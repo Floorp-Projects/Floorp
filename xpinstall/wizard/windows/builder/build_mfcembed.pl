@@ -54,16 +54,13 @@ ParseArgv(@ARGV);
 
 $DEPTH            = "$topsrcdir" if !defined($DEPTH);
 $builderPath      = "$topsrcdir/xpinstall/wizard/windows/builder";
-$verPartial       = "1.0.0.";
-$ver              = $verPartial . GetVersion($DEPTH);
-$verGre           = "1.3b.0." . GetVersion($DEPTH);
 $gDistInstallPath = "$inDistPath/inst_mfcembed";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
 
 chdir("$gPackagerPath/win_mfcembed");
-if(system("perl \"$gPackagerPath/win_mfcembed/makeall.pl\" $ver $verGre -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+if(system("perl \"$gPackagerPath/win_mfcembed/makeall.pl\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
-  die "\n Error: perl \"$gPackagerPath/win_mfcembed/makeall.pl\" $ver $verGre -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
+  die "\n Error: perl \"$gPackagerPath/win_mfcembed/makeall.pl\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
 }
 
 chdir($builderPath);

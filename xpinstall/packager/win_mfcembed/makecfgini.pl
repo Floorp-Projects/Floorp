@@ -93,6 +93,8 @@ $nameProductInternal = $ENV{WIZ_nameProductInternal};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
 $fileUninstallZip = $ENV{WIZ_fileUninstallZip};
+$greFileVersion   = $ENV{WIZ_greFileVersion};
+$greUniqueID      = $ENV{WIZ_greUniqueID};
 
 $inDomain;
 $inRedirDomain;
@@ -198,6 +200,8 @@ while($line = <fpInIt>)
     $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
     $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
     $line =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
+    $line =~ s/\$GreFileVersion\$/$greFileVersion/gi;
+    $line =~ s/\$GreUniqueID\$/$greUniqueID/gi;
     print fpOutIni $line;
   }
 }

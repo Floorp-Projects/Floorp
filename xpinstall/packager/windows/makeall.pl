@@ -31,12 +31,6 @@ use File::Copy;
 use File::Path;
 use File::Basename;
 
-# Make sure there are at least four arguments
-if($#ARGV < 3)
-{
-  PrintUsage();
-}
-
 $DEPTH = "../../..";
 $topsrcdir = GetTopSrcDir();
 # ensure that Packager.pm is in @INC, since we might not be called from
@@ -45,32 +39,14 @@ push(@INC, "$topsrcdir/xpinstall/packager");
 require StageUtils;
 require "$topsrcdir/config/zipcfunc.pl";
 
-$inDefaultProductVersion     = $ARGV[0];
-# $ARGV[0] has the form maj.min.release.bld where maj, min, release
-#   and bld are numerics representing version information.
-# Other variables need to use parts of the version info also so we'll
-#   split out the dot seperated values into the array @versionParts
-#   such that:
-#
-#   $versionParts[0] = maj
-#   $versionParts[1] = min
-#   $versionParts[2] = release
-#   $versionParts[3] = bld
-@versionParts = split /\./, $inDefaultProductVersion;
-
-# We allow non-numeric characters to be included as the last 
-#   characters in fields of $ARG[1] for display purposes (mostly to
-#   show that we have moved past a certain version by adding a '+'
-#   character).  Non-numerics must be stripped out of $inDefaultProductVersion,
-#   however, since this variable is used to identify the the product 
-#   for comparison with other installations, so the values in each field 
-#   must be numeric only:
-$inDefaultProductVersion =~ s/[^0-9.][^.]*//g;
-print "The raw version id is:  $inDefaultProductVersion\n";
-
-# $inDefaultGreVersion is the version that will be used to build GRE.  It is
-# passed to win_gre/makeall.pl.
-$inDefaultGreVersion      = $ARGV[1];
+$inDefaultProductVersion  = StageUtils::GetProductY2KVersion($topsrcdir, $topsrcdir);
+# The mozilla's milestone is the same as the GRE's milestone version.
+# initEmptyValues indicates to GetProductMilestoneVersion() whether or not to
+# prefill the missing version values with '0's:
+#  ie: if milestone version is 1.4a
+#      initEmptyValues dictate whether is should be 1.4a.0.0 or not.
+$initEmptyValues          = 1;
+$inDefaultGreVersion      = StageUtils::GetProductMilestoneVersion($topsrcdir, $topsrcdir, $initEmptyValues);
 $inStagePath              = "$topsrcdir/stage";
 $inDistPath               = "$topsrcdir/dist";
 $inXpiURL                 = "ftp://not.supplied.invalid";
@@ -84,18 +60,46 @@ $seuzFileNameSpecific     = "mozillauninstall.zip";
 $seiGreFileNameSpecific   = "gre-win32-installer.exe";
 $seizGreFileNameSpecific  = "gre-win32-installer.zip";
 
+ParseArgv(@ARGV);
+
+print "\n";
+print " Building Mozilla\n";
+print "  Raw version id   : $inDefaultProductVersion\n";
+
+# $inDefaultProductVersion has the form maj.min.release.bld where maj, min, release
+#   and bld are numerics representing version information.
+# Other variables need to use parts of the version info also so we'll
+#   split out the dot seperated values into the array @versionParts
+#   such that:
+#
+#   $versionParts[0] = maj
+#   $versionParts[1] = min
+#   $versionParts[2] = release
+#   $versionParts[3] = bld
+@versionParts = split /\./, $inDefaultProductVersion;
+
+# We allow non-numeric characters to be included as the last 
+#   characters in fields of $inDefaultProductVersion for display purposes (mostly to
+#   show that we have moved past a certain version by adding a '+'
+#   character).  Non-numerics must be stripped out of $inDefaultProductVersion,
+#   however, since this variable is used to identify the the product 
+#   for comparison with other installations, so the values in each field 
+#   must be numeric only:
+$inDefaultProductVersion =~ s/[^0-9.][^.]*//g;
+
 # set environment vars for use by other .pl scripts called from this script.
 if($versionParts[2] eq "0")
 {
-   $versionMain = "$versionParts[0]\.$versionParts[1]";
+  $versionMain = "$versionParts[0].$versionParts[1]";
 }
 else
 {
-   $versionMain = "$versionParts[0]\.$versionParts[1]\.$versionParts[2]";
+  $versionMain = "$versionParts[0].$versionParts[1].$versionParts[2]";
 }
-print "The display version is: $versionMain\n";
 
-ParseArgv(@ARGV);
+print "  Display version  : $versionMain\n";
+print "  Xpinstall version: $inDefaultProductVersion\n";
+print "\n";
 
 $gDirPackager         = "$topsrcdir/xpinstall/packager";
 $gDirStageProduct     = "$inStagePath/mozilla";
@@ -103,9 +107,9 @@ $gDirDistInstall      = "$inDistPath/install";
 $gDirDistInstGre      = "$inDistPath/inst_gre";
 
 # Build GRE installer package first before building Mozilla!  GRE installer is required by the mozilla installer.
-if(system("perl \"$gDirPackager/win_gre/makeall.pl\" $inDefaultGreVersion -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+if(system("perl \"$gDirPackager/win_gre/makeall.pl\" -productVer $inDefaultGreVersion -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
-  die "\n Error: perl \"$gDirPackager/win_gre/makeall.pl\" $inDefaultGreVersion -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
+  die "\n Error: perl \"$gDirPackager/win_gre/makeall.pl\" -productVer $inDefaultGreVersion -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
 }
 
 # Create the stage area here.
@@ -135,10 +139,27 @@ $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
 # the installer.
 $ENV{WIZ_userAgent}            = "$versionMain ($versionLanguage)";
 $ENV{WIZ_userAgentShort}       = "$versionMain";
-$ENV{WIZ_xpinstallVersion}     = "$versionMain";
+$ENV{WIZ_xpinstallVersion}     = "$inDefaultProductVersion";
 $ENV{WIZ_distInstallPath}      = "$gDirDistInstall";
 
+# GetGreFileVersion() will return the actual version of xpcom.dll used by GRE.
+#  ie:
+#      given milestone.txt : 1.4a
+#      given nsBuildID.h   : 2003030610
+#      gre version would be: 1.4.20030.30610
+$ENV{WIZ_greFileVersion}       = StageUtils::GetGreFileVersion($topsrcdir);
+
+# GetGreSpecialID() will return the GRE ID to be used in the windows registry.
+# This ID is also the same one being querried for by the mozilla glue code.
+#  ie:
+#      given milestone.txt    : 1.4a
+#      given nsBuildID.h      : 2003030610
+#      gre special ID would be: 1.4a_2003030610
+$ENV{WIZ_greUniqueID}          = StageUtils::GetGreSpecialID($topsrcdir);
+
 print "\n";
+print " GRE file version   : $ENV{WIZ_greFileVersion}\n";
+print " GRE special version: $ENV{WIZ_greUniqueID}\n";
 print "\n";
 print " Building $ENV{WIZ_nameProduct} $ENV{WIZ_userAgent}...\n";
 print "\n";
@@ -396,15 +417,18 @@ sub MakeExeZip
 
 sub PrintUsage
 {
-  die "usage: $0 <default app version> <default GRE version> [options]
-
-       default app version: y2k compliant based date version to be used for mozilla.
-                            ie: 5.0.0.2000040413
-
-       default GRE version: version to be used to build GRE.
-                            ie: 1.3b.0.0
+  die "usage: $0 [options]
 
        options include:
+
+           -productVer <ver string>  : Version of the product.  By default it will acquire the
+                                       version listed in mozilla/config/milestone.txt and
+                                       mozilla/config/nsBuildID.h files.
+                                         ie: 1.4a.0.2003030410
+
+           -greVer <ver string>      : Version of GRE.  By default it will acquire the
+                                       version listed in mozilla/config/milestone.txt file.
+                                         ie: 1.4a.0.0
 
            -stagePath <staging path> : full path to where the mozilla components are staged at
                                        Default stage path, if this is not set, is:
@@ -434,6 +458,22 @@ sub ParseArgv
     if($myArgv[$counter] =~ /^[-,\/]h$/i)
     {
       PrintUsage();
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]productVer$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inDefaultProductVersion = $myArgv[$counter];
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]greVer$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inDefaultGreVersion = $myArgv[$counter];
+      }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]stagePath$/i)
     {

@@ -35,7 +35,7 @@ function registerKeys()
 
   createRootRegKey(winreg);
 
-  subkey = regRootKey + "\\$UserAgent$";
+  subkey = regRootKey;
   err    = winreg.setValueString(subkey, "Version", "$UserAgent$");
   tmpstr = new String(fProgram);
   err    = winreg.setValueString(subkey, "GreHome", tmpstr.substring(0, tmpstr.length-1));
@@ -74,7 +74,7 @@ function createRootRegKey(winreg)
     winreg.createKey(subkey,"");
   }
 
-  winreg.createKey(subkey + "\\$UserAgent$","");
+  winreg.createKey(subkey,"");
 }
 
 function registerMainKeys(winreg)
@@ -84,13 +84,13 @@ function registerMainKeys(winreg)
   var value;   //the data in the value you want to look at.
   var err;
 
-  winreg.createKey(regRootKey + "\\$UserAgent$", "");
+  winreg.createKey(regRootKey, "");
 
-  subkey  = regRootKey + "\\$UserAgent$\\Main";
+  subkey  = regRootKey + "\\Main";
   winreg.createKey(subkey,"");
   err     = winreg.setValueString(subkey, "Install Directory", fProgram);
 
-  subkey  = regRootKey + "\\$UserAgent$\\Uninstall";
+  subkey  = regRootKey + "\\Uninstall";
   winreg.createKey(subkey,"");
   err     = winreg.setValueString(subkey, "Uninstall Log Folder", fProgram + "Uninstall");
   err     = winreg.setValueString(subkey, "Description", "$ProductName$ ($UserAgentShort$)");

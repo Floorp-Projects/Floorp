@@ -55,20 +55,14 @@ ParseArgv(@ARGV);
 
 $DEPTH            = "$topsrcdir" if !defined($DEPTH);
 $cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
-$verPartial       = "1.3b.0.";
-$ver              = $verPartial . GetVersion($DEPTH);
 $stageDir         = "$topsrcdir/stage";
 $gDistInstallPath = "$inDistPath/inst_gre";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
 
-print "\n";
-print " Building GRE...\n";
-print "\n";
-
 chdir("$gPackagerPath/win_gre");
-if(system("perl makeall.pl $ver -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+if(system("perl makeall.pl -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
-  die "\n Error: perl makeall.pl $ver -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
+  die "\n Error: perl makeall.pl -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
 }
 
 chdir($cwdBuilder);

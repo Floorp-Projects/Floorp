@@ -55,17 +55,14 @@ ParseArgv(@ARGV);
 
 $DEPTH            = "$topsrcdir" if !defined($DEPTH);
 $cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
-$verPartial       = "1.3.0.";
-$ver              = $verPartial . GetVersion($DEPTH);
-$verGre           = $verPartial . "0";
 $gDistInstallPath = "$inDistPath/install";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
 
 # mozilla's makeall.pl will call GRE's makeall.pl
 chdir("$gPackagerPath/windows");
-if(system("perl makeall.pl $ver $verGre -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+if(system("perl makeall.pl -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
-  die "\n Error: perl makeall.pl $ver $verGre -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
+  die "\n Error: perl makeall.pl -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
 }
 
 chdir($cwdBuilder);

@@ -1,66 +1,3 @@
-function registerMainKeys(winreg)
-{
-  var subkey;  //the name of the subkey you are poking around in
-  var err;
-
-  winreg.createKey("SOFTWARE\\$CompanyName$","");
-
-  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
-  winreg.createKey(subkey,"");
-  err     = winreg.setValueString(subkey, "CurrentVersion", "$UserAgent$");
-
-  winreg.createKey("SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$","");
-
-  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
-  winreg.createKey(subkey,"");
-  err     = winreg.setValueString(subkey, "Install Directory", fProgram);
-
-  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Uninstall";
-  winreg.createKey(subkey,"");
-  err     = winreg.setValueString(subkey, "Uninstall Log Folder", szUninstall);
-  err     = winreg.setValueString(subkey, "Description", "$ProductName$ ($UserAgentShort$)");
-}
-
-function updateWinReg()
-{
-  //Notes:
-  // can't use a double backslash before subkey - Windows already puts it in.
-  // subkeys have to exist before values can be put in.
-  var winreg = getWinRegistry();
-  var subkey;  //the name of the subkey you are poking around in
-  var restrictedAccess;
-  var ikwDefined;
-
-  if(winreg != null) 
-  {
-    /* This will check to see if the user has restricted access or not.
-     * It checks to see if HKEY_LOCALMACHINE\SOFTWARE is writable.  If
-     * it is, then access is not restricted.  This is only used to
-     * determine which Desktop, Programs, and Start Menu folders
-     * are to used: common or per user
-     */
-    restrictedAccess = false;
-    ikwDefined = typeof(winreg.isKeyWritable);
-    logComment("winreg.isKeyWritable(): " + ikwDefined);
-    if(ikwDefined == "function")
-    {
-      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-      if(!winreg.isKeyWritable("SOFTWARE"))
-        restrictedAccess = true;
-    }
-
-    logComment("restrictedAccess value: " + restrictedAccess);
-    if(!restrictedAccess)
-    {
-      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-      registerMainKeys(winreg);
-    }
-
-    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
-    registerMainKeys(winreg);
-  }
-}
-
 function upgradeCleanup()
 {
   deleteThisFile("Program",    "zlib.dll");
@@ -160,8 +97,6 @@ if(verifyDiskSpace(fProgram, srDest))
   // check return value
   if( err == SUCCESS )
   {
-    updateWinReg();
-
     err = performInstall(); 
     logComment("performInstall() returned: " + err);
   }
