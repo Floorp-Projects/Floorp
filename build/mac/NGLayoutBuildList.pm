@@ -220,6 +220,9 @@ sub BuildDist()
 	#XPCOM
     InstallFromManifest(":mozilla:xpcom:public:MANIFEST",							"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:src:MANIFEST",								"$distdirectory:xpcom:");
+	InstallFromManifest(":mozilla:xpcom:libxpt:public:MANIFEST",					"$distdirectory:xpcom:");
+	InstallFromManifest(":mozilla:xpcom:libxpt:xptinfo:public:MANIFEST",			"$distdirectory:xpcom:");
+	InstallFromManifest(":mozilla:xpcom:libxpt:xptcall:public:MANIFEST",			"$distdirectory:xpcom:");
 	
 	#ZLIB
     InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
@@ -243,6 +246,9 @@ sub BuildDist()
 
 	#LIVECONNECT
 	InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",						"$distdirectory:liveconnect:");
+	
+	#XPCONNECT
+	InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
 	
 	#CAPS
 	InstallFromManifest(":mozilla:caps:public:MANIFEST",							"$distdirectory:caps:");
@@ -529,9 +535,13 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",						"xpcom$D.shlb", "xpcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
+	BuildOneProject(":mozilla:xpcom:libxpt:macbuild:libxpt.mcp",				"libxpt$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+
 	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
 	BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",						"LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+
+	BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",						"XPConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
