@@ -41,11 +41,50 @@ public:
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD
+  Reflow(nsIPresContext*          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
+  
 protected:
   nsMathMLmpaddedFrame();
   virtual ~nsMathMLmpaddedFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
+
+private:
+  nsCSSValue mWidth;
+  nsCSSValue mHeight;
+  nsCSSValue mDepth;
+  nsCSSValue mLeftSpace;
+
+  PRInt32    mWidthSign;
+  PRInt32    mHeightSign;
+  PRInt32    mDepthSign;
+  PRInt32    mLeftSpaceSign;
+
+  PRInt32    mWidthPseudoUnit;
+  PRInt32    mHeightPseudoUnit;
+  PRInt32    mDepthPseudoUnit;
+  PRInt32    mLeftSpacePseudoUnit;
+
+  // helpers to process the attributes
+  static PRBool
+  ParseAttribute(nsString&   aString,
+                 PRInt32&    aSign,
+                 nsCSSValue& aCSSValue,
+                 PRInt32&    aPseudoUnit);
+
+  static void
+  UpdateValue(nsIPresContext*      aPresContext,
+              nsIStyleContext*     aStyleContext,
+              PRInt32              aSign,
+              PRInt32              aPseudoUnit,
+              nsCSSValue&          aCSSValue,
+              nscoord              aLeftSpace,
+              nsHTMLReflowMetrics& aReflowMetrics,
+              nscoord&             aValueToUpdate);
 };
 
 #endif /* nsMathMLmpaddedFrame_h___ */
