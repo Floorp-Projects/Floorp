@@ -473,10 +473,6 @@ il_cache_return_notify(IL_ImageReq *image_req)
     nsCRT::zero(&message_data.update_rect, sizeof(IL_Rect));
 
     if (ic->state == IC_COMPLETE) {
-        /* Send the observers a frame complete message. */
-        XP_NotifyObservers(image_req->obs_list, IL_FRAME_COMPLETE,
-                           &message_data);
-
         /* Finally send the observers a complete message. */
         XP_NotifyObservers(image_req->obs_list, IL_IMAGE_COMPLETE,
                            &message_data);
@@ -1559,7 +1555,11 @@ il_image_complete(il_container *ic)
                         /* Call to netlib for net cache data happens here. */
                                   netRequest->SetBackgroundLoad(PR_TRUE);
                                   reader = IL_NewNetReader(ic);
-                        (void) ic->net_cx->GetURL(ic->url, IMG_NTWK_SERVER, reader);
+
+
+                        /* using lclient insures we are using an active image request */
+                        (void) ic->lclient->net_cx->GetURL(ic->url, IMG_NTWK_SERVER, reader);
+ 
                         /* Release reader, GetURL will keep a ref to it. */
                         NS_RELEASE(reader);
                     } else {
@@ -2112,7 +2112,7 @@ IL_GetImage(const char* image_url,
 #endif
 
     /* Record the context that actually initiates and controls the transfer. */
-    ic->net_cx = net_cx->Clone();
+    ic->net_cx = net_cx->Clone();    
         
     /* need to make a net request */
     ILTRACE(1,("il: net request for %s, %s", image_url,
