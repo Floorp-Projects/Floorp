@@ -73,12 +73,12 @@ PRLogModuleInfo* gFileTransportLog = nsnull;
 
 nsFileChannel::nsFileChannel()
     : mURI(nsnull), mGetter(nsnull), mListener(nsnull), mEventQueue(nsnull),
-      mContext(nsnull), mState(QUIESCENT),
+      mContext(nsnull), mHandler(nsnull), mState(QUIESCENT),
       mSuspended(PR_FALSE), mFileStream(nsnull),
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
-      mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
+      mStatus(NS_OK), mSourceOffset(0), mReadFixedAmount(PR_FALSE), 
       mLoadAttributes(LOAD_NORMAL),
-      mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull),
+      mLoadGroup(nsnull),
       mRealListener(nsnull)
 {
     NS_INIT_REFCNT();
