@@ -22,11 +22,12 @@
  *   Josh Soref  <timeless@mac.com>
  */
 
-/**
- * Style rules for bookmark items in Navigator. 
- **/ 
+@import url("chrome://communicator/skin/bookmarks/bookmarks.css");
 
- 
+/**
+ * Personal toolbar items
+ **/
+
   #home-button
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");
@@ -42,114 +43,3 @@
       list-style-image    : url("chrome://communicator/skin/bookmarks/home-active.gif");
     }
 
-/**
- * Personal toolbar items
- **/
-  .bookmarkitem
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-      cursor	          : pointer;
-    }
-
-  .bookmarkfolder
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-    }
-  
-  .bookmarkfolder > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
-    {
-      display             : none;
-    }
-    
-  .bookmarkfolder[open="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-    }  
-
-/* Bookmark item/folder buttons on the personal toolbar */
-
-  /* need to override default border on button-toolbar buttons/menubuttons */    
-  .button-toolbar.bookmarkitem
-    {
-      -moz-binding        : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
-      border              : none;      
-      vertical-align      : middle;
-    }
-    
-  .button-toolbar.bookmarkitem,
-  .button-toolbar.bookmarkfolder
-    {
-      max-width           : 10em;
-    }
-    
-  .button-toolbar.bookmarkfolder > box > text 
-    {
-      max-width: 8em  !important;
-    }
-    
-  .toolbarbutton-top-icon 
-    {
-      max-width           : 2em;
-    }
-    
-  .toolbarbutton-left-text 
-    {
-      max-width           : 8em;
-    }
-    
-  .button-toolbar.bookmarkfolder, .button-toolbar.bookmarkfolder:hover
-    {
-      border              : none;
-    }    
-    
-  .button-toolbar.bookmarkitem > .toolbarbutton-left-icon
-    {
-      margin-right        : 4px;
-    }
-
-  .bookmarkfolder.button-toolbar:hover
-    {
-      color               : #0000FF;
-      cursor              : pointer;
-      border              : none;      
-    }
-
-  .bookmarkfolder.button-toolbar:hover:active
-    {
-      color               : #FF0000;
-      border              : none;
-    }    
-  .bookmarkitem.button-toolbar:hover
-    {
-      color               : #0000FF;
-      text-decoration     : underline;
-      cursor              : pointer;
-      border              : none;      
-    }
-
-  .bookmarkitem.button-toolbar:hover:active
-    {
-      color               : #FF0000;
-      text-decoration     : underline;
-      border              : none;
-    }
-
-  /* drag and drop feedback */
-  .bookmarkitem.button-toolbar[dragover-left="true"]
-    {
-      margin-left         : 0px;
-      border-left         : 2px solid threeddarkshadow;
-    }
-
-  .bookmarkitem.button-toolbar[dragover-right="true"]
-    {
-      margin-right        : 0px;
-      border-right        : 2px solid threeddarkshadow;
-    }
-
-  .menubutton-toolbar-single-text[dragover-top="true"]
-    {
-      background-color    : threeddarkshadow;
-      color               : threedhighlight;
-    }
-    

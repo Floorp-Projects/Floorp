@@ -1,57 +1,136 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
 
-/******** Tree widget **********/
+/* ===== tree.css =======================================================
+  == Styles used by XUL tree-related elements.
+  ======================================================================= */
 
-/** basic tree ****************************************************
- *  basic tree widget for use in main windows where no decoration
- *  is required.
- **/
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: tree ::::: */
+
 tree {
   border: none;
   border-spacing: 0px;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   color: #000000;
 }
 
-/** class="inset" *************************************************
- *  this is the tree class used by dialogs to create treeviews with 
- *  inset borders, and default dialog spacing.
- **/
 tree.inset {
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-  margin: 1px 5px 2px 5px;
+  margin: 2px 4px;
+  border-top: 1px solid #A8B5C6;
+  border-right: 1px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
+  border-left: 1px solid #A8B5C6;
 }
 
-treecell { 
+tree.inset > .tree-container-treerows {
+  border: 1px solid #757C8A;
+}
+
+/* ::::: treeitem ::::: */
+
+treeitem {
+  list-style-image: none;
+}
+
+/* ::::: treerow ::::: */
+
+treerow {
+  border-right: 1px solid transparent;
+  border-left: 1px solid transparent;
+}
+
+treeitem[selected="true"] > treerow {
+  background-color: #C2D0D0;
+  color: #000000;
+}
+
+tree:focus > treechildren treeitem[selected="true"] > treerow,
+treeitem[dd-dropon="true"] > treerow {
+  background-color: #486380;
+  color: #FFFFFF;
+}
+
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow,
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > treecell {
+  border-color: #768AA0;
+}
+
+treehead > treeitem > treerow,
+treehead > treerow {
+  border: none;
+}
+
+/* :::::: treecell ::::: */
+
+treecell {
   border-top: 1px solid transparent;
   border-bottom: 1px solid transparent;
   padding: 0px 0px 1px 2px;
-  white-space: nowrap;
   vertical-align: middle;
-} 
+  white-space: nowrap;
+}
 
-.treecell-header, 
-.treecell-inset-header, 
-.treecell-header-image { 
-  border-left: 1px solid #EDEDED !important;
+/* ::::: iconic treecell ::::: */
+
+.tree-cell-icon,
+.tree-cell-primary-icon,
+.tree-cell-primary-icon-inline-edit-folder {
+  padding-right: 2px;
+  list-style-image: inherit;
+}
+
+.treecell-indent > .tree-cell-primary-icon {
+  padding-left: 14px;
+}
+
+treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon {
+  padding-left: 0px;
+}
+
+/* :::::: header treecell ::::: */
+
+.treecell-header,
+.treecell-inset-header,
+.treecell-header-image {
   border-top: 1px solid #EDEDED !important;
   border-right: 1px solid #6E7070 !important;
   border-bottom: 1px solid #6E7070 !important;
+  border-left: 1px solid #EDEDED !important;
   padding: 0px;
-  background-color: #C2D0D0; 
+  background-color: #C2D0D0;
   color: #000000;
 }
 
 .treecell-header-box,
 .treecell-header-image-box {
-  border-left: 1px solid #C2D0D0;
   border-top: 1px solid #C2D0D0;
   border-right: 1px solid #A4ACAC;
   border-bottom: 1px solid #A4ACAC;
+  border-left: 1px solid #C2D0D0;
   vertical-align: middle;
-}  
+}
 
 .treecell-header-box {
   padding: 0px 4px 0px 4px;
@@ -60,7 +139,7 @@ treecell {
 .treecell-header-image-box {
   padding: 0px 1px 0px 1px;
 }
-  
+
 .treecell-header:hover:active,
 .treecell-header-image:hover:active,
 .treecell-inset-header:hover:active {
@@ -75,7 +154,7 @@ treecell {
   border-bottom: none;
   border-left: 1px solid transparent;
 }
-  
+
 .treecell-header:hover:active > .treecell-header-box,
 .treecell-inset-header:hover:active > .treecell-header-box {
   padding: 1px 4px 0px 5px;
@@ -89,82 +168,63 @@ treecell {
   padding: 0px;
 }
 
-/** class="propertylist" ******************************************
- *  class for cells in grid-formatted property lists.
- **/
+/* ::::: property list treecell ::::: */
+
 treecell.propertylist {
+  border-right: 1px solid #C2D0D0;
+  border-bottom: 1px solid #C2D0D0;
   padding-left: 5px;
-  border-right: 1px solid #CCCCCC;
-  border-bottom: 1px solid #CCCCCC;
 }
 
-.tree-cell-primary-icon {
-  list-style-image: inherit;
-  padding-right: 2px;
+/* ::::: treecell-editable ::::: */
+
+treerow[mode="inline-edit"] {
+  background-color: transparent !important;
 }
 
-.tree-cell-icon {
-  list-style-image: inherit;
-  padding-right: 2px;
-}
-
-.treecell-indent > .tree-cell-primary-icon {
-  padding-left: 14px;
- }
-
-treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon {
-  padding-left: 0px;
-}
-
-.tree-cell-twisty {
- list-style-image: url("chrome://global/skin/closedtwisty.gif");
- -moz-user-focus:ignore;
- padding-right: 2px;
-}
-
-treehead > treeitem > treerow,
-treehead > treerow {
+treerow[mode="inline-edit"] > .treecell-editable {
   border: none;
 }
 
-treerow {
-  border-right: 1px solid transparent;
-  border-left: 1px solid transparent;
+.inline-edit-cell-box {
+  margin-left: 2px;
 }
 
-treeitem[selected="true"] > treerow {
- color: #000000;
- background-color: #CCCCCC;
+.inline-edit-cell-box[mode="edit"] {
+  margin-left: 0px;
 }
 
-tree:focus > treechildren treeitem[selected="true"] > treerow,
-treeitem[dd-dropon="true"] > treerow {
-  color: #ffffff;
-	background-color: #486380;
+.textfield-inline-edit {
+  margin: 0px !important;
+  border: 1px solid #000000 !important;
 }
 
-tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow,
-tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > treecell {
-  border-color: #768AA0;
+.textfield-inline-edit > .textfield-internal-box {
+  border: none !important;
+  padding: 1px !important;
 }
 
-.tree-cell-twisty:hover {
- text-decoration: none;
-}
+/* ::::: twisty ::::: */
 
-.tree-cell-twisty:active {
- text-decoration: none;
-}
-
-.tree-cell-twisty[disabled="true"] {
- list-style-image: none;
+.tree-cell-twisty {
+  -moz-user-focus: ignore;
+  padding-right: 2px;
+  list-style-image: url("chrome://global/skin/closedtwisty.gif");
 }
 
 treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
- list-style-image: url("chrome://global/skin/opentwisty.gif");
+  list-style-image: url("chrome://global/skin/opentwisty.gif");
 }
 
-/* tree header with sort direction indicators */
+.tree-cell-twisty[disabled="true"] {
+  list-style-image: none;
+}
+
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
+  visibility: hidden;
+}
+
+/* ::::: sort direction indicator ::::: */
 
 .tree-header-sortdirection {
   list-style-image: none;
@@ -178,7 +238,9 @@ treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty
   list-style-image: url("chrome://global/skin/sortDescending.gif");
 }
 
-.treecell-popup-icon
-  {
-    list-style-image       : url("chrome://global/skin/columnselect.gif");
-  }
+/* ::::: column picker ::::: */
+
+.treecell-popup-icon {
+  list-style-image: url("chrome://global/skin/columnselect.gif");
+}
+

@@ -1,5 +1,4 @@
-/* -*- Mode: C; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,52 +9,26 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *
  */
 
-    
-.bookmarkitem
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-    cursor				  : pointer;
-  }
+/* ===== personalToolbar.css ============================================
+  == Styles for the Personal Toolbar in Navigator.
+  ======================================================================= */
 
-.bookmarkitem[menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-  }
+@import url("chrome://communicator/skin/bookmarks/bookmarks.css");
   
-.bookmarkfolder
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-  }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* This rule is TERRIBLE. Someone please spank the person who wrote it */
-.bookmarkfolder > box > text 
-  {
-    max-width: 8em;
-  }
-
-.bookmarkfolder[menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-  }
-  
-.bookmarkfolder[open="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-  }  
-
-.bookmarkfolder[open="true"][menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-  }  
-  
-  
+#home-button {
+  list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
+}

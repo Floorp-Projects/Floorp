@@ -26,7 +26,7 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks-tree.css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -116,7 +116,7 @@
               <template id="file-bookmarks-template">
                 <rule iscontainer="true">
                   <treechildren>
-                    <treeitem uri="rdf:*" persist="open" class="treeitem-bookmark"
+                    <treeitem uri="rdf:*" persist="open" class="bookmark-item"
                               rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
                       <treerow>
                         <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"

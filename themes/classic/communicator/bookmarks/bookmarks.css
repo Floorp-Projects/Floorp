@@ -22,135 +22,167 @@
  *   Josh Soref  <timeless@mac.com>
  */
 
-/**
- * Style rules for bookmark items in Navigator. 
- **/ 
-
- 
-  #home-button
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");
-    }
-    
-  #home-button:hover
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/home-hover.gif");
-    }
-    
-  #home-button:hover:active
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/home-active.gif");
-    }
-
-/**
- * Personal toolbar items
- **/
-
-  .bookmarkitem
+/** 
+ * Style rules for bookmarks tree items. Ideally this would be usage agnostic, but
+ * there's window/panel specific cruft in here too. 
+ **/    
+  .bookmark-item
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-      cursor	          : pointer;
     }
-
-  .bookmarkfolder
+ 
+  .bookmark-item[container="true"]
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
     }
+
+  .bookmark-item[container="true"][open="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+    }
+
+  .bookmark-item[container="true"][open="true"][loading="true"]
+    {
+      list-style-image    : url("chrome://global/skin/loading.gif") ! important ;
+    }
+
+  .bookmark-item[status="new"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif") ! important ;
+    }
+
+/**
+ * XXX - need to create some different icons for file system objects
+ **/    
+  .bookmark-item[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/directory/file-folder-open.gif");
+    }
+
+  .bookmark-item[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/directory/file-folder-closed.gif");
+    }
+
+  .bookmark-item[type="http://home.netscape.com/NC-rdf#FileSystemObject"]
+    {
+      list-style-image    : url("chrome://communicator/skin/directory/file-icon.gif");
+    }
+
+/**
+ * Bookmark toolbar buttons
+ **/    
+    
+  .button-toolbar.bookmark-item,
+  .button-toolbar.bookmark-item:hover,
+  .button-toolbar.bookmark-item:hover:active,
+  .button-toolbar.bookmark-item > .button-internal-box,
+  .button-toolbar.bookmark-item:hover > .button-internal-box,
+  .button-toolbar.bookmark-item:hover:active > .button-internal-box,
+  .button-toolbar.bookmark-item 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar.bookmark-item:hover 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar.bookmark-item:hover:active 
+      > .menubutton-toolbar-single-internal-box
+    {
+      border: none !important;
+    }
+    
+  .bookmark-item.button-toolbar[container="true"],
+  .bookmark-item.button-toolbar[container="true"]:hover,
+  .bookmark-item.button-toolbar[container="true"]:hover:active
+    {
+      cursor            : default;
+      background-color  : transparent;
+      color             : inherit;
+      text-decoration   : none;
+    }
   
-  .bookmarkfolder > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+  .bookmark-item.button-toolbar
+    {
+      cursor	          : pointer;
+    }
+
+  .bookmark-item > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
     {
       display             : none;
     }
     
-  .bookmarkfolder[open="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-    }  
-
-/* Bookmark item/folder buttons on the personal toolbar */
-
-  /* need to override default border on button-toolbar buttons/menubuttons */    
-  .button-toolbar.bookmarkitem
-    {
-      -moz-binding        : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
-      border              : none;      
-      vertical-align      : middle;
-    }
-    
-  .button-toolbar.bookmarkitem,
-  .button-toolbar.bookmarkfolder
+  .button-toolbar.bookmark-item
     {
       max-width           : 10em;
     }
     
-  .button-toolbar.bookmarkfolder > box > text 
+  .button-toolbar.bookmark-item > .menubutton-toolbar-single-internal-box
+      > .menubutton-toolbar-single-text 
     {
-      max-width: 8em  !important;
-    }
-    
-  .toolbarbutton-top-icon 
-    {
-      max-width           : 2em;
-    }
-    
-  .toolbarbutton-left-text 
-    {
-      max-width           : 8em;
-    }
-    
-  .button-toolbar.bookmarkfolder, .button-toolbar.bookmarkfolder:hover
-    {
-      border              : none;
-    }    
-    
-  .button-toolbar.bookmarkitem > .toolbarbutton-left-icon
-    {
-      margin-right        : 4px;
+      max-width: 8em !important;
     }
 
-  .bookmarkfolder.button-toolbar:hover
-    {
-      color               : #0000FF;
-      cursor              : pointer;
-      border              : none;      
-    }
-
-  .bookmarkfolder.button-toolbar:hover:active
-    {
-      color               : #FF0000;
-      border              : none;
-    }    
-  .bookmarkitem.button-toolbar:hover
+  .bookmark-item.button-toolbar:hover
     {
       color               : #0000FF;
       text-decoration     : underline;
-      cursor              : pointer;
-      border              : none;      
     }
 
-  .bookmarkitem.button-toolbar:hover:active
+  .bookmark-item.button-toolbar:hover:active
     {
+      background-color  : transparent;
       color               : #FF0000;
       text-decoration     : underline;
-      border              : none;
     }
 
   /* drag and drop feedback */
-  .bookmarkitem.button-toolbar[dragover-left="true"]
+  .bookmark-item.button-toolbar[dragover-left="true"]
     {
       margin-left         : 0px;
-      border-left         : 2px solid ThreeDDarkShadow;
+      border-left         : 2px solid threeddarkshadow;
     }
 
-  .bookmarkitem.button-toolbar[dragover-right="true"]
+  .bookmark-item.button-toolbar[dragover-right="true"]
     {
       margin-right        : 0px;
-      border-right        : 2px solid ThreeDDarkShadow;
+      border-right        : 2px solid threeddarkshadow;
     }
 
   .menubutton-toolbar-single-text[dragover-top="true"]
     {
-      background-color    : ThreeDDarkShadow;
-      color               : ThreeDHighlight;
+      background-color    : threeddarkshadow;
+      color               : threedhighlight;
     }
     
+    
+/**
+ * Bookmarks tree 
+ **/    
+  .bookmarks-panel-tree, .bookmarks-panel-tree > .tree-container-treerows
+    {
+      border              : none;
+    }
+
+  #bookmarksTree
+    {
+      border-top          : none;
+      border-bottom       : none;
+    }
+
+/** 
+ * XXX - disable print plus. This needs to go into ns/!!!
+ */    
+  #navprintplus
+    {
+      display             : none !important; 
+    }
+      
+  #notification-icon  
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/notification.gif");
+    }    
+    
+  #schedule-icon  
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/schedule.gif");
+    }    
+    
+        

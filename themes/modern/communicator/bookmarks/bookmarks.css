@@ -1,5 +1,4 @@
-/* -*- Mode: C; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,107 +9,72 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Ben Goodger <ben@netscape.com>
+ *   Josh Soref  <timeless@mac.com>
+ *
  */
 
-    
-.bookmarkitem
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-    cursor				  : pointer;
-  }
+/* ===== bookmarks.css ==================================================
+  == Styles specific to trees containing bookmarks.
+  ======================================================================= */
 
-.bookmarkitem[menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-  }
-  
-.bookmarkfolder
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-  }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.bookmarkfolder > box > text 
-  {
-    max-width: 8em;
-  }
+/* ::::: bookmark items ::::: */
 
-.bookmarkfolder[menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-  }
-  
-.bookmarkfolder[open="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-  }  
-
-.bookmarkfolder[open="true"][menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-  }  
-  
-  
-treeitem[container="true"][open="true"][loading="true"] > treerow > .treecell-bookmark
-{
- list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+.bookmark-item {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
-treeitem[status="new"] > treerow > .treecell-bookmark
-{
- list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+.bookmark-item[container="true"] {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > .treecell-bookmark,
-treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"] > treerow > .treecell-bookmark,
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treerow > .treecell-bookmark,
-treeitem[container="true"] > treerow > .treecell-bookmark
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
+.bookmark-item[container="true"][open="true"] {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > .treecell-bookmark,
-treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"][open="true"] > treerow > .treecell-bookmark,
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treerow > .treecell-bookmark,
-treeitem[container="true"][open="true"] > treerow > .treecell-bookmark
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+.bookmark-item[container="true"][open="true"][loading="true"] {
+  list-style-image: url("chrome://communicator/skin/icon2/loading.gif") !important;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treerow > .treecell-bookmark
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+.bookmark-item[status="new"] {
+  list-style-image: url("chrome://communicator/skin/icon2/loading.gif") !important;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treerow > .treecell-bookmark
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+/* ::::: bookmark toolbar buttons ::::: */
+
+.bookmark-item.button-toolbar {
+  cursor: pointer;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > .treecell-bookmark
-{
- list-style-image: url("resource:/res/rdf/folder-open.gif");
+.bookmark-item.button-toolbar:hover {
+  text-decoration: underline;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treerow > .treecell-bookmark
-{
- list-style-image: url("resource:/res/rdf/folder-closed.gif");
+.bookmark-item.button-toolbar:hover,
+.bookmark-item.button-toolbar:hover:active,
+.bookmark-item.button-toolbar[open="true"] {
+  background-color: transparent;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > .treecell-bookmark
-{
- list-style-image: url("resource:/res/rdf/article.gif");
+.bookmark-item.button-toolbar[container="true"] {
+  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-left");
 }
 
-treeitem > treerow > .treecell-bookmark {
- list-style-image:url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+.bookmark-item.button-toolbar[container="true"],
+.bookmark-item.button-toolbar[container="true"]:hover {
+  cursor: default;
+  text-decoration: none;
 }
 
 #navprintplus

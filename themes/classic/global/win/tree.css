@@ -46,6 +46,10 @@ tree > treechildren treeitem[selected="true"] > treerow
   	background-color: ThreeDFace;
   }
 
+treeitem {
+  list-style-image: none;
+}
+  
 treerow 
   {
     border        : 1px solid transparent;
@@ -176,7 +180,8 @@ treecell.propertylist
     padding-left          : 5px;
   }
 
-.tree-cell-primary-icon 
+.tree-cell-primary-icon,
+.tree-cell-primary-icon-inline-edit-folder
   {
     list-style-image      : inherit;
     padding-right         : 2px;
@@ -249,12 +254,25 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
     list-style-image       : url("chrome://global/skin/columnselect.gif");
   }
 
+/* Inline Editable Treecells */
+
+treerow[mode="inline-edit"] 
+  {
+    border-top            : none !important;
+    border-bottom         : none !important;
+    background-color      : transparent !important;
+  }
+
 .inline-edit-cell-box
   {
     margin-left           : 2px;
   }
 
-/* Inline Editable Treecells */
+.inline-edit-cell-box[mode="edit"] 
+  {
+    margin-left           : 0px;
+  }
+
 .textfield-inline-edit 
   {
     border                : 1px solid WindowFrame !important;
@@ -263,21 +281,16 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
 
 .textfield-inline-edit > .textfield-internal-box > .textfield-input 
   {
-    border                : 0px !important;
-    padding               : 1px !important;
+    border                : none !important;
+    padding               : 0px !important;
     margin                : 0px !important;
   }
 
 .textfield-inline-edit > .textfield-internal-box 
   {
-    border                : 0px !important;
-    padding               : 0px !important;
+    border                : none !important;
+    padding               : 1px !important;
     margin                : 0px !important;
-  }
-
-treerow[mode="inline-edit"] 
-  {
-    background            : transparent;
   }
 
   
