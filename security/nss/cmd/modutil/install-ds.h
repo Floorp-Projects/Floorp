@@ -287,4 +287,4 @@ Pk11Install_Info_Print(Pk11Install_Info* _this, int pad);
 void 
 Pk11Install_Info_Cleanup(Pk11Install_Info* _this);
 
-#endif // INSTALL_DS_H
+#endif /* INSTALL_DS_H */
