@@ -1806,7 +1806,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
           if (gNoisy) { printf("* parent has tag %s\n", tag.ToNewCString()); } // XXX leak!
           if (NS_SUCCEEDED(result))
           {
-            if (PR_FALSE==tag.Equals(aPropName))
+            if (PR_FALSE==tag.Equals(aPropName->GetUnicode()))
             {
               PRInt32 offsetInParent;
               result = nsIEditorSupport::GetChildOffset(newMiddleNode, parent, offsetInParent);

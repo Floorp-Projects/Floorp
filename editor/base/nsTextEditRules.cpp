@@ -48,7 +48,7 @@ PRBool nsTextEditRules::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   {
     nsAutoString tag;
     element->GetTagName(tag);
-    if (tag.Equals(aTag))
+    if (tag.Equals(aTag->GetUnicode()))
     {
       return PR_TRUE;
     }
