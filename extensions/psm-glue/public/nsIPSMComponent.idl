@@ -20,10 +20,10 @@
  * Contributor(s):
  *   Hubbie Shaw
  *   Doug Turner <dougt@netscape.com>
+ *   Mitch Stoltz <mstoltz@netscape.com>
 */
 
 #include "nsISupports.idl"
-//#include "nsIPrincipal.idl"
 interface nsIPrincipal;
 
 %{C++
@@ -39,6 +39,20 @@ interface nsIPSMComponent : nsISupports
   [noscript] nsCMTControlStar GetControlConnection( );
   void DisplaySecurityAdvisor();
 
+ /* Sig Verification Error Codes */
+  const long VERIFY_OK = 0;
+  const long VERIFY_NOSIG = -2;
+  const long VERIFY_ERROR_UNKNOWN_CA  = -8172;
+  
+  /* Hash Algorithms (based on cmtcmn.h) */ 
+  const short MD2  = 1;
+  const short MD5  = 2;
+  const short SHA1 = 3;
+  const unsigned long MD2_LENGTH  = 16;
+  const unsigned long MD5_LENGTH  = 16;
+  const unsigned long SHA1_LENGTH = 20;
+  const unsigned long MAX_HASH_LENGTH = SHA1_LENGTH;
+
   /* Secure Hashing functions */
   void hashBegin(in unsigned long alg, out unsigned long id);
   void hashUpdate(in unsigned long id, in string buf, in unsigned long buflen);
@@ -51,20 +65,12 @@ interface nsIPSMComponent : nsISupports
                        in unsigned long buflen);
   void verifyRSAEnd(in unsigned long id, in string plaintext,
                     in unsigned long plaintextLen,
-                    in boolean keepCert, out nsIPrincipal principal);
+                    in boolean keepCert, out nsIPrincipal principal, out long result);
+  nsIPrincipal CreatePrincipalFromCert(in unsigned long certID);
 };
 
 %{C++
 #define PSM_COMPONENT_PROGID "component://netscape/psm"
 #define PSM_COMPONENT_CLASSNAME "Mozilla PSM Component"
-
-/* Hash Algorithms (based on cmtcmn.h) */ 
-#define PSM_HASH_MD2  1
-#define PSM_HASH_MD2_LENGTH 16
-#define PSM_HASH_MD5  2
-#define PSM_HASH_MD5_LENGTH 16
-#define PSM_HASH_SHA1 3
-#define PSM_HASH_SHA1_LENGTH 20
-#define PSM_HASH_MAX_LENGTH PSM_HASH_SHA1_LENGTH
 %}
 
