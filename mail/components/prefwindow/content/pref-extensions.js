@@ -107,7 +107,7 @@ function loadAuthorUrl()
   {
     var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
     messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
-    messenger.loadURL(window, authorURL);  
+    messenger.launchExternalURL(authorURL);  
   }
 }
 
