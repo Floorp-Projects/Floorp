@@ -314,8 +314,8 @@ struct nsDOMClassInfoData
   nsIClassInfo *mCachedClassInfo;
   const nsIID *mProtoChainInterface;
   const nsIID **mInterfaces;
-  PRUint32 mScriptableFlags;
-  PRPackedBool mHasClassInterface;
+  PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
+  PRBool mHasClassInterface : 1;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -605,7 +605,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleDeclaration, nsCSSStyleDeclSH,
                            ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(ComputedCSSStyleDeclaration, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(ComputedCSSStyleDeclaration, nsCSSStyleDeclSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ROCSSPrimitiveValue, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1081,7 +1081,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(DocumentStyleSheetList, nsIDOMStyleSheetList)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DocumentStyleSheetList,
+                                      nsIDOMStyleSheetList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
   DOM_CLASSINFO_MAP_END
 
@@ -1113,17 +1114,20 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(HTMLOptionCollection, nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(HTMLOptionCollection,
+                                      nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(HTMLFormControlCollection, nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(HTMLFormControlCollection,
+                                      nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(HTMLGenericCollection, nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(HTMLGenericCollection,
+                                      nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
   DOM_CLASSINFO_MAP_END
 
@@ -1394,6 +1398,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+
+  // This should be removed, there are no users of this class any more.
+
   DOM_CLASSINFO_MAP_BEGIN(HTMLTableColGroupElement, nsIDOMHTMLTableColElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableColElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
@@ -1457,7 +1464,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSMediaRule)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CSSNameSpaceRule, nsIDOMCSSRule)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSNameSpaceRule, nsIDOMCSSRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
   DOM_CLASSINFO_MAP_END
 
@@ -1465,7 +1472,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CSSGroupRuleRuleList, nsIDOMCSSRuleList)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSGroupRuleRuleList, nsIDOMCSSRuleList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
   DOM_CLASSINFO_MAP_END
 
@@ -1487,12 +1494,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSCSS2Properties)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ComputedCSSStyleDeclaration,
-                          nsIDOMCSSStyleDeclaration)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ComputedCSSStyleDeclaration,
+                                      nsIDOMCSSStyleDeclaration)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ROCSSPrimitiveValue, nsIDOMCSSPrimitiveValue)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ROCSSPrimitiveValue,
+                                      nsIDOMCSSPrimitiveValue)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
   DOM_CLASSINFO_MAP_END
 
@@ -1536,19 +1544,19 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandDispatcher)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(XULNodeList, nsIDOMNodeList)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULNodeList, nsIDOMNodeList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(XULNamedNodeMap, nsIDOMNamedNodeMap)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULNamedNodeMap, nsIDOMNamedNodeMap)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(XULAttr, nsIDOMAttr)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULAttr, nsIDOMAttr)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(XULControllers, nsIControllers)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULControllers, nsIControllers)
     DOM_CLASSINFO_MAP_ENTRY(nsIControllers)
   DOM_CLASSINFO_MAP_END
 
@@ -1594,7 +1602,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIXPathNodeSelector)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(NodeSet, nsIDOMNodeList)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(NodeSet, nsIDOMNodeList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
   DOM_CLASSINFO_MAP_END
 
@@ -1846,10 +1854,11 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
                            JSContext *cx, JSObject *obj)
 {
   static const nsIID *sSupportsIID = &NS_GET_IID(nsISupports);
+  const nsDOMClassInfoData &ci_data = sClassInfoData[mID];
 
   // This is safe because...
-  if (sClassInfoData[mID].mProtoChainInterface == sSupportsIID ||
-      !sClassInfoData[mID].mProtoChainInterface) {
+  if (ci_data.mProtoChainInterface == sSupportsIID ||
+      !ci_data.mProtoChainInterface) {
     return NS_OK;
   }
 
@@ -1873,19 +1882,27 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    dont_AddRef(XPTI_GetInterfaceInfoManager());
-  NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
+#ifdef DEBUG
+  if (ci_data.mHasClassInterface) {
+    nsCOMPtr<nsIInterfaceInfoManager> iim =
+      dont_AddRef(XPTI_GetInterfaceInfoManager());
+ 
+    if (iim) {
+      nsCOMPtr<nsIInterfaceInfo> if_info;
+      nsresult dbg_rv =
+        iim->GetInfoForIID(ci_data.mProtoChainInterface,
+                           getter_AddRefs(if_info));
 
-  nsCOMPtr<nsIInterfaceInfo> if_info;
-  nsXPIDLCString name;
+      if (if_info) {
+        nsXPIDLCString name;
+        if_info->GetName(getter_Copies(name));
 
-  nsresult rv = iim->GetInfoForIID(sClassInfoData[mID].mProtoChainInterface,
-                                   getter_AddRefs(if_info));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && if_info, NS_OK);
-
-  rv = if_info->GetName(getter_Copies(name));
-  NS_ENSURE_SUCCESS(rv, rv);
+        NS_ASSERTION(nsCRT::strcmp(CutPrefix(name), ci_data.mName) == 0,
+                     "Class name and proto chain interface name mismatch!");
+      }
+    }
+  }
+#endif
 
   JSObject *global = obj;
   JSObject *tmp;
@@ -1895,7 +1912,7 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   }
 
   jsval val;
-  if (!::JS_GetProperty(cx, global, CutPrefix(name), &val)) {
+  if (!::JS_GetProperty(cx, global, ci_data.mName, &val)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -2480,7 +2497,7 @@ GetInterfaceObject(JSContext *cx, JSObject *obj, const char *aName)
     return nsnull;
   }
 
-  if (!JSVAL_IS_OBJECT(components_val)) {
+  if (JSVAL_IS_PRIMITIVE(components_val)) {
     return nsnull;
   }
 
@@ -2491,7 +2508,7 @@ GetInterfaceObject(JSContext *cx, JSObject *obj, const char *aName)
     return nsnull;
   }
 
-  if (!JSVAL_IS_OBJECT(if_val)) {
+  if (JSVAL_IS_PRIMITIVE(if_val)) {
     return nsnull;
   }
 
@@ -2501,7 +2518,7 @@ GetInterfaceObject(JSContext *cx, JSObject *obj, const char *aName)
     return nsnull;
   }
 
-  if (!JSVAL_IS_OBJECT(val)) {
+  if (JSVAL_IS_PRIMITIVE(val)) {
     return nsnull;
   }
 
@@ -2596,6 +2613,7 @@ NativeConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return JS_TRUE;
 }
 
+// static
 nsresult
 nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
                           JSString *str, PRUint32 flags, PRBool *did_resolve)
@@ -2644,23 +2662,23 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsIID primary_iid = NS_GET_IID(nsISupports);
+    const nsIID *primary_iid = &NS_GET_IID(nsISupports);
 
     if (name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
-      primary_iid = name_struct->mIID;
+      primary_iid = &name_struct->mIID;
     } else if (name_struct->mDOMClassInfoID >= 0) {
       primary_iid =
-        *sClassInfoData[name_struct->mDOMClassInfoID].mProtoChainInterface;
+        sClassInfoData[name_struct->mDOMClassInfoID].mProtoChainInterface;
     }
 
-    NS_ABORT_IF_FALSE(!primary_iid.Equals(NS_GET_IID(nsISupports)),
+    NS_ABORT_IF_FALSE(!primary_iid->Equals(NS_GET_IID(nsISupports)),
                       "Class with nsISupports as primary IID seen in the "
                       "resolver");
 
-    nsXPIDLCString parent_if_name;
+    nsXPIDLCString class_parent_name;
 
-    if (!primary_iid.Equals(NS_GET_IID(nsISupports))) {
-      rv = DefineInterfaceConstants(cx, cfnc_obj, &primary_iid);
+    if (!primary_iid->Equals(NS_GET_IID(nsISupports))) {
+      rv = DefineInterfaceConstants(cx, cfnc_obj, primary_iid);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIInterfaceInfoManager> iim =
@@ -2668,20 +2686,45 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
       NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
 
       nsCOMPtr<nsIInterfaceInfo> if_info;
-      iim->GetInfoForIID(&primary_iid, getter_AddRefs(if_info));
+      iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
       NS_ENSURE_TRUE(if_info, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsIInterfaceInfo> parent;
-      if_info->GetParent(getter_AddRefs(parent));
-      NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+      const nsDOMClassInfoData *ci_data = nsnull;
 
+      if (name_struct->mDOMClassInfoID >= 0) {
+        ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
+      }
+
+      nsCOMPtr<nsIInterfaceInfo> parent;
       nsIID *iid = nsnull;
 
-      parent->GetIID(&iid);
+      if (ci_data && !ci_data->mHasClassInterface) {
+        if_info->GetIID(&iid);
+      } else {
+        if_info->GetParent(getter_AddRefs(parent));
+        NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+
+        parent->GetIID(&iid);
+      }
 
       if (iid) {
         if (!iid->Equals(NS_GET_IID(nsISupports))) {
-          parent->GetName(getter_Copies(parent_if_name));
+          if (ci_data && !ci_data->mHasClassInterface) {
+            // If the class doesn't have a class interface the primary
+            // interface is the interface that should be
+            // constructor.prototype.__proto__.
+
+            if_info->GetName(getter_Copies(class_parent_name));
+          } else {
+            // If the class does have a class interface (or there's no
+            // real class for this name) then the parent of the
+            // primary interface is what we want on
+            // constructor.prototype.__proto__.
+
+            NS_ASSERTION(parent, "Whoa, this is bad, null parent here!");
+
+            parent->GetName(getter_Copies(class_parent_name));
+          }
         }
 
         nsMemory::Free(iid);
@@ -2690,10 +2733,10 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
     JSObject *proto = nsnull;
 
-    if (parent_if_name) {
+    if (class_parent_name) {
       jsval val;
 
-      if (!::JS_GetProperty(cx, obj, CutPrefix(parent_if_name), &val)) {
+      if (!::JS_GetProperty(cx, obj, CutPrefix(class_parent_name), &val)) {
         return NS_ERROR_UNEXPECTED;
       }
 
