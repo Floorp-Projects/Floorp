@@ -1,5 +1,3 @@
-void *Mask;
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -77,9 +75,8 @@ PRLogModuleInfo *PhGfxLog = NULL;
 unsigned char   PhGfxLogState = 0;		/* 0 == Not Enabled */
 #include "nsPhGfxLog.h"
 
-#ifdef DEBUG_kirkj 
-#define ENABLE_PHOTON_FLUXING
-#endif
+/* Global Variable for Alpha Blending */
+void *Mask;
 
 #define SELECT(surf) if (surf->Select()) ApplyClipping(surf->GetGC());
 
@@ -223,6 +220,10 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
   }
   PgSetGC( mPtGC );
   PgSetRegion( mPtGC->rid );
+
+  if (mPhotonFontName)
+    delete [] mPhotonFontName;
+  
 }
 
 
@@ -774,16 +775,18 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont(nsIFontMetrics *aFontMetrics)
       delete [] mPhotonFontName;
 
     mPhotonFontName = pFontHandle->ToNewCString();
+
+	/* Cache the Font metrics locally, costs ~1400 bytes per font */
     PfLoadMetrics( mPhotonFontName );
 
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetFont with nsIFontMetrics Photon Font Name is <%s>\n", mPhotonFontName));
 
     PgSetFont( mPhotonFontName );
-	}
-	else
-	{
+  }
+  else
+  {
     PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetFont with nsIFontMetrics, INVALID Font Handle\n"));
-	}
+  }
 	
   return NS_OK;
 }
@@ -792,6 +795,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont(nsIFontMetrics *aFontMetrics)
 NS_IMETHODIMP nsRenderingContextPh :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetFontMetrics mFontMetrics=<%p>\n", mFontMetrics));
+
   NS_IF_ADDREF(mFontMetrics);
   aFontMetrics = mFontMetrics;
   return NS_OK;
@@ -802,13 +806,17 @@ NS_IMETHODIMP nsRenderingContextPh :: GetFontMetrics(nsIFontMetrics *&aFontMetri
 NS_IMETHODIMP nsRenderingContextPh :: Translate(nscoord aX, nscoord aY)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Translate (%i,%i)\n", aX, aY));
+
 //  printf("nsRenderingContextPh::Translate (%i,%i)\n", aX, aY);
+
 /*
-PtArg_t arg;
-PhPoint_t *pos;
-PtSetArg(&arg,Pt_ARG_POS,&pos,0);
-PtGetResources(mWidget,1,&arg);
+  PtArg_t arg;
+  PhPoint_t *pos;
+
+  PtSetArg(&arg,Pt_ARG_POS,&pos,0);
+  PtGetResources(mWidget,1,&arg);
 */
+
 //printf ("translate widget: %p %d %d\n",mWidget,pos->x,pos->y);
 //aX += pos->x*15;
 //aY += pos->y*15;
@@ -1324,20 +1332,13 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const PRUnichar *aString,
     ret_code = NS_ERROR_FAILURE;
   }  
 
-#if 1
-/**************************************************************/
-/* ---kirk this causes us to crash when placing the cursor --- */
-/* --- Don't know why!                                     --- */
-
-  /* What the heck? I copied this from Windows */
   if (nsnull != aFontID)
   {
     *aFontID = 0;
   }
   	
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6  aWidth=<%d> ret_code=<%d>\n", aWidth, ret_code));
-#endif
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6  aLength=<%d> aWidth=<%d> ret_code=<%d>\n", aLength, aWidth, ret_code));
 
   return ret_code;
 }
@@ -1375,7 +1376,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
     PhPoint_t pos = { x, y };
 
     SELECT(mSurface);
-    PgDrawText( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
+    PgDrawTextChars( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
   }
 
   return NS_OK;
@@ -1387,84 +1388,12 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)
 {
-#if 0
-  /* DEBUG!! */
-  char buffer[aLength*3];
-  int i,x;
-
-  for(i=0,x=0; i<aLength*2; i++)
-  {
-    if (*(aString+i) != NULL)
-	  buffer[x++] = *(aString+i);
-  }
-  
-  buffer[x] = NULL;
-#endif
-
-#if 0
-  nscoord X0 = aX;
-  nscoord Y0 = aY;
-
-  mTMatrix->TransformCoord(&X0,&Y0);
- 
-  PhPoint_t pos = { X0, Y0 };
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawString2 aString=<%s> of %d at (%d,%d) aSpacing=<%p>\n", (char *) buffer, aLength, pos.x, pos.y, aSpacing));
-
-  SELECT(mSurface);
-  PgDrawTextChars( (char *) aString, aLength, &pos, (Pg_TEXT_WIDECHAR | Pg_TEXT_LEFT | Pg_TEXT_TOP));
-  
-  return NS_OK;
-#endif
-
-#if 0
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawString2 first aString=<%s> of %d at (%d,%d) aSpacing=<%p>.\n",aString, aLength, aX, aY, aSpacing));
-
-  nscoord x = aX;
-  nscoord y = aY;
-
-  if (nsnull != aSpacing)
-  {
-    // Render the string, one character at a time...
-    const PRUnichar* end = aString + aLength;
-	while (aString < end)
-	{
-      unsigned char ch[2];
-	  memcpy(ch, aString++,2);
-	  unsigned char tmp;
-	  tmp=ch[0];
-	  ch[0]=ch[1];
-	  ch[1]=tmp;
-	  nscoord xx = x;
-	  nscoord yy = y;
-	  mTMatrix->TransformCoord(&xx, &yy);
-      PhPoint_t pos = { xx, yy };
-      SELECT(mSurface);
-      PgDrawText( (char *) ch, 1, &pos, (Pg_TEXT_WIDECHAR | Pg_TEXT_LEFT | Pg_TEXT_TOP));
-      x += *aSpacing++;
-    }
-  }
-  else
-  {
-    mTMatrix->TransformCoord(&x,&y);
-    PhPoint_t pos = { x, y };
-
-    SELECT(mSurface);
-    PgDrawText( (char *) aString, aLength, &pos, (Pg_TEXT_WIDECHAR | Pg_TEXT_LEFT | Pg_TEXT_TOP));
-  }
-
-  return NS_OK;
-
-#endif
-
-#if 1
   const int BUFFER_SIZE = (aLength * 3);
   char buffer[BUFFER_SIZE];
   int len;
   
   len = wcstombs(buffer, (wchar_t *) aString, BUFFER_SIZE);
   return DrawString( (char *) buffer, aLength, aX, aY, aSpacing);
-#endif
 }
 
 
@@ -1496,7 +1425,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
   SELECT(mSurface);
   res = aImage->Draw( *this, mSurface, x, y, w, h );
 
-Mask = aImage->GetAlphaBits();
+  Mask = aImage->GetAlphaBits();
   return res;
 }
 
@@ -1518,7 +1447,8 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
 
   SELECT(mSurface);
   res = aImage->Draw( *this, mSurface, x, y, w, h );
-Mask = aImage->GetAlphaBits();
+  Mask = aImage->GetAlphaBits();
+
   return res;
 }
 
@@ -1538,7 +1468,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, const nsRect& 
 
   SELECT(mSurface);
   res = aImage->Draw(*this,mSurface,sr.x,sr.y,sr.width,sr.height, dr.x,dr.y,dr.width,dr.height);
-Mask = aImage->GetAlphaBits();
+  Mask = aImage->GetAlphaBits();
 
   return res;
 }
@@ -1556,7 +1486,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, const nsRect& 
 
   SELECT(mSurface);
   res = aImage->Draw(*this,mSurface,tr.x,tr.y,tr.width,tr.height);
-Mask = aImage->GetAlphaBits();
+  Mask = aImage->GetAlphaBits();
 
   return res;
 }
