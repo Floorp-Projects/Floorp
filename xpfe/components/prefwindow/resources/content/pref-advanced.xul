@@ -77,19 +77,16 @@
         frame.setAttribute("hidden", "true");
         return;
       }
-      if (!("didCheckTurbo" in parent))
-        parent.didCheckTurbo = false;
       if (!("isTurboEnabled" in parent))
-        parent.isTurboEnabled = false;
-      if (parent.didCheckTurbo) {
+        parent.isTurboEnabled = -1;
+      else {
         document.getElementById("enableTurbo").checked = parent.isTurboEnabled;
         return;
       }
       var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
       if (winhooksService) {
-        var isTurbo = winhooksService.isStartupTurboEnabled();
-        document.getElementById("enableTurbo").checked = isTurbo;
-        parent.didCheckTurbo = true;
+        parent.isTurboEnabled = winhooksService.isStartupTurboEnabled();
+        document.getElementById("enableTurbo").checked = parent.isTurboEnabled;
       }
 
       parent.hPrefWindow.registerOKCallbackFunc( saveTurboSetting );
@@ -115,7 +112,7 @@
         return;   
 
       var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
-      if (winhooksService) {
+      if (winhooksService && parent.isTurboEnabled != -1) {
         if (parent.isTurboEnabled)
           winhooksService.startupTurboEnable();
         else 
