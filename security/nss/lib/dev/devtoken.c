@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.28 $ $Date: 2002/08/14 20:42:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.29 $ $Date: 2002/09/30 21:15:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -50,6 +50,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.28 $ $D
 #ifdef NSS_3_4_CODE
 #include "pk11func.h"
 #include "dev3hack.h"
+#include "secerr.h"
 #endif
 
 /* The number of object handles to grab during each call to C_FindObjects */
@@ -494,7 +495,7 @@ find_objects_by_template
   PRStatus *statusOpt
 )
 {
-    CK_OBJECT_CLASS objclass;
+    CK_OBJECT_CLASS objclass = (CK_OBJECT_CLASS)-1;
     nssCryptokiObject **objects = NULL;
     PRUint32 i;
     for (i=0; i<otsize; i++) {
@@ -504,6 +505,12 @@ find_objects_by_template
 	}
     }
     PR_ASSERT(i < otsize);
+    if (i == otsize) {
+#ifdef NSS_3_4_CODE
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+#endif
+	return NULL;
+    }
     /* If these objects are being cached, try looking there first */
     if (token->cache && 
         nssTokenObjectCache_HaveObjectClass(token->cache, objclass)) 
@@ -1110,13 +1117,14 @@ get_ck_trust
 {
     CK_TRUST t;
     switch (nssTrust) {
-    case nssTrustLevel_Unknown: t = CKT_NETSCAPE_TRUST_UNKNOWN; break;
     case nssTrustLevel_NotTrusted: t = CKT_NETSCAPE_UNTRUSTED; break;
     case nssTrustLevel_TrustedDelegator: t = CKT_NETSCAPE_TRUSTED_DELEGATOR; 
 	break;
     case nssTrustLevel_ValidDelegator: t = CKT_NETSCAPE_VALID_DELEGATOR; break;
     case nssTrustLevel_Trusted: t = CKT_NETSCAPE_TRUSTED; break;
     case nssTrustLevel_Valid: t = CKT_NETSCAPE_VALID; break;
+    case nssTrustLevel_Unknown:
+    default: t = CKT_NETSCAPE_TRUST_UNKNOWN; break;
     }
     return t;
 }
