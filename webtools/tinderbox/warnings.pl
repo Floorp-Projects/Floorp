@@ -232,11 +232,16 @@ sub build_file_hash {
 
     local $exclude_pat = join '|', @exclude_list; # Used in find_cvs_files
 
+    use Cwd;
+    my $save_dir = cwd;
+
     use File::Find;
     for my $include (@include_list) {
       $include .= ",v" unless -d "$cvs_root/$include";
       &find(\&find_cvs_files, "$cvs_root/$include"); 
     }
+
+    chdir $save_dir;
   }
   return \%bases, \%fullpath;
 }
