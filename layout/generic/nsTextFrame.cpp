@@ -484,7 +484,11 @@ public:
       aPresContext->GetMetricsFor(*plainFont, &mNormalFont);
       aRenderingContext.SetFont(mNormalFont);
       aRenderingContext.GetWidth(' ', mSpaceWidth);
+#ifdef _WIN32
       mNormalFont->GetAveCharWidth(mAveCharWidth);
+#else
+      mAveCharWidth = 0;
+#endif
       mLastFont = mNormalFont;
 
       // Get the small-caps font if needed
@@ -3278,6 +3282,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     // Estimate the number of characters we think will fit
     estimatedNumChars = (maxWidth - aTextData.mX) / aTs.mAveCharWidth;
     estimatedNumChars += estimatedNumChars / 20;
+#else
+    int unused = -1;
 #endif
   }
 
