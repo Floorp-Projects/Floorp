@@ -2491,7 +2491,17 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
     nsContentUtils::ReparentContentWrapper(newContent, this, mDocument,
                                            old_doc);
 
-    res = ReplaceChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+    if (aNewChild == aOldChild) {
+      // We're replacing a child with itself. In this case the child
+      // has already been removed from this element once we get here
+      // so we can't call ReplaceChildAt() (since aOldChild is no
+      // longer at oldPos). In stead we'll call InsertChildAt() to put
+      // the child back where it was.
+
+      res = InsertChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+    } else {
+      res = ReplaceChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+    }
 
     if (NS_FAILED(res)) {
       return res;
