@@ -94,8 +94,9 @@ nsIAtom * nsIEditProperty::th;
 nsIAtom * nsIEditProperty::caption;    
 nsIAtom * nsIEditProperty::col;        
 nsIAtom * nsIEditProperty::colgroup;   
-nsIAtom * nsIEditProperty::thead;      
-nsIAtom * nsIEditProperty::tfoot;      
+nsIAtom * nsIEditProperty::tbody;
+nsIAtom * nsIEditProperty::thead;
+nsIAtom * nsIEditProperty::tfoot;
 nsIAtom * nsIEditProperty::li;         
 nsIAtom * nsIEditProperty::dt;         
 nsIAtom * nsIEditProperty::dd;         
@@ -195,6 +196,7 @@ nsEditProperty::nsEditProperty()
   nsIEditProperty::caption    = NS_NewAtom("caption");
   nsIEditProperty::col        = NS_NewAtom("col");
   nsIEditProperty::colgroup   = NS_NewAtom("colgroup");
+  nsIEditProperty::tbody      = NS_NewAtom("tbody");
   nsIEditProperty::thead      = NS_NewAtom("thead");
   nsIEditProperty::tfoot      = NS_NewAtom("tfoot");
   nsIEditProperty::li         = NS_NewAtom("li");
@@ -274,6 +276,7 @@ nsEditProperty::~nsEditProperty()
   NS_IF_RELEASE(nsIEditProperty::caption);    
   NS_IF_RELEASE(nsIEditProperty::col);        
   NS_IF_RELEASE(nsIEditProperty::colgroup);   
+  NS_IF_RELEASE(nsIEditProperty::tbody);     
   NS_IF_RELEASE(nsIEditProperty::thead);     
   NS_IF_RELEASE(nsIEditProperty::tfoot);      
   NS_IF_RELEASE(nsIEditProperty::li);         

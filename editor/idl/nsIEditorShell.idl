@@ -337,6 +337,30 @@ interface nsIEditorShell : nsISupports
                               out PRInt32 actualRowSpan, out PRInt32 actualColSpan, 
                               out boolean isSelected);
   
+  /* Get the first row element in a table 
+     tableElement may be a table or any child element a table
+   */
+  nsIDOMElement GetFirstRow(in nsIDOMElement tableElement);
+
+  /* Get the next row element in a table after currentRow 
+   * currentRow may be a row or any child element of a row
+  */
+  nsIDOMElement GetNextRow(in nsIDOMElement currentRow);
+
+  /** Examine the current selection and find
+    *   a selected TABLE, TD or TH, or TR element.
+    *   or return the parent TD or TH if selection anchor is inside a table cell
+    *   Returns null if no table element is found.
+    *
+    * Returns:
+    *   The table element (table, row, or cell) found
+    *   tagName           The tagname of returned element
+    *                       Note that "td" will be returned if name is actually "th"
+    *   isSelected        Tells if element returned is a selected element 
+    *                       (false if element is a parent cell of selection)
+    */
+  nsIDOMElement GetSelectedOrParentTableElement(out wstring tagName, out boolean isSelected);
+
   /**** end of table editing *****/
 
   /* Get list of embedded objects, e.g. for mail compose */

@@ -30,7 +30,6 @@ install::
 	$(MAKE_INSTALL) EditorCommandsDebug.js     $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorInitPage.html        $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\content\default
-	$(MAKE_INSTALL) EditorStyles1.css          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorContent.css          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorOverride.css         $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) sidebar-editor.rdf         $(DIST)\bin\chrome\editor\content\default
@@ -53,7 +52,6 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorCommandsDebug.js	
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorInitPage.html 
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorInitPagePlain.html	
-  rm -f $(DIST)\bin\chrome\editor\content\default\EditorStyles1.css
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorContent.css
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorOverride.css
   rm -f $(DIST)\bin\chrome\editor\content\default\sidebar-editor.rdf

@@ -45,14 +45,14 @@
   <keyset id="keyset"/>
     <tabcontrol align="vertical">
 	    <tabbox align="horizontal" flex="100%">
-		    <tab>&generalTab.label;</tab>
-		    <tab>&backgroundTab.label;</tab>
-		    <tab>&metaTagsTab.label;</tab>
+		    <tab id="GeneralTab">&generalTab.label;</tab>
+		    <tab id="ColorTab">&backgroundTab.label;</tab>
+		    <tab id="MetaTab">&metaTagsTab.label;</tab>
 	    </tabbox>
  
-    	<tabpanel flex="100%">
-        <!-- general tab -->
-    		<box align="vertical">
+    	<tabpanel id="tabPanel" flex="100%">
+<!-- ***** general tab ***** -->
+    		<box id="panel1" align="vertical">
           <html:table>
             <html:tr>
               <html:td>
@@ -97,85 +97,127 @@
           </html:table>
         </box>
   
-        <!-- colors/background tab -->
-    		<box align="vertical">
+<!-- **** colors/background tab **** -->
+    		<box id="panel2" align="vertical">
           <html:fieldset><html:legend class = "dialog" align = "left">&pageColors.label;</html:legend>
-            <html:input type="radio" name="ColorMode" id="DefaultColorsRadio"/>
-            <html:label for="DefaultColorsRadio">&defaultColorsRadio.label;</html:label>
-            <html:br/>
-            <html:input type="radio" name="ColorMode" id="CustomColorsRadio"/>
-            <html:label for="CustomColorsRadio">&customColorsRadio.label;</html:label>
-            <html:br/>
-            <html:div>
-              <html:label for="ColorScheme">&colorScheme.label;</html:label>
-              <!-- TODO: COLOR SCHEME SELECT LIST -->
-            </html:div>
-            <html:br/>
-            <box align="horizontal" flex="100%">
-              <box align="vertical" flex="100%">
-                <html:div class="middle-align">
-                  <titledbutton class="color-well" id="textCW" popup="textPopup"/>
-                  <titledbutton value="&normalText.label;" class="push dialog popup" align="right" popup="textPopup"/>
-                </html:div>
-                <html:div class="middle-align">
-                  <titledbutton class="color-well" id="linkCW" popup="linkPopup"/>
-                  <titledbutton value="&linkText.label;" class="push dialog popup" align="right" popup="linkPopup"/>
-                </html:div>
-                <html:div class="middle-align">
-                  <titledbutton class="color-well" id="activeCW" popup="activePopup"/>
-                  <titledbutton value="&activeLinkText.label;" class="push dialog popup" align="right" popup="activePopup"/>
-                </html:div>
-                <html:div class="middle-align">
-                  <titledbutton class="color-well" id="followedCW" popup="followedPopup"/>
-                  <titledbutton value="&followedLinkText.label;" class="push dialog popup" align="right" popup="followedPopup"/>
-                </html:div>
-                <html:div class="middle-align">
-                  <titledbutton class="color-well" id="backgroundCW" popup="backgroundPopup"/>
-                  <titledbutton value="&background.label;" class="push dialog popup" align="right" popup="backgroundPopup"/>
-                </html:div>
+          <html:input type="radio" name="ColorMode" id="DefaultColorsRadio"/>
+          <html:label for="DefaultColorsRadio">&defaultColorsRadio.label;</html:label>
+          <html:br/>
+          <html:input type="radio" name="ColorMode" id="CustomColorsRadio"/>
+          <html:label for="CustomColorsRadio">&customColorsRadio.label;</html:label>
+          <html:br/>
+          <html:div>
+          <spring class="bigspacer"/>
+          <box flex="1">
+            <html:label> &colorScheme.label; 
+            <html:select id="ColorScheme" size="1" style="min-width: 10em">
+              <html:option> Black on White </html:option>
+              <html:option> Blue on White  </html:option>
+              <html:option> White on Black </html:option>
+            </html:select>
+            </html:label>
+          </box>
+          <!-- TODO: COLOR SCHEME SELECT LIST -->
+          </html:div>
+          <spring class="bigspacer"/>
+    	    <box align="horizontal">
+            <spring class="bigspacer"/>
+            <box align="vertical" flex="100%">
+              <box>
+                <html:label class="margin-both"> &normalText.label; </html:label>
+                <spring flex="100%"/>
+                <menu class="colorpicker">
+    	            <html:div id="textCW" class="color-well"/>
+    	            <titledbutton class="popup" align="right" flex="100%" onclick="GetColor('textCP','textCW');"/>
+    	            <menupopup id="normalMenuPopup">
+                    <colorpicker id="textCP" palettename="standard" onclick="GetColor('textCP','textCW');"/>
+                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="GetColor('textCP','textCW');"/>
+    	            </menupopup>
+                </menu>
               </box>
-              <!-- SAMPLE WINDOW -->
-              <div id="TextSampleWindow"/>
+              <spring class="spacer"/>
+              <box>
+                <html:label class="margin-both"> &linkText.label; </html:label>
+                <spring flex="100%"/>
+                <menu class="colorpicker">
+    	            <html:div id="linkCW" class="color-well"/>
+    	            <titledbutton class="popup" align="right" flex="100%"/>
+    	            <menupopup>
+                    <colorpicker id="linkCP" palettename="standard" onclick="GetColor('linkCP','linkCW');"/>
+                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('linkCW');"/>
+    	            </menupopup>
+                </menu>
+              </box>
+              <spring class="spacer"/>
+              <box>
+                <html:label class="margin-both"> &activeLinkText.label; </html:label>
+                <spring flex="100%"/>
+                <menu class="colorpicker">
+    	            <html:div id="activeCW" class="color-well"/>
+    	            <titledbutton class="popup" align="right" flex="100%"/>
+    	            <menupopup>
+                    <colorpicker id="activeCP" palettename="standard" onclick="GetColor('activeCP','activeCW');"/>
+                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('activeCW');"/>
+    	            </menupopup>
+                </menu>
+              </box>
+              <spring class="spacer"/>
+              <box>
+                <html:label class="margin-both"> &followedLinkText.label; </html:label>
+                <spring flex="100%"/>
+                <menu class="colorpicker">
+    	            <html:div id="followedCW" class="color-well"/>
+    	            <titledbutton class="popup" align="right" flex="100%"/>
+    	            <menupopup>
+                    <colorpicker id="followedCP" palettename="standard" onclick="GetColor('followedCP','followedCW');"/>
+                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('followedCW');"/>
+    	            </menupopup>
+                </menu>
+              </box>
+              <spring class="spacer"/>
+              <box>
+                <html:label class="margin-both"> &background.label; </html:label>
+                <spring flex="100%"/>
+                <menu class="colorpicker">
+    	            <html:div id="backgroundCW" class="color-well"/>
+    	            <titledbutton class="popup" align="right" flex="100%"/>
+    	            <menupopup>
+                    <colorpicker id="backgroundCP" palettename="standard" onclick="GetColor('backgroundCP','backgroundCW');"/>
+                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('backgroundCW');"/>
+    	            </menupopup>
+                </menu>
+              </box>
             </box>
+            <spring class="bigspacer"/>
+            <box align="vertical" flex="100%" id="ColorPreview">
+               <!-- basestyle="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; " style="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; "-->
+              <html:div id="NormalText">&normalText.label;</html:div>
+              <spring class="spacer"/>
+              <html:div id="LinkText">&linkText.label;</html:div>
+              <spring class="spacer"/>
+              <html:div id="ActiveLinkText">&activeLinkText.label;</html:div>
+              <spring class="spacer"/>
+              <html:div id="FollowedLinkText">&followedLinkText.label;</html:div>
+            </box>
+          </box>
           </html:fieldset>
           <box align="horizontal">
             <html:input type="checkbox" id="BackgroundImageCheckbox"/>
-            <html:label for="BackgroundImageCheckbox">
-              &backgroundImage.label;
-            </html:label>
+            <html:label for="BackgroundImageCheckbox"> &backgroundImage.label; </html:label>
           </box>
           <box align="horizontal">
-            <html:input type="text" id="BackgroundImageInput" size="10"/>
+            <html:input type="text" class="SizeToParent" id="BackgroundImageInput" size="20"/>
             <spring class="spacer"/>
             <!-- from EdDialogOverlay.xul -->
             <titledbutton id="ChooseFile"/>
           </box>
         </box> <!-- end of colors tab -->
 
-        <!-- meta tags tab -->
-    		<box align="vertical">
+<!-- **** meta tags tab **** -->
+    		<box id="panel3" align="vertical">
         </box>
     	</tabpanel> 
     </tabcontrol>
-    <html:div class="separator" align="horizontal"/>
     <box id="okCancelButtons"/> 
-
-<popupset>
-  <popup id="textPopup">
-    <colorpicker id="textCP" palettename="standard" onclick="getColor('textCP', 'textCW'); parentNode.closePopup();"/>
-  </popup>
-  <popup id="linkPopup">
-    <colorpicker id="linkCP" palettename="standard" onclick="getColor('linkCP', 'linkCW'); parentNode.closePopup();"/>
-  </popup>
-  <popup id="activePopup">
-    <colorpicker id="activeCP" palettename="standard" onclick="getColor('activeCP', 'activeCW'); parentNode.closePopup();"/>
-  </popup>
-  <popup id="followedPopup">
-    <colorpicker id="followedCP" palettename="standard" onclick="getColor('followedCP', 'followedCW'); parentNode.closePopup();"/>
-  </popup>
-  <popup id="backgroundPopup">
-    <colorpicker id="backgroundCP" palettename="standard" onclick="getColor('backgroundCP', 'backgroundCW'); parentNode.closePopup();"/>
-  </popup>
-</popupset>
 
 </window>

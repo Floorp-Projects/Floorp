@@ -32,11 +32,12 @@
 <!ENTITY descriptionInput.label "Description">
 <!ENTITY pageColors.label "Page Colors">
 <!ENTITY defaultColorsRadio.label "Don't specify colors">
-<!ENTITY customColorsRadio.label "Use custom colors">
-<!ENTITY colorScheme.label "Color Schemes">
-<!ENTITY normalText.label "Normal text">
-<!ENTITY linkText.label "Link text">
-<!ENTITY activeLinkText.label "Active link text">
-<!ENTITY followedLinkText.label "Followed link text">
-<!ENTITY background.label "Background">
-<!ENTITY backgroundImage.label "Background Image">
+<!ENTITY customColorsRadio.label "Use custom colors:">
+<!ENTITY colorScheme.label "Color Schemes:">
+<!ENTITY normalText.label "Normal text:">
+<!ENTITY linkText.label "Link text:">
+<!ENTITY activeLinkText.label "Active link text:">
+<!ENTITY followedLinkText.label "Followed link text:">
+<!ENTITY background.label "Background:">
+<!ENTITY backgroundImage.label "Background Image:">
+<!ENTITY colorPicker.default.label "Don't Specify Color">

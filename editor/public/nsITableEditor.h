@@ -93,6 +93,9 @@ public:
     *   a collection of cells that extend past the
     *   previous size of the table
     * If aTable is null, it uses table enclosing the selection anchor
+    * This doesn't doesn't change the selection,
+    *   thus it can be used to fixup all tables
+    *   in a page independant of the selection
     */
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable)=0;
 
@@ -156,7 +159,28 @@ public:
                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan, 
                            PRBool& aIsSelected)=0;
 
+  /** Get the first row element in a table
+    *
+    * @param aTableElement Any TABLE or child-of-table element in the document
+    * @param aRowIndex     The 0-based index of the row
+    *
+    * Returns:
+    * @param aRow        The row at the requested index
+    *                    Returns null if there are no rows in table
+    */
+  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)=0;
 
+  /** Get the next row element starting the search from aTableElement
+    *
+    * @param aTableElement Any TR or child-of-TR element in the document
+    *
+    * Returns:
+    * @param aRow        The row to start search from
+    *                    and the row returned from the search
+    *                    Returns null if there isn't another row
+    */
+  NS_IMETHOD GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)=0;
+  
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
     * a table editing action. 
@@ -196,7 +220,7 @@ public:
     * @param aIsSelected        Tells if element returned is a selected element 
     *                           (false if element is a parent cell of selection)
     */
-  NS_IMETHOD GetSelectedOrParentTableElement(nsCOMPtr<nsIDOMElement> &aTableElement, nsString& aTagName, PRBool &aIsSelected)=0;
+  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRBool &aIsSelected)=0;
 
 };
 

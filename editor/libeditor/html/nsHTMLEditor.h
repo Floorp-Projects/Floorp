@@ -190,8 +190,10 @@ public:
                            PRInt32& aRowSpan, PRInt32& aColSpan, 
                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan, 
                            PRBool& aIsSelected);
+  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
+  NS_IMETHOD GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
   NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, PRInt32 aDirection);
-  NS_IMETHOD GetSelectedOrParentTableElement(nsCOMPtr<nsIDOMElement> &aTableElement, nsString& aTagName, PRBool &aIsSelected);
+  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRBool &aIsSelected);
     
 
 // Selection and navigation
@@ -321,14 +323,20 @@ protected:
 
   // Table utilities
 
-  NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan, PRBool aAfter);
+  // Insert a new cell after or before supplied aCell. 
+  //  Optional: If aNewCell supplied, returns the newly-created cell (addref'd, of course)
+  // This doesn't change or use the current selection
+  NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan,
+                        PRBool aAfter, nsIDOMElement **aNewCell);
   NS_IMETHOD DeleteTable(nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMSelection> &aSelection);
+  NS_IMETHOD SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan);
+  NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan);
+
   // Helper used to get nsITableLayout interface for methods implemented in nsTableFrame
   NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
   // Needed to do appropriate deleting when last cell or row is about to be deleted
   // This doesn't count cells that don't start in the given row (are spanning from row above)
   PRInt32  GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex);
-  nsresult GetRowAt(nsCOMPtr<nsIDOMElement> &aTable, PRInt32 rowIndex, nsCOMPtr<nsIDOMElement> &aRow);
   
   // Most insert methods need to get the same basic context data
   NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,

@@ -2990,7 +2990,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
   nsCOMPtr<nsIDOMElement> element;
   PRBool isSelected;
   nsAutoString tagName;
-  nsresult res = GetSelectedOrParentTableElement(element, tagName, isSelected);
+  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, isSelected);
   if (NS_FAILED(res)) return res;
   if (!element)
   {
@@ -5570,66 +5570,71 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
   if (aElement && IsElementInBody(aElement))
   {
     nsresult res = NS_OK;
-    nsAutoString tagName;
-    aElement->GetNodeName(tagName);
-    tagName.ToLowerCase();
-    if (tagName == "table" || tagName == "tr" || 
-        tagName == "td"    || tagName == "th" ||
-        tagName == "thead" || tagName == "tfoot" ||
-        tagName == "tbody" || tagName == "caption")
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+    if (content)
     {
-      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-      nsCOMPtr<nsIDOMNode> parent;
-      // This MUST succeed if IsElementInBody was TRUE
-      node->GetParentNode(getter_AddRefs(parent));
-      nsCOMPtr<nsIDOMNode>firstChild;
-      // Find deepest child
-      PRBool hasChild;
-      while (NS_SUCCEEDED(node->HasChildNodes(&hasChild)) && hasChild)
+      nsCOMPtr<nsIAtom> atom;
+      content->GetTag(*getter_AddRefs(atom));
+      if (atom.get() == nsIEditProperty::table ||
+          atom.get() == nsIEditProperty::tbody ||
+          atom.get() == nsIEditProperty::thead ||
+          atom.get() == nsIEditProperty::tfoot ||
+          atom.get() == nsIEditProperty::caption ||
+          atom.get() == nsIEditProperty::tr ||
+          atom.get() == nsIEditProperty::td )
       {
-        if (NS_SUCCEEDED(node->GetFirstChild(getter_AddRefs(firstChild))))
+        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+        nsCOMPtr<nsIDOMNode> parent;
+        // This MUST succeed if IsElementInBody was TRUE
+        node->GetParentNode(getter_AddRefs(parent));
+        nsCOMPtr<nsIDOMNode>firstChild;
+        // Find deepest child
+        PRBool hasChild;
+        while (NS_SUCCEEDED(node->HasChildNodes(&hasChild)) && hasChild)
         {
-          parent = node;
-          node = firstChild;
+          if (NS_SUCCEEDED(node->GetFirstChild(getter_AddRefs(firstChild))))
+          {
+            parent = node;
+            node = firstChild;
+          }
         }
-      }
 # if 0 
 // I've ifdef'd this out because it isn't finished and I'm not sure what the intent is.
-      PRInt32 offset = 0;
-      nsCOMPtr<nsIDOMNode>lastChild;
-      res = parent->GetLastChild(getter_AddRefs(lastChild));
-      if (NS_SUCCEEDED(res) && lastChild && node != lastChild)
-      {
-        if (node == lastChild)
+        PRInt32 offset = 0;
+        nsCOMPtr<nsIDOMNode>lastChild;
+        res = parent->GetLastChild(getter_AddRefs(lastChild));
+        if (NS_SUCCEEDED(res) && lastChild && node != lastChild)
         {
-          // Check if node is text and has more than just a &nbsp
-          nsCOMPtr<nsIDOMCharacterData>textNode = do_QueryInterface(node);
-          nsAutoString text;
-          PRUnichar nbspStr[2] = {nbsp, 0};
-          if (textNode && textNode->GetData(text))
+          if (node == lastChild)
           {
-            // Set selection relative to the text node
-            parent = node;
-            PRInt32 len = text.Length();
-            if (len > 1 || text != nbspStr)
+            // Check if node is text and has more than just a &nbsp
+            nsCOMPtr<nsIDOMCharacterData>textNode = do_QueryInterface(node);
+            nsAutoString text;
+            PRUnichar nbspStr[2] = {nbsp, 0};
+            if (textNode && textNode->GetData(text))
             {
-              offset = len;
+              // Set selection relative to the text node
+              parent = node;
+              PRInt32 len = text.Length();
+              if (len > 1 || text != nbspStr)
+              {
+                offset = len;
+              }
             }
+          } else {
+            // We have > 1 node, so set to end of content
           }
-        } else {
-          // We have > 1 node, so set to end of content
         }
-      }
 #endif
-      // Set selection at beginning of deepest node
-      // Should we set 
-      nsCOMPtr<nsIDOMSelection> selection;
-      res = GetSelection(getter_AddRefs(selection));
-      if (NS_SUCCEEDED(res) && selection && firstChild)
-      {
-        res = selection->Collapse(firstChild, 0);
-        if (NS_SUCCEEDED(res))
-          caretIsSet = PR_TRUE;
+        // Set selection at beginning of deepest node
+        nsCOMPtr<nsIDOMSelection> selection;
+        res = GetSelection(getter_AddRefs(selection));
+        if (NS_SUCCEEDED(res) && selection && firstChild)
+        {
+          res = selection->Collapse(firstChild, 0);
+          if (NS_SUCCEEDED(res))
+            caretIsSet = PR_TRUE;
+        }
       }
     }
   }

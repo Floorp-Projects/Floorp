@@ -101,7 +101,7 @@
 <!ENTITY showFormattingToolbarCmd.label ".Show Format Toolbar">
 <!ENTITY showTaskbarCmd.label "Show Taskbar">  
 <!ENTITY showTaskbarCmd.accesskey "t"> 
-<!ENTITY viewPageSource.label "View Page Source">
+<!ENTITY viewPageSource.label "Page Source">
 <!ENTITY viewpagesource.accesskey "s">
 
 
@@ -374,8 +374,6 @@
 <!-- Style Sheet submenu -->
 <!ENTITY stylesheetMenu.label "Apply Style Sheet">
 <!ENTITY formatstylesheetmenu.accesskey "e">
-<!ENTITY stylesheetEditorOneCmd.label "Editor Styles 1">
-<!ENTITY sseditor1.accesskey "1">
 <!ENTITY stylesheetOldstyleCmd.label "Oldstyle">
 <!ENTITY ssoldstyle.accesskey "o">
 <!ENTITY stylesheetModernistCmd.label "Modernist">
@@ -445,7 +443,9 @@
 <!ENTITY tableDeleteMenu.label "Delete">
 <!ENTITY tabledeletemenu.accesskey "d">
 
-<!ENTITY tableJoinCells.label ".Join Cells">
+<!ENTITY tableFixup.label "Fixup table layout">
+<!ENTITY tablefixup.accesskey "f">
+<!ENTITY tableJoinCells.label "Join Cells">
 <!ENTITY tablejoin.accesskey "j">
 <!-- These may be shared in other menus -->
 <!ENTITY properties.label "Properties...">
@@ -505,6 +505,7 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
+<!ENTITY formatToolbar.colorPicker.default.label "Don't Specify Color">
 
 <!ENTITY tempNotification.label "[status message]">
 <!ENTITY tempDoneLoading.label "[Document loading message]">

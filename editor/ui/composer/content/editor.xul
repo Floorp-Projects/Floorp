@@ -81,8 +81,8 @@
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
 
-      <!-- menuseparator /> Put this back when it works.
-      <menuitem id="viewSourceMenuitem"/ -->
+      <menuseparator/>
+      <menuitem id="viewSourceMenuitem"/>
       <menuseparator />
       <menu id="charsetMenu"/>
       <menu id="charsetMenu1"/>
