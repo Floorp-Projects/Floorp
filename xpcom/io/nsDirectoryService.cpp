@@ -252,30 +252,28 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
     if (moz5)
     {
-        localFile->InitWithNativePath(nsDependentCString(moz5));
-        localFile->Normalize();
-        *aFile = localFile;
-        return NS_OK;
-    }
-    else
-    {
-#if defined(DEBUG)
-        static PRBool firstWarning = PR_TRUE;
-
-        if(firstWarning) {
-            // Warn that MOZILLA_FIVE_HOME not set, once.
-            printf("Warning: MOZILLA_FIVE_HOME not set.\n");
-            firstWarning = PR_FALSE;
-        }
-#endif /* DEBUG */
-
-        // Fall back to current directory.
-        if (getcwd(buf, sizeof(buf)))
-        {
+        if (realpath(moz5, buf)) {
             localFile->InitWithNativePath(nsDependentCString(buf));
             *aFile = localFile;
             return NS_OK;
         }
+    }
+#if defined(DEBUG)
+    static PRBool firstWarning = PR_TRUE;
+
+    if(!moz5 && firstWarning) {
+        // Warn that MOZILLA_FIVE_HOME not set, once.
+        printf("Warning: MOZILLA_FIVE_HOME not set.\n");
+        firstWarning = PR_FALSE;
+    }
+#endif /* DEBUG */
+
+    // Fall back to current directory.
+    if (getcwd(buf, sizeof(buf)))
+    {
+        localFile->InitWithNativePath(nsDependentCString(buf));
+        *aFile = localFile;
+        return NS_OK;
     }
 
 #elif defined(XP_OS2)
