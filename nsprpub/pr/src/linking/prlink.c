@@ -54,7 +54,8 @@
 /*
  * On these platforms, symbols have a leading '_'.
  */
-#if defined(SUNOS4) || defined(RHAPSODY) || defined(NEXTSTEP) || defined(WIN16)
+#if defined(SUNOS4) || defined(RHAPSODY) || defined(NEXTSTEP) \
+    || defined(WIN16) || defined(OPENBSD)
 #define NEED_LEADING_UNDERSCORE
 #endif
 
