@@ -1420,7 +1420,7 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 
 			err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
 			// is this right? Mork is returning a 0 id, but that should valid.
-			if (outPos < 0 || outOid.mOid_Scope == 0)	
+			if (outPos < 0 || outOid.mOid_Id == -1)	
 				break;
 			if (err == NS_OK)
 				outputKeys.Add(outOid.mOid_Id);
