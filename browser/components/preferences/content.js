@@ -121,12 +121,6 @@ var gContentPane = {
     return (pref.value == 1);
   },
   
-  showAdvancedScript: function ()
-  {
-    openDialog("chrome://browser/content/preferences/advancedScript.xul", 
-               "", "chrome,modal");
-  },
-
   _exceptionsParams: {
     install: { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "install", },
     popup:   { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "popup"   },
