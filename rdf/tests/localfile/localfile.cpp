@@ -18,11 +18,17 @@
 
 /*
 
-  This is a test script that uses the <tt>nsStreamDataSource</tt>
-  class to read a file from the local file system (using a "file:"
-  URL) and write it back. The idea is that the RDF that gets written
-  out should be equivalent (but not necessarily identical) to the RDF
-  that was read in.
+  This is a test script that uses the nsStreamDataSource class to read
+  a file from the local file system (using a "file:" URL) and write it
+  back. The idea is that the RDF that gets written out should be
+  equivalent (but not necessarily identical) to the RDF that was read
+  in.
+
+  Currently, the nsFileSpec stuff is _really_ sensitive to Win32 file
+  names: be sure to use a file URL that looks like
+  "file://G:/tmp/foo.rdf"; that is, two forward-slashes after the
+  "file:", a drive letter specification with a colon (not a pipe), and
+  forward-slashes in the path.
 
  */
 
