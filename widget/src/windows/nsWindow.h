@@ -308,6 +308,7 @@ protected:
     static BOOL sIsRegistered;
 
     HDWP mDeferredPositioner;
+    static UINT uMSH_MOUSEWHEEL;
 };
 
 //
