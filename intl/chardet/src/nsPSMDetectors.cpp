@@ -413,7 +413,7 @@ nsXPCOMStringDetector::~nsXPCOMStringDetector()
   PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
-MY_NS_IMPL_ISUPPORTS(nsXPCOMStringDetector,nsIStringCharsetDetector::GetIID(), nsICharsetDetector)
+MY_NS_IMPL_ISUPPORTS(nsXPCOMStringDetector,nsIStringCharsetDetector::GetIID(), nsIStringCharsetDetector)
 //----------------------------------------------------------
 void nsXPCOMStringDetector::Report(const char* charset)
 {
