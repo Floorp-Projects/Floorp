@@ -221,8 +221,14 @@
               <menuitem id="defaultResolution" value="96"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-              <menuitem id="systemResolution" value="0" label="&resolution.system.label;"/>
+#define SYSTEMRESOLUTION
 #endif
+#endif
+#ifdef XP_OS2
+#define SYSTEMRESOLUTION
+#endif
+#ifdef SYSTEMRESOLUTION
+              <menuitem id="systemResolution" value="0" label="&resolution.system.label;"/>
 #endif
               <menuseparator id="resolutionSeparator"/>
               <menuitem id="userResolution" hidden="true"/>
