@@ -281,54 +281,52 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
 // XXX check against other possible values and update
 static PRBool
 GetStyleDimension(nsIPresContext* aPresContext,
-                  nsIFrame* aFrame,
+                  const nsReflowState& aReflowState,
                   nsStylePosition* aStylePos,
                   nsStyleCoord& aCoord,
                   nscoord& aResult)
 {
-  nsIFrame* parentFrame;
   PRBool rv = PR_FALSE;
 
-  switch (aCoord.GetUnit()) {
-  case eStyleUnit_Coord:
+  PRIntn unit = aCoord.GetUnit();
+  if (eStyleUnit_Coord == unit) {
     aResult = aCoord.GetCoordValue();
     rv = PR_TRUE;
-    break;
-
-  case eStyleUnit_Percent:
+  }
+  else if (eStyleUnit_Percent == unit) {
     // CSS2 has specified that percentage width/height values are basd
     // on the containing block's <B>width</B>.
     // XXX need to subtract out padding, also this needs
     // to be synced with nsFrame's IsPercentageBase
-    // XXX should this be geometric parent
-    aFrame->GetContentParent(parentFrame);
-    while (nsnull != parentFrame) {
-      nsBlockFrame* block;
-      nsresult status =
-        parentFrame->QueryInterface(kBlockFrameCID, (void**) &block);
-      if (NS_OK == status) {
-        nsRect blockRect;
-        block->GetRect(blockRect);
-        aResult = nscoord(blockRect.width * aCoord.GetPercentValue());
+    const nsReflowState* rs = &aReflowState;
+    while (nsnull != rs) {
+      nsIFrame* block = nsnull;
+      rs->frame->QueryInterface(kBlockFrameCID, (void**) &block);
+      if (nsnull != block) {
+        // We found the nearest containing block which defines what a
+        // percentage size is relative to. Use the width that it will
+        // reflow to as the basis for computing our width.
+        aResult = nscoord(rs->maxSize.width * aCoord.GetPercentValue());
         rv = PR_TRUE;
         break;
       }
-      parentFrame->GetContentParent(parentFrame);
+      rs = rs->parentReflowState;
     }
-    break;
-  default:
+  }
+  else {
     aResult = 0;
   }
-  if (aResult < 0) {
+
+  // Negative width's are ignored
+  if (aResult <= 0) {
     rv = PR_FALSE;
   }
-
   return rv;
 }
 
 PRIntn
 nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
-                          nsIFrame* aFrame,
+                          const nsReflowState& aReflowState,
                           nsSize& aStyleSize)
 {
   // XXX if display == row || rowspan ignore width
@@ -336,15 +334,15 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
 
   PRIntn rv = NS_SIZE_HAS_NONE;
   nsIStyleContext* sc = nsnull;
-  aFrame->GetStyleContext(aPresContext, sc);
+  aReflowState.frame->GetStyleContext(aPresContext, sc);
   if (nsnull != sc) {
     nsStylePosition* pos = (nsStylePosition*)
       sc->GetData(eStyleStruct_Position);
-    if (GetStyleDimension(aPresContext, aFrame, pos, pos->mWidth,
+    if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mWidth,
                           aStyleSize.width)) {
       rv |= NS_SIZE_HAS_WIDTH;
     }
-    if (GetStyleDimension(aPresContext, aFrame, pos, pos->mHeight,
+    if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mHeight,
                           aStyleSize.height)) {
       rv |= NS_SIZE_HAS_HEIGHT;
     }
