@@ -778,17 +778,8 @@
               this.mProgressListeners = new Array();
               const autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               const forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
-              if (!autoHide && !forceHide) {
+              if (!autoHide && !forceHide)
                 this.setStripVisibilityTo(true);
-                
-                this.mTabbedMode = true;
-                this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-
-                // Wire up a progress listener to our tab.
-                var listener = (this.mTabProgressListener)(this, this.mCurrentTab);
-                this.webProgress.addProgressListener(listener, aMask);
-                this.mTabListeners[0] = listener;
-              }
 
               // Hook up a listener for <link>s.
               this.mPanelContainer.addEventListener("DOMLinkAdded", this.onLinkAdded, false);
