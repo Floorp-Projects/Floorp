@@ -5,7 +5,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  			onConstruction="Startup()">
+  			onConstruction="StartUp()">
   <html:style>
 	  #toolbar {
         position: fixed;
@@ -167,20 +167,20 @@ function OpenURL(url)
 	</toolbox>
 </html:div>
 
-<html:div html:id="thread">
-<html:iframe html:align=right html:src="threadPane.xul" html:name="browser.foo" html:width="650" html:height="370" > </html:iframe>
+<html:div id="thread">
+<html:iframe align=right src="threadPane.xul" name="browser.foo" width="650" height="370" > </html:iframe>
 </html:div>
 
-<html:div html:id="message">
-<html:iframe html:align=right html:src="message.html" html:name="browser.webwindow" html:width="650" html:height="370" > </html:iframe>
+<html:div id="message">
+<html:iframe align=right src="message.html" name="browser.webwindow" width="650" height="370" > </html:iframe>
 </html:div>
 
-<html:div html:id="folder">
-<html:iframe html:src="folderPane.xul" html:name="browser.sidebar" html:width="340" html:height="740"></html:iframe>
+<html:div id="folder">
+<html:iframe src="folderPane.xul" name="browser.sidebar" width="340" height="740"></html:iframe>
 </html:div>
 
-<html:div html:id="footer">
-<html:iframe html:src="status.html" html:name="browser.status" html:width="100%" html:height="34" > </html:iframe>
+<html:div id="footer">
+<html:iframe src="status.html" name="browser.status" width="100%" height="34" > </html:iframe>
 </html:div>
 
 </window>
