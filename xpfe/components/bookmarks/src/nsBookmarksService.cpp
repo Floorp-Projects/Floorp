@@ -1533,7 +1533,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult GetBookmarksFile(nsFileSpec* aResult);
 	nsresult WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root);
-	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level);
+	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level, nsISupportsArray *parentArray);
 	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
 	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *node,
@@ -3802,6 +3802,10 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 	if (NS_FAILED(rv))
 	    return NS_OK;
 
+	nsCOMPtr<nsISupportsArray>	parentArray;
+	if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(parentArray))))
+		return(rv);
+
 	rv = NS_ERROR_FAILURE;
 	nsOutputFileStream	strm(bookmarksFile);
 	if (strm.is_open())
@@ -3816,8 +3820,8 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 
 		strm << "<TITLE>Bookmarks</TITLE>\n";
 		strm << "<H1>Bookmarks</H1>\n\n";
-		
-		rv = WriteBookmarksContainer(ds, strm, root, 0);
+
+		rv = WriteBookmarksContainer(ds, strm, root, 0, parentArray);
 		mDirty = PR_FALSE;
 	}
 	return(rv);
@@ -3826,25 +3830,30 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 
 
 nsresult
-nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *parent, PRInt32 level)
+nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm,
+			nsIRDFResource *parent, PRInt32 level, nsISupportsArray *parentArray)
 {
 	nsresult	rv = NS_OK;
-
-	nsAutoString	indentationString("");
-	for (PRInt32 loop=0; loop<level; loop++)	indentationString += "    ";
-	char		*indentation = indentationString.ToNewCString();
-	if (nsnull == indentation)	return(NS_ERROR_OUT_OF_MEMORY);
 
 	nsCOMPtr<nsIRDFContainer> container;
 	rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
 		NS_GET_IID(nsIRDFContainer), getter_AddRefs(container));
 	if (NS_FAILED(rv)) return rv;
 
+	nsAutoString	indentationString("");
+	for (PRInt32 loop=0; loop<level; loop++)	indentationString += "    ";
+	char		*indentation = indentationString.ToNewCString();
+	if (nsnull == indentation)	return(NS_ERROR_OUT_OF_MEMORY);
+
+	strm << indentation;
+	strm << "<DL><p>\n";
+
 	rv = container->Init(ds, parent);
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && (parentArray->IndexOf(parent) < 0))
 	{
-		strm << indentation;
-		strm << "<DL><p>\n";
+		// Note: once we've added something into the parentArray, don't "return" out
+		//       of this function without removing it from the parentArray!
+		parentArray->InsertElementAt(parent, 0);
 
 		nsCOMPtr<nsISimpleEnumerator>	children;
 		if (NS_SUCCEEDED(rv = container->GetElements(getter_AddRefs(children))))
@@ -3916,7 +3925,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					// output description (if one exists)
 					WriteBookmarkProperties(ds, strm, child, kNC_Description, kOpenDD, PR_TRUE);
 
-					rv = WriteBookmarksContainer(ds, strm, child, level+1);
+					rv = WriteBookmarksContainer(ds, strm, child, level+1, parentArray);
 				}
 				else
 				{
@@ -4016,11 +4025,15 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					
 				if (NS_FAILED(rv))	break;
 			}
-
-			strm << indentation;
-			strm << "</DL><p>\n";
 		}
+
+		// cleanup: remove current parent element from parentArray
+		parentArray->RemoveElementAt(0);
 	}
+
+	strm << indentation;
+	strm << "</DL><p>\n";
+
 	nsCRT::free(indentation);
 	return(rv);
 }
