@@ -143,7 +143,7 @@ nsPresContext::GetFontPreferences()
       pref = "font.size.fixed.";
       pref.Append(langGroup);
       pref.ToCString(name, sizeof(name));
-      PRInt32 fixedSize = 14;
+      PRInt32 fixedSize = 13;
       mPrefs->GetIntPref(name, &fixedSize);
       char* unit = nsnull;
       mPrefs->CopyCharPref("font.size.unit", &unit);
