@@ -66,6 +66,9 @@ class nsLDAPConnection : public nsILDAPConnection,
     friend class nsLDAPOperation;
     friend class nsLDAPMessage;
     friend class nsLDAPConnectionLoop;
+    friend PRBool PR_CALLBACK CheckLDAPOperationResult(nsHashKey *aKey, 
+                                                       void *aData,
+                                                       void* aClosure);
 
   public:
     NS_DECL_ISUPPORTS
@@ -78,7 +81,6 @@ class nsLDAPConnection : public nsILDAPConnection,
     virtual ~nsLDAPConnection();
 
   protected:
-
     // invoke the callback associated with a given message, and possibly 
     // delete it from the connection queue
     //
@@ -146,9 +148,8 @@ class nsLDAPConnectionLoop : public nsIRunnable
 
     NS_IMETHOD Init();
 
-  protected:
-
     nsWeakPtr mWeakConn;        // the connection object, a weak reference
+    nsLDAPConnection *mRawConn; // raw version of the connection object ptr
     PRLock *mLock;              // Lock mechanism, since weak references
                                 // aren't thread safe
 };

@@ -241,7 +241,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
         return NS_ERROR_FAILURE;
     }
 
-    // Get a proxy object so the callback happens on the main thread.
+    // Get a proxy object so the callback happens on the current thread.
     // This is now a Synchronous proxy, due to the fact that the DNS
     // service hands out data which it later deallocates, and the async
     // proxy makes this unreliable. See bug 102227 for more details.
@@ -597,80 +597,37 @@ nsLDAPConnectionLoop::Init()
     return NS_OK;
 }
 
-
-// for nsIRunnable.  this thread spins in ldap_result() awaiting the next
-// message.  once one arrives, it dispatches it to the nsILDAPMessageListener 
-// on the main thread.
-//
-// XXX do all returns from this function need to do thread cleanup?
-//
-NS_IMETHODIMP
-nsLDAPConnectionLoop::Run(void)
+// typedef PRBool
+// (*PR_CALLBACK nsHashtableEnumFunc)
+//      (nsHashKey *aKey, void *aData, void* aClosure);
+PRBool PR_CALLBACK
+CheckLDAPOperationResult(nsHashKey *aKey, void *aData, void* aClosure)
 {
     int lderrno;
     nsresult rv;
     PRInt32 returnCode;
     LDAPMessage *msgHandle;
     nsCOMPtr<nsILDAPMessage> msg;
+    PRBool operationFinished = PR_TRUE;
     struct timeval timeout = { 1, 0 }; 
     PRIntervalTime sleepTime = PR_MillisecondsToInterval(40);
 
-    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
-           ("nsLDAPConnection::Run() entered\n"));
+    // we need to access some of the connection loop's objects
+    //
+    nsLDAPConnectionLoop *loop = 
+        NS_STATIC_CAST(nsLDAPConnectionLoop *, aClosure);
 
     // get the console service so we can log messages
     //
     nsCOMPtr<nsIConsoleService> consoleSvc = 
         do_GetService(kConsoleServiceContractId, &rv);
     if (NS_FAILED(rv)) {
-        NS_ERROR("nsLDAPConnection::Run() couldn't get console service");
+        NS_ERROR("CheckLDAPOperationResult() couldn't get console service");
         return NS_ERROR_FAILURE;
     }
 
-    // initialize the thread-specific data for the child thread (as necessary)
-    //
-    if (!nsLDAPThreadDataInit()) {
-        NS_ERROR("nsLDAPConnection::Run() couldn't initialize "
-                   "thread-specific data");
-        return NS_ERROR_FAILURE;
-    }
-
-    // wait for results
-    //
-    while(1) {
-        PRBool operationFinished = PR_TRUE;
-        nsCOMPtr<nsILDAPConnection> conn;
-
-        // Exit this thread if we no longer have an nsLDAPConnection
-        // associcated with it. We also aquire a lock here, to make sure
-        // to avoid a possible race condition when the nsLDAPConnection
-        // is destructed during the call to do_QueryReferent() (since
-        // that function isn't MT safe).
-        //
-        PR_Lock(mLock);
-        conn = do_QueryReferent(mWeakConn);
-        PR_Unlock(mLock);
-
-        if (!conn) {
-            mWeakConn = 0;
-            return NS_OK;
-        }
-
-        nsLDAPConnection *rawConn = NS_STATIC_CAST(nsLDAPConnection *,
-                             NS_STATIC_CAST(nsILDAPConnection *, conn));
-
-        // in case something went wrong on the last iteration, be sure to 
-        // cause nsCOMPtr to release the message before going to sleep in
-        // ldap_result
-        //
-        msg = 0;
-
-        // XXX deal with timeouts better
-        //
-        NS_ASSERTION(rawConn->mConnectionHandle, "nsLDAPConnection::Run(): "
-                     "no connection created.\n");
-        returnCode = ldap_result(rawConn->mConnectionHandle,
-                                 LDAP_RES_ANY, LDAP_MSG_ONE,
+    returnCode = ldap_result(loop->mRawConn->mConnectionHandle,
+                             aKey->HashCode(), LDAP_MSG_ONE,
                                  &timeout, &msgHandle);
 
         // if we didn't error or timeout, create an nsILDAPMessage
@@ -682,20 +639,18 @@ nsLDAPConnectionLoop::Run(void)
             // the connection may not exist yet.  sleep for a while
             // and try again
             //
-            PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
-                   ("ldap_result() timed out.\n"));
-            conn = 0;
+        PR_LOG(gLDAPLogModule, PR_LOG_WARNING, ("ldap_result() timed out.\n"));
 
             // The sleep here is to avoid a problem where the LDAP
             // Connection/thread isn't ready quite yet, and we want to
             // avoid a very busy loop.
             //
             PR_Sleep(sleepTime);
-            continue;
+        return PR_TRUE;
 
         case -1: // something went wrong 
 
-            lderrno = ldap_get_lderrno(rawConn->mConnectionHandle, 0, 0);
+        lderrno = ldap_get_lderrno(loop->mRawConn->mConnectionHandle, 0, 0);
 
             // Sleep briefly, to avoid a very busy loop again.
             //
@@ -715,22 +670,18 @@ nsLDAPConnectionLoop::Run(void)
             case LDAP_DECODING_ERROR:
                 consoleSvc->LogStringMessage(
                     NS_LITERAL_STRING("LDAP: WARNING: decoding error; possible corrupt data received").get());
-                NS_WARNING("nsLDAPConnection::Run(): ldaperrno = "
+            NS_WARNING("CheckLDAPOperationResult(): ldaperrno = "
                            "LDAP_DECODING_ERROR after ldap_result()");
                 break;
 
             case LDAP_NO_MEMORY:
-                consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory while getting async operation result").get());
+            NS_ERROR("CheckLDAPOperationResult(): Couldn't allocate memory"
+                     " while getting async operation result");
                 // punt and hope things work out better next time around
                 break;
 
             default:
-                // shouldn't happen; internal error
-                //
-                consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: DEBUG: ldaperrno set to unexpected value after ldap_result() call in nsLDAPConnection::Run()").get());
-                NS_WARNING("nsLDAPConnection::Run(): ldaperrno set to "
+            NS_ERROR("CheckLDAPOperationResult(): ldaperrno set to "
                            "unexpected value after ldap_result() "
                            "call in nsLDAPConnection::Run()");
                 break;
@@ -754,8 +705,8 @@ nsLDAPConnectionLoop::Run(void)
             //
             nsLDAPMessage *rawMsg = new nsLDAPMessage();
             if (!rawMsg) {
-                consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped").get());
+            NS_ERROR("CheckLDAPOperationResult(): couldn't allocate memory"
+                     " for new LDAP message; search entry dropped");
                 // punt and hope things work out better next time around
                 break;
             }
@@ -763,7 +714,7 @@ nsLDAPConnectionLoop::Run(void)
             // initialize the message, using a protected method not available
             // through nsILDAPMessage (which is why we need the raw pointer)
             //
-            rv = rawMsg->Init(conn, msgHandle);
+        rv = rawMsg->Init(loop->mRawConn, msgHandle);
 
             switch (rv) {
 
@@ -773,28 +724,24 @@ nsLDAPConnectionLoop::Run(void)
             case NS_ERROR_LDAP_DECODING_ERROR:
                 consoleSvc->LogStringMessage(
                     NS_LITERAL_STRING("LDAP: WARNING: decoding error; possible corrupt data received").get());
-                NS_WARNING("nsLDAPConnection::Run(): ldaperrno = "
+            NS_WARNING("CheckLDAPOperationResult(): ldaperrno = "
                            "LDAP_DECODING_ERROR after ldap_result()");
-                continue;
+            return PR_TRUE;
 
             case NS_ERROR_OUT_OF_MEMORY:
-                consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped").get());
                 // punt and hope things work out better next time around
-                continue;
+            return PR_TRUE;
 
             case NS_ERROR_ILLEGAL_VALUE:
             case NS_ERROR_UNEXPECTED:
             default:
                 // shouldn't happen; internal error
                 //
-                consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: DEBUG: nsLDAPConnection::Run(): nsLDAPMessage::Init() returned unexpected value").get());
-                NS_WARNING("nsLDAPConnection::Run(): nsLDAPMessage::Init() "
+            NS_ERROR("CheckLDAPOperationResult(): nsLDAPMessage::Init() "
                            "returned unexpected value.");
 
                 // punt and hope things work out better next time around
-                continue;
+            return PR_TRUE;
             }
 
             // now let the scoping mechanisms provided by nsCOMPtr manage
@@ -805,26 +752,95 @@ nsLDAPConnectionLoop::Run(void)
             // invoke the callback on the nsILDAPOperation corresponding to 
             // this message
             //
-            rv = rawConn->InvokeMessageCallback(msgHandle, msg,
+        rv = loop->mRawConn->InvokeMessageCallback(msgHandle, msg, 
                                                     operationFinished);
             if (NS_FAILED(rv)) {
-                consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: problem invoking message callback").get());
-                NS_ERROR("LDAP: ERROR: problem invoking message callback");
+            NS_ERROR("CheckLDAPOperationResult(): error invoking message"
+                     " callback");
                 // punt and hope things work out better next time around
-                continue;
+            return PR_TRUE;
             }
 
-#if 0
-            // sleep for a while to workaround event queue flooding 
-            // (bug 50104) so that it's possible to test cancelling, firing
-            // status, etc.
-            //
-            PR_Sleep(1000);
-#endif
             break;
         }       
 
+    return PR_TRUE;
+}
+
+// for nsIRunnable.  this thread spins in ldap_result() awaiting the next
+// message.  once one arrives, it dispatches it to the nsILDAPMessageListener 
+// on the main thread.
+//
+// XXX do all returns from this function need to do thread cleanup?
+//
+NS_IMETHODIMP
+nsLDAPConnectionLoop::Run(void)
+{
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+           ("nsLDAPConnection::Run() entered\n"));
+
+    // initialize the thread-specific data for the child thread (as necessary)
+    //
+    if (!nsLDAPThreadDataInit()) {
+        NS_ERROR("nsLDAPConnection::Run() couldn't initialize "
+                   "thread-specific data");
+        return NS_ERROR_FAILURE;
+    }
+
+    // wait for results
+    //
+    while(1) {
+
+        // Exit this thread if we no longer have an nsLDAPConnection
+        // associated with it. We also aquire a lock here, to make sure
+        // to avoid a possible race condition when the nsLDAPConnection
+        // is destructed during the call to do_QueryReferent() (since that
+        // function isn't MT safe).
+        //
+        nsresult rv;
+
+        PR_Lock(mLock);
+        nsCOMPtr<nsILDAPConnection> strongConn = 
+            do_QueryReferent(mWeakConn, &rv);
+        PR_Unlock(mLock);
+
+        if (NS_FAILED(rv)) {
+            mWeakConn = 0;
+            return NS_OK;
+        }
+        // we use a raw connection because we need to call non-interface
+        // methods
+        mRawConn = NS_STATIC_CAST(nsLDAPConnection *, 
+                                  NS_STATIC_CAST(nsILDAPConnection *, 
+                                                 strongConn.get()));
+
+        // XXX deal with timeouts better
+        //
+        NS_ASSERTION(mRawConn->mConnectionHandle, "nsLDAPConnection::Run(): "
+                     "no connection created.\n");
+
+        // We can't enumerate over mPendingOperations itself, because the
+        // callback needs to modify mPendingOperations.  So we clone it first,
+        // and enumerate over the clone.  It kinda sucks that we need to do
+        // this everytime we poll, but the hashtable will pretty much always
+        // be small.
+        //
+        // only clone if the number of pending operations is non-zero
+        // otherwise, put the LDAP connection thread to sleep (briefly)
+        // until there is pending operations..
+        if (mRawConn->mPendingOperations->Count()) {
+          nsHashtable *hashtableCopy = mRawConn->mPendingOperations->Clone();
+          if (hashtableCopy) {
+            hashtableCopy->Enumerate(CheckLDAPOperationResult, this);
+            delete hashtableCopy;
+          } else {
+            // punt and hope it works next time around
+            NS_ERROR("nsLDAPConnectionLoop::Run() error cloning hashtable");
+          }
+        }
+        else {
+          PR_Sleep(PR_MillisecondsToInterval(40));
+        }
     }
 
     // This will never happen, but here just in case.

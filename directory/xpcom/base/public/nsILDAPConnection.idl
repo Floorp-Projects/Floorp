@@ -53,7 +53,8 @@ interface nsILDAPConnection : nsISupports
     readonly attribute wstring bindName;
 
     /** 
-     * set up the connection.  
+     * Set up the connection.  Note that init() must be called on a thread
+     * that already has an nsIEventQueue.
      *
      * @param aHost             server name for ldap_init()
      * @param aPort             server port number for ldap_init()
