@@ -81,6 +81,8 @@ public:
 
   NS_IMETHOD GetAttribute(nsIAtom** aResult) = 0;
   NS_IMETHOD GetElement(nsIContent** aResult) = 0;
+  NS_IMETHOD GetNext(nsIXBLAttributeEntry** aResult) = 0;
+  NS_IMETHOD SetNext(nsIXBLAttributeEntry* aEntry) = 0;
 };
   
 
@@ -89,8 +91,12 @@ public:
   NS_IMETHOD GetAttribute(nsIAtom** aResult) { *aResult = mAttribute; NS_IF_ADDREF(*aResult); return NS_OK; };
   NS_IMETHOD GetElement(nsIContent** aResult) { *aResult = mElement; NS_IF_ADDREF(*aResult); return NS_OK; };
 
+  NS_IMETHOD GetNext(nsIXBLAttributeEntry** aResult) { NS_IF_ADDREF(*aResult = mNext); return NS_OK; }
+  NS_IMETHOD SetNext(nsIXBLAttributeEntry* aEntry) { mNext = aEntry; return NS_OK; }
+
   nsCOMPtr<nsIContent> mElement;
   nsCOMPtr<nsIAtom> mAttribute;
+  nsCOMPtr<nsIXBLAttributeEntry> mNext;
 
   nsXBLAttributeEntry(nsIAtom* aAtom, nsIContent* aContent) {
     NS_INIT_REFCNT(); mAttribute = aAtom; mElement = aContent;
@@ -910,64 +916,59 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
   nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, 
                                                                  mAttributeTable->Get(&key)));
 
-  nsCOMPtr<nsISupportsArray> entry = do_QueryInterface(supports);
-  if (!entry)
+  nsCOMPtr<nsIXBLAttributeEntry> xblAttr = do_QueryInterface(supports);
+  if (!xblAttr)
     return NS_OK;
 
   // Iterate over the elements in the array.
-  PRUint32 count;
-  entry->Count(&count);
 
-  for (PRUint32 i=0; i<count; i++) {
-    nsCOMPtr<nsISupports> item;
-    entry->GetElementAt(i, getter_AddRefs(item));
-    nsCOMPtr<nsIXBLAttributeEntry> xblAttr = do_QueryInterface(item);
-    if (xblAttr) {
-      nsCOMPtr<nsIContent> element;
-      nsCOMPtr<nsIAtom> setAttr;
-      xblAttr->GetElement(getter_AddRefs(element));
-      xblAttr->GetAttribute(getter_AddRefs(setAttr));
+  while (xblAttr) {
+    nsCOMPtr<nsIContent> element;
+    nsCOMPtr<nsIAtom> setAttr;
+    xblAttr->GetElement(getter_AddRefs(element));
+    xblAttr->GetAttribute(getter_AddRefs(setAttr));
 
-      if (aRemoveFlag)
-        element->UnsetAttribute(aNameSpaceID, setAttr, PR_TRUE);
-      else {
+    if (aRemoveFlag)
+      element->UnsetAttribute(aNameSpaceID, setAttr, PR_TRUE);
+    else {
+      nsAutoString value;
+      nsresult result = mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
+      PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                            result == NS_CONTENT_ATTR_HAS_VALUE);
+
+      if (attrPresent)
+        element->SetAttribute(aNameSpaceID, setAttr, value, PR_TRUE);
+    }
+
+    // See if we're the <html> tag in XUL, and see if value is being
+    // set or unset on us.
+    nsCOMPtr<nsIAtom> tag;
+    element->GetTag(*getter_AddRefs(tag));
+    if ((tag.get() == kHTMLAtom) && (setAttr.get() == kValueAtom)) {
+      // Flush out all our kids.
+      PRInt32 childCount;
+      element->ChildCount(childCount);
+      if (childCount > 0)
+        element->RemoveChildAt(0, PR_TRUE);
+      
+      if (!aRemoveFlag) {
+        // Construct a new text node and insert it.
         nsAutoString value;
         nsresult result = mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
-        PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                              result == NS_CONTENT_ATTR_HAS_VALUE);
-
-        if (attrPresent)
-          element->SetAttribute(aNameSpaceID, setAttr, value, PR_TRUE);
-      }
-
-      // See if we're the <html> tag in XUL, and see if value is being
-      // set or unset on us.
-      nsCOMPtr<nsIAtom> tag;
-      element->GetTag(*getter_AddRefs(tag));
-      if ((tag.get() == kHTMLAtom) && (setAttr.get() == kValueAtom)) {
-        // Flush out all our kids.
-        PRInt32 childCount;
-        element->ChildCount(childCount);
-        if (childCount > 0)
-          element->RemoveChildAt(0, PR_TRUE);
-        
-        if (!aRemoveFlag) {
-          // Construct a new text node and insert it.
-          nsAutoString value;
-          nsresult result = mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
-          if (!value.IsEmpty()) {
-            nsCOMPtr<nsIDOMText> textNode;
-            nsCOMPtr<nsIDocument> doc;
-            mBoundElement->GetDocument(*getter_AddRefs(doc));
-            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
-            domDoc->CreateTextNode(value, getter_AddRefs(textNode));
-            nsCOMPtr<nsIDOMNode> dummy;
-            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(element));
-            domElement->AppendChild(textNode, getter_AddRefs(dummy));
-          }
+        if (!value.IsEmpty()) {
+          nsCOMPtr<nsIDOMText> textNode;
+          nsCOMPtr<nsIDocument> doc;
+          mBoundElement->GetDocument(*getter_AddRefs(doc));
+          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+          domDoc->CreateTextNode(value, getter_AddRefs(textNode));
+          nsCOMPtr<nsIDOMNode> dummy;
+          nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(element));
+          domElement->AppendChild(textNode, getter_AddRefs(dummy));
         }
       }
     }
+    nsCOMPtr<nsIXBLAttributeEntry> tmpAttr = xblAttr;
+    tmpAttr->GetNext(getter_AddRefs(xblAttr));
   }
 
   return NS_OK;
@@ -1173,13 +1174,16 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
   aElement->GetAttribute(kNameSpaceID_None, kInheritsAtom, inherits);
   if (!inherits.IsEmpty()) {
     if (!mAttributeTable) {
-        mAttributeTable = new nsSupportsHashtable(8);
+      mAttributeTable = new nsSupportsHashtable(4);
     }
 
     // The user specified at least one attribute.
     char* str = inherits.ToNewCString();
     char* newStr;
-    char* token = nsCRT::strtok( str, ", ", &newStr );   
+    // XXX We should use a strtok function that tokenizes PRUnichar's
+    // so that we don't have to convert from Unicode to ASCII and then back
+
+    char* token = nsCRT::strtok( str, ", ", &newStr );
     while( token != NULL ) {
       // Build an atom out of this attribute.
       nsCOMPtr<nsIAtom> atom;
@@ -1194,12 +1198,13 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
         attr.Left(left, index);
         attr.Right(right, attr.Length()-index-1);
 
-        atom = getter_AddRefs(NS_NewAtom(left));
-        attribute = getter_AddRefs(NS_NewAtom(right));
+        atom = getter_AddRefs(NS_NewAtom(left.GetUnicode()));
+        attribute = getter_AddRefs(NS_NewAtom(right.GetUnicode()));
       }
       else {
-        atom = getter_AddRefs(NS_NewAtom(token));
-        attribute = getter_AddRefs(NS_NewAtom(token));
+        nsAutoString tok; tok.AssignWithConversion(token);
+        atom = getter_AddRefs(NS_NewAtom(tok.GetUnicode()));
+        attribute = atom;
       }
       
       // Create an XBL attribute entry.
@@ -1211,17 +1216,19 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
       nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, 
                                                                      mAttributeTable->Get(&key)));
   
-      nsCOMPtr<nsISupportsArray> entry = do_QueryInterface(supports);
+      nsCOMPtr<nsIXBLAttributeEntry> entry = do_QueryInterface(supports);
       if (!entry) {
-        // Make a new entry.
-        NS_NewISupportsArray(getter_AddRefs(entry));
-
         // Put it in the table.
-        mAttributeTable->Put(&key, entry);
+        mAttributeTable->Put(&key, xblAttr);
+      } else {
+        nsCOMPtr<nsIXBLAttributeEntry> attr = entry;
+        nsCOMPtr<nsIXBLAttributeEntry> tmpAttr = entry;
+        do {
+          attr = tmpAttr;
+          attr->GetNext(getter_AddRefs(tmpAttr));
+        } while (tmpAttr);
+        attr->SetNext(xblAttr);
       }
-
-      // Append ourselves to our entry.
-      entry->AppendElement(xblAttr);
 
       // Now make sure that this attribute is initially set.
       // XXX How to deal with NAMESPACES!!!?

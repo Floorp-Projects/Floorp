@@ -133,10 +133,10 @@ public:
   virtual ~nsXBLService();
 
   // This method loads a binding doc and then builds the specific binding required.
-  NS_IMETHOD GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** aResult);
+  NS_IMETHOD GetBinding(const nsCString& aURLStr, nsIXBLBinding** aResult);
 
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
-  NS_IMETHOD GetBindingDocument(nsIURL* aURI, nsIDocument** aResult);
+  NS_IMETHOD GetBindingDocument(const nsCString& aURI, nsIDocument** aResult);
 
   // This method synchronously loads and parses an XBL file.
   NS_IMETHOD FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult);
@@ -144,34 +144,6 @@ public:
   // This method walks a binding document and removes any text nodes
   // that contain only whitespace.
   NS_IMETHOD StripWhitespaceNodes(nsIContent* aContent);
-
-protected:
-  // This URIkey class is used to hash URLs into an XBL binding
-  // cache.
-  class nsIURIKey : public nsHashKey {
-  protected:
-    nsCOMPtr<nsIURI> mKey;
-
-  public:
-    nsIURIKey(nsIURI* key) : mKey(key) {}
-    ~nsIURIKey(void) {}
-
-    PRUint32 HashValue(void) const {
-      nsXPIDLCString spec;
-      mKey->GetSpec(getter_Copies(spec));
-      return (PRUint32) PL_HashString(spec);
-    }
-
-    PRBool Equals(const nsHashKey *aKey) const {
-      PRBool eq;
-      mKey->Equals( ((nsIURIKey*) aKey)->mKey, &eq );
-      return eq;
-    }
-
-    nsHashKey *Clone(void) const {
-      return new nsIURIKey(mKey);
-    }
-  };
 
 // MEMBER VARIABLES
 protected: 
@@ -378,26 +350,22 @@ nsXBLService::GetBaseTag(nsIContent* aContent, nsIAtom** aResult)
 
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** aResult)
+NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding** aResult)
 {
   *aResult = nsnull;
 
   if (aURLStr.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIURL> uri;
-  nsComponentManager::CreateInstance("component://netscape/network/standard-url",
-                                        nsnull,
-                                        NS_GET_IID(nsIURL),
-                                        getter_AddRefs(uri));
-  uri->SetSpec(aURLStr);
-
   // XXX Obtain the # marker and remove it from the URL.
-  nsXPIDLCString ref;
-  uri->GetRef(getter_Copies(ref));
-  uri->SetRef("");
+  nsCAutoString uri(aURLStr);
+  PRInt32 indx = uri.RFindChar('#');
+  nsCAutoString ref; 
+  uri.Right(ref, uri.Length() - (indx + 1));
+  uri.Truncate(indx);
 
   nsCOMPtr<nsIDocument> doc;
+  
   GetBindingDocument(uri, getter_AddRefs(doc));
   if (!doc)
     return NS_ERROR_FAILURE;
@@ -454,17 +422,25 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** a
 
 
 NS_IMETHODIMP
-nsXBLService::GetBindingDocument(nsIURL* aURI, nsIDocument** aResult)
+nsXBLService::GetBindingDocument(const nsCString& aURLStr, nsIDocument** aResult)
 {
   *aResult = nsnull;
   
   // We've got a file.  Check our key binding file cache.
-  nsIURIKey key(aURI);
+  nsStringKey key(aURLStr);
   nsCOMPtr<nsIDocument> document;
   document = dont_AddRef(NS_STATIC_CAST(nsIDocument*, mBindingTable->Get(&key)));
 
   if (!document) {
-    FetchBindingDocument(aURI, getter_AddRefs(document));
+
+    nsCOMPtr<nsIURL> uri;
+    nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+                                       nsnull,
+                                       NS_GET_IID(nsIURL),
+                                       getter_AddRefs(uri));
+    uri->SetSpec(aURLStr);
+
+    FetchBindingDocument(uri, getter_AddRefs(document));
     if (document) {
       // Put the key binding doc into our table.
       mBindingTable->Put(&key, document);
