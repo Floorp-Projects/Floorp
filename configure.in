@@ -1838,18 +1838,24 @@ dnl
 dnl NSPR is not safe for gnu make -jX (where X > 1) builds.  Force make
 dnl in NSPR to be 'make -j1' - or just 'make'
 dnl 
-dnl Only set this if 'make' is found.
+dnl Only set this if 'make' is found.  Only works on linux for some reason.
 
-_make_command='make'
-_make_version=`$_make_command -v 2> /dev/null`
-_make_is_gnu=`echo $_make_version | head -1 | awk '{ print $1; }'`
+case "$target" in
+	*-linux*)
+		_make_command='make'
+		_make_version=`$_make_command -v 2> /dev/null`
+		_make_is_gnu=`echo $_make_version | head -1 | awk '{ print $1; }'`
+	
+		if test "$_make_is_gnu" = "GNU"
+		then
+			MOZ_NSPRENV_OVERRIDE_MAKE=make
+		fi
+	;;
 
-echo "_make_is_gnu=$_make_is_gnu"
-
-if test "$_make_is_gnu" = "GNU"
-then
-	MOZ_NSPRENV_OVERRIDE_MAKE=make
-fi
+	*)
+		MOZ_NSPRENV_OVERRIDE_MAKE=
+	;;
+esac
 
 AC_SUBST(MOZ_NSPRENV_USE_PTHREADS)
 AC_SUBST(MOZ_NSPRENV_BUILD_OPT)
