@@ -29,7 +29,6 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsIChromeRegistry.h"
 
 #include <Folders.h>
 #include <Script.h>
@@ -38,13 +37,8 @@
 
 #include "ApplIDs.h"
 
-static nsresult GetChromeLocale(PRUnichar** localeName);
 static char* GetResCString(PRInt32 stringIndex, Str255& buf);
- 
-// IDs
-
-static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
- 
+  
 
 //*****************************************************************************
 // CAppFileLocationProvider::Constructor/Destructor
@@ -107,23 +101,8 @@ CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile 
                 rv = localFile->AppendRelativePath(GetResCString(str_PrefDefaultsDirName, strBuf));
         }
     }
-    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativePath(GetResCString(str_DefaultsDirName, strBuf));
-            if (NS_SUCCEEDED(rv)) {
-                rv = localFile->AppendRelativePath(GetResCString(str_ProfileDefaultsDirName, strBuf));
-                if (NS_SUCCEEDED(rv)) {
-                    nsXPIDLString localeName;
-                    rv = GetChromeLocale(getter_Copies(localeName));
-                    if (NS_SUCCEEDED(rv))
-                        rv = localFile->AppendRelativeUnicodePath(localeName);
-                }
-            }
-        }
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
+             nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -271,21 +250,6 @@ NS_METHOD CAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLo
 //****************************************************************************************
 // Static Routines
 //****************************************************************************************
-
-static nsresult GetChromeLocale(PRUnichar** localeName)
-{
-    NS_ENSURE_ARG_POINTER(localeName);
-
-    nsresult rv;    
-    *localeName = nsnull;
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-
-    if (NS_SUCCEEDED(rv)) {
-        nsString tmpstr; tmpstr.AssignWithConversion("navigator");
-        rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), localeName);
-    }
-    return rv;
-}
 
 static char* GetResCString(PRInt32 stringIndex, Str255& buf)
 {
