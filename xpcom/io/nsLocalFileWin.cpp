@@ -42,6 +42,7 @@
 #include  <io.h>
 #include  <stdio.h>
 #include  <stdlib.h>
+#include  <mbstring.h>
 
 #include "prproces.h"
 
@@ -604,7 +605,8 @@ nsLocalFile::InitWithPath(const char *filePath)
     // kill any trailing seperator
     char* temp = nativeFilePath;
     int len = strlen(temp) - 1;
-    if(temp[len] == '\\')
+    // Is '\' second charactor of DBCS?
+    if(temp[len] == '\\' && !::IsDBCSLeadByte(temp[len-1]))
         temp[len] = '\0';
     
     mWorkingPath.Assign(nativeFilePath);
@@ -656,10 +658,10 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
         return rv;  
     
    // create nested directories to target
-    char* slash = strchr(mResolvedPath, '\\');
+    unsigned char* slash = _mbschr((const unsigned char*) mResolvedPath.GetBuffer(), '\\');
     // skip the first '\\'
     ++slash;
-    slash = strchr(slash, '\\');
+    slash = _mbschr(slash, '\\');
 
     while (slash)
     {
@@ -669,7 +671,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 
         *slash = '\\';
         ++slash;
-        slash = strchr(slash, '\\');
+        slash = _mbschr(slash, '\\');
     }
 
 
@@ -692,11 +694,11 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 NS_IMETHODIMP  
 nsLocalFile::Append(const char *node)
 {
-    if ( (node == nsnull)           || 
-         (*node == '/')             || 
-         (strstr(node, "..") != nsnull) ||
-         (strchr(node, '\\') != nsnull) ||
-         (strchr(node, '/')  != nsnull) )
+    if ( (node == nsnull)                                       ||
+         (*node == '/')                                         ||
+         (strstr(node, "..")                         != nsnull) ||
+         (_mbschr((const unsigned char*) node, '\\') != nsnull) ||
+         (strchr(node, '/')                          != nsnull) )
     {
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
@@ -721,7 +723,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
     if(temp == nsnull)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    const char* leaf = strrchr(temp, '\\');
+    const char* leaf = (const char*) _mbsrchr((const unsigned char*) temp, '\\');
     
     // if the working path is just a node without any lashes.
     if (leaf == nsnull)
@@ -738,13 +740,12 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 {
     MakeDirty();
     
-    const char* temp = mWorkingPath.GetBuffer();
+    const unsigned char* temp = (const unsigned char*) mWorkingPath.GetBuffer();
     if(temp == nsnull)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    const char* leaf = strrchr(temp, '\\');
-    
-    PRInt32 offset = mWorkingPath.RFindChar('\\');
+    // cannot use nsCString::RFindChar() due to 0x5c problem
+    PRInt32 offset = (PRInt32) (_mbsrchr(temp, '\\') - temp);
     if (offset)
     {
         mWorkingPath.Truncate(offset+1);
@@ -928,7 +929,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
             {
                 char* temp;
                 GetTarget(&temp);
-                const char* leaf = strrchr(temp, '\\');
+                const char* leaf = (const char*) _mbsrchr((const unsigned char*) temp, '\\');
                 if (leaf[0] == '\\')
                     leaf++;
                 allocatedNewName = (char*) nsAllocator::Clone( leaf, strlen(leaf)+1 );
@@ -1462,7 +1463,9 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 
     nsCString parentPath = mWorkingPath;
 
-    PRInt32 offset = parentPath.RFindChar('\\');
+    // cannot use nsCString::RFindChar() due to 0x5c problem
+    PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.GetBuffer(), '\\')
+                     - (const unsigned char *) parentPath.GetBuffer());
     if (offset == -1)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
@@ -1539,7 +1542,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
 
-    char* path;
+    char* path = nsnull;
     PRBool symLink;
     
     rv = IsSymlink(&symLink);
@@ -1551,15 +1554,13 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     else
         GetPath(&path);
 
-    const char* leaf = strrchr(path, '\\');
-    
+    const char* leaf = (const char*) _mbsrchr((const unsigned char*) path, '\\');
+
+    // XXX On Windows NT / 2000, it should use "PATHEXT" environment value
     if ( (strstr(leaf, ".bat") != nsnull) ||
-         (strstr(leaf, ".exe") != nsnull) )  // are there more that we care about??
-    {
+         (strstr(leaf, ".exe") != nsnull) ) {
         *_retval = PR_TRUE;
-    }
-    else
-    {
+    } else {
         *_retval = PR_FALSE;
     }
     
