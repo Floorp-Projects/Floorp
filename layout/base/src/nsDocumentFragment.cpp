@@ -305,7 +305,7 @@ nsDocumentFragment::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP    
 nsDocumentFragment::GetNodeName(nsString& aNodeName)
 {
-  aNodeName.Assign("#document-fragment");
+  aNodeName.AssignWithConversion("#document-fragment");
   return NS_OK;
 }
 

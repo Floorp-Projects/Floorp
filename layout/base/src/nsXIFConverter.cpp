@@ -34,36 +34,36 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer)
   char* prolog = "<?xml version=\"1.0\"?>\n";
   char* doctype = "<!DOCTYPE xif>\n";
 
-  mBuffer.Append(prolog);
-  mBuffer.Append(doctype);
+  mBuffer.AppendWithConversion(prolog);
+  mBuffer.AppendWithConversion(doctype);
   
-  mAttr = "attr";
-  mName = "name";
-  mValue = "value";
+  mAttr.AssignWithConversion("attr");
+  mName.AssignWithConversion("name");
+  mValue.AssignWithConversion("value");
   
-  mContent = "content";
-  mComment = "comment";
-  mContainer = "container";
-  mLeaf = "leaf";
-  mIsa = "isa";
-  mEntity = "entity";
+  mContent.AssignWithConversion("content");
+  mComment.AssignWithConversion("comment");
+  mContainer.AssignWithConversion("container");
+  mLeaf.AssignWithConversion("leaf");
+  mIsa.AssignWithConversion("isa");
+  mEntity.AssignWithConversion("entity");
 
-  mSelector = "css_selector";
-  mRule = "css_rule";
-  mSheet = "css_stylesheet";
+  mSelector.AssignWithConversion("css_selector");
+  mRule.AssignWithConversion("css_rule");
+  mSheet.AssignWithConversion("css_stylesheet");
 
-  mNULL = "?NULL";
-  mSpacing = "  ";
-  mSpace = (char)' ';
-  mLT = (char)'<';
-  mGT = (char)'>';
-  mLF = (char)'\n';
-  mSlash = (char)'/';
-  mBeginComment = "<!--";
-  mEndComment = "-->";
-  mQuote =(char)'\"';
-  mEqual =(char)'=';
-  mMarkupDeclarationOpen="markup_declaration";
+  mNULL.AssignWithConversion("?NULL");
+  mSpacing.AssignWithConversion("  ");
+  mSpace.AssignWithConversion((char)' ');
+  mLT.AssignWithConversion((char)'<');
+  mGT.AssignWithConversion((char)'>');
+  mLF.AssignWithConversion((char)'\n');
+  mSlash.AssignWithConversion((char)'/');
+  mBeginComment.AssignWithConversion("<!--");
+  mEndComment.AssignWithConversion("-->");
+  mQuote.AssignWithConversion((char)'\"');
+  mEqual.AssignWithConversion((char)'=');
+  mMarkupDeclarationOpen.AssignWithConversion("markup_declaration");
 
   mSelection = nsnull;
 }
@@ -80,16 +80,16 @@ nsXIFConverter::~nsXIFConverter()
 void nsXIFConverter::SetSelection(nsIDOMSelection* aSelection) {
   mSelection = aSelection;
   
-  BeginStartTag("encode");
+  BeginStartTag( NS_ConvertToString("encode") );
   if (mSelection == nsnull)
   {
-    AddAttribute("selection","0");
+    AddAttribute( NS_ConvertToString("selection"), NS_ConvertToString("0") );
   }
   else
   {
-    AddAttribute("selection","1");
+    AddAttribute( NS_ConvertToString("selection"), NS_ConvertToString("1") );
   }
-  FinishStartTag("encode",PR_TRUE,PR_TRUE);
+  FinishStartTag(NS_ConvertToString("encode"),PR_TRUE,PR_TRUE);
 }
 
 
@@ -265,9 +265,9 @@ PRBool  nsXIFConverter::AddMarkupEntity(const PRUnichar aChar)
 
   switch (aChar)
   {
-    case '<': data = "lt"; break;
-    case '>': data = "gt"; break;
-    case '&': data = "amp"; break;
+    case '<': data.AssignWithConversion("lt"); break;
+    case '>': data.AssignWithConversion("gt"); break;
+    case '&': data.AssignWithConversion("amp"); break;
     default:
       result = PR_FALSE;
     break;
@@ -464,35 +464,35 @@ void nsXIFConverter::EndCSSSelectors()
 
 void nsXIFConverter::AddCSSSelectors(const nsString& aSelectors)
 {
-  AddAttribute(nsString("selectors"),aSelectors);
+  AddAttribute(NS_ConvertToString("selectors"),aSelectors);
 }
 
 
 void nsXIFConverter::BeginCSSDeclarationList()
 {
-  AddStartTag(nsString("css_declaration_list"));
+  AddStartTag(NS_ConvertToString("css_declaration_list"));
 }
 
 void nsXIFConverter::EndCSSDeclarationList()
 {
-  AddEndTag(nsString("css_declaration_list"),PR_TRUE);
+  AddEndTag(NS_ConvertToString("css_declaration_list"),PR_TRUE);
 }
 
 
 void nsXIFConverter::BeginCSSDeclaration()
 {
-  BeginStartTag(nsString("css_declaration"));
+  BeginStartTag(NS_ConvertToString("css_declaration"));
 }
 
 void nsXIFConverter::AddCSSDeclaration(const nsString& aName, const nsString& aValue)
 {
-  AddAttribute(nsString("property"),aName);
-  AddAttribute(nsString("value"),aValue);
+  AddAttribute(NS_ConvertToString("property"),aName);
+  AddAttribute(NS_ConvertToString("value"),aValue);
 }
 
 void nsXIFConverter::EndCSSDeclaration()
 {
-  FinishStartTag(nsString("css_declaration"),PR_TRUE);
+  FinishStartTag(NS_ConvertToString("css_declaration"),PR_TRUE);
 }
 
 #ifdef DEBUG_XIF

@@ -1862,7 +1862,7 @@ nsRange::CreateContextualFragment(const nsString& aFragment,
             }
             else {
               // Who're we kidding. This only works for html.
-              contentType.Assign("text/html");
+              contentType.AssignWithConversion("text/html");
             }
 
             result = parser->ParseFragment(aFragment, (void*)0,

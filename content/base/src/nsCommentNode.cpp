@@ -261,7 +261,7 @@ nsCommentNode::GetTag(nsIAtom*& aResult) const
 NS_IMETHODIMP
 nsCommentNode::GetNodeName(nsString& aNodeName)
 {
-  aNodeName.Assign("#comment");
+  aNodeName.AssignWithConversion("#comment");
   return NS_OK;
 }
 
@@ -520,7 +520,7 @@ nsCommentNode::SetText(const char* aBuffer,
                        PRInt32 aLength,
                        PRBool aNotify)
 {
-  nsAutoString str(aBuffer);
+  nsAutoString str; str.AssignWithConversion(aBuffer);
 
   StripCommentDelimiters(str);
   return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);

@@ -223,7 +223,7 @@ nsDOMAttributeMap::GetNormalizedName(PRInt32 aNameSpaceID,
 
   if (nsnull != prefix) {
     prefix->ToString(aAttrName);
-    aAttrName.Append(":");
+    aAttrName.AppendWithConversion(":");
     NS_RELEASE(prefix);
   }
 

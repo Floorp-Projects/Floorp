@@ -440,16 +440,16 @@ nsFrameUtil::Tag::ToString(nsString& aResult)
   if (type == close) {
     aResult.Append(PRUnichar('/'));
   }
-  aResult.Append(name);
+  aResult.AppendWithConversion(name);
   if (0 != num) {
     PRInt32 i, n = num;
     for (i = 0; i < n; i++) {
       aResult.Append(PRUnichar(' '));
-      aResult.Append(attributes[i]);
+      aResult.AppendWithConversion(attributes[i]);
       if (values[i]) {
-        aResult.Append("=\"");
-        aResult.Append(values[i]);
-        aResult.Append('\"');
+        aResult.AppendWithConversion("=\"");
+        aResult.AppendWithConversion(values[i]);
+        aResult.AppendWithConversion('\"');
       }
     }
   }

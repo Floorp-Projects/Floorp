@@ -134,7 +134,7 @@ nsEventStateManager::Init()
                   NS_OBSERVERSERVICE_PROGID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     observerService->AddObserver(this, topic.GetUnicode());
   }
 
@@ -181,7 +181,7 @@ nsEventStateManager::~nsEventStateManager()
                      NS_OBSERVERSERVICE_PROGID, &rv);
     if (NS_SUCCEEDED(rv))
       {
-        nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         observerService->RemoveObserver(this, topic.GetUnicode());
       }
   }
@@ -219,7 +219,7 @@ NS_IMETHODIMP
 nsEventStateManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
                              const PRUnichar *someData) {
   nsAutoString topicString(aTopic);
-  nsAutoString shutdownString(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  nsAutoString shutdownString; shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
   if (topicString == shutdownString)
     Shutdown();
@@ -1811,7 +1811,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         if (focusable) {
           nsAutoString value;
           child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
-          if (!value.Equals("true"))
+          if (!value.EqualsWithConversion("true"))
             disabled = PR_FALSE;
         }
       }

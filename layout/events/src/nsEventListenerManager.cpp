@@ -433,7 +433,7 @@ nsresult nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aLi
 {
   PRInt32 subType;
   nsIID iid;
-  nsAutoString str("on");
+  nsAutoString str; str.AssignWithConversion("on");
   nsIAtom* atom;
 
   str.Append(aType);
@@ -454,7 +454,7 @@ nsresult nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *
   PRInt32 subType;
   nsIID iid;
 
-  nsAutoString str("on");
+  nsAutoString str; str.AssignWithConversion("on");
   nsIAtom* atom;
 
   str.Append(aType);
@@ -651,7 +651,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
           if (NS_SUCCEEDED(result)) {
             nsAutoString eventString;
             if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-              eventString.Insert("on", 0, 2);
+              eventString.InsertWithConversion("on", 0, 2);
               nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
 
               nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(owner);

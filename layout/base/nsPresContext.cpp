@@ -149,12 +149,12 @@ nsPresContext::GetFontPreferences()
     char* value = nsnull;
     mPrefs->CopyCharPref("font.default", &value);
     if (value) {
-      mDefaultFont.name = value;
+      mDefaultFont.name.AssignWithConversion(value);
       nsAllocator::Free(value);
       value = nsnull;
     }
     if (mLangGroup) {
-      nsAutoString pref("font.size.variable.");
+      nsAutoString pref; pref.AssignWithConversion("font.size.variable.");
       const PRUnichar* langGroup = nsnull;
       mLangGroup->GetUnicode(&langGroup);
       pref.Append(langGroup);
@@ -162,7 +162,7 @@ nsPresContext::GetFontPreferences()
       pref.ToCString(name, sizeof(name));
       PRInt32 variableSize = 16;
       mPrefs->GetIntPref(name, &variableSize);
-      pref = "font.size.fixed.";
+      pref.AssignWithConversion("font.size.fixed.");
       pref.Append(langGroup);
       pref.ToCString(name, sizeof(name));
       PRInt32 fixedSize = 13;

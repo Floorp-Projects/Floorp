@@ -605,7 +605,7 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                                 PRUint32 stringLen,
                                 const char* string)
 {
-  nsString aStyleData(string, stringLen);
+  nsString aStyleData; aStyleData.AssignWithConversion(string, stringLen);
   mLoader->DidLoadStyle(aLoader, aStyleData, this, aStatus);
 
   // We added a reference when the loader was created. This

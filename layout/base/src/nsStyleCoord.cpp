@@ -189,24 +189,24 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
            (eStyleUnit_Proportional == mUnit) ||
            (eStyleUnit_Enumerated == mUnit) ||
            (eStyleUnit_Integer == mUnit)) {
-    aBuffer.Append(mValue.mInt, 10);
-    aBuffer.Append("[0x");
-    aBuffer.Append(mValue.mInt, 16);
-    aBuffer.Append(']');
+    aBuffer.AppendWithConversion(mValue.mInt, 10);
+    aBuffer.AppendWithConversion("[0x");
+    aBuffer.AppendWithConversion(mValue.mInt, 16);
+    aBuffer.AppendWithConversion(']');
   }
 
   switch (mUnit) {
-    case eStyleUnit_Null:         aBuffer.Append("Null");     break;
-    case eStyleUnit_Coord:        aBuffer.Append("tw");       break;
-    case eStyleUnit_Percent:      aBuffer.Append("%");        break;
-    case eStyleUnit_Factor:       aBuffer.Append("f");        break;
-    case eStyleUnit_Normal:       aBuffer.Append("Normal");   break;
-    case eStyleUnit_Auto:         aBuffer.Append("Auto");     break;
-    case eStyleUnit_Inherit:      aBuffer.Append("Inherit");  break;
-    case eStyleUnit_Proportional: aBuffer.Append("*");        break;
-    case eStyleUnit_Enumerated:   aBuffer.Append("enum");     break;
-    case eStyleUnit_Integer:      aBuffer.Append("int");      break;
-    case eStyleUnit_Chars:        aBuffer.Append("chars");    break;
+    case eStyleUnit_Null:         aBuffer.AppendWithConversion("Null");     break;
+    case eStyleUnit_Coord:        aBuffer.AppendWithConversion("tw");       break;
+    case eStyleUnit_Percent:      aBuffer.AppendWithConversion("%");        break;
+    case eStyleUnit_Factor:       aBuffer.AppendWithConversion("f");        break;
+    case eStyleUnit_Normal:       aBuffer.AppendWithConversion("Normal");   break;
+    case eStyleUnit_Auto:         aBuffer.AppendWithConversion("Auto");     break;
+    case eStyleUnit_Inherit:      aBuffer.AppendWithConversion("Inherit");  break;
+    case eStyleUnit_Proportional: aBuffer.AppendWithConversion("*");        break;
+    case eStyleUnit_Enumerated:   aBuffer.AppendWithConversion("enum");     break;
+    case eStyleUnit_Integer:      aBuffer.AppendWithConversion("int");      break;
+    case eStyleUnit_Chars:        aBuffer.AppendWithConversion("chars");    break;
   }
   aBuffer.Append(' ');
 }
@@ -260,19 +260,19 @@ void nsStyleSides::AppendToString(nsString& aBuffer) const
   nsStyleCoord  temp;
 
   GetLeft(temp);
-  aBuffer.Append("left: ");
+  aBuffer.AppendWithConversion("left: ");
   temp.AppendToString(aBuffer);
 
   GetTop(temp);
-  aBuffer.Append("top: ");
+  aBuffer.AppendWithConversion("top: ");
   temp.AppendToString(aBuffer);
 
   GetRight(temp);
-  aBuffer.Append("right: ");
+  aBuffer.AppendWithConversion("right: ");
   temp.AppendToString(aBuffer);
 
   GetBottom(temp);
-  aBuffer.Append("bottom: ");
+  aBuffer.AppendWithConversion("bottom: ");
   temp.AppendToString(aBuffer);
 }
 

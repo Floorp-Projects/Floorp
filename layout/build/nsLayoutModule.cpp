@@ -137,7 +137,7 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
   result = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_OK == result) {
-    result = manager->RegisterGlobalName("HTMLImageElement",
+    result = manager->RegisterGlobalName(NS_ConvertToString("HTMLImageElement"),
                                          kHTMLImageElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {
@@ -145,7 +145,7 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
       return result;
     }
 
-    result = manager->RegisterGlobalName("HTMLOptionElement",
+    result = manager->RegisterGlobalName(NS_ConvertToString("HTMLOptionElement"),
                                          kHTMLOptionElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {

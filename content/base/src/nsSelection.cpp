@@ -1380,16 +1380,16 @@ nsDOMSelection::ToString(nsString& aReturn)
 {
   PRInt32 cnt;
   GetRangeCount(&cnt);
-  aReturn = "nsSelection: ";
+  aReturn.AssignWithConversion("nsSelection: ");
   aReturn += cnt;
-  aReturn += " items\n";
+  aReturn.AppendWithConversion(" items\n");
 
   // Get an iterator
   nsSelectionIterator iter(this);
   nsresult res = iter.First();
   if (!NS_SUCCEEDED(res))
   {
-    aReturn += " Can't get an iterator\n";
+    aReturn.AppendWithConversion(" Can't get an iterator\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -1399,7 +1399,7 @@ nsDOMSelection::ToString(nsString& aReturn)
     res = iter.CurrentItem(NS_STATIC_CAST(nsIDOMRange**, getter_AddRefs(range)));
     if (!NS_SUCCEEDED(res))
     {
-      aReturn += " OOPS\n";
+      aReturn.AppendWithConversion(" OOPS\n");
       return NS_ERROR_FAILURE;
     }
     nsString rangeStr;
@@ -1408,16 +1408,16 @@ nsDOMSelection::ToString(nsString& aReturn)
     iter.Next();
   }
 
-  aReturn += "Anchor is ";
+  aReturn.AppendWithConversion("Anchor is ");
   PRInt32 theInt = (PRInt32)(nsIDOMNode*)FetchAnchorNode();
-  aReturn.Append(theInt);
-  aReturn += ", ";
+  aReturn.AppendWithConversion(theInt);
+  aReturn.AppendWithConversion(", ");
   aReturn += FetchAnchorOffset();
-  aReturn += "Focus is";
-  aReturn.Append((long)(nsIDOMNode*)FetchFocusNode(), 16);
-  aReturn += ", ";
+  aReturn.AppendWithConversion("Focus is");
+  aReturn.AppendWithConversion((long)(nsIDOMNode*)FetchFocusNode(), 16);
+  aReturn.AppendWithConversion(", ");
   aReturn += FetchFocusOffset();
-  aReturn += "\n ... end of selection\n";
+  aReturn.AppendWithConversion("\n ... end of selection\n");
 
   return NS_OK;
 }
