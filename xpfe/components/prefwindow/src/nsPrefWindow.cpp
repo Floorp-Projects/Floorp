@@ -33,7 +33,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsFileSpec.h"
 #include "nsIFileSpecWithUI.h"
 #include "nsFileStream.h"
-#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "pratom.h"
 #include "nsIComponentManager.h"
