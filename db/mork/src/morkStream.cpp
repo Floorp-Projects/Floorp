@@ -179,7 +179,7 @@ morkStream::CloseStream(morkEnv* ev) // called by CloseMorkNode();
   
 #define morkStream_kSpacesPerIndent 1 /* one space per indent */
 #define morkStream_kMaxIndentDepth 70 /* max indent of 70 space bytes */
-static const char* morkStream_kSpaces // next line to ease length perception
+static const char morkStream_kSpaces[] // next line to ease length perception
 = "                                                                        ";
 // 123456789_123456789_123456789_123456789_123456789_123456789_123456789_
 // morkStream_kSpaces above must contain (at least) 70 spaces (ASCII 0x20)

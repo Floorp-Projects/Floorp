@@ -653,7 +653,7 @@ morkNode::CutWeakRef(morkEnv* ev)
   return outRefs;
 }
 
-static const char* morkNode_kBroken = "broken";
+static const char morkNode_kBroken[] = "broken";
 
 /*public non-poly*/ const char*
 morkNode::GetNodeAccessAsString() const // e.g. "open", "shut", etc.
