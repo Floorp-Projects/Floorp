@@ -33,6 +33,8 @@
 #include "nsINameSpaceManager.h"
 
 void testAttributes(nsIHTMLContent* content) {
+  nsHTMLValue nullValue;
+
   nsIAtom* sBORDER = NS_NewAtom("border");
   nsIAtom* sWIDTH = NS_NewAtom("width");
   nsIAtom* sHEIGHT = NS_NewAtom("height");
@@ -41,7 +43,7 @@ void testAttributes(nsIHTMLContent* content) {
   nsString sempty("");
   nsString sfoo_gif("foo.gif");
 
-  content->SetHTMLAttribute(sBORDER, nsHTMLValue::kNull, PR_FALSE);
+  content->SetHTMLAttribute(sBORDER, nullValue, PR_FALSE);
   content->SetHTMLAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel), PR_FALSE);
   content->SetAttribute(kNameSpaceID_HTML, sHEIGHT, sempty, PR_FALSE);
   content->SetAttribute(kNameSpaceID_HTML, sSRC, sfoo_gif, PR_FALSE);
