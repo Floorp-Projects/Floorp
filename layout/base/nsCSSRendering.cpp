@@ -2015,18 +2015,29 @@ PRInt16       borderRadii[4],i;
 
     // If it's a fixed background attachment, then get the nearest scrolling
     // ancestor
-    nsIFrame*      scrollFrame = nsnull;
-    const nsIView* clipView = nsnull;
+    const nsIView* viewportView = nsnull;
     nsRect         viewportArea(0, 0, 0, 0);
 
     if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
-      scrollFrame = GetNearestScrollFrame(aForFrame);
+      nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
       
       // Get the viewport size
-      if (scrollFrame) { // XXX This is a band-aid crash fix, see bug 30317.
-        clipView = GetClipView(aPresContext, scrollFrame);
-        clipView->GetDimensions(&viewportArea.width, &viewportArea.height);
+      if (scrollFrame) {
+        viewportView = GetClipView(aPresContext, scrollFrame);
+
+      } else {
+        // The viewport isn't scrollable, so use the root frame's view
+        nsIPresShell*  presShell;
+        nsIFrame*      rootFrame;
+
+        aPresContext->GetShell(&presShell);
+        presShell->GetRootFrame(&rootFrame);
+        NS_RELEASE(presShell);
+        rootFrame->GetView(aPresContext, (nsIView**)&viewportView);
       }
+
+      NS_ASSERTION(viewportView, "no viewport view");
+      viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
     }
 
     // Compute the anchor point. If it's a fixed background attachment, then
@@ -2036,7 +2047,8 @@ PRInt16       borderRadii[4],i;
     // When tiling, the anchor coordinate values will be negative offsets
     // from the padding area
     nsPoint anchor;
-    ComputeBackgroundAnchorPoint(aColor, scrollFrame ? viewportArea : paddingArea,
+    ComputeBackgroundAnchorPoint(aColor, NS_STYLE_BG_ATTACHMENT_FIXED ==
+                                 aColor.mBackgroundAttachment ? viewportArea : paddingArea,
                                  tileWidth, tileHeight, anchor);
 
     // If it's a fixed background attachment, then convert the anchor point
@@ -2051,7 +2063,7 @@ PRInt16       borderRadii[4],i;
         anchor -= offset;
       }
       NS_ASSERTION(view, "expected a view");
-      while (view && (view != clipView)) {
+      while (view && (view != viewportView)) {
         nscoord x, y;
 
         view->GetPosition(&x, &y);
