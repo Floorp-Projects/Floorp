@@ -1384,10 +1384,10 @@ void ICodeGenerator::preprocess(StmtNode *p)
    }
 }
 
-inline bool containsIdentifier(const IdentifierList* identifiers, const StringAtom& name)
+static bool hasAttribute(const IdentifierList* identifiers, Token::Kind tokenKind)
 {
     while (identifiers) {
-        if (identifiers->name == name)
+        if (identifiers->name.tokenKind == tokenKind)
             return true;
         identifiers = identifiers->next;
     }
@@ -1423,23 +1423,20 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             // to handle recursive types, such as linked list nodes.
             mGlobal->defineVariable(nameExpr->name, &Type_Type, JSValue(thisClass));
             if (classStmt->body) {
-                ICodeGenerator ccg(mWorld, thisClass->getScope(), thisClass, false);   // constructor code generator.
+                JSScope* thisScope = thisClass->getScope();
+                ICodeGenerator ccg(mWorld, thisScope, thisClass, false);   // constructor code generator.
                 ccg.allocateParameter(mWorld->identifiers[widenCString("this")], thisClass);   // always parameter #0
-                ICodeGenerator mcg(mWorld, thisClass->getScope(), thisClass, false);   // method code generator.
-                ICodeGenerator scg(mWorld, thisClass->getScope(), thisClass, false);   // static initializer code generator.
+                ICodeGenerator mcg(mWorld, thisScope, thisClass, false);   // method code generator.
+                ICodeGenerator scg(mWorld, thisScope, thisClass, false);   // static initializer code generator.
                 StmtNode* s = classStmt->body->statements;
                 while (s) {
                     switch (s->getKind()) {
                     case StmtNode::Const:
-                        {
-                            
-                        }
-                        break;
                     case StmtNode::Var:
                         {
-                            // FIXME:  need to generate a constructor function using the initializers, etc.
+                            // FIXME:  should preprocess all variable declarations, to prepare for method codegen.
                             VariableStmtNode *vs = static_cast<VariableStmtNode *>(s);
-                            bool isStatic = containsIdentifier(vs->attributes, mWorld->identifiers[widenCString("static")]);
+                            bool isStatic = hasAttribute(vs->attributes, Token::Static);
                             VariableBinding *v = vs->bindings;
                             TypedRegister thisRegister = TypedRegister(0, thisClass);
                             while (v)  {
@@ -1450,16 +1447,16 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                     // FIXME:  need to do code generation for type expressions.
                                     if (v->type && v->type->getKind() == ExprNode::identifier) {
                                         IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(v->type);
-                                        const JSValue& typeValue = mGlobal->getVariable(typeExpr->name);
-                                        ASSERT(typeValue.isObject() && !typeValue.isNull());
-                                        type = static_cast<JSType*>(typeValue.object);
+                                        type = findType(typeExpr->name);
                                     }
-                                    if (isStatic && v->initializer) {
-                                        thisClass->getScope()->setProperty(idExpr->name, kUndefinedValue);
-                                        scg.setStatic(thisClass, idExpr->name, scg.genExpr(v->initializer));
-                                        scg.resetStatement();
+                                    if (isStatic) {
+                                        thisClass->defineStatic(idExpr->name, type);
+                                        if (v->initializer) {
+                                            scg.setStatic(thisClass, idExpr->name, scg.genExpr(v->initializer));
+                                            scg.resetStatement();
+                                        }
                                      } else {
-                                        JSSlot& slot = thisClass->addSlot(idExpr->name, type);
+                                        JSSlot& slot = thisClass->defineSlot(idExpr->name, type);
                                         if (v->initializer) {
                                             // generate code for the default constructor, which initializes the slots.
                                             ccg.setSlot(thisRegister, slot.mIndex, ccg.genExpr(v->initializer));
@@ -1478,6 +1475,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                         }
                         break;
                     default:
+                        NOT_REACHED("unimplemented class member statement");
                         break;
                     }
                     s = s->next;
@@ -1486,7 +1484,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     thisClass->setConstructor(ccg.complete());
                 // REVISIT:  using the scope of the class to store both methods and statics.
                 if (scg.getICode()->size()) {
-                    Interpreter::Context cx(*mWorld, thisClass->getScope());
+                    Interpreter::Context cx(*mWorld, thisScope);
                     ICodeModule* clinit = scg.complete();
                     cx.interpret(clinit, JSValues());
                     delete clinit;
