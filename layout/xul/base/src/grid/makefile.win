@@ -47,7 +47,6 @@ CPPSRCS=					\
 	nsGridRowLeafLayout.cpp \
 	nsGridRowLeafFrame.cpp \
 	nsGridRowGroupFrame.cpp \
-	nsGridRowLeaf.cpp \
 	nsGridRowGroupLayout.cpp \
     nsGrid.cpp \
 	nsGridRow.cpp \

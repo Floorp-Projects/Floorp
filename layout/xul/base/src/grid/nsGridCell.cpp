@@ -49,7 +49,7 @@
 #include "nsStackLayout.h"
 
 
-nsGridCell::nsGridCell():mBoxInRow(nsnull),mBoxInColumn(nsnull)
+nsGridCell::nsGridCell():mBoxInColumn(nsnull),mBoxInRow(nsnull)
 {
     MOZ_COUNT_CTOR(nsGridCell);
 }                                               
