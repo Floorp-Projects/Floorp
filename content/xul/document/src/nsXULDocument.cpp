@@ -4185,6 +4185,9 @@ nsXULDocument::StartLayout(void)
       }
 
       shell->InitialReflow(r.width, r.height);
+      FlushPendingNotifications(); // This is done because iframes don't load their subdocs until
+                                   // they get reflowed.  If we reflow asynchronously, our onload 
+                                   // will fire too early. -- hyatt
 
       // Start observing the document _after_ we do the initial
       // reflow. Otherwise, we'll get into an trouble trying to
