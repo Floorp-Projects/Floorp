@@ -31,9 +31,9 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, PRInt32 port)
                     nsPrintfCString(":%d", keyPort));
 
     if (mUsingHttpProxy)
-        mHashKey.SetCharAt(0, 'P');
+        mHashKey.SetCharAt('P', 0);
     if (mUsingSSL)
-        mHashKey.SetCharAt(1, 'S');
+        mHashKey.SetCharAt('S', 1);
 
     // NOTE: for transparent proxies (e.g., SOCKS) we need to encode the proxy
     // type in the hash key (this ensures that we will continue to speak the
