@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2000/11/09 19:55:52 $ 
+# $Revision: 1.9 $ 
+# $Date: 2000/11/28 00:32:57 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -250,15 +250,25 @@ sub latest_status {
 sub gettree_header {
   my ($self, $tree) = (@_);
   
-  # this is not working the way I want it to.  I will debug it later.
-
-  return '';
-
   my ($out) = '';
 
   (TreeData::tree_exists($tree)) ||
     die("Tree: $tree, not defined.");
   
+  my (@ignoring_builds) = sort keys %{ $IGNORE_BUILDS{$tree} };
+  
+  if (@ignoring_builds) {
+    $out .= "Currently ignoring builds: @ignoring_builds \n";
+    $num_lines++;
+  }
+
+  # this is not working the way I want it to.  Individual columns are
+  # good but the max/min to combine multiple columns is broken.  We
+  # need to introduce the notion of "adjecent cell" to get this to
+  # work right. I will debug it later for now just exit this function.
+
+  return $out;
+
   # find our best guess as to when the tree broke.
 
   my (@earliest_failure) = ();
@@ -358,13 +368,6 @@ sub gettree_header {
                                   );
     
     $out .= $link;
-  }
-
-  my (@ignoring_builds) = sort keys %{ $IGNORE_BUILDS{$tree} };
-  
-  if (@ignoring_builds) {
-    $out .= "Currently ignoring builds: @ignoring_builds \n";
-    $num_lines++;
   }
 
   return $out;
@@ -588,12 +591,23 @@ sub status_table_header {
     my $avg_deadtime = $DATABASE{$tree}{$buildname}{'average_deadtime'};
     my $current_starttime = $DATABASE{$tree}{$buildname}{'recs'}[0]{'starttime'};
     my $current_endtime = $DATABASE{$tree}{$buildname}{'recs'}[0]{'endtime'};
-    
+    my $current_status = $DATABASE{$tree}{$buildname}{'recs'}[0]{'status'};
+    my $previous_endtime = $DATABASE{$tree}{$buildname}{'recs'}[1]{'endtime'};
+    my $current_finnished = (!(
+                               ($current_status eq 'not_running') ||
+                               ($current_status eq 'building')
+                            ));
+
     my $txt ='';    
     my $num_lines;
 
     $txt .= "time now: &nbsp;".&HTMLPopUp::timeHTML($main::TIME)."<br>";
     $num_lines++;
+
+    if ($current_endtime) {
+      $txt .= "previous end_time: &nbsp;";
+      $txt .= &HTMLPopUp::timeHTML($current_endtime)."<br>";
+    }
 
     my $earliest_failure = $DATABASE{$tree}{$buildname}{'earliest_failure'};
     if ($earliest_failure){
@@ -625,13 +639,32 @@ sub status_table_header {
       $num_lines++;
     }
     
-    if ($current_endtime) {
+    $txt .= "<p>";
+    $num_lines++;
+
+    my $estimated_remaining = undef;
+
+    if ($current_finnished) {
       my ($min) =  sprintf ("%.0f",         # round
-                            ($main::TIME  - $current_endtime)/60);
-      $txt .= "previous end_time: &nbsp;";
-      $txt .= &HTMLPopUp::timeHTML($current_endtime)."<br>";
+                            ($main::TIME - $current_endtime)/60);
       $txt .= "current dead_time (minutes): &nbsp;$min<br>";
       $num_lines += 2;
+
+      if ($avg_buildtime) {
+
+        # The build has not started so must estimate at least
+        # $avg_buildtime even if we have waited a long time already.
+        # If we have waited a little time the estimate is:
+        # $avg_buildtime + $avg_deadtime
+
+       my ($estimated_dead_remaining) = 
+          main::max( ($avg_deadtime - 
+                      ($main::TIME - $current_endtime)), 
+                     0);
+
+        $estimated_remaining = ($estimated_dead_remaining + $avg_buildtime);
+      }
+
     } elsif ($current_starttime) {
       my ($min) =  sprintf ("%.0f",         # round
                             ($main::TIME  - $current_starttime)/60);
@@ -639,17 +672,12 @@ sub status_table_header {
       $txt .= &HTMLPopUp::timeHTML($current_starttime)."<br>";
       $txt .= "current build_time (minutes): &nbsp;$min<br>";
       $num_lines += 2;
-    }
 
-    my $estimated_remaining = undef;
+      if ($avg_buildtime) {
+        $estimated_remaining = ($avg_buildtime) - 
+          ($main::TIME - $current_starttime);
+      }
 
-    if (0){
-    } elsif ( ($avg_deadtime) && ($avg_buildtime) && ($current_endtime) ) {
-      $estimated_remaining = ($avg_deadtime + $avg_buildtime) + 
-        ($current_endtime - $main::TIME);
-    } elsif ( ($avg_buildtime) && ($current_starttime) ) {
-      $estimated_remaining = ($avg_buildtime) + 
-        ($current_starttime - $main::TIME);
     }
 
     if ($estimated_remaining) {
@@ -963,11 +991,12 @@ sub status_table_row {
       my ($cell_color) = BuildStatus::status2html_colors('not_running');
       my ($cell_options) = ("rowspan=$rowspan ".
                             "bgcolor=$cell_color ");
+      my ($lc_time) = localtime($current_rec->{'timenow'});
 
       push @outrow, ("\t<!-- not_running: Build:".
                      "tree: $tree, ".
                      "build: $buildname, ".
-                     "previous_end: ".localtime($current_rec->{'timenow'}).", ".
+                     "previous_end: $lc_time, ".
                      "-->\n".
 
                      "\t\t<td align=center $cell_options>".
