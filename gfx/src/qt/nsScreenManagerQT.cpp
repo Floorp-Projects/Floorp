@@ -57,7 +57,7 @@ nsScreenManagerQT::~nsScreenManagerQT()
 }
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenManagerQT, NS_GET_IID(nsIScreenManager))
+NS_IMPL_ISUPPORTS1(nsScreenManagerQT, nsIScreenManager)
 
 //
 // CreateNewScreenObject

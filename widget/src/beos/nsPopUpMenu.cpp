@@ -35,8 +35,7 @@
 #include "nsRect.h"
 #include "nsGfxCIID.h"
 
-static NS_DEFINE_IID(kPopUpMenuIID, NS_IPOPUPMENU_IID);
-NS_IMPL_ISUPPORTS(nsPopUpMenu, kPopUpMenuIID)
+NS_IMPL_ISUPPORTS1(nsPopUpMenu, nsIPopUpMenu)
 
 
 //-------------------------------------------------------------------------

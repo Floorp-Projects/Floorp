@@ -82,7 +82,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 // IIDs
 
 NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
-NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
 NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
 NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
@@ -144,7 +143,7 @@ public:
 
 };
 
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, kIOutputStreamIID);
+NS_IMPL_ISUPPORTS1(ConsoleOutputStreamImpl, nsIOutputStream)
 
 
 ////////////////////////////////////////////////////////////////////////

@@ -940,7 +940,7 @@ nsJAREnumerator::~nsJAREnumerator()
     mArchive->FindFree(mFind);
 }
 
-NS_IMPL_ISUPPORTS(nsJAREnumerator, NS_GET_IID(nsISimpleEnumerator));
+NS_IMPL_ISUPPORTS1(nsJAREnumerator, nsISimpleEnumerator)
 
 //----------------------------------------------
 // nsJAREnumerator::HasMoreElements

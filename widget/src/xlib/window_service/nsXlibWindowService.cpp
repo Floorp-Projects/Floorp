@@ -32,9 +32,7 @@ nsXlibWindowService::~nsXlibWindowService()
 {
 }
 
-NS_IMPL_ADDREF(nsXlibWindowService)
-NS_IMPL_RELEASE(nsXlibWindowService)
-NS_IMPL_QUERY_INTERFACE(nsXlibWindowService, NS_GET_IID(nsIXlibWindowService))
+NS_IMPL_ISUPPORTS1(nsXlibWindowService, nsIXlibWindowService)
 
 nsXlibWindowCallback         nsXlibWindowService::gsWindowCreateCallback = nsnull;
 nsXlibWindowCallback         nsXlibWindowService::gsWindowDestroyCallback = nsnull;

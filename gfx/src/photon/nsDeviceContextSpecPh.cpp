@@ -30,7 +30,6 @@
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
 
-static NS_DEFINE_IID( kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID );
 static NS_DEFINE_CID( kPrintOptionsCID, NS_PRINTOPTIONS_CID );
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
@@ -46,9 +45,7 @@ nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 
 }
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecPh, kDeviceContextSpecIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecPh)
-NS_IMPL_RELEASE(nsDeviceContextSpecPh)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecPh, nsIDeviceContextSpec)
 
 NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet)
 {

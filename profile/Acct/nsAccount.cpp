@@ -129,7 +129,6 @@ char dnsp[24];
 char dnss[24];
 
 // IID and CIDs of all the services needed
-static NS_DEFINE_IID(kIAccountIID, NS_IAccount_IID);
 static NS_DEFINE_CID(kAccountCID, NS_Account_CID);
 //static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
@@ -215,7 +214,7 @@ nsAccount *nsAccount::GetInstance()
  * nsISupports Implementation
  */
 
-NS_IMPL_ISUPPORTS(nsAccount, kIAccountIID);
+NS_IMPL_ISUPPORTS1(nsAccount, nsIAccount)
 
 /*
  * nsIProfile Implementation
@@ -802,9 +801,7 @@ class nsAccountFactory: public nsIFactory {
   };
 };
 
-static NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
-
-NS_IMPL_ISUPPORTS(nsAccountFactory, kFactoryIID);
+NS_IMPL_ISUPPORTS1(nsAccountFactory, nsIFactory)
 
 nsresult nsAccountFactory::CreateInstance(nsISupports *aDelegate,
                                             const nsIID &aIID,
@@ -841,7 +838,7 @@ NSGetFactory(nsISupports* serviceMgr,
   }
   if (aClass.Equals(kAccountCID)) {
     nsAccountFactory *factory = new nsAccountFactory();
-    nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
+    nsresult res = CallQueryInterface(factory, aFactory);
     if (NS_FAILED(res)) {
       *aFactory = nsnull;
       delete factory;

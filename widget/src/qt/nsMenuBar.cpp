@@ -31,7 +31,7 @@
 
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-//NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
+//NS_IMPL_ISUPPORTS1(nsMenuBar, nsIMenuBar)
 
 nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {

@@ -408,7 +408,6 @@ nsParser::~nsParser() {
 
 NS_IMPL_ADDREF(nsParser)
 NS_IMPL_RELEASE(nsParser)
-//NS_IMPL_ISUPPORTS(nsParser,NS_IHTML_HTMLPARSER_IID)
 
 
 /**

@@ -58,7 +58,7 @@ nsScreenPh :: nsScreenPh ( ) {
 nsScreenPh :: ~nsScreenPh( ) { }
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenPh, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenPh, nsIScreen)
 
 NS_IMETHODIMP nsScreenPh :: GetPixelDepth( PRInt32 *aPixelDepth ) {
 	*aPixelDepth = mPixelDepth;

@@ -35,14 +35,12 @@
 // 
 static PRUintn gToolkitTLSIndex = 0; 
 
-//NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
 //-------------------------------------------------------------------------
 //
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
-NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
+NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 struct ThreadInterfaceData
 {

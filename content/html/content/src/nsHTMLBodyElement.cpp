@@ -244,7 +244,7 @@ BodyRule::~BodyRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(BodyRule, NS_GET_IID(nsIStyleRule));
+NS_IMPL_ISUPPORTS1(BodyRule, nsIStyleRule)
 
 NS_IMETHODIMP
 BodyRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const

@@ -26,13 +26,10 @@
 #include "nsGfxCIID.h"
 #include "plstr.h"
 
-static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryXlib, kDeviceContextSpecFactoryIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecFactoryXlib)
-NS_IMPL_RELEASE(nsDeviceContextSpecFactoryXlib)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryXlib, nsIDeviceContextSpecFactory)
 
 nsDeviceContextSpecFactoryXlib::nsDeviceContextSpecFactoryXlib() 
 {

@@ -59,9 +59,7 @@ static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID); 
  
 #if 0 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecBeOS, kDeviceContextSpecIID) 
-NS_IMPL_ADDREF(nsDeviceContextSpecBeOS) 
-NS_IMPL_RELEASE(nsDeviceContextSpecBeOS) 
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecBeOS, nsIDeviceContextSpec)
 #endif 
  
 NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aInstancePtr) 

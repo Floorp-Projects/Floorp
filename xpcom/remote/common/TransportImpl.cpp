@@ -20,7 +20,7 @@
  */
 #include "TransportImpl.h"
 
-NS_IMPL_ISUPPORTS(TransportImpl, NS_GET_IID(ITransport));
+NS_IMPL_ISUPPORTS1(TransportImpl, ITransport)
 
 NS_IMETHODIMP TransportImpl::Read(void** data, PRUint32 * size) {
     if(!bridge) {

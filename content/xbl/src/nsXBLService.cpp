@@ -510,7 +510,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsProxyStream, NS_GET_IID(nsIInputStream));
+NS_IMPL_ISUPPORTS1(nsProxyStream, nsIInputStream)
 
 
 // Implementation /////////////////////////////////////////////////////////////////

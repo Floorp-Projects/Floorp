@@ -964,10 +964,7 @@ HTMLAttributesImpl::~HTMLAttributesImpl(void)
   Reset();
 }
 
-NS_IMPL_ADDREF(HTMLAttributesImpl)
-NS_IMPL_RELEASE(HTMLAttributesImpl)
-
-NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, NS_GET_IID(nsIHTMLAttributes));
+NS_IMPL_ISUPPORTS1(HTMLAttributesImpl, nsIHTMLAttributes)
 
 const PRUnichar kNullCh = PRUnichar('\0');
 

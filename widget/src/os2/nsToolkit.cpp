@@ -26,7 +26,7 @@
 #include "nsToolkit.h"
 #include "nsSwitchToUIThread.h"
 
-NS_IMPL_ISUPPORTS(nsToolkit, NS_GET_IID(nsIToolkit))
+NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 //
 // Static thread local storage index of the Toolkit 

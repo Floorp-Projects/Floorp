@@ -22,8 +22,6 @@
 
 #include "nsRegionMotif.h"
 
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
-
 nsRegionMotif :: nsRegionMotif()
 {
   NS_INIT_REFCNT();
@@ -39,9 +37,7 @@ nsRegionMotif :: ~nsRegionMotif()
   mRegion = nsnull;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionMotif, kRegionIID)
-NS_IMPL_ADDREF(nsRegionMotif)
-NS_IMPL_RELEASE(nsRegionMotif)
+NS_IMPL_ISUPPORTS1(nsRegionMotif, nsIRegion)
 
 nsresult nsRegionMotif :: Init(void)
 {

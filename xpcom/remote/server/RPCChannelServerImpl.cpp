@@ -49,8 +49,8 @@ private:
     IRPCChannel * rpcChannel;
 };
 
-NS_IMPL_ISUPPORTS(RPCChannelRunner, NS_GET_IID(nsIRunnable));
-NS_IMPL_ISUPPORTS(RPCChannelServerImpl, NS_GET_IID(IRPCChannel));
+NS_IMPL_ISUPPORTS1(RPCChannelRunner, nsIRunnable)
+NS_IMPL_ISUPPORTS1(RPCChannelServerImpl, IRPCChannel)
 
 
 

@@ -41,8 +41,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include <sys/stat.h>
 #endif
 
-NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-
 class StreamToFile : public nsIStreamListener {
 public:
   StreamToFile(FILE* fp);
@@ -75,7 +73,7 @@ StreamToFile::StreamToFile(FILE* fp)
   mFile = fp;
 }
 
-NS_IMPL_ISUPPORTS(StreamToFile,kIStreamListenerIID)
+NS_IMPL_ISUPPORTS1(StreamToFile, nsIStreamListener)
 
 StreamToFile::~StreamToFile()
 {

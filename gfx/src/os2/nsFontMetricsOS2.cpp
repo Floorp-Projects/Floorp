@@ -215,7 +215,7 @@ nsFontMetricsOS2::~nsFontMetricsOS2()
   }
 }
 
-NS_IMPL_ISUPPORTS( nsFontMetricsOS2, nsIFontMetrics::GetIID())
+NS_IMPL_ISUPPORTS1(nsFontMetricsOS2, nsIFontMetrics)
 
 nsresult nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup, nsIDeviceContext *aContext)
 {
@@ -1210,8 +1210,7 @@ nsFontEnumeratorOS2::nsFontEnumeratorOS2()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsFontEnumeratorOS2,
-                  NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorOS2, nsIFontEnumerator)
 
 static int gInitializedFontEnumerator = 0;
 

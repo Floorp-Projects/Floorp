@@ -106,7 +106,7 @@ private:
   char mCharset[65];
 };
 
-NS_IMPL_ISUPPORTS(nsNativeDetector, NS_GET_IID(nsICharsetDetector));
+NS_IMPL_ISUPPORTS1(nsNativeDetector, nsICharsetDetector)
 
 //----------------------------------------------------------
 nsNativeDetector::nsNativeDetector(PRUint32 aCodePage)

@@ -911,7 +911,7 @@ CSSImportantRule::~CSSImportantRule(void)
   NS_IF_RELEASE(mDeclaration);
 }
 
-NS_IMPL_ISUPPORTS(CSSImportantRule, NS_GET_IID(nsIStyleRule));
+NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
 
 #if 0
 NS_IMETHODIMP

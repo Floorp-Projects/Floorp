@@ -443,7 +443,7 @@ public:
   NS_DECL_ISUPPORTS
 };
 
-NS_IMPL_ISUPPORTS(TestTransaction, NS_GET_IID(nsITransaction))
+NS_IMPL_ISUPPORTS1(TestTransaction, nsITransaction)
 
 class SimpleTransaction : public TestTransaction
 {

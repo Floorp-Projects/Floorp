@@ -34,7 +34,6 @@
 
 #include "nsPhGfxLog.h"
 
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
@@ -77,12 +76,7 @@ nsDeviceContextPh :: ~nsDeviceContextPh( ) {
 	NS_IF_RELEASE( mSpec );
 	}
 
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-static NS_DEFINE_IID(kIDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextPh, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextPh)
-NS_IMPL_RELEASE(nsDeviceContextPh)
+NS_IMPL_ISUPPORTS1(nsDeviceContextPh, nsIDeviceContext)
 
 NS_IMETHODIMP nsDeviceContextPh :: Init( nsNativeWidget aWidget ) {
   float newscale, origscale;

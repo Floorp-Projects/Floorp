@@ -104,7 +104,7 @@ nsHTMLURIRefObject::~nsHTMLURIRefObject()
 }
 
 //Interfaces for addref and release and queryinterface
-NS_IMPL_ISUPPORTS(nsHTMLURIRefObject, NS_GET_IID(nsIURIRefObject))
+NS_IMPL_ISUPPORTS1(nsHTMLURIRefObject, nsIURIRefObject)
 
 NS_IMETHODIMP
 nsHTMLURIRefObject::Reset()

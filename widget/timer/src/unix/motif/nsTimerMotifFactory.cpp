@@ -63,7 +63,7 @@ nsTimerMotifFactory::~nsTimerMotifFactory()
 {   
 }   
 
-NS_IMPL_ISUPPORTS(nsTimerMotifFactory, NS_GET_IID(nsIFactory))
+NS_IMPL_ISUPPORTS1(nsTimerMotifFactory, nsIFactory)
 
 
 NS_IMETHODIMP

@@ -99,7 +99,7 @@ protected:
     PRBool      mDone;
 };
 
-NS_IMPL_ISUPPORTS(Reader, NS_GET_IID(nsIRunnable));
+NS_IMPL_ISUPPORTS1(Reader, nsIRunnable)
 
 ////////////////////////////////////////////////////////////////////////////////
 

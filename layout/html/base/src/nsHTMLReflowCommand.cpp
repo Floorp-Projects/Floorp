@@ -76,7 +76,7 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
   NS_IF_RELEASE(mListName);
 }
 
-NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, NS_GET_IID(nsIReflowCommand));
+NS_IMPL_ISUPPORTS1(nsHTMLReflowCommand, nsIReflowCommand)
 
 nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater) const
 {

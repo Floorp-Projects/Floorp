@@ -430,7 +430,7 @@ nsFontEnumeratorPh::nsFontEnumeratorPh()
 	NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsFontEnumeratorPh, NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorPh, nsIFontEnumerator)
 
 static int gInitializedFontEnumerator = 0;
 

@@ -156,7 +156,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIRequestObserverIID, NS_IREQUESTOBSERVER_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
@@ -1468,7 +1467,7 @@ nsPluginCacheListener::~nsPluginCacheListener()
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(nsPluginCacheListener, kIStreamListenerIID);
+NS_IMPL_ISUPPORTS1(nsPluginCacheListener, nsIStreamListener)
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginCacheListener::OnStartRequest(nsIRequest *request, nsISupports* ctxt)
@@ -3860,7 +3859,7 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(DOMMimeTypeImpl, nsIDOMMimeType::GetIID());
+NS_IMPL_ISUPPORTS1(DOMMimeTypeImpl, nsIDOMMimeType)
 ////////////////////////////////////////////////////////////////////////
 class DOMPluginImpl : public nsIDOMPlugin {
 public:
@@ -3920,7 +3919,7 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(DOMPluginImpl, nsIDOMPlugin::GetIID());
+NS_IMPL_ISUPPORTS1(DOMPluginImpl, nsIDOMPlugin)
 ////////////////////////////////////////////////////////////////////////
 
 

@@ -59,7 +59,7 @@ public:
   }
 };
 
-NS_IMPL_QUERY_INTERFACE(nsTestCom, NS_GET_IID(nsITestCom));
+NS_IMPL_QUERY_INTERFACE1(nsTestCom, nsITestCom)
 
 nsrefcnt nsTestCom::AddRef() 
 {
@@ -99,7 +99,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsTestComFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_ISUPPORTS1(nsTestComFactory, nsIFactory)
 
 nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
 					  const nsIID &aIID,

@@ -40,7 +40,6 @@
 #include "nsIInterfaceRequestor.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
 
 class RobotSinkObserver : public nsIRobotSinkObserver {
 public:
@@ -65,7 +64,7 @@ static int g_iMaxProcess = 5000;
 static PRBool g_bHitTop;
 static PRBool g_bReadyForNextUrl;
 
-NS_IMPL_ISUPPORTS(RobotSinkObserver, kIRobotSinkObserverIID);
+NS_IMPL_ISUPPORTS1(RobotSinkObserver, nsIRobotSinkObserver)
 
 NS_IMETHODIMP RobotSinkObserver::VerifyDirectory(const char * verify_dir)
 {

@@ -45,7 +45,7 @@ SignonViewerImpl::~SignonViewerImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(SignonViewerImpl, NS_GET_IID(nsISignonViewer));
+NS_IMPL_ISUPPORTS1(SignonViewerImpl, nsISignonViewer)
 
 NS_IMETHODIMP
 SignonViewerImpl::GetNopreviewValue(PRUnichar** aValue)

@@ -200,7 +200,7 @@ NameSpaceImpl::~NameSpaceImpl()
   NS_IF_RELEASE(mPrefix);
 }
 
-NS_IMPL_ISUPPORTS(NameSpaceImpl, NS_GET_IID(nsINameSpace))
+NS_IMPL_ISUPPORTS1(NameSpaceImpl, nsINameSpace)
 
 NS_IMETHODIMP
 NameSpaceImpl::GetNameSpaceManager(nsINameSpaceManager*& aManager) const
@@ -364,7 +364,7 @@ NameSpaceManagerImpl::~NameSpaceManagerImpl()
   ReleaseTable();
 }
 
-NS_IMPL_ISUPPORTS(NameSpaceManagerImpl, NS_GET_IID(nsINameSpaceManager))
+NS_IMPL_ISUPPORTS1(NameSpaceManagerImpl, nsINameSpaceManager)
 
 NS_IMETHODIMP
 NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)

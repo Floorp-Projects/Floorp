@@ -103,7 +103,7 @@ class nsAppshellManager
 
 static nsAppshellManager *pManager = nsnull;
 
-NS_IMPL_ISUPPORTS(nsAppShell, NS_GET_IID(nsIAppShell))
+NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 // nsAppShell constructor
 nsAppShell::nsAppShell()

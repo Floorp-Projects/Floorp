@@ -85,7 +85,7 @@ public:
   void Test();
 };
 
-NS_IMPL_ISUPPORTS(TestClassImpl, NS_GET_IID(ITestClass));
+NS_IMPL_ISUPPORTS1(TestClassImpl, ITestClass)
 
 void TestClassImpl::Test() {
   cout << "hello, world!\n";
@@ -110,7 +110,7 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock) { return NS_OK; }
 };
 
-NS_IMPL_ISUPPORTS(TestFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_ISUPPORTS1(TestFactory, nsIFactory)
 
 nsresult TestFactory::CreateInstance(nsISupports *aDelegate,
                                      const nsIID &aIID,

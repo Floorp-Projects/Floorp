@@ -54,7 +54,7 @@
 #define KBD_CTRL KBD_CONTROL
 #endif
 
-NS_IMPL_ISUPPORTS(nsWidgetModuleData, NS_GET_IID(nsISupports))
+NS_IMPL_ISUPPORTS0(nsWidgetModuleData)
 
 nsWidgetModuleData::nsWidgetModuleData()
 {

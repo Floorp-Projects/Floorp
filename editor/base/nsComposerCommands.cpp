@@ -47,7 +47,7 @@ nsBaseComposerCommand::nsBaseComposerCommand()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsBaseComposerCommand, NS_GET_IID(nsIControllerCommand));
+NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)
 
 
 //--------------------------------------------------------------------------------------------------------------------

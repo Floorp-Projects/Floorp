@@ -205,8 +205,7 @@ NS_IMETHODIMP nsPICSElementObserver::Observe(nsISupports*, const PRUnichar*, con
 ////////////////////////////////////////////////////////////////////////////////
 // nsPICSElementObserverFactory Implementation
 
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsPICSElementObserverFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS1(nsPICSElementObserverFactory, nsIFactory)
 
 nsPICSElementObserverFactory::nsPICSElementObserverFactory(void)
 {

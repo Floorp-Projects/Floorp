@@ -121,7 +121,7 @@ HTMLColorRule::~HTMLColorRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(HTMLColorRule, NS_GET_IID(nsIStyleRule));
+NS_IMPL_ISUPPORTS1(HTMLColorRule, nsIStyleRule)
 
 NS_IMETHODIMP
 HTMLColorRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const

@@ -43,11 +43,8 @@ nsDeviceContextSpecFactoryPh :: ~nsDeviceContextSpecFactoryPh()
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
-static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryPh, kDeviceContextSpecFactoryIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecFactoryPh)
-NS_IMPL_RELEASE(nsDeviceContextSpecFactoryPh)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryPh, nsIDeviceContextSpecFactory)
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: Init(void)
 {

@@ -38,8 +38,6 @@
 
 extern PRUint32 gPluginObjectCount;
 
-static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-
 CPluginInstance::CPluginInstance() :
   fPeer(nsnull), 
   fWindow(nsnull),
@@ -56,9 +54,7 @@ CPluginInstance::~CPluginInstance()
   dbgOut2("CPluginInstance::~CPluginInstance(), gPluginObjectCount = %lu", gPluginObjectCount);
 }
 
-NS_IMPL_QUERY_INTERFACE(CPluginInstance, kIPluginInstanceIID);
-NS_IMPL_ADDREF(CPluginInstance);
-NS_IMPL_RELEASE(CPluginInstance);
+NS_IMPL_ISUPPORTS1(CPluginInstance, nsIPluginInstance)
 
 NS_METHOD CPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {

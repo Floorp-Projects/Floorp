@@ -60,7 +60,7 @@ nsLoggingProgressListener::~nsLoggingProgressListener()
     }
 }
 
-NS_IMPL_ISUPPORTS(nsLoggingProgressListener, NS_GET_IID(nsIXPIListener));
+NS_IMPL_ISUPPORTS1(nsLoggingProgressListener, nsIXPIListener)
 
 NS_IMETHODIMP
 nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)

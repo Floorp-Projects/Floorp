@@ -246,7 +246,7 @@ void nsBlinkTimer::Stop()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsBlinkTimer, NS_GET_IID(nsITimerCallback));
+NS_IMPL_ISUPPORTS1(nsBlinkTimer, nsITimerCallback)
 
 void nsBlinkTimer::AddFrame(nsIPresContext* aPresContext, nsIFrame* aFrame) {
   FrameData* frameData = new FrameData(aPresContext, aFrame);

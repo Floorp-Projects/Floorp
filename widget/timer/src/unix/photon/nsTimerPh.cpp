@@ -29,8 +29,6 @@
 #include <errno.h>
 struct PRLogModuleInfo  *PhTimLog =  nsnull;
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
-
 
 PRBool nsTimerPh::FireTimeout()
 {
@@ -167,7 +165,7 @@ nsTimerPh::Init(nsITimerCallback *aCallback,
     return err;
 }
 
-NS_IMPL_ISUPPORTS(nsTimerPh, kITimerIID)
+NS_IMPL_ISUPPORTS1(nsTimerPh, nsITimer)
 
 void
 nsTimerPh::Cancel()
@@ -348,7 +346,7 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+    return CallQueryInterface(timer, aInstancePtrResult);
 }
 
 int NS_TimeToNextTimeout(struct timeval *aTimer) 

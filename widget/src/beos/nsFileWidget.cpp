@@ -28,8 +28,7 @@
 #include <Window.h>
 #include <View.h>
 
-NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
-NS_IMPL_ISUPPORTS(nsFileWidget, kIFileWidgetIID);
+NS_IMPL_ISUPPORTS1(nsFileWidget, nsIFileWidget)
 
 //-------------------------------------------------------------------------
 //

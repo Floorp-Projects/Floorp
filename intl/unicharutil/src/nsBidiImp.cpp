@@ -33,7 +33,7 @@
 #include "nsIUBidiUtils.h"
 
 
-NS_IMPL_ISUPPORTS(nsBidi, NS_GET_IID(nsIBidi))
+NS_IMPL_ISUPPORTS1(nsBidi, nsIBidi)
 
 
 /*  Comparing the description of the Bidi algorithm with this implementation

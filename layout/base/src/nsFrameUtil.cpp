@@ -502,7 +502,7 @@ nsFrameUtil::~nsFrameUtil()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsFrameUtil, NS_GET_IID(nsIFrameUtil));
+NS_IMPL_ISUPPORTS1(nsFrameUtil, nsIFrameUtil)
 
 void
 nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)

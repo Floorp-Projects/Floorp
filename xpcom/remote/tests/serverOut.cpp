@@ -251,7 +251,7 @@ class nsRPCTestOutImpl  : public  nsIRPCTestOut {
 
 };
 
-NS_IMPL_ISUPPORTS(nsRPCTestOutImpl , NS_GET_IID(nsIRPCTestOut));
+NS_IMPL_ISUPPORTS1(nsRPCTestOutImpl, nsIRPCTestOut)
 int main(int argc, char **args) {
    int i;
     const short num = 5;

@@ -29,7 +29,6 @@
 #include "prprf.h"
 #include <script.h>
 
-NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
 NS_DEFINE_IID(kMacLocaleCID, NS_MACLOCALE_CID);
 
 struct iso_lang_map
@@ -202,7 +201,7 @@ iso_country_map country_list[] = {
 	
 
 /* nsMacLocale ISupports */
-NS_IMPL_ISUPPORTS(nsMacLocale,kIMacLocaleIID)
+NS_IMPL_ISUPPORTS1(nsMacLocale,nsIMacLocale)
 
 nsMacLocale::nsMacLocale(void)
 {

@@ -75,7 +75,7 @@ public:
     InvokeTestTarget();
 };
 
-NS_IMPL_ISUPPORTS(InvokeTestTarget, NS_GET_IID(InvokeTestTargetInterface));
+NS_IMPL_ISUPPORTS1(InvokeTestTarget, InvokeTestTargetInterface)
 
 InvokeTestTarget::InvokeTestTarget()
 {

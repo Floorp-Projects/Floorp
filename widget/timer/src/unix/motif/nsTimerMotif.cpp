@@ -33,8 +33,6 @@
 #include "nsIComponentManager.h"
 #include "nsIMotifAppContextService.h"
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
-
 extern void nsTimerExpired(XtPointer aCallData);
 
 void nsTimerMotif::FireTimeout()
@@ -122,7 +120,7 @@ nsTimerMotif::Init(PRUint32 aDelay)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsTimerMotif, kITimerIID)
+NS_IMPL_ISUPPORTS1(nsTimerMotif, nsITimer)
 
 
 void
@@ -190,6 +188,6 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+    return CallQueryInterface(timer, aInstancePtrResult);
 }
 #endif /* MOZ_MONOLITHIC_TOOLKIT */

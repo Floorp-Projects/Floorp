@@ -52,9 +52,7 @@ nsresult NS_NewMimeContentTypeHandler(nsIMimeContentTypeHandler ** aInstancePtrR
  * The following macros actually implement addref, release and 
  * query interface for our component. 
  */
-NS_IMPL_ADDREF(nsMimeContentTypeHandler)
-NS_IMPL_RELEASE(nsMimeContentTypeHandler)
-NS_IMPL_QUERY_INTERFACE(nsMimeContentTypeHandler, NS_GET_IID(nsIMimeContentTypeHandler)); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ISUPPORTS1(nsMimeContentTypeHandler, nsIMimeContentTypeHandler)
 
 /*
  * nsIMimeEmitter definitions....

@@ -1149,7 +1149,7 @@ GeneratedContentIterator::GeneratedContentIterator(nsIPresContext* aPresContext,
   First();
 }
 
-NS_IMPL_ISUPPORTS(GeneratedContentIterator, NS_GET_IID(nsIContentIterator));
+NS_IMPL_ISUPPORTS1(GeneratedContentIterator, nsIContentIterator)
 
 GeneratedContentIterator::~GeneratedContentIterator()
 {

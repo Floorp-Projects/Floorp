@@ -57,7 +57,7 @@ nsScreenQT::~nsScreenQT()
 }
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenQT, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenQT, nsIScreen)
 
 NS_IMETHODIMP
 nsScreenQT::GetRect(PRInt32 *outLeft,PRInt32 *outTop,

@@ -26,8 +26,7 @@
 #include <Pt.h>
 #include "nsPhWidgetLog.h"
 
-NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
-NS_IMPL_ISUPPORTS(nsFileWidget, kIFileWidgetIID);
+NS_IMPL_ISUPPORTS1(nsFileWidget, nsIFileWidget)
 
 //-------------------------------------------------------------------------
 //

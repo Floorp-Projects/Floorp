@@ -94,7 +94,7 @@ AccountServicesImpl::~AccountServicesImpl()
 
 
 
-NS_IMPL_ISUPPORTS(AccountServicesImpl, NS_GET_IID(nsIAccountServices));
+NS_IMPL_ISUPPORTS1(AccountServicesImpl, nsIAccountServices)
 
 
 NS_IMETHODIMP

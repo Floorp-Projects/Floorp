@@ -438,7 +438,7 @@ class nsRPCTestInOutImpl : public  nsIRPCTestInOut {
 
 };
 
-NS_IMPL_ISUPPORTS(nsRPCTestInOutImpl, NS_GET_IID(nsIRPCTestInOut));
+NS_IMPL_ISUPPORTS1(nsRPCTestInOutImpl, nsIRPCTestInOut)
 int main(int argc, char **args) {
 
    int i;

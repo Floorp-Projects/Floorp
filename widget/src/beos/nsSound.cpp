@@ -34,7 +34,7 @@
 #include <Entry.h>
 #include <Beep.h>
 
-NS_IMPL_ISUPPORTS(nsSound, NS_GET_IID(nsISound));
+NS_IMPL_ISUPPORTS1(nsSound, nsISound)
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

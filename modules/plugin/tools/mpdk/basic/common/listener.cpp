@@ -35,8 +35,6 @@
 
 extern PRUint32 gPluginObjectCount;
 
-static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
-
 CPluginStreamListener::CPluginStreamListener(CPluginInstance* inst, const char* msgName) :
   fMessageName(msgName)
 {
@@ -52,9 +50,7 @@ CPluginStreamListener::~CPluginStreamListener()
   dbgOut2("CPluginStreamListener::~CPluginStreamListener, gPluginObjectCount = %lu", gPluginObjectCount);
 }
 
-NS_IMPL_QUERY_INTERFACE(CPluginStreamListener, kIPluginStreamListenerIID)
-NS_IMPL_ADDREF(CPluginStreamListener)
-NS_IMPL_RELEASE(CPluginStreamListener)
+NS_IMPL_ISUPPORTS1(CPluginStreamListener, nsIPluginStreamListener)
 
 NS_METHOD CPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* streamInfo)
 {

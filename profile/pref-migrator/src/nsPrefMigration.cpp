@@ -2074,7 +2074,7 @@ nsPrefConverter::nsPrefConverter()
    NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsPrefConverter, NS_GET_IID(nsIPrefConverter))
+NS_IMPL_ISUPPORTS1(nsPrefConverter, nsIPrefConverter)
 
 // Apply a charset conversion from the given charset to UTF-8 for the input C string.
 static

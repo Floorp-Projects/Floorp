@@ -262,7 +262,7 @@ class nsReporter : public nsICharsetDetectionObserver
 };
 
 
-NS_IMPL_ISUPPORTS(nsReporter, NS_GET_IID(nsICharsetDetectionObserver))
+NS_IMPL_ISUPPORTS1(nsReporter, nsICharsetDetectionObserver)
 
 nsresult GetDetector(const char* key, nsICharsetDetector** det)
 {

@@ -1372,5 +1372,5 @@ FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
 /*
  * Implementation of ISupports methods...
  */
-NS_IMPL_ISUPPORTS(FrameLoadingInfo, NS_GET_IID(nsISupports));
+NS_IMPL_ISUPPORTS0(FrameLoadingInfo)
 

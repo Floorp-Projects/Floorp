@@ -179,7 +179,7 @@ nsCJVMManagerFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsCJVMManagerFactory)
 NS_IMPL_RELEASE(nsCJVMManagerFactory)
 #else
-NS_IMPL_ISUPPORTS(nsCJVMManagerFactory, kIFactoryIID)
+NS_IMPL_ISUPPORTS1(nsCJVMManagerFactory, nsIFactory)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////
