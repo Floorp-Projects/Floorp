@@ -8,7 +8,7 @@
 [scriptable, uuid(2EFB5005-4508-11d3-AEDA-00A024FFC08C)]
 interface nsIWinEvent : nsIEvent
 {
-	attribute voidStar hwnd;
+	[noscript] attribute voidStar hwnd;
 	attribute unsigned long message;
 	attribute unsigned long wParam;
 	attribute unsigned long lParam;
