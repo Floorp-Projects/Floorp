@@ -137,73 +137,18 @@ public:
   virtual PRBool Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
                          PRBool *aDidDefineProperty);
 
-  /**
-    * Finds text in content
-   */
-  NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase,
-                      PRBool aSearchDown, PRBool &aIsFound);
-
-  /*
-   * Like nsDocument::IsInSelection except it always includes the body node
-   */
-  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
-
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   /*
    * Returns true if document.domain was set for this document
    */
   NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet);
+
 protected:
   nsresult GetPixelDimensions(nsIPresShell* aShell,
                               PRInt32* aWidth,
                               PRInt32* aHeight);
 
-  // Find/Search Method/Data member
-  PRBool SearchBlock(BlockText    & aBlockText, 
-                     nsString     & aStr,
-                     nsIDOMNode * aCurrentBlock);
-
-  PRInt32 GetTagID(nsString& aName) const;
-  PRBool NodeIsBlock(nsIDOMNode * aNode) const;
-  nsIDOMNode * FindBlockParent(nsIDOMNode * aNode, 
-                               PRBool aSkipThisContent = PR_FALSE);
-
-  PRBool BuildBlockTraversing(nsIDOMNode   * aParent,
-                              BlockText    & aBlockText,
-                              nsIDOMNode * aCurrentBlock);
-
-  PRBool BuildBlockFromContent(nsIDOMNode   * aNode,
-                              BlockText    & aBlockText,
-                              nsIDOMNode * aCurrentBlock);
-
-  PRBool BuildBlockFromStack(nsIDOMNode * aParent,
-                             BlockText  & aBlockText,
-                             PRInt32      aStackInx,
-                             nsIDOMNode * aCurrentBlock);
-
-  // Search/Find Data Member
-  nsIDOMNode ** mParentStack;
-  nsIDOMNode ** mChildStack;
-  PRInt32       mStackInx;
-
-  nsString   * mSearchStr;
-  PRInt32      mSearchDirection;
-
-  PRInt32      mLastBlockSearchOffset;
-  PRBool       mAdjustToEnd;
-
-  nsIDOMNode * mHoldBlockContent;
-  nsIDOMNode * mBodyContent;
-
-  PRBool       mShouldMatchCase;
-
-  /*
-   * Bug 13871: Frameset spoofing - find out if document.domain was set
-   */
-  PRBool       mDomainWasSet;
-
-protected:
   void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);
   void UnregisterNamedItems(nsIContent *aContent, PRBool aInForm);
   nsIContent* FindNamedItem(nsIContent *aContent, const nsString& aName,
@@ -213,7 +158,8 @@ protected:
   nsIContent *MatchId(nsIContent *aContent, const nsAReadableString& aId);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
-  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
+  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
+                                          PRInt32 aIndex);
   static PRBool MatchLinks(nsIContent *aContent, nsString* aData);
   static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
   static PRBool MatchLayers(nsIContent *aContent, nsString* aData);
@@ -259,11 +205,16 @@ protected:
   static nsrefcnt gRefCntRDFService;
   static nsIRDFService* gRDF;
 
-  // The parser service -- used for NodeIsBlock:
-  nsCOMPtr<nsIParserService> mParserService;
-
   PRUint32 mIsWriting : 1;
   PRUint32 mWriteLevel : 31;
+
+  nsIDOMNode * mBodyContent;
+
+  /*
+   * Bug 13871: Frameset spoofing - find out if document.domain was set
+   */
+  PRBool       mDomainWasSet;
+
 };
 
 #endif /* nsHTMLDocument_h___ */
