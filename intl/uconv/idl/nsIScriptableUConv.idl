@@ -59,6 +59,12 @@ interface nsIScriptableUnicodeConverter : nsISupports
   string ConvertFromUnicode([const] in wstring aSrc);
 
   /**
+   * Returns the terminator string.
+   * Should be called after ConvertFromUnicode().
+   */
+  string Finish();
+
+  /**
    * Converts the data from one Charset to Unicode.
    */
   wstring ConvertToUnicode([const] in string aSrc);
