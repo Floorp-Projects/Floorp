@@ -41,6 +41,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
+#include "nsIHTMLContent.h"
+#include "nsHTMLIIDs.h"
 
 class Area {
 public:
@@ -880,6 +882,14 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
       NS_RELEASE(baseUri);
 #endif // NECKO
       aTarget = area->mTarget;
+      if (mMap && (aTarget.Length() == 0)) {
+        nsIHTMLContent* content = nsnull;
+        nsresult result = mMap->QueryInterface(kIHTMLContentIID, (void**)&content);
+        if ((NS_OK == result) && content) {
+          content->GetBaseTarget(aTarget);
+          NS_RELEASE(content);
+        }
+      }
       aAltText = area->mAltText;
       *aSuppress = area->mSuppressFeedback;
       return PR_TRUE;
