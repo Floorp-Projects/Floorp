@@ -40,6 +40,9 @@
 // Needed for Localization
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
+// Needed to fetch scrollbar prefs for image documents that are iframes/frameset frames
+#include "nsIScrollable.h"
+#include "nsWeakReference.h"
 
 #define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
@@ -85,6 +88,7 @@ public:
 
   nsIImageRequest*  mImageRequest;
   nscolor           mBlack;
+  nsWeakPtr         mContainer;
 };
 
 //----------------------------------------------------------------------
@@ -195,6 +199,8 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
                                    PRBool aReset)
 {
   NS_ASSERTION(aDocListener, "null aDocListener");
+  NS_ENSURE_ARG_POINTER(aContainer);
+  mContainer = dont_AddRef(NS_GetWeakReference(aContainer));
 
   nsresult rv = Init();
 
@@ -345,6 +351,15 @@ nsImageDocument::CreateSyntheticDocument()
 void
 nsImageDocument::StartLayout()
 {
+
+  // Reset scrolling to default settings for this shell.
+  // This must happen before the initial reflow, when we create the root frame
+  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryReferent(mContainer));
+  if (scrollableContainer) {
+    scrollableContainer->ResetScrollbarPreferences();
+  }
+
+
   PRInt32 i, ns = GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell* shell = GetShellAt(i);
