@@ -664,7 +664,7 @@ HPUX_RESOURCE_HACK	= -Wp,-H16384
 
 OTHER_LIBS	= -L/usr/lib/X11R5 -L$(DIST)/lib $(QTLIB) -lX11 -lXext $(OS_LIBS)
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 EXPORT_DEPLIBS	+= cxxlink-filter
 US_DEPLIBS	+= cxxlink-filter
 CCLD		= CC -tl,./cxxlink-filter
@@ -803,7 +803,7 @@ ifndef NO_WEBFONTS
 EXTRA_REL_FILES += $(WEBFONT_DSO)
 endif
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 OTHER_LIBS	+= -L$(NS_LIB)
 
 #
@@ -1057,7 +1057,7 @@ symbols:
 
 # the embed program
 $(OBJDIR)/embed: tools/embed.cpp
-	$(CC) -I$(QTDIR)/include -o $@ $< $(QTLIB) -L/usr/X11/lib -lXext -lX11
+	$(CCC) -I$(QTDIR)/include -o $@ $< $(QTLIB) -L/usr/X11/lib -lXext -lX11
 
 # make sure icon-pixmaps.inc gets built
 $(OBJDIR)/icons.o: $(OBJDIR)/icon-pixmaps.inc
