@@ -40,6 +40,7 @@
 
 #include "nsWidgetDefs.h"
 #include "nsBaseClipboard.h"
+#include "nsIObserver.h"
 
 class nsITransferable;
 class nsIClipboardOwner;
@@ -52,12 +53,19 @@ struct IDataObject;
 
 struct FormatRecord;
 
-class nsClipboard : public nsBaseClipboard
+class nsClipboard : public nsBaseClipboard,
+		    public nsIObserver
 {
 
 public:
   nsClipboard();
   virtual ~nsClipboard();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
 
   // nsIClipboard
   NS_IMETHOD ForceDataToClipboard(PRInt32 aWhichClipboard);

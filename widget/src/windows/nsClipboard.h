@@ -39,6 +39,7 @@
 #define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
+#include "nsIObserver.h"
 #include <windows.h>
 
 class nsITransferable;
@@ -50,15 +51,20 @@ struct IDataObject;
  * Native Win32 Clipboard wrapper
  */
 
-class nsClipboard : public nsBaseClipboard
+class nsClipboard : public nsBaseClipboard,
+                    public nsIObserver
 {
 
 public:
   nsClipboard();
   virtual ~nsClipboard();
 
-  // nsIClipboard  
-  NS_IMETHOD ForceDataToClipboard ( PRInt32 aWhichClipboard );
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
+
+  // nsIClipboard
   NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval); 
 
   // Internal Native Routines

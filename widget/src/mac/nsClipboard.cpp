@@ -94,7 +94,7 @@ nsClipboard::~nsClipboard()
 // Take data off the transferrable and put it on the clipboard in as many formats
 // as are registered.
 //
-// NOTE: This code could all live in ForceDataToClipboard() and this could be a NOOP. 
+// NOTE: This code could all live in a shutdown observer and this could be a NOOP. 
 // If speed and large data sizes are an issue, we should move that code there and only
 // do it on an app switch.
 //

@@ -61,7 +61,6 @@ public:
   virtual ~nsClipboard();
 
   // nsIClipboard  
-  //NS_IMETHOD ForceDataToClipboard();
   NS_IMETHOD  HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval); 
 
 protected:

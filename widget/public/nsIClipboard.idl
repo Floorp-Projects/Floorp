@@ -83,17 +83,6 @@ interface nsIClipboard : nsISupports
     void emptyClipboard ( in long aWhichClipboard ) ;
 
    /**
-    * Some platforms support deferred notification for putting data on the clipboard
-    * This method forces the data onto the clipboard in its various formats
-    * This may be used if the application going away.
-    *
-    * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
-    * @result NS_OK if successful.
-    */
-  
-    void forceDataToClipboard ( in long aWhichClipboard ) ;
-
-   /**
     * This provides a way to give correct UI feedback about, for instance, a paste 
     * should be allowed. It does _NOT_ actually retreive the data and should be a very
     * inexpensive call. All it does is check if there is data on the clipboard matching

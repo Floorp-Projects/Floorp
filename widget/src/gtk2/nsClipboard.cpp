@@ -349,15 +349,6 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 }
 
 NS_IMETHODIMP
-nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
-{
-    // We don't have a way to force data to the clipboard since
-    // there's no common place to put clipboard data.
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
                                     PRInt32 aWhichClipboard, PRBool *_retval)
 {
