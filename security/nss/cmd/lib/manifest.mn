@@ -35,11 +35,11 @@ CORE_DEPTH	= ../../..
 LIBRARY_NAME	= sectool
 
 # MODULE public and private header  directories are implicitly REQUIRED.
-MODULE		= seccmd
+MODULE		= nss
 
 DEFINES		= -DNSPR20
 
-EXPORTS		= secutil.h \
+PRIVATE_EXPORTS	= secutil.h \
 		  $(NULL)
 
 CSRCS		= secutil.c \
@@ -51,9 +51,10 @@ CSRCS		= secutil.c \
 		ffs.c \
 		$(NULL)
 
-REQUIRES	= nss nspr dbm
+REQUIRES	= dbm
 
 ifdef NSS_ENABLE_ECC
 DEFINES += -DNSS_ENABLE_ECC
 endif
 
+NO_MD_RELEASE	= 1
