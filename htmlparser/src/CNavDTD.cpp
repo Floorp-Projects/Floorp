@@ -1299,7 +1299,7 @@ static char  gTagSet1[]={
   eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
   eHTMLTag_input,     eHTMLTag_isindex,   
   
-  eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_li,
+  eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_layer,     eHTMLTag_li,
   eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
   eHTMLTag_noframes,  eHTMLTag_noscript,
   eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p,         eHTMLTag_pre,
@@ -1323,8 +1323,8 @@ static char  gTagSet2[]={
   eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
   eHTMLTag_kbd,       
 
-  eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
-  eHTMLTag_object,    eHTMLTag_p, 
+  eHTMLTag_label,     eHTMLTag_layer,     eHTMLTag_map,       eHTMLTag_newline,
+  eHTMLTag_nobr,      eHTMLTag_object,    eHTMLTag_p, 
   eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
   eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
   eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,    
@@ -1427,6 +1427,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
     case eHTMLTag_blockquote:
     case eHTMLTag_body:
+    case eHTMLTag_layer:
       if(eHTMLTag_userdefined==aChild)
         result=PR_TRUE;
       else
@@ -1534,7 +1535,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       result=PRBool(0!=strchr(gTagSet1,aChild));
       break;
 
-    case eHTMLTag_layer:
     case eHTMLTag_link:
       break;    //singletons can't contain anything...
 

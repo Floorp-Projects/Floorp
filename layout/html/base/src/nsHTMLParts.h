@@ -175,6 +175,10 @@ extern nsresult
 NS_NewHTMLImage(nsIHTMLContent** aInstancePtrResult,
                 nsIAtom* aTag);
 
+extern nsresult
+NS_NewHTMLLayer(nsIHTMLContent** aInstancePtrResult,
+                nsIAtom* aTag);
+
 /** Create a new HTML reflow command */
 extern nsresult
 NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,

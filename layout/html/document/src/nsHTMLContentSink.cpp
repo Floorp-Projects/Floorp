@@ -798,6 +798,10 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     }
     break;
 
+  case eHTMLTag_layer:
+    rv = NS_NewHTMLLayer(&container, atom);
+    break;
+
   default:
     rv = NS_NewHTMLContainer(&container, atom);
     break;

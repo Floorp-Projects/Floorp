@@ -70,7 +70,6 @@ NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
   case eHTMLTag_ilayer:
   case eHTMLTag_ins:
   case eHTMLTag_kbd:
-  case eHTMLTag_layer:
   case eHTMLTag_li:
   case eHTMLTag_listing:
   case eHTMLTag_menu:
@@ -120,6 +119,9 @@ NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
     break;
   case eHTMLTag_img:
     rv = NS_NewHTMLImage(aInstancePtrResult, atom);
+    break;
+  case eHTMLTag_layer:
+    rv = NS_NewHTMLLayer(aInstancePtrResult, atom);
     break;
   case eHTMLTag_meta:
     rv = NS_NewHTMLMeta(aInstancePtrResult, atom);
