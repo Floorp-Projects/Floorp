@@ -70,6 +70,7 @@ endif
 # Overrides for defaults in config.mk (or wherever)
 ######################################################################
 
+# 5.1 renamed cc++ to c++.
 ifeq ($(OS_RELEASE),5.0)
 CCC			= cc++
 else
@@ -83,8 +84,13 @@ EMACS			= /usr/bin/emacs
 PERL			= /usr/bin/perl
 RANLIB			= ranlib
 
+LDFLAGS                 = 
+
+# -nostdlib gets around the missing -lm problem.
+DSO_LDFLAGS             = -arch $(CPU_ARCH) -dynamiclib -nostdlib -lstdc++ -lcc_dynamic -compatibility_version 1 -current_version 1 -all_load -undefined suppress
+
 # Comment out MKSHLIB to build only static libraries.
-MKSHLIB                 = $(CC) -arch $(CPU_ARCH) -dynamiclib -nostdlib -lstdc++ -lcc_dynamic -compatibility_version 1 -current_version 1 -all_load -undefined suppress
+MKSHLIB                 = $(CC) $(DSO_LDFLAGS)
 DLL_SUFFIX              = dylib
 
 ######################################################################
