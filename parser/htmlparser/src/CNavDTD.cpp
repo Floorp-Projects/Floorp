@@ -2773,7 +2773,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
     result=mSink->AddLeaf(aNode);
 
 #if 1
-    PRBool done=false;
+    PRBool done=PR_FALSE;
     nsCParserNode*  theNode=CreateNode();
     while(!done) {
       CToken*   theToken=mTokenizer->PeekToken();
