@@ -105,6 +105,8 @@ public:
 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
   NS_IMETHOD HashValue(PRUint32& aValue) const;
+  // Strength is an out-of-band weighting, always 0 here
+  NS_IMETHOD GetStrength(PRInt32& aStrength);
 
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
                           nsIPresContext* aPresContext);
@@ -139,6 +141,15 @@ NS_IMETHODIMP
 BodyRule::HashValue(PRUint32& aValue) const
 {
   aValue = (PRUint32)(mPart);
+  return NS_OK;
+}
+
+// Strength is an out-of-band weighting, useful for mapping CSS ! important
+// always 0 here
+NS_IMETHODIMP
+BodyRule::GetStrength(PRInt32& aStrength)
+{
+  aStrength = 0;
   return NS_OK;
 }
 

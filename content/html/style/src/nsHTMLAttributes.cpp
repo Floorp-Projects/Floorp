@@ -211,6 +211,8 @@ public:
 
   // nsIStyleRule 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  // Strength is an out-of-band weighting, always 0 here
+  NS_IMETHOD GetStrength(PRInt32& aStrength);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   /**
@@ -748,6 +750,14 @@ HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPre
   if (nsnull != mMapper) {
     (*mMapper)(this, aContext, aPresContext);
   }
+  return NS_OK;
+}
+
+// Strength is an out-of-band weighting, always 0 here
+NS_IMETHODIMP
+HTMLAttributesImpl::GetStrength(PRInt32& aStrength)
+{
+  aStrength = 0;
   return NS_OK;
 }
 
