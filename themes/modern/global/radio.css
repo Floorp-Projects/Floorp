@@ -83,7 +83,7 @@ radio:hover:active > .radio-check {
   list-style-image: url("chrome://global/skin/radio/radio-act.gif");
 }
 
-radio[disabled] > .radio-check {
+radio[disabled="true"] > .radio-check {
   list-style-image: url("chrome://global/skin/radio/radio-dis.gif") !important;
 }
 
