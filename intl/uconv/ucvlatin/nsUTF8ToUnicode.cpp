@@ -85,7 +85,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
 
    nsresult res;	// conversion result
 
-   for(in=aSrc,out=aDest,res=nsnull;((in < inend) && (out < outend)); in++)
+   for(in=aSrc,out=aDest,res=NS_OK;((in < inend) && (out < outend)); in++)
    {
       if(0 == mState) {
          if( 0 == (0x80 & (*in))) {
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
 			 if(0 == --mState)
              {
                  if(mUcs4 >= 0x00010000) {
-                    if(mUcs4 >= 0x001F0000) {
+                    if(mUcs4 >= 0x00110000) {
                       *out++ = 0xFFFD;
                     } else {
                       mUcs4 -= 0x00010000;
@@ -168,11 +168,13 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
    }
 
    //output not finished, output buffer too short
-   if ((in < inend) && (out >= outend)) res = NS_OK_UDEC_MOREOUTPUT;
+   if((NS_OK == res) && (in < inend) && (out >= outend)) 
+       res = NS_OK_UDEC_MOREOUTPUT;
 
    //last USC4 is incomplete, make sure the caller 
    //returns with properly aligned continuation of the buffer
-   if (mState != 0) res = NS_OK_UDEC_MOREINPUT;
+   if ((NS_OK == res) && (mState != 0))
+       res = NS_OK_UDEC_MOREINPUT;
 
    *aSrcLength = in - aSrc;
    *aDestLength  = out - aDest;
