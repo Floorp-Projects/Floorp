@@ -70,8 +70,9 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
 {
   nsString lc_name(aLocale);
   if (lc_name.Length() <=0) {
+#ifdef DEBUG
     printf("nsAcceptLang::GetAcceptLangFromLocale: aLocale is empty!");
-
+#endif
     // TODO: don't return; instead, use system locale: lc_name=...
     return NS_ERROR_FAILURE;
   }
@@ -174,7 +175,9 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
    */
   NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
   if (NS_FAILED(res) || (nsnull == sBundleService)) {
+#ifdef DEBUG
     printf("\n** nsAcceptLang::GetLocaleFromAcceptLang: failed to get nsIStringBundleService!! **\n");
+#endif
     return NS_ERROR_FAILURE;
   }
   
