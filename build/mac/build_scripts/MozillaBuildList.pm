@@ -19,19 +19,16 @@ use File::Copy;
 # homegrown
 use Moz;
 use MozBuildUtils;
-use MozBuildFlags;
 use MozJar;
 use MacCVS;
 
 @ISA        = qw(Exporter);
-@EXPORT     = qw(   ConfigureBuildSystem
+@EXPORT     = qw(
+                    UpdateBuildNumberFiles
                     Checkout
-                    RunBuild
                     BuildDist
                     BuildProjects
-                    BuildCommonProjects
-                    BuildLayoutProjects
-                    BuildOneProject);
+                 );
 
 
 # NGLayoutBuildList builds the nglayout project
@@ -61,177 +58,15 @@ sub assertRightDirectory()
 
 
 #//--------------------------------------------------------------------------------------------------
-#// startBuildModule
+#// UpdateBuildNumberFiles
 #//--------------------------------------------------------------------------------------------------
-sub startBuildModule($)
+sub UpdateBuildNumberFiles()
 {
-    my($module) = @_;
-
-    print("---- Start of $module ----\n");
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// endBuildModule
-#//--------------------------------------------------------------------------------------------------
-sub endBuildModule($)
-{
-    my($module) = @_;
-    WriteBuildProgress($module);
-    print("---- End of $module ----\n");
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// Configure Build System
-#//--------------------------------------------------------------------------------------------------
-
-my($UNIVERSAL_INTERFACES_VERSION) = 0x0320;
-
-
-sub GenBuildSystemInfo()
-{
-    # always rebuild the configuration program.
-    BuildProjectClean(":mozilla:build:mac:tools:BuildSystemInfo:BuildSystemInfo.mcp", "BuildSystemInfo");
-
-    # delete the configuration file.
-    unlink(":mozilla:build:mac:BuildSystemInfo.pm");
-    
-    # run the program.
-    system(":mozilla:build:mac:BuildSystemInfo");
-
-    # wait for the file to be created.
-    while (!(-e ":mozilla:build:mac:BuildSystemInfo.pm")) { WaitNextEvent(); }
-    
-    # wait for BuildSystemInfo to finish, so that we see correct results.
-    while (IsProcessRunning("BuildSystemInfo")) { WaitNextEvent(); }
-
-    # now, evaluate the contents of the file.
-    open(F, ":mozilla:build:mac:BuildSystemInfo.pm");
-    while (<F>) { eval; }
-    close(F);
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// DoPrebuildCheck
-#//
-#// Check the build tools etc before running the build.
-#//--------------------------------------------------------------------------------------------------
-sub DoPrebuildCheck()
-{
-    SanityCheckJarOptions();
-
-    # launch codewarrior and persist its location. Have to call this before first
-    # call to getCodeWarriorPath().
-    my($ide_path_file) = $main::filepaths{"idepath"};
-    $ide_path_file = full_path_to($ide_path_file);
-    LaunchCodeWarrior($ide_path_file);
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// Regenerate DefinesOptions.h if necessary
-#//
-#//--------------------------------------------------------------------------------------------------
-sub UpdateConfigHeader($)
-{
-    my($config_path) = @_;
-    
-    my($line, $config, $oldconfig, $define, $definevalue, $defines);
-    my($k, $l,);
-
-    foreach $k (keys(%main::options))
-    {
-        if ($main::options{$k})
-        {
-            foreach $l (keys(%{$main::optiondefines{$k}}))
-            {
-                $my::defines{$l} = $main::optiondefines{$k}{$l};
-                print "Setting up my::defines{$l}\n";
-            }
-        }
-    }
-
-    my $config_headerfile = current_directory().$config_path;
-    if (-e $config_headerfile)
-    {
-        open(CONFIG_HEADER, "< $config_headerfile") || die "$config_headerfile: $!\n";
-        while ($line = <CONFIG_HEADER>)
-        {
-            $oldconfig .= $line;
-            if ($line =~ m/#define (.*) (.*)\n/)
-            {
-                $define = $1;
-                $definevalue = $2;
-                if (exists ($my::defines{$define}) and ($my::defines{$define} == $definevalue))
-                {
-                    delete $my::defines{$define};
-                    $config .= $line;
-                }
-            }
-        }
-        close(CONFIG_HEADER);
-    }
-
-    if (%my::defines)
-    {
-        foreach $k (keys(%my::defines))
-        {
-            $config .= "#define " . $k . " " . $my::defines{$k} . "\n";
-        }
-    }
-
-    if (($config ne $oldconfig) || (!-e $config_headerfile))
-    {
-        printf("Writing new DefinesOptions.h\n");
-        open(CONFIG_HEADER, "> $config_headerfile") || die "$config_headerfile: $!\n";
-        MacPerl::SetFileInfo("CWIE", "TEXT", $config_headerfile);
-        print CONFIG_HEADER ($config);
-        close(CONFIG_HEADER);
-    }
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// ConfigureBuildSystem
-#//
-#// defines some build-system configuration variables.
-#//--------------------------------------------------------------------------------------------------
-sub ConfigureBuildSystem()
-{
-    #// In the future, we may want to do configurations based on the actual build system itself.
-    #// GenBuildSystemInfo();
-        
-    #// For now, if we discover a newer header file than existed in Universal Interfaces 3.2,
-    #// we'll assume that 3.3 or later is in use.
-    my($universal_interfaces) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
-    if (-e ($universal_interfaces . "ControlDefinitions.h")) {
-        $UNIVERSAL_INTERFACES_VERSION = 0x0330;
-    }
-
-    #// Rename IC SDK folder in the Mac OS Support folder
-    my($ic_sdk_folder) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:ICProgKit2.0.2");
-    if( -e $ic_sdk_folder)
-    {
-        my($new_ic_folder_name) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:(ICProgKit2.0.2)");
-        rename ($ic_sdk_folder, $new_ic_folder_name);
-        # note that CodeWarrior doesn't descnet into folders with () the name
-        print "Mozilla no longer needs the Internet Config SDK to build:\n  Renaming the 'ICProgKit2.0.2' folder to '(ICProgKit2.0.2)'\n";
-    }
-
-    printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $UNIVERSAL_INTERFACES_VERSION);
-
-    UpdateConfigHeader(":mozilla:config:mac:DefinesOptions.h");
-
     my(@gen_files) = (
         ":mozilla:config:nsBuildID.h",
         ":mozilla:xpfe:global:build.dtd"
     );
     SetBuildNumber(":mozilla:config:build_number", \@gen_files);
-
-    # alias required CodeWarrior libs into the Essential Files folder (only the Profiler lib now)
-    MakeLibAliases();
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -526,7 +361,7 @@ sub BuildResources()
     unless( $main::build{resources} ) { return; }
     assertRightDirectory();
 
-    startBuildModule("resources");
+    StartBuildModule("resources");
 
     ActivateApplication('McPL');
     
@@ -536,24 +371,9 @@ sub BuildResources()
     # Set the default skin to be classic
     SetDefaultSkin("classic/1.0"); 
 
-    endBuildModule("resources");
+    EndBuildModule("resources");
 }
 
-#//--------------------------------------------------------------------------------------------------
-#// Make library aliases
-#//--------------------------------------------------------------------------------------------------
-
-sub MakeLibAliases()
-{
-    my($dist_dir) = GetBinDirectory();
-
-    #// ProfilerLib
-    if ($main::PROFILE)
-    {
-        my($profilerlibpath) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:Profiler:Profiler Common:ProfilerLib");
-        MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
-    }
-}
 
 #//--------------------------------------------------------------------------------------------------
 #// Build the runtime 'dist' directories
@@ -956,7 +776,7 @@ sub BuildDist()
     # activate MacPerl
     ActivateApplication('McPL');
 
-    startBuildModule("dist");
+    StartBuildModule("dist");
     
     my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
     my $dist_dir = GetBinDirectory(); # the subdirectory with the libs and executable.
@@ -992,7 +812,7 @@ sub BuildDist()
         BuildClientDist();
     }
     
-    endBuildModule("dist");
+    EndBuildModule("dist");
 }
 
 
@@ -1008,7 +828,7 @@ sub BuildStubs()
 
     my($distdirectory) = ":mozilla:dist";
 
-    startBuildModule("stubs");
+    StartBuildModule("stubs");
 
     #//
     #// Clean projects
@@ -1021,7 +841,7 @@ sub BuildStubs()
         die "Error: failed to build NSStdLib stubs. Check your ToolServer installation\n";
     }
     
-    endBuildModule("stubs");
+    EndBuildModule("stubs");
 }
 
 
@@ -1033,7 +853,7 @@ sub BuildXPIDLCompiler()
     unless( $main::build{xpidl} ) { return; }
     assertRightDirectory();
 
-    startBuildModule("xpidl");
+    StartBuildModule("xpidl");
 
     #// see if the xpidl compiler/linker has been rebuilt by comparing modification dates.
     my($codewarrior_plugins) = CodeWarriorLib::getCodeWarriorPath("CodeWarrior Plugins:");
@@ -1063,7 +883,7 @@ sub BuildXPIDLCompiler()
         BuildOneProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "xpt_link", 0, 0, 0);
     }
 
-    endBuildModule("xpidl");
+    EndBuildModule("xpidl");
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -1075,7 +895,7 @@ sub BuildIDLProjects()
     unless( $main::build{idl} ) { return; }
     assertRightDirectory();
 
-    startBuildModule("idl");
+    StartBuildModule("idl");
 
     # XPCOM
     BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",                         "xpcom");
@@ -1164,7 +984,7 @@ sub BuildIDLProjects()
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlextrasIDL.mcp", "xmlextras");
     }
 
-    endBuildModule("idl");
+    EndBuildModule("idl");
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -1176,7 +996,7 @@ sub BuildRuntimeProjects()
     unless( $main::build{runtime} ) { return; }
     assertRightDirectory();
 
-    startBuildModule("runtime");
+    StartBuildModule("runtime");
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
@@ -1195,7 +1015,7 @@ sub BuildRuntimeProjects()
     }
     else
     {
-        if ($UNIVERSAL_INTERFACES_VERSION >= 0x0330) {
+        if ($main::UNIVERSAL_INTERFACES_VERSION >= 0x0330) {
         BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "MacOS Interfaces (3.3)");
         } else {
         BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "MacOS Interfaces");
@@ -1264,7 +1084,7 @@ sub BuildRuntimeProjects()
         BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                  "NSPR20$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     }
 
-    endBuildModule("runtime");
+    EndBuildModule("runtime");
 }
 
 
@@ -1280,7 +1100,7 @@ sub BuildCommonProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    startBuildModule("common");
+    StartBuildModule("common");
 
     #//
     #// Shared libraries
@@ -1313,7 +1133,7 @@ sub BuildCommonProjects()
     BuildOneProject(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider.mcp", "mpfilelocprovider$D.o", 0, 0, 0);
     MakeAlias(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider$D.o", ":mozilla:dist:mpfilelocprovider:");
     
-    endBuildModule("common");
+    EndBuildModule("common");
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -1327,7 +1147,7 @@ sub BuildImglibProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    startBuildModule("imglib");
+    StartBuildModule("imglib");
 
     BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",                          "JPEG$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:modules:libimg:macbuild:png.mcp",                 "png$D.o", 0, 0, 0);
@@ -1343,7 +1163,7 @@ sub BuildImglibProjects()
         BuildOneProject(":mozilla:modules:libimg:macbuild:mngdecoder.mcp",          "mngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
 
-    endBuildModule("imglib");
+    EndBuildModule("imglib");
 } # imglib
 
     
@@ -1358,7 +1178,7 @@ sub BuildInternationalProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    startBuildModule("intl");
+    StartBuildModule("intl");
 
     BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.mcp",               "chardet$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",                   "uconv$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1378,7 +1198,7 @@ sub BuildInternationalProjects()
 # BuildOneProject(":mozilla:intl:uconv:macbuild:ucvvt.mcp",                 "ucvvt$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 # BuildOneProject(":mozilla:intl:uconv:macbuild:ucvth.mcp",                 "ucvth$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    endBuildModule("intl");
+    EndBuildModule("intl");
 } # intl
 
 
@@ -1393,7 +1213,7 @@ sub BuildNeckoProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    startBuildModule("necko");
+    StartBuildModule("necko");
 
     if ( $main::CARBON ) {
         BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",                    "Necko$D.shlb (Carbon)", 0, 0, 0);
@@ -1408,7 +1228,7 @@ sub BuildNeckoProjects()
     BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",                   "Necko2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",                "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
           
-    endBuildModule("necko");
+    EndBuildModule("necko");
 }
 
 
@@ -1431,7 +1251,7 @@ sub BuildSecurityProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
     my $dist_dir = GetBinDirectory(); # the subdirectory with the libs and executable.
 
-    startBuildModule("security");
+    StartBuildModule("security");
 
     BuildOneProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
@@ -1466,7 +1286,7 @@ sub BuildSecurityProjects()
     	copy(":mozilla:security:psm:doc:".$file, $doc_dir.$file);
     } 
 	
-    endBuildModule("security");
+    EndBuildModule("security");
 } # Security
 
 
@@ -1481,7 +1301,7 @@ sub BuildBrowserUtilsProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    startBuildModule("browserutils");
+    StartBuildModule("browserutils");
 
     BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",                "uriLoader$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:uriloader:extprotocol:mac:extProtocol.mcp",       "extProtocol$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1497,7 +1317,7 @@ sub BuildBrowserUtilsProjects()
     
     BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",      "DOMDataSource$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    endBuildModule("browserutils");
+    EndBuildModule("browserutils");
 }
 
 
@@ -1514,7 +1334,7 @@ sub BuildLayoutProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
     my($dist_dir) = GetBinDirectory();
     
-    startBuildModule("nglayout");
+    StartBuildModule("nglayout");
 
     open(OUTPUT, ">:mozilla:layout:build:gbdate.h") || die "could not open gbdate.h";
     my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
@@ -1563,7 +1383,7 @@ sub BuildLayoutProjects()
         BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "Mozilla Installer$D", 0, 0, 0);
     }
 
-    endBuildModule("nglayout");
+    EndBuildModule("nglayout");
 }
 
 
@@ -1580,13 +1400,13 @@ sub BuildEditorProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
     my($dist_dir) = GetBinDirectory();
 
-    startBuildModule("editor");
+    StartBuildModule("editor");
 
     BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",                 "EditorTxmgr$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:editor:txtsvc:macbuild:txtsvc.mcp",               "TextServices$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:editor:macbuild:editor.mcp",                      "EditorCore$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    endBuildModule("editor");
+    EndBuildModule("editor");
 }
 
 
@@ -1603,12 +1423,12 @@ sub BuildViewerProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
     my($dist_dir) = GetBinDirectory();
 
-    startBuildModule("viewer");
+    StartBuildModule("viewer");
 
     BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",            "viewer$D",  0, 0, 0);
     BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.mcp",       "webBrowser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    endBuildModule("viewer");
+    EndBuildModule("viewer");
 }
 
 
@@ -1625,7 +1445,7 @@ sub BuildXPAppProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
     my($dist_dir) = GetBinDirectory();
 
-    startBuildModule("xpapp");
+    StartBuildModule("xpapp");
 
     # Components
     BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp", "FindComponent$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1639,7 +1459,7 @@ sub BuildXPAppProjects()
     BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",             "AppShell$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",            "mozBrowser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    endBuildModule("xpapp");
+    EndBuildModule("xpapp");
 }
 
 
@@ -1656,7 +1476,7 @@ sub BuildExtensionsProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
     my($dist_dir) = GetBinDirectory();
 
-    startBuildModule("extensions");
+    StartBuildModule("extensions");
 
     my($chrome_subdir) = "Chrome:";
     my($chrome_dir) = "$dist_dir"."$chrome_subdir";
@@ -1692,25 +1512,12 @@ sub BuildExtensionsProjects()
         BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlextras.mcp", "xmlextras$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
-    endBuildModule("extensions");
+    EndBuildModule("extensions");
 }
 
 #//--------------------------------------------------------------------------------------------------
 #// Build Plugins Projects
 #//--------------------------------------------------------------------------------------------------
-                                         
-sub ImportXMLProject($$)
-{
-    my ($xml_path, $project_path) = @_;
-    my ($codewarrior_ide_name) = CodeWarriorLib::getCodeWarriorIDEName();
-    my $ascript = <<EOS;
-    tell application "$codewarrior_ide_name"
-        make new (project document) as ("$project_path") with data ("$xml_path")
-    end tell
-EOS
-	print $ascript."\n";
-    MacPerl::DoAppleScript($ascript) or die($^E);
-}
 
 sub BuildPluginsProjects()                          
 {
@@ -1720,7 +1527,7 @@ sub BuildPluginsProjects()
     # before we attempt to build the MRJ plugin. This will allow a gradual transition.
     unless( -e CodeWarriorLib::getCodeWarriorPath("MacOS Support:JNIHeaders")) { return; }
 
-    startBuildModule("plugins");
+    StartBuildModule("plugins");
 
     my($plugin_path) = ":mozilla:plugin:oji:MRJ:plugin:";
     my($project_path) = $plugin_path . "MRJPlugin.mcp";
@@ -1749,7 +1556,7 @@ sub BuildPluginsProjects()
     MakeAlias($plugin_path . "MRJPlugin", $plugin_dist);
     MakeAlias($plugin_path . "MRJPlugin.jar", $plugin_dist);
 
-    endBuildModule("plugins");
+    EndBuildModule("plugins");
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -1764,7 +1571,7 @@ sub BuildMailNewsProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    startBuildModule("mailnews");
+    StartBuildModule("mailnews");
 
     BuildOneProject(":mozilla:mailnews:base:util:macbuild:msgUtil.mcp",                 "MsgUtil$D.lib", 0, 0, 0);
     BuildOneProject(":mozilla:mailnews:base:macbuild:msgCore.mcp",                      "mailnews$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1785,7 +1592,7 @@ sub BuildMailNewsProjects()
     BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp",         "msgImportText$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.mcp",     "msgImportEudora$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    endBuildModule("mailnews");
+    EndBuildModule("mailnews");
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -1799,7 +1606,7 @@ sub BuildMozilla()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    startBuildModule("apprunner");
+    StartBuildModule("apprunner");
 
     BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",           "apprunner$D", 0, 0, 1);
 
@@ -1862,7 +1669,7 @@ sub BuildMozilla()
     MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
     copy( ":mozilla:build:bloaturls.txt", $dist_dir . "bloaturls.txt" );
 
-    endBuildModule("apprunner");
+    EndBuildModule("apprunner");
 }
 
 
@@ -1905,27 +1712,6 @@ sub BuildProjects()
     BuildResources();
 }
 
-
-#//--------------------------------------------------------------------------------------------------
-#// checkOutModule. Takes variable number of args; first two are required
-#//--------------------------------------------------------------------------------------------------
-sub checkOutModule
-{
-	my($session, $module, $revision, $date) = @_;
-
-    my($result) = $session->checkout($module, $revision, $date);
-    
-    # result of 1 is success
-    if ($result) { return; }
-    
-    my($checkout_err) = $session->getLastError();
-    if ($checkout_err == 708) {
-        die "Checkout was cancelled";
-    } elsif ($checkout_err == 711) {
-        print "Checkout of '$module' failed\n";
-    }
-}
-
 #//--------------------------------------------------------------------------------------------------
 #// Check out everything
 #//--------------------------------------------------------------------------------------------------
@@ -1936,7 +1722,7 @@ sub Checkout()
     assertRightDirectory();
     my($cvsfile) = AskAndPersistFile($main::filepaths{"sessionpath"});
     my($session) = MacCVS->new( $cvsfile );
-    unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
+    unless (defined($session)) { die "Error: Checkout aborted. Cannot create session file: $session" }
 
     # activate MacCVS
     ActivateApplication('Mcvs');
@@ -1951,79 +1737,25 @@ sub Checkout()
     #//
     if ($main::RUNTIME)
     {
-        checkOutModule($session, "mozilla/build/mac");
-        checkOutModule($session, "mozilla/lib/mac/InterfaceLib");
-        checkOutModule($session, "mozilla/config/mac");
-        checkOutModule($session, "mozilla/gc");
-        checkOutModule($session, "mozilla/lib/mac/NSStartup");
-        checkOutModule($session, "mozilla/lib/mac/NSStdLib");
-        checkOutModule($session, "mozilla/lib/mac/NSRuntime");
-        checkOutModule($session, "mozilla/lib/mac/MoreFiles");
-        checkOutModule($session, "mozilla/lib/mac/MacMemoryAllocator");
-        checkOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
+        CheckOutModule($session, "mozilla/build/mac");
+        CheckOutModule($session, "mozilla/lib/mac/InterfaceLib");
+        CheckOutModule($session, "mozilla/config/mac");
+        CheckOutModule($session, "mozilla/gc");
+        CheckOutModule($session, "mozilla/lib/mac/NSStartup");
+        CheckOutModule($session, "mozilla/lib/mac/NSStdLib");
+        CheckOutModule($session, "mozilla/lib/mac/NSRuntime");
+        CheckOutModule($session, "mozilla/lib/mac/MoreFiles");
+        CheckOutModule($session, "mozilla/lib/mac/MacMemoryAllocator");
+        CheckOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
     }
     else
     {
-        checkOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
-        checkOutModule($session, "mozilla/security/nss", $nss_tab);
-        checkOutModule($session, "mozilla/security/psm", $psm_tag);
-        checkOutModule($session, "DirectorySDKSourceC", $ldapsdk_tag);
-        checkOutModule($session, "SeaMonkeyAll");
+        CheckOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
+        CheckOutModule($session, "mozilla/security/nss", $nss_tab);
+        CheckOutModule($session, "mozilla/security/psm", $psm_tag);
+        CheckOutModule($session, "DirectorySDKSourceC", $ldapsdk_tag);
+        CheckOutModule($session, "SeaMonkeyAll");
     }
 }
 
-
-#//--------------------------------------------------------------------------------------------------
-#// RunBuild
-#//--------------------------------------------------------------------------------------------------
-sub RunBuild($$$$)
-{
-    my($do_pull, $do_build, $build_flags_file, $build_prefs) = @_;
-    
-    # if we are pulling, we probably want to do a full build, so clear the build progress
-    if ($do_pull) {
-        ClearBuildProgress();    
-    }
-    
-    # read local prefs, and the build progress file, and set flags to say what to build
-    SetupBuildParams(\%main::pull,
-                     \%main::build,
-                     \%main::options,
-                     \%main::optiondefines,
-                     \%main::filepaths,
-                     $build_flags_file,
-                     $build_prefs);
-
-    # setup the build log
-    SetupBuildLog($main::filepaths{"buildlogfilepath"}, $main::USE_TIMESTAMPED_LOGS);
-    StopForErrors();
-    
-    if ($main::LOG_TO_FILE) {
-        RedirectOutputToFile($main::filepaths{"scriptlogfilepath"});
-    }
-    
-    # run a pre-build check to see that the tools etc are in order
-    DoPrebuildCheck();
-    
-    if ($do_pull) {
-        Checkout();
-    }
-    
-    unless ($do_build) { return; }
-
-    # create generated headers
-    ConfigureBuildSystem();
-    
-    die;
-    
-    chdir($main::MOZ_SRC);
-    BuildDist();
-    
-    chdir($main::MOZ_SRC);
-    BuildProjects();
-    
-    # the build finished, so clear the build progress state
-    ClearBuildProgress();    
-    print "Build complete\n";
-}
-
+1;

@@ -53,6 +53,7 @@ use CodeWarriorLib;
                   full_path_to
                   BuildProject
                   BuildProjectClean
+                  ImportXMLProject
                   OpenErrorLog
                   MakeAlias
                   GetFileModDate
@@ -291,6 +292,20 @@ sub BuildProjectClean($;$)
 		my ($project_path, $target_name) = @_;
 		build_project($project_path, $target_name, 1);
 	}
+
+
+sub ImportXMLProject($$)
+{
+    my ($xml_path, $project_path) = @_;
+    my ($codewarrior_ide_name) = CodeWarriorLib::getCodeWarriorIDEName();
+    my $ascript = <<EOS;
+    tell application "$codewarrior_ide_name"
+        make new (project document) as ("$project_path") with data ("$xml_path")
+    end tell
+EOS
+	print $ascript."\n";
+    MacPerl::DoAppleScript($ascript) or die($^E);
+}
 
 
 =head2 Miscellaneous

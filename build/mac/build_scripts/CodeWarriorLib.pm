@@ -237,7 +237,7 @@ GUSI routines built-in to MacPerl for a Choose Directory dialog box.
 
 sub activate ($) {
 
-    $ide_loc_file = @_[0];     # save in global
+    $ide_loc_file = $_[0];     # save in global
         
 	my($filepath, $appath, $psi) = ($ide_loc_file);
 
