@@ -80,9 +80,15 @@ window {
     background: darkslategrey !important;
 }
 
+#views-tbar-spacer {
+    -moz-box-flex: 10000;
+}
+
 .view-button {
     /* do NOT set colour, at least not without background. :) */
     text-align: center;
+    max-width: 30ex;
+    -moz-box-flex: 1;
 }
 
 .view-button[state="current"] {

@@ -2637,12 +2637,10 @@ function getTabForObject (source, create)
         tb.setAttribute("href", source.getURL());
         tb.setAttribute("name", source.unicodeName);
         tb.setAttribute("onclick", "onTabClick(event, " + id.quote() + ");");
-        tb.setAttribute("maxwidth", "250");
-        tb.setAttribute("flex", "1");
+        // This wouldn't be here if there was a supported CSS property for it.
         tb.setAttribute("crop", "center");
         tb.setAttribute("context", "context:tab");
-        tb.setAttribute("tooltip", "xul-tooltip-mode");
-
+        tb.setAttribute("tooltip", "xul-tooltip-node");
         tb.setAttribute("class", "tab-bottom view-button");
         tb.setAttribute("id", id);
         tb.setAttribute("state", "normal");

@@ -125,7 +125,7 @@
               <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from
                                            causing an exception -->
             </tabs>
-            <spacer flex="10000"/>
+            <spacer id="views-tbar-spacer"/>
           </scrollbox>
         </hbox>
       </hbox>
