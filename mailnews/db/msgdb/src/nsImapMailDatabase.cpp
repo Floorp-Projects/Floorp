@@ -21,6 +21,9 @@
 #include "nsDBFolderInfo.h"
 #include "nsLocalFolderSummarySpec.h"
 
+#include "nsRDFCID.h"
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
 nsImapMailDatabase::nsImapMailDatabase()
 {
 }
@@ -146,4 +149,52 @@ NS_IMETHODIMP	nsImapMailDatabase::SetSummaryValid(PRBool /* valid */)
 void	nsImapMailDatabase::UpdateFolderFlag(nsMsgHdr * /* msgHdr */, PRBool /* bSet */, 
 									 MsgFlags /* flag */, PRFileDesc * /* fid */)
 {
+}
+
+
+nsresult
+nsImapMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result, PRBool getKeyFromHeader)
+{
+    nsresult rv;
+
+	nsIRDFService *rdf;
+	rv = nsServiceManager::GetService(kRDFServiceCID, 
+                                      nsIRDFService::GetIID(), 
+                                      (nsISupports**)&rdf);
+
+    if (NS_FAILED(rv)) return rv;
+
+	char* msgURI;
+
+	nsFileSpec folderPath = path;
+	char* leafName = folderPath.GetLeafName();
+	nsString folderName(leafName);
+	PL_strfree(leafName);
+	if(folderName.Find(".msf") != -1)
+	{
+		nsString realFolderName;
+		folderName.Left(realFolderName, folderName.Length() - 4);
+		folderPath.SetLeafName((const nsString)realFolderName);
+	}
+
+	rv = nsBuildImapMessageURI(folderPath, key, &msgURI);
+    if (NS_FAILED(rv)) return rv;
+
+
+    nsIRDFResource* res = nsnull;
+    rv = rdf->GetResource(msgURI, &res);
+    PR_smprintf_free(msgURI);
+    if (NS_FAILED(rv)) return rv;
+    
+	nsMsgHdr* msgHdr = (nsMsgHdr*)res;
+	if (res)
+	{
+		msgHdr->Init(this, hdrRow);
+		msgHdr->SetMessageKey(key);
+	}
+    *result = msgHdr;
+  
+    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+
+    return rv;
 }

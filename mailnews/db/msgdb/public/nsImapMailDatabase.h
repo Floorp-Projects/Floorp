@@ -33,6 +33,7 @@ public:
 	
 	NS_IMETHOD			SetSummaryValid(PRBool valid = TRUE);
 	
+	nsresult		CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result, PRBool getKeyFromHeader);
 protected:
 	// IMAP does not set local file flags, override does nothing
 	virtual void	UpdateFolderFlag(nsMsgHdr *msgHdr, PRBool bSet, 

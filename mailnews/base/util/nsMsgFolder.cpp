@@ -1417,6 +1417,9 @@ static char *gMailboxRoot = nsnull;
 /* sspitzer:  don't panic, this is temporary */
 static const char gNewsRoot[] = "/tmp/mozillanews";
 
+static const char *gImapRoot = nsnull;
+
+
 nsresult
 nsGetNewsRoot(nsFileSpec &result)
 {
@@ -1425,6 +1428,21 @@ nsGetNewsRoot(nsFileSpec &result)
   printf("gNewsRoot = %s\n", gNewsRoot);
   result = gNewsRoot;
   return rv;
+}
+
+nsresult
+nsGetImapRoot(nsFileSpec &result)
+{
+  nsresult rv = NS_OK;
+
+     
+    // temporary stuff. for now - should get everything from the mail session
+  if (gImapRoot == nsnull) {
+	  gImapRoot = PL_strdup("/tmp");
+  }
+  result = gImapRoot;
+  return rv;
+      
 }
 
 nsresult
@@ -1531,6 +1549,9 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (strcmp(rootURI, kNewsMessageRootURI) == 0) {
     rv = nsGetNewsRoot(pathResult);
   }
+  else if (strcmp(rootURI, kImapMessageRootURI) == 0) {
+    rv = nsGetImapRoot(pathResult);
+  }
   else {
     rv = nsGetMailboxRoot(pathResult);
   }
@@ -1614,7 +1635,10 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
   if (strcmp(rootURI, kNewsMessageRootURI) == 0) {
     rv = nsGetNewsRoot(root);
   }
-  else {
+  else if (strcmp(rootURI, kImapMessageRootURI) == 0) {
+    rv = nsGetImapRoot(root);
+  }
+ else {
     rv = nsGetMailboxRoot(root);
   }    
   if (NS_FAILED(rv)) return rv;
@@ -1742,6 +1766,26 @@ nsresult nsBuildNewsMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
 
 
 }
+
+nsresult nsBuildImapMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
+{
+	
+	if(!uri)
+		return NS_ERROR_NULL_POINTER;
+
+	char *folderURI;
+
+	nsPath2URI(kImapMessageRootURI, path, &folderURI);
+
+	*uri = PR_smprintf("%s#%d", folderURI, key);
+
+	delete[] folderURI;
+
+	return NS_OK;
+
+
+}
+
 
 nsresult nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder)
 {

@@ -133,6 +133,7 @@ static const char kMailboxMessageRootURI[] = "mailbox_message:/";
 
 static const char kNewsRootURI[] = "news:/";
 static const char kNewsMessageRootURI[] = "news_message:/";
+static const char kImapMessageRootURI[] = "imap_message:/";
 
 extern nsresult
 nsGetMailboxRoot(nsFileSpec &result);
@@ -157,6 +158,9 @@ nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri);
 
 extern nsresult 
 nsBuildNewsMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
+
+extern nsresult 
+nsBuildImapMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
 
 extern nsresult 
 nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder);
