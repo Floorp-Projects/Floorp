@@ -23,35 +23,36 @@
 #ifndef nsDirectoryService_h___
 #define nsDirectoryService_h___
 
-#include "nsIProperties.h"
+#include "nsIDirectoryService.h"
 #include "nsHashtable.h"
-#include "nsAgg.h"
 #include "nsIFile.h"
+#include "nsISupportsArray.h"
+class nsDirectoryService : public nsIDirectoryService, public nsIProperties, public nsIDirectoryServiceProvider
+{
+  public:
 
-#define NS_DIRECTORY_SERVICE_PROGID    "component://netscape/file/directory_service"
-#define NS_DIRECTORY_SERVICE_CLASSNAME "nsIFile Directory Service"
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_DIRECTORY_SERVICE_CID);
 
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
 
-class nsDirectoryService : public nsIProperties, public nsHashtable {
-public:
+  NS_DECL_NSIPROPERTIES  
 
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_DIRECTORY_SERVICE_CID)
+  NS_DECL_NSIDIRECTORYSERVICE
 
-  NS_DECL_AGGREGATED
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
-  NS_DECL_NSIPROPERTIES
-
-  // nsProperties methods:
-  nsDirectoryService(nsISupports* outer);
+  nsDirectoryService();
   virtual ~nsDirectoryService();
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-  static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
 private:
     static nsDirectoryService* mService;
-  
+    static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
+    nsHashtable* mHashtable;
+    nsCOMPtr<nsISupportsArray> mProviders;
 };
 
 

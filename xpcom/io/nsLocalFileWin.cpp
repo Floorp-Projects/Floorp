@@ -39,7 +39,9 @@
 #include "shellapi.h"
 #include "shlguid.h"
 
-#include <stdio.h>
+#include  <io.h>
+#include  <stdio.h>
+#include  <stdlib.h>
 
 #include "prproces.h"
 
@@ -115,70 +117,6 @@ myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
     LL_SHL(b64, result, 32);
     LL_SHR(a64, b64, 32);
     LL_L2I(*lo, a64);
-}
-
-nsresult 
-MyGetFileAttributesEx(const char* file, WIN32_FILE_ATTRIBUTE_DATA* data)
-{
-    BOOL okay;
-	if (!data || !file)
-		return NS_ERROR_FAILURE;
-
-	okay = PR_FALSE;
-	
-	memset(data, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
-	data->dwFileAttributes =  GetFileAttributes(file);
-
-	if(data->dwFileAttributes != 0xFFFFFFFF)
-	{
-		if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-		{
-			HANDLE hFile = CreateFile(file,
-									  0, 
-									  FILE_SHARE_READ, 
-									  NULL, 
-									  OPEN_EXISTING, 
-									  FILE_ATTRIBUTE_NORMAL, 
-									  NULL); 
-
-			if (hFile != INVALID_HANDLE_VALUE)
-			{
-				okay = GetFileTime(hFile,
-								   &data->ftCreationTime,
-								   &data->ftLastAccessTime,
-								   &data->ftLastWriteTime);
-				if (okay)
-				{
-				   // Try to obtain hFile's huge size. 
-				   data->nFileSizeLow = GetFileSize (hFile, 
-													 &data->nFileSizeHigh);
-
-				   if (data->nFileSizeLow == 0xFFFFFFFF && 
-					   GetLastError() != NO_ERROR )
-				   { 
-					   //error in getting filesize
-					   okay = PR_FALSE;      
-				   } 
-				   else
-				   {
-					   okay = PR_TRUE;
-				   }
-				}
-
-				CloseHandle(hFile);
-			}
-		}
-		else
-		{
-			// it is a directory, I dont think that there is a wy to get the time or size.
-			okay = PR_TRUE;
-		}
-	}
-
-    if (!okay)
-       return ConvertWinError(GetLastError());
-    
-    return NS_OK;
 }
 
 
@@ -564,23 +502,23 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     }
     mLastResolution = resolveTerminal;
 
-    const char *workingFilePath = mWorkingPath.GetBuffer();
-    nsresult result;
-    
-
     // First we will see if the workingPath exists.  If it does, then we
     // can simply use that as the resolved path.  This simplification can
     // be done on windows cause its symlinks (shortcuts) use the .lnk
     // file extension.
     
-    result = MyGetFileAttributesEx( workingFilePath, &mFileAttrData);
     
-    if ( NS_SUCCEEDED(result) )
+    const char *workingFilePath = mWorkingPath.GetBuffer();
+
+    PRStatus status = PR_GetFileInfo64(workingFilePath, &mFileInfo64);
+    if ( status == PR_SUCCESS )
     {
         mResolvedPath.SetString(workingFilePath);
 		mDirty = PR_FALSE;
 		return NS_OK;
     }
+
+    nsresult result;
 
     // okay, something is wrong with the working path.  We will try to resolve it.
 
@@ -602,10 +540,13 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     char linkStr[MAX_PATH];
     strcpy(linkStr, mResolvedPath.GetBuffer());
     strcat(linkStr, ".lnk");
-    result = MyGetFileAttributesEx(linkStr, &mFileAttrData);
     
-    if (NS_SUCCEEDED(result))
+    status = PR_GetFileInfo64(linkStr, &mFileInfo64);
+    
+    if ( status == PR_SUCCESS )
 		mDirty = PR_FALSE;
+    else
+        result = NS_ERROR_FAILURE;
 
 	return result;
 }
@@ -744,7 +685,7 @@ nsLocalFile::Append(const char *node)
 {
     if ( (node == nsnull)           || 
          (*node == '/')             || 
-         (*node == '.')             ||
+         (strstr(node, "..") != nsnull) ||
          (strchr(node, '\\') != nsnull) ||
          (strchr(node, '/')  != nsnull) )
     {
@@ -1198,60 +1139,10 @@ nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
     if (NS_FAILED(rv))
         return rv;
     
-    PRUint32 high = mFileAttrData.ftLastWriteTime.dwHighDateTime;
-    PRUint32 low  = mFileAttrData.ftLastWriteTime.dwLowDateTime;
-
-    myLL_II2L(high, low, aLastModificationDate);
-
+    *aLastModificationDate = mFileInfo64.modifyTime;
     return NS_OK;
 }
 
-NS_IMETHODIMP  
-nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
-{
-    nsresult rv = ResolveAndStat(PR_TRUE);
-    
-    if (NS_FAILED(rv))
-        return rv;
-    
-    FILETIME time = mFileAttrData.ftLastWriteTime;
-    
-    PRInt32 hi, lo;
-    myLL_L2II(aLastModificationDate, &hi, &lo );
- 
-    time.dwHighDateTime  = hi;
-    time.dwLowDateTime   = lo;
-
-    const char *filePath = mResolvedPath.GetBuffer();
-    
-    HANDLE file = CreateFile(  filePath,          // pointer to name of the file
-                               GENERIC_WRITE,     // access (write) mode
-                               0,                 // share mode
-                               NULL,              // pointer to security attributes
-                               OPEN_EXISTING,     // how to create
-                               0,                 // file attributes  (??xxx)
-                               NULL);
-    
-    if (!file)
-    {
-        // could not open file for writing.
-        MakeDirty();
-        return NS_ERROR_FAILURE; //TODO better error code
-    }
-
-    if ( 0 == SetFileTime(file, NULL, &time, &time) )
-    {
-        // could not set time
-        MakeDirty();
-        return NS_ERROR_FAILURE;
-    }
-    
-    
-    MakeDirty();
-
-    CloseHandle( file );
-    return NS_OK;
-}
 
 NS_IMETHODIMP  
 nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
@@ -1265,26 +1156,42 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
     if (NS_FAILED(rv))
         return rv;
     
-    FILETIME time = mFileAttrData.ftLastWriteTime;
-
-    myLL_II2L(time.dwHighDateTime,  time.dwLowDateTime, aLastModificationDate);
-
+    *aLastModificationDate = mFileInfo64.modifyTime;
     return NS_OK;
 }
+
+
+NS_IMETHODIMP  
+nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
+{
+    return nsLocalFile::SetModDate(aLastModificationDate, PR_TRUE);
+}
+
 
 NS_IMETHODIMP  
 nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
 {
-    nsresult rv = ResolveAndStat(PR_FALSE);
+    return nsLocalFile::SetModDate(aLastModificationDate, PR_FALSE);
+}
+
+static const PRTime filetime_offset = 116444736000000000i64;
+nsresult
+nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
+{
+    nsresult rv = ResolveAndStat(resolveTerminal);
     
     if (NS_FAILED(rv))
         return rv;
     
-    PRInt32 hi, lo;
-    myLL_L2II(aLastModificationDate, &hi, &lo );
- 
-    FILETIME time = mFileAttrData.ftLastWriteTime;
     
+    PRInt64 windowsTime = aLastModificationDate;
+
+    windowsTime = (windowsTime + filetime_offset) * 10i64;
+    
+    PRInt32 hi, lo;
+    myLL_L2II(windowsTime, &hi, &lo );
+ 
+    FILETIME time;
     time.dwHighDateTime  = hi;
     time.dwLowDateTime   = lo;
         
@@ -1298,31 +1205,36 @@ nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
                                0,                 // file attributes  (??xxx)
                                NULL);
     
+    MakeDirty();
+    
     if (!file)
     {
         // could not open file for writing.
-        MakeDirty();
         return NS_ERROR_FAILURE; //TODO better error code
     }
 
     if ( 0 == SetFileTime(file, NULL, &time, &time) )
     {
         // could not set time
-        MakeDirty();
         return NS_ERROR_FAILURE;
     }
     
-
-    MakeDirty();
-
     CloseHandle( file );
     return NS_OK;
-}
 
+}
 NS_IMETHODIMP  
 nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    const char *filePath = mResolvedPath.GetBuffer();
+
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -1335,13 +1247,31 @@ nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissionsOfLink)
 NS_IMETHODIMP  
 nsLocalFile::SetPermissions(PRUint32 aPermissions)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    const char *filePath = mResolvedPath.GetBuffer();
+    if( chmod(filePath, aPermissions) == -1 )
+        return NS_ERROR_FAILURE;
+        
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
 nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissions)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = ResolveAndStat(PR_FALSE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    const char *filePath = mResolvedPath.GetBuffer();
+    if( chmod(filePath, aPermissions) == -1 )
+        return NS_ERROR_FAILURE;
+        
+    return NS_OK;
 }
 
 
@@ -1357,8 +1287,8 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
     if (NS_FAILED(rv))
         return rv;
     
-    myLL_II2L(mFileAttrData.nFileSizeHigh,  mFileAttrData.nFileSizeLow, aFileSize);
 
+    *aFileSize = mFileInfo64.size;
     return NS_OK;
 }
 
@@ -1430,7 +1360,7 @@ nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
     if (NS_FAILED(rv))
         return rv;
     
-    myLL_II2L(mFileAttrData.nFileSizeHigh,  mFileAttrData.nFileSizeLow, aFileSize);
+    *aFileSize = mFileInfo64.size;
     return NS_OK;
 }
 
@@ -1547,7 +1477,10 @@ nsLocalFile::IsWritable(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;  
     
-    *_retval = !((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0); 
+    const char *workingFilePath = mWorkingPath.GetBuffer();
+    DWORD word = GetFileAttributes(workingFilePath);
+
+    *_retval = !((word & FILE_ATTRIBUTE_READONLY) != 0); 
 
     return NS_OK;
 }
@@ -1618,8 +1551,8 @@ nsLocalFile::IsDirectory(PRBool *_retval)
     
     if (NS_FAILED(rv))
         return rv;
-    
-    *_retval = ((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0); 
+
+    *_retval = (mFileInfo64.type == PR_FILE_DIRECTORY); 
 
     return NS_OK;
 }
@@ -1627,9 +1560,15 @@ nsLocalFile::IsDirectory(PRBool *_retval)
 NS_IMETHODIMP  
 nsLocalFile::IsFile(PRBool *_retval)
 {
-    nsresult rv = IsDirectory(_retval);
-	*_retval = !*_retval;
+    NS_ENSURE_ARG(_retval);
+    *_retval = PR_FALSE;
 
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+
+    *_retval = (mFileInfo64.type == PR_FILE_FILE); 
     return rv;
 }
 
@@ -1644,7 +1583,10 @@ nsLocalFile::IsHidden(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval =  ((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)  != 0); 
+    const char *workingFilePath = mWorkingPath.GetBuffer();
+    DWORD word = GetFileAttributes(workingFilePath);
+
+    *_retval =  ((word & FILE_ATTRIBUTE_HIDDEN)  != 0); 
 
     return NS_OK;
 }
@@ -1684,7 +1626,10 @@ nsLocalFile::IsSpecial(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval = ((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)  != 0); 
+    const char *workingFilePath = mWorkingPath.GetBuffer();
+    DWORD word = GetFileAttributes(workingFilePath);
+
+    *_retval = ((word & FILE_ATTRIBUTE_SYSTEM)  != 0); 
 
     return NS_OK;
 }
