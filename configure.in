@@ -948,6 +948,8 @@ case "$target" in
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
+        WIDGET_DLL='\"gkwidget$(DLL_SUFFIX)\"'
+        GFXWIN_DLL='\"gkgfxwin$(DLL_SUFFIX)\"'
     fi
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(_WIN32)
