@@ -24,13 +24,14 @@
 [scriptable, uuid(1c773b30-d1cf-11d2-bd95-00805f8ae3f4)]
 interface nsIDOMEventTarget : nsISupports
 {
-
+  /* XXX The nsIDOMEventListener arg should be flagged as function */
+  void                     addEventListener(in DOMString type,
+                                            in nsIDOMEventListener listener,
+                                            in boolean useCapture);
 
  /* XXX The nsIDOMEventListener arg should be flagged as function */
-	void	addEventListener(in DOMString type, in nsIDOMEventListener listener, in boolean useCapture);
-
- /* XXX The nsIDOMEventListener arg should be flagged as function */
-	void	removeEventListener(in DOMString type, in nsIDOMEventListener listener, in boolean useCapture);
-  void	dispatchEvent(in nsIDOMEvent evt);
+  void                     removeEventListener(in DOMString type,
+                                               in nsIDOMEventListener listener,
+                                               in boolean useCapture);
+  void                     dispatchEvent(in nsIDOMEvent evt);
 };
-
