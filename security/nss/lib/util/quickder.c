@@ -541,8 +541,8 @@ static SECStatus DecodeGroup(void* dest,
         do
         {
             SECItem anitem;
-            rv = GetItem(&counter, &anitem, PR_FALSE);
-            if (SECSuccess == rv)
+            rv = GetItem(&counter, &anitem, PR_TRUE);
+            if (SECSuccess == rv && (anitem.len) )
             {
                 totalEntries++;
             }
@@ -582,7 +582,11 @@ static SECStatus DecodeGroup(void* dest,
     if (SECSuccess == rv && totalEntries)
     do
     {
-        PR_ASSERT(entryIndex<totalEntries);
+        if (!(entryIndex<totalEntries))
+        {
+            rv = SECFailure;
+            break;
+        }
         rv = DecodeItem(entries[entryIndex++], subTemplate, &group, arena, PR_TRUE);
     } while ( (SECSuccess == rv) && (group.len) );
     /* we should be at the end of the set by now */    
