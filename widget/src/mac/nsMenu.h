@@ -183,6 +183,7 @@ protected:
   PRInt16              mHelpMenuOSItemsCount;
   PRBool               mIsHelpMenu;
   PRBool               mIsEnabled;
+  PRBool               mDestroyHandlerCalled;
 
     // fetch the content node associated with the menupopup item
   void GetMenuPopupElement ( nsIDOMNode** aResult ) ;
