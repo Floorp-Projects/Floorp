@@ -656,7 +656,9 @@ JS_PUBLIC_API(jsdouble *)
 JS_NewDouble(JSContext *cx, jsdouble d)
 {
     JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
-    return (jsdouble *)js2cx->mArena.allocate(sizeof(jsdouble));
+    jsdouble *dptr = (jsdouble *)js2cx->mArena.allocate(sizeof(jsdouble));
+    *dptr = d;
+    return dptr;
 }
 
 JS_PUBLIC_API(JSBool)
