@@ -24,12 +24,11 @@
 [scriptable, uuid(A6CF90C3-15B3-11D2-932E-00805F8ADD32)]
 interface nsIDOMUIEvent : nsIDOMEvent
 {
-        readonly attribute nsIDOMAbstractView  view;
-        readonly attribute long          detail;
-        void               initUIEvent(in DOMString typeArg, 
-                                       in boolean canBubbleArg, 
-                                       in boolean cancelableArg, 
-                                       in nsIDOMAbstractView viewArg, 
-                                       in long detailArg);      
+  readonly attribute nsIDOMAbstractView view;
+  readonly attribute long               detail;
+  void                      initUIEvent(in DOMString typeArg,
+                                        in boolean canBubbleArg,
+                                        in boolean cancelableArg,
+                                        in nsIDOMAbstractView viewArg,
+                                        in long detailArg);
 };
-

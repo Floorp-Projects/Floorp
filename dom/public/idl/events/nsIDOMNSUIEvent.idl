@@ -24,20 +24,17 @@
 [scriptable, uuid(A6CF90C4-15B3-11D2-932E-00805F8ADD32)]
 interface nsIDOMNSUIEvent : nsISupports
 {
+  boolean                   getPreventDefault();
 
-		    boolean			getPreventDefault();
+  readonly attribute long             layerX;
+  readonly attribute long             layerY;
+  readonly attribute long             pageX;
+  readonly attribute long             pageY;
+  readonly attribute unsigned long    which;
+  readonly attribute nsIDOMNode       rangeParent;
+  readonly attribute long             rangeOffset;
 
-	      readonly    attribute   long			      layerX;
-	      readonly    attribute   long			      layerY;
-	      readonly    attribute   long			      pageX;
-	      readonly    attribute   long			      pageY;
-	      readonly    attribute   unsigned long which;
-		    readonly	  attribute   nsIDOMNode		  	  rangeParent;
-		    readonly	  attribute   long           rangeOffset;
+           attribute boolean          cancelBubble;
 
-                    attribute   boolean       cancelBubble;
-
-        readonly    attribute   boolean       isChar;
-
+  readonly attribute boolean          isChar;
 };
-

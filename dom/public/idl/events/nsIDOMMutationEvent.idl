@@ -24,21 +24,20 @@
 [scriptable, uuid(8E440D86-886A-4E76-9E59-C13B939C9A4B)]
 interface MutationEvent : nsIDOMEvent
 {
-  const unsigned short      MODIFICATION                   = 1;
-  const unsigned short      ADDITION                       = 2;
-  const unsigned short      REMOVAL                        = 3;
+  const unsigned short      MODIFICATION       = 1;
+  const unsigned short      ADDITION           = 2;
+  const unsigned short      REMOVAL            = 3;
 
-  readonly attribute nsIDOMNode             relatedNode;
+  readonly attribute nsIDOMNode       relatedNode;
   readonly attribute DOMString        prevValue;
   readonly attribute DOMString        newValue;
   readonly attribute DOMString        attrName;
   readonly attribute unsigned short   attrChange;
-  void               initMutationEvent(in DOMString typeArg, 
-                                       in boolean canBubbleArg, 
-                                       in boolean cancelableArg, 
-                                       in nsIDOMNode relatedNodeArg, 
-                                       in DOMString prevValueArg, 
-                                       in DOMString newValueArg, 
-                                       in DOMString attrNameArg);
+  void                      initMutationEvent(in DOMString typeArg,
+                                              in boolean canBubbleArg,
+                                              in boolean cancelableArg,
+                                              in nsIDOMNode relatedNodeArg,
+                                              in DOMString prevValueArg,
+                                              in DOMString newValueArg,
+                                              in DOMString attrNameArg);
 };
-

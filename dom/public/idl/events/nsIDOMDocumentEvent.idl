@@ -24,7 +24,5 @@
 [scriptable, uuid(46b91d66-28e2-11d4-ab1e-0010830123b4)]
 interface nsIDOMDocumentEvent : nsISupports
 {
-
-  nsIDOMEvent createEvent(in DOMString eventType);
+  nsIDOMEvent               createEvent(in DOMString eventType);
 };
-
