@@ -166,7 +166,7 @@ typedef PRUint32 nsresult;
 /* Returned when a class doesn't allow aggregation */
 #define NS_ERROR_NO_AGGREGATION            ((nsresult) 0x80040110L)
 
-/* Returned when a class doesn't allow aggregation */
+/* Returned when an operation can't complete due to an unavailable resource */
 #define NS_ERROR_NOT_AVAILABLE             ((nsresult) 0x80040111L)
 
 /* Returned when a class is not registered */
