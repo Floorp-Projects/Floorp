@@ -13,6 +13,13 @@ toolkit.jar:
 * content/mozapps/downloads/download.xml                    (downloads/content/download.xml)
 * content/mozapps/downloads/downloadProperties.xul          (downloads/content/downloadProperties.xul)
 * content/mozapps/downloads/downloadProperties.js           (downloads/content/downloadProperties.js)
+* content/mozapps/extensions/extensions.xul                 (extensions/content/extensions.xul)
+* content/mozapps/extensions/extensions.js                  (extensions/content/extensions.js)
+* content/mozapps/extensions/extensions.xml                 (extensions/content/extensions.xml)
+* content/mozapps/extensions/extensions.css                 (extensions/content/extensions.css)
+* content/mozapps/extensions/about.xul                      (extensions/content/about.xul)
+* content/mozapps/extensions/about.js                       (extensions/content/about.js)
+* content/mozapps/shared/richview.xml                       (shared/content/richview.xml)
   content/mozapps/contents.rdf                              (contents-content.rdf)
 
 en-US.jar:
@@ -23,7 +30,16 @@ en-US.jar:
   locale/en-US/mozapps/downloads/downloads.dtd              (downloads/locale/downloads.dtd)
   locale/en-US/mozapps/downloads/downloads.properties       (downloads/locale/downloads.properties)
   locale/en-US/mozapps/downloads/downloadProperties.dtd     (downloads/locale/downloadProperties.dtd)
+  locale/en-US/mozapps/extensions/extensions.dtd            (extensions/locale/extensions.dtd)
+  locale/en-US/mozapps/extensions/extensions.properties     (extensions/locale/extensions.properties)
   locale/en-US/mozapps/contents.rdf                         (contents-locale.rdf)
 
 classic.jar:
+  skin/classic/mozapps/extensions/extensions.css            (extensions/skin/extensions.css)
+  skin/classic/mozapps/shared/richview.xml                  (shared/skin/richview.xml)
+  skin/classic/mozapps/shared/richview.css                  (shared/skin/richview.css)
+  skin/classic/mozapps/shared/viewFader.png                 (shared/skin/viewFader.png)
+  skin/classic/mozapps/shared/itemFader.png                 (shared/skin/itemFader.png)
+  skin/classic/mozapps/shared/itemSelected.png              (shared/skin/itemSelected.png)
   skin/classic/mozapps/contents.rdf                         (contents-skin.rdf)
+
