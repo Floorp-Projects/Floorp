@@ -371,6 +371,12 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
       switch (stm->tymed) {
         case TYMED_HGLOBAL:
           result = GetGlobalData(stm->hGlobal, aData, aLen);
+          if (fe.cfFormat == CF_TEXT) {
+            char * str = (char *)*aData;
+            if (str[*aLen-1] == 0) {
+              (*aLen)--;
+            }
+          }
           break;
         default:
           break;
