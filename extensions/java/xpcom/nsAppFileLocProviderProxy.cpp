@@ -36,15 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAppFileLocProviderProxy.h"
-#include "nsILocalFile.h"
 #include "nsJavaXPCOMBindingUtils.h"
+#include "nsILocalFile.h"
+#include "nsISimpleEnumerator.h"
 
 
 nsAppFileLocProviderProxy::nsAppFileLocProviderProxy(JNIEnv* env,
                                                      jobject aJavaObject)
   : mJavaEnv(env)
 {
-  mJavaLocProvider = mJavaEnv->NewGlobalRef(aJavaObject);
+  mJavaLocProvider = env->NewGlobalRef(aJavaObject);
 }
 
 nsAppFileLocProviderProxy::~nsAppFileLocProviderProxy()
@@ -52,9 +53,13 @@ nsAppFileLocProviderProxy::~nsAppFileLocProviderProxy()
   mJavaEnv->DeleteGlobalRef(mJavaLocProvider);
 }
 
-NS_IMPL_ISUPPORTS1(nsAppFileLocProviderProxy, nsIDirectoryServiceProvider)
+NS_IMPL_ISUPPORTS2(nsAppFileLocProviderProxy,
+                   nsIDirectoryServiceProvider,
+                   nsIDirectoryServiceProvider2)
+
 
 // nsIDirectoryServiceProvider
+
 NS_IMETHODIMP
 nsAppFileLocProviderProxy::GetFile(const char* aProp, PRBool* aIsPersistant,
                                    nsIFile** aResult)
@@ -104,6 +109,140 @@ nsAppFileLocProviderProxy::GetFile(const char* aProp, PRBool* aIsPersistant,
     return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aResult);
   }
 
+  return rv;
+}
+
+
+// nsIDirectoryServiceProvider2
+
+class DirectoryEnumerator : public nsISimpleEnumerator
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  DirectoryEnumerator(JNIEnv* env, jobjectArray aJavaFileArray)
+    : mJavaEnv(env)
+    , mIndex(0)
+  {
+    mJavaFileArray = NS_STATIC_CAST(jobjectArray,
+                                    env->NewGlobalRef(aJavaFileArray));
+    mArraySize = env->GetArrayLength(aJavaFileArray);
+  }
+
+  ~DirectoryEnumerator()
+  {
+    mJavaEnv->DeleteGlobalRef(mJavaFileArray);
+  }
+
+  NS_IMETHOD HasMoreElements(PRBool* aResult)
+  {
+    if (!mJavaFileArray) {
+      *aResult = PR_FALSE;
+    } else {
+      *aResult = (mIndex < mArraySize);
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetNext(nsISupports** aResult)
+  {
+    nsresult rv = NS_ERROR_FAILURE;
+
+    jobject javaFile = mJavaEnv->GetObjectArrayElement(mJavaFileArray, mIndex++);
+    if (javaFile) {
+      nsCOMPtr<nsILocalFile> localFile;
+      rv = File_to_nsILocalFile(mJavaEnv, javaFile, getter_AddRefs(localFile));
+      mJavaEnv->DeleteLocalRef(javaFile);
+
+      if (NS_SUCCEEDED(rv)) {
+        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aResult);
+      }
+    }
+
+    mJavaEnv->ExceptionClear();
+    return NS_ERROR_FAILURE;
+  }
+
+private:
+  JNIEnv*       mJavaEnv;
+  jobjectArray  mJavaFileArray;
+  PRUint32      mArraySize;
+  PRUint32      mIndex;
+};
+
+NS_IMPL_ISUPPORTS1(DirectoryEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsAppFileLocProviderProxy::GetFiles(const char* aProp,
+                                    nsISimpleEnumerator** aResult)
+{
+  nsresult rv = NS_OK;
+
+  // Setup params for calling Java function
+  jstring prop = mJavaEnv->NewStringUTF(aProp);
+  if (!prop)
+    rv = NS_ERROR_OUT_OF_MEMORY;
+
+  // Create method ID
+  jmethodID mid = nsnull;
+  if (NS_SUCCEEDED(rv)) {
+    jclass clazz = mJavaEnv->GetObjectClass(mJavaLocProvider);
+    if (clazz) {
+      mid = mJavaEnv->GetMethodID(clazz, "getFiles",
+                                  "(Ljava/lang/String;)[Ljava/io/File;");
+      mJavaEnv->DeleteLocalRef(clazz);
+    }
+    if (!mid)
+      rv = NS_ERROR_FAILURE;
+  }
+
+  // Call Java function
+  jobject javaFileArray = nsnull;
+  if (NS_SUCCEEDED(rv)) {
+    javaFileArray = mJavaEnv->CallObjectMethod(mJavaLocProvider, mid, prop);
+
+    // Handle any exception thrown by Java method.
+    jthrowable exp = mJavaEnv->ExceptionOccurred();
+    if (exp) {
+#ifdef DEBUG
+      mJavaEnv->ExceptionDescribe();
+#endif
+
+      // If the exception is an instance of XPCOMException, then get the
+      // nsresult from the exception instance.  Else, default to
+      // NS_ERROR_FAILURE.
+      if (mJavaEnv->IsInstanceOf(exp, xpcomExceptionClass)) {
+        jfieldID fid;
+        fid = mJavaEnv->GetFieldID(xpcomExceptionClass, "errorcode", "J");
+        if (fid) {
+          rv = mJavaEnv->GetLongField(exp, fid);
+        } else {
+          rv = NS_ERROR_FAILURE;
+        }
+        NS_ASSERTION(fid, "Couldn't get 'errorcode' field of XPCOMException");
+      } else {
+        rv = NS_ERROR_FAILURE;
+      }
+    } else {
+      // No exception thrown.  Check the result.
+      if (javaFileArray == nsnull) {
+        rv = NS_ERROR_FAILURE;
+      }
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    // Parse return value
+    *aResult = new DirectoryEnumerator(mJavaEnv,
+                                       NS_STATIC_CAST(jobjectArray,
+                                                      javaFileArray));
+    NS_ADDREF(*aResult);
+    return NS_OK;
+  }
+
+  // Handle error conditions
+  *aResult = nsnull;
+  mJavaEnv->ExceptionClear();
   return rv;
 }
 
