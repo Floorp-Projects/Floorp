@@ -121,7 +121,6 @@
            </hbox>  
           <menulist id="sizeVar" class="small-margin">
             <menupopup>
-              <menuitem value="8" label="8"/>
               <menuitem value="9" label="9"/>
               <menuitem value="10" label="10"/>
               <menuitem value="11" label="11"/>
@@ -130,14 +129,19 @@
               <menuitem value="14" label="14"/>
               <menuitem value="15" label="15"/>
               <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
               <menuitem value="18" label="18"/>
               <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
               <menuitem value="24" label="24"/>
               <menuitem value="26" label="26"/>
               <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
               <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
               <menuitem value="36" label="36"/>
               <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
               <menuitem value="48" label="48"/>
               <menuitem value="56" label="56"/>
               <menuitem value="64" label="64"/>
@@ -182,7 +186,6 @@
           </hbox>  
           <menulist id="sizeMono">
             <menupopup>
-              <menuitem value="8" label="8"/>
               <menuitem value="9" label="9"/>
               <menuitem value="10" label="10"/>
               <menuitem value="11" label="11"/>
@@ -191,14 +194,19 @@
               <menuitem value="14" label="14"/>
               <menuitem value="15" label="15"/>
               <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
               <menuitem value="18" label="18"/>
               <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
               <menuitem value="24" label="24"/>
               <menuitem value="26" label="26"/>
               <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
               <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
               <menuitem value="36" label="36"/>
               <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
               <menuitem value="48" label="48"/>
               <menuitem value="56" label="56"/>
               <menuitem value="64" label="64"/>
@@ -241,9 +249,6 @@
           <menulist id="minSize">
             <menupopup>
               <menuitem value="0" label="&minSize.none;"/>
-              <menuitem value="6" label="6"/>
-              <menuitem value="7" label="7"/>
-              <menuitem value="8" label="8"/>
               <menuitem value="9" label="9"/>
               <menuitem value="10" label="10"/>
               <menuitem value="11" label="11"/>
@@ -252,6 +257,7 @@
               <menuitem value="14" label="14"/>
               <menuitem value="15" label="15"/>
               <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
               <menuitem value="18" label="18"/>
               <menuitem value="20" label="20"/>
               <menuitem value="22" label="22"/>
