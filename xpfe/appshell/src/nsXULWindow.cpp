@@ -41,6 +41,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
 #include "nsIJSContextStack.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIWindowMediator.h"
 
 // XXX Get rid of this
@@ -607,40 +608,113 @@ NS_IMETHODIMP nsXULWindow::EnsurePrimaryContentTreeOwner()
 void nsXULWindow::OnChromeLoaded()
 {
    mChromeLoaded = PR_TRUE;
-   
+  
    if(mContentTreeOwner)
       mContentTreeOwner->ApplyChromeMask();
+
+   LoadTitleFromXUL();
+   LoadPositionAndSizeFromXUL(PR_TRUE, PR_TRUE);
+
+   if(mIntrinsicallySized)
+      {
+      nsCOMPtr<nsIContentViewer> cv;
+      mDocShell->GetContentViewer(getter_AddRefs(cv));
+      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
+      if(markupViewer)
+         markupViewer->SizeToContent();
+      }
+
+   //LoadContentAreas();
+
    if(mShowAfterLoad)
       SetVisibility(PR_TRUE);
 }
 
-NS_IMETHODIMP nsXULWindow::GetDOMElementFromDocShell(nsIDocShell* aDocShell,
-   nsIDOMElement** aDOMElement)
+NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition, 
+   PRBool aSize)
 {
-   NS_ENSURE_ARG(aDocShell);
-   NS_ENSURE_ARG_POINTER(aDOMElement);
+   nsCOMPtr<nsIDOMElement> docShellElement;
+   GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
+   NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
 
-   *aDOMElement = nsnull;
+   PRInt32 curX = 0;
+   PRInt32 curY = 0;
+   PRInt32 curCX = 0;
+   PRInt32 curCY = 0;
 
-   nsCOMPtr<nsIContentViewer> cv;
-   
-   aDocShell->GetContentViewer(getter_AddRefs(cv));
-   if(!cv)
-      return NS_ERROR_FAILURE;
+   GetPositionAndSize(&curX, &curY, &curCX, &curCY);
 
-   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-   if(!docv)   
-      return NS_ERROR_FAILURE;
+   PRInt32 errorCode;
+   PRInt32 temp;
 
-   nsCOMPtr<nsIDocument> doc;
-   docv->GetDocument(*getter_AddRefs(doc));
-   nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-   if(!domdoc) 
-      return NS_ERROR_FAILURE;
+   if(aPosition)
+      {
+      PRInt32 specX = curX;
+      PRInt32 specY = curY;
+      nsAutoString sizeString;
 
-   domdoc->GetDocumentElement(aDOMElement);
-   if(!*aDOMElement)
-      return NS_ERROR_FAILURE;
+      if(NS_SUCCEEDED(docShellElement->GetAttribute("screenX", sizeString)))
+         {
+         temp = sizeString.ToInteger(&errorCode);
+         if(NS_SUCCEEDED(errorCode) && temp > 0)
+            specX = temp;
+         }
+      if(NS_SUCCEEDED(docShellElement->GetAttribute("screenY", sizeString)))
+         {
+         temp = sizeString.ToInteger(&errorCode);
+         if(NS_SUCCEEDED(errorCode) && temp > 0)
+            specY = temp;
+         }
+
+      if((specX != curX) || (specY != curY))
+         SetPosition(specX, specY);
+      }
+
+   if(aSize)
+      {
+      PRInt32 specCX = curCX;
+      PRInt32 specCY = curCY;
+      nsAutoString sizeString;
+
+      if(NS_SUCCEEDED(docShellElement->GetAttribute("width", sizeString)))
+         {
+         temp = sizeString.ToInteger(&errorCode);
+         if(NS_SUCCEEDED(errorCode) && temp > 0)
+            {
+            specCX = temp;
+            mIntrinsicallySized = PR_FALSE;
+            }
+         }
+      if(NS_SUCCEEDED(docShellElement->GetAttribute("height", sizeString)))
+         {
+         temp = sizeString.ToInteger(&errorCode);
+         if(NS_SUCCEEDED(errorCode) && temp > 0)
+            {
+            specCY = temp;
+            mIntrinsicallySized = PR_FALSE;
+            }
+         }
+
+      if((specCX != curCX) || (specCY != curCY))
+         SetSize(specCX, specCY, PR_FALSE);
+      }
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
+{
+   nsCOMPtr<nsIDOMElement> docShellElement;
+   GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
+   NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
+
+   nsAutoString windowTitle;
+   docShellElement->GetAttribute("title", windowTitle);
+   if(windowTitle == "")
+      return NS_OK;
+
+   NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
+   mChromeTreeOwner->SetTitle(windowTitle.GetUnicode());
 
    return NS_OK;
 }
@@ -698,6 +772,37 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
          docShellElement->SetAttribute("height", sizeString);
          }
       }
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetDOMElementFromDocShell(nsIDocShell* aDocShell,
+   nsIDOMElement** aDOMElement)
+{
+   NS_ENSURE_ARG(aDocShell);
+   NS_ENSURE_ARG_POINTER(aDOMElement);
+
+   *aDOMElement = nsnull;
+
+   nsCOMPtr<nsIContentViewer> cv;
+   
+   aDocShell->GetContentViewer(getter_AddRefs(cv));
+   if(!cv)
+      return NS_ERROR_FAILURE;
+
+   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+   if(!docv)   
+      return NS_ERROR_FAILURE;
+
+   nsCOMPtr<nsIDocument> doc;
+   docv->GetDocument(*getter_AddRefs(doc));
+   nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
+   if(!domdoc) 
+      return NS_ERROR_FAILURE;
+
+   domdoc->GetDocumentElement(aDOMElement);
+   if(!*aDOMElement)
+      return NS_ERROR_FAILURE;
 
    return NS_OK;
 }
