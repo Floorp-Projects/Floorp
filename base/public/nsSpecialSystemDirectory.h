@@ -29,7 +29,7 @@
 #include "nsFileSpec.h"
 
 #ifdef XP_MAC
-#include "Types.h"
+#include <Types.h>
 #endif
 
 // SEE ALSO:
