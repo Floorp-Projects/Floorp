@@ -16,6 +16,9 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+# Reading the log backwards saves time when we only want the tail.
+use Backwards;
+
 #
 # Global variabls and functions for tinderbox
 #
@@ -24,59 +27,39 @@
 # Global variables
 #
 
-$td1 = {};
-$td2 = {};
-
-$build_list = [];           # array of all build records
-$build_name_index = {};
+# From load_data()
 $ignore_builds = {};
-$build_name_names = [];
+
+# From get_build_name_index()
+$build_name_index = {};     
+$build_names = [];
 $name_count = 0;
 
+# Frome get_build_time_index()
 $build_time_index = {};
 $build_time_times = [];
-$time_count = 0;
 $mindate_time_count = 0;  # time_count that corresponds to the mindate
+$time_count = 0;
 
 $build_table = [];
 $who_list = [];
-$who_list2 = [];
 @note_array = ();
 
-$bloat_by_log = {};
-$minLeaks = 0;
-$minBloat = 0;
+# Yeah, more globals.
+$bloaty_by_log = {};
+$bloaty_min_leaks = 0;
+$bloaty_min_bloat = 0;
 
-#$body_tag = "<BODY TEXT=#000000 BGCOLOR=#8080C0 LINK=#FFFFFF VLINK=#800080 ALINK=#FFFF00>";
-#$body_tag = "<BODY TEXT=#000000 BGCOLOR=#FFFFC0 LINK=#0000FF VLINK=#800080 ALINK=#FF00FF>";
-if( $ENV{'USERNAME'} eq 'ltabb' ){
-    $gzip = 'gzip';
-}
-else {
-    $gzip = '/usr/local/bin/gzip';
-}
+$gzip = '/usr/local/bin/gzip';
 
 $data_dir='data';
-
-$lock_count = 0;
 
 1;
 
 sub lock{
-    #if( $lock_count == 0 ){
-    #    print "locking $tree/LOCKFILE.lck\n";
-    #    open( LOCKFILE_LOCK, ">$tree/LOCKFILE.lck" );
-    #    flock( LOCKFILE_LOCK, 2 );
-    #}
-    #$lock_count++;
 }
 
 sub unlock{
-    #$lock_count--;
-    #if( $lock_count == 0 ){
-    #    flock( LOCKFILE_LOCK, 8 );
-    #    close( LOCKFILE_LOCK );
-    #}
 }
 
 sub print_time {
@@ -120,142 +103,48 @@ sub value_encode {
 }
 
 
-sub load_data {
-  $tree2 = $form{'tree2'};
-  if( $tree2 ne '' ){
-    require "$tree2/treedata.pl";
-    if( -r "$tree2/ignorebuilds.pl" ){
-      require "$tree2/ignorebuilds.pl";
-    }
-
-    $td2 = {};
-    $td2->{name} = $tree2;
-    $td2->{cvs_module} = $cvs_module;
-    $td2->{cvs_branch} = $cvs_branch;
-    $td2->{num} = 1;
-    $td2->{ignore_builds} = $ignore_builds;
-    if( $cvs_root eq '' ){
-      $cvs_root = '/m/src';
-    }
-    $td2->{cvs_root} = $cvs_root;
-    
-    $tree = $form{'tree'};
-    require "$tree/treedata.pl";
-    if( $cvs_root eq '' ){
-      $cvs_root = '/m/src';
-    }
-  }
-
+sub tb_load_data {
   $tree = $form{'tree'};
 
-  return unless $tree;
-  #die "the 'tree' parameter must be provided\n" unless $tree;
+  return undef unless $tree;
   
-  if ( -r "$tree/treedata.pl" ) {
-    require "$tree/treedata.pl";
-  }
-
-  $ignore_builds = {};
-  if( -r "$tree/ignorebuilds.pl" ){
-    require "$tree/ignorebuilds.pl";
-  }
+  require "$tree/treedata.pl" if -r "$tree/treedata.pl";
         
-  $td1 = {};
-  $td1->{name} = $tree;
-  $td1->{num} = 0;
-  $td1->{cvs_module} = $cvs_module;
-  $td1->{cvs_branch} = $cvs_branch;
-  $td1->{ignore_builds} = $ignore_builds;
-  if( $cvs_root eq '' ){
-    $cvs_root = '/m/src';
-  }
-  $td1->{cvs_root} = $cvs_root;
+  $ignore_builds = {};
 
-  &lock;
-  &load_buildlog;
-  &unlock;
+  require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
+        
+  $td = {};
+  $td->{name} = $tree;
+  $td->{num} = 0;
+  $td->{cvs_module} = $cvs_module;
+  $td->{cvs_branch} = $cvs_branch;
+  $td->{ignore_builds} = $ignore_builds;
+  $cvs_root = '/m/src' if $cvs_root eq '';
+  $td->{cvs_root} = $cvs_root;
+
+  $build_list = &load_buildlog($td);
   
-  &get_build_name_index;
-  &get_build_time_index;
+  &get_build_name_index($build_list);
+  &get_build_time_index($build_list);
   
-  &load_who($who_list, $td1);
-  if( $tree2 ne '' ){
-    &load_who($who_list2, $td2);
-  }
+  &load_who($td, $who_list);
 
-  &make_build_table;
+  &make_build_table($td, $build_list);
 
-  ($minLeaks, $minBloat) = load_bloat($td1);
+  ($bloaty_min_leaks, $bloaty_min_bloat) = load_bloaty($td);
+
+  return $td;
 }
 
-sub load_buildlog {
-  my $mailtime, $buildtime, $buildname, $errorparser;
-  my $buildstatus, $logfile,$binaryname;
-  my $buildrec, @treelist, $t;
+sub tb_loadquickparseinfo {
+  my ($tree, $build, $times, $includeStatusOfBuilding) = (@_);
+  local $_;
 
-  if (not defined $maxdate) {
-    $maxdate = time();
-  }
-  if (not defined $mindate) {
-    $mindate = $maxdate - 24*60*60;
-  }
-  
-  if ($tree2 ne '') { 
-    @treelist = ($td1, $td2);
-  }
-  else {
-    @treelist = ($td1);
-  }
-  
-  for $t (@treelist) {
-    use Backwards;
-    my ($bw) = Backwards->new("$t->{name}/build.dat") or die;
-
-    my $tooearly = 0;
-    while( $_ = $bw->readline ) {
-      chomp;
-      ($mailtime, $buildtime, $buildname,
-       $errorparser, $buildstatus, $logfile, $binaryname) = split /\|/;
-      
-      #$buildtime -= $buildtime % 60; # Round to minute
-      # Ignore stuff in the future.
-      next if $buildtime > $maxdate;
-
-      # Ignore stuff in the past (but get a 2 hours of extra data)
-      if ($buildtime < $mindate - 2*60*60) {
-        # Occasionally, a build might show up with a bogus time.  So,
-        # we won't judge ourselves as having hit the end until we
-        # hit a full 20 lines in a row that are too early.
-        last if $tooearly++ > 20;
-
-        next;
-      }
-      $tooearly = 0;
-      $buildrec = {    
-         mailtime    => $mailtime,
-         buildtime   => $buildtime,
-         buildname   => ($tree2 ne '' ? $t->{name} . ' ' : '' ) . $buildname,
-         errorparser => $errorparser,
-         buildstatus => $buildstatus,
-         logfile     => $logfile,
-         binaryname  => $binaryname,
-         td          => $t
-      };
-      if ($form{noignore} or not $t->{ignore_builds}->{$buildname}) {
-        push @{$build_list}, $buildrec;
-      }
-    }
-  }
-}
-
-sub loadquickparseinfo {
-  my ($tree, $build, $times) = (@_);
-
-  do "$tree/ignorebuilds.pl";
+  $maxdate = time;
+  require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
     
-  use Backwards;
-
-  my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
+  my $bw = Backwards->new("$tree/build.dat") or die;
     
   my $latest_time = 0;
   my $tooearly = 0;
@@ -263,7 +152,8 @@ sub loadquickparseinfo {
     chop;
     my ($buildtime, $buildname, $buildstatus) = (split /\|/)[1,2,4];
     
-    if ($buildstatus =~ /^success|busted|testfailed$/) {
+    if ($includeStatusOfBuilding or
+        $buildstatus =~ /^success|busted|testfailed$/) {
 
       # Ignore stuff in the future.
       next if $buildtime > $maxdate;
@@ -290,240 +180,28 @@ sub loadquickparseinfo {
   }
 }
 
-# Load data about who checked in when
-#   File format: <build_time>|<email_address>
-#
-sub load_who {
-  my ($who_list, $treedata) = @_;
-  local $_;
-  
-  open(WHOLOG, "<$treedata->{name}/who.dat");
-  while (<WHOLOG>) {
-    chomp;
-    my ($checkin_time, $email) = split /\|/;
+sub tb_last_status {
+  my ($build_index) = @_;
 
-    # Find the time slice where this checkin belongs.
-    for (my $ii = $time_count; $ii > 0; $ii--) {
-      if ($checkin_time <= $build_time_times->[$ii]) {
-        $who_list->[$ii+1]->{$email} = 1;
-        last;
-      }
-    }
-  }
-
-  # Ignore the last one
-  #
-  if ($time_count > 0) {
-    $who_list->[$time_count] = {};
-  }
-}
-    
-# Load data about code bloat
-#   File format: <build_time>|<build_name>|<leak_delta>|<bloat_delta>
-#
-sub load_bloat {
-  my ($treedata) = @_;
-  local $_;
-  open(BLOATLOG, "<$treedata->{name}/bloat.dat");
-  my $leaksList = [];
-  my $bloatList = [];
-  my $index = 0;
-  my $listMax = 5;      # only take the minimum over the last few entries
-  while (<BLOATLOG>) {
-    chomp;
-    my ($logfile, $leaks, $bloat) = split /\|/;
-    $bloat_by_log->{$logfile} = [ $leaks, $bloat ];
-    $leaksList[$index] = $leaks;
-    $bloatList[$index] = $bloat;
-    $index = ($index + 1) % $listMax;
-  }
-  my $leaksMin = 9999999999999;
-  my $bloatMin = 9999999999999;
-  for ($index = 0; $index < $listMax; $index++) {
-      print "min: $leaksList[$index] $bloatList[$index]\n";
-      if ($leaksList[$index] < $leaksMin) {
-          $leaksMin = $leaksList[$index];
-      }
-      if ($bloatList[$index] < $bloatMin) {
-          $bloatMin = $bloatList[$index];
-      }
-  }
-  return ($leaksMin, $bloatMin);
-}
-    
-sub get_build_name_index {
-  my $i,$br;
-
-  # Get all the unique build names.
-  #
-  foreach $br (@{$build_list}) {
-    $build_name_index->{$br->{buildname}} = 1;
-  }
-    
-  $i = 1;
-  foreach $n (sort keys (%{$build_name_index})) {
-    $build_name_names->[$i] = $n;
-    $i++;
-  }
-
-  $name_count = @{$build_name_names}-1;
-
-  # Update the map so it points to the right index
-  #
-  for ($i=1; $i < $name_count+1; $i++) {
-    $build_name_index->{$build_name_names->[$i]} = $i;
-  }
-}
-
-sub get_build_time_index {
-  my $i,$br;
-
-  # Get all the unique build names.
-  #
-  foreach $br (@{$build_list}) {
-    $build_time_index->{$br->{buildtime}} = 1;
-  }
-
-  $i = 1;
-  foreach $n (sort {$b <=> $a} keys (%{$build_time_index})) {
-    $build_time_times->[$i] = $n;
-    $mindate_time_count = $i if $n >= $mindate;
-    $i++;
-  }
-
-  $time_count = @{$build_time_times}-1;
-
-  # Update the map so it points to the right index
-  #
-  for ($i=1; $i < $time_count+1; $i++) {
-    $build_time_index->{$build_time_times->[$i]} = $i;
-  }
-  
-  #for $i (@{$build_time_times}) {
-  #    print $i . "\n";
-  #}
-  
-  #while( ($k,$v) = each(%{$build_time_index})) {
-  #    print "$k=$v\n";
-  #}
-}
-
-sub make_build_table {
-  my $i,$ti,$bi,$ti1,$br;
-
-  # Create the build table
-  #
-  for ($i=1; $i <= $time_count; $i++){
-    $build_table->[$i] = [];
-  }
-
-  # Populate the build table with build data
-  #
-  foreach $br (reverse @{$build_list}) {
-    $ti = $build_time_index->{$br->{buildtime}};
-    $bi = $build_name_index->{$br->{buildname}};
-    $build_table->[$ti][$bi] = $br;
-  }
-
-  &load_notes;
-
-  for ($bi = $name_count; $bi > 0; $bi--) {
-    for ($ti = $time_count; $ti > 0; $ti--) {
-      if (defined($br = $build_table->[$ti][$bi])
-          and not defined($br->{rowspan})) {
-
-        # If the cell immediately after us is defined, then we 
-        #  can have a previousbuildtime.
-        if (defined($br1 = $build_table->[$ti+1][$bi])) {
-          $br->{previousbuildtime} = $br1->{buildtime};
-        }
-                                
-        $ti1 = $ti-1;
-        while ($ti1 > 0 and not defined($build_table->[$ti1][$bi])) {
-          $build_table->[$ti1][$bi] = -1;
-          $ti1--;
-        }
-        $br->{rowspan} = $ti - $ti1;
-        if ($br->{rowspan} != 1) {
-          $build_table->[$ti1+1][$bi] = $br;
-          $build_table->[$ti][$bi] = -1;
-        }
-      }
-    }
-  }
-}
-
-sub load_notes {
-  if ($tree2 ne '') { 
-    @treelist = ($td1, $td2);
-  }
-  else {
-    @treelist = ($td1);
-  }
-
-  foreach $t (@treelist) {
-    open(NOTES,"<$t->{name}/notes.txt") 
-      or print "<h2>warning: Couldn't open $t->{name}/notes.txt </h2>\n";
-    while (<NOTES>) {
-      chop;
-      ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split /\|/;
-      $nbuildname = "$t->{name} $nbuildname" if $tree2 ne '';
-      $ti = $build_time_index->{$nbuildtime};
-      $bi = $build_name_index->{$nbuildname};
-      #print "[ti = $ti][bi=$bi][buildname='$nbuildname' $_<br>";
-      if ($ti != 0 and $bi != 0) {
-        $build_table->[$ti][$bi]->{hasnote} = 1;
-        if (not defined($build_table->[$ti][$bi]->{noteid})) {
-          $build_table->[$ti][$bi]->{noteid} = (0+@note_array);
-        }
-        $noteid = $build_table->[$ti][$bi]->{noteid};
-        $now_str = &print_time($nnow);
-        $note = &url_decode($nenc_note);
-        $note_array[$noteid] = "<pre>\n[<b><a href=mailto:$nwho>"
-             ."$nwho</a> - $now_str</b>]\n$note\n</pre>"
-             .$note_array[$noteid];
-      }
-    }
-    close(NOTES);
-  }
-}
-
-sub last_success_time {
-  my ($row) = @_;
-
-  for (my $tt=1; $tt <= $time_count; $tt++) {
-    my $br = $build_table->[$tt][$row];
-    next unless defined $br;
-    next unless $br->{buildstatus} eq 'success';
-    return $build_time_times->[$tt + $br->{rowspan} ];
-  }
-  return 0;
-}
-
-sub last_status {
-  my ($row) = @_;
-
-  for (my $tt=1; $tt <= $time_count; $tt++) {
-    my $br = $build_table->[$tt][$row];
-    next unless defined $br;
+  for (my $tt=0; $tt < $time_count; $tt++) {
+    my $br = $build_table->[$tt][$build_index];
+    next unless defined $br and $br->{buildstatus};
     next unless $br->{buildstatus} =~ /^(success|busted|testfailed)$/;
     return $br->{buildstatus};
   }
   return 'building';
 }
 
-sub check_password {
-  if ($form{password} eq '') {
-    if (defined $cookie_jar{tinderbox_password}) {
-      $form{password} = $cookie_jar{tinderbox_password};
-    }
+sub tb_check_password {
+  if ($form{password} eq '' and defined $cookie_jar{tinderbox_password}) {
+    $form{password} = $cookie_jar{tinderbox_password};
   }
   my $correct = '';
-    if (open(REAL, '<data/passwd')) {
-      $correct = <REAL>;
-      close REAL;
-      $correct =~ s/\s+$//;   # Strip trailing whitespace.
-    }
+  if (open(REAL, '<data/passwd')) {
+    $correct = <REAL>;
+    close REAL;
+    $correct =~ s/\s+$//;   # Strip trailing whitespace.
+  }
   $form{password} =~ s/\s+$//;      # Strip trailing whitespace.
   if ($form{password} ne '') {
     open(TRAPDOOR, "../bonsai/data/trapdoor $form{'password'} |") 
@@ -571,14 +249,20 @@ sub check_password {
   exit;
 }
 
-sub find_build_record {
+sub tb_find_build_record {
   my ($tree, $logfile) = @_;
+  local $_;
 
-  my $log_entry = `grep $logfile $tree/build.dat`;
+  my $log_entry = '';
+  my ($bw) = Backwards->new("$tree/build.dat") or die;
+  while( $_ = $bw->readline ) {
+    $log_entry = $_ if /$logfile/;
+  }
 
   chomp($log_entry);
+  # Skip the logfile in the parse since it is already known.
   my ($mailtime, $buildtime, $buildname, $errorparser,
-      $buildstatus, $logfile, $binaryname) = split /\|/, $log_entry;
+      $buildstatus, $binaryname) = (split /\|/, $log_entry)[0..4,6];
 
   $buildrec = {    
     mailtime    => $mailtime,
@@ -592,3 +276,243 @@ sub find_build_record {
   };
   return $buildrec;
 }
+
+sub tb_build_static {
+  # Build tinderbox static pages
+  $ENV{QUERY_STRING}="tree=$tree&static=1";
+  $ENV{REQUEST_METHOD}="GET";
+  system './showbuilds.cgi >/dev/null&';
+}
+
+# end of public functions
+#============================================================
+
+sub load_buildlog {
+  my ($treedata) = $_[0];
+
+  # In general you always want to make "$_" a local
+  # if it is used. That way it is restored upon return.
+  local $_;
+  my $build_list = [];
+
+
+  if (not defined $maxdate) {
+    $maxdate = time();
+  }
+  if (not defined $mindate) {
+    $mindate = $maxdate - 24*60*60;
+  }
+  
+  my ($bw) = Backwards->new("$treedata->{name}/build.dat") or die;
+
+  my $tooearly = 0;
+  while( $_ = $bw->readline ) {
+    chomp;
+    my ($mailtime, $buildtime, $buildname,
+     $errorparser, $buildstatus, $logfile, $binaryname) = split /\|/;
+    
+    # Ignore stuff in the future.
+    next if $buildtime > $maxdate;
+    
+    # Ignore stuff in the past (but get a 2 hours of extra data)
+    if ($buildtime < $mindate - 2*60*60) {
+      # Occasionally, a build might show up with a bogus time.  So,
+      # we won't judge ourselves as having hit the end until we
+      # hit a full 20 lines in a row that are too early.
+      last if $tooearly++ > 20;
+      
+      next;
+    }
+    $tooearly = 0;
+    if ($form{noignore} or not $treedata->{ignore_builds}->{$buildname}) {
+      my $buildrec = {    
+                      mailtime    => $mailtime,
+                      buildtime   => $buildtime,
+                      buildname   => $buildname,
+                      errorparser => $errorparser,
+                      buildstatus => $buildstatus,
+                      logfile     => $logfile,
+                      binaryname  => $binaryname,
+                      td          => $treedata
+                     };
+      push @{$build_list}, $buildrec;
+    }
+  }
+  return $build_list;
+}
+
+# Load data about who checked in when
+#   File format: <build_time>|<email_address>
+#
+sub load_who {
+  my ($treedata, $who_list) = @_;
+  local $_;
+  
+  open(WHOLOG, "<$treedata->{name}/who.dat");
+  while (<WHOLOG>) {
+    chomp;
+    my ($checkin_time, $email) = split /\|/;
+
+    # Find the time slice where this checkin belongs.
+    for (my $ii = $time_count - 1; $ii >= 0; $ii--) {
+      if ($checkin_time <= $build_time_times->[$ii]) {
+        $who_list->[$ii+1]->{$email} = 1;
+        last;
+      }
+    }
+  }
+
+  # Ignore the last one
+  #
+  #if ($time_count > 0) {
+  #  $who_list->[$time_count] = {};
+  #}
+}
+    
+# Load data about code bloat
+#   File format: <build_time>|<build_name>|<leak_delta>|<bloat_delta>
+#
+sub load_bloaty {
+  my $treedata = $_[0];
+  local $_;
+  open(BLOATLOG, "<$treedata->{name}/bloat.dat");
+  my $leaks_list = [];
+  my $bloat_list = [];
+  my $index = 0;
+  my $list_max = 5;   # only take the minimum over the last few entries
+
+  while (<BLOATLOG>) {
+    chomp;
+    my ($logfile, $leaks, $bloat) = split /\|/;
+    $bloaty_by_log->{$logfile} = [ $leaks, $bloat ];
+    $leaks_list[$index] = $leaks;
+    $bloat_list[$index] = $bloat;
+    $index++;
+    $index = 0 unless $index < $list_max;
+  }
+  my $leaks_min = $leaks_list[0];
+  my $bloat_min = $bloat_list[0];
+  for ($index = 1; $index < $list_max; $index++) {
+    if ($leaks_list[$index] < $leaks_min) {
+      $leaks_min = $leaks_list[$index];
+    }
+    if ($bloat_list[$index] < $bloat_min) {
+      $bloat_min = $bloat_list[$index];
+    }
+  }
+  return ($leaks_min, $bloat_min);
+}
+    
+sub get_build_name_index {
+  my ($build_list) = @_;
+
+  # Get all the unique build names.
+  #
+  foreach my $build_record (@{$build_list}) {
+    $build_name_index->{$build_record->{buildname}} = 1;
+  }
+    
+  my $ii = 0;
+  foreach my $name (sort keys %{$build_name_index}) {
+    $build_names->[$ii] = $name;
+    $build_name_index->{$name} = $ii;
+    $ii++;
+  }
+  $name_count = $#{$build_names} + 1;
+}
+
+sub get_build_time_index {
+  my ($build_list) = @_;
+
+  # Get all the unique build names.
+  #
+  foreach my $br (@{$build_list}) {
+    $build_time_index->{$br->{buildtime}} = 1;
+  }
+
+  my $ii = 0;
+  foreach my $time (sort {$b <=> $a} keys %{$build_time_index}) {
+    $build_time_times->[$ii] = $time;
+    $build_time_index->{$time} = $ii;
+    $mindate_time_count = $ii if $time >= $mindate;
+    $ii++;
+  }
+  $time_count = $#{$build_time_times} + 1;
+}
+
+sub make_build_table {
+  my ($treedata, $build_list) = @_;
+  my ($ti, $bi, $ti1, $br);
+
+  # Create the build table
+  #
+  for (my $ii=0; $ii < $time_count; $ii++){
+    $build_table->[$ii] = [];
+  }
+
+  # Populate the build table with build data
+  #
+  foreach $br (reverse @{$build_list}) {
+    $ti = $build_time_index->{$br->{buildtime}};
+    $bi = $build_name_index->{$br->{buildname}};
+    $build_table->[$ti][$bi] = $br;
+  }
+
+  &load_notes($treedata);
+
+  for ($bi = $name_count - 1; $bi >= 0; $bi--) {
+    for ($ti = $time_count - 1; $ti >= 0; $ti--) {
+      if (defined($br = $build_table->[$ti][$bi])
+          and not defined($br->{rowspan})) {
+
+        # If the cell immediately after us is defined, then we 
+        #  can have a previousbuildtime.
+        if (defined($br1 = $build_table->[$ti+1][$bi])) {
+          $br->{previousbuildtime} = $br1->{buildtime};
+        }
+                                
+        $ti1 = $ti-1;
+        while ($ti1 >= 0 and not defined $build_table->[$ti1][$bi]) {
+          $build_table->[$ti1][$bi] = -1;
+          $ti1--;
+        }
+        $br->{rowspan} = $ti - $ti1;
+        unless ($br->{rowspan} == 1) {
+          $build_table->[$ti1+1][$bi] = $br;
+          $build_table->[$ti][$bi] = -1;
+        }
+      }
+    }
+  }
+}
+
+sub load_notes {
+  my $treedata = $_[0];
+
+  open(NOTES,"<$treedata->{name}/notes.txt") 
+    or print "<h2>warning: Couldn't open $treedata->{name}/notes.txt </h2>\n";
+  while (<NOTES>) {
+    chop;
+    my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split /\|/;
+    my $ti = $build_time_index->{$nbuildtime};
+    my $bi = $build_name_index->{$nbuildname};
+
+    if (defined $ti and defined $bi) {
+      $build_table->[$ti][$bi]->{hasnote} = 1;
+      unless (defined $build_table->[$ti][$bi]->{noteid}) {
+        $build_table->[$ti][$bi]->{noteid} = $#note_array + 1;
+      }
+      $noteid = $build_table->[$ti][$bi]->{noteid};
+      $now_str = &print_time($nnow);
+      $note = &url_decode($nenc_note);
+      
+      $note_array[$noteid] = '' unless $note_array[$noteid];
+      $note_array[$noteid] = "<pre>\n[<b><a href=mailto:$nwho>"
+        ."$nwho</a> - $now_str</b>]\n$note\n</pre>"
+        .$note_array[$noteid];
+    }
+  }
+  close NOTES;
+}
+
+
