@@ -1384,24 +1384,21 @@ nsTextFrame::Paint(nsIPresContext* aPresContext,
 #ifdef IBMBIDI
       PRBool bidiEnabled;
       aPresContext->GetBidiEnabled(&bidiEnabled);
-      if (bidiEnabled) {
-        PaintUnicodeText(aPresContext, aRenderingContext, sc, ts, 0, 0);
-      } else
+#else
+      const PRBool bidiEnabled = PR_FALSE;
 #endif // IBMBIDI
-      // If we have ascii text that doesn't contain multi-byte characters
-      // and the text doesn't need transforming then always render as ascii
-      if ((0 == (mState & TEXT_WAS_TRANSFORMED)) && !frag->Is2b() && !hasMultiByteChars) {
-        PaintAsciiText(aPresContext, aRenderingContext, sc, ts, 0, 0);
-      
-      } else if (hasMultiByteChars || (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
-        // If it has multi-byte characters then we have to render it as Unicode
-        // regardless of whether the text fragment is 1-byte or 2-byte characters.
-        // Or if the text fragment requires transforming then leave it up to the
-        // rendering context's preference
+      // * BiDi text or text with multi-byte characters must always be
+      //   rendered as Unicode.
+      // * Non-transformed, 1-byte text should always be rendered as
+      //   ASCII.
+      // * Other transformed or 2-byte text should be rendered according
+      //   to the preference of the hint from the rendering context.
+      if (bidiEnabled || hasMultiByteChars ||
+          ((0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT)) &&
+           (frag->Is2b() || (0 != (mState & TEXT_WAS_TRANSFORMED))))) {
         PaintUnicodeText(aPresContext, aRenderingContext, sc, ts, 0, 0);
       }
       else {
-        // Use char rendering routine
         PaintAsciiText(aPresContext, aRenderingContext, sc, ts, 0, 0);
       }
 
