@@ -48,7 +48,7 @@ interface nsIDOMDOMConfiguration;
 interface nsIDOM3Document : nsIDOM3Node
 {
   // Introduced in DOM Level 3:
-  readonly attribute DOMString       actualEncoding;
+  readonly attribute DOMString       inputEncoding;
   // Introduced in DOM Level 3:
   readonly attribute DOMString       xmlEncoding;
   // Introduced in DOM Level 3:

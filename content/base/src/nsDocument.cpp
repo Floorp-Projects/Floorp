@@ -3586,9 +3586,9 @@ nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 }
 
 NS_IMETHODIMP
-nsDocument::GetActualEncoding(nsAString& aActualEncoding)
+nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 {
-  return GetCharacterSet(aActualEncoding);
+  return GetCharacterSet(aInputEncoding);
 }
 
 NS_IMETHODIMP
@@ -3597,8 +3597,8 @@ nsDocument::GetXmlEncoding(nsAString& aXmlEncoding)
   if (mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
       mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
     // XXX We don't store the encoding given in the xml declaration.
-    // For now, just output the actualEncoding which we do store.
-    GetActualEncoding(aXmlEncoding);
+    // For now, just output the inputEncoding which we do store.
+    GetInputEncoding(aXmlEncoding);
   } else {
     SetDOMStringToNull(aXmlEncoding);
   }
