@@ -24,6 +24,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
 #include "prmem.h"
@@ -61,10 +62,8 @@ int main( int argc, char *argv[] ) {
     }
 
     // Get the component manager
-    nsIComponentManager *compMgr = NULL;
     static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-    static NS_DEFINE_IID(kComponentManagerIID, NS_ICOMPONENTMANAGER_IID);
-    rv = servMgr->GetService(kComponentManagerCID, kComponentManagerIID, (nsISupports **)&compMgr);
+    nsCOMPtr<nsIComponentManager> compMgr = do_GetService(kComponentManagerCID, &rv);
     if (NS_FAILED(rv))
     {
         // Cant get component manager
