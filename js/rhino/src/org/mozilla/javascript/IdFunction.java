@@ -51,6 +51,29 @@ public class IdFunction extends BaseFunction
         this.methodId = id;
     }
 
+    public static void define(Scriptable scope, String name,
+                              IdFunctionMaster master, int id)
+    {
+        define(scope, name, master, id, ScriptableObject.DONTENUM, false);
+    }
+
+    public static void define(Scriptable scope, String name,
+                              IdFunctionMaster master, int id,
+                              int attributes)
+    {
+        define(scope, name, master, id, attributes, false);
+    }
+
+    public static void define(Scriptable scope, String name,
+                              IdFunctionMaster master, int id,
+                              int attributes, boolean sealed)
+    {
+        IdFunction f = new IdFunction(master, name, id);
+        f.setParentScope(scope);
+        if (sealed) { f.sealObject(); }
+        ScriptableObject.defineProperty(scope, name, f, attributes);
+    }
+
     public final int functionType() {
         return functionType;
     }
