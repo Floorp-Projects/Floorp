@@ -38,6 +38,7 @@ XPIDLSRCS =                        \
         .\nsIPrompt.idl            \
         .\nsIProtocolHandler.idl   \
         .\nsIProgressEventSink.idl \
+	.\nsINetNotify.idl         \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
