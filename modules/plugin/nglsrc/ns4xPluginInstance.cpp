@@ -91,9 +91,9 @@ NS_IMETHODIMP ns4xPluginInstance :: QueryInterface(const nsIID& iid, void** inst
 
 NS_IMETHODIMP ns4xPluginInstance :: Initialize(nsIPluginInstancePeer* peer)
 {
-    PRUint16 count;
-    const char* const* names;
-    const char* const* values;
+    PRUint16 count = 0;
+    const char* const* names = nsnull;
+    const char* const* values = nsnull;
 
     NS_ASSERTION(peer != NULL, "null peer");
 
@@ -102,39 +102,37 @@ NS_IMETHODIMP ns4xPluginInstance :: Initialize(nsIPluginInstancePeer* peer)
     NS_ADDREF(fPeer);
 
     nsresult error;
-    nsIPluginTagInfo  *taginfo;
+    nsIPluginTagInfo  *taginfo = nsnull;
 
     error = fPeer->QueryInterface(kIPluginTagInfoIID, (void **)&taginfo);
 
     if (NS_OK == error)
     {
-      if ((error = taginfo->GetAttributes(count, names, values)) != NS_OK)
-          return error;
-
-      if (fCallbacks->newp == NULL)
-          return NS_ERROR_FAILURE; // XXX right error?
-        
-      // XXX Note that the NPPluginType_* enums were crafted to be
-      // backward compatible...
-
-      nsPluginMode  mode;
-      nsMIMEType    mimetype;
-
-      fPeer->GetMode(&mode);
-      fPeer->GetMIMEType(&mimetype);
-
-      error = (nsresult)
-          CallNPP_NewProc(fCallbacks->newp,
-                          (char *)mimetype,
-                          &fNPP,
-                          (PRUint16)mode,
-                          count,
-                          (char**)names,
-                          (char**)values,
-                          NULL); // saved data
-
-      NS_RELEASE(taginfo);
+      taginfo->GetAttributes(count, names, values);
+      NS_IF_RELEASE(taginfo);
     }
+
+    if (fCallbacks->newp == NULL)
+        return NS_ERROR_FAILURE; // XXX right error?
+      
+    // XXX Note that the NPPluginType_* enums were crafted to be
+    // backward compatible...
+
+    nsPluginMode  mode;
+    nsMIMEType    mimetype;
+
+    fPeer->GetMode(&mode);
+    fPeer->GetMIMEType(&mimetype);
+
+    error = (nsresult)
+        CallNPP_NewProc(fCallbacks->newp,
+                        (char *)mimetype,
+                        &fNPP,
+                        (PRUint16)mode,
+                        count,
+                        (char**)names,
+                        (char**)values,
+                        NULL); // saved data
 
     return error;
 }
