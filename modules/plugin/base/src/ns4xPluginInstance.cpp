@@ -419,7 +419,7 @@ error:
     mStreamBuffer=nsnull;
   }
 
-  if (leftToRead > 0)  // if we have more to read in this pass, do it recursivly
+  if (leftToRead > 0)  // if we have more to read in this pass, do it recursively
   {
     OnDataAvailable(pluginInfo, input, leftToRead);
   }
@@ -568,7 +568,7 @@ error:
     mStreamBuffer=nsnull;
   }
 
-  if (leftToRead > 0)  // if we have more to read in this pass, do it recursivly
+  if (leftToRead > 0)  // if we have more to read in this pass, do it recursively
   {
     OnDataAvailable(pluginInfo, input, sourceOffset, leftToRead);
   }

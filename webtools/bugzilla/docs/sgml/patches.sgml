@@ -317,7 +317,7 @@ grep (/$value/, @array);
             Whitespace
           </para>
           <para>
-            Bugzilla's prefered indentation is 4 spaces (no tabs, please).
+            Bugzilla's preferred indentation is 4 spaces (no tabs, please).
           </para>
         </listitem>
         <listitem>

@@ -285,7 +285,7 @@ public:
   NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
 
   /**
-   * Return the base URL for realtive URLs in the document. May return null (or the document URL).
+   * Return the base URL for relative URLs in the document. May return null (or the document URL).
    */
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
   NS_IMETHOD SetBaseURL(nsIURI* aURL);

@@ -609,7 +609,7 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
 
     /* TODO
      * What about allowing choice between case insensitive
-     * and case sensitive comparisions?
+     * and case sensitive comparisons?
      *
      */
     switch (conditionType)

@@ -519,7 +519,7 @@ typedef unsigned long UniCharUCS4;
 
 #define			NLS_MAX_ENCODING_NAME_SIZE			64
 
-/*				Constant name, prefered MIME name	IANA standard encoding name */
+/*				Constant name, preferred MIME name	IANA standard encoding name */
 /*				---------------------------------	--------------------------- */
 #define			NLS_ENCODING_US_ASCII				"ANSI_X3.4-1968"
 #define			NLS_ENCODING_ISO_8859_1				"ISO_8859-1:1987"

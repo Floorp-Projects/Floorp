@@ -5,9 +5,9 @@
 # current time.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/02/15 23:53:33 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/03/19 04:30:07 $ 
+# $Author: timeless%mac.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
 #
@@ -82,7 +82,7 @@ $TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
 	      'assertions caused my multi-part news messages', 
 
 	      'Time shown ought to be UTC',
-	      'Make distclean failes: too many args on command line',
+	      'Make distclean failed: too many args on command line',
 	      'Connection fails; no error message',
 
 	      ('Clicking on &quot;Twisty&quot; in &lt;Subscribe dialog&gt;'.

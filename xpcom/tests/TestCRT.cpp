@@ -56,7 +56,7 @@ PRIntn sign(PRIntn val) {
 
 // Verify that nsCRT versions of string comparison routines get the
 // same answers as the native non-unicode versions. We only pass in
-// iso-latin-1 strings, so the comparision must be valid.
+// iso-latin-1 strings, so the comparison must be valid.
 static void Check(const char* s1, const char* s2, PRIntn n)
 {
   PRIntn clib = PL_strcmp(s1, s2);

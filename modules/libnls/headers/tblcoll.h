@@ -221,7 +221,7 @@ class CollationElementIterator;
  * .     rules += "& C &lt; ch, cH, Ch, CH";
  * .     RuleBasedCollator *mySpanish = new RuleBasedCollator(rules, status);
  * </pre>
- * <p>In order to sort symbols in the similiar order of sorting their
+ * <p>In order to sort symbols in the similar order of sorting their
  * alphabetic equivalents, you can do the following,
  * <pre>
  * .     ErrorCode status = ZERO_ERROR;

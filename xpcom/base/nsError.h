@@ -176,7 +176,7 @@
 /* Returned when an unexpected error occurs */
 #define NS_ERROR_UNEXPECTED                ((nsresult) 0x8000ffffL)
 
-/* Returned when a memory allocation failes */
+/* Returned when a memory allocation fails */
 #define NS_ERROR_OUT_OF_MEMORY             ((nsresult) 0x8007000eL)
 
 /* Returned when an illegal value is passed */

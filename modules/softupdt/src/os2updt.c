@@ -204,7 +204,7 @@ ULONG WriteLockFileDDToConfig (PSZ pszListFile)
                           NULL,
                           szUpdate,
                           CSYS_FIRST_TYPE);             /*Insert at first */
-                                                        /*similiar type   */
+                                                        /*similar type   */
 
       usRetCode = WriteBufferToFile (szFile, &pszCsys); /* write out config.sys*/
     }

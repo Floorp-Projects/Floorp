@@ -717,7 +717,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
   // this is a nice little optimization
   // it turns out that if we only have 1 flexable child
-  // then it does not matter what its prefered size is
+  // then it does not matter what its preferred size is
   // there is nothing to flex it relative. This is great
   // because we can avoid asking for a preferred size in this
   // case. Why is this good? Well you might have html inside it

@@ -575,7 +575,7 @@ find describe. Selecting one or more of the products, versions, components, or m
 <h4>Products</h4> 
 
 
-<p>Although all subprojects within the Mozilla project are similiar, there are several seperate
+<p>Although all subprojects within the Mozilla project are similar, there are several seperate
 products being developed. Each product has its own components.
 
 };

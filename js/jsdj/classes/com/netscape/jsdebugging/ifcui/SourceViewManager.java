@@ -54,7 +54,7 @@ public class SourceViewManager
         if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
 
         _sourceViews    = new Hashtable();
-        _preferedNewViewRect = new Rect(0,0,100,100);
+        _preferredNewViewRect = new Rect(0,0,100,100);
 
         _controlTyrant.addObserver(this);
         _stackTyrant.addObserver(this);
@@ -169,7 +169,7 @@ public class SourceViewManager
     public synchronized SourceView createView( SourceTextItem item )
     {
         // XXX add smarter way of determining location for new source view
-        Rect rect = _preferedNewViewRect;
+        Rect rect = _preferredNewViewRect;
         SourceView view = _createViewAtRect( rect, item );
         if( null != view )
             view.setOwner(this);
@@ -187,7 +187,7 @@ public class SourceViewManager
         _sourceViews.remove(view.getURL());
     }
 
-    public void setPreferedNewViewRect( Rect rect ){_preferedNewViewRect = rect;}
+    public void setPreferedNewViewRect( Rect rect ){_preferredNewViewRect = rect;}
 
     public boolean getShowLineNumbers() {return _showLineNumbers;}
 
@@ -279,7 +279,7 @@ public class SourceViewManager
     private SourceTyrant    _sourceTyrant;
     private StackTyrant     _stackTyrant;
     private Hashtable       _sourceViews;
-    private Rect            _preferedNewViewRect;
+    private Rect            _preferredNewViewRect;
     private Timer           _updateMarksTimer;
     private boolean         _showLineNumbers = false;
 

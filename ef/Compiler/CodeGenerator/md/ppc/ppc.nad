@@ -69,7 +69,7 @@ Result <- poResult_F(Vfloat inResult) cost(1)
 	useProducer(inResult, copyInsn, 0, vrcFloatingPoint);
 	returnVr = &defineTemporary(copyInsn, 0, vrcFloatingPoint);
 	
-	// floating point results go somwhere FIX-ME
+	// floating point results go somewhere FIX-ME
 	returnVr->preColorRegister(1);
 	
 	// create a special instruction for the RegisterAllocator which says this result

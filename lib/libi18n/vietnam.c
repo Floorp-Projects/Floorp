@@ -387,7 +387,7 @@ PRIVATE unsigned char IsVIQRWord(const unsigned char *s,
  
     /*******************************************************************/
     /*** Now, the hard part, I should check the semantic of the word,***/
-    /*** But it will take more comparisions, and I don't think it is ***/
+    /*** But it will take more comparisons, and I don't think it is ***/
     /*** necessary, so I temporarily use the common sense here to    ***/
     /*** detect a vietnamese word.  I'll implement semantic checking ***/
     /*** later if it's really necessary                              ***/

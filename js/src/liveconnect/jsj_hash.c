@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -35,7 +35,7 @@
 /*
  * This is a copy of the NSPR hash-table library, but it has been slightly
  * modified to allow an additional argument to be passed into the hash
- * key-comparision function.  This is used to maintain thread-safety by
+ * key-comparison function.  This is used to maintain thread-safety by
  * passing in a JNIEnv pointer to the key-comparison function rather
  * than storing it in a global.  All types,function names, etc. have
  * been renamed from their original NSPR names to protect the innocent.

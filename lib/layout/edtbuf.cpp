@@ -3420,7 +3420,7 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
                 m_pCurrent->FindList(pContainer, pList);
                 if( pContainer && pList )
                 {
-                    // We are at the begining of an empty element in a list item container,
+                    // We are at the beginning of an empty element in a list item container,
                     // If we were going to Indent, just do that to current container,
                     if( bIndent )
                         Indent();
@@ -12759,7 +12759,7 @@ EDT_ClipboardResult CEditBuffer::DeleteOrCopyAcrossCellBorders(CEditSelection& s
     else if( pTableAtStart != pTableAtEnd )
     {
         // We must have a table at the end (and its not the same as the start)
-        // Delete/copy from start of selection to begining of table at end
+        // Delete/copy from start of selection to beginning of table at end
         pTempStartLeaf = pBegin;
         pTempEndLeaf = pTableAtEnd->PreviousLeaf();
 
@@ -13101,7 +13101,7 @@ void CEditBuffer::AppendCopyBetweenElements( CEditLeafElement *pBegin, CEditLeaf
     ElementOffset end_offset = 0; 
 
     // The end element supplied was prepared for DELETING,
-    //  (i.e., the begining and end of the selection were "divided")
+    //  (i.e., the beginning and end of the selection were "divided")
     //  so the end is guarenteed to be either a next sibling
     //  or the temporary 0-length text element at the end of a real element
     //  For the purpose of copying, we want to construct a "normal" selection
@@ -17251,7 +17251,7 @@ ED_SizeStyle CEditBuffer::CanSizeObject(LO_Element *pLoElement, int32 xVal, int3
     if( iXoffset < 0 || iYoffset < 0 )
         return 0;
 
-    // Note that TOP RIGHT is prefered in the case
+    // Note that TOP RIGHT is preferred in the case
     //   of small object (overlapping hits regions),
     //   and left/right sides are favored over bottom corners
     if( iXoffset >= right_limit )

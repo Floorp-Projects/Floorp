@@ -285,7 +285,7 @@ public class BoxView extends ShapeableView
     }
 
     /**
-     * Inserts a view into the box and forces it to be flexible. Its prefered will be
+     * Inserts a view into the box and forces it to be flexible. Its preferred will be
      * overridden by the given preferred size.
      * If the view implements the Shapeable interface then its
      * max size will be retrieved from it. If its just a normal

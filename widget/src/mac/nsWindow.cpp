@@ -2328,7 +2328,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 //-------------------------------------------------------------------------
 // WidgetToScreen
 //		Walk up the parent tree, converting the given rect to global coordinates.
-//      This is similiar to CalcOffset() but we can't use GetBounds() because it
+//      This is similar to CalcOffset() but we can't use GetBounds() because it
 //      only knows how to give us local coordinates.
 //		@param aLocalRect  -- rect in local coordinates of this widget
 //		@param aGlobalRect -- |aLocalRect| in global coordinates

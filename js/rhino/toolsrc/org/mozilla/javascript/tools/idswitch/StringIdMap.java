@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -375,7 +375,7 @@ public class StringIdMap {
     // '^[ \t]+Id_([a-zA-Z0-9_]+)[ \t]*=.*$'
     // where \1 gives field or method name
         int cursor = begin;
-        // Skip tab and spaces at the begining
+        // Skip tab and spaces at the beginning
         cursor = skip_white_space(array, cursor, end);
         int id_start = cursor;
         int name_start = skip_matched_prefix("Id_", array, cursor, end);

@@ -261,8 +261,8 @@ public class BoxSpringLayout implements ShapeableLayoutManager
             Size size = null;
 
             // if the view is shapeable its easy just ask the
-            // the shapeable for its prefered size. Otherwise
-            // its prefered size is it min size.
+            // the shapeable for its preferred size. Otherwise
+            // its preferred size is it min size.
             if (view instanceof Shapeable)
                size = ((Shapeable)view).preferredSize();
             else

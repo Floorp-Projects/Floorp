@@ -1183,13 +1183,13 @@ nsIMEGtkIC::GetInputStyle() {
   PRInt32 ivalue = 0;
   nsresult rv;
 
-  GdkIMStyle prefered_preedit_style = (GdkIMStyle) SUPPORTED_PREEDIT;
-  GdkIMStyle prefered_status_style = (GdkIMStyle) SUPPORTED_STATUS;
+  GdkIMStyle preferred_preedit_style = (GdkIMStyle) SUPPORTED_PREEDIT;
+  GdkIMStyle preferred_status_style = (GdkIMStyle) SUPPORTED_STATUS;
 
 #ifdef HPUX 
-  prefered_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_POSITION;
-  prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
-  style = gdk_im_decide_style((GdkIMStyle)(prefered_preedit_style | prefered_status_style));
+  preferred_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_POSITION;
+  preferred_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
+  style = gdk_im_decide_style((GdkIMStyle)(preferred_preedit_style | preferred_status_style));
   if (style) {
     ret_style = style;
   } else {
@@ -1209,17 +1209,17 @@ nsIMEGtkIC::GetInputStyle() {
     rv = prefs->CopyCharPref(PREF_XIM_INPUTSTYLE, &input_style);
     if (NS_SUCCEEDED(rv) && input_style[0]) {
       if (!nsCRT::strcmp(input_style, VAL_INPUTSTYLE_ONTHESPOT)) {
-        prefered_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_CALLBACKS;
-        prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_CALLBACKS;
+        preferred_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_CALLBACKS;
+        preferred_status_style = (GdkIMStyle) GDK_IM_STATUS_CALLBACKS;
       } else if (!nsCRT::strcmp(input_style, VAL_INPUTSTYLE_OVERTHESPOT)) {
-        prefered_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_POSITION;
-        prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
+        preferred_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_POSITION;
+        preferred_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
       } else if (!nsCRT::strcmp(input_style, VAL_INPUTSTYLE_SEPARATE)) {
-        prefered_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_NOTHING;
-        prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
+        preferred_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_NOTHING;
+        preferred_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
       } else if (!nsCRT::strcmp(input_style, VAL_INPUTSTYLE_NONE)) {
-        prefered_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_NONE;
-        prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NONE;
+        preferred_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_NONE;
+        preferred_status_style = (GdkIMStyle) GDK_IM_STATUS_NONE;
       }
       nsCRT::free(input_style);
     }
@@ -1240,7 +1240,7 @@ nsIMEGtkIC::GetInputStyle() {
         ivalue = 0;
       }
       if (ivalue) {
-        prefered_preedit_style = (GdkIMStyle) ivalue;
+        preferred_preedit_style = (GdkIMStyle) ivalue;
       }
       nsCRT::free(preeditstyle_type);
     }
@@ -1257,12 +1257,12 @@ nsIMEGtkIC::GetInputStyle() {
         ivalue = 0;
       }
       if (ivalue) {
-        prefered_status_style = (GdkIMStyle) ivalue;
+        preferred_status_style = (GdkIMStyle) ivalue;
       }
       nsCRT::free(statusstyle_type);
     }
   }
-  style = gdk_im_decide_style((GdkIMStyle)(prefered_preedit_style | prefered_status_style));
+  style = gdk_im_decide_style((GdkIMStyle)(preferred_preedit_style | preferred_status_style));
   if (style) {
     ret_style = style;
   } else {
