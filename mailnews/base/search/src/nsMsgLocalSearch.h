@@ -49,6 +49,7 @@ class nsIMsgDBHdr;
 class nsMsgMailboxParser;
 class nsIMsgSearchScopeTerm;
 class nsIMsgFolder;
+class nsMsgSearchBoolExpression;
 
 class nsMsgSearchOfflineMail : public nsMsgSearchAdapter, public nsIUrlListener
 {
@@ -85,7 +86,7 @@ public:
 	nsresult SummaryFileError();
 
 protected:
-	static	nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
+	static nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
                                 nsISupportsArray *termList,
                                 const char *defaultCharset,
                                 nsIMsgSearchScopeTerm *scope, 
@@ -94,6 +95,28 @@ protected:
                                 PRUint32 headerSize,
                                 PRBool ForFilters,
 								PRBool *pResult);
+
+    static nsresult ConstructExpressionTree(nsIMsgDBHdr *msgToMatch,
+                                      nsISupportsArray * termList,
+                                      PRUint32 &aStartPosInList,
+                                      const char *defaultCharset,
+                                      nsIMsgSearchScopeTerm * scope,
+                                      nsIMsgDatabase * db, 
+                                      const char * headers,
+                                      PRUint32 headerSize,
+                                      PRBool Filtering,
+                                      nsMsgSearchBoolExpression ** aExpressionTree,
+				        			  PRBool *pResult);
+    
+     static nsresult ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
+                               nsIMsgSearchTerm * aTerm,
+                               const char *defaultCharset,
+                               nsIMsgSearchScopeTerm * scope,
+                               nsIMsgDatabase * db, 
+                               const char * headers,
+                               PRUint32 headerSize,
+                               PRBool Filtering,
+							   PRBool *pResult); 
 	nsIMsgDatabase *m_db;
 	nsCOMPtr<nsISimpleEnumerator> m_listContext;
 	void CleanUpScope();

@@ -75,10 +75,10 @@ class nsMsgSearchBoolExpression
 public:
 
 	// create a leaf node expression
-	nsMsgSearchBoolExpression(nsIMsgSearchTerm * newTerm,
-                              PRBool EvaluationValue = PR_TRUE,
-                              char * encodingStr = NULL);         
-	nsMsgSearchBoolExpression(nsIMsgSearchTerm * newTerm, char * encodingStr);
+	nsMsgSearchBoolExpression(nsIMsgSearchTerm * aNewTerm,
+                              PRBool aEvaluationValue = PR_TRUE,
+                              char * aEncodingString = NULL);         
+	nsMsgSearchBoolExpression(nsIMsgSearchTerm * aNewTerm, char * aEncodingString);
 
 	// create a non-leaf node expression containing 2 expressions
     // and a boolean operator
@@ -93,10 +93,9 @@ public:
 	// accesors
     
     // Offline
-	nsMsgSearchBoolExpression * AddSearchTerm (nsIMsgSearchTerm * newTerm,
-                                               PRBool EvaluationValue = PR_TRUE);
-	nsMsgSearchBoolExpression * AddSearchTerm (nsIMsgSearchTerm * newTerm,
-                                               char * encodingStr); // IMAP/NNTP
+	static nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchBoolExpression * aOrigExpr, nsIMsgSearchTerm * aNewTerm, PRBool aEvaluationValue);
+	static nsMsgSearchBoolExpression * AddSearchTermWithEncoding (nsMsgSearchBoolExpression * aOrigExpr, nsIMsgSearchTerm * aNewTerm, char * aEncodingStr); // IMAP/NNTP
+    static nsMsgSearchBoolExpression * AddExpressionTree(nsMsgSearchBoolExpression * aOrigExpr, nsMsgSearchBoolExpression * aExpression, PRBool aBoolOp);
 
     // parses the expression tree and all
     // expressions underneath this node using

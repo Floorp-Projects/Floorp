@@ -55,6 +55,9 @@ interface nsIMsgSearchTerm : nsISupports {
     attribute boolean booleanAnd;
     attribute string arbitraryHeader;
 
+	attribute boolean beginsGrouping;
+	attribute boolean endsGrouping;
+
     boolean matchRfc822String(in string aString, in string charset, in boolean charsetOverride);
     boolean matchRfc2047String(in string aString, in string charset, in boolean charsetOverride);
     boolean matchDate(in PRTime aTime);

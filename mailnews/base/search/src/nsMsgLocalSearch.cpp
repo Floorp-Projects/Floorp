@@ -67,6 +67,37 @@ extern "C"
 //----------------------------------------------------------------------------
 // Class definitions for the boolean expression structure....
 //----------------------------------------------------------------------------
+
+
+nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddSearchTermWithEncoding(nsMsgSearchBoolExpression * aOrigExpr, nsIMsgSearchTerm * aNewTerm, char * aEncodingStr)
+// appropriately add the search term to the current expression and return a pointer to the
+// new expression. The encodingStr is the IMAP/NNTP encoding string for newTerm.
+{
+    return aOrigExpr->leftToRightAddTerm(aNewTerm, PR_FALSE, aEncodingStr);
+}
+
+nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddSearchTerm(nsMsgSearchBoolExpression * aOrigExpr, nsIMsgSearchTerm * aNewTerm, PRBool aEvalValue)
+// appropriately add the search term to the current expression
+// Returns: a pointer to the new expression which includes this new search term
+{
+    return aOrigExpr->leftToRightAddTerm(aNewTerm, aEvalValue, nsnull);   // currently we build our expressions to
+                                                          // evaluate left to right.
+}
+
+nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddExpressionTree(nsMsgSearchBoolExpression * aOrigExpr, nsMsgSearchBoolExpression * aExpression, PRBool aBoolOp)
+{
+  if (!aOrigExpr->m_term && !aOrigExpr->m_leftChild && !aOrigExpr->m_rightChild)
+  {
+      // just use the original expression tree...
+      // delete the original since we have a new original to use
+      delete aOrigExpr;
+      return aExpression;
+  }
+
+  nsMsgSearchBoolExpression * newExpr = new nsMsgSearchBoolExpression (aOrigExpr, aExpression, aBoolOp);  
+  return (newExpr) ? newExpr : aOrigExpr;
+}
+
 nsMsgSearchBoolExpression::nsMsgSearchBoolExpression() 
 {
     m_term = nsnull;
@@ -114,23 +145,6 @@ nsMsgSearchBoolExpression::~nsMsgSearchBoolExpression()
 }
 
 nsMsgSearchBoolExpression *
-nsMsgSearchBoolExpression::AddSearchTerm(nsIMsgSearchTerm * newTerm, char * encodingStr)
-// appropriately add the search term to the current expression and return a pointer to the
-// new expression. The encodingStr is the IMAP/NNTP encoding string for newTerm.
-{
-    return leftToRightAddTerm(newTerm,PR_FALSE,encodingStr);
-}
-
-nsMsgSearchBoolExpression *
-nsMsgSearchBoolExpression::AddSearchTerm(nsIMsgSearchTerm * newTerm, PRBool evalValue)
-// appropriately add the search term to the current expression
-// Returns: a pointer to the new expression which includes this new search term
-{
-    return leftToRightAddTerm(newTerm, evalValue,nsnull);   // currently we build our expressions to
-                                                          // evaluate left to right.
-}
-
-nsMsgSearchBoolExpression *
 nsMsgSearchBoolExpression::leftToRightAddTerm(nsIMsgSearchTerm * newTerm, PRBool evalValue, char * encodingStr)
 {
     // we have a base case where this is the first term being added to the expression:
@@ -147,11 +161,11 @@ nsMsgSearchBoolExpression::leftToRightAddTerm(nsIMsgSearchTerm * newTerm, PRBool
     {
       PRBool booleanAnd;
       newTerm->GetBooleanAnd(&booleanAnd);
-        nsMsgSearchBoolExpression * newExpr = new nsMsgSearchBoolExpression (this, tempExpr, booleanAnd);  
-        if (newExpr)
-            return newExpr;
-        else
-            delete tempExpr;    // clean up memory allocation in case of failure
+      nsMsgSearchBoolExpression * newExpr = new nsMsgSearchBoolExpression (this, tempExpr, booleanAnd);  
+      if (newExpr)
+         return newExpr;
+      else
+         delete tempExpr;    // clean up memory allocation in case of failure
     }
     return this;   // in case we failed to create a new expression, return self
 }
@@ -514,8 +528,95 @@ nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch,
     return MatchTerms(msgToMatch, termList, defaultCharset, scope, db, nsnull, 0, PR_FALSE, pResult);
 }
 
-nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
+nsresult nsMsgSearchOfflineMail::ConstructExpressionTree(nsIMsgDBHdr *msgToMatch,
                                             nsISupportsArray * termList,
+                                            PRUint32 &aStartPosInList,
+                                            const char *defaultCharset,
+                                            nsIMsgSearchScopeTerm * scope,
+                                            nsIMsgDatabase * db, 
+                                            const char * headers,
+                                            PRUint32 headerSize,
+                                            PRBool Filtering,
+                                            nsMsgSearchBoolExpression ** aExpressionTree,
+											PRBool *pResult)
+{
+    nsresult err = NS_OK;
+    PRBool result;
+
+	NS_ENSURE_ARG_POINTER(pResult);
+
+	*pResult = PR_FALSE;
+
+    // Don't even bother to look at expunged messages awaiting compression
+    PRUint32 msgFlags;
+    msgToMatch->GetFlags(&msgFlags);
+	if (msgFlags & MSG_FLAG_EXPUNGED)
+        result = PR_FALSE;
+    
+    PRUint32 count;
+    termList->Count(&count);
+
+    nsMsgSearchBoolExpression * finalExpression = new nsMsgSearchBoolExpression(); 
+
+    while (aStartPosInList < count)
+    {
+        nsCOMPtr<nsIMsgSearchTerm> pTerm;
+        termList->QueryElementAt(aStartPosInList, NS_GET_IID(nsIMsgSearchTerm), (void **)getter_AddRefs(pTerm));
+        NS_ASSERTION (msgToMatch, "couldn't get term to match");
+
+        PRBool beginsGrouping;
+        PRBool endsGrouping;
+        pTerm->GetBeginsGrouping(&beginsGrouping);
+        pTerm->GetEndsGrouping(&endsGrouping);
+
+        if (beginsGrouping)
+        {
+            //temporarily turn off the grouping for our recursive call
+            pTerm->SetBeginsGrouping(PR_FALSE); 
+            // recursively process this inner expression
+            nsMsgSearchBoolExpression * innerExpression = new nsMsgSearchBoolExpression(); 
+
+            ConstructExpressionTree(msgToMatch, termList, aStartPosInList, defaultCharset, scope, db, headers, 
+                headerSize, Filtering, &innerExpression, &result);
+
+            // the first search term in the grouping is the one that holds the operator for how this search term
+            // should be joined with the expressions to it's left. 
+            PRBool booleanAnd;
+            pTerm->GetBooleanAnd(&booleanAnd);
+
+            // now add this expression tree to our overall expression tree...
+            finalExpression = nsMsgSearchBoolExpression::AddExpressionTree(finalExpression, innerExpression, booleanAnd);
+
+            // undo our damage
+            pTerm->SetBeginsGrouping(PR_TRUE); 
+
+        }
+        else
+        {
+          ProcessSearchTerm(msgToMatch, pTerm, defaultCharset, scope, db, headers, headerSize, Filtering, &result);
+          finalExpression = nsMsgSearchBoolExpression::AddSearchTerm(finalExpression, pTerm, result);    // added the term and its value to the expression tree
+
+          if (endsGrouping)
+          {
+            // okay, this term marks the end of a grouping...kick out of this function.
+            *pResult = result; 
+            *aExpressionTree = finalExpression;
+            return NS_OK;
+
+          }
+        }
+
+        aStartPosInList++;
+    } // while we still have terms to process in this group
+
+    *pResult = PR_TRUE;
+    *aExpressionTree = finalExpression;
+
+    return NS_OK; 
+}
+
+nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
+                                            nsIMsgSearchTerm * aTerm,
                                             const char *defaultCharset,
                                             nsIMsgSearchScopeTerm * scope,
                                             nsIMsgDatabase * db, 
@@ -534,129 +635,110 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
     PRUint32 msgFlags;
     PRBool result;
 
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(pResult);
 
 	*pResult = PR_FALSE;
 
-    // Don't even bother to look at expunged messages awaiting compression
+    nsMsgSearchAttribValue attrib;
+    aTerm->GetAttrib(&attrib);
+    msgToMatch->GetCharset(getter_Copies(msgCharset));
+    charset = (const char*)msgCharset;
+    if (!charset || !*charset)
+      charset = (const char*)defaultCharset;
     msgToMatch->GetFlags(&msgFlags);
-	if (msgFlags & MSG_FLAG_EXPUNGED)
-        result = PR_FALSE;
 
-    // Loop over all terms, and match them all to this message. 
-
-    nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();  // create our expression
-    if (!expression)
-        return NS_ERROR_OUT_OF_MEMORY;
-    PRUint32 count;
-    termList->Count(&count);
-    for (PRUint32 i = 0; i < count; i++)
+    switch (attrib)
     {
-        nsCOMPtr<nsIMsgSearchTerm> pTerm;
-        termList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
-                                 (void **)getter_AddRefs(pTerm));
-//        NS_ASSERTION (pTerm->IsValid(), "invalid search term");
-        NS_ASSERTION (msgToMatch, "couldn't get term to match");
-
-        nsMsgSearchAttribValue attrib;
-        pTerm->GetAttrib(&attrib);
-        msgToMatch->GetCharset(getter_Copies(msgCharset));
-        charset = (const char*)msgCharset;
-        if (!charset || !*charset)
-          charset = (const char*)defaultCharset;
-        switch (attrib)
+      case nsMsgSearchAttrib::SenderInAddressBook:
+      case nsMsgSearchAttrib::Sender:
+        msgToMatch->GetAuthor(getter_Copies(matchString));
+        err = aTerm->MatchRfc822String (matchString, charset, charsetOverride, &result);
+        break;
+      case nsMsgSearchAttrib::Subject:
+      {
+        msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
+        if (msgFlags & MSG_FLAG_HAS_RE)
+        { 
+          // Make sure we pass along the "Re: " part of the subject if this is a reply.
+          nsXPIDLCString reString;
+          reString.Assign("Re: ");
+          reString.Append(matchString);
+          err = aTerm->MatchRfc2047String(reString, charset, charsetOverride, &result);
+        }
+        else
+          err = aTerm->MatchRfc2047String (matchString, charset, charsetOverride, &result);
+        break;
+      }
+      case nsMsgSearchAttrib::ToOrCC:
+      {
+        PRBool boolKeepGoing;
+        aTerm->GetMatchAllBeforeDeciding(&boolKeepGoing);
+        msgToMatch->GetRecipients(getter_Copies(recipients));
+        err = aTerm->MatchRfc822String (recipients, charset, charsetOverride, &result);
+        if (boolKeepGoing == result)
         {
-        case nsMsgSearchAttrib::SenderInAddressBook:
-        case nsMsgSearchAttrib::Sender:
-          msgToMatch->GetAuthor(getter_Copies(matchString));
-          err = pTerm->MatchRfc822String (matchString, charset, charsetOverride, &result);
-          break;
-        case nsMsgSearchAttrib::Subject:
-          {
-            msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
-
-            if (msgFlags & MSG_FLAG_HAS_RE)
-            { 
-              // Make sure we pass along the "Re: " part of the subject if this is a reply.
-              nsXPIDLCString reString;
-              reString.Assign("Re: ");
-              reString.Append(matchString);
-              err = pTerm->MatchRfc2047String(reString, charset, charsetOverride, &result);
-            }
-            else
-              err = pTerm->MatchRfc2047String (matchString, charset, charsetOverride, &result);
-          }
-          break;
-        case nsMsgSearchAttrib::ToOrCC:
-          {
-            PRBool boolKeepGoing;
-            pTerm->GetMatchAllBeforeDeciding(&boolKeepGoing);
-            msgToMatch->GetRecipients(getter_Copies(recipients));
-            err = pTerm->MatchRfc822String (recipients, charset, charsetOverride, &result);
-            if (boolKeepGoing == result)
-            {
-              msgToMatch->GetCcList(getter_Copies(ccList));
-              err = pTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
-            }
-          }
-          break;
-        case nsMsgSearchAttrib::Body:
-          {
-            nsMsgKey messageOffset;
-            PRUint32 lineCount;
-            msgToMatch->GetMessageOffset(&messageOffset);
-            msgToMatch->GetLineCount(&lineCount);
-            err = pTerm->MatchBody (scope, messageOffset, lineCount, charset, msgToMatch, db, &result);
-          }
-          break;
-        case nsMsgSearchAttrib::Date:
-          {
-            PRTime date;
-            msgToMatch->GetDate(&date);
-            err = pTerm->MatchDate (date, &result);
-          }
-          break;
-        case nsMsgSearchAttrib::MsgStatus:
-          err = pTerm->MatchStatus (msgFlags, &result);
-          break;
-        case nsMsgSearchAttrib::Priority:
-          {
-            nsMsgPriorityValue msgPriority;
-            msgToMatch->GetPriority(&msgPriority);
-            err = pTerm->MatchPriority (msgPriority, &result);
-          }
-          break;
-        case nsMsgSearchAttrib::Size:
-          {
-            PRUint32 messageSize;
-            msgToMatch->GetMessageSize(&messageSize);
-            err = pTerm->MatchSize (messageSize, &result);
-          }
-          break;
-        case nsMsgSearchAttrib::To:
-          msgToMatch->GetRecipients(getter_Copies(recipients));
-          err = pTerm->MatchRfc822String(recipients, charset, charsetOverride, &result);
-          break;
-        case nsMsgSearchAttrib::CC:
           msgToMatch->GetCcList(getter_Copies(ccList));
-          err = pTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
-          break;
-        case nsMsgSearchAttrib::AgeInDays:
-          {
-            PRTime date;
-            msgToMatch->GetDate(&date);
-            err = pTerm->MatchAge (date, &result);
-          }
-          break;
-        case nsMsgSearchAttrib::Label:
-          {
-            nsMsgLabelValue label;
-            msgToMatch->GetLabel(&label);
-            err = pTerm->MatchLabel(label, &result);
-          }          
-          break;         
-        default:
+          err = aTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
+        }
+        break;
+      }
+      case nsMsgSearchAttrib::Body:
+       {
+         nsMsgKey messageOffset;
+         PRUint32 lineCount;
+         msgToMatch->GetMessageOffset(&messageOffset);
+         msgToMatch->GetLineCount(&lineCount);
+         err = aTerm->MatchBody (scope, messageOffset, lineCount, charset, msgToMatch, db, &result);
+         break;
+       }
+      case nsMsgSearchAttrib::Date:
+      {
+        PRTime date;
+        msgToMatch->GetDate(&date);
+        err = aTerm->MatchDate (date, &result);
+
+        break;
+      }
+      case nsMsgSearchAttrib::MsgStatus:
+        err = aTerm->MatchStatus (msgFlags, &result);
+        break;
+      case nsMsgSearchAttrib::Priority:
+      {
+        nsMsgPriorityValue msgPriority;
+        msgToMatch->GetPriority(&msgPriority);
+        err = aTerm->MatchPriority (msgPriority, &result);
+        break;
+      }      
+      case nsMsgSearchAttrib::Size:
+      {
+        PRUint32 messageSize;
+        msgToMatch->GetMessageSize(&messageSize);
+        err = aTerm->MatchSize (messageSize, &result);
+        break;
+      }
+      case nsMsgSearchAttrib::To:
+        msgToMatch->GetRecipients(getter_Copies(recipients));
+        err = aTerm->MatchRfc822String(recipients, charset, charsetOverride, &result);
+        break;
+      case nsMsgSearchAttrib::CC:
+        msgToMatch->GetCcList(getter_Copies(ccList));
+        err = aTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
+        break;
+      case nsMsgSearchAttrib::AgeInDays:
+      {
+        PRTime date;
+        msgToMatch->GetDate(&date);
+        err = aTerm->MatchAge (date, &result);
+        break;
+       }
+      case nsMsgSearchAttrib::Label:
+      {
+         nsMsgLabelValue label;
+         msgToMatch->GetLabel(&label);
+         err = aTerm->MatchLabel(label, &result);
+         break;
+      }                 
+      default:
           // XXX todo
           // for the temporary return receipts filters, we use a custom header for Content-Type
           // but unlike the other custom headers, this one doesn't show up in the search / filter
@@ -672,21 +754,37 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             msgToMatch->GetLineCount(&lineCount);
             nsMsgKey messageKey;
             msgToMatch->GetMessageOffset(&messageKey);
-            err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, charsetOverride,
+            err = aTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, charsetOverride,
                                                 msgToMatch, db, headers, headerSize, Filtering, &result);
           }
           else
             err = NS_ERROR_INVALID_ARG; // ### was SearchError_InvalidAttribute
-        }
-        if (expression && NS_SUCCEEDED(err))
-            expression = expression->AddSearchTerm(pTerm, result);    // added the term and its value to the expression tree
-        else
-            return NS_ERROR_OUT_OF_MEMORY;
     }
-    result = expression->OfflineEvaluate();
-    delete expression;
-	*pResult = result;
-    return err;
+
+    *pResult = result;
+    return NS_OK;
+}
+
+nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
+                                            nsISupportsArray * termList,
+                                            const char *defaultCharset,
+                                            nsIMsgSearchScopeTerm * scope,
+                                            nsIMsgDatabase * db, 
+                                            const char * headers,
+                                            PRUint32 headerSize,
+                                            PRBool Filtering,
+											PRBool *pResult) 
+{
+  nsMsgSearchBoolExpression * expressionTree = new nsMsgSearchBoolExpression(); 
+  PRUint32 initialPos = 0; 
+  nsresult err = ConstructExpressionTree(msgToMatch, termList, initialPos, defaultCharset, scope, db, headers, headerSize, 
+                          Filtering, &expressionTree, pResult);
+
+  // evaluate the expression tree and return the result
+  *pResult = expressionTree->OfflineEvaluate();
+  delete expressionTree;
+
+  return err;
 }
 
 

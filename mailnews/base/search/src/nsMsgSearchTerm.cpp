@@ -332,6 +332,8 @@ nsMsgSearchTerm::nsMsgSearchTerm()
     m_value.attribute=0;
     m_value.u.priority=0;
     m_attribute = nsMsgSearchAttrib::Default;
+    mBeginsGrouping = PR_FALSE;
+    mEndsGrouping = PR_FALSE;
 }
 
 nsMsgSearchTerm::nsMsgSearchTerm (
@@ -696,8 +698,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
                                                 PRBool ForFiltering,
                                                 PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 	*pResult = PR_FALSE;
 	nsresult err = NS_OK;
 	PRBool result;
@@ -768,8 +769,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
 nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
 										   nsIMsgDBHdr *msg, nsIMsgDatabase* db, PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 	nsresult err = NS_OK;
 	PRBool result = PR_FALSE;
 	*pResult = PR_FALSE;
@@ -922,8 +922,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
                                        const char *charset,
                                        PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 	PRBool result = PR_FALSE;
 
 	nsresult err = NS_OK;
@@ -1032,8 +1031,7 @@ nsresult nsMsgSearchTerm::GetMatchAllBeforeDeciding (PRBool *aResult)
 
 nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset, PRBool charsetOverride, PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 	*pResult = PR_FALSE;
 	PRBool result;
 	nsresult err = InitHeaderAddressParser();
@@ -1102,8 +1100,7 @@ nsresult nsMsgSearchTerm::GetLocalTimes (PRTime a, PRTime b, PRExplodedTime &aEx
 
 nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch, PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 
 	nsresult err = NS_OK;
 	PRBool result = PR_FALSE;
@@ -1157,8 +1154,7 @@ nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch, PRBool *pResult)
 
 nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate, PRBool *pResult)
 {
-  if (!pResult)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(pResult);
 
   PRBool result = PR_FALSE;
   nsresult err = NS_OK;
@@ -1206,8 +1202,7 @@ nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate, PRBool *pResult)
 
 nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch, PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 
 	PRBool result = PR_FALSE;
 	switch (m_operator)
@@ -1249,8 +1244,7 @@ nsresult nsMsgSearchTerm::MatchLabel(nsMsgLabelValue aLabelValue, PRBool *pResul
 
 nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch, PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 
 	nsresult err = NS_OK;
 	PRBool matches = PR_FALSE;
@@ -1279,8 +1273,7 @@ nsresult
 nsMsgSearchTerm::MatchPriority (nsMsgPriorityValue priorityToMatch,
                                 PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(pResult);
 
 	nsresult err = NS_OK;
 	PRBool result=NS_OK;
@@ -1378,6 +1371,9 @@ nsMsgSearchTerm::SetArbitraryHeader(const char* aValue)
     m_arbitraryHeader = aValue;
     return NS_OK;
 }
+
+NS_IMPL_GETSET(nsMsgSearchTerm, BeginsGrouping, PRBool, mEndsGrouping);
+NS_IMPL_GETSET(nsMsgSearchTerm, EndsGrouping, PRBool, mEndsGrouping);
 
 //-----------------------------------------------------------------------------
 // nsMsgSearchScopeTerm implementation

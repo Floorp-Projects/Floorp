@@ -733,7 +733,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
 		if (NS_SUCCEEDED(err) && nsnull != termEncodings[i])
 		{
 			encodingLength += strlen(termEncodings[i]) + 1;
-			expression = expression->AddSearchTerm(pTerm,termEncodings[i]);
+            expression = nsMsgSearchBoolExpression::AddSearchTermWithEncoding(expression, pTerm,termEncodings[i]);
 		}
 	}
 

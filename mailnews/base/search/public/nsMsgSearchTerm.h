@@ -109,15 +109,18 @@ public:
 protected:
 	nsresult MatchString (const char *stringToMatch, const char *charset,
                           PRBool *pResult);
-	nsresult		OutputValue(nsCString &outputStr);
+	nsresult OutputValue(nsCString &outputStr);
 	nsresult ParseAttribute(char *inStream, nsMsgSearchAttribValue *attrib);
 	nsMsgSearchOpValue	ParseOperator(char *inStream);
-	nsresult		ParseValue(char *inStream);
-	nsresult		InitHeaderAddressParser();
-    nsresult  InitializeAddressBook();
+	nsresult ParseValue(char *inStream);
+	nsresult InitHeaderAddressParser();
+    nsresult InitializeAddressBook();
     nsresult MatchInAddressBook(const char * aAddress, PRBool *pResult);
     // fields used by search in address book
     nsCOMPtr <nsIAbMDBDirectory> mDirectory;  
+
+    PRPackedBool mBeginsGrouping;
+    PRPackedBool mEndsGrouping; 
 };
 
 #endif
