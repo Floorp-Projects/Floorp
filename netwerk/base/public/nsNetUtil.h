@@ -180,12 +180,10 @@ NS_NewChannel(nsIChannel           **result,
     return rv;
 }
 
-// Use this function with CAUTION. And do not use it on 
-// the UI thread. It creates a stream that blocks when
-// you Read() from it and blocking the UI thread is
-// illegal. If you don't want to implement a full
-// blown asyncrhonous consumer (via nsIStreamListener)
-// look at nsIStreamLoader instead.
+// Use this function with CAUTION. It creates a stream that blocks when you
+// Read() from it and blocking the UI thread is a bad idea. If you don't want
+// to implement a full blown asyncrhonous consumer (via nsIStreamListener) look
+// at nsIStreamLoader instead.
 inline nsresult
 NS_OpenURI(nsIInputStream       **result,
            nsIURI                *uri,
