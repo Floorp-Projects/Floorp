@@ -38,8 +38,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Hashtable;
-
 /**
  * The base class for Function objects
  * See ECMA 15.3.

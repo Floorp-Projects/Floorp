@@ -400,37 +400,40 @@ public class NativeGlobal implements IdFunctionMaster {
     private Object js_unescape(Context cx, Object[] args)
     {
         String s = ScriptRuntime.toString(args, 0);
-        StringBuffer R = new StringBuffer();
-        stringIter: for (int k = 0; k < s.length(); k++) {
-            char c = s.charAt(k);
-            if (c != '%' || k == s.length() -1) {
-                R.append(c);
-                continue;
-            }
-            String hex;
-            int end, start;
-            if (s.charAt(k+1) == 'u') {
-                start = k+2;
-                end = k+6;
-            } else {
-                start = k+1;
-                end = k+3;
-            }
-            if (end > s.length()) {
-                R.append('%');
-                continue;
-            }
-            hex = s.substring(start, end);
-            for (int i = 0; i < hex.length(); i++)
-                if (!TokenStream.isXDigit(hex.charAt(i))) {
-                    R.append('%');
-                    continue stringIter;
+        int firstEscapePos = s.indexOf('%');
+        if (firstEscapePos >= 0) {
+            int L = s.length();
+            char[] buf = s.toCharArray();
+            int destination = firstEscapePos;
+            for (int k = firstEscapePos; k != L;) {
+                char c = buf[k];
+                ++k;
+                if (c == '%' && k != L) {
+                    int end, start;
+                    if (buf[k] == 'u') {
+                        start = k + 1;
+                        end = k + 5;
+                    } else {
+                        start = k;
+                        end = k + 2;
+                    }
+                    if (end <= L) {
+                        int x = 0;
+                        for (int i = start; i != end; ++i) {
+                            x = (x << 4) | TokenStream.xDigitToInt(buf[i]);
+                        }
+                        if (x >= 0) {
+                            c = (char)x;
+                            k = end;
+                        }
+                    }
                 }
-            k = end - 1;
-            R.append((new Character((char) Integer.valueOf(hex, 16).intValue())));
+                buf[destination] = c;
+                ++destination;
+            }
+            s = new String(buf, 0, destination); 
         }
-
-        return R.toString();
+        return s;
     }
 
     /**

@@ -313,7 +313,6 @@ public class StringIdMap {
         return end;
     }
 
-
     private int extract_tag_value(char[] array, int cursor, int end, int id) {
         // cursor points after #[^#=]+= 
         // ALERT: implement support for quoted strings
@@ -321,19 +320,32 @@ public class StringIdMap {
         cursor = skip_white_space(array, cursor, end);
         if (cursor != end) {
             int value_start = cursor;
-            for (; cursor != end; ++cursor) {
+            int value_end = cursor;
+            while (cursor != end) {
                 int c = array[cursor];
-                if (c == '#' || is_white_space(c)) { break; }
+                if (is_white_space(c)) {
+                    int after_space = skip_white_space(array, cursor + 1, end);
+                    if (after_space != end && array[after_space] == '#') {
+                        value_end = cursor;
+                        cursor = after_space;
+                        break;
+                    }
+                    cursor = after_space + 1;
+                }
+                else if (c == '#') { 
+                    value_end = cursor;
+                    break; 
+                }
+                else {
+                    ++cursor;
+                }
             }
             if (cursor != end) {
-                int value_end = cursor;
-                cursor = skip_white_space(array, cursor, end);
-                if (cursor != end && array[cursor] == '#') {
-                       found = true;
-                    tag_value_start = value_start;
-                    tag_value_end = value_end;
-                    tag_definition_end = cursor + 1;
-                }
+                // array[cursor] is '#' here
+                found = true;
+                tag_value_start = value_start;
+                tag_value_end = value_end;
+                tag_definition_end = cursor + 1;
             }
         }
         return (found) ? id : 0;
