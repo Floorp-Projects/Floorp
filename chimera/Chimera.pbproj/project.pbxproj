@@ -3157,7 +3157,7 @@
 		};
 		F564873A023C3857010001CA = {
 			isa = PBXFileReference;
-			path = CHIconTabViewItem.m;
+			path = CHIconTabViewItem.mm;
 			refType = 4;
 		};
 		F564873B023C3857010001CA = {

@@ -41,7 +41,7 @@
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
 #import "BookmarkInfoController.h"
-
+#import "CHIconTabViewItem.h"
 #import "StringUtils.h"
 
 #include "nsCRT.h"
@@ -1021,10 +1021,12 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
       elt->GetAttribute(NS_LITERAL_STRING("href"), href);
       if (!href.IsEmpty()) {
         NSString* url = [NSString stringWith_nsAString: href];
-        NSTabViewItem* tabViewItem = nil;
+        CHIconTabViewItem* tabViewItem = nil;
         if (currentIndex >= total) {
           // We need to make a new tab.
-          tabViewItem = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
+          // XXX this needs fixing to not max out the number of tabs in a browser window.
+          // See [BrowserWindowController newTabsAllowed];
+          tabViewItem = [[[CHIconTabViewItem alloc] initWithIdentifier: nil] autorelease];
           CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: tabViewItem andWindow: [aTabView window]] autorelease];
           [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
           [tabViewItem setView: newView];

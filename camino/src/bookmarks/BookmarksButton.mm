@@ -70,7 +70,8 @@
   NSString* url = [NSString stringWith_nsAString: href];
 
   // Now load the URL in the window.
-  [[[self window] windowController] loadURL: url referrer:nil activate:YES];
+  BrowserWindowController* brController = [[self window] windowController];
+  [brController loadURL: url referrer:nil activate:YES];
 }
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
@@ -87,7 +88,8 @@
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
 
-  [[[self window] windowController] openNewTabWithURL: hrefStr referrer:nil loadInBackground: loadInBackground];
+  BrowserWindowController* brController = [[self window] windowController];
+  [brController openNewTabWithURL: hrefStr referrer:nil loadInBackground: loadInBackground];
 }
 
 -(IBAction)openBookmarkInNewWindow:(id)aSender
@@ -106,10 +108,12 @@
 
   nsAutoString group;
   mElement->GetAttribute(NS_LITERAL_STRING("group"), group);
+
+  BrowserWindowController* brController = [[self window] windowController];
   if (group.IsEmpty()) 
-    [[[self window] windowController] openNewWindowWithURL: hrefStr referrer: nil loadInBackground: loadInBackground];
+    [brController openNewWindowWithURL: hrefStr referrer: nil loadInBackground: loadInBackground];
   else
-    [[[self window] windowController] openNewWindowWithGroup: mElement loadInBackground: loadInBackground];
+    [brController openNewWindowWithGroup: mElement loadInBackground: loadInBackground];
 }
 
 -(IBAction)showBookmarkInfo:(id)aSender
@@ -174,7 +178,8 @@
   }
   else if (([aMenuItem action] == @selector(openBookmarkInNewTab:))) {
     // Only Bookmarks can be opened in new tabs
-    return isBookmark;
+    BrowserWindowController* brController = [[self window] windowController];
+    return isBookmark && [brController newTabsAllowed];
   }
   return YES;
 }

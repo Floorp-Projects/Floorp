@@ -153,8 +153,9 @@ class nsIDOMNode;
 
 - (void)dealloc;
 
--(id)getTabBrowser;
--(CHBrowserWrapper*)getBrowserWrapper;
+- (id)getTabBrowser;
+- (BOOL)newTabsAllowed;
+- (CHBrowserWrapper*)getBrowserWrapper;
 
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate;
 - (void)updateLocationFields:(NSString *)locationString;
@@ -235,7 +236,7 @@ class nsIDOMNode;
 // Context menu methods
 - (IBAction)openLinkInNewWindow:(id)aSender;
 - (IBAction)openLinkInNewTab:(id)aSender;
--(void)openLinkInNewWindowOrTab: (BOOL)aUseWindow;
+- (void)openLinkInNewWindowOrTab: (BOOL)aUseWindow;
 
 - (IBAction)savePageAs:(id)aSender;
 - (IBAction)saveLinkAs:(id)aSender;

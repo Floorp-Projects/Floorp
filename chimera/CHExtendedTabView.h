@@ -22,6 +22,7 @@
 @interface CHExtendedTabView : NSTabView
 {
   BOOL autoHides;
+  int  maxNumberOfTabs;			// 0 means 'no max'
 }
 
 //  Behavior: Autohiding overrides the default tab visibility state.
@@ -30,6 +31,10 @@
 - (BOOL)autoHides;
 - (void)setAutoHides:(BOOL)newSetting;
 
--(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer;
+- (int)maxNumberOfTabs;
+- (void)setMaxNumberOfTabs:(int)maxTabs;
+- (BOOL)canMakeNewTabs;
+
+- (void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer;
 
 @end

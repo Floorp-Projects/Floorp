@@ -836,7 +836,7 @@
   }
   else if (([aMenuItem action] == @selector(openBookmarkInNewTab:))) {
     // Only Bookmarks can be opened in new tabs
-    return isBookmark;
+    return isBookmark && [mBrowserWindowController newTabsAllowed];
   }
   return YES;
 }
