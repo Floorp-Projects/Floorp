@@ -42,6 +42,7 @@
 #include "pics.h"
 #include "xp_ncent.h"
 #include "prefetch.h"
+#include "plvector.h"
 
 /* WEBFONTS are defined only in laytags.c and layout.c */
 #define WEBFONTS
@@ -4755,6 +4756,11 @@ XP_TRACE(("Initializing new doc %d\n", doc_id));
 		{
 			lo_load_user_backdrop(context, state);
 		}
+
+        /* This will be set if we ever encounter an image with no size
+           information, and will indicate to the FE that a reflow needs
+           to be done when all the connections have completed. */
+        context->requires_reflow = PR_FALSE;
 	}
 
 	if (state == NULL)
@@ -5707,12 +5713,35 @@ lo_discard_unprocessed_deferred_images(MWContext *context)
     }
 }
 
+
+/* A helper routine that adds a context to a set of contexts ready for
+   reflow, but only if the context isn't already present in the
+   set. */
+static void
+lo_AddContextToReflow(PLVector* v, MWContext* context)
+{
+    PR_ASSERT(v);
+    if (v) {
+        PRUint32 size = PL_VectorGetSize(v);
+        PRUint32 i;
+
+        for (i = 0; i < size; ++i) {
+            if (PL_VectorGet(v, i) == context)
+                return;
+        }
+
+        PL_VectorAdd(v, context);
+    }
+}
+
 /* Handle image dimension information that has been reported to
    layout since the last time we were called. */
 static void
 lo_process_deferred_image_info(void *closure)
 {
     setImageInfoClosure *c, *next_c;
+    PLVector contextsToReflow;
+    PL_VectorInitialize(&contextsToReflow, 0, 0);
 
 	/* Don't allow reentrant calls. */
 	if (deferred_list_busy)
@@ -5722,6 +5751,40 @@ lo_process_deferred_image_info(void *closure)
     for (c = image_info_deferred_list; c; c = next_c) {
         next_c = c->next;
         lo_set_image_info(c->context, c->ele_id, c->width, c->height);
+
+        /* Determine if the image is visible, and if so, add the
+           context that contains it to the set of contexts that need
+           to be reflowed. */
+        {
+            lo_TopState* top_state = lo_FetchTopState(XP_DOCID(c->context));
+            PR_ASSERT(top_state);
+            if (top_state) {
+                int32 docWidth  = LO_GetLayerScrollWidth(top_state->body_layer);
+                int32 docHeight = LO_GetLayerScrollHeight(top_state->body_layer);
+                int32 docX, docY;
+                LO_ImageStruct* image;
+
+                FE_GetDocPosition(c->context, FE_VIEW, &docX, &docY);
+
+                image = top_state->doc_lists.image_list;
+                while (image) {
+                    if (image->ele_id == c->ele_id)
+                        break;
+
+                    image = image->next_image;
+                }
+
+                if (image
+                    && /* It's visible */
+                    ((image->x + c->width >= docX) &&
+                     (image->y + c->height >= docY) &&
+                     (image->x <= docX + docWidth) &&
+                     (image->y <= docY + docHeight))) {
+                    /* If the image is visible, the context needs to be reflowed */
+                    lo_AddContextToReflow(&contextsToReflow, c->context);
+                }
+            }
+        }
 
         if(destroy_deferred_list)
         {
@@ -5743,6 +5806,35 @@ lo_process_deferred_image_info(void *closure)
     deferred_list_busy = 0;
     image_info_deferred_list = NULL;
     deferred_image_info_timeout = NULL;
+
+    /* Iterate through the contexts that need to be reflowed: if
+       layout is complete in that context, then reflow *now*: there's
+       an incorrectly sized, visible image. */
+    {
+        PRUint32 size = PL_VectorGetSize(&contextsToReflow);
+        PRUint32 i;
+
+        for (i = 0; i < size; ++i) {
+            lo_TopState* top_state;
+            MWContext* context = (MWContext*) PL_VectorGet(&contextsToReflow, i);
+
+            PR_ASSERT(context);
+            if (!context)
+                continue;
+
+            top_state = lo_FetchTopState(XP_DOCID(context));
+            PR_ASSERT(top_state);
+            if (!top_state)
+                continue;
+
+            /* We reflow *immediately* if layout is done. */
+
+            if (!LO_LayingOut(context))
+                LO_RelayoutFromElement(context, NULL);
+        }
+
+        PL_VectorFinalize(&contextsToReflow);
+    }
 }
 
 /* Tell layout the dimensions of an image.  Actually, to avoid subtle
