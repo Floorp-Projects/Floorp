@@ -57,7 +57,7 @@ namespace Silverstone.Manticore.BrowserWindow
 
     protected internal WebBrowser webBrowser;
 
-    protected internal StatusBar statusBar;
+    protected internal StatusBar mStatusBar;
 
     protected internal ManticoreApp application;
 
@@ -96,7 +96,7 @@ namespace Silverstone.Manticore.BrowserWindow
       this.SizeGripStyle = SizeGripStyle.Auto;
 
       // Set up the Status Bar
-      statusBar = new StatusBar();
+      mStatusBar = new StatusBar();
       
       StatusBarPanel docStatePanel = new StatusBarPanel();
       StatusBarPanel statusPanel = new StatusBarPanel();
@@ -110,13 +110,13 @@ namespace Silverstone.Manticore.BrowserWindow
       statusPanel.AutoSize = StatusBarPanelAutoSize.Spring;
       
 
-      statusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, statusPanel, progressPanel, zonePanel});
-      statusBar.ShowPanels = true;
+      mStatusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, statusPanel, progressPanel, zonePanel});
+      mStatusBar.ShowPanels = true;
 
       webBrowser = new WebBrowser(this);
       this.Controls.Add(webBrowser);
 
-      this.Controls.Add(statusBar);
+      this.Controls.Add(mStatusBar);
       
 	    mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", mCommandHandler, this);
 	    mToolbarBuilder.Build();
