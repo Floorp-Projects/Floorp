@@ -500,6 +500,7 @@ input[type="file"] > input {
 input[type="file"] > input[type="button"] {
   height:inherit;
   font-family: sans-serif;
+  user-select: none !important;
 }
 
 
@@ -625,6 +626,7 @@ input[type="submit"] {
   font-size: small;
 
   behavior: none;
+  user-select: none !important;
 	cursor: default;
 }
 
@@ -675,6 +677,8 @@ input[type="reset"] {
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
+
+  user-select: none !important;
   behavior: none;
 	cursor: default;
 }
