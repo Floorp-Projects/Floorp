@@ -349,22 +349,74 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Setup reflow state for reflowing the frame
   // XXX subtract out vertical margin?
   nsSize availSpace(aSpace.width, aSpace.height);
-  nsHTMLReflowState reflowState(mPresContext, mOuterReflowState, aFrame,
-                                availSpace, aSpace.width, aSpace.height);
-  reflowState.reason = reason;
-  aComputedOffsets = reflowState.mComputedOffsets;
-  reflowState.mLineLayout = nsnull;
-  if (!aIsAdjacentWithTop) {
-    reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
+
+  /* We build a different reflow context based on the width attribute of the block,
+   * if it's a floater.
+   * Auto-width floaters need to have their containing-block size set explicitly,
+   * factoring in other floaters that impact it.  
+   * It's possible this should be quirks-only.
+   * All other blocks proceed normally.
+   */
+  const nsStylePosition* position;
+  aFrame->GetStyleData(eStyleStruct_Position,
+                           (const nsStyleStruct*&)position);
+  nsStyleUnit widthUnit = position->mWidth.GetUnit();
+  const nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display,
+                           (const nsStyleStruct*&)display);
+  if ((eStyleUnit_Auto == widthUnit) &&
+      ((NS_STYLE_FLOAT_LEFT == display->mFloats) ||
+       (NS_STYLE_FLOAT_RIGHT == display->mFloats)))
+  {
+    nsHTMLReflowState autoReflowState(mPresContext, mOuterReflowState, aFrame,
+                                      availSpace, aSpace.width, aSpace.height);
+    autoReflowState.reason = reason;
+    rv = DoReflowBlock(autoReflowState, reason, aFrame, aSpace, 
+                       aApplyTopMargin, aPrevBottomMargin,
+                       aIsAdjacentWithTop,
+                       aComputedOffsets,
+                       aFrameReflowStatus);
   }
-  mIsTable = NS_STYLE_DISPLAY_TABLE == reflowState.mStyleDisplay->mDisplay;
-  mComputedWidth = reflowState.mComputedWidth;
+  else
+  {
+    nsHTMLReflowState normalReflowState(mPresContext, mOuterReflowState, aFrame,
+                                        availSpace, reason);
+    rv = DoReflowBlock(normalReflowState, reason, aFrame, aSpace, 
+                       aApplyTopMargin, aPrevBottomMargin,
+                       aIsAdjacentWithTop,
+                       aComputedOffsets,
+                       aFrameReflowStatus);
+  }
+  return rv;
+}
+
+nsresult
+nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
+                                    nsReflowReason aReason,
+                                    nsIFrame* aFrame,
+                                    const nsRect& aSpace,
+                                    PRBool aApplyTopMargin,
+                                    nscoord aPrevBottomMargin,
+                                    PRBool aIsAdjacentWithTop,
+                                    nsMargin& aComputedOffsets,
+                                    nsReflowStatus& aFrameReflowStatus)
+{
+  nsresult rv = NS_OK;
+  nsFrameState state;
+  aFrame->GetFrameState(&state);
+  aComputedOffsets = aReflowState.mComputedOffsets;
+  aReflowState.mLineLayout = nsnull;
+  if (!aIsAdjacentWithTop) {
+    aReflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
+  }
+  mIsTable = NS_STYLE_DISPLAY_TABLE == aReflowState.mStyleDisplay->mDisplay;
+  mComputedWidth = aReflowState.mComputedWidth;
 
   nscoord topMargin = 0;
   if (aApplyTopMargin) {
     // Compute the childs collapsed top margin (its margin collpased
     // with its first childs top-margin -- recursively).
-    topMargin = ComputeCollapsedTopMargin(mPresContext, reflowState);
+    topMargin = ComputeCollapsedTopMargin(mPresContext, aReflowState);
 
 #ifdef NOISY_VERTICAL_MARGINS
     nsFrame::ListTag(stdout, mOuterReflowState.frame);
@@ -381,8 +433,8 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 
     // Adjust the available height if its constrained so that the
     // child frame doesn't think it can reflow into its margin area.
-    if (aApplyTopMargin && (NS_UNCONSTRAINEDSIZE != reflowState.availableHeight)) {
-      reflowState.availableHeight -= topMargin;
+    if (aApplyTopMargin && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
+      aReflowState.availableHeight -= topMargin;
     }
   }
   mTopMargin = topMargin;
@@ -390,17 +442,17 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
   // reflow auto left/right margins will have a zero value.
-  mMargin = reflowState.mComputedMargin;
-  mStyleSpacing = reflowState.mStyleSpacing;
+  mMargin = aReflowState.mComputedMargin;
+  mStyleSpacing = aReflowState.mStyleSpacing;
   nscoord x;
   nscoord y = aSpace.y + topMargin;
 
   // If it's a right floated element, then calculate the x-offset
   // differently
-  if (NS_STYLE_FLOAT_RIGHT == reflowState.mStyleDisplay->mFloats) {
+  if (NS_STYLE_FLOAT_RIGHT == aReflowState.mStyleDisplay->mFloats) {
     nscoord frameWidth;
      
-    if (NS_UNCONSTRAINEDSIZE == reflowState.mComputedWidth) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       nsSize  frameSize;
 
       // Use the current frame width
@@ -408,9 +460,9 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
       frameWidth = frameSize.width;
 
     } else {
-      frameWidth = reflowState.mComputedWidth +
-                   reflowState.mComputedBorderPadding.left +
-                   reflowState.mComputedBorderPadding.right;
+      frameWidth = aReflowState.mComputedWidth +
+                   aReflowState.mComputedBorderPadding.left +
+                   aReflowState.mComputedBorderPadding.right;
     }
 
     // if this is an unconstrained width reflow, then just place the floater at the left margin
@@ -426,10 +478,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   mY = y;
 
   // If it's an auto-width table, then it doesn't behave like other blocks
-  if (mIsTable && !reflowState.mStyleDisplay->IsFloating()) {
+  if (mIsTable && !aReflowState.mStyleDisplay->IsFloating()) {
     // If this isn't the table's initial reflow, then use its existing
     // width to determine where it will be placed horizontally
-    if (reflowState.reason != eReflowReason_Initial) {
+    if (aReflowState.reason != eReflowReason_Initial) {
       nsBlockHorizontalAlign  align;
       nsSize                  size;
 
@@ -443,9 +495,9 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   }
 
   // If the element is relatively positioned, then adjust x and y accordingly
-  if (NS_STYLE_POSITION_RELATIVE == reflowState.mStylePosition->mPosition) {
-    x += reflowState.mComputedOffsets.left;
-    y += reflowState.mComputedOffsets.top;
+  if (NS_STYLE_POSITION_RELATIVE == aReflowState.mStylePosition->mPosition) {
+    x += aReflowState.mComputedOffsets.left;
+    y += aReflowState.mComputedOffsets.top;
   }
 
   // Let frame know that we are reflowing it
@@ -485,13 +537,13 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 
   // See if this is the child's initial reflow and we are supposed to
   // compute our maximum width
-  if (mComputeMaximumWidth && (eReflowReason_Initial == reason)) {
-    nscoord oldAvailableWidth = reflowState.availableWidth;
-    nscoord oldComputedWidth = reflowState.mComputedWidth;
+  if (mComputeMaximumWidth && (eReflowReason_Initial == aReason)) {
+    nscoord oldAvailableWidth = aReflowState.availableWidth;
+    nscoord oldComputedWidth = aReflowState.mComputedWidth;
 
-    reflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
-    reflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-    rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
+    aReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
+    aReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
+    rv = aFrame->Reflow(mPresContext, mMetrics, aReflowState,
                         aFrameReflowStatus);
 
     // Update the reflow metrics with the maximum width
@@ -502,12 +554,12 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 #endif
     // The second reflow is just as a resize reflow with the constrained
     // width
-    reflowState.availableWidth = oldAvailableWidth;
-    reflowState.mComputedWidth = oldComputedWidth;
-    reason = eReflowReason_Resize;
+    aReflowState.availableWidth = oldAvailableWidth;
+    aReflowState.mComputedWidth = oldComputedWidth;
+    aReason = eReflowReason_Resize;
   }
 
-  rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
+  rv = aFrame->Reflow(mPresContext, mMetrics, aReflowState,
                       aFrameReflowStatus);
   mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
 
@@ -579,7 +631,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Now that frame has been reflowed at least one time make sure that
   // the NS_FRAME_FIRST_REFLOW bit is cleared so that never give it an
   // initial reflow reason again.
-  if (eReflowReason_Initial == reason) {
+  if (eReflowReason_Initial == aReason) {
     aFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
   }
 
@@ -606,25 +658,25 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // If the block is shrink wrapping its width, then see if we have percentage
   // based margins. If so, we can calculate them now that we know the shrink
   // wrap width
-  if (NS_SHRINKWRAPWIDTH == reflowState.mComputedWidth) {
+  if (NS_SHRINKWRAPWIDTH == aReflowState.mComputedWidth) {
     nscoord boxWidth = mMetrics.width;
     float   leftPct = 0.0;
     float   rightPct = 0.0;
     
-    if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
+    if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
       nsStyleCoord  leftCoord;
       
-      reflowState.mStyleSpacing->mMargin.GetLeft(leftCoord);
+      aReflowState.mStyleSpacing->mMargin.GetLeft(leftCoord);
       leftPct = leftCoord.GetPercentValue();
 
     } else {
       boxWidth += mMargin.left;
     }
 
-    if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetRightUnit()) {
+    if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetRightUnit()) {
       nsStyleCoord  rightCoord;
 
-      reflowState.mStyleSpacing->mMargin.GetRight(rightCoord);
+      aReflowState.mStyleSpacing->mMargin.GetRight(rightCoord);
       rightPct = rightCoord.GetPercentValue();
 
     } else {
@@ -650,11 +702,11 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     if ((marginPct > 0.0) && (marginPct < 1.0)) {
       double shrinkWrapWidth = float(boxWidth) / (1.0 - marginPct);
 
-      if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
+      if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
         mMargin.left = NSToCoordFloor(shrinkWrapWidth * leftPct);
         mX += mMargin.left;
       }
-      if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetRightUnit()) {
+      if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetRightUnit()) {
         mMargin.right = NSToCoordFloor(shrinkWrapWidth * rightPct);
       }
     }
