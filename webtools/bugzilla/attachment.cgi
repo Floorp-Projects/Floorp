@@ -22,6 +22,7 @@
 #                 Myk Melez <myk@mozilla.org>
 #                 Daniel Raichle <draichle@gmx.net>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Alexander J. Vincent <ajvincent@juno.com>
 
 ################################################################################
 # Script Initialization
@@ -433,6 +434,15 @@ sub view
     # Retrieve the attachment content and its content type from the database.
     SendSQL("SELECT mimetype, filename, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
     my ($contenttype, $filename, $thedata) = FetchSQLData();
+   
+    # Bug 111522: allow overriding content-type manually in the posted $::FORM.
+    if ($::FORM{'ctype'})
+    {
+        $::FORM{'contenttypemethod'} = 'manual';
+        $::FORM{'contenttypeentry'} = $::FORM{'ctype'};
+        validateContentType();
+        $contenttype = $::FORM{'ctype'};
+    }
 
     # Return the appropriate HTTP response headers.
     $filename =~ s/^.*[\/\\]//;
