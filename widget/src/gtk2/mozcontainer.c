@@ -121,6 +121,7 @@ moz_container_class_init (MozContainerClass *klass)
 void
 moz_container_init (MozContainer *container)
 {
+  GTK_WIDGET_SET_FLAGS(container, GTK_CAN_FOCUS);
   container->container.resize_mode = GTK_RESIZE_IMMEDIATE;
   gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container),
 				    FALSE);

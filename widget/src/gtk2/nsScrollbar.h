@@ -33,10 +33,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsBaseWidget.h>
+#include "nsBaseWidget.h"
+
+#include <gtk/gtkwidget.h>
 
 class nsScrollbar : public nsBaseWidget {
  public:
   nsScrollbar();
   virtual ~nsScrollbar();
+
+ private:
+  GtkWidget *mScrollbar;
 };

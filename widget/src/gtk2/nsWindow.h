@@ -150,6 +150,10 @@ class nsWindow : public nsCommonWidget {
 					GdkEventButton *aEvent);
   void               OnButtonReleaseEvent(GtkWidget *aWidget,
 					  GdkEventButton *aEvent);
+  void               OnContainerFocusInEvent(GtkWidget *aWidget,
+					     GdkEventFocus *aEvent);
+  void               OnContainerFocusOutEvent(GtkWidget *aWidget,
+					      GdkEventFocus *aEvent);
   void               SendResizeEvent(nsRect &aRect,
 				     nsEventStatus &aStatus);
 
@@ -171,8 +175,15 @@ class nsWindow : public nsCommonWidget {
   PRPackedBool        mIsTopLevel;
   PRPackedBool        mIsDestroyed;
 
+  PRPackedBool        mContainerGotFocus;
+  PRPackedBool        mContainerLostFocus;
+  PRPackedBool        mContainerBlockFocus;
+  PRPackedBool        mHasFocus;
+
   PRUint32            mPreferredWidth;
   PRUint32            mPreferredHeight;
+
+  nsWindow           *mFocusChild;
 
 };
 
