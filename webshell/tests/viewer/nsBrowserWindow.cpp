@@ -1845,8 +1845,8 @@ nsBrowserWindow::DoCopy()
 	  if (NS_OK == rv) 
 	  {
 	    parser->RegisterDTD(dtd);
-	    dtd->SetContentSink(sink);
-	    dtd->SetParser(parser);
+	    //dtd->SetContentSink(sink);
+	    //dtd->SetParser(parser);
 	    parser->Parse(buffer, PR_FALSE);           
 	  }
 	  NS_IF_RELEASE(dtd);
@@ -2410,8 +2410,8 @@ nsBrowserWindow::DoDebugSave()
 	  if (NS_OK == rv) 
 	  {
 	    parser->RegisterDTD(dtd);
-	    dtd->SetContentSink(sink);
-	    dtd->SetParser(parser);
+	    //dtd->SetContentSink(sink);
+	    //dtd->SetParser(parser);
 	    parser->Parse(buffer, PR_FALSE);           
 	  }
 	  out.close();
