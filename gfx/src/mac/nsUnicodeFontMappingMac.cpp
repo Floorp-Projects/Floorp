@@ -421,15 +421,10 @@ static nsUnicodeBlock GetBlockU3XXX(PRUnichar aChar)
   else if(aChar < 0x3100)   return kHiraganaKatakana; 
   else if(aChar < 0x3130)   return kBopomofo; 
   else if(aChar < 0x3190)   return kHangul; 
+  else if(aChar >= 0x3400)  return kCJKIdeographs; // Unicode 3.0
   else                      return kCJKMisc;
 }
-//--------------------------------------------------------------------------
 
-static nsUnicodeBlock GetBlockU4XXX(PRUnichar aChar)
-{
-  if(aChar < 0x4E00) return  kOthers;
-  else               return  kCJKIdeographs;
-}
 //--------------------------------------------------------------------------
 
 static nsUnicodeBlock GetBlockCJKIdeographs(PRUnichar aChar)
@@ -494,7 +489,7 @@ static getUnicodeBlock gAllGetBlock[16] =
   &GetBlockU1XXX,          // 1
   &GetBlockU2XXX,          // 2
   &GetBlockU3XXX,          // 3
-  &GetBlockU4XXX,          // 4
+  &GetBlockCJKIdeographs,  // 4
   &GetBlockCJKIdeographs,  // 5
   &GetBlockCJKIdeographs,  // 6
   &GetBlockCJKIdeographs,  // 7
