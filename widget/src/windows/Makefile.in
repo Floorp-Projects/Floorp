@@ -86,11 +86,12 @@ LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 FORCE_STATIC_LIB = 1
 
-GARBAGE		+= L_Ienumfe.cpp
+GARBAGE		+= L_Ienumfe.cpp $(srcdir)/L_Ienumfe.cpp
 
 include $(topsrcdir)/config/rules.mk
 
 # Silly case-insensitive fs
-L_Ienumfe.cpp: IENUMFE.CPP
-	cp $< $@
+export:: IENUMFE.CPP
+	cp $< $(srcdir)/L_Ienumfe.cpp
+
 

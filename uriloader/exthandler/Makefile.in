@@ -35,7 +35,7 @@ OSDIR		= unix
 endif
 endif
 
-VPATH		:= @srcdir@ @srcdir@/$(OSDIR)
+VPATH		:= $(srcdir) $(srcdir)/$(OSDIR)
 
 MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
@@ -77,6 +77,7 @@ CPPSRCS	= \
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= shell32.lib
+GARBAGE		+= nsOSHelperAppService.cpp
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -84,3 +85,7 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),WINNT)
+export:: $(OSDIR)/nsOSHelperAppService.cpp
+	$(INSTALL) $^ $(srcdir)
+endif
