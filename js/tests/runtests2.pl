@@ -61,17 +61,15 @@ local $html = "";
 local @failed_tests;
 local $os_type = &get_os_type;
 local @test_list = &get_test_list;
+local $failures_reported = 0;
+local $tests_completed = 0;
 
 &dd ("output file is '$opt_output_file'");
 
 $SIG{INT} = 'int_handler';
 
 &execute_tests (@test_list);
-
-&dd ("=============================================================");
-&dd ($html);
-&dd ("=============================================================");
-&dd (join ("\n", @failed_tests));
+&write_results;
 
 sub execute_tests {
     local (@test_list) = @_;
@@ -120,8 +118,9 @@ sub execute_tests {
 
         foreach $line (@output) {
 
-            if ($line =~ /expected\s*exit\s*code\s*\:?\s*(\n+)/i) {
+            if ($line =~ /expect(ed)?\s*exit\s*code\s*\:?\s*(\n+)/i) {
                 $expected_exit = $1;
+                &dd ("Test case expects exit code $expect_exit");
             }
 
             if ($line =~ /failed!/i) {
@@ -142,12 +141,62 @@ sub execute_tests {
                              "Complete testcase output was:\n" .
                              join ("\n",reverse(@output)));
         } elsif ($failure_lines) {
-            &report_failure ($test, $failure_lines);
+            &report_failure ($test, "Failure messages were:\n" . $failure_lines);
         }        
         
         &dd ("exit code $got_exit, exit signal $exit_signal.");
-        
+
+        $tests_completed++;
     }
+}
+
+sub write_results {
+    local $list_name = ($opt_test_list_file) ?
+      "List '$opt_test_list_file'" : "All tests";
+    local ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = 
+      &get_padded_localtime;
+
+    &dd ("Writing output to $opt_output_file.");
+
+    open (OUTPUT, "> $opt_output_file") ||
+      die ("Could not create output file $opt_output_file");
+
+    print OUTPUT 
+    ("<html><head>\n" .
+     "<title>Test results, $opt_engine_type, $list_name</title>\n" .
+     "</head>\n" .
+     "<body bgcolor='white'>\n" .
+     "<a name='tippy_top'></a>\n" .
+     "<h2>Test results, $opt_engine_type, $list_name</h2><br>\n" .
+     "<p class='results_summary'>\n" .
+     ($#test_list + 1) . "test(s) selected, $tests_completed test(s) " .
+     "completed, $failures_reported failures reported " .
+     "(" . (($failures_reported / $tests_completed) * 100) . "% failed)<br>\n" .
+     "[ <a href='#fail_detail'>Failure Details</a> | " .
+     "<a href='#retest_list'>Retest List</a> | " .
+     "<a href='menu.html'>Test Selection Page</a> ]<br>\n" .
+     "<hr>\n" .
+     "<a name='fail_detail'></a>\n" .
+     "<h2>Failure Details</h2><br>\n<dl>" .
+     $html .
+     "</dl>\n[ <a href='#tippy_top'>Top of Page</a> | " .
+     "<a href='#fail_detail'>Top of Failures</a> ]<br>\n" .
+     "<hr>\n<pre>\n" .
+     "<a name='retest_list'></a>\n" .
+     "<h2>Retest List</h2><br>\n" .
+     "# Retest List, $opt_engine_type, " .
+     "generated $year $mon $mday $hour:$min.\n" .
+     "# Original test base was: $list_name.\n" .
+     "# $tests_completed of $#test_list test(s) were completed, " .
+     "$failures_reported failures reported.\n" .
+     join ("\n", @failed_tests) .
+     "</pre>\n" .
+     "[ <a href='#tippy_top'>Top of Page</a> | " .
+     "<a href='#retest_list'>Top of Retest List</a> ]<br>\n" .
+     "</body>");
+
+    close (OUTPUT);
+
 }
  
 sub parse_args {
@@ -543,14 +592,35 @@ sub get_js_files {
 
 sub report_failure {
     local ($test, $message) = @_;
-    
-    $test =~ /[^\/]+\/[^\/]+\/[^\/]+$/;
+
+    $failures_reported++;
 
     dd ("<> Testcase $test failed:\n$message");
-    #$message =~ s/\n/<br>\n/g;
-    $html .= "<dd><p class='fail_title'>".
-      "Testcase <h href='$lxrurl$test'>$test</a> failed<br>\n" .
-        "<pre>$message</pre>";
+
+    $message =~ s/\n/<br>\n/g;
+    $html .= "<a name='failure$failures_reported'></a>";
+    if ($opt_lxr_url) {
+        $test =~ /\/?([^\/]+\/[^\/]+\/[^\/]+)$/;
+        $test = $1;
+        $html .= "<dd><b>".
+          "Testcase <a target='other_window' href='$opt_lxr_url$test'>$1</a> " .
+            "failed</b><br>\n";
+    } else {
+        $html .= "<dd><b>".
+          "Testcase $test failed</b><br>\n";
+    }
+    
+    $html .= " [ ";
+    if ($failures_reported > 1) {
+        $html .= "<a href='#failure" . ($failures_reported - 1) . "'>" .
+          "Previous Failure</a> | ";
+    }
+
+    $html .= "<a href='#failure" . ($failures_reported + 1) . "'>" .
+      "Next Failure</a> | " .
+        "<a href='#tippy_top'>Top of Page</a> ]<br>\n" .
+          "<tt>$message</tt><br>\n";
+
     @failed_tests[$#failed_tests + 1] = $test;
 
 }
@@ -567,7 +637,7 @@ sub int_handler {
     local $resp;
 
     do {
-        print ("\n** User Break: [Q]uit Now, Quit and [R]eport, [C]ontinue ?");
+        print ("\n** User Break: Just [Q]uit, Quit and [R]eport, [C]ontinue ?");
         $resp = <STDIN>;
     } until ($resp =~ /[QqRrCc]/);
 
