@@ -127,7 +127,7 @@ pref("mail.use_fcc",                        true);
 pref("mail.cc_self",                        false);
 pref("mail.strictly_mime",                  false);
 pref("mail.strictly_mime_headers",          true);
-pref("mail.file_attach_binary",             true);
+pref("mail.file_attach_binary",             false);
 pref("mail.show_headers",                   1); // some
 pref("mail.pane_config",                    0);
 pref("mail.pane_config.dynamic",            0); // new pref used for dynamic pane configuration
