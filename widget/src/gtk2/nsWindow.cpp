@@ -93,6 +93,8 @@ static gboolean scroll_event_cb           (GtkWidget *widget,
                                            GdkEventScroll *event);
 static gboolean visibility_notify_event_cb(GtkWidget *widget,
                                            GdkEventVisibility *event);
+static gboolean window_state_event_cb     (GtkWidget *widget,
+                                           GdkEventWindowState *event);
 
 static PRBool                 gJustGotActivate = PR_FALSE;
 nsCOMPtr  <nsIRollupListener> gRollupListener;
@@ -118,6 +120,7 @@ nsWindow::nsWindow()
     mRetryKeyboardGrab   = PR_FALSE;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
+    mSizeState           = nsSizeMode_Normal;
 }
 
 nsWindow::~nsWindow()
@@ -298,6 +301,43 @@ nsWindow::PlaceBehind(nsIWidget *aWidget,
                       PRBool     aActivate)
 {
     return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsWindow::SetSizeMode(PRInt32 aMode)
+{
+    nsresult rv;
+
+    LOG(("nsWindow::SetSizeMode [%p] %d\n", (void *)this, aMode));
+
+    // Save the requested state.
+    rv = nsBaseWidget::SetSizeMode(aMode);
+
+    // return if there's no shell or our current state is the same as
+    // the mode we were just set to.
+    if (!mShell || mSizeState == mSizeMode) {
+        return rv;
+    }
+
+    switch (aMode) {
+    case nsSizeMode_Maximized:
+        gtk_window_maximize(GTK_WINDOW(mShell));
+        break;
+    case nsSizeMode_Minimized:
+        gtk_window_iconify(GTK_WINDOW(mShell));
+        break;
+    default:
+        // nsSizeMode_Normal, really.
+        if (mSizeState == nsSizeMode_Minimized)
+            gtk_window_deiconify(GTK_WINDOW(mShell));
+        else if (mSizeState == nsSizeMode_Maximized)
+            gtk_window_unmaximize(GTK_WINDOW(mShell));
+        break;
+    }
+
+    mSizeState = mSizeMode;
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -1160,6 +1200,45 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
     }
 }
 
+void
+nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
+{
+    LOG(("nsWindow::OnWindowStateEvent [%p] changed %d new_window_state %d\n",
+         (void *)this, aEvent->changed_mask, aEvent->new_window_state));
+
+    nsSizeModeEvent event;
+    InitSizeModeEvent(event);
+
+    // did we change to maximized?
+    if (aEvent->changed_mask & GDK_WINDOW_STATE_MAXIMIZED &&
+        aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
+        LOG(("\tMaximized\n"));
+        event.mSizeMode = nsSizeMode_Maximized;
+        mSizeState = nsSizeMode_Maximized;
+    }
+    // did we change to iconified?
+    else if (aEvent->changed_mask & GDK_WINDOW_STATE_ICONIFIED &&
+             aEvent->new_window_state & GDK_WINDOW_STATE_ICONIFIED) {
+        LOG(("\tMinimized\n"));
+        event.mSizeMode = nsSizeMode_Minimized;
+        mSizeState = nsSizeMode_Minimized;
+    }
+    // are we now normal?
+    else if (aEvent->changed_mask == 0 && aEvent->new_window_state == 0) {
+        LOG(("\tNormal\n"));
+        event.mSizeMode = nsSizeMode_Normal;
+        mSizeState = nsSizeMode_Normal;
+    }
+    else {
+          // if we got here it means that it's not an event we want to
+          // dispatch
+          return;
+    }
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+}
+
 nsresult
 nsWindow::NativeCreate(nsIWidget        *aParent,
                        nsNativeWidget    aNativeParent,
@@ -1219,7 +1298,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         if (!user_data)
             return NS_ERROR_FAILURE;
 
-        // XXX support generic containers here for embedding!
+        // Get the parent moz container
         parentMozContainer = MOZ_CONTAINER(user_data);
         NS_ASSERTION(parentMozContainer,
                      "owning widget is not a mozcontainer!\n");
@@ -1329,6 +1408,12 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                          G_CALLBACK(configure_event_cb), NULL);
         g_signal_connect(G_OBJECT(mShell), "delete_event",
                          G_CALLBACK(delete_event_cb), NULL);
+        // we need to add this to the shell since versions of gtk
+        // before 2.0.3 forgot to set property_notify events on the
+        // shell window
+        gtk_widget_add_events(mShell, GDK_PROPERTY_NOTIFY);
+        g_signal_connect(G_OBJECT(mShell), "window_state_event",
+                         G_CALLBACK(window_state_event_cb), NULL);
     }
 
     if (mContainer) {
@@ -2094,6 +2179,19 @@ visibility_notify_event_cb (GtkWidget *widget, GdkEventVisibility *event)
     window->OnVisibilityNotifyEvent(widget, event);
 
     return TRUE;
+}
+
+/* static */
+gboolean
+window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
+{
+    nsWindow *window = get_window_for_gtk_widget(widget);
+    if (!window)
+        return FALSE;
+
+    window->OnWindowStateEvent(widget, event);
+
+    return FALSE;
 }
 
 // nsChildWindow class

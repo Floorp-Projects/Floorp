@@ -76,6 +76,7 @@ public:
                               GdkEventScroll *aGdkEvent, PRUint32 aMsg);
     void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent, PRUint32 aMsg);
     void InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg);
+    void InitSizeModeEvent(nsSizeModeEvent &aEvent);
 
     void DispatchGotFocusEvent(void);
     void DispatchLostFocusEvent(void);

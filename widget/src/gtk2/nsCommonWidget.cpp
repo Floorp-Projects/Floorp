@@ -211,6 +211,15 @@ nsCommonWidget::InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg)
 }
 
 void
+nsCommonWidget::InitSizeModeEvent(nsSizeModeEvent &aEvent)
+{
+    memset(&aEvent, 0, sizeof(nsSizeModeEvent));
+    aEvent.eventStructType = NS_SIZEMODE_EVENT;
+    aEvent.message = NS_SIZEMODE;
+    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+}
+
+void
 nsCommonWidget::DispatchGotFocusEvent(void)
 {
     nsGUIEvent event;
