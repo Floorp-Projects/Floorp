@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..
-MODULE=profileservices
+MODULE=profidl
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=$(MODULE)
