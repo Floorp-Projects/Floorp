@@ -48,10 +48,25 @@ on fileFromPath(filePath)
 	return last text item of filePath
 end fileFromPath
 
+on openProject(aProjectFile)
+	tell application "CodeWarrior IDE 3.3"
+		open aProjectFile
+	end tell
+end openProject
+
+on selectProject(aProjectFile)
+	set projectName to fileFromPath(aProjectFile as text)
+	tell application "CodeWarrior IDE 3.3"
+		if (name of window 1 is not projectName) then
+			select window projectName
+		end if
+	end tell
+end selectProject
+
 on getTargets()
 	set targetList to {}
 	set nameList to {}
-	tell application "CodeWarrior IDE 3.2"
+	tell application "CodeWarrior IDE 3.3"
 		set currentProject to project document 1
 		repeat with targetIndex from 1 to (count of targets of currentProject)
 			set currentTarget to (target targetIndex of currentProject)
@@ -62,37 +77,64 @@ on getTargets()
 	end tell
 end getTargets
 
+(* uses "sort" scripting addition to sort a list of strings. *)
+on sortList(aList)
+	if (aList ­ {}) then
+		return sort aList
+	else
+		return {}
+	end if
+end sortList
+
+(* uses "info for" scripting addition, to return the file type of a path. *)
+on getFileType(aFilePath)
+	return file type of (info for alias aFilePath)
+end getFileType
+
+(* returns all "TEXT" files of the named target. *)
 on getTargetFiles(targetKey)
 	set targetFiles to {}
-	tell application "CodeWarrior IDE 3.2"
+	tell application "CodeWarrior IDE 3.3"
 		set currentProject to project document 1
 		set currentTarget to (target targetKey of currentProject)
-		repeat with fileIndex from 1 to (count of target files of currentTarget)
-			set targetFile to (target file fileIndex of currentTarget)
-			-- only consider text files, since other platforms won't be managing binaries.
-			-- also, only consider if target file is directly linked.
-			if (type of targetFile is text file) and (linked of targetFile) then
-				set targetFiles to targetFiles & {Access Paths of targetFile}
-			end if
-		end repeat
-		return sort targetFiles
+		try
+			-- workaround for CW IDE 3.X bug, loop until error encountered.
+			set fileIndex to 1
+			repeat until false
+				set targetFile to (target file fileIndex of currentTarget)
+				-- only consider text files, since other platforms won't be managing binaries.
+				-- also, only consider if target file is directly linked.
+				if (linked of targetFile) then
+					set targetFilePath to (Access Paths of targetFile)
+					tell me
+						if (getFileType(targetFilePath) = "TEXT") then
+							set targetFiles to targetFiles & {targetFilePath}
+						end if
+					end tell
+				end if
+				set fileIndex to (fileIndex + 1)
+			end repeat
+		on error msg
+			-- display dialog msg & " file count = " & fileIndex
+		end try
 	end tell
+	return sortList(targetFiles)
 end getTargetFiles
 
 on addTargetFile(targetFile, targetName)
-	tell application "CodeWarrior IDE 3.2"
+	tell application "CodeWarrior IDE 3.3"
 		add (project document 1) new target file with data {targetFile} to targets {targetName}
 	end tell
 end addTargetFile
 
 on setCurrentTarget(currentTargetName)
-	tell application "CodeWarrior IDE 3.2"
+	tell application "CodeWarrior IDE 3.3"
 		Set Current Target currentTargetName
 	end tell
 end setCurrentTarget
 
 on removeTargetFile(targetFile)
-	tell application "CodeWarrior IDE 3.2"
+	tell application "CodeWarrior IDE 3.3"
 		Remove Files {targetFile}
 	end tell
 end removeTargetFile
@@ -180,9 +222,9 @@ on run
 		-- give it CodeWarrior look and feel.
 		setFileInfo(theManifestFile, "CWIE", "TEXT")
 		
-		tell application "CodeWarrior IDE 3.2"
-			open theProjectFile
-		end tell
+		openProject(theProjectFile)
+		selectProject(theProjectFile)
+		
 		set targetsList to getTargets()
 		set targetNames to names of targetsList
 		set targetCount to count items of targetNames
@@ -208,7 +250,7 @@ on run
 	end if
 	
 	-- shut the project down, and display the result.
-	tell application "CodeWarrior IDE 3.2"
+	tell application "CodeWarrior IDE 3.3"
 		activate
 		Close Project
 		open theManifestFile
