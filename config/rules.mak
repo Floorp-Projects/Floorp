@@ -894,10 +894,6 @@ install::
         @echo +++ make: packaging jars from $(JAR_MANIFEST)
         $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
-!else
-
-install::
-        @echo +++ make: $(JAR_MANIFEST) doesn't exist
 !endif
 
 ################################################################################
