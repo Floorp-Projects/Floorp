@@ -390,22 +390,45 @@ ConvertAndWrite(nsAReadableString& aString,
   NS_ENSURE_ARG_POINTER(aStream);
   NS_ENSURE_ARG_POINTER(aEncoder);
   nsresult rv;
-  PRInt32 charLength;
+  PRInt32 charLength, startCharLength;
   const PRUnichar* unicodeBuf = (const PRUnichar*)nsPromiseFlatString(aString);
   PRInt32 unicodeLength = aString.Length();
+  PRInt32 startLength = unicodeLength;
 
   rv = aEncoder->GetMaxLength(unicodeBuf, unicodeLength, &charLength);
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString charXferString;
-    charXferString.SetCapacity(charLength);
-    char* charXferBuf = (char*)charXferString.GetBuffer();
+  startCharLength = charLength;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aEncoder->Convert(unicodeBuf, &unicodeLength, charXferBuf, &charLength);
-    if (NS_SUCCEEDED(rv)) {
-      PRUint32 written;
-      rv = aStream->Write(charXferBuf, charLength, &written);
+  nsCAutoString charXferString;
+  charXferString.SetCapacity(charLength);
+  char* charXferBuf = (char*)charXferString.GetBuffer();
+  nsresult convert_rv = NS_OK;
+
+  do {
+    unicodeLength = startLength;
+    charLength = startCharLength;
+
+    convert_rv = aEncoder->Convert(unicodeBuf, &unicodeLength, charXferBuf, &charLength);
+    NS_ENSURE_SUCCESS(convert_rv, convert_rv);
+    
+    PRUint32 written;
+    rv = aStream->Write(charXferBuf, charLength, &written);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If the converter couldn't convert a chraacer we replace the
+    // character with a characre entity.
+    if (convert_rv == NS_ERROR_UENC_NOMAPPING) {
+      nsCAutoString entString("&#");
+      entString.AppendInt(unicodeBuf[unicodeLength - 1]);
+      entString.Append(';');
+
+      rv = aStream->Write(entString.GetBuffer(), entString.Length(), &written);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      unicodeBuf += unicodeLength;
+      startLength -= unicodeLength;
     }
-  }
+  } while (convert_rv == NS_ERROR_UENC_NOMAPPING);
 
   return rv;
 }

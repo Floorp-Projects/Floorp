@@ -89,6 +89,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRBool    mDoHeader;
   PRBool    mBodyOnly;
   PRInt32   mPreLevel;
+  PRBool    mInScriptOrStyle;
   
   PRInt32   mMaxColumn;
   

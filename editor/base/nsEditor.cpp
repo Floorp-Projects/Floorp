@@ -1604,7 +1604,7 @@ nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting,
     return NS_ERROR_NO_INTERFACE;
 
   // Should we prettyprint?
-  PRUint32 flags = 0;
+  PRUint32 flags = nsIDocumentEncoder::OutputEncodeEntities;
   NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && prefService)
   {
