@@ -30,15 +30,18 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIObserverService.h"
 
+#define MSGFEEDBACK_TIMER_INTERVAL 500
 
-nsMsgStatusFeedback::nsMsgStatusFeedback()
+nsMsgStatusFeedback::nsMsgStatusFeedback() :
+  mWebShell(nsnull),
+  mWebShellWindow(nsnull),
+  m_meteorsSpinning(PR_FALSE),
+  m_lastPercent(0),
+  mQueuedMeteorStarts(0),
+  mQueuedMeteorStops(0)
 {
 	NS_INIT_REFCNT();
-	m_meteorsSpinning = PR_FALSE;
-	m_lastPercent = 0;
 	LL_I2L(m_lastProgressTime, 0);
-	mWebShell = nsnull;
-  mWebShellWindow = nsnull;
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
@@ -49,7 +52,10 @@ nsMsgStatusFeedback::~nsMsgStatusFeedback()
 //
 // nsISupports
 //
-NS_IMPL_ISUPPORTS3(nsMsgStatusFeedback, nsIMsgStatusFeedback, nsIDocumentLoaderObserver, nsIObserver)
+NS_IMPL_ISUPPORTS3(nsMsgStatusFeedback,
+                   nsIMsgStatusFeedback,
+                   nsIDocumentLoaderObserver,
+                   nsIObserver)
 
 // nsIDocumentLoaderObserver
 
@@ -83,11 +89,10 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 		{
 		  // Kick start the throbber
 		  if (!m_meteorsSpinning)
-			  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "true" );
+            StartMeteors();
 		  else	// because of a bug, we're not stopping the meteors, so lets just stop them here.
-			  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
+            StopMeteors();
 		  setAttribute( rootWebshell, "Messenger:Status", "value", "Loading Document..." );
-		  m_meteorsSpinning = PR_TRUE;
 
 		  // Enable the Stop buton
 		  setAttribute( rootWebshell, "canStop", "disabled", "" );
@@ -123,9 +128,8 @@ nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* c
 		if (rootWebshell) 
 		{
 		  // stop the throbber
-			setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
+          StopMeteors();
 			setAttribute( rootWebshell, "Messenger:Status", "value", "Document: Done" );
-			m_meteorsSpinning = PR_FALSE;
 		  // Disable the Stop buton
 		  setAttribute( rootWebshell, "canStop", "disabled", "true" );
 		}
@@ -258,26 +262,52 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 NS_IMETHODIMP
 nsMsgStatusFeedback::StartMeteors()
 {
-	if (!m_meteorsSpinning)
-	{
-		// meteors are horribly slow, so turn them off for now
-		setAttribute( mWebShell, "Messenger:Throbber", "busy", "true" );
-		m_meteorsSpinning = PR_TRUE;
-	}
-	return NS_OK;
+  nsresult rv;
+
+  if (!mStartTimer) {
+    rv = NS_NewTimer(getter_AddRefs(mStartTimer));
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  // cancel outstanding starts
+  if (mQueuedMeteorStarts>0) {
+    mQueuedMeteorStarts--;
+    NS_ASSERTION(mQueuedMeteorStarts == 0, "destroying unfired/uncanceled start timer");
+    mStartTimer->Cancel();
+  }
+
+  rv = mStartTimer->Init(notifyStartMeteors, (void *)this,
+                         MSGFEEDBACK_TIMER_INTERVAL);
+  if (NS_FAILED(rv)) return rv;
+
+  mQueuedMeteorStarts++;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsMsgStatusFeedback::StopMeteors()
 {
-	if (m_meteorsSpinning)
-	{
-		// meteors are horribly slow, so turn them off for now
-		setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
-		m_meteorsSpinning = PR_FALSE;
-	}
-	return NS_OK;
+  nsresult rv;
+
+  if (!mStopTimer) {
+    rv = NS_NewTimer(getter_AddRefs(mStopTimer));
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // cancel outstanding stops
+  if (mQueuedMeteorStops>0) {
+    mQueuedMeteorStops--;
+    NS_ASSERTION(mQueuedMeteorStops == 0, "destroying unfired/uncanceled stop");
+    mStopTimer->Cancel();
+  }
+
+  rv = mStopTimer->Init(notifyStopMeteors, (void *)this,
+                        MSGFEEDBACK_TIMER_INTERVAL);
+  if (NS_FAILED(rv)) return rv;
+
+  mQueuedMeteorStops++;
+  return NS_OK;
 }
 
 
@@ -368,4 +398,58 @@ nsresult nsMsgStatusFeedback::setAttribute( nsIWebShell *shell,
     return rv;
 }
 
+
+//
+// timer callbacks that resolve closure
+//
+void
+nsMsgStatusFeedback::notifyStartMeteors(nsITimer *aTimer, void *aClosure)
+{
+  NS_ASSERTION(aClosure, "Start meteors: bad nsIMsgStatusFeedback!\n");
+  if (!aClosure) return;
+  ((nsMsgStatusFeedback*)aClosure)->NotifyStartMeteors(aTimer);
+}
+
+void
+nsMsgStatusFeedback::notifyStopMeteors(nsITimer *aTimer, void *aClosure)
+{
+  NS_ASSERTION(aClosure, "Stop meteors: bad nsMsgStatusFeedback!\n");
+  if (!aClosure) return;
+  ((nsMsgStatusFeedback*)aClosure)->NotifyStopMeteors(aTimer);
+}
+
+//
+// actual timer callbacks
+//
+void
+nsMsgStatusFeedback::NotifyStartMeteors(nsITimer *aTimer)
+{
+  mQueuedMeteorStarts--;
+  
+  // meteors already spinning, so noop
+  if (m_meteorsSpinning) return;
+
+  // we'll be stopping them soon, don't bother starting.
+  if (mQueuedMeteorStops > 0) return;
+  
+  // actually start the meteors
+  setAttribute(mWebShell, "Messenger:Throbber", "busy", "true");
+  m_meteorsSpinning = PR_TRUE;
+}
+
+void
+nsMsgStatusFeedback::NotifyStopMeteors(nsITimer* aTimer)
+{
+  mQueuedMeteorStops--;
+  
+  // meteors not spinning
+  if (!m_meteorsSpinning) return;
+
+  // there is at least one more timer firing soon
+  if (mQueuedMeteorStarts > 0) return;
+
+  // actually stop the meteors
+  setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
+  m_meteorsSpinning = PR_FALSE;
+}
 

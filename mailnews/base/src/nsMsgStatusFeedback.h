@@ -27,11 +27,14 @@
 #include "nsIDOMWindow.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
-#include "nsIObserver.h" 
+#include "nsIObserver.h"
+#include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
 
-class nsMsgStatusFeedback : public nsIMsgStatusFeedback, public nsIObserver, public nsIDocumentLoaderObserver
+class nsMsgStatusFeedback : public nsIMsgStatusFeedback,
+                            public nsIObserver,
+                            public nsIDocumentLoaderObserver
 {
 public:
 	nsMsgStatusFeedback();
@@ -50,7 +53,6 @@ public:
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
 
-
 	nsresult setAttribute( nsIWebShell *shell,
                          const char *id,
                          const char *name,
@@ -63,8 +65,21 @@ protected:
 	PRInt32					m_lastPercent;
 	PRInt64					m_lastProgressTime;
 
+  PRBool mQueuedMeteorStarts;
+  PRBool mQueuedMeteorStops;
+  nsCOMPtr<nsITimer> mStartTimer;
+  nsCOMPtr<nsITimer> mStopTimer;
+  
   void BeginObserving();
   void EndObserving();
+
+  // timer callbacks
+  static void notifyStartMeteors(nsITimer *aTimer, void *aClosure);
+  static void notifyStopMeteors(nsITimer *aTimer, void *aClosure);
+
+  // timer callbacks w/resolved closure
+  void NotifyStartMeteors(nsITimer *aTimer);
+  void NotifyStopMeteors(nsITimer *aTimer);
 };
 
 #endif // _nsMsgStatusFeedback_h
