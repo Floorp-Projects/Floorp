@@ -1205,7 +1205,11 @@ si_GetURLAndUserForChangeForm(nsAutoString password)
           /* passwords match so add entry to list */
           /* consider first data node to be the identifying item */
           data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
-          nsAutoString temp = nsAutoString(url->URLName) + ":" + data->value;
+
+          nsAutoString temp = nsAutoString(url->URLName);
+          temp.Append(":");
+          temp.Append(data->value);
+
           *list2 = temp.ToNewUnicode();
           list2++;
           *(users2++) = user;
@@ -1791,7 +1795,7 @@ SI_LoadSignonData(PRBool fullLoad) {
   if (NS_FAILED(si_ReadLine(strmu, strmp, format, fullLoad, 0, 0, PR_TRUE))) {
     return -1;
   }
-  if (format != HEADER_VERSION_1) {
+  if (!format.Equals(HEADER_VERSION_1)) {
     /* something's wrong */
     return -1;
   }
@@ -2326,7 +2330,8 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
    *   first character position
    */
   if (*name == '\\') {
-    correctedName = nsAutoString('\\') + name;
+    correctedName = nsAutoString('\\');
+    correctedName.Append(name);
   } else {
     correctedName = name;
   }
@@ -2476,9 +2481,9 @@ si_RestoreOldSignonDataFromBrowser
   PRInt32 dataCount = LIST_COUNT(user->signonData_list);
   for (PRInt32 i=0; i<dataCount; i++) {
     data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-    if(data->name == USERNAMEFIELD) {
+    if(data->name.Equals(USERNAMEFIELD)) {
       username = data->value;
-    } else if(data->name == PASSWORDFIELD) {
+    } else if(data->name.Equals(PASSWORDFIELD)) {
       password = data->value;
     }
   }

@@ -370,9 +370,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       PRBool bAbortProcess = PR_FALSE;     
       nsCAutoString contentTypeToUse;
       if (desiredContentType)
-        contentTypeToUse = desiredContentType;
+        contentTypeToUse.Assign(desiredContentType);
       else
-        contentTypeToUse = contentType;
+        contentTypeToUse.Assign(contentType);
 
       // We need to first figure out if we are retargeting the load to a content listener
       // that is different from the one that originated the request....if so, set
