@@ -23,7 +23,6 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
-#include "nsIFontCache.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 #include <windows.h>
@@ -199,12 +198,8 @@ NS_METHOD nsLabel::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   //nsIFontMetrics * fm = GetFont();;
  // mDeviceContext->GetMetricsFor(mFont, &fm);
-  nsIFontCache* fontCache;
-  mContext->GetFontCache(fontCache);
   nsIFontMetrics* metrics;
-  fontCache->GetMetricsFor(*mFont, metrics);
-  NS_RELEASE(fontCache);
-  
+  mContext->GetMetricsFor(*mFont, metrics);
 
   nsString text;
   GetLabel(text);

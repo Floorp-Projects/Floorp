@@ -21,7 +21,6 @@
 #include "nspr.h"
 #include "nsIButton.h"
 #include "nsIFontMetrics.h"
-#include "nsIFontCache.h"
 #include "nsIDeviceContext.h"
 #include "nsWidgetsCID.h"
 
@@ -894,11 +893,8 @@ void nsImageButton::PerformAlignment(const nsRect & aRect,
 
   // set up initial text size
   if (mShowText) { 
-    nsIFontCache* fontCache; 
-    mContext->GetFontCache(fontCache); 
     nsIFontMetrics* metrics; 
-    fontCache->GetMetricsFor(mFont, metrics); 
-    NS_RELEASE(fontCache); 
+    mContext->GetMetricsFor(mFont, metrics); 
 
     metrics->GetHeight(string_height); 
     metrics->GetWidth(aText, string_width); 

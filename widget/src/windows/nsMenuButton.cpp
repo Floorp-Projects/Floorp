@@ -20,7 +20,6 @@
 #include "nsWidgetsCID.h" 
 #include "nspr.h"
 #include "nsIFontMetrics.h"
-#include "nsIFontCache.h"
 #include "nsIDeviceContext.h"
 #include "nsWidgetsCID.h"
 #include "nsRepository.h"
