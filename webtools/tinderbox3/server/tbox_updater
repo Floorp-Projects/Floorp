@@ -1,0 +1,4 @@
+#!/bin/sh
+cd /home/jkeiser/tbox3/scripts
+./tbox_bonsai_update.pl
+./tbox_build_static_pages.pl
