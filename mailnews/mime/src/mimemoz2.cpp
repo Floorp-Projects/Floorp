@@ -1862,8 +1862,12 @@ static int DoLanguageSensitiveFont(MimeObject *obj, const char *prefixName, cons
 
 done:
   // if nothing has been written then write out just "<div>" to match with "</div>"
-  if (status == -1)
-    status = MimeObject_write(obj, "<div>\n", 6, PR_FALSE);
+  if (status == -1) {
+    if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
+      status = MimeObject_write(obj, "<div>", 5, PR_FALSE);
+    else
+      status = MimeObject_write(obj, "<pre>", 5, PR_FALSE);
+  }
 
   return status;
 }
