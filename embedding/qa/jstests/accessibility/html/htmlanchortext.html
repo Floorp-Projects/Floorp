@@ -5,7 +5,7 @@
      for HTML ANCHOR TEXT Node
      Author: dsirnapalli@netscape.com
      Created:01.13.02
-     Last Updated:06.25.02.
+     Last Updated:09.16.02.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -50,15 +50,21 @@ function getDomNodeAnchorText()
 function executeTestCase()
 {
   var domNode = getDomNodeAnchorText();
+  domNode.addEventListener('focus',nodeFocused,true);
+
+  domNode = domNode.firstChild;
   accNode = getAccessibleNode(domNode);
+
+  tempaccNode = accNode;
   try{
     netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+    // Even though you tell it to focus the textnode, the focus doesnot happen to the
+    // text node, the focus happens to the link node. textnodes cannot get focus
+    // by design. Thats the reason i attached focus listener to the anchor node above.
     accNode.accTakeFocus();
-    domNode = domNode.firstChild;
     accNode = getAccessibleNode(domNode);
-
     setTimeout("constructResults();", 2000);
    }
    catch(e){
@@ -77,31 +83,42 @@ function constructResults()
   var state = getState();
   var value = getValue();
   var newvalue = value.toString();
+  var numActions = getNumActions();
+  var actionName = getActionName();
 
-  var expectedName      = "External Link";
-  var expectedRole      = "42";
-  var expectedState     = "15728708";
-  var expectedValue     = "http://home.netscape.com";
+  var expectedName          = "External Link";
+  var expectedRole          = "42";
+  var expectedState         = "15728708";
+  var expectedValue         = "http://home.netscape.com";
+  var expectednodeFocus     = "Focused";
+  var expectednumActions    = "1";
+  var expectedactionName    = "Jump";
 
   var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
   var row1 = new Array("Name->", expectedName, name);
   var row2 = new Array("Role->", expectedRole, role);
   var row3 = new Array("State->", expectedState, state);
   var row4 = new Array("Value->", expectedValue, value);
+  var row5 = new Array("accTakeFocus()->", expectednodeFocus, nodeFocus);
+  var row6 = new Array("accNumActions->", expectednumActions, numActions);
+  var row7 = new Array("getAccActionName()->", expectedactionName, actionName);
 
-  row = new Array(row0, row1, row2, row3, row4);
+  row = new Array(row0, row1, row2, row3, row4, row5, row6, row7);
 
   if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
   if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
   if (state == expectedState)               row3[3] = "PASS"; else row3[3] = "FAIL";
   if (newvalue.match(expectedValue))        row4[3] = "PASS"; else row4[3] = "FAIL";
+  if (nodeFocus == expectednodeFocus)       row5[3] = "PASS"; else row5[3] = "FAIL";
+  if (numActions == expectednumActions)     row6[3] = "PASS"; else row6[3] = "FAIL";
+  if (actionName == expectedactionName)     row7[3] = "PASS"; else row7[3] = "FAIL";
 
   appendTableRes();
   if(!isRunningStandalone())
     WriteResults(res);
   else
     submitToCookie();
-  }
+ }
  catch(e){
   alert("Exception**: " + e);
  }
@@ -112,6 +129,7 @@ function constructResults()
 <body>
 
 <script type="text/javascript">
+nodeFocus = "Not Focused";
 cookieName = "nsIAccessibleTestAnchorTextNode";
 var res = "<b><u> Results for HTML Anchor Text Node:</u></b><br><br>";
 
