@@ -52,7 +52,7 @@ CSRCS		= bullet.c \
 		  laytrav.c \
                   $(NULL)
 
-REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha
+REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha ojiimpl
 
 ifdef DOM
 REQUIRES	+= dom
