@@ -28,6 +28,7 @@
 
 class nsWindowEnumerator;
 struct nsWindowInfo;
+struct PRLock;
 
 class nsWindowMediator : public nsIWindowMediator
 {
@@ -156,15 +157,20 @@ public:
   NS_IMETHOD DoCommand(nsISupportsArray* aSources,
                        nsIRDFResource*   aCommand,
                        nsISupportsArray* aArguments);
+
 private:
-	// Helper functions
-	nsresult AddWindowToRDF( nsWindowInfo* ioWindowInfo );
-	PRInt32 AddEnumerator( nsWindowEnumerator* inEnumerator );
-	PRInt32 RemoveEnumerator( nsWindowEnumerator* inEnumerator);
-	PRInt32		mTimeStamp;
-	nsVoidArray mEnumeratorList;
-	nsVoidArray	mWindowList;
-	
+  // Helper functions
+  nsresult AddWindowToRDF( nsWindowInfo* ioWindowInfo );
+  PRInt32 AddEnumerator( nsWindowEnumerator* inEnumerator );
+  PRInt32 RemoveEnumerator( nsWindowEnumerator* inEnumerator);
+
+  NS_IMETHOD UnregisterWindow( nsWindowInfo *inInfo );
+
+  nsVoidArray   mEnumeratorList;
+  nsWindowInfo *mOldestWindow,
+               *mTopmostWindow;
+  PRInt32       mTimeStamp;
+  PRLock       *mListLock;
 
   // pseudo-constants for RDF
   static nsIRDFResource* kNC_WindowMediatorRoot;
