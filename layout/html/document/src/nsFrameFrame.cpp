@@ -340,12 +340,29 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     firstChild = new (shell.get()) nsHTMLFrameInnerFrame;
-    mFrames.SetFrames(firstChild);
-    // XXX temporary! use style system to get correct style!
-    firstChild->Init(aPresContext, mContent, this, mStyleContext, nsnull);
+    if (firstChild) {
+      mFrames.SetFrames(firstChild);
+      // Resolve the style context for the inner frame
+      nsresult rv = NS_OK;
+      nsIStyleContext *innerStyleContext = nsnull;
+      rv = aPresContext->ResolveStyleContextFor(mContent, mStyleContext,
+                                                PR_FALSE,
+                                                &innerStyleContext);
+      if (NS_SUCCEEDED(rv)) {
+        rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
+      } else {
+        NS_WARNING( "Error resolving style for InnerFrame in nsHTMLFrameOuterFrame");
+      }
+      if (NS_FAILED(rv)){
+        NS_WARNING( "Error initializing InnerFrame in nsHTMLFrameOuterFrame");
+        return rv;
+      }
+    } else {
+      NS_WARNING("no memory allocating inner frame in nsHTMLFrameOuterFrame");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
  
-
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
   nsPoint offset(0,0);
   nsMargin border = aReflowState.mComputedBorderPadding;
