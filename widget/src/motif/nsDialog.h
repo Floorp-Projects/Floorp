@@ -58,7 +58,7 @@ public:
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
-  virtual void PreCreateWidget(nsWidgetInitData *aInitData);
+  //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 
 private:
 

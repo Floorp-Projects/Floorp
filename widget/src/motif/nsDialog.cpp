@@ -62,7 +62,6 @@ void nsDialog::Create(nsIWidget *aParent,
 
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
-  unsigned char alignment = GetNativeAlignment();
 
   mWidget = ::XtVaCreateManagedWidget("Dialog",
                                     xmDialogShellWidgetClass, 
@@ -73,7 +72,6 @@ void nsDialog::Create(nsIWidget *aParent,
                                     XmNhighlightOnEnter, False,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
-                                    XmNalignment, alignment,
                                     nsnull);
 
   if (DBG) fprintf(stderr, "Dialog 0x%x  this 0x%x\n", mWidget, this);
