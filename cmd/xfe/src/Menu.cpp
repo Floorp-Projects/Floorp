@@ -176,7 +176,7 @@ XFE_Menu::updateMenuItem(Widget menuItem)
   MenuSpec* spec = (MenuSpec*)userData;
   char**    params = (spec != NULL)? spec->cmd_args: (char**)NULL;
   XFE_CommandInfo info(XFE_COMMAND_BUTTON_ACTIVATE,
-					   menuItem, NULL, params);
+					   menuItem, (XEvent*)NULL, params);
 
 
   if (spec)
@@ -361,7 +361,7 @@ D(	printf ("in XFE_Menu::updateCommandInMenuItem()\n");)
   CommandType cmd;
 
   XFE_CommandInfo info(XFE_COMMAND_BUTTON_ACTIVATE,
-					   menuItem, NULL);
+					   menuItem, (XEvent*) NULL);
 
 
   if (spec)
