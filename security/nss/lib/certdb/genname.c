@@ -241,7 +241,7 @@ cert_get_prev_name_constraint(CERTNameConstraint *current)
 }
 
 SECItem *
-cert_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest, PRArenaPool *arena)
+CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest, PRArenaPool *arena)
 {
 
 
@@ -337,7 +337,7 @@ cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names)
 	goto loser;
     }
     for (i = 0; i < count; i++) {
-	items[i] = cert_EncodeGeneralName(current_name, (SECItem *) NULL, arena);
+	items[i] = CERT_EncodeGeneralName(current_name, (SECItem *) NULL, arena);
 	if (items[i] == NULL) {
 	    goto loser;
 	}
@@ -477,7 +477,7 @@ cert_EncodeNameConstraint(CERTNameConstraint  *constraint,
 	    return NULL;
 	}
     }
-    cert_EncodeGeneralName(&(constraint->name), &(constraint->DERName), 
+    CERT_EncodeGeneralName(&(constraint->name), &(constraint->DERName), 
 			   arena);
     
     dest = SEC_ASN1EncodeItem (arena, dest, constraint,

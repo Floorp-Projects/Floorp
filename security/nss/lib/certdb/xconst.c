@@ -239,7 +239,7 @@ cert_EncodeAuthInfoAccessExtension(PRArenaPool *arena,
     }
 
     for (i = 0; info[i] != NULL; i++) {
-	if (cert_EncodeGeneralName(info[i]->location, &(info[i]->derLocation),
+	if (CERT_EncodeGeneralName(info[i]->location, &(info[i]->derLocation),
 				   arena) == NULL)
 	    /* Note that this may leave some of the locations filled in. */
 	    return SECFailure;
