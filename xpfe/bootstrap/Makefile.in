@@ -84,7 +84,6 @@ LIBS += \
 CPPSRCS = \
 	nsAppRunner.cpp 	\
 	nsSetupRegistry.cpp	\
-	nsUnixStubs.cpp		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
