@@ -173,11 +173,17 @@ PlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the children
   if (nsnull != mAnchoredItem) {
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
     fputs("<\n", out);
     mAnchoredItem->List(out, aIndent + 1);
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
     fputs(">\n", out);
   } else {
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
     fputs("<>\n", out);
   }
 

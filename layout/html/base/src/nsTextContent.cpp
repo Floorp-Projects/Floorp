@@ -1536,6 +1536,10 @@ NS_METHOD TextFrame::List(FILE* out, PRInt32 aIndent) const
           contentIndex, this,
           mContentOffset, mContentOffset+mContentLength-1);
   out << mRect;
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fputs("<\n", out);
   aIndent++;
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);

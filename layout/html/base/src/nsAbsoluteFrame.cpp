@@ -388,6 +388,9 @@ NS_METHOD AbsoluteFrame::List(FILE* out, PRInt32 aIndent) const
   out << mRect;
 
   // List the absolutely positioned frame
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
   fputs("<\n", out);
   mFrame->List(out, aIndent + 1);
   fputs(">\n", out);
