@@ -324,7 +324,7 @@ nsresult
 nsStdURLParser::ParseAtPath(const char* i_Spec, char* *o_Path)
 {
     // Just write the path and check for a starting /
-    nsAutoString dir;
+    nsCAutoString dir;
     if ('/' != *i_Spec)
         dir += "/";
     
