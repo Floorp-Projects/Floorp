@@ -541,6 +541,11 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
             return (void*)XtWindow(mWidget);
 	  }
 	break;
+        case NS_NATIVE_DISPLAY:
+	  {
+            return (void*)XtDisplay(mWidget);
+	  }
+	break;
         case NS_NATIVE_WIDGET:
 	  {
             return (void*)(mWidget);
