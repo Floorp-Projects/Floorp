@@ -45,6 +45,8 @@ typedef enum _FTP_STATE {
 //// Internal states
 ///////////////////////
     FTP_READ_BUF,
+    FTP_ERROR,
+    FTP_COMPLETE,
 
 ///////////////////////
 //// Command channel connection setup states
@@ -61,6 +63,12 @@ typedef enum _FTP_STATE {
 	FTP_R_MACB,
 	FTP_S_PWD ,		// send parent working directory (pwd)
 	FTP_R_PWD ,
+    FTP_S_DEL_FILE, // send delete file
+    FTP_R_DEL_FILE,
+    FTP_S_DEL_DIR , // send delete directory
+    FTP_R_DEL_DIR ,
+    FTP_S_MKDIR,    // send mkdir
+    FTP_R_MKDIR,
 
 ///////////////////////
 //// Data channel connection setup states
@@ -99,6 +107,7 @@ public:
 private:
     nsresult Read(void);
     void SetSystInternals(void);
+    FTP_STATE FindActionState(void);
 
 	PLEventQueue*		mEventQueue;        // used to communicate outside this thread
 
