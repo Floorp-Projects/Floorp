@@ -125,6 +125,10 @@ public:
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue);
 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                                     nsIContent*     aChild,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aHint);
 protected:
   PRUint32 mNumRows;
 
@@ -1015,10 +1019,15 @@ nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
 
         PRBool wasSelected = PR_FALSE;
         GetOptionSelected(viewIndex, &wasSelected);
-        
+
         if (wasSelected == PR_FALSE) {
           changed = PR_TRUE;
         }
+        // Update the locally cached array
+        for (PRUint32 i=0; i < mNumOptions; i++)
+          SetOptionSelected(i, PR_FALSE);
+        SetOptionSelected(viewIndex, PR_TRUE);
+        
       }
     } else {
       // Get the selected option from the widget
@@ -1049,7 +1058,7 @@ nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
         PRBool selectedInView = (i == nextSel);
         GetOptionSelected(i, &selectedInLocalCache);
         if (selectedInView != selectedInLocalCache) {
-          changed = 1;
+          changed = PR_TRUE;
           SetOptionSelected(i, selectedInView);
 
           if (selectedInView) {
@@ -1124,6 +1133,21 @@ void nsSelectControlFrame::SetOptionSelected(PRUint32 index, PRBool aValue)
     }
   }
 }         
+
+NS_IMETHODIMP
+nsSelectControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                     nsIContent*     aChild,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aHint)
+{
+  if (nsnull != mWidget) {
+    if (nsHTMLAtoms::disabled == aAttribute) {
+      mWidget->Enable(!nsFormFrame::GetDisabled(this));
+    }
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
