@@ -1,24 +1,3 @@
-
-/* ::::::::::
-   :: Rules for 'hiding' portions of the chrome for special
-   :: kinds of browser-specific window toolbars. Other global
-   :: window rules are in xul.css
-   ::::: */
- 
-window[chromehidden~="toolbar"] #nav-bar-buttons,
-window[chromehidden~="toolbar"] #print-button {
-  display: none;
-}
-
-window[chromehidden~="toolbar"] #navigator-throbber {
-  margin: 0 5px 0 0 !important;
-  list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif") !important;
-}
-  
-window[chromehidden~="toolbar"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif") !important;
-}
-
 #search-bar {
   -moz-binding: url("chrome://browser/content/search.xml#searchbar");
 }
