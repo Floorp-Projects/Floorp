@@ -254,6 +254,7 @@ install::
 	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm $(PLATFORM)/doc
 	$(NSINSTALL) -m 644 $(XPCOM_LIBS) $(PLATFORM)
 	$(NSINSTALL) -m 644 $(I18N_COMPONENTS) $(PLATFORM)/components
+	$(NSINSTALL) -m 644 $(NSPR_LIBS) $(PLATFORM)
 ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm $(PLATFORM)
 endif
