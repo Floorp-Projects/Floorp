@@ -26,7 +26,7 @@ Requirements:
 
 * JDK1.3 
 
-* Perl 5 perl.exe must be in your path
+* Perl 5 must be in your path
 
 How To Build:
 
@@ -39,17 +39,38 @@ How To Build:
 $MOZILLA_FIVE_HOME:$JDKHOME/jre/lib/$HOSTTYPE/native_threads:$JDKHOME/jre/lib/$HOSTTYPE/classic:
 $JDKHOME/jre/lib/$HOSTTYPE/:
 
-* Set CONNECT_SRC environment variable to connect directoty, 
-  ie  /ws/mozilla/mozilla/java/xpcom/connect 
+* type "gmake"
+
+
+==============================================
+Linux directions  
+===============================================
+
+Requirements:
+
+* mozilla m16 build tree
+
+* JDK1.3 from IBM 
+
+* Perl 5 must be in your path
+
+How To Build:
+
+*  make sure the environment var JDKHOME is set to your jdk installation
+   directory, ie export  JDKHOME=/usr/local/jdk1.3
+   
+* Add following directories to to your LD_LIBRARY_PATH:
+   
+$MOZILLA_FIVE_HOME:$JDKHOME/jre/bin:$JDKHOME/jre/bin/classic:
 
 * type "gmake"
 
-===============================================
+==============================================
 How to run test java component
 ===============================================
 * cd java/test
 * gmake
-
+* add $MOZILLA_FIVE_HOME/dist/classes to your CLASSPATH
 Test component would be placed in dist/bin/componets and loaded on mozilla
-sturtup
+sturtup (or you can use regxpcom for testing)
 
