@@ -172,6 +172,9 @@ EmbedWindow::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP
 EmbedWindow::DestroyBrowserWindow(void)
 {
+  // mark the owner as destroyed so it won't emit events anymore.
+  mOwner->mIsDestroyed = PR_TRUE;
+
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DESTROY_BROWSER]);
   return NS_OK;

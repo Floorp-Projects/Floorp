@@ -146,6 +146,8 @@ class EmbedPrivate {
   PRBool                         mChromeLoaded;
   // saved window ID for reparenting later
   GtkWidget                     *mMozWindowWidget;
+  // has someone called Destroy() on us?
+  PRBool                         mIsDestroyed;
 
  private:
 
