@@ -102,3 +102,4 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   }
 }
+

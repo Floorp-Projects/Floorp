@@ -789,3 +789,4 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
   // not found
   return NS_ERROR_FAILURE;
 }
+
