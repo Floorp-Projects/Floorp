@@ -28,10 +28,12 @@ CSRCS		=  \
 		  $(NULL)
 
 CPPSRCS		= \
-                  ns1ByteToUnicodeBase.cpp \
-                  nsCP1253ToUnicode.cpp \
-                  nsISO88597ToUnicode.cpp \
                   nsLatin1ToUnicode.cpp \
+                  nsISO88597ToUnicode.cpp \
+                  nsCP1253ToUnicode.cpp \
+                  nsUnicodeToLatin1.cpp \
+                  ns1ByteToUnicodeBase.cpp \
+		  nsUCvLatinSupport.cpp \
                   nsUCvLatinDll.cpp \
 		  $(NULL)
 
