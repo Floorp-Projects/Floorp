@@ -42,6 +42,7 @@ import org.mozilla.javascript.*;
 import org.mozilla.classfile.*;
 import java.util.*;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 
 /**
  * This class generates code for a given IR tree.
@@ -161,29 +162,33 @@ public class Codegen extends Interpreter {
                 throw new Error(exn.toString());
             }
         }
+        if (result == null)
+            return null;
         if (tree instanceof OptFunctionNode) {
-            if (result == null)
-                return null;
-            NativeFunction f = OptRuntime.newOptFunction(result, scope, cx);
+            NativeFunction f;
+            try {
+                Constructor ctor = result.getConstructors()[0];
+                Object[] initArgs = { scope, cx };
+                f = (NativeFunction)ctor.newInstance(initArgs);
+            } catch (Exception ex) {
+                throw new RuntimeException
+                    ("Unable to instantiate compiled class:"+ex.toString());
+            }
             OptRuntime.setupFunction(f, scope, true);
             return f;
         } else {
+            NativeScript script;
             try {
-                if (result == null)
-                    return null;
-                NativeScript script = (NativeScript) result.newInstance();
-                if (scope != null) {
-                    script.setPrototype(script.getClassPrototype(scope,
-                                                                 "Script"));
-                    script.setParentScope(scope);
-                }
-                return script;
+                script = (NativeScript) result.newInstance();
+            } catch (Exception ex) {
+                throw new RuntimeException
+                    ("Unable to instantiate compiled class:"+ex.toString());
             }
-            catch (InstantiationException x) {
+            if (scope != null) {
+                script.setPrototype(script.getClassPrototype(scope, "Script"));
+                script.setParentScope(scope);
             }
-            catch (IllegalAccessException x) {
-            }
-            throw new RuntimeException("Unable to instantiate compiled class");
+            return script;
         }
     }
 

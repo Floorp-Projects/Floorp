@@ -37,9 +37,6 @@
 
 package org.mozilla.javascript.optimizer;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
 import org.mozilla.javascript.*;
 
 public final class OptRuntime extends ScriptRuntime {
@@ -330,25 +327,4 @@ public final class OptRuntime extends ScriptRuntime {
             ScriptableObject.putProperty(scope, fnName, fn);
         }
     }
-
-    static NativeFunction newOptFunction(Class functionClass,
-                                         Scriptable scope,
-                                         Context cx)
-    {
-        Constructor[] ctors = functionClass.getConstructors();
-
-        Object[] initArgs = { scope, cx };
-        try {
-            return (NativeFunction) ctors[0].newInstance(initArgs);
-        } catch (InstantiationException e) {
-            throw WrappedException.wrapException(e);
-        } catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        } catch (IllegalArgumentException e) {
-            throw WrappedException.wrapException(e);
-        } catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        }
-    }
-
 }
