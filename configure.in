@@ -619,7 +619,8 @@ fi
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
-AC_HEADER_STDC
+dnl Already done above by AC_TYPE_MODE_T.
+dnl AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 AC_CHECK_HEADERS(fcntl.h limits.h malloc.h paths.h strings.h unistd.h)
