@@ -43,9 +43,6 @@
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
-// Defined and used in wallet.cpp
-extern nsIKeyedStreamGenerator *gKeyedStreamGenerator;
-
 nsWalletlibService::nsWalletlibService()
 {
   NS_INIT_REFCNT();
@@ -59,16 +56,13 @@ nsWalletlibService::~nsWalletlibService()
 #ifdef DEBUG_dp
   printf("Wallet Service destroyed successfully.\n");
 #endif /* DEBUG_dp */
-  // Release the keyed stream generator that we might have acquired
-  NS_IF_RELEASE(gKeyedStreamGenerator);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsWalletlibService,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsWalletlibService,
                               nsIWalletService,
                               nsIObserver,
                               nsIFormSubmitObserver,
                               nsIDocumentLoaderObserver,
-                              nsIPasswordSink,
                               nsISupportsWeakReference)
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsAutoString& walletList) {
@@ -391,11 +385,29 @@ nsWalletlibService::OnEndURLLoad
 NS_IMETHODIMP
 nsWalletlibService::GetPassword(PRUnichar **password)
 {
-  return Wallet_GetMasterPassword(password);
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsWalletlibService::HaveData(const char *url, const PRUnichar *userName, PRBool stripUrl, PRBool *_retval)
 {
   return ::SINGSIGN_HaveData(url, userName, stripUrl, _retval);
+}
+
+NS_IMETHODIMP
+nsWalletlibService::WALLET_Encrypt (const PRUnichar *text, char **crypt) {
+  nsAutoString textAutoString = text;
+  nsAutoString cryptAutoString;
+  PRBool rv = ::Wallet_Encrypt(textAutoString, cryptAutoString);
+  *crypt = cryptAutoString.ToNewCString();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWalletlibService::WALLET_Decrypt (const char *crypt, PRUnichar **text) {
+  nsAutoString cryptAutoString = crypt;
+  nsAutoString textAutoString;
+  PRBool rv = ::Wallet_Decrypt(cryptAutoString, textAutoString);
+  *text = textAutoString.ToNewUnicode();
+  return rv;
 }

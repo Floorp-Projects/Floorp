@@ -25,19 +25,15 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsWalletService.h"
-#include "nsBasicStreamGenerator.h"
 
 // Define the constructor function for the nsWalletlibService
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWalletlibService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicStreamGenerator)
 
 
 // The list of components we register
 static nsModuleComponentInfo components[] = {
     { NS_WALLETSERVICE_CLASSNAME, NS_WALLETSERVICE_CID,
       NS_WALLETSERVICE_PROGID, nsWalletlibServiceConstructor },
-    { NS_BASIC_STREAM_GENERATOR_CLASSNAME, NS_BASIC_STREAM_GENERATOR_CID,
-      NS_BASIC_STREAM_GENERATOR_PROGID, nsBasicStreamGeneratorConstructor },
 };
 
 NS_IMPL_NSGETMODULE("nsWalletModule", components)

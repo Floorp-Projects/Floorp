@@ -73,8 +73,11 @@ WLLT_FetchFromNetCenter();
 extern void
 WLLT_ExpirePassword();
 
-extern NS_METHOD
-Wallet_GetMasterPassword(PRUnichar **password);
+extern nsresult
+Wallet_Encrypt (nsAutoString text, nsAutoString& crypt);
+
+extern nsresult
+Wallet_Decrypt (nsAutoString crypt, nsAutoString& text);
 
 XP_END_PROTOS
 
