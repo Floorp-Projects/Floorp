@@ -13,7 +13,7 @@
 
     <broadcaster id="broadcaster_attachSignature"/>
 
-    <dialogheader title="&accountTitle.label;"/>
+    <dialogheader id="am-main-title" defaultTitle="&accountTitle.label;"/>
     
     <description>&accountSettingsDesc.label;</description>
     <hbox align="center">

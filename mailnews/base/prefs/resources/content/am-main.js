@@ -40,6 +40,18 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function onInit() 
 {
+  var accountName = document.getElementById("server.prettyName");
+  var title = document.getElementById("am-main-title");
+  var defaultTitle = title.getAttribute("defaultTitle");
+  var titleValue;
+
+  if(accountName.value)
+    titleValue = defaultTitle+" - <"+accountName.value+">";
+  else
+    titleValue = defaultTitle;
+
+  title.setAttribute("title",titleValue);
+    
   setupSignatureItems();
 }
 
