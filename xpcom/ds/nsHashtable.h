@@ -83,7 +83,15 @@ class NS_COM nsHashKey {
 
 // Enumerator and Read/Write callback functions.
 
-typedef PRBool
+// Return values for nsHashtableEnumFunc
+enum {
+    kHashEnumerateStop      = PR_FALSE,
+    kHashEnumerateNext      = PR_TRUE,
+    kHashEnumerateRemove    = 2,
+    kHashEnumerateUnhash    = 3
+};
+
+typedef PRIntn
 (*PR_CALLBACK nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* aClosure);
 
 typedef nsresult
