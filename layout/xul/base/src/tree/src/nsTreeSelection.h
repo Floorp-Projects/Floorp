@@ -26,6 +26,7 @@
 #include "nsIOutlinerSelection.h"
 
 class nsIOutlinerBoxObject;
+struct nsOutlinerRange;
 
 class nsOutlinerSelection : public nsIOutlinerSelection
 {
@@ -42,6 +43,8 @@ protected:
 
   PRBool mSuppressed; // Whether or not we should be firing onselect events.
   PRInt32 mCurrentIndex; // The item to draw the rect around. The last one clicked, etc.
+
+  nsOutlinerRange* mFirstRange; // Our list of ranges.
 };
 
 extern nsresult
