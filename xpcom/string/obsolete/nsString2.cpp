@@ -211,7 +211,7 @@ nsString2::nsString2(const nsStr &aString,eCharSize aCharSize,nsIMemoryAgent* an
  * @param   reference to another nsString2
  */
 nsString2::nsString2(const nsString2& aString) :mAgent(aString.mAgent) {
-  nsStr::Initialize(*this,aString.mMultibyte);
+  nsStr::Initialize(*this,(eCharSize)aString.mMultibyte);
   nsStr::Assign(*this,aString,0,aString.mLength,mAgent);
 }
 
