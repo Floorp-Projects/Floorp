@@ -45,7 +45,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMDocument.h"
 #include "nsPluginViewer.h"
-
+#include "nsIPluginViewer.h"
 
 
 #include "nsITimer.h"
@@ -150,7 +150,8 @@ private:
                                 nsRect& aClipRect);
 
 
-class PluginViewerImpl : public nsIContentViewer,
+class PluginViewerImpl : public nsIPluginViewer,
+                         public nsIContentViewer,
                          public nsIContentViewerEdit,
                          public nsIContentViewerFile
 {
@@ -162,6 +163,9 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+
+  // nsIPluginViewer
+  NS_IMETHOD StartLoad(nsIRequest* request, nsIStreamListener*& aResult);
 
   // nsIContentViewer
   NS_IMETHOD Init(nsIWidget* aParentWidget,
@@ -200,8 +204,6 @@ public:
   nsresult MakeWindow(nsNativeWidget aParent,
                       nsIDeviceContext* aDeviceContext,
                       const nsRect& aBounds);
-
-  nsresult StartLoad(nsIRequest* request, nsIStreamListener*& aResult);
 
   void ForceRefresh(void);
 
@@ -258,29 +260,12 @@ PluginViewerImpl::Init(nsIStreamListener** aDocListener)
 // ISupports implementation...
 NS_IMPL_ADDREF(PluginViewerImpl)
 NS_IMPL_RELEASE(PluginViewerImpl)
+NS_IMPL_QUERY_INTERFACE4(PluginViewerImpl,
+                         nsIPluginViewer,
+                         nsIContentViewer,
+                         nsIContentViewerEdit,
+                         nsIContentViewerFile)
 
-nsresult
-PluginViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(kIContentViewerIID)) {
-    nsIContentViewer* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIContentViewer* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 PluginViewerImpl::~PluginViewerImpl()
 {
@@ -333,7 +318,7 @@ PluginViewerImpl::Init(nsIWidget* aParentWidget,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
 {
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);

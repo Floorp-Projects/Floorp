@@ -58,6 +58,7 @@ XPIDLSRCS = 				      \
 	.\nsIScriptablePlugin.idl             \
 	.\nsIHTTPHeaderListener.idl           \
 	.\nsIPluginManager.idl                \
+	.\nsIPluginViewer.idl                 \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

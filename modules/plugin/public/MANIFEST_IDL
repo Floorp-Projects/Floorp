@@ -20,3 +20,5 @@
 # This is a list of local files which get copied to the mozilla:dist:??? directory
 #
 nsIPluginManager.idl
+nsIPluginViewer.idl
+
