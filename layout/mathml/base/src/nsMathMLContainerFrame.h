@@ -154,6 +154,12 @@ public:
     return nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
   }
 
+  NS_IMETHOD 
+  Paint(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        const nsRect&        aDirtyRect,
+        nsFramePaintLayer    aWhichLayer);
+
   // helper function to reflow token elements
   static nsresult
   ReflowTokenFor(nsIFrame*                aFrame,
@@ -223,6 +229,12 @@ public:
   NS_IMETHOD
   InsertScriptLevelStyleContext(nsIPresContext* aPresContext);
 
+  // helper to find the smallest font-size on a tree so that we don't insert
+  // scriptlevel fonts that lead to unreadable results on deeper nodes below us.
+  // XXX expensive recursive function, need something better, with cache
+  static PRInt32
+  FindSmallestFontSizeFor(nsIFrame* aFrame);
+
   // helper to check if a frame is an embellished container
   static PRBool
   IsEmbellishOperator(nsIFrame* aFrame);
@@ -230,19 +242,19 @@ public:
   // helper methods for processing empty MathML frames (with whitespace only)
   static PRBool
   IsOnlyWhitespace(nsIFrame* aFrame);
-  
+
   static void
   ReflowEmptyChild(nsIPresContext* aPresContext,
                    nsIFrame*       aFrame);
 
-  // helper methods to facilitate getting/setting the bounding metrics
-  static nsresult
-  GetBoundingMetricsFor(nsIFrame*          aFrame, 
-                        nsBoundingMetrics& aBoundingMetrics);
-
-  static nsresult
-  SetBoundingMetricsFor(nsIFrame*          aFrame, 
-                        nsBoundingMetrics& aBoundingMetrics);
+  // helper method to facilitate getting the reflow and bounding metrics
+  // IMPORTANT: This function is only meant to be called in Place() methods 
+  // where it is assumed that the frame's rect is still acting as place holder
+  // for the frame's ascent and descent information
+  static void
+  GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
+                                 nsHTMLReflowMetrics& aReflowMetrics,
+                                 nsBoundingMetrics&   aBoundingMetrics);
 
   // helper methods for getting sup/subdrop's from a child
   static void 
@@ -297,6 +309,7 @@ public:
     }
 
   // these are TeX specific params not found in ordinary fonts
+#if 0
   static void
     GetSubDrop (nsIFontMetrics *fm, nscoord& aSubDrop)
     {
@@ -311,6 +324,124 @@ public:
       nscoord xHeight;
       fm->GetXHeight (xHeight);
       aSupDrop = NSToCoordRound(0.3f * xHeight);
+    }
+#endif
+
+  static void
+  GetSubDrop (nsIFontMetrics *fm, nscoord& aSubDrop)
+    {
+      nscoord xHeight;
+      fm->GetXHeight (xHeight);
+      aSubDrop = NSToCoordRound(50.000f/430.556f * xHeight);
+    }
+
+  static void
+  GetSupDrop (nsIFontMetrics *fm, nscoord& aSupDrop)
+    {
+      nscoord xHeight;
+      fm->GetXHeight (xHeight);
+      aSupDrop = NSToCoordRound(386.108f/430.556f * xHeight);
+    }
+
+  static void
+  GetSubShifts (nsIFontMetrics *fm, 
+		      nscoord& aSubShift1, 
+		      nscoord& aSubShift2)
+    {
+      nscoord xHeight = 0;
+      fm->GetXHeight (xHeight);
+      aSubShift1 = NSToCoordRound (150.000f/430.556f * xHeight);
+      aSubShift2 = NSToCoordRound (247.217f/430.556f * xHeight);
+    }
+
+  static void
+  GetSupShifts (nsIFontMetrics *fm, 
+		      nscoord& aSupShift1, 
+		      nscoord& aSupShift2, 
+		      nscoord& aSupShift3)
+    {
+      nscoord xHeight = 0;
+      fm->GetXHeight (xHeight);
+      aSupShift1 = NSToCoordRound (412.892f/430.556f * xHeight);
+      aSupShift2 = NSToCoordRound (362.892f/430.556f * xHeight);
+      aSupShift3 = NSToCoordRound (288.889f/430.556f * xHeight);
+    }
+
+  static void
+  GetNumShifts (nsIFontMetrics *fm, 
+		nscoord& numShift1, 
+		nscoord& numShift2, 
+		nscoord& numShift3)
+    {
+      nscoord xHeight = 0;
+      fm->GetXHeight (xHeight);
+      numShift1 = NSToCoordRound (676.508f/430.556f * xHeight);
+      numShift2 = NSToCoordRound (393.732f/430.556f * xHeight);
+      numShift3 = NSToCoordRound (443.731f/430.556f * xHeight);
+    }
+
+  static void
+  GetDenShifts (nsIFontMetrics *fm, 
+		nscoord& denShift1, 
+		nscoord& denShift2)
+    {
+      nscoord xHeight = 0;
+      fm->GetXHeight (xHeight);
+      denShift1 = NSToCoordRound (685.951f/430.556f * xHeight);
+      denShift2 = NSToCoordRound (344.841f/430.556f * xHeight);
+    }
+
+  static void
+  GetAxisHeight (nsIFontMetrics *fm,
+		 nscoord& axisHeight)
+    {
+      fm->GetXHeight (axisHeight);
+      axisHeight = NSToCoordRound (250.000f/430.556f * axisHeight);
+    }
+
+  static void
+  GetBigOpSpacings (nsIFontMetrics *fm, 
+		    nscoord& bigOpSpacing1,
+		    nscoord& bigOpSpacing2,
+		    nscoord& bigOpSpacing3,
+		    nscoord& bigOpSpacing4,
+		    nscoord& bigOpSpacing5)
+    {
+      nscoord xHeight = 0;
+      fm->GetXHeight (xHeight);
+      bigOpSpacing1 = NSToCoordRound (111.111f/430.556f * xHeight);
+      bigOpSpacing2 = NSToCoordRound (166.667f/430.556f * xHeight);
+      bigOpSpacing3 = NSToCoordRound (200.000f/430.556f * xHeight);
+      bigOpSpacing4 = NSToCoordRound (600.000f/430.556f * xHeight);
+      bigOpSpacing5 = NSToCoordRound (100.000f/430.556f * xHeight);
+    }
+
+#if 0
+  NS_IMETHOD
+  GetItalicCorrection (nscoord& italicCorrection)
+    {
+      italicCorrection = mItalicCorrection;
+      
+      return NS_OK;
+    }
+  
+  NS_IMETHOD
+  SetItalicCorrection (nscoord italicCorrection)
+    {
+      mItalicCorrection = italicCorrection;
+      
+      return NS_OK;
+    }
+#endif
+
+  NS_IMETHOD
+  GetRuleThickness (nsIFontMetrics *fm, nscoord& ruleThickness)
+    {
+      nscoord xHeight;
+      fm->GetXHeight (xHeight);
+      ruleThickness = NSToCoordRound (40.000f/430.556f * xHeight);
+      
+      return NS_OK;
     }
 
 protected:

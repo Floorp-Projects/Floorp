@@ -104,6 +104,7 @@ nsMathMLmmultiscriptsFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
   return rv;
 }
 
@@ -118,7 +119,6 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   ////////////////////////////////////
   // Get the children's desired sizes
 
-  nscoord italicCorrection = 0;
   nscoord minShiftFromXHeight, aSubDrop, aSupDrop;
 
   ////////////////////////////////////////
@@ -134,9 +134,9 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
 
-  nscoord aRuleSize, dummy;
+  nscoord aRuleSize = 0;
   // XXX need to do update this ...
-  fm->GetStrikeout (dummy, aRuleSize);
+  GetRuleThickness (fm, aRuleSize);
 
   /////////////////////////////////////
   // first the shift for the subscript
@@ -201,7 +201,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   // Get the children's sizes
   ////////////////////////////////////
   
-  nscoord width = 0;
+  nscoord width = 0, prescriptsWidth = 0, rightBearing = 0;
   nsIFrame* mprescriptsFrame = nsnull; // frame of <mprescripts/>, if there.  
   PRBool isSubScript = PR_FALSE;
   PRBool isSubScriptPresent = PR_TRUE;
@@ -212,7 +212,6 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   nscoord maxSubScriptShift = aSubScriptShift;
   nscoord maxSupScriptShift = aSupScriptShift; 
   PRInt32 count = 0;
-  nsRect aRect;
   nsHTMLReflowMetrics baseSize (nsnull);
   nsHTMLReflowMetrics subScriptSize (nsnull);
   nsHTMLReflowMetrics supScriptSize (nsnull);
@@ -220,8 +219,14 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   nsIFrame* subScriptFrame;
   nsIFrame* supScriptFrame;
 
+  PRBool firstPrescriptsPair = PR_FALSE;
+  nsBoundingMetrics bmBase, bmSubScript, bmSupScript;
+
   // XXX is there an NSPR macro for int_max ???
-  aDesiredSize.ascent = aDesiredSize.descent = -100000;
+  mBoundingMetrics.ascent = mBoundingMetrics.descent = -10000000;
+  mBoundingMetrics.width = 0;
+
+  aDesiredSize.ascent = aDesiredSize.descent = -10000000;
   aDesiredSize.width = aDesiredSize.height = 0;
 
   nsIFrame* aChildFrame = mFrames.FirstChild();
@@ -235,32 +240,36 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 
       if (childTag.get() == nsMathMLAtoms::mprescripts_) {
         mprescriptsFrame = aChildFrame;
+        firstPrescriptsPair = PR_TRUE;
       }
       else {
+
 	if (childTag.get() == nsMathMLAtoms::none_) {
 	  // we need to record the presence of none tag explicitly
 	  // for correct negotiation between sup/sub shifts later
 	  if (isSubScript) {
 	    isSubScriptPresent = PR_FALSE;
+            bmSubScript.Clear();
+            bmSubScript.leftBearing = 10000000;
 	  }
 	  else {
 	    isSupScriptPresent = PR_FALSE;
+            bmSupScript.Clear();
+            bmSupScript.leftBearing = 10000000;
 	  }
-	  aRect = nsRect (0, 0, 0, 0);
 	}
-	else {
-	  aChildFrame->GetRect(aRect);
-	}
+
         if (0 == count) {
 	  // base 
 	  baseFrame = aChildFrame;
-	  baseSize.descent = aRect.x; baseSize.ascent = aRect.y;
-	  baseSize.width = aRect.width;
-	  baseSize.height = aRect.height;
-	  // we update aDesiredSize.{ascent,descent} with that
+          GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
+
+	  // we update mBoundingMetrics.{ascent,descent} with that
 	  // of the baseFrame only after processing all the sup/sub pairs
-	  // XXX need italic correction here
-	  aDesiredSize.width = aRect.width + italicCorrection;
+          // XXX need italic correction only *if* there are postscripts ?
+	  mBoundingMetrics.width = bmBase.width + bmBase.supItalicCorrection;
+	  mBoundingMetrics.rightBearing = bmBase.rightBearing;
+          mBoundingMetrics.leftBearing = bmBase.leftBearing; // until overwritten
 	}
         else {
 	  // super/subscript block
@@ -268,54 +277,66 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 	    if (isSubScriptPresent) {
 	      // subscript
 	      subScriptFrame = aChildFrame;
-	      subScriptSize.descent = aRect.x; 
-	      subScriptSize.ascent = aRect.y;
-	      subScriptSize.width = aRect.width; 
-	      subScriptSize.height = aRect.height;
+              GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
 	      // get the subdrop from the subscript font
 	      GetSubDropFromChild (aPresContext, subScriptFrame, aSubDrop);
 	      // parameter v, Rule 18a, App. G, TeXbook
-	      minSubScriptShift = baseSize.descent + aSubDrop;
+	      minSubScriptShift = bmBase.descent + aSubDrop;
 	      trySubScriptShift = PR_MAX(minSubScriptShift,aSubScriptShift);
+	      mBoundingMetrics.descent = 
+		PR_MAX(mBoundingMetrics.descent,bmSubScript.descent);
 	      aDesiredSize.descent = 
-		PR_MAX(aDesiredSize.descent,subScriptSize.descent);
-	      width = subScriptSize.width + mScriptSpace;
+		PR_MAX(aDesiredSize.descent,subScriptSize.ascent);
+              width = bmSubScript.width + mScriptSpace;
+              rightBearing = bmSubScript.rightBearing + mScriptSpace;
 	    }
 	  }
 	  else {
 	    if (isSupScriptPresent) {
 	      // supscript
 	      supScriptFrame = aChildFrame;
-	      supScriptSize.descent = aRect.x; 
-	      supScriptSize.ascent = aRect.y;
-	      supScriptSize.width = aRect.width; 
-	      supScriptSize.height = aRect.height;
+              GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
 	      // get the supdrop from the supscript font
 	      GetSupDropFromChild (aPresContext, supScriptFrame, aSupDrop);
 	      // parameter u, Rule 18a, App. G, TeXbook
-	      minSupScriptShift = baseSize.ascent - aSupDrop;
+	      minSupScriptShift = bmBase.ascent - aSupDrop;
 	      // get min supscript shift limit from x-height
 	      // = d(x) + 1/4 * sigma_5, Rule 18c, App. G, TeXbook
 	      minShiftFromXHeight = NSToCoordRound 
-		((supScriptSize.descent + (1.0f/4.0f) * xHeight));
+		((bmSupScript.descent + (1.0f/4.0f) * xHeight));
 	      trySupScriptShift = 
 		PR_MAX(minSupScriptShift,PR_MAX(minShiftFromXHeight,aSupScriptShift));
+	      mBoundingMetrics.ascent = 
+		PR_MAX(mBoundingMetrics.ascent,bmSupScript.ascent);
 	      aDesiredSize.ascent = 
 		PR_MAX(aDesiredSize.ascent,supScriptSize.ascent);
-	      width = PR_MAX(width, supScriptSize.width + mScriptSpace);
+	      width = PR_MAX(width, bmSupScript.width + mScriptSpace);
+	      rightBearing = PR_MAX(rightBearing, bmSupScript.rightBearing + mScriptSpace);
 	    }
 
 	    NS_ASSERTION((isSubScriptPresent || isSupScriptPresent),"mmultiscripts : both sup/subscripts are absent");
-	    aDesiredSize.width += width;
-	    width = 0;
-	    
+
+            if (!mprescriptsFrame) { // we are still looping over base & postscripts
+              mBoundingMetrics.rightBearing = mBoundingMetrics.width + rightBearing;
+	      mBoundingMetrics.width += width;
+            }
+            else {
+              prescriptsWidth += width;
+              if (firstPrescriptsPair) {
+	        firstPrescriptsPair = PR_FALSE;
+                mBoundingMetrics.leftBearing = 
+                  PR_MIN(bmSubScript.leftBearing, bmSupScript.leftBearing);
+              }
+            }
+ 	    width = rightBearing = 0;
+
 	    if (isSubScriptPresent && isSupScriptPresent) {
 	      // negotiate between the various shifts so that 
 	      // there is enough gap between the sup and subscripts
               // Rule 18e, App. G, TeXbook
               nscoord gap = 
-                (trySupScriptShift - supScriptSize.descent) - 
-                (subScriptSize.ascent - trySubScriptShift);
+                (trySupScriptShift - bmSupScript.descent) - 
+                (bmSubScript.ascent - trySubScriptShift);
               if (gap < 4.0f * aRuleSize) {
                 // adjust trySubScriptShift to get a gap of (4.0 * aRuleSize)
                 trySubScriptShift += NSToCoordRound ((4.0f * aRuleSize) - gap);
@@ -324,7 +345,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
               // next we want to ensure that the bottom of the superscript
               // will be > (4/5) * x-height above baseline 
               gap = NSToCoordRound ((4.0f/5.0f) * xHeight - 
-                      (trySupScriptShift - supScriptSize.descent));
+                      (trySupScriptShift - bmSupScript.descent));
               if (gap > 0.0f) {
                 trySupScriptShift += gap;
                 trySubScriptShift -= gap;
@@ -348,13 +369,28 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
     rv = aChildFrame->GetNextSibling(&aChildFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
-  // we left out base during our bounding box updates, so ...
+
+  // we left out the width of prescripts, so ...
+  mBoundingMetrics.rightBearing += prescriptsWidth;
+  mBoundingMetrics.width += prescriptsWidth;
+
+  // we left out the base during our bounding box updates, so ...
+  mBoundingMetrics.ascent = 
+    PR_MAX(mBoundingMetrics.ascent+maxSupScriptShift,bmBase.ascent);
+  mBoundingMetrics.descent = 
+    PR_MAX(mBoundingMetrics.descent+maxSubScriptShift,bmBase.descent);
+
+  // get the reflow metrics ...
   aDesiredSize.ascent = 
     PR_MAX(aDesiredSize.ascent+maxSupScriptShift,baseSize.ascent);
   aDesiredSize.descent = 
     PR_MAX(aDesiredSize.descent+maxSubScriptShift,baseSize.descent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  
+  aDesiredSize.width = mBoundingMetrics.width;
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+
   //////////////////
   // Place Children 
 
@@ -364,6 +400,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 
   if (aPlaceOrigin) {
     nscoord dx = 0, dy = 0;
+    nsRect aRect;
 
     count = 0;
     aChildFrame = mprescriptsFrame; 
@@ -371,9 +408,10 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
       if (nsnull == aChildFrame) { // end of prescripts,
 	// place the base ...
 	aChildFrame = baseFrame; 
-	dy = aDesiredSize.ascent - baseSize.ascent;
-	FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
-	dx += baseSize.width + italicCorrection;
+//	dy = mBoundingMetrics.ascent - bmBase.ascent;
+        dy = aDesiredSize.ascent - baseSize.ascent;
+        FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
+	dx += baseSize.width + bmBase.supItalicCorrection;
       }
       else if (mprescriptsFrame != aChildFrame) { 
 	// process each sup/sub pair
@@ -386,7 +424,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 	    supScriptFrame = aChildFrame;
 	    count = 0;
 	    
-	    // get the bounding boxes of sup/subscripts stored in their rects
+	    // get the ascent/descent of sup/subscripts stored in their rects
 	    // rect.x = descent, rect.y = ascent
 	    subScriptFrame->GetRect (aRect);
 	    subScriptSize.ascent = aRect.y;
@@ -401,25 +439,30 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 	    // XXX should we really center the boxes
 	    // XXX i'm leaving it as left-justified 
 	    // XXX which is consistent with what's done for <msubsup>
+
+           // reverting to center. It looks much nicer and adds a bit
+           // of variety to the engine. At least we have two functions
+           // doing two different things.
+
+	    width = PR_MAX(subScriptSize.width, supScriptSize.width);
+
 	    dy = aDesiredSize.ascent - 
 	      subScriptSize.ascent + 
 	      maxSubScriptShift;
-	    FinishReflowChild (subScriptFrame, aPresContext, 
-			       subScriptSize, dx, dy, 0);
+	    FinishReflowChild (subScriptFrame, aPresContext, subScriptSize,
+			       dx + (width-subScriptSize.width)/2, dy, 0);
 
 	    dy = aDesiredSize.ascent - 
 	      supScriptSize.ascent -
 	      maxSupScriptShift;
-	    FinishReflowChild (supScriptFrame, aPresContext, 
-			       supScriptSize, dx, dy, 0);
+	    FinishReflowChild (supScriptFrame, aPresContext, supScriptSize,
+			       dx + (width-supScriptSize.width)/2, dy, 0);
 
-	    width = mScriptSpace + 
-	      PR_MAX(subScriptSize.width, supScriptSize.width);
-	    dx += width;
-	  }        
+	    dx += mScriptSpace + width;
+	  }
 	}
       }
-      
+
       rv = aChildFrame->GetNextSibling(&aChildFrame);
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
     } while (mprescriptsFrame != aChildFrame);

@@ -257,9 +257,9 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // XXX Fix me!
-  mBoundingMetrics.ascent  =  aDesiredSize.ascent;
-  mBoundingMetrics.descent = -aDesiredSize.descent;
-  mBoundingMetrics.width   =  aDesiredSize.width;
+  mBoundingMetrics.ascent  = aDesiredSize.ascent;
+  mBoundingMetrics.descent = aDesiredSize.descent;
+  mBoundingMetrics.width   = aDesiredSize.width;
 
   return NS_OK;
 }

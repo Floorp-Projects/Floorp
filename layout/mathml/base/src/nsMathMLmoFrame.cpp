@@ -119,6 +119,19 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
     rv = mMathMLChar.Paint(aPresContext,
                            aRenderingContext,
                            mStyleContext);
+#ifdef SHOW_BOUNDING_BOX
+    // for visual debug
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
+        NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
+    {
+      aRenderingContext.SetColor(NS_RGB(0,0,255));
+      nscoord x = mReference.x + mBoundingMetrics.leftBearing;
+      nscoord y = mReference.y;
+      nscoord w = mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
+      nscoord h = mBoundingMetrics.ascent + mBoundingMetrics.descent;
+      aRenderingContext.DrawRect(x,y,w,h);
+    }
+#endif
   }
   else { // let the base class worry about the painting
     rv = nsMathMLContainerFrame::Paint(aPresContext,
@@ -144,6 +157,7 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
   mLeftSpace = 0.0f; // .27777f;
   mRightSpace = 0.0f; // .27777f;
 
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
   return rv;
 }
 
@@ -487,10 +501,6 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     if (old == aDesiredStretchSize) { // hasn't changed !
       mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
     }
-    else {
-      // update our bounding metrics... it becomes that of our MathML char
-      mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
-    }
   }
 
   /////////
@@ -499,7 +509,9 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
     // The rendering will be handled by our MathML char
     mMathMLChar.SetRect(nsRect(0, 0, aDesiredStretchSize.width,
-                               aDesiredStretchSize.height));
+                               aDesiredStretchSize.height));  
+    // update our bounding metrics... it becomes that of our MathML char
+    mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
  }
   else {
     nsHTMLReflowMetrics aReflowMetrics(nsnull);
@@ -513,6 +525,9 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   }
   aDesiredStretchSize.leftSpace = mLeftSpace;
   aDesiredStretchSize.rightSpace = mRightSpace;
+
+  mReference.x = 0;
+  mReference.y = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
 
   // Before we leave... there is a last item in the check-list:
   // If our parent is not embellished, it means we are the outermost embellished
@@ -532,6 +547,8 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     if (0 == dx) return NS_OK;
 
     // adjust the offsets
+    mReference.x = dx;
+
     nsRect rect;
     if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
       mMathMLChar.GetRect(rect);

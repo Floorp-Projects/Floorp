@@ -333,6 +333,12 @@ struct nsEmbellishData {
 // a core <mo>) for which the movablelimits attribute is set to true
 #define NS_MATHML_MOVABLELIMITS                       0x00000040
 
+// This bit is used for visual debug. When set, the bounding box
+// of your frame is painted. You should therefore ensure that you
+// have properly filled your mReference and mBoundingMetrics in
+// Place().
+#define NS_MATHML_SHOW_BOUNDING_METRICS               0x80000000
+
 // Macros that retrieve those bits
 #define NS_MATHML_IS_DISPLAYSTYLE(_flags) \
   (NS_MATHML_DISPLAYSTYLE == ((_flags) & NS_MATHML_DISPLAYSTYLE))
@@ -354,6 +360,9 @@ struct nsEmbellishData {
 
 #define NS_MATHML_IS_MOVABLELIMITS(_flags) \
   (NS_MATHML_MOVABLELIMITS == ((_flags) & NS_MATHML_MOVABLELIMITS))
+
+#define NS_MATHML_PAINT_BOUNDING_METRICS(_flags) \
+  (NS_MATHML_SHOW_BOUNDING_METRICS == ((_flags) & NS_MATHML_SHOW_BOUNDING_METRICS))
 
 // --------------
 // Bits used for the embellish flags -- these bits are set
@@ -405,4 +414,3 @@ struct nsEmbellishData {
   (NS_MATHML_EMBELLISH_MOVABLELIMITS == ((_flags) & NS_MATHML_EMBELLISH_MOVABLELIMITS))
 
 #endif /* nsIMathMLFrame_h___ */
-

@@ -115,7 +115,7 @@ public:
   }
 
   void
-  GetBoundingMetrics(nsBoundingMetrics aBoundingMetrics) {
+  GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics) {
     aBoundingMetrics = mBoundingMetrics;
   }
 
