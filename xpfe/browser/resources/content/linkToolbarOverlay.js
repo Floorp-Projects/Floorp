@@ -178,6 +178,7 @@ LinkToolbarUI.prototype.toggleLinkToolbar =
 function(checkedItem)
 {
   this.goToggleTristateToolbar("linktoolbar", checkedItem);
+  this.initHandlers();
   if (this.isLinkToolbarEnabled())
     this.doRefresh();
   else
@@ -215,5 +216,26 @@ function(id, checkedItem)
     document.persist(id, "hidden");
   }
 }
+LinkToolbarUI.prototype.initHandlers =
+function()
+{
+  var contentArea = document.getElementById("appcontent");
+  if (this.isLinkToolbarEnabled())
+  {
+    if (!this.handlersActive) {
+      contentArea.addEventListener("load", linkToolbarUI.refresh, true);
+      contentArea.addEventListener("unload", linkToolbarUI.clear, true);
+      this.handlersActive = true;
+    }
+  } else
+  {
+    if (this.handlersActive) {
+      contentArea.removeEventListener("load", linkToolbarUI.refresh, true);
+      contentArea.removeEventListener("unload", linkToolbarUI.clear, true);
+      this.handlersActive = false;
+    }
+  }
+}
 
 const linkToolbarUI = new LinkToolbarUI;
+
