@@ -49,13 +49,13 @@ sub finaliseHeader {
 sub authenticate {
     my $self = shift;
     my $realm = $self->realm;
-    print "HTTP/1.1 401 Unauthorized\nWWW-Authenticate: Basic realm=\"$realm\"\n";
+    print "Status: 401 Unauthorized\nWWW-Authenticate: Basic realm=\"$realm\"\n";
     $self->finaliseHeader();
 }
 
 sub header {
     my $self = shift;
-    print "HTTP/1.1 200 OK\n";
+    print "Status: 200 OK\n";
     $self->finaliseHeader();
 }
 

@@ -96,9 +96,9 @@ sub getDefaultString {
         } 
     } elsif ($protocol eq 'http') {
         if ($string eq 'acknowledge') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Acknowledged.</text>');
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 200 OK<br/>Content-Type: text/plain<br/><br/>Acknowledged.</text>');
         } elsif ($string eq 'error') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>');
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>');
         }
     }
     return; # nope, sorry
