@@ -163,6 +163,6 @@ private:
     **/
     void initialize(int size);
 
-}; //-- NamedMap
+};
 
 #endif

@@ -149,7 +149,7 @@ ProcessorState::ProcessorState(Node* aSourceNode, Document* aXslDocument)
     }
     mLoadedDocuments.init(sourceDoc, aXslDocument);
 
-    /* turn object deletion on for some of the Maps (NamedMap) */
+    /* turn object deletion on for some of the Maps */
     mExprHashes[SelectAttr].setOwnership(Map::eOwnsItems);
     mExprHashes[TestAttr].setOwnership(Map::eOwnsItems);
     mExprHashes[ValueAttr].setOwnership(Map::eOwnsItems);
