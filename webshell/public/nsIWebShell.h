@@ -315,8 +315,10 @@ public:
   NS_IMETHOD SetMarginWidth (PRInt32  aWidth)  = 0;
   NS_IMETHOD GetMarginHeight(PRInt32& aWidth)  = 0;
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
-  NS_IMETHOD SetScrolling(PRInt32 aScrolling)   = 0;
-  NS_IMETHOD GetScrolling(PRInt32& aScrolling)  = 0;
+  NS_IMETHOD SetScrolling(PRInt32 aScrolling)  = 0;
+  NS_IMETHOD GetScrolling(PRInt32& aScrolling) = 0;
+  NS_IMETHOD SetIsFrame(PRBool aIsFrame)       = 0;
+  NS_IMETHOD GetIsFrame(PRBool& aIsFrame)      = 0;
 
   /**
     * Finds text in content
