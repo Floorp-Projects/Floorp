@@ -1258,7 +1258,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   //
   char          *attachment1_body = nsnull;
   char          *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
-  PRInt32       attachment1_body_length = 0;
+  PRUint32       attachment1_body_length = 0;
 
  // 
   // Query the editor, get the body of HTML!
@@ -1396,6 +1396,86 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   PR_FREEIF (attachment1_body);
 
   return rv;
+}
+
+// for SMTP, 16k
+// for our internal protocol buffers, 4k
+// for news < 1000
+// so we choose the minimum, because we could be sending and posting this message.
+#define LINE_BREAK_MAX 990
+
+// EnsureLineBreaks() will set m_attachment1_body and m_attachment1_body_length 
+nsresult
+nsMsgComposeAndSend::EnsureLineBreaks(const char *body, PRUint32 bodyLen)
+{
+  NS_ENSURE_ARG_POINTER(body);
+
+  PRUint32 i;
+  PRUint32 charsSinceLineBreak = 0;
+  PRUint32 lastPos = 0;
+
+  char *newBody = nsnull;
+  char *newBodyPos = nsnull;
+  
+  // the most common way to get into the state where we have to insert
+  // linebreaks is when we do HTML reply and we quote large <pre> blocks.
+  // see #83381 and #84261
+  // 
+  // until #67334 is fixed, we'll be replacing newlines with <br>, which can lead
+  // to large quoted <pre> blocks without linebreaks.
+  // this hack makes it so we can at least save (as draft or template) and send or post
+  // the message.
+  // 
+  // XXX TODO 
+  // march backwards and determine the "best" place for the linebreak
+  // for example, we don't want <a hrLINEBREAKref=""> or <bLINEBREAKr>
+  // or "MississLINEBREAKippi" 
+  for (i = 0; i < bodyLen-1; i++) {
+    if (nsCRT::strncmp(body+i, NS_LINEBREAK, NS_LINEBREAK_LEN)) {
+      charsSinceLineBreak++;
+      if (charsSinceLineBreak == LINE_BREAK_MAX) {
+        if (!newBody) {
+          // in the worse case, the body will be solid, no linebreaks.
+          // that will require us to insert a line break every LINE_BREAK_MAX bytes
+          PRUint32 worstCaseLen = bodyLen+((bodyLen/LINE_BREAK_MAX)*NS_LINEBREAK_LEN);
+          newBody = (char *) PR_Malloc(worstCaseLen);
+          if (!newBody) return NS_ERROR_OUT_OF_MEMORY;
+          newBodyPos = newBody;
+        }
+
+        PL_strncpy(newBodyPos, body+lastPos, i - lastPos + 1);
+        newBodyPos += i - lastPos + 1;
+        PL_strncpy(newBodyPos, NS_LINEBREAK, NS_LINEBREAK_LEN);
+        newBodyPos += NS_LINEBREAK_LEN;
+
+        lastPos = i+1;
+        charsSinceLineBreak = 0;
+      }
+    }
+    else {
+      // found a linebreak
+      charsSinceLineBreak = 0;
+    }
+  }
+
+  // if newBody is non-null is non-zero, we inserted a linebreak
+  if (newBody) {
+     // don't forget about part after the last linebreak we inserted
+     PL_strcpy(newBodyPos, body+lastPos);
+
+     m_attachment1_body = newBody;
+     m_attachment1_body_length = PL_strlen(newBody);  // not worstCaseLen
+  }
+  else {
+     // body did not require any additional linebreaks, so just use it
+     // body will not have any null bytes, so we can use PL_strdup
+     m_attachment1_body = PL_strdup(body);
+     if (!m_attachment1_body) {
+    	return NS_ERROR_OUT_OF_MEMORY;
+     }
+     m_attachment1_body_length = bodyLen;
+  }
+  return NS_OK;
 }
 
 //
@@ -2540,13 +2620,9 @@ nsMsgComposeAndSend::SnarfAndCopyBody(const char  *attachment1_body,
 
     if (attachment1_body_length > 0)
     {
-      char *newb = (char *) PR_Malloc (attachment1_body_length + 1);
-      if (! newb)
-        return NS_ERROR_OUT_OF_MEMORY;
-      nsCRT::memcpy (newb, attachment1_body, attachment1_body_length);
-      newb [attachment1_body_length] = 0;
-      m_attachment1_body = newb;
-      m_attachment1_body_length = attachment1_body_length;
+     // will set m_attachment1_body and m_attachment1_body_length
+     nsresult rv = EnsureLineBreaks(attachment1_body, attachment1_body_length);
+     NS_ENSURE_SUCCESS(rv,rv);
     }
   }
   
