@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.78 2004/11/07 23:54:47 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.79 2004/11/08 00:19:01 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -657,7 +657,9 @@
         </para>
 
         <note>
-          The ft_min_word_len parameter is only suported in MySQL v4 or higher.
+          <para>
+            The ft_min_word_len parameter is only suported in MySQL v4 or higher.
+          <para>
         </note>
       </section>
 
