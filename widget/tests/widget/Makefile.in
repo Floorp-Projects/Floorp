@@ -39,60 +39,36 @@ CPPSRCS = \
 	$(NULL)
 
 LIBS := \
-	-lraptorbase	\
-	-lpng \
-	-lpref \
-	-lraptorbase \
-	-lwidget$(MOZ_TOOLKIT) \
 	-lraptorgfx \
-	-lgfx$(MOZ_TOOLKIT) \
-	-lraptorhtml \
 	-lgmbase$(MOZ_TOOLKIT) \
-	-lraptorhtml \
-	-lraptorhtmlpars \
-	-lraptorview \
-	-lreg \
+	$(TK_LIBS) \
+	-lnetlib \
+	-lremoturl \
+	-lnetcnvts \
+	-lgophurl \
 	-labouturl \
+	-lsockstuburl \
+	-lhttpurl \
+	-lmimetype \
 	-lfileurl \
 	-lftpurl \
-	-lgophurl \
-	-lhttpurl \
-	-limg \
-	-ljpeg \
-	-ljs \
-	-ljsurl \
-	-ljsdom \
-	-lmimetype \
-	-lnetcache \
-	-lnetcnvts \
-	-lnetlib \
-	-lnetutil \
-	-lnetwork \
 	-lpwcac \
-	-lraptorwebwidget	\
-	$(DIST)/lib/libraptorhtmlbase_s.a \
-	$(DIST)/lib/libraptorlayout_s.a \
-	$(DIST)/lib/libraptorevents_s.a	\
-	$(DIST)/lib/libraptorhtmlstyle_s.a \
-	$(DIST)/lib/libjsdombase_s.a	\
-	$(DIST)/lib/libjsdomhtml_s.a	\
-	$(DIST)/lib/libjsdomcss_s.a	\
-	$(DIST)/lib/libjsdomcore_s.a	\
-	-lreg \
-	-lremoturl \
+	-lnetwork \
+	-lnetcache \
+	-lpref \
 	-lsecfree \
-	-lstubnj \
-	-lstubsj \
-	-ltestdynamic \
+	-lnetutil \
 	-lmozutil \
-	-lxp \
+	-limg \
+	$(PNG_LIBS) \
+	$(JPEG_LIBS) \
+	-lraptorbase \
 	-lxpcom \
-	-lmozutil \
+	-ljs \
+	-lwidget$(MOZ_TOOLKIT) \
 	-lxp \
-	-lxpcom \
 	$(ZLIB_LIBS) \
-	-lmozdbm \
-	$(TK_LIBS) \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 
