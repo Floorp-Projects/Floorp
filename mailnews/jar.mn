@@ -1,6 +1,6 @@
 messenger.jar:
-    content/messenger/contents.rdf                                             (base/resources/content/contents.rdf)
-    content/messenger-region/contents.rdf                                      (base/resources/content/contents-region.rdf)
+*   content/messenger/contents.rdf                                             (base/resources/content/contents.rdf)
+*   content/messenger-region/contents.rdf                                      (base/resources/content/contents-region.rdf)
     content/messenger/addressbook/pref-addressing.xul                          (addrbook/prefs/resources/content/pref-addressing.xul)
     content/messenger/addressbook/pref-addressbookOverlay.xul                  (addrbook/prefs/resources/content/pref-addressbookOverlay.xul)
     content/messenger/addressbook/pref-directory.js                            (addrbook/prefs/resources/content/pref-directory.js)
@@ -183,7 +183,7 @@ messenger.jar:
     content/messenger/dateFormat.js                                            (base/resources/content/dateFormat.js)
 
 en-US.jar:
-    locale/en-US/messenger/contents.rdf                                (base/resources/locale/en-US/contents.rdf)
+*   locale/en-US/messenger/contents.rdf                                (base/resources/locale/en-US/contents.rdf)
     locale/en-US/messenger/addressbook/abAddressBookNameDialog.dtd     (addrbook/resources/locale/en-US/abAddressBookNameDialog.dtd)
     locale/en-US/messenger/addressbook/abCardOverlay.dtd               (addrbook/resources/locale/en-US/abCardOverlay.dtd)
     locale/en-US/messenger/addressbook/abCardViewOverlay.dtd           (addrbook/resources/locale/en-US/abCardViewOverlay.dtd)
@@ -281,10 +281,10 @@ en-US.jar:
     locale/en-US/messenger/markByDate.dtd                               (base/resources/locale/en-US/markByDate.dtd)
 
 US.jar:
-    locale/US/messenger-region/contents.rdf                             (base/resources/locale/en-US/contents-region.rdf)
+*   locale/US/messenger-region/contents.rdf                             (base/resources/locale/en-US/contents-region.rdf)
     locale/US/messenger-region/region.properties                        (base/resources/locale/en-US/region.properties)
 
 en-win.jar:
      locale/en-US/messenger-mapi/pref-mailnewsOverlay.dtd               (mapi/resources/locale/en-US/pref-mailnewsOverlay.dtd)
      locale/en-US/messenger-mapi/mapi.properties                        (mapi/resources/locale/en-US/mapi.properties)
-     locale/en-US/messenger-mapi/contents.rdf                           (mapi/resources/locale/en-US/contents.rdf)
+*    locale/en-US/messenger-mapi/contents.rdf                           (mapi/resources/locale/en-US/contents.rdf)

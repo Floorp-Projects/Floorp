@@ -1,5 +1,5 @@
 comm.jar:
-    content/wallet/contents.rdf                         (resources/content/contents.rdf)
+*   content/wallet/contents.rdf                         (resources/content/contents.rdf)
     content/wallet/walletNavigatorOverlay.xul           (resources/content/walletNavigatorOverlay.xul)
     content/wallet/walletTasksOverlay.xul               (resources/content/walletTasksOverlay.xul)
     content/wallet/walletContextOverlay.xul             (resources/content/walletContextOverlay.xul)
@@ -19,7 +19,7 @@ comm.jar:
     content/communicator/wallet/WalletViewer.js         (editor/resources/content/WalletViewer.js)
 
 en-US.jar:
-    locale/en-US/wallet/contents.rdf                          (resources/locale/en-US/contents.rdf)
+*   locale/en-US/wallet/contents.rdf                          (resources/locale/en-US/contents.rdf)
     locale/en-US/wallet/walletNavigatorOverlay.dtd            (resources/locale/en-US/walletNavigatorOverlay.dtd)
     locale/en-US/wallet/walletTasksOverlay.dtd                (resources/locale/en-US/walletTasksOverlay.dtd)
     locale/en-US/wallet/walletPrefsOverlay.dtd                (resources/locale/en-US/walletPrefsOverlay.dtd)

@@ -1,6 +1,6 @@
 chatzilla.jar:
-	content/chatzilla/contents.rdf               (xul/content/contents.rdf)
-	locale/en-US/chatzilla/contents.rdf          (xul/locale/en-US/contents.rdf)
+*	content/chatzilla/contents.rdf               (xul/content/contents.rdf)
+*	locale/en-US/chatzilla/contents.rdf          (xul/locale/en-US/contents.rdf)
 	skin/modern/chatzilla/contents.rdf           (xul/skin/contents.rdf)
 	content/chatzilla/lib/js/utils.js            (js/lib/utils.js)
 	content/chatzilla/lib/js/events.js           (js/lib/events.js)

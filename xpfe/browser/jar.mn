@@ -1,6 +1,6 @@
 comm.jar:
-        content/navigator/contents.rdf                 (resources/content/contents.rdf)
-        content/navigator-region/contents.rdf          (resources/content/contents-region.rdf)
+*       content/navigator/contents.rdf                 (resources/content/contents.rdf)
+*       content/navigator-region/contents.rdf          (resources/content/contents-region.rdf)
         content/navigator/browser.js                   (resources/content/browser.js)
         content/navigator/pageInfo.js                  (resources/content/pageInfo.js)
         content/navigator/pageInfo.xul                 (resources/content/pageInfo.xul)
@@ -29,7 +29,7 @@ comm.jar:
         content/navigator/viewPartialSource.xul        (resources/content/viewPartialSource.xul)
         content/navigator/mailNavigatorOverlay.xul     (resources/content/mailNavigatorOverlay.xul)
 en-US.jar:
-        locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
+*       locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)
         locale/en-US/navigator/viewSource.properties        (resources/locale/en-US/viewSource.properties)
         locale/en-US/navigator/pageInfo.dtd                 (resources/locale/en-US/pageInfo.dtd)
@@ -44,5 +44,5 @@ en-US.jar:
         locale/en-US/navigator/mailNavigatorOverlay.dtd     (resources/locale/en-US/mailNavigatorOverlay.dtd)
 
 US.jar:
-        locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)
+*       locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)
         locale/US/navigator-region/region.properties        (resources/locale/en-US/region.properties)

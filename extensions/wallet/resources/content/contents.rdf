@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+
+  <!-- list all the packages being supplied by this jar -->
+  <RDF:Seq about="urn:mozilla:package:root">
+    <RDF:li resource="urn:mozilla:package:wallet"/>
+  </RDF:Seq>
+
+  <!-- package information -->
+  <RDF:Description about="urn:mozilla:package:wallet"
+        chrome:displayName="Form Manager"
+        chrome:author="mozilla.org"
+        chrome:name="wallet"
+#expand  	chrome:localeVersion="__MOZILLA_LOCALE_VERSION__">
+  </RDF:Description>
+
+  <!-- overlay information -->
+  <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://navigator/content/navigator.xul"/>
+    <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
+    <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://navigator/content/navigator.xul">
+    <RDF:li>chrome://wallet/content/walletNavigatorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
+    <RDF:li>chrome://wallet/content/walletTasksOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
+    <RDF:li>chrome://wallet/content/walletPrefsOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+</RDF:RDF>

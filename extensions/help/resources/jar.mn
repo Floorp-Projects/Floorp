@@ -2,7 +2,7 @@ help.jar:
         content/help/help.xul                           (content/help.xul)
         content/help/contextHelp.js                     (content/contextHelp.js)
         content/help/help.js                            (content/help.js)
-        content/help/contents.rdf                       (content/contents.rdf)
+*       content/help/contents.rdf                       (content/contents.rdf)
         content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
         content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
 
@@ -10,7 +10,7 @@ en-US.jar:
         locale/en-US/help/mozillahelp.rdf               (locale/en-US/mozillahelp.rdf)
         locale/en-US/help/testhelp.rdf                  (locale/en-US/testhelp.rdf)
         locale/en-US/help/help-glossary.rdf             (locale/en-US/help-glossary.rdf)
-        locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
+*       locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
         locale/en-US/help/developer_tools.xhtml         (locale/en-US/developer_tools.xhtml)
         locale/en-US/help/glossary.html                 (locale/en-US/glossary.html)
         locale/en-US/help/welcome_help.xhtml            (locale/en-US/welcome_help.xhtml)

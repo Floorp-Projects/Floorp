@@ -57,10 +57,6 @@ if [ "$MOZ_COMPOSER" ]; then
 MAKEFILES_composer="
 editor/composer/Makefile
 editor/ui/Makefile
-editor/ui/composer/content/contents-region.rdf
-editor/ui/composer/content/contents.rdf
-editor/ui/composer/locale/en-US/contents-region.rdf
-editor/ui/composer/locale/en-US/contents.rdf
 "
 fi
 
@@ -311,7 +307,6 @@ layout/html/document/src/Makefile
 layout/html/forms/Makefile
 layout/html/forms/public/Makefile
 layout/html/forms/src/Makefile
-layout/html/forms/resources/locale/en-US/contents.rdf
 layout/html/style/Makefile
 layout/html/style/src/Makefile
 layout/html/table/Makefile
@@ -438,8 +433,6 @@ netwerk/streamconv/test/Makefile
 netwerk/test/Makefile
 netwerk/testserver/Makefile
 netwerk/resources/Makefile
-netwerk/resources/content/contents.rdf
-netwerk/resources/locale/en-US/contents.rdf
 uriloader/exthandler/Makefile
 intl/strres/public/Makefile
 intl/locale/idl/Makefile
@@ -660,9 +653,6 @@ xpfe/components/directory/Makefile
 xpfe/components/download-manager/Makefile
 xpfe/components/download-manager/src/Makefile
 xpfe/components/download-manager/public/Makefile
-xpfe/components/download-manager/resources/mac/contents.rdf
-xpfe/components/download-manager/resources/win/contents.rdf
-xpfe/components/download-manager/resources/unix/contents.rdf
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
@@ -679,11 +669,8 @@ xpfe/components/prefwindow/resources/content/unix/Makefile
 xpfe/components/prefwindow/resources/content/win/Makefile
 xpfe/components/prefwindow/resources/locale/Makefile
 xpfe/components/prefwindow/resources/locale/en-US/Makefile
-xpfe/components/prefwindow/resources/locale/en-US/mac/contents-platform.rdf
 xpfe/components/prefwindow/resources/locale/en-US/unix/Makefile
-xpfe/components/prefwindow/resources/locale/en-US/unix/contents-platform.rdf
 xpfe/components/prefwindow/resources/locale/en-US/win/Makefile
-xpfe/components/prefwindow/resources/locale/en-US/win/contents-platform.rdf
 xpfe/components/related/Makefile
 xpfe/components/related/src/Makefile
 xpfe/components/related/public/Makefile
@@ -697,7 +684,6 @@ xpfe/components/sidebar/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/src/Makefile
-xpfe/components/autocomplete/resources/locale/en-US/contents.rdf
 xpfe/components/urlbarhistory/Makefile
 xpfe/components/urlbarhistory/public/Makefile
 xpfe/components/urlbarhistory/src/Makefile
@@ -722,57 +708,28 @@ xpfe/browser/Makefile
 xpfe/browser/src/Makefile
 xpfe/browser/resources/Makefile
 xpfe/browser/resources/content/Makefile
-xpfe/browser/resources/content/contents-region.rdf
-xpfe/browser/resources/content/contents.rdf
-xpfe/browser/resources/content/mac/contents-platform.rdf
 xpfe/browser/resources/content/unix/Makefile
-xpfe/browser/resources/content/unix/contents-platform.rdf
 xpfe/browser/resources/content/win/Makefile
-xpfe/browser/resources/content/win/contents-platform.rdf
 xpfe/browser/resources/locale/Makefile
-xpfe/browser/resources/locale/en-US/contents-region.rdf
-xpfe/browser/resources/locale/en-US/contents.rdf
 xpfe/browser/resources/locale/en-US/Makefile
-xpfe/browser/resources/locale/en-US/mac/contents-platform.rdf
 xpfe/browser/resources/locale/en-US/unix/Makefile
-xpfe/browser/resources/locale/en-US/unix/contents-platform.rdf
-xpfe/browser/resources/locale/en-US/win/contents-platform.rdf
 xpfe/global/Makefile
 xpfe/global/buildconfig.html
 xpfe/global/resources/Makefile
 xpfe/global/resources/content/Makefile
-xpfe/global/resources/content/contents-region.rdf
-xpfe/global/resources/content/contents-platform.rdf
-xpfe/global/resources/content/contents.rdf
 xpfe/global/resources/content/os2/Makefile
 xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/en-US/Makefile
-xpfe/global/resources/locale/en-US/contents-region.rdf
-xpfe/global/resources/locale/en-US/contents.rdf
-xpfe/global/resources/locale/en-US/brand.dtd
-xpfe/global/resources/locale/en-US/region.dtd
 xpfe/global/resources/locale/en-US/mac/Makefile
-xpfe/global/resources/locale/en-US/mac/contents-platform.rdf
 xpfe/global/resources/locale/en-US/os2/Makefile
-xpfe/global/resources/locale/en-US/os2/contents-platform.rdf
 xpfe/global/resources/locale/en-US/unix/Makefile
-xpfe/global/resources/locale/en-US/unix/contents-platform.rdf
 xpfe/global/resources/locale/en-US/win/Makefile
-xpfe/global/resources/locale/en-US/win/contents-platform.rdf
 xpfe/communicator/Makefile
 xpfe/communicator/resources/Makefile
 xpfe/communicator/resources/locale/Makefile
 xpfe/communicator/resources/locale/en-US/Makefile
-xpfe/communicator/resources/locale/en-US/contents-region.rdf
-xpfe/communicator/resources/locale/en-US/contents.rdf
-xpfe/communicator/resources/locale/en-US/mac/contents-platform.rdf
-xpfe/communicator/resources/locale/en-US/win/contents-platform.rdf
-xpfe/communicator/resources/locale/en-US/unix/contents-platform.rdf
 xpfe/communicator/resources/content/Makefile
-xpfe/communicator/resources/content/contents-region.rdf
-xpfe/communicator/resources/content/contents-platform.rdf
-xpfe/communicator/resources/content/contents.rdf
 xpfe/communicator/resources/content/unix/Makefile
 xpfe/communicator/resources/content/win/Makefile
 "
@@ -826,14 +783,10 @@ security/manager/ssl/Makefile
 security/manager/ssl/src/Makefile
 security/manager/ssl/resources/Makefile
 security/manager/ssl/public/Makefile
-security/manager/ssl/resources/content/contents.rdf
-security/manager/ssl/resources/locale/en-US/contents.rdf
 security/manager/pki/Makefile
 security/manager/pki/resources/Makefile
 security/manager/pki/src/Makefile
 security/manager/pki/public/Makefile
-security/manager/pki/resources/content/contents.rdf
-security/manager/pki/resources/locale/en-US/contents.rdf
 netwerk/protocol/http/public/Makefile
 netwerk/build/Makefile
 netwerk/base/public/Makefile
@@ -865,8 +818,6 @@ extensions/inspector/base/src/Makefile
 extensions/inspector/build/Makefile
 extensions/inspector/build/src/Makefile
 extensions/inspector/resources/Makefile
-extensions/inspector/resources/content/contents.rdf
-extensions/inspector/resources/locale/en-US/contents.rdf
 "
 
 MAKEFILES_transformiix="
@@ -883,7 +834,6 @@ extensions/transformiix/source/xslt/Makefile
 extensions/transformiix/source/Makefile
 extensions/transformiix/Makefile
 extensions/transformiix/resources/Makefile
-extensions/transformiix/resources/buster/contents.rdf
 "
 
 MAKEFILES_tridentprofile="
@@ -891,8 +841,6 @@ extensions/tridentprofile/Makefile
 extensions/tridentprofile/public/Makefile
 extensions/tridentprofile/resources/Makefile
 extensions/tridentprofile/src/Makefile
-extensions/tridentprofile/resources/content/contents.rdf
-extensions/tridentprofile/resources/locale/en-US/contents.rdf
 "
 
 MAKEFILES_typeaheadfind="
@@ -1222,8 +1170,6 @@ if [ "$MOZ_LDAP_XPCOM" ]; then
 	directory/xpcom/base/Makefile
 	directory/xpcom/base/public/Makefile
 	directory/xpcom/base/src/Makefile
-	directory/xpcom/base/resources/content/contents.rdf
-	directory/xpcom/base/resources/locale/en-US/contents.rdf
 "
 fi
 
@@ -1254,13 +1200,9 @@ for extension in $MOZ_EXTENSIONS; do
         content-packs ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/content-packs/Makefile
             extensions/content-packs/resources/Makefile
-            extensions/content-packs/resources/content/contents.rdf
-            extensions/content-packs/resources/locale/en-US/contents.rdf
             " ;;
         cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/cookie/Makefile
-            extensions/cookie/resources/content/contents.rdf
-            extensions/cookie/resources/locale/en-US/contents.rdf
             " ;;
         cview ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/cview/Makefile
@@ -1275,8 +1217,6 @@ for extension in $MOZ_EXTENSIONS; do
         help ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/help/Makefile
             extensions/help/resources/Makefile
-            extensions/help/resources/content/contents.rdf
-            extensions/help/resources/locale/en-US/contents.rdf
             " ;;
         inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_inspector"
@@ -1286,8 +1226,6 @@ for extension in $MOZ_EXTENSIONS; do
             ;;
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/irc/Makefile
-            extensions/irc/xul/content/contents.rdf
-            extensions/irc/xul/locale/en-US/contents.rdf
             " ;;
         layout-debug ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/layout-debug/Makefile
@@ -1298,8 +1236,6 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/p3p/Makefile
             extensions/p3p/public/Makefile
             extensions/p3p/src/Makefile
-            extensions/p3p/resources/content/contents.rdf
-            extensions/p3p/resources/locale/en-US/contents.rdf
             " ;;
         pref ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/pref/Makefile
@@ -1307,8 +1243,6 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/pref/autoconfig/public/Makefile
             extensions/pref/autoconfig/src/Makefile
             extensions/pref/autoconfig/resources/Makefile
-            extensions/pref/autoconfig/resources/content/contents.rdf
-            extensions/pref/autoconfig/resources/locale/en-US/contents.rdf
             " ;;
         spellcheck ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/spellcheck/Makefile
@@ -1319,8 +1253,6 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         tasks ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/tasks/Makefile
-            extensions/tasks/resources/content/contents.rdf
-            extensions/tasks/resources/locale/en-US/contents.rdf
             " ;;
         transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_transformiix"
@@ -1336,8 +1268,6 @@ for extension in $MOZ_EXTENSIONS; do
         venkman ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/venkman/Makefile
             extensions/venkman/resources/Makefile
-            extensions/venkman/resources/content/contents.rdf
-            extensions/venkman/resources/locale/en-US/contents.rdf
             " ;;
         wallet ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/wallet/Makefile
@@ -1347,8 +1277,6 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/wallet/signonviewer/Makefile
             extensions/wallet/walletpreview/Makefile
             extensions/wallet/build/Makefile
-            extensions/wallet/resources/content/contents.rdf
-            extensions/wallet/resources/locale/en-US/contents.rdf
             " ;;
         webservices ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/webservices/Makefile

@@ -1,6 +1,6 @@
 venkman.jar:
-  content/venkman/contents.rdf          (content/contents.rdf)
-  locale/en-US/venkman/contents.rdf     (locale/en-US/contents.rdf)
+* content/venkman/contents.rdf          (content/contents.rdf)
+* locale/en-US/venkman/contents.rdf     (locale/en-US/contents.rdf)
   skin/modern/venkman/contents.rdf      (skin/contents.rdf)
   content/venkman/venkman.xul           (content/venkman.xul)
   content/venkman/venkman-views.xul     (content/venkman-views.xul)

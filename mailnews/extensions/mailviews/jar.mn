@@ -5,7 +5,7 @@ messenger.jar:
     content/messenger/mailViewSetup.xul                              (resources/content/mailViewSetup.xul)
     content/messenger/mailViewList.xul                               (resources/content/mailViewList.xul)
     content/messenger/mailViewList.js                                (resources/content/mailViewList.js)
-    content/messenger-views/contents.rdf                             (resources/content/contents.rdf)
+*   content/messenger-views/contents.rdf                             (resources/content/contents.rdf)
 
 en-US.jar:
     locale/en-US/messenger/msgViewPickerOverlay.dtd                  (resources/locale/en-US/msgViewPickerOverlay.dtd)
