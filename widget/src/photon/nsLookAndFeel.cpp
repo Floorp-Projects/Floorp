@@ -31,13 +31,15 @@ nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::~nsLookAndFeel - %p destroyed\n", this));
+
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
 
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - Not Implemented!\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor mRefCnt=<%d>\n", mRefCnt));
 
   switch( aID )
   {

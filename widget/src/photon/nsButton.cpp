@@ -37,9 +37,9 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 
-NS_IMPL_ADDREF(nsButton)
-NS_IMPL_RELEASE(nsButton)
-
+NS_IMPL_ADDREF_INHERITED(nsButton, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsButton, nsWidget)
+NS_IMPL_QUERY_INTERFACE_INHERITED(nsButton, nsWidget, nsIButton)
 //-------------------------------------------------------------------------
 //
 // nsButton constructor
@@ -60,34 +60,6 @@ nsButton::~nsButton()
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::~nsButton - Not Implemented!\n"));
 }
 
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton:QueryInterface, mWidget=%p\n", mWidget));
-
-    if (NULL == aInstancePtr)
-	{
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
-    if (aIID.Equals(kIButton)) {
-        *aInstancePtr = (void*) ((nsIButton*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-
-    return nsWidget::QueryInterface(aIID,aInstancePtr);
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Set this button label
@@ -96,15 +68,15 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
   nsresult res = NS_ERROR_FAILURE;
-
   mLabel = aText;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsButton:SetLabel, mWidget=%p\n", mWidget));
   if( mWidget )
   {
     PtArg_t arg;
     
-    NS_ALLOC_STR_BUF(label, aText, 256);
+    NS_ALLOC_STR_BUF(label, aText, aText.Length());
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsButton:SetLabel - aText=<%s> mWidget=%p mRefCnt=<%d>\n", label, mWidget, mRefCnt));
 
     PtSetArg( &arg, Pt_ARG_TEXT_STRING, label, 0 );
     if( PtSetResources( mWidget, 1, &arg ) == 0 )
@@ -123,7 +95,9 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::GetLabel\n"));
+   NS_ALLOC_STR_BUF(label, mLabel, mLabel.Length());
+   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::GetLabel label=<%s> mRefCnt=<%d>\n", label, mRefCnt));
+   NS_FREE_STR_BUF(label);
 
   aBuffer = mLabel;
   return NS_OK;
@@ -173,7 +147,7 @@ NS_METHOD nsButton::CreateNative( PtWidget_t* aParent )
   PhDim_t   dim;
   const unsigned short BorderWidth = 2;
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsButton::CreateNative at (%d,%d) for (%d,%d)\n",mBounds.x,mBounds.y, mBounds.width, mBounds.height));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsButton::CreateNative at (%d,%d) for (%d,%d) with mRefCnt=<%d>\n",mBounds.x,mBounds.y, mBounds.width, mBounds.height, mRefCnt));
 
   NS_PRECONDITION(aParent, "nsButton::CreateNative aParent is NULL");
 
@@ -194,40 +168,10 @@ NS_METHOD nsButton::CreateNative( PtWidget_t* aParent )
       RawEventHandler, this );
 
     res = NS_OK;
-
-    /* Add an Activate Callback */
-//    PtAddCallback(mWidget, Pt_CB_ACTIVATE, handle_activate_event, this);
   }
 
   NS_POSTCONDITION(mWidget, "nsButton::CreateNative Failed to create Native Button");
 
   return res;  
 }
-
-#if 0
-int nsButton::handle_activate_event (PtWidget_t *aWidget, void *aData, PtCallbackInfo_t *aCbinfo )
-{
-  nsButton *me = (nsButton *) aData;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsButton::handle_activate_event widget=<%p>\n",me));
-
-  if (me)
-  {
-    nsGUIEvent event;
-
-    event.widget = me;
-    NS_IF_ADDREF(event.widget);
-    event.time = 0; //gdk_event_get_time((GdkEvent*)ge);
-    event.message = NS_MOUSE_LEFT_BUTTON_UP;
-	
-    event.point.x = 0;
-    event.point.y = 0;
-    event.eventStructType = NS_GUI_EVENT;
-
-    PRBool result = me->DispatchWindowEvent(&event);
-  }
-  
-  return (Pt_CONTINUE);
-}
-#endif
   
