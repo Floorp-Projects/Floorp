@@ -153,6 +153,8 @@ protected:
             str == sStatusbar_id    ||
             str == sDirectories_id  ||
             str == sControllers_id  ||
+            str == sScrollX_id      ||
+            str == sScrollY_id      ||
             str == sLength_id);
   }
 
@@ -225,6 +227,8 @@ protected:
   static JSString *sOnresize_id;
   static JSString *sOnscroll_id;
   static JSString *sScrollIntoView_id;
+  static JSString *sScrollX_id;
+  static JSString *sScrollY_id;
   static JSString *sOpen_id;
   static JSString *sItem_id;
   static JSString *sEnumerate_id;
