@@ -465,6 +465,8 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
          aX, aY));
 
+    mPlaced = PR_TRUE;
+
     // Since a popup window's x/y coordinates are in relation to to
     // the parent, the parent might have moved so we always move a
     // popup window.
@@ -487,7 +489,12 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
             gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
         }
         else {
-            gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+            // We only move the toplevel window if someone has
+            // actually placed the window somewhere.  If no placement
+            // has taken place, we just let the window manager Do The
+            // Right Thing.
+            if (mPlaced)
+                gtk_window_move(GTK_WINDOW(mShell), aX, aY);
         }
     }
     else if (mDrawingarea) {
@@ -1188,6 +1195,18 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     if (mBounds.x == aEvent->x &&
         mBounds.y == aEvent->y)
         return FALSE;
+
+    // Toplevel windows need to have their bounds set so that we can
+    // keep track of our location.  It's not often that the x,y is set
+    // by the layout engine.  Width and height are set elsewhere.
+    if (mIsTopLevel) {
+        mPlaced = PR_TRUE;
+        // Need to translate this into the right coordinates
+        nsRect oldrect, newrect;
+        WidgetToScreen(oldrect, newrect);
+        mBounds.x = newrect.x;
+        mBounds.y = newrect.y;
+    }
 
     nsGUIEvent event(NS_MOVE, this);
 
@@ -2336,7 +2355,13 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
             gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
         }
         else {
-            gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+            // We only move the toplevel window if someone has
+            // actually placed the window somewhere.  If no placement
+            // has taken place, we just let the window manager Do The
+            // Right Thing.
+            if (mPlaced)
+                gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+
             gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
             moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
         }

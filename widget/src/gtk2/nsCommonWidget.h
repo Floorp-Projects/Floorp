@@ -137,6 +137,9 @@ protected:
     PRBool              mEnabled;
     // has the native window for this been created yet?
     PRBool              mCreated;
+    // Has anyone set an x/y location for this widget yet? Toplevels
+    // shouldn't be automatically set to 0,0 for first show.
+    PRBool              mPlaced;
 
     // Preferred sizes
     PRUint32            mPreferredWidth;
