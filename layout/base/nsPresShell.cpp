@@ -1346,8 +1346,10 @@ protected:
   nsCOMPtr<nsITimer> mPaintSuppressionTimer; // This timer controls painting suppression.  Until it fires
                                              // or all frames are constructed, we won't paint anything but
                                              // our <body> background and scrollbars.
-#define PAINTLOCK_EVENT_DELAY 1200 // 1200 ms.  This is actually pref-controlled, but we use this
-                                   // value if we fail to get the pref for any reason.
+#define PAINTLOCK_EVENT_DELAY 250 // 250ms.  This is actually
+                                  // pref-controlled, but we use this
+                                  // value if we fail to get the pref
+                                  // for any reason.
 
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell); // A callback for the timer.
 
