@@ -73,17 +73,18 @@ calendarPrefObserver.prototype =
   }
 }
 
+function getDefaultCategories()
+{  
+   try {
+      var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/categories.properties");
+      return categoriesStringBundle.GetStringFromName("categories" );
+   }
+   catch(e) { return "" }
+}
+   
+   
 function calendarPreferences( CalendarWindow )
 {
-   function getDefaultCategories()
-   {  
-      try {
-         var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/categories.properties");
-         return categoriesStringBundle.GetStringFromName("categories" );
-      }
-      catch(e) { return "" }
-   }
-   
    window.calendarPrefObserver = new calendarPrefObserver( this );
    
    this.calendarWindow = CalendarWindow;
@@ -93,44 +94,102 @@ function calendarPreferences( CalendarWindow )
    this.calendarPref = prefService.getBranch("calendar."); // preferences calendar node
    
    // read prefs or set Defaults on the first run
-  try {
-    this.loadPreferences();  
-  }
-  catch(e) {
-     this.calendarPref.setBoolPref( "alarms.show", true );
-     this.calendarPref.setBoolPref( "alarms.playsound", false );
-     this.calendarPref.setIntPref( "date.format", 0 );
-     this.calendarPref.setIntPref( "week.start", 0 );
-     this.calendarPref.setIntPref( "event.defaultlength", 60 );
-     this.calendarPref.setIntPref( "alarms.defaultsnoozelength", 10 );
-     this.calendarPref.setCharPref( "categories.names", getDefaultCategories() );
-     this.calendarPref.setIntPref( "servers.count", 1 ); //this counts the default server as well, so its 1.
-     this.calendarPref.setBoolPref( "servers.reloadonlaunch", false ); //do we reload the remote servers on launch?
-     this.loadPreferences();
-  }
-  
-  
+   this.loadPreferences();  
 }
 
 calendarPreferences.prototype.loadPreferences = function()
 {
-   this.arrayOfPrefs.showalarms = this.calendarPref.getBoolPref( "alarms.show" );
+   try
+   {
+      this.arrayOfPrefs.showalarms = this.calendarPref.getBoolPref( "alarms.show" );
+   }
+   catch( e )
+   {
+      this.calendarPref.setBoolPref( "alarms.show", true );
+      this.arrayOfPrefs.showalarms = true;
+   }
 
-   this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
+   try
+   {
+      this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
+   }
+   catch( e )
+   {
+      this.calendarPref.setBoolPref( "alarms.playsound", false );
+      this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
+   }
 
-   this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
+   try
+   {
+      this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
+   }
+   catch( e )
+   {
+      this.calendarPref.setIntPref( "date.format", 0 );
+      this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
+   }
 
-   this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
+   try
+   {
+      this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
+   }
+   catch( e )
+   {
+      this.calendarPref.setIntPref( "week.start", 0 );
+      this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
+   }
 
-   this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
+   try
+   {
+      this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
+   }
+   catch( e )
+   {
+      this.calendarPref.setIntPref( "event.defaultlength", 60 );
+      this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
+   }
 
-   this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
+   try
+   {
+      this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
+   }
+   catch( e )
+   {
+      this.calendarPref.setIntPref( "alarms.defaultsnoozelength", 10 );
+      this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
+   }
 
-   this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
 
-   this.arrayOfPrefs.numberofservers = this.calendarPref.getIntPref( "servers.count" ); //this counts the default server
+   try
+   {
+      this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
+   }
+   catch( e )
+   {
+      this.calendarPref.setCharPref( "categories.names", getDefaultCategories() );
+      this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
+   }
+         
+   try
+   {
+      this.arrayOfPrefs.numberofservers = this.calendarPref.getIntPref( "servers.count" ); //this counts the default server
+   }
+   catch( e )
+   {
+      this.calendarPref.setIntPref( "servers.count", 1 ); //this counts the default server as well, so its 1.
+      this.arrayOfPrefs.numberofservers = this.calendarPref.getIntPref( "servers.count" ); //this counts the default server
+   }
 
-   this.arrayOfPrefs.reloadonlaunch = this.calendarPref.getBoolPref( "servers.reloadonlaunch" ); //this counts the default server
+
+   try
+   {
+      this.arrayOfPrefs.reloadonlaunch = this.calendarPref.getBoolPref( "servers.reloadonlaunch" ); //this counts the default server   
+   }
+   catch( e )
+   {
+      this.calendarPref.setBoolPref( "servers.reloadonlaunch", false ); //do we reload the remote servers on launch?
+      this.arrayOfPrefs.reloadonlaunch = this.calendarPref.getBoolPref( "servers.reloadonlaunch" ); //this counts the default server
+   }
 }
 
 calendarPreferences.prototype.getPref = function( Preference )
