@@ -61,16 +61,19 @@ imgRequestProxy::~imgRequestProxy()
   /* destructor code */
 
   if (!mCanceled) {
+    PR_Lock(mLock);
+
     mCanceled = PR_TRUE;
 
     /* set mListener to null so that we don't forward any callbacks that RemoveObserver might generate */
     mListener = nsnull;
 
+    PR_Unlock(mLock);
+
     /* Call RemoveObserver with a successful status.  This will keep the channel, if still downloading data,
        from being canceled if 'this' is the last observer.  This allows the image to continue to download and
        be cached even if no one is using it currently.
      */
-    nsAutoLock lock(mLock);
     NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, NS_OK);
 
     mOwner = nsnull;
@@ -89,13 +92,15 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequestProxy::Init", "request", request);
 
+  PR_Lock(mLock);
+
   mOwner = NS_STATIC_CAST(imgIRequest*, request);
   mListener = aObserver;
   mContext = cx;
 
   if (aLoadGroup) {
     PRUint32 imageStatus;
-    nsresult rv = GetImageStatus(&imageStatus);
+    nsresult rv = mOwner->GetImageStatus(&imageStatus);
     if (NS_FAILED(rv)) return rv;
     if (!(imageStatus & STATUS_LOAD_COMPLETE)) {
       aLoadGroup->AddRequest(this, cx);
@@ -103,10 +108,9 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
     }
   }
 
-  {
-    nsAutoLock lock(mLock);
-    request->AddProxy(this);
-  }
+  PR_Unlock(mLock);
+
+  request->AddProxy(this);
 
   return NS_OK;
 }
@@ -153,13 +157,14 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 
   LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
 
+  PR_Lock(mLock);
+
   mCanceled = PR_TRUE;
   mListener = nsnull;
 
-  {
-    nsAutoLock lock(mLock);
-    NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, status);
-  }
+  PR_Unlock(mLock);
+
+  NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, status);
 
   mOwner = nsnull;
 
@@ -181,11 +186,13 @@ NS_IMETHODIMP imgRequestProxy::Resume()
 /* attribute nsILoadGroup loadGroup */
 NS_IMETHODIMP imgRequestProxy::GetLoadGroup(nsILoadGroup **loadGroup)
 {
+  nsAutoLock lock(mLock);
   NS_IF_ADDREF(*loadGroup = mLoadGroup.get());
   return NS_OK;
 }
 NS_IMETHODIMP imgRequestProxy::SetLoadGroup(nsILoadGroup *loadGroup)
 {
+  nsAutoLock lock(mLock);
   mLoadGroup = loadGroup;
   return NS_OK;
 }
