@@ -666,7 +666,7 @@ sub RemoveVotes {
             $whopart);
     my @list;
     while (MoreSQLData()) {
-        my ($name, $count) = (@_);
+        my ($name, $count) = (FetchSQLData());
         push(@list, [$name, $count]);
     }
     if (0 < @list) {
@@ -678,8 +678,9 @@ sub RemoveVotes {
                 $substs{"bugid"} = $id;
                 $substs{"reason"} = $reason;
                 $substs{"count"} = $count;
-                print SENDMAIL PerformSubsts(Param("voteremovedmail"),
-                                             \%substs);
+                my $msg = PerformSubsts(Param("voteremovedmail"),
+                                        \%substs);
+                print SENDMAIL $msg;
                 close SENDMAIL;
             }
         }
