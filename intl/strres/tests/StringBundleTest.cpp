@@ -209,7 +209,7 @@ main(int argc, char *argv[])
   // 123
   ret = bundle->GetStringFromID(123, &ptrv);
   if (NS_FAILED(ret)) {
-    printf("cannot get string from ID\n");
+    printf("cannot get string from ID 123, ret=%d\n", ret);
     return 1;
   }
   v = ptrv;

@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0" encoding="UTF-8" ?> 
 <!-- DON'T localize: strres test cases -->
 
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
@@ -17,7 +17,7 @@
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
 
 	<!--html:script language="javascript" src="resource:/res/strres-test.js" charset="Shift_JIS" / -->
-	<html:script language="javascript" src="resource:/res/strres-test.js" charset="UTF-8" />
+	<html:script language="javascript" src="resource:/res/strres-test.js" />
                    
 	<box align="horizontal" flex="100%" style="width:30em;">
                       
@@ -34,7 +34,7 @@
            
         	<box align="horizontal">
         		<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
-        		<titledbutton onclick="choose()" value="**Choose File..." align="left"/>
+        		<titledbutton onclick="choose()" value="Choose File..." align="left"/>
        		 </box>
                               
         	<box align="horizontal" style="margin-bottom: 1em;">
@@ -54,9 +54,9 @@
                    
         	<box align="horizontal">
 				<spring flex="100%"/>
-            	<titledbutton id="dialog.ok" value="okBtn" onclick="open()" align="left"/>
-				<titledbutton id="dialog.test" value="戻る" onclick="strresTest()" align="left"/>
-            	<titledbutton id="dialog.cancel" value="cancelBtn" onclick="cancel()" align="left"/>
+            	<titledbutton id="dialog.ok" value="ok" onclick="open()" align="left"/>
+				<titledbutton id="dialog.test" value="test" onclick="strresTest()" align="left"/>
+            	<titledbutton id="dialog.cancel" value="cancel: 戻る" onclick="cancel()" align="left"/>
 				<spring flex="100%"/>
         	</box>
                      
