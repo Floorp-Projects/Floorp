@@ -420,9 +420,11 @@ nsOutputStream& nsEndl(nsOutputStream& os)
 {
 #ifdef XP_PC
     os.write("\r\n", 2);
+#elif defined (XP_MAC)
+    os.put('\r');
 #else
     os.put('\n');
 #endif
-    os.flush();
+    //os.flush();
     return os;
 } // nsEndl
