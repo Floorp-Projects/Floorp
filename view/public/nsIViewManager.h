@@ -501,6 +501,12 @@ public:
                                PRUint16 aMinTwips, 
                                nsRectVisibility *aRectVisibility)=0;
 
+  /**
+   * Dispatch a mouse move event based on the most recent mouse
+   * position.  This is used when the contents of the page moved
+   * (aFromScroll is false) or scrolled (aFromScroll is true).
+   */
+  NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
 };
 
 //update view now?

@@ -493,10 +493,22 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_MOUSE_MOVE:
-    // on the Mac, GenerateDragGesture() may not return until the drag has completed
-    // and so |aTargetFrame| may have been deleted (moving a bookmark, for example).
-    // If this is the case, however, we know that ClearFrameRefs() has been called
-    // and it cleared out |mCurrentTarget|. As a result, we should pass |mCurrentTarget|
+    if (IsTrackingDragGesture() &&
+        NS_STATIC_CAST(nsMouseEvent*, aEvent)->reason ==
+          nsMouseEvent::eSynthesized) {
+      // This is not a real mouse move, it's synthesized.  Reset the
+      // starting point to the current point (since things moved), but
+      // otherwise let the user continue the drag.
+      StopTrackingDragGesture();
+      BeginTrackingDragGesture(aPresContext,
+                               NS_STATIC_CAST(nsGUIEvent*, aEvent),
+                               aTargetFrame);
+    }
+    // on the Mac, GenerateDragGesture() may not return until the drag
+    // has completed and so |aTargetFrame| may have been deleted (moving
+    // a bookmark, for example).  If this is the case, however, we know
+    // that ClearFrameRefs() has been called and it cleared out
+    // |mCurrentTarget|. As a result, we should pass |mCurrentTarget|
     // into UpdateCursor().
     GenerateDragGesture(aPresContext, (nsGUIEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
@@ -1358,6 +1370,8 @@ nsEventStateManager::BeginTrackingDragGesture(nsIPresContext* aPresContext,
                                               nsGUIEvent* inDownEvent,
                                               nsIFrame* inDownFrame)
 {
+  // Note that |inDownEvent| could be either a mouse down event or a
+  // synthesized mouse move event.
   mIsTrackingDragGesture = PR_TRUE;
   mGestureDownPoint = inDownEvent->point;
   mGestureDownRefPoint = inDownEvent->refPoint;
@@ -1676,11 +1690,6 @@ nsEventStateManager::DoScrollText(nsIPresContext* aPresContext,
   nsIScrollableView* sv = nsnull;
   nsIFrame* focusFrame = nsnull;
   
-  // Create a mouseout event that we fire to the content before
-  // scrolling, to allow tooltips to disappear, etc.
-
-  nsMouseEvent mouseOutEvent(NS_MOUSE_EXIT, aEvent->widget);
-
   nsIPresShell *presShell = aPresContext->PresShell();
 
   // Otherwise, check for a focused content element
@@ -1722,8 +1731,6 @@ nsEventStateManager::DoScrollText(nsIPresContext* aPresContext,
 
   PRBool passToParent;
   if (sv) {
-    GenerateMouseEnterExit(aPresContext, &mouseOutEvent);
-
     // If we're already at the scroll limit for this view, scroll the
     // parent view instead.
 
@@ -3813,7 +3820,6 @@ NS_IMETHODIMP
 nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 {
   if (!mCurrentTarget && mCurrentTargetContent) {
-    nsCOMPtr<nsIPresShell> shell;
     if (mPresContext) {
       nsIPresShell *shell = mPresContext->GetPresShell();
       if (shell) {

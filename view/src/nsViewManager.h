@@ -228,6 +228,9 @@ public:
                                PRUint16 aMinTwips, 
                                nsRectVisibility *aRectVisibility);
 
+  NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll);
+  void ProcessSynthMouseMoveEvent(PRBool aFromScroll);
+
 protected:
   virtual ~nsViewManager();
   void ProcessPendingUpdates(nsView *aView);
@@ -389,6 +392,7 @@ private:
   nsIScrollableView *mRootScrollable;
   PRInt32           mCachingWidgetChanges;
   nscolor           mDefaultBackgroundColor;
+  nsPoint           mMouseLocation; // device units, relative to mRootView
   nsHashtable       mMapPlaceholderViewToZTreeNode;
   nsCOMPtr<nsIBlender> mBlender;
   nsISupportsArray  *mCompositeListeners;
@@ -396,6 +400,7 @@ private:
   nsView            *mRootView;
   nsCOMPtr<nsIEventQueueService>  mEventQueueService;
   nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
+  nsCOMPtr<nsIEventQueue>         mSynthMouseMoveEventQueue;
   PRPackedBool      mRefreshEnabled;
   PRPackedBool      mPainting;
   PRPackedBool      mRecursiveRefreshPending;
