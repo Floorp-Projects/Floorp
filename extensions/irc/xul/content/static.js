@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg("defaultNick");
 
-client.version = "0.8.13c";
+client.version = "0.8.23";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -130,7 +130,8 @@ function ()
 
 function ucConvertIncomingMessage (e)
 {
-    e.meat = toUnicode(e.meat);
+    var length = e.params.length;
+    e.params[length - 1] = toUnicode(e.params[length - 1]);
     return true;
 }
 
@@ -412,10 +413,28 @@ function initHost(obj)
                                     false /* disable */);
     }
 
-    obj.linkRE = /((\w+):[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
+    obj.linkRE =
+        /((\w[\w-]+):[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
 
     obj.munger = new CMunger();
     obj.munger.enabled = true;
+    obj.munger.addRule ("quote", /(``|'')/, insertQuote);
+    obj.munger.addRule ("bold", /(?:\s|^)(\*[^*()]*\*)(?:[\s.,]|$)/, 
+                        "chatzilla-bold");
+    obj.munger.addRule ("underline", /(?:\s|^)(\_[^_()]*\_)(?:[\s.,]|$)/,
+                        "chatzilla-underline");
+    obj.munger.addRule ("italic", /(?:\s|^)(\/[^\/()]*\/)(?:[\s.,]|$)/,
+                        "chatzilla-italic");
+    /* allow () chars inside |code()| blocks */
+    obj.munger.addRule ("teletype", /(?:\s|^)(\|[^|]*\|)(?:[\s.,]|$)/,
+                        "chatzilla-teletype");
+    obj.munger.addRule (".mirc-colors", /(\x03((\d{1,2})(,\d{1,2}|)|))/,
+                         mircChangeColor);
+    obj.munger.addRule (".mirc-bold", /(\x02)/, mircToggleBold);
+    obj.munger.addRule (".mirc-underline", /(\x1f)/, mircToggleUnder);
+    obj.munger.addRule (".mirc-color-reset", /(\x0f)/, mircResetColor);
+    obj.munger.addRule (".mirc-reverse", /(\x16)/, mircReverseColor);
+    obj.munger.addRule ("ctrl-char", /([\x01-\x1f])/, showCtrlChar);
     obj.munger.addRule ("link", obj.linkRE, insertLink);
     obj.munger.addRule ("mailto",
        /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s]+@[^.<>\[\]()\'\"\s]+\.[^<>\[\]()\'\"\s]+)/i,
@@ -431,22 +450,6 @@ function initHost(obj)
          insertSmiley);
     obj.munger.addRule ("ear", /(?:\s|^)(\(\*)(?:\s|$)/, insertEar, false);
     obj.munger.addRule ("rheet", /(?:\s|\W|^)(rhee+t\!*)(?:\s|$)/i, insertRheet);
-    obj.munger.addRule ("bold", /(?:\s|^)(\*[^*,.()]*\*)(?:[\s.,]|$)/, 
-                        "chatzilla-bold");
-    obj.munger.addRule ("italic", /(?:\s|^)(\/[^\/,.()]*\/)(?:[\s.,]|$)/,
-                        "chatzilla-italic");
-    /* allow () chars inside |code()| blocks */
-    obj.munger.addRule ("teletype", /(?:\s|^)(\|[^|,.]*\|)(?:[\s.,]|$)/,
-                        "chatzilla-teletype");
-    obj.munger.addRule ("underline", /(?:\s|^)(\_[^_,.()]*\_)(?:[\s.,]|$)/,
-                        "chatzilla-underline");
-    obj.munger.addRule (".mirc-colors", /(\x03((\d{1,2})(,\d{1,2}|)|))/,
-                         mircChangeColor);
-    obj.munger.addRule (".mirc-bold", /(\x02)/, mircToggleBold);
-    obj.munger.addRule (".mirc-underline", /(\x1f)/, mircToggleUnder);
-    obj.munger.addRule (".mirc-color-reset", /(\x0f)/, mircResetColor);
-    obj.munger.addRule (".mirc-reverse", /(\x16)/, mircReverseColor);
-    obj.munger.addRule ("ctrl-char", /([\x01-\x1f])/, showCtrlChar);
     obj.munger.addRule ("word-hyphenator",
                         new RegExp ("(\\S{" + client.MAX_WORD_DISPLAY + ",})"),
                         insertHyphenatedWord);
@@ -461,21 +464,59 @@ function initHost(obj)
 
 function insertLink (matchText, containerTag)
 {
-
     var href;
+    var linkText;
     
-    if (matchText.match (/^[a-zA-Z-]+:/))
-        href = matchText;
+    var trailing;
+    ary = matchText.match(/([.,]+)$/);
+    if (ary)
+    {
+        linkText = RegExp.leftContext;
+        trailing = ary[1];
+    }
     else
-        href = "http://" + matchText;
-    
+    {
+        linkText = matchText;
+    }
+
+    var ary = linkText.match (/^(\w[\w-]+):/);
+    if (ary)
+    {
+        if (!("schemes" in client))
+        {
+            var pfx = "@mozilla.org/network/protocol;1?name=";
+            var len = pfx.length
+
+            client.schemes = new Object();
+            for (var c in Components.classes)
+            {
+                if (c.indexOf(pfx) == 0)
+                    client.schemes[c.substr(len)] = true;
+            }
+        }
+        
+        if (!(ary[1] in client.schemes))
+        {
+            insertHyphenatedWord(matchText, containerTag);
+            return;
+        }
+
+        href = linkText;
+    }
+    else
+    {
+        href = "http://" + linkText;
+    }
+
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
     anchor.setAttribute ("href", href);
     anchor.setAttribute ("class", "chatzilla-link");
     anchor.setAttribute ("target", "_content");
-    insertHyphenatedWord (matchText, anchor);
+    insertHyphenatedWord (linkText, anchor);
     containerTag.appendChild (anchor);
+    if (trailing)
+        insertHyphenatedWord (trailing, containerTag);
     
 }
 
@@ -551,6 +592,14 @@ function insertRheet (matchText, containerTag)
     //anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
     containerTag.appendChild (anchor);    
+}
+
+function insertQuote (matchText, containerTag)
+{
+    if (matchText == "``")
+        containerTag.appendChild(document.createTextNode("\u201c"));
+    else
+        containerTag.appendChild(document.createTextNode("\u201d"));
 }
 
 function insertEar (matchText, containerTag)
@@ -707,6 +756,12 @@ function showCtrlChar(c, containerTag)
     var span = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                          "html:span");
     span.setAttribute ("class", "chatzilla-control-char");
+    if (c == "\t")
+    {
+        containerTag.appendChild(document.createTextNode(c));
+        return;
+    }
+
     var ctrlStr = c.charCodeAt(0).toString(16);
     if (ctrlStr.length < 2)
         ctrlStr = "0" + ctrlStr;
@@ -1587,7 +1642,15 @@ function multilineInputMode (state)
 
 function focusInput ()
 {
-    client.input.focus();
+    const WWATCHER_CTRID = "@mozilla.org/embedcomp/window-watcher;1";
+    const nsIWindowWatcher = Components.interfaces.nsIWindowWatcher;
+    
+    var watcher =
+        Components.classes[WWATCHER_CTRID].getService(nsIWindowWatcher);
+    if (watcher.activeWindow == window)
+        client.input.focus();
+    else
+        document.commandDispatcher.focusedElement = client.input;
 }
 
 function newInlineText (data, className, tagName)

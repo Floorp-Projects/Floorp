@@ -31,6 +31,8 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
+
 <overlay id="ovCZPrefs" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
@@ -38,37 +40,37 @@
     <treeitem container="true" id="chatzillaItem" insertbefore="advancedItem">
       <treerow>
         <treecell url="chrome://chatzilla/content/prefpanel/pref-irc.xul" 
-            label="ChatZilla"/>
+            label="&pref-irc.window.title;"/>
       </treerow>
       <treechildren id="chatzillaChildren">
         <treeitem>
           <treerow>
             <treecell url="chrome://chatzilla/content/prefpanel/startup.xul" 
-                label="Startup"/>
+                label="&startup.window.title;"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
             <treecell url="chrome://chatzilla/content/prefpanel/interface.xul" 
-                label="Interface"/>
+                label="&interface.window.title;"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
             <treecell url="chrome://chatzilla/content/prefpanel/appearance.xul" 
-                label="Appearance"/>
+                label="&appearance.window.title;"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
             <treecell url="chrome://chatzilla/content/prefpanel/stalk.xul" 
-                label="Stalking"/>
+                label="&stalk.window.title;"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
             <treecell url="chrome://chatzilla/content/prefpanel/sound.xul" 
-                label="Sound"/>
+                label="&sound.window.title;"/>
           </treerow>
         </treeitem>
       </treechildren>

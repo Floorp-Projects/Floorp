@@ -122,7 +122,6 @@ function net_geturl ()
 CIRCNetwork.prototype.connect =
 function net_conenct()
 {
-
     if ("primServ" in this && this.primServ.connection.isConnected)
         return;
 
@@ -132,17 +131,13 @@ function net_conenct()
     this.nextHost = 0;
     var ev = new CEvent ("network", "do-connect", this, "onDoConnect");
     this.eventPump.addEvent (ev);
-
 }
 
 CIRCNetwork.prototype.quit =
 function net_quit (reason)
 {
-
-    this.stayingPower = false;
     if (this.isConnected())
         this.primServ.logout (reason);
-
 }
 
 /*
@@ -366,6 +361,8 @@ function serv_logout(reason)
     
     if (typeof reason == "undefined") reason = this.DEFAULT_REASON;
 
+    this.quitting = true;
+
     this.connection.sendData ("QUIT :" + reason + "\n");
     this.connection.disconnect();
 
@@ -547,7 +544,8 @@ function serv_disconnect(e)
 
     if (("connecting" in this.parent) ||
         /* fell off while connecting, try again */
-        (this.parent.primServ == this) && (this.parent.stayingPower))
+        (this.parent.primServ == this) &&
+        (!("quitting" in this) && this.parent.stayingPower))
     { /* fell off primary server, reconnect to any host in the serverList */
 	var ev = new CEvent ("network", "do-connect", this.parent,
                              "onDoConnect");
@@ -560,7 +558,9 @@ function serv_disconnect(e)
 
     for (var c in this.channels)
         this.channels[c].users = new Object();
-
+    
+    delete this.quitting;
+        
     return true;
 
 }
@@ -692,9 +692,8 @@ function serv_ppline(e)
  * connection.....CBSConnection (this.connection)
  * source.........the <prefix> of the message (if it exists)
  * user...........user object initialized with data from the message <prefix>
- * params.........array containing the <middle> parameters of the message
- * code...........the first <middle> parameter (most messages have this)
- * meat...........the <trailing> parameter of the message
+ * params.........array containing the parameters of the message
+ * code...........the first parameter (most messages have this)
  *
  * See Section 2.3.1 of RFC 1459 for details on <prefix>, <middle> and
  * <trailing> tokens.
@@ -736,14 +735,16 @@ function serv_onRawData(e)
     var sep = l.indexOf(" :");
 
     if (sep != -1) /* <trailing> param, if there is one */
-        e.meat = l.substr (sep + 2, l.length);
-    else
-        e.meat = "";
-
-    if (sep != -1)
+    {
+        var trail = l.substr (sep + 2, l.length);
         e.params = l.substr(0, sep).split(" ");
+        e.params[e.params.length] = trail;
+    }
     else
+    {
         e.params = l.split(" ");
+    }
+
     e.code = e.params[0].toUpperCase();
 
     e.type = "parseddata";
@@ -799,7 +800,7 @@ function serv_topic (e)
     e.channel = new CIRCChannel (this, e.params[1]);
     e.channel.topicBy = e.user.nick;
     e.channel.topicDate = new Date();
-    e.channel.topic = e.meat;
+    e.channel.topic = e.params[2];
     e.destObject = e.channel;
     e.set = "channel";
 
@@ -843,7 +844,7 @@ function serv_332 (e)
 {
 
     e.channel = new CIRCChannel (this, e.params[2]);
-    e.channel.topic = e.meat;
+    e.channel.topic = e.params[3];
     e.destObject = e.channel;
     e.set = "channel";
 
@@ -936,7 +937,7 @@ function serv_353 (e)
     e.destObject = e.channel;
     e.set = "channel";
 
-    var nicks = e.meat.split (" ");
+    var nicks = e.params[4].split (" ");
 
     for (var n in nicks)
     {
@@ -1224,9 +1225,7 @@ function serv_chanmode (e)
 CIRCServer.prototype.onNick = 
 function serv_nick (e)
 {
-    /* Some irc networks send the new nick in the meat, some send it in param[1]
-     * Handle both cases. */
-    var newNick = (e.meat) ? e.meat : e.params[1]; 
+    var newNick = e.params[1]; 
     var newKey = newNick.toLowerCase();
     var oldKey = e.user.nick;
     var ev;
@@ -1283,16 +1282,16 @@ function serv_quit (e)
             ev.user = e.server.channels[c].users[e.user.nick];
             ev.channel = e.server.channels[c];
             ev.server = ev.channel.parent;
-            ev.reason = e.meat;
+            ev.reason = e.params[1];
             this.parent.eventPump.addEvent(ev);
             delete e.server.channels[c].users[e.user.nick];
         }
     }
 
-    this.users[e.user.nick].lastQuitMessage = e.meat;
+    this.users[e.user.nick].lastQuitMessage = e.params[1];
     this.users[e.user.nick].lastQuitDate = new Date;
 
-    e.reason = e.meat;
+    e.reason = e.params[1];
     e.destObject = e.user;
     e.set = "user";
 
@@ -1325,7 +1324,7 @@ function serv_kick (e)
     delete e.channel.users[e.lamer.nick];
     if (userIsMe(e.lamer))
         e.channel.active = false;
-    e.reason = e.meat;
+    e.reason = e.params[3];
     e.destObject = e.channel;
     e.set = "channel"; 
 
@@ -1337,7 +1336,7 @@ CIRCServer.prototype.onJoin =
 function serv_join (e)
 {
 
-    e.channel = new CIRCChannel (this, (e.meat ? e.meat : e.params[1]));
+    e.channel = new CIRCChannel (this, e.params[1]);
     if (e.user == this.me)
         e.server.sendData ("MODE " + e.channel.encodedName + "\n" /* +
                            "BANS " + e.channel.encodedName + "\n" */);
@@ -1357,14 +1356,7 @@ function serv_ping (e)
 {
 
     /* non-queued send, so we can calcualte lag */
-    if (e.meat)
-    {
-        this.connection.sendData ("PONG :" + e.meat + "\n");
-    }
-    else
-    {
-        this.connection.sendData ("PONG :" + e.params[e.params.length - 1] + "\n");
-    }
+    this.connection.sendData ("PONG :" + e.params[1] + "\n");
     this.connection.sendData ("PING :LAGTIMER\n");
     this.lastPing = this.lastPingSent = new Date();
 
@@ -1378,7 +1370,7 @@ function serv_ping (e)
 CIRCServer.prototype.onPong = 
 function serv_pong (e)
 {
-    if (e.meat != "LAGTIMER")
+    if (e.params[2] != "LAGTIMER")
         return true;
     
     if (this.lastPingSent)
@@ -1412,7 +1404,7 @@ function serv_notice (e)
         e.replyTo = e.channel;
         e.set = "channel";
     }
-    else if (e.meat.search (/\x01.*\x01/i) != -1)
+    else if (e.params[2].search (/\x01.*\x01/i) != -1)
     {
         e.type = "ctcp-reply";
         e.destMethod = "onCTCPReply";
@@ -1452,7 +1444,7 @@ function serv_privmsg (e)
         e.replyTo = e.user; /* send replys to the user who sent the message */
     }
 
-    if (e.meat.search (/\x01.*\x01/i) != -1)
+    if (e.params[2].search (/\x01.*\x01/i) != -1)
     {
         e.type = "ctcp";
         e.destMethod = "onCTCP";
@@ -1469,7 +1461,7 @@ function serv_privmsg (e)
 CIRCServer.prototype.onCTCPReply = 
 function serv_ctcpr (e)
 {
-    var ary = e.meat.match (/^\x01(\S+) ?(.*)\x01$/i);
+    var ary = e.params[2].match (/^\x01(\S+) ?(.*)\x01$/i);
 
     if (ary == null)
         return false;
@@ -1512,7 +1504,7 @@ function serv_ctcpr (e)
 CIRCServer.prototype.onCTCP = 
 function serv_ctcp (e)
 {
-    var ary = e.meat.match (/^\x01(\S+) ?(.*)\x01$/i);
+    var ary = e.params[2].match (/^\x01(\S+) ?(.*)\x01$/i);
 
     if (ary == null)
         return false;

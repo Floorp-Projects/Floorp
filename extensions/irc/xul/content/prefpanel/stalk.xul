@@ -63,10 +63,10 @@
     </hbox>
     <hbox>
       <button id="czAddStalkWords" label="&list.add.label;" 
-          accesskey="&list.add.accesskey;"
+          accesskey="&list.add.stalk.accesskey;"
           oncommand="listAdd('StalkWords');"/>
       <button id="czDelStalkWords" label="&list.del.label;" 
-          accesskey="&list.del.accesskey;"
+          accesskey="&list.del.stalk.accesskey;"
           oncommand="listDelete('StalkWords');"/>
     </hbox>
   </groupbox>

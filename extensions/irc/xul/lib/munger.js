@@ -143,6 +143,12 @@ function mng_munge (text, containerTag, data)
 
                         subTag.setAttribute ("class", newClass);
 
+                        /* don't let this rule match again */
+                        this.entries[entry].enabled = false;
+                        this.munge(ary[1], subTag, data);
+                        this.entries[entry].enabled = true;
+                        
+                        /*
                         var wordParts = splitLongWord (ary[1],
                                                        client.MAX_WORD_DISPLAY);
                         for (var i in wordParts)
@@ -152,8 +158,10 @@ function mng_munge (text, containerTag, data)
                                                             "html:wbr");
                             subTag.appendChild (wbr);
                         }
+                        */
  
                         containerTag.appendChild (subTag);
+
                         this.munge (text.substr (startPos + ary[1].length,
                                                  text.length), containerTag,
                                                  data);

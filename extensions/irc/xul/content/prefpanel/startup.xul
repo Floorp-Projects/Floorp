@@ -60,16 +60,20 @@
           prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
           onselect="listUpdateButtons('Scripts');"/>
       <vbox>
-        <button id="czUpScripts" label="&list.up;" class="up" 
+        <button id="czUpScripts" label="&list.up.label;" class="up" 
+            accesskey="&list.up.script.accesskey;"
             oncommand="listMoveUp('Scripts');"/>
-        <button id="czDnScripts" label="&list.dn;" class="down" 
+        <button id="czDnScripts" label="&list.dn.label;" class="down" 
+            accesskey="&list.dn.script.accesskey;"
             oncommand="listMoveDown('Scripts');"/>
       </vbox>
     </hbox>
     <hbox>
-      <button id="czAddScripts" label="&list.add;"
+      <button id="czAddScripts" label="&list.add.label;"
+          accesskey="&list.add.script.accesskey;"
           oncommand="listAdd('Scripts');"/>
-      <button id="czDelScripts" label="&list.del;" 
+      <button id="czDelScripts" label="&list.del.label;" 
+          accesskey="&list.del.script.accesskey;"
           oncommand="listDelete('Scripts');"/>
     </hbox>
   </groupbox>
@@ -84,18 +88,23 @@
           prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue" 
           onselect="listUpdateButtons('URLs');" ondblclick="listEdit('URLs');"/>
       <vbox>
-        <button id="czUpURLs" label="&list.up;" class="up" 
+        <button id="czUpURLs" label="&list.up.label;" class="up" 
+            accesskey="&list.up.server.accesskey;"
             oncommand="listMoveUp('URLs');"/>
-        <button id="czDnURLs" label="&list.dn;" class="down" 
+        <button id="czDnURLs" label="&list.dn.label;" class="down" 
+            accesskey="&list.dn.server.accesskey;"
             oncommand="listMoveDown('URLs');"/>
       </vbox>
     </hbox>
     <hbox>
-      <button id="czAddURLs" label="&list.add;" 
+      <button id="czAddURLs" label="&list.add.label;" 
+          accesskey="&list.add.server.accesskey;"
           oncommand="listAdd('URLs');"/>
-      <button id="czEditURLs" label="&list.edit;" 
+      <button id="czEditURLs" label="&list.edit.label;" 
+          accesskey="&list.edit.accesskey;"
           oncommand="listEdit('URLs');"/>
-      <button id="czDelURLs" label="&list.del;" 
+      <button id="czDelURLs" label="&list.del.label;" 
+          accesskey="&list.del.server.accesskey;"
           oncommand="listDelete('URLs');"/>
     </hbox>
   </groupbox>

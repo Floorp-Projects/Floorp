@@ -763,11 +763,11 @@ function onInputKeyPress (e)
     switch (e.keyCode)
     {        
         case 13: /* CR */
-            e.line = stringTrim(e.target.value);
-            if (!e.line)
+            e.line = e.target.value;
+            e.target.value = "";
+            if (e.line.search(/\S/) == -1)
                 return;
             onInputCompleteLine (e);
-            e.target.value = "";            
             break;
 
         case 38: /* up */
@@ -1352,7 +1352,7 @@ function cli_testdisplay (e)
     client.currentObject.display (getMsg("cli_testdisplayMsg5"), "USAGE");
     client.currentObject.display (getMsg("cli_testdisplayMsg6"), "STATUS");
 
-    if (o.server && o.server.me)
+    if ("server" in o && o.server.me)
     {
         var me = o.server.me;
         var viewType = client.currentObject.TYPE;
@@ -1393,6 +1393,8 @@ function cli_testdisplay (e)
         client.currentObject.display (unescape(getMsg("cli_testdisplayMsg20")),
                                       "PRIVMSG", sampleUser, me);
         client.currentObject.display (unescape(getMsg("cli_testdisplayMsg21")),
+                                      "PRIVMSG", sampleUser, me);
+        client.currentObject.display (unescape(getMsg("cli_testdisplayMsg22")),
                                       "PRIVMSG", sampleUser, me);
         
 
@@ -2609,11 +2611,14 @@ function my_unknown (e)
     e.params.shift(); /* and the dest. nick (always me) */
         /* if it looks like some kind of "end of foo" code, and we don't
          * already have a mapping for it, make one up */
-    if (!(e.code in client.responseCodeMap) && e.meat.search (/^end of/i) != -1)
+    var length = e.params.length;
+    if (!(e.code in client.responseCodeMap) && 
+        (e.params[length - 1].search (/^end of/i) != -1))
+    {
         client.responseCodeMap[e.code] = "---";
+    }
     
-    this.display (e.params.join(" ") + ": " + e.meat,
-                  e.code.toUpperCase());
+    this.display (e.params.join(" "), e.code.toUpperCase());
 }
 
 CIRCNetwork.prototype.on001 = /* Welcome! */
@@ -2633,7 +2638,7 @@ CIRCNetwork.prototype.on372 = /* MOTD line */
 CIRCNetwork.prototype.on376 = /* end of MOTD */
 function my_showtonet (e)
 {
-    var p = (2 in e.params) ? e.params[2] + " " : "";
+    var p = (3 in e.params) ? e.params[2] + " " : "";
     var str = "";
 
     switch (e.code)
@@ -2661,7 +2666,16 @@ function my_showtonet (e)
                 }
                 delete this.pendingURLs;
             }
-            str = e.meat;
+            for (var v in client.viewsArray)
+            {
+                // reconnect to any existing views
+                var source = client.viewsArray[v].source;
+                var details = getObjectDetails(client.viewsArray[v].source);
+                if ("network" in details && details.network == this)
+                    gotoIRCURL(source.getURL());
+            }
+
+            str = e.params[2];
             break;
             
         case "372":
@@ -2672,7 +2686,8 @@ function my_showtonet (e)
             /* no break */
 
         default:
-            str = e.meat;
+            var length = e.params.length;
+            str = e.params[length - 1];
             break;
     }
 
@@ -2691,13 +2706,13 @@ function my_ctcprunk (e)
 CIRCNetwork.prototype.onNotice = 
 function my_notice (e)
 {
-    this.display (e.meat, "NOTICE", this, e.server.me);
+    this.display (e.params[2], "NOTICE", this, e.server.me);
 }
 
 CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
 function my_303 (e)
 {
-    var onList = stringTrim(e.meat.toLowerCase()).split(/\s+/);
+    var onList = stringTrim(e.params[1].toLowerCase()).split(/\s+/);
     var offList = new Array();
     var newArrivals = new Array();
     var newDepartures = new Array();
@@ -2792,8 +2807,8 @@ function my_321 (e)
         {
             if (list.event323)
             {
-                network.displayHere (list.event323.params.join(" ") + ": " +
-                                     list.event323.meat, "323");
+                var length = list.event323.params.length;
+                network.displayHere (list.event323.params[length - 1], "323");
             }
             network.displayHere (getMsg("my_323", [list.displayed, list.count]),
                                  "INFO");
@@ -2810,7 +2825,7 @@ function my_321 (e)
         this.list = new Array();
         this.list.regexp = null;
     }
-    this.displayHere (e.params[2] + " " + e.meat, "321");
+    this.displayHere (e.params[2] + " " + e.params[3], "321");
     if (client.currentObject != this)
         client.currentObject.display (getMsg("my_321", this.name), "INFO");
     this.list.lastLength = 0;
@@ -2839,9 +2854,9 @@ function my_listrply (e)
     ++this.list.count;
     e.params[2] = toUnicode(e.params[2]);
     if (!(this.list.regexp) || e.params[2].match(this.list.regexp)
-                            || e.meat.match(this.list.regexp))
+                            || e.params[4].match(this.list.regexp))
     {
-        this.list.push([e.params[2], e.params[3], e.meat]);
+        this.list.push([e.params[2], e.params[3], e.params[4]]);
     }
 }
 
@@ -2865,7 +2880,8 @@ function my_352 (e)
     //5-irc.mozilla.org 6-rginda 7-H
     var desc;
     var hops = "?";
-    var ary = e.meat.match(/(\d+)\s(.*)/);
+    var length = e.params.length;
+    var ary = e.params[length - 1].match(/(\d+)\s(.*)/);
     if (ary)
     {
         hops = Number(ary[1]);
@@ -2873,7 +2889,7 @@ function my_352 (e)
     }
     else
     {
-        desc = e.meat;
+        desc = e.params[length - 1];
     }
     
     var status = e.params[7];
@@ -2906,17 +2922,17 @@ function my_whoisreply (e)
     {
         case 311:
             text = getMsg("my_whoisreplyMsg",
-                          [nick, e.params[3], e.params[4], e.meat]);
+                          [nick, e.params[3], e.params[4], e.params[6]]);
             break;
             
         case 319:
-            var ary = stringTrim(e.meat).split(" ");
+            var ary = stringTrim(e.params[3]).split(" ");
             text = getMsg("my_whoisreplyMsg2",[nick, arraySpeak(ary)]);
             break;
             
         case 312:
             text = getMsg("my_whoisreplyMsg3",
-                          [nick, e.params[3], e.meat]);
+                          [nick, e.params[3], e.params[4]]);
             break;
             
         case 317:
@@ -2953,7 +2969,7 @@ CIRCNetwork.prototype.onInvite = /* invite message */
 function my_invite (e)
 {
     this.display (getMsg("my_Invite", [e.user.properNick, e.user.name,
-                                       e.user.host, e.meat]), "INVITE");
+                                       e.user.host, e.params[2]]), "INVITE");
 }
 
 CIRCNetwork.prototype.on433 = /* nickname in use */
@@ -3000,7 +3016,7 @@ function my_neterror (e)
         }
     }
     else
-        msg = e.meat;
+        msg = e.params[e.params.length - 1];
     
     this.display (msg, "ERROR");   
 }
@@ -3011,6 +3027,7 @@ function my_netdisconnect (e)
 {
     var connection = e.server.connection;
     var msg;
+    var reconnect = false;
     
     if (typeof e.disconnectStatus != "undefined")
     {
@@ -3039,6 +3056,7 @@ function my_netdisconnect (e)
             default:
                 msg = getMsg("my_netdisconnectConnectionClosedStatus",
                              [this.name, connection.host, connection.port]);
+                reconnect = true;
                 break;
         }    
     }
@@ -3119,15 +3137,15 @@ CIRCChannel.prototype.onPrivmsg =
 function my_cprivmsg (e)
 {
     
-    this.display (e.meat, "PRIVMSG", e.user, this);
+    this.display (e.params[2], "PRIVMSG", e.user, this);
     
     if ((typeof client.prefix == "string") &&
-        e.meat.indexOf (client.prefix) == 0)
+        e.params[2].indexOf (client.prefix) == 0)
     {
         try
         {
-            var v = eval(e.meat.substring (client.prefix.length,
-                                           e.meat.length));
+            var v = eval(e.params[2].substring (client.prefix.length,
+                                                e.params[2].length));
         }
         catch (ex)
         {
@@ -3180,7 +3198,7 @@ function my_366 (e)
     
     if ("pendingNamesReply" in e.channel)
     {       
-        display (e.meat, "366");
+        display (e.params[3], "366");
         e.channel.pendingNamesReply = false;
     }
 }    
@@ -3221,14 +3239,14 @@ CIRCChannel.prototype.on353 = /* names reply */
 function my_topic (e)
 {
     if ("pendingNamesReply" in e.channel)
-        e.channel.display (e.meat, "NAMES");
+        e.channel.display (e.params[4], "NAMES");
 }
 
 
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (e.meat, "NOTICE", e.user, this);   
+    this.display (e.params[2], "NOTICE", e.user, this);   
 }
 
 CIRCChannel.prototype.onCTCPAction =
@@ -3414,7 +3432,7 @@ function my_cprivmsg (e)
                 setCurrentObject(tab);
         }    
     }
-    this.display (e.meat, "PRIVMSG", e.user, e.server.me);
+    this.display (e.params[2], "PRIVMSG", e.user, e.server.me);
 }
 
 CIRCUser.prototype.onNick =
@@ -3432,7 +3450,7 @@ function my_unick (e)
 CIRCUser.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (e.meat, "NOTICE", this, e.server.me);   
+    this.display (e.params[2], "NOTICE", this, e.server.me);   
 }
 
 CIRCUser.prototype.onCTCPAction =

@@ -42,7 +42,7 @@
   <![CDATA[
     var _elementIDs = ["czNickname", "czUsername", "czDesc", 
         "czNotify", "czDisplayCollapse", "czDisplayCopyMsgs",
-        "czNickCompleteStr"];
+        "czReconnect", "czNickCompleteStr"];
   ]]>
   </script>
   
@@ -73,7 +73,8 @@
       </rows>
     </grid>
     <hbox id="czUserHelpButton">
-      <button label="&userDetails.help.label;" 
+      <button label="&userDetails.help.label;"
+          accesskey="&userDetails.help.accesskey;" 
           oncommand="
               document.getElementById('czUserHelpButton').hidden = true;
               document.getElementById('czUserHelpBox').hidden = false;
@@ -95,6 +96,9 @@
     <checkbox id="czDisplayCopyMsgs" label="&global.copyMsgs.label;" 
         accesskey="&global.copyMsgs.accesskey;" prefdefval="true" 
         prefstring="extensions.irc.views.copyMessages"/>
+    <checkbox id="czReconnect" label="&global.reconnect.label;" 
+        accesskey="&global.reconnect.accesskey;" prefdefval="true" 
+        prefstring="extensions.irc.reconnect"/>
     <separator/>
     <hbox align="center">
       <label value="&global.nickCompleteStr.label;" control="czNickCompleteStr" 

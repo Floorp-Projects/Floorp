@@ -28,6 +28,7 @@
  *   +- username (String)  initial username (ie: username@host.tld)
  *   +- desc     (String)  initial description (used in whois info)
  *   +- defaultNet (String) default network to use for irc:// urls
+ *   +- reconnect (Boolean) reconnect when disconnected due to ERROR
  *   +- bugURL   (String) url to use for "bug 12345" links.  Use %s to place
  *                        the bug number.
  *   +- initialURLs (String) irc:// urls to connect to on startup, semicolon
@@ -88,6 +89,7 @@ function initPrefs()
         "nickname": ["CIRCNetwork.prototype.INITIAL_NICK",          "IRCMonkey"],
         "username": ["CIRCNetwork.prototype.INITIAL_NAME",          "chatzilla"],
         "desc":     ["CIRCNetwork.prototype.INITIAL_DESC",   "New Now Know How"],
+        "reconnect": ["CIRCNetwork.prototype.stayingPower",                true],
         "defaultNet":        ["client.DEFAULT_NETWORK",                "moznet"],
         "charset":           ["client.CHARSET",                              ""],
         "initialURLs":       ["client.INITIAL_URLS",                   "irc://"],

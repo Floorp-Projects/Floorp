@@ -63,6 +63,7 @@
 
 <!ENTITY userDetails.title "User Identification">
 <!ENTITY userDetails.help.label "What do these mean?">
+<!ENTITY userDetails.help.accesskey "W">
 <!ENTITY userDetails.help.desc "Your hostmask, which is used to identify you to other clients and the server, places your user name before the host you are connecting from. So a user name of 'myself' would mean you would be identified as 'myself@host.tld', where 'host.tld' would be dependant on your internet service provider.">
 
 <!ENTITY userDetails.nick.label "Nick name:">
@@ -80,6 +81,8 @@
 <!ENTITY global.collapse.accesskey "c">
 <!ENTITY global.copyMsgs.label "Copy important messages to the network tab">
 <!ENTITY global.copyMsgs.accesskey "i">
+<!ENTITY global.reconnect.label "Automatically reconnect after a disconnect">
+<!ENTITY global.reconnect.accesskey "r">
 <!ENTITY global.nickCompleteStr.label "Nickname completion string:">
 <!ENTITY global.nickCompleteStr.accesskey "k">
 <!ENTITY global.nickCompleteStr.desc "This is appended to a nickname when tab-completed as the first word.">
@@ -133,13 +136,26 @@
 <!ENTITY stalkWords.label1 "When ChatZilla sees an 'important' message, it will highlight the line and the channel's tab. If you have 'aggressive notify' enabled, ChatZilla will also use an OS-dependant method to grab your attention.">
 <!ENTITY stalkWords.label2 "Your nickname is always considered 'important', but you can add more words; just add them to the list below.">
 
-<!ENTITY list.up "Move Up">
-<!ENTITY list.dn "Move Down">
+<!ENTITY list.up.label "Move Up">
+<!ENTITY list.up.script.accesskey "U">
+<!ENTITY list.up.server.accesskey "v">
+
+<!ENTITY list.dn.label "Move Down">
+<!ENTITY list.dn.script.accesskey "w">
+<!ENTITY list.dn.server.accesskey "n">
+
 <!ENTITY list.add.label "Add...">
-<!ENTITY list.add.accesskey "A">
-<!ENTITY list.edit "Edit...">
+<!ENTITY list.add.script.accesskey "A">
+<!ENTITY list.add.server.accesskey "d">
+<!ENTITY list.add.stalk.accesskey  "A">
+
+<!ENTITY list.edit.label "Edit...">
+<!ENTITY list.edit.accesskey "E">
+
 <!ENTITY list.del.label "Remove">
-<!ENTITY list.del.accesskey "R">
+<!ENTITY list.del.script.accesskey "R">
+<!ENTITY list.del.server.accesskey "m">
+<!ENTITY list.del.stalk.accesskey "m">
 <!ENTITY startup.window.title "Startup">
 
 <!ENTITY startupOrder.label "When ChatZilla starts, it will load the JavaScript scripts first, then connect to any autoconnect servers and channels in the order shown.">
@@ -149,11 +165,6 @@
 <!ENTITY autoURLs.title "Autoconnect servers, channels and private message views">
 <!ENTITY autoURLs.accesskey "c">
 
-<!ENTITY list.up "Move Up">
-<!ENTITY list.dn "Move Down">
-<!ENTITY list.add "Add...">
-<!ENTITY list.edit "Edit...">
-<!ENTITY list.del "Remove">
 <!ENTITY startup-newScript.window.title "ChatZilla Script Item">
 
 <!ENTITY text.desc "Enter a web location (URL), or specify the local script file you want:">
