@@ -33,7 +33,7 @@ DIRS += common
 DIRS += control control_kicker
 
 # ActiveX plugin
-ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+ifdef MOZ_ACTIVEX_SCRIPTING_SUPPORT
 DIRS += plugin
 endif
 
