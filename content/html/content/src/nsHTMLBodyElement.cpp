@@ -618,16 +618,14 @@ nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-static nscolor ColorNameToRGB(const nsHTMLValue& aValue)
+static PRBool ColorNameToRGB(const nsHTMLValue& aValue, nscolor* aColor)
 {
   nsAutoString buffer;
   aValue.GetStringValue(buffer);
   char cbuf[40];
   buffer.ToCString(cbuf, sizeof(cbuf));
 
-  nscolor color;
-  NS_ColorNameToRGB(cbuf, &color);
-  return color;
+  return NS_ColorNameToRGB(cbuf, aColor);
 }
 
 static void
@@ -646,9 +644,12 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       color->mColor = value.GetColorValue();
     }
     else if (eHTMLUnit_String == value.GetUnit()) {
-      nsStyleColor* color = (nsStyleColor*)
-        aContext->GetMutableStyleData(eStyleStruct_Color);
-      color->mColor = ColorNameToRGB(value);
+      nscolor backgroundColor;
+      if (ColorNameToRGB(value, &backgroundColor)) {
+        nsStyleColor* color = (nsStyleColor*)
+          aContext->GetMutableStyleData(eStyleStruct_Color);
+        color->mColor = backgroundColor;
+      }
     }
 
     nsCOMPtr<nsIPresShell> presShell;
@@ -667,7 +668,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
               styleSheet->SetLinkColor(value.GetColorValue());
             }
             else if (eHTMLUnit_String == value.GetUnit()) {
-              styleSheet->SetLinkColor(ColorNameToRGB(value));
+              nscolor linkColor;
+              if (ColorNameToRGB(value, &linkColor)) {
+                styleSheet->SetLinkColor(linkColor);
+              }
             }
 
             aAttributes->GetAttribute(nsHTMLAtoms::alink, value);
@@ -675,7 +679,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
               styleSheet->SetActiveLinkColor(value.GetColorValue());
             }
             else if (eHTMLUnit_String == value.GetUnit()) {
-              styleSheet->SetActiveLinkColor(ColorNameToRGB(value));
+              nscolor linkColor;
+              if (ColorNameToRGB(value, &linkColor)) {
+                styleSheet->SetActiveLinkColor(linkColor);
+              }
             }
 
             aAttributes->GetAttribute(nsHTMLAtoms::vlink, value);
@@ -683,7 +690,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
               styleSheet->SetVisitedLinkColor(value.GetColorValue());
             }
             else if (eHTMLUnit_String == value.GetUnit()) {
-              styleSheet->SetVisitedLinkColor(ColorNameToRGB(value));
+              nscolor linkColor;
+              if (ColorNameToRGB(value, &linkColor)) {
+                styleSheet->SetVisitedLinkColor(linkColor);
+              }
             }
             NS_RELEASE(styleSheet);
           }

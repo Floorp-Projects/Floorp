@@ -1396,7 +1396,11 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
     }
   }
 
-#if XXX_no_nav_compat
+// XXX Nav doesn't map illegal values to zero, at least not for color names.
+// Changing it so we ignore the illegal values rather than whack the color to
+// black, which in the case of a background color makes the document unreadable
+//#if XXX_no_nav_compat
+#if 1
   // Illegal values are mapped to empty
   aResult.SetEmptyValue();
   return PR_FALSE;
@@ -1911,10 +1915,13 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes
       char cbuf[40];
       buffer.ToCString(cbuf, sizeof(cbuf));
 
-      nsStyleColor* color = (nsStyleColor*)
-        aContext->GetMutableStyleData(eStyleStruct_Color);
-      NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
-      color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+      nscolor backgroundColor;
+      if (NS_ColorNameToRGB(cbuf, &backgroundColor)) {
+        nsStyleColor* color = (nsStyleColor*)
+          aContext->GetMutableStyleData(eStyleStruct_Color);
+        color->mBackgroundColor = backgroundColor;        
+        color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+      }
     }
   }
 }
