@@ -893,9 +893,12 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
 
     static void reportConversionError(Object value, Class type)
     {
-        throw Context.reportRuntimeError2
-            ("msg.conversion.not.allowed",
-             value.toString(), JavaMembers.javaSignature(type));
+        // It uses String.valueOf(value), not value.toString() since
+        // value can be null, bug 282447.
+        throw Context.reportRuntimeError2(
+            "msg.conversion.not.allowed",
+            String.valueOf(value),
+            JavaMembers.javaSignature(type));
     }
 
     private void writeObject(ObjectOutputStream out)
