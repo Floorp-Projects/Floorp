@@ -44,6 +44,74 @@ if [ -z "${srcdir}" ]; then
     srcdir=.
 fi
 
+# xpcom standalone mode
+if [ "$XPCOM_STANDALONE" ]; then
+  add_makefiles <<END_XPCOM_STANDALONE_MAKEFILES
+#
+# General
+#
+Makefile
+build/Makefile
+build/unix/Makefile
+build/unix/mozilla-config
+build/unix/nspr_my_config.mk
+build/unix/nspr_my_overrides.mk
+config/Makefile
+config/autoconf.mk
+config/mkdepend/Makefile
+config/mkdetect/Makefile
+#
+# modules/libreg
+#
+modules/libreg/Makefile
+modules/libreg/include/Makefile
+modules/libreg/src/Makefile
+#
+# New xpcom hiearchy
+#
+xpcom/Makefile
+xpcom/base/Makefile
+xpcom/build/Makefile
+xpcom/components/Makefile
+xpcom/ds/Makefile
+xpcom/io/Makefile
+xpcom/typelib/Makefile
+xpcom/reflect/Makefile
+xpcom/typelib/xpt/Makefile
+xpcom/typelib/xpt/public/Makefile
+xpcom/typelib/xpt/src/Makefile
+xpcom/typelib/xpt/tests/Makefile
+xpcom/typelib/xpt/tools/Makefile
+xpcom/typelib/xpidl/Makefile
+xpcom/reflect/xptcall/Makefile
+xpcom/reflect/xptcall/public/Makefile
+xpcom/reflect/xptcall/src/Makefile
+xpcom/reflect/xptcall/src/md/Makefile
+xpcom/reflect/xptcall/src/md/test/Makefile
+xpcom/reflect/xptcall/src/md/unix/Makefile
+xpcom/reflect/xptcall/tests/Makefile
+xpcom/reflect/xptinfo/Makefile
+xpcom/reflect/xptinfo/public/Makefile
+xpcom/reflect/xptinfo/src/Makefile
+xpcom/reflect/xptinfo/tests/Makefile
+xpcom/proxy/Makefile
+xpcom/proxy/public/Makefile
+xpcom/proxy/src/Makefile
+xpcom/proxy/tests/Makefile
+xpcom/sample/Makefile
+xpcom/tests/Makefile
+xpcom/tests/dynamic/Makefile
+xpcom/tests/services/Makefile
+xpcom/threads/Makefile
+xpcom/tools/Makefile
+xpcom/tools/registry/Makefile
+#
+# End of xpcom Makefiles
+#
+END_XPCOM_STANDALONE_MAKEFILES
+return 0
+fi
+
 add_makefiles <<END_NGMAKEFILES
 Makefile
 build/Makefile
