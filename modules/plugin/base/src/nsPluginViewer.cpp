@@ -1227,37 +1227,45 @@ NS_IMETHODIMP pluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *
 #ifdef XP_MAC
 
 #if TARGET_CARBON
-inline Boolean OSEventAvail(EventMask mask, EventRecord* event) { return EventAvail(mask, event); }
+static void InitializeEventRecord(EventRecord* event)
+{
+    memset(event, 0, sizeof(EventRecord));
+    GetGlobalMouse(&event->where);
+    event->when = TickCount();
+    event->modifiers = GetCurrentKeyModifiers();
+}
+#else
+inline void InitializeEventRecord(EventRecord* event) { ::OSEventAvail(0, event); }
 #endif
 
 void pluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 {
-       ::OSEventAvail(0, &aMacEvent);
-       switch (anEvent.message) {
-       case NS_GOTFOCUS:
-       case NS_FOCUS_EVENT_START:
-               aMacEvent.what = nsPluginEventType_GetFocusEvent;
-               break;
-       case NS_LOSTFOCUS:
-       case NS_MOUSE_EXIT:
-               aMacEvent.what = nsPluginEventType_LoseFocusEvent;
-               break;
-       case NS_MOUSE_MOVE:
-       case NS_MOUSE_ENTER:
-         mWindow->SetFocus();
-               aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
-               break;
-       case NS_PAINT:
-          aMacEvent.what = updateEvt;
-         break;
-       case NS_KEY_DOWN:
-       case NS_KEY_PRESS:
-         break;
-         
-       default:
-               aMacEvent.what = nullEvent;
-               break;
-       }
+    InitializeEventRecord(&aMacEvent);
+    switch (anEvent.message) {
+    case NS_GOTFOCUS:
+    case NS_FOCUS_EVENT_START:
+        aMacEvent.what = nsPluginEventType_GetFocusEvent;
+        break;
+    case NS_LOSTFOCUS:
+    case NS_MOUSE_EXIT:
+        aMacEvent.what = nsPluginEventType_LoseFocusEvent;
+        break;
+    case NS_MOUSE_MOVE:
+    case NS_MOUSE_ENTER:
+        mWindow->SetFocus();
+        aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
+        break;
+    case NS_PAINT:
+        aMacEvent.what = updateEvt;
+        break;
+    case NS_KEY_DOWN:
+    case NS_KEY_PRESS:
+        break;
+
+    default:
+        aMacEvent.what = nullEvent;
+        break;
+    }
 }
 #endif
 
@@ -1277,39 +1285,38 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
             GUItoMacEvent(anEvent, macEvent);
             event = &macEvent;
             if (event->what == updateEvt) {
-              nsPluginPort* pluginPort = GetPluginPort();
+                nsPluginPort* pluginPort = GetPluginPort();
                 // Add in child windows absolute position to get make the dirty rect
                 // relative to the top-level window.
                 nscoord absWidgetX = 0;
                 nscoord absWidgetY = 0;
-               nsRect widgetClip(0,0,0,0);
-               GetWidgetPosAndClip(mWindow,absWidgetX,absWidgetY,widgetClip);
-               //mViewer->GetBounds(widgetClip);
-               //absWidgetX = widgetClip.x;
-               //absWidgetY = widgetClip.y;
-               
+                nsRect widgetClip(0,0,0,0);
+                GetWidgetPosAndClip(mWindow,absWidgetX,absWidgetY,widgetClip);
+                //mViewer->GetBounds(widgetClip);
+                //absWidgetX = widgetClip.x;
+                //absWidgetY = widgetClip.y;
+
                 // set the port
-    mPluginWindow.x = absWidgetX;
-    mPluginWindow.y = absWidgetY;
+                mPluginWindow.x = absWidgetX;
+                mPluginWindow.y = absWidgetY;
 
 
-    // fix up the clipping region
-    mPluginWindow.clipRect.top = widgetClip.y;
-    mPluginWindow.clipRect.left = widgetClip.x;
-    mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
-    mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width;  
+                // fix up the clipping region
+                mPluginWindow.clipRect.top = widgetClip.y;
+                mPluginWindow.clipRect.left = widgetClip.x;
+                mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
+                mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width;  
 
-    EventRecord updateEvent;
-    ::OSEventAvail(0, &updateEvent);
-    updateEvent.what = updateEvt;
-    updateEvent.message = UInt32(pluginPort->port);
+                EventRecord updateEvent;
+                InitializeEventRecord(&updateEvent);
+                updateEvent.what = updateEvt;
+                updateEvent.message = UInt32(pluginPort->port);
 
-    nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-    PRBool eventHandled = PR_FALSE;
-    mInstance->HandleEvent(&pluginEvent, &eventHandled);
-     }
-            
-            return  nsEventStatus_eConsumeNoDefault;
+                nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+                PRBool eventHandled = PR_FALSE;
+                mInstance->HandleEvent(&pluginEvent, &eventHandled);
+            }
+            return nsEventStatus_eConsumeNoDefault;
             
         }
         //nsPluginPort* port = (nsPluginPort*)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
@@ -1325,10 +1332,12 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 //~~~
 #ifdef XP_WIN
         nsPluginEvent * pPluginEvent = (nsPluginEvent *)anEvent.nativeMsg;
-        PRBool eventHandled = PR_FALSE;
-        mInstance->HandleEvent(pPluginEvent, &eventHandled);
-        if (eventHandled)
-            rv = nsEventStatus_eConsumeNoDefault;
+        if (pPluginEvent) {
+            PRBool eventHandled = PR_FALSE;
+            mInstance->HandleEvent(pPluginEvent, &eventHandled);
+            if (eventHandled)
+                rv = nsEventStatus_eConsumeNoDefault;
+        }
 #endif
 
   return rv;
@@ -1346,7 +1355,7 @@ NS_IMETHODIMP_(void) pluginInstanceOwner::Notify(nsITimer* /* timer */)
     FixUpPluginWindow();
     if (mInstance != NULL) {
         EventRecord idleEvent;
-        ::OSEventAvail(0, &idleEvent);
+        InitializeEventRecord(&idleEvent);
         idleEvent.what = nullEvent;
         
         nsPluginPort* pluginPort = GetPluginPort();
