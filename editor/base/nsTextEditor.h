@@ -72,6 +72,7 @@ public:
   NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength);
+  NS_IMETHOD GetMaxTextLength(PRInt32& aMaxTextLength);
   NS_IMETHOD InsertBreak();
   NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
   // This method sets background of the page (the body tag)
