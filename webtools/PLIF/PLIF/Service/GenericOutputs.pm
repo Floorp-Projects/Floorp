@@ -72,12 +72,21 @@ sub outputReportFatalError {
     });   
 }
 
+sub outputRedirect {
+    my $self = shift;
+    my($app, $output, $uri) = @_;
+    $output->output('redirect', {
+        'target' => $uri,
+    });
+}
+
 # dispatcher.output
 sub strings {
     return (
             'acknowledge' => 'A generic output merely acknowledging that something happened',
             'request' => 'A prompt for user input (only required for interactive protocols, namely stdout)',
             'error' => 'The message given to the user when something goes horribly wrong',
+            'redirect' => 'Tells the user to go see something else',
             );
 }
 
@@ -90,17 +99,33 @@ sub getDefaultString {
     }
     if ($args->{'protocol'} eq 'stdout') {
         if ($args->{'name'} eq 'acknowledge') {
-            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Acknowledged.<br/></text>');
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = '1';
+            $args->{'string'} = '<text xmlns="http://bugzilla.mozilla.org/coses">Acknowledged.<br/></text>';
+            return 1;
         } elsif ($args->{'name'} eq 'request') {
-            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(argument)"/>\'<if lvalue="(defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(defaults)" source="keys" order="default"><text value="(defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>');
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = '1';
+            $args->{'string'} = '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(argument)"/>\'<if lvalue="(defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(defaults)" source="keys" order="default"><text value="(defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>';
+            return 1;
         } elsif ($args->{'name'} eq 'error') {
-            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(error)"/><br/></text>');
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = '1';
+            $args->{'string'} = '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(error)"/><br/></text>';
+            return 1;
         } 
     } elsif ($args->{'protocol'} eq 'http') {
         if ($args->{'name'} eq 'acknowledge') {
-            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 200 OK<br/>Content-Type: text/plain<br/><br/>Acknowledged.</text>');
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = '1';
+            $args->{'string'} = '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 200 OK<br/>Content-Type: text/plain<br/><br/>Acknowledged.</text>';
+            return 1;
         } elsif ($args->{'name'} eq 'error') {
-            $args->{'string'} = ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>');
+            $args->{'type'} = 'COSES';
+            $args->{'version'} = '1';
+            $args->{'string'} = '<text xmlns="http://bugzilla.mozilla.org/coses">Status: 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>';
+            return 1;
         }
     }
+    return;
 }
