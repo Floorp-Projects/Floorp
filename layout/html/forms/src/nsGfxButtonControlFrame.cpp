@@ -58,7 +58,6 @@ static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 
 // Saving PresState
 #include "nsIPresState.h"
-#include "nsIHTMLContent.h"
 
 const nscoord kSuggestedNotSet = -1;
 

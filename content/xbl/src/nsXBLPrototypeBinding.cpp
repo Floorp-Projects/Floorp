@@ -54,7 +54,6 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIXMLContent.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"

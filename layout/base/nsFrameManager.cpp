@@ -57,7 +57,6 @@
 #include "nsIPresState.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
-#include "nsIXMLContent.h"
 #include "nsIXBLBinding.h"
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"

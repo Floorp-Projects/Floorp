@@ -42,11 +42,8 @@
 #include "nsIElementFactory.h"
 #include "nsIServiceManager.h"
 #include "nsDoubleHashtable.h"
-#include "nsVoidArray.h"
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
-#include "nsCRT.h"
-#include "nsContentCID.h"
 
 static nsINameSpaceManager* gNameSpaceManager = nsnull;
 

@@ -50,7 +50,6 @@
 #include "nsISupports.h"
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"

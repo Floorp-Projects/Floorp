@@ -35,7 +35,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "pldhash.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLAttributes.h"
 #include "nsILink.h"
 #include "nsIStyleRuleProcessor.h"

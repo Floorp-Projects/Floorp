@@ -55,7 +55,6 @@
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIURL.h"
-#include "nsIXMLContent.h"
 #include "nsXULContentUtils.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"

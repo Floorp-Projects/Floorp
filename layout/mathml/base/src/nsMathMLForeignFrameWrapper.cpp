@@ -26,7 +26,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
 #include "nsFrame.h"
 #include "nsAreaFrame.h"
 #include "nsLineLayout.h"

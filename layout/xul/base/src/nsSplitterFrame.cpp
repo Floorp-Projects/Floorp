@@ -50,7 +50,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMDocument.h"
-#include "nsIXMLContent.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"

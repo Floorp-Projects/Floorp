@@ -46,7 +46,6 @@
 #include "nsILinkHandler.h"
 #include "nsILink.h"
 #include "nsIXMLContent.h"
-#include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURI.h"

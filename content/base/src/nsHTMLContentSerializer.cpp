@@ -56,7 +56,6 @@
 #include "nsEscape.h"
 #include "nsITextToSubURI.h"
 #include "nsCRT.h"
-#include "nsIHTMLContent.h"
 #include "nsIParserService.h"
 #include "nsContentUtils.h"
 #include "nsILineBreakerFactory.h"

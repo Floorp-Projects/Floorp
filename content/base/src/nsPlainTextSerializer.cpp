@@ -48,7 +48,6 @@
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
-#include "nsIHTMLContent.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsContentUtils.h"

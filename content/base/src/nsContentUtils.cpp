@@ -981,7 +981,6 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
 {
   NS_ENSURE_ARG_POINTER(aNode);
 
-  PRInt32 offset = 0;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
   if (!content) {
@@ -1006,9 +1005,8 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   nsIContent* child = content;
   nsIContent* parent = child->GetParent();
   while (parent) {
-    offset = parent->IndexOf(child);
     aAncestorNodes->AppendElement(parent);
-    aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(offset));
+    aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(parent->IndexOf(child)));
     child = parent;
     parent = parent->GetParent();
   }

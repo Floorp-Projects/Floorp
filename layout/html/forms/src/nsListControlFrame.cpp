@@ -43,7 +43,6 @@
 #include "nsFormControlFrame.h" // for COMPARE macro
 #include "nsFormControlHelper.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLContent.h"
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h" 
 #include "nsIDocument.h"
