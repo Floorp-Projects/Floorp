@@ -128,7 +128,7 @@ ShowComponentsWin(void)
 	HUnlock(gControls->cfg->selCompMsg);
 	SetRect(&listBoxFrame, gControls->cw->compListBox.left, 
 						 --gControls->cw->compListBox.top,
-						   gControls->cw->compListBox.right += kScrollBarWidth,
+						   gControls->cw->compListBox.right + kScrollBarWidth,
 						 ++gControls->cw->compListBox.bottom);
 	FrameRect(&listBoxFrame);
 	ShowNavButtons( back, next);
