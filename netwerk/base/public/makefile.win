@@ -28,6 +28,7 @@ EXPORTS =                           \
         netCore.h                   \
         nsNetUtil.h                 \
         nsUnixColorPrintf.h         \
+        nsReadLine.h		    \
 	$(NULL)
 
 XPIDLSRCS =                             \

@@ -28,8 +28,10 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsILineInputStream.h"
 #include "nsIStreamIO.h"
 #include "nsCOMPtr.h"
+#include "nsReadLine.h"
 #include "prlog.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,18 +79,22 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsFileInputStream : public nsFileStream,
-                          public nsIFileInputStream
+                          public nsIFileInputStream,
+                          public nsILineInputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIFILEINPUTSTREAM
-
+    NS_DECL_NSILINEINPUTSTREAM
+    
     nsFileInputStream() : nsFileStream() {}
     virtual ~nsFileInputStream() {}
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+protected:
+    nsLineBuffer * mLineBuffer;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

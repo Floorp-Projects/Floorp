@@ -76,6 +76,7 @@ EXPORTS		= \
 		netCore.h \
 		nsNetUtil.h \
 		nsUnixColorPrintf.h \
+		nsReadLine.h \
 		$(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/security-prefs.js
