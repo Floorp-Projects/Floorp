@@ -88,7 +88,7 @@ nsSetDefaultMail.prototype = {
           mapiRegistry.isDefaultMailClient = true;
 
       // Now, get the cmd line service.
-      var cmdLineService = Components.classes[ "@mozilla.org/appshell/commandLineService;1" ]
+      var cmdLineService = Components.classes[ "@mozilla.org/app-startup/commandLineService;1" ]
                               .getService( Components.interfaces.nsICmdLineService );
 
       // See if "-setDefaultMail" was specified.  The value will be "1" if

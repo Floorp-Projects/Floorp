@@ -1,3 +1,4 @@
+#ifndef SUPPRESS_CHROME
 comm.jar:
     content/communicator/directory/directory.xul                (directory/directory.xul)
     content/communicator/directory/directory.html               (directory/directory.html)
@@ -165,3 +166,4 @@ toolkit.jar:
 
 en-win.jar:
     locale/en-US/global-platform/nsWindowsHooks.properties      (winhooks/locale/en-US/nsWindowsHooks.properties)
+#endif

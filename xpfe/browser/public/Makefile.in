@@ -44,9 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= browser
 XPIDL_MODULE	= mozbrwsr
-GRE_MODULE	= 1
 
-XPIDLSRCS	= nsIBrowserInstance.idl nsIXULBrowserWindow.idl
+XPIDLSRCS	= nsIBrowserInstance.idl
 
 include $(topsrcdir)/config/rules.mk
 

@@ -70,11 +70,11 @@ nsKillAll.prototype = {
       // turn off server mode
 
       var wasMozillaAlreadyRunning = false;
-      var appShellService = Components.classes["@mozilla.org/appshell/appShellService;1"]
-                           .getService(Components.interfaces.nsIAppShellService);
+      var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                         .getService(Components.interfaces.nsIAppStartup);
       var nativeAppSupport = {isServerMode: false};
       try {
-        nativeAppSupport = appShellService.nativeAppSupport;
+        nativeAppSupport = appStartup.nativeAppSupport;
       } catch ( ex ) {
       }
 
@@ -119,7 +119,7 @@ nsKillAll.prototype = {
 
       if (wasMozillaAlreadyRunning) {
         // Need to exit appshell in this case.
-        appShellService.quit(Components.interfaces.nsIAppShellService.eAttemptQuit);
+        appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit);
       }
 
       // We throw NS_ERROR_NOT_AVAILABLE which will be interpreted by the caller

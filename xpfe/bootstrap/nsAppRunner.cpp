@@ -68,8 +68,8 @@
 #include "nsICmdLineService.h"
 #include "nsIAppShellService.h"
 #include "nsIAppStartupNotifier.h"
+#include "nsIAppStartup.h"
 #include "nsIObserverService.h"
-#include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsIDirectoryService.h"
@@ -85,7 +85,7 @@
 #include "nsIEventQueueService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsBuildID.h"
-#include "nsWindowCreator.h"
+#include "nsIWindowCreator.h"
 #include "nsIWindowWatcher.h"
 #include "nsILocalFile.h"
 #include "nsILookAndFeel.h"
@@ -130,6 +130,8 @@
 #endif
 
 #include "nsWidgetsCID.h"
+#include "nsXPFEComponentsCID.h"
+
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 #define UILOCALE_CMD_LINE_ARG "-UILocale"
@@ -374,10 +376,6 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 #include <gtk/gtk.h>
 #endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
 
-/* Define Class IDs */
-static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
-
 #include "nsNativeAppSupport.h"
 
 /*********************************************/
@@ -438,9 +436,9 @@ static nsresult GetNativeAppSupport(nsINativeAppSupport** aNativeApp)
     NS_ENSURE_ARG_POINTER(aNativeApp);
     *aNativeApp = nsnull;
 
-    nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
-    if (appShellService)
-        appShellService->GetNativeAppSupport(aNativeApp);
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+    if (appStartup)
+        appStartup->GetNativeAppSupport(aNativeApp);
 
     return *aNativeApp ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -511,12 +509,12 @@ static nsresult OpenWindow(const nsCString& aChromeURL,
   // profile" is moot (because they don't support "-turbo",
   // basically).  Specifically, because they don't do turbo, they will
   // *always* have a profile selected.
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1"));
-  nsCOMPtr <nsICmdLineService> cmdLine(do_GetService("@mozilla.org/appshell/commandLineService;1"));
-  if (appShell && cmdLine)
+  nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+  nsCOMPtr <nsICmdLineService> cmdLine(do_GetService(NS_COMMANDLINESERVICE_CONTRACTID));
+  if (appStartup && cmdLine)
   {
     nsCOMPtr<nsINativeAppSupport> nativeApp;
-    if (NS_SUCCEEDED(appShell->GetNativeAppSupport(getter_AddRefs(nativeApp))))
+    if (NS_SUCCEEDED(appStartup->GetNativeAppSupport(getter_AddRefs(nativeApp))))
     {
       // Make sure profile has been selected.
       // At this point, we have to look for failure.  That
@@ -621,7 +619,7 @@ LaunchApplicationWithArgs(const char *commandLineArg,
   nsresult rv;
 
   nsCOMPtr<nsICmdLineService> cmdLine =
-    do_GetService("@mozilla.org/appshell/commandLineService;1",&rv);
+    do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr <nsICmdLineHandler> handler;
@@ -747,9 +745,9 @@ nsresult DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool heedGeneralStartu
     PR_sscanf(tempString.get(), "%d", &height);
   
   if (heedGeneralStartupPrefs) {
-    nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = appShell->CreateStartupState(width, height, windowOpened);
+    rv = appStartup->CreateStartupState(width, height, windowOpened);
     if (NS_FAILED(rv)) return rv;
   }
   else {
@@ -957,29 +955,11 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
       }
     }
     nsresult rv;
-    nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID, &rv));
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = appShellService->DoProfileStartup(cmdLineArgs, shouldShowUI);
+    rv = appStartup->DoProfileStartup(cmdLineArgs, shouldShowUI);
 
     return rv;
-}
-
-static nsresult InitializeWindowCreator()
-{
-  // create an nsWindowCreator and give it to the WindowWatcher service
-  nsWindowCreator *creatorCallback = new nsWindowCreator();
-  if (!creatorCallback)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
-  if (windowCreator) {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    if (wwatch) {
-      wwatch->SetWindowCreator(windowCreator);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 // Maximum allowed / used length of alert message is 255 chars, due to restrictions on Mac.
@@ -1074,8 +1054,8 @@ static nsresult VerifyInstallation(int argc, char **argv)
 #endif
 
 // Note: nativeApp is an owning reference that this function has responsibility
-//       to release.  This responsibility is delegated to the app shell service
-//       (see nsAppShellService::Initialize call, below).
+//       to release.  This responsibility is delegated to the app startup service
+//       (see nsAppStartup::Initialize call, below).
 static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 {
   nsresult rv;
@@ -1167,7 +1147,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_ENTER("cmdLineArgs");
 
   // Initialize the cmd line service
-  nsCOMPtr<nsICmdLineService> cmdLineArgs(do_GetService(kCmdLineServiceCID, &rv));
+  nsCOMPtr<nsICmdLineService> cmdLineArgs(do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "Could not obtain CmdLine processing service\n");
   if (NS_FAILED(rv))
     return rv;
@@ -1187,14 +1167,14 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     return rv;
   NS_TIMELINE_LEAVE("InstallGlobalLocale");
 
-  NS_TIMELINE_ENTER("appShell");
+  NS_TIMELINE_ENTER("appStartup");
 
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get the appshell service");
+  nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+  NS_ASSERTION(appStartup, "failed to get the appstartup service");
 
-  /* if we couldn't get the nsIAppShellService service, then we should hide the
-     splash screen and return */
-  if (NS_FAILED(rv))
+  /* if we couldn't get the nsIAppStartup service, then we should hide the
+     splash screen and return (and something is seriously screwed up) */
+  if (!appStartup)
   {
     // See if platform supports nsINativeAppSupport.
     nsCOMPtr<nsINativeAppSupport> nativeAppSupport(do_QueryInterface(nativeAppOwner));
@@ -1215,24 +1195,30 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     return rv;
   }
 
-  NS_TIMELINE_LEAVE("appShell");
+  NS_TIMELINE_LEAVE("appStartup");
 
-  NS_TIMELINE_ENTER("appShell->Initialize");
+  NS_TIMELINE_ENTER("appStartup->Initialize");
 
   // Create the Application Shell instance...
-  rv = appShell->Initialize(cmdLineArgs, nativeAppOwner);
+  rv = appStartup->Initialize(cmdLineArgs, nativeAppOwner);
 
-  NS_TIMELINE_LEAVE("appShell->Initialize");
+  NS_TIMELINE_LEAVE("appStartup->Initialize");
 
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appstartup");
   if (NS_FAILED(rv)) return rv;
 
-  rv = InitializeWindowCreator();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize window creator");
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIWindowCreator> wcreator (do_QueryInterface(appStartup));
+  NS_ASSERTION(wcreator, "appstartup doesn't do nsIWindowCreator?");
+  NS_ENSURE_TRUE(wcreator, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  NS_ASSERTION(wwatch, "Couldn't get the window watcher!");
+  NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
+
+  wwatch->SetWindowCreator(wcreator);
 
   // So we can open and close windows during startup
-  appShell->EnterLastWindowClosingSurvivalArea();
+  appStartup->EnterLastWindowClosingSurvivalArea();
 
   // Initialize Profile Service here.
   NS_TIMELINE_ENTER("InitializeProfileService");
@@ -1247,9 +1233,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   CheckUseAccessibleSkin();
   NS_TIMELINE_LEAVE("CheckUseAccessibleSkin");
 
-  NS_TIMELINE_ENTER("appShell->CreateHiddenWindow");
-  appShell->CreateHiddenWindow();
-  NS_TIMELINE_LEAVE("appShell->CreateHiddenWindow");
+  NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
+  appStartup->CreateHiddenWindow();
+  NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
 
   // This will go away once Components are handling there own commandlines
   // if we have no command line arguments, we need to heed the
@@ -1296,13 +1282,13 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // Make sure there exists at least 1 window.
   NS_TIMELINE_ENTER("Ensure1Window");
-  rv = appShell->Ensure1Window(cmdLineArgs);
+  rv = appStartup->Ensure1Window(cmdLineArgs);
   NS_TIMELINE_LEAVE("Ensure1Window");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
 
 #if !defined(XP_MAC) && !defined(XP_MACOSX)
-  appShell->ExitLastWindowClosingSurvivalArea();
+  appStartup->ExitLastWindowClosingSurvivalArea();
 #endif
 
 #ifdef MOZ_ENABLE_XREMOTE
@@ -1331,10 +1317,10 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   nativeAppOwner = nsnull;
 
   // Start main event loop
-  NS_TIMELINE_ENTER("appShell->Run");
-  rv = appShell->Run();
-  NS_TIMELINE_LEAVE("appShell->Run");
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
+  NS_TIMELINE_ENTER("appStartup->Run");
+  rv = appStartup->Run();
+  NS_TIMELINE_LEAVE("appStartup->Run");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appstartup");
 
 #ifdef MOZ_TIMELINE
   // Make sure we print this out even if timeline is runtime disabled

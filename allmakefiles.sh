@@ -700,6 +700,9 @@ xpfe/components/search/src/Makefile
 xpfe/components/sidebar/Makefile
 xpfe/components/sidebar/public/Makefile
 xpfe/components/sidebar/src/Makefile
+xpfe/components/startup/Makefile
+xpfe/components/startup/public/Makefile
+xpfe/components/startup/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/src/Makefile
@@ -945,6 +948,9 @@ toolkit/components/printing/Makefile
 toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
 toolkit/components/satchel/src/Makefile
+toolkit/components/startup/Makefile
+toolkit/components/startup/public/Makefile
+toolkit/components/startup/src/Makefile
 toolkit/components/viewconfig/Makefile
 toolkit/components/viewsource/Makefile
 toolkit/mozapps/Makefile

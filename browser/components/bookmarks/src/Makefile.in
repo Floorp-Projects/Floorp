@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  string \
 		  rdf \
 		  appshell \
+		  appcomps \
 		  widget \
 		  necko \
 		  nkcache \

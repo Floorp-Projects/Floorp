@@ -91,7 +91,7 @@ public:
 
   NS_IMETHOD Start(PRBool* aRetVal);
   NS_IMETHOD ReOpen();
-  NS_IMETHOD SetShouldShowUI(PRBool aValue);
+  NS_IMETHOD Enable();
 
 private:
   PRBool mCanShowUI;
@@ -99,11 +99,10 @@ private:
 };
 
 NS_IMETHODIMP
-nsNativeAppSupportMac::SetShouldShowUI(PRBool aValue)
+nsNativeAppSupportMac::Enable()
 {
-    NS_ASSERTION(aValue, "True is the only allowed value!");
-    mCanShowUI = aValue;
-    return NS_OK;
+  mCanShowUI = PR_TRUE;
+  return NS_OK;
 }
 
 /* boolean start (); */

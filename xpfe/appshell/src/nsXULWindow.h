@@ -118,9 +118,9 @@ protected:
       PRInt32 aCY);
    NS_IMETHOD ExitModalLoop(nsresult aStatus);
    NS_IMETHOD CreateNewChromeWindow(PRInt32 aChromeFlags,
-      nsIXULWindow **_retval);
+      nsIAppShell* aAppShell, nsIXULWindow **_retval);
    NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags,
-      nsIXULWindow **_retval);
+      nsIAppShell* aAppShell, nsIXULWindow **_retval);
 
    void       EnableParent(PRBool aEnable);
    PRBool     ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,

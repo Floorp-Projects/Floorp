@@ -64,9 +64,8 @@
 #include <string.h>
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
-static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+#include "nsIAppStartup.h"
+#include "nsXPFEComponentCID.h"
 #endif
 
 #ifdef MOZ_WIDGET_PHOTON
@@ -142,9 +141,9 @@ void beos_signal_handler(int signum) {
 	fprintf(stderr, "beos_signal_handler: %d\n", signum);
 #endif
 	nsresult rv;
-	nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID,&rv));
+	nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
 	if (NS_FAILED(rv)) {
-		// Failed to get the appshell service so shutdown the hard way
+		// Failed to get the appstartup service so shutdown the hard way
 #ifdef DEBUG
 		fprintf(stderr, "beos_signal_handler: appShell->do_GetService() failed\n");
 #endif
@@ -152,7 +151,7 @@ void beos_signal_handler(int signum) {
 	}
 
 	// Exit the appshell so that the app can shutdown normally
-	appShellService->Quit(nsIAppShellService::eAttemptQuit);
+	appStartup->Quit(nsIAppStartup::eAttemptQuit);
 }
 #endif 
 

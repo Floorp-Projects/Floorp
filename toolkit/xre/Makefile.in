@@ -87,10 +87,11 @@ endif
 
 FORCE_STATIC_LIB = 1
 
+XPIDLSRCS = nsINativeAppSupport.idl
+
 EXPORTS = nsXULAppAPI.h
 
 SHAREDCPPSRCS = \
-	nsWindowCreator.cpp \
 	showOSAlert.cpp \
 	$(NULL)
 

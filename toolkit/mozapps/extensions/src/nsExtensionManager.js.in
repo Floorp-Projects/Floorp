@@ -1544,7 +1544,7 @@ nsExtensionManager.prototype = {
     //          time now.
     this._cleanDirs();
   
-    var cmdLineSvc = Components.classes["@mozilla.org/appshell/commandLineService;1"]
+    var cmdLineSvc = Components.classes["@mozilla.org/app-startup/commandLineService;1"]
                                 .getService(Components.interfaces.nsICmdLineService);
     var safeMode = cmdLineSvc.getCmdLineValue("-safe-mode") != null;
     if (!safeMode) {
@@ -1647,7 +1647,7 @@ nsExtensionManager.prototype = {
 
   handleCommandLineArgs: function nsExtensionManager_handleCommandLineArgs ()
   {
-    var cmdLineSvc = Components.classes["@mozilla.org/appshell/commandLineService;1"]
+    var cmdLineSvc = Components.classes["@mozilla.org/app-startup/commandLineService;1"]
                               .getService(Components.interfaces.nsICmdLineService);
     var globalExtension = cmdLineSvc.getCmdLineValue("-install-global-extension");
     if (globalExtension)

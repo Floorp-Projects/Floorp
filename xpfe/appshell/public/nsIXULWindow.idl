@@ -41,69 +41,78 @@
 
 /**
  * The nsIXULWindow
+ *
+ * When the window is destroyed, it will fire a "xul-window-destroyed"
+ * notification through the global observer service.
  */
 
 interface nsIDocShell;
 interface nsIDocShellTreeItem;
+interface nsIAppShell;
 interface nsIXULBrowserWindow;
 
 [scriptable, uuid(5d72a699-a252-4161-a45f-e7d35e78b7f3)]
 interface nsIXULWindow : nsISupports
 {
   /**
-  The docshell owning the XUL for this window.
-  */
+   * The docshell owning the XUL for this window.
+   */
   readonly attribute nsIDocShell docShell;
 
   /**
-  Indicates if this window is instrinsically sized.	
-  */
+   * Indicates if this window is instrinsically sized.	
+   */
   attribute boolean intrinsicallySized;
 
   /**
-  This returns the primary content shell.  
-  
-  Note that this is a docshell tree item and therefore can not be assured of
-  what object it is.  It could be an editor, a docshell, or a browser object.
-  Or down the road any other object that supports being a DocShellTreeItem
-  Query accordingly	to determine the capabilities.
-  */
+   * The primary content shell.  
+   *
+   * Note that this is a docshell tree item and therefore can not be assured of
+   * what object it is. It could be an editor, a docshell, or a browser object.
+   * Or down the road any other object that supports being a DocShellTreeItem
+   * Query accordingly to determine the capabilities.
+   */
   readonly attribute nsIDocShellTreeItem primaryContentShell;
 
   /**
-  This returns the content shell specified by the supplied id.
-    
-  Note that this is a docshell tree item and therefore can not be assured of
-  what object it is.  It could be an editor, a docshell, or a browser object.
-  Or down the road any other object that supports being a DocShellTreeItem
-  Query accordingly	to determine the capabilities.
-  */
+   * The content shell specified by the supplied id.
+   *
+   * Note that this is a docshell tree item and therefore can not be assured of
+   * what object it is.  It could be an editor, a docshell, or a browser object.
+   * Or down the road any other object that supports being a DocShellTreeItem
+   * Query accordingly to determine the capabilities.
+   */
   nsIDocShellTreeItem getContentShellById(in wstring ID);
 
   /**
-  Tell this window that it has picked up or lost a child XUL window
-  @param aChild the child window being added or removed
-  */
+   * Tell this window that it has picked up a child XUL window
+   * @param aChild the child window being added
+   */
   void addChildWindow(in nsIXULWindow aChild);
+
+  /**
+   * Tell this window that it has lost a child XUL window
+   * @param aChild the child window being removed
+   */
   void removeChildWindow(in nsIXULWindow aChild);
 
   /**
-  Move the window to a centered position.
-  @param aRelative the window relative to which the window is moved.
-                    See screen parameter for details. if null, the
-                    window is centered relative to the main screen.
-  @param aScreen PR_TRUE to center the window relative to the screen
-                  containing aRelative. PR_FALSE to center it relative
-                  to aRelative itself.
-  @param aAlert PR_TRUE to move the window to an alert position,
-                generally centered horizontally and 1/3 down from the top.
-  */
+   * Move the window to a centered position.
+   * @param aRelative the window relative to which the window is moved.
+   *                  See screen parameter for details. if null, the
+   *                  window is centered relative to the main screen.
+   * @param aScreen   PR_TRUE to center the window relative to the screen
+   *                  containing aRelative. PR_FALSE to center it relative
+   *                  to aRelative itself.
+   * @param aAlert    PR_TRUE to move the window to an alert position,
+   *                  generally centered horizontally and 1/3 down from the top.
+   */
   void center(in nsIXULWindow aRelative, in boolean aScreen, in boolean aAlert);
 
   /**
-  Shows the window as a modal window. That is, ensures that it is visible
-  and runs a local event loop, exiting only once the window has been closed.
-  */
+   * Shows the window as a modal window. That is, ensures that it is visible
+   * and runs a local event loop, exiting only once the window has been closed.
+   */
   void showModal();
 
   const unsigned long lowestZ = 0;
@@ -112,20 +121,20 @@ interface nsIXULWindow : nsISupports
   const unsigned long raisedZ = 6;   /* "alwaysRaised" attribute */
   const unsigned long highestZ = 9;
 
-           attribute unsigned long zLevel;
+  attribute unsigned long zLevel;
 
   /**
    * contextFlags are from nsIWindowCreator2
    */
-           attribute PRUint32  contextFlags;
+  attribute PRUint32 contextFlags;
 
   /**
-  Create a new window.
-  @param aChromeFlags: see nsIWebBrowserChrome
-  @return the newly minted window
-  */
-  nsIXULWindow createNewWindow(in PRInt32 aChromeFlags);
+   * Create a new window.
+   * @param aChromeFlags see nsIWebBrowserChrome
+   * @return the newly minted window
+   */
+  nsIXULWindow createNewWindow(in PRInt32 aChromeFlags,
+                               in nsIAppShell aAppShell);
 
   attribute nsIXULBrowserWindow XULBrowserWindow;
 };
-

@@ -83,9 +83,7 @@
 #include "plevent.h"
 #include "plstr.h"
 
-#include "nsIAppShell.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
+#include "nsIAppStartup.h"
 
 #include "nsIDocumentViewer.h"
 #include "nsIBrowserHistory.h"
@@ -102,9 +100,7 @@
 // Stuff to implement file download dialog.
 #include "nsIProxyObjectManager.h" 
 
-#if defined(MOZ_PHOENIX) || defined(MOZ_XULRUNNER)
-#include "nsToolkitCompsCID.h"
-#endif
+#include "nsXPFEComponentsCID.h"
 
 // If DEBUG, NS_BUILD_REFCNT_LOGGING, MOZ_PERF_METRICS, or MOZ_JPROF is
 // defined, enable the PageCycler.
@@ -115,8 +111,6 @@
 /* Define Class IDs */
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID,    NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_CID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
 
 #ifdef DEBUG                                                           
 static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
@@ -225,18 +219,18 @@ public:
       nsresult rv;
       // make sure our timer is stopped first
       StopTimer();
-      nsCOMPtr<nsIAppShellService> appShellServ = 
-               do_GetService(kAppShellServiceCID, &rv);
+      nsCOMPtr<nsIAppStartup> appStartup = 
+               do_GetService(NS_APPSTARTUP_CONTRACTID, &rv);
       if(NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
                do_GetService(kProxyObjectManagerCID, &rv);
       if(NS_FAILED(rv)) return rv;
-      nsCOMPtr<nsIAppShellService> appShellProxy;
-      rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIAppShellService), 
-                                                appShellServ, PROXY_ASYNC | PROXY_ALWAYS,
-                                                getter_AddRefs(appShellProxy));
+      nsCOMPtr<nsIAppStartup> appStartupProxy;
+      rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIAppStartup),
+                                                   appStartup, PROXY_ASYNC | PROXY_ALWAYS,
+                                                   getter_AddRefs(appStartupProxy));
 
-      (void)appShellProxy->Quit(nsIAppShellService::eAttemptQuit);
+      (void)appStartupProxy->Quit(nsIAppStartup::eAttemptQuit);
       return NS_ERROR_FAILURE;
     }
   }
@@ -526,7 +520,7 @@ nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
   *aIsPageCycling = PR_FALSE;
   if (!sCmdLineURLUsed) {
     nsCOMPtr<nsICmdLineService> cmdLineArgs = 
-             do_GetService(kCmdLineServiceCID, &rv);
+             do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       if (APP_DEBUG) fprintf(stderr, "Could not obtain CmdLine processing service\n");
       return NS_ERROR_FAILURE;

@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
                   string \
 		  MapiProxy \
 		  appshell \
+		  appcomps \
 		  windowwatcher \
 		  dom \
 		  profile \

@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  msgdb \
 		  rdf \
 		  appshell \
+		  appcomps \
 		  msgimap \
 		  msgnews \
 		  docshell \

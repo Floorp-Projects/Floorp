@@ -82,7 +82,6 @@ CPPSRCS  = \
            nsComposerRegistration.cpp     \
            nsEditingSession.cpp	          \
            nsComposerCommandsUpdater.cpp  \
-           nsEditorService.cpp            \
            nsEditorSpellCheck.cpp         \
            $(NULL)
 

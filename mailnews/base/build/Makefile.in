@@ -77,6 +77,7 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgdb \
 		  appshell \
+		  appcomps \
 		  msgnews \
 		  msgimap \
 		  gfx \

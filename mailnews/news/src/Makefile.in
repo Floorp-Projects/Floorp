@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  uriloader \
 		  appshell \
+		  appcomps \
 		  mime \
 		  intl \
 		  webshell \

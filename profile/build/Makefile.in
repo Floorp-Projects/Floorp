@@ -46,7 +46,6 @@ LIBRARY_NAME	= profile
 EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsProfileModule
-GRE_MODULE	= 1
 
 PACKAGE_FILE = profile.pkg
 
@@ -55,6 +54,7 @@ REQUIRES	= xpcom \
 		  string \
 		  uriloader \
 		  appshell \
+		  appcomps \
 		  $(NULL)
 
 CPPSRCS		= \

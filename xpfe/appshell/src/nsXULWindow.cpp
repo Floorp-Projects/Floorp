@@ -43,7 +43,6 @@
 #include "nsXULWindow.h"
 
 // Helper classes
-#include "nsAppShellCIDs.h"
 #include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "prprf.h"
@@ -86,6 +85,7 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsITimelineService.h"
+#include "nsAppShellCID.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 
@@ -109,7 +109,6 @@
 #define ZLEVEL_ATTRIBUTE   NS_LITERAL_STRING("zlevel")
 // CIDs
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -363,7 +362,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   mContinueModalLoop = PR_TRUE;
   EnableParent(PR_FALSE);
 
-  nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+  nsCOMPtr<nsIAppShellService> appShellService(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   if (appShellService)
       appShellService->TopLevelWindowIsModal(
                          NS_STATIC_CAST(nsIXULWindow*, this), PR_TRUE);
@@ -434,32 +433,14 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    if(!mWindow)
       return NS_OK;
 
-   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+   NS_ASSERTION(appShell, "Couldn't get appShell... xpcom shutdown?");
    if(appShell)
      appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
 
    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
    if (parentWindow)
      parentWindow->RemoveChildWindow(this);
-
-// Anyone still using native menus should add themselves here.
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  {
-  // unregister as document listener
-  // this is needed for menus
-   nsCOMPtr<nsIContentViewer> cv;
-   if(mDocShell)
-      mDocShell->GetContentViewer(getter_AddRefs(cv));
-   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-   if(docv)
-      {
-      nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(getter_AddRefs(doc));
-/*      if(doc)
-         doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));  */
-      }
-   }
-#endif
 
    // let's make sure the window doesn't get deleted out from under us
    // while we are trying to close....this can happen if the docshell
@@ -534,14 +515,18 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       mWindow = nsnull;
    }
 
-   /* Inform the appshellservice we've destroyed this window and it could
+   /* Inform appstartup we've destroyed this window and it could
       quit now if it wanted. This must happen at least after mDocShell
       is destroyed, because onunload handlers fire then, and those being
       script, anything could happen. A new window could open, even.
       See bug 130719. */
-   if(appShell)
-      appShell->Quit(nsIAppShellService::eConsiderQuit);
-   
+   nsCOMPtr<nsIObserverService> obssvc =
+     do_GetService("@mozilla.org/observer-service;1");
+   NS_ASSERTION(obssvc, "Couldn't get observer service?");
+
+   if (obssvc)
+     obssvc->NotifyObservers(nsnull, "xul-window-destroyed", nsnull);
+
    return NS_OK;
 }
 
@@ -760,15 +745,14 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
    if(windowMediator)
       windowMediator->UpdateWindowTimeStamp(NS_STATIC_CAST(nsIXULWindow*, this));
 
-   // Hide splash screen (if there is one).
-   static PRBool splashScreenGone = PR_FALSE;
-   if(!splashScreenGone)
-      {
-      nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
-      if(appShellService)
-         appShellService->HideSplashScreen();
-      splashScreenGone = PR_TRUE;
-      }
+   // notify observers so that we can hide the splash screen if possible
+   nsCOMPtr<nsIObserverService> obssvc
+     (do_GetService("@mozilla.org/observer-service;1"));
+   NS_WARN_IF_FALSE(obssvc, "Couldn't get observer service.");
+   if (obssvc) {
+     obssvc->NotifyObservers(nsnull, "xul-window-visible", nsnull); 
+   }
+
    mDebuting = PR_FALSE;
    NS_TIMELINE_LEAVE("nsXULWindow::SetVisibility");
    return NS_OK;
@@ -1556,22 +1540,18 @@ NS_IMETHODIMP nsXULWindow::GetWindowDOMElement(nsIDOMElement** aDOMElement)
    nsCOMPtr<nsIContentViewer> cv;
    
    mDocShell->GetContentViewer(getter_AddRefs(cv));
-   if(!cv)
-      return NS_ERROR_FAILURE;
+   NS_ENSURE_TRUE(cv, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-   if(!docv)   
-      return NS_ERROR_FAILURE;
+   NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIDocument> doc;
    docv->GetDocument(getter_AddRefs(doc));
    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-   if(!domdoc) 
-      return NS_ERROR_FAILURE;
+   NS_ENSURE_TRUE(domdoc, NS_ERROR_FAILURE);
 
    domdoc->GetDocumentElement(aDOMElement);
-   if(!*aDOMElement)
-      return NS_ERROR_FAILURE;
+   NS_ENSURE_TRUE(*aDOMElement, NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -1700,20 +1680,20 @@ NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus)
 
 // top-level function to create a new window
 NS_IMETHODIMP nsXULWindow::CreateNewWindow(PRInt32 aChromeFlags,
-   nsIXULWindow **_retval)
+                             nsIAppShell* aAppShell, nsIXULWindow **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
-    return CreateNewChromeWindow(aChromeFlags, _retval);
-  return CreateNewContentWindow(aChromeFlags, _retval);
+    return CreateNewChromeWindow(aChromeFlags, aAppShell, _retval);
+  return CreateNewContentWindow(aChromeFlags, aAppShell, _retval);
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
-   nsIXULWindow **_retval)
+   nsIAppShell* aAppShell, nsIXULWindow **_retval)
 {
    NS_TIMELINE_ENTER("nsXULWindow::CreateNewChromeWindow");
-   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
    
    // Just do a normal create of a window and return.
@@ -1725,7 +1705,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
    nsCOMPtr<nsIXULWindow> newWindow;
    appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, PR_FALSE,
       aChromeFlags, nsIAppShellService::SIZE_TO_CONTENT,
-      nsIAppShellService::SIZE_TO_CONTENT, getter_AddRefs(newWindow));
+      nsIAppShellService::SIZE_TO_CONTENT, aAppShell, getter_AddRefs(newWindow));
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
@@ -1742,10 +1722,10 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
-   nsIXULWindow **_retval)
+   nsIAppShell* aAppShell, nsIXULWindow **_retval)
 {
    NS_TIMELINE_ENTER("nsXULWindow::CreateNewContentWindow");
-   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIXULWindow> parent;
@@ -1789,7 +1769,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIXULWindow> newWindow;
    appShell->CreateTopLevelWindow(parent, uri, PR_FALSE, PR_FALSE,
-                                 aChromeFlags, 615, 480,
+                                  aChromeFlags, 615, 480, aAppShell,
                                  getter_AddRefs(newWindow));
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
@@ -1800,7 +1780,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    if(browserChrome)
       browserChrome->SetChromeFlags(aChromeFlags);
 
-   nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(kAppShellCID));
+   nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(NS_APPSHELLSERVICE_CONTRACTID));
    NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);
 
    subShell->Create(0, nsnull);

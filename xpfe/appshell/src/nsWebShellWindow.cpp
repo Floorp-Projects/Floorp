@@ -72,7 +72,6 @@
 #include "nsIAppShell.h"
 
 #include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
 
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNodeList.h"

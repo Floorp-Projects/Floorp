@@ -34,83 +34,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #ifndef __nsAppShellService_h
 #define __nsAppShellService_h
 
 #include "nsIAppShellService.h"
-#include "nsINativeAppSupport.h"
 #include "nsIObserver.h"
-#include "nsWeakReference.h"
-#include "nsIAppShell.h"
-#include "plevent.h"
 
 //Interfaces Needed
 #include "nsIXULWindow.h"
-#include "nsIWindowMediator.h"
-#include "nsPIWindowWatcher.h"
-#include "nsISplashScreen.h"
+#include "nsStringFwd.h"
+
+// {0099907D-123C-4853-A46A-43098B5FB68C}
+#define NS_APPSHELLSERVICE_CID \
+{ 0x99907d, 0x123c, 0x4853, { 0xa4, 0x6a, 0x43, 0x9, 0x8b, 0x5f, 0xb6, 0x8c } }
 
 class nsAppShellService : public nsIAppShellService,
-                          public nsIObserver,
-                          public nsSupportsWeakReference
+                          public nsIObserver
 {
 public:
-  nsAppShellService(void);
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPSHELLSERVICE
   NS_DECL_NSIOBSERVER
 
-protected:
-  virtual ~nsAppShellService();
+  nsAppShellService();
 
-  void RegisterObserver(PRBool aRegister);
+protected:
+  ~nsAppShellService();
+
   NS_IMETHOD JustCreateTopWindow(nsIXULWindow *aParent,
                                  nsIURI *aUrl, 
                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 PRBool aIsHiddenWindow, nsIXULWindow **aResult);
+                                 PRBool aIsHiddenWindow, nsIAppShell* aAppShell,
+                                 nsIXULWindow **aResult);
   PRUint32 CalculateWindowZLevel(nsIXULWindow *aParent, PRUint32 aChromeMask);
   nsresult SetXPConnectSafeContext();
   nsresult ClearXPConnectSafeContext();
-  void     AttemptingQuit(PRBool aAttempt);
 
-  nsCOMPtr<nsIAppShell> mAppShell;
-  nsCOMPtr<nsICmdLineService> mCmdLineService;
-  nsCOMPtr<nsIWindowMediator> mWindowMediator;
-  nsCOMPtr<nsPIWindowWatcher> mWindowWatcher;
   nsCOMPtr<nsIXULWindow>      mHiddenWindow;
-  PRBool mXPCOMShuttingDown;
-#ifndef MOZ_XUL_APP
-  nsCOMPtr<nsISplashScreen> mSplashScreen;
-#endif
-  nsCOMPtr<nsINativeAppSupport> mNativeAppSupport;
-
-  PRUint16     mModalWindowCount;
-  PRInt32      mConsiderQuitStopper; // if > 0, Quit(eConsiderQuit) fails
-  PRPackedBool mShuttingDown;   // Quit method reentrancy check
-  PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
-
-  // A "last event" that is used to flush the appshell's event queue.
-  PR_STATIC_CALLBACK(void*) HandleExitEvent(PLEvent* aEvent);
-  PR_STATIC_CALLBACK(void) DestroyExitEvent(PLEvent* aEvent);
-
-private:
-#ifndef MOZ_XUL_APP
-  nsresult CheckAndRemigrateDefunctProfile();
-#endif
-
-  nsresult LaunchTask(const char *aParam,
-                      PRInt32 height, PRInt32 width,
-                      PRBool *windowOpened);
-  
-  nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                      const nsAFlatString& aAppArgs,
-                      PRInt32 aWidth, PRInt32 aHeight);
-                      
-  nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width);
-
+  PRPackedBool                mXPCOMShuttingDown;
+  PRUint16                    mModalWindowCount;
 };
 
 #endif

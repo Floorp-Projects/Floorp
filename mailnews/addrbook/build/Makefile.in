@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  rdfutil \
 		  docshell \
 		  appshell \
+		  appcomps \
 		  dom \
 		  widget \
 		  locale \

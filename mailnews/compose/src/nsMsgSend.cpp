@@ -88,7 +88,6 @@
 #include "nsTextFormatter.h"
 #include "nsIWebShell.h"
 #include "nsIPrompt.h"
-#include "nsIAppShellService.h"
 #include "nsMailHeaders.h"
 #include "nsIDocShell.h"
 #include "nsMimeTypes.h"

@@ -46,7 +46,7 @@
 #include "nsILocalFileMac.h"
 #include "nsDebug.h"
 #include "nsNetUtil.h"
-#include "nsIAppShellService.h"
+#include "nsIAppStartup.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
@@ -65,6 +65,7 @@
 #include "nsIPrefService.h"
 
 #include "nsAEEventHandling.h"
+#include "nsXPFEComponentsCID.h"
 
 // NSPR
 #include "prmem.h"
@@ -73,9 +74,6 @@
 #ifdef XP_MAC
 #include "pprio.h"  // PR_Init_Log
 #endif
-
-#include "nsAppShellCIDs.h"
-static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 
 // the static instance
 nsMacCommandLine nsMacCommandLine::sMacCommandLine;
@@ -402,12 +400,12 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
     if (NS_FAILED(rv) || !doQuit)
         return errAEEventNotHandled;
           
-  nsCOMPtr<nsIAppShellService> appShellService = 
-           do_GetService(kAppShellServiceCID, &rv);
+  nsCOMPtr<nsIAppStartup> appStartup = 
+           (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
   
-  (void)appShellService->Quit(nsIAppShellService::eAttemptQuit);
+  (void)appStartup->Quit(nsIAppStartup::eAttemptQuit);
   return noErr;
 }
 

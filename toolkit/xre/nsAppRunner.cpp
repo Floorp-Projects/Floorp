@@ -56,6 +56,7 @@
 #include "prenv.h"
 
 #include "nsIAppShellService.h"
+#include "nsIAppStartup.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIArray.h"
 #include "nsICategoryManager.h"
@@ -89,11 +90,11 @@
 #include "nsNetUtil.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
+#include "nsXPFEComponentsCID.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
 #include "nsXREDirProvider.h"
-#include "nsWindowCreator.h"
 
 #include "nsINIParser.h"
 
@@ -593,7 +594,7 @@ LaunchApplicationWithArgs(const char *commandLineArg,
   nsresult rv;
 
   nsCOMPtr<nsICmdLineService> cmdLine =
-    do_GetService("@mozilla.org/appshell/commandLineService;1",&rv);
+    do_GetService("@mozilla.org/app-startup/commandLineService;1",&rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr <nsICmdLineHandler> handler;
@@ -720,10 +721,10 @@ DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool heedGeneralStartupPrefs, P
     PR_sscanf(tempString.get(), "%d", &height);
   
   if (heedGeneralStartupPrefs) {
-    nsCOMPtr<nsIAppShellService> appShellService
-      (do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+    nsCOMPtr<nsIAppStartup> appStartup
+      (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = appShellService->CreateStartupState(width, height, windowOpened);
+    rv = appStartup->CreateStartupState(width, height, windowOpened);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
@@ -956,7 +957,7 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
 
   // Initialize the cmd line service
   nsCOMPtr<nsICmdLineService> cmdLineArgs
-    (do_GetService("@mozilla.org/appshell/commandLineService;1"));
+    (do_GetService("@mozilla.org/app-startup/commandLineService;1"));
   NS_ENSURE_TRUE(cmdLineArgs, NS_ERROR_FAILURE);
 
   rv = cmdLineArgs->Initialize(gArgc, gArgv);
@@ -968,15 +969,8 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
     return rv;
   }
 
-  nsCOMPtr<nsIAppShellService> appShellService
-    (do_GetService("@mozilla.org/appshell/appShellService;1"));
-  NS_ENSURE_TRUE(appShellService, NS_ERROR_UNEXPECTED);
-
-  rv = appShellService->Initialize(cmdLineArgs, native);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIWindowCreator> creator = new nsWindowCreator();
-  if (!creator) return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIWindowCreator> creator (do_GetService(NS_APPSTARTUP_CONTRACTID));
+  if (!creator) return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIWindowWatcher> wwatch
     (do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
@@ -1310,11 +1304,11 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
 
       ioParamBlock->SetObjects(dlgArray);
 
-      nsCOMPtr<nsIAppShellService> appShellService
-        (do_GetService("@mozilla.org/appshell/appShellService;1"));
-      NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
+      nsCOMPtr<nsIAppStartup> appStartup
+        (do_GetService(NS_APPSTARTUP_CONTRACTID));
+      NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
-      appShellService->EnterLastWindowClosingSurvivalArea();
+      appStartup->EnterLastWindowClosingSurvivalArea();
 
       nsCOMPtr<nsIDOMWindow> newWindow;
       rv = windowWatcher->OpenWindow(nsnull,
@@ -1324,7 +1318,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
                                      ioParamBlock,
                                      getter_AddRefs(newWindow));
 
-      appShellService->ExitLastWindowClosingSurvivalArea();
+      appStartup->ExitLastWindowClosingSurvivalArea();
 
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1916,12 +1910,12 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         NS_TIMELINE_LEAVE("startupNotifier");
       }
 
-      nsCOMPtr<nsIAppShellService> appShellService;
-      appShellService = do_GetService("@mozilla.org/appshell/appShellService;1");
-      NS_ENSURE_TRUE(appShellService, 1);
+      nsCOMPtr<nsIAppStartup> appStartup
+        (do_GetService(NS_APPSTARTUP_CONTRACTID));
+      NS_ENSURE_TRUE(appStartup, 1);
 
       // So we can open and close windows during startup
-      appShellService->EnterLastWindowClosingSurvivalArea();
+      appStartup->EnterLastWindowClosingSurvivalArea();
 
       // Profile Migration
       if (gAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
@@ -1933,9 +1927,9 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
       dirProvider.DoStartup();
 
-      NS_TIMELINE_ENTER("appShellService->CreateHiddenWindow");
-      rv = appShellService->CreateHiddenWindow();
-      NS_TIMELINE_LEAVE("appShellService->CreateHiddenWindow");
+      NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
+      rv = appStartup->CreateHiddenWindow();
+      NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
       NS_ENSURE_SUCCESS(rv, 1);
 
       // Extension Compatibility Checking and Startup
@@ -1983,10 +1977,10 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
         nsCOMPtr<nsICmdLineService> cmdLineArgs
-          (do_GetService("@mozilla.org/appshell/commandLineService;1"));
+          (do_GetService("@mozilla.org/app-startup/commandLineService;1"));
         NS_ENSURE_TRUE(cmdLineArgs, 1);
 
-        // This will go away once Components are handling there own commandlines
+        // This will go away once Components are handling their own commandlines
         // if we have no command line arguments, we need to heed the
         // "general.startup.*" prefs
         // if we had no command line arguments, argc == 1.
@@ -1999,12 +1993,12 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       
         // Make sure there exists at least 1 window.
         NS_TIMELINE_ENTER("Ensure1Window");
-        rv = appShellService->Ensure1Window(cmdLineArgs);
+        rv = appStartup->Ensure1Window(cmdLineArgs);
         NS_TIMELINE_LEAVE("Ensure1Window");
         NS_ENSURE_SUCCESS(rv, 1);
 
 #ifndef XP_MACOSX
-        appShellService->ExitLastWindowClosingSurvivalArea();
+        appStartup->ExitLastWindowClosingSurvivalArea();
 #endif
 
 #ifdef MOZ_ENABLE_XREMOTE
@@ -2017,13 +2011,13 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif /* MOZ_ENABLE_XREMOTE */
 
         // enable win32 DDE responses and Mac appleevents responses
-        nativeApp->SetShouldShowUI(PR_TRUE);
+        nativeApp->Enable();
 
         // Start main event loop
-        NS_TIMELINE_ENTER("appShell->Run");
-        rv = appShellService->Run();
-        NS_TIMELINE_LEAVE("appShell->Run");
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
+        NS_TIMELINE_ENTER("appStartup->Run");
+        rv = appStartup->Run();
+        NS_TIMELINE_LEAVE("appStartup->Run");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appstartup");
 
 #ifdef MOZ_ENABLE_XREMOTE
         // shut down the x remote proxy window

@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  rdfutil \
 		  appshell \
+		  appcomps \
 		  dom \
 		  layout \
 		  widget \

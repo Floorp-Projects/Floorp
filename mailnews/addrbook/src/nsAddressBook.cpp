@@ -60,8 +60,6 @@
 #include "nsRDFResource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsAppShellCIDs.h"
-#include "nsIAppShellService.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"

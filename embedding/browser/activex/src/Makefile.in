@@ -50,12 +50,11 @@ DIRS = $(NULL)
 # Common
 DIRS += common
 
-# ActiveX control
-DIRS += control control_kicker
-
 # ActiveX plugin
 ifdef MOZ_ACTIVEX_SCRIPTING_SUPPORT
 DIRS += plugin
 endif
+
+# The ActiveX control is now built in tier 99 from mozilla/Makefile.in
 
 include $(topsrcdir)/config/rules.mk

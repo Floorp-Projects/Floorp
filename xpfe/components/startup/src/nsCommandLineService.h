@@ -62,4 +62,9 @@ protected:
   PRBool ArgsMatch(const char *lookingFor, const char *userGave);
 };
 
+// e34783f5-ac08-11d2-8d19-00805fc2500c
+#define NS_COMMANDLINESERVICE_CID \
+{  0xe34783f5, 0xac08, 0x11d2, \
+  {0x8d, 0x19, 0x00, 0x80, 0x5f, 0xc2, 0x50,0xc} }
+
 #endif

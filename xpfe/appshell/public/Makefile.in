@@ -48,30 +48,17 @@ GRE_MODULE	= 1
 
 EXPORTS		= \
 		nsIWebShellWindow.h \
-		nsAppShellCIDs.h \
-		nsISplashScreen.h \
+		nsAppShellCID.h \
 		$(NULL)
 
 XPIDLSRCS	= \
 		nsIAppShellService.idl \
-		nsICmdLineService.idl \
-		nsICmdLineHandler.idl \
 		nsIWindowMediator.idl \
 		nsIWindowMediatorListener.idl \
 		nsIXULWindow.idl \
-		nsIUserInfo.idl \
-		nsINativeAppSupport.idl \
 		nsIPopupWindowManager.idl \
-		nsICloseAllWindows.idl \
+		nsIXULBrowserWindow.idl \
 		$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-XPIDLSRCS	+= nsINativeAppSupportWin.idl
-endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS 	+= nsAppleEvents.h
-XPIDLSRCS	+= nsICloseAllWindows.idl
-endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -65,6 +65,7 @@
 #include "nsIPref.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
 #ifdef MOZ_PHOENIX
@@ -264,13 +265,18 @@ private:
  * whether Mozilla is already running.
  */
 
-class nsNativeAppSupportWin : public nsNativeAppSupportBase {
+class nsNativeAppSupportWin : public nsNativeAppSupportBase,
+                              public nsIObserver
+{
 public:
+    NS_DECL_NSIOBSERVER
+    NS_DECL_ISUPPORTS_INHERITED
+
     // Overrides of base implementation.
     NS_IMETHOD Start( PRBool *aResult );
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
-    NS_IMETHOD SetShouldShowUI(PRBool aValue);
+    NS_IMETHOD Enable();
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -325,6 +331,13 @@ private:
     static char mMutexName[];
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
+
+NS_INTERFACE_MAP_BEGIN(nsNativeAppSupportWin)
+    NS_INTERFACE_MAP_ENTRY(nsIObserver)
+NS_INTERFACE_MAP_END_INHERITING(nsNativeAppSupportBase)
+
+NS_IMPL_ADDREF_INHERITED(nsNativeAppSupportWin, nsNativeAppSupportBase)
+NS_IMPL_RELEASE_INHERITED(nsNativeAppSupportWin, nsNativeAppSupportBase)
 
 void
 nsNativeAppSupportWin::CheckConsole() {
@@ -766,6 +779,19 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
     return rv;
 }
 
+NS_IMETHODIMP
+nsNativeAppSupportWin::Observe(nsISupports* aSubject, const char* aTopic,
+                               const PRUnichar* aData)
+{
+    if (strcmp(aTopic, "quit-application") == 0) {
+        Quit();
+    } else {
+        NS_ERROR("Unexpected observer topic.");
+    }
+
+    return NS_OK;
+}
+
 // Terminate DDE regardless.
 NS_IMETHODIMP
 nsNativeAppSupportWin::Quit() {
@@ -774,7 +800,7 @@ nsNativeAppSupportWin::Quit() {
     // window as we will destroy ours under our lock.
     // When the mutex goes off the stack, it is unlocked via destructor.
     Mutex mutexLock(mMutexName);
-    NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE );
+    NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE);
 
     // If we've got a message window to receive IPC or new window requests,
     // get rid of it as we are shutting down.
@@ -814,10 +840,18 @@ nsNativeAppSupportWin::Quit() {
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportWin::SetShouldShowUI(PRBool aValue)
+nsNativeAppSupportWin::Enable()
 {
-    NS_ASSERTION(aValue, "True is the only allowed value!");
-    mCanHandleRequests = aValue;
+    mCanHandleRequests = PR_TRUE;
+
+    nsCOMPtr<nsIObserverService> obs
+        (do_GetService("@mozilla.org/observer-service;1"));
+    if (obs) {
+        obs->AddObserver(this, "quit-application", PR_FALSE);
+    } else {
+        NS_ERROR("No observer service?");
+    }
+
     return NS_OK;
 }
 
@@ -1499,14 +1533,11 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     }
 
     // OK, now create nsICmdLineService object from argc/argv.
-    static NS_DEFINE_CID( kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID );
-
     nsCOMPtr<nsIComponentManager> compMgr;
     NS_GetComponentManager(getter_AddRefs(compMgr));
-    rv = compMgr->CreateInstance( kCmdLineServiceCID,
-                                  0,
-                                  NS_GET_IID( nsICmdLineService ),
-                                  (void**)aResult );
+    rv = compMgr->CreateInstanceByContractID("@mozilla.org/app-startup/commandLineService;1",
+                                             0, NS_GET_IID( nsICmdLineService ),
+                                             (void**) aResult);
 
     if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
 #if MOZ_DEBUG_DDE

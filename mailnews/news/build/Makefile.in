@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgdb \
 		  appshell \
+		  appcomps \
 		  mime \
 		  necko \
 		  rdf \

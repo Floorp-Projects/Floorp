@@ -42,6 +42,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = appcomps
+
+EXPORTS = nsXPFEComponentsCID.h
+
 MOZ_HAVE_BROWSER=1
 ifdef MOZ_THUNDERBIRD
 MOZ_HAVE_BROWSER=
@@ -53,11 +57,10 @@ ifdef MOZ_SUNBIRD
 MOZ_HAVE_BROWSER=
 endif
 ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
-# Firefox and XULRunner use this flag to stop the automatic processing of the
-# jar.mn file that lives parallel to this Makefile. The jar.mn is responsible
+# Firefox and XULRunner use this flag to suppress the distribution of chrome from
+# the jar.mn file that lives parallel to this Makefile. The jar.mn is responsible
 # for the packaging of a large number of chrome files these apps don't need. 
-NO_DIST_INSTALL=1
-NO_INSTALL=1
+DEFINES += SUPPRESS_CHROME
 endif
 
 ifdef MOZ_HAVE_BROWSER
@@ -66,7 +69,6 @@ DIRS	= \
 			filepicker \
 			find \
 			search \
-			shistory \
 			intl \
 			resetPref \
 			killAll \
@@ -85,6 +87,7 @@ DIRS += \
 		download-manager \
 		history \
 		sidebar \
+		startup \
 		alerts \
 		$(NULL)
 endif
@@ -116,10 +119,8 @@ DIRS    = \
           prefwindow \
           console \
           sidebar/public \
-          history/public \
-          shistory/public \
           bookmarks/public \
-	  alerts \
+          alerts \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT) 

@@ -1862,11 +1862,11 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
     if (NS_FAILED(rv)) return;
 
-    nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
-    if (NS_FAILED(rv)) return;
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(appStartup));
+    if (!appStartup) return;
 
     nsCOMPtr<nsINativeAppSupport> nativeApp;
-    rv = appShell->GetNativeAppSupport(getter_AddRefs( nativeApp ));
+    rv = appStartup->GetNativeAppSupport(getter_AddRefs( nativeApp ));
     if (NS_FAILED(rv)) return;
 
     // first see if there is a url
@@ -1911,17 +1911,17 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     rv = args->GetCmdLineValue( "-kill", getter_Copies(arg));
     if ( NS_SUCCEEDED(rv) && (const char*)arg ) {
       // Turn off server mode.
-      nsCOMPtr<nsIAppShellService> appShell =
-        do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
-      if (NS_FAILED(rv)) return;
+      nsCOMPtr<nsIAppStartup> appStartup
+        (do_GetService(NS_APPSTARTUP_CONTRACTID));
+      if (!appStartup) return;
       
       nsCOMPtr<nsINativeAppSupport> native;
-      rv = appShell->GetNativeAppSupport( getter_AddRefs( native ));
+      rv = appStartup->GetNativeAppSupport( getter_AddRefs( native ));
       if (NS_SUCCEEDED(rv)) {
         native->SetIsServerMode( PR_FALSE );
 
         // close app if there are no more top-level windows.
-        appShell->Quit(nsIAppShellService::eConsiderQuit);
+        appStartup->Quit(nsIAppShellService::eConsiderQuit);
       }
 
       return;
@@ -2155,7 +2155,7 @@ nsNativeAppSupportOS2::EnsureProfile(nsICmdLineService* args)
 
   nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+  nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   // If we have a profile, everything is fine.
@@ -2181,7 +2181,7 @@ nsNativeAppSupportOS2::EnsureProfile(nsICmdLineService* args)
       canInteract = PR_FALSE;
     }
   }
-  rv = appShell->DoProfileStartup(args, canInteract);
+  rv = appStartup->DoProfileStartup(args, canInteract);
 
   mForceProfileStartup = PR_FALSE;
 
@@ -2461,8 +2461,8 @@ nsNativeAppSupportOS2::OnLastWindowClosing() {
                  profileCount > 1 ) {
                 // Turn off turbo mode and quit the application.
                 SetIsServerMode( PR_FALSE );
-                nsCOMPtr<nsIAppShellService> appShell =
-                    do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+                nsCOMPtr<nsIAppStartup> appShell
+                    (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
                 if ( NS_SUCCEEDED( rv ) ) {
                     appShell->Quit(nsIAppShellService::eAttemptQuit);
                 }

@@ -54,12 +54,11 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIPromptService.h"
-#include "nsAppShellCIDs.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIAppStartup.h"
 #include "nsIAppShellService.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsINativeAppSupport.h"
 #include "nsICmdLineService.h"
-#include "nsIProfileInternal.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsXPIDLString.h"
@@ -74,6 +73,7 @@
 #include "nsIMsgComposeParams.h"
 #include "nsIMsgCompose.h"
 #include "nsMsgCompCID.h"
+#include "nsXPFEComponentsCID.h"
 #include "nsIMsgSend.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIMsgComposeService.h"
@@ -89,8 +89,6 @@
 
 extern PRLogModuleInfo *MAPI;
 
-
-static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
 class nsMAPISendListener : public nsIMsgSendListener
 {
@@ -160,20 +158,23 @@ PRBool nsMapiHook::isMapiService = PR_FALSE;
 
 PRBool nsMapiHook::Initialize()
 {
+#ifndef MOZ_THUNDERBIRD
     nsresult rv;
     nsCOMPtr<nsINativeAppSupport> native;
 
-    nsCOMPtr<nsICmdLineService> cmdLineArgs(do_GetService(kCmdLineServiceCID, &rv));
+    nsCOMPtr<nsICmdLineService> cmdLineArgs (
+      do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    nsCOMPtr<nsIAppShellService> appShell (do_GetService( "@mozilla.org/appshell/appShellService;1", &rv));
+    nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    rv = appShell->GetNativeAppSupport( getter_AddRefs( native ));
+    rv = appStartup->GetNativeAppSupport(getter_AddRefs(native));
     if (NS_FAILED(rv)) return PR_FALSE;
 
     rv = native->EnsureProfile(cmdLineArgs);
     if (NS_FAILED(rv)) return PR_FALSE;
+#endif
 
     return PR_TRUE;
 }
@@ -190,9 +191,6 @@ PRBool nsMapiHook::DisplayLoginDialog(PRBool aLogin, PRUnichar **aUsername,
     nsresult rv;
     PRBool btnResult = PR_FALSE;
 
-    nsCOMPtr<nsIAppShellService> appShell(do_GetService( "@mozilla.org/appshell/appShellService;1", &rv));
-    if (NS_FAILED(rv) || !appShell) return PR_FALSE;
-   
     nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
     if (NS_SUCCEEDED(rv) && dlgService)
     {

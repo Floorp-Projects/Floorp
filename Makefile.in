@@ -206,10 +206,6 @@ tier_9_dirs	+= \
 		editor \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-tier_9_dirs	+= xpfe/bootstrap/appleevents
-endif
-
 ifdef MOZ_THUNDERBIRD
 ifdef MOZ_USE_OFFICIAL_BRANDING
 tier_9_dirs  += other-licenses/branding/thunderbird
@@ -222,23 +218,8 @@ tier_9_dirs  += other-licenses/branding/firefox
 endif
 endif
 
-# profile and chrome should be in tier 50, but are required by xpfe/appshell
-# This is a temporary hack until the app-startup patch lands.
-
-ifdef MOZ_XUL
-ifdef MOZ_XUL_APP
-tier_9_dirs	+= chrome
-else
-tier_9_dirs	+= rdf/chrome
-endif
-endif
-
-tier_9_dirs  += profile
-
 tier_9_dirs	+= \
 		xpfe/appshell \
-		xpfe/browser/public \
-		xpfe/components/sidebar/public \
 		xpfe/components/xremote/public \
 		$(NULL)
 
@@ -248,10 +229,6 @@ endif
 
 ifdef MOZ_LDAP_XPCOM
 tier_9_dirs	+= directory/xpcom
-endif
-
-ifndef MOZ_XUL
-tier_9_dirs    += embedding/minimo/chromelite
 endif
 
 ifdef MOZ_XUL_APP
@@ -264,6 +241,18 @@ endif
 # tier 50 - xpfe & toolkit
 #
 
+ifdef MOZ_XUL
+ifdef MOZ_XUL_APP
+tier_50_dirs += chrome
+else
+tier_50_dirs += rdf/chrome
+endif
+else
+tier_50_dirs += embedding/minimo/chromelite
+endif
+
+tier_50_dirs += profile
+
 ifdef MOZ_PSM
 tier_50_dirs	+= security/manager
 endif
@@ -273,10 +262,8 @@ ifdef MOZ_JPROF
 tier_50_dirs        += tools/jprof
 endif
 
-ifdef MOZ_XUL_APP
-tier_50_dirs += toolkit/components/history/public
-else
-tier_50_dirs += xpfe/components/history/public
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+tier_50_dirs	+= xpfe/bootstrap/appleevents
 endif
 
 tier_50_dirs	+= xpfe themes
@@ -287,10 +274,6 @@ endif
 
 ifdef MOZ_MAPINFO
 tier_50_dirs	+= tools/codesighs
-endif
-
-ifneq (,$(MOZ_L10N_LANG)$(MOZ_L10N_TOOLS))
-tier_50_dirs	+= l10n
 endif
 
 ifdef MOZ_XUL_APP
@@ -358,6 +341,10 @@ tier_99_dirs  += other-licenses/branding/thunderbird/content
 endif
 endif
 
+ifdef MOZ_COMPOSER
+tier_99_dirs	+= editor/ui
+endif
+
 ifdef MOZ_STANDALONE_COMPOSER
 tier_99_dirs	+= composer
 endif
@@ -385,10 +372,16 @@ ifneq (,$(ENABLE_TESTS))
 tier_99_dirs += webshell/tests
 endif
 
-# winembed, mfcembed
+# winembed, mfcembed, axcontrol
 ifeq ($(OS_ARCH),WINNT)
 ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
 tier_99_dirs += embedding/tests
+endif
+ifndef MOZ_NO_ACTIVEX_SUPPORT
+tier_99_dirs += \
+		embedding/browser/activex/src/control \
+		embedding/browser/activex/src/control_kicker \
+		$(NULL)
 endif
 endif
 

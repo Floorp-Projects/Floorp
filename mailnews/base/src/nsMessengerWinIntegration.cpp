@@ -411,24 +411,24 @@ nsMessengerWinIntegration::Init()
     rv = profilePath->GetPath(mProfilePath);
     NS_ENSURE_SUCCESS(rv, rv);
 #else
-  // get current profile name to fill in commandliner. 
+    // get current profile name to fill in commandliner. 
     nsCOMPtr<nsIProfile> profileService = do_GetService(NS_PROFILE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  profileService->GetCurrentProfile(getter_Copies(mProfileName));
+    profileService->GetCurrentProfile(getter_Copies(mProfileName));
 #endif
 
-  // get application path 
-  char appPath[_MAX_PATH] = {0};
-  GetModuleFileName(nsnull, appPath, sizeof(appPath));
-  WCHAR wideFormatAppPath[_MAX_PATH*2] = {0};
-  MultiByteToWideChar(CP_ACP, 0, appPath, strlen(appPath), wideFormatAppPath, _MAX_PATH*2);
-  mAppName.Assign((PRUnichar *)wideFormatAppPath);
+    // get application path 
+    char appPath[_MAX_PATH] = {0};
+    GetModuleFileName(nsnull, appPath, sizeof(appPath));
+    WCHAR wideFormatAppPath[_MAX_PATH*2] = {0};
+    MultiByteToWideChar(CP_ACP, 0, appPath, strlen(appPath), wideFormatAppPath, _MAX_PATH*2);
+    mAppName.Assign((PRUnichar *)wideFormatAppPath);
 
-  rv = ResetCurrent();
-  NS_ENSURE_SUCCESS(rv,rv);
+    rv = ResetCurrent();
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = SetupUnreadCountUpdateTimer();
+    rv = SetupUnreadCountUpdateTimer();
   }
 
   return NS_OK;

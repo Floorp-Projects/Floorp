@@ -35,37 +35,45 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsNativeAppSupportBase.h"
 
 nsNativeAppSupportBase::nsNativeAppSupportBase()
 {
 }
 
-nsNativeAppSupportBase::~nsNativeAppSupportBase() {
+nsNativeAppSupportBase::~nsNativeAppSupportBase()
+{
 }
 
 NS_IMPL_ISUPPORTS1(nsNativeAppSupportBase, nsINativeAppSupport)
 
 // Start answer defaults to OK.
 NS_IMETHODIMP
-nsNativeAppSupportBase::Start( PRBool *result ) {
-    NS_ENSURE_ARG( result );
-    *result = PR_TRUE;
-    return NS_OK;
+nsNativeAppSupportBase::Start( PRBool *result )
+{
+  *result = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportBase::Enable()
+{
+  return NS_OK;
 }
 
 // Stop answer defaults to OK.
 NS_IMETHODIMP
-nsNativeAppSupportBase::Stop( PRBool *result ) {
-    NS_ENSURE_ARG( result );
-    *result = PR_TRUE;
-    return NS_OK;
+nsNativeAppSupportBase::Stop( PRBool *result )
+{
+  *result = PR_TRUE;
+  return NS_OK;
 }
 
-// Quit is a 0x90.
 NS_IMETHODIMP
-nsNativeAppSupportBase::Quit() {
-    return NS_OK;
+nsNativeAppSupportBase::Quit()
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -74,55 +82,7 @@ nsNativeAppSupportBase::ReOpen()
   return NS_OK;
 }
 
-// Show splash screen if implementation has one.
-NS_IMETHODIMP
-nsNativeAppSupportBase::ShowSplashScreen() {
-    NS_NOTREACHED("Don't call me, I'm obsolete!");
-    return NS_OK;
-}
-
-// Hide splash screen if there is one.
-NS_IMETHODIMP
-nsNativeAppSupportBase::HideSplashScreen() {
-    NS_NOTREACHED("Don't call me, I'm obsolete!");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBase::SetIsServerMode(PRBool aIsServerMode) {
-    NS_NOTREACHED("Don't call me, I'm obsolete!");
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBase::GetIsServerMode(PRBool *aIsServerMode) {
-    NS_NOTREACHED("Don't call me, I'm obsolete!");
-    *aIsServerMode = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBase::SetShouldShowUI(PRBool aShouldShowUI) {
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBase::GetShouldShowUI(PRBool *aShouldShowUI) {
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBase::StartServerMode() {
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsNativeAppSupportBase::OnLastWindowClosing() {
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBase::EnsureProfile(nsICmdLineService* args)
-{
-    return NS_OK;
+  return NS_OK;
 }

@@ -42,9 +42,9 @@
 interface nsICloseAllWindows : nsISupports
 {
 	/**
-	Closes all open windows, optionally asking to confirm changes if any.
-	Returns TRUE is the user does not cancel from any confirmation dialog.
-	*/
+	 * Closes all open windows, optionally asking to confirm changes if any.
+	 * @return TRUE if the user does not cancel from any confirmation dialog.
+     */
 	boolean closeAll(in boolean askSave);
 };
 

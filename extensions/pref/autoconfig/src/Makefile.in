@@ -51,7 +51,18 @@ MODULE_NAME      = nsAutoConfigModule
 
 PACKAGE_FILE     = autoconfig.pkg
 
-REQUIRES         = xpcom string intl js xpconnect necko profile pref appshell embedcomponents windowwatcher
+REQUIRES         = xpcom \
+                   string \
+                   intl \
+                   js \
+                   xpconnect \
+                   necko \
+                   profile \
+                   pref \
+                   appcomps \
+                   embedcomponents \
+                   windowwatcher \
+                   $(NULL)
 
 include $(topsrcdir)/config/config.mk
 

@@ -43,7 +43,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profile
-GRE_MODULE	= 1
 
 SDK_XPIDLSRCS	= \
 		nsIProfile.idl \

@@ -78,6 +78,7 @@ REQUIRES	= xpcom \
 		  content \
 		  pref \
 		  appshell \
+		  appcomps \
 		  gfx \
 		  xpinstall \
 		  uriloader \
@@ -122,7 +123,6 @@ PREF_JS_EXPORTS = $(srcdir)/browser-prefs.js
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
-		nsWindowCreator.cpp \
 		showOSAlert.cpp \
 		$(NULL)
 

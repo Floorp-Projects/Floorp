@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_STANDALONE_COMPOSER
 PREF_JS_EXPORTS = $(srcdir)/composer.js
+EXTRA_COMPONENTS = nsComposerCmdLineHandler.js
 endif
 
 include $(topsrcdir)/config/rules.mk

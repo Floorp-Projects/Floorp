@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,15 +16,15 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Seth Spitzer <sspitzer@netscape.com>
+ *  Conrad Carlen <ccarlen@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,18 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsEditorService.h"
-#include "nsString.h"
-#include "plstr.h"
+#include "nsISupports.idl"
 
-nsEditorService::nsEditorService()
+[scriptable, uuid(2f977d49-5485-11d4-87e2-0010a4e75ef2)]
+interface nsICloseAllWindows : nsISupports
 {
-}
+	/**
+     * Closes all open windows, optionally asking to confirm changes if any.
+     * @return TRUE if the user does not cancel from any confirmation dialog.
+     */
+	boolean closeAll(in boolean askSave);
+};
 
-nsEditorService::~nsEditorService()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsEditorService, nsICmdLineHandler) 
-
-CMDLINEHANDLER_IMPL(nsEditorService,"-edit","general.startup.editor","chrome://editor/content/editor.xul","Start with editor.","@mozilla.org/commandlinehandler/general-startup;1?type=editor","Editor Startup Handler", PR_TRUE,"about:blank", PR_TRUE)

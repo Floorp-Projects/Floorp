@@ -129,11 +129,11 @@
           winhooksService.startupAddOption("-turbo");
         else 
           winhooksService.startupRemoveOption("-turbo");
-        var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
-        appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
+        var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
+                           getService(Components.interfaces.nsIAppStartup);
         var nativeAppSupport = null;
         try {
-          nativeAppSupport = appShell.nativeAppSupport;
+          nativeAppSupport = appStartup.nativeAppSupport;
         }
         catch ( ex ) {
         }
