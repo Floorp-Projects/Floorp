@@ -4753,14 +4753,14 @@ nsEventStateManager::GetNextDocShell(nsIDocShellTreeNode* aNode,
   NS_ASSERTION(aResult, "null out pointer");
   PRInt32 numChildren = 0;
   
+  *aResult = nsnull;
+
   aNode->GetChildCount(&numChildren);
-  if (numChildren == 0) {
-    *aResult = nsnull;
-    return;
+  if (numChildren) {
+    aNode->GetChildAt(0, aResult);
+    if (*aResult)
+      return;
   }
-  aNode->GetChildAt(0, aResult);
-  if (*aResult)
-    return;
   
   nsCOMPtr<nsIDocShellTreeNode> curNode = aNode;
   while (curNode) {
