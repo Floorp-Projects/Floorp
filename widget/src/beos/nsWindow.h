@@ -50,6 +50,7 @@
 
 // forward declaration
 class nsViewBeOS;
+class nsIRollupListener;
 
 /**
  * Native BeOS window wrapper. 
@@ -151,6 +152,9 @@ public:
     void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
 protected:
+
+	static PRBool           EventIsInsideWindow(nsWindow* aWindow, nsPoint pos) ;
+	static PRBool           DealWithPopups(uint32 methodID, nsPoint pos);
 
      // Allow Derived classes to modify the height that is passed
      // when the window is created or resized.
