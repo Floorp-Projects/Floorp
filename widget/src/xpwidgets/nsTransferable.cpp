@@ -23,10 +23,16 @@
 #include "nsISupportsArray.h"
 #include "nsRepository.h"
 
-#include <strstrea.h>
+#ifdef XP_UNIX
+#include <strstream.h>
+#endif
 
-#include "nsDataObj.h"
-#include "DDCOMM.h"
+#ifdef XP_PC
+#include <strstrea.h>
+#endif
+
+//#include "nsDataObj.h"
+//#include "DDCOMM.h"
 
 // XIF convertor stuff
 #include "nsIParser.h"
