@@ -64,7 +64,7 @@
 #define PARSER_DLL "libraptorhtmlpars.so"
 #define DOM_DLL    "libjsdom.so"
 #define LAYOUT_DLL "libraptorhtml.so"
-#define NETLIB_DLL "netlib.so"
+#define NETLIB_DLL "libnetlib.so"
 #endif
 #endif
 
