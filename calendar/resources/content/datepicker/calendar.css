@@ -1,29 +1,7 @@
 
 calendar {
-	-moz-binding: url("calendar.xml#calendar");
+	-moz-binding: url("chrome://calendar/content/datepicker/calendar.xml#calendar");
 }
-/*
-.cal-menu { 
-	font-family: Arial;
-	font-size: 10pt;
-	color: #ffffff;
-	border: 1px outset #ffffff;
-}
-
-.cal-menu:hover { 
-	font-family: Arial;
-	font-size: 10pt;
-	color: #ffffff;
-	border: 2px outset #ffffff;
-}
-
-.cal-popup {
-	min-width: 130px;
-	background-color: #ffffff;
-	border: 1px outset #ffffff;
-	padding: 0px;
-}
-*/
 
 .cal-mainbox {
 	min-width: 130px;
@@ -46,23 +24,23 @@ calendar {
 
 .cal-navbtn {
 	min-width: 10px;
-	-moz-binding: url("calendar.xml#cal-navbtn");
+	-moz-binding: url("chrome://calendar/content/datepicker/calendar.xml#cal-navbtn");
 }
 
 .cal-navbtn[dir="-1"] {
-	background: url("image/left-arrow.gif") no-repeat 50% 50%;
+	background: url("chrome://calendar/skin/datetimepickers/left-arrow.gif") no-repeat 50% 50%;
 }
 
 .cal-navbtn[dir="1"] {
-	background: url("image/right-arrow.gif") no-repeat 50% 50%;
+	background: url("chrome://calendar/skin/datetimepickers/right-arrow.gif") no-repeat 50% 50%;
 }
 
 .cal-navbtn[dir="-1"]:hover {
-	background: url("image/left-arrow-hover.gif") no-repeat 50% 50%;
+	background: url("chrome://calendar/skin/datetimepickers/left-arrow-hover.gif") no-repeat 50% 50%;
 }
 
 .cal-navbtn[dir="1"]:hover {
-	background: url("image/right-arrow-hover.gif") no-repeat 50% 50%;
+	background: url("chrome://calendar/skin/datetimepickers/right-arrow-hover.gif") no-repeat 50% 50%;
 }
 
 .cal-navbtn:active {
@@ -87,7 +65,7 @@ calendar {
 	color: #000000;
 	border: 1px solid transparent;
 	text-align: center;
-	-moz-binding: url("calendar.xml#cal-day");
+	-moz-binding: url("chrome://calendar/content/datepicker/calendar.xml#cal-day");
 }
 
 .cal-day[othermonth="true"] {
