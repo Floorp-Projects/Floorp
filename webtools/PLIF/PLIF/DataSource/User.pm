@@ -65,7 +65,7 @@ sub getUserByContactDetails {
     my($app, $contactName, $address) = @_;
     # decent databases can do this in one go. Those that can't can do
     # it in a generic two-step process:
-    return $self->getUserByID($app, $self->getUserIDByContactDetails($app, $username));
+    return $self->getUserByID($app, $self->getUserIDByContactDetails($app, $contactName, $address));
     # XXX no error checking! if getUserID... return undef, return ()!
     # return the same as getUserByID()
 }

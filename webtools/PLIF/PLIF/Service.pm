@@ -46,10 +46,13 @@ sub dispatch {
     my $self = shift;
     my($app, $name, @arguments) = @_;
     my $method = $self->can($name);
+    local $" = '\', \'';
     if ($method) {
+        $self->dump(10, "Attempting to dispatch method: $self->$name('$app', '@arguments')");
         &$method($self, $app, @arguments);
         return 1;
     } else {
-        return undef;
+        $self->dump(10, "There is no method '$name' in object '$self', skipping...");
+        return;
     }
 }

@@ -93,32 +93,38 @@ sub expand {
                     my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
                     if ($order or $source) {
                         my @items = $self->sort($order, $self->keys($value, $source));
-                        push(@index, $index);
-                        push(@stack, $stack);
-                        push(@scope, $superscope);
-                        # now we push all but one of the items onto
-                        # the stack -- so first take that item...
-                        my $firstItem = pop(@items); # (@items is sorted backwards)
-                        # and then take a copy of the scope if we didn't already
-                        if ($scope == $superscope) {
-                            $scope = {%$scope};
+                        if (@items) {
+                            push(@index, $index);
+                            push(@stack, $stack);
+                            push(@scope, $superscope);
+                            # now we push all but one of the items onto
+                            # the stack -- so first take that item...
+                            my $firstItem = pop(@items); # (@items is sorted backwards)
+                            # and then take a copy of the scope if we didn't already
+                            $superscope->{'coses: last condition'} = 1;
+                            if ($scope == $superscope) {
+                                $scope = {%$scope};
+                            }
+                            $scope->{'coses: last condition'} = 0;
+                            foreach my $item (@items) {
+                                push(@index, 1);
+                                push(@stack, $contents);
+                                $scope->{$variable} = $item;
+                                push(@scope, $scope); 
+                                # make sure we create a new scope for the
+                                # next item -- otherwise each part of the
+                                # loop would just have a reference to the
+                                # same shared hash, and so they would all
+                                # have the same value!
+                                $scope = {%$scope};
+                            }
+                            # and finally create the first scope (not pushed on the stack, it is the next, live one)
+                            $index = 1; # skip past attributes
+                            $stack = $contents;
+                            $scope->{$variable} = $firstItem;
+                        } else {
+                            $superscope->{'coses: last condition'} = 0;
                         }
-                        foreach my $item (@items) {
-                            push(@index, 1);
-                            push(@stack, $contents);
-                            $scope->{$variable} = $item;
-                            push(@scope, $scope); 
-                            # make sure we create a new scope for the
-                            # next item -- otherwise each part of the
-                            # loop would just have a reference to the
-                            # same shared hash, and so they would all
-                            # have the same value!
-                            $scope = {%$scope};
-                        }
-                        # and finally create the first scope (not pushed on the stack, it is the next, live one)
-                        $index = 1; # skip past attributes
-                        $stack = $contents;
-                        $scope->{$variable} = $firstItem;
                         next node;
                     } else {
                         if ($scope == $superscope) {
@@ -199,15 +205,16 @@ sub getString {
 sub evaluateVariable {
     my $self = shift;
     my($variable, $scope) = @_;
-    my @parts = split(/\./o, $variable); # split variable at dots ('.')
+    my @parts = split(/\./o, $variable, -1); # split variable at dots ('.') (the negative number prevents null trailing fields from being stripped)
     # drill down through scope
     foreach my $part (@parts) {
         if (ref($scope) eq 'HASH') { 
             $scope = $scope->{$part};
         } elsif (ref($scope) eq 'ARRAY') {
+            $self->assert(scalar($part =~ /^\d+$/o), 1, "Tried to drill into an array using a non-numeric key ('$part')");
             $scope = $scope->[$part];
         } else {
-            $self->error(1, "Could not resolve '$variable' at '$part'");
+            $self->error(1, "Could not resolve '$variable' (the part giving me trouble was '$part')");
         }
     }
     if (defined($scope)) {
@@ -361,7 +368,7 @@ sub sort {
     my $self = shift;
     my($order, @list) = @_;
     # sort the list (in reverse order!)
-    if (defined($order)) {
+    if (defined($order) and scalar(@list)) {
         if ($order eq 'lexical') {
             return sort { $b cmp $a } @list;
         } elsif ($order eq 'reverse lexical') {

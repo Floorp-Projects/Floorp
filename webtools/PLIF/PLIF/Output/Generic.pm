@@ -134,7 +134,9 @@ sub methodMissing {
 sub fillData {
     my $self = shift;
     my($data) = @_;
-    $data->{'app'} = $app->hash;
-    $data->{'session'} = $self->session->hash;
-    $data->{'input'} = $app->input->hash;
+    $data->{'app'} = $self->app->hash;
+    if (defined($self->actualSession)) {
+        $data->{'session'} = $self->actualSession->hash;
+    }
+    $data->{'input'} = $self->app->input->hash;
 }

@@ -48,7 +48,7 @@ sub getUserIDByUsername {
     return $self->database($app)->execute('SELECT userData.userID
                                            FROM userData, userDataTypes
                                            WHERE userData.fieldID = userDataTypes.fieldID
-                                           AND userDataTypes.category = 'contact'
+                                           AND userDataTypes.category = \'contact\'
                                            AND CONCAT(userDataTypes.data, userData.data) = ?', $username)->row->[0];
     # XXX no error checking!
     # return userID or undef
@@ -60,7 +60,7 @@ sub getUserIDByContactDetails {
     return $self->database($app)->execute('SELECT userData.userID
                                            FROM userData, userDataTypes
                                            WHERE userData.fieldID = userDataTypes.fieldID
-                                           AND userDataTypes.category = 'contact'
+                                           AND userDataTypes.category = \'contact\'
                                            AND userDataTypes.name = ?
                                            AND userData.data = ?', $contactName, $address)->row->[0];
     # XXX no error checking!
@@ -231,19 +231,12 @@ sub setGroup {
     # This probably doesn't need to be too efficient... 
     $self->assert(defined($groupID) or defined($groupName), 1, 
                   'Invalid arguments to DataSource::User::setGroup: \'groupID\' and \'groupName\' both undefined');
-
-    if (defined($fieldID)) {
-    } else {
-        return $self->database($app)->execute('INSERT INTO userDataTypes SET category=?, name=?, type=?, data=?, mode=?',
-                                              $category, $name, $type, $data, $mode)->ID;
-    }
-
     if (not defined($groupID)) {
         # add a new record
-        $groupID = $self->database($app)->execute('INSERT INTO groups SET name=?', $name)->ID;
+        $groupID = $self->database($app)->execute('INSERT INTO groups SET name=?', $groupName)->ID;
     } elsif (defined($groupName)) {
         # replace the existing record
-        $self->database($app)->execute('UPDATE groups SET name=? WHERE groupID = ?', $name, $groupID);
+        $self->database($app)->execute('UPDATE groups SET name=? WHERE groupID = ?', $groupName, $groupID);
     }
     # now update the rights mapping table
     $self->database($app)->execute('DELETE FROM groupRightsMapping WHERE groupID = ?', $groupID);

@@ -124,7 +124,7 @@ sub getObject {
 sub getServiceList {
     my $self = shift;
     my($name) = @_;
-    my @services;
+    my @services = ();
     foreach my $service (@{$self->services}) {
         if ($service->provides($name)) {
             # Create the service. If it is already created, this will
@@ -137,6 +137,8 @@ sub getServiceList {
             push(@services, $service);
         }
     }
+    local $" = '\', \'';
+    $self->dump(10, "Created a service list for '$name' containing: '@services'");
     return @services;
 }
 
@@ -145,12 +147,13 @@ sub getObjectList {
     # constructor call
     my $self = shift;
     my($name) = @_;
-    my @services;
+    my @services = ();
     foreach my $service (@{$self->objects}) {
         if ($service->objectProvides($name)) {
             push(@services, $service);
         }
     }
+    $self->dump(10, "Created an object list for '$name' containing: '@services'");
     return @services;
 }
 
@@ -213,15 +216,16 @@ sub dispatchMethod {
     my $self = shift;
     my($service, $prefix, $method, @arguments) = @_;
     # the \u makes the first letter of the $command uppercase
+    $self->dump(10, "dispatching method '$prefix\u$method'...");
     return ($self->getSelectingServiceList($service)->dispatch($self, "$prefix\u$method", @arguments) or 
             $self->getSelectingObjectList($service)->dispatch($self, "$prefix\u$method", @arguments));
 }
 
 sub DESTROY {
     my $self = shift;
-    $self->dump(9, 'At controller shutdown, there were ' .
+    $self->dump(10, 'At controller shutdown, there were ' .
                 # I assume there will always be > 1 and so haven't bothered to special case the singular grammar
-                scalar($self->services) . 
+                scalar(@{$self->services}) . 
                 ' services registered, of which ' .
                 scalar(keys(%{$self->servicesHash})) .
                 ' had been placed in the services hash.')

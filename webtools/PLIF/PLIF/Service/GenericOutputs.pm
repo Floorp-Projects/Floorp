@@ -45,7 +45,7 @@ sub provides {
 # this is typically used by input devices
 sub outputRequest {
     my $self = shift;
-    my($app, $argument) = @_;
+    my($app, $output, $argument) = @_;
     $output->output(undef, 'request', {
         'command' => $app->command,
         'argument' => $argument,
@@ -55,8 +55,8 @@ sub outputRequest {
 # dispatcher.output.generic
 sub outputReportFatalError {
     my $self = shift;
-    my($error) = @_;
-    $self->output(undef, 'error', {
+    my($app, $output, $error) = @_;
+    $output->output(undef, 'error', {
         'error' => $error,
     });   
 }
@@ -67,13 +67,15 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'request') {
-            return '<text>'<text variable="(data.argument)"/>'? </text>';
+            return '<text>\'<text value="(data.argument)"/>\'? </text>';
         } elsif ($string eq 'error') {
-            return '<text>Error:<br/><text variable="(data.error)"/></br/></text>';
+            $self->dump(9, 'Looks like an error occured, because the string \'error\' is being requested');
+            return '<text>Error:<br/><text value="(data.error)"/><br/></text>';
         }
     } elsif ($protocol eq 'http') {
         if ($string eq 'error') {
-            return '<text>HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text variable="(data.error)"/></text>';
+            $self->dump(9, 'Looks like an error occured, because the string \'error\' is being requested');
+            return '<text>HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(data.error)"/></text>';
         }
     }
     return; # nope, sorry

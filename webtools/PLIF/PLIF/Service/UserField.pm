@@ -135,8 +135,8 @@ sub DESTROY {
 sub write {
     my $self = shift;
     if ($self->{'_DELETE'}) {
-        $self->app->getService('dataSource.user')->removeUserField($elf->app, $self->userID, $self->fieldID);
+        $self->app->getService('dataSource.user')->removeUserField($self->app, $self->userID, $self->fieldID);
     } else {
-        $self->app->getService('dataSource.user')->setUserField($elf->app, $self->userID, $self->fieldID, $self->data);
+        $self->app->getService('dataSource.user')->setUserField($self->app, $self->userID, $self->fieldID, $self->data);
     }
 }

@@ -86,7 +86,7 @@ sub createArgument {
         if ($self->getArgument('batch')) {
             $self->SUPER::createArgument($argument);
         } else {
-            $self->dump(5, "going to request $argument from user!");
+            $self->warn(5, "going to request '$argument' from user!");
             $self->app->output->request($argument);
             # get input from user :-)
             my $term = Term::ReadLine->new($self->app->name);

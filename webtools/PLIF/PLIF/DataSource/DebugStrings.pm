@@ -84,6 +84,9 @@ sub getDefaultString {
           <embed string="debug.dumpVars"/>
         </set>
       </set>
+      <else>
+        <text value="  (prefix)"/><br/>
+      </else>
     </if>
   </with>
   <without variable="prefix">

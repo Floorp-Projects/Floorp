@@ -63,7 +63,7 @@ sub getArgument {
 sub getArguments {
     my $self = shift;
     my $result = {};
-    foreach my $argument (keys %$self) {
+    foreach my $argument (keys(%$self)) {
         if ($argument =~ /^argument (.*)$/o) {
             $result->{$1} = \@{$self->{$argument}};
         }

@@ -41,7 +41,7 @@ $app->run();
 # setup everything (automatically called by the constructor, above)
 sub init {
     my $self = shift;
-    $self->dump(5, '*** Started PLIF Application ***');
+    $self->dump(5, '', '', '*** Started PLIF Application ***', '********************************');
     $self->SUPER::init(@_);
     $self->initInput();
 }
@@ -55,7 +55,7 @@ sub run {
             $self->objects([]);
             if ($self->verifyInput()) {
                 if ($self->input->command) {
-                    $self->command($command);
+                    $self->command($self->input->command);
                     $self->dispatch($self->input->command);
                 } else {
                     $self->command('');

@@ -84,7 +84,7 @@ sub getUserByContactDetails {
 
 sub getUserByID {
     my $self = shift;
-    my($app, $id) = @_;
+    my($app, $userID) = @_;
     my(@data) = $app->getService('dataSource.user')->getUserByUserID($app, $userID);
     if (@data) {
         return $self->objectCreate($app, @data);
@@ -121,7 +121,7 @@ sub objectInit {
     $self->fieldsByID({});
     # don't forget to update the 'hash' function if you add more fields
     my $fieldFactory = $app->getService('user.fieldFactory');
-    foreach my $fieldID (keys($fields)) {
+    foreach my $fieldID (keys(%$fields)) {
         $self->insertField($fieldFactory->createFieldByID($app, $self, $fieldID, $fields->{$fieldID}));
     }
     $self->groups({%$groups}); # hash of groupID => groupName
@@ -146,13 +146,13 @@ sub hasField {
 }
 
 # if you want to add a field, you do:
-#     $user->getField('category', 'name')->data = $myData;
+#     $user->getField('category', 'name')->data($myData);
 sub getField {
     my $self = shift;
     my($category, $name) = @_;
     my $field = $self->hasField($category, $name);
     if (not defined($field)) {
-        $field = $self->insertField($fieldFactory->createFieldByName($app, $self, $fieldCategory, $fieldName));
+        $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByName($self->app, $self, $category, $name));
     }
     return $field;
 }
@@ -199,7 +199,7 @@ sub doAddressChange {
         my $field = $self->fieldsByID->{$self->newFieldID};
         $self->assert(defined($field), 1, 'Database integrity error: newFieldID doesn\'t map to a field!');
         if (defined($password) and ($self->app->getService('service.passwords')->checkPassword($self->newFieldPassword, $password))) {
-            $field->data = $self->newFieldValue;
+            $field->data($self->newFieldValue);
         } elsif (not defined($field->data)) {
             $field->remove();
         }
@@ -228,7 +228,7 @@ sub hash {
     $result->{'adminMessage'} = $self->adminMessage,
     $result->{'groups'} = $self->groups,
     $result->{'rights'} = keys(%{$self->rights});
-    $result->{'fields'} = {},
+    $result->{'fields'} = {};
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
         $result->{'fields'}->{$field->fieldID} = $field->data;
