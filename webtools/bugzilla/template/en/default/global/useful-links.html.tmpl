@@ -98,16 +98,14 @@
       
       <td colspan="3">
         [% IF user.showmybugslink %]
-          <a href="buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;email1=[% user.login FILTER url_quote %]&amp;emailtype1=exact&amp;emailassigned_to1=1&amp;emailreporter1=1">My&nbsp;Bugs
-          </a>
+          <a href="buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;email1=[% user.login FILTER url_quote %]&amp;emailtype1=exact&amp;emailassigned_to1=1&amp;emailreporter1=1">My&nbsp;Bugs</a>
           [% print_pipe = 1 %]
         [% END %]
 
         [% FOREACH q = user.queries %]
           [% IF q.linkinfooter %]
             [% " | " IF print_pipe %]
-            <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">[% q.name FILTER html FILTER no_break %]
-            </a>
+            <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">[% q.name FILTER html FILTER no_break %]</a>
             [% print_pipe = 1 %]
           [% END %]        
         [% END %]
