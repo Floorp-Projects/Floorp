@@ -82,13 +82,17 @@ tab[selected="true"] {
 }
 
 tab[beforeselected="true"] {
+#ifndef XP_MACOSX
   -moz-appearance: tab-left-edge;
+#endif
   border-right: none;
   -moz-border-radius-topright: 0;
 }
 
 tab[afterselected="true"] {
+#ifndef XP_MACOSX
   -moz-appearance: tab-right-edge;
+#endif
   border-left: none;
   -moz-border-radius-topleft: 0;
 }
