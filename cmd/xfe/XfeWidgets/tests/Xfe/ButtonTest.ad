@@ -18,13 +18,13 @@
 
 ButtonTest*MainForm.width:				500
 ButtonTest*MainForm.height:				700
-ButtonTest*MainForm.background:			Gray70
+!ButtonTest*MainForm.background:			Gray70
 ButtonTest*MainForm.shadowThickness:		0
 ButtonTest*MainForm.shadowType:			shadow_in
 
 ButtonTest*fontList:	-*-helvetica-medium-r-*-*-*-140-*-*-*-*-iso8859-*
 ButtonTest*labelFontList:	-*-helvetica-medium-r-*-*-*-140-*-*-*-*-iso8859-*
-ButtonTest*foreground:	Black
+!ButtonTest*foreground:	Black
 
 !!
 !! MenuBar
@@ -34,7 +34,7 @@ ButtonTest*MenuBar.rightAttachment:					attach_form
 ButtonTest*MenuBar.topAttachment:					attach_form
 ButtonTest*MenuBar.bottomAttachment:				attach_none
 
-ButtonTest*MenuBar*background:						Gray65
+!ButtonTest*MenuBar*background:						Gray65
 ButtonTest*MenuBar*shadowThickness:					2
 
 ButtonTest*MenuBar*File.mnemonic:					F
@@ -58,15 +58,15 @@ ButtonTest*ButtonTarget.bottomAttachment:			attach_none
 ButtonTest*ButtonTarget.topOffset:					200
 ButtonTest*ButtonTarget.leftOffset:					50
 
-ButtonTest*ButtonTarget.background:					Gray70
+!ButtonTest*ButtonTarget.background:					Gray70
 
 ButtonTest*ButtonTarget.buttonType:					button_push
 
-ButtonTest*ButtonTarget.raiseOnEnter:				true
+ButtonTest*ButtonTarget.raiseOnEnter:				false
 
-ButtonTest*ButtonTarget.shadowThickness:			2
+!ButtonTest*ButtonTarget.shadowThickness:			0
 
-ButtonTest*ButtonTarget.raiseBorderThickness:		2
+!ButtonTest*ButtonTarget.raiseBorderThickness:		0
 
 ButtonTest*ButtonTarget.marginLeft:					10
 ButtonTest*ButtonTarget.marginRight:				10
@@ -80,6 +80,20 @@ ButtonTest*ButtonTarget.transparentCursor:			cross
 
 !ButtonTest*ButtonTarget.selectionModifiers:		Shift
 ButtonTest*ButtonTarget.editModifiers:		    Shift
+
+ButtonTest*ButtonTarget*armForeground:				Red
+
+ButtonTest*ButtonTarget*fillOnArm:				false
+
+ButtonTest*ButtonTarget*underlineThickness:		    1
+
+ButtonTest*ButtonTarget*pretendSensitive:		    false
+
+
+
+
+
+
 
 
 
