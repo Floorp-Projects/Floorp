@@ -539,9 +539,6 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aContent);
-  if (!aContent || !aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
   *aResult = nsnull;  // initialize out param
 
   nsresult rv;
