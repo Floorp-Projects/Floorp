@@ -37,7 +37,14 @@ interface nsINNTPNewsgroup : nsISupports {
   attribute boolean needsExtraInfo;
   
   boolean IsOfflineArticle(in long num);
-  
+
+
+  attribute boolean category;
+
+  /* this should die, and we should start using individual accessors */
+  attribute long flag;
+
+  attribute boolean subscribed;
 };
 
 
