@@ -1194,18 +1194,12 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
       mimeInfo->SetPreferredApplicationHandler(handlerFile);
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
 #ifdef DEBUG_bzbarsky
-      fprintf(stderr, "The flag: %s\n", NS_ConvertUCS2toUTF8(mozillaFlags).get());
-#endif // DEBUG_bzbarsky
-      mimeInfo->SetAlwaysAskBeforeHandling(mozillaFlags.Equals(NS_LITERAL_STRING("prompt")));
-      
-#ifdef DEBUG_bzbarsky        
       fprintf(stderr, "Here we want to set handler to: %s\n", NS_ConvertUCS2toUTF8(handler).get());
 #endif // DEBUG_bzbarsky
       mimeInfo->SetApplicationDescription(handler.get());
     }
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
-    mimeInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
   }
   
   *_retval = mimeInfo;
@@ -1293,7 +1287,6 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
   if (NS_SUCCEEDED(rv)) {
     mimeInfo->SetPreferredApplicationHandler(handlerFile);
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
-    mimeInfo->SetAlwaysAskBeforeHandling(mozillaFlags.Equals(NS_LITERAL_STRING("prompt")));
     // FIXME set the handler
 #ifdef DEBUG_bzbarsky
     fprintf(stderr, "Here we want to set handler to: %s\n", NS_ConvertUCS2toUTF8(handler).get());
@@ -1301,7 +1294,6 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
     mimeInfo->SetApplicationDescription(handler.get());
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
-    mimeInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
   }
     
   *_retval = mimeInfo;
