@@ -1,9 +1,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.2 $ 
-# $Date: 2001/01/04 00:24:09 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/02/15 21:11:04 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
 
@@ -130,6 +130,32 @@ package BuildStatus;
                         },
           );
 
+# return true if and only if the status indicates that the build is
+# complete.
+
+sub is_status_final {
+  if ( ($buildstatus eq 'not_running') ||
+       ($buildstatus eq 'building') ) {
+    return 0;
+    }
+    return 1;
+}
+
+# rerturn true if and only if the status is valid (known the the
+# library).
+
+sub is_status_valid {
+  my ($status) = @_;
+
+  if ( defined ($STATUS{$status}) ) {
+    return 1;
+  } else {
+    return 0;
+  }
+
+}
+
+# run the status handler associated with the status given as input.
 
 sub run_status_handler {
   my ($record) = @_;
@@ -144,17 +170,8 @@ sub run_status_handler {
   return ;
 }
 
-sub is_status_valid {
-  my ($status) = @_;
 
-  if ( defined ($STATUS{$status}) ) {
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-
+# return the list of all status values
 
 sub get_all_status {
   my (@status) = keys %STATUS;
@@ -223,3 +240,4 @@ sub status2descriptions {
   return @out;
 }
 
+1;
