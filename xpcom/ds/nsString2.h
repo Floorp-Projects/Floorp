@@ -629,12 +629,13 @@ PRInt32 RFindCharInSet(const nsStr& aString,PRInt32 anOffset=-1) const;
  * @update	gess 7/27/98
  * @param   S is the string to be compared
  * @param   aIgnoreCase tells us how to treat case
+ * @param   aCount tells us how many chars to compare
  * @return  -1,0,1
  */
-virtual PRInt32 Compare(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
-virtual PRInt32 Compare(const nsStr &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
-virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
-virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
+virtual PRInt32 Compare(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+virtual PRInt32 Compare(const nsStr &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
 /**
  * These methods compare a given string type to this one
