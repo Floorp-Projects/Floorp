@@ -178,7 +178,8 @@
     typedef char XP_Bool;
 #endif
 
-#if !defined(XP_WIN)
+/* this should just go away, as nspr has it. */
+#if !defined(XP_WIN) && !defined(XP_UNIX)
 typedef int (*FARPROC)();
 #endif
 
