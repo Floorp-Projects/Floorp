@@ -174,7 +174,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="1000"
                    title="&locationItem.title;" class="chromeclass-location">
         <textbox id="urlbar" flex="1"
-                 type="autocomplete" accesskey="&urlbar.accesskey;"
+                 type="autocomplete"
                  autocompletesearch="history" 
                  autocompletepopup="PopupAutoComplete"
                  tabscrolling="true"

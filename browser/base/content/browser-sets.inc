@@ -162,6 +162,8 @@
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
     <key id="focusURLBar" key="&openCmd.commandkey;" command="Browser:OpenLocation"
          modifiers="accel"/>
+    <key id="focusURLBar2" key="&urlbar.accesskey;" command="Browser:OpenLocation"
+         modifiers="alt"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
     <key id="focusSearchBar" key="&searchFocusUnix.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
