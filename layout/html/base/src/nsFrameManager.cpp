@@ -1247,17 +1247,17 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       UndisplayedNode* undisplayed = mUndisplayedMap->GetFirstNode(localContent);
       while (undisplayed) {
         nsIStyleContext* undisplayedContext = nsnull;
-        if (undisplayed->mContent) {  // child content
+        undisplayed->mStyle->GetPseudoType(pseudoTag);
+        if (undisplayed->mContent && pseudoTag == nsnull) {  // child content
           aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
                                               PR_FALSE, &undisplayedContext);
         }
         else {  // pseudo element
-          undisplayed->mStyle->GetPseudoType(pseudoTag);
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
           aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag, newContext, PR_FALSE,
                                                     &undisplayedContext);
-          NS_RELEASE(pseudoTag);
         }
+        NS_IF_RELEASE(pseudoTag);
         if (undisplayedContext) {
           if (undisplayedContext == undisplayed->mStyle) {
             undisplayedContext->RemapStyle(aPresContext);
