@@ -23,6 +23,7 @@
 #ifndef nsGfxTextControlFrame_h___
 #define nsGfxTextControlFrame_h___
 
+#include "nsIGfxTextControlFrame.h"
 #include "nsCOMPtr.h"
 #include "nsCWeakReference.h"
 #include "nsFormControlFrame.h"
@@ -333,7 +334,8 @@ protected:
  * and attaches an editor to the subdocument.
  ******************************************************************************/
 
-class nsGfxTextControlFrame : public nsTextControlFrame
+class nsGfxTextControlFrame : public nsTextControlFrame,
+                              public nsIGfxTextControlFrame
 {
 private:
 	typedef nsFormControlFrame Inherited;
@@ -344,6 +346,9 @@ public:
 
   /** destructor */
   virtual ~nsGfxTextControlFrame();
+
+  /** needs it's own QI for nsIGfxTextControlFrame */
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** nsIFrame override of Init.
     * all we do here is cache the pres context for later use
@@ -452,6 +457,9 @@ public:
   // See: nsGfxTextControlFrame::SetFocus
   //      nsEnderEventListener::Focus
   PRBool DidSetFocus() { return mDidSetFocus; }
+
+  /* ============= nsIGfxTextControlFrame ================= */
+  NS_IMETHOD GetEditor(nsIEditor **aEditor);
 
 protected:
 
@@ -564,6 +572,11 @@ protected:
   nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted
 
   PRBool mDidSetFocus;  // init false, 
+
+private:  // frames are not refcounted
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
 
 };
 
