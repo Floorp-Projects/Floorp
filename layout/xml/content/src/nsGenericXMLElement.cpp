@@ -151,7 +151,7 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
               nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
               viewCSS->GetComputedStyle(elt, empty, getter_AddRefs(cssDecl));
               if (cssDecl) {
-                nsAutoString behavior; behavior.AssignWithConversion("behavior");
+                nsAutoString behavior; behavior.AssignWithConversion("-moz-binding");
                 nsAutoString value;
                 cssDecl->GetPropertyValue(behavior, value);
                 if (!value.IsEmpty()) {

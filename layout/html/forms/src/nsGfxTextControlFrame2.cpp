@@ -1530,8 +1530,8 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
   return NS_ERROR_FAILURE;
 }
 
-#define DIV_STRING "user-focus: none; border: 0px !important; padding: 0px; margin:0px; "
-#define DIV_STRING_SINGLELINE "user-focus: none; white-space : nowrap; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
+#define DIV_STRING "-moz-user-focus: none; border: 0px !important; padding: 0px; margin:0px; "
+#define DIV_STRING_SINGLELINE "-moz-user-focus: none; white-space : nowrap; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,

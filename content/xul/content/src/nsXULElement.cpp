@@ -1929,7 +1929,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
                   nsAutoString empty;
                   viewCSS->GetComputedStyle(this, empty, getter_AddRefs(cssDecl));
                   if (cssDecl) {
-                    nsAutoString behavior; behavior.Assign(NS_LITERAL_STRING("behavior"));
+                    nsAutoString behavior; behavior.Assign(NS_LITERAL_STRING("-moz-binding"));
                     nsAutoString value;
                     cssDecl->GetPropertyValue(behavior, value);
                     if (!value.IsEmpty()) {

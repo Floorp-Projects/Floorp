@@ -56,11 +56,11 @@ iframe {
 
 /* focusable content */
 a, area, button, input, object, select, textarea {
-  user-focus: normal;
+  -moz-user-focus: normal;
 }
 
 option {
-  user-focus: none;
+  -moz-user-focus: none;
 }
 
 /* blocks */
@@ -163,7 +163,7 @@ table {
   border-collapse: separate;
   margin-top: 0;
   margin-bottom: 0;
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
 }
 
 /* must never set padding in td, th */
@@ -180,7 +180,7 @@ th {
 caption {
   text-align: center;
   display: table-caption;
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
 }
 tr {
   display: table-row;
@@ -319,7 +319,7 @@ ul, menu, dir {
   margin: 1em 0;
   padding-left: 40px;
   counter-reset: -html-counter 0;
-  float-edge: margin-box;
+  -moz-float-edge: margin-box;
 }
 
 ol {
@@ -328,7 +328,7 @@ ol {
   margin: 1em 0;
   padding-left: 40px;
   counter-reset: -html-counter 0;
-  float-edge: margin-box;
+  -moz-float-edge: margin-box;
 }
 
 li {
@@ -380,9 +380,12 @@ dl {
 dt {
   display: block;
 }
-dl[compact] > dt {  /* compact allowed on DL, OL, UL, DIR MENU */
+/* compact allowed on DL, OL, UL, DIR MENU */
+/*
+dl[compact] > dt {
   display: compact;
 }
+*/
 dd {
   display: block;
   margin-left: 40px;
@@ -419,7 +422,7 @@ img[usemap], object[usemap] {
 }
 img[usemap], object[usemap] {
   color: blue;
-  user-focus: normal;
+  -moz-user-focus: normal;
 }
 img:-moz-text {
   /* font-family: sans-serif; */
@@ -447,23 +450,23 @@ input {
   border: 2px inset rgb(204, 204, 204);
   color: black;
 	background-color: white;
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   font-family:-moz-fixed;
-  behavior: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
 	cursor: text;
 }
 
 input[type="hidden"] {
   border: none;
   visibility: collapse;
-  behavior: none;
+  -moz-binding: none;
 }
 
 input[type="image"] {
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   border: none;
   vertical-align:baseline;
-  behavior: none;
+  -moz-binding: none;
   background-color: inherit;
   cursor: default;
   font-family: sans-serif;
@@ -485,10 +488,10 @@ input[type="image"][disabled] {
 
 /* file selector */
 input[type="file"] {
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   white-space: nowrap;
   border:none;
-  behavior: none;
+  -moz-binding: none;
 	cursor: default;
 }
 
@@ -500,7 +503,7 @@ input[type="file"] > input {
 input[type="file"] > input[type="button"] {
   height:inherit;
   font-family: sans-serif;
-  user-select: none !important;
+  -moz-user-select: none !important;
 }
 
 
@@ -523,7 +526,7 @@ input[type="radio"] {
   color:black;
   width:12px;
   height:12px;
-  behavior: none;
+  -moz-binding: none;
   -moz-border-radius:6px;
 	cursor: default;
 }
@@ -580,7 +583,7 @@ input[type="checkbox"] {
   width:13px;
   height:13px;
   color:black;
-  behavior: none;
+  -moz-binding: none;
 	cursor: default;
 /*  -moz-border-radius:1px; */
 }
@@ -616,16 +619,16 @@ input[type="checkbox"][disabled]:active {
 
 /* submit */
 input[type="submit"] { 
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
-  user-select: none !important;
+  -moz-user-select: none !important;
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
 
-  behavior: none;
+  -moz-binding: none;
 	cursor: default;
 }
 
@@ -667,7 +670,7 @@ input[type="submit"][disabled], input[type="submit"][disabled]:active {
 
 /* reset */
 input[type="reset"] { 
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
@@ -675,8 +678,8 @@ input[type="reset"] {
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
-  behavior: none;
-  user-select: none !important;
+  -moz-binding: none;
+  -moz-user-select: none !important;
 	cursor: default;
 }
 
@@ -721,16 +724,16 @@ input[type="reset"][disabled],input[type="reset"][disabled]:active {
 
 /* button */
 input[type="button"] { 
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
-  behavior: none;
+  -moz-binding: none;
   white-space: pre;
-  user-select: none !important;
+  -moz-user-select: none !important;
 	cursor: default;
 }
 
@@ -779,11 +782,11 @@ input[type="button"][disabled], input[type="button"][disabled]:active {
 button { 
   font-family: sans-serif;
   font-size: small;
-  user-select: none !important;
+  -moz-user-select: none !important;
   display: inline;
   vertical-align: bottom;
   cursor: default;
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
 
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
@@ -794,7 +797,7 @@ button {
 
 button:hover {
 /*   border : 2px solid black;  */
-  user-select: none !important;
+  -moz-user-select: none !important;
 }
 
 button:active:hover {
@@ -830,7 +833,7 @@ button[disabled], button[disabled]:active {
 
 /* text input */
 input[type="text"] {
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   font-family:-moz-fixed;
   border: 2px inset rgb(204, 204, 204); /* for Nav Quirks */
   padding: 0px;                         /* for Nav Quirks */
@@ -868,7 +871,7 @@ label {
 /* Combo box style */
 :-moz-display-comboboxcontrol-frame {
   cursor: default !important;
-  user-select: none !important;
+  -moz-user-select: none !important;
   overflow:hidden !important;
   white-space:nowrap !important;
   background-color: inherit !important;
@@ -886,8 +889,8 @@ select:-moz-dummy-option {
 }
 
 select[size] {
-  user-select: none !important;
-  box-sizing: border-box;
+  -moz-user-select: none !important;
+  -moz-box-sizing: border-box;
   font-family: sans-serif;
   font-size: small;
   background-color: white;
@@ -900,8 +903,8 @@ select[size] {
 }
 
 select, select[size="1"] {
-  user-select: none !important;
-  box-sizing: border-box;
+  -moz-user-select: none !important;
+  -moz-box-sizing: border-box;
   font-family: sans-serif;
   font-size: small;
   background-color: white;
@@ -925,8 +928,8 @@ select[disabled] {
 
 /* combobox button */
 select > input[type="button"] {
-  user-focus: none;
-  user-select: none !important;
+  -moz-user-focus: none;
+  -moz-user-select: none !important;
   position: static !important;
   white-space:nowrap;
   border: outset 2px rgb(204, 204, 204);
@@ -964,7 +967,7 @@ option {
   display:block;
   font-family: inherit;
   font-size: inherit;
-  user-select: none;
+  -moz-user-select: none;
 }
 
 /* we need to address the part where there is a label */
@@ -1054,7 +1057,7 @@ td textarea {
 
 textarea {
   text-align: start;
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   font-family:-moz-fixed;
   vertical-align: bottom;
   border: 2px inset #c0c0c0;
@@ -1065,7 +1068,7 @@ textarea {
   margin-bottom: 1px;
   margin-left:   0px;
   margin-right:  0px;
-  behavior: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
 }
 
 textarea[disabled] {
@@ -1194,7 +1197,7 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 /* XXX Temporary until @page is supported... */
 :-moz-page, :-moz-page-sequence {
-  background: none;
+  background: transparent;
   display: block;
 }
 
@@ -1209,7 +1212,7 @@ sourcetext { /* XXX should not be in HTML namespace */
   border-collapse: separate;
   margin-top: 0;
   margin-bottom: 0;
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
 }
 
 :table-outer {
@@ -1225,7 +1228,7 @@ sourcetext { /* XXX should not be in HTML namespace */
   left: inherit;
   z-index: inherit;
   clip: inherit;
-  opacity: inherit;
+  -moz-opacity: inherit;
   width:  0px; /* hack for boxes */
   height: 0px; /* hack for boxes */
 }
@@ -1277,7 +1280,7 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 /* combobox dropdown list */
 :-moz-dropdown-list {
-  user-select: none !important;
+  -moz-user-select: none !important;
   background-color:inherit;
   border: 2px inset rgb(153, 153, 153);
 } 

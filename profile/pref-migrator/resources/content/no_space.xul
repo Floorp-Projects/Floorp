@@ -30,7 +30,7 @@ Contributor(s):
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         orient="vertical"
 	    onload="OnLoad()"
-	    style="min-height: 8em; user-focus: ignore;"
+	    style="min-height: 8em; -moz-user-focus: ignore;"
 	    class="dialog"
         title="&noSpace.label;"> 
     

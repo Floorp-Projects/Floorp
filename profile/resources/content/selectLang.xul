@@ -7,7 +7,7 @@
 <window id="selectLangWindow"
         title="&langSelBox.title.label;"
         orient="vertical" class="dialog"
-        style="width: 30em; user-focus: ignore;"
+        style="width: 30em; -moz-user-focus: ignore;"
         onload="Startup();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
