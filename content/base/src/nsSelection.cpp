@@ -3110,7 +3110,10 @@ nsDOMSelection::~nsDOMSelection()
 	}
   setAnchorFocusRange(-1);
 
-  NS_IF_RELEASE(mAutoScrollTimer);
+  if (mAutoScrollTimer) {
+    mAutoScrollTimer->Stop();
+    NS_RELEASE(mAutoScrollTimer);
+  }
 }
 
 
