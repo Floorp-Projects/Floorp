@@ -25,11 +25,9 @@
 #include "nsIGenericFactory.h"
 
 #include "nsNSSDialogs.h"
-#include "nsCertificateManager.h"
 #include "nsPKIParamBlock.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertificateManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPKIParamBlock, Init)
 
 static nsModuleComponentInfo components[] =
@@ -39,12 +37,6 @@ static nsModuleComponentInfo components[] =
     NS_NSSDIALOGS_CID,
     NS_NSSDIALOGS_CONTRACTID,
     nsNSSDialogsConstructor
-  },
-
-  { "PSM Certificate Manager", 
-    NS_CERTIFICATEMANAGER_CID,
-    NS_CERTIFICATEMANAGER_CONTRACTID,
-    nsCertificateManagerConstructor
   },
 
   { "PKI Parm Block", 
