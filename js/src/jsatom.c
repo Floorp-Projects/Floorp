@@ -55,6 +55,7 @@ char *js_boolean_str[] = {
 
 char   js_Array_str[]             = "Array";
 char   js_Math_str[]              = "Math";
+char   js_NaN_str[]               = "NaN";
 char   js_Object_str[]            = "Object";
 char   js_anonymous_str[]         = "anonymous";
 char   js_arguments_str[]         = "arguments";
@@ -217,6 +218,7 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
 
     FROB(ArrayAtom,               js_Array_str);
     FROB(MathAtom,                js_Math_str);
+    FROB(NaNAtom,                 js_NaN_str);
     FROB(ObjectAtom,              js_Object_str);
     FROB(anonymousAtom,           js_anonymous_str);
     FROB(argumentsAtom,           js_arguments_str);

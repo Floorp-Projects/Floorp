@@ -105,6 +105,7 @@ struct JSAtomState {
     /* Various built-in or commonly-used atoms. */
     JSAtom              *ArrayAtom;
     JSAtom              *MathAtom;
+    JSAtom              *NaNAtom;
     JSAtom              *ObjectAtom;
     JSAtom              *anonymousAtom;
     JSAtom              *argumentsAtom;
@@ -137,6 +138,7 @@ extern char   *js_boolean_str[];
 
 extern char   js_Array_str[];
 extern char   js_Math_str[];
+extern char   js_NaN_str[];
 extern char   js_Object_str[];
 extern char   js_anonymous_str[];
 extern char   js_arguments_str[];
