@@ -106,6 +106,13 @@ nsresult nsPop3URL::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_OK;
     }
 
+	if (aIID.Equals(nsIMsgMailNewsUrl::GetIID()))
+	{
+		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
+		AddRef();
+		return NS_OK;
+	}
+
 #if defined(NS_DEBUG)
     /*
      * Check for the debug-only interface indicating thread-safety
