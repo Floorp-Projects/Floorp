@@ -209,6 +209,27 @@ float app2dev;
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
  */
+NS_IMETHODIMP nsRenderingContextPS :: LockDrawingSurface(PRInt32 aX, PRInt32 aY,
+                                                          PRUint32 aWidth, PRUint32 aHeight,
+                                                          void **aBits, PRInt32 *aStride,
+                                                          PRInt32 *aWidthBytes, PRUint32 aFlags)
+{
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsRenderingContextPS :: UnlockDrawingSurface(void)
+{
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 12/21/98 dwc
+ */
 NS_IMETHODIMP
 nsRenderingContextPS :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {

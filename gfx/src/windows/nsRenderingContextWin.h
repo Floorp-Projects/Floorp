@@ -60,6 +60,11 @@ public:
 
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
 
+  NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
+                                void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
+                                PRUint32 aFlags);
+  NS_IMETHOD UnlockDrawingSurface(void);
+
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult);
@@ -203,9 +208,8 @@ protected:
   HPEN              mCurrPen;
   HPEN              mNullPen;
   PRUint8           *mGammaTable;
-  COLORREF          mCurrTextColor;
+  nscolor           mCurrTextColor;
   nsLineStyle       mCurrLineStyle;
-  PRBool            mGetNearestColor;
 
 #ifdef NS_DEBUG
   PRBool            mInitialized;

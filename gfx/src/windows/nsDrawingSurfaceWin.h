@@ -52,6 +52,7 @@ public:
                   PRUint32 aFlags);
   NS_IMETHOD GetDC(HDC *aDC);
   NS_IMETHOD ReleaseDC(void);
+  NS_IMETHOD IsReleaseDCDestructive(PRBool *aDestructive);
 
   // locals
 #ifdef NGLAYOUT_DDRAW

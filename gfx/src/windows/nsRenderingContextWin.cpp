@@ -100,16 +100,13 @@ public:
   nsTransform2D   mMatrix;
   nsRect          mLocalClip;
   HRGN            mClipRegion;
-  nscolor         mBrushColor;
-  HBRUSH          mSolidBrush;
+  nscolor         mColor;
+  COLORREF        mColorREF;
   nsIFontMetrics  *mFontMetrics;
-  HFONT           mFont;
-  nscolor         mPenColor;
   HPEN            mSolidPen;
   HPEN            mDashedPen;
   HPEN            mDottedPen;
   PRInt32         mFlags;
-  nscolor         mTextColor;
   nsLineStyle     mLineStyle;
 };
 
@@ -119,16 +116,13 @@ GraphicsState :: GraphicsState()
   mMatrix.SetToIdentity();  
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mClipRegion = NULL;
-  mBrushColor = NS_RGB(0, 0, 0);
-  mSolidBrush = NULL;
+  mColor = NS_RGB(0, 0, 0);
+  mColorREF = RGB(0, 0, 0);
   mFontMetrics = nsnull;
-  mFont = NULL;
-  mPenColor = NS_RGB(0, 0, 0);
   mSolidPen = NULL;
   mDashedPen = NULL;
   mDottedPen = NULL;
   mFlags = ~FLAGS_ALL;
-  mTextColor = RGB(0, 0, 0);
   mLineStyle = nsLineStyle_kSolid;
 }
 
@@ -138,16 +132,13 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
 {
   mNext = &aState;
   mClipRegion = NULL;
-  mBrushColor = aState.mBrushColor;
-  mSolidBrush = NULL;
+  mColor = NS_RGB(0, 0, 0);
+  mColorREF = RGB(0, 0, 0);
   mFontMetrics = nsnull;
-  mFont = NULL;
-  mPenColor = aState.mPenColor;
   mSolidPen = NULL;
   mDashedPen = NULL;
   mDottedPen = NULL;
   mFlags = ~FLAGS_ALL;
-  mTextColor = aState.mTextColor;
   mLineStyle = aState.mLineStyle;
 }
 
@@ -160,13 +151,9 @@ GraphicsState :: ~GraphicsState()
   }
 
   //these are killed by the rendering context...
-  mSolidBrush = NULL;
   mSolidPen = NULL;
   mDashedPen = NULL;
   mDottedPen = NULL;
-
-  //don't delete this because it lives in the font metrics
-  mFont = NULL;
 }
 
 #define NOT_SETUP 0x33
@@ -206,14 +193,13 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mCurrPenColor = NULL;
   mCurrPen = NULL;
   mNullPen = NULL;
-  mCurrTextColor = RGB(0, 0, 0);
+  mCurrTextColor = NS_RGB(0, 0, 0);
   mCurrLineStyle = nsLineStyle_kSolid;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
   mSurface = nsnull;
   mMainSurface = nsnull;
-  mGetNearestColor = PR_FALSE;
 
   mStateCache = new nsVoidArray();
 
@@ -448,7 +434,8 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   HFONT   prevfont;
   HPEN    prevpen;
 
-  ::SetTextColor(aNewDC, mCurrTextColor);
+  ::SetTextColor(aNewDC, PALETTERGB_COLORREF(mColor));
+  mCurrTextColor = mCurrentColor;
   ::SetBkMode(aNewDC, TRANSPARENT);
   ::SetPolyFillMode(aNewDC, WINDING);
   ::SetStretchBltMode(aNewDC, COLORONCOLOR);
@@ -510,16 +497,10 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
 nsresult nsRenderingContextWin :: CommonInit(void)
 {
   float app2dev;
+
   mContext->GetAppUnitsToDevUnits(app2dev);
 	mTMatrix->AddScale(app2dev, app2dev);
   mContext->GetDevUnitsToAppUnits(mP2T);
-
-  PRUint32 depth;
-
-  mContext->GetDepth(depth);
-
-  if (16 == depth)
-    mGetNearestColor = PR_TRUE;
 
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;
@@ -534,6 +515,88 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mContext->GetGammaTable(mGammaTable);
 
   return SetupDC(nsnull, mDC);
+}
+
+NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY,
+                                                          PRUint32 aWidth, PRUint32 aHeight,
+                                                          void **aBits, PRInt32 *aStride,
+                                                          PRInt32 *aWidthBytes, PRUint32 aFlags)
+{
+  PRBool  destructive;
+
+  PushState();
+
+  mSurface->IsReleaseDCDestructive(&destructive);
+
+  if (destructive)
+  {
+    PushClipState();
+
+    if (nsnull != mOrigSolidBrush)
+      mCurrBrush = (HBRUSH)::SelectObject(mDC, mOrigSolidBrush);
+
+    if (nsnull != mOrigFont)
+      mCurrFont = (HFONT)::SelectObject(mDC, mOrigFont);
+
+    if (nsnull != mOrigSolidPen)
+      mCurrPen = (HPEN)::SelectObject(mDC, mOrigSolidPen);
+
+    if (nsnull != mOrigPalette)
+      ::SelectPalette(mDC, mOrigPalette, TRUE);
+  }
+
+  mSurface->ReleaseDC();
+
+  return mSurface->Lock(aX, aY, aWidth, aHeight, aBits, aStride, aWidthBytes, aFlags);
+}
+
+NS_IMETHODIMP nsRenderingContextWin :: UnlockDrawingSurface(void)
+{
+  PRBool  clipstate;
+
+  mSurface->Unlock();
+  mSurface->GetDC(&mDC);
+
+  PopState(clipstate);
+
+  mSurface->IsReleaseDCDestructive(&clipstate);
+
+  if (clipstate)
+  {
+    ::SetTextColor(mDC, PALETTERGB_COLORREF(mColor));
+    mCurrTextColor = mCurrentColor;
+
+    ::SetBkMode(mDC, TRANSPARENT);
+    ::SetPolyFillMode(mDC, WINDING);
+    ::SetStretchBltMode(mDC, COLORONCOLOR);
+
+    mOrigSolidBrush = (HBRUSH)::SelectObject(mDC, mCurrBrush);
+    mOrigFont = (HFONT)::SelectObject(mDC, mCurrFont);
+    mOrigSolidPen = (HPEN)::SelectObject(mDC, mCurrPen);
+
+    // If this is a palette device, then select and realize the palette
+    nsPaletteInfo palInfo;
+    mContext->GetPaletteInfo(palInfo);
+
+    if (palInfo.isPaletteDevice && palInfo.palette)
+    {
+      PRBool  offscr;
+      // Select the palette in the background
+      mOrigPalette = ::SelectPalette(mDC, (HPALETTE)palInfo.palette, TRUE);
+
+      mSurface->IsOffscreen(&offscr);
+
+      // Don't do the realization for an off-screen memory DC
+
+      if (PR_FALSE == offscr)
+        ::RealizePalette(mDC);
+    }
+
+    if (GetDeviceCaps(mDC, RASTERCAPS) & (RC_BITBLT))
+      gFastDDASupport = PR_TRUE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -641,19 +704,21 @@ NS_IMETHODIMP nsRenderingContextWin :: PushState(void)
 // from state to state. if we NULL it, we need to also delete it,
 // which means we'll just re-create it when we push the clip state. MMP
 //    state->mClipRegion = NULL;
-    state->mBrushColor = mStates->mBrushColor;
-    state->mSolidBrush = NULL;
-    state->mFontMetrics = mStates->mFontMetrics;
-    state->mFont = NULL;
-    state->mPenColor = mStates->mPenColor;
     state->mSolidPen = NULL;
     state->mDashedPen = NULL;
     state->mDottedPen = NULL;
     state->mFlags = ~FLAGS_ALL;
-    state->mTextColor = mStates->mTextColor;
     state->mLineStyle = mStates->mLineStyle;
 
     mStates = state;
+  }
+
+  if (nsnull != mStates->mNext)
+  {
+    mStates->mNext->mColor = mCurrentColor;
+    mStates->mNext->mColorREF = mColor;
+    mStates->mNext->mFontMetrics = mFontMetrics;
+    NS_IF_ADDREF(mStates->mNext->mFontMetrics);
   }
 
   mTMatrix = &mStates->mMatrix;
@@ -703,11 +768,15 @@ NS_IMETHODIMP nsRenderingContextWin :: PopState(PRBool &aClipEmpty)
       }
 
       oldstate->mFlags &= ~FLAGS_ALL;
-      oldstate->mSolidBrush = NULL;
-      oldstate->mFont = NULL;
       oldstate->mSolidPen = NULL;
       oldstate->mDashedPen = NULL;
       oldstate->mDottedPen = NULL;
+
+      NS_IF_RELEASE(mFontMetrics);
+      mFontMetrics = mStates->mFontMetrics;
+
+      mCurrentColor = mStates->mColor;
+      mColor = mStates->mColorREF;
 
       SetLineStyle(mStates->mLineStyle);
     }
@@ -922,6 +991,7 @@ NS_IMETHODIMP nsRenderingContextWin :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
+
   return NS_OK;
 }
 
@@ -938,6 +1008,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetFontMetrics(nsIFontMetrics *&aFontMetr
 {
   NS_IF_ADDREF(mFontMetrics);
   aFontMetrics = mFontMetrics;
+
   return NS_OK;
 }
 
@@ -1022,7 +1093,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoor
     dda_struct.crColor = mColor;
 
     LineDDA((int)(aX0),(int)(aY0),(int)(aX1),(int)(aY1),(LINEDDAPROC) LineDDAFunc,(long)&dda_struct);
-
   }
   else
   {
@@ -1623,20 +1693,15 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 {
   if ((mCurrentColor != mCurrBrushColor) || (NULL == mCurrBrush))
   {
-    HBRUSH tbrush;
-
-    if (PR_TRUE == mGetNearestColor)
-      tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
-    else
-      tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(mColor));
+    HBRUSH tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tbrush);
 
     if (NULL != mCurrBrush)
       VERIFY(::DeleteObject(mCurrBrush));
 
-    mStates->mSolidBrush = mCurrBrush = tbrush;
-    mStates->mBrushColor = mCurrBrushColor = mCurrentColor;
+    mCurrBrush = tbrush;
+    mCurrBrushColor = mCurrentColor;
 //printf("brushes: %d\n", ++numbrush);
   }
 
@@ -1654,15 +1719,15 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
     
     ::SelectObject(mDC, tfont);
 
-    mStates->mFont = mCurrFont = tfont;
-    mStates->mFontMetrics = mCurrFontMetrics = mFontMetrics;
+    mCurrFont = tfont;
+    mCurrFontMetrics = mFontMetrics;
 //printf("fonts: %d\n", ++numfont);
   }
 
   if (mCurrentColor != mCurrTextColor)
   {
     ::SetTextColor(mDC, PALETTERGB_COLORREF(mColor));
-    mStates->mTextColor = mCurrTextColor = mCurrentColor;
+    mCurrTextColor = mCurrentColor;
   }
 }
 
@@ -1701,12 +1766,7 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mSolidPen))
   {
-    HPEN  tpen;
-
-    if (PR_TRUE == mGetNearestColor)
-      tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
-    else
-      tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
 
@@ -1714,7 +1774,7 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
       VERIFY(::DeleteObject(mCurrPen));
 
     mStates->mSolidPen = mCurrPen = tpen;
-    mStates->mPenColor = mCurrPenColor = mCurrentColor;
+    mCurrPenColor = mCurrentColor;
 //printf("pens: %d\n", ++numpen);
   }
 
@@ -1725,12 +1785,7 @@ HPEN nsRenderingContextWin :: SetupDashedPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mDashedPen))
   {
-    HPEN  tpen;
-
-    if (PR_TRUE == mGetNearestColor)
-      tpen = ::CreatePen(PS_DASH, 0, PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
-    else
-      tpen = ::CreatePen(PS_DASH, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen = ::CreatePen(PS_DASH, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
 
@@ -1738,7 +1793,7 @@ HPEN nsRenderingContextWin :: SetupDashedPen(void)
       VERIFY(::DeleteObject(mCurrPen));
 
     mStates->mDashedPen = mCurrPen = tpen;
-    mStates->mPenColor  = mCurrPenColor = mCurrentColor;
+    mCurrPenColor = mCurrentColor;
 //printf("pens: %d\n", ++numpen);
   }
 
@@ -1749,12 +1804,7 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mDottedPen))
   {
-    HPEN  tpen;
-
-    if (PR_TRUE == mGetNearestColor)
-      tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
-    else
-      tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
 
@@ -1762,8 +1812,7 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
       VERIFY(::DeleteObject(mCurrPen));
 
     mStates->mDottedPen = mCurrPen = tpen;
-    mStates->mPenColor = mCurrPenColor = mCurrentColor;
-
+    mCurrPenColor = mCurrentColor;
 //printf("pens: %d\n", ++numpen);
   }
 

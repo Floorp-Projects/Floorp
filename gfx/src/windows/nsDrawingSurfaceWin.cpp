@@ -292,11 +292,23 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: GetDimensions(PRUint32 *aWidth, PRUint32 *a
 
 NS_IMETHODIMP nsDrawingSurfaceWin :: IsOffscreen(PRBool *aOffScreen)
 {
+  *aOffScreen = mKillDC;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceWin :: IsPixelAddressable(PRBool *aAddressable)
 {
+#ifdef NGLAYOUT_DDRAW
+  if (nsnull != mSurface)
+    *aAddressable = PR_TRUE;
+  else
+#endif
+  if (nsnull != mSelectedBitmap)
+    *aAddressable = PR_TRUE;
+  else
+    *aAddressable = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -438,6 +450,18 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: ReleaseDC(void)
     }
   }
 #endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDrawingSurfaceWin :: IsReleaseDCDestructive(PRBool *aDestructive)
+{
+#ifdef NGLAYOUT_DDRAW
+  if (nsnull != mSurface)
+    *aDestructive = PR_TRUE;
+  else
+#endif
+    *aDestructive = PR_FALSE;
 
   return NS_OK;
 }
