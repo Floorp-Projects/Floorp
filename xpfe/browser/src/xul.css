@@ -120,8 +120,8 @@ titledbutton[class~=popup] {
 toolbar titledbutton {
   display: inline;
   color:black; 
-
-  padding: 2px;
+  border: 1px solid transparent;
+  padding: 1px;
   margin: 2px;
 
   font: 2.5mm sans-serif;
@@ -158,7 +158,7 @@ toolbar titledbutton[disabled] {
 }
 
 
-titledbutton[class~=push] { 
+titledbutton.push { 
   display: inline;
   vertical-align: bottom;
   cursor: default;
@@ -170,7 +170,7 @@ titledbutton[class~=push] {
   padding: 1px;
 }
 
-titledbutton[class~=push]:active {
+titledbutton.push:active {
   border-style: inset;
 
   padding-left: 2px;
@@ -179,26 +179,26 @@ titledbutton[class~=push]:active {
   padding-bottom: 0px;
 }
 
-titledbutton[class~=push]:hover {
+titledbutton.push:hover {
 }
 
-titledbutton[class~=push]:active:-moz-outline {
+titledbutton.push:active:-moz-outline {
    border : 1px solid black;
 }
 
-titledbutton[class~=push]:hover:-moz-outline {
+titledbutton.push:hover:-moz-outline {
    border : 1px solid black;
 }
 
-titledbutton[class~=push][disabled] {
+titledbutton.push[disabled] {
    border-style: solid;
 }
 
-titledbutton[class~=push][disabled]:active {
+titledbutton.push[disabled]:active {
   padding: 1px;
 }
 
-titledbutton[class~=push]:-moz-focus-inner {
+titledbutton.push:-moz-focus-inner {
    padding-left  : 2px;
    padding-right : 2px;
    padding-top   : 1px;
@@ -206,7 +206,7 @@ titledbutton[class~=push]:-moz-focus-inner {
    margin: 0px;
 }
 
-titledbutton[class~=push]:focus:-moz-focus-inner {
+titledbutton.push:focus:-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;
