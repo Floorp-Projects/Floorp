@@ -84,16 +84,16 @@ NS_END_EXTERN_C
 #define	IMAP_MOVING_MESSAGES_TO                                  5040
 #define	IMAP_MOVING_MESSAGE_TO                                  5041
 #define	IMAP_COPYING_MESSAGES_TO                                  5042
-#define	IMAP_COPYING_MESSAGE_TO                                  5043
-#define	IMAP_SELECTING_MAILBOX                                  5044
-#define IMAP_FOLDER_RECEIVING_MESSAGE_OF						5045
-#define IMAP_DISCOVERING_MAILBOX								5046
-#define IMAP_ENTER_PASSWORD_PROMPT								5047
-#define IMAP_SERVER_NOT_IMAP4									5048
-#define IMAP_SERVER_SAID										5049
-#define IMAP_DONE												5050
-#define IMAP_ENTER_PASSWORD_PROMPT_TITLE			5051
-#define IMAP_UNKNOWN_HOST_ERROR						5052
+#define	IMAP_COPYING_MESSAGE_TO                               5043
+#define	IMAP_SELECTING_MAILBOX                  5044
+#define IMAP_FOLDER_RECEIVING_MESSAGE_OF	5045
+#define IMAP_DISCOVERING_MAILBOX		5046
+#define IMAP_ENTER_PASSWORD_PROMPT		5047
+#define IMAP_SERVER_NOT_IMAP4			5048
+#define IMAP_SERVER_SAID			5049
+#define IMAP_DONE				5050
+#define IMAP_ENTER_PASSWORD_PROMPT_TITLE	5051
+#define IMAP_UNKNOWN_HOST_ERROR			5052
 #define IMAP_CONNECTION_REFUSED_ERROR               5053
 #define IMAP_NET_TIMEOUT_ERROR                      5054
 #define IMAP_MOVE_FOLDER_TO_TRASH                   5055
@@ -107,5 +107,25 @@ NS_END_EXTERN_C
 #define IMAP_PFC_READ_MAIL                          5063
 #define IMAP_PFC_SENT_MAIL                          5064
 #define IMAP_SPECIAL_CHAR                           5065
-#define IMAP_SERVER_DISCONNECTED                    5066
+#define IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME       5066
+#define IMAP_PUBLIC_FOLDER_TYPE_NAME                5067
+#define IMAP_OTHER_USERS_FOLDER_TYPE_NAME           5068
+#define IMAP_PERSONAL_FOLDER_TYPE_DESCRIPTION       5069
+#define IMAP_PERSONAL_SHARED_FOLDER_TYPE_DESCRIPTION 5070
+#define IMAP_PUBLIC_FOLDER_TYPE_DESCRIPTION         5071
+#define IMAP_OTHER_USERS_FOLDER_TYPE_DESCRIPTION    5072
+#define IMAP_ACL_FULL_RIGHTS                        5073
+#define IMAP_ACL_LOOKUP_RIGHT                       5074
+#define IMAP_ACL_READ_RIGHT                         5075
+#define IMAP_ACL_SEEN_RIGHT                         5076
+#define IMAP_ACL_WRITE_RIGHT                        5077
+#define IMAP_ACL_INSERT_RIGHT                       5078
+#define IMAP_ACL_POST_RIGHT                         5079
+#define IMAP_ACL_CREATE_RIGHT                       5080
+#define IMAP_ACL_DELETE_RIGHT                       5081
+#define IMAP_ACL_ADMINISTER_RIGHT                   5082
+#define IMAP_UNKNOWN_USER                           5083
+
+#define IMAP_SERVER_DISCONNECTED                    5090
+
 #endif /* _nsImapStringBundle_H__ */
