@@ -74,6 +74,7 @@ nsresult
 nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                                   const nsRect& aSpace,
                                   PRBool aIsAdjacentWithTop,
+                                  nsMargin& aComputedOffsets,
                                   nsReflowStatus& aFrameReflowStatus)
 {
   nsresult rv = NS_OK;
@@ -121,6 +122,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Setup reflow state for reflowing the frame
   nsHTMLReflowState reflowState(mPresContext, aFrame, mOuterReflowState,
                                 availSize);
+  aComputedOffsets = reflowState.computedOffsets;
   reflowState.lineLayout = nsnull;
   reflowState.mRunInFrame = mRunInFrame;
   reflowState.mCompactMarginWidth = mCompactMarginWidth;
@@ -247,6 +249,7 @@ nsBlockReflowContext::CollapseMargins(const nsMargin& aMargin,
 PRBool
 nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
                                  nscoord aPrevBottomMargin,
+                                 const nsMargin& aComputedOffsets,
                                  nsRect& aInFlowBounds,
                                  nsRect& aCombinedRect)
 {
@@ -341,7 +344,8 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
       mFrame->GetStyleData(eStyleStruct_Position,
                            (const nsStyleStruct*&)stylePos);
       if (NS_STYLE_POSITION_RELATIVE == stylePos->mPosition) {
-        ComputeRelativePosition(mFrame, stylePos, x, y);
+        x += aComputedOffsets.left - aComputedOffsets.right;
+        y += aComputedOffsets.top - aComputedOffsets.bottom;
       }
 
       // Compute combined-rect in callers coordinate system. The value
@@ -391,34 +395,3 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
   return fits;
 }
 
-void
-nsBlockReflowContext::ComputeRelativePosition(nsIFrame* aFrame,
-                                              const nsStylePosition* aStylePos,
-                                              nscoord& aX, nscoord& aY)
-{
-  nsStyleCoord coord;
-  
-  nscoord dx = 0;
-  switch (aStylePos->mOffset.GetLeftUnit()) {
-  case eStyleUnit_Percent:
-    printf("XXX: not yet implemented: % relative position\n");
-  case eStyleUnit_Auto:
-    break;
-  case eStyleUnit_Coord:
-    dx = aStylePos->mOffset.GetLeft(coord).GetCoordValue();
-    break;
-  }
-  aX += dx;
-
-  nscoord dy = 0;
-  switch (aStylePos->mOffset.GetTopUnit()) {
-  case eStyleUnit_Percent:
-    printf("XXX: not yet implemented: % relative position\n");
-  case eStyleUnit_Auto:
-    break;
-  case eStyleUnit_Coord:
-    dy = aStylePos->mOffset.GetTop(coord).GetCoordValue();
-    break;
-  }
-  aY += dy;
-}
