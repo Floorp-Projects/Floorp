@@ -28,6 +28,7 @@
 use strict;
 use lib ".";
 
+use Bugzilla;
 use Bugzilla::Constants;
 require "CGI.pl";
 
@@ -191,8 +192,8 @@ if ($action eq 'changeform') {
     if ($isbuggroup == 0) {
         print html_quote($name);
     } else {
-        print "<INPUT TYPE=HIDDEN NAME=\"oldname\" VALUE=" . 
-        html_quote($name) . ">
+        print "<INPUT TYPE=HIDDEN NAME=\"oldname\" VALUE=\"" . 
+        html_quote($name) . "\">
         <INPUT SIZE=60 NAME=\"name\" VALUE=\"" . html_quote($name) . "\">";
     }
     print "</TD></TR><TR><TH>Description:</TH><TD>";
@@ -268,6 +269,26 @@ if ($action eq 'changeform') {
 
     print "</TABLE><BR>";
     print "<INPUT TYPE=SUBMIT VALUE=\"Submit\">\n";
+    print <<EOF;
+<table width="76%" border="1">
+  <tr>
+    <td><p><strong>Conversion of groups created with Bugzilla versions 2.16 and
+        prior:</strong></p>
+          <ul>
+            <li>Remove all explicit memberships from this group: 
+              <input name="remove_explicit_members" type="submit" id="remove_explicit_members" value="Remove Memberships">
+</li>
+            <li>Remove all explicit memberships that are included in the above
+            regular expression: 
+              <input name="remove_explicit_members_regexp" type="submit" id="remove_explicit_members_regexp" value="Remove memberships included in regular expression"> 
+            </li>
+          </ul>          <p><br>            
+              </p>
+      </p></td>
+  </tr>
+</table>
+<BR>
+EOF
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"postchanges\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=$gid>\n";
     print "</FORM>";
@@ -544,7 +565,158 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'postchanges') {
+
+    # ZLL: Bug 181589: we need to have something to remove explictly listed users from
+    # groups in order for the conversion to 2.18 groups to work
+    if ($::FORM{remove_explicit_members}) {
+        PutHeader("Confirm: Remove All Explicit Members?");
+        my ($gid, $chgs) = doGroupChanges();
+        print "<br><br>\n";
+        if ($chgs) {
+            print "Group updated, please confirm removal:<p>\n";
+        }
+        confirmRemove(0,$gid);
+        PutFooter();
+        exit;
+    } elsif ($::FORM{remove_explicit_members_regexp}) {
+        PutHeader("Confirm: Remove Explicit Members in the Regular Expression?");
+        my ($gid, $chgs, $rexp) = doGroupChanges();
+        print "<br><br>\n";
+        if ($chgs) {
+            print "Group updated, please confirm removal:<p>\n";
+        }
+        confirmRemove(1, $gid, $rexp);
+        PutFooter();
+        exit;
+    }
+    
+   # if we got this far, the admin doesn't want to convert, so just save their changes
+   
     PutHeader("Updating group hierarchy");
+    my ($gid, $chgs) = doGroupChanges();
+    
+    if (!$chgs) {
+        print "You didn't change anything!<BR>\n";
+        print "If you really meant it, hit the <B>Back</B> button and try again.<p>\n";
+    } else {
+        print "Done.<p>\n";
+    }
+    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
+    exit;
+}
+
+if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
+    # remove all explicit users from the group with gid $::FORM{group} 
+    # that match the regexp stored in the db for that group 
+    # or all of them period
+    my $dbh = Bugzilla->dbh;
+    my $gid = $::FORM{group};
+    my $sth = $dbh->prepare("SELECT name, userregexp FROM groups
+                             WHERE id = ?");
+    $sth->execute($gid);
+    my ($name, $regexp) = $sth->fetchrow_array();
+    if ($action eq 'remove_all_regexp') {
+        PutHeader("Removing All Explicit Group Memberships Matching "
+                . "Group RegExp from \'" . html_quote($name) . "\'");
+    } else {
+        PutHeader("Removing All Explicit Group Memberships from \'"
+                . html_quote($name) . "\'");
+    }
+    $dbh->do("LOCK TABLES
+                  groups WRITE,
+                  profiles READ,
+                  user_group_map WRITE");
+    $sth = $dbh->prepare("SELECT user_group_map.user_id, profiles.login_name
+                             FROM user_group_map, profiles
+                             WHERE user_group_map.user_id = profiles.userid
+                             AND user_group_map.group_id = ?
+                             AND isderived = 0
+                             AND isbless = 0");
+    $sth->execute($gid);
+    my $sth2 = $dbh->prepare("DELETE FROM user_group_map
+                              WHERE user_id = ?
+                              AND isbless = 0
+                              AND group_id = ?");
+    if ($action eq 'remove_all_regexp') {
+        print "<br><b>Removing explicit memberships of users matching \'"
+              . html_quote($regexp) . "\'...</b><br>\n";
+    } else {
+        print "<br><b>Removing explicit membership</b><br>\n";
+    }
+    while ( my ($userid, $userlogin) = $sth->fetchrow_array() ) {
+        if ((($regexp =~ /\S/) && ($userlogin =~ m/$regexp/i))
+            || ($action eq 'remove_all'))
+        {
+            $sth2->execute($userid,$gid);
+            print html_quote($userlogin) . " removed<br>\n";
+        }
+    }
+    print "<br><b>Done</b><br>";
+
+    $sth = $dbh->prepare("UPDATE groups
+             SET last_changed = NOW()
+             WHERE id = ?");
+    $sth->execute($gid);
+    $dbh->do("UNLOCK TABLES");
+    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
+    exit;
+}
+
+
+
+
+#
+# No valid action found
+#
+
+PutHeader("Error");
+print "I don't have a clue what you want.<BR>\n";
+
+foreach ( sort keys %::FORM) {
+    print "$_: $::FORM{$_}<BR>\n";
+}
+
+PutTrailer("<a href=editgroups.cgi>Try the group list</a>");
+
+# confirm if the user wants to remove the explicit users
+sub confirmRemove {
+    my ($remove_regexp_only, $group, $regexp) = @_;
+    
+    if (!$remove_regexp_only) { 
+        print "This option will remove ";
+        print "all explicitly defined users ";
+    } elsif ($regexp =~ /\S/) { 
+        print "This option will remove ";
+        print "all users included in the regular expression: " . 
+              html_quote($regexp) . " ";
+    } else {
+        print "<b>There is no regular expression defined.</b>\n";
+        print "No users will be removed<p>\n";
+        print "<a href=\"editgroups.cgi\">return to the Edit Groups page</a>\n";
+        return;
+    }
+    print "from group $::FORM{name}.<p>\n";
+    print "Generally, you will only need to do this when upgrading groups ";
+    print "created with Bugzilla versions 2.16 and prior. Use this option ";
+    print "with <b>extreme care</b> and consult the Bugzilla Guide for ";
+    print "further information.<p>\n";
+    
+    print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=$group>\n";
+    
+    if ($remove_regexp_only) {
+        print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"remove_all_regexp\">\n";
+    } else {
+        print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"remove_all\">\n";
+    }
+    
+    print "<INPUT NAME=\"confirm\" TYPE=SUBMIT VALUE=\"Confirm\">\n";
+    print "<p>Or <a href=\"editgroups.cgi\">return to the Edit Groups page</a>\n";
+    print "</FORM>";
+}
+
+# Helper sub to handle the making of changes to a group
+sub doGroupChanges {
     my $gid = trim($::FORM{group} || '');
     unless ($gid) {
         ShowError("No group specified.<BR>" .
@@ -622,28 +794,10 @@ if ($action eq 'postchanges') {
 
         }
     }
-    if (!$chgs) {
-        print "You didn't change anything!<BR>\n";
-        print "If you really meant it, hit the <B>Back</B> button and try again.<p>\n";
-    } else {
+    
+    if ($chgs) {
+        # mark the changes
         SendSQL("UPDATE groups SET last_changed = NOW() WHERE id = $gid");
-        print "Done.<p>\n";
     }
-    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
-    exit;
+    return $gid, $chgs, $::FORM{"rexp"};
 }
-
-
-
-#
-# No valid action found
-#
-
-PutHeader("Error");
-print "I don't have a clue what you want.<BR>\n";
-
-foreach ( sort keys %::FORM) {
-    print "$_: $::FORM{$_}<BR>\n";
-}
-
-PutTrailer("<a href=editgroups.cgi>Try the group list</a>");
