@@ -61,6 +61,9 @@
 //
 NPError NS_PluginInitialize()
 {
+    FILE *log = fopen("pandora_log.txt", "a");
+    fprintf(log, "NS_PluginInitialize\n");
+    fclose(log);
   return NPERR_NO_ERROR;
 }
 
@@ -68,17 +71,24 @@ void NS_PluginShutdown()
 {
 }
 
+//NP_Initialize
+
 /////////////////////////////////////////////////////////////
 //
 // construction and destruction of our plugin instance object
 //
 nsPluginInstanceBase * NS_NewPluginInstance(nsPluginCreateData * aCreateDataStruct)
 {
-  if(!aCreateDataStruct)
-    return NULL;
+    FILE *log = fopen("pandora_log.txt", "a");
+    fprintf(log, "NS_NewPluginInstance\n");
+    if(!aCreateDataStruct) {
+        fclose(log);
+        return NULL;
+    }
 
-  nsPluginInstance * plugin = new nsPluginInstance(aCreateDataStruct->instance);
-  return plugin;
+    nsPluginInstance * plugin = new nsPluginInstance(aCreateDataStruct->instance);
+    fclose(log);
+    return plugin;
 }
 
 void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
@@ -96,6 +106,9 @@ nsPluginInstance::nsPluginInstance(NPP aInstance) : nsPluginInstanceBase(),
   mInitialized(FALSE),
   mScriptablePeer(NULL)
 {
+    FILE *log = fopen("pandora_log.txt", "a");
+    fprintf(log, "nsPluginInstance constructor\n");
+    fclose(log);
   mhWnd = NULL;
   mString[0] = '\0';
 }
@@ -129,6 +142,7 @@ void report(Exception x)
 
 NPBool nsPluginInstance::init(NPWindow* aWindow)
 {
+    FILE *log = fopen("pandora_log.txt", "a");
   if(aWindow == NULL)
     return FALSE;
 
@@ -144,11 +158,14 @@ NPBool nsPluginInstance::init(NPWindow* aWindow)
   // it in the window procedure
   SetWindowLong(mhWnd, GWL_USERDATA, (LONG)this);
 
-  printf("Pandora: starting up\n");
+
+  fprintf(log, "Pandora: starting up\n");
   world = new World();
   metadata = new JavaScript::MetaData::JS2Metadata(*world);
   spiderMonkeyClass = new (metadata) JS2SpiderMonkeyClass(world->identifiers[widenCString("SpiderMonkey")]);
-  printf("Pandora: done starting up\n");
+  fprintf(log, "Pandora: done starting up\n");
+
+  fclose(log);
  
   mInitialized = TRUE;
 

@@ -22,13 +22,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(f78d64e0-1dd1-11b2-a9b4-ae998c529d3e)]
-interface acmeJSObject : nsISupports {
-	string getProperty(in string name);
-	void setProperty(in string name, in string value);
-};
-
-[scriptable, uuid(d2d536a0-b6fc-11d5-9d11-0060b0fbd8ac)]
+[scriptable, uuid(d2e1683a-6717-421a-a813-6b02bb503e82)]
 interface nsIPandora : nsISupports {
   string invoke(in string target);
   attribute nsISupports document;

@@ -182,7 +182,7 @@ private:
 class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
-	~Pond() { delete [] pondBase; if (nextPond) delete nextPond; }
+    ~Pond() { delete [] pondBase; if (nextPond) delete nextPond; }
     
     void *allocFromPond(JS2Metadata *meta, size_t sz, PondScum::ScumFlag flag);
     uint32 returnToPond(PondScum *p);
@@ -428,9 +428,9 @@ public:
 
     virtual void mark()                     { }
 
-	void acquire()	{ count++; }
-	bool release()  { ASSERT(count > 0); return ((--count) == 0); }
-	int count;
+    void acquire()  { count++; }
+    bool release()  { ASSERT(count > 0); return ((--count) == 0); }
+    int count;
 };
 
 // A local member is either forbidden, a dynamic variable, a variable, a constructor method, a getter or a setter:
@@ -544,7 +544,7 @@ public:
 class LocalBinding {
 public:
     LocalBinding(AccessSet accesses, LocalMember *content, bool enumerable) 
-		: accesses(accesses), content(content), xplicit(false), enumerable(enumerable) { content->acquire(); }
+        : accesses(accesses), content(content), xplicit(false), enumerable(enumerable) { content->acquire(); }
 
 // The qualified name is to be inferred from the map where this binding is kept
 //    QualifiedName qname;        // The qualified name bound by this binding
@@ -623,7 +623,7 @@ public:
 class InstanceBinding {
 public:
     InstanceBinding(AccessSet accesses, InstanceMember *content) 
-		: accesses(accesses), content(content) { content->acquire(); }
+        : accesses(accesses), content(content) { content->acquire(); }
     virtual ~InstanceBinding() { if (content->release()) delete content; }
 
 // The qualified name is to be inferred from the map where this binding is kept
@@ -1027,7 +1027,7 @@ public:
 
     bool                isMethodClosure;        // if true, use the thisObject from below
     js2val              thisObject;
-	const String *sourceText;
+    const String *sourceText;
 
     virtual void markChildren();
     virtual ~FunctionInstance();
@@ -1215,7 +1215,7 @@ class SlotReference : public Reference {
 // A special case of a DotReference with an Sl instead of a D
 public:
     SlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
-    virtual ~SlotReference()	{ }
+    virtual ~SlotReference()    { }
 
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
@@ -1554,9 +1554,9 @@ public:
     void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
     DynamicVariable *createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable)
-	{
+    {
         return createDynamicProperty(obj, world.identifiers[widenCString(name)], initVal, access, sealed, enumerable);
-	}
+    }
     DynamicVariable *createDynamicProperty(JS2Object *obj, const StringAtom &name, js2val initVal, Access access, bool sealed, bool enumerable);
     void addPublicVariableToLocalMap(LocalBindingMap *lMap, const StringAtom &name, LocalMember *v, Access access, bool enumerable);
 
@@ -1599,8 +1599,8 @@ public:
     js2val toGeneralNumber(js2val x)    { if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
     bool toBoolean(js2val x)            { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
     float64 toInteger(js2val x)         { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
-    int32 valToInt32(js2val x)				{ if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInt32(x); }
-    uint32 valToUInt32(js2val x)			{ if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToUInt32(x); }
+    int32 valToInt32(js2val x)          { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInt32(x); }
+    uint32 valToUInt32(js2val x)        { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToUInt32(x); }
     js2val toObject(js2val x)           { if (JS2VAL_IS_OBJECT(x)) return x; else return convertValueToObject(x); }
     // x is a General Number
     int64 truncateToInteger(js2val x)   { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return JS2Engine::float64toInt64(toFloat64(x)); }
@@ -1665,7 +1665,7 @@ public:
 
     enum Flag { JS1, JS2 };
     Flag flags;
-	int version;
+    int version;
 
     TargetList targetList;          // stack of potential break/continue targets
 

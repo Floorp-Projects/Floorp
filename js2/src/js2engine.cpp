@@ -246,6 +246,13 @@ namespace MetaData {
 */
     }
 
+/*
+
+    runtime strings will now be allocated from a separate 'World'
+    which is GC-able
+
+*/
+
     String *JS2Engine::allocStringPtr(const char *s)
     { 
         String *p = (String *)(meta->alloc(sizeof(String), PondScum::StringFlag));

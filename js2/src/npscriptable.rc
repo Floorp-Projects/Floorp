@@ -53,10 +53,10 @@ BEGIN
             VALUE "InternalName", "npandora\0"
             VALUE "LegalCopyright", "Copyright © 2002\0"
             VALUE "LegalTrademarks", "\0"
-            VALUE "MIMEType", "application/js2-plugin\0"
+            VALUE "MIMEType", "application/x-js2-plugin\0"
             VALUE "OriginalFilename", "npandora.dll\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "JS2 Plugin for Mozilla\0"
+            VALUE "ProductName", "JS2 Plugin for Mozilla!!\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END

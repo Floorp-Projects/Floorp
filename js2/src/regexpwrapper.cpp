@@ -2817,7 +2817,7 @@ REMatchResult *REExecute(JS2Metadata *meta, JS2RegExp *re, const jschar *str, ui
     REMatchState *x, *result;
     const jschar *cp;
     uint32 start, p;
-	REMatchResult *returnValue = NULL;
+    REMatchResult *returnValue = NULL;
 
     start = index;
     if (start > length)
