@@ -49,6 +49,7 @@
 // Interfaces Needed
 #include "nsIGlobalHistory.h"
 #include "nsIHTTPChannel.h"
+#include "nsILayoutHistoryState.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -2422,8 +2423,8 @@ NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI* aURI)
       entry = do_CreateInstance(NS_SHENTRY_PROGID);
    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIInputStream> inputStream;
-   nsCOMPtr<nsISupports> layoutState;
+   nsCOMPtr<nsIInputStream> inputStream;  // XXX Need to get this from somewhere
+   nsCOMPtr<nsILayoutHistoryState> layoutState; // XXX Need to get this from somewhere
 
    NS_ENSURE_SUCCESS(entry->Create(aURI, mTitle.GetUnicode(), nsnull, 
       inputStream, layoutState), NS_ERROR_FAILURE);
