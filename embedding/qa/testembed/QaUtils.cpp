@@ -104,8 +104,72 @@ void WriteToOutputFile(const char *pLine)
 								| CStdioFile::modeNoTruncate, &e ) ) 
     { 
         CString failCause = "Unable to open file. Reason : "; 
-        failCause += e.m_cause; 
-        AfxMessageBox(failCause); 
+        switch (e.m_cause) {
+        case CFileException::none:
+            failCause += "No error occurred.";
+            break;
+
+        case CFileException::generic:
+            failCause += "An unspecified error occurred.";
+            break;
+
+        case CFileException::fileNotFound:
+            failCause += "The file could not be located.";
+            break;
+
+        case CFileException::badPath:
+            failCause += "All or part of the path is invalid.";
+            break;
+
+        case CFileException::tooManyOpenFiles:
+            failCause += "The permitted number of open files was exceeded.";
+            break;
+
+        case CFileException::accessDenied:
+            failCause += "The file could not be accessed.";
+            break;
+
+        case CFileException::invalidFile:
+            failCause += "There was an attempt to use an invalid file handle.";
+            break;
+
+        case CFileException::removeCurrentDir:
+            failCause += "The current working directory cannot be removed.";
+            break;
+
+        case CFileException::directoryFull:
+            failCause += "There are no more directory entries.";
+            break;
+
+        case CFileException::badSeek:
+            failCause += "There was an error trying to set the file pointer.";
+            break;
+
+        case CFileException::hardIO:
+            failCause += "There was a hardware error.";
+            break;
+
+        case CFileException::sharingViolation:
+            failCause += "SHARE.EXE was not loaded, or a shared region was locked.";
+            break;
+
+        case CFileException::lockViolation:
+            failCause += "There was an attempt to lock a region that was already locked.";
+            break;
+
+        case CFileException::diskFull:
+            failCause += "The disk is full.";
+            break;
+
+        case CFileException::endOfFile:
+            failCause += "The end of file was reached.";
+            break;
+
+        default:
+            failCause += "Some reason not documented in <http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vcmfc98/html/_mfc_cfileexception.3a3a.m_cause.asp>.";
+            break;
+        }
+        AfxMessageBox(failCause);
     } 
     else 
     { 
