@@ -83,8 +83,8 @@ public:
 
     /* nsIStreamListener interface methods... */
     NS_IMETHOD GetBindInfo(nsIURL* aURL);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax, 
-                          const nsString& aMsg);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRInt32 aLength);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString& aMsg);
@@ -704,20 +704,38 @@ NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURL* aURL)
 
 
 NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRInt32 aProgress, 
-                                         PRInt32 aProgressMax, 
-                                         const nsString& aMsg)
+                                         PRInt32 aProgressMax)
 {
     nsresult rv = NS_OK;
 
     /* Pass the notification out to the next stream listener... */
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnProgress(aURL, aProgress, aProgressMax, aMsg);
+        rv = m_NextStream->OnProgress(aURL, aProgress, aProgressMax);
     }
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
         /* XXX: Should we ignore the return value? */
-        (void) m_Observer->OnProgress(aURL, aProgress, aProgressMax, aMsg);
+        (void) m_Observer->OnProgress(aURL, aProgress, aProgressMax);
+    }
+
+    return rv;
+}
+
+
+NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const nsString& aMsg)
+{
+    nsresult rv = NS_OK;
+
+    /* Pass the notification out to the next stream listener... */
+    if (nsnull != m_NextStream) {
+        rv = m_NextStream->OnStatus(aURL, aMsg);
+    }
+
+    /* Pass the notification out to the Observer... */
+    if (nsnull != m_Observer) {
+        /* XXX: Should we ignore the return value? */
+        (void) m_Observer->OnStatus(aURL, aMsg);
     }
 
     return rv;

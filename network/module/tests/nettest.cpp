@@ -55,7 +55,8 @@ public:
     TestConsumer();
 
     NS_IMETHOD GetBindInfo(nsIURL* aURL);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax);
+    NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
@@ -93,16 +94,21 @@ NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURL* aURL)
 }
 
 NS_IMETHODIMP TestConsumer::OnProgress(nsIURL* aURL, PRInt32 Progress, 
-                                       PRInt32 ProgressMax, const nsString& aMsg)
+                                       PRInt32 ProgressMax)
 {
     if (bTraceEnabled) {
-        if (aMsg.Length()) {
-            printf("\n+++ TestConsumer::OnProgress: status ");
-            fputs(aMsg, stdout);
-            fputs("\n", stdout);
-        } else {
-            printf("\n+++ TestConsumer::OnProgress: URL: %p - %d of total %d\n", aURL, Progress, ProgressMax);
-        }
+        printf("\n+++ TestConsumer::OnProgress: URL: %p - %d of total %d\n", aURL, Progress, ProgressMax);
+    }
+
+    return 0;
+}
+
+NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const nsString& aMsg)
+{
+    if (bTraceEnabled) {
+        printf("\n+++ TestConsumer::OnStatus: ");
+        fputs(aMsg, stdout);
+        fputs("\n", stdout);
     }
 
     return 0;

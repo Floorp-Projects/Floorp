@@ -37,7 +37,7 @@ class nsIURL;
 class nsIStreamObserver : public nsISupports {
 public:
     /**
-     * Notify the client that the URL has started to load.  This method is
+     * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>
      *
      * @return The return value is currently ignored.  In the future it may be
@@ -46,13 +46,17 @@ public:
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType) = 0;
 
     /**
-     * Notify the client that progress as occurred for the URL load.<BR>
+     * Notify the observer that progress as occurred for the URL load.<BR>
      */
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax, 
-                          const nsString &aMsg) = 0;
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax) = 0;
 
     /**
-     * Notify the client that the URL has finished loading.  This method is 
+     * Notify the observer with a status message for the URL load.<BR>
+     */
+    NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg) = 0;
+
+    /**
+     * Notify the observer that the URL has finished loading.  This method is 
      * called once when the networking library has finished processing the 
      * URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
      * 

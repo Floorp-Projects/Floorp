@@ -218,8 +218,7 @@ PRIVATE void stub_GraphProgressInit(MWContext  *context,
 
     if (pListener = getStreamListener(URL_s)) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
-        nsAutoString status;
-        pListener->OnProgress(pConn->pURL, 0, content_length, status);
+        pListener->OnProgress(pConn->pURL, 0, content_length);
         pListener->Release();
     }
 }
@@ -238,9 +237,8 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
 
     if (pListener = getStreamListener(URL_s)) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
-        nsAutoString status;
         pListener->OnProgress(pConn->pURL, bytes_received, 
-                              content_length, status);
+                              content_length);
         pListener->Release();
     }
 }
@@ -263,9 +261,8 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
 
     if (pListener = getStreamListener(URL_s)) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
-        nsAutoString status;
         pListener->OnProgress(pConn->pURL, total_bytes_read, 
-                              content_length, status);
+                              content_length);
     }
 }
 
@@ -277,7 +274,7 @@ PRIVATE void stub_Progress(MWContext *context, const char *msg)
         nsConnectionInfo *pConn = 
             (nsConnectionInfo *) context->modular_data->fe_data;
         nsAutoString status(msg);
-        pListener->OnProgress(pConn->pURL, -1, -1, status);
+        pListener->OnStatus(pConn->pURL, status);
         pListener->Release();
     } else {
         printf("%s\n", msg);
