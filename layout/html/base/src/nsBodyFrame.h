@@ -105,7 +105,9 @@ protected:
 
   ~nsBodyFrame();
 
-  void ComputeDesiredSize(const nsRect& aDesiredRect,
+  void ComputeDesiredSize(nsIPresContext& aPresContext,
+                          const nsReflowState& aReflowState,
+                          const nsRect& aDesiredRect,
                           const nsSize& aMaxSize,
                           const nsMargin& aBorderPadding,
                           nsReflowMetrics& aDesiredSize);
