@@ -948,9 +948,7 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
   {
     nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
     
-    if (nsHTMLEditUtils::IsList(curNode)     || 
-        nsHTMLEditUtils::IsListItem(curNode) ||
-        nsHTMLEditUtils::IsBlockquote(curNode))
+    if (nsHTMLEditUtils::IsNodeThatCanOutdent(curNode))
     {
       *aCanOutdent = PR_TRUE;
       break;
@@ -992,14 +990,12 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
     if (NS_FAILED(res)) return res;
     if (!selection) return NS_ERROR_NULL_POINTER;
     
-    // test start parent heirachy
+    // test start parent hierarchy
     res = mHTMLEditor->GetStartNodeAndOffset(selection, address_of(parent), &selOffset);
     if (NS_FAILED(res)) return res;
     while (parent && (parent!=root))
     {
-      if (nsHTMLEditUtils::IsList(parent)     || 
-          nsHTMLEditUtils::IsListItem(parent) ||
-          nsHTMLEditUtils::IsBlockquote(parent))
+      if (nsHTMLEditUtils::IsNodeThatCanOutdent(parent))
       {
         *aCanOutdent = PR_TRUE;
         break;
@@ -1008,14 +1004,12 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
       tmp->GetParentNode(getter_AddRefs(parent));
     }
 
-    // test end parent heirachy
+    // test end parent hierarchy
     res = mHTMLEditor->GetEndNodeAndOffset(selection, address_of(parent), &selOffset);
     if (NS_FAILED(res)) return res;
     while (parent && (parent!=root))
     {
-      if (nsHTMLEditUtils::IsList(parent)     || 
-          nsHTMLEditUtils::IsListItem(parent) ||
-          nsHTMLEditUtils::IsBlockquote(parent))
+      if (nsHTMLEditUtils::IsNodeThatCanOutdent(parent))
       {
         *aCanOutdent = PR_TRUE;
         break;
@@ -1056,7 +1050,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
     nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
     nsAutoString format;
     // if it is a known format node we have it easy
-    if (IsBlockNode(curNode) && !IsFormatNode(curNode))
+    if (IsBlockNode(curNode) && !nsHTMLEditUtils::IsFormatNode(curNode))
     {
       // arrayOfNodes.RemoveObject(curNode);
       res = AppendInnerFormatNodes(arrayOfNodes, curNode);
@@ -1093,7 +1087,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
     nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
     nsAutoString format;
     // if it is a known format node we have it easy
-    if (IsFormatNode(curNode))
+    if (nsHTMLEditUtils::IsFormatNode(curNode))
       GetFormatString(curNode, format);
     else if (IsBlockNode(curNode))
     {
@@ -1114,7 +1108,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
           format.Truncate(0);
           break;
         }
-        else if (IsFormatNode(node))
+        else if (nsHTMLEditUtils::IsFormatNode(node))
         {
           GetFormatString(node, format);
           break;
@@ -1141,18 +1135,6 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
   return res;
 }
 
-PRBool 
-nsHTMLEditRules::IsFormatNode(nsIDOMNode *aNode)
-{
-  if (!aNode) return NS_ERROR_NULL_POINTER;
-  if (nsHTMLEditUtils::IsParagraph(aNode)  ||
-      nsHTMLEditUtils::IsPre(aNode)  ||
-      nsHTMLEditUtils::IsHeader(aNode)  ||
-      nsHTMLEditUtils::IsAddress(aNode) )
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
 nsresult 
 nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
                                         nsIDOMNode *aNode)
@@ -1176,7 +1158,7 @@ nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
   {
     childList->Item(j, getter_AddRefs(child));
     PRBool isBlock = IsBlockNode(child);
-    PRBool isFormat = IsFormatNode(child);
+    PRBool isFormat = nsHTMLEditUtils::IsFormatNode(child);
     if (isBlock && !isFormat)  // if it's a div, etc, recurse
       AppendInnerFormatNodes(aArray, child);
     else if (isFormat)
@@ -1198,12 +1180,9 @@ nsHTMLEditRules::GetFormatString(nsIDOMNode *aNode, nsAString &outFormat)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIAtom> atom = mHTMLEditor->GetTag(aNode);
-  if (nsEditProperty::p == atom        ||
-      nsEditProperty::address == atom  ||
-      nsEditProperty::pre == atom      ||
-      nsHTMLEditUtils::IsHeader(aNode))
+  if (nsHTMLEditUtils::IsFormatNode(aNode))
   {
+    nsCOMPtr<nsIAtom> atom = nsEditor::GetTag(aNode);
     atom->ToString(outFormat);
   }
   else
@@ -2771,7 +2750,7 @@ nsHTMLEditRules::DeleteNonTableElements(nsIDOMNode *aNode)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
-  if (nsHTMLEditUtils::IsTableElement(aNode) && !nsHTMLEditUtils::IsTable(aNode))
+  if (nsHTMLEditUtils::IsTableElementButNotTable(aNode))
   {
     nsCOMPtr<nsIDOMNodeList> children;
     aNode->GetChildNodes(getter_AddRefs(children));
@@ -3296,10 +3275,7 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
       nsCOMPtr<nsIDOMNode> curBlockPar;
       if (!curBlock) return NS_ERROR_NULL_POINTER;
       curBlock->GetParentNode(getter_AddRefs(curBlockPar));
-      if (nsHTMLEditUtils::IsPre(curBlock)         ||
-          nsHTMLEditUtils::IsParagraph(curBlock)   ||
-          nsHTMLEditUtils::IsHeader(curBlock)      ||
-          nsHTMLEditUtils::IsAddress(curBlock))
+      if (nsHTMLEditUtils::IsFormatNode(curBlock))
       {
         // if the first editable node after selection is a br, consume it.  Otherwise
         // it gets pushed into a following block after the split, which is visually bad.
@@ -5629,7 +5605,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     for (i=listCount-1; i>=0; i--)
     {
       nsCOMPtr<nsIDOMNode> node = outArrayOfNodes[i];
-      if ( (nsHTMLEditUtils::IsTableElement(node) && !nsHTMLEditUtils::IsTable(node)) )
+      if (nsHTMLEditUtils::IsTableElementButNotTable(node))
       {
         PRInt32 j=i;
         outArrayOfNodes.RemoveObjectAt(i);
@@ -5791,7 +5767,7 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
     
     // scan for table elements and divs.  If we find table elements other than table,
     // replace it with a list of any editable non-table content.
-    if (nsHTMLEditUtils::IsTableElement(testNode) && !nsHTMLEditUtils::IsTable(testNode))
+    if (nsHTMLEditUtils::IsTableElementButNotTable(testNode))
     {
       PRInt32 j=i;
       outArrayOfNodes.RemoveObjectAt(i);
@@ -6438,7 +6414,7 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
   
   // sanity check
   NS_PRECONDITION(PR_TRUE == nsHTMLEditUtils::IsListItem(aListItem),
-                  "expected a list item and didnt get one");
+                  "expected a list item and didn't get one");
   
   // if we are in an empty listitem, then we want to pop up out of the list
   PRBool isEmpty;
@@ -6591,8 +6567,8 @@ nsHTMLEditRules::MakeBlockquote(nsCOMArray<nsIDOMNode>& arrayOfNodes)
     if (NS_FAILED(res)) return res;
 
     // if the node is a table element or list item, dive inside
-    if ( (nsHTMLEditUtils::IsTableElement(curNode) && !(nsHTMLEditUtils::IsTable(curNode))) || 
-         nsHTMLEditUtils::IsListItem(curNode) )
+    if (nsHTMLEditUtils::IsTableElementButNotTable(curNode) || 
+        nsHTMLEditUtils::IsListItem(curNode))
     {
       curBlock = 0;  // forget any previous block
       // recursion time
@@ -6670,10 +6646,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
     ToLowerCase(curNodeTag);
  
     // if curNode is a address, p, header, address, or pre, remove it 
-    if (nsHTMLEditUtils::IsPre(curNode)        ||
-        nsHTMLEditUtils::IsParagraph(curNode)  ||
-        nsHTMLEditUtils::IsHeader(curNode)     ||
-        nsHTMLEditUtils::IsAddress(curNode))
+    if (nsHTMLEditUtils::IsFormatNode(curNode))
     {
       // process any partial progress saved
       if (curBlock)
@@ -6731,10 +6704,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
         }
       }
       curBlock = mHTMLEditor->GetBlockNodeParent(curNode);
-      if (nsHTMLEditUtils::IsPre(curBlock)       ||
-          nsHTMLEditUtils::IsParagraph(curBlock) ||
-          nsHTMLEditUtils::IsHeader(curBlock)    ||
-          nsHTMLEditUtils::IsAddress(curBlock))
+      if (nsHTMLEditUtils::IsFormatNode(curBlock))
       {
         firstNode = curNode;  
         lastNode = curNode;
@@ -6818,10 +6788,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
     // it with a new block of correct type.
     // xxx floppy moose: pre cant hold everything the others can
     if (nsHTMLEditUtils::IsMozDiv(curNode)     ||
-        nsHTMLEditUtils::IsPre(curNode)        ||
-        nsHTMLEditUtils::IsParagraph(curNode)  ||
-        nsHTMLEditUtils::IsHeader(curNode)     ||
-        nsHTMLEditUtils::IsAddress(curNode))
+        nsHTMLEditUtils::IsFormatNode(curNode))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), *aBlockTag);
@@ -7658,39 +7625,25 @@ nsHTMLEditRules::RemoveEmptyNodes()
       PRBool bIsCandidate = PR_FALSE;
       PRBool bIsEmptyNode = PR_FALSE;
       PRBool bIsMailCite = PR_FALSE;
-      
-      // dont delete the body
+
+      // don't delete the body
       if (!nsTextEditUtils::IsBody(node))
       {
         // only consider certain nodes to be empty for purposes of removal
         if (  (bIsMailCite = nsHTMLEditUtils::IsMailCite(node))  ||
               nsEditor::NodeIsType(node, nsEditProperty::a)      ||
-              nsEditor::NodeIsType(node, nsEditProperty::b)      ||
-              nsEditor::NodeIsType(node, nsEditProperty::i)      ||
-              nsEditor::NodeIsType(node, nsEditProperty::u)      ||
-              nsEditor::NodeIsType(node, nsEditProperty::tt)     ||
-              nsEditor::NodeIsType(node, nsEditProperty::s)      ||
-              nsEditor::NodeIsType(node, nsEditProperty::strike) ||
-              nsHTMLEditUtils::IsBig(node)                       ||
-              nsHTMLEditUtils::IsSmall(node)                     ||
-              nsEditor::NodeIsType(node, nsEditProperty::blink)  ||
-              nsEditor::NodeIsType(node, nsEditProperty::sub)    ||
-              nsEditor::NodeIsType(node, nsEditProperty::sup)    ||
-              nsEditor::NodeIsType(node, nsEditProperty::font)   ||
+              nsHTMLEditUtils::IsInlineStyle(node)               ||
               nsHTMLEditUtils::IsList(node)                      ||
               nsHTMLEditUtils::IsDiv(node)  )
         {
           bIsCandidate = PR_TRUE;
         }
         // these node types are candidates if selection is not in them
-        else if (nsHTMLEditUtils::IsParagraph(node) ||
-            nsHTMLEditUtils::IsHeader(node)    ||
+        else if (nsHTMLEditUtils::IsFormatNode(node) ||
             nsHTMLEditUtils::IsListItem(node)  ||
-            nsHTMLEditUtils::IsBlockquote(node)||
-            nsHTMLEditUtils::IsPre(node)       ||
-            nsHTMLEditUtils::IsAddress(node) )
+            nsHTMLEditUtils::IsBlockquote(node) )
         {
-          // if it is one of these, dont delete if sel inside.
+          // if it is one of these, don't delete if selection inside.
           // this is so we can create empty headings, etc, for the
           // user to type into.
           PRBool bIsSelInNode;

@@ -174,7 +174,6 @@ protected:
   nsresult DidAbsolutePosition();
   nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignType);
-  PRBool   IsFormatNode(nsIDOMNode *aNode);
   nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
                                   nsIDOMNode *aNode);
   nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);

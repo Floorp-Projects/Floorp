@@ -52,6 +52,9 @@ public:
   static PRBool IsSmall(nsIDOMNode *aNode);
 
   // from nsHTMLEditRules:
+  static PRBool IsInlineStyle(nsIDOMNode *aNode);
+  static PRBool IsFormatNode(nsIDOMNode *aNode);
+  static PRBool IsNodeThatCanOutdent(nsIDOMNode *aNode);
   static PRBool IsHeader(nsIDOMNode *aNode);
   static PRBool IsParagraph(nsIDOMNode *aNode);
   static PRBool IsHR(nsIDOMNode *aNode);
@@ -59,6 +62,7 @@ public:
   static PRBool IsTable(nsIDOMNode *aNode);
   static PRBool IsTableRow(nsIDOMNode *aNode);
   static PRBool IsTableElement(nsIDOMNode *aNode);
+  static PRBool IsTableElementButNotTable(nsIDOMNode *aNode);
   static PRBool IsTableCell(nsIDOMNode *aNode);
   static PRBool IsTableCellOrCaption(nsIDOMNode *aNode);
   static PRBool IsList(nsIDOMNode *aNode);
