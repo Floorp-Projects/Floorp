@@ -62,6 +62,9 @@
 #include "plstr.h"
 //#include "nsDependentString.h"
 #include "nsIProperties.h"
+#include "nsUnicharUtils.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 
 //#define DEBUG_BenB
 
@@ -632,6 +635,22 @@ mozSanitizingHTMLSerializer::SanitizeAttrValue(nsHTMLTag aTag,
       value.Find("data:") != kNotFound ||
       value.Find("base64") != kNotFound)
     return NS_ERROR_ILLEGAL_VALUE;
+
+  // Check img src scheme
+  if (aTag == eHTMLTag_img && 
+      attr_name.Equals(NS_LITERAL_STRING("src"), nsCaseInsensitiveStringComparator()))
+  {
+    nsresult rv;
+    nsCOMPtr<nsIIOService> ioService;
+    ioService = do_GetIOService(&rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCAutoString scheme;
+    rv = ioService->ExtractScheme(NS_LossyConvertUCS2toASCII(value), scheme);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!scheme.Equals("cid", nsCaseInsensitiveCStringComparator()))
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   return NS_OK;
 }
