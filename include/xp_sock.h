@@ -82,7 +82,9 @@ extern int dupsocket(int foo); /* always fails */
 #define BOOLEAN char
 #endif /* XP_WIN */
 
+#ifndef SOCKET_ERRNO
 #define SOCKET_ERRNO    XP_GetError()
+#endif
 
 /************************************************************************/
 
