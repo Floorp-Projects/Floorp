@@ -1,10 +1,11 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <title> nsIAccessible Interface Test Case </title>
-<!-- Descrpt: Test nsIAccessible Interface methods for HTML Check Box Node
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for HTML Check Box Node
      Author: dsirnapalli@netscape.com
      Revs: 01.18.02 - Created
-     Last Run On:01.24.02.
+     Last Run On:02.25.02.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -31,7 +32,7 @@
 <script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
 </script>
 
-<script type="text/javascript" src="accessibility.js"></script>
+<script type="text/javascript" src="accesslib.js"></script>
 
 <script type="text/javascript">
 
@@ -54,37 +55,38 @@ function getDomNodeCheckBox()
 function executeTestCase()
 {
   var domNode = getDomNodeCheckBox();
-
   if(domNode == null)
   {
     res = res + "Could not get the DOM Node";
     submitToCookie();
   }
   else
-  { //else1
+  {//else1
     accNode = getAccessibleNode(domNode);
-
     tempaccNode = accNode;
-
     if(accNode == "Exception")
     {
       res = res + "The Node you selected is not an Accessible Node";
       submitToCookie();
     }
     else
-    { //else2
-     try{
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    {
+      try{
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-      accNode.accTakeFocus();
-      setTimeout("constructResults();", 2000);
-     }
-     catch(e){
-      alert("Exception**: " + e);
-     }
+        // Here we are telling the accessible node to get focus.We had to call constructResults
+        // after some time interval because it actually takes some time for the accessible
+        // node to get focus. Before checking pass fail criteria in constructResults method
+        // we had to give some time for the node to get focus.
+        accNode.accTakeFocus();
+        setTimeout("constructResults();", 2000);
+      }
+      catch(e){
+        alert("Exception**: " + e);
+      }
     }//else2
-  } //else1
+  }
 }
 
 function constructResults()
@@ -93,108 +95,65 @@ function constructResults()
    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+   // originally we stored the accNode in tempaccNode.
+   // Below code is used to check where the focus actually is.
+   // accNode.accFocused returns an accessible node. on that accessible node when you call
+   // accGetDOMNode it will return the corresponding dom node. if that dom node and
+   // tempaccNode's dom node is same, that mean focus is on the node we expected it to be on.
    if(tempaccNode.accGetDOMNode() == accNode.accFocused.accGetDOMNode())
    {
-     varaccFocused = true;
+     varaccFocused = "Focused";
    }
    else
    {
-     varaccFocused = false;
+     varaccFocused = "Not Focused";
    }
 
-   var name = getName(accNode);
-   var role = getRole(accNode);
-   var state = getState(accNode);
-   var value = getValue(accNode);
+   var name = getName();
+   var role = getRole();
+   var state = getState();
+   var value = getValue();
    var newvalue = value.toString();
-
-   if (focused == true) focus = "Focused"; else focus = "Not Focused";
-   if (varaccFocused == true) tookfocus = "Focused"; else tookfocus = "Not Focused";
+   var numActions = getNumActions();
+   if(numActions > 1)
+     alert("When i last modified the test case numActions was 1. Now numActions is more than 1. Add tests for other numActions");
+   var actionName = getActionName();
+   var action = doAction();
 
    var expectedName      = null;
    var expectedRole      = "44";
    var expectedState     = "1048580";
    var expectedValue     = "NS_ERROR_NOT_IMPLEMENTED";
-   var expectedFocus     = "Focused";
-   var expectedTookfocus = "Focused";
+   var expectednodeFocus     = "Focused";
+   var expectedaccFocused    = "Focused";
+   var expectednumActions    = "1";
+   var expectedactionName    = "Check";
+   var expectednodeCheck     = "Check Box Checked";
 
    var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
    var row1 = new Array("Name->", expectedName, name);
    var row2 = new Array("Role->", expectedRole, role);
    var row3 = new Array("State->", expectedState, state);
    var row4 = new Array("Value->", expectedValue, value);
-   var row5 = new Array("accTakeFocus->", expectedFocus, focus);
-   var row6 = new Array("accFocused->", expectedTookfocus, tookfocus);
+   var row5 = new Array("accTakeFocus()->", expectednodeFocus, nodeFocus);
+   var row6 = new Array("accFocused->", expectedaccFocused, varaccFocused);
+   var row7 = new Array("accNumActions->", expectednumActions, numActions);
+   var row8 = new Array("getAccActionName()->", expectedactionName, actionName);
+   var row9 = new Array("accDoAction()->", expectednodeCheck, nodeCheck);
 
-   if (name == expectedName)            row1[3] = "PASS"; else row1[3] = "FAIL";
-   if (role == expectedRole)            row2[3] = "PASS"; else row2[3] = "FAIL";
-   if (state == expectedState)          row3[3] = "PASS"; else row3[3] = "FAIL";
-   if (newvalue.search("NS_ERROR_NOT_IMPLEMENTED"))
-                                        row4[3] = "PASS"; else row4[3] = "FAIL";
-   if (focus == expectedFocus)          row5[3] = "PASS"; else row5[3] = "FAIL";
-   if (tookfocus == expectedTookfocus)  row6[3] = "PASS"; else row6[3] = "FAIL";
+   row = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8, row9);
 
-   res += "<table border cols=4 width='70%'>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-     res += "<td><b>" + row0[col] + "</b></td>";
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row1[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row1[col] + "</td>";
-    else
-     res += "<td>" + row1[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row2[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row2[col] + "</td>";
-    else
-     res += "<td>" + row2[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row3[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row3[col] + "</td>";
-    else
-     res += "<td>" + row3[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row4[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row4[col] + "</td>";
-    else
-     res += "<td>" + row4[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row5[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row5[col] + "</td>";
-    else
-     res += "<td>" + row5[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row6[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row6[col] + "</td>";
-    else
-     res += "<td>" + row6[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "</table>";
+   if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
+   if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
+   if (state == expectedState)               row3[3] = "PASS"; else row3[3] = "FAIL";
+   if (newvalue.match(expectedValue))        row4[3] = "PASS"; else row4[3] = "FAIL";
+   if (nodeFocus == expectednodeFocus)       row5[3] = "PASS"; else row5[3] = "FAIL";
+   if (varaccFocused == expectedaccFocused)  row6[3] = "PASS"; else row6[3] = "FAIL";
+   if (numActions == expectednumActions)     row7[3] = "PASS"; else row7[3] = "FAIL";
+   if (actionName == expectedactionName)     row8[3] = "PASS"; else row8[3] = "FAIL";
+   if (nodeCheck == expectednodeCheck)       row9[3] = "PASS"; else row9[3] = "FAIL";
 
+   appendTableRes();
    submitToCookie();
  }
  catch(e){
@@ -202,10 +161,9 @@ function constructResults()
  }
 }
 
-function submitToCookie()
+function nodeChecked()
 {
-  createCookie("nsIAccessibleTestCheckBoxNode", res, 14);
-  setTimeout("window.location.reload();", 2000);
+  nodeCheck = "Check Box Checked";
 }
 
 </script>
@@ -221,17 +179,19 @@ document.write('<input name="resultsfile" type="hidden" value="' + window.opener
 </form>
 
 <script type="text/javascript">
-
-focused = false;
+nodeFocus = "Not Focused";
+nodeCheck = "Check Box Not Checked";
+cookieName = "nsIAccessibleTestCheckBoxNode";
 var res = "<b><u> Results for HTML Check Box Node:</u></b><br><br>";
-if(readCookie("nsIAccessibleTestCheckBoxNode") == null)
+
+if(readCookie(cookieName) == null)
 {
  <!-- Test Form -->
   document.write('<br><br><b> Testing Check Box </b><br><br>');
   document.write('<form>');
 
   document.write('Is your age: <br>');
-  document.write('<input type="checkbox" name="sex" onFocus="focused=true"> Above 30');
+  document.write('<input type="checkbox" name="sex" onClick="nodeChecked();" onFocus="nodeFocused();"> Above 30');
   document.write('<input type="checkbox" name="sex"> Below 30');
 
   document.write('</form>');
@@ -240,8 +200,8 @@ if(readCookie("nsIAccessibleTestCheckBoxNode") == null)
 }
 else
 {
-  var cookieValue = readCookie("nsIAccessibleTestCheckBoxNode");
-  eraseCookie("nsIAccessibleTestCheckBoxNode");
+  var cookieValue = readCookie(cookieName);
+  eraseCookie(cookieName);
   displayResults(cookieValue);
 }
 

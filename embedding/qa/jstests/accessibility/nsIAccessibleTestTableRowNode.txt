@@ -1,10 +1,11 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <title> nsIAccessible Interface Test Case </title>
-<!-- Descrpt: Test nsIAccessible Interface methods for HTML Table Row Node
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for HTML Table Row Node
      Author: dsirnapalli@netscape.com
-     Revs: 11.20.01 - Created
-     Last Run On:01.07.02.
+     Revs: 01.20.02 - Created
+     Last Run On:02.21.02.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -31,7 +32,7 @@
 <script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
 </script>
 
-<script type="text/javascript" src="accessibility.js"></script>
+<script type="text/javascript" src="accesslib.js"></script>
 
 <script type="text/javascript">
 
@@ -52,15 +53,14 @@ function getDomNodeTableRow()
 function executeTestCase()
 {
   var domNode = getDomNodeTableRow();
-
   if(domNode == null)
   {
     res = res + "Could not get the DOM Node";
+    submitToCookie();
   }
   else
   {
     var accNode = getAccessibleNode(domNode);
-
     if(accNode == "Exception")
     {
       newres = "The Node you selected is not an Accessible Node";
@@ -71,11 +71,10 @@ function executeTestCase()
       res += " <td width='30%'> PASS </td>";
       res += "</tr>";
       res += "</table>";
+
+      submitToCookie();
     }
   }
-
-  createCookie("nsIAccessibleTestTableRowNode", res, 14);
-  setTimeout("window.location.reload();", 2000);
 }
 
 </script>
@@ -92,9 +91,10 @@ document.write('<input name="resultsfile" type="hidden" value="' + window.opener
 </form>
 
 <script type="text/javascript">
-
+cookieName = "nsIAccessibleTestTableRowNode";
 var res = "<b><u> Results for HTML Table Row Node:</u></b><br><br>";
-if(readCookie("nsIAccessibleTestTableRowNode") == null)
+
+if(readCookie(cookieName) == null)
 {
   <!-- Test Table -->
   document.write('<center>');
@@ -119,8 +119,8 @@ if(readCookie("nsIAccessibleTestTableRowNode") == null)
 }
 else
 {
-  var cookieValue = readCookie("nsIAccessibleTestTableRowNode");
-  eraseCookie("nsIAccessibleTestTableRowNode");
+  var cookieValue = readCookie(cookieName);
+  eraseCookie(cookieName);
   displayResults(cookieValue);
 }
 

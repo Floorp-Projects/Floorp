@@ -1,10 +1,11 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <title> nsIAccessible Interface Test Case </title>
-<!-- Descrpt: Test nsIAccessible Interface methods for HTML Table Cell Text Node
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for HTML Table Cell Text Node
      Author: dsirnapalli@netscape.com
-     Revs: 11.20.01 - Created
-     Last Run On:01.03.02.
+     Revs: 01.20.02 - Created
+     Last Run On:02.21.02.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -31,7 +32,7 @@
 <script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
 </script>
 
-<script type="text/javascript" src="accessibility.js"></script>
+<script type="text/javascript" src="accesslib.js"></script>
 
 <script type="text/javascript">
 
@@ -50,25 +51,26 @@ function getDomNodeTableCellText()
  }
 }
 
-
 function executeTestCase()
 {
   var domNode = getDomNodeTableCellText();
   if(domNode == null)
   {
     res = res + "Could not get the DOM Node";
+    submitToCookie();
   }
   else
   { //else1
-    var accNode = getAccessibleNode(domNode);
-
+    accNode = getAccessibleNode(domNode);
+    tempaccNode = accNode;
     if(accNode == "Exception")
     {
       res = res + "The Node you selected is not an Accessible Node";
+      submitToCookie();
     }
     else
     { //else2
-	  try{
+     try{
 	   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 	   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
@@ -89,65 +91,21 @@ function executeTestCase()
        var row3 = new Array("State->", expectedState, state);
        var row4 = new Array("Value->", expectedValue, value);
 
+       row = new Array(row0, row1, row2, row3, row4);
 
-       if (name == expectedName)     row1[3] = "PASS"; else row1[3] = "FAIL";
-       if (role == expectedRole)     row2[3] = "PASS"; else row2[3] = "FAIL";
-       if (state == expectedState)   row3[3] = "PASS"; else row3[3] = "FAIL";
-       if (newvalue.search("NS_ERROR_NOT_IMPLEMENTED"))
-                                     row4[3] = "PASS"; else row4[3] = "FAIL";
+       if (name == expectedName)          row1[3] = "PASS"; else row1[3] = "FAIL";
+       if (role == expectedRole)          row2[3] = "PASS"; else row2[3] = "FAIL";
+       if (state == expectedState)        row3[3] = "PASS"; else row3[3] = "FAIL";
+       if (newvalue.match(expectedValue)) row4[3] = "PASS"; else row4[3] = "FAIL";
 
-       res += "<table border cols=4 width='70%'>";
-	   res += "<tr>";
-	   for(col=0; col<4; col++)
-	     res += "<td><b>" + row0[col] + "</b></td>";
-	   res += "</tr>";
-	   res += "<tr>";
-	   for(col=0; col<4; col++)
-	   {
-	    if(row1[col] == "FAIL")
-	     res += "<td bgcolor='#FF0000'>" + row1[col] + "</td>";
-	    else
-	     res += "<td>" + row1[col] + "</td>";
-	   }
-	   res += "</tr>";
-	   res += "<tr>";
-	   for(col=0; col<4; col++)
-	   {
-	    if(row2[col] == "FAIL")
-	     res += "<td bgcolor='#FF0000'>" + row2[col] + "</td>";
-	    else
-	     res += "<td>" + row2[col] + "</td>";
-	   }
-	   res += "</tr>";
-	   res += "<tr>";
-	   for(col=0; col<4; col++)
-	   {
-	    if(row3[col] == "FAIL")
-	     res += "<td bgcolor='#FF0000'>" + row3[col] + "</td>";
-	    else
-	     res += "<td>" + row3[col] + "</td>";
-	   }
-	   res += "</tr>";
-	   res += "<tr>";
-	   for(col=0; col<4; col++)
-	   {
-	    if(row4[col] == "FAIL")
-	     res += "<td bgcolor='#FF0000'>" + row4[col] + "</td>";
-	    else
-	     res += "<td>" + row4[col] + "</td>";
-	   }
-	   res += "</tr>";
-
-       res += "</table>";
-      }
-      catch(e){
-       alert("Exception**: " + e);
-      }
+       appendTableRes();
+       submitToCookie();
+     }
+     catch(e){
+      alert("Exception**: " + e);
+     }
     }//else2
-  }//else1
-
-  createCookie("nsIAccessibleTestTableCellTextNode", res, 14);
-  setTimeout("window.location.reload();", 2000);
+  } //else1
 }
 
 </script>
@@ -163,9 +121,10 @@ document.write('<input name="resultsfile" type="hidden" value="' + window.opener
 </form>
 
 <script type="text/javascript">
-
+cookieName = "nsIAccessibleTestTableCellTextNode";
 var res = "<b><u> Results for HTML Table Cell Text Node:</u></b><br><br>";
-if(readCookie("nsIAccessibleTestTableCellTextNode") == null)
+
+if(readCookie(cookieName) == null)
 {
   <!-- Test Table -->
   document.write('<center>');
@@ -190,8 +149,8 @@ if(readCookie("nsIAccessibleTestTableCellTextNode") == null)
 }
 else
 {
-  var cookieValue = readCookie("nsIAccessibleTestTableCellTextNode");
-  eraseCookie("nsIAccessibleTestTableCellTextNode");
+  var cookieValue = readCookie(cookieName);
+  eraseCookie(cookieName);
   displayResults(cookieValue);
 }
 
