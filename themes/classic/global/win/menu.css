@@ -207,7 +207,7 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
       margin-bottom       : 0px;
     }
 
-  menulist > menupopup > menuitem[selected="true"]
+  menulist > menupopup > menuitem[menuactive="true"]
     {
       border              : 1px dotted #F5DB95;
     }

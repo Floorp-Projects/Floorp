@@ -12,7 +12,7 @@
       margin              : 1px 5px 2px 5px;
     }
     
-  menulist[disabled="true"]
+  menulist[disabled="true"] > .menulist-internal-box > .menulist-display-box
     {
       background-color    : -moz-Dialog;
       color               : GrayText;
