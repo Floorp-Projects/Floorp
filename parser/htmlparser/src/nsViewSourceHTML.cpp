@@ -183,7 +183,10 @@ public:
   ~CSharedVSContext() {
   }
 
-  static CSharedVSContext& GetSharedContext();
+  static CSharedVSContext& GetSharedContext() {
+    static CSharedVSContext gSharedVSContext;
+    return gSharedVSContext;
+  }
 
   nsCParserNode       mEndNode;
   nsCParserNode       mStartNode;
@@ -220,12 +223,7 @@ CViewSourceHTML::CViewSourceHTML() : nsIDTD(),
 
 }
 
-static CSharedVSContext __CSharedVSContext_gSharedVSContext;
 
-static CSharedVSContext& CSharedVSContext::GetSharedContext()
-{
-    return __CSharedVSContext_gSharedVSContext;
-}
 
 /**
  *  Default destructor
