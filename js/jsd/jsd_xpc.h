@@ -40,15 +40,17 @@
 #include "jsdebug.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nspr.h"
 
 #if defined(DEBUG_rginda_l)
 #define DEBUG_verbose
 #endif
 
-#ifdef DEBUG_verbose
-extern PRUint32 gScriptCount;
-extern PRUint32 gValueCount;
-#endif
+struct LiveEphemeral {
+    /* link in a chain of live values list */
+    PRCList         links;
+    jsdIEphemeral *value;
+};
 
 /*******************************************************************************
  * reflected jsd data structures
@@ -69,7 +71,7 @@ class jsdPC : public jsdIPC
     static jsdIPC *FromPtr (jsuword aPC)
     {
         if (!aPC)
-            return 0;
+            return nsnull;
         
         jsdIPC *rv = new jsdPC (aPC);
         NS_IF_ADDREF(rv);
@@ -100,7 +102,7 @@ class jsdObject : public jsdIObject
                                 JSDObject *aObject)
     {
         if (!aObject)
-            return 0;
+            return nsnull;
         
         jsdIObject *rv = new jsdObject (aCx, aObject);
         NS_IF_ADDREF(rv);
@@ -121,31 +123,32 @@ class jsdProperty : public jsdIProperty
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_JSDIPROPERTY
-
-    /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdProperty (JSDContext *aCx, JSDProperty *aProperty) :
-        mCx(aCx), mProperty(aProperty)
-    {
-        NS_INIT_ISUPPORTS();
-    }
-
+    NS_DECL_JSDIEPHEMERAL
+    
+    jsdProperty (JSDContext *aCx, JSDProperty *aProperty);
+    virtual ~jsdProperty ();
+    
     static jsdIProperty *FromPtr (JSDContext *aCx,
                                   JSDProperty *aProperty)
     {
         if (!aProperty)
-            return 0;
+            return nsnull;
         
         jsdIProperty *rv = new jsdProperty (aCx, aProperty);
         NS_IF_ADDREF(rv);
         return rv;
     }
 
+    static void InvalidateAll();
+
   private:
     jsdProperty(); /* no implementation */
     jsdProperty(const jsdProperty&); /* no implementation */
 
-    JSDContext  *mCx;
-    JSDProperty *mProperty;
+    PRBool         mValid;
+    LiveEphemeral  mLiveListEntry;
+    JSDContext    *mCx;
+    JSDProperty   *mProperty;
 };
 
 class jsdScript : public jsdIScript
@@ -153,56 +156,16 @@ class jsdScript : public jsdIScript
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_JSDISCRIPT
+    NS_DECL_JSDIEPHEMERAL
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE), mCx(aCx),
-                                                      mScript(aScript),
-                                                      mFileName(0), 
-                                                      mFunctionName(0),
-                                                      mBaseLineNumber(0),
-                                                      mLineExtent(0)
-    {
-        NS_INIT_ISUPPORTS();
-#ifdef DEBUG_verbose
-        printf ("++++++ jsdScript %i\n", ++gScriptCount);
-#endif
-
-        if (mScript)
-        {
-            /* copy the script's information now, so we have it later, when it
-             * get's destroyed. */
-            JSD_LockScriptSubsystem(mCx);
-            mFileName = new nsCString(JSD_GetScriptFilename(mCx, mScript));
-            mFunctionName =
-                new nsCString(JSD_GetScriptFunctionName(mCx, mScript));
-            mBaseLineNumber = JSD_GetScriptBaseLineNumber(mCx, mScript);
-            mLineExtent = JSD_GetScriptLineExtent(mCx, mScript);
-            JSD_UnlockScriptSubsystem(mCx);
-            
-            mValid = true;
-        }
-    }
-    virtual ~jsdScript () 
-    {
-        if (mFileName)
-            delete mFileName;
-        if (mFunctionName)
-            delete mFunctionName;
-        
-        /* Invalidate() needs to be called to release an owning reference to
-         * ourselves, so if we got here without being invalidated, something
-         * has gone wrong with our ref count */
-        NS_ASSERTION (!mValid, "Script destroyed without being invalidated.");
-        
-#ifdef DEBUG_verbose
-        printf ("------ jsdScript %i\n", --gScriptCount);
-#endif
-    }
-
+    jsdScript (JSDContext *aCx, JSDScript *aScript);
+    virtual ~jsdScript();
+    
     static jsdIScript *FromPtr (JSDContext *aCx, JSDScript *aScript)
     {
         if (!aScript)
-            return 0;
+            return nsnull;
 
         void *data = JSD_GetScriptPrivate (aScript);
         jsdIScript *rv;
@@ -237,12 +200,14 @@ class jsdStackFrame : public jsdIStackFrame
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_JSDISTACKFRAME
+    NS_DECL_JSDIEPHEMERAL
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
     jsdStackFrame (JSDContext *aCx, JSDThreadState *aThreadState,
                    JSDStackFrameInfo *aStackFrameInfo) :
         mCx(aCx), mThreadState(aThreadState), mStackFrameInfo(aStackFrameInfo)
     {
+        mValid = (aCx && aThreadState && aStackFrameInfo);
         NS_INIT_ISUPPORTS();
     }
 
@@ -258,7 +223,7 @@ class jsdStackFrame : public jsdIStackFrame
                                     JSDStackFrameInfo *aStackFrameInfo)
     {
         if (!aStackFrameInfo)
-            return 0;
+            return nsnull;
         
         jsdIStackFrame *rv = new jsdStackFrame (aCx, aThreadState,
                                                 aStackFrameInfo);
@@ -270,6 +235,7 @@ class jsdStackFrame : public jsdIStackFrame
     jsdStackFrame(); /* no implementation */
     jsdStackFrame(const jsdStackFrame&); /* no implementation */
 
+    PRBool             mValid;
     JSDContext        *mCx;
     JSDThreadState    *mThreadState;
     JSDStackFrameInfo *mStackFrameInfo;
@@ -280,20 +246,16 @@ class jsdValue : public jsdIValue
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_JSDIVALUE
+    NS_DECL_JSDIEPHEMERAL
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdValue (JSDContext *aCx, JSDValue *aValue) : mCx(aCx), mValue(aValue)
-    {
-#ifdef DEBUG_verbose
-        printf ("++++++ jsdValue %i\n", ++gValueCount);
-#endif
-        NS_INIT_ISUPPORTS();
-    }
-
+    jsdValue (JSDContext *aCx, JSDValue *aValue);
+    virtual ~jsdValue();
+    
     static jsdIValue *FromPtr (JSDContext *aCx, JSDValue *aValue)
     {
         if (!aValue)
-            return 0;
+            return nsnull;
 
         jsdIValue *rv;
         rv = new jsdValue (aCx, aValue);
@@ -301,20 +263,16 @@ class jsdValue : public jsdIValue
         return rv;
     }
 
-    virtual ~jsdValue() 
-    {
-#ifdef DEBUG_verbose
-        printf ("----- jsdValue %i\n", --gValueCount);
-#endif
-        JSD_DropValue (mCx, mValue);
-    }
+    static void InvalidateAll();
     
   private:
     jsdValue(); /* no implementation */
     jsdValue (const jsdScript&); /* no implementation */
     
-    JSDContext *mCx;
-    JSDValue  *mValue;
+    PRBool         mValid;
+    LiveEphemeral  mLiveListEntry;
+    JSDContext    *mCx;
+    JSDValue      *mValue;
 };
 
 /******************************************************************************
@@ -375,7 +333,7 @@ class jsdContext : public jsdIContext
     static jsdIContext *FromPtr (JSDContext *aCx)
     {
         if (!aCx)
-            return 0;
+            return nsnull;
         
         void *data = JSD_GetContextPrivate (aCx);
         jsdIContext *rv;
@@ -424,7 +382,7 @@ class jsdThreadState : public jsdIThreadState
                                      JSDThreadState *aThreadState)
     {
         if (!aThreadState)
-            return 0;
+            return nsnull;
         
         jsdIThreadState *rv = new jsdThreadState (aCx, aThreadState);
         NS_IF_ADDREF(rv);
