@@ -23,9 +23,9 @@
 interface nsICollection : nsISupports
 {
 
-  unsigned long Count();
-  nsISupports GetElementAt(in unsigned long index);
-  void SetElementAt(in unsigned long index, in nsISupports item);
+  PRUint32 Count();
+  nsISupports GetElementAt(in PRUint32 index);
+  void SetElementAt(in PRUint32 index, in nsISupports item);
   void AppendElement(in nsISupports item);
   void RemoveElement(in nsISupports item);
 
