@@ -1298,6 +1298,22 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURI)
 #endif
 }
 
+NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
+{
+  nsCOMPtr<nsIFile> appFile;
+  nsresult rv = GetHandlerAppFromPrefs(PromiseFlatCString(aScheme).get(),
+                                       getter_AddRefs(appFile));
+  if (NS_SUCCEEDED(rv))
+    return appFile->GetLeafName(_retval);
+
+#ifdef MOZ_WIDGET_GTK2
+  nsGNOMERegistry::GetAppDescForScheme(aScheme, _retval);
+  return _retval.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
   LOG(("-- nsOSHelperAppService::GetFileTokenForPath: '%s'\n",
