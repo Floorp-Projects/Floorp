@@ -85,7 +85,6 @@ class NS_COM nsPrintfCString
     protected:
       virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
       virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
-//    virtual       PRBool     GetReadableFragment( const_fragment_type&, nsFragmentRequest ) const;
 
     private:
       char_type* mStart;
