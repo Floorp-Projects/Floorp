@@ -269,16 +269,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
 
   // Determine the width we have to work with
   nscoord cellWidth = -1;
-  //if (NS_UNCONSTRAINEDSIZE!=availSize.width)
-  {
-    const nsStylePosition* kidPosition = (const nsStylePosition*)
-      (mStyleContext->GetStyleData(eStyleStruct_Position));
-    switch (kidPosition->mWidth.GetUnit()) {
-      case eStyleUnit_Coord:
-        cellWidth = kidPosition->mWidth.GetCoordValue();
-        break;
 
-      case eStyleUnit_Percent: 
+  const nsStylePosition* cellPosition = (const nsStylePosition*)
+    (mStyleContext->GetStyleData(eStyleStruct_Position));
+  switch (cellPosition->mWidth.GetUnit()) {
+    case eStyleUnit_Coord:
+      cellWidth = cellPosition->mWidth.GetCoordValue();
+      break;
+
+    case eStyleUnit_Percent: 
+    {
+      if (NS_UNCONSTRAINEDSIZE!=availSize.width)
       {
         nscoord tableWidth=0;
         const nsReflowState *tableReflowState = aReflowState.parentReflowState->parentReflowState->parentReflowState;
@@ -286,20 +287,21 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
         nsIStyleContextPtr tableSC;
         tableFrame->GetStyleContext(aPresContext, tableSC.AssignRef());
         PRBool tableIsAutoWidth = nsTableFrame::TableIsAutoWidth(tableFrame, tableSC, *tableReflowState, tableWidth);
-        float percent = kidPosition->mWidth.GetPercentValue();
+        float percent = cellPosition->mWidth.GetPercentValue();
         cellWidth = (PRInt32)(tableWidth*percent);
-        break;
       }
-
-      case eStyleUnit_Inherit:
-        // XXX for now, do nothing
-      default:
-      case eStyleUnit_Auto:
-        break;
+      break;
     }
-    if (-1!=cellWidth)
-      availSize.width = cellWidth;
+
+    case eStyleUnit_Inherit:
+      // XXX for now, do nothing
+    default:
+    case eStyleUnit_Auto:
+      break;
   }
+  
+  if (-1!=cellWidth)
+    availSize.width = cellWidth;
 
   // reduce available space by insets
 
