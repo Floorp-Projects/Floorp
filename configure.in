@@ -442,7 +442,7 @@ MOZ_PNG_LIBS='-L$(DIST)/lib -lmozpng'
 MOZ_MNG_CFLAGS=
 MOZ_MNG_LIBS='-L$(DIST)/lib -lmozmng'
 
-MOZ_JS_LIBS='-lmozjs'
+MOZ_JS_LIBS='-L$(DIST)/bin -lmozjs'
 XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
@@ -3439,7 +3439,7 @@ dnl Need cookie and wallet to build mozilla, this should
 dnl not be the case, 18352 has been filed.
 dnl http://bugzilla.mozilla.org/show_bug.cgi?id=18352
 MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras help transformiix"
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin"
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman" 
 
 MOZ_ARG_WITH_STRING(extensions,
 [  --with-extensions       Enable extensions (dirs in extensions/)],
@@ -3460,6 +3460,10 @@ MOZ_ARG_WITH_STRING(extensions,
 if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c xmlterm`; then
     AC_MSG_WARN([Cannot build xmlterm without gtk toolkit. Removing xmlterm from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlterm||'`
+fi
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c venkman`; then
+    MOZ_JSDEBUGGER=1
 fi
 
 dnl Disable jar packaging
@@ -4031,6 +4035,7 @@ AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
+AC_SUBST(MOZ_JSDEBUGGER)
 AC_SUBST(ENABLE_EAZEL_PROFILER)
 AC_SUBST(EAZEL_PROFILER_CFLAGS)
 AC_SUBST(EAZEL_PROFILER_LIBS)
