@@ -585,6 +585,8 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
     //fire click
     event.eventStructType = NS_MOUSE_EVENT;
     event.widget = nsnull;
+    event.point.x = aEvent->point.x;
+    event.point.y = aEvent->point.y;
 
     if (nsnull != mouseContent) {
       ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, aStatus); 
