@@ -1555,7 +1555,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   
   if (chrome)
   {
-      chrome->AppendRelativeUnixPath("netwerk/content/");
+      chrome->AppendRelativeUnixPath("netwerk/content/default/");
       chrome->AppendRelativeUnixPath(scheme);
       PRBool exists;
       chrome->Exists(&exists);
@@ -1714,7 +1714,7 @@ end:
   
   if (chrome)
   {
-      chrome->AppendRelativeUnixPath("netwerk/content/");
+      chrome->AppendRelativeUnixPath("netwerk/content/default/");
       chrome->AppendRelativeUnixPath(scheme);
       PRBool exists;
       chrome->Exists(&exists);
