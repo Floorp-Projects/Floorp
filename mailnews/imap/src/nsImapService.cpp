@@ -3693,12 +3693,17 @@ nsImapService::MessageURIToMsgHdr(const char *uri, nsIMsgDBHdr **_retval)
 }
 
 NS_IMETHODIMP
-nsImapService::PlaybackAllOfflineOperations(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener)
+nsImapService::PlaybackAllOfflineOperations(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener, nsISupports **aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsresult rv;
   nsImapOfflineSync *goOnline = new nsImapOfflineSync(aMsgWindow, aListener, nsnull);
   if (goOnline)
   {
-    return goOnline->ProcessNextOperation();
+    rv = goOnline->QueryInterface(NS_GET_IID(nsISupports), (void **) aResult); 
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_SUCCEEDED(rv) && *aResult)
+      return goOnline->ProcessNextOperation();
   }
   return NS_ERROR_OUT_OF_MEMORY;
 }
