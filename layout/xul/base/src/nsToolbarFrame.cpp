@@ -66,7 +66,7 @@ nsToolbarFrame :: nsToolbarFrame ( )
 //
 nsToolbarFrame :: ~nsToolbarFrame ( )
 {
-	//*** anything?
+  printf("Deleting toolbar frame\n");
 }
 
 
