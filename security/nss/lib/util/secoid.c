@@ -403,6 +403,7 @@ CONST_OID aes128_CBC[] 				= { AES, 2 };
 CONST_OID aes128_OFB[] 				= { AES, 3 };
 CONST_OID aes128_CFB[] 				= { AES, 4 };
 #endif
+CONST_OID aes128_KEY_WRAP[]			= { AES, 5 };
 
 CONST_OID aes192_ECB[] 				= { AES, 21 };
 CONST_OID aes192_CBC[] 				= { AES, 22 };
@@ -410,6 +411,7 @@ CONST_OID aes192_CBC[] 				= { AES, 22 };
 CONST_OID aes192_OFB[] 				= { AES, 23 };
 CONST_OID aes192_CFB[] 				= { AES, 24 };
 #endif
+CONST_OID aes192_KEY_WRAP[]			= { AES, 25 };
 
 CONST_OID aes256_ECB[] 				= { AES, 41 };
 CONST_OID aes256_CBC[] 				= { AES, 42 };
@@ -417,6 +419,7 @@ CONST_OID aes256_CBC[] 				= { AES, 42 };
 CONST_OID aes256_OFB[] 				= { AES, 43 };
 CONST_OID aes256_CFB[] 				= { AES, 44 };
 #endif
+CONST_OID aes256_KEY_WRAP[]			= { AES, 45 };
 
 CONST_OID sha256[]                              = { SHAXXX, 1 };
 CONST_OID sha384[]                              = { SHAXXX, 2 };
@@ -1035,6 +1038,13 @@ const static SECOidData oids[] = {
     OD( pkcs1SHA512WithRSAEncryption, SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION,
 	"PKCS #1 SHA-512 With RSA Encryption", CKM_SHA512_RSA_PKCS,
 	INVALID_CERT_EXTENSION ),
+
+    OD( aes128_KEY_WRAP, SEC_OID_AES_128_KEY_WRAP,
+	"AES-128 Key Wrap", CKM_NETSCAPE_AES_KEY_WRAP, INVALID_CERT_EXTENSION),
+    OD( aes192_KEY_WRAP, SEC_OID_AES_192_KEY_WRAP,
+	"AES-192 Key Wrap", CKM_NETSCAPE_AES_KEY_WRAP, INVALID_CERT_EXTENSION),
+    OD( aes256_KEY_WRAP, SEC_OID_AES_256_KEY_WRAP,
+	"AES-256 Key Wrap", CKM_NETSCAPE_AES_KEY_WRAP, INVALID_CERT_EXTENSION),
 
 };
 
