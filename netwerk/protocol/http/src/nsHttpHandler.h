@@ -35,6 +35,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsICacheSession.h"
 #include "nsIEventQueueService.h"
+#include "nsIMIMEService.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -123,6 +124,7 @@ public:
     nsresult GetProxyObjectManager(nsIProxyObjectManager **);
     nsresult GetEventQueueService(nsIEventQueueService **);
     nsresult GetStreamConverterService(nsIStreamConverterService **);
+    nsresult GetMimeService(nsIMIMEService **);
 
     // Called by the channel before writing a request
     nsresult OnModifyRequest(nsIHttpChannel *);
@@ -185,6 +187,7 @@ private:
     nsCOMPtr<nsIEventQueueService>      mEventQueueService;
     nsCOMPtr<nsINetModuleMgr>           mNetModuleMgr;
     nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
+    nsCOMPtr<nsIMIMEService>            mMimeService;
 
     // the authentication credentials cache
     nsHttpAuthCache                  *mAuthCache;
