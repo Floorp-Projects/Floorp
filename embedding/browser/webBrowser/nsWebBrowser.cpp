@@ -20,16 +20,21 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-#include "nsIComponentManager.h"
+// Local Includes
+#include "nsWebBrowser.h"
+
+// Helper Classes
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
+
+//Interfaces Needed
+#include "nsIComponentManager.h"
 #include "nsIDeviceContext.h"
+#include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIDocShell.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsWebBrowser.h"
 #include "nsIWebNavigation.h"
 
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
@@ -272,7 +277,9 @@ NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** document)
    NS_ENSURE_ARG_POINTER(document);
    NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShell);
+   nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(mDocShell));
+   NS_ENSURE_TRUE(shellAsNav, NS_ERROR_FAILURE);
+
    NS_ENSURE_SUCCESS(shellAsNav->GetDocument(document), NS_ERROR_FAILURE);
 
    return NS_OK;
