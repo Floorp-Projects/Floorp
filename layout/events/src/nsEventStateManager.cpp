@@ -37,6 +37,7 @@
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 #include "nsIWebShell.h"
 #include "nsIFocusableContent.h"
+#include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -49,6 +50,7 @@ static NS_DEFINE_IID(kIDOMHTMLObjectElementIID, NS_IDOMHTMLOBJECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 nsEventStateManager::nsEventStateManager() {
   mLastMouseOverFrame = nsnull;
@@ -114,7 +116,8 @@ NS_IMETHODIMP
 nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext, 
                                  nsGUIEvent *aEvent,
                                  nsIFrame* aTargetFrame,
-                                 nsEventStatus& aStatus)
+                                 nsEventStatus& aStatus,
+                                 nsIView* aView)
 {
   mCurrentTarget = aTargetFrame;
   nsresult ret = NS_OK;
@@ -139,6 +142,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             if (nsnull != aEvent->widget) {
               aEvent->widget->SetFocus();
             }
+            SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
           }
         }
 
@@ -166,9 +170,24 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
           break;
         case NS_VK_PAGE_DOWN: 
         case NS_VK_PAGE_UP:
+        case NS_VK_SPACE:
+          if (!mCurrentFocus) {
+            nsIScrollableView* sv = GetNearestScrollingView(aView);
+            if (sv) {
+              nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+              sv->ScrollByPages((keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
+            }
+          }
           break;
         case NS_VK_DOWN: 
         case NS_VK_UP:
+          if (!mCurrentFocus) {
+            nsIScrollableView* sv = GetNearestScrollingView(aView);
+            if (sv) {
+              nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+              sv->ScrollByLines((keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
+            }
+          }
           break;
       }
     }
@@ -194,6 +213,24 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
     mCurrentTarget = nsnull;
   }
   return NS_OK;
+}
+
+nsIScrollableView*
+nsEventStateManager::GetNearestScrollingView(nsIView* aView)
+{
+  nsIScrollableView* sv;
+  if (NS_OK == aView->QueryInterface(kIScrollableViewIID, (void**)&sv)) {
+    return sv;
+  }
+
+  nsIView* parent;
+  aView->GetParent(parent);
+
+  if (nsnull != parent) {
+    return GetNearestScrollingView(parent);
+  }
+
+  return nsnull;
 }
 
 void

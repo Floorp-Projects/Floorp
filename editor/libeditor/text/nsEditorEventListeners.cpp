@@ -188,16 +188,23 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       case nsIDOMEvent::VK_DOWN:
       	// these have already been handled in nsRangeList. Why are we getting them
       	// again here (Mac)? In switch to avoid putting in bogus chars.
+
+        //return NS_OK to allow page scrolling.
+        return NS_OK;
       	break;
       
       case nsIDOMEvent::VK_HOME:
       case nsIDOMEvent::VK_END:
-      case nsIDOMEvent::VK_PAGE_UP:
-      case nsIDOMEvent::VK_PAGE_DOWN:
       	// who handles these?
 #if DEBUG
 		printf("Key not handled\n");
 #endif
+        break;
+
+      case nsIDOMEvent::VK_PAGE_UP:
+      case nsIDOMEvent::VK_PAGE_DOWN:
+        //return NS_OK to allow page scrolling.
+        return NS_OK;
       	break;
       	
       default:

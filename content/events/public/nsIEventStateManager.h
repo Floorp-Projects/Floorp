@@ -27,6 +27,7 @@ class nsIContent;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIFrame;
+class nsIView;
 
 /*
  * Event listener manager interface.
@@ -48,7 +49,8 @@ public:
   NS_IMETHOD PostHandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent *aEvent, 
                          nsIFrame* aTargetFrame,
-                         nsEventStatus& aStatus) = 0;
+                         nsEventStatus& aStatus,
+                         nsIView* aView) = 0;
 
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext) = 0;
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;

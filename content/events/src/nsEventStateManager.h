@@ -22,6 +22,7 @@
 #include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
 class nsIDocument;
+class nsIScrollableView;
 
 /*
  * Event listener manager
@@ -43,7 +44,8 @@ public:
   NS_IMETHOD PostHandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent *aEvent,
                          nsIFrame* aTargetFrame,
-                         nsEventStatus& aStatus);
+                         nsEventStatus& aStatus,
+                         nsIView* aView);
 
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext);
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
@@ -63,6 +65,7 @@ protected:
   nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIContent *aContent);
+  nsIScrollableView* GetNearestScrollingView(nsIView* aView);
 
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
