@@ -174,7 +174,9 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   mCompactMarginWidth = 0;
   mAlignCharOffset = 0;
   mUseAlignCharOffset = 0;
+#ifdef DEBGUG
   mDebugHook = nsnull;
+#endif
 
   frame->GetStyleData(eStyleStruct_Position,
                       (const nsStyleStruct*&)mStylePosition);
