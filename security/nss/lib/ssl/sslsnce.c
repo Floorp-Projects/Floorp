@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.9 2001/02/09 00:32:06 nelsonb%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.10 2001/06/09 03:18:09 nelsonb%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -43,42 +43,33 @@
  * All processes that are part of the same conceptual server (serving on 
  * the same address and port) MUST share a common SSL session cache. 
  * This code makes the content of the shared cache accessible to all
- * processes on the same "server".  This code works on Unix and Win32 only,
- * and is platform specific. 
+ * processes on the same "server".  This code works on Unix and Win32 only.
  *
- * Unix: Multiple processes share a single (inherited) FD for a disk 
- * file all share one single file position.  If one lseeks, the position for 
- * all processes is changed.  Since the set of platforms we support do not 
- * all share portable lseek-and-read or lseek-and-write functions, a global 
- * lock must be used to make the lseek call and the subsequent read or write 
- * call be one atomic operation.  It is no longer necessary for cache element 
- * sizes to be a power of 2, or a multiple of a sector size.
+ * We use NSPR anonymous shared memory and move data to & from shared memory.
+ * We must do explicit locking of the records for all reads and writes.
+ * The set of Cache entries are divided up into "sets" of 128 entries. 
+ * Each set is protected by a lock.  There may be one or more sets protected
+ * by each lock.  That is, locks to sets are 1:N.
+ * There is one lock for the entire cert cache.
+ * There is one lock for the set of wrapped sym wrap keys.
  *
- * For Win32, where (a) disk I/O is not atomic, and (b) we use memory-mapped
- * files and move data to & from memory instead of calling read or write,
- * we must do explicit locking of the records for all reads and writes.
- * We have just one lock, for the entire file, using an NT semaphore.
- * We avoid blocking on "local threads" since it's bad to block on a local 
- * thread - If NSPR offered portable semaphores, it would handle this itself.
+ * The anonymous shared memory is laid out as if it were declared like this:
  *
- * Since this file has to do lots of platform specific I/O, the system
- * dependent error codes need to be mapped back into NSPR error codes.
- * Since NSPR's error mapping functions are private, the code is necessarily
- * duplicated in libSSL.
- *
- * Note, now that NSPR provides portable anonymous shared memory, for all
- * platforms except Mac, the implementation below should be replaced with 
- * one that uses anonymous shared memory ASAP.  This will eliminate most 
- * platform dependent code in this file, and improve performance big time.
- *
- * Now that NSPR offers portable cross-process locking (semaphores) on Unix
- * and Win32, semaphores should be used here for all platforms.
+ * struct {
+ *     cacheDescriptor          desc;
+ *     sidCacheLock             sidCacheLocks[ numSIDCacheLocks];
+ *     sidCacheLock             keyCacheLock;
+ *     sidCacheLock             certCacheLock;
+ *     sidCacheSet              sidCacheSets[ numSIDCacheSets ];
+ *     sidCacheEntry            sidCacheData[ numSIDCacheEntries];
+ *     certCacheEntry           certCacheData[numCertCacheEntries];
+ *     SSLWrappedSymWrappingKey keyCacheData[kt_kea_size][SSL_NUM_WRAP_MECHS];
+ * } sharedMemCacheData;
  */
 #include "nssrenam.h"
 #include "seccomon.h"
 
 #if defined(XP_UNIX) || defined(XP_WIN32)
-#ifndef NADA_VERISON
 
 #include "cert.h"
 #include "ssl.h"
@@ -95,12 +86,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <signal.h>
 #include "unix_err.h"
 
 #else /* XP_WIN32 */
-#ifdef MC_HTTPD
-#include <ereport.h>
-#endif /* MC_HTTPD */
 #include <wtypes.h>
 #include "win32err.h"
 #endif /* XP_WIN32 */
@@ -110,615 +99,294 @@
 
 #include "nspr.h"
 #include "nsslocks.h"
-
-static PZLock *cacheLock;
-
-/*
-** The server session-id cache uses a simple flat cache. The cache is
-** sized during initialization. We hash the ip-address + session-id value
-** into an index into the cache and do the lookup. No buckets, nothing
-** fancy.
-*/
-
-static PRBool isMultiProcess  = PR_FALSE;
-
-static PRUint32 numSIDCacheEntries  = 10000; 
-static PRUint32 sidCacheFileSize;
-static PRUint32 sidCacheWrapOffset;
-
-static PRUint32 numCertCacheEntries = 250;
-static PRUint32 certCacheFileSize;
-
-#define MIN_CERT_CACHE_ENTRIES 125 /* the effective size in old releases. */
-
+#include "sslmutex.h"
 
 /*
-** Format of a cache entry.
+** Format of a cache entry in the shared memory.
 */ 
-typedef struct SIDCacheEntryStr SIDCacheEntry;
-struct SIDCacheEntryStr {
-    PRIPv6Addr addr;
-    PRUint32 time;
+struct sidCacheEntryStr {
+/* 16 */    PRIPv6Addr  addr;	/* client's IP address */
+/*  4 */    PRUint32    time;	/* expiration time of this entry */
+/*  2 */    PRUint16	version;
+/*  1 */    PRUint8	valid;
+/*  1 */    PRUint8     sessionIDLength;
+/* 32 */    PRUint8     sessionID[SSL3_SESSIONID_BYTES];
+/* 56  - common header total */
 
     union {
 	struct {
-	    /* This is gross.  We have to have version and valid in both arms
-	     * of the union for alignment reasons.  This probably won't work
-	     * on a 64-bit machine. XXXX
-	     */
-/*  2 */    uint16        version;
-/*  1 */    unsigned char valid;
-/*  1 */    unsigned char cipherType;
+/* 64 */    PRUint8	masterKey[SSL_MAX_MASTER_KEY_BYTES];
+/* 32 */    PRUint8	cipherArg[SSL_MAX_CYPHER_ARG_BYTES];
 
-/* 16 */    unsigned char sessionID[SSL_SESSIONID_BYTES];
-/* 64 */    unsigned char masterKey[SSL_MAX_MASTER_KEY_BYTES];
-/* 32 */    unsigned char cipherArg[SSL_MAX_CYPHER_ARG_BYTES];
-
-/*  1 */    unsigned char masterKeyLen;
-/*  1 */    unsigned char keyBits;
-
-/*  1 */    unsigned char secretKeyBits;
-/*  1 */    unsigned char cipherArgLen;
-/*120 */} ssl2;
+/*  1 */    PRUint8	cipherType;
+/*  1 */    PRUint8	masterKeyLen;
+/*  1 */    PRUint8	keyBits;
+/*  1 */    PRUint8	secretKeyBits;
+/*  1 */    PRUint8	cipherArgLen;
+/*101 */} ssl2;
 
 	struct {
-/*  2 */    uint16           version;
-/*  1 */    unsigned char    valid;
-/*  1 */    uint8            sessionIDLength;
-
-/* 32 */    unsigned char    sessionID[SSL3_SESSIONID_BYTES];
-
 /*  2 */    ssl3CipherSuite  cipherSuite;
-/*  2 */    uint16           compression; 	/* SSL3CompressionMethod */
+/*  2 */    PRUint16    compression; 	/* SSL3CompressionMethod */
 
-/*122 */    ssl3SidKeys      keys;	/* keys and ivs, wrapped as needed. */
-/*  4 */    PRUint32         masterWrapMech; 
-/*  4 */    SSL3KEAType      exchKeyType;
+/*122 */    ssl3SidKeys keys;	/* keys and ivs, wrapped as needed. */
+/*  1 */    PRUint8     hasFortezza;
+/*  1 */    PRUint8     resumable;
 
-/*  2 */    int16            certIndex;
-/*  1 */    uint8            hasFortezza;
-/*  1 */    uint8            resumable;
-	} ssl3;
-	/* We can't make this struct fit in 128 bytes 
-	 * so, force the struct size up to the next power of two.
-	 */
+/*  4 */    PRUint32    masterWrapMech; 
+/*  4 */    SSL3KEAType exchKeyType;
+/*  4 */    PRInt32     certIndex;
+/*140 */} ssl3;
+#if defined(LINUX)
 	struct {
-	    unsigned char filler[256 - sizeof(PRIPv6Addr) - sizeof(PRUint32)];
-	} force256;
+	    PRUint8     filler[144];	
+	} forceSize;
+#endif
     } u;
 };
+typedef struct sidCacheEntryStr sidCacheEntry;
 
-
-typedef struct CertCacheEntryStr CertCacheEntry;
 
 /* The length of this struct is supposed to be a power of 2, e.g. 4KB */
-struct CertCacheEntryStr {
-    uint16        certLength;				/*    2 */
-    uint16        sessionIDLength;			/*    2 */
-    unsigned char sessionID[SSL3_SESSIONID_BYTES];	/*   32 */
-    unsigned char cert[SSL_MAX_CACHED_CERT_LEN];	/* 4060 */
+struct certCacheEntryStr {
+    PRUint16    certLength;				/*    2 */
+    PRUint16    sessionIDLength;			/*    2 */
+    PRUint8 	sessionID[SSL3_SESSIONID_BYTES];	/*   32 */
+    PRUint8 	cert[SSL_MAX_CACHED_CERT_LEN];		/* 4060 */
 };						/* total   4096 */
+typedef struct certCacheEntryStr certCacheEntry;
 
+struct sidCacheLockStr {
+    PRUint32	timeStamp;
+    sslMutex	mutex;
+    sslPID	pid;
+};
+typedef struct sidCacheLockStr sidCacheLock;
 
-static void IOError(int rv, char *type);
-static PRUint32 Offset(const PRIPv6Addr *addr, unsigned char *s, unsigned nl);
-static void Invalidate(SIDCacheEntry *sce);
-/************************************************************************/
+struct sidCacheSetStr {
+    PRIntn	next;
+};
+typedef struct sidCacheSetStr sidCacheSet;
+
+struct cacheDescStr {
+
+    PRUint32            sharedMemSize;
+
+    PRUint32		numSIDCacheLocks;
+    PRUint32		numSIDCacheSets;
+    PRUint32		numSIDCacheSetsPerLock;
+
+    PRUint32            numSIDCacheEntries; 
+    PRUint32            sidCacheSize;
+
+    PRUint32            numCertCacheEntries;
+    PRUint32            certCacheSize;
+
+    PRUint32            numKeyCacheEntries;
+    PRUint32            keyCacheSize;
+
+    PRUint32		ssl2Timeout;
+    PRUint32		ssl3Timeout;
+
+    /* These values are volatile, and are accessed through sharedCache-> */
+    PRUint32		nextCertCacheEntry;	/* certCacheLock protects */
+    PRBool      	stopPolling;
+
+    /* The private copies of these values are pointers into shared mem */
+    /* The copies of these values in shared memory are merely offsets */
+    sidCacheLock    *          sidCacheLocks;
+    sidCacheLock    *          keyCacheLock;
+    sidCacheLock    *          certCacheLock;
+    sidCacheSet     *          sidCacheSets;
+    sidCacheEntry   *          sidCacheData;
+    certCacheEntry  *          certCacheData;
+    SSLWrappedSymWrappingKey * keyCacheData;
+
+    /* Only the private copies of these pointers are valid */
+    char *                     sharedMem;
+    struct cacheDescStr *      sharedCache;  /* shared copy of this struct */
+    PRFileMap *                cacheMemMap;
+    PRThread  *                poller;
+};
+typedef struct cacheDescStr cacheDesc;
+
+static cacheDesc globalCache;
 
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
 
-#ifdef _WIN32
+static PRBool isMultiProcess  = PR_FALSE;
 
-struct winInheritanceStr {
-    PRUint32 numSIDCacheEntries;
-    PRUint32 sidCacheFileSize;
-    PRUint32 sidCacheWrapOffset;
-    PRUint32 numCertCacheEntries;
-    PRUint32 certCacheFileSize;
 
-    DWORD         parentProcessID;
-    HANDLE        parentProcessHandle;
-    HANDLE        SIDCacheFDMAP;
-    HANDLE        certCacheFDMAP;
-    HANDLE        svrCacheSem;
+#define DEF_SID_CACHE_ENTRIES  10000
+#define DEF_CERT_CACHE_ENTRIES 250
+#define MIN_CERT_CACHE_ENTRIES 125 /* the effective size in old releases. */
+#define DEF_KEY_CACHE_ENTRIES  250
+
+#define SID_CACHE_ENTRIES_PER_SET  128
+#define SID_ALIGNMENT          16
+
+#define DEF_SSL2_TIMEOUT	100   /* seconds */
+#define MAX_SSL2_TIMEOUT	100   /* seconds */
+#define MIN_SSL2_TIMEOUT	  5   /* seconds */
+
+#define DEF_SSL3_TIMEOUT      86400L  /* 24 hours */
+#define MAX_SSL3_TIMEOUT      86400L  /* 24 hours */
+#define MIN_SSL3_TIMEOUT          5   /* seconds  */
+
+#if defined(AIX) || defined(LINUX)
+#define MAX_SID_CACHE_LOCKS 8
+#else
+#define MAX_SID_CACHE_LOCKS 256
+#endif
+
+#define SID_HOWMANY(val, size) (((val) + ((size) - 1)) / (size))
+#define SID_ROUNDUP(val, size) ((size) * SID_HOWMANY((val), (size)))
+
+
+static sslPID myPid;
+
+/* forward static function declarations */
+static void IOError(int rv, char *type);
+static PRUint32 SIDindex(cacheDesc *cache, const PRIPv6Addr *addr, PRUint8 *s, unsigned nl);
+static SECStatus LaunchLockPoller(cacheDesc *cache);
+
+
+
+
+struct inheritanceStr {
+    PRUint32 sharedMemSize;
+    PRUint16 fmStrLen;
 };
-typedef struct winInheritanceStr winInheritance;
 
-static HANDLE svrCacheSem    = INVALID_HANDLE_VALUE;
+typedef struct inheritanceStr inheritance;
 
-static char * SIDCacheData    = NULL;
-static HANDLE SIDCacheFD      = INVALID_HANDLE_VALUE;
-static HANDLE SIDCacheFDMAP   = INVALID_HANDLE_VALUE;
-
-static char * certCacheData   = NULL;
-static HANDLE certCacheFD     = INVALID_HANDLE_VALUE;
-static HANDLE certCacheFDMAP  = INVALID_HANDLE_VALUE;
-
-static PRUint32 myPid;
-
-/* The presence of the TRUE element in this struct makes the semaphore 
- * inheritable. The NULL means use process's default security descriptor. 
- */
-static SECURITY_ATTRIBUTES semaphoreAttributes = 
-				{ sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
-
-static SECURITY_ATTRIBUTES sidCacheFDMapAttributes = 
-				{ sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
-
-static SECURITY_ATTRIBUTES certCacheFDMapAttributes = 
-				{ sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+#ifdef _WIN32
 
 #define DEFAULT_CACHE_DIRECTORY "\\temp"
 
-static SECStatus
-createServerCacheSemaphore(void)
-{
-    PR_ASSERT(svrCacheSem == INVALID_HANDLE_VALUE);
-
-    /* inheritable, starts signalled, 1 signal max, no file name. */
-    svrCacheSem = CreateSemaphore(&semaphoreAttributes, 1, 1, NULL);
-    if (svrCacheSem == NULL) {
-	svrCacheSem = INVALID_HANDLE_VALUE;
-	/* We could get the error code, but what could be do with it ? */
-	nss_MD_win32_map_default_error(GetLastError());
-    	return SECFailure;
-    }
-    return SECSuccess;
-}
-
-static SECStatus
-_getServerCacheSemaphore(void)
-{
-    DWORD     event;
-    DWORD     lastError;
-    SECStatus rv;
-
-    PR_ASSERT(svrCacheSem != INVALID_HANDLE_VALUE);
-    if (svrCacheSem == INVALID_HANDLE_VALUE &&
-    	SECSuccess   != createServerCacheSemaphore()) {
-	return SECFailure;	/* what else ? */
-    }
-    event = WaitForSingleObject(svrCacheSem, INFINITE);
-    switch (event) {
-    case WAIT_OBJECT_0:
-    case WAIT_ABANDONED:
-	rv = SECSuccess;
-    	break;
-
-    case WAIT_TIMEOUT:
-    case WAIT_IO_COMPLETION:
-    default: 		/* should never happen. nothing we can do. */
-	PR_ASSERT(("WaitForSingleObject returned invalid value.", 0));
-	/* fall thru */
-
-    case WAIT_FAILED:		/* failure returns this */
-	rv = SECFailure;
-	lastError = GetLastError();	/* for debugging */
-	nss_MD_win32_map_default_error(lastError);
-	break;
-    }
-    return rv;
-}
-
-static void
-_doGetServerCacheSemaphore(void * arg)
-{
-    SECStatus * rv = (SECStatus *)arg;
-    *rv = _getServerCacheSemaphore();
-}
-
-static SECStatus
-getServerCacheSemaphore(void)
-{
-    PRThread *    selectThread;
-    PRThread *    me    	= PR_GetCurrentThread();
-    PRThreadScope scope 	= PR_GetThreadScope(me);
-    SECStatus     rv    	= SECFailure;
-
-    if (scope == PR_GLOBAL_THREAD) {
-        rv = _getServerCacheSemaphore();
-    } else {
-        selectThread = PR_CreateThread(PR_USER_THREAD,
-				       _doGetServerCacheSemaphore, &rv,
-				       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-				       PR_JOINABLE_THREAD, 0);
-        if (selectThread != NULL) {
-	    /* rv will be set by _doGetServerCacheSemaphore() */
-	    PR_JoinThread(selectThread);
-        }
-    }
-    return rv;
-}
-
-static SECStatus
-releaseServerCacheSemaphore(void)
-{
-    BOOL success = FALSE;
-
-    PR_ASSERT(svrCacheSem != INVALID_HANDLE_VALUE);
-    if (svrCacheSem != INVALID_HANDLE_VALUE) {
-	/* Add 1, don't want previous value. */
-	success = ReleaseSemaphore(svrCacheSem, 1, NULL);
-    }
-    if (!success) {
-	nss_MD_win32_map_default_error(GetLastError());
-	return SECFailure;
-    }
-    return SECSuccess;
-}
-
-static void
-destroyServerCacheSemaphore(void)
-{
-    PR_ASSERT(svrCacheSem != INVALID_HANDLE_VALUE);
-    if (svrCacheSem != INVALID_HANDLE_VALUE) {
-	CloseHandle(svrCacheSem);
-	/* ignore error */
-	svrCacheSem = INVALID_HANDLE_VALUE;
-    }
-}
-
-#define GET_SERVER_CACHE_READ_LOCK(fd, offset, size) \
-    if (isMultiProcess) getServerCacheSemaphore();
-
-#define GET_SERVER_CACHE_WRITE_LOCK(fd, offset, size) \
-    if (isMultiProcess) getServerCacheSemaphore();
-
-#define RELEASE_SERVER_CACHE_LOCK(fd, offset, size) \
-    if (isMultiProcess) releaseServerCacheSemaphore();
-
 #endif /* _win32 */
 
-/************************************************************************/
-
 #ifdef XP_UNIX
-static int    SIDCacheFD      = -1;
-static int    certCacheFD     = -1;
-
-static pid_t  myPid;
-
-struct unixInheritanceStr {
-    PRUint32 numSIDCacheEntries;
-    PRUint32 sidCacheFileSize;
-    PRUint32 sidCacheWrapOffset;
-    PRUint32 numCertCacheEntries;
-    PRUint32 certCacheFileSize;
-
-    PRInt32  SIDCacheFD;
-    PRInt32  certCacheFD;
-};
-
-typedef struct unixInheritanceStr unixInheritance;
-
 
 #define DEFAULT_CACHE_DIRECTORY "/tmp"
-
-#ifdef TRACE
-static void 
-fcntlFailed(struct flock *lock) 
-{
-    fprintf(stderr,
-    "fcntl failed, errno = %d, PR_GetError = %d, lock.l_type = %d\n",
-	errno, PR_GetError(), lock->l_type);
-    fflush(stderr);
-}
-#define FCNTL_FAILED(lock) fcntlFailed(lock)
-#else
-#define FCNTL_FAILED(lock) 
-#endif
-
-/* NOTES:  Because there are no atomic seek-and-read and seek-and-write
-** functions that are supported on all our UNIX platforms, we need
-** to prevent all simultaeous seek-and-read operations.  For that reason,
-** we use mutually exclusive (write) locks for read and write operations,
-** and use them all at the same offset (zero).
-*/
-static SECStatus
-_getServerCacheLock(int fd, short type, PRUint32 offset, PRUint32 size)
-{
-    int          result;
-    struct flock lock;
-
-    memset(&lock, 0, sizeof lock);
-    lock.l_type   = /* type */ F_WRLCK;
-    lock.l_whence = SEEK_SET;	/* absolute file offsets. */
-    lock.l_start  = 0;
-    lock.l_len    = 128;
-
-#ifdef TRACE
-    if (ssl_trace) {
-	fprintf(stderr, "%d: %s lock, offset %8x, size %4d\n", myPid,
-	    (type == F_RDLCK) ? "read " : "write", offset, size);
-	fflush(stderr);
-    }
-#endif
-    result = fcntl(fd, F_SETLKW, &lock);
-    if (result == -1) {
-        nss_MD_unix_map_default_error(errno);
-	FCNTL_FAILED(&lock);
-    	return SECFailure;
-    }
-#ifdef TRACE
-    if (ssl_trace) {
-	fprintf(stderr, "%d:   got lock, offset %8x, size %4d\n", 
-	    myPid, offset, size);
-	fflush(stderr);
-    }
-#endif
-    return SECSuccess;
-}
-
-typedef struct sslLockArgsStr {
-    PRUint32    offset;
-    PRUint32    size;
-    PRErrorCode err;
-    SECStatus   rv;
-    int         fd;
-    short       type;
-} sslLockArgs;
-
-static void
-_doGetServerCacheLock(void * arg)
-{
-    sslLockArgs * args = (sslLockArgs *)arg;
-    args->rv = _getServerCacheLock(args->fd, args->type, args->offset, 
-				   args->size );
-    if (args->rv != SECSuccess) {
-	args->err = PR_GetError();
-    }
-}
-
-static SECStatus
-getServerCacheLock(int fd, short type, PRUint32 offset, PRUint32 size)
-{
-    PRThread *    selectThread;
-    PRThread *    me    	= PR_GetCurrentThread();
-    PRThreadScope scope 	= PR_GetThreadScope(me);
-    SECStatus     rv    	= SECFailure;
-
-    if (scope == PR_GLOBAL_THREAD) {
-        rv = _getServerCacheLock(fd, type, offset, size);
-    } else {
-	/* Ib some platforms, one thread cannot read local/automatic 
-	** variables from another thread's stack.  So, get this space
-	** from the heap, not the stack.
-	*/
-	sslLockArgs * args = PORT_New(sslLockArgs);
-
-	if (!args)
-	    return rv;
-
-	args->offset = offset;
-	args->size   = size;
-	args->rv     = SECFailure;
-	args->fd     = fd;
-	args->type   = type;
-        selectThread = PR_CreateThread(PR_USER_THREAD,
-				       _doGetServerCacheLock, args,
-				       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-				       PR_JOINABLE_THREAD, 0);
-        if (selectThread != NULL) {
-	    /* rv will be set by _doGetServerCacheLock() */
-	    PR_JoinThread(selectThread);
-	    rv = args->rv;
-	    if (rv != SECSuccess) {
-		PORT_SetError(args->err);
-	    }
-        }
-	PORT_Free(args);
-    }
-    return rv;
-}
-
-static SECStatus
-releaseServerCacheLock(int fd, PRUint32 offset, PRUint32 size)
-{
-    int          result;
-    struct flock lock;
-
-    memset(&lock, 0, sizeof lock);
-    lock.l_type   = F_UNLCK;
-    lock.l_whence = SEEK_SET;	/* absolute file offsets. */
-    lock.l_start  = 0;
-    lock.l_len    = 128;
-
-#ifdef TRACE
-    if (ssl_trace) {
-	fprintf(stderr, "%d:     unlock, offset %8x, size %4d\n", 
-	    myPid, offset, size);
-	fflush(stderr);
-    }
-#endif
-    result = fcntl(fd, F_SETLK, &lock);
-    if (result == -1) {
-        nss_MD_unix_map_default_error(errno);
-	FCNTL_FAILED(&lock);
-    	return SECFailure;
-    }
-    return SECSuccess;
-}
-
-
-/* these defines take the arguments needed to do record locking, 
- * however the present implementation does only file locking.
- */
-
-#define GET_SERVER_CACHE_READ_LOCK( fd, offset, size) \
-    if (isMultiProcess) getServerCacheLock(fd, F_RDLCK, offset, size);
-
-#define GET_SERVER_CACHE_WRITE_LOCK(fd, offset, size) \
-    if (isMultiProcess) getServerCacheLock(fd, F_WRLCK, offset, size);
-
-#define RELEASE_SERVER_CACHE_LOCK(  fd, offset, size) \
-    if (isMultiProcess) releaseServerCacheLock(fd, offset, size);
-
-/*
-** Zero a file out to nb bytes
-*/
-static SECStatus 
-ZeroFile(int fd, int nb)
-{
-    off_t off;
-    int amount, rv;
-    char buf[16384];
-
-    PORT_Memset(buf, 0, sizeof(buf));
-    off = lseek(fd, 0, SEEK_SET);
-    if (off != 0) {
-	if (off == -1) 
-	    nss_MD_unix_map_lseek_error(errno);
-    	else
-	    PORT_SetError(PR_FILE_SEEK_ERROR);
-    	return SECFailure;
-    }
-
-    while (nb > 0) {
-	amount = (nb > sizeof buf) ? sizeof buf : nb;
-	rv = write(fd, buf, amount);
-	if (rv <= 0) {
-	    if (!rv)
-	    	PORT_SetError(PR_IO_ERROR);
-	    else
-		nss_MD_unix_map_write_error(errno);
-	    IOError(rv, "zero-write");
-	    return SECFailure;
-	}
-	nb -= rv;
-    }
-    return SECSuccess;
-}
 
 #endif /* XP_UNIX */
 
 
 /************************************************************************/
 
-/*
-** Reconstitute a cert from the cache
-** This is only called from ConvertToSID().
-** Caller must hold the cache lock before calling this.
-*/
-static CERTCertificate *
-GetCertFromCache(SIDCacheEntry *sce, CERTCertDBHandle *dbHandle)
+static void 
+IOError(int rv, char *type)
 {
-    CERTCertificate *cert;
-    PRUint32         offset;
-    int              rv;
 #ifdef XP_UNIX
-    off_t            off;
-#endif
-    SECItem          derCert;
-    CertCacheEntry   cce;
-
-    offset = (PRUint32)sce->u.ssl3.certIndex * sizeof(CertCacheEntry);
-    GET_SERVER_CACHE_READ_LOCK(certCacheFD, offset, sizeof(CertCacheEntry));
-#ifdef XP_UNIX
-    off = lseek(certCacheFD, offset, SEEK_SET);
-    rv = -1;
-    if (off != offset) {
-	if (off == -1) 
-	    nss_MD_unix_map_lseek_error(errno);
-	else 
-	    PORT_SetError(PR_FILE_SEEK_ERROR);
-    } else {
-	rv = read(certCacheFD, &cce, sizeof(CertCacheEntry));
-	if (rv != sizeof(CertCacheEntry)) {
-	    if (rv == -1)
-		nss_MD_unix_map_read_error(errno);
-	    else
-	    	PORT_SetError(PR_IO_ERROR);
-	}
-    }
+    syslog(LOG_ALERT,
+	   "SSL: %s error with session-id cache, pid=%d, rv=%d, error='%m'",
+	   type, myPid, rv);
 #else /* XP_WIN32 */
-    /* Use memory mapped I/O and just memcpy() the data */
-    CopyMemory(&cce, &certCacheData[offset], sizeof(CertCacheEntry));
-    rv = sizeof cce;
-#endif /* XP_WIN32 */
-    RELEASE_SERVER_CACHE_LOCK(certCacheFD, offset, sizeof(CertCacheEntry))
-
-    if (rv != sizeof(CertCacheEntry)) {
-	IOError(rv, "read");	/* error set above */
-	return NULL;
-    }
-
-    /* See if the session ID matches with that in the sce cache. */
-    if((cce.sessionIDLength != sce->u.ssl3.sessionIDLength) ||
-       PORT_Memcmp(cce.sessionID, sce->u.ssl3.sessionID, cce.sessionIDLength)) {
-        /* this is a cache miss, not an error */
-	PORT_SetError(SSL_ERROR_SESSION_NOT_FOUND);
-	return NULL;
-    }
-
-    derCert.len  = cce.certLength;
-    derCert.data = cce.cert;
-
-    cert = CERT_NewTempCertificate(dbHandle, &derCert, NULL,
-				   PR_FALSE, PR_TRUE);
-
-    return cert;
+    /* wish win32 had something like syslog() */
+#endif /* XP_UNIX */
 }
 
-/* Put a certificate in the cache.  We assume that the certIndex in
-** sid is valid.
-*/
-static void
-CacheCert(CERTCertificate *cert, SIDCacheEntry *sce)
+static PRUint32
+LockSidCacheLock(sidCacheLock *lock, PRUint32 now)
 {
-    PRUint32       offset;
-    CertCacheEntry cce;
-#ifdef XP_UNIX
-    off_t          off;
-    int            rv;
-#endif
+    SECStatus      rv      = sslMutex_Lock(&lock->mutex);
+    if (rv != SECSuccess)
+    	return 0;
+    if (!now)
+	now  = ssl_Time();
+    lock->timeStamp = now;
+    lock->pid       = myPid;
+    return now;
+}
 
-    offset = (PRUint32)sce->u.ssl3.certIndex * sizeof(CertCacheEntry);
-    if (cert->derCert.len > SSL_MAX_CACHED_CERT_LEN)
-	return;
-    
-    cce.sessionIDLength = sce->u.ssl3.sessionIDLength;
-    PORT_Memcpy(cce.sessionID, sce->u.ssl3.sessionID, cce.sessionIDLength);
+static SECStatus
+UnlockSidCacheLock(sidCacheLock *lock)
+{
+    SECStatus      rv;
+
+    lock->pid = 0;
+    rv        = sslMutex_Unlock(&lock->mutex);
+    return rv;
+}
+
+/* returns the value of ssl_Time on success, zero on failure. */
+static PRUint32
+LockSet(cacheDesc *cache, PRUint32 set, PRUint32 now)
+{
+    PRUint32       lockNum = set % cache->numSIDCacheLocks;
+    sidCacheLock * lock    = cache->sidCacheLocks + lockNum;
+
+    return LockSidCacheLock(lock, now);
+}
+
+static SECStatus
+UnlockSet(cacheDesc *cache, PRUint32 set)
+{
+    PRUint32       lockNum = set % cache->numSIDCacheLocks;
+    sidCacheLock * lock    = cache->sidCacheLocks + lockNum;
+
+    return UnlockSidCacheLock(lock);
+}
+
+/************************************************************************/
+
+
+/* Put a certificate in the cache.  Update the cert index in the sce.
+*/
+static PRUint32
+CacheCert(cacheDesc * cache, CERTCertificate *cert, sidCacheEntry *sce)
+{
+    PRUint32        now;
+    certCacheEntry  cce;
+
+    if ((cert->derCert.len > SSL_MAX_CACHED_CERT_LEN) ||
+        (cert->derCert.len <= 0) ||
+	(cert->derCert.data == NULL)) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return 0;
+    }
+
+    cce.sessionIDLength = sce->sessionIDLength;
+    PORT_Memcpy(cce.sessionID, sce->sessionID, cce.sessionIDLength);
 
     cce.certLength = cert->derCert.len;
     PORT_Memcpy(cce.cert, cert->derCert.data, cce.certLength);
 
-    GET_SERVER_CACHE_WRITE_LOCK(certCacheFD, offset, sizeof cce);
-#ifdef XP_UNIX
-    off = lseek(certCacheFD, offset, SEEK_SET);
-    if (off != offset) {
-	if (off == -1) 
-	    nss_MD_unix_map_lseek_error(errno);
-	else 
-	    PORT_SetError(PR_FILE_SEEK_ERROR);
-    } else {
-	rv = write(certCacheFD, &cce, sizeof cce);
-	if (rv != sizeof(CertCacheEntry)) {
-	    if (rv == -1)
-		nss_MD_unix_map_write_error(errno);
-	    else
-	    	PORT_SetError(PR_IO_ERROR);
-	    IOError(rv, "cert-write");
-	    Invalidate(sce);
-	}
-    }
-#else /* WIN32 */
-    /* Use memory mapped I/O and just memcpy() the data */
-    CopyMemory(&certCacheData[offset], &cce, sizeof cce);
-#endif /* XP_UNIX */
+    /* get lock on cert cache */
+    now = LockSidCacheLock(cache->certCacheLock, 0);
+    if (now) {
 
-    RELEASE_SERVER_CACHE_LOCK(certCacheFD, offset, sizeof cce);
-    return;
+	/* Find where to place the next cert cache entry. */
+	cacheDesc * sharedCache = cache->sharedCache;
+	PRUint32    ndx         = sharedCache->nextCertCacheEntry;
+
+	/* write the entry */
+	cache->certCacheData[ndx] = cce;
+
+	/* remember where we put it. */
+	sce->u.ssl3.certIndex = ndx;
+
+	/* update the "next" cache entry index */
+	sharedCache->nextCertCacheEntry = 
+					(ndx + 1) % cache->numCertCacheEntries;
+
+	UnlockSidCacheLock(cache->certCacheLock);
+    }
+    return now;
+
 }
 
 /*
 ** Convert memory based SID to file based one
 */
 static void 
-ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
+ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
 {
-    to->u.ssl2.valid = 1;
-    to->u.ssl2.version = from->version;
-    to->addr = from->addr;
-    to->time = from->time;
+    to->valid   = 1;
+    to->version = from->version;
+    to->addr    = from->addr;
+    to->time    = from->time;
 
     if (from->version < SSL_LIBRARY_VERSION_3_0) {
 	if ((from->u.ssl2.masterKey.len > SSL_MAX_MASTER_KEY_BYTES) ||
@@ -726,7 +394,7 @@ ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
 	    SSL_DBG(("%d: SSL: masterKeyLen=%d cipherArgLen=%d",
 		     myPid, from->u.ssl2.masterKey.len,
 		     from->u.ssl2.cipherArg.len));
-	    to->u.ssl2.valid = 0;
+	    to->valid = 0;
 	    return;
 	}
 
@@ -735,8 +403,8 @@ ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
 	to->u.ssl2.cipherArgLen  = from->u.ssl2.cipherArg.len;
 	to->u.ssl2.keyBits       = from->u.ssl2.keyBits;
 	to->u.ssl2.secretKeyBits = from->u.ssl2.secretKeyBits;
-	PORT_Memcpy(to->u.ssl2.sessionID, from->u.ssl2.sessionID,
-		  sizeof(to->u.ssl2.sessionID));
+	to->sessionIDLength      = SSL2_SESSIONID_BYTES;
+	PORT_Memcpy(to->sessionID, from->u.ssl2.sessionID, SSL2_SESSIONID_BYTES);
 	PORT_Memcpy(to->u.ssl2.masterKey, from->u.ssl2.masterKey.data,
 		  from->u.ssl2.masterKey.len);
 	PORT_Memcpy(to->u.ssl2.cipherArg, from->u.ssl2.cipherArg.data,
@@ -750,13 +418,12 @@ ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
 	SSL_TRC(8, ("%d: SSL: ConvertSID: masterKeyLen=%d cipherArgLen=%d "
 		    "time=%d addr=0x%08x%08x%08x%08x cipherType=%d", myPid,
 		    to->u.ssl2.masterKeyLen, to->u.ssl2.cipherArgLen,
-		    to->time, to->addr.pr_s6_addr32[0], 
+		    to->time, to->addr.pr_s6_addr32[0],
 		    to->addr.pr_s6_addr32[1], to->addr.pr_s6_addr32[2],
 		    to->addr.pr_s6_addr32[3], to->u.ssl2.cipherType));
     } else {
 	/* This is an SSL v3 session */
 
-	to->u.ssl3.sessionIDLength  = from->u.ssl3.sessionIDLength;
 	to->u.ssl3.cipherSuite      = from->u.ssl3.cipherSuite;
 	to->u.ssl3.compression      = (uint16)from->u.ssl3.compression;
 	to->u.ssl3.resumable        = from->u.ssl3.resumable;
@@ -764,12 +431,14 @@ ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
 	to->u.ssl3.keys             = from->u.ssl3.keys;
 	to->u.ssl3.masterWrapMech   = from->u.ssl3.masterWrapMech;
 	to->u.ssl3.exchKeyType      = from->u.ssl3.exchKeyType;
+	to->sessionIDLength         = from->u.ssl3.sessionIDLength;
+	to->u.ssl3.certIndex        = -1;
 
-	PORT_Memcpy(to->u.ssl3.sessionID, 
-	            from->u.ssl3.sessionID,
-		    from->u.ssl3.sessionIDLength);
+	PORT_Memcpy(to->sessionID, from->u.ssl3.sessionID,
+		    to->sessionIDLength);
 
-	SSL_TRC(8, ("%d: SSL3: ConvertSID: time=%d addr=0x%08x%08x%08x%08x cipherSuite=%d",
+	SSL_TRC(8, ("%d: SSL3: ConvertSID: time=%d addr=0x%08x%08x%08x%08x "
+	            "cipherSuite=%d",
 		    myPid, to->time, to->addr.pr_s6_addr32[0],
 		    to->addr.pr_s6_addr32[1], to->addr.pr_s6_addr32[2],
 		    to->addr.pr_s6_addr32[3], to->u.ssl3.cipherSuite));
@@ -782,10 +451,11 @@ ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
 ** Caller must hold cache lock when calling this.
 */
 static sslSessionID *
-ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
+ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce, 
+             CERTCertDBHandle * dbHandle)
 {
     sslSessionID *to;
-    uint16 version = from->u.ssl2.version;
+    uint16 version = from->version;
 
     to = (sslSessionID*) PORT_ZAlloc(sizeof(sslSessionID));
     if (!to) {
@@ -800,13 +470,13 @@ ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
 	    goto loser;
 	}
 	if (from->u.ssl2.cipherArgLen) {
-	    to->u.ssl2.cipherArg.data = (unsigned char*)
-		PORT_Alloc(from->u.ssl2.cipherArgLen);
+	    to->u.ssl2.cipherArg.data = 
+	    	(unsigned char*)PORT_Alloc(from->u.ssl2.cipherArgLen);
 	    if (!to->u.ssl2.cipherArg.data) {
 		goto loser;
 	    }
 	    PORT_Memcpy(to->u.ssl2.cipherArg.data, from->u.ssl2.cipherArg,
-		      from->u.ssl2.cipherArgLen);
+		        from->u.ssl2.cipherArgLen);
 	}
 
 	to->u.ssl2.cipherType    = from->u.ssl2.cipherType;
@@ -814,22 +484,22 @@ ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
 	to->u.ssl2.cipherArg.len = from->u.ssl2.cipherArgLen;
 	to->u.ssl2.keyBits       = from->u.ssl2.keyBits;
 	to->u.ssl2.secretKeyBits = from->u.ssl2.secretKeyBits;
-	PORT_Memcpy(to->u.ssl2.sessionID, from->u.ssl2.sessionID,
-		  sizeof from->u.ssl2.sessionID);
+/*	to->sessionIDLength      = SSL2_SESSIONID_BYTES; */
+	PORT_Memcpy(to->u.ssl2.sessionID, from->sessionID, SSL2_SESSIONID_BYTES);
 	PORT_Memcpy(to->u.ssl2.masterKey.data, from->u.ssl2.masterKey,
-		  from->u.ssl2.masterKeyLen);
+		    from->u.ssl2.masterKeyLen);
 
 	SSL_TRC(8, ("%d: SSL: ConvertToSID: masterKeyLen=%d cipherArgLen=%d "
 		    "time=%d addr=0x%08x%08x%08x%08x cipherType=%d",
 		    myPid, to->u.ssl2.masterKey.len,
-		    to->u.ssl2.cipherArg.len, to->time, 
+		    to->u.ssl2.cipherArg.len, to->time,
 		    to->addr.pr_s6_addr32[0], to->addr.pr_s6_addr32[1],
-		    to->addr.pr_s6_addr32[2], to->addr.pr_s6_addr32[3], 
+		    to->addr.pr_s6_addr32[2], to->addr.pr_s6_addr32[3],
 		    to->u.ssl2.cipherType));
     } else {
 	/* This is an SSL v3 session */
 
-	to->u.ssl3.sessionIDLength  = from->u.ssl3.sessionIDLength;
+	to->u.ssl3.sessionIDLength  = from->sessionIDLength;
 	to->u.ssl3.cipherSuite      = from->u.ssl3.cipherSuite;
 	to->u.ssl3.compression      = (SSL3CompressionMethod)from->u.ssl3.compression;
 	to->u.ssl3.resumable        = from->u.ssl3.resumable;
@@ -838,9 +508,7 @@ ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
 	to->u.ssl3.masterWrapMech   = from->u.ssl3.masterWrapMech;
 	to->u.ssl3.exchKeyType      = from->u.ssl3.exchKeyType;
 
-	PORT_Memcpy(to->u.ssl3.sessionID, 
-	            from->u.ssl3.sessionID,
-		    from->u.ssl3.sessionIDLength);
+	PORT_Memcpy(to->u.ssl3.sessionID, from->sessionID, from->sessionIDLength);
 
 	/* the portions of the SID that are only restored on the client
 	 * are set to invalid values on the server.
@@ -863,15 +531,21 @@ ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
 
 	to->u.ssl3.clientWriteSaveLen = 0;
 
-	if (from->u.ssl3.certIndex != -1) {
-	    to->peerCert = GetCertFromCache(from, dbHandle);
+	if (from->u.ssl3.certIndex != -1 && pcce) {
+	    SECItem          derCert;
+
+	    derCert.len  = pcce->certLength;
+	    derCert.data = pcce->cert;
+
+	    to->peerCert = CERT_NewTempCertificate(dbHandle, &derCert, NULL,
+					           PR_FALSE, PR_TRUE);
 	    if (to->peerCert == NULL)
 		goto loser;
 	}
     }
 
-    to->version    = from->u.ssl2.version;
-    to->time       = from->time;
+    to->version    = from->version;
+    to->time       = from->time;	/* XXX ??? is expiration time */
     to->cached     = in_server_cache;
     to->addr       = from->addr;
     to->references = 1;
@@ -879,7 +553,6 @@ ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
     return to;
 
   loser:
-    Invalidate(from);
     if (to) {
 	if (version < SSL_LIBRARY_VERSION_3_0) {
 	    if (to->u.ssl2.masterKey.data)
@@ -893,210 +566,82 @@ ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
 }
 
 
-/* Invalidate a SID cache entry. 
- * Called from CacheCert, ConvertToSid, and ServerSessionIDUncache. 
- */
-static void 
-Invalidate(SIDCacheEntry *sce)
-{
-    PRUint32	offset;
-#ifdef XP_UNIX
-    off_t	off;
-    int 	rv;
-#endif
-
-    if (sce == NULL) return;
-
-    if (sce->u.ssl2.version < SSL_LIBRARY_VERSION_3_0) {
-	offset = Offset(&sce->addr, sce->u.ssl2.sessionID,
-			sizeof sce->u.ssl2.sessionID); 
-    } else {
-	offset = Offset(&sce->addr, sce->u.ssl3.sessionID,
-			sce->u.ssl3.sessionIDLength); 
-    }
-	
-    sce->u.ssl2.valid = 0;
-    SSL_TRC(7, ("%d: SSL: uncaching session-id at offset %ld",
-		    myPid, offset));
-
-    GET_SERVER_CACHE_WRITE_LOCK(SIDCacheFD, offset, sizeof *sce);
-
-#ifdef XP_UNIX
-    off = lseek(SIDCacheFD, offset, SEEK_SET);
-    if (off != offset) {
-	if (off == -1) 
-	    nss_MD_unix_map_lseek_error(errno);
-	else 
-	    PORT_SetError(PR_FILE_SEEK_ERROR);
-    } else {
-	rv = write(SIDCacheFD, sce, sizeof *sce);
-	if (rv != sizeof *sce) {
-	    if (rv == -1)
-		nss_MD_unix_map_write_error(errno);
-	    else
-	    	PORT_SetError(PR_IO_ERROR);
-	    IOError(rv, "invalidate-write");
-    	}
-    }
-#else /* WIN32 */
-    /* Use memory mapped I/O and just memcpy() the data */
-    CopyMemory(&SIDCacheData[offset], sce, sizeof *sce);
-#endif /* XP_UNIX */
-
-    RELEASE_SERVER_CACHE_LOCK(SIDCacheFD, offset, sizeof *sce);
-}
-
-
-static void 
-IOError(int rv, char *type)
-{
-#ifdef XP_UNIX
-    syslog(LOG_ALERT,
-	   "SSL: %s error with session-id cache, pid=%d, rv=%d, error='%m'",
-	   type, myPid, rv);
-#else /* XP_WIN32 */
-#ifdef MC_HTTPD 
-    ereport(LOG_FAILURE, "%s error with session-id cache rv=%d\n",type, rv);
-#endif /* MC_HTTPD */
-#endif /* XP_UNIX */
-}
-
-static void 
-lock_cache(void)
-{
-    PZ_Lock(cacheLock);
-}
-
-static void 
-unlock_cache(void)
-{
-    PZ_Unlock(cacheLock);
-}
 
 /*
 ** Perform some mumbo jumbo on the ip-address and the session-id value to
 ** compute a hash value.
 */
 static PRUint32 
-Offset(const PRIPv6Addr *addr, unsigned char *s, unsigned nl)
+SIDindex(cacheDesc *cache, const PRIPv6Addr *addr, PRUint8 *s, unsigned nl)
 {
     PRUint32 rv;
+    PRUint32 x[8];
 
-    rv = addr->pr_s6_addr32[3] ^ (((PRUint32)s[0] << 24) | ((PRUint32)s[1] << 16)
-		 | (s[2] << 8) | s[nl-1]);
-    return (rv % numSIDCacheEntries) * sizeof(SIDCacheEntry);
+    memset(x, 0, sizeof x);
+    if (nl > sizeof x)
+    	nl = sizeof x;
+    memcpy(x, s, nl);
+
+    rv = (addr->pr_s6_addr32[0] ^ addr->pr_s6_addr32[1] ^
+	  addr->pr_s6_addr32[2] ^ addr->pr_s6_addr32[3] ^
+          x[0] ^ x[1] ^ x[2] ^ x[3] ^ x[4] ^ x[5] ^ x[6] ^ x[7])
+	  % cache->numSIDCacheSets;
+    return rv;
 }
 
 
 
 /*
 ** Look something up in the cache. This will invalidate old entries
-** in the process. Caller has locked the cache!
+** in the process. Caller has locked the cache set!
 ** Returns PR_TRUE if found a valid match.  PR_FALSE otherwise.
 */
-static PRBool 
-FindSID(const PRIPv6Addr *addr, unsigned char *sessionID,
-	unsigned sessionIDLength, SIDCacheEntry *sce)
+static sidCacheEntry *
+FindSID(cacheDesc *cache, PRUint32 setNum, PRUint32 now,
+        const PRIPv6Addr *addr, unsigned char *sessionID,
+	unsigned sessionIDLength)
 {
-    PRUint32      offset;
-    PRUint32      now;
-    int           rv;
-#ifdef XP_UNIX
-    off_t         off;
-#endif
+    PRUint32      ndx   = cache->sidCacheSets[setNum].next;
+    int           i;
 
-    /* Read in cache entry after hashing ip address and session-id value */
-    offset = Offset(addr, sessionID, sessionIDLength); 
-    now = ssl_Time();
-    GET_SERVER_CACHE_READ_LOCK(SIDCacheFD, offset, sizeof *sce);
-#ifdef XP_UNIX
-    off = lseek(SIDCacheFD, offset, SEEK_SET);
-    rv = -1;
-    if (off != offset) {
-	if (off == -1) 
-	    nss_MD_unix_map_lseek_error(errno);
-	else 
-	    PORT_SetError(PR_FILE_SEEK_ERROR);
-    } else {
-	rv = read(SIDCacheFD, sce, sizeof *sce);
-	if (rv != sizeof *sce) {
-	    if (rv == -1) 
-		nss_MD_unix_map_read_error(errno);
-	    else 
-		PORT_SetError(PR_IO_ERROR);
-    	}
-    }
-#else /* XP_WIN32 */
-    /* Use memory mapped I/O and just memcpy() the data */
-    CopyMemory(sce, &SIDCacheData[offset], sizeof *sce);
-    rv = sizeof *sce;
-#endif /* XP_WIN32 */
-    RELEASE_SERVER_CACHE_LOCK(SIDCacheFD, offset, sizeof *sce);
+    sidCacheEntry * set = cache->sidCacheData + 
+    			 (setNum * SID_CACHE_ENTRIES_PER_SET);
 
-    if (rv != sizeof *sce) {
-	IOError(rv, "server sid cache read");
-	return PR_FALSE;
-    }
+    for (i = SID_CACHE_ENTRIES_PER_SET; i > 0; --i) {
+	sidCacheEntry * sce;
 
-    if (!sce->u.ssl2.valid) {
-	/* Entry is not valid */
-	PORT_SetError(SSL_ERROR_SESSION_NOT_FOUND);
-	return PR_FALSE;
-    }
+	ndx  = (ndx - 1) % SID_CACHE_ENTRIES_PER_SET;
+	sce = set + ndx;
 
-    if (((sce->u.ssl2.version < SSL_LIBRARY_VERSION_3_0) &&
-	 (now > sce->time + ssl_sid_timeout)) ||
-	((sce->u.ssl2.version >= SSL_LIBRARY_VERSION_3_0) &&
-	 (now > sce->time + ssl3_sid_timeout))) {
-	/* SessionID has timed out. Invalidate the entry. */
-	SSL_TRC(7, ("%d: timed out sid entry addr=%08x%08x%08x%08x now=%x time+=%x",
-		    myPid, sce->addr.pr_s6_addr32[0],
-		    sce->addr.pr_s6_addr32[1], sce->addr.pr_s6_addr32[2],
-		    sce->addr.pr_s6_addr32[3], now, 
-		    sce->time + ssl_sid_timeout));
-	sce->u.ssl2.valid = 0;
+	if (!sce->valid)
+	    continue;
 
-	GET_SERVER_CACHE_WRITE_LOCK(SIDCacheFD, offset, sizeof *sce);
-#ifdef XP_UNIX
-	off = lseek(SIDCacheFD, offset, SEEK_SET);
-	rv = -1;
-	if (off != offset) {
-	    if (off == -1) 
-		nss_MD_unix_map_lseek_error(errno);
-	    else
-	    	PORT_SetError(PR_IO_ERROR);
-	} else {
-	    rv = write(SIDCacheFD, sce, sizeof *sce);
-	    if (rv != sizeof *sce) {
-		if (rv == -1) 
-		    nss_MD_unix_map_write_error(errno);
-		else 
-		    PORT_SetError(PR_IO_ERROR);
-		IOError(rv, "timeout-write");
-	    }
+	if (now > sce->time) {
+	    /* SessionID has timed out. Invalidate the entry. */
+	    SSL_TRC(7, ("%d: timed out sid entry addr=%08x%08x%08x%08x now=%x "
+			"time+=%x",
+			myPid, sce->addr.pr_s6_addr32[0],
+			sce->addr.pr_s6_addr32[1], sce->addr.pr_s6_addr32[2],
+			sce->addr.pr_s6_addr32[3], now,
+			sce->time + ssl_sid_timeout));
+	    sce->valid = 0;
+	    continue;
 	}
-#else /* WIN32 */
-	/* Use memory mapped I/O and just memcpy() the data */
-	CopyMemory(&SIDCacheData[offset], sce, sizeof *sce);
-	rv = sizeof *sce;
-#endif /* XP_UNIX */
-	RELEASE_SERVER_CACHE_LOCK(SIDCacheFD, offset, sizeof *sce);
-	if (rv == sizeof *sce)
-	    PORT_SetError(SSL_ERROR_SESSION_NOT_FOUND);
-	return PR_FALSE;
+
+	/*
+	** Next, examine specific session-id/addr data to see if the cache
+	** entry matches our addr+session-id value
+	*/
+	if (sessionIDLength == sce->sessionIDLength      &&
+	    !memcmp(&sce->addr, addr, sizeof(PRIPv6Addr)) &&
+	    !memcmp(sce->sessionID, sessionID, sessionIDLength)) {
+	    /* Found it */
+	    return sce;
+	}
     }
 
-    /*
-    ** Finally, examine specific session-id/addr data to see if the cache
-    ** entry matches our addr+session-id value
-    */
-    if (!memcmp(&sce->addr, addr, sizeof(PRIPv6Addr)) &&
-	(PORT_Memcmp(sce->u.ssl2.sessionID, sessionID, sessionIDLength) == 0)) {
-	/* Found it */
-	return PR_TRUE;
-    }
     PORT_SetError(SSL_ERROR_SESSION_NOT_FOUND);
-    return PR_FALSE;
+    return NULL;
 }
 
 /************************************************************************/
@@ -1106,40 +651,82 @@ FindSID(const PRIPv6Addr *addr, unsigned char *sessionID,
  * pointer ssl_sid_lookup.
  */
 static sslSessionID *
-ServerSessionIDLookup(	const PRIPv6Addr  *addr,
+ServerSessionIDLookup(const PRIPv6Addr *addr,
 			unsigned char *sessionID,
 			unsigned int   sessionIDLength,
                         CERTCertDBHandle * dbHandle)
 {
-    SIDCacheEntry sce;
-    sslSessionID *sid;
+    sslSessionID *  sid      = 0;
+    sidCacheEntry * psce;
+    certCacheEntry *pcce     = 0;
+    cacheDesc *     cache    = &globalCache;
+    PRUint32        now;
+    PRUint32        set;
+    PRInt32         cndx;
+    sidCacheEntry   sce;
+    certCacheEntry  cce;
 
-    sid = 0;
-    lock_cache();
-    if (FindSID(addr, sessionID, sessionIDLength, &sce)) {
-	/* Found it. Convert file format to internal format */
-	sid = ConvertToSID(&sce, dbHandle);
+    set = SIDindex(cache, addr, sessionID, sessionIDLength);
+    now = LockSet(cache, set, 0);
+    if (!now)
+    	return NULL;
+
+    psce = FindSID(cache, set, now, addr, sessionID, sessionIDLength);
+    if (psce) {
+	if (psce->version >= SSL_LIBRARY_VERSION_3_0 && 
+	    (cndx = psce->u.ssl3.certIndex) != -1) {
+
+	    PRUint32 gotLock = LockSidCacheLock(cache->certCacheLock, now);
+	    if (gotLock) {
+		pcce = &cache->certCacheData[cndx];
+
+		/* See if the cert's session ID matches the sce cache. */
+		if ((pcce->sessionIDLength == psce->sessionIDLength) &&
+		    !PORT_Memcmp(pcce->sessionID, psce->sessionID, 
+		                 pcce->sessionIDLength)) {
+		    cce = *pcce;
+		} else {
+		    /* The cert doesen't match the SID cache entry, 
+		    ** so invalidate the SID cache entry. 
+		    */
+		    psce->valid = 0;
+		    psce = 0;
+		    pcce = 0;
+		}
+		UnlockSidCacheLock(cache->certCacheLock);
+	    } else {
+		/* what the ??.  Didn't get the cert cache lock.
+		** Don't invalidate the SID cache entry, but don't find it.
+		*/
+		PORT_Assert(!("Didn't get cert Cache Lock!"));
+		psce = 0;
+		pcce = 0;
+	    }
+	}
+	if (psce) {
+	    sce = *psce;	/* grab a copy while holding the lock */
+    	}
     }
-    unlock_cache();
+    UnlockSet(cache, set);
+    if (psce) {
+	/* sce conains a copy of the cache entry.
+	** Convert file format to internal format 
+	*/
+	sid = ConvertToSID(&sce, pcce ? &cce : 0, dbHandle);
+    }
     return sid;
 }
 
 /*
-** Place an sid into the cache, if it isn't already there. Note that if
-** some other server process has replaced a session-id cache entry that has
-** the same cache index as this sid, then all is ok. Somebody has to lose
-** when this condition occurs, so it might as well be this sid.
+** Place a sid into the cache, if it isn't already there. 
 */
 static void 
 ServerSessionIDCache(sslSessionID *sid)
 {
-    SIDCacheEntry sce;
-    PRUint32      offset;
-#ifdef XP_UNIX
-    off_t         off;
-    int           rv;
-#endif
-    uint16 version = sid->version;
+    sidCacheEntry sce;
+    PRUint32      now     = 0;
+    uint16        version = sid->version;
+    cacheDesc *   cache   = &globalCache;
 
     if ((version >= SSL_LIBRARY_VERSION_3_0) &&
 	(sid->u.ssl3.sessionIDLength == 0)) {
@@ -1147,384 +734,319 @@ ServerSessionIDCache(sslSessionID *sid)
     }
 
     if (sid->cached == never_cached || sid->cached == invalid_cache) {
-	lock_cache();
+	PRUint32 set;
 
-	sid->time = ssl_Time();
 	if (version < SSL_LIBRARY_VERSION_3_0) {
+	    sid->time = ssl_Time() + ssl_sid_timeout;
 	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x%08x%08x%08x time=%x "
-			"cipher=%d", myPid, sid->cached, 
+			"cipher=%d", myPid, sid->cached,
 			sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
 			sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
 			sid->time, sid->u.ssl2.cipherType));
 	    PRINT_BUF(8, (0, "sessionID:", sid->u.ssl2.sessionID,
-			  sizeof(sid->u.ssl2.sessionID)));
+			  SSL2_SESSIONID_BYTES));
 	    PRINT_BUF(8, (0, "masterKey:", sid->u.ssl2.masterKey.data,
 			  sid->u.ssl2.masterKey.len));
 	    PRINT_BUF(8, (0, "cipherArg:", sid->u.ssl2.cipherArg.data,
 			  sid->u.ssl2.cipherArg.len));
 
-	    /* Write out new cache entry */
-	    offset = Offset(&sid->addr, sid->u.ssl2.sessionID,
-			    sizeof(sid->u.ssl2.sessionID)); 
 	} else {
+	    sid->time = ssl_Time() + ssl3_sid_timeout;
 	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x%08x%08x%08x time=%x "
-			"cipherSuite=%d", myPid, sid->cached, 
+			"cipherSuite=%d", myPid, sid->cached,
 			sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
-			sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3], 
+			sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
 			sid->time, sid->u.ssl3.cipherSuite));
 	    PRINT_BUF(8, (0, "sessionID:", sid->u.ssl3.sessionID,
 			  sid->u.ssl3.sessionIDLength));
-
-	    offset = Offset(&sid->addr, sid->u.ssl3.sessionID,
-			    sid->u.ssl3.sessionIDLength);
-	    
 	}
 
 	ConvertFromSID(&sce, sid);
-	if (version >= SSL_LIBRARY_VERSION_3_0) {
-	    if (sid->peerCert == NULL) {
-		sce.u.ssl3.certIndex = -1;
-	    } else {
-		sce.u.ssl3.certIndex = (int16)
-		    ((offset / sizeof(SIDCacheEntry)) % numCertCacheEntries);
-	    }
-	}
-	
-	GET_SERVER_CACHE_WRITE_LOCK(SIDCacheFD, offset, sizeof sce);
-#ifdef XP_UNIX
-	off = lseek(SIDCacheFD, offset, SEEK_SET);
-	if (off != offset) {
-	    if (off == -1) 
-		nss_MD_unix_map_lseek_error(errno);
-	    else
-	    	PORT_SetError(PR_IO_ERROR);
-	} else {
-	    rv = write(SIDCacheFD, &sce, sizeof sce);
-	    if (rv != sizeof(sce)) {
-		if (rv == -1) 
-		    nss_MD_unix_map_write_error(errno);
-		else 
-		    PORT_SetError(PR_IO_ERROR);
-		IOError(rv, "update-write");
-	    }
-	}
-#else /* WIN32 */
-	CopyMemory(&SIDCacheData[offset], &sce, sizeof sce);
-#endif /* XP_UNIX */
-	RELEASE_SERVER_CACHE_LOCK(SIDCacheFD, offset, sizeof sce);
 
 	if ((version >= SSL_LIBRARY_VERSION_3_0) && 
 	    (sid->peerCert != NULL)) {
-	    CacheCert(sid->peerCert, &sce);
+	    now = CacheCert(cache, sid->peerCert, &sce);
 	}
 
-	sid->cached = in_server_cache;
-	unlock_cache();
+	set = SIDindex(cache, &sce.addr, sce.sessionID, sce.sessionIDLength);
+	now = LockSet(cache, set, now);
+	if (now) {
+	    PRUint32  next = cache->sidCacheSets[set].next;
+	    PRUint32  ndx  = set * SID_CACHE_ENTRIES_PER_SET + next;
+
+	    /* Write out new cache entry */
+	    cache->sidCacheData[ndx] = sce;
+
+	    cache->sidCacheSets[set].next = 
+	    				(next + 1) % SID_CACHE_ENTRIES_PER_SET;
+
+	    UnlockSet(cache, set);
+	    sid->cached = in_server_cache;
+	}
     }
 }
 
+/*
+** Although this is static, it is called from ssl via global function pointer
+**	ssl_sid_uncache.  This invalidates the referenced cache entry.
+*/
 static void 
 ServerSessionIDUncache(sslSessionID *sid)
 {
-    SIDCacheEntry sce;
-    PRErrorCode   err;
-    int rv;
+    cacheDesc *    cache   = &globalCache;
+    PRUint8 *      sessionID;
+    unsigned int   sessionIDLength;
+    PRErrorCode    err;
+    PRUint32       set;
+    PRUint32       now;
+    sidCacheEntry *psce;
 
-    if (sid == NULL) return;
+    if (sid == NULL) 
+    	return;
     
     /* Uncaching a SID should never change the error code. 
     ** So save it here and restore it before exiting.
     */
     err = PR_GetError();
-    lock_cache();
+
     if (sid->version < SSL_LIBRARY_VERSION_3_0) {
+	sessionID       = sid->u.ssl2.sessionID;
+	sessionIDLength = SSL2_SESSIONID_BYTES;
 	SSL_TRC(8, ("%d: SSL: UncacheMT: valid=%d addr=0x%08x%08x%08x%08x time=%x "
-		    "cipher=%d", myPid, sid->cached, 
+		    "cipher=%d", myPid, sid->cached,
 		    sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
-		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3], 
+		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
 		    sid->time, sid->u.ssl2.cipherType));
-	PRINT_BUF(8, (0, "sessionID:", sid->u.ssl2.sessionID,
-		      sizeof(sid->u.ssl2.sessionID)));
+	PRINT_BUF(8, (0, "sessionID:", sessionID, sessionIDLength));
 	PRINT_BUF(8, (0, "masterKey:", sid->u.ssl2.masterKey.data,
 		      sid->u.ssl2.masterKey.len));
 	PRINT_BUF(8, (0, "cipherArg:", sid->u.ssl2.cipherArg.data,
 		      sid->u.ssl2.cipherArg.len));
-	rv = FindSID(&sid->addr, sid->u.ssl2.sessionID,
-		     sizeof(sid->u.ssl2.sessionID), &sce);
     } else {
+	sessionID       = sid->u.ssl3.sessionID;
+	sessionIDLength = sid->u.ssl3.sessionIDLength;
 	SSL_TRC(8, ("%d: SSL3: UncacheMT: valid=%d addr=0x%08x%08x%08x%08x time=%x "
-		    "cipherSuite=%d", myPid, sid->cached, 
+		    "cipherSuite=%d", myPid, sid->cached,
 		    sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
-		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3], 
+		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
 		    sid->time, sid->u.ssl3.cipherSuite));
-	PRINT_BUF(8, (0, "sessionID:", sid->u.ssl3.sessionID,
-		      sid->u.ssl3.sessionIDLength));
-	rv = FindSID(&sid->addr, sid->u.ssl3.sessionID,
-		     sid->u.ssl3.sessionIDLength, &sce);
+	PRINT_BUF(8, (0, "sessionID:", sessionID, sessionIDLength));
     }
-    
-    if (rv) {
-	Invalidate(&sce);
+    set = SIDindex(cache, &sid->addr, sessionID, sessionIDLength);
+    now = LockSet(cache, set, 0);
+    if (now) {
+	psce = FindSID(cache, set, now, &sid->addr, sessionID, sessionIDLength);
+	if (psce) {
+	    psce->valid = 0;
+	}
+	UnlockSet(cache, set);
     }
     sid->cached = invalid_cache;
-    unlock_cache();
     PORT_SetError(err);
 }
 
 static SECStatus
-InitSessionIDCache(int maxCacheEntries, PRUint32 timeout,
-		   PRUint32 ssl3_timeout, const char *directory)
+InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout, 
+          PRUint32 ssl3_timeout, const char *directory)
 {
-    char *cfn;
-#ifdef XP_UNIX
-    int rv;
-    if (SIDCacheFD >= 0) {
+    ptrdiff_t     ptr;
+    sidCacheLock *pLock;
+    char *        sharedMem;
+    PRFileMap *   cacheMemMap;
+    char *        cfn = NULL;	/* cache file name */
+    int           locks_initialized = 0;
+    int           locks_to_initialize = 0;
+    PRUint32      init_time;
+
+    if (cache->sharedMem) {
 	/* Already done */
 	return SECSuccess;
     }
-#else /* WIN32 */
-	if(SIDCacheFDMAP != INVALID_HANDLE_VALUE) {
-	/* Already done */
-	return SECSuccess;
+
+    cache->numSIDCacheEntries = maxCacheEntries ? maxCacheEntries 
+                                                : DEF_SID_CACHE_ENTRIES;
+    cache->numSIDCacheSets    = 
+    	SID_HOWMANY(cache->numSIDCacheEntries, SID_CACHE_ENTRIES_PER_SET);
+
+    cache->numSIDCacheEntries = 
+    	cache->numSIDCacheSets * SID_CACHE_ENTRIES_PER_SET;
+
+    cache->numSIDCacheLocks   = 
+    	PR_MIN(cache->numSIDCacheSets, MAX_SID_CACHE_LOCKS);
+
+    cache->numSIDCacheSetsPerLock = 
+    	SID_HOWMANY(cache->numSIDCacheSets, cache->numSIDCacheLocks);
+
+    /* compute size of shared memory, and offsets of all pointers */
+    ptr = 0;
+    cache->sharedMem     = (char *)ptr;
+    ptr += SID_ROUNDUP(sizeof(cacheDesc), SID_ALIGNMENT);
+
+    cache->sidCacheLocks = (sidCacheLock *)ptr;
+    cache->keyCacheLock  = cache->sidCacheLocks + cache->numSIDCacheLocks;
+    cache->certCacheLock = cache->keyCacheLock  + 1;
+    ptr = (ptrdiff_t)(cache->certCacheLock + 1);
+    ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
+
+    cache->sidCacheSets  = (sidCacheSet *)ptr;
+    ptr = (ptrdiff_t)(cache->sidCacheSets + cache->numSIDCacheSets);
+    ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
+
+    cache->sidCacheData  = (sidCacheEntry *)ptr;
+    ptr = (ptrdiff_t)(cache->sidCacheData + cache->numSIDCacheEntries);
+    ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
+
+    cache->certCacheData = (certCacheEntry *)ptr;
+    cache->sidCacheSize  = 
+    	(char *)cache->certCacheData - (char *)cache->sidCacheData;
+
+    /* This is really a poor way to computer this! */
+    cache->numCertCacheEntries = cache->sidCacheSize / sizeof(certCacheEntry);
+    if (cache->numCertCacheEntries < MIN_CERT_CACHE_ENTRIES)
+    	cache->numCertCacheEntries = MIN_CERT_CACHE_ENTRIES;
+    ptr = (ptrdiff_t)(cache->certCacheData + cache->numCertCacheEntries);
+    ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
+
+    cache->keyCacheData  = (SSLWrappedSymWrappingKey *)ptr;
+    cache->certCacheSize = 
+    	(char *)cache->keyCacheData - (char *)cache->certCacheData;
+
+    cache->numKeyCacheEntries = kt_kea_size * SSL_NUM_WRAP_MECHS;
+    ptr = (ptrdiff_t)(cache->keyCacheData + cache->numKeyCacheEntries);
+    ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
+
+    cache->sharedMemSize = ptr;
+
+    cache->keyCacheSize  = (char *)ptr - (char *)cache->keyCacheData;
+
+    if (ssl2_timeout) {   
+	if (ssl2_timeout > MAX_SSL2_TIMEOUT) {
+	    ssl2_timeout = MAX_SSL2_TIMEOUT;
 	}
-#endif /* XP_UNIX */
-
-
-    if (maxCacheEntries) {
-	numSIDCacheEntries = maxCacheEntries;
-    }
-    sidCacheWrapOffset = numSIDCacheEntries * sizeof(SIDCacheEntry);
-    sidCacheFileSize = sidCacheWrapOffset +
-         (kt_kea_size * SSL_NUM_WRAP_MECHS * sizeof(SSLWrappedSymWrappingKey));
-
-    /* Create file names */
-    cfn = (char*) PORT_Alloc(PORT_Strlen(directory) + 100);
-    if (!cfn) {
-	return SECFailure;
-    }
-#ifdef XP_UNIX
-    sprintf(cfn, "%s/.sslsidc.%d", directory, getpid());
-#else /* XP_WIN32 */
-	sprintf(cfn, "%s\\ssl.sidc.%d.%d", directory,
-			GetCurrentProcessId(), GetCurrentThreadId());
-#endif /* XP_WIN32 */
-
-    /* Create session-id cache file */
-#ifdef XP_UNIX
-    do {
-	(void) unlink(cfn);
-	SIDCacheFD = open(cfn, O_EXCL|O_CREAT|O_RDWR, 0600);
-    } while (SIDCacheFD < 0 && errno == EEXIST);
-    if (SIDCacheFD < 0) {
-	nss_MD_unix_map_open_error(errno);
-	IOError(SIDCacheFD, "create");
-	goto loser;
-    }
-    rv = unlink(cfn);
-    if (rv < 0) {
-	nss_MD_unix_map_unlink_error(errno);
-	IOError(rv, "unlink");
-	goto loser;
-    }
-#else  /* WIN32 */
-    SIDCacheFDMAP = 
-    	CreateFileMapping(INVALID_HANDLE_VALUE, /* allocate in swap file */
-			  &sidCacheFDMapAttributes, /* inheritable. */
-			  PAGE_READWRITE,
-			  0,                    /* size, high word. */
-			  sidCacheFileSize,     /* size, low  word. */
-			  NULL);		/* no map name in FS */
-    if(! SIDCacheFDMAP) {
-	nss_MD_win32_map_default_error(GetLastError());
-	goto loser;
-    }
-    SIDCacheData = (char *)MapViewOfFile(SIDCacheFDMAP, 
-                                         FILE_MAP_ALL_ACCESS, 	/* R/W    */
-					 0, 0, 			/* offset */
-				         sidCacheFileSize);	/* size   */
-    if (! SIDCacheData) {
-	nss_MD_win32_map_default_error(GetLastError());
-	goto loser;
-    }
-#endif /* XP_UNIX */
-
-    if (!cacheLock)
-	nss_InitLock(&cacheLock, nssILockCache);
-    if (!cacheLock) {
-	SET_ERROR_CODE
-	goto loser;
-    }
-#ifdef _WIN32
-    if (isMultiProcess  && (SECSuccess != createServerCacheSemaphore())) {
-	SET_ERROR_CODE
-	goto loser;
-    }
-#endif
-
-    if (timeout) {   
-	if (timeout > 100) {
-	    timeout = 100;
+	if (ssl2_timeout < MIN_SSL2_TIMEOUT) {
+	    ssl2_timeout = MIN_SSL2_TIMEOUT;
 	}
-	if (timeout < 5) {
-	    timeout = 5;
-	}
-	ssl_sid_timeout = timeout;
+	cache->ssl2Timeout = ssl2_timeout;
+    } else {
+	cache->ssl2Timeout = DEF_SSL2_TIMEOUT;
     }
 
     if (ssl3_timeout) {   
-	if (ssl3_timeout > 86400L) {
-	    ssl3_timeout = 86400L;
+	if (ssl3_timeout > MAX_SSL3_TIMEOUT) {
+	    ssl3_timeout = MAX_SSL3_TIMEOUT;
 	}
-	if (ssl3_timeout < 5) {
-	    ssl3_timeout = 5;
+	if (ssl3_timeout < MIN_SSL3_TIMEOUT) {
+	    ssl3_timeout = MIN_SSL3_TIMEOUT;
 	}
-	ssl3_sid_timeout = ssl3_timeout;
+	cache->ssl3Timeout = ssl3_timeout;
+    } else {
+	cache->ssl3Timeout = DEF_SSL3_TIMEOUT;
     }
-
-    GET_SERVER_CACHE_WRITE_LOCK(SIDCacheFD, 0, sidCacheFileSize);
-#ifdef XP_UNIX
-    /* Initialize the files */
-    if (ZeroFile(SIDCacheFD, sidCacheFileSize)) {
-	/* Bummer */
-	close(SIDCacheFD);
-	SIDCacheFD = -1;
-	goto loser;
-    }
-#else /* XP_WIN32 */
-    ZeroMemory(SIDCacheData, sidCacheFileSize);
-#endif /* XP_UNIX */
-    RELEASE_SERVER_CACHE_LOCK(SIDCacheFD, 0, sidCacheFileSize);
-    PORT_Free(cfn);
-    return SECSuccess;
-
-  loser:
-#ifdef _WIN32
-    if (svrCacheSem)
-	destroyServerCacheSemaphore();
-#endif
-    if (cacheLock) {
-	PZ_DestroyLock(cacheLock);
-	cacheLock = NULL;
-    }
-    PORT_Free(cfn);
-    return SECFailure;
-}
-
-static SECStatus 
-InitCertCache(const char *directory)
-{
-    char *cfn;
-#ifdef XP_UNIX
-    int rv;
-    if (certCacheFD >= 0) {
-	/* Already done */
-	return SECSuccess;
-    }
-#else /* WIN32 */
-    if(certCacheFDMAP != INVALID_HANDLE_VALUE) {
-	/* Already done */
-	return SECSuccess;
-    }
-#endif /* XP_UNIX */
-
-    numCertCacheEntries = sidCacheFileSize / sizeof(CertCacheEntry);
-    if (numCertCacheEntries < MIN_CERT_CACHE_ENTRIES)
-    	numCertCacheEntries = MIN_CERT_CACHE_ENTRIES;
-    certCacheFileSize = numCertCacheEntries * sizeof(CertCacheEntry);
 
     /* Create file names */
-    cfn = (char*) PORT_Alloc(PORT_Strlen(directory) + 100);
-    if (!cfn) {
-	return SECFailure;
-    }
 #ifdef XP_UNIX
-    sprintf(cfn, "%s/.sslcertc.%d", directory, getpid());
+    /* there's some confusion here about whether PR_OpenAnonFileMap wants
+    ** a directory name or a file name for its first argument.
+    cfn = PR_smprintf("%s/.sslsvrcache.%d", directory, myPid);
+    */
+    cfn = PR_smprintf("%s", directory);
 #else /* XP_WIN32 */
-    sprintf(cfn, "%s\\ssl.certc.%d.%d", directory,
-	    GetCurrentProcessId(), GetCurrentThreadId());
+    cfn = PR_smprintf("%s/svrcache_%d_%x.ssl", directory, myPid, 
+    			GetCurrentThreadId());
 #endif /* XP_WIN32 */
+    if (!cfn) {
+	goto loser;
+    }
 
-    /* Create certificate cache file */
-#ifdef XP_UNIX
-    do {
-	(void) unlink(cfn);
-	certCacheFD = open(cfn, O_EXCL|O_CREAT|O_RDWR, 0600);
-    } while (certCacheFD < 0 && errno == EEXIST);
-    if (certCacheFD < 0) {
-	nss_MD_unix_map_open_error(errno);
-	IOError(certCacheFD, "create");
+    /* Create cache */
+    cacheMemMap = PR_OpenAnonFileMap(cfn, cache->sharedMemSize, 
+                                            PR_PROT_READWRITE);
+    PR_smprintf_free(cfn);
+    if(! cacheMemMap) {
 	goto loser;
     }
-    rv = unlink(cfn);
-    if (rv < 0) {
-	nss_MD_unix_map_unlink_error(errno);
-	IOError(rv, "unlink");
+    sharedMem = PR_MemMap(cacheMemMap, 0, cache->sharedMemSize);
+    if (! sharedMem) {
 	goto loser;
     }
-#else  /* WIN32 */
-    certCacheFDMAP = 
-    	CreateFileMapping(INVALID_HANDLE_VALUE, /* allocate in swap file */
-			  &certCacheFDMapAttributes, /* inheritable. */
-			  PAGE_READWRITE,
-			  0,                /* size, high word. */
-			  certCacheFileSize, /* size, low word. */
-			  NULL);           /* no map name in FS */
-    if (! certCacheFDMAP) {
-	nss_MD_win32_map_default_error(GetLastError());
-	goto loser;
-    }
-    certCacheData = (char *) MapViewOfFile(certCacheFDMAP, 
-                                           FILE_MAP_ALL_ACCESS, /* R/W    */
-					   0, 0, 		/* offset */
-					   certCacheFileSize);	/* size   */
-    if (! certCacheData) {
-	nss_MD_win32_map_default_error(GetLastError());
-	goto loser;
-    }
-#endif /* XP_UNIX */
 
-/*  GET_SERVER_CACHE_WRITE_LOCK(certCacheFD, 0, certCacheFileSize); */
-#ifdef XP_UNIX
-    /* Initialize the files */
-    if (ZeroFile(certCacheFD, certCacheFileSize)) {
-	/* Bummer */
-	close(certCacheFD);
-	certCacheFD = -1;
-	goto loser;
+    /* Initialize shared memory. This may not be necessary on all platforms */
+    memset(sharedMem, 0, cache->sharedMemSize);
+
+    /* Copy cache descriptor header into shared memory */
+    memcpy(sharedMem, cache, sizeof *cache);
+
+    /* save private copies of these values */
+    cache->cacheMemMap = cacheMemMap;
+    cache->sharedMem   = sharedMem;
+    cache->sharedCache = (cacheDesc *)sharedMem;
+
+    /* Fix pointers in our private copy of cache descriptor to point to 
+    ** spaces in shared memory 
+    */
+    ptr = (ptrdiff_t)cache->sharedMem;
+    *(ptrdiff_t *)(&cache->sidCacheLocks) += ptr;
+    *(ptrdiff_t *)(&cache->keyCacheLock ) += ptr;
+    *(ptrdiff_t *)(&cache->certCacheLock) += ptr;
+    *(ptrdiff_t *)(&cache->sidCacheSets ) += ptr;
+    *(ptrdiff_t *)(&cache->sidCacheData ) += ptr;
+    *(ptrdiff_t *)(&cache->certCacheData) += ptr;
+    *(ptrdiff_t *)(&cache->keyCacheData ) += ptr;
+
+    /* initialize the locks */
+    init_time = ssl_Time();
+    pLock = cache->sidCacheLocks;
+    for (locks_to_initialize = cache->numSIDCacheLocks + 2;
+         locks_initialized < locks_to_initialize; 
+	 ++locks_initialized, ++pLock ) {
+
+	SECStatus err = sslMutex_Init(&pLock->mutex, isMultiProcess);
+	if (err)
+	    goto loser;
+        pLock->timeStamp = init_time;
+	pLock->pid       = 0;
     }
-#else /* XP_WIN32 */
-    ZeroMemory(certCacheData, certCacheFileSize);
-#endif /* XP_UNIX */
-/*  RELEASE_SERVER_CACHE_LOCK(certCacheFD, 0, certCacheFileSize);   */
-    PORT_Free(cfn);
+
     return SECSuccess;
 
-  loser:
-    PORT_Free(cfn);
+loser:
+    if (cache->cacheMemMap) {
+	if (cache->sharedMem) {
+	    if (locks_initialized > 0) {
+		pLock = cache->sidCacheLocks;
+		for (; locks_initialized > 0; --locks_initialized, ++pLock ) {
+		    sslMutex_Destroy(&pLock->mutex);
+		}
+	    }
+	    PR_MemUnmap(cache->sharedMem, cache->sharedMemSize);
+	    cache->sharedMem = NULL;
+	}
+    	PR_CloseFileMap(cache->cacheMemMap);
+	cache->cacheMemMap = NULL;
+    }
     return SECFailure;
 }
 
+
 SECStatus
-SSL_ConfigServerSessionIDCache(	int      maxCacheEntries, 
-				PRUint32 timeout,
+SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
+                                int      maxCacheEntries, 
+				PRUint32 ssl2_timeout,
 			       	PRUint32 ssl3_timeout, 
 			  const char *   directory)
 {
     SECStatus rv;
 
-    PORT_Assert(sizeof(SIDCacheEntry) == 256);
-    PORT_Assert(sizeof(CertCacheEntry) == 4096);
+/*  printf("sizeof(sidCacheEntry) == %u\n", sizeof(sidCacheEntry)); */
+    PORT_Assert(sizeof(sidCacheEntry) % 8 == 0);
+    PORT_Assert(sizeof(certCacheEntry) == 4096);
 
     myPid = SSL_GETPID();
     if (!directory) {
 	directory = DEFAULT_CACHE_DIRECTORY;
     }
-    rv = InitSessionIDCache(maxCacheEntries, timeout, ssl3_timeout, directory);
-    if (rv) {
-	SET_ERROR_CODE
-    	return SECFailure;
-    }
-    rv = InitCertCache(directory);
+    rv = InitCache(cache, maxCacheEntries, ssl2_timeout, ssl3_timeout, 
+                   directory);
     if (rv) {
 	SET_ERROR_CODE
     	return SECFailure;
@@ -1536,87 +1058,93 @@ SSL_ConfigServerSessionIDCache(	int      maxCacheEntries,
     return SECSuccess;
 }
 
+SECStatus
+SSL_ConfigServerSessionIDCache(	int      maxCacheEntries, 
+				PRUint32 ssl2_timeout,
+			       	PRUint32 ssl3_timeout, 
+			  const char *   directory)
+{
+    return SSL_ConfigServerSessionIDCacheInstance(&globalCache, 
+    		maxCacheEntries, ssl2_timeout, ssl3_timeout, directory);
+}
+
 /* Use this function, instead of SSL_ConfigServerSessionIDCache,
  * if the cache will be shared by multiple processes.
  */
 SECStatus
 SSL_ConfigMPServerSIDCache(	int      maxCacheEntries, 
-				PRUint32 timeout,
+				PRUint32 ssl2_timeout,
 			       	PRUint32 ssl3_timeout, 
 		          const char *   directory)
 {
     char *	envValue;
+    char *	inhValue;
+    cacheDesc * cache         = &globalCache;
+    PRUint32    fmStrLen;
     SECStatus 	result;
+    PRStatus 	prStatus;
     SECStatus	putEnvFailed;
+    inheritance inherit;
+    char        fmString[PR_FILEMAP_STRING_BUFSIZE];
 
     isMultiProcess = PR_TRUE;
-    result = SSL_ConfigServerSessionIDCache(maxCacheEntries, timeout, 
-                                            ssl3_timeout, directory);
-    if (result == SECSuccess) {
-#ifdef _WIN32
-	winInheritance winherit;
+    result = SSL_ConfigServerSessionIDCacheInstance(cache, maxCacheEntries, 
+					ssl2_timeout, ssl3_timeout, directory);
+    if (result != SECSuccess) 
+        return result;
 
-	winherit.numSIDCacheEntries	= numSIDCacheEntries;
-	winherit.sidCacheFileSize	= sidCacheFileSize;
-	winherit.sidCacheWrapOffset	= sidCacheWrapOffset;
-	winherit.numCertCacheEntries	= numCertCacheEntries;
-	winherit.certCacheFileSize	= certCacheFileSize;
-	winherit.SIDCacheFDMAP		= SIDCacheFDMAP;
-	winherit.certCacheFDMAP		= certCacheFDMAP;
-	winherit.svrCacheSem		= svrCacheSem;
-	winherit.parentProcessID	= GetCurrentProcessId();
-	winherit.parentProcessHandle	= 
-	    OpenProcess(PROCESS_DUP_HANDLE, TRUE, winherit.parentProcessID);
-        if (winherit.parentProcessHandle == NULL) {
-	    SET_ERROR_CODE
-	    return SECFailure;
-	}
-        envValue = BTOA_DataToAscii((unsigned char *)&winherit, 
-	                             sizeof winherit);
-    	if (!envValue) {
-	    SET_ERROR_CODE
-	    return SECFailure;
-	}
-#else
-	unixInheritance uinherit;
-
-	uinherit.numSIDCacheEntries	= numSIDCacheEntries;
-	uinherit.sidCacheFileSize	= sidCacheFileSize;
-	uinherit.sidCacheWrapOffset	= sidCacheWrapOffset;
-	uinherit.numCertCacheEntries	= numCertCacheEntries;
-	uinherit.certCacheFileSize	= certCacheFileSize;
-	uinherit.SIDCacheFD		= SIDCacheFD;
-	uinherit.certCacheFD		= certCacheFD;
-
-        envValue = BTOA_DataToAscii((unsigned char *)&uinherit, 
-	                             sizeof uinherit);
-    	if (!envValue) {
-	    SET_ERROR_CODE
-	    return SECFailure;
-	}
-#endif
+    prStatus = PR_ExportFileMapAsString(cache->cacheMemMap, 
+                                        sizeof fmString, fmString);
+    if ((prStatus != PR_SUCCESS) || !(fmStrLen = strlen(fmString))) {
+	SET_ERROR_CODE
+	return SECFailure;
     }
+
+    inherit.sharedMemSize	= cache->sharedMemSize;
+    inherit.fmStrLen            = fmStrLen;
+
+    inhValue = BTOA_DataToAscii((unsigned char *)&inherit, sizeof inherit);
+    if (!inhValue || !strlen(inhValue)) {
+	SET_ERROR_CODE
+	return SECFailure;
+    }
+    envValue = PR_smprintf("%s,%s", inhValue, fmString);
+    if (!envValue || !strlen(envValue)) {
+	SET_ERROR_CODE
+	return SECFailure;
+    }
+    PORT_Free(inhValue);
+
     putEnvFailed = (SECStatus)NSS_PutEnv(envVarName, envValue);
-    PORT_Free(envValue);
+    PR_smprintf_free(envValue);
     if (putEnvFailed) {
         SET_ERROR_CODE
         result = SECFailure;
     }
+
+#if !defined(WIN32)
+    /* Launch thread to poll cache for expired locks */
+    LaunchLockPoller(cache);
+#endif
     return result;
 }
 
 SECStatus
-SSL_InheritMPServerSIDCache(const char * envString)
+SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
 {
     unsigned char * decoString = NULL;
+    char *          fmString   = NULL;
     unsigned int    decoLen;
-#ifdef _WIN32
-    winInheritance  inherit;
-#else
-    unixInheritance inherit;
-#endif
+    ptrdiff_t       ptr;
+    inheritance     inherit;
+    cacheDesc       my;
 
     myPid = SSL_GETPID();
+
+    /* If this child was created by fork(), and not by exec() on unix,
+    ** then isMultiProcess will already be set.
+    ** If not, we'll set it below.
+    */
     if (isMultiProcess)
     	return SECSuccess;	/* already done. */
 
@@ -1631,11 +1159,18 @@ SSL_InheritMPServerSIDCache(const char * envString)
 	    return SECFailure;
 	}
     }
+    envString = PORT_Strdup(envString);
+    if (!envString) 
+	return SECFailure;
+    fmString = strchr(envString, ',');
+    if (!fmString) 
+    	goto loser;
+    *fmString++ = 0;
 
     decoString = ATOB_AsciiToData(envString, &decoLen);
     if (!decoString) {
     	SET_ERROR_CODE
-	return SECFailure;
+	goto loser;
     }
     if (decoLen != sizeof inherit) {
     	SET_ERROR_CODE
@@ -1643,152 +1178,166 @@ SSL_InheritMPServerSIDCache(const char * envString)
     }
 
     PORT_Memcpy(&inherit, decoString, sizeof inherit);
+
+    if (strlen(fmString)  != inherit.fmStrLen ) {
+    	goto loser;
+    }
+
+    memset(&my, 0, sizeof my);
+    my.sharedMemSize	= inherit.sharedMemSize;
+
+    /* Create cache */
+    my.cacheMemMap = PR_ImportFileMapFromString(fmString);
+    if(! my.cacheMemMap) {
+	goto loser;
+    }
+    my.sharedMem = PR_MemMap(my.cacheMemMap, 0, my.sharedMemSize);
+    if (! my.sharedMem) {
+	goto loser;
+    }
+    my.sharedCache   = (cacheDesc *)my.sharedMem;
+
+    if (my.sharedCache->sharedMemSize != my.sharedMemSize) {
+	SET_ERROR_CODE
+    	goto loser;
+    }
+
+    memcpy(cache, my.sharedCache, sizeof *cache);
+    cache->cacheMemMap = my.cacheMemMap;
+    cache->sharedMem   = my.sharedMem;
+    cache->sharedCache = my.sharedCache;
+
+    /* Fix pointers in our private copy of cache descriptor to point to 
+    ** spaces in shared memory 
+    */
+    ptr = (ptrdiff_t)cache->sharedMem;
+    *(ptrdiff_t *)(&cache->sidCacheLocks) += ptr;
+    *(ptrdiff_t *)(&cache->keyCacheLock ) += ptr;
+    *(ptrdiff_t *)(&cache->certCacheLock) += ptr;
+    *(ptrdiff_t *)(&cache->sidCacheSets ) += ptr;
+    *(ptrdiff_t *)(&cache->sidCacheData ) += ptr;
+    *(ptrdiff_t *)(&cache->certCacheData) += ptr;
+    *(ptrdiff_t *)(&cache->keyCacheData ) += ptr;
+
     PORT_Free(decoString);
-
-    numSIDCacheEntries	= inherit.numSIDCacheEntries;
-    sidCacheFileSize	= inherit.sidCacheFileSize;
-    sidCacheWrapOffset	= inherit.sidCacheWrapOffset;
-    numCertCacheEntries	= inherit.numCertCacheEntries;
-    certCacheFileSize	= inherit.certCacheFileSize;
-
-#ifdef _WIN32
-    SIDCacheFDMAP	= inherit.SIDCacheFDMAP;
-    certCacheFDMAP	= inherit.certCacheFDMAP;
-    svrCacheSem		= inherit.svrCacheSem;
-
-#if 0
-    /* call DuplicateHandle ?? */
-    inherit.parentProcessID;
-    inherit.parentProcessHandle;
-#endif
-
-    if(!SIDCacheFDMAP) {
-    	SET_ERROR_CODE
-    	goto loser;
-    }
-    SIDCacheData = (char *)MapViewOfFile(SIDCacheFDMAP, 
-                                         FILE_MAP_ALL_ACCESS, 	/* R/W    */
-					 0, 0, 			/* offset */
-				         sidCacheFileSize);	/* size   */
-    if(!SIDCacheData) {
-	nss_MD_win32_map_default_error(GetLastError());
-    	goto loser;
-    }
-
-    if(!certCacheFDMAP) {
-    	SET_ERROR_CODE
-    	goto loser;
-    }
-    certCacheData = (char *) MapViewOfFile(certCacheFDMAP, 
-                                           FILE_MAP_ALL_ACCESS, /* R/W    */
-					   0, 0, 		/* offset */
-					   certCacheFileSize);	/* size   */
-    if(!certCacheData) {
-	nss_MD_win32_map_default_error(GetLastError());
-    	goto loser;
-    }
-
-#else /* must be unix */
-    SIDCacheFD		= inherit.SIDCacheFD;
-    certCacheFD		= inherit.certCacheFD;
-    if (SIDCacheFD < 0 || certCacheFD < 0) {
-    	SET_ERROR_CODE
-    	goto loser;
-    }
-#endif
-
-    if (!cacheLock) {
-	nss_InitLock(&cacheLock, nssILockCache);
-	if (!cacheLock) 
-	    goto loser;
-    }
     isMultiProcess = PR_TRUE;
     return SECSuccess;
 
 loser:
     if (decoString) 
 	PORT_Free(decoString);
-#if _WIN32
-    if (SIDCacheFDMAP) {
-	CloseHandle(SIDCacheFDMAP);
-	SIDCacheFDMAP = NULL;
-    }
-    if (certCacheFDMAP) {
-	CloseHandle(certCacheFDMAP);
-	certCacheFDMAP = NULL;
-    }
-#else
-    if (SIDCacheFD >= 0) {
-	close(SIDCacheFD);
-	SIDCacheFD = -1;
-    }
-    if (certCacheFD >= 0) {
-	close(certCacheFD);
-	certCacheFD = -1;
-    }
-#endif
     return SECFailure;
 
 }
+
+SECStatus
+SSL_InheritMPServerSIDCache(const char * envString)
+{
+    return SSL_InheritMPServerSIDCacheInstance(&globalCache, envString);
+}
+
+#if !defined(WIN32)
+
+#define SID_LOCK_EXPIRATION_TIMEOUT  30 /* seconds */
+
+static void
+LockPoller(void * arg)
+{
+    cacheDesc *    cache         = (cacheDesc *)arg;
+    cacheDesc *    sharedCache   = cache->sharedCache;
+    sidCacheLock * pLock;
+    PRIntervalTime timeout;
+    PRUint32       now;
+    PRUint32       then;
+    int            locks_polled  = 0;
+    int            locks_to_poll = cache->numSIDCacheLocks + 2;
+
+    timeout = PR_SecondsToInterval(SID_LOCK_EXPIRATION_TIMEOUT);
+    while(!sharedCache->stopPolling) {
+    	PR_Sleep(timeout);
+	if (sharedCache->stopPolling)
+	    break;
+
+	now   = ssl_Time();
+	then  = now - SID_LOCK_EXPIRATION_TIMEOUT;
+	for (pLock = cache->sidCacheLocks, locks_polled = 0;
+	     locks_to_poll > locks_polled && !sharedCache->stopPolling; 
+	     ++locks_polled, ++pLock ) {
+	    pid_t pid;
+
+	    if (pLock->timeStamp   < then && 
+	        pLock->timeStamp   != 0 && 
+		(pid = pLock->pid) != 0) {
+
+	    	/* maybe we should try the lock? */
+		int result = kill(pid, 0);
+		if (result < 0 && errno == ESRCH) {
+		    SECStatus rv;
+		    /* No process exists by that pid any more.
+		    ** Treat this mutex as abandoned.
+		    */
+		    pLock->timeStamp = now;
+		    pLock->pid       = 0;
+		    rv = sslMutex_Unlock(&pLock->mutex);
+		    if (rv != SECSuccess) {
+		    	/* Now what? */
+		    }
+		}
+	    }
+	} /* end of loop over locks */
+    } /* end of entire polling loop */
+}
+
+/* Launch thread to poll cache for expired locks */
+static SECStatus 
+LaunchLockPoller(cacheDesc *cache)
+{
+    PRThread * pollerThread;
+
+    pollerThread = 
+	PR_CreateThread(PR_USER_THREAD, LockPoller, cache, PR_PRIORITY_NORMAL, 
+	                PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+    if (!pollerThread) {
+    	return SECFailure;
+    }
+    cache->poller = pollerThread;
+    return SECSuccess;
+}
+#endif
 
 /************************************************************************
  *  Code dealing with shared wrapped symmetric wrapping keys below      *
  ************************************************************************/
 
-
+/* If now is zero, it implies that the lock is not held, and must be 
+** aquired here.  
+*/
 static PRBool
-getWrappingKey(PRInt32                   symWrapMechIndex,
+getSvrWrappingKey(PRInt32                symWrapMechIndex,
                SSL3KEAType               exchKeyType, 
                SSLWrappedSymWrappingKey *wswk, 
-               PRBool                    grabSharedLock)
+	       cacheDesc *               cache,
+	       PRUint32                  lockTime)
 {
-    PRUint32      offset = sidCacheWrapOffset + 
-	       ((exchKeyType * SSL_NUM_WRAP_MECHS + symWrapMechIndex) *
-		   sizeof(SSLWrappedSymWrappingKey));
-    PRBool        rv     = PR_TRUE;
-#ifdef XP_UNIX
-    off_t         lrv;
-    ssize_t       rrv;
-#endif
+    PRUint32  ndx = (exchKeyType * SSL_NUM_WRAP_MECHS) + symWrapMechIndex;
+    SSLWrappedSymWrappingKey * pwswk = cache->keyCacheData + ndx;
+    PRUint32  now = 0;
+    PRBool    rv  = PR_FALSE;
 
-    if (grabSharedLock) {
-	GET_SERVER_CACHE_READ_LOCK(SIDCacheFD, offset, sizeof *wswk);
-    }
-
-#ifdef XP_UNIX
-    lrv = lseek(SIDCacheFD, offset, SEEK_SET);
-    if (lrv != offset) {
-	if (lrv == -1) 
-	    nss_MD_unix_map_lseek_error(errno);
-	else
-	    PORT_SetError(PR_IO_ERROR);
-	    IOError(rv, "wrapping-read");
-	rv = PR_FALSE;
-    } else {
-	rrv = read(SIDCacheFD, wswk, sizeof *wswk);
-	if (rrv != sizeof *wswk) {
-	    if (rrv == -1) 
-		nss_MD_unix_map_read_error(errno);
-	    else 
-		PORT_SetError(PR_IO_ERROR);
-	    IOError(rv, "wrapping-read");
-	    rv = PR_FALSE;
+    if (!lockTime) {
+	lockTime = now = LockSidCacheLock(cache->keyCacheLock, now);
+	if (!lockTime) {
+	    return rv;
 	}
     }
-#else /* XP_WIN32 */
-    /* Use memory mapped I/O and just memcpy() the data */
-    CopyMemory(wswk, &SIDCacheData[offset], sizeof *wswk);
-#endif /* XP_WIN32 */
-    if (grabSharedLock) {
-	RELEASE_SERVER_CACHE_LOCK(SIDCacheFD, offset, sizeof *wswk);
+    if (pwswk->exchKeyType      == exchKeyType && 
+	pwswk->symWrapMechIndex == symWrapMechIndex &&
+	pwswk->wrappedSymKeyLen != 0) {
+	*wswk = *pwswk;
+	rv = PR_TRUE;
     }
-    if (rv) {
-    	if (wswk->exchKeyType      != exchKeyType || 
-	    wswk->symWrapMechIndex != symWrapMechIndex ||
-	    wswk->wrappedSymKeyLen == 0) {
-	    memset(wswk, 0, sizeof *wswk);
-	    rv = PR_FALSE;
-	}
+    if (now) {
+	UnlockSidCacheLock(cache->keyCacheLock);
     }
     return rv;
 }
@@ -1800,17 +1349,16 @@ ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
 {
     PRBool rv;
 
-    lock_cache();
-
     PORT_Assert( (unsigned)exchKeyType < kt_kea_size);
     PORT_Assert( (unsigned)symWrapMechIndex < SSL_NUM_WRAP_MECHS);
     if ((unsigned)exchKeyType < kt_kea_size &&
         (unsigned)symWrapMechIndex < SSL_NUM_WRAP_MECHS) {
-	rv = getWrappingKey(symWrapMechIndex, exchKeyType, wswk, PR_TRUE);
+	rv = getSvrWrappingKey(symWrapMechIndex, exchKeyType, wswk, 
+	                       &globalCache, 0);
     } else {
     	rv = PR_FALSE;
     }
-    unlock_cache();
+
     return rv;
 }
 
@@ -1820,17 +1368,19 @@ ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
  * the disk entry, and returns false.  
  * Otherwise, it overwrites the caller's wswk with the value obtained from 
  * the disk, and returns PR_TRUE.  
- * This is all done while holding the locks/semaphores necessary to make 
+ * This is all done while holding the locks/mutexes necessary to make 
  * the operation atomic.
  */
 PRBool
 ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
 {
-    PRBool        rv;
+    cacheDesc *   cache            = &globalCache;
+    PRBool        rv               = PR_FALSE;
     SSL3KEAType   exchKeyType      = wswk->exchKeyType;   
                                 /* type of keys used to wrap SymWrapKey*/
     PRInt32       symWrapMechIndex = wswk->symWrapMechIndex;
-    PRUint32      offset;
+    PRUint32      ndx;
+    PRUint32      now = 0;
     SSLWrappedSymWrappingKey myWswk;
 
     PORT_Assert( (unsigned)exchKeyType < kt_kea_size);
@@ -1841,57 +1391,26 @@ ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
     if ((unsigned)symWrapMechIndex >=  SSL_NUM_WRAP_MECHS)
     	return 0;
 
-    offset = sidCacheWrapOffset + 
-	       ((exchKeyType * SSL_NUM_WRAP_MECHS + symWrapMechIndex) *
-		   sizeof(SSLWrappedSymWrappingKey));
+    ndx = (exchKeyType * SSL_NUM_WRAP_MECHS) + symWrapMechIndex;
     PORT_Memset(&myWswk, 0, sizeof myWswk);	/* eliminate UMRs. */
-    lock_cache();
-    GET_SERVER_CACHE_WRITE_LOCK(SIDCacheFD, offset, sizeof *wswk);
 
-    rv = getWrappingKey(wswk->symWrapMechIndex, wswk->exchKeyType, &myWswk, 
-                        PR_FALSE);
-    if (rv) {
-	/* we found it on disk, copy it out to the caller. */
-	PORT_Memcpy(wswk, &myWswk, sizeof *wswk);
-    } else {
-	/* Wasn't on disk, and we're still holding the lock, so write it. */
-
-#ifdef XP_UNIX
-	off_t         lrv;
-	ssize_t       rrv;
-
-	lrv = lseek(SIDCacheFD, offset, SEEK_SET);
-	if (lrv != offset) {
-	    if (lrv == -1) 
-		nss_MD_unix_map_lseek_error(errno);
-	    else
-		PORT_SetError(PR_IO_ERROR);
-	    IOError(rv, "wrapping-read");
-	    rv = PR_FALSE;
+    now = LockSidCacheLock(cache->keyCacheLock, now);
+    if (now) {
+	rv = getSvrWrappingKey(wswk->symWrapMechIndex, wswk->exchKeyType, 
+	                       &myWswk, cache, now);
+	if (rv) {
+	    /* we found it on disk, copy it out to the caller. */
+	    PORT_Memcpy(wswk, &myWswk, sizeof *wswk);
 	} else {
-	    rrv = write(SIDCacheFD, wswk, sizeof *wswk);
-	    if (rrv != sizeof *wswk) {
-		if (rrv == -1) 
-		    nss_MD_unix_map_read_error(errno);
-		else 
-		    PORT_SetError(PR_IO_ERROR);
-		IOError(rv, "wrapping-read");
-		rv = PR_FALSE;
-	    }
+	    /* Wasn't on disk, and we're still holding the lock, so write it. */
+	    cache->keyCacheData[ndx] = *wswk;
 	}
-#else /* XP_WIN32 */
-	/* Use memory mapped I/O and just memcpy() the data */
-	CopyMemory(&SIDCacheData[offset], wswk, sizeof *wswk);
-#endif /* XP_WIN32 */
+	UnlockSidCacheLock(cache->keyCacheLock);
     }
-    RELEASE_SERVER_CACHE_LOCK(SIDCacheFD, offset, sizeof *wswk);
-    unlock_cache();
     return rv;
 }
 
-
-#endif /* NADA_VERISON */
-#else
+#else  /* MAC version or other platform */
 
 #include "seccomon.h"
 #include "cert.h"
@@ -1900,28 +1419,28 @@ ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
 
 SECStatus
 SSL_ConfigServerSessionIDCache(	int      maxCacheEntries, 
-				PRUint32 timeout,
+				PRUint32 ssl2_timeout,
 			       	PRUint32 ssl3_timeout, 
 			  const char *   directory)
 {
-    PR_ASSERT(!"SSL servers are not supported on the platform. (SSL_ConfigServerSessionIDCache)");    
+    PR_ASSERT(!"SSL servers are not supported on this platform. (SSL_ConfigServerSessionIDCache)");    
     return SECFailure;
 }
 
 SECStatus
 SSL_ConfigMPServerSIDCache(	int      maxCacheEntries, 
-				PRUint32 timeout,
+				PRUint32 ssl2_timeout,
 			       	PRUint32 ssl3_timeout, 
 		          const char *   directory)
 {
-    PR_ASSERT(!"SSL servers are not supported on the platform. (SSL_ConfigMPServerSIDCache)");    
+    PR_ASSERT(!"SSL servers are not supported on this platform. (SSL_ConfigMPServerSIDCache)");    
     return SECFailure;
 }
 
 SECStatus
 SSL_InheritMPServerSIDCache(const char * envString)
 {
-    PR_ASSERT(!"SSL servers are not supported on the platform. (SSL_InheritMPServerSIDCache)");    
+    PR_ASSERT(!"SSL servers are not supported on this platform. (SSL_InheritMPServerSIDCache)");    
     return SECFailure;
 }
 
@@ -1931,7 +1450,7 @@ ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
 		    SSLWrappedSymWrappingKey *wswk)
 {
     PRBool rv = PR_FALSE;
-    PR_ASSERT(!"SSL servers are not supported on the platform. (ssl_GetWrappingKey)");    
+    PR_ASSERT(!"SSL servers are not supported on this platform. (ssl_GetWrappingKey)");    
     return rv;
 }
 
@@ -1941,14 +1460,14 @@ ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
  * the disk entry, and returns false.  
  * Otherwise, it overwrites the caller's wswk with the value obtained from 
  * the disk, and returns PR_TRUE.  
- * This is all done while holding the locks/semaphores necessary to make 
+ * This is all done while holding the locks/mutexes necessary to make 
  * the operation atomic.
  */
 PRBool
 ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
 {
     PRBool        rv = PR_FALSE;
-    PR_ASSERT(!"SSL servers are not supported on the platform. (ssl_SetWrappingKey)");
+    PR_ASSERT(!"SSL servers are not supported on this platform. (ssl_SetWrappingKey)");
     return rv;
 }
 

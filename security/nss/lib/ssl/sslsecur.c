@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.11 2001/05/08 23:12:32 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.12 2001/06/09 03:18:08 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -1239,7 +1239,7 @@ SSL_GetSessionID(PRFileDesc *fd)
 	    sid = ss->sec->ci.sid;
 	    item = (SECItem *)PORT_Alloc(sizeof(SECItem));
 	    if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-		item->len = SSL_SESSIONID_BYTES;
+		item->len = SSL2_SESSIONID_BYTES;
 		item->data = (unsigned char*)PORT_Alloc(item->len);
 		PORT_Memcpy(item->data, sid->u.ssl2.sessionID, item->len);
 	    } else {
