@@ -312,7 +312,6 @@ real_checkout:
 	cvs_co() { echo "$$@" ; \
 	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
 	  if test -f $$failed; then false; else true; fi; }; \
-        cvs_co $(CVSCO_L10N) && \
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_PSM) && \
         cvs_co $(CVSCO_LDAPCSDK) && \
