@@ -388,7 +388,6 @@ NS_IMETHODIMP oeICalContainerImpl::SetBatchMode(PRBool aBatchMode)
                 #endif
             }
             else {
-                nsresult rv;
                 rv = tmpobserver->OnEndBatch();
                 #ifdef ICAL_DEBUG
                 if( NS_FAILED( rv ) ) {
