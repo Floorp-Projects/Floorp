@@ -1596,5 +1596,22 @@ const char* lookupStr(const char *s)
     return s;
 }
 
+#ifdef NS_DEBUG
+
+void
+DumpProperties(VObject *o)
+{
+  return;
+
+  VObjectIterator i;
+  initPropIterator(&i,o);
+  while (moreIteration(&i)) 
+  {
+    VObject *each = nextVObject(&i);
+    // printf("ID = %s Value = [%s]\n", each->id, fakeCString(vObjectUStringZValue(each)));
+  }
+}
+
+#endif
 
 /* end of source file vobject.c */
