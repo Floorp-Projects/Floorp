@@ -93,7 +93,8 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
         if (Param("usetargetmilestone")) {
             print "<TD><B>Target milestone:</B>$target_milestone\n";
         }
-        print "<TR><TD COLSPAN=6><B>URL:</B> " . html_quote($url) . "\n";
+        print "<TR><TD COLSPAN=6><B>URL:</B>&nbsp;";
+	print "<A HREF=\"" . $url . "\">" .  html_quote($url) . "</A>\n"; 
         print "<TR><TD COLSPAN=6><B>Summary:</B> " . html_quote($shortdesc) . "\n";
         if (Param("usestatuswhiteboard")) {
             print "<TR><TD COLSPAN=6><B>Status Whiteboard:" .
