@@ -723,7 +723,7 @@ pre_call_clean_up:
         }
         oldsp = fp->sp;
         fp->sp = sp;
-        success = js_Invoke(cx, argc, JS_FALSE);
+        success = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
         result = fp->sp[-1];
         fp->sp = oldsp;
         if(oldfp != fp)
