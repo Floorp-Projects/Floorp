@@ -61,6 +61,7 @@ my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
                "url" => \&bot_urls,
+               "(stocks|stock)" => \&bot_stocks,
                );
 
 my %pubcmds = (
@@ -71,7 +72,7 @@ my %pubcmds = (
                "up" => \&bot_up,
                "(trees|tree)" => \&bot_tinderbox,
                "debug" => \&bot_debug,
-               "(stocks|stock)" => \&bot_stocks,
+               "(stocks|stock)" => \&bot_pub_stocks,
                "(translate|xlate|x)" => \&bot_translate,
                );
 
@@ -305,10 +306,10 @@ sub on_msg {
             return;
         }
     }
-    if (do_command(\%pubcmds, $nick, $cmd, $rest)) {
+    if (do_command(\%msgcmds, $nick, $cmd, $rest)) {
         return;
     }
-    if (do_command(\%msgcmds, $nick, $cmd, $rest)) {
+    if (do_command(\%pubcmds, $nick, $cmd, $rest)) {
         return;
     }
     do_unknown($nick, $cmd, $rest);
@@ -1083,6 +1084,12 @@ sub bot_stocks {
             }
         }
     }
+}
+
+sub bot_pub_stocks {
+    my ($nick, $cmd, $rest) = (@_);
+    bot_stocks(::$speaker, $cmd, $rest);
+    sendmsg($nick, "[ Stocks sent to $::speaker. In the future, use \"/msg mozbot stocks\" ]");
 }
 
 sub translate_usage {
