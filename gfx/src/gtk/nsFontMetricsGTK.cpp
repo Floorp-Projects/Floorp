@@ -860,28 +860,6 @@ static PLHashTable* gCharSets = nsnull;
 
 static nsFontCharSetInfo Ignore = { nsnull };
 
-static void
-SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
-{
-  nsresult result;
-  NS_WITH_SERVICE(nsICharsetConverterManager, manager,
-    NS_CHARSETCONVERTERMANAGER_PROGID, &result);
-  if (manager && NS_SUCCEEDED(result)) {
-    nsAutoString charset(aSelf->mCharSet);
-    nsIUnicodeEncoder* converter = nsnull;
-    result = manager->GetUnicodeEncoder(&charset, &converter);
-    if (converter && NS_SUCCEEDED(result)) {
-      aSelf->mConverter = converter;
-      result = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
-        nsnull, '?');
-      nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
-      if (mapper) {
-        result = mapper->FillInfo(aSelf->mMap);
-      }
-    }
-  }
-}
-
 static gint
 SingleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
   PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
@@ -907,6 +885,42 @@ DoubleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
   // XXX do high-bit if font requires it
 
   return count;
+}
+
+static void
+SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
+{
+  nsresult result;
+  NS_WITH_SERVICE(nsICharsetConverterManager, manager,
+    NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+  if (manager && NS_SUCCEEDED(result)) {
+    nsAutoString charset(aSelf->mCharSet);
+    nsIUnicodeEncoder* converter = nsnull;
+    result = manager->GetUnicodeEncoder(&charset, &converter);
+    if (converter && NS_SUCCEEDED(result)) {
+      aSelf->mConverter = converter;
+      result = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
+        nsnull, '?');
+      nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
+      if (mapper) {
+        result = mapper->FillInfo(aSelf->mMap);
+
+        /*
+         * XXX This is a bit of a hack. Documents containing the CP1252
+         * extensions of Latin-1 (e.g. smart quotes) will display with those
+         * special characters way too large. This is because they happen to
+         * be in these large double byte fonts. So, we disable those
+         * characters here. Revisit this decision later.
+         */
+        if (aSelf->Convert == DoubleByteConvert) {
+          PRUint32* map = aSelf->mMap;
+          for (PRUint16 i = 0; i < (0x3000 >> 5); i++) {
+            map[i] = 0;
+          }
+        }
+      }
+    }
+  }
 }
 
 static nsFontCharSetInfo CP1251 =
