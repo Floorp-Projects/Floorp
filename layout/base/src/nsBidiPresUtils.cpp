@@ -60,9 +60,8 @@ nsBidiPresUtils::nsBidiPresUtils() : mSuccess(NS_ERROR_FAILURE),
                                      mIndexMap(nsnull),
                                      mLevels(nsnull)
 {
-  nsCOMPtr<nsIBidi> bidiEngine = do_GetService("@mozilla.org/intl/bidi;1");
-  if (bidiEngine) {
-    mBidiEngine = bidiEngine;
+  mBidiEngine = do_GetService("@mozilla.org/intl/bidi;1");
+  if (mBidiEngine) {
     mSuccess = NS_OK;
   }
 }
@@ -841,11 +840,10 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
 {
   nsresult rv;
   if (!mUnicodeUtils) {
-    nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
-    if (!bidiUtils) {
+    mUnicodeUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
+    if (!mUnicodeUtils) {
       return NS_ERROR_FAILURE;
     }
-    mUnicodeUtils = bidiUtils;
   }
 // ahmed 
       //adjusted for correct numeral shaping  
@@ -1023,6 +1021,7 @@ nsresult nsBidiPresUtils::GetBidiEngine(nsIBidi** aBidiEngine)
   nsresult rv = NS_ERROR_FAILURE;
   if (mBidiEngine) {
     *aBidiEngine = mBidiEngine;
+    NS_ADDREF(*aBidiEngine);
     rv = NS_OK;
   }
   return rv; 
