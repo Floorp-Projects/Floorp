@@ -461,11 +461,11 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       if(NS_SUCCEEDED(result))
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         nsAutoString endTag(NS_EnumToTag(theTag));
-        CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
         endTag.Insert("</",0,2);
         endTag.Append(">");        
         CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag,endTag);
         result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(eHTMLTag_style==theTag),aScanner,endTag);  //tell new token to finish consuming text...    
+        CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
         AddToken(textToken,result,mTokenDeque,theRecycler);
         AddToken(endToken,result,mTokenDeque,theRecycler);
       }
