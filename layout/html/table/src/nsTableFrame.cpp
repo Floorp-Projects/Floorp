@@ -2983,8 +2983,9 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
                                          aReflowState.reflowState, kidFrame,
                                          nsSize(0,0), eReflowReason_Resize);
         nsHTMLReflowMetrics unusedDesiredSize(nsnull);
+        nsReflowStatus      status;
         ReflowChild(kidFrame, aPresContext, unusedDesiredSize, kidReflowState,
-                    0, 0, 0, aStatus);
+                    0, 0, 0, status);
         kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     }
 
