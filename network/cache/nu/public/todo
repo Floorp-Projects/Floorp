@@ -1,0 +1,6 @@
+
+move the following files here-
+
+nsCacheManager.h
+nsCacheModule.h
+nsMemModule.h not if memmodule is being made in nsCacheManager
