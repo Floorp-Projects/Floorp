@@ -71,7 +71,6 @@ private:
   IL_GroupContext *mGroupContext;
   nsVoidArray *mObservers;
   nsIDeviceContext *mDeviceContext;
-  IL_ColorSpace *mColorSpace;
   ilINetContext* mNetContext;
 };
 
@@ -103,10 +102,6 @@ ImageGroupImpl::~ImageGroupImpl()
     IL_DestroyGroupContext(mGroupContext);
   }
   
-  if (mColorSpace != nsnull) {
-    IL_ReleaseColorSpace(mColorSpace);
-  }
-
   NS_IF_RELEASE(mManager);
   NS_IF_RELEASE(mNetContext);
 }
@@ -137,20 +132,22 @@ ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext)
   mDeviceContext = aDeviceContext;
   NS_ADDREF(mDeviceContext);
 
-  // Ask the device context to create a color space.
-  // XXX We should ask the device context to get its color space
-  // rather than having it create a color space for us...
-  mDeviceContext->CreateILColorSpace(mColorSpace);
+  // Get color space to use for this device context.
+  IL_ColorSpace*  colorSpace;
+
+  mDeviceContext->GetILColorSpace(colorSpace);
 
   // Set the image group context display mode
   IL_DisplayData displayData;
 	displayData.dither_mode = IL_Auto;
-  displayData.color_space = mColorSpace;
+  displayData.color_space = colorSpace;
   displayData.progressive_display = PR_TRUE;
   IL_SetDisplayMode(mGroupContext, 
                     IL_COLOR_SPACE | IL_PROGRESSIVE_DISPLAY | IL_DITHER_MODE,
                     &displayData);
 
+  // Release the color space
+  IL_ReleaseColorSpace(colorSpace);
   return NS_OK;
 }
 

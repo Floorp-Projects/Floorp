@@ -29,234 +29,172 @@ static NS_DEFINE_IID(kIImageRendererIID, IL_IIMAGERENDERER_IID);
 
 class ImageRendererImpl : public ilIImageRenderer {
 public:
-  static IL_ColorSpace *sPseudoColorSpace;
-  
   ImageRendererImpl();
-  ~ImageRendererImpl();
 
   NS_DECL_ISUPPORTS
 
   virtual void NewPixmap(void* aDisplayContext, 
-			 PRInt32 aWidth, PRInt32 aHeight, 
-			 IL_Pixmap* aImage, IL_Pixmap* aMask);
+			                   PRInt32 aWidth, PRInt32 aHeight, 
+			                   IL_Pixmap* aImage, IL_Pixmap* aMask);
 
   virtual void UpdatePixmap(void* aDisplayContext, 
-			    IL_Pixmap* aImage, 
-			    PRInt32 aXOffset, PRInt32 aYOffset, 
-			    PRInt32 aWidth, PRInt32 aHeight);
+			                      IL_Pixmap* aImage, 
+			                      PRInt32 aXOffset, PRInt32 aYOffset, 
+			                      PRInt32 aWidth, PRInt32 aHeight);
 
   virtual void ControlPixmapBits(void* aDisplayContext, 
-				 IL_Pixmap* aImage, PRUint32 aControlMsg);
+				                         IL_Pixmap* aImage, PRUint32 aControlMsg);
 
   virtual void DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage);
   
   virtual void DisplayPixmap(void* aDisplayContext, 
-			     IL_Pixmap* aImage, IL_Pixmap* aMask, 
-			     PRInt32 aX, PRInt32 aY, 
-			     PRInt32 aXOffset, PRInt32 aYOffset, 
-			     PRInt32 aWidth, PRInt32 aHeight);
+                  			     IL_Pixmap* aImage, IL_Pixmap* aMask, 
+                  			     PRInt32 aX, PRInt32 aY, 
+                  			     PRInt32 aXOffset, PRInt32 aYOffset, 
+                  			     PRInt32 aWidth, PRInt32 aHeight);
 
   virtual void DisplayIcon(void* aDisplayContext, 
-			   PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber);
+			                     PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber);
 
   virtual void GetIconDimensions(void* aDisplayContext, 
-				 PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
-				 PRUint32 aIconNumber);
+                        				 PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
+                        				 PRUint32 aIconNumber);
 };
-
-IL_ColorSpace *ImageRendererImpl::sPseudoColorSpace = nsnull;
 
 ImageRendererImpl::ImageRendererImpl()
 {
   NS_INIT_REFCNT();
 }
 
-ImageRendererImpl::~ImageRendererImpl()
-{
-}
-
 NS_IMPL_ISUPPORTS(ImageRendererImpl, kIImageRendererIID)
-
 
 void 
 ImageRendererImpl::NewPixmap(void* aDisplayContext, 
-			     PRInt32 aWidth, PRInt32 aHeight, 
-			     IL_Pixmap* aImage, IL_Pixmap* aMask)
+			                       PRInt32 aWidth, PRInt32 aHeight, 
+                      	     IL_Pixmap* aImage, IL_Pixmap* aMask)
 {
-    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
-    nsIImage  *img;
-    nsresult  rv;
+  nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
+  nsIImage  *img;
+  nsresult  rv;
 
-    static NS_DEFINE_IID(kImageCID, NS_IMAGE_CID);
-    static NS_DEFINE_IID(kImageIID, NS_IIMAGE_IID);
+  static NS_DEFINE_IID(kImageCID, NS_IMAGE_CID);
+  static NS_DEFINE_IID(kImageIID, NS_IIMAGE_IID);
 
-    rv = NSRepository::CreateInstance(kImageCID, nsnull, kImageIID, (void **)&img);
-
-    if (NS_OK != rv)
-        return;
-
-    PRInt32 depth;
-    if (aImage->header.color_space->pixmap_depth == 8) {
-        depth = 8;
-    }
-    else {
-        depth = 24;
-    }
-
-  // XXX When the other platforms implement GetDepth() then remove the
-  // XP_WIN ifdef
-#ifdef XP_WIN
-  PRUint32  deviceDepth;
-  dc->GetDepth(deviceDepth);
-
-  if ((8 == depth) && (deviceDepth > (PRUint32)depth)) {
-    // Don't force dithering to the color cube...
-    depth = 24;
+  // Create a new image object
+  rv = NSRepository::CreateInstance(kImageCID, nsnull, kImageIID, (void **)&img);
+  if (NS_OK != rv) {
+    // XXX What about error handling?
+    return;
   }
-#endif
 
-    img->Init(aWidth, aHeight, depth, 
-	      (aMask == nsnull) ? nsMaskRequirements_kNoMask : 
-	                          nsMaskRequirements_kNeeds1Bit);
+  // Have the image match the depth and color space associated with the
+  // device.
+  // XXX We probably don't want to do that for monomchrome images (e.g., XBM)
+  // or one-bit deep GIF images.
+  PRInt32 depth;
+  IL_ColorSpace *colorSpace;
 
-    aImage->bits = img->GetBits();
-    aImage->client_data = img;
-    // We don't need to add a reference here, because we're already holding
-    // a reference, because of the call above to the repository to create the
-    // nsIImage*
-    aImage->header.width = aWidth;
-    aImage->header.height = aHeight;
-    aImage->header.widthBytes = img->GetLineStride();
+  dc->GetILColorSpace(colorSpace);
+  depth = colorSpace->pixmap_depth;
 
-    if (aMask) {
-        aMask->bits = img->GetAlphaBits();
-        aMask->client_data = img;
-        // Make sure you add another reference here, because when the mask's
-        // pixmap is destroyed the reference will be released
-        NS_ADDREF(img);
-        aMask->header.width = aWidth;
-        aMask->header.height = aHeight;
+  // Initialize the image object
+  img->Init(aWidth, aHeight, depth, (aMask == nsnull) ? nsMaskRequirements_kNoMask : 
+	          nsMaskRequirements_kNeeds1Bit);
+
+  // Update the pixmap image and mask information
+  aImage->bits = img->GetBits();
+  aImage->client_data = img;  // we don't need to add a ref here, because there's
+                              // already one from the call to create the image object
+  aImage->header.width = aWidth;
+  aImage->header.height = aHeight;
+  aImage->header.widthBytes = img->GetLineStride();
+
+  if (aMask) {
+    aMask->bits = img->GetAlphaBits();
+    aMask->client_data = img;
+    // We must add another reference here, because when the mask's pixmap is
+    // destroyed it will release a reference
+    NS_ADDREF(img);
+    aMask->header.width = aWidth;
+    aMask->header.height = aHeight;
+  }
+
+  // Replace the existing color space with the color space associated
+  // with the device.
+  IL_ReleaseColorSpace(aImage->header.color_space);
+  aImage->header.color_space = colorSpace;
+
+  // XXX Why do we do this on a per-image basis?
+  if (8 == depth) {
+    IL_ColorMap *cmap = &colorSpace->cmap;
+    nsColorMap *nscmap = img->GetColorMap();
+    PRUint8 *mapptr = nscmap->Index;
+    int i;
+                
+    for (i=0; i < cmap->num_colors; i++) {
+      *mapptr++ = cmap->map[i].red;
+      *mapptr++ = cmap->map[i].green;
+      *mapptr++ = cmap->map[i].blue;
     }
 
-    if (8 == depth) {
-        IL_ColorMap *cmap;
-        if (sPseudoColorSpace == nsnull) {
-#ifdef XP_WIN
-            // This needs to match the logical palette
-            // XXX Clean this up to use the one and only color space
-            // the device manager should hold...
-            IL_RGB  reserved[10];
-            memset(reserved, 0, sizeof(reserved));
-            cmap = IL_NewCubeColorMap(reserved, 10, 216 + 10);
-#else
-            cmap = IL_NewCubeColorMap(nsnull, 0, 216);
-#endif
-            
-            if (cmap != nsnull) {
-                sPseudoColorSpace = IL_CreatePseudoColorSpace(cmap, 8, 8);
+    img->ImageUpdated(dc, nsImageUpdateFlags_kColorMapChanged, nsnull);
                 
-                if (sPseudoColorSpace == nsnull) {
-                    IL_DestroyColorMap(cmap);
-                    
-                    // XXX We should do something here
-                    return;
-                }
-            }
-            else {
-                // XXX We should do something here
-                return;
-            }
-        }
-        IL_AddRefToColorSpace(sPseudoColorSpace);
-        IL_ReleaseColorSpace(aImage->header.color_space);
-        aImage->header.color_space = sPseudoColorSpace;
-
-        cmap = &sPseudoColorSpace->cmap;
-        nsColorMap *nscmap = img->GetColorMap();
-        PRUint8 *mapptr = nscmap->Index;
-        int i;
-                
-        for (i=0; i < cmap->num_colors; i++) {
-          *mapptr++ = cmap->map[i].red;
-          *mapptr++ = cmap->map[i].green;
-          *mapptr++ = cmap->map[i].blue;
-        }
-
-        img->ImageUpdated(dc, nsImageUpdateFlags_kColorMapChanged, nsnull);
-                
-        if (aImage->header.transparent_pixel) {
-            PRUint8 red, green, blue;
-            PRUint8 *lookup_table = (PRUint8 *)aImage->header.color_space->cmap.table;
-            red = aImage->header.transparent_pixel->red;
-            green = aImage->header.transparent_pixel->green;
-            blue = aImage->header.transparent_pixel->blue;
-            aImage->header.transparent_pixel->index =  
-              lookup_table[((red >> 3) << 10) |
-                          ((green >> 3) << 5) |
-                          (blue >> 3)];
-        }
+    if (aImage->header.transparent_pixel) {
+      PRUint8 red, green, blue;
+      PRUint8 *lookup_table = (PRUint8 *)aImage->header.color_space->cmap.table;
+      red = aImage->header.transparent_pixel->red;
+      green = aImage->header.transparent_pixel->green;
+      blue = aImage->header.transparent_pixel->blue;
+      aImage->header.transparent_pixel->index = lookup_table[((red >> 3) << 10) |
+                                                             ((green >> 3) << 5) |
+                                                             (blue >> 3)];
     }
-    else {
-        IL_RGBBits colorRGBBits;
-        IL_ColorSpace *colorSpace;
-        
-        // XXX We shouldn't be creating a new color space for pixmap. Change it
-        // to ask the device context for its color space
-        colorRGBBits.red_shift = 16;  
-        colorRGBBits.red_bits = 8;
-        colorRGBBits.green_shift = 8;
-        colorRGBBits.green_bits = 8; 
-        colorRGBBits.blue_shift = 0; 
-        colorRGBBits.blue_bits = 8;  
-        colorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-        IL_ReleaseColorSpace(aImage->header.color_space);
-        aImage->header.color_space = colorSpace;
-    }
+  }
 }
 
 void 
 ImageRendererImpl::UpdatePixmap(void* aDisplayContext, 
-				IL_Pixmap* aImage, 
-				PRInt32 aXOffset, PRInt32 aYOffset, 
-				PRInt32 aWidth, PRInt32 aHeight)
+				                        IL_Pixmap* aImage, 
+				                        PRInt32 aXOffset, PRInt32 aYOffset, 
+				                        PRInt32 aWidth, PRInt32 aHeight)
 {
-    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
-    nsIImage         *img = (nsIImage *)aImage->client_data;
-    nsRect            drect(aXOffset, aYOffset, aWidth, aHeight);
+  nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
+  nsIImage         *img = (nsIImage *)aImage->client_data;
+  nsRect            drect(aXOffset, aYOffset, aWidth, aHeight);
 
-    img->ImageUpdated(dc, nsImageUpdateFlags_kBitsChanged, &drect);
+  img->ImageUpdated(dc, nsImageUpdateFlags_kBitsChanged, &drect);
 }
 
 void 
 ImageRendererImpl::ControlPixmapBits(void* aDisplayContext, 
-				     IL_Pixmap* aImage, PRUint32 aControlMsg)
+				                             IL_Pixmap* aImage, PRUint32 aControlMsg)
 {
-    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
-    nsIImage *img = (nsIImage *)aImage->client_data;
+  nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
+  nsIImage *img = (nsIImage *)aImage->client_data;
 
-    if (aControlMsg == IL_RELEASE_BITS) {
-      img->Optimize(dc);
-    }
+  if (aControlMsg == IL_RELEASE_BITS) {
+    img->Optimize(dc);
+  }
 }
 
 void 
 ImageRendererImpl::DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)
 {
-    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
-    nsIImage *img = (nsIImage *)aImage->client_data;
+  nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
+  nsIImage *img = (nsIImage *)aImage->client_data;
 
-    aImage->client_data = nsnull;
-    if (img) {
-        NS_RELEASE(img);
-    }
+  aImage->client_data = nsnull;
+  if (img) {
+    NS_RELEASE(img);
+  }
 }
   
 void 
 ImageRendererImpl::DisplayPixmap(void* aDisplayContext, 
-				 IL_Pixmap* aImage, IL_Pixmap* aMask, 
-				 PRInt32 aX, PRInt32 aY, 
-				 PRInt32 aXOffset, PRInt32 aYOffset, 
-				 PRInt32 aWidth, PRInt32 aHeight)
+				                         IL_Pixmap* aImage, IL_Pixmap* aMask, 
+                        				 PRInt32 aX, PRInt32 aY, 
+                        				 PRInt32 aXOffset, PRInt32 aYOffset, 
+                        				 PRInt32 aWidth, PRInt32 aHeight)
 {
   // Image library doesn't drive the display process.
   // XXX Why is this part of the API?
@@ -264,15 +202,15 @@ ImageRendererImpl::DisplayPixmap(void* aDisplayContext,
 
 void 
 ImageRendererImpl::DisplayIcon(void* aDisplayContext, 
-			       PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber)
+			                         PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber)
 {
   // XXX Why is this part of the API?
 }
 
 void 
 ImageRendererImpl::GetIconDimensions(void* aDisplayContext, 
-				     PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
-				     PRUint32 aIconNumber)
+				                             PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
+                        				     PRUint32 aIconNumber)
 {
   // XXX Why is this part of the API?
 }
@@ -287,9 +225,8 @@ NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult)
 
   ilIImageRenderer *renderer = new ImageRendererImpl();
   if (renderer == nsnull) {
-        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return renderer->QueryInterface(kIImageRendererIID, 
-                                  (void **) aInstancePtrResult);
+  return renderer->QueryInterface(kIImageRendererIID, (void **)aInstancePtrResult);
 }

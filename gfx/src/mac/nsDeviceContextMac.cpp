@@ -437,7 +437,7 @@ nsresult nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName)
   return NS_OK;
 }
 
-nsresult nsDeviceContextMac :: CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+nsresult nsDeviceContextMac :: GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   return nsnull;
 }
