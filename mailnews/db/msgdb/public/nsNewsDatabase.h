@@ -77,12 +77,6 @@ public:
   virtual nsresult  AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
   nsresult          SyncWithReadSet();
   
-  // used to handle filters editing on open news groups.
-  //static void			NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
-  void					ClearFilterList();	// filter was changed by user.
-  void					OpenFilterList();
-  // void               OnFolderFilterListChanged(MSG_FolderInfo *folder);
-
   NS_IMETHOD GetDefaultViewFlags(nsMsgViewFlagsTypeValue *aDefaultViewFlags);
   NS_IMETHOD GetDefaultSortType(nsMsgViewSortTypeValue *aDefaultSortType);
 

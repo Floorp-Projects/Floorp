@@ -281,20 +281,6 @@ nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// used to handle filters editing on open news groups.
-//	static void				NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
-void nsNewsDatabase::ClearFilterList()
-{
-  // filter was changed by user.
-  return;
-}
-void nsNewsDatabase::OpenFilterList()
-{
-  return;
-}
-//void OnFolderFilterListChanged(MSG_FolderInfo *folder);
-//caller needs to free
-
 // should we thread messages with common subjects that don't start with Re: together?
 // I imagine we might have separate preferences for mail and news, so this is a virtual method.
 PRBool	
