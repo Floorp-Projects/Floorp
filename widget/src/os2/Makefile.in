@@ -46,6 +46,10 @@ REQUIRES	= gfx \
 		  webbrowserpersist \
 		  $(NULL)
 
+ifdef BUILD_STATIC_LIBS
+EXPORTS		= wdgtos2rc.h
+endif
+
 CPPSRCS		= \
 		nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
