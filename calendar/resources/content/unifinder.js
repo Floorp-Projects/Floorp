@@ -472,6 +472,7 @@ var treeView =
    selectedColumn : null,
    sortDirection : null,
    sortStartedTime : new Date().getTime(), // updated just before sort
+   outParameter : new Object(),  // used to obtain dates during sort
 
    isContainer : function(){return false;},
    getCellProperties : function(){return false;},
@@ -611,10 +612,14 @@ function compareEvents( eventA, eventB )
          return compareString(eventA.title,  eventB.title) * modifier;
       
       case "unifinder-search-results-tree-col-startdate":
-         return compareDate(eventA.start, eventB.start) * modifier;
+        var msNextStartA = msNextOrPreviousRecurrenceStart(eventA);
+        var msNextStartB = msNextOrPreviousRecurrenceStart(eventB);
+        return compareMSTime(msNextStartA, msNextStartB) * modifier;
    
       case "unifinder-search-results-tree-col-enddate":
-         return compareDate(eventA.end, eventB.end) * modifier;
+        var msNextEndA = msNextOrPreviousRecurrenceEnd(eventA);
+        var msNextEndB = msNextOrPreviousRecurrenceEnd(eventB);
+        return compareMSTime(msNextEndA, msNextEndB) * modifier;
    
       case "unifinder-search-results-tree-col-categories":
          return compareString(eventA.categories, eventB.categories) * modifier;
@@ -641,12 +646,29 @@ function nullToEmpty(value) {
   return value == null? "" : value;
 }
 
-function compareDate(a, b) {
-  a = dateToMilliseconds(a);
-  b = dateToMilliseconds(b);
+function compareMSTime(a, b) {
   return ((a < b) ? -1 :      // avoid underflow problems of subtraction
           (a > b) ?  1 : 0); 
 }
+
+function msNextOrPreviousRecurrenceStart( calendarEvent ) {
+  if (calendarEvent.recur && calendarEvent.start) {
+    treeView.outParameter.value = null; // avoid creating objects during sort
+    if (calendarEvent.getNextRecurrence(treeView.sortStartedTime,
+                                         treeView.outParameter) ||
+        calendarEvent.getPreviousOccurrence(treeView.sortStartedTime,
+                                            treeView.outParameter))
+      return treeView.outParameter.value;
+  } 
+  return dateToMilliseconds(calendarEvent.start);
+}
+
+function msNextOrPreviousRecurrenceEnd(event) {
+  var msNextStart = msNextOrPreviousRecurrenceStart(event);
+  var msDuration=dateToMilliseconds(event.end)-dateToMilliseconds(event.start);
+  return msNextStart + msDuration;
+}
+
 function dateToMilliseconds(date) {
   // Treat null/0 as 'now' when sort started, so incomplete tasks stay current.
   // Time is computed once per sort (just before sort) so sort is stable.
