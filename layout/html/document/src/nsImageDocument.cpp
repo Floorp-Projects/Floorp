@@ -70,6 +70,7 @@ public:
   nsresult EndLayout(nsISupports *ctxt, 
                         nsresult status, 
                         const PRUnichar *errorMsg);
+  nsresult UpdateTitle( void );
 
   void StartLayout();
 
@@ -183,7 +184,7 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
   // Create synthetic document
   rv = CreateSyntheticDocument();
   if (NS_OK != rv) {
@@ -229,17 +230,15 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
   // Finally, start the layout going
   StartLayout();
 
+  // now update the title
+  UpdateTitle();
+
   return NS_OK;
 }
 
 nsresult
 nsImageDocument::CreateSyntheticDocument()
 {
-  // XXX Set title to "GIF image widthxheight pixels - Netscape"
-
-  // Wire up an image load request to the document
-//  mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor, 0, 0, 0);
-
   // Synthesize an html document that refers to the image
   nsresult rv;
   nsIHTMLContent* root;
@@ -329,15 +328,41 @@ nsImageDocument::EndLayout(nsISupports *ctxt,
                            nsresult status, 
                            const PRUnichar *errorMsg)
 {
-  nsString titleStr = "Image ";
+  // unused...
+  ctxt;
+  status;
+  errorMsg;
+
+  // title was being set here but this is never called...
+  //  (see UpdateTitle: work is done there now)
+
+  return NS_OK;
+}
+
+
+// NOTE: call this AFTER the shell has been installed as an observer of the 
+//       document so the update notification gets processed by the shell 
+//       and it updates the titlebar
+nsresult nsImageDocument::UpdateTitle( void )
+{
+  nsString titleStr;
+  // get the title from the Document (in case there was a previously set title )
+  GetTitle( titleStr );
+  // append the image information...
+  titleStr.Append( "Image" );
   if (mImageRequest) {
     PRUint32 width, height;
     mImageRequest->GetNaturalDimensions(&width, &height);
-    titleStr.Append((PRInt32)width);
-    titleStr.Append("x");
-    titleStr.Append((PRInt32)height);
-    titleStr.Append(" pixels");
+    // if we got a valid size (often we do not) then display it
+    if (width != 0 && height != 0){
+      titleStr.Append( " " );
+      titleStr.Append((PRInt32)width);
+      titleStr.Append("x");
+      titleStr.Append((PRInt32)height);
+      titleStr.Append(" pixels");
+    }
   } 
+  // set it on the document
   SetTitle(titleStr);
   return NS_OK;
 }
