@@ -693,6 +693,11 @@ COOKIE_GetCookie(nsIURI * address) {
   if NS_FAILED(address->SchemeIs("https", &isSecure))
       isSecure = PR_TRUE;
 
+  /* Don't let ftp sites read cookies (could be a security issue) */
+  PRBool isFtp;
+  if (NS_FAILED(address->SchemeIs("ftp", &isFtp)) || isFtp)
+      return nsnull;
+
   /* search for all cookies */
   if (cookie_list == nsnull) {
     return nsnull;
@@ -1069,6 +1074,11 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
   if (NS_FAILED(rv)) {
     return;
   }
+
+  /* Don't let ftp sites set cookies (could be a security issue) */
+  PRBool isFtp;
+  if (NS_FAILED(curURL->SchemeIs("ftp", &isFtp)) || isFtp)
+      return;
 
   rv = curURL->GetPath(cur_path);
   if (NS_FAILED(rv)) {
