@@ -20,6 +20,7 @@
 #include "nsFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIChromeRegistry.h"
+#include "nsIRDFXMLDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsCRT.h"
 #include "rdf.h"
@@ -37,9 +38,9 @@ static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID, NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID, NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_IID(kIRDFIntIID, NS_IRDFINT_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 #define CHROME_NAMESPACE_URI "http://chrome.mozilla.org/rdf#"
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, chrome);
@@ -492,6 +493,12 @@ nsChromeRegistry::Init(const char* uri)
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv)) return rv;
 
+      rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                              nsnull,
+                                              nsIRDFXMLDataSource::GetIID(),
+                                              (void**) &mInner);
+      if (NS_FAILED(rv)) return rv;
+
       // Retrieve the mInner data source.
       nsSpecialSystemDirectory chromeFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
       chromeFile += "chrome";
@@ -500,9 +507,15 @@ nsChromeRegistry::Init(const char* uri)
       nsFileURL chromeURL(chromeFile);
       const char* innerURI = chromeURL.GetAsString();
 
-      // Try to create the new data source.
-      if (NS_FAILED(rv = gRDFService->GetDataSource(innerURI, &mInner))) 
-        return rv;
+      rv = mInner->Init(innerURI);
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIRDFXMLDataSource> xmlds = do_QueryInterface(mInner);
+      if (! xmlds)
+          return NS_ERROR_FAILURE;
+
+      // We need to read this synchronously.
+      rv = xmlds->Open(PR_TRUE);
   }
   
   return rv;
