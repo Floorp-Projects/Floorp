@@ -35,6 +35,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgressListener.h"
+#include "nsIChannel.h"
 #include "nsTimer.h"
 #include "nsWeakReference.h"
 

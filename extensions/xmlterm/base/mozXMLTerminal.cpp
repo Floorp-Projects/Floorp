@@ -224,7 +224,8 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell, &result));
     if (NS_FAILED(result)) return result;
 
-    result = progress->AddProgressListener((nsIWebProgressListener*)this);
+    result = progress->AddProgressListener((nsIWebProgressListener*)this,
+                                           nsIWebProgress::NOTIFY_STATE_REQUEST);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
@@ -1035,7 +1036,7 @@ NS_IMETHODIMP mozXMLTerminal::ExportHTML(const PRUnichar* aFilename,
 NS_IMETHODIMP
 mozXMLTerminal::OnStateChange(nsIWebProgress* aWebProgress, 
                    nsIRequest *aRequest, 
-                   PRInt32 progressStateFlags, 
+                   PRUint32 progressStateFlags,
                    nsresult aStatus) {
     if (progressStateFlags & nsIWebProgressListener::STATE_IS_REQUEST)
         if (progressStateFlags & nsIWebProgressListener::STATE_START) {
@@ -1055,14 +1056,16 @@ mozXMLTerminal::OnProgressChange(nsIWebProgress *aWebProgress,
                                      PRInt32 aMaxSelfProgress,
                                      PRInt32 aCurTotalProgress,
                                      PRInt32 aMaxTotalProgress) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 mozXMLTerminal::OnLocationChange(nsIWebProgress* aWebProgress,
                       nsIRequest* aRequest,
                       nsIURI *location) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
@@ -1071,13 +1074,15 @@ mozXMLTerminal::OnStatusChange(nsIWebProgress* aWebProgress,
                     nsIRequest* aRequest,
                     nsresult aStatus,
                     const PRUnichar* aMessage) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 mozXMLTerminal::OnSecurityChange(nsIWebProgress *aWebProgress, 
                       nsIRequest *aRequest, 
-                      PRInt32 state) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                      PRUint32 state) {
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }

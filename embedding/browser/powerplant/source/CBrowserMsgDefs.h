@@ -125,13 +125,13 @@ struct MsgStatusChangeInfo
 struct MsgSecurityChangeInfo
 {
     MsgSecurityChangeInfo(CBrowserShell* broadcaster,
-                          PRInt32 state) :
+                          PRUint32 state) :
         mBroadcaster(broadcaster),
         mState(state)
         { }
     
     CBrowserShell *mBroadcaster;
-    PRInt32 mState;
+    PRUint32 mState;
 }; 
 
 // msg_OnChromeStatusChange

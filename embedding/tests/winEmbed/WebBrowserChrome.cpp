@@ -250,7 +250,7 @@ NS_IMETHODIMP WebBrowserChrome::OnProgressChange(nsIWebProgress *progress, nsIRe
 }
 
 NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
-                                               PRInt32 progressStateFlags, PRUint32 status)
+                                               PRUint32 progressStateFlags, nsresult status)
 {
     if ((progressStateFlags & STATE_START) && (progressStateFlags & STATE_IS_DOCUMENT))
     {
@@ -304,9 +304,9 @@ WebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 WebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                     nsIRequest *aRequest, 
-                                    PRInt32 state)
+                                    PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 //*****************************************************************************

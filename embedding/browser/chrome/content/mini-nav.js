@@ -131,7 +131,7 @@ function MiniNavStartup()
 
     var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-    webProgress.addProgressListener(gBrowserStatusHandler);
+    webProgress.addProgressListener(gBrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_LOCATION);
   } catch (e) {
     alert("Error opening a mini-nav window"); 
     dump(e+"\n");

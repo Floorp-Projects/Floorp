@@ -686,17 +686,17 @@ nsDocShellTreeOwner::OnProgressChange(nsIWebProgress* aProgress,
 NS_IMETHODIMP
 nsDocShellTreeOwner::OnStateChange(nsIWebProgress* aProgress,
                                    nsIRequest* aRequest,
-                                   PRInt32 aProgressStateFlags,
+                                   PRUint32 aProgressStateFlags,
                                    nsresult aStatus)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
                                                     nsIRequest* aRequest,
                                                     nsIURI* aURI)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -705,15 +705,15 @@ nsDocShellTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
                                     nsresult aStatus,
                                     const PRUnichar* aMessage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                       nsIRequest *aRequest, 
-                                      PRInt32 state)
+                                      PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 

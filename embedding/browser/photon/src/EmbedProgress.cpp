@@ -320,7 +320,7 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
 NS_IMETHODIMP
 EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 				nsIRequest     *aRequest,
-				PRInt32         aState)
+				PRUint32         aState)
 {
   return NS_OK;
 }

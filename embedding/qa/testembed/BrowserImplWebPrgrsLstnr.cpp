@@ -112,7 +112,7 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 }
 
 NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
-                                               PRInt32 progressStateFlags, PRUint32 status)
+                                          PRUint32 progressStateFlags, nsresult status)
 {
 	char theDocType[100];
 	char theStateType[100];
@@ -315,7 +315,7 @@ CBrowserImpl::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 CBrowserImpl::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                     nsIRequest *aRequest, 
-                                    PRInt32 state)
+                                    PRUint32 state)
 {
 	nsCString stringMsg;
 

@@ -32,7 +32,7 @@ interface nsISecureBrowserUI : nsISupports
 {
     void init(in nsIDOMWindow window);
 
-    readonly attribute long state;
+    readonly attribute unsigned long state;
     readonly attribute AString tooltipText;
 };
 

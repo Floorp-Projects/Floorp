@@ -148,13 +148,13 @@ public:
   }
 
   NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
-                              nsIRequest* aRequest, PRInt32 aStateFlags,
+                              nsIRequest* aRequest, PRUint32 aStateFlags,
                               PRUint32 aStatus)
   {
     nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
     if (listener)
       return listener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
   
   NS_IMETHODIMP OnStatusChange(nsIWebProgress *aWebProgress,
@@ -164,7 +164,7 @@ public:
     nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
     if (listener)
       return listener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   NS_IMETHODIMP OnLocationChange(nsIWebProgress *aWebProgress,
@@ -173,7 +173,7 @@ public:
     nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
     if (listener)
       return listener->OnLocationChange(aWebProgress, aRequest, aLocation);
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
   
   NS_IMETHODIMP OnProgressChange(nsIWebProgress *aWebProgress,
@@ -187,16 +187,16 @@ public:
     if (listener)
       return listener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress,
                                         aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   NS_IMETHODIMP OnSecurityChange(nsIWebProgress *aWebProgress,
-                                 nsIRequest *aRequest, PRInt32 aState)
+                                 nsIRequest *aRequest, PRUint32 aState)
   {
     nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
     if (listener)
       return listener->OnSecurityChange(aWebProgress, aRequest, aState);
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
 private:

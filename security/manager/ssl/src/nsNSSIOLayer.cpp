@@ -256,14 +256,14 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::GetSecurityState(PRInt32* state)
+nsNSSSocketInfo::GetSecurityState(PRUint32* state)
 {
   *state = mSecurityState;
   return NS_OK;
 }
 
 nsresult
-nsNSSSocketInfo::SetSecurityState(PRInt32 aState)
+nsNSSSocketInfo::SetSecurityState(PRUint32 aState)
 {
   mSecurityState = aState;
   return NS_OK;

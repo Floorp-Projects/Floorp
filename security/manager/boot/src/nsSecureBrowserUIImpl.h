@@ -96,7 +96,7 @@ protected:
   lockIconState mPreviousSecurityState;
 
   void ResetStateTracking();
-  PRInt32 mNewToplevelSecurityState;
+  PRUint32 mNewToplevelSecurityState;
   nsXPIDLString mInfoTooltip;
   PRInt32 mDocumentRequestsInProgress;
   PRInt32 mSubRequestsInProgress;

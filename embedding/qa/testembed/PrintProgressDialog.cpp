@@ -89,9 +89,9 @@ CDlgPrintListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
-CDlgPrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+CDlgPrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -68,6 +68,7 @@ class nsIDOMElement;
 class nsIDOMNode;
 class nsIDOMHTMLDocument;
 class nsIURI;
+class nsIChannel;
 class nsIPresShell;
 class nsIOutputStream;
 class nsISupportsArray;

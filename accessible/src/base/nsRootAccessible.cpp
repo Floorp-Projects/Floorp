@@ -456,12 +456,12 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
         if (docShell) {
           mWebProgress = do_GetInterface(docShell);
-          mWebProgress->AddProgressListener(this);
+          mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION | 
+                                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT);
         }
       }
     }
     NS_ASSERTION(mWebProgress, "Could not get nsIWebProgress for nsRootAccessible");
-    mWebProgress->AddProgressListener(this);
   }
 
   return NS_OK;
@@ -704,7 +704,7 @@ NS_IMETHODIMP nsRootAccessible::GetDocument(nsIDocument **doc)
 }
 
 NS_IMETHODIMP nsRootAccessible::OnStateChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+  nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
   if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP)) {
     // Set up scroll position listener
@@ -730,6 +730,7 @@ NS_IMETHODIMP nsRootAccessible::OnProgressChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -765,13 +766,15 @@ NS_IMETHODIMP nsRootAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP nsRootAccessible::OnStatusChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP nsRootAccessible::OnSecurityChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRInt32 state)
+  nsIRequest *aRequest, PRUint32 state)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 

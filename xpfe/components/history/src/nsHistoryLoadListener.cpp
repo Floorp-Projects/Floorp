@@ -76,7 +76,8 @@ nsHistoryLoadListener::Init()
 
     NS_ADDREF_THIS();
     rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,
-                                                      this));
+                                                      this),
+                                       nsIWebProgress::NOTIFY_STATE_DOCUMENT);
     printf("\tSuccess: %8.8X\n", rv);
     
     return NS_OK;
@@ -86,11 +87,11 @@ NS_IMPL_ISUPPORTS2(nsHistoryLoadListener,
                    nsIWebProgressListener,
                    nsISupportsWeakReference)
 
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in nsresult aStatus); */
 NS_IMETHODIMP
 nsHistoryLoadListener::OnStateChange(nsIWebProgress *aWebProgress,
                                      nsIRequest *aRequest,
-                                     PRInt32 aStateFlags, PRUint32 aStatus)
+                                     PRUint32 aStateFlags, nsresult aStatus)
 {
     // we only care about finishing up documents
     if (! (aStateFlags & nsIWebProgressListener::STATE_STOP))
@@ -149,32 +150,28 @@ nsHistoryLoadListener::OnProgressChange(nsIWebProgress *aWebProgress,
                                         PRInt32 aCurTotalProgress,
                                         PRInt32 aMaxTotalProgress)
 {
-    printf("nsHistoryLoadListener::OnProgressChange(w,r, %d, %d, %d, %d)\n",
-           aCurSelfProgress, aMaxSelfProgress,
-           aCurTotalProgress, aMaxTotalProgress );
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP nsHistoryLoadListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
-    printf("nsHistoryLoadListener::OnLocationChange(w,r,l)\n");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP nsHistoryLoadListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
-    printf("nsHistoryLoadListener::OnStatusChange(w,r, %8.8X, %s)\n",
-           aStatus, NS_ConvertUCS2toUTF8(aMessage).get());
-
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
-NS_IMETHODIMP nsHistoryLoadListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
+NS_IMETHODIMP nsHistoryLoadListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
-    printf("nsHistoryLoadListener::OnSecurityChange(w,r, %d)\n", state);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 

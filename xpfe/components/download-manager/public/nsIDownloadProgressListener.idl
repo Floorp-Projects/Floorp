@@ -64,8 +64,8 @@ interface nsIDownloadProgressListener : nsISupports {
 
   void onStateChange(in nsIWebProgress aWebProgress,
                      in nsIRequest aRequest,
-                     in long aStateFlags,
-                     in unsigned long aStatus,
+                     in unsigned long aStateFlags,
+                     in nsresult aStatus,
                      in nsIDownload aDownload);
 
   void onProgressChange(in nsIWebProgress aWebProgress,
@@ -89,7 +89,7 @@ interface nsIDownloadProgressListener : nsISupports {
 
   void onSecurityChange(in nsIWebProgress aWebProgress,
                         in nsIRequest aRequest,
-                        in long aState,
+                        in unsigned long aState,
                         in nsIDownload aDownload);
 
 };

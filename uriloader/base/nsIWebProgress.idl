@@ -35,18 +35,34 @@ interface nsIWebProgressListener;
 [scriptable, uuid(570F39D0-EFD0-11d3-B093-00A024FFC08C)]
 interface nsIWebProgress : nsISupports
 {
+  const unsigned long NOTIFY_STATE_REQUEST  = 0x00000001;
+  const unsigned long NOTIFY_STATE_DOCUMENT = 0x00000002;
+  const unsigned long NOTIFY_STATE_NETWORK  = 0x00000004;
+  const unsigned long NOTIFY_STATE_WINDOW   = 0x00000008;
+  const unsigned long NOTIFY_STATE_ALL      = 0x0000000f;
+
+  const unsigned long NOTIFY_PROGRESS       = 0x00000010;
+  const unsigned long NOTIFY_STATUS         = 0x00000020;
+  const unsigned long NOTIFY_SECURITY       = 0x00000040;
+  const unsigned long NOTIFY_LOCATION       = 0x00000080;
+
+  const unsigned long NOTIFY_ALL            = 0x000000ff;
+
   /**
    * Registers a listener to be notified of Progress Events
    *
    * @param listener - The listener interface to be called when a progress
    *                   event occurs.
    *
+   * @param aNotifyMask - The types of notifications to receive.
+   *
    * @return  NS_OK - Listener was registered successfully.
    *          NS_INVALID_ARG - The listener passed in was either nsnull, 
    *                            or was already registered with this progress
    *                            interface.
    */
-  void addProgressListener(in nsIWebProgressListener listener);
+  void addProgressListener(in nsIWebProgressListener listener,
+                           in unsigned long aNotifyMask);
 
   /**
    * Removes a previously registered listener of Progress Events

@@ -467,7 +467,8 @@ nsPICS::Init()
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(mDocLoaderService, &rv));
         if (NS_SUCCEEDED(rv)) {
-            (void) process->AddProgressListener((nsIWebProgressListener*)this);
+            (void) process->AddProgressListener((nsIWebProgressListener*)this,
+                                                nsIWebProgress::NOTIFY_STATE_ALL);
         }
       }
 
@@ -694,7 +695,7 @@ nsPICS::ParsePICSLabel(char * label)
 NS_IMETHODIMP
 nsPICS::OnStateChange(nsIWebProgress* aWebProgress, 
                       nsIRequest *aRequest, 
-                      PRInt32 progressStateFlags, 
+                      PRUint32 progressStateFlags,
                       nsresult aStatus)
 {
   nsresult rv = NS_OK;
@@ -872,15 +873,19 @@ nsPICS::OnProgressChange(nsIWebProgress *aWebProgress,
                                      PRInt32 aCurSelfProgress,
                                      PRInt32 aMaxSelfProgress,
                                      PRInt32 aCurTotalProgress,
-                                     PRInt32 aMaxTotalProgress) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                                     PRInt32 aMaxTotalProgress)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPICS::OnLocationChange(nsIWebProgress* aWebProgress,
                          nsIRequest* aRequest,
-                         nsIURI *location) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                         nsIURI *location)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 
@@ -888,16 +893,20 @@ NS_IMETHODIMP
 nsPICS::OnStatusChange(nsIWebProgress* aWebProgress,
                        nsIRequest* aRequest,
                        nsresult aStatus,
-                       const PRUnichar* aMessage) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                       const PRUnichar* aMessage)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsPICS::OnSecurityChange(nsIWebProgress *aWebProgress, 
                          nsIRequest *aRequest, 
-                         PRInt32 state) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                         PRUint32 state)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 void

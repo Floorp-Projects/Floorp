@@ -50,7 +50,7 @@ interface nsISecurityEventSink : nsISupports
       * changed. State flags are in nsIWebProgressListener.idl
       */
 
-    void onSecurityChange(in nsISupports i_Context, in long state);
+    void onSecurityChange(in nsISupports i_Context, in unsigned long state);
 };
 
 
