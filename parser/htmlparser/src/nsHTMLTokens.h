@@ -155,13 +155,15 @@ class CStartToken: public CHTMLToken {
     virtual PRInt32     GetTypeID(void);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
-            void        SetAttributed(PRBool aValue);
             PRBool      IsAttributed(void);
+            void        SetAttributed(PRBool aValue);
+            PRBool      IsEmpty(void);
+            void        SetEmpty(PRBool aValue);
     virtual void        DebugDumpSource(ostream& out);
   
   protected:
             PRBool      mAttributed;      
-
+            PRBool      mEmpty;      
 };
 
 

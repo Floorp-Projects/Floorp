@@ -2393,7 +2393,7 @@ PRInt32 COtherDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken
  *  @param   aScanner: see nsScanner.h
  *  @return  
  */
-PRInt32 COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+PRInt32 COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
   PRBool done=PR_FALSE;
   PRInt32 result=kNoError;
   nsAutoString as("");
@@ -2459,12 +2459,12 @@ PRInt32 COtherDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& a
   PRInt32 result=kNoError;
 
   aToken=new CStartToken(nsAutoString(""));
-
+  
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
     if(kNoError==result) {
       if(((CStartToken*)aToken)->IsAttributed()) {
-        result=ConsumeAttributes(aChar,aScanner,aToken);
+        result=ConsumeAttributes(aChar,aScanner,(CStartToken*)aToken);
       }
       //now that that's over with, we have one more problem to solve.
       //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and

@@ -2393,17 +2393,30 @@ PRInt32 CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) 
  *  @param   aScanner: see nsScanner.h
  *  @return  
  */
-PRInt32 CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+PRInt32 CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
   PRBool done=PR_FALSE;
   PRInt32 result=kNoError;
   nsAutoString as("");
   PRInt16 theAttrCount=0;
 
   while((!done) && (result==kNoError)) {
-    CToken* theToken= new CAttributeToken(as);
+    CAttributeToken* theToken= new CAttributeToken(as);
     if(theToken){
       result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-      if(kNoError==result){
+
+      //Much as I hate to do this, here's some special case code.
+      //This handles the case of empty-tags in XML. Our last
+      //attribute token will come through with a text value of ""
+      //and a textkey of "/". We should destroy it, and tell the 
+      //start token it was empty.
+      nsString& key=theToken->GetKey();
+      nsString& text=theToken->GetText();
+      if((key[0]==kForwardSlash) && (0==text.Length())){
+        //tada! our special case! Treat it like an empty start tag...
+        aToken->SetEmpty(PR_TRUE);
+        delete theToken;
+      }
+      else if(kNoError==result){
         theAttrCount++;
         mTokenDeque.Push(theToken);
       }//if
@@ -2459,12 +2472,12 @@ PRInt32 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
   PRInt32 result=kNoError;
 
   aToken=new CStartToken(nsAutoString(""));
-
+  
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
     if(kNoError==result) {
       if(((CStartToken*)aToken)->IsAttributed()) {
-        result=ConsumeAttributes(aChar,aScanner,aToken);
+        result=ConsumeAttributes(aChar,aScanner,(CStartToken*)aToken);
       }
       //now that that's over with, we have one more problem to solve.
       //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
