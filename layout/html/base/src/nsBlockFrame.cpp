@@ -458,13 +458,42 @@ nsBlockFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
 }
 
 nsresult
-nsBlockFrame::ReflowInlineChild(nsIFrame*            aKidFrame,
-                                nsIPresContext*      aPresContext,
+nsBlockFrame::ReflowInlineChild(nsLineLayout&        aLineLayout,
+                                nsIFrame*            aKidFrame,
                                 nsReflowMetrics&     aDesiredSize,
                                 const nsReflowState& aReflowState,
                                 nsReflowStatus&      aStatus)
 {
-  aStatus = ReflowChild(aKidFrame, aPresContext, aDesiredSize, aReflowState);
+  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
+#ifdef NS_DEBUG
+  nsFrameState  kidFrameState;
+  aKidFrame->GetFrameState(kidFrameState);
+  NS_ASSERTION(kidFrameState & NS_FRAME_IN_REFLOW, "kid frame is not in reflow");
+#endif
+
+  nsIInlineFrame* iif;
+  if (NS_OK == aKidFrame->QueryInterface(kIInlineFrameIID, (void**)&iif)) {
+    iif->ReflowInline(aLineLayout, aDesiredSize, aReflowState, aStatus);
+  }
+  else {
+    aKidFrame->Reflow(aLineLayout.mPresContext, aDesiredSize, aReflowState,
+                      aStatus);
+  }
+
+  if (NS_FRAME_IS_COMPLETE(aStatus)) {
+    nsIFrame* kidNextInFlow;
+     
+    aKidFrame->GetNextInFlow(kidNextInFlow);
+    if (nsnull != kidNextInFlow) {
+      // Remove all of the childs next-in-flows. Make sure that we ask
+      // the right parent to do the removal (it's possible that the
+      // parent is not this because we are executing pullup code)
+      nsIFrame* parent;
+       
+      aKidFrame->GetGeometricParent(parent);
+      DeleteNextInFlowsFor((nsContainerFrame*)parent, aKidFrame);
+    }
+  }
   return NS_OK;
 }
 
