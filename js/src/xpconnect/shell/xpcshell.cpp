@@ -91,9 +91,13 @@ static nsIXPConnect* GetXPConnect()
 
 /***************************************************************************/
 
+#define EXITCODE_RUNTIME_ERROR 3
+#define EXITCODE_FILE_NOT_FOUND 4
+
 FILE *gOutFile = NULL;
 FILE *gErrFile = NULL;
 
+int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 
 static void
@@ -152,6 +156,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     fputs("^\n", gErrFile);
  out:
+    gExitCode = EXITCODE_RUNTIME_ERROR;
     JS_free(cx, prefix);
 }
 /*
@@ -256,6 +261,10 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef LIVECONNECT
     JSJ_SimpleShutdown();
 #endif
+
+    gExitCode = 0;
+    JS_ConvertArguments(cx, argc, argv,"/ i", &gExitCode);
+
     gQuitting = JS_TRUE;
 //    exit(0);
     return JS_FALSE;
@@ -427,6 +436,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
                             JSSMSG_CANT_OPEN,
                             filename, strerror(errno));
+            gExitCode = EXITCODE_FILE_NOT_FOUND;
             return;
         }
     } else {
@@ -612,7 +622,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
     if (filename || isInteractive)
         Process(cx, obj, filename);
-    return 0;
+    return gExitCode;
 }
 
 /***************************************************************************/

@@ -87,6 +87,10 @@
 #include <io.h>     /* for isatty() */
 #endif
 
+#define EXITCODE_RUNTIME_ERROR 3
+#define EXITCODE_FILE_NOT_FOUND 4
+
+int gExitCode = 0;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
 
@@ -274,6 +278,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 	    JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
 			    JSSMSG_CANT_OPEN,
 			    filename, strerror(errno));
+            gExitCode = EXITCODE_FILE_NOT_FOUND;
 	    return;
 	}
     } else {
@@ -463,7 +468,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
     if (filename || isInteractive)
         Process(cx, obj, filename);
-    return 0;
+    return gExitCode;
 }
 
 
@@ -604,10 +609,15 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool
 Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    int r = 0;    
+
 #ifdef LIVECONNECT
     JSJ_SimpleShutdown();
 #endif
-    exit(0);
+
+    JS_ConvertArguments(cx, argc, argv,"/ i", &r);
+
+    exit(r);
     return JS_FALSE;
 }
 
@@ -1685,6 +1695,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     fputs("^\n", gErrFile);
  out:
+    gExitCode = EXITCODE_RUNTIME_ERROR;
     JS_free(cx, prefix);
 }
 
