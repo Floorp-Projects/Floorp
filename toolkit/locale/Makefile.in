@@ -27,12 +27,4 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DEPS = build.dtd
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE += build.dtd
-
-build.dtd: build.dtd.in $(DEPTH)/config/build_number
-	@$(RM) -f $@
-	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $(srcdir)/build.dtd.in
