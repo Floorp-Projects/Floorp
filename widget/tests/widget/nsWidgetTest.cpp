@@ -15,14 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#define DEBUG 1
-#define NS_DEBUG 1
-
-#include "nsDebug.h"
-
 #include <stdio.h>
 #include <stdlib.h>
-
 
 //---- Factory Includes & Stuff -----// 
 #include "nsIFactory.h" 
@@ -85,14 +79,8 @@ char * gFailedMsg = NULL;
 
 
 
-#ifdef XP_PC
-#define RAPTORWIDGET_LIB "raptorwidget.dll"
-#define RAPTORGFX_LIB    "raptorgfxwin.dll"
-#else
-#define RAPTORWIDGET_LIB "libwidgetunix.so"
-#define RAPTORGFX_LIB    "libgfxunix.so"
-#endif
-
+#define WIDGET_DLL "raptorwidget.dll"
+#define GFXWIN_DLL "raptorgfxwin.dll"
 
 #define DEBUG_MOUSE 0
 
@@ -692,6 +680,7 @@ nsEventStatus PR_CALLBACK GenericTextTestHandleEvent(char           *aTitle,
   */
 nsEventStatus PR_CALLBACK ButtonTestHandleEvent(nsGUIEvent *aEvent)
 {
+
   nsIButton * btn;
   if (aEvent->message != NS_MOUSE_LEFT_BUTTON_UP) {
     return nsEventStatus_eIgnore;
@@ -699,7 +688,7 @@ nsEventStatus PR_CALLBACK ButtonTestHandleEvent(nsGUIEvent *aEvent)
 
   if (NS_OK == aEvent->widget->QueryInterface(kIButtonIID, (void**)&btn)) {
     nsAutoString strBuf;
-    nsString     str("Testing ");
+    nsString     str("Tesing ");
     btn->GetLabel(strBuf);
     char * title = strBuf.ToNewCString();
 
@@ -768,7 +757,7 @@ void DumpRects()
  */
 nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
-    printf("aEvent->message %d\n", aEvent->message);
+	//  printf("aEvent->message %d\n", aEvent->message);
     nsEventStatus result = nsEventStatus_eIgnore;
     switch(aEvent->message) {
 
@@ -836,10 +825,8 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
               // paint the background
             if (aEvent->widget == window) {
                 nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-                if (nsnull != drawCtx) {
-                  drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
-                  drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
-                }
+                drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
+                drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
 
                 return nsEventStatus_eIgnore;
             }
@@ -1028,10 +1015,11 @@ nsEventStatus PR_CALLBACK TooltipPos2(nsGUIEvent *aEvent)
   return(MoveTooltip(2, aEvent));
 }
 
+
 /**--------------------------------------------------------------------------------
  *
  */
-nsresult WidgetTest(int* argc, char **argv)
+nsresult WidgetTest()
 {
     // Open global test log file
     gFD = fopen(gLogFileName, "w");
@@ -1041,22 +1029,22 @@ nsresult WidgetTest(int* argc, char **argv)
     }
 
     // register widget classes
-    NSRepository::RegisterFactory(kCWindowCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCChildCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCButtonCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCCheckButtonCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCComboBoxCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCFileWidgetCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCListBoxCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCRadioButtonCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCRadioGroupCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCHorzScrollbarCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCVertScrollbarCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTextAreaCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTextFieldCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTabWidgetCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTooltipWidgetCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCAppShellCID, RAPTORWIDGET_LIB, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCWindowCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCChildCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCButtonCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCCheckButtonCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCComboBoxCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCFileWidgetCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCListBoxCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCRadioButtonCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCRadioGroupCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCHorzScrollbarCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCVertScrollbarCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCTextAreaCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCTextFieldCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCTabWidgetCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCTooltipWidgetCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCAppShellCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
 
     
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
@@ -1065,28 +1053,20 @@ nsresult WidgetTest(int* argc, char **argv)
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
 
 
-    NSRepository::RegisterFactory(kCRenderingContextIID, RAPTORGFX_LIB, PR_FALSE, PR_FALSE); 
-    NSRepository::RegisterFactory(kCDeviceContextIID, RAPTORGFX_LIB, PR_FALSE, PR_FALSE); 
-    NSRepository::RegisterFactory(kCFontMetricsIID, RAPTORGFX_LIB, PR_FALSE, PR_FALSE); 
-    NSRepository::RegisterFactory(kCImageIID, RAPTORGFX_LIB, PR_FALSE, PR_FALSE); 
-
-    nsresult  res;
+    NSRepository::RegisterFactory(kCRenderingContextIID, "raptorgfxwin.dll", PR_FALSE, PR_FALSE); 
+    NSRepository::RegisterFactory(kCDeviceContextIID, "raptorgfxwin.dll", PR_FALSE, PR_FALSE); 
+    NSRepository::RegisterFactory(kCFontMetricsIID, "raptorgfxwin.dll", PR_FALSE, PR_FALSE); 
+    NSRepository::RegisterFactory(kCImageIID, "raptorgfxwin.dll", PR_FALSE, PR_FALSE); 
 
       // Create a application shell
     nsIAppShell *appShell;
-    res = NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
-    if (NS_OK == res)
-    {
-      appShell->Create(argc, argv);
-    } else {
-      fprintf(stderr, "Couldn't Create and Instance of AppShell!\n");
-      return res;
-    }
-fprintf(stderr, "Before device context stuff\n");
+    NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
+    appShell->Create();
 
     nsIDeviceContext* deviceContext = 0;
 
     // Create a device context for the widgets
+    nsresult  res;
 
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -1104,11 +1084,11 @@ fprintf(stderr, "Before device context stuff\n");
     //
     NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
     nsRect rect(100, 100, 600, 700);
-    window->Create((nsIWidget*)NULL, rect, HandleEvent, NULL, NULL, 
-                   (nsWidgetInitData *)appShell->GetNativeData(NS_NATIVE_SHELL));
+
+    window->Create((nsIWidget*)NULL, rect, HandleEvent, NULL);
     window->SetTitle("TOP-LEVEL window");
 
-    /*tooltipWindow = createTooltipWindow(window, "INSERT <tooltip> here", 0, 0, 150, 0);
+    tooltipWindow = createTooltipWindow(window, "INSERT <tooltip> here", 0, 0, 150, 0);
     tooltipWindow->Show(PR_FALSE);
     toolTipButton1 = createSimpleButton(window, "Tooltip \\/\\/",400, 100, 100, 0);
     toolTipButton2 = createSimpleButton(window, "Tooltip /\\/\\",500, 200, 100, 0);
@@ -1139,9 +1119,7 @@ fprintf(stderr, "Before device context stuff\n");
     NS_RELEASE(child); // the parent keeps a reference on this child
 
     y += rect.height + 5;
-*/
-    int x = 10;
-    int y = 10;
+
    
     //
     // create a button
@@ -1168,7 +1146,7 @@ fprintf(stderr, "Before device context stuff\n");
     x = createTestButton(window, kBrowseBtn, x,   y, 75, HandleFileButtonEvent);
     x = 10;
     y += rect.height + 5;
-/*
+
     //
     // create a check button
     //
@@ -1222,7 +1200,7 @@ fprintf(stderr, "Before device context stuff\n");
     passwordText = ptextWidget;
 
     textShelfTest(gFD, "Password Text", passwordText);
-*/
+
     x = createTestButton(window, kSetCaret, x+180, y, 75, PasswordTextTestHandleEvent);
     x = createTestButton(window, kGetCaret, x+5,   y, 75, PasswordTextTestHandleEvent);
     x = createTestButton(window, kSetText,  x+5,   y, 75, PasswordTextTestHandleEvent);
@@ -1234,7 +1212,7 @@ fprintf(stderr, "Before device context stuff\n");
     //
     // create a readonly text widget
     //
-/*
+
     nsITextWidget * rtextWidget;
     rect.SetRect(x, y, 100, 25);  
     NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&rtextWidget);
@@ -1278,7 +1256,7 @@ fprintf(stderr, "Before device context stuff\n");
     rect.SetRect(x+25, 10, 350, 25);  
     NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&statusText);
     statusText->Create(window, rect, HandleEvent, deviceContext);
-*/  
+  
     //
     // create a Failed Button
     //
@@ -1309,7 +1287,7 @@ fprintf(stderr, "Before device context stuff\n");
     //
     // create a listbox widget
     //
-/*
+
     rect.SetRect(x, y, 150, 100);  
     NSRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&listBox);
     listBox->Create(window, rect, HandleEvent, NULL);
@@ -1320,7 +1298,7 @@ fprintf(stderr, "Before device context stuff\n");
       listBox->AddItemAt(listStr1, i);
     }
     listSelfTest(gFD, "ListBox", listBox);
-*/
+
     x = createTestButton(window, kSetSelection,    x+150, y, 125, ListBoxTestHandleEvent);
     x = createTestButton(window, kRemoveSelection, x+5,   y, 125, ListBoxTestHandleEvent);
     x = 10;
@@ -1330,7 +1308,7 @@ fprintf(stderr, "Before device context stuff\n");
     //
     // create a multi-selection listbox widget
     //
-/*
+
     rect.SetRect(x, y, 150, 100);  
     NSRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&gMultiListBox);
       // Notice the extra agrument PR_TRUE below which indicates that
@@ -1419,7 +1397,7 @@ fprintf(stderr, "Before device context stuff\n");
     }
     listSelfTest(gFD, "ComboBox", comboBox);
     NS_RELEASE(comboBox);
-*/
+
     x = createTestButton(window, kSetSelection,    x+125, y, 125, ComboTestHandleEvent);
     x = createTestButton(window, kRemoveSelection, x+5,   y, 125, ComboTestHandleEvent);
 
@@ -1431,7 +1409,7 @@ fprintf(stderr, "Before device context stuff\n");
     status.Append(eval(gOverallStatus));
     gNonVisualStatus = gOverallStatus;
 
-    //statusText->SetText(status);
+    statusText->SetText(status);
 
     // show
     window->Show(PR_TRUE);
@@ -1440,22 +1418,4 @@ fprintf(stderr, "Before device context stuff\n");
     return(appShell->Run());
 }
 
-
-
-#ifdef XP_PC
-#include <windows.h>
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, 
-    int nCmdShow)
-{
-    return(WidgetTest(0, NULL));
-}
-#else
-void main(int argc, char **argv)
-{
-    int argC = argc;
-    //NS_WARNING("Need to force the Shared Library to load!");
-    WidgetTest(&argC, argv);
-}
-
-#endif
 
