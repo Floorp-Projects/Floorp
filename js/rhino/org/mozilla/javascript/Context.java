@@ -474,8 +474,7 @@ public final class Context {
                                  "NativeNumber",        "NativeDate", 
                                  "NativeMath",          "NativeCall", 
                                  "NativeClosure",       "NativeWith", 
-                                 "regexp.NativeRegExp", "NativeScript",
-                                 "JavaAdapter"
+                                 "regexp.NativeRegExp", "NativeScript"
                                };
             for (int i=0; i < classes.length; i++) {
                 try {
@@ -485,6 +484,15 @@ public final class Context {
                 } catch (ClassNotFoundException e) {
                     continue;
                 }
+            }
+            
+            // Define the JavaAdapter class, allowing it to be overridden.
+            try {
+                String defaultName = "org.mozilla.javascript.JavaAdapter";
+                String adapterName = System.getProperty(defaultName, defaultName);
+                Class adapterClass = Class.forName(adapterName);
+                ScriptableObject.defineClass(scope, adapterClass, sealed);
+            } catch (ClassNotFoundException e) {
             }
             
             // This creates the Packages and java package roots.
