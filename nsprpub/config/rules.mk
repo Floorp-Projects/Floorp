@@ -77,11 +77,13 @@ include $(topsrcdir)/config/config.mk
 endif
 
 ifdef USE_AUTOCONF
+ifdef CROSS_COMPILE
 ifdef INTERNAL_TOOLS
 CC=$(HOST_CC)
 CCC=$(HOST_CXX)
 CFLAGS=$(HOST_CFLAGS)
 CXXFLAGS=$(HOST_CXXFLAGS)
+endif
 endif
 endif
 
