@@ -40,6 +40,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.spec.AlgorithmParameterSpec;
 import org.mozilla.jss.util.Assert;
 import java.security.NoSuchAlgorithmException;
+import javax.crypto.spec.*;
 
 final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
 
@@ -90,6 +91,23 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
         initDecrypt(key, null);
     }
 
+    private static byte[] getIVFromParams(AlgorithmParameterSpec params) {
+        byte[] IV = null;
+        if( params instanceof IVParameterSpec ) {
+            IV = ((IVParameterSpec)params).getIV();
+        }
+        try {
+            if( params instanceof IvParameterSpec ) {
+                IV = ((IvParameterSpec)params).getIV();
+            }
+        } catch(NoClassDefFoundError e) {
+            // javax.crypto.spec.IvParameterSpec was introduced in JDK 1.4.
+            // Older versions of the JRE don't have it.
+        }
+        return IV;
+    }
+        
+
     public void initEncrypt(SymmetricKey key, AlgorithmParameterSpec parameters)
         throws InvalidKeyException, InvalidAlgorithmParameterException,
         TokenException
@@ -99,9 +117,7 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
         checkKey(key);
         checkParams(parameters);
 
-        if( parameters instanceof IVParameterSpec ) {
-            IV = ((IVParameterSpec)parameters).getIV();
-        }
+        IV = getIVFromParams(parameters);
         this.key = key;
         this.parameters = parameters;
         state = ENCRYPT;
@@ -118,9 +134,7 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
         checkKey(key);
         checkParams(parameters);
 
-        if( parameters instanceof IVParameterSpec ) {
-            IV = ((IVParameterSpec)parameters).getIV();
-        }
+        IV = getIVFromParams(parameters);
         this.key = key;
         this.parameters = parameters;
         state = DECRYPT;
@@ -216,22 +230,13 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
     private void checkParams(AlgorithmParameterSpec params)
         throws InvalidAlgorithmParameterException
     {
-        Class paramClass = algorithm.getParameterClass();
-        if(params==null) {
-            if(paramClass != null) {
-                // this algorithm takes a parameter, but none was given
-                throw new InvalidAlgorithmParameterException(algorithm+
-                    " requires an algorithm parameter");
+        if( ! algorithm.isValidParameterObject(params) ) {
+            String name = "null";
+            if( params != null ) {
+                name = params.getClass().getName();
             }
-        } else {
-            if( paramClass == null ) {
-                //this algorithm doesn't take a param, but one was given
-                throw new InvalidAlgorithmParameterException(algorithm+
-                    " does not take a parameter");
-            } else if( ! ( paramClass.isInstance(params) ) ) {
-                throw new InvalidAlgorithmParameterException(algorithm+
-                    " expects a parameter of type "+paramClass);
-            }
+            throw new InvalidAlgorithmParameterException(algorithm +
+                " cannot use a " + name + " parameter");
         }
     }
     

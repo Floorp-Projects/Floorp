@@ -121,7 +121,11 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
                 throw new InvalidKeyException("key must be JSS key");
             }
             SymmetricKey symkey = ((SecretKeyFacade)key).key;
-            encAlg = EncryptionAlgorithm.fromString(buf.toString());
+
+            // lookup the encryption algorithm
+            int keyStrength = symkey.getStrength();
+            encAlg = EncryptionAlgorithm.lookup(algFamily, algMode,
+                algPadding, keyStrength);
             blockSize = encAlg.getBlockSize();
             cipher = token.getCipherContext(encAlg);
 
@@ -304,7 +308,11 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
             return null;
         }
         try {
-            return cipher.doFinal(input, inputOffset, inputLen);
+            if( input == null || inputLen == 0) {
+                return cipher.doFinal();
+            } else {
+                return cipher.doFinal(input, inputOffset, inputLen);
+            }
         } catch(IllegalStateException ise) {
             Assert.notReached();
             return null;
@@ -420,6 +428,14 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
             "http://bugzilla.mozilla.org/show_bug.cgi?id=135328");
     }
 
+    public int engineGetKeySize(Key key) throws InvalidKeyException {
+        if( ! (key instanceof SecretKeyFacade) ) {
+            throw new InvalidKeyException("key must be JSS key");
+        }
+        SymmetricKey symkey = ((SecretKeyFacade)key).key;
+        return symkey.getLength();
+    }
+
     static public class DES extends JSSCipherSpi {
         public DES() {
             super("DES");
@@ -440,6 +456,5 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
             super("RC4");
         }
     }
-
 
 }

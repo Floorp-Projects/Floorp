@@ -33,36 +33,170 @@
 
 package org.mozilla.jss.crypto;
 
-import java.util.Hashtable;
 import java.security.NoSuchAlgorithmException;
 import org.mozilla.jss.asn1.*;
+import javax.crypto.spec.IvParameterSpec;
+import java.util.*;
 
 /**
  * An algorithm for performing symmetric encryption.
  */
 public class EncryptionAlgorithm extends Algorithm {
-    protected EncryptionAlgorithm(int oidTag, String name, Class paramClass,
-        int blockSize, boolean padded, OBJECT_IDENTIFIER oid)
+
+    private static class Mode {
+        private String name;
+
+        private static Hashtable nameHash = new Hashtable();
+
+        private Mode() { }
+        private Mode(String name) {
+            this.name = name;
+            nameHash.put(name.toLowerCase(), this);
+        }
+
+        public static Mode fromString(String name)
+            throws NoSuchAlgorithmException
+        {
+            Mode m = (Mode) nameHash.get(name.toLowerCase());
+            if( m == null ) {
+                throw new NoSuchAlgorithmException(
+                    "Unrecognized mode \"" + name + "\"");
+            }
+            return m;
+        }
+
+        public String toString() {
+            return name;
+        }
+
+        public static final Mode NONE = new Mode("NONE");
+        public static final Mode ECB = new Mode("ECB");
+        public static final Mode CBC = new Mode("CBC");
+    }
+
+    private static class Alg {
+        private String name;
+
+        private static Hashtable nameHash = new Hashtable();
+
+        private Alg() { }
+        private Alg(String name) {
+            this.name = name;
+            nameHash.put(name.toLowerCase(), this);
+        }
+
+        private static Alg fromString(String name)
+            throws NoSuchAlgorithmException
+        {
+            Alg a = (Alg) nameHash.get(name.toLowerCase());
+            if( a == null ) {
+                throw new NoSuchAlgorithmException("Unrecognized algorithm \""
+                    + name + "\"");
+            }
+            return a;
+        }
+
+        public String toString() {
+            return name;
+        }
+
+        public static final Alg RC4 = new Alg("RC4");
+        public static final Alg DES = new Alg("DES");
+        public static final Alg DESede = new Alg("DESede");
+        public static final Alg AES = new Alg("AES");
+        public static final Alg RC2 = new Alg("RC2");
+    }
+
+    private static class Padding {
+        private String name;
+
+        private static Hashtable nameHash = new Hashtable();
+
+        private Padding() { }
+        private Padding(String name) {
+            this.name = name;
+            nameHash.put(name.toLowerCase(), this);
+        }
+
+        public String toString() {
+            return name;
+        }
+
+        public static Padding fromString(String name)
+            throws NoSuchAlgorithmException
+        {
+            Padding p = (Padding) nameHash.get(name.toLowerCase());
+            if( p == null ) {
+                throw new NoSuchAlgorithmException("Unrecognized Padding " +
+                    "type \"" + name + "\"");
+            }
+            return p;
+        }
+
+        public static final Padding NONE = new Padding("NoPadding");
+        public static final Padding PKCS5 = new Padding("PKCS5Padding");
+    }
+
+    private static String makeName(Alg alg, Mode mode, Padding padding) {
+        StringBuffer buf = new StringBuffer();
+        buf.append(alg.toString());
+        buf.append('/');
+        buf.append(mode.toString());
+        buf.append('/');
+        buf.append(padding.toString());
+        return buf.toString();
+    }
+
+    protected EncryptionAlgorithm(int oidTag, Alg alg, Mode mode,
+        Padding padding, Class paramClass, int blockSize,
+        OBJECT_IDENTIFIER oid, int keyStrength)
     {
-        super(oidTag, name, oid, paramClass);
+        super(oidTag, makeName(alg, mode, padding), oid, paramClass);
+        this.alg = alg;
+        this.mode = mode;
+        this.padding = padding;
         this.blockSize = blockSize;
-        this.padded = padded;
         if(oid!=null) {
             oidMap.put(oid, this);
         }
         if( name != null ) {
-            oidMap.put(name.toLowerCase(), this);
+            nameMap.put(name.toLowerCase(), this);
         }
+        this.keyStrength = keyStrength;
+        algList.addElement(this);
+    }
+
+    protected EncryptionAlgorithm(int oidTag, Alg alg, Mode mode,
+        Padding padding, Class []paramClasses, int blockSize, 
+        OBJECT_IDENTIFIER oid, int keyStrength)
+    {
+        super(oidTag, makeName(alg, mode, padding), oid, paramClasses);
+        this.alg = alg;
+        this.mode = mode;
+        this.padding = padding;
+        this.blockSize = blockSize;
+        if(oid!=null) {
+            oidMap.put(oid, this);
+        }
+        if( name != null ) {
+            nameMap.put(name.toLowerCase(), this);
+        }
+        this.keyStrength = keyStrength;
+        algList.addElement(this);
     }
 
     private int blockSize;
-    private boolean padded;
+    private Alg alg;
+    private Mode mode;
+    private Padding padding;
+    private int keyStrength;
 
     ///////////////////////////////////////////////////////////////////////
     // mapping
     ///////////////////////////////////////////////////////////////////////
     private static Hashtable oidMap = new Hashtable();
     private static Hashtable nameMap = new Hashtable();
+    private static Vector algList = new Vector();
 
     public static EncryptionAlgorithm fromOID(OBJECT_IDENTIFIER oid)
         throws NoSuchAlgorithmException
@@ -75,6 +209,13 @@ public class EncryptionAlgorithm extends Algorithm {
         }
     }
 
+    // Note: after we remove this deprecated method, we can remove
+    // nameMap.
+    /**
+     * @deprecated This method is deprecated because algorithm strings
+     *  don't contain key length, which is necessary to distinguish between
+     *  AES algorithms.
+     */
     public static EncryptionAlgorithm fromString(String name)
         throws NoSuchAlgorithmException
     {
@@ -86,6 +227,35 @@ public class EncryptionAlgorithm extends Algorithm {
         }
     }
 
+    public static EncryptionAlgorithm lookup(String algName, String modeName,
+        String paddingName, int keyStrength)
+        throws NoSuchAlgorithmException
+    {
+        int len = algList.size();
+        Alg alg = Alg.fromString(algName);
+        Mode mode = Mode.fromString(modeName);
+        Padding padding = Padding.fromString(paddingName);
+        int i;
+        for(i = 0; i < len; ++i ) {
+            EncryptionAlgorithm cur =
+                (EncryptionAlgorithm) algList.elementAt(i);
+            System.out.print("Comparing against " + cur.toString() +"...");
+            if( cur.alg == alg && cur.mode == mode && cur.padding == padding ) {
+                System.out.print("Matched alg/mode/padding...");
+                if( cur.keyStrength == 0 || cur.keyStrength == keyStrength ) {
+                    break;
+                }
+            }
+        }
+        if( i == len ) {
+            throw new NoSuchAlgorithmException(algName + "/" + modeName + "/"
+                + paddingName + " with key strength " + keyStrength +
+                " not found");
+        }
+        return (EncryptionAlgorithm) algList.elementAt(i);
+    }
+        
+
     /** 
      * The blocksize of the algorithm in bytes. Stream algorithms (such as
      * RC4) have a blocksize of 1.
@@ -96,9 +266,40 @@ public class EncryptionAlgorithm extends Algorithm {
 
     /**
      * Returns <code>true</code> if this algorithm performs padding.
+     * @deprecated Call <tt>getPaddingType()</tt> instead.
      */
     public boolean isPadded() {
-        return padded;
+        return ! Padding.NONE.equals(padding);
+    }
+
+    /**
+     * Returns the type of padding for this algorithm.
+     */
+    public Padding getPaddingType() {
+        return padding;
+    }
+
+    //
+    // In JDK 1.4, Sun introduced javax.crypto.spec.IvParameterSpec,
+    // which obsoletes org.mozilla.jss.crypto.IVParameterSpec. However,
+    // we still need to support pre-1.4 runtimes, so we have to be
+    // prepared for this new class not to be available. Here we try to load
+    // the new 1.4 class. If we succeed, we will accept either JSS's
+    // IVParameterSpec or Java's IvParameterSpec. If we fail, which will
+    // happen if we are running a pre-1.4 runtime, we just accept
+    // JSS's IVParameterSpec.
+    //
+    private static Class[] IVParameterSpecClasses = null;
+    static {
+        try {
+            IVParameterSpecClasses = new Class[2];
+            IVParameterSpecClasses[0] = IVParameterSpec.class;
+            IVParameterSpecClasses[1] = IvParameterSpec.class;
+        } catch(NoClassDefFoundError e) {
+            // We must be running on a pre-1.4 JRE.
+            IVParameterSpecClasses = new Class[1];
+            IVParameterSpecClasses[0] = IVParameterSpec.class;
+        }
     }
 
     /**
@@ -111,77 +312,75 @@ public class EncryptionAlgorithm extends Algorithm {
     public native int getIVLength();
 
     public static final EncryptionAlgorithm
-    RC4 = new EncryptionAlgorithm(SEC_OID_RC4, "RC4", null, 1, false,
-            OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(4) );
+    RC4 = new EncryptionAlgorithm(SEC_OID_RC4, Alg.RC4, Mode.NONE, Padding.NONE,
+            (Class)null, 1, OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(4), 0);
 
     public static final EncryptionAlgorithm
-    DES_ECB = new EncryptionAlgorithm(SEC_OID_DES_ECB, "DES/ECB/NoPadding",
-        null, 8, false, OBJECT_IDENTIFIER.ALGORITHM.subBranch(6) );
+    DES_ECB = new EncryptionAlgorithm(SEC_OID_DES_ECB, Alg.DES, Mode.ECB,
+        Padding.NONE, (Class)null, 8, OBJECT_IDENTIFIER.ALGORITHM.subBranch(6),
+        56);
 
     public static final EncryptionAlgorithm
-    DES_CBC = new EncryptionAlgorithm(SEC_OID_DES_CBC, "DES/CBC/NoPadding",
-        IVParameterSpec.class, 8, false,
-        OBJECT_IDENTIFIER.ALGORITHM.subBranch(7) );
+    DES_CBC = new EncryptionAlgorithm(SEC_OID_DES_CBC, Alg.DES, Mode.CBC,
+        Padding.NONE, IVParameterSpecClasses, 8,
+        OBJECT_IDENTIFIER.ALGORITHM.subBranch(7), 56);
 
     public static final EncryptionAlgorithm
-    DES_CBC_PAD = new EncryptionAlgorithm(CKM_DES_CBC_PAD,
-        "DES/CBC/PKCS5Padding", IVParameterSpec.class, 8, true, null); // no oid
+    DES_CBC_PAD = new EncryptionAlgorithm(CKM_DES_CBC_PAD, Alg.DES, Mode.CBC,
+        Padding.PKCS5, IVParameterSpecClasses, 8, null, 56); // no oid
 
     public static final EncryptionAlgorithm
-    DES3_ECB = new EncryptionAlgorithm(CKM_DES3_ECB, "DESede/ECB/NoPadding",
-        null, 8, false, null); // no oid
+    DES3_ECB = new EncryptionAlgorithm(CKM_DES3_ECB, Alg.DESede, Mode.ECB,
+        Padding.NONE, (Class)null, 8, null, 168); // no oid
 
     public static final EncryptionAlgorithm
-    DES3_CBC = new EncryptionAlgorithm(SEC_OID_DES_EDE3_CBC,
-        "DESede/CBC/NoPadding", IVParameterSpec.class, 8, false,
-        OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(7) );
+    DES3_CBC = new EncryptionAlgorithm(SEC_OID_DES_EDE3_CBC, Alg.DESede,
+        Mode.CBC, Padding.NONE, IVParameterSpecClasses, 8,
+        OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(7), 168);
 
     public static final EncryptionAlgorithm
-    DES3_CBC_PAD = new EncryptionAlgorithm(CKM_DES3_CBC_PAD,
-        "DESede/CBC/PKCS5Padding", IVParameterSpec.class, 8, true,
-        null); //no oid
+    DES3_CBC_PAD = new EncryptionAlgorithm(CKM_DES3_CBC_PAD, Alg.DESede,
+        Mode.CBC, Padding.PKCS5, IVParameterSpecClasses, 8,
+        null, 168); //no oid
 
     public static final EncryptionAlgorithm
-    RC2_CBC = new EncryptionAlgorithm(SEC_OID_RC2_CBC, "RC2/CBC/NoPadding",
-        IVParameterSpec.class, 8, false,
-        OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(2) );
+    RC2_CBC = new EncryptionAlgorithm(SEC_OID_RC2_CBC, Alg.RC2, Mode.CBC,
+        Padding.NONE, IVParameterSpecClasses, 8,
+        OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(2), 0);
 
     public static final OBJECT_IDENTIFIER AES_ROOT_OID = 
         new OBJECT_IDENTIFIER( new long[] 
             { 2, 16, 840, 1, 101, 3, 4, 1 } );
 
     public static final EncryptionAlgorithm
-    AES_128_ECB = new EncryptionAlgorithm(CKM_AES_ECB,
-        "AES/ECB/NoPadding", null, 16, false,
-        AES_ROOT_OID.subBranch(1) );
+    AES_128_ECB = new EncryptionAlgorithm(CKM_AES_ECB, Alg.AES, Mode.ECB,
+        Padding.NONE, (Class)null, 16,
+        AES_ROOT_OID.subBranch(1), 128);
 
     public static final EncryptionAlgorithm
-    AES_128_CBC = new EncryptionAlgorithm(CKM_AES_CBC,
-        "AES/CBC/NoPadding", IVParameterSpec.class, 16, false,
-        AES_ROOT_OID.subBranch(2) );
+    AES_128_CBC = new EncryptionAlgorithm(CKM_AES_CBC, Alg.AES, Mode.CBC,
+        Padding.NONE, IVParameterSpecClasses, 16,
+        AES_ROOT_OID.subBranch(2), 128);
 
     public static final EncryptionAlgorithm
-    AES_192_ECB = new EncryptionAlgorithm(CKM_AES_ECB,
-        "AES/ECB/NoPadding", null, 16, false,
-        AES_ROOT_OID.subBranch(21) );
+    AES_192_ECB = new EncryptionAlgorithm(CKM_AES_ECB, Alg.AES, Mode.ECB,
+        Padding.NONE, (Class)null, 16, AES_ROOT_OID.subBranch(21), 192);
 
     public static final EncryptionAlgorithm
-    AES_192_CBC = new EncryptionAlgorithm(CKM_AES_CBC,
-        "AES/CBC/NoPadding", IVParameterSpec.class, 16, false,
-        AES_ROOT_OID.subBranch(22) );
+    AES_192_CBC = new EncryptionAlgorithm(CKM_AES_CBC, Alg.AES, Mode.CBC,
+        Padding.NONE, IVParameterSpecClasses, 16,
+        AES_ROOT_OID.subBranch(22), 192);
 
     public static final EncryptionAlgorithm
-    AES_256_ECB = new EncryptionAlgorithm(CKM_AES_ECB,
-        "AES/ECB/NoPadding", null, 16, false,
-        AES_ROOT_OID.subBranch(41) );
+    AES_256_ECB = new EncryptionAlgorithm(CKM_AES_ECB, Alg.AES, Mode.ECB,
+        Padding.NONE, (Class)null, 16, AES_ROOT_OID.subBranch(41), 256);
 
     public static final EncryptionAlgorithm
-    AES_256_CBC = new EncryptionAlgorithm(CKM_AES_CBC,
-        "AES/CBC/NoPadding", IVParameterSpec.class, 16, false,
-        AES_ROOT_OID.subBranch(42) );
+    AES_256_CBC = new EncryptionAlgorithm(CKM_AES_CBC, Alg.AES, Mode.CBC,
+        Padding.NONE, IVParameterSpecClasses, 16,
+        AES_ROOT_OID.subBranch(42), 256);
 
     public static final EncryptionAlgorithm
-    AES_CBC_PAD = new EncryptionAlgorithm(CKM_AES_CBC_PAD,
-        "AES/CBC/PKCS5Padding", IVParameterSpec.class, 16, true,
-        null); // no oid
+    AES_CBC_PAD = new EncryptionAlgorithm(CKM_AES_CBC_PAD, Alg.AES, Mode.CBC,
+        Padding.PKCS5, IVParameterSpecClasses, 16, null, 256); // no oid
 }
