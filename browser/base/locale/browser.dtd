@@ -1,10 +1,10 @@
-<!-- LOCALIZATION NOTE : FILE This file contains the browser main menu items --> 
+<!-- LOCALIZATION NOTE : FILE This file contains the browser main menu items -->
 <!-- LOCALIZATION NOTE : FILE Do not translate accesskey and commandkey --> 
 
-<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE --> 
-<!ENTITY mainWindow.title "&brandShortName;"> 
-<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
-<!ENTITY mainWindow.titlemodifier "&brandShortName;"> 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandShortName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandShortName;">
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
@@ -288,6 +288,7 @@
 <!ENTITY minimizeWindow.label "Minimize Window">
 <!ENTITY bringAllToFront.label "Bring All to Front">
 <!ENTITY zoomWindow.label "Zoom Window">
+<!ENTITY windowMenu.label "Window">
 
 <!ENTITY pageThemeButton.label "Page Themes">
 <!ENTITY pageThemeNoTheme.label "No Theme">
