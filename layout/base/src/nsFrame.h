@@ -170,6 +170,8 @@ public:
   NS_IMETHOD  VerifyTree() const;
 
 protected:
+  // Style post processing hook
+  NS_METHOD DidSetStyleContext(void);
 
   // Selection Methods
   NS_METHOD HandlePress(nsIPresContext& aPresContext,
