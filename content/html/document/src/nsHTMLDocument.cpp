@@ -66,9 +66,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIStreamListener.h"
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsIIOService.h"
-#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
@@ -2002,8 +2001,8 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
     return NS_ERROR_FAILURE;
   NS_ConvertUTF8toUCS2 newURIString(scheme);
   newURIString += NS_LITERAL_STRING("://") + aDomain + NS_ConvertUTF8toUCS2(path);
-  nsIURI *newURI;
-  if (NS_FAILED(NS_NewURI(&newURI, newURIString)))
+  nsCOMPtr<nsIURI> newURI;
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString)))
     return NS_ERROR_FAILURE;
 
   // Get codebase principal
