@@ -36,6 +36,7 @@ public:
   static nsIAtom* a;
   static nsIAtom* above;
   static nsIAtom* action;
+  static nsIAtom* active;
   static nsIAtom* align;
   static nsIAtom* alink;
   static nsIAtom* alt;
@@ -89,6 +90,7 @@ public:
   static nsIAtom* h6;
   static nsIAtom* height;
   static nsIAtom* hidden;
+  static nsIAtom* hover;
   static nsIAtom* href;
   static nsIAtom* hspace;
   static nsIAtom* httpEquiv;
@@ -122,6 +124,7 @@ public:
   static nsIAtom* onfocus;
   static nsIAtom* onload;
   static nsIAtom* onunload;
+  static nsIAtom* outOfDate;
   static nsIAtom* overflow;
 
   static nsIAtom* p;
@@ -162,6 +165,7 @@ public:
   static nsIAtom* value;
   static nsIAtom* variable;
   static nsIAtom* visibility;
+  static nsIAtom* visited;
   static nsIAtom* vlink;
   static nsIAtom* vspace;
 
