@@ -265,7 +265,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 			ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
 		}
 		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
-
+/*
 		NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
 		if (NS_SUCCEEDED(rv) && (platformCharset))
 		{
@@ -284,6 +284,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 					}
 				}
 		}
+*/
 #endif
 
 		gRDFService->GetResource(kURINC_FileSystemRoot,               &kNC_FileSystemRoot);
