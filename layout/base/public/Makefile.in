@@ -66,7 +66,6 @@ nsIImageFrame.h \
 nsIImageMap.h \
 nsILayoutDebugger.h \
 nsILayoutHistoryState.h \
-nsIMutableStyleContext.h \
 nsIObjectFrame.h \
 nsIPageSequenceFrame.h \
 nsIPercentHeightObserver.h  \
