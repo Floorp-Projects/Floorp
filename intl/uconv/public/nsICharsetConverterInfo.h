@@ -27,6 +27,9 @@
 NS_DECLARE_ID(kICharsetConverterInfoIID,
   0x6a7730e0, 0x8ed3, 0x11d2, 0x8a, 0x98, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+#define NS_ICHARSETCONVERTERINFO_IID \
+{ 0x6a7730e0, 0x8ed3, 0x11d2, {0x8a, 0x98, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
+
 /**
  * Interface for getting the Charset Converter information.
  *
@@ -43,6 +46,8 @@ NS_DECLARE_ID(kICharsetConverterInfoIID,
 class nsICharsetConverterInfo : public nsISupports
 {
 public:
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETCONVERTERINFO_IID)
+ 
 
   /**
    * Returns the character set this converter is converting from.

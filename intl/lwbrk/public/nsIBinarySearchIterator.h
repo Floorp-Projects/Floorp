@@ -31,6 +31,7 @@
 class nsIBinarySearchIterator : public nsISupports {
 
 public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBINARYSEARCHITERATOR_IID)
 
   NS_IMETHOD First() = 0; 
   NS_IMETHOD Next(PRBool aForward) = 0; 

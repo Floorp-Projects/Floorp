@@ -37,6 +37,7 @@ class nsILocaleFactory : public nsIFactory
 
 public:
 
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOCALEFACTORY_IID)
    NS_IMETHOD NewLocale(nsString** categoryList,nsString**  
       valueList, PRUint8 count, nsILocale** locale) = 0;
 

@@ -28,6 +28,10 @@
 NS_DECLARE_ID(kICharsetAliasIID,\
  0xccd4d374, 0xccdc, 0x11d2, 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
 
+#define NS_ICHARSETALIAS_IID \
+{ 0xccd4d374, 0xccdc, 0x11d2, { 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 }}
+
+
 // {98D41C21-CCF3-11d2-B3B1-00805F8A6670}
 NS_DECLARE_ID(kCharsetAliasCID,\
  0x98d41c21, 0xccf3, 0x11d2, 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
@@ -37,6 +41,8 @@ NS_DECLARE_ID(kCharsetAliasCID,\
 class nsICharsetAlias : public nsISupports
 {
 public:
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETALIAS_IID)
+
    NS_IMETHOD GetPreferred(const nsString& aAlias, nsString& aResult) = 0;
    NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** aResult) = 0;
    NS_IMETHOD GetPreferred(const char* aAlias, char* aResult, PRInt32 aBufLength) = 0;

@@ -34,6 +34,7 @@ class nsIWin32Locale : public nsISupports {
 
 public:
 	
+        NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWIN32LOCALE_IID)
 	NS_IMETHOD GetPlatformLocale(const nsString* locale,LCID* winLCID) = 0;
 	NS_IMETHOD GetXPLocale(LCID winLCID,nsString* locale) = 0;
 };

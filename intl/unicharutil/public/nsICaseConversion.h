@@ -31,6 +31,8 @@ class nsICaseConversion : public nsISupports {
 
 public: 
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICASECONVERSION_IID)
+
   // Convert one Unicode character into upper case
   NS_IMETHOD ToUpper( PRUnichar aChar, PRUnichar* aReturn) = 0;
 

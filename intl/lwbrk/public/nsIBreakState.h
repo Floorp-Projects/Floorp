@@ -33,6 +33,9 @@
 class nsIBreakState : public nsISupports
 {
 public:
+ 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBREAKSTATE_IID)
+
   NS_IMETHOD Set (PRUint32 aPos, PRBool aDone) = 0; 
   NS_IMETHOD GetText (const PRUnichar** oText) = 0; 
   NS_IMETHOD Length (PRUint32* oLen) = 0; 

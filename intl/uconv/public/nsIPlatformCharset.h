@@ -29,6 +29,9 @@
 NS_DECLARE_ID(kIPlatformCharsetIID, 
  0x84b0f181, 0xc6c7, 0x11d2, 0xb3, 0xb0, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
 
+#define NS_IPLATFORMCHARSET_IID \
+{ 0x84b0f181, 0xc6c7, 0x11d2, {0xb3, 0xb0, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 }}
+
 
 // Class ID for our PlatformCharset implementation
 // {84B0F182-C6C7-11d2-B3B0-00805F8A6670}
@@ -46,6 +49,8 @@ typedef enum {
 class nsIPlatformCharset : public nsISupports
 {
 public:
+ 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLATFORMCHARSET_IID)
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult) = 0;
 
