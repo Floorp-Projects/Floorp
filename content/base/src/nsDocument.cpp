@@ -2230,8 +2230,8 @@ nsDocument::CreateElement(const nsAString& aTagName,
   nsCOMPtr<nsIAtom> name = do_GetAtom(aTagName);
 
   nsCOMPtr<nsIContent> content;
-  rv = CreateElement(name, nsnull, GetDefaultNamespaceID(),
-                     mDefaultElementType, getter_AddRefs(content));
+  rv = CreateElem(name, nsnull, GetDefaultNamespaceID(), PR_TRUE,
+                  getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);
@@ -4360,20 +4360,12 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
   PRInt32 elementType = aDocumentDefaultType ? mDefaultElementType :
                                                aNamespaceID;
 
-  return CreateElement(aName, aPrefix, aNamespaceID, elementType, aResult);
-}
-
-nsresult
-nsDocument::CreateElement(nsIAtom *aName, nsIAtom *aPrefix,
-                          PRInt32 aNamespaceID, PRInt32 aElementType,
-                          nsIContent** aResult)
-{
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
                                               getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CreateElement(nodeInfo, aElementType, aResult);
+  return CreateElement(nodeInfo, elementType, aResult);
 }
 
 nsresult
