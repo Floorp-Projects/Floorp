@@ -42,85 +42,10 @@ private:
 public:
   
 	NS_DECL_ISUPPORTS
-
+  NS_DECL_NSIRDFDATASOURCE
 	nsAbRDFDataSource(void);
 	virtual ~nsAbRDFDataSource(void);
 	virtual nsresult Init();
-
-	// nsIRDFDataSource methods
-	NS_IMETHOD GetURI(char* *uri);
-
-	NS_IMETHOD GetSource(nsIRDFResource* property,
-					   nsIRDFNode* target,
-					   PRBool tv,
-					   nsIRDFResource** source /* out */);
-
-	NS_IMETHOD GetTarget(nsIRDFResource* source,
-					   nsIRDFResource* property,
-					   PRBool tv,
-					   nsIRDFNode** target);
-
-	NS_IMETHOD GetSources(nsIRDFResource* property,
-						nsIRDFNode* target,
-						PRBool tv,
-						nsISimpleEnumerator** sources);
-
-	NS_IMETHOD GetTargets(nsIRDFResource* source,
-						nsIRDFResource* property,    
-						PRBool tv,
-						nsISimpleEnumerator** targets);
-
-	NS_IMETHOD Assert(nsIRDFResource* source,
-					nsIRDFResource* property, 
-					nsIRDFNode* target,
-					PRBool tv);
-
-	NS_IMETHOD Unassert(nsIRDFResource* source,
-					  nsIRDFResource* property,
-					  nsIRDFNode* target);
-
-	NS_IMETHOD Change(nsIRDFResource *aSource,
-					nsIRDFResource *aProperty,
-					nsIRDFNode *aOldTarget,
-					nsIRDFNode *aNewTarget);
-
-	NS_IMETHOD Move(nsIRDFResource *aOldSource,
-				  nsIRDFResource *aNewSource,
-				  nsIRDFResource *aProperty,
-				  nsIRDFNode *aTarget);
-
-	NS_IMETHOD HasAssertion(nsIRDFResource* source,
-						  nsIRDFResource* property,
-						  nsIRDFNode* target,
-						  PRBool tv,
-						  PRBool* hasAssertion);
-
-	NS_IMETHOD AddObserver(nsIRDFObserver* n);
-
-	NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
-
-	NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-						 nsISimpleEnumerator** labels);
-
-	NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-						  nsISimpleEnumerator** labels); 
-
-	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor);
-
-	NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-							nsIEnumerator/*<nsIRDFResource>*/** commands);
-	NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-							nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
-
-	NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-							  nsIRDFResource*   aCommand,
-							  nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-							  PRBool* aResult);
-
-	NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-					   nsIRDFResource*   aCommand,
-					   nsISupportsArray/*<nsIRDFResource>*/* aArguments);
-
   
 protected:
 

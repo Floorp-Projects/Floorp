@@ -30,16 +30,7 @@ public:
 	virtual ~nsAddrBookSession();
 
 	NS_DECL_ISUPPORTS
-	
-	// nsIAddrBookSession support
-
-	NS_IMETHOD AddAddressBookListener(nsIAbListener *listener);
-	NS_IMETHOD RemoveAddressBookListener(nsIAbListener *listener);
-	NS_IMETHOD NotifyItemPropertyChanged(nsISupports *item, const char *property, const char* oldValue, const char* newValue);
-	NS_IMETHOD NotifyDirectoryItemAdded(nsIAbDirectory *directory, nsISupports *item);
-	NS_IMETHOD NotifyDirectoryItemDeleted(nsIAbDirectory *directory, nsISupports *item);
-	NS_IMETHOD GetUserProfileDirectory(nsFileSpec * *userDir);
-
+	NS_DECL_NSIADDRBOOKSESSION
   
 protected:
 

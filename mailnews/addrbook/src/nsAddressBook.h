@@ -40,15 +40,7 @@ public:
 	virtual ~nsAddressBook();
 
 	NS_DECL_ISUPPORTS
-
-	// nsIAddressBook
-	NS_IMETHOD DeleteCards(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
-	NS_IMETHOD NewAddressBook(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, const char *name);
-	NS_IMETHOD DeleteAddressBooks(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
-	NS_IMETHOD PrintCard();
-	NS_IMETHOD PrintAddressbook();
-	NS_IMETHOD SetWebShellWindow(nsIDOMWindow *win);
-	NS_IMETHOD ImportAddressBook();
+    NS_DECL_NSIADDRESSBOOK
 
 protected:
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 

@@ -42,7 +42,7 @@ private:
 public:
   
 	NS_DECL_ISUPPORTS_INHERITED
-
+  NS_DECL_NSIABLISTENER
 	nsAbCardDataSource(void);
 	virtual ~nsAbCardDataSource (void);
 	virtual nsresult Init();
@@ -80,13 +80,6 @@ public:
 	NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 					   nsIRDFResource*   aCommand,
 					   nsISupportsArray/*<nsIRDFResource>*/* aArguments);
-
-	NS_IMETHOD OnItemAdded(nsISupports *parentDirectory, nsISupports *item);
-
-	NS_IMETHOD OnItemRemoved(nsISupports *parentDirectory, nsISupports *item);
-
-	NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property,
-									const char *oldValue, const char *newValue);
 
   // caching frequently used resources
 protected:

@@ -56,16 +56,7 @@ class nsAddrDatabase : public nsIAddrDatabase
 {
 public:
 	NS_DECL_ISUPPORTS
-
-	//////////////////////////////////////////////////////////////////////////////
-	// nsIAddrDBAnnouncer methods:
-
-	NS_IMETHOD AddListener(nsIAddrDBListener *listener);
-	NS_IMETHOD RemoveListener(nsIAddrDBListener *listener);
-	NS_IMETHOD NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
-	NS_IMETHOD NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
-	NS_IMETHOD NotifyAnnouncerGoingAway();
-
+    NS_DECL_NSIADDRDBANNOUNCER
 	//////////////////////////////////////////////////////////////////////////////
 	// nsIAddrDatabase methods:
 

@@ -42,7 +42,7 @@ private:
 public:
   
 	NS_DECL_ISUPPORTS_INHERITED
-
+  NS_DECL_NSIABLISTENER
 	nsAbDirectoryDataSource(void);
 	virtual ~nsAbDirectoryDataSource (void);
 	virtual nsresult Init();
@@ -85,12 +85,6 @@ public:
 					   nsIRDFResource*   aCommand,
 					   nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
-	NS_IMETHOD OnItemAdded(nsISupports *parentDirectory, nsISupports *item);
-
-	NS_IMETHOD OnItemRemoved(nsISupports *parentDirectory, nsISupports *item);
-
-	NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property,
-									const char *oldValue, const char *newValue);
 protected:
 
 	nsresult createDirectoryNode(nsIAbDirectory* directory, nsIRDFResource* property,

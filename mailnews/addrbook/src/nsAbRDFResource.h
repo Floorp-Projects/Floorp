@@ -45,11 +45,7 @@ public:
 	virtual ~nsAbRDFResource(void);
 
 	NS_DECL_ISUPPORTS_INHERITED
-
-	// nsIAddrDBListener
-	NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
-	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
-	NS_IMETHOD OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator);
+  NS_DECL_NSIADDRDBLISTENER
 
 protected:
 

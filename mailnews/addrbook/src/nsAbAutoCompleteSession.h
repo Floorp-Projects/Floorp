@@ -37,10 +37,9 @@ class nsAbAutoCompleteSession : public nsIAutoCompleteSession
 {
 public:
 	NS_DECL_ISUPPORTS
+    NS_DECL_NSIAUTOCOMPLETESESSION
 	nsAbAutoCompleteSession();
 	virtual ~nsAbAutoCompleteSession();
-
-	NS_IMETHOD AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener); 
 
 protected:
   nsresult InitializeTable();
