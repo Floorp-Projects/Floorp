@@ -86,8 +86,6 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     {
         // Initialise XPCOM
         NS_InitXPCOM2(&sServiceManager, mozBinDirectory, appFileLocProvider);
-        if (!sServiceManager)
-            return NS_ERROR_NULL_POINTER;
                 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
         sXPCOMInitializedFlag = PR_TRUE;
@@ -132,9 +130,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 #ifdef HACK_AROUND_THREADING_ISSUES
     // XXX force certain objects to be created on the main thread
     nsCOMPtr<nsIStringBundleService> sBundleService;
-    rv = sServiceManager->GetService(NS_STRINGBUNDLE_CONTRACTID,
-                                     nsIStringBundleService::GetIID(), 
-                                     getter_AddRefs(sBundleService));
+    sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIStringBundle> stringBundle;
@@ -146,9 +142,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 
     // Init the chrome registry.
     nsCOMPtr<nsIChromeRegistry> chromeReg;
-    rv = sServiceManager->GetService("@mozilla.org/chrome/chrome-registry;1", 
-                                     nsIChromeRegistry::GetIID(), 
-                                     getter_AddRefs(chromeReg));
+    chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1", &rv);
     if (chromeReg)
     {
         // Ignore the return value here.  If chrome is already initialized
@@ -169,7 +163,7 @@ nsresult NS_TermEmbedding()
     }
     sInitCounter = 0;
 
-    NS_RELEASE(sServiceManager);
+    NS_IF_RELEASE(sServiceManager);
 
     // Terminate XPCOM & cleanup
 #ifndef HACK_AROUND_NONREENTRANT_INITXPCOM
