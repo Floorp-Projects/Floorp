@@ -3598,8 +3598,8 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
   nsCAutoString oneHeader;
   nsCAutoString headerName;
   nsCAutoString headerValue;
-  PRUint32 crlf = 0;
-  PRUint32 colon = 0;
+  PRInt32 crlf = 0;
+  PRInt32 colon = 0;
   nsIAtom *headerAtom;
   
   //
