@@ -103,7 +103,7 @@
             [% IF type.is_active %]
               <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
               <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
-              [% IF type.is_requestable %]
+              [% IF type.is_requestable || flag.status == "?" %]
                 <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
               [% END %]
             [% ELSE %]

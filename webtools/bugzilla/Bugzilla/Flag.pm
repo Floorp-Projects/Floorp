@@ -166,7 +166,9 @@ sub validate {
                             { id => $id, status => $status });
                 
         # Make sure the user didn't request the flag unless it's requestable.
-        if ($status eq '?' && !$flag->{type}->{is_requestable}) {
+        # If the flag was requested before it became unrequestable, leave it as is.
+        if ($status eq '?' && $flag->{status} ne '?' && 
+            !$flag->{type}->{is_requestable}) {
             ThrowCodeError("flag_status_invalid", 
                            { id => $id, status => $status });
         }
