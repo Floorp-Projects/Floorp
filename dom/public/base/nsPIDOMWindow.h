@@ -92,6 +92,8 @@ public:
   NS_IMETHOD SetFrameElementInternal(nsIDOMElement* aFrameElement) = 0;
 
   NS_IMETHOD IsLoadingOrRunningTimeout(PRBool* aResult) = 0;
+  NS_IMETHOD IsPopupSpamWindow(PRBool *aResult) = 0;
+  NS_IMETHOD SetPopupSpamWindow(PRBool aPopup) = 0;
 
   NS_IMETHOD SetOpenerScriptURL(nsIURI* aURI) = 0;
 };
