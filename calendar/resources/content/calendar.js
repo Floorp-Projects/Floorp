@@ -763,6 +763,41 @@ function jsDateToDateTime(date)
     return newDate;
 }
 
+
+function appendCalendars(to, froms, listener)
+{
+    var getListener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
+        {
+            if (listener)
+                listener.onOperationComplete(aCalendar, aStatus, aOperationType,
+                                             aId, aDetail);
+        },
+        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
+        {
+            if (!Components.isSuccessCode(aStatus)) {
+                aborted = true;
+                return;
+            }
+            if (aCount) {
+                for (var i=0; i<aCount; ++i) {
+                    // Store a (short living) reference to the item.
+                    var itemCopy = aItems[i].clone();
+                    to.addItem(itemCopy, null);
+                }  
+            }
+        }
+    };
+
+
+    for each(var from in froms) {
+        from.getItems(Components.interfaces.calICalendar.ITEM_FILTER_TYPE_ALL,
+                      0, null, null, getListener);
+    }
+}
+
+
+
 /* 
 * returns true if lastModified match
 *
@@ -1388,44 +1423,45 @@ function print()
 
 function publishEntireCalendar()
 {
-   var args = new Object();
-   
-   args.onOk =  self.publishEntireCalendarDialogResponse;
-   var name = gCalendarWindow.calendarManager.getSelectedCalendarId();
-   var node = gCalendarWindow.calendarManager.rdf.getNode( name );
+    var args = new Object();
 
-   var remotePath = node.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
-   
-   if( remotePath != "" && remotePath != null )
-   {
-      var publishObject = new Object( );
-      publishObject.remotePath = remotePath;
-      args.publishObject = publishObject;
-   }
-   
-   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
+    args.onOk =  self.publishEntireCalendarDialogResponse;
+
+    var remotePath = ""; // get a remote path as a pref of the calendar
+
+    if (remotePath != "" && remotePath != null) {
+        var publishObject = new Object( );
+        publishObject.remotePath = remotePath;
+        args.publishObject = publishObject;
+    }
+
+    openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
 }
 
 function publishEntireCalendarDialogResponse( CalendarPublishObject )
 {
-   //update the calendar object with the publish information
-   var name = gCalendarWindow.calendarManager.getSelectedCalendarId();
-   
-   //get the node
-   var node = gCalendarWindow.calendarManager.rdf.getNode( name );
-   
-   node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarPublishObject.remotePath );
-   
-    if( node.getAttribute("http://home.netscape.com/NC-rdf#publishAutomatically") != "true" )
-        node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", "false");
+    var icsURL = makeURL(CalendarPublishObject.remotePath);
 
-   gCalendarWindow.calendarManager.rdf.flush();
-      
-   calendarUploadFile(node.getAttribute( "http://home.netscape.com/NC-rdf#path" ), 
-                      CalendarPublishObject.remotePath, 
-                      "text/calendar");
+    var oldCalendar = getCalendar(); // get the currently selected calendar
 
-   return( false );
+    // create an ICS calendar, but don't register it
+    var calManager = getCalendarManager();
+    try {
+        var newCalendar = calManager.createCalendar(oldCalendar.name, "ics", icsURL);
+    } catch (ex) {
+        dump(ex);
+        return false;
+    }
+
+    var getListener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
+        {
+            // delete the new calendar now that we're done with it
+            calManager.deleteCalendar(newCalendar);
+        }
+    };
+
+    appendCalendars(newCalendar, [oldCalendar], getListener);
 }
 
 function publishCalendarData()

@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -104,155 +105,155 @@ function convertToUnicode(aCharset, aSrc )
 
 function loadEventsFromFile()
 {
-  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+    const nsIFilePicker = Components.interfaces.nsIFilePicker;
   
-  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-  fp.init(window, gCalendarBundle.getString("Open"), nsIFilePicker.modeOpenMultiple);
-  fp.defaultExtension = "ics";
-   
-  fp.appendFilter( filterCalendar, "*" + extensionCalendar );
-  fp.appendFilter( filterXcs, "*" + extensionXcs );
-  fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
-  fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
-  fp.show();
-  var filesToAppend = fp.files;
-  
-  if (filesToAppend && filesToAppend.hasMoreElements()) 
-  {
-      var calendarEventArray = new Array();
-      var duplicateEventArray = new Array();
-      var calendarToDoArray = new Array();
-      var duplicateToDoArray = new Array();
-      var currentFile;
-      var aDataStream;
-      var i;
-      var parsedEventArray = null, parsedToDoArray = null;
-      var date = new Date();
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+    fp.init(window, gCalendarBundle.getString("Open"), nsIFilePicker.modeOpenMultiple);
+    fp.defaultExtension = "ics";
 
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
-      promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
-      var flags = ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 ) + 
-                  ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 ) + 
-                  ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 );
-      var intoCalName = getSelectedCalendarNameOrDefault();
-      var importAllStr = gCalendarBundle.getString( "importAll" );
-      var promptStr = gCalendarBundle.getString( "promptForEach" );
-      var discardAllStr = gCalendarBundle.getString( "discardAll" );
-      var importNewEventsTitle = gCalendarBundle.getString( "aboutToImportNewEventsTitle" );
-      var importDupEventsTitle = gCalendarBundle.getString( "aboutToImportDupEventsTitle" );
-      var importNewTasksTitle = gCalendarBundle.getString( "aboutToImportNewTasksTitle" );
-      var importDupTasksTitle = gCalendarBundle.getString( "aboutToImportDupTasksTitle" );
-      var fromFileNames = "";
-      
-      while (filesToAppend.hasMoreElements())
-      {
-        currentFile = filesToAppend.getNext().QueryInterface(Components.interfaces.nsILocalFile);
-        fromFileNames += (fromFileNames == "" ? "" : ", ") + currentFile.leafName;
-        aDataStream = readDataFromFile( currentFile.path, "UTF-8" );
-        
-        switch (fp.filterIndex) {
-        case 1 : // xcs: transform data into ics data
-          aDataStream = transformXCSData( aDataStream );
-          // fall thru to process ics data
-        case 0 : // ics
-        case 3 : // vcs
-          parsedEventArray = parseIcalEvents( aDataStream );
-          parsedToDoArray = parseIcalToDos( aDataStream );
-          break;
-        case 2: // csv
-          parsedEventArray = parseOutlookCSVEvents( aDataStream );
-          break;
-        default:
-          break;
-        }
-        if( parsedEventArray ) {
-          for( i = 0; i < parsedEventArray.length; i++ ) {
-            var parsedEvent = parsedEventArray[i];
-            date.setTime( parsedEvent.start.getTime() );
-            if( eventExists( date, parsedEvent.title ) )
-              duplicateEventArray[duplicateEventArray.length] = parsedEvent;
-            else
-              calendarEventArray[calendarEventArray.length] = parsedEvent;
-          }
-        }
-        if( parsedToDoArray ) {
-          for( i = 0; i < parsedToDoArray.length; i++ ) {
-            var parsedToDo = parsedToDoArray[i];
-            date.setTime( parsedToDo.start.getTime() );
-            if( toDoExists( date, parsedToDo.title ) )
-              duplicateToDoArray[duplicateToDoArray.length] = parsedToDo;
-            else
-              calendarToDoArray[calendarToDoArray.length] = parsedToDo;
-          }
-        }
-      }
-      
-      var result = {value:0}; 
-      var buttonPressed;
+    fp.appendFilter( filterCalendar, "*" + extensionCalendar );
+    fp.appendFilter( filterXcs, "*" + extensionXcs );
+    fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
+    fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
+    fp.show();
+    var filesToAppend = fp.files;
 
-      // EVENTS:
-      if (calendarEventArray.length > 0) {
-        // Ask user what to import (all / prompt each / none)
-        var importNewEventsText = gCalendarBundle.getFormattedString( "aboutToImportNewEvents", [calendarEventArray.length, intoCalName, fromFileNames]);
-        buttonPressed = promptService.confirmEx( window, importNewEventsTitle, importNewEventsText, flags,
-                                                     importAllStr, discardAllStr, promptStr,
+    if (filesToAppend && filesToAppend.hasMoreElements()) {
+        var calendarEventArray = new Array();
+        var duplicateEventArray = new Array();
+        var calendarToDoArray = new Array();
+        var duplicateToDoArray = new Array();
+        var currentFile;
+        var aDataStream;
+        var i;
+        var parsedEventArray = null, parsedToDoArray = null;
+        var date = new Date();
+
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
+        promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
+        var flags = ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 ) + 
+            ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 ) + 
+            ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 );
+        var intoCalName = getSelectedCalendarNameOrDefault();
+        var importAllStr = gCalendarBundle.getString( "importAll" );
+        var promptStr = gCalendarBundle.getString( "promptForEach" );
+        var discardAllStr = gCalendarBundle.getString( "discardAll" );
+        var importNewEventsTitle = gCalendarBundle.getString( "aboutToImportNewEventsTitle" );
+        var importDupEventsTitle = gCalendarBundle.getString( "aboutToImportDupEventsTitle" );
+        var importNewTasksTitle = gCalendarBundle.getString( "aboutToImportNewTasksTitle" );
+        var importDupTasksTitle = gCalendarBundle.getString( "aboutToImportDupTasksTitle" );
+        var fromFileNames = "";
+
+        // create a temp memory calendar to put all the events and todos in to
+        var tmpCalendar = getCalendarManager().createCalendar("tmpcal", "memory", null);
+
+        while (filesToAppend.hasMoreElements()) {
+            currentFile = filesToAppend.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+            fromFileNames += (fromFileNames == "" ? "" : ", ") + currentFile.leafName;
+            aDataStream = readDataFromFile( currentFile.path, "UTF-8" );
+
+            switch (fp.filterIndex) {
+            case 1 : // xcs: transform data into ics data
+                aDataStream = transformXCSData( aDataStream );
+                // fall thru to process ics data
+            case 0 : // ics
+            case 3 : // vcs
+                parseIcalEvents(tmpCalendar, aDataStream);
+                parseIcalToDos(tmpCalendar, aDataStream);
+                break;
+            case 2: // csv
+                parseOutlookCSVEvents(tmpCalendar, aDataStream);
+                break;
+            default:
+                break;
+            }
+        }
+
+        var listener = {
+            onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
+            {
+                // delete the new calendar now that we're done with it
+                getCalendarManager().deleteCalendar(tmpCalendar);
+            }
+        };
+
+
+        appendCalendars(getCalendar(), [tmpCalendar], listener);
+
+        return true;
+
+        // XXX handle all this stuff
+
+        var result = {value:0}; 
+        var buttonPressed;
+
+        // EVENTS:
+        if (calendarEventArray.length > 0) {
+            // Ask user what to import (all / prompt each / none)
+            var importNewEventsText = gCalendarBundle.getFormattedString( "aboutToImportNewEvents",
+                                                                          [calendarEventArray.length,
+                                                                           intoCalName, fromFileNames]);
+            buttonPressed = promptService.confirmEx( window, importNewEventsTitle, importNewEventsText,
+                                                     flags, importAllStr, discardAllStr, promptStr,
                                                      null, result );
         
-        if(buttonPressed == 0) // Import all
-            addEventsToCalendar( calendarEventArray, true );
-        else if(buttonPressed == 2) // prompt
-            addEventsToCalendar( calendarEventArray );
-        //else if(buttonPressed == 1) // discard all
-      }
+            if(buttonPressed == 0) // Import all
+                addEventsToCalendar( calendarEventArray, true );
+            else if(buttonPressed == 2) // prompt
+                addEventsToCalendar( calendarEventArray );
+            //else if(buttonPressed == 1) // discard all
+        }
       
-      if (duplicateEventArray.length > 0) {
+        if (duplicateEventArray.length > 0) {
+            // Ask user what to do with duplicates
+            var importDupEventsText = gCalendarBundle.getFormattedString( "aboutToImportDupEvents",
+                                                                          [duplicateEventArray.length,
+                                                                           intoCalName, fromFileNames]);
+            buttonPressed = promptService.confirmEx( window, importDupEventsTitle, importDupEventsText, flags,
+                                                     importAllStr, discardAllStr, promptStr,
+                                                     null, result );
+            if(buttonPressed == 0) // Import all
+                addEventsToCalendar( duplicateEventArray, true );
+            else if(buttonPressed == 2) // Prompt for each
+                addEventsToCalendar( duplicateEventArray ); 
+            //else if(buttonPressed == 1) // Discard all
+        }
+        
+        // TODOS
+        if (calendarToDoArray.length > 0) {
+            // Ask user what to import (all / prompt each / none)
+            var importNewTasksText = gCalendarBundle.getFormattedString( "aboutToImportNewTasks", [calendarToDoArray.length, intoCalName, fromFileNames]);
+            buttonPressed = promptService.confirmEx( window, importNewTasksTitle, importNewTasksText, flags,
+                                                     importAllStr, discardAllStr, promptStr,
+                                                     null, result );
+            
+            if(buttonPressed == 0) // Import all
+                addToDosToCalendar( calendarToDoArray, true );
+            else if(buttonPressed == 2) // prompt
+                addToDosToCalendar( calendarToDoArray );
+            //else if(buttonPressed == 1) // discard all
+        }
+        
         // Ask user what to do with duplicates
-        var importDupEventsText = gCalendarBundle.getFormattedString( "aboutToImportDupEvents", [duplicateEventArray.length, intoCalName, fromFileNames]);
-        buttonPressed = promptService.confirmEx( window, importDupEventsTitle, importDupEventsText, flags,
+        if (duplicateToDoArray.length > 0) {
+            var importDupTasksText = gCalendarBundle.getFormattedString( "aboutToImportDupTasks", [duplicateToDoArray.length, intoCalName, fromFileNames]);
+            buttonPressed = promptService.confirmEx( window, importDupTasksTitle, importDupTasksText, flags,
                                                      importAllStr, discardAllStr, promptStr,
                                                      null, result );
-        if(buttonPressed == 0) // Import all
-          addEventsToCalendar( duplicateEventArray, true );
-        else if(buttonPressed == 2) // Prompt for each
-          addEventsToCalendar( duplicateEventArray ); 
-        //else if(buttonPressed == 1) // Discard all
-      }
-      
-      // TODOS
-      if (calendarToDoArray.length > 0) {
-        // Ask user what to import (all / prompt each / none)
-        var importNewTasksText = gCalendarBundle.getFormattedString( "aboutToImportNewTasks", [calendarToDoArray.length, intoCalName, fromFileNames]);
-        buttonPressed = promptService.confirmEx( window, importNewTasksTitle, importNewTasksText, flags,
-                                                     importAllStr, discardAllStr, promptStr,
-                                                     null, result );
-        
-        if(buttonPressed == 0) // Import all
-            addToDosToCalendar( calendarToDoArray, true );
-        else if(buttonPressed == 2) // prompt
-            addToDosToCalendar( calendarToDoArray );
-        //else if(buttonPressed == 1) // discard all
-      }
-      
-      // Ask user what to do with duplicates
-      if (duplicateToDoArray.length > 0) {
-        var importDupTasksText = gCalendarBundle.getFormattedString( "aboutToImportDupTasks", [duplicateToDoArray.length, intoCalName, fromFileNames]);
-        buttonPressed = promptService.confirmEx( window, importDupTasksTitle, importDupTasksText, flags,
-                                                     importAllStr, discardAllStr, promptStr,
-                                                     null, result );
-        if(buttonPressed == 0) // Import all
-          addToDosToCalendar( duplicateToDoArray, true );
-        else if(buttonPressed == 2) // Prompt for each
-          addToDosToCalendar( duplicateToDoArray ); 
-        //else if(buttonPressed == 1) // Discard all
-      }
-      
-      // If there were no events or todos to import, let the user know
-      //
-      if (calendarEventArray.length == 0 && duplicateEventArray.length == 0 &&
-          calendarToDoArray.length == 0 && duplicateToDoArray.length == 0)
-        alert( gCalendarBundle.getFormattedString( "noEventsOrTasksToImport", [fromFileNames] ) );
-  }
-  return true;
+            if(buttonPressed == 0) // Import all
+                addToDosToCalendar( duplicateToDoArray, true );
+            else if(buttonPressed == 2) // Prompt for each
+                addToDosToCalendar( duplicateToDoArray ); 
+            //else if(buttonPressed == 1) // Discard all
+        }
+
+        // If there were no events or todos to import, let the user know
+        //
+        if (calendarEventArray.length == 0 && duplicateEventArray.length == 0 &&
+            calendarToDoArray.length == 0 && duplicateToDoArray.length == 0)
+            alert( gCalendarBundle.getFormattedString( "noEventsOrTasksToImport", [fromFileNames] ) );
+    }
+    return true;
 }
 
 
@@ -895,36 +896,22 @@ function parseOutlookTextField(args, textIndexName, eventFields)
 /**** parseIcalEvents
  *
  * Takes a text block of iCalendar events and tries to split that into individual events.
- * Parses those events and returns an array of calendarEvents.
+ * Parses those events and adds them to a calendar.
  */
- 
-function parseIcalEvents( icalStr )
+
+function parseIcalEvents(calendar, icalStr)
 {
-   var calendarEventArray =  new Array();
+    for (var i=0, j=0; (i = icalStr.indexOf("BEGIN:VEVENT", j)) != -1; ) {
+        // try to find the begin and end of an event. ParseIcalString does not support VCALENDAR
+        j = icalStr.indexOf("END:VEVENT", i + "BEGIN:VEVENT".length);
+        j = (j == -1? icalStr.length : j + "END:VEVENT".length);
 
-   for(var i=0, j=0; (i = icalStr.indexOf("BEGIN:VEVENT", j)) != -1; )
-   { 
-      // try to find the begin and end of an event. ParseIcalString does not support VCALENDAR
-      j = icalStr.indexOf("END:VEVENT", i + "BEGIN:VEVENT".length);
-      j = (j == -1? icalStr.length : j + "END:VEVENT".length);
-      var eventData = icalStr.substring(i, j);
+        var eventData = icalStr.substring(i, j);
+        var calendarEvent = createEvent();
+        calendarEvent.icalString = eventData;
 
-      var calendarEvent = createEvent();
-
-      // if parsing import iCalendar failed, add data as description
-      if ( !calendarEvent.parseIcalString(eventData) )
-      {
-         // initialize start and end dates.
-         initCalendarEvent( calendarEvent );
-
-         // Save the parsed text as description.
-         calendarEvent.description = eventData;      
-      }
-
-      calendarEventArray[ calendarEventArray.length ] = calendarEvent;
-   }
-   
-   return calendarEventArray;
+        calendar.addItem(calendarEvent, null);
+    }
 }
 
 /**** parseIcalToDos
@@ -933,33 +920,19 @@ function parseIcalEvents( icalStr )
  * Parses those toDos and returns an array of calendarToDos.
  */
  
-function parseIcalToDos( icalStr )
+function parseIcalToDos(calendar, icalStr)
 {
-   var calendarToDoArray =  new Array();
-
-   for(var i=0, j=0; (i = icalStr.indexOf("BEGIN:VTODO", j)) != -1; )
-   { 
+   for(var i=0, j=0; (i = icalStr.indexOf("BEGIN:VTODO", j)) != -1; ) { 
       // try to find the begin and end of an toDo. ParseIcalString does not support VCALENDAR
       j = icalStr.indexOf("END:VTODO", i + "BEGIN:VTODO".length);
       j = (j == -1? icalStr.length : j + "END:VTODO".length);
-      var toDoData = icalStr.substring(i, j);
 
+      var eventData = icalStr.substring(i, j);
       var calendarToDo = createToDo();
+      calendarToDo.icalString = eventData;
 
-      // if parsing import iCalendar failed, add data as description
-      if ( !calendarToDo.parseIcalString(toDoData) )
-      {
-         // initialize start and end dates.
-         initCalendarToDo( calendarToDo );
-
-         // Save the parsed text as description.
-         calendarToDo.description = toDoData;      
-      }
-
-      calendarToDoArray[ calendarToDoArray.length ] = calendarToDo;
+      calendar.addItem(calendarToDo, null);
    }
-   
-   return calendarToDoArray;
 }
 
 /**** transformXCSData: transform into ics data
@@ -2013,6 +1986,7 @@ function getXmlDocument ( eventList )
 }
 
 function startImport() {
+  /*
     var ImportExportErrorHandler = {
         errorreport : "",
         onLoad   : function() {},
@@ -2033,7 +2007,10 @@ function startImport() {
 
     }
     gICalLib.addObserver( ImportExportErrorHandler );
-    loadEventsFromFile();
     ImportExportErrorHandler.showErrors();
     gICalLib.removeObserver( ImportExportErrorHandler );
+  */
+
+    loadEventsFromFile();
+
 }
