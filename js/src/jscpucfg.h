@@ -160,7 +160,7 @@
 #define PR_WORDS_PER_DWORD_LOG2  1L
 #endif /* defined(_WINDOWS) && !defined(_WIN32) */
 
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 
 #error "This file is supposed to be auto-generated on UNIX platforms, but the"
 #error "static version for Mac and Windows platforms is being used."
@@ -168,7 +168,7 @@
 
 #else
 
-#error "Must define one of XP_MAC, XP_PC or XP_UNIX"
+#error "Must define one of XP_MAC, XP_PC, XP_UNIX, or XP_BEOS"
 
 #endif
 

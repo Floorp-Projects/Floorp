@@ -37,7 +37,7 @@
 #   define CURRENT_DIR          "c:\\"
 #   define POPEN                _popen
 #   define PCLOSE               _pclose
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #   include <strings.h>
 #   include <stdio.h>
 #   include <stdlib.h>
@@ -246,7 +246,7 @@ js_isAbsolute(const char *name)
     return (strlen(name)>1)?((name[1]==':')?JS_TRUE:JS_FALSE):JS_FALSE;
 #else
     return (name[0]
-#   ifdef XP_UNIX
+#   if defined(XP_UNIX) || defined(XP_BEOS)
             ==
 #   else
             !=
