@@ -16,7 +16,6 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestContainerFrame.exe
@@ -33,7 +32,7 @@ LLIBS=				\
  $(LIBNSPR)			\
  $(DIST)\lib\libplc21.lib
 
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\layout\config\rules.mak>
 
 install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG1) $(DIST)\bin
@@ -49,7 +48,7 @@ install:: $(PROGRAMS)
         $(INCS)
         $(LLIBS)
         $(OS_LIBS)
-        -Fd$(PBDFILE)
+        -Fd.\$(OBJDIR)\$(*B)
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp

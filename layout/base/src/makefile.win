@@ -16,7 +16,6 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
 
 LIBRARY_NAME=raptorlayout_s 
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
@@ -73,10 +72,11 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\layout\config\rules.mak>
 
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(PDBFILE).pdb

@@ -16,7 +16,6 @@
 # Reserved.
 
 DEPTH=..\..\..\.. 
-IGNORE_MANIFEST=1
 
 LIBRARY_NAME=raptorhtmlforms_s 
 
@@ -44,7 +43,7 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\layout\config\rules.mak>
 
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib

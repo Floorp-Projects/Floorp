@@ -16,10 +16,9 @@
 # Reserved.
 
 DEPTH=..\..\..\.. 
-IGNORE_MANIFEST=1
 
 EXPORTS=nsICSSParser.h 
 MODULE=raptor 
 
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\layout\config\rules.mak>
 
