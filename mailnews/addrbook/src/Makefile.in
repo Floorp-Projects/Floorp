@@ -98,6 +98,7 @@ EXPORTS		+= nsAbLDAPDirectoryQuery.h \
 		nsAbLDAPDirectory.h \
 		nsAbLDAPDirFactory.h \
 		nsAbLDAPCard.h \
+		nsAbLDAPAutoCompFormatter.h \
 		$(NULL)
 
 CPPSRCS		+= nsAbLDAPDirectory.cpp \
@@ -106,6 +107,7 @@ CPPSRCS		+= nsAbLDAPDirectory.cpp \
                 nsAbLDAPProperties.cpp \
                 nsAbLDAPDirectoryQuery.cpp \
                 nsAbBoolExprToLDAPFilter.cpp \
+		nsAbLDAPAutoCompFormatter.cpp \
 		$(NULL)
 endif
 

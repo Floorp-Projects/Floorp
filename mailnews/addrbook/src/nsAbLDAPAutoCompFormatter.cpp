@@ -1,0 +1,521 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): Dan Mosedale <dmose@netscape.com> (Original Author)
+ */
+
+// Work around lack of conditional build logic in codewarrior's
+// build system.  The MOZ_LDAP_XPCOM preprocessor symbol is only 
+// defined on Mac because noone else needs this weirdness; thus 
+// the XP_MAC check first.  This conditional encloses the entire
+// file, so that in the case where the ldap option is turned off
+// in the mac build, a dummy (empty) object will be generated.
+//
+#if !defined(XP_MAC) || defined(MOZ_LDAP_XPCOM)
+
+#include "nsAbLDAPAutoCompFormatter.h"
+#include "nsIAutoCompleteResults.h"
+#include "nsIServiceManager.h"
+#include "nsIMsgHeaderParser.h"
+#include "nsLDAP.h"
+#include "prlog.h"
+
+NS_IMPL_ISUPPORTS2(nsAbLDAPAutoCompFormatter, 
+		   nsILDAPAutoCompFormatter, 
+		   nsIAbLDAPAutoCompFormatter)
+
+nsAbLDAPAutoCompFormatter::nsAbLDAPAutoCompFormatter() :
+    mNameFormat(NS_LITERAL_STRING("[cn]")),
+    mAddressFormat(NS_LITERAL_STRING("{mail}")),
+    mCommentFormat(NS_LITERAL_STRING("[o]"))
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsAbLDAPAutoCompFormatter::~nsAbLDAPAutoCompFormatter()
+{
+}
+
+NS_IMETHODIMP
+nsAbLDAPAutoCompFormatter::Format(nsILDAPMessage *aMsg, 
+                                  nsIAutoCompleteItem **aItem) 
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIMsgHeaderParser> msgHdrParser = 
+        do_GetService("@mozilla.org/messenger/headerparser;1", &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::Format(): do_GetService()"
+                 " failed trying to obtain"
+                 " '@mozilla.org/messenger/headerparser;1'");
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    // generate the appropriate string
+    //
+    nsCAutoString name;
+    rv = ProcessFormat(mNameFormat, aMsg, &name, 0);
+    if (NS_FAILED(rv)) {
+        // Something went wrong lower down the stack; a message should
+        // have already been logged there.  Return an error, rather
+        // than trying to generate a bogus nsIAutoCompleteItem
+        //
+        return rv;
+    }
+
+    nsCAutoString address;
+    rv = ProcessFormat(mAddressFormat, aMsg, &address, 0);
+    if (NS_FAILED(rv)) {
+        // Something went wrong lower down the stack; a message should have 
+        // already been logged there.  Return an error, rather than trying to 
+        // generate a bogus nsIAutoCompleteItem.
+        //
+        return rv;
+    }
+
+    nsXPIDLCString value;
+    /* As far as I can tell, the documentation in nsIMsgHdrParser that 
+     * nsnull means "US-ASCII" is actually wrong, it appears to mean UTF8
+     */
+    rv = msgHdrParser->MakeFullAddress(nsnull, name.get(), address.get(), 
+                                       getter_Copies(value));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::Format(): call to"
+                 " MakeFullAddress() failed");
+        return rv;
+    }
+
+    // create an nsIAutoCompleteItem to hold the returned value
+    //
+    nsCOMPtr<nsIAutoCompleteItem> item = do_CreateInstance(
+        NS_AUTOCOMPLETEITEM_CONTRACTID, &rv);
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::Format(): couldn't"
+                 " create " NS_AUTOCOMPLETEITEM_CONTRACTID "\n");
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    // this is that part that actually gets autocompleted to
+    //
+    rv = item->SetValue(NS_ConvertUTF8toUCS2(value));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::Format(): "
+                 "item->SetValue failed");
+        return rv;
+    }
+
+    // generate the appropriate string to appear as a comment off to the side
+    //
+    nsCAutoString comment;
+    rv = ProcessFormat(mCommentFormat, aMsg, &comment, 0);
+    if (NS_FAILED(rv)) {
+        // Something went wrong lower down the stack; a messagne should have 
+        // already been logged there.  Return an error rather than
+        // trying to generate a bogus nsIAutoCompleteItem.
+        //
+        return rv;
+    }
+
+    rv = item->SetComment(NS_ConvertUTF8toUCS2(comment).get());
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::Format():"
+                 " item->SetComment failed");
+        return rv;
+    }
+
+    // all done; return the item
+    //
+    NS_IF_ADDREF(*aItem = item);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAbLDAPAutoCompFormatter::GetAttributes(PRUint32 *aCount, char ** *aAttrs)
+{
+    if (!aCount || !aAttrs) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+
+    nsCStringArray mSearchAttrs;
+    nsresult rv = ProcessFormat(mNameFormat, 0, 0, &mSearchAttrs);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsAbLDAPAutoCompFormatter::SetNameFormat(): "
+                   "ProcessFormat() failed");
+        return rv;
+    }
+    rv = ProcessFormat(mAddressFormat, 0, 0, &mSearchAttrs);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsAbLDAPAutoCompFormatter::SetNameFormat(): "
+                   "ProcessFormat() failed");
+        return rv;
+    }
+    rv = ProcessFormat(mCommentFormat, 0, 0, &mSearchAttrs);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsAbLDAPAutoCompFormatter::SetNameFormat(): "
+                   "ProcessFormat() failed");
+        return rv;
+    }
+
+    // none of the formatting templates require any LDAP attributes
+    //
+    PRUint32 count = mSearchAttrs.Count();   // size of XPCOM array we'll need
+    if (!count) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::GetAttributes(): "
+                 "current output format (if set) requires no search "
+                 "attributes");
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    // build up the raw XPCOM array to return
+    //
+    PRUint32 rawSearchAttrsSize = 0;        // grown as XPCOM array is built
+    char **rawSearchAttrs = 
+        NS_STATIC_CAST(char **, nsMemory::Alloc(count * sizeof(char *)));
+    if (!rawSearchAttrs) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::GetAttributes(): out of "
+		 "memory");
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Loop through the string array, and build up the C-array.
+    //
+    while (rawSearchAttrsSize < count) {
+        if (!(rawSearchAttrs[rawSearchAttrsSize] = 
+              (mSearchAttrs.CStringAt(rawSearchAttrsSize))->ToNewCString())) {
+            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(rawSearchAttrsSize, 
+                                                  rawSearchAttrs);
+            NS_ERROR("nsAbLDAPAutoCompFormatter::GetAttributes(): out "
+		     "of memory");
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        rawSearchAttrsSize++;
+    }
+
+    *aCount = rawSearchAttrsSize;
+    *aAttrs = rawSearchAttrs;
+
+    return NS_OK;
+
+}
+// parse and process a formatting attribute.  If aStringArray is
+// non-NULL, return a list of the attributes from mNameFormat in
+// aStringArray.  Otherwise, generate an autocomplete value from the
+// information in aMessage and append it to aValue.  Any errors
+// (including failure to find a required attribute while building up aValue) 
+// return an NS_ERROR_* up the stack so that the caller doesn't try and
+// generate an nsIAutoCompleteItem from this.
+//
+nsresult
+nsAbLDAPAutoCompFormatter::ProcessFormat(const nsAReadableString & aFormat,
+                                         nsILDAPMessage *aMessage, 
+                                         nsAWritableCString *aValue,
+                                         nsCStringArray *aAttrs)
+{
+    nsresult rv;    // temp for return values
+
+    // get some iterators to parse aFormat
+    //
+    nsReadingIterator<PRUnichar> iter, iterEnd;
+    aFormat.BeginReading(iter);
+    aFormat.EndReading(iterEnd);
+
+    // get the console service for error logging
+    //
+    nsCOMPtr<nsIConsoleService> consoleSvc = 
+        do_GetService("@mozilla.org/consoleservice;1", &rv);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsAbLDAPAutoCompFormatter::ProcessFormat(): "
+                   "couldn't get console service");
+    }
+
+    PRBool attrRequired = PR_FALSE;     // is this attr required or optional?
+    nsCAutoString attrName;             // current attr to get
+
+    // parse until we hit the end of the string
+    //
+    while (iter != iterEnd) {
+
+        switch (*iter) {            // process the next char
+
+        case PRUnichar('{'):
+
+            attrRequired = PR_TRUE;  // this attribute is required
+
+            /*FALLTHROUGH*/
+
+        case PRUnichar('['):
+
+            rv = ParseAttrName(iter, iterEnd, attrRequired, consoleSvc, 
+                               attrName);
+            if ( NS_FAILED(rv) ) {
+
+                // something unrecoverable happened; stop parsing and 
+                // propagate the error up the stack
+                //
+                return rv;
+            }
+
+            // if we're building an array
+            if ( aAttrs ) { 
+
+                // and it doesn't already contain this string
+                if (aAttrs->IndexOfIgnoreCase(attrName) == -1) { 
+
+                    // add it
+                    if (!aAttrs->AppendCString(attrName)) {
+                        
+                        // current AppendCString always returns PR_TRUE;
+                        // if we hit this error, something has changed in
+                        // that code
+                        //
+                        NS_ERROR(
+                            "nsAbLDAPAutoCompFormatter::ProcessFormat():"
+                            " aAttrs->AppendCString(attrName) failed");
+                        return NS_ERROR_UNEXPECTED;
+                    }
+                }
+            } else {
+
+                // otherwise, append the first value of this attr to aValue
+                // XXXdmose should do better than this; bug 76595
+
+                rv = AppendFirstAttrValue(attrName, aMessage, attrRequired, 
+                                          *aValue);
+                if ( NS_FAILED(rv) ) {
+
+                    // something unrecoverable happened; stop parsing and 
+                    // propagate the error up the stack
+                    //
+                    return rv;
+                }
+            }
+
+            attrName.Truncate();     // clear out for next pass
+            attrRequired = PR_FALSE; // reset to the default for the next pass
+
+            break;
+
+        case PRUnichar('\\'):
+
+            // advance the iterator and be sure we haven't run off the end
+            //
+            ++iter;
+            if (iter == iterEnd) {
+
+                // abort; missing escaped char
+                //
+                if (consoleSvc) {
+                    consoleSvc->LogStringMessage(
+                        NS_LITERAL_STRING(
+                            "LDAP addressbook autocomplete formatter: error parsing format string: premature end of string after \\ escape").get());
+
+                    NS_ERROR("LDAP addressbook autocomplete formatter: error "
+                             "parsing format string: premature end of string "
+                             "after \\ escape");
+                }
+
+                return NS_ERROR_ILLEGAL_VALUE;
+            }
+
+            /*FALLTHROUGH*/
+
+        default:
+            
+            // if we're not just building an array of attribute names, append
+            // this character to the item we're generating.
+            //
+            if (!aAttrs) {
+
+                // this character gets treated as a literal
+                //
+                (*aValue).Append(NS_STATIC_CAST(char, *iter));
+            }
+        }
+
+        ++iter; // advance the iterator
+    }
+
+    return NS_OK;
+}
+
+nsresult 
+nsAbLDAPAutoCompFormatter::ParseAttrName(
+    nsReadingIterator<PRUnichar> &aIter,        // iterators for mOutputString
+    nsReadingIterator<PRUnichar> &aIterEnd, 
+    PRBool aAttrRequired,                       // required?  or just optional?
+    nsCOMPtr<nsIConsoleService> &aConsoleSvc,   // no need to reacquire this
+    nsAWritableCString &aAttrName)              // attribute token
+{
+    // reset attrname, and move past the opening brace
+    //
+    ++aIter;
+
+    // get the rest of the attribute name
+    //
+    do {
+
+        // be sure we haven't run off the end
+        //
+        if (aIter == aIterEnd) {
+
+            // abort; missing closing delimiter
+            //
+            if (aConsoleSvc) {
+                aConsoleSvc->LogStringMessage(
+                    NS_LITERAL_STRING(
+                        "LDAP address book autocomplete formatter: error parsing format string: missing } or ]").get());
+
+                NS_ERROR("LDAP address book autocomplete formatter: error "
+                         "parsing format string: missing } or ]");
+            }
+
+            return NS_ERROR_ILLEGAL_VALUE;
+
+        } else if ( (aAttrRequired && *aIter == PRUnichar('}')) || 
+                    (!aAttrRequired && *aIter == PRUnichar(']')) ) {
+
+            // done with this attribute
+            //
+            break;
+
+        } else {
+
+            // this must be part of the attribute name
+            //
+            aAttrName.Append(NS_STATIC_CAST(char,*aIter));
+        }
+
+        ++aIter;
+
+    } while (1);
+
+    return NS_OK;
+}
+
+nsresult
+nsAbLDAPAutoCompFormatter::AppendFirstAttrValue(
+    nsAReadableCString &aAttrName, // attr to get
+    nsILDAPMessage *aMessage, // msg to get values from
+    PRBool aAttrRequired, // is this a required value?
+    nsAWritableCString &aValue)
+{
+    // get the attribute values for the field which will be used 
+    // to fill in nsIAutoCompleteItem::value
+    //
+    PRUint32 numVals;
+    PRUnichar **values;
+
+    nsresult rv;
+    rv = aMessage->GetValues(PromiseFlatCString(aAttrName).get(), &numVals, 
+                             &values);
+    if (NS_FAILED(rv)) {
+
+        switch (rv) {
+        case NS_ERROR_LDAP_DECODING_ERROR:
+            // this may not be an error, per se; it could just be that the 
+            // requested attribute does not exist in this particular message,
+            // either because we didn't request it with the search operation,
+            // or because it doesn't exist on the server.
+            //
+            break;
+
+        case NS_ERROR_OUT_OF_MEMORY:
+        case NS_ERROR_UNEXPECTED:
+            break;
+
+        default:
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
+                     "unexpected return code from aMessage->getValues()");
+            rv = NS_ERROR_UNEXPECTED;
+            break;
+        }
+
+        // if this was a required attribute, don't append anything to aValue
+        // and return the error code
+        //
+        if (aAttrRequired) {
+            return rv;
+        } else {
+            // otherwise forget about this attribute, but return NS_OK, which
+            // will cause our caller to continue processing nameFormat in 
+            // order to generate an nsIAutoCompleteItem.
+            //
+            return NS_OK;
+        }
+    }
+
+    // append the value to our string; then free the array of results
+    //
+    aValue.Append(NS_ConvertUCS2toUTF8(values[0]));
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numVals, values);
+
+    // if this attribute wasn't required, we fall through to here, and return 
+    // ok
+    //
+    return NS_OK;
+}
+
+// attribute AString nameFormat;
+NS_IMETHODIMP 
+nsAbLDAPAutoCompFormatter::GetNameFormat(nsAWritableString & aNameFormat)
+{
+    aNameFormat  = mNameFormat;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsAbLDAPAutoCompFormatter::SetNameFormat(const nsAReadableString & aNameFormat)
+{
+    mNameFormat = aNameFormat; 
+    return NS_OK;
+}
+
+// attribute AString addressFormat;
+NS_IMETHODIMP 
+nsAbLDAPAutoCompFormatter::GetAddressFormat(nsAWritableString & aAddressFormat)
+{
+    aAddressFormat  = mAddressFormat;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsAbLDAPAutoCompFormatter::SetAddressFormat(const nsAReadableString & 
+                                            aAddressFormat)
+{
+    mAddressFormat = aAddressFormat; 
+    return NS_OK;
+}
+
+// attribute AString commentFormat;
+NS_IMETHODIMP 
+nsAbLDAPAutoCompFormatter::GetCommentFormat(nsAWritableString & aCommentFormat)
+{
+    aCommentFormat  = mCommentFormat;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsAbLDAPAutoCompFormatter::SetCommentFormat(const nsAReadableString & 
+                                            aCommentFormat)
+{
+    mCommentFormat = aCommentFormat; 
+
+    return NS_OK;
+}
+
+#endif

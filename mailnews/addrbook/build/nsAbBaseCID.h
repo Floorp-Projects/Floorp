@@ -346,4 +346,15 @@
         {0x84, 0xac, 0x12, 0x48, 0x25, 0xc7, 0x78, 0xf8}        \
 }
 
+// nsAbLDAPAutoCompFormatter
+
+// 4e276d6d-9981-46b4-9070-92f344ac5f5a
+//
+#define NS_ABLDAPAUTOCOMPFORMATTER_CID \
+{ 0x4e276d6d, 0x9981, 0x46b4, \
+ { 0x90, 0x70, 0x92, 0xf3, 0x44, 0xac, 0x5f, 0x5a }}
+
+#define NS_ABLDAPAUTOCOMPFORMATTER_CONTRACTID \
+ "@mozilla.org/ldap-autocomplete-formatter;1?type=addrbook"
+
 #endif // nsAbBaseCID_h__

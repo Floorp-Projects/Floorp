@@ -33,7 +33,6 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 
-
 /* Include all of the interfaces our factory can generate components for */
 
 #include "nsDirectoryDataSource.h"
@@ -70,6 +69,7 @@
 #include "nsAbLDAPDirectory.h"
 #include "nsAbLDAPCard.h"
 #include "nsAbLDAPDirFactory.h"
+#include "nsAbLDAPAutoCompFormatter.h"
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
@@ -108,6 +108,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbBooleanExpression)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPDirectory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPCard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPDirFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPAutoCompFormatter)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
@@ -251,6 +252,12 @@ static nsModuleComponentInfo components[] =
     NS_ABLDAPDIRFACTORY_CID,
     NS_ABLDAPDIRFACTORY_CONTRACTID,
     nsAbLDAPDirFactoryConstructor },
+
+  { "Address book LDAP autocomplete formatter",
+    NS_ABLDAPAUTOCOMPFORMATTER_CID,
+    NS_ABLDAPAUTOCOMPFORMATTER_CONTRACTID,
+    nsAbLDAPAutoCompFormatterConstructor },
+
 #endif
 
   { "The directory query proxy interface",

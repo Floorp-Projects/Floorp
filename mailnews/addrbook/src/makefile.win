@@ -60,6 +60,7 @@ EXPORTS=								\
 			nsAbLDAPDirectory.h \
 			nsAbLDAPDirFactory.h	\
 			nsAbLDAPCard.h \
+			nsAbLDAPAutoCompFormatter.h \
 !endif
 			nsAbDirectoryRDFResource.h \
 			nsAbBooleanExpression.h \
@@ -107,6 +108,7 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAbLDAPProperties.obj \
     .\$(OBJDIR)\nsAbLDAPDirectoryQuery.obj \
     .\$(OBJDIR)\nsAbBoolExprToLDAPFilter.obj \
+    .\$(OBJDIR)\nsAbLDAPAutoCompFormatter.obj \
 !endif
     .\$(OBJDIR)\nsAbBooleanExpression.obj \
     .\$(OBJDIR)\nsAbDirectoryRDFResource.obj \

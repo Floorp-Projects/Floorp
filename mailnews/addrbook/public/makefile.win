@@ -46,6 +46,7 @@ XPIDLSRCS =						 \
 			.\nsIAbDirectorySearch.idl \
 !if !defined(DISABLE_LDAP)
 			.\nsILDAPPrefsService.idl \
+			.\nsIAbLDAPAutoCompFormatter.idl \
 !endif
 			$(NULL)
 

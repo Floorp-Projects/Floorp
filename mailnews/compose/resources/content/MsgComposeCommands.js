@@ -519,7 +519,13 @@ var messageComposeOfflineObserver = {
     else
       isOffline = false;
     MessageComposeOfflineStateChanged(isOffline);
-    setupLdapAutocompleteSession();
+
+    try {
+        setupLdapAutocompleteSession();
+    } catch (ex) {
+        // catch the exception and ignore it, so that if LDAP setup 
+        // fails, the entire compose window stuff doesn't get aborted
+    }
   }
 }
 
@@ -560,7 +566,12 @@ function MessageComposeOfflineStateChanged(goingOffline)
 
 var directoryServerObserver = {
   Observe: function(subject, topic, value) {
-    setupLdapAutocompleteSession();
+      try {
+          setupLdapAutocompleteSession();
+      } catch (ex) {
+          // catch the exception and ignore it, so that if LDAP setup 
+          // fails, the entire compose window doesn't get horked
+      }
   }
 }
 
@@ -605,31 +616,33 @@ function RemoveDirectorySettingsObserver(prefstring)
 
 function setupLdapAutocompleteSession()
 {
-    gSetupLdapAutocomplete = true;
     var autocompleteLdap = false;
     var autocompleteDirectory = null;
     var prevAutocompleteDirectory = currentAutocompleteDirectory;
-    
-    try {
-        autocompleteLdap = prefs.GetBoolPref(
-            "ldap_2.autoComplete.useDirectory");
-        if (autocompleteLdap)
-            autocompleteDirectory = prefs.CopyCharPref(
-                "ldap_2.autoComplete.directoryServer");
-    } catch(ex) {
-        dump("ERROR: " + ex + "\n");
-    }
+
+    autocompleteLdap = prefs.GetBoolPref("ldap_2.autoComplete.useDirectory");
+    if (autocompleteLdap)
+        autocompleteDirectory = prefs.CopyCharPref(
+            "ldap_2.autoComplete.directoryServer");
 
     if(gCurrentIdentity.overrideGlobalPref) {
         autocompleteDirectory = gCurrentIdentity.directoryServer;
     }
-    try {
-       if (!gLDAPSession)
-        gLDAPSession = Components.classes["@mozilla.org/autocompleteSession;1?type=ldap"].createInstance()
-                                 .QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
-    } catch (ex) {
-      dump ("ERROR:" + ex + "\n");
+
+    // use a temporary to do the setup so that we don't overwrite the
+    // global, then have some problem and throw an exception, and leave the
+    // global with a partially setup session.  we'll assign the temp
+    // into the global after we're done setting up the session
+    //
+    var LDAPSession;
+    if (gLDAPSession) {
+        LDAPSession = gLDAPSession;
+    } else {
+        LDAPSession = Components.classes[
+            "@mozilla.org/autocompleteSession;1?type=ldap"].createInstance()
+            .QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
     }
+            
     if (autocompleteDirectory && !isOffline) { 
         // Add observer on the directory server we are autocompleting against
         // only if current server is different from previous.
@@ -643,13 +656,10 @@ function setupLdapAutocompleteSession()
         }
         else
           AddDirectorySettingsObserver();
-        if (gLDAPSession) {
-            if (!sessionAdded) {
-            // add session for all the recipients
-              for (var i=1; i <= MAX_RECIPIENTS; i++)
-                document.getElementById("msgRecipient#" + i).addSession(gLDAPSession);
-              sessionAdded = true;
-            }
+        
+        // fill in the session params if there is a session
+        //
+        if (LDAPSession) {
             var serverURL = Components.classes[
                 "@mozilla.org/network/ldap-url;1"].
                 createInstance().QueryInterface(
@@ -661,22 +671,69 @@ function setupLdapAutocompleteSession()
             } catch (ex) {
                 dump("ERROR: " + ex + "\n");
             }
-            gLDAPSession.serverURL = serverURL;
+            LDAPSession.serverURL = serverURL;
 
             // don't search on strings shorter than this
             //
             try { 
-                gLDAPSession.minStringLength = prefs.GetIntPref(
+                LDAPSession.minStringLength = prefs.GetIntPref(
                     autocompleteDirectory + ".autoComplete.minStringLength");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsLDAPAutoCompleteSession use its default.
             }
 
+            // we don't try/catch here, because if this fails, we're outta luck
+            //
+            var ldapFormatter = Components.classes[
+                "@mozilla.org/ldap-autocomplete-formatter;1?type=addrbook"]
+                .createInstance().QueryInterface(
+                    Components.interfaces.nsIAbLDAPAutoCompFormatter);
+
+            // override autocomplete name format?
+            //
+            try {
+                ldapFormatter.nameFormat = 
+                    prefs.CopyUnicharPref(autocompleteDirectory + 
+                                          ".autoComplete.nameFormat");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsAbLDAPAutoCompFormatter use its default.
+            }
+
+            // override autocomplete mail address format?
+            //
+            try {
+                ldapFormatter.addressFormat = 
+                    prefs.CopyUnicharPref(autocompleteDirectory + 
+                                          ".autoComplete.addressFormat");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsAbLDAPAutoCompFormatter use its default.
+            }
+
+            // override autocomplete entry comment format?
+            //
+            try {
+                ldapFormatter.commentFormat = 
+                    prefs.CopyUnicharPref(autocompleteDirectory + 
+                                          ".autoComplete.commentFormat");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsAbLDAPAutoCompFormatter use its default.
+            }
+            
+            // set the session's formatter, which also happens to
+            // force a call to the formatter's getAttributes() method
+            // -- which is why this needs to happen after we've set the
+            // various formats
+            //
+            LDAPSession.formatter = ldapFormatter;
+
             // override autocomplete entry formatting?
             //
             try {
-                gLDAPSession.outputFormat = 
+                LDAPSession.outputFormat = 
                     prefs.CopyUnicharPref(autocompleteDirectory + 
                                           ".autoComplete.outputFormat");
             } catch (ex) {
@@ -687,13 +744,12 @@ function setupLdapAutocompleteSession()
             // override default search filter template?
             //
             try { 
-                gLDAPSession.filterTemplate = prefs.CopyUnicharPref(
+                LDAPSession.filterTemplate = prefs.CopyUnicharPref(
                     autocompleteDirectory + ".autoComplete.filterTemplate");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsLDAPAutoCompleteSession use its default
             }
-
 
             // override default maxHits (currently 100)
             //
@@ -701,11 +757,21 @@ function setupLdapAutocompleteSession()
                 // XXXdmose should really use .autocomplete.maxHits,
                 // but there's no UI for that yet
                 // 
-                gLDAPSession.maxHits = 
+                LDAPSession.maxHits = 
                     prefs.GetIntPref(autocompleteDirectory + ".maxHits");
             } catch (ex) {
                 // if this pref isn't there, or is out of range, no big deal. 
                 // just let nsLDAPAutoCompleteSession use its default.
+            }
+
+            if (!sessionAdded) {
+                // if we make it here, we know that session initialization has
+                // succeeded; add the session for all recipients, and 
+                // remember that we've done so
+                for (var i=1; i <= MAX_RECIPIENTS; i++)
+                    document.getElementById("msgRecipient#" + i).
+                        addSession(LDAPSession);
+                sessionAdded = true;
             }
         }
     } else {
@@ -717,10 +783,14 @@ function setupLdapAutocompleteSession()
       }
       if (gLDAPSession && sessionAdded) {
         for (var i=1; i <= MAX_RECIPIENTS; i++) 
-          document.getElementById("msgRecipient#" + i).removeSession(gLDAPSession);
+          document.getElementById("msgRecipient#" + i).
+              removeSession(gLDAPSession);
         sessionAdded = false;
       }
     }
+
+    gLDAPSession = LDAPSession;
+    gSetupLdapAutocomplete = true;
 }
 
 function DoCommandClose()
@@ -1983,8 +2053,14 @@ function LoadIdentity(startup)
         }
 
       AddDirectoryServerObserver(false);
-      if (!startup)
-        setupLdapAutocompleteSession();
+      if (!startup) {
+          try {
+              setupLdapAutocompleteSession();
+          } catch (ex) {
+              // catch the exception and ignore it, so that if LDAP setup 
+              // fails, the entire compose window doesn't end up horked
+          }
+      }
     }
 }
 
@@ -2003,8 +2079,14 @@ function setupAutocomplete()
       gAutocompleteSession = 1;
     }
   }
-  if (!gSetupLdapAutocomplete)
-    setupLdapAutocompleteSession();
+  if (!gSetupLdapAutocomplete) {
+      try {
+          setupLdapAutocompleteSession();
+      } catch (ex) {
+          // catch the exception and ignore it, so that if LDAP setup 
+          // fails, the entire compose window doesn't end up horked
+      }
+  }
 }
 
 function subjectKeyPress(event)

@@ -26,6 +26,7 @@
 #include "nsILDAPConnection.h"
 #include "nsILDAPMessageListener.h"
 #include "nsILDAPAutoCompleteSession.h"
+#include "nsILDAPAutoCompFormatter.h"
 #include "nsILDAPURL.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
@@ -60,12 +61,15 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     nsCOMPtr<nsISupportsArray> mResultsArray;     // cached, to avoid re-gets
     nsString mSearchString;                       // autocomplete this string
     nsString mFilterTemplate;                     // search filter template
-    nsString mOutputFormat;                       // how to format output
     nsCOMPtr<nsILDAPURL> mServerURL;        // URL for the directory to search
     PRInt32 mMaxHits;                       // return at most this many entries
     PRUint32 mMinStringLength;              // strings < this size are ignored
     char **mSearchAttrs;        // outputFormat search attrs for SearchExt call
     PRUint32 mSearchAttrsSize;              // size of above array
+
+    // used to format the ldap message into an nsIAutoCompleteItem
+    //
+    nsCOMPtr<nsILDAPAutoCompFormatter> mFormatter;
 
     // stopgap until nsLDAPService works
     nsresult InitConnection();             
@@ -75,25 +79,6 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
 
     // add to the results set
     nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage); 
-
-    // parse and process outputFormat
-    nsresult ProcessOutputFormat(nsAReadableString & aOutputFormat,
-                                 nsILDAPMessage *aMessage, 
-                                 nsAWritableString *aValue,
-                                 nsCStringArray *aAttrs);
-
-    // process a single attribute while parsing outputFormat
-    nsresult ParseAttrName(nsReadingIterator<PRUnichar> & aIter,  
-                           nsReadingIterator<PRUnichar> & aIterEnd, 
-                           PRBool aAttrRequired,
-                           nsCOMPtr<nsIConsoleService> & aConsoleSvc,
-                           nsAWritableCString & aAttrName);
-
-    // append the first value associated with aAttrName in aMessage to aValue
-    nsresult AppendFirstAttrValue(nsAReadableCString &aAttrName, 
-                                  nsILDAPMessage *aMessage,
-                                  PRBool aAttrRequired,
-                                  nsAWritableString &aValue);
 
     // all done; call OnAutoComplete
     nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage); 
