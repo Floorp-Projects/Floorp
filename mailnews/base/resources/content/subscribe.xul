@@ -30,7 +30,7 @@ Rights Reserved.
 <window xmlns:NC="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
-		class="dialog"
+        class="dialog"
         width="500"
         height="400"
         id="subscribeWindow"
@@ -135,11 +135,8 @@ Rights Reserved.
 
   <separator/>
 
-  <box autostretch="never">
-   <statusbarpanel id="offline-status"/> 
-    <progressmeter id="statusbar-icon" value="0"/>
- <statusbarpanel id="statusText" value="" crop="right" flex="1"/>  
-    <spring flex="1"/>
-  </box>
-    <box id="okCancelButtons"/>
+  <box id="okCancelButtons"/>
+
+<statusbar id="status-bar" class="chromeclass-status"/>
+
 </window>
