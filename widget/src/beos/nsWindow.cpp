@@ -84,8 +84,6 @@ static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
 static nsIRollupListener * gRollupListener           = nsnull;
 static nsIWidget         * gRollupWidget             = nsnull;
 static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
-// Preserve Mozilla's shortcut for closing 
-static PRBool              gGotQuitShortcut          = PR_FALSE;
 // Tracking last activated BWindow
 static BWindow           * gLastActiveWindow = NULL;
 
@@ -1726,11 +1724,6 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsWindow::CLOSEWINDOW :
 		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		if (gGotQuitShortcut == PR_TRUE)
-		{
-			gGotQuitShortcut = PR_FALSE;
-			return false;
-		}
 		if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
 			DealWithPopups(CLOSEWINDOW,nsPoint(0,0));
 		DispatchStandardEvent(NS_DESTROY);
@@ -2162,10 +2155,6 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 	mIsAltDown     = ((mod & B_COMMAND_KEY) && !(mod & B_RIGHT_OPTION_KEY))? PR_TRUE : PR_FALSE;
 	mIsMetaDown    = (mod & B_LEFT_OPTION_KEY) ? PR_TRUE : PR_FALSE;	
 	bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
-	if(B_COMMAND_KEY && (rawcode == 'w' || rawcode == 'W'))
-		gGotQuitShortcut = PR_TRUE;
-	else
-		gGotQuitShortcut = PR_FALSE;
 
 	aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
 
@@ -2629,8 +2618,11 @@ void nsWindowBeOS::DispatchMessage(BMessage *msg, BHandler *handler)
 			if (view)
 				view->KeyDown(bytes.String(), bytes.Length());
 		}
+		if(strcmp(bytes.String(),"w") && strcmp(bytes.String(),"W"))
+			BWindow::DispatchMessage(msg, handler);
 	}
-	BWindow::DispatchMessage(msg, handler);
+	else
+		BWindow::DispatchMessage(msg, handler);
 }
 
 //This method serves single purpose here - allows Mozilla to save current window position,
