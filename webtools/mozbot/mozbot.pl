@@ -159,7 +159,7 @@ my @urls;
 my $greet = 0;
 my @greetings = 
 	( 
-	"g'day", "bonjour", "guten tag", "moshi, moshi",
+	"g'day", "bonjour", "guten tag", "konnichiwa",
 	"hello", "hola", "hi", "buono giorno", "aloha",
 	"hey", "'sup", "lo", "howdy", "saluton", "hei",
 	"hallo", "word", "yo yo yo", "rheeet", "bom dia",
