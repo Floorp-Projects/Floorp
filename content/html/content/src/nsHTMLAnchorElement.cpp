@@ -383,7 +383,7 @@ nsHTMLAnchorElement::GetHref(nsAWritableString& aValue)
   nsresult rv = GetHrefCString(buf);
   if (NS_FAILED(rv)) return rv;
   if (buf) {
-    aValue.Assign(NS_ConvertASCIItoUCS2(buf));
+    aValue.Assign(NS_ConvertUTF8toUCS2(buf));
     nsCRT::free(buf);
   }
   // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
