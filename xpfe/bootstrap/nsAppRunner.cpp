@@ -70,15 +70,11 @@ static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gI
 #endif // XP_MAC
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
-/* Define Interface IDs */
-static NS_DEFINE_IID(kIAppShellServiceIID,  NS_IAPPSHELL_SERVICE_IID);
-static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 
 // defined for profileManager
 #if defined(NS_USING_PROFILES)
@@ -93,8 +89,7 @@ static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #include "nsIDOMAppCoresManager.h"
 
 //static nsIDOMAppCoresManager *appCoresManager = nsnull;
-static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
-static NS_DEFINE_IID(kAppCoresManagerCID,     NS_APPCORESMANAGER_CID);
+static NS_DEFINE_CID(kAppCoresManagerCID,     NS_APPCORESMANAGER_CID);
 
 /*********************************************/
 
@@ -245,7 +240,7 @@ int main(int argc, char* argv[])
   NS_SetupRegistry_1();
 
   nsIFileLocator* locator = nsnull;
-  rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+  rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
   if (NS_FAILED(rv))
       return rv;
   if (!locator)
@@ -273,7 +268,7 @@ int main(int argc, char* argv[])
    */
 
   rv = nsServiceManager::GetService(kCmdLineServiceCID,
-                                    kICmdLineServiceIID,
+                                    nsICmdLineService::GetIID(),
                                     (nsISupports **)&cmdLineArgs);
   if (NS_FAILED(rv)) {
     fprintf(stderr, "Could not obtain CmdLine processing service\n");
@@ -351,7 +346,7 @@ int main(int argc, char* argv[])
 			{
 				// No directory name provided. Get File Locator
 				nsIFileLocator* locator = nsnull;
-				rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+				rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
 				if (NS_FAILED(rv) || !locator)
 					return NS_ERROR_FAILURE;
 				
@@ -516,7 +511,7 @@ int main(int argc, char* argv[])
    * Create the Application Shell instance...
    */
   rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
+                                    nsIAppShellService::GetIID(),
                                     (nsISupports**)&appShell);
   if (NS_FAILED(rv)) {
     goto done;			// don't use goto in C++!
@@ -579,7 +574,7 @@ int main(int argc, char* argv[])
 
   // Kick off appcores
   rv = nsServiceManager::GetService(kAppCoresManagerCID,
-                                    kIDOMAppCoresManagerIID,
+                                    nsIDOMAppCoresManager::GetIID(),
                                     (nsISupports**)&appCoresManager);
 	if (NS_SUCCEEDED(rv)) {
 		if (appCoresManager->Startup() != NS_OK) {
@@ -606,7 +601,7 @@ int main(int argc, char* argv[])
 	 	 * Create the Application Shell instance...
 		 */
 		rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
+                                    nsIAppShellService::GetIID(),
                                     (nsISupports**)&profAppShell);
 		if (NS_FAILED(rv))
 			goto done;
