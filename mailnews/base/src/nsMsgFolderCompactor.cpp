@@ -680,8 +680,10 @@ nsFolderCompactState::StartMessage()
   NS_ASSERTION(m_fileStream, "Fatal, null m_fileStream...\n");
   if (m_fileStream)
   {
+    // this will force an internal flush, but not a sync. Tell should really do an internal flush,
+    // but it doesn't, and I'm afraid to change that nsIFileStream.cpp code anymore.
+    m_fileStream->seek(PR_SEEK_CUR, 0);
     // record the new message key for the message
-    m_fileStream->flush();
     m_startOfNewMsg = m_fileStream->tell();
     rv = NS_OK;
   }
