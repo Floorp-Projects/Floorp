@@ -109,7 +109,7 @@ public:
   NS_IMETHOD SetRange(nsIDOMRange* aRange);
   NS_IMETHOD SetNode(nsIDOMNode* aNode);
   NS_IMETHOD SetWrapColumn(PRUint32 aWC);
-  NS_IMETHOD SetCharset(const nsAString& aCharset);
+  NS_IMETHOD SetCharset(const nsACString& aCharset);
   NS_IMETHOD GetMimeType(nsAString& aMimeType);
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
   NS_IMETHOD EncodeToString(nsAString& aOutputString);
@@ -273,9 +273,9 @@ nsDocumentEncoder::SetNode(nsIDOMNode* aNode)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::SetCharset(const nsAString& aCharset)
+nsDocumentEncoder::SetCharset(const nsACString& aCharset)
 {
-  CopyUCS2toASCII(aCharset, mCharset);
+  mCharset = aCharset;
   return NS_OK;
 }
 

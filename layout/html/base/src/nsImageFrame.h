@@ -204,7 +204,7 @@ private:
   inline void GetLoadGroup(nsIPresContext *aPresContext,
                            nsILoadGroup **aLoadGroup);
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
-  void GetDocumentCharacterSet(nsAString& aCharset) const;
+  void GetDocumentCharacterSet(nsACString& aCharset) const;
 
   /**
    * This function will recalculate mTransform.  If a non-null image

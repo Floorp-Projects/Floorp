@@ -123,7 +123,7 @@ public:
 
   NS_IMETHOD DeleteSelection(EDirection aAction);
 
-  NS_IMETHOD SetDocumentCharacterSet(const nsAString & characterSet);
+  NS_IMETHOD SetDocumentCharacterSet(const nsACString & characterSet);
 
   /** we override this here to install event listeners */
   NS_IMETHOD PostCreate();
@@ -151,7 +151,7 @@ public:
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
                             const nsAString& aFormatType,
-                            const nsAString& aCharsetOverride,
+                            const nsACString& aCharsetOverride,
                             PRUint32 aFlags);
 
 
@@ -212,7 +212,7 @@ protected:
   // Helpers for output routines
   NS_IMETHOD GetAndInitDocEncoder(const nsAString& aFormatType,
                                   PRUint32 aFlags,
-                                  const nsAString& aCharset,
+                                  const nsACString& aCharset,
                                   nsIDocumentEncoder** encoder);
 
   // key event helpers

@@ -387,13 +387,13 @@ mozSanitizingHTMLSerializer::AddDocTypeDecl(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::SetDocumentCharset(nsAString& aCharset)
+mozSanitizingHTMLSerializer::SetDocumentCharset(nsACString& aCharset)
 {
   // No idea, if this works - it isn't invoked by |TestOutput|.
   Write(NS_LITERAL_STRING("\n<meta http-equiv=\"Context-Type\" content=\"text/html; charset=")
         /* Danger: breaking the line within the string literal, like
            "foo"\n"bar", breaks win32! */
-        + aCharset + NS_LITERAL_STRING("\">\n"));
+        + NS_ConvertASCIItoUCS2(aCharset) + NS_LITERAL_STRING("\">\n"));
   return NS_OK;
 }
 

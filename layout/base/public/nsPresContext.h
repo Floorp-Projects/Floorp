@@ -503,7 +503,7 @@ public:
   /**
    * Get the document charset
    */
-  NS_IMETHOD GetBidiCharset(nsAString &aCharSet) const = 0;
+  NS_IMETHOD GetBidiCharset(nsACString &aCharSet) const = 0;
 
 
 #endif // IBMBIDI

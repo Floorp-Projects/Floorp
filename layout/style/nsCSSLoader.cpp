@@ -633,9 +633,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
   if (NS_FAILED(result) && mLoader->mDocument) {
     // no useful data on charset.  Try the document charset.
     // That needs no resolution, since it's already fully resolved
-    nsAutoString docCharset;
-    mLoader->mDocument->GetDocumentCharacterSet(docCharset);
-    CopyUCS2toASCII(docCharset, charset);
+    mLoader->mDocument->GetDocumentCharacterSet(charset);
 #ifdef DEBUG_bzbarsky
     fprintf(stderr, "Set from document: %s\n",
             charset.get());

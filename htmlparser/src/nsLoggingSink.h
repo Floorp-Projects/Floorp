@@ -74,7 +74,7 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
 
   // nsIHTMLContentSink

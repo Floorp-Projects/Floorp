@@ -314,8 +314,8 @@ public:
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  NS_IMETHOD GetDocumentCharacterSet(nsAString& oCharsetID);
-  NS_IMETHOD SetDocumentCharacterSet(const nsAString& aCharSetID);
+  NS_IMETHOD GetDocumentCharacterSet(nsACString& oCharsetID);
+  NS_IMETHOD SetDocumentCharacterSet(const nsACString& aCharSetID);
 
   NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource);
   NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource);
@@ -606,7 +606,7 @@ protected:
 
   nsWeakPtr mDocumentContainer;
 
-  nsString mCharacterSet;
+  nsCString mCharacterSet;
   PRInt32 mCharacterSetSource;
 
   nsVoidArray mCharSetObservers;

@@ -178,7 +178,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
           }
           //Mohamed
           else {
-            nsAutoString bidiCharset;
+            nsCAutoString bidiCharset;
             context->GetBidiCharset(bidiCharset);
             if (bidiCharset.EqualsIgnoreCase("UTF-8") || (!isVisual)) {
               if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_VISUAL) || (!isBidiSystem) ) {

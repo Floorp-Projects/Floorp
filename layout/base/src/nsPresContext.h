@@ -192,7 +192,7 @@ public:
 //Mohamed  17-1-01
   NS_IMETHOD SetIsBidiSystem(PRBool aIsBidi);
   NS_IMETHOD GetIsBidiSystem(PRBool &aResult) const;
-  NS_IMETHOD GetBidiCharset(nsAString &aCharSet) const;
+  NS_IMETHOD GetBidiCharset(nsACString &aCharSet) const;
 //Mohamed End
 #endif // IBMBIDI
 
@@ -276,7 +276,7 @@ protected:
 #ifdef IBMBIDI
   nsBidiPresUtils*      mBidiUtils;
   PRUint32              mBidi;
-  nsAutoString          mCharset;                 // the charset we are using
+  nsCAutoString         mCharset;                 // the charset we are using
 #endif // IBMBIDI
 
 #ifdef DEBUG
@@ -292,7 +292,7 @@ protected:
   void   GetUserPreferences();
   void   GetFontPreferences();
   void   GetDocumentColorPreferences();
-  void   UpdateCharSet(const PRUnichar* aCharSet);
+  void   UpdateCharSet(const char* aCharSet);
   void SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMode);
 
 private:

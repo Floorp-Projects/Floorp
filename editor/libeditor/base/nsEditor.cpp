@@ -961,7 +961,7 @@ nsEditor::GetDocumentModified(PRBool *outDocModified)
 }
 
 NS_IMETHODIMP
-nsEditor::GetDocumentCharacterSet(nsAString &characterSet)
+nsEditor::GetDocumentCharacterSet(nsACString &characterSet)
 {
   nsresult rv;
   nsCOMPtr<nsIDocument> doc;
@@ -981,7 +981,7 @@ nsEditor::GetDocumentCharacterSet(nsAString &characterSet)
 }
 
 NS_IMETHODIMP
-nsEditor::SetDocumentCharacterSet(const nsAString& characterSet)
+nsEditor::SetDocumentCharacterSet(const nsACString& characterSet)
 {
   nsresult rv;
   nsCOMPtr<nsIDocument> doc;

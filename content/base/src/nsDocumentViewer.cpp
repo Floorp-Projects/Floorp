@@ -447,18 +447,19 @@ protected:
 #endif // NS_DEBUG
 #endif // NS_PRINTING
 
+  /* character set member data */
+  PRInt32 mHintCharsetSource;
+  nsCString mHintCharset;
+  nsCString mDefaultCharacterSet;
+  nsCString mForceCharacterSet;
+  nsCString mPrevDocCharacterSet;
+  
   // document management data
   //   these items are specific to markup documents (html and xml)
   //   may consider splitting these out into a subclass
   PRPackedBool mAllowPlugins;
   PRPackedBool mIsSticky;
 
-  /* character set member data */
-  nsString mDefaultCharacterSet;
-  nsString mHintCharset;
-  PRInt32 mHintCharsetSource;
-  nsString mForceCharacterSet;
-  nsString mPrevDocCharacterSet;
 };
 
 //------------------------------------------------------------------
@@ -2322,9 +2323,8 @@ NS_IMETHODIMP DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 // XXX: SEMANTIC CHANGE!
 //      returns a copy of the string.  Caller is responsible for freeing result
 //      using Recycle(aDefaultCharacterSet)
-NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCharacterSet)
+NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
 {
-  NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
   NS_ENSURE_STATE(mContainer);
 
   if (mDefaultCharacterSet.IsEmpty())
@@ -2348,69 +2348,64 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
     }
 
     if (!defCharset.IsEmpty())
-      mDefaultCharacterSet.Assign(defCharset.get());
+      CopyUCS2toASCII(defCharset, mDefaultCharacterSet);
     else
-      mDefaultCharacterSet.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+      mDefaultCharacterSet.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
   }
-  *aDefaultCharacterSet = ToNewUnicode(mDefaultCharacterSet);
+  aDefaultCharacterSet = mDefaultCharacterSet;
   return NS_OK;
 }
 
 static void
 SetChildDefaultCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  aChild->SetDefaultCharacterSet((PRUnichar*) aClosure);
+  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  aChild->SetDefaultCharacterSet(*charset);
 }
 
-NS_IMETHODIMP DocumentViewerImpl::SetDefaultCharacterSet(const PRUnichar* aDefaultCharacterSet)
+NS_IMETHODIMP
+DocumentViewerImpl::SetDefaultCharacterSet(const nsACString& aDefaultCharacterSet)
 {
   mDefaultCharacterSet = aDefaultCharacterSet;  // this does a copy of aDefaultCharacterSet
   // now set the default char set on all children of mContainer
   return CallChildren(SetChildDefaultCharacterSet,
-                      (void*) aDefaultCharacterSet);
+                      (void*) &aDefaultCharacterSet);
 }
 
 // XXX: SEMANTIC CHANGE!
 //      returns a copy of the string.  Caller is responsible for freeing result
 //      using Recycle(aForceCharacterSet)
-NS_IMETHODIMP DocumentViewerImpl::GetForceCharacterSet(PRUnichar** aForceCharacterSet)
+NS_IMETHODIMP DocumentViewerImpl::GetForceCharacterSet(nsACString& aForceCharacterSet)
 {
-  NS_ENSURE_ARG_POINTER(aForceCharacterSet);
-
-  nsAutoString emptyStr;
-  if (mForceCharacterSet.Equals(emptyStr)) {
-    *aForceCharacterSet = nsnull;
-  }
-  else {
-    *aForceCharacterSet = ToNewUnicode(mForceCharacterSet);
-  }
+  aForceCharacterSet = mForceCharacterSet;
   return NS_OK;
 }
 
 static void
 SetChildForceCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  aChild->SetForceCharacterSet((PRUnichar*) aClosure);
+  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  aChild->SetForceCharacterSet(*charset);
 }
 
-NS_IMETHODIMP DocumentViewerImpl::SetForceCharacterSet(const PRUnichar* aForceCharacterSet)
+NS_IMETHODIMP
+DocumentViewerImpl::SetForceCharacterSet(const nsACString& aForceCharacterSet)
 {
   mForceCharacterSet = aForceCharacterSet;
   // now set the force char set on all children of mContainer
-  return CallChildren(SetChildForceCharacterSet, (void*) aForceCharacterSet);
+  return CallChildren(SetChildForceCharacterSet, (void*) &aForceCharacterSet);
 }
 
 // XXX: SEMANTIC CHANGE!
 //      returns a copy of the string.  Caller is responsible for freeing result
 //      using Recycle(aHintCharacterSet)
-NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSet(PRUnichar * *aHintCharacterSet)
+NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSet(nsACString& aHintCharacterSet)
 {
-  NS_ENSURE_ARG_POINTER(aHintCharacterSet);
 
   if(kCharsetUninitialized == mHintCharsetSource) {
-    *aHintCharacterSet = nsnull;
+    aHintCharacterSet.Truncate();
   } else {
-    *aHintCharacterSet = ToNewUnicode(mHintCharset);
+    aHintCharacterSet = mHintCharset;
     // this can't possibly be right.  we can't set a value just because somebody got a related value!
     //mHintCharsetSource = kCharsetUninitialized;
   }
@@ -2426,11 +2421,9 @@ NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSetSource(PRInt32 *aHintCharac
 }
 
 
-NS_IMETHODIMP DocumentViewerImpl::GetPrevDocCharacterSet(PRUnichar * *aPrevDocCharacterSet)
+NS_IMETHODIMP DocumentViewerImpl::GetPrevDocCharacterSet(nsACString& aPrevDocCharacterSet)
 {
-  NS_ENSURE_ARG_POINTER(aPrevDocCharacterSet);
-
-  *aPrevDocCharacterSet = ToNewUnicode(mPrevDocCharacterSet);
+  aPrevDocCharacterSet = mPrevDocCharacterSet;
 
   return NS_OK;
 }
@@ -2438,15 +2431,17 @@ NS_IMETHODIMP DocumentViewerImpl::GetPrevDocCharacterSet(PRUnichar * *aPrevDocCh
 static void
 SetChildPrevDocCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  aChild->SetPrevDocCharacterSet((PRUnichar*) aClosure);
+  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  aChild->SetPrevDocCharacterSet(*charset);
 }
 
 
-NS_IMETHODIMP DocumentViewerImpl::SetPrevDocCharacterSet(const PRUnichar* aPrevDocCharacterSet)
+NS_IMETHODIMP
+DocumentViewerImpl::SetPrevDocCharacterSet(const nsACString& aPrevDocCharacterSet)
 {
   mPrevDocCharacterSet = aPrevDocCharacterSet;  
   return CallChildren(SetChildPrevDocCharacterSet,
-                      (void*) aPrevDocCharacterSet);
+                      (void*) &aPrevDocCharacterSet);
 }
 
 
@@ -2456,7 +2451,8 @@ SetChildHintCharacterSetSource(nsIMarkupDocumentViewer* aChild, void* aClosure)
   aChild->SetHintCharacterSetSource(NS_PTR_TO_INT32(aClosure));
 }
 
-NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
+NS_IMETHODIMP
+DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
 {
   mHintCharsetSource = aHintCharacterSetSource;
   // now set the hint char set source on all children of mContainer
@@ -2467,14 +2463,16 @@ NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharact
 static void
 SetChildHintCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  aChild->SetHintCharacterSet((PRUnichar*) aClosure);
+  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  aChild->SetHintCharacterSet(*charset);
 }
 
-NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintCharacterSet)
+NS_IMETHODIMP
+DocumentViewerImpl::SetHintCharacterSet(const nsACString& aHintCharacterSet)
 {
   mHintCharset = aHintCharacterSet;
   // now set the hint char set on all children of mContainer
-  return CallChildren(SetChildHintCharacterSet, (void*) aHintCharacterSet);
+  return CallChildren(SetChildHintCharacterSet, (void*) &aHintCharacterSet);
 }
 
 static void

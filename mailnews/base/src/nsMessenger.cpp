@@ -408,7 +408,7 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMessenger::SetDisplayCharset(const PRUnichar * aCharset)
+NS_IMETHODIMP nsMessenger::SetDisplayCharset(const char * aCharset)
 {
   if (mCurrentDisplayCharset.Equals(aCharset))
     return NS_OK;
@@ -422,7 +422,7 @@ NS_IMETHODIMP nsMessenger::SetDisplayCharset(const PRUnichar * aCharset)
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
       if (muDV) {
-        muDV->SetForceCharacterSet(aCharset);
+        muDV->SetForceCharacterSet(nsDependentCString(aCharset));
 
       }
 
@@ -555,7 +555,7 @@ nsMessenger::OpenURL(const char *aURL)
   NS_ENSURE_ARG_POINTER(aURL);
 
   // This is to setup the display DocShell as UTF-8 capable...
-  SetDisplayCharset(NS_LITERAL_STRING("UTF-8").get());
+  SetDisplayCharset("UTF-8");
   
   char *unescapedUrl = PL_strdup(aURL);
   if (!unescapedUrl)
@@ -594,7 +594,7 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
 {
   NS_ENSURE_ARG_POINTER(aURL);
   
-  SetDisplayCharset(NS_LITERAL_STRING("UTF-8").get());
+  SetDisplayCharset("UTF-8");
   
   nsAutoString uriString(NS_ConvertASCIItoUCS2(aURL).get());
   // Cleanup the empty spaces that might be on each end.

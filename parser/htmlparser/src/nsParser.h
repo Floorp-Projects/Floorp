@@ -160,9 +160,9 @@ class nsParser : public nsIParser,
      *  @param   aCharsetSource- the source of the charset
      *  @return	 nada
      */
-    NS_IMETHOD_(void) SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource);
+    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, PRInt32 aSource);
 
-    NS_IMETHOD_(void) GetDocumentCharset(nsAString& aCharset, PRInt32& aSource)
+    NS_IMETHOD_(void) GetDocumentCharset(nsACString& aCharset, PRInt32& aSource)
     {
          aCharset = mCharset;
          aSource = mCharsetSource;
@@ -330,10 +330,10 @@ class nsParser : public nsIParser,
      */
     PRBool DetectMetaTag(const char* aBytes, 
                          PRInt32 aLen, 
-                         nsString& oCharset, 
+                         nsCString& oCharset, 
                          PRInt32& oCharsetSource);
 
-    void SetSinkCharset(nsAString& aCharset);
+    void SetSinkCharset(nsACString& aCharset);
 
     /**
      *  Removes continue parsing events
@@ -453,7 +453,7 @@ protected:
     PRUint16            mFlags;
 
     nsString            mUnusedInput;
-    nsString            mCharset;
+    nsCString           mCharset;
     nsString            mCommandStr;
 
     

@@ -55,7 +55,7 @@ interface nsIMessenger : nsISupports {
     const long eMoveMsg = 2;
     const long eCopyMsg = 3;
 
-    void setDisplayCharset(in wstring aCharset);
+    void setDisplayCharset(in string aCharset);
 
     readonly attribute nsITransactionManager transactionManager;
 

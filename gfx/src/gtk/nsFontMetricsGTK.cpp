@@ -1369,7 +1369,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
-  nsresult res;
+  nsresult res = NS_OK;
   mDocConverterType = nsnull;
 
   if (!gInitialized) {

@@ -93,7 +93,7 @@ private:
   // String bundles...
   nsCOMPtr<nsIStringBundle>   mStringBundle;
 
-  nsString mCurrentDisplayCharset;
+  nsCString mCurrentDisplayCharset;
 
   nsCOMPtr<nsISupports>  mSearchContext;
   nsCString   mLastDisplayURI; // this used when the user attempts to force a charset reload of a message...we need to get the last displayed

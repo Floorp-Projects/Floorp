@@ -72,7 +72,7 @@ class nsMyObserver : public nsICharsetDetectionObserver
    NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, 
                    nsIDocument* aDocument,
                    nsIParser* aParser,
-                   const PRUnichar* aCharset,
+                   const char* aCharset,
                    const char* aCommand);
 
    // Methods to support nsICharsetDetectionObserver
@@ -92,7 +92,7 @@ class nsMyObserver : public nsICharsetDetectionObserver
      //detector outlives parser, we might want to change weak reference here. 
      nsIDocument* mWeakRefDocument;
      nsIParser* mWeakRefParser;
-     nsAutoString mCharset;
+     nsCAutoString mCharset;
      nsCAutoString mCommand;
 };
 
@@ -111,7 +111,7 @@ class nsDetectionAdaptor :
    NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector, 
                    nsIDocument* aDocument,
                    nsIParser* aParser,
-                   const PRUnichar* aCharset,
+                   const char* aCharset,
                    const char* aCommand=nsnull);
   
    // Methode to suppor nsIParserFilter

@@ -80,7 +80,7 @@ interface nsIDocCharset : nsISupports
      *
      * A force also sets the fallback encoding for this frame.
      */
-    attribute wstring charset;
+    attribute string charset;
 
 };
 

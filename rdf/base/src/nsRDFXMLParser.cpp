@@ -79,7 +79,7 @@ nsRDFXMLParser::ParseAsync(nsIRDFDataSource* aSink, nsIURI* aBaseURI, nsIStreamL
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    parser->SetDocumentCharset(NS_LITERAL_STRING("UTF-8"),
+    parser->SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"),
                                kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
@@ -110,7 +110,7 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    parser->SetDocumentCharset(NS_LITERAL_STRING("UTF-8"),
+    parser->SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"),
                                kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 

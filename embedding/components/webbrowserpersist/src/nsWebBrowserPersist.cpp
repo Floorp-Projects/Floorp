@@ -1572,7 +1572,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
             getter_Copies(realContentType));
 
         nsCAutoString contentType; contentType.AssignWithConversion(realContentType);
-        nsAutoString charType; // Empty
+        nsCAutoString charType; // Empty
 
         // Save the document
         nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(aDocument);
@@ -1629,7 +1629,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
             getter_Copies(realContentType));
 
         nsCAutoString contentType; contentType.AssignWithConversion(realContentType.get());
-        nsAutoString charType; // Empty
+        nsCAutoString charType; // Empty
 
         // Save the document, fixing up the links as it goes out
         rv = SaveDocumentWithFixup(
@@ -3315,7 +3315,7 @@ nsresult
 nsWebBrowserPersist::SaveDocumentWithFixup(
     nsIDocument *aDocument, nsIDocumentEncoderNodeFixup *aNodeFixup,
     nsIURI *aFile, PRBool aReplaceExisting, const nsACString &aFormatType,
-    const nsString &aSaveCharset, PRUint32 aFlags)
+    const nsCString &aSaveCharset, PRUint32 aFlags)
 {
     NS_ENSURE_ARG_POINTER(aFile);
     
@@ -3362,13 +3362,13 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     if (mWrapColumn && (aFlags & ENCODE_FLAGS_WRAP))
         encoder->SetWrapColumn(mWrapColumn);
 
-    nsAutoString charsetStr(aSaveCharset);
+    nsCAutoString charsetStr(aSaveCharset);
     if (charsetStr.IsEmpty())
     {
         rv = aDocument->GetDocumentCharacterSet(charsetStr);
         if(NS_FAILED(rv))
         {
-            charsetStr.Assign(NS_LITERAL_STRING("ISO-8859-1")); 
+            charsetStr = NS_LITERAL_CSTRING("ISO-8859-1");
         }
     }
     rv = encoder->SetCharset(charsetStr);

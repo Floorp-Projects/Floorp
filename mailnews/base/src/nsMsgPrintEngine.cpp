@@ -571,7 +571,6 @@ nsMsgPrintEngine::InitializeDisplayCharset()
   // libmime always converts to UTF-8 (both HTML and XML)
   if (mDocShell) 
   {
-    nsAutoString aForceCharacterSet(NS_LITERAL_STRING("UTF-8"));
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
@@ -579,7 +578,7 @@ nsMsgPrintEngine::InitializeDisplayCharset()
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
       if (muDV) 
       {
-        muDV->SetForceCharacterSet(aForceCharacterSet.get());
+        muDV->SetForceCharacterSet(NS_LITERAL_CSTRING("UTF-8"));
       }
     }
   }

@@ -1708,13 +1708,13 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
               NS_ASSERTION(nodeInfo, "Image content without a nodeinfo?");
               nsCOMPtr<nsIDocument> doc;
               nodeInfo->GetDocument(getter_AddRefs(doc));
-              nsAutoString charset;
+              nsCAutoString charset;
               if (doc) {
                 doc->GetDocumentCharacterSet(charset);
               } 
               nsCOMPtr<nsIURI> uri;
               nsresult rv = NS_NewURI(getter_AddRefs(uri), src,
-                                      NS_LossyConvertUCS2toASCII(charset).get(),
+                                      charset.get(),
                                       baseURL);
               NS_ENSURE_SUCCESS(rv, rv);
             
@@ -1895,7 +1895,7 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
 }
 
 void
-nsImageFrame::GetDocumentCharacterSet(nsAString& aCharset) const
+nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const
 {
   nsresult rv;
   nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
@@ -1913,10 +1913,10 @@ nsImageFrame::SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
 {
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
-  nsAutoString charset;
+  nsCAutoString charset;
   GetDocumentCharacterSet(charset);
   NS_NewURI(aURI, aSpec, 
-            charset.IsEmpty() ? nsnull : NS_ConvertUCS2toUTF8(charset).get(), 
+            charset.IsEmpty() ? nsnull : charset.get(), 
             baseURI, aIOService);
 }
 

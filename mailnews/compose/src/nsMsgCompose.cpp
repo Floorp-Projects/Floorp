@@ -751,7 +751,7 @@ nsresult nsMsgCompose::SetDocumentCharset(const char *charset)
   m_compFields->SetCharacterSet(charset);
   
   // notify the change to editor
-  m_editor->SetDocumentCharacterSet(NS_ConvertASCIItoUCS2(charset));
+  m_editor->SetDocumentCharacterSet(nsDependentCString(charset));
 
   return NS_OK;
 }
@@ -1257,9 +1257,7 @@ NS_IMETHODIMP nsMsgCompose::InitEditor(nsIEditor* aEditor, nsIDOMWindow* aConten
   m_editor = aEditor;
 
   // Set the charset
-  nsAutoString msgCharSet;
-  msgCharSet.AssignWithConversion(m_compFields->GetCharacterSet());
-
+  const nsDependentCString msgCharSet(m_compFields->GetCharacterSet());
   m_editor->SetDocumentCharacterSet(msgCharSet);
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
@@ -1274,8 +1272,8 @@ NS_IMETHODIMP nsMsgCompose::InitEditor(nsIEditor* aEditor, nsIDOMWindow* aConten
   {
     nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
     if (markupCV) {
-      NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(msgCharSet.get()), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(markupCV->SetForceCharacterSet(msgCharSet.get()), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(msgCharSet), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(markupCV->SetForceCharacterSet(msgCharSet), NS_ERROR_FAILURE);
     }
   }
 

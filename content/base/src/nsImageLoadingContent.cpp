@@ -598,13 +598,13 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // (2) Get the charset
-  nsAutoString charset;
+  nsCAutoString charset;
   aDocument->GetDocumentCharacterSet(charset);
 
   // (3) Construct the silly thing
   return NS_NewURI(aURI,
                    aSpec,
-                   charset.IsEmpty() ? nsnull : NS_ConvertUCS2toUTF8(charset).get(),
+                   charset.IsEmpty() ? nsnull : charset.get(),
                    baseURL,
                    sIOService);
 }

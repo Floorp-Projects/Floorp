@@ -65,6 +65,6 @@ public:
    */
   NS_IMETHOD Init(nsIWebShellServices* aWebShell, nsICharsetDetector *aDetector, 
                   nsIDocument* aDocument, nsIParser* aParser, 
-                  const PRUnichar* aCharset, const char* aCommand=nsnull) = 0;
+                  const char* aCharset, const char* aCommand=nsnull) = 0;
 };
 #endif /* nsICDETAdaptor_h__ */

@@ -389,7 +389,7 @@ nsWebShell::LoadDocument(const char* aURL,
       muDV->GetHintCharacterSetSource(&hint);
       if( aSource > hint ) 
       {
-        muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
+        muDV->SetHintCharacterSet(nsDependentCString(aCharset));
         muDV->SetHintCharacterSetSource(aSource);
         if(eCharsetReloadRequested != mCharsetReloadState) 
         {
@@ -425,7 +425,7 @@ nsWebShell::ReloadDocument(const char* aCharset,
       muDV->GetHintCharacterSetSource(&hint);
       if( aSource > hint ) 
       {
-         muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
+         muDV->SetHintCharacterSet(nsDependentCString(aCharset));
          muDV->SetHintCharacterSetSource(aSource);
          if(eCharsetReloadRequested != mCharsetReloadState) 
          {

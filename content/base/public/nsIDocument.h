@@ -157,8 +157,8 @@ public:
    * will trigger a startDocumentLoad if necessary to answer the
    * question.
    */
-  NS_IMETHOD GetDocumentCharacterSet(nsAString& oCharSetID) = 0;
-  NS_IMETHOD SetDocumentCharacterSet(const nsAString& aCharSetID) = 0;
+  NS_IMETHOD GetDocumentCharacterSet(nsACString& oCharSetID) = 0;
+  NS_IMETHOD SetDocumentCharacterSet(const nsACString& aCharSetID) = 0;
 
   NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource) = 0;
   NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource) = 0;

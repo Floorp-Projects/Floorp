@@ -84,7 +84,7 @@ NS_MakeAbsoluteURIWithCharset(nsACString &aResult,
   nsCOMPtr<nsIURI> absURI;
   nsresult rv;
 
-  nsAutoString originCharset; // XXX why store charset as UCS2?
+  nsCAutoString originCharset; // XXX why store charset as UCS2?
   if (aDocument && NS_FAILED(aDocument->GetDocumentCharacterSet(originCharset)))
     originCharset.Truncate();
 
@@ -96,7 +96,7 @@ NS_MakeAbsoluteURIWithCharset(nsACString &aResult,
     originCharset.Truncate();
 
   rv = nsHTMLUtils::IOService->NewURI(NS_ConvertUCS2toUTF8(aSpec),
-                                      NS_LossyConvertUCS2toASCII(originCharset).get(),
+                                      originCharset.get(),
                                       aBaseURI, getter_AddRefs(absURI));
   if (NS_FAILED(rv)) return rv; 
 
