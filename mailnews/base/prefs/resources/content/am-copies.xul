@@ -47,7 +47,6 @@
   <box align="horizontal">
     <html:input name="identity.bccSelf" type="checkbox"/>
     <html:div>&bccAccount.label;</html:div>
-    <html:spacer/>
     <html:div id="bccemail"/>
   </box>
   <box align="horizontal">
