@@ -22,7 +22,6 @@
 #include "nsRepository.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "VerReg.h"
 #include "nsSpecialSystemDirectory.h"
 #include "prio.h"
 #include "prerror.h"

@@ -50,7 +50,6 @@ LINCS= \
     $(NULL)
 
 LLIBS =                      \
-    $(DIST)\lib\libreg32.lib \
     $(DIST)\lib\xpcom.lib    \
     $(DIST)\lib\xppref32.lib \
 !ifndef NECKO
