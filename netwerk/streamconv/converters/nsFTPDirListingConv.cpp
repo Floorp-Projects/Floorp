@@ -1100,7 +1100,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
             aString.Append("DIRECTORY");
             break;
         case Link:
-            aString.Append("SYM-LINK");
+            aString.Append("SYMBOLIC-LINK");
             break;
         default:
             aString.Append("FILE");
