@@ -1079,9 +1079,57 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
 
 function RevealSearchPanel()
 {
-  var searchPanel = document.getElementById("urn:sidebar:panel:search");
-  if (searchPanel)
-    SidebarSelectPanel(searchPanel, true, true); // lives in sidebarOverlay.js
+  // first lets check if the search panel will be shown at all
+  // by checking the sidebar datasource to see if there is an entry
+  // for the search panel, and if it is excluded for navigator or not
+  
+  var searchPanelExists = false;
+  
+  if (document.getElementById("urn:sidebar:panel:search")) {
+    var myPanel = document.getElementById("urn:sidebar:panel:search");
+    var panel = sidebarObj.panels.get_panel_from_header_node(myPanel);
+
+    searchPanelExists = !panel.is_excluded();
+  } else if (sidebarObj.never_built) {
+
+    try{
+      var datasource = RDF.GetDataSourceBlocking(sidebarObj.datasource_uri);
+      var aboutValue = RDF.GetResource("urn:sidebar:panel:search");
+
+      // check if the panel is even in the list by checking for its content
+      var contentProp = RDF.GetResource("http://home.netscape.com/NC-rdf#content");
+      var content = datasource.GetTarget(aboutValue, contentProp, true);
+     
+      if (content instanceof Components.interfaces.nsIRDFLiteral){
+        // the search panel entry exists, now check if it is excluded
+        // for navigator
+        var excludeProp = RDF.GetResource("http://home.netscape.com/NC-rdf#exclude");
+        var exclude = datasource.GetTarget(aboutValue, excludeProp, true);
+
+        if (exclude instanceof Components.interfaces.nsIRDFLiteral) {
+          searchPanelExists = (exclude.Value.indexOf("navigator:browser") < 0);
+        } else {
+          // panel exists and no exclude set
+          searchPanelExists = true;
+        }
+      }
+    } catch(e){
+      searchPanelExists = false;
+    }
+  }
+
+  if (searchPanelExists) {
+    // make sure the sidebar is open, else SidebarSelectPanel() will fail
+    if (sidebar_is_hidden())
+      SidebarShowHide();
+  
+    if (sidebar_is_collapsed())
+      SidebarExpandCollapse();
+
+    var searchPanel = document.getElementById("urn:sidebar:panel:search");
+    if (searchPanel)
+      SidebarSelectPanel(searchPanel, true, true); // lives in sidebarOverlay.js      
+  }
 }
 
 function isSearchPanelOpen()
