@@ -39,19 +39,19 @@ Rights Reserved.
 		<spring flex="100%"/>
 		<html:div id="info"/>
 		<box align="horizontal" flex="100%">
-			<html:input type="radio" id="all" name="download" check="true"/>
+			<html:input type="radio" id="all" name="download"/>
 			<html:label for="all">&all.label;</html:label>
 		</box>
 
 		<box align="horizontal" flex="100%">
-			<html:input type="radio" id="some" name="download"/>
+			<html:input type="radio" id="some" name="download" checked="true"/>
 			<html:label for="some">&download.label;</html:label>
 			<html:input type="text" id="number" size="10"/>
 			<html:label>&headers.label;</html:label>
 		</box>
 
 		<box align="horizontal" flex="100%">
-			<html:input type="checkbox" id="mark"/>
+			<html:input type="checkbox" id="markread"/>
 			<html:label>&mark.label;</html:label>
 		</box>
 

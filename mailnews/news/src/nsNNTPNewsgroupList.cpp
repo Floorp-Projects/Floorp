@@ -34,6 +34,12 @@
 #include "nsIDBFolderInfo.h"
 #include "nsINewsDatabase.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMWindow.h"
+#include "nsIAppShellService.h" 
+#include "nsAppShellCIDs.h"
+
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 #ifdef HAVE_PANES
 class MSG_Master;
@@ -196,6 +202,37 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
     
     return NS_OK;
 }
+
+static nsresult 
+openWindow( const PRUnichar *chrome, const PRUnichar *args ) 
+{
+    nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    JSContext *jsContext = nsnull;
+    nsresult rv;
+    NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
+    if ( NS_SUCCEEDED( rv ) ) {
+        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
+                                                    &jsContext );
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Set up arguments for "window.openDialog"
+            void *stackPtr;
+            jsval *argv = JS_PushArguments( jsContext,
+                                            &stackPtr,
+                                            "WssW",
+                                            chrome,
+                                            "_blank",
+                                            "chrome,modal,dialog",
+                                            args );
+            if ( argv ) {
+                nsCOMPtr<nsIDOMWindow> newWindow;                                                          rv = hiddenWindow->OpenDialog( jsContext,
+                                               argv,
+                                               4,
+                                               getter_AddRefs( newWindow ) );                              JS_PopArguments( jsContext, stackPtr );
+            }
+        }
+    }
+    return rv;
+}       
 
 nsresult
 nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
@@ -370,16 +407,30 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				download = FE_NewsDownloadPrompt(m_pane->GetContext(),
 													*last - *first + 1,
 													&m_downloadAll, newsFolder);
-#endif
+#else
+#ifdef DEBUG_NEWS
+				printf("Download Header Dialog:  %d\n",*last - *first + 1);
+				printf("download all = %d\n", m_downloadAll);
+#endif /* DEBUG_NEWS */
+				nsAutoString args = "";
+				args.Append(*last - *first + 1);
+				args.Append(",");
+				args.Append(m_groupName);
+				rv = openWindow( nsString("chrome://messenger/content/downloadheaders.xul").GetUnicode(), args.GetUnicode() ); 
+				NS_ASSERTION(NS_SUCCEEDED(rv), "failed to open download headers dialog");
+#endif /* HAVE_PANES */
 				if (download)
 				{
 					m_maxArticles = 0;
 
+#ifdef DEBUG_NEWS
+		    printf("todo: this should be per server!\n");
+#endif /* DEBUG_NEWS */
                     rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &m_maxArticles);
                     if (NS_FAILED(rv)) {
 #ifdef DEBUG_NEWS
                         printf("get pref of PREF_NEWS_MAX_ARTICLES failed\n");
-#endif
+#endif /* DEBUG_NEWS */
                         m_maxArticles = 0;
                     }
                     
@@ -388,12 +439,15 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 					if (!m_downloadAll)
 					{
 						PRBool markOldRead = PR_FALSE;
+#ifdef DEBUG_NEWS
+		    				printf("todo: this should be per server!\n");
+#endif /* DEBUG_NEWS */
 
 						rv = prefs->GetBoolPref(PREF_NEWS_MARK_OLD_READ, &markOldRead);
                         if (NS_FAILED(rv)) {
 #ifdef DEBUG_NEWS
                             printf("get pref of PREF_NEWS_MARK_OLD_READ failed\n");
-#endif                           
+#endif /* DEBUG_NEWS */
                         }
 
 						if (markOldRead && m_set)
@@ -413,7 +467,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 	}
 #ifdef DEBUG_NEWS
 	printf("GetRangeOfArtsToDownload(first possible = %d, last possible = %d, first = %d, last = %d maxextra = %d\n",first_possible, last_possible, *first, *last, maxextra);
-#endif
+#endif /* DEBUG_NEWS */
 	m_firstMsgToDownload = *first;
 	m_lastMsgToDownload = *last;
     if (status) *status=0;

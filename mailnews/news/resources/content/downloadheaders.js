@@ -24,10 +24,12 @@
 var newmessages = "";
 var newsgroupname = "";
 var Bundle = srGetStrBundle("chrome://messenger/locale/news.properties");
+var prefs = Components.classes['component://netscape/preferences'].getService();
+prefs = prefs.QueryInterface(Components.interfaces.nsIPref); 
 
 function OnLoad()
 {
-	dump("OnLoad()\n");
+	//dump("OnLoad()\n");
 
 	if (window.arguments && window.arguments[0]) {
 		var args = window.arguments[0];
@@ -48,6 +50,17 @@ function OnLoad()
 		var infotext = downloadHeadersInfoText1 + " " + newmessages + " " + downloadHeadersInfoText2;
 		setDivText('info',infotext);
 	}
+
+	//dump("TODO: max_articles and mark_old read should be passed in, and per server\n");
+	var max_articles_value = prefs.GetIntPref("news.max_articles");
+	var mark_old_read_value = prefs.GetBoolPref("news.mark_old_read");
+
+	var numberElement = document.getElementById("number");
+	numberElement.value = max_articles_value;
+
+	var markreadElement = document.getElementById("markread");
+	markreadElement.checked = mark_old_read_value;
+
 	return true;
 }
 
