@@ -153,11 +153,12 @@ nsPSMComponent::RegisterCertContentListener()
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsPSMComponent, 
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsPSMComponent, 
                               nsIPSMComponent, 
                               nsISecurityManagerComponent,
                               nsIContentHandler,
-                              nsISignatureVerifier);
+                              nsISignatureVerifier,
+                              nsIEntropyCollector);
 
 #define INIT_NUM_PREFS 100
 /* preference types */
@@ -1185,3 +1186,11 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   return rv;
 }
 
+NS_IMETHODIMP
+nsPSMComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
+{
+    if (mControl) {
+      CMT_RandomUpdate(mControl, entropy, bufLen);
+    }
+    return NS_OK;
+}

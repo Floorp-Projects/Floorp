@@ -30,6 +30,7 @@
 
 #include "nsIContentHandler.h"
 #include "nsIURIContentListener.h"
+#include "nsIEntropyCollector.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
@@ -58,7 +59,8 @@ private:
 // Implementation of the PSM component interface.
 class nsPSMComponent : public nsIPSMComponent, 
                        public nsIContentHandler, 
-                       public nsISignatureVerifier
+                       public nsISignatureVerifier,
+                       public nsIEntropyCollector
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_PSMCOMPONENT_CID );
@@ -71,6 +73,7 @@ public:
   NS_DECL_NSIPSMCOMPONENT
   NS_DECL_NSICONTENTHANDLER
   NS_DECL_NSISIGNATUREVERIFIER
+  NS_DECL_NSIENTROPYCOLLECTOR
 
   static NS_METHOD CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aResult);
   nsresult RegisterCertContentListener();
