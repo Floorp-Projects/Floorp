@@ -132,6 +132,8 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
+  ::gdk_rgb_init();
+  
   mRenderingSurface = new nsDrawingSurfaceGTK();
 
   mRenderingSurface->drawable = (GdkDrawable *)aWindow->GetNativeData(NS_NATIVE_WINDOW);
