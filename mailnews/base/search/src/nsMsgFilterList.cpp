@@ -661,9 +661,7 @@ nsresult
 nsMsgFilterList::WriteWstrAttr(nsMsgFilterFileAttribValue attrib,
                                const PRUnichar *aFilterName)
 {
-    char* utf8Name = nsAutoString(aFilterName).ToNewUTF8String();
-    WriteStrAttr(attrib, utf8Name);
-    ::Recycle(utf8Name);
+    WriteStrAttr(attrib, NS_ConvertUCS2toUTF8(aFilterName));
     return NS_OK;
 }
 
@@ -888,7 +886,7 @@ nsresult nsMsgFilterList::MoveFilter(nsIMsgFilter *aFilter,
     rv = m_filters->GetIndexOf(NS_STATIC_CAST(nsISupports*,aFilter),
                                &filterIndex);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_ARG(filterIndex > 0);
+    NS_ENSURE_ARG(filterIndex >= 0);
         
 
     return MoveFilterAt(filterIndex, motion);
