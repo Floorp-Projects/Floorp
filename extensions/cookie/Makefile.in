@@ -26,8 +26,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = cookie
 
-CSRCS =				\
-    $(NULL)
+IS_COMPONENT = 1
 
 CPPSRCS =				\
 	nsCookieService.cpp			\
@@ -43,15 +42,19 @@ EXPORTS = \
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
+ifdef ENABLE_TESTS
+DIRS            = tests
+endif
+
 MODULE = cookie
 
 REQUIRES = js netlib xpcom xppref32 nspr
 
-MKSHLIB :=
-
-# we don't want the shared lib
-NO_SHARED_LIB=1
-
 include $(topsrcdir)/config/config.mk
+
+# hack until necko lands
+ifndef NECKO
+PUBLIC=$(DEPTH)/netwerk/dist/include
+endif
 
 include $(topsrcdir)/config/rules.mk
