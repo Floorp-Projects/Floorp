@@ -524,3 +524,21 @@ nsNntpIncomingServer::DisplaySubscribedGroup(nsIMsgNewsFolder *aMsgFolder, PRInt
 	return rv;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::PerformBiff()
+{
+#ifdef DEBUG_NEWS
+	printf("PerformBiff for nntp\n");
+#endif
+	return PerformExpand();
+}
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
+{
+    if (!_retval) return NS_ERROR_NULL_POINTER;
+
+	*_retval = PR_FALSE;
+	return NS_OK;
+}
+

@@ -51,6 +51,8 @@ public:
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD CloseCachedConnections();
     NS_IMETHOD PerformExpand();
+	NS_IMETHOD PerformBiff();
+	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 
 private:
     PRBool mNewsrcHasChanged;

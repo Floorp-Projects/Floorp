@@ -588,6 +588,13 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
+{
+    if (!_retval) return NS_ERROR_NULL_POINTER;
+	*_retval = PR_TRUE;
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
                                        PRUnichar *aPromptTitle, 
