@@ -1570,14 +1570,14 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   area.size.w=drect.width;
   area.size.h=drect.height;
 
-  printf ("location: %d, %p %p (%d %d) %d %d %d %d\n",aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
+//  printf ("location: %d, %p %p (%d %d) %d %d %d %d\n",aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
 
 nsRect rect;
 PRBool valid;
 GetClipRect(rect,valid);
 if (valid)
 {
-  printf ("clip: %d %d %d %d\n",rect.x,rect.y,rect.width,rect.height);
+//  printf ("clip: %d %d %d %d\n",rect.x,rect.y,rect.width,rect.height);
   area.size.w = rect.width; area.size.h = rect.height; 
 }
   
