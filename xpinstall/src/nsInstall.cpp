@@ -899,6 +899,126 @@ nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aRe
     return NS_OK;
 }
 
+PRInt32
+nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn)
+{
+    static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+    static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+    static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+    static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+    static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+    static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+	
+    nsresult ret;
+    nsFileSpec* resFile;
+    nsFileURL* resFileURL = nsnull;
+    nsIURL *url = nsnull;
+    nsILocale* locale = nsnull;
+    nsIStringBundleService* service = nsnull;
+    nsINetService* pNetService = nsnull;
+    nsIEventQueueService* pEventQueueService = nsnull;
+    nsIStringBundle* bundle = nsnull;
+    nsIBidirectionalEnumerator* propEnum = nsnull;
+    *aReturn = JSVAL_NULL;
+    jsval v = JSVAL_NULL;
+
+    // set up JSObject to return
+    JS_GetProperty( cx, JS_GetGlobalObject( cx ), "Object", &v );
+    if (!v)
+    {
+        SaveError(nsInstall::UNEXPECTED_ERROR);
+        return NS_ERROR_FAILURE;
+    }
+    JSClass *objclass = JS_GetClass( cx, JSVAL_TO_OBJECT(v) );
+    JSObject *res = JS_NewObject( cx, objclass, JSVAL_TO_OBJECT(v), 0 );
+
+    // extract properties file
+    // XXX append locale info: lang code, country code, .properties suffix to aBaseName
+    ExtractFileFromJar(aBaseName, nsnull, &resFile);
+    if (!resFile)
+    {
+        SaveError( nsInstall::FILE_DOES_NOT_EXIST );
+        return NS_OK;
+    }
+	
+    // initialize string bundle and related services
+    ret = nsServiceManager::GetService(kStringBundleServiceCID, 
+                    kIStringBundleServiceIID, (nsISupports**) &service);
+    if (NS_FAILED(ret)) 
+        goto handle_err;
+    ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID, (nsISupports**) &pNetService);
+    if (NS_FAILED(ret)) 
+        goto handle_err;
+    ret = nsServiceManager::GetService(kEventQueueServiceCID,
+                    kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
+    if (NS_FAILED(ret)) 
+        goto handle_err;
+    ret = pEventQueueService->CreateThreadEventQueue();
+    if (NS_FAILED(ret)) 
+        goto handle_err;
+
+    // construct properties file URL as required by StringBundle interface
+    resFileURL = new nsFileURL( *resFile );
+    ret = pNetService->CreateURL(&url, nsString( resFileURL->GetURLString()), nsnull, nsnull, nsnull);
+    if (resFileURL)
+        delete resFileURL;
+    if (resFile)
+	    delete resFile;
+    if (NS_FAILED(ret)) 
+        goto handle_err;
+
+    // get the string bundle using the extracted properties file
+    ret = service->CreateBundle(url, locale, &bundle);
+    if (NS_FAILED(ret)) 
+        goto handle_err;
+    ret = bundle->GetEnumeration(&propEnum);
+    if (NS_FAILED(ret))
+        goto handle_err;
+
+    // set the variables of the JSObject to return using the StringBundle's
+    // enumeration service
+    ret = propEnum->First();
+    if (NS_FAILED(ret))
+        goto handle_err;
+    while (NS_SUCCEEDED(ret))
+    {
+        nsIPropertyElement* propElem = nsnull;
+        ret = propEnum->CurrentItem((nsISupports**)&propElem);
+        if (NS_FAILED(ret))
+            goto handle_err;
+        nsString* key = nsnull;
+        nsString* val = nsnull;
+        ret = propElem->GetKey(&key);
+        if (NS_FAILED(ret)) 
+            goto handle_err;
+        ret = propElem->GetValue(&val);
+        if (NS_FAILED(ret))
+            goto handle_err;
+        char* keyCStr = key->ToNewCString();
+        PRUnichar* valCStr = val->ToNewUnicode();
+        if (keyCStr && valCStr) 
+        {
+            JSString* propValJSStr = JS_NewUCStringCopyZ(cx, (jschar*) valCStr);
+            jsval propValJSVal = STRING_TO_JSVAL(propValJSStr);
+            JS_SetProperty(cx, res, keyCStr, &propValJSVal);
+            delete[] keyCStr;
+            delete[] valCStr;
+        }
+        if (key)
+            delete key;
+        if (val)
+            delete val;
+        ret = propEnum->Next();
+    }
+	 
+    *aReturn = OBJECT_TO_JSVAL(res);
+    return NS_OK;
+
+handle_err:
+    SaveError(ret);
+    return NS_OK;
+}
+
 PRInt32    
 nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn)
 {

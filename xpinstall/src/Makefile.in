@@ -50,7 +50,7 @@ CPPSRCS = \
     nsSoftwareUpdateRun.cpp     \
     nsSoftwareUpdateStream.cpp  \
     nsTopProgressNotifier.cpp   \
-    nsLoggingProgressNotifier   \
+    nsLoggingProgressNotifier.cpp   \
     ScheduledTasks.cpp          \
     nsInstallFileOpItem.cpp     \
     $(NULL)

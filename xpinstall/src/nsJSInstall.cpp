@@ -1041,6 +1041,40 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
+// Native method LoadResources
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallLoadResources(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+    nsAutoString b0;
+
+    *rval = JSVAL_NULL;
+
+    // If there's no private data, this must be the prototype, so ignore
+    if (nsnull == nativeThis) {
+        return JS_TRUE;
+    }
+
+    if (argc >= 1)
+    {
+	    ConvertJSValToStr(b0, cx, argv[0]);
+	    if (NS_OK != nativeThis->LoadResources(cx, b0, rval))
+	    {
+		    return JS_FALSE;
+	    }
+    }
+    else
+    {
+        JS_ReportError(cx, "Function LoadResources requires 1 parameter");
+	    return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+
+//
 // Native method Patch
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2306,6 +2340,7 @@ static JSFunctionSpec InstallMethods[] =
   {"GetLastError",              InstallGetLastError,            0},
   {"GetWinProfile",             InstallGetWinProfile,           2},
   {"GetWinRegistry",            InstallGetWinRegistry,          0},
+  {"LoadResources",             InstallLoadResources,           1},
   {"Patch",                     InstallPatch,                   5},
   {"ResetError",                InstallResetError,              0},
   {"SetPackageFolder",          InstallSetPackageFolder,        1},

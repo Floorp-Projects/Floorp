@@ -46,6 +46,13 @@
 
 #include "nsIXPInstallProgress.h"
 
+#include "nsIStringBundle.h"
+#include "nsILocale.h"
+#include "nsINetService.h"
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
+#include "nsIProperties.h"
 
 class nsInstallInfo
 {
@@ -173,6 +180,7 @@ class nsInstall
         PRInt32    GetLastError(PRInt32* aReturn);
         PRInt32    GetWinProfile(const nsString& aFolder, const nsString& aFile, JSContext* jscontext, JSClass* WinProfileClass, jsval* aReturn);
         PRInt32    GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aReturn);
+        PRInt32	   LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    ResetError();
