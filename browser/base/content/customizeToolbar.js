@@ -429,7 +429,7 @@ function resetToDefault()
   var paletteBox = document.getElementById("palette-box");
   while (paletteBox.firstChild)
     paletteBox.removeChild(paletteBox.firstChild);
-  buildPalette(paletteBox, toolbar, defaultSet);
+  buildPalette(paletteBox, toolbar, items);
 
   gToolbarChanged = true;
 }
