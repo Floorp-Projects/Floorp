@@ -54,7 +54,7 @@
 #include <assert.h>
 #include <errno.h>
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
   #include <Errors.h>
 #endif
 
@@ -74,7 +74,9 @@
 #include "reg.h"
 #include "NSReg.h"
 
-#if defined(XP_UNIX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#define MAX_PATH 512
+#elif defined(XP_UNIX)
 #ifndef MAX_PATH
 #define MAX_PATH 1024
 #endif
@@ -84,8 +86,6 @@
 #endif
 #elif defined(WIN32)
 #define MAX_PATH _MAX_PATH
-#elif defined(XP_MAC)
-#define MAX_PATH 512
 #elif defined(XP_BEOS)
 #include <limits.h>
 #define MAX_PATH PATH_MAX
@@ -141,7 +141,7 @@ static char     *user_name = NULL;
 
 
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
 void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
 char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
@@ -305,7 +305,7 @@ static REGFILE* vr_findRegFile(char *filename)
 
     pReg = RegList;
     while( pReg != NULL ) {
-#if defined XP_UNIX || defined XP_BEOS
+#if defined(XP_UNIX) && !defined(XP_MACOSX) || defined XP_BEOS
         if ( 0 == XP_STRCMP( filename, pReg->filename ) ) {
 #else
         if ( 0 == XP_STRCASECMP( filename, pReg->filename ) ) {
@@ -345,14 +345,14 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
     {
         switch (errno)
         {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         case fnfErr:
 #else
         case ENOENT:    /* file not found */
 #endif
             return REGERR_NOFILE;
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         case opWrErr:
 #else
 #ifndef XP_OS2_VACPP
@@ -454,7 +454,7 @@ static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
         readlen = XP_FileRead(buffer, len, fh );
         /* PR_READ() returns an unreliable length, check EOF separately */
         if (readlen < 0) {
-#if !defined(STANDALONE_REGISTRY) || !defined(XP_MAC)
+#if !defined(STANDALONE_REGISTRY) || !defined(XP_MAC) || !defined(XP_MACOSX)
     #if defined(STANDALONE_REGISTRY)
             if (errno == EBADF) /* bad file handle, not open for read, etc. */
     #else
@@ -3037,7 +3037,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
                 case REGTYPE_ENTRY_FILE:
 
                     err = nr_ReadData( reg, &desc, *size, (char*)buffer );
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
                     if (err == 0)
                     {
                         tmpbuf = nr_PathFromMacAlias(buffer, *size);
@@ -3199,7 +3199,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
 
         case REGTYPE_ENTRY_FILE:
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             nr_MacAliasFromPath(buffer, &data, &datalen);
             if (data)
                 needFree = TRUE;
@@ -3955,7 +3955,7 @@ extern PRLock *vr_lock;
 
 
 
-#if defined(XP_UNIX) && !defined(STANDALONE_REGISTRY)
+#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(STANDALONE_REGISTRY)
 extern XP_Bool bGlobalRegistry;
 #endif
 
@@ -3993,7 +3993,7 @@ VR_INTERFACE(REGERR) NR_StartupRegistry(void)
             /* initialization for version registry */
             vr_lock = PR_NewLock();
             XP_ASSERT( vr_lock != NULL );
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
             bGlobalRegistry = ( getenv(UNIX_GLOBAL_FLAG) != NULL );
 #endif
 #endif 

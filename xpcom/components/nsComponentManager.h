@@ -229,7 +229,7 @@ protected:
 
 #define NS_ERROR_IS_DIR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM, 24)
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 /* The default registry on the unix system is $HOME/.mozilla/registry per
  * vr_findGlobalRegName(). vr_findRegFile() will create the registry file
  * if it doesn't exist. But it wont create directories.

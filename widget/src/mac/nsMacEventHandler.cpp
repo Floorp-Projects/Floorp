@@ -52,7 +52,7 @@
 #include "nsIMenuRollup.h"
 #include "nsTSMStrategy.h"
 
-#ifndef RHAPSODY
+#ifndef XP_MACOSX
 #include <locale>
 #endif
 

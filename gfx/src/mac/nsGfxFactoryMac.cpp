@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *  Patrick C. Beard <beard@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,6 +59,104 @@
 #include "nsScreenManagerMac.h"
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
+#include "nsPrintOptionsMac.h"
+
+#ifdef XP_MACOSX
+
+#include "nsIGenericFactory.h"
+
+// XXX Implement the GFX module using NS_GENERIC_FACTORY_CONSTRUCTOR / NS_IMPL_NSGETMODULE
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
+
+static NS_IMETHODIMP
+nsScriptableRegionConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  NS_ENSURE_NO_AGGREGATION(aOuter);
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+  nsCOMPtr<nsIRegion> region = new nsRegionMac();
+  NS_ENSURE_TRUE(region, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsIScriptableRegion> result(new nsScriptableRegion(region));
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+  return result->QueryInterface(aIID, aResult);
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "nsFontMetrics",
+    NS_FONT_METRICS_CID,
+    "@mozilla.org/gfx/fontmetrics;1",
+    nsFontMetricsMacConstructor },
+  { "nsDeviceContext",
+    NS_DEVICE_CONTEXT_CID,
+    "@mozilla.org/gfx/devicecontext;1",
+    nsDeviceContextMacConstructor },
+  { "nsRenderingContext",
+    NS_RENDERING_CONTEXT_CID,
+    "@mozilla.org/gfx/renderingcontext;1",
+    nsRenderingContextMacConstructor },
+  { "nsImage",
+    NS_IMAGE_CID,
+    "@mozilla.org/gfx/image;1",
+    nsImageMacConstructor },
+  { "nsRegion",
+    NS_REGION_CID,
+    "@mozilla.org/gfx/unscriptable-region;1",
+    nsRegionMacConstructor },
+  { "nsBlender",
+    NS_BLENDER_CID,
+    "@mozilla.org/gfx/blender;1",
+    nsBlenderConstructor },
+  { "nsDrawingSurface",
+    NS_DRAWING_SURFACE_CID,
+    "@mozilla.org/gfx/drawing-surface;1",
+    nsDrawingSurfaceMacConstructor },
+  { "nsDeviceContextSpec",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecXConstructor },
+  { "nsDeviceContextSpecFactory",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    "@mozilla.org/gfx/devicecontextspecfactory;1",
+    nsDeviceContextSpecFactoryMacConstructor },
+  { "nsScriptableRegion",
+    NS_SCRIPTABLE_REGION_CID,
+    "@mozilla.org/gfx/region;1",
+    nsScriptableRegionConstructor },
+  { "nsPrintOptions",
+    NS_PRINTOPTIONS_CID,
+    "@mozilla.org/gfx/printoptions;1",
+    nsPrintOptionsXConstructor },
+  { "nsFontEnumerator",
+    NS_FONT_ENUMERATOR_CID,
+    "@mozilla.org/gfx/fontenumerator;1",
+    nsFontEnumeratorMacConstructor },
+  { "nsFontList",
+    NS_FONTLIST_CID,
+    "@mozilla.org/gfx/fontlist;1",
+    nsFontListConstructor },
+  { "nsScreenManager",
+    NS_SCREENMANAGER_CID,
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerMacConstructor }
+};
+
+NS_IMPL_NSGETMODULE(nsGfxModule, components)
+
+#else
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -211,3 +309,5 @@ extern "C" NS_GFX nsresult NSGetFactory(nsISupports* servMgr,
 	
 	return factory->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
+
+#endif

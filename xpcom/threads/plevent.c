@@ -47,14 +47,14 @@
 #include <kernel/OS.h>
 #endif
 
-#if defined(RHAPSODY)
+#if defined(XP_MACOSX)
 #undef XP_UNIX
 #define XP_MAC 1
 #endif
 
 #if defined(XP_MAC)
 #include <AppleEvents.h>
-#if !defined(RHAPSODY)
+#if !defined(DARWIN)
 #include "pprthred.h"
 #endif
 #else

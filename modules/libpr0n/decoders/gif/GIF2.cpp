@@ -1035,7 +1035,7 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             gs->global_colormap = map;
 
 #ifndef M12N                    /* Fix me. */
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             //im->hasUniqueColormap = 1; // What the hell is this?
 #endif
 #endif /* M12N */
@@ -1440,7 +1440,7 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             }
 
 #ifndef M12N                    /* Fix me */
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             //im->hasUniqueColormap = 1; // WTF?
 #endif
 #endif /* M12N */

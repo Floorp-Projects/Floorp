@@ -51,6 +51,11 @@ endif
 
 DIRS	+= $(NSPRPUB_DIR)
 
+# MacOSX needs to build lib for MoreFiles before xpcom
+ifeq ($(OS_ARCH),Darwin)
+DIRS           += lib/mac/MoreFiles
+endif
+
 # intl should not be in here - it's just temporary until
 # xpconnect's dependency on intl is repaired - see bug 106130
 DIRS		+= dbm modules/libreg js string xpcom intl js/src/xpconnect

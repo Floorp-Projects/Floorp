@@ -246,14 +246,12 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
     mInstallPlatform = "OS/2";
 #elif defined(XP_PC)
     mInstallPlatform = "Windows";
-#elif defined(RHAPSODY)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
     mInstallPlatform = "Macintosh";
 #elif defined (XP_UNIX)
     mInstallPlatform = "X11";
 #elif defined(XP_BEOS)
     mInstallPlatform = "BeOS";
-#elif defined(XP_MAC)
-    mInstallPlatform = "Macintosh";
 #endif
 
     mInstallPlatform += "; ";

@@ -29,7 +29,7 @@
 #include "nscore.h"
 #include "nsFileSpec.h"
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Types.h>
 #endif
 
@@ -122,7 +122,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
 
     void            operator = (SystemDirectories aSystemSystemDirectory);
  
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     void            operator = (OSType folderType);
                     nsSpecialSystemDirectory(OSType folderType);
     enum {

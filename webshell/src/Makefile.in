@@ -32,7 +32,7 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= gkweb
 EXTRA_DSO_LIBS	= jsdom docshell
 
-ifeq ($(OS_ARCH),Rhapsody)
+ifeq ($(OS_ARCH),Darwin)
 IS_COMPONENT	= 1
 endif
 

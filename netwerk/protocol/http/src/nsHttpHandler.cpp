@@ -943,14 +943,12 @@ nsHttpHandler::InitUserAgentComponents()
     "OS/2"
 #elif defined(XP_PC)
     "Windows"
-#elif defined(RHAPSODY)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
     "Macintosh"
 #elif defined (XP_UNIX)
     "X11"
 #elif defined(XP_BEOS)
     "BeOS"
-#elif defined(XP_MAC)
-    "Macintosh"
 #endif
     ));
 

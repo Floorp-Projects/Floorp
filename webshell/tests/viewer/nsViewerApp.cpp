@@ -459,6 +459,11 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
         _CrtSetDbgFlag(old);
       }
 #endif
+#if defined(XP_MACOSX)
+      else if (PL_strncmp(argv[i], "-psn_", 5) == 0) {
+        continue;
+      }
+#endif
       else if (PL_strncmp(argv[i], "-p", 2) == 0) {
         char *optionalSampleStopIndex = &(argv[i][2]);
         if ('\0' != *optionalSampleStopIndex)

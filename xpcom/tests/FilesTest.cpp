@@ -127,7 +127,7 @@ void FilesTest::WriteStuff(nsOutputStream& s)
 //----------------------------------------------------------------------------------------
 {
     // Initialize a URL from a string without suffix.  Change the path to suit your machine.
-    nsFileURL fileURL("file:///Development/MPW/MPW%20Shell", PR_FALSE);
+    nsFileURL fileURL("file:///X/Developer/Headers", PR_FALSE);
     s << "File URL initialized to:     \"" << fileURL << "\""<< nsEndl;
     
     // Initialize a Unix path from a URL
@@ -147,7 +147,7 @@ void FilesTest::WriteStuff(nsOutputStream& s)
     s << "File URL assigned from spec: \"" << fileURL.GetURLString() << "\""<< nsEndl;
     
     // Assign a unix path using a string with a suffix.
-    filePath = "/Development/MPW/SysErrs.err";
+    filePath = "/X/Developer/Headers/FlatCarbon/vfp.h";
     s << "File path reassigned to:     \"" << (const char*)filePath << "\""<< nsEndl;    
     
     // Assign to a file spec using a unix path.

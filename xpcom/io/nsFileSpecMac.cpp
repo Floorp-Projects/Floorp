@@ -44,15 +44,12 @@
 #include "prtypes.h"
 #include "nscore.h"
 
-#ifndef RHAPSODY
 #include "FullPath.h"
 #include "FileCopy.h"
 #include "MoreFilesExtras.h"
-#endif
 
 #include <Aliases.h>
 #include <Folders.h>
-#include <Errors.h>
 #include <Math64.h>
 #include <TextUtils.h>
 #include <Processes.h>
@@ -63,7 +60,6 @@
 #include "nsXPIDLString.h"
 
 
-#ifndef RHAPSODY
 const unsigned char* kAliasHavenFolderName = "\pnsAliasHaven";
 
 //========================================================================================
@@ -558,7 +554,6 @@ char* MacFileHelpers::PathNameFromFSSpec( const FSSpec& inSpec )
 	return result;
 } // MacFileHelpers::PathNameFromFSSpec
 
-#endif
 
 #pragma mark -
 
@@ -566,7 +561,6 @@ char* MacFileHelpers::PathNameFromFSSpec( const FSSpec& inSpec )
 //					  Macintosh nsFileSpec implementation
 //========================================================================================
 
-#ifndef RHAPSODY
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
@@ -574,7 +568,6 @@ nsFileSpec::nsFileSpec()
 //    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 	Clear();
 }
-#endif
 
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const FSSpec& inSpec, PRBool resolveAlias)
@@ -598,7 +591,6 @@ void nsFileSpec::operator = (const FSSpec& inSpec)
 	mError = NS_OK;
 }
 
-#ifndef RHAPSODY
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -1394,8 +1386,8 @@ nsDirectoryIterator::nsDirectoryIterator(
 //----------------------------------------------------------------------------------------
 	: mCurrent(inDirectory)
 	, mExists(false)
-	, mIndex(-1)
 	, mResoveSymLinks(resolveSymLinks)
+	, mIndex(-1)
 {
 	CInfoPBRec pb;
 	OSErr err = inDirectory.GetCatInfo(pb);
@@ -1472,4 +1464,3 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
 	return *this;
 } // nsDirectoryIterator::operator ++
 
-#endif

@@ -62,11 +62,18 @@
 #define NS_OS_CURRENT_PROCESS_DIR               "CurProcD"
 #define NS_OS_CURRENT_WORKING_DIR               "CurWorkD"
 
-#if !defined (XP_UNIX)
+#if !defined (XP_UNIX) || defined(XP_MACOSX)
     #define NS_OS_SYSTEM_DIR                    "SysD"
 #endif
 
-#ifdef XP_MAC
+// for MacOSX we need the UNIX entries, plus the MAC entries
+#if defined (XP_UNIX) || defined(XP_MACOSX)
+    #define NS_UNIX_LOCAL_DIR                   "Locl"
+    #define NS_UNIX_LIB_DIR                     "LibD"
+    #define NS_UNIX_HOME_DIR                    "Home" 
+#endif
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
     #define NS_MAC_DESKTOP_DIR                  "Desk"
     #define NS_MAC_TRASH_DIR                    "Trsh"
     #define NS_MAC_STARTUP_DIR                  "Strt"
@@ -107,10 +114,6 @@
     #define NS_WIN_COMMON_DESKTOP_DIRECTORY     "CmDeskP"
     #define NS_WIN_APPDATA_DIR                  "AppData"
     #define NS_WIN_PRINTHOOD                    "PrntHd" 
-#elif defined (XP_UNIX)
-    #define NS_UNIX_LOCAL_DIR                   "Locl"
-    #define NS_UNIX_LIB_DIR                     "LibD"
-    #define NS_UNIX_HOME_DIR                    "Home" 
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "OS2Dir"
     #define NS_OS2_HOME_DIR                     "Home"

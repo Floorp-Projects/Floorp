@@ -427,7 +427,7 @@ int HaveDecodedRow(
     case gfxIFormats::RGB:
       {
         while(rowBufIndex != decoder->mGIFStruct->rowend) {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
           *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
 #endif
           *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
@@ -477,7 +477,7 @@ int HaveDecodedRow(
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
 #else
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
           *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
 #endif
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
@@ -486,7 +486,7 @@ int HaveDecodedRow(
 #endif
             decoder->mAlphaLine[x>>3] |= 1<<(7-x&0x7);
           } else {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             rgbRowIndex+=4;
 #else
             rgbRowIndex+=3;

@@ -211,6 +211,11 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),Darwin)
+# don't let us build with "-dynamiclib"
+EXTRA_DSO_LDOPTS = -execute
+endif
+
 # This code removes the console from release builds
 # (unless you've set MOZ_WINCONSOLE=1).
 ifndef MOZ_WINCONSOLE
@@ -289,4 +294,12 @@ nsStaticComponents.cpp: nsStaticComponents.cpp.in Makefile Makefile.in $(FINAL_L
 	sed -e "s|%DECL_NSGETMODULES%|$(foreach m,$(_COMPONENT_LIST),DECL_NSGETMODULE($(m)))|" | \
 	sed -e "s|%MODULE_LIST%|$(foreach m, $(_COMPONENT_LIST),MODULE($(m)),)|" \
 	> $@
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+install:: $(PROGRAM)
+	rm -rf $(DIST)/Mozilla.app
+	mkdir $(DIST)/Mozilla.app
+	cp -R $(srcdir)/macbuild/Contents $(DIST)/Mozilla.app
+	cp -RL $(DIST)/bin $(DIST)/Mozilla.app/Contents/MacOS
+endif
 

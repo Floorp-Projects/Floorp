@@ -5215,7 +5215,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         ((nsMenuFrame*) newFrame)->SetFrameConstructor(this);
       }
       else if (aTag == nsXULAtoms::menubar) {
-  #if defined(XP_MAC) || defined(RHAPSODY) // The Mac uses its native menu bar.
+  #if defined(XP_MAC) || defined(XP_MACOSX) // The Mac uses its native menu bar.
         aHaltProcessing = PR_TRUE;
         return NS_OK;
   #else

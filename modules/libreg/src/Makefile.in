@@ -30,6 +30,10 @@ include $(srcdir)/objs.mk
 MODULE		= libreg
 LIBRARY_NAME	= mozreg_s
 
+# MacOSX requires the MoreFiles module
+ifeq ($(OS_ARCH),Darwin)
+REQUIRES = macmorefiles
+endif
 
 CSRCS		= reg.c VerReg.c vr_stubs.c nr_bufio.c
 

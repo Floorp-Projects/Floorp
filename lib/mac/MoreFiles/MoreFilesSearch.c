@@ -144,7 +144,7 @@ static	void	CheckForMatches(CInfoPBPtr cPB,
 #undef	pascal
 #endif
 
-#if TARGET_RT_MAC_CFM || defined(MACOSX)
+#if TARGET_RT_MAC_CFM || defined(XP_MACOSX)
 
 static	pascal	void	TimeOutTask(TMTaskPtr tmTaskPtr);
 
@@ -687,7 +687,7 @@ Failed:
 #undef	pascal
 #endif
 
-#if TARGET_RT_MAC_CFM || defined(MACOSX)
+#if TARGET_RT_MAC_CFM || defined(XP_MACOSX)
 
 static	pascal	void	TimeOutTask(TMTaskPtr tmTaskPtr)
 {

@@ -122,11 +122,11 @@ nsWatchTask :: DoWatchTask ( nsWatchTask* inSelf )
 {
   if ( inSelf->mChecksum == 'mozz' ) {
     if ( !inSelf->mSuspended  ) {
-      #if TARGET_CARBON
+#if TARGET_CARBON
  	  PRBool busy = inSelf->mBusy;
- 	  #else
+#else
  	  PRBool busy = inSelf->mBusy && LMGetCrsrBusy();
- 	  #endif   
+#endif   
       if ( !busy ) {
         if ( ::TickCount() - inSelf->mTicks > kTicksToShowWatch ) {
           ::SetCursor ( &(inSelf->mWatchCursor) );
@@ -140,9 +140,10 @@ nsWatchTask :: DoWatchTask ( nsWatchTask* inSelf )
       ++inSelf->mAnimation;
     }
     
+#if !TARGET_CARBON
     // reset the task to fire again
     inSelf->mTask.vblCount = kRepeatInterval;
-    
+#endif    
   } // if valid checksum
   
 } // DoWatchTask
