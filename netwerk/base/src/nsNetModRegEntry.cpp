@@ -126,10 +126,10 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
     char* topic;
 
     rv = aEntry->GetTopic(&topic);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv) || !topic)
         return rv;
     
-    if (topic && !PL_strcmp(topic, mTopic)) 
+    if (!PL_strcmp(topic, mTopic))
     {
         nsCOMPtr<nsINetNotify> aSyncProxy;
         aEntry->GetSyncProxy(getter_AddRefs(aSyncProxy));
@@ -142,8 +142,8 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
         {
             *_retVal = PR_TRUE;
         }
-        nsMemory::Free(topic);
     }
+    nsMemory::Free(topic);
     return rv;
 }
 
