@@ -51,6 +51,7 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIObserver.h"
 #include "nsIProgressDialog.h"
+#include "nsIWindowWatcher.h"
 
 /* Outstanding issues/todo:
  * 1. Using the target path as an identifier is not sufficient because it's not unique on mac.
@@ -260,9 +261,8 @@ nsDownloadManager::AssertProgressInfo()
     res = do_QueryInterface(supports);
     res->GetValue(&id);
     nsCStringKey key(id);
-    if (mCurrDownloadItems->Exists(&key)) {
+    if (mCurrDownloadItems->Exists(&key)) { // if not, must be a finished download; don't need to update info
       nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
-      if (!item) continue; // must be a finished download; don't need to update info
 
       // update percentage
       item->GetPercentComplete(&percentComplete);
@@ -296,7 +296,6 @@ nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
   if (NS_FAILED(rv)) return rv;
 
   DownloadItem* item = NS_STATIC_CAST(DownloadItem*, aDownloadItem);
-  if (!item) return NS_ERROR_FAILURE;
 
   item->SetDownloadManager(this);
 
@@ -459,12 +458,17 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   
   // if we ever have the capability to display the UI of third party dl managers,
   // we'll open their UI here instead.
+  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> ww = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMWindow> newWindow;
-  nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(aParent);
-  nsresult rv = internalWin->OpenDialog(NS_LITERAL_STRING(DOWNLOAD_MANAGER_URL), 
-                                        NS_LITERAL_STRING("_blank"),
-                                        NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
-                                        nsnull, getter_AddRefs(newWindow));
+  rv = ww->OpenWindow(aParent,
+                      DOWNLOAD_MANAGER_URL,
+                      "_blank",
+                      "chrome,titlebar,dependent,centerscreen",
+                      nsnull,
+                      getter_AddRefs(newWindow));
 
   if (NS_FAILED(rv)) return rv;
 
