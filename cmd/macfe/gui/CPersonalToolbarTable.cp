@@ -550,6 +550,9 @@ CPersonalToolbarTable :: ClickSelect( const STableCell &/*inCell*/, const SMouse
 void
 CPersonalToolbarTable :: ClickCell(const STableCell &inCell, const SMouseDownEvent &inMouseDown)
 {
+	if ( inCell.col > mCols )
+		return;
+		
 	if ( ::WaitMouseMoved(inMouseDown.macEvent.where) ) {
 	
 		if (LDropArea::DragAndDropIsPresent()) {
