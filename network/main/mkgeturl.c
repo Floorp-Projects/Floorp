@@ -725,6 +725,7 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 #ifdef JAVA
     libnet_asyncIO = PR_NewNamedMonitor("libnet");
 #endif
+	NET_SetupPrefs(NULL);
 	PREF_RegisterCallback("network.proxy",NET_PrefChangedFunc,NULL);
 	PREF_RegisterCallback("browser.cache",NET_PrefChangedFunc,NULL);
 	PREF_RegisterCallback("network.hosts.socks_server",NET_PrefChangedFunc,NULL);
