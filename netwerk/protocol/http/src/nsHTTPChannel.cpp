@@ -70,7 +70,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mLoadAttributes(LOAD_NORMAL),
     mResponseContext(nsnull),
     mLoadGroup(nsnull),
-    mPostStream(nsnull),
     mAuthTriedWithPrehost(PR_FALSE),
     mUsingProxy(PR_FALSE)
 {
@@ -104,7 +103,6 @@ nsHTTPChannel::~nsHTTPChannel()
     //TODO if we keep our copy of mURI, then delete it too.
     NS_IF_RELEASE(mRequest);
     NS_IF_RELEASE(mResponse);
-    NS_IF_RELEASE(mPostStream);
     NS_IF_RELEASE(mResponseDataListener);
 
     mHandler         = null_nsCOMPtr();
@@ -140,10 +138,12 @@ NS_IMPL_RELEASE(nsHTTPChannel);
 NS_IMETHODIMP
 nsHTTPChannel::IsPending(PRBool *result)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv;
 
   if (mRequest) {
     rv = mRequest->IsPending(result);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
   }
   return rv;
 }
@@ -151,10 +151,20 @@ nsHTTPChannel::IsPending(PRBool *result)
 NS_IMETHODIMP
 nsHTTPChannel::Cancel(void)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv;
+
+  //
+  // If this channel is currently waiting for a transport to become available.
+  // Notify the HTTPHandler that this request has been cancelled...
+  //
+  if (!mConnected && (HS_WAITING_FOR_OPEN == mState)) {
+    rv = mHandler->CancelPendingChannel(this);
+  }
 
   if (mRequest) {
     rv = mRequest->Cancel();
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
   }
   return rv;
 }
@@ -162,10 +172,12 @@ nsHTTPChannel::Cancel(void)
 NS_IMETHODIMP
 nsHTTPChannel::Suspend(void)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv;
 
   if (mRequest) {
     rv = mRequest->Suspend();
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
   }
   return rv;
 }
@@ -173,10 +185,12 @@ nsHTTPChannel::Suspend(void)
 NS_IMETHODIMP
 nsHTTPChannel::Resume(void)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv;
 
   if (mRequest) {
     rv = mRequest->Resume();
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
   }
   return rv;
 }
@@ -297,7 +311,7 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     *aContentType = nsnull;
 
     //
-    // If the content type has been returned by the server then retern that...
+    // If the content type has been returned by the server then return that...
     //
     if (mContentType.Length()) {
         *aContentType = mContentType.ToNewCString();
@@ -493,6 +507,53 @@ nsHTTPChannel::GetCharset(char* *o_String)
   return rv;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::SetPostDataStream(nsIInputStream* aPostStream)
+{
+  nsresult rv = NS_OK;
+
+  if (aPostStream && mRequest) {
+    rv = mRequest->SetPostDataStream(aPostStream);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetPostDataStream(nsIInputStream **o_postStream)
+{ 
+  nsresult rv = NS_OK;
+
+  if (o_postStream && mRequest) {
+    rv = mRequest->GetPostDataStream(o_postStream);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetAuthTriedWithPrehost(PRBool iTried)
+{
+    mAuthTriedWithPrehost = iTried;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetAuthTriedWithPrehost(PRBool* oTried)
+{
+    if (oTried)
+    {
+        *oTried = mAuthTriedWithPrehost;
+        return NS_OK;
+    }
+    else
+        return NS_ERROR_NULL_POINTER;
+}
+
 
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -582,6 +643,7 @@ nsHTTPChannel::Open(void)
         mState = HS_WAITING_FOR_OPEN;
         return NS_OK;
     }
+    if (NS_FAILED(rv)) return rv;
 
     // Check for any modules that want to set headers before we
     // send out a request.
@@ -789,48 +851,6 @@ nsresult nsHTTPChannel::SetCharset(const char *aCharset)
 {
   mCharset = aCharset;
   return NS_OK;
-}
-
-
-nsresult
-nsHTTPChannel::SetPostDataStream(nsIInputStream* postDataStream)
-{
-    NS_IF_RELEASE(mPostStream);
-    mPostStream = postDataStream;
-    if (mPostStream)
-        NS_ADDREF(mPostStream);
-    return NS_OK;
-}
-
-nsresult
-nsHTTPChannel::GetPostDataStream(nsIInputStream **o_postStream)
-{ 
-    if (o_postStream)
-    {
-        *o_postStream = mPostStream; 
-        NS_IF_ADDREF(*o_postStream); 
-        return NS_OK; 
-    }
-    return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::SetAuthTriedWithPrehost(PRBool iTried)
-{
-    mAuthTriedWithPrehost = iTried;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::GetAuthTriedWithPrehost(PRBool* oTried)
-{
-    if (oTried)
-    {
-        *oTried = mAuthTriedWithPrehost;
-        return NS_OK;
-    }
-    else
-        return NS_ERROR_NULL_POINTER;
 }
 
 

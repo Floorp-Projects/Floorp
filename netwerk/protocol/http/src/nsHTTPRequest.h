@@ -59,9 +59,8 @@ class nsHTTPRequest : public nsIStreamObserver,
 
 public:
 
-    // Constructor and destructor
+    // Constructor
     nsHTTPRequest(nsIURI* i_URL=0, HTTPMethod i_Method=HM_GET, nsIChannel* i_Tranport = nsnull);
-    virtual ~nsHTTPRequest();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMOBSERVER
@@ -79,33 +78,38 @@ public:
         Similarly getting will for now only get the first occurence. 
         TODO change to get the list.
     */
-    NS_IMETHOD          SetHeader(nsIAtom* i_Header, const char* i_Value);
-    NS_IMETHOD          GetHeader(nsIAtom* i_Header, char* *o_Value);
+    nsresult            SetHeader(nsIAtom* i_Header, const char* i_Value);
+    nsresult            GetHeader(nsIAtom* i_Header, char* *o_Value);
 
     /*
         Clone the current request for later use. Release it
         after you are done.
     */
-    NS_IMETHOD          Clone(const nsHTTPRequest* *o_Copy) const;
+    nsresult            Clone(const nsHTTPRequest* *o_Copy) const;
                         
-    NS_IMETHOD          SetHTTPVersion(HTTPVersion i_Version);
-    NS_IMETHOD          GetHTTPVersion(HTTPVersion* o_Version);
+    nsresult            SetHTTPVersion(HTTPVersion i_Version);
+    nsresult            GetHTTPVersion(HTTPVersion* o_Version);
 
-    NS_IMETHOD          SetMethod(HTTPMethod i_Method);
+    nsresult            SetMethod(HTTPMethod i_Method);
     HTTPMethod          GetMethod(void) const;
                         
-    NS_IMETHOD          SetPriority(); // TODO 
-    NS_IMETHOD          GetPriority(); //TODO
+    nsresult            SetPriority(); // TODO 
+    nsresult            GetPriority(); //TODO
 
     nsresult            GetHeaderEnumerator(nsISimpleEnumerator** aResult);
         
-    NS_IMETHOD          SetConnection(nsHTTPChannel* i_Connection);
+    nsresult            SetConnection(nsHTTPChannel* i_Connection);
 
     // Build the actual request string based on the settings. 
     nsresult            WriteRequest(nsIChannel *aChannel, 
                                      PRBool aIsProxied = PR_FALSE);
 
+    nsresult            GetPostDataStream(nsIInputStream* *aResult);
+    nsresult            SetPostDataStream(nsIInputStream* aStream);
+
 protected:
+    virtual ~nsHTTPRequest();
+
     // Use a method string corresponding to the method.
     const char*         MethodToString(HTTPMethod i_Method=HM_GET)
     {
