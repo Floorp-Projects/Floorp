@@ -537,7 +537,7 @@ var defaultController =
           return true;
         } catch (ex) { return false; }
       case "cmd_rewrap":
-        return !composeHTML && !focusedElement;
+        return !focusedElement;
 
       //Format Menu
       case "cmd_decreaseFont":
