@@ -84,19 +84,6 @@ public:
   nsIHTMLStyleSheet*  mSheet;
 };
 
-class HTMLDocumentColorRule : public HTMLColorRule {
-public:
-  HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~HTMLDocumentColorRule();
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
-protected:
-  void Initialize(nsIPresContext* aPresContext);
-
-  PRBool mInitialized;
-};
-
 HTMLColorRule::HTMLColorRule(nsIHTMLStyleSheet* aSheet)
   : mSheet(aSheet)
 {
@@ -133,52 +120,6 @@ HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 #endif
-
-HTMLDocumentColorRule::HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet) 
-  : HTMLColorRule(aSheet),
-    mInitialized(PR_FALSE)
-{
-}
-
-HTMLDocumentColorRule::~HTMLDocumentColorRule()
-{
-}
-
-NS_IMETHODIMP
-HTMLDocumentColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
-{
-  if (aRuleData->mSID == eStyleStruct_Color) {
-    if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
-      if (!mInitialized)
-        Initialize(aRuleData->mPresContext);
-      nsCSSValue val; val.SetColorValue(mColor);
-      aRuleData->mColorData->mColor = val;
-    }
-  }
-  return NS_OK;
-}
-
-void
-HTMLDocumentColorRule::Initialize(nsIPresContext* aPresContext)
-{
-  aPresContext->GetDefaultColor(&mColor); // in case something below fails
-
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMHTMLDocument> domdoc = do_QueryInterface(doc);
-  if (!domdoc)
-    return;
-  nsCOMPtr<nsIDOMHTMLElement> body;
-  domdoc->GetBody(getter_AddRefs(body));
-  nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
-  nsIFrame *bodyFrame;
-  shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
-  if (!bodyFrame)
-    return;
-  mColor = bodyFrame->GetStyleColor()->mColor;
-}
 
 class GenericTableRule: public nsIStyleRule {
 public:
@@ -643,7 +584,7 @@ protected:
   HTMLColorRule*       mLinkRule;
   HTMLColorRule*       mVisitedRule;
   HTMLColorRule*       mActiveRule;
-  HTMLDocumentColorRule* mDocumentColorRule;
+  HTMLColorRule*       mDocumentColorRule;
   TableTbodyRule*      mTableTbodyRule;
   TableRowRule*        mTableRowRule;
   TableColgroupRule*   mTableColgroupRule;
@@ -694,11 +635,6 @@ HTMLStyleSheetImpl::Init()
   if (!mTableTHRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableTHRule);
-
-  mDocumentColorRule = new HTMLDocumentColorRule(this);
-  if (!mDocumentColorRule)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(mDocumentColorRule);
 
   return NS_OK;
 }
@@ -799,6 +735,26 @@ HTMLStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
   return NS_OK;
 }
 
+static nsresult GetBodyColor(nsIPresContext* aPresContext, nscolor* aColor)
+{
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMHTMLDocument> domdoc = do_QueryInterface(doc);
+  if (!domdoc)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMHTMLElement> body;
+  domdoc->GetBody(getter_AddRefs(body));
+  nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
+  nsIFrame *bodyFrame;
+  shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
+  if (!bodyFrame)
+    return NS_ERROR_FAILURE;
+  *aColor = bodyFrame->GetStyleColor()->mColor;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
                                   nsIAtom* aMedium)
@@ -850,8 +806,24 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
         ruleWalker->Forward(mTableColgroupRule);
       }
       else if (tag == nsHTMLAtoms::table) {
-        if (aData->mCompatMode == eCompatibility_NavQuirks)
-          ruleWalker->Forward(mDocumentColorRule);
+        if (aData->mCompatMode == eCompatibility_NavQuirks) {
+          nscolor bodyColor;
+          nsresult rv = GetBodyColor(ruleWalker->GetCurrentNode()->PresContext(), &bodyColor);
+          if (NS_SUCCEEDED(rv) &&
+              (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
+            if (mDocumentColorRule) {
+              mDocumentColorRule->mSheet = nsnull;
+              NS_RELEASE(mDocumentColorRule);
+            }
+            mDocumentColorRule = new HTMLColorRule(this);
+            if (mDocumentColorRule) {
+              NS_ADDREF(mDocumentColorRule);
+              mDocumentColorRule->mColor = bodyColor;
+            }
+          }
+          if (mDocumentColorRule)
+            ruleWalker->Forward(mDocumentColorRule);
+        }
       }
     } // end html element
 
@@ -895,7 +867,7 @@ HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     return NS_OK;
   }
 
-  // Don't worry about the HTMLDocumentColorRule since it only applies
+  // Don't worry about the mDocumentColorRule since it only applies
   // to descendants of body, when we're already reresolving.
 
   // Handle the content style rules.
@@ -1068,11 +1040,6 @@ HTMLStyleSheetImpl::Reset(nsIURI* aURL)
     PL_DHashTableFinish(&mMappedAttrTable);
     mMappedAttrTable.ops = nsnull;
   }
-
-  mDocumentColorRule = new HTMLDocumentColorRule(this);
-  if (!mDocumentColorRule)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(mDocumentColorRule);
 
   return NS_OK;
 }
