@@ -189,7 +189,7 @@ nsSchemaBuiltinType::GetName(nsAString& aName)
       aName.Assign(NS_LITERAL_STRING("IDREF"));
       break;
     case BUILTIN_TYPE_IDREFS:
-      aName.Assign(NS_LITERAL_STRING("IDREF"));
+      aName.Assign(NS_LITERAL_STRING("IDREFS"));
       break;
     case BUILTIN_TYPE_ENTITY:
       aName.Assign(NS_LITERAL_STRING("ENTITY"));
