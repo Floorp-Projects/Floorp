@@ -40,7 +40,9 @@ interface nsIDOMNSHTMLDocument : nsISupports
 
   DOMString                 getSelection();
 
-  nsIDOMDocument            open(/* ... */);
+  nsIDOMDocument            open();
+  void                      write();
+  void                      writeln();
   void                      clear();
 
   void                      captureEvents(in long eventFlags);

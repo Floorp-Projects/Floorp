@@ -187,6 +187,7 @@ protected:
 
   nsresult WriteCommon(const nsAReadableString& aText,
                        PRBool aNewlineTerminate);
+  nsresult ScriptWriteCommon(PRBool aNewlineTerminate);
   nsresult OpenCommon(nsIURI* aUrl);
 
   nsIHTMLStyleSheet*    mAttrStyleSheet;
