@@ -22,8 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS =				\
-		nsIPrefWindow.h \
+XPIDLSRCS =				\
+		nsIPrefWindow.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
