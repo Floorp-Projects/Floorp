@@ -138,8 +138,11 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
   char szBuf[MAX_BUF];
   HWND hwndFW;
 
+  char *tempEnvVar = NULL;
+
   hDlgMessage = NULL;
   gulWhatToDo = WTD_ASK;
+
 
   /* load strings from setup.exe */
   if(NS_LoadStringAlloc(0, IDS_ERROR_GLOBALALLOC, &szEGlobalAlloc, MAX_BUF))
@@ -195,26 +198,53 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
   GetPrivateProfileString("General", "Defaults Info Filename", "", szBuf, MAX_BUF, szFileIniUninstall);
   strcat(szFileIniDefaultsInfo, szBuf);
 
-#ifdef OLDCODE
   // determine the system's TEMP path
-  if(GetTempPath(MAX_BUF, szTempDir) == 0)
-  {
-    if(GetWindowsDirectory(szTempDir, MAX_BUF) == 0)
-    {
-      char szEGetWinDirFailed[MAX_BUF];
-
-      if(GetPrivateProfileString("Messages", "ERROR_GET_WINDOWS_DIRECTORY_FAILED", "", 
-                                 szEGetWinDirFailed, sizeof(szEGetWinDirFailed),
-                                 szFileIniUninstall))
-        PrintError(szEGetWinDirFailed, ERROR_CODE_SHOW);
-
-      return(1);
-    }
-
-    AppendBackSlash(szTempDir, MAX_BUF);
-    strcat(szTempDir, "TEMP");
+  tempEnvVar = getenv("TMP");
+  if ((tempEnvVar) && (!(isFAT(tempEnvVar)))) {
+    strcpy(szOSTempDir, tempEnvVar);
   }
-#endif
+  else
+  {
+    tempEnvVar = getenv("TEMP");
+    if (tempEnvVar)
+      strcpy(szOSTempDir, tempEnvVar);
+  }
+  if ((!tempEnvVar) || (isFAT(tempEnvVar)))
+  {
+    ULONG ulBootDrive = 0;
+    APIRET rc;
+    char  buffer[] = " :\\OS2\\";
+    DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                    &ulBootDrive, sizeof(ulBootDrive));
+    buffer[0] = 'A' - 1 + ulBootDrive;
+    if (isFAT(buffer)) {
+       /* Try current disk if boot drive is FAT */
+       ULONG ulDriveNum;
+       ULONG ulDriveMap;
+       strcpy(buffer, " :\\");
+       DosQueryCurrentDisk(&ulDriveNum, &ulDriveMap);
+       buffer[0] = 'A' - 1 + ulDriveNum;
+       if (isFAT(buffer)) {
+         int i;
+         for (i = 2; i < 26; i++) {
+           if ((ulDriveMap<<(31-i)) >> 31) {
+             buffer[0] = 'A' + i;
+             if (!(isFAT(buffer))) {
+                break;
+             }
+           }
+         }
+         if (i == 26) {
+            char szBuf[MAX_BUF];
+            WinLoadString(0, NULLHANDLE, IDS_ERROR_NO_LONG_FILENAMES, sizeof(szBuf), szBuf);
+            WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, szBuf, NULL, 0, MB_ICONEXCLAMATION);
+            return(1);
+         }
+       }
+    }
+    strcpy(szOSTempDir, buffer);
+    strcat(szOSTempDir, "TEMP");
+  }
   strcpy(szOSTempDir, szTempDir);
   AppendBackSlash(szTempDir, MAX_BUF);
   strcat(szTempDir, WIZ_TEMP_DIR);
@@ -936,7 +966,7 @@ HRESULT GetAppPath()
   }
   else
   {
-    strcpy(szApp, ugUninstall.szOIKey); /* OLDCODE */
+    strcpy(szApp, ugUninstall.szOIKey);
   }
 
   PrfQueryProfileString(HINI_USERPROFILE, szApp, "PathToExe", "", szTmpAppPath, sizeof(szTmpAppPath));
@@ -965,9 +995,7 @@ HRESULT GetUninstallLogPath()
   }
   else
   {
-#ifdef OLDCODE
     strcpy(szApp, ugUninstall.szOIKey);
-#endif
   }
 
   PrfQueryProfileString(HINI_USERPROFILE, szApp, "Uninstall Log Folder", "", szLogFolder, sizeof(szLogFolder));
@@ -1025,8 +1053,8 @@ HRESULT ParseUninstallIni(int argc, char *argv[])
   GetPrivateProfileString("General", "Company Name", "", ugUninstall.szCompanyName, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Product Name", "", ugUninstall.szProductName, MAX_BUF, szFileIniUninstall);
 
-  GetPrivateProfileString("General", "Key",          "", szKeyCrypted, MAX_BUF, szFileIniUninstall);
-  GetPrivateProfileString("General", "Decrypt Key",  "", szBuf, MAX_BUF, szFileIniUninstall);
+  GetPrivateProfileString("General", "App",          "", szKeyCrypted, MAX_BUF, szFileIniUninstall);
+  GetPrivateProfileString("General", "Decrypt App",  "", szBuf, MAX_BUF, szFileIniUninstall);
   if(strcmpi(szBuf, "TRUE") == 0)
   {
     DecryptString(ugUninstall.szOIKey, szKeyCrypted);
@@ -1298,6 +1326,31 @@ HRESULT FileExists(PSZ szFile)
         return FILE_DIRECTORY;
   }
   return (FALSE);
+}
+
+BOOL isFAT(char* szPath)
+{
+  APIRET rc;
+  ULONG ulSize;
+  PFSQBUFFER2 pfsqbuf2;
+  CHAR szDrive[3];
+
+  ulSize = sizeof(FSQBUFFER2) + 3 * CCHMAXPATH;
+  pfsqbuf2 = (PFSQBUFFER2)malloc(ulSize);
+  strncpy(szDrive, szPath, 2);
+  szDrive[2] = '\0';
+
+  DosError(FERR_DISABLEHARDERR);
+  rc = DosQueryFSAttach(szDrive, 0, FSAIL_QUERYNAME,
+                        pfsqbuf2, &ulSize);
+  DosError(FERR_ENABLEHARDERR);
+
+  if (rc == NO_ERROR) {
+    if (strcmp(pfsqbuf2->szFSDName + pfsqbuf2->cbName, "FAT") != 0)
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 void DeInitialize()

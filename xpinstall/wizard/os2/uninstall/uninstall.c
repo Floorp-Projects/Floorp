@@ -64,9 +64,12 @@ main(int argc, char *argv[], char *envp[])
   HMQ hmq;
   QMSG qmsg;
   char  szBuf[MAX_BUF];
+  ATOM atom;
 
   hab = WinInitialize( 0 );
   hmq = WinCreateMsgQueue( hab, 0 );
+
+  atom = WinAddAtom(WinQuerySystemAtomTable(), CLASS_NAME);
 
   if(Initialize(0, argv[0]))
   {
@@ -103,6 +106,8 @@ main(int argc, char *argv[], char *envp[])
 
   /* Do clean up before exiting from the application */
   DeInitialize();
+
+  WinDeleteAtom(WinQuerySystemAtomTable(), atom);
 
   WinDestroyMsgQueue( hmq );
   WinTerminate( hab ); 

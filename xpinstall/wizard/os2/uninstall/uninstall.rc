@@ -67,6 +67,7 @@ BEGIN
     IDS_ERROR_STRING_LOAD   "Could not load string resource ID %d"
     IDS_ERROR_STRING_NULL   "Null pointer encountered."
     IDS_ERROR_GLOBALALLOC   "Memory allocation error."
+    IDS_ERROR_NO_LONG_FILENAMES "You must have at least one drive that supports long filenames to install this product."
 END
 
 /////////////////////////////////////////////////////////////////////////////

@@ -81,6 +81,7 @@ void              AppendBackSlash(PSZ   szInput, ULONG dwInputSize);
 void              RemoveSlash(PSZ   szInput);
 void              AppendSlash(PSZ   szInput, ULONG dwInputSize);
 HRESULT           FileExists(PSZ   szFile);
+BOOL              isFAT(char* szPath);
 HRESULT           CheckInstances();
 void              RemoveQuotes(PSZ   lpszSrc, PSZ   lpszDest, int iDestSize);
 PSZ               GetFirstNonSpace(PSZ   lpszString);

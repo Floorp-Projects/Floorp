@@ -120,33 +120,3 @@ BOOL UndoDesktopIntegration(void)
   return(0);
 }
 
-
-/* Function that retrieves the app name (including path) that is going to be
- * uninstalled.  The return string is in upper case. */
-int GetUninstallAppPathName(char *szAppPathName, ULONG ulAppPathNameSize)
-{
-#ifdef OLDCODE
-  char szKey[MAX_BUF];
-  HKEY hkRoot;
-
-  if(*ugUninstall.szUserAgent != '\0')
-  {
-    hkRoot = ugUninstall.hWrMainRoot;
-    strcpy(szKey, ugUninstall.szWrMainKey);
-    AppendBackSlash(szKey, sizeof(szKey));
-    strcat(szKey, ugUninstall.szUserAgent);
-    AppendBackSlash(szKey, sizeof(szKey));
-    strcat(szKey, "Main");
-  }
-  else
-  {
-    return(CMI_APP_PATHNAME_NOT_FOUND);
-  }
-
-  GetWinReg(hkRoot, szKey, "PathToExe", szAppPathName, dwAppPathNameSize);
-  strupr(szAppPathName);
-  return(CMI_OK);
-
-#endif
-}
-
