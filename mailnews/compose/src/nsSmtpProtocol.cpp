@@ -1709,9 +1709,10 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     rv = smtpServer->GetUsername(getter_Copies(username));
     NS_ENSURE_SUCCESS(rv, rv);
     
+    NS_ConvertASCIItoUCS2 usernameUTF16(username);
     const PRUnichar *formatStrings[] =
     {
-      NS_ConvertASCIItoUCS2(username).get(),
+      usernameUTF16.get(),
       nsnull  // this will be overwritten in some cases.
     };
 
@@ -1719,12 +1720,14 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     rv = prefBranch->GetBoolPref(prefName.get(), &hideHostnameForPassword);
     // for certain redirector types, we don't want to show the
     // hostname to the user when prompting for password
+    nsAutoString hostnameUTF16;
     if (!hideHostnameForPassword) 
     {
       nsXPIDLCString hostname;      
       rv = smtpServer->GetHostname(getter_Copies(hostname));
       NS_ENSURE_SUCCESS(rv, rv);
-      formatStrings[1] = NS_ConvertASCIItoUCS2(hostname).get();
+      CopyASCIItoUTF16(hostname, hostnameUTF16);
+      formatStrings[1] = hostnameUTF16.get();
     }
     rv = PromptForPassword(smtpServer, smtpUrl, formatStrings, aPassword);
     NS_ENSURE_SUCCESS(rv,rv);
