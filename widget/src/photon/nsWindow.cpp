@@ -689,7 +689,9 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW);
         PtSetArg( &arg[arg_count++], Pt_ARG_RAW_CALLBACKS,   &callback, 1 );
         PtSetArg( &args[arg_count++], Pt_ARG_FLAGS, 0, Pt_GETS_FOCUS);
-        mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
+        // briane
+        //mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
+        mWidget = mMenuRegion = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
      }
 	else
 	{
@@ -1386,11 +1388,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Show this=<%p> State=<%d> mRefCnt=<%d> mWidget=<%p>\n", this, bState, mRefCnt, mWidget));
 
+
   if (!mWidget)
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Show - mWidget is NULL!\n" ));
     return NS_OK; // Will be null durring printing
   }
+
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Show this=<%p> IsRealized=<%d> mIsTooSmall=<%d>\n", this, PtWidgetIsRealized( mWidget ), mIsTooSmall));
   //printf ("nsWindow::Show this=<%p> State=<%d> IsRealized=<%d> mIsTooSmall=<%d> gRollupScreenRegion=<%p>\n", this, bState, PtWidgetIsRealized( mWidget ), mIsTooSmall, gRollupScreenRegion);
