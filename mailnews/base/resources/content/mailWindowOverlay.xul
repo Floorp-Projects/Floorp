@@ -189,7 +189,7 @@ Rights Reserved.
 	</menu>
 
 	<menu id="menu_View">
-		<menupopup>
+		<menupopup id="menu_View_Popup">
 			<menu id="menu_Toolbars">
 				<menupopup>
 					<menuitem id="menu_showMessengerToolbar"
