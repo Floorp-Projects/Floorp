@@ -2216,6 +2216,10 @@ FE_ConnectToRemoteHost(MWContext * context, int url_type, char *
 
         // Strip off any command line options
         lpszArg = strstr(lpszApp, "%1");
+        if ( !lpszArg ) {
+            // Look for "%l", instead.
+            lpszArg = strstr(lpszApp, "%l");
+        }
         if (lpszArg)
             *lpszArg = '\0';  // null terminate the string here
 
