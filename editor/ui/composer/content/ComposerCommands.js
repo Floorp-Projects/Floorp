@@ -42,7 +42,7 @@
 
 /* Implementations of nsIControllerCommand for composer commands */
 
-var gComposerJSCommandControllerID = -1;
+var gComposerJSCommandControllerID = 0;
 
 
 //-----------------------------------------------------------------------------------
@@ -132,6 +132,10 @@ function SetupTextEditorCommands()
 
 function SetupComposerWindowCommands()
 {
+  // Don't need to do this if already done
+  if (gComposerWindowControllerID)
+    return;
+
   // Create a command controller and register commands
   //   specific to Web Composer window (file-related commands, HTML Source...)
   //   We can't use the composer controller created on the content window else
@@ -202,18 +206,18 @@ function SetupComposerWindowCommands()
 
   // Store the controller ID so we can be sure to get the right one later
   gComposerWindowControllerID = windowControllers.getControllerId(editorController);
-
-
 }
 
 //-----------------------------------------------------------------------------------
 function GetComposerCommandManager()
 {
 	var controller;
-  try { 
-    controller = window.controllers.getControllerById(gComposerJSCommandControllerID);
-  } catch (e) {}
-
+  if (gComposerJSCommandControllerID)
+  {
+    try { 
+      controller = window.controllers.getControllerById(gComposerJSCommandControllerID);
+    } catch (e) {}
+  }
   if (!controller)
   {
     //create it

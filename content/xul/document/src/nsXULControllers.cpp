@@ -162,7 +162,7 @@ nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** 
 NS_IMETHODIMP
 nsXULControllers::InsertControllerAt(PRUint32 aIndex, nsIController *controller)
 {
-  nsXULControllerData*  controllerData = new nsXULControllerData(mCurControllerID++, controller);
+  nsXULControllerData*  controllerData = new nsXULControllerData(++mCurControllerID, controller);
   if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
   PRBool  inserted = mControllers.InsertElementAt((void *)controllerData, aIndex);
   NS_ASSERTION(inserted, "Insertion of controller failed");
