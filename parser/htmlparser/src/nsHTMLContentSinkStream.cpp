@@ -469,7 +469,7 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
   if (mUnicodeEncoder)
   {
     EncodeToBuffer(aString);
-    out.write(mBuffer, mBuffer.Length());
+    out.write(&mBuffer, mBuffer.Length());
   }
   // else just write the unicode
   else
