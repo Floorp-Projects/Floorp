@@ -568,9 +568,13 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
       page->GetView(aPresContext, &view);
       NS_ASSERTION(nsnull != view, "no page view");
       if (pageNum < mFromPageNum || pageNum > mToPageNum) {
-        // XXX Doesn't seem like we need to do this
-        // because we ask only the pages we want to print
-        //view->SetVisibility(nsViewVisibility_kHide);
+        // Hide the pages that won't be printed to the Viewmanager
+        // doesn't put them in the display list. Also, makde
+        // sure the child views don't get asked to print
+        // but my guess is that there won't be any
+        view->SetVisibility(nsViewVisibility_kHide);
+        view->SetChildClip(0,0,0,0);
+        view->SetViewFlags(NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
       } else {
         nsRect rect;
         page->GetRect(rect);
