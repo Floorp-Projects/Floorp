@@ -103,7 +103,7 @@ class nsHTMLFrameOuterFrame : public nsHTMLContainerFrame {
 public:
   nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD ListTag(FILE* out = stdout) const;
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -132,7 +132,7 @@ public:
 
   nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD ListTag(FILE* out = stdout) const;
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
@@ -290,11 +290,11 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
   }
 }
 
-NS_IMETHODIMP nsHTMLFrameOuterFrame::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP nsHTMLFrameOuterFrame::ListTag(FILE* out) const
 {
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
-  fprintf(out, "%X OUTER \n", this);
-  return nsHTMLContainerFrame::List(out, aIndent);
+  nsHTMLContainerFrame::ListTag(out);
+  fputs(" (OUTER)", out);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -426,11 +426,11 @@ float nsHTMLFrameInnerFrame::GetTwipsToPixels()
 #endif
 
 
-NS_IMETHODIMP nsHTMLFrameInnerFrame::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP nsHTMLFrameInnerFrame::ListTag(FILE* out) const
 {
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
-  fprintf(out, "%X INNER \n", this);
-  return nsFrame::List(out, aIndent);
+  nsLeafFrame::ListTag(out);
+  fputs(" (INNER)", out);
+  return NS_OK;
 }
 
 NS_METHOD

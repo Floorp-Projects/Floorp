@@ -63,8 +63,6 @@ public:
 
   static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
 
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -73,6 +71,8 @@ public:
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
+
+  NS_IMETHOD  VerifyTree() const;
 
 protected:
   void CalculateRowCol(nsIPresContext* aPresContext, nscoord aSize, PRInt32 aNumSpecs, 

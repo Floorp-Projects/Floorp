@@ -79,7 +79,7 @@ enum nsMouseState {
 class nsHTMLFramesetBorderFrame : public nsLeafFrame {
 
 public:
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD ListTag(FILE* out = stdout) const;
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
@@ -369,13 +369,6 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
   aSize.width  = 0;
   aSize.height = 0;
 }  
-
-NS_IMETHODIMP nsHTMLFramesetFrame::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
-  fprintf(out, "%X \n", this);
-  return nsHTMLContainerFrame::List(out, aIndent);
-}
 
   
 NS_IMETHODIMP
@@ -731,6 +724,14 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLFramesetFrame::VerifyTree() const
+{
+  // XXX Completely disabled for now; once pseud-frames are reworked
+  // then we can turn it back on.
+  return NS_OK;
+}
+
 /*******************************************************************************
  * nsHTMLFrameset
  ******************************************************************************/
@@ -923,10 +924,10 @@ NS_METHOD nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLFramesetBorderFrame::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP nsHTMLFramesetBorderFrame::ListTag(FILE* out) const
 {
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
-  fprintf(out, "%X BORDER \n", this);
-  return nsLeafFrame::List(out, aIndent);
+  nsLeafFrame::ListTag(out);
+  fputs(" (BORDER)", out);
+  return NS_OK;
 }
 
