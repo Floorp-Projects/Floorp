@@ -153,7 +153,7 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
 	mCommand = nsCRT::strdup(command);
     if (mCommand == nsnull)
         return NS_ERROR_OUT_OF_MEMORY; 
-    mOriginalURI = originalURI;
+    mOriginalURI = originalURI ? originalURI : uri;
     mBufferSegmentSize = bufferSegmentSize;
     mBufferMaxSize = bufferMaxSize;
 
@@ -269,6 +269,28 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         nsFileSpec jarCacheFile;
         rv = GetCacheFile(jarCacheFile);
         if (NS_FAILED(rv)) return rv;
+
+		if (jarCacheFile.IsFile()) {
+	        // then we've already got the file in the local cache -- no need to download it
+
+            NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIFileChannel> jarCacheChannel;
+            rv = serv->NewChannelFromNativePath(jarCacheFile.GetNativePathCString(), 
+                                                mLoadGroup,
+                                                mCallbacks,
+                                                mLoadAttributes,
+                                                nsnull,
+                                                mBufferSegmentSize,
+                                                mBufferMaxSize,
+                                                getter_AddRefs(jarCacheChannel));
+
+            if (NS_FAILED(rv)) return rv;
+
+		    rv = ExtractJARElement(jarCacheChannel);
+			return rv;
+		}
 
         NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
