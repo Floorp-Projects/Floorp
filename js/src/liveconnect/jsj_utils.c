@@ -450,7 +450,7 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
 
     *envp = NULL;
     err_msg = NULL;
-    
+
     jsj_env = the_java_jsj_env;
     if (jsj_env == NULL && JSJ_callbacks && JSJ_callbacks->map_js_context_to_jsj_thread)
         jsj_env = JSJ_callbacks->map_js_context_to_jsj_thread(cx, &err_msg);
@@ -464,7 +464,10 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
 
     JS_ASSERT((jsj_env->recursion_depth == 0) || (jsj_env->cx == cx));
     jsj_env->recursion_depth++;
-    jsj_env->cx = cx;
+
+    /* bug #60018:  prevent dangling pointer to JSContext */
+    if (!jsj_env->cx)
+        jsj_env->cx = cx;
 
     if (envp)
         *envp = jsj_env->jEnv;
