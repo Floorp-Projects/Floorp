@@ -2240,7 +2240,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     aChildList.AppendElement(labelContent);
 
     // create button which drops the list down
-    nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID));
+    nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID));
     if (ef) {
       nsCOMPtr<nsIContent> content;
       result = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));

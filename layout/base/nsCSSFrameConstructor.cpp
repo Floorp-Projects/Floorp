@@ -1371,7 +1371,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     nimgr->GetNodeInfo(nsHTMLAtoms::img, nsnull, kNameSpaceID_None,
                        *getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID,&rv));
+    nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIContent> content;
