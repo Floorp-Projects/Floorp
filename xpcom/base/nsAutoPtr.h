@@ -992,6 +992,24 @@ class nsRefPtr
 
         // Other pointer operators
 
+      void
+      swap( nsRefPtr<T>& rhs )
+          // ...exchange ownership with |rhs|; can save a pair of refcount operations
+        {
+          T* temp = rhs.mRawPtr;
+          rhs.mRawPtr = mRawPtr;
+          mRawPtr = temp;
+        }
+
+      void
+      swap( T*& rhs )
+          // ...exchange ownership with |rhs|; can save a pair of refcount operations
+        {
+          T* temp = rhs;
+          rhs = mRawPtr;
+          mRawPtr = temp;
+        }
+
       nsDerivedSafe<T>*
       get() const
           /*
