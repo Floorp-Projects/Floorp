@@ -28,3 +28,11 @@ window {
 .treecell-error {
     white-space: normal;
 }
+
+.treecell-error[type="error"] {
+  list-style-image: url("chrome://global/skin/error-icon.gif") !important;
+}
+
+.treecell-error[type="warning"] {
+  list-style-image: url("chrome://global/skin/alert-icon.gif") !important;
+}
