@@ -124,7 +124,12 @@
 
   </box>
 
-  <box id="okCancelButtons"/>
+  <box id="saveCancelButtons">
+  	<spring flex="1"/>
+	<button oncommand="Save();" id="save_button" value="&sidebar.customize.save.label;" />
+	<button oncommand="window.close();" value="&sidebar.customize.cancel.label;" />
+	<spring flex="1"/>
+  </box>
 
 </window>
 
