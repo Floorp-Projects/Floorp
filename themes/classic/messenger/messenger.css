@@ -19,7 +19,7 @@
  */
 
 @import url(chrome://communicator/skin/);
-@import url(chrome://communicator/skin/messenger/messenger.css);
+@import url(chrome://communicator/skin/sidebar/sidebar.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
