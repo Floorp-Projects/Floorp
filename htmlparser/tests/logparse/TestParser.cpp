@@ -42,90 +42,73 @@
 #include "nsIParser.h"
 #include "nsILoggingSink.h"
 #include "nsIInputStream.h"
-#include "prprf.h"
-#include <fstream.h>
-
 
 // Class IID's
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
-static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
-
-// Interface IID's
-static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
-
+static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 
 //----------------------------------------------------------------------
 
 nsresult ParseData(char* anInputStream,char* anOutputStream) {
-	nsresult result=NS_OK;
+  NS_ENSURE_ARG_POINTER(anInputStream);
+  NS_ENSURE_ARG_POINTER(anOutputStream);
+	
+  nsresult result = NS_OK;
 
-  if(anInputStream && anOutputStream) {
-    PRFileDesc* in=PR_Open(anInputStream, PR_RDONLY, 777);
-          
-    if (!in) {
-      return NS_ERROR_FAILURE;
-    }
+  // Create a parser
+  nsCOMPtr<nsIParser> parser(do_CreateInstance(kParserCID, &result));
+  if (NS_FAILED(result)) {
+    printf("\nUnable to create a parser\n");
+    return result;
+  }
+  // Create a sink
+  nsCOMPtr<nsILoggingSink> sink(do_CreateInstance(kLoggingSinkCID, &result));
+  if (NS_FAILED(result)) {
+    printf("\nUnable to create a sink\n");
+    return result;
+  }
+  // Create a dtd
+  nsCOMPtr<nsIDTD> dtd(do_CreateInstance(kNavDTDCID, &result));
+  if(NS_FAILED(result)) {
+    printf("Unable to create a dtd\n");
+    return result;
+  }
+     
+  PRFileDesc* in = PR_Open(anInputStream, PR_RDONLY, 777);
+  if (!in) {
+    printf("\nUnable to open input file - %s\n", anInputStream);
+    return result;
+  }
+  
+  PRFileDesc* out = PR_Open(anOutputStream, PR_CREATE_FILE|PR_WRONLY, 777);
+  if (!out) {
+    printf("\nUnable to open output file - %s\n", anOutputStream);
+    return result;
+  }
 
-    nsString   stream;
-    char       buffer[1024];
-    PRBool     done=PR_FALSE;
-    PRInt32    length=0;
-
-    while(!done) {
-      length = PR_Read(in, buffer, sizeof(buffer));
-      if (length>0) {
-        stream.AppendWithConversion(buffer,length); 
-      }
-      else {
-        done=PR_TRUE;
-      }
-    }
-
-    PR_Close(in);
-
-    // Create a parser
-    nsCOMPtr<nsIParser> parser;
-    result = nsComponentManager::CreateInstance(kParserCID,nsnull,kIParserIID,getter_AddRefs(parser));
-    if (NS_SUCCEEDED(result)) {
-      // Create a sink
-      nsCOMPtr<nsILoggingSink> sink;
-      result = nsComponentManager::CreateInstance(kLoggingSinkCID,nsnull,kILoggingSinkIID,getter_AddRefs(sink));
-      if (NS_SUCCEEDED(result)) {
-        // Create a dtd
-        nsCOMPtr<nsIDTD> dtd;
-        result=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(dtd));
-        if(NS_SUCCEEDED(result)) {
-          // Parse the document, having the sink write the data to fp
-          PRFileDesc* out;
-          out = PR_Open(anOutputStream, PR_CREATE_FILE|PR_WRONLY, 777);
-          
-          //fstream out(anOutputStream,ios::out);
-
-          if (!out) {
-            return NS_ERROR_FAILURE;
-          }
-			    
-          sink->SetOutputStream(out);
-          parser->RegisterDTD(dtd);
-	        parser->SetContentSink(sink);
-	        result = parser->Parse(stream, 0, NS_LITERAL_STRING("text/html"), PR_FALSE, PR_TRUE);
-
-          PR_Close(out);
-        }
-        else {
-          cout << "Unable to create a dtd (" << result << ")" <<endl;
-        }
-      }
-      else {
-        cout << "Unable to create a sink (" << result << ")" <<endl;
-      }
+  nsString stream;
+  char buffer[1024] = {0}; // XXX Yikes!
+  PRBool done = PR_FALSE;
+  PRInt32 length = 0;
+  while(!done) {
+    length = PR_Read(in, buffer, sizeof(buffer));
+    if (length != 0) {
+      stream.AppendWithConversion(buffer, length);
     }
     else {
-     cout << "Unable to create a parser (" << result << ")" <<endl;
+      done=PR_TRUE;
     }
   }
+
+  sink->SetOutputStream(out);
+  parser->RegisterDTD(dtd);
+	parser->SetContentSink(sink);
+  result = parser->Parse(stream, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+  
+  PR_Close(in);
+  PR_Close(out);
+
   return result;
 }
 
@@ -135,7 +118,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
 int main(int argc, char** argv)
 {
   if (argc < 3) {
-		cout << "Usage: " << "" << "<inputfile> <outputfile>" << endl; 
+		printf("\nUsage: <inputfile> <outputfile>\n"); 
     return -1;
   }
 
