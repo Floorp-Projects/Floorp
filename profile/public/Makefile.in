@@ -24,11 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profile
 
-EXPORTS		= profileSwitch.h
-
 XPIDLSRCS	= nsIProfile.idl
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 

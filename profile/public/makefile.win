@@ -20,8 +20,7 @@
 
 MODULE=profile 
 DEPTH=..\.. 
-EXPORTS= profileSwitch.h \
-	nsIAccount.h \
+EXPORTS=nsIAccount.h \
 	dialshr.h \
 	resource.h \
 	     $(NULL)

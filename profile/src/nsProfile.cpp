@@ -214,7 +214,6 @@ nsProfile::nsProfile()
 
 nsProfile::~nsProfile() 
 {
-  printf("nsProfile::~nsProfile()\n");
 }
 
 /*
@@ -280,11 +279,6 @@ nsProfile::OpenRegistry()
     return rv;
 }
 
-NS_IMETHODIMP nsProfile::Shutdown()
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 {
@@ -302,17 +296,23 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
   if (cmdLineArgs)
     rv = ProcessArgs(cmdLineArgs, &profileDirSet, profileURLStr);
   
-  if (!profileDirSet)
+  if (!profileDirSet) {
     rv = LoadDefaultProfileDir(profileURLStr);
-  
+    if (NS_FAILED(rv)) {
+	 CloseRegistry();
+	 return rv;
+    }
+  }
+
   // Closing the registry that was opened in Startup()
   rv = CloseRegistry();
+  if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG_profile
   printf("Profile Manager : Profile Wizard and Manager activites : End\n");
 #endif
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -381,15 +381,19 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 							NS_SIZETOCONTENT,           // height
                                                     getter_AddRefs(profWindow));
 
-            if (NS_FAILED(rv)) 
-                {
-                    return rv;
-                }
+            if (NS_FAILED(rv)) return rv;
 
             /*
              * Start up the main event loop...
              */	
             rv = profAppShell->Run();
+
+	    char *currentProfileStr = nsnull;
+	    rv = GetCurrentProfile(&currentProfileStr);
+	    if (NS_FAILED(rv) || !currentProfileStr) {
+		return NS_ERROR_FAILURE;
+	    }
+	    PR_DELETE(currentProfileStr);
         }
 
     if (pregPref && PL_strcmp(isPregInfoSet, REGISTRY_TRUE_STRING) != 0)

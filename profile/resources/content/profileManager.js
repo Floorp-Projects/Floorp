@@ -7,8 +7,7 @@ profile = profile.QueryInterface(Components.interfaces.nsIProfile);
 function openCreateProfile()
 {
 	// Need to call CreateNewProfile xuls
-	var win = window.openDialog('chrome://profile/content/createProfileWizard.xul', 'CPW', 'chrome');
-	return win;
+	window.openDialog('chrome://profile/content/createProfileWizard.xul', 'CPW', 'chrome');
 }
 
 function CreateProfile()

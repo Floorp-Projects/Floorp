@@ -92,14 +92,10 @@ function onNext()
 		 return;
 	}
 
-	//dump("***********onNext\n");
-
-	if (currentPageTag != "newProfile1_2") {
-		saveData();
-		var nextPageTag = testMap[currentPageTag].next;
-		var url = getUrlFromTag(nextPageTag);
-		displayPage(url);
-	}
+	saveData();
+	var nextPageTag = testMap[currentPageTag].next;
+	var url = getUrlFromTag(nextPageTag);
+	displayPage(url);
 }
 
 function onBack()
@@ -108,12 +104,10 @@ function onBack()
 		return;
 	}
 
-	if (currentPageTag != "newProfile1_2") {
-		saveData();
-		previousPageTag = testMap[currentPageTag].previous;
-		var url = grtUrlFromTag(previousPageTag);
-		displayPage(url);
-	}
+	saveData();
+	previousPageTag = testMap[currentPageTag].previous;
+	var url = getUrlFromTag(previousPageTag);
+	displayPage(url);
 }
 
 function displayPage(content)
@@ -128,10 +122,10 @@ function displayPage(content)
 		{
 			contentFrame.setAttribute("src", content);
 		}
-               //hack for onLoadHandler problem bug #15458
-               var tmpUrl = content.split(".");
-               var tag = tmpUrl[0];
-               wizardPageLoaded(tag);
+                //hack for onLoadHandler problem bug #15458
+                var tmpUrl = content.split(pagePostfix);
+                var tag = tmpUrl[0];
+                wizardPageLoaded(tag);
 	}
 }
 
@@ -263,7 +257,13 @@ function ExitApp()
         appShell.Quit();
 }
 
-function cancelApp()
+function onCancel()
 {
-	dump("fix this.\n");
+        if (top.window.opener) {
+                // we came from the profile manager window...
+                window.close();
+        }
+        else {
+                ExitApp()
+        }
 }

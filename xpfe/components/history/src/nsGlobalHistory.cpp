@@ -35,7 +35,6 @@
 #include "nsIEnumerator.h"
 #include "nsIGenericFactory.h"
 #include "nsIGlobalHistory.h"
-#include "nsIProfile.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
@@ -61,6 +60,9 @@
 #include "nsIBrowsingProfile.h"
 #endif
 
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h" 
+
 ////////////////////////////////////////////////////////////////////////
 // Common CIDs
 
@@ -68,7 +70,9 @@ static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kGlobalHistoryCID,     NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+ 
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 
 #ifdef MOZ_BRPROF
 static NS_DEFINE_CID(kBrowsingProfileCID,   NS_BROWSINGPROFILE_CID);
@@ -1285,20 +1289,17 @@ nsGlobalHistory::OpenDB()
 {
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
+  nsCOMPtr <nsIFileSpec> historyFile;
   nsFileSpec dbfile;
-  rv = profile->GetCurrentProfileDir(&dbfile);
+
+  NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // Urgh. No profile directory. Use tmp instead.
-  if (! dbfile.Exists()) {
-    // XXX Probably should warn user before doing this. Oh well.
-    dbfile = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  }
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_History50, getter_AddRefs(historyFile));
+  if (NS_FAILED(rv)) return rv; 
 
-  dbfile += "history.dat";
+  rv = historyFile->GetFileSpec(&dbfile);
+  if (NS_FAILED(rv)) return rv;
 
   // Leaving XPCOM, entering Mork. The IID is a lie; the component
   // manager appears to be used solely to get dynamic loading of the

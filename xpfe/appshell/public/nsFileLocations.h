@@ -82,7 +82,12 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
 
 		,	App_Registry40                 = App_FileBase      +   20
 		,   App_Registry50                 = App_FileBase      +   21
-		
+		,   App_LocalStore50		   = App_FileBase	+  30
+		,   App_History50		   = App_FileBase	+  40
+		,   App_MailDirectory50		   = App_FileBase	+  50
+		,   App_ImapMailDirectory50	   = App_FileBase	+  60
+		,   App_NewsDirectory50		   = App_FileBase	+  70
+		,   App_MessengerFolderCache50	   = App_FileBase	+  80
 		};
                     //nsSpecialFileSpec();
                     nsSpecialFileSpec(Type aType);        
