@@ -126,10 +126,11 @@ NS_COM char* ToNewCString( const nsACString& aSource );
    * contains embedded nulls.
    *
    * @param aSource a UTF-16 string (made of PRUnichar's)
+   * @param aUTF8Count the number of 8-bit units that was returned
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
 
-NS_COM char* ToNewUTF8String( const nsAString& aSource );
+NS_COM char* ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count = nsnull );
 
 
   /**
@@ -171,10 +172,11 @@ NS_COM PRUnichar* ToNewUnicode( const nsACString& aSource );
    * may not help you if |aSource| contains embedded nulls.
    *
    * @param aSource an 8-bit wide string, UTF-8 encoded
+   * @param aUTF16Count the number of 16-bit units that was returned
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    *         (UTF-16 encoded)
    */
-NS_COM PRUnichar* UTF8ToNewUnicode( const nsACString& aSource );
+NS_COM PRUnichar* UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count = nsnull );
 
   /**
    * Copies |aLength| 16-bit code units from the start of |aSource| to the
