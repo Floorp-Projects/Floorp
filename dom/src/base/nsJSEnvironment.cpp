@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #include "nsJSEnvironment.h"
@@ -160,7 +160,7 @@ NS_ScriptErrorReporter(JSContext *cx,
                                    0, 0, 0, category);
             nsMemory::Free((void *)newMessageUni);
           }
-      
+
           if (NS_SUCCEEDED(rv))
             owner->ReportScriptError(errorObject);
         }
@@ -981,30 +981,41 @@ nsJSContext::GetGlobalObject()
 {
   JSObject *global = ::JS_GetGlobalObject(mContext);
 
-  if (global) {
-    nsISupports* sup = (nsISupports *)::JS_GetPrivate(mContext, global);
-
-    if (sup) {
-      nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native =
-        do_QueryInterface(sup);
-
-      if (wrapped_native) {
-        nsCOMPtr<nsISupports> native;
-
-        wrapped_native->GetNative(getter_AddRefs(native));
-
-        if (native) {
-          nsIScriptGlobalObject *script_global = nsnull;
-
-          CallQueryInterface(native, &script_global);
-
-          return script_global;
-        }
-      }
-    }
+  if (!global) {
+    return nsnull;
   }
 
-  return nsnull;
+  JSClass *c = JS_GET_CLASS(mContext, global);
+
+  if (!c || ((~c->flags) & (JSCLASS_HAS_PRIVATE |
+                            JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsISupports> native =
+    (nsISupports *)::JS_GetPrivate(mContext, global);
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native =
+    do_QueryInterface(native);
+
+  if (wrapped_native) {
+    // The global object is a XPConnect wrapped native, the native in
+    // the wrapper might be the nsIScriptGlobalObject
+
+    wrapped_native->GetNative(getter_AddRefs(native));
+  }
+
+  nsIScriptGlobalObject *script_global = nsnull;
+
+  if (native) {
+    // We have private data (either directly from ::JS_GetPrivate() or
+    // through wrapped_native->GetNative()), check if it's a
+    // nsIScriptGlobalObject
+
+    CallQueryInterface(native, &script_global);
+  }
+
+  return script_global;
 }
 
 NS_IMETHODIMP_(void*)
@@ -1085,6 +1096,7 @@ nsresult
 nsJSContext::InitializeLiveConnectClasses()
 {
   nsresult rv = NS_OK;
+
   nsCOMPtr<nsIJVMManager> jvmManager =
     do_GetService(nsIJVMManager::GetCID(), &rv);
 
@@ -1470,7 +1482,7 @@ nsJSEnvironment::nsJSEnvironment()
     return;                     // XXX swallow error! need Init()?
 
   gDOMThread = PR_GetCurrentThread();
-  
+
   NS_ASSERTION(!gOldJSGCCallback, "nsJSEnvironment created more than once");
   gOldJSGCCallback = ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
 
@@ -1503,7 +1515,7 @@ nsJSEnvironment::~nsJSEnvironment()
 
 NS_IMPL_ISUPPORTS1(nsJSEnvironment,nsIObserver);
 
-NS_IMETHODIMP nsJSEnvironment::Observe(nsISupports *aSubject, 
+NS_IMETHODIMP nsJSEnvironment::Observe(nsISupports *aSubject,
                                        const PRUnichar *aTopic,
                                        const PRUnichar *someData)
 {
