@@ -1363,10 +1363,8 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
   // This initializes the Prefs booleans
   mGotGfxPrefs = PR_FALSE;
   mGotXBLFormPrefs = PR_FALSE;
-  mHasGfxScrollbars = PR_FALSE;
   mUseXBLForms = PR_FALSE;
 
-  HasGfxScrollbars();
   UseXBLForms();
 
   return NS_OK;
@@ -3329,17 +3327,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   
 
 
----------------Native Scrollbars------
-
-
-
-     ScrollFrame
-
-         ^
-         |
-     AreaFrame or BoxFrame (InitialContainingBlock)
-  
-
 ---------------Gfx Scrollbars ------
 
 
@@ -3595,21 +3582,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
      RootFrame(DocElementContainingBlock)
   
 
-
----------------Native Scrollbars------
-
-
-
-     ViewPortFrame (FixedContainingBlock) <---- RootView
-
-         ^
-         |
-     ScrollFrame <--- RootScrollableView
-
-         ^
-         |
-     RootFrame(DocElementContainingBlock)
-  
 
 ---------------Gfx Scrollbars ------
 
@@ -3897,11 +3869,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       viewManager->SetRootScrollableView(scrollableView);
       parentFrame = newScrollableFrame;
 
-      // if gfx scrollbars store them
-      if (HasGfxScrollbars())
-        mGfxScrollFrame = newFrame;
-      else
-        mGfxScrollFrame = nsnull;
+      mGfxScrollFrame = newFrame;
 
   } else {
     // If no scrollbars and xul, don't build a scrollframe at all. 
@@ -4226,12 +4194,6 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*   aPresShell,
     NS_ASSERTION(0, "We longer support native widgets");
   }
   return rv;
-}
-
-PRBool
-nsCSSFrameConstructor::HasGfxScrollbars()
-{
-  return PR_TRUE;
 }
 
 PRBool
@@ -6062,74 +6024,34 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
 
   nsRefPtr<nsStyleContext> contentStyle = aContentStyle;
 
-  PRBool isGfx = HasGfxScrollbars();
+  if (!gfxScrollFrame) {
+    NS_NewGfxScrollFrame(aPresShell, &gfxScrollFrame, aDocument, aIsRoot);
 
-  if (isGfx) {
-    if (!gfxScrollFrame) {
-      NS_NewGfxScrollFrame(aPresShell, &gfxScrollFrame, aDocument, aIsRoot);
-      
-      InitAndRestoreFrame(aPresContext, aState, aContent, 
-                          aParentFrame, contentStyle, nsnull, gfxScrollFrame);
-      
-      // Create a view
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, gfxScrollFrame,
-                                               contentStyle, aContentParentFrame, PR_FALSE);
-    }
-    
-    InitGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument,
-                       aParentFrame, aContentParentFrame, contentStyle,
-                       aIsRoot, gfxScrollFrame, anonymousItems, aScrollPortFrame);
-
-    scrollFrame = anonymousItems.childList; // get the scrollport from the anonymous list
-    parentFrame = gfxScrollFrame;
-    aNewFrame = gfxScrollFrame;
-
-    // we used the style that was passed in. So resolve another one.
-    nsRefPtr<nsStyleContext> scrollPseudoStyle;
-    scrollPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                                   nsCSSAnonBoxes::scrolledContent,
-                                                                   contentStyle);
-
-    contentStyle = scrollPseudoStyle;
     InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        parentFrame, contentStyle, nsnull, scrollFrame);
+                        aParentFrame, contentStyle, nsnull, gfxScrollFrame);
 
-  } else {
-    // native scrollbarss
-    NS_NewScrollFrame(aPresShell, &scrollFrame);
-    aNewFrame = scrollFrame;
-    parentFrame = aParentFrame;
-    InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        parentFrame, contentStyle, nsnull, scrollFrame);
-
-
-    // need to hook up the native scroll window's content parent
-    if (nsnull != aContentParentFrame) {
-      nsIView* view = nsnull;
-      scrollFrame->GetView(aPresContext, &view);
-      if (view) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
-        nsIView* parentView;
-        view->GetParent(parentView);
-
-        nsIView* zParentView = parentView;
-        aContentParentFrame->GetView(aPresContext, &zParentView);
-
-        if (nsnull == zParentView) {
-         nsIFrame* zParentFrame = nsnull;
-          aContentParentFrame->GetParentWithView(aPresContext, &zParentFrame);
-          NS_ASSERTION(zParentFrame, "GetParentWithView failed");
-          zParentFrame->GetView(aPresContext, &zParentView);
-          NS_ASSERTION(zParentView, "no parent with view");
-        }
-
-        if (zParentView != parentView) {
-          vm->InsertZPlaceholder(zParentView, view, nsnull, PR_TRUE);
-        }
-      }
-    }
+    // Create a view
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, gfxScrollFrame,
+                                             contentStyle, aContentParentFrame, PR_FALSE);
   }
+
+  InitGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument,
+                     aParentFrame, aContentParentFrame, contentStyle,
+                     aIsRoot, gfxScrollFrame, anonymousItems, aScrollPortFrame);
+
+  scrollFrame = anonymousItems.childList; // get the scrollport from the anonymous list
+  parentFrame = gfxScrollFrame;
+  aNewFrame = gfxScrollFrame;
+
+  // we used the style that was passed in. So resolve another one.
+  nsRefPtr<nsStyleContext> scrollPseudoStyle;
+  scrollPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                                 nsCSSAnonBoxes::scrolledContent,
+                                                                 contentStyle);
+
+  contentStyle = scrollPseudoStyle;
+  InitAndRestoreFrame(aPresContext, aState, aContent, 
+                      parentFrame, contentStyle, nsnull, scrollFrame);
 
   nsStyleContext* aScrolledChildStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
                                                                                    aScrolledPseudo,
@@ -6318,7 +6240,7 @@ nsCSSFrameConstructor::InitGfxScrollFrame(nsIPresShell*            aPresShell,
 
   aAnonymousFrames.AddChild(aScrollPortFrame);
 
-  // if there are any anonymous children for the nsScrollFrame create frames for them.
+  // if there are any anonymous children for the nsGfxScrollFrame create frames for them.
   CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, aDocument, aNewFrame,
                         PR_FALSE, aAnonymousFrames);
 
@@ -7656,7 +7578,7 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
     // Check to see if the content is a select and 
     // then if it has a drop down (thus making it a combobox)
     // The drop down is a ListControlFrame derived from a 
-    // nsScrollFrame then get the area frame and that will be the parent
+    // nsGfxScrollFrame then get the area frame and that will be the parent
     // What is unclear here, is if any of this fails, should it return
     // the nsComboboxControlFrame or null?
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
