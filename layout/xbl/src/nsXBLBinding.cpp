@@ -1027,8 +1027,6 @@ nsXBLBinding::CreateScriptObject(nsIScriptContext* aContext, nsIDocument* aDocum
     void* privateData = JS_GetPrivate(jscontext, xulElementProtoObject);
     JS_SetPrivate(jscontext, object, privateData);
 
-    NS_IF_ADDREF((nsISupports*)privateData);
-
     // Set ourselves as the new script object.
     owner->SetScriptObject(object);
     SetScriptObject(object);
