@@ -38,6 +38,7 @@ function Startup()
   gDialog.hrefInput        = document.getElementById("hrefInput");
   gDialog.makeRelativeLink = document.getElementById("MakeRelativeLink");
   gDialog.showLinkBorder   = document.getElementById("showLinkBorder");
+  gDialog.linkTab          = document.getElementById("imageLinkTab");
 
   // Get a single selected image element
   var tagName = "img";
@@ -45,8 +46,8 @@ function Startup()
   {
     imageElement = window.arguments[0];
     // We've been called from form field propertes, so we can't insert a link
-    var imageLinkTab = document.getElementById('imageLinkTab');
-    imageLinkTab.parentNode.removeChild(imageLinkTab);
+    gDialog.linkTab.parentNode.removeChild(gDialog.linkTab);
+    gDialog.linkTab = null;
   }
   else
   {
@@ -109,7 +110,14 @@ function Startup()
     gDialog.widthUnitsMenulist.selectedIndex == 0 &&
     gDialog.heightUnitsMenulist.selectedIndex == 0;
 
-  SetTextboxFocus(gDialog.srcInput);
+  // Start in "Link" tab if 2nd arguement is true
+  if (gDialog.linkTab && "arguments" in window && window.arguments[1])
+  {
+    document.getElementById("TabBox").selectedTab = gDialog.linkTab;
+    SetTextboxFocus(gDialog.hrefInput);
+  }
+  else
+    SetTextboxFocus(gDialog.srcInput);
 
   SetWindowLocation();
 }
