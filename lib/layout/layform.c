@@ -1236,6 +1236,8 @@ lo_form_input_minimal(MWContext *context, lo_DocState *state,
 	if (form_data->type == FORM_TYPE_NONE)
 	{
 		form_data->FE_Data = NULL;
+		if (type == FORM_TYPE_HIDDEN)
+	        form_data->value = lo_FetchParamValue(context, tag, PARAM_VALUE);
 	}
 
 	form_data->type = type;
@@ -1273,7 +1275,9 @@ lo_form_input_minimal(MWContext *context, lo_DocState *state,
 	}
 #endif /* NICE_BUT_NOT_NCSA_COMPAT */
 
-	form_data->value = lo_FetchParamValue(context, tag, PARAM_VALUE);
+	if (form_data->type != FORM_TYPE_HIDDEN)
+		form_data->value = lo_FetchParamValue(context, tag, PARAM_VALUE);
+
 	if (form_data->value == NULL)
 	{
 		if (form_data->type == FORM_TYPE_SUBMIT)

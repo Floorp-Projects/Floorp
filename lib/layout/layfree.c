@@ -236,8 +236,7 @@ lo_CleanFormElementData(LO_FormElementData *element_data)
 			break;
 		case FORM_TYPE_SUBMIT:
 		case FORM_TYPE_RESET:
-		case FORM_TYPE_BUTTON:
-		case FORM_TYPE_HIDDEN:
+		case FORM_TYPE_BUTTON:		
 		case FORM_TYPE_READONLY:
 			{
 				lo_FormElementMinimalData *form_data;
@@ -253,6 +252,19 @@ lo_CleanFormElementData(LO_FormElementData *element_data)
 				{
 					PA_FREE(form_data->value);
 					form_data->value = NULL;
+				}
+			}
+			break;
+		case FORM_TYPE_HIDDEN:
+			{
+				lo_FormElementMinimalData *form_data;
+
+				form_data = (lo_FormElementMinimalData *)
+						element_data;
+				if (form_data->name != NULL)
+				{
+					PA_FREE(form_data->name);
+					form_data->name = NULL;
 				}
 			}
 			break;
