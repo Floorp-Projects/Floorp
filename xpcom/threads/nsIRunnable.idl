@@ -40,5 +40,5 @@
 [scriptable, uuid(4a2abaf0-6886-11d3-9382-00104ba0fd40)]
 interface nsIRunnable : nsISupports
 {
-    void Run();
+    void run();
 };
