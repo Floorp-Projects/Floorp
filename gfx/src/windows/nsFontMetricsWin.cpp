@@ -2903,6 +2903,22 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
     if (font) {
       return font;
     }
+
+    //let's try fall back list
+    PRInt32 i = strlen(name);
+    char ch;
+    name[i+2] = '\0';
+    name[i] = '.';
+    for (ch = '1'; ch <= '9'; ch++)
+    {
+       name[i+1] = ch;
+       if (NS_FAILED(gPref->CopyCharPref(name, &value)))
+         break;
+       font = LoadGenericFont(aDC, aChar, &value);
+       if (font)
+         return font;
+    }
+
   }
   prefix.ToCString(name, sizeof(name));
   PrefEnumInfo info = { aChar, aDC, nsnull, this };
