@@ -209,14 +209,14 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);
 extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
 
-enum JSErrNum {
+typedef enum JSErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
     name = number,
 #include "jsmsg.def"
 #undef MSG_DEF
     JSErr_Limit
 #undef MSGDEF
-};
+} JSErrNum;
 
 extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 

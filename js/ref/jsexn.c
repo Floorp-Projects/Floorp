@@ -188,7 +188,7 @@ static JSExnType errorToException[] = {
 
 JSBool
 js_ErrorToException(JSContext *cx, JSErrorReport *reportp) {
-    uintN errorNumber;
+    JSErrNum errorNumber; 
     JSObject *errobj;
     JSExnType exn;
 
