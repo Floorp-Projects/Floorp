@@ -69,7 +69,7 @@ race_decode_decompress(const char *from, unsigned short *buf, size_t buflen)
 	unsigned short *p = buf;
 	unsigned int bitbuf = 0;
 	int bitlen = 0;
-	int i, j;
+	unsigned int i, j;
 	size_t len;
 
 	while (*from != '\0') {

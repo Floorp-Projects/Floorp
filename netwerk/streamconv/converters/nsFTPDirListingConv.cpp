@@ -363,7 +363,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         
         if (type != 'd') 
         {
-            for (int i = 0; i < sizeof(result.fe_size); i++)
+            for (int i = 0; i < int(sizeof(result.fe_size)); ++i)
             {
                 if (result.fe_size[i] != '\0')
                     aString.Append((const char*)&result.fe_size[i], 1);
@@ -425,4 +425,3 @@ NS_NewFTPDirListingConv(nsFTPDirListingConv** aFTPDirListingConv)
     NS_ADDREF(*aFTPDirListingConv);
     return (*aFTPDirListingConv)->Init();
 }
-

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ----- BEGIN LICENSE BLOCK -----
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -167,7 +167,7 @@ int ParseFTPList(const char *line, struct list_state *state,
               while (pos < linelen && isdigit(line[pos]))
                 pos++;
               if (pos < linelen && line[pos] == ',' &&
-                 ((&line[pos]) - (p+1)) < (sizeof(result->fe_size)-1) )
+                 ((&line[pos]) - (p+1)) < int(sizeof(result->fe_size)-1) )
               {
                 memcpy( result->fe_size, p+1, (unsigned)(&line[pos] - (p+1)) );
                 result->fe_size[(&line[pos] - (p+1))] = '\0';
