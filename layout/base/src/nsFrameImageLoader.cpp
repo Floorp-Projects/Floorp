@@ -261,6 +261,10 @@ nsFrameImageLoader::StopImageLoad(PRBool aStopChrome)
   printf("\n");
 #endif
   if (mImageRequest) {
+    // can't kill the image request if we're in the middle of a notification
+    if (mNotifyLockCount) { 
+      return NS_ERROR_FAILURE;
+    }
     mImageRequest->RemoveObserver(this);
     NS_RELEASE(mImageRequest);
   }
