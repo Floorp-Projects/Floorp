@@ -44,7 +44,7 @@
 #include "mkparse.h"
 #include "mkaccess.h"
 #include "net_xp_file.h"
-//#include "cookies.h"
+/*#include "cookies.h" */
 #include "httpauth.h"
 #include "prefapi.h"
 #include "shist.h"
@@ -3026,7 +3026,7 @@ net_SaveCookiePermissions(char * filename)
  * returns 0 on success -1 on failure.
  *
  */
-//#define PERMISSION_LINE_BUFFER_SIZE 4096
+/* #define PERMISSION_LINE_BUFFER_SIZE 4096 */
 /*
 PRIVATE int
 net_ReadCookiePermissions(char * filename)
@@ -3237,7 +3237,7 @@ NET_InitRDFCookieResources (void)
  *
  *
  */
-//#define LINE_BUFFER_SIZE 4096
+/*#define LINE_BUFFER_SIZE 4096 */
 /*
 PUBLIC int
 NET_ReadCookies(char * filename)
