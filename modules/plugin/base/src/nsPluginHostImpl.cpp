@@ -4684,7 +4684,7 @@ typedef NS_4XPLUGIN_CALLBACK(char *, NP_GETMIMEDESCRIPTION)(void);
 static nsresult FixUpPluginInfo(nsPluginInfo &aInfo, nsPluginFile &aPluginFile)
 {
 #ifndef XP_WIN
-  retrun NS_OK;
+  return NS_OK;
 #endif
 
   for (PRUint32 i = 0; i < aInfo.fVariantCount; i++) {
