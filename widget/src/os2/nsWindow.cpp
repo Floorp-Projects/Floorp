@@ -2422,7 +2422,16 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
           break;
         case WM_CONTEXTMENU:
-          result = DispatchMouseEvent( NS_CONTEXTMENU, mp1, mp2);
+          if (SHORT2FROMMP(mp2) == TRUE) {
+            HWND hwndCurrFocus = WinQueryFocus(HWND_DESKTOP);
+            if (hwndCurrFocus != mWnd) {
+              WinSendMsg(hwndCurrFocus, msg, mp1, mp2);
+            } else {
+              result = DispatchMouseEvent( NS_CONTEXTMENU_KEY, mp1, mp2);
+            }
+          } else {
+            result = DispatchMouseEvent( NS_CONTEXTMENU, mp1, mp2);
+          }
           break;
     
         case WM_CHORD:
@@ -2881,8 +2890,15 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   // Mouse leave & enter messages don't seem to have position built in.
   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
   {
-    POINTL ptl = { (SHORT)SHORT1FROMMP( mp1), (SHORT)SHORT2FROMMP( mp1) };
-    PM2NS( ptl);
+    POINTL ptl;
+    if (aEventType == NS_CONTEXTMENU_KEY) {
+      WinQueryPointerPos(HWND_DESKTOP, &ptl);
+      WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1 );
+    } else {
+      ptl.x = SHORT1FROMMP(mp1);
+      ptl.y = SHORT2FROMMP(mp1);
+    }
+    PM2NS(ptl);
     nsPoint pt( ptl.x, ptl.y);
     InitEvent( event, aEventType, &pt);
 
