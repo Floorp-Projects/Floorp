@@ -103,6 +103,8 @@
 
 #include "nsIDOMXPathEvaluator.h"
 #include "nsNodeInfoManager.h"
+#include "nsICategoryManager.h"
+#include "nsIDOMNSFeatureFactory.h"
 
 #ifdef	MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
@@ -386,9 +388,7 @@ nsNode3Tearoff::GetFeature(const nsAString& aFeature,
                            const nsAString& aVersion,
                            nsISupports** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsNode3Tearoff::GetFeature()");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsGenericElement::InternalGetFeature(this, aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -1128,7 +1128,8 @@ extern PRBool gCheckedForXPathDOM;
 extern PRBool gHaveXPathDOM;
 
 nsresult
-nsGenericElement::InternalIsSupported(const nsAString& aFeature,
+nsGenericElement::InternalIsSupported(nsISupports* aObject,
+                                      const nsAString& aFeature,
                                       const nsAString& aVersion,
                                       PRBool* aReturn)
 {
@@ -1192,7 +1193,53 @@ nsGenericElement::InternalIsSupported(const nsAString& aFeature,
   }
 #endif /* MOZ_SVG */
 
+  else {
+    nsCOMPtr<nsIDOMNSFeatureFactory> factory =
+      GetDOMFeatureFactory(aFeature, aVersion);
+
+    if (factory) {
+      factory->HasFeature(aObject, aFeature, aVersion, aReturn);
+    }
+  }
   return NS_OK;
+}
+
+nsresult
+nsGenericElement::InternalGetFeature(nsISupports* aObject,
+                                    const nsAString& aFeature,
+                                    const nsAString& aVersion,
+                                    nsISupports** aReturn)
+{
+  *aReturn = nsnull;
+  nsCOMPtr<nsIDOMNSFeatureFactory> factory =
+    GetDOMFeatureFactory(aFeature, aVersion);
+
+  if (factory) {
+    factory->GetFeature(aObject, aFeature, aVersion, aReturn);
+  }
+
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMNSFeatureFactory>
+nsGenericElement::GetDOMFeatureFactory(const nsAString& aFeature,
+                                       const nsAString& aVersion)
+{
+  nsIDOMNSFeatureFactory *factory = nsnull;
+  nsCOMPtr<nsICategoryManager> categoryManager =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  if (categoryManager) {
+    nsCAutoString featureCategory(NS_DOMNS_FEATURE_PREFIX);
+    AppendUTF16toUTF8(aFeature, featureCategory);
+    nsXPIDLCString contractID;
+    nsresult rv = categoryManager->GetCategoryEntry(featureCategory.get(),
+                                                    NS_ConvertUTF16toUTF8(aVersion).get(),
+                                                    getter_Copies(contractID));
+    if (NS_SUCCEEDED(rv)) {
+      CallGetService(contractID.get(), &factory);  // addrefs
+    }
+  }
+  return factory;
 }
 
 NS_IMETHODIMP
@@ -1200,7 +1247,7 @@ nsGenericElement::IsSupported(const nsAString& aFeature,
                               const nsAString& aVersion,
                               PRBool* aReturn)
 {
-  return InternalIsSupported(aFeature, aVersion, aReturn);
+  return InternalIsSupported(this, aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP

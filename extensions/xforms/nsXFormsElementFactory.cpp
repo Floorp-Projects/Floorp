@@ -90,7 +90,9 @@ NS_HIDDEN_(nsresult) NS_NewXFormsToggleElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsCaseElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSwitchElement(nsIXTFElement **aResult);
 
-NS_IMPL_ISUPPORTS1(nsXFormsElementFactory, nsIXTFElementFactory)
+NS_IMPL_ISUPPORTS2(nsXFormsElementFactory,
+                   nsIXTFElementFactory,
+                   nsIDOMNSFeatureFactory)
 
 NS_IMETHODIMP
 nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
@@ -182,4 +184,24 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
 
   *aElement = nsnull;
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXFormsElementFactory::HasFeature(nsISupports *aObject,
+                                   const nsAString& aFeature,
+                                   const nsAString& aVersion,
+                                   PRBool *aReturn)
+{
+  *aReturn = aFeature.EqualsLiteral("org.w3c.xforms.dom") &&
+             aVersion.EqualsLiteral("1.0");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsElementFactory::GetFeature(nsISupports *aObject,
+                                   const nsAString & aFeature,
+                                   const nsAString & aVersion,
+                                   nsISupports **aReturn)
+{
+  return NS_ERROR_NOT_AVAILABLE;
 }
