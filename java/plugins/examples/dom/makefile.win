@@ -18,15 +18,14 @@
 #
 # Contributor(s): 
 
-IGNORE_MANIFEST=1 
-#//------------------------------------------------------------------------
-#//
-#// Specify the depth of the current directory relative to the
-#// root of NS
-#//
-#//------------------------------------------------------------------------
-DEPTH = ..\..\..
+.SUFFIXES: .java .class
+.java.class:
+	$(JDKHOME)\bin\javac -classpath ".;../../classes;%classpath%" $<
+default: DOMViewer.jar
+DOMViewer.jar: DOMViewerFactory.class DOMAccessPanel.class DOMTreeDumper.class manifest
+	$(JDKHOME)\bin\jar cvfm DOMViewer.jar manifest *.class
 
-DIRS  =  MediaPlayer pdf rtf zip dom
-
-include <$(DEPTH)\config\rules.mak>
+clobber:
+	-del *.class *.jar
+export: DOMViewver.jar
+	copy DOMViewver.jar $(PLUGLET)
