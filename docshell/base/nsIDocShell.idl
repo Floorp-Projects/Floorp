@@ -286,6 +286,13 @@ interface nsIDocShell : nsISupports
   const unsigned long BUSY_FLAGS_BEFORE_PAGE_LOAD = 2;
   const unsigned long BUSY_FLAGS_PAGE_LOADING     = 4;
 
+  /**
+   * Load commands for the document 
+   */
+  const unsigned long LOAD_CMD_NORMAL  = 0x1; // Normal load
+  const unsigned long LOAD_CMD_RELOAD  = 0x2; // Reload
+  const unsigned long LOAD_CMD_HISTORY = 0x4; // Load from history
+
   readonly attribute unsigned long busyFlags;
 
   /* 

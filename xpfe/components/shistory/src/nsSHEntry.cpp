@@ -69,6 +69,21 @@ NS_INTERFACE_MAP_END
 //*****************************************************************************
 //    nsSHEntry: nsISHEntry
 //*****************************************************************************
+NS_IMETHODIMP nsSHEntry::SetScrollPosition(PRInt32 x, PRInt32 y)
+{
+  mScrollPositionX = x;
+  mScrollPositionY = y;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::GetScrollPosition(PRInt32 *x, PRInt32 *y)
+{
+  if (x && y) {
+    *x = mScrollPositionX;
+    *y = mScrollPositionY;
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsSHEntry::GetURI(nsIURI** aURI)
 {
