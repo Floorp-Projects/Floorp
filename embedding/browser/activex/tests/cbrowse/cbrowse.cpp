@@ -45,8 +45,13 @@ CBrowseApp theApp;
 
 BOOL CBrowseApp::InitInstance()
 {
-	if (!InitATL())
+	// Initialize OLE libraries
+	if (!AfxOleInit())
+	{
 		return FALSE;
+	}
+//	if (!InitATL())
+//		return FALSE;
 
 	AfxEnableControlContainer();
 	_Module.RegisterClassObjects(CLSCTX_LOCAL_SERVER, 

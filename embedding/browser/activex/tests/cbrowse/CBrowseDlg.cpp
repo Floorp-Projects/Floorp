@@ -109,6 +109,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_COMMAND(ID_VIEW_OPENLINKSINNEWWINDOWS, OnViewOpenInNewWindow)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_EDITMODE, OnUpdateViewEditmode)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_OPENLINKSINNEWWINDOWS, OnUpdateViewOpenInNewWindow)
+	ON_COMMAND(ID_FILE_PAGESETUP, OnFilePagesetup)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -889,6 +890,11 @@ void CBrowseDlg::OnFilePrint()
 	ExecOleCommand(NULL, OLECMDID_PRINT);
 }
 
+void CBrowseDlg::OnFilePagesetup() 
+{
+	ExecOleCommand(NULL, OLECMDID_PAGESETUP);
+}
+
 void CBrowseDlg::OnDebugVisible() 
 {
     VARIANT_BOOL visible = VARIANT_TRUE;
@@ -974,3 +980,4 @@ void CBrowseDlg::OnUpdateViewOpenInNewWindow(CCmdUI* pCmdUI)
 {
     pCmdUI->SetCheck(1); //m_bNewWindow ? 1 : 0);
 }
+
