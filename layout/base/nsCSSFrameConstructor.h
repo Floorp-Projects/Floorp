@@ -505,7 +505,8 @@ protected:
                            nsIContent*              aContent,
                            nsIFrame*                aFrame,
                            PRBool                   aCanHaveGeneratedContent,
-                           nsFrameItems&            aFrameItems);
+                           nsFrameItems&            aFrameItems,
+                           PRBool                   aParentIsBlock);
 
   nsresult CreateInputFrame(nsIPresContext  *aPresContext,
                             nsIContent      *aContent, 
@@ -626,10 +627,6 @@ InitializeScrollFrame(nsIPresContext*          aPresContext,
 
   // Methods support creating block frames and their children
 
-  PRBool HaveFirstLetterStyle(nsIPresContext* aPresContext,
-                              nsIContent* aContent,
-                              nsIStyleContext* aStyleContext);
-
   nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext,
                                        nsIContent* aContent,
                                        nsIStyleContext* aStyleContext);
@@ -638,13 +635,29 @@ InitializeScrollFrame(nsIPresContext*          aPresContext,
                                       nsIContent*      aContent,
                                       nsIFrame*        aFrame);
 
-  nsresult ProcessBlockChildren(nsIPresContext*          aPresContext,
+  nsresult ConstructBlock(nsIPresContext*          aPresContext,
+                          nsFrameConstructorState& aState,
+                          const nsStyleDisplay*    aDisplay,
+                          nsIContent*              aContent,
+                          nsIFrame*                aParentFrame,
+                          nsIStyleContext*         aStyleContext,
+                          nsIFrame*                aNewFrame);
+
+  nsresult ConstructInline(nsIPresContext*          aPresContext,
+                           nsFrameConstructorState& aState,
+                           const nsStyleDisplay*    aDisplay,
+                           nsIContent*              aContent,
+                           nsIFrame*                aParentFrame,
+                           nsIStyleContext*         aStyleContext,
+                           nsIFrame*                aNewFrame);
+
+  nsresult MakeFirstLetterFrame(nsIPresContext* aPresContext,
                                 nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
-                                nsIFrame*                aFrame,
-                                nsFrameItems&            aFrameItems,
-                                PRBool                   aCanHaveGeneratedContent,
-                                PRBool                   aForBlock);
+                                nsIContent* aContainer,
+                                nsIContent* aChild,
+                                nsIContent* aContainingBlockContent,
+                                nsIFrame* aParentFrame,
+                                nsFrameItems& aFrameItems);
 
   nsresult WrapTextFrame(nsIPresContext* aPresContext,
                          nsFrameConstructorState& aState,
