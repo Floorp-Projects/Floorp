@@ -570,11 +570,23 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, con
 	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
 	if(NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFResource> kServer;
-	rv = rdfService->GetResource((const char *)serverUri, getter_AddRefs(kServer));
-	if(NS_FAILED(rv)) return rv;
+	PRInt32 slashpos = groupUri.RFindChar('/',PR_TRUE);
+	PRInt32 dotpos = groupUri.RFindChar('.',PR_TRUE);
+	nsCOMPtr <nsIRDFResource> parent;
+
+	if (dotpos > slashpos) {
+		groupUri.Truncate(dotpos);
 	
-	rv = ds->Assert(kServer, kNC_Child, newsgroupResource, PR_TRUE);
+		rv = rdfService->GetResource((const char *)groupUri, getter_AddRefs(parent));
+		if(NS_FAILED(rv)) return rv;
+	}
+	else {
+		rv = rdfService->GetResource((const char *)serverUri, getter_AddRefs(parent));
+		if(NS_FAILED(rv)) return rv;
+	}
+		
+	// if HasAssertion
+	rv = ds->Assert(parent, kNC_Child, newsgroupResource, PR_TRUE);
 	if(NS_FAILED(rv)) return rv;
 
 	return NS_OK;

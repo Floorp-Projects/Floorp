@@ -1250,9 +1250,11 @@ nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer)
 	rv = ConstructNntpUrl((const char *)uriStr, "", nsMsgKey_None, nsnull, getter_AddRefs(uri));
 	if (NS_FAILED(rv)) return rv;
 
+#if 0
 	// first add the newsgroups we are subscribed to.
 	rv = aNntpServer->AddSubscribedNewsgroups();
 	if (NS_FAILED(rv)) return rv;
+#endif
 
 	// now run the url to add the rest of the groups
     rv = RunNewsUrl(uri, nsnull, nsnull);  
