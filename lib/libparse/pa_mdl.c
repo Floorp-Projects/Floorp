@@ -305,7 +305,7 @@ pa_eval_javascript_expression(pa_DocData *doc_data,
         return PR_TRUE;
     }
 
-    if (!LM_AttemptLockJS(NULL, NULL)) {
+    if (!LM_AttemptLockJS(doc_data->window_id, NULL, NULL)) {
         doc_data->waiting_for_js_thread = PR_TRUE;
         return PR_FALSE;
     }
@@ -316,7 +316,7 @@ pa_eval_javascript_expression(pa_DocData *doc_data,
     *return_value = eval_str && !XP_STRCMP(eval_str, "true");
     if (eval_str)
         XP_FREE(eval_str);
-	LM_UnlockJS();
+    LM_UnlockJS(doc_data->window_id);
     return PR_TRUE;
 }
 
