@@ -511,7 +511,8 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 			// okay, take the current date, subtract off the age in days, then do an appropriate Date search on 
 			// the resulting day.
 			PRTime now = PR_Now();
-			PRTime matchDay = 0; // = now ;  - term->m_value.u.age * 60 * 60 * 24; won't work on the mac
+			PRTime matchDay;
+			LL_I2L(matchDay, 0); // = now ;  - term->m_value.u.age * 60 * 60 * 24; won't work on the mac
    	PRExplodedTime exploded;
     PR_ExplodeTime(matchDay, PR_LocalTimeParameters, &exploded);
     PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
