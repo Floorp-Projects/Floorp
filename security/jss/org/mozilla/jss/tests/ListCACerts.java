@@ -12,7 +12,7 @@ public class ListCACerts {
         X509Certificate[] certs = cm.getCACerts();
 
         for(int i=0; i < certs.length; ++i ) {
-            System.out.println(certs[i].getIssuerDN().toString());
+            System.out.println(certs[i].getSubjectDN().toString());
             InternalCertificate ic = (InternalCertificate) certs[i];
             System.out.println("SSL: " + ic.getSSLTrust() + ", Email: " +
                 ic.getEmailTrust() + ", Object Signing: " +
