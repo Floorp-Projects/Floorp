@@ -104,8 +104,10 @@ if ($aBuildWizard eq "buildwizard")
 
 #// deliver wizard to staging area (mozilla/installer/stage)
 copy("$WIZARD/mozilla-installer", $RAW);
+copy("$WIZARD/mozilla-installer-bin", $RAW);
 copy("$WIZARD/README", $RAW);
 copy("$WIZARD/MPL-1.1.txt", $RAW);
+chmod(0755, "$RAW/mozilla-installer"); #// ensure shell script is executable
 
 spew("Completed delivering wizard");
 
@@ -128,13 +130,14 @@ spew("Completed making .xpis");
 #-------------------------------------------------------------------------
 #   Package stub and sea
 #-------------------------------------------------------------------------
-#// tar and gzip mozilla-installer, README, license, config.ini into stub
+#// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
+#// config.ini into stub
 chdir($RAW);
-system("tar cvf $STUB/$aStubName.tar mozilla-installer README config.ini MPL-1.1.txt"); 
+system("tar cvf $STUB/$aStubName.tar mozilla-installer mozilla-installer-bin README config.ini MPL-1.1.txt"); 
 system("gzip $STUB/$aStubName.tar");
 
-#// tar and gzip mozilla-installer, README, license, config.ini, and .xpis 
-#// into sea
+#// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
+#// config.ini, and .xpis into sea
 system("tar cvf $BLOB/$aBlobName.tar ."); 
 system("gzip $BLOB/$aBlobName.tar");
 chdir($_orig);
