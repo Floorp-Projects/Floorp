@@ -165,7 +165,7 @@
     <menupopup>
       <menuitem value="0" label="&desktop.label;"/>
       <menuitem value="1" label="&downloads.label;"/>
-      <menuitem value="2" label="" hidden="true" id="downloadFolder" crop="middle"/>
+      <menuitem value="2" label="" hidden="true" id="downloadFolder" crop="center" flex="1"/>
       <menuitem value="9" label="&choose.label;"/>
     </menupopup>
   </menulist>
