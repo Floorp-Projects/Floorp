@@ -330,8 +330,7 @@
                 oncommand="gContextMenu.setWallpaper();"/>
 
 <!--XXXBlake XUL sucks! We need autocheck for menuitems. -->
-      <menuitem id="context-blockimage"
-                label="&blockImageCmd.label;" class="menuitem-iconic"
+      <menuitem id="context-blockimage" class="menuitem-iconic"
                 oncommand="gContextMenu.toggleImageBlocking(this.getAttribute('checked') != 'true');"/>
       <menuitem id="context-back"
                 label="&backCmd.label;"

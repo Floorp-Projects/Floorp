@@ -3019,6 +3019,15 @@ nsContextMenu.prototype = {
         this.showItem( "context-blockimage", this.onImage);
         if (this.onImage) {
           var blockImage = document.getElementById("context-blockimage");
+
+          var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
+          uri.spec = this.imageURL;
+
+          var shortenedUriHost = uri.host
+          if (shortenedUriHost.length > 15)
+            shortenedUriHost = shortenedUriHost.substr(0,15) + "...";
+          blockImage.label = gNavigatorBundle.getFormattedString ("blockImages", [shortenedUriHost]);
+
           if (this.isImageBlocked()) {
             blockImage.setAttribute("checked", "true");
           }
