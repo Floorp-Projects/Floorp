@@ -133,7 +133,6 @@ public:
 
   // XBL Atoms
   static nsIAtom* kEventAtom;
-  static nsIAtom* kScrollbarAtom;
   static nsIAtom* kInputAtom;
 
   nsFixedSizeAllocator mPool;

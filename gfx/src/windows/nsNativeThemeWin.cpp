@@ -54,6 +54,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
+#include <malloc.h>
 
 #define THEME_COLOR 204
 #define THEME_FONT  210
@@ -137,14 +138,11 @@ nsNativeThemeWin::nsNativeThemeWin() {
     drawThemeBG = (DrawThemeBackgroundPtr)GetProcAddress(mThemeDLL, "DrawThemeBackground");
     getThemeContentRect = (GetThemeContentRectPtr)GetProcAddress(mThemeDLL, "GetThemeBackgroundContentRect");
     getThemePartSize = (GetThemePartSizePtr)GetProcAddress(mThemeDLL, "GetThemePartSize");
-    getThemeFont = (GetThemeFontPtr)GetProcAddress(mThemeDLL, "GetThemeFont");
     getThemeSysFont = (GetThemeSysFontPtr)GetProcAddress(mThemeDLL, "GetThemeSysFont");
-    getThemeTextMetrics = (GetThemeTextMetricsPtr)GetProcAddress(mThemeDLL, "GetThemeTextMetrics");
     getThemeColor = (GetThemeColorPtr)GetProcAddress(mThemeDLL, "GetThemeColor");
 
     mCheckedAtom = getter_AddRefs(NS_NewAtom("checked"));
     mDisabledAtom = getter_AddRefs(NS_NewAtom("disabled"));
-    mSBOrientAtom = getter_AddRefs(NS_NewAtom("sborient"));
     mSelectedAtom = getter_AddRefs(NS_NewAtom("selected"));
     mTypeAtom = getter_AddRefs(NS_NewAtom("type"));
   }
@@ -197,15 +195,26 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       return mTabTheme;
     }
     case NS_THEME_SCROLLBAR:
-    case NS_THEME_SCROLLBAR_TRACK:
-    case NS_THEME_SCROLLBAR_BUTTON:
-    case NS_THEME_SCROLLBAR_THUMB:
-    case NS_THEME_SCROLLBAR_GRIPPER: {
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_BUTTON_UP:
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
+    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
+    {
       if (!mScrollbarTheme)
         mScrollbarTheme = openTheme(NULL, L"Scrollbar");
       return mScrollbarTheme;
     }
-    case NS_THEME_STATUSBAR: {
+    case NS_THEME_STATUSBAR:
+    case NS_THEME_STATUSBAR_PANEL:
+    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_RESIZER:
+    {
       if (!mStatusbarTheme)
         mStatusbarTheme = openTheme(NULL, L"Status");
       return mStatusbarTheme;
@@ -369,10 +378,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       
       return NS_OK;
     }
-    case NS_THEME_SCROLLBAR_BUTTON: {
+    case NS_THEME_SCROLLBAR_BUTTON_UP:
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
       aPart = SP_BUTTON;
-      aState = 8; // Assume horizontal by default.
-                  // States are 4 vert up, 4 vert down, 4 horz left, 4 horz right
+      aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP)*4;
       if (!aFrame)
         aState += BP_NORMAL;
       else if (IsDisabled(aFrame))
@@ -386,41 +397,19 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         else 
           aState += BP_NORMAL;
       }
-
-      if (aFrame) {
-        nsCOMPtr<nsIContent> content;
-        aFrame->GetContent(getter_AddRefs(content));
-
-        // Get our parent frame's orientation.  If we are a horizontal scrollbar,
-        // then subtract 8 from the result to get the correct offset.
-        if (HasAttrValue(content, mSBOrientAtom, "vertical"))
-          aState -= 8; // We're vertical instead.
-
-        // Are we the start button or end button?  If we are the end button, add 4
-        // to the result to get the correct offset.
-        if (HasAttrValue(content, mTypeAtom, "increment"))
-          aState += 4;
-      }
-
       return NS_OK;
     }
-    case NS_THEME_SCROLLBAR_TRACK: {
-      aPart = SP_TRACKSTARTHOR;
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL: {
+      aPart = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL) ?
+              SP_TRACKSTARTHOR : SP_TRACKSTARTVERT;
       aState = BP_NORMAL;
-      if (aFrame) {
-        nsCOMPtr<nsIContent> content;
-        aFrame->GetContent(getter_AddRefs(content));
-
-        // Get our scrollbar frame's orientation.  If we are a vertical scrollbar,
-        // then add 2 to get the correct val
-        if (HasAttrValue(content, mSBOrientAtom, "vertical"))
-          aPart += 2;  // We're vertical instead.
-      }
-
       return NS_OK;
     }
-    case NS_THEME_SCROLLBAR_THUMB: {
-      aPart = SP_THUMBHOR;
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL: {
+      aPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
+              SP_THUMBHOR : SP_THUMBVERT;
       if (!aFrame)
         aState = BP_NORMAL;
       else if (IsDisabled(aFrame))
@@ -436,26 +425,19 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         else 
           aState = BP_NORMAL;
       }
-
-      if (aFrame) {
-        nsCOMPtr<nsIContent> content;
-        aFrame->GetContent(getter_AddRefs(content));
-
-        // Get our parent frame's orientation.  If we are a horizontal scrollbar,
-        // then subtract 8 from the result to get the correct offset.
-        if (HasAttrValue(content, mSBOrientAtom, "vertical"))
-          aPart = SP_THUMBVERT;  // We're vertical instead.
-      }
-
       return NS_OK;
     }
-    case NS_THEME_SCROLLBAR_GRIPPER: {
-      aPart = SP_GRIPPERHOR;
+    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
+    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL: {
+      aPart = (aWidgetType == NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL) ?
+              SP_GRIPPERHOR : SP_GRIPPERVERT;
       if (!aFrame)
         aState = BP_NORMAL;
       else if (IsDisabled(aFrame))
         aState = BP_DISABLED;
       else {
+        // XXXdwh The gripper needs to get a hover attribute set on it, since it
+        // never goes into :hover.
         PRInt32 eventState = GetContentState(aFrame);
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the gripper, since the drag is not canceled
@@ -466,21 +448,20 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         else 
           aState = BP_NORMAL;
       }
-
-      if (aFrame) {
-        nsCOMPtr<nsIContent> content;
-        aFrame->GetContent(getter_AddRefs(content));
-
-        if (HasAttrValue(content, mSBOrientAtom, "vertical"))
-          aPart = SP_GRIPPERVERT;  // We're vertical instead.
-      }
-
       return NS_OK;
     }
     case NS_THEME_TOOLBOX:
-    case NS_THEME_STATUSBAR: {
+    case NS_THEME_STATUSBAR:
+    case NS_THEME_SCROLLBAR: {
       aPart = aState = 0;
       return NS_OK; // These have no part or state.
+    }
+    case NS_THEME_STATUSBAR_PANEL:
+    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_RESIZER: {
+      aPart = (aWidgetType - NS_THEME_STATUSBAR_PANEL) + 1;
+      aState = BP_NORMAL;
+      return NS_OK;
     }
     case NS_THEME_TAB: {
       aPart = TABP_TAB;
@@ -585,15 +566,20 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext, 
-                                   nsIFrame* aFrame,
-                                   PRUint8 aWidgetType,
-                                   nsMargin* aResult)
+nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext, 
+                                  nsIFrame* aFrame,
+                                  PRUint8 aWidgetType,
+                                  nsMargin* aResult)
 {
   if (!getThemeContentRect)
     return NS_ERROR_FAILURE;
 
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || aWidgetType == NS_THEME_STATUSBAR)
+  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
+      aWidgetType == NS_THEME_STATUSBAR || 
+      aWidgetType == NS_THEME_RESIZER ||
+      aWidgetType == NS_THEME_SCROLLBAR ||
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL)
     return NS_OK; // Don't worry about it.
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -625,88 +611,6 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::GetWidgetFont(nsIDeviceContext* aContext,
-                                PRUint8 aWidgetType,
-                                nsFont* aFont)
-{
-  if (!getThemeFont)
-    return NS_ERROR_FAILURE;
-
-  HANDLE theme = GetTheme(aWidgetType);
-  if (!theme)
-    return NS_ERROR_FAILURE;
-
-  PRInt32 part, state;
-  nsresult rv = GetThemePartAndState(nsnull, aWidgetType, part, state);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsDeviceContextWin* dcWin = (nsDeviceContextWin*)aContext;
-  HWND  hwnd;
-  HDC   tdc;
-  if (!dcWin->mDC) {
-    hwnd = (HWND)dcWin->mWidget;
-    tdc = ::GetDC(hwnd);
-  }
-  else
-    tdc = dcWin->mDC;
-
-  // Get our info.
- // LOGFONT logFont;
- // HRESULT res = getThemeFont(theme, tdc, part, state, THEME_FONT, &logFont);
- // if (FAILED(res)) {
-    // Part didn't define a font. Get the font from the system metrics
-    // instead.
-    nsSystemFontID sysID;
-    rv = GetSystemFont(aWidgetType, sysID);
-    if (NS_FAILED(rv))
-      return rv;
-    dcWin->GetSysFontInfo(tdc, sysID, aFont);
- // }
- // else
- //   dcWin->CopyLogFontToNSFont(&tdc, &logFont, aFont);
-
-  // Release the dc
-  if (!dcWin->mDC)
-    ::ReleaseDC(hwnd, tdc);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeThemeWin::GetWidgetColor(nsIPresContext* aPresContext,
-                                 nsIRenderingContext* aContext,
-                                 nsIFrame* aFrame,
-                                 PRUint8 aWidgetType,
-                                 nscolor* aColor)
-{
-  HANDLE theme = GetTheme(aWidgetType);
-  
-  PRInt32 part, state;
-  nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
-  
-  HDC hdc = ((nsRenderingContextWin*)aContext)->mDC;
-  if (!hdc)
-    return NS_ERROR_FAILURE;
-  
-  //COLORREF color;
-  //HRESULT res = getThemeColor(theme, hdc, part, state, THEME_COLOR, &color);
-  //if (FAILED(res)) {
-    // Try to get a system color based off the widget type.
-    nsCOMPtr<nsILookAndFeel> lf;
-    aPresContext->GetLookAndFeel(getter_AddRefs(lf));
-    nsILookAndFeel::nsColorID colorID;
-    rv = GetSystemColor(aWidgetType, colorID);
-    if (NS_FAILED(rv))
-      return rv;
-    lf->GetColor(colorID, *aColor);
-  // }
-
-  // Copy the colorref into an nscolor.
- // *aColor = color;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        nsSize* aResult)
@@ -714,7 +618,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (!getThemePartSize)
     return NS_ERROR_FAILURE;
 
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || aWidgetType == NS_THEME_STATUSBAR)
+  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
+      aWidgetType == NS_THEME_STATUSBAR)
     return NS_OK; // Don't worry about it.
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -731,7 +636,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     return NS_ERROR_FAILURE;
 
   PRInt32 sizeReq = 1; // Best-fit size.
-  if (aWidgetType == NS_THEME_SCROLLBAR_THUMB)
+  if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
+      aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL)
     sizeReq = 0; // Best-fit size for scrollbar thumbs is too large for most themes.
                  // In our app, we want the thumb to be able to really shrink down,
                  // so use the min-size request value (of 0).
@@ -748,7 +654,10 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 {
   // Some widget types just never change state.
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR ||
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK || aWidgetType == NS_THEME_STATUSBAR) {
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL || 
+      aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
+      aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL) {
     *aShouldRepaint = PR_FALSE;
     return NS_OK;
   }

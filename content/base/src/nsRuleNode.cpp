@@ -1833,23 +1833,7 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     if (dc) {
       // GetSystemFont sets the font face but not necessarily the size
       aFont->mFont.size = defaultVariableFont.size;
-      // If our font type is theme, then check for appearance data and
-      // obtain our font based off our widget type.
-      if (sysID == eSystemFont_Theme) {
-        const nsStyleDisplay* display = (const nsStyleDisplay*)
-                                         aContext->GetStyleData(eStyleStruct_Display);
-        if (display->mAppearance) {
-          // Get our theme.
-          nsCOMPtr<nsITheme> theme;
-          aPresContext->GetTheme(getter_AddRefs(theme));
-          if (theme) {
-            nsCOMPtr<nsIDeviceContext> deviceContext;
-            aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-            theme->GetWidgetFont(deviceContext, display->mAppearance, &aFont->mFont);
-          }
-        }
-      }
-      else if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
+      if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
         aFont->mFont.name = defaultVariableFont.name;
       }
       aFont->mSize = aFont->mFont.size; // this becomes our cascading size

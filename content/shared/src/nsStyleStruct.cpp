@@ -1029,13 +1029,13 @@ PRInt32 nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 
   if ((mDisplay == aOther.mDisplay) &&
       (mFloats == aOther.mFloats) &&
-      (mOverflow == aOther.mOverflow) &&
-      (mAppearance == aOther.mAppearance)) {
+      (mOverflow == aOther.mOverflow)) {
     if ((mBreakType == aOther.mBreakType) &&
         (mBreakBefore == aOther.mBreakBefore) &&
         (mBreakAfter == aOther.mBreakAfter) &&
         (mClipFlags == aOther.mClipFlags) &&
-        (mClip == aOther.mClip)) {
+        (mClip == aOther.mClip) &&
+        (mAppearance == aOther.mAppearance)) {
       return NS_STYLE_HINT_NONE;
     }
     return NS_STYLE_HINT_REFLOW;

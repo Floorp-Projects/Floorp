@@ -98,8 +98,8 @@ WIN_LIBS=                                       \
 !if defined(NGLAYOUT_DDRAW)
          ole32.lib                              \
 !endif
-         winspool.lib                           \
-         comdlg32.lib
+        winspool.lib                           \
+        comdlg32.lib
 
 LLFLAGS = 	$(LLFLAGS)		 
 include <$(DEPTH)\config\rules.mak>

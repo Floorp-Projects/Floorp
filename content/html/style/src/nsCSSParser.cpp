@@ -3955,19 +3955,6 @@ PRBool CSSParserImpl::ParseAzimuth(PRInt32& aErrorCode, nsCSSValue& aValue)
   return PR_FALSE;
 }
 
-static PRBool HasForegroundContent(PRUint8 aAppearance)
-{
-  return ((aAppearance == NS_THEME_BUTTON) ||
-          (aAppearance == NS_THEME_TOOLBAR_BUTTON) ||
-          (aAppearance == NS_THEME_TOOLBAR_DUAL_BUTTON) ||
-          (aAppearance == NS_THEME_LISTBOX_LISTITEM) ||
-          (aAppearance == NS_THEME_TREEVIEW_TREEITEM) ||
-          (aAppearance == NS_THEME_TREEVIEW_HEADER_CELL) ||
-          (aAppearance == NS_THEME_TAB) ||
-          (aAppearance == NS_THEME_TOOLTIP) ||
-          (aAppearance == NS_THEME_TEXTFIELD));
-}
-
 PRBool CSSParserImpl::ParseAppearance(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
                                       PRInt32& aChangeHint)
 {
@@ -3979,24 +3966,6 @@ PRBool CSSParserImpl::ParseAppearance(PRInt32& aErrorCode, nsICSSDeclaration* aD
     aErrorCode = AppendValue(aDeclaration, eCSSProperty_appearance, appearance, aChangeHint);
   else
     return PR_FALSE;
-
-  if (appearance.GetIntValue() && HasForegroundContent(appearance.GetIntValue())) {
-    // When an appearance is specified, it can act as a shorthand that
-    // specifies color and font information as well.
-    // Add in font information.
-    PRInt32 index = SearchKeywordTable(eCSSKeyword_theme, nsCSSProps::kFontKTable);
-    if (index > 0) {
-      nsCSSValue val(nsCSSProps::kFontKTable[index], eCSSUnit_Enumerated);
-      AppendValue(aDeclaration, eCSSProperty_font_family, val, aChangeHint);
-    }
-
-    // Add in color information.
-    index = SearchKeywordTable(eCSSKeyword_theme, nsCSSProps::kColorKTable);
-    if (index > 0) {
-      nsCSSValue val(nsCSSProps::kColorKTable[index], eCSSUnit_Integer);
-      AppendValue(aDeclaration, eCSSProperty_color, val, aChangeHint);
-    }
-  }
 
   return PR_TRUE;
 }

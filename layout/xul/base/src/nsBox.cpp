@@ -665,8 +665,8 @@ nsBox::GetBorder(nsMargin& aMargin)
         nsCOMPtr<nsIDeviceContext> dc;
         context->GetDeviceContext(getter_AddRefs(dc));
         nsMargin margin(0,0,0,0);
-        gTheme->GetWidgetPadding(dc, frame, 
-                                 disp->mAppearance, &margin);
+        gTheme->GetWidgetBorder(dc, frame, 
+                                disp->mAppearance, &margin);
         float p2t;
         context->GetScaledPixelsToTwips(&p2t);
         aMargin.top = NSIntPixelsToTwips(margin.top, p2t);

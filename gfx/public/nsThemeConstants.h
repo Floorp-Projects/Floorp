@@ -35,11 +35,11 @@
 #define NS_THEME_STATUSBAR                                 21
 
 // A single pane of a status bar.
-#define NS_THEME_STATUSBAR_PANE                            21
+#define NS_THEME_STATUSBAR_PANEL                           22
 
 // The resizer background area in a status bar 
 // for the resizer widget in the corner of a window.
-#define NS_THEME_STATUSBAR_RESIZER_PANE                    23
+#define NS_THEME_STATUSBAR_RESIZER_PANEL                   23
 
 // The resizer itself.
 #define NS_THEME_RESIZER                                   24
@@ -99,28 +99,28 @@
 #define NS_THEME_SCROLLBAR                                 81
 
 // A scrollbar button (up/down/left/right)
-#define NS_THEME_SCROLLBAR_BUTTON                          82
+#define NS_THEME_SCROLLBAR_BUTTON_UP                       82
+#define NS_THEME_SCROLLBAR_BUTTON_DOWN                     83
+#define NS_THEME_SCROLLBAR_BUTTON_LEFT                     84
+#define NS_THEME_SCROLLBAR_BUTTON_RIGHT                    85
 
 // The scrollbar track
-#define NS_THEME_SCROLLBAR_TRACK                           83
-
-// The start of a scrollbar track
-#define NS_THEME_SCROLLBAR_TRACK_START                     84
-
-// The end of a scrollbar track
-#define NS_THEME_SCROLLBAR_TRACK_END                       85
+#define NS_THEME_SCROLLBAR_TRACK_HORIZONTAL                86
+#define NS_THEME_SCROLLBAR_TRACK_VERTICAL                  87
 
 // The scrollbar thumb
-#define NS_THEME_SCROLLBAR_THUMB                           86
+#define NS_THEME_SCROLLBAR_THUMB_HORIZONTAL                88
+#define NS_THEME_SCROLLBAR_THUMB_VERTICAL                  89
 
 // The gripper that goes on the thumb
-#define NS_THEME_SCROLLBAR_GRIPPER                         87
+#define NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL              90
+#define NS_THEME_SCROLLBAR_GRIPPER_VERTICAL                91
 
 // A textfield or text area
-#define NS_THEME_TEXTFIELD                                 91
+#define NS_THEME_TEXTFIELD                                 95
 
 // The caret of a text area
-#define NS_THEME_TEXTFIELD_CARET                           92
+#define NS_THEME_TEXTFIELD_CARET                           96
 
 // A dropdown list.
 #define NS_THEME_DROPDOWN                                  101

@@ -228,6 +228,15 @@
     </implementation>
   </binding>
 
+  <binding id="statusbar">
+    <content>
+      <children/>
+      <xul:statusbarpanel class="statusbar-resizerpanel">
+        <xul:resizer dir="bottomright" style="-moz-appearance: resizer; cursor: se-resize"/>
+      </xul:statusbarpanel>
+    </content>
+  </binding>
+  
   <binding id="statusbarpanel-iconic" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
