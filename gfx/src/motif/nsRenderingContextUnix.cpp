@@ -580,20 +580,15 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
   }
 
 #ifdef MITSHM
-  PRUint32 format;
-
-  if (mRenderingSurface->visual->c_class == TrueColor || 
-      mRenderingSurface->visual->c_class == DirectColor)    
-    format = ZPixmap;
-  else 
-    format = XYPixmap;
 
   if (mSupportsSharedPixmaps == PR_TRUE) {
 
     mRenderingSurface->shmImage = 
       ::XShmCreateImage(mRenderingSurface->display,
 			mRenderingSurface->visual, 
-			depth, format, 0, 
+			depth, 
+			XShmPixmapFormat(mRenderingSurface->display), 
+			0, 
 			&(mRenderingSurface->shmInfo),
 			w,h);
     
