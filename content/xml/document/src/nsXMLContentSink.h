@@ -217,9 +217,7 @@ protected:
 
   nsString mRef; // ScrollTo #ref
   nsString mTitleText; 
-  nsString mTextareaText; 
 
-  nsCOMPtr<nsIDOMHTMLTextAreaElement> mTextAreaElement;
   nsCOMPtr<nsIHTMLContent> mStyleElement;
   nsCOMPtr<nsIHTMLContent> mBaseElement;
   nsCOMPtr<nsIHTMLContent> mMetaElement;

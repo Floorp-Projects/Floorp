@@ -803,7 +803,7 @@ MakeContentObject(nsHTMLTag aNodeType,
                   nsIDOMHTMLFormElement* aForm,
                   nsIWebShell* aWebShell,
                   nsIHTMLContent** aResult,
-                  const nsString* aContent = nsnull,
+                  const nsAString* aSkippedContent = nsnull,
                   PRBool aInsideNoXXXTag = PR_FALSE);
 
 
@@ -843,14 +843,15 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    // Make the content object
-    // XXX why is textarea not a container?
-    nsAutoString content;
-    if (eHTMLTag_textarea == aNodeType) {
-      content.Assign(aNode.GetSkippedContent());
+    // XXX if the parser treated the text in a textarea like a normal textnode
+    //     we wouldn't need to do this.
+    const nsAString* skippedContent = nsnull;
+    if (aNodeType == eHTMLTag_textarea) {
+      skippedContent = &aNode.GetSkippedContent();
     }
+    // Make the content object
     rv = MakeContentObject(aNodeType, nodeInfo, aForm, aWebShell,
-                           aResult, &content, !!mInsideNoXXXTag);
+                           aResult, skippedContent, !!mInsideNoXXXTag);
 
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);
@@ -991,7 +992,7 @@ MakeContentObject(nsHTMLTag aNodeType,
                   nsIDOMHTMLFormElement* aForm,
                   nsIWebShell* aWebShell,
                   nsIHTMLContent** aResult,
-                  const nsString* aContent,
+                  const nsAString* aSkippedContent,
                   PRBool aInsideNoXXXTag)
 {
   nsresult rv = NS_OK;
@@ -1218,23 +1219,32 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLTableCellElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_textarea:
-    //if (nsHTMLElementFactory::mUseXBLForms)
-    //  rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    //else {
-      rv = NS_NewHTMLTextAreaElement(aResult, aNodeInfo);
-      // XXX why is textarea not a container. If it were, this code would not be necessary
-      // If the text area has some content, set it 
-      if (aContent && (aContent->Length() > 0)) {
-        nsIDOMHTMLTextAreaElement* taElem;
-        rv = (*aResult)->QueryInterface(NS_GET_IID(nsIDOMHTMLTextAreaElement), (void **)&taElem);
-        if ((NS_OK == rv) && taElem) {
-          taElem->SetDefaultValue(*aContent);
-          NS_RELEASE(taElem);
+    rv = NS_NewHTMLTextAreaElement(aResult, aNodeInfo);
+    // XXX if the parser treated the text in a textarea like a normal textnode
+    //     we wouldn't need to do this.
+    // If the text area has some content, set it
+    if (aSkippedContent && (!aSkippedContent->IsEmpty())) {
+      // Strip only one leading newline if there is one (bug 40394)
+      nsString::const_iterator start, end;
+      aSkippedContent->BeginReading(start);
+      aSkippedContent->EndReading(end);
+      if (*start == nsCRT::CR) {
+        ++start;
+        if (start != end && *start == nsCRT::LF) {
+          ++start;
         }
       }
-      if (!aInsideNoXXXTag) 
-        SetForm(*aResult, aForm);
-    //}
+      else if (*start == nsCRT::LF) {
+        ++start;
+      }
+
+      nsCOMPtr<nsIDOMHTMLTextAreaElement> ta(do_QueryInterface(*aResult));
+      if (ta) {
+        ta->SetDefaultValue(Substring(start, end));
+      }
+    }
+    if (!aInsideNoXXXTag) 
+      SetForm(*aResult, aForm);
     break;
   case eHTMLTag_title:
     rv = NS_NewHTMLTitleElement(aResult, aNodeInfo);
@@ -2224,14 +2234,12 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         FlushText(aDidFlush, aReleaseLast);
       }
       else {
-        nsCOMPtr<nsIDOMCharacterData> cdata = do_QueryInterface(mLastTextNode, &rv);
-        if (NS_SUCCEEDED(rv)) {
-          CBufDescriptor bd(mText, PR_TRUE, mTextSize+1, mTextLength);
-          bd.mIsConst = PR_TRUE;
-          nsAutoString str(bd);
-          
-          rv = cdata->AppendData(str);
-          
+
+        nsCOMPtr<nsIDOMCharacterData> cdata(do_QueryInterface(mLastTextNode));
+
+        if (cdata) {
+          rv = cdata->AppendData(Substring(mText, mText + mTextLength));
+
           mLastTextNodeSize += mTextLength;
           mTextLength = 0;
           didFlush = PR_TRUE;

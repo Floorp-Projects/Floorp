@@ -69,6 +69,9 @@
 #include "nsGUIEvent.h"
 #include "nsLinebreakConverter.h"
 #include "nsIPresState.h"
+#include "nsIDOMText.h"
+#include "nsReadableUtils.h"
+#include "nsITextContent.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -117,6 +120,13 @@ public:
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                            PRBool aDeepSetDocument);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
                                nsHTMLValue& aResult);
@@ -134,6 +144,8 @@ public:
 
 protected:
   nsCOMPtr<nsIControllers> mControllers;
+  char*                    mValue;
+  PRPackedBool             mValueChanged;
 
   NS_IMETHOD SelectAll(nsIPresContext* aPresContext);
 };
@@ -167,6 +179,8 @@ NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLTextAreaElement::nsHTMLTextAreaElement()
 {
+  mValue = 0;
+  mValueChanged = PR_FALSE;
 }
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
@@ -410,10 +424,13 @@ nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
     formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
     return NS_OK;
   } else {
-    return nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
-                                                      nsHTMLAtoms::value,
-                                                      aValue);
+    if (!mValueChanged || !mValue) {
+      GetDefaultValue(aValue);
+    } else {
+      aValue = NS_ConvertUTF8toUCS2(mValue);
+    }
   }
+  return NS_OK;
 }
 
 
@@ -443,14 +460,15 @@ nsHTMLTextAreaElement::SetValueGuaranteed(const nsAString& aValue,
 
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
   }
+  else {
+    if (mValue) {
+      nsMemory::Free(mValue);
+    }
+    mValue = ToNewUTF8String(aValue);
+    NS_ENSURE_TRUE(mValue, NS_ERROR_OUT_OF_MEMORY);
 
-  // Always set the value internally, since it affects layout
-  //
-  // Set the attribute in the DOM too, we call SetAttribute with aNotify
-  // false so that we don't generate unnecessary reflows.
-  nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
-                                             nsHTMLAtoms::value, aValue,
-                                             PR_FALSE);
+    SetValueChanged(PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -465,39 +483,134 @@ nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
 {
+  mValueChanged = aValueChanged;
+  if (!aValueChanged && mValue) {
+    nsMemory::Free(mValue);
+    mValue = nsnull;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 {
-  nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
-                                             nsHTMLAtoms::defaultvalue,
-                                             aDefaultValue);
+  nsresult rv;
+  PRInt32 nChildren, i;
 
-  return NS_OK;                                                    
+  nsAutoString defVal;
+
+  ChildCount(nChildren);
+  for (i = 0; i < nChildren; i++) {
+    nsCOMPtr<nsIContent> child;
+    nsCOMPtr<nsIDOMText> textNode;
+
+    rv = ChildAt(i, *getter_AddRefs(child));
+    NS_ENSURE_SUCCESS(rv, rv);
+    textNode = do_QueryInterface(child);
+    if(textNode) {
+      nsAutoString tmp;
+      textNode->GetData(tmp);
+      defVal.Append(tmp);
+    }
+  }
+
+  aDefaultValue.Assign(defVal);
+  
+  return NS_OK;
 }  
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
 {
-  nsAutoString defaultValue(aDefaultValue);
+  nsresult rv;
+  PRInt32 nChildren, i;
+  PRBool firstChildUsed = PR_FALSE;
 
-  // normalize line breaks. Need this e.g. when the value is
-  // coming from a URL, which used platform line breaks.
-  nsLinebreakConverter::ConvertStringLineBreaks(defaultValue,
-       nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
+  ChildCount(nChildren);
+  // If a child exist we try to reuse it
+  if (nChildren > 0) {
+    nsCOMPtr<nsIContent> child;
+    nsCOMPtr<nsIDOMText> textNode;
 
-  // Strip only one leading LF if there is one (bug 40394)
-  if (0 == defaultValue.Find("\n", PR_FALSE, 0, 1)) {
-    defaultValue.Cut(0,1);
+    rv = ChildAt(0, *getter_AddRefs(child));
+    NS_ENSURE_SUCCESS(rv, rv);
+    textNode = do_QueryInterface(child);
+    if(textNode) {
+      rv = textNode->SetData(aDefaultValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+      firstChildUsed = PR_TRUE;
+    }
   }
-
-  nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
-                                             nsHTMLAtoms::defaultvalue,
-                                             defaultValue, PR_TRUE);
-  SetValue(defaultValue);
+  
+  PRInt32 lastChild = firstChildUsed ? 1 : 0;
+  for (i = nChildren-1; i >= lastChild; i--) {
+    RemoveChildAt(i, PR_TRUE);
+  }
+  
+  if (!firstChildUsed) {
+    nsCOMPtr<nsIContent> textContent;
+    rv = NS_NewTextNode(getter_AddRefs(textContent));
+    NS_ENSURE_SUCCESS(rv, rv);
+      
+    nsCOMPtr<nsIDOMText> textNode;
+    textNode = do_QueryInterface(textContent);
+    rv = textNode->SetData(aDefaultValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    AppendChildTo(textContent, PR_TRUE, PR_TRUE);
+  }
+  
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                     PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv;
+  rv = nsGenericHTMLContainerFormElement::InsertChildAt(aKid, aIndex, aNotify,
+                                                        aDeepSetDocument);
+  if (!mValueChanged) {
+    Reset();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                      PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv;
+  rv = nsGenericHTMLContainerFormElement::ReplaceChildAt(aKid, aIndex, aNotify,
+                                                         aDeepSetDocument);
+  if (!mValueChanged) {
+    Reset();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                     PRBool aDeepSetDocument)
+{
+  nsresult rv;
+  rv = nsGenericHTMLContainerFormElement::AppendChildTo(aKid, aNotify,
+                                                        aDeepSetDocument);
+  if (!mValueChanged) {
+    Reset();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+{
+  nsresult rv;
+  rv = nsGenericHTMLContainerFormElement::RemoveChildAt(aIndex, aNotify);
+  if (!mValueChanged) {
+    Reset();
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -747,10 +860,17 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
 nsresult
 nsHTMLTextAreaElement::Reset()
 {
-  nsAutoString resetVal;
-  GetDefaultValue(resetVal);
-  nsresult rv = SetValue(resetVal);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  // If the frame is there, we have to set the value so that it will show up.
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  if (formControlFrame) {
+    nsAutoString resetVal;
+    GetDefaultValue(resetVal);
+    rv = SetValue(resetVal);
+    NS_ENSURE_SUCCESS(rv, rv);
+    formControlFrame->OnContentReset();
+  }
+  SetValueChanged(PR_FALSE);
   return NS_OK;
 }
 
