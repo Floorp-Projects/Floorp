@@ -517,9 +517,12 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
     nsAutoString type;
     input->GetType(type);
 
+    PRBool isReadOnly = PR_FALSE;
+    input->GetReadOnly(&isReadOnly);
+
     nsAutoString autocomplete; 
     input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-    if (type.EqualsLiteral("text") &&
+    if (type.EqualsLiteral("text") && !isReadOnly &&
         !autocomplete.LowerCaseEqualsLiteral("off")) {
 
       nsCOMPtr<nsIDOMHTMLFormElement> form;
