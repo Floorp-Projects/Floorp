@@ -439,7 +439,7 @@ XRemoteService::CreateProxyWindow(void)
 
   nsWidgetInitData initData;
   initData.mWindowType = eWindowType_toplevel;
-  initData.mContentType = nsIDocShellTreeItem::typeChrome;
+  initData.mContentType = eContentTypeUI;
 
   // create the window as a new toplevel
   nsRect rect(0,0,100,100);
