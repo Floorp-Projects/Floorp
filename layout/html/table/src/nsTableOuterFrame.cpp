@@ -393,7 +393,8 @@ nsTableOuterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   
   // caption frames live in a different list which we need to check separately
   if (mCaptionFrame) {
-    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::captionList, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::captionList, aWhichLayer, 
+                               (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }
