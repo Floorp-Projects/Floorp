@@ -1085,10 +1085,18 @@ static NSArray* sToolbarDefaults = nil;
 -(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
     CHIconTabViewItem* newTab = [[[CHIconTabViewItem alloc] initWithIdentifier: nil] autorelease];
-    
+
+    // hyatt originally made new tabs open on the far right and tabs opened from a content
+    // link open to the right of the current tab. The idea was to keep the new tab
+    // close to the tab that spawned it, since they are related. Users, however, got confused
+    // as to why tabs appeared in different places, so now all tabs go on the far right.
+#ifdef OPEN_TAB_TO_RIGHT_OF_SELECTED    
     NSTabViewItem* selectedTab = [mTabBrowser selectedTabViewItem];
     int index = [mTabBrowser indexOfTabViewItem: selectedTab];
     [mTabBrowser insertTabViewItem: newTab atIndex: index+1];
+#else
+    [mTabBrowser addTabViewItem: newTab];
+#endif
 
     CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
     [newView setTab: newTab];
