@@ -37,4 +37,13 @@ interface nsIHttpChannelInternal : nsISupports
      */
     attribute nsIURI documentURI;
 
+    /**
+     * Get the major/minor version numbers for the request
+     */
+    void getRequestVersion(out unsigned long major, out unsigned long minor);
+
+    /**
+     * Get the major/minor version numbers for the response
+     */
+    void getResponseVersion(out unsigned long major, out unsigned long minor);
 };

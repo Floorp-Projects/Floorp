@@ -3715,3 +3715,31 @@ nsHttpChannel::nsContentEncodings::PrepareForNext(void)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetRequestVersion(PRUint32 *major, PRUint32 *minor)
+{
+  int version = mRequestHead.Version();
+
+  if (major) { *major = version / 10; }
+  if (minor) { *minor = version % 10; }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetResponseVersion(PRUint32 *major, PRUint32 *minor)
+{
+  if (!mResponseHead)
+  {
+    *major = *minor = 0;                   // we should at least be kind about it
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  int version = mResponseHead->Version();
+
+  if (major) { *major = version / 10; }
+  if (minor) { *minor = version % 10; }
+
+  return NS_OK;
+}
+
