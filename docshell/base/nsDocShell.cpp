@@ -133,8 +133,9 @@ NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri,
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
    mContentListener->SetPresContext(aPresContext);
 
-   NS_ENSURE_SUCCESS(uriLoader->OpenURI(aUri, nsnull, nsnull, mContentListener,
-      nsnull, nsnull, getter_AddRefs(mLoadCookie)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(uriLoader->OpenURIVia(aUri, nsnull, 
+      NS_STATIC_CAST(nsIDocShell*, this), nsnull, mLoadCookie, 
+      getter_AddRefs(mLoadCookie), aAdapterBinding), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -1408,6 +1409,24 @@ NS_IMETHODIMP nsDocShell::ScrollByPages(PRInt32 numPages)
    return NS_OK;
 }
 
+///*****************************************************************************
+// nsDocShell::nsIInterfaceRequestor
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
+{
+   NS_ENSURE_ARG_POINTER(aSink);
+
+   if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
+      NS_SUCCEEDED(EnsureContentListener()))
+      *aSink = mContentListener;
+   else
+      return QueryInterface(aIID, aSink);
+
+   NS_IF_ADDREF(((nsISupports*)*aSink));
+   return NS_OK;   
+}
+
 //*****************************************************************************
 // nsDocShell::nsIContentViewerContainer
 //*****************************************************************************   
@@ -1838,10 +1857,4 @@ nsresult nsDocShell::GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame)
 {
    //XXX Implement
    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& anIID, void** aSink)
-{
-  return QueryInterface(anIID, aSink);
-}
-
+}   
