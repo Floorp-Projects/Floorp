@@ -106,7 +106,7 @@ static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-
+static NS_DEFINE_IID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 //
 // Main window events
@@ -512,6 +512,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsComponentManager::RegisterComponent(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+ 		nsComponentManager::RegisterComponent(kCClipboardCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
     //NS_InitToolkit(PR_GetCurrentThread());
 
