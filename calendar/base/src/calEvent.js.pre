@@ -48,7 +48,7 @@ function calEvent() {
 }
 
 calEvent.prototype = {
-    __proto__: (new calItemBase),
+    __proto__: (new calItemBase()),
 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
@@ -73,38 +73,8 @@ calEvent.prototype = {
 
 #define MEMBER_ATTR(varname, initvalue, attrname) \
     varname: initvalue,                           \
-    get attrname() { return this.varname; }       \
+    get attrname() { return this.varname; },      \
     set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; }
-
-    MEMBER_ATTR(mStartDate, null, startDate),
-    MEMBER_ATTR(mEndDate, null, endDate),
-    MEMBER_ATTR(mStampDate, null, stampDate)
-
-#undef MEMBER_ATTR
-};
-
-function calMutableEvent() {
-    this.wrappedJSObject = this;
-}
-
-calMutableEvent.prototype = {
-    __proto__: (new calMutableItemBase),
-
-    QueryInterface: function (aIID) {
-        if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calIMutableItemBase) &&
-            !aIID.equals(Components.interfaces.calIMutableEvent))
-        {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-
-        return this;
-    },
-
-#define MEMBER_ATTR(varname, initvalue, attrname) \
-    varname: initvalue,                                                 \
-    get attrname() { return this.varname; },                            \
-    set attrname(v) { this.varname = v; }
 
     MEMBER_ATTR(mStartDate, null, startDate),
     MEMBER_ATTR(mEndDate, null, endDate),

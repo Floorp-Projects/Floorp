@@ -65,7 +65,7 @@ calItemBase.prototype = {
         this.mAlarmTime.makeImmutable();
 
         this.mImmutable = true;
-    }
+    },
 
     // for subclasses to use; copies the ItemBase's values
     // into m
@@ -96,7 +96,7 @@ calItemBase.prototype = {
 
 #define MEMBER_ATTR(varname, initvalue, attrname) \
     varname: initvalue,                           \
-    get attrname() { return this.varname; }       \
+    get attrname() { return this.varname; },      \
     set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; }
 
     MEMBER_ATTR(mGeneration, 0, generation),
@@ -104,7 +104,7 @@ calItemBase.prototype = {
     MEMBER_ATTR(mLastModifiedTime, 0, lastModifiedTime),
     MEMBER_ATTR(mParent, null, parent),
     MEMBER_ATTR(mId, null, id),
-    MEMBER_ATTR(mTitle, null, title),
+    MEMBER_ATTR(mTitle, "", title),
     MEMBER_ATTR(mPriority, 0, priority),
     MEMBER_ATTR(mIsPrivate, 0, isPrivate),
     MEMBER_ATTR(mMethod, 0, method),
