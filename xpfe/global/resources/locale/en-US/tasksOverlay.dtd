@@ -19,7 +19,7 @@
 
 
 <!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
-<!ENTITY walletMenu.label "Personal Managers">
+<!ENTITY walletMenu.label "Privacy and Security">
 <!ENTITY walletFormManager.label "Form Manager">
 <!ENTITY walletPasswordManager.label "Password Manager">
 <!ENTITY walletSafeFillCmd.label "Prefill Form Safely">
