@@ -279,7 +279,9 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
 
   // find the boxes that contain our rows and columns
   nsIBox* child = nsnull;
-  mBox->GetChildBox(&child);
+  // if we have <grid></grid> then mBox will be null (bug 125689)
+  if (mBox)
+    mBox->GetChildBox(&child);
 
   while(child)
   {
