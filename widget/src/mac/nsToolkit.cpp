@@ -19,19 +19,20 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsGUIEvent.h"
-#include "plevent.h"
-#include "prinrval.h"
+
 #include <Gestalt.h>
 #include <Appearance.h>
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
+#include "nsXPComCIID.h"
+// Class IDs...
+static NS_DEFINE_IID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
+
+// Interface IDs...
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 nsWindow* nsToolkit::mFocusedWidget = nsnull;
-PLEventQueue*	nsToolkit::sPLEventQueue = nsnull;
 
-extern "C" NS_EXPORT PLEventQueue* GetMacPLEventQueue()
-{
-	return nsToolkit::GetEventQueue();
-}
- 
 //=================================================================
 /*  Constructor
  *  @update  dc 08/31/98
@@ -119,13 +120,11 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
  */
 NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
-	 // Create the NSPR event Queue and start the repeater
-	if ( sPLEventQueue == NULL )
-		sPLEventQueue = PL_CreateEventQueue("toolkit", aThread);
  	StartRepeating();
 	
 	return NS_OK;
 }
+
 
 
 //=================================================================
@@ -137,7 +136,14 @@ NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 void	nsToolkit::RepeatAction(const EventRecord& /*inMacEvent*/)
 {
 	// Handle pending NSPR events
-	PL_ProcessPendingEvents( sPLEventQueue );
+	nsIEventQueueService* eventQService = NULL;
+	if ( NS_SUCCEEDED( nsServiceManager::GetService(kEventQueueServiceCID,
+                                      kIEventQueueServiceIID,
+                                      (nsISupports **)&eventQService) ) )
+    {
+    	eventQService->ProcessEvents();
+    	nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
+    }
 }
 
 
