@@ -1,0 +1,633 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+################################
+# Quotes Module                #
+################################
+# Based on a request from Nortis http://www.blomstereng.org/
+
+package BotModules::Quotes;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+use Fcntl;
+use DBI;
+1;
+
+# This uses a number of MySQL-specific features.
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    my $help = {
+        '' => 'A module to manage quotes.',
+        'quote' => 'Search for a quote, or return a random one. To search for a quote, you must specify search parameters, see the help entries for id, text, author, note, match. Otherwise, a random quote is returned.',
+        'match' => 'If there are multiple matches, you can specify which match you want by appending the match number to your search terms, for example \'quote author=blake 4\' will return the fourth quote whose author is \'blake\'. The default is 1.',
+        'id' => 'To search for a quote by its numeric ID, append the ID to the \'quote\' command. For example, \'quote 42\'. If you specify other search parameters, this will return the relevant match from that list, see the help entry for \'match\'.',
+        'text' => 'To search for a quote by text, append \'text="foo"\' to the \'quote\' command. For example, \'quote text="meaning of life"\' or \'quote text=life\'. You could also just say \'quote hello world\' or \'quote hello world 2\' (to get the second match).',
+        'author' => 'To search for a quote by author or attribution, append \'author="foo"\' to the \'quote\' command. For example, \'quote author="Douglas Adams"\' or \'quote author=asimov\'.',
+        'note' => 'To search for a quote by text in its note, append \'note="foo"\' to the \'quote\' command. For example, \'quote note=""\' or \'quote author=asimov\'.',
+        'quotelast' => 'Returns the last quote added. Append a numer to return the nth but last quote added, as in \'lastquote 2\'.',
+        'status' => 'Prints some information about the status of the quotes database.',
+    };
+    if ($self->canAdd($event)) {
+        $help->{'addquote'} = 'Add a quote to the database. The format is \'addquote quote - author (note)\'. The \'(note)\' part may be omitted. The author may not.';
+    }
+    if ($self->canDelete($event)) {
+        $help->{'delquote'} = 'Delete a quote from the database. The format is \'delquote id\'.';
+    }
+    if ($self->canEdit($event)) {
+        $help->{'editquote'} = 'Edit a quote in the database. The format is \'editquote id quote - author (note)\' which will update the quote with that ID, using the new text, author, etc, in the same way as for \'addquote\'.';
+    }
+    if ($self->isAdmin($event)) {
+        $help->{'setupquotes'} = 'Configure the quotes database connection. Format: \'setupquotes dbhost.example.com:dbport dbname dbuser dbpass\'. You can also just say \'setupquotes\' to check on the configuration. See also \'help quote-defaults\'.';
+        $help->{'quote-defaults'} = 'To get the default configuration, use \'setupquotes mozbotquotes.damowmow.com:3306 mozbotquotes mozbotquotes mozbotquotes\'.';
+    }
+    return $help;
+}
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+      ['prefix', 1, 1, '!'], # the prefix to put before the undirected quote commands
+      ['dbhost', 1, 1, 'mozbotquotes.damowmow.com'],
+      ['dbport', 1, 1, '3306'],
+      ['dbname', 1, 1, 'mozbotquotes'],
+      ['dbuser', 1, 1, 'mozbotquotes'],
+      ['dbpass', 1, 1, 'mozbotquotes'],
+      ['tableName', 1, 1, 'quotes'],
+      ['usersAdd', 1, 1, []],
+      ['usersDelete', 1, 1, []],
+      ['usersEdit', 1, 1, []],
+    );
+}
+
+# call this at the top of any function that uses tableName
+sub sanitiseTableName {
+    my $self = shift;
+    $self->{tableName} =~ s/[^a-zA-Z]//gos;
+    if (length($self->{tableName}) < 1) {
+        $self->{tableName} = 'quotes';
+    }
+    $self->saveConfig();
+}
+
+sub canAdd {
+    my $self = shift;
+    return $self->checkRights('Add', @_);
+}
+
+sub canDelete {
+    my $self = shift;
+    return $self->checkRights('Delete', @_);
+}
+
+sub canEdit {
+    my $self = shift;
+    return $self->checkRights('Edit', @_);
+}
+
+sub checkRights {
+    my $self = shift;
+    my ($right, $event) = @_;
+    return 1 if $self->isAdmin($event);
+    foreach my $user ($self->{"user$right"}) {
+        return 1 if $user eq $event->{userName};
+    }
+    return 0;
+}
+
+sub Schedule {
+    my $self = shift;
+    my ($event) = @_;
+    unless ($self->dbconnect($event)) {
+        $self->say($event, "Failed to connect to quotes database: $self->{dberror}");
+        $self->say($event, 'Use the \'setupquotes\' command to configure the database.');
+    }
+    $self->SUPER::Schedule($event);
+}
+
+sub dbconnect {
+    my $self = shift;
+    my ($event) = @_;
+    eval {
+        $self->{dbhandle} =
+          DBI->connect("DBI:mysql:$self->{dbname}:$self->{dbhost}:$self->{dbport}",
+                       $self->{dbuser}, $self->{dbpass},
+                       {RaiseError => 1, PrintError => 1, AutoCommit => 1, Taint => 0});
+    };
+    if (not $self->{dbhandle}) {
+        $self->{dberror} = $@;
+        $self->debug("Failed to connect to quotes database: $self->{dberror}");
+        return 0;
+    }
+    return 1;
+}
+
+sub dbdisconnect {
+    my $self = shift;
+    my ($event) = @_;
+    if ($self->{dbhandle}) {
+        $self->{dbhandle}->disconnect();
+        $self->{dbhandle} = undef;
+    }
+}
+
+sub unload {
+    my $self = shift;
+    my ($event) = @_;
+    $self->dbdisconnect($event);
+    $self->SUPER::unload(@_);
+}
+
+sub dbcheckconfig {
+    my $self = shift;
+    my ($event) = @_;
+
+    $self->sanitiseTableName();
+
+    # count tables
+    my $tables = $self->{dbhandle}->selectall_arrayref('SHOW TABLES');
+    my $wantedTable = undef;
+    $tables = [] unless defined $tables;
+    foreach (@$tables) {
+        $_ = $_->[0];
+    }
+    if (@$tables == 1) {
+        # if only one, assume that's the one we want to use
+        $wantedTable = $tables->[0];
+    } else {
+        # otherwise, assume the name is 'quotes'
+        $wantedTable = $self->{tableName} || 'quotes';
+    }
+
+    # check table exists
+    $self->{dbtables} = $tables;
+    foreach my $table (@$tables) {
+        if (lc $table eq lc $wantedTable) {
+            $self->{tableName} = $table;
+            $self->saveConfig();
+            return 1;
+        }
+    }
+    return 0;
+}
+
+sub dbcreatetables {
+    my $self = shift;
+    my ($event) = @_;
+
+    $self->sanitiseTableName();
+
+    # create table
+    eval {
+        $self->{dbhandle}->do("CREATE TABLE IF NOT EXISTS $self->{tableName} (
+                               id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                               quote TEXT NOT NULL DEFAULT '',
+                               author VARCHAR(100) NOT NULL DEFAULT 'Unknown',
+                               date DATETIME NOT NULL DEFAULT 0,
+                               note TEXT NULL DEFAULT NULL,
+                               shown INTEGER UNSIGNED NOT NULL DEFAULT 0,
+                               INDEX (author), INDEX(shown)
+                             )");
+    };
+    if ($@) {
+        $self->{dberror} = $@;
+        $self->debug("Failed to create quotes table: $self->{dberror}");
+        return 0;
+    }
+    return 1;
+}
+
+sub verifyConnection {
+    my $self = shift;
+    my ($event) = @_;
+    if ($self->dbconnect($event)) {
+        if (not $self->dbcheckconfig($event)) {
+            if (@{$self->{dbtables}}) {
+                local $" = '\', \'';
+                $self->say($event, "Connected, but I there were several tables and I wasn't sure which to use. The tables in this database are: '@{$self->{dbtables}}'");
+                $self->say($event, "To make me create a new table (called '$self->{tableName}') use 'setupquotes table'. To make me use a particular table from the list above, use 'setupquotes use table $self->{dbtables}->[0]' (or whatever table you want to use).");
+            } else {
+                $self->say($event, "Connected, but I couldn't find a quotes table in the database. If you want me to create a table (named '$self->{tableName}') for you, use 'setupquotes tables'. To create one with a specific name, e.g. 'mozQuotes', use 'setupquotes tables mozQuotes'.");
+            }
+        } else {
+            $self->say($event, "Connected (using table '$self->{tableName}').");
+        }
+    } else {
+        $self->say($event, "Failed to connect to quotes database: $self->{dberror}");
+    }
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*set\s*up\s*quotes?(?:\s+(.*?))?\s*$/osi and $self->isAdmin($event)) {
+        my $data = $1;
+        if ($data =~ m/^(\S+):(\S+)\s+(\S+)\s+(\S+)\s+(\S+)$/osi) {
+            $self->dbdisconnect($event);
+            $self->{'dbhost'} = $1;
+            $self->{'dbport'} = $2;
+            $self->{'dbname'} = $3;
+            $self->{'dbuser'} = $4;
+            $self->{'dbpass'} = $5;
+            $self->saveConfig();
+            $self->say($event, "Ok, trying to connect...");
+            $self->verifyConnection($event);
+        } elsif ($data =~ m/^tables?(?:\s+(\S+))?$/osi) {
+            if ($self->{dbhandle}) {
+                if ($1) {
+                    $self->{tableName} = $1;
+                    $self->sanitiseTableName();
+                }
+                if ($self->dbcreatetables($event)) {
+                    $self->say($event, "Connected (using table '$self->{tableName}').");
+                } else {
+                    $self->say($event, "Failed to create the table ('$self->{dberror}') -- make sure you have the right permissions set up.");
+                }
+            } else {
+                $self->say($event, 'I haven\'t yet successfully connected to a database. Please select a MySQL server to connect to, e.g. \'setupquotes mozbotquotes.damowmow.com:3306 mozbotquotes mozbotquotes mozbotquotes\'');
+            }
+        } elsif ($data =~ m/^use\s*tables?\s+(\S+)$/osi) {
+            $self->{tableName} = $1;
+            $self->sanitiseTableName();
+            if ($self->{dbhandle}) {
+                if (not $self->dbcheckconfig($event)) {
+                    if (@{$self->{dbtables}}) {
+                        local $" = '\', \'';
+                        $self->say($event, "The table you requested, '$self->{tableName}', doesn't exist in this database. The tables in this database are: '@{$self->{dbtables}}'");
+                        $self->say($event, "To make me create this new table (called '$self->{tableName}') use 'setupquotes table'. To make me use one of the tables from the list above, use 'setupquotes use table $self->{dbtables}->[0]' (or whatever table you want to use).");
+                    } else {
+                        $self->say($event, "The table you requested, '$self->{tableName}', doesn't exist in this database. In fact this database has no tables at all. If you want me to create a table (called '$self->{tableName}') for you, use 'setupquotes tables'.");
+                    }
+                } else {
+                    $self->say($event, "Connected (using table '$self->{tableName}').");
+                }
+            } else {
+                $self->say($event, 'Noted. However, I haven\'t yet successfully connected to a database, so this is not enough to complete configuration.');
+                $self->say($event, 'Please select a MySQL server to connect to, e.g. \'setupquotes mozbotquotes.damowmow.com:3306 mozbotquotes mozbotquotes mozbotquotes\'');
+            }
+        } elsif ($data =~ m/^\s*$/osi) {
+            $self->dbdisconnect($event);
+            $self->say($event, "Checking connection...");
+            $self->verifyConnection($event);
+        } else {
+            $self->say($event, 'The format is: \'setupquotes host.domain.tld:port database username password\' or just \'setupquotes\' to check the configuration.');
+        }
+    } elsif ($message =~ /^\s*quote(?:\s+(.+?))?\s*$/osi) {
+        $self->getQuote($event, $1);
+    } elsif ($message =~ /^\s*(?:quotelast|last\s*quote)(?:\s+(.+?))?\s*$/osi) {
+        $self->getLastQuote($event, $1);
+    } elsif ($message =~ /^\s*add\s*quote(?:\s+(.+?))?\s*$/osi) {
+        $self->addQuote($event, $1);
+    } elsif ($message =~ /^\s*(?:delete|del|remove|rem)?\s*quote(?:\s+(.+?))?\s*$/osi) {
+        $self->deleteQuote($event, $1);
+    } elsif ($message =~ /^\s*edit\s*quote(?:\s+(.+?))?\s*$/osi) {
+        $self->editQuote($event, $1);
+    } elsif ($message =~ /^\s*(?:quotes?\s*)?status\s*$/osi) {
+        $self->printStatus($event);
+    } elsif ($self->checkBangCommands(@_)) {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Heard {
+    my $self = shift;
+    if ($self->checkBangCommands(@_)) {
+        return $self->SUPER::Heard(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub checkBangCommands {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^$self->{prefix}quote(?:\s+(.+?))?\s*$/si) {
+        $self->getQuote($event, $1);
+    } elsif ($message =~ /^$self->{prefix}(?:quotelast|lastquote)(?:\s+(.+?))?\s*$/si) {
+        $self->getLastQuote($event, $1);
+    } elsif ($message =~ /^$self->{prefix}addquote(?:\s+(.+?))?\s*$/si) {
+        $self->addQuote($event, $1);
+    } elsif ($message =~ /^$self->{prefix}delquote(?:\s+(.+?))?\s*$/si) {
+        $self->deleteQuote($event, $1);
+    } elsif ($message =~ /^$self->{prefix}editquote(?:\s+(.+?))?\s*$/si) {
+        $self->editQuote($event, $1);
+    } else {
+        return 1; # nope
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub markRead {
+    my $self = shift;
+    my ($id) = @_;
+    eval {
+        $self->{dbhandle}->do("UPDATE $self->{tableName} SET shown = shown + 1 WHERE id = ?", undef, $id);
+    };
+    #if ($@) {
+    #    $self->debug("While updating shown count in database: $@");
+    #    # ignore errors
+    #}
+}
+
+sub getQuote {
+    my $self = shift;
+    my ($event, $data) = @_;
+    if (not $self->{dbhandle}) {
+        $self->say($event, "$event->{from}: I haven't got a connection to a database yet, sorry.");
+        return;
+    }
+    if (defined $data) {
+        if ($data =~ m/^\s*([0-9]+)\s*$/os) {
+            $self->getQuoteById($event, $1);
+        } else {
+            $self->searchQuote($event, $data);
+        }
+    } else {
+        $self->randomQuote($event);
+    }
+}
+
+sub randomQuote {
+    my $self = shift;
+    my ($event) = @_;
+    $self->sanitiseTableName();
+    my($id, $quote, $author, $note);
+    eval {
+        ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note FROM $self->{tableName} ORDER BY RAND() LIMIT 1", undef);
+        # ideally, i'd like to not show recently shown stuff again too soon
+        # but i don't have a good solution yet
+        # XXX
+    };
+    if ($@) {
+        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
+        $self->tellAdmin($event, "While trying to read a random quote to the database, I got: $@");
+        return;
+    }
+    if (defined $quote) {
+        $self->markRead($id);
+        $note = defined $note ? " ($note)" : '';
+        $self->say($event, "Quote $id: $quote - $author$note");
+    } else {
+        $self->say($event, "$event->{from}: There are no quotes in the database yet.");
+    }
+}
+
+sub getQuoteById {
+    my $self = shift;
+    my ($event, $id, $action) = @_;
+    $self->sanitiseTableName();
+    my($quote, $author, $note);
+    eval {
+        ($quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT quote, author, note FROM $self->{tableName} WHERE id=?", undef, $id);
+    };
+    if ($@) {
+        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
+        $self->tellAdmin($event, "While trying to read a quote to the database, I got: $@");
+        return;
+    }
+    if (defined $quote) {
+        $self->markRead($id);
+        $note = defined $note ? " ($note)" : '';
+        $action = defined $action ? "$action: " : '';
+        $self->say($event, "\u${action}Quote $id: $quote - $author$note");
+    } elsif (defined $action) {
+        return 0;
+    } else {
+        $self->say($event, "$event->{from}: There is no quote with ID $id as far as I can tell.");
+    }
+    return 1;
+}
+
+sub searchQuote {
+    my $self = shift;
+    my ($event, $data) = @_;
+    # [author=""] [text=""] [note=""] [text] [n]
+    my (@columns, @values);
+    my $skip = 0;
+    while (length $data) {
+        if ($data =~ s/^\s*text=(\S+)\b//osi or
+            $data =~ s/^\s*text="([^"]*)"\b//osi or
+            $data =~ s/^\s*text='([^']*)'\b//osi) {
+            push(@columns, 'quote LIKE ?');
+            push(@values, "%$1%");
+        } elsif ($data =~ s/^\s*author=(\S+)\b//osi or
+            $data =~ s/^\s*author="([^"]*)"\b//osi or
+            $data =~ s/^\s*author='([^']*)'\b//osi) {
+            push(@columns, 'author LIKE ?');
+            push(@values, "%$1%");
+        } elsif ($data =~ s/^\s*note=(\S+)\b//osi or
+            $data =~ s/^\s*note="([^"]*)"\b//osi or
+            $data =~ s/^\s*note='([^']*)'\b//osi) {
+            push(@columns, 'note LIKE ?');
+            push(@values, "%$1%");
+        } elsif ($data =~ s/^\s*([0-9]+)\s*$//osi) {
+            $skip = $1 - 1;
+        } elsif ($data =~ s/^\s*(\S+)\b//osi or
+                 $data =~ s/^\s*"([^"]+)"\b//osi or
+                 $data =~ s/^\s*'([^']+)'\b//osi) {
+            push(@columns, 'quote LIKE ?');
+            push(@values, "%$1%");
+        } else {
+            # wtf
+            $self->say($event, "$event->{from}: I didn't quite understand what you were looking for. See the help entry for 'quote' for more information on the quote searching syntax.");
+            return;
+        }
+    }
+
+    $self->sanitiseTableName();
+    my($id, $count, $quote, $author, $note);
+    eval {
+        local $" = ' AND ';
+        ($count) = $self->{dbhandle}->selectrow_array("SELECT COUNT(*) FROM $self->{tableName} WHERE @columns", undef, @values);
+        ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note FROM $self->{tableName} WHERE @columns LIMIT $skip,1", undef, @values);
+    };
+    if ($@) {
+        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
+        $self->tellAdmin($event, "While trying to search for a quote in the database, I got: $@");
+        return;
+    }
+    if (defined $quote) {
+        $self->markRead($id);
+        $note = defined $note ? " ($note)" : '';
+        my $n = $skip + 1;
+        $count = "about $n" if $count < $n; # sanitise output in case of race condition
+        $self->say($event, "Quote $id (match $n of $count): $quote - $author$note");
+    } else {
+        $self->say($event, "$event->{from}: No matching quotes found.");
+    }
+}
+
+sub getLastQuote {
+    my $self = shift;
+    my ($event, $data) = @_;
+    if (not $self->{dbhandle}) {
+        $self->say($event, "$event->{from}: I haven't got a connection to a database yet, sorry.");
+        return;
+    }
+    if ($data !~ m/^\s*([0-9]+)?\s*$/os) {
+        $self->say($event, "$event->{from}: The syntax is 'lastquote 2', where 2 is the number of the quote to show (counting from the end). You can omit the number to get the last quote added.");
+        return;
+    }
+    my $skip = ($1 || 1) - 1;
+    $self->sanitiseTableName();
+    my($id, $quote, $author, $note);
+    eval {
+        ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note FROM $self->{tableName} ORDER BY id DESC LIMIT $skip,1", undef);
+    };
+    if ($@) {
+        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
+        $self->tellAdmin($event, "While trying to read the last few quotes from the database, I got: $@");
+        return;
+    }
+    if (defined $quote) {
+        $self->markRead($id);
+        $note = defined $note ? " ($note)" : '';
+        $self->say($event, "Quote $id: $quote - $author$note");
+    } else {
+        $self->say($event, "$event->{from}: There are no quotes in the database yet.");
+    }
+}
+
+sub addQuote {
+    my $self = shift;
+    my ($event, $data) = @_;
+    if (not $self->canAdd($event)) {
+        $self->say($event, "$event->{from}: You are not allowed to add quotes, sorry.");
+        return;
+    }
+    if (not $self->{dbhandle}) {
+        $self->say($event, "$event->{from}: I haven't got a connection to a database yet, sorry.");
+        return;
+    }
+    # quote - author (note)
+    if ($data =~ m/^ (.+\S)
+                     \s* - \s*
+                     (.+?)
+                     (?:\s+\((.+)\))?
+                   $/osx) {
+        my $quote = $1;
+        my $author = $2;
+        my $note = $3;
+        # insert data
+        $self->sanitiseTableName();
+        eval {
+            $self->{dbhandle}->do("INSERT INTO $self->{tableName} SET
+                                   quote = ?, author = ?, date = NOW(), note = ?",
+                                 undef, $quote, $author, $note);
+            my $id = $self->{dbhandle}->{mysql_insertid};
+            if (not $self->getQuoteById($event, $id, 'inserted')) {
+                $self->say($event, "$event->{from}: Your quote disappeared after I inserted it into the database. You may wish to speak to the other people who have access to the quotes database about this... :-)");
+            }
+        };
+        if ($@) {
+            $self->say($event, "$event->{from}: I'm sorry, I had some problems adding the quote to the database.");
+            $self->tellAdmin($event, "While trying to add a quote to the database, I got: $@");
+        }
+    } else {
+        $self->say($event, "$event->{from}: The syntax for adding a quote is 'quote - author' or 'quote - author (note)'.");
+    }
+}
+
+sub deleteQuote {
+    my $self = shift;
+    my ($event, $data) = @_;
+    if (not $self->canDelete($event)) {
+        $self->say($event, "$event->{from}: You are not allowed to delete quotes, sorry.");
+        return;
+    }
+    if (not $self->{dbhandle}) {
+        $self->say($event, "$event->{from}: I haven't got a connection to a database yet, sorry.");
+        return;
+    }
+    if ($data !~ m/^\s*([0-9]+)\s*$/os) {
+        $self->say($event, "$event->{from}: The syntax is 'delquote 5', where 5 is the id of the quote to delete.");
+        return;
+    }
+    my $id = $1;
+    $self->sanitiseTableName();
+    my($quote, $author, $note);
+    eval {
+        ($quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT quote, author, note FROM $self->{tableName} WHERE ID=?", undef, $id);
+    };
+    if ($@) {
+        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
+        $self->tellAdmin($event, "While trying to read a quote to delete from the database, I got: $@");
+        return;
+    }
+    if (defined $quote) {
+        eval {
+            $self->{dbhandle}->do("DELETE FROM $self->{tableName} WHERE ID=?", undef, $id);
+        };
+        if ($@) {
+            $self->say($event, "$event->{from}: I'm sorry, I can't delete from the database. Maybe I don't have enough privileges on the database server.");
+            $self->tellAdmin($event, "While trying to delete from the database, I got: $@");
+            return;
+        }
+        $note = defined $note ? " ($note)" : '';
+        $self->say($event, "Deleted: Quote $id: $quote - $author$note");
+    } else {
+        $self->say($event, "$event->{from}: There is no quote with ID $id as far as I can tell.");
+    }
+}
+
+sub editQuote {
+    my $self = shift;
+    my ($event, $data) = @_;
+    if (not $self->canEdit($event)) {
+        $self->say($event, "$event->{from}: You are not allowed to edit quotes, sorry.");
+        return;
+    }
+    if (not $self->{dbhandle}) {
+        $self->say($event, "$event->{from}: I haven't got a connection to a database yet, sorry.");
+        return;
+    }
+    if ($data =~ m/^ ([0-9]+) \s+
+                     (.+\S)
+                     \s* - \s*
+                     (.+?)
+                     (?:\s+\((.+)\))?
+                   $/osx) {
+        my $id = $1;
+        my $quote = $2;
+        my $author = $3;
+        my $note = $4;
+        # insert data
+        $self->sanitiseTableName();
+        eval {
+            $self->{dbhandle}->do("UPDATE $self->{tableName} SET
+                                   quote = ?, author = ?, note = ?
+                                   WHERE id = ?",
+                                 undef, $quote, $author, $note, $id);
+            if (not $self->getQuoteById($event, $id, 'edited')) {
+                $self->say($event, "$event->{from}: I couldn't find a quote with ID $id.");
+            }
+        };
+        if ($@) {
+            $self->say($event, "$event->{from}: I'm sorry, I had some problems editing the quote in the database.");
+            $self->tellAdmin($event, "While trying to edit a quote in the database, I got: $@");
+        }
+    } else {
+        $self->say($event, "$event->{from}: The syntax for editing a quote is 'id quote - author' or 'id quote - author (note)', much like for adding a quote but with the id of the quote to edit at the start.");
+    }
+}
+
+sub printStatus {
+    my $self = shift;
+    my ($event) = @_;
+    $self->sanitiseTableName();
+    my ($quotes, $sources, $shown) = @_;
+    eval {
+        ($quotes, $sources, $shown) = $self->{dbhandle}->selectrow_array("SELECT COUNT(*), COUNT(DISTINCT author), SUM(shown) FROM $self->{tableName}");
+    };
+    if ($@) {
+        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
+        $self->tellAdmin($event, "While trying to obtain statistics of the database, I got: $@");
+        return;
+    }
+    my $s1 = $quotes == 1 ? '' : 's';
+    my $s2 = $sources == 1 ? '' : 's';
+    my $s3 = $shown == 1 ? '' : 's';
+    $self->say($event, "$event->{from}: The database contains $quotes quote$s1 attributed to $sources source$s2. I have shown quotes $shown time$s3 in total.");
+}
