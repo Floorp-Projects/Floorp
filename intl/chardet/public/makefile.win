@@ -33,6 +33,7 @@ EXPORTS = \
 	nsIXMLEncodingService.h \
 	nsMetaCharsetCID.h \
 	nsXMLEncodingCID.h \
+	nsIDocumentCharsetInfo.h \
         $(NULL)
 
 MODULE=chardet
