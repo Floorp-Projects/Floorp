@@ -173,7 +173,7 @@ NSS_LIBS	= \
 	$(NULL)
 else
 NSS_LIBS	= \
-	-L$(LIBS_DIR) \
+	$(LIBS_DIR) \
 	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
 	-lsmime3 \
 	-lssl3 \
