@@ -864,8 +864,10 @@ nsHighlightColorStateCommand::IsCommandEnabled(const nsAReadableString & aComman
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+    if (!htmlEditor) return NS_ERROR_FAILURE;
     PRBool useCSS;
-    editor->IsCSSEnabled(&useCSS);
+    htmlEditor->IsCSSEnabled(&useCSS);
       
     *outCmdEnabled = useCSS;
   }

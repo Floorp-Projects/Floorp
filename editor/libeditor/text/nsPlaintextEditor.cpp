@@ -255,15 +255,6 @@ nsPlaintextEditor::EndEditorInit()
   return res;
 }
 
-nsresult
-nsPlaintextEditor::IsCSSEnabled(PRBool *aIsSet)
-{
-  // STUB
-  *aIsSet = PR_FALSE;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP 
 nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSet) 
 { 
@@ -2115,10 +2106,10 @@ void nsPlaintextEditor::HandleEventListenerError()
 #endif
 
 nsresult
-nsPlaintextEditor::SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
-                                               const nsAReadableString & aAttribute,
-                                               const nsAReadableString & aValue)
+nsPlaintextEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
+                                            const nsAReadableString & aAttribute,
+                                            const nsAReadableString & aValue)
 {
-  // STUB
+  nsEditor::SetAttribute(aElement, aAttribute, aValue);
   return NS_OK;
 }

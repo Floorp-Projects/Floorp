@@ -107,10 +107,9 @@ public:
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
   NS_IMETHOD BeginComposition(nsTextEventReply* aReply);
-  NS_IMETHOD IsCSSEnabled(PRBool *aIsSet);
-  NS_IMETHOD SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
-                                         const nsAReadableString & aAttribute,
-                                         const nsAReadableString & aValue);
+  NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
+                                      const nsAReadableString & aAttribute,
+                                      const nsAReadableString & aValue);
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);

@@ -79,14 +79,7 @@ interface nsIEditor  : nsISupports
    */
   [noscript] void Init(in nsIDOMDocument doc, in nsIPresShellPtr shell, in nsIContentPtr aRoot, in nsISelectionController aSelCon, in unsigned long aFlags);
 
-  /** IsCSSEnabled answers a boolean which is true is the HTMLEditor has been
-    * instantiated with CSS knowledge and if the CSS pref is currently checked
-    *
-    * @param aIsSet     [OUT] true if CSS handled and enabled
-    */
-  void IsCSSEnabled(out PRBool aIsSet);
-
-  void SetCSSEquivalentToHTMLStyle(in nsIDOMElement element, in DOMString sourceAttrName, in DOMString sourceAttrValue);
+  void SetAttributeOrEquivalent(in nsIDOMElement element, in DOMString sourceAttrName, in DOMString sourceAttrValue);
   /**
    * PostCreate should be called after Init, and is the time that the editor tells
    * its documentStateObservers that the document has been created.
