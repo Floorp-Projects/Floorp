@@ -2516,16 +2516,6 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
         targetFrame = mCurrentTarget;
       }
 
-      // Bug 103055: mouseout and mouseover apply to *elements*, not all nodes
-      // Get the nearest element parent and check it
-      while (targetElement &&
-             !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
-        // Yes, this is weak, but it will stick around for this short time :)
-        nsIContent* temp = targetElement;
-        temp->GetParent(*getter_AddRefs(targetElement));
-        targetFrame = nsnull;
-      }
-
       if (mLastMouseOverElement == targetElement) {
         break;
       }
