@@ -31,7 +31,7 @@ REQUIRES=util img xpcom raptor netlib
 
 INCLUDES+= -I../xpwidgets -I../motif -I.
 
-CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
+CPPSRCS=nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
 
 ifeq ($(USE_NGLAYOUT_GTK),1)
 TOOLKIT_DSO_LDOPTS = $(DIST)/lib/libraptorwidgetgtk_s.a
