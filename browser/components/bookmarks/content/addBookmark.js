@@ -116,7 +116,6 @@ function Startup()
   var bookmarkView = document.getElementById("bookmarks-view");
 
   var shouldSetOKButton = true;
-  var dialogElement = document.documentElement;
   if ("arguments" in window) {
     var ind;
     var folderItem = null;
@@ -132,7 +131,7 @@ function Startup()
       document.getElementById("createinseparator").setAttribute("hidden", "true");
       document.getElementById("nameseparator").setAttribute("hidden", "true");
       sizeToContent();
-      dialogElement.setAttribute("title", dialogElement.getAttribute("title-selectFolder"));
+      document.title = document.documentElement.getAttribute("selectFolderTitle");
       shouldSetOKButton = false;
       if (window.arguments[2])
         folderItem = RDF.GetResource(window.arguments[2]);

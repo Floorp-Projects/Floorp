@@ -171,7 +171,7 @@ function Startup()
     gExtensionsView.selected = lastSelected;
 
   var extensionsStrings = document.getElementById("extensionsStrings");
-  document.documentElement.setAttribute("title", extensionsStrings.getString(gWindowState + "Title"));
+  document.title = extensionsStrings.getString(gWindowState + "Title");
   
   gExtensionsViewController.onCommandUpdate(); 
   
