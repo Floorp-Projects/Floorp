@@ -642,7 +642,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     //
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
-                           : PR_FALSE, nsnull, this);
+                           : PR_FALSE, nsnull, this, nsnull);
     switch (rv) {
     case NS_OK:
         break;
@@ -667,7 +667,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
 
     // our OnLDAPMessage accepts all result callbacks
     //
-    rv = mCurrentOperation->Init(mConnection, mCallback);
+    rv = mCurrentOperation->Init(mConnection, mCallback, nsnull);
     if (NS_FAILED(rv))
         return NS_ERROR_UNEXPECTED; // this should never happen
 
@@ -780,7 +780,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
         return NS_ERROR_FAILURE;
     }
 
-    rv = mCurrentOperation->Init(mConnection, mCallback);
+    rv = mCurrentOperation->Init(mConnection, mCallback, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // QI() the URI to an nsILDAPURL so we get can the LDAP specific portions
@@ -827,7 +827,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 // void onLDAPInit (in nsresult aStatus); */
 //
 NS_IMETHODIMP
-nsLDAPChannel::OnLDAPInit(nsresult aStatus)
+nsLDAPChannel::OnLDAPInit(nsILDAPConnection *aConnection, nsresult aStatus)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
