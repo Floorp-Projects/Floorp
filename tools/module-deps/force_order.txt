@@ -21,4 +21,5 @@ string                      xpcom
 png                         imglib2
 jpeg                        imglib2
 mng                         imglib2
-
+find                        embedcomponents
+commandhandler              embedcomponents
