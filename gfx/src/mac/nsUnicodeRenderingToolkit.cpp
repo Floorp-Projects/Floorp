@@ -20,6 +20,8 @@
 #include "nsUnicodeFallbackCache.h"
 #include "nsDrawingSurfaceMac.h"
 #include "nsTransform2D.h"
+#include "nsFontMetricsMac.h"
+#include "nsGraphicState.h"
 
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
@@ -545,7 +547,7 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
 	mGS->mFontMetrics->GetMaxAscent(ascent);
 	y += ascent;
 
-    mGS->mTMatrix->TransformCoord(&x,&y);
+    mGS->mTMatrix.TransformCoord(&x,&y);
 
     PRUint32 i;
 	PRInt32 currentX = x;
@@ -557,7 +559,7 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
 		int* spacing = (aLength <= STACK_TREASHOLD ? buffer : new int[aLength]);
 		if (spacing)
 		{
-			mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
+			mGS->mTMatrix.ScaleXCoords(aSpacing, aLength, spacing);
 		    for(i =0; i < aLength; i++)
 		    {
 		       short curFontNum = fontmap->GetFontID(aString[i]);
