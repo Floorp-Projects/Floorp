@@ -13,8 +13,8 @@
 # require technical configurations.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/11/09 19:22:00 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/28 00:35:37 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
@@ -312,6 +312,9 @@ sub set_tinderbox_variables {
 
   $TINDERBOX{'tinderbox_timenow'} = MailProcess::mailstring2time($MAIL_HEADER{'Date'});
 
+  $TINDERBOX{'tinderbox_mailto'} = $MAIL_HEADER{'To'};
+  $TINDERBOX{'tinderbox_mailfrom'} = $MAIL_HEADER{'From'};
+
   $TINDERBOX{'tinderbox_status'} = $TINDERBOX{$BTData::STATUS_FIELD_NAME};
 
   # the validity of this value is tested in BTData::update2tree if need be.
@@ -373,8 +376,10 @@ sub check_required_vars {
 
   my ($uniq_id) = join('.', 
                        $TINDERBOX{'tinderbox_tree'},
-                       $TINDERBOX{'tinderbox_bug_id'},
                        $TINDERBOX{'tinderbox_timenow'},
+                       $TINDERBOX{'tinderbox_bug_id'},
+                       $TINDERBOX{'tinderbox_mailto'},
+                       $TINDERBOX{'tinderbox_mailfrom'},
                       );
 
   MailProcess::write_update_file('BT', $uniq_id, 
