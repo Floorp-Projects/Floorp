@@ -20,6 +20,7 @@
 #include "il.h"
 
 #include "jpeglib.h"
+#include "jerror.h"
 
  /* cope with brain-damaged compilers that don't make sizeof return a size_t */
  #ifdef SIZEOF
