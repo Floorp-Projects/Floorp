@@ -320,10 +320,11 @@ public class Interpreter {
 
             case TokenStream.COMMA :
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addByte(TokenStream.POP, iCodeTop);
-                itsStackDepth--;
-                child = child.getNextSibling();
-                iCodeTop = generateICode(child, iCodeTop);
+                while (null != (child = child.getNextSibling())) {
+                    iCodeTop = addByte(TokenStream.POP, iCodeTop);
+                    itsStackDepth--;
+                    iCodeTop = generateICode(child, iCodeTop);
+                }
                 break;
 
             case TokenStream.SWITCH : {

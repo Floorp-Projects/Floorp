@@ -618,12 +618,17 @@ public class Codegen extends Interpreter {
                 visitSwitch(node, child);
                 break;
 
-              case TokenStream.COMMA:
-                generateCodeFromNode(child, node, -1, -1);
-                addByteCode(ByteCode.POP);
-                generateCodeFromNode(child.getNextSibling(),
-                                            node, trueLabel, falseLabel);
+              case TokenStream.COMMA: {
+                Node next = child.getNextSibling();
+                while (next != null) {
+                    generateCodeFromNode(child, node, -1, -1);
+                    addByteCode(ByteCode.POP);
+                    child = next;
+                    next = next.getNextSibling();
+                }
+                generateCodeFromNode(child, node, trueLabel, falseLabel);
                 break;
+              }
 
               case TokenStream.NEWSCOPE:
                 addScriptRuntimeInvoke("newScope", "()",

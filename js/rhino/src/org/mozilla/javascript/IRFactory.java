@@ -584,14 +584,13 @@ public class IRFactory {
      */
     public Object createArrayLiteral(Object obj) {
         Node array;
-        Node result;
-        array = result = new Node(TokenStream.NEW,
-                                  Node.newString(TokenStream.NAME, "Array"));
-        Node temp = createNewTemp(result);
-        result = temp;
+        array = new Node(TokenStream.NEW,
+                         Node.newString(TokenStream.NAME, "Array"));
+        Node temp = createNewTemp(array);
 
         Node elem = null;
         int i = 0;
+        Node comma = new Node(TokenStream.COMMA, temp);
         for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
             // Move cursor to cursor.next before elem.next can be
             // altered in new Node constructor
@@ -606,7 +605,7 @@ public class IRFactory {
             Node addelem = new Node(TokenStream.SETELEM, createUseTemp(temp),
                                     Node.newNumber(i), elem);
             i++;
-            result = new Node(TokenStream.COMMA, result, addelem);
+            comma.addChildToBack(addelem);
         }
 
         /*
@@ -630,15 +629,15 @@ public class IRFactory {
             {
                 Node setlength = new Node(TokenStream.SETPROP,
                                           createUseTemp(temp),
-                                          Node.newString(
-                                                   "length"),
+                                          Node.newString("length"),
                                           Node.newNumber(i));
-                result = new Node(TokenStream.COMMA, result, setlength);
+                comma.addChildToBack(setlength);
             }
         } else {
             array.addChildToBack(Node.newNumber(i));
         }
-        return new Node(TokenStream.COMMA, result, createUseTemp(temp));
+        comma.addChildToBack(createUseTemp(temp));
+        return comma;
     }
 
     /**
@@ -651,8 +650,8 @@ public class IRFactory {
         Node result = new Node(TokenStream.NEW, Node.newString(TokenStream.NAME,
                                                          "Object"));
         Node temp = createNewTemp(result);
-        result = temp;
 
+        Node comma = new Node(TokenStream.COMMA, temp);
         for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
             Node n = cursor;
             cursor = cursor.getNextSibling();
@@ -663,9 +662,10 @@ public class IRFactory {
             Node next = cursor;
             cursor = cursor.getNextSibling();
             Node addelem = new Node(op, createUseTemp(temp), n, next);
-            result = new Node(TokenStream.COMMA, result, addelem);
+            comma.addChildToBack(addelem);
         }
-        return new Node(TokenStream.COMMA, result, createUseTemp(temp));
+        comma.addChildToBack(createUseTemp(temp));
+        return comma;
     }
 
     /**
