@@ -24,7 +24,7 @@
  * Tom Kneeland, tomk@mitre.org
  *    -- added UInt32 to provide a common unsigned integer
  *
- * $Id: baseutils.h,v 1.6 2001/01/12 20:06:09 axel%pike.org Exp $
+ * $Id: baseutils.h,v 1.7 2001/06/15 11:12:14 sicking%bigfoot.com Exp $
  */
 
 // Basic Definitions used throughout many of these classes
@@ -37,6 +37,20 @@ typedef int Int32;
 #ifndef __MACTYPES__
 typedef unsigned int UInt32;
 #endif
+
+#ifdef TX_EXE
+
+#ifdef  DEBUG
+#define NS_ASSERTION(_cond, _msg)                                \
+if(!(_cond)) {                                                   \
+  cerr << "ASSERTION (" << #_cond << ") " << _msg << endl;       \
+  cerr << "on line " << __LINE__ << " in " << __FILE__ << endl;  \
+}
+#else
+#define NS_ASSERTION(_cond, _msg) {}
+#endif
+
+#endif //TX_EXE
 
 typedef Int32 MBool;
 
