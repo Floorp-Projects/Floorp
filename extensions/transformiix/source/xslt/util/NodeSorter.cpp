@@ -20,7 +20,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NodeSorter.cpp,v 1.2 2000/04/13 10:37:49 kvisco%ziplink.net Exp $
+ * $Id: NodeSorter.cpp,v 1.3 2000/05/02 21:41:45 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -112,7 +112,7 @@ void NodeSorter::sort
      // Build hash table of sort keys
      for ( ; i < nodes->size(); i++) {
          Node* node = nodes->get(i);
-         String* sortKey = new String();
+         DOMString* sortKey = new DOMString();
          exprResult = selectExpr->evaluate(node, ps);
          if ((!exprResult) || (exprResult->getResultType() != ExprResult::NODESET)) {
              //-- should we flag this as an error?
