@@ -271,7 +271,7 @@ SetUpBlend()
 {
 void              *bits1,*bits2;
 nsresult          rv;
-nsIDeviceContext  *dx;
+nsIDeviceContext  *dx = nsnull;
 
   static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
   static NS_DEFINE_IID(kBlenderIID, NS_IBLENDER_IID);
@@ -321,7 +321,7 @@ Restore(nsIBlender *aBlender,nsIImage *aImage)
 PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
 PRUint16            *cur16;
 PRInt32             w,h,ls,x,y,numbytes,sls;
-HDC                 dstdc;
+HDC                 dstdc = 0;
 HBITMAP             srcbits,tb1;
 BITMAP              srcinfo;
 LPBITMAPINFOHEADER  srcbinfo;
@@ -514,7 +514,7 @@ nsresult            result = NS_ERROR_FAILURE;
 PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
 PRUint16            *cur16;
 PRInt32             w,h,ls,x,y,numbytes,sls;
-HDC                 srcdc,dstdc;
+HDC                 srcdc = 0,dstdc = 0;
 HBITMAP             srcbits,tb1;
 BITMAP              srcinfo;
 LPBITMAPINFOHEADER  srcbinfo;
