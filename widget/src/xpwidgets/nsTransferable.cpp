@@ -25,11 +25,12 @@
 #include "nsVoidArray.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
+ 
 
-
-static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kITransferableIID,        NS_ITRANSFERABLE_IID);
+static NS_DEFINE_IID(kIGenericTransferableIID, NS_IGENERICTRANSFERABLE_IID);
+static NS_DEFINE_IID(kIDataFlavorIID,          NS_IDATAFLAVOR_IID);
+static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 
 
 NS_IMPL_ADDREF(nsTransferable)
@@ -37,7 +38,7 @@ NS_IMPL_RELEASE(nsTransferable)
 
 typedef struct {
   nsIDataFlavor * mFlavor;
-  void *   mData;
+  char *   mData;
   PRUint32 mDataLen;
 } DataStruct;
 
@@ -87,6 +88,12 @@ nsresult nsTransferable::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   if (aIID.Equals(kITransferableIID)) {
     *aInstancePtr = (void*) ((nsITransferable*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIGenericTransferableIID)) {
+    *aInstancePtr = (void*) ((nsIGenericTransferable*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -190,7 +197,7 @@ NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void 
       if (nsnull != data->mData) {
         delete[] data->mData;
       }
-      data->mData     = aData;
+      data->mData     = (char *)aData;
       data->mDataLen  = aDataLen;
       return NS_OK;
     }

@@ -20,11 +20,14 @@
 #include <windows.h>
 #include <OLE2.h>
 
+#include "nsCOMPtr.h"
 #include "nsDataObj.h"
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
+#include "nsIGenericTransferable.h"
+#include "nsITransferable.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -127,7 +130,7 @@ static UINT GetFormat(const nsString & aMimeStr)
   * 
   *
   */
-NS_IMETHODIMP nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, IDataObject ** aDataObj)
+nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, IDataObject ** aDataObj)
 {
   if (nsnull == aTransferable) {
     return NS_ERROR_FAILURE;
@@ -158,7 +161,7 @@ NS_IMETHODIMP nsClipboard::CreateNativeDataObject(nsITransferable * aTransferabl
       UINT format = GetFormat(mime);
 
       FORMATETC fe;
-      SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
+      SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
 
       // Now tell the native IDataObject about both the DataFlavor and 
       // the native data format
@@ -173,33 +176,36 @@ NS_IMETHODIMP nsClipboard::CreateNativeDataObject(nsITransferable * aTransferabl
   // Now check to see if there is a converter for the transferable
   // and then register any of it's output formats
   // Get the transferable list of data flavors
-  nsIFormatConverter * converter = nsnull;
-  aTransferable->GetConverter(&converter);
-  if (nsnull != converter) {
-    // Get list of output flavors
-    converter->GetOutputDataFlavors(&dfList);
-    if (nsnull != dfList) {
-      for (i=0;i<dfList->Count();i++) {
-        nsIDataFlavor * df;
-        nsISupports * supports = dfList->ElementAt(i);
-        if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-          nsString mime;
-          df->GetMimeType(mime);
-          UINT format = GetFormat(mime);
+  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
+  if (genericTrans) {
+    nsIFormatConverter * converter = nsnull;
+    genericTrans->GetConverter(&converter);
+    if (nsnull != converter) {
+      // Get list of output flavors
+      converter->GetOutputDataFlavors(&dfList);
+      if (nsnull != dfList) {
+        for (i=0;i<dfList->Count();i++) {
+          nsIDataFlavor * df;
+          nsISupports * supports = dfList->ElementAt(i);
+          if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
+            nsString mime;
+            df->GetMimeType(mime);
+            UINT format = GetFormat(mime);
 
-          FORMATETC fe;
-          SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
+            FORMATETC fe;
+            SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
 
-          // Now tell the native IDataObject about both the DataFlavor and 
-          // the native data format
-          dataObj->AddDataFlavor(df, &fe);
-          NS_RELEASE(df);
+            // Now tell the native IDataObject about both the DataFlavor and 
+            // the native data format
+            dataObj->AddDataFlavor(df, &fe);
+            NS_RELEASE(df);
+          }
+          NS_RELEASE(supports);
         }
-        NS_RELEASE(supports);
+        NS_RELEASE(dfList);
       }
-      NS_RELEASE(dfList);
+      NS_RELEASE(converter);
     }
-    NS_RELEASE(converter);
   }
 
   *aDataObj = dataObj;
@@ -247,7 +253,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   * 
   *
   */
-static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen)
+nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen)
 {
   nsresult  result = NS_ERROR_FAILURE;
   LPSTR     lpStr; 
@@ -296,7 +302,7 @@ static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen)
   * 
   *
   */
-static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, void ** aData, PRUint32 * aLen)
+nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, void ** aData, PRUint32 * aLen)
 {
   HGLOBAL   hglb; 
   nsresult  result = NS_ERROR_FAILURE;
@@ -314,7 +320,7 @@ static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, voi
   * 
   *
   */
-static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen)
+nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen)
 {
   nsresult result = NS_ERROR_FAILURE;
 
@@ -323,7 +329,7 @@ static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aForma
   }
 
   FORMATETC fe;
-  SET_FORMATETC(fe, aFormat, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
+  SET_FORMATETC(fe, aFormat, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
 
   if (S_OK == aDataObject->QueryGetData(&fe)) {
     LPSTGMEDIUM stm;
@@ -380,17 +386,19 @@ static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aForma
   * 
   *
   */
-NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
+                                            nsIWidget       * aWindow,
+                                            nsITransferable * aTransferable)
 {
+  nsresult res = NS_ERROR_FAILURE;
+
   // make sure we have a good transferable
   if (nsnull == aTransferable) {
-    return NS_ERROR_FAILURE;
+    return res;
   }
-
-  PRBool useOLE = PR_FALSE;
-  IDataObject * dataObj;
-  if (S_OK == ::OleGetClipboard(&dataObj)) {
-    useOLE = PR_TRUE;
+  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
+  if (!genericTrans) {
+    return res;
   }
 
   // Get the transferable list of data flavors
@@ -410,21 +418,47 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
       void   * data;
       PRUint32 dataLen;
 
-      if (useOLE) {
-        if (NS_OK == GetNativeDataOffClipboard(dataObj, format, &data, &dataLen)) {
-          aTransferable->SetTransferData(df, data, dataLen);
+      if (nsnull != aDataObject) {
+        res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
+        if (NS_OK == res) {
+          genericTrans->SetTransferData(df, data, dataLen);
         }
-      } else {
-        if (NS_OK == GetNativeDataOffClipboard(mWindow, format, &data, &dataLen)) {
-          aTransferable->SetTransferData(df, data, dataLen);
+      } else if (nsnull != aWindow) {
+        res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
+        if (NS_OK == res) {
+          genericTrans->SetTransferData(df, data, dataLen);
         }
-      }
-      NS_RELEASE(df);
+      } 
+      NS_IF_RELEASE(df);
     }
     NS_RELEASE(supports);
   }
 
-  return NS_OK;
+  return res;
+
+}
+
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+{
+  // make sure we have a good transferable
+  if (nsnull == aTransferable) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult res;
+
+  IDataObject * dataObj;
+  if (S_OK == ::OleGetClipboard(&dataObj)) {
+    res = GetDataFromDataObject(dataObj, nsnull, aTransferable);
+  } else {
+    res = GetDataFromDataObject(nsnull, mWindow, aTransferable);
+  }
+  return res;
+
 }
 
 

@@ -21,6 +21,7 @@
 
 #include "nsIFormatConverter.h"
 #include "nsITransferable.h"
+#include "nsIGenericTransferable.h"
 #include "nsCOMPtr.h"
 
 
@@ -34,7 +35,7 @@ class nsVoidArray;
  * XP Transferable wrapper
  */
 
-class nsTransferable : public nsITransferable
+class nsTransferable : public nsITransferable, public nsIGenericTransferable
 {
 
 public:
@@ -44,19 +45,23 @@ public:
   //nsISupports
   NS_DECL_ISUPPORTS
   
+
   //nsITransferable
-  NS_IMETHOD FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList ) ;
   NS_IMETHOD FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList ) ;
   NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList);
   NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aFlavor);
 
    // Transferable still owns |aData|. Do not delete it.
   NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen);
-    // Transferable consumes |aData|. Do not delete it.
+  NS_IMETHOD_(PRBool) IsLargeDataSet();
+
+  //nsIGenericTransferable
+  NS_IMETHOD FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList ) ;
+
+  // Transferable consumes |aData|. Do not delete it.
   NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen);
 
   NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor);
-  NS_IMETHOD_(PRBool) IsLargeDataSet();
 
   NS_IMETHOD SetConverter(nsIFormatConverter * aConverter);
   NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter);

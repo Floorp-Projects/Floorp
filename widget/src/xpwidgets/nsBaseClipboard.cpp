@@ -123,12 +123,12 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
 NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable)
 {
   if (nsnull != aTransferable) {
-    GetNativeClipboardData(aTransferable);
+    return GetNativeClipboardData(aTransferable);
   } else {
     printf("  nsBaseClipboard::GetData(), aTransferable is NULL.\n");
   }
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 

@@ -20,34 +20,66 @@
 #define nsIDragService_h__
 
 #include "nsISupports.h"
-#include "nsPoint.h"
 
-class nsIDragSource;
-class nsIImage;
+class  nsITransferable;
+struct nsSize;
 
 // {8B5314BB-DB01-11d2-96CE-0060B0FB9956}
 #define NS_IDRAGSERVICE_IID      \
 { 0x8b5314bb, 0xdb01, 0x11d2, { 0x96, 0xce, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 
+#define DRAGDROP_ACTION_COPY 1
+#define DRAGDROP_ACTION_MOVE 2
+#define DRAGDROP_ACTION_LINK 4
 
 class nsIDragService : public nsISupports {
 
   public:
 
   /**
+    * Set the current state of the drag whether it can be dropped or not.
+    * usually the target "frame" sets this so the native system can render the correct feedback
+    *
+    * @param  aCanDrop indicates whether it can be dropped here
+    */
+   NS_IMETHOD SetCanDrop (PRBool aCanDrop) = 0; 
+
+   /**
+    * Retrieves whether the drag can be dropped at this location 
+    *
+    * @param  aCanDrop indicates whether it can be dropped here
+    */
+    NS_IMETHOD GetCanDrop (PRBool * aCanDrop) = 0; 
+
+  /**
+    * Sets the current width and height if the drag target area. 
+    * It will contain the current size of the Frame that the drag is currently in
+    * 
+    * @param  aDragTargetSize contains width/height of the current target
+    */
+   NS_IMETHOD SetTargetSize (nsSize aDragTargetSize) = 0; 
+
+   /**
+    * Gets the current width and height if the drag target area. 
+    * It will contain the current size of the Frame that the drag is currently in
+    *
+    * @param  aCanDrop indicates whether it can be dropped here
+    */
+    NS_IMETHOD GetTargetSize (nsSize * aDragTargetSize) = 0; 
+
+  /**
     * Starts a modal drag session.  
     *
-    * @param  aDragSrc the object being dragged
-    * @param  aStartLocation start location of drag
-    * @param  aImageOffset the offset the image should be from the cursor 
-    * @param  aImage image to be dragged
-    * @param  aDoFlyback indicates image flys back
+    * @param  aTransferable the transferable to be dragged
     */
-    NS_IMETHOD StartDragSession (nsIDragSource * aDragSrc, 
-                                 nsPoint       * aStartLocation, 
-                                 nsPoint       * aImageOffset, 
-                                 nsIImage      * aImage, 
-                                 PRBool          aDoFlyback) = 0;
+    NS_IMETHOD StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType) = 0;
+
+  /**
+    * Get data from a Drag->Drop   
+    *
+    * @param  aTransferable the transferable for the data to be put into
+    */
+    NS_IMETHOD GetData (nsITransferable * aTransferable) = 0;
 };
 
 #endif

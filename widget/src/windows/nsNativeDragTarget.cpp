@@ -22,46 +22,56 @@
 #include "nsIDragService.h"
 #include "nsWidgetsCID.h"
 #include "nsNativeDragTarget.h"
+#include "nsDragService.h"
 #include "nsIServiceManager.h"
 
 #include "nsIWidget.h"
 #include "nsWindow.h"
 
+#define DRAG_DEBUG 0
+
 /* Define Class IDs */
-static NS_DEFINE_IID(kDragServiceCID,  NS_DRAGSERVICE_CID);
+static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
 
+// This is cached for Leave notification
+static POINTL gDragLastPoint;
 
 /*
  * class nsNativeDragTarget
  */
 
-// construction, destruction
-
+//-----------------------------------------------------
+// construction
+//-----------------------------------------------------
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
 {
   m_cRef = 0;
 
   mWindow = aWnd;
-  NS_ADDREF(mWindow);
+  mHWnd   = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
+
   /*
    * Get the DragService
    */
-  nsresult rv = nsServiceManager::GetService(kDragServiceCID,
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              kIDragServiceIID,
                                              (nsISupports**)&mDragService);
 }
 
 
+//-----------------------------------------------------
+// destruction
+//-----------------------------------------------------
 nsNativeDragTarget::~nsNativeDragTarget()
 {
-  NS_IF_RELEASE(mWindow);
 }
 
+//-----------------------------------------------------
 // IUnknown methods - see iunknown.h for documentation
-
+//-----------------------------------------------------
 STDMETHODIMP nsNativeDragTarget::QueryInterface(REFIID riid, void** ppv)
 {
     *ppv=NULL;
@@ -78,11 +88,13 @@ STDMETHODIMP nsNativeDragTarget::QueryInterface(REFIID riid, void** ppv)
 }
 
 
+//-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsNativeDragTarget::AddRef(void)
 {
     return ++m_cRef;
 }
 
+//-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsNativeDragTarget::Release(void)
 {
 	 if (0 != --m_cRef)
@@ -92,22 +104,54 @@ STDMETHODIMP_(ULONG) nsNativeDragTarget::Release(void)
     return 0;
 }
 
-void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType)
+//-----------------------------------------------------
+void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType, 
+                                               POINTL   aPT)
 {
   nsEventStatus status;
   nsGUIEvent event;
   ((nsWindow *)mWindow)->InitEvent(event, aEventType);
+
+  //DWORD pos = ::GetMessagePos();
+  POINT cpos;
+
+  cpos.x = aPT.x;
+  cpos.y = aPT.y;
+
+  //cpos.x = LOWORD(pos);
+  //cpos.y = HIWORD(pos);
+
+  if (mHWnd != NULL) {
+    ::ScreenToClient(mHWnd, &cpos);
+    event.point.x = cpos.x;
+    event.point.y = cpos.y;
+  } else {
+    event.point.x = 0;
+    event.point.y = 0;
+  }
+
+  //event.point.x = aPT.x;
+  //event.point.y = aPT.y;
   mWindow->DispatchEvent(&event, status);
 }
 
+//-----------------------------------------------------
 // IDropTarget methods
-
-STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
-												                   POINTL pt, DWORD* pdwEffect)
+//-----------------------------------------------------
+STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, 
+                                           DWORD        grfKeyState,
+												                   POINTL       pt, 
+                                           DWORD*       pdwEffect)
 {
-  printf("DragEnter\n");
+  if (DRAG_DEBUG) printf("DragEnter\n");
 	if (mDragService) {
-    DispatchDragDropEvent(NS_DRAGDROP_ENTER);
+    DispatchDragDropEvent(NS_DRAGDROP_ENTER, pt);
+    PRBool canDrop;
+    mDragService->GetCanDrop(&canDrop);
+    if (!canDrop) {
+      *pdwEffect = DROPEFFECT_NONE;
+    }
+    mDragService->SetCanDrop(PR_FALSE);
 		return NOERROR;
 	} else {
 		return ResultFromScode(E_FAIL);
@@ -115,22 +159,33 @@ STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfK
 }
 
 
-STDMETHODIMP nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL pt, LPDWORD pdwEffect)
+//-----------------------------------------------------
+STDMETHODIMP nsNativeDragTarget::DragOver(DWORD   grfKeyState, 
+                                          POINTL  pt, 
+                                          LPDWORD pdwEffect)
 {
-  printf("DragOver\n");
+  if (DRAG_DEBUG) printf("DragOver\n");
 	if (mDragService) {
-    DispatchDragDropEvent(NS_DRAGDROP_OVER);
+    DispatchDragDropEvent(NS_DRAGDROP_OVER, pt);
+    gDragLastPoint = pt;
+    PRBool canDrop;
+    mDragService->GetCanDrop(&canDrop);
+    printf("Can Drop %d\n", canDrop);
+    if (!canDrop) {
+      *pdwEffect = DROPEFFECT_NONE;
+    }
+    mDragService->SetCanDrop(PR_FALSE);
 		return NOERROR;
 	} else {
 		return ResultFromScode(E_FAIL);
 	}
 }
 
-
+//-----------------------------------------------------
 STDMETHODIMP nsNativeDragTarget::DragLeave() {
-  printf("DragLeave\n");
+  if (DRAG_DEBUG) printf("DragLeave\n");
 	if (mDragService) {
-    DispatchDragDropEvent(NS_DRAGDROP_EXIT);
+    DispatchDragDropEvent(NS_DRAGDROP_EXIT, gDragLastPoint);
 		return NOERROR;
 	} else {
 		return ResultFromScode(E_FAIL);
@@ -138,18 +193,30 @@ STDMETHODIMP nsNativeDragTarget::DragLeave() {
 }
 
 
-STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
-										                  POINTL pt, LPDWORD pdwEffect)
+//-----------------------------------------------------
+STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pIDataSource, 
+                                      DWORD        grfKeyState,
+										                  POINTL       aPT, 
+                                      LPDWORD      pdwEffect)
 {
-  printf("Drop\n");
+  if (DRAG_DEBUG) printf("Drop\n");
+
 	if (mDragService) {
-
     // Clear the native clipboard
-    ::OleFlushClipboard();
+    //::OleFlushClipboard();
 
-    ::OleSetClipboard(pIDataSource);
+    //::OleSetClipboard(pIDataSource);
+    nsDragService * dragService = (nsDragService *)mDragService;
+    dragService->SetIDataObject(pIDataSource);
 
-    DispatchDragDropEvent(NS_DRAGDROP_DROP);
+
+    DispatchDragDropEvent(NS_DRAGDROP_DROP, aPT);
+    PRBool canDrop;
+    mDragService->GetCanDrop(&canDrop);
+    if (!canDrop) {
+      *pdwEffect = DROPEFFECT_NONE;
+    }
+    mDragService->SetCanDrop(PR_FALSE);
     return NOERROR;
 	} else {
 		return ResultFromScode(E_FAIL);

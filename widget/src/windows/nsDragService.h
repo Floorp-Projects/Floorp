@@ -19,23 +19,17 @@
 #ifndef nsDragService_h__
 #define nsDragService_h__
 
-#include "nsIDragService.h"
-#include "nsPoint.h"
-#include "nsIImage.h"
+#include "nsBaseDragService.h"
 
-#include <OLE2.h>
-#include "OLEIDL.H"
-
-class nsIDragSource;
-class nsDataObj;
-
-#define MAX_FORMATS 32
+struct IDropSource;
+struct IDataObject;
+class  nsNativeDragTarget;
 
 /**
  * Native Win32 DragService wrapper
  */
 
-class nsDragService : public nsIDragService
+class nsDragService : public nsBaseDragService
 {
 
 public:
@@ -43,22 +37,20 @@ public:
   virtual ~nsDragService();
 
   //nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+  
   
   //nsIDragService
-  NS_IMETHOD StartDragSession (nsIDragSource * aDragSrc, 
-                               nsPoint       * aStartLocation, 
-                               nsPoint       * aImageOffset, 
-                               nsIImage      * aImage, 
-                               PRBool          aDoFlyback);
+  NS_IMETHOD StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType);
 
-
+  // Native Impl.
+  NS_IMETHOD SetIDataObject (IDataObject * aDataObj);
+    NS_IMETHOD GetData (nsITransferable * aTransferable);
 
 protected:
-
-  nsIDragSource * mDragSource;
-  //nsDataObj * mDataObj;
-
+  IDropSource        * mNativeDragSrc;
+  nsNativeDragTarget * mNativeDragTarget;
+  IDataObject *        mDataObject;
 };
 
 #endif // nsDragService_h__

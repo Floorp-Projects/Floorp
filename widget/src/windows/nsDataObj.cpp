@@ -203,6 +203,7 @@ BOOL nsDataObj::FormatsMatch(const FORMATETC& source, const FORMATETC& target) c
 
 STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
+  printf("nsDataObj::GetData\n");
   if (nsnull == mTransferable) {
 	  return ResultFromScode(DATA_E_FORMATETC);
   }
@@ -244,6 +245,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 
 STDMETHODIMP nsDataObj::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
+  printf("nsDataObj::GetDataHere\n");
 	//if (m_dragDrop) {
 	//	return m_dragDrop->GetDataHere(pFE, pSTM);
 	//} else {
@@ -254,16 +256,26 @@ STDMETHODIMP nsDataObj::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 
 STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
 {
-	//if (m_dragDrop) {
-	//	return m_dragDrop->QueryGetData(pFE);
-	//} else {
-		return ResultFromScode(E_FAIL);
-	//}
+  printf("nsDataObj::QueryGetData  ");
+  printf("format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
+
+  PRUint32 dfInx = 0;
+
+  ULONG count;
+  FORMATETC fe;
+  m_enumFE->Reset();
+  while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
+    if (fe.cfFormat == pFE->cfFormat) {
+      return S_OK;
+    }
+  }
+	return ResultFromScode(E_FAIL);
 }
 
 STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 	 (LPFORMATETC pFEIn, LPFORMATETC pFEOut)
 {
+  printf("nsDataObj::GetCanonicalFormatEtc\n");
 	//if (m_dragDrop) {
 	//	return m_dragDrop->GetCanonicalFormatEtc(pFEIn, pFEOut);
 	//} else {
@@ -274,6 +286,7 @@ STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
 {
+  printf("nsDataObj::SetData\n");
   return ResultFromScode(E_FAIL);
 	//return m_dragDrop->SetData(pFE, pSTM, fRelease);
 }
@@ -281,6 +294,7 @@ STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease
 
 STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
 {
+  printf("nsDataObj::EnumFormatEtc\n");
 
   switch (dwDir) {
     case DATADIR_GET: {
@@ -305,17 +319,20 @@ STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
 STDMETHODIMP nsDataObj::DAdvise(LPFORMATETC pFE, DWORD dwFlags,
 										  LPADVISESINK pIAdviseSink, DWORD* pdwConn)
 {
+  printf("nsDataObj::DAdvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
 
 STDMETHODIMP nsDataObj::DUnadvise(DWORD dwConn)
 {
+  printf("nsDataObj::DUnadvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
 STDMETHODIMP nsDataObj::EnumDAdvise(LPENUMSTATDATA *ppEnum)
 {
+  printf("nsDataObj::EnumDAdvise\n");
 	return ResultFromScode(E_FAIL);
 }
 

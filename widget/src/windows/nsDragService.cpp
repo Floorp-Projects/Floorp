@@ -17,26 +17,25 @@
  */
 
 #include "nsDragService.h"
-#include "nsIDragSource.h"
 #include "nsITransferable.h"
-#include "nsDragSource.h"
 #include "nsDataObj.h"
-#include "nsTransferable.h"
 
-#include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
-#include "nsIClipboard.h"
+#include "nsNativeDragTarget.h"
+#include "nsNativeDragSource.h"
 #include "nsClipboard.h"
 
-#include "OLEIDL.h"
-#include "OLE2.h"
+#include <OLE2.h>
+#include "OLEIDL.H"
+
 
 static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
-static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
-static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
+//static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
 
-NS_IMPL_ADDREF(nsDragService)
-NS_IMPL_RELEASE(nsDragService)
+//static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
+
+NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
+NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 
 //-------------------------------------------------------------------------
 //
@@ -46,8 +45,9 @@ NS_IMPL_RELEASE(nsDragService)
 nsDragService::nsDragService()
 {
   NS_INIT_REFCNT();
-  mDragSource  = nsnull;
-
+  mNativeDragTarget = nsnull;
+  mNativeDragSrc    = nsnull;
+  mDataObject       = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -57,7 +57,9 @@ nsDragService::nsDragService()
 //-------------------------------------------------------------------------
 nsDragService::~nsDragService()
 {
-  NS_IF_RELEASE(mDragSource);
+  NS_IF_RELEASE(mNativeDragSrc);
+  NS_IF_RELEASE(mNativeDragTarget);
+  NS_IF_RELEASE(mDataObject);
 }
 
 /**
@@ -84,34 +86,60 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return rv;
 }
 
-
-NS_IMETHODIMP nsDragService::StartDragSession (nsIDragSource * aDragSrc, 
-                                               nsPoint       * aStartLocation, 
-                                               nsPoint       * aImageOffset, 
-                                               nsIImage      * aImage, 
-                                               PRBool          aDoFlyback)
+//---------------------------------------------------------
+NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType)
 
 {
-  NS_IF_RELEASE(mDragSource);
-  mDragSource = aDragSrc;
-  NS_ADDREF(mDragSource);
 
-  nsIClipboard* clipboard;
-  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                             kIClipboardIID,
-                                             (nsISupports **)&clipboard);
-  if (NS_OK == rv) {
-    nsITransferable * trans;
-    mDragSource->GetTransferable(&trans);
-    IDataObject * dataObj;
-    ((nsClipboard *)clipboard)->CreateNativeDataObject(trans, &dataObj);
-        
-    DWORD dropRes;
-    HRESULT res = 0;
-    res = ::DoDragDrop(dataObj,
-                       (IDropSource *)((nsDragSource *)mDragSource)->GetNativeDragSrc(), 
-                       DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_SCROLL, &dropRes);
+  // To do the drag we need to create an object that 
+  // mplements the IDataObject interface (for OLE)
+  //
+  // We start by getting the clipboard object,
+  // casting it our known class and using utility
+
+  NS_IF_RELEASE(mNativeDragSrc);
+  mNativeDragSrc = (IDropSource *)new nsNativeDragSource();
+  if (nsnull != mNativeDragSrc) {
+    mNativeDragSrc->AddRef();
   }
-  return NS_OK;
+
+  mTransferable = dont_QueryInterface(aTransferable);
+
+  IDataObject * dataObj;
+  nsClipboard::CreateNativeDataObject(mTransferable, &dataObj);
+
+  nsresult result = NS_ERROR_FAILURE;
+  DWORD dropRes;
+  DWORD effects = DROPEFFECT_SCROLL;
+  if (aActionType & DRAGDROP_ACTION_COPY) {
+    effects |= DROPEFFECT_COPY;
+  }
+  if (aActionType & DRAGDROP_ACTION_MOVE) {
+    effects |= DROPEFFECT_MOVE;
+  }
+  if (aActionType & DRAGDROP_ACTION_LINK) {
+    effects |= DROPEFFECT_LINK;
+  }
+
+  HRESULT res = ::DoDragDrop(dataObj, mNativeDragSrc, effects, &dropRes);
+
+  return (DRAGDROP_S_DROP == res?NS_OK:NS_ERROR_FAILURE);
 }
 
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable)
+{
+  if (nsnull != mDataObject) {
+    return nsClipboard::GetDataFromDataObject(mDataObject, nsnull, aTransferable);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+//---------------------------------------------------------
+NS_IMETHODIMP nsDragService::SetIDataObject (IDataObject * aDataObj)
+{
+  NS_IF_RELEASE(mDataObject);
+  mDataObject = aDataObj;
+  NS_ADDREF(mDataObject);
+  return NS_OK;
+}

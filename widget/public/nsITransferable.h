@@ -37,15 +37,6 @@ class nsITransferable : public nsISupports {
     static const nsIID& GetIID() { static nsIID iid = NS_ITRANSFERABLE_IID; return iid; }
 
   /**
-    * Computes a list of flavors that the transferable can accept into it, either through
-    * intrinsic knowledge or input data converters.
-    *
-    * @param  outFlavorList fills list with supported flavors. This is a copy of
-    *          the internal list, so it may be edited w/out affecting the transferable.
-    */
-  NS_IMETHOD FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList ) = 0;
-
-  /**
     * Computes a list of flavors that the transferable can export, either through
     * intrinsic knowledge or output data converters.
     *
@@ -82,41 +73,10 @@ class nsITransferable : public nsISupports {
     NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen) = 0;
 
   /**
-    * Set Data into the transferable as a specified DataFlavor. The transferable now
-    * owns the data, so the caller must not delete it.
-    *
-    * @param  aFlavor the flavor of data that is being set
-    * @param  aData the data 
-    * @param  aDataLen the length of the data (it may or may not be meaningful)
-    */
-    NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen) = 0;
-
-  /**
-    * Add the data flavor, indicating that this transferable 
-    * can receive this type of flavor
-    *
-    * @param  aDataFlavor a new data flavor to handle
-    * @param  aHumanPresentableName human readable string for mime
-    */
-    NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor) = 0;
-
-  /**
     * Returns PR_TRUE if the data is large.
     *
     */
     NS_IMETHOD_(PRBool) IsLargeDataSet() = 0;
-
-  /**
-    * Sets the converter for this transferable
-    *
-    */
-    NS_IMETHOD SetConverter(nsIFormatConverter * aConverter) = 0;
-
-  /**
-    * Gets the converter for this transferable
-    *
-    */
-    NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter) = 0;
 
 };
 
