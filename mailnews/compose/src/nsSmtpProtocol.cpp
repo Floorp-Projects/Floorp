@@ -69,6 +69,7 @@
 #include "nsIPipe.h"
 #include "nsMsgSimulateError.h"
 #include "nsNetUtil.h"
+#include "nsIPrefService.h"
 
 #include "nsISSLSocketControl.h"
 /* sigh, cmtcmn.h, included from nsIPSMSocketInfo.h, includes windows.h, which includes winuser.h,
@@ -1507,18 +1508,18 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 nsresult
 nsSmtpProtocol::GetPassword(char **aPassword)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
     NS_ENSURE_ARG_POINTER(aPassword);
 
+    nsresult rv;
     nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(m_runningURL, &rv);
-    if (NS_FAILED(rv)) return rv;
-
+    NS_ENSURE_SUCCESS(rv,rv); 
+   
     nsCOMPtr<nsISmtpServer> smtpServer;
     rv = smtpUrl->GetSmtpServer(getter_AddRefs(smtpServer));
-    if (NS_FAILED(rv)) return rv;
-
+    NS_ENSURE_SUCCESS(rv,rv);
+    
     rv = smtpServer->GetPassword(aPassword);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv); 
 
     if (PL_strlen(*aPassword) > 0)
         return rv;
@@ -1527,73 +1528,102 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     nsCRT::free(*aPassword);
     *aPassword = 0;
 
-    nsCOMPtr<nsIAuthPrompt> netPrompt;
-    rv = smtpUrl->GetAuthPrompt(getter_AddRefs(netPrompt));
-    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString redirectorType; 
+    rv = smtpServer->GetRedirectorType(getter_Copies(redirectorType));
+    NS_ENSURE_SUCCESS(rv,rv);
+      
+    nsCAutoString prefName("smtp.");
+    prefName.Append(redirectorType);
+    prefName.Append(".hide_hostname_for_password");
+    
+    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsCOMPtr<nsIPrefBranch> prefBranch; 
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
+    NS_ENSURE_SUCCESS(rv,rv);
 
     nsXPIDLCString username;
-    nsXPIDLCString hostname;
-    PRUnichar *passwordPromptString = nsnull;
-
-    nsXPIDLString passwordTemplate;
-    mSmtpBundle->GetStringByID(NS_SMTP_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
-
-    if (!passwordTemplate) return NS_ERROR_NULL_POINTER;
-    
-    nsXPIDLString passwordTitle;
-    mSmtpBundle->GetStringByID(NS_SMTP_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
-
-    if (!passwordTitle) 
-    {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
-
     rv = smtpServer->GetUsername(getter_Copies(username));
-    if (NS_FAILED(rv)) goto done;
-    rv = smtpServer->GetHostname(getter_Copies(hostname));
-    if (NS_FAILED(rv)) goto done;
-
-    passwordPromptString = nsTextFormatter::smprintf(passwordTemplate,
-                                                     (const char *) username,
-                                                     (const char *) hostname);
-    if (!passwordPromptString)
-    {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
     
-    rv = smtpServer->GetPasswordWithUI(passwordPromptString, passwordTitle,
-                                       netPrompt, aPassword);
+    nsCAutoString promptValue(username);
 
-done:
-    if (passwordPromptString)
-        nsCRT::free(passwordPromptString);
+    PRBool hideHostnameForPassword = PR_FALSE;
+    rv = prefBranch->GetBoolPref(prefName.get(), &hideHostnameForPassword);
+    if (NS_SUCCEEDED(rv) && hideHostnameForPassword) {
+      // for certain redirector types, we don't want to show the
+      // hostname to the user when prompting for password
+    }
+    else {
+      nsXPIDLCString hostname;      
+      rv = smtpServer->GetHostname(getter_Copies(hostname));
+      NS_ENSURE_SUCCESS(rv, rv);
+      promptValue.Append("@");
+      promptValue.Append(hostname);
+    }
 
+    rv = PromptForPassword(smtpServer, smtpUrl, NS_ConvertASCIItoUCS2(promptValue).get(), aPassword);
+    NS_ENSURE_SUCCESS(rv,rv);
     return rv;
+}
+
+nsresult nsSmtpProtocol::PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar *aPromptValue, char **aPassword)
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr<nsIStringBundle> composeStringBundle;
+  rv = stringService->CreateBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties", getter_AddRefs(composeStringBundle));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  const PRUnichar *formatStrings[] =
+  {
+    aPromptValue,
+  };
+ 
+  nsXPIDLString passwordPromptString;
+  rv = composeStringBundle->FormatStringFromID(NS_SMTP_PASSWORD_PROMPT,
+    formatStrings, 1,
+    getter_Copies(passwordPromptString));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIAuthPrompt> netPrompt;
+  rv = aSmtpUrl->GetAuthPrompt(getter_AddRefs(netPrompt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsXPIDLString passwordTitle;
+  rv = composeStringBundle->GetStringFromID(NS_SMTP_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = aSmtpServer->GetPasswordWithUI(passwordPromptString.get(), passwordTitle,
+    netPrompt, aPassword);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 
 nsresult
 nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
     NS_ENSURE_ARG_POINTER(aUsername);
     NS_ENSURE_ARG_POINTER(aPassword);
 
+    nsresult rv;
     nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(m_runningURL, &rv);
-    if (NS_FAILED(rv)) return rv;
-
+    NS_ENSURE_SUCCESS(rv,rv);
+    
     nsCOMPtr<nsISmtpServer> smtpServer;
     rv = smtpUrl->GetSmtpServer(getter_AddRefs(smtpServer));
-    if (NS_FAILED(rv)) return rv;
-
+    NS_ENSURE_SUCCESS(rv,rv);
+    
     rv = smtpServer->GetPassword(aPassword);
-    if (NS_FAILED(rv)) return rv;
-
+    NS_ENSURE_SUCCESS(rv,rv);
+    
     if (PL_strlen(*aPassword) > 0) {
         rv = smtpServer->GetUsername(aUsername);
-        if (NS_FAILED(rv)) return rv;
-
+        NS_ENSURE_SUCCESS(rv,rv);
+    
         if (PL_strlen(*aUsername) > 0)
             return rv;
         
@@ -1606,42 +1636,14 @@ nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
     nsCRT::free(*aPassword);
     *aPassword = 0;
 
-    nsCOMPtr<nsIAuthPrompt> netPrompt;
-    rv = smtpUrl->GetAuthPrompt(getter_AddRefs(netPrompt));
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString hostname;
-    PRUnichar *passwordPromptString = nsnull;
-
-    nsXPIDLString passwordTemplate;
-    mSmtpBundle->GetStringByID(NS_SMTP_USERNAME_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
-
-    if (!passwordTemplate) return NS_ERROR_NULL_POINTER;
-    
-    nsXPIDLString passwordTitle;
-    mSmtpBundle->GetStringByID(NS_SMTP_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
-
-    if (!passwordTitle) 
-        return NS_ERROR_NULL_POINTER;
-
+    nsXPIDLCString hostname;      
     rv = smtpServer->GetHostname(getter_Copies(hostname));
-    if (NS_FAILED(rv)) 
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    passwordPromptString = nsTextFormatter::smprintf(passwordTemplate,
-                                                     (const char *) hostname);
-    if (!passwordPromptString)
-        return NS_ERROR_NULL_POINTER;
-    
-    rv = smtpServer->GetUsernamePasswordWithUI(passwordPromptString, passwordTitle,
-                                       netPrompt, aUsername, aPassword);
-
-    if (passwordPromptString)
-        nsCRT::free(passwordPromptString);
-
+    rv = PromptForPassword(smtpServer, smtpUrl, NS_ConvertASCIItoUCS2(hostname).get(), aPassword);
+    NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }
-
 
 nsresult nsSmtpProtocol::RequestOverrideInfo(nsISmtpServer * aSmtpServer)
 {
