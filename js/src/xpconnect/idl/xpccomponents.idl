@@ -124,6 +124,21 @@ interface nsIXPCComponents : nsISupports
 
     boolean isSuccessCode(in nsresult result);
 
+    /* lookupMethod is designed to be called from JavaScript only.
+     *
+     * It returns a method looking only at the idl interfaces and
+     * ignores any overrides or resolvers that might be in place for
+     * a given scriptable wrapped native.
+     * It must be called with two params: an object and a method name.
+     * It returns a function object or throws an exception on error.
+     * This method exists only to solve mozilla browser problems
+     * when chrome attempts to lookup and call methods in content
+     * and *must* not get confused by method properties that have been
+     * replaced in the content JS code. This method is not recommended for
+     * any other use.
+     */
+    void lookupMethod();
+
     /* 'lastResult' is accessable via JavaScript only */
     /* 'returnCode' is accessable via JavaScript only */
 };

@@ -1766,6 +1766,102 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
                                       nsnull);
 }
 
+/* void lookupMethod (); */
+NS_IMETHODIMP nsXPCComponents::LookupMethod()
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+    if(NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+
+    // get the xpconnect native call context
+    nsCOMPtr<nsIXPCNativeCallContext> cc;
+    xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    if(!cc)
+        return NS_ERROR_FAILURE;
+
+    // verify that we are being called from JS (i.e. the current call is
+    // to this object - though we don't verify that it is to this exact method)
+    nsCOMPtr<nsISupports> callee;
+    cc->GetCallee(getter_AddRefs(callee));
+    if(!callee || callee.get() != 
+                  NS_STATIC_CAST(const nsISupports*,
+                                 NS_STATIC_CAST(const nsIXPCComponents*,this)))
+        return NS_ERROR_FAILURE;
+
+    // Get JSContext of current call
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    if(NS_FAILED(rv) || !cx)
+        return NS_ERROR_FAILURE;
+
+    // get place for return value
+    jsval *retval = nsnull;
+    rv = cc->GetRetValPtr(&retval);
+    if(NS_FAILED(rv) || !retval)
+        return NS_ERROR_FAILURE;
+
+    // get argc and argv and verify arg count
+    PRUint32 argc;
+    rv = cc->GetArgc(&argc);
+    if(NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+
+    if(argc < 2)
+        return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+
+    jsval* argv;
+    rv = cc->GetArgvPtr(&argv);
+    if(NS_FAILED(rv) || !argv)
+        return NS_ERROR_FAILURE;
+
+    // first param must be a JSObject
+    if(JSVAL_IS_PRIMITIVE(argv[0]))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
+
+    // second param must be a string
+    if(!JSVAL_IS_STRING(argv[1]))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    // this will do verification and the method lookup for us
+    XPCCallContext inner_cc(JS_CALLER, cx, obj, nsnull, argv[1]);
+
+    // was our jsobject really a wrapped native at all?
+    XPCWrappedNative* wrapper = inner_cc.GetWrapper();
+    if(!wrapper || !wrapper->IsValid())
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    // did we find a method/attribute by that name?
+    XPCNativeMember* member = inner_cc.GetMember();
+    if(!member || member->IsConstant())
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+    
+    // it would a be a big surprise if there is a member without an interface :)
+    XPCNativeInterface* iface = inner_cc.GetInterface();
+    if(!iface)
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    // get (and perhaps lazily create) the member's cloneable function
+    jsval funval;
+    if(!member->GetValue(inner_cc, iface, &funval))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    // clone a function we can use for this object 
+    JSObject* funobj = JS_CloneFunctionObject(cx, JSVAL_TO_OBJECT(funval), 
+                                              wrapper->GetFlatJSObject());
+    if(!funobj)
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    // return the function and let xpconnect know we did so
+    *retval = OBJECT_TO_JSVAL(funobj);
+    cc->SetReturnValueWasSet(PR_TRUE);
+
+    return NS_OK;
+}
+
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
