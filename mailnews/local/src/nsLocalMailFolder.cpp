@@ -1294,7 +1294,7 @@ nsresult nsMsgLocalMailFolder::MoveMessageToTrash(nsIMessage *message, nsIMsgFol
 
 	if (NS_SUCCEEDED(rv) && messageService)
 	{
-		nsIURL * url = nsnull;
+		nsIURI * url = nsnull;
 		nsCOMPtr<nsIStreamListener> streamListener(do_QueryInterface(copyStreamListener));
 		if(!streamListener)
 			return NS_ERROR_NO_INTERFACE;

@@ -387,12 +387,12 @@ void KillPopData(char* data)
 
 // nsPop3Protocol class implementation
 
-nsPop3Protocol::nsPop3Protocol(nsIURL* aURL) : nsMsgLineBuffer(NULL, FALSE), m_username(eOneByte), m_password(eOneByte), m_commandResponse(eOneByte)
+nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, FALSE), m_username(eOneByte), m_password(eOneByte), m_commandResponse(eOneByte)
 {
 	Initialize(aURL);
 }
 
-void nsPop3Protocol::Initialize(nsIURL * aURL)
+void nsPop3Protocol::Initialize(nsIURI * aURL)
 {
 	nsresult rv = NS_OK;
     m_pop3ConData = nsnull;
@@ -464,7 +464,7 @@ void nsPop3Protocol::SetPassword(const char* passwd)
 }
 
 
-nsresult nsPop3Protocol::LoadUrl(nsIURL* aURL, nsISupports * /* aConsumer */)
+nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 {
 	const char* urlSpec = NULL;
 	const char* host = NULL;
@@ -653,7 +653,7 @@ nsPop3Protocol::Error(int err_code)
 	return(err_code);
 }
 
-PRInt32 nsPop3Protocol::SendData(nsIURL * aURL, const char * dataBuffer)
+PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer)
 {
 	PRInt32 result = nsMsgProtocol::SendData(aURL, dataBuffer);
 
@@ -679,8 +679,8 @@ PRInt32 nsPop3Protocol::SendAuth()
 
 	nsString command("AUTH"CRLF, eOneByte);
 
-    m_pop3ConData->next_state_after_response = POP3_AUTH_RESPONSE;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+  m_pop3ConData->next_state_after_response = POP3_AUTH_RESPONSE;
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 	return SendData(url, command.GetBuffer());
 }
 
@@ -743,7 +743,7 @@ PRInt32 nsPop3Protocol::AuthLogin()
 
 	nsString2 command("AUTH LOGIN" CRLF, eOneByte);
     m_pop3ConData->next_state_after_response = POP3_AUTH_LOGIN_RESPONSE;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
     return SendData(url, command.GetBuffer());
 }
 
@@ -796,7 +796,7 @@ PRInt32 nsPop3Protocol::SendUsername()
 	cmd = "USER ";
 	cmd += m_username;
 	cmd += CRLF;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 	return SendData(url, cmd.GetBuffer());
 }
 
@@ -827,7 +827,7 @@ PRInt32 nsPop3Protocol::SendPassword()
 	cmd = "PASS ";
 	cmd += m_password;
 	cmd += CRLF;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
     return SendData(url, cmd.GetBuffer());
 }
 
@@ -913,7 +913,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
 		cmd = "GURL" CRLF;
         m_pop3ConData->next_state_after_response = POP3_GURL_RESPONSE;
     }
-    nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
     return SendData(url, cmd.GetBuffer());
 }
 
@@ -1044,7 +1044,7 @@ PRInt32 nsPop3Protocol::SendList()
     if (!m_pop3ConData->msg_info)
         return(MK_OUT_OF_MEMORY);
     m_pop3ConData->next_state_after_response = POP3_GET_LIST;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
     return SendData(url, "LIST"CRLF);
 }
 
@@ -1115,7 +1115,7 @@ PRInt32 nsPop3Protocol::SendFakeUidlTop()
 	{
 		m_pop3ConData->next_state_after_response = POP3_GET_FAKE_UIDL_TOP;
 		m_pop3ConData->pause_for_read = PR_TRUE;
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 		status = SendData(url, cmd);
 	}
 
@@ -1304,7 +1304,7 @@ PRInt32 nsPop3Protocol::SendXtndXlstMsgid()
         return StartUseTopForFakeUidl();
     m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
     m_pop3ConData->pause_for_read = PR_TRUE;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
     return SendData(url, "XTND XLST Message-Id" CRLF);
 }
 
@@ -1397,7 +1397,7 @@ PRInt32 nsPop3Protocol::SendUidlList()
 
     m_pop3ConData->next_state_after_response = POP3_GET_UIDL_LIST;
     m_pop3ConData->pause_for_read = PR_TRUE;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
     return SendData(url,"UIDL" CRLF);
 }
 
@@ -1740,7 +1740,7 @@ nsPop3Protocol::SendTop()
 		* the next
 		*/
 		m_pop3ConData->bytes_received_in_message = 0;
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 		status = SendData(url,cmd);
 	}
 	PR_FREEIF(cmd);
@@ -1756,7 +1756,7 @@ PRInt32 nsPop3Protocol::SendXsender()
 	if (cmd)
 	{  
 		m_pop3ConData->next_state_after_response = POP3_XSENDER_RESPONSE;
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 		status = SendData(url, cmd);
 	}
 	PR_FREEIF(cmd);
@@ -1832,7 +1832,7 @@ nsPop3Protocol::SendRetr()
         NET_Progress(ce->window_id, buf);
 #endif 
 		}
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 		status = SendData(url, cmd);
 	} // if cmd
 	PR_FREEIF(cmd);
@@ -1931,7 +1931,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
          */
         m_pop3ConData->real_new_counter++;		
         /* (rb) count only real messages being downloaded */
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
         m_nsIPop3Sink->IncorporateBegin(uidl, url, flags,
                                         &m_pop3ConData->msg_closure);  
 
@@ -2160,7 +2160,7 @@ PRInt32 nsPop3Protocol::SendDele()
 	if (cmd)
 	{
    		m_pop3ConData->next_state_after_response = POP3_DELE_RESPONSE;
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 		status = SendData(url, cmd);
 	}
 	PR_FREEIF(cmd);
@@ -2270,7 +2270,7 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
  *
  * returns zero or more if the transfer needs to be continued.
  */
-nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength)
+nsresult nsPop3Protocol::ProcessProtocolState (nsIURI* aURL, nsIInputStream* aInputStream, PRUint32 aLength)
 {
     PRInt32 status = 0;
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_nsIPop3URL);

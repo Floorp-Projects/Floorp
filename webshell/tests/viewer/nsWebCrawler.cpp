@@ -32,7 +32,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -205,7 +205,7 @@ nsWebCrawler::~nsWebCrawler()
 NS_IMPL_ISUPPORTS(nsWebCrawler, kIDocumentLoaderObserverIID)
 
 NS_IMETHODIMP
-nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                                   const char* aCommand)
 {
   return NS_OK;
@@ -213,7 +213,7 @@ nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
 
 NS_IMETHODIMP
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                nsIURL* aURL,
+                                nsIURI* aURL,
                                 PRInt32 aStatus,
                                 nsIDocumentLoaderObserver * aObserver)
 {
@@ -302,7 +302,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                              const char* aContentType, 
                              nsIContentViewer* aViewer)
 {
@@ -311,21 +311,21 @@ nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
 
 NS_IMETHODIMP
 nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                nsIURL* aURL, PRUint32 aProgress, 
+                                nsIURI* aURL, PRUint32 aProgress, 
                                 PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                               nsString& aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                            PRInt32 aStatus)
 {
   return NS_OK;
@@ -333,7 +333,7 @@ nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
 
 NS_IMETHODIMP
 nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
-                                       nsIURL *aURL,
+                                       nsIURI *aURL,
                                        const char *aContentType,
                                        const char *aCommand)
 {
@@ -341,7 +341,7 @@ nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
 }
 
 FILE*
-nsWebCrawler::GetOutputFile(nsIURL *aURL, nsString& aOutputName)
+nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
 {
   static const char kDefaultOutputFileName[] = "test.txt";   // the default
   FILE *result = nsnull;
@@ -519,7 +519,7 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
   }
 
   PRBool ok = PR_TRUE;
-  nsIURL* url;
+  nsIURI* url;
   nsresult rv;
 #ifndef NECKO
   rv = NS_NewURL(&url, aURLSpec);
@@ -532,7 +532,7 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
   rv = service->NewURI(uriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   NS_RELEASE(uri);
 #endif // NECKO
 
@@ -599,7 +599,7 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
       aNode->GetAttribute(kNameSpaceID_HTML, mSrcAttr, src);
     }
     aNode->GetAttribute(kNameSpaceID_HTML, mBaseHrefAttr, base);/* XXX not public knowledge! */
-    nsIURL* docURL = aDocument->GetDocumentURL();
+    nsIURI* docURL = aDocument->GetDocumentURL();
     nsresult rv;
 #ifndef NECKO
     rv = NS_MakeAbsoluteURL(docURL, base, src, absURLSpec);

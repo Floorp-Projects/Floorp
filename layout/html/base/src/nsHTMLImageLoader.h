@@ -25,7 +25,7 @@
 class nsIFrame;
 class nsImageMap;
 class nsIImage;
-class nsIURL;
+class nsIURI;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
@@ -49,7 +49,7 @@ public:
   ~nsHTMLImageLoader();
 
   void Init(nsIFrame* aFrame, nsHTMLImageLoaderCB aCallBack, void* aClosure,
-            nsIURL* aBaseURL, const nsString& aURLSpec);
+            nsIURI* aBaseURL, const nsString& aURLSpec);
 
   nsIImage* GetImage();
 
@@ -97,7 +97,7 @@ protected:
 
   nsresult StartLoadImage(nsIPresContext* aPresContext);
 
-  nsIURL* mBaseURL;
+  nsIURI* mBaseURL;
   nsIFrame* mFrame;
   nsHTMLImageLoaderCB mCallBack;
   void* mClosure;

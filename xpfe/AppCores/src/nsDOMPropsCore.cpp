@@ -29,7 +29,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIWebShell.h"
@@ -440,7 +440,7 @@ nsDOMPropsCore::ShowProperties(const nsString& aUrl, nsIDOMWindow* aParent, nsID
   nsresult           rv;
   nsIAppShellService *appShell;
 
-  nsCOMPtr<nsIURL> urlObj;
+  nsCOMPtr<nsIURI> urlObj;
 #ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
 #else
@@ -452,7 +452,7 @@ nsDOMPropsCore::ShowProperties(const nsString& aUrl, nsIDOMWindow* aParent, nsID
   rv = service->NewURI(uriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))

@@ -24,7 +24,7 @@
 #include "nsISupports.h"
 
 class nsIDocument;
-class nsIURL;
+class nsIURI;
 class nsIWebShell;
 
 #define NS_IXMLCONTENT_SINK_IID \
@@ -116,7 +116,7 @@ public:
 
 extern nsresult NS_NewXMLContentSink(nsIXMLContentSink** aInstancePtrResult,
                                      nsIDocument* aDoc,
-                                     nsIURL* aURL,
+                                     nsIURI* aURL,
                                      nsIWebShell* aWebShell);
 
 #endif // nsIXMLContentSink_h___

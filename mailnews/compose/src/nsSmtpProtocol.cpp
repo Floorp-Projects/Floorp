@@ -209,7 +209,7 @@ esmtp_value_encode(char *addr)
 // END OF TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-nsSmtpProtocol::nsSmtpProtocol(nsIURL * aURL) : m_responseText("", eOneByte)
+nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL) : m_responseText("", eOneByte)
 {
   Initialize(aURL);
 }
@@ -223,7 +223,7 @@ nsSmtpProtocol::~nsSmtpProtocol()
 	PR_FREEIF(m_dataBuf);
 }
 
-void nsSmtpProtocol::Initialize(nsIURL * aURL)
+void nsSmtpProtocol::Initialize(nsIURI * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into Smtp Protocol");
 	nsresult rv = NS_OK;
@@ -293,7 +293,7 @@ const char * nsSmtpProtocol::GetUserDomainName()
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsSmtpProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsSmtpProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
 
@@ -444,7 +444,7 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 	buffer += GetUserDomainName();
 	buffer += CRLF;
 	
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
@@ -470,7 +470,7 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 	buffer += GetUserDomainName();
 	buffer += CRLF;
 
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
@@ -562,7 +562,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 		PR_FREEIF (s);
 	  }
 
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
@@ -589,7 +589,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	buffer += GetUserDomainName();
 	buffer += CRLF;
 
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
@@ -760,7 +760,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  else
 		  return (MK_COMMUNICATIONS_ERROR);
 	
-	  nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	  status = SendData(url, buffer);
 	  m_nextState = SMTP_RESPONSE;
 	  m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
@@ -809,7 +809,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 	if (base64Str) {
 		char buffer[512];
 		PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 		status = SendData(url, buffer);
 		m_nextState = SMTP_RESPONSE;
 		m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
@@ -889,7 +889,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 	   past the terminating null.) */
 	m_addresses += PL_strlen (m_addresses) + 1;
 	m_addressesLeft--;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
@@ -922,7 +922,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
     /* else send the RCPT TO: command */
 	buffer = "DATA";
 	buffer += CRLF;
-    nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);  
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);  
     status = SendData(url, buffer.GetBuffer());   
 
     m_nextState = SMTP_RESPONSE;  
@@ -1108,7 +1108,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 					// to make more room.
 					if (bsize < 100) // i chose 100 arbitrarily.
 					{
-						nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+						nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 						SendData(url, buffer);
 						buffer[0] = '\0';
 						b = buffer; // reset buffer
@@ -1118,7 +1118,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 				} while (line /* && bsize > 100 */);
               }
 
-			nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+			nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 			SendData(url, buffer); 
 			delete fileStream;
 		}
@@ -1131,7 +1131,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 
 	// always issue a '.' and CRLF when we are done...
 	nsAutoString cmd ((const char *) CRLF "." CRLF, eOneByte);
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	SendData(url, cmd.GetBuffer());
 #ifdef UNREADY_CODE
 		NET_Progress(CE_WINDOW_ID,
@@ -1202,14 +1202,14 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 	NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_MAILSENT));
 #endif
 	/* else */
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	SendData(url, "quit"CRLF); // send a quit command to close the connection with the server.
 	m_nextState = SMTP_DONE;
 	return(0);
 }
 
 
-nsresult nsSmtpProtocol::LoadUrl(nsIURL * aURL, nsISupports * /* aConsumer */)
+nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
@@ -1292,7 +1292,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURL * aURL, nsISupports * /* aConsumer */)
  *
  * returns zero or more if the transfer needs to be continued.
  */
-nsresult nsSmtpProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
     ClearFlag(SMTP_PAUSE_FOR_READ); /* already paused; reset */

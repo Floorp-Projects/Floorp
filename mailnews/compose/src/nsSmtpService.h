@@ -45,13 +45,13 @@ public:
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// SendMailMessage requires the file name of the message to send, the sender, a comma delimited list of recipients.
 	// It builds an Smtp url, makes an smtp connection and runs the url. If you want a handle on the running task, pass in 
-	// a valid nsIURL ptr. You can later interrupt this action by asking the netlib service manager to interrupt the url you 
+	// a valid nsIURI ptr. You can later interrupt this action by asking the netlib service manager to interrupt the url you 
 	// are given back. Remember to release aURL when you are done with it. Pass nsnull in for aURL if you don't care about 
 	// the returned URL.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath, const nsString& aRecipients, nsIUrlListener * aUrlListener, 
-							   nsIURL ** aURL);
+							   nsIURI ** aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsISmtpService interface 

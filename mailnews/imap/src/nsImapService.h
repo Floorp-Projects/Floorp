@@ -46,66 +46,66 @@ public:
 	NS_IMETHOD SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder *aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
-                            nsIURL ** aURL);	
+                            nsIURI ** aURL);	
 	NS_IMETHOD LiteSelectFolder(nsIEventQueue * aClientEventQueue, 
                                 nsIMsgFolder * aImapMailFolder, 
                                 nsIUrlListener * aUrlListener, 
-                                nsIURL ** aURL);
+                                nsIURI ** aURL);
 	NS_IMETHOD FetchMessage(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIUrlListener * aUrlListener, 
-                            nsIURL ** aURL,
+                            nsIURI ** aURL,
 							nsISupports *aConsumer,
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID);
 	NS_IMETHOD Noop(nsIEventQueue * aClientEventQueue, 
                     nsIMsgFolder * aImapMailFolder,
                     nsIUrlListener * aUrlListener, 
-                    nsIURL ** aURL);
+                    nsIURI ** aURL);
 	NS_IMETHOD GetHeaders(nsIEventQueue * aClientEventQueue, 
                           nsIMsgFolder * aImapMailFolder, 
                           nsIUrlListener * aUrlListener, 
-                          nsIURL ** aURL,
+                          nsIURI ** aURL,
                           const char *messageIdentifierList,
                           PRBool messageIdsAreUID);
 	NS_IMETHOD Expunge(nsIEventQueue * aClientEventQueue, 
                        nsIMsgFolder * aImapMailFolder,
                        nsIUrlListener * aUrlListener,
-                       nsIURL ** aURL);
+                       nsIURI ** aURL);
 	NS_IMETHOD Biff(nsIEventQueue * aClientEventQueue, 
                     nsIMsgFolder * aImapMailFolder,
                     nsIUrlListener * aUrlListener,
-                    nsIURL ** aURL,
+                    nsIURI ** aURL,
                     PRUint32 uidHighWater);
 	NS_IMETHOD DeleteMessages(nsIEventQueue * aClientEventQueue,
                               nsIMsgFolder * aImapMailFolder, 
                               nsIUrlListener * aUrlListener,
-                              nsIURL ** aURL,
+                              nsIURI ** aURL,
                               const char *messageIdentifierList,
                               PRBool messageIdsAreUID);
 	NS_IMETHOD DeleteAllMessages(nsIEventQueue * aClientEventQueue, 
                                  nsIMsgFolder * aImapMailFolder,
                                  nsIUrlListener * aUrlListener,
-                                 nsIURL ** aURL);
+                                 nsIURI ** aURL);
 	NS_IMETHOD AddMessageFlags(nsIEventQueue * aClientEventQueue,
                                nsIMsgFolder * aImapMailFolder, 
                                nsIUrlListener * aUrlListener,
-                               nsIURL ** aURL,
+                               nsIURI ** aURL,
                                const char *messageIdentifierList,
                                imapMessageFlagsType flags,
                                PRBool messageIdsAreUID);
 	NS_IMETHOD SubtractMessageFlags(nsIEventQueue * aClientEventQueue,
                                     nsIMsgFolder * aImapMailFolder, 
                                     nsIUrlListener * aUrlListener,
-                                    nsIURL ** aURL,
+                                    nsIURI ** aURL,
                                     const char *messageIdentifierList,
                                     imapMessageFlagsType flags,
                                     PRBool messageIdsAreUID);
 	NS_IMETHOD SetMessageFlags(nsIEventQueue * aClientEventQueue,
                                nsIMsgFolder * aImapMailFolder, 
                                nsIUrlListener * aUrlListener, 
-                               nsIURL ** aURL,
+                               nsIURI ** aURL,
                                const char *messageIdentifierList,
                                imapMessageFlagsType flags,
                                PRBool messageIdsAreUID);
@@ -113,21 +113,21 @@ public:
     NS_IMETHOD DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
                                   nsIMsgFolder* aImapMailFolder,
                                   nsIUrlListener* aUrlListener,
-                                  nsIURL** aURL);
+                                  nsIURI** aURL);
     NS_IMETHOD DiscoverAllAndSubscribedFolders(nsIEventQueue*
                                                aClientEventQueue,
                                                nsIMsgFolder* aImapMailFolder,
                                                nsIUrlListener* aUrlListener,
-                                               nsIURL** aURL);
+                                               nsIURI** aURL);
     NS_IMETHOD DiscoverChildren(nsIEventQueue* aClientEventQueue,
                                 nsIMsgFolder* aImapMailFolder,
                                 nsIUrlListener* aUrlListener,
-                                nsIURL** aURL);
+                                nsIURI** aURL);
     NS_IMETHOD DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
                                      nsIMsgFolder* aImapMailFolder,
                                      nsIUrlListener* aUrlListener,
                                      PRInt32 level,
-                                     nsIURL** aURL);
+                                     nsIURI** aURL);
     NS_IMETHOD OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
                                  nsIMsgFolder* aSrcFolder,
                                  const char* messageIds,
@@ -135,7 +135,7 @@ public:
                                  PRBool idsAreUids,
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
-                                 nsIURL** aURL);
+                                 nsIURI** aURL);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -143,13 +143,13 @@ public:
 	// we suppport the nsIMsgMessageService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURL **aURL);
+						   nsIUrlListener * aUrlListener, nsIURI **aURL);
 
 	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
+							  nsIUrlListener * aUrlListener, nsIURI ** aURL);
 
 	NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, 
-								 nsIUrlListener *aUrlListener, nsIURL **aURL);
+								 nsIUrlListener *aUrlListener, nsIURI **aURL);
 
 protected:
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
@@ -161,13 +161,13 @@ protected:
                                          nsIImapUrl* aImapUrl,
                                          nsIUrlListener* aUrlListener,
                                          nsISupports* aConsumer,
-                                         nsIURL** aURL);
+                                         nsIURI** aURL);
     nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,
                               nsIImapUrl* aImapUrl);
 	nsresult DiddleFlags(nsIEventQueue * aClientEventQueue,
                          nsIMsgFolder * aImapMailFolder, 
                          nsIUrlListener * aUrlListener, 
-                         nsIURL ** aURL,
+                         nsIURI ** aURL,
                          const char *messageIdentifierList,
                          const char *howToDiddle,
                          imapMessageFlagsType flags,

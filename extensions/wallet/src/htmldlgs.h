@@ -166,7 +166,7 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
   char* button = NULL;
 
   nsAutoString * nsCookie = new nsAutoString("");
-  nsIURL* url;
+  nsIURI* url;
   char* separator;
   nsresult res;
 

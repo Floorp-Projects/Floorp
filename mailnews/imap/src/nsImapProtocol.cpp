@@ -343,7 +343,7 @@ nsImapProtocol::GetImapHostName()
 	if (!m_userName && m_runningUrl)
 	{
 		const char * temp = nsnull;
-		nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningUrl);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningUrl);
 		url->GetHost(&temp);
 		if (temp) // keep our own copy
 			m_hostName = PL_strdup(temp); 
@@ -441,7 +441,7 @@ nsImapProtocol::SetupSinkProxy()
 // Setup With Url is intended to set up data which is held on a PER URL basis and not
 // a per connection basis. If you have data which is independent of the url we are currently
 // running, then you should put it in Initialize(). 
-nsresult nsImapProtocol::SetupWithUrl(nsIURL * aURL, nsISupports* aConsumer)
+nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 {
     nsresult rv = NS_ERROR_FAILURE;
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
@@ -918,7 +918,7 @@ void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString)
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
     PR_CEnterMonitor(this);
 
@@ -943,7 +943,7 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 	return res;
 }
 
-NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
     PR_CEnterMonitor(this);
 	nsresult rv = NS_OK;
@@ -955,7 +955,7 @@ NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURL* aURL, const char *aContentT
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsImapProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsImapProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
     PR_CEnterMonitor(this);
 	nsresult rv = NS_OK;
@@ -1009,7 +1009,7 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer)
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
 			nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(m_outputStream); 
-			nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningUrl);
+			nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningUrl);
 			if (inputStream)
 				rv = m_outputConsumer->OnDataAvailable(url,
                                                        inputStream,
@@ -1031,7 +1031,7 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer)
 // url to run monitor to let the imap main thread loop process the current url (it is waiting
 // on this monitor). There is a contract that the imap thread has already been started b4 we
 // attempt to load a url....
-nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
+nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
 	if (aURL)

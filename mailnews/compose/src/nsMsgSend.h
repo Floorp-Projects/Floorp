@@ -301,8 +301,8 @@ public:
   // Delivery and completion callback routines...
   void	      DeliverFileAsMail();
   void	      DeliverFileAsNews();
-  void	      DeliverAsMailExit(nsIURL *aUrl, nsresult aExitCode);
-  void	      DeliverAsNewsExit(nsIURL *aUrl, nsresult aExitCode);
+  void	      DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode);
+  void	      DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode);
 
 
   void	      Fail(nsresult failure_code, char *error_msg);

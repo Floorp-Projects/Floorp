@@ -53,14 +53,14 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	NS_IMETHOD ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
-							nsIUrlListener * aUrlListener, nsIURL ** aURL);
+							nsIUrlListener * aUrlListener, nsIURI ** aURL);
 	
 
 	NS_IMETHOD DisplayMessageNumber(const char *url,
                                     PRUint32 aMessageNumber,
                                     nsISupports * aDisplayConsumer,
 									nsIUrlListener * aUrlListener,
-                                    nsIURL ** aURL);
+                                    nsIURI ** aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End suppport for the nsIMailboxService Interface
@@ -70,20 +70,20 @@ public:
 	// we suppport the nsIMsgMessageService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURL **aURL);
+						   nsIUrlListener * aUrlListener, nsIURI **aURL);
 
 	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
+							  nsIUrlListener * aUrlListener, nsIURI ** aURL);
 
 	NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, 
-								 nsIUrlListener *aUrlListener, nsIURL **aURL);
+								 nsIUrlListener *aUrlListener, nsIURI **aURL);
 
 protected:
 	// helper functions used by the service
 	nsresult PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
 							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl);
 	
-	nsresult RunMailboxUrl(nsIURL * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
+	nsresult RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
 };
 
 #endif /* nsMailboxService_h___ */

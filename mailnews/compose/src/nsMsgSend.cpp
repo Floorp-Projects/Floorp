@@ -1614,7 +1614,7 @@ nsMsgComposeAndSend::Init(
 }
 
 nsresult
-MailDeliveryCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
+MailDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 {
   if (tagData)
   {
@@ -1627,7 +1627,7 @@ MailDeliveryCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
 }
 
 nsresult
-NewsDeliveryCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
+NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 {
   if (tagData)
   {
@@ -1754,7 +1754,7 @@ nsMsgComposeAndSend::DeliverFileAsNews ()
 }
 
 void
-nsMsgComposeAndSend::DeliverAsNewsExit(nsIURL *aUrl, nsresult aExitCode)
+nsMsgComposeAndSend::DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode)
 {
   // If we fail on the news delivery, not sense in going on so just notify
   // the user and exit.
@@ -3038,7 +3038,7 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, char *error_msg)
 }
 
 void
-nsMsgComposeAndSend::DeliverAsMailExit(nsIURL *aUrl, nsresult aExitCode)
+nsMsgComposeAndSend::DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode)
 {
   // If we failed, stop the madness.
   if (NS_FAILED(aExitCode))

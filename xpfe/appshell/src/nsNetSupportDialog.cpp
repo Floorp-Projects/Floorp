@@ -32,7 +32,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIDOMHTMLInputElement.h"
@@ -435,7 +435,7 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
 	if ( !NS_SUCCEEDED ( result ) )
   	return result;
 
-	nsIURL* dialogURL;
+	nsIURI* dialogURL;
 #ifndef NECKO
     result = NS_NewURL(&dialogURL, inXULURL );
 #else
@@ -447,7 +447,7 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
     result = service->NewURI(uriStr, nsnull, &uri);
     if (NS_FAILED(result)) return result;
 
-    result = uri->QueryInterface(nsIURL::GetIID(), (void**)&dialogURL);
+    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&dialogURL);
     NS_RELEASE(uri);
 #endif // NECKO
  	if (!NS_SUCCEEDED (result) )

@@ -64,7 +64,7 @@ struct nsINetService : public nsISupports
      *                  URL loading.  This parameter cannot be NULL.
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */ 
-    NS_IMETHOD OpenStream(nsIURL *aUrl, 
+    NS_IMETHOD OpenStream(nsIURI *aUrl, 
                           nsIStreamListener *aConsumer) = 0;
 
     /**
@@ -78,7 +78,7 @@ struct nsINetService : public nsISupports
      *                      created for this URL load.
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
-    NS_IMETHOD OpenBlockingStream(nsIURL *aUrl, 
+    NS_IMETHOD OpenBlockingStream(nsIURI *aUrl, 
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream) = 0;
 
@@ -88,7 +88,7 @@ struct nsINetService : public nsISupports
      * @param aUrl  The URL to stop loading.
      * @return Returns NS_OK if successful, or NS_ERROR_FAILURE if an error occurred.
      */ 
-    NS_IMETHOD InterruptStream(nsIURL* aURL) = 0;
+    NS_IMETHOD InterruptStream(nsIURI* aURL) = 0;
 
     /**
      * Get the complete cookie string associated with the URL
@@ -97,7 +97,7 @@ struct nsINetService : public nsISupports
      * @param aCookie The string object which will hold the result
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
-    NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie)=0;
+    NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie)=0;
 
    /**
      * Set the cookie string associated with the URL
@@ -106,7 +106,7 @@ struct nsINetService : public nsISupports
      * @param aCookie The string to set
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
-    NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie)=0;
+    NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie)=0;
 
     NS_IMETHOD Cookie_DisplayCookieInfoAsHTML()=0;
     NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results)=0;
@@ -223,9 +223,9 @@ struct nsINetService : public nsISupports
                            nsIProtocolURLFactory* *aProtocolURLFactory,
                            nsIProtocol* *aProtocol) = 0;
 
-    NS_IMETHOD CreateURL(nsIURL* *aURLResult, 
+    NS_IMETHOD CreateURL(nsIURI* *aURLResult, 
                          const nsString& aSpec, 
-                         const nsIURL* aContextURL = nsnull,
+                         const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull) = 0;
 

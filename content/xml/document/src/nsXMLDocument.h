@@ -44,7 +44,7 @@ public:
 
   NS_IMETHOD GetContentType(nsString& aContentType) const;
 
-  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+  NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener,
                                const char* aCommand);
@@ -73,7 +73,7 @@ public:
 protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
-  virtual nsresult Reset(nsIURL* aUrl);
+  virtual nsresult Reset(nsIURI* aUrl);
 
   // For HTML elements in our content model
   nsIHTMLStyleSheet*    mAttrStyleSheet;

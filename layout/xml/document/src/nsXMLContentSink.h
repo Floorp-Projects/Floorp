@@ -26,7 +26,7 @@
 
 class nsIDocument;
 class nsIScriptObjectOwner;
-class nsIURL;
+class nsIURI;
 class nsIWebShell;
 class nsIContent;
 class nsVoidArray;
@@ -57,7 +57,7 @@ public:
   virtual ~nsXMLContentSink();
 
   nsresult Init(nsIDocument* aDoc,
-                nsIURL* aURL,
+                nsIURI* aURL,
                 nsIWebShell* aContainer);
 
   // nsISupports
@@ -119,8 +119,8 @@ protected:
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
 #else
-  nsresult CreateStyleSheetURL(nsIURL** aUrl, const nsAutoString& aHref);
-  nsresult LoadXSLStyleSheet(const nsIURL* aUrl);
+  nsresult CreateStyleSheetURL(nsIURI** aUrl, const nsAutoString& aHref);
+  nsresult LoadXSLStyleSheet(const nsIURI* aUrl);
 #endif
 
   nsresult AddText(const nsString& aString);
@@ -128,8 +128,8 @@ protected:
   nsresult CreateSourceText(const nsParserError* aError, nsString& aSourceString);
 
   nsIDocument* mDocument;
-  nsIURL* mDocumentURL;
-  nsIURL* mDocumentBaseURL; // can be set via HTTP headers
+  nsIURI* mDocumentURL;
+  nsIURI* mDocumentBaseURL; // can be set via HTTP headers
   nsIWebShell* mWebShell;
   nsIParser* mParser;
 

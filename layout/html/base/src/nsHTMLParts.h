@@ -29,7 +29,7 @@ class nsIHTMLContent;
 class nsIHTMLContentSink;
 class nsIHTMLFragmentContentSink;
 class nsITextContent;
-class nsIURL;
+class nsIURI;
 class nsString;
 class nsIWebShell;
 
@@ -343,7 +343,7 @@ extern nsresult NS_NewTableCellFrame(nsIFrame** aResult);
 // XXX passing aWebShell into this is wrong
 extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIDocument* aDoc,
-                                      nsIURL* aURL,
+                                      nsIURI* aURL,
                                       nsIWebShell* aWebShell);
 extern nsresult NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aInstancePtrResult);
 

@@ -54,7 +54,7 @@
 
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -544,7 +544,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 
   if (NS_SUCCEEDED(result) && service)
   {
-    nsCOMPtr<nsIURL> url;
+    nsCOMPtr<nsIURI> url;
 #ifndef NECKO
     result = NS_NewURL(getter_AddRefs(url), nsString(EDITOR_BUNDLE_URL));
 #else

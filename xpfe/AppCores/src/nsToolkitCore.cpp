@@ -30,7 +30,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIWebShell.h"
@@ -148,7 +148,7 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   window = nsnull;
 
-  nsCOMPtr<nsIURL> urlObj;
+  nsCOMPtr<nsIURI> urlObj;
 #ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
 #else
@@ -160,7 +160,7 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   rv = service->NewURI(uriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))
@@ -186,7 +186,7 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
 
-  nsCOMPtr<nsIURL> urlObj;
+  nsCOMPtr<nsIURI> urlObj;
 
 #ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
@@ -199,7 +199,7 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   rv = service->NewURI(uriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))
@@ -309,7 +309,7 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
 
   nsresult           rv;
 
-  nsCOMPtr<nsIURL> urlObj;
+  nsCOMPtr<nsIURI> urlObj;
 #ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
 #else
@@ -321,7 +321,7 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   rv = service->NewURI(uriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))
@@ -354,7 +354,7 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   window = nsnull;
 
-  nsCOMPtr<nsIURL> urlObj;
+  nsCOMPtr<nsIURI> urlObj;
 #ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
 #else
@@ -366,7 +366,7 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   rv = service->NewURI(uriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))

@@ -21,7 +21,7 @@
 #include "nsIPop3IncomingServer.idl"
 #include "nsIMsgFolder.idl"
 
-interface nsIURL;
+interface nsIURI;
 interface nsIStreamListener;
 
 
@@ -35,7 +35,7 @@ interface nsIStreamListener;
 interface nsIPop3Service : nsISupports {
   /*
    * All of these functions build pop3 urls and run them. If you want
-   * a handle on the running task, pass in a valid nsIURL ptr. You can later
+   * a handle on the running task, pass in a valid nsIURI ptr. You can later
    * interrupt this action by asking the netlib service manager to interrupt
    * the url you are given back. Remember to release aURL when you are
    * done with it. Pass nsnull in for aURL if you
@@ -49,10 +49,10 @@ interface nsIPop3Service : nsISupports {
    * mail on different pop3 accounts....
    */
   
-  nsIURL GetNewMail(in nsIUrlListener aUrlListener,
+  nsIURI GetNewMail(in nsIUrlListener aUrlListener,
                     in nsIPop3IncomingServer popServer);
 
-  nsIURL CheckForNewMail(in nsIUrlListener aUrlListener,
+  nsIURI CheckForNewMail(in nsIUrlListener aUrlListener,
 						 in nsIMsgFolder inbox,
                          in nsIPop3IncomingServer popServer);
   

@@ -41,7 +41,7 @@ public:
 	// Getters and Setters for the news specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////
 
-	// mscott: this interface really belongs in nsIURL and I will move it there after talking
+	// mscott: this interface really belongs in nsIURI and I will move it there after talking
 	// it over with core netlib. This error message replaces the err_msg which was in the 
 	// old URL_struct. Also, it should probably be a nsString or a PRUnichar *. I don't know what
 	// XP_GetString is going to return in mozilla. 

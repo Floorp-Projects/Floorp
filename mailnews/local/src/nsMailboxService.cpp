@@ -84,7 +84,7 @@ nsresult nsMailboxService::QueryInterface(const nsIID &aIID, void** aInstancePtr
 }
 
 nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
-										nsIUrlListener * aUrlListener, nsIURL ** aURL)
+										nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 	nsresult rv = NS_OK;
@@ -124,7 +124,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
                               nsIStreamListener * aMailboxCopyHandler,
                               PRBool moveMessage,
                               nsIUrlListener * aUrlListener,
-                              nsIURL **aURL)
+                              nsIURI **aURL)
 {
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 	nsresult rv = NS_OK;
@@ -140,12 +140,12 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 		if (!moveMessage)
 			mailboxurl->SetMailboxAction(nsMailboxActionCopyMessage);
 		mailboxurl->SetMailboxCopyHandler(aMailboxCopyHandler);
-		nsCOMPtr<nsIURL> url = do_QueryInterface(mailboxurl);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
 		rv = RunMailboxUrl(url);
 	}
 
 	if (aURL)
-		mailboxurl->QueryInterface(nsIURL::GetIID(), (void **) aURL);
+		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
 
 	NS_UNLOCK_INSTANCE();
 
@@ -155,7 +155,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
                                           nsISupports * aDisplayConsumer, 
 										  nsIUrlListener * aUrlListener,
-                                          nsIURL ** aURL)
+                                          nsIURI ** aURL)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
@@ -165,19 +165,19 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 
 	if (NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr<nsIURL> url = do_QueryInterface(mailboxurl);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
 		rv = RunMailboxUrl(url, aDisplayConsumer);
 	}
 
 	if (aURL)
-		mailboxurl->QueryInterface(nsIURL::GetIID(), (void **) aURL);
+		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
 	NS_UNLOCK_INSTANCE();
 
 	return rv;
 }
 
 NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
-												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL)
+												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURI **aURL)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
@@ -188,12 +188,12 @@ NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFi
 	if (NS_SUCCEEDED(rv))
 	{
 		mailboxurl->SetMessageFile(aFile);
-		nsCOMPtr<nsIURL> url = do_QueryInterface(mailboxurl);
+		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
 		rv = RunMailboxUrl(url);
 	}
 
 	if (aURL)
-		mailboxurl->QueryInterface(nsIURL::GetIID(), (void **) aURL);
+		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
 	
 	NS_UNLOCK_INSTANCE();
 	return rv;
@@ -203,7 +203,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
                                                 PRUint32 aMessageNumber,
                                                 nsISupports * aDisplayConsumer,
                                                 nsIUrlListener * aUrlListener,
-                                                nsIURL ** aURL)
+                                                nsIURI ** aURL)
 {
 	// mscott - this function is no longer supported...
 	NS_ASSERTION(0, "deprecated method");
@@ -212,7 +212,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
 
 // Takes a mailbox url, this method creates a protocol instance and loads the url
 // into the protocol instance.
-nsresult nsMailboxService::RunMailboxUrl(nsIURL * aMailboxUrl, nsISupports * aDisplayConsumer)
+nsresult nsMailboxService::RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDisplayConsumer)
 {
 	// create a protocol instance to run the url..
 	nsresult rv = NS_OK;

@@ -37,7 +37,7 @@ enum nsMsgDeliveryType
 // This is the generic callback that will be called when the URL processing operation
 // is complete. The tagData is what was passed in by the caller at creation time.
 //
-typedef nsresult (*nsMsgDeliveryCompletionCallback) (nsIURL *aUrl, nsresult aExitCode, void *tagData);
+typedef nsresult (*nsMsgDeliveryCompletionCallback) (nsIURI *aUrl, nsresult aExitCode, void *tagData);
 
 class nsMsgDeliveryListener: public nsIUrlListener
 {
@@ -50,8 +50,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
-	NS_IMETHOD          OnStartRunningUrl(nsIURL * aUrl);
-	NS_IMETHOD          OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+	NS_IMETHOD          OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD          OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
 private:
   // Private Information

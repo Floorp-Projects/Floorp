@@ -37,7 +37,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsRDFCID.h"
@@ -101,14 +101,14 @@ public:
 
 	 // stream observer
 
-	 NS_IMETHOD	OnStartBinding(nsIURL *aURL, const char *aContentType);
-	 NS_IMETHOD	OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-	 NS_IMETHOD	OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-	 NS_IMETHOD	OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	 NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
+	 NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+	 NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+	 NS_IMETHOD	OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	 // stream listener
-	 NS_IMETHOD	GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-	 NS_IMETHOD	OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+	 NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+	 NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
 				PRUint32 aLength);
 };
 
@@ -224,7 +224,7 @@ NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, nsIStreamListener::GetIID());
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnStartBinding(nsIURL *aURL, const char *aContentType)
+RelatedLinksStreamListener::OnStartBinding(nsIURI *aURL, const char *aContentType)
 {
 	 nsAutoString		trueStr("true");
 	 nsIRDFLiteral		*literal = nsnull;
@@ -240,7 +240,7 @@ RelatedLinksStreamListener::OnStartBinding(nsIURL *aURL, const char *aContentTyp
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
+RelatedLinksStreamListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
 {
 	 return(NS_OK);
 }
@@ -248,7 +248,7 @@ RelatedLinksStreamListener::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint3
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+RelatedLinksStreamListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	 return(NS_OK);
 }
@@ -256,7 +256,7 @@ RelatedLinksStreamListener::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+RelatedLinksStreamListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
 {
 	 nsAutoString		trueStr("true");
 	 nsIRDFLiteral		*literal = nsnull;
@@ -276,7 +276,7 @@ RelatedLinksStreamListener::OnStopBinding(nsIURL* aURL, nsresult aStatus, const 
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+RelatedLinksStreamListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	return(NS_OK);
 }
@@ -284,7 +284,7 @@ RelatedLinksStreamListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+RelatedLinksStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	nsresult	rv = NS_OK;
 
@@ -761,7 +761,7 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 	if (! queryURL)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	nsCOMPtr<nsIURL> url;
+	nsCOMPtr<nsIURI> url;
 #ifndef NECKO
 	rv = NS_NewURL(getter_AddRefs(url), queryURL);
 #else
@@ -772,7 +772,7 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
     rv = service->NewURI(queryURL, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
 #endif // NECKO
 

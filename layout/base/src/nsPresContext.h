@@ -48,7 +48,7 @@ public:
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult);
   NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode);
-  NS_IMETHOD GetBaseURL(nsIURL** aURLResult);
+  NS_IMETHOD GetBaseURL(nsIURI** aURLResult);
   NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
                                     nsIStyleContext* aParentContext,
@@ -143,7 +143,7 @@ protected:
   nsCOMPtr<nsIEventStateManager> mEventManager;
   nsCompatibility       mCompatibilityMode;
   nsWidgetRendering     mWidgetRenderingMode;
-  nsCOMPtr<nsIURL>      mBaseURL;
+  nsCOMPtr<nsIURI>      mBaseURL;
   PRBool                mStopped;
 
 #ifdef DEBUG

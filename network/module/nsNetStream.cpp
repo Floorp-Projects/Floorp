@@ -38,7 +38,7 @@ NS_DEFINE_IID(kIConnectionInfoIID, NS_ICONNECTIONINFO_IID);
 
 
 
-nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
+nsConnectionInfo::nsConnectionInfo(nsIURI *aURL,
                                    nsNetlibStream *aStream, 
                                    nsIStreamListener *aNotify)
 {
@@ -82,7 +82,7 @@ nsConnectionInfo::~nsConnectionInfo()
 }
 
 NS_IMETHODIMP 
-nsConnectionInfo::GetURL(nsIURL **aURL)
+nsConnectionInfo::GetURL(nsIURI **aURL)
 {
     *aURL = pURL;
     NS_IF_ADDREF(pURL);    
@@ -91,7 +91,7 @@ nsConnectionInfo::GetURL(nsIURL **aURL)
 }
 
 NS_IMETHODIMP 
-nsConnectionInfo::SetURL(nsIURL *aURL)
+nsConnectionInfo::SetURL(nsIURI *aURL)
 {
 	NS_IF_RELEASE(pURL); // release old one
 	pURL = aURL;

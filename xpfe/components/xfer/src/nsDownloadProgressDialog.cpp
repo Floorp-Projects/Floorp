@@ -30,10 +30,12 @@
 static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
 #else
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIEventQueueService.h"
+#include "nsIProgressEventSink.h"
+#include "nsIBufferInputStream.h"
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -109,9 +111,9 @@ nsDownloadProgressDialog::OnStop() {
 }
 
 // ctor
-nsDownloadProgressDialog::nsDownloadProgressDialog( nsIURL *aURL,
+nsDownloadProgressDialog::nsDownloadProgressDialog( nsIURI *aURL,
                                                     const nsFileSpec &anOutputFileName )
-        : mUrl( nsDontQueryInterface<nsIURL>(aURL) ),
+        : mUrl( nsDontQueryInterface<nsIURI>(aURL) ),
           mDocument(),
           mWindow(),
           mOutput(0),
@@ -145,7 +147,7 @@ nsDownloadProgressDialog::Show() {
 
     if ( NS_SUCCEEDED( rv ) ) {
         // Open "download progress" dialog.
-        nsIURL *url;
+        nsIURI *url;
         char * urlStr = "resource:/res/samples/downloadProgress.xul";
 #ifndef NECKO
         rv = NS_NewURL( &url, urlStr );
@@ -157,7 +159,7 @@ nsDownloadProgressDialog::Show() {
         rv = service->NewURI(urlStr, nsnull, &uri);
         if (NS_FAILED(rv)) return rv;
 
-        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
         NS_RELEASE(uri);
 #endif // NECKO
 
@@ -211,9 +213,16 @@ nsDownloadProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
                     document->AddObserver( this );
 
                     // Store instance information into dialog's DOM.
+#ifdef NECKO
+                    char *loc = 0;
+                    mUrl->GetSpec( &loc );
+                    rv = setAttribute( mDocument, "data.location", "value", loc );
+                    nsCRT::free(loc);
+#else
                     const char *loc = 0;
                     mUrl->GetSpec( &loc );
                     rv = setAttribute( mDocument, "data.location", "value", loc );
+#endif
                     if ( NS_SUCCEEDED( rv ) ) {
                         rv = setAttribute( mDocument, "data.fileName", "value", nsString((const char*)mFileName) );
                         if ( NS_SUCCEEDED( rv ) ) {
@@ -241,7 +250,13 @@ nsDownloadProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
 }
 
 NS_IMETHODIMP
-nsDownloadProgressDialog::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength) {
+#ifdef NECKO
+nsDownloadProgressDialog::OnDataAvailable(nsISupports* aContext, nsIBufferInputStream *aIStream,
+                                          PRUint32 offset, PRUint32 aLength)
+#else
+nsDownloadProgressDialog::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+#endif
+{
     nsresult rv = NS_OK;
 
     // Check for download cancelled by user.
@@ -288,13 +303,23 @@ nsDownloadProgressDialog::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream
 }
 
 NS_IMETHODIMP
-nsDownloadProgressDialog::OnStartBinding(nsIURL* aURL, const char *aContentType) {
+#ifdef NECKO
+nsDownloadProgressDialog::OnStartBinding(nsISupports* aContext)
+#else
+nsDownloadProgressDialog::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
+{
   //nsresult rv = NS_OK;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDownloadProgressDialog::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) {
+#ifdef NECKO
+nsDownloadProgressDialog::OnProgress(nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
+#else
+nsDownloadProgressDialog::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+#endif
+{
   //nsresult rv = NS_OK;
     char buf[16];
     PR_snprintf( buf, sizeof buf, "%lu", aProgressMax );
@@ -305,7 +330,12 @@ nsDownloadProgressDialog::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 
 }
 
 NS_IMETHODIMP
-nsDownloadProgressDialog::OnStatus(nsIURL* aURL, const PRUnichar* aMsg) {
+#ifdef NECKO
+nsDownloadProgressDialog::OnStatus(nsISupports* aContext, const PRUnichar* aMsg)
+#else
+nsDownloadProgressDialog::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
+#endif
+{
   //nsresult rv = NS_OK;
     nsString msg = aMsg;
     setAttribute( mDocument, "data.status", "value", aMsg );
@@ -313,7 +343,12 @@ nsDownloadProgressDialog::OnStatus(nsIURL* aURL, const PRUnichar* aMsg) {
 }
 
 NS_IMETHODIMP
-nsDownloadProgressDialog::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg) {
+#ifdef NECKO
+nsDownloadProgressDialog::OnStopBinding(nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+#else
+nsDownloadProgressDialog::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+#endif
+{
     nsresult rv = NS_OK;
     // Close the output file.
     if ( mOutput ) {
@@ -378,6 +413,23 @@ nsDownloadProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
+#ifdef NECKO
+  if (aIID.Equals(nsIProgressEventSink::GetIID())) {
+    *aInstancePtr = (void*) ((nsIProgressEventSink*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+#endif
+  if (aIID.Equals(nsIStreamObserver::GetIID())) {
+    *aInstancePtr = (void*) ((nsIStreamObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIStreamListener::GetIID())) {
+    *aInstancePtr = (void*) ((nsIStreamListener*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(nsIDocumentObserver::GetIID())) {
     *aInstancePtr = (void*) ((nsIDocumentObserver*)this);
     NS_ADDREF_THIS();

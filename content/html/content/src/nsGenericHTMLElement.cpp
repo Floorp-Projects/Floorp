@@ -45,7 +45,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIURLGroup.h"
@@ -106,7 +106,7 @@ public:
   virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
                                         PRInt32 aHint);
   virtual nsresult GetParent(nsISupports **aParent);
-  virtual nsresult GetBaseURL(nsIURL** aURL);
+  virtual nsresult GetBaseURL(nsIURI** aURL);
 
 protected:
   nsIHTMLContent *mContent;  
@@ -201,7 +201,7 @@ nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
 }
 
 nsresult 
-nsDOMCSSAttributeDeclaration::GetBaseURL(nsIURL** aURL)
+nsDOMCSSAttributeDeclaration::GetBaseURL(nsIURI** aURL)
 {
   NS_ASSERTION(nsnull != aURL, "null pointer");
 
@@ -539,7 +539,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
         return result;
       }
 
-      nsIURL* docURL = nsnull;
+      nsIURI* docURL = nsnull;
       if (nsnull != mDocument) {
         mDocument->GetBaseURL(docURL);
       }
@@ -968,7 +968,7 @@ nsGenericHTMLElement::GetInlineStyleRules(nsISupportsArray* aRules)
 }
 
 nsresult
-nsGenericHTMLElement::GetBaseURL(nsIURL*& aBaseURL) const
+nsGenericHTMLElement::GetBaseURL(nsIURI*& aBaseURL) const
 {
   return GetBaseURL(mAttributes, mDocument, &aBaseURL);
 }
@@ -976,11 +976,11 @@ nsGenericHTMLElement::GetBaseURL(nsIURL*& aBaseURL) const
 nsresult
 nsGenericHTMLElement::GetBaseURL(nsIHTMLAttributes* aAttributes,
                                  nsIDocument* aDocument,
-                                 nsIURL** aBaseURL)
+                                 nsIURI** aBaseURL)
 {
   nsresult result = NS_OK;
 
-  nsIURL* docBaseURL = nsnull;
+  nsIURI* docBaseURL = nsnull;
   if (nsnull != aDocument) {
     result = aDocument->GetBaseURL(docBaseURL);
   }
@@ -994,7 +994,7 @@ nsGenericHTMLElement::GetBaseURL(nsIHTMLAttributes* aAttributes,
         nsAutoString baseHref;
         value.GetStringValue(baseHref);
 
-        nsIURL* url = nsnull;
+        nsIURI* url = nsnull;
         nsIURLGroup* urlGroup = nsnull;
         docBaseURL->GetURLGroup(&urlGroup);
         if (urlGroup) {
@@ -1017,7 +1017,7 @@ nsGenericHTMLElement::GetBaseURL(nsIHTMLAttributes* aAttributes,
           NS_RELEASE(baseUri);
           if (NS_FAILED(result)) return result;
 
-          result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+          result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
 #endif // NECKO
         }
         *aBaseURL = url;
@@ -1956,7 +1956,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes
           nsCOMPtr<nsIDocument> doc;
           rv = shell->GetDocument(getter_AddRefs(doc));
           if (NS_SUCCEEDED(rv) && doc) {
-            nsCOMPtr<nsIURL> docURL;
+            nsCOMPtr<nsIURI> docURL;
             nsGenericHTMLElement::GetBaseURL(aAttributes, doc,
                                              getter_AddRefs(docURL));
 #ifndef NECKO

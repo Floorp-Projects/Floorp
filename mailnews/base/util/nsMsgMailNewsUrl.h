@@ -30,10 +30,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Okay, I found that all of the mail and news url interfaces needed to support
-// several common interfaces (in addition to those provided through nsIURL). 
+// several common interfaces (in addition to those provided through nsIURI). 
 // So I decided to group them all in this interface.
 // This interface may grow or it may get smaller (if these things get pushed up
-// into nsIURL). The unfortunate thing is that we'd also like to have all of our
+// into nsIURI). The unfortunate thing is that we'd also like to have all of our
 // mail news protocols inherit implementations of this interface. But that is
 // implementation inheritance across dlls. We could do it though....something else
 // to add to the list =).
@@ -73,10 +73,10 @@ public:
 	NS_IMETHOD SetUrlState(PRBool runningUrl, nsresult aStatusCode);
 	NS_IMETHOD GetUrlState(PRBool *runningUrl);
 
-	// nsIURL support
+	// nsIURI support
 	// mscott: some of these we won't need to implement..as part of the netlib re-write we'll be removing them
-	// from nsIURL and then we can remove them from here as well....
-    NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const;
+	// from nsIURI and then we can remove them from here as well....
+    NS_IMETHOD_(PRBool) Equals(const nsIURI *aURL) const;
     NS_IMETHOD GetSpec(const char* *result) const;
     NS_IMETHOD SetSpec(const char* spec);
     NS_IMETHOD GetProtocol(const char* *result) const;

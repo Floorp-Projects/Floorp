@@ -36,7 +36,7 @@ nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 	// nsINetLibUrl specific state
     m_URL_s = nsnull;
  
-	// nsIURL specific state
+	// nsIURI specific state
     m_protocol = nsnull;
     m_host = nsnull;
     m_file = nsnull;
@@ -72,8 +72,8 @@ nsresult nsMsgMailNewsUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER;
     }
-    if (aIID.Equals(nsIURL::GetIID())) {
-        *aInstancePtr = (void*) ((nsIURL*)this);
+    if (aIID.Equals(nsIURI::GetIID())) {
+        *aInstancePtr = (void*) ((nsIURI*)this);
         AddRef();
         return NS_OK;
     }
@@ -205,7 +205,7 @@ NS_METHOD nsMsgMailNewsUrl::GetURLInfo(URL_Struct_** aResult) const
 ////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Begin nsIURL support
+// Begin nsIURI support
 ////////////////////////////////////////////////////////////////////////////////////
 
 nsresult nsMsgMailNewsUrl::GetProtocol(const char* *result) const
@@ -382,14 +382,14 @@ nsresult nsMsgMailNewsUrl::SetPostData(nsIInputStream* input)
 }
 
 
-PRBool nsMsgMailNewsUrl::Equals(const nsIURL* aURL) const 
+PRBool nsMsgMailNewsUrl::Equals(const nsIURI* aURL) const 
 {
     PRBool bIsEqual;
     nsIMsgMailNewsUrl * other;
     NS_LOCK_INSTANCE();
 	// for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void**)&other) == NS_OK) {
+    if (((nsIURI*)aURL)->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void**)&other) == NS_OK) {
         bIsEqual = other == (nsIMsgMailNewsUrl *) this; // compare the pointers...
     }
     else
@@ -399,12 +399,12 @@ PRBool nsMsgMailNewsUrl::Equals(const nsIURL* aURL) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// End of nsIURL support
+// End of nsIURI support
 ////////////////////////////////////////////////////////////////////////////////////
  
 ////////////////////////////////////////////////////////////////////////////////////
 // The following set of functions should become obsolete once we take them out of
-// nsIURL.....
+// nsIURI.....
 ////////////////////////////////////////////////////////////////////////////////////
 nsresult nsMsgMailNewsUrl::GetLoadAttribs(nsILoadAttribs* *result) const
 {
@@ -447,6 +447,6 @@ nsresult nsMsgMailNewsUrl::ToString(PRUnichar* *aString) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// End of functions which should be made obsolete after modifying nsIURL
+// End of functions which should be made obsolete after modifying nsIURI
 ////////////////////////////////////////////////////////////////////////////////////
 

@@ -20,7 +20,7 @@
 #include "nsIUrlListener.idl"
 #include "nsINntpIncomingServer.idl"
 
-interface nsIURL;
+interface nsIURI;
 interface nsIStreamListener;  
 interface nsISupportsArray;
 
@@ -38,12 +38,12 @@ typedef unsigned long nsMsgKey;
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
 
-  nsIURL PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);
+  nsIURI PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);
 
-  nsIURL RunNewsUrl (in nsString urlString, in nsString newsgroupName, in nsMsgKey aKey, in nsISupports aConsumer, in nsIUrlListener aUrlListener); 
+  nsIURI RunNewsUrl (in nsString urlString, in nsString newsgroupName, in nsMsgKey aKey, in nsISupports aConsumer, in nsIUrlListener aUrlListener); 
 
-  nsIURL GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
+  nsIURI GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
 
-  nsIURL CancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
+  nsIURI CancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
 };
 

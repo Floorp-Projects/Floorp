@@ -29,7 +29,7 @@ class nsUnicharStreamLoader : public nsIUnicharStreamLoader,
                               public nsIStreamListener
 {
 public:
-  nsUnicharStreamLoader(nsIURL* aURL,
+  nsUnicharStreamLoader(nsIURI* aURL,
                         nsStreamCompleteFunc aFunc,
                         void* aRef);
   virtual ~nsUnicharStreamLoader();
@@ -38,12 +38,12 @@ public:
   
   NS_IMETHOD GetNumCharsRead(PRInt32* aNumBytes);
 
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
-  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                              PRUint32 aLength);
 
 protected:
@@ -53,7 +53,7 @@ protected:
 };
 
 
-nsUnicharStreamLoader::nsUnicharStreamLoader(nsIURL* aURL,
+nsUnicharStreamLoader::nsUnicharStreamLoader(nsIURI* aURL,
                                              nsStreamCompleteFunc aFunc,
                                              void* aRef)
 {
@@ -128,14 +128,14 @@ nsUnicharStreamLoader::GetNumCharsRead(PRInt32* aNumBytes)
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStartBinding(nsIURL* aURL, 
+nsUnicharStreamLoader::OnStartBinding(nsIURI* aURL, 
                                       const char *aContentType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnProgress(nsIURL* aURL, 
+nsUnicharStreamLoader::OnProgress(nsIURI* aURL, 
                                   PRUint32 aProgress, 
                                   PRUint32 aProgressMax)
 {
@@ -143,13 +143,13 @@ nsUnicharStreamLoader::OnProgress(nsIURL* aURL,
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+nsUnicharStreamLoader::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStopBinding(nsIURL* aURL, 
+nsUnicharStreamLoader::OnStopBinding(nsIURI* aURL, 
                                      nsresult aStatus, 
                                      const PRUnichar* aMsg)
 {
@@ -159,7 +159,7 @@ nsUnicharStreamLoader::OnStopBinding(nsIURL* aURL,
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::GetBindInfo(nsIURL* aURL,
+nsUnicharStreamLoader::GetBindInfo(nsIURI* aURL,
                                    nsStreamBindingInfo* aInfo)
 {
   return NS_OK;
@@ -168,7 +168,7 @@ nsUnicharStreamLoader::GetBindInfo(nsIURL* aURL,
 #define BUF_SIZE 1024
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnDataAvailable(nsIURL* aURL, 
+nsUnicharStreamLoader::OnDataAvailable(nsIURI* aURL, 
                                        nsIInputStream *aIStream, 
                                        PRUint32 aLength)
 {
@@ -200,7 +200,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsIURL* aURL,
 
 extern NS_NET nsresult 
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
-                          nsIURL* aURL,
+                          nsIURI* aURL,
                           nsStreamCompleteFunc aFunc,
                           void* aRef)
 {

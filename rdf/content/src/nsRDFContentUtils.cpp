@@ -237,7 +237,7 @@ nsRDFContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         rv = aElement->GetDocument(*getter_AddRefs(doc));
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIURL> url = dont_AddRef( doc->GetDocumentURL() );
+        nsCOMPtr<nsIURI> url = dont_AddRef( doc->GetDocumentURL() );
         NS_ASSERTION(url != nsnull, "element has no document");
         if (! url)
             return NS_ERROR_UNEXPECTED;
@@ -417,7 +417,7 @@ nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
     else {
         nsresult rv;
 
-        nsCOMPtr<nsIURL> docURL;
+        nsCOMPtr<nsIURI> docURL;
         rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
         if (NS_FAILED(rv)) return rv;
 
@@ -445,7 +445,7 @@ nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, n
     // DOM APIs.
     nsresult rv;
 
-    nsCOMPtr<nsIURL> docURL;
+    nsCOMPtr<nsIURI> docURL;
     rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
     if (NS_FAILED(rv)) return rv;
 

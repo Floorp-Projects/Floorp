@@ -27,7 +27,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -155,7 +155,7 @@ public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   nsresult Init(nsIDocument* aDoc,
-                nsIURL* aURL,
+                nsIURI* aURL,
                 nsIWebShell* aContainer);
 
   // nsISupports
@@ -194,8 +194,8 @@ public:
 
   nsIDocument* mDocument;
   nsIHTMLDocument* mHTMLDocument;
-  nsIURL* mDocumentURL;
-  nsIURL* mDocumentBaseURL;
+  nsIURI* mDocumentURL;
+  nsIURI* mDocumentBaseURL;
   nsIWebShell* mWebShell;
   nsIParser* mParser;
 
@@ -1361,7 +1361,7 @@ SinkContext::FlushText(PRBool* aDidFlush)
 nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
                       nsIDocument* aDoc,
-                      nsIURL* aURL,
+                      nsIURI* aURL,
                       nsIWebShell* aWebShell)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
@@ -1449,7 +1449,7 @@ NS_IMPL_ISUPPORTS(HTMLContentSink, kIHTMLContentSinkIID)
 
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
-                      nsIURL* aURL,
+                      nsIURI* aURL,
                       nsIWebShell* aContainer)
 {
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
@@ -2468,7 +2468,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
     SplitMimeType(aType, mimeType, params);
 
     if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
-      nsIURL* url = nsnull;
+      nsIURI* url = nsnull;
       nsIURLGroup* urlGroup = nsnull;
       mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
@@ -2484,7 +2484,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 
         nsIURI *uri = nsnull, *baseUri = nsnull;
 
-        result = mDocumentBaseURL->QueryInterface(nsIURL::GetIID(), (void**)&baseUri);
+        result = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
         if (NS_FAILED(result)) return result;
 
         const char *uriStr = aHref.GetBuffer();
@@ -2492,7 +2492,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
         NS_RELEASE(baseUri);
         if (NS_FAILED(result)) return result;
 
-        result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
         NS_RELEASE(uri);
 #endif // NECKO
       }
@@ -2821,7 +2821,7 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       }
       
       nsAutoString ret;
-      nsIURL* docURL = mDocument->GetDocumentURL();
+      nsIURI* docURL = mDocument->GetDocumentURL();
       const char* url;
       if (docURL) {
         (void)docURL->GetSpec(&url);
@@ -2910,7 +2910,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     // If there is a SRC attribute...
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
-      nsIURL* url = nsnull;
+      nsIURI* url = nsnull;
       nsIURLGroup* urlGroup = nsnull;
       mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
@@ -2926,7 +2926,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
         nsIURI *uri = nsnull, *baseUri = nsnull;
 
-        rv = mDocumentBaseURL->QueryInterface(nsIURL::GetIID(), (void**)&baseUri);
+        rv = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
         if (NS_FAILED(rv)) return rv;
 
         const char *uriStr = src.GetBuffer();
@@ -2934,7 +2934,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
         NS_RELEASE(baseUri);
         if (NS_FAILED(rv)) return rv;
 
-        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
         NS_RELEASE(uri);
 #endif // NECKO
       }
@@ -3078,7 +3078,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       // src with immediate style data doesn't add up
       // XXX what does nav do?
       // Use the SRC attribute value to load the URL
-      nsIURL* url = nsnull;
+      nsIURI* url = nsnull;
       nsIURLGroup* urlGroup = nsnull;
       mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
@@ -3094,7 +3094,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
         nsIURI *uri = nsnull, *baseUri = nsnull;
 
-        rv = mDocumentBaseURL->QueryInterface(nsIURL::GetIID(), (void**)&baseUri);
+        rv = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
         if (NS_FAILED(rv)) return rv;
 
         const char *uriStr = src.GetBuffer();
@@ -3102,7 +3102,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
         NS_RELEASE(baseUri);
         if (NS_FAILED(rv)) return rv;
 
-        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
         NS_RELEASE(uri);
 #endif // NECKO
       }

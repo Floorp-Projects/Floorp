@@ -572,7 +572,7 @@ nsresult nsXULAttributes::UpdateClassList(const nsString& aValue)
   return NS_OK;
 }
 
-nsresult nsXULAttributes::UpdateStyleRule(nsIURL* aDocURL, const nsString& aValue)
+nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsString& aValue)
 {
     if (aValue == "")
     {

@@ -45,7 +45,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsITransport:
 
-    NS_IMETHOD GetURL(nsIURL* *result);
+    NS_IMETHOD GetURL(nsIURI* *result);
 
     NS_IMETHOD SetInputStreamConsumer(nsIStreamListener* aListener);
 
@@ -55,17 +55,17 @@ public:
 
 	NS_IMETHOD IsTransportOpen(PRBool * aSocketOpen);
 	
-	NS_IMETHOD Open(nsIURL * aUrl);
+	NS_IMETHOD Open(nsIURI * aUrl);
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIStreamListener:
 
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength);
 
 
@@ -77,8 +77,8 @@ public:
 	nsSocketTransport(const char * fileName); 
 
     virtual ~nsSocketTransport(void);
-    NS_IMETHOD GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult);
-	NS_IMETHOD SetSocketBinding(nsIURL* pURL, URL_Struct_ ** aResult);
+    NS_IMETHOD GetURLInfo(nsIURI* pURL, URL_Struct_ **aResult);
+	NS_IMETHOD SetSocketBinding(nsIURI* pURL, URL_Struct_ ** aResult);
 
 	// the following routines are called by the sock stub protocol hack....
 	// we should be able to remove this dependency once we move things to the new
@@ -113,7 +113,7 @@ protected:
     // through the inputStreamConsumer any socket specific data
     nsIStreamListener *m_inputStreamConsumer; 
 
-    nsIURL *m_url;		// the url we are currently running...
+    nsIURI *m_url;		// the url we are currently running...
     nsString* mData;
     PRFileDesc *m_ready_fd;
     nsIEventQueueService* mEventQService;

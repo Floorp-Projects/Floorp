@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIURL;
+interface nsIURI;
 
 %{C++
 #include "nsIURL.h"
@@ -27,7 +27,7 @@ interface nsIURL;
 [scriptable, uuid(47618220-D008-11d2-8069-006008128C4E)]
 interface nsIUrlListener : nsISupports {
 
-    void OnStartRunningUrl(in nsIURL url);
-    void OnStopRunningUrl(in nsIURL url, in nsresult aExitCode);
+    void OnStartRunningUrl(in nsIURI url);
+    void OnStopRunningUrl(in nsIURI url, in nsresult aExitCode);
 
 };

@@ -175,9 +175,9 @@ NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsIInputStream::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
 
-// Utility to create a nsIURL object...
+// Utility to create a nsIURI object...
 nsresult 
-NewURL(nsIURL** aInstancePtrResult, const nsString& aSpec)
+NewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
 {  
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
@@ -194,7 +194,7 @@ NewURL(nsIURL** aInstancePtrResult, const nsString& aSpec)
 }
 
 nsresult
-SaveQuoteMessageCompleteCallback(nsIURL *aURL, nsresult aExitCode, void *tagData)
+SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData)
 {
   nsresult        rv = NS_OK;
 

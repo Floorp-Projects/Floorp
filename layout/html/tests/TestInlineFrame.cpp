@@ -39,7 +39,7 @@ static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 class MyDocument : public nsDocument {
 public:
   MyDocument();
-  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+  NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
                                nsIWebShell* aShell,
                                nsIStreamListener **aDocListener,
                                const char* aCommand)

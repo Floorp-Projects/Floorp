@@ -98,19 +98,19 @@ public:
   NS_IMETHOD Shutdown(void);
 
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
+                                  nsIURI* aUrl, 
                                   PRBool showWindow,
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
+                                  nsIURI* aUrl, 
                                   PRBool showWindow,
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD RunModalDialog(      nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
+                                  nsIURI* aUrl, 
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
@@ -479,7 +479,7 @@ nsAppShellService::Shutdown(void)
  */
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
-                                        nsIURL* aUrl, PRBool showWindow,
+                                        nsIURI* aUrl, PRBool showWindow,
                                         nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                         nsIXULWindowCallbacks *aCallbacks,
                                         PRInt32 aInitialWidth, PRInt32 aInitialHeight)
@@ -527,7 +527,7 @@ nsAppShellService::CloseTopLevelWindow(nsIWebShellWindow* aWindow)
  */
 NS_IMETHODIMP
 nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
-                                      nsIURL* aUrl, PRBool showWindow,
+                                      nsIURI* aUrl, PRBool showWindow,
                                       nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
@@ -571,7 +571,7 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
 */
 NS_IMETHODIMP
 nsAppShellService::RunModalDialog(
-                      nsIWebShellWindow *aParent, nsIURL* aUrl,
+                      nsIWebShellWindow *aParent, nsIURI* aUrl,
                       nsIWebShellWindow*& aResult, nsIStreamObserver *anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)

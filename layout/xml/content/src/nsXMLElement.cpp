@@ -136,7 +136,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
           nsAutoString show, href, target;
-          nsIURL* baseURL = nsnull;
+          nsIURI* baseURL = nsnull;
 	        nsLinkVerb verb = eLinkVerb_Replace;
 	        target.Truncate();
           GetAttribute(kNameSpaceID_None, kHrefAtom, href);
@@ -166,7 +166,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_ENTER:
       {
         nsAutoString href, target;
-        nsIURL* baseURL = nsnull;
+        nsIURI* baseURL = nsnull;
         GetAttribute(kNameSpaceID_None, kHrefAtom, href);
         if (nsnull != mInner.mDocument) {
           baseURL = mInner.mDocument->GetDocumentURL();

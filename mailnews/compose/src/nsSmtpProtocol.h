@@ -71,17 +71,17 @@ class nsSmtpProtocol : public nsMsgProtocol
 {
 public:
 	// Creating a protocol instance requires the URL which needs to be run.
-	nsSmtpProtocol(nsIURL * aURL);
+	nsSmtpProtocol(nsIURI * aURL);
 	virtual ~nsSmtpProtocol();
 
-	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer = nsnull);
+	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 private:
 	// Smtp Event Sinks
@@ -120,8 +120,8 @@ private:
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
 	// initialization function given a new url and transport layer
-	void Initialize(nsIURL * aURL);
-	virtual nsresult ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
+	void Initialize(nsIURI * aURL);
+	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol

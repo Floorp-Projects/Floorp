@@ -81,7 +81,7 @@ nsMimeEmitter2::SetOutputStream(nsIOutputStream *outStream)
 // anything to the stream since these may be image data
 // output streams, etc...
 nsresult       
-nsMimeEmitter2::Initialize(nsIURL *url)
+nsMimeEmitter2::Initialize(nsIURI *url)
 {
   // set the url
   mURL = url;

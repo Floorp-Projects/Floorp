@@ -159,24 +159,24 @@ public:
 	virtual ~nsNNTPProtocol();
 
 	// initialization function given a news url
-	NS_IMETHOD Initialize(nsIURL * aURL);
+	NS_IMETHOD Initialize(nsIURI * aURL);
 
 	// aConsumer is typically a display stream you may want the results to be displayed into...
-	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer = nsnull);
+	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	char * m_ProxyServer;		/* proxy server hostname */
 
 private:
 	// over-rides from nsMsgProtocol
-	virtual nsresult ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
+	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length);
 	virtual nsresult CloseSocket();
 
 	// we have our own implementation of SendData which writes to the nntp log
 	// and then calls the base class to transmit the data
-	PRInt32 SendData(nsIURL * aURL, const char * dataBuffer);
+	PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
     void ParseHeaderForCancel(char *buf);
     
@@ -290,7 +290,7 @@ private:
 
 	// Figure out what the first command is and send it. 
 	// Returns the status from the NETWrite.
-	PRInt32 SendFirstNNTPCommand(nsIURL * url);
+	PRInt32 SendFirstNNTPCommand(nsIURI * url);
 
 	// Interprets the server response from the first command sent.
 	// returns negative if the server responds unexpectedly.
@@ -372,7 +372,7 @@ private:
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	nsresult ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
+	nsresult ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
 };
 
 NS_BEGIN_EXTERN_C

@@ -36,7 +36,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -127,7 +127,7 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
   }
 
   // Set the image loader's source URL and base URL
-  nsIURL* baseURL = nsnull;
+  nsIURI* baseURL = nsnull;
   nsIHTMLContent* htmlContent;
   rv = mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
   if (NS_SUCCEEDED(rv)) {
@@ -627,7 +627,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
         PRInt32 x = NSTwipsToIntPixels((aEvent->point.x - inner.x), t2p);
         PRInt32 y = NSTwipsToIntPixels((aEvent->point.y - inner.y), t2p);
-        nsIURL* docURL = nsnull;
+        nsIURI* docURL = nsnull;
         nsIDocument* doc = nsnull;
         mContent->GetDocument(doc);
         if (nsnull != doc) {
@@ -654,7 +654,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
       }
       else {
         suppress = GetSuppress();
-        nsIURL* baseURL = nsnull;
+        nsIURI* baseURL = nsnull;
         nsIHTMLContent* htmlContent;
         if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
           htmlContent->GetBaseURL(baseURL);

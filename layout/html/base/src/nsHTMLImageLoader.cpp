@@ -21,7 +21,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -54,7 +54,7 @@ void
 nsHTMLImageLoader::Init(nsIFrame* aFrame,
                         nsHTMLImageLoaderCB aCallBack,
                         void* aClosure,
-                        nsIURL* aBaseURL,
+                        nsIURI* aBaseURL,
                         const nsString& aURLSpec)
 {
   mFrame = aFrame;

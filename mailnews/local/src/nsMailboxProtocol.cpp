@@ -54,7 +54,7 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
  */
 #define OUTPUT_BUFFER_SIZE (4096*2)
 
-nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL)
+nsMailboxProtocol::nsMailboxProtocol(nsIURI * aURL)
 {
 	Initialize(aURL);
 }
@@ -65,7 +65,7 @@ nsMailboxProtocol::~nsMailboxProtocol()
 	delete m_lineStreamBuffer;
 }
 
-void nsMailboxProtocol::Initialize(nsIURL * aURL)
+void nsMailboxProtocol::Initialize(nsIURI * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into MAILBOX Protocol");
 	if (aURL)
@@ -92,7 +92,7 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsINewsURL. If it doesn't support a news URL interface then
@@ -112,7 +112,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aConte
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
@@ -207,7 +207,7 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 // Begin protocol state machine functions...
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsMailboxProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
+nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
 	HG77067
@@ -278,7 +278,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 
 	if (m_mailboxParser)
 	{
-		nsCOMPtr <nsIURL> url = do_QueryInterface(m_runningUrl);
+		nsCOMPtr <nsIURI> url = do_QueryInterface(m_runningUrl);
 		rv = m_mailboxParser->OnDataAvailable(url, inputStream, length); // let the parser deal with it...
 	}
 
@@ -312,7 +312,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	{
 		if (m_mailboxCopyHandler)
 		{
-			nsCOMPtr <nsIURL> url = do_QueryInterface(m_runningUrl);
+			nsCOMPtr <nsIURI> url = do_QueryInterface(m_runningUrl);
 			rv = m_mailboxCopyHandler->OnDataAvailable(url, inputStream, length);
 		}
 	}
@@ -369,7 +369,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
  *
  * returns zero or more if the transfer needs to be continued.
  */
-nsresult nsMailboxProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
     ClearFlag(MAILBOX_PAUSE_FOR_READ); /* already paused; reset */

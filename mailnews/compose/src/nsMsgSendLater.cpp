@@ -95,7 +95,7 @@ nsMsgSendLater::~nsMsgSendLater()
 }
 
 nsresult
-SaveMessageCompleteCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
+SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 {
   nsresult rv = NS_OK;
 

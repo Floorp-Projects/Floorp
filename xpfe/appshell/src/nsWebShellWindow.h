@@ -39,7 +39,7 @@
 /* Forward declarations.... */
 struct PLEvent;
 
-class nsIURL;
+class nsIURI;
 class nsIAppShell;
 class nsIContent;
 class nsIDocument;
@@ -116,7 +116,7 @@ public:
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
   // nsWebShellWindow methods...
-  nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURL* aUrl,
+  nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       nsIStreamObserver* anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight);
@@ -133,22 +133,22 @@ public:
   
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                 nsIURL* aURL, const char* aCommand);
+                                 nsIURI* aURL, const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                               nsIURL *aUrl, PRInt32 aStatus,
+                               nsIURI *aUrl, PRInt32 aStatus,
 							   nsIDocumentLoaderObserver * aDocObserver);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-                            nsIURL* aURL, const char* aContentType, 
+                            nsIURI* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
-                               nsIURL* aURL, PRUint32 aProgress, 
+                               nsIURI* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-                             nsIURL* aURL, nsString& aMsg);
+                             nsIURI* aURL, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-                          nsIURL* aURL, PRInt32 aStatus);
+                          nsIURI* aURL, PRInt32 aStatus);
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                      nsIURL* aURL,
+                                      nsIURI* aURL,
                                       const char *aContentType,
                                       const char *aCommand );
 

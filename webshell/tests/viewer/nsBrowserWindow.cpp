@@ -102,7 +102,7 @@ static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #else
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
@@ -624,7 +624,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    nsIURL * url;
+    nsIURI * url;
 #ifndef NECKO
     res = NS_NewURL(&url, WALLET_EDITOR_URL);
 #else
@@ -635,7 +635,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     res = service->NewURI(WALLET_EDITOR_URL, nsnull, &uri);
     if (NS_FAILED(res)) return nsEventStatus_eIgnore;
 
-    res = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    res = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
 #endif // NECKO
     if (!NS_FAILED(res)) {
@@ -996,7 +996,7 @@ GetTitleSuffix(void)
   if (NS_FAILED(ret)) {
     return suffix;
   }
-  nsIURL* url = nsnull;
+  nsIURI* url = nsnull;
 #ifndef NECKO
   ret = NS_NewURL(&url, nsString(VIEWER_BUNDLE_URL));
 #else
@@ -1007,7 +1007,7 @@ GetTitleSuffix(void)
     ret = service->NewURI(VIEWER_BUNDLE_URL, nsnull, &uri);
     if (NS_FAILED(ret)) return ret;
 
-    ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(ret)) {
@@ -1834,7 +1834,7 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTak
 // Stream observer implementation
 
 NS_IMETHODIMP
-nsBrowserWindow::OnProgress(nsIURL* aURL,
+nsBrowserWindow::OnProgress(nsIURI* aURL,
                             PRUint32 aProgress,
                             PRUint32 aProgressMax)
 {
@@ -1860,7 +1860,7 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   if (mStatus) {
     PRUint32 size;
@@ -1870,7 +1870,7 @@ nsBrowserWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
+nsBrowserWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
   if (mStatus) {
     nsAutoString url;
@@ -1888,7 +1888,7 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OnStopBinding(nsIURL* aURL,
+nsBrowserWindow::OnStopBinding(nsIURI* aURL,
                                nsresult status,
                                const PRUnichar* aMsg)
 {

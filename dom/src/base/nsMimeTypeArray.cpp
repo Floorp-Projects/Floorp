@@ -36,7 +36,7 @@ MimeTypeArrayImpl::MimeTypeArrayImpl(nsIDOMNavigator* navigator)
 MimeTypeArrayImpl::~MimeTypeArrayImpl()
 {
 	if (mMimeTypeArray != nsnull) {
-		for (int i = 0; i < mMimeTypeCount; i++) {
+		for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
 			NS_IF_RELEASE(mMimeTypeArray[i]);
 		}
 		delete[] mMimeTypeArray;

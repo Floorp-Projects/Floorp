@@ -29,7 +29,7 @@ class nsIDOMHTMLAreaElement;
 class nsIDOMHTMLMapElement;
 class nsIPresContext;
 class nsIRenderingContext;
-class nsIURL;
+class nsIURI;
 class nsString;
 
 class nsImageMap : public nsIDocumentObserver
@@ -47,7 +47,7 @@ public:
    * then NS_NOT_INSIDE is returned.
    */
   PRBool IsInside(nscoord aX, nscoord aY,
-                  nsIURL* aDocURL,
+                  nsIURI* aDocURL,
                   nsString& aAbsURL,
                   nsString& aTarget,
                   nsString& aAltText,

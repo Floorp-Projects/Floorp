@@ -78,12 +78,12 @@ public:
     TestConsumer();
     virtual ~TestConsumer();
 
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info);
+    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
+    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 };
 
 
@@ -105,7 +105,7 @@ TestConsumer::~TestConsumer()
 }
 
 
-NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info)
+NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::GetBindInfo: URL: %p\n", aURL);
@@ -114,7 +114,7 @@ NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info)
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnProgress(nsIURL* aURL, PRUint32 Progress, 
+NS_IMETHODIMP TestConsumer::OnProgress(nsIURI* aURL, PRUint32 Progress, 
                                        PRUint32 ProgressMax)
 {
     if (bTraceEnabled) {
@@ -124,7 +124,7 @@ NS_IMETHODIMP TestConsumer::OnProgress(nsIURL* aURL, PRUint32 Progress,
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+NS_IMETHODIMP TestConsumer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStatus: ");
@@ -138,7 +138,7 @@ NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP TestConsumer::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
@@ -148,7 +148,7 @@ NS_IMETHODIMP TestConsumer::OnStartBinding(nsIURL* aURL, const char *aContentTyp
 }
 
 
-NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length) 
+NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length) 
 {
     PRUint32 len;
 
@@ -173,7 +173,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStre
 }
 
 
-NS_IMETHODIMP TestConsumer::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+NS_IMETHODIMP TestConsumer::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStopBinding... URL: %p status: %d\n", aURL, status);
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
     char buf[256];
     nsIStreamListener *pConsumer;
     nsIEventQueueService* pEventQService;
-    nsIURL *pURL;
+    nsIURI *pURL;
     nsresult result;
     int i;
 

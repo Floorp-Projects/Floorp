@@ -179,8 +179,8 @@ public:
 	NS_IMETHOD EndCopy(PRBool copySucceeded);
 
     // nsIUrlListener methods
-	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
     // nsIImapExtensionSink methods
     NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,

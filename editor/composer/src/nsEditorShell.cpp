@@ -754,7 +754,7 @@ nsEditorShell::CreateWindowWithURL(const char* urlStr)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIURL> url = nsnull;
+  nsCOMPtr<nsIURI> url = nsnull;
   nsCOMPtr<nsIWebShellWindow> newWindow;
   
   rv = NS_NewURL(getter_AddRefs(url), urlStr);
@@ -848,7 +848,7 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
                                           getter_AddRefs(toolkitCore));
         if (NS_SUCCEEDED(result) && toolkitCore)
         {
-          // at some point we need to be passing nsFileSpecs around. When nsIUrl is fileSpec-
+          // at some point we need to be passing nsFileSpecs around. When nsIURI is fileSpec-
           // savvy, we should use that.
           result = toolkitCore->ShowWindowWithArgs("chrome://editor/content", nsnull, fileURLString/*fileURL.GetAsString()*/);
         }
@@ -2301,13 +2301,13 @@ nsEditorShell::StopLogging()
 
 // nsIDocumentLoaderObserver methods
 NS_IMETHODIMP
-nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand)
+nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)
 {
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus,
+nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
 								 nsIDocumentLoaderObserver * aObserver)
 {
    return PrepareDocumentForEditing();
@@ -2315,7 +2315,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt3
 
 NS_IMETHODIMP
 nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIURL* aURL, const char* aContentType,
+                                 nsIURI* aURL, const char* aContentType,
                                  nsIContentViewer* aViewer)
 {
 
@@ -2324,7 +2324,7 @@ nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                    nsIURL* aURL, PRUint32 aProgress, 
+                                    nsIURI* aURL, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
 {
   return NS_OK;
@@ -2332,21 +2332,21 @@ nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsEditorShell::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                  nsIURL* aURL, nsString& aMsg)
+                                  nsIURI* aURL, nsString& aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEditorShell::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIURL* aURL, PRInt32 aStatus)
+                               nsIURI* aURL, PRInt32 aStatus)
 {
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEditorShell::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIURL *aURL,
+                                           nsIURI *aURL,
                                            const char *aContentType,
                                            const char *aCommand )
 {

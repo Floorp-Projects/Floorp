@@ -28,7 +28,7 @@
 class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
 {
 public:
-	// overrides for nsIURL
+	// overrides for nsIURI
 	NS_IMETHOD SetURLInfo(URL_Struct *URL_s);
 
 	// from nsIMailboxUrl:

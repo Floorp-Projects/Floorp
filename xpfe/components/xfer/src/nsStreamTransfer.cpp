@@ -59,7 +59,7 @@ private:
 }; // nsStreamTransfer
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFileAndTransferLocation( nsIURL *aURL ) {
+nsStreamTransfer::SelectFileAndTransferLocation( nsIURI *aURL ) {
     // Prompt the user for the destination file.
     nsFileSpec outputFileName;
     nsresult rv = SelectFile( outputFileName );

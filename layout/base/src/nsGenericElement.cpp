@@ -39,7 +39,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsFrame.h"
@@ -1201,7 +1201,7 @@ nsGenericElement::Release()
 void
 nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
                               nsLinkVerb aVerb,
-                              nsIURL* aBaseURL,
+                              nsIURI* aBaseURL,
                               const nsString& aURLSpec,
                               const nsString& aTargetSpec,
                               PRBool aClick)

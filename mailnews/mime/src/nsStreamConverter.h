@@ -60,7 +60,7 @@ public:
    * 
    * This method is currently not called.  
    */
-  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
+  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
 
   /**
    * Notify the client that data is available in the input stream.  This
@@ -72,7 +72,7 @@ public:
    * @param length    The amount of data that was just pushed into the stream.
    * @return The return value is currently ignored.
    */
-  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                              PRUint32 aLength);
 
 
@@ -84,17 +84,17 @@ public:
   * @return The return value is currently ignored.  In the future it may be
   * used to cancel the URL load..
   */
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
   
   /**
   * Notify the observer that progress as occurred for the URL load.<BR>
   */
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   
   /**
   * Notify the observer with a status message for the URL load.<BR>
   */
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
   
   /**
   * Notify the observer that the URL has finished loading.  This method is 
@@ -107,7 +107,7 @@ public:
   * @param msg   A text string describing the error.
   * @return The return value is currently ignored.
   */
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
   ////////////////////////////////////////////////////////////////////////////
   // nsStreamConverter specific methods:
@@ -129,7 +129,7 @@ private:
   char                *mOutputFormat;
   PRBool              mWrapperOutput;  /* Should we output the frame split message display */
   char                *mURLString;
-  nsIURL              *mURL;
+  nsIURI              *mURL;
 }; 
 
 /* this function will be used by the factory to generate an class access object....*/

@@ -26,13 +26,13 @@
 #include "nsIPostToServer.h"
 #include "nsCOMPtr.h"
 
-class nsHttpUrlImpl : public nsIURL, public nsINetlibURL, public nsIHttpURL,
+class nsHttpUrlImpl : public nsIURI, public nsINetlibURL, public nsIHttpURL,
                       public nsIPostToServer    // XXX for now
 {
 public:
-    // from nsIURL:
+    // from nsIURI:
 
-    NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const;
+    NS_IMETHOD_(PRBool) Equals(const nsIURI *aURL) const;
     NS_IMETHOD GetSpec(const char* *result) const;
     NS_IMETHOD SetSpec(const char* spec);
     NS_IMETHOD GetProtocol(const char* *result) const;
@@ -87,7 +87,7 @@ public:
     /* Handle http-equiv meta tags. */
     NS_IMETHOD  AddMimeHeader(const char *name, const char *value);
 
-    nsresult ParseURL(const nsString& aSpec, const nsIURL* aURL = nsnull);
+    nsresult ParseURL(const nsString& aSpec, const nsIURI* aURL = nsnull);
 
 protected:
     virtual ~nsHttpUrlImpl();

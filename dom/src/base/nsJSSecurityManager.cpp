@@ -183,11 +183,7 @@ nsJSSecurityManager::GetSitePolicy(const char *org)
 PRInt32 
 nsJSSecurityManager::CheckForPrivilege(JSContext *cx, char *prop_name, int priv_code)
 {
-  int i;
-  char *markp;
   char *tmp_prop_name;
-  char prop_val_buf[128];
-  int prop_val_len = sizeof(prop_val_buf); 
   JSBool priv = JS_TRUE;
 
   if(prop_name == NULL) {

@@ -171,7 +171,7 @@ void testStrings(nsIDocument* aDoc) {
 class MyDocument : public nsMarkupDocument {
 public:
   MyDocument();
-  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+  NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener,
                                const char* aCommand)

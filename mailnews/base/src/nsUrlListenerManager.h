@@ -58,7 +58,7 @@ protected:
 	nsVoidArray * m_listeners;
 
 	// helper function used to enumerate ISupportsArray and broadcast the change
-	nsresult BroadcastChange(nsIURL * aUrl, nsUrlNotifyType notification, nsresult aErrorCode);
+	nsresult BroadcastChange(nsIURI * aUrl, nsUrlNotifyType notification, nsresult aErrorCode);
 };
 
 #endif /* nsUrlListenerManager_h___ */

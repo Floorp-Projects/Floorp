@@ -28,7 +28,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -76,10 +76,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 
 protected:
 
@@ -686,7 +686,7 @@ nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 static
 void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 {
-  nsIURL* baseURL = nsnull;
+  nsIURI* baseURL = nsnull;
   nsIHTMLContent* htmlContent;
   if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
     htmlContent->GetBaseURL(baseURL);
@@ -1060,7 +1060,7 @@ TempObserver::QueryInterface(const nsIID& aIID,
 
 
 NS_IMETHODIMP
-TempObserver::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+TempObserver::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #if 0
   fputs("[progress ", stdout);
@@ -1072,7 +1072,7 @@ TempObserver::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax
 }
 
 NS_IMETHODIMP
-TempObserver::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+TempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 #if 0
   fputs("[status ", stdout);
@@ -1084,7 +1084,7 @@ TempObserver::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 }
 
 NS_IMETHODIMP
-TempObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
+TempObserver::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 #if 0
   fputs("Loading ", stdout);
@@ -1095,7 +1095,7 @@ TempObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
-TempObserver::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+TempObserver::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 {
 #if 0
   fputs("Done loading ", stdout);

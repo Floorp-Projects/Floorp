@@ -391,7 +391,7 @@ nsNNTPProtocol::~nsNNTPProtocol()
 	delete m_lineStreamBuffer;
 }
 
-nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
+nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 {
     nsresult rv = NS_OK;
 	if (!aURL)
@@ -480,7 +480,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 	return NS_OK;
 }
 
-nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
+nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
   PRBool bVal = FALSE;
   char *hostAndPort = nsnull;
@@ -795,7 +795,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
 
@@ -846,7 +846,7 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 		So, we'll make sure we quote / in message IDs as %2F.
 
  */
-nsresult nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID,
+nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID,
 								  char ** aCommandSpecificData)
 {
 	char * hostAndPort = NULL;
@@ -880,7 +880,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * 
 	if (s && PR_sscanf(s+1, " %u ", &port) == 1 && HG05998)
 		*s = 0;
 
-	// I think the path part is just the file part of the nsIURL interface...
+	// I think the path part is just the file part of the nsIURI interface...
 //	aURL->GetFile(&path_part); 
 	aURL->GetSpec(&url);
 	path_part = PL_strchr (url, ':');
@@ -1021,7 +1021,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * 
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  */
 
-PRInt32 nsNNTPProtocol::SendData(nsIURL * aURL, const char * dataBuffer)
+PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer)
 {
 	NNTP_LOG_WRITE(dataBuffer);
 	return nsMsgProtocol::SendData(aURL, dataBuffer); // base class actually transmits the data
@@ -1215,7 +1215,7 @@ PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 PRInt32 nsNNTPProtocol::SendListExtensions()
 {
 	PRInt32 status = 0;
-	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	if (url)
 		status = SendData(url, NNTP_CMD_LIST_EXTENSIONS);
 
@@ -1554,7 +1554,7 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
  *
  * returns the status from the NETWrite */
 
-PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
+PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 {
 	char *command=0;
 	PRInt32 status = 0;
@@ -4465,7 +4465,7 @@ PRInt32 nsNNTPProtocol::SetupForTransfer()
 // It returns a negative number (mscott: we'll change this to be an enumerated type which we'll coordinate
 // with the netlib folks?) when we are done processing.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length)
 {
 	PRInt32 status = 0; 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);

@@ -475,7 +475,7 @@ int nsExpatTokenizer::LoadExternalDTD(const XML_Char * base,
   }
 
   // XXX try to compose this using base url
-  nsIURL * url = nsnull;
+  nsIURI * url = nsnull;
   nsString * s = new nsString((PRUnichar *)systemId);
   res = netService->CreateURL(&url, *s);
   if (NS_FAILED(res)) {

@@ -34,7 +34,7 @@
 
 // ** forward declaration **
 class nsIUrlListener;
-class nsIURL;
+class nsIURI;
 class nsIImapUrl;
 class nsIEventQueue;
 class nsIImapProtocol;
@@ -57,7 +57,7 @@ public:
                                            nsIImapUrl* aImapUrl,
                                            nsIUrlListener* aUrlListener,
                                            nsISupports* aConsumer,
-                                           nsIURL** aURL) = 0;
+                                           nsIURI** aURL) = 0;
     NS_IMETHOD LoadNextQueuedUrl() = 0;
     NS_IMETHOD RemoveConnection(nsIImapProtocol* aImapConnection) = 0;
 };

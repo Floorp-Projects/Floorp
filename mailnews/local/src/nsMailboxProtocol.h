@@ -78,20 +78,20 @@ class nsMailboxProtocol : public nsMsgProtocol
 public:
 	// Creating a protocol instance requires the URL which needs to be run AND it requires
 	// a transport layer. 
-	nsMailboxProtocol(nsIURL * aURL);
+	nsMailboxProtocol(nsIURI * aURL);
 	virtual ~nsMailboxProtocol();
 
 	// the consumer of the url might be something like an nsIWebShell....
-	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
+	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+	NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -121,11 +121,11 @@ private:
 	nsCOMPtr<nsIWebShell>	 m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
 
-	virtual nsresult ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
+	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length);
 	virtual nsresult CloseSocket();
 
 	// initialization function given a new url and transport layer
-	void Initialize(nsIURL * aURL);
+	void Initialize(nsIURI * aURL);
 	PRInt32 SetupMessageExtraction();
 
 	////////////////////////////////////////////////////////////////////////////////////////

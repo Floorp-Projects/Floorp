@@ -23,7 +23,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -122,7 +122,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // for nsIDocumentLoaderFactory
-  NS_IMETHOD CreateInstance(nsIURL* aURL,
+  NS_IMETHOD CreateInstance(nsIURI* aURL,
                             const char* aContentType, 
                             const char* aCommand,
                             nsIContentViewerContainer* aContainer,
@@ -145,14 +145,14 @@ public:
 
   nsresult InitUAStyleSheet();
 
-  nsresult CreateDocument(nsIURL* aURL, 
+  nsresult CreateDocument(nsIURI* aURL, 
                           const char* aCommand,
                           nsIContentViewerContainer* aContainer,
                           const nsCID& aDocumentCID,
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aDocViewer);
 
-  nsresult CreateRDFDocument(const char* aContentType, nsIURL* aURL, 
+  nsresult CreateRDFDocument(const char* aContentType, nsIURI* aURL, 
                              const char* aCommand,
                              nsIContentViewerContainer* aContainer,
                              nsISupports* aExtraInfo,
@@ -227,7 +227,7 @@ nsLayoutDLF::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP
-nsLayoutDLF::CreateInstance(nsIURL* aURL, 
+nsLayoutDLF::CreateInstance(nsIURI* aURL, 
                             const char* aContentType, 
                             const char *aCommand,
                             nsIContentViewerContainer* aContainer,
@@ -321,7 +321,7 @@ nsLayoutDLF::CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
 }
 
 nsresult
-nsLayoutDLF::CreateDocument(nsIURL* aURL, 
+nsLayoutDLF::CreateDocument(nsIURI* aURL, 
                             const char* aCommand,
                             nsIContentViewerContainer* aContainer,
                             const nsCID& aDocumentCID,
@@ -468,7 +468,7 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
 // ...note, this RDF document _may_ be XUL :-)
 nsresult
 nsLayoutDLF::CreateRDFDocument(const char* aContentType,
-                               nsIURL* aURL, 
+                               nsIURI* aURL, 
                                const char* aCommand,
                                nsIContentViewerContainer* aContainer,
                                nsISupports* aExtraInfo,
@@ -541,7 +541,7 @@ nsLayoutDLF::InitUAStyleSheet()
   nsresult rv = NS_OK;
 
   if (nsnull == gUAStyleSheet) {  // snarf one
-    nsIURL* uaURL;
+    nsIURI* uaURL;
 #ifndef NECKO
     rv = NS_NewURL(&uaURL, nsString(UA_CSS_URL)); // XXX this bites, fix it
 #else
@@ -552,7 +552,7 @@ nsLayoutDLF::InitUAStyleSheet()
     rv = service->NewURI(UA_CSS_URL, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&uaURL);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&uaURL);
     NS_RELEASE(uri);
 #endif // NECKO
     if (NS_SUCCEEDED(rv)) {

@@ -136,7 +136,7 @@ NS_IMETHODIMP nsPluginStreamPeer :: GetMIMEType(nsMIMEType *result)
   return NS_OK;
 }
 
-nsresult nsPluginStreamPeer :: Initialize(nsIURL *aURL, PRUint32 aLength,
+nsresult nsPluginStreamPeer :: Initialize(nsIURI *aURL, PRUint32 aLength,
                                           PRUint32 aLastMod, nsMIMEType aMIMEType,
                                           void *aNotifyData)
 {

@@ -164,7 +164,7 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
     if ( NS_SUCCEEDED( rv ) ) 
     {
         // Open "progress" dialog.
-        nsIURL *url;
+        nsIURI *url;
         rv = NS_NewURL( &url, "resource:/res/profile/progress_undetermined.xul" );
         if ( NS_SUCCEEDED(rv) ) 
         {

@@ -31,7 +31,7 @@
 class nsIDocument;
 class nsIRDFXMLDataSource;
 class nsINameSpaceManager;
-class nsIURL;
+class nsIURI;
 
 // {751843E2-8309-11d2-8EAC-00805F29F370}
 #define NS_IRDFCONTENTSINK_IID \
@@ -48,7 +48,7 @@ public:
     /**
      * Initialize the content sink.
      */
-    NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager) = 0;
+    NS_IMETHOD Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager) = 0;
 
     /**
      * Set the content sink's RDF Data source

@@ -244,7 +244,15 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(kIParserIID)) {  //do IParser base class...
     *aInstancePtr = (nsIParser*)(this);                                        
   }
-  else if(aIID.Equals(kIStreamListenerIID)) {  //do IStreamListener base class...
+#ifdef NECKO
+  else if(aIID.Equals(nsIProgressEventSink::GetIID())) {
+    *aInstancePtr = (nsIStreamListener*)(this);                                        
+  }
+#endif
+  else if(aIID.Equals(nsIStreamObserver::GetIID())) {
+    *aInstancePtr = (nsIStreamObserver*)(this);                                        
+  }
+  else if(aIID.Equals(nsIStreamListener::GetIID())) {
     *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...
@@ -624,7 +632,7 @@ nsParser::IsParserEnabled()
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey) {
+nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   nsresult result=kBadURL;
@@ -955,7 +963,7 @@ nsITokenizer* nsParser::GetTokenizer(void) {
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo){
+nsresult nsParser::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo){
   nsresult result=0;
   return result;
 }
@@ -972,7 +980,7 @@ nsresult
 #ifdef NECKO
 nsParser::OnProgress(nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
 #else
-nsParser::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+nsParser::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 #endif
 {
   nsresult result=0;
@@ -999,7 +1007,7 @@ nsresult
 #ifdef NECKO
 nsParser::OnStatus(nsISupports* aContext, const PRUnichar* aMsg)
 #else
-nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 #endif
 {
   nsresult result=0;
@@ -1029,7 +1037,7 @@ nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 #ifdef NECKO
 nsresult nsParser::OnStartBinding(nsISupports* aContext)
 #else
-nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType)
+nsresult nsParser::OnStartBinding(nsIURI* aURL, const char *aSourceType)
 #endif
 {
   NS_PRECONDITION((eNone==mParserContext->mStreamListenerState),kBadListenerInit);
@@ -1091,7 +1099,7 @@ nsParser::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *err
 #ifdef NECKO
 nsresult nsParser::OnDataAvailable(nsISupports* aContext, nsIBufferInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength)
 #else
-nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 aLength)
+nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 aLength)
 #endif
 {
 /*  if (nsnull != mListener) {
@@ -1164,7 +1172,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
 #ifdef NECKO
 nsresult nsParser::OnStopBinding(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
 #else
-nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+nsresult nsParser::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
 {
   mParserContext->mStreamListenerState=eOnStop;

@@ -305,7 +305,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
           nsAutoString target;
-          nsIURL* baseURL = nsnull;
+          nsIURI* baseURL = nsnull;
           GetBaseURL(baseURL);
           GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
           if (target.Length() == 0) {
@@ -332,7 +332,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
         }
 
         nsAutoString target;
-        nsIURL* baseURL = nsnull;
+        nsIURI* baseURL = nsnull;
         GetBaseURL(baseURL);
         GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
         if (target.Length() == 0) {

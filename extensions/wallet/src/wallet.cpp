@@ -27,7 +27,7 @@
 #include "nsINetService.h"
 #else
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIChannel.h"
 #endif // NECKO
 
@@ -362,7 +362,7 @@ Wallet_Localize(char* genericString) {
     printf("cannot get net service\n");
     return v.ToNewCString();
   }
-  nsIURL *url = nsnull;
+  nsIURI *url = nsnull;
 
 #ifndef NECKO
   ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
@@ -378,7 +378,7 @@ Wallet_Localize(char* genericString) {
     return v.ToNewCString();
   }
 
-  ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
 
 #endif // NECKO
@@ -1180,7 +1180,7 @@ wallet_FetchFromNetCenter(char* from, char* to) {
     nsIInputStream* *aNewStream = &newStream;
     nsresult rv;
 #ifndef NECKO
-    nsIURL * url;
+    nsIURI * url;
     if (!NS_FAILED(NS_NewURL(&url, from))) {
         NS_WITH_SERVICE(nsINetService, inet, kNetServiceCID, &rv);
         if (NS_FAILED(rv)) return;
@@ -1577,10 +1577,10 @@ wallet_InitializeURLList() {
  */
 void
 wallet_InitializeCurrentURL(nsIDocument * doc) {
-  static nsIURL * lastUrl = NULL;
+  static nsIURI * lastUrl = NULL;
 
   /* get url */
-  nsIURL* url;
+  nsIURI* url;
   url = doc->GetDocumentURL();
   if (lastUrl == url) {
     NS_RELEASE(url);

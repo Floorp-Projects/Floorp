@@ -2256,7 +2256,7 @@ nsImapMailFolder::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::OnStartRunningUrl(nsIURL *aUrl)
+nsImapMailFolder::OnStartRunningUrl(nsIURI *aUrl)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	m_urlRunning = PR_TRUE;
@@ -2264,7 +2264,7 @@ nsImapMailFolder::OnStartRunningUrl(nsIURL *aUrl)
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::OnStopRunningUrl(nsIURL *aUrl, nsresult aExitCode)
+nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	nsresult rv = NS_OK;

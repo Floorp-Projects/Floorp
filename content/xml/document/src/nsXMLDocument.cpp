@@ -142,7 +142,7 @@ nsrefcnt nsXMLDocument::Release()
 }
 
 nsresult
-nsXMLDocument::Reset(nsIURL* aURL)
+nsXMLDocument::Reset(nsIURI* aURL)
 {
   nsresult result = nsDocument::Reset(aURL);
   if (NS_FAILED(result)) {
@@ -180,7 +180,7 @@ nsXMLDocument::GetContentType(nsString& aContentType) const
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::StartDocumentLoad(nsIURL *aUrl, 
+nsXMLDocument::StartDocumentLoad(nsIURI *aUrl, 
                                  nsIContentViewerContainer* aContainer,
                                  nsIStreamListener **aDocListener,
                                  const char* aCommand)

@@ -32,22 +32,22 @@
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Okay, I found that all of the mail and news url interfaces needed to support
-// several common interfaces (in addition to those provided through nsIURL). 
+// several common interfaces (in addition to those provided through nsIURI). 
 // So I decided to group them all in this interface.
 // This interface may grow or it may get smaller (if these things get pushed up
-// into nsIURL). The unfortunate thing is that we'd also like to have all of our
+// into nsIURI). The unfortunate thing is that we'd also like to have all of our
 // mail news protocols inherit implementations of this interface. But that is
 // implementation inheritance across dlls. We could do it though....something else
 // to add to the list =).
 //////////////////////////////////////////////////////////////////////////////////
 
-class nsIMsgMailNewsUrl : public nsIURL
+class nsIMsgMailNewsUrl : public nsIURI
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IMSGMAILNEWSURL_IID; return iid; }
 
 	///////////////////////////////////////////////////////////////////////////////
-	// Eventually we'd like to push this type of functionality up into nsIURL.
+	// Eventually we'd like to push this type of functionality up into nsIURI.
 	// The idea is to allow the "application" (the part of the code which wants to 
 	// run a url in order to perform some action) to register itself as a listener
 	// on url. As a url listener, the app will be informed when the url begins to run

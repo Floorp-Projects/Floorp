@@ -37,8 +37,8 @@ static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 // foward declarations...
 
 nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, 
-							  const nsString& aRecipients, nsIUrlListener *, nsIURL ** aUrl);
-nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer);
+							  const nsString& aRecipients, nsIUrlListener *, nsIURI ** aUrl);
+nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer);
 
 nsSmtpService::nsSmtpService()
 {
@@ -54,9 +54,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsSmtpService, nsISmtpService::GetIID());
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsString& aRecipients, 
-										nsIUrlListener * aUrlListener, nsIURL ** aURL)
+										nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
-	nsIURL * urlToRun = nsnull;
+	nsIURI * urlToRun = nsnull;
 	nsresult rv = NS_OK;
 
 	NS_LOCK_INSTANCE();
@@ -106,7 +106,7 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 
 // short cut function for creating a mailto url...
 nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, 
-							  const nsString& aRecipients, nsIUrlListener * aUrlListener, nsIURL ** aUrl)
+							  const nsString& aRecipients, nsIUrlListener * aUrlListener, nsIURI ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
 	// in addition until we have a session to get a password, host and other stuff from, we need to use default values....
@@ -135,13 +135,13 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
-		rv = smtpUrl->QueryInterface(nsIURL::GetIID(), (void **) aUrl);
+		rv = smtpUrl->QueryInterface(nsIURI::GetIID(), (void **) aUrl);
 	 }
 
 	 return rv;
 }
 
-nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
+nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer)
 {
 	// mscott: this function is pretty clumsy right now...eventually all of the dispatching
 	// and transport creation code will live in netlib..this whole function is just a hack

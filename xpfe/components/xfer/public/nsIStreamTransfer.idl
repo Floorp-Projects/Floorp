@@ -18,10 +18,10 @@
 
 #include "nsIAppShellComponent.idl"
 
-[ptr] native nsIURL( nsIURL );
+[ptr] native nsIURI( nsIURI );
 
 %{C++
-class nsIURL;
+class nsIURI;
 %}
 
 /*----------------------------- nsIStreamTransfer ------------------------------
@@ -49,7 +49,7 @@ interface nsIStreamTransfer : nsIAppShellComponent {
     | the argument URL as source to that file, while showing a progress        |
     | dialog.                                                                  |
     --------------------------------------------------------------------------*/
-    void SelectFileAndTransferLocation( in nsIURL aURL );
+    void SelectFileAndTransferLocation( in nsIURI aURL );
 };
 
 
@@ -57,5 +57,5 @@ interface nsIStreamTransfer : nsIAppShellComponent {
 #define NS_ISTREAMTRANSFER_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xfer"
 #define NS_ISTREAMTRANSFER_CLASSNAME "Mozilla Stream Transfer Component"
 #define NS_DECL_ISTREAMTRANSFER \
-    NS_IMETHOD SelectFileAndTransferLocation( nsIURL *aURL );
+    NS_IMETHOD SelectFileAndTransferLocation( nsIURI *aURL );
 %}

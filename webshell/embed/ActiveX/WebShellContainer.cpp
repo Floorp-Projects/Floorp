@@ -278,7 +278,7 @@ CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCo
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartBinding(nsIURL* aURL, const char *aContentType)
+CWebShellContainer::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStartBinding(..., \"%s\")\n"), A2CT(aContentType));
@@ -287,7 +287,7 @@ CWebShellContainer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+CWebShellContainer::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnProgress(..., \"%d\", \"%d\")\n"), (int) aProgress, (int) aProgressMax);
@@ -296,7 +296,7 @@ CWebShellContainer::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgr
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+CWebShellContainer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStatus(..., \"%s\")\n"), W2T((PRUnichar *) aMsg));
@@ -311,7 +311,7 @@ CWebShellContainer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+CWebShellContainer::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStopBinding(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
@@ -330,14 +330,14 @@ CWebShellContainer::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnicha
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand)
+CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)
 { 
 	return NS_OK; 
 } 
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
-CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus, nsIDocumentLoaderObserver * aObserver)
+CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus, nsIDocumentLoaderObserver * aObserver)
 {
 	PRUnichar* wString = nsnull;    
 
@@ -361,34 +361,34 @@ CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, P
 } 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer)
+CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, nsIContentViewer* aViewer)
 { 
 	return NS_OK; 
 } 
 
 NS_IMETHODIMP
-CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 { 
 	return NS_OK; 
 } 
 
 // we don't care about these. 
 NS_IMETHODIMP
-CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, nsString& aMsg)
+CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg)
 { 
 	return NS_OK; 
 } 
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRInt32 aStatus)
+CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus)
 {
 	return NS_OK; 
 } 
 
 
 NS_IMETHODIMP 
-CWebShellContainer::HandleUnknownContentType(nsIDocumentLoader* loader, nsIURL *aURL, const char *aContentType, const char *aCommand ) 
+CWebShellContainer::HandleUnknownContentType(nsIDocumentLoader* loader, nsIURI *aURL, const char *aContentType, const char *aCommand ) 
 { 
 	return NS_OK; 
 } 

@@ -362,7 +362,7 @@ nsresult nsImapUrl::ParseUrl(const nsString& aSpec)
                                         "imap",
                                         getter_AddRefs(server));
         if (NS_FAILED(rv)) return rv;
-        // can't do an addref because it's private to nsIURL, so use
+        // can't do an addref because it's private to nsIURI, so use
         // do_QueryInterface instead
 		m_server = do_QueryInterface(server);
     }
@@ -1031,7 +1031,7 @@ char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldCh
 
 
 ////////////////////////////////////////////////////////////////////////////////////
-// End of functions which should be made obsolete after modifying nsIURL
+// End of functions which should be made obsolete after modifying nsIURI
 ////////////////////////////////////////////////////////////////////////////////////
 
 void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)

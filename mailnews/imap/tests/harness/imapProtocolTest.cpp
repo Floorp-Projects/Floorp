@@ -130,8 +130,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
-	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
 	// nsIImapLog support
 	NS_IMETHOD HandleImapLogData (const char * aLogData);
@@ -338,14 +338,14 @@ nsresult nsIMAP4TestDriver::ListCommands()
 // Begin protocol specific command url generation code...gee that's a mouthful....
 ///////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsIMAP4TestDriver::OnStartRunningUrl(nsIURL * aUrl)
+nsresult nsIMAP4TestDriver::OnStartRunningUrl(nsIURI * aUrl)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	m_runningURL = PR_TRUE;
 	return NS_OK;
 }
 
-nsresult nsIMAP4TestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+nsresult nsIMAP4TestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	nsresult rv = NS_OK;

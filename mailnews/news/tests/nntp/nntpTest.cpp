@@ -168,8 +168,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
-	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
 	// run driver initializes the instance, lists the commands, runs the command and when
 	// the command is finished, it reads in the next command and continues...theoretically,
@@ -279,14 +279,14 @@ nsNntpTestDriver::~nsNntpTestDriver()
 
 NS_IMPL_ISUPPORTS(nsNntpTestDriver, nsIUrlListener::GetIID())
 
-NS_IMETHODIMP nsNntpTestDriver::OnStartRunningUrl(nsIURL * aUrl)
+NS_IMETHODIMP nsNntpTestDriver::OnStartRunningUrl(nsIURI * aUrl)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	m_runningURL = PR_TRUE;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsNntpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+NS_IMETHODIMP nsNntpTestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	nsresult rv = NS_OK;

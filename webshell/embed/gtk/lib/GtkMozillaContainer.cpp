@@ -283,7 +283,7 @@ GtkMozillaContainer::EndLoadURL(nsIWebShell* aShell,
 
 
 nsresult
-GtkMozillaContainer::CreateContentViewer(nsIURL* aURL, 
+GtkMozillaContainer::CreateContentViewer(nsIURI* aURL, 
                                          const char* aContentType, 
                                          const char *aCommand,
                                          nsIContentViewerContainer* aContainer,
@@ -404,7 +404,7 @@ GtkMozillaContainer::StartStream(const char *base_url, const char *action,
 {
   nsresult rv = NS_OK;
   nsString url_str(base_url);
-  nsIURL* url = nsnull;
+  nsIURI* url = nsnull;
   nsIContentViewer* viewer = nsnull;
   nsIStreamListener* listener = nsnull;
 
@@ -419,7 +419,7 @@ GtkMozillaContainer::StartStream(const char *base_url, const char *action,
   rv = service->NewURI(uriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   NS_RELEASE(uri);
 #endif // NECKO
 

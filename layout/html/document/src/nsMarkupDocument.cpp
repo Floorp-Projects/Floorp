@@ -165,7 +165,7 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
     
     if (sheet != nsnull)
     {
-      nsIURL* sheetURL = nsnull;
+      nsIURI* sheetURL = nsnull;
       sheet->GetURL(sheetURL);
       
       if (nsnull == sheetURL) {

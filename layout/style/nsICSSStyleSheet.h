@@ -33,7 +33,7 @@ class nsICSSStyleSheet : public nsIStyleSheet {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_SHEET_IID; return iid; }
 
-  NS_IMETHOD  ContainsStyleSheet(nsIURL* aURL) const = 0;
+  NS_IMETHOD  ContainsStyleSheet(nsIURI* aURL) const = 0;
 
   NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
   NS_IMETHOD  InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;
@@ -47,7 +47,7 @@ public:
   NS_IMETHOD  StyleSheetCount(PRInt32& aCount) const = 0;
   NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
 
-  NS_IMETHOD  Init(nsIURL* aURL) = 0;
+  NS_IMETHOD  Init(nsIURI* aURL) = 0;
   NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
   NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
   NS_IMETHOD  ClearMedia(void) = 0;
@@ -66,7 +66,7 @@ public:
 
 // XXX for backwards compatibility and convenience
 extern NS_HTML nsresult
-  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURL* aURL);
+  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL);
 
 extern NS_HTML nsresult
   NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);

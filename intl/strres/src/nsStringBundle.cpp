@@ -66,7 +66,7 @@ public:
   nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult);
 
   // deprecated
-  nsStringBundle(nsIURL* aURL, nsILocale* aLocale, nsresult* aResult);
+  nsStringBundle(nsIURI* aURL, nsILocale* aLocale, nsresult* aResult);
   virtual ~nsStringBundle();
 
   NS_DECL_ISUPPORTS
@@ -116,7 +116,7 @@ nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresul
 }
 
 // deprecated
-nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
+nsStringBundle::nsStringBundle(nsIURI* aURL, nsILocale* aLocale,
   nsresult* aResult)
 {
   NS_INIT_REFCNT();
@@ -313,7 +313,7 @@ nsStringBundle::OpenInputStream(const nsString2 aURLStr, nsIInputStream*& in)
                                               kINetServiceIID, (nsISupports**) &pNetService);
   /* get the url
    */
-  nsIURL    *url = nsnull;
+  nsIURI    *url = nsnull;
 
   ret = pNetService->CreateURL(&url, aURLStr, nsnull, nsnull,
                                nsnull);
@@ -410,7 +410,7 @@ public:
     nsIStringBundle** aResult);
 
   // deprecate
-  NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
+  NS_IMETHOD CreateBundle(nsIURI* aURL, nsILocale* aLocale,
     nsIStringBundle** aResult);
 };
 
@@ -449,7 +449,7 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
 
 /* deprecated */
 NS_IMETHODIMP
-nsStringBundleService::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
+nsStringBundleService::CreateBundle(nsIURI* aURL, nsILocale* aLocale,
   nsIStringBundle** aResult)
 {
   nsresult ret = NS_OK;

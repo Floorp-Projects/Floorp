@@ -20,7 +20,7 @@
 #include "nsIPop3IncomingServer.idl"
 #include "nsIMsgFolder.idl"
 
-interface nsIURL;
+interface nsIURI;
 
 [scriptable, uuid(EC54D490-BB00-11D2-AB5E-00805F8AC968)]
 interface nsIPop3Sink : nsISupports {
@@ -33,7 +33,7 @@ interface nsIPop3Sink : nsISupports {
   void AbortMailDelivery();
 
   /* returns a closure ? */
-  voidStar IncorporateBegin(in string uidlString, in nsIURL aURL,
+  voidStar IncorporateBegin(in string uidlString, in nsIURI aURL,
                             in unsigned long flags);
 
   void IncorporateWrite(in voidStar closure, in string block,

@@ -25,7 +25,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -134,7 +134,7 @@ struct nsUnknownContentDialog : public nsIXULWindowCallbacks,
     NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { return NS_OK; }
 
     // nsUnknownContentDialog stuff
-    nsUnknownContentDialog( nsIURL *aURL, const char *aContentType, nsIDocumentLoader *aDocLoader )
+    nsUnknownContentDialog( nsIURI *aURL, const char *aContentType, nsIDocumentLoader *aDocLoader )
         : mUrl( aURL ),
           mContentType( aContentType ),
           mDocLoader( aDocLoader ) {
@@ -155,7 +155,7 @@ struct nsUnknownContentDialog : public nsIXULWindowCallbacks,
     }
 
 private:
-    nsCOMPtr<nsIURL>            mUrl;
+    nsCOMPtr<nsIURI>            mUrl;
     nsCOMPtr<nsIWebShell>       mWebShell;
     nsCOMPtr<nsIWebShellWindow> mWindow;
     nsString                    mContentType;
@@ -194,7 +194,7 @@ nsUnknownContentDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 // HandleUnknownContentType (from nsIUnknownContentTypeHandler) implementation.
 NS_IMETHODIMP
-nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
+nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURI *aURL,
                                                        const char *aContentType,
                                                        nsIDocumentLoader *aDocLoader ) {
     nsresult rv = NS_OK;
@@ -205,7 +205,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
         nsCOMPtr<nsIWebShellWindow> newWindow;
     
         // Make url for dialog xul.
-        nsIURL *url;
+        nsIURI *url;
         char * urlStr = "resource:/res/samples/unknownContent.xul";
 #ifndef NECKO
         rv = NS_NewURL( &url, urlStr );
@@ -217,7 +217,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
         rv = service->NewURI(urlStr, nsnull, &uri);
         if (NS_FAILED(rv)) return rv;
 
-        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
         NS_RELEASE(uri);
 #endif // NECKO
     
@@ -282,9 +282,16 @@ nsUnknownContentDialog::ConstructBeforeJavaScript( nsIWebShell *aWebShell ) {
                     nsCOMPtr<nsIDOMElement> location;
                     rv = xulDoc->GetElementById( "data.location", getter_AddRefs(location) );
                     if ( location ) {
+#ifdef NECKO
+                        char *loc = 0;
+                        mUrl->GetSpec( &loc );
+                        rv = location->SetAttribute( "value", loc );
+                        nsCRT::free(loc);
+#else
                         const char *loc = 0;
                         mUrl->GetSpec( &loc );
                         rv = location->SetAttribute( "value", loc );
+#endif
                         if ( NS_SUCCEEDED( rv ) ) {
                             // Set data.contentType value attribute to the content type.
                             nsCOMPtr<nsIDOMElement> contentType;

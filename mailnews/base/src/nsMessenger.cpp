@@ -265,7 +265,7 @@ nsMessenger::Open3PaneWindow()
 	urlstr = "resource:/res/samples/messenger.html";
 	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   
-	nsIURL* url = nsnull;
+	nsIURI* url = nsnull;
 	NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv);
 	if (NS_SUCCEEDED(rv) && pNetService) {
 		rv = pNetService->CreateURL(&url, urlstr);
@@ -607,7 +607,7 @@ nsMessenger::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *
 
 		if (NS_SUCCEEDED(rv) && messageService)
 		{
-			nsIURL * url = nsnull;
+			nsIURI * url = nsnull;
 			nsCOMPtr<nsIStreamListener> streamListener(do_QueryInterface(copyStreamListener));
 			if(!streamListener)
 				return NS_ERROR_NO_INTERFACE;

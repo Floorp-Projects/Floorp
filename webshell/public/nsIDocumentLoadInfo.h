@@ -26,7 +26,7 @@
 { 0xa6cf9063, 0x15b3, 0x11d2,    \
   {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-class nsIURL;
+class nsIURI;
 class nsIContentViewerContainer;
 
 class nsIDocumentLoadInfo : public nsISupports {
@@ -47,7 +47,7 @@ public:
    * @param aURL out parameter for url
    * @result NS_OK if successful
    */
-  NS_IMETHOD GetURL(nsIURL **aURL)=0;
+  NS_IMETHOD GetURL(nsIURI **aURL)=0;
 
   /**
    * Get the container associated with this document load

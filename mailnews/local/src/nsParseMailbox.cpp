@@ -52,14 +52,14 @@ NS_IMPL_ISUPPORTS_INHERITED(nsMsgMailboxParser, nsParseMailMessageState, nsIStre
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	// right now, this really just means turn around and process the url
 	ProcessMailboxInputStream(aURL, aIStream, aLength);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
@@ -95,7 +95,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	DoneParsingFolder();
 	// what can we do? we can close the stream?
@@ -193,7 +193,7 @@ void nsMsgMailboxParser::UpdateProgressPercent ()
 #endif
 }
 
-int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	nsresult ret = NS_OK;
 

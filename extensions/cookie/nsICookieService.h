@@ -20,7 +20,7 @@
 #define nsICookieService_h__
 
 #include "nsISupports.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsString.h"
 
 // {AB397772-12D3-11d3-8AD1-00105A1B8860}

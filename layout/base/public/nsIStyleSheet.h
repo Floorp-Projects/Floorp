@@ -22,7 +22,7 @@
 #include "nsISupports.h"
 class nsIAtom;
 class nsString;
-class nsIURL;
+class nsIURI;
 class nsIStyleRule;
 class nsISupportsArray;
 class nsIPresContext;
@@ -39,7 +39,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISTYLE_SHEET_IID; return iid; }
 
   // basic style sheet data
-  NS_IMETHOD GetURL(nsIURL*& aURL) const = 0;
+  NS_IMETHOD GetURL(nsIURI*& aURL) const = 0;
   NS_IMETHOD GetTitle(nsString& aTitle) const = 0;
   NS_IMETHOD GetType(nsString& aType) const = 0;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const = 0;

@@ -126,7 +126,7 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 // nsIMsgMessageService support
 ////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL)
+NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURI **aURL)
 {
 	// unimplemented for news right now....if we feel it would be useful to 
 	// be able to spool a news article to disk then this is the method we need to implement.
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileS
 	return rv;
 }
 
-nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
+nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
   
@@ -262,7 +262,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
 
 
 nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURL **aURL)
+						   nsIUrlListener * aUrlListener, nsIURI **aURL)
 {
 	NS_ASSERTION(0, "unimplemented feature");
 	return NS_OK;
@@ -392,7 +392,7 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
 ////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgroupNames, nsIUrlListener * aUrlListener, nsIURL **_retval)
+nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgroupNames, nsIUrlListener * aUrlListener, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
   printf("nsNntpService::PostMessage(%s,%s,??,??)\n",(const char *)pathToFile,newsgroupNames);
@@ -453,7 +453,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
   rv = nntpProtocol->LoadUrl(mailnewsurl, /* aConsumer */ nsnull);
 		
   if (_retval)
-	  nntpUrl->QueryInterface(nsIURL::GetIID(), (void **) _retval);
+	  nntpUrl->QueryInterface(nsIURI::GetIID(), (void **) _retval);
     
   NS_UNLOCK_INSTANCE();
 
@@ -461,7 +461,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
 }
 
 nsresult 
-nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener, nsIURL **_retval)
+nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener, nsIURI **_retval)
 {
 #ifdef DEBUG_sspitzer
   printf("nsNntpService::RunNewsUrl(%s,%s,%lu,...)\n", (const char *)nsAutoCString(urlString), (const char *)nsAutoCString(newsgroupName), key);
@@ -508,12 +508,12 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
   if (NS_FAILED(rv)) return rv;
   
   if (_retval)
-	  nntpUrl->QueryInterface(nsIURL::GetIID(), (void **) _retval);
+	  nntpUrl->QueryInterface(nsIURI::GetIID(), (void **) _retval);
 	
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURL **_retval)
+NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURI **_retval)
 {
   if (!uri) {
 	return NS_ERROR_NULL_POINTER;
@@ -572,7 +572,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *newsgroupname, nsISupportsArray *messages, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
+NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *newsgroupname, nsISupportsArray *messages, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
   PRUint32 count = 0;

@@ -40,7 +40,7 @@ class nsIStyleContext;
 class nsIAtom;
 class nsString;
 class nsIEventStateManager;
-class nsIURL;
+class nsIURI;
 
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
@@ -103,7 +103,7 @@ public:
   /** 
    * Get base url for presentation
    */
-  NS_IMETHOD GetBaseURL(nsIURL** aURLResult) = 0;
+  NS_IMETHOD GetBaseURL(nsIURI** aURLResult) = 0;
 
   /** 
    * Get medium of presentation

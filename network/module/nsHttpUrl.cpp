@@ -100,7 +100,7 @@ nsresult nsHttpUrlImpl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_OK;
     }
     if (aIID.Equals(kIURLIID)) {
-        *aInstancePtr = (void*) ((nsIURL*)this);
+        *aInstancePtr = (void*) ((nsIURI*)this);
         AddRef();
         return NS_OK;
     }
@@ -320,7 +320,7 @@ done:
 // XXX don't bother with port numbers
 // XXX don't bother with ref's
 // XXX null pointer checks are incomplete
-nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
+nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURI* aURL)
 {
     // XXX hack!
     char* cSpec = aSpec.ToNewCString();
@@ -661,14 +661,14 @@ nsHttpUrlImpl::ReconstructSpec(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PRBool nsHttpUrlImpl::Equals(const nsIURL* aURL) const 
+PRBool nsHttpUrlImpl::Equals(const nsIURI* aURL) const 
 {
     PRBool bIsEqual(PR_FALSE);
     if (aURL)
     {
         NS_LOCK_INSTANCE();
         nsIHttpURL* otherURL;
-        if (NS_SUCCEEDED(((nsIURL*)aURL)->QueryInterface(kIHttpURLIID, (void**)&otherURL))) {
+        if (NS_SUCCEEDED(((nsIURI*)aURL)->QueryInterface(kIHttpURLIID, (void**)&otherURL))) {
             nsHttpUrlImpl* other = (nsHttpUrlImpl*)otherURL;
             bIsEqual = PRBool((0 == PL_strcmp(mProtocol, other->mProtocol)) && 
                               (0 == PL_strcasecmp(mHost, other->mHost)) &&

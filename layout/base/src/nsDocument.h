@@ -110,7 +110,7 @@ public:
 
   virtual nsIArena* GetArena();
 
-  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+  NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener,
                                const char* aCommand);
@@ -123,22 +123,28 @@ public:
   /**
    * Return the URL for the document. May return null.
    */
-  virtual nsIURL* GetDocumentURL() const;
+  virtual nsIURI* GetDocumentURL() const;
 
   /**
    * Return the content (mime) type of this document.
    */
   NS_IMETHOD GetContentType(nsString& aContentType) const;
 
+#ifndef NECKO
   /**
    * Return the URLGroup for the document. May return null.
    */
   virtual nsIURLGroup* GetDocumentURLGroup() const;
+#endif
 
   /**
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).
    */
-  NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
+#ifdef NECKO
+  NS_IMETHOD GetBaseURI(nsIURI*& aURL) const;
+#else
+  NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
+#endif
 
   /**
    * Return a standard name for the document's character set. This will
@@ -414,7 +420,7 @@ protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
-  virtual nsresult Reset(nsIURL* aURL);
+  virtual nsresult Reset(nsIURI* aURL);
 
 	// this enum is temporary; there should be no knowledge of HTML in
 	// nsDocument. That will be fixed when content sink stream factories
@@ -437,8 +443,10 @@ protected:
 
   nsIArena* mArena;
   nsString* mDocumentTitle;
-  nsIURL* mDocumentURL;
+  nsIURI* mDocumentURL;
+#ifndef NECKO
   nsIURLGroup* mDocumentURLGroup;
+#endif
   nsString mCharacterSet;
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;

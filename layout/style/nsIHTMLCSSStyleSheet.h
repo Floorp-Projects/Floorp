@@ -29,13 +29,13 @@ class nsIHTMLCSSStyleSheet : public nsIStyleSheet {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IHTML_CSS_STYLE_SHEET_IID; return iid; }
 
-  NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument) = 0;
-  NS_IMETHOD Reset(nsIURL* aURL) = 0;
+  NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument) = 0;
+  NS_IMETHOD Reset(nsIURI* aURL) = 0;
 };
 
 // XXX for convenience and backward compatibility
 extern NS_HTML nsresult
-  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURL* aURL,
+  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURI* aURL,
                           nsIDocument* aDocument);
 
 extern NS_HTML nsresult

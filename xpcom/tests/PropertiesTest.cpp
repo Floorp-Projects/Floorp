@@ -117,7 +117,7 @@ main(int argc, char* argv[])
     printf("cannot get net service\n");
     return 1;
   }
-  nsIURL *url = nsnull;
+  nsIURI *url = nsnull;
   ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
     nsnull);
   if (NS_FAILED(ret) || (!url)) {

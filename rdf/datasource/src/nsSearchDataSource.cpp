@@ -53,7 +53,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIBuffer.h"
@@ -113,14 +113,14 @@ public:
 
 	// stream observer
 
-	NS_IMETHOD	OnStartBinding(nsIURL *aURL, const char *aContentType);
-	NS_IMETHOD	OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD	OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-	NS_IMETHOD	OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
+	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// stream listener
-	NS_IMETHOD	GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-	NS_IMETHOD	OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength);
 };
 
@@ -954,7 +954,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 	char	*searchURL = action.ToNewCString();
 	if (searchURL)
 	{
-		nsIURL		*url = nsnull;
+		nsIURI		*url = nsnull;
 #ifndef NECKO
         rv = NS_NewURL(&url, (const char*) searchURL);
 #else
@@ -965,7 +965,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
         rv = service->NewURI((const char*) searchURL, nsnull, &uri);
         if (NS_FAILED(rv)) return rv;
 
-        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
         NS_RELEASE(uri);
 #endif // NECKO
 		if (NS_SUCCEEDED(rv))
@@ -1540,7 +1540,7 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 
 
 NS_IMETHODIMP
-SearchDataSourceCallback::OnStartBinding(nsIURL *aURL, const char *aContentType)
+SearchDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -1561,7 +1561,7 @@ SearchDataSourceCallback::OnStartBinding(nsIURL *aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-SearchDataSourceCallback::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
+SearchDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
 {
 	return(NS_OK);
 }
@@ -1569,7 +1569,7 @@ SearchDataSourceCallback::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 
 
 
 NS_IMETHODIMP
-SearchDataSourceCallback::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+SearchDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	return(NS_OK);
 }
@@ -1577,7 +1577,7 @@ SearchDataSourceCallback::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -2013,7 +2013,7 @@ NS_IMPL_ISUPPORTS(SearchDataSourceCallback, nsIRDFSearchDataSourceCallback::GetI
 
 
 NS_IMETHODIMP
-SearchDataSourceCallback::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+SearchDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	return(NS_OK);
 }
@@ -2021,7 +2021,7 @@ SearchDataSourceCallback::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 
 
 NS_IMETHODIMP
-SearchDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	nsresult	rv = NS_OK;
 

@@ -35,7 +35,7 @@ nsMsgProtocol::nsMsgProtocol()
 nsMsgProtocol::~nsMsgProtocol()
 {}
 
-nsresult nsMsgProtocol::OpenNetworkSocket(nsIURL * aURL, PRUint32 aPort, const char * aHostName) // open a connection on this url
+nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, PRUint32 aPort, const char * aHostName) // open a connection on this url
 {
 	nsresult rv = NS_OK;
 
@@ -53,7 +53,7 @@ nsresult nsMsgProtocol::OpenNetworkSocket(nsIURL * aURL, PRUint32 aPort, const c
 	return rv;
 }
 
-nsresult nsMsgProtocol::OpenFileSocket(nsIURL * aURL, const nsFileSpec * aFileSpec)
+nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec)
 {
 	nsresult rv = NS_OK;
 	
@@ -110,7 +110,7 @@ nsresult nsMsgProtocol::CloseSocket()
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  */
 
-PRInt32 nsMsgProtocol::SendData(nsIURL * aURL, const char * dataBuffer)
+PRInt32 nsMsgProtocol::SendData(nsIURI * aURL, const char * dataBuffer)
 {
 	PRUint32 writeCount = 0; 
 	PRInt32 status = 0; 
@@ -136,26 +136,26 @@ PRInt32 nsMsgProtocol::SendData(nsIURL * aURL, const char * dataBuffer)
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsMsgProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+NS_IMETHODIMP nsMsgProtocol::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	// right now, this really just means turn around and churn through the state machine
 	return ProcessProtocolState(aURL, aIStream, aLength);
 }
 
-NS_IMETHODIMP nsMsgProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgProtocol::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
 	return aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMsgProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
 	return aMsgUrl->SetUrlState(PR_FALSE, aStatus);
 }
 
-nsresult nsMsgProtocol::LoadUrl(nsIURL * aURL, nsISupports * /* aConsumer */)
+nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 {
 	// okay now kick us off to the next state...
 	// our first state is a process state so drive the state machine...

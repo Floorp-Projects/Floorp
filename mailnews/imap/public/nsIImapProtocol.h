@@ -34,7 +34,7 @@
 { 0x4ccac6f0, 0xdcb4, 0x11d2,					\
     { 0x80, 0x6d, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
-class nsIURL;
+class nsIURI;
 class nsIImapUrl;
 class nsIImapHostSessionList;
 class nsIWebShell;
@@ -53,7 +53,7 @@ public:
 	// I think. Imap happens to be the only case where we need to push back
 	// a thread safe object to our test app. 
 	/////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD LoadUrl(nsIURL * aUrl, nsISupports * aConsumer) = 0;
+	NS_IMETHOD LoadUrl(nsIURI * aUrl, nsISupports * aConsumer) = 0;
 
 	///////////////////////////////////////////////////////////////////////// 
 	// IsBusy returns true if the connection is currently processing a url

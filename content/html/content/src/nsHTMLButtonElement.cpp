@@ -397,7 +397,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
         if (activeLink == this) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
             nsAutoString href, target, disabled;
-            nsIURL* baseURL = nsnull;
+            nsIURI* baseURL = nsnull;
             GetBaseURL(baseURL);
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);

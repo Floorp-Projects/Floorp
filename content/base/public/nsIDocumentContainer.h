@@ -21,7 +21,7 @@
 #include "nsISupports.h"
 class nsIScriptable;
 class nsIScriptEnvironment;
-class nsIURL;
+class nsIURI;
 
 #define NS_IDOCUMENT_CONTAINER_IID \
 { 0x8efd4470, 0x944d, 0x11d1,      \
@@ -35,7 +35,7 @@ public:
    * @param url the URL to display
    * @param connection the connection to use.
    */
-  virtual void Display(nsIURL* aURL) = 0;
+  virtual void Display(nsIURI* aURL) = 0;
 
   /**
    * Returns a script environment for the specified language and version.

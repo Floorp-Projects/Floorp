@@ -172,7 +172,7 @@ public:
     NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
     // nsIRDFContentSink
-    NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
+    NS_IMETHOD Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager);
     NS_IMETHOD SetDataSource(nsIRDFXMLDataSource* ds);
     NS_IMETHOD GetDataSource(nsIRDFXMLDataSource*& ds);
 
@@ -250,7 +250,7 @@ protected:
 
     nsVoidArray* mContextStack;
 
-    nsIURL*      mDocumentURL;
+    nsIURI*      mDocumentURL;
     PRUint32     mGenSym; // for generating anonymous resources
 };
 
@@ -713,7 +713,7 @@ RDFContentSinkImpl::AddEntityReference(const nsIParserNode& aNode)
 // nsIRDFContentSink interface
 
 NS_IMETHODIMP
-RDFContentSinkImpl::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
+RDFContentSinkImpl::Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager)
 {
     NS_PRECONDITION((nsnull != aURL) && (nsnull != aNameSpaceManager), "null ptr");
     if ((! aURL) || (! aNameSpaceManager))

@@ -31,7 +31,7 @@ public:
     virtual       ~nsMimeEmitter2 (void);
 
     // These will be called to start and stop the total operation
-    NS_IMETHOD    Initialize(nsIURL *url);
+    NS_IMETHOD    Initialize(nsIURI *url);
     NS_IMETHOD    Complete();
 
     // Set the output stream/listener for processed data.
@@ -79,7 +79,7 @@ protected:
     char          *mAttachContentType;
 
     // the url for the data being processed...
-    nsIURL        *mURL;
+    nsIURI        *mURL;
 
     // The setting for header output...
     PRInt32       mHeaderDisplayType;

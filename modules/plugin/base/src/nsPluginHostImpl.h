@@ -130,13 +130,17 @@ public:
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
 
   NS_IMETHOD
-  InstantiateEmbededPlugin(const char *aMimeType, nsIURL* aURL, nsIPluginInstanceOwner *aOwner);
+#ifdef NECKO
+  InstantiateEmbededPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
+#else
+  InstantiateEmbededPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
+#endif
 
   NS_IMETHOD
   InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
-  SetUpPluginInstance(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner);
+  SetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
   IsPluginEnabledForType(const char* aMimeType);
@@ -235,7 +239,7 @@ private:
   /* Called by InstantiatePlugin */
 
   nsresult
-  NewEmbededPluginStream(nsIURL* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
+  NewEmbededPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
 
@@ -243,10 +247,10 @@ private:
   FindPluginEnabledForType(const char* aMimeType, nsPluginTag* &aPlugin);
 
   nsresult
-  FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstanceOwner *aOwner);
+  FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
   void
-  AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURL* aURL);
+  AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURI* aURL);
 
   char        *mPluginPath;
   nsPluginTag *mPlugins;

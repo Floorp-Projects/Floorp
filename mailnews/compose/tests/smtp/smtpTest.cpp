@@ -141,8 +141,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
-	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
 	// run driver initializes the instance, lists the commands, runs the command and when
 	// the command is finished, it reads in the next command and continues...theoretically,
@@ -180,14 +180,14 @@ protected:
 	PRBool m_protocolInitialized; 
 };
 
-nsresult nsSmtpTestDriver::OnStartRunningUrl(nsIURL * aUrl)
+nsresult nsSmtpTestDriver::OnStartRunningUrl(nsIURI * aUrl)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	m_runningURL = PR_TRUE;
 	return NS_OK;
 }
 
-nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	//nsresult rv = NS_OK;
@@ -409,7 +409,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	// SMTP protocol instance every time we launch a mailto url...
 
 	nsFilePath filePath (fileName);
-	nsIURL * url = nsnull;
+	nsIURI * url = nsnull;
 	m_smtpService->SendMailMessage(filePath, recipients, this, &url);
 	if (url)
 		m_smtpUrl = do_QueryInterface(url);

@@ -28,7 +28,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -103,7 +103,7 @@ static void SetTextStringOnTextNode(const nsString& aTextString, nsIContent* aTe
 nsresult
 NS_NewXMLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
-                     nsIURL* aURL,
+                     nsIURI* aURL,
                      nsIWebShell* aWebShell)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
@@ -184,7 +184,7 @@ nsXMLContentSink::~nsXMLContentSink()
 
 nsresult
 nsXMLContentSink::Init(nsIDocument* aDoc,
-                       nsIURL* aURL,
+                       nsIURI* aURL,
                        nsIWebShell* aContainer)
 {
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
@@ -998,11 +998,11 @@ GetQuotedAttributeValue(nsString& aSource,
 
 #ifdef XSL
 nsresult
-nsXMLContentSink::CreateStyleSheetURL(nsIURL** aUrl, 
+nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl, 
                                       const nsAutoString& aHref)
 {
   nsAutoString absURL;
-  nsIURL* docURL = mDocument->GetDocumentURL();
+  nsIURI* docURL = mDocument->GetDocumentURL();
   nsIURLGroup* urlGroup; 
   nsresult result = NS_OK;
   
@@ -1034,7 +1034,7 @@ nsXMLContentSink::CreateStyleSheetURL(nsIURL** aUrl,
     result = service->NewURI(absUrlStr, nsnull, &uri);
     if (NS_FAILED(result)) return result;
 
-    result = uri->QueryInterface(nsIURL::GetIID(), (void**)aUrl);
+    result = uri->QueryInterface(nsIURI::GetIID(), (void**)aUrl);
     NS_RELEASE(uri);
 #endif // NECKO
   }
@@ -1046,7 +1046,7 @@ nsXMLContentSink::CreateStyleSheetURL(nsIURL** aUrl,
 // Create an XML parser and an XSL content sink and start parsing
 // the XSL stylesheet located at the given URL.
 nsresult
-nsXMLContentSink::LoadXSLStyleSheet(const nsIURL* aUrl)
+nsXMLContentSink::LoadXSLStyleSheet(const nsIURI* aUrl)
 {  
   nsresult rv = NS_OK;
 
@@ -1141,7 +1141,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   SplitMimeType(aType, mimeType, params);
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
-    nsIURL* url = nsnull;
+    nsIURI* url = nsnull;
     nsIURLGroup* urlGroup = nsnull;
     mDocumentBaseURL->GetURLGroup(&urlGroup);
     if (urlGroup) {
@@ -1164,7 +1164,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
       NS_RELEASE(baseUri);
       if (NS_FAILED(result)) return result;
 
-      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
       NS_RELEASE(uri);
       if (NS_FAILED(result)) return result;
 #endif // NECKO
@@ -1264,7 +1264,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
-  nsIURL* url = nsnull;
+  nsIURI* url = nsnull;
   FlushText();
 
   // XXX For now, we don't add the PI to the content model.
@@ -1632,7 +1632,7 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
         return rv;
       }
         
-      nsIURL* docURL = mDocument->GetDocumentURL();
+      nsIURI* docURL = mDocument->GetDocumentURL();
       const char* url;
       if (docURL) {
          (void)docURL->GetSpec(&url);
@@ -1761,9 +1761,9 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
     // If there is a SRC attribute...
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
-      nsIURL* url = nsnull;
+      nsIURI* url = nsnull;
       nsAutoString absURL;
-      nsIURL* docURL = mDocument->GetDocumentURL();
+      nsIURI* docURL = mDocument->GetDocumentURL();
       nsIURLGroup* urlGroup;
 
       rv = docURL->GetURLGroup(&urlGroup);
@@ -1784,7 +1784,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
           rv = service->NewURI(uriStr, nsnull, &uri);
           if (NS_FAILED(rv)) return rv;
 
-          rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+          rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
           NS_RELEASE(uri);
           if (NS_FAILED(rv)) return rv;
 #endif // NECKO

@@ -36,7 +36,7 @@ class nsIStreamObserver;
 class nsIStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
-class nsIURL;
+class nsIURI;
 class nsIURLGroup;
 class nsIViewManager;
 class nsString;
@@ -85,7 +85,7 @@ public:
   // returns the arena associated with this document.
   virtual nsIArena* GetArena() = 0;
 
-  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+  NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener,
                                const char* aCommand) = 0;
@@ -98,7 +98,7 @@ public:
   /**
    * Return the URL for the document. May return null.
    */
-  virtual nsIURL* GetDocumentURL() const = 0;
+  virtual nsIURI* GetDocumentURL() const = 0;
 
   /**
    * Return the URLGroup for the document. May return null.
@@ -108,7 +108,7 @@ public:
   /**
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).
    */
-  NS_IMETHOD GetBaseURL(nsIURL*& aURL) const = 0;
+  NS_IMETHOD GetBaseURL(nsIURI*& aURL) const = 0;
 
   /**
    * Return the content (mime) type of this document.

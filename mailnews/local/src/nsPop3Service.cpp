@@ -42,14 +42,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsPop3Service, nsIPop3Service::GetIID());
 NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 							   nsIMsgFolder *inbox, 
                                nsIPop3IncomingServer *popServer,
-                               nsIURL ** aURL)
+                               nsIURI ** aURL)
 {
 	NS_LOCK_INSTANCE();
 	nsresult rv = NS_OK;
 	char * hostname = nsnull;
 
     nsCOMPtr<nsIMsgIncomingServer> server;
-	nsCOMPtr<nsIURL> url;
+	nsCOMPtr<nsIURI> url;
 
 	server = do_QueryInterface(popServer);
     if (server) 
@@ -81,12 +81,12 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 
 nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
                                    nsIPop3IncomingServer *popServer,
-                                   nsIURL ** aURL)
+                                   nsIURI ** aURL)
 {
 	NS_LOCK_INSTANCE();
 	nsresult rv = NS_OK;
 	char * popHost = nsnull;
-	nsCOMPtr<nsIURL> url;
+	nsCOMPtr<nsIURI> url;
 
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	server = do_QueryInterface(popServer);    
@@ -122,7 +122,7 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 									 nsIMsgFolder *inbox,
                                      nsIPop3IncomingServer *server,
 									 nsIUrlListener * aUrlListener,
-                                     nsIURL ** aUrl)
+                                     nsIURI ** aUrl)
 {
 	nsresult rv = NS_OK;
 	// create a sink to run the url with
@@ -146,14 +146,14 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 		pop3Url->RegisterListener(aUrlListener);
 
 	if (aUrl)
-		rv = pop3Url->QueryInterface(nsIURL::GetIID(), (void **) aUrl);
+		rv = pop3Url->QueryInterface(nsIURI::GetIID(), (void **) aUrl);
 	else  // hmmm delete is protected...what can we do here? no one has a ref cnt on the object...
 		NS_IF_RELEASE(pop3Url);
 
 	return rv;
 }
 
-nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURL * aUrlToRun)
+nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlToRun)
 {
 	nsresult rv = NS_OK;
 	if (aServer && aUrlToRun)

@@ -45,7 +45,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
@@ -109,7 +109,7 @@ protected:
     nsVoidArray       mObservers;
     char**            mNamedDataSourceURIs;
     PRInt32           mNumNamedDataSourceURIs;
-    nsIURL**          mCSSStyleSheetURLs;
+    nsIURI**          mCSSStyleSheetURLs;
     PRInt32           mNumCSSStyleSheetURLs;
     nsIRDFResource*   mRootResource;
     PRBool            mIsLoading; // true while the document is loading
@@ -231,8 +231,8 @@ public:
     NS_IMETHOD EndLoad(void);
     NS_IMETHOD SetRootResource(nsIRDFResource* aResource);
     NS_IMETHOD GetRootResource(nsIRDFResource** aResource);
-    NS_IMETHOD AddCSSStyleSheetURL(nsIURL* aStyleSheetURL);
-    NS_IMETHOD GetCSSStyleSheetURLs(nsIURL*** aStyleSheetURLs, PRInt32* aCount);
+    NS_IMETHOD AddCSSStyleSheetURL(nsIURI* aStyleSheetURL);
+    NS_IMETHOD GetCSSStyleSheetURLs(nsIURI*** aStyleSheetURLs, PRInt32* aCount);
     NS_IMETHOD AddNamedDataSourceURI(const char* aNamedDataSourceURI);
     NS_IMETHOD GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount);
     NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI);
@@ -358,7 +358,7 @@ static const char kResourceURIPrefix[] = "resource:";
     nsIParser* parser       = nsnull;
     nsIDTD* dtd             = nsnull;
     nsIStreamListener* lsnr = nsnull;
-    nsIURL* url             = nsnull;
+    nsIURI* url             = nsnull;
     nsAutoString utf8("UTF-8");
 
 #ifndef NECKO
@@ -371,7 +371,7 @@ static const char kResourceURIPrefix[] = "resource:";
     rv = service->NewURI(uri, nsnull, &uriPtr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uriPtr->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    rv = uriPtr->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uriPtr);
 #endif // NECKO
     if (NS_FAILED(rv))
@@ -544,13 +544,13 @@ XULDataSourceImpl::GetRootResource(nsIRDFResource** aResource)
 }
 
 NS_IMETHODIMP
-XULDataSourceImpl::AddCSSStyleSheetURL(nsIURL* aCSSStyleSheetURL)
+XULDataSourceImpl::AddCSSStyleSheetURL(nsIURI* aCSSStyleSheetURL)
 {
     NS_PRECONDITION(aCSSStyleSheetURL != nsnull, "null ptr");
     if (! aCSSStyleSheetURL)
         return NS_ERROR_NULL_POINTER;
 
-    nsIURL** p = new nsIURL*[mNumCSSStyleSheetURLs + 1];
+    nsIURI** p = new nsIURI*[mNumCSSStyleSheetURLs + 1];
     if (! p)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -573,7 +573,7 @@ XULDataSourceImpl::AddCSSStyleSheetURL(nsIURL* aCSSStyleSheetURL)
 }
 
 NS_IMETHODIMP
-XULDataSourceImpl::GetCSSStyleSheetURLs(nsIURL*** aCSSStyleSheetURLs, PRInt32* aCount)
+XULDataSourceImpl::GetCSSStyleSheetURLs(nsIURI*** aCSSStyleSheetURLs, PRInt32* aCount)
 {
     *aCSSStyleSheetURLs = mCSSStyleSheetURLs;
     *aCount = mNumCSSStyleSheetURLs;

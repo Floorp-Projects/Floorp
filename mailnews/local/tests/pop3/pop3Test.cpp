@@ -103,8 +103,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
-	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
 	// run driver initializes the instance, lists the commands, runs the command and when
 	// the command is finished, it reads in the next command and continues...theoretically,
@@ -158,14 +158,14 @@ nsPop3TestDriver::~nsPop3TestDriver()
 	NS_IF_RELEASE(m_eventQueue);
 }
 
-nsresult nsPop3TestDriver::OnStartRunningUrl(nsIURL * aUrl)
+nsresult nsPop3TestDriver::OnStartRunningUrl(nsIURI * aUrl)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	m_runningURL = PR_TRUE;
 	return NS_OK;
 }
 
-nsresult nsPop3TestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+nsresult nsPop3TestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	nsresult rv = NS_OK;

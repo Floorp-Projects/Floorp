@@ -84,14 +84,14 @@ public:
 
 	// stream observer
 
-	NS_IMETHOD	OnStartBinding(nsIURL *aURL, const char *aContentType);
-	NS_IMETHOD	OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD	OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-	NS_IMETHOD	OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
+	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// stream listener
-	NS_IMETHOD	GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-	NS_IMETHOD	OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength);
 };
 
@@ -533,7 +533,7 @@ FTPDataSourceCallback::~FTPDataSourceCallback()
 
 
 NS_IMETHODIMP
-FTPDataSourceCallback::OnStartBinding(nsIURL *aURL, const char *aContentType)
+FTPDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -549,7 +549,7 @@ FTPDataSourceCallback::OnStartBinding(nsIURL *aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-FTPDataSourceCallback::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
+FTPDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
 {
 	return(NS_OK);
 }
@@ -557,7 +557,7 @@ FTPDataSourceCallback::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aPr
 
 
 NS_IMETHODIMP
-FTPDataSourceCallback::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+FTPDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	return(NS_OK);
 }
@@ -565,7 +565,7 @@ FTPDataSourceCallback::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-FTPDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+FTPDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -585,7 +585,7 @@ FTPDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUni
 
 
 NS_IMETHODIMP
-FTPDataSourceCallback::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+FTPDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	return(NS_OK);
 }
@@ -593,7 +593,7 @@ FTPDataSourceCallback::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 
 
 NS_IMETHODIMP
-FTPDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+FTPDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
 	nsresult	rv = NS_OK;
 
@@ -726,7 +726,7 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 		source->GetValue( getter_Copies(ftpURL) );
 
 #ifndef NECKO
-        nsIURL		*url;
+        nsIURI		*url;
         rv = NS_NewURL(&url, (const char*) ftpURL);
 		if (NS_SUCCEEDED(rv))
 		{

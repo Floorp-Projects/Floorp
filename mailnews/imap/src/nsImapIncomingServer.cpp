@@ -68,7 +68,7 @@ public:
                                            nsIImapUrl* aImapUrl,
                                            nsIUrlListener* aUrlListener = 0,
                                            nsISupports* aConsumer = 0,
-                                           nsIURL** aURL = 0);
+                                           nsIURI** aURL = 0);
     NS_IMETHOD LoadNextQueuedUrl();
     NS_IMETHOD RemoveConnection(nsIImapProtocol* aImapConnection);
 
@@ -159,7 +159,7 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
                                                   nsIUrlListener*
                                                   aUrlListener,
                                                   nsISupports* aConsumer,
-                                                  nsIURL** aURL)
+                                                  nsIURI** aURL)
 {
     nsresult rv = NS_OK;
     nsIImapProtocol* aProtocol = nsnull;
@@ -233,7 +233,7 @@ nsImapIncomingServer::LoadNextQueuedUrl()
                                                &protocolInstance);
             if (NS_SUCCEEDED(rv) && protocolInstance)
             {
-				nsCOMPtr<nsIURL> url = do_QueryInterface(aImapUrl, &rv);
+				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
 				if (NS_SUCCEEDED(rv) && url)
 					rv = protocolInstance->LoadUrl(url, aConsumer);
                 m_urlQueue->RemoveElementAt(0);

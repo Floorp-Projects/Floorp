@@ -55,7 +55,7 @@ ComposeBEGetStringByIDREAL(PRInt32 stringID)
   NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
   if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
   {
-    nsIURL      *url = nsnull;
+    nsIURI      *url = nsnull;
     nsILocale   *locale = nsnull;
 
     res = pNetService->CreateURL(&url, nsString(propertyURL), nsnull, nsnull, nsnull);

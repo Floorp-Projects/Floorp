@@ -45,7 +45,7 @@ class nsIDOMScriptObjectFactory;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
-class nsIURL;
+class nsIURI;
 class nsIFormControlFrame;
 
 class nsGenericHTMLElement : public nsGenericElement {
@@ -112,7 +112,7 @@ public:
   nsresult HasClass(nsIAtom* aClass) const;
   nsresult GetContentStyleRules(nsISupportsArray* aRules);
   nsresult GetInlineStyleRules(nsISupportsArray* aRules);
-  nsresult GetBaseURL(nsIURL*& aBaseURL) const;
+  nsresult GetBaseURL(nsIURI*& aBaseURL) const;
   nsresult GetBaseTarget(nsString& aBaseTarget) const;
   nsresult ToHTMLString(nsString& aResult) const;
   nsresult ToHTML(FILE* out) const;
@@ -248,7 +248,7 @@ public:
 
   static nsresult GetBaseURL(nsIHTMLAttributes* aAttributes,
                              nsIDocument* aDocument,
-                             nsIURL** aResult);
+                             nsIURI** aResult);
 
   nsIHTMLAttributes* mAttributes;
 };
@@ -440,7 +440,7 @@ public:
   NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules) {           \
     return _g.GetInlineStyleRules(aRules);                             \
   }                                                                    \
-  NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const {                     \
+  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const {                     \
     return _g.GetBaseURL(aBaseURL);                                    \
   }                                                                    \
   NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const {              \
@@ -486,7 +486,7 @@ public:
   }                                                                    \
   NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);           \
   NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);            \
-  NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const {                     \
+  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const {                     \
     return _g.GetBaseURL(aBaseURL);                                    \
   }                                                                    \
   NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const {              \

@@ -52,12 +52,12 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetBindInfo(nsIURL* aURL);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD GetBindInfo(nsIURI* aURL);
+  NS_IMETHOD OnProgress(nsIURI* aURL, PRInt32 Progress, PRInt32 ProgressMax);
+  NS_IMETHOD OnStatus(nsIURI* aURL, const nsString& aMsg);
+  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRInt32 length);
+  NS_IMETHOD OnStopBinding(nsIURI* aURL, PRInt32 status, const nsString& aMsg);
 
   PRBool IsDone() const { return mDone; }
   PRBool HaveError() const { return mError; }
@@ -88,31 +88,31 @@ StreamToFile::~StreamToFile()
 }
 
 NS_IMETHODIMP
-StreamToFile::GetBindInfo(nsIURL* aURL)
+StreamToFile::GetBindInfo(nsIURI* aURL)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-StreamToFile::OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax)
+StreamToFile::OnProgress(nsIURI* aURL, PRInt32 Progress, PRInt32 ProgressMax)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-StreamToFile::OnStatus(nsIURL* aURL, const nsString& aMsg)
+StreamToFile::OnStatus(nsIURI* aURL, const nsString& aMsg)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-StreamToFile::OnStartBinding(nsIURL* aURL, const char *aContentType)
+StreamToFile::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-StreamToFile::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream,
+StreamToFile::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream,
                               PRInt32 length) 
 {
   PRUint32 len;
@@ -130,7 +130,7 @@ StreamToFile::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream,
 
 
 NS_IMETHODIMP
-StreamToFile::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
+StreamToFile::OnStopBinding(nsIURI* aURL, PRInt32 status, const nsString& aMsg)
 {
   mDone = PR_TRUE;
   if (0 != status) {
@@ -228,7 +228,7 @@ PageGrabber::Grab(const nsString& aURL)
   printf(" to %s\n", cname);
         
   // Create the URL object...
-  nsIURL* url = NULL;
+  nsIURI* url = NULL;
   nsresult rv;
 
 #ifndef NECKO

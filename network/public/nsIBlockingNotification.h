@@ -24,7 +24,7 @@
 #include "prthread.h"
 
 /* forward declarations... */
-class nsIURL;
+class nsIURI;
 
 /* 7a3e0350-d724-11d2-99db-0080c7cb1080 */
 #define NS_IBLOCKINGNOTIFICATION_IID   \
@@ -35,8 +35,8 @@ class nsIURL;
 class nsIBlockingNotification : public nsISupports
 {
 public:
-  NS_IMETHOD IsBlocked(nsIURL *aUrl, PRBool *aResult) = 0;
-  NS_IMETHOD Resume(nsIURL *aUrl, void *aExtraInfo) = 0;
+  NS_IMETHOD IsBlocked(nsIURI *aUrl, PRBool *aResult) = 0;
+  NS_IMETHOD Resume(nsIURI *aUrl, void *aExtraInfo) = 0;
 };
 
 
@@ -51,12 +51,12 @@ class nsIBlockingNotificationObserver : public nsISupports
 {
 public:
   NS_IMETHOD Notify(nsIBlockingNotification *aCaller,
-                    nsIURL *aUrl,
+                    nsIURI *aUrl,
                     PRThread *aThread,
                     PRInt32 aCode,
                     void  *aExtraInfo) = 0;
 
-  NS_IMETHOD CancelNotify(nsIURL *aUrl) = 0;
+  NS_IMETHOD CancelNotify(nsIURI *aUrl) = 0;
 };
 
 

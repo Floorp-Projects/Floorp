@@ -536,7 +536,7 @@ public:
   virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
                                         PRInt32 aHint);
   virtual nsresult GetParent(nsISupports **aParent);
-  virtual nsresult GetBaseURL(nsIURL** aURL);
+  virtual nsresult GetBaseURL(nsIURI** aURL);
 
 protected:
   nsICSSStyleRule *mRule;
@@ -608,7 +608,7 @@ DOMCSSDeclarationImpl::GetParent(nsISupports **aParent)
 }
 
 nsresult
-DOMCSSDeclarationImpl::GetBaseURL(nsIURL** aURL)
+DOMCSSDeclarationImpl::GetBaseURL(nsIURI** aURL)
 {
   NS_ASSERTION(nsnull != aURL, "null pointer");
 

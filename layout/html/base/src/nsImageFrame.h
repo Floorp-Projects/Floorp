@@ -26,7 +26,7 @@
 class nsIFrame;
 class nsImageMap;
 class nsIImage;
-class nsIURL;
+class nsIURI;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;

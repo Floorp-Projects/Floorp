@@ -25,7 +25,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
   nsIWebShellServices* ws;
 //  nsString theURL(aSpec);
 // char* url = aSpec.ToNewCString();
-  nsIURL* uaURL = nsnull;
+  nsIURI* uaURL = nsnull;
 //  rv = NS_NewURL(&uaURL, nsString(aSpec));
  
     if(numOfAttributes >= 2) {
@@ -173,7 +173,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
           rv = service->NewURI(uriStr, nsnull, &uri);
           if (NS_FAILED(rv)) return rv;
 
-          rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&uaURL);
+          rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&uaURL);
           NS_RELEASE(uri);
           if (NS_FAILED(rv)) return rv;
 #endif // NECKO

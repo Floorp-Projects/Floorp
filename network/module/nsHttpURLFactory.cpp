@@ -32,9 +32,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsIProtocolURLFactory:
 
-    NS_IMETHOD CreateURL(nsIURL* *aResult,
+    NS_IMETHOD CreateURL(nsIURI* *aResult,
                          const nsString& aSpec,
-                         const nsIURL* aContextURL = nsnull,
+                         const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull);
 
@@ -61,9 +61,9 @@ static NS_DEFINE_IID(kIProtocolURLFactoryIID, NS_IPROTOCOLURLFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsHttpURLFactory, kIProtocolURLFactoryIID);
 
 NS_IMETHODIMP
-nsHttpURLFactory::CreateURL(nsIURL* *aResult,
+nsHttpURLFactory::CreateURL(nsIURI* *aResult,
                           const nsString& aSpec,
-                          const nsIURL* aContextURL,
+                          const nsIURI* aContextURL,
                           nsISupports* aContainer,
                           nsIURLGroup* aGroup)
 {

@@ -287,10 +287,10 @@ typedef struct _Pop3ConData {
 class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer
 {
 public:
-    nsPop3Protocol(nsIURL* aURL);  
+    nsPop3Protocol(nsIURI* aURL);  
     virtual ~nsPop3Protocol();
     
-    virtual nsresult LoadUrl(nsIURL *aURL, nsISupports * aConsumer = nsnull);
+    virtual nsresult LoadUrl(nsIURI *aURL, nsISupports * aConsumer = nsnull);
 
     const char* GetUsername() { return m_username.GetBuffer(); };
     void SetUsername(const char* name);
@@ -307,10 +307,10 @@ private:
 	
 	nsString m_commandResponse;
 
-	virtual nsresult ProcessProtocolState(nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength); 
+	virtual nsresult ProcessProtocolState(nsIURI* aURL, nsIInputStream* aInputStream, PRUint32 aLength); 
 	virtual nsresult CloseSocket();
-	virtual PRInt32 SendData(nsIURL * aURL, const char * dataBuffer);
-	void Initialize(nsIURL * aURL);
+	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
+	void Initialize(nsIURI * aURL);
 
     nsCOMPtr<nsIPop3URL> m_nsIPop3URL;
     nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;

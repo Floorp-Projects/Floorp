@@ -28,7 +28,7 @@
 
 /* Forward declarations... */
 class nsString;
-class nsIURL;
+class nsIURI;
 class nsIFactory;
 class nsIPostData;
 class nsIContentViewer;
@@ -63,7 +63,7 @@ class nsIDocumentLoaderFactory : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADERFACTORY_IID)
 
-    NS_IMETHOD CreateInstance(nsIURL* aURL,
+    NS_IMETHOD CreateInstance(nsIURI* aURL,
                               const char* aContentType, 
                               const char *aCommand,
                               nsIContentViewerContainer* aContainer,
@@ -99,12 +99,22 @@ public:
                             nsIPostData* aPostData = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
+#ifdef NECKO
+                            PRBool bypassCache = PR_FALSE,
+                            PRBool bypassProxy = PR_FALSE,
+#else
                             nsURLReloadType type = nsURLReload,
+#endif
                             const PRUint32 aLocalIP = 0) = 0;
 
     NS_IMETHOD LoadSubDocument(const nsString& aURLSpec,
                                nsISupports* aExtraInfo = nsnull,
+#ifdef NECKO
+                               PRBool bypassCache = PR_FALSE,
+                               PRBool bypassProxy = PR_FALSE,
+#else
                                nsURLReloadType type = nsURLReload,
+#endif
                                const PRUint32 aLocalIP = 0) = 0;
 
     NS_IMETHOD Stop(void) = 0;

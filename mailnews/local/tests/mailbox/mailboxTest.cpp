@@ -170,8 +170,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
-	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
 	nsMailboxTestDriver(nsIEventQueue *queue, nsIStreamListener * aMailboxParser);
 	virtual ~nsMailboxTestDriver();
@@ -198,13 +198,13 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface --> primarily to test copy, move and delete
 	////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
-	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
-	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} 
+	NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
+	NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg) { return NS_OK;}
+	NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} 
 	
-	NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
+	NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
@@ -229,14 +229,14 @@ protected:
 	nsMailDatabase * OpenDB(nsFileSpec filePath);
 };
 
-nsresult nsMailboxTestDriver::OnStartRunningUrl(nsIURL * aUrl)
+nsresult nsMailboxTestDriver::OnStartRunningUrl(nsIURI * aUrl)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	m_runningURL = PR_TRUE;
 	return NS_OK;
 }
 
-nsresult nsMailboxTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+nsresult nsMailboxTestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
 	nsresult rv = NS_OK;
@@ -512,7 +512,7 @@ nsresult nsMailboxTestDriver::OnDisplayMessage(PRBool copyMessage)
 		NS_WITH_SERVICE(nsIMailboxService, mailboxService, kCMailboxServiceCID, &rv);
 		if (NS_SUCCEEDED(rv) && mailboxService)
 		{
-			nsIURL * url = nsnull;
+			nsIURI * url = nsnull;
 			if (copyMessage)
 				mailboxService->CopyMessage("", this, PR_FALSE, this, nsnull);
 			else // display the message
@@ -565,7 +565,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 
 	if (NS_SUCCEEDED(rv) && mailboxService)
 	{
-		nsIURL * url = nsnull;
+		nsIURI * url = nsnull;
 		mailboxService->ParseMailbox(filePath, m_mailboxParser, this /* register self as url listener */, &url);
 		if (url)
 			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
@@ -580,7 +580,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 // End on command handlers for mailbox
 /////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMailboxTestDriver::OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRUint32 aLength)
+NS_IMETHODIMP nsMailboxTestDriver::OnDataAvailable(nsIURI* aURL, nsIInputStream *aStream, PRUint32 aLength)
 {
 	// read the data out and print it to the screen....
 	if (aLength > 0)
@@ -597,7 +597,7 @@ NS_IMETHODIMP nsMailboxTestDriver::OnDataAvailable(nsIURL* aURL, nsIInputStream 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxTestDriver::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsMailboxTestDriver::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 	nsIMailboxUrl * mailboxUrl = nsnull;
 	if (aURL)
@@ -615,7 +615,7 @@ NS_IMETHODIMP nsMailboxTestDriver::OnStartBinding(nsIURL* aURL, const char *aCon
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxTestDriver::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMailboxTestDriver::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsIMailboxUrl * mailboxUrl = nsnull;
 	if (aURL)

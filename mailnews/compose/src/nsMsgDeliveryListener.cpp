@@ -24,7 +24,7 @@
 NS_IMPL_ISUPPORTS(nsMsgDeliveryListener, nsIUrlListener::GetIID())
 
 nsresult 
-nsMsgDeliveryListener::OnStartRunningUrl(nsIURL * aUrl)
+nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)
 {
 #ifdef NS_DEBUG
   printf("Starting to run the delivery operation\n");
@@ -34,7 +34,7 @@ nsMsgDeliveryListener::OnStartRunningUrl(nsIURL * aUrl)
 }
 
 nsresult 
-nsMsgDeliveryListener::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+nsMsgDeliveryListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
   nsresult rv;
 #ifdef NS_DEBUG

@@ -29,7 +29,7 @@
 
 #include "nscore.h"
 #include "nsError.h"
-class nsIURL;
+class nsIURI;
 class nsString;
 
 class nsRDFParserUtils {

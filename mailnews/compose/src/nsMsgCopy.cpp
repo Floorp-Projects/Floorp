@@ -92,7 +92,7 @@ nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement 
 
 		if (NS_SUCCEEDED(rv) && messageService)
 		{
-			nsIURL * url = nsnull;
+			nsIURI * url = nsnull;
 			messageService->CopyMessage(uri, copyStreamListener, isMove, nsnull, &url);
 			ReleaseMessageServiceFromURI(uri, messageService);
 		}

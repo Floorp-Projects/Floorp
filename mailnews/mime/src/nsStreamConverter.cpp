@@ -69,7 +69,7 @@ NS_IMPL_ISUPPORTS(nsStreamConverter, nsIStreamConverter::GetIID());
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 nsresult 
-NewURL(nsIURL** aInstancePtrResult, const nsString& aSpec)
+NewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
 {  
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
@@ -289,7 +289,7 @@ nsStreamConverter::SetOutputListener(nsIStreamListener *outListner)
 * This method is currently not called.  
 */
 nsresult
-nsStreamConverter::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+nsStreamConverter::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 #ifdef NS_DEBUG
   // printf("nsStreamConverter::GetBindInfo()\n");
@@ -309,7 +309,7 @@ nsStreamConverter::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 * @return The return value is currently ignored.
 */
 nsresult
-nsStreamConverter::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+nsStreamConverter::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                    PRUint32 aLength)
 {
   nsresult        rc;
@@ -339,7 +339,7 @@ nsStreamConverter::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream,
 * used to cancel the URL load..
 */
 nsresult
-nsStreamConverter::OnStartBinding(nsIURL* aURL, const char *aContentType)
+nsStreamConverter::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 #ifdef NS_DEBUG
   // printf("nsStreamConverter::OnStartBinding() for Content-Type: %s\n", aContentType);
@@ -352,7 +352,7 @@ nsStreamConverter::OnStartBinding(nsIURL* aURL, const char *aContentType)
 * Notify the observer that progress as occurred for the URL load.<BR>
 */
 nsresult
-nsStreamConverter::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+nsStreamConverter::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
   // printf("nsStreamConverter::OnProgress()\n");
@@ -365,7 +365,7 @@ nsStreamConverter::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgre
 * Notify the observer with a status message for the URL load.<BR>
 */
 nsresult
-nsStreamConverter::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+nsStreamConverter::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 #ifdef NS_DEBUG
   // printf("nsStreamConverter::OnStatus()\n");
@@ -386,7 +386,7 @@ nsStreamConverter::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 * @return The return value is currently ignored.
 */
 nsresult
-nsStreamConverter::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+nsStreamConverter::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 #ifdef NS_DEBUG
   // printf("nsStreamConverter::OnStopBinding()\n");

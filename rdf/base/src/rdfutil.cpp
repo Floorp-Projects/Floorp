@@ -41,7 +41,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsRDFCID.h"
@@ -263,7 +263,7 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
 
 
 nsresult
-rdf_MakeAbsoluteURI(nsIURL* aURL, nsString& aURI)
+rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
 {
     nsresult rv;
     nsAutoString result;

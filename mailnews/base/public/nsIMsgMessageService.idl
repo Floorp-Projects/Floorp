@@ -20,7 +20,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIURL;
+interface nsIURI;
 interface nsIUrlListener;
 interface nsIStreamListener;
 interface nsIFileSpec;
@@ -31,7 +31,7 @@ interface nsIMsgMessageService : nsISupports {
 %{ C++
      
      /////////////////////////////////////////////////////////////////
-     // If you want a handle on the running task, pass in a valid nsIURL 
+     // If you want a handle on the running task, pass in a valid nsIURI 
      // ptr. You can later interrupt this action by asking the netlib 
      // service manager to interrupt the url you are given back. 
      // Remember to release aURL when you are done with it. Pass nsnull
@@ -50,7 +50,7 @@ interface nsIMsgMessageService : nsISupports {
 %}
 
 	void CopyMessage(in string aSrcURI, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
-						   in nsIUrlListener aUrlListener, out nsIURL aURL);
+						   in nsIUrlListener aUrlListener, out nsIURI aURL);
 
 %{ C++
 
@@ -64,7 +64,7 @@ interface nsIMsgMessageService : nsISupports {
      ///////////////////////////////////////////////////////////////////
 %}
 	void DisplayMessage(in string aMessageURI, in nsISupports aDisplayConsumer, 
-							  in nsIUrlListener aUrlListener, out nsIURL aURL);
+							  in nsIUrlListener aUrlListener, out nsIURI aURL);
 
 %{ C++
 
@@ -79,5 +79,5 @@ interface nsIMsgMessageService : nsISupports {
      ///////////////////////////////////////////////////////////////////
 %}
 	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile, in boolean aAppendToFile, 
-							in nsIUrlListener aUrlListener, out nsIURL aURL);
+							in nsIUrlListener aUrlListener, out nsIURI aURL);
 };

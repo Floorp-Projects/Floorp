@@ -42,12 +42,12 @@ public:
     nsMsgMailboxParserStub();
 
 	// nsIStreamListener interfaces:
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info);
+    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
+    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 
 protected:
     ~nsMsgMailboxParserStub();
@@ -65,20 +65,20 @@ nsMsgMailboxParserStub::~nsMsgMailboxParserStub()
 NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 NS_IMPL_ISUPPORTS(nsMsgMailboxParserStub,kIStreamListenerIID);
 
-NS_IMETHODIMP nsMsgMailboxParserStub::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info)
+NS_IMETHODIMP nsMsgMailboxParserStub::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info)
 {
     printf("\n+++ nsMsgMailboxParserStub::GetBindInfo: URL: %p\n", aURL);
     return 0;
 }
 
-NS_IMETHODIMP nsMsgMailboxParserStub::OnProgress(nsIURL* aURL, PRUint32 Progress, 
+NS_IMETHODIMP nsMsgMailboxParserStub::OnProgress(nsIURI* aURL, PRUint32 Progress, 
                                        PRUint32 ProgressMax)
 {
     printf("\n+++ nsMsgMailboxParserStub::OnProgress: URL: %p - %d of total %d\n", aURL, Progress, ProgressMax);
     return 0;
 }
 
-NS_IMETHODIMP nsMsgMailboxParserStub::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgMailboxParserStub::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	printf("\n+++ nsMsgMailboxParserStub::OnStatus: ");
     nsString str(aMsg);
@@ -88,14 +88,14 @@ NS_IMETHODIMP nsMsgMailboxParserStub::OnStatus(nsIURL* aURL, const PRUnichar* aM
     return 0;
 }
 
-NS_IMETHODIMP nsMsgMailboxParserStub::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgMailboxParserStub::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 	printf("\n+++ nsMsgMailboxParserStub::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
     return 0;
 }
 
 
-NS_IMETHODIMP nsMsgMailboxParserStub::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length) 
+NS_IMETHODIMP nsMsgMailboxParserStub::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length) 
 {
     PRUint32 totalBytesRead = 0;
     PRUint32 len = 0;
@@ -127,7 +127,7 @@ NS_IMETHODIMP nsMsgMailboxParserStub::OnDataAvailable(nsIURL* aURL, nsIInputStre
 }
 
 
-NS_IMETHODIMP nsMsgMailboxParserStub::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgMailboxParserStub::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 {
 	// on stop binding is called by the mailbox protocol when there is no more data forthcoming...
 

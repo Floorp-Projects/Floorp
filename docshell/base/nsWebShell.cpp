@@ -67,7 +67,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #endif // NECKO
 
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
@@ -280,40 +280,40 @@ public:
 
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                 nsIURL* aURL, 
+                                 nsIURI* aURL, 
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                               nsIURL* aURL, 
+                               nsIURI* aURL, 
                                PRInt32 aStatus,
 							   nsIDocumentLoaderObserver * );
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-                            nsIURL* aURL, const char* aContentType, 
+                            nsIURI* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
-                               nsIURL* aURL, PRUint32 aProgress, 
+                               nsIURI* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-                             nsIURL* aURL, nsString& aMsg);
+                             nsIURI* aURL, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-                          nsIURL* aURL, PRInt32 aStatus);
+                          nsIURI* aURL, PRInt32 aStatus);
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                      nsIURL* aURL,
+                                      nsIURI* aURL,
                                       const char *aContentType,
                                       const char *aCommand );
 //  NS_IMETHOD OnConnectionsComplete();
 
   // nsIRefreshURL interface methods...
-  NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
+  NS_IMETHOD RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat);
   NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
   NS_IMETHOD CancelRefreshURLTimers(void);
 
 
 #if 0
   // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 #endif  /* 0 */
 
 
@@ -381,7 +381,7 @@ public:
 
 protected:
   void InitFrameData(PRBool aCompleteInitScrolling);
-  nsresult CheckForTrailingSlash(nsIURL* aURL);
+  nsresult CheckForTrailingSlash(nsIURI* aURL);
 
   nsIEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
@@ -840,7 +840,7 @@ nsWebShell::GetContentViewer(nsIContentViewer** aResult)
 
 NS_IMETHODIMP
 nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                     nsIURL* aURL,
+                                     nsIURI* aURL,
                                      const char *aContentType,
                                      const char *aCommand ) {
     // If we have a doc loader observer, let it respond to this.
@@ -1664,10 +1664,10 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       docViewer->GetDocument(*getter_AddRefs(doc));
 
       // Get the URL for the document
-      nsCOMPtr<nsIURL>  docURL = nsDontAddRef<nsIURL>(doc->GetDocumentURL());
+      nsCOMPtr<nsIURI>  docURL = nsDontAddRef<nsIURI>(doc->GetDocumentURL());
 
       // See if they're the same
-      nsCOMPtr<nsIURL>  url;
+      nsCOMPtr<nsIURI>  url;
 #ifndef NECKO
       NS_NewURL(getter_AddRefs(url), aUrlSpec);
 #else
@@ -1680,7 +1680,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
     rv = service->NewURI(uriSpec, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 #endif // NECKO
@@ -2558,7 +2558,7 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
 
 NS_IMETHODIMP
 nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                nsIURL* aURL, 
+                                nsIURI* aURL, 
                                 const char* aCommand)
 {
 #if DEBUG_nisheeth
@@ -2604,7 +2604,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                              nsIURL* aURL, 
+                              nsIURI* aURL, 
                               PRInt32 aStatus,
 							                nsIDocumentLoaderObserver * aWebShell)
 {
@@ -2687,7 +2687,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader, 
-                           nsIURL* aURL, 
+                           nsIURI* aURL, 
                            const char* aContentType, 
                            nsIContentViewer* aViewer)
 {
@@ -2716,7 +2716,7 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                              nsIURL* aURL, 
+                              nsIURI* aURL, 
                               PRUint32 aProgress, 
                               PRUint32 aProgressMax)
 {
@@ -2733,7 +2733,7 @@ nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                            nsIURL* aURL, 
+                            nsIURI* aURL, 
                             nsString& aMsg)
 {
   /*
@@ -2749,7 +2749,7 @@ nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader, 
-                         nsIURL* aURL, 
+                         nsIURI* aURL, 
                          PRInt32 aStatus)
 {
 #if 0
@@ -2817,7 +2817,7 @@ void refreshData::Notify(nsITimer *aTimer)
 
 
 NS_IMETHODIMP
-nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
+nsWebShell::RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat)
 {
   
   nsresult rv = NS_OK;
@@ -2918,7 +2918,7 @@ nsWebShell::CancelRefreshURLTimers(void)
  *   2) The load of aURL is in progress and this function is being called
  *      from one of the functions in nsIStreamListener implemented by nsWebShell.
  */
-nsresult nsWebShell::CheckForTrailingSlash(nsIURL* aURL)
+nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 {
 
 #if OLD_HISTORY 
@@ -2965,7 +2965,7 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURL* aURL)
 
 #if 0
 NS_IMETHODIMP
-nsWebShell::OnStartBinding(nsIURL* aURL, const char *aContentType)
+nsWebShell::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
   nsresult rv = NS_OK;
 
@@ -2977,7 +2977,7 @@ nsWebShell::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-nsWebShell::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+nsWebShell::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsresult rv = NS_OK;
 
@@ -2999,7 +2999,7 @@ nsWebShell::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 
 
 NS_IMETHODIMP
-nsWebShell::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+nsWebShell::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
 
@@ -3021,7 +3021,7 @@ nsWebShell::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-nsWebShell::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+nsWebShell::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
 

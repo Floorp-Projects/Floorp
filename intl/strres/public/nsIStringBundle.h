@@ -56,7 +56,7 @@ class nsIStringBundleService : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTRINGBUNDLESERVICE_IID)
 
-  NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
+  NS_IMETHOD CreateBundle(nsIURI* aURL, nsILocale* aLocale,
                           nsIStringBundle** aResult) = 0; /* deprecated */
   NS_IMETHOD CreateBundle(const char* aURLSpec, nsILocale* aLocale,
                           nsIStringBundle** aResult) = 0;

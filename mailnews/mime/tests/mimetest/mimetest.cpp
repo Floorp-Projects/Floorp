@@ -259,9 +259,9 @@ FixURL(char *url)
   }
 }
 
-// Utility to create a nsIURL object...
+// Utility to create a nsIURI object...
 nsresult 
-NewURL(nsIURL** aInstancePtrResult, const nsString& aSpec)
+NewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
 {  
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
@@ -315,7 +315,7 @@ DoRFC822toHTMLConversion(char *filename)
   nsFileSpec      mySpec(inFilePath);
   nsresult        rv;
   char            newURL[1024] = ""; // URL for filename
-  nsIURL          *aURL = nsnull;
+  nsIURI          *aURL = nsnull;
 
   if (!mySpec.Exists())
   {
@@ -356,7 +356,7 @@ DoRFC822toHTMLConversion(char *filename)
     return NS_ERROR_FAILURE;
   }
   
-  // Create an nsIURL object needed for stream IO...
+  // Create an nsIURI object needed for stream IO...
   PR_snprintf(newURL, sizeof(newURL), "file://%s", filename);
   FixURL(newURL);
   if (NS_FAILED(NewURL(&aURL, nsString(newURL))))

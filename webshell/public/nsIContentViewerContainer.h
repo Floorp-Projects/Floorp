@@ -24,7 +24,7 @@
 #include "nsISupports.h"
 
 class nsIContentViewer;
-class nsIURL;
+class nsIURI;
 class nsIDocumentLoader;
 
 #define NS_ICONTENT_VIEWER_CONTAINER_IID \
@@ -48,7 +48,7 @@ public:
   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult) = 0;
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
-                                      nsIURL* aURL,
+                                      nsIURI* aURL,
                                       const char *aContentType,
                                       const char *aCommand ) = 0;
 };

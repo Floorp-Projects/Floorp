@@ -64,7 +64,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::QueryInterface(REFNSIID aIID, void** 
 	return NS_ERROR_NO_INTERFACE;
 }
 
-static nsresult GetMessage(nsIURL *aURL, nsIMessage **message)
+static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 {
 	nsCOMPtr<nsIMsgUriUrl> uriURL;
 	char* uri;
@@ -96,7 +96,7 @@ static nsresult GetMessage(nsIURL *aURL, nsIMessage **message)
 	return rv;
 }
 
-static nsresult IsMoveMessage(nsIURL *aURL, PRBool *isMoveMessage)
+static nsresult IsMoveMessage(nsIURI *aURL, PRBool *isMoveMessage)
 {
 	if(!isMoveMessage)
 		return NS_ERROR_NULL_POINTER;
@@ -119,7 +119,7 @@ static nsresult IsMoveMessage(nsIURL *aURL, PRBool *isMoveMessage)
 
 }
 
-static nsresult DeleteMessage(nsIURL *aURL, nsIMsgFolder *srcFolder)
+static nsresult DeleteMessage(nsIURI *aURL, nsIMsgFolder *srcFolder)
 {
 	nsCOMPtr<nsIMessage> message;
 	nsresult rv;
@@ -154,19 +154,19 @@ NS_IMETHODIMP nsCopyMessageStreamListener::Init(nsIMsgFolder *srcFolder, nsICopy
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+NS_IMETHODIMP nsCopyMessageStreamListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+NS_IMETHODIMP nsCopyMessageStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength)
 {
 	nsresult rv;
 	rv = mDestination->CopyData(aIStream, aLength);
 	return rv;
 }
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
 	nsCOMPtr<nsIMessage> message;
 	nsresult rv;
@@ -179,17 +179,17 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStartBinding(nsIURL* aURL, const ch
 	return rv;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	//If this is a move and we finished the copy, delete the old message.
 	if(aStatus == NS_BINDING_SUCCEEDED)

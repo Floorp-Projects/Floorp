@@ -67,7 +67,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////
 	// we support the nsIImapProtocol interface
 	//////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
+	NS_IMETHOD LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy, PRBool &isInboxConnection);
 	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl,
                             PRBool & hasToWait);
@@ -81,23 +81,23 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	// mscott; I don't think we need to worry about this yet so I'll leave it stubbed out for now
-	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} ;
+	NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} ;
 	
 	// Whenever data arrives from the connection, core netlib notifies the protocol by calling
 	// OnDataAvailable. We then read and process the incoming data from the input stream. 
-	NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
+	NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
 
-	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+	NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// Ideally, a protocol should only have to support the stream listener methods covered above. 
 	// However, we don't have this nsIStreamListenerLite interface defined yet. Until then, we are using
 	// nsIStreamListener so we need to add stubs for the heavy weight stuff we don't want to use.
 
-	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
-	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
+	NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
+	NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg) { return NS_OK;}
 
 	// This is evil, I guess, but this is used by libmsg to tell a running imap url
 	// about headers it should download to update a local database.
@@ -367,7 +367,7 @@ private:
 	PRUint32	*m_fetchBodyIdList;
 
 	// initialization function given a new url and transport layer
-	nsresult  SetupWithUrl(nsIURL * aURL, nsISupports* aConsumer);
+	nsresult  SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer);
 	void ReleaseUrlState(); // release any state that is stored on a per action basis.
 
 	////////////////////////////////////////////////////////////////////////////////////////

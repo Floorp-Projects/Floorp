@@ -37,16 +37,16 @@ public:
 	NS_IMETHOD Init(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination, nsISupports *listenerData);
 
 	//nsIStreamListener implementation
-	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-	NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+	NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+	NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength);
-	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+	NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
 
-	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+	NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
 
-	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+	NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
 
-	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 protected:
 	nsCOMPtr<nsICopyMessageListener> mDestination;

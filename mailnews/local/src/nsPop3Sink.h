@@ -47,7 +47,7 @@ public:
     NS_IMETHOD BeginMailDelivery(PRBool *aBool);
     NS_IMETHOD EndMailDelivery();
     NS_IMETHOD AbortMailDelivery();
-    NS_IMETHOD IncorporateBegin(const char* uidlString, nsIURL* aURL, 
+    NS_IMETHOD IncorporateBegin(const char* uidlString, nsIURI* aURL, 
                                 PRUint32 flags, void** closure);
     NS_IMETHOD IncorporateWrite(void* closure, const char* block,
                                 PRInt32 length);

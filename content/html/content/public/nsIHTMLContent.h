@@ -27,7 +27,7 @@ class nsIStyleContext;
 class nsIPresContext;
 class nsXIFConverter;
 class nsIHTMLAttributes;
-class nsIURL;
+class nsIURI;
 
 // IID for the nsIHTMLContent class
 #define NS_IHTMLCONTENT_IID   \
@@ -72,7 +72,7 @@ public:
    * but certain content carries a local base for backward
    * compatibility.
    */
-  NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const = 0;
+  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const = 0;
 
   /**
    * Get the base target for any links within this piece

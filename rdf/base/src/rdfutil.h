@@ -47,7 +47,7 @@ class nsIRDFResource;
 class nsIRDFNode;
 class nsIRDFResource;
 class nsString;
-class nsIURL;
+class nsIURI;
 
 /**
  * The dreaded is-a function. Uses rdf:instanceOf to determine if aResource is aType.
@@ -79,7 +79,7 @@ nsresult
 rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);
 
 nsresult
-rdf_MakeAbsoluteURI(nsIURL* aBaseURL, nsString& aURI);
+rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsString& aURI);
 
 void SHTtest ();
                        

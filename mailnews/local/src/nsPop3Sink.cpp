@@ -200,7 +200,7 @@ nsPop3Sink::AbortMailDelivery()
 
 nsresult
 nsPop3Sink::IncorporateBegin(const char* uidlString,
-                             nsIURL* aURL,
+                             nsIURI* aURL,
                              PRUint32 flags,
                              void** closure)
 {

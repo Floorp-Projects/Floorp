@@ -42,12 +42,12 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD GetNewMail(nsIUrlListener * aUrlListener,
                           nsIPop3IncomingServer *popServer,
-                          nsIURL ** aURL);
+                          nsIURI ** aURL);
 
 	NS_IMETHOD CheckForNewMail(nsIUrlListener * aUrlListener,
 							   nsIMsgFolder *inbox,
                                nsIPop3IncomingServer *popServer,
-                               nsIURL ** aURL);
+                               nsIURI ** aURL);
 	
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End suppport for the nsIPop3Service Interface
@@ -57,9 +57,9 @@ protected:
 	// convience function to make constructing of the pop3 url easier...
 	nsresult BuildPop3Url(const char * urlSpec, nsIMsgFolder *inbox,
                           nsIPop3IncomingServer *, nsIUrlListener * aUrlListener,
-                          nsIURL ** aUrl);
+                          nsIURI ** aUrl);
 
-	nsresult RunPopUrl(nsIMsgIncomingServer * aServer, nsIURL * aUrlToRun);
+	nsresult RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlToRun);
 };
 
 #endif /* nsPop3Service_h___ */
