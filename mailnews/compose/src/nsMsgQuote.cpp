@@ -144,7 +144,8 @@ NS_IMETHODIMP nsMsgQuote::GetStreamListener(nsIStreamListener ** aStreamListener
 }
 
 nsresult
-nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener)
+nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener,
+                         const PRUnichar * aMsgCharSet)
 {
   nsresult  rv;
 
@@ -175,6 +176,14 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
       modifiedUrlSpec += "?header=quotebody";
 
   aURL->SetSpec((const char *) modifiedUrlSpec);
+
+  // if we were given a non empty charset, then use it
+  if (aMsgCharSet && *aMsgCharSet)
+  {
+    nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURL));
+    if (i18nUrl)
+      i18nUrl->SetCharsetOverRide(aMsgCharSet);
+  }
 
   rv = nsComponentManager::CreateInstance(kMsgQuoteListenerCID, nsnull, NS_GET_IID(nsIMsgQuoteListener), getter_AddRefs(mQuoteListener));
   if (NS_FAILED(rv)) return rv;
