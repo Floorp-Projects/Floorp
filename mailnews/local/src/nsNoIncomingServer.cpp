@@ -40,14 +40,8 @@ public:
     nsNoIncomingServer();
     virtual ~nsNoIncomingServer();
     
-    NS_IMETHOD GetRootFolderPath(char **);
-    NS_IMETHOD SetRootFolderPath(char *);
-
     NS_IMETHOD GetServerURI(char * *uri);
     NS_IMETHOD GetPrettyName(PRUnichar **retval);
-
-private:
-    char *m_rootFolderPath;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNoIncomingServer,
@@ -56,20 +50,14 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNoIncomingServer,
 
                             
 
-nsNoIncomingServer::nsNoIncomingServer() :
-    m_rootFolderPath(0)
+nsNoIncomingServer::nsNoIncomingServer()
 {    
     NS_INIT_REFCNT();
 }
 
 nsNoIncomingServer::~nsNoIncomingServer()
 {
-    PR_FREEIF(m_rootFolderPath);
 }
-
-NS_IMPL_SERVERPREF_STR(nsNoIncomingServer,
-                       RootFolderPath,
-                       "directory")
 
 nsresult
 nsNoIncomingServer::GetServerURI(char **uri)

@@ -35,6 +35,14 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
+#ifdef DEBUG_seth
+#define DO_HASHING_OF_HOSTNAME 1
+#endif
+
+#ifdef DO_HASHING_OF_HOSTNAME
+#include "nsMsgUtils.h"
+#endif /* DO_HASHING_OF_HOSTNAME */
+
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -493,8 +501,6 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     nsresult rv;
     rv = GetFileValue("directory", aLocalPath);
     if (NS_SUCCEEDED(rv) && *aLocalPath) return rv;
-
-
     
     nsXPIDLCString type;
     GetType(getter_Copies(type));
@@ -512,11 +518,17 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     rv = GetHostName(getter_Copies(hostname));
     if (NS_FAILED(rv)) return rv;
 
-    path->AppendRelativeUnixPath(hostname);
+#ifdef DO_HASHING_OF_HOSTNAME
+    nsCAutoString hashedHostname = "";
+    hashedHostname += hostname;
+    NS_MsgHashIfNecessary(hashedHostname);
 
-    if (NS_FAILED(rv)) return rv;
+    path->AppendRelativeUnixPath(hashedHostname);
+#else
+    path->AppendRelativeUnixPath(hostname);
+#endif /* DO_HASHING_OF_HOSTNAME */
     SetLocalPath(path);
-    
+
     *aLocalPath = path;
     NS_ADDREF(*aLocalPath);
 
@@ -530,7 +542,9 @@ nsMsgIncomingServer::SetLocalPath(nsIFileSpec *spec)
         spec->CreateDir();
         return SetFileValue("directory", spec);
     }
-    return NS_OK;
+    else {
+	return NS_ERROR_NULL_POINTER;
+    }
 }
 
 // use the convenience macros to implement the accessors

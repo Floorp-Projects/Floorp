@@ -87,7 +87,6 @@ private:
                                    nsIImapUrl* aImapUrl,
                                    nsIImapProtocol** aImapConnection);
     PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
-	char *m_rootFolderPath;
     nsCOMPtr<nsISupportsArray> m_connectionCache;
     nsCOMPtr<nsISupportsArray> m_urlQueue;
     nsVoidArray					m_urlConsumers;
@@ -122,7 +121,7 @@ NS_IMETHODIMP nsImapIncomingServer::QueryInterface(REFNSIID aIID, void** aInstan
 }
 
                             
-nsImapIncomingServer::nsImapIncomingServer() : m_rootFolderPath(nsnull)
+nsImapIncomingServer::nsImapIncomingServer()
 {    
     NS_INIT_REFCNT();
     nsresult rv;
@@ -133,7 +132,6 @@ nsImapIncomingServer::nsImapIncomingServer() : m_rootFolderPath(nsnull)
 
 nsImapIncomingServer::~nsImapIncomingServer()
 {
-	PR_FREEIF(m_rootFolderPath);
 }
 
 NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomingServer's implementation...

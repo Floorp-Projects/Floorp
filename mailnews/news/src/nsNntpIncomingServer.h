@@ -41,9 +41,6 @@ public:
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
     
-    NS_IMETHOD GetRootFolderPath(char **);
-    NS_IMETHOD SetRootFolderPath(char *);
-    
     NS_IMETHOD GetServerURI(char * *uri);
 };
 

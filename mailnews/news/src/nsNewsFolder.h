@@ -105,7 +105,7 @@ protected:
 	//Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *setStr);
 
-  nsresult LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile);
+  nsresult LoadNewsrcFileAndCreateNewsgroups(nsIFileSpec * newsrcFile);
   PRInt32 RememberLine(char *line);
   nsresult ForgetLine(void);
 

@@ -17,10 +17,10 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIFileSpec.idl"
 
 [scriptable, uuid(21ea0654-f773-11d2-8aec-004005263078)]
 interface nsINntpIncomingServer : nsISupports {
-    attribute string newsrcFilePath;
+	/* the on-disk path to the newsrc file for this server */
+	attribute nsIFileSpec newsrcFilePath;  
 };
-
-

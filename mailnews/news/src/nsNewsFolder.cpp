@@ -139,8 +139,6 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
 
-    char *newsrcFilePathStr = nsnull;
-    
     //Are we assured this is the server for this folder?
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = GetServer(getter_AddRefs(server));
@@ -151,19 +149,11 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
                                 getter_AddRefs(nntpServer));
     if (NS_FAILED(rv)) return rv;
     
-    rv = nntpServer->GetNewsrcFilePath(&newsrcFilePathStr);
+    nsCOMPtr<nsIFileSpec> newsrcFilePath;
+    rv = nntpServer->GetNewsrcFilePath(getter_AddRefs(newsrcFilePath));
     if (NS_FAILED(rv)) return rv;
       
-    nsFileSpec newsrcFile(newsrcFilePathStr);
-    PR_FREEIF(newsrcFilePathStr);
-    newsrcFilePathStr = nsnull;
-
-    if (NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_NEWS
-      printf("uri = %s newsrc file = %s\n", mURI, (const char *)newsrcFile);
-#endif
-      rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
-    }
+    rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFilePath);
   }
   else {
 #ifdef DEBUG_NEWS
@@ -1067,10 +1057,10 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 }
 
 nsresult 
-nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
+nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsIFileSpec * newsrcFile)
 {
   nsInputFileStream newsrcStream(newsrcFile); 
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   PRInt32 numread = 0;
 
   if (NS_FAILED(m_inputStream.GrowBuffer(NEWSRC_FILE_BUFFER_SIZE))) {

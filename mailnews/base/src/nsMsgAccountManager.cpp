@@ -96,6 +96,7 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 #define PREF_4X_MAIL_SMTP_NAME "mail.smtp_name"
 #define PREF_4X_MAIL_SERVER_TYPE "mail.server_type"
 #define PREF_4X_NETWORK_HOSTS_IMAP_SERVER "network.hosts.imap_servers"
+#define PREF_4X_MAIL_USE_IMAP_SENTMAIL "mail.imap_sentmail_path"
 
 #ifdef DEBUG_seth
 #define DEBUG_CLEAR_PREF 1
@@ -303,6 +304,7 @@ private:
   static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
 
   // methods for migration / upgrading
+  nsresult MigrateIdentity(nsIMsgIdentity *identity);
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   
   nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
@@ -316,8 +318,8 @@ private:
   nsresult MigrateAndClearOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
   nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, nsFileSpec &newsHostsDir);
-  nsresult MigrateAndClearOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, const char *newsrcfile);
+  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
+  nsresult MigrateAndClearOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, nsFileSpec &newsrcfile);
   nsresult SetServerRootPref(const char *pref_name, nsFileSpec & dir);
   
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
@@ -1084,8 +1086,6 @@ nsMsgAccountManager::UpgradePrefs()
 {
     nsresult rv;
     PRInt32 oldMailType;
-    char *oldStr = nsnull;
-    PRBool oldBool;
 
     rv = getPrefService();
     if (NS_FAILED(rv)) return rv;
@@ -1106,111 +1106,8 @@ nsMsgAccountManager::UpgradePrefs()
     rv = createKeyedIdentity("identity1", getter_AddRefs(identity));
     if (NS_FAILED(rv)) return rv;
 
-    // identity stuff
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USEREMAIL, &oldStr);
-    if (NS_SUCCEEDED(rv)) {
-      if (oldStr) {
-      	identity->SetEmail(oldStr);
-      }
-      else {
-        identity->SetEmail("");
-      }
-      PR_FREEIF(oldStr);
-
-#ifdef DEBUG_CLEAR_PREF
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USEREMAIL);
-#endif
-    }
-    
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USERNAME, &oldStr);
-    if (NS_SUCCEEDED(rv)) {
-      if (oldStr) {
-      	identity->SetFullName(oldStr);
-      }
-      else {
-        identity->SetFullName("");
-      }
-      PR_FREEIF(oldStr);
-
-#ifdef DEBUG_CLEAR_PREF
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USERNAME);
-#endif
-    }
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_REPLY_TO, &oldStr);
-    if (NS_SUCCEEDED(rv)) {
-      if (oldStr) {
-      	identity->SetReplyTo(oldStr);
-      }
-      else {
-        identity->SetReplyTo("");
-      }
-      PR_FREEIF(oldStr);
-      
-#ifdef DEBUG_CLEAR_PREF
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_REPLY_TO);
-#endif
-    }
-
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_ORGANIZATION, &oldStr);
-    if (NS_SUCCEEDED(rv)) {
-      if (oldStr) {
-      	identity->SetOrganization(oldStr);
-      }
-      else {
-        identity->SetOrganization("");
-      }
-      PR_FREEIF(oldStr);
-      
-#ifdef DEBUG_CLEAR_PREF
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_ORGANIZATION);
-#endif
-    }
-
-    rv = m_prefs->GetBoolPref(PREF_4X_MAIL_COMPOSE_HTML, &oldBool);
-    if (NS_SUCCEEDED(rv)) {
-      identity->SetComposeHtml(oldBool);
-
-#ifdef DEBUG_CLEAR_PREF
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_COMPOSE_HTML);
-#endif
-    }
-
-    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_SMTP_SERVER, &oldStr);
-    if (NS_SUCCEEDED(rv)) {
-      if (oldStr) {
-        identity->SetSmtpHostname(oldStr);
-      }
-      else {
-        identity->SetSmtpHostname("");
-      }
-      PR_FREEIF(oldStr);
-      
-#ifdef DEBUG_CLEAR_PREF
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_SMTP_SERVER);
-#endif
-    }
-
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_SMTP_NAME, &oldStr);
-    if (NS_SUCCEEDED(rv)) {
-      if (oldStr) {
-      	identity->SetSmtpUsername(oldStr);
-      }
-      else {
-        identity->SetSmtpUsername("");
-      }
-      PR_FREEIF(oldStr);
-
-#ifdef DEBUG_CLEAR_PREF
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_SMTP_NAME);
-#endif
-    }
+    rv = MigrateIdentity(identity);
+    if (NS_FAILED(rv)) return rv;    
     
     if ( oldMailType == 0) {      // POP
       rv = MigratePopAccounts(identity);
@@ -1236,6 +1133,131 @@ nsMsgAccountManager::UpgradePrefs()
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
+}
+
+nsresult
+nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
+{
+  nsresult rv;
+  char *oldStr = nsnull;
+  PRBool oldBool;
+    
+  // identity stuff
+  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USEREMAIL, &oldStr);
+  if (NS_SUCCEEDED(rv)) {
+    if (oldStr) {
+      identity->SetEmail(oldStr);
+    }
+    else {
+      identity->SetEmail("");
+    }
+    PR_FREEIF(oldStr);
+    
+#ifdef DEBUG_CLEAR_PREF
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USEREMAIL);
+#endif
+  }
+  
+  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USERNAME, &oldStr);
+  if (NS_SUCCEEDED(rv)) {
+    if (oldStr) {
+      identity->SetFullName(oldStr);
+    }
+    else {
+      identity->SetFullName("");
+    }
+    PR_FREEIF(oldStr);
+    
+#ifdef DEBUG_CLEAR_PREF
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USERNAME);
+#endif
+  }
+  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_REPLY_TO, &oldStr);
+  if (NS_SUCCEEDED(rv)) {
+    if (oldStr) {
+      identity->SetReplyTo(oldStr);
+    }
+    else {
+      identity->SetReplyTo("");
+    }
+    PR_FREEIF(oldStr);
+    
+#ifdef DEBUG_CLEAR_PREF
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_REPLY_TO);
+#endif
+  }
+  
+  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_ORGANIZATION, &oldStr);
+  if (NS_SUCCEEDED(rv)) {
+    if (oldStr) {
+      identity->SetOrganization(oldStr);
+    }
+    else {
+      identity->SetOrganization("");
+    }
+    PR_FREEIF(oldStr);
+    
+#ifdef DEBUG_CLEAR_PREF
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_ORGANIZATION);
+#endif
+  }
+  
+  rv = m_prefs->GetBoolPref(PREF_4X_MAIL_COMPOSE_HTML, &oldBool);
+  if (NS_SUCCEEDED(rv)) {
+    identity->SetComposeHtml(oldBool);
+    
+#ifdef DEBUG_CLEAR_PREF
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_MAIL_COMPOSE_HTML);
+#endif
+  }
+  
+  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_SMTP_SERVER, &oldStr);
+  if (NS_SUCCEEDED(rv)) {
+    if (oldStr) {
+      identity->SetSmtpHostname(oldStr);
+    }
+    else {
+      identity->SetSmtpHostname("");
+    }
+    PR_FREEIF(oldStr);
+    
+#ifdef DEBUG_CLEAR_PREF
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_SMTP_SERVER);
+#endif
+  }
+  
+  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_SMTP_NAME, &oldStr);
+  if (NS_SUCCEEDED(rv)) {
+    if (oldStr) {
+      identity->SetSmtpUsername(oldStr);
+    }
+    else {
+      identity->SetSmtpUsername("");
+    }
+    PR_FREEIF(oldStr);
+    
+#ifdef DEBUG_CLEAR_PREF
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_MAIL_SMTP_NAME);
+#endif
+  }
+
+#ifdef NOT_READY_YET
+  // migrate the mail.default_* and news.default_* prefs
+  PRBool use_imap_sentmail;
+  rv = m_prefs->GetBoolPref(PREF_4X_MAIL_USE_IMAP_SENTMAIL, &use_imap_sentmail);
+  if (use_imap_sentmail) {
+  }
+  else {
+  }
+#endif /* 0 */
+  return NS_OK;
 }
 
 nsresult
@@ -1918,11 +1940,11 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 }
 
 nsresult
-nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, nsFileSpec & newsHostsDir)
+nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, nsFileSpec & newsrcfile, nsFileSpec & newsHostsDir)
 {  
 	nsresult rv;
 	nsFileSpec thisNewsHostsDir = newsHostsDir;
-	if (!newsrcfile) return NS_ERROR_NULL_POINTER;
+        if (!identity) return NS_ERROR_NULL_POINTER;
 	if (!hostname) return NS_ERROR_NULL_POINTER;
 
     // create the account
@@ -1982,7 +2004,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 }
 
 nsresult
-nsMsgAccountManager::MigrateAndClearOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, const char *newsrcfile)
+nsMsgAccountManager::MigrateAndClearOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, nsFileSpec & newsrcfile)
 {
   nsresult rv;
   
@@ -1999,7 +2021,11 @@ nsMsgAccountManager::MigrateAndClearOldNntpPrefs(nsIMsgIncomingServer *server, c
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 #endif /* SUPPORT_SNEWS */
 	
-  nntpServer->SetNewsrcFilePath((char *)newsrcfile);
+  nsCOMPtr <nsIFileSpec> path;
+  rv = NS_NewFileSpecWithSpec(newsrcfile, getter_AddRefs(path));
+  if (NS_FAILED(rv)) return rv;
+
+  nntpServer->SetNewsrcFilePath(path);
     
   return NS_OK;
 }
