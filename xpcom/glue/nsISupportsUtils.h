@@ -558,18 +558,19 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 //	exists in "nsCOMPtr.h" for use with |nsCOMPtr|s.
 
 extern "C++" {
+	// ...because some one is accidentally including this file inside an |extern "C"|
 
 class nsISupports;
 
-template <class T>
+template <class SourceType, class DestinationType>
 inline
 nsresult
-CallQueryInterface( nsISupports* aSource, T** aDestination )
+CallQueryInterface( SourceType* aSource, DestinationType** aDestination )
 		// a type-safe shortcut for calling the |QueryInterface()| member function
 	{
 		NS_PRECONDITION(aSource, "null parameter");
 
-		return aSource->QueryInterface(T::GetIID(), aDestination);
+		return aSource->QueryInterface(DestinationType::GetIID(), aDestination);
 	}
 
 } // extern "C++"

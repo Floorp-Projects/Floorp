@@ -531,16 +531,16 @@ getter_AddRefs( nsCOMPtr<T>& aSmartPtr )
 
 
 
-template <class T>
+template <class SourceType, class DestinationType>
 inline
 nsresult
-CallQueryInterface( nsISupports* aSource, nsCOMPtr<T>* aDestination )
+CallQueryInterface( SourceType* aSource, nsCOMPtr<DestinationType>* aDestination )
 		// a type-safe shortcut for calling the |QueryInterface()| member function
 	{
 		NS_PRECONDITION(aSource, "null parameter");
 		NS_PRECONDITION(aDestination, "null parameter");
 
-		return aSource->QueryInterface(T::GetIID(), getter_AddRefs(*aDestination));
+		return aSource->QueryInterface(DestinationType::GetIID(), getter_AddRefs(*aDestination));
 	}
 
 
