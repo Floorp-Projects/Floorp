@@ -153,7 +153,7 @@ Rights Reserved.
 		</menu>
 	    
 		<menu id="menu_View">
-		    <menupopup>
+		    <menupopup id="menu_View_Popup">
 				<menu id="menu_Toolbars">
 					<menupopup>
 						<menuitem id="menu_showAbToolbar"
@@ -248,8 +248,7 @@ Rights Reserved.
 	<box align="horizontal" flex="100%" style="min-width:150px">
 		<!-- sidebar with dir tree -->
 		<box id="sidebar-box">
-			<splitter class="sidebar-main-header" collapse="after"
-			          onclick="sidebarOpenClosePanel(this)"> 
+			<splitter class="sidebar-main-header" collapse="after">
 				<text style="min-width:1px" value="&addressbook-sidebar-header.label;"/>
 			</splitter>
 			
