@@ -73,6 +73,8 @@
 #include "nsParserCIID.h"
 #include "nsParserUtils.h"
 #include "nsIDocumentViewer.h"
+#include "nsIScrollable.h"
+#include "nsStyleConsts.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -1540,6 +1542,30 @@ nsXMLContentSink::PopContent()
 void
 nsXMLContentSink::StartLayout()
 {
+
+  PRBool topLevelFrameset = PR_FALSE;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+  if (docShellAsItem) {
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    if(docShellAsItem.get() == root.get()) {
+      topLevelFrameset = PR_TRUE;
+    }
+  }
+
+  // If it's a frameset document then disable scrolling.
+  // Else, reset scrolling to default settings for this shell.
+  // This must happen before the initial reflow, when we create the root frame
+  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mWebShell));
+  if (scrollableContainer) {
+    if (topLevelFrameset) {
+      scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, NS_STYLE_OVERFLOW_HIDDEN);
+      scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X, NS_STYLE_OVERFLOW_HIDDEN);
+    } else {
+      scrollableContainer->ResetScrollbarPreferences();
+    }
+  }
+
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell* shell = mDocument->GetShellAt(i);
@@ -1578,16 +1604,6 @@ nsXMLContentSink::StartLayout()
     mRef.AssignWithConversion(ref);
   }
 
-  PRBool topLevelFrameset = PR_FALSE;
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
-  if (docShellAsItem) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-    if(docShellAsItem.get() == root.get()) {
-      topLevelFrameset = PR_TRUE;
-    }
-  }
-
   if (ref || topLevelFrameset) {
     // XXX support more than one presentation-shell here
 
@@ -1595,9 +1611,9 @@ nsXMLContentSink::StartLayout()
     // scroll bars.
     ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsIPresShell* shell = mDocument->GetShellAt(i);
-      if (nsnull != shell) {
-        nsCOMPtr<nsIViewManager>vm;
+      nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+      if (shell) {
+        nsCOMPtr<nsIViewManager> vm;
         shell->GetViewManager(getter_AddRefs(vm));
         if (vm) {
           nsIView* rootView = nsnull;
@@ -1606,15 +1622,10 @@ nsXMLContentSink::StartLayout()
             nsIScrollableView* sview = nsnull;
             rootView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &sview);
             if (nsnull != sview) {
-              if (topLevelFrameset)
-                mOriginalScrollPreference = nsScrollPreference_kNeverScroll;
-              else
-                sview->GetScrollPreference(mOriginalScrollPreference);
               sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
             }
           }
         }
-        NS_RELEASE(shell);
       }
     }
   }
