@@ -490,6 +490,96 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
  * =============================================================================
  */
 
+void
+nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContext,
+                                                nsIRenderingContext& aRenderingContext,
+                                                PRUint32             aOptions,
+                                                nsStretchDirection   aStretchDirection,
+                                                nsBoundingMetrics&   aPreferredStretchSize)
+{
+  if (aOptions & STRETCH_CONSIDER_ACTUAL_SIZE) {
+    // when our actual size is ok, just use it
+    aPreferredStretchSize = mBoundingMetrics;
+  }
+  else if (aOptions & STRETCH_CONSIDER_EMBELLISHMENTS) {
+    // compute our up-to-date size using Place()
+    nsHTMLReflowMetrics metrics(nsnull);
+    Place(aPresContext, aRenderingContext, PR_FALSE, metrics);
+    aPreferredStretchSize = mBoundingMetrics;
+  }
+  else {
+    // compute a size that doesn't include embellishements
+    NS_ASSERTION(NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
+                 NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags) ||
+                 NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags),
+                 "invalid call to GetPreferredStretchSize");
+    nsRect rect;
+    PRBool firstTime = PR_TRUE;
+    nsBoundingMetrics bm, bmChild;
+    nsIFrame* childFrame;
+    // XXXrbs need overloaded FirstChild() and clean integration of <maction> throughout
+    FirstChild(aPresContext, nsnull, &childFrame);
+    while (childFrame) {
+      // initializations in case this child happens not to be a MathML frame
+      childFrame->GetRect(rect);
+      bmChild.ascent = rect.y;
+      bmChild.descent = rect.x;
+      bmChild.width = rect.width;
+      bmChild.rightBearing = rect.width;
+      bmChild.leftBearing = 0;
+
+      nsIMathMLFrame* mathMLFrame;
+      nsresult rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_SUCCEEDED(rv) && mathMLFrame) {
+      	nsEmbellishData childData;
+        mathMLFrame->GetEmbellishData(childData);
+        if (NS_MATHML_IS_EMBELLISH_OPERATOR(childData.flags) &&
+            childData.direction == aStretchDirection) {
+          // embellishements are not included, only consider the inner first child itself
+          nsIMathMLFrame* mathMLchildFrame;
+          rv = childData.firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLchildFrame);
+          if (NS_SUCCEEDED(rv) && mathMLchildFrame) {
+            mathMLFrame = mathMLchildFrame;
+          }
+        }
+        mathMLFrame->GetBoundingMetrics(bmChild);
+      }
+
+      if (firstTime) {
+        firstTime = PR_FALSE;
+        bm = bmChild;
+        if (!NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags) &&
+            !NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags)) {
+          // we may get here for cases such as <msup><mo>...</mo> ... </msup>
+          break;
+        }
+      }
+      else {
+        if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags)) {
+          // if we get here, it means this is container that will stack its children
+          // vertically and fire an horizontal stretch on each them. This is the case
+          // for \munder, \mover, \munderover. We just sum-up the size vertically.
+          bm.descent += bmChild.ascent + bmChild.descent;
+          if (bm.leftBearing > bmChild.leftBearing)
+            bm.leftBearing = bmChild.leftBearing;
+          if (bm.rightBearing < bmChild.rightBearing)
+            bm.rightBearing = bmChild.rightBearing;
+        }
+        else if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags)) {
+          // just sum-up the sizes horizontally.
+          bm += bmChild;
+        }
+        else {
+          NS_ERROR("unexpected case in GetPreferredStretchSize");
+          break;
+        }
+      }
+      childFrame->GetNextSibling(&childFrame);
+    }
+    aPreferredStretchSize = bm;
+  }
+}
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
@@ -528,12 +618,11 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
         GetReflowAndBoundingMetricsFor(childFrame, childSize, childSize.mBoundingMetrics);
 
         nsBoundingMetrics containerSize = aContainerSize;
-
         if (aStretchDirection != NS_STRETCH_DIRECTION_DEFAULT &&
             aStretchDirection != mEmbellishData.direction) {
           // change the direction and confine the stretch to us
-          // XXX tune this
-          containerSize = mBoundingMetrics;
+          GetPreferredStretchSize(aPresContext, aRenderingContext, 0,
+                                  mEmbellishData.direction, containerSize);
         }
 
         // do the stretching...
@@ -545,7 +634,42 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
                             nsRect(childSize.descent, childSize.ascent,
                                    childSize.width, childSize.height));
 
-        // We now have one child that may have changed, re-position all our children
+        // Remember the siblings which were _deferred_.
+        // Now that this embellished child may have changed, we need to
+        // fire the stretch on its siblings using our updated size
+
+        if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ||
+            NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags)) {
+
+          nsStretchDirection stretchDir =
+            NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ?
+              NS_STRETCH_DIRECTION_VERTICAL : NS_STRETCH_DIRECTION_HORIZONTAL;
+
+          GetPreferredStretchSize(aPresContext, aRenderingContext, STRETCH_CONSIDER_EMBELLISHMENTS,
+                                  stretchDir, containerSize);
+
+          childFrame = mFrames.FirstChild();
+          while (childFrame) {
+            if (childFrame != mEmbellishData.firstChild) {
+              rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+              if (NS_SUCCEEDED(rv) && mathMLFrame) {
+                // retrieve the metrics that was stored at the previous pass
+                GetReflowAndBoundingMetricsFor(childFrame, 
+                  childSize, childSize.mBoundingMetrics);
+                // do the stretching...
+                mathMLFrame->Stretch(aPresContext, aRenderingContext,
+                                     stretchDir, containerSize, childSize);
+                // store the updated metrics
+                childFrame->SetRect(aPresContext,
+                                    nsRect(childSize.descent, childSize.ascent,
+                                           childSize.width, childSize.height));
+              }
+            }
+            childFrame->GetNextSibling(&childFrame);
+          }
+        }
+
+        // re-position all our children
         Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
 
         // If our parent is not embellished, it means we are the outermost embellished
@@ -637,33 +761,12 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
     if (!parentWillFireStretch) {
       // There is nobody who will fire the stretch for us, we do it ourselves!
 
-       // BEGIN of GETTING THE STRETCH SIZE
-       // What is the size that we should use to stretch our stretchy children ????
-
-// 1) With this code, vertical stretching works. But horizontal stretching
-// does not work when the firstChild happens to be the core embellished mo...
-//      nsRect rect;
-//      nsIFrame* childFrame = mEmbellishData.firstChild;
-//      NS_ASSERTION(childFrame, "Something is wrong somewhere");
-//      childFrame->GetRect(rect);
-//      nsStretchMetrics curSize(rect.x, rect.y, rect.width, rect.height);
-
-
-// 2) With this code, horizontal stretching works. But vertical stretching
-// is done in some cases where frames could have simply been kept as is.
-//      nsStretchMetrics curSize(aDesiredSize);
-      nsBoundingMetrics curSize = mBoundingMetrics;
-
-
-// 3) With this code, we should get appropriate size when it is done !!
-//      GetDesiredSize(aDirection, aPresContext, aRenderingContext, curSize);
-
-      // XXX It is not clear if a direction should be imposed.
-      // With the default direction, the MathMLChar will attempt to stretch
-      // in its preferred direction.
+      nsBoundingMetrics defaultSize;
+      GetPreferredStretchSize(aPresContext, aRenderingContext, 0,
+                              mEmbellishData.direction, defaultSize);
 
       Stretch(aPresContext, aRenderingContext, NS_STRETCH_DIRECTION_DEFAULT,
-              curSize, aDesiredSize);
+              defaultSize, aDesiredSize);
     }
   }
   if (aDesiredSize.maxElementSize) {
@@ -1301,46 +1404,43 @@ printf("\n");
   // If we are a container which is entitled to stretch its children, then we
   // ask our stretchy children to stretch themselves
 
-  if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ||
-      NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags)) {
+  // The stretching of siblings of an embellished child is _deferred_ until
+  // after finishing the stretching of the embellished child - bug 117652
 
-    // get our tentative bounding metrics using Place()
-    Place(aPresContext, *aReflowState.rendContext, PR_FALSE, aDesiredSize);
+  if (!NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
+      (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ||
+       NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags))) {
 
-    // What size should we use to stretch our stretchy children
-    // XXX tune this
-    nsBoundingMetrics containerSize = mBoundingMetrics;
-
-    // get the strech direction
+    // get the stretchy direction
     nsStretchDirection stretchDir =
-      NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ?
-        NS_STRETCH_DIRECTION_VERTICAL : NS_STRETCH_DIRECTION_HORIZONTAL;
+      NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) 
+      ? NS_STRETCH_DIRECTION_VERTICAL 
+      : NS_STRETCH_DIRECTION_HORIZONTAL;
+
+    // what size should we use to stretch our stretchy children
+    // We don't use STRETCH_CONSIDER_ACTUAL_SIZE -- because our size is not known yet
+    // We don't use STRETCH_CONSIDER_EMBELLISHMENTS -- because we don't want to
+    // include them in the caculations of the size of stretchy elements
+    nsBoundingMetrics containerSize;
+    GetPreferredStretchSize(aPresContext, *aReflowState.rendContext, 0,
+                            stretchDir, containerSize);
 
     // fire the stretch on each child
     childFrame = mFrames.FirstChild();
     while (childFrame) {
-      if (mEmbellishData.firstChild == childFrame) {
-        // skip this child... because:
-        // If we are here it means we are an embellished container and
-        // for now, we don't touch our embellished child frame.
-        // Its stretch will be handled separatedly when we receive
-        // the stretch command fired by our parent frame.
-      }
-      else {
-        nsIMathMLFrame* mathMLFrame;
-        rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-        if (NS_SUCCEEDED(rv) && mathMLFrame) {
-          // retrieve the metrics that was stored at the previous pass
-          GetReflowAndBoundingMetricsFor(childFrame, 
-            childDesiredSize, childDesiredSize.mBoundingMetrics);
+      nsIMathMLFrame* mathMLFrame;
+      rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_SUCCEEDED(rv) && mathMLFrame) {
+        // retrieve the metrics that was stored at the previous pass
+        GetReflowAndBoundingMetricsFor(childFrame,
+          childDesiredSize, childDesiredSize.mBoundingMetrics);
 
-          mathMLFrame->Stretch(aPresContext, *aReflowState.rendContext,
-                               stretchDir, containerSize, childDesiredSize);
-          // store the updated metrics
-          childFrame->SetRect(aPresContext,
-                              nsRect(childDesiredSize.descent, childDesiredSize.ascent,
-                                     childDesiredSize.width, childDesiredSize.height));
-        }
+        mathMLFrame->Stretch(aPresContext, *aReflowState.rendContext,
+                             stretchDir, containerSize, childDesiredSize);
+        // store the updated metrics
+        childFrame->SetRect(aPresContext,
+                            nsRect(childDesiredSize.descent, childDesiredSize.ascent,
+                                   childDesiredSize.width, childDesiredSize.height));
       }
       childFrame->GetNextSibling(&childFrame);
     }
@@ -1384,7 +1484,7 @@ nsMathMLContainerFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
-enum nsMathMLFrameTypeEnum {
+enum eMathMLFrameType {
   eMathMLFrameType_UNKNOWN = -1,
   eMathMLFrameType_Ordinary,
   eMathMLFrameType_Operator,
@@ -1411,8 +1511,8 @@ GetInterFrameSpacing(PRInt32  aScriptLevel,
                      nsIAtom* aFirstFrameType,
                      nsIAtom* aSecondFrameType)
 {
-  nsMathMLFrameTypeEnum firstType = eMathMLFrameType_UNKNOWN;
-  nsMathMLFrameTypeEnum secondType = eMathMLFrameType_UNKNOWN;
+  eMathMLFrameType firstType = eMathMLFrameType_UNKNOWN;
+  eMathMLFrameType secondType = eMathMLFrameType_UNKNOWN;
 
   // do the mapping for the first frame
   if (aFirstFrameType == nsMathMLAtoms::ordinaryMathMLFrame)
