@@ -374,8 +374,10 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
           mSidebar = nsnull;
         }
 
-        if (mListenerManager)
+        if (mListenerManager) {
           mListenerManager->RemoveAllListeners(PR_FALSE);
+          mListenerManager = nsnull;
+        }
 
         if (mContext && mJSObject) {
 //      if (mContext && mJSObject && aDocument) {
