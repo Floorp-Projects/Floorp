@@ -123,8 +123,11 @@ function loadCalendarEventDialog()
 
     event = args.calendarEvent;
 
-
-
+    if (isEvent(event))
+        document.getElementById("component-type").selectedIndex = 0;
+    else if (isTodo(event))
+        document.getElementById("component-type").selectedIndex = 1;
+    else { /* uh... */ dump("got a bogus event\n"); }
 
     // mode is "new or "edit" - show proper header
     var titleDataItem = null;
@@ -1565,8 +1568,23 @@ function processComponentType()
     {
       case "ICAL_COMPONENT_EVENT":
         // Hide and show the appropriate fields and widgets
-        hideElement("task-status-label");
+        hideElement("task-cancelled-label");
         hideElement("cancelled-checkbox");
+        hideElement("task-start-datetime-label");
+        hideElement("start-checkbox");
+        hideElement("due-checkbox");
+        hideElement("due-datetime");
+        hideElement("task-due-datetime-label");
+        hideElement("task-completed-label");
+        hideElement("completed-checkbox");
+        hideElement("completed-date-picker");
+        hideElement("percent-complete-menulist");
+        hideElement("percent-complete-label");
+        hideElement("task-priority-label");
+        hideElement("priority-levels");
+        showElement("end-datetime");
+        showElement("event-start-datetime-label");
+        showElement("event-end-datetime-label");
         showElement("event-status-label");
         showElement("event-status-field");
         showElement("all-day-event-checkbox");
@@ -1579,11 +1597,27 @@ function processComponentType()
         break;
       case "ICAL_COMPONENT_TODO":
         // Hide and show the appropriate fields and widgets
+        hideElement("end-datetime");
+        hideElement("event-start-datetime-label");
+        hideElement("event-end-datetime-label");
         hideElement("event-status-label");
         hideElement("event-status-field");
         hideElement("all-day-event-checkbox");
-        showElement("task-status-label");
+        showElement("task-cancelled-label");
         showElement("cancelled-checkbox");
+        showElement("task-start-datetime-label");
+        showElement("start-checkbox");
+        showElement("due-checkbox");
+        showElement("due-datetime");
+        showElement("task-due-datetime-label");
+        showElement("task-completed-label");
+        showElement("completed-checkbox");
+        showElement("completed-date-picker");
+        showElement("percent-complete-menulist");
+        showElement("percent-complete-label");
+        showElement("task-priority-label");
+        showElement("priority-levels");
+        
         // Set menubar title correctly - New vs. Edit
         if( "new" == args.mode )
           titleDataItem = document.getElementById( "data-event-title-new" );
@@ -1617,4 +1651,81 @@ function addAttendee(email)
     treeItem.appendChild(treeRow);
     treeRow.appendChild(treeCell);
     document.getElementById("bucketBody").appendChild(treeItem);
+}
+
+/*
+ * Check that the due date is after the start date, if they are the same day
+ * then the checkDueTime function should catch the problem (if there is one).
+ */
+
+function checkDueDate()
+{
+   var startDate = document.getElementById( "start-datetime" ).value; 
+   var dueDate = document.getElementById( "due-datetime" ).value; 
+   
+   if( startDate.getFullYear() == dueDate.getFullYear() &&
+       startDate.getMonth() == dueDate.getMonth() &&
+       startDate.getDay() == dueDate.getDay() )
+      return( 0 );
+
+   else if ( dueDate < startDate)
+      return -1;
+   else if (dueDate > startDate)
+      return 1;
+}
+
+/** Check that start datetime <= due datetime if both exist.
+    Provide separate error message for startDate > dueDate or
+    startDate == dueDate && startTime > dueTime. **/
+function checkSetTimeDate()
+{
+  var startCheckBox = document.getElementById( "start-checkbox" );
+  var dueCheckBox = document.getElementById( "due-checkbox" );
+  if (startCheckBox.checked && dueCheckBox.checked)
+  {
+    var CheckDueDate = checkDueDate();
+
+    if ( CheckDueDate < 0 )
+    {
+      // due before start
+      setDateError(true);
+      setTimeError(false);
+      return false;
+    }
+    else if ( CheckDueDate == 0 )
+    {
+      setDateError(false);
+      // start & due same
+      var CheckDueTime = checkDueTime();
+      setTimeError(CheckDueTime);
+      return !CheckDueTime;
+    }
+  }
+  setDateError(false);
+  setTimeError(false);
+  return true;
+}
+
+/**
+*   Called when the start or due datetime checkbox is clicked.
+*   Enables/disables corresponding datetime picker and alarm relation.
+*/
+function onDateTimeCheckbox(checkbox, pickerId)
+{
+   var picker = document.getElementById( pickerId );
+   picker.disabled = !checkbox.checked;
+
+   updateAlarmItemEnabled();   
+
+   updateOKButton();
+}
+
+function setDateError(state)
+{ 
+   document.getElementById( "due-date-warning" ).setAttribute( "collapsed", !state );
+}
+
+function setTimeError(state)
+{ 
+   document.getElementById( "due-time-warning" ).setAttribute( "collapsed", !state );
 }

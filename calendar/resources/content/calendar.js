@@ -335,7 +335,10 @@ function calendarFinish()
 
 function launchPreferences()
 {
-    window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable,modal");
+    if (applicationName == "Mozilla" || applicationName == "Firebird")
+        goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
+    else
+        window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable,modal");
 }
 
 /** 
@@ -649,7 +652,7 @@ function multiweekToDoBoxDoubleClickEvent( todoBox, event )
    
    gCalendarWindow.multiweekView.clearSelectedDate();
    
-   editToDo( todoBox.calendarToDo );
+   editEvent( todoBox.calendarToDo );
 
    if ( event ) 
    {
@@ -855,7 +858,7 @@ function newToDo ( startDate, dueDate )
    
     // created todo has no start or due date unless user wants one
     if (startDate) 
-        calendarToDo.start.jsDate = startDate;
+        calendarToDo.entryTime.jsDate = startDate;
 
     if (dueDate)
         calendarToDo.dueDate.jsDate = dueDate;
@@ -897,10 +900,10 @@ function editNewEvent( calendarEvent, server )
 */
 function editNewToDo( calendarToDo, server )
 {
-  openToDoDialog(calendarToDo,
-                 "new",
-                 self.addToDoDialogResponse,
-                 server);
+  openEventDialog(calendarToDo,
+                  "new",
+                  self.addToDoDialogResponse,
+                  server);
 }
 
 /** 
@@ -939,19 +942,7 @@ function editEvent( calendarEvent )
                   self.modifyEventDialogResponse,
                   null);
 }
-   
-/** 
-* Helper function to launch the event composer to edit an event.
-* When the user clicks OK "modifyEventDialogResponse" is called
-*/
 
-function editToDo( calendarToDo )
-{
-  openToDoDialog(calendarToDo,
-                 "edit",
-                 self.modifyToDoDialogResponse,
-                 null);
-}
    
 /** 
 * Called when the user clicks OK in the edit event dialog
@@ -998,27 +989,6 @@ function openEventDialog(calendarEvent, mode, onOk, server)
   window.setCursor( "wait" );
   // open the dialog modally
   openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,titlebar,modal", args );
-}
-
-/** PRIVATE: open todo dialog in mode, and call onOk if ok is clicked.
-    'mode' is "new" or "edit".
-    'server' is path to calendar to update.
- **/
-function openToDoDialog(calendarToDo, mode, onOk, server)
-{
-  // set up a bunch of args to pass to the dialog
-  var args = new Object();
-  args.calendarEvent = calendarToDo;
-  args.mode = mode;
-  args.onOk = onOk;
-  
-  if( server )
-    args.server = server;
-   
-  // wait cursor will revert to auto in todoDialog.js loadCalendarEventDialog
-  window.setCursor( "wait" );
-  // open the dialog modally
-  openDialog("chrome://calendar/content/toDoDialog.xul", "caEditToDo", "chrome,titlebar,modal", args );
 }
 
 /**
