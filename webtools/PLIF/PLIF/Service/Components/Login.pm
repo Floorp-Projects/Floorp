@@ -110,6 +110,19 @@ sub reportInputVerificationError {
 }
 
 # dispatcher.commands
+sub cmdLogin {
+    my $self = shift;
+    my($app) = @_;
+    my $user = $app->getObject('user');
+    if (defined($user)) {
+        $self->warn(4, 'tried to log in but was already logged in');
+        $app->noCommand();
+    } else {
+        $self->requireLogin($app);
+    }
+}
+
+# dispatcher.commands
 sub cmdLoginRequestAccount {
     my $self = shift;
     my($app) = @_;
