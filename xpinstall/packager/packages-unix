@@ -251,6 +251,9 @@ bin/components/nsCloseAllWindows.js
 ; Kerberos NegotiateAuth
 bin/components/libnegotiateauth.so
 
+; GnomeVFS support
+bin/components/libnkgnomevfs.so
+
 ; webservices
 bin/components/libwebsrvcs.so
 bin/components/websrvcs.xpt
