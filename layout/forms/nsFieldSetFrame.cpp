@@ -342,6 +342,9 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   nscoord contentWidth = contentSize.width + borderPadding.left + borderPadding.right;
 
   aDesiredSize.width = (legendWidth > contentWidth) ? legendWidth : contentWidth;
+  if (aReflowState.HaveConstrainedWidth() && (aReflowState.minWidth > aDesiredSize.width)) {
+    aDesiredSize.width = aReflowState.minWidth;
+  }
 
   // Place the legend 
   nsRect legendRect(0, 0, 0, 0);
@@ -402,6 +405,9 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   aDesiredSize.height  = contentTopOffset + contentSize.height + borderPadding.bottom;
   if (mInline) // XXX parents don't yet ...... 
     aDesiredSize.height += margin.bottom;
+  if (aReflowState.HaveConstrainedHeight() && (aReflowState.minHeight > aDesiredSize.height)) {
+    aDesiredSize.height = aReflowState.minHeight;
+  }
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
   if (nsnull != aDesiredSize.maxElementSize) {

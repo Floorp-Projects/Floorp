@@ -146,7 +146,14 @@ nsLegendFrame::Reflow(nsIPresContext& aPresContext,
 
   // add in our border and padding to the size of the child
   aDesiredSize.width  += borderPadding.left + borderPadding.right;
+  if (aReflowState.HaveConstrainedWidth() && (aReflowState.minWidth > aDesiredSize.width)) {
+    aDesiredSize.width = aReflowState.minWidth;
+  }
+
   aDesiredSize.height += borderPadding.top + borderPadding.bottom;
+  if (aReflowState.HaveConstrainedHeight() && (aReflowState.minHeight > aDesiredSize.height)) {
+    aDesiredSize.height = aReflowState.minHeight;
+  }
 
   // adjust our max element size, if necessary
   if (aDesiredSize.maxElementSize) {
