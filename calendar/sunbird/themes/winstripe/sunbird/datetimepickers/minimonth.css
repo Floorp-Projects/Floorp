@@ -17,6 +17,15 @@
   text-align: center;
 }
 
+.minimonth-year-name {
+  font-family: Arial;
+  font-size: 12pt;
+  font-weight: bold;
+  color: #000000;
+  text-align: center;
+  margin-left: 6px;
+}
+
 .minimonth-navbtn {
   min-width: 10px;
 }
@@ -87,5 +96,9 @@
 
 .minimonth-day:active {
   background-color: #d2d2d2;
+}
+
+.minimonth-list[current="true"] {
+  font-weight: bold;
 }
 

@@ -19,7 +19,6 @@
 <bindings id="xulMiniMonth"
     xmlns="http://www.mozilla.org/xbl"
     xmlns:xbl="http://www.mozilla.org/xbl"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
     <binding id="minimonth" extends="xul:box" xbl:inherits="onchange,onmonthchange">
@@ -31,7 +30,8 @@
           <xul:hbox class="minimonth-month-box">
             <xul:image class="minimonth-navbtn" dir="-1"/>
             <xul:spacer flex="1"/>
-            <xul:text id="month-name" class="minimonth-month-name" value="Month"/>
+            <xul:text id="month-name" class="minimonth-month-name" value="Month" popup="month-list"/>
+            <xul:text id="year-name" class="minimonth-year-name" value="Year" popup="year-list"/>
             <xul:spacer flex="1"/>
             <xul:image class="minimonth-navbtn" dir="1"/>
           </xul:hbox>
@@ -100,6 +100,30 @@
                 <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
           </xul:vbox>
+          <xul:menupopup id="month-list">
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+          </xul:menupopup>
+          <xul:menupopup id="year-list">
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+            <xul:menuitem class="minimonth-list"/>
+          </xul:menupopup>
+          
         </xul:vbox>
         </content>
 
@@ -151,9 +175,10 @@
                 var monthbox = document.getAnonymousNodes(this)[0].childNodes[0];
                 this.mLeftBtn = monthbox.childNodes[0];
                 this.mLeftBtn.mCalendar = this;
-                this.mRightBtn = monthbox.childNodes[4];
+                this.mRightBtn = monthbox.childNodes[5];
                 this.mRightBtn.mCalendar = this;
                 this.mMonthCell = monthbox.childNodes[2];
+                this.mYearCell = monthbox.childNodes[3];
 
                 //var val = this.parentNode.parentNode.parentNode.parentNode.value;
                 //if (val) this.mValue = new Date(val);
@@ -237,11 +262,35 @@
                     this.mSelected = null;
                 }
 
-                //-------- Update the month title
-                var mon = this.getMonthName(aDate) + " " + aDate.getFullYear();
+                //-------- Update the month and year title
+                var mon = this.getMonthName(aDate);
 
                 this.mMonthCell.setAttribute("value", mon);
+                this.mYearCell.setAttribute("value", aDate.getFullYear());
 
+                //-------- Update the month popup
+                var months = document.getAnonymousNodes(this)[0].childNodes[2].childNodes;
+                for (var i = 0; i < months.length; i++) {
+                  months[i].setAttribute("label", this.mMonthNames[i]);
+                  months[i].setAttribute("value", i);
+                  months[i].setAttribute("current", "false");
+                  if (i == aDate.getMonth())
+                    months[i].setAttribute("current", "true");
+                }
+
+                //-------- Update the year popup
+                var years = document.getAnonymousNodes(this)[0].childNodes[3].childNodes;
+                var year = new Date(aDate.toString());
+                year.setFullYear(aDate.getFullYear() - (years.length%2 + 1));
+                for (var i = 0; i < years.length; i++) {
+                  years[i].setAttribute("label", year.getFullYear());
+                  years[i].setAttribute("value", year.getFullYear());
+                  years[i].setAttribute("current", "false");
+                  if (year.getFullYear() == aDate.getFullYear())
+                    years[i].setAttribute("current", "true");
+                  year.setFullYear(year.getFullYear() + 1);
+                }
+                
                 //-------- Update the calendar
                 var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
 
@@ -391,12 +440,48 @@
 
             ]]></body>
         </method>
+        
+        <method name="switchMonth">
+            <parameter name="aMonth"/>
+            <body><![CDATA[
+              this.mEditorDate.setMonth(aMonth);
+              this.showMonth(this.mEditorDate);
+
+              if (this.mSelected)
+	              this.mSelected.removeAttribute("selected");
+	        
+              this.value = this.mEditorDate;
+              if (this.onmonthchange) this.onmonthchange();
+
+            ]]></body>
+        </method>
+        <method name="switchYear">
+            <parameter name="aYear"/>
+            <body><![CDATA[
+              this.mEditorDate.setFullYear(aYear);
+              this.showMonth(this.mEditorDate);
+
+              if (this.mSelected)
+	              this.mSelected.removeAttribute("selected");
+	        
+              this.value = this.mEditorDate;
+              if (this.onmonthchange) this.onmonthchange();
+
+            ]]></body>
+        </method>
 
         </implementation>
 
         <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
         <handlers>
             <handler event="bindingattached" action="this.initialize();"/>
+            <handler event="click"><![CDATA[
+              var element = event.originalTarget;
+              if (element.parentNode.getAttribute("id") == "month-list")
+                this.switchMonth(element.getAttribute("value"));
+              if (element.parentNode.getAttribute("id") == "year-list")
+                this.switchYear(element.getAttribute("value"));
+            ]]></handler>            
         </handlers>
 
     </binding>
