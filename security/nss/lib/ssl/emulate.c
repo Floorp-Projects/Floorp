@@ -34,12 +34,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: emulate.c,v 1.4 2001/12/07 02:04:24 relyea%netscape.com Exp $
+ * $Id: emulate.c,v 1.5 2002/02/22 04:23:22 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
 
-#if defined( XP_UNIX )
+#if defined( XP_UNIX ) || defined( XP_BEOS )
 #include <fcntl.h>
 #endif
 #if defined(WIN32)
@@ -95,7 +95,7 @@ ssl_EmulateAcceptRead(	PRFileDesc *   sd,
 }
 
 
-#if !defined( XP_UNIX ) && !defined( WIN32 )
+#if !defined( XP_UNIX ) && !defined( WIN32 ) && !defined( XP_BEOS )
 /*
  * _PR_EmulateTransmitFile
  *
@@ -293,12 +293,12 @@ done:
     	PR_CloseFileMap(mapHandle);
     return count;
 }
-#endif  /* XP_UNIX */
+#endif  /* XP_UNIX || WIN32 || XP_BEOS */
 
 
 
 
-#if !defined( XP_UNIX ) && !defined( WIN32 )
+#if !defined( XP_UNIX ) && !defined( WIN32 ) && !defined( XP_BEOS )
 /*
  * _PR_EmulateSendFile
  *
@@ -442,7 +442,7 @@ done:
     return rv;
 }
 
-#else /* UNIX and NT handled below */
+#else /* UNIX, NT, and BEOS handled below */
 
 /*
  * _PR_UnixSendFile
@@ -630,4 +630,4 @@ done:
 	PR_Close(sd);
     return count;
 }
-#endif /* UNIX and NT */
+#endif /* UNIX, NT, and BEOS */

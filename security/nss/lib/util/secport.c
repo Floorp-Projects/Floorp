@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.10 2002/02/05 22:20:43 jpierre%netscape.com Exp $
+ * $Id: secport.c,v 1.11 2002/02/22 04:23:29 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -60,7 +60,7 @@
 #include "prthread.h"
 #endif /* THREADMARK */
 
-#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
 #include <stdlib.h>
 #else
 #include "wtypes.h"

@@ -39,7 +39,7 @@
 #define _GENCI_H_ 1
 #include "seccomon.h"
 
-#if defined (XP_UNIX) || defined (XP_WIN32) || defined (XP_OS2)
+#if defined (XP_UNIX) || defined (XP_WIN32) || defined (XP_OS2) || defined (XP_BEOS)
 
 /*
  * On unix, NT, Windows '95, and OS/2 we use full maci

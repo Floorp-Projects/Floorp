@@ -406,8 +406,8 @@ fort_GenerateRandom(unsigned char *buf, int bytes)
 /*
  * NOTE: that MAC is missing below.
  */
-#if defined (XP_UNIX) || defined (XP_OS2)
-#ifdef XP_UNIX
+#if defined (XP_UNIX) || defined (XP_OS2) || defined (XP_BEOS)
+#if defined (XP_UNIX) || defined (XP_BEOS)
 #define NS_PATH_SEP ':'
 #define NS_DIR_SEP '/'
 #define NS_DEFAULT_PATH ".:/bin/netscape:/etc/netscape/:/etc"
@@ -448,7 +448,7 @@ local_getFileInfo(const char *fn, PRFileInfo *info)
     }
     return rv;
 }
-#endif /* UNIX & OS/2 */
+#endif /* UNIX, OS/2, and BEOS */
 
 #ifdef XP_WIN
 #define NS_PATH_SEP ';'

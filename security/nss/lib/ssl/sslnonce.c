@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslnonce.c,v 1.9 2001/11/09 05:39:36 nelsonb%netscape.com Exp $
+ * $Id: sslnonce.c,v 1.10 2002/02/22 04:23:24 wtc%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -44,7 +44,7 @@
 #include "sslproto.h"
 #include "nssilock.h"
 #include "nsslocks.h"
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS) || defined(XP_BEOS)
 #include <time.h>
 #endif
 
@@ -348,7 +348,7 @@ PRUint32
 ssl_Time(void)
 {
     PRUint32 myTime;
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS) || defined(XP_BEOS)
     myTime = time(NULL);	/* accurate until the year 2038. */
 #else
     /* portable, but possibly slower */

@@ -54,7 +54,7 @@
 /*#include "keylow.h" */
 #include "secder.h"
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
 #endif
 

@@ -550,6 +550,39 @@ GetHighResClock(void *buf, size_t maxbytes)
  
 #endif /* VMS */
 
+#ifdef BEOS
+#include <be/kernel/OS.h>
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    bigtime_t bigtime; /* Actually an int64 */
+
+    bigtime = real_time_clock_usecs();
+    return CopyLowBits(buf, maxbytes, &bigtime, sizeof(bigtime));
+}
+
+static void
+GiveSystemInfo(void)
+{
+    system_info *info = NULL;
+    int32 val;                     
+    get_system_info(info);
+    if (info) {
+        val = info->boot_time;
+        RNG_RandomUpdate(&val, sizeof(val));
+        val = info->used_pages;
+        RNG_RandomUpdate(&val, sizeof(val));
+        val = info->used_ports;
+        RNG_RandomUpdate(&val, sizeof(val));
+        val = info->used_threads;
+        RNG_RandomUpdate(&val, sizeof(val));
+        val = info->used_teams;
+        RNG_RandomUpdate(&val, sizeof(val));
+    }
+}
+#endif /* BEOS */
+
 #if defined(nec_ews)
 #include <sys/systeminfo.h>
 
@@ -735,6 +768,16 @@ void RNG_SystemInfoForRNG(void)
 #else
     extern char **environ;
 #endif
+#ifdef BEOS
+    static const char * const files[] = {
+	"/boot/var/swap",
+	"/boot/var/log/syslog",
+	"/boot/var/tmp",
+	"/boot/home/config/settings",
+	"/boot/home",
+	0
+    };
+#else
     static const char * const files[] = {
 	"/etc/passwd",
 	"/etc/utmp",
@@ -743,6 +786,7 @@ void RNG_SystemInfoForRNG(void)
 	"/usr/tmp",
 	0
     };
+#endif
 
 #ifdef DO_PS
 For now it is considered that it is too expensive to run the ps command

@@ -32,7 +32,7 @@
  */
 
 #include "seccomon.h"
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include "unix_rand.c"
 #endif
 #ifdef XP_WIN
