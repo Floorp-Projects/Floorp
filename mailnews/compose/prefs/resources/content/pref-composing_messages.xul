@@ -13,7 +13,7 @@
     
   <script language="JavaScript">
   <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "sendStruct", "wrapLength", "strictlyMime"];
+    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "sendStruct", "sendDefaultCharsetList", "wrapLength", "strictlyMime"];
     
     function Startup()
     {
@@ -81,6 +81,19 @@
     <checkbox id="sendStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;"
               pref="true" preftype="bool" prefstring="mail.send_struct"
               prefattribute="checked"/>
+
+    <box autostretch="never">
+    <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>
+    <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+              pref="true" preftype="string" prefstring="mailnews.send_default_charset"
+              prefattribute="data">
+      <template>
+        <menupopup>
+          <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+        </menupopup>
+      </template>
+    </menulist>       
+    </box>               
   </titledbox>
               
   <titledbox autostretch="never">
