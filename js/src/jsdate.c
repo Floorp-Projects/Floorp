@@ -1391,11 +1391,35 @@ date_toGMTString(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-/* for Date.toLocaleString; interface to PRMJTime date struct. */
+/* for Date.toLocaleString; interface to PRMJTime date struct.
+ * If findEquivalent is true, then try to map the year to an equivalent year
+ * that's in range.
+ */
 static void
-new_explode(jsdouble time, PRMJTime *split)
+new_explode(jsdouble time, PRMJTime *split, JSBool findEquivalent)
 {
     jsint year = YearFromTime(time);
+    int16 adjustedYear;
+
+    /* If the year doesn't fit in a PRMJTime, find something to do about it. */
+    if (year > 32767 || year < -32768) {
+        if (findEquivalent) {
+            /* We're really just trying to get a timezone string; map the year
+             * to some equivalent year in the range 0 to 2800.  Borrowed from
+             * A. D. Olsen.
+             */
+            jsint cycles;
+#define CYCLE_YEARS 2800L
+            cycles = (year >= 0) ? year / CYCLE_YEARS
+                                 : -1 - (-1 - year) / CYCLE_YEARS;
+            adjustedYear = year - cycles * CYCLE_YEARS;
+        } else {
+            /* Clamp it to the nearest representable year. */
+            adjustedYear = (year > 0) ? 32767 : - 32768;
+        }
+    } else {
+        adjustedYear = (int16)year;
+    }
 
     split->tm_usec = (int32) msFromTime(time) * 1000;
     split->tm_sec = (int8) SecFromTime(time);
@@ -1404,49 +1428,12 @@ new_explode(jsdouble time, PRMJTime *split)
     split->tm_mday = (int8) DateFromTime(time);
     split->tm_mon = (int8) MonthFromTime(time);
     split->tm_wday = (int8) WeekDay(time);
-    split->tm_year = (int16) year;
+    split->tm_year = (int16) adjustedYear;
     split->tm_yday = (int16) DayWithinYear(time, year);
 
     /* not sure how this affects things, but it doesn't seem
        to matter. */
     split->tm_isdst = (DaylightSavingTA(time) != 0);
-}
-
-static JSBool
-date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
-                    jsval *argv, jsval *rval)
-{
-    char buf[100];
-    JSString *str;
-    PRMJTime split;
-    jsdouble *date = date_getProlog(cx, obj, argv);
-    if (!date)
-        return JS_FALSE;
-
-    if (!JSDOUBLE_IS_FINITE(*date)) {
-        PR_snprintf(buf, sizeof buf, js_NaN_date_str);
-    } else {
-        jsdouble local = LocalTime(*date);
-        new_explode(local, &split);
-
-        /* let PRMJTime format it.  Use '%#c' for windows, because '%c' is
-         * backward-compatible and non-y2k with msvc; '%#c' requests that a
-         * full year be used in the result string.
-         */
-        PRMJ_FormatTime(buf, sizeof buf,
-#ifdef _WIN32
-                      "%#c",
-#else
-                      "%c",
-#endif
-                      &split);
-    }
-
-    str = JS_NewStringCopyZ(cx, buf);
-    if (!str)
-        return JS_FALSE;
-    *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
 }
 
 /* helper function */
@@ -1482,7 +1469,7 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
 
         /* get a timezone string from the OS to include as a
            comment. */
-        new_explode(date, &split);
+        new_explode(date, &split, JS_TRUE);
         PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z) ", &split);
 
         /* Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
@@ -1503,6 +1490,48 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
                     ((tzbuf[0] == '(' && tzbuf[1] != ')') ? tzbuf : ""),
 
                     YearFromTime(local));
+    }
+
+    str = JS_NewStringCopyZ(cx, buf);
+    if (!str)
+        return JS_FALSE;
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+static JSBool
+date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
+                    jsval *argv, jsval *rval)
+{
+    char buf[100];
+    JSString *str;
+    PRMJTime split;
+    jsdouble *date = date_getProlog(cx, obj, argv);
+    if (!date)
+        return JS_FALSE;
+
+    if (!JSDOUBLE_IS_FINITE(*date)) {
+        PR_snprintf(buf, sizeof buf, js_NaN_date_str);
+    } else {
+        intN result_len;
+        jsdouble local = LocalTime(*date);
+        new_explode(local, &split, JS_FALSE);
+
+        /* let PRMJTime format it.  Use '%#c' for windows, because '%c' is
+         * backward-compatible and non-y2k with msvc; '%#c' requests that a
+         * full year be used in the result string.
+         */
+        result_len = PRMJ_FormatTime(buf, sizeof buf,
+#ifdef _WIN32
+                                   "%#c",
+#else
+                                   "%c",
+#endif
+                                   &split);
+
+        /* If it failed, default to toString. */
+        if (result_len == 0)
+            return date_format(cx, *date, rval);
     }
 
     str = JS_NewStringCopyZ(cx, buf);
