@@ -3656,13 +3656,38 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
       //  static const char waitingStateName[] = "W";
     const char *stateName = NULL;
     const char *hostName = GetImapHostName();  // initilize to empty string
+
+    PRInt32 logDataLen = PL_strlen(logData); // PL_strlen checks for null
+    nsCString logDataLines;
+    const char *logDataToLog;
+    PRInt32 lastLineEnd;
+
+    const int kLogDataChunkSize = 400; // nspr line length is 512, and we allow some space for the log preamble.
+
+    // break up buffers > 400 bytes on line boundaries.
+    if (logDataLen > kLogDataChunkSize)
+    {
+      logDataLines.Assign(logData);
+      lastLineEnd = logDataLines.RFindChar('\n', kLogDataChunkSize);
+      // null terminate the last line
+      if (lastLineEnd == kNotFound)
+        lastLineEnd = kLogDataChunkSize - 1;
+
+      logDataLines.Insert( '\0', lastLineEnd + 1);
+      logDataToLog = logDataLines.get();
+    }
+    else
+    {
+      logDataToLog = logData;
+      lastLineEnd = logDataLen;
+    }
     switch (GetServerStateParser().GetIMAPstate())
     {
     case nsImapServerResponseParser::kFolderSelected:
       if (extraInfo)
-        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s-%s:%s:%s: %s", this,hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s-%s:%s:%s: %.400s", this,hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logDataToLog));
       else
-        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s-%s:%s: %s", this,hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s-%s:%s: %.400s", this,hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logDataToLog));
       return;
     case nsImapServerResponseParser::kNonAuthenticated:
       stateName = nonAuthStateName;
@@ -3673,9 +3698,23 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
     }
 
     if (extraInfo)
-      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s:%s:%s: %s", this,hostName,stateName,logSubName,extraInfo,logData));
+      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s:%s:%s: %.400s", this,hostName,stateName,logSubName,extraInfo,logDataToLog));
     else
-      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s:%s: %s",this,hostName,stateName,logSubName,logData));
+      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s:%s: %.400s",this,hostName,stateName,logSubName,logDataToLog));
+
+    // dump the rest of the string in < 400 byte chunks
+    while (logDataLen > kLogDataChunkSize)
+    {
+      logDataLines.Cut(0, lastLineEnd + 2); // + 2 to account for the LF and the '\0' we added
+      logDataLen = logDataLines.Length();
+      lastLineEnd = (logDataLen > kLogDataChunkSize) ? logDataLines.RFindChar('\n', kLogDataChunkSize) : kNotFound;
+      // null terminate the last line
+      if (lastLineEnd == kNotFound)
+        lastLineEnd = kLogDataChunkSize - 1;
+      logDataLines.Insert( '\0', lastLineEnd + 1);
+      logDataToLog = logDataLines.get();
+      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%.400s", logDataToLog));
+    }
   }
 }
 
