@@ -212,6 +212,7 @@ IsScriptEnabled(nsIDocument *aDoc)
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   aDoc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  NS_ENSURE_TRUE(globalObject, PR_TRUE);
 
   nsCOMPtr<nsIScriptContext> scriptContext;
   globalObject->GetContext(getter_AddRefs(scriptContext));
