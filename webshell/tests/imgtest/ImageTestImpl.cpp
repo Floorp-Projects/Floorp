@@ -21,6 +21,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#include "windows.h"
 #include "prtypes.h"
 #include <stdio.h>
 #include "resources.h"
