@@ -197,6 +197,13 @@ public:
   virtual void SetFont(const nsFont& aFont) = 0;
 
   /**
+   * Sets the font for the RenderingContext
+   * @param aFontMetric The font metrics representing the
+   *        font to use in the RenderingContext
+   */
+  virtual void SetFont(nsIFontMetrics *aFontMetrics) = 0;
+
+  /**
    * Get the current font for the RenderingContext
    * @return The current font of the RenderingContext
    */

@@ -528,7 +528,7 @@ PRUint8   *srcbits;
     mLocation.y = 0;
     mAlphaDepth = 8;
     mAlphaWidth = aTheMask->GetWidth();
-    mAlphaHeight = aTheMask->GetWidth();
+    mAlphaHeight = aTheMask->GetHeight();
     num = mAlphaWidth*mAlphaHeight;
     mARowBytes = aTheMask->GetLineStride();
     mAlphaBits = new unsigned char[mARowBytes * mAlphaHeight];

@@ -75,6 +75,7 @@ public:
   virtual void 		SetColor(nscolor aColor);
   virtual nscolor GetColor() const;
   virtual void 		SetFont(const nsFont& aFont);
+  virtual void    SetFont(nsIFontMetrics *aFontMetrics);
   virtual const nsFont& GetFont();
   virtual nsIFontMetrics * GetFontMetrics();
   virtual void 		Translate(nscoord aX, nscoord aY);

@@ -82,6 +82,7 @@ public:
   virtual nscolor GetColor() const;
 
   virtual void SetFont(const nsFont& aFont);
+  virtual void SetFont(nsIFontMetrics *aFontMetrics);
   virtual const nsFont& GetFont();
 
   virtual nsIFontMetrics * GetFontMetrics();

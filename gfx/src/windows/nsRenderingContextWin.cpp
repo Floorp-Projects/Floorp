@@ -854,11 +854,17 @@ nsresult nsRenderingContextWin :: GetLineStyle(nsLineStyle &aLineStyle)
   return NS_OK;
 }
 
-
 void nsRenderingContextWin :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
+}
+
+void nsRenderingContextWin :: SetFont(nsIFontMetrics *aFontMetrics)
+{
+  NS_IF_RELEASE(mFontMetrics);
+  mFontMetrics = aFontMetrics;
+  NS_IF_ADDREF(mFontMetrics);
 }
 
 const nsFont& nsRenderingContextWin :: GetFont()

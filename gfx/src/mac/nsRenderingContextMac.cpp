@@ -539,6 +539,28 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 
 //------------------------------------------------------------------------
 
+void nsRenderingContextMac :: SetFont(nsIFontMetrics *aFontMetrics)
+{
+	NS_IF_RELEASE(mFontMetrics);
+  mFontMetrics = aFontMetrics;
+	NS_IF_ADDREF(mFontMetrics);
+
+	if (mFontMetrics)
+  {
+    nsFont font;
+
+    //XXX this is incredibly hokey. nothing should really
+    //be done with the fontmetrics passed in (either here or in
+    //SetFont() above) until you want to actually *use* the font
+    //for somethin. MMP
+
+    mFontMetrics->GetFont(&font);
+		nsFontMetricsMac::SetFont(font, mContext);
+  }
+}
+
+//------------------------------------------------------------------------
+
 const nsFont& nsRenderingContextMac :: GetFont()
 {
   const nsFont* font = nsnull;

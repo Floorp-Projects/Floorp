@@ -624,6 +624,31 @@ void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
   }
 }
 
+void nsRenderingContextUnix :: SetFont(nsIFontMetrics *aFontMetrics)
+{
+  NS_IF_RELEASE(mFontMetrics);
+  mFontMetrics = aFontMetrics;
+  NS_IF_ADDREF(mFontMetrics);
+
+  //XXX this code and that in SetFont() above need to be factored
+  //into a function. MMP.
+
+  if (mFontMetrics)
+  {  
+//    mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
+    nsFontHandle  fontHandle;
+    mFontMetrics->GetFontHandle(fontHandle);
+    mCurrFontHandle = (Font)fontHandle;
+    
+    ::XSetFont(mRenderingSurface->display,
+	             mRenderingSurface->gc,
+	             mCurrFontHandle);
+      
+//    ::XFlushGC(mRenderingSurface->display,
+//	             mRenderingSurface->gc);
+  }
+}
+
 const nsFont& nsRenderingContextUnix :: GetFont()
 {
   const nsFont* font;
