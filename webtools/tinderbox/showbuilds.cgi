@@ -335,6 +335,9 @@ BEGIN {
         
       # Build Log
       # 
+      # Uncomment this line to print logfile names in build rectangle.
+      # print "$logfile<br>";
+      
       print "<A HREF='$logurl'"
            ." onclick=\"return log(event,$build_index,'$logfile');\">"
            ."L</a>";
