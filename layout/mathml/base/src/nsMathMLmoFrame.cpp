@@ -157,8 +157,6 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
  
   // Init our local attributes
   mFlags = 0;
-  mLeftSpace = 0.0f; // .27777f;
-  mRightSpace = 0.0f; // .27777f;
   mMinSize = float(NS_UNCONSTRAINEDSIZE);
   mMaxSize = float(NS_UNCONSTRAINEDSIZE);
 
@@ -204,13 +202,12 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // fill our mEmbellishData member variable
   nsIFrame* firstChild = mFrames.FirstChild();
   if (firstChild) {
-    mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.core = this;
     mEmbellishData.direction = mMathMLChar.GetStretchDirection();
-    
-    // for consistency, set the first non-empty child as the embellished child
-    mEmbellishData.firstChild = firstChild;
-    
+    mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
+    // IMPORTANT: these two NULL tell us the core <mo> of the embellished hierarchy.
+    mEmbellishData.firstChild = nsnull; 
+    mEmbellishData.core = nsnull;
+
     // there are two extra things that we need to record so that if our
     // parent is <mover>, <munder>, or <munderover>, they will treat us properly:
     // 1) do we have accent="true"
@@ -300,7 +297,27 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   nsOperatorFlags form = NS_MATHML_OPERATOR_FORM_INFIX;
 
   nsIMathMLFrame* mathMLFrame = nsnull;
+  nsIFrame* embellishAncestor = this;
   nsEmbellishData embellishData;
+
+  // Get our outermost embellished container and its parent. 
+  // We ensure that we are the core, not just a sibling of the core
+  nsIFrame* parentAncestor = this;
+  do {
+    embellishAncestor = parentAncestor;
+    embellishAncestor->GetParent(&parentAncestor);
+    rv = parentAncestor->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (NS_SUCCEEDED(rv) && mathMLFrame) {
+      mathMLFrame->GetEmbellishData(embellishData);
+    }
+    else {
+      embellishData.core = nsnull;
+    }
+  } while (embellishData.core == this);
+  // flag if we have an embellished ancestor
+  if (embellishAncestor != this) {
+    mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
+  }
 
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::form_, value)) {
@@ -308,39 +325,8 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
       form = NS_MATHML_OPERATOR_FORM_PREFIX;
     else if (value.Equals(NS_LITERAL_STRING("postfix")))
       form = NS_MATHML_OPERATOR_FORM_POSTFIX;
-
-    // see if we have an embellished ancestor, and check that we are really
-    // the 'core' of the ancestor, not just a sibling of the core
-    rv = mParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (NS_SUCCEEDED(rv) && mathMLFrame) {
-      mathMLFrame->GetEmbellishData(embellishData);
-      if (embellishData.core == this) {
-        // flag if we have an embellished ancestor
-        mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
-      }
-    }
   }
   else {
-    // Get our outermost embellished container and its parent
-    nsIFrame* embellishAncestor;
-    nsIFrame* parent = this;
-    do {
-      embellishAncestor = parent;
-      embellishAncestor->GetParent(&parent);
-      rv = parent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-      if (NS_SUCCEEDED(rv) && mathMLFrame) {
-        mathMLFrame->GetEmbellishData(embellishData);
-      }
-      else {
-        embellishData.core = nsnull;
-      }
-    } while (embellishData.core == this);
-    // flag if we have an embellished ancestor
-    if (embellishAncestor != this)
-    {
-      mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
-    }
-
     // Find the position of our outermost embellished container w.r.t
     // its siblings (frames are singly-linked together).
     nsIFrame* prev = nsnull;
@@ -348,7 +334,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     nsIFrame* frame;
 
     embellishAncestor->GetNextSibling(&next);
-    parent->FirstChild(aPresContext, nsnull, &frame);
+    parentAncestor->FirstChild(aPresContext, nsnull, &frame);
     while (frame) {
       if (frame == embellishAncestor) break;
       prev = frame;
@@ -366,15 +352,25 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   nsAutoString data;
   mMathMLChar.GetData(data);
   mMathMLChar.SetData(aPresContext, data); // XXX hack to reset, bug 45010
-  PRBool found = nsMathMLOperators::LookupOperator(data, form,
-                                                   &mFlags, &mLeftSpace, &mRightSpace);
+  float lspace, rspace;
+  PRBool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
 
   // If we don't want too much extra space when we are a script
   if ((0 < mPresentationData.scriptLevel) &&
       !NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
-    mLeftSpace /= 2.0f;
-    mRightSpace /= 2.0f;
+    lspace /= 2.0f;
+    rspace /= 2.0f;
   }
+
+  // Since these values are relative to the 'em' unit, convert to twips now
+  nscoord leftSpace, rightSpace, em;
+  const nsStyleFont* font;
+  GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+  GetEmHeight(fm, em);
+  leftSpace = NSToCoordRound(lspace * em);
+  rightSpace = NSToCoordRound(rspace * em);
 
   // Now see if there are user-defined attributes that override the dictionary.
   // XXX If an attribute can be forced to be true when it is false in the
@@ -424,11 +420,6 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // If we are an accent without explicit lspace="." or rspace=".",
   // ignore our default left/right space
 
-  // Get the value of 'em'
-  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-    mStyleContext->GetStyleData(eStyleStruct_Font));
-  float em = float(font->mFont.size);
-
   // lspace = number h-unit | namedspace
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::lspace_, value)) {
@@ -437,13 +428,13 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue))
     {
       if ((eCSSUnit_Number == cssValue.GetUnit()) && !cssValue.GetFloatValue())
-        mLeftSpace = 0.0f;
+        leftSpace = 0;
       else if (cssValue.IsLengthUnit())
-        mLeftSpace = float(CalcLength(aPresContext, mStyleContext, cssValue)) / em;
+        leftSpace = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
   else if (NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
-    mLeftSpace = 0.0f;
+    leftSpace = 0;
   }
 
   // rspace = number h-unit | namedspace
@@ -454,14 +445,18 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue))
     {
       if ((eCSSUnit_Number == cssValue.GetUnit()) && !cssValue.GetFloatValue())
-        mRightSpace = 0.0f;
+        rightSpace = 0;
       else if (cssValue.IsLengthUnit())
-        mRightSpace = float(CalcLength(aPresContext, mStyleContext, cssValue)) / em;
+        rightSpace = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
   else if (NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
-    mRightSpace = 0.0f;
+    rightSpace = 0;
   }
+
+  // cache these values
+  mEmbellishData.leftSpace = leftSpace;
+  mEmbellishData.rightSpace = rightSpace;
 
   // minsize = number [ v-unit | h-unit ] | namedspace
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
@@ -544,7 +539,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
         (ch == 0x00D7)) { // &times;
       mFlags |= NS_MATHML_OPERATOR_CENTERED;
     }
-  }  
+  }
 }
 
 // NOTE: aDesiredStretchSize is an IN/OUT parameter
@@ -732,8 +727,9 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
         // get the leading to be left at the top and the bottom of the stretched char
         // this seems more reliable than using fm->GetLeading() on suspicious fonts               
-        float em = float(font->mFont.size);
-        leading = nscoord(0.2f * em); 
+        nscoord em;
+        GetEmHeight(fm, em);
+        leading = NSToCoordRound(0.2f * em); 
 
         aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
         aDesiredStretchSize.descent = mBoundingMetrics.descent + leading;
@@ -744,8 +740,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
       nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
       mMathMLChar.SetRect(
-         nsRect(0, dy, charSize.width,
-                charSize.ascent + charSize.descent));
+         nsRect(0, dy, charSize.width, charSize.ascent + charSize.descent));
 
       mReference.x = 0;
       mReference.y = aDesiredStretchSize.ascent;
@@ -765,20 +760,19 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
   if (!NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
 
-    // Get the value of 'em'
-    nscoord em = NSToCoordRound(float(font->mFont.size));
-
     // Account the spacing
-    aDesiredStretchSize.width += nscoord((mLeftSpace + mRightSpace) * em);
-    mBoundingMetrics.width = aDesiredStretchSize.width;
-    nscoord dx = nscoord(mLeftSpace * em);
+    mBoundingMetrics.width += mEmbellishData.leftSpace + mEmbellishData.rightSpace;
+    aDesiredStretchSize.width = mBoundingMetrics.width;
+    aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
+    nscoord dx = mEmbellishData.leftSpace;
     if (!dx) return NS_OK;
 
     // adjust the offsets
     mBoundingMetrics.leftBearing += dx;
     mBoundingMetrics.rightBearing += dx;
-    aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
+    aDesiredStretchSize.mBoundingMetrics.leftBearing += dx;
+    aDesiredStretchSize.mBoundingMetrics.rightBearing += dx;
 
     nsRect rect;
     if (NS_MATHML_OPERATOR_GET_FORM(mFlags)) {

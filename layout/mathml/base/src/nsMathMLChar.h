@@ -141,6 +141,11 @@ public:
     aBoundingMetrics = mBoundingMetrics;
   }
 
+  void
+  SetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics) {
+    mBoundingMetrics = aBoundingMetrics;
+  }
+
   // Hooks to access the extra leaf style contexts given to the MathMLChars.
   // They provide an interface to make them acessible to the Style System via
   // the Get/Set AdditionalStyleContext() APIs. Owners of MathMLChars

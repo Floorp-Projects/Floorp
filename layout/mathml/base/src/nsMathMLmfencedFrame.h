@@ -66,6 +66,37 @@ public:
         nsFramePaintLayer    aWhichLayer,
         PRUint32             aFlags = 0);
 
+  // exported routine that both mfenced and mfrac share.
+  // mfrac uses this when its bevelled attribute is set.
+  static nsresult
+  doReflow(nsIPresContext*          aPresContext,
+           const nsHTMLReflowState& aReflowState,
+           nsHTMLReflowMetrics&     aDesiredSize,
+           nsReflowStatus&          aStatus,
+           nsIFrame*                aForFrame,
+           nsMathMLChar*            aOpenChar,
+           nsMathMLChar*            aCloseChar,
+           nsMathMLChar*            aSeparatorsChar,
+           PRInt32                  aSeparatorsCount);
+
+  // helper routines to format the MathMLChars involved here
+  static nsresult
+  ReflowChar(nsIPresContext*      aPresContext,
+             nsIRenderingContext& aRenderingContext,
+             nsMathMLChar*        aMathMLChar,
+             nsOperatorFlags      aForm,
+             PRInt32              aScriptLevel,
+             nscoord              axisHeight,
+             nscoord              em,
+             nsBoundingMetrics&   aContainerSize,
+             nsHTMLReflowMetrics& aDesiredSize);
+
+  static void
+  PlaceChar(nsMathMLChar*      aMathMLChar,
+            nscoord            aDesiredSize,
+            nsBoundingMetrics& bm,
+            nscoord&           dx);
+
 protected:
   nsMathMLmfencedFrame();
   virtual ~nsMathMLmfencedFrame();
@@ -76,27 +107,6 @@ protected:
   nsMathMLChar* mCloseChar;
   nsMathMLChar* mSeparatorsChar;
   PRInt32       mSeparatorsCount;
-
-  // helper routines to format the MathMLChars involved here
-  static nsresult
-  ReflowChar(nsIPresContext*      aPresContext,
-             nsIRenderingContext& aRenderingContext,
-             nsMathMLChar*        aMathMLChar,
-             nsOperatorFlags      aForm,
-             PRInt32              aScriptLevel,
-             nscoord              fontAscent,
-             nscoord              fontDescent,
-             nscoord              axisHeight,
-             nscoord              em,
-             nsBoundingMetrics&   aContainerSize,
-             nsHTMLReflowMetrics& aDesiredSize);
-
-  static void
-  PlaceChar(nsMathMLChar*      aMathMLChar,
-            nscoord            aFontAscent,
-            nscoord            aDesiredAscent,
-            nsBoundingMetrics& bm,
-            nscoord&           dx);
 
   // clean up
   void
