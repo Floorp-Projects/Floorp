@@ -325,6 +325,39 @@ sub CheckEmailSyntax {
 
 
 
+sub MailPassword {
+    my ($login, $password) = (@_);
+    my $urlbase = Param("urlbase");
+    my $template = "From: bugzilla-daemon
+To: %s
+Subject: Your bugzilla password.
+
+To use the wonders of bugzilla, you can use the following:
+
+ E-mail address: %s
+       Password: %s
+
+ To change your password, go to:
+ ${urlbase}changepassword.cgi
+
+ (Your bugzilla and CVS password, if any, are not currently synchronized.
+ Top hackers are working around the clock to fix this, as you read this.)
+";
+    my $msg = sprintf($template, $login, $login, $password);
+
+    open SENDMAIL, "|/usr/lib/sendmail -t";
+    print SENDMAIL $msg;
+    close SENDMAIL;
+
+    print "Content-type: text/html\n\n";
+    print "<H1>Password has been emailed.</H1>\n";
+    print "The password for the e-mail address\n";
+    print "$login has been e-mailed to that address.\n";
+    print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
+    print "and enter your password in the form there.\n";
+}
+
+
 sub confirm_login {
     my ($nexturl) = (@_);
 
@@ -350,35 +383,7 @@ sub confirm_login {
 			SqlQuote($enteredlogin));
 		$realpwd = FetchOneColumn();
             }
-            my $urlbase = Param("urlbase");
-            my $template = "From: bugzilla-daemon
-To: %s
-Subject: Your bugzilla password.
-
-To use the wonders of bugzilla, you can use the following:
-
- E-mail address: %s
-       Password: %s
-
- To change your password, go to:
- ${urlbase}changepassword.cgi
-
- (Your bugzilla and CVS password, if any, are not currently synchronized.
- Top hackers are working around the clock to fix this, as you read this.)
-";
-            my $msg = sprintf($template, $enteredlogin, $enteredlogin,
-			      $realpwd);
-            
-	    open SENDMAIL, "|/usr/lib/sendmail -t";
-	    print SENDMAIL $msg;
-	    close SENDMAIL;
-
-            print "Content-type: text/html\n\n";
-            print "<H1>Password has been emailed.</H1>\n";
-            print "The password for the e-mail address\n";
-            print "$enteredlogin has been e-mailed to that address.\n";
-            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-            print "and enter your password in the form there.\n";
+            MailPassword($enteredlogin, $realpwd);
             exit;
         }
 
