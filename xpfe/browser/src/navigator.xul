@@ -5,7 +5,246 @@
 <!DOCTYPE window
 [
 <!ENTITY mainWindow.title "Mozilla"> 
-<!ENTITY throbber.url "http://www.mozilla.org">
+<!ENTITY throbber.url "http://www.mozilla.org"> 
+<!ENTITY fileMenu.label "File">
+<!ENTITY browserCmd.label "New Browser Window">
+<!ENTITY newMenu.label "New">
+<!ENTITY newMailCmd.label "Mail Message">
+<!ENTITY newChatCmd.label "Chat Window">
+<!ENTITY newBlankPageCmd.label "Blank Window">
+<!ENTITY newPageFromTemplateCmd.label "Page Using Template">
+<!ENTITY newPageFromDraftCmd.label "Page using Draft">
+<!ENTITY openCmd.label "Open">
+<!ENTITY sendPageCmd.label "Send Page">
+<!ENTITY editPageCmd.label "Edit Page">
+<!ENTITY offlineMenu.label "Offline">
+<!ENTITY offlineGoOfflineCmd.label "Go Offline">
+<!ENTITY offlineSynchronizeCmd.label "Synchronize">
+<!ENTITY printSetupCmd.label "Print Setup">
+<!ENTITY printPreviewCmd.label "Print Preview">
+<!ENTITY printCmd.label "Print">
+<!ENTITY closeCmd.label ".Close">
+<!ENTITY quitCmd.label "Quit">
+<!ENTITY editMenu.label "Edit">
+<!ENTITY undoCmd.label "Undo">
+<!ENTITY redoCmd.label "Redo">
+<!ENTITY cutCmd.label "Cut">
+<!ENTITY copyCmd.label "Copy">
+<!ENTITY pasteCmd.label "Paste">
+<!ENTITY deleteCmd.label "Delete">
+<!ENTITY walletMenu.label "Wallet">
+<!ENTITY walletSafeFillCmd.label "Safe Form Fill">
+<!ENTITY walletQuickFillCmd.label "Quick Form Fill">
+<!ENTITY walletContentsCmd.label "Wallet Contents">
+<!ENTITY walletDisplaySignonsCmd.label "Display Signons">
+<!ENTITY walletDisplayCookiesCmd.label "Display Cookies">
+<!ENTITY walletSamplesCmd.label "Samples">
+<!ENTITY walletChangePasswordCmd.label "Change Password">
+<!ENTITY selectAllCmd.label "Select All">
+<!ENTITY preferences.label "Preferences">
+<!ENTITY viewMenu.label "View">
+<!ENTITY toolbarsCmd.label "Toolbars">
+<!ENTITY sidebarCmd.label "Sidebar">
+<!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
+<!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
+<!ENTITY useStyleSheetMenu.label "Use Stylesheet">
+<!ENTITY useStyleSheetDefaultCmd.label "Default">
+<!ENTITY useStyleSheetEasyReadingCmd.label "Easy Reading">
+<!ENTITY useStyleSheetMaxInfoCmd.label "Maximum Information">
+<!ENTITY useStlyleSheetBizarreCmd.label "Bizarre">
+<!ENTITY reloadCmd.label "Reload">
+<!ENTITY showImagesCmd.label "Show Images">
+<!ENTITY stopCmd.label "Stop">
+<!ENTITY pageSourceCmd.label "Page Source">
+<!ENTITY pageInfoCmd.label "Page Info">
+<!ENTITY translateMenu.label "Translate">
+<!ENTITY translateFrentoEngCmd.label "French to English">
+<!ENTITY translateGermtoEngCmd.label "German to English">
+<!ENTITY tanslateSpantoEngCmd.label "Spanish to English">
+<!ENTITY translateEngtoFrenCmd.label "English to French">
+<!ENTITY translateGermtoFrenCmd.label "German to French">
+<!ENTITY translateSpantoFrenCmd.label "Spanish to French">
+<!ENTITY translateEngtoGermCmd.label "English to German">
+<!ENTITY translateFrentoGermCmd.label "French to German">
+<!ENTITY translateSpantoGermCmd.label "Spanish to German">
+<!ENTITY translateEngtoSpanCmd.label "English to Spanish">
+<!ENTITY translateFrentoSpanCmd.label "French to Spanish">
+<!ENTITY translateGermtoSpanCmd.label "German to Spanish">
+<!ENTITY dcharMenu.label "Default Character Set">
+<!ENTITY dcharIso1Cmd.label "ISO Latin 1 (ISO-8859-1)">
+<!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-1)">
+<!ENTITY dcharIso3Cmd.label "ISO Latin 3 (ISO-8859-1)">
+<!ENTITY dcharIso4Cmd.label "ISO Latin 4 (ISO-8859-1)">
+<!ENTITY dcharIso9Cmd.label "ISO Latin 5 (ISO-8859-9)">
+<!ENTITY dcharIso14Cmd.label "ISO Latin 8 (ISO-8859-14)">
+<!ENTITY dcharIso15Cmd.label "ISO Latin 9 (ISO-8859-15)">
+<!ENTITY dcharWinLat2Cmd.label "Windows Latin2 (windows-1250)"> 
+<!ENTITY dcharWinLat1Cmd.label "Windows Latin 1 (windows-1252)">
+<!ENTITY dcharWinLat5Cmd.label "Windows Latin 5 (windows-1254">
+<!ENTITY dcharWinBalRimCmd.label "Windows Baltic Rim (windows-1257)">
+<!ENTITY dcharMacRomCmd.label "Macintosh Roman">
+<!ENTITY dcharMacCenEuroCmd.label "Macintosh Central European">
+<!ENTITY dcharMacTurCmd.label "Macintosh Turkish">
+<!ENTITY dcharMacCroaCmd.label "Macintosh Croatian">
+<!ENTITY dcharMacRomCmd.label "Macintosh Romanian">
+<!ENTITY dcharMacIceCmd.label "Macintosh Icelandic">
+<!ENTITY dcharJapanCmd.label "Japanese JIS (ISO-2022-JP)">
+<!ENTITY dcharJapanShiftjsCmd.label "Japanese (Shift_JIS)">
+<!ENTITY dcharJapanEucCmd.label "Japanese (EUC-JP)">
+<!ENTITY dcharTradChiBigCmd.label "Traditional Chinese (Big5)">
+<!ENTITY dcharTriChiEucCmd.label "Traditional Chinese (EUC-TW)">
+<!ENTITY dcharSimpChiGbCmd.label "Simplified Chinese (GB2312)">
+<!ENTITY dcharKoreanCmd.label "Korean (EUC-KR)">
+<!ENTITY dcharUtfCmd.label "UTF-8">
+<!ENTITY dcharIsoCyrCmd.label "ISO Cyrillic (ISO-8859-5)">
+<!ENTITY dcharWinCyrCmd.label "Windows Cyrillic (windows-1251)">
+<!ENTITY dcharMacCyrCmd.label "Macintosh Cyrillic">
+<!ENTITY dcharMacUkrCmd.label "Macintosh Ukrainian">
+<!ENTITY dcharRusCmd.label "Russian (KOI8-R)">
+<!ENTITY dcharUkrCmd.label "Ukrainian (KOI8-U)">
+<!ENTITY dcharIsoGreekCmd.label "ISO Greek (ISO-8859-7)">
+<!ENTITY dcharWinGreekCmd.label "Windows Greek (windows-1253)">
+<!ENTITY dcharMacGreekCmd.label "Macintosh Greek">
+<!ENTITY dcharWinVietCmd.label "Windows Vietnamese (windows-1258)">
+<!ENTITY dcharVietTcnCmd.label "Vietnamese (TCVN5712)">
+<!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
+<!ENTITY dcharVieVpCmd.label "Vietnamese (VPS)">
+<!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
+<!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
+<!ENTITY searchMenu.label "Search">
+<!ENTITY findOnCmd.label "Find On this page...">
+<!ENTITY findAgainCmd.label "Find Again">
+<!ENTITY searchParentCmd.label "Search Parent Item...">
+<!ENTITY searchParenet2Cmd.label "Search Parent2 Item">
+<!ENTITY appSpecificCmd.label "App Specific">
+<!ENTITY searchInternetCmd.label "Search the Internet...">
+<!ENTITY searchAllMailCmd.label "Search All Mail....">
+<!ENTITY searchBookmarksCmd.label "Search Bookmarks...">
+<!ENTITY searchPeopleCmd.label "Search People...">
+<!ENTITY searchComputerCmd.label "Search on this Computer...">
+<!ENTITY goMenu.label "Go">
+<!ENTITY goBackCmd.label "Back">
+<!ENTITY goForwardCmd.label "Forward">
+<!ENTITY goHomeCmd.label "Home">
+<!ENTITY goPrev1Cmd.label "Previous Site 1">
+<!ENTITY goPrev2Cmd.label "Previous Site 2">
+<!ENTITY goPrevnCmd.label "Previous Site n">
+<!ENTITY bookmarksMenu.label "Bookmarks">
+<!ENTITY addCurPageCmd.label "Add Current Page">
+<!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
+<!ENTITY tasksMenu.label "Tasks">
+<!ENTITY navigatorCmd.label "Navigator">
+<!ENTITY messengerCmd.label "Messenger">
+<!ENTITY editorCmd.label "Editor">
+<!ENTITY manageHistoryCmd.label "Manage History">
+<!ENTITY chatCmd.label "Chat">
+<!ENTITY shoppingCartCmd.label "Shopping Cart">
+<!ENTITY servACmd.label "Services A">
+<!ENTITY servBCmd.label "Services B">
+<!ENTITY servCCmd.label "Services C">
+<!ENTITY servDCmd.label "Services D">
+<!ENTITY toolsMenu.label "Tools">
+<!ENTITY toolsPluginsInfoCmd.label "Plugins Info">
+<!ENTITY toolsJavaConsoleCmd.label "Java/JS Console">
+<!ENTITY toolsServerToolsCmd.label "Server Tools">
+<!ENTITY toolsJsDebuggerCmd.label "JavaScipt Debugger">
+<!ENTITY securityInfo.label "Security Info">
+<!ENTITY window1Cmd.label "Window 1">
+<!ENTITY window2Cmd.label "Window 2">
+<!ENTITY window3Cmd.label "Window 3">
+<!ENTITY helpMenuCmd.label "Help">
+<!ENTITY helpContentsCmd.label "Help Contents">
+<!ENTITY howTutorialCmd.label "How to Tutorial">
+<!ENTITY helpChannelCmd.label "Help Channel">
+<!ENTITY softwareUpdatesCmd.label "Software Updates">
+<!ENTITY technicalSupportCmd.label "Technical Support">
+<!ENTITY releaseNotesCmd.label "Release Notes">
+<!ENTITY aboutCommunicatorCmd.label "About Communicator Prototype">
+
+<!ENTITY debugMenu.label "Debug">
+<!ENTITY debugVerCmd.label "Verification">
+<!ENTITY ver1Cmd.label "Mozilla">
+<!ENTITY ver2Cmd.label "Yahoo">
+<!ENTITY ver3Cmd.label "Netscape">
+<!ENTITY ver4Cmd.label "Excite">
+<!ENTITY ver5Cmd.label "Microsoft">
+<!ENTITY ver6Cmd.label "city.net">
+<!ENTITY ver7Cmd.label "Mirabilis">
+<!ENTITY ver8Cmd.label "Pathfinder">
+<!ENTITY ver9Cmd.label "Warner Bros.">
+<!ENTITY ver10Cmd.label "CNN">
+<!ENTITY ver11Cmd.label "USA Today">
+<!ENTITY ver12Cmd.label "Disney">
+<!ENTITY ver13Cmd.label "Hotwired">
+<!ENTITY ver14Cmd.label "Hotbot">
+<!ENTITY ver15Cmd.label "Frames">
+<!ENTITY ver16Cmd.label "Tables">
+<!ENTITY ver17Cmd.label "Applets">
+<!ENTITY ver18Cmd.label "JavaScript">
+<!ENTITY ver19Cmd.label "GIF Images">
+<!ENTITY ver20Cmd.label "JPEG Images">
+<!ENTITY ver21Cmd.label "PNG Images">
+<!ENTITY ver22Cmd.label "Transparency">
+<!ENTITY ver23Cmd.label "Animation">
+<!ENTITY ver24Cmd.label "Larger page">
+<!ENTITY ver25Cmd.label "Smaller page">
+
+<!ENTITY viewDemoMenu.label "Viewer Demos">
+<!ENTITY demo0Cmd.label "#0 Basic Styles">
+<!ENTITY demo1Cmd.label "#1 CSS Styles">
+<!ENTITY demo2Cmd.label "#2 Images">
+<!ENTITY demo3Cmd.label "#3 Basic Tables">
+<!ENTITY demo4Cmd.label "#4 Simple Tables">
+<!ENTITY demo5Cmd.label "#5 More Styles">
+<!ENTITY demo6Cmd.label "#6 Deeply Nested Tables">
+<!ENTITY demo7Cmd.label "#7 Scaled Anim Image">
+<!ENTITY demo8Cmd.label "#8 Form">
+<!ENTITY demo9Cmd.label "#9 Frames">
+<!ENTITY demo10Cmd.label "#10 Anim Images">
+<!ENTITY demo11Cmd.label "#11 Fixed Positioning">
+<!ENTITY demo12Cmd.label "#12 More Fixed Pos">
+<!ENTITY demo13Cmd.label "#13 DHTML">
+<!ENTITY demo14Cmd.label "#14 XML Sorting">
+<!ENTITY demo15Cmd.label "#15 XML IRS">
+
+<!ENTITY xptkMenu.label "XPToolkit">
+<!ENTITY xptk1Cmd.label "Tri-state checkbox">
+<!ENTITY xptk2Cmd.label "Toolbar">
+<!ENTITY xptk3Cmd.label "Tree">
+<!ENTITY xptk4Cmd.label "Dialog">
+<!ENTITY xptk5Cmd.label "Dialog w/ animation">
+
+<!-- Toolbar items --> 
+<!ENTITY backButton.label "Back">
+<!ENTITY forwardButton.label "Forward">
+<!ENTITY reloadButton.label "Reload">
+<!ENTITY stopButton.label "Stop">
+<!ENTITY printButton.label "Print">
+
+<!-- Toolbar items --> 
+<!ENTITY  homeButton.label "Home">
+<!ENTITY  netscapeButton.label "Netscape">
+<!ENTITY  bugzillaButton.label "Bugzilla">
+<!ENTITY  tinderboxButton.label "Tinderbox">
+
+<!-- Statusbar -->
+<!ENTITY  notifCom.label "[Notification Component]">
+<!ENTITY  statusText.label "Document: Done">
+<!ENTITY  buildId.label "Build ID: 1999043018">
+<!ENTITY  security-button.label "Secure Conn">
+
+<!-- taskbar -->
+<!ENTITY  webButton.label "Web">
+<!ENTITY  mailButton.label "Mail">
+<!ENTITY  chatButton.label "Chat">
+<!ENTITY  dayplannerButton.label "DayPlanner">
+<!ENTITY  shoppingButton.label "Shopping">
+<!ENTITY  myDeskButton.label "My Desk">
+<!ENTITY  openWinButton.label "Open Windows">
+
+
+
+
 ]> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -28,282 +267,282 @@
 
 
   <menubar>
-      <menu name="File">
-      <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
+      <menu name="&fileMenu.label;">
+      <menuitem name="&browserCmd.label;" onclick="BrowserNewWindow();"/>
       	<menu name="New">
-      		<menuitem name="Mail Message" onclick="MsgNewMessage();"/>
-		      <menuitem name="Chat Window" onclick=""/>
+      		<menuitem name="&newMailCmd.label;" onclick="MsgNewMessage();"/>
+		      <menuitem name="&newChatCmd.label;" onclick=""/>
 		      <separator />
-		      <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();"/>
+		      <menuitem name="&newBlankPageCmd.label;" onclick="BrowserNewWindow();"/>
+		      <menuitem name="&newPageFromTemplateCmd.label;" onclick="BrowserNewWindow();"/>
+		      <menuitem name="&newPageFromDraftCmd.label;" onclick="BrowserNewWindow();"/>
     		</menu>
-      <menuitem name="Open" onclick="BrowserOpenWindow();"/>
+      <menuitem name="&openCmd.label;" onclick="BrowserOpenWindow();"/>
       <separator />
-      <menuitem name="Send Page" onclick="BrowserReload();"/>
-	   <menuitem name="Edit Page" onclick="BrowserReload();" />
+      <menuitem name="&sendPageCmd.label;" onclick="BrowserReload();"/>
+	   <menuitem name="&editPageCmd.label;" onclick="BrowserReload();" />
 	   <separator />
-      <menu name="Offline">
-	      <menuitem name="Go Offline" onclick="BrowserReload();"/>
+      <menu name="&offlineMenu.label;">
+	      <menuitem name="&offlineGoOfflineCmd.label;" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="Synchronize..." onclick="BrowserReload();"/>
+	      <menuitem name="&offlineSynchronizeCmd.label;" onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="Print Setup" onclick=";"/>
-      <menuitem name="Print Preview" onclick=""/>
-      <menuitem name="Print" onclick="BrowserPrint()"/>
+      <menuitem name="&printSetupCmd.label;" onclick=";"/>
+      <menuitem name="&printPreviewCmd.label;" onclick=""/>
+      <menuitem name="&printCmd.label;" onclick="BrowserPrint()"/>
       <separator />
-      <menuitem name=".Close" onclick="BrowserClose();"/>
-      <menuitem name="Quit" onclick="BrowserExit();"/>
+      <menuitem name="&closeCmd.label;" onclick="BrowserClose();"/>
+      <menuitem name="&quitCmd.label;" onclick="BrowserExit();"/>
     </menu>
-	<menu name="Edit"> 
-      <menuitem name="Undo" onclick="BrowserReload();"/> 
-      <menuitem name="Redo" onclick="BrowserReload();"/> 
+	<menu name="&editMenu.label;"> 
+      <menuitem name="&undoCmd.label;" onclick="BrowserReload();"/> 
+      <menuitem name="&redoCmd.label;" onclick="BrowserReload();"/> 
       <separator /> 
-      <menuitem name="Cut" onclick="BrowserReload();"/> 
-      <menuitem name="Copy" onclick="BrowserCopy();"/> 
-      <menuitem name="Paste" onclick="BrowserReload();"/> 
-      <menuitem name="Delete" onclick="BrowserReload();"/> 
+      <menuitem name="&cutCmd.label;" onclick="BrowserReload();"/> 
+      <menuitem name="&copyCmd.label;" onclick="BrowserCopy();"/> 
+      <menuitem name="&pasteCmd.label;" onclick="BrowserReload();"/> 
+      <menuitem name="&deleteCmd.label;" onclick="BrowserReload();"/> 
       <separator /> 
-      <menu name="Wallet"> 
-          <menuitem name="Safe Form Fill" onclick="WalletSafeFillin();"/> 
-          <menuitem name="Quick Form Fill" onclick="WalletQuickFillin();"/> 
+      <menu name="&walletMenu.label;"> 
+          <menuitem name="&walletSafeFillCmd.label;" onclick="WalletSafeFillin();"/> 
+          <menuitem name="&walletQuickFillCmd.label;" onclick="WalletQuickFillin();"/> 
           <separator /> 
-          <menuitem name="Wallet Contents" onclick="WalletEditor();"/> 
-          <menuitem name="Display Signons" onclick="SignonViewer();"/> 
-          <menuitem name="Display Cookies" onclick="CookieViewer();"/> 
+          <menuitem name="&walletContentsCmd.label;" onclick="WalletEditor();"/> 
+          <menuitem name="&walletDisplaySignonsCmd.label;" onclick="SignonViewer();"/> 
+          <menuitem name="&walletDisplayCookiesCmd.label;" onclick="CookieViewer();"/> 
           <separator /> 
-          <menuitem name="Samples" onclick="WalletSamples();"/> 
-          <menuitem name="Change Password" onclick="WalletChangePassword();"/> 
+          <menuitem name="&walletSamplesCmd.label;" onclick="WalletSamples();"/> 
+          <menuitem name="&walletChangePasswordCmd.label;" onclick="WalletChangePassword();"/> 
 	  </menu> 
       <separator /> 
-      <menuitem name="Select All" onclick="BrowserReload();"/> 
+      <menuitem name="&selectAllCmd.label;" onclick="BrowserReload();"/> 
       <separator /> 
-      <menuitem name="Preferences..." onclick="DoPreferences();"/> 
+      <menuitem name="&preferences.label;" onclick="DoPreferences();"/> 
     </menu> 
 
-    <menu name="View">
-      <menuitem name="Toolbars" onclick="BrowserReload();"/>
-      <menuitem name="Sidebar" onclick="BrowserReload();"/>
+    <menu name="&viewMenu.label;">
+      <menuitem name="&toolbarsCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&sidebarCmd.label;" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Enlarge Text Size" onclick="BrowserReload();"/>
-      <menuitem name="Reduce Text Size" onclick="BrowserReload();"/>
+      <menuitem name="&enlargeTextSizeCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&reduceTextSizeCmd.label;" onclick="BrowserReload();"/>
       <separator />
-      <menu name="Use Stylesheet" onclick="BrowserReload();">
-	      <menuitem name="Default" onclick="BrowserReload();"/>
+      <menu name="&useStyleSheetMenu.label;" onclick="BrowserReload();">
+	      <menuitem name="&useStyleSheetDefaultCmd.label;" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="Easy Reading" onclick="BrowserReload();"/>
-	      <menuitem name="Maximum Information" onclick="BrowserReload();"/>
-	      <menuitem name="Bizarre" onclick="BrowserReload();"/>
+	      <menuitem name="&useStyleSheetEasyReadingCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&useStyleSheetMaxInfoCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&useStlyleSheetBizarreCmd.label;" onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="Reload" onclick="BrowserReload();"/>
-      <menuitem name="Show Images" onclick="BrowserReload();"/>
-      <menuitem name="Stop" onclick="BrowserStop();"/>
+      <menuitem name="&reloadCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&showImagesCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&stopCmd.label;" onclick="BrowserStop();"/>
       <separator />
-      <menuitem name="Page Source" onclick="BrowserViewSource();"/>
-      <menuitem name="Page Info" onclick="BrowserReload();"/>
+      <menuitem name="&pageSourceCmd.label;" onclick="BrowserViewSource();"/>
+      <menuitem name="&pageInfoCmd.label;" onclick="BrowserReload();"/>
       <separator />
-      <menu name="Translate">
-	      <menuitem name="French To English" onclick="BrowserReload();"/>
-	      <menuitem name="German To English" onclick="BrowserReload();"/>
-	      <menuitem name="Spanish To English" onclick="BrowserReload();"/>
+      <menu name="&translateMenu.label;">
+	      <menuitem name="&translateFrentoEngCmd.label; " onclick="BrowserReload();"/>
+	      <menuitem name="&translateGermtoEngCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&tanslateSpantoEngCmd.label;" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="English To French" onclick="BrowserReload();"/>
-	      <menuitem name="German To French" onclick="BrowserReload();"/>
-	      <menuitem name="Spanish To French" onclick="BrowserReload();"/>
+	      <menuitem name="&translateEngtoFrenCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateGermtoFrenCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateSpantoFrenCmd.label;" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="English To German" onclick="BrowserReload();"/>
-	      <menuitem name="French To German" onclick="BrowserReload();"/>
-	      <menuitem name="Spanish To German" onclick="BrowserReload();"/>
+	      <menuitem name="&translateEngtoSpanCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateFrentoGermCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateSpantoGermCmd.label;" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="English To Spanish" onclick="BrowserReload();"/>
-	      <menuitem name="French To Spanish" onclick="BrowserReload();"/>
-	      <menuitem name="German To Spanish" onclick="BrowserReload();"/>
+	      <menuitem name="&translateEngtoSpanCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateFrentoSpanCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateGermtoSpanCmd.label;" onclick="BrowserReload();"/>
     </menu>
-      <menu name="Default Character Set">
-	         <menuitem name="ISO Latin 1 (ISO-8859-1)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
-	         <menuitem name="ISO Latin 2 (ISO-8859-2)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
-	         <menuitem name="ISO Latin 3 (ISO-8859-3)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
-	         <menuitem name="ISO Latin 4 (ISO-8859-4)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-4');"/>
-	         <menuitem name="ISO Latin 5 (ISO-8859-9)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-9');"/>
-	         <menuitem name="ISO Latin 8 (ISO-8859-14)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-14');"/>
-	         <menuitem name="ISO Latin 9 (ISO-8859-15)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-15');"/>
-	         <menuitem name="Windows Latin2 (windows-1250)" onclick="BrowserSetDefaultCharacterSet('windows-1250');"/>
-	         <menuitem name="Windows Latin 1 (windows-1252)" onclick="BrowserSetDefaultCharacterSet('windows-1252');"/>
-	         <menuitem name="Windows Latin 5 (windows-1254)" onclick="BrowserSetDefaultCharacterSet('windows-1254');"/>
-	         <menuitem name="Windows Baltic Rim (windows-1257)" onclick="BrowserSetDefaultCharacterSet('windows-1257');"/>
-	         <menuitem name="Macintosh Roman" onclick="BrowserSetDefaultCharacterSet('x-mac-roman');"/>
-	         <menuitem name="Macintosh Central European" onclick="BrowserSetDefaultCharacterSet('x-mac-ce');"/>
-	         <menuitem name="Macintosh Turkish" onclick="BrowserSetDefaultCharacterSet('x-mac-turkish');"/>
-	         <menuitem name="Macintosh Croatian" onclick="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
-	         <menuitem name="Macintosh Romanian" onclick="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
-	         <menuitem name="Macintosh Icelandic" onclick="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
+      <menu name="&dcharMenu.label;">
+	         <menuitem name="&dcharIso1Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
+	         <menuitem name="&dcharIso2Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
+	         <menuitem name="&dcharIso3Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
+	         <menuitem name="&dcharIso4Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-4');"/>
+	         <menuitem name="&dcharIso9Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-9');"/>
+	         <menuitem name="&dcharIso14Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-14');"/>
+	         <menuitem name="&dcharIso15Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-15');"/>
+	         <menuitem name="&dcharWinLat2Cmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1250');"/>
+	         <menuitem name="&dcharWinLat1Cmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1252');"/>
+	         <menuitem name="&dcharWinLat5Cmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1254');"/>
+	         <menuitem name="&dcharWinBalRimCmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1257');"/>
+	         <menuitem name="&dcharMacRomCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-roman');"/>
+	         <menuitem name="&dcharMacCenEuroCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-ce');"/>
+	         <menuitem name="&dcharMacTurCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-turkish');"/>
+	         <menuitem name="&dcharMacCroaCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
+	         <menuitem name="&dcharMacRomCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
+	         <menuitem name="&dcharMacIceCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
                  <separator />
-	         <menuitem name="Japanese JIS (ISO-2022-JP)" onclick="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
-	         <menuitem name="Japanese (Shift_JIS)" onclick="BrowserSetDefaultCharacterSet('Shift_JIS');"/>
-	         <menuitem name="Japanese (EUC-JP)" onclick="BrowserSetDefaultCharacterSet('EUC-JP');"/>
+	         <menuitem name="&dcharJapanCmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
+	         <menuitem name="&dcharJapanShiftjsCmd.label;" onclick="BrowserSetDefaultCharacterSet('Shift_JIS');"/>
+	         <menuitem name="&dcharJapanEucCmd.label;" onclick="BrowserSetDefaultCharacterSet('EUC-JP');"/>
                  <separator />
-	         <menuitem name="Traditional Chinese (Big5)" onclick="BrowserSetDefaultCharacterSet('Big5');"/>
-	         <menuitem name="Traditional Chinese (EUC-TW)" onclick="BrowserSetDefaultCharacterSet('x-euc-tw');"/>
-	         <menuitem name="Simplified Chinese (GB2312)" onclick="BrowserSetDefaultCharacterSet('GB2312');"/>
+	         <menuitem name="&dcharTradChiBigCmd.label;" onclick="BrowserSetDefaultCharacterSet('Big5');"/>
+	         <menuitem name="&dcharTriChiEucCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-euc-tw');"/>
+	         <menuitem name="&dcharSimpChiGbCmd.label;" onclick="BrowserSetDefaultCharacterSet('GB2312');"/>
                  <separator />
- 	         <menuitem name="Korean (EUC-KR)" onclick="BrowserSetDefaultCharacterSet('EUC-KR');"/>
+ 	         <menuitem name="&dcharKoreanCmd.label;" onclick="BrowserSetDefaultCharacterSet('EUC-KR');"/>
                  <separator />
-	         <menuitem name="UTF-8" onclick="BrowserSetDefaultCharacterSet('UTF-8');"/>
+	         <menuitem name="&dcharUtfCmd.label;" onclick="BrowserSetDefaultCharacterSet('UTF-8');"/>
                  <separator />
-	         <menuitem name="ISO Cyrillic (ISO-8859-5)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-5');"/>
-	         <menuitem name="Windows Cyrillic (windows-1251)" onclick="BrowserSetDefaultCharacterSet('windows-1251');"/>
-	         <menuitem name="Macintosh Cyrillic" onclick="BrowserSetDefaultCharacterSet('x-mac-cyrillic');"/>
-	         <menuitem name="Macintosh Ukrainian" onclick="BrowserSetDefaultCharacterSet('x-mac-ukrainian');"/>
-	         <menuitem name="Russian (KOI8-R)" onclick="BrowserSetDefaultCharacterSet('KOI8-R');"/>
-	         <menuitem name="Ukrainian (KOI8-U)" onclick="BrowserSetDefaultCharacterSet('KOI8-U');"/>
+	         <menuitem name="&dcharIsoCyrCmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-5');"/>
+	         <menuitem name="&dcharWinCyrCmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1251');"/>
+	         <menuitem name="&dcharMacCyrCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-cyrillic');"/>
+	         <menuitem name="&dcharMacUkrCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-ukrainian');"/>
+	         <menuitem name="&dcharRusCmd.label; " onclick="BrowserSetDefaultCharacterSet('KOI8-R');"/>
+	         <menuitem name="&dcharUkrCmd.label;" onclick="BrowserSetDefaultCharacterSet('KOI8-U');"/>
                  <separator />
-	         <menuitem name="ISO Greek (ISO-8859-7)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-7');"/>
-	         <menuitem name="Windows Greek (windows-1253)" onclick="BrowserSetDefaultCharacterSet('windows-1253');"/>
-	         <menuitem name="Macintosh Greek" onclick="BrowserSetDefaultCharacterSet('x-mac-greek');"/>
+	         <menuitem name="&dcharIsoGreekCmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-7');"/>
+	         <menuitem name="&dcharWinGreekCmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1253');"/>
+	         <menuitem name="&dcharMacGreekCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-greek');"/>
                  <separator />
-	         <menuitem name="Windows Vietnamese (windows-1258)" onclick="BrowserSetDefaultCharacterSet('windows-1258');"/>
-	         <menuitem name="Vietnamese (TCVN5712)" onclick="BrowserSetDefaultCharacterSet('x-viet-tcvn5712');"/>
-	         <menuitem name="Vietnamese (VISCII)" onclick="BrowserSetDefaultCharacterSet('VISCII');"/>
-	         <menuitem name="Vietnamese (VPS)" onclick="BrowserSetDefaultCharacterSet('x-viet-vps');"/>
+	         <menuitem name="&dcharWinVietCmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1258');"/>
+	         <menuitem name="&dcharVietTcnCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-viet-tcvn5712');"/>
+	         <menuitem name="&dcharVietViCmd.label;" onclick="BrowserSetDefaultCharacterSet('VISCII');"/>
+	         <menuitem name="&dcharVieVpCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-viet-vps');"/>
                  <separator />
-	         <menuitem name="Thai (TIS-620)" onclick="BrowserSetDefaultCharacterSet('TIS-620');"/>
+	         <menuitem name="&dcharThaiCmd.label;" onclick="BrowserSetDefaultCharacterSet('TIS-620');"/>
                  <separator />
-	         <menuitem name="Armenian (ARMSCII-8)" onclick="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
+	         <menuitem name="&dcharArmCmd.label;" onclick="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
 	   </menu>
     </menu>
-    <menu name="Search">
-      <menuitem name="Find On This page..." onclick="BrowserFind();"/>
-      <menuitem name="Find Again" onclick="BrowserFindAgain();"/>
+    <menu name="&searchMenu.label;">
+      <menuitem name="&findOnCmd.label;" onclick="BrowserFind();"/>
+      <menuitem name="&findAgainCmd.label;" onclick="BrowserFindAgain();"/>
       <separator />
-      <menuitem name="Search Parent Item..." onclick="BrowserReload();"/>
-      <menuitem name="Search Parent2 Item..." onclick="BrowserReload();"/>
-      <menuitem name="App Specific" onclick="BrowserReload();"/>
-      <menuitem name="App Specific" onclick="BrowserReload();"/>
+      <menuitem name="&searchParentCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&searchParenet2Cmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&appSpecificCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&appSpecificCmd.label;" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Search The Internet..." onclick="BrowserReload();"/>
-      <menuitem name="Search All Mail..." onclick="BrowserReload();"/>
-      <menuitem name="Search Bookmarks" onclick="BrowserReload();"/>
-      <menuitem name="Search People" onclick="BrowserReload();"/>
+      <menuitem name="&searchInternetCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&searchAllMailCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&searchBookmarksCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&searchPeopleCmd.label;" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Search On This Computer..." onclick="BrowserReload();"/>
+      <menuitem name="&searchComputerCmd.label;" onclick="BrowserReload();"/>
     </menu>
-    <menu name="Go">
-      <menuitem id="menuitem-back" name="Back" onclick="BrowserBack();"/>
-      <menuitem id="menuitem-forward" name="Forward" onclick="BrowserForward();" />
-      <menuitem name="Home" onclick="BrowserHome();"/>
+    <menu name="&goMenu.label;">
+      <menuitem id="menuitem-back;" name="&goBackCmd.label;" onclick="BrowserBack();"/>
+      <menuitem id="menuitem-forward;" name="&goForwardCmd.label;" onclick="BrowserForward();" />
+      <menuitem name="&goHomeCmd.label;" onclick="BrowserHome();"/>
       <separator />
-      <menuitem name="Previous Site 1" onclick="BrowserBack();"/>
-      <menuitem name="Previous Site 2" onclick="BrowserBack();"/>
-      <menuitem name="Previous Site n" onclick="BrowserBack();"/>
+      <menuitem name="&goPrev1Cmd.label;" onclick="BrowserBack();"/>
+      <menuitem name="&goPrev2Cmd.label;" onclick="BrowserBack();"/>
+      <menuitem name="&goPrevnCmd.label;" onclick="BrowserBack();"/>
     </menu>
-    <menu name="Bookmarks" onclick="OpenBookmarkURL(event.target)" 
+    <menu name="&bookmarksMenu.label;" onclick="OpenBookmarkURL(event.target)" 
 						   datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
-		<menuitem name="Add Current Page" onclick="BrowserAddBookmark(window.frames[0].frames[1].location.href,window.frames[0].frames[1].document.title);"/>
-		<menuitem name="Manage Bookmarks..." onclick="BrowserEditBookmarks();"/>
+		<menuitem name="&addCurPageCmd.label;" onclick="BrowserAddBookmark(window.frames[0].frames[1].location.href,window.frames[0].frames[1].document.title);"/>
+		<menuitem name="&manBookmarksCmd.label;" onclick="BrowserEditBookmarks();"/>
 		<separator/>
 	</menu>
-	 <menu name="Tasks">
-      <menuitem name="Navigator" onclick="BrowserReload();"/>
-      <menuitem name="Messenger" onclick="OpenMessenger();" />
-      <menuitem name="Editor"    onclick="OpenEditor();" />
-      <menuitem name="Manage History"    onclick="OpenHistoryView();" />
-      <menuitem name="Chat" onclick="BrowserReload();"/>
-      <menuitem name="Shopping Cart" onclick="BrowserReload();"/>
+	 <menu name="&tasksMenu.label;">
+      <menuitem name="&navigatorCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
+      <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
+      <menuitem name="&manageHistoryCmd.label;"    onclick="OpenHistoryView();" />
+      <menuitem name="&chatCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&shoppingCartCmd.label;" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Services A" onclick="BrowserReload();"/>
-      <menuitem name="Services B" onclick="BrowserReload();" />
-      <menuitem name="Services C" onclick="BrowserReload();"/>
-      <menuitem name="Services D" onclick="BrowserReload();"/>
+      <menuitem name="&servACmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&servBCmd.label;" onclick="BrowserReload();" />
+      <menuitem name="&servCCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&servDCmd.label;" onclick="BrowserReload();"/>
       <separator />
-      <menu name="Tools">
-	      <menuitem name="Plugins Info" onclick="BrowserReload();"/>
-	      <menuitem name="Server Tools" onclick="BrowserReload();" />
-	      <menuitem name="Java/JS Console" onclick="BrowserReload();"/>
-	      <menuitem name="JavaScript Debugger" onclick="BrowserReload();"/>
+      <menu name="&toolsMenu.label;">
+	      <menuitem name="&toolsPluginsInfoCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&toolsJavaConsoleCmd.label;" onclick="BrowserReload();" />
+	      <menuitem name="&toolsServerToolsCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&toolsJsDebuggerCmd.label;" onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="Security Info" onclick="BrowserReload();"/>
+      <menuitem name="&securityInfo.label;" onclick="BrowserReload();"/>
       <separator/>
-      <menuitem name="Window 1" onclick="BrowserReload();" key="1"/>
-      <menuitem name="Window 2" onclick="BrowserReload();" />
-      <menuitem name="Window 3" onclick="BrowserReload();" />
+      <menuitem name="&window1Cmd.label;" onclick="BrowserReload();" key="1"/>
+      <menuitem name="&window2Cmd.label;" onclick="BrowserReload();" />
+      <menuitem name="&window3Cmd.label;" onclick="BrowserReload();" />
     </menu>
     
-     <menu name="Help">
-      <menuitem name="Help Contents" onclick="window.frames[0].frames[1].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
+     <menu name="&helpMenuCmd.label;">
+      <menuitem name="&helpContentsCmd.label;" onclick="window.frames[0].frames[1].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
       <separator />
-      <menuitem name="How To Tutorial" onclick="BrowserReload();"/>
-      <menuitem name="Help Channel" onclick="BrowserReload();" />
+      <menuitem name="&howTutorialCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&helpChannelCmd.label;" onclick="BrowserReload();" />
       <separator />
-      <menuitem name="Software Updates" onclick="BrowserReload();"/>
-      <menuitem name="Technical Support" onclick="BrowserReload();"/>
-      <menuitem name="Release Notes" 
+      <menuitem name="&softwareUpdatesCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&technicalSupportCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&releaseNotesCmd.label;" 
 	            onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
       
       <separator />
-      <menuitem name="About Communicator Prototype" 
+      <menuitem name="&aboutCommunicatorCmd.label;" 
 	            onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
     </menu>
 
     // Menu for testing.
-    <menu name="Debug">
+    <menu name="&debugMenu.label;">
 
-      <menu name="Verification"> // Build verification sites.
-        <menuitem name="Mozilla"   onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org'"/>
-        <menuitem name="Yahoo"     onclick="window.frames[0].frames[1].location.href='http://www.yahoo.com'"/>
-        <menuitem name="Netscape"  onclick="window.frames[0].frames[1].location.href='http://www.netscape.com'"/>
-        <menuitem name="Excite"    onclick="window.frames[0].frames[1].location.href='http://www.excite.com'"/>
-        <menuitem name="Microsoft" onclick="window.frames[0].frames[1].location.href='http://www.microsoft.com'"/>
-        <menuitem name="city.net"  onclick="window.frames[0].frames[1].location.href='http://www.city.net'"/>
-        <menuitem name="Mirabilis" onclick="window.frames[0].frames[1].location.href='http://www.mirabilis.com'"/>
-        <menuitem name="Pathfinder" onclick="window.frames[0].frames[1].location.href='http://www.pathfinder.com/welcome'"/>
-        <menuitem name="Warner Bros." onclick="window.frames[0].frames[1].location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
-        <menuitem name="CNN"          onclick="window.frames[0].frames[1].location.href='http://www.cnn.com'"/>
-        <menuitem name="USA Today" onclick="window.frames[0].frames[1].location.href='http://www.usatoday.com'"/>
-        <menuitem name="Disney"    onclick="window.frames[0].frames[1].location.href='http://www.disney.go.com'"/>
-        <menuitem name="Hotwired"  onclick="window.frames[0].frames[1].location.href='http://www.hotwired.com'"/>
-        <menuitem name="Hotbot"    onclick="window.frames[0].frames[1].location.href='http://www.hotbot.com'"/>
+      <menu name="&debugVerCmd.label;"> // Build verification sites.
+        <menuitem name="&ver1Cmd.label;"   onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org'"/>
+        <menuitem name="&ver2Cmd.label;"     onclick="window.frames[0].frames[1].location.href='http://www.yahoo.com'"/>
+        <menuitem name="&ver3Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://www.netscape.com'"/>
+        <menuitem name="&ver4Cmd.label;"    onclick="window.frames[0].frames[1].location.href='http://www.excite.com'"/>
+        <menuitem name="&ver5Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.microsoft.com'"/>
+        <menuitem name="&ver6Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://www.city.net'"/>
+        <menuitem name="&ver7Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.mirabilis.com'"/>
+        <menuitem name="&ver8Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.pathfinder.com/welcome'"/>
+        <menuitem name="&ver9Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
+        <menuitem name="&ver10Cmd.label;"          onclick="window.frames[0].frames[1].location.href='http://www.cnn.com'"/>
+        <menuitem name="&ver11Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.usatoday.com'"/>
+        <menuitem name="&ver12Cmd.label;"    onclick="window.frames[0].frames[1].location.href='http://www.disney.go.com'"/>
+        <menuitem name="&ver13Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://www.hotwired.com'"/>
+        <menuitem name="&ver14Cmd.label;"    onclick="window.frames[0].frames[1].location.href='http://www.hotbot.com'"/>
 	    <separator />
-        <menuitem name="Frames"  onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_frame_index.html'"/>
-        <menuitem name="Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
-        <menuitem name="Applets" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_applet.htm'"/>
-        <menuitem name="JavaScript Applets" onclick="window.frames[0].frames[1].location.href='http://www.abcnews.com'"/>
-        <menuitem name="GIF Images" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_imagemap.html'"/>
-        <menuitem name="JPEG Images" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="PNG Images" onclick="window.frames[0].frames[1].location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
-        <menuitem name="Transparency" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
-        <menuitem name="Animation" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="Larger page" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html'"/>
-        <menuitem name="Smaller page" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_link.html'"/>
+        <menuitem name="&ver15Cmd.label;"  onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_frame_index.html'"/>
+        <menuitem name="&ver16Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="&ver17Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_applet.htm'"/>
+        <menuitem name="&ver18Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.abcnews.com'"/>
+        <menuitem name="&ver19Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_imagemap.html'"/>
+        <menuitem name="&ver20Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="&ver21Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
+        <menuitem name="&ver22Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
+        <menuitem name="&ver23Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="&ver24Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html'"/>
+        <menuitem name="&ver25Cmd.label;" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_link.html'"/>
       </menu>
 
-	  <menu name="Viewer Demos">  // Viewer tests.
-        <menuitem name="#0 Basic Styles"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test0.html'"/>
-        <menuitem name="#1 CSS Styles"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test1.html'"/>
-        <menuitem name="#2 Images"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="#3 Basic Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test3.html'"/>
-        <menuitem name="#4 Simple Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test4.html'"/>
-        <menuitem name="#5 More Styles"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test5.html'"/>
-        <menuitem name="#6 Deeply Nested Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
-        <menuitem name="#7 Scaled Anim Image"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test7.html'"/>
-        <menuitem name="#8 Forms"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test8.html'"/>
-        <menuitem name="#9 Frames"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test9.html'"/>
-        <menuitem name="#10 Anim Images" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test10.html'"/>
-        <menuitem name="#11 Fixed Positioning" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
-        <menuitem name="#12 More Fixed Pos" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
-        <menuitem name="#13 DHTML" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
-	<menuitem name="#14 XML Sorting" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
-	<menuitem name="#15 XML IRS" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
+	  <menu name="&viewDemoMenu.label;">  // Viewer tests.
+        <menuitem name="&demo0Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test0.html'"/>
+        <menuitem name="&demo1Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test1.html'"/>
+        <menuitem name="&demo2Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="&demo3Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test3.html'"/>
+        <menuitem name="&demo4Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test4.html'"/>
+        <menuitem name="&demo5Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test5.html'"/>
+        <menuitem name="&demo6Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="&demo7Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test7.html'"/>
+        <menuitem name="&demo8Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test8.html'"/>
+        <menuitem name="&demo9Cmd.label;"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test9.html'"/>
+        <menuitem name="&demo10Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test10.html'"/>
+        <menuitem name="&demo11Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
+        <menuitem name="&demo12Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
+        <menuitem name="&demo13Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
+	<menuitem name="&demo14Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
+	<menuitem name="&demo15Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
       </menu>
 
-      <menu name="XPToolkit"> // XPToolkit tests.
-        <menuitem name="Tri-state checkbox" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/checkboxTest.xul'"/>
-        <menuitem name="Toolbar" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/toolbarTest1.xul'"/>
-        <menuitem name="Tree" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/treeTest1.xul'"/>
-        <menuitem name="Dialog" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexsimplemaster.xul'"/>
-        <menuitem name="Dialog w/ animation" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexanimmaster.xul'"/>
+      <menu name="&xptkMenu.label;"> // XPToolkit tests.
+        <menuitem name="&xptk1Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/checkboxTest.xul'"/>
+        <menuitem name="&xptk2Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/toolbarTest1.xul'"/>
+        <menuitem name="&xptk3Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/treeTest1.xul'"/>
+        <menuitem name="&xptk4Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexsimplemaster.xul'"/>
+        <menuitem name="&xptk5Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexanimmaster.xul'"/>
       </menu>
 
     </menu>
@@ -313,21 +552,21 @@
   <box id="outer-box" align="vertical">
    <toolbox>
     <toolbar class="main-bar">
-		  <titledbutton id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
+		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			
 	      </titledbutton>
 
-	      <titledbutton id="forward-button" align="bottom" value="Forward" 
+	      <titledbutton id="forward-button" align="bottom" value="&forwardButton.label;" 
 				onclick="BrowserForward()">
 				  <observes element="canGoForward" attribute="disabled" onChange="BrowserSetForward()"/>
 	      </titledbutton>
 
-	      <titledbutton id="reload-button" align="bottom" value="Reload" 
+	      <titledbutton id="reload-button" align="bottom" value="&reloadButton.label;" 
 				  onclick="window.frames[0].frames[1].location.reload()">
 				  <observes element="canReload" attribute="disabled"/>
 	      </titledbutton>
 
-	      <titledbutton id="stop-button" align="bottom" value="Stop" 
+	      <titledbutton id="stop-button" align="bottom" value="&stopButton.label;" 
 				onclick="BrowserStop()">
 	        <observes element="canStop" attribute="disabled" onchange="BrowserCanStop()"/>
 	      </titledbutton>
@@ -338,7 +577,7 @@
 			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
 			<spring flex="100%"/>
 	      </box>
-	      <titledbutton id="print-button" align="bottom" value="Print"  
+	      <titledbutton id="print-button" align="bottom" value="&printButton.label;"  
 				onclick="">
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
@@ -349,13 +588,13 @@
 	</toolbar>
 
     <toolbar class="main-bar">
-    	<titledbutton id="home-button" align="right" value="Home" 
+    	<titledbutton id="home-button" align="right" value="&homeButton.label;" 
 			onclick="BrowserHome()"/>
-		<titledbutton id="netscape-button" align="right" value="Netscape" 
+		<titledbutton id="netscape-button" align="right" value="&netscapeButton.label;" 
 			onclick="window.frames[0].frames[1].location.href='http://home.netscape.com'"/>
-		<titledbutton id="bugzilla-button" align="right" value="Bugzilla" 
+		<titledbutton id="bugzilla-button" align="right" value="&bugzillaButton.label;" 
 			onclick="window.frames[0].frames[1].location.href='http://bugzilla.mozilla.org'"/>
-		<titledbutton id="tinderbox-button" align="right" value="Tinderbox" 
+		<titledbutton id="tinderbox-button" align="right" value="&tinderboxButton.label;" 
 			onclick="window.frames[0].frames[1].location.href='http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=SeaMonkey&amp;hours=12&amp;nocrap=1'"/>
 		<spring flex="100%"/>
 	</toolbar>
@@ -369,7 +608,7 @@
 
   <box align="horizontal" id="status-bar">
  
-    <titledbutton value="[Notification Component]" onclick="doTests()"/>
+    <titledbutton value="&notifCom.label;" onclick="doTests()"/>
 
 	<box id="security-box" class="insecure" align="horizontal" flex="100%">
 		<box align="vertical" style="width:100px">
@@ -381,34 +620,34 @@
 			<spring flex="100%"/>
 		</box>
 
-		<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+		<titledbutton id="statusText" align="right" flex="100%" value="&statusText.label;" style="font-family:sans-serif;font-size:2.5mm">
 					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
 		</titledbutton>
 		
 		<spring flex="100%"/>
 
-		<titledbutton align="right" value="Build ID: 1999043018" style="font-family:sans-serif;font-size:2.5mm;"/>
+		<titledbutton align="right" value="&buildId.label;" style="font-family:sans-serif;font-size:2.5mm;"/>
 				
-		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
+		<titledbutton id="security-button" class="insecure" value="&security-button.label;" align="right" onclick="securityOff();"/>
      </box>
   </box>
 
   <toolbox>
 	  <toolbar id="taskbar">
 	  	  <box align="horizontal">
-  	 	     <titledbutton align="left" class="popup"  value="Web" />
-  	 	     <titledbutton align="left" class="popup"  value="Mail" />
-  	 	     <titledbutton align="left" class="popup"  value="Chat" />
+  	 	     <titledbutton align="left" class="popup"  value="&webButton.label;" />
+  	 	     <titledbutton align="left" class="popup"  value="&mailButton.label;" />
+  	 	     <titledbutton align="left" class="popup"  value="&chatButton.label;" />
 		  </box>
 		  <spring flex="100%"/>
 	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  class="popup"  value="DayPlanner" />
-  	 		<titledbutton align="left"  class="popup"  value="Shopping" />
-  	 		<titledbutton align="left"  class="popup"  value="My Desk" />
+  	 		<titledbutton align="left"  class="popup"  value="&dayplannerButton.label;" />
+  	 		<titledbutton align="left"  class="popup"  value="&shoppingButton.label;" />
+  	 		<titledbutton align="left"  class="popup"  value="&myDeskButton.label;" />
           </box>
 		  <spring flex="100%"/>
 	   	  <box align="horizontal">
-  			<titledbutton align="left" class="popup" value="Open Windows" />
+  			<titledbutton align="left" class="popup" value="&openWinButton.label;" />
   	 		<titledbutton align="left" id="mini-nav" value="" />
   	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
   	 		<titledbutton align="left" id="mini-addr" value="" />
