@@ -47,6 +47,7 @@
 #include "genname.h"
 #include "xconst.h"
 #include "secutil.h"
+#include "blapi.h"
 #include "pqgutil.h"
 #include "certxutl.h"
 #include "secrng.h"	/* for RNG_ */

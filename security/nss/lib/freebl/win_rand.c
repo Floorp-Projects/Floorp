@@ -31,6 +31,7 @@
  * GPL.
  */
 
+#include "blapi.h"
 #include "secrng.h"
 #ifdef XP_WIN
 #include <windows.h>
