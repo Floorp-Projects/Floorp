@@ -27,7 +27,6 @@
 
 # Send comments, improvements, bugs to Benjamin Smedberg <benjamin@smedbergs.us>
 use CGI;
-use CGI::Carp qw(fatalsToBrowser);
 
 $query = new CGI;
 $field_separator = '<<fs>>';
@@ -164,7 +163,7 @@ sub print_script_preview {
        <a href="http://www.mozilla.org/build/">the build instructions</a>.
 
        <address>Maintained by
-           <a href="mailto:bsmedberg&#x40;covad&#x2e;net?subject=Build Configurator">Benjamin Smedberg &lt;bsmedberg&#x40;covad&#x2e;net&gt;</a></address>
+           <a href="mailto:benjamin&#x40;smedbergs&#x2e;us?subject=Build Configurator">Benjamin Smedberg &lt;benjamin&#x40;smedberg&#x2e;us&gt;</a></address>
 	  );
 }
 
@@ -360,7 +359,7 @@ sub print_configure_form {
        <a href="http://www.mozilla.org/build/">Back to the Build Instructions</a>
 
        <address>Maintained by
-           <a href="mailto:bsmedberg&#x40;covad&#x2e;net?subject=Build Configurator">Benjamin Smedberg &lt;bsmedberg&#x40;covad&#x2e;net&gt;</a></address>
+           <a href="mailto:benjamin&#x40;smedbergs&#x2e;us?subject=Build Configurator">Benjamin Smedberg &lt;benjamin&#x40;smedbergs&#x2e;us&gt;</a></address>
 	  );
 
   print "\n</body>\n</html>\n";
