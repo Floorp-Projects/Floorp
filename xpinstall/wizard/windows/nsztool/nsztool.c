@@ -611,9 +611,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
   else
   {
     /* The first parameter is not "-g".  Assume that it's the name of the
-     * self-extracting .exe to be saved as.  So lets create it. */
+     * self-extracting .exe to be saved as.  So lets create it only if it does not exist. */
 
-    EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)ExtractFilesProc, (LONG)szSeaExe);
+    if(!FileExists(szSeaExe))
+      EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)ExtractFilesProc, (LONG)szSeaExe);
+
     if(!FileExists(szSeaExe))
     {
       wsprintf(szBuf, "file not found: %s", szSeaExe);
