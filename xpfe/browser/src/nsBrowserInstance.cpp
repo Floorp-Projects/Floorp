@@ -27,6 +27,7 @@
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIClipboardCommands.h"
 #include "pratom.h"
@@ -1281,7 +1282,9 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     mWebShell = webShell;
     //NS_ADDREF(mWebShell); WE DO NOT OWN THIS
     // inform our top level webshell that we are its parent URI content listener...
-    mWebShell->SetParentURIContentListener(this);
+    nsCOMPtr<nsIDocShell> docShell (do_QueryInterface(mWebShell));
+    if (docShell)
+      docShell->SetParentURIContentListener(this);
 
     const PRUnichar * name;
     webShell->GetName( &name);
@@ -1500,7 +1503,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   if (mContentAreaDocLoader) {
     PRBool isBusy = PR_FALSE;
 
-    mContentAreaDocLoader->IsBusy(isBusy);
+    mContentAreaDocLoader->IsBusy(&isBusy);
     if (isBusy) {
       return NS_OK;
     }
@@ -2372,6 +2375,35 @@ nsBrowserInstance::CanHandleContent(const char * aContentType,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsBrowserInstance::GetParentContentListener(nsIURIContentListener** aParent)
+{
+  *aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserInstance::SetParentContentListener(nsIURIContentListener* aParent)
+{
+  NS_ASSERTION(!aParent, "SetParentContentListener on the application level should never be called");
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserInstance::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  *aLoadCookie = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserInstance::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  NS_ASSERTION(!aLoadCookie, "SetLoadCookie on the application level should never be called");
+  return NS_OK;
+}
+
 
 
 NS_DEFINE_MODULE_INSTANCE_COUNTER()

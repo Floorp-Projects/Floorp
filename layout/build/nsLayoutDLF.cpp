@@ -23,6 +23,7 @@
 #include "nsLayoutModule.h"
 #include "nsIComponentManager.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderFactory.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIURL.h"
