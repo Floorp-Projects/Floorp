@@ -145,7 +145,7 @@ struct JSGCThing {
  * no discontinuities over the split created by the thing pages.  So if, for a
  * given JSGCPageInfo *pi, we find that
  *
- *  pi->flags + ((jsuword)thing % 1023) / sizeof(JSGCThing) >= pi->split
+ *  pi->flags + ((jsuword)thing % 1024) / sizeof(JSGCThing) >= pi->split
  *
  * then we must add GC_THINGS_SIZE to the nominal flags pointer to jump over
  * all the thing pages that split the flags into two discontiguous spans.
