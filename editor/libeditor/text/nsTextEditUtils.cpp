@@ -42,13 +42,6 @@
 #include "nsPlaintextEditor.h"
 #include "nsEditProperty.h"
 
-#include "nsString.h"
-#include "nsUnicharUtils.h"
-
-/********************************************************
- *  helper methods from nsTextEditRules
- ********************************************************/
- 
 ///////////////////////////////////////////////////////////////////////////
 // IsBody: true if node an html body node
 //                  
@@ -97,11 +90,9 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
   if (elem)
   {
-    nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
     nsAutoString typeAttrVal;
-    nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
-    ToLowerCase(typeAttrVal);
-    if (NS_SUCCEEDED(res) && (typeAttrVal.Equals(NS_LITERAL_STRING("_moz"))))
+    nsresult res = elem->GetAttribute(NS_LITERAL_STRING("type"), typeAttrVal);
+    if (NS_SUCCEEDED(res) && (typeAttrVal.EqualsIgnoreCase("_moz")))
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -118,9 +109,10 @@ nsTextEditUtils::InBody(nsIDOMNode *node, nsIEditor *editor)
   {
     nsCOMPtr<nsIDOMElement> bodyElement;
     nsresult res = editor->GetRootElement(getter_AddRefs(bodyElement));
-    if (NS_FAILED(res) || !bodyElement)
-      return res?res:NS_ERROR_NULL_POINTER;
+    if (NS_FAILED(res))
+      return res;
     nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+    if (!bodyNode) return NS_ERROR_NULL_POINTER;
     nsCOMPtr<nsIDOMNode> tmp;
     nsCOMPtr<nsIDOMNode> p = node;
     while (p && p!= bodyNode)

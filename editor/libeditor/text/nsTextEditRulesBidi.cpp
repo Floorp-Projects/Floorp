@@ -53,10 +53,9 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
 {
   NS_ENSURE_ARG_POINTER(aCancel);
   *aCancel = PR_FALSE;
-  nsresult res = NS_OK;
 
   nsCOMPtr<nsIPresShell> shell;
-  res = mEditor->GetPresShell(getter_AddRefs(shell));
+  nsresult res = mEditor->GetPresShell(getter_AddRefs(shell));
   if (NS_FAILED(res))
     return res;
   if (!shell)
@@ -79,29 +78,25 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
     return NS_ERROR_NULL_POINTER;
   
   nsIFrame *primaryFrame;
-  nsIFrame *frameBefore;
-  nsIFrame *frameAfter;
-  PRInt32 frameOffset;
-
   res = shell->GetPrimaryFrameFor(content, &primaryFrame);
   if (NS_FAILED(res))
     return res;
   if (!primaryFrame)
     return NS_ERROR_NULL_POINTER;
   
+  nsIFrame *frameBefore;
+  nsIFrame *frameAfter;
+  PRInt32 frameOffset;
+
   res = primaryFrame->GetChildFrameContainingOffset(aSelOffset, PR_FALSE, &frameOffset, &frameBefore);
   if (NS_FAILED(res))
     return res;
   if (!frameBefore)
     return NS_ERROR_NULL_POINTER;
   
-  PRInt32 start, end;
-  PRUint8 currentCursorLevel;
   PRUint8 levelAfter;
   PRUint8 levelBefore;
-  PRUint8 levelOfDeletion;
   nsCOMPtr<nsIAtom> embeddingLevel = getter_AddRefs(NS_NewAtom("EmbeddingLevel")); 
-  nsCOMPtr<nsIAtom> baseLevel = getter_AddRefs(NS_NewAtom("BaseLevel"));
 
   // Get the bidi level of the frame before the caret
   res = frameBefore->GetBidiProperty(context, embeddingLevel, (void**)&levelBefore,sizeof(PRUint8));
@@ -110,6 +105,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
 
   // If the caret is at the end of the frame, get the bidi level of the
   // frame after the caret
+  PRInt32 start, end;
   frameBefore->GetOffsets(start, end);
   if (aSelOffset == end
      || aSelOffset == -1)
@@ -124,6 +120,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
     {
       // there was no frameAfter, i.e. the caret is at the end of the
       // document -- use the base paragraph level
+      nsCOMPtr<nsIAtom> baseLevel = getter_AddRefs(NS_NewAtom("BaseLevel"));
       res = frameBefore->GetBidiProperty(context, baseLevel, (void**)&levelAfter,sizeof(PRUint8));
       if (NS_FAILED(res))
         return res;
@@ -139,9 +136,12 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   {
     levelAfter = levelBefore;
   }
+  PRUint8 currentCursorLevel;
   res = shell->GetCaretBidiLevel(&currentCursorLevel);
   if (NS_FAILED(res))
     return res;
+
+  PRUint8 levelOfDeletion;
   levelOfDeletion = (nsIEditor::eNext==aAction) ? levelAfter : levelBefore;
 
   if (currentCursorLevel == levelOfDeletion)
