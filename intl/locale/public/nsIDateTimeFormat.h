@@ -24,6 +24,7 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsILocale.h"
+#include "nsIScriptableDateFormat.h"
 #include "prtime.h"
 #include <time.h>
 
@@ -32,24 +33,6 @@
 #define NS_IDATETIMEFORMAT_IID \
 { 0x2bbaa0b0, 0xa591, 0x11d2, \
 { 0x91, 0x19, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
-
-typedef PRInt32  nsDateFormatSelector;
-enum {
-    kDateFormatNone = 0,            // do not include the date  in the format string
-    kDateFormatLong,                // provides the long date format for the given locale
-    kDateFormatShort,               // provides the short date format for the given locale
-    kDateFormatYearMonth,           // formats using only the year and month 
-    kDateFormatWeekday              // week day (e.g. Mon, Tue)
-};
-
-typedef PRInt32  nsTimeFormatSelector;
-enum {
-    kTimeFormatNone = 0,            // don't include the time in the format string
-    kTimeFormatSeconds,             // provides the time format with seconds in the  given locale 
-    kTimeFormatNoSeconds,           // provides the time format without seconds in the given locale 
-    kTimeFormatSecondsForce24Hour,  // forces the time format to use the 24 clock, regardless of the locale conventions
-    kTimeFormatNoSecondsForce24Hour // forces the time format to use the 24 clock, regardless of the locale conventions
-};
 
 
 // Locale sensitive date and time format interface
