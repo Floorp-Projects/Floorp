@@ -144,7 +144,7 @@ protected:
   void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  PRBool ChangeFocus(nsIContent* aFocus);
+  PRBool ChangeFocus(nsIContent* aFocus, PRInt32 aFocusedWith);
   NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, PRBool ignoreTabIndex, nsIContent** aResult);
 
   void TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex);
@@ -225,6 +225,7 @@ protected:
   nsIContent* mHoverContent;
   nsIContent* mDragOverContent;
   nsIContent* mCurrentFocus;
+  PRInt32 mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
   nsIWidget * mLastWindowToHaveFocus; // last native window to get focus via the evs
   PRBool      mConsumeFocusEvents;
