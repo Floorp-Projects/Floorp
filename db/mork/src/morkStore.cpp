@@ -292,7 +292,6 @@ mork_bool morkStore::DoPreferLargeOverCompressCommit(morkEnv* ev)
   // true when mStore_CanWriteIncremental && store has file large enough 
 {
   nsIMdbFile* file = mStore_File;
-  nsIMdbEnv* menv = ev->AsMdbEnv();
   if ( file && mStore_CanWriteIncremental )
   {
     mdb_pos fileEof = 0;
@@ -307,7 +306,6 @@ mork_percent morkStore::PercentOfStoreWasted(morkEnv* ev)
 {
   mork_percent outPercent = 0;
   nsIMdbFile* file = mStore_File;
-  nsIMdbEnv* menv = ev->AsMdbEnv();
   
   if ( file )
   {

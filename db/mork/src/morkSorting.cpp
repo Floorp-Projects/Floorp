@@ -321,8 +321,8 @@ morkSorting::NewSortingRowCursor(morkEnv* ev, mork_pos inRowPos)
   morkSortingRowCursor* outCursor = 0;
   if ( ev->Good() )
   {
-    nsIMdbHeap* heap = mSorting_Table->mTable_Store->mPort_Heap;
-    morkSortingRowCursor* cursor = 0;
+//    nsIMdbHeap* heap = mSorting_Table->mTable_Store->mPort_Heap;
+//    morkSortingRowCursor* cursor = 0;
       
     // $$$$$
     // morkSortingRowCursor* cursor = new(*heap, ev)
