@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#include "gtklayout.h"
 #include "resources.h"
 
 #include "stdio.h"
@@ -86,12 +87,15 @@ void CreateViewerMenus(GtkWidget *aParent, gpointer aCallback)
   int nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
   item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", NULL);
   gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, NULL);
-
+/*
   gtk_box_pack_start (GTK_BOX (aParent),
 	gtk_item_factory_get_widget (item_factory,
 	"<main>"),
 	FALSE, FALSE, 0);
-							    
+*/							    
+  gtk_layout_put (GTK_LAYOUT (aParent),
+	gtk_item_factory_get_widget (item_factory, "<main>"),
+	0, 0);
 /*
   menu = CreatePulldownMenu(fileMenu, "Print Preview", 'P');
   CreateMenuItem(menu, "One Column", VIEWER_ONE_COLUMN, aCallback);
