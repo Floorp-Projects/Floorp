@@ -26,8 +26,6 @@
 #include "nsIMsgCompose.h"
 #include "nsCOMPtr.h"
 #include "nsMsgCompFields.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIOutputStream.h"
 #include "nsIMsgQuote.h"
 #include "nsIMsgSendListener.h"
@@ -35,6 +33,8 @@
 #include "nsIMsgSend.h"
 #include "nsIStreamListener.h"
 #include "nsIMimeHeaders.h"
+#include "nsIDocShell.h"
+#include "nsIBaseWindow.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
@@ -104,8 +104,8 @@ class nsMsgCompose : public nsIMsgCompose
 	nsMsgComposeSendListener      *m_sendListener;
 	nsIEditorShell                *m_editor;
 	nsIDOMWindow                  *m_window;
-	nsIWebShell                   *m_webShell;
-	nsIWebShellWindow             *m_webShellWin;
+    nsCOMPtr<nsIDocShell>          m_docShell;
+    nsCOMPtr<nsIBaseWindow>        m_baseWindow;
 	nsMsgCompFields               *m_compFields;
 	nsCOMPtr<nsIMsgIdentity>      m_identity;
 	PRBool						  m_composeHTML;

@@ -20,7 +20,6 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "nsCOMPtr.h"
 #include "nsMsgCompose.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNode.h"
@@ -33,7 +32,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsMsgCompCID.h"
-#include "nsMsgSend.h"
 #include "nsIMessenger.h"	//temporary!
 #include "nsIMessage.h"		//temporary!
 #include "nsMsgQuote.h"
@@ -64,6 +62,8 @@
 #include "nsIAddrBookSession.h"
 #include "nsIAddressBook.h"
 #include "nsIMIMEService.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -109,8 +109,6 @@ nsMsgCompose::nsMsgCompose()
 	mMsgSend = nsnull;
 	m_sendListener = nsnull;
 	m_window = nsnull;
-	m_webShell = nsnull;
-	m_webShellWin = nsnull;
 	m_editor = nsnull;
 	mQuoteStreamListener=nsnull;
 	m_compFields = new nsMsgCompFields;
@@ -385,21 +383,15 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 		if (!globalObj)
 			return NS_ERROR_FAILURE;
 		
-      nsCOMPtr<nsIDocShell> docShell;
-		globalObj->GetDocShell(getter_AddRefs(docShell));
-		nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-		if (!webShell)
-			return NS_ERROR_NOT_INITIALIZED;
-		m_webShell = webShell;
-		
-		nsCOMPtr<nsIWebShellContainer> webShellContainer;
-		m_webShell->GetContainer(*getter_AddRefs(webShellContainer));
-		if (!webShellContainer)
-			return NS_ERROR_NOT_INITIALIZED;
+		globalObj->GetDocShell(getter_AddRefs(m_docShell));
+                            \
+        nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(m_docShell));
+        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+        rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+        if (NS_FAILED(rv)) return rv;
 
-		nsCOMPtr<nsIWebShellWindow> webShellWin = do_QueryInterface(webShellContainer, &rv);
-		m_webShellWin = webShellWin;
-  	}
+        m_baseWindow = do_QueryInterface(treeOwner);
+    }
 	
 	switch (format)
 	{
@@ -532,8 +524,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
       PRInt32     bodyLength;
       char        *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
       
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(m_webShell));
-      mMsgSend->SetDocShell(docShell);
+      mMsgSend->SetDocShell(m_docShell);
 
       if (!mEntityConversionDone)
       {
@@ -815,25 +806,20 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 
 nsresult nsMsgCompose::CloseWindow()
 {
-	if (m_webShellWin)
-	{
-		m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
+    if (m_baseWindow) {
+        m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
 							      /* be sure we wont use it anymore. */
-		nsIWebShellWindow *saveWin = m_webShellWin;
-		m_webShellWin = nsnull;
-		saveWin->Close();
-	}
+        return m_baseWindow->Destroy();
+    }
 
 	return NS_OK;
 }
 
 nsresult nsMsgCompose::ShowWindow(PRBool show)
 {
-	if (m_webShellWin)
-	{
-		m_webShellWin->Show(show);
-	}
-
+	if (m_baseWindow) {
+        return m_baseWindow->SetVisibility(PR_TRUE);
+    }
 	return NS_OK;
 }
 
@@ -2342,8 +2328,6 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
     }
     
     /*ducarroz: for now, I've hardcoded the addressbook DBs we are looking in it, will do much better later! */
-    PRInt32 nbrOfAddrbook = 2;
-    const char addrbookName[2][20] = {"abook.mab", "history.mab"};
 
     nsCOMPtr<nsIMsgRecipientArray> array;
     nsCOMPtr<nsIMsgRecipientArray> noHTMLArray;
