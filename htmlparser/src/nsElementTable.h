@@ -90,6 +90,7 @@ struct nsHTMLElement {
   PRBool          CanContainSelf(void) const;
   PRBool          CanAutoCloseTag(eHTMLTags aTag) const;
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
+  PRBool          IsSpecialParent(eHTMLTags aTag) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
  
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);

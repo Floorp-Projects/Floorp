@@ -247,6 +247,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mComputedCRC32=0;
   mExpectedCRC32=0;
   mDTDState=NS_OK;
+  mStyleHandlingEnabled=PR_TRUE;
 
   if(!gHTMLElements) {
     InitializeElementTable();
@@ -294,7 +295,7 @@ nsCParserNode* CNavDTD::CreateNode(void) {
  * This method recycles a given node
  * @update  gess1/8/99
  * @param 
- * @return 
+ * @return  
  */
 void CNavDTD::RecycleNode(nsCParserNode* aNode) {
   if(aNode && (!aNode->mUseCount)) {
@@ -464,29 +465,28 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,
   mHasOpenScript=PR_FALSE;
   mParseMode=aParseMode;
 
-
-  nsString theString;
-  theString.Append("hello there rick",10);
-
-
   if((aNotifySink) && (aSink)) {
 
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
 
     mTokenRecycler=0;
+    mStyleHandlingEnabled=PR_TRUE;
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
     }
-    result = aSink->WillBuildModel();
 
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
-    START_TIMER();
+    if(result==NS_OK) {
+      result = aSink->WillBuildModel();
 
-    mSkipTarget=eHTMLTag_unknown;
-    mComputedCRC32=0;
-    mExpectedCRC32=0;
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
+      START_TIMER();
+
+      mSkipTarget=eHTMLTag_unknown;
+      mComputedCRC32=0;
+      mExpectedCRC32=0;
+    }
   }
   return result;
 }
@@ -573,6 +573,10 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           }
           if(result==NS_OK) {
             eHTMLTags theTarget; 
+
+              //now let's disable style handling to save time when closing remaining stack members...
+            mStyleHandlingEnabled=PR_FALSE;
+
             while(mBodyContext->GetCount() > 0) { 
               theTarget = mBodyContext->Last(); 
               CloseContainersTo(theTarget,PR_FALSE); 
@@ -682,8 +686,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
       static eHTMLTags passThru[]= {
         eHTMLTag_html,eHTMLTag_comment,eHTMLTag_newline,
-        eHTMLTag_whitespace,eHTMLTag_script,eHTMLTag_noscript,
-        eHTMLTag_nolayer,eHTMLTag_markupDecl,eHTMLTag_userdefined
+        eHTMLTag_whitespace,eHTMLTag_script,
+        eHTMLTag_markupDecl,eHTMLTag_userdefined
       };
 
       if(!FindTagInSet(theTag,passThru,sizeof(passThru)/sizeof(eHTMLTag_unknown))){
@@ -1124,7 +1128,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   return result;
 }
 
-void PushMisplacedAttributes(nsIParserNode& aNode,nsDeque& aDeque,PRInt32 aCount) {
+void PushMisplacedAttributes(nsIParserNode& aNode,nsDeque& aDeque,PRInt32& aCount) {
   if(aCount > 0) {
     CToken* theAttrToken=nsnull;
     nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
@@ -1190,15 +1194,13 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
           if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
          
           theToken=mTokenizer->PeekToken();
-          PRBool theParentContains=-1; //set to -1 so that CanCmit will recompute.
           
           if(theToken) {
             theToken->mUseCount=0;
             theTag=(eHTMLTags)theToken->GetTypeID();
             if(!nsHTMLElement::IsWhitespaceTag(theTag) && theTag!=eHTMLTag_unknown) {
-              if((gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch))     ||
-                 (!gHTMLElements[mBodyContext->TagAt(theIndex)].CanContain(theTag))||
-                 (!CanOmit(aParent,theTag,theParentContains))) {
+              if((gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) ||
+                 (gHTMLElements[aParent].CanContain(theTag))) {
                   done=PR_TRUE;
               }            
             }
@@ -1953,13 +1955,6 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
  *  @return  PR_TRUE if parent can contain child
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
-  if(mHasOpenForm) {
-    if(aParent==aChild)
-      return gHTMLElements[aParent].CanContainSelf();
-    if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown))) {
-      return PR_TRUE;
-    }//if
-  }//if
   return gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
 } 
 
@@ -2703,6 +2698,7 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
   
   nsresult   result=NS_OK; 
+  PRBool     isDefaultNode=PR_FALSE;
 
 #ifdef ENABLE_CRC
   #define K_OPENOP 100
@@ -2721,11 +2717,17 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       break;
 
     case eHTMLTag_body:
-        mHasOpenBody=PR_TRUE;
-        if(mHasOpenHead)
-          mHasOpenHead=1;
-        CloseHead(aNode); //do this just in case someone left it open...
-        result=OpenBody(aNode); 
+      {
+        eHTMLTags theParent=mBodyContext->Last();
+        if(!gHTMLElements[aTag].IsSpecialParent(theParent)) {
+          mHasOpenBody=PR_TRUE;
+          if(mHasOpenHead)
+            mHasOpenHead=1;
+          CloseHead(aNode); //do this just in case someone left it open...
+          result=OpenBody(aNode); 
+        }
+        else isDefaultNode=PR_TRUE;
+      }
       break;
 
     case eHTMLTag_style:
@@ -2757,6 +2759,11 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       break;
 
     default:
+      isDefaultNode=PR_TRUE;
+      break;
+  }
+
+  if(isDefaultNode) {
 
       STOP_TIMER();
       MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
@@ -2767,9 +2774,7 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       START_TIMER();
 
       mBodyContext->Push(aNode,aResidualStyleLevel);
-      break;
   }
-
 
   return result;
 }
@@ -2869,13 +2874,40 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
         
 #ifdef  ENABLE_RESIDUALSTYLE
         PRBool theTagIsStyle=nsHTMLElement::IsStyleTag(theTag);
-        if(theTagIsStyle && aClosedByStartTag) {
-          if(theStyles) {
-            theStyles->PushFront(theNode);
-            mBodyContext->PushStyles(theStyles);
+
+        if(mStyleHandlingEnabled) {
+          if(aClosedByStartTag) {
+            if(theTagIsStyle) {
+              if(theStyles) {
+                theStyles->PushFront(theNode);
+                mBodyContext->PushStyles(theStyles);
+              }
+              else mBodyContext->PushStyle(theNode);
+            } 
           }
-          else mBodyContext->PushStyle(theNode);
-        } 
+          else {
+            //if you're here, then we're dealing with the closure of tags
+            //caused by a close tag (as opposed to an open tag).
+            //At a minimum, we should consider pushing residual styles up 
+            //up the stack...
+
+            if(aTarget!=theTag) {
+              if(theTagIsStyle) {
+                if(theStyles) {
+                  theStyles->PushFront(theNode);
+                  mBodyContext->PushStyles(theStyles);
+                }
+                else mBodyContext->PushStyle(theNode);
+              } 
+              else if(theStyles) {
+                mBodyContext->PushStyles(theStyles);
+              }
+            }
+          }
+        }
+        else {
+          //since stylehandling is disabled, let's recycle the associated nodes here...
+        }
 #endif
         RecycleNode(theNode);
       }
@@ -2994,8 +3026,6 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
               {
                 theToken=mTokenizer->PopToken();
                 theNode.Init(theToken,mLineNumber,0);
-
-                result=mSink->AddLeaf(theNode);
 
                 STOP_TIMER();
                 MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
