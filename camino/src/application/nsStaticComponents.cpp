@@ -63,7 +63,6 @@ DECL_NSGETMODULE(nsParserModule)
 DECL_NSGETMODULE(nsGfxMacModule)
 DECL_NSGETMODULE(nsImageLib2Module)
 DECL_NSGETMODULE(nsPluginModule)
-DECL_NSGETMODULE(DOM_components)
 DECL_NSGETMODULE(nsWidgetMacModule)
 DECL_NSGETMODULE(nsLayoutModule)
 DECL_NSGETMODULE(nsMorkModule)
@@ -102,7 +101,6 @@ MODULE(nsParserModule),
 MODULE(nsGfxMacModule),
 MODULE(nsImageLib2Module),
 MODULE(nsPluginModule),
-MODULE(DOM_components),
 MODULE(nsWidgetMacModule),
 MODULE(nsLayoutModule),
 MODULE(nsMorkModule),
