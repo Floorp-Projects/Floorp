@@ -313,16 +313,16 @@ loser:
 void 
 DES_DestroyContext(DESContext *cx, PRBool freeit)
 {
-	PORT_Assert(cx != NULL);
-	if (cx == NULL) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return;
-	}
-	if (cx->keyobj != NULL_PTR)
-		B_DestroyKeyObject(&cx->keyobj);
-	if (cx->algobj != NULL_PTR)
-		B_DestroyAlgorithmObject(&cx->algobj);
 	if (freeit) {
+		PORT_Assert(cx != NULL);
+		if (cx == NULL) {
+			PORT_SetError(SEC_ERROR_INVALID_ARGS);
+			return;
+		}
+		if (cx->keyobj != NULL_PTR)
+			B_DestroyKeyObject(&cx->keyobj);
+		if (cx->algobj != NULL_PTR)
+			B_DestroyAlgorithmObject(&cx->algobj);
 		PORT_ZFree(cx, sizeof(DESContext));
 	}
 }
@@ -556,16 +556,16 @@ loser:
 void 
 RC2_DestroyContext(RC2Context *cx, PRBool freeit)
 {
-	PORT_Assert(cx != NULL);
-	if (cx == NULL) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return;
-	}
-	if (cx->keyobj != NULL_PTR)
-		B_DestroyKeyObject(&cx->keyobj);
-	if (cx->algobj != NULL_PTR)
-		B_DestroyAlgorithmObject(&cx->algobj);
 	if (freeit) {
+		PORT_Assert(cx != NULL);
+		if (cx == NULL) {
+			PORT_SetError(SEC_ERROR_INVALID_ARGS);
+			return;
+		}
+		if (cx->keyobj != NULL_PTR)
+			B_DestroyKeyObject(&cx->keyobj);
+		if (cx->algobj != NULL_PTR)
+			B_DestroyAlgorithmObject(&cx->algobj);
 		PORT_ZFree(cx, sizeof(RC2Context));
 	}
 }
@@ -770,16 +770,16 @@ loser:
 void 
 RC4_DestroyContext(RC4Context *cx, PRBool freeit)
 {
-	PORT_Assert(cx != NULL);
-	if (cx == NULL) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return;
-	}
-	if (cx->keyobj != NULL_PTR)
-		B_DestroyKeyObject(&cx->keyobj);
-	if (cx->algobj != NULL_PTR)
-		B_DestroyAlgorithmObject(&cx->algobj);
 	if (freeit) {
+		PORT_Assert(cx != NULL);
+		if (cx == NULL) {
+			PORT_SetError(SEC_ERROR_INVALID_ARGS);
+			return;
+		}
+		if (cx->keyobj != NULL_PTR)
+			B_DestroyKeyObject(&cx->keyobj);
+		if (cx->algobj != NULL_PTR)
+			B_DestroyAlgorithmObject(&cx->algobj);
 		PORT_ZFree(cx, sizeof(RC4Context));
 	}
 }
@@ -998,16 +998,16 @@ loser:
 
 void RC5_DestroyContext(RC5Context *cx, PRBool freeit)
 {
-	PORT_Assert(cx != NULL);
-	if (cx == NULL) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		return;
-	}
-	if (cx->keyobj != NULL_PTR)
-		B_DestroyKeyObject(&cx->keyobj);
-	if (cx->algobj != NULL_PTR)
-		B_DestroyAlgorithmObject(&cx->algobj);
 	if (freeit) {
+		PORT_Assert(cx != NULL);
+		if (cx == NULL) {
+			PORT_SetError(SEC_ERROR_INVALID_ARGS);
+			return;
+		}
+		if (cx->keyobj != NULL_PTR)
+			B_DestroyKeyObject(&cx->keyobj);
+		if (cx->algobj != NULL_PTR)
+			B_DestroyAlgorithmObject(&cx->algobj);
 		PORT_ZFree(cx, sizeof(RC5Context));
 	}
 }
