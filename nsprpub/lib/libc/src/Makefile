@@ -137,7 +137,11 @@ $(TINC):
 
 $(OBJDIR)/plvrsion.$(OBJ_SUFFIX): $(TINC)
 ifeq ($(OS_ARCH), WINNT)
+ifdef XP_OS2_EMX
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+else
 	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+endif
 else
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
 endif
