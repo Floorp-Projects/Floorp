@@ -72,7 +72,7 @@ private:
   nsresult FindItemWithName(const PRUnichar *aName,
                             nsIDocShellTreeItem **aFoundItem);
 
-  static JSContext *GetJSContext(nsIDOMWindow *aWindow);
+  static JSContext *GetExtantJSContext(nsIDOMWindow *aWindow);
   static nsresult   URIfromURL(const PRUnichar *aURL,
                                nsIDOMWindow *aParent,
                                nsIURI **aURI);
@@ -98,9 +98,7 @@ private:
                                       nsIDocShellTreeItem **outTreeItem);
   static void       GetWindowTreeOwner(nsIDOMWindow *inWindow,
                                        nsIDocShellTreeOwner **outTreeOwner);
-  static void       GetWindowScriptContextAndObject(nsIDOMWindow *inWindow,
-                                                    JSContext **cx,
-                                                    JSObject **outObject);
+  static JSObject  *GetWindowScriptObject(nsIDOMWindow *inWindow);
 
   nsVoidArray   mEnumeratorList;
   WindowInfo   *mOldestWindow;
