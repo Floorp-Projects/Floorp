@@ -57,13 +57,6 @@
                                   (decimal-value $digit-value)))
                (:non-zero-digit (#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                 ((decimal-value $digit-value)))
-               (:octal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7)
-                             (($default-action $default-action)
-                              (octal-value $digit-value)))
-               (:zero-to-three (#\0 #\1 #\2 #\3)
-                               ((octal-value $digit-value)))
-               (:four-to-seven (#\4 #\5 #\6 #\7)
-                               ((octal-value $digit-value)))
                (:hex-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\A #\B #\C #\D #\E #\F #\a #\b #\c #\d #\e #\f)
                            ((hex-value $digit-value)))
                (:letter-e (#\E #\e) (($default-action $default-action)))
@@ -76,10 +69,8 @@
                                  (($default-action $default-action)))
                (:ordinary-reg-exp-first-char (- :non-terminator (#\\ #\/ #\*))
                                              (($default-action $default-action)))
-               ((:ordinary-reg-exp-char slash) (- :non-terminator (#\\ #\/))
-                (($default-action $default-action)))
-               ((:ordinary-reg-exp-char guillemet) (- :non-terminator (#\\ #?00BB))
-                (($default-action $default-action))))
+               (:ordinary-reg-exp-char (- :non-terminator (#\\ #\/))
+                                       (($default-action $default-action))))
               (($default-action character nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
@@ -94,6 +85,8 @@
        
        (%text nil "The start symbols are " (:grammar-symbol (:next-token re)) " and " (:grammar-symbol (:next-token div))
               " depending on whether a " (:character-literal #\/) " should be interpreted as a regular expression or division.")
+
+       (deftype semantic-exception (oneof syntax-error))
        
        (%section "Unicode Character Classes")
        (%charclass :unicode-character)
@@ -164,10 +157,7 @@
          (production (:token :tau) (:string-literal) token-string-literal
            (token (oneof string (string-value :string-literal)))
            (reg-exp-may-follow false))
-         (production (:token re) ((:reg-exp-literal slash)) token-reg-exp-literal-slash
-           (token (oneof regular-expression (r-e-value :reg-exp-literal)))
-           (reg-exp-may-follow false))
-         (production (:token :tau) ((:reg-exp-literal guillemet)) token-reg-exp-literal-guillemet
+         (production (:token re) (:reg-exp-literal) token-reg-exp-literal
            (token (oneof regular-expression (r-e-value :reg-exp-literal)))
            (reg-exp-may-follow false))
          (production (:token :tau) (:end-of-input) token-end
@@ -213,7 +203,7 @@
          (production :initial-identifier-character (#\\ :hex-escape) initial-identifier-character-escape
            (character-value (if (is-ordinary-initial-identifier-character (character-value :hex-escape))
                               (character-value :hex-escape)
-                              (bottom character)))
+                              (throw (oneof syntax-error))))
            (contains-escapes true)))
        
        (%charclass :ordinary-initial-identifier-character)
@@ -226,7 +216,7 @@
          (production :continuing-identifier-character (#\\ :hex-escape) continuing-identifier-character-escape
            (character-value (if (is-ordinary-continuing-identifier-character (character-value :hex-escape))
                               (character-value :hex-escape)
-                              (bottom character)))
+                              (throw (oneof syntax-error))))
            (contains-escapes true)))
        
        (%charclass :ordinary-continuing-identifier-character)
@@ -344,33 +334,31 @@
          (production :numeric-literal (:decimal-literal) numeric-literal-decimal
            (double-value (rational-to-double (rational-value :decimal-literal))))
          (production :numeric-literal (:hex-integer-literal (:- :hex-digit)) numeric-literal-hex
-           (double-value (rational-to-double (integer-to-rational (integer-value :hex-integer-literal)))))
-         (production :numeric-literal (:octal-integer-literal) numeric-literal-octal
-           (double-value (rational-to-double (integer-to-rational (integer-value :octal-integer-literal))))))
+           (double-value (rational-to-double (integer-value :hex-integer-literal)))))
        (%print-actions)
        
        (define (expt (base rational) (exponent integer)) rational
          (if (= exponent 0)
-           (integer-to-rational 1)
+           1
            (if (< exponent 0)
-             (rational/ (integer-to-rational 1) (expt base (neg exponent)))
+             (rational/ 1 (expt base (neg exponent)))
              (rational* base (expt base (- exponent 1))))))
        
        (rule :decimal-literal ((rational-value rational))
          (production :decimal-literal (:mantissa) decimal-literal
            (rational-value (rational-value :mantissa)))
          (production :decimal-literal (:mantissa :letter-e :signed-integer) decimal-literal-exponent
-           (rational-value (rational* (rational-value :mantissa) (expt (integer-to-rational 10) (integer-value :signed-integer))))))
+           (rational-value (rational* (rational-value :mantissa) (expt 10 (integer-value :signed-integer))))))
        
        (%charclass :letter-e)
        
        (rule :mantissa ((rational-value rational))
          (production :mantissa (:decimal-integer-literal) mantissa-integer
-           (rational-value (integer-to-rational (integer-value :decimal-integer-literal))))
+           (rational-value (integer-value :decimal-integer-literal)))
          (production :mantissa (:decimal-integer-literal #\.) mantissa-integer-dot
-           (rational-value (integer-to-rational (integer-value :decimal-integer-literal))))
+           (rational-value (integer-value :decimal-integer-literal)))
          (production :mantissa (:decimal-integer-literal #\. :fraction) mantissa-integer-dot-fraction
-           (rational-value (rational+ (integer-to-rational (integer-value :decimal-integer-literal))
+           (rational-value (rational+ (integer-value :decimal-integer-literal)
                                       (rational-value :fraction))))
          (production :mantissa (#\. :fraction) mantissa-dot-fraction
            (rational-value (rational-value :fraction))))
@@ -391,8 +379,8 @@
        
        (rule :fraction ((rational-value rational))
          (production :fraction (:decimal-digits) fraction-decimal-digits
-           (rational-value (rational/ (integer-to-rational (integer-value :decimal-digits))
-                                      (expt (integer-to-rational 10) (n-digits :decimal-digits))))))
+           (rational-value (rational/ (integer-value :decimal-digits)
+                                      (expt 10 (n-digits :decimal-digits))))))
        (%print-actions)
        
        (rule :signed-integer ((integer-value integer))
@@ -421,13 +409,6 @@
            (integer-value (+ (* 16 (integer-value :hex-integer-literal)) (hex-value :hex-digit)))))
        (%charclass :letter-x)
        (%charclass :hex-digit)
-       
-       (rule :octal-integer-literal ((integer-value integer))
-         (production :octal-integer-literal (#\0 :octal-digit) octal-integer-literal-first
-           (integer-value (octal-value :octal-digit)))
-         (production :octal-integer-literal (:octal-integer-literal :octal-digit) octal-integer-literal-rest
-           (integer-value (+ (* 8 (integer-value :octal-integer-literal)) (octal-value :octal-digit)))))
-       (%charclass :octal-digit)
        (%print-actions)
        
        (%section "Quantity literals")
@@ -474,8 +455,8 @@
        (rule :string-escape ((character-value character))
          (production :string-escape (:control-escape) string-escape-control
            (character-value (character-value :control-escape)))
-         (production :string-escape (:octal-escape) string-escape-octal
-           (character-value (character-value :octal-escape)))
+         (production :string-escape (:zero-escape) string-escape-zero
+           (character-value (character-value :zero-escape)))
          (production :string-escape (:hex-escape) string-escape-hex
            (character-value (character-value :hex-escape)))
          (production :string-escape (:identity-escape) string-escape-non-escape
@@ -492,21 +473,9 @@
          (production :control-escape (#\v) control-escape-vertical-tab (character-value #?000B)))
        (%print-actions)
        
-       (rule :octal-escape ((character-value character))
-         (production :octal-escape (:octal-digit (:- :octal-digit)) octal-escape-1
-           (character-value (code-to-character (octal-value :octal-digit))))
-         (production :octal-escape (:zero-to-three :octal-digit (:- :octal-digit)) octal-escape-2-low
-           (character-value (code-to-character (+ (* 8 (octal-value :zero-to-three))
-                                                  (octal-value :octal-digit)))))
-         (production :octal-escape (:four-to-seven :octal-digit) octal-escape-2-high
-           (character-value (code-to-character (+ (* 8 (octal-value :four-to-seven))
-                                                  (octal-value :octal-digit)))))
-         (production :octal-escape (:zero-to-three :octal-digit :octal-digit) octal-escape-3
-           (character-value (code-to-character (+ (+ (* 64 (octal-value :zero-to-three))
-                                                     (* 8 (octal-value :octal-digit 1)))
-                                                  (octal-value :octal-digit 2))))))
-       (%charclass :zero-to-three)
-       (%charclass :four-to-seven)
+       (rule :zero-escape ((character-value character))
+         (production :zero-escape (#\0 (:- :a-s-c-i-i-digit)) zero-escape-zero
+           (character-value #?0000)))
        (%print-actions)
        
        (rule :hex-escape ((character-value character))
@@ -522,10 +491,8 @@
        
        (%section "Regular expression literals")
        
-       (grammar-argument :rho slash guillemet)
-       
-       (rule (:reg-exp-literal :rho) ((r-e-value reg-exp))
-         (production (:reg-exp-literal :rho) ((:reg-exp-body :rho) :reg-exp-flags) reg-exp-literal
+       (rule :reg-exp-literal ((r-e-value reg-exp))
+         (production :reg-exp-literal (:reg-exp-body :reg-exp-flags) reg-exp-literal
            (r-e-value (tuple reg-exp (r-e-body :reg-exp-body) (r-e-flags :reg-exp-flags)))))
        
        (rule :reg-exp-flags ((r-e-flags string))
@@ -534,12 +501,10 @@
          (production :reg-exp-flags (:reg-exp-flags :continuing-identifier-character) reg-exp-flags-more
            (r-e-flags (append (r-e-flags :reg-exp-flags) (vector (character-value :continuing-identifier-character))))))
        
-       (rule (:reg-exp-body :rho) ((r-e-body string))
-         (production (:reg-exp-body slash) (#\/ :reg-exp-first-char (:reg-exp-chars slash) #\/) reg-exp-body-slash
+       (rule :reg-exp-body ((r-e-body string))
+         (production :reg-exp-body (#\/ :reg-exp-first-char :reg-exp-chars #\/) reg-exp-body
            (r-e-body (append (r-e-body :reg-exp-first-char)
-                             (r-e-body :reg-exp-chars))))
-         (production (:reg-exp-body guillemet) (#?00AB (:reg-exp-chars guillemet) #?00BB) reg-exp-body-guillemet
-           (r-e-body (r-e-body :reg-exp-chars))))
+                             (r-e-body :reg-exp-chars)))))
        
        (rule :reg-exp-first-char ((r-e-body string))
          (production :reg-exp-first-char (:ordinary-reg-exp-first-char) reg-exp-first-char-ordinary
@@ -549,21 +514,20 @@
        
        (%charclass :ordinary-reg-exp-first-char)
        
-       (rule (:reg-exp-chars :rho) ((r-e-body string))
-         (production (:reg-exp-chars :rho) () reg-exp-chars-none
+       (rule :reg-exp-chars ((r-e-body string))
+         (production :reg-exp-chars () reg-exp-chars-none
            (r-e-body ""))
-         (production (:reg-exp-chars :rho) ((:reg-exp-chars :rho) (:reg-exp-char :rho)) reg-exp-chars-more
+         (production :reg-exp-chars (:reg-exp-chars :reg-exp-char) reg-exp-chars-more
            (r-e-body (append (r-e-body :reg-exp-chars)
                              (r-e-body :reg-exp-char)))))
        
-       (rule (:reg-exp-char :rho) ((r-e-body string))
-         (production (:reg-exp-char :rho) ((:ordinary-reg-exp-char :rho)) reg-exp-char-ordinary
+       (rule :reg-exp-char ((r-e-body string))
+         (production :reg-exp-char (:ordinary-reg-exp-char) reg-exp-char-ordinary
            (r-e-body (vector ($default-action :ordinary-reg-exp-char))))
-         (production (:reg-exp-char :rho) (#\\ :non-terminator) reg-exp-char-escape
+         (production :reg-exp-char (#\\ :non-terminator) reg-exp-char-escape
            (r-e-body (vector #\\ ($default-action :non-terminator)))))
        
-       (%charclass (:ordinary-reg-exp-char slash))
-       (%charclass (:ordinary-reg-exp-char guillemet))
+       (%charclass :ordinary-reg-exp-char)
        )))
   
   (defparameter *ll* (world-lexer *lw* 'code-lexer))
