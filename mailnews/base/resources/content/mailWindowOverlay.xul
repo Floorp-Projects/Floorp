@@ -601,13 +601,13 @@ Rights Reserved.
         label="&contextSaveAs.label;"
         accesskey="&contextSaveAs.accesskey;"
         oncommand="MsgSaveAsFile();"/>
+    <menuitem id="threadPaneContext-printpreview"
+        label="&contextPrintPreview.label;"
+        oncommand="PrintEnginePrintPreview();"/>
     <menuitem id="threadPaneContext-print"
         label="&contextPrint.label;"
         accesskey="&contextPrint.accesskey;"
         oncommand="PrintEnginePrint();"/>
-    <menuitem id="threadPaneContext-printpreview"
-        label="&contextPrintPreview.label;"
-        oncommand="PrintEnginePrintPreview();"/>
     <menuitem id="threadPaneContext-delete"
         command="cmd_delete"/>
   </popup>
@@ -935,6 +935,9 @@ Rights Reserved.
         label="&contextSaveAs.label;"
         accesskey="&contextSaveAs.accesskey;"
         oncommand="MsgSaveAsFile();"/>
+    <menuitem id="messagePaneContext-printpreview"
+        label="&contextPrintPreview.label;"
+        oncommand="PrintEnginePrintPreview();"/>
     <menuitem id="messagePaneContext-print"
         label="&contextPrint.label;"
         accesskey="&contextPrint.accesskey;"
@@ -1078,8 +1081,8 @@ Rights Reserved.
 
       <menuseparator/>
       <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
-      <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" command="cmd_print"/>
       <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="cmd_printpreview"/>
+      <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" command="cmd_print"/>
     </menupopup>
   </menu>
 
