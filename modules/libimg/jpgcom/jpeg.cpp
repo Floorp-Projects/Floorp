@@ -18,7 +18,7 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.2 1999/04/19 21:28:48 pnunn%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.3 1999/04/20 18:51:20 pnunn%netscape.com Exp $
  */
 
 
@@ -144,7 +144,7 @@ il_error_exit (j_common_ptr cinfo)
 
 #ifdef DEBUG
 #if 0
-  //ptn fix later
+  /*ptn fix later */
     if (il_debug >= 1) {
         char buffer[JMSG_LENGTH_MAX];
 
