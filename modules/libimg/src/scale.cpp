@@ -791,14 +791,8 @@ il_emit_row(
            LOSRC GIF when the SRC is a JPEG. */
         /* PR_ASSERT(cbuf); */
         
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
                                           IL_LOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, mask,
-                                IL_LOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
-
 #ifdef _USD
 		maskp = (uint8 XP_HUGE *)mask->bits + 
             (mask_header->height - drow_start - 1) * mask_header->widthBytes;
@@ -829,13 +823,8 @@ il_emit_row(
             }
       
         }
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
                                           IL_UNLOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, mask,
-                                IL_UNLOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
     }
 
 	if (!ic->converter) {
@@ -855,13 +844,8 @@ il_emit_row(
         else
             src_trans_pixel_index = src_header->transparent_pixel->index;
 
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
                                           IL_LOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
-                                IL_LOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
 
 		/* No converter, image is already rendered in pseudocolor. */
 #ifdef _USD
@@ -885,14 +869,8 @@ il_emit_row(
                 if (cbuf[i] != src_trans_pixel_index)
                     dest[i] = indirect_map[cbuf[i]];
         }
-
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
                                           IL_UNLOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
-                                IL_UNLOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
 #endif /* M12N */
 
 	} else {
@@ -972,13 +950,8 @@ il_emit_row(
             il_scale_RGB_row(src, src_len, dest, dest_len);
 		}
 
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
                                           IL_LOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
-                                IL_LOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
 
 #ifdef _USD
 		out = (uint8 XP_HUGE *)image->bits +
@@ -1004,13 +977,8 @@ il_emit_row(
 		(*ic->converter)(ic, byte_mask, srcbuf, dcolumn_start,
                          column_count, out);
 
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
                                           IL_UNLOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
-                                IL_UNLOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
 
         /*
          * Have to reset transparent pixels to background color
