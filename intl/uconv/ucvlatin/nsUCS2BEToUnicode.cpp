@@ -247,10 +247,12 @@ nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
         mState = 0;
         mEndian = kLittleEndian;
       }
-      else { // Neither BOM nor 'plausible' byte patterns at the beginning
-        *aSrcLength = 0;
-        *aDestLength = 0;
-        return NS_ERROR_ILLEGAL_INPUT;
+      else { // Neither BOM nor 'plausible' byte patterns at the beginning.
+             // Just assume it's BE (following Unicode standard)
+             // and let the garbage show up in the browser. (security concern?)
+             // (bug 246194)
+        mState = 0;   
+        mEndian = kBigEndian;
       }
     }
     
@@ -262,7 +264,7 @@ nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
 #elif defined(IS_LITTLE_ENDIAN)
     if (mEndian == kBigEndian)
 #else
-    #error "Unknown edinanness"
+    #error "Unknown endinanness"
 #endif
       SwapBytes(aDest, *aDestLength);
 
