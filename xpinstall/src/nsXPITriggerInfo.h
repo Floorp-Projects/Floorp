@@ -82,16 +82,20 @@ class nsXPITriggerItem
     nsCOMPtr<nsILocalFile>      mFile;
     nsCOMPtr<nsIOutputStream>   mOutStream;
     nsCOMPtr<nsIPrincipal>      mPrincipal;
-  
+
 
     PRBool  IsFileURL() { return StringBeginsWith(mURL, NS_LITERAL_STRING("file:/")); }
     PRBool  IsRelativeURL();
+
+    const PRUnichar* GetSafeURLString();
 
     void    SetPrincipal(nsIPrincipal* aPrincipal);
   private:
     //-- prevent inadvertent copies and assignments
     nsXPITriggerItem& operator=(const nsXPITriggerItem& rhs);
     nsXPITriggerItem(const nsXPITriggerItem& rhs);
+
+    nsString    mSafeURL;
 };
 
 

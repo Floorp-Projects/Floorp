@@ -39,6 +39,7 @@
 
 #include "nscore.h"
 #include "nsXPITriggerInfo.h"
+#include "nsNetUtil.h"
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -105,6 +106,25 @@ PRBool nsXPITriggerItem::IsRelativeURL()
     return (cpos > spos);
 }
 
+const PRUnichar*
+nsXPITriggerItem::GetSafeURLString()
+{
+    // create the safe url string the first time
+    if (mSafeURL.IsEmpty() && !mURL.IsEmpty())
+    {
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), mURL);
+        if (uri)
+        {
+            nsCAutoString spec;
+            uri->SetUserPass(EmptyCString());
+            uri->GetSpec(spec);
+            mSafeURL = NS_ConvertUTF8toUTF16(spec);
+        }
+    }
+
+    return mSafeURL.get();
+}
 
 void
 nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
