@@ -675,7 +675,6 @@ PrefResult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * l
         return PREF_NOT_INITIALIZED;
 
     pref = pref_HashTableLookup(pref_name);
-    //    NS_ASSERTION(pref, pref_name);
 
     if (pref)
     {
@@ -1098,67 +1097,6 @@ PREF_PrefIsLocked(const char *pref_name)
     }
     
     return result;
-}
-
-/*
- * Creates an iterator over the children of a node.
- */
-typedef struct 
-{
-    char*       childList;
-    char*       parent;
-    int         bufsize;
-} PrefChildIter; 
-
-/* if entry begins with the given string, i.e. if string is
-  "a"
-  and entry is
-  "a.b.c" or "a.b"
-  then add "a.b" to the list. */
-PR_STATIC_CALLBACK(PLDHashOperator)
-pref_addChild(PLDHashTable *table, PLDHashEntryHdr* heh,PRUint32 number,void *arg)
-{
-    PrefHashEntry* he = NS_STATIC_CAST(PrefHashEntry*,heh);
-    PrefChildIter* pcs = (PrefChildIter*) arg;
-    if ( PL_strncmp(he->key, pcs->parent, PL_strlen(pcs->parent)) == 0 )
-    {
-        char buf[512];
-        char* nextdelim;
-        PRUint32 parentlen = PL_strlen(pcs->parent);
-        char* substring;
-
-        strncpy(buf, he->key, PR_MIN(512, PL_strlen(he->key) + 2));
-        nextdelim = buf + parentlen;
-        if (parentlen < PL_strlen(buf))
-        {
-            /* Find the next delimiter if any and truncate the string there */
-            nextdelim = strstr(nextdelim, ".");
-            if (nextdelim)
-            {
-                *nextdelim = ';';
-                *(nextdelim + 1) = '\0';
-            } else {
-                /* otherwise, ensure string always ends with a ';' character so strtok will be happy. */
-                strcat(buf, ";");
-            }
-        }
-
-        substring = strstr(pcs->childList, buf);
-
-        if (!substring)
-        {
-            int newsize = PL_strlen(pcs->childList) + PL_strlen(buf) + 2;
-            if (newsize > pcs->bufsize)
-            {
-                pcs->bufsize *= 3;
-                pcs->childList = (char*) realloc(pcs->childList, sizeof(char) * pcs->bufsize);
-                if (!pcs->childList)
-                    return PL_DHASH_STOP;
-            }
-            PL_strcat(pcs->childList, buf);
-        }
-    }
-    return PL_DHASH_NEXT;
 }
 
 /* Adds a node to the beginning of the callback list. */
