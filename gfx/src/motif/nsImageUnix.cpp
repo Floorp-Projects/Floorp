@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include "xp_core.h"			//this is a hack to get it to build. MMP
 #include "nsImageUnix.h"
 #include "nsRenderingContextUnix.h"
 #include "nsDeviceContextUnix.h"

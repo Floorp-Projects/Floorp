@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+
+#include "xp_core.h"			//this is a hack to get it to build. MMP
 #include "nsRenderingContextUnix.h"
 #include "nsDeviceContextUnix.h"
 
