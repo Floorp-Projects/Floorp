@@ -45,17 +45,17 @@ PKG_SUFFIX	= .deb
 endif
 
 PKG_BASENAME	:= mozilla-$(shell $(topsrcdir)/build/autoconf/config.guess)
-PACKAGE		:= $(PKG_BASENAME).$(PKG_SUFFIX)
+PACKAGE		:= $(PKG_BASENAME)$(PKG_SUFFIX)
 
 ifdef BUILD_OFFICIAL
-TARGETS		= $(DIST)/$(PACKAGE)
+TARGETS		= $(PACKAGE)
 endif
 
 NSPR_DIR	= $(DIST)/bin
 ifndef EXCLUDE_NSPR_LIBS
 NSPR_LDIR	= $(findstring -L,$(NSPR_LIBS))
 ifneq ($(NSPR_LDIR),)
-NSPR_DIR	= $(patsubst %lib,%bin,$(subst -L,,$(NSPR_LDIR)))
+NSPR_DIR	= $(patsubst %lib,%bin,$(subst -L,,$(word 1,$(NSPR_LIBS))))
 endif
 endif
 
@@ -69,20 +69,24 @@ NOT_IN_PACKAGE	= \
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
+
 ifeq ($(OS_ARCH),IRIX)
 STRIP_FLAGS	= -f
 endif
 
-$(DIST)/$(PACKAGE): $(DIST)/bin/apprunner
+all export libs install:: $(TARGETS)
+
+$(PACKAGE): $(DIST)/bin/apprunner
 ifneq ($(NSPR_DIR),$(DIST)/bin)
 	@chmod 755 $(NSPR_DIR)/*
 	@cp -p $(NSPR_DIR)/* $(DIST)/bin/.
 endif
 	@rm -f $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(NOT_IN_PACKAGE)
-	@ln -s $(DIST)/bin $(DIST)/package
+	@ln -s bin $(DIST)/package
 	@cd $(DIST)/bin; find . ! -type d -exec strip $(STRIP_FLAGS) {} \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
-	cd $(DIST); tar -cvhf - package | gzip -v > $@
+	cd $(DIST); tar -cvhf - package | gzip > $@
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 	@echo "Sorry, don't know how to build an RPM file yet...."
