@@ -182,6 +182,11 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
 NS_IMETHODIMP
 nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
 {
+  if (!mResources) {
+    // Our resources got destroyed -- just bail out
+    return NS_OK;
+  }
+  
   if (!mResources->mStyleSheetList) {
     NS_NewISupportsArray(getter_AddRefs(mResources->mStyleSheetList));
     if (!mResources->mStyleSheetList)
