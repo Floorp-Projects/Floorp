@@ -50,6 +50,7 @@
 #include "nsIAtom.h"
 #include "nsICollation.h"
 #include "nsIAbListener.h"
+#include "nsIObserver.h"
 
 typedef struct AbCard
 {
@@ -59,7 +60,7 @@ typedef struct AbCard
 } AbCard;
 
 
-class nsAbView : public nsIAbView, public nsIOutlinerView, public nsIAbListener
+class nsAbView : public nsIAbView, public nsIOutlinerView, public nsIAbListener, public nsIObserver
 {
 public:
   nsAbView();
@@ -69,6 +70,7 @@ public:
   NS_DECL_NSIABVIEW
   NS_DECL_NSIOUTLINERVIEW
   NS_DECL_NSIABLISTENER
+  NS_DECL_NSIOBSERVER
 
 private:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
@@ -78,11 +80,12 @@ private:
   PRInt32 FindIndexForCard(nsIAbCard *card);
   nsresult GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *abcard);
   nsresult InvalidateOutliner(PRInt32 row);
-  void RemoveCardAt(PRInt32 row);
+  nsresult RemoveCardAt(PRInt32 row);
   nsresult AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32 *index);
   nsresult RemoveCardAndSelectNextCard(nsISupports *item);
   nsresult EnumerateCards();
-  PRBool mSuppressSelectionChange;
+  nsresult AddPrefObservers();
+  nsresult RemovePrefObservers();
 
   nsCString mURI;
   nsCOMPtr <nsIAbDirectory> mDirectory;
@@ -92,6 +95,9 @@ private:
   nsString mSortDirection;
   nsCOMPtr<nsICollation> mCollationKeyGenerator;
   nsCOMPtr<nsIAbViewListener> mAbViewListener;
+
+  PRPackedBool mSuppressSelectionChange;
+  PRPackedBool mSuppressCountChange;
 };
 
 #endif /* _nsAbView_H_ */

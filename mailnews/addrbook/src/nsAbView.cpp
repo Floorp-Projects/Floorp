@@ -49,8 +49,21 @@
 #include "nsIAddrBookSession.h"
 #include "nsAbBaseCID.h"
 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+
+
 #define CARD_NOT_FOUND -1
 #define ALL_ROWS -1
+
+#define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
+
+// also, our default primary sort
+#define DISPLAY_NAME_COLUMN_ID "DisplayName" 
+
+// also, our default secondary sort
+#define PRIMARY_EMAIL_COLUMN_ID "PrimaryEmail" 
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
@@ -62,6 +75,7 @@ NS_INTERFACE_MAP_BEGIN(nsAbView)
    NS_INTERFACE_MAP_ENTRY(nsIAbView)
    NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
    NS_INTERFACE_MAP_ENTRY(nsIAbListener)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
 nsAbView::nsAbView()
@@ -69,6 +83,7 @@ nsAbView::nsAbView()
   NS_INIT_ISUPPORTS();
   mMailListAtom = getter_AddRefs(NS_NewAtom("MailList"));
   mSuppressSelectionChange = PR_FALSE;
+  mSuppressCountChange = PR_FALSE;
 }
 
 nsAbView::~nsAbView()
@@ -86,6 +101,10 @@ NS_IMETHODIMP nsAbView::Close()
   mAbViewListener = nsnull;
 
   nsresult rv = NS_OK;
+
+  rv = RemovePrefObservers();
+  NS_ENSURE_SUCCESS(rv,rv);
+  
   nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
   if(NS_SUCCEEDED(rv))
     abSession->RemoveAddressBookListener(this);
@@ -93,24 +112,73 @@ NS_IMETHODIMP nsAbView::Close()
   PRInt32 i = mCards.Count();
   while(i-- > 0)
   {
-    RemoveCardAt(i);
+    rv = RemoveCardAt(i);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "remove card failed\n");
   }
   return NS_OK;
 }
 
-void nsAbView::RemoveCardAt(PRInt32 row)
+nsresult nsAbView::RemoveCardAt(PRInt32 row)
 {
+  nsresult rv;
+
   AbCard *abcard = (AbCard*) (mCards.ElementAt(row));
   NS_IF_RELEASE(abcard->card);
   mCards.RemoveElementAt(row);
   PR_FREEIF(abcard->primaryCollationKey);
   PR_FREEIF(abcard->secondaryCollationKey);
   PR_FREEIF(abcard);
+
+  if (mAbViewListener && !mSuppressCountChange) {
+    rv = mAbViewListener->OnCountChanged(mCards.Count());
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::GetURI(char **aURI)
 {
   *aURI = nsCRT::strdup(mURI.get());
+  return NS_OK;
+}
+
+nsresult nsAbView::AddPrefObservers()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = pbi->AddObserver(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, this, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  return NS_OK;
+}
+
+nsresult nsAbView::RemovePrefObservers()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = pbi->RemoveObserver(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, this);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   return NS_OK;
 }
 
@@ -122,13 +190,8 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   mURI = aURI;
   mAbViewListener = abViewListener;
 
-  /* todo:
-  register as a listener of "mail.addr_book.lastnamefirst"
-  const kDisplayName = 0;
-  const kLastNameFirst = 1;
-  const kFirstNameFirst = 2;
-  if it changes, rebuild and invalidate
-  */
+  rv = AddPrefObservers();
+  NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -151,7 +214,20 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
 
 	rv = abSession->AddAddressBookListener(this);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  if (mAbViewListener && !mSuppressCountChange) {
+    rv = mAbViewListener->OnCountChanged(mCards.Count());
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
   return rv;
+}
+
+NS_IMETHODIMP nsAbView::GetDirectory(nsIAbDirectory **aDirectory)
+{
+  NS_ENSURE_ARG_POINTER(aDirectory);
+  *aDirectory = mDirectory;
+  NS_IF_ADDREF(*aDirectory);
+  return NS_OK;
 }
 
 nsresult nsAbView::EnumerateCards()
@@ -439,15 +515,20 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
 
   nsAutoString sortColumn;
   if (!colID) 
-    sortColumn = NS_LITERAL_STRING("DisplayName");  // default sort
+    sortColumn = NS_LITERAL_STRING(DISPLAY_NAME_COLUMN_ID);  // default sort
   else 
     sortColumn = colID;
 
   PRInt32 count = mCards.Count();
   PRInt32 i;
 
-  // if we are sorting by how we are already sorted, just reverse
-  if (!nsCRT::strcmp(mSortColumn.get(),sortColumn.get())) {
+  // if we are sorting by how we are already sorted, 
+  // and just the sort direction changes, just reverse
+  //
+  // note, we'll call SortBy() with the existing sort column and the
+  // existing sort direction, and that needs to do a complete resort.
+  // for example, we do that when the PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST changes
+  if (!nsCRT::strcmp(mSortColumn.get(),sortColumn.get()) && !nsCRT::strcmp(mSortDirection.get(), sortDir)) {
     PRInt32 halfPoint = count / 2;
     for (i=0; i < halfPoint; i++) {
       // swap the elements.
@@ -506,7 +587,7 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
   NS_ENSURE_SUCCESS(rv,rv);
   
   // XXX fix me, do this with const to avoid the strcpy
-  rv = abcard->card->GetCardUnicharValue(NS_LITERAL_STRING("PrimaryEmail").get(), getter_Copies(value));
+  rv = abcard->card->GetCardUnicharValue(NS_LITERAL_STRING(PRIMARY_EMAIL_COLUMN_ID).get(), getter_Copies(value));
   NS_ENSURE_SUCCESS(rv,rv);
   
   // XXX be smarter about the key, from an arena
@@ -590,6 +671,41 @@ NS_IMETHODIMP nsAbView::OnItemAdded(nsISupports *parentDir, nsISupports *item)
   return rv;
 }
 
+NS_IMETHODIMP nsAbView::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+{
+  nsresult rv;
+
+  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsDependentString prefName(someData);
+    
+    if (prefName.Equals(NS_LITERAL_STRING(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST))) {
+      // the PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST pref affects how the DisplayName column looks.
+      // so if the DisplayName is our primary or secondary sort,
+      // we need to resort.
+      //
+      // XXX optimize me
+      // PrimaryEmail is always the secondary sort, unless it is currently the
+      // primary sort.  So, if PrimaryEmail is the primary sort, 
+      // DisplayName might be the secondary sort.
+      //
+      // one day, we can get fancy and remember what the secondary sort is.
+      // we we do that, we can fix this code.  at best, it will turn a sort into a invalidate.
+      // 
+      // if neither the primary nor the secondary sorts are DisplayName, all we have to do is
+      // invalidate (to show the new DisplayNames), but the sort will not change.
+      if (!nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(DISPLAY_NAME_COLUMN_ID).get()) ||
+          !nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(PRIMARY_EMAIL_COLUMN_ID).get())) {
+        rv = SortBy(mSortColumn.get(), mSortDirection.get());
+      }
+      else {
+        rv = InvalidateOutliner(ALL_ROWS);
+      }
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+  }
+  return NS_OK;
+}
+
 nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32 *index)
 {
   nsresult rv = NS_OK;
@@ -605,6 +721,11 @@ nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32
   if (selectCardAfterAdding && mOutlinerSelection) {
     mOutlinerSelection->SetCurrentIndex(*index);
     mOutlinerSelection->RangedSelect(*index, *index, PR_FALSE /* augment */);
+  }
+
+  if (mAbViewListener && !mSuppressCountChange) {
+    rv = mAbViewListener->OnCountChanged(mCards.Count());
+    NS_ENSURE_SUCCESS(rv,rv);
   }
 
   return rv;
@@ -636,6 +757,7 @@ NS_IMETHODIMP nsAbView::OnItemRemoved(nsISupports *parentDir, nsISupports *item)
   
   if (directory.get() == mDirectory.get()) {
     rv = RemoveCardAndSelectNextCard(item);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
   return rv;
 }
@@ -647,7 +769,9 @@ nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
   if (card) {
     PRInt32 index = FindIndexForCard(card);
     if (index != CARD_NOT_FOUND) {
-      RemoveCardAt(index);
+      rv = RemoveCardAt(index);
+      NS_ENSURE_SUCCESS(rv,rv);
+
       if (mOutliner)
         rv = mOutliner->RowCountChanged(index, -1);
       NS_ENSURE_SUCCESS(rv,rv);
@@ -731,14 +855,18 @@ NS_IMETHODIMP nsAbView::OnItemPropertyChanged(nsISupports *item, const char *pro
     }
     
     mSuppressSelectionChange = PR_TRUE;
-    
+    mSuppressCountChange = PR_TRUE;
+
     // remove the old card
-    RemoveCardAt(index);
-    
+    rv = RemoveCardAt(index);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "remove card failed\n");
+
     // add the card we created, and select it (to restore selection) if it was selected
     rv = AddCard(newCard, cardWasSelected /* select card */, &index);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "add card failed\n");
+
     mSuppressSelectionChange = PR_FALSE;
-    NS_ENSURE_SUCCESS(rv,rv);
+    mSuppressCountChange = PR_FALSE;
 
     // ensure restored selection is visible
     if (cardWasSelected) {

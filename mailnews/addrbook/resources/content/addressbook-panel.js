@@ -21,6 +21,12 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  */
 
+function GetAbViewListener()
+{
+  // the ab panel doesn't care if the total changes, or if the selection changes
+  return null;
+}
+
 function abPanelLoad() 
 {
   InitCommonJS(); 
