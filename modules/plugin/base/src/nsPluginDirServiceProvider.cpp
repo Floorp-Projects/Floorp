@@ -156,7 +156,10 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
                         // if the user installed an older version AFTER a newer one
                         // This assumes the last version installed is the one the user wants to use
                         // We can also tweak this for checking for a minimum version on szKey
-                        if (::CompareFileTime(&modTime,&curVer) >= 0 && atof(curKey) >= 1.3)
+                        // Don't tweek. Stay between compatible versions in 1.3.x. JRE 1.4 is an XPCOM
+                        // component and needs to be installed explicitly!
+                        if (::CompareFileTime(&modTime,&curVer) >= 0 && 
+                            (atof(curKey) >= 1.3) && (atof(curKey) < 1.4))
                         {
                             PL_strcpy(newestPath,path);
                             curVer = modTime;
