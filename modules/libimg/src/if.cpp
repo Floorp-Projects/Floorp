@@ -239,6 +239,7 @@ il_description_notify(il_container *ic)
     case IL_XBM : PL_strcpy(buf2, "XBM"); break;
     case IL_JPEG : PL_strcpy(buf2, "JPEG"); break;
     case IL_PNG : PL_strcpy(buf2, "PNG"); break;
+    case IL_ART : PL_strcpy(buf2, "ART"); break;
 
     default : PL_strcpy(buf2, "");
     }
@@ -910,6 +911,18 @@ il_type(int suspected_type, const char *buf, int32 len)
 	{
 		return IL_JPEG;
 	}
+
+  /* ART begins with JG (4A 47). Major version offset 2.
+     Minor version offset 3. Offset 4 must be NULL.
+  */
+  if (len >= 5 &&
+     ((unsigned char) buf[0])==0x4a &&
+     ((unsigned char) buf[1])==0x47 &&
+     ((unsigned char) buf[4])==0x00 )
+  {
+      return IL_ART;
+  }
+
 
 	/* no simple test for XBM vs, say, XPM so punt for now */
 	if (len >= 8 && !strncmp(buf, "#define ", 8) ) 
