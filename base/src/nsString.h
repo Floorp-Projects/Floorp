@@ -234,7 +234,7 @@ public:
 protected:
   virtual void EnsureCapacityFor(PRInt32 aNewLength);
 
-  PRUnichar mBuf[32];
+  chartype mBuf[32];
 };
 
 ostream& operator<<(ostream& os,nsAutoString& aString);
