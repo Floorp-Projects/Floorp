@@ -244,7 +244,9 @@ nsContextMenu.prototype = {
             if ( elem.nodeType == 1 && 
                  ( elem.tagName.toUpperCase() == "A"
                    ||
-                   elem.tagName.toUpperCase() == "AREA" ) ) {
+                   elem.tagName.toUpperCase() == "AREA"
+                   ||
+                   elem.getAttributeNS("http://www.w3.org/1999/xlink","type") == "simple")) {
                 // Clicked on a link.
                 this.onLink = true;
                 // Remember corresponding element.
@@ -260,12 +262,19 @@ nsContextMenu.prototype = {
         // Test for missing protocol property.
         if ( !link.protocol ) {
            // We must resort to testing the URL string :-(.
-           dump( "Bug! Link.protocol is still undefined!\n" );
-           var protocol = link.href.substr( 0, 11 );
-           return protocol != "javascript:";
+           var protocol;
+           if (link.href) {
+             protocol = link.href.substr( 0, 11 );
+           } else {
+             protocol = link.getAttributeNS("http://www.w3.org/1999/xlink","href");
+             if (protocol) {
+               protocol = protocol.substr( 0, 11 );
+             }
+           }           
+           return protocol.toLowerCase() != "javascript:";
         } else {
            // Presume all but javascript: urls are saveable.
-           return link.protocol != "javascript:";
+           return link.protocol.toLowerCase() != "javascript:";
         }
     },
     // Open linked-to URL in a new window.
@@ -450,7 +459,15 @@ nsContextMenu.prototype = {
     },
     // Generate fully-qualified URL for clicked-on link.
     linkURL : function () {
-        return this.link.href;
+        if (this.link.href) {
+          return this.link.href;
+        }
+        // XXX TODO Relative URLs, XML Base
+        var href = this.link.getAttributeNS("http://www.w3.org/1999/xlink","href");
+        if (href == "") {
+          throw "Empty href"; // Without this we try to save as the current doc, for example, HTML case also throws if empty
+        }
+        return href;
     },
     // Returns "true" if there's no text selected, null otherwise.
     isNoTextSelected : function ( event ) {
