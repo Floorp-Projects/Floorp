@@ -133,14 +133,70 @@ struct XPTString {
  * designates an InterfaceTypeDescriptor, while 19 represents an 
  * InterfaceIsTypeDescriptor.
  */
-#define TD_INTERFACE_TYPE    18
-#define TD_INTERFACE_IS_TYPE 19
 
 struct XPTTypeDescriptorPrefix {
     uint8 is_pointer:1, is_unique_pointer:1, is_reference:1,
           tag:5;
 };
 #define XPT_TDP_SIZE 1
+
+/* 
+ * The following defines map mnemonic names to the different numeric values 
+ * of XPTTypeDescriptor->tag when XPTTypeDescriptor->is_pointer is FALSE.
+ */
+#define TD_INT8   0   /* int8 */
+#define TD_INT16  1   /* int16 */
+#define TD_INT32  2   /* int32 */
+#define TD_INT64  3   /* int64 */
+#define TD_UINT8  4   /* uint8 */
+#define TD_UINT16 5   /* uint16 */
+#define TD_UINT32 6   /* uint32 */
+#define TD_UINT64 7   /* uint64 */
+#define TD_FLOAT  8   /* float */
+#define TD_DOUBLE 9   /* double */
+#define TD_BOOL   10  /* boolean (8-bit value) */
+#define TD_CHAR   11  /* char (8-bit character) */
+#define TD_WCHAR  12  /* wchar_t (16-bit character) */
+#define TD_VOID   13  /* void */
+
+/* These ones aren't used yet, but for completeness sake they're here.
+ * #define TD_RESERVED 14
+ * #define TD_RESERVED 15
+ * #define TD_RESERVED 16
+ * #define TD_RESERVED 17
+ */
+
+/* 
+ * The following defines represent special cases XPTTypeDescriptor->tag 
+ * when the TypeDescriptor is of type Interface or InterfaceIs.
+ */
+#define TD_INTERFACE_TYPE    18
+#define TD_INTERFACE_IS_TYPE 19
+
+/* 
+ * The following defines map mnemonic names to the different numeric values 
+ * of XPTTypeDescriptor->tag when XPTTypeDescriptor->is_pointer is TRUE.
+ */
+#define TD_PINT8    0   /* int8* */
+#define TD_PINT16   1   /* int16* */
+#define TD_PINT32   2   /* int32* */
+#define TD_PINT64   3   /* int64* */
+#define TD_PUINT8   4   /* uint8* */
+#define TD_PUINT16  5   /* uint16* */
+#define TD_PUINT32  6   /* uint32* */
+#define TD_PUINT64  7   /* uint64* */
+#define TD_PFLOAT   8   /* float* */
+#define TD_PDOUBLE  9   /* double* */
+#define TD_PBOOL    10  /* boolean* (8-bit value) */
+#define TD_PCHAR    11  /* char* (pointer to a single 8-bit character) */
+#define TD_PWCHAR   12  /* wchar_t* (pointer to a single 16-bit character) */
+#define TD_PVOID    13  /* void* (generic opaque pointer) */
+#define TD_PPNSIID  14  /* nsIID** */
+#define TD_PBSTR    15  /* BSTR is an OLE type consisting of a 32-bit 
+                           string-length field followed bu a NUL-terminated 
+                           Unicode string */
+#define TD_PSTRING  16  /* char* (pointer to a NUL-terminated array) */
+#define TD_PWSTRING 17  /* wchar* (pointer to a NUL-terminated array) */
 
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix *prefix;
