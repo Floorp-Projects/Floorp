@@ -51,8 +51,6 @@ nsNativeViewerApp::Run()
 
   // Pump all messages
   do {
-//    BOOL  havePriorityMessage;
-
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
     // Note: on Win98 and NT 5.0 we can also use PM_QS_INPUT and PM_QS_PAINT flags.
