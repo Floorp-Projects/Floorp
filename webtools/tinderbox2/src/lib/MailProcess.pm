@@ -4,8 +4,8 @@
 # mailprocessing program.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/10/18 20:27:43 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:39:22 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
@@ -304,6 +304,13 @@ sub mailstring2time {
 
 sub write_update_file {
   my ($update_type, $uniq_id, $tree, %tinderbox) = @_;
+
+  # first we try and make the file name legal, then we check by using
+  # the definiative legal filename checker.
+
+  $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
+
+  $update_file = main::extract_filename_chars($update_file);
 
   # write out an build update file so that the server to know about
   # the new info.
