@@ -254,6 +254,11 @@ bin/libssl3.so
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 
+; [Extensions]
+;
+bin/components/libnkgnomevfs.so
+bin/components/libnegotiateauth.so
+
 ; [Additional Developer Tools]
 [adt]
 ; [Document Inspector]
