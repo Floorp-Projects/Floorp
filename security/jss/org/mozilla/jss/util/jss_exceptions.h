@@ -44,6 +44,8 @@ PR_BEGIN_EXTERN_C
 
 #define ALREADY_INITIALIZED_EXCEPTION "org/mozilla/jss/crypto/AlreadyInitializedException"
 
+#define INDEX_OUT_OF_BOUNDS_EXCEPTION "java/lang/IndexOutOfBoundsException"
+
 #define BAD_PADDING_EXCEPTION "org/mozilla/jss/crypto/BadPaddingException"
 
 #define CERT_DATABASE_EXCEPTION "org/mozilla/jss/CertDatabaseException"
@@ -96,6 +98,8 @@ PR_BEGIN_EXTERN_C
 #define SECURITY_EXCEPTION "java/lang/SecurityException"
 
 #define SIGNATURE_EXCEPTION "java/security/SignatureException"
+
+#define SOCKET_EXCEPTION "java/net/SocketException"
 
 #define TOKEN_EXCEPTION "org/mozilla/jss/crypto/TokenException"
 

@@ -36,6 +36,7 @@
 /* Need to include these first.
  * #include <nspr.h>
  * #include <jni.h>
+ * #include <secitem.h>
  */
 
 PR_BEGIN_EXTERN_C
@@ -51,6 +52,8 @@ PR_EXTERN(void) PR_DetachThread(void);
 #define PR_AttachThread(a, b, c)  ((PRThread*)1)
 #define PR_DetachThread()
 
+/* defined in CryptoManager.c */
+extern JavaVM *JSS_javaVM;
 
 /***********************************************************************
  * J S S _ t h r o w M s g

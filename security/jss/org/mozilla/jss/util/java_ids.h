@@ -247,6 +247,37 @@ PR_BEGIN_EXTERN_C
 #define SIG_CONTEXT_PROXY_CONSTRUCTOR_SIG "([B)V"
 
 /*
+ * SSLCertificateApprovalCallback
+ */
+#define SSLCERT_APP_CB_APPROVE_NAME "approve"
+#define SSLCERT_APP_CB_APPROVE_SIG "(Lorg/mozilla/jss/crypto/X509Certificate;Lorg/mozilla/jss/ssl/SSLCertificateApprovalCallback$ValidityStatus;)Z"
+
+/*
+ * SSLSecurityStatus
+ */
+#define SSL_SECURITY_STATUS_CLASS_NAME "org/mozilla/jss/ssl/SSLSecurityStatus"
+#define SSL_SECURITY_STATUS_CONSTRUCTOR_NAME "<init>"
+#define SSL_SECURITY_STATUS_CONSTRUCTOR_SIG "(ILjava/lang/String;IILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/mozilla/jss/crypto/X509Certificate;)V"
+
+/*
+ * SSLSocket
+ */
+#define SSLSOCKET_HANDSHAKE_NOTIFIER_NAME "notifyAllHandshakeListeners"
+#define SSLSOCKET_HANDSHAKE_NOTIFIER_SIG "()V"
+#define SSLSOCKET_PROXY_FIELD "sockProxy"
+#define SSLSOCKET_PROXY_SIG "Lorg/mozilla/jss/ssl/SocketProxy;"
+
+/*
+ * ValidityStatus
+ */
+#define SSLCERT_APP_CB_VALIDITY_STATUS_CLASS \
+    "org/mozilla/jss/ssl/SSLCertificateApprovalCallback$ValidityStatus"
+#define SSLCERT_APP_CB_VALIDITY_STATUS_ADD_REASON_NAME "addReason"
+#define SSLCERT_APP_CB_VALIDITY_STATUS_ADD_REASON_SIG \
+    "(ILorg/mozilla/jss/pkcs11/PK11Cert;I)V"
+
+
+/*
  * SymKeyProxy
  */
 #define SYM_KEY_PROXY_FIELD "keyProxy"
