@@ -18,6 +18,7 @@
 
 #include "msgCore.h"
 #include "nsImapUtils.h"
+#include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "prsystem.h"
 
@@ -28,54 +29,42 @@
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-//utilities
-static char *gImapRoot = nsnull;
-
 nsresult
-nsGetImapRoot(nsFileSpec &result)
+nsGetImapRoot(const char* hostname, nsFileSpec &result)
 {
-  nsresult rv = NS_OK;
+    nsresult rv = NS_OK; 
 
-     
-    // temporary stuff. for now - should get everything from the mail session
-  if (gImapRoot == nsnull) {
-    nsIMsgMailSession *session;
-    rv = nsServiceManager::GetService(kMsgMailSessionCID,
-                                      nsIMsgMailSession::GetIID(),
-                                      (nsISupports **)&session);
-    
-    if (NS_SUCCEEDED(rv)) {
-      nsIMsgIncomingServer *server;
-      rv = session->GetCurrentServer(&server);
-      if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get current server\n");
-      if (NS_SUCCEEDED(rv)) {
-        nsIImapIncomingServer *imapServer;
-        rv = server->QueryInterface(nsIImapIncomingServer::GetIID(),
-                                    (void **)&imapServer);
-        if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get imap server\n");
-        if (NS_SUCCEEDED(rv)) {
-          rv = imapServer->GetRootFolderPath(&gImapRoot);
-          if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get root\n");
-          NS_RELEASE(imapServer);
-        }
-        NS_RELEASE(server);
-        
-      }
-      nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
-    }
-  }
-  result = gImapRoot;
-  return rv;
-      
+	  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+    if (NS_FAILED(rv)) return rv;
+
+	  nsCOMPtr<nsIMsgAccountManager> accountManager;
+	  rv = session->GetAccountManager(getter_AddRefs(accountManager));
+    if(NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISupportsArray> servers;
+    rv = accountManager->FindServersByHostname(hostname,
+                                               nsIImapIncomingServer::GetIID(),
+                                               getter_AddRefs(servers));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIMsgIncomingServer>
+        server(do_QueryInterface(servers->ElementAt(0)));
+
+    char *localPath = nsnull;
+
+    if (server)
+				rv = server->GetLocalPath(&localPath);
+
+    result = localPath;
+    return rv;
 }
 
 nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
   nsresult rv;
-
-  
   nsAutoString sep;
+
   sep += PR_GetDirectorySeparator();
 
   nsAutoString sbdSep;
@@ -87,128 +76,54 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
-  if ((strcmp(rootURI, kImapRootURI) == 0) || 
-           (strcmp(rootURI, kImapMessageRootURI) == 0)) {
-    rv = nsGetImapRoot(pathResult);
-	}
-  else {
+  if ((strcmp(rootURI, kImapRootURI) != 0) &&
+           (strcmp(rootURI, kImapMessageRootURI) != 0)) {
+    pathResult = nsnull;
     rv = NS_ERROR_FAILURE; 
   }
 
+  // the server name is the first component of the path, so extract it out
+  PRInt32 hostStart;
+
+  hostStart = uri.Find('/');
+  if (hostStart <= 0) return NS_ERROR_FAILURE;
+
+  // skip past all //
+  while (uri[hostStart]=='/') hostStart++;
+
+  // cut mailbox://hostname/folder -> hostname/folder
+  nsAutoString hostname;
+  uri.Right(hostname, uri.Length() - hostStart);
+
+  PRInt32 hostEnd = hostname.Find('/');
+
+  // folder comes after the hostname, after the '/'
+  nsAutoString folder;
+  hostname.Right(folder, hostname.Length() - hostEnd - 1);
+
+  // cut off first '/' and everything following it
+  // hostname/folder -> hostname
+  if (hostEnd >0) {
+    hostname.Truncate(hostEnd);
+  }
+  
+  // local mail case
+  // should return a list of all local mail folders? or maybe nothing
+  // at all?
+  char *hostchar = hostname.ToNewCString();
+  
+  rv = nsGetImapRoot(hostchar, pathResult);
+
+  delete[] hostchar;
+
   if (NS_FAILED(rv)) {
-    pathResult = nsnull;
-    return rv;
-  }
- 
-  nsAutoString path="";
-  uri.Cut(0, nsCRT::strlen(rootURI));
-
-  PRInt32 uriLen = uri.Length();
-  PRInt32 pos;
-  while(uriLen > 0) {
-    nsAutoString folderName;
-
-    PRInt32 leadingPos;
-    // if it's the first character then remove it.
-    while ((leadingPos = uri.Find('/')) == 0) {
-      uri.Cut(0, 1);
-      uriLen--;
-    }
-
-    if (uriLen == 0)
-      break;
-
-    pos = uri.Find('/');
-    if (pos < 0)
-      pos = uriLen;
-
-
-    PRInt32 leftRes = uri.Left(folderName, pos);
-
-    NS_ASSERTION(leftRes == pos,
-                 "something wrong with nsString");
-	//We only want to add this after the first time around.
-	if(path.Length() > 0)
-	{
-		path += sep;
-		path += PR_GetDirectorySeparator();
-	}
-    // the first time around the separator is special because
-    // the root mail folder doesn't end with .sbd
-    sep = sbdSep;
-
-    path += folderName;
-    uri.Cut(0, pos);
-    uriLen -= pos;
+      pathResult = nsnull;
+      return rv;
   }
 
-  if(path.Length() > 0)
-	  pathResult +=path;
+  if (folder != "")
+      pathResult += folder;
 
-  return NS_OK;
-}
-
-nsresult
-nsPath2ImapURI(const char* rootURI, const nsFileSpec& spec, char **uri)
-{
-  nsresult rv;
-
-
-  nsAutoString sep;
-  /* sspitzer: is this ok for mail and news? */
-  rv = nsGetMailFolderSeparator(sep);
-  if (NS_FAILED(rv)) return rv;
-
-  PRUint32 sepLen = sep.Length();
-
-  nsFileSpec root;
-   rv = nsGetImapRoot(root);
-  if (NS_FAILED(rv)) return rv;
-
-  const char *path = spec;
-  nsAutoString pathStr(path);
-  path = root;
-  nsAutoString rootStr(path);
-  
-  PRInt32 pos = pathStr.Find(rootStr);
-  if (pos != 0)     // if doesn't start with root path
-    return NS_ERROR_FAILURE;
-
-  nsAutoString uriStr(rootURI);
-
-  PRUint32 rootStrLen = rootStr.Length();
-  pathStr.Cut(0, rootStrLen);
-  PRInt32 pathStrLen = pathStr.Length();
-
-  char dirSep = PR_GetDirectorySeparator();
-  
-  while (pathStrLen > 0) {
-    nsAutoString folderName;
-    
-    PRInt32 leadingPos;
-    // if it's the first character then remove it.
-    while ((leadingPos = pathStr.Find(dirSep)) == 0) {
-      pathStr.Cut(0, 1);
-      pathStrLen--;
-    }
-    if (pathStrLen == 0)
-      break;
-
-    pos = pathStr.Find(sep);
-    if (pos < 0) 
-      pos = pathStrLen;
-
-    PRInt32 leftRes = pathStr.Left(folderName, pos);
-    NS_ASSERTION(leftRes == pos,
-                 "something wrong with nsString");
-
-    pathStr.Cut(0, pos + sepLen);
-    pathStrLen -= pos + sepLen;
-
-    uriStr += '/';
-    uriStr += folderName;
-  }
-  *uri = uriStr.ToNewCString();
   return NS_OK;
 }
 
@@ -248,19 +163,21 @@ nsresult nsParseImapMessageURI(const char* uri, nsString& folderURI, PRUint32 *k
 
 }
 
-nsresult nsBuildImapMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
+nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char** uri)
 {
 	
 	if(!uri)
 		return NS_ERROR_NULL_POINTER;
 
-	char *folderURI;
+	nsAutoString tailURI(baseURI);
 
-	nsPath2ImapURI(kImapMessageRootURI, path, &folderURI);
+	if (tailURI.Find(kImapRootURI) == 0)
+		tailURI.Cut(0, PL_strlen(kImapRootURI));
 
-	*uri = PR_smprintf("%s#%d", folderURI, key);
+	char *tail = tailURI.ToNewCString();
 
-	delete[] folderURI;
+	*uri = PR_smprintf("%s%s#%d", kImapMessageRootURI, tail, key);
+	delete[] tail;
 
 	return NS_OK;
 

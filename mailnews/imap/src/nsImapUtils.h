@@ -41,7 +41,7 @@ extern nsresult
 nsParseImapMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
 
 extern nsresult 
-nsBuildImapMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
+nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char **uri);
 
 
 #endif //NS_IMAPUTILS_H
