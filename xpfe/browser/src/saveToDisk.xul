@@ -18,35 +18,72 @@
         var data;
         var dialog;
 
+        function initData() {
+            // Create data object and initialize.
+            data = new Object;
+            data.location      = document.getElementById("data.location");
+            data.contentType   = document.getElementById("data.contentType");
+            data.fileName      = document.getElementById("data.fileName");
+            data.execute       = document.getElementById("data.execute");
+        }
+
+        function initDialog() {
+            // Create dialog object and initialize.
+            dialog = new Object;
+            dialog.location    = document.getElementById("dialog.location");
+            dialog.contentType = document.getElementById("dialog.contentType");
+            dialog.fileName    = document.getElementById("dialog.fileName");
+            dialog.ok          = document.getElementById("dialog.ok");
+            dialog.enabled     = false;
+        }
+
         function loadDialog() {
+            // Set initial dialog field contents.
             dialog.location.setAttribute( "value", data.location.getAttribute( "value" ) );
             dialog.contentType.setAttribute( "value", data.contentType.getAttribute( "value" ) );
             dialog.fileName.setAttribute( "value", data.fileName.getAttribute( "value" ) );
         }
 
         function onLoad() {
-            // Set global variables.
-            data = new Object;
-            data.location      = document.getElementById("data.location");
-            data.contentType   = document.getElementById("data.contentType");
-            data.fileName      = document.getElementById("data.fileName");
-            data.execute       = document.getElementById("data.execute");
-            dialog = new Object;
-            dialog.location    = document.getElementById("dialog.location");
-            dialog.contentType = document.getElementById("dialog.contentType");
-            dialog.fileName    = document.getElementById("dialog.fileName");
+            // Init data.
+            initData();
+
+            // Init dialog.
+            initDialog();
 
             // Fill dialog.
             loadDialog();
         }
 
         function ok() {
+            // Proceed with download into target filename.
             data.execute.setAttribute("filename", dialog.fileName.value );
             data.execute.setAttribute("command","ok");
         }
 
         function cancel() {
-            data.execute.setAttribute("command","cancel");
+            // Close the window.
+            data.execute.setAttribute("command","close");
+        }
+
+        function onTyping( key ) {
+            if ( key == 13 && dialog.enabled ) {
+                ok();
+            } else {
+                if ( dialog.enabled ) {
+                    // Disable OK if they delete all the text.
+                    if ( dialog.fileName.value == "" ) {
+                        dialog.enabled = false;
+                        dialog.ok.setAttribute( "disabled", "" );
+                    }
+                } else {
+                    // Enable OK once the user types something.
+                    if ( dialog.fileName.value != "" ) {
+                        dialog.enabled = true;
+                        dialog.ok.removeAttribute( "disabled" );
+                    }
+                }
+            }
         }
     </html:script>
 
@@ -74,14 +111,14 @@
                 Enter file name:
             </html:td>
             <html:td align="left">
-                <html:input id="dialog.fileName" value="" style="width:300px;"/>
+                <html:input id="dialog.fileName" value="" style="width:300px;" onkeyup="onTyping(event.which)"/>
             </html:td>
         </html:tr>
 
         <html:tr>
             <html:td align="center" colspan="2">
-                <html:button onclick="ok()">Ok</html:button>
-                <html:button onclick="cancel()">Cancel</html:button>
+                <html:button id="dialog.ok" onclick="ok()" disabled>OK</html:button>
+                <html:button onclick="cancel()" disabled>Cancel</html:button>
             </html:td>
         </html:tr>
     </html:table>
