@@ -22,25 +22,21 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/pref/platformPrefOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref-navigator.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="pref-navigator"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');"
+      onload="parent.initPanel('chrome://browser/content/pref/pref-navigator.xul');"
       headertitle="&lHeader;">
 
-  <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-navigator.js"/>
+  <stringbundle id="bundle_prefutilities" src="chrome://browser/locale/pref/prefutilities.properties"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-navigator.js"/>
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["startupPage", "browserStartupHomepage",
-                       "bookmarksButton", "goButton",
-                       "homeButton", "printButton",
-                       "searchButton"];
+    var _elementIDs = ["startupPage", "browserStartupHomepage"];
   ]]>
   </script>
   
@@ -85,34 +81,5 @@
       </hbox>
     </vbox>
   </groupbox>
-  
-  <!-- toolbar buttons customization -->
-  <groupbox flex="1" id="prefShowButtons" orient="horizontal">
-    <caption label="&toolbarIntro.label;"/>
-    <vbox id="prefShowButtonsBox1">
-
-              <checkbox id="bookmarksButton"
-                        label="&bookmarksButton.label;"
-                        prefstring="browser.toolbars.showbutton.bookmarks"/>
-              <checkbox id="goButton"
-                        label="&goButton.label;"
-                        prefstring="browser.toolbars.showbutton.go"/>
-              <checkbox id="homeButton"
-                        label="&homeButton.label;"
-                        prefstring="browser.toolbars.showbutton.home"/>
-     </vbox>
-     <vbox id="prefShowButtonsbox">
-
-              <checkbox id="searchButton"
-                        label="&searchButton.label;"
-                        prefstring="browser.toolbars.showbutton.search"/>
-      	      <checkbox id="printButton"
-                        label="&printButton.label;"
-                        prefstring="browser.toolbars.showbutton.print"/>
-      </vbox>
-      <vbox id="prefShowButtonBox">
-
-      </vbox>
-   </groupbox>
 </page>
 
