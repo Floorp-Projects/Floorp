@@ -107,6 +107,7 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     if      (size <=  1024) pad = (((size-1)/ 256) + 1) *  256;
     else if (size <=  4096) pad = (((size-1)/1024) + 1) * 1024;
     else if (size <= 16384) pad = (((size-1)/4096) + 1) * 4096;
+    else return nsnull; // unexpected size!
     
     nsDiskCacheEntry * diskEntry = (nsDiskCacheEntry *)new char[pad];
     if (!diskEntry)  return nsnull;
