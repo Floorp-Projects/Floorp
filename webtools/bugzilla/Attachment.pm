@@ -42,7 +42,7 @@ use Template;
 my $template = Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => 'template/default' ,
+    INCLUDE_PATH => 'template/custom:template/default' ,
     # Allow templates to be specified with relative paths.
     RELATIVE => 1 
   }
