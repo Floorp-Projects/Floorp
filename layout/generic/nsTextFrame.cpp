@@ -2154,7 +2154,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   if (endsInNewline) {
     rs = NS_INLINE_LINE_BREAK_AFTER(rs);
   }
-  else if (offset == startingOffset) {
+  else if ((offset != contentLength) && (offset == startingOffset)) {
+    // Break-before a long-word that doesn't fit here
     rs = NS_INLINE_LINE_BREAK_BEFORE();
   }
   aStatus = rs;
