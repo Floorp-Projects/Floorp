@@ -1833,7 +1833,14 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   newAttachment->type =  MimeHeaders_get ( headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE );
 
   if (PL_strstr(newAttachment->type, MESSAGE_RFC822))
-     PL_strcat(newAttachment->real_name, ".eml");      
+  {
+    char *newName = PR_smprintf("%s.eml", newAttachment->real_name);
+    if (newName)
+    {
+      PR_Free(newAttachment->real_name);
+      newAttachment->real_name = newName;
+    }
+  }      
   
   //
   // This is to handle the degenerated Apple Double attachment.
