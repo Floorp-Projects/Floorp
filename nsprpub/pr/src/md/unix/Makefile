@@ -57,6 +57,10 @@ FREEBSD_CSRCS = \
 	freebsd.c \
 	$(NULL)
 
+NETBSD_CSRCS = \
+	netbsd.c \
+	$(NULL)
+
 BSDI_CSRCS = \
 	bsdi.c \
 	$(NULL)
@@ -122,6 +126,9 @@ CSRCS += $(AIX_CSRCS)
 endif
 ifeq ($(OS_ARCH),FreeBSD)
 CSRCS += $(FREEBSD_CSRCS)
+endif
+ifeq ($(OS_ARCH),NetBSD)
+CSRCS += $(NETBSD_CSRCS)
 endif
 ifeq ($(OS_ARCH),BSD_OS)
 CSRCS += $(BSDI_CSRCS)

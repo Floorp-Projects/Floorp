@@ -324,6 +324,8 @@ int poll(void *listptr, unsigned long nfds, long timeout)
 int poll(struct pollfd filedes[], unsigned int nfds, int timeout)
 #elif defined(HPUX9)
 int poll(struct pollfd filedes[], int nfds, int timeout)
+#elif defined(NETBSD)
+int poll(struct pollfd *filedes, nfds_t nfds, int timeout)
 #else
 int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
 #endif

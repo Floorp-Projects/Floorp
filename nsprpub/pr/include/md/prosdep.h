@@ -59,6 +59,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(FREEBSD)
 #include "md/_freebsd.h"
 
+#elif defined(NETBSD)
+#include "md/_netbsd.h"
+
 #elif defined(BSDI)
 #include "md/_bsdi.h"
 

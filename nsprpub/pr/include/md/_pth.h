@@ -69,7 +69,8 @@
 	(!memcmp(&(t), &pt_zero_tid, sizeof(pthread_t)))
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
-	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD)
+	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
+	|| defined(NETBSD)
 #define PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
 #define PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -134,7 +135,8 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
  * These platforms don't have pthread_atfork()
  */
 #if defined(_PR_DCETHREADS) || defined(FREEBSD) \
-	|| (defined(LINUX) && defined(__alpha))
+	|| (defined(LINUX) && defined(__alpha)) \
+	|| defined(NETBSD)
 #define PT_NO_ATFORK
 #endif
 
@@ -142,7 +144,7 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
  * These platforms don't have sigtimedwait()
  */
 #if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX) \
-	|| defined(FREEBSD)
+	|| defined(FREEBSD) || defined(NETBSD)
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
@@ -184,7 +186,7 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
  */
 #define PT_PRIO_MIN            1
 #define PT_PRIO_MAX            127
-#elif defined(FREEBSD) /* XXX */
+#elif defined(FREEBSD) || defined(NETBSD) /* XXX */
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            126
 #else
@@ -213,7 +215,7 @@ extern int (*_PT_aix_yield_fcn)();
 #define PTHREAD_YIELD()             sched_yield()
 #elif defined(LINUX)
 #define PTHREAD_YIELD()            	sched_yield()
-#elif defined(FREEBSD)
+#elif defined(FREEBSD) || defined(NETBSD)
 #define PTHREAD_YIELD()                 pthread_yield()
 #else
 #error "Need to define PTHREAD_YIELD for this platform"

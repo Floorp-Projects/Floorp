@@ -49,7 +49,8 @@
         || defined(UNIXWARE) || defined(NCR) || defined(SNI) || defined(NEC) \
         || defined(BSDI) || defined(SONY)
 #include <sys/select.h>
-#elif defined(SUNOS4) || defined(SCO) || defined(FREEBSD) || defined(RHAPSODY)
+#elif defined(SUNOS4) || defined(SCO) || defined(FREEBSD) \
+        || defined(NETBSD) || defined(RHAPSODY)
 #include <sys/types.h>
 #elif defined(LINUX)
 #include <sys/time.h>

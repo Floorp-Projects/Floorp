@@ -194,11 +194,11 @@ static PRThread* _PR_CreateThread(
 
     if (EPERM != pt_schedpriv)
     {
-#if !defined(_PR_DCETHREADS) && !defined(FREEBSD)
+#if !defined(_PR_DCETHREADS) && !defined(FREEBSD) && !defined(NETBSD)
         struct sched_param schedule;
 #endif
 
-#if !defined(FREEBSD)
+#if !defined(FREEBSD) && !defined(NETBSD)
         rv = pthread_attr_setinheritsched(&tattr, PTHREAD_EXPLICIT_SCHED);
         PR_ASSERT(0 == rv);
 #endif
@@ -208,7 +208,7 @@ static PRThread* _PR_CreateThread(
 #if defined(_PR_DCETHREADS)
         rv = pthread_attr_setprio(&tattr, pt_PriorityMap(priority));
         PR_ASSERT(0 == rv);
-#elif !defined(FREEBSD)
+#elif !defined(FREEBSD) && !defined(NETBSD)
         rv = pthread_attr_getschedparam(&tattr, &schedule);
         PR_ASSERT(0 == rv);
         schedule.sched_priority = pt_PriorityMap(priority);
@@ -550,7 +550,7 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
     rv = pthread_setprio(thred->id, pt_PriorityMap(newPri));
     /* pthread_setprio returns the old priority */
     PR_ASSERT(-1 != rv);
-#elif !defined(FREEBSD)
+#elif !defined(FREEBSD) && !defined(NETBSD)
     if (EPERM != pt_schedpriv)
     {
         int policy;
@@ -751,7 +751,7 @@ void _PR_InitThreads(
      * conflict with the use of these two signals in our GC support.
      * So we don't know how to support GC on Linux pthreads.
      */
-#if !defined(LINUX) && !defined(FREEBSD)
+#if !defined(LINUX) && !defined(FREEBSD) && !defined(NETBSD)
 	init_pthread_gc_support();
 #endif
 
@@ -1036,7 +1036,7 @@ static void suspend_signal_handler(PRIntn sig)
 	pthread_cond_signal(&me->suspendResumeCV);
 	while (me->suspend & PT_THREAD_SUSPENDED)
 	{
-#if !defined(FREEBSD)  /*XXX*/
+#if !defined(FREEBSD) && !defined(NETBSD)  /*XXX*/
         PRIntn rv;
 	    sigwait(&sigwait_set, &rv);
 #endif
