@@ -219,6 +219,7 @@ nsInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
@@ -598,6 +599,7 @@ nsInlineFrame::PushFrames(nsIPresContext* aPresContext,
   // our overflow list when it is ready)
   SetOverflowFrames(aPresContext, aFromChild);
 }
+
 
 //////////////////////////////////////////////////////////////////////
 

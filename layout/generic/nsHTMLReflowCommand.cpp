@@ -128,7 +128,7 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext*      aPresContext,
   }
 #endif
 
-  if (nsnull != root) {
+  if (nsnull != root) {    
     mPath.RemoveElementAt(mPath.Count() - 1);
 
     nsHTMLReflowState reflowState(aPresContext, root, *this,

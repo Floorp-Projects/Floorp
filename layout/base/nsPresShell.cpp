@@ -313,7 +313,7 @@ public:
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame);  
+  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType);  
   NS_IMETHOD ProcessReflowCommands();
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
@@ -1280,7 +1280,7 @@ NS_IMETHODIMP
 PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
   // Cancel any pending reflow commands targeted at this frame
-  CancelReflowCommand(aFrame);
+  CancelReflowCommand(aFrame, nsnull);
 
   // Notify the frame manager
   if (mFrameManager) {
@@ -1759,15 +1759,23 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 }
 
 NS_IMETHODIMP
-PresShell::CancelReflowCommand(nsIFrame* aTargetFrame)
+PresShell::CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType)
 {
   PRInt32 i, n = mReflowCommands.Count();
   for (i = 0; i < n; i++) {
     nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(i);
     if (rc) {
-      nsIFrame* target;
+      nsIFrame* target;      
       if (NS_SUCCEEDED(rc->GetTarget(target))) {
         if (target == aTargetFrame) {
+          if (aCmdType != NULL) {
+            // If aCmdType is specified, only remove reflow commands of that type
+            nsIReflowCommand::ReflowType type;
+            if (NS_SUCCEEDED(rc->GetType(type))) {
+              if (type != *aCmdType)
+                continue;
+            }
+          }
 #ifdef DEBUG
           if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
             printf("PresShell: removing rc=%p for frame ", rc);
@@ -1903,7 +1911,7 @@ PresShell::ProcessReflowCommands()
       // Dispatch the reflow command
       nsSize          maxSize;
       rootFrame->GetSize(maxSize);
-      if (gDoAsyncReflow) beforeReflow = PR_Now();
+      if (gDoAsyncReflow) beforeReflow = PR_Now();      
       rc->Dispatch(mPresContext, desiredSize, maxSize, *rcx);
       if (gDoAsyncReflow) afterReflow = PR_Now();
       NS_RELEASE(rc);
@@ -1932,7 +1940,7 @@ PresShell::ProcessReflowCommands()
         // LL_L2I(reflowTime, mAccumulatedReflowTime);
         printf("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", this, reflowTime);
       }
-#endif            
+#endif
       mAccumulatedReflowTime = 0;
     }
     

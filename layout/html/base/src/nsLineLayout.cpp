@@ -853,7 +853,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   aFrame->GetFrameState(&state);
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
-  }
+  }  
   else if (*aNextRCFrame == aFrame) {
     reason = eReflowReason_Incremental;
     // Make sure we only incrementally reflow once
@@ -861,6 +861,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
   else if (psd->mReflowState->reason == eReflowReason_StyleChange) {
     reason = eReflowReason_StyleChange;
+  }
+  else if (psd->mReflowState->reason == eReflowReason_Dirty) {
+    if (state & NS_FRAME_IS_DIRTY)
+      reason = eReflowReason_Dirty;
   }
   else {
     const nsHTMLReflowState* rs = psd->mReflowState;
@@ -882,6 +886,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           if (target == parentFrame) {
             reason = eReflowReason_StyleChange;
           }
+        }
+        else if (type == nsIReflowCommand::ReflowDirty &&
+                 (state & NS_FRAME_IS_DIRTY)) {          
+          reason = eReflowReason_Dirty;
         }
       }
     }

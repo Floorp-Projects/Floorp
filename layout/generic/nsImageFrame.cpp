@@ -173,43 +173,23 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
   ListTag(stdout);
   printf(": UpdateImage: status=%x\n", aStatus);
 #endif
+  nsIPresShell* presShell;
+  aPresContext->GetShell(&presShell);
+
   if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
     // We failed to load the image. Notify the pres shell
-    nsIPresShell* presShell;
-    aPresContext->GetShell(&presShell);
     if (presShell) {
       presShell->CantRenderReplacedElement(aPresContext, this);
       NS_RELEASE(presShell);
     }
   }
   else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    // Now that the size is available, trigger a content-changed reflow
-    if (nsnull != mContent) {
-      nsIDocument* document = nsnull;
-      mContent->GetDocument(document);
-      if (nsnull != document) {
-        document->ContentChanged(mContent, nsnull);
-        NS_RELEASE(document);
-      } else {
-        // The content object isn't associated with a document. That probably
-        // means it's generated content. Mark ourselves dirty and generate a
-        // reflow command targeted at our parent frame
-        nsIReflowCommand* reflowCmd;
-        nsresult          rv;
-
-        mState |= NS_FRAME_IS_DIRTY;
-        rv = NS_NewHTMLReflowCommand(&reflowCmd, mParent,
-                                     nsIReflowCommand::ReflowDirty);
-        if (NS_SUCCEEDED(rv)) {
-          nsIPresShell* presShell;
-          
-          // Add the reflow command
-          aPresContext->GetShell(&presShell);
-          presShell->AppendReflowCommand(reflowCmd);
-          NS_RELEASE(reflowCmd);
-          NS_RELEASE(presShell);
-        }
-      }
+    if (mParent) {
+      mState |= NS_FRAME_IS_DIRTY;
+	    mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
+    }
+    else {
+      NS_ASSERTION(0, "No parent to pass the reflow request up to.");
     }
   }
   return NS_OK;
@@ -226,7 +206,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     nsIPresShell* shell;
     aPresContext->GetShell(&shell);
     if (shell) {
-      shell->CancelReflowCommand(this);
+      shell->CancelReflowCommand(this, nsnull);
       NS_RELEASE(shell);
     }
   }

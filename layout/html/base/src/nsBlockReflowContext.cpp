@@ -155,6 +155,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   else if (mOuterReflowState.reason == eReflowReason_StyleChange) {
     reason = eReflowReason_StyleChange;
   }
+  else if (mOuterReflowState.reason == eReflowReason_Dirty) {
+    if (state & NS_FRAME_IS_DIRTY)
+      reason = eReflowReason_Dirty;
+  }
   else {
     if (mOuterReflowState.reason == eReflowReason_Incremental) {
       // If the incremental reflow command is a StyleChanged reflow
@@ -171,6 +175,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
           if (target == mOuterReflowState.frame) {
             reason = eReflowReason_StyleChange;
           }
+        }
+        else if (type == nsIReflowCommand::ReflowDirty &&
+                 (state & NS_FRAME_IS_DIRTY)) {
+          reason = eReflowReason_Dirty;
         }
       }
     }
