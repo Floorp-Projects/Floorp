@@ -289,8 +289,7 @@ PRInt32 nsIMAPBodyShell::Generate(char *partNum)
 		if (!GetPseudoInterrupted() && !DeathSignalReceived())
 		{
           nsresult rv = 
-			m_protocolConnection->BeginMessageDownLoad(contentLength,
-                                                       MESSAGE_RFC822);
+      m_protocolConnection->BeginMessageDownLoad(contentLength, MESSAGE_RFC822);
           if (NS_FAILED(rv))
           {
             m_generatingPart = nsnull;
@@ -1040,6 +1039,8 @@ PRInt32 nsIMAPBodypartMessage::Generate(PRBool stream, PRBool prefetch)
 
 	if (!m_topLevelMessage && !m_shell->GetPseudoInterrupted())	// not the top-level message - we need the MIME header as well as the message header
 	{
+    // but we don't need the MIME header of a message/rfc822 part!
+    if (PL_strcasecmp(m_bodyType, "message") || PL_strcasecmp(m_bodySubType, "rfc822"))
 		m_contentLength += GenerateMIMEHeader(stream, prefetch);
 	}
 

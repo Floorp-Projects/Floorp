@@ -1090,10 +1090,11 @@ void nsImapServerResponseParser::msg_fetch()
 					char *startPartNum = fNextToken + 5;
 					if (whereHeader > startPartNum)
 					{
-						char *partNum = (char *)PR_CALLOC((whereHeader - startPartNum) * sizeof (char));
+            PRInt32 partLength = whereHeader - startPartNum - 1; //-1 for the dot!
+            char *partNum = (char *)PR_CALLOC((partLength + 1) * sizeof (char));
 						if (partNum)
 						{
-							PL_strncpy(partNum, startPartNum, (whereHeader - startPartNum));
+              PL_strncpy(partNum, startPartNum, partLength);
 							if (ContinueParse())
 							{
 								if (PL_strstr(fNextToken, "FIELDS"))
