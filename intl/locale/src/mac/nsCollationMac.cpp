@@ -160,6 +160,7 @@ nsresult nsCollationMac::CreateSortKey(const nsCollationStrength strength,
     str_len = strlen(str);
     NS_ASSERTION(str_len > *outLen, "output buffer too small");
     
+    // If no CJK then generate a collation key
     if (smJapanese != m_scriptcode && smKorean != m_scriptcode && 
         smTradChinese != m_scriptcode && smSimpChinese != m_scriptcode) {
       for (int i = 0; i < str_len; i++) {
@@ -167,14 +168,25 @@ nsresult nsCollationMac::CreateSortKey(const nsCollationStrength strength,
       }
     }
     else {
-      // No CJK support, just copy the row string then lowercase for ASCII only.
+      // No CJK support, just copy the row string.
       strcpy((char *) key, str);
-      for (int i = 0; i < str_len; i++) {
-        if ((unsigned char) str[i] < 128) {
-          *key++ = tolower(str[i]);
+      while (*key) {
+        if ((unsigned char) *key < 128) {
+          key++;
         }
         else {
-          key += (smFirstByte == CharacterByteType((Ptr) key, 0, m_scriptcode)) ? 2 : 1; 
+          // ShiftJIS specific, shift hankaku kana in front of zenkaku.
+          if (smJapanese == m_scriptcode) {
+            if (*key >= 0xA0 && *key < 0xE0) {
+              *key -= (0xA0 - 0x81);
+            }
+            else if (*key >= 0x81 && *key < 0xA0) {
+              *key += (0xE0 - 0xA0);
+            } 
+          }
+          // advance 2 bytes if the API says so and not passing the end of the string
+          key += ((smFirstByte == CharacterByteType((Ptr) key, 0, m_scriptcode)) &&
+                  (*(key + 1))) ? 2 : 1;
         }
       }
     }
