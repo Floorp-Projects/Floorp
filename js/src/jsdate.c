@@ -1424,9 +1424,9 @@ date_toGMTString(JSContext *cx, JSObject *obj, uintN argc,
  * that's in range.
  */
 static void
-new_explode(jsdouble time, PRMJTime *split, JSBool findEquivalent)
+new_explode(jsdouble timeval, PRMJTime *split, JSBool findEquivalent)
 {
-    jsint year = YearFromTime(time);
+    jsint year = YearFromTime(timeval);
     int16 adjustedYear;
 
     /* If the year doesn't fit in a PRMJTime, find something to do about it. */
@@ -1449,19 +1449,19 @@ new_explode(jsdouble time, PRMJTime *split, JSBool findEquivalent)
 	adjustedYear = (int16)year;
     }
 
-    split->tm_usec = (int32) msFromTime(time) * 1000;
-    split->tm_sec = (int8) SecFromTime(time);
-    split->tm_min = (int8) MinFromTime(time);
-    split->tm_hour = (int8) HourFromTime(time);
-    split->tm_mday = (int8) DateFromTime(time);
-    split->tm_mon = (int8) MonthFromTime(time);
-    split->tm_wday = (int8) WeekDay(time);
+    split->tm_usec = (int32) msFromTime(timeval) * 1000;
+    split->tm_sec = (int8) SecFromTime(timeval);
+    split->tm_min = (int8) MinFromTime(timeval);
+    split->tm_hour = (int8) HourFromTime(timeval);
+    split->tm_mday = (int8) DateFromTime(timeval);
+    split->tm_mon = (int8) MonthFromTime(timeval);
+    split->tm_wday = (int8) WeekDay(timeval);
     split->tm_year = (int16) adjustedYear;
-    split->tm_yday = (int16) DayWithinYear(time, year);
+    split->tm_yday = (int16) DayWithinYear(timeval, year);
 
     /* not sure how this affects things, but it doesn't seem
        to matter. */
-    split->tm_isdst = (DaylightSavingTA(time) != 0);
+    split->tm_isdst = (DaylightSavingTA(timeval) != 0);
 }
 
 /* helper function */
