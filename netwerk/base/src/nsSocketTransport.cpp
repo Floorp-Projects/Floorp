@@ -422,10 +422,16 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             PRBool isalive = PR_FALSE;
             if (NS_SUCCEEDED (IsAlive (0, &isalive)) && !isalive)
             {
-                CloseConnection ();
+                if (mSocketFD)
+                {
+                    PR_Close (mSocketFD);
+                    mSocketFD = nsnull;
+                }
 
                 mCurrentState = eSocketState_WaitConnect;
                 mLastReuseCount = mReuseCount;
+                fireStatus (mCurrentState);
+
                 continue;
             }
         }
@@ -1294,7 +1300,7 @@ NS_IMETHODIMP
 nsSocketTransport::GetReuseConnection(PRBool *_retval)
 {
     if (_retval == NULL)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_NULL_POINTER;
 
     *_retval = !mCloseConnectionOnceDone;
     return NS_OK;
@@ -1308,6 +1314,23 @@ nsSocketTransport::SetReuseConnection(PRBool aReuse)
     if (aReuse)
         mReuseCount++;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetReuseCount (PRUint32 * count)
+{
+    if (count == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *count = mReuseCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetReuseCount (PRUint32   count)
+{
+    mReuseCount = count;
     return NS_OK;
 }
 
