@@ -252,8 +252,31 @@ NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, EmptyTrashThreshhold,
                        "empty_trash_threshhold");
 
-NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
-                       "delete_model");
+//NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
+//                       "delete_model");
+
+NS_IMETHODIMP								   	
+nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)
+{						
+  PRBool isAOLServer = PR_FALSE;
+
+  NS_ENSURE_ARG(retval);
+
+  GetIsAOLServer(&isAOLServer);
+  if (isAOLServer)
+  {
+    *retval = nsMsgImapDeleteModels::DeleteNoTrash;
+    return NS_OK;
+  }
+  nsresult ret = GetIntValue("delete_model", retval);
+  return ret;
+}
+
+NS_IMETHODIMP	   								\
+nsImapIncomingServer::SetDeleteModel(PRInt32 ivalue)
+{												\
+  return SetIntValue("delete_model", ivalue);			
+}
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
                        "timeout");
@@ -379,6 +402,9 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 		    nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
 		    if (NS_SUCCEEDED(rv) && url)
 		    {
+#ifdef DEBUG_bienvenu
+          printf("loading queued url\n");
+#endif
 			    rv = protocolInstance->LoadUrl(url, aConsumer);
           NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
 			    urlRun = PR_TRUE;
@@ -1603,8 +1629,6 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted)
 {
 	nsresult rv = NS_OK;
-	PRBool canRunUrl = PR_FALSE;
-  PRBool canRunButBusy = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
 
   PR_CEnterMonitor(this);
@@ -1616,7 +1640,7 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl,
 
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt && !canRunUrl && !canRunButBusy; i++) 
+  for (PRUint32 i = 0; i < cnt; i++) 
   {	
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
