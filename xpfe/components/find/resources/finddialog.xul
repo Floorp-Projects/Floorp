@@ -34,38 +34,44 @@ Contributor(s):
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/finddialog.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="findDialog"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="findDialog"
   onload="onLoad();"
   onunload="onUnload();"
+  style="width: 30em;"
   title="&findDialog.title;"
-  debug="false"
   class="dialog"
   align="vertical"
-  persist="screenX screenY"
-  screenX="24" screenY="24">
+  persist="screenX screenY">
 
   <script type="application/x-javascript" src="chrome://global/content/finddialog.js"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-  <box>
   
-    <!-- hack. we seem to need this separator to get it to render -->
-    <separator orient="vertical" class="thin"/>
-
-    <box orient="vertical">
-      <text class="label" value="&findField.label;"/>
-    </box>
-    
-    <box orient="vertical">
-      <textbox id="dialog.findKey" oninput="doEnabling();"/>
-      <box orient="vertical" autostretch="never">
-        <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
-        <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>
-        <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;"/>
-      </box>
-    </box>
-  </box>
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row>
+        <vbox valign="middle">   <!-- we should use 'baseline' here -->
+          <text class="label" value="&findField.label;" valign="bottom"/>
+        </vbox>
+        <vbox valign="middle">
+          <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
+        </vbox>
+      </row>
+      <row>
+        <spring/>
+        <vbox>
+          <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
+          <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>
+          <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;"/>
+        </vbox>
+      </row>
+    </rows>
+  </grid>
 
   <!-- used to store the find text -->
   <foo style="display:none;" id="fBLT" label="&findButton.label;"/>
