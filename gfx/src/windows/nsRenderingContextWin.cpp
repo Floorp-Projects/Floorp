@@ -21,6 +21,7 @@
  */
 
 #include "nsRenderingContextWin.h"
+#include "nsICharRepresentable.h"
 #include "nsFontMetricsWin.h"
 #include "nsRegionWin.h"
 #include <math.h>
@@ -1484,7 +1485,7 @@ PRUint16 gArabicLigatureMap[] =
 0x8EE0  // 0xFE8E 0xFEE0 -> 0xFEFC
 };
 static void ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
-             PRUnichar* aBuf, PRUint32 &aBufLen, PRUint8* map)
+             PRUnichar* aBuf, PRUint32 &aBufLen, PRUint32* map)
 {
    const PRUnichar* src = aString+aLen-1;
    const PRUnichar* p;
@@ -1600,6 +1601,55 @@ static PRBool NeedComplexScriptHandling(const PRUnichar *aString, PRUint32 aLen,
 }
 #endif // ARABIC_HEBREW_RENDERING
 
+#ifdef FIX_FOR_BUG_6585
+// This function will substitute non-ascii 7-bit chars so that
+// the final rendering will look like: char{U+00E5} -- see bug 6585.
+// For example, "å" will be render as "å{U+00E5}".
+
+static PRUnichar*
+SubstituteNonAsciiChars(const PRUnichar* aString, 
+                        PRUint32         aLength,
+                        PRUnichar*       aBuffer, 
+                        PRUint32         aBufferLength, 
+                        PRUint32*        aCount)
+{
+  // This code is optimized so that no work is done if all
+  // chars happen to be 7-bit ascii chars.
+  char cbuf[10];
+  PRUint32 count = 0;
+  PRUnichar* result;
+  for (PRUint32 i = 0; i < aLength; i++) {
+    if (aString[i] > PRUnichar(0x7F)) {
+      if (0 == count) { 
+        // A non 7-bit char is encountered for the first time... 
+        // So... switch to a separate array, and copy the previous chars there.
+        // At worse, each char will eat 9 PRUnichars (1 for the char itself,
+        // and 8 for its unicode "{U+NNNN}")
+        if (aLength*9 < aBufferLength) { // use the proposed buffer
+          result = aBuffer;
+        }
+        else { // allocated an array --caller will release
+          result = new PRUnichar[aLength*9];
+          if (!result) break; // do nothing
+        }
+        for (count = 0; count < i; count++)
+          result[count] =  aString[count]; 
+      }
+      // From now on, add all non-ascii chars followed by their {U+NNNN} ...
+      result[count++] = aString[i]; // the char istelf
+      PR_snprintf(cbuf, sizeof(cbuf), "{U+%04X}", aString[i]);
+      for (PRUint32 j = 0; j < 8; j++) // its unicode
+        result[count++] = PRUnichar(cbuf[j]); 
+    }
+    else if (0 < count) {
+      // ... And simply add ascii chars.
+      result[count++] = aString[i];
+    }
+  }
+  *aCount = (0 < count)? count : aLength;
+  return (0 < count)? result : (PRUnichar *)(const PRUnichar *)aString;
+}
+#endif
 
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(char ch, nscoord& aWidth)
 {
@@ -1659,6 +1709,17 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
 {
   if (nsnull != mFontMetrics)
   {
+    PRUnichar* pstr = (PRUnichar *)(const PRUnichar *)aString;
+#ifdef FIX_FOR_BUG_6585
+    // XXX code is OK - remaining issue: 'substituteNonAsciiChars' has to 
+    // be initialized based on the desired rendering mode -- see bug 6585
+    PRBool substituteNonAsciiChars = PR_FALSE;
+    PRUnichar str[8192];
+    if (substituteNonAsciiChars) { 
+      pstr = SubstituteNonAsciiChars(aString, aLength, str, 8192, &aLength);
+    }
+#endif
+
     nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
     nsFontWin* prevFont = nsnull;
 
@@ -1672,7 +1733,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
     LONG width = 0;
     PRUint32 start = 0;
     for (PRUint32 i = 0; i < aLength; i++) {
-      PRUnichar c = aString[i];
+      PRUnichar c = pstr[i];
       nsFontWin* currFont = nsnull;
       nsFontWin** font = metrics->mLoadedFonts;
       nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
@@ -1695,22 +1756,22 @@ FoundFont:
 #ifdef ARABIC_HEBREW_RENDERING
           PRBool bArabic=PR_FALSE;
           PRBool bHebrew=PR_FALSE;
-          if(NeedComplexScriptHandling(&aString[start],i-start,
+          if(NeedComplexScriptHandling(&pstr[start],i-start,
                 HAS_HEBREW_GLYPH(prevFont), &bHebrew,
                 HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
           {
              len = 8192;
              if(bHebrew) {
-                HebrewReordering(&aString[start], i-start, buf, len);
+                HebrewReordering(&pstr[start], i-start, buf, len);
              } else if (bArabic) {
-                ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
+                ArabicShaping(&pstr[start], i-start, buf, len, prevFont->mMap);
             }
              width += prevFont->GetWidth(mDC, buf, len);
           } 
           else 
 #endif // ARABIC_HEBREW_RENDERING
           {
-            width += prevFont->GetWidth(mDC, &aString[start], i - start);
+            width += prevFont->GetWidth(mDC, &pstr[start], i - start);
           }
           prevFont = currFont;
           start = i;
@@ -1730,22 +1791,22 @@ FoundFont:
 #ifdef ARABIC_HEBREW_RENDERING
       PRBool bArabic=PR_FALSE;
       PRBool bHebrew=PR_FALSE;
-      if(NeedComplexScriptHandling(&aString[start],i-start,
+      if(NeedComplexScriptHandling(&pstr[start],i-start,
                 HAS_HEBREW_GLYPH(prevFont), &bHebrew,
             HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
       {
          len = 8192;
          if(bHebrew) {
-            HebrewReordering(&aString[start], i-start, buf, len);
+            HebrewReordering(&pstr[start], i-start, buf, len);
          } else if (bArabic) {
-            ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
+            ArabicShaping(&pstr[start], i-start, buf, len, prevFont->mMap);
         }
          width += prevFont->GetWidth(mDC, buf, len);
       } 
       else 
 #endif // ARABIC_HEBREW_RENDERING
       {
-        width += prevFont->GetWidth(mDC, &aString[start], i - start);
+        width += prevFont->GetWidth(mDC, &pstr[start], i - start);
       }
     }
 
@@ -1759,6 +1820,11 @@ FoundFont:
     if (nsnull != aFontID)
       *aFontID = 0;
 
+#ifdef FIX_FOR_BUG_6585
+    if (pstr != aString && pstr != str) {
+      delete[] pstr;
+    }
+#endif
     return NS_OK;
   }
   else
@@ -1807,6 +1873,17 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 {
   if (nsnull != mFontMetrics)
   {
+    PRUnichar* pstr = (PRUnichar *)(const PRUnichar *)aString;
+#ifdef FIX_FOR_BUG_6585
+    // XXX code is OK - remaining issue: 'substituteNonAsciiChars' has to 
+    // be initialized based on the rendering mode -- see bug 6585
+    PRBool substituteNonAsciiChars = PR_FALSE;
+    PRUnichar str[8192];
+    if (substituteNonAsciiChars) { 
+      pstr = SubstituteNonAsciiChars(aString, aLength, str, 8192, &aLength);
+    }
+#endif
+
     // Take care of the ascent since the drawing is on the baseline
     nscoord ascent;
     mFontMetrics->GetMaxAscent(ascent);
@@ -1827,7 +1904,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 
     PRUint32 start = 0;
     for (PRUint32 i = 0; i < aLength; i++) {
-      PRUnichar c = aString[i];
+      PRUnichar c = pstr[i];
       nsFontWin* currFont = nsnull;
       nsFontWin** font = metrics->mLoadedFonts;
       nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
@@ -1852,8 +1929,8 @@ FoundFont:
             // positioning.
 
             // Slow, but accurate rendering
-            const PRUnichar* str = &aString[start];
-            const PRUnichar* end = &aString[i];
+            const PRUnichar* str = &pstr[start];
+            const PRUnichar* end = &pstr[i];
             while (str < end) {
               // XXX can shave some cycles by inlining a version of transform
               // coord where y is constant and transformed once
@@ -1869,15 +1946,15 @@ FoundFont:
 #ifdef ARABIC_HEBREW_RENDERING
             PRBool bArabic=PR_FALSE;
             PRBool bHebrew=PR_FALSE;
-            if(NeedComplexScriptHandling(&aString[start],i-start,
+            if(NeedComplexScriptHandling(&pstr[start],i-start,
                 HAS_HEBREW_GLYPH(prevFont), &bHebrew,
                 HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
             {
                len = 8192;
                if(bHebrew) {
-                  HebrewReordering(&aString[start], i-start, buf, len);
+                  HebrewReordering(&pstr[start], i-start, buf, len);
                } else if (bArabic) {
-                  ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
+                  ArabicShaping(&pstr[start], i-start, buf, len, prevFont->mMap);
               }
               prevFont->DrawString(mDC, x, y, buf, len);
               x += prevFont->GetWidth(mDC, buf, len);
@@ -1885,8 +1962,8 @@ FoundFont:
             else 
 #endif // ARABIC_HEBREW_RENDERING
             {
-              prevFont->DrawString(mDC, x, y, &aString[start], i - start);
-              x += prevFont->GetWidth(mDC, &aString[start], i - start);
+              prevFont->DrawString(mDC, x, y, &pstr[start], i - start);
+              x += prevFont->GetWidth(mDC, &pstr[start], i - start);
             }
           }
           prevFont = currFont;
@@ -1910,8 +1987,8 @@ FoundFont:
         // positioning.
 
         // Slow, but accurate rendering
-        const PRUnichar* str = &aString[start];
-        const PRUnichar* end = &aString[i];
+        const PRUnichar* str = &pstr[start];
+        const PRUnichar* end = &pstr[i];
         while (str < end) {
           // XXX can shave some cycles by inlining a version of transform
           // coord where y is constant and transformed once
@@ -1927,22 +2004,22 @@ FoundFont:
 #ifdef ARABIC_HEBREW_RENDERING
         PRBool bArabic=PR_FALSE;
         PRBool bHebrew=PR_FALSE;
-        if(NeedComplexScriptHandling(&aString[start],i-start,
+        if(NeedComplexScriptHandling(&pstr[start],i-start,
             HAS_HEBREW_GLYPH(prevFont), &bHebrew,
             HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
         {
             len = 8192;
             if(bHebrew) {
-               HebrewReordering(&aString[start], i-start, buf, len);
+               HebrewReordering(&pstr[start], i-start, buf, len);
             } else if (bArabic) {
-               ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
+               ArabicShaping(&pstr[start], i-start, buf, len, prevFont->mMap);
             }
             prevFont->DrawString(mDC, x, y, buf, len);
         } 
         else 
 #endif // ARABIC_HEBREW_RENDERING
         {
-          prevFont->DrawString(mDC, x, y, &aString[start], i - start);
+          prevFont->DrawString(mDC, x, y, &pstr[start], i - start);
         }
       }
     }
@@ -1952,6 +2029,11 @@ FoundFont:
       ::SelectObject(mDC, mCurrFont);
     }
 
+#ifdef FIX_FOR_BUG_6585
+    if (pstr != aString && pstr != str) {
+      delete[] pstr;
+    }
+#endif
     return NS_OK;
   }
   else
@@ -2072,10 +2154,22 @@ nsRenderingContextWin::GetBoundingMetrics(const PRUnichar*   aString,
   if (!mFontMetrics)
     return NS_ERROR_FAILURE;
   else if (aString && 0 < aLength) {
+    PRUnichar* pstr = (PRUnichar *)(const PRUnichar *)aString;
+#ifdef FIX_FOR_BUG_6585
+    // XXX code is OK - remaining issue: 'substituteNonAsciiChars' has to 
+    // be initialized based on the rendering mode -- see bug 6585
+    PRBool substituteNonAsciiChars = PR_FALSE;
+    PRUnichar str[8192];
+    if (substituteNonAsciiChars) { 
+      pstr = SubstituteNonAsciiChars(aString, aLength, str, 8192, &aLength);
+    }
+#endif
+
     nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
     nsFontWin* prevFont = nsnull;
 
     SetupFontAndColor();
+    HFONT selectedFont = mCurrFont;
 
     float italicSlope;
     mFontMetrics->GetItalicSlope(italicSlope);
@@ -2084,7 +2178,7 @@ nsRenderingContextWin::GetBoundingMetrics(const PRUnichar*   aString,
     PRBool firstTime = PR_TRUE;
     PRUint32 start = 0;
     for (PRUint32 i = 0; i < aLength; i++) {
-      PRUnichar c = aString[i];
+      PRUnichar c = pstr[i];
       nsFontWin* currFont = nsnull;
       nsFontWin** font = metrics->mLoadedFonts;
       nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
@@ -2100,8 +2194,25 @@ FoundFont:
       // XXX avoid this test by duplicating code
       if (prevFont) {
         if (currFont != prevFont) {
-          rv = prevFont->GetBoundingMetrics(mDC, italicSlope, &aString[start], i - start, rawbm);
-          if (NS_FAILED(rv)) return rv;
+          if (prevFont->mFont != selectedFont) {
+            ::SelectObject(mDC, prevFont->mFont);
+            selectedFont = prevFont->mFont;
+          }
+          rv = prevFont->GetBoundingMetrics(mDC, italicSlope, &pstr[start], i - start, rawbm);
+          if (NS_FAILED(rv)) {
+#ifdef NS_DEBUG
+            printf("GetBoundingMetrics() failed for: 0x%04X...\n", pstr[start]);
+            prevFont->DumpFontInfo();
+#endif
+            if (selectedFont != mCurrFont) {
+              // Restore the font
+              ::SelectObject(mDC, mCurrFont);
+            }
+#ifdef FIX_FOR_BUG_6585
+            if (pstr != aString && pstr != str) delete[] pstr;
+#endif
+            return rv;
+          }
           if (firstTime) {
 	    firstTime = PR_FALSE;
             aBoundingMetrics = rawbm;
@@ -2120,8 +2231,25 @@ FoundFont:
     }
 
     if (prevFont) {
-      rv = prevFont->GetBoundingMetrics(mDC, italicSlope, &aString[start], i - start, rawbm);
-      if (NS_FAILED(rv)) return rv;
+      if (prevFont->mFont != selectedFont) {
+        ::SelectObject(mDC, prevFont->mFont);
+        selectedFont = prevFont->mFont;
+      }
+      rv = prevFont->GetBoundingMetrics(mDC, italicSlope, &pstr[start], i - start, rawbm);
+      if (NS_FAILED(rv)) {
+#ifdef NS_DEBUG
+        printf("GetBoundingMetrics() failed for: 0x%04X...\n", pstr[start]);
+        prevFont->DumpFontInfo();
+#endif
+        if (selectedFont != mCurrFont) {
+          // Restore the font
+          ::SelectObject(mDC, mCurrFont);
+        }
+#ifdef FIX_FOR_BUG_6585
+        if (pstr != aString && pstr != str) delete[] pstr;
+#endif
+        return rv;
+      }
       if (firstTime)
         aBoundingMetrics = rawbm;
       else
@@ -2138,6 +2266,13 @@ FoundFont:
     aBoundingMetrics.supItalicCorrection = NSToCoordRound(float(aBoundingMetrics.supItalicCorrection) * mP2T);
     aBoundingMetrics.leftItalicCorrection = NSToCoordRound(float(aBoundingMetrics.leftItalicCorrection) * mP2T);
 
+    if (selectedFont != mCurrFont) {
+      // Restore the font
+      ::SelectObject(mDC, mCurrFont);
+    }
+#ifdef FIX_FOR_BUG_6585
+    if (pstr != aString && pstr != str) delete[] pstr;
+#endif
   }
   if (nsnull != aFontID)
     *aFontID = 0;
