@@ -9120,6 +9120,15 @@ and to send receive and send information to any computer on the Internet.")
 ResDef(CAPS_TARGET_URL_ALL_JAVA_PERMISSION, (CAPS_MSG_BASE + 204), "\
 #AllJavaPermission")
 
+ResDef(CAPS_TARGET_DESC_ALL_JS_PERMISSION, (CAPS_MSG_BASE + 205), "\
+Access to all Privileged JavaScript operations")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION, (CAPS_MSG_BASE + 206), "\
+Access to all Privileged JavaScript operations.")
+
+ResDef(CAPS_TARGET_URL_ALL_JS_PERMISSION, (CAPS_MSG_BASE + 207), "\
+#AllJavaScriptPermission")
+
 
 /* The following messages are for Software Update */
 #define SU_MSG_BASE XP_MSG_BASE + 4000
