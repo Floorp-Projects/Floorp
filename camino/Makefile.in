@@ -70,7 +70,7 @@ export::
 endif
 
 libs::
-	$(PBBUILD) -target $(TARGET) -buildstyle $(BUILDSTYLE) USE_GCC3=YES CC="$(CC)" CPLUSPLUS="$(CXX)"
+	$(PBBUILD) -project Camino.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) USE_GCC3=YES
 
 clean clobber::
 	rm -rf build
