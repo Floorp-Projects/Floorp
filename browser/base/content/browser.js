@@ -470,9 +470,33 @@ function delayedStartup()
     var types = gPrefService.getCharPref("browser.download.pluginOverrideTypes");
     types = types.split(",");
     
+    const kPluginOverrideTypesNotHandled = "browser.download.pluginOverrideTypesNotHandled";
+    
     var catman = Components.classes["@mozilla.org/categorymanager;1"].getService(Components.interfaces.nsICategoryManager);
-    for (var i = 0; i < types.length; ++i)
+    var typesNotHandled = "";
+    for (var i = 0; i < types.length; ++i) {
+      // Keep track of all overrides for plugins that aren't actually installed,
+      // so we know not to show them in the plugin configuration dialog BUT 
+      // don't delete the overrides such that when the user actually installs the 
+      // plugin in this build their preferences are remembered.
+      try {
+        var catEntry = catman.getCategoryEntry("Gecko-Content-Viewers", types[i]);
+      }
+      catch (e) {
+        catEntry = "";
+      }
+      if (catEntry == "")
+        typesNotHandled += types[i] + ",";
+    
       catman.deleteCategoryEntry("Gecko-Content-Viewers", types[i], false);
+    }
+    
+    if (typesNotHandled != "") {
+      typesNotHandled = typesNotHandled.substr(0, typesNotHandled.length - 1);
+      gPrefService.setCharPref(kPluginOverrideTypesNotHandled, typesNotHandled);
+    }
+    else if (gPrefService.prefHasUserValue(kPluginOverrideTypesNotHandled))
+      gPrefService.clearUserPref(kPluginOverrideTypesNotHandled);
   }
   catch (e) { }
 }
