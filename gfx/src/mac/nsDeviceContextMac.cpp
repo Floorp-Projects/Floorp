@@ -57,8 +57,6 @@ double				pix_inch;
 	
 	mDepth = (**thepix).pixelSize;
 	
-	mPageRect = (**thepix).bounds;
-	
     ::HSetState ((Handle)thepix,PixMapHState);
   // cps - Unlocking GDeviceHandles is a no - no. See above.
   //::HUnlock((Handle)thegd);
@@ -81,17 +79,12 @@ NS_IMPL_RELEASE(nsDeviceContextMac)
 
 NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
-//float t2d, a2d;
-
   NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
 
 
 	// this is a windowptr, or grafptr, native to macintosh only
 	mSurface = aNativeWidget;
 	
-  //mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
-  mAppUnitsToDevUnits = mTwipsToPixels;
-  mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
   return NS_OK;
 }
@@ -238,48 +231,30 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 		return NS_ERROR_FAILURE;
 }
 
-/**------------------------------------------------------------------------
- * See the documentation in nsDeviceContext.h
- * @update 12/11/98 dwc
- */
+//------------------------------------------------------------------------
+
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  aWidth = mPageRect.right-mPageRect.left;
-  aHeight = mPageRect.bottom-mPageRect.top;
+  aWidth = 1;
+  aHeight = 1;
 
   return NS_ERROR_FAILURE;
 }
 
 
-/**------------------------------------------------------------------------
- * See the documentation in nsDeviceContext.h
- * @update 12/11/98 dwc
- */
+//------------------------------------------------------------------------
+
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {
 GrafPtr	curPort;
-double	pix_Inch;
-THPrint	thePrintRecord;			// handle to print record
 	
 	aContext = new nsDeviceContextMac();
 	((nsDeviceContextMac*)aContext)->mSpec = aDevice;
 	NS_ADDREF(aDevice);
 
 	::GetPort(&curPort);
-	
-	thePrintRecord = ((nsDeviceContextSpecMac*)aDevice)->mPrtRec;
-	pix_Inch = (**thePrintRecord).prInfo.iHRes;
-	
-	((nsDeviceContextMac*)aContext)->Init(curPort);
-
-	((nsDeviceContextMac*)aContext)->mPageRect = (**thePrintRecord).prInfo.rPage;	
-	((nsDeviceContextMac*)aContext)->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(72);
-	((nsDeviceContextMac*)aContext)->mPixelsToTwips = 1.0f/mTwipsToPixels;
-  ((nsDeviceContextMac*)aContext)->mAppUnitsToDevUnits = mTwipsToPixels;
-  ((nsDeviceContextMac*)aContext)->mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
-	
-  return NS_OK;
+  return ((nsDeviceContextMac*)aContext)->Init(curPort);
 }
 
 
@@ -327,7 +302,13 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
+ 		Rect	theRect;
+ 		
  		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort));
+ 		::SetRect(&theRect,0,0,100,100);
+ 		::PenNormal();
+ 		::PaintRect(&theRect);
+ 		
 		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
 	}
   return NS_OK;
