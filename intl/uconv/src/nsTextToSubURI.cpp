@@ -159,6 +159,16 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   return rv;
 }
 
+static PRBool statefulCharset(const char *charset)
+{
+  if (!nsCRT::strncasecmp(charset, "ISO-2022-", sizeof("ISO-2022-")-1) ||
+      !nsCRT::strcasecmp(charset, "UTF-7") ||
+      !nsCRT::strcasecmp(charset, "HZ-GB-2312"))
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
 nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
                                              const nsAFlatCString &aURI, 
                                              PRBool aIRI, 
@@ -166,12 +176,15 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
 {
   nsresult rv = NS_OK;
 
-  if (IsASCII(aURI)) {
+  // check for 7bit encoding the data may not be ASCII after we decode
+  PRBool isStatefulCharset = statefulCharset(aCharset.get());
+
+  if (!isStatefulCharset && IsASCII(aURI)) {
     _retval.Assign(NS_ConvertASCIItoUCS2(aURI));
     return rv;
   }
 
-  if (aIRI) {
+  if (!isStatefulCharset && aIRI) {
     NS_ConvertUTF8toUCS2 ucs2(aURI);
     if (aURI.Equals(NS_ConvertUCS2toUTF8(ucs2))) {
       _retval.Assign(ucs2);
@@ -217,6 +230,17 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
 {
   nsCAutoString unescapedSpec(aURIFragment);
   NS_UnescapeURL(unescapedSpec);
+
+  return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval);
+}
+
+NS_IMETHODIMP  nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString & aCharset, 
+                                                   const nsACString &aURIFragment, 
+                                                   nsAString &_retval)
+{
+  nsCAutoString unescapedSpec;
+  NS_UnescapeURL(PromiseFlatCString(aURIFragment),
+                 esc_AlwaysCopy | esc_OnlyNonASCII, unescapedSpec);
 
   return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval);
 }
