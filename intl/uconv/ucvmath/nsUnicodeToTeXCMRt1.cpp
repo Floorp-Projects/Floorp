@@ -31,7 +31,7 @@
  * 21/March/2001   RBS.            Support for Mathematical fonts.
  */
 
-#include "nsUnicodeToTeXCMRIt1.h"
+#include "nsUnicodeToTeXCMRt1.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -46,9 +46,9 @@ static PRInt16 g_ufShiftTable[] =  {
 };
 
 //----------------------------------------------------------------------
-// Class nsUnicodeToTeXCMRIt1 [implementation]
+// Class nsUnicodeToTeXCMRt1 [implementation]
 
-nsUnicodeToTeXCMRIt1::nsUnicodeToTeXCMRIt1() 
+nsUnicodeToTeXCMRt1::nsUnicodeToTeXCMRt1() 
 : nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
                         (uMappingTable*) &g_ufMappingTable)
 {
@@ -57,7 +57,7 @@ nsUnicodeToTeXCMRIt1::nsUnicodeToTeXCMRIt1()
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
-NS_IMETHODIMP nsUnicodeToTeXCMRIt1::GetMaxLength(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToTeXCMRt1::GetMaxLength(const PRUnichar * aSrc, 
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
