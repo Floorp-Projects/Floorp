@@ -68,58 +68,28 @@
 
 /* for XP_GetString() */
 #include <xpgetstr.h>
-extern int XFE_SAVE_AS_TYPE_ENCODING;
-extern int XFE_SAVE_AS_TYPE;
-extern int XFE_SAVE_AS_ENCODING;
-extern int XFE_SAVE_AS;
-extern int XFE_ERROR_OPENING_FILE;
-extern int XFE_ERROR_DELETING_FILE;
-extern int XFE_LOG_IN_AS;
-extern int XFE_OUT_OF_MEMORY_URL;
-extern int XFE_FILE_OPEN;
-extern int XFE_PRINTING_OF_FRAMES_IS_CURRENTLY_NOT_SUPPORTED;
-extern int XFE_ERROR_SAVING_OPTIONS;
+
+extern int XFE_COMMANDS_UPLOAD_FILE;
+extern int XFE_CANNOT_SEE_FILE;
+extern int XFE_CANNOT_READ_FILE;
+extern int XFE_IS_A_DIRECTORY;
 extern int XFE_UNKNOWN_ESCAPE_CODE;
+extern int XFE_LOG_IN_AS;
 extern int XFE_COULDNT_FORK;
 extern int XFE_EXECVP_FAILED;
-extern int XFE_SAVE_FRAME_AS;
-extern int XFE_SAVE_AS;
-extern int XFE_PRINT_FRAME;
-extern int XFE_PRINT;
+extern int XFE_OUT_OF_MEMORY_URL;
+extern int XFE_COMMANDS_OPEN_URL_USAGE;
+extern int XFE_COMMANDS_HTML_HELP_USAGE;
+extern int XFE_COMMANDS_UNPARSABLE_ENCODING_FILTER_SPEC;
+extern int XFE_NETSCAPE_MAIL;
+extern int XFE_NETSCAPE_NEWS;
+extern int XFE_BOOKMARKS;
+extern int XFE_ADDRESS_BOOK;
 extern int XFE_DOWNLOAD_FILE;
 extern int XFE_COMPOSE_NO_SUBJECT;
 extern int XFE_COMPOSE;
 extern int XFE_NETSCAPE_UNTITLED;
 extern int XFE_NETSCAPE;
-extern int XFE_MAIL_FRAME;
-extern int XFE_MAIL_DOCUMENT;
-extern int XFE_NETSCAPE_MAIL;
-extern int XFE_NETSCAPE_NEWS;
-extern int XFE_BOOKMARKS;
-extern int XFE_ADDRESS_BOOK;
-extern int XFE_BACK;
-#if 0		/* Disabling back/forward in frame - dp */
-extern int XFE_BACK_IN_FRAME;
-#endif /* 0 */
-extern int XFE_FORWARD;
-extern int XFE_FORWARD_IN_FRAME;
-extern int XFE_CANNOT_SEE_FILE;
-extern int XFE_CANNOT_READ_FILE;
-extern int XFE_IS_A_DIRECTORY;
-extern int XFE_REFRESH;
-extern int XFE_REFRESH_FRAME;
-
-extern int XFE_COMMANDS_ADD_BOOKMARK_USAGE;
-extern int XFE_COMMANDS_FIND_USAGE;
-extern int XFE_COMMANDS_HTML_HELP_USAGE;
-extern int XFE_COMMANDS_MAIL_TO_USAGE;
-extern int XFE_COMMANDS_OPEN_FILE_USAGE;
-extern int XFE_COMMANDS_OPEN_URL_USAGE;
-extern int XFE_COMMANDS_PRINT_FILE_USAGE;
-extern int XFE_COMMANDS_SAVE_AS_USAGE;
-extern int XFE_COMMANDS_SAVE_AS_USAGE_TWO;
-extern int XFE_COMMANDS_UNPARSABLE_ENCODING_FILTER_SPEC;
-extern int XFE_COMMANDS_UPLOAD_FILE;
 
 extern char* help_menu_names[];
 extern char* directory_menu_names[];
@@ -1713,16 +1683,6 @@ fe_home_cb (Widget widget, XtPointer closure, XtPointer call_data)
   fe_GetURL ((MWContext *) closure, url, FALSE);
 }
 
-static void
-fe_add_bookmark_cb (Widget widget, XtPointer closure, XtPointer call_data)
-{
-  MWContext *context = (MWContext *) closure;
-  fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
-  fe_AddBookmarkCallback (widget, closure, call_data);
-}
-
 /* Help menu
  */
 void
@@ -2544,35 +2504,6 @@ fe_mailto_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
 }
 #endif  /* MOZ_MAIL_NEWS */
 
-
-static void
-fe_add_bookmark_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
-{
-  /* See also fe_open_url_action() */
-  MWContext *context = fe_WidgetToMWContext (widget);
-  XP_ASSERT (context);
-  if (!context) return;
-  fe_UserActivity (context);
-  if (*ac && av[*ac-1] && !strcmp (av[*ac-1], "<remote>"))
-    (*ac)--;
-  if ((*ac == 1 || *ac == 2) && av[0])
-    {
-      URL_Struct *url = NET_CreateURLStruct (av[0], FALSE);
-      char *title = ((*ac == 2 && av[1]) ? av[1] : 0);
-      fe_AddToBookmark (context, title, url, 0);
-    }
-  else if (*ac > 2)
-    {
-      fprintf (stderr,
-			   XP_GetString(XFE_COMMANDS_ADD_BOOKMARK_USAGE),
-			   fe_progname);
-    }
-  else
-    {
-      fe_add_bookmark_cb (widget, (XtPointer)context, (XtPointer)0);
-    }
-}
-
 static void
 fe_html_help_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
 {
@@ -2630,8 +2561,6 @@ fe_undefined_key_action (Widget widget, XEvent *event,
 /* for the rest, look in src/Command.cpp -- for 'cmd_mapping mapping[]' */
 XtActionsRec fe_CommandActions [] =
 {
-  { "addBookmark",	fe_add_bookmark_action	},
-
 #ifdef MOZ_MAIL_NEWS
   { "mailto",		fe_mailto_action },
 #endif

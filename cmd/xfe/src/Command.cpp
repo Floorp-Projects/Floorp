@@ -675,7 +675,8 @@ static struct cmd_mapping mapping[] = {
 #ifdef MOZ_MAIL_NEWS
 	{ "openConference", xfeCmdOpenConference }
 #endif
-
+    // Bookmarks menu functions.
+    { "addBookmark",	xfeCmdAddBookmark },
 };
 static int num_old_cmds = sizeof(mapping) / sizeof(mapping[0]);
 
