@@ -27,6 +27,7 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Search;
 
 require "CGI.pl";
 
@@ -304,13 +305,18 @@ sub DoSavedSearches() {
     my @queries = @{Bugzilla->user->queries};
     my @newqueries;
     foreach my $q (@queries) {
-        if ($q->{'query'} !~ /query_format=(advanced|specific)/) {
-            if ($q->{'query'} =~ /query_format=&/) {
-                $q->{'query'} =~ s/query_format=&/query_format=advanced&/;
+        if ($q->{'query'} =~ /query_format=([^&]*)/) {
+            my $format = $1;
+            if (!IsValidQueryType($format)) {
+                if ($format eq "") {
+                    $q->{'query'} =~ s/query_format=/query_format=advanced/;
+                }
+                else {
+                    $q->{'query'} .= '&query_format=advanced';
+                }
             }
-            else {
-                $q->{'query'} .= '&query_format=advanced';
-            }
+        } else {
+            $q->{'query'} .= '&query_format=advanced';
         }
         push @newqueries, $q;
     }

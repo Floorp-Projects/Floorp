@@ -32,6 +32,8 @@ use strict;
 use vars qw($userid);
 
 package Bugzilla::Search;
+use base qw(Exporter);
+@Bugzilla::Search::EXPORT = qw(IsValidQueryType);
 
 use Bugzilla::Config;
 use Bugzilla::Error;
@@ -1436,4 +1438,13 @@ sub ValidateGroupName {
     return $ret;
 }
 
+# Validate that the query type is one we can deal with
+sub IsValidQueryType
+{
+    my ($queryType) = @_;
+    if (grep { $_ eq $queryType } qw(specific advanced)) {
+        return 1;
+    }
+    return 0;
+}
 1;
