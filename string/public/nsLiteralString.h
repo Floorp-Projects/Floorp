@@ -69,8 +69,8 @@ literal_string( const nsACString::char_type* aPtr, PRUint32 aLength )
   #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsDependentString n(NS_REINTERPRET_CAST(const nsAString::char_type*, s), PRUint32((sizeof(s)/sizeof(wchar_t))-1))
 #else
   #define NS_LL(s)                                s
-  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, PRUint32(sizeof(s)-1))
-  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, PRUint32(sizeof(s)-1))
+  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUTF16(s, PRUint32(sizeof(s)-1))
+  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUTF16 n(s, PRUint32(sizeof(s)-1))
 #endif
 
 /*

@@ -1331,12 +1331,12 @@ nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
 }
 
 void
-NS_ConvertASCIItoUCS2::Init( const char* aCString, PRUint32 aLength )
+NS_ConvertASCIItoUTF16::Init( const char* aCString, PRUint32 aLength )
   {
     AppendWithConversion(aCString,aLength);
   }
 
-NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsACString& aCString )
+NS_ConvertASCIItoUTF16::NS_ConvertASCIItoUTF16( const nsACString& aCString )
   {
     SetCapacity(aCString.Length());
 
@@ -1351,7 +1351,7 @@ NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsACString& aCString )
       }
   }
 
-NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const nsACString& aCString )
+NS_ConvertUTF8toUTF16::NS_ConvertUTF8toUTF16( const nsACString& aCString )
   {
     // Compute space required: do this once so we don't incur multiple
     // allocations. This "optimization" is probably of dubious value...
@@ -1370,36 +1370,36 @@ NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const nsACString& aCString )
 
         // All ready? Time to convert
 
-        ConvertUTF8toUCS2 converter(mUStr);
+        ConvertUTF8toUTF16 converter(mUStr);
         copy_string(aCString.BeginReading(start), aCString.EndReading(end),
                     converter).write_terminator();
         mLength = converter.Length();
         if (mLength != count)
           {
-            NS_ERROR("Input wasn't UTF8 or incorrect length was calculated");
+            NS_ERROR("Input wasn't UTF-8 or incorrect length was calculated");
             Truncate();
           }
       }
   }
 
-NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const nsASingleFragmentCString& aCString )
+NS_ConvertUTF8toUTF16::NS_ConvertUTF8toUTF16( const nsASingleFragmentCString& aCString )
   {
     nsASingleFragmentCString::const_char_iterator start;
     Init(aCString.BeginReading(start), aCString.Length());
   }
 
-NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const char* aCString )
+NS_ConvertUTF8toUTF16::NS_ConvertUTF8toUTF16( const char* aCString )
   {
     Init(aCString, nsCharTraits<char>::length(aCString));
   }
 
-NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
+NS_ConvertUTF8toUTF16::NS_ConvertUTF8toUTF16( const char* aCString, PRUint32 aLength )
   {
     Init(aCString, aLength);
   }
 
 void
-NS_ConvertUTF8toUCS2::Init( const char* aCString, PRUint32 aLength )
+NS_ConvertUTF8toUTF16::Init( const char* aCString, PRUint32 aLength )
   {
     // Compute space required: do this once so we don't incur multiple
     // allocations. This "optimization" is probably of dubious value...
@@ -1416,7 +1416,7 @@ NS_ConvertUTF8toUCS2::Init( const char* aCString, PRUint32 aLength )
 
         // All ready? Time to convert
 
-        ConvertUTF8toUCS2 converter(mUStr);
+        ConvertUTF8toUTF16 converter(mUStr);
         converter.write(aCString, aLength);
         mLength = converter.Length();
         mUStr[mLength] = char_type(0);

@@ -422,32 +422,33 @@ public:
 // NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
 
 /**
- * A helper class that converts a UCS2 string to UTF8
+ * A helper class that converts a UTF-16 string to UTF-8
  */
-class NS_COM NS_ConvertUCS2toUTF8
+class NS_COM NS_ConvertUTF16toUTF8
       : public nsCAutoString
     /*
       ...
     */
   {
     public:
-      explicit NS_ConvertUCS2toUTF8( const PRUnichar* aString );
-      NS_ConvertUCS2toUTF8( const PRUnichar* aString, PRUint32 aLength );
-      explicit NS_ConvertUCS2toUTF8( const nsAString& aString );
-      explicit NS_ConvertUCS2toUTF8( const nsASingleFragmentString& aString );
+      explicit NS_ConvertUTF16toUTF8( const PRUnichar* aString );
+      NS_ConvertUTF16toUTF8( const PRUnichar* aString, PRUint32 aLength );
+      explicit NS_ConvertUTF16toUTF8( const nsAString& aString );
+      explicit NS_ConvertUTF16toUTF8( const nsASingleFragmentString& aString );
 
     protected:
       void Init( const PRUnichar* aString, PRUint32 aLength );
 
     private:
         // NOT TO BE IMPLEMENTED
-      NS_ConvertUCS2toUTF8( char );
+      NS_ConvertUTF16toUTF8( char );
   };
 
+
 /**
- * A helper class that converts a UCS2 string to ASCII in a lossy manner
+ * A helper class that converts a UTF-16 string to ASCII in a lossy manner
  */
-class NS_COM NS_LossyConvertUCS2toASCII
+class NS_COM NS_LossyConvertUTF16toASCII
       : public nsCAutoString
     /*
       ...
@@ -455,21 +456,25 @@ class NS_COM NS_LossyConvertUCS2toASCII
   {
     public:
       explicit
-      NS_LossyConvertUCS2toASCII( const PRUnichar* aString )
+      NS_LossyConvertUTF16toASCII( const PRUnichar* aString )
         {
           AppendWithConversion( aString, ~PRUint32(0) /* MAXINT */);
         }
 
-      NS_LossyConvertUCS2toASCII( const PRUnichar* aString, PRUint32 aLength )
+      NS_LossyConvertUTF16toASCII( const PRUnichar* aString, PRUint32 aLength )
         {
           AppendWithConversion( aString, aLength );
         }
 
-      explicit NS_LossyConvertUCS2toASCII( const nsAString& aString );
+      explicit NS_LossyConvertUTF16toASCII( const nsAString& aString );
 
     private:
         // NOT TO BE IMPLEMENTED
-      NS_LossyConvertUCS2toASCII( char );
+      NS_LossyConvertUTF16toASCII( char );
   };
+
+// Backward compatibility
+typedef NS_ConvertUTF16toUTF8 NS_ConvertUCS2toUTF8;
+typedef NS_LossyConvertUTF16toASCII NS_LossyConvertUCS2toASCII;
 
 #endif /* !defined(nsString_h__) */

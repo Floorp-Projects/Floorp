@@ -484,7 +484,7 @@ public:
 
 // NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
 
-class NS_COM NS_ConvertASCIItoUCS2
+class NS_COM NS_ConvertASCIItoUTF16
       : public nsAutoString
     /*
       ...
@@ -492,21 +492,21 @@ class NS_COM NS_ConvertASCIItoUCS2
   {
     public:
       explicit
-      NS_ConvertASCIItoUCS2( const nsACString& aCString );
+      NS_ConvertASCIItoUTF16( const nsACString& aCString );
 
       explicit
-      NS_ConvertASCIItoUCS2( const nsAFlatCString& aCString )
+      NS_ConvertASCIItoUTF16( const nsAFlatCString& aCString )
         {
           Init( aCString.get(), aCString.Length() );
         }
 
       explicit
-      NS_ConvertASCIItoUCS2( const char* aCString )
+      NS_ConvertASCIItoUTF16( const char* aCString )
         {
           Init( aCString, ~PRUint32(0) /* MAXINT */ );
         }
 
-      NS_ConvertASCIItoUCS2( const char* aCString, PRUint32 aLength )
+      NS_ConvertASCIItoUTF16( const char* aCString, PRUint32 aLength )
         {
           Init( aCString, aLength );
         }
@@ -523,23 +523,28 @@ class NS_COM NS_ConvertASCIItoUCS2
 
     private:
         // NOT TO BE IMPLEMENTED
-      NS_ConvertASCIItoUCS2( PRUnichar );
+      NS_ConvertASCIItoUTF16( PRUnichar );
   };
 
-class NS_COM NS_ConvertUTF8toUCS2
+
+class NS_COM NS_ConvertUTF8toUTF16
       : public nsAutoString
   {
     public:
-      explicit NS_ConvertUTF8toUCS2( const nsACString& aCString );
-      explicit NS_ConvertUTF8toUCS2( const nsASingleFragmentCString& aCString );
-      explicit NS_ConvertUTF8toUCS2( const char* aCString );
-      NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength );
+      explicit NS_ConvertUTF8toUTF16( const nsACString& aCString );
+      explicit NS_ConvertUTF8toUTF16( const nsASingleFragmentCString& aCString );
+      explicit NS_ConvertUTF8toUTF16( const char* aCString );
+      NS_ConvertUTF8toUTF16( const char* aCString, PRUint32 aLength );
 
     protected:
       void Init( const char* aCString, PRUint32 aLength );
 
     private:
-      NS_ConvertUTF8toUCS2( PRUnichar );
+      NS_ConvertUTF8toUTF16( PRUnichar );
   };
+
+// Backward compatibility
+typedef NS_ConvertASCIItoUTF16 NS_ConvertASCIItoUCS2;
+typedef NS_ConvertUTF8toUTF16 NS_ConvertUTF8toUCS2;
 
 #endif /* !defined(nsString2_h__) */
