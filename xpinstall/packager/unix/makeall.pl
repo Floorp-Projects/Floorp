@@ -75,6 +75,7 @@ MakeXpiFile("langenus");
 MakeXpiFile("regus");
 MakeXpiFile("venkman");
 MakeXpiFile("inspector");
+MakeXpiFile("spellcheck");
 
 # Make the config.ini file
 MakeConfigFile();
