@@ -239,14 +239,14 @@ constructSHA1PBAKey(JNIEnv *env, SECItem *pwitem, SECItem *salt,
     SECItem *keyBits=NULL;
     PK11SymKey *key=NULL;
 
-    pbeCtxt = PBE_CreateContext( SEC_OID_SHA1, pbeBitGenIntegrityKey,
+    pbeCtxt = (PBEBitGenContext*) PBE_CreateContext( SEC_OID_SHA1, pbeBitGenIntegrityKey,
                     pwitem, salt, 160 /* SHA1 key length */, iterationCount);
     if( pbeCtxt == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to create PBE context");
         goto finish;
     }
 
-    keyBits = PBE_GenerateBits(pbeCtxt);
+    keyBits = (SECItem*) pBE_GenerateBits(pbeCtxt);
     if( keyBits == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to generate bits from"
                 "PBE context");

@@ -640,9 +640,9 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_getDSAParamsNative
     /*
      * Now turn them into byte arrays
      */
-    if( !(jP = JSS_OctetStringToByteArray(env, &P)) ||
-        !(jQ = JSS_OctetStringToByteArray(env, &Q)) ||
-        !(jG = JSS_OctetStringToByteArray(env, &G)) )
+    if( !(jP = (jobject) JSS_OctetStringToByteArray(env, &P)) ||
+        !(jQ = (jobject) JSS_OctetStringToByteArray(env, &Q)) ||
+        !(jG = (jobject) JSS_OctetStringToByteArray(env, &G)) )
     {
         goto finish;
     }
