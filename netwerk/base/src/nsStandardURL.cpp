@@ -60,6 +60,7 @@ nsIIDNService *nsStandardURL::gIDNService = nsnull;
 nsICharsetConverterManager *nsStandardURL::gCharsetMgr = nsnull;
 PRBool nsStandardURL::gInitialized = PR_FALSE;
 PRBool nsStandardURL::gEscapeUTF8 = PR_TRUE;
+PRBool nsStandardURL::gAlwaysEncodeInUTF8 = PR_FALSE;
 
 #if defined(PR_LOGGING)
 //
@@ -129,8 +130,9 @@ end:
 // nsStandardURL::nsPrefObserver
 //----------------------------------------------------------------------------
 
-#define NS_NET_PREF_ESCAPEUTF8 "network.standard-url.escape-utf8"
-#define NS_NET_PREF_ENABLEIDN  "network.enableIDN"
+#define NS_NET_PREF_ESCAPEUTF8         "network.standard-url.escape-utf8"
+#define NS_NET_PREF_ENABLEIDN          "network.enableIDN"
+#define NS_NET_PREF_ALWAYSENCODEINUTF8 "network.standard-url.encode-utf8"
 
 NS_IMPL_ISUPPORTS1(nsStandardURL::nsPrefObserver, nsIObserver)
 
@@ -157,6 +159,12 @@ nsPrefObserver::Observe(nsISupports *subject,
                         NS_ADDREF(gIDNService = serv.get());
                 }
                 LOG(("IDN support %s\n", gIDNService ? "enabled" : "disabled"));
+            }
+            else if (!nsCRT::strcmp(data, NS_LITERAL_STRING(NS_NET_PREF_ALWAYSENCODEINUTF8).get())) {
+                PRBool val;
+                if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_ALWAYSENCODEINUTF8, &val)))
+                    gAlwaysEncodeInUTF8 = val;
+                LOG(("encode in UTF-8 %s\n", gAlwaysEncodeInUTF8 ? "enabled" : "disabled"));
             }
         } 
     }
@@ -306,6 +314,7 @@ nsStandardURL::InitGlobalObjects()
     if (prefBranch) {
         nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
         prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 
+        prefBranch->AddObserver(NS_NET_PREF_ALWAYSENCODEINUTF8, obs.get(), PR_FALSE);
         prefBranch->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE); 
         // initialize IDN
         nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
@@ -2271,7 +2280,9 @@ nsStandardURL::Init(PRUint32 urlType,
     mDefaultPort = defaultPort;
     mURLType = urlType;
 
-    if (charset == nsnull || *charset == '\0') {
+    if (gAlwaysEncodeInUTF8)
+        mOriginCharset.Truncate();
+    else if (charset == nsnull || *charset == '\0') {
         mOriginCharset.Truncate();
         // check if baseURI provides an origin charset and use that.
         if (baseURI)

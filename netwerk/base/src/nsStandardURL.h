@@ -251,6 +251,7 @@ private:
     static nsICharsetConverterManager  *gCharsetMgr;
     static PRBool                       gInitialized;
     static PRBool                       gEscapeUTF8;
+    static PRBool                       gAlwaysEncodeInUTF8;
 };
 
 #define NS_THIS_STANDARDURL_IMPL_CID                 \
