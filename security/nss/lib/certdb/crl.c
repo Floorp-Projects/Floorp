@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.39 2004/01/07 23:07:22 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.40 2004/02/11 05:25:01 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1461,7 +1461,7 @@ SECStatus DPCache_Update(CRLDPCache* cache, CERTCertificate* issuer,
        through a certificate verification (CERT_CheckCRL) */
     if (issuer) {
         /* if we didn't have a valid issuer cert yet, but we do now. add it */
-        if (NULL == cache->issuer) {
+        if ( (NULL == cache->issuer) && (SECSuccess == CERT_CheckCertUsage(issuer, KU_CRL_SIGN))) {
             /* save the issuer cert */
             cache->issuer = CERT_DupCertificate(issuer);
         }
