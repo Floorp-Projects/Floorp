@@ -45,12 +45,35 @@ MAPFILE        = $(LIBRARY_NAME).map
 MODULE_NAME = NSS
 META_COMPONENT = crypto
 
+REQUIRES	= \
+		xpcom \
+		string \
+		necko \
+		uriloader \
+		pref \
+		caps \
+		dom \
+		intl \
+		locale \
+		profile \
+		windowwatcher \
+		js \
+		docshell \
+		widget \
+		layout \
+		content \
+		pippki \
+		xpconnect \
+		jar \
+		layout_xul \
+		gfx \
+		$(NULL)
+
 include <$(DEPTH)/config/config.mak>
 
 CFLAGS = $(CFLAGS) -DNSS_USE_STATIC_LIBS
 
 LINCS = $(LINCS)     \
-    -I$(PUBLIC)      \
     -I$(XPDIST)/public/security \
     -I$(XPDIST)/private/security \
     $(NULL)
