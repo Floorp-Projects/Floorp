@@ -2537,6 +2537,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
   return rv;
 }
 
+void nsMsgLocalMailFolder::CopyPropertiesToMsgHdr(nsIMsgDBHdr *destHdr, nsIMsgDBHdr *srcHdr)
+{
+	nsXPIDLCString sourceJunkScore;
+	srcHdr->GetStringProperty("junkscore", getter_Copies(sourceJunkScore));
+	destHdr->SetStringProperty("junkscore", sourceJunkScore);
+	srcHdr->GetStringProperty("junkscoreorigin", getter_Copies(sourceJunkScore));
+	destHdr->SetStringProperty("junkscoreorigin", sourceJunkScore);
+}
+
+
 NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
   // we are the destination folder for a move/copy
@@ -2643,6 +2653,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 		  nsresult result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
 		  if (NS_SUCCEEDED(result) && newHdr)
 		  {
+        // need to copy junk score from mCopyState->m_message to newHdr.
+        if (mCopyState->m_message)
+					CopyPropertiesToMsgHdr(newHdr, mCopyState->m_message);
 		    msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
 		    if (localUndoTxn)
         { 
@@ -2803,10 +2816,23 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
 
     mCopyState->m_parseMsgState->FinishHeader();
 
-    result =
-      mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
+    result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
     if (NS_SUCCEEDED(result) && newHdr)
     {
+			nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+			nsCOMPtr<nsIMsgDatabase> srcDB;
+			if (srcFolder)
+			{
+				srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+				if (srcDB)
+				{
+					nsCOMPtr <nsIMsgDBHdr> srcMsgHdr;
+					srcDB->GetMsgHdrForKey(key, getter_AddRefs(srcMsgHdr));
+					if (srcMsgHdr)
+						CopyPropertiesToMsgHdr(newHdr, srcMsgHdr);
+				}
+			}
+
       result = GetDatabaseWOReparse(getter_AddRefs(msgDb));
       if (NS_SUCCEEDED(result) && msgDb)
       {
@@ -2906,7 +2932,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
 }
 
 nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message, 
-                                             nsIMsgFolder *dstFolder,
+                                             nsIMsgFolder *dstFolder /* dst same as "this" */,
                                              nsIMsgWindow *aMsgWindow,
                                              PRBool isMove)
 {
@@ -3243,12 +3269,15 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
       }
       if (mDatabase)
       {
-        PRBool valid;
-        mDatabase->GetSummaryValid(&valid);
-        if (valid && mCheckForNewMessagesAfterParsing)
+        if (mCheckForNewMessagesAfterParsing)
         {
-          if (msgWindow)
-           rv = GetNewMessages(msgWindow, nsnull);
+          PRBool valid;
+          mDatabase->GetSummaryValid(&valid);
+          if (valid)
+          {
+            if (msgWindow)
+             rv = GetNewMessages(msgWindow, nsnull);
+          }
           mCheckForNewMessagesAfterParsing = PR_FALSE;
         }
       }
