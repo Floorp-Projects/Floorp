@@ -53,10 +53,13 @@ class nsRegisterItem : public nsInstallObject
         PRBool RegisterPackageNode();
 
     private:
+        nsresult GetURLFromIFile(nsIFile *aFile, char **aOutURL);
+
         nsCString mURL;
         nsCOMPtr<nsIFile> mChrome;
         PRUint32  mChromeType;
-        char* mPath; 
+        nsCOMPtr<nsIFile> mProgDir;
+        nsCString mPath; 
 };
 
 #endif /* nsRegisterItem_h__ */
