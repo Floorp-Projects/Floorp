@@ -167,7 +167,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
 
       if (NS_SUCCEEDED(firstFrame->GetBackgroundColor(&backgroundColor))) {
         mCompositingFrame->SetBackgroundColor(backgroundColor);
-        FillWithColor(mCompositingFrame, backgroundColor);
+        FillWithColor(mCompositingFrame, 0);
       }
 
       ZeroMask(mCompositingFrame);
