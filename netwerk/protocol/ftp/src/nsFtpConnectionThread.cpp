@@ -874,7 +874,8 @@ nsFtpConnectionThread::S_pass() {
             PRUnichar *passwd = nsnull;
             PRBool retval;
             nsAutoString message;
-            nsAutoString title; title.AssignWithConversion("Password");
+            nsAutoString title;
+            title.AssignWithConversion("Password");
             
             nsXPIDLCString host;
             rv = mURL->GetHost(getter_Copies(host));
@@ -1047,7 +1048,7 @@ nsFtpConnectionThread::R_cwd() {
     if (mResponseCode/100 == 2) {
         mCwd = mCwdAttempt;
 
-        nsresult rv = mFTPChannel->SetContentType("application/http-index-format");
+        nsresult rv = mChannel->SetContentType("application/http-index-format");
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         // success
@@ -1085,7 +1086,7 @@ nsFtpConnectionThread::R_size() {
         PRInt32 conversionError;
         mLength = mResponseMsg.ToInteger(&conversionError);
 
-        rv = mFTPChannel->SetContentLength(mLength);
+        rv = mChannel->SetContentLength(mLength);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
     }
@@ -1356,7 +1357,7 @@ nsFtpConnectionThread::R_pasv() {
 
     // we're connected figure out what type of transfer we're doing (ascii or binary)
     nsXPIDLCString type;
-    rv = mFTPChannel->GetContentType(getter_Copies(type));
+    rv = mChannel->GetContentType(getter_Copies(type));
     nsCAutoString typeStr;
     if (NS_FAILED(rv) || !type) 
         typeStr = "bin";
@@ -1447,9 +1448,70 @@ nsFtpConnectionThread::Run() {
     if(NS_FAILED(rv)) return rv;
 
     rv = Process(); // turn the crank.
-    mListener = 0;
-    mChannel = 0;
+    if (NS_FAILED(rv)) return rv;
+
+    // before releaseing the refs to these cached members,
+    // marshall over a ref so we're sure the final release
+    // of these members doesn't occur on our thread.
+    NS_ASSERTION(mListener, "no listener implies no-one is handling data");
+    nsFTPReleaseEvent *event = 
+        new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mListener));
+    if (!event) return NS_ERROR_OUT_OF_MEMORY;
+    rv = event->Fire(mEventQueue);
+    if (NS_FAILED(rv)) return rv;
+    mListener = 0; // ditch our ref.
+
+    if (mListenerContext) {
+        event = new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mListenerContext));
+        if (!event) return NS_ERROR_OUT_OF_MEMORY;
+        rv = event->Fire(mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+        mListenerContext = 0;
+    }
+
+    if (mObserver) {
+        event = new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mObserver));
+        if (!event) return NS_ERROR_OUT_OF_MEMORY;
+        rv = event->Fire(mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+        mObserver = 0;
+    }
+
+    if (mObserverContext) {
+        event = new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mObserverContext));
+        if (!event) return NS_ERROR_OUT_OF_MEMORY;
+        rv = event->Fire(mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+        mObserverContext = 0;
+    }
+
+    event = new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mChannel));
+    if (!event) return NS_ERROR_OUT_OF_MEMORY;
+    rv = event->Fire(mEventQueue);
+    if (NS_FAILED(rv)) return rv;
+    mChannel = 0; // ditch our ref
+
+    event = new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mConnCache));
+    if (!event) return NS_ERROR_OUT_OF_MEMORY;
+    rv = event->Fire(mEventQueue);
+    if (NS_FAILED(rv)) return rv;
     mConnCache = 0;
+
+    if (mPrompter) {
+        event = new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mPrompter));
+        if (!event) return NS_ERROR_OUT_OF_MEMORY;
+        rv = event->Fire(mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+        mPrompter = 0;
+    }
+
+    if (mWriteStream) {
+        event = new nsFTPReleaseEvent(NS_STATIC_CAST(nsISupports*, mWriteStream));
+        if (!event) return NS_ERROR_OUT_OF_MEMORY;
+        rv = event->Fire(mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+        mWriteStream = 0;
+    }
 
     return rv;
 }
@@ -1573,7 +1635,6 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     // parameter validation
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");
 
-    // setup internal member variables
     mChannel = aChannel; // a straight com ptr to the channel
 
     rv = aChannel->GetURI(getter_AddRefs(mURL));
@@ -1627,9 +1688,6 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     if (NS_FAILED(rv)) return rv;
 
     rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
-    if (NS_FAILED(rv)) return rv;
-
-    mFTPChannel = do_QueryInterface(aChannel, &rv);
     if (NS_FAILED(rv)) return rv;
 
     mConnCache = do_QueryInterface(aHandler, &rv);

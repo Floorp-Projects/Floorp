@@ -55,7 +55,7 @@ class nsFTPAsyncReadEvent : public nsAsyncEvent
 {
 public:
     nsFTPAsyncReadEvent(nsIStreamListener* listener, nsIChannel* channel, nsISupports* context);
-    virtual ~nsFTPAsyncReadEvent() {}
+    virtual ~nsFTPAsyncReadEvent() {};
 
     NS_IMETHOD HandleEvent();
 protected:
@@ -72,13 +72,28 @@ public:
                          nsIStreamObserver* observer,
                          nsIChannel* channel, 
                          nsISupports* context);
-    virtual ~nsFTPAsyncWriteEvent() {}
+    virtual ~nsFTPAsyncWriteEvent() {};
 
     NS_IMETHOD HandleEvent();
 protected:
     nsCOMPtr<nsIStreamObserver> mObserver;
     nsCOMPtr<nsIInputStream>    mInStream;
     PRUint32                    mWriteCount;
+};
+
+// Release event. This is used to marshall the release 
+// of the channel over to the calling/owning thread.
+class nsFTPReleaseEvent : public nsAsyncEvent
+{
+public:
+    nsFTPReleaseEvent(nsISupports *aRef)
+        : nsAsyncEvent(nsnull, nsnull) { mRef = aRef; };
+    virtual ~nsFTPReleaseEvent() {};
+
+    // nothing to do but have the destructor called.
+    NS_IMETHOD HandleEvent() { return NS_OK; };
+protected:
+    nsCOMPtr<nsISupports> mRef;
 };
 
 #endif // ___nsasyncevent_h____
