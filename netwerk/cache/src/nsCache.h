@@ -31,6 +31,8 @@
 #define _nsCache_h_
 
 #include "nsAReadableString.h"
+#include "prtime.h"
+#include "nsError.h"
 
 #if 0
           // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
