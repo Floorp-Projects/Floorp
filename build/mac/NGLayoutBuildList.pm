@@ -1027,6 +1027,7 @@ sub MakeResourceAliases()
 	InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$samples_dir");
 	{
