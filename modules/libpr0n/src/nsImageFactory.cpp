@@ -25,14 +25,14 @@
 #include "nsIModule.h"
 
 #include "nsImageLoader.h"
-#include "nsImageRequest.h"
-#include "nsImageRequestProxy.h"
+#include "imgRequest.h"
+#include "imgRequestProxy.h"
 
 // objects that just require generic constructors
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageLoader)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageRequest)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageRequestProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequest)
+NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 
 static nsModuleComponentInfo components[] =
 {
@@ -43,11 +43,11 @@ static nsModuleComponentInfo components[] =
   { "image request",
     NS_IMAGEREQUEST_CID,
     "@mozilla.org/image/request/real;1",
-    nsImageRequestConstructor, },
+    imgRequestConstructor, },
   { "image request proxy",
     NS_IMAGEREQUESTPROXY_CID,
     "@mozilla.org/image/request/proxy;1",
-    nsImageRequestProxyConstructor, },
+    imgRequestProxyConstructor, },
 };
 
 NS_IMPL_NSGETMODULE("nsImageLib2Module", components)

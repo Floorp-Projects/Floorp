@@ -70,8 +70,8 @@ nsPNGDecoder::~nsPNGDecoder()
 
 /** nsIImageDecoder methods **/
 
-/* void init (in lpIImageRequest aRequest); */
-NS_IMETHODIMP nsPNGDecoder::Init(lpIImageRequest *aRequest)
+/* void init (in imgIRequest aRequest); */
+NS_IMETHODIMP nsPNGDecoder::Init(imgIRequest *aRequest)
 {
   mRequest = aRequest;
   mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
@@ -104,8 +104,8 @@ NS_IMETHODIMP nsPNGDecoder::Init(lpIImageRequest *aRequest)
 }
 
 
-/* readonly attribute lpIImageRequest request; */
-NS_IMETHODIMP nsPNGDecoder::GetRequest(lpIImageRequest * *aRequest)
+/* readonly attribute imgIRequest request; */
+NS_IMETHODIMP nsPNGDecoder::GetRequest(imgIRequest * *aRequest)
 {
   *aRequest = mRequest;
   NS_ADDREF(*aRequest);

@@ -21,7 +21,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsImageRequest.h"
+#include "imgRequest.h"
 #include "nsIImageDecoderObserver.h"
 
 #include "gfxIImageContainer.h"
@@ -36,25 +36,25 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
-class nsImageRequestProxy : public lpIImageRequest,
+class imgRequestProxy : public imgIRequest,
                             public nsIImageDecoderObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_LPIIMAGEREQUEST
+  NS_DECL_IMGIREQUEST
   NS_DECL_NSIIMAGEDECODEROBSERVER
   NS_DECL_GFXIIMAGECONTAINEROBSERVER
 
-  nsImageRequestProxy();
-  virtual ~nsImageRequestProxy();
+  imgRequestProxy();
+  virtual ~imgRequestProxy();
 
   /* additional members */
-  nsresult Init(nsImageRequest *request, nsIImageDecoderObserver *aObserver, nsISupports *cx);
+  nsresult Init(imgRequest *request, nsIImageDecoderObserver *aObserver, nsISupports *cx);
 
 private:
   nsCOMPtr<nsIImageDecoderObserver> mObserver;
 
   nsCOMPtr<nsISupports> mContext;
 
-  nsCOMPtr<lpIImageRequest> mOwner;
+  nsCOMPtr<imgIRequest> mOwner;
 };

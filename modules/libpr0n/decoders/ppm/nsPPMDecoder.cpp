@@ -55,8 +55,8 @@ nsPPMDecoder::~nsPPMDecoder()
 
 /** nsIImageDecoder methods **/
 
-/* void init (in lpIImageRequest aRequest); */
-NS_IMETHODIMP nsPPMDecoder::Init(lpIImageRequest *aRequest)
+/* void init (in imgIRequest aRequest); */
+NS_IMETHODIMP nsPPMDecoder::Init(imgIRequest *aRequest)
 {
   mRequest = aRequest;
 
@@ -71,8 +71,8 @@ NS_IMETHODIMP nsPPMDecoder::Init(lpIImageRequest *aRequest)
   return NS_OK;
 }
 
-/* readonly attribute lpIImageRequest request; */
-NS_IMETHODIMP nsPPMDecoder::GetRequest(lpIImageRequest * *aRequest)
+/* readonly attribute imgIRequest request; */
+NS_IMETHODIMP nsPPMDecoder::GetRequest(imgIRequest * *aRequest)
 {
   *aRequest = mRequest;
   NS_ADDREF(*aRequest);

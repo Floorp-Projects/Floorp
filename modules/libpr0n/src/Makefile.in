@@ -33,8 +33,8 @@ IS_COMPONENT	= 1
 CPPSRCS		= ImageCache.cpp \
 			nsImageFactory.cpp    \
 			nsImageLoader.cpp         \
-			nsImageRequest.cpp        \
-			nsImageRequestProxy.cpp
+			imgRequest.cpp        \
+			imgRequestProxy.cpp
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
