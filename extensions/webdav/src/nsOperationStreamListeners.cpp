@@ -415,8 +415,8 @@ NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
 
 nsresult
 NS_WD_NewOperationStreamListener(nsIWebDAVResource *resource,
-                                 PRUint32 operation,
                                  nsIWebDAVOperationListener *listener,
+                                 PRUint32 operation,
                                  nsIStreamListener **streamListener)
 {
     nsCOMPtr<nsIRequestObserver> osl = 
