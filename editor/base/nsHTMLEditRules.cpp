@@ -27,7 +27,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
-#include "nsIContent.h"
 
 const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -351,7 +350,7 @@ nsHTMLEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
  ********************************************************/
  
 PRBool
-nsHTMLEditRules::IsBlockNode(nsIContent *aContent)
+nsHTMLEditRules::IsBlockNode(nsCOMPtr <nsIContent> aContent)
 {
   nsIAtom* atom = nsnull;
   PRBool result;
