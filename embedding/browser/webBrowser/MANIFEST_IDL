@@ -21,7 +21,5 @@
 #
 
 nsCWebBrowser.idl
-nsIProgress.idl
-nsIProgressListener.idl
 nsIWebBrowser.idl
 nsIWebBrowserChrome.idl
