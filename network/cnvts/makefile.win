@@ -98,7 +98,7 @@ LINCS= \
     -I$(XPDIST)\public\parse	\
     -I$(XPDIST)\public\security	\
     -I$(XPDIST)\public\marimurl	\
-    -I$(XPDIST)\public\layout	\
+    -I$(XPDIST)\public\lay	\
     -I$(XPDIST)\public\style	\
     -I$(XPDIST)\public\zlib	\
     -I$(XPDIST)\public\network 
