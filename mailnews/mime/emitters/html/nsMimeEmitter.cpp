@@ -21,6 +21,7 @@
 #include "plstr.h"
 #include "nsEmitterUtils.h"
 #include "nsMailHeaders.h"
+#include "nscore.h"
 
 /* 
  * This function will be used by the factory to generate an 

@@ -19,6 +19,9 @@
 /* Root idl declarations to be used by all. */
 
 %{C++
+
+#include "prtime.h"
+
 /* 
  * Start commenting out the C++ versions of the below in the output header
  */
@@ -30,6 +33,7 @@ typedef octet               PRUint8  ;
 typedef unsigned short      PRUint16 ;
 typedef unsigned long       PRUint32 ;
 typedef unsigned long long  PRUint64 ;
+typedef unsigned long long  PRTime   ;
 typedef short               PRInt16  ;
 typedef long                PRInt32  ;
 typedef long long           PRInt64  ;
@@ -38,6 +42,7 @@ typedef unsigned long       nsrefcnt ;
 typedef unsigned long       nsresult ;
 
 [ptr]         native voidStar(void);
+[ptr]         native charStar(char);
 
 [ref, nsid]   native nsIDRef(nsID);
 [ref, nsid]   native nsIIDRef(nsIID);

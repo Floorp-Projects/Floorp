@@ -35,6 +35,7 @@
 #include "nsISecurityContext.h"
 #include "xpgetstr.h"
 #include "lcglue.h"
+#include "nscore.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;

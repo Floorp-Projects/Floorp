@@ -35,8 +35,10 @@ public:
     NS_IMETHOD Close(void);
 
     // nsIOutputStream methods:
-    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount); 
-    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount);
+    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, 
+                     PRUint32 *aWriteCount); 
+    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
+                         PRUint32 *aWriteCount);
     NS_IMETHOD Flush(void);
 
     // nsByteBufferOutputStream methods:
@@ -62,7 +64,7 @@ public:
     NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount); 
 
     // nsIByteBufferInputStream methods:
-    NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 *aWriteCount);
+    NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 aCount, PRUint32 *aWriteCount);
     NS_IMETHOD Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
 
     // nsByteBufferInputStream methods:

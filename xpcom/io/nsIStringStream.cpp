@@ -110,7 +110,8 @@ class BasicStringImpl
 								            *aWriteCount = bytesWrit;
 								            return NS_OK;
 								        }
-        NS_IMETHOD                      Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
+        NS_IMETHOD                      WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
+                                                  PRUint32 *aWriteCount)
                                         {
                                             return NS_ERROR_NOT_IMPLEMENTED;
                                         }

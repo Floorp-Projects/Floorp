@@ -24,6 +24,7 @@
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
 #include "nsRepository.h"
+#include "nscore.h"
 
 // Need this for FO_NGLAYOUT
 #include "net.h"

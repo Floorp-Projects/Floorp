@@ -23,6 +23,7 @@
 #include "nsMailHeaders.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nscore.h"
 
 // For the new pref API's
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);

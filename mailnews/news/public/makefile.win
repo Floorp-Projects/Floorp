@@ -31,7 +31,6 @@ XPIDLSRCS= \
 
 EXPORTS =							\
 		nsIMsgOfflineNewsState.h 	\
-		nsINNTPArticleList.h 		\
 		nsINNTPCategory.h			\
 		nsINNTPCategoryContainer.h	\
 		nsINNTPHost.h				\

@@ -21,6 +21,7 @@
 
 #include "prlog.h"
 #include "prmem.h"
+#include "nscore.h"
 
 
 class ns4xPluginStreamListener : public nsIPluginStreamListener {

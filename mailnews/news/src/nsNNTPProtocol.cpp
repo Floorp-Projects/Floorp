@@ -22,6 +22,7 @@
 #include "nntpCore.h"
 
 #include "nsNNTPProtocol.h"
+#include "nsINNTPArticleList.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsFileStream.h"

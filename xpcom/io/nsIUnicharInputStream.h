@@ -19,6 +19,8 @@
 #define nsIUnicharInputStream_h___
 
 #include "nsIInputStream.h"
+#include "nscore.h"
+
 class nsString;
 
 #define NS_IUNICHAR_INPUT_STREAM_IID \

@@ -189,11 +189,11 @@ NS_IMETHODIMP
 nsByteBufferInputStream::Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
     nsDummyBufferStream in(aBuf, aCount);
-    return Fill(&in, aWriteCount);
+    return Fill(&in, aCount, aWriteCount);
 }
 
 NS_IMETHODIMP
-nsByteBufferInputStream::Fill(nsIInputStream* stream, PRUint32 *aWriteCount)
+nsByteBufferInputStream::Fill(nsIInputStream* stream, PRUint32 aCount, PRUint32 *aWriteCount)
 {
     nsresult rv = NS_OK;
 
@@ -201,9 +201,6 @@ nsByteBufferInputStream::Fill(nsIInputStream* stream, PRUint32 *aWriteCount)
         return NS_BASE_STREAM_CLOSED;
 
     *aWriteCount = 0;
-    PRUint32 aCount;
-    rv = stream->GetLength(&aCount);
-    if (NS_FAILED(rv)) return rv;
 
     if (mBlocking) 
         PR_CEnterMonitor(this);
@@ -349,15 +346,17 @@ nsByteBufferOutputStream::Close(void)
 }
 
 NS_IMETHODIMP
-nsByteBufferOutputStream::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
+nsByteBufferOutputStream::Write(const char* aBuf, PRUint32 aCount,
+                                PRUint32 *aWriteCount)
 {
     return mInputStream->Fill(aBuf, aCount, aWriteCount);
 }
 
 NS_IMETHODIMP
-nsByteBufferOutputStream::Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
+nsByteBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
+                                    PRUint32 *aWriteCount)
 {
-    return mInputStream->Fill(fromStream, aWriteCount);
+    return mInputStream->Fill(fromStream, aCount, aWriteCount);
 }
 
 NS_IMETHODIMP

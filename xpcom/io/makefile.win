@@ -29,11 +29,8 @@ EXPORTS =                          \
         nsFileSpecImpl.h           \
         nsFileSpecStreaming.h      \
         nsFileStream.h             \
-        nsIBaseStream.h            \
         nsIByteBufferInputStream.h \
         nsIFileStream.h            \
-        nsIInputStream.h           \
-        nsIOutputStream.h          \
         nsIStringStream.h          \
         nsIUnicharInputStream.h    \
         nsSpecialSystemDirectory.h \
@@ -42,20 +39,12 @@ EXPORTS =                          \
 NO_XPT_GEN=1
 XPIDL_MODULE = xpcom_io
 
-XPIDLSRCS =                     \
-        .\nsIFileSpec.idl       \
-        $(NULL)
-
-xXPIDLSRCS =                     \
-        .\nsIUri.idl            \
-        .\nsIUrl.idl            \
-        .\nsIIOService.idl      \
-        .\nsIIOSpec.idl         \
-        .\nsIFileSpec.idl       \
-        .\nsIStreamObserver.idl \
-        .\nsIBaseStream.idl     \
-        .\nsIInputStream.idl    \
-        .\nsIOutputStream.idl   \
+XPIDLSRCS =                        \
+        .\nsIFileSpec.idl          \
+        .\nsIBaseStream.idl        \
+        .\nsIInputStream.idl       \
+        .\nsIOutputStream.idl      \
+        .\nsIBufferInputStream.idl \
         $(NULL)
 
 ################################################################################

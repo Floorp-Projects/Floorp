@@ -26,7 +26,7 @@
 #include "nsIComponentManager.h"
 #include "nsNetConverterStream.h"
 #include "nsCOMPtr.h"
-
+#include "nscore.h"
 
 static NS_DEFINE_CID(kINetPluginCID, NS_INET_PLUGIN_CID);
 
