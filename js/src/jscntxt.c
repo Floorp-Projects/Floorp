@@ -19,6 +19,7 @@
 /*
  * JS execution context.
  */
+#include "jsstddef.h"
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>

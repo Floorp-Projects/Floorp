@@ -31,6 +31,7 @@
  * was designed with error recovery built on 64-bit first and follow bitsets
  * in mind, however.
  */
+#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -65,6 +66,7 @@
  * Each parser takes a context and a token stream, and emits bytecode using
  * a code generator.
  */
+
 typedef JSParseNode *
 JSParser(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc);
 
@@ -89,7 +91,7 @@ static JSParser ShiftExpr;
 static JSParser AddExpr;
 static JSParser MulExpr;
 static JSParser UnaryExpr;
-static JSParser MemberExpr;
+static JSParseNode *MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCallSyntax);
 static JSParser PrimaryExpr;
 
 /*
@@ -430,14 +432,14 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 	    if (!ok)
 		goto out;
 	    if (sprop && pobj == fun->object) {
-		if (sprop->getter == js_GetArgument) {
+                if (sprop->getter == js_GetArgument) {
 #ifdef CHECK_ARGUMENT_HIDING
-		    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-		    js_ReportCompileError(cx, ts,
-					  "duplicate formal argument %s",
-					  ATOM_BYTES(argAtom));
-		    ok = JS_FALSE;
-		    goto out;
+                    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+                    js_ReportCompileError(cx, ts,
+                                          "duplicate formal argument %s",
+                                          ATOM_BYTES(argAtom));
+                    ok = JS_FALSE;
+                    goto out;
 #else
                     /* A duplicate parameter name. We create a dummy symbol
                      * entry with property id of the parameter number and set
@@ -455,10 +457,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     if (!ok)
                         goto out;
                     sprop->id = (jsid) argAtom;
-
 #endif
-		}
-	    }
+                }
+            }
 	    if (sprop) {
 		OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
 		sprop = NULL;
@@ -587,9 +588,11 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * XXX not ECMA, but documented in several books -- need a compile option
      */
     if (pn->pn_type == TOK_ASSIGN && pn->pn_op == JSOP_NOP) {
+#ifdef CHECK_EQUALITY_ASSIGNMENT
 	js_ReportCompileError(cx, ts,
 	    "test for equality (==) mistyped as assignment (=)?\n"
 	    "Assuming equality test");
+#endif
     	pn->pn_type = TOK_EQOP;
     	pn->pn_op = cx->jsop_eq;
 	pn2 = pn->pn_left;
@@ -1919,7 +1922,7 @@ static JSParseNode *
 UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSTokenType tt;
-    JSParseNode *pn, *pn2, *pn3;
+    JSParseNode *pn, *pn2;
 
     ts->flags |= TSF_REGEXP;
     tt = js_GetToken(cx, ts);
@@ -1946,7 +1949,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn = NewParseNode(cx, &ts->token, PN_UNARY);
 	if (!pn)
 	    return NULL;
-	pn2 = MemberExpr(cx, ts, tc);
+	pn2 = MemberExpr(cx, ts, tc, JS_TRUE);
 	if (!pn2)
 	    return NULL;
 	if (!SetIncOpKid(cx, ts, tc, pn, pn2, tt, JS_TRUE))
@@ -1954,69 +1957,11 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_pos.end = pn2->pn_pos.end;
 	break;
 
-      case TOK_NEW:
-	/* Allow 'new this.ctor(...)' constructor expressions. */
-	pn = NewParseNode(cx, &ts->token, PN_LIST);
-	if (!pn)
-	    return NULL;
-	tt = js_GetToken(cx, ts);
-	pn2 = NewParseNode(cx, &ts->token, PN_NULLARY);
-	if (!pn2)
-	    return NULL;
-	switch (tt) {
-	  case TOK_NAME:
-	    pn2->pn_op = JSOP_NAME;
-	    pn2->pn_atom = ts->token.t_atom;
-	    pn2->pn_slot = -1;
-	    break;
-	  case TOK_PRIMARY:
-	    if (ts->token.t_op == JSOP_THIS) {
-		pn2->pn_op = JSOP_THIS;
-		break;
-	    }
-	    /* FALL THROUGH */
-	  default:
-	    js_ReportCompileError(cx, ts, "missing name after new operator");
-	    return NULL;
-	}
-	while (js_MatchToken(cx, ts, TOK_DOT)) {
-	    pn3 = NewParseNode(cx, &ts->token, PN_NAME);
-	    if (!pn3)
-	    	return NULL;
-	    MUST_MATCH_TOKEN(TOK_NAME,
-			     "missing name in constructor expression");
-	    pn3->pn_pos.begin = pn2->pn_pos.begin;
-	    pn3->pn_pos.end = ts->token.pos.end;
-	    pn3->pn_op = JSOP_GETPROP;
-	    pn3->pn_expr = pn2;
-	    pn3->pn_atom = ts->token.t_atom;
-	    pn2 = pn3;
-	}
-	PN_INIT_LIST_1(pn, pn2);
-	if (js_MatchToken(cx, ts, TOK_LP) && !js_MatchToken(cx, ts, TOK_RP)) {
-	    do {
-		pn2 = AssignExpr(cx, ts, tc);
-		if (!pn2)
-		    return NULL;
-		PN_APPEND(pn, pn2);
-	    } while (js_MatchToken(cx, ts, TOK_COMMA));
-
-	    /* (balance: */
-	    MUST_MATCH_TOKEN(TOK_RP,
-			     "missing ) after constructor argument list");
-	}
-	if (pn->pn_count - 1 >= ARGC_LIMIT) {
-	    JS_ReportError(cx, "too many constructor arguments");
-	    return NULL;
-	}
-	pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-	break;
-
       case TOK_DELETE:
 	pn = NewParseNode(cx, &ts->token, PN_UNARY);
 	if (!pn)
 	    return NULL;
-	pn2 = MemberExpr(cx, ts, tc);
+	pn2 = UnaryExpr(cx, ts, tc);
 	if (!pn2)
 	    return NULL;
 	if (!SetLvalKid(cx, ts, pn, pn2, js_delete_str))
@@ -2029,7 +1974,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       default:
 	js_UngetToken(ts);
-	pn = MemberExpr(cx, ts, tc);
+	pn = MemberExpr(cx, ts, tc, JS_TRUE);
 	if (!pn)
 	    return NULL;
 
@@ -2053,15 +1998,64 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 
 static JSParseNode *
-MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
+ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSParseNode *listNode)
+{
+    JSBool matched;
+
+    ts->flags |= TSF_REGEXP;
+    matched = js_MatchToken(cx, ts, TOK_RP);
+    ts->flags &= ~TSF_REGEXP;
+    if (!matched) {
+	do {
+	    JSParseNode *argNode = AssignExpr(cx, ts, tc);
+	    if (!argNode)
+		return NULL;
+	    PN_APPEND(listNode, argNode);
+	} while (js_MatchToken(cx, ts, TOK_COMMA));
+
+	/* (balance: */
+	MUST_MATCH_TOKEN(TOK_RP, "missing ) after argument list");
+    }
+    return listNode;
+}
+
+static JSParseNode *
+MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCallSyntax)
 {
     JSParseNode *pn, *pn2, *pn3;
     JSTokenType tt;
-    JSBool matched;
 
-    pn = PrimaryExpr(cx, ts, tc);
-    if (!pn)
-	return NULL;
+    /* Check for new expressions */
+    ts->flags |= TSF_REGEXP;
+    tt = js_PeekToken(cx, ts);
+    ts->flags &= ~TSF_REGEXP;
+    if (tt == TOK_NEW) {
+	(void)js_GetToken(cx, ts);
+
+	pn = NewParseNode(cx, &ts->token, PN_LIST);
+	if (!pn)
+	    return NULL;
+	pn2 = MemberExpr(cx, ts, tc, JS_FALSE);
+	if (!pn2)
+	    return NULL;
+	PN_INIT_LIST_1(pn, pn2);
+
+	if (js_MatchToken(cx, ts, TOK_LP)) {
+	    pn = ArgumentList(cx, ts, tc, pn);
+	    if (!pn)
+	    	return NULL;
+	}
+	if (pn->pn_count - 1 >= ARGC_LIMIT) {
+	    JS_ReportError(cx, "too many constructor arguments");
+	    return NULL;
+	}
+	pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
+
+    } else {
+	pn = PrimaryExpr(cx, ts, tc);
+	if (!pn)
+	    return NULL;
+    }
 
     while ((tt = js_GetToken(cx, ts)) > TOK_EOF) {
 	if (tt == TOK_DOT) {
@@ -2099,28 +2093,16 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		pn2->pn_left = pn;
 		pn2->pn_right = pn3;
 	    }
-	} else if (tt == TOK_LP) {
+	} else if (allowCallSyntax && tt == TOK_LP) {
 	    pn2 = NewParseNode(cx, &ts->token, PN_LIST);
 	    if (!pn2)
 	    	return NULL;
-	    PN_INIT_LIST_1(pn2, pn);
 	    pn2->pn_op = JSOP_CALL;
+	    PN_INIT_LIST_1(pn2, pn);
 
-	    ts->flags |= TSF_REGEXP;
-	    matched = js_MatchToken(cx, ts, TOK_RP);
-	    ts->flags &= ~TSF_REGEXP;
-	    if (!matched) {
-		do {
-		    pn3 = AssignExpr(cx, ts, tc);
-		    if (!pn3)
-			return NULL;
-		    PN_APPEND(pn2, pn3);
-		} while (js_MatchToken(cx, ts, TOK_COMMA));
-
-		/* (balance: */
-		MUST_MATCH_TOKEN(TOK_RP, "missing ) after argument list");
-	    }
-
+	    pn2 = ArgumentList(cx, ts, tc, pn2);
+	    if (!pn2)
+	    	return NULL;
 	    if (pn2->pn_count - 1 >= ARGC_LIMIT) {
 		JS_ReportError(cx, "too many function arguments");
 		return NULL;

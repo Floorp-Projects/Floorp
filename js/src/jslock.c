@@ -21,6 +21,7 @@
 /*
  * JS locking stubs.
  */
+#include "jsstddef.h"
 #include <stdlib.h>
 #include "jspubtd.h"
 #include "prthread.h"

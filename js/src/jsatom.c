@@ -19,7 +19,7 @@
 /*
  * JS atom table.
  */
-#include <stddef.h>
+#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include "prtypes.h"
