@@ -526,8 +526,11 @@ nsDNSLookup::InitiateLookup(void)
             memcpy(mHostEntry.hostEnt.h_addr_list[0], &netAddr->inet.ip, mHostEntry.hostEnt.h_length);
             mHostEntry.hostEnt.h_addr_list[1] = '\0';
 
-            return CompletedLookup(NS_OK);
+            rv = CompletedLookup(NS_OK);
         }
+        nsAllocator::Free(netAddr);
+		if(PR_SUCCESS == status) 
+			return rv;
     }
 
     // Incomming hostname is not a numeric ip address. Need to do the actual
