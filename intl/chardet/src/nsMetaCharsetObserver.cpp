@@ -335,7 +335,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->AddObserver(mHack, htmlTopic);
+    res = anObserverService->AddObserver(mHack, htmlTopic.GetUnicode());
 
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
                                     anObserverService);
@@ -355,7 +355,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->RemoveObserver(mHack, htmlTopic);
+    res = anObserverService->RemoveObserver(mHack, htmlTopic.GetUnicode());
 
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
                                     anObserverService);
