@@ -174,3 +174,62 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
   return res;
 }
 
+
+NS_IMETHODIMP nsLookAndFeel::GetFont(const nsFontID aID, nsFont &aFont)
+{
+#if 0
+  NONCLIENTMETRICS ncm;
+
+  memset(&ncm, sizeof(NONCLIENTMETRICS), 0);
+  ncm.cbSize = sizeof(NONCLIENTMETRICS);
+
+  BOOL status = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 
+                                     sizeof(NONCLIENTMETRICS),  
+                                     (PVOID)&ncm, 
+                                     0);
+  if (!status) {
+
+  }
+
+
+  nsresult res = NS_OK;
+  switch (aID) {
+    case eFont_Caption:
+      break;
+
+    case eFont_Icon:
+      break;
+
+    case eFont_Menu:
+      break;
+
+    case eFont_MessageBox:
+      break;
+
+    case eFont_SmallCaption:
+      break;
+
+    case eFont_StatusBar:
+    case eFont_Tooltips: {
+      FONT hFont = CreateIndirectFont(&ncm.lfStatusFont);
+      if (hFont) {
+
+      }
+
+      } break;
+
+    case eFont_Widget:
+      aFont.name = "Arial";
+      //aFont.size = 200;
+      //aFont.weight = 200;
+      break;
+
+    default:
+      res = NS_ERROR_FAILURE;
+  } // switch
+
+  return res;
+#else
+  return NS_OK;
+#endif
+}

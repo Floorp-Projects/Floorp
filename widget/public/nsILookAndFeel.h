@@ -20,6 +20,7 @@
 #define __nsILookAndFeel
 #include "nsISupports.h"
 #include "nsColor.h"
+#include "nsFont.h"
 
 // {21B51DE1-21A3-11d2-B6E0-00805F8A2676}
 #define NS_ILOOKANDFEEL_IID \
@@ -74,6 +75,19 @@ public:
     eMetricFloat_ButtonHorizontalInsidePadding
   } nsMetricFloatID;
 
+  
+  typedef enum {
+    eFont_Caption,
+    eFont_Icon,
+    eFont_Menu,
+    eFont_MessageBox,
+    eFont_SmallCaption,
+    eFont_StatusBar,
+    eFont_Tooltips,
+    eFont_Widget
+  } nsFontID;
+
+  NS_IMETHOD GetFont(const nsFontID aID, nsFont &aFont) = 0;
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric) = 0;
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric) = 0;

@@ -177,3 +177,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
   return res;
 }
 
+NS_IMETHODIMP nsLookAndFeel::GetFont(const nsFontID aID, nsFont &aFont)
+{
+  return NS_OK;
+}
