@@ -944,7 +944,7 @@ NS_IMETHODIMP StyleSetImpl::ContentInserted(nsIPresContext* aPresContext,
                                             PRInt32         aIndexInContainer)
 {
   return mFrameConstructor->ContentInserted(aPresContext, aContainer,
-                                            aChild, aIndexInContainer);
+                                            aChild, aIndexInContainer, nsnull);
 }
 
 NS_IMETHODIMP StyleSetImpl::ContentReplaced(nsIPresContext* aPresContext,

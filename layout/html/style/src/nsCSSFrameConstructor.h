@@ -27,6 +27,7 @@
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleContext.h"
+#include "nsILayoutHistoryState.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -73,7 +74,8 @@ public:
   NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
-                             PRInt32         aIndexInContainer);
+                             PRInt32         aIndexInContainer,
+                             nsILayoutHistoryState* aFrameState);
 
   NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
@@ -139,11 +141,22 @@ public:
                                         nsIContent*     aChild,
                                         nsIFrame**      aResult,
                                         PRBool          aIsAppend,
-                                        PRBool          aIsScrollbar);
+                                        PRBool          aIsScrollbar,
+                                        nsILayoutHistoryState* aFrameState);
+
   NS_IMETHOD RemoveMappingsForFrameSubtree(nsIPresContext* aParentFrame,
-                                           nsIFrame*       aRemovedFrame);
+                                           nsIFrame*       aRemovedFrame,
+                                           nsILayoutHistoryState* aFrameState);
 
 protected:
+
+  nsresult InitAndRestoreFrame (nsIPresContext*          aPresContext,
+                                nsFrameConstructorState& aState,
+                                nsIContent*              aContent,
+                                nsIFrame*                aParentFrame,
+                                nsIStyleContext*         aStyleContext,
+                                nsIFrame*                aPrevInFlow,
+                                nsIFrame*                aNewFrame);
 
   nsresult ResolveStyleContext(nsIPresContext*   aPresContext,
                                nsIFrame*         aParentFrame,
@@ -170,7 +183,8 @@ protected:
                                          nsIPresContext* aPresContext,
                                          nsIContent*     aDocElement,
                                          nsIFrame*       aParentFrame,
-                                         nsIFrame*&      aNewTableFrame);
+                                         nsIFrame*&      aNewTableFrame,
+                                         nsILayoutHistoryState* aFrameState);
 
   nsresult CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
                                    nsIDocument*          aDocument,
@@ -828,6 +842,17 @@ InitializeSelectFrame(nsIPresShell*        aPresShell,
                                            nsIFrame* aBlockFrame,
                                            PRBool* aStopLooking);
 
+  // Capture state for the frame tree rooted at the frame associated with the
+  // content object, aContent
+  nsresult CaptureStateForFramesOf(nsIPresContext* aPresContext,
+                                   nsIContent* aContent,
+                                   nsILayoutHistoryState* aHistoryState);
+
+  // Capture state for the frame tree rooted at aFrame.
+  nsresult CaptureStateFor(nsIPresContext* aPresContext,
+                           nsIFrame* aFrame,
+                           nsILayoutHistoryState* aHistoryState);
+
   //----------------------------------------
 
   // Methods support :first-line style
@@ -862,6 +887,13 @@ protected:
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
 
+  // XXX This is an interface into a hashtable that holds frame state objects
+  // for saving/restoring state as frame trees are deleted and created in 
+  // RecreateFramesForContent() and ReconstructDocElementHierarchy().  
+  // These state objects should be stored in the hashtable maintained by the 
+  // session history, but since the session history API is undergoing a re-write, 
+  // we'll start using session history once that re-write is done.
+  nsCOMPtr<nsILayoutHistoryState>  mTempFrameTreeState;
 };
 
 #endif /* nsCSSFrameConstructor_h___ */

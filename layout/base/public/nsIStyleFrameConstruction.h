@@ -33,6 +33,7 @@ class nsIStyleSheet;
 class nsIStyleRule;
 class nsStyleChangeList;
 class nsIFrameManager;
+class nsILayoutHistoryState;
 
 // IID for the nsIStyleSet interface {a6cf9066-15b3-11d2-932e-00805f8add32}
 #define NS_ISTYLE_FRAME_CONSTRUCTION_IID \
@@ -60,7 +61,8 @@ public:
   NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
-                             PRInt32         aIndexInContainer) = 0;
+                             PRInt32         aIndexInContainer,
+                             nsILayoutHistoryState* aFrameState) = 0;
 
   NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,

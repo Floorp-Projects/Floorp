@@ -46,6 +46,11 @@
 #include "nsIDOMDragListener.h"
 #include "nsTreeItemDragCapturer.h"
 
+static nsILayoutHistoryState*
+GetStateStorageObject(nsTreeRowGroupFrame* aTreeRowGroupFrame, 
+                      nsTableFrame* aTableFrame);
+
+
 // define this to get some help
 #undef DEBUG_tree
 
@@ -99,7 +104,7 @@ NS_IMETHODIMP
 nsTreeRowGroupFrame::Destroy(nsIPresContext* aPresContext)
 {
   if (mScrollbar) {
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
     mScrollbar->Destroy(aPresContext);
   }
   return nsTableRowGroupFrame::Destroy(aPresContext);
@@ -196,7 +201,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext*
     
     nsIFrame* nextFrame;
     GetNextFrame(childFrame, &nextFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, GetStateStorageObject(this, aTableFrame));
     mFrames.DestroyFrame(aPresContext, childFrame);
     mTopFrame = childFrame = nextFrame;
   }
@@ -232,7 +237,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresC
     
     nsIFrame* prevFrame;
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, GetStateStorageObject(this, aTableFrame));
     mFrames.DestroyFrame(aPresContext, childFrame);
     mBottomFrame = childFrame = prevFrame;
   }
@@ -705,7 +710,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
     // Just blow away all our frames, but keep a content chain
     // as a hint to figure out how to build the frames.
     // Remove the scrollbar first.
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, this);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, this, GetStateStorageObject(this, tableFrame));
     mFrames.DestroyFrames(aPresContext);
     tableFrame->InvalidateCellMap();
     nsCOMPtr<nsIContent> topRowContent;
@@ -714,7 +719,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
     if (topRowContent)
       ConstructContentChain(topRowContent);
   }
-  
+
   mTopFrame = mBottomFrame = nsnull; // Make sure everything is cleared out.
 
   // Force a reflow.
@@ -971,7 +976,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
    
     if (nukeScrollbar || (value == "0" && !mIsFull)) {
       // Nuke the scrollbar.
-      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar);
+      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
       mScrollbarList.DestroyFrames(aPresContext);
       mScrollbar = nsnull;
     }
@@ -1163,7 +1168,8 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext* aPresContext)
     PRBool isAppend = (mLinkupFrame == nsnull);
 
     mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, nsnull, startContent,
-                                               &mTopFrame, isAppend, PR_FALSE);
+                                               &mTopFrame, isAppend, PR_FALSE, 
+                                               GetStateStorageObject(this, tableFrame));
     
     // XXX Can be optimized if we detect that we're appending a row.
     // Also the act of appending or inserting a row group is harmless.
@@ -1248,7 +1254,8 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFram
           isAppend = PR_FALSE;
         }
         mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, prevFrame, nextContent,
-                                                   aResult, isAppend, PR_FALSE);
+                                                   aResult, isAppend, PR_FALSE,
+                                                   GetStateStorageObject(this, tableFrame));
 
         // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
         // Also the act of appending or inserting a row group is harmless.
@@ -1307,7 +1314,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext* aPresContext, nscoord
       while (currFrame) {
         nsIFrame* nextFrame;
         currFrame->GetNextSibling(&nextFrame);
-        mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame);
+        mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame, nsnull);
         mFrames.DestroyFrame(aPresContext, currFrame);
         currFrame = nextFrame;
         //printf("Nuked one off the end.\n");
@@ -1325,7 +1332,7 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext* aPresContext)
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
-  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+  nsTreeFrame* treeFrame = (nsTreeFrame*) tableFrame;  
   MarkTreeAsDirty(aPresContext, treeFrame);
 }
 
@@ -1339,7 +1346,8 @@ void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFra
   while (currFrame) {
     nsIFrame* nextFrame;
     currFrame->GetNextSibling(&nextFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame, 
+      GetStateStorageObject(this, NULL));
     mFrames.DestroyFrame(aPresContext, currFrame);
     currFrame = nextFrame;
     //printf("Nuked one off the end.\n");
@@ -1362,7 +1370,7 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
 
   // Go ahead and delete the frame.
   if (aChildFrame) {
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame, nsnull);
     mFrames.DestroyFrame(aPresContext, aChildFrame);
     treeFrame->InvalidateCellMap();
     treeFrame->InvalidateColumnCache();
@@ -1418,7 +1426,7 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
     
     nsIFrame* aResult;
     mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, nsnull, content,
-                                               &aResult, PR_FALSE, PR_TRUE);
+                                               &aResult, PR_FALSE, PR_TRUE, nsnull);
 
   }
 }
@@ -1875,3 +1883,21 @@ nsTreeRowGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingContext
   return res;
   
 } // Paint
+
+static nsILayoutHistoryState*
+GetStateStorageObject(nsTreeRowGroupFrame* aTreeRowGroupFrame, nsTableFrame* aTableFrame)
+{
+  nsILayoutHistoryState* object = nsnull;
+  nsTableFrame* tableFrame = nsnull;
+
+  if (aTableFrame)
+    tableFrame = aTableFrame;
+  else
+    nsTableFrame::GetTableFrame(aTreeRowGroupFrame, tableFrame);
+
+  if (tableFrame) {
+    nsTreeFrame* treeFrame = (nsTreeFrame*) tableFrame;
+    treeFrame->GetFrameStateStorageObject(&object);
+  }
+  return object;
+}
