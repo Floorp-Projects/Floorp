@@ -848,9 +848,9 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
   // Get our frames object
 
   // Walk the frames
-  for ( ; ;) {
+  /*for ( ; ;) {
     // For each frame, recur.
-  }
+  }*/
 
   return NS_OK;
 }
