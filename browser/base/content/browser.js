@@ -3816,7 +3816,7 @@ function launchExternalUrl(aURL)
 function sendLink(url, title)
 {
   // generate a mailto url based on the url and the url's title
-  var mailtoUrl = url ? "mailto:?body=" + url + "&subject=" + encodeURIComponent(title) : "mailto:";
+  var mailtoUrl = url ? "mailto:?body=" + encodeURIComponent(url) + "&subject=" + encodeURIComponent(title) : "mailto:";
 
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   var uri = ioService.newURI(mailtoUrl, null, null);
