@@ -2971,7 +2971,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               nsLinkVerb aVerb,
                               nsIURI* aBaseURL,
                               const nsAString& aURLSpec,
-                              const nsAString& aTargetSpec,
+                              const nsAFlatString& aTargetSpec,
                               PRBool aClick)
 {
   nsCOMPtr<nsILinkHandler> handler;
@@ -3006,10 +3006,10 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     // says it's ok.
     if (NS_SUCCEEDED(proceed))
       handler->OnLinkClick(this, aVerb, targetURI,
-                           PromiseFlatString(aTargetSpec).get());
+                           aTargetSpec.get());
   } else {
     handler->OnOverLink(this, targetURI,
-                        PromiseFlatString(aTargetSpec).get());
+                        aTargetSpec.get());
   }
   return rv;
 }
