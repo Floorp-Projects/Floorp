@@ -49,6 +49,9 @@ extern GtkWidget* gButtonWidget;
 extern GtkWidget* gCheckboxWidget;
 extern GtkWidget* gScrollbarWidget;
 extern GtkWidget* gGripperWidget;
+extern GtkWidget* gEntryWidget;
+extern GtkWidget* gArrowWidget;
+extern GtkWidget* gDropdownButtonWidget;
 
 GtkStateType
 ConvertGtkState(GtkWidgetState* aState)
@@ -238,3 +241,45 @@ moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                 rect->width, rect->height);
 }
 
+void
+moz_gtk_entry_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                    GdkRectangle* clipRect, GtkWidgetState* state)
+{
+  gint x = rect->x;
+  gint y = rect->y;
+  gint width = rect->width;
+  gint height = rect->height;
+  
+  if (state->focused) {
+      x += 1;
+      y += 1;
+      width -= 2;
+      height -= 2;
+  }
+  
+  gtk_paint_shadow (style, window,
+                    GTK_STATE_NORMAL, GTK_SHADOW_IN,
+                    clipRect, gEntryWidget, "entry",
+                    x, y, width, height);
+  
+  if (state->focused)
+      gtk_paint_focus (style, window,  clipRect, gEntryWidget, "entry",
+                       rect->x, rect->y, rect->width - 1, rect->height - 1);
+
+  x = style->klass->xthickness;
+  y = style->klass->ythickness;
+
+  gtk_paint_flat_box (style, window, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
+                      clipRect, gEntryWidget, "entry_bg",  rect->x + x,
+                      rect->y + y, rect->width - 2*x, rect->height - 2*y);
+}
+
+void
+moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                             GdkRectangle* clipRect, GtkWidgetState* state)
+{
+  moz_gtk_button_paint(window, gDropdownButtonWidget->style, rect, clipRect, state, GTK_RELIEF_NORMAL);
+  gtk_paint_arrow(style, window, ConvertGtkState(state), state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT,
+                  clipRect, gArrowWidget, "arrow", GTK_ARROW_DOWN, TRUE, rect->x, rect->y,
+                  rect->width, rect->height);
+}
