@@ -281,13 +281,13 @@ static nsModuleComponentInfo components[] =
     NS_STRCDETECTOR_CONTRACTID_BASE "ukprob", nsUKStringProbDetectorConstructor, 
    NULL, NULL},
 #ifdef INCLUDE_DBGDETECTOR
- { "Debuging Detector 1st block", NS_1STBLKDBG_DETECTOR_CID, 
+ { "Debugging Detector 1st block", NS_1STBLKDBG_DETECTOR_CID, 
     NS_CHARSET_DETECTOR_CONTRACTID_BASE "1stblkdbg", ns1stBlkDbgDetectorConstructor, 
     NULL, NULL},
- { "Debuging Detector 2nd block", NS_2NDBLKDBG_DETECTOR_CID, 
+ { "Debugging Detector 2nd block", NS_2NDBLKDBG_DETECTOR_CID, 
     NS_CHARSET_DETECTOR_CONTRACTID_BASE "2ndblkdbg", ns2ndBlkDbgDetectorConstructor, 
     NULL, NULL},
- { "Debuging Detector Last block", NS_LASTBLKDBG_DETECTOR_CID, 
+ { "Debugging Detector Last block", NS_LASTBLKDBG_DETECTOR_CID, 
     NS_CHARSET_DETECTOR_CONTRACTID_BASE "lastblkdbg", nsLastBlkDbgDetectorConstructor, 
     NULL, NULL},
 #endif /* INCLUDE_DBGDETECTOR */
