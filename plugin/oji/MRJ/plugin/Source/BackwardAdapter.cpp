@@ -1388,7 +1388,7 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
         return -1;
     nsresult err = inStr->SetReadBuffer((PRUint32)len, (const char*)buffer);
     if (err != NS_OK) return -1;
-    err = inStr->GetListener()->OnDataAvailable(inStr->GetPluginStreamInfo(), inStr, len);
+    err = inStr->GetListener()->OnDataAvailable(inStr->GetPluginStreamInfo(), inStr, 0, len);
     if (err != NS_OK) return -1;
     return len;
 }
