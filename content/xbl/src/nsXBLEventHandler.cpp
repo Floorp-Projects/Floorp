@@ -99,12 +99,18 @@ nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 PRBool 
 nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 {
+  nsAutoString trueString = "true";
+  nsAutoString falseString = "false";
+
   return PR_TRUE;
 }
 
 PRBool 
 nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
 {
+  nsAutoString trueString = "true";
+  nsAutoString falseString = "false";
+
   return PR_TRUE;
 }
 
