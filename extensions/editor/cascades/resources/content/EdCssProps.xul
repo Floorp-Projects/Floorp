@@ -59,6 +59,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
 
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://cascades/content/compatibility.js"/>
   <script type="application/x-javascript" src="chrome://cascades/content/commonCssProps.js"/>
   <script type="application/x-javascript" src="chrome://cascades/content/EdCssProps.js"/>
   <script type="application/x-javascript" src="chrome://cascades/content/EdCssProps-utils.js"/>
@@ -139,6 +140,9 @@
     <vbox>
       <tabbox id="sheetTabbox">
         <tabs>
+          <tab id="compatibilityTab"
+               label="&compatibilityTab.label;"
+               oncommand="onSelectCSSTreeItem('compatibility');"/>
           <tab id="sheetInfoTab"
                label="&sheetInfoTab.label;"
                oncommand="onSelectCSSTreeItem('general');"/>
@@ -160,6 +164,38 @@
         </tabs>
         <!-- defined in tabsOverlay -->
         <tabpanels id="TabPanels">
+          <grid id="compatibilityTabPanel" flex="1">
+            <columns><column/><column/><column/><column/></columns>
+            <rows>
+              <row align="center">
+                <label value="NOT YET IMPLEMENTED" class="titleLabel"/>
+              </row>
+              <row align="center">
+                <label value="CSS Level:"/>
+                <menulist>
+                  <menupopup>
+                    <menuitem label="3"/>
+                    <menuitem label="2" oncommand="SelectCSSLevel('CSS2')"/>
+                    <menuitem label="1" oncommand="SelectCSSLevel('CSS1')"/>
+                  </menupopup>
+                </menulist>
+              </row>
+              <row align="center">
+                <label value="Edit stylesheets compatible with:"/>
+                <checkbox label="Gecko" selected="true"/>
+                <checkbox label="Netscape 4"/>
+              </row>
+              <row align="center">
+                <spacer/>
+                <checkbox label="WinIE 4"/>
+                <checkbox label="WinIE 5/6"/>
+              </row>
+              <row align="center">
+                <spacer/>
+                <checkbox label="Opera 6"/>
+              </row>
+            </rows>
+          </grid>
           <!-- STYLESHEET INFORMATION PANEL -->
           <vbox id="sheetInfoTabPanel"
                 flex="1">

@@ -1711,3 +1711,19 @@ function AddCSSLevelChoice(rows)
 
   rows.appendChild(row);
 }
+
+function SelectCSSLevel(level)
+{
+  var bit = kCompatibilities[level];
+  var i = 0;
+  var id = kButtonCompatibilityArray[i];
+  while (id) {
+    var elt = document.getElementById(id);
+    if (elt) {
+      var compats = parseInt(kButtonCompatibilityArray[i+1], 2);
+      EnableUI(elt, (compats >> bit) & 1);
+    }
+    i += 2;
+    id = kButtonCompatibilityArray[i];
+  }
+}
