@@ -27,7 +27,6 @@ FILES=\
         dialogFrame.html                \
         dialogSidebar.js                \
         dialogSidebar.xul               \
-        dialogWindow.xul                \
         sidebar-registry.rdf            \
         document.gif                    \
         dom-test-1.xul                  \
