@@ -120,7 +120,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     }
     else {
       nscoord lr = borderPadding.left + borderPadding.right;
-      mContentArea.width = aReflowState.availableWidth - lr;
+      mContentArea.width = PR_MAX(0, aReflowState.availableWidth - lr);
     }
   }
   mHaveRightFloaters = PR_FALSE;
@@ -137,7 +137,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     // the bottom border and padding. The content area height doesn't
     // include either border or padding edge.
     mBottomEdge = aReflowState.availableHeight - borderPadding.bottom;
-    mContentArea.height = mBottomEdge - borderPadding.top;
+    mContentArea.height = PR_MAX(0, mBottomEdge - borderPadding.top);
   }
   else {
     // When we are not in a paginated situation then we always use

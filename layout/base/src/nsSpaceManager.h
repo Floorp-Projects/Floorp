@@ -104,8 +104,11 @@ inline void nsBandTrapezoid::GetRect(nsRect& aRect) const
 {
   aRect.x = PR_MIN(mTopLeftX, mBottomLeftX);
   aRect.y = mTopY;
-  aRect.width = PR_MAX(mTopRightX, mBottomRightX) - aRect.x;
-  aRect.height = mBottomY - mTopY;
+  aRect.width = PR_MAX(mTopRightX, mBottomRightX);
+  if (NS_MAXSIZE != aRect.width) {
+    aRect.width -= aRect.x;
+  }
+  aRect.height = (NS_MAXSIZE == mBottomY) ? NS_MAXSIZE : mBottomY - mTopY;
 }
 
 inline void nsBandTrapezoid::operator=(const nsRect& aRect)

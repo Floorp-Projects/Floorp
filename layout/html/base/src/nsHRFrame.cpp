@@ -319,6 +319,7 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
         // When the HR is using an 'auto' or percentage width, make sure it
         // remains springy.
         aDesiredSize.maxElementSize->width = onePixel;
+        aDesiredSize.width = PR_MAX(aDesiredSize.width, onePixel);
       }
       else {
         aDesiredSize.maxElementSize->width = aReflowState.mComputedWidth;
@@ -326,6 +327,7 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
     }
     else {
       aDesiredSize.maxElementSize->width = onePixel;
+      aDesiredSize.width = PR_MAX(aDesiredSize.width, onePixel);
     }
     NS_ASSERTION(aDesiredSize.maxElementSize->width <= aDesiredSize.width, "bad max-element-size width");
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
