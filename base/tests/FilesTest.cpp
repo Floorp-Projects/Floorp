@@ -18,7 +18,9 @@
 
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
-
+#if WHEN_MCMULLEN_REVIEWS
+#include "nsSpecialSystemDirectory.h"
+#endif
 //#include "string.h"
 //void* operator new(size_t n) { return malloc(n); }
 
@@ -35,6 +37,7 @@ struct FilesTest
 	int Parent(const char* relativePath, nsFileSpec& outParent);
 	int Delete(nsFileSpec& victim);
 	int CreateDirectory(nsFileSpec& victim);
+    int CreateDirectoryRecursive(const char* aPath);
 	int IterateDirectoryChildren(nsFileSpec& startChild);
 	int CanonicalPath(const char* relativePath);
 	int Persistence(const char* relativePath);
@@ -44,7 +47,9 @@ struct FilesTest
     int Rename(const char*  sourceFile, const char* newName);
 
     int Execute(const char* appName, const char* args);
-
+#if WHEN_MCMULLEN_REVIEWS
+    int SpecialSystemDirectories();
+#endif
 	void Banner(const char* bannerString);
 	void Passed();
 	void Failed();
@@ -369,6 +374,23 @@ int FilesTest::CreateDirectory(nsFileSpec& dirSpec)
 }
 
 //----------------------------------------------------------------------------------------
+int FilesTest::CreateDirectoryRecursive(const char* aPath)
+//----------------------------------------------------------------------------------------
+{
+    nsFileSpec dirSpec(aPath, PR_TRUE);
+	mConsole
+		<< "Testing nsFilePath(X, PR_TRUE) using"
+		<< "\n\t" << (const char*)aPath
+		<< nsEndl;
+		
+    Passed();
+	
+    return 0;
+}
+
+
+
+//----------------------------------------------------------------------------------------
 int FilesTest::IterateDirectoryChildren(nsFileSpec& startChild)
 //----------------------------------------------------------------------------------------
 {
@@ -522,6 +544,241 @@ int FilesTest::Execute(const char* appName, const char* args)
     return 0;
 }
 
+#if WHEN_MCMULLEN_REVIEWS
+int FilesTest::SpecialSystemDirectories()
+{
+     mConsole << "Please verify that these are the paths to various system directories:" << nsEndl;
+
+
+    nsSpecialSystemDirectory systemDir;
+    
+    systemDir = nsSpecialSystemDirectory::OS_DriveDirectory;
+    if ((const char*)systemDir == nsnull)
+    {
+		Failed();
+		return -1;
+	}
+    
+    mConsole << "OS_DriveDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::OS_TemporaryDirectory;
+    mConsole << "OS_TemporaryDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+    
+#ifdef XP_MAC
+    systemDir = nsSpecialSystemDirectory::Mac_SystemDirectory;
+    mConsole << "Mac_SystemDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_DesktopDirectory;
+    mConsole << "Mac_DesktopDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_TrashDirectory;
+    mConsole << "Mac_TrashDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_StartupDirectory;
+    mConsole << "Mac_StartupDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_ShutdownDirectory;
+    mConsole << "Mac_ShutdownDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_AppleMenuDirectory;
+    mConsole << "Mac_AppleMenuDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_ControlPanelDirectory;
+    mConsole << "Mac_ControlPanelDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_ExtensionDirectory;
+    mConsole << "Mac_ExtensionDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_FontsDirectory;
+    mConsole << "Mac_FontsDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Mac_PreferencesDirectory;
+    mConsole << "Mac_PreferencesDirectory yields \t";
+
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+#elif XP_PC
+    systemDir = nsSpecialSystemDirectory::Win_SystemDirectory;
+    mConsole << "Win_SystemDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Win_WindowsDirectory;
+    mConsole << "Win_WindowsDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+#else
+    systemDir = nsSpecialSystemDirectory::Unix_LocalDirectory;
+    mConsole << "Unix_LocalDirectory yields \t";
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+
+    systemDir = nsSpecialSystemDirectory::Unix_LibDirectory;
+    mConsole << "Unix_LibDirectory yields \t";
+
+    if((const char*)systemDir)
+    {
+        mConsole <<   (const char*) systemDir  << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        Failed();
+		return -1;
+    }
+#endif    
+    
+    Passed();
+    return 0;
+
+}
+#endif
+
+
 //----------------------------------------------------------------------------------------
 int FilesTest::RunAllTests()
 // For use with DEBUG defined.
@@ -540,7 +797,7 @@ int FilesTest::RunAllTests()
 	Banner("Canonical Path");
 	if (CanonicalPath("mumble/iotest.txt") != 0)
 		return -1;
-	
+
 	Banner("OutputStream");
 	if (OutputStream("mumble/iotest.txt") != 0)
 		return -1;
@@ -568,6 +825,15 @@ int FilesTest::RunAllTests()
 	if (CreateDirectory(parent) != 0)
 		return -1;
 
+    Banner("CreateDirectoryRecursive Relative (using nsFileSpec)");
+	if (CreateDirectoryRecursive("mumble/dir1/dir2/dir3/") != 0)
+		return -1;
+#ifdef XP_PC
+    Banner("CreateDirectoryRecursive Absolute (using nsFileSpec)");
+	if (CreateDirectoryRecursive("c:\\temp\\dir1\\dir2\\dir3\\") != 0)
+		return -1;
+#endif
+
 	Banner("IterateDirectoryChildren");
 	if (IterateDirectoryChildren(parent) != 0)
 		return -1;
@@ -593,6 +859,16 @@ int FilesTest::RunAllTests()
     if NS_FAILED(Execute("/bin/ls", "/"))
 #endif
         return -1;
+#if WHEN_MCMULLEN_REVIEWS    
+    Banner("Special System Directories");
+    if (SpecialSystemDirectories() != 0)
+        return -1;
+#endif
+
+    Banner("Move");
+    if (Move("mumble/moveFile.txt", "mumble/move") != 0)
+        return -1;
+
 
 	Banner("Persistence");
 	if (Persistence("mumble/filedesc.dat") != 0)
@@ -613,3 +889,4 @@ int main()
 	FilesTest tester;
 	return tester.RunAllTests();
 } // main
+ 
