@@ -226,8 +226,8 @@ th {
 *|*:table-cell {
   display: table-cell;
   padding: 1px;
+  white-space: inherit;
 }
-
 
 /* inlines */
 

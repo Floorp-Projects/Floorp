@@ -147,6 +147,7 @@ void nsTableCellFrame::SetPass1MaxElementSize(nscoord       aMaxWidth,
 { 
   mPass1MaxElementSize.height = aMaxElementSize.height;
   nscoord maxElemWidth = aMaxElementSize.width;
+  // the following can be removed when blocks handle nowrap - use regression test bug57828 after removing
   // the max elem width needs to take into account a cell that is NOWRAP
   const nsStyleText* styleText;
   GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
