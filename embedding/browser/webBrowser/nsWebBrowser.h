@@ -28,6 +28,20 @@
 
 #include "nsCWebBrowser.h"
 
+class nsWebBrowserInitInfo
+{
+public:
+   //nsIGenericWindow Stuff
+/*   nativeWindow         parentNativeWindow;
+   nsCOMPtr<nsIWidget>  parentWidget; */
+   PRInt32        x;
+   PRInt32        y;
+   PRInt32        cx;
+   PRInt32        cy;
+   PRBool         visible;
+};
+
+
 class nsWebBrowser : public nsIWebBrowser, public nsIWebBrowserNav,
    public nsIProgress, public nsIGenericWindow, public nsIScrollable,
    public nsITextScroll
@@ -49,11 +63,16 @@ protected:
    virtual ~nsWebBrowser();
 
    void UpdateListeners();
+   nsresult CreateDocShell(const PRUnichar* contentType);
 
 protected:
    nsCOMPtr<nsISupportsArray> m_ListenerList;
-   nsCOMPtr<nsIDocShell> m_DocShell;
-   PRBool   m_Created;
+   nsCOMPtr<nsIDocShell>      m_DocShell;
+   PRBool                     m_Created;
+   nsWebBrowserInitInfo*      m_InitInfo;
+   nsCOMPtr<nsIWidget>        m_ParentWidget;
+   nativeWindow               m_ParentNativeWindow;
+   nsCOMPtr<nsIWidget>        m_InternalWidget;
 };
 
 #endif /* nsWebBrowser_h__ */
