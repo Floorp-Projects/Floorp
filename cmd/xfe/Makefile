@@ -547,7 +547,7 @@ endif
 
 ifndef NO_MOCHA
 # XXX To a DSO...
-ifndef FULL_STATIC_BUILD
+ifdef FULL_STATIC_BUILD
 BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a
 else
 BASIC_DSOS      += -ljs -ljsj
