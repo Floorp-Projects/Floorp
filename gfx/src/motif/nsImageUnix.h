@@ -86,7 +86,7 @@ private:
   /** 
    * Calculate the amount of memory needed for the initialization of the image
    */
-  void ComputeMetrics();
+  void ComputMetrics();
 
 private:
   PRInt32 mWidth;
