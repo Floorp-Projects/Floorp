@@ -120,9 +120,10 @@
 #define NS_STYLE_FONT_SIZE_SMALLER              8
 
 // See nsStylePosition.mPosition
-#define NS_STYLE_POSITION_STATIC                0
+#define NS_STYLE_POSITION_NORMAL                0
 #define NS_STYLE_POSITION_RELATIVE              1
 #define NS_STYLE_POSITION_ABSOLUTE              2
+#define NS_STYLE_POSITION_FIXED                 3
 
 // See nsStylePosition.mClip
 #define NS_STYLE_CLIP_AUTO                      0x00
