@@ -44,7 +44,7 @@ show index from descs;
 	
 create table people (
     id mediumint not null auto_increment primary key,
-    who varchar(16) not null,
+    who varchar(32) not null,
 
     unique(who)
 );
