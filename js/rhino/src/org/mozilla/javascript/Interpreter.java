@@ -2131,6 +2131,8 @@ public class Interpreter {
         }
 
         if (lhs instanceof InterpretedFunction) {
+            // Inlining of InterpretedFunction.call not to create
+            // argument array
             InterpretedFunction f = (InterpretedFunction)lhs;
             stack[stackTop] = interpret(cx, calleeScope, calleeThis,
                                         stack, sDbl, calleeArgShft, count,
@@ -2166,7 +2168,20 @@ public class Interpreter {
         int calleeArgShft = stackTop + 1;
         Object lhs = stack[stackTop];
 
-        if (lhs instanceof Function) {
+        if (lhs instanceof InterpretedFunction) {
+            // Inlining of InterpretedFunction.construct not to create
+            // argument array
+            InterpretedFunction f = (InterpretedFunction)lhs;
+            Scriptable newInstance = f.createObject(cx, scope);
+            Object callResult = interpret(cx, scope, newInstance,
+                                          stack, sDbl, calleeArgShft, count,
+                                          f, f.itsData);
+            if (callResult instanceof Scriptable && callResult != undefined) {
+                stack[stackTop] = callResult;
+            } else {
+                stack[stackTop] = newInstance;
+            }
+        } else if (lhs instanceof Function) {
             Function f = (Function)lhs;
             Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, count);
             stack[stackTop] = f.construct(cx, scope, outArgs);
