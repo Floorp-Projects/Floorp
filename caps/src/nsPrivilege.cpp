@@ -17,6 +17,7 @@
  */
 /*describes the state and duration of privileges*/
 #include "nsPrivilege.h"
+#include "nsIAllocator.h"
 #include "prlog.h"
 #include "plstr.h"
 
@@ -149,7 +150,7 @@ nsPrivilege::ToString(char * * result)
 			privStr = "error";
 			break;
 	}
-	itsString = new char[strlen(privStr) + strlen(durStr) + 1];
+	itsString = (char *)nsAllocator::Alloc(strlen(privStr) + strlen(durStr) + 1);
 	PL_strcpy(itsString, privStr);
 	PL_strcat(itsString, durStr);
 	result = & itsString;
@@ -176,5 +177,5 @@ nsPrivilege::nsPrivilege(PRInt16 state, PRInt16 duration)
 
 nsPrivilege::~nsPrivilege(void)
 {
-	if(itsString) delete [] itsString;
+	if(itsString) nsAllocator::Free(itsString);
 }
