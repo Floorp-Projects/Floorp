@@ -18,6 +18,8 @@
    Rights Reserved.
    
    Contributor(s): 
+     Håkan Waara <hwaara@chello.se>
+     Peter Annema <disttsc@bart.nl>
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -33,7 +35,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical"
-        onload="imageBlockingEnabled(); parent.initPanel('chrome://cookie/content/pref-images.xul');">
+        onload="init();">
           
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
@@ -42,53 +44,33 @@
   
   var _elementIDs = ["accOrgImages", "networkImageBehaviour", "networkImageWarnAboutImages"];
 
-  // Present finer control over image loading to the user.
-  // enable image blocker if "imageblocker.enabled" pref is true
-  function imageBlockingEnabled() {
+  function init()
+  {
+    parent.initPanel('chrome://cookie/content/pref-images.xul');
 
-      if( !parent.hPrefWindow.getPref( "bool", "imageblocker.enabled" ) ) 
-        {
+    imageBlockingEnabled();
 
-          // Hide originating server option.
-          var orgImages = document.getElementById( "accOrgImages" );
-          orgImages.setAttribute("hidden", "true");
-
-          // Hide warn about images button.
-          var networkImageWarnAboutImages = document.getElementById( "networkImageWarnAboutImages");
-          networkImageWarnAboutImages.setAttribute("hidden", "true");
-
-          // Hide viewImages button.
-          var viewImagesButton = document.getElementById( "viewImages");
-          viewImagesButton.setAttribute("hidden", "true");
-
-        } else {
-
-          // Show originating server option.
-          var orgImages = document.getElementById( "accOrgImages" );
-          orgImages.setAttribute("hidden", "false");
-
-          // Show warn about images button.
-          var networkImageWarnAboutImages = document.getElementById( "networkImageWarnAboutImages");
-          networkImageWarnAboutImages.setAttribute("hidden", "false");
-
-          // Show viewImages button.
-          var viewImagesButton = document.getElementById( "viewImages");
-          viewImagesButton.setAttribute("hidden", "false");
-
-        }
-    }
-
-  function updateImageFields( aInteger, aBoolean ) {
-    var imageBehaviourField = document.getElementById("networkImageBehaviour");
-    var imageBehaviourCheckbox = document.getElementById("networkImageWarnAboutImages");
-    
-    imageBehaviourField.value = aInteger;
-    imageBehaviourCheckbox.checked = aBoolean;
+    var enabled = document.getElementById("networkImageBehaviour").data != "2";
+    setWarnAboutImagesEnabled(enabled);
   }
 
+  // Present finer control over image loading to the user.
+  // enable image blocker if "imageblocker.enabled" pref is true
+  function imageBlockingEnabled()
+  {
+    if (parent.hPrefWindow.getPref("bool", "imageblocker.enabled"))
+      document.getElementById("haveImageBlocking").removeAttribute("hidden");
+  }
+
+  function setWarnAboutImagesEnabled(aEnabled)
+  {
+    document.getElementById("networkImageWarnAboutImages").disabled = !aEnabled;
+  }
  
   ]]>
   </script>
+
+  <broadcaster id="haveImageBlocking" hidden="true"/>
 
   <box class="box-smallheader" id="imagesHeader" title="&lHeader;"/>
 
@@ -100,19 +82,33 @@
     <radiogroup id="networkImageBehaviour" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="network.image.imageBehavior"
                 prefattribute="value">
-      <radio group="networkImageBehaviour" value="0" label="&accAllImagesRadio.label;" accesskey="&accAllImagesRadio.accesskey;"/>
-      <radio id="accOrgImages" group="networkImageBehaviour" value="1" label="&accOrgImagesRadio.label;" accesskey="&accOrgImagesRadio.accesskey;"/>
-      <radio group="networkImageBehaviour" value="2" label="&disableImages.label;" accesskey="&disableImages.accesskey;"/>
+       <radio group="networkImageBehaviour" value="2" label="&disableImages.label;"
+              accesskey="&disableImages.accesskey;"
+              oncommand="setWarnAboutImagesEnabled(false);"/>
+       <radio group="networkImageBehaviour" value="1" label="&accOrgImagesRadio.label;"
+              accesskey="&accOrgImagesRadio.accesskey;"
+              id="accOrgImages" observes="haveImageBlocking"
+              oncommand="setWarnAboutImagesEnabled(true);"/>
+       <radio group="networkImageBehaviour" value="0" label="&accAllImagesRadio.label;"
+              accesskey="&accAllImagesRadio.accesskey;"
+              oncommand="setWarnAboutImagesEnabled(true);"/>
     </radiogroup>
 
+    <separator observes="haveImageBlocking"/>
+
     <box autostretch="never">    
-      <checkbox class="indent" id="networkImageWarnAboutImages" label="&warnAboutImages.label;" accesskey="&warnAboutImages.accesskey;"
-              pref="true" preftype="bool" prefstring="network.image.warnAboutImages" 
-              prefattribute="checked"/>
+       <checkbox id="networkImageWarnAboutImages" label="&warnAboutImages.label;"
+                 accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
+                 pref="true" preftype="bool" prefattribute="checked"
+                 prefstring="network.image.warnAboutImages"/>
     </box>
 
+     <separator observes="haveImageBlocking"/>
+ 
     <box autostretch="never" halign="right">
-      <button class="dialog" id="viewImages" label="&viewImages.label;" accesskey="&viewImages.accesskey;" oncommand="viewImages();"/>
+      <button class="dialog" id="viewImages" lavel="&viewImages.label;"
+              accesskey="&viewImages.accesskey;" oncommand="viewImages();"
+              observes="haveImageBlocking"/>
     </box>
 
   </titledbox>
