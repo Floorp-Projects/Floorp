@@ -94,7 +94,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
 	  NS_IMETHOD UpdateGoMenu();
 	  NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );
 
-    PRBool              mIsViewSource;
     PRBool              mIsClosed;
 
     nsIScriptContext   *mToolbarScriptContext;			// weak reference
