@@ -1408,7 +1408,7 @@ new_explode(jsdouble time, PRTime *split, JSBool findEquivalent)
              * to some equivalent year in the range 0 to 2800.  Borrowed from
              * A. D. Olsen.
              */
-            int cycles;
+            jsint cycles;
 #define CYCLE_YEARS 2800L
             cycles = (year >= 0) ? year / CYCLE_YEARS
                                  : -1 - (-1 - year) / CYCLE_YEARS;
@@ -1434,43 +1434,6 @@ new_explode(jsdouble time, PRTime *split, JSBool findEquivalent)
     /* not sure how this affects things, but it doesn't seem
        to matter. */
     split->tm_isdst = (DaylightSavingTA(time) != 0);
-}
-
-static JSBool
-date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
-                    jsval *argv, jsval *rval)
-{
-    char buf[100];
-    JSString *str;
-    PRTime split;
-    jsdouble *date = date_getProlog(cx, obj, argv);
-    if (!date)
-        return JS_FALSE;
-
-    if (!JSDOUBLE_IS_FINITE(*date)) {
-        PR_snprintf(buf, sizeof buf, js_NaN_date_str);
-    } else {
-        jsdouble local = LocalTime(*date);
-        new_explode(local, &split, JS_FALSE);
-
-        /* let PRTime format it.  Use '%#c' for windows, because '%c' is
-         * backward-compatible and non-y2k with msvc; '%#c' requests that a
-         * full year be used in the result string.
-         */
-        PR_FormatTime(buf, sizeof buf,
-#ifdef _WIN32
-                      "%#c",
-#else
-                      "%c",
-#endif
-                      &split);
-    }
-
-    str = JS_NewStringCopyZ(cx, buf);
-    if (!str)
-        return JS_FALSE;
-    *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
 }
 
 /* helper function */
@@ -1527,6 +1490,48 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
                     ((tzbuf[0] == '(' && tzbuf[1] != ')') ? tzbuf : ""),
 
                     YearFromTime(local));
+    }
+
+    str = JS_NewStringCopyZ(cx, buf);
+    if (!str)
+        return JS_FALSE;
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+static JSBool
+date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
+                    jsval *argv, jsval *rval)
+{
+    char buf[100];
+    JSString *str;
+    PRTime split;
+    jsdouble *date = date_getProlog(cx, obj, argv);
+    if (!date)
+        return JS_FALSE;
+
+    if (!JSDOUBLE_IS_FINITE(*date)) {
+        PR_snprintf(buf, sizeof buf, js_NaN_date_str);
+    } else {
+        intN result_len;
+        jsdouble local = LocalTime(*date);
+        new_explode(local, &split, JS_FALSE);
+
+        /* let PRTime format it.  Use '%#c' for windows, because '%c' is
+         * backward-compatible and non-y2k with msvc; '%#c' requests that a
+         * full year be used in the result string.
+         */
+        result_len = PR_FormatTime(buf, sizeof buf,
+#ifdef _WIN32
+                                   "%#c",
+#else
+                                   "%c",
+#endif
+                                   &split);
+
+        /* If it failed, default to toString. */
+        if (result_len == 0)
+            return date_format(cx, *date, rval);
     }
 
     str = JS_NewStringCopyZ(cx, buf);
