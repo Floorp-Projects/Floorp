@@ -37,7 +37,7 @@
 //
 // class CImageIconMixin
 //
-// Draw an image, most likely as an icon
+// Draw an image, most likely as an icon.
 //
 class CImageIconMixin : public LListener
 {
@@ -59,6 +59,13 @@ public:
 	
 protected:
 
+		// catch the message that the image is ready to draw
+	virtual void ListenToMessage ( MessageT inMessage, void* ioPtr ) ;
+	
+		// called when the image is ready to draw. This should do something like
+		// refresh the view.
+	virtual void ImageIsReady ( ) = 0;
+	
 		// Draw a scaled image as an icon. Override to draw differently
 	virtual void DoDrawing ( DrawingState & inState, const Point & inTopLeft,
 								const IconTransformType inTransform, Uint32 inWidth,

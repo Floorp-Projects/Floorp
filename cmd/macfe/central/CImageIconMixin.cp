@@ -53,6 +53,20 @@ CImageIconMixin :: ~CImageIconMixin ( )
 
 
 //
+// ListenToMessage
+//
+// Listen for the update of image and then 
+//
+void
+CImageIconMixin :: ListenToMessage ( const MessageT inMessage, void* ioData )
+{
+	if ( inMessage == CIconContext::msg_ImageReadyToDraw )
+		ImageIsReady();
+		
+} // ListenToMessage
+
+
+//
 // DrawIcon
 //	
 // Draw the image. Will begin loading it if the data has not yet arrived and will
