@@ -1276,6 +1276,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatusWB(OLECMDID cmdID, OLECMDF
 		return E_UNEXPECTED;
 	}
 
+	// TODO acknowledge the fact that we support OLECMDID_PRINT
+
 	return E_NOTIMPL;
 }
 
@@ -1288,6 +1290,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ExecWB(OLECMDID cmdID, OLECMDEXECOPT 
 	{
 		NG_ASSERT(0);
 		return E_UNEXPECTED;
+	}
+
+	// Test which commands are handled
+	if (cmdID == OLECMDID_PRINT)
+	{
+		// TODO print when the client says print!
 	}
 
 	return E_NOTIMPL;
@@ -1517,4 +1525,18 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 	return E_NOTIMPL;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// IOleCommandTarget
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText)
+{
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::Exec(const GUID __RPC_FAR *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
+{
+	return E_NOTIMPL;
+}
 
