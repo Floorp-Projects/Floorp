@@ -251,7 +251,8 @@ typedef JSBool
 
 typedef enum JSGCStatus {
     JSGC_BEGIN,
-    JSGC_END
+    JSGC_END,
+    JSGC_MARK_END
 } JSGCStatus;
 
 typedef JSBool

@@ -94,6 +94,9 @@ js_LockGCThing(JSContext *cx, void *thing);
 extern JSBool
 js_UnlockGCThing(JSContext *cx, void *thing);
 
+extern JSBool 
+js_IsAboutToBeFinalized(JSContext *cx, void *thing);
+
 extern void
 js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg);
 
