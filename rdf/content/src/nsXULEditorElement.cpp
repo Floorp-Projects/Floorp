@@ -60,12 +60,10 @@ MOZ_DECL_CTOR_COUNTER(RDF_nsXULEditorElement);
 nsXULEditorElement::nsXULEditorElement(nsIDOMXULElement* aOuter)
 :nsXULElement(aOuter)
 {
-    MOZ_COUNT_CTOR(RDF_nsXULEditorElement);
 }
 
 nsXULEditorElement::~nsXULEditorElement()
 {
-    MOZ_COUNT_DTOR(RDF_nsXULEditorElement);
 }
 
 NS_IMETHODIMP

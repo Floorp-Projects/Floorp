@@ -234,8 +234,6 @@ FileSystemDataSource::isFileURI(nsIRDFResource *r)
 
 FileSystemDataSource::FileSystemDataSource(void)
 {
-	MOZ_COUNT_CTOR(RDF_FileSystemDataSource);
-
 	NS_INIT_REFCNT();
 
 	if (gRefCnt++ == 0)
@@ -275,7 +273,6 @@ FileSystemDataSource::FileSystemDataSource(void)
 
 FileSystemDataSource::~FileSystemDataSource (void)
 {
-    MOZ_COUNT_DTOR(RDF_FileSystemDataSource);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: FileSystemDataSource\n", gInstanceCount);

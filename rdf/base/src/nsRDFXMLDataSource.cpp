@@ -420,8 +420,6 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mNameSpaces(nsnull),
       mURLSpec(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_RDFXMLDataSourceImpl);
-
     NS_INIT_REFCNT();
 
 #ifdef PR_LOGGING
@@ -480,7 +478,6 @@ RDFXMLDataSourceImpl::Init()
 
 RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 {
-    MOZ_COUNT_DTOR(RDF_RDFXMLDataSourceImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: RDFXMLDataSourceImpl\n", gInstanceCount);

@@ -473,8 +473,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
       mCurrentOverlay(0),
       mStyleSheetCount(0)
 {
-    MOZ_COUNT_CTOR(RDF_XULContentSinkImpl);
-
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
@@ -534,7 +532,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
 
 XULContentSinkImpl::~XULContentSinkImpl()
 {
-    MOZ_COUNT_DTOR(RDF_XULContentSinkImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: XULContentSinkImpl\n", gInstanceCount);

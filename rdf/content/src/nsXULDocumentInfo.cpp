@@ -64,15 +64,12 @@ private:
 XULDocumentInfoImpl::XULDocumentInfoImpl(void)
 :mParentDocument(nsnull), mContentSink(nsnull)
 {
-	MOZ_COUNT_CTOR(RDF_XULDocumentInfoImpl);
-
 	NS_INIT_REFCNT();
 }
 
 
 XULDocumentInfoImpl::~XULDocumentInfoImpl(void)
 {
-    MOZ_COUNT_DTOR(RDF_XULDocumentInfoImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: XULDocumentInfoImpl\n", gInstanceCount);

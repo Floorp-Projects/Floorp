@@ -88,8 +88,6 @@ ContainerEnumeratorImpl::ContainerEnumeratorImpl(nsIRDFDataSource* aDataSource,
       mResult(nsnull),
       mNextIndex(1)
 {
-    MOZ_COUNT_CTOR(RDF_ContainerEnumeratorImpl);
-
     NS_INIT_REFCNT();
 
     mDataSource = dont_QueryInterface(aDataSource);
@@ -110,7 +108,6 @@ ContainerEnumeratorImpl::ContainerEnumeratorImpl(nsIRDFDataSource* aDataSource,
 
 ContainerEnumeratorImpl::~ContainerEnumeratorImpl(void)
 {
-    MOZ_COUNT_DTOR(RDF_ContainerEnumeratorImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: ContainerEnumeratorImpl\n", gInstanceCount);
