@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
- *   Ken Herron <kherron@newsguy.com>
+ *   Ken Herron <kherron@fastmail.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -58,6 +58,7 @@
 #include "nsTempfilePS.h"
 
 class nsIImage;
+class nsIAtom;
 #endif
 
 #include <stdio.h>
@@ -137,12 +138,9 @@ struct PrintSetup_ {
   const char* bullet;           /* What char to use for bullets */
 
   struct URL_Struct_ *url;      /* url of doc being translated */
-  FILE *out;                    /* Where to send the output */
-  FILE *tmpBody;                   /* temp file for True-Type printing */
   XL_CompletionRoutine completion; /* Called when translation finished */
   void* carg;                   /* Data saved for completion routine */
   int status;                   /* Status of URL on completion */
-  const char *print_cmd;        /* print command */
   int num_copies;               /* Number of copies of job to print */
 };
 
@@ -183,22 +181,26 @@ public:
    *	@update 2/1/99 dwc
    */
   void end_page();
-  /** ---------------------------------------------------
-   *  start the current document
-   *	@update 2/1/99 dwc
-   */
-  void begin_document();
 
   /** ---------------------------------------------------
    *  end the current document
    *	@update 2/1/99 dwc
    */
   nsresult end_document();
+
   /** ---------------------------------------------------
-   *  add CID check code
-   *	@update 01/20/03 louie
+   *  Write the document prolog to the given file handle
+   *  @param File handle which should receive the prolog.
    */
-  void add_cid_check();
+  void write_prolog(FILE *aHandle);
+
+  /** ---------------------------------------------------
+   *  Write the document script (body) to the given file handle.
+   *  @param File handle which should receive the prolog.
+   *  @return NS_OK or a suitable error code for I/O errors.
+   */
+  nsresult write_script(FILE *aHandle);
+
   /** ---------------------------------------------------
    *  move the current point to this location
    *	@update 9/30/2003 kherron
@@ -394,7 +396,13 @@ public:
   
   void settitle(PRUnichar * aTitle);
 
-  FILE * GetPrintFile();
+  /** ---------------------------------------------------
+   *  Retrieve the handle for the temp file holding the
+   *  document script.
+   *  @return the script file handle.
+   */
+  FILE * GetScriptHandle() { return mScriptFP; }
+
   PRBool  GetUnixPrinterSetting(const nsCAutoString&, char**);
   PrintSetup            *mPrintSetup;
 private:
@@ -403,9 +411,8 @@ private:
   nsCOMPtr<nsIPersistentProperties> mPrinterProps;
   char                  *mTitle;
   nsTempfilePS          mTempfileFactory;
-  nsCOMPtr<nsILocalFile> mDocProlog;
   nsCOMPtr<nsILocalFile> mDocScript;
-
+  FILE                  *mScriptFP;
 
 
   /** ---------------------------------------------------
@@ -415,9 +422,10 @@ private:
   void initialize_translation(PrintSetup* aPi);
   /** ---------------------------------------------------
    *  initialize language group
-   *	@update 5/30/00 katakai
+   *	@update 5/17/2004 kherron
+   *	@param aHandle File handle to write langgroup directives
    */
-  void initlanggroup();
+  void initlanggroup(FILE *aHandle);
 
 };
 

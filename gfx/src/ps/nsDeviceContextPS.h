@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Ken Herron <kherron@fastmail.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +48,7 @@
 #include "nsVoidArray.h"
 #include "nsIDeviceContextPS.h"
 #include "nsFontMetricsPS.h"
+#include "nsIPrintJobPS.h"
 
 class nsPostScriptObj;
 class nsDeviceContextWin;       // need to be a friend of the class using us.
@@ -106,6 +108,7 @@ protected:
   PRUint32               mDepth;
   nsCOMPtr<nsIDeviceContextSpec>  mSpec;
   nsCOMPtr<nsIDeviceContext>      mParentDeviceContext;
+  nsIPrintJobPS         *mPrintJob;
   nsPostScriptObj       *mPSObj;
   nsHashtable           *mPSFontGeneratorList;
 };
