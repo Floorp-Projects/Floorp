@@ -86,6 +86,8 @@ NS_IMETHODIMP nsSplashScreenGtk::Show()
   mDialog = gdk_window_new(NULL, &attr, GDK_WA_X | GDK_WA_Y);
 
   gdk_window_set_back_pixmap(mDialog, pmap, FALSE);
+  gdk_pixmap_unref(pmap);
+
   gdk_window_show(mDialog);
 
   return NS_OK;
