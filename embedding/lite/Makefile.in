@@ -34,12 +34,9 @@ REQUIRES	= xpcom \
 		  chrome \
 		  necko \
 		  pref \
+		  history \
 		  appcomps \
 		  $(NULL)
-
-ifdef MOZ_PHOENIX
-REQUIRES	+= history
-endif
 
 CPPSRCS         = \
                 nsEmbedChromeRegistry.cpp \
