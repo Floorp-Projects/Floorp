@@ -164,11 +164,12 @@ static void PRSelectTest(void)
 
         if (debug_mode) printf("return from select is %d\n", rv);
 
-        if (PR_FD_ISSET(newSock, &rdset))
+        if (PR_FD_ISSET(newSock, &rdset)) {
             if (debug_mode) printf("I can't believe it- the socket is ready okay!\n");
-        else
+        } else {
             if (debug_mode) printf("Damn; the select test failed...\n");
 			else Test_Result (FAIL);
+        }
 
         strcpy(buf, "XXXXXXXXXX");
         bytesRead = PR_Recv(newSock, buf, 10, 0, PR_INTERVAL_NO_TIMEOUT);
@@ -245,12 +246,13 @@ static void NativeSelectTest(void)
 
         if (debug_mode) printf("return from select is %d\n", rv);
 
-        if (FD_ISSET(osfd, &rdset))
+        if (FD_ISSET(osfd, &rdset)) {
             if (debug_mode)
                 printf("I can't believe it- the socket is ready okay!\n");
-        else
+        } else {
             if (debug_mode) printf("Damn; the select test failed...\n");
 			else Test_Result (FAIL);
+        }
 
         strcpy(buf, "XXXXXXXXXX");
         bytesRead = PR_Recv(newSock, buf, 10, 0, PR_INTERVAL_NO_TIMEOUT);
