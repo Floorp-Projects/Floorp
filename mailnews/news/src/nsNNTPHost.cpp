@@ -503,6 +503,7 @@ nsNNTPHost::nsNNTPHost(const char *name, PRInt32 port)
 	m_groupSucceeded = PR_FALSE;
 	m_lastGroupUpdate = 0;
 	m_groupTree = NULL;
+    m_inhaled = PR_FALSE;
 }
 
 /* we're not supposed to implement this */
@@ -926,10 +927,10 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 		nsMsgGroupRecord* group = FindOrCreateGroup(line);
 		// Go add all of our categories to the newsrc.
 		AssureAllDescendentsLoaded(group);
-		nsMsgGroupRecord* end = group->GetSiblingOrAncestorSibling();
+		nsMsgGroupRecord* endRecord = group->GetSiblingOrAncestorSibling();
 		nsMsgGroupRecord* child;
 		for (child = group->GetNextAlphabetic() ;
-			 child != end ;
+			 child != endRecord ;
 			 child = child->GetNextAlphabetic()) {
 			PR_ASSERT(child);
 			if (!child) break;
@@ -2150,7 +2151,6 @@ nsNNTPHost::AddGroup(const char *name,
 			if (!fullname) break;
             
 			nsINNTPNewsgroup* info;
-            nsresult rv;
             
             rv = FindGroup(fullname, &info);
 			if (NS_SUCCEEDED(rv)) {
@@ -2173,7 +2173,7 @@ nsNNTPHost::AddGroup(const char *name,
         // solution: SwitchNewsToCategoryContainer should
         // return an nsresult
         nsINNTPCategoryContainer *catContainer;
-        nsresult rv =
+        rv =
             newsInfo->QueryInterface(nsINNTPCategoryContainer::GetIID(),
                                      (void **)&catContainer);
 		if (NS_FAILED(rv))
@@ -2432,7 +2432,7 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
             subscribed) {
 			info->SetWantNewTotals(PR_FALSE);
             char *name;
-            nsresult rv = info->GetName(&name);
+            rv = info->GetName(&name);
 			if (NS_SUCCEEDED(rv)) {
                 *result = PL_strdup(name);
                 return NS_OK;
