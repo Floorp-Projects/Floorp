@@ -425,7 +425,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
     mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData);
     mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
   }
-  if (mRuleProcessors[eDocSheet].Count()) {
+  if (useRuleProcessors && mRuleProcessors[eDocSheet].Count()) {
     mRuleProcessors[eDocSheet].EnumerateForwards(aCollectorFunc, aData);
   }
   lastDocRN = mRuleWalker->GetCurrentNode();
