@@ -22,6 +22,7 @@
  *     Daniel Veditz <dveditz@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
  *     Mitch Stoltz <mstoltz@netscape.com>
+ *     Jeroen Dobbelaere <jeroen.dobbelaere@acunia.com>
  */
 
 /* 
@@ -909,7 +910,7 @@ PRInt32 nsZipArchive::BuildFileList()
     PRUint32 endsig;
     PRBool bEndsigFound = PR_FALSE;
 
-    for (endp -= sizeof(ZipEnd); endp >= buf; endp--)
+    for (endp -= ZIPEND_SIZE; endp >= buf; endp--)
     {
 		endsig = xtolong(endp);
 		if (endsig == ENDSIG)
@@ -937,7 +938,7 @@ PRInt32 nsZipArchive::BuildFileList()
       status = ZIP_ERR_CORRUPT;
 
     //-- backward read must overlap ZipEnd length
-    pos += sizeof(ZipEnd);
+    pos += ZIPEND_SIZE;
 
   } /* while looking for end signature */
 
@@ -950,7 +951,7 @@ PRInt32 nsZipArchive::BuildFileList()
     //-- we think we found the central directory, read in the first chunk
     pos = 0;
     bufsize = PR_Read( mFd, &buf, sizeof(buf) );
-    if (bufsize < (PRInt32)(sizeof(ZipCentral) + sizeof(ZipEnd)))
+    if (bufsize < (PRInt32)(ZIPCENTRAL_SIZE + ZIPEND_SIZE))
     {
       // We know we read the end sig and got pointed at the central
       // directory--there should be at least this much
@@ -1014,7 +1015,7 @@ PRInt32 nsZipArchive::BuildFileList()
     item->time = xtoint( central->time );
     item->date = xtoint( central->date );
 
-    pos += sizeof(ZipCentral);
+    pos += ZIPCENTRAL_SIZE;
 
     //-------------------------------------------------------
     // get the item name
@@ -1069,7 +1070,7 @@ PRInt32 nsZipArchive::BuildFileList()
     // set up to process the next item at the top of loop
     //-------------------------------------------------------
     leftover = (PRUint32)(bufsize - pos);
-    if ( leftover < (extralen + commentlen + sizeof(ZipCentral)) )
+    if ( leftover < (extralen + commentlen + ZIPCENTRAL_SIZE) )
     {
       //-- not enough data left to process at top of loop.
       //-- move leftover and read more
@@ -1090,12 +1091,19 @@ PRInt32 nsZipArchive::BuildFileList()
     }
 
     //-- make sure we've read enough
-    if ( (PRUint32)bufsize < pos + sizeof(ZipCentral) )
+    if ( (PRUint32)bufsize < pos + ZIPCENTRAL_SIZE )
     {
       status = ZIP_ERR_CORRUPT;
       break;
     }
   } /* while reading central directory records */
+
+#if defined(DEBUG)
+  if (status != ZIP_OK) {
+    const char* msgs[] = { "ZIP_OK", "ZIP_ERR_GENERAL", "ZIP_ERR_MEMORY", "ZIP_ERR_DISK", "ZIP_ERR_CORRUPT", "ZIP_ERR_PARAM", "ZIP_ERR_FNF", "ZIP_ERR_UNSUPPORTED", "ZIP_ERR_SMALLBUF", "UNKNOWN" };
+    printf("nsZipArchive::BuildFileList  status = %d '%s'\n", status, msgs[(status <= 0 && status >= -8) ? -status : 9]);
+  }
+#endif
 
   return status;
 }
@@ -1157,14 +1165,14 @@ PRInt32  nsZipArchive::SeekToItem(const nsZipItem* aItem)
       return ZIP_ERR_CORRUPT;
 
     ZipLocal   Local;
-    if ( PR_Read(mFd, (char*)&Local, sizeof(ZipLocal)) != (READTYPE)sizeof(ZipLocal)
+    if ( PR_Read(mFd, (char*)&Local, ZIPLOCAL_SIZE) != (READTYPE) ZIPLOCAL_SIZE
          || xtolong( Local.signature ) != LOCALSIG )
     {
       //-- read error or local header not found
       return ZIP_ERR_CORRUPT;
     }
 
-    ((nsZipItem*)aItem)->offset += sizeof(Local) +
+    ((nsZipItem*)aItem)->offset += ZIPLOCAL_SIZE +
                                    xtoint( Local.filename_len ) +
                                    xtoint( Local.extrafield_len );
     ((nsZipItem*)aItem)->flags |= ZIFLAG_DATAOFFSET;

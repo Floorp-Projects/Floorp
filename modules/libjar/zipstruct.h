@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Jeroen Dobbelaere <jeroen.dobbelaere@acunia.com>
  */
 
 #ifndef _zipstruct_h
@@ -47,6 +48,13 @@ typedef struct ZipLocal_
   unsigned char extrafield_len [2];
 } ZipLocal;
 
+/*
+ * 'sizeof(struct XXX)' includes padding on ARM (see bug 87965)
+ * As the internals of a jar/zip file must not depend on the target
+ * architecture (i386, ppc, ARM, ...), use a fixed value instead.
+ */ 
+#define ZIPLOCAL_SIZE (4+2+2+2+2+2+4+4+4+2+2)
+
 typedef struct ZipCentral_
   {
   unsigned char signature [4];
@@ -68,6 +76,13 @@ typedef struct ZipCentral_
   unsigned char localhdr_offset [4];
 } ZipCentral;
 
+/*
+ * 'sizeof(struct XXX)' includes padding on ARM (see bug 87965)
+ * As the internals of a jar/zip file must not depend on the target
+ * architecture (i386, ppc, ARM, ...), use a fixed value instead.
+ */ 
+#define ZIPCENTRAL_SIZE (4+2+2+2+2+2+2+4+4+4+2+2+2+2+2+4+4)
+
 typedef struct ZipEnd_
   {
   unsigned char signature [4];
@@ -79,6 +94,13 @@ typedef struct ZipEnd_
   unsigned char offset_central_dir [4];
   unsigned char commentfield_len [2];
 } ZipEnd;
+
+/*
+ * 'sizeof(struct XXX)' includes padding on ARM (see bug 87965)
+ * As the internals of a jar/zip file must not depend on the target
+ * architecture (i386, ppc, ARM, ...), use a fixed value instead.
+ */ 
+#define ZIPEND_SIZE (4+2+2+2+2+4+4+2)
 
 /* signatures */
 #define LOCALSIG    0x04034B50l
