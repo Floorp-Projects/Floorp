@@ -1097,6 +1097,7 @@ PRInt32 nsString::Left(nsString& aCopy,PRInt32 aCount) const {
  *  @return  number of chars copied
  */
 PRInt32 nsString::Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) const {
+  aCopy.Truncate();
   if(anOffset<mLength) {
     aCount=(anOffset+aCount<=mLength) ? aCount : mLength-anOffset;
 
