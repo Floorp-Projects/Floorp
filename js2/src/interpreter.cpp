@@ -61,7 +61,6 @@ namespace Interpreter {
 
         // initial activation.
         JSActivation* activation = new JSActivation(iCode, args);
-        JSValues* locals = &activation->mLocals;
         JSValues* registers = &activation->mRegisters;
 
         InstructionIterator begin_pc = iCode->its_iCode->begin();
@@ -78,7 +77,6 @@ namespace Interpreter {
                     ICodeModule* target = 
                         (*registers)[op2(call)].function->getICode();
                     activation = new JSActivation(target, activation, op3(call));
-                    locals = &activation->mLocals;
                     registers = &activation->mRegisters;
                     begin_pc = pc = target->its_iCode->begin();
                 }
@@ -95,7 +93,6 @@ namespace Interpreter {
                     frames.pop();
                     activation = frame->itsActivation;
                     registers = &activation->mRegisters;
-                    locals = &activation->mLocals;
                     (*registers)[frame->itsResult] = result;
                     pc = frame->itsReturnPC;
                     begin_pc = frame->itsBasePC;
@@ -163,18 +160,6 @@ namespace Interpreter {
                 {
                     LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
                     (*registers)[dst(li)] = JSValue(src1(li));
-                }
-                break;
-            case LOAD_VAR:
-                {
-                    LoadVar* lv = static_cast<LoadVar*>(instruction);
-                    (*registers)[dst(lv)] = (*locals)[src1(lv)];
-                }
-                break;
-            case SAVE_VAR:
-                {
-                    SaveVar* sv = static_cast<SaveVar*>(instruction);
-                    (*locals)[dst(sv)] = (*registers)[src1(sv)];
                 }
                 break;
             case BRANCH:

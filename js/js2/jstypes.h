@@ -176,23 +176,23 @@ namespace JSTypes {
          */
     struct JSActivation : public gc_base {
         JSValues mRegisters;
-        JSValues mLocals;
             
         JSActivation(ICodeModule* iCode, const JSValues& args)
-            : mRegisters(iCode->itsMaxRegister + 1), mLocals(args)
+            : mRegisters(iCode->itsMaxRegister + 1) 
         {
-            // ensure that locals array is large enough.
-            uint32 localsSize = iCode->itsMaxVariable + 1;
-            if (localsSize > mLocals.size())
-                mLocals.resize(localsSize);
+            // copy arg list to initial registers.
+            JSValues::iterator dest = mRegisters.begin();
+            for (JSValues::const_iterator src = args.begin(), 
+                     end = args.end(); src != end; ++src, ++dest) {
+                *dest = *src;
+            }
         }
 
         JSActivation(ICodeModule* iCode, JSActivation* caller, 
                      const RegisterList& list)
-            : mRegisters(iCode->itsMaxRegister + 1),
-              mLocals(iCode->itsMaxVariable + 1)
+            : mRegisters(iCode->itsMaxRegister + 1)
         {
-            // copy caller's parameter list in to locals.
+            // copy caller's parameter list to initial registers.
             JSValues::iterator dest = mRegisters.begin();
             const JSValues& params = caller->mRegisters;
             for (RegisterList::const_iterator src = list.begin(), 

@@ -78,14 +78,11 @@ namespace ICG {
     
     class ICodeModule {
     public:
-        ICodeModule(InstructionStream *iCode, uint32 maxRegister,
-                    uint32 maxVariable) :
-            its_iCode(iCode), itsMaxRegister(maxRegister),
-            itsMaxVariable(maxVariable) { }
+        ICodeModule(InstructionStream *iCode, uint32 maxRegister) :
+            its_iCode(iCode), itsMaxRegister(maxRegister) { }
         
         InstructionStream *its_iCode;
         uint32  itsMaxRegister;
-        uint32  itsMaxVariable;
     };
     
     /****************************************************************/
@@ -103,11 +100,7 @@ namespace ICG {
         
         void markMaxRegister() \
         { if (topRegister > maxRegister) maxRegister = topRegister; }
-        void markMaxVariable(uint32 variableIndex) \
-        { if (variableIndex > maxVariable) maxVariable = variableIndex; }
         
-        Register topRegister;
-        Register registerBase;
         Register getRegister() \
         { return topRegister++; }
         void resetTopRegister() \
@@ -116,9 +109,10 @@ namespace ICG {
         
         ICodeOp getBranchOp() \
         { ASSERT(!iCode->empty()); return iCode->back()->getBranchOp(); }
-        
+
+        Register topRegister;
+        Register registerBase;        
         uint32  maxRegister;
-        uint32  maxVariable;
         
         void setLabel(Label *label);
         void setLabel(InstructionStream *stream, Label *label);
@@ -127,8 +121,7 @@ namespace ICG {
         void branchConditional(Label *label, Register condition);
         
     public:
-        ICodeGenerator() : topRegister(0), registerBase(0), maxRegister(0),
-                           maxVariable(0) \
+        ICodeGenerator() : topRegister(0), registerBase(0), maxRegister(0)
         { iCode = new InstructionStream(); }
         
         virtual ~ICodeGenerator() { if (iCode) delete iCode; }
@@ -150,11 +143,8 @@ namespace ICG {
         
         Register compare(ICodeOp op, Register source1, Register source2);
         
-        Register loadVariable(uint32 frameIndex);
         Register loadImmediate(double value);
-        
-        void saveVariable(uint32 frameIndex, Register value);
-        
+                
         Register newObject();
         Register newArray();
         
