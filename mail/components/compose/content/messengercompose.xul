@@ -345,21 +345,6 @@
             </menupopup>
           </menu>
           <menuitem id="menu_AddressSidebar" type="checkbox" checked="false" label="&addressSidebar.label;" accesskey="&addressSidebar.accesskey;" oncommand="toggleAddressPicker();"/>
-          <menuseparator/>
-          <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
-            <template>
-              <rule>
-                <menupopup>
-                  <menuitem type="radio" name="charsetGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                </menupopup>
-              </rule>
-            </template>
-
-            <menupopup>
-              <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://global/content/customizeCharset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'mailedit')"/>
-              <menuseparator />
-            </menupopup>
-          </menu>
         </menupopup>
       </menu>
   
@@ -381,6 +366,20 @@
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
           <menuseparator/>
+          <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
+            <template>
+              <rule>
+                <menupopup>
+                  <menuitem type="radio" name="charsetGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </menupopup>
+              </rule>
+            </template>
+
+            <menupopup>
+              <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://global/content/customizeCharset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'mailedit')"/>
+              <menuseparator />
+            </menupopup>
+          </menu>
           <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" oncommand="OutputFormatMenuSelect(event.target)">
             <menupopup>
               <menuitem type="radio" name="output_format" label="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="format_auto" checked="true"/>
