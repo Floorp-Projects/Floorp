@@ -45,7 +45,14 @@ class nsIScriptContext;
 class nsIScriptExternalNameSet : public nsISupports {
 public:
   /**
-   * Called for each new name set
+   * Called to tell the name set to do any class initialization
+   * it needs to
+   */
+  NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext) = 0;
+
+  /**
+   * Called to tell the name set to add its names to the
+   * namespace manager of the context.
    */
   NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext) = 0;
 };

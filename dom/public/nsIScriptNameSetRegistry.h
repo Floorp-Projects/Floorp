@@ -57,6 +57,14 @@ public:
   NS_IMETHOD RemoveExternalNameSet(nsIScriptExternalNameSet* aNameSet) = 0;
   
   /**
+   * Intialize classes associated with the name sets.
+   *
+   * @param aScriptContext the script context within which to initialize
+   * @result NS_OK if successful
+   */
+  NS_IMETHOD InitializeClasses(nsIScriptContext* aContext) = 0;
+
+  /**
    * Populate the specified script context with all of the
    * name sets in the registry. Will generally be called when the
    * script context first needs to create a name space manager.

@@ -52,6 +52,8 @@ public:
   NS_IMETHOD     GC();
   NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
+
+  nsresult InitializeExternalClasses();
 };
 
 class nsJSEnvironment {

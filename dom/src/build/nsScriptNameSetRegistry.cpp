@@ -66,6 +66,26 @@ nsScriptNameSetRegistry::RemoveExternalNameSet(nsIScriptExternalNameSet* aNameSe
 }
 
 NS_IMETHODIMP 
+nsScriptNameSetRegistry::InitializeClasses(nsIScriptContext* aContext)
+{
+  nsresult result = NS_OK;
+  if (nsnull != aContext) {
+    PRInt32 i, count = mNameSets.Count();
+
+    for (i = 0; i < count; i++) {
+      nsIScriptExternalNameSet* ns = (nsIScriptExternalNameSet*)mNameSets.ElementAt(i);
+      if (nsnull != ns) {
+        result = ns->InitializeClasses(aContext);
+        if (NS_OK != result) {
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
 nsScriptNameSetRegistry::PopulateNameSpace(nsIScriptContext* aContext)
 {
   nsresult result = NS_OK;

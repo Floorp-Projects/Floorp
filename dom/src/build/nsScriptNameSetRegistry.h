@@ -33,6 +33,7 @@ class nsScriptNameSetRegistry : public nsIScriptNameSetRegistry {
 
   NS_IMETHOD AddExternalNameSet(nsIScriptExternalNameSet* aNameSet);
   NS_IMETHOD RemoveExternalNameSet(nsIScriptExternalNameSet* aNameSet);
+  NS_IMETHOD InitializeClasses(nsIScriptContext* aContext);
   NS_IMETHOD PopulateNameSpace(nsIScriptContext* aScriptContext);
 
  protected:

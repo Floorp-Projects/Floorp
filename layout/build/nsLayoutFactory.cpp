@@ -288,6 +288,7 @@ public:
 
   NS_DECL_ISUPPORTS
   
+  NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
   NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
 };
 
@@ -301,6 +302,12 @@ LayoutScriptNameSet::~LayoutScriptNameSet()
 }
 
 NS_IMPL_ISUPPORTS(LayoutScriptNameSet, kIScriptExternalNameSetIID);
+
+NS_IMETHODIMP 
+LayoutScriptNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
