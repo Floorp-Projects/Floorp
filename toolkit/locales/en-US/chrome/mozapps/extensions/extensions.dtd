@@ -55,9 +55,9 @@
 <!ENTITY extensionItem.installing.label       "Installing...">
 
 <!ENTITY getMoreExtensions.label          "Get More Extensions">
-<!ENTITY getMoreExtensions.tooltip        "Get More Extensions from update.mozilla.org">
+<!ENTITY getMoreExtensions.tooltip        "Get More Extensions from addons.mozilla.org">
 <!ENTITY getMoreThemes.label              "Get More Themes">
-<!ENTITY getMoreThemes.tooltip            "Get More Themes from update.mozilla.org">
+<!ENTITY getMoreThemes.tooltip            "Get More Themes from addons.mozilla.org">
 
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
 <!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">

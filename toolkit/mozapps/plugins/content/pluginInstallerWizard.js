@@ -489,7 +489,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
     "&chromeLocale=" + this.getChromeLocale();
 
   document.getElementById("moreInfoLink").setAttribute("onclick",
-    "gPluginInstaller.loadURL('https://update.mozilla.org/plugins/"+notInstalledList+"')");
+    "gPluginInstaller.loadURL('https://pfs.mozilla.org/plugins/"+notInstalledList+"')");
   
   // clear the tab's plugin list
   this.mTab.missingPlugins = null;
