@@ -762,6 +762,24 @@ NS_IMETHODIMP nsParseMailMessageState::GetAllHeaders(char ** pHeaders, PRInt32 *
 	return NS_OK;
 }
 
+// generate headers as a string, with CRLF between the headers
+NS_IMETHODIMP nsParseMailMessageState::GetHeaders(char ** pHeaders)
+{
+  NS_ENSURE_ARG_POINTER(pHeaders);
+  nsCString crlfHeaders;
+  char *curHeader = m_headers.GetBuffer();
+  for (PRInt32 headerPos = 0; headerPos < m_headers.GetBufferPos();)
+  {
+    crlfHeaders.Append(curHeader);
+    crlfHeaders.Append(CRLF);
+    PRInt32 headerLen = strlen(curHeader);
+    curHeader += headerLen + 1;
+    headerPos += headerLen + 1;
+  }
+  *pHeaders = nsCRT::strdup(crlfHeaders.get());
+  return NS_OK;
+}
+
 struct message_header *nsParseMailMessageState::GetNextHeaderInAggregate (nsVoidArray &list)
 {
 	// When parsing a message with multiple To or CC header lines, we're storing each line in a 
