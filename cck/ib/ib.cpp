@@ -1424,14 +1424,11 @@ int StartIB(CString parms, WIDGET *curWidget)
 	if (linuxOption == "Linux")
 	{
 		nscpxpiPath = nscpxpilinuxPath + nsinstPath;
-		char currentdir[_MAX_PATH];
-		_getcwd(currentdir,_MAX_PATH);
 		_mkdir(tempPath);
 		_chdir(tempPath);
 		_mkdir(templinuxDir);
 		_chdir(templinuxDir);
 		_mkdir(nsinstallerDir);
-		_chdir(nsinstallerDir);
 
 		CString tPath = nscpxpiPath;
 		tPath.Replace(xpiDir,"");
@@ -1446,8 +1443,6 @@ int StartIB(CString parms, WIDGET *curWidget)
 			templinuxPath+"\\xpi\\recommended.start", FALSE);
 		CopyFile(nscpxpiPath+"\\recommended.end",
 			templinuxPath+"\\xpi\\recommended.end", FALSE);
-
-		_chdir(currentdir);
 	}
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
 //Check for disk space before continuing
