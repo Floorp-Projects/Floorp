@@ -105,8 +105,15 @@ nsTreeRowGroupFrame::Destroy(nsIPresContext* aPresContext)
   return nsTableRowGroupFrame::Destroy(aPresContext);
 }
 
-NS_IMPL_ADDREF(nsTreeRowGroupFrame)
-NS_IMPL_RELEASE(nsTreeRowGroupFrame)
+nsrefcnt nsTreeRowGroupFrame::AddRef(void)
+{
+  return 1;
+}
+
+nsrefcnt nsTreeRowGroupFrame::Release(void)
+{
+  return 1;
+}
   
 NS_IMETHODIMP
 nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr) 
