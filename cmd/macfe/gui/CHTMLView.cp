@@ -202,6 +202,7 @@ CHTMLView::CHTMLView(LStream* inStream)
 	,	mStopEnablerHackExecuted(false)
 	,	mInFocusCallAlready(false)
 	,	mDragSelection(false)
+	,	mFontScaling(eDefaultFontScaling)
 {
 
 	// FIX ME: Use C++.  I.e., use mem-initializers where possible (as above)
@@ -2298,7 +2299,15 @@ void CHTMLView::FindCommandStatus(CommandT inCommand,
 			outEnabled = ((mContext->GetCurrentHistoryEntry() != NULL) && CFindWindow::CanFindAgain());
 			break;
 		}
-		
+
+		case cmd_FontLarger:
+			outEnabled = (mFontScaling < eMaxFontScaling);
+			break;
+			
+		case cmd_FontSmaller:
+			outEnabled = (mFontScaling > eMinFontScaling);
+			break;
+					
 		case cmd_PageSetup:
 			if (CanPrint())
 				outEnabled = TRUE;
@@ -2356,6 +2365,18 @@ void CHTMLView::GetDefaultFileNameForSaveAs(URL_Struct* url, CStr31& defaultName
 	// Overridden by CMessageView to use the message subject instead.
 	fe_FileNameFromContext(*mContext, url->address, defaultName);
 }
+
+
+void CHTMLView::NoteFontScalingChanged ( )
+{
+	if ( GetContext() ) {
+		MWContext* mwContext = *GetContext();
+		mwContext->fontScalingPercentage = LO_GetScalingFactor(static_cast<Int32>(mFontScaling));
+		GetContext()->Repaginate(NET_SUPER_RELOAD);
+	}
+	
+} // NoteFontScalingChanged
+
 
 Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 {
@@ -2666,6 +2687,21 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 		
 		case cmd_MailDocument:	// Send Page/Frame
 			MSG_MailDocument(*mContext);
+			break;
+
+
+		case cmd_FontLarger:
+			if ( mFontScaling < eMaxFontScaling ) {
+				++mFontScaling;
+				NoteFontScalingChanged();
+			}
+			break;
+
+		case cmd_FontSmaller:
+			if ( mFontScaling > eMinFontScaling ) {
+				--mFontScaling;
+				NoteFontScalingChanged();
+			}
 			break;
 
 		default:

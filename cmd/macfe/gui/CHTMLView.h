@@ -276,6 +276,13 @@ class CHTMLView :
 		
 	protected:
 
+		enum {
+			eDefaultFontScaling = 0,
+			eMinFontScaling = -8,
+			eMaxFontScaling = 8
+		};
+		
+		virtual void NoteFontScalingChanged ( ) ;
 
 		virtual void			DrawSelf(void);
 		virtual	void			DrawFrameFocus(void);
@@ -777,6 +784,7 @@ class CHTMLView :
 		SDimension32			mPendingDocDimension;
 		Boolean						mPendingDocDimension_IsValid;
 
+		Int8					mFontScaling;		// -8 <= mFontScaling <= 8
 		StRegion				mSaveLayerClip;
 		RgnHandle				mLayerClip;
 		SPoint32				mLayerOrigin;
