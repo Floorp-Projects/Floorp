@@ -73,29 +73,10 @@ if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
     exit;
 }
 
-sub GeneratePersonInput {
-    my ($field, $required, $def_value, $extraJavaScript) = (@_);
-    $extraJavaScript ||= "";
-    if ($extraJavaScript ne "") {
-        $extraJavaScript = "onChange=\"$extraJavaScript\"";
-    }
-    return "<INPUT NAME=\"$field\" SIZE=32 $extraJavaScript VALUE=\"$def_value\">";
-}
-
-sub GeneratePeopleInput {
-    my ($field, $def_value) = (@_);
-    return "<INPUT NAME=\"$field\" SIZE=45 VALUE=\"$def_value\">";
-}
-
-
-
-
 # Implementations of several of the below were blatently stolen from CGI.pm,
 # by Lincoln D. Stein.
 
-
 # Get rid of all the %xx encoding and the like from the given URL.
-
 sub url_decode {
     my ($todecode) = (@_);
     $todecode =~ tr/+/ /;       # pluses become spaces
@@ -103,15 +84,12 @@ sub url_decode {
     return $todecode;
 }
 
-
 # Quotify a string, suitable for putting into a URL.
-
 sub url_quote {
     my($toencode) = (@_);
     $toencode=~s/([^a-zA-Z0-9_\-.])/uc sprintf("%%%02x",ord($1))/eg;
     return $toencode;
 }
-
 
 sub ParseUrlString {
     # We don't want to detaint the user supplied data...
@@ -170,7 +148,6 @@ sub ProcessFormFields {
     my ($buffer) = (@_);
     return ParseUrlString($buffer, \%::FORM, \%::MFORM);
 }
-
 
 sub ProcessMultipartFormFields {
     my ($boundary) = @_;
@@ -233,12 +210,10 @@ sub ProcessMultipartFormFields {
     }
 }
 
-
 # check and see if a given field exists, is non-empty, and is set to a 
 # legal value.  assume a browser bug and abort appropriately if not.
 # if $legalsRef is not passed, just check to make sure the value exists and 
 # is non-NULL
-# 
 sub CheckFormField (\%$;\@) {
     my ($formRef,                # a reference to the form to check (a hash)
         $fieldname,              # the fieldname to check
@@ -265,7 +240,6 @@ sub CheckFormField (\%$;\@) {
 }
 
 # check and see if a given field is defined, and abort if not
-# 
 sub CheckFormFieldDefined (\%$) {
     my ($formRef,                # a reference to the form to check (a hash)
         $fieldname,              # the fieldname to check
@@ -326,7 +300,6 @@ sub ValidateBugID {
 
 }
 
-
 sub ValidateComment {
     # Make sure a comment is not too large (greater than 64K).
     
@@ -336,26 +309,6 @@ sub ValidateComment {
         DisplayError("Comments cannot be longer than 65,535 characters.");
         exit;
     }
-}
-
-
-# check and see if a given string actually represents a positive
-# integer, and abort if not.
-# 
-sub CheckPosInt($) {
-    my ($number) = @_;              # the fieldname to check
-
-    if ( $number !~ /^[1-9][0-9]*$/ ) {
-        print "Received string \"$number\" when positive integer expected; ";
-        print Param("browserbugmessage");
-        PutFooter();
-        exit 0;
-      }
-}
-
-sub FormData {
-    my ($field) = (@_);
-    return $::FORM{$field};
 }
 
 sub html_quote {
@@ -383,34 +336,10 @@ sub value_quote {
     return $var;
 }
 
-sub navigation_header {
-    if (defined $::COOKIE{"BUGLIST"} && $::COOKIE{"BUGLIST"} ne "" &&
-        defined $::FORM{'id'}) {
-        my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
-        my $cur = lsearch(\@bugs, $::FORM{"id"});
-        print "<B>Bug List:</B> (@{[$cur + 1]} of @{[$#bugs + 1]})\n";
-        print "<A HREF=\"show_bug.cgi?id=$bugs[0]\">First</A>\n";
-        print "<A HREF=\"show_bug.cgi?id=$bugs[$#bugs]\">Last</A>\n";
-        if ($cur > 0) {
-            print "<A HREF=\"show_bug.cgi?id=$bugs[$cur - 1]\">Prev</A>\n";
-        } else {
-            print "<I><FONT COLOR=\#777777>Prev</FONT></I>\n";
-        }
-        if ($cur < $#bugs) {
-            $::next_bug = $bugs[$cur + 1];
-            print "<A HREF=\"show_bug.cgi?id=$::next_bug\">Next</A>\n";
-        } else {
-            print "<I><FONT COLOR=\#777777>Next</FONT></I>\n";
-        }
-        print qq{&nbsp;&nbsp;<A HREF="buglist.cgi?regetlastlist=1">Show list</A>\n};
-    }
-    print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=query.cgi>Query page</A>\n";
-    print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=enter_bug.cgi>Enter new bug</A>\n"
-}
-
 # Adds <link> elements for bug lists. These can be inserted into the header by
 # (ab)using the "jscript" parameter to PutHeader, which inserts an arbitrary
-# string into the header. This function is modelled on the one above.
+# string into the header. This is currently used only in
+# template/en/default/bug/edit.html.tmpl.
 sub navigation_links($) {
     my ($buglist) = @_;
     
@@ -450,145 +379,9 @@ sub navigation_links($) {
     return $retval;
 } 
 
-sub make_checkboxes {
-    my ($src,$default,$isregexp,$name) = (@_);
-    my $last = "";
-    my $capitalized = "";
-    my $popup = "";
-    my $found = 0;
-    $default = "" if !defined $default;
-
-    if ($src) {
-        foreach my $item (@$src) {
-            if ($item eq "-blank-" || $item ne $last) {
-                if ($item eq "-blank-") {
-                    $item = "";
-                }
-                $last = $item;
-                $capitalized = $item;
-                $capitalized =~ tr/A-Z/a-z/;
-                $capitalized =~ s/^(.?)(.*)/\u$1$2/;
-                if ($isregexp ? $item =~ $default : $default eq $item) {
-                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\" CHECKED>$capitalized<br>";
-                    $found = 1;
-                } else {
-                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\">$capitalized<br>";
-                }
-            }
-        }
-    }
-    if (!$found && $default ne "") {
-        $popup .= "<INPUT NAME=$name TYPE=CHECKBOX CHECKED>$default";
-    }
-    return $popup;
-}
-
-#
-# make_selection_widget: creates an HTML selection widget from a list of text strings.
-# $groupname is the name of the setting (form value) that this widget will control
-# $src is the list of options
-# you can specify a $default value which is either a string or a regex pattern to match to
-#    identify the default value
-# $capitalize lets you optionally capitalize the option strings; the default is the value
-#    of Param("capitalizelists")
-# $multiple is 1 if several options are selectable (default), 0 otherwise.
-# $size is used for lists to control how many items are shown. The default is 7. A list of
-#    size 1 becomes a popup menu.
-# $preferLists is 1 if selection lists should be used in favor of radio buttons and
-#    checkboxes, and 0 otherwise. The default is the value of Param("preferlists").
-#
-# The actual widget generated depends on the parameter settings:
-# 
-#        MULTIPLE     PREFERLISTS    SIZE     RESULT
-#       0 (single)        0           =1      Popup Menu (normal for list of size 1)
-#       0 (single)        0           >1      Radio buttons
-#       0 (single)        1           =1      Popup Menu (normal for list of size 1)
-#       0 (single)        1           n>1     List of size n, single selection
-#       1 (multi)         0           n/a     Check boxes; size ignored
-#       1 (multi)         1           n/a     List of size n, multiple selection, of size n
-#
-sub make_selection_widget {
-    my ($groupname,$src,$default,$isregexp,$multiple, $size, $capitalize, $preferLists) = (@_);
-    my $last = "";
-    my $popup = "";
-    my $found = 0;
-    my $displaytext = "";
-    $groupname = "" if !defined $groupname;
-    $default = "" if !defined $default;
-    $capitalize = Param("capitalizelists") if !defined $capitalize;
-    $multiple = 1 if !defined $multiple;
-    $preferLists = Param("preferlists") if !defined $preferLists;
-    $size = 7 if !defined $size;
-    my $type = "LIST";
-    if (!$preferLists) {
-        if ($multiple) {
-            $type = "CHECKBOX";
-        } else {
-            if ($size > 1) {
-                $type = "RADIO";
-            }
-        }
-    }
-
-    if ($type eq "LIST") {
-        $popup .= "<SELECT NAME=\"$groupname\"";
-        if ($multiple) {
-            $popup .= " MULTIPLE";
-        }
-        $popup .= " SIZE=$size>\n";
-    }
-    if ($src) {
-        foreach my $item (@$src) {
-            if ($item eq "-blank-" || $item ne $last) {
-                if ($item eq "-blank-") {
-                    $item = "";
-                }
-                $last = $item;
-                $displaytext = $item;
-                if ($capitalize) {
-                    $displaytext =~ tr/A-Z/a-z/;
-                    $displaytext =~ s/^(.?)(.*)/\u$1$2/;
-                }   
-
-                if ($isregexp ? $item =~ $default : $default eq $item) {
-                    if ($type eq "CHECKBOX") {
-                        $popup .= "<INPUT NAME=$groupname type=checkbox VALUE=\"$item\" CHECKED>$displaytext<br>";
-                    } elsif ($type eq "RADIO") {
-                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\" CHECKED>$displaytext<br>";
-                    } else {
-                        $popup .= "<OPTION SELECTED VALUE=\"$item\">$displaytext\n";
-                    }
-                    $found = 1;
-                } else {
-                    if ($type eq "CHECKBOX") {
-                        $popup .= "<INPUT NAME=$groupname type=checkbox VALUE=\"$item\">$displaytext<br>";
-                    } elsif ($type eq "RADIO") {
-                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\">$displaytext<br>";
-                    } else {
-                        $popup .= "<OPTION VALUE=\"$item\">$displaytext";
-                    }
-                }
-            }
-        }
-    }
-    if (!$found && $default ne "") {
-        if ($type eq "CHECKBOX") {
-            $popup .= "<INPUT NAME=$groupname type=checkbox CHECKED>$default";
-        } elsif ($type eq "RADIO") {
-            $popup .= "<INPUT NAME=$groupname type=radio checked>$default";
-        } else {
-            $popup .= "<OPTION SELECTED>$default\n";
-        }
-    }
-    if ($type eq "LIST") {
-        $popup .= "</SELECT>";
-    }
-    return $popup;
-}
-
-
 $::CheckOptionValues = 1;
 
+# This sub is still used in reports.cgi.
 sub make_options {
     my ($src,$default,$isregexp) = (@_);
     my $last = "";
@@ -636,48 +429,6 @@ sub make_options {
     return $popup;
 }
 
-
-sub make_popup {
-    my ($name,$src,$default,$listtype,$onchange) = (@_);
-    my $popup = "<SELECT NAME=$name";
-    if ($listtype > 0) {
-        $popup .= " SIZE=5";
-        if ($listtype == 2) {
-            $popup .= " MULTIPLE";
-        }
-    }
-    if (defined $onchange && $onchange ne "") {
-        $popup .= " onchange=$onchange";
-    }
-    $popup .= ">" . make_options($src, $default,
-                                 ($listtype == 2 && $default ne ""));
-    $popup .= "</SELECT>";
-    return $popup;
-}
-
-
-sub BuildPulldown {
-    my ($name, $valuelist, $default) = (@_);
-
-    my $entry = qq{<SELECT NAME="$name">};
-    foreach my $i (@$valuelist) {
-        my ($tag, $desc) = (@$i);
-        my $selectpart = "";
-        if ($tag eq $default) {
-            $selectpart = " SELECTED";
-        }
-        if (!defined $desc) {
-            $desc = $tag;
-        }
-        $entry .= qq{<OPTION$selectpart VALUE="$tag">$desc\n};
-    }
-    $entry .= qq{</SELECT>};
-    return $entry;
-}
-
-
-
-
 sub PasswordForLogin {
     my ($login) = (@_);
     SendSQL("select cryptpassword from profiles where login_name = " .
@@ -688,7 +439,6 @@ sub PasswordForLogin {
     }
     return $result;
 }
-
 
 sub quietly_check_login() {
     $::usergroupset = '0';
@@ -738,9 +488,6 @@ sub quietly_check_login() {
     return $loginok;
 }
 
-
-
-
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
@@ -764,8 +511,6 @@ sub CheckEmailSyntax {
     }
 }
 
-
-
 sub MailPassword {
     my ($login, $password) = (@_);
     my $urlbase = Param("urlbase");
@@ -779,7 +524,6 @@ sub MailPassword {
     print SENDMAIL $msg;
     close SENDMAIL;
 }
-
 
 sub confirm_login {
     my ($nexturl) = (@_);
@@ -1183,7 +927,6 @@ $h2
     }
 }
 
-
 # Putfooter echoes footerhtml and by default prints closing tags
 #
 # param
@@ -1192,14 +935,12 @@ $h2
 # Example:
 # Putfooter(); # normal close
 # Putfooter(1); # don't send closing tags
-
 sub PutFooter {
     my ( $dontclose ) = @_;
     print PerformSubsts(Param("footerhtml"));
     print "\n</body></html>\n" if ( ! $dontclose );
     SyncAnyPendingShadowChanges();
 }
-
 
 ###############################################################################
 # Error handling
@@ -1287,7 +1028,6 @@ sub PuntTryAgain ($) {
     exit;
 }
 
-
 sub CheckIfVotedConfirmed {
     my ($id, $who) = (@_);
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
@@ -1316,7 +1056,6 @@ sub CheckIfVotedConfirmed {
     }
 
 }
-
 
 sub GetBugActivity {
     my ($id, $starttime) = (@_);
@@ -1392,7 +1131,6 @@ sub GetBugActivity {
     
     return(\@operations, $incomplete_data);
 }
-
 
 sub GetCommandMenu {
     my $loggedin = quietly_check_login();
@@ -1500,7 +1238,6 @@ Edit <a href="userprefs.cgi">prefs</a>
 
 ############# Live code below here (that is, not subroutine defs) #############
 
-
 $| = 1;
 
 # Uncommenting this next line can help debugging.
@@ -1530,7 +1267,6 @@ if (defined $ENV{"REQUEST_METHOD"}) {
         }
     }
 }
-
 
 if (defined $ENV{"HTTP_COOKIE"}) {
     # Don't trust anything which came in as a cookie
