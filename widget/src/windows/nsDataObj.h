@@ -138,7 +138,8 @@ class nsDataObj : public IDataObject
     virtual HRESULT GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
 
-    nsresult ExtractURL ( nsString & outURL ) ;
+    nsresult ExtractShortcutURL ( nsString & outURL ) ;
+    nsresult ExtractShortcutTitle ( nsString & outTitle ) ;
 
     nsString mStringData;
 

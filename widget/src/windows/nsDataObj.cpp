@@ -407,15 +407,12 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
   if ( fileGroupDescHand ) {
     LPFILEGROUPDESCRIPTOR fileGroupDesc = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTOR, ::GlobalLock(fileGroupDescHand));
 
-#if 0
-    nsAutoString url;
-    if ( NS_FAILED(ExtractURL(url)) )
+    nsAutoString title;
+    if ( NS_FAILED(ExtractShortcutTitle(title)) )
       return E_OUTOFMEMORY;
-    char* urlStr = url.ToNewCString();        // XXX what about unicode urls?!?!
-    if ( !urlStr )
+    char* titleStr = title.ToNewCString();        // XXX what about unicode urls?!?!
+    if ( !titleStr )
       return E_OUTOFMEMORY;
-#endif
-    char* urlStr = strdup("TEMP URL FILENAME");
 
     // one file in the file descriptor block
     fileGroupDesc->cItems = 1;
@@ -423,13 +420,16 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
     
     // create the filename string -- |.URL| extensions imply an internet shortcut file. Make
     // sure the filename isn't too long as to blow out the array, and still have enough room
-    // for the |.URL| suffix.
-    int urlLength = strlen(urlStr);
-    int trimmedLen = urlLength > MAX_PATH - 5 ? MAX_PATH - 5 : urlLength;
-    urlStr[trimmedLen] = nsnull;
-    sprintf(fileGroupDesc->fgd[0].cFileName, "%s.URL", urlStr);
+    // for our .URL suffix.
+    
+    static const char* shortcutSuffix = ".URL";
+    static int suffixLen = strlen(shortcutSuffix);
+    int titleLen = strlen(titleStr);
+    int trimmedLen = titleLen > MAX_PATH - (suffixLen + 1) ? MAX_PATH - (suffixLen + 1) : titleLen;
+    titleStr[trimmedLen] = nsnull;
+    sprintf(fileGroupDesc->fgd[0].cFileName, "%s%s", titleStr, shortcutSuffix);
 
-    nsMemory::Free(urlStr);
+    nsMemory::Free(titleStr);
     ::GlobalUnlock ( fileGroupDescHand );
     aSTG.hGlobal = fileGroupDescHand;
     aSTG.tymed = TYMED_HGLOBAL;
@@ -454,7 +454,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   HRESULT result = S_OK;
   
   nsAutoString url;
-  if ( NS_FAILED(ExtractURL(url)) )
+  if ( NS_FAILED(ExtractShortcutURL(url)) )
     return E_OUTOFMEMORY;
   char* urlStr = url.ToNewCString();        // XXX what about unicode urls?!?!
   if ( !urlStr )
@@ -477,6 +477,8 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   }
   else
     result = E_OUTOFMEMORY;
+
+  nsAllocator::Free ( urlStr );
     
   return result;
   
@@ -686,10 +688,13 @@ void nsDataObj::SetTransferable(nsITransferable * aTransferable)
 // ExtractURL
 //
 // Roots around in the transferable for the appropriate flavor that indicates
-// a url and pulls it out. Used mostly for creating internet shortcuts on the desktop.
+// a url and pulls out the url portion of the data. Used mostly for creating
+// internet shortcuts on the desktop. The url flavor is of the format:
+//
+//   <url> <space> <page title>
 //
 nsresult
-nsDataObj :: ExtractURL ( nsString & outURL )
+nsDataObj :: ExtractShortcutURL ( nsString & outURL )
 {
   NS_ASSERTION ( mTransferable, "We'd don't have a good transferable" );
   nsresult rv = NS_ERROR_FAILURE;
@@ -702,10 +707,59 @@ nsDataObj :: ExtractURL ( nsString & outURL )
       nsXPIDLString url;
       urlObject->GetData ( getter_Copies(url) );
       outURL = url;
-      rv = NS_OK;
+
+      // find the first space in the data, that's where the url ends. trunc the 
+      // result string at that point.
+      PRInt32 spaceIndex = outURL.FindChar ( ' ' );
+      NS_ASSERTION ( spaceIndex > 0, "Format for url flavor is <url> <space> <page title>" );
+      if ( spaceIndex > 0 ) {
+        outURL.Truncate ( spaceIndex );
+        rv = NS_OK;    
+      }
     }
   } // if found flavor
   
   return rv;
 
-} // ExtractURL
+} // ExtractShortcutURL
+
+
+//
+// ExtractShortcutTitle
+//
+// Roots around in the transferable for the appropriate flavor that indicates
+// a url and pulls out the title portion of the data. Used mostly for creating
+// internet shortcuts on the desktop. The url flavor is of the format:
+//
+//   <url> <space> <page title>
+//
+nsresult
+nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
+{
+  NS_ASSERTION ( mTransferable, "We'd don't have a good transferable" );
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  PRUint32 len = 0;
+  nsCOMPtr<nsISupports> genericURL;
+  if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
+    nsCOMPtr<nsISupportsWString> urlObject ( do_QueryInterface(genericURL) );
+    if ( urlObject ) {
+      nsXPIDLString url;
+      nsAutoString holder;
+      urlObject->GetData ( getter_Copies(url) );
+      holder = url;
+
+      // find the first space in the data, that's where the url ends. we want
+      // everything after that space. FindChar() returns -1 if we can't find
+      PRInt32 spaceIndex = holder.FindChar ( ' ' );
+      NS_ASSERTION ( spaceIndex != -1, "Format for url flavor is <url> <space> <page title>" );
+      if ( spaceIndex != -1 ) {
+        holder.Mid ( outTitle, spaceIndex + 1, (len/2) - (spaceIndex + 1) );
+        rv = NS_OK;    
+      }
+    }
+  } // if found flavor
+  
+  return rv;
+
+} // ExtractShortcutTitle
