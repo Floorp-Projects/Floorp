@@ -643,7 +643,8 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 	//else
 	{
 		PRBool handled = DispatchOSEventToRaptor(anEvent, ::FrontWindow());
-		if((!handled) && (anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0) )
+		/* we want to call this if cmdKey is pressed and no other modifier keys are pressed */
+		if((!handled) && (anEvent.what == keyDown) && (anEvent.modifiers == cmdKey) )
 		{
 			// do a menu key command
 			long menuResult = ::MenuKey(theChar);
