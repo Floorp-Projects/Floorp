@@ -17,10 +17,32 @@
  */
 
 #include "nsTextWidget.h"
-
+#include <ToolUtils.h>
 
 NS_IMPL_ADDREF(nsTextWidget);
 NS_IMPL_RELEASE(nsTextWidget);
+
+
+//-------------------------------------------------------------------------
+//	¥ NOTE ABOUT MENU HANDLING ¥
+//
+//	The definitions below, as well as the NS_MENU_SELECTED code in
+//	DispatchEvent() are temporary hacks only. They require the menu
+//	resources to be created under Contructor with the standard
+//	PowerPlant menu IDs. All that will go away because:
+//	- nsTextWidget will be rewritten as an XP widget by the Editor team.
+//	- menu handling will be rewritten by the XPApp team.
+//-------------------------------------------------------------------------
+
+#include <Scrap.h>
+#include <PP_Messages.h>		// for PP standard menu commands
+enum
+{
+	menu_Apple = 128,
+	menu_File,
+	menu_Edit
+};
+
 
 //-------------------------------------------------------------------------
 //
@@ -137,6 +159,65 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 	{
 		switch (aEvent.message)
 		{
+				case NS_MENU_SELECTED:
+				{
+					nsMenuEvent* menuEvent = (nsMenuEvent*)&aEvent;
+					long menuID = HiWord(menuEvent->mCommand);
+					long menuItem = LoWord(menuEvent->mCommand);
+					switch (menuID)
+					{
+						case menu_Edit:
+						{
+							switch (menuItem)
+							{
+//								case cmd_Undo:
+//								case cmd_Cut:	//¥TODO
+//								case cmd_Copy:	//¥TODO
+								case cmd_Paste:
+								{
+									long scrapOffset;
+									Handle scrapH = ::NewHandle(0);
+									long scrapLen = ::GetScrap(scrapH, 'TEXT', &scrapOffset);
+									if (scrapLen > 0)
+									{
+										::HLock(scrapH);
+
+										// truncate to the first line
+										char* cr = strchr((char*)*scrapH, '\r');
+										if (cr != nil)
+											scrapLen = cr - *scrapH;
+
+										// paste text
+										nsString str;
+										str.SetString((char*)*scrapH, scrapLen);
+										PRUint32 startSel, endSel;
+										GetSelection(&startSel, &endSel);
+										PRUint32 outSize;
+										InsertText(str, startSel, endSel, outSize);
+
+										::HUnlock(scrapH);
+									}
+									break;
+								}
+								case cmd_Clear:
+								{
+									nsString str;
+									PRUint32 outSize;
+									SetText(str, outSize);
+									break;
+								}
+								case cmd_SelectAll:
+								{
+									SelectAll();
+									break;
+								}
+							}
+							break;
+						}
+					}
+					break;
+				}
+
 				case NS_GOTFOCUS:
 				{
 					StartDraw();
@@ -469,7 +550,10 @@ void	nsTextWidget::RepeatAction(const EventRecord& inMacEvent)
 	{
 		StartDraw();
 		//::TEIdle(mTE);
-		IdleControls(mWindowPtr);		// this should really live in the window
+		IdleControls(mWindowPtr);	// this should really live in the window
+									// but the problem is that we have to set
+									// the graphic environment with StartDraw/EndDraw
+									// in order to make the cursor blink
 		EndDraw();
 	}
 }
