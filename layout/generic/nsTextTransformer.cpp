@@ -450,6 +450,11 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   PRBool isWhitespace = PR_FALSE;
   PRUnichar* result = nsnull;
 
+  // Fix word breaking problem w/ PREFORMAT and PREWRAP
+  // for word breaking, we should really go to the normal code
+  if((! aForLineBreak) && (eNormal != mMode))
+     mMode = eNormal;
+
   while (offset < fragLen) {
     PRUnichar firstChar = frag->CharAt(offset);
 
@@ -763,6 +768,11 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   PRInt32 wordLen = 0;
   PRBool isWhitespace = PR_FALSE;
   PRUnichar* result = nsnull;
+
+  // Fix word breaking problem w/ PREFORMAT and PREWRAP
+  // for word breaking, we should really go to the normal code
+  if((! aForLineBreak) && (eNormal != mMode))
+     mMode = eNormal;
 
   while (--offset >= 0) {
     PRUnichar firstChar = frag->CharAt(offset);
