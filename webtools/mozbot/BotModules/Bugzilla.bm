@@ -138,7 +138,7 @@ sub FetchBug {
     my $uri;
     if ($type eq 'dwim') {
         # XXX should escape query string
-        $uri = "$self->{'bugsURI'}$self->{'bugsDWIMQueryDefault'}".join(',',split(' ',$bugParams));
+        $uri = "$self->{'bugsURI'}buglist.cgi?$self->{'bugsDWIMQueryDefault'}".join(',',split(' ',$bugParams));
         $type = 'bugs';
     } else {
         $uri = "$self->{'bugsURI'}buglist.cgi?bug_id=".join(',',split(' ',$bugParams));
