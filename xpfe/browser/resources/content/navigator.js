@@ -23,6 +23,94 @@
   var defaultStatus = "default status text";
   var explicitURL = false;
 
+  function BeginDragPersonalToolbar ( event )
+  {
+    //XXX we rely on a capturer to already have determined which item the mouse was over
+    //XXX and have set an attribute.
+    
+    // if the click is on the toolbar proper, ignore it. We only care about clicks on
+    // items.
+    var toolbar = document.getElementById("PersonalToolbar");
+    if ( event.target == toolbar )
+      return true;  // continue propagating the event
+    
+    var dragStarted = false;
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+      if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+      if ( trans ) {
+        trans.addDataFlavor("moz/toolbaritem");
+        var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
+        if ( genData ) data = genData.QueryInterface(Components.interfaces.nsISupportsWString);
+        if ( data ) {
+        
+          //XXX replace with the real data when rdf is hooked up.
+          data.data = "toolbar item, baby!";
+          
+          trans.setTransferData ( "moz/toolbaritem", genData, 38 );  // double byte data (19*2)
+          var transArray = Components.classes["component://netscape/supports-array"].createInstance();
+          if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
+          if ( transArray ) {
+            // put it into the transferable as an |nsISupports|
+            var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+            transArray.AppendElement(genTrans);
+            var nsIDragService = Components.interfaces.nsIDragService;
+            dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                                nsIDragService.DRAGDROP_ACTION_MOVE );
+            dragStarted = true;
+          }
+        } // if data object
+      } // if transferable
+    } // if drag service
+
+    return !dragStarted;  // don't propagate the event if a drag has begun
+
+  } // BeginDragPersonalToolbar
+  
+  
+  function DropPersonalToolbar ( event )
+  { 
+    var dropAccepted = false;
+    
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      var dragSession = dragService.getCurrentSession();
+      if ( dragSession ) {
+        var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+        if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+        if ( trans ) {
+          trans.addDataFlavor("moz/toolbaritem");
+          for ( var i = 0; i < dragSession.numDropItems; ++i ) {
+            dragSession.getData ( trans, i );
+            var dataObj = new Object();
+            var bestFlavor = new Object();
+            var len = new Object();
+            trans.getAnyTransferData ( bestFlavor, dataObj, len );
+            if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+            if ( dataObj ) {
+            
+              //XXX do something real here! remember len is in bytes, not chars
+              dataObj.data[len.value / 2] = null;
+              dump ( "!!! got data len = " + len.value + " |" + dataObj.data + "|\n" );
+              
+              dragSession.canDrop = true;
+              var dropAccepted = true;        
+            } 
+          
+          } // foreach drag item
+      
+        } // if transferable
+      } // if dragsession
+    } // if dragservice
+    
+    return !dropAccepted;  // don't propagate the event if a drag was accepted
+
+  } // DropPersonalToolbar
+  
+
   function UpdateHistory(event)
   {
     // This is registered as a capturing "load" event handler. When a
