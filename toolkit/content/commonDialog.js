@@ -98,8 +98,8 @@ function setLabelForNode(aNode, aLabel, aIsLabelFlag)
 
 function commonDialogOnLoad()
 {
-  // set the window title
-  window.title = gCommonDialogParam.GetString(12);
+  // set the document title
+  document.title = gCommonDialogParam.GetString(12);
 
   // set the number of command buttons
   var nButtons = gCommonDialogParam.GetInt(2);
