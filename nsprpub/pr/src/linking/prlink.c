@@ -560,7 +560,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif /* WIN32 || WIN16 */
 
-#if defined(XP_MAC) && GENERATINGCFM
+#if defined(XP_MAC) && TARGET_RT_MAC_CFM
     {
     OSErr                err;
     Ptr                    main;
@@ -682,10 +682,8 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         cFileName = &(cMacPath[index + 1]);
         
         /* Convert the path and name into Pascal strings */
-        strcpy((char*) &pName, cMacPath);
-        c2pstr((char*) &pName);
-        strcpy((char*) &fileSpec.name, cFileName);
-        c2pstr((char*) &fileSpec.name);
+        PStrFromCStr(cMacPath, pName);
+        PStrFromCStr(cFileName, fileSpec.name);
         strcpy(cName, cFileName);
         PR_DELETE(cMacPath);
         cMacPath = NULL;
@@ -729,7 +727,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     lm->next = pr_loadmap;
     pr_loadmap = lm;
     }
-#elif defined(XP_MAC) && !GENERATINGCFM
+#elif defined(XP_MAC) && !TARGET_RT_MAC_CFM
     {
 
     }
@@ -1013,7 +1011,7 @@ PR_UnloadLibrary(PRLibrary *lib)
     }
 #endif  /* XP_PC */
 
-#if defined(XP_MAC) && GENERATINGCFM
+#if defined(XP_MAC) && TARGET_RT_MAC_CFM
     /* Close the connection */
     CloseConnection(&(lib->dlh));
 #endif
