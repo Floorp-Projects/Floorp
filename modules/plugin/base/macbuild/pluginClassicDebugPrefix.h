@@ -25,3 +25,5 @@
 #include "MacSharedPrefix_debug.h"
 
 #undef TARGET_CARBON
+#define TARGET_CARBON 0
+#define PLUGIN_LOGGING 0

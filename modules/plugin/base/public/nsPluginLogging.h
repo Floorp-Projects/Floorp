@@ -43,7 +43,9 @@
 #ifdef PR_LOGGING
 #include "prlog.h"
 
+#ifndef PLUGIN_LOGGING    // allow external override
 #define PLUGIN_LOGGING 1  // master compile-time switch for pluging logging
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Basic Plugin Logging Usage Instructions
@@ -75,7 +77,7 @@
 //    http://www.mozilla.org/projects/nspr/reference/html/prlog.html
 
 
-#ifdef PLUGIN_LOGGING
+#if PLUGIN_LOGGING
 
 class nsPluginLogging
 {
@@ -90,7 +92,7 @@ public:
 #endif  // PR_LOGGING
 
 // Quick-use macros
-#ifdef PLUGIN_LOGGING
+#if PLUGIN_LOGGING
  #define NPN_PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                        \
    PR_LOG(nsPluginLogging::gNPNLog, a, b); \
@@ -100,7 +102,7 @@ public:
  #define NPN_PLUGIN_LOG(a, b)
 #endif
 
-#ifdef PLUGIN_LOGGING
+#if PLUGIN_LOGGING
  #define NPP_PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                         \
    PR_LOG(nsPluginLogging::gNPPLog, a, b); \
@@ -110,7 +112,7 @@ public:
  #define NPP_PLUGIN_LOG(a, b)
 #endif
 
-#ifdef PLUGIN_LOGGING
+#if PLUGIN_LOGGING
  #define PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                         \
    PR_LOG(nsPluginLogging::gPluginLog, a, b); \
