@@ -32,6 +32,11 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 META_COMPONENT	= mail
 MODULE_NAME	= nsOutlookImport
+ifdef USE_SHORT_LIBNAME
+EXTRA_DSO_LIBS	= msgbsutl
+else
+EXTRA_DSO_LIBS	= msgbaseutil
+endif
 
 REQUIRES	= xpcom \
 		  string \
@@ -68,6 +73,7 @@ CPPSRCS		= \
 
 EXTRA_DSO_LDOPTS = \
 	$(LIBS_DIR) \
+	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
