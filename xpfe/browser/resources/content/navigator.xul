@@ -51,14 +51,18 @@ Contributor(s): ______________________________________. -->
   align="vertical"
   width="640" height="480"
   screenX="10" screenY="10"
-  persist="screenX screenY width height sizemode"
-  ondraggesture="return GeneralDrag(event);"> 
+  persist="screenX screenY width height sizemode"> 
 
 <script language="javascript" src="chrome://global/content/strres.js"></script>
 <script language="javascript" src="chrome://navigator/content/navigator.js"></script>
 <script language="javascript" src="nsContextMenu.js"></script>
 <script language="javascript" src="tooltip.js"></script>
 <script language="javascript" src="navigatorDD.js"></script>
+<script language="javascript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
+<script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
+<script language="javascript" src="chrome://global/content/nsTransferable.js"></script>
+<script language="javascript" src="chrome://global/content/nsClipboard.js"></script>
+<script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
 
 <!-- UI services -->
 <script language="javascript" src="chrome://navigator/content/sessionHistoryUI.js"></script>
@@ -245,7 +249,7 @@ Contributor(s): ______________________________________. -->
 
          
           <box autostretch="never" valign="middle" flex="1">
-      			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
+      			<image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
 			      <textfield autocomplete="true" timeout="300" class="plain chromeclass-location" 
 		 	                 searchSessionType="urlbar" id="urlbar" tooltiptext="&locationBar.tooltip;"
 			                 onkeypress="if( event.which == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
@@ -344,9 +348,12 @@ Contributor(s): ______________________________________. -->
           </rule>
         </template>
        
-        <button class="button-toolbar" id="homebutton" 
-          value="&homeButton.label;"
-          oncommand="BrowserHome(); event.preventBubble();"/>
+        <button class="button-toolbar" id="homebutton" value="&homeButton.label;"
+                ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
+                ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                oncommand="BrowserHome(); event.preventBubble();"/>
     
       </box>
 
@@ -360,9 +367,9 @@ Contributor(s): ______________________________________. -->
   
     <box id="appcontent" align="vertical" flex="100%"
       onclick="if (event.button==2) browserHandleMiddleClick(event);"
-      ondragover="return DragOverContentArea(event);"
-      ondragdrop="return DropOnContentArea(event);"
-      ondraggesture="BeginDragContentArea(event);">
+      ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
+      ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+      ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
 
       <!-- this box is temporary, pending XBLified <browser> -->
       <box id="browser" flex="1">
