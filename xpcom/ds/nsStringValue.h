@@ -25,7 +25,6 @@
 #include "nscore.h"
 #include "nsIAllocator.h"
 #include <string.h>
-#include "nsCRT.h"
 
 #if 0
 typedef int PRInt32;
@@ -97,74 +96,6 @@ inline size_t stringlen(const char* theString) {
   return ::strlen(theString);
 }
 
-//----------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------
-
-class NS_COM CBufDescriptor {
-public:
-  CBufDescriptor(char* aString, PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
-    mBuffer=aString;
-    mCharSize=1;
-    mStackBased=aStackBased;
-    mIsConst=PR_FALSE;
-    mLength=mCapacity=0;
-    if(aString && aCapacity>1) {
-      mCapacity=aCapacity-1;
-      mLength=(-1==aLength) ? strlen(aString) : aLength;
-      if(mLength>PRInt32(mCapacity))
-        mLength=mCapacity;
-    }
-  }
-
-  CBufDescriptor(const char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
-    mBuffer=(char*)aString;
-    mCharSize=1;
-    mStackBased=aStackBased;
-    mIsConst=PR_TRUE;
-    mLength=mCapacity=0;
-    if(aString && aCapacity>1) {
-      mCapacity=aCapacity-1;
-      mLength=(-1==aLength) ? stringlen(aString) : aLength;
-      if(mLength>PRInt32(mCapacity))
-        mLength=mCapacity;
-    }
-  }
-
-  CBufDescriptor(PRUnichar* aString, PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
-    mBuffer=(char*)aString;
-    mCharSize=2;
-    mStackBased=aStackBased;
-    mLength=mCapacity=0;
-    mIsConst=PR_FALSE;
-    if(aString && aCapacity>1) {
-      mCapacity=aCapacity-1;
-      mLength=(-1==aLength) ? stringlen(aString) : aLength;
-      if(mLength>PRInt32(mCapacity))
-        mLength=mCapacity;
-    }
-  }
-
-  CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
-    mBuffer=(char*)aString;
-    mCharSize=2;
-    mStackBased=aStackBased;
-    mLength=mCapacity=0;
-    mIsConst=PR_TRUE;
-    if(aString && aCapacity>1) {
-      mCapacity=aCapacity-1;
-      mLength=(-1==aLength) ? stringlen(aString) : aLength;
-      if(mLength>PRInt32(mCapacity))
-        mLength=mCapacity;
-    }
-  }
-
-  char*     mBuffer;
-  PRUint32  mCapacity;
-  PRInt32   mLength;
-  PRBool    mStackBased;
-  PRBool    mIsConst;
-  char      mCharSize;
-};
 
 
 //----------------------------------------------------------------------------------------
@@ -218,9 +149,9 @@ template <class CharType>
 struct nsStringValueImpl {
 
   nsStringValueImpl()  {
-    mBuffer=0;
+    mBuffer=(CharType*)gCommonEmptyBuffer;
     mLength=mCapacity=0;
-    mRefCount=1;
+    mRefCount=2;  //so we don't ever try to free the shared buffer
   }
 
   nsStringValueImpl(const nsStringValueImpl<CharType>& aCopy) {
@@ -244,7 +175,7 @@ struct nsStringValueImpl {
       mBuffer=theString;
     }
     else {
-      mBuffer=0;
+      mBuffer=(CharType*)gCommonEmptyBuffer;
       mLength=mCapacity=0;
     }
     mRefCount=1;
@@ -266,6 +197,7 @@ struct nsStringValueImpl {
 
   void*     GetBuffer() {return mBuffer;}
   PRUint32  GetLength() {return mLength;}
+  PRUint32  GetCapacity() {return mCapacity;}
   size_t    GetCharSize() {return sizeof(CharType);}
 
   CharType* mBuffer;
