@@ -155,7 +155,14 @@
                   </menupopup>
                 </menu>            
                 <menuseparator/>
-                <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="Browser:Stop" key="key_stop"/>
+                <menuitem label="&stopCmd.label;"
+                          accesskey="&stopCmd.accesskey;"
+                          command="Browser:Stop"
+#ifdef XP_MACOSX
+                          key="key_stop_mac"/>
+#else
+                          key="key_stop"/>
+#endif
                 <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" command="Browser:Reload" key="key_reload"/>
                 <menuseparator/>
                 <menu id="viewTextZoomMenu" label="&textSize.label;" accesskey="&textSize.accesskey;">

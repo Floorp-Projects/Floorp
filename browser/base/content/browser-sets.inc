@@ -309,6 +309,7 @@
 # even if the stop button and menuitem are disabled (see Bug 284140)
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
 #ifdef XP_MACOSX
+    <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" oncommand="BrowserStop();"/>
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
 #else
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
