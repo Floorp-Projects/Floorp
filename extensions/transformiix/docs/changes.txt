@@ -1,6 +1,16 @@
 TransforMiiX (TM)
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+Note: The changes listed here mainly reflect the core XSLT processor and
+      the standalone version.
+
+Build 20000906
+
+-- Fixed UTF8 bug
+   - reported by Steve Tinney (stinney@sas.upenn.edu)
+
+-- Updated Expat for standalone version
+
 Build 20000725
 
 -- Windows Makefiles are up to date to create Mozilla module
