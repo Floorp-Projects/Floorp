@@ -177,11 +177,12 @@ PR_IMPLEMENT(void)
 PL_VectorCompact(PLVector* v)
 {
     if (v->size != v->maxSize) {
+        void ** newData = NULL;
+
         /* shrink to desired size */
 #ifdef SIZE_T_MAX
         PR_ASSERT(v->size <= SIZE_T_MAX/sizeof(void *)); /* no overflow */
 #endif
-        void ** newData = NULL;
         if (v->size != 0) {
             newData = (void **)PR_Malloc(v->size * sizeof(void *));
             /* copy new data from old */
