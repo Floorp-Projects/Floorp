@@ -332,12 +332,15 @@ DaylightSavingTA(jsdouble t)
     return result;
 }
 
-#define LocalTime(t)    ((t) + LocalTZA + DaylightSavingTA(t))
+
+#define AdjustTime(t)   fmod(LocalTZA + DaylightSavingTA(t), msPerDay)
+
+#define LocalTime(t)    ((t) + AdjustTime(t))
 
 static jsdouble
 UTC(jsdouble t)
 {
-    return t - LocalTZA - DaylightSavingTA(t - LocalTZA);
+    return t - AdjustTime(t - LocalTZA);
 }
 
 static intN
@@ -1493,8 +1496,7 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
 
 	/* offset from GMT in minutes.  The offset includes daylight savings,
 	   if it applies. */
-	jsint minutes = (jsint) floor((LocalTZA + DaylightSavingTA(date))
-				      / msPerMinute);
+	jsint minutes = (jsint) floor(AdjustTime(date) / msPerMinute);
 
 	/* map 510 minutes to 0830 hours */
 	intN offset = (minutes / 60) * 100 + minutes % 60;
