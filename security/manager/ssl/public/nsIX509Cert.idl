@@ -183,8 +183,8 @@ interface nsIX509Cert : nsISupports {
   const unsigned long CERT_USAGE_StatusResponder = 10;
   const unsigned long CERT_USAGE_AnyCA = 11;
 
-  void verifyForUsage(in PRUInt32 usage,
-                      out PRUInt32 verificationResult);
+  void verifyForUsage(in PRUint32 usage,
+                      out PRUint32 verificationResult);
 
   /*
    * This method is here to make it easier to view a cert.
