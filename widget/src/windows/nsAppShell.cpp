@@ -18,7 +18,6 @@
 
 #include "nsAppShell.h"
 #include "nsIWidget.h"
-#include "nsSelectionMgr.h"
 #include <windows.h>
 
 NS_IMPL_ISUPPORTS(nsAppShell, NS_IAPPSHELL_IID) 
@@ -32,7 +31,6 @@ nsAppShell::nsAppShell()
 { 
   NS_INIT_REFCNT();
   mDispatchListener = 0;
-  mSelectionMgr = 0;
 }
 
 
@@ -45,10 +43,6 @@ nsAppShell::nsAppShell()
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
-  // Create the selection manager
-  if (!mSelectionMgr)
-      NS_NewSelectionMgr(&mSelectionMgr);
-
   return NS_OK;
 }
 
@@ -189,7 +183,6 @@ NS_METHOD nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-  NS_IF_RELEASE(mSelectionMgr);
 }
 
 //-------------------------------------------------------------------------
@@ -205,13 +198,4 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
-NS_METHOD
-nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
-{
-  *aSelectionMgr = mSelectionMgr;
-  NS_IF_ADDREF(mSelectionMgr);
-  if (!mSelectionMgr)
-    return NS_ERROR_NOT_INITIALIZED;
-  return NS_OK;
-}
 

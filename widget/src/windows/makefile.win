@@ -51,7 +51,6 @@ CPPSRCS =              \
 	nsDialog.cpp         \
 	nsLabel.cpp          \
 	nsToolkit.cpp        \
-	nsSelectionMgr.cpp   \
 	nsStringUtil.cpp   \
 	$(NULL)
 
@@ -86,7 +85,6 @@ OBJS =                             \
 	.\$(OBJDIR)\nsDialog.obj    \
 	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
-	.\$(OBJDIR)\nsSelectionMgr.obj   \
 	.\$(OBJDIR)\nsStringUtil.obj   \
 	$(NULL)
 
