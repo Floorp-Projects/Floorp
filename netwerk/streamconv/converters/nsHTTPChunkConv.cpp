@@ -41,6 +41,12 @@ nsHTTPChunkConv::nsHTTPChunkConv()
     mListener    = nsnull;
     mChunkBuffer = NULL;
     mState = CHUNK_STATE_INIT;
+
+    mValueBufLen = 0;
+    mHeaderBufLen= 0;
+    mHeadersCount= mHeadersExpected = 0;
+
+    mChunkContext= NULL;
 }
 
 nsHTTPChunkConv::~nsHTTPChunkConv ()
@@ -78,8 +84,14 @@ nsHTTPChunkConv::AsyncConvertData (
     mListener = aListener;
     NS_ADDREF (mListener);
 
-    mAsyncConvContext = (nsISupportsPRBool *) aCtxt;
-    
+    mAsyncConvContext = (nsISupportsVoid *) aCtxt;
+    if (mAsyncConvContext)
+    {
+        const void *p;
+        mAsyncConvContext -> GetData (&p);
+        mChunkContext = (nsHTTPChunkConvContext *)p;
+    }
+
     return NS_OK; 
 } 
 
@@ -200,8 +212,8 @@ nsHTTPChunkConv::OnDataAvailable (
                         }
                         else
                         {
-                            if (mAsyncConvContext)
-                                mAsyncConvContext -> SetData (PR_TRUE);
+                            if (mChunkContext)
+                                mChunkContext -> SetEOF (PR_TRUE);
                         }
 
                         mState = CHUNK_STATE_INIT;
@@ -254,7 +266,7 @@ nsHTTPChunkConv::OnDataAvailable (
                             mState = CHUNK_STATE_CR_FINAL;
                     }
                     else
-                        mState = CHUNK_STATE_FINAL;
+                        mState = CHUNK_STATE_TRAILER;
                     
                     c = 0;
                     break;
@@ -314,6 +326,58 @@ nsHTTPChunkConv::OnDataAvailable (
                         streamLen -= rl;
                     }
                     break;
+                
+                case CHUNK_STATE_TRAILER:
+                    
+                    if (!mChunkContext || mHeadersCount == mChunkContext -> GetTrailerHeaderCount ())
+                        mState = CHUNK_STATE_FINAL;
+                    else
+                        mState = CHUNK_STATE_TRAILER_HEADER;
+
+                    break;
+
+                case CHUNK_STATE_TRAILER_HEADER:
+                    
+                    rv = iStr -> Read (&c, 1, &rl);
+                    if (NS_FAILED (rv))
+                        return rv;
+
+                    streamLen--;
+                    if (isalnum (c) && mHeaderBufLen < sizeof (mHeaderBuf) - 1)
+                        mHeaderBuf[mHeaderBufLen++] = c;
+                    else
+                    if (c == ':')
+                    {
+                        mHeaderBuf[mHeaderBufLen] = 0;
+                        mState = CHUNK_STATE_TRAILER_VALUE;
+                    }
+                    break;
+                
+                case CHUNK_STATE_TRAILER_VALUE:
+
+                    rv = iStr -> Read (&c, 1, &rl);
+                    if (NS_FAILED (rv))
+                        return rv;
+
+                    streamLen--;
+
+                    if (isspace (c) && mValueBufLen == 0 || c == '\r')
+                        break;
+                    else
+                    if (c == '\n')
+                    {
+                        mValueBuf[mValueBufLen] = 0;
+                        mHeadersCount++;
+
+                        mChunkContext -> SetResponseHeader (mHeaderBuf, mValueBuf);
+                        mHeaderBufLen = mValueBufLen = 0;
+                        mState = CHUNK_STATE_TRAILER;
+                    }
+                    else
+                    if (mValueBufLen < sizeof (mValueBuf) - 1)
+                        mValueBuf[mValueBufLen++] = c;
+
+                    break;
             } /* switch */
         } /* while */
     } /* DO_UNCHUNKING */
@@ -351,3 +415,5 @@ NS_NewHTTPChunkConv (nsHTTPChunkConv ** aHTTPChunkConv)
     NS_ADDREF(*aHTTPChunkConv);
     return NS_OK;
 }
+
+

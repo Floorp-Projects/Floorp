@@ -26,6 +26,7 @@
 
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
+#include "nsHTTPChunkConv.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
@@ -124,8 +125,10 @@ protected:
     PRBool                      mCompressHeaderChecked;
     PRBool                      mChunkHeaderChecked;
     PRBool                      mDataReceived;
-    nsCOMPtr<nsISupportsPRBool> mChunkHeaderEOF;
+    nsCOMPtr<nsISupportsVoid>   mChunkHeaderEOF;
     nsHTTPPipelinedRequest*     mPipelinedRequest;
+
+    nsHTTPChunkConvContext      mChunkHeaderCtx;
 };
 
 
