@@ -379,25 +379,28 @@ nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent,
  	GetNumChildren(&numChildren);
 
 	nsCOMPtr <nsIMsgDBHdr> curHdr;
-	for (childIndex = 0; childIndex < numChildren; childIndex++)
+	if (numChildren > 0)
 	{
-		rv = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
-		if (NS_SUCCEEDED(rv) && curHdr)
+		for (childIndex = 0; childIndex < numChildren; childIndex++)
 		{
-			nsMsgKey threadParent;
-
-			curHdr->GetThreadParent(&threadParent);
-			if (threadParent == oldParent)
+			rv = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
+			if (NS_SUCCEEDED(rv) && curHdr)
 			{
-				curHdr->SetThreadParent(newParent);
-				if (announcer)
-				{
-					nsMsgKey curKey;
+				nsMsgKey threadParent;
 
-					curHdr->GetMessageKey(&curKey);
-					announcer->NotifyParentChangedAll(curKey, oldParent, newParent, nsnull);
+				curHdr->GetThreadParent(&threadParent);
+				if (threadParent == oldParent)
+				{
+					curHdr->SetThreadParent(newParent);
+					if (announcer)
+					{
+						nsMsgKey curKey;
+
+						curHdr->GetMessageKey(&curKey);
+						announcer->NotifyParentChangedAll(curKey, oldParent, newParent, nsnull);
+					}
+					// need to send some sort of reparenting notification here.
 				}
-				// need to send some sort of reparenting notification here.
 			}
 		}
 	}
