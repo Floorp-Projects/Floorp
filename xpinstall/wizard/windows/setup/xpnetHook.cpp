@@ -1229,23 +1229,6 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
   return(iRv);
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// Progress bar
-// Centers the specified window over the desktop. Assumes the window is
-// smaller both horizontally and vertically than the desktop
-static void
-CenterWindow(HWND hWndDlg)
-{
-	RECT	rect;
-	int		iLeft, iTop;
-
-	GetWindowRect(hWndDlg, &rect);
-	iLeft = (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2;
-	iTop  = (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2;
-
-	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-}
-
 // Window proc for dialog
 LRESULT CALLBACK
 DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1260,7 +1243,7 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                               sizeof(gszFileInfo),
                               szFileIniConfig);
       DisableSystemMenuItems(hWndDlg, FALSE);
-      CenterWindow(hWndDlg);
+      RepositionWindow(hWndDlg, BANNER_IMAGE_DOWNLOAD);
       if(gbShowDownloadRetryMsg)
         SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
       else
@@ -1285,7 +1268,6 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-
       return FALSE;
 
     case WM_SIZE:
@@ -1534,6 +1516,7 @@ void DeInitDownloadDlg()
 {
   if(sgProduct.mode != SILENT)
   {
+    SaveWindowPosition(dlgInfo.hWndDlg);
     DestroyWindow(dlgInfo.hWndDlg);
     UnregisterClass("GaugeFile", hInst);
   }

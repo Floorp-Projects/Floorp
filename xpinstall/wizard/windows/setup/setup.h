@@ -92,6 +92,10 @@ typedef int PRInt32;
 #define INCLUDE_INVISIBLE_OBJS          TRUE
 #define SKIP_INVISIBLE_OBJS             FALSE
 
+#define NO_BANNER_IMAGE                 0x00000000
+#define BANNER_IMAGE_DOWNLOAD           0x00000001
+#define BANNER_IMAGE_INSTALLING         0x00000002
+
 #define APPPATH_GRE_PATH_SET            0x00000000
 #define APPPATH_GRE_PATH_NOT_SET        0x00000001
 #define APPPATH_GRE_PATH_ALREADY_SET    0x00000002
@@ -612,6 +616,8 @@ struct sSysInfo
   DWORD dwMemoryAvailablePhysical;
   DWORD dwScreenX;
   DWORD dwScreenY;
+  DWORD lastWindowPosCenterX;
+  DWORD lastWindowPosCenterY;
   BOOL  bScreenReader;
   BOOL  bRefreshIcons;
 };

@@ -298,7 +298,7 @@ BEGIN
 #ifndef __MINGW32__
                     114,
 #endif
-                    IDC_STATIC,"Static",SS_BITMAP,0,0,312,34
+                    IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
 END
 
 DLG_ADVANCED_SETTINGS DIALOG DISCARDABLE  51, 56, 315, 205
@@ -431,7 +431,7 @@ BEGIN
 #ifndef __MINGW32__
                     114,
 #endif
-                    IDC_STATIC,"Static",SS_BITMAP,0,0,312,34
+                    IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
     LTEXT           "",IDC_STATIC4,9,91,37,8,SS_NOPREFIX
     CONTROL         "",IDC_STATUS_TO,"Static",SS_LEFTNOWORDWRAP | 
                     SS_NOPREFIX | WS_GROUP,49,91,253,8
@@ -478,7 +478,7 @@ IDB_BOX_UNCHECKED       BITMAP  FIXED IMPURE    "box_unch.bmp"
 IDB_BOX_CHECKED         BITMAP  FIXED IMPURE    "box_chec.bmp"
 IDB_BITMAP_WELCOME      BITMAP  DISCARDABLE     "bitmap1.bmp"
 IDB_BOX_CHECKED_DISABLED BITMAP  FIXED IMPURE    "box_ch_d.bmp"
-IDB_BITMAP_DOWNLOAD_LOGO BITMAP  DISCARDABLE     "downloadLogo.bmp"
+IDB_BITMAP_BANNER       BITMAP  DISCARDABLE     "downloadLogo.bmp"
 IDB_QUICK_LAUNCH        BITMAP  DISCARDABLE     "turbo-systray.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
