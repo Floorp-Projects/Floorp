@@ -56,23 +56,27 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
                      "<TABLE CELLPADDING=8 CELLSPACING=1 BORDER=1>" +
                      "<TR><TD NOWRAP>");
 
-    if (icon != null) {
-      getOut().print("<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>" +
-                       "<TR><TD NOWRAP VALIGN=CENTER>");
-      if (link_url != null)
-        getOut().print("<A HREF=\"" + link_url + "\">");
-      getOut().print("<IMG SRC=\"" + icon +
-                       "\" BORDER=0 ALIGN=MIDDLE ALT=\"\">");
-      if (link_url != null) getOut().print("</A>");
-      getOut().print("</TD><TD VALIGN=CENTER>");
-    }
+//#### Temporarily removed because the current renderer doesn't get it --Edwin
+//    if (icon != null) {
+//      getOut().print("<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>" +
+//                       "<TR><TD NOWRAP VALIGN=CENTER>");
+//      if (link_url != null)
+//        getOut().print("<A HREF=\"" + link_url + "\">");
+//      getOut().print("<IMG SRC=\"" + icon +
+//                       "\" BORDER=0 ALIGN=MIDDLE ALT=\"\">");
+//      if (link_url != null) getOut().print("</A>");
+//      getOut().print("</TD><TD VALIGN=CENTER>");
+//    }
+//#### End of temporarily removed block --Edwin
 
     if (link_url != null) getOut().print("<A HREF=\"" + link_url + "\">");
     getOut().print(link_name);
     if (link_url != null) getOut().print("</A>");
 
-    if (icon != null)
-      getOut().print("</TD></TR></TABLE>");
+//#### Temporarily removed because the current renderer doesn't get it --Edwin
+//    if (icon != null)
+//      getOut().print("</TD></TR></TABLE>");
+//#### End of temporarily removed block --Edwin
     getOut().print("</TD><TD>");
 
     if (all_headers_p) {
@@ -105,30 +109,44 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
           name = n[0];
       }
 
-      getOut().print("<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>");
+//#### Temporarily removed because the current renderer doesn't get it --Edwin
+//      getOut().print("<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>");
+//
+//      if (name != null)
+//        getOut().print("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>" +
+//                         "Name" +  // #### l10n
+//                         ": </TH><TD>" +
+//                         name +
+//                         "</TD></TR>");
+//
+//      if (type != null)
+//        getOut().print("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>" +
+//                         "Type" +  // #### l10n
+//                         ": </TH><TD>" +
+//                         type +
+//                         "</TD></TR>");
+//
+//      if (desc != null)
+//        getOut().print("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>" +
+//                         "Description" +  // #### l10n
+//                         ": </TH><TD>" +
+//                         desc +
+//                         "</TD></TR>");
+//
+//      getOut().print("</TABLE>");
+//#### End of temporarily removed block --Edwin
 
+//#### Temporarily inserted to get rendering working --Edwin
       if (name != null)
-        getOut().print("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>" +
-                         "Name" +  // #### l10n
-                         ": </TH><TD>" +
-                         name +
-                         "</TD></TR>");
+        getOut().print("<B>Name: </B>" + name + "<BR>");
 
       if (type != null)
-        getOut().print("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>" +
-                         "Type" +  // #### l10n
-                         ": </TH><TD>" +
-                         type +
-                         "</TD></TR>");
+        getOut().print("<B>Type: </B>" + type + "<BR>");
 
       if (desc != null)
-        getOut().print("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>" +
-                         "Description" +  // #### l10n
-                         ": </TH><TD>" +
-                         desc +
-                         "</TD></TR>");
+        getOut().print("<B>Description: </B>" + desc + "<BR>");
+//#### End of temporarily inserted block --Edwin
 
-      getOut().print("</TABLE>");
     }
 
     if (body != null) {
