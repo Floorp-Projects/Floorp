@@ -39,6 +39,8 @@ public:
   static nsIAtom* beforePseudo;
 
   static nsIAtom* disabledPseudo;
+  static nsIAtom* dragOverPseudo;
+  static nsIAtom* dragPseudo;
 
   static nsIAtom* enabledPseudo;
 
