@@ -694,32 +694,38 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                 // make space for the decoding
                 strUnicodeBuffer->SetCapacity(unicodeLength);
                 unicodeString = (PRUnichar *) strUnicodeBuffer->get();
-                result = decoder->Convert(aString, (PRInt32 *) &aStringLen, unicodeString, &unicodeLength);
-                if (NS_SUCCEEDED(result)) {
-                  strUnicodeBuffer->SetLength(unicodeLength);
-                } else {
-#ifdef DEBUG
-                  /*
-                   * We currently fail often because of XML documents
-                   * which are in UTF-8 importing stylesheets which
-                   * use an ISO-8859-1 char, especially in comments in
-                   * the sheet.  See http://bugzilla.mozilla.org/show_bug.cgi?id=106843
-                   *
-                   * This assertion should at least make it possible
-                   * to catch such errors in chrome, pending this bug
-                   * being fixed
-                   */
-                   
-                  nsCAutoString uriStr;
-                  mURL->GetSpec(uriStr);
-                  nsCAutoString errorMessage;
-                  errorMessage = NS_LITERAL_CSTRING("Decoding sheet from ") +
-                                 uriStr +
-                                 NS_LITERAL_CSTRING(" failed");
-                  NS_ASSERTION(PR_FALSE, errorMessage.get());
-#endif // DEBUG
-                  strUnicodeBuffer->SetLength(0);
-                }
+                PRInt32 totalChars = 0;
+                PRInt32 unicharLength = unicodeLength;
+                do {
+                  PRInt32 srcLength = aStringLen;
+                  result = decoder->Convert(aString, &srcLength, unicodeString, &unicharLength);
+                  
+                  totalChars += unicharLength;
+                  if (NS_FAILED(result)) {
+                    // if we failed, we consume one byte, replace it with U+FFFD
+                    // and try the conversion again.
+                    unicodeString[unicharLength++] = (PRUnichar)0xFFFD;
+                    unicodeString = unicodeString + unicharLength;
+                    unicharLength = unicodeLength - (++totalChars);
+
+                    decoder->Reset();
+
+                    if (((PRUint32) (srcLength + 1)) > aStringLen) {
+                      srcLength = aStringLen;
+                    } else {
+                      srcLength++;
+                    }
+
+                    aString += srcLength;
+                    aStringLen -= srcLength;
+                  }
+                } while (NS_FAILED(result) && (aStringLen > 0));
+                
+                // Don't propagate return code of unicode decoder
+                // since it doesn't reflect on our success or failure
+                // - Ref. bug 87110
+                result = NS_OK;
+                strUnicodeBuffer->SetLength(totalChars);
               }
             }
             NS_RELEASE(decoder);
