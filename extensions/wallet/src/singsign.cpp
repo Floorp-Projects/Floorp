@@ -1684,11 +1684,7 @@ SI_LoadSignonData() {
   /* read the URL line */
   while (NS_SUCCEEDED(si_ReadLine(strm, buffer))) {
     si_StripLF(buffer);
-    if (buffer.Length() == 0) {
-      /* something's wrong */
-      si_unlock_signon_list();
-      return -1;
-    }
+    /* a blank line is perfectly valid here -- corresponds to a local file */
     passwordRealm = buffer.ToNewCString();
     if (!passwordRealm) {
       si_unlock_signon_list();
