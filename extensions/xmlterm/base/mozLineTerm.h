@@ -46,6 +46,7 @@ public:
 
   // mozILineTerm interface
   NS_IMETHOD Open(const PRUnichar *command,
+                  const PRUnichar *initInput,
                   const PRUnichar *promptRegexp,
                   PRInt32 options, PRInt32 processType,
                   nsIDOMDocument *domDoc);
@@ -63,6 +64,7 @@ public:
   // (not scriptable, no authentication cookie required)
 
   NS_IMETHOD OpenAux(const PRUnichar *command,
+                     const PRUnichar *initInput,
                      const PRUnichar *promptRegexp,
                      PRInt32 options, PRInt32 processType,
                      nsIDOMDocument *domDoc,

@@ -44,6 +44,7 @@ class mozILineTermAux : public mozILineTerm {
 
   // mozILineTerm interface
   NS_IMETHOD Open(const PRUnichar *command,
+                  const PRUnichar *initInput,
                   const PRUnichar *promptRegexp,
                   PRInt32 options, PRInt32 processType,
                   nsIDOMDocument *domDoc) = 0;
@@ -75,6 +76,7 @@ class mozILineTermAux : public mozILineTerm {
    * @param aCookie (output) cookie associated with LineTerm
    */
   NS_IMETHOD OpenAux(const PRUnichar *command,
+                     const PRUnichar *initInput,
                      const PRUnichar *promptRegexp,
                      PRInt32 options, PRInt32 processType,
                      nsIDOMDocument *domDoc,

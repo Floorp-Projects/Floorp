@@ -1,5 +1,8 @@
 skin --- CSS stylesheets and images for user interface
 
-xmlterm.css       Stylesheet for XMLterm startup file ../content/xmlterm.html
+
+xmlterm.css       Stylesheet for XUL wrapper ../content/xmlterm.xul
+
+xmltpage.css      Stylesheet for XMLterm startup file ../content/xmlterm.html
 
 

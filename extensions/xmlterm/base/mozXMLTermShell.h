@@ -35,7 +35,9 @@
 #include "mozIXMLTermShell.h"
 
 
-class mozXMLTermShell : public mozIXMLTermShell {
+class mozXMLTermShell : public mozIXMLTermShell,
+                        public nsIWebShellContainer
+{
  public: 
 
   mozXMLTermShell();
@@ -51,6 +53,9 @@ class mozXMLTermShell : public mozIXMLTermShell {
 
   NS_IMETHOD SetPrompt(const PRUnichar* aPrompt, const PRUnichar* aCookie);
 
+  NS_IMETHOD IgnoreKeyPress(const PRBool aIgnore,
+                            const PRUnichar* aCookie);
+
   NS_IMETHOD Init(nsIDOMWindow* aContentWin,
                   const PRUnichar* URL,
                   const PRUnichar* args);
@@ -63,11 +68,30 @@ class mozXMLTermShell : public mozIXMLTermShell {
 
   NS_IMETHOD SendText(const PRUnichar* aString, const PRUnichar* aCookie);
 
-  NS_IMETHOD NewXMLTermWindow(const PRUnichar* args);
+  NS_IMETHOD NewXMLTermWindow(const PRUnichar* args,
+                              nsIDOMWindow **_retval);
 
   NS_IMETHOD Exit(void);
 
   NS_IMETHOD Finalize(void);
+
+  // nsIWebShellContainer interface
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
+                         const PRUnichar* aURL,
+                         nsLoadType aReason);
+ 
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
+                          const PRUnichar* aURL);
+ 
+
+  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
+                             const PRUnichar* aURL,
+                             PRInt32 aProgress,
+                             PRInt32 aProgressMax);
+ 
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
+                        const PRUnichar* aURL,
+                        nsresult aStatus);
 protected:
 
   /** object initialization flag */

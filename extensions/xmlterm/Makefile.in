@@ -56,7 +56,7 @@ DIRS = base tests linetest
 
 else  # not STAND_ALONE
 
-DIRS = base ui geckoterm tests
+DIRS = base ui scripts tests geckoterm
 
 LIBRARY_NAME = 
 

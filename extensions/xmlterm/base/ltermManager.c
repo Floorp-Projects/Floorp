@@ -225,7 +225,8 @@ int lterm_new()
  * (documented in the LTERM interface)
  * @return 0 on success, or -1 on error
  */
-int lterm_open(int lterm, char *const argv[], const char* cookie,
+int lterm_open(int lterm, char *const argv[],
+               const char* cookie, const char* init_command,
                const UNICHAR* prompt_regexp, int options, int process_type,
                lterm_callback_func_t callback_func, void *callback_data)
 {
@@ -536,19 +537,26 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
   } else {
     int result;
     char* shellInitFormat;
+    char* initStr = "";
+
+    if (init_command != NULL)
+        initStr = (char *) init_command;
 
     if ((lts->processType == LTERM_CSH_PROCESS) ||
       (lts->processType == LTERM_TCSH_PROCESS)) {
       /* C-shell family */
-      shellInitFormat = "setenv LTERM_COOKIE '%s'\n";
+      shellInitFormat = "setenv LTERM_COOKIE '%s'; if (-f $HOME/.xmltermrc) source $HOME/.xmltermrc\n%s";
 
     } else {
       /* Bourne-shell family */
-      shellInitFormat = "LTERM_COOKIE='%s'; export LTERM_COOKIE\n";
+      shellInitFormat = "LTERM_COOKIE='%s'; export LTERM_COOKIE; if [ -f $HOME/.xmltermrc ]; then source $HOME/.xmltermrc; fi\n%s";
     }
 
-    if (strlen(shellInitFormat)+strlen(lts->cookie) <= MAXSHELLINITSTR+1) {
-      sprintf(lts->shellInitStr, shellInitFormat, lts->cookie);
+    /* **** WATCH OUT FOR BUFFER OVERFLOW!!! *** */
+    if (strlen(shellInitFormat)-4+strlen(lts->cookie)+strlen(initStr) <=
+         MAXSHELLINITSTR-1) {
+      sprintf(lts->shellInitStr, shellInitFormat, lts->cookie, initStr);
+
     } else {
       LTERM_WARNING("lterm_open: Warning - shell initialization string too long\n");
       lts->shellInitStr[0] = '\0';
@@ -905,6 +913,9 @@ int lterm_resize(int lterm, int rows, int cols)
 
   lto = &(lts->ltermOutput);
 
+  LTERM_LOG(lterm_resize,0,("lto->outputMode=%d\n",
+                             lto->outputMode));
+
   /* Free full screen buffers */
   if (lto->screenChar != NULL)
     FREE(lto->screenChar);
@@ -912,13 +923,18 @@ int lterm_resize(int lterm, int rows, int cols)
   if (lto->screenStyle != NULL)
     FREE(lto->screenStyle);
 
-  /* Clear screen buffer */
   lto->screenChar  = NULL;
   lto->screenStyle = NULL;
 
   /* Resize screen */
   lts->nRows = rows;
   lts->nCols = cols;
+
+  if (lto->outputMode == LTERM1_SCREEN_MODE) {
+    /* Clear screen */
+    if (ltermClearOutputScreen(lts) != 0)
+      return -1;
+  }
 
   if (lts->ptyMode) {
     /* Resize PTY */

@@ -5,7 +5,7 @@ INSTALL: Installation instructions for XMLterm source code
 
 *NOTE* Check the XMLterm web site <http://xmlterm.org> for updates.
 
-26 Dec 1999
+28 Feb 2000
 
 QUICK INSTALLATION INSTRUCTIONS (Linux/Solaris)
 -----------------------------------------------
@@ -15,8 +15,9 @@ b) cd mozilla/extensions/xmlterm
 c) ./makemake -r
 d) make all
 e) cd ../../dist/bin
-f) ./mozilla chrome://xmlterm/content/xmlterm.html
-g) ./run-mozilla.sh xmlterm
+f) ./xmlterm
+  OR
+   ./mozilla -chrome chrome://xmlterm/content/xmlterm.xul
 
 
 DETAILED INSTALLATION INSTRUCTIONS
@@ -88,22 +89,26 @@ To clean up completely, type
   make clean
 
 
-4. Using XMLterm within the browser
------------------------------------
+4. Running XMLterm using mozilla
+--------------------------------
 
 At this time, XMLterm cannot be accessed through the menu bar. After Step 3,
 execute the following command in the "mozilla/dist/bin" directory:
 
-  ./mozilla chrome://xmlterm/content/xmlterm.html
+   ./xmlterm
 
-This should create an XMLterm in the browser window. Then click on that window
-with the mouse to shift focus and start typing UNIX commands.
-(You may also type this URL into the browser's URL box.)
+"xmlterm" is shorthand for the following command, which you may also execute
+directly
+
+   ./mozilla -chrome chrome://xmlterm/content/xmlterm.xul
+
+The above command(s) should create an XMLterm window. Click on that window
+with the mouse to give it focus and start typing UNIX commands.
 
 **NOTE**
 The command prompt is assumed to be terminated by one of the characters
-"#$%>?", followed by a space. If this is not the case, many features will not
-work. This restriction will be relaxed in the future.
+"#$%>?", followed by a space. If this is not the case, many features will
+not work. This restriction will be relaxed in the future.
 
 The command line can be edited using EMACS-style key bindings.
 Command completion should also work with TCSH and BASH, as should history
@@ -112,7 +117,7 @@ recall.
 By default, blue coloring is used to indicate clickable display elements.
 Note that the prompt and the input command line are clickable.
 (Of course, the appearance of XMLterm is completely configurable
-using the CSS stylesheet chrome://xmlterm/skin/default/xmlterm.css)
+using the CSS stylesheet chrome://xmlterm/skin/default/xmltpage.css)
 
 After typing one or two commands, click on the prompt string of any previous
 command to see what happens! Then click again on the same prompt string.
@@ -122,27 +127,42 @@ Clicking on a previous command line (to the right of the prompt) re-executes
 the command.
 
 The sample Perl script "xls", the iconic/hypertext version of the Unix "ls"
-command, is in the "tests" directory. Copy it to a directory in your
-executable path to use it.
+command, is in the "scripts" directory. Also in the "scripts" directory
+is "xcat", an XMLterm-aware version of the "cat" command.
 
 
-5. Using the lightweight "xmlterm" stand-alone program
-------------------------------------------------------
+5. Setting the path
+-------------------
 
-Step 3 also creates an executable called "xmlterm" in the "mozilla/dist/bin"
+To use XMLterm most efficiently, add the mozilla binary directory
+(mozilla/dist/bin) to your execution PATH variable by modifying
+your shell initialization file (.profile/.cshrc). This will enable you to use
+commands such as "xmlterm", "xls", and "xcat" easily.
+
+
+6. Using the lightweight "geckoterm" stand-alone program
+--------------------------------------------------------
+
+Step 3 also creates an executable called "geckoterm" in the "mozilla/dist/bin"
 directory. This is a lightweight program implementing XMLterm using the Gecko
 layout engine only, without the added baggage of the full browser. To use it,
 type the following command in the "mozilla/dist/bin" directory:
 
-./run-mozilla.sh xmlterm
+./run-mozilla.sh geckoterm
 
 This will create an XMLterm window. Click on this window to give it focus
 before typing Unix commands.
 
-Note: At present, the "xmlterm" executable works only with the GTK front end.
+Notes:
+     a) The Mozilla component registry may need to be updated by running
+        xmlterm using mozilla at least once (as in step 4) before trying to
+        run "geckoterm".
+
+     b) At present, the "geckoterm" executable works only with the GTK front
+        end.
 
 
-6. Stand-alone mode (optional)
+7. Stand-alone mode (optional)
 ------------------------------
 
 Although XMLterm resides in the Mozilla source tree, portions of it are

@@ -161,6 +161,13 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes, int *opvals,
             lto->cursorCol--;
           break;
 
+        case U_TAB:                       /* Tab */
+          LTERM_LOG(ltermProcessOutput,32,("Screen mode, TAB\n"));
+          lto->cursorCol = ((lto->cursorCol/8)+1)*8;
+          if (lto->cursorCol > lts->nCols-1)
+            lto->cursorCol = lts->nCols-1;
+          break;
+
         case U_BEL:                       /* Bell */
           LTERM_LOG(ltermProcessOutput,32,("************ Screen mode, BELL\n"));
           bellFlag = 1;

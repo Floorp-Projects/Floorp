@@ -25,9 +25,24 @@
 
 #include <stdio.h>
 
+#undef RAW_GTK_WINDOW
+
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+
+#ifdef RAW_GTK_WINDOW
+#include <gtk/gtk.h>
+#include "gtkmozarea.h"
+#include "gdksuperwin.h"
+#include "mozISimpleContainer.h"
+#else
+#include "nsIWidget.h"
+#include "nsWidgetsCID.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsIBaseWindow.h"
+#endif
 
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -47,13 +62,20 @@
 #include "nsIDOMWindow.h"
 
 #include "mozXMLT.h"
+#include "mozXMLTermUtils.h"
 #include "mozXMLTermShell.h"
+
+// Define Interface IDs
+static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 
 // Define Class IDs
 static NS_DEFINE_IID(kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID);
 
-// Define Interface IDs
-static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
+#ifdef RAW_GTK_WINDOW
+#else
+static NS_DEFINE_IID(kWindowCID,             NS_WINDOW_CID);
+static NS_DEFINE_IID(kWebShellCID,           NS_WEB_SHELL_CID);
+#endif
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -118,6 +140,9 @@ mozXMLTermShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   } else if ( aIID.Equals(NS_GET_IID(mozIXMLTermShell)) ) {
     *aInstancePtr = NS_STATIC_CAST(mozIXMLTermShell*,this);
 
+  } else if ( aIID.Equals(NS_GET_IID(nsIWebShellContainer)) ) {
+    *aInstancePtr = NS_STATIC_CAST(nsIWebShellContainer*,this);
+
   } else {
     return NS_ERROR_NO_INTERFACE;
   }
@@ -175,6 +200,29 @@ NS_IMETHODIMP mozXMLTermShell::SetPrompt(const PRUnichar* aPrompt,
       return NS_ERROR_FAILURE;
 
     return mXMLTerminal->SetPrompt(aPrompt);
+
+  } else {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+}
+
+
+/** Ignore key press events
+ * (workaround for form input being transmitted to xmlterm)
+ * @param aIgnore ignore flag (true/false)
+ * @param aCookie document.cookie string for authentication
+ */
+NS_IMETHODIMP mozXMLTermShell::IgnoreKeyPress(const PRBool aIgnore,
+                                              const PRUnichar* aCookie)
+{
+  if (mXMLTerminal) {
+    nsresult result;
+    PRBool matchesCookie;
+    result = mXMLTerminal->MatchesCookie(aCookie, &matchesCookie);
+    if (NS_FAILED(result) || !matchesCookie)
+      return NS_ERROR_FAILURE;
+
+    return mXMLTerminal->SetKeyIgnore(aIgnore);
 
   } else {
     return NS_ERROR_NOT_INITIALIZED;
@@ -313,13 +361,156 @@ NS_IMETHODIMP mozXMLTermShell::SendText(const PRUnichar* aString,
 
 // Create new XMLTerm window with specified argument string
 NS_IMETHODIMP
-mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args)
+mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args,
+                                  nsIDOMWindow **_retval)
 {
-  nsresult result = NS_OK;
+  nsresult result;
+  PRInt32 width = 760;
+  PRInt32 height = 400;
 
   XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,10,("\n"));
 
-  return result;
+  if (!_retval)
+    return NS_ERROR_NULL_POINTER;
+  *_retval = nsnull;
+
+  if (!mContentAreaDocShell)
+    return NS_ERROR_FAILURE;
+
+  // Get top window
+  nsCOMPtr<nsIWebShell> contentAreaWebShell( do_QueryInterface(mContentAreaDocShell) );
+
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check0, contWebShell=0x%x\n",
+                                            (int) contentAreaWebShell.get()));
+
+  nsCOMPtr<nsIWebShellContainer> topContainer = nsnull;
+  result = contentAreaWebShell->GetTopLevelWindow(getter_AddRefs(topContainer));
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check0, topContainer=0x%x\n",
+                                                (int) topContainer.get()));
+
+  nsCOMPtr<nsIWebShellWindow> topWin( do_QueryInterface(topContainer) );
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check0, topWin=0x%x\n",
+                                                (int) topWin.get()));
+
+  // Determine preferences
+  nsCOMPtr<nsIPref> prefs = nsnull;
+  result = mContentAreaDocShell->GetPrefs(getter_AddRefs(prefs));
+
+#ifdef RAW_GTK_WINDOW // Create window using raw GTK calls
+  GtkWidget *mainWin = NULL;
+  GtkWidget *mozArea = NULL;
+  GdkSuperWin *superWin = NULL;
+
+  mainWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_default_size( GTK_WINDOW(mainWin), width, height);
+  gtk_window_set_title(GTK_WINDOW(mainWin), "XMLterm2");
+  
+  mozArea = gtk_mozarea_new();
+  gtk_container_add(GTK_CONTAINER(mainWin), mozArea);
+  gtk_widget_realize(mozArea);
+  gtk_widget_show(mozArea);
+  superWin = GTK_MOZAREA(mozArea)->superwin;
+
+  gdk_window_show(superWin->bin_window);                                       
+  gdk_window_show(superWin->shell_window);
+
+  gtk_widget_show(mainWin);
+
+
+  // Create simple container
+  nsCOMPtr<mozISimpleContainer> gSimpleContainer = nsnull;
+  result = NS_NewSimpleContainer(getter_AddRefs(gSimpleContainer));
+
+  if (NS_FAILED(result) || !gSimpleContainer) {
+    return result; // Exit main program
+  }
+
+  // Determine window dimensions
+  GtkAllocation *alloc = &GTK_WIDGET(mainWin)->allocation;
+    
+  // Initialize container it to hold a doc shell
+  result = gSimpleContainer->Init((nsNativeWidget *) superWin,
+                              alloc->width, alloc->height, prefs);
+
+  if (NS_FAILED(result)) {
+    return result; // Exit main program
+  }
+
+  // Get reference to doc shell embedded in a simple container
+  nsCOMPtr<nsIDocShell> docShell;
+  result = gSimpleContainer->GetDocShell(*getter_AddRefs(docShell));
+
+  if (NS_FAILED(result) || !docShell) {
+    return result; // Exit main program
+  }
+
+  // Load initial XMLterm document
+  result = gSimpleContainer->LoadURL(
+                                 "file:///home/svn/mysrc/web/home/links.html");
+  if (NS_FAILED(result))
+    return result;
+
+  ///nsCOMPtr<nsIWebShell> webShell( do_QueryInterface(docShell) );
+  ///nsString aStr("file:///home/svn/mysrc/web/home/links.html");
+  ///result = webShell->LoadURL(aStr.GetUnicode());
+  ///if (NS_FAILED(result))
+  ///  return result;
+
+  // Return new DOM window
+  result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell, _retval);
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check8, *_retval=0x%x\n",
+                                                *_retval));
+  if (NS_FAILED(result) || !*_retval)
+    return NS_ERROR_FAILURE;
+
+#else            // Use nsIAppShellService
+
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check4\n"));
+
+  // Create the Application Shell instance...
+  nsIAppShellService* appShellSvc = nsnull;
+  result = nsServiceManager::GetService(kAppShellServiceCID,
+                                        NS_GET_IID(nsIAppShellService),
+                                        (nsISupports**)&appShellSvc);
+
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check5\n"));
+  if (NS_FAILED(result) || !appShellSvc)
+      return NS_ERROR_FAILURE;
+
+  // Create top level window
+  nsCOMPtr<nsIWebShellWindow> webShellWin;
+  nsCOMPtr<nsIURI> uri = nsnull;
+  //nsCAutoString urlCString("chrome://xmlterm/content/xmlterm.html");
+  //result = uri->SetSpec(urlCString.GetBuffer());
+
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check6\n"));
+  if (NS_FAILED(result))
+      return NS_ERROR_FAILURE;
+
+  appShellSvc->CreateTopLevelWindow((nsIWebShellWindow*) nsnull,
+                                    uri,
+                                    PR_TRUE,
+                                    PR_FALSE,
+                                    (PRUint32) 0,
+                                    (nsIXULWindowCallbacks*)nsnull,
+                                    width, height,
+                                    getter_AddRefs(webShellWin));
+
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check7, webShellWin=0x%x\n",
+                                                webShellWin.get()));
+  if (NS_FAILED(result))
+    return result;
+
+  // Return new DOM window
+  result = webShellWin->GetDOMWindow(_retval);
+  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check8, *_retval=0x%x\n",
+                                                *_retval));
+  if (NS_FAILED(result) || !*_retval)
+    return NS_ERROR_FAILURE;
+
+#endif
+
+  return NS_OK;
 }
 
 
@@ -339,5 +530,36 @@ mozXMLTermShell::Exit()
     appShell->Shutdown();
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   } 
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozXMLTermShell::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
+{
+  XMLT_LOG(mozXMLTermShell::WillLoadURL,0,("\n"));
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozXMLTermShell::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
+{
+  XMLT_LOG(mozXMLTermShell::BeginLoadURL,0,("\n"));
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozXMLTermShell::ProgressLoadURL(nsIWebShell* aShell,
+          const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+{
+  XMLT_LOG(mozXMLTermShell::ProgressLoadURL,0,("\n"));
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozXMLTermShell::EndLoadURL(nsIWebShell* aShell,
+                                             const PRUnichar* aURL,
+                                             nsresult aStatus)
+{
+  XMLT_LOG(mozXMLTermShell::EndLoadURL,0,("\n"));
   return NS_OK;
 }

@@ -1,23 +1,14 @@
-/* xmlterm.css: XMLterm default style sheet */
+/* xmlterm.css: Stylesheet for XUL wrapper ../content/xmlterm.xul */
 
-BODY { font-family: monaco, courier, elite, monospace;
-       background-color: #FFFFFF;
-     }
+@import url(chrome://global/skin/);
 
-DIV, PRE, SPAN { margin: 0; padding-top: 0; padding-bottom: 0 }
-
-PRE { font-family: monaco;
-      line-height: 120% }
-
-/* Input components */
-SPAN.prompt      { color: blue }
-SPAN.command     { color: blue }
-
-/* Screen display */
-PRE.row   { margin: 0; padding-top: 0; padding-bottom: 0 }
-SPAN.row  { margin: 0; padding-top: 0; padding-bottom: 0 }
-
-/* Directory display */
-SPAN.plainfile   { font-family: monaco}
-SPAN.directory   { font-family: monaco; color: blue; cursor: hand }
-SPAN.executable  { font-family: monaco; color: blue; cursor: hand }
+/**
+ * remove black border from iframe
+ */
+html|iframe {
+ min-width: 10px;
+ min-height: 10px;
+ width: 100px;
+ height: 100px;
+ border: none;
+}

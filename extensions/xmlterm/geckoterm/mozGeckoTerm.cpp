@@ -179,7 +179,7 @@ int main( int argc, char *argv[] )
   gdk_rgb_init();
 
   mainWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_default_size( GTK_WINDOW(mainWin), 720, 484);
+  gtk_window_set_default_size( GTK_WINDOW(mainWin), 740, 484);
   gtk_window_set_title(GTK_WINDOW(mainWin), "XMLterm");
   
   mozArea = gtk_mozarea_new();

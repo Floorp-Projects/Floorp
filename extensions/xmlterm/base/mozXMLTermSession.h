@@ -61,10 +61,9 @@ class mozXMLTermSession
    */
   NS_IMETHOD Finalize(void);
 
-  /** Resizes XMLterm to match a resized window.
-   * @param lineTermAux LineTermAux object to be resized (may be null)
+  /** Sets XMLTerm flag to indicate XMLTerm needs to be resized
    */
-  NS_IMETHOD Resize(mozILineTermAux* lineTermAux);
+  NS_IMETHOD NeedsResizing(void);
 
   /** Preprocesses user input before it is transmitted to LineTerm
    * @param aString (inout) input data to be preprocessed
@@ -129,6 +128,14 @@ protected:
     SESSION_EVENT_TYPES
   };
 
+  /** output type */
+  enum OutputType {
+    LINE_OUTPUT = 0,
+    SCREEN_OUTPUT,
+    STREAM_OUTPUT,
+    OUTPUT_TYPES
+  };
+
   /** display style of output */
   enum OutputDisplayType {
     NO_NODE          = 0,
@@ -147,7 +154,8 @@ protected:
     JS_FRAGMENT,
     HTML_FRAGMENT,
     HTML_DOCUMENT,
-    XML_DOCUMENT
+    XML_DOCUMENT,
+    OUTPUT_MARKUP_TYPES
   };
 
   /** settings for automatic markup detection */
@@ -168,8 +176,7 @@ protected:
   /** type of currently active meta command */
   enum MetaCommandType {
     NO_META_COMMAND    = 0,
-    SCREEN_META_COMMAND,
-    STREAM_META_COMMAND,
+    DEFAULT_META_COMMAND,
     HTTP_META_COMMAND,
     JS_META_COMMAND,
     TREE_META_COMMAND,
@@ -195,6 +202,11 @@ protected:
     TREE_PRINT_HTML   = 6,
     TREE_ACTION_CODES = 7
   };
+
+  /** Resizes XMLterm to match a resized window.
+   * @param lineTermAux LineTermAux object to be resized (may be null)
+   */
+  NS_IMETHOD Resize(mozILineTermAux* lineTermAux);
 
   /** Displays ("echoes") input text string with style and positions cursor
    * @param aString string to be displayed
@@ -318,7 +330,7 @@ protected:
    * containing an empty text node, and append it as a
    * child of the main BODY element. Also make it the current display element.
    */
-  NS_IMETHOD NewScreen(PRBool resize);
+  NS_IMETHOD NewScreen(void);
 
   /** Returns DOM PRE node corresponding to specified screen row
    */
@@ -563,16 +575,18 @@ protected:
   nsCOMPtr<mozIXMLTermStream> mXMLTermStream;
 
 
-  /** currently active meta command (if any) */
-  MetaCommandType      mMetaCommandType;
-
+  /** currently active output type */
+  OutputType    mOutputType;
 
   /** currently active display style of output */
   OutputDisplayType    mOutputDisplayType;
 
-
   /** currently active markup style of output */
   OutputMarkupType     mOutputMarkupType;
+
+
+  /** currently active meta command (if any) */
+  MetaCommandType      mMetaCommandType;
 
   /** currently active setting for automatic markup detection */
   AutoDetectOption     mAutoDetect;
@@ -613,6 +627,9 @@ protected:
 
   /** restore input echo flag */
   PRBool               mRestoreInputEcho;
+
+  /** needs resizing flag */
+  PRBool               mNeedsResizing;
 
   /** shell prompt string */
   nsString             mShellPrompt;

@@ -284,6 +284,7 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
 /** Open LineTerm without callback
  */
 NS_IMETHODIMP mozLineTerm::Open(const PRUnichar *command,
+                                const PRUnichar *initInput,
                                 const PRUnichar *promptRegexp,
                                 PRInt32 options, PRInt32 processType,
                                 nsIDOMDocument *domDoc)
@@ -295,7 +296,8 @@ NS_IMETHODIMP mozLineTerm::Open(const PRUnichar *command,
   }
 
   nsAutoString aCookie;
-  return OpenAux(command, promptRegexp, options, processType, domDoc,
+  return OpenAux(command, initInput, promptRegexp,
+                 options, processType, domDoc,
                  nsnull, aCookie);
 }
 
@@ -303,6 +305,7 @@ NS_IMETHODIMP mozLineTerm::Open(const PRUnichar *command,
 /** Open LineTerm, with an Observer for callback to process new input/output
  */
 NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
+                                   const PRUnichar *initInput,
                                    const PRUnichar *promptRegexp,
                                    PRInt32 options, PRInt32 processType,
                                    nsIDOMDocument *domDoc,
@@ -374,11 +377,17 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   char* cookieCStr = mCookie.ToNewCString();
   XMLT_LOG(mozLineTerm::Open,22, ("mCookie=%s\n", cookieCStr));
 
+  // Convert initInput to CString
+  nsCAutoString initCStr (initInput);
+  XMLT_LOG(mozLineTerm::Open,22, ("initInput=%s\n", initCStr.GetBuffer()));
+
   if (anObserver != nsnull) {
-    result = lterm_open(mLTerm, NULL, cookieCStr, L"#$%>?", options,
+    result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
+                        L"#$%>?", options,
                         processType, mozLineTerm::Callback, (void *) this);
   } else {
-    result = lterm_open(mLTerm, NULL, cookieCStr, L"#$%>?", options,
+    result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
+                        L"#$%>?", options,
                         processType, NULL, NULL);
   }
 
@@ -592,6 +601,9 @@ NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
 
   XMLT_LOG(mozLineTerm::ReadAux,30,("\n"));
 
+  if (!_retval)
+    return NS_ERROR_NULL_POINTER;
+
   retCode = lterm_read(mLTerm, 0, ubuf, MAXCOL-1,
                        ustyle, opcodes, opvals,
                        buf_row, buf_col, &cursor_row, &cursor_col);
@@ -602,7 +614,7 @@ NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
     // Return null pointer(s)
     *_retval = nsnull;
 
-    if (retstyle != nsnull)
+    if (retstyle)
       *retstyle = nsnull;
 
   } else {
@@ -610,7 +622,7 @@ NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
     mCursorRow = cursor_row;
     mCursorColumn = cursor_col;
 
-    XMLT_LOG(mozLineTerm::Read,72,("cursor_col=%d\n", cursor_col));
+    XMLT_LOG(mozLineTerm::ReadAux,72,("cursor_col=%d\n", cursor_col));
 
     int allocBytes = sizeof(PRUnichar)*(retCode + 1);
     *_retval = (PRUnichar*) nsAllocator::Alloc(allocBytes);

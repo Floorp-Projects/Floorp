@@ -24,6 +24,7 @@
 #include "nsIServiceManager.h"
 
 #include "mozXMLT.h"
+#include "mozXMLTermUtils.h"
 #include "mozXMLTermListeners.h"
 
 #include "nsIDOMKeyEvent.h"
@@ -103,7 +104,9 @@ NS_NewXMLTermDragListener(nsIDOMEventListener ** aInstancePtrResult,
 // mozXMLTermKeyListener implementation
 /////////////////////////////////////////////////////////////////////////
 
-mozXMLTermKeyListener::mozXMLTermKeyListener()
+mozXMLTermKeyListener::mozXMLTermKeyListener() :
+  mXMLTerminal(nsnull),
+  mSuspend(false)
 {
   NS_INIT_REFCNT();
 }
@@ -139,6 +142,9 @@ mozXMLTermKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMKeyListener*,this);
 
+  } else if (aIID.Equals(NS_GET_IID(mozIXMLTermSuspend))) {
+    *aInstancePtr = NS_STATIC_CAST(mozIXMLTermSuspend*,this);
+
   } else {
     return NS_ERROR_NO_INTERFACE;
   }
@@ -148,6 +154,23 @@ mozXMLTermKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP mozXMLTermKeyListener::GetSuspend(PRBool* aSuspend)
+{
+  if (!*aSuspend)
+    return NS_ERROR_NULL_POINTER;
+  *aSuspend = mSuspend;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozXMLTermKeyListener::SetSuspend(const PRBool aSuspend)
+{
+  XMLT_LOG(mozXMLTermKeyListener::SetSuspend,50,("aSuspend=0x%x\n",
+                                                 aSuspend));
+  mSuspend = aSuspend;
+  return NS_OK;
+}
 
 // Individual key handlers return NS_OK to indicate NOT consumed
 // by default, an error is returned indicating event is consumed
@@ -163,8 +186,6 @@ mozXMLTermKeyListener::HandleEvent(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 mozXMLTermKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  nsresult result;
-
   nsCOMPtr<nsIDOMKeyEvent> keyEvent;
   keyEvent = do_QueryInterface(aKeyEvent);
   if (!keyEvent) {
@@ -172,58 +193,20 @@ mozXMLTermKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  PRBool isShift, ctrlKey, altKey;
+  PRBool shiftKey, ctrlKey, altKey;
   PRUint32 keyCode;
 
-  XMLT_LOG(mozXMLTermKeyListener::KeyDown,50,("\n"));
+  XMLT_LOG(mozXMLTermKeyListener::KeyDown,50,("mSuspend=0x%x\n",
+                                               mSuspend));
 
   if (NS_SUCCEEDED(keyEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(keyEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(keyEvent->GetShiftKey(&shiftKey)) &&
       NS_SUCCEEDED(keyEvent->GetCtrlKey(&ctrlKey)) &&
       NS_SUCCEEDED(keyEvent->GetAltKey(&altKey)) ) {
 
     XMLT_LOG(mozXMLTermKeyListener::KeyDown,52,
-          ("keyCode=0x%x, ctrlKey=%d, altKey=%d\n", keyCode, ctrlKey, altKey));
-
-    PRUint32 keyChar = 0;
-
-    if (!ctrlKey && !altKey) {
-      // Not control/alt key event
-      switch (keyCode) {
-      case nsIDOMKeyEvent::DOM_VK_LEFT:
-        keyChar = U_CTL_B;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_RIGHT:
-        keyChar = U_CTL_F;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_UP:
-        keyChar = U_CTL_P;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_DOWN:
-        keyChar = U_CTL_N;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_ESCAPE:
-        keyChar = U_ESCAPE;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_TAB: // Consume TAB to avoid scroll problems
-        keyChar = 0;
-        break;
-      default: // ignore event without consuming
-        return NS_OK;
-      }
-
-    } else if (ctrlKey == PR_TRUE) {
-      keyChar = keyCode - 0x40U;   // Is this portable?
-    }
-
-    XMLT_LOG(mozXMLTermKeyListener::KeyDown,52,("keyChar=0x%x\n", keyChar));
-
-    if ((keyChar > 0) && (keyChar < U_SPACE)) {
-      // Transmit valid non-null control character
-      const PRUnichar temUString[] = {keyChar,0};
-      nsAutoString keyString(temUString);
-      result = mXMLTerminal->SendTextAux(keyString);
-    }
+          ("code=0x%x, shift=%d, ctrl=%d, alt=%d\n",
+           keyCode, shiftKey, ctrlKey, altKey));
   }
 
   // Consume key down event
@@ -244,7 +227,8 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   nsresult result;
 
-  XMLT_LOG(mozXMLTermKeyListener::KeyPress,50,("\n"));
+  XMLT_LOG(mozXMLTermKeyListener::KeyPress,50,("mSuspend=0x%x\n",
+                                               mSuspend));
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent;
   keyEvent = do_QueryInterface(aKeyEvent);
@@ -253,63 +237,135 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
+#if 0  // Debugging
+  nsCOMPtr<nsIPresShell> presShell;
+  result = mXMLTerminal->GetPresShell(getter_AddRefs(presShell));
+  if (NS_SUCCEEDED(result) && presShell) {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = presShell->GetSelection(SELECTION_NORMAL,
+                                     getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result) && selection) {
+      nsCOMPtr<nsIDOMNode> childNode, parentNode;
+      result = selection->GetFocusNode(getter_AddRefs(childNode));
+      if (NS_SUCCEEDED(result) && childNode) {
+        PRInt32 j;
+        nsAutoString nodeName;
+        for (j=0; (j<6) && childNode; j++) {
+          result = childNode->GetParentNode(getter_AddRefs(parentNode));
+          if (NS_SUCCEEDED(result) && parentNode) {
+            result = parentNode->GetNodeName(nodeName);
+            if (NS_SUCCEEDED(result)) {
+              nsCAutoString CNodeName = nodeName;
+              XMLT_LOG(mozXMLTermKeyListener::KeyPress,58,("nodeName=%s\n",
+                                              CNodeName.GetBuffer()));
+            }
+            childNode = parentNode;
+          } else {
+            childNode = nsnull;
+          }
+        }
+      }
+    }
+  }
+#endif
+
   PRUint32 keyCode;
-  PRBool isShift, ctrlKey, altKey;
+  PRBool shiftKey, ctrlKey, altKey;
   if (NS_SUCCEEDED(keyEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(keyEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(keyEvent->GetShiftKey(&shiftKey)) &&
       NS_SUCCEEDED(keyEvent->GetCtrlKey(&ctrlKey)) &&
       NS_SUCCEEDED(keyEvent->GetAltKey(&altKey)) ) {
 
     PRUint32 keyChar = 0;
+    nsAutoString JSCommand = "";
+
     result = keyEvent->GetCharCode(&keyChar);
 
     XMLT_LOG(mozXMLTermKeyListener::KeyPress,52,
-          ("keyChar=0x%x, ctrlKey=%d, altKey=%d\n", keyChar, ctrlKey, altKey));
+          ("code=0x%x, char=0x%x, shift=%d, ctrl=%d, alt=%d\n",
+           keyCode, keyChar, shiftKey, ctrlKey, altKey));
 
-    if (ctrlKey == PR_TRUE) {
-      // Do nothing for Ctrl-Alt key events; just consume then
+    if (keyChar == 0) {
+      // Key that hasn't been mapped to a character code
 
-      if (altKey == PR_FALSE) {
-        // Control character, without Alt
-
-        if ((keyChar > 0) && (keyChar < U_SPACE)) {
-          // Transmit valid non-null control character
-          const PRUnichar temUString[] = {keyChar,0};
-          nsAutoString keyString(temUString);
-          result = mXMLTerminal->SendTextAux(keyString);
-        }
+      switch (keyCode) {
+      case nsIDOMKeyEvent::DOM_VK_SHIFT:
+      case nsIDOMKeyEvent::DOM_VK_CONTROL:
+      case nsIDOMKeyEvent::DOM_VK_ALT:
+        break;                         // ignore modifier key event
+      case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+      case nsIDOMKeyEvent::DOM_VK_DELETE:
+        keyChar = U_BACKSPACE;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_TAB:
+        keyChar = U_TAB;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_RETURN:
+        keyChar = U_LINEFEED;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_LEFT:
+        keyChar = U_CTL_B;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_RIGHT:
+        keyChar = U_CTL_F;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_UP:
+        keyChar = U_CTL_P;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_DOWN:
+        keyChar = U_CTL_N;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+        keyChar = U_ESCAPE;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_HOME:
+        JSCommand = "ScrollHome";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_END:
+        JSCommand = "ScrollEnd";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
+        JSCommand = "ScrollPageUp";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
+        JSCommand = "ScrollPageDown";
+        break;
+      default: // ignore event without consuming
+        return NS_OK;
       }
 
-    } else {
-      // Unmodified key event (including TAB/BACKSPACE/RETURN/LINEFEED)
+    } else if ((ctrlKey == PR_TRUE) && (altKey == PR_FALSE) &&
+               (keyChar > 0x60U) && (keyChar < 0xA0U)) {
+      // Control character, without Alt; adjust character code
+      keyChar = keyChar - 0x60U;   // Is this portable?
+    }
 
-      if (keyChar == 0) {
-        // Key that hasn't been mapped to a character code
-        switch (keyCode) {
-        case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-        case nsIDOMKeyEvent::DOM_VK_DELETE:
-          keyChar = U_BACKSPACE;
-          break;
-        case nsIDOMKeyEvent::DOM_VK_TAB:
-          keyChar = U_TAB;
-          break;
-        case nsIDOMKeyEvent::DOM_VK_RETURN:
-          keyChar = U_LINEFEED;
-          break;
-        default: // ignore event without consuming
-          return NS_OK;
-        }
+    if (JSCommand.Length() > 0) {
+      // Execute JS command
+      nsCOMPtr<nsIDOMDocument> domDocument;
+      result = mXMLTerminal->GetDocument(getter_AddRefs(domDocument));
+
+      if (NS_SUCCEEDED(result) && domDocument) {
+        nsAutoString JSInput = JSCommand;
+        nsAutoString JSOutput = "";
+        JSInput.Append("(");
+        JSInput.Append(shiftKey,10);
+        JSInput.Append(",");
+        JSInput.Append(ctrlKey,10);
+        JSInput.Append(");");
+        result = mozXMLTermUtils::ExecuteScript(domDocument,
+                                                JSInput,
+                                                JSOutput);
       }
+    }
+    // Translate Carriage Return to LineFeed (may not be portable??)
+    if (keyChar == U_CRETURN) keyChar = U_LINEFEED;
 
-      // Translate Carriage Return to LineFeed (may not be portable??)
-      if (keyChar == U_CRETURN) keyChar = U_LINEFEED;
-
-      if ((keyChar > 0) && (keyChar <= 0xFFFDU)) {
-        // Transmit valid non-null Unicode character
-        const PRUnichar temUString[] = {keyChar,0};
-        nsAutoString keyString(temUString);
-        result = mXMLTerminal->SendTextAux(keyString);
-      }
+    if (!mSuspend && (keyChar > 0) && (keyChar <= 0xFFFDU)) {
+      // Transmit valid non-null Unicode character
+      const PRUnichar temUString[] = {keyChar,0};
+      nsAutoString keyString(temUString);
+      result = mXMLTerminal->SendTextAux(keyString);
     }
   }
 
