@@ -1124,7 +1124,8 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
 
   if(aToken) {
     PRInt32   attrCount   = aToken->GetAttributeCount();
-    if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
+    if((gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) &&
+       (!nsHTMLElement::IsWhitespaceTag(aChildTag))) {
       eHTMLTags theTag=eHTMLTag_unknown;
       PRInt32   theIndex=kNotFound;
     
