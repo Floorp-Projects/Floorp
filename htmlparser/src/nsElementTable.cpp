@@ -1039,7 +1039,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, (kSelf|kInlineEntity),	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kDefaultPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kDiscardMisplaced), kDefaultPropRange,
     /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_td,
@@ -1063,7 +1063,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kDiscardMisplaced), kNoPropRange,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_th, 
@@ -1079,7 +1079,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kDiscardMisplaced), kNoPropRange,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_title,

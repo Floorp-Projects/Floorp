@@ -137,16 +137,17 @@ extern CTagList      gFramesetKids;
 extern CTagList      gHeadingTags;
 
 //special property bits...
-static const int kDiscardTag      = 0x0001; //tells us to toss this tag
-static const int kOmitEndTag      = 0x0002; //safely ignore end tag
-static const int kLegalOpen       = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
-static const int kOmitWS          = 0x0008; //If set, the tag can omit all ws and newlines
-static const int kNoPropagate     = 0x0010; //If set, this tag won't propagate as a child
-static const int kBadContentWatch = 0x0020; 
-static const int kNoStyleLeaksIn  = 0x0040; 
-static const int kNoStyleLeaksOut = 0x0080; 
-static const int kMustCloseSelf   = 0x0100; 
-static const int kSaveMisplaced   = 0x0200; //If set, then children this tag can't contain are pushed onto the misplaced stack
+static const int kDiscardTag       = 0x0001; //tells us to toss this tag
+static const int kOmitEndTag       = 0x0002; //safely ignore end tag
+static const int kLegalOpen        = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
+static const int kOmitWS           = 0x0008; //If set, the tag can omit all ws and newlines
+static const int kNoPropagate      = 0x0010; //If set, this tag won't propagate as a child
+static const int kBadContentWatch  = 0x0020; 
+static const int kNoStyleLeaksIn   = 0x0040; 
+static const int kNoStyleLeaksOut  = 0x0080; 
+static const int kMustCloseSelf    = 0x0100; 
+static const int kSaveMisplaced    = 0x0200; //If set, then children this tag can't contain are pushed onto the misplaced stack
+static const int kDiscardMisplaced = 0x0400; //If set, then the tag, if misplaced, will be ignored.
 
 //*********************************************************************************************
 // The following ints define the standard groups of HTML elements...

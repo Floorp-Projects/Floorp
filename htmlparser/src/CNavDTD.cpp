@@ -689,7 +689,10 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
        ---------------------------------------------------------------------------------
      */
     if(!execSkipContent) {
-      static eHTMLTags passThru[]= {eHTMLTag_html,eHTMLTag_comment,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_script};
+      static eHTMLTags passThru[]= {
+        eHTMLTag_html,eHTMLTag_comment,eHTMLTag_newline,
+        eHTMLTag_whitespace,eHTMLTag_script,eHTMLTag_noscript,
+        eHTMLTag_userdefined};
       if(!FindTagInSet(theTag,passThru,sizeof(passThru)/sizeof(eHTMLTag_unknown))){
         if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
           if((!mHadBody) && (!mHadFrameset)){
@@ -1012,7 +1015,16 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
 
         if(!(theCanContainResult && theChildAgrees)) {
           if (!CanPropagate(theParentTag,aChildTag)) { 
-            if(nsHTMLElement::IsContainer(aChildTag)){        
+            if(nsHTMLElement::IsContainer(aChildTag)){ 
+              if(gHTMLElements[aChildTag].HasSpecialProperty(kDiscardMisplaced)) {
+                // Closing the tags above might cause non-compatible results.
+                // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
+                // In the example above <TBODY> is badly misplaced. To be backwards
+                // compatible we should not attempt to close the tags above it, for
+                // the contents inside the table might get thrown out of the table.
+                // The safest thing to do is to discard this tag.
+                return result;
+              }
               CloseContainersTo(theIndex,theParentTag,PR_TRUE);
             }//if
             else break;
