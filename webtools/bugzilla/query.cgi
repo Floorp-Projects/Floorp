@@ -210,6 +210,11 @@ print "
 <td><input type=radio name=long_desc_type value=substr checked>Substring</td>
 <td><input type=radio name=long_desc_type value=regexp>Regexp</td>
 </tr>
+<td align=right>URL:</td>
+<td><input name=bug_file_loc size=30></td>
+<td><input type=radio name=bug_file_loc_type value=substr checked>Substring</td>
+<td><input type=radio name=long_desc_type value=regexp>Regexp</td>
+</tr>
 </table>
 <p>
 

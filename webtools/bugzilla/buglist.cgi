@@ -211,7 +211,7 @@ if (defined $::FORM{'sql'}) {
 } else {
   my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
                       "bug_status", "resolution", "priority", "bug_severity",
-                      "assigned_to", "reporter", "bug_file_loc", "component");
+                      "assigned_to", "reporter", "component");
 
   foreach my $field (keys %::FORM) {
       my $or = "";
@@ -259,7 +259,7 @@ Click the <B>Back</B> button and try again.";
     }
 }
 
-foreach my $f ("short_desc", "long_desc") {
+foreach my $f ("short_desc", "long_desc", "bug_file_loc") {
     if (defined $::FORM{$f}) {
         my $s = SqlQuote(trim($::FORM{$f}));
         if ($s ne "") {
