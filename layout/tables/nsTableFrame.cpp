@@ -3195,32 +3195,73 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
       /* We found the nearest containing table (actually, the inner table).  
          This defines what our percentage size is relative to. Use its desired width 
          as the basis for computing our width.
+         **********************************************************************************
+         Nav4 compatibility code:  if the inner table has a percent width and the outer
+         table has an auto width, the parentWidth is the width the containing cell would be 
+         without the inner table.
+         **********************************************************************************
        */
       // Compute and subtract out the insets (sum of border and padding) for the table
-      nsMargin borderPadding;
+       nsMargin borderPadding;
+      /* the following hack is because the outer table really holds the position info */
+      // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+      nsIFrame * outerTableFrame = nsnull;
+      table->GetGeometricParent(outerTableFrame);
+      const nsStylePosition* tablePosition;
+      outerTableFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
       const nsStyleSpacing* spacing;
-      table->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-      nsSize tableSize;
-      table->GetSize(tableSize);
-      parentWidth = tableSize.width;
-      spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
-      parentWidth -= (borderPadding.right + borderPadding.left);
-      // same for the row group
-      childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-      spacing->CalcBorderPaddingFor(childFrame, borderPadding);
-      parentWidth -= (borderPadding.right + borderPadding.left);
-      // same for the row
-      grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-      spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
-      parentWidth -= (borderPadding.right + borderPadding.left);
-      // same for the cell
-      greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-      spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
-      parentWidth -= (borderPadding.right + borderPadding.left);
+      outerTableFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+      // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
 
-      if (PR_TRUE==gsDebugNT)
-        printf("%p: found a table frame %p, returning parentWidth %d from frame width %d\n", 
-               aReflowState.frame, table, parentWidth, tableSize.width);
+      if (eStyleUnit_Auto == tablePosition->mWidth.GetUnit())
+      {
+        parentWidth = 0;
+        if (nsnull != ((nsTableFrame*)table)->mColumnWidths)
+        {
+          PRInt32 colIndex = ((nsTableCellFrame *)greatgrandchildFrame)->GetColIndex();
+          PRInt32 colSpan = ((nsTableCellFrame *)greatgrandchildFrame)->GetColSpan();
+          for (PRInt32 i = 0; i<colSpan; i++)
+            parentWidth += ((nsTableFrame*)table)->GetColumnWidth(i+colIndex);
+          // subtract out cell border and padding
+          greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+          spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
+          parentWidth -= (borderPadding.right + borderPadding.left);
+          if (PR_TRUE==gsDebugNT)
+            printf("%p: found a table frame %p with auto width, returning parentWidth %d from cell in col %d with span %d\n", 
+                   aReflowState.frame, table, parentWidth, colIndex, colSpan);
+        }
+        else
+        {
+          if (PR_TRUE==gsDebugNT)
+            printf("%p: found a table frame %p with auto width, returning parentWidth %d because parent has no info yet.\n", 
+                   aReflowState.frame, table, parentWidth);
+        }
+
+      }
+      else
+      {
+        nsSize tableSize;
+        table->GetSize(tableSize);
+        parentWidth = tableSize.width;
+        spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
+        parentWidth -= (borderPadding.right + borderPadding.left);
+        // same for the row group
+        childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+        spacing->CalcBorderPaddingFor(childFrame, borderPadding);
+        parentWidth -= (borderPadding.right + borderPadding.left);
+        // same for the row
+        grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+        spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
+        parentWidth -= (borderPadding.right + borderPadding.left);
+        // same for the cell
+        greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+        spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
+        parentWidth -= (borderPadding.right + borderPadding.left);
+
+        if (PR_TRUE==gsDebugNT)
+          printf("%p: found a table frame %p, returning parentWidth %d from frame width %d\n", 
+                 aReflowState.frame, table, parentWidth, tableSize.width);
+      }
       break;
     }
 
