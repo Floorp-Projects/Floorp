@@ -536,7 +536,6 @@ nsXBLEventHandler::GetController(nsIController** aResult)
 void
 nsXBLEventHandler::RemoveEventHandlers()
 {
-  // XXX Handle unhooking listeners attached to the document or window!
   if (mNextHandler)
     mNextHandler->RemoveEventHandlers();
 

@@ -637,6 +637,14 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           }
           else receiver = do_QueryInterface(boundDoc);
         }
+        else if (!attachType.IsEmpty() && !attachType.Equals(NS_LITERAL_STRING("_element"))) {
+          nsCOMPtr<nsIDocument> boundDoc;
+          mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
+          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(boundDoc));
+          nsCOMPtr<nsIDOMElement> otherElement;
+          domDoc->GetElementById(attachType, getter_AddRefs(otherElement));
+          receiver = do_QueryInterface(otherElement);
+        }
 
         if (mouse || key || focus || xul || scroll || special) {
           // Create a new nsXBLEventHandler.
