@@ -887,6 +887,7 @@ mail/components/prefwindow/Makefile
 mail/extensions/Makefile
 mail/extensions/smime/Makefile
 mail/extensions/offline/Makefile
+mail/config/Makefile
 xpfe/components/build2/Makefile
 "
 
