@@ -12,7 +12,7 @@
             <xul:popupset ignorekeys="true"
 				oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);"
 			>
-                <xul:popup oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false'">
+                <xul:popup oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false';">
                 </xul:popup>
             </xul:popupset>
         </xul:box>
@@ -74,7 +74,7 @@
                 if (status == Components.interfaces.nsIAutoCompleteStatus.failed)
                     return;
                 
-                if (me.disableAutocomplete == "true")
+                if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
                     return;
 
                 me.lastResults = result;
@@ -132,8 +132,9 @@
                     menuitem.setAttribute('data', i);
                     menuitem.setAttribute('value', item.value);
                     popupElement.appendChild(menuitem);
-//                    dump("  match=" + item.value + "\n");
+//					dump("  match=" + item.value + "\n");
                 }
+//				dump("  count=" + result.items.Count() + ", default=" + result.defaultItemIndex + "\n");
                 popupset.replaceChild(popupElement, popupset.firstChild);
 				if (result.defaultItemIndex != -1)
 				{
@@ -142,7 +143,10 @@
 				}
 				me.privatefunc.selectedItemIndex = result.defaultItemIndex;
 				if (result.defaultItemIndex != 0 || result.items.Count() != 1)
+				{
+					me.privatefunc.closePopupMenu(me); //Close it first as openPopup seems to work as a toggle!
 					popupset.firstChild.openPopup(me.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
+				}
             },
 
             param: this
@@ -153,6 +157,18 @@
         <property name="privatefunc">
         <![CDATA[
         ({
+			imeInProgress: function(me) {
+				var inputElement = me.anonymousContent[0].firstChild;
+				//I hope ime will set an attribute on the input field when it's currently building a sequence
+				//like that we can now when we can or not autocomplete.
+				//Q: How can I know when ime is done? I need to kick the autocomplete timer?
+
+				//if (inputElement.getAttribute('<TBD>') == "true")
+				//	return true;
+
+				return false;
+			},
+
             onMenuCommand: function(me, popupSetElem) {
 				var inputElement = me.anonymousContent[0].firstChild;
 				var popupElem = popupSetElem.firstChild;
@@ -174,7 +190,7 @@
 			callListener: function(me, action) {
                 switch (action) {
                     case 'startLookup':
-                        if (me.disableAutocomplete == "true")
+                        if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
                             return;
 						var inputElement = me.anonymousContent[0].firstChild;
                         if (!me.lastResults || inputElement.value != me.lastResults.searchString)
@@ -192,7 +208,7 @@
                             me.autoCompleteTimer = 0;
                         }
                         me.needToAutocomplete = false;
-                        if (this.disableAutocomplete == "true")
+                        if (this.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
                             return;
 						var inputElement = me.anonymousContent[0].firstChild;
                         me.autoCompleteSession.onAutoComplete(inputElement.value, me.lastResults, me.autoCompleteListener);
@@ -202,7 +218,7 @@
 
 			finishAutoComplete: function(me, event) {
  			   me.privatefunc.closePopupMenu(me);
-               if (me.disableAutocomplete == "true")
+               if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
                     return;
 
                 var inputElement = me.anonymousContent[0].firstChild;
@@ -279,15 +295,15 @@
 			},
 
 			processKeyPress: function(me, event) {
-				if (me.disableAutocomplete == "true")
-					return;
-
 				//Stop current lookup in case it's async.
 				me.privatefunc.callListener(me, 'stopLookup'); 
 				if (me.autoCompleteTimer) {
 					clearTimeout(me.autoCompleteTimer);
 					me.autoCompleteTimer = 0;
 				}
+
+				if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
+					return;
 
 				var popup = me.anonymousContent[0].childNodes[1].firstChild;
  				if (popup && me.menuOpen != "true")
@@ -298,6 +314,7 @@
 					case 8: /*vk_back*/
 					case 46: /*vk_delete*/
 						me.privatefunc.closePopupMenu(me);
+						me.lastResults.searchString='';
 						return;
 
 					case 13 /*vk_return*/:
@@ -350,8 +367,9 @@
 		<handler type="click" value="this.privatefunc.cleanupInputField(this);"/>
 		<handler type="dblclick" value="this.privatefunc.cleanupInputField(this);"/>
         <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
-        <handler type="focus" value="this.needToAutocomplete = false;"/>
+        <handler type="focus" value="this.needToAutocomplete = false; this.lastResults.searchString=''"/>
         <handler type="blur" value="
+			this.privatefunc.closePopupMenu(this);
             if (this.needToAutocomplete)
                 this.privatefunc.finishAutoComplete(this, event);
 			this.privatefunc.cleanupInputField(this);
