@@ -71,10 +71,11 @@ public:
                     NS_ASSERTION(mInStreamCount >= 0, "mInStreamCount has gone negative");
                 }
 
+    // GCC 2.95.2 requires this to be defined, although we never call it.
+    // and OS/2 requires that it not be private
+    nsDiskCacheStreamIO() { NS_NOTREACHED("oops"); }
 private:
 
-    // GCC 2.95.2 requires this to be defined, although we never call it.
-    nsDiskCacheStreamIO() { NS_NOTREACHED("oops"); }
 
     nsresult    OpenCacheFile(PRIntn flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks();
