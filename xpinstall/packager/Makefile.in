@@ -112,9 +112,9 @@ ifndef MOZ_PKG_APPNAME
 MOZ_PKG_APPNAME = Mozilla
 endif
 ifdef MOZ_DEBUG
-_APPNAME	= MozillaDebug.app
+_APPNAME	= $(MOZ_PKG_APPNAME)Debug.app
 else
-_APPNAME	= Mozilla.app
+_APPNAME	= $(MOZ_PKG_APPNAME).app
 endif
 PKG_SUFFIX	= .dmg
 _ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
