@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 XPIDL_MODULE	= xpcom_components
 LIBRARY_NAME	= xpcomcomponents_s
-REQUIRES	= libreg string
+REQUIRES	= libreg string caps
 
 CPPSRCS		= \
 		nsComponentManager.cpp \
