@@ -44,6 +44,7 @@ DIRS= \
     updates \
     intl \
     resetPref \
+    alerts \
     build \
     $(NULL)
 
