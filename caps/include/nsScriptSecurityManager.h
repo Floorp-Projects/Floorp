@@ -346,8 +346,8 @@ private:
     static nsresult
     doGetObjectPrincipal(JSContext *cx, JSObject *obj, nsIPrincipal **result);
 
-    nsresult
-    GetBaseURIScheme(nsIURI* aURI, char** aScheme);
+    static nsresult
+    GetBaseURIScheme(nsIURI* aURI, nsCString& aScheme);
 
     static nsresult 
     ReportError(JSContext* cx, const nsAString& messageTag,
