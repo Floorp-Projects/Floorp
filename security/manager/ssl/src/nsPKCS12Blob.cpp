@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.3 2001/03/21 00:57:38 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.4 2001/03/21 01:27:04 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -303,7 +303,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file)
   }
   for (i=0; i<numCerts; i++) {
     nsNSSCertificate *cert;
-    nrv = mCertArray->GetElementAt(i, &NS_STATIC_CAST(nsISupports*,cert));
+    nrv = mCertArray->GetElementAt(i, (nsISupports**)&cert);
     if (NS_FAILED(nrv)) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("FAILED getting el %d", i));
       goto finish;
