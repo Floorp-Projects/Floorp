@@ -364,9 +364,8 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
   nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // see if we need a widget. Get our parent. Querty interface the parent we are given. 
-  nsCOMPtr<nsIBox> parent (do_QueryInterface(aParent));
-
-  if (parent) {
+  nsIBox *parent;
+  if (aParent && NS_SUCCEEDED(CallQueryInterface(aParent, &parent))) {
     PRBool needsWidget = PR_FALSE;
     parent->ChildrenMustHaveWidgets(needsWidget);
     if (needsWidget) {
@@ -2055,7 +2054,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         // if the kid had a child before see if this child has mouse
         // though. 
         PRBool isAdaptor = PR_FALSE;
-        nsCOMPtr<nsIBox> box = mInner->GetBoxForFrame(hit, isAdaptor);
+        nsIBox *box = mInner->GetBoxForFrame(hit, isAdaptor);
         if (box) {
           PRBool mouseThrough = PR_FALSE;
           box->GetMouseThrough(mouseThrough);

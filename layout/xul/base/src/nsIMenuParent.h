@@ -47,6 +47,11 @@
 class nsIMenuFrame;
 class nsIDOMKeyEvent;
 
+/*
+ * nsIMenuParent is implemented on frames and thus should not be
+ * refcounted.  Eventually it should not inherit from nsISupports.
+ */
+
 class nsIMenuParent : public nsISupports {
 
 public:

@@ -273,8 +273,8 @@ nsMenuPopupFrame::MarkStyleChange(nsBoxLayoutState& aState)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-    nsCOMPtr<nsIBox> box(do_QueryInterface(popupSet));
-    if (box) {
+    nsIBox *box;
+    if (popupSet && NS_SUCCEEDED(CallQueryInterface(popupSet, &box))) {
       nsBoxLayoutState state(mPresContext);
       box->MarkDirtyChildren(state); // Mark the popupset as dirty.
     }
@@ -333,8 +333,8 @@ nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-    nsCOMPtr<nsIBox> box(do_QueryInterface(popupSet));
-    if (box) {
+    nsIBox *box;
+    if (popupSet && NS_SUCCEEDED(CallQueryInterface(popupSet, &box))) {
       nsBoxLayoutState state(mPresContext);
       box->MarkDirtyChildren(state); // Mark the popupset as dirty.
     }
@@ -381,8 +381,8 @@ nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
       return parentBox->RelayoutDirtyChild(aState, this);
     else {
       nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-      nsCOMPtr<nsIBox> box(do_QueryInterface(popupSet));
-      if (box) {
+      nsIBox *box;
+      if (popupSet && NS_SUCCEEDED(CallQueryInterface(popupSet, &box))) {
         nsBoxLayoutState state(mPresContext);
         box->MarkDirtyChildren(state); // Mark the popupset as dirty.
       }
@@ -1894,7 +1894,8 @@ nsMenuPopupFrame::DismissChain()
   nsIFrame* frame;
   GetParent(&frame);
   if (frame) {
-    nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
+    nsIMenuFrame *menuFrame = nsnull;
+    CallQueryInterface(frame, &menuFrame);
     if (!menuFrame) {
       nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
       if (popupSetFrame) {
@@ -1910,8 +1911,8 @@ nsMenuPopupFrame::DismissChain()
     menuFrame->OpenMenu(PR_FALSE);
 
     // Get the parent.
-    nsCOMPtr<nsIMenuParent> menuParent;
-    menuFrame->GetMenuParent(getter_AddRefs(menuParent));
+    nsIMenuParent* menuParent;
+    menuFrame->GetMenuParent(&menuParent);
     if (menuParent)
       menuParent->DismissChain();
   }

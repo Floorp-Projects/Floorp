@@ -119,7 +119,8 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
 
     // get our box
     nsIFrame* frame = GetFrame();
-    nsCOMPtr<nsIBox> box (do_QueryInterface(frame));
+    nsIBox* box;
+    CallQueryInterface(frame, &box);
 
     nsRect rect;
     nsIBox* scrolledBox;
@@ -219,7 +220,8 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     
     // get our box
     nsIFrame* frame = GetFrame();
-    nsCOMPtr<nsIBox> box (do_QueryInterface(frame));
+    nsIBox *box;
+    CallQueryInterface(frame, &box);
 
     nsRect rect, crect;
     nsIBox* scrolledBox;
@@ -298,7 +300,8 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     
     // get our box
     nsIFrame* frame = GetFrame();
-    nsCOMPtr<nsIBox> box (do_QueryInterface(frame));
+    nsIBox* box;
+    CallQueryInterface(frame, &box);
 
     nsRect rect, crect;
     nsIBox* scrolledBox;

@@ -1138,7 +1138,8 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame) {
-    nsCOMPtr<nsIBox> box(do_QueryInterface(mTopFrame));
+    nsIBox *box;
+    CallQueryInterface(mTopFrame, &box);
     return box;
   }
 
@@ -1147,7 +1148,8 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame && mRowsToPrepend <= 0) {
-    nsCOMPtr<nsIBox> box(do_QueryInterface(mTopFrame));
+    nsIBox *box;
+    CallQueryInterface(mTopFrame, &box);
     return box;
   }
 
@@ -1189,7 +1191,8 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
 
       mBottomFrame = mTopFrame;
 
-      nsCOMPtr<nsIBox> box(do_QueryInterface(mTopFrame));
+      nsIBox *box;
+      CallQueryInterface(mTopFrame, &box);
       return box;
     } else
       return GetFirstItemBox(++aOffset, 0);
@@ -1244,10 +1247,13 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset, PRBool* aCreat
     }
   }
 
-  if (result)
-    mBottomFrame = result;
+  if (!result)
+    return nsnull;
 
-  nsCOMPtr<nsIBox> box(do_QueryInterface(result));
+  mBottomFrame = result;
+
+  nsIBox *box;
+  CallQueryInterface(result, &box);
   return box;
 }
 

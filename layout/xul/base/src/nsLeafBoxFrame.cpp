@@ -109,8 +109,8 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
    // see if we need a widget
-  nsCOMPtr<nsIBox> parent (do_QueryInterface(aParent));
-  if (parent) {
+  nsIBox *parent;
+  if (aParent && NS_SUCCEEDED(CallQueryInterface(aParent, &parent))) {
     PRBool needsWidget = PR_FALSE;
     parent->ChildrenMustHaveWidgets(needsWidget);
     if (needsWidget) {

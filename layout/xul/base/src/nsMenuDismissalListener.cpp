@@ -133,7 +133,7 @@ NS_IMETHODIMP
 nsMenuDismissalListener::GetSubmenuWidgetChain(nsISupportsArray **_retval)
 {
   NS_NewISupportsArray ( _retval );
-  nsCOMPtr<nsIMenuParent> curr ( dont_QueryInterface(mMenuParent) );
+  nsIMenuParent *curr = mMenuParent;
   while ( curr ) {
     nsCOMPtr<nsIWidget> widget;
     curr->GetWidget ( getter_AddRefs(widget) );
@@ -142,14 +142,12 @@ nsMenuDismissalListener::GetSubmenuWidgetChain(nsISupportsArray **_retval)
     
     // move up the chain
     nsIFrame* currAsFrame = nsnull;
-    if ( NS_SUCCEEDED(curr->QueryInterface(NS_GET_IID(nsIFrame), NS_REINTERPRET_CAST(void**,&currAsFrame))) ) {
+    if ( NS_SUCCEEDED(CallQueryInterface(curr, &currAsFrame)) ) {
       nsIFrame* parentFrame = nsnull;
       currAsFrame->GetParent(&parentFrame);
-      nsIMenuParent* next;
       nsCOMPtr<nsIMenuFrame> menuFrame ( do_QueryInterface(parentFrame) );
       if ( menuFrame ) {
-        menuFrame->GetMenuParent ( &next );       // Advance to next parent
-        curr = dont_AddRef(next);
+        menuFrame->GetMenuParent ( &curr );       // Advance to next parent
       }
       else {
         // we are a menuParent but not a menuFrame. This is probably the case

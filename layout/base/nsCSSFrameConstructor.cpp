@@ -10182,7 +10182,8 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
 
   // Is it a box? If so we can coelesce.
   nsresult rv;
-  nsCOMPtr<nsIBox> box = do_QueryInterface(aFrame, &rv);
+  nsIBox *box;
+  rv = CallQueryInterface(aFrame, &box);
   if (NS_SUCCEEDED(rv) && box) {
     nsBoxLayoutState state(aPresContext);
     box->MarkStyleChange(state);
