@@ -207,6 +207,10 @@ public:
           
   /** Calculate Layout Information */
   void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
+
+  /* compute all the collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
+  void    ComputeCollapsingBorders(PRInt32 aStartRowIndex, PRInt32 aEndRowIndex);
+
   void    RecalcLayoutData();
 
   // Get cell margin information
@@ -473,8 +477,6 @@ public:
   virtual void InvalidateColumnWidths();
 
 protected:
-  /** do post processing to setting up style information for the frame */
-  NS_IMETHOD DidSetStyleContext(nsIPresContext& aPresContext);
 
   /** Support methods for DidSetStyleContext */
   void      MapBorderMarginPadding(nsIPresContext& aPresContext);

@@ -1178,7 +1178,9 @@ void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTable
   }
 }
 
-void nsTableFrame::RecalcLayoutData()
+/* compute all the collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
+void nsTableFrame::ComputeCollapsingBorders(PRInt32 aStartRowIndex,
+                                            PRInt32 aEndRowIndex)
 {
   nsCellMap *cellMap = GetCellMap();
   if (nsnull==cellMap)
@@ -1186,6 +1188,77 @@ void nsTableFrame::RecalcLayoutData()
 
   PRInt32 colCount = cellMap->GetColCount();
   PRInt32 rowCount = cellMap->GetRowCount();
+  if (aStartRowIndex>=rowCount)
+  {
+    NS_ASSERTION(PR_FALSE, "aStartRowIndex>=rowCount in ComputeCollapsingBorders");
+    return; // we don't have the requested row yet
+  }
+
+  // For every row between aStartRowIndex and aEndRowIndex (or the end of the table),
+  // walk across every edge and compute the border at that edge.
+  // Distribute half the computed border to the appropriate adjacent objects
+  // (always a cell frame or the table frame.)  In the case of odd width, 
+  // the object on the right/bottom gets the extra portion
+  PRInt32 rowIndex = aStartRowIndex;
+  for ( ; rowIndex<rowCount && rowIndex <=aEndRowIndex; rowIndex++)
+  {
+    PRInt32 colIndex=0;
+    for ( ; colIndex<colCount; colIndex++)
+    {
+      /*
+      
+      // compute vertical edges
+      if (0==colIndex)
+      { // table is left neighbor
+        ComputeLeftBorderForEdgeAt(rowIndex, colIndex);
+      }
+      ComputeRightBorderForEdgeAt(rowIndex, colIndex);
+
+      // compute horizontal edges
+      if (0==rowIndex)
+      {
+        ComputeTopBorderForEdgeAt(rowIndex, colIndex);
+      }
+      ComputeBottomBorderForEdgeAt(rowIndex, colIndex);
+
+
+      if ((colCount-1)==colIndex)
+      { // table is right neighbor
+      }
+      else
+      { // interior cell
+      }
+
+      if ((rowCount-1)==rowIndex)
+      {
+      }
+      else
+      {
+      }
+
+      */
+
+    }
+  }
+}
+
+void nsTableFrame::RecalcLayoutData()
+{
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull==cellMap)
+    return; // no info yet, so nothing useful to do
+  PRInt32 colCount = cellMap->GetColCount();
+  PRInt32 rowCount = cellMap->GetRowCount();
+  
+  // compute all the collapsing border values for the entire table
+  // XXX: it would be nice to make this incremental!
+  const nsStyleTable *tableStyle=nsnull;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
+    ComputeCollapsingBorders(0, rowCount-1);
+
+  //XXX need to determine how much of what follows is really necessary
+  //    it does collapsing margins between table elements
   PRInt32 row = 0;
   PRInt32 col = 0;
 
@@ -3590,17 +3663,6 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext& aPresContext)
 #endif
 }
 
-
-
-
-// Subclass hook for style post processing
-NS_METHOD nsTableFrame::DidSetStyleContext(nsIPresContext& aPresContext)
-{
-#ifdef NOISY_STYLE
-  printf("nsTableFrame::DidSetStyleContext \n");
-#endif
-  return NS_OK;
-}
 
 NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin)
 {

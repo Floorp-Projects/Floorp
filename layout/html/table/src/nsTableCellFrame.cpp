@@ -68,12 +68,6 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *myColor, 0, 0);
     
-    //XXX: this could be calculated once and remembered
-    // get border padding values
-    //XXX: also check style for rule on rendering empty cells
-    /*
-
-    */
     // empty cells do not render their border
     PRBool renderBorder = PR_TRUE;
     if (PR_TRUE==GetContentEmpty())
@@ -730,45 +724,6 @@ nscoord nsTableCellFrame::GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const
 
 
 /**
-  * Given a style context and an edge, find the padding
-  *
-  **/
-nscoord nsTableCellFrame::GetPadding(nsIFrame* aFrame, PRUint8 aEdge) const
-{
-  nscoord result = 0;
-
-  if (aFrame)
-  {
-    const nsStyleSpacing* spacing;
-    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
-    nsMargin  padding;
-    spacing->CalcPaddingFor(aFrame, padding);
-    switch (aEdge)
-    {
-      case NS_SIDE_TOP:
-        result = padding.top;
-      break;
-
-      case NS_SIDE_RIGHT:
-        result = padding.right;
-      break;
-
-      case NS_SIDE_BOTTOM:
-        result = padding.bottom;
-      break;
-
-      case NS_SIDE_LEFT:
-        result = padding.left;
-      break;
-
-    }
-  }
-  return result;
-}
-
-
-
-/**
   * Given an Edge, find the opposing edge (top<-->bottom, left<-->right)
   *
   **/
@@ -875,6 +830,7 @@ void nsTableCellFrame::RecalcLayoutData(nsTableFrame* aTableFrame,
   CalculateMargins(aTableFrame, aBoundaryCells);
   mCalculated = NS_OK;
 }
+
 
 /* ----- debugging methods ----- */
 NS_METHOD nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
