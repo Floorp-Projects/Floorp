@@ -137,7 +137,7 @@ nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 {
-  nsIHTMLStyleSheet *sheet;
+  nsIHTMLStyleSheet *sheet=nsnull;
 
   if (aDocument) {
     nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(aDocument));
