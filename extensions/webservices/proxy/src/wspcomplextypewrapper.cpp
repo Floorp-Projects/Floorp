@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vidur Apparao (vidur@netscape.com)  (Original author)
  *   John Bandhauer (jband@netscape.com)
- *   Vidur Apparao (vidur@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -91,25 +91,32 @@ class WSPComplexTypeEnumerator : public nsISimpleEnumerator {
 public:
   WSPComplexTypeEnumerator(WSPComplexTypeWrapper* aWrapper,
                            nsIInterfaceInfo* aInterfaceInfo);
-  virtual ~WSPComplexTypeEnumerator() {}
+  virtual ~WSPComplexTypeEnumerator();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
 protected:
-  nsCOMPtr<WSPComplexTypeWrapper> mWrapper;
+  WSPComplexTypeWrapper* mWrapper;
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
   PRUint16 mIndex;
   PRUint16 mCount;
 };
 
 WSPComplexTypeEnumerator::WSPComplexTypeEnumerator(WSPComplexTypeWrapper* aWrapper, nsIInterfaceInfo* aInterfaceInfo) 
-  : mWrapper(aWrapper), mInterfaceInfo(aInterfaceInfo), mIndex(3)
+  : mInterfaceInfo(aInterfaceInfo), mIndex(3)
 {
   NS_INIT_ISUPPORTS();
+  mWrapper = aWrapper;
+  NS_ADDREF(mWrapper);
   if (mInterfaceInfo) {
     mInterfaceInfo->GetMethodCount(&mCount);
   }
+}
+
+WSPComplexTypeEnumerator::~WSPComplexTypeEnumerator()
+{
+  NS_RELEASE(mWrapper);
 }
 
 NS_IMPL_ISUPPORTS1(WSPComplexTypeEnumerator, nsISimpleEnumerator)
@@ -164,10 +171,7 @@ WSPComplexTypeEnumerator::GetNext(nsISupports **_retval)
 }
 
 
-WSPComplexTypeWrapper::WSPComplexTypeWrapper(nsISupports* aComplexTypeInstance,
-                                             nsIInterfaceInfo* aInterfaceInfo)
-  : mComplexTypeInstance(aComplexTypeInstance), 
-    mInterfaceInfo(aInterfaceInfo)
+WSPComplexTypeWrapper::WSPComplexTypeWrapper()
 {
   NS_INIT_ISUPPORTS();
 }
@@ -176,26 +180,36 @@ WSPComplexTypeWrapper::~WSPComplexTypeWrapper()
 {
 }
 
-nsresult 
-WSPComplexTypeWrapper::Create(nsISupports* aComplexTypeInstance,
-                              nsIInterfaceInfo* aInterfaceInfo,
-                              WSPComplexTypeWrapper** aWrapper)
+nsresult
+WSPComplexTypeWrapper::Init(nsISupports* aComplexTypeInstance,
+                            nsIInterfaceInfo* aInterfaceInfo)
 {
-  NS_ENSURE_ARG(aComplexTypeInstance);
-  NS_ENSURE_ARG(aInterfaceInfo);
-  NS_ENSURE_ARG_POINTER(aWrapper);
-
-  WSPComplexTypeWrapper* wrapper = new WSPComplexTypeWrapper(aComplexTypeInstance, aInterfaceInfo);
-  if (!wrapper) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-   
-  *aWrapper = wrapper;
-  NS_ADDREF(*aWrapper);
+  mComplexTypeInstance = aComplexTypeInstance;
+  mInterfaceInfo = aInterfaceInfo;
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(WSPComplexTypeWrapper, nsIPropertyBag)
+NS_METHOD
+WSPComplexTypeWrapper::Create(nsISupports* outer, const nsIID& aIID, 
+                              void* *aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  NS_ENSURE_NO_AGGREGATION(outer);
+
+  WSPComplexTypeWrapper* wrapper = new WSPComplexTypeWrapper();
+  if (!wrapper) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(wrapper);
+  nsresult rv = wrapper->QueryInterface(aIID, aInstancePtr);
+  NS_RELEASE(wrapper);
+  return rv;
+}
+
+NS_IMPL_ISUPPORTS2_CI(WSPComplexTypeWrapper, 
+                      nsIWebServiceComplexTypeWrapper,
+                      nsIPropertyBag)
 
 /* readonly attribute nsISimpleEnumerator enumerator; */
 NS_IMETHODIMP 

@@ -45,6 +45,7 @@ CPPSRCS=					\
 	wspproxy.cpp				\
 	wspcallcontext.cpp			\
 	wspfactory.cpp				\
+	wspexception.cpp			\
 	wspcomplextypewrapper.cpp		\
 	wsppropertybagwrapper.cpp		\
 	$(NULL)

@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vidur Apparao (vidur@netscape.com)  (Original author)
  *   John Bandhauer (jband@netscape.com)
- *   Vidur Apparao (vidur@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -53,6 +53,7 @@ WSPCallContext::WSPCallContext(WSPProxy* aProxy,
     mOperation(aOperation), mStatus(NS_ERROR_NOT_AVAILABLE)
 {
   NS_INIT_ISUPPORTS();
+  NS_IF_ADDREF(mProxy);
 }
 
 WSPCallContext::~WSPCallContext()
@@ -154,7 +155,7 @@ WSPCallContext::HandleResponse(nsISOAPResponse *aResponse,
                                PRBool *_retval)
 {
   NS_ASSERTION(aCall == mCall, "unexpected call instance");
-  NS_ASSERTION(!aLast, "only single response expected");
+  NS_ASSERTION(aLast, "only single response expected");
   mStatus = status;
   *_retval = PR_TRUE;
   CallCompletionListener();
@@ -189,24 +190,27 @@ WSPCallContext::CallCompletionListener()
   nsresult rv;
 #define PARAM_BUFFER_COUNT     8
 
+  if (!mProxy) {
+    return NS_OK;
+  }
   nsXPTCVariant paramBuffer[PARAM_BUFFER_COUNT];
   nsXPTCVariant* dispatchParams = nsnull;
  
   nsCOMPtr<nsISOAPResponse> response;
+    nsCOMPtr<nsISOAPFault> fault;
   mCompletion->GetResponse(getter_AddRefs(response));
   if (response) {
-    nsCOMPtr<nsISOAPFault> fault;
     rv = response->GetFault(getter_AddRefs(fault));
     if (NS_FAILED(rv)) {
       return rv;
     }
-    if (fault) {
-      WSPException* exception = new WSPException(fault, mStatus);
-      if (!exception) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      mException = exception;
+  }
+  if (!response || fault) {
+    WSPException* exception = new WSPException(fault, mStatus);
+    if (!exception) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+    mException = exception;
   }
 
   nsCOMPtr<nsIInterfaceInfo> listenerInterfaceInfo;
@@ -319,7 +323,7 @@ WSPCallContext::CallCompletionListener()
 
       nsCOMPtr<nsISchemaType> type;
       nsCOMPtr<nsISchemaElement> element = do_QueryInterface(schemaComponent);
-      if (!element) {
+      if (element) {
         rv = element->GetType(getter_AddRefs(type));
         if (NS_FAILED(rv)) {
           goto call_completion_end;
@@ -371,6 +375,9 @@ call_completion_end:
   if(dispatchParams && dispatchParams != paramBuffer) {
     delete [] dispatchParams;
   }
-
+  nsCOMPtr<nsIWebServiceCallContext> kungFuDeathGrip(this);
+  mProxy->CallCompleted(this);
+  NS_RELEASE(mProxy);
+  
   return rv;
 }

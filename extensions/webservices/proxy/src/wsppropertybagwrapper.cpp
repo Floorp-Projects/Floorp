@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vidur Apparao (vidur@netscape.com)  (Original author)
  *   John Bandhauer (jband@netscape.com)
- *   Vidur Apparao (vidur@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -41,37 +41,42 @@
 #include "wspprivate.h"
 
 
-WSPPropertyBagWrapper::WSPPropertyBagWrapper(nsIPropertyBag* aPropertyBag,
-                                             nsIInterfaceInfo* aInterfaceInfo)
-  : mPropertyBag(aPropertyBag), mInterfaceInfo(aInterfaceInfo)
+WSPPropertyBagWrapper::WSPPropertyBagWrapper()
+  : mIID(nsnull)
 {
   NS_INIT_ISUPPORTS();
-  mInterfaceInfo->GetIIDShared(&mIID);
 }
 
 WSPPropertyBagWrapper::~WSPPropertyBagWrapper()
 {
 }
 
-nsresult 
-WSPPropertyBagWrapper::Create(nsIPropertyBag* aPropertyBag,
-                              nsIInterfaceInfo* aInterfaceInfo,
-                              WSPPropertyBagWrapper** aWrapper)
+nsresult
+WSPPropertyBagWrapper::Init(nsIPropertyBag* aPropertyBag,
+                            nsIInterfaceInfo* aInterfaceInfo)
 {
-  NS_ENSURE_ARG(aPropertyBag);
-  NS_ENSURE_ARG(aInterfaceInfo);
-  NS_ENSURE_ARG_POINTER(aWrapper);
+  mPropertyBag = aPropertyBag;
+  mInterfaceInfo = aInterfaceInfo;
+  mInterfaceInfo->GetIIDShared(&mIID);
+  return NS_OK;
+}
 
-  WSPPropertyBagWrapper* wrapper = new WSPPropertyBagWrapper(aPropertyBag,
-                                                             aInterfaceInfo);
+NS_METHOD
+WSPPropertyBagWrapper::Create(nsISupports* outer, const nsIID& aIID, 
+                              void* *aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  NS_ENSURE_NO_AGGREGATION(outer);
+
+  WSPPropertyBagWrapper* wrapper = new WSPPropertyBagWrapper();
   if (!wrapper) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  *aWrapper = wrapper;
-  NS_ADDREF(*aWrapper);
-  
-  return NS_OK;
+
+  NS_ADDREF(wrapper);
+  nsresult rv = wrapper->QueryInterface(aIID, aInstancePtr);
+  NS_RELEASE(wrapper);
+  return rv;
 }
 
 NS_IMPL_ADDREF(WSPPropertyBagWrapper)
@@ -80,10 +85,20 @@ NS_IMPL_RELEASE(WSPPropertyBagWrapper)
 NS_IMETHODIMP
 WSPPropertyBagWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if(aIID.Equals(*mIID) || aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
+  if((mIID && aIID.Equals(*mIID)) || aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = NS_STATIC_CAST(nsXPTCStubBase*, this);
     NS_ADDREF_THIS();
     return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIWebServicePropertyBagWrapper))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIWebServicePropertyBagWrapper*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;    
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;    
   }
         
   return NS_ERROR_NO_INTERFACE;
@@ -189,4 +204,84 @@ WSPPropertyBagWrapper::GetInterfaceInfo(nsIInterfaceInfo** info)
   return NS_OK;
 }
 
+///////////////////////////////////////////////////
+//
+// Implementation of nsIClassInfo
+//
+///////////////////////////////////////////////////
+
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] out nsIIDPtr array); */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetInterfaces(PRUint32 *count, nsIID * **array)
+{
+  *count = 2;
+  nsIID** iids = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(2 * sizeof(nsIID*)));
+  if (!iids) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  iids[0] = NS_STATIC_CAST(nsIID *, nsMemory::Clone(mIID, sizeof(nsIID)));
+  const nsIID& wsiid = NS_GET_IID(nsIWebServicePropertyBagWrapper);
+  iids[1] = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&wsiid, sizeof(nsIID)));
+  
+  *array = iids;
+
+  return NS_OK;
+}
+
+/* nsISupports getHelperForLanguage (in PRUint32 language); */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetHelperForLanguage(PRUint32 language, 
+                                            nsISupports **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+/* readonly attribute string contractID; */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetContractID(char * *aContractID)
+{
+  *aContractID = ToNewUTF8String(NS_LITERAL_STRING(NS_WEBSERVICEPROPERTYBAGWRAPPER_CONTRACTID));
+  return NS_OK;
+}
+
+/* readonly attribute string classDescription; */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetClassDescription(char * *aClassDescription)
+{
+  *aClassDescription = nsnull;
+  return NS_OK;
+}
+
+/* readonly attribute nsCIDPtr classID; */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetClassID(nsCID * *aClassID)
+{
+  *aClassID = nsnull;
+  return NS_OK;
+}
+
+/* readonly attribute PRUint32 implementationLanguage; */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+{
+  *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+  return NS_OK;
+}
+
+/* readonly attribute PRUint32 flags; */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetFlags(PRUint32 *aFlags)
+{
+  *aFlags = nsIClassInfo::DOM_OBJECT;
+  return NS_OK;
+}
+
+/* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
+NS_IMETHODIMP 
+WSPPropertyBagWrapper::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
 

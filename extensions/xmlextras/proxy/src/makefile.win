@@ -43,6 +43,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\wspproxy.obj		\
 	.\$(OBJDIR)\wspcallcontext.obj		\
 	.\$(OBJDIR)\wspfactory.obj		\
+	.\$(OBJDIR)\wspexception.obj		\
 	.\$(OBJDIR)\wspcomplextypewrapper.obj	\
 	.\$(OBJDIR)\wsppropertybagwrapper.obj	\
 	$(NULL)

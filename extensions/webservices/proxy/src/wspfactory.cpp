@@ -65,13 +65,13 @@ WSPFactory::CreateProxy(const nsAString & wsdlURL,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void createProxyAsync (in AString wsdlURL, in AString portname, in AString qualifier, in boolean isAsync, in nsIWebServiceProxyListener listener); */
+/* void createProxyAsync (in AString wsdlURL, in AString portname, in AString qualifier, in boolean isAsync, in nsIWebServiceProxyCreationListener listener); */
 NS_IMETHODIMP 
 WSPFactory::CreateProxyAsync(const nsAString & wsdlURL, 
                              const nsAString & portname, 
                              const nsAString & qualifier, 
                              PRBool isAsync, 
-                             nsIWebServiceProxyListener *listener)
+                             nsIWebServiceProxyCreationListener *listener)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

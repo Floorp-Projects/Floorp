@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vidur Apparao (vidur@netscape.com)  (Original author)
  *   John Bandhauer (jband@netscape.com)
- *   Vidur Apparao (vidur@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -50,6 +50,7 @@
 #include "nsSOAPUtils.h"
 
 WSPProxy::WSPProxy()
+  : mIID(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -58,21 +59,25 @@ WSPProxy::~WSPProxy()
 {
 }
 
-nsresult
+NS_IMETHODIMP
 WSPProxy::Init(nsIWSDLPort* aPort,
                nsIInterfaceInfo* aPrimaryInterface,
                const nsAReadableString& aQualifier,
                PRBool aIsAsync)
 {
+  NS_ENSURE_ARG(aPort);
+  NS_ENSURE_ARG(aPrimaryInterface);
+
   mPort = aPort;
   mPrimaryInterface = aPrimaryInterface;
+  mPrimaryInterface->GetIIDShared(&mIID);
   mQualifier.Assign(aQualifier);
   mIsAsync = aIsAsync;
   
   if (mIsAsync) {
     // Get the completion method info
     const nsXPTMethodInfo* listenerGetter;
-    nsresult rv = mPrimaryInterface->GetMethodInfo(4, &listenerGetter);
+    nsresult rv = mPrimaryInterface->GetMethodInfo(3, &listenerGetter);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -81,7 +86,7 @@ WSPProxy::Init(nsIWSDLPort* aPort,
     if (!type.IsInterfacePointer()) {
       return NS_ERROR_FAILURE;
     }
-    rv = mPrimaryInterface->GetInfoForParam(4, &listenerParam,
+    rv = mPrimaryInterface->GetInfoForParam(3, &listenerParam,
                                       getter_AddRefs(mListenerInterfaceInfo));
     if (NS_FAILED(rv)) {
       return rv;
@@ -91,13 +96,30 @@ WSPProxy::Init(nsIWSDLPort* aPort,
   return NS_OK;
 }
 
+NS_METHOD
+WSPProxy::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  NS_ENSURE_NO_AGGREGATION(outer);
+
+  WSPProxy* proxy = new WSPProxy();
+  if (!proxy) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(proxy);
+  nsresult rv = proxy->QueryInterface(aIID, aInstancePtr);
+  NS_RELEASE(proxy);
+  return rv;
+}
+
 NS_IMPL_ADDREF(WSPProxy)
 NS_IMPL_RELEASE(WSPProxy)
 
 NS_IMETHODIMP
 WSPProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if(aIID.Equals(*mIID) || aIID.Equals(NS_GET_IID(nsISupports))) {
+  if((mIID && aIID.Equals(*mIID)) || aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsXPTCStubBase*, this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -127,6 +149,8 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
                      nsXPTCMiniVariant* params)
 {
   nsresult rv;
+  nsCOMPtr<nsIWebServiceCallContext> cc;
+  nsCOMPtr<nsIWSDLBinding> binding;
 
   if (methodIndex < 3) {
     NS_ERROR("WSPProxy: bad method index");
@@ -135,14 +159,22 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
 
   // The first method in the interface for async callers is the 
   // one to set the async listener
-  if (mIsAsync && (methodIndex == 4)) {
+  if (mIsAsync && (methodIndex == 3)) {
     nsISupports* listener = NS_STATIC_CAST(nsISupports*, params[0].val.p);
     mAsyncListener = listener;
     return NS_OK;
   }
 
+  PRUint32 methodOffset;
+  if (mIsAsync) {
+    methodOffset = 4;
+  }
+  else {
+    methodOffset = 3;
+  }
   nsCOMPtr<nsIWSDLOperation> operation;
-  rv = mPort->GetOperation(methodIndex - 3, getter_AddRefs(operation));
+  rv = mPort->GetOperation(methodIndex - methodOffset, 
+                           getter_AddRefs(operation));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -159,9 +191,11 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     return rv;
   }
 
-  nsCOMPtr<nsIWSDLBinding> binding;
-  nsCOMPtr<nsISOAPEncoding> encoding;
-  call->GetEncoding(getter_AddRefs(encoding));
+  nsCOMPtr<nsISOAPEncoding> encoding = do_CreateInstance(NS_SOAPENCODING_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  call->SetEncoding(encoding);
 
   // Get the method name and target object uri
   nsAutoString methodName, targetObjectURI, address;
@@ -205,6 +239,12 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
   rv = call->SetTransportURI(address);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  PRUint16 version;
+  portBinding->GetSoapVersion(&version);
+  if (version == nsISOAPMessage::VERSION_UNKNOWN) {
+    version = nsISOAPMessage::VERSION_1_1;
   }
 
   // Set up the parameters to the call
@@ -353,7 +393,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     nsAutoString blockName, blockNamespace;
     
     nsCOMPtr<nsISchemaElement> element = do_QueryInterface(schemaComponent);
-    if (!element) {
+    if (element) {
       rv = element->GetType(getter_AddRefs(type));
       if (NS_FAILED(rv)) {
         goto call_method_end;
@@ -392,7 +432,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     const nsXPTParamInfo& paramInfo = info->GetParam(whichParam[i]);
     PRUint32 arrayLength = 0;
     if (IsArray(part)) {
-      arrayLength = params[whichParam[i-1]].val.u32;
+      arrayLength = params[whichParam[i]-1].val.u32;
 #ifdef DEBUG
       const nsXPTType& arrayType = paramInfo.GetType();
       NS_ASSERTION(arrayType.IsArray(), "WSPProxy:: array type incorrect");
@@ -411,7 +451,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
   }
   
   // Encode the parameters to the call
-  rv = call->Encode(nsISOAPMessage::VERSION_1_2, 
+  rv = call->Encode(version, 
                     methodName, targetObjectURI,
                     headerCount, headerBlocks,
                     bodyCount, bodyBlocks);
@@ -419,13 +459,14 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     goto call_method_end;
   }
 
-  WSPCallContext* cc;
-  cc = new WSPCallContext(this, call, methodName, 
-                          operation);
-  if (!cc) {
+  WSPCallContext* ccInst;
+  ccInst = new WSPCallContext(this, call, methodName, 
+                              operation);
+  if (!ccInst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto call_method_end;
   }
+  cc = ccInst;
 
   if (mIsAsync) {
     PRUint8 pcount;
@@ -454,23 +495,23 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
 
     nsIWebServiceCallContext** retval = NS_STATIC_CAST(nsIWebServiceCallContext**,
                                                        params[pcount-1].val.p);
-    if (retval) {
+    if (!retval) {
       rv = NS_ERROR_FAILURE;
       goto call_method_end;
     }
     *retval = cc;
-
+    NS_ADDREF(*retval);
     
-    rv = cc->CallAsync(methodIndex+1, mAsyncListener);
+    rv = ccInst->CallAsync(methodIndex-1, mAsyncListener);
     if (NS_FAILED(rv)) {
       goto call_method_end;
     }
 
     mPendingCalls.AppendElement(NS_STATIC_CAST(nsIWebServiceSOAPCallContext*,
-                                               cc));
+                                               ccInst));
   }
   else {
-    rv = cc->CallSync(methodIndex, params);
+    rv = ccInst->CallSync(methodIndex, params);
   }
 
 call_method_end:
@@ -507,9 +548,30 @@ WSPProxy::IsArray(nsIWSDLPart* aPart)
     }
   }
 
+  nsCOMPtr<nsISchemaComplexType> complexType(do_QueryInterface(type));
+  if (!complexType) {
+    return PR_FALSE;
+  }
+
+  while (complexType) {
+    PRUint16 derivation;
+    complexType->GetDerivation(&derivation);
+    if (derivation == nsISchemaComplexType::DERIVATION_SELF_CONTAINED) {
+      break;
+    }
+    nsCOMPtr<nsISchemaType> base;
+    complexType->GetBaseType(getter_AddRefs(base));
+    complexType = do_QueryInterface(base);
+  }
+  
+  // If the base type is not a complex type, then we're done
+  if (!complexType) {
+    return PR_FALSE;
+  }
+
   nsAutoString name, ns;
-  type->GetName(name);
-  type->GetTargetNamespace(ns);
+  complexType->GetName(name);
+  complexType->GetTargetNamespace(ns);
 
   if (name.Equals(NS_LITERAL_STRING("Array")) &&
       (ns.Equals(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1]) ||
@@ -565,6 +627,25 @@ WSPProxy::ParameterToVariant(nsIInterfaceInfo* aInterfaceInfo,
     }
     return XPTCMiniVariantToVariant(type_tag, aMiniVariant, iinfo, aVariant);
   }
+}
+
+nsresult
+WSPProxy::WrapInPropertyBag(nsISupports* aInstance,
+                            nsIInterfaceInfo* aInterfaceInfo,
+                            nsIPropertyBag** aPropertyBag)
+{
+  *aPropertyBag = nsnull;
+  nsresult rv;
+  nsCOMPtr<nsIWebServiceComplexTypeWrapper> wrapper(do_CreateInstance(NS_WEBSERVICECOMPLEXTYPEWRAPPER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = wrapper->Init(aInstance, aInterfaceInfo);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  CallQueryInterface(wrapper, aPropertyBag);
+  return NS_OK;
 }
 
 nsresult
@@ -628,14 +709,13 @@ WSPProxy::XPTCMiniVariantToVariant(uint8 aTypeTag,
     {
       nsISupports* instance = (nsISupports*)aResult.val.p;
       if (instance) {
-        // Rewrap an interface instance in a property bag
-        nsCOMPtr<WSPComplexTypeWrapper> wrapper;
-        rv = WSPComplexTypeWrapper::Create(instance, aInterfaceInfo, 
-                                           getter_AddRefs(wrapper));
+        nsCOMPtr<nsIPropertyBag> propBag;
+        rv = WrapInPropertyBag(instance, aInterfaceInfo, 
+                               getter_AddRefs(propBag));
         if (NS_FAILED(rv)) {
           return rv;
         }
-        var->SetAsInterface(NS_GET_IID(nsIPropertyBag), wrapper);
+        var->SetAsInterface(NS_GET_IID(nsIPropertyBag), propBag);
         NS_RELEASE(instance);
       }
       else {
@@ -670,28 +750,22 @@ WSPProxy::ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
   }
 
   if (aLength) {
-    nsIVariant** entries = (nsIVariant**)nsMemory::Alloc(aLength * sizeof(nsIVariant*));
-    if (!entries) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
     PRUint32 i = 0;
-    nsXPTCVariant var;
     void* array = aResult.val.p;
-    nsCOMPtr<nsIVariant> element;
+    void* entries;
+    const nsIID* iid = nsnull; 
 
 #define POPULATE(_t,_v)                                                  \
   PR_BEGIN_MACRO                                                         \
+    _t* entries##_v = (_t*)nsMemory::Alloc(aLength * sizeof(_t));        \
+    if (!entries##_v) {                                                  \
+      return NS_ERROR_OUT_OF_MEMORY;                                     \
+    }                                                                    \
     for(i = 0; i < aLength; i++)                                         \
     {                                                                    \
-      var.type = aTypeTag;                                               \
-      var.val._v = *((_t*)array + i);                                    \
-      rv = XPTCMiniVariantToVariant(aTypeTag, var, aInterfaceInfo,       \
-                                    entries+i);                          \
-      if (NS_FAILED(rv)) {                                               \
-        break;                                                           \
-      }                                                                  \
+      entries##_v[i] = *((_t*)array + i);                                \
     }                                                                    \
+    entries = (void*)entries##_v;                                        \
   PR_END_MACRO
 
     switch (aTypeTag) {
@@ -708,21 +782,53 @@ WSPProxy::ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
       case nsXPTType::T_BOOL:          POPULATE(PRBool, b);       break;
       case nsXPTType::T_CHAR:          POPULATE(char, c);         break;
       case nsXPTType::T_WCHAR:         POPULATE(PRUnichar, wc);   break;
-      case nsXPTType::T_INTERFACE:     POPULATE(nsISupports*, p); break;
+      case nsXPTType::T_INTERFACE:  
+      {
+        nsISupports** entriesSup = (nsISupports**)nsMemory::Alloc(aLength * 
+                                                        sizeof(nsISupports*));
+        if (!entriesSup) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        const nsIID& propbagIID = NS_GET_IID(nsIPropertyBag);
+        iid = &propbagIID;
+        entries = (void*)entriesSup;
+        for(i = 0; i < aLength; i++) {
+          nsISupports* instance = *((nsISupports**)array + i);
+          nsISupports** outptr = entriesSup + i;
+          if (instance) {
+            nsCOMPtr<nsIPropertyBag> propBag;
+            rv = WrapInPropertyBag(instance, aInterfaceInfo,
+                                   getter_AddRefs(propBag));
+            if (NS_FAILED(rv)) {
+              break;
+            }
+            propBag->QueryInterface(NS_GET_IID(nsISupports),
+                                    (void**)outptr);
+          }
+          else {
+            *outptr = nsnull;
+          }
+        }
+        aTypeTag = nsXPTType::T_INTERFACE_IS;
+        break;
+      }
+      default:
+        NS_ERROR("Conversion of illegal array type");
+        return NS_ERROR_FAILURE;
     }
 
 #undef POPULATE
 
     if (NS_SUCCEEDED(rv)) {
-      const nsIID& varIID = NS_GET_IID(nsIVariant);
-      rv = retvar->SetAsArray(nsIDataType::VTYPE_INTERFACE, 
-                              &varIID, 
-                              aLength, entries);
+      rv = retvar->SetAsArray(aTypeTag, iid, aLength, entries);
     }
 
-    // Even if we failed while converting, we want to release
-    // the entries that were already created.
-    NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, entries);
+    if (aTypeTag == nsXPTType::T_INTERFACE) {
+      NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, (nsISupports**)entries);
+    }
+    else {
+      nsMemory::Free(entries);
+    }
   }
   else {
     retvar->SetAsEmpty();
@@ -830,6 +936,27 @@ WSPProxy::VariantToOutParameter(nsIInterfaceInfo* aInterfaceInfo,
 }
 
 nsresult
+WSPProxy::WrapInComplexType(nsIPropertyBag* aPropertyBag,
+                            nsIInterfaceInfo* aInterfaceInfo,
+                            nsISupports** aComplexType)
+{
+  *aComplexType = nsnull;
+  WSPPropertyBagWrapper* wrapper = new WSPPropertyBagWrapper();
+  if (!wrapper) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(wrapper);
+  nsresult rv = wrapper->Init(aPropertyBag, aInterfaceInfo);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(wrapper);
+    return rv;
+  }
+  wrapper->QueryInterface(NS_GET_IID(nsISupports), (void**)aComplexType);
+  NS_RELEASE(wrapper);
+  return NS_OK;
+}
+
+nsresult
 WSPProxy::VariantToValue(uint8 aTypeTag,
                          void* aValue,
                          nsIInterfaceInfo* aInterfaceInfo,
@@ -897,8 +1024,9 @@ WSPProxy::VariantToValue(uint8 aTypeTag,
         if (NS_FAILED(rv)) {
           return rv;
         }
-        WSPPropertyBagWrapper* wrapper;
-        rv = WSPPropertyBagWrapper::Create(propBag, aInterfaceInfo, &wrapper);
+        nsCOMPtr<nsISupports> wrapper;
+        rv = WrapInComplexType(propBag, aInterfaceInfo, 
+                               getter_AddRefs(wrapper));
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -906,7 +1034,6 @@ WSPProxy::VariantToValue(uint8 aTypeTag,
         const nsIID* iid;
         aInterfaceInfo->GetIIDShared(&iid);
         rv = wrapper->QueryInterface(*iid, (void**)aValue);
-        NS_RELEASE(wrapper);
       }
       break;
     }
@@ -934,85 +1061,66 @@ WSPProxy::VariantToArrayValue(uint8 aTypeTag,
     return rv;
   }
 
-  if ((type != nsIDataType::VTYPE_INTERFACE) || 
-      (!arrayIID.Equals(NS_GET_IID(nsIVariant)))) {
-    return NS_ERROR_FAILURE;
-  }
-  nsIVariant** variants = (nsIVariant**)array;
-
-  PRUint32 size;
-  // Allocate the array
+  *((PRUint32*)aResult[0].val.p) = count;
   switch (aTypeTag) {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
-      size = sizeof(PRUint8);
-      break;
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
-      size = sizeof(PRUint16);
-      break;
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
-      size = sizeof(PRUint32);
-      break;
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
-      size = sizeof(PRUint64);
-      break;
     case nsXPTType::T_FLOAT:
-      size = sizeof(float);
-      break;
     case nsXPTType::T_DOUBLE:
-      size = sizeof(double);
-      break;
     case nsXPTType::T_BOOL:
-      size = sizeof(PRBool);
-      break;
     case nsXPTType::T_CHAR:
-      size = sizeof(char);
-      break;
     case nsXPTType::T_WCHAR:
-      size = sizeof(PRUnichar);
+      *((void**)aResult[1].val.p) = array;
       break;
     case nsXPTType::T_INTERFACE:
-      size = sizeof(nsISupports*);
+    case nsXPTType::T_INTERFACE_IS:
+    {
+      if (!arrayIID.Equals(NS_GET_IID(nsIPropertyBag))) {
+        NS_ERROR("Array of complex types should be represented by property bags");
+        return NS_ERROR_FAILURE;
+      }
+      nsISupports** outptr = (nsISupports**)nsMemory::Alloc(count * 
+                                                         sizeof(nsISupports*));
+      if (!outptr) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      nsISupports** arraySup = (nsISupports**)array;
+      const nsIID* iid;
+      aInterfaceInfo->GetIIDShared(&iid);
+      PRUint32 i;
+      for (i = 0; i < count; i++) {
+        nsCOMPtr<nsIPropertyBag> propBag(do_QueryInterface(arraySup[i]));
+        if (!propBag) {
+          *(outptr + i) = nsnull;
+        }
+        else {
+          nsCOMPtr<nsISupports> wrapper;
+          rv = WrapInComplexType(propBag, aInterfaceInfo, 
+                                 getter_AddRefs(wrapper));
+          if (NS_FAILED(rv)) {
+            NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, outptr);
+            return rv;
+          }
+          rv = wrapper->QueryInterface(*iid, (void**)(outptr + i));
+          if (NS_FAILED(rv)) {
+            NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, outptr);
+            return rv;
+          }
+        }
+      }
+      *((void**)aResult[1].val.p) = outptr;
       break;
+    }
     default:
-      NS_ERROR("Unexpected array type");
+      NS_ERROR("Conversion of illegal array type");
       return NS_ERROR_FAILURE;
   }
-
-  void* outptr = nsMemory::Alloc(count * size);
-  if (!outptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  PRUint32 i;
-  for (i = 0; i < count; i++) {
-    rv = VariantToValue(aTypeTag, (void*)((char*)outptr + (i*size)),
-                        aInterfaceInfo, variants[i]);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-  }
-
-  // Free the variant array passed back to us
-  NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, variants);
-
-  // If conversion failed, free the allocated structures
-  if (NS_FAILED(rv)) {
-    if (aTypeTag == nsXPTType::T_INTERFACE) {
-      nsMemory::Free(outptr);
-    }
-    else {
-      NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, (nsISupports**)outptr);
-    }
-
-    return rv;
-  }
-
-  *((PRUint32*)aResult[0].val.p) = count;
-  *((void**)aResult[1].val.p) = outptr;
 
   return NS_OK;
 }
@@ -1156,4 +1264,11 @@ WSPProxy::GetListenerInterfaceInfo(nsIInterfaceInfo** aInfo)
 {
   *aInfo = mListenerInterfaceInfo;
   NS_IF_ADDREF(*aInfo);
+}
+
+void
+WSPProxy::CallCompleted(WSPCallContext* aContext)
+{
+  mPendingCalls.RemoveElement(NS_STATIC_CAST(nsIWebServiceCallContext*, 
+                                             aContext));
 }

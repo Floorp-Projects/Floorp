@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vidur Apparao (vidur@netscape.com) (Original author)
  *   John Bandhauer (jband@netscape.com)
- *   Vidur Apparao (vidur@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -61,6 +61,9 @@
 #include "nsIPropertyBag.h"
 #include "nsIException.h"
 
+// Forward decls
+class WSPCallContext;
+
 class WSPFactory : public nsIWebServiceProxyFactory 
 {
 public:
@@ -94,16 +97,11 @@ public:
                         nsXPTCMiniVariant* params);
   NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
-  nsresult Init(nsIWSDLPort* aPort,
-                nsIInterfaceInfo* aPrimaryInterface,
-                const nsAReadableString& aQualifier,
-                PRBool aIsAsync);
   void GetListenerInterfaceInfo(nsIInterfaceInfo** aInfo);
+  void CallCompleted(WSPCallContext* aContext);
 
-  static nsresult Create(nsIWSDLPort* aPort,
-                         nsIInterfaceInfo* aPrimaryInterface,
-                         const nsAReadableString& aQualifier,
-                         PRBool aIsAsync, WSPProxy** aProxy);
+  static NS_METHOD
+  Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
   static nsresult XPTCMiniVariantToVariant(uint8 aTypeTag,
                                            nsXPTCMiniVariant aResult,
@@ -141,6 +139,12 @@ public:
                                         nsIVariant* aVariant,
                                         nsXPTCMiniVariant* aMiniVariant);
   static PRBool IsArray(nsIWSDLPart* aPart);
+  static nsresult WrapInPropertyBag(nsISupports* aInstance,
+                                    nsIInterfaceInfo* aInterfaceInfo,
+                                    nsIPropertyBag** aPropertyBag);
+  static nsresult WrapInComplexType(nsIPropertyBag* aPropertyBag,
+                                    nsIInterfaceInfo* aInterfaceInfo,
+                                    nsISupports** aComplexType);
 
 protected:
   nsCOMPtr<nsIWSDLPort> mPort;
@@ -202,19 +206,19 @@ protected:
   nsresult mStatus;
 };
 
-class WSPComplexTypeWrapper : public nsIPropertyBag
+class WSPComplexTypeWrapper : public nsIWebServiceComplexTypeWrapper,
+                              public nsIPropertyBag
 {
 public:
-  WSPComplexTypeWrapper(nsISupports* aComplexTypeInstance,
-                        nsIInterfaceInfo* aInterfaceInfo);
+  WSPComplexTypeWrapper();
   virtual ~WSPComplexTypeWrapper();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTYBAG
+  NS_DECL_NSIWEBSERVICECOMPLEXTYPEWRAPPER
 
-  static nsresult Create(nsISupports* aComplexTypeInstance,
-                         nsIInterfaceInfo* aInterfaceInfo,
-                         WSPComplexTypeWrapper** aWrapper);
+  static NS_METHOD
+  Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
   nsresult GetPropertyValue(PRUint32 aMethodIndex,
                             const nsXPTMethodInfo* aMethodInfo,
@@ -225,14 +229,17 @@ protected:
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
 };
 
-class WSPPropertyBagWrapper : public nsXPTCStubBase
+class WSPPropertyBagWrapper : public nsXPTCStubBase,
+                              public nsIWebServicePropertyBagWrapper,
+                              public nsIClassInfo
 {
 public:
-  WSPPropertyBagWrapper(nsIPropertyBag* aPropertyBag,
-                        nsIInterfaceInfo* aInterfaceInfo);
+  WSPPropertyBagWrapper();
   virtual ~WSPPropertyBagWrapper();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIWEBSERVICEPROPERTYBAGWRAPPER
+  NS_DECL_NSICLASSINFO
 
   // Would be nice to have a NS_DECL_NSXPTCSTUBBASE
   NS_IMETHOD CallMethod(PRUint16 methodIndex,
@@ -240,13 +247,24 @@ public:
                         nsXPTCMiniVariant* params);
   NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
-  static nsresult Create(nsIPropertyBag* aPropertyBag,
-                         nsIInterfaceInfo* aInterfaceInfo,
-                         WSPPropertyBagWrapper** aWrapper);
+  static NS_METHOD
+  Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
 protected:
   nsCOMPtr<nsIPropertyBag> mPropertyBag;
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
   const nsIID* mIID;
 };
+
+#define NS_WEBSERVICECALLCONTEXT_CLASSID          \
+{ /* a42e9bf3-6bae-4c59-8f76-9dc175eec5b1 */      \
+ 0xa42e9bf3, 0x6bae, 0x4c59,                      \
+ {0x8f, 0x76, 0x9d, 0xc1, 0x75, 0xee, 0xc5, 0xb1}}
+#define NS_WEBSERVICECALLCONTEXT_CONTRACTID "@mozilla.org/xmlextras/proxy/webservicecallcontext;1"
+#define NS_WEBSERVICEEXCEPTION_CLASSID            \
+{ /* 07c2bf7b-376e-4629-b9c0-dbb17630b98d */      \
+ 0x07c2bf7b, 0x376e, 0x4629,                      \
+ {0xb9, 0xc0, 0xdb, 0xb1, 0x76, 0x30, 0xb9, 0x8d}}
+#define NS_WEBSERVICEEXCEPTION_CONTRACTID "@mozilla.org/xmlextras/proxy/webserviceexception;1"
 
 #endif // __wspprivate_h__
