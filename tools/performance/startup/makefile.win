@@ -26,6 +26,8 @@ INSTALL_DIR = $(DIST)\bin
 INSTALL_FILE_LIST =  \
     miniNav.bat \
     bigNav.bat  \
+    compareNav.bat \
+    compareNavStats.bat \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
