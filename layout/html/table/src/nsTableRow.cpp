@@ -279,6 +279,21 @@ void nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
   }
 }
 
+nsContentAttr
+nsTableRow::AttributeToString(nsIAtom* aAttribute,
+                              nsHTMLValue& aValue,
+                              nsString& aResult) const
+{
+  nsContentAttr ca = eContentAttr_NotThere;
+  if (aAttribute == nsHTMLAtoms::valign) {
+    AlignParamToString(aValue, aResult);
+    ca = eContentAttr_HasValue;
+  }
+  else {
+    ca = nsTableContent::AttributeToString(aAttribute, aValue, aResult);
+  }
+  return ca;
+}
 
 nsresult
 nsTableRow::CreateFrame(nsIPresContext* aPresContext,
