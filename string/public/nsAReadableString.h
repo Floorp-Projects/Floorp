@@ -1531,7 +1531,7 @@ typedef basic_nsPromiseFlatString<char>       nsPromiseFlatCString;
   #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsLiteralString n(s, (sizeof(s)/sizeof(wchar_t))-1)
 #else
   #define NS_L(s)                                 s
-  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, sizeof(s)-1))
+  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, sizeof(s)-1)
   #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, sizeof(s)-1)
 #endif
 
