@@ -116,9 +116,26 @@ smime_main()
   html_msg $? 0 "Compare Decoded Enveloped Data and Original" "."
 
   # multiple recip
-  #cmsutil -E -i alicecc.txt -d ${R_ALICEDIR} -o alicecc.env \
-  #        -r bob@bogus.com,dave@bogus.com
-  #cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss
+  echo "$SCRIPTNAME: Testing multiple recipients ------------------------------"
+  echo "cmsutil -E -i alicecc.txt -d ${R_ALICEDIR} -o alicecc.env \\"
+  echo "        -r bob@bogus.com,dave@bogus.com"
+  cmsutil -E -i alice.txt -d ${R_ALICEDIR} -o alicecc.env \
+          -r bob@bogus.com,dave@bogus.com
+  html_msg $? 0 "Create Multiple Recipients Enveloped Data Alice" "."
+
+  echo "cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss -o alice.data2"
+  cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss -o alice.data2
+  html_msg $? 0 "Decode Multiple Recipients Enveloped Data Alice by Bob" "."
+
+  echo "cmsutil -D -i alicecc.env -d ${R_DAVEDIR} -p nss -o alice.data2"
+  cmsutil -D -i alicecc.env -d ${R_DAVEDIR} -p nss -o alice.data3
+  html_msg $? 0 "Decode Multiple Recipients Enveloped Data Alice by Dave" "."
+
+  diff alice.txt alice.data2
+  html_msg $? 0 "Compare Decoded Mult. Recipients Enveloped Data Alice/Bob" "."
+
+  diff alice.txt alice.data3
+  html_msg $? 0 "Compare Decoded Mult. Recipients Enveloped Data Alice/Dave" "."
   
   echo "$SCRIPTNAME: Sending CERTS-ONLY Message ------------------------------"
   echo "cmsutil -O -r \"Alice,bob@bogus.com,dave@bogus.com\" \\"
