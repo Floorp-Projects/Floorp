@@ -24,21 +24,10 @@
    -   Neil Rashbrook <neil@parkwaycc.co.uk> (ass'td polish fix)
   -->
 
-<?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/editorFormatToolbar.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/addressingWidget.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-
-<?xul-overlay href="chrome://messenger/content/messengercompose/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/editorSmileyOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/messengercompose/mailComposeExtrasOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % messengercomposeDTD SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd" >
@@ -47,6 +36,8 @@
 %messengerDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
+<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
+%charsetDTD;
 ]>
 
 <window id="msgcomposeWindow"
@@ -77,16 +68,33 @@
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
+<!-- move needed functions into a single js file -->
+<script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+
 <commandset id="composeCommands">
   <commandset id="msgComposeCommandUpdate"
-    commandupdater="true"
-    events="focus"
-    oncommandupdate="CommandUpdate_MsgCompose()"/>
-
-  <commandset id="globalEditMenuItems"/>
-  <commandset id="selectEditMenuItems"/>
-  <commandset id="undoEditMenuItems"/>
-  <commandset id="clipboardEditMenuItems"/>
+              commandupdater="true"
+              events="focus"
+              oncommandupdate="CommandUpdate_MsgCompose()"/>
+  <commandset id="globalEditMenuItems"
+              commandupdater="true"
+              events="focus"
+              oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+  <commandset id="selectEditMenuItems"
+              commandupdater="true"
+              events="select"
+              oncommandupdate="goUpdateSelectEditMenuItems()"/>
+  <commandset id="undoEditMenuItems"
+              commandupdater="true"
+              events="undo"
+              oncommandupdate="goUpdateUndoEditMenuItems()"/>
+  <commandset id="clipboardEditMenuItems"
+              commandupdater="true"
+              events="clipboard"
+              oncommandupdate="goUpdatePasteMenuItems()"/>
 
   <commandset id="commonEditorMenuItems"/>
   <commandset id="composerMenuItems"/>
@@ -94,7 +102,6 @@
   <commandset id="composerStyleMenuItems"/>
   <commandset id="composerTableMenuItems"/>
   <commandset id="composerListMenuItems"/>
-  <command id="cmd_quit"/>
   <!-- File Menu -->
   <command id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
   <command id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
@@ -110,14 +117,20 @@
   <command id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
   <command id="cmd_printSetup" oncommand="goDoCommand('cmd_printSetup')"/>
   <command id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
+  <command id="cmd_quit" oncommand="goQuitApplication()"/>
 
   <!-- Edit Menu -->
   <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
   <!--command id="cmd_find"/-->
   <!--command id="cmd_findNext"/-->
-  <command id="cmd_rewrap"  oncommand="goDoCommand('cmd_rewrap')"/>
-  <command id="cmd_delete"/>
-  <command id="cmd_selectAll"/>
+  <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')" disabled="true"/>
+  <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')" disabled="true"/>
+  <command id="cmd_cut" oncommand="goDoCommand('cmd_cut')" disabled="true"/>
+  <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
+  <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')" disabled="true"/>
+  <command id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
+  <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')" valueDefault="&deleteCmd.label;" disabled="true"/>
+  <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')" disabled="true"/>
   <command id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
 
   <!-- View Menu -->
@@ -133,31 +146,32 @@
 
 <broadcasterset id="composeBroadcasters">
   <broadcaster id="Editor:Throbber" busy="false"/>
-  <broadcaster id="Communicator:WorkMode"/>
+  <broadcaster id="Communicator:WorkMode" label="&offlineGoOfflineCmd.label;"
+               type="checkbox" oncommand="toggleOfflineStatus();"/>
   <broadcaster id="args" value="editorType=default"/>
 </broadcasterset>
 
 <keyset id="tasksKeys">
   <!-- File Menu -->
-  <key id="key_close"/>
-  <key id="key_save"  key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
+  <key id="key_close" key="&closeCmd.key;" modifiers="accel"/>
+  <key id="key_save" key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
   <key id="key_send" keycode="&sendCmd.keycode;" observes="cmd_sendWithCheck" modifiers="accel"/>
   <key id="key_sendLater" keycode="&sendLaterCmd.keycode;" observes="cmd_sendLater" modifiers="accel, shift"/>
-  <key id="key_print"  key="&printCmd.key;" command="cmd_print" modifiers="accel"/>
-  <key id="key_quit"/>
+  <key id="key_print" key="&printCmd.key;" command="cmd_print" modifiers="accel"/>
+  <key id="key_quit" key="&quitApplicationCmd.key;" modifiers="accel"/>
   
   <!-- Edit Menu -->
-  <key id="key_undo"/>
-  <key id="key_redo"/>
-  <key id="key_cut"/>
-  <key id="key_copy"/>
-  <key id="key_paste"/>
+  <key id="key_undo" key="&undoCmd.key;" modifiers="accel"/>
+  <key id="key_redo" key="&redoCmd.key;" modifiers="accel"/>
+  <key id="key_cut" key="&cutCmd.key;" modifiers="accel"/>
+  <key id="key_copy" key="&copyCmd.key;" modifiers="accel"/>
+  <key id="key_paste" key="&pasteCmd.key;" modifiers="accel"/>
   <key id="pastequotationkb"/>
-  <key id="key_delete"/>
-  <key id="key_selectAll"/>
-  <key id="key_find"  key="&findCmd.key;"  command="cmd_find" modifiers="accel"/>
-  <key id="key_findNext"  key="&findAgainCmd.key;" command="cmd_findNext" modifiers="accel"/>
-  <key id="key_findPrev"  key="&findPrevCmd.key;"  command="cmd_findPrev" modifiers="accel, shift"/>
+  <key id="key_delete" keycode="VK_DELETE"/>
+  <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
+  <key id="key_find" key="&findCmd.key;" command="cmd_find" modifiers="accel"/>
+  <key id="key_findNext" key="&findAgainCmd.key;" command="cmd_findNext" modifiers="accel"/>
+  <key id="key_findPrev" key="&findPrevCmd.key;" command="cmd_findPrev" modifiers="accel, shift"/>
   <key keycode="&findAgainCmd.key2;" command="cmd_findNext"/>
   <key keycode="&findPrevCmd.key2;"  command="cmd_findPrev" modifiers="shift"/>
   
@@ -198,6 +212,10 @@
   <menuitem label="&addAttachment.label;" accesskey="&addAttachment.accesskey;" command="cmd_attachFile"/>
 </popup>
 
+<popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 
+  <label id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
+</popup>
+
   <toolbox id="compose-toolbox" class="toolbox-top" mode="icons"> 
   <!-- Menu -->
   
@@ -206,9 +224,9 @@
 
      <toolbaritem id="menubar-items" align="center">
       <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
-      <menu id="menu_File">
+      <menu id="menu_File" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="menu_FilePopup">
-          <menu id="menu_New">
+          <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;">
             <menupopup id="menu_NewPopup">
               <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
               <menuseparator/>
@@ -216,8 +234,8 @@
           </menu>
           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
           <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
-          <menuitem hidden="true" observes="Communicator:WorkMode"/>
-          <menuitem id="menu_close"/>
+          <menuitem id="offlineGoOfflineCmd" hidden="true" label="&offlineGoOfflineCmd.label;" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
+          <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
           <menuseparator/>
           <menuitem label="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" command="cmd_saveDefault"/>
           <menu label="&saveAsCmd.label;" accesskey="&saveAsCmd.accesskey;">
@@ -234,22 +252,24 @@
           <menuseparator/>
           <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
+          <menuseparator id="menu_FileQuitSeparator"/>
+          <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" command="cmd_quit"/>
         </menupopup>
       </menu>
       
-      <menu id="menu_Edit">
+      <menu id="menu_Edit" label="&editMenu.label;" accesskey="&editMenu.accesskey;">
         <menupopup onpopupshowing="updateEditItems();">
-          <menuitem id="menu_undo"/>
-          <menuitem id="menu_redo"/>
+          <menuitem id="menu_undo" label="&undoCmd.label;" key="key_undo" accesskey="&undoCmd.accesskey;" command="cmd_undo"/>
+          <menuitem id="menu_redo" label="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" command="cmd_redo"/>
           <menuseparator/>
-          <menuitem id="menu_cut"/>
-          <menuitem id="menu_copy"/>
-          <menuitem id="menu_paste"/>
+          <menuitem id="menu_cut" label="&cutCmd.label;" key="key_cut" accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
+          <menuitem id="menu_copy" label="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
+          <menuitem id="menu_paste" label="&pasteCmd.label;" key="key_paste" accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
           <menuitem id="menu_pasteQuote"/>
           <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap"/>
-          <menuitem id="menu_delete"/>
+          <menuitem id="menu_delete" label="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
           <menuseparator/>
-          <menuitem id="menu_selectAll"/>
+          <menuitem id="menu_selectAll" label="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
           <menuseparator/>
           <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      command="cmd_find"/>
           <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" command="cmd_findNext"/>
@@ -257,9 +277,9 @@
         </menupopup>
       </menu>
 
-      <menu id="menu_View">
+      <menu id="menu_View" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
         <menupopup id="menu_View_Popup">
-          <menu id="menu_Toolbars">
+          <menu id="menu_Toolbars" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
             <menupopup>
               <menuitem id="menu_showComposeToolbar"
                         type="checkbox"
@@ -274,14 +294,31 @@
                         accesskey="&showFormatToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showTaskbar"
-                        type="checkbox"/>
+                        type="checkbox"
+                        label="&showTaskbarCmd.label;"
+                        accesskey="&showTaskbarCmd.accesskey;"
+                        oncommand="goToggleToolbar('status-bar', 'menu_showTaskbar')"
+                        checked="true"/>
               <menuseparator/>
               <menuitem id="menu_customizeToolbar" oncommand="CustomizeMailToolbar('compose-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
                     
             </menupopup>
           </menu>
           <menuseparator/>
-          <menu id = "maileditCharsetMenu" />
+          <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
+            <template>
+              <rule>
+                <menupopup>
+                  <menuitem type="radio" name="charsetGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </menupopup>
+              </rule>
+            </template>
+
+            <menupopup>
+              <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'mailedit')"/>
+              <menuseparator />
+            </menupopup>
+          </menu>
         </menupopup>
       </menu>
   
@@ -385,7 +422,7 @@
             <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" oncommand="toAddressBook();" id="tasksMenuAddressBook" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
             <menuseparator/>
             <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
-            <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>
+            <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;" oncommand="goDoCommand('cmd_preferences')"/>
          </menupopup>
       </menu>
       
@@ -466,7 +503,46 @@
               <menupopup id="msgIdentityPopup"/>
             </menulist>
           </hbox> 
-          <listbox id="addressingWidget" flex="1"/>
+          <listbox id="addressingWidget" flex="1" seltype="multiple" rows="4"
+                   onkeydown="awKeyDown(event, this)"
+                   onclick="awClickEmptySpace(event.originalTarget, true)"
+                   ondragover="DragOverAddressingWidget(event);"
+                   ondragdrop="return DropOnAddressingWidget(event);">
+            <listcols>
+              <listcol id="typecol-addressingWidget"/>
+              <listcol id="textcol-addressingWidget" flex="1"/>
+            </listcols>
+            <listitem class="addressingWidgetItem" allowevents="true">
+              <listcell class="addressingWidgetCell" align="stretch">
+                <menulist id="addressCol1#1" disableonsend="true"
+                          class="aw-menulist menulist-compact" flex="1"  
+                          oncommand="gContentChanged=true; awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
+                  <menupopup>
+                    <menuitem value="addr_to" label="&toAddr.label;"/>
+                    <menuitem value="addr_cc" label="&ccAddr.label;"/>
+                    <menuitem value="addr_bcc" label="&bccAddr.label;"/>
+                    <menuitem value="addr_reply" label="&replyAddr.label;"/>
+                    <menuitem value="addr_newsgroups" label="&newsgroupsAddr.label;"/>
+                    <menuitem value="addr_followup" label="&followupAddr.label;"/>
+                  </menupopup>
+                </menulist>
+              </listcell>
+              <listcell class="addressingWidgetCell">
+                <textbox id="addressCol2#1" class="plain textbox-addressingWidget uri-element"
+                         type="autocomplete" flex="1"
+                         searchSessions="addrbook" timeout="300" maxrows="4" 
+                         autoFill="true" autoFillAfterMatch="true" forceComplete="true"
+                         minResultsForPopup="3" ignoreBlurWhileSearching="true"
+                         ontextcommand="awRecipientTextCommand(eventParam, this)"
+                         onerrorcommand="awRecipientErrorCommand(eventParam, this)"
+                         oninput="gContentChanged=true; setupAutocomplete();" disableonsend="true"
+                         onkeypress="awRecipientKeyPress(event, this)"
+                         onkeydown="awRecipientKeyDown(event, this)">
+                  <image class="person-icon" onclick="this.parentNode.select();"/>
+                </textbox>
+              </listcell>
+            </listitem>
+          </listbox>
           <hbox align="center">
             <label value="&subject.label;" accesskey="&subject.accesskey;" control="msgSubject"/>
             <textbox id="msgSubject" flex="1" class="toolbar" disableonsend="true"
@@ -508,7 +584,44 @@
       <toolbarseparator class="toolbarseparator-standard"/>
       <toolbarbutton id="AlignPopupButton"/>
       <toolbarbutton id="InsertPopupButton"/>
-      <toolbarbutton id="smileButtonMenu" padwithspace="true"/>
+      <toolbarbutton type="menu" id="smileButtonMenu" padwithspace="true"
+                     observes="cmd_smiley"
+                     tooltiptext="&SmileButton.tooltip;">
+        <menupopup id="smilyPopup">
+          <menuitem class="smiley insert-smile menuitem-iconic" label="&smiley1Cmd.label;" 
+                    oncommand="doStatefulCommand('cmd_smiley', ':-)'  )"/>
+          <menuitem class="smiley insert-frown menuitem-iconic" label="&smiley2Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-('  )"/>                                              
+          <menuitem class="smiley insert-wink menuitem-iconic" label="&smiley3Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ';-)'  )"/>                       
+          <menuitem class="smiley insert-tongue menuitem-iconic" label="&smiley4Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-P'  )"/>
+          <menuitem class="smiley insert-laughing menuitem-iconic" label="&smiley5Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-D'  )"/>
+          <menuitem class="smiley insert-embarrassed menuitem-iconic" label="&smiley6Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-['  )"/>
+          <menuitem class="smiley insert-undecided menuitem-iconic" label="&smiley7Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-\\' )"/>
+          <menuitem class="smiley insert-surprise menuitem-iconic" label="&smiley8Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', '=-O' )"/>           
+          <menuitem class="smiley insert-kiss menuitem-iconic" label="&smiley9Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-*' )"/>           
+          <menuitem class="smiley insert-yell menuitem-iconic" label="&smiley10Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', '>:o' )"/>           
+          <menuitem class="smiley insert-cool menuitem-iconic" label="&smiley11Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', '8-)' )"/>           
+          <menuitem class="smiley insert-money menuitem-iconic" label="&smiley12Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-$' )"/>           
+          <menuitem class="smiley insert-foot menuitem-iconic" label="&smiley13Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-!' )"/>           
+          <menuitem class="smiley insert-innocent menuitem-iconic" label="&smiley14Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', 'O:-)' )"/>           
+          <menuitem class="smiley insert-cry menuitem-iconic" lbel="&smiley15Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':\'(' )"/>
+          <menuitem class="smiley insert-sealed menuitem-iconic" label="&smiley16Cmd.label;"
+                    oncommand="doStatefulCommand('cmd_smiley', ':-X' )"/>           
+        </menupopup>
+      </toolbarbutton>
       <spacer flex="1"/>
     </toolbar>
   </toolbox>

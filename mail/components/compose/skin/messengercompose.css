@@ -29,6 +29,16 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: options menu icons ::::: */
+
+.icon-mail16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail-16.gif");
+}
+
+.icon-addressbook16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook-16.gif");
+}
+
 /* ::::: primary toolbar buttons ::::: */
  
 .toolbarbutton-1 {
@@ -175,4 +185,42 @@ treechildren:-moz-tree-image(remote-err) {
 .composemenu-text-2 {
   font-style: italic;
   color: GrayText;
+}
+
+/* ::::: addressing widget ::::: */
+  
+#addressingWidget {
+  -moz-user-focus: none;
+  width: 0;
+}  
+
+#typecol-addressingWidget {
+  min-width: 9em;
+  border-right: 1px solid #CACAFF;
+}
+
+.addressingWidgetItem,
+.dummy-row {
+  border: none !important;
+  background-color: inherit !important;
+  color: inherit !important;
+}
+
+.addressingWidgetCell {
+  border-bottom: 1px solid #CACAFF;
+  padding: 0px;
+}
+
+.addressingWidgetCell:first-child {
+  border-top: none;
+}
+
+.dummy-row-cell:first-child {
+  border-top: none;
+  border-bottom: 1px solid #CACAFF;
+}
+
+.person-icon {
+  margin: 0 3px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.gif");
 }

@@ -3,6 +3,12 @@
 
 <!ENTITY fromAddr.label "From:">
 <!ENTITY fromAddr.accesskey "r">
+<!ENTITY toAddr.label "To:"> 
+<!ENTITY ccAddr.label "Cc:"> 
+<!ENTITY bccAddr.label "Bcc:"> 
+<!ENTITY replyAddr.label "Reply-To:"> 
+<!ENTITY newsgroupsAddr.label "Newsgroup:"> 
+<!ENTITY followupAddr.label "Followup-To:"> 
 <!ENTITY subject.label  "Subject:">
 <!ENTITY subject.accesskey "S">
 <!ENTITY attachments.label "Attachments:">
@@ -11,8 +17,20 @@
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
 <!-- File menu items -->
+<!ENTITY fileMenu.label "File"> 
+<!ENTITY fileMenu.accesskey "f">
+<!ENTITY newMenu.label "New">
+<!ENTITY newMenu.accesskey "N">
 <!ENTITY newMessage.label "Message">  
 <!ENTITY newMessage.accesskey "M">  
+<!ENTITY attachFileCmd.label "Attach File...">
+<!ENTITY attachFileCmd.key "">
+<!ENTITY attachFileCmd.accesskey "F">
+<!ENTITY attachPageCmd.label "Attach Web Page...">
+<!ENTITY attachPageCmd.accesskey "W">
+<!ENTITY closeCmd.label "Close">  
+<!ENTITY closeCmd.key "W">  
+<!ENTITY closeCmd.accesskey "c">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY saveCmd.key "S">
 <!ENTITY saveCmd.accesskey "s">
@@ -24,11 +42,8 @@
 <!ENTITY saveAsDraftCmd.accesskey "D">
 <!ENTITY saveAsTemplateCmd.label "Template">
 <!ENTITY saveAsTemplateCmd.accesskey "T">
-<!ENTITY attachFileCmd.label "Attach File...">
-<!ENTITY attachFileCmd.key "">
-<!ENTITY attachFileCmd.accesskey "F">
-<!ENTITY attachPageCmd.label "Attach Web Page...">
-<!ENTITY attachPageCmd.accesskey "W">
+<!ENTITY offlineGoOfflineCmd.label "Work Offline">
+<!ENTITY offlineGoOfflineCmd.accesskey "w">
 <!ENTITY sendNowCmd.label "Send Now">
 <!ENTITY sendCmd.keycode "VK_RETURN">
 <!ENTITY sendNowCmd.accesskey "d">
@@ -40,9 +55,34 @@
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.key "P">
 <!ENTITY printCmd.accesskey "P">
-<!ENTITY closeCmd.label "Close">
+<!ENTITY quitApplicationCmd.label "Exit"> 
+<!ENTITY quitApplicationCmd.key "Q"> 
+<!ENTITY quitApplicationCmd.accesskey "x">
 
 <!-- Edit menu items -->
+<!ENTITY editMenu.label "Edit"> 
+<!ENTITY editMenu.accesskey "e">
+<!ENTITY undoCmd.label "Undo">  
+<!ENTITY undoCmd.key "Z">  
+<!ENTITY undoCmd.accesskey "u"> 
+<!ENTITY redoCmd.label "Redo">  
+<!ENTITY redoCmd.key "Y">  
+<!ENTITY redoCmd.accesskey "r"> 
+<!ENTITY cutCmd.label "Cut">  
+<!ENTITY cutCmd.key "X">  
+<!ENTITY cutCmd.accesskey "t"> 
+<!ENTITY copyCmd.label "Copy">  
+<!ENTITY copyCmd.key "C">  
+<!ENTITY copyCmd.accesskey "c"> 
+<!ENTITY pasteCmd.label "Paste">  
+<!ENTITY pasteCmd.key "V">  
+<!ENTITY pasteCmd.accesskey "p">
+<!ENTITY deleteCmd.label "Delete">  
+<!ENTITY deleteCmd.key "D">  
+<!ENTITY deleteCmd.accesskey "d"> 
+<!ENTITY selectAllCmd.label "Select All">  
+<!ENTITY selectAllCmd.key "A">  
+<!ENTITY selectAllCmd.accesskey "a"> 
 <!ENTITY findCmd.label "Find and Replace...">
 <!ENTITY findCmd.key "F">
 <!ENTITY findCmd.accesskey "F">
@@ -53,15 +93,19 @@
 <!ENTITY findPrevCmd.label "Find Previous">
 <!ENTITY findPrevCmd.key "G">
 <!ENTITY findPrevCmd.key2 "VK_F3">
-<!ENTITY findPrevCmd.accesskey "v">
-<!ENTITY accountManagerCmd.label "Account Settings...">
-<!ENTITY accountManagerCmd.accesskey "c">
+<!ENTITY findPrevCmd.accesskey "v"> 
 
 <!-- View menu items -->
+<!ENTITY viewMenu.label "View"> 
+<!ENTITY viewMenu.accesskey "v">
+<!ENTITY viewToolbarsMenu.label "Toolbars"> 
+<!ENTITY viewToolbarsMenu.accesskey "T"> 
 <!ENTITY showComposeToolbarCmd.label "Mail Toolbar">
 <!ENTITY showComposeToolbarCmd.accesskey "o">
 <!ENTITY showFormatToolbarCmd.label "Formatting Toolbar">
 <!ENTITY showFormatToolbarCmd.accesskey "F">
+<!ENTITY showTaskbarCmd.label "Status Bar">  
+<!ENTITY showTaskbarCmd.accesskey "S"> 
 <!ENTITY showParagraphMarksCmd.label ".Show Paragraph Marks">
 <!ENTITY pageSourceCmd.label ".Page Source">
 <!ENTITY pageSourceCmd.accesskey "u">
@@ -118,6 +162,11 @@
 <!-- Options menu items -->
 <!ENTITY optionsMenu.label "Options">
 <!ENTITY optionsMenu.accesskey "p">
+<!ENTITY accountManagerCmd.label "Account Settings...">
+<!ENTITY accountManagerCmd.accesskey "c">
+<!ENTITY preferencesCmd.label "Options...">
+<!ENTITY preferencesCmd.key "O">  
+<!ENTITY preferencesCmd.accesskey "O">
 
 <!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
 <!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
@@ -216,6 +265,22 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
+<!ENTITY smiley1Cmd.label "Smile">
+<!ENTITY smiley2Cmd.label "Frown">
+<!ENTITY smiley3Cmd.label "Wink">
+<!ENTITY smiley4Cmd.label "Tongue-out">
+<!ENTITY smiley5Cmd.label "Laughing">
+<!ENTITY smiley6Cmd.label "Embarrassed">
+<!ENTITY smiley7Cmd.label "Undecided">
+<!ENTITY smiley8Cmd.label "Surprise">
+<!ENTITY smiley9Cmd.label "Kiss">
+<!ENTITY smiley10Cmd.label "Yell">
+<!ENTITY smiley11Cmd.label "Cool">
+<!ENTITY smiley12Cmd.label "Money-Mouth">
+<!ENTITY smiley13Cmd.label "Foot-in-Mouth">
+<!ENTITY smiley14Cmd.label "Innocent">
+<!ENTITY smiley15Cmd.label "Cry">
+<!ENTITY smiley16Cmd.label "Lips-are-Sealed">
 
 <!-- context menu items -->
 <!ENTITY undo.label "Undo">
