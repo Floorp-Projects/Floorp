@@ -36,7 +36,15 @@ MOZ_WINCONSOLE=0
 endif
 endif
 
+ifneq (,$(filter mac,$(MOZ_WIDGET_TOOLKIT)))
+ifndef BUILD_STATIC_LIBS
+GRE_BUILD       = 1;
+endif
+endif
+
+ifdef GRE_BUILD
 DEFINES		+= -DXPCOM_GLUE
+endif
 
 MODULE		= apprunner
 REQUIRES	= xpcom \
@@ -136,12 +144,19 @@ endif
 # If you change anything that mozilla links to, please talk to dougt@netscape.com
 LIBS		+= \
 		$(MOZ_JS_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+ifdef GRE_BUILD
+LIBS            += \
 		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
-		$(NSPR_LIBS) \
 		$(NULL)
+else
+LIBS		+= $(XPCOM_LIBS)
+endif
 
 ifdef MOZ_JPROF
 LIBS         += -ljprof
