@@ -1633,6 +1633,19 @@ nsDocument::EndLoad()
       i--;
     }
   }
+
+  // Fire a DOM event notifying listeners that this document has been
+  // loaded (excluding images and other loads initiated by this
+  // document).
+  nsCOMPtr<nsIDOMEvent> event;
+  CreateEvent(NS_LITERAL_STRING("Events"),
+              getter_AddRefs(event));
+  if (event) {
+    event->InitEvent(NS_LITERAL_STRING("DOMContentLoaded"), PR_TRUE, PR_TRUE);
+    PRBool noDefault;
+    DispatchEvent(event, &noDefault);
+  }
+
   return NS_OK;
 }
 
@@ -3147,7 +3160,8 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 
   nsCOMPtr<nsIEventStateManager> esm;
   if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
-    return esm->DispatchNewEvent((nsISupports *)(nsIDOMDocument *)this, aEvent, _retval);
+    return esm->DispatchNewEvent((nsISupports *)(nsIDOMDocument *)this, aEvent,
+                                 _retval);
   }
 
   return NS_ERROR_FAILURE;
