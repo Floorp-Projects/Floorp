@@ -141,13 +141,12 @@ sub gcc_parser {
     $filename =~ s/Makefile$/Makefile.in/;
 
     my $dir;
-    if (-e "$cvsroot/$tree/$builddir/$filename,v") {
+    if (-e "$cvsroot/$tree/$build_dir/$filename,v") {
       $dir = $build_dir;
     } else {
       unless(defined($dir = $file_hash_ref->{$filename})) {
         $dir = '[no_match]';
       }
-      warn "Did not find $cvsroot/$tree/$builddir/$filename,v\n" if $dir =~ /multiple/;
     }
     my $file = "$dir/$filename";
 
