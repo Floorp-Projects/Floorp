@@ -92,9 +92,6 @@ mozbrowser:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 libs:: mozbrowser
 	$(INSTALL) $< $(DIST)/bin
 	
-libs:: mozbrowser.exe.manifest
- 	$(INSTALL) $< $(DIST)/bin
-
 install:: mozbrowser
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
