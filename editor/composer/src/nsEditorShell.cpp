@@ -615,32 +615,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   rv = editor->PostCreate();
   if (NS_FAILED(rv)) return rv;
   
-  // get the URL of the page we are editing
-  if (aUrl)
-  {
-   
-    // if this is a file URL of a file that exists locally, we'll stash the nsIFile
-    // in the disk document, so that later saves save back to the same file.
-    nsCOMPtr<nsIFileURL> pageFileURL(do_QueryInterface(aUrl));
-    PRBool isFile=PR_FALSE;
-    rv = aUrl->SchemeIs("file", &isFile);
-    if (NS_SUCCEEDED(rv) && isFile && pageFileURL)
-    {
-      nsCOMPtr<nsIFile> pageFile;
-      pageFileURL->GetFile(getter_AddRefs(pageFile));
-    
-      PRBool  fileExists;
-      if (pageFile && NS_SUCCEEDED(pageFile->Exists(&fileExists)) && fileExists)
-      {
-        nsCOMPtr<nsIDOMDocument>  domDoc;
-        editor->GetDocument(getter_AddRefs(domDoc));
-        nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(domDoc));
-        if (diskDoc)
-          diskDoc->InitDiskDocument(pageFile);
-      }
-    }
-  }
-
   if (!mMailCompose) {
     // Set the editor-specific Window caption
     UpdateWindowTitleAndRecentMenu(PR_TRUE);
@@ -1756,6 +1730,7 @@ nsEditorShell::TransferDocumentStateListeners()
   return NS_OK;
 }
 
+// this method should move into JS
 NS_IMETHODIMP
 nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWindowInternal* inCheckWindow, PRBool *aDidFind)
 {
@@ -1763,48 +1738,66 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   
   *aDidFind = PR_FALSE;
   
-  
-  // It's really hard to compare nsIFiles with file URLs; there seems to be
-  // a lot of work here.  Ideally, we should be able to use nsIFile::GetURL,
-  // but it is only implemented on Windows.
-  nsCAutoString  fileURL; fileURL.AssignWithConversion(inFileURL);
-  
-  // make a temp URL for testing against
-  nsresult rv = NS_OK;
-  
-  nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  nsresult rv;
+  nsAutoString fileurlstring(inFileURL);
+  nsCOMPtr<nsIURI> newFileLocation;
+  rv = NS_NewURI(getter_AddRefs(newFileLocation), fileurlstring);
   if (NS_FAILED(rv)) return rv;
-  
-  rv = urlFile->SetURL(fileURL.get());
-  // We fail if inFileURL isn't a "file:" URL, but that's ok.
-  //TODO: When publishing is done, we should support checking remote URL as well
-  if (NS_FAILED(rv)) return NS_OK;
-  
+
   nsCOMPtr<nsIDOMWindow> contentWindow;
   inCheckWindow->GetContent(getter_AddRefs(contentWindow));
-  if (contentWindow)
+  if (!contentWindow) return NS_ERROR_NULL_POINTER;
+
+  // get the content doc
+  nsCOMPtr<nsIDOMDocument> contentDoc;          
+  contentWindow->GetDocument(getter_AddRefs(contentDoc));
+
+  // use the contentDoc to get the document's URI
+  nsCOMPtr<nsIURI> docURI;
+  rv = GetDocumentURI(contentDoc, getter_AddRefs(docURI));
+  if (rv == NS_ERROR_NOT_INITIALIZED) return NS_OK; // editing about:blank so no uri yet
+  if (NS_FAILED(rv) || !docURI) return NS_ERROR_NULL_POINTER;
+
+  // this does a simple string compare but isn't really checking for aliases
+  // or ".." in path which might actually cause this method to fail to match
+  // even though the same file is being edited
+  PRBool isSameFile;          
+  if (NS_SUCCEEDED(docURI->Equals(newFileLocation, &isSameFile)) && isSameFile)
   {
-    // get the content doc
-    nsCOMPtr<nsIDOMDocument> contentDoc;          
-    contentWindow->GetDocument(getter_AddRefs(contentDoc));
-    nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(contentDoc));   // safe with NULL contentDoc
-    if (diskDoc)
+    *aDidFind = PR_TRUE;
+  }
+  else 
+  {
+    // do the schemes match?  if not, these are not matches
+    // check file: protocol first
+    PRBool doContinueChecking = PR_TRUE;
+    nsCOMPtr<nsIFileURL> currentProtocolFile(do_QueryInterface(docURI));
+    if (currentProtocolFile)
     {
-      nsCOMPtr<nsIFile> docFileSpec;
-      if (NS_SUCCEEDED(diskDoc->GetFileSpec(getter_AddRefs(docFileSpec))) && docFileSpec)
+      nsCOMPtr<nsIFileURL> newProtocolFile(do_QueryInterface(newFileLocation));
+      if (!newProtocolFile)
       {
-        PRBool    isSameFile;          
-        if (NS_SUCCEEDED(docFileSpec->Equals(urlFile, &isSameFile)) && isSameFile)
-        {
-          *aDidFind = PR_TRUE;
-        }
+        *aDidFind = PR_FALSE;
+        doContinueChecking = PR_FALSE;
       }
+      else if (NS_SUCCEEDED(currentProtocolFile->Equals(newProtocolFile, &isSameFile)) && isSameFile)
+      {
+        *aDidFind = PR_TRUE;
+        doContinueChecking = PR_FALSE;
+      }
+    }
+    
+    // check http urls... then ftp, then maybe even https... any others?
+    if (doContinueChecking)
+    {
+      // this is covered by bug #104908
     }
   }
 
   return NS_OK;
 }
 
+// this function should move into JS
 // helper function
 static nsresult GetExtensionForMIMEType(const char* inMIMEType, nsACString& outExtension)
 {
@@ -1831,13 +1824,247 @@ static nsresult GetExtensionForMIMEType(const char* inMIMEType, nsACString& outE
   return NS_OK;
 }
 
+// this method should move into JS
+nsresult 
+nsEditorShell::PromptAndSetTitleIfNone(nsIDOMHTMLDocument *aHTMLDoc, PRBool *aTitleChanged, PRBool *retVal)
+{
+  *retVal = PR_FALSE;
 
+  if (!aHTMLDoc)
+    return NS_ERROR_NULL_POINTER;
+
+  // Get existing document title, check its length (we don't need to prompt if there is one)
+  nsAutoString title;
+  nsresult res = aHTMLDoc->GetTitle(title);
+  if (NS_FAILED(res)) return res;
+  if (title.Length() != 0)
+  {
+    *retVal = PR_TRUE;
+    return NS_OK;
+  }
+
+  if (!mContentWindow)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+
+  // Use a "prompt" common dialog to get title string from user
+  nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+  if (!dialog)
+    return NS_ERROR_NULL_POINTER;
+
+//  PRUnichar *titleUnicode = ToNewUnicode(title);
+  PRUnichar *titleUnicode = nsnull;
+  nsAutoString captionStr, msgStr1, msgStr2;
+  
+  GetBundleString(NS_LITERAL_STRING("DocumentTitle"), captionStr);
+  GetBundleString(NS_LITERAL_STRING("NeedDocTitle"), msgStr1); 
+  GetBundleString(NS_LITERAL_STRING("DocTitleHelp"), msgStr2);
+  msgStr1 += PRUnichar('\n');
+  msgStr1 += msgStr2;
+  
+  res = dialog->Prompt(cwP, captionStr.get(), msgStr1.get(),
+                       &titleUnicode, 0, 0, retVal); 
+  if (NS_FAILED(res)) return res;
+  if (*retVal == PR_FALSE)
+  {
+    // This indicates Cancel was selected
+    return NS_OK;
+  }
+
+  // This sets title in HTML node and sets title changed flag
+  nsDependentString temp(titleUnicode);
+  *aTitleChanged = temp.Length() > 0;
+  mEditor->SetDocumentTitle(temp);
+  nsCRT::free(titleUnicode);
+  return NS_OK;
+}
+
+
+// this method should move into JS
+// it should be split into "ShowSaveFilePicker" and "GetSuggestedFileName"
+nsresult
+nsEditorShell::ShowSaveFilePicker(PRBool aDoSaveAsText, nsIURI *aDocumentURI, 
+                                  nsIDOMHTMLDocument *ahtmlDocument, const char *aMIMEType,
+                                  PRInt16 *aDialogResult, nsIFile **aResultingLocation)
+{
+  // create a file picker instance
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &res);
+  if (!filePicker)
+  {
+    NS_ASSERTION(0, "Failed to get file picker widget");
+    return res;
+  }
+
+  // determine prompt string based on type of saving we'll do
+  nsAutoString promptString;
+  if (aDoSaveAsText && mEditorType == eHTMLTextEditorType)
+    GetBundleString(NS_LITERAL_STRING("ExportToText"), promptString);
+  else
+    GetBundleString(NS_LITERAL_STRING("SaveDocumentAs"), promptString);
+
+  // Initialize nsIFilePicker
+  nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryReferent(mContentWindow));
+  res = filePicker->Init(parentWindow, promptString.get(), nsIFilePicker::modeSave);
+  if (NS_FAILED(res)) return res;
+  
+  // Set filters according to the type of output
+  if (aDoSaveAsText)
+    filePicker->AppendFilters(nsIFilePicker::filterText);
+  else
+    filePicker->AppendFilters(nsIFilePicker::filterHTML);
+  filePicker->AppendFilters(nsIFilePicker::filterAll);
+
+  // brade:  pull this stuff out into a separate JS function:  GetSuggestedFileName
+  // determine suggested file name
+  // this will take several steps:
+  //   check for existing file name we can use
+  //   check if there is a title we can use
+  nsCOMPtr<nsIURI>tmpURI(aDocumentURI);
+  if (!aDocumentURI)
+  {
+    // check the current url, use that file name if possible
+    // make a uri with the html document's url; then QI to an nsIURL
+    // from nsIURL we can get just the base name of the file which is what we want
+    // we'll add on the extension later
+    nsAutoString urlstring;
+    if (ahtmlDocument)
+      res = ahtmlDocument->GetURL(urlstring);
+    if (!urlstring.IsEmpty())
+    {
+      char *docURLChar = ToNewCString(urlstring);
+      if (docURLChar)
+      {
+        res = NS_NewURI(getter_AddRefs(tmpURI), docURLChar);
+        nsCRT::free(docURLChar);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
+  
+  nsAutoString fileName;
+  nsCOMPtr<nsIURL> documentURL(do_QueryInterface(tmpURI));
+  if (tmpURI && documentURL)
+  {
+    char *fileNameChar = nsnull;
+    res = documentURL->GetFileBaseName(&fileNameChar);
+    if (NS_SUCCEEDED(res) && fileNameChar)
+      fileName.AssignWithConversion(fileNameChar);
+    if (fileNameChar)
+      nsCRT::free(fileNameChar);
+  }
+
+  // now let's try using the page title
+  nsAutoString title;
+  if (ahtmlDocument)
+  {
+    res = ahtmlDocument->GetTitle(title);
+    if (NS_FAILED(res)) return res;
+  }
+
+  // if we don't have a filename but we do have a title...
+  if (fileName.IsEmpty() && !title.IsEmpty())
+  {
+    // clean up the title to make it a usable filename
+    // Strip out quote character
+    PRUnichar quote = (PRUnichar)'\"';
+    title.StripChar(quote);
+
+    //Replace "bad" filename characteres with "_"
+    title.ReplaceChar(" .\\/@:", (PRUnichar)'_');
+    fileName.Append(title);
+  }
+
+  // if we still don't have a file name, let's just go with "untitled"
+  if (fileName.Length() == 0)
+    fileName.Append(NS_LITERAL_STRING("untitled"));
+
+  // now we'll add the correct extension from the MIME type
+  nsCAutoString fileExt(aDoSaveAsText ? "txt" : "html");
+  res = GetExtensionForMIMEType(aMIMEType, fileExt);
+  if (NS_FAILED(res)) return res;
+  fileName.Append(PRUnichar('.'));
+  fileName.AppendWithConversion(fileExt.get());
+
+  // now let's actually set the filepicker's suggested filename
+  if (fileName.Length() > 0)
+    filePicker->SetDefaultString(fileName.get());
+
+  // set the file picker's current directory
+  // assuming we have information needed (like prior saved location)
+  if (tmpURI && documentURL)
+  {
+    nsCOMPtr<nsIFileURL> fileurl(do_QueryInterface(documentURL));
+    if (fileurl)
+    {
+      nsCOMPtr<nsIFile> fileLocation;
+      res = fileurl->GetFile(getter_AddRefs(fileLocation));
+      if (NS_SUCCEEDED(res) && fileLocation)
+      {
+        nsCOMPtr<nsIFile> parentPath;
+        res = fileLocation->GetParent(getter_AddRefs(parentPath));
+        if (NS_SUCCEEDED(res) && parentPath)
+        {
+          nsCOMPtr<nsILocalFile> localParentPath(do_QueryInterface(parentPath));
+          if (localParentPath)
+            filePicker->SetDisplayDirectory(localParentPath);
+        }
+      }
+    }
+  }
+
+  // so everything should be setup now, lets show the dialog!!!
+  res = filePicker->Show(aDialogResult);
+  if (NS_FAILED(res)) return res;
+
+  // if the user didn't cancel, let's set the resulting file & location
+  if (nsIFilePicker::returnCancel != *aDialogResult)
+  {
+    nsCOMPtr<nsILocalFile> localFile;
+    res = filePicker->GetFile(getter_AddRefs(localFile));
+    if (NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIFile> tempFile(do_QueryInterface(localFile));
+    *aResultingLocation = tempFile;
+    NS_IF_ADDREF(*aResultingLocation);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetDocumentURI(nsIDOMDocument *aDoc, nsIURI **aDocumentURI)
+{
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDoc);
+  if (!htmlDoc) return NS_ERROR_NULL_POINTER;
+
+  // get the url of the current document
+  nsAutoString urlstring;
+  nsresult res = htmlDoc->GetURL(urlstring);
+  if (NS_FAILED(res)) return res;
+
+  // if it's about:blank, then we haven't saved yet
+  if (urlstring.EqualsIgnoreCase("about:blank"))
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // create the uri to return
+  char *docURLChar = ToNewCString(urlstring);
+  if (docURLChar)
+  {
+    res = NS_NewURI(aDocumentURI, docURLChar);
+    nsCRT::free(docURLChar);
+    if (NS_FAILED(res)) return res;
+  }
+
+  return NS_OK;
+}
+
+// this method should move into JS
 NS_IMETHODIMP 
 nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* aMimeType, PRBool *_retval)
 {
-  nsresult  res = NS_NOINTERFACE;
   *_retval = PR_FALSE;
-
   NS_ENSURE_ARG_POINTER((aMimeType));
   if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1848,282 +2075,137 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
   if (!mimeTypeCStr.Equals("text/html") && !saveAsText)
     return NS_ERROR_FAILURE;
 
-  nsAutoString    mimeType(aMimeType);
-  
+  // if we don't have the right editor type, bail now
+  if ((mEditorType != ePlainTextEditorType)
+      && (mEditorType != eHTMLTextEditorType))
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsAutoString mimeType(aMimeType);
+
   // if we're saving as text, force the text/plain MIME type (because we use this
   // to get a content serializer on save)
   if (saveAsText)
     mimeType.Assign(NS_LITERAL_STRING("text/plain").get());
-  
-  switch (mEditorType)
+
+  // get the editor
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor)
+    return NS_NOINTERFACE;
+
+  // get the document
+  nsCOMPtr<nsIDOMDocument> doc;
+  nsresult res = editor->GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(res)) return res;
+  if (!doc) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(doc);
+  if (!diskDoc)
+    return NS_ERROR_NO_INTERFACE;
+
+  // find out if the doc already has a fileSpec associated with it.
+  nsCOMPtr<nsIURI> docFile;
+  PRBool noFileSpec = (GetDocumentURI(doc, getter_AddRefs(docFile)) == NS_ERROR_NOT_INITIALIZED);
+  PRBool mustShowFileDialog = aSaveAs || noFileSpec;
+
+  // this is where it starts to get messy
+  PRBool replacing = !aSaveAs;
+  PRBool titleChanged = PR_FALSE;
+
+  nsCOMPtr<nsIURL> docURL(do_QueryInterface(docFile));
+  nsCOMPtr<nsIFileURL> docFileURL(do_QueryInterface(docFile));
+  nsCOMPtr<nsIFile> resultingFileLocation;
+  if (docFileURL)
   {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-    {
-      nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-      if (editor)
-      {
-        // get the document
-        nsCOMPtr<nsIDOMDocument> doc;
-        res = editor->GetDocument(getter_AddRefs(doc));
-        if (NS_FAILED(res)) return res;
-        if (!doc) return NS_ERROR_NULL_POINTER;
-  
-        nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(doc);
-        if (!diskDoc)
-          return NS_ERROR_NO_INTERFACE;
-
-        // find out if the doc already has a fileSpec associated with it.
-        nsCOMPtr<nsIFile>    docFile;
-        PRBool noFileSpec = (diskDoc->GetFileSpec(getter_AddRefs(docFile)) == NS_ERROR_NOT_INITIALIZED);
-        PRBool mustShowFileDialog = aSaveAs || noFileSpec;
-        PRBool replacing = !aSaveAs;
-        PRBool titleChanged = PR_FALSE;
-        
-        // Get existing document title
-        nsAutoString title;
-        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
-        if (!htmlDoc) return NS_ERROR_FAILURE;
-        res = htmlDoc->GetTitle(title);
-        if (NS_FAILED(res)) return res;
-        
-        if (mustShowFileDialog)
-        {
-          // Prompt for title ONLY if existing title is empty and we are saving to HTML
-          if (!mMailCompose && (!saveAsText && mEditorType == eHTMLTextEditorType) && (title.Length() == 0))
-          {
-            // Use a "prompt" common dialog to get title string from user
-            nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
-            if (dialog)
-            { 
-              PRUnichar *titleUnicode = ToNewUnicode(title);
-              nsAutoString captionStr, msgStr1, msgStr2;
-              
-              GetBundleString(NS_LITERAL_STRING("DocumentTitle"), captionStr);
-              GetBundleString(NS_LITERAL_STRING("NeedDocTitle"), msgStr1); 
-              GetBundleString(NS_LITERAL_STRING("DocTitleHelp"), msgStr2);
-              msgStr1 += PRUnichar('\n');
-              msgStr1 += msgStr2;
-              
-              PRBool retVal = PR_FALSE;
-              if(!mContentWindow)
-                return NS_ERROR_NOT_INITIALIZED;
-              nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
-              if (!cwP) return NS_ERROR_NOT_INITIALIZED;
-
-              res = dialog->Prompt(cwP, captionStr.get(), msgStr1.get(),
-                                   &titleUnicode, 0, 0, &retVal); 
-              
-              if( retVal == PR_FALSE)
-              {
-                // This indicates Cancel was used -- don't continue saving
-                *_retval = PR_FALSE;
-                return NS_OK;
-              }
-              // This sets title in HTML node
-              {
-                nsDependentString temp(titleUnicode);
-                mEditor->SetDocumentTitle(temp);
-                title = temp;
-              }
-              nsCRT::free(titleUnicode);
-              titleChanged = PR_TRUE;
-            }
-          }
-
-          nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &res);
-          if (filePicker)
-          {
-            nsAutoString fileName;
-
-            nsAutoString  promptString;
-            if (saveAsText && mEditorType == eHTMLTextEditorType)
-              GetBundleString(NS_LITERAL_STRING("ExportToText"), promptString);
-            else
-              GetBundleString(NS_LITERAL_STRING("SaveDocumentAs"), promptString);
-
-            // Initialize nsIFilePicker
-            nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryReferent(mContentWindow));
-            res = filePicker->Init(parentWindow, promptString.get(), nsIFilePicker::modeSave);
-            if (NS_FAILED(res))
-              return res;
-            
-            // Set filters according to the type of output
-            if (saveAsText)
-              filePicker->AppendFilters(nsIFilePicker::filterText);
-            else
-              filePicker->AppendFilters(nsIFilePicker::filterHTML);
-
-            filePicker->AppendFilters(nsIFilePicker::filterAll);
-            
-            if (noFileSpec)
-            {
-              // check the current url, use that file name if possible
-              nsString urlstring;
-              res = htmlDoc->GetURL(urlstring);
-
-              // if it's not a local file already, grab the current file name
-              if ( (urlstring.CompareWithConversion("file", PR_TRUE, 4) != 0 )
-                && (urlstring.CompareWithConversion("about:blank", PR_TRUE, -1) != 0) )
-              {
-                // remove cruft before file name including '/'
-                // if the url ends with a '/' then the whole string will be cut
-                PRInt32 index = urlstring.RFindChar((PRUnichar)'/', PR_FALSE, -1, -1 );
-                if ( index != -1 )
-                {
-                  urlstring.Cut(0, index + 1);
-                  if (urlstring.Length() > 0)
-                  {
-                    // Then truncate at any existing "#", "?" or "." since we replace with ".html"
-                    index = urlstring.RFindChar((PRUnichar)'.', PR_FALSE, -1, -1 );
-                    if ( index != -1)
-                      urlstring.Truncate(index);
-                    if (urlstring.Length() > 0)
-                    {
-                      index = urlstring.RFindChar((PRUnichar)'#', PR_FALSE, -1, -1 );
-                      if ( index != -1)
-                        urlstring.Truncate(index);
-                      if (urlstring.Length() > 0)
-                      {
-                        index = urlstring.RFindChar((PRUnichar)'?', PR_FALSE, -1, -1 );
-                        if ( index != -1)
-                          urlstring.Truncate(index);
-                      }
-                    }
-                    if (urlstring.Length() > 0)
-                    {
-                      title = urlstring;
-                    }
-                  }
-                }
-              }
-              
-              // Use page title as suggested name for new document
-              if (title.IsEmpty())
-              {
-                title.AppendWithConversion("untitled");
-              }
-              else
-              {
-                // Strip out quote character
-                PRUnichar quote = (PRUnichar)'\"';
-                title.StripChar(quote);
-
-                //Replace "bad" filename characteres with "_"
-                title.ReplaceChar(" .\\/@:", (PRUnichar)'_');
-              }
-
-              // get the correct extension from the MIME type here
-              fileName = title;
-              nsCAutoString fileExt(saveAsText ? "txt" : "html");
-              GetExtensionForMIMEType(mimeTypeCStr.get(), fileExt);
-              fileName.Append(PRUnichar('.'));
-              fileName.AppendWithConversion(fileExt.get());
-            } 
-            else  // have a file spec
-            {
-              nsXPIDLString  leafName;
-              docFile->GetUnicodeLeafName(getter_Copies(leafName));
-              if (leafName.get() && *leafName)
-                fileName.Assign(leafName);
-
-              if (saveAsText)
-              {
-                // Replace html-related extension with "txt"
-                PRInt32 index = fileName.RFind(".html", PR_TRUE);
-                if (index == -1)
-                  index = fileName.RFind(".htm", PR_TRUE);
-                if (index == -1)
-                  index = fileName.RFind(".shtml", PR_TRUE);
-                if (index > 0)
-                {
-                  nsCAutoString fileExt("txt");
-                  GetExtensionForMIMEType(mimeTypeCStr.get(), fileExt);
-
-                  // Truncate after "." and append "txt" extension
-                  fileName.SetLength(index+1);
-                  fileName.AppendWithConversion(fileExt.get());
-                }
-              }
-
-              nsCOMPtr<nsIFile> parentPath;
-              if (NS_SUCCEEDED(docFile->GetParent(getter_AddRefs(parentPath))))
-              {
-                nsCOMPtr<nsILocalFile> localParentPath(do_QueryInterface(parentPath));
-                if (localParentPath)
-                  filePicker->SetDisplayDirectory(localParentPath);
-              }
-            }
-            
-            if (fileName.Length() > 0)
-              filePicker->SetDefaultString(fileName.get());
-
-            PRInt16 dialogResult;
-            // Finally show the dialog
-            res = filePicker->Show(&dialogResult);
-            if (NS_FAILED(res))
-              return res;
-
-            if (dialogResult == nsIFilePicker::returnCancel)
-            {
-              // Note that *_retval = PR_FALSE at this point
-              if (titleChanged)
-                UpdateWindowTitleAndRecentMenu(PR_FALSE);
-              return NS_OK;
-            }
-            replacing = (dialogResult == nsIFilePicker::returnReplace);
-            
-            nsCOMPtr<nsILocalFile> localFile;
-            res = filePicker->GetFile(getter_AddRefs(localFile));
-            if (NS_FAILED(res)) return res;
-            
-            docFile = do_QueryInterface(localFile, &res);
-            if (NS_FAILED(res)) return res;
-          }
-          else
-          {
-            NS_ASSERTION(0, "Failed to get file widget");
-            return res;
-          }
-
-          // Set the new URL for the webshell
-          if (!aSaveCopy)
-          {
-            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
-            if (webShell)
-            {
-              nsXPIDLCString docURLSpec;
-              res = docFile->GetURL(getter_Copies(docURLSpec));
-              if (NS_FAILED(res)) return res;
-            
-              nsAutoString  fileURLUnicode; fileURLUnicode.AssignWithConversion(docURLSpec);      
-              res = webShell->SetURL(fileURLUnicode.get());
-              if (NS_FAILED(res)) return res;
-            }
-          }
-        } // mustShowFileDialog
-
-        res = editor->SaveFile(docFile, replacing, aSaveCopy, mimeType);
-        if (NS_FAILED(res))
-        {
-          nsAutoString saveDocStr, failedStr;
-          GetBundleString(NS_LITERAL_STRING("SaveDocument"), saveDocStr);
-          GetBundleString(NS_LITERAL_STRING("SaveFileFailed"), failedStr);
-          Alert(saveDocStr, failedStr);
-        } else {
-          // File was saved successfully
-          *_retval = PR_TRUE;
-        }
-        // Update window title to show possibly different filename
-        // This also covers problem that after undoing a title change,
-        //   window title looses the extra [filename] part that this adds
-        UpdateWindowTitleAndRecentMenu(PR_TRUE);
-      }
-      break;
-    }
-    default:
-      res = NS_ERROR_NOT_IMPLEMENTED;
+    res = docFileURL->GetFile(getter_AddRefs(resultingFileLocation));
+    if (NS_FAILED(res))
+      mustShowFileDialog = PR_TRUE;  // probably a remote url if we didn't get a file url; force save dialog for now
   }
+
+  if (mustShowFileDialog)
+  {
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+    if (!htmlDoc) return NS_ERROR_FAILURE;
+
+    // Prompt for title if we are saving to HTML
+    if (!mMailCompose && !saveAsText && (mEditorType == eHTMLTextEditorType))
+    {
+      PRBool userContinuing; // not cancel
+      res = PromptAndSetTitleIfNone(htmlDoc, &titleChanged, &userContinuing);
+      if (NS_FAILED(res)) return res;
+      if (userContinuing == PR_FALSE)
+      {
+        *_retval = PR_FALSE;
+        return NS_OK;
+      }
+    }
+
+    // put up file picker
+    PRInt16 dialogResult;
+    res = ShowSaveFilePicker(saveAsText, docFile, htmlDoc,
+                             mimeTypeCStr.get(), &dialogResult, 
+                             getter_AddRefs(resultingFileLocation));
+    if (NS_FAILED(res)) return res;
+
+    // check if the user canceled
+    // if the user canceled and they set the title, we need to update
+    // the window title and recent menu even though they didn't save the file
+    if (dialogResult == nsIFilePicker::returnCancel)
+    {
+      if (titleChanged)
+        UpdateWindowTitleAndRecentMenu(PR_FALSE);
+
+      // Note that *_retval = PR_FALSE at this point
+      return NS_OK;
+    }
+
+    replacing = (dialogResult == nsIFilePicker::returnReplace);
+
+    char *docURLChar = nsnull;
+    res = resultingFileLocation->GetURL(&docURLChar);
+    if (NS_SUCCEEDED(res))
+    {
+      // create a new uri with result; set docFile to this new uri
+      nsCOMPtr<nsIURI> resultingURI;
+      res = NS_NewURI(getter_AddRefs(resultingURI), docURLChar);
+      if (NS_SUCCEEDED(res))
+        docFile = resultingURI;
+
+      // Set the new URL for the webshell unless we are saving a copy
+      if (NS_SUCCEEDED(res) && !aSaveCopy)
+      {
+        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
+        if (webShell && resultingFileLocation)
+        {
+          nsAutoString urlstring; urlstring.AssignWithConversion(docURLChar);
+          res = webShell->SetURL(urlstring.get());
+        }
+      }
+    }
+    
+    if (docURLChar) nsCRT::free(docURLChar);
+    if (NS_FAILED(res)) return res;
+  } // mustShowFileDialog
+
+  res = editor->SaveFile(docFile, replacing, aSaveCopy, mimeType);
+  if (NS_FAILED(res))
+  {
+    nsAutoString saveDocStr, failedStr;
+    GetBundleString(NS_LITERAL_STRING("SaveDocument"), saveDocStr);
+    GetBundleString(NS_LITERAL_STRING("SaveFileFailed"), failedStr);
+    Alert(saveDocStr, failedStr);
+  }
+  else
+  {
+    // File was saved successfully
+    *_retval = PR_TRUE;
+  }
+  // Update window title to show possibly different filename
+  // This also covers problem that after undoing a title change,
+  //   window title loses the extra [filename] part that this adds
+  UpdateWindowTitleAndRecentMenu(PR_TRUE);
+
   return res;
 }
 
@@ -2155,6 +2237,7 @@ nsEditorShell::Print()
   return NS_OK;
 }
 
+// this method should move into JS
 NS_IMETHODIMP
 nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *filterType, PRUnichar **_retval)
 {
@@ -2290,23 +2373,26 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
   // Append just the 'leaf' filename to the Doc. Title for the window caption
   if (NS_SUCCEEDED(res))
   {
-    nsCOMPtr<nsIDOMDocument>  domDoc;
-    editor->GetDocument(getter_AddRefs(domDoc));
-    if (domDoc)
+    // get the dom document
+    nsCOMPtr<nsIDOMDocument> doc;
+    res = editor->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(res)) return res;
+    if (!doc) return NS_ERROR_NULL_POINTER;
+
+    // find out if the doc already has a fileSpec associated with it.
+    nsCOMPtr<nsIURI> docFileSpec;
+    if (NS_SUCCEEDED(GetDocumentURI(doc, getter_AddRefs(docFileSpec))))
     {
-      nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(domDoc);
-      if (diskDoc)
+      nsCOMPtr<nsIURL> url = do_QueryInterface(docFileSpec);
+      if (url)
       {
-        // find out if the doc already has a fileSpec associated with it.
-        nsCOMPtr<nsIFile> docFileSpec;
-        if (NS_SUCCEEDED(diskDoc->GetFileSpec(getter_AddRefs(docFileSpec))))
-        {
-          nsXPIDLString fileName;
-          docFileSpec->GetUnicodeLeafName(getter_Copies(fileName));
-          windowCaption.AppendWithConversion(" [");
-          windowCaption.Append(fileName);
-          windowCaption.AppendWithConversion("]");
-        }
+        char *fileNameChar = nsnull;
+        url->GetFileName(&fileNameChar);
+        windowCaption.Append(NS_LITERAL_STRING(" ["));
+        windowCaption.AppendWithConversion(fileNameChar);
+        windowCaption.Append(NS_LITERAL_STRING("]"));
+        if (fileNameChar)
+          nsCRT::free(fileNameChar);
       }
     }
     nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaDocShell));
