@@ -569,6 +569,13 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
   if (actionToUse == nsImapUrl::nsImapOpenMimePart)
     actionToUse = nsIImapUrl::nsImapMsgFetch;
 
+  nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aImapUrl));
+  if (aImapMailFolder && msgurl && messageIdentifierList)
+  {
+    PRBool useLocalCache = PR_FALSE;
+    aImapMailFolder->HasMsgOffline(atoi(messageIdentifierList), &useLocalCache);  
+    msgurl->SetMsgIsInLocalCache(useLocalCache);
+  }
   rv = aImapUrl->SetImapMessageSink(aImapMessage);
   if (NS_SUCCEEDED(rv))
 	{
