@@ -1701,7 +1701,7 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
     char buf[ 64 + 16 ]; // buffer for staging hex
     char* p = buf;
     *p++ = '{'; // punct 1
-    mork_size punctSize = 10; // counting "{ {/*r=*/ "
+    mork_size punctSize = (mWriter_BeVerbose) ? 10 : 3; // counting "{ {/*r=*/ "
 
     if ( ioTable->IsTableRewrite() && mWriter_Incremental )
     {
@@ -1713,21 +1713,23 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
     p += oidSize;
     *p++ = ' '; // punct 2
     *p++ = '{'; // punct 3
+    if (mWriter_BeVerbose)
+    {
     
-    *p++ = '/'; // punct=4
-    *p++ = '*'; // punct=5
-    *p++ = 'r'; // punct=6
-    *p++ = '='; // punct=7
+      *p++ = '/'; // punct=4
+      *p++ = '*'; // punct=5
+      *p++ = 'r'; // punct=6
+      *p++ = '='; // punct=7
 
-    mork_token tableUses = (mork_token) ioTable->mTable_GcUses;
-    mork_size usesSize = ev->TokenAsHex(p, tableUses);
-    punctSize += usesSize;
-    p += usesSize;
+      mork_token tableUses = (mork_token) ioTable->mTable_GcUses;
+      mork_size usesSize = ev->TokenAsHex(p, tableUses);
+      punctSize += usesSize;
+      p += usesSize;
     
-    *p++ = '*'; // punct=8
-    *p++ = '/'; // punct=9
-    *p++ = ' '; // punct=10
-
+      *p++ = '*'; // punct=8
+      *p++ = '/'; // punct=9
+      *p++ = ' '; // punct=10
+    }
     mWriter_LineSize += stream->Write(ev, buf, oidSize + punctSize);
     
     mork_kind tk = mWriter_TableKind;
@@ -2070,7 +2072,7 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
       
 //      mork_rid rid = roid->mOid_Id;
       *p++ = '['; // start row punct=1
-      mork_size punctSize = 9; // counting "{ /*r=*/ "
+      mork_size punctSize = (mWriter_BeVerbose) ? 9 : 1; // counting "[ /*r=*/ "
       
       mork_bool rowRewrite = ioRow->IsRowRewrite();
             
@@ -2088,20 +2090,22 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
       
       p += ridSize;
       
-      *p++ = ' '; // punct=2
-      *p++ = '/'; // punct=3
-      *p++ = '*'; // punct=4
-      *p++ = 'r'; // punct=5
-      *p++ = '='; // punct=6
+      if (mWriter_BeVerbose)
+      {
+        *p++ = ' '; // punct=2
+        *p++ = '/'; // punct=3
+        *p++ = '*'; // punct=4
+        *p++ = 'r'; // punct=5
+        *p++ = '='; // punct=6
 
-      mork_size usesSize = ev->TokenAsHex(p, (mork_token) ioRow->mRow_GcUses);
-      punctSize += usesSize;
-      p += usesSize;
+        mork_size usesSize = ev->TokenAsHex(p, (mork_token) ioRow->mRow_GcUses);
+        punctSize += usesSize;
+        p += usesSize;
       
-      *p++ = '*'; // punct=7
-      *p++ = '/'; // punct=8
-      *p++ = ' '; // punct=9
-      
+        *p++ = '*'; // punct=7
+        *p++ = '/'; // punct=8
+        *p++ = ' '; // punct=9
+      }
       mWriter_LineSize += stream->Write(ev, buf, ridSize + punctSize);
       
       // special case situation where row puts exactly one column:
