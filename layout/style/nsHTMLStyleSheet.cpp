@@ -1438,7 +1438,7 @@ FindPreviousSibling(nsIPresShell* aPresShell,
 
   // Note: not all content objects are associated with a frame so
   // keep looking until we find a previous frame
-  for (PRInt32 index = aIndexInContainer - 1; index > 0; index--) {
+  for (PRInt32 index = aIndexInContainer - 1; index >= 0; index--) {
     nsIContent* precedingContent;
     aContainer->ChildAt(index, precedingContent);
     prevSibling = aPresShell->FindFrameWithContent(precedingContent);
