@@ -427,7 +427,9 @@ void nsToolbar::DoHorizontalLayout(const nsRect& aTBRect)
       }
       // Gap is added before hand because it is the left hand gap
       x += mItems[i]->mGap;
-      mItems[i]->mItem->SetBounds(x, yLoc, width, height, PR_FALSE);
+      if (((i == (mNumItems-1) && !mLastItemIsRightJustified)) || (i != (mNumItems-1))) {
+        mItems[i]->mItem->SetBounds(x, yLoc, width, height, PR_FALSE);
+      }
       x += width;
     }
   }
