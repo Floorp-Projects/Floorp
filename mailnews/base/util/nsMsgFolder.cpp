@@ -73,6 +73,7 @@ nsMsgFolder::nsMsgFolder(void)
     mHaveParsedURI(PR_FALSE),
     mIsServerIsValid(PR_FALSE),
     mIsServer(PR_FALSE),
+    mDeleteIsMoveToTrash(PR_TRUE),
 	mBaseMessageURI(nsnull)
 	{
 //  NS_INIT_REFCNT(); done by superclass
@@ -884,7 +885,7 @@ NS_IMETHODIMP nsMsgFolder::GetDeleteIsMoveToTrash(PRBool *deleteIsMoveToTrash)
 {
 	if(deleteIsMoveToTrash)
 	{
-		*deleteIsMoveToTrash = PR_FALSE;
+		*deleteIsMoveToTrash = mDeleteIsMoveToTrash;
 		return NS_OK;
 	}
 	return
@@ -913,7 +914,8 @@ NS_IMETHODIMP nsMsgFolder::Delete ()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::DeleteSubFolders(nsISupportsArray *folders)
+NS_IMETHODIMP nsMsgFolder::DeleteSubFolders(nsISupportsArray *folders,
+                                            nsIMsgWindow *msgWindow)
 {
 	nsresult rv;
 
@@ -2026,6 +2028,13 @@ NS_IMETHODIMP nsMsgFolder::MatchName(nsString *name, PRBool *matches)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgFolder::SetDeleteIsMoveToTrash(PRBool bVal)
+{
+  mDeleteIsMoveToTrash = bVal;
+  return NS_OK;
+}
+
 nsresult
 nsMsgFolder::NotifyPropertyChanged(nsIAtom *property,
                                    char *oldValue, char* newValue)
@@ -2242,3 +2251,27 @@ nsGetMailFolderSeparator(nsString& result)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsMsgFolder::RecursiveSetDeleteIsMoveToTrash(PRBool bVal)
+{
+  nsresult rv = NS_OK;
+  if (mSubFolders)
+  {
+    PRUint32 cnt = 0, i;
+    rv = mSubFolders->Count(&cnt);
+    for (i=0; i < cnt; i++)
+    {
+      nsCOMPtr<nsISupports> aSupport;
+      rv = GetElementAt(i, getter_AddRefs(aSupport));
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCOMPtr<nsIMsgFolder> folder;
+        folder = do_QueryInterface(aSupport);
+        if (folder)
+          folder->RecursiveSetDeleteIsMoveToTrash(bVal);
+      }
+    }
+  }
+  return SetDeleteIsMoveToTrash(bVal);
+}

@@ -64,13 +64,13 @@ var FolderPaneController =
 				
 			case "cmd_delete":
 			case "button_delete":
-			/* add this back when folder delete has warning
+			// add this back when folder delete has warning
 				if ( command == "cmd_delete" )
 					goSetMenuValue(command, 'valueFolder');
 				var folderTree = GetFolderTree();
 				if ( folderTree && folderTree.selectedItems )
 					return true;
-				else*/
+				else
 					return false;
 			
 			default:
@@ -85,7 +85,7 @@ var FolderPaneController =
 			case "cmd_delete":
 			case "button_delete":
 				// add this back in when folder delete has warning
-				//MsgDeleteFolder();
+				MsgDeleteFolder();
 				break;
 		}
 	},

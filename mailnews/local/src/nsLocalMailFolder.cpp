@@ -71,6 +71,10 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgI18N.h"
+#include "nsIWebShell.h"
+#include "nsIDocShell.h"
+#include "nsIPrompt.h"
+#include "nsIInterfaceRequestor.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -713,8 +717,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
     rv = GetTrashFolder(getter_AddRefs(trashFolder));
     if (NS_SUCCEEDED(rv))
     {
+        trashFolder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
         nsCOMPtr<nsIFolder> parent;
-        rv = GetParent(getter_AddRefs(parent));
+        rv = trashFolder->GetParent(getter_AddRefs(parent));
         if (NS_SUCCEEDED(rv) && parent)
         {
             nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent, &rv);
@@ -727,6 +732,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
                     nsString folderName(idlFolderName);
                     trashFolder->SetParent(nsnull);
                     parentFolder->PropagateDelete(trashFolder, PR_TRUE);
+                    nsCOMPtr<nsISupports> trashSupport = do_QueryInterface(trashFolder);
+                    nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parent);
+                    if (trashSupport && parentSupport)
+                      NotifyItemDeleted(parentSupport, trashSupport, "folderView");
                     parentFolder->CreateSubfolder(folderName.GetUnicode());
                 }
             }
@@ -736,11 +745,49 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
 }
 
 
+nsresult nsMsgLocalMailFolder::IsChildOfTrash(PRBool *result)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  PRBool isServer = PR_FALSE;
+
+  if (!result) return rv;
+  *result = PR_FALSE;
+
+  rv = GetIsServer(&isServer);
+  if (NS_FAILED(rv) || isServer) return rv;
+
+  nsCOMPtr<nsIFolder> parent;
+  nsCOMPtr<nsIMsgFolder> parentFolder;
+  nsCOMPtr<nsIMsgFolder> thisFolder;
+  rv = QueryInterface(NS_GET_IID(nsIMsgFolder), (void **)
+                      getter_AddRefs(thisFolder));
+
+  PRUint32 parentFlags = 0;
+
+  while (!isServer && thisFolder) {
+    rv = thisFolder->GetParent(getter_AddRefs(parent));
+    if (NS_FAILED(rv)) return rv;
+    parentFolder = do_QueryInterface(parent, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = parentFolder->GetIsServer(&isServer);
+    if (NS_FAILED(rv) || isServer) return rv;
+    rv = parentFolder->GetFlags(&parentFlags);
+    if (NS_FAILED(rv)) return rv;
+    if (parentFlags & MSG_FOLDER_FLAG_TRASH) {
+      *result = PR_TRUE;
+      return rv;
+    }
+    thisFolder = parentFolder;
+  }
+  return rv;
+}
+
+
 NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 {
-	nsresult rv = GetDatabase(nsnull);
+	nsresult rv;
 
-	if(NS_SUCCEEDED(rv))
+	if(mDatabase)
 	{
 		mDatabase->ForceClosed();
 		mDatabase = null_nsCOMPtr();
@@ -754,26 +801,107 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 	rv = pathSpec->GetFileSpec(&path);
 	if (NS_FAILED(rv)) return rv;
 
-	//Clean up .sbd folder if it exists.
-	if(NS_SUCCEEDED(rv))
-	{
-		nsLocalFolderSummarySpec	summarySpec(path);
-		// Remove summary file.
-		summarySpec.Delete(PR_FALSE);
+  nsLocalFolderSummarySpec	summarySpec(path);
 
-		//Delete mailbox
-		path.Delete(PR_FALSE);
+  if (!mDeleteIsMoveToTrash)
+  {
+    //Clean up .sbd folder if it exists.
+    if(NS_SUCCEEDED(rv))
+    {
+      // Remove summary file.
+      summarySpec.Delete(PR_FALSE);
+      
+      //Delete mailbox
+      path.Delete(PR_FALSE);
+      
+      if (!path.IsDirectory())
+        AddDirectorySeparator(path);
+      
+      //If this is a directory, then remove it.
+      if (path.IsDirectory())
+        {
+          path.Delete(PR_TRUE);
+        }
+    }
+  }
+  else
+  {   // move to trash folder
+    nsXPIDLString idlName;
+    nsCOMPtr<nsIMsgFolder> child;
+    nsAutoString folderName;
+    nsCOMPtr<nsIMsgFolder> trashFolder;
+    nsCOMPtr<nsIFileSpec> trashSpec;
+    nsFileSpec trashPath;
 
-	    if (!path.IsDirectory())
-		  AddDirectorySeparator(path);
+    GetName(getter_Copies(idlName));
+    folderName = idlName;
 
-		//If this is a directory, then remove it.
-	    if (path.IsDirectory())
-		{
-			path.Delete(PR_TRUE);
-		}
-	}
-  return NS_OK;
+    rv = GetTrashFolder(getter_AddRefs(trashFolder));
+    if (NS_FAILED(rv)) return rv;
+    rv = trashFolder->GetPath(getter_AddRefs(trashSpec));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = trashSpec->GetFileSpec(&trashPath);
+    if (NS_FAILED(rv)) return rv;
+    AddDirectorySeparator(trashPath);
+    if (!trashPath.IsDirectory())
+      trashPath.CreateDirectory();
+    
+    nsFileSpec oldPath = path;
+
+    path.MoveToDir(trashPath);
+    summarySpec.MoveToDir(trashPath);
+
+    AddDirectorySeparator(oldPath);
+    if (oldPath.IsDirectory())
+      oldPath.Delete(PR_TRUE);
+
+    trashFolder->AddSubfolder(&folderName, getter_AddRefs(child));
+    if (child) 
+    {
+      nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
+      nsCOMPtr<nsISupports> trashSupports = do_QueryInterface(trashFolder);
+      if (childSupports && trashSupports)
+      {
+        NotifyItemAdded(trashSupports, childSupports, "folderView");
+      }
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
+  nsISupportsArray *folders, nsIMsgWindow *msgWindow)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  PRBool isChildOfTrash;
+  rv = IsChildOfTrash(&isChildOfTrash);
+
+  if (isChildOfTrash)
+    return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
+
+  nsCOMPtr<nsIWebShell> webShell;
+  if (!msgWindow) return NS_ERROR_NULL_POINTER;
+  msgWindow->GetRootWebShell(getter_AddRefs(webShell));
+  if (!mMsgStringService)
+    mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_PROGID);
+  if (!mMsgStringService) return NS_ERROR_FAILURE;
+  PRUnichar *alertString = nsnull;
+  mMsgStringService->GetStringByID(POP3_MOVE_FOLDER_TO_TRASH, &alertString);
+  if (!alertString) return rv;
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webShell));
+  if (docShell)
+  {
+    nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+    if (dialog)
+    {
+      PRBool okToDelete = PR_FALSE;
+      dialog->Confirm(alertString, &okToDelete);
+      if (okToDelete)
+        return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
@@ -1095,27 +1223,8 @@ nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 			PRUint32 numFolders;
 			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
                                           1, &numFolders, result);
-#if 0
-      // ** jt -- This shouldn't be needed. The OS should prevent
-      // user from deleting the trash folder while we are running the app.
-      // The only thing we need to do is to make sure that we have all
-      // the default mailboxes created when startup.
-      if (NS_FAILED(rv))
-      {
-        nsCOMPtr<nsIFileSpec> pathSpec;
-        nsFileSpec fileSpec;
-        rv = rootFolder->GetPath(getter_AddRefs(pathSpec));
-        if (NS_SUCCEEDED(rv))
-        {
-          rv = pathSpec->GetFileSpec(&fileSpec);
-          if (NS_SUCCEEDED(rv))
-          {
-            nsFileSpec trashSpec = fileSpec + "Trash";
-            nsOutputFileStream trashStream(fileSpec);
-          }
-        }
-      }
-#endif
+      if (NS_SUCCEEDED(rv) && numFolders != 1)
+        rv = NS_ERROR_FAILURE;
     }
     return rv;
 }
@@ -2132,4 +2241,3 @@ nsresult nsMsgLocalMailFolder::CreateBaseMessageURI(const char *aURI)
 	return rv;
 
 }
-

@@ -1536,7 +1536,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
-		rv = folder->DeleteSubFolders(folderArray);
+		rv = folder->DeleteSubFolders(folderArray, msgWindow);
 
 	return rv;
 }

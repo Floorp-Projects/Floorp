@@ -86,7 +86,7 @@ public:
   NS_IMETHOD GetCanRename(PRBool *aCanRename);
   NS_IMETHOD ForceDBClosed(void);
   NS_IMETHOD Delete(void);
-  NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
+  NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
   NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage);
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage);
   NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
@@ -120,6 +120,8 @@ public:
   NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *_retval);
   NS_IMETHOD GetUsername(char * *aUsername);
   NS_IMETHOD GetHostname(char * *aHostname);
+  NS_IMETHOD SetDeleteIsMoveToTrash(PRBool bVal);
+  NS_IMETHOD RecursiveSetDeleteIsMoveToTrash(PRBool bVal);
   NS_IMETHOD SetFlag(PRUint32 flag);
   NS_IMETHOD SetPrefFlag();
   NS_IMETHOD ClearFlag(PRUint32 flag);
@@ -289,6 +291,7 @@ protected:
   nsString mName;
   nsCOMPtr<nsIFileSpec> mPath;
   char * mBaseMessageURI; //The uri with the message scheme
+  PRBool mDeleteIsMoveToTrash;
 
   // static stuff for cross-instance objects like atoms
   static PRInt32 gInstanceCount;

@@ -703,7 +703,7 @@ NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
     if (NS_FAILED(rv)) return rv;
     folders->AppendElement(folderSupport);
     which->Delete();
-    return nsMsgFolder::DeleteSubFolders(folders);
+    return nsMsgFolder::DeleteSubFolders(folders, nsnull);
 }
 
 
@@ -1487,7 +1487,7 @@ nsImapMailFolder::InTrash(nsIMsgFolder* folder)
     return PR_FALSE;
 }
 NS_IMETHODIMP
-nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders)
+nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgWindow)
 {
     nsCOMPtr<nsIMsgFolder> curFolder;
     nsCOMPtr<nsISupports> folderSupport;
@@ -1526,7 +1526,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders)
         }
     }
         
-    return nsMsgFolder::DeleteSubFolders(folders);
+    return nsMsgFolder::DeleteSubFolders(folders, nsnull);
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)

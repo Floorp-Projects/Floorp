@@ -40,6 +40,7 @@
 #include "nsIMsgParseMailMsgState.h"
 #include "nsITransactionManager.h"
 #include "nsIMsgLocalMailFolder.h"
+#include "nsIMsgStringService.h"
 
 #define FOUR_K 4096
 
@@ -102,6 +103,7 @@ public:
   NS_IMETHOD Compact();
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
 	NS_IMETHOD Delete ();
+  NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
 	NS_IMETHOD Rename (const PRUnichar *aNewName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
@@ -144,6 +146,8 @@ protected:
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
     nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
     nsresult WriteStartOfNewMessage();
+  nsresult IsChildOfTrash(PRBool *result);
+  nsresult RecursiveSetDeleteIsMoveTrash(PRBool bVal);
 
 	/* Finds the directory associated with this folder.  That is if the path is
 	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
@@ -178,6 +182,7 @@ protected:
                                     //time
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   const char *mType;
+  nsCOMPtr<nsIMsgStringService> mMsgStringService;  
 };
 
 #endif // nsMsgLocalMailFolder_h__
