@@ -52,3 +52,25 @@ Rights Reserved.
 <!ENTITY useMIMEpart1.label 'Using the "quoted printable" MIME encoding (does not work'>
 <!-- LOCALIZATION NOTE (useMIMEpart2.label): Concatenates with useMIMEpart1.label -->
 <!ENTITY useMIMEpart2.label "well with some mail or newsgroups readers)">
+
+<!ENTITY viewDefaultCharset.label "View default charset:">
+<!ENTITY sendDefaultCharset.label "Send default charset:">
+<!ENTITY defaultCharset1.label "Western (ISO-8859-1)">
+<!ENTITY defaultCharset2.label "Central European (ISO-8859-2)">
+<!ENTITY defaultCharset3.label "South European (ISO-8859-3)">
+<!ENTITY defaultCharset4.label "Baltic (ISO-8859-4)">
+<!ENTITY defaultCharset5.label "Turkish (ISO-8859-9)">
+<!ENTITY defaultCharset6.label "Nordic (ISO-8859-10)">
+<!ENTITY defaultCharset7.label "Celtic (ISO-8859-14)">
+<!ENTITY defaultCharset8.label "Western (ISO-8859-15)">
+<!ENTITY defaultCharset9.label "Japanese (ISO-2022-JP)">
+<!ENTITY defaultCharset10.label "Chinese Traditional (Big5)">
+<!ENTITY defaultCharset11.label "Chinese Simplified (GB2312)">
+<!ENTITY defaultCharset12.label "Korean (EUC-KR)">
+<!ENTITY defaultCharset13.label "Unicode (UTF-8)">
+<!ENTITY defaultCharset14.label "Cyrillic (KOI8-R)">
+<!ENTITY defaultCharset15.label "Cyrillic/Ukrainian (KOI8-U)">
+<!ENTITY defaultCharset16.label "Greek (ISO-8859-7)">
+<!ENTITY defaultCharset17.label "Vietnamese (VISCII)">
+<!ENTITY defaultCharset18.label "Thai (TIS-620)">
+<!ENTITY defaultCharset19.label "Armenian (ARMSCII-8)">

@@ -63,6 +63,31 @@
 		</html:div>
 		<html:label for="mail.display_struct" class="indent-second-label">&convertStructs.label2;<html:b>&convertStructs.label3;</html:b>&convertStructs.label4;</html:label>
 	
+		<html:div>
+			<html:label for="mailnews.view_default_charset">&viewDefaultCharset.label;</html:label>
+			<html:select pref="true" preftype="string" prefstring="mailnews.view_default_charset" id="mailnews.view_default_charset">
+				<html:option value="ISO-8859-1" label="&defaultCharset1.label;"/>
+				<html:option value="ISO-8859-2" label="&defaultCharset2.label;"/>
+				<html:option value="ISO-8859-3" label="&defaultCharset3.label;"/>
+				<html:option value="ISO-8859-4" label="&defaultCharset4.label;"/>
+				<html:option value="ISO-8859-9" label="&defaultCharset5.label;"/>
+				<html:option value="ISO-8859-10" label="&defaultCharset6.label;"/>
+				<html:option value="ISO-8859-14" label="&defaultCharset7.label;"/>
+				<html:option value="ISO-8859-15" label="&defaultCharset8.label;"/>
+				<html:option value="ISO-2022-JP" label="&defaultCharset9.label;"/>
+				<html:option value="Big5" label="&defaultCharset10.label;"/>
+				<html:option value="GB2312" label="&defaultCharset11.label;"/>
+				<html:option value="EUC-KR" label="&defaultCharset12.label;"/>
+				<html:option value="UTF-8" label="&defaultCharset13.label;"/>
+				<html:option value="KOI8-R" label="&defaultCharset14.label;"/>
+				<html:option value="KOI8-U" label="&defaultCharset15.label;"/>
+				<html:option value="ISO-8859-7" label="&defaultCharset16.label;"/>
+				<html:option value="VISCII" label="&defaultCharset17.label;"/>
+				<html:option value="TIS-620" label="&defaultCharset18.label;"/>
+				<html:option value="ARMSCII-8" label="&defaultCharset19.label;"/>
+			</html:select>
+		</html:div>
+
 	</titledbox>
 
 	<!-- Sending -->
@@ -99,6 +124,31 @@
 			<html:label for="mail.strictly_mime1">&useMIMEpart1.label;</html:label>
 		</html:div>
 		<html:label for="mail.strictly_mime1" class="indent-second-label">&useMIMEpart2.label;</html:label>
+
+		<html:div>
+			<html:label for="mailnews.send_default_charset">&sendDefaultCharset.label;</html:label>
+			<html:select pref="true" preftype="string" prefstring="mailnews.send_default_charset" id="mailnews.send_default_charset">
+				<html:option value="ISO-8859-1" label="&defaultCharset1.label;"/>
+				<html:option value="ISO-8859-2" label="&defaultCharset2.label;"/>
+				<html:option value="ISO-8859-3" label="&defaultCharset3.label;"/>
+				<html:option value="ISO-8859-4" label="&defaultCharset4.label;"/>
+				<html:option value="ISO-8859-9" label="&defaultCharset5.label;"/>
+				<html:option value="ISO-8859-10" label="&defaultCharset6.label;"/>
+				<html:option value="ISO-8859-14" label="&defaultCharset7.label;"/>
+				<html:option value="ISO-8859-15" label="&defaultCharset8.label;"/>
+				<html:option value="ISO-2022-JP" label="&defaultCharset9.label;"/>
+				<html:option value="Big5" label="&defaultCharset10.label;"/>
+				<html:option value="GB2312" label="&defaultCharset11.label;"/>
+				<html:option value="EUC-KR" label="&defaultCharset12.label;"/>
+				<html:option value="UTF-8" label="&defaultCharset13.label;"/>
+				<html:option value="KOI8-R" label="&defaultCharset14.label;"/>
+				<html:option value="KOI8-U" label="&defaultCharset15.label;"/>
+				<html:option value="ISO-8859-7" label="&defaultCharset16.label;"/>
+				<html:option value="VISCII" label="&defaultCharset17.label;"/>
+				<html:option value="TIS-620" label="&defaultCharset18.label;"/>
+				<html:option value="ARMSCII-8" label="&defaultCharset19.label;"/>
+			</html:select>
+		</html:div>
 	</titledbox>
 
 </window>
