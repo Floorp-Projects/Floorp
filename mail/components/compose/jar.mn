@@ -1,5 +1,7 @@
 classic.jar:
 +   skin/classic/messenger/messengercompose/messengercompose.css   (skin/messengercompose.css)
+    skin/classic/messenger/messengercompose/compose-toolbar.png    (skin/compose-toolbar.png)
+    skin/classic/messenger/messengercompose/compose-toolbar-small.png   (skin/compose-toolbar-small.png)
 
 messenger.jar:
 *+  content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)

@@ -3,4 +3,7 @@ messenger.jar:
 *+  content/messenger-smime/msgCompSMIMEOverlay.xul                  (content/msgCompSMIMEOverlay.xul)
 *+  content/messenger-smime/msgHdrViewSMIMEOverlay.js                (content/msgHdrViewSMIMEOverlay.js)
 
+classic.jar:
++   skin/classic/messenger/smime/msgCompSMIMEOverlay.css               (skin/msgCompSMIMEOverlay.css)
+
 
