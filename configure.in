@@ -3114,6 +3114,25 @@ dnl =   module names beginning with ^ will be disabled (this is because you can'
 dnl =   pass args to --without-debug-modules)
 dnl = 
 dnl ========================================================
+MOZ_ARG_WITH_STRING(default-mozilla-five-home,
+[  --with-default-mozilla-five-home    Set the default value for MOZILLA_FIVE_HOME],
+  [ val=`echo $withval`
+    DSO_LDOPTS="$DSO_LDOPTS -Wl,-rpath=$val"
+    LIBS="$LIBS -Wl,-rpath=$val"
+    AC_DEFINE_UNQUOTED(MOZ_DEFAULT_MOZILLA_FIVE_HOME,"$val")
+    MOZ_NSPRENV_OVERRIDE_DSO_LDOPTS="-shared -rpath=$val"
+    AC_SUBST(MOZ_NSPRENV_OVERRIDE_DSO_LDOPTS) ] )
+dnl ========================================================
+
+dnl ========================================================
+dnl =
+dnl = --with-debug-modules=module1,^module2,etc
+dnl = 
+dnl = Enable/disable debug for specific modules only
+dnl =   module names beginning with ^ will be disabled (this is because you can't
+dnl =   pass args to --without-debug-modules)
+dnl = 
+dnl ========================================================
 
 MOZ_ARG_WITH_STRING(debug-modules,
 [  --with-debug-modules    Enable/disable debug for specific modules only],
