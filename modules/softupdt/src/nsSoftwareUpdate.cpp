@@ -118,6 +118,7 @@ nsSoftwareUpdate::nsSoftwareUpdate(void* env, char* inUserPackageName)
   silent = PR_FALSE;
   force = PR_FALSE;
   jarName = NULL;
+  jarURL = NULL;
   char *errorMsg;
 
   /* Need to verify that this is a SoftUpdate JavaScript object */
@@ -125,6 +126,7 @@ nsSoftwareUpdate::nsSoftwareUpdate(void* env, char* inUserPackageName)
 
   /* XXX: FIX IT. How do we get data from env 
   jarName = (String) env.getMember("src");
+  jarURL = (String) env.getMember("srcURL");
   silent = ((PRBool) env.getMember("silent")).booleanValue();
   force  = ((PRBool) env.getMember("force")).booleanValue();
   */
@@ -358,36 +360,46 @@ char* nsSoftwareUpdate::ExtractJARFile(char* inJarLocation,
      the installer certificate */
   /* XXX this needs to be optimized, so that we do not create a principal
      for every certificate */
+
+  /* XXX: Should we put up a dialog for unsigned JAR file support? */
+  XP_Bool unsigned_jar_enabled;
+  PREF_GetBoolPref("autoupdate.unsigned_jar_support", &unsigned_jar_enabled);
+
   {
     PRUint32 i;
     PRBool haveMatch = PR_FALSE;
     nsPrincipalArray* prinArray = 
       (nsPrincipalArray*)getCertificates(zigPtr, inJarLocation);
-    if ((prinArray == NULL) || (prinArray->GetSize() == 0)) {
-      char *msg = NULL;
-      msg = PR_sprintf_append(msg, "Missing certificate for %s", inJarLocation);
-      *errorMsg = SU_GetErrorMsg3(msg, nsSoftUpdateError_NO_CERTIFICATE);
-      PR_FREEIF(msg);
-      return NULL;
-    }
 
-    PRUint32 noOfPrins = prinArray->GetSize();
-    for (i=0; i < noOfPrins; i++) {
-      nsPrincipal* prin = (nsPrincipal*)prinArray->Get(i);
-      if (installPrincipal->equals( prin )) {
-        haveMatch = PR_TRUE;
-        break;
+    PR_ASSERT(installPrincipal != NULL);
+    if ((prinArray != NULL) && (prinArray->GetSize() > 0)) {
+      PRUint32 noOfPrins = prinArray->GetSize();
+      for (i=0; i < noOfPrins; i++) {
+        nsPrincipal* prin = (nsPrincipal*)prinArray->Get(i);
+        if (installPrincipal->equals( prin )) {
+          haveMatch = PR_TRUE;
+          break;
+        }
       }
     }
-    if (haveMatch == PR_FALSE) {
+
+    if ((haveMatch == PR_FALSE)) {
       char *msg = NULL;
-      msg = PR_sprintf_append(msg, "Missing certificate for %s", inJarLocation);
-      *errorMsg = SU_GetErrorMsg3(msg, 
-                                  nsSoftUpdateError_NO_MATCHING_CERTIFICATE);
+      if (prinArray == NULL) {
+        if (!unsigned_jar_enabled) {
+          msg = PR_sprintf_append(msg, "Missing certificate for %s", 
+                                  inJarLocation);
+          *errorMsg = SU_GetErrorMsg3(msg, nsSoftUpdateError_NO_CERTIFICATE);
+        }
+      } else {
+        msg = PR_sprintf_append(msg, "Missing certificate for %s", inJarLocation);
+        *errorMsg = SU_GetErrorMsg3(msg, 
+                                    nsSoftUpdateError_NO_MATCHING_CERTIFICATE);
+      }
       PR_FREEIF(msg);
     }
 
-    freeCertificates(prinArray);
+    freeIfCertificates(prinArray);
 
     if (*errorMsg != NULL) 
       return NULL;
@@ -1227,19 +1239,28 @@ PRInt32 nsSoftwareUpdate::InitializeInstallerCertificate(char* *errorMsg)
 {
   PRInt32 errcode;
   nsPrincipal *prin = NULL;
+
+  *errorMsg = NULL;
+
+  /* XXX: Should we put up a dialog for unsigned JAR file support? */
+  XP_Bool unsigned_jar_enabled;
+  PREF_GetBoolPref("autoupdate.unsigned_jar_support", &unsigned_jar_enabled);
+
   nsPrincipalArray* prinArray = 
     (nsPrincipalArray*)getCertificates(zigPtr, installerJarName);
   if ((prinArray == NULL) || (prinArray->GetSize() == 0)) {
-    *errorMsg = SU_GetErrorMsg4(SU_ERROR_NO_CERTIFICATE, 
-                                nsSoftUpdateError_NO_INSTALLER_CERTIFICATE);
-    errcode = nsSoftUpdateError_NO_INSTALLER_CERTIFICATE;
+    if (!unsigned_jar_enabled) {
+      *errorMsg = SU_GetErrorMsg4(SU_ERROR_NO_CERTIFICATE, 
+                                  nsSoftUpdateError_NO_INSTALLER_CERTIFICATE);
+      errcode = nsSoftUpdateError_NO_INSTALLER_CERTIFICATE;
+    }
   } else if (prinArray->GetSize() > 1) {
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_TOO_MANY_CERTIFICATES, 
                                 nsSoftUpdateError_TOO_MANY_CERTIFICATES);
     errcode = nsSoftUpdateError_TOO_MANY_CERTIFICATES;
   } else {
     prin = (nsPrincipal *)prinArray->Get(0);
-    if (prin == NULL) {
+    if ((prin == NULL) && (!unsigned_jar_enabled)) {
       *errorMsg = SU_GetErrorMsg4(SU_ERROR_NO_CERTIFICATE, 
                                   nsSoftUpdateError_NO_INSTALLER_CERTIFICATE);
       errcode = nsSoftUpdateError_NO_INSTALLER_CERTIFICATE;
@@ -1252,10 +1273,17 @@ PRInt32 nsSoftwareUpdate::InitializeInstallerCertificate(char* *errorMsg)
     void* key = prin->getKey();
     PRUint32 key_len = prin->getKeyLength();
     installPrincipal = new nsPrincipal(prinType, key, key_len);
+  } else {
+    /* We should get the URL where we are getting the JarURL from */
+    PR_ASSERT(jarURL != NULL);
+    /* Create a codebase principal with the JAR URL */
+    installPrincipal = new nsPrincipal(nsPrincipalType_CodebaseExact, 
+                                       jarURL, XP_STRLEN(jarURL));
   }
+  PR_ASSERT(installPrincipal != NULL);
   
   /* Free the allocated principals */
-  freeCertificates(prinArray);
+  freeIfCertificates(prinArray);
   return saveError(errcode);
 }
 
@@ -1432,6 +1460,10 @@ PRInt32 nsSoftwareUpdate::OpenJARFile(char* *errorMsg)
 
   *errorMsg = NULL;
   
+  /* XXX: Should we put up a dialog for unsigned JAR file support? */
+  XP_Bool unsigned_jar_enabled;
+  PREF_GetBoolPref("autoupdate.unsigned_jar_support", &unsigned_jar_enabled);
+
   PREF_GetBoolPref( AUTOUPDATE_ENABLE_PREF, &enabled);
   
   if (!enabled)	{
@@ -1460,6 +1492,8 @@ PRInt32 nsSoftwareUpdate::OpenJARFile(char* *errorMsg)
                           NULL, /* realStream->fURL->address,  */
                           jarData );
   if ( err != 0 ) {
+    if (unsigned_jar_enabled) 
+      return nsSoftwareUpdate_SUCCESS;
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_VERIFICATION_FAILED, err);
     return err;
   }
@@ -1469,6 +1503,8 @@ PRInt32 nsSoftwareUpdate::OpenJARFile(char* *errorMsg)
   err = SOB_get_metainfo(jarData, NULL, INSTALLER_HEADER, 
                          (void**)&installerJarName, &installerJarNameLength);
   if (err != 0) {
+    if (unsigned_jar_enabled) 
+      return nsSoftwareUpdate_SUCCESS;
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_MISSING_INSTALLER, err);
     return err;
   }
@@ -1494,7 +1530,7 @@ void* nsSoftwareUpdate::getCertificates(void* zigPtr, char* pathname)
   return nsPrincipal::getSigners(zigPtr, pathname);
 }
 
-void nsSoftwareUpdate::freeCertificates(void* prins)
+void nsSoftwareUpdate::freeIfCertificates(void* prins)
 {
   nsPrincipalArray* prinArray = (nsPrincipalArray*)prins;
   if ((prinArray == NULL) || (prinArray->GetSize() == 0))
@@ -1615,12 +1651,26 @@ char* nsSoftwareUpdate::NativeExtractJARFile(char* inJarLocation,
   }
   
 done:
+  XP_Bool unsigned_jar_enabled;
+  PREF_GetBoolPref("autoupdate.unsigned_jar_support", &unsigned_jar_enabled);
+
   /* Create the return Java string if everything went OK */
-  if (tempName && ( result == 0) ) {
-    ret_value = tempName;
+  if (tempName) {
+    if (result == 0) {
+      ret_value = tempName;
+    } else {
+      if (unsigned_jar_enabled) {
+        ret_value = tempName;
+      }
+    }
+  } 
+  
+  if ( (result != 0) && (!unsigned_jar_enabled) ) {
+    *errorMsg = SU_GetErrorMsg4(SU_ERROR_EXTRACT_FAILED, result);
+    return NULL;
   }
   
-  if ( (result != 0) || (ret_value == NULL) ) {
+  if (ret_value == NULL) {
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_EXTRACT_FAILED, result);
     return NULL;
   }

@@ -337,6 +337,7 @@ private:
   char* installerJarName;          /* Name of the installer file */
   unsigned long installerJarNameLength;    /* Length of Name of the installer file */
   char* jarName;                   /* Name of the JAR file */
+  char* jarURL;                    /* Name of the JAR file */
   char* jarCharset;                /* Charset for filenames in JAR */
   void* zigPtr;                    /* Stores the pointer to ZIG * */
   nsPrincipal* installPrincipal;   /* principal with the signature from the JAR file */
@@ -409,7 +410,7 @@ private:
    */
   void* getCertificates(void* zigPtr, char* inJarLocation);
 
-  void freeCertificates(void* prins);
+  void freeIfCertificates(void* prins);
 
   char* NativeExtractJARFile(char* inJarLocation, char* finalFile, char* *errorMsg);
 
