@@ -91,7 +91,8 @@ public class NativeJavaPackage extends ScriptableObject {
         for (int i = 0; i < commonPackages.length; i++)
             packages.forcePackage(commonPackages[i]);
 
-        NativeJavaObject.initJSObject();
+        if (Context.useJSObject)
+            NativeJavaObject.initJSObject();
         
         Method[] m = FunctionObject.findMethods(NativeJavaPackage.class, 
                                                 "jsFunction_getClass");

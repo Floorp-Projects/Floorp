@@ -883,8 +883,6 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     }
 
     public static void initJSObject() {
-        if (!Context.useJSObject)
-            return;
         // if netscape.javascript.JSObject is in the CLASSPATH, enable JSObject
         // compatability wrappers
         jsObjectClass = null;
