@@ -2281,7 +2281,9 @@ struct callinfo info[NFRAMES];
 
 #if defined(SAVE_CALL_CHAIN) && defined(POWERPC) && defined(MACOS)
 
-#include <stdarg.h>
+#if (NFRAMES > 1)
+
+/* traditional, fixed-size call chain buffer. */
 
 static asm void *GetSP() 
 {
@@ -2308,5 +2310,76 @@ void GC_save_callers(struct callinfo info[NFRAMES])
 			break;
 	}
 }
+
+#else
+
+/* new and improved store all call chains in a tree, which lets us track arbitrarily deep chains. */ 
+/* use GC_scratch_alloc() to allocate the tree nodes. */
+
+#include "call_tree.h"
+
+typedef struct stack_frame stack_frame;
+
+struct stack_frame {
+	stack_frame*	next;				// savedSP
+	void*			savedCR;
+	void*			savedLR;
+	void*			reserved0;
+	void*			reserved1;
+	void*			savedTOC;
+};
+
+/* primordial root of the call tree. */
+static call_tree root = { 0, 0, 0, 0 };
+
+asm stack_frame* getStackFrame()
+{
+	mr		r3, sp
+	blr
+}
+
+static call_tree* find_tree(stack_frame* frame)
+{
+    if ((frame == NULL) || ((word)frame & 0x1))
+        return &root;
+    else {
+        call_tree* parent = find_tree(frame->next);
+        call_tree* tree = parent->children;
+        while (tree != NULL) {
+            if (tree->pc == frame->savedLR)
+                break;
+            tree = tree->siblings;
+        }
+        if (tree == NULL) {
+            /* no tree exists for this frame, so we create one. */
+            tree = (call_tree*) GC_scratch_alloc(sizeof(call_tree));
+            if (tree != NULL) {
+                tree->pc = frame->savedLR;
+                tree->parent = parent;
+                tree->siblings = parent->children;
+                parent->children = tree;
+                tree->children = NULL;
+            }
+        }
+        return tree;
+    }
+}
+
+void GC_save_callers(struct callinfo info[NFRAMES]) 
+{
+	int	i;
+	stack_frame* currentFrame;
+	call_tree* currentTree;
+	
+	currentFrame = getStackFrame();		// GC_save_callers's frame.
+	currentFrame = currentFrame->next;	// GC_debug_malloc's frame.
+	currentFrame = currentFrame->next;	// GC_debug_malloc's caller's frame.
+	
+	currentTree = find_tree(currentFrame);
+	
+	info[0].ci_pc = (word) currentTree;
+}
+
+#endif
 
 #endif /* POWERPC && MACOS */
