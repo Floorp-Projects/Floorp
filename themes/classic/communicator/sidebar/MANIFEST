@@ -1,15 +1,4 @@
 #!dest communicator:skin:sidebar
-list-down-dis.gif
-list-down.gif
-list-up-dis.gif
-list-up.gif
-sidebar-bottomright-cap.gif
-sidebar-icon.gif
-sidebar-topright-cap.gif
-sbgrippy-left-hover.gif
-sbgrippy-left.gif
-sbgrippy-right-hover.gif
-sbgrippy-right.gif
 sidebarSplitterBindings.xml
 sidebar-close-hover.gif
 sidebar-close.gif

@@ -31,18 +31,7 @@ clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\sidebar\*.*
 
 install:: 
-	$(MAKE_INSTALL) list-down-dis.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) list-down.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) list-up-dis.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) list-up.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sidebar-bottomright-cap.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sidebar-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sidebar-topright-cap.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebarSplitterBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-left-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-left.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-right-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-right.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-close-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-close.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-open-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
