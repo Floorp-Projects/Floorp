@@ -115,6 +115,14 @@ nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
   mIsChecked = aIsEnabled;
+  
+  // update the content model
+  if ( mIsChecked )                                                                
+    mDOMElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("true"));
+  else                                                                          
+    mDOMElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("false"));
+
+  // uncheck others if we're a radiomenu
   if ( mMenuType == eRadio && aIsEnabled )
     UncheckRadioSiblings ( mDOMElement );
 
@@ -189,7 +197,6 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
       if ( mIsChecked )
         break;       
       SetChecked(PR_TRUE);
-      UncheckRadioSiblings(mDOMElement);
       break;
     }
       
