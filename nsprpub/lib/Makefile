@@ -25,6 +25,10 @@ include $(MOD_DEPTH)/config/config.mk
 
 DIRS = ds libc
 
+ifneq (,$(filter-out Rhapsody WIN16 NEWS-OS,$(OS_TARGET)))
+DIRS += prstreams
+endif
+
 include $(MOD_DEPTH)/config/rules.mk
 
 export:: $(TARGETS)
