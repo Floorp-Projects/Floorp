@@ -264,6 +264,7 @@ RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
     NS_ASSERTION(nsnull != viewManager, "null view manager");
 
     view->Init(viewManager, mRect, rootView);
+    //we don't insert it here, instead SetScrolledView() does it...
     NS_RELEASE(viewManager);
 
     // We expect the root view to be a scrolling view
