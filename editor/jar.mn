@@ -161,6 +161,8 @@ comm.jar:
 	content/editor/EdImageOverlay.js                         (ui/dialogs/content/EdImageOverlay.js) 
 	content/editor/EdHLineProps.xul                          (ui/dialogs/content/EdHLineProps.xul) 
 	content/editor/EdHLineProps.js                           (ui/dialogs/content/EdHLineProps.js) 
+	content/editor/EdReplace.xul                             (ui/dialogs/content/EdReplace.xul) 
+	content/editor/EdReplace.js                              (ui/dialogs/content/EdReplace.js) 
 	content/editor/EdSpellCheck.xul                          (ui/dialogs/content/EdSpellCheck.xul) 
 	content/editor/EdSpellCheck.js                           (ui/dialogs/content/EdSpellCheck.js) 
 	content/editor/EdDictionary.xul                          (ui/dialogs/content/EdDictionary.xul) 
@@ -225,8 +227,8 @@ comm.jar:
 	content/editor/EditorPublishOverlay.xul                  (ui/dialogs/content/EditorPublishOverlay.xul) 
 
 en-US.jar:
+        locale/en-US/editor/editor.dtd                   (ui/composer/locale/en-US/editor.dtd)
         locale/en-US/editor/contents.rdf                 (ui/composer/locale/en-US/contents.rdf)
-	locale/en-US/editor/editor.dtd                   (ui/composer/locale/en-US/editor.dtd) 
 	locale/en-US/editor/editorPrefsOverlay.dtd       (ui/composer/locale/en-US/editorPrefsOverlay.dtd) 
 	locale/en-US/editor/editorNavigatorOverlay.dtd   (ui/composer/locale/en-US/editorNavigatorOverlay.dtd) 
 	locale/en-US/editor/pref-editing.dtd             (ui/composer/locale/en-US/pref-editing.dtd) 
@@ -248,6 +250,7 @@ en-US.jar:
 	locale/en-US/editor/EditorColorProperties.dtd    (ui/dialogs/locale/en-US/EditorColorProperties.dtd) 
 	locale/en-US/editor/EdColorPicker.dtd            (ui/dialogs/locale/en-US/EdColorPicker.dtd) 
 	locale/en-US/editor/EditorPersonalDictionary.dtd (ui/dialogs/locale/en-US/EditorPersonalDictionary.dtd) 
+	locale/en-US/editor/EditorReplace.dtd            (ui/dialogs/locale/en-US/EditorReplace.dtd) 
 	locale/en-US/editor/EditorSpellCheck.dtd         (ui/dialogs/locale/en-US/EditorSpellCheck.dtd) 
 	locale/en-US/editor/EditorTableProperties.dtd    (ui/dialogs/locale/en-US/EditorTableProperties.dtd) 
 	locale/en-US/editor/EditorFormProperties.dtd     (ui/dialogs/locale/en-US/EditorFormProperties.dtd) 
