@@ -480,26 +480,10 @@ nsRenderingContextXlib::GetClipRegion(nsIRegion **aRegion)
   
   NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
   
-  if (nsnull == *aRegion) {
-    nsRegionXlib *rgn = new nsRegionXlib();
-    
-    if (nsnull != rgn) {
-      NS_ADDREF(rgn);
-
-      rv = rgn->Init();
-
-      if (NS_OK == rv)
-        *aRegion = rgn;
-      else
-        NS_RELEASE(rgn);
-    }
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
+  if (*aRegion) {
+    nsIRegion *nRegion = (nsIRegion *)mClipRegion;
+    (*aRegion)->SetTo(*nRegion);
   }
-
-  if (rv == NS_OK)
-    (*aRegion)->SetTo(*mClipRegion);
-
   return rv;
 }
 
