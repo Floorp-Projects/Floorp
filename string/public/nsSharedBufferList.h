@@ -47,7 +47,12 @@ class nsSharedBufferList
           : public nsXXXBufferHandle<PRUnichar>
         {
           public:
-            Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageStart, PRUnichar* aStorageEnd ) : nsXXXBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageStart, aStorageEnd) { }
+            Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageStart, PRUnichar* aStorageEnd, PRBool aIsSingleAllocation=PR_FALSE )
+                : nsXXXBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageStart, aStorageEnd)
+              {
+                if ( aIsSingleAllocation )
+                  mFlags |= kIsSingleAllocationWithBuffer;
+              }
 
             Buffer* mPrev;
             Buffer* mNext;
@@ -57,12 +62,26 @@ class nsSharedBufferList
         {
           Buffer*     mBuffer;
           PRUnichar*  mPosInBuffer;
+
+          Position() { }
+          Position( Buffer* aBuffer, PRUnichar* aPosInBuffer ) : mBuffer(aBuffer), mPosInBuffer(aPosInBuffer) { }
         };
 
 
 
     public:
-      nsSharedBufferList() : mFirstBuffer(0), mLastBuffer(0), mTotalDataLength(0) { }
+      nsSharedBufferList( Buffer* aBuffer = 0 )
+          : mFirstBuffer(aBuffer),
+            mLastBuffer(aBuffer),
+            mTotalDataLength(0)
+        {
+          if ( aBuffer )
+            {
+              aBuffer->mPrev = aBuffer->mNext = 0;
+              mTotalDataLength = aBuffer->DataLength();
+            }
+        }
+
       virtual ~nsSharedBufferList();
 
     private:
@@ -75,7 +94,8 @@ class nsSharedBufferList
       Buffer* UnlinkBuffer( Buffer* );
       void    SplitBuffer( const Position& );
 
-      static Buffer* NewBuffer( const PRUnichar*, PRUint32, PRUint32 = 0 );
+      static Buffer* NewSingleAllocationBuffer( const PRUnichar*, PRUint32, PRUint32 = 0 );
+      static Buffer* NewWrappingBuffer( PRUnichar*, PRUnichar*, PRUnichar* );
 
       void    DiscardSuffix( PRUint32 );
         // need other discards: prefix, and by iterator or pointer or something

@@ -8,6 +8,7 @@
 #include "nsSharedString.h"
 #include "nsFragmentedString.h"
 #include "nsReadableUtils.h"
+#include "nsSlidingString.h"
 
 #ifdef TEST_STD_STRING
 #include "nsStdStringWrapper.h"
@@ -435,6 +436,16 @@ main()
       tests_failed += test_writable(fs0);
     }
 #endif
+
+    {
+      NS_NAMED_LITERAL_STRING(literal, "Hello");
+      PRUnichar* buffer = ToNewUnicode(literal);
+
+      nsSlidingString ss0(buffer, buffer+5, buffer+6);
+//    ss0.AppendBuffer(buffer, buffer+5, buffer+6);
+
+      tests_failed += test_readable_hello(ss0);
+    }
 
 
     {

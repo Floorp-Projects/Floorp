@@ -133,7 +133,7 @@ nsFragmentedString::SetLength( PRUint32 aNewLength )
     else if ( aNewLength > mBufferList.GetDataLength() )
       {
         size_t empty_space_to_add = aNewLength - mBufferList.GetDataLength();
-        nsSharedBufferList::Buffer* new_buffer = nsSharedBufferList::NewBuffer(0, 0, empty_space_to_add);
+        nsSharedBufferList::Buffer* new_buffer = nsSharedBufferList::NewSingleAllocationBuffer(0, 0, empty_space_to_add);
         new_buffer->DataEnd(new_buffer->DataStart()+empty_space_to_add);
         mBufferList.LinkBuffer(mBufferList.GetLastBuffer(), new_buffer, 0);
       }

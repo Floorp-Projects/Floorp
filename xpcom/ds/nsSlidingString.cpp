@@ -61,11 +61,13 @@ nsSlidingSubstring::nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList, 
   }
 
 nsSlidingSubstring::nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList )
-    : /* mStart(aBufferList.First(), ...), mEnd(aEnd),*/ mBufferList(aBufferList)
+    : mBufferList(aBufferList)
   {
     mBufferList.AcquireReference();
 
-    // mStart, mEnd, mLength
+    mStart  = nsSlidingSharedBufferList::Position(mBufferList.GetFirstBuffer(), mBufferList.GetFirstBuffer()->DataStart());
+    mEnd    = nsSlidingSharedBufferList::Position(mBufferList.GetLastBuffer(), mBufferList.GetLastBuffer()->DataEnd());
+    mLength = PRUint32(Distance(mStart, mEnd));
   }
 
 nsSlidingSubstring::~nsSlidingSubstring()
@@ -115,8 +117,8 @@ nsSlidingSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragmen
 
 
 
-nsSlidingString::nsSlidingString()
-    : nsSlidingSubstring(*(new nsSlidingSharedBufferList))
+nsSlidingString::nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
+    : nsSlidingSubstring(*(new nsSlidingSharedBufferList(nsSlidingSharedBufferList::NewWrappingBuffer(aStorageStart, aDataEnd, aStorageEnd))))
   {
     // nothing else to do here
   }
