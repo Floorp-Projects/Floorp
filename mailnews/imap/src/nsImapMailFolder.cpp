@@ -401,7 +401,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
     char *folderName = nsnull;
     rv = GetName(&folderName);
-	if (folderName && !PL_strcasecmp(folderName, "INBOX"))
+//	if (folderName && !PL_strcasecmp(folderName, "INBOX"))
 		selectFolder = PR_TRUE;
 
     delete [] folderName;
@@ -418,38 +418,32 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
                                            nsnull);
 #endif 
         }
-        rv = NS_ERROR_NULL_POINTER;
+        selectFolder = PR_FALSE;
     }
-    else if (selectFolder)
+    rv = GetDatabase();
+
+	// don't run select if we're already running a url/select...
+	if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
+	{
+		rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+		m_urlRunning = PR_TRUE;
+	}
+
+    if(NS_SUCCEEDED(rv))
     {
-        rv = GetDatabase();
-
-		// don't run select if we're already running a url/select...
-		if (NS_SUCCEEDED(rv) && !m_urlRunning)
-		{
-			rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
-			m_urlRunning = PR_TRUE;
-		}
-
+        nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
+        nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+        rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
         if(NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
-            nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-            rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
-            if(NS_SUCCEEDED(rv))
-                rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
-                                                       this,
-                                                       &messageEnumerator);
-            *result = messageEnumerator;
-        }
-        else
-            return rv;
+            rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
+                                                   this,
+                                                   &messageEnumerator);
+        *result = messageEnumerator;
     }
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
+    else
+        return rv;
 }
+
 
 NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 {
