@@ -156,11 +156,19 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
       fileSpec += "Inbox";
     }
     m_outFileStream = new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
-	if (m_outFileStream)
-		m_outFileStream->seek(fileSpec.GetFileSize());
-
-
-	// create a new mail parser
+    
+    // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 
+    // where for some reason or another we can't write too and lose the messages
+    // See bug 62480
+    if (!m_outFileStream)
+        return NS_ERROR_OUT_OF_MEMORY;
+ 
+    m_outFileStream->seek(fileSpec.GetFileSize());
+ 
+    if (!m_outFileStream->is_open())
+        return NS_ERROR_FAILURE;
+    
+    // create a new mail parser
     m_newMailParser = new nsParseNewMailState;
     if (m_newMailParser == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -378,8 +386,13 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 	{
 		if (m_newMailParser)
 			m_newMailParser->HandleLine(buffer, PL_strlen(buffer));
-		if (m_outFileStream)
-			*m_outFileStream << buffer;
+    // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 
+    // where for some reason or another we can't write too and lose the messages
+    // See bug 62480
+        if (!m_outFileStream)
+            return NS_ERROR_OUT_OF_MEMORY;
+        *m_outFileStream << buffer;
+
 	}
 	return NS_OK;
 }

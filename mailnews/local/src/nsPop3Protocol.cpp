@@ -1146,7 +1146,13 @@ nsPop3Protocol::GetStat()
 
 
     if (!m_pop3ConData->only_check_for_new_mail) {
-        m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull, &m_pop3ConData->msg_del_started);
+        // The following was added to prevent the loss of Data when we try and
+        // write to somewhere we dont have write access error to (See bug 62480)
+        // (Note: This is only a temp hack until the underlying XPCOM is fixed
+        // to return errors)
+        if(NS_FAILED(m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull,
+                                                      &m_pop3ConData->msg_del_started)))
+            return(Error(POP3_MESSAGE_WRITE_ERROR));
 
         if(!m_pop3ConData->msg_del_started)
         {
@@ -2172,6 +2178,15 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         {
             status =
                 m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+            // The following was added to prevent the loss of Data when we try
+            // and write to somewhere we dont have write access error to (See 
+            // bug 62480)
+            // (Note: This is only a temp hack until the underlying XPCOM is
+            // fixed to return errors)
+            
+            if(NS_FAILED(status))
+                return(Error(POP3_MESSAGE_WRITE_ERROR));
+
             m_pop3ConData->msg_closure = 0;
             buffer_size = 0;
         }
@@ -2221,6 +2236,16 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     {
         status = 
             m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+
+        // The following was added to prevent the loss of Data when we try
+        // and write to somewhere we dont have write access error to (See
+        // bug 62480)
+        // (Note: This is only a temp hack until the underlying XPCOM is
+        // fixed to return errors)
+
+        if(NS_FAILED(status))
+            return(Error(POP3_MESSAGE_WRITE_ERROR));
+
         m_pop3ConData->msg_closure = 0;
     }
     
@@ -2359,6 +2384,16 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
         {
             status = 
                 m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+
+            // The following was added to prevent the loss of Data when we try
+            // and write to somewhere we dont have write access error to (See
+            // bug 62480)
+            // (Note: This is only a temp hack until the underlying XPCOM is
+            // fixed to return errors)
+
+            if(NS_FAILED(status))
+                return(Error(POP3_MESSAGE_WRITE_ERROR));
+
             m_pop3ConData->msg_closure = 0;
         }
     }
