@@ -726,6 +726,9 @@ PR_EXTERN(void) _PR_MD_WAKEUP_CPUS();
 
 /* Interrupts related */
 
+PR_EXTERN(void) _PR_MD_START_INTERRUPTS(void);
+#define    _PR_MD_START_INTERRUPTS _MD_START_INTERRUPTS
+
 PR_EXTERN(void) _PR_MD_STOP_INTERRUPTS(void);
 #define    _PR_MD_STOP_INTERRUPTS _MD_STOP_INTERRUPTS
 
@@ -791,6 +794,9 @@ extern void _PR_MD_EXIT(PRIntn status);
 #define    _PR_MD_EXIT _MD_EXIT
 
 /* Locks related */
+
+PR_EXTERN(void) _PR_MD_INIT_LOCKS(void);
+#define    _PR_MD_INIT_LOCKS _MD_INIT_LOCKS
 
 PR_EXTERN(PRStatus) _PR_MD_NEW_LOCK(_MDLock *md);
 #define    _PR_MD_NEW_LOCK _MD_NEW_LOCK
@@ -1213,12 +1219,6 @@ extern PRStatus _PR_MapOptionName(
     PRSockOption optname, PRInt32 *level, PRInt32 *name);
 extern void _PR_InitThreads(
     PRThreadType type, PRThreadPriority priority, PRUintn maxPTDs);
-
-PR_EXTERN(void) _PR_MD_START_INTERRUPTS(void);
-#define    _PR_MD_START_INTERRUPTS _MD_START_INTERRUPTS
-
-PR_EXTERN(void) _PR_MD_INIT_LOCKS(void);
-#define    _PR_MD_INIT_LOCKS _MD_INIT_LOCKS
 
 struct PRLock {
 #if defined(_PR_PTHREADS)
