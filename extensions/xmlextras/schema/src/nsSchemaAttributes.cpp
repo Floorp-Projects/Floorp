@@ -28,7 +28,7 @@
 // nsSchemaAttribute implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaAttribute::nsSchemaAttribute(nsISchema* aSchema, 
+nsSchemaAttribute::nsSchemaAttribute(nsSchema* aSchema, 
                                      const nsAReadableString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
@@ -49,7 +49,29 @@ NS_IMPL_ISUPPORTS3(nsSchemaAttribute,
 NS_IMETHODIMP 
 nsSchemaAttribute::Resolve()
 {
-  return NS_OK;
+  if (mIsResolving) {
+    return NS_OK;
+  }
+
+  mIsResolving = PR_TRUE;
+  nsresult rv = NS_OK;
+  if (mType && mSchema) {
+    nsCOMPtr<nsISchemaType> type;
+    rv = mSchema->ResolveTypePlaceholder(mType, getter_AddRefs(type));
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    mType = do_QueryInterface(type);
+    if (!mType) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    rv = mType->Resolve();
+  }
+  mIsResolving = PR_FALSE;
+
+  return rv;
 }
 
 /* void clear (); */
@@ -162,7 +184,7 @@ nsSchemaAttribute::SetUse(PRUint16 aUse)
 // nsSchemaAttributeRef implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaAttributeRef::nsSchemaAttributeRef(nsISchema* aSchema, 
+nsSchemaAttributeRef::nsSchemaAttributeRef(nsSchema* aSchema, 
                                            const nsAReadableString& aRef)
   : nsSchemaComponentBase(aSchema), mRef(aRef)
 {
@@ -304,7 +326,7 @@ nsSchemaAttributeRef::SetUse(PRUint16 aUse)
 // nsSchemaAttributeGroup implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaAttributeGroup::nsSchemaAttributeGroup(nsISchema* aSchema,
+nsSchemaAttributeGroup::nsSchemaAttributeGroup(nsSchema* aSchema,
                                                const nsAReadableString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
@@ -457,7 +479,7 @@ nsSchemaAttributeGroup::AddAttribute(nsISchemaAttributeComponent* aAttribute)
 // nsSchemaAttributeGroupRef implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaAttributeGroupRef::nsSchemaAttributeGroupRef(nsISchema* aSchema,
+nsSchemaAttributeGroupRef::nsSchemaAttributeGroupRef(nsSchema* aSchema,
                                                      const nsAReadableString& aRef)
   : nsSchemaComponentBase(aSchema), mRef(aRef)
 {
@@ -579,7 +601,7 @@ nsSchemaAttributeGroupRef::GetAttributeByName(const nsAReadableString & name,
 // nsSchemaAnyAttribute implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaAnyAttribute::nsSchemaAnyAttribute(nsISchema* aSchema)
+nsSchemaAnyAttribute::nsSchemaAnyAttribute(nsSchema* aSchema)
   : nsSchemaComponentBase(aSchema), mProcess(PROCESS_STRICT)
 {
   NS_INIT_ISUPPORTS();

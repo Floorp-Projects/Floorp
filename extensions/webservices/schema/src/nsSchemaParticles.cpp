@@ -28,7 +28,7 @@
 // nsSchemaParticleBase implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaParticleBase::nsSchemaParticleBase(nsISchema* aSchema)
+nsSchemaParticleBase::nsSchemaParticleBase(nsSchema* aSchema)
   : nsSchemaComponentBase(aSchema), mMinOccurs(1), mMaxOccurs(1)
 {
 }
@@ -86,7 +86,7 @@ nsSchemaParticleBase::SetMaxOccurs(PRUint32 aMaxOccurs)
 // nsSchemaModelGroup implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaModelGroup::nsSchemaModelGroup(nsISchema* aSchema, 
+nsSchemaModelGroup::nsSchemaModelGroup(nsSchema* aSchema, 
                                        const nsAReadableString& aName,
                                        PRUint16 aCompositor)
   : nsSchemaParticleBase(aSchema), mName(aName), mCompositor(aCompositor)
@@ -223,7 +223,7 @@ nsSchemaModelGroup::AddParticle(nsISchemaParticle* aParticle)
 // nsSchemaModelGroupRef implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaModelGroupRef::nsSchemaModelGroupRef(nsISchema* aSchema,
+nsSchemaModelGroupRef::nsSchemaModelGroupRef(nsSchema* aSchema,
                                              const nsAReadableString& aRef)
   : nsSchemaParticleBase(aSchema), mRef(aRef)
 {
@@ -345,7 +345,7 @@ nsSchemaModelGroupRef::GetParticle(PRUint32 index, nsISchemaParticle **_retval)
 // nsSchemaAnyParticle implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaAnyParticle::nsSchemaAnyParticle(nsISchema* aSchema)
+nsSchemaAnyParticle::nsSchemaAnyParticle(nsSchema* aSchema)
   : nsSchemaParticleBase(aSchema), mProcess(PROCESS_STRICT)
 {
   NS_INIT_ISUPPORTS();
@@ -434,7 +434,7 @@ nsSchemaAnyParticle::SetNamespace(const nsAReadableString& aNamespace)
 // nsSchemaElement implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaElement::nsSchemaElement(nsISchema* aSchema, 
+nsSchemaElement::nsSchemaElement(nsSchema* aSchema, 
                                  const nsAReadableString& aName)
   : nsSchemaParticleBase(aSchema), mName(aName), 
     mNillable(PR_FALSE), mAbstract(PR_FALSE)
@@ -460,7 +460,16 @@ nsSchemaElement::Resolve()
   }
 
   mIsResolving = PR_TRUE;
-  nsresult rv = mType->Resolve();
+  nsresult rv = NS_OK;
+  if (mType && mSchema) {
+    rv = mSchema->ResolveTypePlaceholder(mType, getter_AddRefs(mType));
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return rv;
+    }
+
+    rv = mType->Resolve();
+  }
   mIsResolving = PR_FALSE;
 
   return rv;
@@ -586,7 +595,7 @@ nsSchemaElement::SetFlags(PRBool aNillable, PRBool aAbstract)
 // nsSchemaElementRef implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaElementRef::nsSchemaElementRef(nsISchema* aSchema, 
+nsSchemaElementRef::nsSchemaElementRef(nsSchema* aSchema, 
                                        const nsAReadableString& aRef)
   : nsSchemaParticleBase(aSchema), mRef(aRef)
 {

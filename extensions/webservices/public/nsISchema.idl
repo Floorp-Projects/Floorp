@@ -80,6 +80,7 @@ interface nsISchema : nsISchemaComponent {
 interface nsISchemaType : nsISchemaComponent {
   const unsigned short SCHEMA_TYPE_SIMPLE = 1;
   const unsigned short SCHEMA_TYPE_COMPLEX = 2;
+  const unsigned short SCHEMA_TYPE_PLACEHOLDER = 3;
 
   readonly attribute AString name;
   readonly attribute unsigned short schemaType;
@@ -172,13 +173,20 @@ interface nsISchemaComplexType : nsISchemaType {
   const unsigned short CONTENT_MODEL_MIXED = 4;
 
   const unsigned short DERIVATION_EXTENSION_SIMPLE = 1;
-  const unsigned short DERIVATION_EXTENSION_COMPLEX = 2;
-  const unsigned short DERIVATION_RESTRICTION = 3; // Restriction of a complex type
-  const unsigned short DERIVATION_SELF_CONTAINED = 4; // Restriction of ur-type
+  const unsigned short DERIVATION_RESTRICTION_SIMPLE = 2;
+  const unsigned short DERIVATION_EXTENSION_COMPLEX = 3;
+  const unsigned short DERIVATION_RESTRICTION_COMPLEX = 4;  
+  const unsigned short DERIVATION_SELF_CONTAINED = 5; // Restriction of ur-type
 
   readonly attribute unsigned short contentModel;
   readonly attribute unsigned short derivation;
   readonly attribute nsISchemaType baseType;
+
+  // For complex types that are derivations of simple types or of
+  // complex types that are themselves derivations of simple types
+  // i.e. derivation is either DERIVATION_RESTRICTION_SIMPLE or
+  // DERIVATION_EXTENSION_SIMPLE.
+  readonly attribute nsISchemaSimpleType simpleBaseType; 
 
   readonly attribute nsISchemaModelGroup modelGroup;
   
@@ -194,6 +202,8 @@ interface nsISchemaParticle : nsISchemaComponent {
   const unsigned short PARTICLE_TYPE_ELEMENT = 1;
   const unsigned short PARTICLE_TYPE_MODEL_GROUP = 2;
   const unsigned short PARTICLE_TYPE_ANY = 3;
+
+  const PRUint32 OCCURRENCE_UNBOUNDED = 0xFFFFFFFF;
 
   readonly attribute AString name;
   readonly attribute unsigned short particleType;

@@ -28,7 +28,7 @@
 // nsSchemaComplexType implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaComplexType::nsSchemaComplexType(nsISchema* aSchema,
+nsSchemaComplexType::nsSchemaComplexType(nsSchema* aSchema,
                                          const nsAReadableString& aName,
                                          PRBool aAbstract)
   : nsSchemaComponentBase(aSchema), mName(aName), mAbstract(aAbstract),
@@ -73,6 +73,40 @@ nsSchemaComplexType::Resolve()
       }
     }
   }
+
+  if (!mSchema) {
+    mIsResolving = PR_FALSE;
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mBaseType) {
+    rv = mSchema->ResolveTypePlaceholder(mBaseType, getter_AddRefs(mBaseType));
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    rv = mBaseType->Resolve();
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+  }
+    
+  if (mSimpleBaseType) {
+    nsCOMPtr<nsISchemaType> type;
+    rv = mSchema->ResolveTypePlaceholder(mSimpleBaseType, 
+                                         getter_AddRefs(type));
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    mSimpleBaseType = do_QueryInterface(type);
+    if (!mSimpleBaseType) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    rv = mSimpleBaseType->Resolve();
+  }
   mIsResolving = PR_FALSE;
 
   return NS_OK;
@@ -90,6 +124,10 @@ nsSchemaComplexType::Clear()
   if (mBaseType) {
     mBaseType->Clear();
     mBaseType = nsnull;
+  }
+  if (mSimpleBaseType) {
+    mSimpleBaseType->Clear();
+    mSimpleBaseType = nsnull;
   }
   if (mModelGroup) {
     mModelGroup->Clear();
@@ -169,6 +207,18 @@ nsSchemaComplexType::GetBaseType(nsISchemaType * *aBaseType)
   return NS_OK;
 }
 
+/* readonly attribute nsISchemaSimpleType simplBaseType; */
+NS_IMETHODIMP 
+nsSchemaComplexType::GetSimpleBaseType(nsISchemaSimpleType * *aSimpleBaseType)
+{
+  NS_ENSURE_ARG_POINTER(aSimpleBaseType);
+
+  *aSimpleBaseType = mSimpleBaseType;
+  NS_IF_ADDREF(*aSimpleBaseType);
+
+  return NS_OK;
+}
+
 /* readonly attribute nsISchemaModelGroup modelGroup; */
 NS_IMETHODIMP 
 nsSchemaComplexType::GetModelGroup(nsISchemaModelGroup * *aModelGroup)
@@ -244,6 +294,14 @@ nsSchemaComplexType::SetDerivation(PRUint16 aDerivation,
 {
   mDerivation = aDerivation;
   mBaseType = aBaseType;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSchemaComplexType::SetSimpleBaseType(nsISchemaSimpleType* aSimpleBaseType)
+{
+  mSimpleBaseType = aSimpleBaseType;
 
   return NS_OK;
 }

@@ -28,7 +28,7 @@
 // nsSchemaComponentBase implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaComponentBase::nsSchemaComponentBase(nsISchema* aSchema) 
+nsSchemaComponentBase::nsSchemaComponentBase(nsSchema* aSchema) 
   : mSchema(aSchema), mIsResolving(PR_FALSE), mIsClearing(PR_FALSE)
 {
 }

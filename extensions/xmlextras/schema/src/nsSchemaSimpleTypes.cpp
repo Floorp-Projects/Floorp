@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS4(nsSchemaBuiltinType,
 NS_IMETHODIMP 
 nsSchemaBuiltinType::GetTargetNamespace(nsAWritableString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema"));
+  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE));
   
   return NS_OK;
 }
@@ -253,7 +253,7 @@ nsSchemaBuiltinType::GetBuiltinType(PRUint16 *aBuiltinType)
 // nsSchemaListType implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaListType::nsSchemaListType(nsISchema* aSchema, 
+nsSchemaListType::nsSchemaListType(nsSchema* aSchema, 
                                    const nsAReadableString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
@@ -274,7 +274,28 @@ NS_IMPL_ISUPPORTS4(nsSchemaListType,
 NS_IMETHODIMP 
 nsSchemaListType::Resolve()
 {
-  return NS_OK;
+  if (mIsResolving) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  mIsResolving = PR_TRUE;
+  if (mListType && mSchema) {
+    nsCOMPtr<nsISchemaType> type;
+    rv = mSchema->ResolveTypePlaceholder(mListType, getter_AddRefs(type));
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    mListType = do_QueryInterface(type);
+    if (!mListType) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  rv = mListType->Resolve();
+  mIsResolving = PR_FALSE;
+
+  return rv;
 }
 
 /* void clear (); */
@@ -351,7 +372,7 @@ nsSchemaListType::SetListType(nsISchemaSimpleType* aListType)
 // nsSchemaUnionType implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaUnionType::nsSchemaUnionType(nsISchema* aSchema, 
+nsSchemaUnionType::nsSchemaUnionType(nsSchema* aSchema, 
                                      const nsAReadableString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
@@ -372,6 +393,40 @@ NS_IMPL_ISUPPORTS4(nsSchemaUnionType,
 NS_IMETHODIMP 
 nsSchemaUnionType::Resolve()
 {
+  if (mIsResolving) {
+    return NS_OK;
+  }
+
+  mIsResolving = PR_TRUE;
+  nsresult rv;
+  PRUint32 i, count;
+  mUnionTypes.Count(&count);
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsISchemaType> type;
+    
+    rv = mUnionTypes.QueryElementAt(i, NS_GET_IID(nsISchemaType),
+                                    getter_AddRefs(type));
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    if (mSchema) {
+      rv = mSchema->ResolveTypePlaceholder(type,
+                                           getter_AddRefs(type));
+      if (NS_FAILED(rv)) {
+        mIsResolving = PR_FALSE;
+        return NS_ERROR_FAILURE;
+      }
+      mUnionTypes.ReplaceElementAt(type, i);
+      rv = type->Resolve();
+      if (NS_FAILED(rv)) {
+        mIsResolving = PR_FALSE;
+        return rv;
+      }
+    }
+  }
+  mIsResolving = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -465,7 +520,7 @@ nsSchemaUnionType::AddUnionType(nsISchemaSimpleType* aType)
 // nsSchemaRestrictionType implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaRestrictionType::nsSchemaRestrictionType(nsISchema* aSchema, 
+nsSchemaRestrictionType::nsSchemaRestrictionType(nsSchema* aSchema, 
                                                  const nsAReadableString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
@@ -486,7 +541,29 @@ NS_IMPL_ISUPPORTS4(nsSchemaRestrictionType,
 NS_IMETHODIMP 
 nsSchemaRestrictionType::Resolve()
 {
-  return NS_OK;
+  if (mIsResolving) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  mIsResolving = PR_TRUE;
+  if (mBaseType && mSchema) {
+    nsCOMPtr<nsISchemaType> type;
+    rv = mSchema->ResolveTypePlaceholder(mBaseType, getter_AddRefs(type));
+    if (NS_FAILED(rv)) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    mBaseType = do_QueryInterface(type);
+    if (!mBaseType) {
+      mIsResolving = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
+    rv = mBaseType->Resolve();
+  }
+  mIsResolving = PR_FALSE;
+
+  return rv;
 }
 
 /* void clear (); */
@@ -601,14 +678,76 @@ nsSchemaRestrictionType::AddFacet(nsISchemaFacet* aFacet)
   return mFacets.AppendElement(aFacet);
 }
 
-/* End of implementation class template. */
+////////////////////////////////////////////////////////////
+//
+// nsSchemaTypePlaceholder implementation
+//
+////////////////////////////////////////////////////////////
+nsSchemaTypePlaceholder::nsSchemaTypePlaceholder(nsSchema* aSchema,
+                                                 const nsAReadableString& aName)
+  : nsSchemaComponentBase(aSchema), mName(aName)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsSchemaTypePlaceholder::~nsSchemaTypePlaceholder()
+{
+}
+
+NS_IMPL_ISUPPORTS3(nsSchemaTypePlaceholder, 
+                   nsISchemaComponent,
+                   nsISchemaType,
+                   nsISchemaSimpleType)
+
+
+/* void resolve (); */
+NS_IMETHODIMP 
+nsSchemaTypePlaceholder::Resolve()
+{
+  return NS_OK;
+}
+
+/* void clear (); */
+NS_IMETHODIMP 
+nsSchemaTypePlaceholder::Clear()
+{
+  return NS_OK;
+}
+
+/* readonly attribute wstring name; */
+NS_IMETHODIMP 
+nsSchemaTypePlaceholder::GetName(nsAWritableString& aName)
+{
+  aName.Assign(mName);
+  
+  return NS_OK;
+}
+
+/* readonly attribute unsigned short schemaType; */
+NS_IMETHODIMP 
+nsSchemaTypePlaceholder::GetSchemaType(PRUint16 *aSchemaType)
+{
+  NS_ENSURE_ARG_POINTER(aSchemaType);
+
+  *aSchemaType = nsISchemaType::SCHEMA_TYPE_PLACEHOLDER;
+
+  return NS_OK;
+}
+
+/* readonly attribute unsigned short simpleType; */
+NS_IMETHODIMP 
+nsSchemaTypePlaceholder::GetSimpleType(PRUint16 *aSimpleType)
+{
+  return NS_ERROR_FAILURE;
+}
+
 
 ////////////////////////////////////////////////////////////
 //
 // nsSchemaFacet implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaFacet::nsSchemaFacet(nsISchema* aSchema, 
+nsSchemaFacet::nsSchemaFacet(nsSchema* aSchema, 
                              PRUint16 aFacetType,
                              PRBool aIsFixed)
   : nsSchemaComponentBase(aSchema), mFacetType(aFacetType), mIsFixed(aIsFixed)

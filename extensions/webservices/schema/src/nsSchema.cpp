@@ -446,3 +446,27 @@ nsSchema::AddModelGroup(nsISchemaModelGroup* aModelGroup)
   return NS_OK;
 }
 
+nsresult
+nsSchema::ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
+                                 nsISchemaType** aType)
+{
+  PRUint16 schemaType;
+
+  *aType = nsnull;
+  aPlaceholder->GetSchemaType(&schemaType);
+  if (schemaType == nsISchemaType::SCHEMA_TYPE_PLACEHOLDER) {
+    nsAutoString name;
+    aPlaceholder->GetName(name);
+    
+    nsresult rv = GetTypeByName(name, aType);
+    if (NS_FAILED(rv) || !*aType) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  else {
+    *aType = aPlaceholder;
+  }
+
+  return NS_OK;
+}
+

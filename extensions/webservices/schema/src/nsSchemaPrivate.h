@@ -32,6 +32,8 @@
 #include "nsHashtable.h"
 #include "nsString.h"
 
+#define NS_SCHEMA_NAMESPACE "http://www.w3.org/2001/XMLSchema"
+
 class nsSchema : public nsISchema 
 {
 public:
@@ -47,6 +49,8 @@ public:
   NS_IMETHOD AddElement(nsISchemaElement* aElement);
   NS_IMETHOD AddAttributeGroup(nsISchemaAttributeGroup* aAttributeGroup);
   NS_IMETHOD AddModelGroup(nsISchemaModelGroup* aModelGroup);
+  nsresult ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
+                                  nsISchemaType** aType);
 
 protected:
   nsString mTargetNamespace;
@@ -64,14 +68,14 @@ protected:
 
 class nsSchemaComponentBase {
 public:
-  nsSchemaComponentBase(nsISchema* aSchema);
+  nsSchemaComponentBase(nsSchema* aSchema);
   virtual ~nsSchemaComponentBase();
 
   NS_IMETHOD GetTargetNamespace(nsAWritableString& aTargetNamespace);
 
 protected:
-  nsISchema* mSchema;  // [WEAK] It owns me
-  // Used to prevent cyclical recursion in the object graph
+  nsSchema* mSchema;  // [WEAK] It owns me
+  // Used to prevent infinite recursion for cycles in the object graph
   PRPackedBool mIsResolving;
   PRPackedBool mIsClearing;
 };
@@ -103,7 +107,7 @@ class nsSchemaListType : public nsSchemaComponentBase,
                          public nsISchemaListType
 {
 public:
-  nsSchemaListType(nsISchema* aSchema, const nsAReadableString& aName);
+  nsSchemaListType(nsSchema* aSchema, const nsAReadableString& aName);
   virtual ~nsSchemaListType();
 
   NS_DECL_ISUPPORTS
@@ -123,7 +127,7 @@ class nsSchemaUnionType : public nsSchemaComponentBase,
                           public nsISchemaUnionType
 {
 public:
-  nsSchemaUnionType(nsISchema* aSchema, const nsAReadableString& aName);
+  nsSchemaUnionType(nsSchema* aSchema, const nsAReadableString& aName);
   virtual ~nsSchemaUnionType();
   
   NS_DECL_ISUPPORTS
@@ -143,7 +147,7 @@ class nsSchemaRestrictionType : public nsSchemaComponentBase,
                                 public nsISchemaRestrictionType
 {
 public:
-  nsSchemaRestrictionType(nsISchema* aSchema, const nsAReadableString& aName);
+  nsSchemaRestrictionType(nsSchema* aSchema, const nsAReadableString& aName);
   virtual ~nsSchemaRestrictionType();
 
   NS_DECL_ISUPPORTS
@@ -165,7 +169,7 @@ class nsSchemaComplexType : public nsSchemaComponentBase,
                             public nsISchemaComplexType
 {
 public:
-  nsSchemaComplexType(nsISchema* aSchema, const nsAReadableString& aName,
+  nsSchemaComplexType(nsSchema* aSchema, const nsAReadableString& aName,
                       PRBool aAbstract);
   virtual ~nsSchemaComplexType();
 
@@ -176,6 +180,7 @@ public:
 
   NS_IMETHOD SetContentModel(PRUint16 aContentModel);
   NS_IMETHOD SetDerivation(PRUint16 aDerivation, nsISchemaType* aBaseType);
+  NS_IMETHOD SetSimpleBaseType(nsISchemaSimpleType* aSimpleBaseType);
   NS_IMETHOD SetModelGroup(nsISchemaModelGroup* aModelGroup);
   NS_IMETHOD AddAttribute(nsISchemaAttributeComponent* aAttribute);
   
@@ -184,16 +189,33 @@ protected:
   PRUint16 mContentModel;
   PRUint16 mDerivation;
   nsCOMPtr<nsISchemaType> mBaseType;
+  nsCOMPtr<nsISchemaSimpleType> mSimpleBaseType;
   nsCOMPtr<nsISchemaModelGroup> mModelGroup;
   nsSupportsArray mAttributes;
   nsSupportsHashtable mAttributesHash;
   PRPackedBool mAbstract;
 };
 
+class nsSchemaTypePlaceholder : public nsSchemaComponentBase,
+                                public nsISchemaSimpleType
+{
+public:
+  nsSchemaTypePlaceholder(nsSchema* aSchema, const nsAReadableString& aName);
+  virtual ~nsSchemaTypePlaceholder();
+
+  NS_DECL_ISUPPORTS
+  NS_IMPL_NSISCHEMACOMPONENT_USING_BASE
+  NS_DECL_NSISCHEMATYPE
+  NS_DECL_NSISCHEMASIMPLETYPE
+
+protected:
+  nsString mName;
+};
+
 class nsSchemaParticleBase : public nsSchemaComponentBase
 {
 public:  
-  nsSchemaParticleBase(nsISchema* aSchema);
+  nsSchemaParticleBase(nsSchema* aSchema);
   virtual ~nsSchemaParticleBase();
 
   NS_IMETHOD GetMinOccurs(PRUint32 *aMinOccurs);
@@ -227,7 +249,7 @@ class nsSchemaModelGroup : public nsSchemaParticleBase,
                            public nsISchemaModelGroup
 {
 public:
-  nsSchemaModelGroup(nsISchema* aSchema, 
+  nsSchemaModelGroup(nsSchema* aSchema, 
                      const nsAReadableString& aName,
                      PRUint16 aCompositor);
   virtual ~nsSchemaModelGroup();
@@ -249,7 +271,7 @@ class nsSchemaModelGroupRef : public nsSchemaParticleBase,
                               public nsISchemaModelGroup
 {
 public:
-  nsSchemaModelGroupRef(nsISchema* aSchema, 
+  nsSchemaModelGroupRef(nsSchema* aSchema, 
                         const nsAReadableString& aRef);
   virtual ~nsSchemaModelGroupRef();
 
@@ -267,7 +289,7 @@ class nsSchemaAnyParticle : public nsSchemaParticleBase,
                             public nsISchemaAnyParticle
 {
 public:
-  nsSchemaAnyParticle(nsISchema* aSchema);
+  nsSchemaAnyParticle(nsSchema* aSchema);
   virtual ~nsSchemaAnyParticle();
 
   NS_DECL_ISUPPORTS
@@ -287,7 +309,7 @@ class nsSchemaElement : public nsSchemaParticleBase,
                         public nsISchemaElement
 {
 public:
-  nsSchemaElement(nsISchema* aSchema, const nsAReadableString& aName);
+  nsSchemaElement(nsSchema* aSchema, const nsAReadableString& aName);
   virtual ~nsSchemaElement();
 
   NS_DECL_ISUPPORTS
@@ -313,7 +335,7 @@ class nsSchemaElementRef : public nsSchemaParticleBase,
                            public nsISchemaElement
 {
 public:
-  nsSchemaElementRef(nsISchema* aSchema, const nsAReadableString& aRef);
+  nsSchemaElementRef(nsSchema* aSchema, const nsAReadableString& aRef);
   virtual ~nsSchemaElementRef();
 
   NS_DECL_ISUPPORTS
@@ -330,7 +352,7 @@ class nsSchemaAttribute : public nsSchemaComponentBase,
                           public nsISchemaAttribute 
 {
 public:
-  nsSchemaAttribute(nsISchema* aSchema, const nsAReadableString& aName);
+  nsSchemaAttribute(nsSchema* aSchema, const nsAReadableString& aName);
   virtual ~nsSchemaAttribute();
 
   NS_DECL_ISUPPORTS
@@ -355,7 +377,7 @@ class nsSchemaAttributeRef : public nsSchemaComponentBase,
                              public nsISchemaAttribute 
 {
 public:
-  nsSchemaAttributeRef(nsISchema* aSchema, const nsAReadableString& aRef);
+  nsSchemaAttributeRef(nsSchema* aSchema, const nsAReadableString& aRef);
   virtual ~nsSchemaAttributeRef();
   
   NS_DECL_ISUPPORTS
@@ -379,7 +401,7 @@ class nsSchemaAttributeGroup : public nsSchemaComponentBase,
                                public nsISchemaAttributeGroup
 {
 public:
-  nsSchemaAttributeGroup(nsISchema* aSchema, const nsAReadableString& aName);
+  nsSchemaAttributeGroup(nsSchema* aSchema, const nsAReadableString& aName);
   virtual ~nsSchemaAttributeGroup();
   
   NS_DECL_ISUPPORTS
@@ -399,7 +421,7 @@ class nsSchemaAttributeGroupRef : public nsSchemaComponentBase,
                                   public nsISchemaAttributeGroup
 {
 public:
-  nsSchemaAttributeGroupRef(nsISchema* aSchema, const nsAReadableString& aRef);
+  nsSchemaAttributeGroupRef(nsSchema* aSchema, const nsAReadableString& aRef);
   virtual ~nsSchemaAttributeGroupRef();
   
   NS_DECL_ISUPPORTS
@@ -416,7 +438,7 @@ class nsSchemaAnyAttribute : public nsSchemaComponentBase,
                              public nsISchemaAnyAttribute
 {
 public:
-  nsSchemaAnyAttribute(nsISchema* aSchema);
+  nsSchemaAnyAttribute(nsSchema* aSchema);
   virtual ~nsSchemaAnyAttribute();
 
   NS_DECL_ISUPPORTS
@@ -436,7 +458,7 @@ class nsSchemaFacet : public nsSchemaComponentBase,
                       public nsISchemaFacet
 {
 public:
-  nsSchemaFacet(nsISchema* aSchema, PRUint16 aFacetType, PRBool aIsFixed);
+  nsSchemaFacet(nsSchema* aSchema, PRUint16 aFacetType, PRBool aIsFixed);
   virtual ~nsSchemaFacet();
 
   NS_DECL_ISUPPORTS
