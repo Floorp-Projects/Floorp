@@ -15,7 +15,7 @@
 #
 
 DEPTH=..\..\..\..
-IGNORE_MANIFEST=1
+
 
 include <$(DEPTH)\config\rules.mak>
 
