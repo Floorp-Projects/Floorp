@@ -53,11 +53,6 @@ Contributors:
     <keyset id="keyset"/>
     <description class="desc">&MsgSelectDesc.label;</description>
 
-    <grid flex="1">
-
-    <rows>
-    <row flex="1">
-
     <outliner flex="1" id="synchronizeOutliner">
       <outlinerbody flex="1" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" onclick="onSynchronizeClick(event);">
         <template>
@@ -114,7 +109,4 @@ Contributors:
       <outlinercol class="outlinercol-header outlinercol-inset-header" id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;" />
     </outliner>
 
-    </row>
-    </rows>
-    </grid>
 </dialog>
