@@ -19,7 +19,11 @@ interface EditorAppCore : BaseAppCore
   void setTextProperty(in DOMString prop, in DOMString attr, in DOMString value);
   void removeTextProperty(in DOMString prop, in DOMString attr);
   void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out DOMString firstHas, out DOMString anyHas, out DOMString allHas);
-  
+  void setBodyAttribute(in DOMString attr, in DOMString value);
+  void setBackgroundColor(in DOMString color);
+
+  DOMString getLocalFileURL(in Window parent, in DOMString filterType);
+    
   void setParagraphFormat(in DOMString value);
 
   void loadUrl(in DOMString url);
@@ -58,13 +62,14 @@ interface EditorAppCore : BaseAppCore
   Element createElementWithDefaults(in DOMString tagName);
   Element insertElement(in Element element, in boolean deleteSelection);
   void    insertLinkAroundSelection(in Element anchorElement);
+  void    selectElement(in Element element);
+  void    setCaretAfterElement(in Element element);
   
   void setToolbarWindow(in Window win);
   void setContentWindow(in Window win);
   void setWebShellWindow(in Window win);
 
   DOMString startSpellChecking();
-  DOMString getFirstMisspelledWord();
   DOMString getNextMisspelledWord();
   DOMString getSuggestedWord();
   boolean checkCurrentWord(in DOMString suggestedWord);

@@ -59,6 +59,12 @@ public:
 
   NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas)=0;
 
+  NS_IMETHOD    SetBodyAttribute(const nsString& aAttr, const nsString& aValue)=0;
+
+  NS_IMETHOD    SetBackgroundColor(const nsString& aColor)=0;
+
+  NS_IMETHOD    GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn)=0;
+
   NS_IMETHOD    SetParagraphFormat(const nsString& aValue)=0;
 
   NS_IMETHOD    LoadUrl(const nsString& aUrl)=0;
@@ -115,6 +121,10 @@ public:
 
   NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
 
+  NS_IMETHOD    SelectElement(nsIDOMElement* aElement)=0;
+
+  NS_IMETHOD    SetCaretAfterElement(nsIDOMElement* aElement)=0;
+
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
 
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin)=0;
@@ -122,8 +132,6 @@ public:
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin)=0;
 
   NS_IMETHOD    StartSpellChecking(nsString& aReturn)=0;
-
-  NS_IMETHOD    GetFirstMisspelledWord(nsString& aReturn)=0;
 
   NS_IMETHOD    GetNextMisspelledWord(nsString& aReturn)=0;
 
@@ -157,6 +165,9 @@ public:
   NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue);  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr);  \
   NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas);  \
+  NS_IMETHOD    SetBodyAttribute(const nsString& aAttr, const nsString& aValue);  \
+  NS_IMETHOD    SetBackgroundColor(const nsString& aColor);  \
+  NS_IMETHOD    GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn);  \
   NS_IMETHOD    SetParagraphFormat(const nsString& aValue);  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
   NS_IMETHOD    NewWindow();  \
@@ -185,11 +196,12 @@ public:
   NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);  \
   NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);  \
   NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);  \
+  NS_IMETHOD    SelectElement(nsIDOMElement* aElement);  \
+  NS_IMETHOD    SetCaretAfterElement(nsIDOMElement* aElement);  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    StartSpellChecking(nsString& aReturn);  \
-  NS_IMETHOD    GetFirstMisspelledWord(nsString& aReturn);  \
   NS_IMETHOD    GetNextMisspelledWord(nsString& aReturn);  \
   NS_IMETHOD    GetSuggestedWord(nsString& aReturn);  \
   NS_IMETHOD    CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aReturn);  \
@@ -214,6 +226,9 @@ public:
   NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue) { return _to SetTextProperty(aProp, aAttr, aValue); }  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr) { return _to RemoveTextProperty(aProp, aAttr); }  \
   NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas) { return _to GetTextProperty(aProp, aAttr, aValue, aFirstHas, aAnyHas, aAllHas); }  \
+  NS_IMETHOD    SetBodyAttribute(const nsString& aAttr, const nsString& aValue) { return _to SetBodyAttribute(aAttr, aValue); }  \
+  NS_IMETHOD    SetBackgroundColor(const nsString& aColor) { return _to SetBackgroundColor(aColor); }  \
+  NS_IMETHOD    GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn) { return _to GetLocalFileURL(aParent, aFilterType, aReturn); }  \
   NS_IMETHOD    SetParagraphFormat(const nsString& aValue) { return _to SetParagraphFormat(aValue); }  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to LoadUrl(aUrl); }  \
   NS_IMETHOD    NewWindow() { return _to NewWindow(); }  \
@@ -242,11 +257,12 @@ public:
   NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn) { return _to CreateElementWithDefaults(aTagName, aReturn); }  \
   NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn) { return _to InsertElement(aElement, aDeleteSelection, aReturn); }  \
   NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement) { return _to InsertLinkAroundSelection(aAnchorElement); }  \
+  NS_IMETHOD    SelectElement(nsIDOMElement* aElement) { return _to SelectElement(aElement); }  \
+  NS_IMETHOD    SetCaretAfterElement(nsIDOMElement* aElement) { return _to SetCaretAfterElement(aElement); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to SetContentWindow(aWin); }  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to SetWebShellWindow(aWin); }  \
   NS_IMETHOD    StartSpellChecking(nsString& aReturn) { return _to StartSpellChecking(aReturn); }  \
-  NS_IMETHOD    GetFirstMisspelledWord(nsString& aReturn) { return _to GetFirstMisspelledWord(aReturn); }  \
   NS_IMETHOD    GetNextMisspelledWord(nsString& aReturn) { return _to GetNextMisspelledWord(aReturn); }  \
   NS_IMETHOD    GetSuggestedWord(nsString& aReturn) { return _to GetSuggestedWord(aReturn); }  \
   NS_IMETHOD    CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aReturn) { return _to CheckCurrentWord(aSuggestedWord, aReturn); }  \
