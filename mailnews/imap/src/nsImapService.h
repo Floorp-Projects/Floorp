@@ -59,10 +59,11 @@ public:
                                 nsIMsgFolder * aImapMailFolder, 
                                 nsIUrlListener * aUrlListener, 
                                 nsIURI ** aURL);
-	NS_IMETHOD FetchMessage(nsIEventQueue * aClientEventQueue, 
+	NS_IMETHOD FetchMessage(
+                            nsIImapUrl * aImapUrl,
+                            nsIImapUrl::nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
-                            nsIUrlListener * aUrlListener, 
                             nsIURI ** aURL,
 							nsISupports *aConsumer,
                             const char *messageIdentifierList,
@@ -200,10 +201,10 @@ public:
 protected:
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
                            nsCString& folderName);
-	nsresult CreateStartOfImapUrl(nsIImapUrl  * &imapUrl,
-                                  nsIMsgFolder* &aImapFolder,
-                                  nsIUrlListener * aUrlListener, 
-                                  nsCString &urlSpec);
+	nsresult CreateStartOfImapUrl(nsIImapUrl  **imapUrl,
+                                  nsIMsgFolder* aImapFolder,
+                                  nsIUrlListener * aUrlListener,
+                                  nsCString & urlSpec);
     nsresult GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue, 
                                          nsIImapUrl* aImapUrl,
                                          nsISupports* aConsumer,
@@ -218,6 +219,10 @@ protected:
                          const char *howToDiddle,
                          imapMessageFlagsType flags,
                          PRBool messageIdsAreUID);
+
+    // just a little helper method...maybe it should be a macro? which helps break down a imap message uri
+    // into the folder and message key equivalents
+    nsresult DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder,  char ** msgKey);
 
 };
 

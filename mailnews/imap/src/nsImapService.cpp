@@ -34,6 +34,7 @@
 #include "nsIWebShell.h"
 #include "nsIRDFService.h"
 #include "nsIEventQueueService.h"
+#include "nsXPIDLString.h"
 #include "nsRDFCID.h"
 
 #include "nsIMsgStatusFeedback.h"
@@ -108,10 +109,10 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
     nsresult rv;
-	rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, aUrlListener, urlSpec);
+	rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -120,8 +121,7 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
 
 		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
-		if (mailNewsUrl)
-			mailNewsUrl->SetStatusFeedback(aStatusFeedback);
+    	mailNewsUrl->SetStatusFeedback(aStatusFeedback);  
 
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
@@ -131,19 +131,13 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append("/select>/");
             urlSpec.Append(folderName.GetBuffer());
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+		    rv = mailNewsUrl->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                  imapUrl,
                                                  nsnull,
                                                  aURL);
 		}
-        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	} // if we have a url to run....
 
 	return rv;
@@ -165,37 +159,33 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
 	nsresult rv;
     
-    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, aUrlListener, urlSpec);
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec);
 
-	if (NS_SUCCEEDED(rv) && imapUrl)
+	if (NS_SUCCEEDED(rv))
 	{
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
 		if (NS_SUCCEEDED(rv))
 		{
 			char hierarchySeparator = '/';
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+
 			urlSpec.Append("/liteselect>");
 			urlSpec.Append(hierarchySeparator);
 
             nsCString folderName;
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                  nsnull, aURL);
 		}
-        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	} // if we have a url to run....
 
 	return rv;
@@ -208,41 +198,23 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                                             nsIURI ** aURL) 
 {
 	nsresult rv = NS_OK;
-    nsCOMPtr<nsIEventQueue> queue;
- 	// get the Event Queue for this thread...
-	NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                    kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIMsgFolder> folder;
+    nsXPIDLCString msgKey;
 
-	if (NS_SUCCEEDED(rv) && pEventQService)
-		rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                                 getter_AddRefs(queue));
-
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-
-	nsCAutoString	folderURI;
-	nsMsgKey	msgKey;
-	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey);
+    rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
 	if (NS_SUCCEEDED(rv))
 	{
-		nsIRDFResource* res;
-		rv = rdf->GetResource(folderURI, &res);
-		if (NS_FAILED(rv))
-			return rv;
-		nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+    	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
 		if (NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsIImapMessageSink>
-                imapMessageSink(do_QueryInterface(res, &rv));
-			if (NS_SUCCEEDED(rv))
-			{
-				nsCAutoString messageIdString;
+        {
+           nsCOMPtr<nsIImapUrl> imapUrl;
+           nsCAutoString urlSpec;
+           rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec);
+           if (NS_FAILED(rv)) return rv;
 
-				messageIdString.Append(msgKey, 10);
-				rv = FetchMessage(queue, folder, imapMessageSink,
-                                  aUrlListener, aURL, aDisplayConsumer,
-                                  messageIdString, PR_TRUE);
-			}
-		}
+           rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+                              aURL, aDisplayConsumer, msgKey, PR_TRUE);
+        }
 	}
 	return rv;
 }
@@ -258,85 +230,115 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
     streamSupport = do_QueryInterface(aMailboxCopy, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIEventQueue> queue;
- 	// get the Event Queue for this thread...
-	NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                    kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIMsgFolder> folder;
+    nsXPIDLCString msgKey;
+    rv = DecomposeImapURI(aSrcMailboxURI, getter_AddRefs(folder), getter_Copies(msgKey));
+	if (NS_SUCCEEDED(rv))
+	{
+    	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
+		if (NS_SUCCEEDED(rv))
+		{
+            nsCOMPtr<nsIImapUrl> imapUrl;
+            nsCAutoString urlSpec;
+            rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec);
 
-    if (NS_FAILED(rv)) return rv;
+            // now try to display the message
+			rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+                              aURL, streamSupport, msgKey, PR_TRUE);
+           if (NS_SUCCEEDED(rv) && moveMessage)
+           {
+               nsCOMPtr<nsIEventQueue> queue;	
+               // get the Event Queue for this thread...
+	           NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
 
-    rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                             getter_AddRefs(queue));
-    if (NS_FAILED(rv)) return rv;
+               if (NS_FAILED(rv)) return rv;
 
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
+               rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+               if (NS_FAILED(rv)) return rv;
+               
+               // ** jt -- this really isn't an optimal way of deleting a
+               // list of messages but I don't have a better way at this
+               // moment
+               rv = AddMessageFlags(queue, folder, aUrlListener, nsnull,
+                                    msgKey,
+                                    kImapMsgDeletedFlag,
+                                    PR_TRUE);
+               // ** jt -- force to update the folder
+               if (NS_SUCCEEDED(rv))
+                  rv = SelectFolder(queue, folder, aUrlListener, nsnull, nsnull);
+            } // if move message
+        } // if we got an imap message sink
+    } // if we decomposed the imap message 
+    return rv;
+}
+
+// just a helper method to break down imap message URIs....
+nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder, char ** aMsgKey)
+{
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
     if (NS_FAILED(rv)) return rv;
 
 	nsCAutoString	folderURI;
-	nsMsgKey	msgKey;
-	rv = nsParseImapMessageURI(aSrcMailboxURI, folderURI, &msgKey);
+    nsMsgKey msgKey;
+	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey);
 	if (NS_SUCCEEDED(rv))
 	{
 		nsIRDFResource* res;
 		rv = rdf->GetResource(folderURI, &res);
-		if (NS_FAILED(rv))
-			return rv;
-		nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-		if (NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsIImapMessageSink>
-                imapMessageSink(do_QueryInterface(res, &rv));
-			if (NS_SUCCEEDED(rv))
-			{
-				nsCString messageIdString;
+		if (NS_FAILED(rv))	return rv;
+        rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
+        // convert the message key into a string
+        if (msgKey)
+        {
+            nsCAutoString messageIdString;
+            messageIdString.Append(msgKey, 10 /* base 10 */);
+            *aMsgKey = messageIdString.ToNewCString();
+        }
+    }
 
-				messageIdString.Append(msgKey, 10);
-				rv = FetchMessage(queue, folder, imapMessageSink,
-                                  aUrlListener, aURL, streamSupport,
-                                  messageIdString, PR_TRUE);
-                if (NS_SUCCEEDED(rv) && moveMessage)
-                {
-                    // ** jt -- this really isn't an optimal way of deleting a
-                    // list of messages but I don't have a better way at this
-                    // moment
-                    rv = AddMessageFlags(queue, folder, aUrlListener, nsnull,
-                                         messageIdString,
-                                         kImapMsgDeletedFlag,
-                                         PR_TRUE);
-                    // ** jt -- force to update the folder
-                    if (NS_SUCCEEDED(rv))
-                        rv = SelectFolder(queue, folder, aUrlListener, nsnull, nsnull);
-                }
-			}
-		}
-	}
     return rv;
 }
 
 NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
-												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURI **aURL)
+												  PRBool aAddDummyEnvelope, nsIUrlListener *aUrlListener, nsIURI **aURL)
 {
-	// unimplemented for imap right now....if we feel it would be useful to 
-	// be able to spool an imap message to disk then this is the method we need to implement.
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIMsgFolder> folder;
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsXPIDLCString msgKey;
 
-  //
-  // Returning success causes us much grief with the editor because we wait until this is
-  // complete to do anything...so changing this to failure.
-  //
-	nsresult rv = NS_ERROR_FAILURE;
+    rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCAutoString urlSpec;
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec);
+    if (NS_SUCCEEDED(rv)) 
+    {
+        nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(imapUrl, &rv);
+        if (NS_FAILED(rv)) return rv;
+        msgUrl->SetMessageFile(aFile);
+        msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+
+        return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aURL, imapMessageSink, msgKey, PR_TRUE);
+    }
+
 	return rv;
 }
-
 
 /* fetching RFC822 messages */
 /* imap4://HOST>fetch><UID/SEQUENCE>>MAILBOXPATH>x */
 /*   'x' is the message UID or sequence number list */
 /* will set the 'SEEN' flag */
+
 NS_IMETHODIMP
-nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue, 
+nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
+                            nsIImapUrl::nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
-                            nsIUrlListener * aUrlListener, nsIURI ** aURL,
+                            nsIURI ** aURL,
 							nsISupports * aDisplayConsumer, 
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID)
@@ -344,66 +346,69 @@ nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
-    NS_ASSERTION (aImapMailFolder && aClientEventQueue && aImapMessage,
-                  "Oops ... null pointer");
-    if (!aImapMailFolder || !aClientEventQueue)
+    NS_ASSERTION (aImapUrl && aImapMailFolder &&  aImapMessage,"Oops ... null pointer");
+    if (!aImapUrl || !aImapMailFolder || !aImapMessage)
         return NS_ERROR_NULL_POINTER;
-	
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
 
-    nsresult rv;
-    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, aUrlListener, urlSpec);
+    nsCAutoString urlSpec;
+    nsresult rv = aImapUrl->SetImapAction(aImapAction /* nsIImapUrl::nsImapMsgFetch */);
+    rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
-	if (NS_SUCCEEDED(rv) && imapUrl)
+	rv = aImapUrl->SetImapMessageSink(aImapMessage);
+	if (NS_SUCCEEDED(rv))
 	{
+        nsXPIDLCString currentSpec;
+        nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
+        url->GetSpec(getter_Copies(currentSpec));
+        urlSpec = currentSpec;
 
-		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
-        rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+	    char hierarchySeparator = '/'; // ### fixme - should get from folder
+		urlSpec.Append("fetch>");
+		urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+		urlSpec.Append(">");
+		urlSpec.Append(hierarchySeparator);
 
-		rv = imapUrl->SetImapMessageSink(aImapMessage);
-		if (NS_SUCCEEDED(rv))
-		{
-			char hierarchySeparator = '/'; // ### fixme - should get from folder
+        nsCString folderName;
+        GetFolderName(aImapMailFolder, folderName);
+		urlSpec.Append(folderName.GetBuffer());
+		urlSpec.Append(">");
+		urlSpec.Append(messageIdentifierList);
 
-			urlSpec.Append("/fetch>");
-			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
-			urlSpec.Append(">");
-			urlSpec.Append(hierarchySeparator);
 
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
-			urlSpec.Append(folderName.GetBuffer());
-			urlSpec.Append(">");
-			urlSpec.Append(messageIdentifierList);
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-            if (NS_FAILED(rv)) return rv; 
+		// mscott - this cast to a char * is okay...there's a bug in the XPIDL
+		// compiler that is preventing in string parameters from showing up as
+		// const char *. hopefully they will fix it soon.
+		rv = url->SetSpec((char *) urlSpec.GetBuffer());
 
-			// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-			// compiler that is preventing in string parameters from showing up as
-			// const char *. hopefully they will fix it soon.
-			rv = url->SetSpec((char *) urlSpec.GetBuffer());
+        // if the display consumer is a webshell, then we should run the url in the webshell.
+        // otherwise, we'll run it normally....
 
-            // if the display consumer is a webshell, then we should run the url in the webshell.
-            // otherwise, we'll run it normally....
+        nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
+        if (NS_SUCCEEDED(rv) && webShell)
+            rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
+        else
+        {
+            nsCOMPtr<nsIEventQueue> queue;	
+            // get the Event Queue for this thread...
+	        NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
 
-            nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
-            if (NS_SUCCEEDED(rv) && webShell)
-                rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
-            else
-                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aDisplayConsumer, aURL);
-		}
-        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_FAILED(rv)) return rv;
+
+            rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+            if (NS_FAILED(rv)) return rv;
+            rv = GetImapConnectionAndLoadUrl(queue, aImapUrl,
+                                             aDisplayConsumer, aURL);
+
+        }
 	}
 	return rv;
 }
 
 nsresult 
-nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
-                                    nsIMsgFolder* &aImapMailFolder,
+nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
+                                    nsIMsgFolder* aImapMailFolder,
                                     nsIUrlListener * aUrlListener,
-                                    nsCString &urlSpec)
+                                    nsCString & urlSpec)
 {
 	nsresult rv = NS_OK;
     char *hostname = nsnull;
@@ -421,14 +426,14 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
     // needs to represent a select folder action. 
 	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
                                             nsIImapUrl::GetIID(), (void **)
-                                            &imapUrl);
+                                            imapUrl);
 	if (NS_SUCCEEDED(rv) && imapUrl)
     {
-        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl, &rv);
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(*imapUrl, &rv);
         if (NS_SUCCEEDED(rv) && mailnewsUrl && aUrlListener)
             mailnewsUrl->RegisterListener(aUrlListener);
 
-		imapUrl->Initialize(username);
+		(*imapUrl)->Initialize(username);
 
         // *** jefft -- let's only do hostname now. I'll do username later
         // when the incoming server works were done. We might also need to
@@ -444,12 +449,10 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
 
         // *** jefft - force to parse the urlSpec in order to search for
         // the correct incoming server
-        nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-		if (NS_SUCCEEDED(rv) && url)
-			// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-			// compiler that is preventing in string parameters from showing up as
-			// const char *. hopefully they will fix it soon.
-			rv = url->SetSpec((char *) urlSpec.GetBuffer());
+ 		// mscott - this cast to a char * is okay...there's a bug in the XPIDL
+		// compiler that is preventing in string parameters from showing up as
+		// const char *. hopefully they will fix it soon.
+		rv = mailnewsUrl->SetSpec((char *) urlSpec.GetBuffer());
 
     }
 
@@ -478,14 +481,15 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl,aImapMailFolder, aUrlListener, urlSpec);
+	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),aImapMailFolder, aUrlListener, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
-		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
+        rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
 		if (NS_SUCCEEDED(rv))
@@ -503,20 +507,13 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(folderName.GetBuffer());
             urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
 
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                  nsnull, aURL);
 
 		}
-        NS_RELEASE(imapUrl); // release our ref count from the
-                             // create instance call...
 	}
 	return rv;
 }
@@ -534,18 +531,18 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl,
+	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec);
+                                          aUrlListener, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
 
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectNoopFolder);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -558,17 +555,11 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
 
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                  nsnull, aURL);
         }
-        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
 	return rv;
 }
@@ -585,18 +576,19 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl,
+	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
-                                          aUrlListener, 
-                                          urlSpec);
-	if (NS_SUCCEEDED(rv) && imapUrl)
+                                          aUrlListener, urlSpec);
+	if (NS_SUCCEEDED(rv))
 	{
 
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapExpungeFolder);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -609,17 +601,11 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
 
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                  nsnull, aURL);
 		}
-        NS_IF_RELEASE(imapUrl);
 	}
 	return rv;
 }
@@ -639,18 +625,19 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl,
+	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec);
+                                          aUrlListener, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
 
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapExpungeFolder);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+        
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -664,17 +651,11 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
             urlSpec.Append(folderName.GetBuffer());
 			urlSpec.Append(">");
 			urlSpec.Append(uidHighWater, 10);
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                  nsnull, aURL);
 		}
-        NS_IF_RELEASE(imapUrl);
 	}
 	return rv;
 }
@@ -691,16 +672,18 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
     if (!eventQueue || ! folder)
         return rv;
     
-    nsIImapUrl* imapUrl = nsnull;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
 
-    rv = CreateStartOfImapUrl(imapUrl, folder, urlListener, urlSpec);
-    if (NS_SUCCEEDED(rv) && imapUrl)
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, urlListener, urlSpec);
+    if (NS_SUCCEEDED(rv))
     {
         rv = SetImapUrlSink(folder, imapUrl);
         if (NS_SUCCEEDED(rv))
         {
             char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+
             urlSpec.Append("/delete>");
             urlSpec.Append(hierarchySeparator);
             
@@ -709,18 +692,13 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
             if (NS_SUCCEEDED(rv))
             {
                 urlSpec.Append(folderName.GetBuffer());
-                nsCOMPtr<nsIURL> uri = do_QueryInterface(imapUrl, &rv);
-                if (NS_SUCCEEDED(rv) && uri)
-                {
-                    rv = uri->SetSpec((char*) urlSpec.GetBuffer());
-                    if (NS_SUCCEEDED(rv))
-                        rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+                if (NS_SUCCEEDED(rv))
+                    rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
                                                          nsnull,
                                                          url);
-                }
             }
         }
-        NS_RELEASE(imapUrl);
     }
     return rv;
 }
@@ -741,13 +719,12 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl,
+	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec);
+                                          aUrlListener, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
 
@@ -757,6 +734,7 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
 		if (NS_SUCCEEDED(rv))
 		{
 			char hierarchySeparator = '/'; // ### fixme - should get from folder
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
 			urlSpec.Append("/deletemsg>");
 			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
@@ -769,18 +747,12 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
             urlSpec.Append(folderName.GetBuffer());
 			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                  nsnull, aURL);
 
         }
-        NS_IF_RELEASE(imapUrl);
 	}
 	return rv;
 }
@@ -797,14 +769,13 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl,
+	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec);
-	if (NS_SUCCEEDED(rv) && imapUrl)
+                                          aUrlListener, urlSpec);
+	if (NS_SUCCEEDED(rv))
 	{
 
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectNoopFolder);
@@ -813,23 +784,18 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
 		if (NS_SUCCEEDED(rv))
 		{
 			char hierarchySeparator = '/'; // ### fixme - should get from folder
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
 			urlSpec.Append("/deleteallmsgs>");
 			urlSpec.Append(hierarchySeparator);
             nsCString folderName;
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                  nsnull, aURL);
 		}
-        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
 	return rv;
 }
@@ -894,13 +860,12 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapUrl * imapUrl = nsnull;
-	nsCString urlSpec;
+	nsCOMPtr<nsIImapUrl> imapUrl;
+	nsCAutoString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl,
+	nsresult rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec); 
+                                          aUrlListener, urlSpec); 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
 
@@ -910,6 +875,7 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 		if (NS_SUCCEEDED(rv))
 		{
 			char hierarchySeparator = '/'; // ### fixme - should get from folder
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
 			urlSpec.Append('/');
 			urlSpec.Append(howToDiddle);
@@ -924,17 +890,11 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(messageIdentifierList);
 			urlSpec.Append('>');
 			urlSpec.Append(flags, 10);
-			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                                   nsnull, aURL);
 		}
-        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
 	return rv;
 }
@@ -1007,31 +967,27 @@ nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapUrl* aImapUrl = nsnull;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> aImapUrl;
+    nsCAutoString urlSpec;
 
-    nsresult rv = CreateStartOfImapUrl(aImapUrl,
+    nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec);
-    if (NS_SUCCEEDED (rv) && aImapUrl)
+                                          aUrlListener, urlSpec);
+    if (NS_SUCCEEDED (rv))
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
         if (NS_SUCCEEDED(rv))
         {
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
+
             urlSpec.Append("/discoverallboxes");
 			nsCOMPtr <nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, aImapUrl,
                                                  nsnull, aURL);
         }
-        NS_RELEASE(aImapUrl);
     }
     return rv;
 }
@@ -1047,31 +1003,26 @@ nsImapService::DiscoverAllAndSubscribedFolders(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapUrl* aImapUrl = nsnull;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> aImapUrl;
+    nsCAutoString urlSpec;
 
-    nsresult rv = CreateStartOfImapUrl(aImapUrl,
+    nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec);
+                                          aUrlListener, urlSpec);
     if (NS_SUCCEEDED (rv) && aImapUrl)
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
         if (NS_SUCCEEDED(rv))
         {
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
+
             urlSpec.Append("/discoverallandsubscribedboxes");
-			nsCOMPtr <nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
+			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, aImapUrl,
                                                  nsnull, aURL);
         }
-        NS_RELEASE(aImapUrl);
     }
     return rv;
 }
@@ -1087,14 +1038,13 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapUrl* aImapUrl = nsnull;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> aImapUrl;
+    nsCAutoString urlSpec;
 
-    nsresult rv = CreateStartOfImapUrl(aImapUrl,
+    nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
                                           aImapMailFolder,
-                                          aUrlListener,
-                                          urlSpec);
-    if (NS_SUCCEEDED (rv) && aImapUrl)
+                                          aUrlListener, urlSpec);
+    if (NS_SUCCEEDED (rv))
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
@@ -1104,15 +1054,15 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
             GetFolderName(aImapMailFolder, folderName);
             if (folderName.Length() > 0)
             {
+                nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
+
                 // **** fix me with host specific hierarchySeparator please
                 urlSpec.Append("/discoverchildren>/");
                 urlSpec.Append(folderName.GetBuffer());
-				nsCOMPtr <nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-				if (NS_SUCCEEDED(rv) && url)
-					// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-					// compiler that is preventing in string parameters from showing up as
-					// const char *. hopefully they will fix it soon.
-					rv = url->SetSpec((char *) urlSpec.GetBuffer());
+    			// mscott - this cast to a char * is okay...there's a bug in the XPIDL
+				// compiler that is preventing in string parameters from showing up as
+				// const char *. hopefully they will fix it soon.
+				rv = uri->SetSpec((char *) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                      aImapUrl,
@@ -1123,7 +1073,6 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
                 rv = NS_ERROR_NULL_POINTER;
             }
         }
-        NS_RELEASE(aImapUrl);
     }
     return rv;
 }
@@ -1140,11 +1089,11 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapUrl* aImapUrl = nsnull;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> aImapUrl;
+    nsCAutoString urlSpec;
 
-    nsresult rv = CreateStartOfImapUrl(aImapUrl,
-                                          aImapMailFolder,aUrlListener,  urlSpec);
+    nsresult rv = CreateStartOfImapUrl(getter_AddRefs(aImapUrl),
+                                          aImapMailFolder,aUrlListener, urlSpec);
     if (NS_SUCCEEDED (rv) && aImapUrl)
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
@@ -1155,28 +1104,22 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
             GetFolderName(aImapMailFolder, folderName);
             if (folderName.Length() > 0)
             {
+                nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
                 urlSpec.Append("/discoverlevelchildren>");
                 urlSpec.Append(level);
                 // **** fix me with host specific hierarchySeparator please
                 urlSpec.Append("/"); // hierarchySeparator "/"
                 urlSpec.Append(folderName.GetBuffer());
-				nsCOMPtr <nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-				if (NS_SUCCEEDED(rv) && url)
-					// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-					// compiler that is preventing in string parameters from showing up as
-					// const char *. hopefully they will fix it soon.
-					rv = url->SetSpec((char *) urlSpec.GetBuffer());
+
+				rv = uri->SetSpec((char *) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                      aImapUrl,
                                                      nsnull, aURL);
             }
             else
-            {
                 rv = NS_ERROR_NULL_POINTER;
-            }
         }
-        NS_RELEASE(aImapUrl);
     }
     return rv;
 }
@@ -1235,17 +1178,18 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         return NS_ERROR_FAILURE;
     }
 
-    nsIImapUrl* imapUrl = nsnull;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
 
-    rv = CreateStartOfImapUrl(imapUrl, aSrcFolder, aUrlListener,
-                                 urlSpec);
-    if (NS_SUCCEEDED(rv) && imapUrl)
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aSrcFolder, aUrlListener, urlSpec);
+    if (NS_SUCCEEDED(rv))
     {
         // **** fix me with real host hierarchy separator
         char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
         SetImapUrlSink(aSrcFolder, imapUrl);
         imapUrl->SetCopyState(copyState);
+
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
         if (isMove)
             urlSpec.Append("/onlinemove>");
@@ -1269,16 +1213,10 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         GetFolderName(aDstFolder, folderName);
         urlSpec.Append(folderName);
 
-		nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-		if (NS_SUCCEEDED(rv) && url)
-			// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-			// compiler that is preventing in string parameters from showing up as
-			// const char *. hopefully they will fix it soon.
-			rv = url->SetSpec((char *) urlSpec.GetBuffer());
+		rv = uri->SetSpec((char *) urlSpec.GetBuffer());
         if (NS_SUCCEEDED(rv))
             rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                              nsnull, aURL);
-        NS_RELEASE(imapUrl);
     }
     PR_FREEIF(srcHostname);
     PR_FREEIF(srcUsername);
@@ -1304,17 +1242,20 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!aClientEventQueue || !aFileSpec || !aDstFolder)
         return rv;
-    nsIImapUrl* imapUrl = nsnull;
-    nsCString urlSpec;
+    
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
 
-    rv = CreateStartOfImapUrl(imapUrl, aDstFolder, aListener, urlSpec);
-    if (NS_SUCCEEDED(rv) && imapUrl)
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aDstFolder, aListener, urlSpec);
+    if (NS_SUCCEEDED(rv))
     {
         // **** fix me with real host hierarchy separator
         char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
         SetImapUrlSink(aDstFolder, imapUrl);
         imapUrl->SetMsgFileSpec(aFileSpec);
         imapUrl->SetCopyState(aCopyState);
+
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
         if (inSelectedState)
             urlSpec.Append("/appenddraftfromfile>");
@@ -1338,11 +1279,8 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
             if (messageId)
                 urlSpec.Append(messageId);
         }
-        nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl, &rv);
-        if (NS_SUCCEEDED(rv))
-			// mscott - this cast is OK....bug in idl compiler is preventing
-			// the argument in SetSpec from being expressed as a const char *
-            rv = url->SetSpec((char *) urlSpec.GetBuffer());
+
+        rv = uri->SetSpec((char *) urlSpec.GetBuffer());
         if (NS_SUCCEEDED(rv))
             rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                              nsnull, aURL);
@@ -1389,11 +1327,11 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     if (!eventQueue || !srcFolder || !dstFolder)
         return NS_ERROR_NULL_POINTER;
 
-    nsIImapUrl* imapUrl;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
     nsresult rv;
 
-    rv = CreateStartOfImapUrl(imapUrl, dstFolder, urlListener, urlSpec);
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), dstFolder, urlListener, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         rv = SetImapUrlSink(dstFolder, imapUrl);
@@ -1401,7 +1339,8 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
         {
             char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
             nsCString folderName;
-
+            
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
             GetFolderName(srcFolder, folderName);
             urlSpec.Append("/movefolderhierarchy>");
             urlSpec.Append(hierarchySeparator);
@@ -1411,17 +1350,12 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             GetFolderName(dstFolder, folderName);
             urlSpec.Append(hierarchySeparator);
             urlSpec.Append(folderName.GetBuffer());
-            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl, &rv);
-            if (NS_SUCCEEDED(rv) && uri)
-            {
-                rv = uri->SetSpec((char*) urlSpec.GetBuffer());
-                if (NS_SUCCEEDED(rv))
-                    rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
-                                                     nsnull,
-                                                     url);
-            }
+            rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                 nsnull,
+                                                 url);
         }
-        NS_RELEASE(imapUrl);
     }
     return rv;
 }
@@ -1436,17 +1370,19 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     if (!eventQueue || !srcFolder || !newLeafName || !*newLeafName)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapUrl* imapUrl;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
     nsresult rv;
 
-    rv = CreateStartOfImapUrl(imapUrl, srcFolder, urlListener, urlSpec);
-    if (NS_SUCCEEDED(rv) && imapUrl)
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), srcFolder, urlListener, urlSpec);
+    if (NS_SUCCEEDED(rv))
     {
         rv = SetImapUrlSink(srcFolder, imapUrl);
         if (NS_SUCCEEDED(rv))
         {
             char hierarchySeparator = '/';
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+
             nsCString folderName;
             GetFolderName(srcFolder, folderName);
             urlSpec.Append("/rename>");
@@ -1462,17 +1398,11 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
                 urlSpec.Append(folderName.GetBuffer());
             }
             urlSpec.Append(newLeafName);
-            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl, &rv);
-            if (NS_SUCCEEDED(rv) && uri)
-            {
-                rv = uri->SetSpec((char*) urlSpec.GetBuffer());
-                if (NS_SUCCEEDED(rv))
-                    rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
-                                                     nsnull,
-                                                     url);
-            } // if (NS_SUCCEEDED(rv) && uri)
+            rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                 nsnull, url);
         } // if (NS_SUCCEEDED(rv))
-        NS_RELEASE(imapUrl);
     } // if (NS_SUCCEEDED(rv) && imapUrl)
     return rv;
 }
@@ -1487,17 +1417,19 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
     if (!eventQueue || !parent || !newFolderName || !*newFolderName)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapUrl* imapUrl;
-    nsCString urlSpec;
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
     nsresult rv;
 
-    rv = CreateStartOfImapUrl(imapUrl, parent, urlListener, urlSpec);
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), parent, urlListener, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         rv = SetImapUrlSink(parent, imapUrl);
         if (NS_SUCCEEDED(rv))
         {
             char hierarchySeparator = '/';
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+
             nsCString folderName;
             GetFolderName(parent, folderName);
             urlSpec.Append("/create>");
@@ -1508,17 +1440,13 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
                 urlSpec.Append(hierarchySeparator);
             }
             urlSpec.Append(newFolderName);
-            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl, &rv);
-            if (NS_SUCCEEDED(rv) && uri)
-            {
-                rv = uri->SetSpec((char*) urlSpec.GetBuffer());
-                if (NS_SUCCEEDED(rv))
-                    rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+    
+            rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
                                                      nsnull,
                                                      url);
-            } // if (NS_SUCCEEDED(rv) && uri)
         } // if (NS_SUCCEEDED(rv))
-        NS_RELEASE(imapUrl);
     } // if (NS_SUCCEEDED(rv) && imapUrl)
     return rv;
 }
