@@ -534,16 +534,16 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
   PRInt32 type;
   GetType(&type);
   if (IsReset(type)) {
-    rv = nsFormControlHelper::GetLocalizedString(propname, "Reset", aString);
+    rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Reset").get(), aString);
   } 
   else if (IsSubmit(type)) {
-    rv = nsFormControlHelper::GetLocalizedString(propname, "Submit", aString);
+    rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Submit").get(), aString);
   } 
   else if (IsBrowse(type)) {
-    rv = nsFormControlHelper::GetLocalizedString(propname, "Browse", aString);
+    rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Browse").get(), aString);
   }
   else {
-    aString.AssignWithConversion("  ");
+    aString.Assign(NS_LITERAL_STRING("  "));
     rv = NS_OK;
   }
   return rv;

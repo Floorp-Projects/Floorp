@@ -285,7 +285,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   // Get Loc title
   nsString title;
   nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
-                                          "FileUpload", title);
+                                          NS_LITERAL_STRING("FileUpload").get(), title);
 
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
   if (!filePicker)

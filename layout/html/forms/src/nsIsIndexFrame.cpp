@@ -146,7 +146,7 @@ nsIsIndexFrame::UpdatePromptLabel()
     // because the value is localized for non-english platforms, thus
     // it might not be the string "This is a searchable index. Enter search keywords: "
     result = nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
-                                                     "IsIndexPrompt", prompt);
+                                                     NS_LITERAL_STRING("IsIndexPrompt").get(), prompt);
   }
   nsCOMPtr<nsITextContent> text = do_QueryInterface(mTextContent);
   result = text->SetText(prompt.get(), prompt.Length(), PR_TRUE);
