@@ -175,6 +175,9 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   
     return mInner.GetRangeList(aResult);                                       
   }                                                                        
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  }
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)

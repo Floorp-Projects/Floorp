@@ -883,6 +883,21 @@ nsGenericElement::GetRangeList(nsVoidArray*& aResult) const
   return NS_OK;
 }
 
+nsresult
+nsGenericElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                         size_t aInstanceSize) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+#ifdef DEBUG
+  *aResult = (PRUint32) aInstanceSize;
+#else
+  *aResult = 0;
+#endif
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 nsresult
@@ -1350,6 +1365,20 @@ struct nsGenericAttribute
   {
     NS_IF_RELEASE(mName);
   }
+
+#ifdef DEBUG
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    if (!aResult) {
+      return NS_ERROR_NULL_POINTER;
+    }
+    PRUint32 sum = sizeof(*this) - sizeof(mValue);
+    PRUint32 ssize;
+    mValue.SizeOf(aSizer, &ssize);
+    sum += ssize;
+    *aResult = sum;
+    return NS_OK;
+  }
+#endif
 
   PRInt32   mNameSpaceID;
   nsIAtom*  mName;
@@ -2154,5 +2183,38 @@ nsGenericContainerElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
 nsresult 
 nsGenericContainerElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
+  return NS_OK;
+}
+
+nsresult
+nsGenericContainerElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                                  size_t aInstanceSize) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRUint32 sum = 0;
+#ifdef DEBUG
+  sum += aInstanceSize;
+  if (mAttributes) {
+    // Add in array of attributes size
+    PRUint32 asize;
+    mAttributes->SizeOf(aSizer, &asize);
+    sum += asize;
+    
+    // Add in each attributes size
+    PRInt32 i, n = mAttributes->Count();
+    for (i = 0; i < n; i++) {
+      const nsGenericAttribute* attr = (const nsGenericAttribute*)
+        mAttributes->ElementAt(i);
+      if (attr) {
+        PRUint32 asum = 0;
+        attr->SizeOf(aSizer, &asum);
+        sum += asum;
+      }
+    }
+  }
+#endif
+  *aResult = sum;
   return NS_OK;
 }

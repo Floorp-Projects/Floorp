@@ -172,6 +172,8 @@ struct nsGenericDOMDataNode {
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                  size_t aInstanceSize) const;
 
   // Implementation for nsIContent
   nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
@@ -476,7 +478,10 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
-  }                                                                        
+  }                                                                        \
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
+    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
+  }
 
 /**
  * Implement the nsIDOMText API by forwarding the methods to a

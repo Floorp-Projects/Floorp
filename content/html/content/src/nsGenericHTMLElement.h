@@ -126,6 +126,8 @@ public:
   nsresult GetBaseTarget(nsString& aBaseTarget) const;
   nsresult ToHTMLString(nsString& aResult) const;
   nsresult ToHTML(FILE* out) const;
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                  size_t aInstanceSize) const;
 
   //----------------------------------------
   nsresult AttributeToString(nsIAtom* aAttribute,

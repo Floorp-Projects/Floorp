@@ -27,6 +27,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsVoidArray.h"
+#include "nsISizeOfHandler.h"
 
 //#define DEBUG_REFS
 
@@ -204,6 +205,16 @@ struct HTMLAttribute {
     return PR_FALSE;
   }
 
+#ifdef DEBUG
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    if (!aResult) {
+      return NS_ERROR_NULL_POINTER;
+    }
+    *aResult = sizeof(*this);
+    return NS_OK;
+  }
+#endif
+
   nsIAtom*        mAttribute;
   nsHTMLValue     mValue;
   HTMLAttribute*  mNext;
@@ -288,6 +299,16 @@ public:
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+
+#ifdef DEBUG
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    if (!aResult) {
+      return NS_ERROR_NULL_POINTER;
+    }
+    *aResult = sizeof(*this);
+    return NS_OK;
+  }
+#endif
 
   nsIHTMLStyleSheet*  mSheet;
   PRInt32             mUseCount;
@@ -779,6 +800,8 @@ public:
   NS_IMETHOD Reset(void);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
   virtual nsresult SetAttributeName(nsIAtom* aAttrName, PRBool& aFound);
@@ -1457,6 +1480,41 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
     }
     fputs(buffer, out);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRUint32 sum = 0;
+#ifdef DEBUG
+  sum = sizeof(*this);
+  if (mAttrNames != mNameBuffer) {
+    sum += sizeof(*mAttrNames) * mAttrSize;
+  }
+  if (mFirstUnmapped) {
+    HTMLAttribute* ha = mFirstUnmapped;
+    while (ha) {
+      PRUint32 asum = 0;
+      ha->SizeOf(aSizer, &asum);
+      sum += asum;
+      ha = ha->mNext;
+    }
+  }
+  if (mMapped) {
+    PRBool recorded;
+    aSizer->RecordObject((void*)mMapped, &recorded);
+    if (!recorded) {
+      PRUint32 asum = 0;
+      mMapped->SizeOf(aSizer, &asum);
+      sum += asum;
+    }
+  }
+#endif
+  *aResult = sum;
   return NS_OK;
 }
 
