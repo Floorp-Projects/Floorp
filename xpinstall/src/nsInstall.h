@@ -66,7 +66,7 @@
 #define MAX_FILENAME 31
 #elif defined (XP_PC)
 #define MAX_FILENAME 128
-#elif defined (XP_UNIX)
+#else 
 #define MAX_FILENAME 1024
 #endif
 
