@@ -66,12 +66,12 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
             controller.doCommand('cmd_wordNext');"/>
-    <key id="key_home" keycode="VK_PAGEUP" shift="false" control="false"
+    <key id="key_home" keycode="VK_PAGE_UP" shift="false" control="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
             controller.doCommand('cmd_scrollPageUp');"/>
-    <key id="key_home" keycode="VK_PAGEDOWN" shift="false" control="false"
+    <key id="key_home" keycode="VK_PAGE_DOWN" shift="false" control="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
