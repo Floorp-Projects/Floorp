@@ -1211,8 +1211,13 @@ XFE_Frame::createBaseWidgetShell(Widget parent,String name)
 			XtSetArg (av[ac], XmNinitialState, IconicState); ac++;
 			XtSetArg (av[ac], XmNiconic, True); ac++;
 		}
-		
-		shell = XfeCreateFrameShell(parent,name,av,ac);
+
+#ifdef BROKEN_AUTOMATION
+ 		shell = XfeCreateFrameShell(parent,name,av,ac);
+#else
+		shell = XtCreatePopupShell(name,topLevelShellWidgetClass,
+								   parent,av,ac);
+#endif
 		
 		// This hackery must die too.  It will go away as soon as the 
 		// XfeFrameShell widget supports XmNresizeCallback and
