@@ -27,7 +27,7 @@ class nsIPresContext;
  * TableRowGroup
  *
  * @author  sec   11-20-97 6:12pm
- * @version $Revision: 1.1 $
+ * @version $Revision: 3.1 $
  * @see
  */
 class nsTableRowGroup : public nsTableContent

@@ -28,7 +28,7 @@
  * TableContent is a concrete subclass for all content nodes contained directly within a table.
  *
  * @author  sclark
- * @version $Revision: 1.1 $
+ * @version $Revision: 3.1 $
  * @see
  */
 class nsTableContent : public nsHTMLContainer, public nsITableContent
