@@ -94,6 +94,11 @@ struct nsReflowMetrics {
  */
 #define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
 
+/**
+ * The reason the frame is being reflowed.
+ *
+ * @see nsReflowState
+ */
 enum nsReflowReason {
   eReflowReason_Initial = 0,     // initial reflow of a newly created frame
   eReflowReason_Incremental = 1, // an incremental change has occured. see the reflow command for details
@@ -101,19 +106,39 @@ enum nsReflowReason {
 };
 
 /**
+ * The type of size constraint that applies to a particular dimension.
+ * For the fixed and fixed content cases the min size in the reflow state
+ * structure is ignored and you should use the max size value when reflowing
+ * the frame.
+ *
+ * @see nsReflowState
+ */
+enum nsReflowConstraint {
+  eReflowSize_Unconstrained = 0,  // choose whatever frame size you want
+  eReflowSize_Constrained = 1,    // choose a frame size between the min and max sizes
+  eReflowSize_Fixed = 2,          // frame size is fixed
+  eReflowSize_FixedContent = 3    // size of your content area is fixed
+};
+
+/**
  * Reflow state passed to a frame during reflow. The reflow states are linked
- * together. The max size represents the available space on which to reflow
+ * together. The max size represents the max available space in which to reflow
  * your frame, and is computed as the parent frame's available content area
- * minus any room for margins that your frame requests.
+ * minus any room for margins that your frame requests. The min size represents
+ * the min available space in which to reflow your frame
  *
  * @see #Reflow()
  */
 struct nsReflowState {
-  nsReflowReason       reason;            // the reason for the reflow
-  nsIReflowCommand*    reflowCommand;     // only used for incremental changes
-  nsSize               maxSize;           // the available space in which to reflow
   const nsReflowState* parentReflowState; // pointer to parent's reflow state
   nsIFrame*            frame;             // the frame being reflowed
+  nsReflowReason       reason;            // the reason for the reflow
+  nsIReflowCommand*    reflowCommand;     // only used for incremental changes
+  nsReflowConstraint   widthConstraint;   // constraint that applies to width dimension
+  nsReflowConstraint   heightConstraint;  // constraint that applies to height dimension
+  nsSize               maxSize;           // the max available space in which to reflow
+  nsSize               minSize;           // the min available space in which to reflow.
+                                          // Only used for eReflowSize_Constrained
 
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command
