@@ -32,8 +32,8 @@
 
 class nsMsgAccountManager
 	: public nsIMsgAccountManager,
-		public nsIObserver,
-		public nsSupportsWeakReference
+      public nsIObserver,
+      public nsSupportsWeakReference
 {
 public:
 
@@ -116,9 +116,6 @@ private:
 
   static PRBool findAccountByServerKey (nsISupports *element, void *aData);
 
-  // load up the servers into the given nsISupportsArray
-  static PRBool getServersToArray(nsISupports *element, void *aData);
-
   // load up the identities into the given nsISupportsArray
   static PRBool getIdentitiesToArray(nsISupports *element, void *aData);
 
@@ -130,6 +127,9 @@ private:
   // ("element" is always a server)
   //
   
+  // load up the servers into the given nsISupportsArray
+  static PRBool getServersToArray(nsHashKey* aKey, void *element, void *aData);
+
   // find the server given by {username, hostname, type}
   static PRBool findServer(nsISupports *aElement, void *data);
 

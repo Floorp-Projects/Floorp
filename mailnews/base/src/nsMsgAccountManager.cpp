@@ -17,7 +17,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ * Alec Flett <alecf@netscape.com>
+ */
+
+/*
+ * The account manager service - manages all accounts, servers, and identities
  */
 
 #include "nsIComponentManager.h"
@@ -105,7 +110,10 @@ typedef struct _findAccountByKeyEntry {
 
 
 
-NS_IMPL_ISUPPORTS3(nsMsgAccountManager, nsIMsgAccountManager, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsMsgAccountManager,
+                   nsIMsgAccountManager,
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
@@ -204,7 +212,8 @@ nsMsgAccountManager::getPrefService()
 }
 
 char *
-nsMsgAccountManager::getUniqueKey(const char* prefix, nsHashtable *hashTable)
+nsMsgAccountManager::getUniqueKey(const char* prefix,
+                                  nsHashtable *hashTable)
 {
   PRInt32 i=1;
   char key[30];
@@ -468,13 +477,27 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
   // possible problem is that it wasn't in the hash table anyway... and if
   // so, it doesn't matter.
   m_accounts->RemoveElement(aAccount);
-  
+
   // XXX - need to figure out if this is the last time this server is
   // being used, and only send notification then.
+  // (and only remove from hashtable then too!)
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = aAccount->GetIncomingServer(getter_AddRefs(server));
-  if(NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv) && server) {
+
+    nsXPIDLCString serverKey;
+    rv = server->GetKey(getter_Copies(serverKey));
+    
+    nsStringKey hashKey(serverKey);
+    
+    nsIMsgIncomingServer* removedServer =
+      (nsIMsgIncomingServer*) m_incomingServers.Remove(&hashKey);
+
+    //NS_ASSERTION(server.get() == removedServer, "Key maps to different server. something wacky is going on");
+
+    // remove reference from hashtable
+    NS_IF_RELEASE(removedServer);
+    
     NotifyServerUnloaded(server);
   }
   return NS_OK;
@@ -786,27 +809,28 @@ nsMsgAccountManager::GetAllServers(nsISupportsArray **_retval)
 
   // enumerate by going through the list of accounts, so that we
   // get the order correct
-  m_accounts->EnumerateForwards(getServersToArray,
-                                (void *)(nsISupportsArray*)servers);
+  m_incomingServers.Enumerate(getServersToArray,
+                              (void *)(nsISupportsArray*)servers);
   *_retval = servers;
   NS_ADDREF(*_retval);
   return rv;
 }
 
 PRBool
-nsMsgAccountManager::getServersToArray(nsISupports *element, void *aData)
+nsMsgAccountManager::getServersToArray(nsHashKey *aKey,
+                                       void *element,
+                                       void *aData)
 {
   nsresult rv;
-  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMsgIncomingServer> server =
+    do_QueryInterface((nsISupports*)element, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
   
   nsISupportsArray *array = (nsISupportsArray*)aData;
   
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = account->GetIncomingServer(getter_AddRefs(server));
-
+  nsCOMPtr<nsISupports> serverSupports = do_QueryInterface(server);
   if (NS_SUCCEEDED(rv)) 
-    array->AppendElement(server);
+    array->AppendElement(serverSupports);
 
   return PR_TRUE;
 }
@@ -859,9 +883,19 @@ nsMsgAccountManager::LoadAccounts()
       if (!str.IsEmpty()) {
           rv = GetAccount(str.GetBuffer(), getter_AddRefs(account));
       }
+
+      // force load of accounts (need to find a better way to do this
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      account->GetIncomingServer(getter_AddRefs(server));
+
+      nsCOMPtr<nsISupportsArray> identities;
+      account->GetIdentities(getter_AddRefs(identities));
+      
       token = nsCRT::strtok(rest, ",", &rest);
     }
 
+    
+       
     /* finished loading accounts */
     return NS_OK;
 }
@@ -1239,6 +1273,8 @@ NS_IMETHODIMP
 nsMsgAccountManager::GetIdentitiesForServer(nsIMsgIncomingServer *server,
                                             nsISupportsArray **_retval)
 {
+  NS_ENSURE_ARG_POINTER(server);
+  NS_ENSURE_ARG_POINTER(_retval);
   nsresult rv;
   rv = LoadAccounts();
   if (NS_FAILED(rv)) return rv;
