@@ -60,7 +60,6 @@ CPPSRCS= \
 	nsToolkit.cpp \
 	nsGtkEventHandler.cpp \
 	nsRadioButton.cpp \
-	nsSelectionMgr.cpp \
 	nsPopUpMenu.cpp \
 	nsWidget.cpp \
 	nsWindow.cpp \
