@@ -35,39 +35,7 @@ static PRInt32 gNumWidgets;
 #endif
 
 // nsBaseWidget
-#ifdef LOG_REFCNTS
-extern "C" {
-  void __log_addref(void* p, int oldrc, int newrc);
-  void __log_release(void* p, int oldrc, int newrc);
-}
-
-nsrefcnt nsBaseWidget::AddRef(void)
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsBaseWidget");
-  return mRefCnt;
-}
-
-nsrefcnt nsBaseWidget::Release(void)
-{
-  __log_release((void*) this, mRefCnt, mRefCnt - 1);
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsBaseWidget");
-  if (mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
-
-NS_IMPL_QUERY_INTERFACE1(nsBaseWidget, nsIWidget)
-#else
 NS_IMPL_ISUPPORTS1(nsBaseWidget, nsIWidget)
-#endif
-
 
 // nsBaseWidget::Enumerator
 NS_IMPL_ISUPPORTS2(nsBaseWidget::Enumerator, nsIBidirectionalEnumerator, nsIEnumerator)
@@ -78,8 +46,6 @@ NS_IMPL_ISUPPORTS2(nsBaseWidget::Enumerator, nsIBidirectionalEnumerator, nsIEnum
 // nsBaseWidget constructor
 //
 //-------------------------------------------------------------------------
-
-MOZ_DECL_CTOR_COUNTER(nsBaseWidget);
 
 nsBaseWidget::nsBaseWidget()
 :	mClientData(nsnull)
@@ -103,7 +69,6 @@ nsBaseWidget::nsBaseWidget()
 #endif
 ,   mZIndex(0)
 {
-  MOZ_COUNT_CTOR(nsBaseWidget);
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
   printf("WIDGETS+ = %d\n", gNumWidgets);
@@ -122,7 +87,6 @@ nsBaseWidget::nsBaseWidget()
 //-------------------------------------------------------------------------
 nsBaseWidget::~nsBaseWidget()
 {
-  MOZ_COUNT_DTOR(nsBaseWidget);
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets--;
   printf("WIDGETS- = %d\n", gNumWidgets);

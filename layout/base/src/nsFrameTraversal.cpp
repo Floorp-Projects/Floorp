@@ -41,6 +41,7 @@ public:
   NS_IMETHOD IsDone();//what does this mean??off edge? yes
 
   nsFrameIterator();
+
 protected:
   void      setCurrent(nsIFrame *aFrame){mCurrent = aFrame;}
   nsIFrame *getCurrent(){return mCurrent;}
@@ -131,8 +132,6 @@ NS_IMPL_ADDREF(nsFrameIterator)
 
 NS_IMPL_RELEASE(nsFrameIterator)
 
-
-
 nsFrameIterator::nsFrameIterator()
 {
   mOffEdge = 0;
@@ -141,7 +140,6 @@ nsFrameIterator::nsFrameIterator()
   mStart = nsnull;
   NS_INIT_REFCNT();
 }
-
 
 
 NS_IMETHODIMP

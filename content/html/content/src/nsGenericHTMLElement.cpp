@@ -1067,7 +1067,9 @@ nsGenericHTMLElement::GetInlineStyleRules(nsISupportsArray* aRules)
     if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::style, value)) {
       if (eHTMLUnit_ISupports == value.GetUnit()) {
         nsISupports* supports = value.GetISupportsValue();
-        result = supports->QueryInterface(kIStyleRuleIID, (void**)&rule);
+        if (supports) {
+          result = supports->QueryInterface(kIStyleRuleIID, (void**)&rule);
+        }
         NS_RELEASE(supports);
       }
     }
@@ -1334,16 +1336,19 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
   if (nsHTMLAtoms::style == aAttribute) {
     if (eHTMLUnit_ISupports == aValue.GetUnit()) {
       nsIStyleRule* rule = (nsIStyleRule*) aValue.GetISupportsValue();
-      nsICSSStyleRule*  cssRule;
-      if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
-        nsICSSDeclaration* decl = cssRule->GetDeclaration();
-        if (nsnull != decl) {
-          decl->ToString(aResult);
+      if (rule) {
+        nsICSSStyleRule*  cssRule;
+        if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
+          nsICSSDeclaration* decl = cssRule->GetDeclaration();
+          if (nsnull != decl) {
+            decl->ToString(aResult);
+          }
+          NS_RELEASE(cssRule);
         }
-        NS_RELEASE(cssRule);
-      }
-      else {
-        aResult = "Unknown rule type";
+        else {
+          aResult = "Unknown rule type";
+        }
+        NS_RELEASE(rule);
       }
       return NS_CONTENT_ATTR_HAS_VALUE;
     }

@@ -68,6 +68,9 @@ protected:
     FrameInfo*      mNext;
 
     FrameInfo(nsIFrame* aFrame, const nsRect& aRect);
+#ifdef DEBUG
+    ~FrameInfo();
+#endif
   };
 
 public:

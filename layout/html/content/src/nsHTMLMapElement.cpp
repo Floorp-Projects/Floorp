@@ -199,11 +199,9 @@ NS_NewHTMLMapElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLMapElement);
 
 nsHTMLMapElement::nsHTMLMapElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLMapElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mAreas = nsnull;
@@ -211,7 +209,6 @@ nsHTMLMapElement::nsHTMLMapElement(nsIAtom* aTag)
 
 nsHTMLMapElement::~nsHTMLMapElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLMapElement);
   if (nsnull != mAreas) {
     mAreas->ParentDestroyed();
     NS_RELEASE(mAreas);

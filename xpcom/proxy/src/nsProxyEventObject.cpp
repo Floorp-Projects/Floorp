@@ -212,7 +212,7 @@ nsProxyEventObject::AddRef(void)
     NS_PRECONDITION(mRoot, "bad root");
 
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsProxyEventObject");
+    NS_LOG_ADDREF(this, mRefCnt, "nsProxyEventObject", sizeof(*this));
     if(1 == mRefCnt && mRoot && mRoot != this)
         NS_ADDREF(mRoot);
 

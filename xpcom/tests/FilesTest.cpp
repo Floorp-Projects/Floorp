@@ -611,7 +611,7 @@ int FilesTest::DiskSpace()
 
     PRInt64 bytes = systemDir.GetDiskSpaceAvailable();
     
-    printf("OS Drive has %ld bytes free\n", bytes);
+    printf("OS Drive has %lld bytes free\n", bytes);
 
     return Inspect();
 }

@@ -40,6 +40,8 @@ static nsrefcnt gCaseConvRefCnt = 0;
 
 #define MAX_UNIBYTE 127
 
+MOZ_DECL_CTOR_COUNTER(nsTextTransformer);
+
 nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
                                      nsIWordBreaker* aWordBreaker)
   : mBuffer(mAutoWordBuffer),
@@ -48,6 +50,7 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
     mLineBreaker(aLineBreaker),
     mWordBreaker(aWordBreaker)
 {
+  MOZ_COUNT_CTOR(nsTextTransformer);
   if (gCaseConvRefCnt++ == 0) {
     nsresult res;
     res = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
@@ -59,6 +62,7 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
 
 nsTextTransformer::~nsTextTransformer()
 {
+  MOZ_COUNT_DTOR(nsTextTransformer);
   if (mBuffer != mAutoWordBuffer) {
     delete [] mBuffer;
   }

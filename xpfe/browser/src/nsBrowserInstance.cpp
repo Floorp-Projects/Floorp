@@ -150,11 +150,8 @@ static nsresult setAttribute( nsIWebShell *shell,
 // nsBrowserAppCore
 /////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(nsBrowserAppCore);
-
 nsBrowserAppCore::nsBrowserAppCore()
 {
-  MOZ_COUNT_CTOR(nsBrowserAppCore);
   mContentWindow        = nsnull;
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
@@ -169,7 +166,6 @@ nsBrowserAppCore::nsBrowserAppCore()
 
 nsBrowserAppCore::~nsBrowserAppCore()
 {
-  MOZ_COUNT_DTOR(nsBrowserAppCore);
   NS_IF_RELEASE(mSHistory);
 }
 

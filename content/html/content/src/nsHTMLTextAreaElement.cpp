@@ -129,11 +129,9 @@ NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLTextAreaElement);
 
 nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLTextAreaElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -141,7 +139,6 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsIAtom* aTag)
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLTextAreaElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 

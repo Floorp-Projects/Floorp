@@ -611,7 +611,6 @@ nsRangeList::nsRangeList()
 
 nsRangeList::~nsRangeList()
 {
- 
   if (mSelectionListeners)
   {
 	  PRUint32 cnt;
@@ -1407,7 +1406,6 @@ nsRangeList::DeleteFromDocument()
 
 // note: this can return a nil anchor node
 
-
 nsDOMSelection::nsDOMSelection(nsRangeList *aList)
 {
   mRangeList = aList;
@@ -1689,11 +1687,11 @@ nsDOMSelection::AddItem(nsIDOMRange *aItem)
     return NS_ERROR_FAILURE;
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsISupports> isupp;
-  nsresult result = aItem->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(isupp)); 
-  if (NS_FAILED(result))
-    return result;
-  result = mRangeArray->AppendElement(isupp);
+  nsresult result;
+  nsCOMPtr<nsISupports> isupp = do_QueryInterface(aItem, &result);
+  if (NS_SUCCEEDED(result)) {
+    result = mRangeArray->AppendElement(isupp);
+  }
   return result;
 }
 
@@ -1739,9 +1737,8 @@ nsDOMSelection::Clear()
     if (NS_FAILED(rv)) return rv;
     if (cnt == 0)
       break;
-    nsCOMPtr<nsIDOMRange> range;
     nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(0));
-    range = do_QueryInterface(isupportsindex);
+    nsCOMPtr<nsIDOMRange> range = do_QueryInterface(isupportsindex);
     mRangeArray->RemoveElementAt(0);
     selectFrames(range, 0);
     // Does RemoveElementAt also delete the elements?

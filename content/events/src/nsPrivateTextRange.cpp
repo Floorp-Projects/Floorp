@@ -31,7 +31,6 @@ nsPrivateTextRange::nsPrivateTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd,
 
 nsPrivateTextRange::~nsPrivateTextRange(void)
 {
-
 }
 
 NS_IMPL_ADDREF(nsPrivateTextRange)

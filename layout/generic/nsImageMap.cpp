@@ -92,18 +92,22 @@ public:
   PRBool mHasURL;
 };
 
+MOZ_DECL_CTOR_COUNTER(Area);
+
 Area::Area(const nsString& aBaseURL, const nsString& aHREF,
            const nsString& aTarget, const nsString& aAltText,
            PRBool aSuppress, PRBool aHasURL)
   : mBase(aBaseURL), mHREF(aHREF), mTarget(aTarget), mAltText(aAltText),
     mSuppressFeedback(aSuppress), mHasURL(aHasURL)
 {
+  MOZ_COUNT_CTOR(Area);
   mCoords = nsnull;
   mNumCoords = 0;
 }
 
 Area::~Area()
 {
+  MOZ_COUNT_DTOR(Area);
   delete [] mCoords;
 }
 

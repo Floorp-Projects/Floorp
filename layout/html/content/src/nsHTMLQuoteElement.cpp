@@ -84,18 +84,15 @@ NS_NewHTMLQuoteElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLQuoteElement);
 
 nsHTMLQuoteElement::nsHTMLQuoteElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLQuoteElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLQuoteElement::~nsHTMLQuoteElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLQuoteElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLQuoteElement)

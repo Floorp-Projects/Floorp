@@ -85,18 +85,15 @@ NS_NewHTMLBRElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLBRElement);
 
 nsHTMLBRElement::nsHTMLBRElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLBRElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLBRElement::~nsHTMLBRElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLBRElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLBRElement)

@@ -147,11 +147,9 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLImageElement);
 
 nsHTMLImageElement::nsHTMLImageElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLImageElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mOwnerDocument = nsnull;
@@ -159,7 +157,6 @@ nsHTMLImageElement::nsHTMLImageElement(nsIAtom* aTag)
 
 nsHTMLImageElement::~nsHTMLImageElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLImageElement);
   NS_IF_RELEASE(mOwnerDocument);
 }
 

@@ -182,7 +182,7 @@ XPCJSStackFrame::AddRef(void)
     if(mStack)
         mStack->AddRef();
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "XPCJSStackFrame");
+    NS_LOG_ADDREF(this, mRefCnt, "XPCJSStackFrame", sizeof(*this));
     return mRefCnt;
 }
 

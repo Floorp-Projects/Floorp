@@ -60,18 +60,15 @@ public:
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 };
 
-MOZ_DECL_CTOR_COUNTER(nsTableCellCollection);
 
 nsTableCellCollection::nsTableCellCollection(nsIContent* aParent, 
                                              nsIAtom*    aTag)
   : GenericElementCollection(aParent, aTag)
 {
-  MOZ_COUNT_CTOR(nsTableCellCollection);
 }
 
 nsTableCellCollection::~nsTableCellCollection()
 {
-  MOZ_COUNT_DTOR(nsTableCellCollection);
 }
 
 NS_IMETHODIMP 
@@ -239,11 +236,9 @@ NS_NewHTMLTableRowElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLTableRowElement);
 
 nsHTMLTableRowElement::nsHTMLTableRowElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLTableRowElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mCells = nsnull;
@@ -251,7 +246,6 @@ nsHTMLTableRowElement::nsHTMLTableRowElement(nsIAtom* aTag)
 
 nsHTMLTableRowElement::~nsHTMLTableRowElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLTableRowElement);
   if (nsnull != mCells) {
     mCells->ParentDestroyed();
     NS_RELEASE(mCells);

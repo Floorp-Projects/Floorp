@@ -72,7 +72,7 @@ nsXPCWrappedJS::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJS");
+    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJS", sizeof(*this));
     if(1 == mRefCnt && mRoot && mRoot != this)
         NS_ADDREF(mRoot);
 
@@ -311,7 +311,7 @@ nsXPCWrappedJSMethods::AddRef(void)
 {
     NS_PRECONDITION(mWrapper, "bad state");
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJSMethods");
+    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJSMethods", sizeof(*this));
     if(2 == mRefCnt)
         NS_ADDREF(mWrapper);
     return mRefCnt;

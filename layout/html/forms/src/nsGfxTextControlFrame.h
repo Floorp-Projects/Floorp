@@ -53,15 +53,10 @@ class nsGfxTextControlFrame;
 class EnderTempObserver : public nsIDocumentLoaderObserver
 {
 public:
-  EnderTempObserver() 
-  { 
-    NS_INIT_REFCNT(); 
-    mFirstCall = PR_TRUE;
-  }
+  EnderTempObserver();
+  virtual ~EnderTempObserver();
 
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
-
-  virtual ~EnderTempObserver();
 
   // nsISupports
   NS_DECL_ISUPPORTS

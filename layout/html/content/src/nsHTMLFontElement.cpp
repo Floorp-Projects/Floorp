@@ -92,18 +92,15 @@ NS_NewHTMLFontElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLFontElement);
 
 nsHTMLFontElement::nsHTMLFontElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLFontElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLFontElement::~nsHTMLFontElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLFontElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLFontElement)

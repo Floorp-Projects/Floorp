@@ -162,11 +162,9 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLInputElement);
 
 nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLInputElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mType = NS_FORM_INPUT_TEXT; // default value
@@ -177,7 +175,6 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
 
 nsHTMLInputElement::~nsHTMLInputElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLInputElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -186,15 +183,6 @@ nsHTMLInputElement::~nsHTMLInputElement()
 }
 
 // nsISupports
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsHTMLInputElement::AddRef(void)
-{
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsHTMLInputElement");
-  return mRefCnt;
-}
-
 
 NS_IMETHODIMP
 nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -217,6 +205,8 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   return NS_NOINTERFACE;
 }
+
+NS_IMPL_ADDREF(nsHTMLInputElement);
 
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLInputElement::Release()

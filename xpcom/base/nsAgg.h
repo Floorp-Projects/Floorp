@@ -100,7 +100,7 @@ _class::Internal::AddRef(void)                                              \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
     NS_PRECONDITION(PRInt32(agg->mRefCnt) >= 0, "illegal refcnt");          \
     ++agg->mRefCnt;                                                         \
-    NS_LOG_ADDREF(this, agg->mRefCnt, #_class);                             \
+    NS_LOG_ADDREF(this, agg->mRefCnt, #_class, sizeof(*this));              \
     return agg->mRefCnt;                                                    \
 }                                                                           \
                                                                             \

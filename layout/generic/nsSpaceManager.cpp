@@ -1010,13 +1010,25 @@ nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 /////////////////////////////////////////////////////////////////////////////
 // FrameInfo
 
+MOZ_DECL_CTOR_COUNTER(FrameInfo);
+
 nsSpaceManager::FrameInfo::FrameInfo(nsIFrame* aFrame, const nsRect& aRect)
   : mFrame(aFrame), mRect(aRect), mNext(0)
 {
+  MOZ_COUNT_CTOR(FrameInfo);
 }
+
+#ifdef DEBUG
+nsSpaceManager::FrameInfo::~FrameInfo()
+{
+  MOZ_COUNT_DTOR(FrameInfo);
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // BandRect
+
+MOZ_DECL_CTOR_COUNTER(BandRect);
 
 nsSpaceManager::BandRect::BandRect(nscoord    aLeft,
                                    nscoord    aTop,
@@ -1024,6 +1036,7 @@ nsSpaceManager::BandRect::BandRect(nscoord    aLeft,
                                    nscoord    aBottom,
                                    nsIFrame*  aFrame)
 {
+  MOZ_COUNT_CTOR(BandRect);
   mLeft = aLeft;
   mTop = aTop;
   mRight = aRight;
@@ -1038,6 +1051,7 @@ nsSpaceManager::BandRect::BandRect(nscoord      aLeft,
                                    nscoord      aBottom,
                                    nsVoidArray* aFrames)
 {
+  MOZ_COUNT_CTOR(BandRect);
   mLeft = aLeft;
   mTop = aTop;
   mRight = aRight;
@@ -1049,6 +1063,7 @@ nsSpaceManager::BandRect::BandRect(nscoord      aLeft,
 
 nsSpaceManager::BandRect::~BandRect()
 {
+  MOZ_COUNT_DTOR(BandRect);
   if (mNumFrames > 1) {
     delete mFrames;
   }

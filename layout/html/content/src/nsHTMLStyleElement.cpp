@@ -101,11 +101,9 @@ NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLStyleElement);
 
 nsHTMLStyleElement::nsHTMLStyleElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLStyleElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mStyleSheet = nsnull;
@@ -113,7 +111,6 @@ nsHTMLStyleElement::nsHTMLStyleElement(nsIAtom* aTag)
 
 nsHTMLStyleElement::~nsHTMLStyleElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLStyleElement);
   NS_IF_RELEASE(mStyleSheet);
 }
 

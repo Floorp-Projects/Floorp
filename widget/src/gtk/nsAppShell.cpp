@@ -109,8 +109,6 @@ PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
   return found;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsAppShell);
-
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
@@ -118,7 +116,6 @@ MOZ_DECL_CTOR_COUNTER(nsAppShell);
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
-  MOZ_COUNT_CTOR(nsAppShell);
   NS_INIT_REFCNT();
   mDispatchListener = 0;
   mLock = PR_NewLock();
@@ -135,7 +132,6 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-  MOZ_COUNT_DTOR(nsAppShell);
   PR_DestroyLock(mLock);
   delete mEventQueueTokens;
 }
@@ -146,38 +142,7 @@ nsAppShell::~nsAppShell()
 //
 //-------------------------------------------------------------------------
 
-#ifdef LOG_REFCNTS
-extern "C" {
-  void __log_addref(void* p, int oldrc, int newrc);
-  void __log_release(void* p, int oldrc, int newrc);
-}
-
-nsrefcnt nsAppShell::AddRef(void)
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsAppShell");
-  return mRefCnt;
-}
-
-nsrefcnt nsAppShell::Release(void)
-{
-  __log_release((void*) this, mRefCnt, mRefCnt - 1);
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsAppShell");
-  if (mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
-
-NS_IMPL_QUERY_INTERFACE1(nsAppShell, nsIAppShell)
-#else
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
-#endif
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)

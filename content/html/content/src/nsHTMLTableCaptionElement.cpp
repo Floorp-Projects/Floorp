@@ -85,18 +85,15 @@ NS_NewHTMLTableCaptionElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLTableCaptionElement);
 
 nsHTMLTableCaptionElement::nsHTMLTableCaptionElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLTableCaptionElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLTableCaptionElement::~nsHTMLTableCaptionElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLTableCaptionElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLTableCaptionElement)

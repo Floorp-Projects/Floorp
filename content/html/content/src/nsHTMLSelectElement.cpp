@@ -203,11 +203,9 @@ NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLSelectElement);
 
 nsHTMLSelectElement::nsHTMLSelectElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLSelectElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mOptions = nsnull;
@@ -216,7 +214,6 @@ nsHTMLSelectElement::nsHTMLSelectElement(nsIAtom* aTag)
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLSelectElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -876,11 +873,9 @@ nsOptionList::GetOptions()
   mDirty = PR_FALSE;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsOptionList);
 
 nsOptionList::nsOptionList(nsHTMLSelectElement* aSelect) 
 {
-  MOZ_COUNT_CTOR(nsOptionList);
   mDirty = PR_TRUE;
   // Do not maintain a reference counted reference. When
   // the select goes away, it will let us know.
@@ -889,7 +884,6 @@ nsOptionList::nsOptionList(nsHTMLSelectElement* aSelect)
 
 nsOptionList::~nsOptionList()
 {
-  MOZ_COUNT_DTOR(nsOptionList);
   DropReference();
 }
 

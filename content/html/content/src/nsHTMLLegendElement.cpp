@@ -93,11 +93,9 @@ NS_NewHTMLLegendElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLLegendElement);
 
 nsHTMLLegendElement::nsHTMLLegendElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLLegendElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -105,7 +103,6 @@ nsHTMLLegendElement::nsHTMLLegendElement(nsIAtom* aTag)
 
 nsHTMLLegendElement::~nsHTMLLegendElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLLegendElement);
   if (mForm) {
     NS_RELEASE(mForm);
   }

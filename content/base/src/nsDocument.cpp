@@ -503,78 +503,12 @@ nsDOMImplementation::SetScriptObject(void *aScriptObject)
 // =
 // ==================================================================
 
-#if 0
-NS_LAYOUT nsresult
-NS_NewPostData(PRBool aIsFile, char* aData, 
-               nsIPostData** aInstancePtrResult)
-{
-  nsresult rv = NS_OK;
+MOZ_DECL_CTOR_COUNTER(nsDocumentChildNodes);
 
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtrResult = new nsPostData(aIsFile, aData);
-  if (nsnull != *aInstancePtrResult) {
-    NS_ADDREF(*aInstancePtrResult);
-  } else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return rv;
-}
-#endif
-
-#if 0 // nuking postdata
-nsPostData::nsPostData(PRBool aIsFile, char* aData)
-{
-  NS_INIT_REFCNT();
-
-  mData    = nsnull;
-  mDataLen = 0;
-  mIsFile  = aIsFile;
-
-  if (aData) {
-    mDataLen = PL_strlen(aData);
-    mData = aData;
-  }
-}
-
-nsPostData::~nsPostData()
-{
-  if (nsnull != mData) {
-    delete [] mData;
-    mData = nsnull;
-  }
-}
-
-
-/*
- * Implementation of ISupports methods...
- */
-NS_IMPL_ISUPPORTS(nsPostData,kIPostDataIID);
-
-PRBool nsPostData::IsFile() 
-{ 
-  return mIsFile;
-}
-
-const char* nsPostData::GetData()
-{
-  return mData;
-}
-
-PRInt32 nsPostData::GetDataLength()
-{
-  return mDataLen;
-}
-#endif // nuking postdata.
-
-// ==================================================================
-// =
-// ==================================================================
 nsDocumentChildNodes::nsDocumentChildNodes(nsIDocument* aDocument)
 {
+  MOZ_COUNT_CTOR(nsDocumentChildNodes);
+
   // We don't reference count our document reference (to avoid circular
   // references). We'll be told when the document goes away.
   mDocument = aDocument;
@@ -582,6 +516,7 @@ nsDocumentChildNodes::nsDocumentChildNodes(nsIDocument* aDocument)
  
 nsDocumentChildNodes::~nsDocumentChildNodes()
 {
+  MOZ_COUNT_DTOR(nsDocumentChildNodes);
 }
 
 NS_IMETHODIMP

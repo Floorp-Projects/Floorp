@@ -59,8 +59,6 @@ static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
-MOZ_DECL_CTOR_COUNTER(nsPresContext);
-
 nsPresContext::nsPresContext()
   : mDefaultFont("Times", NS_FONT_STYLE_NORMAL,
                  NS_FONT_VARIANT_NORMAL,
@@ -73,7 +71,6 @@ nsPresContext::nsPresContext()
                       0,
                       NSIntPointsToTwips(10))
 {
-  MOZ_COUNT_CTOR(nsPresContext);
   NS_INIT_REFCNT();
   mCompatibilityMode = eCompatibility_Standard;
   mCompatibilityLocked = PR_FALSE;
@@ -96,7 +93,6 @@ nsPresContext::nsPresContext()
 
 nsPresContext::~nsPresContext()
 {
-  MOZ_COUNT_DTOR(nsPresContext);
   mShell = nsnull;
 
   Stop();

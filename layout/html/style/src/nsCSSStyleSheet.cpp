@@ -60,7 +60,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsITextContent.h"
 #include "prlog.h"
 
-//#define DEBUG_REFS
 //#define DEBUG_RULES
 #define DEBUG_CASCADE
 
@@ -1063,11 +1062,6 @@ void CSSStyleSheetImpl::operator delete(void* ptr)
   }
 }
 
-#ifdef DEBUG_REFS
-static PRInt32 gInstanceCount;
-#endif
-MOZ_DECL_CTOR_COUNTER(CSSStyleSheetImpl);
-
 CSSStyleSheetImpl::CSSStyleSheetImpl()
   : nsICSSStyleSheet(),
     mTitle(), 
@@ -1083,15 +1077,9 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mDirty(PR_FALSE),
     mScriptObject(nsnull)
 {
-  MOZ_COUNT_CTOR(CSSStyleSheetImpl);
   NS_INIT_REFCNT();
 
   mInner = new CSSStyleSheetInner(this);
-
-#ifdef DEBUG_REFS
-  ++gInstanceCount;
-  fprintf(stdout, "%d + CSSStyleSheet size: %d\n", gInstanceCount, sizeof(*this));
-#endif
 }
 
 CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
@@ -1110,7 +1098,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mScriptObject(nsnull),
     mInner(aCopy.mInner)
 {
-  MOZ_COUNT_CTOR(CSSStyleSheetImpl);
   NS_INIT_REFCNT();
 
   mInner->AddSheet(this);
@@ -1141,20 +1128,10 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     }
     while (otherChild && ourSlot);
   }
-
-#ifdef DEBUG_REFS
-  ++gInstanceCount;
-  fprintf(stdout, "%d + CSSStyleSheet size: %d\n", gInstanceCount, sizeof(*this));
-#endif
 }
 
 CSSStyleSheetImpl::~CSSStyleSheetImpl()
 {
-  MOZ_COUNT_DTOR(CSSStyleSheetImpl);
-#ifdef DEBUG_REFS
-  --gInstanceCount;
-  fprintf(stdout, "%d - CSSStyleSheet\n", gInstanceCount);
-#endif
   NS_IF_RELEASE(mMedia);
   if (mFirstChild) {
     CSSStyleSheetImpl* child = mFirstChild;

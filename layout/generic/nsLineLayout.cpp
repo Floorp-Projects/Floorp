@@ -49,13 +49,17 @@
 #undef REALLY_NOISY_TRIM
 #endif
 
+MOZ_DECL_CTOR_COUNTER(nsTextRun);
+
 nsTextRun::nsTextRun()
 {
+  MOZ_COUNT_CTOR(nsTextRun);
   mNext = nsnull;
 }
 
 nsTextRun::~nsTextRun()
 {
+  MOZ_COUNT_DTOR(nsTextRun);
 }
 
 void
@@ -80,6 +84,8 @@ nsTextRun::List(FILE* out, PRInt32 aIndent)
 #define PLACED_LEFT  0x1
 #define PLACED_RIGHT 0x2
 
+MOZ_DECL_CTOR_COUNTER(nsLineLayout);
+
 nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
                            nsISpaceManager* aSpaceManager,
                            const nsHTMLReflowState* aOuterReflowState,
@@ -91,6 +97,8 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
     mMinLineHeight(0),
     mComputeMaxElementSize(aComputeMaxElementSize)
 {
+  MOZ_COUNT_CTOR(nsLineLayout);
+
   // Stash away some style data that we need
   aOuterReflowState->frame->GetStyleData(eStyleStruct_Text,
                                          (const nsStyleStruct*&) mStyleText);
@@ -129,6 +137,8 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
 nsLineLayout::nsLineLayout(nsIPresContext& aPresContext)
   : mPresContext(aPresContext)
 {
+  MOZ_COUNT_CTOR(nsLineLayout);
+
   mTextRuns = nsnull;
   mTextRunP = &mTextRuns;
   mNewTextRun = nsnull;
@@ -139,6 +149,8 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext)
 
 nsLineLayout::~nsLineLayout()
 {
+  MOZ_COUNT_DTOR(nsLineLayout);
+
   NS_ASSERTION(nsnull == mRootSpan, "bad line-layout user");
   nsTextRun::DeleteTextRuns(mTextRuns);
 

@@ -955,8 +955,11 @@ nsHTMLElementFactory::CreateInstanceByTag(const nsString& aTag,
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR_COUNTER(SinkContext);
+
 SinkContext::SinkContext(HTMLContentSink* aSink)
 {
+  MOZ_COUNT_CTOR(SinkContext);
   mSink = aSink;
   mPreAppend = PR_FALSE;
   mStack = nsnull;
@@ -969,6 +972,7 @@ SinkContext::SinkContext(HTMLContentSink* aSink)
 
 SinkContext::~SinkContext()
 {
+  MOZ_COUNT_DTOR(SinkContext);
   if (nsnull != mStack) {
     for (PRInt32 i = 0; i < mStackPos; i++) {
       NS_RELEASE(mStack[i].mContent);
@@ -1631,6 +1635,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
   return it->QueryInterface(kIHTMLContentSinkIID, (void **)aResult);
 }
 
+// Note: operator new zeros our memory
 HTMLContentSink::HTMLContentSink()
 {
 #ifdef NS_DEBUG
@@ -1639,12 +1644,6 @@ HTMLContentSink::HTMLContentSink()
   }
 #endif
   mNotAtRef        = PR_TRUE;
-  mParser          = nsnull;
-  mDocumentBaseURL = nsnull;
-  mBody            = nsnull;
-  mFrameset        = nsnull;
-  mStyleSheetCount = 0;
-  mCSSLoader       = nsnull;
   mContentIDCounter = NS_CONTENT_ID_COUNTER_BASE;
 }
 

@@ -81,7 +81,6 @@ static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
-static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
 
 // comment out to hide caret
@@ -406,11 +405,8 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
   return it->QueryInterface(kIPresShellIID, (void **) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(PresShell);
-
 PresShell::PresShell()
 {
-  MOZ_COUNT_CTOR(PresShell);
   mIsDestroying = PR_FALSE;
   mCaretEnabled = PR_FALSE;
   mDisplayNonTextSelection = PR_FALSE;
@@ -419,39 +415,8 @@ PresShell::PresShell()
   EnableScrolling();
 }
 
-#ifdef NS_DEBUG
-// for debugging only
-nsrefcnt PresShell::AddRef(void)
-{
-  if (gsNoisyRefs) {
-    printf("PresShell: AddRef: %p, cnt = %d \n",this, mRefCnt+1);
-  }
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "PresShell");
-  return mRefCnt;
-}
-
-// for debugging only
-nsrefcnt PresShell::Release(void)
-{
-  if (gsNoisyRefs) {
-    printf("PresShell Release: %p, cnt = %d \n",this, mRefCnt-1);
-  }
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "PresShell");
-  if (mRefCnt == 0) {
-    if (gsNoisyRefs) {
-      printf("PresShell Delete: %p, \n",this);
-    }
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
-#else
 NS_IMPL_ADDREF(PresShell)
 NS_IMPL_RELEASE(PresShell)
-#endif
 
 nsresult
 PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -504,8 +469,6 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 PresShell::~PresShell()
 {
-  MOZ_COUNT_DTOR(PresShell);
-
   mRefCnt = 99;/* XXX hack! get around re-entrancy bugs */
 
   mIsDestroying = PR_TRUE;

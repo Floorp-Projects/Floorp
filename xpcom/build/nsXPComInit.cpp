@@ -25,9 +25,6 @@
 
 #include "nsAllocator.h"
 #include "nsArena.h"
-#if 0
-#include "nsBuffer.h"
-#endif
 #include "nsByteBuffer.h"
 #ifdef PAGE_MANAGER
 #include "nsPageMgr.h"
@@ -55,9 +52,6 @@
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 // ds
 static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
-#if 0
-static NS_DEFINE_CID(kBufferCID, NS_BUFFER_CID);
-#endif
 static NS_DEFINE_CID(kByteBufferCID, NS_BYTEBUFFER_CID);
 #ifdef PAGE_MANAGER
 static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
@@ -491,15 +485,13 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     NS_PurgeAtomTable();
 
-#ifdef BLOATY
-    NS_DumpBloatStatistics();
-#endif
-
-#if defined(DEBUG) && (defined(_WIN32) || defined(XP_UNIX))
+#ifdef NS_BUILD_REFCNT_LOGGING
+#if defined(_WIN32) || defined(XP_UNIX)
     if (getenv("MOZ_DUMP_LEAKS")) {
-        nsTraceRefcnt::DumpLeaks(stderr);
-        nsTraceRefcnt::FlushCtorRegistry();
+        nsTraceRefcnt::DumpStatistics();
     }
+#endif
+    nsTraceRefcnt::ResetStatistics();
 #endif
 
 #ifdef GC_LEAK_DETECTOR
@@ -509,5 +501,3 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     return NS_OK;
 }
-
-//////////////////////////////////////////////////////////////////////////////

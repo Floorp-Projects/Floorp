@@ -174,11 +174,9 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLFormElement);
 
 nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLFormElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mControls = new nsFormControlList();
@@ -188,7 +186,6 @@ nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
 
 nsHTMLFormElement::~nsHTMLFormElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLFormElement);
 
   // set the controls to have no form
   PRUint32 numControls;
@@ -239,19 +236,11 @@ nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
-nsHTMLFormElement::AddRef(void)                                
-{ 
-  //nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsHTMLFormElement");
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsHTMLFormElement);
 
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLFormElement::Release()
 {
-  //nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "nsHTMLFormElement");
   PRUint32 numChildren;
@@ -639,18 +628,15 @@ nsHTMLFormElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
 
 // nsFormControlList implementation, this could go away if there were a lightweight collection implementation somewhere
 
-MOZ_DECL_CTOR_COUNTER(nsFormControlList);
 
 nsFormControlList::nsFormControlList() 
 {
-  MOZ_COUNT_CTOR(nsFormControlList);
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
 }
 
 nsFormControlList::~nsFormControlList()
 {
-  MOZ_COUNT_DTOR(nsFormControlList);
   Clear();
 }
 

@@ -74,9 +74,12 @@ protected:
   PLHashTable* mTable;
 };
 
+MOZ_DECL_CTOR_COUNTER(UndisplayedNode);
+
 struct UndisplayedNode {
   UndisplayedNode(nsIContent* aContent, nsIStyleContext* aStyle)
   {
+    MOZ_COUNT_CTOR(UndisplayedNode);
     mContent = aContent;
     mStyle = aStyle;
     NS_ADDREF(mStyle);
@@ -84,6 +87,7 @@ struct UndisplayedNode {
   }
   UndisplayedNode(nsIStyleContext* aPseudoStyle) 
   {
+    MOZ_COUNT_CTOR(UndisplayedNode);
     mContent = nsnull;
     mStyle = aPseudoStyle;
     NS_ADDREF(mStyle);
@@ -91,6 +95,7 @@ struct UndisplayedNode {
   }
   ~UndisplayedNode(void)
   {
+    MOZ_COUNT_DTOR(UndisplayedNode);
     NS_RELEASE(mStyle);
     if (mNext) {
       delete mNext;
@@ -261,6 +266,7 @@ NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
 
 FrameManager::FrameManager()
 {
+  NS_INIT_REFCNT();
 }
 
 NS_IMPL_ADDREF(FrameManager)
@@ -1313,8 +1319,11 @@ CompareKeys(void* key1, void* key2)
   return key1 == key2;
 }
 
+MOZ_DECL_CTOR_COUNTER(FrameHashTable);
+
 FrameHashTable::FrameHashTable(PRUint32 aNumBuckets)
 {
+  MOZ_COUNT_CTOR(FrameHashTable);
   mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
                            (PLHashComparator)CompareKeys,
                            (PLHashComparator)nsnull,
@@ -1323,6 +1332,7 @@ FrameHashTable::FrameHashTable(PRUint32 aNumBuckets)
 
 FrameHashTable::~FrameHashTable()
 {
+  MOZ_COUNT_DTOR(FrameHashTable);
   PL_HashTableDestroy(mTable);
 }
 
@@ -1395,8 +1405,13 @@ FrameHashTable::Dump(FILE* fp)
 }
 #endif
 
+//----------------------------------------------------------------------
+
+MOZ_DECL_CTOR_COUNTER(UndisplayedMap);
+
 UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
 {
+  MOZ_COUNT_CTOR(UndisplayedMap);
   mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
                            (PLHashComparator)CompareKeys,
                            (PLHashComparator)nsnull,
@@ -1406,6 +1421,7 @@ UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
 
 UndisplayedMap::~UndisplayedMap(void)
 {
+  MOZ_COUNT_DTOR(UndisplayedMap);
   Clear();
   PL_HashTableDestroy(mTable);
 }
