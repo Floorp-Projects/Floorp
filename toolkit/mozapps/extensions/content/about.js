@@ -34,7 +34,9 @@ function init()
   // Home Page URL
   var homepageArc = rdfs.GetResource(EM_NS("homepageURL"));
   var homepage = gExtensionDB.GetTarget(extension, homepageArc, true);
-  homepage = homepage.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  if (homepage)
+    homepage = homepage.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    
   // Creator
   var creatorArc = rdfs.GetResource(EM_NS("creator"));
   var creator = gExtensionDB.GetTarget(extension, creatorArc, true);
@@ -53,9 +55,13 @@ function init()
   extensionCreator.setAttribute("value", creator);
   
   var extensionHomepage = document.getElementById("extensionHomepage");
-  extensionHomepage.setAttribute("href", homepage);
-  extensionHomepage.setAttribute("tooltiptext", homepage);
-  
+  if (homepage) {
+    extensionHomepage.setAttribute("href", homepage);
+    extensionHomepage.setAttribute("tooltiptext", homepage);
+  }
+  else
+    extensionHomepage.hidden = true;
+    
   var contributorsBox = document.getElementById("contributorsBox");
   var contributorsArc = rdfs.GetResource(EM_NS("contributor"));
   var contributors = gExtensionDB.GetTargets(extension, contributorsArc, true);

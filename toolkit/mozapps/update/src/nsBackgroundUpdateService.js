@@ -75,7 +75,7 @@ nsUpdateService.prototype = {
   
   updateEnded: function ()
   {
-    this.updating = false;
+    // this.updating = false;
     delete this._updateObserver;
   },
   
@@ -95,7 +95,7 @@ nsUpdateService.prototype = {
     var lastUpdateTime = this._pref.getIntPref(PREF_UPDATE_LASTUPDATEDATE);
     var timeSinceLastCheck = Date.UTC() - lastUpdateTime;
     if (timeSinceLastCheck > interval) {
-      if (!this.updating)
+      // if (!this.updating)
         this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
                                      nsIUpdateService.SOURCE_EVENT_BACKGROUND);
     }
@@ -105,7 +105,7 @@ nsUpdateService.prototype = {
   
   checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
   {
-    if (this.updating) return;
+    // if (this.updating) return;
 
     switch (aSourceEvent) {
     case nsIUpdateService.SOURCE_EVENT_MISMATCH:
@@ -143,7 +143,7 @@ nsUpdateService.prototype = {
   
   checkForUpdatesInternal: function (aItems, aItemCount, aUpdateTypes, aSourceEvent)
   {
-    this.updating = true;
+    // this.updating = true;
   
     // Listen for notifications sent out by the app updater (implemented here) and the
     // extension updater (implemented in nsExtensionItemUpdater)
@@ -282,7 +282,7 @@ nsUpdateService.prototype = {
   // nsITimerCallback
   notify: function (aTimer)
   {
-    if (this.updating) return;
+    // if (this.updating) return;
     
     this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
                                  nsIUpdateService.SOURCE_EVENT_BACKGROUND);
