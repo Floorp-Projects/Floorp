@@ -84,6 +84,7 @@ static NSString *SidebarToolbarItemIdentifier	= @"Sidebar Toolbar Item";
 static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
 static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
+static NSString *ViewSourceToolbarItemIdentifier = @"View Source Toolbar Item";
 
 static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
 
@@ -469,6 +470,7 @@ static NSArray* sToolbarDefaults = nil;
                                         ThrobberToolbarItemIdentifier,
                                         SearchToolbarItemIdentifier,
                                         PrintToolbarItemIdentifier,
+                                        ViewSourceToolbarItemIdentifier,
                                         NSToolbarCustomizeToolbarItemIdentifier,
                                         NSToolbarFlexibleSpaceItemIdentifier,
                                         NSToolbarSpaceItemIdentifier,
@@ -596,6 +598,13 @@ static NSArray* sToolbarDefaults = nil;
         [toolbarItem setImage:[NSImage imageNamed:@"print"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(printDocument:)];
+    } else if ( [itemIdent isEqual:ViewSourceToolbarItemIdentifier] ) {
+        [toolbarItem setLabel:@"View Source"];
+        [toolbarItem setPaletteLabel:@"View Page Source"];
+        [toolbarItem setToolTip:@"Display the HTML source of this page"];
+        [toolbarItem setImage:[NSImage imageNamed:@"showsource"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(viewSource:)];
     } else {
         toolbarItem = nil;
     }

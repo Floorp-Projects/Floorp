@@ -555,6 +555,7 @@
 				F5F190BC02D1F81A01026D5D,
 				F5F190BF02D217C201026D5D,
 				F5CA1A1B02D3957001F34900,
+				F5EB9377030C92450100010C,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -5570,6 +5571,7 @@
 				F5F190BD02D1F81A01026D5D,
 				F5F190C002D217C201026D5D,
 				F5CA1A1C02D3957001F34900,
+				F5EB9378030C92450100010C,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -7628,6 +7630,7 @@
 				F53F5AE902448BC8010001CA,
 				F53F5AEA02448BC8010001CA,
 				F55CCFD2020E98EA010001CA,
+				F5EB9376030C92450100010C,
 			);
 			isa = PBXGroup;
 			name = "Purple Images";
@@ -7770,6 +7773,23 @@
 			name = nsToolkit.mm;
 			path = ../widget/src/cocoa/nsToolkit.mm;
 			refType = 2;
+		};
+		F5EB9376030C92450100010C = {
+			isa = PBXFileReference;
+			path = showsource.tif;
+			refType = 2;
+		};
+		F5EB9377030C92450100010C = {
+			fileRef = F5EB9376030C92450100010C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5EB9378030C92450100010C = {
+			fileRef = F5EB9376030C92450100010C;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F5F14E9602A5A43A01A967F3 = {
 			isa = PBXFileReference;
