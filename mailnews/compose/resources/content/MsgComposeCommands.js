@@ -146,7 +146,7 @@ var progressListener = {
 };
 
 // i18n globals
-var currentMailSendCharset = null;
+var g_currentMailSendCharset = null;
 var g_send_default_charset = null;
 var g_charsetTitle = null;
 var g_charsetConvertManager = Components.classes['@mozilla.org/charset-converter-manager;1'].getService();
@@ -965,7 +965,7 @@ function SetDocumentCharacterSet(aCharset)
 
   if (msgCompose) {
     msgCompose.SetDocumentCharset(aCharset);
-    currentMailSendCharset = aCharset;
+    g_currentMailSendCharset = aCharset;
     g_charsetTitle = null;
     SetComposeWindowTitle(13);
   }
@@ -973,40 +973,47 @@ function SetDocumentCharacterSet(aCharset)
     dump("Compose has not been created!\n");
 }
 
-function InitCharsetMenuCheckMark()
+function UpdateMailEditCharset()
 {
-  // return if the charset is already set explitily
-  if (currentMailSendCharset != null) {
-    dump("already set to " + currentMailSendCharset + "\n");
-    return;
-  }
-
-  var menuitem;
-
   var send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
-  dump("send_default_charset is " + send_default_charset + "\n");
+//  dump("send_default_charset is " + send_default_charset + "\n");
 
   var compFieldsCharset = msgCompose.compFields.characterSet;
-  dump("msgCompose.compFields is " + compFieldsCharset + "\n");
+//  dump("msgCompose.compFields is " + compFieldsCharset + "\n");
 
-  if (compFieldsCharset == "us-ascii")
-    compFieldsCharset = "ISO-8859-1";
-  menuitem = document.getElementById(compFieldsCharset);
-
-  // charset may have been set implicitly in case of reply/forward
-  if (send_default_charset != compFieldsCharset) {
-    if (menuitem)
-      menuitem.setAttribute('checked', 'true');
-    return;
+  if (g_charsetConvertManager) {
+    var charsetAtom = g_charsetConvertManager.GetCharsetAtom(compFieldsCharset);
+    if (charsetAtom && (charsetAtom.GetUnicode() == "us-ascii"))
+      compFieldsCharset = "ISO-8859-1";   // no menu item for "us-ascii"
   }
 
-  // use pref default
-  menuitem = document.getElementById(send_default_charset);
+  // charset may have been set implicitly in case of reply/forward
+  // or use pref default otherwise
+  var menuitem = document.getElementById(send_default_charset == compFieldsCharset ? 
+                                         send_default_charset : compFieldsCharset);
   if (menuitem)
     menuitem.setAttribute('checked', 'true');
 
   // Set a document charset to a default mail send charset.
-  SetDocumentCharacterSet(send_default_charset);
+  if (send_default_charset == compFieldsCharset)
+    SetDocumentCharacterSet(send_default_charset);
+}
+
+function InitCharsetMenuCheckMark()
+{
+  // return if the charset is already set explitily
+  if (g_currentMailSendCharset != null) {
+    dump("already set to " + g_currentMailSendCharset + "\n");
+    return;
+  }
+
+  // Check the menu
+  UpdateMailEditCharset();
+  // use setTimeout workaround to delay checkmark the menu
+  // when onmenucomplete is ready then use it instead of oncreate
+  // see bug 78290 for the detail
+  setTimeout("UpdateMailEditCharset()", 0);
+
 }
 
 function GetCharsetUIString()
