@@ -149,7 +149,7 @@ Rights Reserved.
           
     <vbox flex="1">
       <hbox id="mail3PaneVertLayoutBox" persist="collapsed height" flex="1">
-        <vbox flex="1" autostrech="always" persist="width">
+        <vbox flex="1" autostretch="always" persist="width">
           <sidebarheader type="box" class="sidebarheader-main" label="&mail-sidebar-header.label;"/>
           <tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext" persist="collapsed width"/>
         </vbox>
