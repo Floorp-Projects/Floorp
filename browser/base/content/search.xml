@@ -352,7 +352,7 @@
 
     <handlers>
 
-      <handler event="keypress" keycode="vk_up" modifiers="control" phase="capturing">
+      <handler event="keypress" keycode="vk_up" modifiers="accel" phase="capturing">
         <![CDATA[
           var currentEngine = this.currentEngine;
           if (currentEngine) {
@@ -366,7 +366,7 @@
         ]]>
       </handler>
 
-      <handler event="keypress" keycode="vk_down" modifiers="control" phase="capturing">
+      <handler event="keypress" keycode="vk_down" modifiers="accel" phase="capturing">
         <![CDATA[
           var currentEngine = this.currentEngine;
           if (currentEngine) {
