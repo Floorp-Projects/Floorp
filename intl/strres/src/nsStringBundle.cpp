@@ -35,6 +35,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
+#include "nsIMemory.h"
 #include "nsCOMPtr.h"
 #include "pratom.h"
 #include "prclist.h"
@@ -48,13 +49,11 @@
 #include "nsHashtable.h"
 #include "nsAutoLock.h"
 #include "nsTextFormatter.h"
-#include "nsIChromeRegistry.h"
 #include "nsIErrorService.h"
 
 #include "nsAcceptLang.h" // for nsIAcceptLang
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
@@ -182,8 +181,9 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
                                      PRUint32 aLength,
                                      PRUnichar **aResult)
 {
+  nsresult rv;
   nsAutoString formatStr;
-  nsresult rv = GetStringFromName(aName, formatStr);
+  rv = GetStringFromName(aName, formatStr);
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.GetUnicode(), aParams, aLength, aResult);
@@ -647,7 +647,8 @@ struct bundleCacheEntry_t {
   nsIStringBundle* mBundle;
 };
 
-class nsStringBundleService : public nsIStringBundleService
+class nsStringBundleService : public nsIStringBundleService,
+                              public nsIMemoryPressureObserver
 {
 public:
   nsStringBundleService();
@@ -655,6 +656,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLESERVICE
+  NS_DECL_NSIMEMORYPRESSUREOBSERVER
     
 private:
   nsresult getStringBundle(const char *aUrl, nsILocale* aLocale,
@@ -663,6 +665,8 @@ private:
                             PRUint32 argCount, PRUnichar** argArray,
                             PRUnichar* *result);
 
+  void flushBundleCache();
+  
   bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
                                       nsStringKey *aHashKey);
 
@@ -694,23 +698,55 @@ nsStringBundleService::nsStringBundleService() :
   NS_ASSERTION(mScratchUri, "Couldn't create scratch URI");
   mErrorService = do_GetService(kErrorServiceCID);
   NS_ASSERTION(mErrorService, "Couldn't get error service");
+
+  nsMemory::RegisterObserver(this);
 }
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsStringBundleService,
+                              nsIStringBundleService,
+                              nsIMemoryPressureObserver)
 
 nsStringBundleService::~nsStringBundleService()
 {
+  nsMemory::UnregisterObserver(this);
+  
+  flushBundleCache();
+  PL_FinishArenaPool(&mCacheEntryPool);
+}
+
+NS_IMETHODIMP
+nsStringBundleService::FlushMemory(PRUint32 aReason, size_t requestedAmount)
+{
+  flushBundleCache();
+  return NS_OK;
+}
+
+void
+nsStringBundleService::flushBundleCache()
+{
+  // release all bundles in the cache
+  mBundleMap.Reset();
+  
   PRCList *current = PR_LIST_HEAD(&mBundleCache);
   while (current != &mBundleCache) {
     bundleCacheEntry_t *cacheEntry = (bundleCacheEntry_t*)current;
 
     recycleEntry(cacheEntry);
-    
+    PRCList *oldItem = current;
     current = PR_NEXT_LINK(current);
+    
+    // will be freed in PL_FreeArenaPool
+    PR_REMOVE_LINK(oldItem);
   }
-  
-  PL_FinishArenaPool(&mCacheEntryPool);
+  PL_FreeArenaPool(&mCacheEntryPool);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsStringBundleService, NS_GET_IID(nsIStringBundleService))
+NS_IMETHODIMP
+nsStringBundleService::FlushBundles()
+{
+  flushBundleCache();
+  return NS_OK;
+}
 
 nsresult
 nsStringBundleService::getStringBundle(const char *aURLSpec,
@@ -719,27 +755,9 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 {
   nsresult ret;
 
-  const char *urlSpec = aURLSpec;
   nsXPIDLCString newSpec;
 
-  // chrome URL resolution might fail if there's no chrome registry
-  // so handle this gracefully
-  if (mScratchUri) {
-    // resolve the chrome URL to it's complete representation
-    mScratchUri->SetSpec(aURLSpec);
-    
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry =
-      do_GetService(kChromeRegistryCID, &ret);
-    if (NS_SUCCEEDED(ret)) {
-    
-      ret = chromeRegistry->ConvertChromeURL(mScratchUri, getter_Copies(newSpec));
-      if (NS_SUCCEEDED(ret)) {
-        if (NS_SUCCEEDED(ret)) urlSpec = newSpec;
-      }
-    }
-  }
-
-  nsStringKey completeKey(urlSpec);
+  nsStringKey completeKey(aURLSpec);
 
   bundleCacheEntry_t* cacheEntry =
     (bundleCacheEntry_t*)mBundleMap.Get(&completeKey);
