@@ -90,9 +90,9 @@ toolbarbutton.bookmark-item[open="true"] {
 }
 
 .toolbarpaletteitem-box[type="bookmarks-toolbar"][place="palette"] {
-  width: 32px;
-  height: 32px;
-  background: url("chrome://browser/skin/bookmark-large.png") no-repeat center;
+  width: 42px;
+  height: 42px;
+  background: url("chrome://browser/skin/bookmarks-large.png") no-repeat;
 }
 
 /* ::::: bookmark menus ::::: */
@@ -373,6 +373,52 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 131px 32px 99px) !important;
 }
 
+#downloads-button {
+  list-style-image: url("chrome://browser/skin/downloads-large.png");
+  -moz-image-region: rect(0px 42px 42px 0px);
+}
+#downloads-button:hover {
+  -moz-image-region: rect(0px 96px 42px 54px);
+}
+#downloads-button[disabled="true"] {
+  -moz-image-region: rect(0px 150px 42px 108px);
+}
+#downloads-button:hover:active,
+#downloads-button[checked="true"] {
+  -moz-image-region: rect(0px 204px 42px 162px);
+}
+
+#bookmarks-button {
+  list-style-image: url("chrome://browser/skin/bookmarks-large.png");
+  -moz-image-region: rect(0px 42px 42px 0px);
+}
+#bookmarks-button:hover {
+  -moz-image-region: rect(0px 96px 42px 54px);
+}
+#bookmarks-button[disabled="true"] {
+  -moz-image-region: rect(0px 150px 42px 108px);
+}
+#bookmarks-button:hover:active,
+#bookmarks-button[checked="true"] {
+  -moz-image-region: rect(0px 204px 42px 162px);
+}
+
+#history-button {
+  list-style-image: url("chrome://browser/skin/history-large.png");
+  -moz-image-region: rect(0px 42px 42px 0px);
+}
+#history-button:hover {
+  -moz-image-region: rect(0px 96px 42px 54px);
+}
+#history-button[disabled="true"] {
+  -moz-image-region: rect(0px 150px 42px 108px);
+}
+#history-button:hover:active, 
+#history-button[checked="true"] {
+  -moz-image-region: rect(0px 204px 42px 162px);
+}
+
+
 /* ::::: small primary toolbar buttons ::::: */
 
 toolbar[iconsize="small"] #back-button {
@@ -455,6 +501,52 @@ toolbar[iconsize="small"] #print-button:hover:active {
 toolbar[iconsize="small"] #print-button[disabled="true"] {
   -moz-image-region: rect(0px 112px 25px 84px);
 }
+
+toolbar[iconsize="small"] #downloads-button {
+  list-style-image: url("chrome://browser/skin/downloads-small.png") !important;
+  -moz-image-region: rect(0px 24px 25px 0px);
+}
+toolbar[iconsize="small"] #downloads-button:hover {
+  -moz-image-region: rect(0px 48px 25px 24px);
+}
+toolbar[iconsize="small"] #downloads-button:hover:active,
+toolbar[iconsize="small"] #downloads-button[checked="true"] {
+  -moz-image-region: rect(0px 72px 25px 48px);
+}
+toolbar[iconsize="small"] #downloads-button[disabled="true"] {
+  -moz-image-region: rect(0px 96px 25px 72px) !important;
+}
+
+toolbar[iconsize="small"] #bookmarks-button {
+  list-style-image: url("chrome://browser/skin/bookmarks-small.png") !important;
+  -moz-image-region: rect(0px 24px 25px 0px);
+}
+toolbar[iconsize="small"] #bookmarks-button:hover {
+  -moz-image-region: rect(0px 48px 25px 24px);
+}
+toolbar[iconsize="small"] #bookmarks-button:hover:active,
+toolbar[iconsize="small"] #bookmarks-button[checked="true"] {
+  -moz-image-region: rect(0px 72px 25px 48px);
+}
+toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
+  -moz-image-region: rect(0px 96px 25px 72px) !important;
+}
+
+toolbar[iconsize="small"] #history-button {
+  list-style-image: url("chrome://browser/skin/history-small.png") !important;
+  -moz-image-region: rect(0px 24px 25px 0px);
+}
+toolbar[iconsize="small"] #history-button:hover {
+  -moz-image-region: rect(0px 48px 25px 24px);
+}
+toolbar[iconsize="small"] #history-button:hover:active,
+toolbar[iconsize="small"] #history-button[checked="true"] {
+  -moz-image-region: rect(0px 72px 25px 48px);
+}
+toolbar[iconsize="small"] #history-button[disabled="true"] {
+  -moz-image-region: rect(0px 96px 25px 72px) !important;
+}
+
 
 /* ::::: fullscreen window controls ::::: */
 
