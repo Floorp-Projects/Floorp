@@ -22,6 +22,14 @@
 
 #include "icodegenerator.h"
 
+#ifdef XP_MAC
+#include "gc_allocator.h"
+#else
+// for platforms w/o a working gc_allocator.
+#include <memory>
+#define gc_allocator std::allocator
+#endif
+
 namespace JavaScript {
     class JSObject;
 
@@ -45,7 +53,7 @@ namespace JavaScript {
 	
 	using std::vector;
 	
-	typedef vector<JSValue> JSValues;
+	typedef vector<JSValue, gc_allocator<JSValue> > JSValues;
 
 	JSValue interpret(InstructionStream& iCode, const JSValues& args);
 }
