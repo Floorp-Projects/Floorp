@@ -47,10 +47,7 @@
 
 menupopup,
 popup {
-  min-width: 1px;
-  color: #000000;
-  border-top: 1px solid #C3C3C3;
-  background: url("chrome://global/skin/icons/popup-overlay.png") repeat !important;
+  -moz-appearance: menupopup;;
 }
 
 /* ::::: popup internal box ::::: */
