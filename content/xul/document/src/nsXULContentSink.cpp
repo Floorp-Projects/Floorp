@@ -166,6 +166,7 @@ protected:
     static nsIAtom* kKeysetAtom;
     static nsIAtom* kOverlayAtom;
     static nsIAtom* kPositionAtom;
+    static nsIAtom* kRefAtom;
     static nsIAtom* kScriptAtom;
     static nsIAtom* kTemplateAtom;
 
@@ -311,6 +312,7 @@ nsIAtom* XULContentSinkImpl::kIdAtom;
 nsIAtom* XULContentSinkImpl::kKeysetAtom;
 nsIAtom* XULContentSinkImpl::kOverlayAtom;
 nsIAtom* XULContentSinkImpl::kPositionAtom;
+nsIAtom* XULContentSinkImpl::kRefAtom;
 nsIAtom* XULContentSinkImpl::kScriptAtom;
 nsIAtom* XULContentSinkImpl::kTemplateAtom;
 
@@ -499,6 +501,7 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
         kKeysetAtom      = NS_NewAtom("keyset");
         kOverlayAtom     = NS_NewAtom("overlay");
         kPositionAtom    = NS_NewAtom("position");
+        kRefAtom         = NS_NewAtom("ref");
         kScriptAtom      = NS_NewAtom("script");
         kTemplateAtom    = NS_NewAtom("template");
     }
@@ -589,6 +592,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
         NS_IF_RELEASE(kKeysetAtom);
         NS_IF_RELEASE(kOverlayAtom);
         NS_IF_RELEASE(kPositionAtom);
+        NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kScriptAtom);
         NS_IF_RELEASE(kTemplateAtom);
     }
@@ -1793,6 +1797,14 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, n
     // Add the element to the XUL document's ID-to-element map.
     nsAutoString id;
     rv = element->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        rv = xuldoc->AddElementForID(id, element);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = element->GetAttribute(kNameSpaceID_None, kRefAtom, id);
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
