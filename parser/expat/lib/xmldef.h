@@ -56,15 +56,17 @@ particular environments. */
  */
 
 #include "nspr.h"
-#define malloc(x) PR_Malloc(x)
-#define realloc(x, y) PR_Realloc((x), (y))
+#define malloc(x) PR_Malloc((size_t)(x))
+#define realloc(x, y) PR_Realloc((x), (size_t)(y))
 #define calloc(x, y) PR_Calloc((x),(y))
 #define free(x) PR_Free(x)
+#define memcpy(x, y, z) memcpy((x), (y), (size_t)(z))
+#define memmove(x, y, z) memmove((x), (y), (size_t)(z))
+#define memcmp(x, y, z) memcmp((x), (y), (size_t)(z))
 
 #if PR_BYTES_PER_INT != 4
 typedef PRInt32 int;
 #endif
-
 
 /* Enable Unicode string processing in expat */
 #define XML_UNICODE
