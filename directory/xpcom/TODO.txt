@@ -82,6 +82,9 @@ housecleaning
   thread-crossing operations (side benefit: also exposes more LDAPy
   goodness to JS) 
 
+* change timeout value from PRTime to PRIntervalTime (wouldn't require
+  LL_* macros).
+
 
 misc
 ----
@@ -115,6 +118,9 @@ perf
   nsLDAPService again, need to implement shutdown for nsLDAPService
   (probably analogous to the way nsSocketTransportService shuts down.
   but how does nsIShutdownListener fit in here? and CanUnload?)
+
+* remove unnecessary thread-safety code (NS_IMPL_THREADSAFE) to avoid
+  locking overhead
 
 
 later
