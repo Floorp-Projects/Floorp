@@ -49,6 +49,11 @@ class nsISupportsArray;
 #define NS_STYLELIST_SID   \
 {0x4fb83b60, 0xcf27, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+// SID AD5993F0-DA2B-11d1-80B9-00805F8A274D
+#define NS_STYLEPOSITION_SID  \
+{0xad5993f0, 0xda2b, 0x11d1, {0x80, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x27, 0x4d}}
+
+
 // Indicies into border/padding/margin arrays
 #define NS_SIDE_TOP     0
 #define NS_SIDE_RIGHT   1
@@ -107,6 +112,20 @@ struct nsStyleList : public nsStyleStruct {
   PRUint8   mListStyleType;             // See nsStyleConsts.h
   nsString  mListStyleImage;            // absolute url string
   PRUint8   mListStylePosition;
+};
+
+struct nsStylePosition : public nsStyleStruct {
+  PRUint8 mPosition;                    // see nsStyleConsts.h
+
+  PRUint8 mLeftOffsetFlags;             // see nsStyleConsts.h
+  nscoord mLeftOffset;
+  PRUint8 mTopOffsetFlags;              // see nsStyleConsts.h
+  nscoord mTopOffset;
+
+  PRUint8 mWidthFlags;                  // see nsStyleConsts.h
+  nscoord mWidth;
+  PRUint8 mHeightFlags;                 // see nsStyleConsts.h
+  nscoord mHeight;
 };
 
 //----------------------------------------------------------------------

@@ -41,6 +41,7 @@ static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
@@ -211,6 +212,42 @@ void StyleListImpl::InheritFrom(const nsStyleList& aCopy)
 }
 
 // --------------------
+// nsStylePosition
+//
+struct StylePositionImpl: public nsStylePosition {
+  StylePositionImpl(void)
+  {
+    mPosition = NS_STYLE_POSITION_STATIC;
+    mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_AUTO;
+    mLeftOffset = 0;
+    mTopOffsetFlags = NS_STYLE_POSITION_VALUE_AUTO;
+    mTopOffset = 0;
+    mWidthFlags = NS_STYLE_POSITION_VALUE_AUTO;
+    mWidth = 0;
+    mHeightFlags = NS_STYLE_POSITION_VALUE_AUTO;
+    mHeight = 0;
+  }
+
+  ~StylePositionImpl(void)
+  {}
+
+  virtual const nsID& GetID(void)
+  { return kStylePositionSID;  }
+
+  virtual void InheritFrom(const nsStylePosition& aCopy);
+
+private:  // These are not allowed
+  StylePositionImpl(const StylePositionImpl& aOther);
+  StylePositionImpl& operator=(const StylePositionImpl& aOther);
+};
+
+void StylePositionImpl::InheritFrom(const nsStylePosition& aCopy)
+{
+  // positioning values not inherited
+}
+
+
+// --------------------
 // nsStyleMolecule
 //
 nsStyleMolecule::nsStyleMolecule()
@@ -292,6 +329,7 @@ public:
   StyleSpacingImpl  mSpacing;
   StyleBorderImpl   mBorder;
   StyleListImpl     mList;
+  StylePositionImpl mPosition;
 // xxx backward support hack
   StyleMoleculeImpl mMolecule;
 };
