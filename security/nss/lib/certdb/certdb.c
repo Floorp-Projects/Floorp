@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.2 2000/06/20 16:15:32 chrisk%netscape.com Exp $
+ * $Id: certdb.c,v 1.3 2000/09/06 22:10:06 relyea%netscape.com Exp $
  */
 
 #include "prlock.h"
@@ -173,6 +173,19 @@ const SEC_ASN1Template SEC_CertIssuerTemplate[] = {
     { SEC_ASN1_SKIP_REST },
     { 0 }
 };
+/*
+ * Find the subjectName in a DER encoded certificate
+ */
+const SEC_ASN1Template SEC_CertSerialNumberTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+	  0, NULL, sizeof(SECItem) },
+    { SEC_ASN1_EXPLICIT | SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED | 
+	  SEC_ASN1_CONTEXT_SPECIFIC | 0,
+	  0, SEC_SkipTemplate },	/* version */
+    { SEC_ASN1_ANY, 0, NULL }, /* serial number */
+    { SEC_ASN1_SKIP_REST },
+    { 0 }
+};
 
 /*
  * Find the issuer and serialNumber in a DER encoded certificate.
@@ -290,6 +303,50 @@ CERT_IssuerNameFromDERCert(SECItem *derCert, SECItem *derName)
     
     PORT_Memset(derName, 0, sizeof(SECItem));
     rv = SEC_ASN1DecodeItem(arena, derName, SEC_CertIssuerTemplate, &sd.data);
+
+    if ( rv ) {
+	goto loser;
+    }
+
+    tmpptr = derName->data;
+    derName->data = (unsigned char*)PORT_Alloc(derName->len);
+    if ( derName->data == NULL ) {
+	goto loser;
+    }
+    
+    PORT_Memcpy(derName->data, tmpptr, derName->len);
+    
+    PORT_FreeArena(arena, PR_FALSE);
+    return(SECSuccess);
+
+loser:
+    PORT_FreeArena(arena, PR_FALSE);
+    return(SECFailure);
+}
+
+SECStatus
+CERT_SerialNumberFromDERCert(SECItem *derCert, SECItem *derName)
+{
+    int rv;
+    PRArenaPool *arena;
+    CERTSignedData sd;
+    void *tmpptr;
+    
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    
+    if ( ! arena ) {
+	return(SECFailure);
+    }
+   
+    PORT_Memset(&sd, 0, sizeof(CERTSignedData));
+    rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
+    
+    if ( rv ) {
+	goto loser;
+    }
+    
+    PORT_Memset(derName, 0, sizeof(SECItem));
+    rv = SEC_ASN1DecodeItem(arena, derName, SEC_CertSerialNumberTemplate, &sd.data);
 
     if ( rv ) {
 	goto loser;

@@ -36,6 +36,7 @@
 #include "mcom_db.h"
 #include "certdb.h"
 
+#ifdef STATIC_CERT_INIT
 static char example_com_server_ca[] =
 "MIICBTCCAW6gAwIBAgIBATANBgkqhkiG9w0BAQQFADA+MREwDwYICZIm9ZgeZAET"
 "A2NvbTEVMBMGCAmSJvWYHmQBEwdFeGFtcGxlMRIwEAYDVQQDEwlTZXJ2ZXIgQ0Ew"
@@ -76,6 +77,7 @@ static char example_com_objsign_ca[] =
 "2zOD7GOA0CWN149vb6rEchECykDsJj9LoBl6o1aRxk9WkIFnXmMOJSuJA+ilCe//"
 "81a5OhKbe0p7ym6rh190BLwh2VePFeyabq6NipfZlN6qgWUzoepf+jVblufW/2EI"
 "fbMSylc=";
+#endif
 
 /* This is the cert->certKey (serial number and issuer name) of
  * the cert that we want to revoke.
@@ -118,6 +120,8 @@ CERT_CheckForEvilCert(CERTCertificate *cert)
 
     return(SECSuccess);
 }
+
+#ifdef STATIC_CERT_INIT
 
 #define DEFAULT_TRUST_FLAGS (CERTDB_VALID_CA | \
                              CERTDB_TRUSTED_CA | \
@@ -253,14 +257,16 @@ loser:
     return(SECFailure);
 }
 
+#endif
+
 extern void certdb_InitDBLock(void);
 
 SECStatus
 CERT_InitCertDB(CERTCertDBHandle *handle)
 {
+#ifdef STATIC_CERT_INIT
     SECStatus rv;
     certInitEntry *entry;
-
     certdb_InitDBLock();
 
     entry = initialcerts;
@@ -277,8 +283,13 @@ CERT_InitCertDB(CERTCertDBHandle *handle)
 done:
     CERT_SetDBContentVersion(CERT_DB_CONTENT_VERSION, handle);
     return(rv);
+#else
+    CERT_SetDBContentVersion(0, handle);
+    return(SECSuccess);
+#endif
 }
 
+#ifdef STATIC_CERT_INIT
 static CERTCertificate *
 CertFromEntry(CERTCertDBHandle *handle, char *asciicert)
 {
@@ -300,10 +311,12 @@ CertFromEntry(CERTCertDBHandle *handle, char *asciicert)
 
     return(cert);
 }
+#endif
 
 SECStatus
 CERT_AddNewCerts(CERTCertDBHandle *handle)
 {
+#ifdef STATIC_CERT_INIT
     int oldversion;
     int newversion;
     certInitEntry *entry;
@@ -395,5 +408,6 @@ CERT_AddNewCerts(CERTCertDBHandle *handle)
         CERT_SetDBContentVersion(newversion, handle);
     }
 
+#endif
     return(SECSuccess);
 }
