@@ -114,7 +114,6 @@
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
     <command id="Browser:Print" oncommand="BrowserPrint();"/>
-    <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
     <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
