@@ -216,6 +216,7 @@ protected:
     nsSocketState                   mCurrentState;
     nsCOMPtr<nsIRequest>            mDNSRequest;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
+    nsCOMPtr<nsIProgressEventSink>  mNonProxiedEventSink;
     char*                           mHostName;
     PRInt32                         mPort;
     PRIntervalTime                  mLastActiveTime;
