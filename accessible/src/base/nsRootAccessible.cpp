@@ -401,7 +401,7 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
     // capture Form change events 
-    rv = target->AddEventListener(NS_LITERAL_STRING("change"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+    rv = target->AddEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
     // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
@@ -463,7 +463,7 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener()
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
     if (target) { 
       target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
-      target->RemoveEventListener(NS_LITERAL_STRING("change"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+      target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -582,10 +582,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       }
       else
         FireAccessibleFocusEvent(accessible, targetNode);
-    }
-    else if (eventType.EqualsIgnoreCase("change")) {
-      if (!selectControl)   // Don't use onchange to fire EVENT_STATE_CHANGE events for selects
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
     }
     else if (eventType.EqualsIgnoreCase("ListitemStateChange")) {
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
@@ -724,7 +720,11 @@ NS_IMETHODIMP nsRootAccessible::Change(nsIDOMEvent* aEvent)
   // this may be the event that we have the individual Accessible objects
   //  handle themselves -- have list/combos figure out the change in selection
   //  have textareas and inputs fire a change of state etc...
+#ifdef MOZ_ACCESSIBILITY_ATK
   return HandleEvent(aEvent);
+#else
+  return NS_OK;   // Ignore form change events in MSAA
+#endif
 }
 
 // gets Select events when text is selected in a textarea or input
