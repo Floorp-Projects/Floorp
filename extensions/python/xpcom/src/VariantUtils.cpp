@@ -852,19 +852,13 @@ PyXPCOM_InterfaceVariantHelper::~PyXPCOM_InterfaceVariantHelper()
 				}
 			}
 			if (ns_v.IsValDOMString() && ns_v.val.p) {
-				PythonTypeDescriptor &ptd = m_python_type_desc_array[i];
-				if (XPT_PD_IS_OUT(ptd.param_flags) || XPT_PD_IS_DIPPER(ptd.param_flags))
-					delete (const nsAString *)ns_v.val.p;
+				delete (const nsAString *)ns_v.val.p;
 			}
 			if (ns_v.IsValCString() && ns_v.val.p) {
-				PythonTypeDescriptor &ptd = m_python_type_desc_array[i];
-				if (XPT_PD_IS_OUT(ptd.param_flags) || XPT_PD_IS_DIPPER(ptd.param_flags))
-					delete (const nsACString *)ns_v.val.p;
+				delete (const nsACString *)ns_v.val.p;
 			}
 			if (ns_v.IsValUTF8String() && ns_v.val.p) {
-				PythonTypeDescriptor &ptd = m_python_type_desc_array[i];
-				if (XPT_PD_IS_OUT(ptd.param_flags) || XPT_PD_IS_DIPPER(ptd.param_flags))
-					delete (const nsACString *)ns_v.val.p;
+				delete (const nsACString *)ns_v.val.p;
 			}
 			if (ns_v.IsValArray()) {
 				nsXPTCVariant &ns_v = m_var_array[i];
@@ -1171,6 +1165,8 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				PyErr_NoMemory();
 				BREAK_FALSE;
 			}
+			// We created it - flag as such for cleanup.
+			ns_v.flags |= nsXPTCVariant::VAL_IS_DOMSTR;
 			break;
 		  }
 		  case nsXPTType::T_CSTRING:
@@ -1203,6 +1199,8 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				PyErr_NoMemory();
 				BREAK_FALSE;
 			}
+			// We created it - flag as such for cleanup.
+			ns_v.flags |= bIsUTF8 ? nsXPTCVariant::VAL_IS_UTF8STR : nsXPTCVariant::VAL_IS_CSTR;
 			break;
 			}
 		  case nsXPTType::T_CHAR_STR: {
@@ -1455,6 +1453,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::PrepareOutVariant(const PythonTypeDescrip
 			  ns_v.flags |= nsXPTCVariant::VAL_IS_DOMSTR;
 			  // Dippers are really treated like "in" params.
 			  ns_v.ptr = new nsString();
+			  ns_v.val.p = ns_v.ptr; // VAL_IS_* says the .p is what gets freed
 			  if (!ns_v.ptr) {
 				  PyErr_NoMemory();
 				  rc = PR_FALSE;
@@ -1467,6 +1466,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::PrepareOutVariant(const PythonTypeDescrip
 			  NS_ABORT_IF_FALSE(XPT_PD_IS_DIPPER(td.param_flags) && XPT_PD_IS_IN(td.param_flags), "out DOMStrings must really be in dippers!");
 			  ns_v.flags |= ( XPT_TDP_TAG(ns_v.type)==nsXPTType::T_CSTRING ? nsXPTCVariant::VAL_IS_CSTR : nsXPTCVariant::VAL_IS_UTF8STR);
 			  ns_v.ptr = new nsCString();
+			  ns_v.val.p = ns_v.ptr; // VAL_IS_* says the .p is what gets freed
 			  if (!ns_v.ptr) {
 				  PyErr_NoMemory();
 				  rc = PR_FALSE;

@@ -15,10 +15,15 @@
 # Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
 #
 
-import sys, os
+import sys, os, time
 import xpcom.components
 import xpcom._xpcom
 import xpcom.nsError
+
+try:
+    import gc
+except ImportError:
+    gc = None
 
 num_errors = 0
 
@@ -453,6 +458,8 @@ except ImportError:
     def gettotalrefcount():
         return 0
 
+from pyxpcom_test_tools import getmemusage
+
 def test_from_js():
     # Ensure we can find the js test script - same dir as this!
     # Assume the path of sys.argv[0] is where we can find the js test code.
@@ -492,10 +499,16 @@ def doit(num_loops = -1):
         if i==0:
             # First loop is likely to "leak" as we cache things.
             # Leaking after that is a problem.
+            if gc is not None:
+                gc.collect()
             num_refs = gettotalrefcount()
+            mem_usage = getmemusage()
 
         if num_errors:
             break
+
+    if gc is not None:
+        gc.collect()
 
     lost = gettotalrefcount() - num_refs
     # Sometimes we get spurious counts off by 1 or 2.
@@ -503,6 +516,17 @@ def doit(num_loops = -1):
     # more than twice!
     if abs(lost)>2:
         print "*** Lost %d references" % (lost,)
+
+    # sleep to allow the OS to recover
+    time.sleep(1)
+    mem_lost = getmemusage() - mem_usage
+    # working set size is fickle, and when we were leaking strings, this test
+    # would report a leak of 100MB.  So we allow a 2MB buffer - but even this
+    # may still occasionally report spurious warnings.  If you are really
+    # worried, bump the counter to a huge value, and if there is a leak it will
+    # show.
+    if mem_lost > 2000000:
+        print "*** Lost %.6f MB of memory" % (mem_lost/1000000.0,)
 
     if num_errors:
         print "There were", num_errors, "errors testing the Python component :-("
