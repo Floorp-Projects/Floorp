@@ -374,16 +374,19 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
     printf("\n");
   }
 
-  do
+  if (nsnull != aView)
   {
-    //get absolute coordinates of view
+    do
+    {
+      //get absolute coordinates of view
 
-    par->GetPosition(&x, &y);
+      par->GetPosition(&x, &y);
 
-    trect.x += x;
-    trect.y += y;
+      trect.x += x;
+      trect.y += y;
+    }
+    while (par = par->GetParent());
   }
-  while (par = par->GetParent());
 
   if (mDirtyRect.IsEmpty())
     mDirtyRect = trect;
@@ -585,11 +588,20 @@ void nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord height)
     bottom = height;
   }
 
+  aView->SetDimensions(width, height);
+
+	nsIView *parent = aView->GetParent();  // no addref
+
+  if (nsnull == parent)
+  {
+    parent = aView;
+    x = y = 0;
+  }
+
   //now damage the right edge of the view,
   //and the bottom edge of the view,
 
   nsRect  trect;
-	nsIView *parent = aView->GetParent();  // no addref
 
   //right edge...
 
@@ -608,8 +620,6 @@ void nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord height)
   trect.height = bottom - top;
 
   UpdateView(parent, trect, 0);
-
-  aView->SetDimensions(width, height);
 }
 
 void nsViewManager :: SetViewClip(nsIView *aView, nsRect *rect)
