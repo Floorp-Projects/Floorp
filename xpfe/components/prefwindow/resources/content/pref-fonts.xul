@@ -42,7 +42,7 @@
 
     <box autostretch="never" valign="middle">
       <text class="label small-margin" value="&language.label;" accesskey="&language.accesskey;" for="selectLangs"/>
-      <menulist id="selectLangs" class="small-margin" oncommand="selectLanguage();">
+      <menulist id="selectLangs" class="small-margin" oncommand="selectLanguage();" persist="value">
         <menupopup>
           <menuitem value="x-western" label="&font.langGroup.latin1;"/>
           <menuitem value="x-central-euro" label="&font.langGroup.latin2;"/>
