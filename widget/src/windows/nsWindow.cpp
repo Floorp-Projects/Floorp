@@ -420,7 +420,12 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
     aStatus = mEventListener->ProcessEvent(*event);
   }
-  nsWindow * thisPtr = this;
+
+  // the window can be destroyed during processing of seemingly innocuous events like, say,
+  // mousedowns due to the magic of scripting. mousedowns will return nsEventStatus_eIgnore,
+  // which causes problems with the deleted window. therefore:
+  if (mOnDestroyCalled)
+    aStatus = nsEventStatus_eConsumeNoDefault;
   return NS_OK;
 }
 
@@ -460,7 +465,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     // Get the window which caused the event and ask it to process the message
     nsWindow *someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
 
-    // Re-direct a tab change message destined for it's parent window to the
+    // Re-direct a tab change message destined for its parent window to the
     // the actual window which generated the event.
     if (msg == WM_NOTIFY) {
       LPNMHDR pnmh = (LPNMHDR) lParam;
@@ -1200,7 +1205,10 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Update()
 {
-  VERIFY(::UpdateWindow(mWnd));
+  // updates can come through for windows no longer holding an mWnd during
+  // deletes triggered by JavaScript in buttons with mouse feedback
+  if (mWnd)
+    VERIFY(::UpdateWindow(mWnd));
   return NS_OK;
 }
 
