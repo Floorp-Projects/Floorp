@@ -29,6 +29,7 @@
 #include "nsFileSpec.h"
 #include "nsICopyMessageListener.h"
 #include "nsFileStream.h"
+#include "nsIPop3IncomingServer.h"  // need this for an interface ID
 
 typedef struct {
 	nsOutputFileStream* fileStream;
@@ -48,19 +49,19 @@ public:
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
-  // nsIRDFResource methods:
-  NS_IMETHOD Init(const char *aURI);
+	// nsIRDFResource methods:
+	NS_IMETHOD Init(const char *aURI);
   
-  // nsICollection methods:
-  NS_IMETHOD Enumerate(nsIEnumerator* *result);
+	// nsICollection methods:
+	NS_IMETHOD Enumerate(nsIEnumerator* *result);
 
-  // nsIFolder methods:
-  NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
+	// nsIFolder methods:
+	NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 
-  // nsIMsgFolder methods:
-  NS_IMETHOD AddUnique(nsISupports* element);
-  NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-  NS_IMETHOD GetMessages(nsIEnumerator* *result);
+	// nsIMsgFolder methods:
+	NS_IMETHOD AddUnique(nsISupports* element);
+	NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
+	NS_IMETHOD GetMessages(nsIEnumerator* *result);
 
 
 	NS_IMETHOD CreateSubfolder(const char *folderName);
@@ -70,13 +71,13 @@ public:
 	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
-  NS_IMETHOD GetChildNamed(const char* name, nsISupports ** aChild);
+	NS_IMETHOD GetChildNamed(const char* name, nsISupports ** aChild);
 
-  // this override pulls the value from the db
+	// this override pulls the value from the db
 	NS_IMETHOD GetName(char ** name);   // Name of this folder (as presented to user).
 	NS_IMETHOD GetPrettyName(char** prettyName);	// Override of the base, for top-level mail folder
 
-  NS_IMETHOD BuildFolderURL(char **url);
+	NS_IMETHOD BuildFolderURL(char **url);
 
 	NS_IMETHOD UpdateSummaryTotals() ;
 
@@ -94,14 +95,14 @@ public:
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
-  virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
+	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages();
 
 	// nsIMsgMailFolder
-  NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
+	NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
 
 	//nsICopyMessageListener
 	NS_IMETHOD BeginCopy(nsIMessage *message);
@@ -126,6 +127,7 @@ protected:
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
 	nsresult DeleteMessage(nsIMessage *message);
+	virtual const nsIID& GetIncomingServerType() {return nsIPop3IncomingServer::GetIID();}
 
 protected:
 	nsNativeFileSpec *mPath;

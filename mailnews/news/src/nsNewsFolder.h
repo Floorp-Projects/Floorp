@@ -28,6 +28,7 @@
 #include "nsMsgDBFolder.h" 
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
+#include "nsINntpIncomingServer.h" // need this for the IID
 
 /*
  * some platforms (like Windows and Mac) use a map file, because of
@@ -137,6 +138,7 @@ protected:
 #ifdef USE_NEWSRC_MAP_FILE
   nsresult MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile);
 #endif
+  virtual const nsIID& GetIncomingServerType() {return nsINntpIncomingServer::GetIID();}
 
 protected:
 	nsNativeFileSpec *mPath;

@@ -27,6 +27,7 @@
 #include "nsICopyMessageListener.h"
 #include "nsIImapService.h"
 #include "nsIUrlListener.h"
+#include "nsIImapIncomingServer.h" // we need this for its IID
 
 /* fa32d000-f6a0-11d2-af8d-001083002da8 */
 #define NS_IMAPRESOURCE_CID \
@@ -254,6 +255,8 @@ protected:
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
 	nsresult GetDatabase();
+
+	virtual const nsIID& GetIncomingServerType() {return nsIImapIncomingServer::GetIID();}
 
     nsNativeFileSpec *m_pathName;
     PRBool m_initialized;
