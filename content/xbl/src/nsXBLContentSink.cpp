@@ -60,6 +60,7 @@
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
 #include "nsNodeInfoManager.h"
+#include "nsINodeInfo.h"
 
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
