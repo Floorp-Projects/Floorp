@@ -32,22 +32,126 @@ CIEHtmlElement::~CIEHtmlElement()
 {
 }
 
+
+HRESULT CIEHtmlElement::GetIDispatch(IDispatch **pDispatch)
+{
+	if (pDispatch == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	return QueryInterface(IID_IDispatch, (void **) pDispatch);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // IHTMLElement implementation
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::setAttribute(BSTR strAttributeName, VARIANT AttributeValue, LONG lFlags)
 {
-	return E_NOTIMPL;
+	if (strAttributeName == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	// Get the name from the BSTR
+	USES_CONVERSION;
+	nsString szName = OLE2W(strAttributeName);
+
+	// Get the value from the variant
+	CComVariant vValue;
+	if (FAILED(vValue.ChangeType(VT_BSTR, &AttributeValue)))
+	{
+		return E_INVALIDARG;
+	}
+	nsString szValue = OLE2W(vValue.bstrVal);
+
+	nsIDOMElement *pIDOMElement = nsnull;
+	if (FAILED(GetDOMElement(&pIDOMElement)))
+	{
+		return E_UNEXPECTED;
+	}
+
+	// Set the attribute
+	pIDOMElement->SetAttribute(szName, szValue);
+	pIDOMElement->Release();
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::getAttribute(BSTR strAttributeName, LONG lFlags, VARIANT __RPC_FAR *AttributeValue)
 {
-	return E_NOTIMPL;
+	if (strAttributeName == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	if (AttributeValue == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	VariantInit(AttributeValue);
+
+	// Get the name from the BSTR
+	USES_CONVERSION;
+	nsString szName = OLE2W(strAttributeName);
+
+	nsIDOMElement *pIDOMElement = nsnull;
+	if (FAILED(GetDOMElement(&pIDOMElement)))
+	{
+		return E_UNEXPECTED;
+	}
+
+	BOOL bCaseSensitive = (lFlags == VARIANT_TRUE) ? TRUE : FALSE;
+
+	nsString szValue;
+
+	// Get the attribute
+	nsresult nr = pIDOMElement->GetAttribute(szName, szValue);
+	pIDOMElement->Release();
+
+	if (nr == NS_OK)
+	{
+		USES_CONVERSION;
+		AttributeValue->vt = VT_BSTR;
+		AttributeValue->bstrVal = SysAllocString(W2COLE((const PRUnichar *) szValue));
+		return S_OK;
+	}
+	else
+	{
+		return S_FALSE;
+	}
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::removeAttribute(BSTR strAttributeName, LONG lFlags, VARIANT_BOOL __RPC_FAR *pfSuccess)
 {
-	return E_NOTIMPL;
+	if (strAttributeName == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	nsIDOMElement *pIDOMElement = nsnull;
+	if (FAILED(GetDOMElement(&pIDOMElement)))
+	{
+		return E_UNEXPECTED;
+	}
+
+	BOOL bCaseSensitive = (lFlags == VARIANT_TRUE) ? TRUE : FALSE;
+
+	// Get the name from the BSTR
+	USES_CONVERSION;
+	nsString szName = OLE2W(strAttributeName);
+
+	// Remove the attribute
+	nsresult nr = pIDOMElement->RemoveAttribute(szName);
+	BOOL bRemoved = (nr == NS_OK) ? TRUE : FALSE;
+	pIDOMElement->Release();
+
+	if (pfSuccess)
+	{
+		*pfSuccess = (bRemoved) ? VARIANT_TRUE : VARIANT_FALSE;
+	}
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_className(BSTR v)
@@ -61,8 +165,14 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_className(BSTR __RPC_FAR *p)
 	{
 		return E_INVALIDARG;
 	}
-	// TODO
-	*p = SysAllocString(OLESTR(""));
+
+	VARIANT vValue;
+	VariantInit(&vValue);
+	BSTR bstrName = SysAllocString(OLESTR("class"));
+	getAttribute(bstrName, FALSE, &vValue);
+	SysFreeString(bstrName);
+
+	*p = vValue.bstrVal;
 	return S_OK;
 }
 
@@ -77,8 +187,14 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_id(BSTR __RPC_FAR *p)
 	{
 		return E_INVALIDARG;
 	}
-	// TODO
-	*p = SysAllocString(OLESTR(""));
+
+	VARIANT vValue;
+	VariantInit(&vValue);
+	BSTR bstrName = SysAllocString(OLESTR("id"));
+	getAttribute(bstrName, FALSE, &vValue);
+	SysFreeString(bstrName);
+
+	*p = vValue.bstrVal;
 	return S_OK;
 }
 
@@ -89,11 +205,18 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_tagName(BSTR __RPC_FAR *p)
 		return E_INVALIDARG;
 	}
 
-	nsString sNodeName;
-	m_pIDOMNode->GetNodeName(sNodeName);
+	nsIDOMElement *pIDOMElement = nsnull;
+	if (FAILED(GetDOMElement(&pIDOMElement)))
+	{
+		return E_UNEXPECTED;
+	}
+
+	nsString szTagName;
+	pIDOMElement->GetTagName(szTagName);
+	pIDOMElement->Release();
 
 	USES_CONVERSION;
-	*p = SysAllocString(W2COLE((const PRUnichar *) sNodeName));
+	*p = SysAllocString(W2COLE((const PRUnichar *) szTagName));
 	return S_OK;
 }
 
@@ -105,9 +228,9 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_parentElement(IHTMLElement __RPC_F
 	}
 
 	*p = NULL;
-	if (m_pParent)
+	if (m_pIDispParent)
 	{
-//		m_pParent->QueryInterface(IID_IHTMLElement, (void **) p);
+		m_pIDispParent->QueryInterface(IID_IHTMLElement, (void **) p);
 	}
 
 	return S_OK;
@@ -503,6 +626,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_children(IDispatch __RPC_FAR *__RP
 
 	*p = NULL;
 
+	// Create a collection representing the children of this node
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
 	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
 	if (pCollection)

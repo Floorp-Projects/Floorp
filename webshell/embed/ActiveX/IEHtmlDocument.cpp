@@ -25,9 +25,21 @@ CIEHtmlDocument::CIEHtmlDocument()
 {
 }
 
+
 CIEHtmlDocument::~CIEHtmlDocument()
 {
 }
+
+
+HRESULT CIEHtmlDocument::GetIDispatch(IDispatch **pDispatch)
+{
+	if (pDispatch == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	return QueryInterface(IID_IDispatch, (void **) pDispatch);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // IHTMLDocument methods
@@ -49,6 +61,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_
 
 	*p = NULL;
 
+	// TODO get all elements
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
 	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
 	if (pCollection)

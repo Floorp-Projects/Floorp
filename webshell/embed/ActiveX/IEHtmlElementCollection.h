@@ -32,14 +32,15 @@ public:
 protected:
 	virtual ~CIEHtmlElementCollection();
 
-	CIEHtmlNode *m_pParent;
+	// Pointer to parent node/document
+	IDispatch *m_pIDispParent;
 
 public:
 	// Adds a node to the collection
 	virtual HRESULT AddNode(IDispatch *pNode);
 
 	// Sets the parent node of this collection
-	virtual HRESULT SetParentNode(CIEHtmlNode *pParent);
+	virtual HRESULT SetParentNode(IDispatch *pIDispParent);
 
 	// Helper method creates a collection from a parent node
 	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance);

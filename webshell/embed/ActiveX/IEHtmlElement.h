@@ -35,6 +35,8 @@ BEGIN_COM_MAP(CIEHtmlElement)
 	COM_INTERFACE_ENTRY_IID(IID_IHTMLElement, IHTMLElement)
 END_COM_MAP()
 
+	virtual HRESULT GetIDispatch(IDispatch **pDispatch);
+
 	// Implementation of IHTMLElement
 	virtual HRESULT STDMETHODCALLTYPE setAttribute(BSTR strAttributeName, VARIANT AttributeValue, LONG lFlags);
 	virtual HRESULT STDMETHODCALLTYPE getAttribute(BSTR strAttributeName, LONG lFlags, VARIANT __RPC_FAR *AttributeValue);

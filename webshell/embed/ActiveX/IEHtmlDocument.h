@@ -36,6 +36,8 @@ BEGIN_COM_MAP(CIEHtmlDocument)
 	COM_INTERFACE_ENTRY_IID(IID_IHTMLDocument2, IHTMLDocument2)
 END_COM_MAP()
 
+	virtual HRESULT GetIDispatch(IDispatch **pDispatch);
+
 	// IHTMLDocument methods
 	virtual HRESULT STDMETHODCALLTYPE get_Script(IDispatch __RPC_FAR *__RPC_FAR *p);
 
