@@ -77,7 +77,7 @@ DIST_DIRS =			\
   modules\libimg		\
   base                          \
   lib\xp			\
-  lib\libnet
+  network
 
 # The list of directories to build the nglayout layout engine and
 # related libraries.
@@ -160,8 +160,8 @@ pull_imglib:
 pull_netlib:
 	@cd $(MOZ_SRC)\.
 	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/xp
-	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/libnet
-	$(CVSCO_NETLIB) $(MOZ_TOP)/include
+	$(CVSCO_LIZARD) $(MOZ_TOP)/network
+	$(CVSCO_LIZARD) -A $(MOZ_TOP)/include
 
 pull_nglayout:
 	@cd $(MOZ_SRC)\.
