@@ -319,11 +319,12 @@ protected:
     PRPackedBool               mAllowMetaRedirects;
     PRPackedBool               mAllowImages;
     PRPackedBool               mFocusDocFirst;
+    PRPackedBool               mHasFocus;
+    PRPackedBool               mCreatingDocument; // (should be) debugging only
 
     PRUint32                   mAppType;
     PRInt32                    mChildOffset;  // Offset in the parent's child list.
     PRUint32                   mBusyFlags;
-    PRPackedBool               mHasFocus;
 
     // Reference to the SHEntry for this docshell until the page is destroyed.
     // Somebody give me better name

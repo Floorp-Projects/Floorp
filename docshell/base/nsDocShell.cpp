@@ -189,6 +189,7 @@ nsDocShell::nsDocShell():
     mAllowMetaRedirects(PR_TRUE),
     mAllowImages(PR_TRUE),
     mFocusDocFirst(PR_FALSE),
+    mCreatingDocument(PR_FALSE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mBusyFlags(BUSY_FLAGS_NONE),
     mFiredUnloadEvent(PR_FALSE),
@@ -3466,32 +3467,43 @@ nsDocShell::CreateAboutBlankContentViewer()
 {
   nsCOMPtr<nsIDocument> blankDoc;
   nsCOMPtr<nsIContentViewer> viewer;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  /* mCreatingDocument should never be true at this point. However, it's
+     a theoretical possibility. We want to know about it and make it stop,
+     and this sounds like a job for an assertion. */
+  NS_ASSERTION(!mCreatingDocument, "infinite(?) loop creating document averted");
+  if (mCreatingDocument)
+    return NS_ERROR_FAILURE;
+
+  mCreatingDocument = PR_TRUE;
 
   // one helper factory, please
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory(do_CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=text/html"));
-  if (!docFactory)
-    return NS_ERROR_FAILURE;
+  if (docFactory) {
 
-  nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
+    nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
 
-  // generate (about:blank) document to load
-  docFactory->CreateBlankDocument(loadGroup, getter_AddRefs(blankDoc));
-  if (!blankDoc)
-    return NS_ERROR_FAILURE;
+    // generate (about:blank) document to load
+    docFactory->CreateBlankDocument(loadGroup, getter_AddRefs(blankDoc));
+    if (blankDoc) {
 
-  // create a content viewer for us and the new document
-  docFactory->CreateInstanceForDocument(NS_ISUPPORTS_CAST(nsIDocShell *, this),
-                blankDoc, "view", getter_AddRefs(viewer));
+      // create a content viewer for us and the new document
+      docFactory->CreateInstanceForDocument(NS_ISUPPORTS_CAST(nsIDocShell *, this),
+                    blankDoc, "view", getter_AddRefs(viewer));
 
-  // hook 'em up
-  if (viewer) {
-    viewer->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer *,this));
-    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(blankDoc));
-    Embed(viewer, "", 0);
-    viewer->SetDOMDocument(domdoc);
-    return NS_OK;
+      // hook 'em up
+      if (viewer) {
+        viewer->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer *,this));
+        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(blankDoc));
+        Embed(viewer, "", 0);
+        viewer->SetDOMDocument(domdoc);
+        rv = NS_OK;
+      }
+    }
   }
-  return NS_ERROR_FAILURE;
+  mCreatingDocument = PR_FALSE;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3805,15 +3817,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         mContentViewer = nsnull;
     }
 
-    // End copying block (Don't mess with the old content/document viewer
-    // beyond here!!)
-
-    // See the book I wrote above regarding why the focus controller is 
-    // being used here.  -- hyatt
-    if (focusController)
-        focusController->SetSuppressFocus(PR_FALSE,
-                                          "Win32-Only Link Traversal Issue");
-
     mContentViewer = aNewViewer;
 
     nsCOMPtr<nsIWidget> widget;
@@ -3830,6 +3833,22 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         NS_ERROR("ContentViewer Initialization failed");
         return NS_ERROR_FAILURE;
     }
+
+    // End copying block (Don't mess with the old content/document viewer
+    // beyond here!!)
+
+    // See the book I wrote above regarding why the focus controller is 
+    // being used here.  -- hyatt
+
+    /* Note it's important that focus suppression be turned off no earlier
+       because in cases where the docshell is lazily creating an about:blank
+       document, mContentViewer->Init finally puts a reference to that
+       document into the DOM window, which prevents an infinite recursion
+       attempting to lazily create the document as focus is unsuppressed
+       (bug 110856). */
+    if (focusController)
+        focusController->SetSuppressFocus(PR_FALSE,
+                                          "Win32-Only Link Traversal Issue");
 
     if (bgSet) {
         // Stuff the bgcolor from the last view manager into the new
