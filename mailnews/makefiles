@@ -47,6 +47,7 @@ mailnews/mime/emitters/Makefile
 mailnews/mime/emitters/html/Makefile
 mailnews/mime/emitters/src/Makefile
 mailnews/mime/emitters/xml/Makefile
+mailnews/mime/emitters/raw/Makefile
 mailnews/mime/tests/Makefile
 mailnews/mime/tests/xpcomtest/Makefile
 mailnews/mime/public/Makefile
