@@ -53,7 +53,7 @@ nsRDFResource::~nsRDFResource(void)
 
     // N.B. that we need to free the URI *after* we un-cache the resource,
     // due to the way that the resource manager is implemented.
-    delete[] mURI;
+    nsCRT::free(mURI);
 }
 
 NS_IMPL_ADDREF(nsRDFResource)
@@ -115,7 +115,7 @@ nsRDFResource::Init(const char* aURI)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    if (! (mURI = new char[PL_strlen(aURI) + 1]))
+    if (! (mURI = (char *)nsAllocator::Alloc(nsCRT::strlen(aURI) + 1)))
         return NS_ERROR_OUT_OF_MEMORY;
 
     PL_strcpy(mURI, aURI);
