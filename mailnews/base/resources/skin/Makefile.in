@@ -50,6 +50,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/readcol.gif	\
 	$(srcdir)/readmail.gif	\
 	$(srcdir)/unreadmail.gif	\
+	$(srcdir)/replyall.gif	\
+	$(srcdir)/next.gif	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
