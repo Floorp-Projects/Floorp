@@ -539,6 +539,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 .autocomplete-search-engine[menuactive="true"] {
+  background-color: #9499AC;
   color: #FFFFFF;
 }
 
