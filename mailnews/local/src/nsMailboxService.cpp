@@ -126,8 +126,10 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
                               nsIUrlListener * aUrlListener,
                               nsIURI **aURL)
 {
-
-  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, aUrlListener, moveMessage ? nsIMailboxUrl::ActionMoveMessage: nsIMailboxUrl::ActionCopyMessage, 
+    nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
+    if (!moveMessage)
+        mailboxAction = nsIMailboxUrl::ActionCopyMessage;
+  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, aUrlListener, mailboxAction, 
                       aURL);
 }
 
