@@ -1082,7 +1082,6 @@ $table{groups} =
 $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
-    cryptpassword varchar(34),
     hostname varchar(128),
     lastused timestamp,
 
@@ -2595,6 +2594,29 @@ AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 # Add a field for the attachment ID to the bugs_activity table, so installations
 # using the attachment manager can record changes to attachments.
 AddField("bugs_activity", "attach_id", "mediumint null");
+
+# 2001-01-17 bbaetz@student.usyd.edu.au bug 95732
+# Remove logincookies.cryptpassword, and delete entries which become
+# invalid
+if (GetFieldDef("logincookies", "cryptpassword")) {
+    # We need to delete any cookies which are invalid, before dropping the
+    # column
+
+    print "Removing invalid login cookies...\n";
+
+    # mysql doesn't support DELETE with multi-table queries, so we have
+    # to iterate
+    my $sth = $dbh->prepare("SELECT cookie FROM logincookies, profiles " .
+                            "WHERE logincookies.cryptpassword != " .
+                            "profiles.cryptpassword AND " .
+                            "logincookies.userid = profiles.userid");
+    $sth->execute();
+    while (my ($cookie) = $sth->fetchrow_array()) {
+        $dbh->do("DELETE FROM logincookies WHERE cookie = $cookie");
+    }
+
+    DropField("logincookies", "cryptpassword");
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

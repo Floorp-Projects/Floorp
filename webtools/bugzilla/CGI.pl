@@ -689,8 +689,7 @@ sub quietly_check_login() {
                 "profiles.login_name, " .
                 "profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND profiles.cryptpassword = logincookies.cryptpassword " .
-                "AND logincookies.hostname = " .
+                " AND logincookies.hostname = " .
                 SqlQuote($ENV{"REMOTE_HOST"}) .
                 ", profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
@@ -979,7 +978,7 @@ sub confirm_login {
        if (!defined $ENV{'REMOTE_HOST'}) {
          $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
        }
-       SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+       SendSQL("insert into logincookies (userid,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
        SendSQL("select LAST_INSERT_ID()");
        my $logincookie = FetchOneColumn();
 

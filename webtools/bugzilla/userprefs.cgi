@@ -171,6 +171,8 @@ sub SaveAccount {
         SendSQL("UPDATE  profiles 
                  SET     cryptpassword = $cryptedpassword 
                  WHERE   userid = $userid");
+        # Invalidate all logins except for the current one
+        InvalidateLogins($userid, $::COOKIE{"Bugzilla_logincookie"});
     }
     SendSQL("UPDATE profiles SET " .
             "realname = " . SqlQuote(trim($::FORM{'realname'})) .

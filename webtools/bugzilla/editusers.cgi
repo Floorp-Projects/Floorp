@@ -808,6 +808,11 @@ if ($action eq 'update') {
             SendSQL("UPDATE  profiles
                      SET     cryptpassword = $cryptpassword
                      WHERE   login_name = $loginname");
+            SendSQL("SELECT userid
+                     FROM profiles
+                     WHERE login_name=" . SqlQuote($userold));
+            my $userid = FetchOneColumn();
+            InvalidateLogins($userid);
             print "Updated password.<BR>\n";
         } else {
             print "Did not update password: $passworderror<br>\n";
@@ -827,8 +832,7 @@ if ($action eq 'update') {
                  FROM profiles
                  WHERE login_name=" . SqlQuote($userold));
         my $userid = FetchOneColumn();
-        SendSQL("DELETE FROM logincookies
-                 WHERE userid=" . $userid);
+        InvalidateLogins($userid);
         print "Updated disabled text.<BR>\n";
     }
     if ($editall && $user ne $userold) {

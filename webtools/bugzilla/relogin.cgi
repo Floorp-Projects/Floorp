@@ -29,6 +29,25 @@ use lib qw(.);
 
 require "CGI.pl";
 
+# We don't want to remove a random logincookie from the db, so
+# call quietly_check_login. If we're logged in after this, then
+# the logincookie must be correct
+
+ConnectToDatabase();
+quietly_check_login();
+
+if ($::userid) {
+    # Even though we know the userid must match, we still check it in the
+    # SQL as a sanity check, since there is no locking here, and if
+    # the user logged out from two machines simulataniously, while someone
+    # else logged in and got the same cookie, we could be logging the
+    # other user out here. Yes, this is very very very unlikely, but why
+    # take chances? - bbaetz
+    SendSQL("DELETE FROM logincookies WHERE cookie = " .
+            SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
+            "AND userid = $::userid");
+}
+
 my $cookiepath = Param("cookiepath");
 print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
 Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT

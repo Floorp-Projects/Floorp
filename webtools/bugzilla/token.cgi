@@ -227,6 +227,8 @@ sub changePassword {
     SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
     SendSQL("UNLOCK TABLES");
 
+    InvalidateLogins($userid);
+
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";
 
