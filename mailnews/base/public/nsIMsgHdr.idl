@@ -98,7 +98,6 @@ interface nsIMsgHdr : nsISupports
     attribute string author;
     attribute string subject;
     attribute string recipients;
-    attribute boolean recipientsIsNewsgroup;
     
     /* anything below here still has to be fixed */
     void setReferences(in string references);
