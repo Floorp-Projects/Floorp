@@ -36,8 +36,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2I
     jobjectArray jnames;
     jobjectArray jvalues;
     jobjectArray result;
-    char*const* names;
-    char*const* values;
+    const char*const* names;
+    const char*const* values;
     PRUint16 nAttr;
 
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -143,8 +143,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2I
     jobjectArray jnames;
     jobjectArray jvalues;
     jobjectArray result;
-    char*const* names;
-    char*const* values;
+    const char * const * names;
+    const char * const * values;
     PRUint16 nParam;
 
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,

@@ -72,7 +72,8 @@ nsByteRange*  ByteRanges::GetByteRanges(JNIEnv *env, jobject object) {
 	env->ReleaseIntArrayElements(jlength,length,0);
 	return NULL;
     }
-    for (int i = 0;i<current;i++) {
+    int i;
+    for (i = 0;i<current;i++) {
 	res[i].offset = offset[i];
 	res[i].length = length[i];
 	res[i].next   = &res[i+1];
