@@ -131,9 +131,9 @@ interface nsIWebBrowserPrint : nsISupports
   /**
    * Print the specified DOM window
    *
-   * aThePrintOptions - Printer Settings for the print job, if aThePrintSettings is null
-   *                    then the global PS will be used.
-   * aWPListener - is updated during the print
+   * @param aThePrintSettings - Printer Settings for the print job, if aThePrintSettings is null
+   *                            then the global PS will be used.
+   * @param aWPListener - is updated during the print
    * @return void
    */
   void print(in nsIPrintSettings aThePrintSettings,
@@ -142,10 +142,10 @@ interface nsIWebBrowserPrint : nsISupports
   /**
    * Print Preview the specified DOM window
    *
-   * aThePrintOptions - Printer Settings for the print preview, if aThePrintSettings is null
-   *                    then the global PS will be used.
-   * aChildDOMWin - DOM Window of the child document to be PP (FrameSet frames)
-   * aWPListener - is updated during the printpreview
+   * @param aThePrintSettings - Printer Settings for the print preview, if aThePrintSettings is null
+   *                            then the global PS will be used.
+   * @param aChildDOMWin - DOM Window of the child document to be PP (FrameSet frames)
+   * @param aWPListener - is updated during the printpreview
    * @return void
    */
   void printPreview(in nsIPrintSettings aThePrintSettings,
@@ -155,14 +155,14 @@ interface nsIWebBrowserPrint : nsISupports
   /**
    * Print Preview - Navigates within the window
    *
-   * aNavType - navigation enum
-   * aPageNum - page num to navigate to when aNavType = ePrintPreviewGoToPageNum
+   * @param aNavType - navigation enum
+   * @param aPageNum - page num to navigate to when aNavType = ePrintPreviewGoToPageNum
    * @return void
    */
   void printPreviewNavigate(in short aNavType, in long aPageNum);
 
   /**
-   * Cancel - Cancels the current print 
+   * @param Cancel - Cancels the current print 
    * @return void
    */
   void cancel();
