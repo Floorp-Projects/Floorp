@@ -104,5 +104,5 @@ OBJS =  .\$(OBJDIR)\nsConfigFactory.obj \
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
-install::
+libs::
     $(MAKE_INSTALL) .\prefcalls.js $(DIST)\bin\defaults\autoconfig

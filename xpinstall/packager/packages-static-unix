@@ -111,6 +111,7 @@ bin/components/xpcom_xpti.xpt
 bin/components/xpinstall.xpt
 bin/components/oji.xpt
 bin/components/pref.xpt
+bin/components/autoconfig.xpt
 bin/components/proxyObjInst.xpt
 bin/components/rdf.xpt
 bin/components/shistory.xpt
@@ -176,6 +177,7 @@ bin/chrome/installed-chrome.txt
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin/defaults/pref/*
+bin/defaults/autoconfig/prefcalls.js
 ; this is only here if you have plugins -blizzard
 ; bin/plugins/*
 bin/res/entityTables/*
