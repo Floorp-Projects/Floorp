@@ -21,7 +21,6 @@
 #include "nsXtEventHandler.h"
 #include "nsStringUtil.h"
 
-#define DBG 0
 extern XtAppContext gAppContext;
 
 //-------------------------------------------------------------------------
@@ -29,10 +28,10 @@ extern XtAppContext gAppContext;
 // nsFileWidget constructor
 //
 //-------------------------------------------------------------------------
-nsFileWidget::nsFileWidget(nsISupports *aOuter) : nsWindow(aOuter),
-  mIOwnEventLoop(PR_FALSE)
+nsFileWidget::nsFileWidget() : nsWindow(), nsIFileWidget()
 {
-  //mWnd = NULL;
+  NS_INIT_REFCNT();
+
   mNumberOfFilters = 0;
 }
 
@@ -65,8 +64,6 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
 
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
@@ -75,8 +72,6 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = XmCreateFileSelectionDialog(parentWidget, "filesb", NULL, 0);
 
@@ -109,17 +104,21 @@ void nsFileWidget::Create(nsNativeWidget aParent,
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsFileWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
+nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kIFileWidgetIID,    NS_IFILEWIDGET_IID);
+  //  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
 
-  if (aIID.Equals(kIFileWidgetIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+    nsresult result = NS_NOINTERFACE;
+    static NS_DEFINE_IID(kInsFileWidgetIID, NS_IFILEWIDGET_IID);
+    if (result == NS_NOINTERFACE && aIID.Equals(kInsFileWidgetIID)) {
+        *aInstancePtr = (void*) ((nsIFileWidget*)this);
+        AddRef();
+        result = NS_OK;
+    }
+
+    return result;
 }
+
 
 
 //-------------------------------------------------------------------------
@@ -294,61 +293,4 @@ void  nsFileWidget::SetDefaultString(nsString& aString)
 nsFileWidget::~nsFileWidget()
 {
 }
-
-#define GET_OUTER() ((nsFileWidget*) ((char*)this - nsFileWidget::GetOuterOffset()))
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL_NO_SHOW(nsFileWidget, AggFileWidget);
-
-void nsFileWidget::AggFileWidget::Create( nsIWidget *aParent,
-                                      nsString& aTitle,
-                                      nsMode aMode,
-                                      nsIDeviceContext *aContext,
-                                      nsIAppShell *aAppShell,
-                                      nsIToolkit *aToolkit,
-                                      void *aInitData)
-{
-  GET_OUTER()->Create(aParent, aTitle, aMode, aContext, aAppShell, aToolkit, aInitData);
-}
-
-void nsFileWidget::AggFileWidget::OnOk()
-{
-  GET_OUTER()->OnOk();
-}
-
-void nsFileWidget::AggFileWidget::OnCancel()
-{
-  GET_OUTER()->OnCancel();
-}
-
-void nsFileWidget::AggFileWidget::Show(PRBool bState)
-{
-  GET_OUTER()->Show(bState);
-}
-
-void nsFileWidget::AggFileWidget::GetFile(nsString& aFile)
-{
-  GET_OUTER()->GetFile(aFile);
-}
-
-void nsFileWidget::AggFileWidget::SetDefaultString(nsString& aFile)
-{
-  GET_OUTER()->SetDefaultString(aFile);
-}
-
-
-void nsFileWidget::AggFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
-                                                const nsString aTitles[],
-                                                const nsString aFilters[])
-{
-  GET_OUTER()->SetFilterList(aNumberOfFilters, aTitles, aFilters);
-}
-
-PRBool nsFileWidget::AggFileWidget::Show()
-{
-  GET_OUTER()->Show(PR_TRUE);
-  return PR_TRUE;
-}
-
 
