@@ -2246,7 +2246,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
           (parentSelectedNode != bodyElement))
       {
         nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
-        PRBool isInline = PR_TRUE;
+        isInline = PR_TRUE;
         while (isInline)
         {
           // Get parent of the top node to split
@@ -2589,6 +2589,67 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
   return res;
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray* aNodeList)
+{
+  if (!aNodeList)
+    return NS_ERROR_NULL_POINTER;
+
+#if 0
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  nsresult res;
+
+  res = NS_NewISupportsArray(&aNodeList);
+  if (NS_FAILED(res))
+    return res;
+
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                           nsIContentIterator::GetIID(), 
+                                           getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(res)) && iter)
+  {
+    // get the root content
+    nsCOMPtr<nsIContent> rootContent;
+
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    nsEditor::GetDocument(getter_AddRefs(domdoc));
+    if (!domdoc)
+      return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
+    if (!doc)
+      return NS_ERROR_UNEXPECTED;
+
+    rootContent = doc->GetRootContent();
+
+    iter->Init(rootContent);
+
+    // loop through the content iterator for each content node
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
+      if (node)
+      {
+        nsAutoString tagName;
+        node->GetNodeName(tagName);
+        tagName.ToLowerCase();
+
+        // See if it's an image or an embed
+        if (tagName == "img" || tagName == "embed")
+          aNodeList->AppendElement(node);
+      }
+      iter->Next();
+    }
+  }
+
+  return res;
+#endif
+}
 
 PRBool 
 nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)

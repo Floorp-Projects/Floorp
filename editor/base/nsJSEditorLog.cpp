@@ -761,6 +761,12 @@ nsJSEditorLog::SetCaretAfterElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
+nsJSEditorLog::GetEmbeddedObjects(nsISupportsArray* aNodeList)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsJSEditorLog::InsertTable()
 {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -132,6 +132,7 @@ public:
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
+  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray* aNodeList);
   NS_IMETHOD InsertTable();
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
