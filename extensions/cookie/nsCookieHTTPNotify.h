@@ -40,23 +40,12 @@ public:
   // nsCookieHTTPNotify methods:
   nsCookieHTTPNotify();
   virtual ~nsCookieHTTPNotify();
+
+  static NS_METHOD
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
  
 private:
    
-};
-
-class nsCookieHTTPNotifyFactory : public nsIFactory {
-public:
-
-  NS_DECL_ISUPPORTS
-
-  // nsIFactory methods:
-  NS_IMETHOD CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  // nsCookieHTTPNotifyFactory methods:
-  nsCookieHTTPNotifyFactory(void);
-  virtual ~nsCookieHTTPNotifyFactory(void);
 };
 
 extern NS_EXPORT nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify);
