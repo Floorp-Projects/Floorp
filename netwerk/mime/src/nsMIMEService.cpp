@@ -27,6 +27,7 @@
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsMimeTypes.h"
 
 // Hash table helper functions
 PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
@@ -238,75 +239,75 @@ nsresult
 nsMIMEService::InitFromHack() {
     nsresult rv;
 
-    rv = AddMapping("text/plain", "txt", "Text File", nsnull);
+    rv = AddMapping(TEXT_PLAIN, "txt", "Text File", nsnull);
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("text/plain", "text");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AddMapping("application/octet-stream", "exe", "Binary Executable", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("application/octet-stream", "bin");
+    rv = AppendExtension(TEXT_PLAIN, "text");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/html", "htm", "Hyper Text Markup Language", nsnull);
+    rv = AddMapping(APPLICATION_OCTET_STREAM, "exe", "Binary Executable", nsnull);
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("text/html", "html");
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("text/html", "shtml");
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "bin");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/rdf", "rdf", "Resource Description Framework", nsnull);
+    rv = AddMapping(TEXT_HTML, "htm", "Hyper Text Markup Language", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(TEXT_HTML, "html");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(TEXT_HTML, "shtml");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/xul", "xul", "XML-Based User Interface Language", nsnull);
+    rv = AddMapping(TEXT_RDF, "rdf", "Resource Description Framework", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/xml", "xml", "Extensible Markup Language", nsnull);
+    rv = AddMapping(TEXT_XUL, "xul", "XML-Based User Interface Language", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/css", "css", "Style Sheet", nsnull);
+    rv = AddMapping(TEXT_XML, "xml", "Extensible Markup Language", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("application/x-javascript", "js", "Javascript Source File", nsnull);
+    rv = AddMapping(TEXT_CSS, "css", "Style Sheet", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("message/rfc822", "eml", "RFC-822 data", nsnull);
+    rv = AddMapping(APPLICATION_JAVASCRIPT, "js", "Javascript Source File", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/gif", "gif", "GIF Image", nsnull);
+    rv = AddMapping(MESSAGE_RFC822, "eml", "RFC-822 data", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/jpeg", "jpeg", "JPEG Image", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("image/jpeg", "jpg");
+    rv = AddMapping(IMAGE_GIF, "gif", "GIF Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/png", "png", "PNG Image", nsnull);
+    rv = AddMapping(IMAGE_JPG, "jpeg", "JPEG Image", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(IMAGE_JPG, "jpg");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/x-jg", "art", "ART Image", nsnull);
+    rv = AddMapping(IMAGE_PNG, "png", "PNG Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/tiff", "tiff", "TIFF Image", nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("image/tiff", "tif");
+    rv = AddMapping(IMAGE_ART, "art", "ART Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("application/postscript", "ps", "Postscript File", nsnull);
+    rv = AddMapping(IMAGE_TIFF, "tiff", "TIFF Image", nsnull);
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("application/postscript", "eps");
+    rv = AppendExtension(IMAGE_TIFF, "tif");
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("application/postscript", "ai");
+
+    rv = AddMapping(APPLICATION_POSTSCRIPT, "ps", "Postscript File", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_POSTSCRIPT, "eps");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_POSTSCRIPT, "ai");
     if (NS_FAILED(rv)) return rv;
                  
-    rv = AddMapping("text/rtf", "rtf", "Rich Text Format", nsnull);
+    rv = AddMapping(TEXT_RTF, "rtf", "Rich Text Format", nsnull);
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("text/rtf", "rtf");
+    rv = AppendExtension(TEXT_RTF, "rtf");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/cpp", "cpp", "CPP file", nsnull);
+    rv = AddMapping(TEXT_CPP, "cpp", "CPP file", nsnull);
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension("text/cpp", "cpp");
+    rv = AppendExtension(TEXT_CPP, "cpp");
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;
