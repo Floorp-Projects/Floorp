@@ -42,7 +42,6 @@
 #include "prnetdb.h"
 #include "nsIPrompt.h"
 #include "nsIPref.h"
-#include "nsISecurityManagerComponent.h"
 #include "nsIServiceManager.h"
 #include "nsIWebProgressListener.h"
 #include "nsIChannel.h"
@@ -1110,7 +1109,7 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   return bytesWritten;
 }
 
-nsresult InitNSSMethods()
+static void InitNSSMethods()
 {
   nsSSLIOLayerIdentity = PR_GetUniqueIdentity("NSS layer");
   nsSSLIOLayerMethods  = *PR_GetDefaultIOMethods();
@@ -1120,14 +1119,6 @@ nsresult InitNSSMethods()
   nsSSLIOLayerMethods.available = nsSSLIOLayerAvailable;
   nsSSLIOLayerMethods.write = nsSSLIOLayerWrite;
   nsSSLIOLayerMethods.read = nsSSLIOLayerRead;
-  
-  /* Make sure NSS has been loaded. 
-   * We rely on the NSS component to keep itself loaded 
-   * until the application shuts down.
-   */
-  nsresult rv;
-  nsCOMPtr<nsISupports> loader = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
-  return rv;
 }
 
 nsresult
@@ -1141,8 +1132,7 @@ nsSSLIOLayerNewSocket(const char *host,
 {
   // XXX - this code is duplicated in nsSSLIOLayerAddToSocket
   if (firstTime) {
-    nsresult rv = InitNSSMethods();
-    if (NS_FAILED(rv)) return rv;
+    InitNSSMethods();
     gTLSIntolerantSites =  new nsHashtable(16, PR_TRUE);
     if (!gTLSIntolerantSites) return NS_ERROR_OUT_OF_MEMORY;
     firstTime = PR_FALSE;
@@ -2229,8 +2219,7 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   // XXX - this code is duplicated in nsSSLIONewSocket
   if (firstTime) {
-    rv = InitNSSMethods();
-    if (NS_FAILED(rv)) return rv;
+    InitNSSMethods();
     gTLSIntolerantSites =  new nsHashtable(16, PR_TRUE);
     if (!gTLSIntolerantSites) return NS_ERROR_OUT_OF_MEMORY;
     firstTime = PR_FALSE;

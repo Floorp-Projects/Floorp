@@ -28,7 +28,6 @@
 #define _nsNSSComponent_h_
 
 #include "nsCOMPtr.h"
-#include "nsISecurityManagerComponent.h"
 #include "nsISignatureVerifier.h"
 #include "nsIURIContentListener.h"
 #include "nsIStreamListener.h"
@@ -49,6 +48,9 @@
 
 #define NS_NSSCOMPONENT_CID \
 {0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
+
+#define PSM_COMPONENT_CONTRACTID "@mozilla.org/psm;1"
+#define PSM_COMPONENT_CLASSNAME "Mozilla PSM Component"
 
 //Define an interface that we can use to look up from the
 //callbacks passed to NSS.
@@ -91,7 +93,6 @@ protected:
   PRUint32 mType;
   PRBool mDoSilentDownload;
   nsAutoString mCrlAutoDownloadKey;
-  nsCOMPtr<nsISecurityManagerComponent> mNSS;
   nsCOMPtr<nsIURI> mURI;
   nsresult handleContentDownloadError(nsresult errCode);
 };
@@ -130,8 +131,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 struct PRLock;
 
 // Implementation of the PSM component interface.
-class nsNSSComponent : public nsISecurityManagerComponent,
-                       public nsISignatureVerifier,
+class nsNSSComponent : public nsISignatureVerifier,
                        public nsIEntropyCollector,
                        public nsINSSComponent,
                        public nsIObserver,
@@ -145,7 +145,6 @@ public:
   virtual ~nsNSSComponent();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISECURITYMANAGERCOMPONENT
   NS_DECL_NSISIGNATUREVERIFIER
   NS_DECL_NSIENTROPYCOLLECTOR
   NS_DECL_NSIOBSERVER
