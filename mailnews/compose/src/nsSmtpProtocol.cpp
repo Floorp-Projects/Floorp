@@ -839,10 +839,10 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  int len = 1; /* first <NUL> char */
 
 	  nsCRT::memset(plain_string, 0, 512);
-	  PR_snprintf(&plain_string[1], 510, "%s", username);
+	  PR_snprintf(&plain_string[1], 510, "%s", (const char*)username);
 	  len += PL_strlen(username);
 	  len++; /* second <NUL> char */
-	  PR_snprintf(&plain_string[len], 511-len, "%s", password);
+	  PR_snprintf(&plain_string[len], 511-len, "%s", (const char*)password);
 	  len += PL_strlen(password);
 
 	  base64Str = PL_Base64Encode(plain_string, len, nsnull);
