@@ -44,6 +44,9 @@ interface nsIGlobalHistory : nsISupports
     // Remove the specified page from the global history
     void RemovePage(in string aURL);
 
+    // Remove all pages from global history
+    void RemoveAllPages();
+
     // Get the URL's last visit date
     long long GetLastVisitDate(in string aURL);
 

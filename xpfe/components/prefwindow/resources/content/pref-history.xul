@@ -74,7 +74,8 @@
                  prefattribute="value"/>
       <text class="label" value="&days.label;"/>
       <spring flex="1"/>
-      <button class="dialog" value="&clearHistory.label;" accesskey="&clearHistory.accesskey;"/>
+      <button class="dialog" value="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
+        oncommand="prefClearGlobalHistory();"/>
     </box>
   </titledbox>  
   
