@@ -9,8 +9,8 @@
 # browser.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/08/02 20:04:23 $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/08/20 18:57:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Storable.pm,v $ 
 # $Name:  $ 
@@ -75,8 +75,18 @@ sub save_structure {
 
   my ($tmpfile) = "$data_file.$main::UID";
 
-  store($data_refs, $tmpfile);
-  main::atomic_rename_file($tmpfile, $data_file);
+  # we need to catch IO errors and report them ourseleves. The the
+  # perl store functions do not give the filename which had the error.
+
+  eval {
+      local $SIG{'__DIE__'};
+      store($data_refs, $tmpfile);
+      main::atomic_rename_file($tmpfile, $data_file);  
+  };
+  
+  ($@) &&
+      die("Error in: Persistence::save_structure ".
+          "writing file: $data_file \n\t$@ \n");
 
   return ;
 }
@@ -94,7 +104,18 @@ sub load_structure {
   (-r $data_file) || (-R $data_file) ||
     die("data file: $data_file is not readable\n");
 
-  my ($r) = retrieve($data_file);
+  # The perl store functions do not give the filename which had the
+  # error so catch IO errors and report them ourseleves.
+
+  my $r;
+  eval {
+      local $SIG{'__DIE__'};
+      $r = retrieve($data_file);
+  };
+
+  ($@) &&
+      die("Error in: Persistence::load_structure ".
+          "reading file: $data_file \n\t$@ \n");
 
   return $r;
 }
