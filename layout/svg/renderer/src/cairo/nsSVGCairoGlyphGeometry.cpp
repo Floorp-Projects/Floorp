@@ -380,6 +380,10 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
   }
 
   cairo_font_t *font = metrics->GetFont();
+
+  if (!font)
+    return NS_OK;
+
   cairo_set_font(ctx, font);
 
   GetGlobalTransform(ctx);
