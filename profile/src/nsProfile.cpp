@@ -728,6 +728,11 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
+
+#ifdef DEBUG_profile_verbose
+            printf("profileName & profileDir are: %s\n", (const char*)cmdResult);
+#endif
+
 			foundProfileCommandArg = PR_TRUE;
             nsAutoString currProfileName; currProfileName.AssignWithConversion(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
@@ -737,19 +742,13 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
             }
             else {
-                // No directory name provided. Get File Locator
-                // Get current profile, make the new one a sibling...
-                nsCOMPtr<nsIFile> tempResult;                 
-                rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(tempResult));
-                NS_ENSURE_SUCCESS(rv, rv);
-                rv = tempResult->QueryInterface(NS_GET_IID(nsILocalFile), getter_AddRefs(currProfileDir));
-                NS_ENSURE_SUCCESS(rv, rv);
-                rv = currProfileDir->AppendUnicode(currProfileName.get());
-                NS_ENSURE_SUCCESS(rv, rv);
+                // No directory name provided. Place it in
+                // NS_APP_USER_PROFILES_ROOT_DIR
+                nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+                if (NS_FAILED(rv)) return rv;
+                rv = directoryService->Get(NS_APP_USER_PROFILES_ROOT_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(currProfileDir));
+                if (NS_FAILED(rv)) return rv;
             }
-#ifdef DEBUG_profile_verbose
-            printf("profileName & profileDir are: %s\n", (const char*)cmdResult);
-#endif /* DEBUG_profile */
 
             nsXPIDLString currProfilePath;
             currProfileDir->GetUnicodePath(getter_Copies(currProfilePath));
