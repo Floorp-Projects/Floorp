@@ -335,7 +335,7 @@ nsresult nsMsgBiffManager::PerformBiff()
       // (since we don't want to prompt the user for password UI)
       // and make sure the server isn't already in the middle of downloading new messages
       if(!serverBusy && (!serverRequiresPassword || userAuthenticated))
-        current->server->PerformBiff();
+        current->server->PerformBiff(nsnull);
       mBiffArray->RemoveElementAt(i);
       i--; //Because we removed it we need to look at the one that just moved up.
       SetNextBiffTime(current, currentTime);

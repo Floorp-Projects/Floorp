@@ -75,7 +75,7 @@ public:
   NS_DECL_NSISUBSCRIBABLESERVER
 	NS_DECL_NSIURLLISTENER
 
-	NS_IMETHOD PerformBiff();
+	NS_IMETHOD PerformBiff(nsIMsgWindow *aMsgWindow);
 	NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
   NS_IMETHOD CloseCachedConnections();
   NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);

@@ -53,7 +53,6 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIFileSpec.h"
 #include "nsPop3Protocol.h"
-#include "nsIMsgMailSession.h"
 #include "nsIMsgLocalMailFolder.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
@@ -120,7 +119,7 @@ nsPop3IncomingServer::GetLocalStoreType(char **type)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
+NS_IMETHODIMP nsPop3IncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
   nsCOMPtr<nsIPop3Service> pop3Service(do_GetService(kCPop3ServiceCID, &rv));
@@ -139,50 +138,41 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
     if (NS_FAILED(rv) || numFolders != 1) return rv;
   }
 
-  //Biff just needs to give status in one of the windows. so do it in topmost window.
-  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIMsgWindow> msgWindow;
+  SetPerformingBiff(PR_TRUE);
+  urlListener = do_QueryInterface(inbox);
 
-  rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-  if(NS_SUCCEEDED(rv))
+  PRBool downloadOnBiff = PR_FALSE;
+  rv = GetDownloadOnBiff(&downloadOnBiff);
+  if (downloadOnBiff)
   {
-    SetPerformingBiff(PR_TRUE);
-    urlListener = do_QueryInterface(inbox);
-
-    PRBool downloadOnBiff = PR_FALSE;
-    rv = GetDownloadOnBiff(&downloadOnBiff);
-    if (downloadOnBiff)
+    nsCOMPtr <nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
+    if (localInbox && NS_SUCCEEDED(rv))
     {
-      nsCOMPtr <nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
-      if (localInbox && NS_SUCCEEDED(rv))
+      PRBool valid =PR_FALSE;
+      nsCOMPtr <nsIMsgDatabase> db;
+      rv = inbox->GetMsgDatabase(aMsgWindow, getter_AddRefs(db));
+      if (NS_SUCCEEDED(rv) && db)
+        rv = db->GetSummaryValid(&valid);
+      if (NS_SUCCEEDED(rv) && valid)
+        rv = pop3Service->GetNewMail(aMsgWindow, urlListener, inbox, this, nsnull);
+      else
       {
-        PRBool valid =PR_FALSE;
-        nsCOMPtr <nsIMsgDatabase> db;
-        rv = inbox->GetMsgDatabase(msgWindow, getter_AddRefs(db));
-        if (NS_SUCCEEDED(rv) && db)
-          rv = db->GetSummaryValid(&valid);
-        if (NS_SUCCEEDED(rv) && valid)
-          rv = pop3Service->GetNewMail(msgWindow, urlListener, inbox, this, nsnull);
-        else
+        PRBool isLocked;
+        inbox->GetLocked(&isLocked);
+        if (!isLocked)
         {
-          PRBool isLocked;
-          inbox->GetLocked(&isLocked);
-          if (!isLocked)
-          {
-            rv = localInbox->ParseFolder(msgWindow, urlListener);
-          }
-          if (NS_SUCCEEDED(rv))
-            rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+          rv = localInbox->ParseFolder(aMsgWindow, urlListener);
         }
+        if (NS_SUCCEEDED(rv))
+          rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
       }
     }
-    else
-      rv = pop3Service->CheckForNewMail(nsnull, urlListener, inbox, this, nsnull);
+  }
+  else
+    rv = pop3Service->CheckForNewMail(nsnull, urlListener, inbox, this, nsnull);
     // it's important to pass in null for the msg window if we are performing biff
         // this makes sure that we don't show any kind of UI during biff.
-  }
+
   return NS_OK;
 }
 

@@ -749,7 +749,7 @@ function MsgGetMessagesForAllServers(defaultServer)
                 else
                 {
                     // Check to see if there are new messages on the server
-                    currentServer.PerformBiff();
+                    currentServer.PerformBiff(msgWindow);
                 }
             }
         }

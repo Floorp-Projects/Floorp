@@ -948,7 +948,7 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
  	return rv; 	
 }
 
-NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
+NS_IMETHODIMP nsImapIncomingServer::PerformBiff(nsIMsgWindow* aMsgWindow)
 {
   nsresult rv;
 
@@ -957,7 +957,7 @@ NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 	if(NS_SUCCEEDED(rv))
 	{
     SetPerformingBiff(PR_TRUE);
-		rv = rootMsgFolder->GetNewMessages(nsnull, nsnull);
+		rv = rootMsgFolder->GetNewMessages(aMsgWindow, nsnull);
   }
   return rv;
 }

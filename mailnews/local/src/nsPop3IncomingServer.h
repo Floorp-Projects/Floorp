@@ -58,7 +58,7 @@ public:
     virtual ~nsPop3IncomingServer();
 
     NS_IMETHOD GetLocalStoreType(char **);
-    NS_IMETHOD PerformBiff();
+    NS_IMETHOD PerformBiff(nsIMsgWindow *aMsgWindow);
     NS_IMETHOD GetDownloadMessagesAtStartup(PRBool *getMessages);
     NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
     NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);

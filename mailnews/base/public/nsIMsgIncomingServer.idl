@@ -189,7 +189,7 @@ interface nsIMsgIncomingServer : nsISupports {
   void SetDefaultLocalPath(in nsIFileSpec aDefaultLocalPath);
 
   /* do a biff */
-  void PerformBiff();
+  void PerformBiff(in nsIMsgWindow aMsgWindow);
   
   /* this checks if a server needs a password to do biff */
   readonly attribute boolean serverRequiresPasswordForBiff;

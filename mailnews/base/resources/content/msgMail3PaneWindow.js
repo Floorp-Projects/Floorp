@@ -788,7 +788,7 @@ function loadStartFolder(initialUri)
         {
             // Perform biff on the server to check for new mail, except for imap
             if (defaultServer.type != "imap")
-              defaultServer.PerformBiff();         
+              defaultServer.PerformBiff(msgWindow);        
         }
 
 

@@ -173,7 +173,7 @@ nsMsgIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 
   
 NS_IMETHODIMP
-nsMsgIncomingServer::PerformBiff()
+nsMsgIncomingServer::PerformBiff(nsIMsgWindow* aMsgWindow)
 {
   //This had to be implemented in the derived class, but in case someone doesn't implement it
   //just return not implemented.

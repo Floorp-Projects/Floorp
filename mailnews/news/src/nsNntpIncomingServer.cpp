@@ -699,7 +699,7 @@ nsNntpIncomingServer::DisplaySubscribedGroup(nsIMsgNewsFolder *aMsgFolder, PRInt
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::PerformBiff()
+nsNntpIncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
 {
 #ifdef DEBUG_NEWS
 	printf("PerformBiff for nntp\n");
