@@ -149,10 +149,13 @@ nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength,
                                        const nsAString& stringIn, PRUint32* outLen)
 {
   nsresult res = NS_OK;
-  // Currently, no length change by the normalization.
-  // API returns number of bytes when LCMAP_SORTKEY is specified 
+  DWORD dwMapFlags = LCMAP_SORTKEY;
+
+  if (strength == kCollationCaseInSensitive)
+    dwMapFlags |= NORM_IGNORECASE;
+
   if (mW_API) {
-    *outLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
+    *outLen = LCMapStringW(mLCID, dwMapFlags, 
                            (LPCWSTR) PromiseFlatString(stringIn).get(),
                            (int) stringIn.Length(), NULL, 0);
   }
@@ -160,7 +163,7 @@ nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength,
     char *Cstr = nsnull;
     res = mCollation->UnicodeToChar(stringIn, &Cstr, mCharset);
     if (NS_SUCCEEDED(res) && Cstr != nsnull) {
-      *outLen = LCMapStringA(mLCID, LCMAP_SORTKEY, Cstr, PL_strlen(Cstr), NULL, 0);
+      *outLen = LCMapStringA(mLCID, dwMapFlags, Cstr, PL_strlen(Cstr), NULL, 0);
       PR_Free(Cstr);
     }
   }
@@ -173,23 +176,20 @@ nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength,
 {
   int byteLen;
   nsresult res = NS_OK;
-  nsAutoString stringNormalized;
+  DWORD dwMapFlags = LCMAP_SORTKEY;
 
-  if (mCollation != NULL && strength == kCollationCaseInSensitive) {
-    mCollation->NormalizeString(stringIn, stringNormalized);
-  } else {
-    stringNormalized = stringIn;
-  }
+  if (strength == kCollationCaseInSensitive)
+    dwMapFlags |= NORM_IGNORECASE;
 
   if (mW_API) {
-    byteLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
-                          (LPCWSTR) stringNormalized.get(), (int) stringNormalized.Length(), (LPWSTR) key, *outLen);
+    byteLen = LCMapStringW(mLCID, dwMapFlags, 
+                          (LPCWSTR) PromiseFlatString(stringIn).get(), (int) stringIn.Length(), (LPWSTR) key, *outLen);
   }
   else {
     char *Cstr = nsnull;
-    res = mCollation->UnicodeToChar(stringNormalized, &Cstr, mCharset);
+    res = mCollation->UnicodeToChar(stringIn, &Cstr, mCharset);
     if (NS_SUCCEEDED(res) && Cstr != nsnull) {
-      byteLen = LCMapStringA(mLCID, LCMAP_SORTKEY, Cstr, PL_strlen(Cstr), (char *) key, (int) *outLen);
+      byteLen = LCMapStringA(mLCID, dwMapFlags, Cstr, PL_strlen(Cstr), (char *) key, (int) *outLen);
       PR_Free(Cstr);
     }
   }
