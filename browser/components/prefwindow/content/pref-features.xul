@@ -93,11 +93,18 @@
                 oncommand="javascriptEnabledChange();"/>
       <spring flex="1"/>
       
-      <checkbox id="allowWindowMoveResize"    prefstring="dom.disable_window_move_resize"         hidden="true"/>
-      <checkbox id="allowWindowFlip"          prefstring="dom.disable_window_flip"                hidden="true"/>
-      <checkbox id="allowHideStatusBar"       prefstring="dom.disable_window_open_feature.status" hidden="true"/>
-      <checkbox id="allowWindowStatusChange"  prefstring="dom.disable_window_status_change"       hidden="true"/>
-      <checkbox id="allowImageSrcChange"      prefstring="dom.disable_image_src_set"              hidden="true"/>
+      <checkbox id="allowWindowMoveResize" hidden="true"
+                reversed="true" prefstring="dom.disable_window_move_resize"/>
+      <checkbox id="allowWindowFlip" hidden="true"
+                reversed="true" prefstring="dom.disable_window_flip"/>
+      <checkbox id="allowControlContextMenu" hidden="true"
+                prefstring="dom.event.contextmenu.enabled"/>
+      <checkbox id="allowHideStatusBar" hidden="true"
+                reversed="true" prefstring="dom.disable_window_open_feature.status"/>
+      <checkbox id="allowWindowStatusChange" hidden="true"
+                reversed="true" prefstring="dom.disable_window_status_change"/>
+      <checkbox id="allowImageSrcChange" hidden="true"
+                reversed="true" prefstring="dom.disable_image_src_set"/>
       
       <button id="advancedJavascript" label="&advancedJavaScript.label;" accesskey="&advancedJavaScript.accesskey;"
               oncommand="advancedJavaScript();" class="uniWidthButton"/>

@@ -6,4 +6,5 @@
 <!ENTITY allowWindowFlip.label           "Raise or lower windows">
 <!ENTITY allowWindowStatusChange.label   "Change status bar text">
 <!ENTITY allowWindowImageSrcChange.label "Change images">
+<!ENTITY allowControlContextMenu.label   "Disable or replace context menus">
 <!ENTITY allowHideStatusBar.label        "Hide the status bar">
