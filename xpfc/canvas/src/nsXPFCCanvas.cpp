@@ -941,7 +941,10 @@ nsresult nsXPFCCanvas :: SetBounds(const nsRect &aBounds)
 
   if (mView != nsnull)
   {
-    gXPFCToolkit->GetViewManager()->MoveViewTo(mView, mBounds.x, mBounds.y);
+	  nsIView *parent;
+    mView->GetParent(parent);
+
+    if (parent) gXPFCToolkit->GetViewManager()->MoveViewTo(mView, mBounds.x, mBounds.y);
     gXPFCToolkit->GetViewManager()->ResizeView(mView, mBounds.width, mBounds.height);
 
     nsIWidget * widget = nsnull;
@@ -1442,12 +1445,12 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
           rect.width = ((nsPaintEvent *)aEvent)->rect->width;
           rect.height = ((nsPaintEvent *)aEvent)->rect->height;
 
-          ds = ctx->CreateDrawingSurface(&rect);
+          ds = ctx->CreateDrawingSurface(&rect,nsnull);
           ctx->SelectOffScreenDrawingSurface(ds);
 
           es = OnPaint((*((nsPaintEvent*)aEvent)->renderingContext),(*((nsPaintEvent*)aEvent)->rect));
 
-          ctx->CopyOffScreenBits(rect);
+          ctx->CopyOffScreenBits(ds, rect.x, rect.y, rect,nsnull);
           ctx->DestroyDrawingSurface(ds);
 
           return es;

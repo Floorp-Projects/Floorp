@@ -218,7 +218,9 @@ nsresult nsCalTimebarScale :: DrawTime(nsIRenderingContext& aContext,
   x = aRect.x + (INSET << 1);
   y = aRect.y + (INSET << 1);
 
-  aContext.DrawString(text,nsCRT::strlen(text),x,y,0);
+  nsString string = text;
+
+  aContext.DrawString(string,x,y,0);
 
   return (NS_OK);
 }

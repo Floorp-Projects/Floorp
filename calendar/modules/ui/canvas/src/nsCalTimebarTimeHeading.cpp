@@ -127,7 +127,7 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aR
   y = ((rect.height - height)>>1)+rect.y;
 
   aRenderingContext.SetColor(GetForegroundColor());
-  aRenderingContext.DrawString(*string,nsCRT::strlen(*string),x,y,0);
+  aRenderingContext.DrawString(*string,x,y,0);
 
   aRenderingContext.PopState();
 

@@ -334,13 +334,15 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
            * we need to generalize this.
            */
           psBuf = pEvent->toStringFmt(usFmt).toCString("");
-          aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
+          nsString string = psBuf;
+          aRenderingContext.DrawString(string,rect.x+1,rect.y,0);
           delete psBuf;
 
           if (rect.height > (2 * fm_height))
           {
             psBuf = pEvent->getSummary().toCString("");
-            aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
+            string = psBuf;
+            aRenderingContext.DrawString(string,rect.x+1,rect.y+fm_height,0);
             delete psBuf;
           }
         }
@@ -391,13 +393,15 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
            * we need to generalize this.
            */
           psBuf = pEvent->toStringFmt(usFmt).toCString("");
-          aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
+          nsString string = psBuf;
+          aRenderingContext.DrawString(string,rect.x+1,rect.y,0);
           delete psBuf;
 
           if (rect.height > (2 * fm_height))
           {
             psBuf = pEvent->getSummary().toCString("");
-            aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
+            string = psBuf;
+            aRenderingContext.DrawString(string,rect.x+1,rect.y+fm_height,0);
             delete psBuf;
           }
         }

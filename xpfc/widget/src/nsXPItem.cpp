@@ -291,7 +291,7 @@ nsEventStatus nsXPItem :: PaintForeground(nsIRenderingContext& aRenderingContext
 
   }
   
-  aRenderingContext.DrawString(string,string.Length(),x,y,0);
+  aRenderingContext.DrawString(string,x,y,0);
 
   return nsEventStatus_eConsumeNoDefault;  
 }

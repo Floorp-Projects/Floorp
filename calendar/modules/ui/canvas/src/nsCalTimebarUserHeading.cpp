@@ -99,7 +99,7 @@ nsEventStatus nsCalTimebarUserHeading :: PaintForeground(nsIRenderingContext& aR
   y = ((rect.height - height)>>1)+rect.y;
 
   aRenderingContext.SetColor(GetForegroundColor());
-  aRenderingContext.DrawString(mUserName,mUserName.Length(),x,y,0);
+  aRenderingContext.DrawString(mUserName,x,y,0);
 
   return nsEventStatus_eConsumeNoDefault;  
 }

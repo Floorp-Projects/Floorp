@@ -257,14 +257,16 @@ nsEventStatus nsCalMonthViewCanvas :: PaintForeground(nsIRenderingContext& aRend
       psBuf = pEvent->toStringFmt(usFmt).toCString("");
 
       aRenderingContext.SetColor(NS_RGB(255,255,255)); 
-      aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),bounds.x+1,bounds.y,0);
+      nsString string = psBuf;
+      aRenderingContext.DrawString(string,bounds.x+1,bounds.y,0);
 
       delete psBuf;
 
       if (bounds.height > (2 * fm_height))
       {
         psBuf = pEvent->getSummary().toCString("");
-        aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),bounds.x+1,bounds.y+fm_height,0);
+        string = psBuf;
+        aRenderingContext.DrawString(string,bounds.x+1,bounds.y+fm_height,0);
         delete psBuf;
       }
     }
@@ -443,7 +445,8 @@ nsEventStatus nsCalMonthViewCanvas :: PaintCellBackground( PRUint32& aCellRow, P
 
     aRenderingContext.SetColor(GetForegroundColor());
 
-    aRenderingContext.DrawString(strDate,nsCRT::strlen(strDate),x,y,0);
+    nsString string = strDate;
+    aRenderingContext.DrawString(string,x,y,0);
 
   }
 
