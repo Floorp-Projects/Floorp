@@ -14,6 +14,7 @@ browser.jar:
         content/browser/openLocation.js               (content/openLocation.js)
         content/browser/pageReport.xul                (content/pageReport.xul)
         content/browser/pageReport.js                 (content/pageReport.js)
+        content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
         content/browser/search.xml                    (content/search.xml)
 
 classic.jar:
@@ -68,6 +69,7 @@ en-US.jar:
         locale/en-US/browser/openLocation.dtd         (locale/openLocation.dtd)
         locale/en-US/browser/openLocation.properties  (locale/openLocation.properties)
         locale/en-US/browser/pageReport.dtd           (locale/pageReport.dtd)
+        locale/en-US/browser/pageReportFirstTime.dtd  (locale/pageReportFirstTime.dtd)
 
 US.jar:
         locale/US/browser-region/region.properties    (locale/region.properties)
