@@ -6,6 +6,16 @@ Insert nice little intro for version 2.18 here.
 *** ABOUT THIS VERSION ***
 **************************
 
+This is a development snapshot release of Bugzilla.  As such the remainer of
+these release notes have NOT been updated (we usually do this just prior to a
+stable release).  For information about a development snapshot release, the
+best source of information is on our website (http://www.bugzilla.org/) in
+the Status Updates area.  Development snapshot releases are NOT recommended
+for production use unless you have an expert Perl programmer on hand willing
+to combat any difficulties you run into, since there is no guarantee of
+stability during a development cycle.  You have been warned.
+
+
 Bug numbers referenced in this document are all on
 bugzilla.mozilla.org unless otherwise specified.
 
