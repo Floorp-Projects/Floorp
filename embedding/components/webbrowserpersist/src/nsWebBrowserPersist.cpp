@@ -3165,10 +3165,10 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI, 
                             mCurrentCharset.get(), mCurrentBaseURI);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString spec;
     rv = uri->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Search for the URI in the map and replace it with the local file
     nsCStringKey key(spec.get());
@@ -3185,14 +3185,14 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
     if (data->mFile)
     {
         rv = data->mFile->Clone(getter_AddRefs(fileAsURI)); 
-        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     else
     {
         rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
-        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
         rv = AppendPathToURI(fileAsURI, data->mFilename);
-        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     nsAutoString newValue;
 
@@ -3204,7 +3204,9 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
     if (data->mDataPathIsRelative)
     {
         nsCOMPtr<nsIURL> url(do_QueryInterface(fileAsURI));
-        NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
+        if (!url)
+          return NS_ERROR_FAILURE;
+          
         nsCAutoString filename;
         url->GetFileName(filename);
 
@@ -3340,29 +3342,30 @@ nsWebBrowserPersist::SaveSubframeContent(
     // Work out the path for the subframe
     nsCOMPtr<nsIURI> frameURI;
     rv = mCurrentDataPath->Clone(getter_AddRefs(frameURI));
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = AppendPathToURI(frameURI, filenameWithExt);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Work out the path for the subframe data
     nsCOMPtr<nsIURI> frameDataURI;
     rv = mCurrentDataPath->Clone(getter_AddRefs(frameDataURI));
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsAutoString newFrameDataPath(aData->mFilename);
 
     // Append _data
     newFrameDataPath.AppendLiteral("_data");
     rv = AppendPathToURI(frameDataURI, newFrameDataPath);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Make frame document & data path conformant and unique
     rv = CalculateUniqueFilename(frameURI);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = CalculateUniqueFilename(frameDataURI);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentThingsToPersist++;
-    SaveDocumentInternal(aFrameContent, frameURI, frameDataURI);
+    rv = SaveDocumentInternal(aFrameContent, frameURI, frameDataURI);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Store the updated uri to the frame
     aData->mFile = frameURI;
