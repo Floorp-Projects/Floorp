@@ -43,6 +43,7 @@ nsHTTPSHandler::nsHTTPSHandler()
                                        (nsISupports**)&psm);  
 
     NS_IF_RELEASE(psm);
+    mScheme = nsIURI::HTTPS;
 }
 
 nsHTTPSHandler::~nsHTTPSHandler()

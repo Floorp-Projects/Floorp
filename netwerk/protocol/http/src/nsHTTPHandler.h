@@ -190,6 +190,7 @@ protected:
     nsCString mProductComment;
     nsCString mAppUserAgentOverride;
 
+    PRInt32   mScheme;
 
 private:
 

@@ -205,7 +205,7 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
     }
 
     PRBool isHTTP = PR_FALSE;
-    if (NS_SUCCEEDED(i_URL->SchemeIs(nsIURI::HTTP, &isHTTP)) && isHTTP)
+    if (NS_SUCCEEDED(i_URL->SchemeIs(mScheme, &isHTTP)) && isHTTP)
     {
         // Check for filtering
         nsCOMPtr<nsIWebFilters> filters = 
@@ -600,6 +600,7 @@ nsHTTPHandler::nsHTTPHandler():
     mPipelineFirstRequest(PR_FALSE),
     mPipelineMaxRequests(DEFAULT_PIPELINE_MAX_REQUESTS),
     mReferrerLevel(0),
+    mScheme(nsIURI::HTTP),
     mRequestTimeout(DEFAULT_HTTP_REQUEST_TIMEOUT),
     mConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT),
     mProxySSLConnectAllowed(PR_FALSE)
@@ -1697,7 +1698,7 @@ nsHTTPHandler::Check4BrokenHTTPServers(const char * a_Server, PRUint32 * a_Capab
     if (a_Capabilities == NULL)
         return NS_ERROR_NULL_POINTER;
     
-    for (unsigned int i = 0; i < sizeof (brokenServers_well_known) / sizeof (BrokenServersTable); i++)
+    for (PRUint32 i = 0; i < sizeof (brokenServers_well_known) / sizeof (BrokenServersTable); i++)
     {
         BrokenServersTable *tP = &brokenServers_well_known[i];
         if (tP->matchFlags == BAD_SERVERS_MATCH_EXACT && !PL_strcmp(tP->serverHeader, a_Server))
