@@ -386,42 +386,33 @@ PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
     return PR_FALSE;
   }
   
-  // Now look for HTML.  First, we get us a nice nsCAutoString
-  // containing our data in a readonly-ish manner...
-  const CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
-  const nsCAutoString str(bufDesc);
-
-  nsCAutoString::const_iterator start, end;
-  str.BeginReading(start);
-  str.EndReading(end);
-  PRUint32 pos = 0; // for Substring ease
+  // Now look for HTML.
+  const char* str = mBuffer;
+  const char* end = mBuffer + mBufferLen;
 
   // skip leading whitespace
-  while (start != end && nsCRT::IsAsciiSpace(*start)) {
-    ++start;
-    ++pos;
+  while (str != end && nsCRT::IsAsciiSpace(*str)) {
+    ++str;
   }
 
   // did we find something like a start tag?
-  if (start == end || *start != '<' || ++start == end) {
+  if (str == end || *str != '<' || ++str == end) {
     return PR_FALSE;
   }
 
-  // advance pos to keep synch with |start|
-  ++pos;
-
   // If we seem to be SGML or XML and we got down here, just pretend we're HTML
-  if (*start == '!' || *start == '?') {
+  if (*str == '!' || *str == '?') {
     mContentType = TEXT_HTML;
     return PR_TRUE;
   }
-
-  const char* strPtr = str.get() + pos;
+  
+  PRUint32 bufSize = end - str;
   // We use sizeof(_tagstr) below because that's the length of _tagstr
   // with the one char " " or ">" appended.
 #define MATCHES_TAG(_tagstr)                                              \
-  (PL_strncasecmp(strPtr, _tagstr " ", sizeof(_tagstr)) == 0 ||  \
-   PL_strncasecmp(strPtr, _tagstr ">", sizeof(_tagstr)) == 0)
+  (bufSize >= sizeof(_tagstr) &&                                          \
+   (PL_strncasecmp(str, _tagstr " ", sizeof(_tagstr)) == 0 ||             \
+    PL_strncasecmp(str, _tagstr ">", sizeof(_tagstr)) == 0))
     
   if (MATCHES_TAG("html")     ||
       MATCHES_TAG("frameset") ||
