@@ -1774,69 +1774,52 @@ NS_IMETHODIMP nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord height)
+inline min(nscoord x, nscoord y) { return (x < y ? x : y); }
+inline max(nscoord x, nscoord y) { return (x > y ? x : y); }
+
+NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord height)
 {
-  nscoord twidth, theight, left, top, right, bottom, x, y;
+	nscoord oldWidth, oldHeight;
+	aView->GetDimensions(&oldWidth, &oldHeight);
+	if (width != oldWidth || height != oldHeight) {
+		nscoord x = 0, y = 0;
+		nsIView* parentView = nsnull;
+	    aView->GetParent(parentView);
+	    if (parentView != nsnull)
+			aView->GetPosition(&x, &y);
+		else
+			parentView = aView;
 
-  aView->GetPosition(&x, &y);
-  aView->GetDimensions(&twidth, &theight);
+		// resize the view.
+		aView->SetDimensions(width, height);
+		
+		// compute rectangular strips that need to be refreshed.
+		nscoord minWidth, maxWidth;
+		if (oldWidth < width)
+			minWidth = oldWidth, maxWidth = width;
+		else
+			minWidth = width, maxWidth = oldWidth;
 
-  if (width < twidth)
-  {
-    left = width;
-    right = twidth;
-  }
-  else
-  {
-    left = twidth;
-    right = width;
-  }
-
-  if (height < theight)
-  {
-    top = height;
-    bottom = theight;
-  }
-  else
-  {
-    top = theight;
-    bottom = height;
-  }
-
-  aView->SetDimensions(width, height);
-
-	nsIView *parent;
-  aView->GetParent(parent);
-
-  if (nsnull == parent)
-  {
-    parent = aView;
-    x = y = 0;
-  }
-
-  //now damage the right edge of the view,
-  //and the bottom edge of the view,
-
-  nsRect  trect;
-
-  //right edge...
-
-  trect.x = left;
-  trect.y = y;
-  trect.width = right - left;
-  trect.height = bottom - y;
-
-  UpdateView(parent, trect, NS_VMREFRESH_NO_SYNC);
-
-  //bottom edge...
-
-  trect.x = x;
-  trect.y = top;
-  trect.width = right - x;
-  trect.height = bottom - top;
-
-  UpdateView(parent, trect, NS_VMREFRESH_NO_SYNC);
-  return NS_OK;
+		nscoord minHeight, maxHeight;
+		if (oldHeight < height)
+			minHeight = oldHeight, maxHeight = height;
+		else
+			minHeight = height, maxHeight = oldHeight;
+			
+		if (width != oldWidth) {
+			nscoord deltaWidth = maxWidth - minWidth;
+			nsRect rightEdge(x + minWidth, y, deltaWidth, maxHeight);
+			UpdateView(parentView, rightEdge, NS_VMREFRESH_NO_SYNC);
+		}
+		
+		if (height != oldHeight) {
+			nscoord deltaHeight = maxHeight - minHeight;
+			nsRect bottomEdge(x, y + minHeight, maxWidth, deltaHeight);
+			UpdateView(parentView, bottomEdge, NS_VMREFRESH_NO_SYNC);
+		}
+	}
+	
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *aRect)
