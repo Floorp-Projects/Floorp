@@ -2,7 +2,8 @@
 
 
 <!ENTITY  window.title "Fonts">
-<!ENTITY  header "Fonts">
+<!ENTITY  lHeader "Fonts">
+<!ENTITY  rHeader "Change the fonts in your display">
 <!ENTITY  encod.select "For the Encoding:">
 <!ENTITY  encod1.option "Western">
 <!ENTITY  size.select "Size">
