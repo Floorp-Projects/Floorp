@@ -25,45 +25,6 @@
 
 #undef GetPort  // Windows (sigh)
 
-////////////////////////////////////////////////////////////////////////////////
-// The "Typical URL" Implementation
-
-// XXX regenerate:
-#define NS_ITYPICALURL_IID                           \
-{ /* 5053f850-f11e-11d2-9322-000000000000 */         \
-    0x5053f850,                                      \
-    0xf11e,                                          \
-    0x11d2,                                          \
-    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
-}
-
-// XXX regenerate:
-#define NS_TYPICALURL_CID                            \
-{ /* 8ffae6d0-ee37-11d2-9322-000000000000 */         \
-    0x8ffae6d0,                                      \
-    0xee37,                                          \
-    0x11d2,                                          \
-    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
-}
-
-/**
- * The nsITypicalUrl interface defines the initializer for a URL
- * implementation that only supports the accessors of nsIUrl.
- *
- * Protocol writers can obtain one by calling the component manager
- * to create an instance of a typical URL by the CID, and then call
- * the Init routine on it and finally QueryInterface to get the nsIUrl
- * to return.
- */
-
-class nsIUrl;
-
-class nsITypicalUrl : public nsISupports
-{
-public:
-    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl) = 0;
-};
-
 #define NS_IURL_IID                                  \
 { /* 82c1b000-ea35-11d2-931b-00104ba0fd40 */         \
     0x82c1b000,                                      \
@@ -73,7 +34,7 @@ public:
 }
 
 /**
- * The nsIURI class is an interface to the URI behaviour for parsing
+ * The nsIUrl class is an interface to the URL behaviour for parsing
  * portions out of a URI. This follows Tim Berners-Lee's URI spec at-
  * 
  *   http://www.w3.org/Addressing/URI/URI_Overview.html
@@ -102,7 +63,13 @@ class nsIUrl : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IURL_IID);
 
-    // Core parsing functions
+    /**
+     * Parses a URL spec (a string) relative to a base URL.
+     * Any defaults not specified in the spec (because it is a relative
+     * spec) are pulled from the base. The baseUrl can be null in which
+     * case the spec must be an absolute URL.
+     */
+    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl) = 0;
 
     /**
      * The Scheme is the protocol that this URI refers to. 
@@ -170,11 +137,35 @@ public:
 
 };
 
-extern nsresult NS_NewURL(nsIUrl** aInstancePtrResult, const char *aSpec, nsIUrl* aBaseUrl);
+////////////////////////////////////////////////////////////////////////////////
 
-extern nsresult NS_NewConnection(nsIUrl* url,
-                             nsISupports* eventSink,
-                             nsIConnectionGroup* group,
-                             nsIProtocolConnection* *result);
+/**
+ * Protocol writers can obtain a default nsIUrl implementation by calling the
+ * component manager with NS_STANDARDURL_CID. The implementation returned will 
+ * only implement the set of accessors specified by nsIUrl. After obtaining the
+ * instance from the component manager, the Init routine must be called on it
+ * to initialize it from the user's URL spec. 
+ */
+
+#define NS_STANDARDURL_CID                           \
+{ /* 46fc2a26-ff66-11d2-8ccb-0060b0fc14a3 */         \
+    0x46fc2a26,                                      \
+    0xff66,                                          \
+    0x11d2,                                          \
+    {0x8c, 0xcb, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern nsresult
+NS_NewURL(nsIUrl** aInstancePtrResult, const char *aSpec, nsIUrl* aBaseUrl);
+
+extern nsresult
+NS_NewConnection(nsIUrl* url,
+                 nsISupports* eventSink,
+                 nsIConnectionGroup* group,
+                 nsIProtocolConnection* *result);
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif /* nsIIUrl_h___ */

@@ -28,8 +28,8 @@
 static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID,  NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kTypicalUrlCID,            NS_TYPICALURL_CID);
-static NS_DEFINE_CID(kSocketTransportServiceCID,  NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kStandardUrlCID,           NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,11 +118,11 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
         }
         inst = NS_STATIC_CAST(nsISocketTransportService*, trans); 
     }
-    else if (mClassID.Equals(kTypicalUrlCID)) {
-        nsUrl* url = new nsUrl(aOuter);
+    else if (mClassID.Equals(kStandardUrlCID)) {
+        nsStandardUrl* url = new nsStandardUrl(aOuter);
         if (url == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-        inst = NS_STATIC_CAST(nsITypicalUrl*, url);
+        inst = NS_STATIC_CAST(nsIUrl*, url);
     }
     else {
         return NS_ERROR_NO_INTERFACE;
@@ -145,8 +145,6 @@ nsresult nsNetFactory::LockFactory(PRBool aLock)
 extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
              nsIFactory **aFactory)
 {
     if (aFactory == nsnull)
@@ -187,9 +185,9 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;;
 
-    rv = compMgr->RegisterComponent(kTypicalUrlCID, 
-                                    "Typical URL Implementation",
-                                    "component://netscape/network/typcial-url",
+    rv = compMgr->RegisterComponent(kStandardUrlCID, 
+                                    "Standard URL Implementation",
+                                    "component://netscape/network/standard-url",
                                     aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
@@ -211,7 +209,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kSocketTransportServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;;
 
-    rv = compMgr->UnregisterComponent(kTypicalUrlCID, aPath);
+    rv = compMgr->UnregisterComponent(kStandardUrlCID, aPath);
     return rv;
 }
 

@@ -16,14 +16,14 @@
  * Reserved.
  */
 
-#ifndef nsUrl_h__
-#define nsUrl_h__
+#ifndef nsStandardUrl_h__
+#define nsStandardUrl_h__
 
 #include "nsIUrl.h"
 #include "nsAgg.h"
 
 // XXX regenerate:
-#define NS_THIS_TYPICALURL_IMPLEMENTATION_CID        \
+#define NS_THIS_STANDARDURL_IMPLEMENTATION_CID       \
 { /* 905ed480-f11f-11d2-9322-000000000000 */         \
     0x905ed480,                                      \
     0xf11f,                                          \
@@ -31,13 +31,15 @@
     {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
 }
 
-class nsUrl : public nsIUrl, public nsITypicalUrl
+class nsStandardUrl : public nsIUrl
 {
 public:
     NS_DECL_AGGREGATED
 
     ////////////////////////////////////////////////////////////////////////////
     // nsIUrl methods:
+
+    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl);
 
     NS_IMETHOD GetScheme(const char* *result);
     NS_IMETHOD SetScheme(const char* scheme);
@@ -60,15 +62,10 @@ public:
     NS_IMETHOD ToNewCString(char* *result);
 
     ////////////////////////////////////////////////////////////////////////////
-    // nsITypicalUrl methods:
+    // nsStandardUrl methods:
 
-    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsUrl methods:
-
-    nsUrl(nsISupports* outer);
-    virtual ~nsUrl();
+    nsStandardUrl(nsISupports* outer);
+    virtual ~nsStandardUrl();
 
 protected:
     nsresult Parse(const char* spec, nsIUrl* aBaseUrl);
@@ -85,4 +82,4 @@ protected:
     char*       mSpec;  // XXX go away
 };
 
-#endif // nsUrl_h__
+#endif // nsStandardUrl_h__

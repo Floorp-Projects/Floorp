@@ -32,15 +32,15 @@ CPPSRCS =                              \
         nsSocketTransport.cpp          \
         nsSocketTransportService.cpp   \
         nsNetService.cpp               \
-        nsUrl.cpp                      \
+        nsStandardUrl.cpp              \
         $(NULL)
 
-EXPORTS =                        \
-        nsConnectionGroup.h      \
-        nsNetService.h           \
-        nsFileTransportService.h \
+EXPORTS =			   \
+        nsConnectionGroup.h	   \
+        nsNetService.h		   \
+        nsFileTransportService.h   \
         nsSocketTransportService.h \
-        nsUrl.h                  \
+        nsStandardUrl.h		   \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

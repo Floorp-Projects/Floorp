@@ -21,12 +21,12 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 LIBRARY_NAME=netwerkbase_s
 
-EXPORTS =                        \
-        nsConnectionGroup.h      \
-        nsNetService.h           \
-        nsFileTransportService.h \
+EXPORTS =                          \
+        nsConnectionGroup.h        \
+        nsNetService.h             \
+        nsFileTransportService.h   \
         nsSocketTransportService.h \
-        nsUrl.h                  \
+        nsStandardUrl.h            \
         $(NULL)
 
 CPP_OBJS =                                         \
@@ -38,7 +38,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsSocketTransport.obj          \
         .\$(OBJDIR)\nsSocketTransportService.obj   \
         .\$(OBJDIR)\nsNetService.obj               \
-        .\$(OBJDIR)\nsUrl.obj                      \
+        .\$(OBJDIR)\nsStandardUrl.obj              \
         $(NULL)
 
 LINCS =                     \
