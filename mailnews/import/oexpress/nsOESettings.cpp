@@ -299,6 +299,10 @@ PRBool OESettings::DoImport( nsIMsgAccount **ppAccount)
 		}
 	}
 
+	// Now save the new acct info to pref file.
+	rv = accMgr->SaveAccountInfo();
+	NS_ASSERTION(NS_SUCCEEDED(rv), "Can't save account info to pref file");
+
 	return( accounts != 0);
 }
 

@@ -221,19 +221,18 @@ function FinishAccount() {
     if (!serverIsNntp(pageData))
         EnableCheckMailAtStartUpIfNeeded(gCurrentAccount);
 
-    // hack hack - save the prefs file NOW in case we crash
+    // in case we crash, force us a save of the prefs file NOW
     try {
-        var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-        prefs.savePrefFile(null);
-    } catch (ex) {
-        dump("Error saving prefs!\n");
-		dump("ex = " + ex + "\n");
+      am.saveAccountInfo();
+    } 
+    catch (ex) {
+      dump("Error saving account info: " + ex + "\n");
     }
     window.close();
     if(top.okCallback)
     {
         var state = true;
-        //		dump("finish callback");
+        //dump("finish callback");
         top.okCallback(state);
     }
 }

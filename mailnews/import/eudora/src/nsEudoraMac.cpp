@@ -673,6 +673,10 @@ PRBool nsEudoraMac::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **local
 		}		
 	}
 
+	// Now save the new acct info to pref file.
+	rv = accMgr->SaveAccountInfo();
+	NS_ASSERTION(NS_SUCCEEDED(rv), "Can't save account info to pref file");
+
 	for (i = 0; i < kNumSettingStrs; i++) {
 		delete pStrs[i];
 	}

@@ -56,7 +56,6 @@ static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_CID(kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
@@ -969,6 +968,13 @@ ImportMailThread( void *stuff)
 			}
 		}
 	}
+
+	// Now save the new acct info to pref file.
+	nsCOMPtr <nsIMsgAccountManager> accMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv) && accMgr) {
+	  rv = accMgr->SaveAccountInfo();
+	  NS_ASSERTION(NS_SUCCEEDED(rv), "Can't save account info to pref file");
+	}
 	
 	nsImportGenericMail::SetLogs( success, error, pData->successLog, pData->errorLog);
 
@@ -997,7 +1003,7 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	
 	*ppFolder = nsnull;
 		
-	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
+	nsCOMPtr <nsIMsgAccountManager> accMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);
@@ -1136,7 +1142,7 @@ PRBool nsImportGenericMail::FindAccount( nsIMsgFolder **ppFolder)
 	
 	*ppFolder = nsnull;
 
- 	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
+	nsCOMPtr <nsIMsgAccountManager> accMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);

@@ -943,6 +943,10 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	rv = account->AddIdentity(identity);
 	if (NS_FAILED(rv)) return rv;
 
+	// Now save the new acct info to pref file.
+	rv = accountManager->SaveAccountInfo();
+	if (NS_FAILED(rv)) return rv;
+
 	return NS_OK;
 }
 

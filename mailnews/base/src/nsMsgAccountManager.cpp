@@ -2095,3 +2095,12 @@ nsMsgAccountManager::SetLastServerFound(nsIMsgIncomingServer *server, const char
     
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgAccountManager::SaveAccountInfo()
+{
+  nsresult rv;
+  rv = getPrefService();
+  NS_ENSURE_SUCCESS(rv,rv);
+  return m_prefs->SavePrefFile(nsnull);
+}
