@@ -49,7 +49,7 @@ public:
   static        Atom sMozLockAtom;
   static        Atom sMozCommandAtom;
   static        Atom sMozResponseAtom;
-
+  static        Atom sMozUserAtom;
 
 };
 
