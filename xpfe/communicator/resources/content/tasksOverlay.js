@@ -273,7 +273,7 @@ function CheckForWalletAndImage()
 // perform a wallet action
 function WalletAction( action ) 
 {
-  var strings = document.getElementById("strings");
+  var strings = document.getElementById("personalManagers");
   if (action == "password" || action == "expire" || action == "clear") {
     wallet = Components.classes['component://netscape/wallet/wallet-service'];
     wallet = wallet.getService();
