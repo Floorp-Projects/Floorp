@@ -842,15 +842,40 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
   }
 
-  gdk_window_copy_area(drawing->GetDrawable(),      // dest window
-                       copyGC,                      // gc
-                       aDX,                         // xdest
-                       aDY,                         // ydest
-                       mImagePixmap,                // source window
-                       aSX,                         // xsrc
-                       aSY,                         // ysrc
-                       aSWidth,                     // width
-                       aSHeight);                   // height
+  nsRegionGTK clipRgn;
+  if (mAlphaPixmap &&
+      NS_SUCCEEDED(((nsRenderingContextGTK&)aContext).CopyClipRegion(clipRgn))) {
+    // we have both a set of rectangles and a bitmap defining the clip
+    // let X11 clip to the bitmap, do the rectangles by hand
+    nsRegionRectSet *rectSet = nsnull;
+    clipRgn.Intersect(aDX, aDY, aSWidth, aSHeight);
+    if (NS_SUCCEEDED(clipRgn.GetRects(&rectSet))) {
+      for (PRUint32 i=0; i<rectSet->mRectsLen; i++) {
+        nsRegionRect *rect = &(rectSet->mRects[i]);
+        gdk_window_copy_area(drawing->GetDrawable(),      // dest window
+                             copyGC,                      // gc
+                             rect->x,                     // xdest
+                             rect->y,                     // ydest
+                             mImagePixmap,                // source window
+                             aSX+(rect->x-aDX),           // xsrc
+                             aSY+(rect->y-aDY),           // ysrc
+                             rect->width,                 // width
+                             rect->height);               // height
+      }
+      clipRgn.FreeRects(rectSet);
+    }
+  } else {
+    // normal case - let X11 take care of all the clipping
+    gdk_window_copy_area(drawing->GetDrawable(),      // dest window
+                         copyGC,                      // gc
+                         aDX,                         // xdest
+                         aDY,                         // ydest
+                         mImagePixmap,                // source window
+                         aSX,                         // xsrc
+                         aSY,                         // ysrc
+                         aSWidth,                     // width
+                         aSHeight);                   // height
+  }
  
   gdk_gc_unref(copyGC);
   mFlags = 0;
