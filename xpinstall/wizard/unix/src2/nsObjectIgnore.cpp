@@ -40,8 +40,8 @@
 #include "nsObjectIgnore.h"
 #include "assert.h"
 
-nsObjectIgnore::nsObjectIgnore() :
-    mFilename(NULL),
+nsObjectIgnore::nsObjectIgnore(char *aFilename) :
+    mFilename(aFilename),
     mNext(NULL)
 {
 }
@@ -49,17 +49,6 @@ nsObjectIgnore::nsObjectIgnore() :
 nsObjectIgnore::~nsObjectIgnore()
 {
     XI_IF_FREE(mFilename);
-}
-
-int
-nsObjectIgnore::SetFilename(char *aFilename)
-{
-    if (!aFilename)
-        return E_PARAM;
-    
-    mFilename = aFilename;
-
-    return OK;
 }
 
 char *
@@ -83,13 +72,4 @@ nsObjectIgnore *
 nsObjectIgnore::GetNext()
 {
     return mNext;
-}
-
-int
-nsObjectIgnore::InitNext()
-{
-    XI_ASSERT((mNext==NULL), "Leaking nsObjectIgnore::mNext!\n");
-    mNext = NULL;
-
-    return OK;
 }
