@@ -3583,6 +3583,7 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 						if (endQuote > 0)
 						{
 							line.Mid(nameAttrib, startQuote+1, endQuote-startQuote-1);
+							line.Cut(0, endQuote + 1);
 						}
 					}
 					else
@@ -3594,6 +3595,11 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 						if (space > 0)
 						{
 							nameAttrib.Truncate(space);
+							line.Cut(0, equal+1+space);
+						}
+						else
+						{
+							line.Truncate();
 						}
 					}
 				}
