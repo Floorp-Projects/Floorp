@@ -2139,8 +2139,10 @@ PR_IMPLEMENT(void *) PR_EnumerateAddrInfo(void             *iterPtr,
         if (ai->ai_addrlen < sizeof(PRNetAddr))
             memset(((char*)result)+ai->ai_addrlen, 0, sizeof(PRNetAddr) - ai->ai_addrlen);
 
-        if (port != 0)
-            result->inet.port = PR_htons(port);
+        if (result->raw.family == PR_AF_INET)
+            result->inet.port = htons(port);
+        else
+            result->ipv6.port = htons(port);
     }
 
     return ai;
