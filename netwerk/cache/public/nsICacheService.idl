@@ -44,7 +44,7 @@ interface nsICacheService : nsISupports
      */
     void shutdown();
 
-    /*
+    /**
      * Create a cache session
      *
      * A cache session represents a client's access into the cache.  The cache
@@ -68,8 +68,13 @@ interface nsICacheService : nsISupports
                                   in nsCacheStoragePolicy   storagePolicy,
                                   in boolean                streamBased);
 
-    /*
+    /**
      * Visit entries stored in the cache.  Used to implement about:cache.
      */
     void visitEntries(in nsICacheVisitor visitor);
+
+    /**
+     * Evicts all entries in all devices implied by the storage policy.
+     */
+    void evictEntries(in nsCacheStoragePolicy  storagePolicy);
 };

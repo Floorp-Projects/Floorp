@@ -63,4 +63,9 @@ interface nsICacheSession : nsISupports
     void asyncOpenCacheEntry(in string            key,
                              in nsCacheAccessMode accessRequested,
                              in nsICacheListener  listener);
+
+    /**
+     * Evict all entries for this session's clientID according to its storagePolicy.
+     */
+    void evictEntries();
 };
