@@ -85,8 +85,6 @@ CPPSRCS		= \
 
 LLIBS		+= $(DIST)/lib/xpcom32.lib
 
-EXTRA_DSO_LDOPTS = $(MOZ_JS_LIBS) $(MOZ_COMPONENT_LIBS)
-
 EXPORTS		+= \
 		$(srcdir)/nsILiveconnect.h \
 		$(srcdir)/nsISecureLiveconnect.h \
