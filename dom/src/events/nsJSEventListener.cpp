@@ -107,7 +107,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return NS_OK;
     }
     if (mReturnResult == nsReturnResult_eNotSet) {
-      if (eventString == "error" || eventString == "mouseover") {
+      if (eventString.EqualsWithConversion("error") || eventString.EqualsWithConversion("mouseover")) {
         mReturnResult = nsReturnResult_eReverseReturnResult;
       }
       else {
