@@ -76,6 +76,6 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/bookmark-item.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmark-folder-closed.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmark-folder-open.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/personal-toolbar-folder-closed.gif $(DIST)/bin/res/rdfb
+	$(INSTALL) $(srcdir)/../resources/personal-toolbar-folder-closed.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/personal-toolbar-folder-open.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/History/h1.hst $(DIST)/bin/res/rdf/History
