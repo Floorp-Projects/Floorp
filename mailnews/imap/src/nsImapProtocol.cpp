@@ -3068,7 +3068,7 @@ char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataB
 			{
 				m_inputStream->Read(aDataBuffer + numBytesInBuffer, numBytesToCopy, &numBytesCopied);
 				Log("OnDataAvailable", nsnull, aDataBuffer + numBytesInBuffer);
-				aDataBuffer[numBytesCopied] = '\0';
+				aDataBuffer[numBytesInBuffer + numBytesCopied] = '\0';
 			}
 
 			// okay, now that we've tried to read in more data from the stream, look for another end of line 
