@@ -104,6 +104,10 @@ public:
 
   void LoadNextURL();
 
+  void SetVerbose(PRBool aSetting) {
+    mVerbose = aSetting;
+  }
+
 protected:
   virtual ~nsWebCrawler();
 
@@ -138,6 +142,9 @@ protected:
   PRInt32 mWidth;
   PRInt32 mHeight;
   PRInt32 mMaxPages;
+
+  nsString mCurrentURL;
+  PRBool mVerbose;
 
   nsVoidArray mPendingURLs;
   nsVoidArray mSafeDomains;
