@@ -469,21 +469,21 @@ pkits_BasicCertRevocation()
 
   VFY_ACTION="Invalid Bad CRL Signature Test4"; log_banner
   certImport BadCRLSignatureCACert
-  crlImport $crls/BadCRLSignatureCACRL.crl
+  crlImportn $crls/BadCRLSignatureCACRL.crl
   pkitsn $certs/InvalidBadCRLSignatureTest4EE.crt \
      $certs/BadCRLSignatureCACert.crt
   delete BadCRLSignatureCACert
 
   VFY_ACTION="Invalid Bad CRL Issuer Name Test5"; log_banner
   certImport BadCRLIssuerNameCACert
-  crlImport $crls/BadCRLIssuerNameCACRL.crl
+  crlImportn $crls/BadCRLIssuerNameCACRL.crl
   pkitsn $certs/InvalidBadCRLIssuerNameTest5EE.crt \
      $certs/BadCRLIssuerNameCACert.crt
   delete BadCRLIssuerNameCACert
 
   VFY_ACTION="Invalid Wrong CRL Test6"; log_banner
   certImport WrongCRLCACert
-  crlImport $crls/WrongCRLCACRL.crl
+  crlImportn $crls/WrongCRLCACRL.crl
   pkitsn $certs/InvalidWrongCRLTest6EE.crt \
      $certs/WrongCRLCACert.crt
   delete WrongCRLCACert
@@ -498,18 +498,19 @@ pkits_BasicCertRevocation()
 
   VFY_ACTION="Invalid Unknown CRL Entry Extension Test8"; log_banner
   certImport UnknownCRLEntryExtensionCACert
-  crlImport $crls/UnknownCRLEntryExtensionCACRL.crl
+  crlImportn $crls/UnknownCRLEntryExtensionCACRL.crl
   pkitsn $certs/InvalidUnknownCRLEntryExtensionTest8EE.crt \
      $certs/UnknownCRLEntryExtensionCACert.crt
   delete UnknownCRLEntryExtensionCACert
 
   VFY_ACTION="Invalid Unknown CRL Extension Test9"; log_banner
   certImport UnknownCRLExtensionCACert
-  crlImport $crls/UnknownCRLExtensionCACRL.crl
+  crlImportn $crls/UnknownCRLExtensionCACRL.crl
   pkitsn $certs/InvalidUnknownCRLExtensionTest9EE.crt \
      $certs/UnknownCRLExtensionCACert.crt
 
   VFY_ACTION="Invalid Unknown CRL Extension Test10"; log_banner
+  crlImportn $crls/UnknownCRLExtensionCACRL.crl
   pkitsn $certs/InvalidUnknownCRLExtensionTest10EE.crt \
      $certs/UnknownCRLExtensionCACert.crt
   delete UnknownCRLExtensionCACert
