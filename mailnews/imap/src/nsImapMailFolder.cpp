@@ -447,7 +447,9 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     {
         nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
         nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-        rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
+        rv = NS_ERROR_UNEXPECTED;
+        if (mDatabase)
+            rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
         if(NS_SUCCEEDED(rv))
             rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
                                                    this,
@@ -642,14 +644,15 @@ NS_IMETHODIMP nsImapMailFolder::GetName(PRUnichar ** name)
 				nsString folderName;
 
 				nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
-				mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-				if (dbFolderInfo)
-				{
-					dbFolderInfo->GetMailboxName(folderName);
-					m_haveReadNameFromDB = PR_TRUE;
-					*name = folderName.ToNewCString();
-					return NS_OK;
-				}
+                if (mDatabase) {
+                    mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+                    if (dbFolderInfo) {
+                        dbFolderInfo->GetMailboxName(folderName);
+                        m_haveReadNameFromDB = PR_TRUE;
+                        *name = folderName.ToNewCString();
+                        return NS_OK;
+                    }
+                }
 			}
         }
 #endif 
@@ -1201,7 +1204,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
             return rv;
         if (!mDatabase) 
             return NS_ERROR_NULL_POINTER;
-        mDatabase->AddListener(this);
+        if (mDatabase)
+            mDatabase->AddListener(this);
     }
     if (aSpec->folderSelected)
     {
@@ -1211,13 +1215,18 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 		nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
 		PRInt32 imapUIDValidity = 0;
 
-		rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+        rv = NS_ERROR_UNEXPECTED;
+        if (mDatabase)
+            rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
 
 		if (NS_SUCCEEDED(rv) && dbFolderInfo)
 			dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
-    	mDatabase->ListAllKeys(existingKeys);
-    	if (mDatabase->ListAllOfflineDeletes(&existingKeys) > 0)
-			existingKeys.QuickSort();
+
+        if (mDatabase) {
+            mDatabase->ListAllKeys(existingKeys);
+            if (mDatabase->ListAllOfflineDeletes(&existingKeys) > 0)
+                existingKeys.QuickSort();
+        }
     	if ((imapUIDValidity != aSpec->folder_UIDVALIDITY)	/* && // if UIDVALIDITY Changed 
     		!NET_IsOffline() */)
     	{
@@ -1226,7 +1235,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			TNeoFolderInfoTransfer *originalInfo = NULL;
 			originalInfo = new TNeoFolderInfoTransfer(dbFolderInfo);
 #endif // 0
-			mDatabase->ForceClosed();
+            if (mDatabase)
+                mDatabase->ForceClosed();
 			mDatabase = null_nsCOMPtr();
 				
 			nsLocalFolderSummarySpec	summarySpec(dbName);
@@ -1250,15 +1260,18 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			else if (NS_SUCCEEDED(rv) && mDatabase)
 			{
 #if TRANSFER_INFO
-				if (originalInfo)
+				if (originalInfo && mDatabase)
 				{
 					originalInfo->TransferFolderInfo(mDatabase->m_dbFolderInfo);
 					delete originalInfo;
 				}
 #endif
 				SummaryChanged();
-                mDatabase->AddListener(this);
-				rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+                rv = NS_ERROR_UNEXPECTED;
+                if (mDatabase) {
+                    mDatabase->AddListener(this);
+                    rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+                }
 			}
 			// store the new UIDVALIDITY value
 
@@ -1294,8 +1307,10 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			PRUint32 total;
             
 			// It would be nice to notify RDF or whoever of a mass delete here.
-    		mDatabase->DeleteMessages(&keysToDelete,NULL);
-			total = keysToDelete.GetSize();
+            if (mDatabase) {
+                mDatabase->DeleteMessages(&keysToDelete,NULL);
+                total = keysToDelete.GetSize();
+            }
 		}
 		// if this is the INBOX, tell the stand-alone biff about the new high water mark
 		if (mFlags & MSG_FOLDER_FLAG_INBOX)
