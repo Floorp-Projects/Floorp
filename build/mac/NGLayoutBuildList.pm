@@ -1374,7 +1374,10 @@ sub MakeResourceAliases()
 	  _InstallResources(":mozilla:xpfe:components:related:resources:locale:MANIFEST",			"$related_dir:locale");
         }
         {
-          _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
+          my($search_dir) = "$chrome_dir"."Search";
+	  _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",		"$search_dir:content:default");
+	  _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-skin",			"$search_dir:skin:default");
+	  _InstallResources(":mozilla:xpfe:components:search:locale:MANIFEST",				"$search_dir:locale");
 
           my($searchdatasets_dir) = "$resource_dir" . "rdf:datasets:";
           _InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",			"$searchdatasets_dir");
