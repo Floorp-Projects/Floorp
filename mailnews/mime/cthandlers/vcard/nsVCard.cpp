@@ -80,6 +80,16 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
  * be edited by hand. The real source is vcc.y. The #line directives
  * can be commented out here to make it easier to trace through
  * in a debugger. However, if a bug is found it should 
+ *
+ * the vcc.y that _this_ vcc.c comes from is lost.
+ * I couldn't find it in the 4.x tree
+ * I bet we took it from IMC's original SDK, but the SDK has been taken down.
+ * see http://www.imc.org/imc-vcard/mail-archive/msg00460.html
+ *
+ * for what it's worth, see 
+ * http://softwarestudio.org/libical/
+ * http://lxr.mozilla.org/mozilla/source/other-licenses/libical/src/libicalvcal/vcc.y
+ * http://lxr.mozilla.org/mozilla/source/other-licenses/libical/src/libicalvcal/vcc.c
  */
 #include "nsVCard.h"
 #include "nsVCardObj.h"
