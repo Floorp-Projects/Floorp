@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.4 $ $Date: 2001/10/19 20:06:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.5 $ $Date: 2001/11/05 17:29:27 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -94,16 +94,16 @@ STAN_LoadDefaultNSS3TrustDomain
     }
     td->tokenList = nssList_Create(td->arena, PR_TRUE);
     list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, NULL);
-#ifdef NSS_SOFTOKEN_MODULE
     if (list) {
 	/* XXX this doesn't work until softoken is a true PKCS#11 mod */
 	for (le = list->head; le; le = le->next) {
-	    token = nssToken_CreateFromPK11SlotInfo(td, le->slot);
-	    PK11Slot_SetNSSToken(le->slot, token);
-	    nssList_Add(td->tokenList, token);
+	    if (!PK11_IsInternal(le->slot)) {
+		token = nssToken_CreateFromPK11SlotInfo(td, le->slot);
+		PK11Slot_SetNSSToken(le->slot, token);
+		nssList_Add(td->tokenList, token);
+	    }
 	}
     }
-#endif
     td->tokens = nssList_CreateIterator(td->tokenList);
     g_default_trust_domain = td;
 }
@@ -302,16 +302,16 @@ static unsigned int
 get_nss3trust_from_cktrust(CK_TRUST t)
 {
     unsigned int rt = 0;
-    if (t & CKT_NETSCAPE_TRUSTED) {
+    if (t == CKT_NETSCAPE_TRUSTED) {
 	rt |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
     }
-    if (t & CKT_NETSCAPE_TRUSTED_DELEGATOR) {
+    if (t == CKT_NETSCAPE_TRUSTED_DELEGATOR) {
 	rt |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | CERTDB_NS_TRUSTED_CA;
     }
-    if (t & CKT_NETSCAPE_VALID) {
+    if (t == CKT_NETSCAPE_VALID) {
 	rt |= CERTDB_VALID_PEER;
     }
-    if (t & CKT_NETSCAPE_VALID_DELEGATOR) {
+    if (t == CKT_NETSCAPE_VALID_DELEGATOR) {
 	rt |= CERTDB_VALID_CA;
     }
     /* user */
@@ -342,7 +342,9 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
     /* nickname */
     cc->nickname = PL_strdup(c->nickname);
     /* slot (ownSlot ?) (addref ?) */
-    cc->slot = c->token->pk11slot;
+    if (c->token) {
+	cc->slot = c->token->pk11slot;
+    }
     /* trust */
     cc->trust = nssTrust_GetCERTCertTrust(&c->trust, cc);
     /* referenceCount  addref? */
@@ -413,6 +415,7 @@ STAN_ChangeCertTrust(NSSCertificate *c, CERTCertTrust *trust)
     cc->trust = trust;
     /* Set the NSSCerticate's trust */
     nssTrust.serverAuth = get_stan_trust(trust->sslFlags);
+    nssTrust.clientAuth = get_stan_trust(trust->sslFlags);
     nssTrust.emailProtection = get_stan_trust(trust->emailFlags);
     nssTrust.codeSigning= get_stan_trust(trust->objectSigningFlags);
     return nssCertificate_SetCertTrust(c, &nssTrust);

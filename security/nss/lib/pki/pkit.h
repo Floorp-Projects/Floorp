@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.5 $ $Date: 2001/10/19 18:16:44 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.6 $ $Date: 2001/11/05 17:29:27 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -83,6 +83,7 @@ typedef struct nssDecodedCertStr nssDecodedCert;
 struct NSSTrustStr 
 {
     CK_TRUST serverAuth;
+    CK_TRUST clientAuth;
     CK_TRUST emailProtection;
     CK_TRUST codeSigning;
 };

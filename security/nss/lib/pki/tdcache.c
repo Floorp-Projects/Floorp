@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.6 $ $Date: 2001/10/19 18:16:45 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.7 $ $Date: 2001/11/05 17:29:27 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -222,9 +222,11 @@ add_cert_to_cache(NSSTrustDomain *td, NSSCertificate *cert)
 	 * and email hashes.
 	 */
 	/* nickname */
-	nickname = nssUTF8_Duplicate(cert->nickname, td->arena);
-	nssrv = nssHash_Add(td->cache->nickname, nickname, subjectList);
-	if (nssrv != PR_SUCCESS) goto loser;
+	if (cert->nickname) {
+	    nickname = nssUTF8_Duplicate(cert->nickname, td->arena);
+	    nssrv = nssHash_Add(td->cache->nickname, nickname, subjectList);
+	    if (nssrv != PR_SUCCESS) goto loser;
+	}
 	/* email */
 	if (cert->email) {
 	    subjects = (nssList *)nssHash_Lookup(td->cache->email, cert->email);
