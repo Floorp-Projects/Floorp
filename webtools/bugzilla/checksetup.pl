@@ -904,7 +904,7 @@ if (-e "data/params") {
     require "defparams.pl";
     use vars @::param_list;
     open(PARAMFILE, ">>old-params.txt") 
-      || die "$0: Can't open params.txt for writing: $!\n";
+      || die "$0: Can't open old-params.txt for writing: $!\n";
       
     foreach my $item (keys %::param) {
         if (!grep($_ eq $item, @::param_list) && $item ne "version") {
