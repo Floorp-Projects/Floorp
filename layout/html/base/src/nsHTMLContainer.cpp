@@ -25,6 +25,7 @@
 #include "nsStyleConsts.h"
 #include "nsCSSBlockFrame.h"
 #include "nsIPresContext.h"
+#include "nsIDeviceContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLAttributes.h"
@@ -589,34 +590,36 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       if (nsnull != parentContext) {
         parentFont = (const nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
       }
+      const nsFont& defaultFont = aPresContext->GetDefaultFont(); 
+      const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
 
       // face: string list
       GetAttribute(nsHTMLAtoms::face, value);
       if (value.GetUnit() == eHTMLUnit_String) {
-        nsAutoString familyList;
-        value.GetStringValue(familyList);
-        // XXX needs font support to determine usable fonts
-        // parse up the string & remove the quotes
-        // XXX only does first until we can tell what are installed fonts
-        nsAutoString family;
-        PRInt32 index = familyList.Find(PRUnichar(','));
-        if (-1 < index) {
-          familyList.Left(family, index);
-        }
-        else {
-          family.Append(familyList);
-        }
-        family.StripChars("\"");
-        family.StripWhitespace();
 
-        if (family.EqualsIgnoreCase("monospace")) {
-          font->mFont = font->mFixedFont;
+        nsIDeviceContext* dc = aPresContext->GetDeviceContext();
+        if (nsnull != dc) {
+          nsAutoString  familyList;
+
+          value.GetStringValue(familyList);
+          
+          font->mFont.name = familyList;
+          nsAutoString face;
+          if (NS_OK == dc->FirstExistingFont(font->mFont, face)) {
+            if (face.EqualsIgnoreCase("monospace")) {
+              font->mFont = font->mFixedFont;
+            }
+            else {
+              font->mFixedFont.name = familyList;
+            }
+          }
+          else {
+            font->mFont.name = defaultFont.name;
+            font->mFixedFont.name= defaultFixedFont.name;
+          }
+          font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
+          NS_RELEASE(dc);
         }
-        else {
-          font->mFont.name = family;
-          font->mFixedFont.name = family;
-        }
-        font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
       }
 
       // pointSize: int, enum
@@ -640,17 +643,14 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
           if ((value.GetUnit() == eHTMLUnit_Integer) || (value.GetUnit() == eHTMLUnit_Enumerated)) { 
             PRInt32 size = value.GetIntValue();
         
-            const nsFont& normal = aPresContext->GetDefaultFont(); 
-            const nsFont& normalFixed = aPresContext->GetDefaultFixedFont(); 
-
             if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
               size = 3 + size;  // XXX should be BASEFONT, not three
             }
             size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
             PRInt32 scaler = aPresContext->GetFontScaler();
             float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normal.size, scaleFactor);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normalFixed.size, scaleFactor);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size, scaleFactor);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFixedFont.size, scaleFactor);
           }
         }
       }
@@ -823,12 +823,12 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
 
       // set up the basefont (defaults to 3)
       nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
-      const nsFont& normal = aPresContext->GetDefaultFont(); 
-      const nsFont& normalFixed = aPresContext->GetDefaultFixedFont(); 
+      const nsFont& defaultFont = aPresContext->GetDefaultFont(); 
+      const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
       PRInt32 scaler = aPresContext->GetFontScaler();
       float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-      font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)normal.size, scaleFactor);
-      font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)normalFixed.size, scaleFactor);
+      font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFont.size, scaleFactor);
+      font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);
     }
   }
 }
