@@ -29,699 +29,355 @@ MATHML_OPERATOR(_rank,
                 _rspace)  = rightspace in em
 */
 
-#ifdef WANT_MATHML_OPERATOR_COUNT
-#define NS_MATHML_OPERATOR_COUNT 343
+#if defined(WANT_MATHML_OPERATOR_COUNT)
+  #define NS_MATHML_OPERATOR_COUNT 343
 #else
-#ifdef WANT_MATHML_OPERATOR_UNICHAR
-//Unicode(s),\0// group symbol form
-0x0028,0x0000, // 0 ( prefix
-0x0029,0x0000, // 0 ) postfix
-0x005B,0x0000, // 0 [ prefix
-0x005D,0x0000, // 0 ] postfix
-0x007B,0x0000, // 0 { prefix
-0x007D,0x0000, // 0 } postfix
-0x201D,0x0000, // 0 &CloseCurlyDoubleQuote; postfix
-0x2019,0x0000, // 0 &CloseCurlyQuote; postfix
-0x3008,0x0000, // 0 &LeftAngleBracket; prefix
-0xF603,0x0000, // 0 &LeftBracketingBar; prefix
-0x2308,0x0000, // 0 &LeftCeiling; prefix
-0x301A,0x0000, // 0 &LeftDoubleBracket; prefix
-0xF605,0x0000, // 0 &LeftDoubleBracketingBar; prefix
-0x230A,0x0000, // 0 &LeftFloor; prefix
-0x201C,0x0000, // 0 &OpenCurlyDoubleQuote; prefix
-0x2018,0x0000, // 0 &OpenCurlyQuote; prefix
-0x3009,0x0000, // 0 &RightAngleBracket; postfix
-0xF604,0x0000, // 0 &RightBracketingBar; postfix
-0x2309,0x0000, // 0 &RightCeiling; postfix
-0x301B,0x0000, // 0 &RightDoubleBracket; postfix
-0xF606,0x0000, // 0 &RightDoubleBracketingBar; postfix
-0x230B,0x0000, // 0 &RightFloor; postfix
-0xE850,0x0000, // 0 &LeftSkeleton; prefix
-0xE851,0x0000, // 0 &RightSkeleton; postfix
-0xE89C,0x0000, // 1 &InvisibleComma; infix
-0x002C,0x0000, // 2 , infix
-0xE859,0x0000, // 3 &HorizontalLine; infix
-0xE85A,0x0000, // 3 &VerticalLine; infix
-0x003B,0x0000, // 4 ; infix
-0x003B,0x0000, // 4 ; postfix
-0x003A,0x003D,0x0000, // 5 := infix
-0xE85B,0x0000, // 5 &Assign; infix
-0x2235,0x0000, // 6 &Because; infix
-0x2234,0x0000, // 6 &Therefore; infix
-0xE85C,0x0000, // 7 &VerticalSeparator; infix
-0x002F,0x002F,0x0000, // 8 // infix
-0x2237,0x0000, // 9 &Colon; infix
-0x0026,0x0000, // 10 &amp; prefix
-0x0026,0x0000, // 10 &amp; postfix
-0x002A,0x003D,0x0000, // 11 *= infix
-0x002D,0x003D,0x0000, // 11 -= infix
-0x002B,0x003D,0x0000, // 11 += infix
-0x002F,0x003D,0x0000, // 11 /= infix
-0x002D,0x003E,0x0000, // 12 -&gt; infix
-0x003A,0x0000, // 13 : infix
-0x002E,0x002E,0x0000, // 14 .. postfix
-0x002E,0x002E,0x002E,0x0000, // 14 ... postfix
-0x220B,0x0000, // 15 &SuchThat; infix
-0xE30F,0x0000, // 16 &DoubleLeftTee; infix
-0x22A8,0x0000, // 16 &DoubleRightTee; infix
-0x22A4,0x0000, // 16 &DownTee; infix
-0x22A3,0x0000, // 16 &LeftTee; infix
-0x22A2,0x0000, // 16 &RightTee; infix
-0x21D2,0x0000, // 17 &Implies; infix
-0xF524,0x0000, // 17 &RoundImplies; infix
-0x007C,0x0000, // 18 | infix
-0x007C,0x007C,0x0000, // 18 || infix
-0xE375,0x0000, // 18 &Or; infix
-0x0026,0x0026,0x0000, // 19 &amp;&amp; infix
-0xE374,0x0000, // 19 &And; infix
-0x0026,0x0000, // 20 &amp; infix
-0x0021,0x0000, // 21 ! prefix
-0xE3AC,0x0000, // 21 &Not; prefix
-0x2203,0x0000, // 22 &Exists; prefix
-0x2200,0x0000, // 22 &ForAll; prefix
-0x2204,0x0000, // 22 &NotExists; prefix
-0x2208,0x0000, // 23 &Element; infix
-0x2209,0x0000, // 23 &NotElement; infix
-0x220C,0x0000, // 23 &NotReverseElement; infix
-0xE604,0x0000, // 23 &NotSquareSubset; infix
-0x22E2,0x0000, // 23 &NotSquareSubsetEqual; infix
-0xE615,0x0000, // 23 &NotSquareSuperset; infix
-0x22E3,0x0000, // 23 &NotSquareSupersetEqual; infix
-0x2284,0x0000, // 23 &NotSubset; infix
-0x2288,0x0000, // 23 &NotSubsetEqual; infix
-0x2285,0x0000, // 23 &NotSuperset; infix
-0x2289,0x0000, // 23 &NotSupersetEqual; infix
-0x220B,0x0000, // 23 &ReverseElement; infix
-0x228F,0x0000, // 23 &SquareSubset; infix
-0x2291,0x0000, // 23 &SquareSubsetEqual; infix
-0x2290,0x0000, // 23 &SquareSuperset; infix
-0x2292,0x0000, // 23 &SquareSupersetEqual; infix
-0x22D0,0x0000, // 23 &Subset; infix
-0x2286,0x0000, // 23 &SubsetEqual; infix
-0x2283,0x0000, // 23 &Superset; infix
-0x2287,0x0000, // 23 &SupersetEqual; infix
-0x21D0,0x0000, // 24 &DoubleLeftArrow; infix
-0x21D4,0x0000, // 24 &DoubleLeftRightArrow; infix
-0x21D2,0x0000, // 24 &DoubleRightArrow; infix
-0xF50B,0x0000, // 24 &DownLeftRightVector; infix
-0xF50E,0x0000, // 24 &DownLeftTeeVector; infix
-0x21BD,0x0000, // 24 &DownLeftVector; infix
-0xF50C,0x0000, // 24 &DownLeftVectorBar; infix
-0xF50F,0x0000, // 24 &DownRightTeeVector; infix
-0x21C1,0x0000, // 24 &DownRightVector; infix
-0xF50D,0x0000, // 24 &DownRightVectorBar; infix
-0x2190,0x0000, // 24 &LeftArrow; infix
-0x21E4,0x0000, // 24 &LeftArrowBar; infix
-0x21C6,0x0000, // 24 &LeftArrowRightArrow; infix
-0x2194,0x0000, // 24 &LeftRightArrow; infix
-0xF505,0x0000, // 24 &LeftRightVector; infix
-0x21A4,0x0000, // 24 &LeftTeeArrow; infix
-0xF509,0x0000, // 24 &LeftTeeVector; infix
-0x21BC,0x0000, // 24 &LeftVector; infix
-0xF507,0x0000, // 24 &LeftVectorBar; infix
-0x2199,0x0000, // 24 &LowerLeftArrow; infix
-0x2198,0x0000, // 24 &LowerRightArrow; infix
-0x2192,0x0000, // 24 &RightArrow; infix
-0x21E5,0x0000, // 24 &RightArrowBar; infix
-0x21C4,0x0000, // 24 &RightArrowLeftArrow; infix
-0x21A6,0x0000, // 24 &RightTeeArrow; infix
-0xF50A,0x0000, // 24 &RightTeeVector; infix
-0x21C0,0x0000, // 24 &RightVector; infix
-0xF508,0x0000, // 24 &RightVectorBar; infix
-0xE233,0x0000, // 24 &ShortLeftArrow; infix
-0xE232,0x0000, // 24 &ShortRightArrow; infix
-0x2196,0x0000, // 24 &UpperLeftArrow; infix
-0x2197,0x0000, // 24 &UpperRightArrow; infix
-0x003D,0x0000, // 25 = infix
-0x003C,0x0000, // 25 &lt; infix
-0x003E,0x0000, // 25 &gt; infix
-0x0021,0x003D,0x0000, // 25 != infix
-0x003D,0x003D,0x0000, // 25 == infix
-0x003C,0x003D,0x0000, // 25 &lt;= infix
-0x003E,0x003D,0x0000, // 25 &gt;= infix
-0x2261,0x0000, // 25 &Congruent; infix
-0x224D,0x0000, // 25 &CupCap; infix
-0x2250,0x0000, // 25 &DotEqual; infix
-0x2225,0x0000, // 25 &DoubleVerticalBar; infix
-0xF431,0x0000, // 25 &Equal; infix
-0x2242,0x0000, // 25 &EqualTilde; infix
-0x21CC,0x0000, // 25 &Equilibrium; infix
-0x2265,0x0000, // 25 &GreaterEqual; infix
-0x22DB,0x0000, // 25 &GreaterEqualLess; infix
-0x2267,0x0000, // 25 &GreaterFullEqual; infix
-0xE2F7,0x0000, // 25 &GreaterGreater; infix
-0x2277,0x0000, // 25 &GreaterLess; infix
-0xE2F6,0x0000, // 25 &GreaterSlantEqual; infix
-0x2273,0x0000, // 25 &GreaterTilde; infix
-0x224E,0x0000, // 25 &HumpDownHump; infix
-0x224F,0x0000, // 25 &HumpEqual; infix
-0x22B2,0x0000, // 25 &LeftTriangle; infix
-0xF410,0x0000, // 25 &LeftTriangleBar; infix
-0x22B4,0x0000, // 25 &LeftTriangleEqual; infix
-0x2264,0x0000, // 25 &le; infix
-0x22DA,0x0000, // 25 &LessEqualGreater; infix
-0x2266,0x0000, // 25 &LessFullEqual; infix
-0x2276,0x0000, // 25 &LessGreater; infix
-0xE2FB,0x0000, // 25 &LessLess; infix
-0xE2FA,0x0000, // 25 &LessSlantEqual; infix
-0x2272,0x0000, // 25 &LessTilde; infix
-0x226B,0x0000, // 25 &NestedGreaterGreater; infix
-0x226A,0x0000, // 25 &NestedLessLess; infix
-0x2262,0x0000, // 25 &NotCongruent; infix
-0x226D,0x0000, // 25 &NotCupCap; infix
-0x2226,0x0000, // 25 &NotDoubleVerticalBar; infix
-0x2260,0x0000, // 25 &NotEqual; infix
-0xE84E,0x0000, // 25 &NotEqualTilde; infix
-0x226F,0x0000, // 25 &NotGreater; infix
-0xE2A6,0x0000, // 25 &NotGreaterEqual; infix
-0x2270,0x0000, // 25 &NotGreaterFullEqual; infix
-0xE2CC,0x0000, // 25 &NotGreaterGreater; infix
-0x2279,0x0000, // 25 &NotGreaterLess; infix
-0x2271,0x0000, // 25 &NotGreaterSlantEqual; infix
-0x2275,0x0000, // 25 &NotGreaterTilde; infix
-0xE616,0x0000, // 25 &NotHumpDownHump; infix
-0xE84D,0x0000, // 25 &NotHumpEqual; infix
-0x22EA,0x0000, // 25 &NotLeftTriangle; infix
-0xF412,0x0000, // 25 &NotLeftTriangleBar; infix
-0x22EC,0x0000, // 25 &NotLeftTriangleEqual; infix
-0x226E,0x0000, // 25 &NotLess; infix
-0xE2A7,0x0000, // 25 &NotLessEqual; infix
-0x2278,0x0000, // 25 &NotLessGreater; infix
-0xE2CB,0x0000, // 25 &NotLessLess; infix
-0x2270,0x0000, // 25 &NotLessSlantEqual; infix
-0x2274,0x0000, // 25 &NotLessTilde; infix
-0xF428,0x0000, // 25 &NotNestedGreaterGreater; infix
-0xF423,0x0000, // 25 &NotNestedLessLess; infix
-0x2280,0x0000, // 25 &NotPrecedes; infix
-0xE5DC,0x0000, // 25 &NotPrecedesEqual; infix
-0x22E0,0x0000, // 25 &NotPrecedesSlantEqual; infix
-0x22EB,0x0000, // 25 &NotRightTriangle; infix
-0xF413,0x0000, // 25 &NotRightTriangleBar; infix
-0x22ED,0x0000, // 25 &NotRightTriangleEqual; infix
-0x2281,0x0000, // 25 &NotSucceeds; infix
-0xE5F1,0x0000, // 25 &NotSucceedsEqual; infix
-0x22E1,0x0000, // 25 &NotSucceedsSlantEqual; infix
-0xE837,0x0000, // 25 &NotSucceedsTilde; infix
-0x2241,0x0000, // 25 &NotTilde; infix
-0x2244,0x0000, // 25 &NotTildeEqual; infix
-0x2247,0x0000, // 25 &NotTildeFullEqual; infix
-0x2249,0x0000, // 25 &NotTildeTilde; infix
-0x2224,0x0000, // 25 &NotVerticalBar; infix
-0x227A,0x0000, // 25 &Precedes; infix
-0xE2FE,0x0000, // 25 &PrecedesEqual; infix
-0x227C,0x0000, // 25 &PrecedesSlantEqual; infix
-0x227E,0x0000, // 25 &PrecedesTilde; infix
-0x2237,0x0000, // 25 &Proportion; infix
-0x221D,0x0000, // 25 &Proportional; infix
-0x21CB,0x0000, // 25 &ReverseEquilibrium; infix
-0x22B3,0x0000, // 25 &RightTriangle; infix
-0xF411,0x0000, // 25 &RightTriangleBar; infix
-0x22B5,0x0000, // 25 &RightTriangleEqual; infix
-0x227B,0x0000, // 25 &Succeeds; infix
-0x227D,0x0000, // 25 &SucceedsEqual; infix
-0x227D,0x0000, // 25 &SucceedsSlantEqual; infix
-0x227F,0x0000, // 25 &SucceedsTilde; infix
-0x223C,0x0000, // 25 &Tilde; infix
-0x2243,0x0000, // 25 &TildeEqual; infix
-0x2245,0x0000, // 25 &TildeFullEqual; infix
-0x2248,0x0000, // 25 &TildeTilde; infix
-0x22A5,0x0000, // 25 &UpTee; infix
-0x2223,0x0000, // 25 &VerticalBar; infix
-0x2294,0x0000, // 26 &SquareUnion; infix
-0x22C3,0x0000, // 26 &Union; infix
-0x228E,0x0000, // 26 &UnionPlus; infix
-0x002D,0x0000, // 27 - infix
-0x002B,0x0000, // 27 + infix
-0x22C2,0x0000, // 27 &Intersection; infix
-0x2213,0x0000, // 27 &MinusPlus; infix
-0x00B1,0x0000, // 27 &PlusMinus; infix
-0x2293,0x0000, // 27 &SquareIntersection; infix
-0x22C1,0x0000, // 28 &Vee; prefix
-0x2296,0x0000, // 28 &CircleMinus; prefix
-0x2295,0x0000, // 28 &CirclePlus; prefix
-0x2211,0x0000, // 28 &Sum; prefix
-0x22C3,0x0000, // 28 &Union; prefix
-0x228E,0x0000, // 28 &UnionPlus; prefix
-0x006C,0x0069,0x006D,0x0000, // 28 lim prefix
-0x006D,0x0061,0x0078,0x0000, // 28 max prefix
-0x006D,0x0069,0x006E,0x0000, // 28 min prefix
-0x2296,0x0000, // 29 &CircleMinus; infix
-0x2295,0x0000, // 29 &CirclePlus; infix
-0x2232,0x0000, // 30 &ClockwiseContourIntegral; prefix
-0x222E,0x0000, // 30 &ContourIntegral; prefix
-0x2233,0x0000, // 30 &CounterClockwiseContourIntegral; prefix
-0x222F,0x0000, // 30 &DoubleContourIntegral; prefix
-0x222B,0x0000, // 30 &Integral; prefix
-0x22D3,0x0000, // 31 &Cup; infix
-0x22D2,0x0000, // 32 &Cap; infix
-0x2240,0x0000, // 33 &VerticalTilde; infix
-0x22C0,0x0000, // 34 &Wedge; prefix
-0x2297,0x0000, // 34 &CircleTimes; prefix
-0x2210,0x0000, // 34 &Coproduct; prefix
-0x220F,0x0000, // 34 &Product; prefix
-0x22C2,0x0000, // 34 &Intersection; prefix
-0x2210,0x0000, // 35 &Coproduct; infix
-0x22C6,0x0000, // 36 &Star; infix
-0x2299,0x0000, // 37 &CircleDot; prefix
-0x002A,0x0000, // 38 * infix
-0xE89E,0x0000, // 38 &InvisibleTimes; infix
-0x00B7,0x0000, // 39 &CenterDot; infix
-0x2297,0x0000, // 40 &CircleTimes; infix
-0x22C1,0x0000, // 41 &Vee; infix
-0x22C0,0x0000, // 42 &Wedge; infix
-0x22C4,0x0000, // 43 &Diamond; infix
-0x2216,0x0000, // 44 &Backslash; infix
-0x002F,0x0000, // 45 / infix
-0x002D,0x0000, // 46 - prefix
-0x002B,0x0000, // 46 + prefix
-0x2213,0x0000, // 46 &MinusPlus; prefix
-0x00B1,0x0000, // 46 &PlusMinus; prefix
-0x002E,0x0000, // 47 . infix
-0xE619,0x0000, // 48 &Cross; infix
-0x002A,0x002A,0x0000, // 49 ** infix
-0x2299,0x0000, // 50 &CircleDot; infix
-0x2218,0x0000, // 51 &SmallCircle; infix
-0x25A1,0x0000, // 52 &Square; prefix
-0x2207,0x0000, // 53 &Del; prefix
-0x2202,0x0000, // 53 &PartialD; prefix
-0xF74B,0x0000, // 54 &CapitalDifferentialD; prefix
-0xF74C,0x0000, // 54 &DifferentialD; prefix
-0x221A,0x0000, // 55 &Sqrt; prefix
-0x21D3,0x0000, // 56 &DoubleDownArrow; infix
-0xE200,0x0000, // 56 &DoubleLongLeftArrow; infix
-0xE202,0x0000, // 56 &DoubleLongLeftRightArrow; infix
-0xE204,0x0000, // 56 &DoubleLongRightArrow; infix
-0x21D1,0x0000, // 56 &DoubleUpArrow; infix
-0x21D5,0x0000, // 56 &DoubleUpDownArrow; infix
-0x2193,0x0000, // 56 &DownArrow; infix
-0xF504,0x0000, // 56 &DownArrowBar; infix
-0xE216,0x0000, // 56 &DownArrowUpArrow; infix
-0x21A7,0x0000, // 56 &DownTeeArrow; infix
-0xF519,0x0000, // 56 &LeftDownTeeVector; infix
-0x21C3,0x0000, // 56 &LeftDownVector; infix
-0xF517,0x0000, // 56 &LeftDownVectorBar; infix
-0xF515,0x0000, // 56 &LeftUpDownVector; infix
-0xF518,0x0000, // 56 &LeftUpTeeVector; infix
-0x21BF,0x0000, // 56 &LeftUpVector; infix
-0xF516,0x0000, // 56 &LeftUpVectorBar; infix
-0xE201,0x0000, // 56 &LongLeftArrow; infix
-0xE203,0x0000, // 56 &LongLeftRightArrow; infix
-0xE205,0x0000, // 56 &LongRightArrow; infix
-0xE217,0x0000, // 56 &ReverseUpEquilibrium; infix
-0xF514,0x0000, // 56 &RightDownTeeVector; infix
-0x21C2,0x0000, // 56 &RightDownVector; infix
-0xF512,0x0000, // 56 &RightDownVectorBar; infix
-0xF510,0x0000, // 56 &RightUpDownVector; infix
-0xF513,0x0000, // 56 &RightUpTeeVector; infix
-0x21BE,0x0000, // 56 &RightUpVector; infix
-0xF511,0x0000, // 56 &RightUpVectorBar; infix
-0xE87F,0x0000, // 56 &ShortDownArrow; infix
-0xE880,0x0000, // 56 &ShortUpArrow; infix
-0x2191,0x0000, // 56 &UpArrow; infix
-0xF503,0x0000, // 56 &UpArrowBar; infix
-0x21C5,0x0000, // 56 &UpArrowDownArrow; infix
-0x2195,0x0000, // 56 &UpDownArrow; infix
-0xE218,0x0000, // 56 &UpEquilibrium; infix
-0x21A5,0x0000, // 56 &UpTeeArrow; infix
-0x005E,0x0000, // 57 ^ infix
-0x003C,0x003E,0x0000, // 58 &lt;&gt; infix
-0x0027,0x0000, // 59 ' postfix
-0x0021,0x0000, // 60 ! postfix
-0x0021,0x0021,0x0000, // 60 !! postfix
-0x007E,0x0000, // 61 ~ infix
-0x0040,0x0000, // 62 @ infix
-0x002D,0x002D,0x0000, // 63 -- postfix
-0x002D,0x002D,0x0000, // 63 -- prefix
-0x002B,0x002B,0x0000, // 63 ++ postfix
-0x002B,0x002B,0x0000, // 63 ++ prefix
-0xE8A0,0x0000, // 64 &ApplyFunction; infix
-0x003F,0x0000, // 65 ? infix
-0x005F,0x0000, // 66 _ infix
-0x02D8,0x0000, // 67 &Breve; postfix
-0x00B8,0x0000, // 67 &Cedilla; postfix
-0x0060,0x0000, // 67 &DiacriticalGrave; postfix
-0x02D9,0x0000, // 67 &DiacriticalDot; postfix
-0x02DD,0x0000, // 67 &DiacriticalDoubleAcute; postfix
-0x00B4,0x0000, // 67 &DiacriticalAcute; postfix
-0x02DC,0x0000, // 67 &DiacriticalTilde; postfix
-0x00A8,0x0000, // 67 &DoubleDot; postfix
-0x0311,0x0000, // 67 &DownBreve; postfix
-0x02C7,0x0000, // 67 &Hacek; postfix
-0x0302,0x0000, // 67 &Hat; postfix
-0x00AF,0x0000, // 67 &OverBar; postfix
-0xF612,0x0000, // 67 &OverBrace; postfix
-0xF614,0x0000, // 67 &OverBracket; postfix
-0xF610,0x0000, // 67 &OverParenthesis; postfix
-0x20DB,0x0000, // 67 &TripleDot; postfix
-0x0332,0x0000, // 67 &UnderBar; postfix
-0xF613,0x0000, // 67 &UnderBrace; postfix
-0xF615,0x0000, // 67 &UnderBracket; postfix
-0xF611,0x0000, // 67 &UnderParenthesis; postfix
+  #define _ , // dirty trick to make the macro handle a variable number of arguments
 
-#else
-MATHML_OPERATOR(0,"(",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  0028 prefix
-MATHML_OPERATOR(1,")",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  0029 postfix
-MATHML_OPERATOR(2,"[",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  005B prefix
-MATHML_OPERATOR(3,"]",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  005D postfix
-MATHML_OPERATOR(4,"{",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  007B prefix
-MATHML_OPERATOR(5,"}",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  007D postfix
-MATHML_OPERATOR(6,"&CloseCurlyDoubleQuote;",(3|(1<<3)),0.0f,0.0f) //  201D postfix
-MATHML_OPERATOR(7,"&CloseCurlyQuote;",(3|(1<<3)),0.0f,0.0f) //  2019 postfix
-MATHML_OPERATOR(8,"&LeftAngleBracket;",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  3008 prefix
-MATHML_OPERATOR(9,"&LeftBracketingBar;",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  F603 prefix
-MATHML_OPERATOR(10,"&LeftCeiling;",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  2308 prefix
-MATHML_OPERATOR(11,"&LeftDoubleBracket;",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  301A prefix
-MATHML_OPERATOR(12,"&LeftDoubleBracketingBar;",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  F605 prefix
-MATHML_OPERATOR(13,"&LeftFloor;",(2|(1<<2)|(1<<3)),0.0f,0.0f) //  230A prefix
-MATHML_OPERATOR(14,"&OpenCurlyDoubleQuote;",(2|(1<<3)),0.0f,0.0f) //  201C prefix
-MATHML_OPERATOR(15,"&OpenCurlyQuote;",(2|(1<<3)),0.0f,0.0f) //  2018 prefix
-MATHML_OPERATOR(16,"&RightAngleBracket;",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  3009 postfix
-MATHML_OPERATOR(17,"&RightBracketingBar;",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  F604 postfix
-MATHML_OPERATOR(18,"&RightCeiling;",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  2309 postfix
-MATHML_OPERATOR(19,"&RightDoubleBracket;",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  301B postfix
-MATHML_OPERATOR(20,"&RightDoubleBracketingBar;",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  F606 postfix
-MATHML_OPERATOR(21,"&RightFloor;",(3|(1<<2)|(1<<3)),0.0f,0.0f) //  230B postfix
-MATHML_OPERATOR(22,"&LeftSkeleton;",(2|(1<<3)),0.0f,0.0f) //  E850 prefix
-MATHML_OPERATOR(23,"&RightSkeleton;",(3|(1<<3)),0.0f,0.0f) //  E851 postfix
-MATHML_OPERATOR(24,"&InvisibleComma;",(1|(1<<6)),0.0f,0.0f) //  E89C infix
-MATHML_OPERATOR(25,",",(1|(1<<6)),0.0f,.33333f) //  002C infix
-MATHML_OPERATOR(26,"&HorizontalLine;",(1|(1<<2)),0.0f,0.0f) //  E859 infix
-MATHML_OPERATOR(27,"&VerticalLine;",(1|(1<<2)),0.0f,0.0f) //  E85A infix
-MATHML_OPERATOR(28,";",(1|(1<<6)),0.0f,.27777f) //  003B infix
-MATHML_OPERATOR(29,";",(3|(1<<6)),0.0f,0.0f) //  003B postfix
-MATHML_OPERATOR(30,":=",1,.27777f,.27777f) //  003A 003D infix
-MATHML_OPERATOR(31,"&Assign;",1,.27777f,.27777f) //  E85B infix
-MATHML_OPERATOR(32,"&Because;",1,.27777f,.27777f) //  2235 infix
-MATHML_OPERATOR(33,"&Therefore;",1,.27777f,.27777f) //  2234 infix
-MATHML_OPERATOR(34,"&VerticalSeparator;",(1|(1<<2)),.27777f,.27777f) //  E85C infix
-MATHML_OPERATOR(35,"//",1,.27777f,.27777f) //  002F 002F infix
-MATHML_OPERATOR(36,"&Colon;",1,.27777f,.27777f) //  2237 infix
-MATHML_OPERATOR(37,"&amp;",2,0.0f,.27777f) //  0026 prefix
-MATHML_OPERATOR(38,"&amp;",3,.27777f,0.0f) //  0026 postfix
-MATHML_OPERATOR(39,"*=",1,.27777f,.27777f) //  002A 003D infix
-MATHML_OPERATOR(40,"-=",1,.27777f,.27777f) //  002D 003D infix
-MATHML_OPERATOR(41,"+=",1,.27777f,.27777f) //  002B 003D infix
-MATHML_OPERATOR(42,"/=",1,.27777f,.27777f) //  002F 003D infix
-MATHML_OPERATOR(43,"-&gt;",1,.27777f,.27777f) //  002D 003E infix
-MATHML_OPERATOR(44,":",1,.27777f,.27777f) //  003A infix
-MATHML_OPERATOR(45,"..",3,.22222f,0.0f) //  002E 002E postfix
-MATHML_OPERATOR(46,"...",3,.22222f,0.0f) //  002E 002E 002E postfix
-MATHML_OPERATOR(47,"&SuchThat;",1,.27777f,.27777f) //  220B infix
-MATHML_OPERATOR(48,"&DoubleLeftTee;",1,.27777f,.27777f) //  E30F infix
-MATHML_OPERATOR(49,"&DoubleRightTee;",1,.27777f,.27777f) //  22A8 infix
-MATHML_OPERATOR(50,"&DownTee;",1,.27777f,.27777f) //  22A4 infix
-MATHML_OPERATOR(51,"&LeftTee;",1,.27777f,.27777f) //  22A3 infix
-MATHML_OPERATOR(52,"&RightTee;",1,.27777f,.27777f) //  22A2 infix
-MATHML_OPERATOR(53,"&Implies;",(1|(1<<2)),.27777f,.27777f) //  21D2 infix
-MATHML_OPERATOR(54,"&RoundImplies;",1,.27777f,.27777f) //  F524 infix
-MATHML_OPERATOR(55,"|",(1|(1<<2)),.27777f,.27777f) //  007C infix
-MATHML_OPERATOR(56,"||",1,.22222f,.22222f) //  007C 007C infix
-MATHML_OPERATOR(57,"&Or;",(1|(1<<2)),.22222f,.22222f) //  E375 infix
-MATHML_OPERATOR(58,"&amp;&amp;",1,.27777f,.27777f) //  0026 0026 infix
-MATHML_OPERATOR(59,"&And;",(1|(1<<2)),.22222f,.22222f) //  E374 infix
-MATHML_OPERATOR(60,"&amp;",1,.27777f,.27777f) //  0026 infix
-MATHML_OPERATOR(61,"!",2,0.0f,.27777f) //  0021 prefix
-MATHML_OPERATOR(62,"&Not;",2,0.0f,.27777f) //  E3AC prefix
-MATHML_OPERATOR(63,"&Exists;",2,0.0f,.27777f) //  2203 prefix
-MATHML_OPERATOR(64,"&ForAll;",2,0.0f,.27777f) //  2200 prefix
-MATHML_OPERATOR(65,"&NotExists;",2,0.0f,.27777f) //  2204 prefix
-MATHML_OPERATOR(66,"&Element;",1,.27777f,.27777f) //  2208 infix
-MATHML_OPERATOR(67,"&NotElement;",1,.27777f,.27777f) //  2209 infix
-MATHML_OPERATOR(68,"&NotReverseElement;",1,.27777f,.27777f) //  220C infix
-MATHML_OPERATOR(69,"&NotSquareSubset;",1,.27777f,.27777f) //  E604 infix
-MATHML_OPERATOR(70,"&NotSquareSubsetEqual;",1,.27777f,.27777f) //  22E2 infix
-MATHML_OPERATOR(71,"&NotSquareSuperset;",1,.27777f,.27777f) //  E615 infix
-MATHML_OPERATOR(72,"&NotSquareSupersetEqual;",1,.27777f,.27777f) //  22E3 infix
-MATHML_OPERATOR(73,"&NotSubset;",1,.27777f,.27777f) //  2284 infix
-MATHML_OPERATOR(74,"&NotSubsetEqual;",1,.27777f,.27777f) //  2288 infix
-MATHML_OPERATOR(75,"&NotSuperset;",1,.27777f,.27777f) //  2285 infix
-MATHML_OPERATOR(76,"&NotSupersetEqual;",1,.27777f,.27777f) //  2289 infix
-MATHML_OPERATOR(77,"&ReverseElement;",1,.27777f,.27777f) //  220B infix
-MATHML_OPERATOR(78,"&SquareSubset;",1,.27777f,.27777f) //  228F infix
-MATHML_OPERATOR(79,"&SquareSubsetEqual;",1,.27777f,.27777f) //  2291 infix
-MATHML_OPERATOR(80,"&SquareSuperset;",1,.27777f,.27777f) //  2290 infix
-MATHML_OPERATOR(81,"&SquareSupersetEqual;",1,.27777f,.27777f) //  2292 infix
-MATHML_OPERATOR(82,"&Subset;",1,.27777f,.27777f) //  22D0 infix
-MATHML_OPERATOR(83,"&SubsetEqual;",1,.27777f,.27777f) //  2286 infix
-MATHML_OPERATOR(84,"&Superset;",1,.27777f,.27777f) //  2283 infix
-MATHML_OPERATOR(85,"&SupersetEqual;",1,.27777f,.27777f) //  2287 infix
-MATHML_OPERATOR(86,"&DoubleLeftArrow;",(1|(1<<2)),.27777f,.27777f) //  21D0 infix
-MATHML_OPERATOR(87,"&DoubleLeftRightArrow;",(1|(1<<2)),.27777f,.27777f) //  21D4 infix
-MATHML_OPERATOR(88,"&DoubleRightArrow;",(1|(1<<2)),.27777f,.27777f) //  21D2 infix
-MATHML_OPERATOR(89,"&DownLeftRightVector;",(1|(1<<2)),.27777f,.27777f) //  F50B infix
-MATHML_OPERATOR(90,"&DownLeftTeeVector;",(1|(1<<2)),.27777f,.27777f) //  F50E infix
-MATHML_OPERATOR(91,"&DownLeftVector;",(1|(1<<2)),.27777f,.27777f) //  21BD infix
-MATHML_OPERATOR(92,"&DownLeftVectorBar;",(1|(1<<2)),.27777f,.27777f) //  F50C infix
-MATHML_OPERATOR(93,"&DownRightTeeVector;",(1|(1<<2)),.27777f,.27777f) //  F50F infix
-MATHML_OPERATOR(94,"&DownRightVector;",(1|(1<<2)),.27777f,.27777f) //  21C1 infix
-MATHML_OPERATOR(95,"&DownRightVectorBar;",(1|(1<<2)),.27777f,.27777f) //  F50D infix
-MATHML_OPERATOR(96,"&LeftArrow;",(1|(1<<2)),.27777f,.27777f) //  2190 infix
-MATHML_OPERATOR(97,"&LeftArrowBar;",(1|(1<<2)),.27777f,.27777f) //  21E4 infix
-MATHML_OPERATOR(98,"&LeftArrowRightArrow;",(1|(1<<2)),.27777f,.27777f) //  21C6 infix
-MATHML_OPERATOR(99,"&LeftRightArrow;",(1|(1<<2)),.27777f,.27777f) //  2194 infix
-MATHML_OPERATOR(100,"&LeftRightVector;",(1|(1<<2)),.27777f,.27777f) //  F505 infix
-MATHML_OPERATOR(101,"&LeftTeeArrow;",(1|(1<<2)),.27777f,.27777f) //  21A4 infix
-MATHML_OPERATOR(102,"&LeftTeeVector;",(1|(1<<2)),.27777f,.27777f) //  F509 infix
-MATHML_OPERATOR(103,"&LeftVector;",(1|(1<<2)),.27777f,.27777f) //  21BC infix
-MATHML_OPERATOR(104,"&LeftVectorBar;",(1|(1<<2)),.27777f,.27777f) //  F507 infix
-MATHML_OPERATOR(105,"&LowerLeftArrow;",(1|(1<<2)),.27777f,.27777f) //  2199 infix
-MATHML_OPERATOR(106,"&LowerRightArrow;",(1|(1<<2)),.27777f,.27777f) //  2198 infix
-MATHML_OPERATOR(107,"&RightArrow;",(1|(1<<2)),.27777f,.27777f) //  2192 infix
-MATHML_OPERATOR(108,"&RightArrowBar;",(1|(1<<2)),.27777f,.27777f) //  21E5 infix
-MATHML_OPERATOR(109,"&RightArrowLeftArrow;",(1|(1<<2)),.27777f,.27777f) //  21C4 infix
-MATHML_OPERATOR(110,"&RightTeeArrow;",(1|(1<<2)),.27777f,.27777f) //  21A6 infix
-MATHML_OPERATOR(111,"&RightTeeVector;",(1|(1<<2)),.27777f,.27777f) //  F50A infix
-MATHML_OPERATOR(112,"&RightVector;",(1|(1<<2)),.27777f,.27777f) //  21C0 infix
-MATHML_OPERATOR(113,"&RightVectorBar;",(1|(1<<2)),.27777f,.27777f) //  F508 infix
-MATHML_OPERATOR(114,"&ShortLeftArrow;",1,.27777f,.27777f) //  E233 infix
-MATHML_OPERATOR(115,"&ShortRightArrow;",1,.27777f,.27777f) //  E232 infix
-MATHML_OPERATOR(116,"&UpperLeftArrow;",(1|(1<<2)),.27777f,.27777f) //  2196 infix
-MATHML_OPERATOR(117,"&UpperRightArrow;",(1|(1<<2)),.27777f,.27777f) //  2197 infix
-MATHML_OPERATOR(118,"=",1,.27777f,.27777f) //  003D infix
-MATHML_OPERATOR(119,"&lt;",1,.27777f,.27777f) //  003C infix
-MATHML_OPERATOR(120,"&gt;",1,.27777f,.27777f) //  003E infix
-MATHML_OPERATOR(121,"!=",1,.27777f,.27777f) //  0021 003D infix
-MATHML_OPERATOR(122,"==",1,.27777f,.27777f) //  003D 003D infix
-MATHML_OPERATOR(123,"&lt;=",1,.27777f,.27777f) //  003C 003D infix
-MATHML_OPERATOR(124,"&gt;=",1,.27777f,.27777f) //  003E 003D infix
-MATHML_OPERATOR(125,"&Congruent;",1,.27777f,.27777f) //  2261 infix
-MATHML_OPERATOR(126,"&CupCap;",1,.27777f,.27777f) //  224D infix
-MATHML_OPERATOR(127,"&DotEqual;",1,.27777f,.27777f) //  2250 infix
-MATHML_OPERATOR(128,"&DoubleVerticalBar;",1,.27777f,.27777f) //  2225 infix
-MATHML_OPERATOR(129,"&Equal;",1,.27777f,.27777f) //  F431 infix
-MATHML_OPERATOR(130,"&EqualTilde;",1,.27777f,.27777f) //  2242 infix
-MATHML_OPERATOR(131,"&Equilibrium;",(1|(1<<2)),.27777f,.27777f) //  21CC infix
-MATHML_OPERATOR(132,"&GreaterEqual;",1,.27777f,.27777f) //  2265 infix
-MATHML_OPERATOR(133,"&GreaterEqualLess;",1,.27777f,.27777f) //  22DB infix
-MATHML_OPERATOR(134,"&GreaterFullEqual;",1,.27777f,.27777f) //  2267 infix
-MATHML_OPERATOR(135,"&GreaterGreater;",1,.27777f,.27777f) //  E2F7 infix
-MATHML_OPERATOR(136,"&GreaterLess;",1,.27777f,.27777f) //  2277 infix
-MATHML_OPERATOR(137,"&GreaterSlantEqual;",1,.27777f,.27777f) //  E2F6 infix
-MATHML_OPERATOR(138,"&GreaterTilde;",1,.27777f,.27777f) //  2273 infix
-MATHML_OPERATOR(139,"&HumpDownHump;",1,.27777f,.27777f) //  224E infix
-MATHML_OPERATOR(140,"&HumpEqual;",1,.27777f,.27777f) //  224F infix
-MATHML_OPERATOR(141,"&LeftTriangle;",1,.27777f,.27777f) //  22B2 infix
-MATHML_OPERATOR(142,"&LeftTriangleBar;",1,.27777f,.27777f) //  F410 infix
-MATHML_OPERATOR(143,"&LeftTriangleEqual;",1,.27777f,.27777f) //  22B4 infix
-MATHML_OPERATOR(144,"&le;",1,.27777f,.27777f) //  2264 infix
-MATHML_OPERATOR(145,"&LessEqualGreater;",1,.27777f,.27777f) //  22DA infix
-MATHML_OPERATOR(146,"&LessFullEqual;",1,.27777f,.27777f) //  2266 infix
-MATHML_OPERATOR(147,"&LessGreater;",1,.27777f,.27777f) //  2276 infix
-MATHML_OPERATOR(148,"&LessLess;",1,.27777f,.27777f) //  E2FB infix
-MATHML_OPERATOR(149,"&LessSlantEqual;",1,.27777f,.27777f) //  E2FA infix
-MATHML_OPERATOR(150,"&LessTilde;",1,.27777f,.27777f) //  2272 infix
-MATHML_OPERATOR(151,"&NestedGreaterGreater;",1,.27777f,.27777f) //  226B infix
-MATHML_OPERATOR(152,"&NestedLessLess;",1,.27777f,.27777f) //  226A infix
-MATHML_OPERATOR(153,"&NotCongruent;",1,.27777f,.27777f) //  2262 infix
-MATHML_OPERATOR(154,"&NotCupCap;",1,.27777f,.27777f) //  226D infix
-MATHML_OPERATOR(155,"&NotDoubleVerticalBar;",1,.27777f,.27777f) //  2226 infix
-MATHML_OPERATOR(156,"&NotEqual;",1,.27777f,.27777f) //  2260 infix
-MATHML_OPERATOR(157,"&NotEqualTilde;",1,.27777f,.27777f) //  E84E infix
-MATHML_OPERATOR(158,"&NotGreater;",1,.27777f,.27777f) //  226F infix
-MATHML_OPERATOR(159,"&NotGreaterEqual;",1,.27777f,.27777f) //  E2A6 infix
-MATHML_OPERATOR(160,"&NotGreaterFullEqual;",1,.27777f,.27777f) //  2270 infix
-MATHML_OPERATOR(161,"&NotGreaterGreater;",1,.27777f,.27777f) //  E2CC infix
-MATHML_OPERATOR(162,"&NotGreaterLess;",1,.27777f,.27777f) //  2279 infix
-MATHML_OPERATOR(163,"&NotGreaterSlantEqual;",1,.27777f,.27777f) //  2271 infix
-MATHML_OPERATOR(164,"&NotGreaterTilde;",1,.27777f,.27777f) //  2275 infix
-MATHML_OPERATOR(165,"&NotHumpDownHump;",1,.27777f,.27777f) //  E616 infix
-MATHML_OPERATOR(166,"&NotHumpEqual;",1,.27777f,.27777f) //  E84D infix
-MATHML_OPERATOR(167,"&NotLeftTriangle;",1,.27777f,.27777f) //  22EA infix
-MATHML_OPERATOR(168,"&NotLeftTriangleBar;",1,.27777f,.27777f) //  F412 infix
-MATHML_OPERATOR(169,"&NotLeftTriangleEqual;",1,.27777f,.27777f) //  22EC infix
-MATHML_OPERATOR(170,"&NotLess;",1,.27777f,.27777f) //  226E infix
-MATHML_OPERATOR(171,"&NotLessEqual;",1,.27777f,.27777f) //  E2A7 infix
-MATHML_OPERATOR(172,"&NotLessGreater;",1,.27777f,.27777f) //  2278 infix
-MATHML_OPERATOR(173,"&NotLessLess;",1,.27777f,.27777f) //  E2CB infix
-MATHML_OPERATOR(174,"&NotLessSlantEqual;",1,.27777f,.27777f) //  2270 infix
-MATHML_OPERATOR(175,"&NotLessTilde;",1,.27777f,.27777f) //  2274 infix
-MATHML_OPERATOR(176,"&NotNestedGreaterGreater;",1,.27777f,.27777f) //  F428 infix
-MATHML_OPERATOR(177,"&NotNestedLessLess;",1,.27777f,.27777f) //  F423 infix
-MATHML_OPERATOR(178,"&NotPrecedes;",1,.27777f,.27777f) //  2280 infix
-MATHML_OPERATOR(179,"&NotPrecedesEqual;",1,.27777f,.27777f) //  E5DC infix
-MATHML_OPERATOR(180,"&NotPrecedesSlantEqual;",1,.27777f,.27777f) //  22E0 infix
-MATHML_OPERATOR(181,"&NotRightTriangle;",1,.27777f,.27777f) //  22EB infix
-MATHML_OPERATOR(182,"&NotRightTriangleBar;",1,.27777f,.27777f) //  F413 infix
-MATHML_OPERATOR(183,"&NotRightTriangleEqual;",1,.27777f,.27777f) //  22ED infix
-MATHML_OPERATOR(184,"&NotSucceeds;",1,.27777f,.27777f) //  2281 infix
-MATHML_OPERATOR(185,"&NotSucceedsEqual;",1,.27777f,.27777f) //  E5F1 infix
-MATHML_OPERATOR(186,"&NotSucceedsSlantEqual;",1,.27777f,.27777f) //  22E1 infix
-MATHML_OPERATOR(187,"&NotSucceedsTilde;",1,.27777f,.27777f) //  E837 infix
-MATHML_OPERATOR(188,"&NotTilde;",1,.27777f,.27777f) //  2241 infix
-MATHML_OPERATOR(189,"&NotTildeEqual;",1,.27777f,.27777f) //  2244 infix
-MATHML_OPERATOR(190,"&NotTildeFullEqual;",1,.27777f,.27777f) //  2247 infix
-MATHML_OPERATOR(191,"&NotTildeTilde;",1,.27777f,.27777f) //  2249 infix
-MATHML_OPERATOR(192,"&NotVerticalBar;",1,.27777f,.27777f) //  2224 infix
-MATHML_OPERATOR(193,"&Precedes;",1,.27777f,.27777f) //  227A infix
-MATHML_OPERATOR(194,"&PrecedesEqual;",1,.27777f,.27777f) //  E2FE infix
-MATHML_OPERATOR(195,"&PrecedesSlantEqual;",1,.27777f,.27777f) //  227C infix
-MATHML_OPERATOR(196,"&PrecedesTilde;",1,.27777f,.27777f) //  227E infix
-MATHML_OPERATOR(197,"&Proportion;",1,.27777f,.27777f) //  2237 infix
-MATHML_OPERATOR(198,"&Proportional;",1,.27777f,.27777f) //  221D infix
-MATHML_OPERATOR(199,"&ReverseEquilibrium;",(1|(1<<2)),.27777f,.27777f) //  21CB infix
-MATHML_OPERATOR(200,"&RightTriangle;",1,.27777f,.27777f) //  22B3 infix
-MATHML_OPERATOR(201,"&RightTriangleBar;",1,.27777f,.27777f) //  F411 infix
-MATHML_OPERATOR(202,"&RightTriangleEqual;",1,.27777f,.27777f) //  22B5 infix
-MATHML_OPERATOR(203,"&Succeeds;",1,.27777f,.27777f) //  227B infix
-MATHML_OPERATOR(204,"&SucceedsEqual;",1,.27777f,.27777f) //  227D infix
-MATHML_OPERATOR(205,"&SucceedsSlantEqual;",1,.27777f,.27777f) //  227D infix
-MATHML_OPERATOR(206,"&SucceedsTilde;",1,.27777f,.27777f) //  227F infix
-MATHML_OPERATOR(207,"&Tilde;",1,.27777f,.27777f) //  223C infix
-MATHML_OPERATOR(208,"&TildeEqual;",1,.27777f,.27777f) //  2243 infix
-MATHML_OPERATOR(209,"&TildeFullEqual;",1,.27777f,.27777f) //  2245 infix
-MATHML_OPERATOR(210,"&TildeTilde;",1,.27777f,.27777f) //  2248 infix
-MATHML_OPERATOR(211,"&UpTee;",1,.27777f,.27777f) //  22A5 infix
-MATHML_OPERATOR(212,"&VerticalBar;",1,.27777f,.27777f) //  2223 infix
-MATHML_OPERATOR(213,"&SquareUnion;",(1|(1<<2)),.22222f,.22222f) //  2294 infix
-MATHML_OPERATOR(214,"&Union;",(1|(1<<2)),.22222f,.22222f) //  22C3 infix
-MATHML_OPERATOR(215,"&UnionPlus;",(1|(1<<2)),.22222f,.22222f) //  228E infix
-MATHML_OPERATOR(216,"-",1,.22222f,.22222f) //  002D infix
-MATHML_OPERATOR(217,"+",1,.22222f,.22222f) //  002B infix
-MATHML_OPERATOR(218,"&Intersection;",(1|(1<<2)),.22222f,.22222f) //  22C2 infix
-MATHML_OPERATOR(219,"&MinusPlus;",1,.22222f,.22222f) //  2213 infix
-MATHML_OPERATOR(220,"&PlusMinus;",1,.22222f,.22222f) //  00B1 infix
-MATHML_OPERATOR(221,"&SquareIntersection;",(1|(1<<2)),.22222f,.22222f) //  2293 infix
-MATHML_OPERATOR(222,"&Vee;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  22C1 prefix
-MATHML_OPERATOR(223,"&CircleMinus;",(2|(1<<5)),0.0f,.16666f) //  2296 prefix
-MATHML_OPERATOR(224,"&CirclePlus;",(2|(1<<5)),0.0f,.16666f) //  2295 prefix
-MATHML_OPERATOR(225,"&Sum;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  2211 prefix
-MATHML_OPERATOR(226,"&Union;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  22C3 prefix
-MATHML_OPERATOR(227,"&UnionPlus;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  228E prefix
-MATHML_OPERATOR(228,"lim",2,0.0f,.16666f) //  006C 0069 006D prefix
-MATHML_OPERATOR(229,"max",2,0.0f,.16666f) //  006D 0061 0078 prefix
-MATHML_OPERATOR(230,"min",2,0.0f,.16666f) //  006D 0069 006E prefix
-MATHML_OPERATOR(231,"&CircleMinus;",1,.16666f,.16666f) //  2296 infix
-MATHML_OPERATOR(232,"&CirclePlus;",1,.16666f,.16666f) //  2295 infix
-MATHML_OPERATOR(233,"&ClockwiseContourIntegral;",(2|(1<<2)|(1<<5)),0.0f,0.0f) //  2232 prefix
-MATHML_OPERATOR(234,"&ContourIntegral;",(2|(1<<2)|(1<<5)),0.0f,0.0f) //  222E prefix
-MATHML_OPERATOR(235,"&CounterClockwiseContourIntegral;",(2|(1<<2)|(1<<5)),0.0f,0.0f) //  2233 prefix
-MATHML_OPERATOR(236,"&DoubleContourIntegral;",(2|(1<<2)|(1<<5)),0.0f,0.0f) //  222F prefix
-MATHML_OPERATOR(237,"&Integral;",(2|(1<<2)|(1<<5)),0.0f,0.0f) //  222B prefix
-MATHML_OPERATOR(238,"&Cup;",1,.16666f,.16666f) //  22D3 infix
-MATHML_OPERATOR(239,"&Cap;",1,.16666f,.16666f) //  22D2 infix
-MATHML_OPERATOR(240,"&VerticalTilde;",1,.16666f,.16666f) //  2240 infix
-MATHML_OPERATOR(241,"&Wedge;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  22C0 prefix
-MATHML_OPERATOR(242,"&CircleTimes;",(2|(1<<5)),0.0f,.16666f) //  2297 prefix
-MATHML_OPERATOR(243,"&Coproduct;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  2210 prefix
-MATHML_OPERATOR(244,"&Product;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  220F prefix
-MATHML_OPERATOR(245,"&Intersection;",(2|(1<<2)|(1<<5)),0.0f,.16666f) //  22C2 prefix
-MATHML_OPERATOR(246,"&Coproduct;",1,.16666f,.16666f) //  2210 infix
-MATHML_OPERATOR(247,"&Star;",1,.16666f,.16666f) //  22C6 infix
-MATHML_OPERATOR(248,"&CircleDot;",(2|(1<<5)),0.0f,.16666f) //  2299 prefix
-MATHML_OPERATOR(249,"*",1,.16666f,.16666f) //  002A infix
-MATHML_OPERATOR(250,"&InvisibleTimes;",1,0.0f,0.0f) //  E89E infix
-MATHML_OPERATOR(251,"&CenterDot;",1,.16666f,.16666f) //  00B7 infix
-MATHML_OPERATOR(252,"&CircleTimes;",1,.16666f,.16666f) //  2297 infix
-MATHML_OPERATOR(253,"&Vee;",1,.16666f,.16666f) //  22C1 infix
-MATHML_OPERATOR(254,"&Wedge;",1,.16666f,.16666f) //  22C0 infix
-MATHML_OPERATOR(255,"&Diamond;",1,.16666f,.16666f) //  22C4 infix
-MATHML_OPERATOR(256,"&Backslash;",(1|(1<<2)),.16666f,.16666f) //  2216 infix
-MATHML_OPERATOR(257,"/",(1|(1<<2)),.16666f,.16666f) //  002F infix
-MATHML_OPERATOR(258,"-",2,0.0f,.05555f) //  002D prefix
-MATHML_OPERATOR(259,"+",2,0.0f,.05555f) //  002B prefix
-MATHML_OPERATOR(260,"&MinusPlus;",2,0.0f,.05555f) //  2213 prefix
-MATHML_OPERATOR(261,"&PlusMinus;",2,0.0f,.05555f) //  00B1 prefix
-MATHML_OPERATOR(262,".",1,0.0f,0.0f) //  002E infix
-MATHML_OPERATOR(263,"&Cross;",1,.11111f,.11111f) //  E619 infix
-MATHML_OPERATOR(264,"**",1,.11111f,.11111f) //  002A 002A infix
-MATHML_OPERATOR(265,"&CircleDot;",1,.11111f,.11111f) //  2299 infix
-MATHML_OPERATOR(266,"&SmallCircle;",1,.11111f,.11111f) //  2218 infix
-MATHML_OPERATOR(267,"&Square;",2,0.0f,.11111f) //  25A1 prefix
-MATHML_OPERATOR(268,"&Del;",2,0.0f,.11111f) //  2207 prefix
-MATHML_OPERATOR(269,"&PartialD;",2,0.0f,.11111f) //  2202 prefix
-MATHML_OPERATOR(270,"&CapitalDifferentialD;",2,0.0f,.11111f) //  F74B prefix
-MATHML_OPERATOR(271,"&DifferentialD;",2,0.0f,.11111f) //  F74C prefix
-MATHML_OPERATOR(272,"&Sqrt;",(2|(1<<2)),0.0f,.11111f) //  221A prefix
-MATHML_OPERATOR(273,"&DoubleDownArrow;",(1|(1<<2)),.11111f,.11111f) //  21D3 infix
-MATHML_OPERATOR(274,"&DoubleLongLeftArrow;",(1|(1<<2)),.11111f,.11111f) //  E200 infix
-MATHML_OPERATOR(275,"&DoubleLongLeftRightArrow;",(1|(1<<2)),.11111f,.11111f) //  E202 infix
-MATHML_OPERATOR(276,"&DoubleLongRightArrow;",(1|(1<<2)),.11111f,.11111f) //  E204 infix
-MATHML_OPERATOR(277,"&DoubleUpArrow;",(1|(1<<2)),.11111f,.11111f) //  21D1 infix
-MATHML_OPERATOR(278,"&DoubleUpDownArrow;",(1|(1<<2)),.11111f,.11111f) //  21D5 infix
-MATHML_OPERATOR(279,"&DownArrow;",(1|(1<<2)),.11111f,.11111f) //  2193 infix
-MATHML_OPERATOR(280,"&DownArrowBar;",(1|(1<<2)),.11111f,.11111f) //  F504 infix
-MATHML_OPERATOR(281,"&DownArrowUpArrow;",(1|(1<<2)),.11111f,.11111f) //  E216 infix
-MATHML_OPERATOR(282,"&DownTeeArrow;",(1|(1<<2)),.11111f,.11111f) //  21A7 infix
-MATHML_OPERATOR(283,"&LeftDownTeeVector;",(1|(1<<2)),.11111f,.11111f) //  F519 infix
-MATHML_OPERATOR(284,"&LeftDownVector;",(1|(1<<2)),.11111f,.11111f) //  21C3 infix
-MATHML_OPERATOR(285,"&LeftDownVectorBar;",(1|(1<<2)),.11111f,.11111f) //  F517 infix
-MATHML_OPERATOR(286,"&LeftUpDownVector;",(1|(1<<2)),.11111f,.11111f) //  F515 infix
-MATHML_OPERATOR(287,"&LeftUpTeeVector;",(1|(1<<2)),.11111f,.11111f) //  F518 infix
-MATHML_OPERATOR(288,"&LeftUpVector;",(1|(1<<2)),.11111f,.11111f) //  21BF infix
-MATHML_OPERATOR(289,"&LeftUpVectorBar;",(1|(1<<2)),.11111f,.11111f) //  F516 infix
-MATHML_OPERATOR(290,"&LongLeftArrow;",(1|(1<<2)),.11111f,.11111f) //  E201 infix
-MATHML_OPERATOR(291,"&LongLeftRightArrow;",(1|(1<<2)),.11111f,.11111f) //  E203 infix
-MATHML_OPERATOR(292,"&LongRightArrow;",(1|(1<<2)),.11111f,.11111f) //  E205 infix
-MATHML_OPERATOR(293,"&ReverseUpEquilibrium;",(1|(1<<2)),.11111f,.11111f) //  E217 infix
-MATHML_OPERATOR(294,"&RightDownTeeVector;",(1|(1<<2)),.11111f,.11111f) //  F514 infix
-MATHML_OPERATOR(295,"&RightDownVector;",(1|(1<<2)),.11111f,.11111f) //  21C2 infix
-MATHML_OPERATOR(296,"&RightDownVectorBar;",(1|(1<<2)),.11111f,.11111f) //  F512 infix
-MATHML_OPERATOR(297,"&RightUpDownVector;",(1|(1<<2)),.11111f,.11111f) //  F510 infix
-MATHML_OPERATOR(298,"&RightUpTeeVector;",(1|(1<<2)),.11111f,.11111f) //  F513 infix
-MATHML_OPERATOR(299,"&RightUpVector;",(1|(1<<2)),.11111f,.11111f) //  21BE infix
-MATHML_OPERATOR(300,"&RightUpVectorBar;",(1|(1<<2)),.11111f,.11111f) //  F511 infix
-MATHML_OPERATOR(301,"&ShortDownArrow;",1,.11111f,.11111f) //  E87F infix
-MATHML_OPERATOR(302,"&ShortUpArrow;",1,.11111f,.11111f) //  E880 infix
-MATHML_OPERATOR(303,"&UpArrow;",(1|(1<<2)),.11111f,.11111f) //  2191 infix
-MATHML_OPERATOR(304,"&UpArrowBar;",(1|(1<<2)),.11111f,.11111f) //  F503 infix
-MATHML_OPERATOR(305,"&UpArrowDownArrow;",(1|(1<<2)),.11111f,.11111f) //  21C5 infix
-MATHML_OPERATOR(306,"&UpDownArrow;",(1|(1<<2)),.11111f,.11111f) //  2195 infix
-MATHML_OPERATOR(307,"&UpEquilibrium;",(1|(1<<2)),.11111f,.11111f) //  E218 infix
-MATHML_OPERATOR(308,"&UpTeeArrow;",(1|(1<<2)),.11111f,.11111f) //  21A5 infix
-MATHML_OPERATOR(309,"^",1,.11111f,.11111f) //  005E infix
-MATHML_OPERATOR(310,"&lt;&gt;",1,.11111f,.11111f) //  003C 003E infix
-MATHML_OPERATOR(311,"'",3,.11111f,0.0f) //  0027 postfix
-MATHML_OPERATOR(312,"!",3,.11111f,0.0f) //  0021 postfix
-MATHML_OPERATOR(313,"!!",3,.11111f,0.0f) //  0021 0021 postfix
-MATHML_OPERATOR(314,"~",1,.11111f,.11111f) //  007E infix
-MATHML_OPERATOR(315,"@",1,.11111f,.11111f) //  0040 infix
-MATHML_OPERATOR(316,"--",3,.11111f,0.0f) //  002D 002D postfix
-MATHML_OPERATOR(317,"--",2,0.0f,.11111f) //  002D 002D prefix
-MATHML_OPERATOR(318,"++",3,.11111f,0.0f) //  002B 002B postfix
-MATHML_OPERATOR(319,"++",2,0.0f,.11111f) //  002B 002B prefix
-MATHML_OPERATOR(320,"&ApplyFunction;",1,0.0f,0.0f) //  E8A0 infix
-MATHML_OPERATOR(321,"?",1,.11111f,.11111f) //  003F infix
-MATHML_OPERATOR(322,"_",1,.11111f,.11111f) //  005F infix
-MATHML_OPERATOR(323,"&Breve;",(3|(1<<4)),0.0f,0.0f) //  02D8 postfix
-MATHML_OPERATOR(324,"&Cedilla;",(3|(1<<4)),0.0f,0.0f) //  00B8 postfix
-MATHML_OPERATOR(325,"&DiacriticalGrave;",(3|(1<<4)),0.0f,0.0f) //  0060 postfix
-MATHML_OPERATOR(326,"&DiacriticalDot;",(3|(1<<4)),0.0f,0.0f) //  02D9 postfix
-MATHML_OPERATOR(327,"&DiacriticalDoubleAcute;",(3|(1<<4)),0.0f,0.0f) //  02DD postfix
-MATHML_OPERATOR(328,"&DiacriticalAcute;",(3|(1<<4)),0.0f,0.0f) //  00B4 postfix
-MATHML_OPERATOR(329,"&DiacriticalTilde;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  02DC postfix
-MATHML_OPERATOR(330,"&DoubleDot;",(3|(1<<4)),0.0f,0.0f) //  00A8 postfix
-MATHML_OPERATOR(331,"&DownBreve;",(3|(1<<4)),0.0f,0.0f) //  0311 postfix
-MATHML_OPERATOR(332,"&Hacek;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  02C7 postfix
-MATHML_OPERATOR(333,"&Hat;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  0302 postfix
-MATHML_OPERATOR(334,"&OverBar;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  00AF postfix
-MATHML_OPERATOR(335,"&OverBrace;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  F612 postfix
-MATHML_OPERATOR(336,"&OverBracket;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  F614 postfix
-MATHML_OPERATOR(337,"&OverParenthesis;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  F610 postfix
-MATHML_OPERATOR(338,"&TripleDot;",(3|(1<<4)),0.0f,0.0f) //  20DB postfix
-MATHML_OPERATOR(339,"&UnderBar;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  0332 postfix
-MATHML_OPERATOR(340,"&UnderBrace;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  F613 postfix
-MATHML_OPERATOR(341,"&UnderBracket;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  F615 postfix
-MATHML_OPERATOR(342,"&UnderParenthesis;",(3|(1<<2)|(1<<4)),0.0f,0.0f) //  F611 postfix
+MATHML_OPERATOR(  0,0x0028,(2|(1<<2)|(1<<3)),0.0f,0.0f) // ( prefix
+MATHML_OPERATOR(  1,0x0029,(3|(1<<2)|(1<<3)),0.0f,0.0f) // ) postfix
+MATHML_OPERATOR(  2,0x005B,(2|(1<<2)|(1<<3)),0.0f,0.0f) // [ prefix
+MATHML_OPERATOR(  3,0x005D,(3|(1<<2)|(1<<3)),0.0f,0.0f) // ] postfix
+MATHML_OPERATOR(  4,0x007B,(2|(1<<2)|(1<<3)),0.0f,0.0f) // { prefix
+MATHML_OPERATOR(  5,0x007D,(3|(1<<2)|(1<<3)),0.0f,0.0f) // } postfix
+MATHML_OPERATOR(  6,0x201D,(3|(1<<3)),0.0f,0.0f) // &CloseCurlyDoubleQuote; postfix
+MATHML_OPERATOR(  7,0x2019,(3|(1<<3)),0.0f,0.0f) // &CloseCurlyQuote; postfix
+MATHML_OPERATOR(  8,0x3008,(2|(1<<2)|(1<<3)),0.0f,0.0f) // &LeftAngleBracket; prefix
+MATHML_OPERATOR(  9,0xF603,(2|(1<<2)|(1<<3)),0.0f,0.0f) // &LeftBracketingBar; prefix
+MATHML_OPERATOR( 10,0x2308,(2|(1<<2)|(1<<3)),0.0f,0.0f) // &LeftCeiling; prefix
+MATHML_OPERATOR( 11,0x301A,(2|(1<<2)|(1<<3)),0.0f,0.0f) // &LeftDoubleBracket; prefix
+MATHML_OPERATOR( 12,0xF605,(2|(1<<2)|(1<<3)),0.0f,0.0f) // &LeftDoubleBracketingBar; prefix
+MATHML_OPERATOR( 13,0x230A,(2|(1<<2)|(1<<3)),0.0f,0.0f) // &LeftFloor; prefix
+MATHML_OPERATOR( 14,0x201C,(2|(1<<3)),0.0f,0.0f) // &OpenCurlyDoubleQuote; prefix
+MATHML_OPERATOR( 15,0x2018,(2|(1<<3)),0.0f,0.0f) // &OpenCurlyQuote; prefix
+MATHML_OPERATOR( 16,0x3009,(3|(1<<2)|(1<<3)),0.0f,0.0f) // &RightAngleBracket; postfix
+MATHML_OPERATOR( 17,0xF604,(3|(1<<2)|(1<<3)),0.0f,0.0f) // &RightBracketingBar; postfix
+MATHML_OPERATOR( 18,0x2309,(3|(1<<2)|(1<<3)),0.0f,0.0f) // &RightCeiling; postfix
+MATHML_OPERATOR( 19,0x301B,(3|(1<<2)|(1<<3)),0.0f,0.0f) // &RightDoubleBracket; postfix
+MATHML_OPERATOR( 20,0xF606,(3|(1<<2)|(1<<3)),0.0f,0.0f) // &RightDoubleBracketingBar; postfix
+MATHML_OPERATOR( 21,0x230B,(3|(1<<2)|(1<<3)),0.0f,0.0f) // &RightFloor; postfix
+MATHML_OPERATOR( 22,0xE850,(2|(1<<3)),0.0f,0.0f) // &LeftSkeleton; prefix
+MATHML_OPERATOR( 23,0xE851,(3|(1<<3)),0.0f,0.0f) // &RightSkeleton; postfix
+MATHML_OPERATOR( 24,0xE89C,(1|(1<<6)),0.0f,0.0f) // &InvisibleComma; infix
+MATHML_OPERATOR( 25,0x002C,(1|(1<<6)),0.0f,.33333f) // , infix
+MATHML_OPERATOR( 26,0xE859,(1|(1<<2)),0.0f,0.0f) // &HorizontalLine; infix
+MATHML_OPERATOR( 27,0xE85A,(1|(1<<2)),0.0f,0.0f) // &VerticalLine; infix
+MATHML_OPERATOR( 28,0x003B,(1|(1<<6)),0.0f,.27777f) // ; infix
+MATHML_OPERATOR( 29,0x003B,(3|(1<<6)),0.0f,0.0f) // ; postfix
+MATHML_OPERATOR( 30,0x003A _ 0x003D,1,.27777f,.27777f) // := infix
+MATHML_OPERATOR( 31,0xE85B,1,.27777f,.27777f) // &Assign; infix
+MATHML_OPERATOR( 32,0x2235,1,.27777f,.27777f) // &Because; infix
+MATHML_OPERATOR( 33,0x2234,1,.27777f,.27777f) // &Therefore; infix
+MATHML_OPERATOR( 34,0xE85C,(1|(1<<2)),.27777f,.27777f) // &VerticalSeparator; infix
+MATHML_OPERATOR( 35,0x002F _ 0x002F,1,.27777f,.27777f) // // infix
+MATHML_OPERATOR( 36,0x2237,1,.27777f,.27777f) // &Colon; infix
+MATHML_OPERATOR( 37,0x0026,2,0.0f,.27777f) // &amp; prefix
+MATHML_OPERATOR( 38,0x0026,3,.27777f,0.0f) // &amp; postfix
+MATHML_OPERATOR( 39,0x002A _ 0x003D,1,.27777f,.27777f) // *= infix
+MATHML_OPERATOR( 40,0x002D _ 0x003D,1,.27777f,.27777f) // -= infix
+MATHML_OPERATOR( 41,0x002B _ 0x003D,1,.27777f,.27777f) // += infix
+MATHML_OPERATOR( 42,0x002F _ 0x003D,1,.27777f,.27777f) // /= infix
+MATHML_OPERATOR( 43,0x002D _ 0x003E,1,.27777f,.27777f) // -&gt; infix
+MATHML_OPERATOR( 44,0x003A,1,.27777f,.27777f) // : infix
+MATHML_OPERATOR( 45,0x002E _ 0x002E,3,.22222f,0.0f) // .. postfix
+MATHML_OPERATOR( 46,0x002E _ 0x002E _ 0x002E,3,.22222f,0.0f) // ... postfix
+MATHML_OPERATOR( 47,0x220B,1,.27777f,.27777f) // &SuchThat; infix
+MATHML_OPERATOR( 48,0xE30F,1,.27777f,.27777f) // &DoubleLeftTee; infix
+MATHML_OPERATOR( 49,0x22A8,1,.27777f,.27777f) // &DoubleRightTee; infix
+MATHML_OPERATOR( 50,0x22A4,1,.27777f,.27777f) // &DownTee; infix
+MATHML_OPERATOR( 51,0x22A3,1,.27777f,.27777f) // &LeftTee; infix
+MATHML_OPERATOR( 52,0x22A2,1,.27777f,.27777f) // &RightTee; infix
+MATHML_OPERATOR( 53,0x21D2,(1|(1<<2)),.27777f,.27777f) // &Implies; infix
+MATHML_OPERATOR( 54,0xF524,1,.27777f,.27777f) // &RoundImplies; infix
+MATHML_OPERATOR( 55,0x007C,(1|(1<<2)),.27777f,.27777f) // | infix
+MATHML_OPERATOR( 56,0x007C _ 0x007C,1,.22222f,.22222f) // || infix
+MATHML_OPERATOR( 57,0xE375,(1|(1<<2)),.22222f,.22222f) // &Or; infix
+MATHML_OPERATOR( 58,0x0026 _ 0x0026,1,.27777f,.27777f) // &amp;&amp; infix
+MATHML_OPERATOR( 59,0xE374,(1|(1<<2)),.22222f,.22222f) // &And; infix
+MATHML_OPERATOR( 60,0x0026,1,.27777f,.27777f) // &amp; infix
+MATHML_OPERATOR( 61,0x0021,2,0.0f,.27777f) // ! prefix
+MATHML_OPERATOR( 62,0xE3AC,2,0.0f,.27777f) // &Not; prefix
+MATHML_OPERATOR( 63,0x2203,2,0.0f,.27777f) // &Exists; prefix
+MATHML_OPERATOR( 64,0x2200,2,0.0f,.27777f) // &ForAll; prefix
+MATHML_OPERATOR( 65,0x2204,2,0.0f,.27777f) // &NotExists; prefix
+MATHML_OPERATOR( 66,0x2208,1,.27777f,.27777f) // &Element; infix
+MATHML_OPERATOR( 67,0x2209,1,.27777f,.27777f) // &NotElement; infix
+MATHML_OPERATOR( 68,0x220C,1,.27777f,.27777f) // &NotReverseElement; infix
+MATHML_OPERATOR( 69,0xE604,1,.27777f,.27777f) // &NotSquareSubset; infix
+MATHML_OPERATOR( 70,0x22E2,1,.27777f,.27777f) // &NotSquareSubsetEqual; infix
+MATHML_OPERATOR( 71,0xE615,1,.27777f,.27777f) // &NotSquareSuperset; infix
+MATHML_OPERATOR( 72,0x22E3,1,.27777f,.27777f) // &NotSquareSupersetEqual; infix
+MATHML_OPERATOR( 73,0x2284,1,.27777f,.27777f) // &NotSubset; infix
+MATHML_OPERATOR( 74,0x2288,1,.27777f,.27777f) // &NotSubsetEqual; infix
+MATHML_OPERATOR( 75,0x2285,1,.27777f,.27777f) // &NotSuperset; infix
+MATHML_OPERATOR( 76,0x2289,1,.27777f,.27777f) // &NotSupersetEqual; infix
+MATHML_OPERATOR( 77,0x220B,1,.27777f,.27777f) // &ReverseElement; infix
+MATHML_OPERATOR( 78,0x228F,1,.27777f,.27777f) // &SquareSubset; infix
+MATHML_OPERATOR( 79,0x2291,1,.27777f,.27777f) // &SquareSubsetEqual; infix
+MATHML_OPERATOR( 80,0x2290,1,.27777f,.27777f) // &SquareSuperset; infix
+MATHML_OPERATOR( 81,0x2292,1,.27777f,.27777f) // &SquareSupersetEqual; infix
+MATHML_OPERATOR( 82,0x22D0,1,.27777f,.27777f) // &Subset; infix
+MATHML_OPERATOR( 83,0x2286,1,.27777f,.27777f) // &SubsetEqual; infix
+MATHML_OPERATOR( 84,0x2283,1,.27777f,.27777f) // &Superset; infix
+MATHML_OPERATOR( 85,0x2287,1,.27777f,.27777f) // &SupersetEqual; infix
+MATHML_OPERATOR( 86,0x21D0,(1|(1<<2)),.27777f,.27777f) // &DoubleLeftArrow; infix
+MATHML_OPERATOR( 87,0x21D4,(1|(1<<2)),.27777f,.27777f) // &DoubleLeftRightArrow; infix
+MATHML_OPERATOR( 88,0x21D2,(1|(1<<2)),.27777f,.27777f) // &DoubleRightArrow; infix
+MATHML_OPERATOR( 89,0xF50B,(1|(1<<2)),.27777f,.27777f) // &DownLeftRightVector; infix
+MATHML_OPERATOR( 90,0xF50E,(1|(1<<2)),.27777f,.27777f) // &DownLeftTeeVector; infix
+MATHML_OPERATOR( 91,0x21BD,(1|(1<<2)),.27777f,.27777f) // &DownLeftVector; infix
+MATHML_OPERATOR( 92,0xF50C,(1|(1<<2)),.27777f,.27777f) // &DownLeftVectorBar; infix
+MATHML_OPERATOR( 93,0xF50F,(1|(1<<2)),.27777f,.27777f) // &DownRightTeeVector; infix
+MATHML_OPERATOR( 94,0x21C1,(1|(1<<2)),.27777f,.27777f) // &DownRightVector; infix
+MATHML_OPERATOR( 95,0xF50D,(1|(1<<2)),.27777f,.27777f) // &DownRightVectorBar; infix
+MATHML_OPERATOR( 96,0x2190,(1|(1<<2)),.27777f,.27777f) // &LeftArrow; infix
+MATHML_OPERATOR( 97,0x21E4,(1|(1<<2)),.27777f,.27777f) // &LeftArrowBar; infix
+MATHML_OPERATOR( 98,0x21C6,(1|(1<<2)),.27777f,.27777f) // &LeftArrowRightArrow; infix
+MATHML_OPERATOR( 99,0x2194,(1|(1<<2)),.27777f,.27777f) // &LeftRightArrow; infix
+MATHML_OPERATOR(100,0xF505,(1|(1<<2)),.27777f,.27777f) // &LeftRightVector; infix
+MATHML_OPERATOR(101,0x21A4,(1|(1<<2)),.27777f,.27777f) // &LeftTeeArrow; infix
+MATHML_OPERATOR(102,0xF509,(1|(1<<2)),.27777f,.27777f) // &LeftTeeVector; infix
+MATHML_OPERATOR(103,0x21BC,(1|(1<<2)),.27777f,.27777f) // &LeftVector; infix
+MATHML_OPERATOR(104,0xF507,(1|(1<<2)),.27777f,.27777f) // &LeftVectorBar; infix
+MATHML_OPERATOR(105,0x2199,(1|(1<<2)),.27777f,.27777f) // &LowerLeftArrow; infix
+MATHML_OPERATOR(106,0x2198,(1|(1<<2)),.27777f,.27777f) // &LowerRightArrow; infix
+MATHML_OPERATOR(107,0x2192,(1|(1<<2)),.27777f,.27777f) // &RightArrow; infix
+MATHML_OPERATOR(108,0x21E5,(1|(1<<2)),.27777f,.27777f) // &RightArrowBar; infix
+MATHML_OPERATOR(109,0x21C4,(1|(1<<2)),.27777f,.27777f) // &RightArrowLeftArrow; infix
+MATHML_OPERATOR(110,0x21A6,(1|(1<<2)),.27777f,.27777f) // &RightTeeArrow; infix
+MATHML_OPERATOR(111,0xF50A,(1|(1<<2)),.27777f,.27777f) // &RightTeeVector; infix
+MATHML_OPERATOR(112,0x21C0,(1|(1<<2)),.27777f,.27777f) // &RightVector; infix
+MATHML_OPERATOR(113,0xF508,(1|(1<<2)),.27777f,.27777f) // &RightVectorBar; infix
+MATHML_OPERATOR(114,0xE233,1,.27777f,.27777f) // &ShortLeftArrow; infix
+MATHML_OPERATOR(115,0xE232,1,.27777f,.27777f) // &ShortRightArrow; infix
+MATHML_OPERATOR(116,0x2196,(1|(1<<2)),.27777f,.27777f) // &UpperLeftArrow; infix
+MATHML_OPERATOR(117,0x2197,(1|(1<<2)),.27777f,.27777f) // &UpperRightArrow; infix
+MATHML_OPERATOR(118,0x003D,1,.27777f,.27777f) // = infix
+MATHML_OPERATOR(119,0x003C,1,.27777f,.27777f) // &lt; infix
+MATHML_OPERATOR(120,0x003E,1,.27777f,.27777f) // &gt; infix
+MATHML_OPERATOR(121,0x0021 _ 0x003D,1,.27777f,.27777f) // != infix
+MATHML_OPERATOR(122,0x003D _ 0x003D,1,.27777f,.27777f) // == infix
+MATHML_OPERATOR(123,0x003C _ 0x003D,1,.27777f,.27777f) // &lt;= infix
+MATHML_OPERATOR(124,0x003E _ 0x003D,1,.27777f,.27777f) // &gt;= infix
+MATHML_OPERATOR(125,0x2261,1,.27777f,.27777f) // &Congruent; infix
+MATHML_OPERATOR(126,0x224D,1,.27777f,.27777f) // &CupCap; infix
+MATHML_OPERATOR(127,0x2250,1,.27777f,.27777f) // &DotEqual; infix
+MATHML_OPERATOR(128,0x2225,1,.27777f,.27777f) // &DoubleVerticalBar; infix
+MATHML_OPERATOR(129,0xF431,1,.27777f,.27777f) // &Equal; infix
+MATHML_OPERATOR(130,0x2242,1,.27777f,.27777f) // &EqualTilde; infix
+MATHML_OPERATOR(131,0x21CC,(1|(1<<2)),.27777f,.27777f) // &Equilibrium; infix
+MATHML_OPERATOR(132,0x2265,1,.27777f,.27777f) // &GreaterEqual; infix
+MATHML_OPERATOR(133,0x22DB,1,.27777f,.27777f) // &GreaterEqualLess; infix
+MATHML_OPERATOR(134,0x2267,1,.27777f,.27777f) // &GreaterFullEqual; infix
+MATHML_OPERATOR(135,0xE2F7,1,.27777f,.27777f) // &GreaterGreater; infix
+MATHML_OPERATOR(136,0x2277,1,.27777f,.27777f) // &GreaterLess; infix
+MATHML_OPERATOR(137,0xE2F6,1,.27777f,.27777f) // &GreaterSlantEqual; infix
+MATHML_OPERATOR(138,0x2273,1,.27777f,.27777f) // &GreaterTilde; infix
+MATHML_OPERATOR(139,0x224E,1,.27777f,.27777f) // &HumpDownHump; infix
+MATHML_OPERATOR(140,0x224F,1,.27777f,.27777f) // &HumpEqual; infix
+MATHML_OPERATOR(141,0x22B2,1,.27777f,.27777f) // &LeftTriangle; infix
+MATHML_OPERATOR(142,0xF410,1,.27777f,.27777f) // &LeftTriangleBar; infix
+MATHML_OPERATOR(143,0x22B4,1,.27777f,.27777f) // &LeftTriangleEqual; infix
+MATHML_OPERATOR(144,0x2264,1,.27777f,.27777f) // &le; infix
+MATHML_OPERATOR(145,0x22DA,1,.27777f,.27777f) // &LessEqualGreater; infix
+MATHML_OPERATOR(146,0x2266,1,.27777f,.27777f) // &LessFullEqual; infix
+MATHML_OPERATOR(147,0x2276,1,.27777f,.27777f) // &LessGreater; infix
+MATHML_OPERATOR(148,0xE2FB,1,.27777f,.27777f) // &LessLess; infix
+MATHML_OPERATOR(149,0xE2FA,1,.27777f,.27777f) // &LessSlantEqual; infix
+MATHML_OPERATOR(150,0x2272,1,.27777f,.27777f) // &LessTilde; infix
+MATHML_OPERATOR(151,0x226B,1,.27777f,.27777f) // &NestedGreaterGreater; infix
+MATHML_OPERATOR(152,0x226A,1,.27777f,.27777f) // &NestedLessLess; infix
+MATHML_OPERATOR(153,0x2262,1,.27777f,.27777f) // &NotCongruent; infix
+MATHML_OPERATOR(154,0x226D,1,.27777f,.27777f) // &NotCupCap; infix
+MATHML_OPERATOR(155,0x2226,1,.27777f,.27777f) // &NotDoubleVerticalBar; infix
+MATHML_OPERATOR(156,0x2260,1,.27777f,.27777f) // &NotEqual; infix
+MATHML_OPERATOR(157,0xE84E,1,.27777f,.27777f) // &NotEqualTilde; infix
+MATHML_OPERATOR(158,0x226F,1,.27777f,.27777f) // &NotGreater; infix
+MATHML_OPERATOR(159,0xE2A6,1,.27777f,.27777f) // &NotGreaterEqual; infix
+MATHML_OPERATOR(160,0x2270,1,.27777f,.27777f) // &NotGreaterFullEqual; infix
+MATHML_OPERATOR(161,0xE2CC,1,.27777f,.27777f) // &NotGreaterGreater; infix
+MATHML_OPERATOR(162,0x2279,1,.27777f,.27777f) // &NotGreaterLess; infix
+MATHML_OPERATOR(163,0x2271,1,.27777f,.27777f) // &NotGreaterSlantEqual; infix
+MATHML_OPERATOR(164,0x2275,1,.27777f,.27777f) // &NotGreaterTilde; infix
+MATHML_OPERATOR(165,0xE616,1,.27777f,.27777f) // &NotHumpDownHump; infix
+MATHML_OPERATOR(166,0xE84D,1,.27777f,.27777f) // &NotHumpEqual; infix
+MATHML_OPERATOR(167,0x22EA,1,.27777f,.27777f) // &NotLeftTriangle; infix
+MATHML_OPERATOR(168,0xF412,1,.27777f,.27777f) // &NotLeftTriangleBar; infix
+MATHML_OPERATOR(169,0x22EC,1,.27777f,.27777f) // &NotLeftTriangleEqual; infix
+MATHML_OPERATOR(170,0x226E,1,.27777f,.27777f) // &NotLess; infix
+MATHML_OPERATOR(171,0xE2A7,1,.27777f,.27777f) // &NotLessEqual; infix
+MATHML_OPERATOR(172,0x2278,1,.27777f,.27777f) // &NotLessGreater; infix
+MATHML_OPERATOR(173,0xE2CB,1,.27777f,.27777f) // &NotLessLess; infix
+MATHML_OPERATOR(174,0x2270,1,.27777f,.27777f) // &NotLessSlantEqual; infix
+MATHML_OPERATOR(175,0x2274,1,.27777f,.27777f) // &NotLessTilde; infix
+MATHML_OPERATOR(176,0xF428,1,.27777f,.27777f) // &NotNestedGreaterGreater; infix
+MATHML_OPERATOR(177,0xF423,1,.27777f,.27777f) // &NotNestedLessLess; infix
+MATHML_OPERATOR(178,0x2280,1,.27777f,.27777f) // &NotPrecedes; infix
+MATHML_OPERATOR(179,0xE5DC,1,.27777f,.27777f) // &NotPrecedesEqual; infix
+MATHML_OPERATOR(180,0x22E0,1,.27777f,.27777f) // &NotPrecedesSlantEqual; infix
+MATHML_OPERATOR(181,0x22EB,1,.27777f,.27777f) // &NotRightTriangle; infix
+MATHML_OPERATOR(182,0xF413,1,.27777f,.27777f) // &NotRightTriangleBar; infix
+MATHML_OPERATOR(183,0x22ED,1,.27777f,.27777f) // &NotRightTriangleEqual; infix
+MATHML_OPERATOR(184,0x2281,1,.27777f,.27777f) // &NotSucceeds; infix
+MATHML_OPERATOR(185,0xE5F1,1,.27777f,.27777f) // &NotSucceedsEqual; infix
+MATHML_OPERATOR(186,0x22E1,1,.27777f,.27777f) // &NotSucceedsSlantEqual; infix
+MATHML_OPERATOR(187,0xE837,1,.27777f,.27777f) // &NotSucceedsTilde; infix
+MATHML_OPERATOR(188,0x2241,1,.27777f,.27777f) // &NotTilde; infix
+MATHML_OPERATOR(189,0x2244,1,.27777f,.27777f) // &NotTildeEqual; infix
+MATHML_OPERATOR(190,0x2247,1,.27777f,.27777f) // &NotTildeFullEqual; infix
+MATHML_OPERATOR(191,0x2249,1,.27777f,.27777f) // &NotTildeTilde; infix
+MATHML_OPERATOR(192,0x2224,1,.27777f,.27777f) // &NotVerticalBar; infix
+MATHML_OPERATOR(193,0x227A,1,.27777f,.27777f) // &Precedes; infix
+MATHML_OPERATOR(194,0xE2FE,1,.27777f,.27777f) // &PrecedesEqual; infix
+MATHML_OPERATOR(195,0x227C,1,.27777f,.27777f) // &PrecedesSlantEqual; infix
+MATHML_OPERATOR(196,0x227E,1,.27777f,.27777f) // &PrecedesTilde; infix
+MATHML_OPERATOR(197,0x2237,1,.27777f,.27777f) // &Proportion; infix
+MATHML_OPERATOR(198,0x221D,1,.27777f,.27777f) // &Proportional; infix
+MATHML_OPERATOR(199,0x21CB,(1|(1<<2)),.27777f,.27777f) // &ReverseEquilibrium; infix
+MATHML_OPERATOR(200,0x22B3,1,.27777f,.27777f) // &RightTriangle; infix
+MATHML_OPERATOR(201,0xF411,1,.27777f,.27777f) // &RightTriangleBar; infix
+MATHML_OPERATOR(202,0x22B5,1,.27777f,.27777f) // &RightTriangleEqual; infix
+MATHML_OPERATOR(203,0x227B,1,.27777f,.27777f) // &Succeeds; infix
+MATHML_OPERATOR(204,0x227D,1,.27777f,.27777f) // &SucceedsEqual; infix
+MATHML_OPERATOR(205,0x227D,1,.27777f,.27777f) // &SucceedsSlantEqual; infix
+MATHML_OPERATOR(206,0x227F,1,.27777f,.27777f) // &SucceedsTilde; infix
+MATHML_OPERATOR(207,0x223C,1,.27777f,.27777f) // &Tilde; infix
+MATHML_OPERATOR(208,0x2243,1,.27777f,.27777f) // &TildeEqual; infix
+MATHML_OPERATOR(209,0x2245,1,.27777f,.27777f) // &TildeFullEqual; infix
+MATHML_OPERATOR(210,0x2248,1,.27777f,.27777f) // &TildeTilde; infix
+MATHML_OPERATOR(211,0x22A5,1,.27777f,.27777f) // &UpTee; infix
+MATHML_OPERATOR(212,0x2223,1,.27777f,.27777f) // &VerticalBar; infix
+MATHML_OPERATOR(213,0x2294,(1|(1<<2)),.22222f,.22222f) // &SquareUnion; infix
+MATHML_OPERATOR(214,0x22C3,(1|(1<<2)),.22222f,.22222f) // &Union; infix
+MATHML_OPERATOR(215,0x228E,(1|(1<<2)),.22222f,.22222f) // &UnionPlus; infix
+MATHML_OPERATOR(216,0x002D,1,.22222f,.22222f) // - infix
+MATHML_OPERATOR(217,0x002B,1,.22222f,.22222f) // + infix
+MATHML_OPERATOR(218,0x22C2,(1|(1<<2)),.22222f,.22222f) // &Intersection; infix
+MATHML_OPERATOR(219,0x2213,1,.22222f,.22222f) // &MinusPlus; infix
+MATHML_OPERATOR(220,0x00B1,1,.22222f,.22222f) // &PlusMinus; infix
+MATHML_OPERATOR(221,0x2293,(1|(1<<2)),.22222f,.22222f) // &SquareIntersection; infix
+MATHML_OPERATOR(222,0x22C1,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &Vee; prefix
+MATHML_OPERATOR(223,0x2296,(2|(1<<5)),0.0f,.16666f) // &CircleMinus; prefix
+MATHML_OPERATOR(224,0x2295,(2|(1<<5)),0.0f,.16666f) // &CirclePlus; prefix
+MATHML_OPERATOR(225,0x2211,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &Sum; prefix
+MATHML_OPERATOR(226,0x22C3,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &Union; prefix
+MATHML_OPERATOR(227,0x228E,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &UnionPlus; prefix
+MATHML_OPERATOR(228,0x006C _ 0x0069 _ 0x006D,2,0.0f,.16666f) // lim prefix
+MATHML_OPERATOR(229,0x006D _ 0x0061 _ 0x0078,2,0.0f,.16666f) // max prefix
+MATHML_OPERATOR(230,0x006D _ 0x0069 _ 0x006E,2,0.0f,.16666f) // min prefix
+MATHML_OPERATOR(231,0x2296,1,.16666f,.16666f) // &CircleMinus; infix
+MATHML_OPERATOR(232,0x2295,1,.16666f,.16666f) // &CirclePlus; infix
+MATHML_OPERATOR(233,0x2232,(2|(1<<2)|(1<<5)),0.0f,0.0f) // &ClockwiseContourIntegral; prefix
+MATHML_OPERATOR(234,0x222E,(2|(1<<2)|(1<<5)),0.0f,0.0f) // &ContourIntegral; prefix
+MATHML_OPERATOR(235,0x2233,(2|(1<<2)|(1<<5)),0.0f,0.0f) // &CounterClockwiseContourIntegral; prefix
+MATHML_OPERATOR(236,0x222F,(2|(1<<2)|(1<<5)),0.0f,0.0f) // &DoubleContourIntegral; prefix
+MATHML_OPERATOR(237,0x222B,(2|(1<<2)|(1<<5)),0.0f,0.0f) // &Integral; prefix
+MATHML_OPERATOR(238,0x22D3,1,.16666f,.16666f) // &Cup; infix
+MATHML_OPERATOR(239,0x22D2,1,.16666f,.16666f) // &Cap; infix
+MATHML_OPERATOR(240,0x2240,1,.16666f,.16666f) // &VerticalTilde; infix
+MATHML_OPERATOR(241,0x22C0,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &Wedge; prefix
+MATHML_OPERATOR(242,0x2297,(2|(1<<5)),0.0f,.16666f) // &CircleTimes; prefix
+MATHML_OPERATOR(243,0x2210,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &Coproduct; prefix
+MATHML_OPERATOR(244,0x220F,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &Product; prefix
+MATHML_OPERATOR(245,0x22C2,(2|(1<<2)|(1<<5)),0.0f,.16666f) // &Intersection; prefix
+MATHML_OPERATOR(246,0x2210,1,.16666f,.16666f) // &Coproduct; infix
+MATHML_OPERATOR(247,0x22C6,1,.16666f,.16666f) // &Star; infix
+MATHML_OPERATOR(248,0x2299,(2|(1<<5)),0.0f,.16666f) // &CircleDot; prefix
+MATHML_OPERATOR(249,0x002A,1,.16666f,.16666f) // * infix
+MATHML_OPERATOR(250,0xE89E,1,0.0f,0.0f) // &InvisibleTimes; infix
+MATHML_OPERATOR(251,0x00B7,1,.16666f,.16666f) // &CenterDot; infix
+MATHML_OPERATOR(252,0x2297,1,.16666f,.16666f) // &CircleTimes; infix
+MATHML_OPERATOR(253,0x22C1,1,.16666f,.16666f) // &Vee; infix
+MATHML_OPERATOR(254,0x22C0,1,.16666f,.16666f) // &Wedge; infix
+MATHML_OPERATOR(255,0x22C4,1,.16666f,.16666f) // &Diamond; infix
+MATHML_OPERATOR(256,0x2216,(1|(1<<2)),.16666f,.16666f) // &Backslash; infix
+MATHML_OPERATOR(257,0x002F,(1|(1<<2)),.16666f,.16666f) // / infix
+MATHML_OPERATOR(258,0x002D,2,0.0f,.05555f) // - prefix
+MATHML_OPERATOR(259,0x002B,2,0.0f,.05555f) // + prefix
+MATHML_OPERATOR(260,0x2213,2,0.0f,.05555f) // &MinusPlus; prefix
+MATHML_OPERATOR(261,0x00B1,2,0.0f,.05555f) // &PlusMinus; prefix
+MATHML_OPERATOR(262,0x002E,1,0.0f,0.0f) // . infix
+MATHML_OPERATOR(263,0xE619,1,.11111f,.11111f) // &Cross; infix
+MATHML_OPERATOR(264,0x002A _ 0x002A,1,.11111f,.11111f) // ** infix
+MATHML_OPERATOR(265,0x2299,1,.11111f,.11111f) // &CircleDot; infix
+MATHML_OPERATOR(266,0x2218,1,.11111f,.11111f) // &SmallCircle; infix
+MATHML_OPERATOR(267,0x25A1,2,0.0f,.11111f) // &Square; prefix
+MATHML_OPERATOR(268,0x2207,2,0.0f,.11111f) // &Del; prefix
+MATHML_OPERATOR(269,0x2202,2,0.0f,.11111f) // &PartialD; prefix
+MATHML_OPERATOR(270,0xF74B,2,0.0f,.11111f) // &CapitalDifferentialD; prefix
+MATHML_OPERATOR(271,0xF74C,2,0.0f,.11111f) // &DifferentialD; prefix
+MATHML_OPERATOR(272,0x221A,(2|(1<<2)),0.0f,.11111f) // &Sqrt; prefix
+MATHML_OPERATOR(273,0x21D3,(1|(1<<2)),.11111f,.11111f) // &DoubleDownArrow; infix
+MATHML_OPERATOR(274,0xE200,(1|(1<<2)),.11111f,.11111f) // &DoubleLongLeftArrow; infix
+MATHML_OPERATOR(275,0xE202,(1|(1<<2)),.11111f,.11111f) // &DoubleLongLeftRightArrow; infix
+MATHML_OPERATOR(276,0xE204,(1|(1<<2)),.11111f,.11111f) // &DoubleLongRightArrow; infix
+MATHML_OPERATOR(277,0x21D1,(1|(1<<2)),.11111f,.11111f) // &DoubleUpArrow; infix
+MATHML_OPERATOR(278,0x21D5,(1|(1<<2)),.11111f,.11111f) // &DoubleUpDownArrow; infix
+MATHML_OPERATOR(279,0x2193,(1|(1<<2)),.11111f,.11111f) // &DownArrow; infix
+MATHML_OPERATOR(280,0xF504,(1|(1<<2)),.11111f,.11111f) // &DownArrowBar; infix
+MATHML_OPERATOR(281,0xE216,(1|(1<<2)),.11111f,.11111f) // &DownArrowUpArrow; infix
+MATHML_OPERATOR(282,0x21A7,(1|(1<<2)),.11111f,.11111f) // &DownTeeArrow; infix
+MATHML_OPERATOR(283,0xF519,(1|(1<<2)),.11111f,.11111f) // &LeftDownTeeVector; infix
+MATHML_OPERATOR(284,0x21C3,(1|(1<<2)),.11111f,.11111f) // &LeftDownVector; infix
+MATHML_OPERATOR(285,0xF517,(1|(1<<2)),.11111f,.11111f) // &LeftDownVectorBar; infix
+MATHML_OPERATOR(286,0xF515,(1|(1<<2)),.11111f,.11111f) // &LeftUpDownVector; infix
+MATHML_OPERATOR(287,0xF518,(1|(1<<2)),.11111f,.11111f) // &LeftUpTeeVector; infix
+MATHML_OPERATOR(288,0x21BF,(1|(1<<2)),.11111f,.11111f) // &LeftUpVector; infix
+MATHML_OPERATOR(289,0xF516,(1|(1<<2)),.11111f,.11111f) // &LeftUpVectorBar; infix
+MATHML_OPERATOR(290,0xE201,(1|(1<<2)),.11111f,.11111f) // &LongLeftArrow; infix
+MATHML_OPERATOR(291,0xE203,(1|(1<<2)),.11111f,.11111f) // &LongLeftRightArrow; infix
+MATHML_OPERATOR(292,0xE205,(1|(1<<2)),.11111f,.11111f) // &LongRightArrow; infix
+MATHML_OPERATOR(293,0xE217,(1|(1<<2)),.11111f,.11111f) // &ReverseUpEquilibrium; infix
+MATHML_OPERATOR(294,0xF514,(1|(1<<2)),.11111f,.11111f) // &RightDownTeeVector; infix
+MATHML_OPERATOR(295,0x21C2,(1|(1<<2)),.11111f,.11111f) // &RightDownVector; infix
+MATHML_OPERATOR(296,0xF512,(1|(1<<2)),.11111f,.11111f) // &RightDownVectorBar; infix
+MATHML_OPERATOR(297,0xF510,(1|(1<<2)),.11111f,.11111f) // &RightUpDownVector; infix
+MATHML_OPERATOR(298,0xF513,(1|(1<<2)),.11111f,.11111f) // &RightUpTeeVector; infix
+MATHML_OPERATOR(299,0x21BE,(1|(1<<2)),.11111f,.11111f) // &RightUpVector; infix
+MATHML_OPERATOR(300,0xF511,(1|(1<<2)),.11111f,.11111f) // &RightUpVectorBar; infix
+MATHML_OPERATOR(301,0xE87F,1,.11111f,.11111f) // &ShortDownArrow; infix
+MATHML_OPERATOR(302,0xE880,1,.11111f,.11111f) // &ShortUpArrow; infix
+MATHML_OPERATOR(303,0x2191,(1|(1<<2)),.11111f,.11111f) // &UpArrow; infix
+MATHML_OPERATOR(304,0xF503,(1|(1<<2)),.11111f,.11111f) // &UpArrowBar; infix
+MATHML_OPERATOR(305,0x21C5,(1|(1<<2)),.11111f,.11111f) // &UpArrowDownArrow; infix
+MATHML_OPERATOR(306,0x2195,(1|(1<<2)),.11111f,.11111f) // &UpDownArrow; infix
+MATHML_OPERATOR(307,0xE218,(1|(1<<2)),.11111f,.11111f) // &UpEquilibrium; infix
+MATHML_OPERATOR(308,0x21A5,(1|(1<<2)),.11111f,.11111f) // &UpTeeArrow; infix
+MATHML_OPERATOR(309,0x005E,1,.11111f,.11111f) // ^ infix
+MATHML_OPERATOR(310,0x003C _ 0x003E,1,.11111f,.11111f) // &lt;&gt; infix
+MATHML_OPERATOR(311,0x0027,3,.11111f,0.0f) // ' postfix
+MATHML_OPERATOR(312,0x0021,3,.11111f,0.0f) // ! postfix
+MATHML_OPERATOR(313,0x0021 _ 0x0021,3,.11111f,0.0f) // !! postfix
+MATHML_OPERATOR(314,0x007E,1,.11111f,.11111f) // ~ infix
+MATHML_OPERATOR(315,0x0040,1,.11111f,.11111f) // @ infix
+MATHML_OPERATOR(316,0x002D _ 0x002D,3,.11111f,0.0f) // -- postfix
+MATHML_OPERATOR(317,0x002D _ 0x002D,2,0.0f,.11111f) // -- prefix
+MATHML_OPERATOR(318,0x002B _ 0x002B,3,.11111f,0.0f) // ++ postfix
+MATHML_OPERATOR(319,0x002B _ 0x002B,2,0.0f,.11111f) // ++ prefix
+MATHML_OPERATOR(320,0xE8A0,1,0.0f,0.0f) // &ApplyFunction; infix
+MATHML_OPERATOR(321,0x003F,1,.11111f,.11111f) // ? infix
+MATHML_OPERATOR(322,0x005F,1,.11111f,.11111f) // _ infix
+MATHML_OPERATOR(323,0x02D8,(3|(1<<4)),0.0f,0.0f) // &Breve; postfix
+MATHML_OPERATOR(324,0x00B8,(3|(1<<4)),0.0f,0.0f) // &Cedilla; postfix
+MATHML_OPERATOR(325,0x0060,(3|(1<<4)),0.0f,0.0f) // &DiacriticalGrave; postfix
+MATHML_OPERATOR(326,0x02D9,(3|(1<<4)),0.0f,0.0f) // &DiacriticalDot; postfix
+MATHML_OPERATOR(327,0x02DD,(3|(1<<4)),0.0f,0.0f) // &DiacriticalDoubleAcute; postfix
+MATHML_OPERATOR(328,0x00B4,(3|(1<<4)),0.0f,0.0f) // &DiacriticalAcute; postfix
+MATHML_OPERATOR(329,0x02DC,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &DiacriticalTilde; postfix
+MATHML_OPERATOR(330,0x00A8,(3|(1<<4)),0.0f,0.0f) // &DoubleDot; postfix
+MATHML_OPERATOR(331,0x0311,(3|(1<<4)),0.0f,0.0f) // &DownBreve; postfix
+MATHML_OPERATOR(332,0x02C7,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &Hacek; postfix
+MATHML_OPERATOR(333,0x0302,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &Hat; postfix
+MATHML_OPERATOR(334,0x00AF,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &OverBar; postfix
+MATHML_OPERATOR(335,0xF612,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &OverBrace; postfix
+MATHML_OPERATOR(336,0xF614,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &OverBracket; postfix
+MATHML_OPERATOR(337,0xF610,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &OverParenthesis; postfix
+MATHML_OPERATOR(338,0x20DB,(3|(1<<4)),0.0f,0.0f) // &TripleDot; postfix
+MATHML_OPERATOR(339,0x0332,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &UnderBar; postfix
+MATHML_OPERATOR(340,0xF613,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &UnderBrace; postfix
+MATHML_OPERATOR(341,0xF615,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &UnderBracket; postfix
+MATHML_OPERATOR(342,0xF611,(3|(1<<2)|(1<<4)),0.0f,0.0f) // &UnderParenthesis; postfix
 
+  #undef _
 #endif
-#endif
+
