@@ -225,7 +225,7 @@ nsLineIterator::~nsLineIterator()
   }
 }
 
-NS_IMPL_QUERY_INTERFACE(nsLineIterator, kILineIteratorIID)
+NS_IMPL_ISUPPORTS(nsLineIterator, kILineIteratorIID)
 
 nsresult
 nsLineIterator::Init(nsLineBox* aLines, PRBool aRightToLeft)
