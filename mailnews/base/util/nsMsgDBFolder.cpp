@@ -638,12 +638,13 @@ NS_IMETHODIMP
 nsMsgDBFolder::GetMsgDatabase(nsIMsgWindow *aMsgWindow,
                               nsIMsgDatabase** aMsgDatabase)
 {
-    GetDatabase(aMsgWindow);
-    if (!aMsgDatabase || !mDatabase)
-        return NS_ERROR_NULL_POINTER;
-    *aMsgDatabase = mDatabase;
-    NS_ADDREF(*aMsgDatabase);
-    return NS_OK;
+  GetDatabase(aMsgWindow);
+  
+  if (!aMsgDatabase || !mDatabase)
+    return NS_ERROR_NULL_POINTER;
+  
+  NS_ADDREF(*aMsgDatabase = mDatabase);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1694,8 +1695,19 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
     nsXPIDLCString whiteListAbURI;
  
     // if this is the junk folder, or the trash folder
-    // don't analyze for spam
-    if (mFlags & MSG_FOLDER_FLAG_JUNK || mFlags & MSG_FOLDER_FLAG_TRASH)
+    // don't analyze for spam, because we don't care
+    //
+    // if it's the sent, unsent, templates, or drafts, 
+    // don't analyze for spam, because the user
+    // created that message
+    //
+    // if it's a public imap folder, or another users
+    // imap folder, don't analyze for spam, because
+    // it's not ours to analyze
+    if (mFlags & (MSG_FOLDER_FLAG_JUNK | MSG_FOLDER_FLAG_TRASH |
+                 MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_QUEUE |
+                 MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_TEMPLATES |
+                 MSG_FOLDER_FLAG_IMAP_PUBLIC | MSG_FOLDER_FLAG_IMAP_OTHER_USER))
       return NS_OK;
 
     nsresult rv = GetServer(getter_AddRefs(server));
