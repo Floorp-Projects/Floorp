@@ -123,6 +123,8 @@ nsListControlFrame::nsListControlFrame()
 //---------------------------------------------------------
 nsListControlFrame::~nsListControlFrame()
 {
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+
   // if list is dropped down 
   // make sure it gets rolled up
   if (IsInDropDownMode()) {
@@ -286,7 +288,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
 {
-#ifdef DEBUG_rodsXXX
+#ifdef DEBUG_rods
   printf("nsListControlFrame::Reflow    Reason: ");
   switch (aReflowState.reason) {
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
@@ -355,6 +357,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         mHasBeenInitialized = PR_TRUE;
         InitSelectionCache(-1); // Reset sel cache so as not to send event
         Reset(mPresContext);
+#if 1
         nsCOMPtr<nsIReflowCommand> cmd;
         nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(cmd), this, nsIReflowCommand::StyleChanged);
         if (NS_FAILED(rv)) { return rv; }
@@ -368,10 +371,18 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         rv = shell->AppendReflowCommand(cmd);
         // must do this next line regardless of result of AppendReflowCommand
         shell->ExitReflowLock(PR_TRUE);
+#else
+        if (mParent) {
+          nsCOMPtr<nsIPresShell> shell;
+          nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+          mState |= NS_FRAME_IS_DIRTY;
+          mParent->ReflowDirtyChild(shell, (nsIFrame*) this);
+        }
+#endif
       }
     }
 
-#if 1
+#if 0
   nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                                          aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
@@ -416,6 +427,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Add the list frame as a child of the form
   if (IsInDropDownMode() == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
@@ -1943,6 +1955,17 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
         Reset(aPresContext);             // this sets mSelectedIndex to the defaulted selection
         wasReset = PR_TRUE;
       }
+
+#if DEBUG_rods
+      {
+      nsAutoString text = "No Value";
+      nsresult rv = option->GetLabel(text);
+      if (NS_CONTENT_ATTR_NOT_THERE == rv || 0 == text.Length()) {
+        option->GetText(text);
+      }   
+      printf("this %p Index: %d  [%s] CB: %p\n", this, aIndex, text.ToNewCString(), mComboboxFrame); //leaks
+      }
+#endif
     }
   }
 
@@ -2469,6 +2492,30 @@ void nsListControlFrame::ResetSelectedItem()
 }
 
 //----------------------------------------------------------------------
+// helper
+//----------------------------------------------------------------------
+PRBool
+nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
+{
+  // only allow selection with the left button
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  if (mouseEvent) {
+    PRUint16 whichButton;
+    if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
+      if (whichButton != 1) {
+        aMouseEvent->PreventDefault();
+        aMouseEvent->PreventCapture();
+        aMouseEvent->PreventBubble();
+        return PR_FALSE;
+      } else {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+//----------------------------------------------------------------------
 // nsIDOMMouseListener
 //----------------------------------------------------------------------
 nsresult
@@ -2477,6 +2524,11 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
+  }
+
+  // only allow selection with the left button
+  if (!IsLeftButton(aMouseEvent)) {
+    return NS_ERROR_FAILURE; // means consume event
   }
 
   // Check to see if the disabled option was clicked on
@@ -2512,7 +2564,11 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     UpdateSelection(PR_TRUE, PR_FALSE, mContent);
   }
 
-  return NS_OK;
+  aMouseEvent->PreventDefault();
+  aMouseEvent->PreventCapture();
+  aMouseEvent->PreventBubble();
+  return NS_ERROR_FAILURE;
+  //return NS_OK;
 }
 
 //---------------------------------------------------------
@@ -2577,6 +2633,11 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
+  }
+
+  // only allow selection with the left button
+  if (!IsLeftButton(aMouseEvent)) {
+    return NS_ERROR_FAILURE; // means consume event
   }
 
   // Check to see if the disabled option was clicked on
@@ -2673,7 +2734,11 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       }
     }
   }
-  return NS_OK;
+  aMouseEvent->PreventDefault();
+  aMouseEvent->PreventCapture();
+  aMouseEvent->PreventBubble();
+  return NS_ERROR_FAILURE; //consumes event
+  //return NS_OK;
 }
 
 //----------------------------------------------------------------------

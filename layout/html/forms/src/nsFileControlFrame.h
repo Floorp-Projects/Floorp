@@ -30,8 +30,7 @@
 #include "nsIStatefulFrame.h"
 
 class nsIPresState;
-class nsButtonControlFrame;
-class nsTextControlFrame;
+class nsGfxTextControlFrame;
 class nsFormFrame;
 class nsISupportsArray;
 class nsIHTMLContent;
@@ -176,7 +175,7 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  nsTextControlFrame* mTextFrame;
+  nsGfxTextControlFrame* mTextFrame;
   nsFormFrame*        mFormFrame;
   nsIHTMLContent*     mTextContent;
   nsString*           mCachedState;
@@ -184,7 +183,7 @@ protected:
   nsIPresContext*     mPresContext;  // weak reference
 
 private:
-  nsTextControlFrame* GetTextControlFrame(nsIPresContext* aPresContext,
+  nsGfxTextControlFrame* GetTextControlFrame(nsIPresContext* aPresContext,
                                           nsIFrame* aStart);
 
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

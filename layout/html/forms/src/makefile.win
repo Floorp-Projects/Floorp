@@ -34,13 +34,8 @@ CPPSRCS= \
   nsListControlFrame.cpp \
   nsFormFrame.cpp \
   nsFormControlFrame.cpp \
-  nsButtonControlFrame.cpp \
-  nsCheckboxControlFrame.cpp \
   nsFileControlFrame.cpp \
-  nsRadioControlFrame.cpp \
-  nsTextControlFrame.cpp  	\
   nsGfxTextControlFrame.cpp \
-  nsTextControlFrame.cpp  	\
   nsFieldSetFrame.cpp \
   nsLegendFrame.cpp \
   nsHTMLButtonControlFrame.cpp \
@@ -51,7 +46,6 @@ CPPSRCS= \
   nsGfxCheckboxControlFrame.cpp \
   nsGfxRadioControlFrame.cpp \
   nsGfxAutoTextControlFrame.cpp \
-  nsNativeFormControlFrame.cpp \
   nsRadioControlGroup.cpp
 
 CPP_OBJS= \
@@ -61,11 +55,7 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsListControlFrame.obj \
   .\$(OBJDIR)\nsFormFrame.obj \
   .\$(OBJDIR)\nsFormControlFrame.obj \
-  .\$(OBJDIR)\nsButtonControlFrame.obj \
-  .\$(OBJDIR)\nsCheckboxControlFrame.obj \
   .\$(OBJDIR)\nsFileControlFrame.obj \
-  .\$(OBJDIR)\nsRadioControlFrame.obj \
-  .\$(OBJDIR)\nsTextControlFrame.obj \
   .\$(OBJDIR)\nsGfxTextControlFrame.obj \
   .\$(OBJDIR)\nsFieldSetFrame.obj \
   .\$(OBJDIR)\nsLegendFrame.obj \
@@ -77,7 +67,6 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsGfxCheckboxControlFrame.obj \
   .\$(OBJDIR)\nsGfxRadioControlFrame.obj \
   .\$(OBJDIR)\nsGfxAutoTextControlFrame.obj \
-  .\$(OBJDIR)\nsNativeFormControlFrame.obj \
   .\$(OBJDIR)\nsRadioControlGroup.obj 
 
 

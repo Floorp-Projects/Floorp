@@ -30,7 +30,6 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsITextWidget.h"
-#include "nsITextAreaWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsSize.h"
 #include "nsString.h"

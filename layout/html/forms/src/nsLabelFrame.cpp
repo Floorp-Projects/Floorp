@@ -54,17 +54,9 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsFormControlFrame.h"
 
 #include "nsIFocusableContent.h"
-
-//Enumeration of possible mouse states used to detect mouse clicks
-enum nsMouseState {
-  eMouseNone,
-  eMouseEnter,
-  eMouseExit,
-  eMouseDown,
-  eMouseUp
-};
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -78,6 +70,7 @@ class nsLabelFrame : public nsHTMLContainerFrame
 {
 public:
   nsLabelFrame();
+  virtual ~nsLabelFrame();
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -127,6 +120,8 @@ protected:
   PRBool mControlIsInside;
   nsIFormControlFrame* mControlFrame;
   nsRect mTranslatedRect;
+
+  nsCOMPtr<nsIPresContext> mPresContext;
 };
 
 nsresult
@@ -153,6 +148,11 @@ nsLabelFrame::nsLabelFrame()
   mControlIsInside = PR_FALSE;
   mControlFrame    = nsnull;
   mTranslatedRect  = nsRect(0,0,0,0);
+}
+
+nsLabelFrame::~nsLabelFrame()
+{
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 }
 
 void
@@ -541,7 +541,10 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
       aReflowState.reflowCommand->GetNext(nextFrame);
       NS_ASSERTION(nextFrame == mFrames.FirstChild(), "unexpected next reflow command frame");
     }
-  }
+  } else if (eReflowReason_Initial == aReflowState.reason) {
+    mPresContext = aPresContext;
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+  } 
 
   // XXX remove the following when the reflow state is fixed
   LabelHack((nsHTMLReflowState&)aReflowState, "BUG - label");

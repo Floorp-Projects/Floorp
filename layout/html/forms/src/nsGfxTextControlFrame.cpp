@@ -31,7 +31,6 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsITextWidget.h"
-#include "nsITextAreaWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsSize.h"
 #include "nsString.h"
@@ -81,6 +80,7 @@
 #include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
 #include "nsStyleUtil.h"
+#include "nsLinebreakConverter.h"
 
 // for anonymous content and frames
 #include "nsHTMLParts.h"
@@ -100,9 +100,7 @@
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
@@ -189,12 +187,17 @@ nsGfxTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
+
   } else  if (aIID.Equals(NS_GET_IID(nsIGfxTextControlFrame))) {
     *aInstancePtr = (void*)(nsIGfxTextControlFrame*) this;
+    return NS_OK;
+    
+  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
     return NS_OK;                                                        
   }
   
-  return nsTextControlFrame::QueryInterface(aIID, aInstancePtr);
+  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -205,7 +208,7 @@ nsGfxTextControlFrame::Init(nsIPresContext*  aPresContext,
                             nsIFrame*        aPrevInFlow)
 {
   mFramePresContext = aPresContext;
-  return (nsTextControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow));
+  return nsFormControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
 NS_IMETHODIMP
@@ -333,6 +336,8 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
 
 nsGfxTextControlFrame::~nsGfxTextControlFrame()
 {
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+
   nsresult result;
   if (mDisplayFrame) {
     mFrameConstructor->RemoveMappingsForFrameSubtree(mFramePresContext,
@@ -1078,6 +1083,12 @@ void nsGfxTextControlFrame::CalcSizeOfSubDocInTwips(const nsMargin &aBorder,
     aSubBounds.y      = aBorder.top + aPadding.top;
     aSubBounds.width  = (aFrameSize.width - (aBorder.left + aPadding.left + aBorder.right + aPadding.right));
     aSubBounds.height = (aFrameSize.height - (aBorder.top + aPadding.top + aBorder.bottom + aPadding.bottom));
+}
+
+PRInt32 
+nsGfxTextControlFrame::GetMaxNumValues()
+{
+  return 1;
 }
 
 PRBool
@@ -1990,6 +2001,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 
   // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    mPresContext = aPresContext;
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
@@ -2991,7 +3004,7 @@ nsGfxTextControlFrame::GetAdditionalChildListName(PRInt32 aIndex,
     return NS_OK;
   }
 
-  return nsTextControlFrame::GetAdditionalChildListName(aIndex, aListName);
+  return nsLeafFrame::GetAdditionalChildListName(aIndex, aListName);
 }
 
 NS_IMETHODIMP
@@ -3004,7 +3017,7 @@ nsGfxTextControlFrame::FirstChild(nsIPresContext* aPresContext,
     return NS_OK;
   }
   
-  return nsTextControlFrame::FirstChild(aPresContext, aListName, aFirstChild);
+  return nsLeafFrame::FirstChild(aPresContext, aListName, aFirstChild);
 }
 
 NS_IMETHODIMP
@@ -3015,7 +3028,58 @@ nsGfxTextControlFrame::Destroy(nsIPresContext* aPresContext)
     mDisplayFrame->Destroy(aPresContext);
     mDisplayFrame=nsnull;
   }
-  return nsTextControlFrame::Destroy(aPresContext);
+  return nsLeafFrame::Destroy(aPresContext);
+}
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
+{
+  *aStateType = nsIStatefulFrame::eTextType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+{
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
+  nsAutoString theString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, theString);
+  if (NS_SUCCEEDED(res)) {
+    char* chars = theString.ToNewCString();
+    if (chars) {
+    
+      // GetProperty returns platform-native line breaks. We must convert
+      // these to content line breaks.
+      char* newChars = nsLinebreakConverter::ConvertLineBreaks(chars,
+           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
+      if (newChars) {
+        nsCRT::free(chars);
+        chars = newChars;
+      }
+      
+      (*aState)->SetStateProperty("value", nsAutoString(chars));
+
+      nsCRT::free(chars);
+    } else {
+      res = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  (*aState)->SetStateProperty("value", theString);
+  return res;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  nsAutoString stateString;
+  aState->GetStateProperty("value", stateString);
+  nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
+  return res;
 }
 
 #ifdef NS_DEBUG

@@ -54,6 +54,11 @@
 #include "nsStyleUtil.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLLabelElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMHTMLLegendElement.h"
+#include "nsIDOMHTMLButtonElement.h"
+#include "nsIEventStateManager.h"
 
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -87,6 +92,7 @@ nsFormControlFrame::~nsFormControlFrame()
     mFormFrame->RemoveRadioControlFrame(this);
     mFormFrame = nsnull;
   }
+  RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 }
 
 // Frames are not refcounted, no need to AddRef
@@ -302,10 +308,17 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
+  if (!mDidInit) {
+    mPresContext = aPresContext;
+    InitializeControl(aPresContext);
+    mDidInit = PR_TRUE;
+  }
+
   // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
+
 
   nsresult skiprv = SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                      aDesiredSize, aReflowState, aStatus);
@@ -313,31 +326,11 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
     return skiprv;
   }
 
-  nsWidgetRendering mode;
-  aPresContext->GetWidgetRenderingMode(&mode);
-  if (eWidgetRendering_Native == mode) {
-    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, mWidgetSize);
-
-    if (!mDidInit) {
-      PostCreateWidget(aPresContext, aDesiredSize.width, aDesiredSize.height);
-      mDidInit = PR_TRUE;
-    }
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
-
-  } else {
-    nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-    if (!mDidInit) {
-      //GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
-      PostCreateWidget(aPresContext, aDesiredSize.width, aDesiredSize.height);
-      mDidInit = PR_TRUE;
-    }
-    return rv;
-  }
+  nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   aStatus = NS_FRAME_COMPLETE;
   SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
-  return NS_OK;
+  return rv;
 }
 
 
@@ -347,9 +340,72 @@ nsFormControlFrame::GetWidgetInitData(nsIPresContext* aPresContext)
   return nsnull;
 }
 
-void 
-nsFormControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
+
+nsresult
+nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg)
 {
+#if 0
+  NS_ASSERTION(aPresContext, "aPresContext is NULL in RegUnRegAccessKey!");
+  NS_ASSERTION(aFrame, "aFrame is NULL in RegUnRegAccessKey!");
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsAutoString accessKey;
+
+  if (aFrame != nsnull) {
+    nsCOMPtr<nsIContent> content;
+    if (NS_SUCCEEDED(aFrame->GetContent(getter_AddRefs(content)))) {
+#if 1
+      PRInt32 nameSpaceID;
+      content->GetNameSpaceID(nameSpaceID);
+      nsAutoString resultValue;
+      rv = content->GetAttribute(nameSpaceID, nsHTMLAtoms::accesskey, accessKey);
+#else
+      nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
+      if (inputElement) {
+        rv = inputElement->GetAccessKey(accessKey);
+      } else {
+        nsCOMPtr<nsIDOMHTMLTextAreaElement> textarea(do_QueryInterface(content));
+        if (textarea) {
+          rv = textarea->GetAccessKey(accessKey);
+        } else {
+          nsCOMPtr<nsIDOMHTMLLabelElement> label(do_QueryInterface(content));
+          if (label) {
+            rv = label->GetAccessKey(accessKey);
+          } else {
+            nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(content));
+            if (legend) {
+              rv = legend->GetAccessKey(accessKey);
+            } else {
+              nsCOMPtr<nsIDOMHTMLButtonElement> btn(do_QueryInterface(content));
+              if (btn) {
+                rv = btn->GetAccessKey(accessKey);
+              } 
+            }
+          }
+        }
+      }
+#endif
+    }
+  }
+
+  if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+    nsCOMPtr<nsIEventStateManager> stateManager;
+    if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
+      if (aDoReg) {
+        return stateManager->RegisterAccessKey(aFrame, (PRUint32)accessKey.First());
+      } else {
+        return stateManager->UnregisterAccessKey(aFrame);
+      }
+    }
+  }
+#endif
+  return NS_ERROR_FAILURE;
+}
+
+void 
+nsFormControlFrame::InitializeControl(nsIPresContext* aPresContext)
+{
+  RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
 }
 
 void 

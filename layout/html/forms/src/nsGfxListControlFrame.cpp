@@ -125,6 +125,8 @@ nsGfxListControlFrame::nsGfxListControlFrame()
 //---------------------------------------------------------
 nsGfxListControlFrame::~nsGfxListControlFrame()
 {
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+
   // if list is dropped down 
   // make sure it gets rolled up
   if (IsInDropDownMode()) {
@@ -375,6 +377,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Add the list frame as a child of the form
   if (IsInDropDownMode() == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
@@ -583,8 +586,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // for the list frame and use that as the max/minimum size for the contents
   if (visibleHeight == 0) {
     nsCOMPtr<nsIFontMetrics> fontMet;
-    nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
-    if (fontMet) {
+    nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+    if (NS_SUCCEEDED(res) && fontMet) {
       aReflowState.rendContext->SetFont(fontMet);
       fontMet->GetHeight(visibleHeight);
       mMaxHeight = visibleHeight;
@@ -654,8 +657,7 @@ NS_IMETHODIMP
 nsGfxListControlFrame::GetFont(nsIPresContext* aPresContext, 
                                const nsFont*&  aFont)
 {
-  nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-  return NS_OK;
+  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
 }
 
 
@@ -1459,10 +1461,7 @@ nsGfxListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
     if (aSelected) {
       DisplaySelected(content);
       // Now that it is selected scroll to it
-      nsCOMPtr<nsIContent> content(do_QueryInterface(content));
-      if (content) {
-        ScrollToFrame(content);
-      }
+      ScrollToFrame(content);
     } else {
       DisplayDeselected(content);
     }

@@ -30,7 +30,6 @@
 #include "nsIFrame.h"
 #include "nsISupports.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLParts.h"
@@ -39,6 +38,7 @@
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsFont.h"
+#include "nsFormControlFrame.h"
 
 static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
 static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
@@ -63,6 +63,11 @@ nsLegendFrame::nsLegendFrame()
 {
 }
 
+nsLegendFrame::~nsLegendFrame()
+{
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+}
+
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
@@ -77,6 +82,20 @@ nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   }
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtrResult);
 }
+
+NS_IMETHODIMP 
+nsLegendFrame::Reflow(nsIPresContext*          aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus)
+{
+  if (eReflowReason_Initial == aReflowState.reason) {
+    mPresContext = aPresContext;
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+  } 
+  return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+}
+
 
 PRInt32 nsLegendFrame::GetAlign()
 {

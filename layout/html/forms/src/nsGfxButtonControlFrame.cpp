@@ -332,7 +332,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
-#if 1
+#if 0
   nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                                          aDesiredSize, aReflowState, aStatus);
 
@@ -362,6 +362,12 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     aPresContext->GetCompatibilityMode(&mode);
 
     if (mode == eCompatibility_NavQuirks) {
+      // nsHTMLButtonControlFrame::Reflow registers it for Standard Mode
+      // and sets up mPresContext
+      if (eReflowReason_Initial == aReflowState.reason) {
+        mPresContext = aPresContext;
+        nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+      }
       // Do NavQuirks Sizing and layout
       rv = DoNavQuirksReflow(aPresContext, aDesiredSize, aReflowState, aStatus);   
     } else {

@@ -23,24 +23,35 @@
 #ifndef nsGfxRadioControlFrame_h___
 #define nsGfxRadioControlFrame_h___
 
-#include "nsRadioControlFrame.h"
+#include "nsFormControlFrame.h"
+#include "nsIStatefulFrame.h"
+#include "nsIRadioControlFrame.h"
 
 // nsGfxRadioControlFrame
 
 #define NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX   0 // for additional style contexts
 #define NS_GFX_RADIO_CONTROL_FRAME_LAST_CONTEXT_INDEX   0
 
-class nsGfxRadioControlFrame : public nsRadioControlFrame
+class nsGfxRadioControlFrame : public nsFormControlFrame,
+                               public nsIStatefulFrame,
+                               public nsIRadioControlFrame
+
 {
 private:
-	typedef nsRadioControlFrame Inherited;
 
 public:
   nsGfxRadioControlFrame();
   ~nsGfxRadioControlFrame();
 
    //nsIRadioControlFrame methods
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
+
+
+  virtual PRBool GetChecked(PRBool aGetInitialValue);
+  virtual void   SetChecked(nsIPresContext* aPresContext, PRBool aValue, PRBool aSetInitialValue);
+
+  void InitializeControl(nsIPresContext* aPresContext);
 
   NS_IMETHOD GetAdditionalStyleContext(PRInt32 aIndex, 
                                        nsIStyleContext** aStyleContext) const;
@@ -66,6 +77,21 @@ public:
   virtual void PaintRadioButton(nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect);
+
+  virtual PRInt32 GetMaxNumValues() { return 1; }
+  
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
+  virtual void Reset(nsIPresContext* aPresContext);
+
+       // nsIFormControlFrame
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
+  //nsIStatefulFrame
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   ///XXX: End o the temporary methods
 #ifdef DEBUG_rodsXXX

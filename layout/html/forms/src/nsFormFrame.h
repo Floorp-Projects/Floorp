@@ -34,7 +34,7 @@ class  nsIFrame;
 class  nsIPresContext;
 struct nsHTMLReflowState;
 class  nsFormControlFrame;
-class  nsRadioControlFrame;
+class  nsGfxRadioControlFrame;
 class  nsIFormControlFrame;
 class  nsIDOMHTMLFormElement;
 class nsIDocument;
@@ -52,6 +52,11 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+
   // nsIFormManager
 
   NS_IMETHOD OnReset(nsIPresContext* aPresContext);
@@ -60,7 +65,7 @@ public:
 
   // other methods 
 
-  void OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
+  void OnRadioChecked(nsIPresContext* aPresContext, nsGfxRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
     
   void AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame);
   static void AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aFrame);
@@ -92,6 +97,10 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
   void RemoveRadioGroups();
+
+  void DoDefaultSelection(nsIPresContext*          aPresContext, 
+                          nsRadioControlGroup *    aGroup,
+                          nsGfxRadioControlFrame * aRadioToIgnore = nsnull);
 
   nsresult ProcessValue(nsIFormProcessor& aFormProcessor, nsIFormControlFrame* aFrameControl, const nsString& aName, nsString& aNewValue);
   nsresult ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);

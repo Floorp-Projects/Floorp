@@ -31,11 +31,14 @@
 #include "nsLeafFrame.h"
 #include "nsCoord.h"
 #include "nsIStyleContext.h"
+#include "nsIPresContext.h"
+#include "nsCOMPtr.h"
 
 class nsIView;
 class nsIPresContext;
 class nsStyleCoord;
 class nsFormFrame;
+class nsIFocusableContent;
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
@@ -152,11 +155,9 @@ public:
   virtual void ControlChanged(nsIPresContext* aPresContext) {}
 
   /**
-    * Perform opertations after the widget associated with this frame has been
-    * created.
+    * Chance to Initialize to a defualt value
     */
-  virtual void PostCreateWidget(nsIPresContext* aPresContext,
-                                nscoord& aWidth, nscoord& aHeight);
+  virtual void InitializeControl(nsIPresContext* aPresContext);
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
@@ -221,6 +222,8 @@ public:
                                    nsHTMLReflowMetrics& aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus& aStatus);
+  // AccessKey Helper function
+  static nsresult RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg);
 
 protected:
 
@@ -300,6 +303,8 @@ protected:
   nsFormFrame* mFormFrame;
   nscoord      mSuggestedWidth;
   nscoord      mSuggestedHeight;
+
+  nsCOMPtr<nsIPresContext> mPresContext;
 
   // Reflow Optimization
   nsSize       mCacheSize;
