@@ -36,7 +36,10 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsINntpIncomingServer.h"
+
+#if 0
 #include "nsIImapIncomingServer.h"
+#endif
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
@@ -1526,33 +1529,36 @@ nsGetImapRoot(nsFileSpec &result)
 {
   nsresult rv = NS_OK;
 
-     
     // temporary stuff. for now - should get everything from the mail session
   if (gImapRoot == nsnull) {
+#if 0
     nsIMsgMailSession *session;
     rv = nsServiceManager::GetService(kMsgMailSessionCID,
                                       nsIMsgMailSession::GetIID(),
                                       (nsISupports **)&session);
     
     if (NS_SUCCEEDED(rv)) {
-      nsIMsgIncomingServer *server;
-      rv = session->GetCurrentServer(&server);
-      if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get current server\n");
-      if (NS_SUCCEEDED(rv)) {
-        nsIImapIncomingServer *imapServer;
-        rv = server->QueryInterface(nsIImapIncomingServer::GetIID(),
-                                    (void **)&imapServer);
-        if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get imap server\n");
+        nsIMsgIncomingServer *server;
+        rv = session->GetCurrentServer(&server);
+        if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get current server\n");
         if (NS_SUCCEEDED(rv)) {
-          rv = imapServer->GetRootFolderPath(&gImapRoot);
-          if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get root\n");
-          NS_RELEASE(imapServer);
+            nsIImapIncomingServer *imapServer;
+            rv = server->QueryInterface(nsIImapIncomingServer::GetIID(),
+                                        (void **)&imapServer);
+            if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get imap server\n");
+            if (NS_SUCCEEDED(rv)) {
+                rv = imapServer->GetRootFolderPath(&gImapRoot);
+                if (NS_FAILED(rv)) printf("nsGetImapRoot: Couldn't get root\n");
+                NS_RELEASE(imapServer);
+            }
+            NS_RELEASE(server);
+            
         }
-        NS_RELEASE(server);
-        
-      }
-      nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+        nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
     }
+#else
+    gImapRoot = PL_strdup("/tmp/");
+#endif
   }
   result = gImapRoot;
   return rv;
