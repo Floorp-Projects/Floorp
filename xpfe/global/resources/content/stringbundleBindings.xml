@@ -18,6 +18,7 @@
             dump("<StringBundle> Error: Failed to get string from bundle. Are you using the right key?\n");
             dump("The key you provided was: " + aStringKey + "\n");
             dump("The exception thrown was:\n" + e + "\n");
+	    return null;
           }
         ]]>
         </body>
@@ -32,13 +33,12 @@
         <setter>
         <![CDATA[
           try {
-            strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
+            var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
             strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+            this._bundle = strBundleService.CreateBundle(val, this.appLocale); 
           } 
           catch (ex) {
-            return null;
           }
-          this._bundle = strBundleService.CreateBundle(val, this.appLocale); 
         ]]>
         </setter>
       </property>
@@ -46,16 +46,14 @@
       <property name="appLocale">
         <getter>
         <![CDATA[
-          var applicationLocale = null;
           try {
-            localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
+            var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
             localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
+            return localeService.GetApplicationLocale();
           } 
           catch (ex) {
             return null;
           }
-          applicationLocale = localeService.GetApplicationLocale();
-          return applicationLocale;
         ]]>
         </getter>
       </property>
