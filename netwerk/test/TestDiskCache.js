@@ -1,3 +1,5 @@
+var clientID = "javascript";
+var key = "theme:button";
 var nsICache = Components.interfaces.nsICache;
 
 function getCacheService()
@@ -16,8 +18,8 @@ function createCacheSession(clientID, storagePolicy, streamable)
 
 function openCacheEntry(mode)
 {
-    var session = createCacheSession("javascript", nsICache.STORE_ON_DISK, true);
-    var entry = session.openCacheEntry("theme:button", mode);
+    var session = createCacheSession(clientID, nsICache.STORE_ON_DISK, true);
+    var entry = session.openCacheEntry(key, mode);
     return entry;
 }
 
@@ -27,21 +29,30 @@ function dumpLeaks()
     leakDetector.dumpLeaks();
 }
 
-var entry = openCacheEntry(nsICache.ACCESS_WRITE);
-var output = entry.transport.openOutputStream(0, -1, 0);
+function wrapInputStream(input)
+{
+    var nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
+    var factory = Components.classes["@mozilla.org/scriptableinputstream;1"];
+    var wrapper = factory.createInstance(nsIScriptableInputStream);
+    wrapper.init(input);
+    return wrapper;
+}
+
+var outputEntry = openCacheEntry(nsICache.ACCESS_WRITE);
+var output = outputEntry.transport.openOutputStream(0, -1, 0);
 if (output.write("foo", 3) == 3)
     print("disk cache write works!");
 else
     print("disk cache write broken!");
 output.close();
-entry.markValid();
-entry.close();
+outputEntry.markValid();
+outputEntry.close();
 
-var newEntry = openCacheEntry(nsICache.ACCESS_READ);
-var input = newEntry.transport.openInputStream(0, -1, 0);
-if (input.available() == 3)
+var inputEntry = openCacheEntry(nsICache.ACCESS_READ);
+var input = wrapInputStream(inputEntry.transport.openInputStream(0, -1, 0));
+if (input.read(input.available()) == "foo")
     print("disk cache read works!");
 else
     print("disk cache read broken!");
 input.close();
-newEntry.close();
+inputEntry.close();
