@@ -39,7 +39,7 @@ namespace JavaScript {
                                    GC_finalization_proc *old_proc, void* *old_client_data);
     }
 
-    #ifndef XP_MAC
+    #if 0 && !defined(XP_MAC)
     // for platforms where GC doesn't exist yet.
     inline void* GC_malloc(size_t bytes) { return ::operator new(bytes); }
     inline void* GC_malloc_atomic(size_t bytes) { return ::operator new(bytes); }
