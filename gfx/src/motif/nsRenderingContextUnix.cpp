@@ -28,7 +28,18 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
-#define CLIPPING_NOT_FUNCTIONAL 1
+//#define NO_CLIP
+
+/*
+  Some Implementation Notes
+
+  REGIONS:  Regions are clipping rects associated with a GC. Since 
+  multiple Drawable's can and do share GC's (they are hardware cached)
+  In order to select clip rect's into GC's, they must be writeable. Thus, 
+  any consumer of the 'gfx' library must assume that GC's created by them
+  will be modified in gfx.
+
+ */
 
 class GraphicsState
 {
@@ -56,20 +67,8 @@ GraphicsState :: GraphicsState()
 
 GraphicsState :: ~GraphicsState()
 {
-  if (nsnull != mClipRegion)
-  {
-    ::XDestroyRegion(mClipRegion);
-    mClipRegion = NULL;
-  }
-
   mFont = nsnull;
-
 }
-
-
-typedef unsigned char BYTE;
-
-#define RGB(r,g,b) ((unsigned long) (((BYTE) (r) | ((unsigned long) ((BYTE) (g)) <<8)) | (((unsigned long)(BYTE)(b)) << 16)))
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
@@ -103,8 +102,10 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
   }
 
   mTMatrix = nsnull;
+
   PopState();
 
+  // Destroy the State Machine
   if (nsnull != mStateCache)
   {
     PRInt32 cnt = mStateCache->Count();
@@ -122,7 +123,14 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
     mStateCache = nsnull;
   }
 
-  delete mFrontBuffer;
+  // Destroy the front buffer and it's GC if one was allocated for it
+  if (nsnull != mFrontBuffer) {
+    if (mFrontBuffer != mRenderingSurface) {
+      ::XFreeGC(mFrontBuffer->display,
+		mFrontBuffer->gc);
+    }
+    delete mFrontBuffer;
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
@@ -156,17 +164,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   
   mFrontBuffer = mRenderingSurface;
 
-  ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
-  ((nsDeviceContextUnix *)aContext)->InstallColormap();
-
-  mFontCache = mContext->GetFontCache();
-  mP2T = mContext->GetDevUnitsToAppUnits();
-  mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
-                     mContext->GetAppUnitsToDevUnits());
-
-  mRegion = ::XCreateRegion();
-  // Select a default font here?
-  return NS_OK;
+  return (CommonInit());
 }
 
 nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
@@ -177,20 +175,33 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   NS_IF_ADDREF(mContext);
 
   mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;
-  ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
-  ((nsDeviceContextUnix *)aContext)->InstallColormap();
+
+  return (CommonInit());
+}
+
+nsresult nsRenderingContextUnix :: CommonInit()
+{
+  ((nsDeviceContextUnix *)mContext)->SetDrawingSurface(mRenderingSurface);
+  ((nsDeviceContextUnix *)mContext)->InstallColormap();
 
   mFontCache = mContext->GetFontCache();
   mP2T = mContext->GetDevUnitsToAppUnits();
   mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
-  mRegion = ::XCreateRegion();
   return NS_OK;
 }
 
 nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
-  mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;
+
+  if (mFrontBuffer == mRenderingSurface) {
+    XGCValues values;
+    mFrontBuffer->gc = ::XCreateGC(mRenderingSurface->display,
+				   mRenderingSurface->drawable,
+				   nsnull, &values);
+  }
+  
+  mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;  
   return NS_OK;
 }
 
@@ -206,6 +217,9 @@ nsIDeviceContext * nsRenderingContextUnix :: GetDeviceContext(void)
 
 void nsRenderingContextUnix :: PushState(void)
 {
+
+  nsRect rect;
+
   GraphicsState * state = new GraphicsState();
 
   // Push into this state object, add to vector
@@ -218,11 +232,32 @@ void nsRenderingContextUnix :: PushState(void)
   else
     mTMatrix = new nsTransform2D(mTMatrix);
 
+  GetClipRect(state->mLocalClip);
+
+  state->mClipRegion = mRegion;
+
+  if (nsnull != state->mClipRegion) {
+    mRegion = ::XCreateRegion();
+
+    XRectangle xrect;
+    
+    xrect.x = state->mLocalClip.x;
+    xrect.y = state->mLocalClip.y;
+    xrect.width = state->mLocalClip.width;
+    xrect.height = state->mLocalClip.height;
+    
+    ::XUnionRectWithRegion(&xrect, mRegion, mRegion);
+  }
+
+  state->mColor = mCurrentColor;
 
 }
 
 PRBool nsRenderingContextUnix :: PopState(void)
 {
+
+  PRBool bEmpty = PR_FALSE;
+
   PRUint32 cnt = mStateCache->Count();
   GraphicsState * state;
 
@@ -235,12 +270,34 @@ PRBool nsRenderingContextUnix :: PopState(void)
       delete mTMatrix;
     mTMatrix = state->mMatrix;
 
+    if (nsnull != mRegion)
+      ::XDestroyRegion(mRegion);
+
+    mRegion = state->mClipRegion;
+
+    if (nsnull != mRegion && ::XEmptyRegion(mRegion) == True){
+      bEmpty = PR_TRUE;
+    }else{
+
+      // Select in the old region.  We probably want to set a dirty flag and only 
+      // do this IFF we need to draw before the next Pop.  We'd need to check the
+      // state flag on every draw operation.
+      if (nsnull != mRegion)
+	::XSetRegion(mRenderingSurface->display,
+		     mRenderingSurface->gc,
+		     mRegion);
+
+    }
+
+    if (state->mColor != mCurrentColor)
+      SetColor(state->mColor);
+    
+
     // Delete this graphics state object
     delete state;
   }
 
-  //XXX need to return if clip region is empty after pop. see nsirendering....h MMP
-  return PR_FALSE;
+  return bEmpty;
 }
 
 PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
@@ -248,75 +305,71 @@ PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
   return PR_TRUE;
 }
 
-PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
+PRBool nsRenderingContextUnix :: SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine)
 {
-#ifdef CLIPPING_NOT_FUNCTIONAL
-  return PR_FALSE;
-#endif
-
-  // Essentially, create the rect and select it into the GC. Get the current
-  // ClipRegion first
+  PRBool bEmpty = PR_FALSE;
 
   nsRect  trect = aRect;
 
-  mTMatrix->TransformCoord(&trect.x, &trect.y,
-                           &trect.width, &trect.height);
+  XRectangle xrect;
 
-  //how we combine the new rect with the previous?
+  xrect.x = trect.x;
+  xrect.y = trect.y;
+  xrect.width = trect.width;
+  xrect.height = trect.height;
+
+  Region a = ::XCreateRegion();
+  ::XUnionRectWithRegion(&xrect, a, a);
+
   if (aCombine == nsClipCombine_kIntersect)
   {
-    Region a = ::XCreateRegion();
     Region tRegion = ::XCreateRegion();
 
-    ::XOffsetRegion(a, trect.x, trect.y);
-    ::XShrinkRegion(a, -trect.width, -trect.height);
-
-    ::XIntersectRegion(a, mRegion, tRegion);
-
-    ::XDestroyRegion(mRegion);
-    ::XDestroyRegion(a);
-
-    mRegion = tRegion;
+    if (nsnull != mRegion) {
+      ::XIntersectRegion(a, mRegion, tRegion);
+      ::XDestroyRegion(mRegion);
+      ::XDestroyRegion(a);
+      mRegion = tRegion;
+    } else {
+      ::XDestroyRegion(tRegion);
+      mRegion = a;
+    }
 
   }
   else if (aCombine == nsClipCombine_kUnion)
   {
-    Region a = ::XCreateRegion();
-    Region tRegion = ::XCreateRegion();
+    if (nsnull != mRegion) {
+      Region tRegion = ::XCreateRegion();
+      ::XUnionRegion(a, mRegion, tRegion);
+      ::XDestroyRegion(mRegion);
+      ::XDestroyRegion(a);
+      mRegion = tRegion;
+    } else {
+      mRegion = a;
+    }
 
-    ::XOffsetRegion(a, trect.x, trect.y);
-    ::XShrinkRegion(a, -trect.width, -trect.height);
-
-    ::XUnionRegion(a, mRegion, tRegion);
-
-    ::XDestroyRegion(mRegion);
-    ::XDestroyRegion(a);
-
-    mRegion = tRegion;
   }
   else if (aCombine == nsClipCombine_kSubtract)
   {
-    Region a = ::XCreateRegion();
-    Region tRegion = ::XCreateRegion();
 
-    ::XOffsetRegion(a, trect.x, trect.y);
-    ::XShrinkRegion(a, -trect.width, -trect.height);
+    if (nsnull != mRegion) {
 
-    ::XSubtractRegion(a, mRegion, tRegion);
+      Region tRegion = ::XCreateRegion();
+      ::XSubtractRegion(mRegion, a, tRegion);
+      ::XDestroyRegion(mRegion);
+      ::XDestroyRegion(a);
+      mRegion = tRegion;
 
-    ::XDestroyRegion(mRegion);
-    ::XDestroyRegion(a);
+    } else {
+      mRegion = a;
+    }
 
-    mRegion = tRegion;
   }
   else if (aCombine == nsClipCombine_kReplace)
   {
-    Region a = ::XCreateRegion();
 
-    ::XOffsetRegion(a, trect.x, trect.y);
-    ::XShrinkRegion(a, -trect.width, -trect.height);
-
-    ::XDestroyRegion(mRegion);
+    if (nsnull != mRegion)
+      ::XDestroyRegion(mRegion);
 
     mRegion = a;
 
@@ -324,18 +377,35 @@ PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine 
   else
     NS_ASSERTION(PR_FALSE, "illegal clip combination");
 
-  ::XSetRegion(mRenderingSurface->display,
-	       mRenderingSurface->gc,
-	       mRegion);
+  if (::XEmptyRegion(mRegion) == True) {
 
-  return PR_TRUE;
+    bEmpty = PR_TRUE;
+    ::XSetClipMask(mRenderingSurface->display,
+		   mRenderingSurface->gc,
+		   None);
+
+  } else {
+
+    ::XSetRegion(mRenderingSurface->display,
+		 mRenderingSurface->gc,
+		 mRegion);
+
+  }
+
+  return bEmpty;
+}
+
+PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
+{
+  nsRect  trect = aRect;
+
+  mTMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
+  return(SetClipRectInPixels(trect,aCombine));
 }
 
 PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
 {
-#ifdef CLIPPING_NOT_FUNCTIONAL
-  return PR_FALSE;
-#endif
 
   if (mRegion != nsnull) {
     XRectangle xrect;
@@ -343,35 +413,42 @@ PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
     aRect.SetRect(xrect.x, xrect.y, xrect.width, xrect.height);
   } else {
     aRect.SetRect(0,0,0,0);
+    return (PR_TRUE);
   }
-  return PR_TRUE;
+  if (::XEmptyRegion(mRegion) == True)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
 
 }
 
 PRBool nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
-
-#ifdef CLIPPING_NOT_FUNCTIONAL
-  return PR_FALSE;
-#endif
-
   nsRect rect;
   XRectangle xrect;
 
   nsRegionUnix *pRegion = (nsRegionUnix *)&aRegion;
   Region xregion = pRegion->GetXRegion();
+  
+  ::XClipBox(xregion, &xrect);
 
-  ::XSetRegion(mRenderingSurface->display,
-	       mRenderingSurface->gc,
-	       xregion);
+  rect.x = xrect.x;
+  rect.y = xrect.y;
+  rect.width = xrect.width;
+  rect.height = xrect.height;
 
-  mRegion = xregion ;
+  SetClipRectInPixels(rect, aCombine);
 
-  return (PR_TRUE);
+  if (::XEmptyRegion(mRegion) == True)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+
 }
 
 void nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
 {
+
   nsIRegion * pRegion ;
 
   static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
@@ -398,16 +475,7 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
 {
   XGCValues values ;
 
-  mCurrentColor = aColor ;
-
-  // XXX
-  //mCurrentColor++;
-
-  PRUint32 pixel ;
-
-  pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
-
-  mCurrentColor = pixel;
+  mCurrentColor = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
 
   values.foreground = mCurrentColor;
   values.background = mCurrentColor;
@@ -416,6 +484,8 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
 	      mRenderingSurface->gc,
 	      GCForeground | GCBackground,
 	      &values);
+
+  mCurrentColor = aColor ;
   
 }
 
@@ -431,7 +501,7 @@ void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 
   if (mFontMetrics)
   {  
-//    mCurrFontHandle = (Font)mFontMetrics->GetFontHandle();
+
     mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
     
     ::XSetFont(mRenderingSurface->display,
@@ -476,22 +546,22 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
   PRUint32 depth = DefaultDepth(mRenderingSurface->display,
 				DefaultScreen(mRenderingSurface->display));
   Pixmap p;
-
+  
   if (aBounds != nsnull) {
     p  = ::XCreatePixmap(mRenderingSurface->display,
-			     mRenderingSurface->drawable,
-			     aBounds->width, aBounds->height, depth);
+			 mRenderingSurface->drawable,
+			 aBounds->width, aBounds->height, depth);
   } else {
     p  = ::XCreatePixmap(mRenderingSurface->display,
-			     mRenderingSurface->drawable,
-			     2, 2, depth);
+			 mRenderingSurface->drawable,
+			 2, 2, depth);
   }
 
   nsDrawingSurfaceUnix * surface = new nsDrawingSurfaceUnix();
 
   surface->drawable = p ;
   surface->display  = mRenderingSurface->display;
-  surface->gc       = mRenderingSurface->gc;
+  surface->gc       = mFrontBuffer->gc;
   surface->visual   = mRenderingSurface->visual;
   surface->depth    = mRenderingSurface->depth;
 
@@ -506,8 +576,8 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
   ::XFreePixmap(surface->display, surface->drawable);
 
   //XXX greg, this seems bad. MMP
-  if (mRenderingSurface == surface)
-    mRenderingSurface = nsnull;
+    if (mRenderingSurface == surface)
+      mRenderingSurface = nsnull;
 
   delete aDS;
 }
@@ -805,17 +875,17 @@ void nsRenderingContextUnix :: DrawString(const nsString& aString,
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
-nscoord width,height;
+  nscoord width,height;
   width = NS_TO_INT_ROUND(mP2T * aImage->GetWidth());
   height = NS_TO_INT_ROUND(mP2T * aImage->GetHeight());
-
+  
   this->DrawImage(aImage,aX,aY,width,height);
 }
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                         nscoord aWidth, nscoord aHeight) 
 {
-nsRect	tr;
+  nsRect	tr;
 
   tr.x = aX;
   tr.y = aY;
@@ -826,7 +896,7 @@ nsRect	tr;
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
-nsRect	sr,dr;
+  nsRect	sr,dr;
   
   sr = aSRect;
   mTMatrix ->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
@@ -840,11 +910,11 @@ nsRect	sr,dr;
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-nsRect	tr;
+  nsRect	tr;
 
   tr = aRect;
   mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-
+  
   if (aImage != nsnull) {
     ((nsImageUnix*)aImage)->Draw(*this,mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
   } else {
@@ -854,13 +924,24 @@ nsRect	tr;
 
 nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 {
+
+
+  ::XSetClipMask(mFrontBuffer->display,
+		 mFrontBuffer->gc,
+		 None);
+  
   
   ::XCopyArea(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mFrontBuffer->drawable,
 	      mFrontBuffer->gc,
 	      aBounds.x, aBounds.y, aBounds.width, aBounds.height, 0, 0);
-	      
+  
+  if (nsnull != mRegion)
+    ::XSetRegion(mRenderingSurface->display,
+		 mRenderingSurface->gc,
+		 mRegion);
+
   return NS_OK;
 }
 

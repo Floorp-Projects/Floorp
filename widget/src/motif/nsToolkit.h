@@ -20,6 +20,7 @@
 #define TOOLKIT_H
 
 #include "nsIToolkit.h"
+#include "X11/Xlib.h"
 
 struct MethodInfo;
 
@@ -32,15 +33,20 @@ struct MethodInfo;
 class nsToolkit : public nsIToolkit
 {
 
-  public:
-    nsToolkit();
-    virtual                 ~nsToolkit();
-
-    NS_DECL_ISUPPORTS
-
+public:
+  nsToolkit();
+  virtual                 ~nsToolkit();
+  
+  NS_DECL_ISUPPORTS
+    
     virtual void            Init(PRThread *aThread);
+  
+public:
+  NS_IMETHOD_(GC) GetSharedGC();
+  NS_IMETHOD_(void) SetSharedGC(GC aGC);
 
-
+private:
+  GC mSharedGC;
 
 };
 

@@ -180,6 +180,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
     mOuter = aOuter;
   else
     mOuter = &mInner;
+  mGC = nsnull ;
 }
 
 
@@ -190,6 +191,10 @@ nsWindow::nsWindow(nsISupports *aOuter):
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+  if (nsnull != mGC) {
+    ::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
+    mGC = nsnull;
+  }
 }
 
 
@@ -230,6 +235,9 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
 	mToolkit = new nsToolkit();
 	mToolkit->AddRef();
 	mToolkit->Init(PR_GetCurrentThread());
+
+	// Create a shared GC for all widgets
+	((nsToolkit *)mToolkit)->SetSharedGC((GC)GetNativeData(NS_NATIVE_GRAPHIC));
       }
     }
     
@@ -246,25 +254,9 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
   else {
     nsresult  res;
     
-    // XXX Move this! - For some reason Registering in another DLL (shell) isn't working
-        
-#define GFXWIN_DLL "libgfxunix.so"
-
-    /*static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
-    static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
-    static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
-    
-    NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    
-   */ 
-    
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
+    
     //res = !NS_OK;
     res = NSRepository::CreateInstance(kDeviceContextCID, 
 				       nsnull, 
@@ -303,8 +295,9 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
 				    XmNmarginWidth, 0,
 				    nsnull);
 
-  mWidget = frame ;
+	      
 
+  mWidget = frame ;
 
   if (mainWindow) {
     XmMainWindowSetAreas (mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
@@ -325,12 +318,36 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
                 nsXtWidget_Resize_Callback,
                 this);
 
+
+
   /*XtAddCallback(mWidget,
                 XmNexposeCallback,
                 nsXtWidget_Expose_Callback,
                 this);*/
 
 
+  // Create a Writeable GC for this Widget. Unfortunatley, 
+  // the Window for the Widget is not created properly at this point and
+  // we Need the GC prior to the Rendering Context getting created, so
+  // we create a small dummy window of the default depth as our dummy Drawable
+  // to create a compatible GC
+
+  if (nsnull == mGC) {
+
+    XGCValues values;
+    Window w;
+    Display * d = XtDisplay(mWidget);
+    
+    w = ::XCreateSimpleWindow(d,
+			      RootWindow(d,DefaultScreen(d)),
+			      0,0,1,1,0,
+			      BlackPixel(d,DefaultScreen(d)),
+			      WhitePixel(d,DefaultScreen(d)));
+    mGC = ::XCreateGC(d, w, nsnull, &values);
+    
+    ::XDestroyWindow(d,w);
+  }
+  
 }
 
 
@@ -732,14 +749,14 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 	break;
         case NS_NATIVE_GRAPHIC:
 	  {
-	    XGCValues values;
-	    GC aGC;
-  
-	    aGC= ::XtGetGC(mWidget, 
-			   nsnull,
-			   &values);
+	    // We Cache a Read-Only Shared GC in the Toolkit.  If we don't
+	    // have one ourselves (because it needs to be writeable) grab the
+	    // the shared GC
+	    
+	    if (nsnull == mGC)
+	      return (((nsToolkit *)mToolkit)->GetSharedGC());
 
-            return (void*)aGC;
+	    return ((void*)mGC);
 	  }
 	break;
         case NS_NATIVE_COLORMAP:
@@ -762,6 +779,7 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
   nsIRenderingContext * ctx = nsnull;
 
   if (GetNativeData(NS_NATIVE_WIDGET)) {
+
     nsresult  res;
     
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);

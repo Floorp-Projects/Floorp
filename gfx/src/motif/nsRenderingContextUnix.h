@@ -58,6 +58,7 @@ public:
 
   virtual nsresult Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
   virtual nsresult Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
+  virtual nsresult CommonInit();
 
   virtual void Reset();
 
@@ -70,6 +71,7 @@ public:
 
   virtual PRBool IsVisibleRect(const nsRect& aRect);
 
+  virtual PRBool SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine);
   virtual PRBool SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
   virtual PRBool GetClipRect(nsRect &aRect);
   virtual PRBool SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);

@@ -63,6 +63,10 @@ private:
   Region    mRegion;
   nsRegionType  mRegionType;
 
+private:
+  virtual void SetRegionType();
+  virtual void SetRegionEmpty();
+  virtual Region CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
 };
 

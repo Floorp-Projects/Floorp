@@ -51,23 +51,28 @@ void nsRegionUnix :: SetTo(const nsIRegion &aRegion)
 {
   nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
 
-  ::XDestroyRegion(mRegion);
-  mRegion = ::XCreateRegion();
+  SetRegionEmpty();
 
   ::XUnionRegion(mRegion, pRegion->mRegion, mRegion);
 
-  mRegionType = eRegionType_rect ; // XXX: Should probably set to complex
+  SetRegionType();
 }
 
 void nsRegionUnix :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  ::XDestroyRegion(mRegion);
-  mRegion = ::XCreateRegion();
 
-  ::XOffsetRegion(mRegion, aX, aY);
-  ::XShrinkRegion(mRegion, -aWidth, -aHeight);
+  SetRegionEmpty();
 
-  mRegionType = eRegionType_rect ;
+  XRectangle xrect;
+
+  xrect.x = aX;
+  xrect.y = aY;
+  xrect.width = aWidth;
+  xrect.height = aHeight;
+
+  ::XUnionRectWithRegion(&xrect, mRegion, mRegion);
+
+  SetRegionType();
 }
 
 void nsRegionUnix :: Intersect(const nsIRegion &aRegion)
@@ -76,23 +81,19 @@ void nsRegionUnix :: Intersect(const nsIRegion &aRegion)
 
   ::XIntersectRegion(mRegion, pRegion->mRegion, mRegion);
 
-  mRegionType = eRegionType_rect ;
+  SetRegionType();
 }
 
 void nsRegionUnix :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  Region tRegion;
+  Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
 
-  tRegion = ::XCreateRegion();
-
-  ::XOffsetRegion(tRegion, aX, aY);
-  ::XShrinkRegion(tRegion, -aWidth, -aHeight);
-  
   ::XIntersectRegion(mRegion, tRegion, mRegion);
 
   ::XDestroyRegion(tRegion);
 
-  mRegionType = eRegionType_rect ;
+  SetRegionType();
+
 }
 
 void nsRegionUnix :: Union(const nsIRegion &aRegion)
@@ -101,23 +102,21 @@ void nsRegionUnix :: Union(const nsIRegion &aRegion)
 
   ::XUnionRegion(mRegion, pRegion->mRegion, mRegion);
 
-  mRegionType = eRegionType_rect ;
+  SetRegionType();
+
 }
 
 void nsRegionUnix :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  Region tRegion;
 
-  tRegion = ::XCreateRegion();
+  Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
 
-  ::XOffsetRegion(tRegion, aX, aY);
-  ::XShrinkRegion(tRegion, -aWidth, -aHeight);
-  
   ::XUnionRegion(mRegion, tRegion, mRegion);
 
   ::XDestroyRegion(tRegion);
 
-  mRegionType = eRegionType_rect ;
+  SetRegionType();
+
 }
 
 void nsRegionUnix :: Subtract(const nsIRegion &aRegion)
@@ -126,27 +125,28 @@ void nsRegionUnix :: Subtract(const nsIRegion &aRegion)
 
   ::XSubtractRegion(mRegion, pRegion->mRegion, mRegion);
 
-  mRegionType = eRegionType_rect ;
+  SetRegionType();
+
 }
+
 void nsRegionUnix :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  Region tRegion;
-
-  tRegion = ::XCreateRegion();
-
-  ::XOffsetRegion(tRegion, aX, aY);
-  ::XShrinkRegion(tRegion, -aWidth, -aHeight);
+  Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
   
   ::XSubtractRegion(mRegion, tRegion, mRegion);
 
   ::XDestroyRegion(tRegion);
 
-  mRegionType = eRegionType_rect ;
+  SetRegionType();
+
 }
 
 PRBool nsRegionUnix :: IsEmpty(void)
 {
-  return (::XEmptyRegion(mRegion));
+  if (mRegionType == eRegionType_empty)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
 
 PRBool nsRegionUnix :: IsEqual(const nsIRegion &aRegion)
@@ -197,3 +197,41 @@ Region nsRegionUnix :: GetXRegion(void)
 {
   return (mRegion);
 }
+
+void nsRegionUnix :: SetRegionType()
+{
+  if (::XEmptyRegion(mRegion) == True)
+    mRegionType = eRegionType_empty;
+  else
+    mRegionType = eRegionType_rect ;
+}
+
+void nsRegionUnix :: SetRegionEmpty()
+{
+  ::XDestroyRegion(mRegion);
+  mRegion = ::XCreateRegion();
+}
+
+Region nsRegionUnix :: CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+  Region r = ::XCreateRegion();
+
+  XRectangle xrect;
+
+  xrect.x = aX;
+  xrect.y = aY;
+  xrect.width = aWidth;
+  xrect.height = aHeight;
+
+  ::XUnionRectWithRegion(&xrect, r, r);
+
+  return (r);
+}
+
+
+
+
+
+
+
+
