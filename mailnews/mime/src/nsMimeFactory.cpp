@@ -256,6 +256,12 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                     path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+  rv = compMgr->RegisterComponent(kCStreamConverterCID,
+                                    "Mailnews Mime Stream Converter",
+                                    NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID1,
+                                    path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
   // The interface for URL utils
   rv = compMgr->RegisterComponent(kCIMimeHeadersCID,
   								  "Mime Headers",
