@@ -103,18 +103,20 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 GTK_GLUE		= -lgtksuperwin
 endif
 
-EXTRA_DSO_LIBS		= gkgfx
+XP_DIST_LIBS		= \
+			-lgkgfx \
+			$(NULL)
+
 ifdef MOZ_OJI
-EXTRA_DSO_LIBS		+= jsj
+XP_DIST_LIBS		+= -ljsj
 endif
 ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS		+= mozutil_s
+XP_DIST_LIBS		+= -lmozutil_s
 endif
 
-XP_DIST_LIBS		= \
-			$(EXTRA_DSO_LIBS) \
-			$(MOZ_JS_LIBS) \
+XP_DIST_LIBS		+= \
 			$(XPCOM_LIBS) \
+			$(MOZ_JS_LIBS) \
 			$(NULL)
 
 XP_LIBS			= \
