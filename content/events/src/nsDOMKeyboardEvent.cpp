@@ -49,11 +49,9 @@ nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext, nsKeyEvent* 
 
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
-    mEventIsTrusted = PR_TRUE;
   }
   else {
     mEventIsInternal = PR_TRUE;
-    mEventIsTrusted = PR_FALSE;
     mEvent->time = PR_Now();
   }
 }

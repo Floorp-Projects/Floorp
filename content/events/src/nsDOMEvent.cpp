@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsDOMEvent.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -68,19 +68,19 @@ static const char* const sEventNames[] = {
   "popupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut"
 }; 
 
+static char *sPopupAllowedEvents;
+
+
 nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
 {
   mPresContext = aPresContext;
-  mEventIsTrusted = PR_FALSE;
 
   if (aEvent) {
     mEvent = aEvent;
     mEventIsInternal = PR_FALSE;
-    mEventIsTrusted = PR_TRUE;
   }
   else {
     mEventIsInternal = PR_TRUE;
-    mEventIsTrusted = PR_FALSE;
     /*
       A derived class might want to allocate its own type of aEvent
       (derived from nsEvent). To do this, it should take care to pass
@@ -89,8 +89,8 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
         nsDOMFooEvent::nsDOMFooEvent(..., nsEvent* aEvent)
         : nsDOMEvent(..., aEvent ? aEvent : new nsFooEvent())
       
-      Then, to override the mEventIsInternal and mEventIsTrusted
-      assignments done by the base ctor, it should do this in its own ctor:
+      Then, to override the mEventIsInternal assignments done by the
+      base ctor, it should do this in its own ctor:
 
         nsDOMFooEvent::nsDOMFooEvent(..., nsEvent* aEvent)
         ...
@@ -98,11 +98,9 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
           ...
           if (aEvent) {
             mEventIsInternal = PR_FALSE;
-            mEventIsTrusted = PR_TRUE;
           }
           else {
             mEventIsInternal = PR_TRUE;
-            mEventIsTrusted = PR_FALSE;
           }
           ...
         }
@@ -286,7 +284,12 @@ nsDOMEvent::HasOriginalTarget(PRBool* aResult)
 NS_IMETHODIMP
 nsDOMEvent::SetTrusted(PRBool aTrusted)
 {
-  mEventIsTrusted = aTrusted;
+  if (aTrusted) {
+    mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_TRUSTED;
+  } else {
+    mEvent->internalAppFlags &= ~NS_APP_EVENT_FLAG_TRUSTED;
+  }
+
   return NS_OK;
 }
 
@@ -360,7 +363,7 @@ nsDOMEvent::PreventCapture()
 NS_IMETHODIMP
 nsDOMEvent::GetIsTrusted(PRBool *aIsTrusted)
 {
-  *aIsTrusted = mEventIsTrusted;
+  *aIsTrusted = mEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
 
   return NS_OK;
 }
@@ -461,7 +464,6 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBo
   NS_ENSURE_SUCCESS(SetEventType(aEventTypeArg), NS_ERROR_FAILURE);
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
   mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
-  mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
   return NS_OK;
 }
 
@@ -516,10 +518,10 @@ nsDOMEvent::IsHandled(PRBool* aIsHandled)
 NS_IMETHODIMP
 nsDOMEvent::SetHandled(PRBool aHandled)
 {
-  if(aHandled) 
+  if(aHandled)
     mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_HANDLED;
   else
-	mEvent->internalAppFlags &= ~NS_APP_EVENT_FLAG_HANDLED;
+    mEvent->internalAppFlags &= ~NS_APP_EVENT_FLAG_HANDLED;
 
   return NS_OK;
 }
@@ -532,6 +534,204 @@ nsDOMEvent::GetInternalNSEvent(nsEvent** aNSEvent)
   return NS_OK;
 }
 
+// return true if eventName is contained within events, delimited by
+// spaces
+static PRBool
+PopupAllowedForEvent(const char *eventName)
+{
+  if (!sPopupAllowedEvents) {
+    nsDOMEvent::PopupAllowedEventsChanged();
+
+    if (!sPopupAllowedEvents) {
+      return PR_FALSE;
+    }
+  }
+
+  nsDependentCString events(sPopupAllowedEvents);
+
+  nsAFlatCString::const_iterator start, end;
+  nsAFlatCString::const_iterator startiter(events.BeginReading(start));
+  events.EndReading(end);
+
+  while (startiter != end) {
+    nsAFlatCString::const_iterator enditer(end);
+
+    if (!FindInReadable(nsDependentCString(eventName), startiter, enditer))
+      return PR_FALSE;
+
+    // the match is surrounded by spaces, or at a string boundary
+    if ((startiter == start || *--startiter == ' ') &&
+        (enditer == end || *enditer == ' ')) {
+      return PR_TRUE;
+    }
+
+    // Move on and see if there are other matches. (The delimitation
+    // requirement makes it pointless to begin the next search before
+    // the end of the invalid match just found.)
+    startiter = enditer;
+  }
+
+  return PR_FALSE;
+}
+
+// static
+PopupControlState
+nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
+{
+  // generally if an event handler is running, new windows are disallowed.
+  // check for exceptions:
+  PopupControlState abuse = openAbused;
+
+  switch(aEvent->eventStructType) {
+  case NS_EVENT :
+    // For these following events only allow popups if they're
+    // triggered while handling user input. See
+    // nsPresShell::HandleEventInternal() for details.
+    if (nsEventStateManager::IsHandlingUserInput()) {
+      switch(aEvent->message) {
+      case NS_FORM_SELECTED :
+        if (::PopupAllowedForEvent("select"))
+          abuse = openControlled;
+      case NS_FORM_CHANGE :
+        if (::PopupAllowedForEvent("change"))
+          abuse = openControlled;
+      }
+    }
+    break;
+  case NS_GUI_EVENT :
+    // For this following event only allow popups if it's triggered
+    // while handling user input. See
+    // nsPresShell::HandleEventInternal() for details.
+    if (nsEventStateManager::IsHandlingUserInput()) {
+      switch(aEvent->message) {
+      case NS_FORM_INPUT :
+        if (::PopupAllowedForEvent("input"))
+          abuse = openControlled;
+        break;
+      }
+    }
+    break;
+  case NS_INPUT_EVENT :
+    // For this following event only allow popups if it's triggered
+    // while handling user input. See
+    // nsPresShell::HandleEventInternal() for details.
+    if (nsEventStateManager::IsHandlingUserInput()) {
+      switch(aEvent->message) {
+      case NS_FORM_CHANGE :
+        if (::PopupAllowedForEvent("change"))
+          abuse = openControlled;
+        break;
+      }
+    }
+    break;
+  case NS_KEY_EVENT :
+    if (aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) {
+      PRUint32 key = NS_STATIC_CAST(nsKeyEvent *, aEvent)->keyCode;
+      switch(aEvent->message) {
+      case NS_KEY_PRESS :
+        // return key on focused button. see note at NS_MOUSE_LEFT_CLICK.
+        if (key == nsIDOMKeyEvent::DOM_VK_RETURN)
+          abuse = openAllowed;
+        else if (::PopupAllowedForEvent("keypress"))
+          abuse = openControlled;
+        break;
+      case NS_KEY_UP :
+        // space key on focused button. see note at NS_MOUSE_LEFT_CLICK.
+        if (key == nsIDOMKeyEvent::DOM_VK_SPACE)
+          abuse = openAllowed;
+        else if (::PopupAllowedForEvent("keyup"))
+          abuse = openControlled;
+        break;
+      case NS_KEY_DOWN :
+        if (::PopupAllowedForEvent("keydown"))
+          abuse = openControlled;
+        break;
+      }
+    }
+    break;
+  case NS_MOUSE_EVENT :
+    if (aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) {
+      switch(aEvent->message) {
+      case NS_MOUSE_LEFT_BUTTON_UP :
+        if (::PopupAllowedForEvent("mouseup"))
+          abuse = openControlled;
+        break;
+      case NS_MOUSE_LEFT_BUTTON_DOWN :
+        if (::PopupAllowedForEvent("mousedown"))
+          abuse = openControlled;
+        break;
+      case NS_MOUSE_LEFT_CLICK :
+        /* Click events get special treatment because of their
+           historical status as a more legitimate event handler. If
+           click popups are enabled in the prefs, clear the popup
+           status completely. */
+        if (::PopupAllowedForEvent("click"))
+          abuse = openAllowed;
+        break;
+      case NS_MOUSE_LEFT_DOUBLECLICK :
+        if (::PopupAllowedForEvent("dblclick"))
+          abuse = openControlled;
+        break;
+      }
+    }
+    break;
+  case NS_SCRIPT_ERROR_EVENT :
+    switch(aEvent->message) {
+    case NS_SCRIPT_ERROR :
+      // Any error event will allow popups, if enabled in the pref.
+      if (::PopupAllowedForEvent("error"))
+        abuse = openControlled;
+      break;
+    }
+    break;
+  case NS_FORM_EVENT :
+    // For these following events only allow popups if they're
+    // triggered while handling user input. See
+    // nsPresShell::HandleEventInternal() for details.
+    if (nsEventStateManager::IsHandlingUserInput()) {
+      switch(aEvent->message) {
+      case NS_FORM_SUBMIT :
+        if (::PopupAllowedForEvent("submit"))
+          abuse = openControlled;
+        break;
+      case NS_FORM_RESET :
+        if (::PopupAllowedForEvent("reset"))
+          abuse = openControlled;
+        break;
+      }
+    }
+    break;
+  }
+
+  return abuse;
+}
+
+// static
+void
+nsDOMEvent::PopupAllowedEventsChanged()
+{
+  if (sPopupAllowedEvents) {
+    nsMemory::Free(sPopupAllowedEvents);
+  }
+
+  nsAdoptingCString str =
+    nsContentUtils::GetCharPref("dom.popup_allowed_events");
+
+  // We'll want to do this even if str is empty to avoid looking up
+  // this pref all the time if it's not set.
+  sPopupAllowedEvents = ToNewCString(str);
+}
+
+// static
+void
+nsDOMEvent::Shutdown()
+{
+  if (sPopupAllowedEvents) {
+    nsMemory::Free(sPopupAllowedEvents);
+  }
+}
+
+// static
 const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 {
   switch(aEventType) {
@@ -599,7 +799,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_SCROLL_EVENT:
     return sEventNames[eDOMEvents_scroll];
   case NS_TEXT_TEXT:
-	  return sEventNames[eDOMEvents_text];
+    return sEventNames[eDOMEvents_text];
   case NS_XUL_POPUP_SHOWING:
     return sEventNames[eDOMEvents_popupShowing];
   case NS_XUL_POPUP_SHOWN:

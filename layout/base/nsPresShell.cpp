@@ -76,8 +76,8 @@
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
 #include "nsIDeviceContext.h"
-#include "nsIEventStateManager.h"
-#include "nsIDOMEvent.h"
+#include "nsEventStateManager.h"
+#include "nsDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsHTMLParts.h"
 #include "nsContentUtils.h"
@@ -5899,6 +5899,37 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
   nsresult rv = NS_OK;
 
   if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
+    PRBool isHandlingUserInput = PR_FALSE;
+
+    if (aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) {
+      switch (aEvent->message) {
+      case NS_GOTFOCUS:
+      case NS_LOSTFOCUS:
+      case NS_ACTIVATE:
+      case NS_DEACTIVATE:
+        // Treat focus/blur events as user input if they happen while
+        // executing trusted script, or no script at all. If they
+        // happen during execution of non-trusted script, then they
+        // should not be considerd user input.
+        if (!nsContentUtils::IsCallerChrome()) {
+          break;
+        }
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_KEY_PRESS:
+      case NS_KEY_DOWN:
+      case NS_KEY_UP:
+        isHandlingUserInput = PR_TRUE;
+      }
+    }
+
+    nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput);
+
+    nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
 
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.

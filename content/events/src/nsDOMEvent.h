@@ -44,6 +44,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventTarget.h"
+#include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
@@ -146,6 +147,12 @@ public:
   NS_IMETHOD    IsHandled(PRBool* aHandled);
   NS_IMETHOD    SetHandled(PRBool aHandled);
 
+  static PopupControlState GetEventPopupControlState(nsEvent *aEvent);
+
+  static void PopupAllowedEventsChanged();
+
+  static void Shutdown();
+
 protected:
 
   // Internal helper functions
@@ -161,7 +168,6 @@ protected:
   nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
   nsCOMPtr<nsIDOMEventTarget> mTmpRealOriginalTarget;
   PRPackedBool mEventIsInternal;
-  PRPackedBool mEventIsTrusted;
 
   void* mScriptObject;
 };

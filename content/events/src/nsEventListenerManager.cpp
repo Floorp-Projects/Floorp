@@ -440,6 +440,8 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
 void nsEventListenerManager::Shutdown()
 {
     sAddListenerID = JSVAL_VOID;
+
+    nsDOMEvent::Shutdown();
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -1582,6 +1584,8 @@ nsresult nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
     }
 
     if (NS_SUCCEEDED(ret)) {
+      nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
+
       for (int k = 0; !mListenersRemoved && listeners && k < listeners->Count(); ++k) {
         nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*, listeners->ElementAt(k));
         if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {

@@ -156,11 +156,15 @@
 // belonging to the back-end like nsIContentPolicy
 #include "nsIPopupWindowManager.h"
 
+nsIScriptSecurityManager *GlobalWindowImpl::sSecMan    = nsnull;
+nsIFactory *GlobalWindowImpl::sComputedDOMStyleFactory = nsnull;
+
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
-nsIScriptSecurityManager *GlobalWindowImpl::sSecMan    = nsnull;
-nsIFactory *GlobalWindowImpl::sComputedDOMStyleFactory = nsnull;
+static PopupControlState    gPopupControlState         = openAbused;
+static PRInt32              gRunningTimeoutDepth       = 0;
+
 #ifdef DEBUG_jst
 PRInt32 gTimeoutCnt                                    = 0;
 #endif
@@ -187,13 +191,6 @@ static const char kDOMSecurityWarningsBundleURL[] = "chrome://communicator/local
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
 static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
-// CheckForAbusePoint return values:
-enum {
-  openAllowed = 0,  // open that window without worries
-  openControlled,   // it's a popup, but allow it
-  openAbused,       // it's a popup. disallow it, but allow domain override.
-  openOverridden    // disallow window open
-};
 // CheckOpenAllow return values:
 enum {
   allowNot = 0,     // the window opening was denied
@@ -203,36 +200,6 @@ enum {
   allowWhitelisted  // allowed: it's whitelisted or popup blocking is disabled
 };
 
-
-// return true if eventName is contained within events, delimited by spaces
-static PRBool
-ContainsEventName(const char *eventName, const nsAFlatCString& events)
-{
-  nsAFlatCString::const_iterator start, end;
-  events.BeginReading(start);
-  events.EndReading(end);
-
-  nsAFlatCString::const_iterator startiter(start);
-
-  while (startiter != end) {
-    nsAFlatCString::const_iterator enditer(end);
-
-    if (!FindInReadable(nsDependentCString(eventName), startiter, enditer))
-      return PR_FALSE;
-
-    // the match is surrounded by spaces, or at a string boundary
-    if ((startiter == start || *--startiter == ' ') &&
-        (enditer == end || *enditer == ' '))
-      return PR_TRUE;
-
-    /* Move on and see if there are other matches. (The delimitation
-       requirement makes it pointless to begin the next search before
-       the end of the invalid match just found.) */
-    startiter = enditer;
-  }
-
-  return PR_FALSE;
-}
 
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
@@ -250,7 +217,6 @@ GlobalWindowImpl::GlobalWindowImpl()
     mTimeoutInsertionPoint(&mTimeouts),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
-    mLastMouseButtonAction(LL_ZERO),
     mGlobalObjectOwner(nsnull),
     mDocShell(nsnull),
     mCurrentEvent(0)
@@ -420,6 +386,42 @@ void
 GlobalWindowImpl::SetOpenerScriptURL(nsIURI* aURI)
 {
   mOpenerScriptURL = aURI;
+}
+
+PopupControlState
+PushPopupControlState(PopupControlState aState)
+{
+  PopupControlState oldState = gPopupControlState;
+
+  if (aState < gPopupControlState) {
+    gPopupControlState = aState;
+  }
+
+  return oldState;
+}
+
+void
+PopPopupControlState(PopupControlState aState)
+{
+  gPopupControlState = aState;
+}
+
+PopupControlState
+GlobalWindowImpl::PushPopupControlState(PopupControlState aState) const
+{
+  return ::PushPopupControlState(aState);
+}
+
+void
+GlobalWindowImpl::PopPopupControlState(PopupControlState aState) const
+{
+  ::PopPopupControlState(aState);
+}
+
+PopupControlState
+GlobalWindowImpl::GetPopupControlState() const
+{
+  return gPopupControlState;
 }
 
 nsresult
@@ -869,11 +871,6 @@ GlobalWindowImpl::HandleDOMEvent(nsPresContext* aPresContext,
 
   if (aEvent->message == NS_PAGE_UNLOAD) {
     mIsDocumentLoaded = PR_FALSE;
-  } else if ((aEvent->message >= NS_MOUSE_LEFT_BUTTON_UP &&
-              aEvent->message <= NS_MOUSE_RIGHT_BUTTON_DOWN) ||
-             (aEvent->message >= NS_MOUSE_LEFT_DOUBLECLICK &&
-              aEvent->message <= NS_MOUSE_RIGHT_CLICK)) {
-    mLastMouseButtonAction = PR_Now();
   }
 
   // Capturing stage
@@ -2881,10 +2878,17 @@ GlobalWindowImpl::DisableExternalCapture()
 static
 PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
 {
-  PRBool blocked = PR_FALSE;
+  nsCOMPtr<nsIPopupWindowManager> pm =
+    do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
+
+  if (!pm) {
+    return PR_FALSE;
+  }
+
+  PRBool blocked = PR_TRUE;
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
-  nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
-  if (pm && doc) {
+
+  if (doc) {
     PRUint32 permission = nsIPopupWindowManager::ALLOW_POPUP;
     pm->TestPermission(doc->GetDocumentURI(), &permission);
     blocked = (permission == nsIPopupWindowManager::DENY_POPUP);
@@ -2950,7 +2954,7 @@ GlobalWindowImpl::CanSetProperty(const char *aPrefName)
  * routine to determine whether to allow the new window.
  * Returns a value from the CheckForAbusePoint enum.
  */
-PRUint32
+PopupControlState
 GlobalWindowImpl::CheckForAbusePoint()
 {
   nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mDocShell));
@@ -2963,162 +2967,9 @@ GlobalWindowImpl::CheckForAbusePoint()
       return openAllowed;
   }
 
-  PRUint32 abuse = openAllowed; // level of abuse we've detected
-
-  // is the document being loaded or unloaded?
-  if (!mIsDocumentLoaded)
-    abuse = openAbused;
-
-  /* Disallow windows after a user-defined click delay.
-     This is a consideration secondary to document load because
-     of its stronger response (openOverridden). See bug 247017. */
-  if (abuse == openAllowed) {
-    PRInt32 delay = nsContentUtils::GetIntPref("dom.disable_open_click_delay");
-    if (delay != 0) {
-      PRTime now = PR_Now();
-      PRTime ll_delta;
-      PRUint32 delta;
-      LL_SUB(ll_delta, now, mLastMouseButtonAction);
-      LL_L2UI(delta, ll_delta);
-      if (delta/1000 > (PRUint32) delay)
-        abuse = openOverridden;
-    }
-  }
-
-  /* Is a timer running?
-     This is a consideration secondary to the user-defined click delay
-     because that seemed the Right Thing. See bug 197919 comment 45. */
-  if (abuse == openAllowed && mRunningTimeout)
-    abuse = openAbused;
-
-  if (abuse == openAllowed) {
-    // we'll need to know what DOM event is being processed now, if any
-    nsEvent *currentEvent = mCurrentEvent;
-    if (!currentEvent && mDocShell) {
-      /* The DOM window's current event is accurate for events that make it
-        all the way to the window. But it doesn't see events handled directly
-        by a target element. For those, check the EventStateManager. */
-      nsCOMPtr<nsIPresShell> presShell;
-      mDocShell->GetPresShell(getter_AddRefs(presShell));
-      if (presShell) {
-        nsPresContext *presContext = presShell->GetPresContext();
-        if (presContext)
-          presContext->EventStateManager()->GetCurrentEvent(&currentEvent);
-      }
-    }
-
-    // fetch pref string detailing which events are allowed
-    const nsAdoptingCString& eventPref =
-      nsContentUtils::GetCharPref("dom.popup_allowed_events");
-
-    // generally if an event handler is running, new windows are disallowed.
-    // check for exceptions:
-    if (currentEvent) {
-      abuse = openAbused;
-      switch(currentEvent->eventStructType) {
-        case NS_EVENT :
-          switch(currentEvent->message) {
-            case NS_FORM_SELECTED :
-              if (::ContainsEventName("select", eventPref))
-                abuse = openControlled;
-              break;
-            case NS_FORM_CHANGE :
-              if (::ContainsEventName("change", eventPref))
-                abuse = openControlled;
-              break;
-            case NS_RESIZE_EVENT :
-              if (::ContainsEventName("resize", eventPref))
-                abuse = openControlled;
-              break;
-          }
-          break;
-        case NS_GUI_EVENT :
-          switch(currentEvent->message) {
-            case NS_FORM_INPUT :
-              if (::ContainsEventName("input", eventPref))
-                abuse = openControlled;
-              break;
-          }
-          break;
-        case NS_INPUT_EVENT :
-          switch(currentEvent->message) {
-            case NS_FORM_CHANGE :
-              if (::ContainsEventName("change", eventPref))
-                abuse = openControlled;
-              break;
-          }
-          break;
-        case NS_KEY_EVENT : {
-          PRUint32 key = NS_STATIC_CAST(nsKeyEvent *, currentEvent)->keyCode;
-          switch(currentEvent->message) {
-            case NS_KEY_PRESS :
-              // return key on focused button. see note at NS_MOUSE_LEFT_CLICK.
-              if (key == nsIDOMKeyEvent::DOM_VK_RETURN)
-                abuse = openAllowed;
-              else if (::ContainsEventName("keypress", eventPref))
-                abuse = openControlled;
-              break;
-            case NS_KEY_UP :
-              // space key on focused button. see note at NS_MOUSE_LEFT_CLICK.
-              if (key == nsIDOMKeyEvent::DOM_VK_SPACE)
-                abuse = openAllowed;
-              else if (::ContainsEventName("keyup", eventPref))
-                abuse = openControlled;
-              break;
-            case NS_KEY_DOWN :
-              if (::ContainsEventName("keydown", eventPref))
-                abuse = openControlled;
-              break;
-          }
-          break;
-        }
-        case NS_MOUSE_EVENT :
-          switch(currentEvent->message) {
-            case NS_MOUSE_LEFT_BUTTON_UP :
-              if (::ContainsEventName("mouseup", eventPref))
-                abuse = openControlled;
-              break;
-            case NS_MOUSE_LEFT_BUTTON_DOWN :
-              if (::ContainsEventName("mousedown", eventPref))
-                abuse = openControlled;
-              break;
-            case NS_MOUSE_LEFT_CLICK :
-              /* Click events get special treatment because of their
-                 historical status as a more legitimate event handler.
-                 If click popups are enabled in the prefs, clear the
-                 popup status completely. */
-              if (::ContainsEventName("click", eventPref))
-                abuse = openAllowed;
-              break;
-            case NS_MOUSE_LEFT_DOUBLECLICK :
-              if (::ContainsEventName("dblclick", eventPref))
-                abuse = openControlled;
-              break;
-          }
-          break;
-        case NS_SCRIPT_ERROR_EVENT :
-          switch(currentEvent->message) {
-            case NS_SCRIPT_ERROR :
-              if (::ContainsEventName("error", eventPref))
-                abuse = openControlled;
-              break;
-          }
-          break;
-        case NS_FORM_EVENT :
-          switch(currentEvent->message) {
-            case NS_FORM_SUBMIT :
-              if (::ContainsEventName("submit", eventPref))
-                abuse = openControlled;
-              break;
-            case NS_FORM_RESET :
-              if (::ContainsEventName("reset", eventPref))
-                abuse = openControlled;
-              break;
-          }
-          break;
-      } // switch
-    } // currentEvent
-  } // abuse == openAllowed
+  // level of abuse we've detected, initialized to the current popup
+  // state
+  PopupControlState abuse = gPopupControlState;
 
   // limit the number of simultaneously open popups
   if (abuse == openAbused || abuse == openControlled) {
@@ -3135,7 +2986,7 @@ GlobalWindowImpl::CheckForAbusePoint()
    or if its target is an extant window.
    Returns a value from the CheckOpenAllow enum. */
 PRUint32
-GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
+GlobalWindowImpl::CheckOpenAllow(PopupControlState aAbuseLevel,
                                  const nsAString &aName)
 {
   PRUint32 allowWindow = allowNoAbuse; // (also used for openControlled)
@@ -3249,7 +3100,7 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
 {
   nsresult rv;
 
-  PRUint32 abuseLevel = CheckForAbusePoint();
+  PopupControlState abuseLevel = CheckForAbusePoint();
   PRUint32 allowReason = CheckOpenAllow(abuseLevel, aName);
   if (allowReason == allowNot) {
     FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl, aOptions);
@@ -3311,7 +3162,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
   }
 
-  PRUint32 abuseLevel = CheckForAbusePoint();
+  PopupControlState abuseLevel = CheckForAbusePoint();
   PRUint32 allowReason = CheckOpenAllow(abuseLevel, name);
   if (allowReason == allowNot) {
     FireAbuseEvents(PR_TRUE, PR_FALSE, url, options);
@@ -4894,6 +4745,23 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   timeout->mWindow = this;
   NS_ADDREF(timeout->mWindow);
 
+  // No popups from timeouts by default
+  timeout->mPopupState = openAbused;
+
+  if (gRunningTimeoutDepth == 0 && gPopupControlState < openAbused) {
+    // This timeout is *not* set from another timeout and it's set
+    // while popups are enabled. Propagate the state to the timeout if
+    // its delay (interval) is equal to or less than what
+    // "dom.disable_open_click_delay" is set to.
+
+    PRInt32 delay =
+      nsContentUtils::GetIntPref("dom.disable_open_click_delay");
+
+    if (interval <= (delay * PR_MSEC_PER_SEC)) {
+      timeout->mPopupState = gPopupControlState;
+    }
+  }
+
   InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
   timeout->mPublicId = ++mTimeoutPublicIdCounter;
   *aReturn = timeout->mPublicId;
@@ -5013,10 +4881,21 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     mRunningTimeout = timeout;
     timeout->mRunning = PR_TRUE;
 
+    // Push this timeouts popup control state, which should only be
+    // eabled the first time a timeout fires that was created while
+    // popups were enabled and with a delay less than
+    // "dom.disable_open_click_delay".
+    nsAutoPopupStatePusher popupStatePusher(timeout->mPopupState);
+
+    // Clear the timeout's popup state, if any, to prevent interval
+    // timeouts from repeatedly opening poups.
+    timeout->mPopupState = openAbused;
+
     // Hold on to the timeout in case mExpr or mFunObj releases its
     // doc.
     timeout->AddRef();
 
+    ++gRunningTimeoutDepth;
     ++mTimeoutFiringDepth;
 
     if (timeout->mExpr) {
@@ -5047,6 +4926,8 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     }
 
     --mTimeoutFiringDepth;
+    --gRunningTimeoutDepth;
+
     mRunningTimeout = last_running_timeout;
     timeout->mRunning = PR_FALSE;
 
