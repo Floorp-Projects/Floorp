@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.8 $ ';
+$Version = '$Revision: 1.9 $ ';
 
 
 sub PrintUsage {
@@ -475,6 +475,7 @@ sub BuildIt {
       print LOG "tinderbox: build: $BuildName\n";
       print LOG "tinderbox: errorparser: unix\n";
       print LOG "tinderbox: buildfamily: unix\n";
+      print LOG "tinderbox: version: $Version\n";
       print LOG "tinderbox: END\n";            
     }
     close LOG;
@@ -534,6 +535,7 @@ sub MailStartBuildMessage {
     print LOG "tinderbox: build: $BuildName\n";
     print LOG "tinderbox: errorparser: unix\n";
     print LOG "tinderbox: buildfamily: unix\n";
+    print LOG "tinderbox: version: $Version\n";
     print LOG "tinderbox: END\n";
     print LOG "\n";
   }
