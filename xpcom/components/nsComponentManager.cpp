@@ -784,6 +784,9 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     }
 
     // Finally read in PROGID -> CID mappings
+    // Naa. Only about 20 progid are always got. So prepopulating this
+    // doesn't make much sense now. If this gets higher, more close to
+    // the number of progid that exist, this would make sense.
 
     return NS_OK;
 }
@@ -1020,6 +1023,37 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     return NS_ERROR_FACTORY_NOT_LOADED;
 }
 
+
+nsFactoryEntry *
+nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, PRBool checkRegistry)
+{
+    nsIDKey key(aClass);
+    nsFactoryEntry *entry = (nsFactoryEntry*) mFactories->Get(&key);
+
+    if (entry)
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("\t\tfound in factory cache."));
+    else
+#ifdef USE_REGISTRY
+        if (checkRegistry)
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                   ("\t\tnot found in factory cache. Looking in registry"));
+
+            nsresult rv = PlatformFind(aClass, &entry);
+
+            // If we got one, cache it in our hashtable
+            if (NS_SUCCEEDED(rv))
+            {
+                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                       ("\t\tfound in registry."));
+                mFactories->Put(&key, entry);
+            }
+        }
+#endif /* USE_REGISTRY */
+
+    return (entry);
+}
+
 /**
  * FindFactory()
  *
@@ -1039,49 +1073,18 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
         PR_LogPrint("nsComponentManager: FindFactory(%s)", buf);
         delete [] buf;
     }
-    	
+
     PR_ASSERT(aFactory != NULL);
-    	
-    PR_EnterMonitor(mMon);
-    	
-    nsIDKey key(aClass);
-    nsFactoryEntry *entry = (nsFactoryEntry*) mFactories->Get(&key);
-    	
-    nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
-    	
-#ifdef USE_REGISTRY
-    if (entry == NULL)
-    {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("\t\tnot found in factory cache. Looking in registry"));
 
-        nsresult rv = PlatformFind(aClass, &entry);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, PR_TRUE);
 
-        // If we got one, cache it in our hashtable
-        if (NS_SUCCEEDED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("\t\tfound in registry."));
-            mFactories->Put(&key, entry);
-        }
-    }
-    else
-    {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("\t\tfound in factory cache."));
-    }
-#endif /* USE_REGISTRY */
+    nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;    	
     	
-    PR_ExitMonitor(mMon);
-    	
-    if (entry != NULL)
+    if (entry)
     {
-        if ((entry)->factory == NULL)
+        if (entry->factory == NULL)
         {
             res = LoadFactory(entry, aFactory);
-#if 0
-            // This doesn't work. On firsttime run, I hit a coredump
-            // got to see why.
             // XXX Cache factory that we created for performance.
             // XXX Need a way to release this factory else dlls will never
             // XXX get unloaded
@@ -1090,7 +1093,6 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
                 entry->factory = *aFactory;
                 NS_ADDREF(entry->factory);
             }
-#endif
         }
         else
         {
@@ -1101,8 +1103,7 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
     }
     	
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("\t\tFindFactory() %s",
-            NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
+           ("\t\tFindFactory() %s", NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
     	
     return res;
 }
@@ -1311,36 +1312,26 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         delete [] buf;
     }
 
-    nsIFactory *old = NULL;
-    FindFactory(aClass, &old);
-
-    if (old != NULL)
-    {
-        NS_RELEASE(old);
-        if (!aReplace)
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-                   ("\t\tFactory already registered."));
-            return NS_ERROR_FACTORY_EXISTS;
-        }
-        else
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-                   ("\t\tdeleting old Factory Entry."));
-        }
-    }
-    	
-    PR_EnterMonitor(mMon);
-	
+    nsFactoryEntry *entry = NULL;
     nsIDKey key(aClass);
-    nsFactoryEntry* entry = new nsFactoryEntry(aClass, aFactory);
-    if (entry == NULL)
-    {
-        PR_ExitMonitor(mMon);
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mFactories->Put(&key, entry);
+    entry = GetFactoryEntry(aClass, PR_TRUE);
 
+    if (entry && !aReplace)
+    {
+        // Already registered
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tFactory already registered."));
+        return NS_ERROR_FACTORY_EXISTS;
+    }
+
+    nsFactoryEntry *newEntry = new nsFactoryEntry(aClass, aFactory);
+    if (newEntry == NULL) return NS_ERROR_OUT_OF_MEMORY;
+    if (entry)
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tdeleting old Factory Entry."));
+        mFactories->Remove(&key);
+        delete entry;
+    }
+    mFactories->Put(&key, newEntry);
 
     // Update the ProgID->CLSID Map
     if (aProgID)
@@ -1348,27 +1339,13 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         nsresult rv = HashProgID(aProgID, aClass);
         if(NS_FAILED(rv))
         {
-            // Adding progID mapping failed. This would result in
-            // an error in CreateInstance(..progid,..) However
-            // we have already added the mapping of CLSID -> factory
-            // and hence, a CreateInstance(..,CLSID,..) would pass.
-            //
-            // mmh! Should I pass back an error or not.
-            //
-            // thinking..ok we are passing back an error as we
-            // think for people registering with progid,
-            // CreateInstance(..progid..) is the more used one.
-            //
-            PR_ExitMonitor(mMon);
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory register succeeded. PROGID->CLSID mapping failed."));
             return (rv);
         }
     }
-    PR_ExitMonitor(mMon);
     	
-    PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("\t\tFactory register succeeded."));
+    PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tFactory register succeeded."));
     	
     return NS_OK;
 }
@@ -1426,37 +1403,27 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
         if (fullName) delete [] fullName;
     }
 
-    nsIFactory *old = NULL;
-    FindFactory(aClass, &old);
-    	
-    if (old != NULL)
-    {
-        NS_RELEASE(old);
-        if (!aReplace)
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-                   ("\t\tFactory already registered."));
-            return NS_ERROR_FACTORY_EXISTS;
-        }
-        else
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-                   ("\t\tdeleting registered Factory."));
-        }
-    }
+    nsIDKey key(aClass);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, PR_TRUE);
 
-    PR_EnterMonitor(mMon);
-    	
+    if (entry && !aReplace)
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tFactory already registered."));
+        return NS_ERROR_FACTORY_EXISTS;
+    }
+    
 #ifdef USE_REGISTRY
-    if (aPersist == PR_TRUE)
+    if (aPersist)
     {
         // Add it to the registry
         nsDll *dll = new nsDll(aLibrarySpec);
-        if (dll == NULL) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
+        if (dll == NULL) return NS_ERROR_OUT_OF_MEMORY;
         char *cidString = aClass.ToString();
+        if (cidString == NULL)
+        {
+            delete dll;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         PlatformRegister(cidString, aClassName, aProgID, dll);
         delete [] cidString;
         delete dll;
@@ -1466,48 +1433,36 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
     {
         // Create a dll from the librarySpec
         nsDll *dll = CreateCachedDll(aLibrarySpec);
-        if (dll == NULL)
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
+        if (dll == NULL) return NS_ERROR_OUT_OF_MEMORY;
         
         // Use the dll to create a factoryEntry
-        nsFactoryEntry* entry = new nsFactoryEntry(aClass, dll);
-        if (entry == NULL)
+        nsFactoryEntry *newEntry = new nsFactoryEntry(aClass, dll);
+        if (newEntry == NULL)
         {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
+            delete dll;
+            return NS_ERROR_OUT_OF_MEMORY;
         }
-        nsIDKey key(aClass);
-        mFactories->Put(&key, entry);
+        if (entry)
+        {
+            mFactories->Remove(&key);
+            delete entry;
+            entry = NULL;
+            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tdeleting registered Factory."));
+        }
+        mFactories->Put(&key, newEntry);
     }
     	
- done:
-	
-    if(NS_SUCCEEDED(rv))
-    {
-        // Update the ProgID->CLSID Map if we were successful
-        // If we do this unconditionally, this map could grow into a map
-        // of all component progid. We want to populate the ProgID->CLSID mapping
-        // only if we aren't storing the mapping in the registry. If we are
-        // storing in the registry, on first creation, the mapping will get
-        // added.
+    // Update the ProgID->CLSID Map if this isnt stored in registry
 #ifdef USE_REGISTRY
-        if (aProgID && aPersist != PR_TRUE)
-        {
-            rv = HashProgID(aProgID, aClass);
-        }
+    if (aProgID && aPersist != PR_TRUE)
+        rv = HashProgID(aProgID, aClass);
 #else /* USE_REGISTRY */
-        if (aProgID)
-            rv = HashProgID(aProgID, aClass);
+    if (aProgID)
+        rv = HashProgID(aProgID, aClass);
 #endif /* USE_REGISTRY */
-    }
-    
-    PR_ExitMonitor(mMon);
+
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("\t\tFactory register %s.",
-            rv == NS_OK ? "succeeded" : "failed"));
+           ("\t\tFactory register %s.", NS_SUCCEEDED(rv) ? "succeeded" : "failed"));
     return rv;
 }
 
@@ -1532,37 +1487,27 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
         delete [] buf;
     }
 
-    nsIFactory *old = NULL;
-    FindFactory(aClass, &old);
-    	
-    if (old != NULL)
+    nsIDKey key(aClass);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, PR_TRUE);
+
+    if (entry && !aReplace)
     {
-        NS_RELEASE(old);
-        if (!aReplace)
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-                   ("\t\tFactory already registered."));
-            return NS_ERROR_FACTORY_EXISTS;
-        }
-        else
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-                   ("\t\tdeleting registered Factory."));
-        }
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tFactory already registered."));
+        return NS_ERROR_FACTORY_EXISTS;
     }
 
-    PR_EnterMonitor(mMon);
-    	
 #ifdef USE_REGISTRY
-    if (aPersist == PR_TRUE)
+    if (aPersist)
     {
         // Add it to the registry
         nsDll *dll = new nsDll(aDllName, 1/* dummy */);
-        if (dll == NULL) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
+        if (dll == NULL) rv = NS_ERROR_OUT_OF_MEMORY;
         char *cidString = aClass.ToString();
+        if (cidString == NULL)
+        {
+            delete dll;
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
         PlatformRegister(cidString, aClassName, aProgID, dll);
         delete [] cidString;
         delete dll;
@@ -1570,50 +1515,38 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
     else
 #endif
     {
-        // Create a dll from the librarySpec
+        // Create a dll from the DllName
         nsDll *dll = CreateCachedDllName(aDllName);
-        if (dll == NULL)
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
+        if (dll == NULL) return NS_ERROR_OUT_OF_MEMORY;
         
         // Use the dll to create a factoryEntry
-        nsFactoryEntry* entry = new nsFactoryEntry(aClass, dll);
-        if (entry == NULL)
+        nsFactoryEntry* newEntry = new nsFactoryEntry(aClass, dll);
+        if (newEntry == NULL)
         {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
+            delete dll;
+            return NS_ERROR_OUT_OF_MEMORY;
         }
-        nsIDKey key(aClass);
-        mFactories->Put(&key, entry);
+        if (entry)
+        {
+            mFactories->Remove(&key);
+            delete entry;
+            entry = NULL;
+            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tdeleting registered Factory."));
+        }
+        mFactories->Put(&key, newEntry);
     }
     	
- done:
-	
-    if(NS_SUCCEEDED(rv))
-    {
-        // Update the ProgID->CLSID Map if we were successful
-        // If we do this unconditionally, this map could grow into a map
-        // of all component progid. We want to populate the ProgID->CLSID mapping
-        // only if we aren't storing the mapping in the registry. If we are
-        // storing in the registry, on first creation, the mapping will get
-        // added.
+        // Update the ProgID->CLSID Map if this isn't stored in registry
 #ifdef USE_REGISTRY
-        if (aProgID && aPersist != PR_TRUE)
-        {
-            rv = HashProgID(aProgID, aClass);
-        }
+    if (aProgID && aPersist != PR_TRUE)
+        rv = HashProgID(aProgID, aClass);
 #else /* USE_REGISTRY */
-        if (aProgID)
-            rv = HashProgID(aProgID, aClass);
+    if (aProgID)
+        rv = HashProgID(aProgID, aClass);
 #endif /* USE_REGISTRY */
-    }
-    
-    PR_ExitMonitor(mMon);
+
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("\t\tFactory register %s.",
-            rv == NS_OK ? "succeeded" : "failed"));
+           ("\t\tFactory register %s.", rv == NS_OK ? "succeeded" : "failed"));
     return rv;
 }
 

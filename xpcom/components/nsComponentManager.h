@@ -143,6 +143,7 @@ public:
 
 protected:
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
+    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, PRBool checkRegistry);
 
     nsresult SyncComponentsInDir(RegistrationTime when, nsIFileSpec *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
