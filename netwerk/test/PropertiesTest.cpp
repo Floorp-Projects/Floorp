@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef XPCOM_STANDALONE
-
 #include "nsXPCOM.h"
 #include "nsIEventQueueService.h"
 #include "nsIPersistentProperties2.h"
@@ -62,11 +60,9 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
 
-#endif
 int
 main(int argc, char* argv[])
 {
-#ifndef XPCOM_STANDALONE
   nsresult ret;
 
 
@@ -180,6 +176,5 @@ main(int argc, char* argv[])
     delete[] pVal;
 	  ret = propEnum->Next();
   }
-#endif
   return 0;
 }
