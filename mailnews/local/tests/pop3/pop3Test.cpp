@@ -50,7 +50,7 @@
 #include "nsIEventQueue.h"
 
 #include "nsIMsgIdentity.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsMsgLocalCID.h"
@@ -318,18 +318,18 @@ nsresult nsPop3TestDriver::OnExit()
 	return NS_OK;
 }
 
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
-
 nsresult nsPop3TestDriver::OnIdentityCheck()
 {
 	nsresult result = NS_OK;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &result); 
-	if (NS_SUCCEEDED(result) && mailSession)
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &result);
+    
+	if (NS_SUCCEEDED(result) && accountManager)
 	{
 		// mscott: we really don't check an identity, we check
 		// for an outgoing 
 		nsIMsgIncomingServer * incomingServer = nsnull;
-		result = mailSession->GetCurrentServer(&incomingServer);
+		result = accountManager->GetCurrentServer(&incomingServer);
 		if (NS_SUCCEEDED(result) && incomingServer)
 		{
 			char * value = nsnull;
@@ -359,11 +359,13 @@ nsresult nsPop3TestDriver::OnCheck()
 {
 	nsresult rv = NS_OK;
 
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     nsIMsgIncomingServer *server;
-    rv = mailSession->GetCurrentServer(&server);
+    rv = accountManager->GetCurrentServer(&server);
     if (NS_FAILED(rv)) return rv;
 
     nsIPop3IncomingServer *popServer;
@@ -445,14 +447,15 @@ nsresult nsPop3TestDriver::OnUidl()
 nsresult nsPop3TestDriver::OnGet()
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
 
 	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kPop3ServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     nsIMsgIncomingServer *server;
-    rv = mailSession->GetCurrentServer(&server);
+    rv = accountManager->GetCurrentServer(&server);
     if (NS_FAILED(rv)) return rv;
 
     nsIPop3IncomingServer *popServer;
