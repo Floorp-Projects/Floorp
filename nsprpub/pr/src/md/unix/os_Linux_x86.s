@@ -27,7 +27,6 @@
 _PR_x86_AtomicIncrement:
     movl 4(%esp), %ecx
     movl $1, %eax
-    nop
     lock
     xaddl %eax, (%ecx)
     incl %eax
@@ -44,7 +43,6 @@ _PR_x86_AtomicIncrement:
 _PR_x86_AtomicDecrement:
     movl 4(%esp), %ecx
     movl $-1, %eax
-    nop
     lock
     xaddl %eax, (%ecx)
     decl %eax
