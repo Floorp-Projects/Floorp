@@ -284,9 +284,9 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  * @param   anOffset is the index into aDest where shifting shall begin
  * @param   aCount is the number of chars to be "cut"
  */
-void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
-void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  PRUnichar* root=(PRUnichar*)aDest;
+void ShiftDoubleCharsLeft(PRUnichar* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
+void ShiftDoubleCharsLeft(PRUnichar* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
+  PRUnichar* root= aDest;
   PRUnichar* dst = root+anOffset;
   PRUnichar* src = root+anOffset+aCount;
 
@@ -302,22 +302,14 @@ void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint3
  * @param   anOffset is the index into aDest where shifting shall begin
  * @param   aCount is the number of chars to be "inserted"
  */
-void ShiftDoubleCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
-void ShiftDoubleCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  PRUnichar* root=(PRUnichar*)aDest;
+void ShiftDoubleCharsRight(PRUnichar* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
+void ShiftDoubleCharsRight(PRUnichar* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
+  PRUnichar* root= aDest;
   PRUnichar* src = root+anOffset;
   PRUnichar* dst = root+anOffset+aCount;
 
   memmove(dst,src,sizeof(PRUnichar)*(aLength-anOffset));
 }
-
-
-typedef void (*ShiftChars)(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
-ShiftChars gShiftChars[2][2]= {
-  {&ShiftCharsLeft,&ShiftCharsRight},
-  {&ShiftDoubleCharsLeft,&ShiftDoubleCharsRight}
-};
-
 
 //----------------------------------------------------------------------------------------
 //
@@ -887,10 +879,10 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet);
-PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){ 
+PRInt32 CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet);
+PRInt32 CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){ 
 
-  PRUnichar*  from = (PRUnichar*)aString;
+  PRUnichar*  from = aString;
   PRUnichar*  end =  from + aLength;
   PRUnichar*  to = from;
 
@@ -918,9 +910,6 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
   }
   return to - (PRUnichar*)aString;
 }
-
-typedef PRInt32 (*CompressChars)(char* aString,PRUint32 aCount,const char* aSet);
-CompressChars gCompressChars[]={&CompressChars1,&CompressChars2};
 
 /**
  * This method strips chars in a given set from the given buffer 
@@ -965,11 +954,11 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet);
-PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){ 
+PRInt32 StripChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet);
+PRInt32 StripChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){ 
 
-  PRUnichar*  to   = (PRUnichar*)aString;
-  PRUnichar*  from = (PRUnichar*)aString-1;
+  PRUnichar*  to   = aString;
+  PRUnichar*  from = aString-1;
   PRUnichar*  end  = to + aLength;
 
   if(aSet && aString && (0 < aLength)){
@@ -987,9 +976,5 @@ PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){
   }
   return to - (PRUnichar*)aString;
 }
-
-
-typedef PRInt32 (*StripChars)(char* aString,PRUint32 aCount,const char* aSet);
-StripChars gStripChars[]={&StripChars1,&StripChars2};
 
 #endif

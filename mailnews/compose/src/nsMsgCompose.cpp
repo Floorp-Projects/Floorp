@@ -2853,7 +2853,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
     PRInt32 metaCharsetOffset = sigData.Find(metaCharset,PR_TRUE,0,-1);
 
     if (metaCharsetOffset != kNotFound)
-      nsStr::Delete(sigData, metaCharsetOffset, metaCharset.Length());
+      nsStr::Delete2(sigData, metaCharsetOffset, metaCharset.Length());
   }
 
   PR_FREEIF(readBuf);

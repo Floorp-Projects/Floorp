@@ -215,7 +215,45 @@ void nsStr::StrAppend(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt3
  * @param   aSrcOffset is where in aSource chars are copied from
  * @param   aCount is the number of chars from aSource to be inserted into aDest
  */
-void nsStr::StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
+
+PRInt32 nsStr::GetSegmentLength(const nsStr& aSource,
+                                    PRUint32 aSrcOffset, PRInt32 aCount)
+{
+  PRInt32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
+  PRInt32 theLength=(aSrcOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-aSrcOffset);
+
+  return theLength;
+}
+
+void nsStr::AppendForInsert(nsStr& aDest, PRUint32 aDestOffset, const nsStr& aSource, PRUint32 aSrcOffset, PRInt32 theLength) {
+  nsStr theTempStr;
+  nsStr::Initialize(theTempStr,eCharSize(aDest.mCharSize));
+
+  PRBool isBigEnough=EnsureCapacity(theTempStr,aDest.mLength+theLength);  //grow the temp buffer to the right size
+
+  if(isBigEnough) {
+    if(aDestOffset) {
+      StrAppend(theTempStr,aDest,0,aDestOffset); //first copy leftmost data...
+    } 
+              
+    StrAppend(theTempStr,aSource,aSrcOffset,theLength); //next copy inserted (new) data
+            
+    PRUint32 theRemains=aDest.mLength-aDestOffset;
+    if(theRemains) {
+      StrAppend(theTempStr,aDest,aDestOffset,theRemains); //next copy rightmost data
+    }
+
+    Free(aDest);
+    aDest.mStr = theTempStr.mStr;
+    theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
+    aDest.mCapacity=theTempStr.mCapacity;
+    aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+  }
+}
+
+void nsStr::StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
+  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
   //there are a few cases for insert:
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
@@ -223,46 +261,138 @@ void nsStr::StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PR
   if(0<aSource.mLength){
     if(aDest.mLength){
       if(aDestOffset<aDest.mLength){
-        PRInt32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
-        PRInt32 theLength=(aSrcOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-aSrcOffset);
+        PRInt32 theLength = GetSegmentLength(aSource, aSrcOffset, aCount);
 
         if(aSrcOffset<aSource.mLength) {
             //here's the only new case we have to handle. 
             //chars are really being inserted into our buffer...
 
-          if(aDest.mLength+theLength > aDest.mCapacity) {
-            nsStr theTempStr;
-            nsStr::Initialize(theTempStr,eCharSize(aDest.mCharSize));
-
-            PRBool isBigEnough=EnsureCapacity(theTempStr,aDest.mLength+theLength);  //grow the temp buffer to the right size
-
-            if(isBigEnough) {
-              if(aDestOffset) {
-                StrAppend(theTempStr,aDest,0,aDestOffset); //first copy leftmost data...
-              } 
-              
-              StrAppend(theTempStr,aSource,aSrcOffset,theLength); //next copy inserted (new) data
-            
-              PRUint32 theRemains=aDest.mLength-aDestOffset;
-              if(theRemains) {
-                StrAppend(theTempStr,aDest,aDestOffset,theRemains); //next copy rightmost data
-              }
-
-              Free(aDest);
-              aDest.mStr = theTempStr.mStr;
-              theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
-              aDest.mCapacity=theTempStr.mCapacity;
-              aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
-            }
-
-          }
-
+          if(aDest.mLength+theLength > aDest.mCapacity)
+            AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
           else {
-              //shift the chars right by theDelta...
-            (*gShiftChars[aDest.mCharSize][KSHIFTRIGHT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
+            //shift the chars right by theDelta...
+            ShiftCharsRight(aDest.mStr, aDest.mLength, aDestOffset, theLength);
       
             //now insert new chars, starting at offset
-            (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
+            CopyChars1To1(aDest.mStr, aDestOffset, aSource.mStr, aSrcOffset, theLength);
+          }
+
+            //finally, make sure to update the string length...
+          aDest.mLength+=theLength;
+          AddNullTerminator(aDest);
+          NSSTR_SEEN(aDest);
+        }//if
+        //else nothing to do!
+      }
+      else StrAppend(aDest,aSource,0,aCount);
+    }
+    else StrAppend(aDest,aSource,0,aCount);
+  }
+}
+
+void nsStr::StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
+  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  //there are a few cases for insert:
+  //  1. You're inserting chars into an empty string (assign)
+  //  2. You're inserting onto the end of a string (append)
+  //  3. You're inserting onto the 1..n-1 pos of a string (the hard case).
+  if(0<aSource.mLength){
+    if(aDest.mLength){
+      if(aDestOffset<aDest.mLength){
+        PRInt32 theLength = GetSegmentLength(aSource, aSrcOffset, aCount);
+
+        if(aSrcOffset<aSource.mLength) {
+            //here's the only new case we have to handle. 
+            //chars are really being inserted into our buffer...
+
+          if(aDest.mLength+theLength > aDest.mCapacity)
+            AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
+          else {
+            //shift the chars right by theDelta...
+            ShiftDoubleCharsRight(aDest.mUStr, aDest.mLength, aDestOffset, theLength);
+      
+            //now insert new chars, starting at offset
+            CopyChars1To2(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
+          }
+
+            //finally, make sure to update the string length...
+          aDest.mLength+=theLength;
+          AddNullTerminator(aDest);
+          NSSTR_SEEN(aDest);
+        }//if
+        //else nothing to do!
+      }
+      else StrAppend(aDest,aSource,0,aCount);
+    }
+    else StrAppend(aDest,aSource,0,aCount);
+  }
+}
+
+void nsStr::StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
+  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  //there are a few cases for insert:
+  //  1. You're inserting chars into an empty string (assign)
+  //  2. You're inserting onto the end of a string (append)
+  //  3. You're inserting onto the 1..n-1 pos of a string (the hard case).
+  if(0<aSource.mLength){
+    if(aDest.mLength){
+      if(aDestOffset<aDest.mLength){
+        PRInt32 theLength = GetSegmentLength(aSource, aSrcOffset, aCount);
+
+        if(aSrcOffset<aSource.mLength) {
+            //here's the only new case we have to handle. 
+            //chars are really being inserted into our buffer...
+
+          if(aDest.mLength+theLength > aDest.mCapacity)
+            AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
+          else {
+            //shift the chars right by theDelta...
+            ShiftCharsRight(aDest.mStr, aDest.mLength, aDestOffset, theLength);
+      
+            //now insert new chars, starting at offset
+            CopyChars2To1(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
+          }
+
+            //finally, make sure to update the string length...
+          aDest.mLength+=theLength;
+          AddNullTerminator(aDest);
+          NSSTR_SEEN(aDest);
+        }//if
+        //else nothing to do!
+      }
+      else StrAppend(aDest,aSource,0,aCount);
+    }
+    else StrAppend(aDest,aSource,0,aCount);
+  }
+}
+
+void nsStr::StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
+  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  //there are a few cases for insert:
+  //  1. You're inserting chars into an empty string (assign)
+  //  2. You're inserting onto the end of a string (append)
+  //  3. You're inserting onto the 1..n-1 pos of a string (the hard case).
+  if(0<aSource.mLength){
+    if(aDest.mLength){
+      if(aDestOffset<aDest.mLength){
+        PRInt32 theLength = GetSegmentLength(aSource, aSrcOffset, aCount);
+
+        if(aSrcOffset<aSource.mLength) {
+            //here's the only new case we have to handle. 
+            //chars are really being inserted into our buffer...
+
+          if(aDest.mLength+theLength > aDest.mCapacity)
+            AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
+          else {
+            
+            //shift the chars right by theDelta...
+            ShiftDoubleCharsRight(aDest.mUStr, aDest.mLength, aDestOffset, theLength);
+      
+            //now insert new chars, starting at offset
+            CopyChars2To2(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
           }
 
             //finally, make sure to update the string length...
@@ -286,23 +416,55 @@ void nsStr::StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PR
  * @param   aDestOffset is where in aDest deletion is to occur
  * @param   aCount is the number of chars to be deleted in aDest
  */
-void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
+
+
+void nsStr::Delete1(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  
   if(aDestOffset<aDest.mLength){
-
-    PRUint32 theDelta=aDest.mLength-aDestOffset;
-    PRUint32 theLength=(theDelta<aCount) ? theDelta : aCount;
-
+    
+    PRUint32 theLength=GetDeleteLength(aDest, aDestOffset, aCount);
+    
     if(aDestOffset+theLength<aDest.mLength) {
 
       //if you're here, it means we're cutting chars out of the middle of the string...
       //so shift the chars left by theLength...
-      (*gShiftChars[aDest.mCharSize][KSHIFTLEFT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
+      ShiftCharsLeft(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       aDest.mLength-=theLength;
       AddNullTerminator(aDest);
       NSSTR_SEEN(aDest);
     }
     else StrTruncate(aDest,aDestOffset);
   }//if
+}
+
+void nsStr::Delete2(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
+  
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  if(aDestOffset<aDest.mLength){
+    
+    PRUint32 theLength=GetDeleteLength(aDest, aDestOffset, aCount);
+    
+    if(aDestOffset+theLength<aDest.mLength) {
+
+      //if you're here, it means we're cutting chars out of the middle of the string...
+      //so shift the chars left by theLength...
+      ShiftDoubleCharsLeft(aDest.mUStr,aDest.mLength,aDestOffset,theLength);
+      aDest.mLength-=theLength;
+      AddNullTerminator(aDest);
+      NSSTR_SEEN(aDest);
+    }
+    else StrTruncate(aDest,aDestOffset);
+  }//if
+}
+
+PRInt32 nsStr::GetDeleteLength(const nsStr& aDest, PRUint32 aDestOffset, PRUint32 aCount)
+{
+    PRUint32 theDelta=aDest.mLength-aDestOffset;
+    PRUint32 theLength=(theDelta<aCount) ? theDelta : aCount;
+
+    return theLength;
 }
 
 /**
@@ -318,7 +480,6 @@ void nsStr::StrTruncate(nsStr& aDest,PRUint32 aDestOffset){
     NSSTR_SEEN(aDest);
   }
 }
-
 
 /**
  * This method removes characters from the given set from this string.
@@ -341,13 +502,17 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
     if(aEliminateLeading) {
       while(++theIndex<=theMax) {
         PRUnichar theChar=GetCharAt(aDest,theIndex);
-        PRInt32 thePos=gFindChars[eOneByte](aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
+        PRInt32 thePos=FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound==thePos)
           break;
       }
+      
       if(0<theIndex) {
         if(theIndex<theMax) {
-          Delete(aDest,0,theIndex);
+          if (aDest.mCharSize == eOneByte)
+            Delete1(aDest,0,theIndex);
+          else
+            Delete2(aDest,0,theIndex);
         }
         else StrTruncate(aDest,0);
       }
@@ -358,7 +523,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
       PRInt32 theNewLen=theIndex;
       while(--theIndex>=0) {
         PRUnichar theChar=GetCharAt(aDest,theIndex);  //read at end now...
-        PRInt32 thePos=gFindChars[eOneByte](aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
+        PRInt32 thePos=FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound<thePos) 
           theNewLen=theIndex;
         else break;
@@ -377,9 +542,20 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
  * @param 
  * @return
  */
-void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){
+void nsStr::CompressSet1(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  
   Trim(aDest,aSet,aEliminateLeading,aEliminateTrailing);
-  PRUint32 aNewLen=gCompressChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
+  PRUint32 aNewLen=CompressChars1(aDest.mStr,aDest.mLength,aSet);
+  aDest.mLength=aNewLen;
+  NSSTR_SEEN(aDest);
+}
+
+void nsStr::CompressSet2(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 bytes");
+  
+  Trim(aDest,aSet,aEliminateLeading,aEliminateTrailing);
+  PRUint32 aNewLen=CompressChars2(aDest.mUStr,aDest.mLength,aSet);
   aDest.mLength=aNewLen;
   NSSTR_SEEN(aDest);
 }
@@ -391,9 +567,21 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
  * @param 
  * @return
  */
-void nsStr::StripChars(nsStr& aDest,const char* aSet){
+void nsStr::StripChars1(nsStr& aDest,const char* aSet){
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  
   if((0<aDest.mLength) && (aSet)) {
-    PRUint32 aNewLen=gStripChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
+    PRUint32 aNewLen=::StripChars1(aDest.mStr, aDest.mLength, aSet);
+    aDest.mLength=aNewLen;
+    NSSTR_SEEN(aDest);
+  }
+}
+
+void nsStr::StripChars2(nsStr& aDest,const char* aSet){
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 bytes");
+  
+  if((0<aDest.mLength) && (aSet)) {
+    PRUint32 aNewLen=::StripChars2(aDest.mUStr, aDest.mLength, aSet);
     aDest.mLength=aNewLen;
     NSSTR_SEEN(aDest);
   }
@@ -522,7 +710,9 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnor
   if(aCount<0)
     aCount = aDest.mLength;
 
-  if((0<aDest.mLength) && ((PRUint32)anOffset<aDest.mLength) && (aTarget.mLength)) {
+  if((0<aDest.mLength) &&
+     ((PRUint32)anOffset<aDest.mLength) &&
+     (aTarget.mLength)) {
 
     if(0<aCount) {
 
@@ -642,6 +832,7 @@ TranslateCompareResult(const PRInt32 aDestLength, const PRInt32& aSourceLength, 
   
   return result;
 }
+
 /**
  * Compare source and dest strings, up to an (optional max) number of chars
  * @param   aDest is the first str to compare
