@@ -148,17 +148,29 @@
 
         <method name="update">
             <parameter name="aValue"/>
-            <parameter name="refresh"/>
+            <parameter name="aRefresh"/>
             <body><![CDATA[
-                if (aValue == null) {  // invalid date, revert to previous date
-                    // set textBox.value property, not attribute
-                    this.kTextBox.value = this.formatDate(this.mValue);
-                } else {
+                if (aValue != null) {
+                  // format fails if year <= 1600 on win2k, so try format first.
+                  var formattedValue = null;
+                  try { 
+                    formattedValue = this.formatDate(aValue);
+                  } catch (ex) {} // fall thru
+                  
+                  if (formattedValue) {
+                    // format succeeded, safe to set value
                     this.mValue = aValue;
-                    this.kTextBox.value = this.formatDate(this.mValue);
+                    this.kTextBox.value = formattedValue;
                     // called before constructor, so check aRefresh before kCallBack
-                    if( refresh != false && this.kCallback )
-                        this.kCallback();
+                    if ( aRefresh != false && "kCallback" in this)
+                      this.kCallback();
+                    return;
+                  }
+                }
+                // invalid date, revert to previous date
+                // set textBox.value property, not attribute
+                if (this.mValue) {
+                  this.kTextBox.value = this.formatDate(this.mValue);
                 }
             ]]></body>
         </method>
