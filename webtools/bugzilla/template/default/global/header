@@ -11,14 +11,23 @@
 <html>
   <head>
     <title>[% title %]</title>
+    
     [% Param('headerhtml') %]
+    
     [% jscript %]
+    
     [% IF style %]
       <style type="text/css">
         [% style %]
       </style>
     [% END %]
+    
+    [% IF style_url %]
+      <link href="[% style_url %]" rel="stylesheet" type="text/css" />
+    [% END %]
+  
   </head>
+  
   <body [% Param('bodyhtml') %][% " " %][% extra %]>
 
   [% PerformSubsts(Param('bannerhtml')) %]

@@ -22,77 +22,165 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Stephan Niemz  <st.n@gmx.net>
 #                 Andreas Franke <afranke@mathweb.org>
+#                 Myk Melez <myk@mozilla.org>
 
+################################################################################
+# Script Initialization
+################################################################################
+
+# Make it harder for us to do dangerous things in Perl.
 use diagnostics;
 use strict;
 
 use lib qw(.);
 
+use vars qw( $template $vars );
+
+# Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
-use Date::Parse;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
-
 sub sillyness {
     my $zz;
     $zz = $::db_name;
-    $zz = $::defaultqueryname;
-    $zz = $::unconfirmedstate;
-    $zz = $::userid;
     $zz = @::components;
     $zz = @::default_column_list;
+    $zz = $::defaultqueryname;
+    $zz = @::dontchange;
     $zz = @::legal_keywords;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
     $zz = @::legal_product;
-    $zz = @::settable_resolution;
     $zz = @::legal_severity;
-    $zz = @::versions;
+    $zz = @::settable_resolution;
     $zz = @::target_milestone;
-    $zz = %::proddesc;
+    $zz = $::unconfirmedstate;
+    $zz = $::userid;
+    $zz = @::versions;
 };
-
-my $serverpush = 0;
 
 ConnectToDatabase();
 
-#print "Content-type: text/plain\n\n";    # Handy for debugging.
-#$::FORM{'debug'} = 1;
+################################################################################
+# Data and Security Validation
+################################################################################
 
+# Determine the format in which the user would like to receive the output.
+# Uses the default format if the user did not specify an output format;
+# otherwise validates the user's choice against the list of available formats.
+my $format = ValidateOutputFormat($::FORM{'format'});
 
-if (grep(/^cmd-/, keys(%::FORM))) {
+# Whether or not the user wants to change multiple bugs.
+my $dotweak = $::FORM{'tweak'} ? 1 : 0;
+
+# Use server push to display a "Please wait..." message for the user while
+# executing their query if their browser supports it and they are viewing
+# the bug list as HTML and they have not disabled it by adding &serverpush=0
+# to the URL.
+#
+# Server push is a Netscape 3+ hack incompatible with MSIE, Lynx, and others. 
+# Even Communicator 4.51 has bugs with it, especially during page reload.
+# http://www.browsercaps.org used as source of compatible browsers.
+#
+my $serverpush =
+  exists $ENV{'HTTP_USER_AGENT'} 
+    && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
+      && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
+        && $format->{'extension'} eq "html"
+          && !defined($::FORM{'serverpush'})
+            || $::FORM{'serverpush'};
+
+my $order = $::FORM{'order'} || "";
+
+# If the user is retrieving the last bug list they looked at, hack the buffer
+# storing the query string so that it looks like a query retrieving those bugs.
+if ($::FORM{'regetlastlist'}) {
+    if (!$::COOKIE{'BUGLIST'}) {
+        DisplayError(qq|Sorry, I seem to have lost the cookie that recorded
+                        the results of your last query.  You will have to start
+                        over at the <a href="query.cgi">query page</a>.|);
+        exit;
+    }
+    $::FORM{'bug_id'} = join(",", split(/:/, $::COOKIE{'BUGLIST'}));
+    $order = "reuse last sort" unless $order;
+    $::buffer = "bug_id=$::FORM{'bug_id'}&order=" . url_quote($order);
+}
+
+if ($::buffer =~ /&cmd-/) {
     my $url = "query.cgi?$::buffer#chart";
-    print qq{Refresh: 0; URL=$url
-Content-type: text/html
+    print "Refresh: 0; URL=$url\n";
+    print "Content-Type: text/html\n\n";
+    # Generate and return the UI (HTML page) from the appropriate template.
+    $vars->{'title'} = "Adding field to query page...";
+    $vars->{'url'} = $url;
+    $vars->{'link'} = "Click here if the page does not redisplay automatically.";
+    $template->process("global/message.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error());
+    exit;
+}
 
-Adding field to query page...
-<P>
-<A HREF="$url">Click here if page doesn't redisplay automatically.</A>
-};
-    exit();
+# Generate a reasonable filename for the user agent to suggest to the user
+# when the user saves the bug list.  Uses the name of the remembered query
+# if available.  We have to do this now, even though we return HTTP headers 
+# at the end, because the fact that there is a remembered query gets 
+# forgotten in the process of retrieving it.
+my @time = localtime(time());
+my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
+my $filename = "bugs-$date.$format->{extension}";
+$::FORM{'cmdtype'} ||= "";
+if ($::FORM{'cmdtype'} eq 'runnamed') {
+    $filename = "$::FORM{'namedcmd'}-$date.$format->{extension}";
+    # Remove white-space from the filename so the user cannot tamper
+    # with the HTTP headers.
+    $filename =~ s/\s//;
+}
+
+if ($dotweak) {
+    confirm_login();
+    if (!UserInGroup("editbugs")) {
+        DisplayError("Sorry, you do not have sufficient privileges to edit
+                      multiple bugs.");
+        exit;
+    }
+    GetVersionTable();
+}
+else {
+    quietly_check_login();
 }
 
 
-
-if (!defined $::FORM{'cmdtype'}) {
-    # This can happen if there's an old bookmark to a query...
-    $::FORM{'cmdtype'} = 'doit';
-}
-
+################################################################################
+# Utilities
+################################################################################
 
 sub SqlifyDate {
-    my ($str) = (@_);
-    if (!defined $str) {
-        $str = "";
-    }
+    my ($str) = @_;
+    $str = "" if !defined $str;
     my $date = str2time($str);
-    if (!defined $date) {
-        PuntTryAgain("The string '<tt>".html_quote($str)."</tt>' is not a legal date.");
+    if (!defined($date)) {
+        my $htmlstr = html_quote($str);
+        DisplayError("The string <tt>$htmlstr</tt> is not a legal date.");
+        exit;
     }
-    return time2str("%Y/%m/%d %H:%M:%S", $date);
+    return time2str("%Y-%m-%d %H:%M:%S", $date);
 }
 
+my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
+sub DiffDate {
+    my ($datestr) = @_;
+    my $date = str2time($datestr);
+    my $age = time() - $date;
+    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $date;
+    if( $age < 18*60*60 ) {
+        $date = sprintf "%02d:%02d:%02d", $h,$m,$s;
+    } elsif( $age < 6*24*60*60 ) {
+        $date = sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
+    } else {
+        $date = sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
+    }
+    return $date;
+}
 
 sub GetByWordList {
     my ($field, $strs) = (@_);
@@ -129,28 +217,75 @@ sub GetByWordListSubstr {
     return \@list;
 }
 
-
-sub Error {
-    my ($str) = (@_);
-    if (!$serverpush) {
-        print "Content-type: text/html\n\n";
+sub LookupNamedQuery {
+    my ($name) = @_;
+    confirm_login();
+    my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+    my $qname = SqlQuote($name);
+    SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
+    my $result = FetchOneColumn();
+    if (!$result) {
+        my $qname = html_quote($name);
+        DisplayError("The query named <em>$qname</em> seems to no longer exist.");
+        exit;
     }
-    PuntTryAgain($str);
+    return $result;
+}
+
+sub GetQuip {
+    return if !Param('usequip');
+
+    my $quip;
+
+    # This is stupid.  We really really need to move the quip list into the DB!
+    if (open(COMMENTS, "<data/comments")) {
+        my @cdata;
+        push(@cdata, $_) while <COMMENTS>;
+        close COMMENTS;
+        $quip = $cdata[int(rand($#cdata + 1))];
+    }
+    $quip ||= "Bugzilla would like to put a random quip here, but nobody has entered any.";
+
+    return $quip;
+}
+
+sub GetGroupsByGroupSet {
+    my ($groupset) = @_;
+
+    return if !$groupset;
+
+    SendSQL("
+        SELECT  bit, name, description, isactive
+          FROM  groups
+         WHERE  (bit & $groupset) != 0
+           AND  isbuggroup != 0
+      ORDER BY  description ");
+
+    my @groups;
+
+    while (MoreSQLData()) {
+        my $group = {};
+        ($group->{'bit'}, $group->{'name'},
+         $group->{'description'}, $group->{'isactive'}) = FetchSQLData();
+        push(@groups, $group);
+    }
+
+    return \@groups;
 }
 
 
 
-
+################################################################################
+# Query Generation
+################################################################################
 
 sub GenerateSQL {
     my $debug = 0;
-    my ($fieldsref, $supptablesref, $wherepartref, $urlstr) = (@_);
+    my ($fieldsref, $urlstr) = (@_);
     my @fields;
     my @supptables;
     my @wherepart;
     @fields = @$fieldsref if $fieldsref;
-    @supptables = @$supptablesref if $supptablesref;
-    @wherepart = @$wherepartref if $wherepartref;
     my %F;
     my %M;
     ParseUrlString($urlstr, \%F, \%M);
@@ -172,10 +307,11 @@ sub GenerateSQL {
         my $c = trim($F{'votes'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                return Error("The 'At least ___ votes' field must be a\n" .
-                             "simple number. You entered \"" .
-                             html_quote($c) . "\", which\n" .
-                             "doesn't cut it.");
+                my $htmlc = html_quote($c);
+                DisplayError("The <em>At least ___ votes</em> field must be
+                              a simple number.  You entered <kbd>$htmlc</kbd>,
+                              which doesn't cut it.");
+                exit;
             }
             push(@specialchart, ["votes", "greaterthan", $c - 1]);
         }
@@ -255,9 +391,10 @@ sub GenerateSQL {
         if (@clist) {
             push(@specialchart, \@clist);
         } else {
-            return Error("You must specify one or more fields in which to\n" .
-                         "search for <tt>" .
-                         html_quote($email) . "</tt>.\n");
+            my $htmlemail = html_quote($email);
+            DisplayError("You must specify one or more fields in which
+                          to search for <tt>$htmlemail</tt>.");
+            exit;
         }
     }
 
@@ -266,10 +403,11 @@ sub GenerateSQL {
         my $c = trim($F{'changedin'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                return Error("The 'changed in last ___ days' field must be\n" .
-                             "a simple number. You entered \"" .
-                             html_quote($c) . "\", which\n" .
-                             "doesn't cut it.");
+                my $htmlc = html_quote($c);
+                DisplayError("The <em>changed in last ___ days</em> field
+                              must be a simple number.  You entered
+                              <kbd>$htmlc</kbd>, which doesn't cut it.");
+                exit;
             }
             push(@specialchart, ["changedin",
                                  "lessthan", $c + 1]);
@@ -417,17 +555,17 @@ sub GenerateSQL {
                  $t = "greaterthan";
              }
              if ($field eq "ispatch" && $v ne "0" && $v ne "1") {
-                 return Error("The only legal values for the 'Attachment is patch' " .
-                              "field are 0 and 1.");
+                 DisplayError("The only legal values for the <em>Attachment is
+                               patch</em> field are 0 and 1.");
+                 exit;
              }
              if ($field eq "isobsolete" && $v ne "0" && $v ne "1") {
-                 return Error("The only legal values for the 'Attachment is obsolete' " .
-                              "field are 0 and 1.");
+                 DisplayError("The only legal values for the <em>Attachment is
+                               obsolete</em> field are 0 and 1.");
+                 exit;
              }
              $f = "$table.$field";
          },
-         # 2001-05-16 myk@mozilla.org: enable querying against attachment status
-         # if this installation has enabled use of the attachment tracker.
          "^attachstatusdefs.name," => sub {
              # When searching for multiple statuses within a single boolean chart,
              # we want to match each status record separately.  In other words,
@@ -473,12 +611,13 @@ sub GenerateSQL {
                  my $id = GetKeywordIdFromName($value);
                  if ($id) {
                      push(@list, "$table.keywordid = $id");
-                 } else {
-                     return Error("Unknown keyword named <code>" .
-                                  html_quote($v) . "</code>.\n" .
-                                  "<P>The legal keyword names are\n" .
-                                  "<A HREF=describekeywords.cgi>" .
-                                  "listed here</A>.\n");
+                 }
+                 else {
+                     my $htmlv = html_quote($v);
+                     DisplayError(qq|There is no keyword named <code>$htmlv</code>.
+                                     To search for keywords, consult the
+                                    <a href="describekeywords.cgi">list of legal keywords</a>.|);
+                     exit;
                  }
              }
              my $haveawordterm;
@@ -667,16 +806,16 @@ sub GenerateSQL {
     }
 
 
-# A boolean chart is a way of representing the terms in a logical 
+# A boolean chart is a way of representing the terms in a logical
 # expression.  Bugzilla builds SQL queries depending on how you enter
-# terms into the boolean chart. Boolean charts are represented in 
-# urls as tree-tuples of (chart id, row, column). The query form 
+# terms into the boolean chart. Boolean charts are represented in
+# urls as tree-tuples of (chart id, row, column). The query form
 # (query.cgi) may contain an arbitrary number of boolean charts where
-# each chart represents a clause in a SQL query. 
+# each chart represents a clause in a SQL query.
 #
 # The query form starts out with one boolean chart containing one
-# row and one column.  Extra rows can be created by pressing the 
-# AND button at the bottom of the chart.  Extra columns are created 
+# row and one column.  Extra rows can be created by pressing the
+# AND button at the bottom of the chart.  Extra columns are created
 # by pressing the OR button at the right end of the chart. Extra
 # charts are created by pressing "Add another boolean chart".
 #
@@ -705,11 +844,11 @@ sub GenerateSQL {
 # SELECT blah FROM blah WHERE ( (a1 OR a2)AND(b1 OR b2 OR b3)AND(c1)) AND (d1)
 #
 # The terms within a single row of a boolean chart are all constraints
-# on a single piece of data.  If you're looking for a bug that has two 
-# different people cc'd on it, then you need to use two boolean charts. 
-# This will find bugs with one CC mathing 'foo@blah.org' and and another 
-# CC matching 'bar@blah.org'. 
-# 
+# on a single piece of data.  If you're looking for a bug that has two
+# different people cc'd on it, then you need to use two boolean charts.
+# This will find bugs with one CC mathing 'foo@blah.org' and and another
+# CC matching 'bar@blah.org'.
+#
 # --------------------------------------------------------------
 # CC    | equal to
 # foo@blah.org
@@ -717,7 +856,7 @@ sub GenerateSQL {
 # CC    | equal to
 # bar@blah.org
 #
-# If you try to do this query by pressing the AND button in the 
+# If you try to do this query by pressing the AND button in the
 # original boolean chart then what you'll get is an expression that
 # looks for a single CC where the login name is both "foo@blah.org",
 # and "bar@blah.org". This is impossible.
@@ -740,7 +879,7 @@ sub GenerateSQL {
 # $ff = qualified field name (field name prefixed by table)
 #       e.g. bugs_activity.bug_id
 # $t  = type of query. e.g. "equal to", "changed after", case sensitive substr"
-# $v  = value - value the user typed in to the form 
+# $v  = value - value the user typed in to the form
 # $q  = sanitized version of user input (SqlQuote($v))
 # @supptables = Tables and/or table aliases used in query
 # %suppseen   = A hash used to store all the tables in supptables to weed
@@ -814,13 +953,13 @@ sub GenerateSQL {
                 }
                 if ($term) {
                     push(@orlist, $term);
-                } else {
-                    my $errstr = "Can't seem to handle " .
-                        qq{'<code>$F{"field$chart-$row-$col"}</code>' and } .
-                            qq{'<code>$F{"type$chart-$row-$col"}</code>' } .
-                                "together";
-                    die "Internal error: $errstr" if $chart < 0;
-                    return Error($errstr);
+                }
+                else {
+                    my $errstr =
+                      qq|Cannot seem to handle <code>$F{"field$chart-$row-$col"}</code>
+                         and <code>$F{"type$chart-$row-$col"}</code> together|;
+                    $chart < 0 ? die "Internal error: $errstr"
+                               : DisplayError($errstr) && exit;
                 }
             }
             if (@orlist) {
@@ -839,931 +978,538 @@ sub GenerateSQL {
             $suppseen{$str} = 1;
         }
     }
-
-    my $query =  ("SELECT " . join(', ', @fields) .
+    my $query =  ("SELECT DISTINCT " . join(', ', @fields) .
                   " FROM $suppstring" .
-                  " WHERE " . join(' AND ', (@wherepart, @andlist)) .
-                  " GROUP BY bugs.bug_id");
+                  " WHERE " . join(' AND ', (@wherepart, @andlist)));
 
     $query = SelectVisible($query, $::userid, $::usergroupset);
 
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
-        exit();
+        exit;
     }
     return $query;
 }
 
 
 
-sub LookupNamedQuery {
-    my ($name) = (@_);
-    confirm_login();
-    my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
-    SendSQL("SELECT query FROM namedqueries " .
-            "WHERE userid = $userid AND name = " . SqlQuote($name));
-    my $result = FetchOneColumn();
-    if (!defined $result) {
-        print "Content-type: text/html\n\n";
-        PutHeader("Something weird happened");
-        print qq{The named query $name seems to no longer exist.};
-        PutFooter();
-        exit;
-    }
-    return $result;
-}
+################################################################################
+# Command Execution
+################################################################################
 
-
-
-$::querytitle = "Bug List";
-
+# Figure out if the user wanted to do anything besides just running the query
+# they defined on the query page, and take appropriate action.
 CMD: for ($::FORM{'cmdtype'}) {
     /^runnamed$/ && do {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
-        $::querytitle = "Bug List: $::FORM{'namedcmd'}";
+        $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         ProcessFormFields($::buffer);
         last CMD;
     };
+
     /^editnamed$/ && do {
         my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
-        print qq{Content-type: text/html
-Refresh: 0; URL=$url
-
-<TITLE>What a hack.</TITLE>
-<A HREF="$url">Loading your query named <B>$::FORM{'namedcmd'}</B>...</A>
-};
+        print "Refresh: 0; URL=$url\n";
+        print "Content-Type: text/html\n\n";
+        # Generate and return the UI (HTML page) from the appropriate template.
+        $vars->{'title'} = "Loading your query named $::FORM{'namedcmd'}";
+        $vars->{'url'} = $url;
+        $vars->{'link'} = "Click here if the page does not redisplay automatically.";
+        $template->process("global/message.html.tmpl", $vars)
+          || DisplayError("Template process failed: " . $template->error());
         exit;
     };
+
     /^forgetnamed$/ && do {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
-        SendSQL("DELETE FROM namedqueries WHERE userid = $userid " .
-                "AND name = " . SqlQuote($::FORM{'namedcmd'}));
-
-        print "Content-type: text/html\n\n";
-        PutHeader("Query is gone", "");
-
-        print qq{
-OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
-<P>
-<A HREF="query.cgi">Go back to the query page.</A>
-};
-        PutFooter();
+        my $qname = SqlQuote($::FORM{'namedcmd'});
+        SendSQL("DELETE FROM namedqueries WHERE userid = $userid AND name = $qname");
+        print "Content-Type: text/html\n\n";
+        # Generate and return the UI (HTML page) from the appropriate template.
+        $vars->{'title'} = "Query is gone";
+        $vars->{'message'} = "OK, the <b>$::FORM{'namedcmd'}</b> query is gone.";
+        $vars->{'url'} = "query.cgi";
+        $vars->{'link'} = "Go back to the query page.";
+        $template->process("global/message.html.tmpl", $vars)
+          || DisplayError("Template process failed: " . $template->error());
         exit;
     };
+
     /^asdefault$/ && do {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
-        print "Content-type: text/html\n\n";
-        SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
-                "($userid, '$::defaultqueryname'," .
-                SqlQuote($::buffer) . ")");
-        PutHeader("OK, default is set");
-        print qq{
-OK, you now have a new default query.  You may also bookmark the result of any
-individual query.
-
-<P><A HREF="query.cgi">Go back to the query page, using the new default.</A>
-};
-        PutFooter();
-        exit();
+        my $qname = SqlQuote($::defaultqueryname);
+        my $qbuffer = SqlQuote($::buffer);
+        SendSQL("REPLACE INTO namedqueries (userid, name, query)
+                 VALUES ($userid, $qname, $qbuffer)");
+        print "Content-Type: text/html\n\n";
+        # Generate and return the UI (HTML page) from the appropriate template.
+        $vars->{'title'} = "OK, default is set";
+        $vars->{'message'} = "OK, you now have a new default query.  You may
+                              also bookmark the result of any individual query.";
+        $vars->{'url'} = "query.cgi";
+        $vars->{'link'} = "Go back to the query page, using the new default.";
+        $template->process("global/message.html.tmpl", $vars)
+          || DisplayError("Template process failed: " . $template->error());
+        exit;
     };
+
     /^asnamed$/ && do {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
-        print "Content-type: text/html\n\n";
+
         my $name = trim($::FORM{'newqueryname'});
-        if ($name eq "" || $name =~ /[<>&]/) {
-            PutHeader("Please pick a valid name for your new query");
-            print "Click the <B>Back</B> button and type in a valid name\n";
-            print "for this query.  (Query names should not contain unusual\n";
-            print "characters.)\n";
-            PutFooter();
-            exit();
-        }
-        $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
+        $name
+          || DisplayError("You must enter a name for your query.")
+            && exit;
+        $name =~ /[<>&]/
+          && DisplayError("The name of your query cannot contain any
+                           of the following characters: &lt;, &gt;, &amp;.")
+            && exit;
         my $qname = SqlQuote($name);
-       my $tofooter= ( $::FORM{'tofooter'} ? 1 : 0 );
-        SendSQL("SELECT query FROM namedqueries " .
-                "WHERE userid = $userid AND name = $qname");
-        if (!FetchOneColumn()) {
-            SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter) " .
-                    "VALUES ($userid, $qname, ". SqlQuote($::buffer) .", ". $tofooter .")");
-        } else {
-            SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) . "," .
-                   " linkinfooter = " . $tofooter .
-                    " WHERE userid = $userid AND name = $qname");
+
+        $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
+        my $qbuffer = SqlQuote($::buffer);
+
+        my $tofooter= $::FORM{'tofooter'} ? 1 : 0;
+
+        SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
+        if (FetchOneColumn()) {
+            SendSQL("UPDATE  namedqueries
+                        SET  query = $qbuffer , linkinfooter = $tofooter
+                      WHERE  userid = $userid AND name = $qname");
         }
-        PutHeader("OK, query saved.");
-        print qq{
-OK, you have a new query named <code>$name</code>
-<P>
-<BR><A HREF="query.cgi">Go back to the query page</A>
-};
-        PutFooter();
+        else {
+            SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter)
+                     VALUES ($userid, $qname, $qbuffer, $tofooter)");
+        }
+        print "Content-Type: text/html\n\n";
+        # Generate and return the UI (HTML page) from the appropriate template.
+        $vars->{'title'} = "OK, query saved.";
+        $vars->{'message'} = "OK, you have a new query named <code>$name</code>";
+        $vars->{'url'} = "query.cgi";
+        $vars->{'link'} = "Go back to the query page.";
+        $template->process("global/message.html.tmpl", $vars)
+          || DisplayError("Template process failed: " . $template->error());
         exit;
     };
 }
 
 
-if (exists $ENV{'HTTP_USER_AGENT'} && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/ ) {
-    # Search for real Netscape 3 and up.  http://www.browsercaps.org used as source of
-    # browsers compatbile with server-push.  It's a Netscape hack, incompatbile
-    # with MSIE and Lynx (at least).  Even Communicator 4.51 has bugs with it,
-    # especially during page reload.
-    $serverpush = 1;
+################################################################################
+# Column Definition
+################################################################################
 
-    print qq{Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n
---thisrandomstring
-Content-type: text/html\n
-<html><head><title>Bugzilla is pondering your query</title>
-<style type="text/css">
-    .psb { margin-top: 20%; text-align: center; }
-</style></head><body>
-<h1 class="psb">Please stand by ...</h1></body></html>
-    };
-    # Note! HTML header is complete!
-} else {
-    print "Content-type: text/html\n";
-    #Changing attachment to inline to resolve 46897
-    #zach@zachlipton.com
-    print "Content-disposition: inline; filename=bugzilla_bug_list.html\n";
-    # Note! Don't finish HTML header yet!  Only one newline so far!
-}
-sub DefCol {
-    my ($name, $k, $t, $s, $q) = (@_);
+# Define the columns that can be selected in a query and/or displayed in a bug
+# list.  Column records include the following fields:
+#
+# 1. ID: a unique identifier by which the column is referred in code;
+#
+# 2. Name: The name of the column in the database (may also be an expression
+#          that returns the value of the column);
+#
+# 3. Title: The title of the column as displayed to users.
+# 
+# Note: There are a few hacks in the code that deviate from these definitions.
+#       In particular, when the list is sorted by the "votes" field the word 
+#       "DESC" is added to the end of the field to sort in descending order, 
+#       and the redundant summaryfull column is removed when the client
+#       requests "all" columns.
 
-    $::key{$name} = $k;
-    $::title{$name} = $t;
-    if (defined $s && $s ne "") {
-        $::sortkey{$name} = $s;
-    }
-    if (!defined $q || $q eq "") {
-        $q = 0;
-    }
-    $::needquote{$name} = $q;
+my $columns = {};
+sub DefineColumn {
+    my ($id, $name, $title) = @_;
+    $columns->{$id} = { 'name' => $name , 'title' => $title };
 }
 
-DefCol("opendate", "unix_timestamp(bugs.creation_ts)", "Opened",
-       "bugs.creation_ts");
-DefCol("changeddate", "unix_timestamp(bugs.delta_ts)", "Changed",
-       "bugs.delta_ts");
-DefCol("severity", "substring(bugs.bug_severity, 1, 3)", "Sev",
-       "bugs.bug_severity");
-DefCol("priority", "substring(bugs.priority, 1, 3)", "Pri", "bugs.priority");
-DefCol("platform", "substring(bugs.rep_platform, 1, 3)", "Plt",
-       "bugs.rep_platform");
-DefCol("owner", "map_assigned_to.login_name", "Owner",
-       "map_assigned_to.login_name");
-DefCol("reporter", "map_reporter.login_name", "Reporter",
-       "map_reporter.login_name");
-DefCol("qa_contact", "map_qa_contact.login_name", "QAContact", "map_qa_contact.login_name");
-DefCol("status", "substring(bugs.bug_status,1,4)", "State", "bugs.bug_status");
-DefCol("resolution", "substring(bugs.resolution,1,4)", "Result",
-       "bugs.resolution");
-DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "bugs.short_desc", 1);
-DefCol("summaryfull", "bugs.short_desc", "Summary", "bugs.short_desc", 1);
-DefCol("status_whiteboard", "bugs.status_whiteboard", "StatusSummary", "bugs.status_whiteboard", 1);
-DefCol("component", "substring(bugs.component, 1, 8)", "Comp",
-       "bugs.component");
-DefCol("product", "substring(bugs.product, 1, 8)", "Product", "bugs.product");
-DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
-DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
-DefCol("target_milestone", "bugs.target_milestone", "TargetM",
-       "bugs.target_milestone");
-DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
-DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
+# Column:     ID                    Name                           Title
+DefineColumn("id"                , "bugs.bug_id"                , "ID"               );
+DefineColumn("groupset"          , "bugs.groupset"              , "Groupset"         );
+DefineColumn("opendate"          , "bugs.creation_ts"           , "Opened"           );
+DefineColumn("changeddate"       , "bugs.delta_ts"              , "Changed"          );
+DefineColumn("severity"          , "bugs.bug_severity"          , "Severity"         );
+DefineColumn("priority"          , "bugs.priority"              , "Priority"         );
+DefineColumn("platform"          , "bugs.rep_platform"          , "Platform"         );
+DefineColumn("owner"             , "map_assigned_to.login_name" , "Owner"            );
+DefineColumn("reporter"          , "map_reporter.login_name"    , "Reporter"         );
+DefineColumn("qa_contact"        , "map_qa_contact.login_name"  , "QA Contact"       );
+DefineColumn("status"            , "bugs.bug_status"            , "State"            );
+DefineColumn("resolution"        , "bugs.resolution"            , "Result"           );
+DefineColumn("summary"           , "bugs.short_desc"            , "Summary"          );
+DefineColumn("summaryfull"       , "bugs.short_desc"            , "Summary"          );
+DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Status Summary"   );
+DefineColumn("component"         , "bugs.component"             , "Component"        );
+DefineColumn("product"           , "bugs.product"               , "Product"          );
+DefineColumn("version"           , "bugs.version"               , "Version"          );
+DefineColumn("os"                , "bugs.op_sys"                , "OS"               );
+DefineColumn("target_milestone"  , "bugs.target_milestone"      , "Target Milestone" );
+DefineColumn("votes"             , "bugs.votes"                 , "Votes"            );
+DefineColumn("keywords"          , "bugs.keywords"              , "Keywords"         );
 
-my @collist;
+
+################################################################################
+# Display Column Determination
+################################################################################
+
+# Determine the columns that will be displayed in the bug list via the 
+# columnlist CGI parameter, the user's preferences, or the default.
+my @displaycolumns = ();
 if (defined $::FORM{'columnlist'}) {
-    @collist = split(/[ ,]+/, $::FORM{'columnlist'});
-} elsif (defined $::COOKIE{'COLUMNLIST'}) {
-    @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
-} else {
-    @collist = @::default_column_list;
-}
-
-my $minvotes;
-if (defined $::FORM{'votes'}) {
-    if (trim($::FORM{'votes'}) ne "") {
-        if (! (grep {/^votes$/} @collist)) {
-            push(@collist, 'votes');
-        }
+    if ($::FORM{'columnlist'} eq "all") {
+        # If the value of the CGI parameter is "all", display all columns,
+        # but remove the redundant "summaryfull" column.
+        @displaycolumns = grep($_ ne 'summaryfull', keys(%$columns));
+    }
+    else {
+        @displaycolumns = split(/[ ,]+/, $::FORM{'columnlist'});
     }
 }
+elsif (defined $::COOKIE{'COLUMNLIST'}) {
+    # Use the columns listed in the user's preferences.
+    @displaycolumns = split(/ /, $::COOKIE{'COLUMNLIST'});
+}
+else {
+    # Use the default list of columns.
+    @displaycolumns = @::default_column_list;
+}
+
+# Weed out columns that don't actually exist to prevent the user 
+# from hacking their column list cookie to grab data to which they 
+# should not have access.  Detaint the data along the way.
+@displaycolumns = grep($columns->{$_} && trick_taint($_), @displaycolumns);
+
+# Remove the "ID" column from the list because bug IDs are always displayed
+# and are hard-coded into the display templates.
+@displaycolumns = grep($_ ne 'id', @displaycolumns);
+
+# IMPORTANT! Never allow the groupset column to be displayed!
+@displaycolumns = grep($_ ne 'groupset', @displaycolumns);
+
+# Add the votes column to the list of columns to be displayed
+# in the bug list if the user is searching for bugs with a certain
+# number of votes and the votes column is not already on the list.
+push(@displaycolumns, 'votes') 
+  if $::FORM{'votes'} && !grep($_ eq 'votes', @displaycolumns);
 
 
-my $dotweak = defined $::FORM{'tweak'};
+################################################################################
+# Select Column Determination
+################################################################################
 
+# Generate the list of columns that will be selected in the SQL query.
+
+# The bug ID and groupset are always selected because bug IDs are always
+# displayed and we need the groupset to determine whether or not the bug
+# is visible to the user.
+my @selectcolumns = ("id", "groupset");
+
+# Display columns are selected because otherwise we could not display them.
+push (@selectcolumns, @displaycolumns);
+
+# If the user is editing multiple bugs, we also make sure to select the product
+# and status because the values of those fields determine what options the user
+# has for modifying the bugs.
 if ($dotweak) {
-    confirm_login();
-    if (!UserInGroup("editbugs")) {
-        print qq{
-Sorry; you do not have sufficient privileges to edit a bunch of bugs
-at once.
-};
-        PutFooter();
-        exit();
-    }
-} else {
-    quietly_check_login();
+    push(@selectcolumns, "product") if !grep($_ eq 'product', @selectcolumns);
+    push(@selectcolumns, "status") if !grep($_ eq 'status', @selectcolumns);
 }
 
 
-my @fields = ("bugs.bug_id", "bugs.groupset");
+################################################################################
+# Query Generation
+################################################################################
 
-foreach my $c (@collist) {
-    if (exists $::needquote{$c}) {
-        # The value we are actually using is $::key{$c}, which was created
-        # using the DefCol() function earlier.  We test for the existance
-        # of $::needsquote{$c} to find out if $c is a legitimate key in the
-        # hashes that were defined by DefCol().  If $::needsquote{$c} exists,
-        # then $c is valid and we can use it to look up our key.
-        # If it doesn't exist, then we know the user is screwing with us   
-        # and we'll just skip it.
-        trick_taint($c);
-        push(@fields, $::key{$c});
-    }
+# Convert the list of columns being selected into a list of column names.
+my @selectnames = map($columns->{$_}->{'name'}, @selectcolumns);
+
+# Generate the basic SQL query that will be used to generate the bug list.
+my $query = GenerateSQL(\@selectnames, $::buffer);
+
+
+################################################################################
+# Sort Order Determination
+################################################################################
+
+# Add to the query some instructions for sorting the bug list.
+if ($::COOKIE{'LASTORDER'} && !$order || $order =~ /^reuse/i) {
+    $order = url_decode($::COOKIE{'LASTORDER'});
 }
 
-
-if ($dotweak) {
-    push(@fields, "bugs.product", "bugs.bug_status");
-}
-
-
-
-if ($::FORM{'regetlastlist'}) {
-    if (!$::COOKIE{'BUGLIST'}) {
-        print qq{
-Sorry, I seem to have lost the cookie that recorded the results of your last
-query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
-};
-        PutFooter();
-        exit;
-    }
-    my @list = split(/:/, $::COOKIE{'BUGLIST'});
-    $::FORM{'bug_id'} = join(',', @list);
-    if (!$::FORM{'order'}) {
-        $::FORM{'order'} = 'reuse last sort';
-    }
-    $::buffer = "bug_id=" . $::FORM{'bug_id'} . "&order=" .
-        url_quote($::FORM{'order'});
-}
-
-
-
-ReconnectToShadowDatabase();
-
-my $query = GenerateSQL(\@fields, undef, undef, $::buffer);
-
-if ($::COOKIE{'LASTORDER'}) {
-    if ((!$::FORM{'order'}) || $::FORM{'order'} =~ /^reuse/i) {
-        $::FORM{'order'} = url_decode($::COOKIE{'LASTORDER'});
-    }
-}
-
-
-if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
-    $query .= " ORDER BY ";
-    $::FORM{'order'} =~ s/votesum/bugs.votes/; # Silly backwards compatability
-                                               # hack.
-    $::FORM{'order'} =~ s/assign\.login_name/map_assigned_to.login_name/g;
-                                # Another backwards compatability hack.
-
-    ORDER: for ($::FORM{'order'}) {
+if ($order) {
+    # Convert the value of the "order" form field into a list of columns
+    # by which to sort the results.
+    ORDER: for ($order) {
         /\./ && do {
-            # This (hopefully) already has fieldnames in it, so we're done.
+            # A custom list of columns.  Make sure each column is valid.
+            foreach my $fragment (split(/[,\s]+/, $order)) {
+                next if $fragment =~ /^asc|desc$/i;
+                my @columnnames = map($columns->{lc($_)}->{'name'}, keys(%$columns));
+                if (!grep($_ eq $fragment, @columnnames)) {
+                    my $qfragment = html_quote($fragment);
+                    DisplayError("The custom sort order you specified in your
+                                  form submission or cookie contains an invalid
+                                  column name <em>$qfragment</em>.");
+                    exit;
+                }
+            }
+            # Now that we have checked that all columns in the order are valid,
+            # detaint the order string.
+            trick_taint($order);
             last ORDER;
         };
         /Number/ && do {
-            $::FORM{'order'} = "bugs.bug_id";
+            $order = "bugs.bug_id";
             last ORDER;
         };
         /Import/ && do {
-            $::FORM{'order'} = "bugs.priority, bugs.bug_severity";
+            $order = "bugs.priority, bugs.bug_severity";
             last ORDER;
         };
         /Assign/ && do {
-            $::FORM{'order'} = "map_assigned_to.login_name, bugs.bug_status, priority, bugs.bug_id";
+            $order = "map_assigned_to.login_name, bugs.bug_status, priority, bugs.bug_id";
             last ORDER;
         };
         /Changed/ && do {
-            $::FORM{'order'} = "bugs.delta_ts, bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
+            $order = "bugs.delta_ts, bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
             last ORDER;
         };
         # DEFAULT
-        $::FORM{'order'} = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
+        $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
     }
-    die "Invalid order: $::FORM{'order'}" unless
-        $::FORM{'order'} =~ /^([a-zA-Z0-9_., ]+)$/;
-    $::FORM{'order'} = $1; # detaint this, since we've checked it
 
     # Extra special disgusting hack: if we are ordering by target_milestone,
     # change it to order by the sortkey of the target_milestone first.
-    my $order = $::FORM{'order'};
     if ($order =~ /bugs.target_milestone/) {
-        $query =~ s/ WHERE / LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
         $order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
+        $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
     }
 
-    $query .= $order;
+    # If we are sorting by votes, sort in descending order.
+    if ($order =~ /bugs.votes\s+(asc|desc){0}/i) {
+        $order =~ s/bugs.votes/bugs.votes desc/i;
+    }
+
+    $query .= " ORDER BY $order ";
 }
 
 
-if ($::FORM{'debug'} && $serverpush) {
-    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
+################################################################################
+# Query Execution
+################################################################################
+
+# Time to use server push to display an interim message to the user until
+# the query completes and we can display the bug list.
+if ($serverpush) {
+    # Generate HTTP headers.
+    print "Content-Disposition: inline; filename=$filename\n";
+    print "Content-Type: multipart/x-mixed-replace;boundary=thisrandomstring\n\n";
+    print "--thisrandomstring\n";
+    print "Content-Type: text/html\n\n";
+
+    # Generate and return the UI (HTML page) from the appropriate template.
+    $template->process("buglist/server-push.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
 
+# Connect to the shadow database if this installation is using one to improve
+# query performance.
+ReconnectToShadowDatabase();
 
-if (Param('expectbigqueries')) {
-    SendSQL("set option SQL_BIG_TABLES=1");
-}
+# Tell MySQL to store temporary tables on the hard drive instead of memory
+# to avoid "table out of space" errors on MySQL versions less than 3.23.2.
+SendSQL("SET OPTION SQL_BIG_TABLES=1") if Param('expectbigqueries');
 
+# Execute the query.
 SendSQL($query);
 
-my $count = 0;
-$::bugl = "";
-sub pnl {
-    my ($str) = (@_);
-    $::bugl  .= $str;
-}
 
-my $fields = $::buffer;
-$fields =~ s/[&?]order=[^&]*//g;
-$fields =~ s/[&?]cmdtype=[^&]*//g;
+################################################################################
+# Results Retrieval
+################################################################################
 
+# Retrieve the query results one row at a time and write the data into a list
+# of Perl records.
 
-my $orderpart;
-my $oldorder;
+my $bugowners = {};
+my $bugproducts = {};
+my $bugstatuses = {};
 
-if (defined $::FORM{'order'} && trim($::FORM{'order'}) ne "") {
-    $orderpart = "&order=" . url_quote("$::FORM{'order'}");
-    $oldorder = url_quote(", $::FORM{'order'}");
-} else {
-    $orderpart = "";
-    $oldorder = "";
-}
+my @bugs; # the list of records
 
-if ($dotweak) {
-    pnl "<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">";
-}
+while (my @row = FetchSQLData()) {
+    my $bug = {}; # a record
 
-
-my @th;
-foreach my $c (@collist) {
-    if (exists $::needquote{$c}) {
-        my $h = "<TH>";
-        if (defined $::sortkey{$c}) {
-            $h .= "<A HREF=\"buglist.cgi?$fields&order=" . url_quote($::sortkey{$c}) . "$oldorder\">$::title{$c}</A>";
-        } else {
-            $h .= $::title{$c};
-        }
-        $h .= "</TH>";
-        push(@th, $h);
-    }
-}
-
-my $tablestart = "<TABLE CELLSPACING=0 CELLPADDING=4 WIDTH=100%>
-<TR ALIGN=LEFT><TH>
-<A HREF=\"buglist.cgi?$fields&order=bugs.bug_id\">ID</A>";
-
-my $splitheader = 0;
-if ($::COOKIE{'SPLITHEADER'}) {
-    $splitheader = 1;
-}
-
-if ($splitheader) {
-    $tablestart =~ s/<TH/<TH COLSPAN="2"/;
-    for (my $pass=0 ; $pass<2 ; $pass++) {
-        if ($pass == 1) {
-            $tablestart .= "</TR>\n<TR><TD></TD>";
-        }
-        for (my $i=1-$pass ; $i<@th ; $i += 2) {
-            my $h = $th[$i];
-            $h =~ s/TH/TH COLSPAN="2" ALIGN="left"/;
-            $tablestart .= $h;
-        }
-    }
-} else {
-    $tablestart .= join("", @th);
-}
-
-
-$tablestart .= "\n";
-
-
-my @row;
-my %seen;
-my @bugarray;
-my %prodhash;
-my %statushash;
-my %ownerhash;
-my %qahash;
-
-my $pricol = -1;
-my $sevcol = -1;
-for (my $colcount = 0 ; $colcount < @collist ; $colcount++) {
-    my $colname = $collist[$colcount];
-    if ($colname eq "priority") {
-        $pricol = $colcount;
-    }
-    if ($colname eq "severity") {
-        $sevcol = $colcount;
-    }
-}
-
-my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
-
-# Truncate email to 30 chars per bug #103592
-my $maxemailsize = 30;
-
-while (@row = FetchSQLData()) {
-    my $bug_id = shift @row;
-    my $g = shift @row;         # Bug's group set.
-    if (!defined $seen{$bug_id}) {
-        $seen{$bug_id} = 1;
-        $count++;
-        if ($count % 200 == 0) {
-            # Too big tables take too much browser memory...
-            pnl "</TABLE>$tablestart";
-        }
-        push @bugarray, $bug_id;
-
-        # retrieve this bug's priority and severity, if available,
-        # by looping through all column names -- gross but functional
-        my $priority = "unknown";
-        my $severity;
-        if ($pricol >= 0) {
-            $priority = $row[$pricol];
-        }
-        if ($sevcol >= 0) {
-            $severity = $row[$sevcol];
-        }
-        my $customstyle = "";
-        if ($severity) {
-            if ($severity eq "enh") {
-                $customstyle = "style='font-style:italic ! important'";
-            }
-            if ($severity eq "blo") {
-                $customstyle = "style='color:red ! important; font-weight:bold ! important'";
-            }
-            if ($severity eq "cri") {
-                $customstyle = "style='color:red; ! important'";
-            }
-        }
-        pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
-        if ($dotweak) {
-            pnl "<input type=checkbox name=id_$bug_id>";
-        }
-        pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
-        pnl "$bug_id</A>";
-        if ($g != "0") { pnl "*"; }
-        pnl " ";
-        foreach my $c (@collist) {
-            if (exists $::needquote{$c}) {
-                my $value = shift @row;
-                if (!defined $value) {
-                    pnl "<TD>";
-                    next;
-                }
-                if ($c eq "owner") {
-                    $ownerhash{$value} = 1;
-                }
-                if ($c eq "qa_contact") {
-                    $qahash{$value} = 1;
-                }
-                if ( ($c eq "owner" || $c eq "qa_contact" ) &&
-                        length $value > $maxemailsize )  {
-                    my $trunc = substr $value, 0, $maxemailsize;
-                    $value = value_quote($value);
-                    $value = qq|<SPAN TITLE="$value">$trunc...</SPAN>|;
-                } elsif( $c eq 'changeddate' or $c eq 'opendate' ) {
-                    my $age = time() - $value;
-                    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $value;
-                    if( $age < 18*60*60 ) {
-                        $value = sprintf "%02d:%02d:%02d", $h,$m,$s;
-                    } elsif ( $age < 6*24*60*60 ) {
-                        $value = sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
-                    } else {
-                        $value = sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
-                    }
-                }
-                if ($::needquote{$c} || $::needquote{$c} == 5) {
-                    $value = html_quote($value);
-                } else {
-                    $value = "<nobr>$value</nobr>";
-                }
-
-                pnl "<td class=$c>$value";
-            }
-        }
-        if ($dotweak) {
-            my $value = shift @row;
-            $prodhash{$value} = 1;
-            $value = shift @row;
-            $statushash{$value} = 1;
-        }
-        pnl "\n";
-    }
-}
-my $buglist = join(":", @bugarray);
-
-
-# This is stupid.  We really really need to move the quip list into the DB!
-my $quip;
-if (Param('usequip')){
-  if (open (COMMENTS, "<data/comments")) {
-    my @cdata;
-    while (<COMMENTS>) {
-      push @cdata, $_;
-    }
-    close COMMENTS;
-    $quip = $cdata[int(rand($#cdata + 1))];
-  }
-  $quip ||= "Bugzilla would like to put a random quip here, but nobody has entered any.";
-}
-
-
-# We've done all we can without any output.  If we can server push it is time
-# take down the waiting page and put up the real one.
-if ($serverpush) {
-    print "\n";
-    print "--thisrandomstring\n";
-    print "Content-type: text/html\n";
-    print "Content-disposition: inline; filename=bugzilla_bug_list.html\n";
-    # Note! HTML header not yet closed
-}
-my $toolong = 0;
-if ($::FORM{'order'}) {
-    my $q = url_quote($::FORM{'order'});
-    my $cookiepath = Param("cookiepath");
-    print "Set-Cookie: LASTORDER=$q ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-}
-if (length($buglist) < 4000) {
-    print "Set-Cookie: BUGLIST=$buglist\n\n";
-} else {
-    print "Set-Cookie: BUGLIST=\n\n";
-    $toolong = 1;
-}
-PutHeader($::querytitle, undef, "", "", navigation_links($buglist));
-
-
-print "
-<CENTER>
-<B>" .  time2str("%a %b %e %T %Z %Y", time()) . "</B>";
-
-if (Param('usebuggroups')) {
-   print "<BR>* next to a bug number notes a bug not visible to everyone.<BR>";
-}
-
-if (defined $::FORM{'debug'}) {
-    print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
-}
-
-if ($toolong) {
-    print "<h2>This list is too long for bugzilla's little mind; the\n";
-    print "Next/Prev/First/Last buttons won't appear.</h2>\n";
-}
-
-if (Param('usequip')){
-  print "<HR><A HREF=quips.cgi><I>$quip</I></A></CENTER>\n";
-}
-print "<HR SIZE=10>";
-print "$count bugs found." if $count > 9;
-print $tablestart, "\n";
-print $::bugl;
-print "</TABLE>\n";
-
-if ($count == 0) {
-    print "Zarro Boogs found.\n";
-    # I've been asked to explain this ... way back when, when Netscape released
-    # version 4.0 of its browser, we had a release party.  Naturally, there
-    # had been a big push to try and fix every known bug before the release.
-    # Naturally, that hadn't actually happened.  (This is not unique to
-    # Netscape or to 4.0; the same thing has happened with every software
-    # project I've ever seen.)  Anyway, at the release party, T-shirts were
-    # handed out that said something like "Netscape 4.0: Zarro Boogs".
-    # Just like the software, the T-shirt had no known bugs.  Uh-huh.
-    #
-    # So, when you query for a list of bugs, and it gets no results, you
-    # can think of this as a friendly reminder.  Of *course* there are bugs
-    # matching your query, they just aren't in the bugsystem yet...
-
-    print qq{<p><A HREF="query.cgi">Query Page</A>\n};
-    print qq{&nbsp;&nbsp;<A HREF="enter_bug.cgi">Enter New Bug</A>\n};
-    print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
-} elsif ($count == 1) {
-    print "One bug found.\n";
-} else {
-    print "$count bugs found.\n";
-}
-
-if ($dotweak) {
-    GetVersionTable();
-    print "
-<SCRIPT>
-numelements = document.changeform.elements.length;
-function SetCheckboxes(value) {
-    var item;
-    for (var i=0 ; i<numelements ; i++) {
-        item = document.changeform.elements\[i\];
-        item.checked = value;
-    }
-}
-document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCheckboxes(false);\\\"> <input type=button value=\\\"Check All\\\" onclick=\\\"SetCheckboxes(true);\\\">\");
-</SCRIPT>";
-
-    my $resolution_popup = make_options(\@::settable_resolution, "FIXED");
-    my @prod_list = keys %prodhash;
-    my @list = @prod_list;
-    my @legal_versions;
-    my @legal_component;
-    if (1 == @prod_list) {
-        @legal_versions = @{$::versions{$prod_list[0]}};
-        @legal_component = @{$::components{$prod_list[0]}};
+    # Slurp the row of data into the record.
+    foreach my $column (@selectcolumns) {
+        $bug->{$column} = shift @row;
     }
 
-    my $version_popup = make_options(\@legal_versions, $::dontchange);
-    my $platform_popup = make_options(\@::legal_platform, $::dontchange);
-    my $priority_popup = make_options(\@::legal_priority, $::dontchange);
-    my $sev_popup = make_options(\@::legal_severity, $::dontchange);
-    my $component_popup = make_options(\@legal_component, $::dontchange);
-    my $product_popup = make_options(\@::legal_product, $::dontchange);
-
-
-    print "
-<hr>
-<TABLE>
-<TR>
-    <TD ALIGN=RIGHT><B>Product:</B></TD>
-    <TD><SELECT NAME=product>$product_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Version:</B></TD>
-    <TD><SELECT NAME=version>$version_popup</SELECT></TD>
-<TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
-    <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
-    <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
-</TR>
-<TR>
-    <TD ALIGN=RIGHT><B>Component:</B></TD>
-    <TD><SELECT NAME=component>$component_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
-    <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
-</TR>";
-
-    if (Param("usetargetmilestone")) {
-        my @legal_milestone;
-        if(1 == @prod_list) {
-            @legal_milestone = @{$::target_milestone{$prod_list[0]}};
-        }
-        my $tfm_popup = make_options(\@legal_milestone, $::dontchange);
-        print "
-    <TR>
-    <TD ALIGN=RIGHT><B>Target milestone:</B></TD>
-    <TD><SELECT NAME=target_milestone>$tfm_popup</SELECT></TD>
-    </TR>";
+    # Process certain values further (i.e. date format conversion).
+    if ($bug->{'changeddate'}) {
+        $bug->{'changeddate'} =~ 
+          s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
+        $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
     }
+    ($bug->{'opendate'} = DiffDate($bug->{'opendate'})) if $bug->{'opendate'};
 
-    if (Param("useqacontact")) {
-        print "
-<TR>
-<TD><B>QA Contact:</B></TD>
-<TD COLSPAN=3><INPUT NAME=qa_contact SIZE=32 VALUE=\"" .
-            value_quote($::dontchange) . "\"></TD>
-</TR>";
-    }
+    # Record the owner, product, and status in the big hashes of those things.
+    $bugowners->{$bug->{'owner'}} = 1 if $bug->{'owner'};
+    $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
+    $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
 
-   print qq{
-<TR><TD ALIGN="RIGHT"><B>CC List:</B></TD>
-<TD COLSPAN=3><INPUT NAME="masscc" SIZE=32 VALUE="">
-<SELECT NAME="ccaction">
-<OPTION VALUE="add">Add these to the CC List
-<OPTION VALUE="remove">Remove these from the CC List
-</SELECT>
-</TD>
-</TR>
-};
-
-    if (@::legal_keywords) {
-        print qq{
-<TR><TD><B><A HREF="describekeywords.cgi">Keywords</A>:</TD>
-<TD COLSPAN=3><INPUT NAME=keywords SIZE=32 VALUE="">
-<SELECT NAME="keywordaction">
-<OPTION VALUE="add">Add these keywords
-<OPTION VALUE="delete">Delete these keywords
-<OPTION VALUE="makeexact">Make the keywords be exactly this list
-</SELECT>
-</TD>
-</TR>
-};
-    }
-
-
-    print "</TABLE>
-
-<INPUT NAME=multiupdate value=Y TYPE=hidden>
-
-<B>Additional Comments:</B>
-<BR>
-<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
-
-if($::usergroupset ne '0') {
-    SendSQL("select bit, name, description, isactive ".
-            "from groups where bit & $::usergroupset != 0 ".
-            "and isbuggroup != 0 ".
-            "order by description");
-    # We only print out a header bit for this section if there are any
-    # results.
-    my $groupFound = 0;
-    my $inactiveFound = 0;
-    while (MoreSQLData()) {
-        my ($bit, $groupname, $description, $isactive) = (FetchSQLData());
-        if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
-          if(!$groupFound) {
-            print "<B>Groupset:</B><BR>\n";
-            print "<TABLE BORDER=1><TR>\n";
-            print "<TH ALIGN=center VALIGN=middle>Don't<br>change<br>this group<br>restriction</TD>\n";
-            print "<TH ALIGN=center VALIGN=middle>Remove<br>bugs<br>from this<br>group</TD>\n";
-            print "<TH ALIGN=center VALIGN=middle>Add<br>bugs<br>to this<br>group</TD>\n";
-            print "<TH ALIGN=left VALIGN=middle>Group name:</TD></TR>\n";
-            $groupFound = 1;
-          }
-          # Modifying this to use radio buttons instead
-          print "<TR>";
-          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"-1\" checked></TD>\n";
-          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"0\"></TD>\n";
-          if ($isactive) {
-            print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"1\"></TD>\n";
-          } else {
-            $inactiveFound = 1;
-            print "<TD>&nbsp;</TD>\n";
-          }
-          print "<TD>";
-          if(!$isactive) {
-            print "<I>";
-          }
-          print "$description";
-          if(!$isactive) {
-            print "</I>";
-          }
-          print "</TD></TR>\n";
-        }
-    }
-    # Add in some blank space for legibility
-    if($groupFound) {
-      print "</TABLE>\n";
-      if ($inactiveFound) {
-        print "<FONT SIZE=\"-1\">(Note: Bugs may not be added to inactive groups (<I>italicized</I>), only removed)</FONT><BR>\n";
-      }
-      print "<BR><BR>\n";
-    }
+    # Add the record to the list.
+    push(@bugs, $bug);
 }
 
-
-
-
-    # knum is which knob number we're generating, in javascript terms.
-
-    my $knum = 0;
-    print "
-<INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
-        Do nothing else<br>";
-    $knum++;
-    if ($statushash{$::unconfirmedstate} && 1 == scalar(keys(%statushash))) {
-        print "
-<INPUT TYPE=radio NAME=knob VALUE=confirm>
-        Confirm bugs (change status to <b>NEW</b>)<br>";
-        $knum++;
-    }
-    print "
-<INPUT TYPE=radio NAME=knob VALUE=accept>
-        Accept bugs (change status to <b>ASSIGNED</b>)<br>";
-    $knum++;
-    if (!defined $statushash{'CLOSED'} &&
-        !defined $statushash{'VERIFIED'} &&
-        !defined $statushash{'RESOLVED'}) {
-        print "
-<INPUT TYPE=radio NAME=knob VALUE=clearresolution>
-        Clear the resolution<br>";
-        $knum++;
-        print "
-<INPUT TYPE=radio NAME=knob VALUE=resolve>
-        Resolve bugs, changing <A HREF=\"bug_status.html\">resolution</A> to
-        <SELECT NAME=resolution
-          ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
-          $resolution_popup</SELECT><br>";
-        $knum++;
-    }
-    if (!defined $statushash{'NEW'} &&
-        !defined $statushash{'ASSIGNED'} &&
-        !defined $statushash{'REOPENED'}) {
-        print "
-<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bugs<br>";
-        $knum++;
-    }
-    my @statuskeys = keys %statushash;
-    if (1 == @statuskeys) {
-        if (defined $statushash{'RESOLVED'}) {
-            print "
-<INPUT TYPE=radio NAME=knob VALUE=verify>
-        Mark bugs as <b>VERIFIED</b><br>";
-            $knum++;
-        }
-        if (defined $statushash{'VERIFIED'}) {
-            print "
-<INPUT TYPE=radio NAME=knob VALUE=close>
-        Mark bugs as <b>CLOSED</b><br>";
-            $knum++;
-        }
-    }
-    print "
-<INPUT TYPE=radio NAME=knob VALUE=reassign>
-        <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bugs to
-        <INPUT NAME=assigned_to SIZE=32
-          ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"
-          VALUE=\"$::COOKIE{'Bugzilla_login'}\"><br>";
-    $knum++;
-    print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
-          Reassign bugs to owner of selected component<br>";
-    $knum++;
-
-    print "
-<p>
-<font size=-1>
-To make changes to a bunch of bugs at once:
-<ol>
-<li> Put check boxes next to the bugs you want to change.
-<li> Adjust above form elements.  (If the change you are making requires
-       an explanation, include it in the comments box).
-<li> Click the below \"Commit\" button.
-</ol></font>
-<INPUT TYPE=SUBMIT VALUE=Commit>";
-
-    my $movers = Param("movers");
-    $movers =~ s/\s?,\s?/|/g;
-    $movers =~ s/@/\@/g;
-
-    if ( Param("move-enabled")
-         && (defined $::COOKIE{"Bugzilla_login"})
-         && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
-      print "<P>";
-      print "<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"";
-      print Param("move-button-text") . "\">";
-    }
-
-    print "</FORM><hr>\n";
-}
-
-
-if ($count > 0) {
-    print "<FORM METHOD=POST ACTION=\"long_list.cgi\">
-<INPUT TYPE=HIDDEN NAME=buglist VALUE=$buglist>
-<INPUT TYPE=SUBMIT VALUE=\"Long Format\">
-<NOBR><A HREF=\"query.cgi\">Query Page</A></NOBR>
-&nbsp;&nbsp;
-<NOBR><A HREF=\"enter_bug.cgi\">Enter New Bug</A></NOBR>
-&nbsp;&nbsp;
-<NOBR><A HREF=\"colchange.cgi?$::buffer\">Change columns</A></NOBR>";
-    if (!$dotweak && $count > 1 && UserInGroup("editbugs")) {
-        print "&nbsp;&nbsp;\n";
-        print "<NOBR><A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
-        print "Change several bugs at once</A></NOBR>\n";
-    }
-    my @owners = sort(keys(%ownerhash));
-    my $suffix = Param('emailsuffix');
-    if (@owners > 1 && UserInGroup("editbugs")) {
-        if ($suffix ne "") {
-            map(s/$/$suffix/, @owners);
-        }
-        my $list = join(',', @owners);
-        print qq{&nbsp;&nbsp;\n};
-        print qq{<A HREF="mailto:$list">Send&nbsp;mail&nbsp;to&nbsp;bug&nbsp;owners</A>\n};
-    }
-    my @qacontacts = sort(keys(%qahash));
-    if (@qacontacts > 1 && UserInGroup("editbugs") && Param("useqacontact")) {
-        if ($suffix ne "") {
-            map(s/$/$suffix/, @qacontacts); 
-        }
-        my $list = join(',', @qacontacts);
-        print qq{&nbsp;&nbsp;\n};
-        print qq{<A HREF="mailto:$list">Send&nbsp;mail&nbsp;to&nbsp;bug&nbsp;QA&nbsp;contacts</A>\n};
-    }
-    print qq{&nbsp;&nbsp;\n};
-    print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
-
-    print "</FORM>\n";
-}
-
-# 2001-06-20, myk@mozilla.org, bug 47914:
-# Switch back from the shadow database to the regular database 
-# so that PutFooter() can determine the current user even if
-# the "logincookies" table is corrupted in the shadow database.
+# Switch back from the shadow database to the regular database so PutFooter()
+# can determine the current user even if the "logincookies" table is corrupted
+# in the shadow database.
 SendSQL("USE $::db_name");
 
-PutFooter();
 
-if ($serverpush) {
-    print "\n--thisrandomstring--\n";
+################################################################################
+# Template Variable Definition
+################################################################################
+
+# Define the variables and functions that will be passed to the UI template.
+
+$vars->{'bugs'} = \@bugs;
+$vars->{'columns'} = $columns;
+$vars->{'displaycolumns'} = \@displaycolumns;
+
+my @openstates = OpenStates();
+$vars->{'openstates'} = \@openstates;
+$vars->{'closedstates'} = ['CLOSED', 'VERIFIED', 'RESOLVED'];
+
+# The list of query fields in URL query string format, used when creating
+# URLs to the same query results page with different parameters (such as
+# a different sort order or when taking some action on the set of query
+# results).  To get this string, we start with the raw URL query string
+# buffer that was created when we initially parsed the URL on script startup,
+# then we remove all non-query fields from it, f.e. the sort order (order)
+# and command type (cmdtype) fields.
+$vars->{'urlquerypart'} = $::buffer;
+$vars->{'urlquerypart'} =~ s/[&?](order|cmdtype)=[^&]*//g;
+$vars->{'order'} = $order;
+
+# The user's login account name (i.e. email address).
+$vars->{'user'} = $::COOKIE{'Bugzilla_login'};
+
+$vars->{'caneditbugs'} = UserInGroup('editbugs');
+$vars->{'usebuggroups'} = UserInGroup('usebuggroups');
+
+# Whether or not this user is authorized to move bugs to another installation.
+$vars->{'ismover'} = 1
+  if Param('move-enabled')
+    && defined($vars->{'user'})
+      && Param('movers') =~ /^(\Q$vars->{'user'}\E[,\s])|([,\s]\Q$vars->{'user'}\E[,\s]+)/;
+
+my @bugowners = keys %$bugowners;
+if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {
+    my $suffix = Param('emailsuffix');
+    map(s/$/$suffix/, @bugowners) if $suffix;
+    my $bugowners = join(",", @bugowners);
+    $vars->{'bugowners'} = $bugowners;
 }
+
+if ($::FORM{'debug'}) {
+    $vars->{'debug'} = 1;
+    $vars->{'query'} = $query;
+}
+
+# Whether or not to split the column titles across two rows to make
+# the list more compact.
+$vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
+
+$vars->{'quip'} = GetQuip() if Param('usequip');
+$vars->{'currenttime'} = time2str("%a %b %e %T %Z %Y", time());
+
+# The following variables are used when the user is making changes to multiple bugs.
+if ($dotweak) {
+    $vars->{'dotweak'} = 1;
+    $vars->{'use_keywords'} = 1 if @::legal_keywords;
+
+    $vars->{'products'} = \@::legal_product;
+    $vars->{'platforms'} = \@::legal_platform;
+    $vars->{'priorities'} = \@::legal_priority;
+    $vars->{'severities'} = \@::legal_severity;
+    $vars->{'resolutions'} = \@::settable_resolution;
+
+    # The value that represents "don't change the value of this field".
+    $vars->{'dontchange'} = $::dontchange;
+
+    $vars->{'unconfirmedstate'} = $::unconfirmedstate;
+
+    $vars->{'bugstatuses'} = [ keys %$bugstatuses ];
+
+    # The groups to which the user belongs.
+    $vars->{'groups'} = GetGroupsByGroupSet($::usergroupset) if $::usergroupset ne '0';
+
+    # If all bugs being changed are in the same product, the user can change
+    # their version and component, so generate a list of products, a list of
+    # versions for the product (if there is only one product on the list of
+    # products), and a list of components for the product.
+    $vars->{'bugproducts'} = [ keys %$bugproducts ];
+    if (scalar(@{$vars->{'bugproducts'}}) == 1) {
+        my $product = $vars->{'bugproducts'}->[0];
+        $vars->{'versions'} = $::versions{$product};
+        $vars->{'components'} = $::components{$product};
+        $vars->{'targetmilestones'} = $::target_milestone{$product} if Param('usetargetmilestone');
+    }
+}
+
+
+################################################################################
+# HTTP Header Generation
+################################################################################
+
+# If we are doing server push, output a separator string.
+print "\n--thisrandomstring\n" if $serverpush;
+    
+# Generate HTTP headers
+
+# Suggest a name for the bug list if the user wants to save it as a file.
+# If we are doing server push, then we did this already in the HTTP headers
+# that started the server push, so we don't have to do it again here.
+print "Content-Disposition: inline; filename=$filename\n" unless $serverpush;
+
+if ($format->{'extension'} eq "html") {
+    print "Content-Type: text/html\n";
+
+    if ($order) {
+        my $qorder = url_quote($order);
+        print "Set-Cookie: LASTORDER=$qorder ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+    }
+    my $bugids = join(":", map( $_->{'id'}, @bugs));
+    if (length($bugids) < 4000) {
+        print "Set-Cookie: BUGLIST=$bugids\n";
+    }
+    else {
+        print "Set-Cookie: BUGLIST=\n";
+        $vars->{'toolong'} = 1;
+    }
+}
+else {
+    print "Content-Type: $format->{'contenttype'}\n";
+}
+
+print "\n"; # end HTTP headers
+
+
+################################################################################
+# Content Generation
+################################################################################
+
+# Generate and return the UI (HTML page) from the appropriate template.
+$template->process("buglist/$format->{'template'}", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;
+
+
+################################################################################
+# Script Conclusion
+################################################################################
+
+print "\n--thisrandomstring--\n" if $serverpush;

@@ -193,6 +193,7 @@ unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
 unless (have_vers("Template","2.06"))     { push @missing,"Template" }
 unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
+unless (have_vers("File::Spec", "0.82"))  { push @missing,"File::Spec" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
@@ -483,6 +484,21 @@ LocalVar('platforms', '
         "Sun",
         "Other"
 );
+');
+
+
+
+
+LocalVar('contenttypes', '
+#
+# The types of content that template files can generate, indexed by file extension.
+#
+$contenttypes = {
+  "html" => "text/html" , 
+   "rdf" => "application/xml" , 
+   "xml" => "text/xml" , 
+    "js" => "application/x-javascript" , 
+};
 ');
 
 

@@ -1,6 +1,6 @@
 [% DEFAULT title = "Bugzilla Message" %]
 
-[% INCLUDE global/header title=title %]
+[% PROCESS global/header %]
 
 [%# The "header" template automatically displays the contents of a "message"
     variable if it finds one, so it is not necessary to display the message
@@ -13,4 +13,4 @@
   </p>
 [% END %]
 
-[% INCLUDE global/footer %]
+[% PROCESS global/footer %]

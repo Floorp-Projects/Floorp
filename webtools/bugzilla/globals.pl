@@ -35,6 +35,7 @@ sub globals_pl_sillyness {
     my $zz;
     $zz = @main::SqlStateStack;
     $zz = @main::chooseone;
+    $zz = $main::contenttypes;
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
     $zz = @main::dontchange;
@@ -54,8 +55,8 @@ sub globals_pl_sillyness {
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
-    $zz = $main::userid;
     $zz = $main::template;
+    $zz = $main::userid;
     $zz = $main::vars;
 }
 
@@ -79,6 +80,9 @@ use Date::Parse;               # For str2time().
 #use Carp;                       # for confess
 use RelationSet;
 
+# Use standard Perl libraries for cross-platform file/directory manipulation.
+use File::Spec;
+    
 # Some environment variables are not taint safe
 delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
@@ -1611,7 +1615,9 @@ $::template ||= Template->new(
             $var =~ s/\n/\\n/g; 
             $var =~ s/\r/\\r/g; 
             return $var;
-        }
+        } , 
+        
+        html => \&html_quote , 
       } ,
   }
 ) || DisplayError("Template creation failed: " . Template->error())
@@ -1638,6 +1644,116 @@ $Template::Stash::LIST_OPS->{ containsany } =
       }
       return 0;
   };
+
+
+sub GetOutputFormats {
+    # Builds a set of possible output formats for a script by looking for
+    # format files in the appropriate template directories as specified by 
+    # the template include path, the sub-directory parameter, and the
+    # template name parameter.
+    
+    # This function is relevant for scripts with one basic function whose
+    # results can be represented in multiple formats, f.e. buglist.cgi, 
+    # which has one function (query and display of a list of bugs) that can 
+    # be represented in multiple formats (i.e. html, rdf, xml, etc.).
+    
+    # It is *not* relevant for scripts with several functions but only one
+    # basic output format, f.e. editattachstatuses.cgi, which not only lists 
+    # statuses but also provides adding, editing, and deleting functions.
+    # (although it may be possible to make this function applicable under 
+    # these circumstances with minimal modification).
+    
+    # Format files have names that look like SCRIPT-FORMAT.EXT.tmpl, where
+    # SCRIPT is the name of the CGI script being invoked, SUBDIR is the name 
+    # of the template sub-directory, FORMAT is the name of the format, and EXT 
+    # is the filename extension identifying the content type of the output.
+     
+    # When a format file is found, a record for that format is added to
+    # the hash of format records, indexed by format name, with each record
+    # containing the name of the format file, its filename extension,
+    # and its content type (obtained by reference to the $::contenttypes
+    # hash defined in localconfig).
+    
+    my ($subdir, $script) = @_;
+
+    # A set of output format records, indexed by format name, each record 
+    # containing template, extension, and contenttype fields.
+    my $formats = {};
+    
+    # Get the template include path from the template object.
+    my $includepath = $::template->context->{ LOAD_TEMPLATES }->[0]->include_path();
+    
+    # Loop over each include directory in reverse so that format files
+    # earlier in the path override files with the same name later in
+    # the path (i.e. "custom" formats override "default" ones).
+    foreach my $path (reverse @$includepath) {
+        # Get the list of files in the given sub-directory if it exists.
+        my $dirname = File::Spec->catdir($path, $subdir);
+        opendir(SUBDIR, $dirname) || next;
+        my @files = readdir SUBDIR;
+        closedir SUBDIR;
+        
+        # Loop over each file in the sub-directory looking for format files
+        # (files whose name looks like SCRIPT-FORMAT.EXT.tmpl).
+        foreach my $file (@files) {
+            if ($file =~ /^$script-(.+)\.(.+)\.(tmpl)$/) {
+                $formats->{$1} = { 
+                  'template'    => $file , 
+                  'extension'   => $2 , 
+                  'contenttype' => $::contenttypes->{$2} || "text/plain" , 
+                };
+            }
+        }
+    }
+    return $formats;
+}
+
+sub ValidateOutputFormat {
+    my ($format, $script, $subdir) = @_;
+    
+    # If the script name is undefined, assume the script currently being
+    # executed, deriving its name from Perl's built-in $0 (program name) var.
+    if (!defined($script)) {
+        my ($volume, $dirs, $filename) = File::Spec->splitpath($0);
+        $filename =~ /^(.+)\.cgi$/;
+        $script = $1
+          || DisplayError("Could not determine the name of the script.")
+          && exit;
+    }
+    
+    # If the format name is undefined or the default format is specified,
+    # do not do any validation but instead return the default format.
+    if (!defined($format) || $format eq "default") {
+        return 
+          { 
+            'template'    => "$script.html.tmpl" , 
+            'extension'   => "html" , 
+            'contenttype' => "text/html" , 
+          };
+    }
+    
+    # If the subdirectory name is undefined, assume the script name.
+    $subdir = $script if !defined($subdir);
+    
+    # Get the list of output formats supported by this script.
+    my $formats = GetOutputFormats($subdir, $script);
+    
+    # Validate the output format requested by the user.
+    if (!$formats->{$format}) {
+        my $escapedname = html_quote($format);
+        DisplayError("The <em>$escapedname</em> output format is not 
+          supported by this script.  Supported formats (besides the 
+          default HTML format) are <em>" . 
+          join("</em>, <em>", map(html_quote($_), keys(%$formats))) . 
+          "</em>.");
+        exit;
+    }
+    
+    # Return the validated output format.
+    return $formats->{$format};
+}
+
+###############################################################################
 
 # Add a "substr" method to the Template Toolkit's "scalar" object
 # that returns a substring of a string.

@@ -1201,7 +1201,8 @@ sub PutFooter {
 sub DisplayError {
   my ($message, $title) = (@_);
   $title ||= "Error";
-
+  $message ||= "An unknown error occurred.";
+  
   print "Content-type: text/html\n\n";
   PutHeader($title);
 
