@@ -611,8 +611,8 @@ pkits_NameConstraints()
       $certs/TrustAnchorRootCertificate.crt
 
   VFY_ACTION="Valid RFC822 nameConstraints Test25"
-  pkits $certs/InvalidRFC822nameConstraintsTest24EE.crt \
-      $certs/nameConstraintsRFC822CA2Cert.crt \
+  pkits $certs/ValidRFC822nameConstraintsTest25EE.crt \
+      $certs/nameConstraintsRFC822CA3Cert.crt \
       $certs/TrustAnchorRootCertificate.crt
 
   VFY_ACTION="Invalid RFC822 nameConstraints Test26"
