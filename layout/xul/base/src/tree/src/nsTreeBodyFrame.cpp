@@ -3568,15 +3568,15 @@ nsTreeBodyFrame::OnDragDrop (nsIDOMEvent* aEvent)
 {
   // Remove the drop folder and all its parents from the array.
   PRInt32 parentIndex;
-  while (NS_SUCCEEDED(mView->GetParentIndex(mDropRow, &parentIndex)) &&
-         parentIndex >= 0) {
+  nsresult rv = mView->GetParentIndex(mDropRow, &parentIndex);
+  while (NS_SUCCEEDED(rv) && parentIndex >= 0) {
     mValueArray.RemoveValue(parentIndex);
-    mView->GetParentIndex(parentIndex, &parentIndex);
+    rv = mView->GetParentIndex(parentIndex, &parentIndex);
   }
 
   mView->Drop(mDropRow, mDropOrient);
 
-  return NS_OK;
+  return rv;
 } // OnDragDrop
 
 // Clear out all our tracking vars.
