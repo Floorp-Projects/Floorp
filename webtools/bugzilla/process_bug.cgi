@@ -689,7 +689,7 @@ if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{massc
         $cc_add = $::FORM{newcc};
         # We came from bug_form which uses a select box to determine what cc's
         # need to be removed...
-        if (defined $::FORM{removecc}) {
+        if (defined $::FORM{removecc} && $::FORM{cc}) {
             $cc_remove = join (",", @{$::MFORM{cc}});
         }
     }
