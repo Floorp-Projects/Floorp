@@ -47,6 +47,8 @@ sub is_tainted {
 }
 
 sub trick_taint {
+    require Carp;
+    Carp::confess("Undef to trick_taint") unless defined $_[0];
     $_[0] =~ /^(.*)$/s;
     $_[0] = $1;
     return (defined($_[0]));

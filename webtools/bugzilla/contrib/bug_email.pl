@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.16 2003/08/22 14:59:13 justdave%syndicomm.com Exp $
+# $Id: bug_email.pl,v 1.17 2003/11/22 03:50:41 bbaetz%acm.org Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -69,12 +69,15 @@
 use strict;
 use MIME::Parser;
 
-chdir '..';        # this script lives in contrib
-push @INC, "contrib/.";
-push @INC, ".";
+BEGIN {
+    chdir '..';        # this script lives in contrib
+    push @INC, "contrib/.";
+    push @INC, ".";
+}
 
 require "globals.pl";
-require "BugzillaEmail.pm";
+use BugzillaEmail;
+use Bugzilla::Config qw(:DEFAULT $datadir);
 
 use lib ".";
 use lib "../";
@@ -137,8 +140,8 @@ sub storeAttachments( $$ )
 		print "Error while reading attachment $decoded_file!\n";
 		next;
 	    }
-	    # print "unlinking data/mimedump-tmp/$decoded_file";
-	    # unlink "data/mimedump-tmp/$decoded_file";
+	    # print "unlinking $datadir/mimedump-tmp/$decoded_file";
+	    # unlink "$datadir/mimedump-tmp/$decoded_file";
 	} else {
 	    # data is in the scalar 
 	    $data = $decoded_file;
@@ -248,7 +251,7 @@ sub Reply( $$$$ ) {
     die "Cannot find sender-email-address" unless defined( $Sender );
     
     if( $test ) {
-	open( MAIL, ">>data/bug_email_test.log" );
+	open( MAIL, '>>', "$datadir/bug_email_test.log" );
     }
     else {
 	open( MAIL, "| /usr/sbin/sendmail -t" );
@@ -697,10 +700,10 @@ my $parser = new MIME::Parser;
 
 # Create and set the output directory:
 # FIXME: There should be a $BUGZILLA_HOME variable (SML)
-(-d "data/mimedump-tmp") or mkdir "data/mimedump-tmp",0755 or die "mkdir: $!";
-(-w "data/mimedump-tmp") or die "can't write to directory";
+(-d "$datadir/mimedump-tmp") or mkdir "$datadir/mimedump-tmp",0755 or die "mkdir: $!";
+(-w "$datadir/mimedump-tmp") or die "can't write to directory";
 
-$parser->output_dir("data/mimedump-tmp");
+$parser->output_dir("$datadir/mimedump-tmp");
     
 # Read the MIME message:
 my $entity = $parser->read(\*STDIN) or die "couldn't parse MIME stream";

@@ -32,6 +32,7 @@ use vars qw($template $userid %COOKIE);
 
 use Bug;
 use Bugzilla;
+use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::BugMail;
 
 $::lockcount = 0;
@@ -50,7 +51,7 @@ my $cgi = Bugzilla->cgi;
 sub Log {
     my ($str) = (@_);
     Lock();
-    open(FID, ">>data/maillog") || die "Can't write to data/maillog";
+    open(FID, ">>$datadir/maillog") || die "Can't write to $datadir/maillog";
     print FID time2str("%D %H:%M", time()) . ": $str\n";
     close FID;
     Unlock();
@@ -59,13 +60,13 @@ sub Log {
 sub Lock {
     if ($::lockcount <= 0) {
         $::lockcount = 0;
-        open(LOCKFID, ">>data/maillock") || die "Can't open data/maillock: $!";
+        open(LOCKFID, ">>$datadir/maillock") || die "Can't open $datadir/maillock: $!";
         my $val = flock(LOCKFID,2);
         if (!$val) { # '2' is magic 'exclusive lock' const.
             print $cgi->header();
             print "Lock failed: $val\n";
         }
-        chmod 0666, "data/maillock";
+        chmod 0666, "$datadir/maillock";
     }
     $::lockcount++;
 }

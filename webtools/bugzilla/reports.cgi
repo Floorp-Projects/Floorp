@@ -37,6 +37,8 @@ use strict;
 
 use lib qw(.);
 
+use Bugzilla::Config qw(:DEFAULT $datadir);
+
 require "CGI.pl";
 use vars qw(%FORM); # globals from CGI.pl
 
@@ -48,7 +50,7 @@ $@ && ThrowCodeError("gd_not_installed");
 eval "use Chart::Lines";
 $@ && ThrowCodeError("chart_lines_not_installed");
 
-my $dir = "data/mining";
+my $dir = "$datadir/mining";
 my $graph_dir = "graphs";
 
 use Bugzilla;

@@ -135,9 +135,9 @@ sub connect_shadow {
 }
 
 sub connect_main {
-    my $dsn = "DBI:mysql:host=$::db_host;database=$::db_name;port=$::db_port";
+    my $dsn = "DBI:mysql:host=$db_host;database=$db_name;port=$db_port";
 
-    $dsn .= ";mysql_socket=$::db_sock" if $::db_sock;
+    $dsn .= ";mysql_socket=$db_sock" if $db_sock;
 
     return _connect($dsn);
 }

@@ -35,6 +35,8 @@ require "CGI.pl";
 require "globals.pl";
 use Bugzilla::Series;
 
+use Bugzilla::Config qw(:DEFAULT $datadir);
+
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 use vars qw(@legal_bug_status @legal_resolution);
@@ -432,7 +434,7 @@ if ($action eq 'new') {
     }
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     print "OK, done.<p>\n";
     PutTrailer($localtrailer,
@@ -675,7 +677,7 @@ if ($action eq 'delete') {
 
     SendSQL("UNLOCK TABLES");
 
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
     exit;
 }
@@ -1200,7 +1202,7 @@ if ($action eq 'update') {
         
         print "Updated product name.<BR>\n";
     }
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
     SendSQL("UNLOCK TABLES");
 
     if ($checkvotes) {

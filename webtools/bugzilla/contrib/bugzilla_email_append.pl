@@ -31,11 +31,15 @@
 use strict;
 use MIME::Parser;
 
-chdir "..";        # this script lives in contrib, change to main
-push @INC, "contrib";
-push @INC, "."; # this script lives in contrib
+BEGIN {
+  chdir "..";        # this script lives in contrib, change to main
+  push @INC, "contrib";
+  push @INC, "."; # this script lives in contrib
+}
+
 require "globals.pl";
-require "BugzillaEmail.pm";
+use BugzillaEmail;
+use Bugzilla::Config qw(:DEFAULT $datadir);
 
 # Create a new MIME parser:
 my $parser = new MIME::Parser;
@@ -44,10 +48,10 @@ my $Comment = "";
 
 # Create and set the output directory:
 # FIXME: There should be a $BUGZILLA_HOME variable (SML)
-(-d "data/mimedump-tmp") or mkdir "data/mimedump-tmp",0755 or die "mkdir: $!";
-(-w "data/mimedump-tmp") or die "can't write to directory";
+(-d "$datadir/mimedump-tmp") or mkdir "$datadir/mimedump-tmp",0755 or die "mkdir: $!";
+(-w "$datadir/mimedump-tmp") or die "can't write to directory";
 
-$parser->output_dir("data/mimedump-tmp");
+$parser->output_dir("$datadir/mimedump-tmp");
     
 # Read the MIME message:
 my $entity = $parser->read(\*STDIN) or die "couldn't parse MIME stream";

@@ -34,6 +34,29 @@ use base qw(Exporter);
 
 use Bugzilla::Util;
 
+# Under mod_perl, get this from a .htaccess config variable,
+# and/or default from the current 'real' dir
+# At some stage after this, it may be possible for these dir locations
+# to go into localconfig. localconfig can't be specified in a config file,
+# except possibly with mod_perl. If you move localconfig, you need to change
+# the define here.
+# $libpath is really only for mod_perl; its not yet possible to move the
+# .pms elsewhere.
+# $webdotdir must be in the webtree somewhere. Even if you use a local dot,
+# we output images to there. Also, if $webdot dir is not relative to the
+# bugzilla root directory, you'll need to change showdependancygraph.cgi to
+# set image_url to the correct location.
+# The script should really generate these graphs directly...
+# Note that if $libpath is changed, some stuff will break, notably dependancy
+# graphs (since the path will be wrong in the HTML). This will be fixed at
+# some point.
+
+our $libpath = '.';
+our $localconfig = "$libpath/localconfig";
+our $datadir = "$libpath/data";
+our $templatedir = "$libpath/template";
+our $webdotdir = "$datadir/webdot";
+
 # Module stuff
 @Bugzilla::Config::EXPORT = qw(Param);
 
@@ -42,13 +65,15 @@ use Bugzilla::Util;
 # when it shouldn't
 # ChmodDataFile is here until that stuff all moves out of globals.pl
 # into this file
-@Bugzilla::Config::EXPORT_OK = qw($contenttypes ChmodDataFile);
+@Bugzilla::Config::EXPORT_OK = qw(ChmodDataFile);
+
 %Bugzilla::Config::EXPORT_TAGS =
   (
    admin => [qw(GetParamList UpdateParams SetParam WriteParams)],
    db => [qw($db_host $db_port $db_name $db_user $db_pass $db_sock)],
+   locations => [qw($libpath $localconfig $datadir $templatedir $webdotdir)],
   );
-Exporter::export_ok_tags('admin', 'db');
+Exporter::export_ok_tags('admin', 'db', 'locations');
 
 # Bugzilla version
 $Bugzilla::Config::VERSION = "2.17.6";
@@ -74,23 +99,24 @@ my %param;
 # XXX - mod_perl - need to register Apache init handler for params
 sub _load_datafiles {
     # read in localconfig variables
-    do 'localconfig';
+    do $localconfig;
 
-    if (-e 'data/params') {
+    if (-e "$datadir/params") {
         # Handle reading old param files by munging the symbol table
         # Don't have to do this if we use safe mode, since its evaled
         # in a sandbox where $foo is in the same module as $::foo
         #local *::param = \%param;
 
-        # Note that checksetup.pl sets file permissions on 'data/params'
+        # Note that checksetup.pl sets file permissions on '$datadir/params'
 
         # Using Safe mode is _not_ a guarantee of safety if someone does
         # manage to write to the file. However, it won't hurt...
         # See bug 165144 for not needing to eval this at all
         my $s = new Safe;
 
-        $s->rdo('data/params');
-        die "Error evaluating data/params: $@" if $@;
+        $s->rdo("$datadir/params");
+        die "Error reading $datadir/params: $!" if $!;
+        die "Error evaluating $datadir/params: $@" if $@;
 
         # Now read the param back out from the sandbox
         %param = %{$s->varglob('param')};
@@ -226,17 +252,17 @@ sub WriteParams {
 
     require File::Temp;
     my ($fh, $tmpname) = File::Temp::tempfile('params.XXXXX',
-                                              DIR => 'data' );
+                                              DIR => $datadir );
 
     print $fh (Data::Dumper->Dump([ \%param ], [ '*param' ]))
       || die "Can't write param file: $!";
 
     close $fh;
 
-    rename $tmpname, "data/params"
-      || die "Can't rename $tmpname to data/params: $!";
+    rename $tmpname, "$datadir/params"
+      || die "Can't rename $tmpname to $datadir/params: $!";
 
-    ChmodDataFile('data/params', 0666);
+    ChmodDataFile("$datadir/params", 0666);
 }
 
 # Some files in the data directory must be world readable iff we don't have
@@ -248,7 +274,7 @@ sub WriteParams {
 sub ChmodDataFile {
     my ($file, $mask) = @_;
     my $perm = 0770;
-    if ((stat('data'))[2] & 0002) {
+    if ((stat($datadir))[2] & 0002) {
         $perm = 0777;
     }
     $perm = $perm & $mask;
@@ -320,10 +346,6 @@ Bugzilla::Config - Configuration parameters for Bugzilla
   # Localconfig variables may also be imported
   use Bugzilla::Config qw(:db);
   print "Connecting to $db_name as $db_user with $db_pass\n";
-
-  # This variable does not belong in localconfig, and needs to go
-  # somewhere better
-  use Bugzilla::Config($contenttypes)
 
 =head1 DESCRIPTION
 

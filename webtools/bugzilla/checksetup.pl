@@ -118,10 +118,18 @@ use lib ".";
 use vars qw( $db_name %answer );
 use Bugzilla::Constants;
 
+my $silent;
+
+# The use of some Bugzilla modules brings in modules we need to test for
+# Check first, via BEGIN
+BEGIN {
+
+    # However, don't run under -c (because of tests)
+    if (!$^C) {
+
 ###########################################################################
 # Non-interactive override
 ###########################################################################
-my $silent;
 if ($ARGV[0]) {
     do $ARGV[0] 
         or ($@ && die("Error $@ processing $ARGV[0]"))
@@ -322,18 +330,14 @@ if (%missing) {
     exit;
 }
 
+}
+}
+
 ###########################################################################
 # Global definitions
 ###########################################################################
 
-# We use require + import here instead of "use" to load Bugzilla::Config
-# because Bugzilla::Config has dependencies on some of the modules tested
-# for above, so we need to wait until those dependency checks have been
-# done before loading it, rather than loading it at compile time.
-# see http://bugzilla.mozilla.org/show_bug.cgi?id=170073
-
-require Bugzilla::Config;
-import Bugzilla::Config qw(:DEFAULT :admin);
+use Bugzilla::Config qw(:DEFAULT :admin :locations);
 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
 # variables from this location.  We don't want these declared here.  They'll
@@ -372,7 +376,7 @@ import Bugzilla::Config qw(:DEFAULT :admin);
 
 print "Checking user setup ...\n" unless $silent;
 $@ = undef;
-do 'localconfig';
+do $localconfig;
 if ($@) { # capture errors in localconfig, bug 97290
    print STDERR <<EOT;
 An error has occurred while reading your 
@@ -404,7 +408,7 @@ sub LocalVar ($$)
     my ($name, $definition) = @_;
     return if LocalVarExists($name); # if localconfig declared it, we're done.
     $newstuff .= " " . $name;
-    open FILE, '>>localconfig';
+    open FILE, '>>', $localconfig;
     print FILE ($answer{$name} or $definition), "\n\n";
     close FILE;
 }
@@ -682,7 +686,7 @@ LocalVar('platforms', '
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may want\n",
           "to change and adapt to your local settings. Please edit the file\n",
-          "'localconfig' and rerun checksetup.pl\n\n",
+          "'$localconfig' and rerun checksetup.pl\n\n",
           "The following variables are new to localconfig since you last ran\n",
           "checksetup.pl:  $newstuff\n\n";
     exit;
@@ -757,29 +761,31 @@ EOF
 #
 
 # The |require "globals.pl"| above ends up creating a template object with
-# a COMPILE_DIR of 'data'. This means that TT creates the directory for us,
+# a COMPILE_DIR of "$datadir". This means that TT creates the directory for us,
 # so this code wouldn't run if we just checked for the existence of the
-# directory. Instead, check for the existence of 'data/nomail', which is
+# directory. Instead, check for the existence of '$datadir/nomail', which is
 # created in this block
-unless (-d 'data' && -e 'data/nomail') {
-    print "Creating data directory ...\n";
+unless (-d $datadir && -e "$datadir/nomail") {
+    print "Creating data directory ($datadir) ...\n";
     # permissions for non-webservergroup are fixed later on
-    mkdir 'data', 0770;
-    mkdir 'data/mimedump-tmp', 01777;
-    open FILE, '>>data/nomail'; close FILE;
-    open FILE, '>>data/mail'; close FILE;
+    mkdir $datadir, 0770;
+    mkdir "$datadir/mimedump-tmp", 01777;
+    open FILE, '>>', "$datadir/nomail"; close FILE;
+    open FILE, '>>', "$datadir/mail"; close FILE;
 }
 
 # 2000-12-14 New graphing system requires a directory to put the graphs in
-# This code copied from what happens for the 'data' dir above.
+# This code copied from what happens for the data dir above.
 # If the graphs dir is not present, we assume that they have been using
 # a Bugzilla with the old data format, and so upgrade their data files.
+
+# NB - the graphs dir isn't movable yet, unlike the datadir
 unless (-d 'graphs') {
     print "Creating graphs directory...\n";
     # permissions for non-webservergroup are fixed later on
-    mkdir 'graphs', 0770; 
+    mkdir 'graphs', 0770;
     # Upgrade data format
-    foreach my $in_file (glob("data/mining/*"))
+    foreach my $in_file (glob("$datadir/mining/*"))
     {
         # Don't try and upgrade image or db files!
         if (($in_file =~ /\.gif$/i) || 
@@ -791,7 +797,7 @@ unless (-d 'graphs') {
 
         rename("$in_file", "$in_file.orig") or next;        
         open(IN, "$in_file.orig") or next;
-        open(OUT, ">$in_file") or next;
+        open(OUT, '>', $in_file) or next;
         
         # Fields in the header
         my @declared_fields = ();
@@ -852,13 +858,13 @@ unless (-d 'graphs') {
     }
 }
 
-unless (-d 'data/mining') {
-    mkdir 'data/mining', 0700;
+unless (-d "$datadir/mining") {
+    mkdir "$datadir/mining", 0700;
 }
 
-unless (-d 'data/webdot') {
+unless (-d "$webdotdir") {
     # perms/ownership are fixed up later
-    mkdir 'data/webdot', 0700;
+    mkdir "$webdotdir", 0700;
 }
 
 if ($my_create_htaccess) {
@@ -870,7 +876,7 @@ if ($my_create_htaccess) {
   }
   if (!-e ".htaccess") {
     print "Creating .htaccess...\n";
-    open HTACCESS, ">.htaccess";
+    open HTACCESS, '>', '.htaccess';
     print HTACCESS <<'END';
 # don't allow people to retrieve non-cgi executable files or our private data
 <FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$>
@@ -892,7 +898,7 @@ END
     close HTACCESS;
     if ($oldaccess =~ s/\|localconfig\|/\|.*localconfig.*\|/) {
       print "Repairing .htaccess...\n";
-      open HTACCESS, ">.htaccess";
+      open HTACCESS, '>', '.htaccess';
       print HTACCESS $oldaccess;
       print HTACCESS <<'END';
 <FilesMatch ^(localconfig.js|localconfig.rdf)$>
@@ -905,7 +911,7 @@ END
   }
   if (!-e "Bugzilla/.htaccess") {
     print "Creating Bugzilla/.htaccess...\n";
-    open HTACCESS, ">Bugzilla/.htaccess";
+    open HTACCESS, '>', 'Bugzilla/.htaccess';
     print HTACCESS <<'END';
 # nothing in this directory is retrievable unless overriden by an .htaccess
 # in a subdirectory
@@ -914,9 +920,12 @@ END
     close HTACCESS;
     chmod $fileperm, "Bugzilla/.htaccess";
   }
-  if (!-e "data/.htaccess") {
-    print "Creating data/.htaccess...\n";
-    open HTACCESS, ">data/.htaccess";
+  # Even though $datadir may not (and should not) be in the webtree,
+  # we can't know for sure, so create the .htaccess anyeay. Its harmless
+  # if its not accessible...
+  if (!-e "$datadir/.htaccess") {
+    print "Creating $datadir/.htaccess...\n";
+    open HTACCESS, '>', "$datadir/.htaccess";
     print HTACCESS <<'END';
 # nothing in this directory is retrievable unless overriden by an .htaccess
 # in a subdirectory; the only exception is duplicates.rdf, which is used by
@@ -927,22 +936,23 @@ deny from all
 </Files>
 END
     close HTACCESS;
-    chmod $fileperm, "data/.htaccess";
+    chmod $fileperm, "$datadir/.htaccess";
   }
-  if (!-e "template/.htaccess") {
-    print "Creating template/.htaccess...\n";
-    open HTACCESS, ">template/.htaccess";
+  # Ditto for the template dir
+  if (!-e "$templatedir/.htaccess") {
+    print "Creating $templatedir/.htaccess...\n";
+    open HTACCESS, '>', "$templatedir/.htaccess";
     print HTACCESS <<'END';
 # nothing in this directory is retrievable unless overriden by an .htaccess
 # in a subdirectory
 deny from all
 END
     close HTACCESS;
-    chmod $fileperm, "template/.htaccess";
+    chmod $fileperm, "$templatedir/.htaccess";
   }
-  if (!-e "data/webdot/.htaccess") {
-    print "Creating data/webdot/.htaccess...\n";
-    open HTACCESS, ">data/webdot/.htaccess";
+  if (!-e "$webdotdir/.htaccess") {
+    print "Creating $webdotdir/.htaccess...\n";
+    open HTACCESS, '>', "$webdotdir/.htaccess";
     print HTACCESS <<'END';
 # Restrict access to .dot files to the public webdot server at research.att.com 
 # if research.att.com ever changed their IP, or if you use a different
@@ -961,7 +971,7 @@ END
 Deny from all
 END
     close HTACCESS;
-    chmod $fileperm, "data/webdot/.htaccess";
+    chmod $fileperm, "$webdotdir/.htaccess";
   }
 
 }
@@ -969,7 +979,7 @@ END
 if ($my_index_html) {
     if (!-e "index.html") {
         print "Creating index.html...\n";
-        open HTML, ">index.html";
+        open HTML, '>', 'index.html';
         print HTML <<'END';
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -989,22 +999,23 @@ END
             print "\n\n";
             print "*** It appears that you still have an old index.html hanging\n";
             print "    around.  The contents of this file should be moved into a\n";
-            print "    template and placed in the 'template/en/custom' directory.\n\n";
+            print "    template and placed in the 'en/custom' directory within";
+            print "    your template directory.\n\n";
         }
         close HTML;
     }
 }
 
 {
-    if (-e 'data/template') {
+    if (-e "$datadir/template") {
         print "Removing existing compiled templates ...\n" unless $silent;
 
-       File::Path::rmtree('data/template');
+       File::Path::rmtree("$datadir/template");
 
        #Check that the directory was really removed
-       if(-e 'data/template') {
+       if(-e "$datadir/template") {
            print "\n\n";
-           print "The data/template directory could not be removed. Please\n";
+           print "The directory '$datadir/template' could not be removed. Please\n";
            print "remove it manually and rerun checksetup.pl.\n\n";
            exit;
        }
@@ -1016,15 +1027,15 @@ END
     my @templatepaths = ();
     {
         use File::Spec; 
-        opendir(DIR, "template") || die "Can't open  'template': $!";
+        opendir(DIR, $templatedir) || die "Can't open '$templatedir': $!";
         my @files = grep { /^[a-z-]+$/i } readdir(DIR);
         closedir DIR;
 
         foreach my $dir (@files) {
             next if($dir =~ /^CVS$/i);
-            my $path = File::Spec->catdir('template', $dir, 'custom');
+            my $path = File::Spec->catdir($templatedir, $dir, 'custom');
             push(@templatepaths, $path) if(-d $path);
-            $path = File::Spec->catdir('template', $dir, 'default');
+            $path = File::Spec->catdir($templatedir, $dir, 'default');
             push(@templatepaths, $path) if(-d $path);
         }
     }
@@ -1063,8 +1074,8 @@ END
                PRE_CHOMP => 1 ,
                TRIM => 1 ,
 
-               # becomes data/template/{en, ...}/{custom,default}
-               COMPILE_DIR => 'data/', 
+               # => $datadir/template/`pwd`/template/{en, ...}/{custom,default}
+               COMPILE_DIR => "$datadir/template",
 
                # These don't actually need to do anything here, just exist
                FILTERS =>
@@ -1090,15 +1101,15 @@ END
 }
 
 # Just to be sure ...
-unlink "data/versioncache";
+unlink "$datadir/versioncache";
 
-# Remove parameters from the data/params file that no longer exist in Bugzilla,
+# Remove parameters from the params file that no longer exist in Bugzilla,
 # and set the defaults for new ones
 
 my @oldparams = UpdateParams();
 
 if (@oldparams) {
-    open(PARAMFILE, ">>old-params.txt") 
+    open(PARAMFILE, '>>', 'old-params.txt') 
       || die "$0: Can't open old-params.txt for writing: $!\n";
 
     print "The following parameters are no longer used in Bugzilla, " .
@@ -1222,16 +1233,16 @@ if ($my_webservergroup) {
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
     fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
-    fixPerms('data/.htaccess', $<, $webservergid, 027);
-    fixPerms('data/duplicates', $<, $webservergid, 027, 1);
-    fixPerms('data/mining', $<, $webservergid, 027, 1);
-    fixPerms('data/template', $<, $webservergid, 007, 1); # webserver will write to these
-    fixPerms('data/webdot', $<, $webservergid, 007, 1);
-    fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
-    fixPerms('data/params', $<, $webservergid, 017);
+    fixPerms("$datadir/.htaccess", $<, $webservergid, 027);
+    fixPerms("$datadir/duplicates", $<, $webservergid, 027, 1);
+    fixPerms("$datadir/mining", $<, $webservergid, 027, 1);
+    fixPerms("$datadir/template", $<, $webservergid, 007, 1); # webserver will write to these
+    fixPerms($webdotdir, $<, $webservergid, 007, 1);
+    fixPerms("$webdotdir/.htaccess", $<, $webservergid, 027);
+    fixPerms("$datadir/params", $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
     fixPerms('Bugzilla', $<, $webservergid, 027, 1);
-    fixPerms('template', $<, $webservergid, 027, 1);
+    fixPerms($templatedir, $<, $webservergid, 027, 1);
     fixPerms('css', $<, $webservergid, 027, 1);
     fixPerms('js', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
@@ -1239,32 +1250,32 @@ if ($my_webservergroup) {
 
     # Don't use fixPerms here, because it won't change perms on the directory
     # unless its using recursion
-    chown $<, $webservergid, 'data';
-    chmod 0771, 'data';
+    chown $<, $webservergid, $datadir;
+    chmod 0771, $datadir;
     chown $<, $webservergid, 'graphs';
     chmod 0770, 'graphs';
 } else {
     # get current gid from $( list
     my $gid = (split " ", $()[0];
     fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
-    fixPerms('data/.htaccess', $<, $gid, 022);
-    fixPerms('data/duplicates', $<, $gid, 022, 1);
-    fixPerms('data/mining', $<, $gid, 022, 1);
-    fixPerms('data/template', $<, $gid, 000, 1); # webserver will write to these
-    fixPerms('data/webdot', $<, $gid, 000, 1);
-    chmod 01777, 'data/webdot';
-    fixPerms('data/webdot/.htaccess', $<, $gid, 022);
-    fixPerms('data/params', $<, $gid, 011);
+    fixPerms("$datadir/.htaccess", $<, $gid, 022);
+    fixPerms("$datadir/duplicates", $<, $gid, 022, 1);
+    fixPerms("$datadir/mining", $<, $gid, 022, 1);
+    fixPerms("$datadir/template", $<, $gid, 000, 1); # webserver will write to these
+    fixPerms($webdotdir, $<, $gid, 000, 1);
+    chmod 01777, $webdotdir;
+    fixPerms("$webdotdir/.htaccess", $<, $gid, 022);
+    fixPerms("$datadir/params", $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
     fixPerms('Bugzilla', $<, $gid, 022, 1);
-    fixPerms('template', $<, $gid, 022, 1);
+    fixPerms($templatedir, $<, $gid, 022, 1);
     fixPerms('css', $<, $gid, 022, 1);
     fixPerms('js', $<, $gid, 022, 1);
 
     # Don't use fixPerms here, because it won't change perms on the directory
     # unless its using recursion
-    chown $<, $gid, 'data';
-    chmod 0777, 'data';
+    chown $<, $gid, $datadir;
+    chmod 0777, $datadir;
     chown $<, $gid, 'graphs';
     chmod 01777, 'graphs';
 }
@@ -1362,7 +1373,7 @@ The '$my_db_name' database is not accessible. This might have several reasons:
   Bugzilla Guide in the doc directory and all parts of the MySQL
   documentation.
 * There is an subtle problem with Perl, DBI, DBD::mysql and MySQL. Make
-  sure all settings in 'localconfig' are correct. If all else fails, set
+  sure all settings in '$localconfig' are correct. If all else fails, set
   '\$db_check' to zero.\n
 EOF
     }
@@ -1410,11 +1421,11 @@ if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
     }
 
     # Check .htaccess allows access to generated images
-    if(-e "data/webdot/.htaccess") {
-      open HTACCESS, "data/webdot/.htaccess";
+    if(-e "$webdotdir/.htaccess") {
+      open HTACCESS, "$webdotdir/.htaccess";
       if(! grep(/png/,<HTACCESS>)) {
         print "Dependency graph images are not accessible.\n";
-        print "Delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+        print "Delete $webdotdir/.htaccess and re-run checksetup.pl to rectify.\n";
       }
       close HTACCESS;
     }
@@ -2880,11 +2891,11 @@ if (&TableExists('comments')) {
 }
 
 # 2001-04-08 Added a special directory for the duplicates stats.
-unless (-d 'data/duplicates') {
+unless (-d "$datadir/duplicates") {
     print "Creating duplicates directory...\n";
-    mkdir 'data/duplicates', 0770; 
+    mkdir "$datadir/duplicates", 0770; 
     if ($my_webservergroup eq "") {
-        chmod 01777, 'data/duplicates';
+        chmod 01777, "$datadir/duplicates";
     } 
 }
 
@@ -3126,20 +3137,20 @@ if (!GetFieldDef("bugs", "alias")) {
 
 # 2002-07-15 davef@tetsubo.com - bug 67950
 # Move quips to the db.
-if (-r 'data/comments' && -s 'data/comments'
-    && open (COMMENTS, "<data/comments")) {
-    print "Populating quips table from data/comments...\n\n";
+if (-r "$datadir/comments" && -s "$datadir/comments"
+    && open (COMMENTS, "<$datadir/comments")) {
+    print "Populating quips table from $datadir/comments...\n\n";
     while (<COMMENTS>) {
         chomp;
         $dbh->do("INSERT INTO quips (quip) VALUES ("
                  . $dbh->quote($_) . ")");
     }
-    print "The data/comments file (used to store quips) has been copied into\n" .
-      "the database, and the data/comments file moved to data/comments.bak - \n" .
+    print "The $datadir/comments file (used to store quips) has been copied into\n" .
+      "the database, and the $datadir/comments file moved to $datadir/comments.bak - \n" .
       "you can delete this fileonce you're satisfied the migration worked\n" .
       "correctly.\n\n";
     close COMMENTS;
-    rename("data/comments", "data/comments.bak");
+    rename("$datadir/comments", "$datadir/comments.bak");
 }
 
 # 2002-07-31 bbaetz@student.usyd.edu.au bug 158236
@@ -3731,7 +3742,7 @@ if (!$series_exists) {
         # Convert the name in the same way that collectstats.pl does
         my $product_file = $product;
         $product_file =~ s/\//-/gs;
-        $product_file = "data/mining/$product_file";
+        $product_file = "$datadir/mining/$product_file";
 
         # There are many reasons that this might fail (e.g. no stats for this
         # product), so we don't worry if it does.        
@@ -3883,8 +3894,8 @@ if ($sth->rows == 0) {
   # Here we look to see what the emailregexp is set to so we can 
   # check the email addy they enter. Bug 96675. If they have no 
   # params (likely but not always the case), we use the default.
-  if (-e "data/params") { 
-    require "data/params"; # if they have a params file, use that
+  if (-e "$datadir/params") { 
+    require "$datadir/params"; # if they have a params file, use that
   }
   if (Param('emailregexp')) {
     $mailcheckexp = Param('emailregexp');
@@ -4128,7 +4139,7 @@ if (!$adminuid) { die "No administrator!" } # should never get here
 # when test product was created, admin was unknown
 $dbh->do("UPDATE components SET initialowner = $adminuid WHERE initialowner = 0");
 
-unlink "data/versioncache";
+unlink "$datadir/versioncache";
 
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n" unless $silent;
 

@@ -27,6 +27,7 @@ use lib qw(.);
 
 use File::Temp;
 use Bugzilla;
+use Bugzilla::Config qw(:DEFAULT $webdotdir);
 
 require "CGI.pl";
 
@@ -85,7 +86,7 @@ if (!defined($::FORM{'id'}) && !defined($::FORM{'doall'})) {
 
 my ($fh, $filename) = File::Temp::tempfile("XXXXXXXXXX",
                                            SUFFIX => '.dot',
-                                           DIR => "data/webdot");
+                                           DIR => $webdotdir);
 my $urlbase = Param('urlbase');
 
 print $fh "digraph G {";
@@ -189,7 +190,7 @@ if ($webdotbase =~ /^https?:/) {
     my $dotfh;
     my ($pngfh, $pngfilename) = File::Temp::tempfile("XXXXXXXXXX",
                                                      SUFFIX => '.png',
-                                                     DIR => 'data/webdot');
+                                                     DIR => $webdotdir);
     open (DOT, '-|') or exec ($webdotbase, "-Tpng", $filename);
     print $pngfh $_ while <DOT>;
     close DOT;
@@ -198,7 +199,7 @@ if ($webdotbase =~ /^https?:/) {
 
     my ($mapfh, $mapfilename) = File::Temp::tempfile("XXXXXXXXXX",
                                                      SUFFIX => '.map',
-                                                     DIR => 'data/webdot');
+                                                     DIR => $webdotdir);
     open (DOT, '-|') or exec ($webdotbase, "-Tismap", $filename);
     print $mapfh $_ while <DOT>;
     close DOT;
@@ -209,15 +210,16 @@ if ($webdotbase =~ /^https?:/) {
 # Cleanup any old .dot files created from previous runs.
 my $since = time() - 24 * 60 * 60;
 # Can't use glob, since even calling that fails taint checks for perl < 5.6
-opendir(DIR, "data/webdot/");
-my @files = grep { /\.dot$|\.png$|\.map$/ && -f "data/webdot/$_" } readdir(DIR);
+opendir(DIR, $webdotdir);
+my @files = grep { /\.dot$|\.png$|\.map$/ && -f "$webdotdir/$_" } readdir(DIR);
 closedir DIR;
 foreach my $f (@files)
 {
-    $f = "data/webdot/$f";
+    $f = "$webdotdir/$f";
     # Here we are deleting all old files. All entries are from the
-    # data/webdot/ directory. Since we're deleting the file (not following
+    # $webdot directory. Since we're deleting the file (not following
     # symlinks), this can't escape to delete anything it shouldn't
+    # (unless someone moves the location of $webdotdir, of course)
     trick_taint($f);
     if (ModTime($f) < $since) {
         unlink $f;

@@ -32,7 +32,7 @@ use Bugzilla::DB qw(:DEFAULT :deprecated);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module
-use Bugzilla::Config qw(:DEFAULT ChmodDataFile);
+use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -68,7 +68,7 @@ sub globals_pl_sillyness {
 
 # XXX - Move this to Bugzilla::Config once code which uses these has moved out
 # of globals.pl
-do 'localconfig';
+do $localconfig;
 
 use DBI;
 
@@ -242,7 +242,7 @@ sub GenerateVersionTable {
 
     require File::Temp;
     my ($fh, $tmpname) = File::Temp::tempfile("versioncache.XXXXX",
-                                              DIR => "data");
+                                              DIR => "$datadir");
 
     print $fh "#\n";
     print $fh "# DO NOT EDIT!\n";
@@ -322,8 +322,8 @@ sub GenerateVersionTable {
     print $fh "1;\n";
     close $fh;
 
-    rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
-    ChmodDataFile('data/versioncache', 0666);
+    rename $tmpname, "$datadir/versioncache" || die "Can't rename $tmpname to versioncache";
+    ChmodDataFile("$datadir/versioncache", 0666);
 }
 
 
@@ -349,8 +349,8 @@ sub ModTime {
 $::VersionTableLoaded = 0;
 sub GetVersionTable {
     return if $::VersionTableLoaded;
-    my $mtime = ModTime("data/versioncache");
-    if (!defined $mtime || $mtime eq "" || !-r "data/versioncache") {
+    my $mtime = ModTime("$datadir/versioncache");
+    if (!defined $mtime || $mtime eq "" || !-r "$datadir/versioncache") {
         $mtime = 0;
     }
     if (time() - $mtime > 3600) {
@@ -358,13 +358,13 @@ sub GetVersionTable {
         Token::CleanTokenTable() if Bugzilla->dbwritesallowed;
         GenerateVersionTable();
     }
-    require 'data/versioncache';
+    require "$datadir/versioncache";
     if (!defined %::versions) {
         GenerateVersionTable();
-        do 'data/versioncache';
+        do "$datadir/versioncache";
 
         if (!defined %::versions) {
-            die "Can't generate file data/versioncache";
+            die "Can't generate file $datadir/versioncache";
         }
     }
     $::VersionTableLoaded = 1;

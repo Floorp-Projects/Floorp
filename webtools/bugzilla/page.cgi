@@ -23,7 +23,7 @@
 
 ###############################################################################
 # This CGI is a general template display engine. To display templates using it,
-# put them in the "pages" subdirectory of template/en/default, call them
+# put them in the "pages" subdirectory of en/default, call them
 # "foo.<ctype>.tmpl" and use the URL page.cgi?id=foo.<ctype> , where <ctype> is
 # a content-type, e.g. html.
 ###############################################################################

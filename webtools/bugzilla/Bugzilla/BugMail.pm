@@ -32,6 +32,8 @@ package Bugzilla::BugMail;
 
 use RelationSet;
 
+use Bugzilla::Config qw(:DEFAULT $datadir);
+
 # This code is really ugly. It was a commandline interface, then it was moved
 # There are package-global variables which we rely on ProcessOneBug to clean
 # up each time, and other sorts of fun.
@@ -66,7 +68,7 @@ sub AUTOLOAD {
 }
 
 # This is run when we load the package
-if (open(NOMAIL, "<data/nomail")) {
+if (open(NOMAIL, '<', "$datadir/nomail")) {
     while (<NOMAIL>) {
         $nomail{trim($_)} = 1;
     }

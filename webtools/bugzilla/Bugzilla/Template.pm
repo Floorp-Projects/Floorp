@@ -29,7 +29,7 @@ package Bugzilla::Template;
 
 use strict;
 
-use Bugzilla::Config;
+use Bugzilla::Config qw(:DEFAULT $templatedir $datadir);
 use Bugzilla::Util;
 
 # for time2str - replace by TT Date plugin??
@@ -37,6 +37,7 @@ use Date::Format ();
 
 use base qw(Template);
 
+# XXX - mod_perl
 my $template_include_path;
 
 # Make an ordered list out of a HTTP Accept-Language header see RFC 2616, 14.4
@@ -69,13 +70,16 @@ sub sortAcceptLanguage {
 # If no Accept-Language is present it uses the defined default
 sub getTemplateIncludePath () {
     # Return cached value if available
+
+    # XXXX - mod_perl!
     if ($template_include_path) {
         return $template_include_path;
     }
     my $languages = trim(Param('languages'));
     if (not ($languages =~ /,/)) {
         return $template_include_path =
-               ["template/$languages/custom", "template/$languages/default"];
+               ["$templatedir/$languages/custom",
+                "$templatedir/$languages/default"];
     }
     my @languages       = sortAcceptLanguage($languages);
     my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "" );
@@ -92,7 +96,9 @@ sub getTemplateIncludePath () {
     }
     push(@usedlanguages, Param('defaultlanguage'));
     return $template_include_path =
-        [map(("template/$_/custom", "template/$_/default"), @usedlanguages)];
+        [map(("$templatedir/$_/custom",
+              "$templatedir/$_/default"),
+             @usedlanguages)];
 }
 
 
@@ -177,7 +183,7 @@ sub create {
         PRE_CHOMP => 1,
         TRIM => 1,
 
-        COMPILE_DIR => 'data/',
+        COMPILE_DIR => "$datadir/template",
 
         # Functions for processing text within templates in various ways.
         # IMPORTANT!  When adding a filter here that does not override a
@@ -321,4 +327,3 @@ C<Bugzilla-E<gt>instance-E<gt>template> to get an already created module.
 =head1 SEE ALSO
 
 L<Bugzilla>, L<Template>
-

@@ -32,8 +32,7 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
-
-
+use Bugzilla::Config qw(:DEFAULT $datadir);
 
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
@@ -317,7 +316,7 @@ if ($action eq 'new') {
           SqlQuote($version) . ", $product_id)");
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     print "OK, done.<p>\n";
     PutTrailer("<A HREF=\"editversions.cgi?product=$product&amp;action=add\">add</a> another version or $localtrailer");
@@ -446,7 +445,7 @@ if ($action eq 'delete') {
     print "Version deleted.<P>\n";
     SendSQL("UNLOCK TABLES");
 
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
     exit;
 }
@@ -527,7 +526,7 @@ if ($action eq 'update') {
                  SET value=" . SqlQuote($version) . "
                  WHERE product_id = $product_id
                    AND value=" . SqlQuote($versionold));
-        unlink "data/versioncache";
+        unlink "$datadir/versioncache";
         print "Updated version.<BR>\n";
     }
     SendSQL("UNLOCK TABLES");

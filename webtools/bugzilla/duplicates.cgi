@@ -36,6 +36,7 @@ use vars qw($buffer);
 
 use Bugzilla;
 use Bugzilla::Search;
+use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
 
 my $cgi = Bugzilla->cgi;
@@ -116,10 +117,10 @@ my $yesterday = days_ago(1);
 use Errno;
 use Fcntl;
 
-if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$today",
+if (!tie(%dbmcount, 'AnyDBM_File', "$datadir/duplicates/dupes$today",
          O_RDONLY, 0644)) {
     if ($!{ENOENT}) {
-        if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$yesterday",
+        if (!tie(%dbmcount, 'AnyDBM_File', "$datadir/duplicates/dupes$yesterday",
                  O_RDONLY, 0644)) {
             my $vars = { today => $today };
             if ($!{ENOENT}) {
@@ -163,7 +164,7 @@ my $dobefore = 0;
 my %delta;
 my $whenever = days_ago($changedsince);    
 
-if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
+if (!tie(%before, 'AnyDBM_File', "$datadir/duplicates/dupes$whenever",
          O_RDONLY, 0644)) {
     # Ignore file not found errors
     if (!$!{ENOENT}) {

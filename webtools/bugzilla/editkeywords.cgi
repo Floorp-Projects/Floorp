@@ -25,6 +25,8 @@ use lib ".";
 
 require "CGI.pl";
 
+use Bugzilla::Config qw(:DEFAULT $datadir);
+
 use vars qw($template $vars);
 
 my $localtrailer = "<A HREF=\"editkeywords.cgi\">edit</A> more keywords";
@@ -240,7 +242,7 @@ if ($action eq 'new') {
             SqlQuote($description) . ")");
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editkeywords.cgi\">edit</a> more keywords",
@@ -328,7 +330,7 @@ if ($action eq 'update') {
             " WHERE id = $id");
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     print Bugzilla->cgi->header();
 
@@ -373,7 +375,7 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM keyworddefs WHERE id = $id");
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     print Bugzilla->cgi->header();
 

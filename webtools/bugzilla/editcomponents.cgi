@@ -31,6 +31,7 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
+use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Series;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
@@ -471,7 +472,7 @@ if ($action eq 'new') {
     }
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     print "OK, done.<p>\n";
     if ($product) {
@@ -666,7 +667,7 @@ if ($action eq 'delete') {
     print "Components deleted.<P>\n";
     SendSQL("UNLOCK TABLES");
 
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
     exit;
 }
@@ -836,7 +837,7 @@ if ($action eq 'update') {
         SendSQL("UPDATE components SET name=" . SqlQuote($component) . 
                  "WHERE id=$component_id");
 
-        unlink "data/versioncache";
+        unlink "$datadir/versioncache";
         print "Updated component name.<BR>\n";
     }
     SendSQL("UNLOCK TABLES");

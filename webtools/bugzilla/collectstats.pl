@@ -38,6 +38,7 @@ use Bugzilla::Search;
 use Bugzilla::User;
 
 use Bugzilla;
+use Bugzilla::Config qw(:DEFAULT $datadir);
 
 # Turn off output buffering (probably needed when displaying output feedback
 # in the regenerate mode.)
@@ -66,7 +67,7 @@ push( @myproducts, "-All-", @::legal_product );
 
 my $tstart = time;
 foreach (@myproducts) {
-    my $dir = "data/mining";
+    my $dir = "$datadir/mining";
 
     &check_data_dir ($dir);
     
@@ -87,8 +88,8 @@ CollectSeriesData();
 # Generate a static RDF file containing the default view of the duplicates data.
 open(CGI, "GATEWAY_INTERFACE=cmdline REQUEST_METHOD=GET QUERY_STRING=ctype=rdf ./duplicates.cgi |")
   || die "can't fork duplicates.cgi: $!";
-open(RDF, ">data/duplicates.tmp")
-  || die "can't write to data/duplicates.tmp: $!";
+open(RDF, ">$datadir/duplicates.tmp")
+  || die "can't write to $datadir/duplicates.tmp: $!";
 my $headers_done = 0;
 while (<CGI>) {
   print RDF if $headers_done;
@@ -96,9 +97,9 @@ while (<CGI>) {
 }
 close CGI;
 close RDF;
-if (-s "data/duplicates.tmp") {
-    rename("data/duplicates.rdf", "data/duplicates-old.rdf");
-    rename("data/duplicates.tmp", "data/duplicates.rdf");
+if (-s "$datadir/duplicates.tmp") {
+    rename("$datadir/duplicates.rdf", "$datadir/duplicates-old.rdf");
+    rename("$datadir/duplicates.tmp", "$datadir/duplicates.rdf");
 }
 
 sub check_data_dir {
@@ -182,11 +183,11 @@ sub calculate_dupes {
     # Save % count here in a date-named file
     # so we can read it back in to do changed counters
     # First, delete it if it exists, so we don't add to the contents of an old file
-    if (my @files = <data/duplicates/dupes$today*>) {
+    if (my @files = <$datadir/duplicates/dupes$today*>) {
         unlink @files;
     }
    
-    dbmopen(%count, "data/duplicates/dupes$today", 0644) || die "Can't open DBM dupes file: $!";
+    dbmopen(%count, "$datadir/duplicates/dupes$today", 0644) || die "Can't open DBM dupes file: $!";
 
     # Create a hash with key "a bug number", value "bug which that bug is a
     # direct dupe of" - straight from the duplicates table.

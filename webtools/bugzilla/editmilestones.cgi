@@ -19,8 +19,7 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
-
-
+use Bugzilla::Config qw(:DEFAULT $datadir);
 
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
@@ -315,7 +314,7 @@ if ($action eq 'new') {
           SqlQuote($milestone) . ", $product_id, $sortkey)");
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     print "OK, done.<p>\n";
     PutTrailer("<A HREF=\"editmilestones.cgi?product=$product&amp;action=add\">add</a> another milestone or $localtrailer");
@@ -456,7 +455,7 @@ if ($action eq 'delete') {
     print "Milestone deleted.<P>\n";
     SendSQL("UNLOCK TABLES");
 
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
     exit;
 }
@@ -523,7 +522,7 @@ if ($action eq 'update') {
         SendSQL("UPDATE milestones SET sortkey=$sortkey
                  WHERE product_id=" . $product_id . "
                    AND value=" . SqlQuote($milestoneold));
-        unlink "data/versioncache";
+        unlink "$datadir/versioncache";
         print "Updated sortkey.<BR>\n";
     }
     if ($milestone ne $milestoneold) {
@@ -552,7 +551,7 @@ if ($action eq 'update') {
                 "SET defaultmilestone = " . SqlQuote($milestone) .
                 " WHERE id = $product_id" .
                 "  AND defaultmilestone = " . SqlQuote($milestoneold));
-        unlink "data/versioncache";
+        unlink "$datadir/versioncache";
         print "Updated milestone.<BR>\n";
     }
     SendSQL("UNLOCK TABLES");

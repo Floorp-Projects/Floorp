@@ -49,6 +49,8 @@ use strict;
 use vars qw(@param_list);
 use File::Spec; # for find_languages
 
+use Bugzilla::Config qw(:DEFAULT $templatedir $webdotdir);
+
 # Checking functions for the various values
 # Some generic checking functions are included in Bugzilla::Config
 
@@ -98,10 +100,10 @@ sub check_webdotbase {
             return "The file path \"$value\" is not a valid executable.  Please specify the complete file path to 'dot' if you intend to generate graphs locally.";
         }
         # Check .htaccess allows access to generated images
-        if(-e "data/webdot/.htaccess") {
-            open HTACCESS, "data/webdot/.htaccess";
+        if(-e "$webdotdir/.htaccess") {
+            open HTACCESS, "$webdotdir/.htaccess";
             if(! grep(/ \\\.png\$/,<HTACCESS>)) {
-                return "Dependency graph images are not accessible.\nAssuming that you have not modified the file, delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+                return "Dependency graph images are not accessible.\nAssuming that you have not modified the file, delete $webdotdir/.htaccess and re-run checksetup.pl to rectify.\n";
             }
             close HTACCESS;
         }
@@ -155,8 +157,8 @@ sub check_languages {
        return "You need to specify a language tag."
     }
     foreach my $language (@languages) {
-       if(   ! -d "template/$language/custom" 
-          && ! -d "template/$language/default") {
+       if(   ! -d "$templatedir/$language/custom" 
+          && ! -d "$templatedir/$language/default") {
           return "The template directory for $language does not exist";
        }
     }
@@ -165,7 +167,7 @@ sub check_languages {
 
 sub find_languages {
     my @languages = ();
-    opendir(DIR, "template") || return "Can't open 'template' directory: $!";
+    opendir(DIR, $templatedir) || return "Can't open 'template' directory: $!";
     my @langdirs = grep { /^[a-z-]+$/i } readdir(DIR);
     closedir DIR;
 
@@ -702,7 +704,7 @@ You will get this message once a day until you\'ve dealt with these bugs!
    </ul>
    The default value is a publically-accessible webdot server. If you change
    this value, make certain that the webdot server can read files from your
-   data/webdot directory. On Apache you do this by editing the .htaccess file,
+   webdot directory. On Apache you do this by editing the .htaccess file,
    for other systems the needed measures may vary. You can run checksetup.pl
    to recreate the .htaccess file if it has been lost.',
    type => 't',

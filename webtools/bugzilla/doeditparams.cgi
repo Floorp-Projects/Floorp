@@ -26,7 +26,7 @@ use strict;
 use lib qw(.);
 
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT :admin);
+use Bugzilla::Config qw(:DEFAULT :admin $datadir);
 
 require "CGI.pl";
 
@@ -111,7 +111,7 @@ foreach my $i (GetParamList()) {
 
 WriteParams();
 
-unlink "data/versioncache";
+unlink "$datadir/versioncache";
 
 print "<p>OK, done.</p>\n";
 print $howto;
