@@ -1,5 +1,9 @@
 1998-07-22  Leif Hedstrom  <leif@netscape.com>
 
+	* LDIF.pm (readEntry): Moved from my LdapUtils.pm package.
+
 	* Utils.pm (printEntry): Moved from the ::Connection class, and
 	marked it as "obsolete".
+	(encodeBase64): Moved from my LdapUtils.pm package.
+	(decodeBase64): Dito.
 
