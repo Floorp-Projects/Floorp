@@ -161,9 +161,9 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
 
   if (anXEv != NULL) { // Do Mouse Event specific intialization
     anEvent.time       = anXEv->xbutton.time;
-    anEvent.isShift    = anXEv->xbutton.state | ShiftMask;
-    anEvent.isControl  = PR_FALSE; // anXEv->xbutton.state | ControlMask;
-    anEvent.isAlt      = PR_FALSE;
+    anEvent.isShift    = anXEv->xbutton.state & ShiftMask;
+    anEvent.isControl  = anXEv->xbutton.state & ControlMask;
+    anEvent.isAlt      = PR_FALSE; // Fix later
     anEvent.clickCount = 1; // Fix for double-clicks
     anEvent.eventStructType = NS_MOUSE_EVENT;
   }
@@ -817,8 +817,8 @@ void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, 
   XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res);
   aKeyEvent.keyCode   = nsConvertKey(res);
   aKeyEvent.time      = xKeyEvent->time; 
-  aKeyEvent.isShift   = PR_FALSE; // modout | ShiftMask; // Fix later
-  aKeyEvent.isControl = PR_FALSE; // modout | ControlMask;
+  aKeyEvent.isShift   = modout & ShiftMask; 
+  aKeyEvent.isControl = modout & ControlMask;
   aKeyEvent.isAlt     = PR_FALSE; // Fix later
 // printf("KEY Event type %d %d shift %d control %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl);
 }
