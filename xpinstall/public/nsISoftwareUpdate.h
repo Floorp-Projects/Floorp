@@ -34,10 +34,6 @@ class nsISoftwareUpdate : public nsISupports
 {
     public:
         static const nsIID& IID() { static nsIID iid = NS_ISOFTWAREUPDATE_IID; return iid; }
-
-            NS_IMETHOD Startup() = 0;
-            
-            NS_IMETHOD Shutdown()= 0;
             
             NS_IMETHOD InstallJar(nsInstallInfo *installInfo) = 0;
 
