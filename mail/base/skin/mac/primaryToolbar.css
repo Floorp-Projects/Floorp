@@ -434,15 +434,15 @@ toolbar[iconsize="small"] #button-next[disabled] {
 
 /* ::::: end small primary toolbar buttons ::::: */
 
-#junkBarImage {
-  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
-  -moz-image-region: rect(0px 256px 32px 224px);
-}
-
-#junkBarMessage {
+.msgNotificationBarText {
   font: icon;
   font-weight: bold;
   padding: 0px 4px;
+}
+
+#junkBarImage {
+  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
+  -moz-image-region: rect(0px 256px 32px 224px);
 }
 
 #junkBar {
@@ -459,12 +459,6 @@ toolbar[iconsize="small"] #button-next[disabled] {
 }
 
 /* ::::: remote content bar status rules ::::: */
-
-#remoteContentMessage {
-  font: icon;
-  font-weight: bold;
-  padding: 0px 4px;
-}
 
 #remoteContentImage {
   list-style-image: url("chrome://global/skin/console/console-toolbar.png");

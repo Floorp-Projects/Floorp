@@ -436,7 +436,19 @@ toolbar[iconsize="small"] #button-mark[disabled] {
 
 /* ::::: end small primary toolbar buttons ::::: */
 
-/* ::::: junk message bar style rules ::::: */
+/* ::::: message notification bar style rules ::::: */
+
+.msgNotificationBar {
+  border-bottom: 1px solid;
+  -moz-border-bottom-colors: #000000;
+  -moz-appearance: toolbox;
+  background-color: -moz-Dialog;
+  color: black;
+}
+
+.msgNotificationBarText {
+  font-weight: bold;
+}
 
 #junkBarImage {
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
@@ -444,37 +456,11 @@ toolbar[iconsize="small"] #button-mark[disabled] {
   padding-left: 3px;
 }
 
-#junkBarMessage {
-  font-weight: bold;
-}
-
-#junkBar {
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: #000000;
-  background: url("chrome://messenger/skin/icons/junkbar.png") repeat-y bottom left white;
-  color: white;
-}
-
-
 #junkIcon {
   list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
-}
-
-/* ::::: remote content bar status rules ::::: */
-
-#remoteContentMessage {
-  font-weight: bold;
 }
 
 #remoteContentImage {
   list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
   padding: 3px;
-}
-
-#remoteContentBar {
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: #000000;
-  -moz-appearance: toolbox;
-  background-color: -moz-Dialog;
-  color: black;
 }

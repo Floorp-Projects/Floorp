@@ -1259,12 +1259,10 @@ function ClearMessagePane()
     gCurrentDisplayedMessage = null;
     if (GetMessagePaneFrame().location != "about:blank")
         GetMessagePaneFrame().location = "about:blank";
+    
     // hide the message header view AND the message pane...
     HideMessageHeaderPane();
-
-    // hide the junk bar
-    SetUpJunkBar(null);
-    SetUpRemoteContentBar(null);
+    gMessageNotificationBar.clearMsgNotifications();
   }
 }
 

@@ -27,7 +27,6 @@ classic.jar:
     skin/classic/messenger/icons/throbber.gif       (icons/throbber.gif)
     skin/classic/messenger/icons/throbber-small.gif (icons/throbber-small.gif)
     skin/classic/messenger/icons/throbber-small.png (icons/throbber-small.png)
-    skin/classic/messenger/icons/junkbar.png        (icons/junkbar.png)
 +   skin/classic/messenger/icons/folder-junk.png    (icons/folder-junk.png)
     skin/classic/messenger/icons/folder-closed.png  (icons/folder-closed.png)
     skin/classic/messenger/icons/folder-draft.png   (icons/folder-draft.png)

@@ -486,28 +486,29 @@ function StopUrls()
   msgWindow.StopUrls();
 }
 
-function loadStartPage() {
-    try {
-        // collapse the junk bar
-        SetUpJunkBar(null);
-        SetUpRemoteContentBar(null);
-
-        var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
-
-        if (startpageenabled) {
-            var startpage = pref.getComplexValue("mailnews.start_page.url",
-                                                 Components.interfaces.nsIPrefLocalizedString).data;
-            if (startpage != "") {
-                GetMessagePaneFrame().location = startpage;
-                //dump("start message pane with: " + startpage + "\n");
-                ClearMessageSelection();
-            }
-        }
+function loadStartPage() 
+{
+  try 
+  {
+    gMessageNotificationBar.clearMsgNotifications();
+    
+    var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
+    if (startpageenabled) 
+    {
+      var startpage = pref.getComplexValue("mailnews.start_page.url", Components.interfaces.nsIPrefLocalizedString).data;
+      if (startpage != "") 
+      {
+        GetMessagePaneFrame().location = startpage;
+        //dump("start message pane with: " + startpage + "\n");
+        ClearMessageSelection();
+      }
     }
-    catch (ex) {
-        dump("Error loading start page.\n");
-        return;
-    }
+  }
+  catch (ex) 
+  {
+    dump("Error loading start page.\n");
+    return;
+  }
 }
 
 // Display AccountCentral page when users clicks on the Account Folder.

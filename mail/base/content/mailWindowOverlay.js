@@ -62,6 +62,10 @@ const kNoRemoteContentPolicy = 0;
 const kBlockRemoteContent = 1;
 const kAllowRemoteContent = 2;
 
+const kMsgNotificationNoStatus = 0;
+const kMsgNotificationJunkBar = 1;
+const kMsgNotificationRemoteImages = 2;
+
 var gMessengerBundle;
 var gPromptService;
 var gOfflinePromptsBundle;
@@ -2134,7 +2138,7 @@ function HandleJunkStatusChanged(folder)
         // We have no way of determining if the junk status of our current message has really changed
         // the only thing we can do is cheat by asking if the junkbar visibility had to change as a result of this notification
 
-        var changedJunkStatus = SetUpJunkBar(msgHdr);
+        var changedJunkStatus = gMessageNotificationBar.setJunkMsg(msgHdr);
 
         // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
         // reload the message if the status has just changed to not junk. 
@@ -2159,53 +2163,54 @@ function HandleJunkStatusChanged(folder)
       }
     }
     else
-      SetUpJunkBar(null);
+      gMessageNotificationBar.setJunkMsg(null);
   }
 }
 
-// returns true if we actually changed the visiblity of the junk bar otherwise false
-function SetUpJunkBar(aMsgHdr)
+var gMessageNotificationBar = 
 {
-  // XXX todo
-  // should this happen on the start, or at the end?
-  // if at the end, we might keep the "this message is junk" up for a while, until a big message is loaded
-  // or do we need to wait until here, to make sure the message is fully analyzed
-  // what about almost hiding it on the start, and then showing here?
+  mMsgNotificationBar: document.getElementById('msgNotificationBar'),
 
-  var isJunk = false;
+  setJunkMsg: function (aMsgHdr)
+  {
+    var isJunk = false;
+    var isCurrentlyNotJunk = this.mMsgNotificationBar.selectedIndex != kMsgNotificationJunkBar;
   
-  if (aMsgHdr) {
-    var junkScore = aMsgHdr.getStringProperty("junkscore"); 
-    isJunk = ((junkScore != "") && (junkScore != "0"));
+    if (aMsgHdr) 
+    {
+      var junkScore = aMsgHdr.getStringProperty("junkscore"); 
+      isJunk = ((junkScore != "") && (junkScore != "0"));
+    }
+
+    this.updateMsgNotificationBar (isJunk ? kMsgNotificationJunkBar : kMsgNotificationNoStatus);
+
+    goUpdateCommand('button_junk');
+
+    return (isJunk && isCurrentlyNotJunk) || (!isJunk && !isCurrentlyNotJunk);
+  },
+
+  setRemoteContentMsg: function (aMsgHdr)
+  {  
+    this.updateMsgNotificationBar(aMsgHdr && aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent ? 
+                                  kMsgNotificationRemoteImages : kMsgNotificationNoStatus);
+  },
+
+  clearMsgNotifications: function()
+  {
+    this.updateMsgNotificationBar(kMsgNotificationNoStatus);
+  },
+
+  // private method used to set our message notification deck to the correct value...
+  updateMsgNotificationBar: function(aIndex)
+  {
+    if (aIndex == kMsgNotificationNoStatus)
+      this.mMsgNotificationBar.setAttribute('collapsed', true);
+    else
+      this.mMsgNotificationBar.removeAttribute('collapsed');
+    
+    this.mMsgNotificationBar.selectedIndex = aIndex;
   }
-  
-  var junkBar = document.getElementById("junkBar");
-  var isAlreadyCollapsed = junkBar.getAttribute("collapsed") == "true";
-
-  if (isJunk)
-    junkBar.removeAttribute("collapsed");
-  else
-    junkBar.setAttribute("collapsed","true");
- 
-  goUpdateCommand('button_junk');
-
-  return (isJunk && isAlreadyCollapsed) || (!isJunk && !isAlreadyCollapsed);
-}
-
-// hides or shows the remote content bar based on the property in the msg hdr
-function SetUpRemoteContentBar(aMsgHdr)
-{
-  var showRemoteContentBar = false;
-  if (aMsgHdr && aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent)
-    showRemoteContentBar = true;
-
-  var remoteContentBar = document.getElementById("remoteContentBar");
-  
-  if (showRemoteContentBar)
-    remoteContentBar.removeAttribute("collapsed");
-  else
-    remoteContentBar.setAttribute("collapsed","true");
-}
+};
 
 function LoadMsgWithRemoteContent()
 {
@@ -2269,8 +2274,8 @@ function OnMsgLoaded(aUrl)
 
     if (!(/type=x-message-display/.test(msgURI)))
       msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
-        
-    SetUpJunkBar(msgHdr);
+     
+    gMessageNotificationBar.setJunkMsg(msgHdr);
 
     // we just finished loading a message. set a timer to actually mark the message is read after n seconds
     // where n can be configured by the user.

@@ -326,7 +326,7 @@ var messageHeaderSink = {
       gBuildAttachmentPopupForCurrentMsg = true;
       ClearAttachmentList();
       ClearEditMessageButton();
-      SetUpRemoteContentBar(null);
+      gMessageNotificationBar.clearMsgNotifications();
 
       for (index in gMessageListeners)
         gMessageListeners[index].onStartHeaders();
@@ -474,9 +474,10 @@ var messageHeaderSink = {
     { 
       OnMsgLoaded(url);
     },
+
     onMsgHasRemoteContent: function(aMsgHdr)
     {
-      SetUpRemoteContentBar(aMsgHdr);
+      gMessageNotificationBar.setRemoteContentMsg(aMsgHdr);
     },
 
     mSecurityInfo  : null,
