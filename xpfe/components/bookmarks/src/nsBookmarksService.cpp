@@ -5069,10 +5069,14 @@ nsBookmarksService::WriteBookmarks(nsFileSpec* aBookmarksFile, nsIRDFDataSource*
   // its place. 
   if (succeeded) {
     char* bookmarksFileName = aBookmarksFile->GetLeafName();
-    aBookmarksFile->Delete(PR_FALSE);
+    char* tempBookmarksFileName = tempFile.GetLeafName();
+    // If tempFile == aBookmarksFile, we must not delete/rename
+    if (nsCRT::strcmp(bookmarksFileName, tempBookmarksFileName)) {
+      aBookmarksFile->Delete(PR_FALSE);
+      tempFile.Rename(bookmarksFileName);
+    }
 
-    tempFile.Rename(bookmarksFileName);
-
+    nsCRT::free(tempBookmarksFileName);
     nsCRT::free(bookmarksFileName);
   }
   else
