@@ -702,6 +702,12 @@ install:: $(XPIDL_GEN_DIR) $(TYPELIB)
 
 GARBAGE=$(GARBAGE) $(XPIDL_GEN_DIR) $(DIST)\bin\components\$(MODULE).xpt
 
+clobber::
+        -$(RM_R) $(GARBAGE) 2> NUL
+
+clobber_all::
+        -$(RM_R) $(GARBAGE) 2> NUL
+
 !endif
 !endif
 
