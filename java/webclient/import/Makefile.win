@@ -40,6 +40,7 @@ $(JAVAXPIDLSRCS) :
 	copy $(DEPTH)\dist\idl\$(@F) .
 
 mvjava2stubs:
+	-mkdir ..\classes_spec\org\mozilla\webclient\stubs
 	copy *.java ..\classes_spec\org\mozilla\webclient\stubs
 
 chPackageinStubs:

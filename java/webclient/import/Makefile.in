@@ -40,7 +40,8 @@ $(JAVAXPIDLSRCS) :
 	cp $(DEPTH)/dist/idl/$(@F) .
 
 mvjava2stubs: chPackageinStubs
-	mv *.java ../classes_spec/org/mozilla/webclient/stubs
+	if test ! -d ../classes_spec/org/mozilla/webclient/stubs ; then mkdir ../classes_spec/org/mozilla/webclient/stubs ; else true ; fi ;
+	mv *.java ../classes_spec/org/mozilla/webclient/stubs/.
 
 chPackageinStubs: idl2java
 	perl chPackage.pl unix nsIProfile.java "org.mozilla.webclient.stubs"
