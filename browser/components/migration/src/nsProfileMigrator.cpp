@@ -57,11 +57,8 @@
 // nsIProfileMigrator
 
 #define MIGRATION_WIZARD_FE_URL "chrome://browser/content/migration/migration.xul"
-#ifdef XP_MACOSX
-#define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,centerscreen"
-#else
 #define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,modal,centerscreen"
-#endif
+
 NS_IMETHODIMP
 nsProfileMigrator::Migrate()
 {
@@ -253,7 +250,18 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMig
       }
     }
   }
+#else
+  // XXXben - until we figure out what to do here with default browsers on MacOS and
+  // GNOME, simply copy data from a previous Phoenix install. 
+  *aNeedsActiveProfile = PR_FALSE;
+  nsCOMPtr<nsISupportsString> key(do_CreateInstance("@mozilla.org/supports-string;1"));
+  key->SetData(NS_LITERAL_STRING("phoenix"));
+  nsCOMPtr<nsIBrowserProfileMigrator> bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
+  
+  NS_IF_ADDREF(*aKey = key);
+  NS_IF_ADDREF(*aMigrator = bpm);
 #endif
+
   return NS_OK;
 }
 

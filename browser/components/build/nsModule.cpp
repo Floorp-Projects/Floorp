@@ -65,10 +65,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhoenixProfileMigrator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
@@ -99,8 +99,8 @@ static const nsModuleComponentInfo components[] =
     NS_BOOKMARKS_DATASOURCE_CONTRACTID,
     nsBookmarksServiceConstructor },
 
-  { "Profile Migrator", 
-    NS_PROFILEMIGRATOR_CID, 
+  { "Profile Migrator",
+    NS_PROFILEMIGRATOR_CID,
     NS_PROFILEMIGRATOR_CONTRACTID,
     nsProfileMigratorConstructor },
 
