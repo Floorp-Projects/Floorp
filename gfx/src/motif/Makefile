@@ -28,10 +28,11 @@ REQUIRES=util img xpcom raptor netlib
 LCFLAGS+=-D_IMPL_NS_GFXONXP
 
 EXTRA_DSO_LDOPTS+=\
-	$(DIST)/bin/libxpcom.so \
-	$(DIST)/bin/libraptorgfx.so \
-	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libreg.so \
+	-L$(DIST)/bin \
+	-lxpcom \
+	-lraptorgfx \
+	-lraptorbase \
+	-lreg \
 	$(LIBNSPR)\
 	$(DIST)/lib/libplc21.a
 
