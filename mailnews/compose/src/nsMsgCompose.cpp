@@ -522,7 +522,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
       nsIDocShell *docshell = nsnull;
       nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
       if (globalObj && (docshell = globalObj->GetDocShell()))
-        docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
+        docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
 
       if (aHTMLEditor && !mCiteReference.IsEmpty())
         mailEditor->InsertAsCitedQuotation(aBuf,
@@ -532,10 +532,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
       else
         mailEditor->InsertAsQuotation(aBuf,
                                       getter_AddRefs(nodeInserted));
-
-      // XXX see bug #206793
-      if (docshell)
-        docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
 
       m_editor->EndOfDocument();
     }
@@ -2397,17 +2393,13 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
       if (globalObj)
         docshell = globalObj->GetDocShell();
       if (docshell)
-        docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
+        docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
       
       if (aHTMLEditor)
         mailEditor->InsertAsCitedQuotation(mMsgBody, EmptyString(), PR_TRUE,
                                            getter_AddRefs(nodeInserted));
       else
         mailEditor->InsertAsQuotation(mMsgBody, getter_AddRefs(nodeInserted));
-
-      // XXX see bug #206793
-      if (docshell)
-        docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
     }
       
   }
