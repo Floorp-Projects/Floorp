@@ -863,7 +863,7 @@ if (@bugidlist) {
 # Define the variables and functions that will be passed to the UI template.
 
 $vars->{'bugs'} = \@bugs;
-$vars->{'buglist'} = \@bugidlist;
+$vars->{'buglist'} = join(',', @bugidlist);
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 

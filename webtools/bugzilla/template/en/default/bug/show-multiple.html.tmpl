@@ -89,19 +89,13 @@
     <tr>
       [% PROCESS cell attr = { description => "Resolution",
                                name => "resolution" } %]
-      <td>
-        <b>Assigned To:</b>&nbsp;
-        [% bug.assigned_to.login FILTER html %]
-      </td>
-      <td>
-        <b>Reported By:</b>&nbsp;
-        [% bug.reporter.login FILTER html %]
-      </td>
+      [% PROCESS cell attr = { description => "Assigned To",
+                               name => "assigned_to" } %]
+      [% PROCESS cell attr = { description => "Reported By",
+                               name => "reporter" } %]
       [% IF Param('useqacontact') %]
-        <td>
-          <b>QA Contact:</b>&nbsp;
-          [% bug.qa_contact.login FILTER html %]
-        </td>
+        [% PROCESS cell attr = { description => "QA Contact",
+                                 name => "qa_contact" } %]
       [% END %]
     </tr>
 
@@ -196,7 +190,7 @@
   </table>
 
   [% PROCESS bug/comments.html.tmpl
-     comments = bug.longdescs %]
+     comments = bug.comments %]
 
   <hr>
 [% END %]
