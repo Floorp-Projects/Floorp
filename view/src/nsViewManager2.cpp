@@ -287,7 +287,7 @@ NS_IMETHODIMP nsViewManager2::GetRootView(nsIView *&aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager2::SetRootView(nsIView *aView)
+NS_IMETHODIMP nsViewManager2 :: SetRootView(nsIView *aView, nsIWidget* aWidget)
 {
   UpdateTransCnt(mRootView, aView);
   // Do NOT destroy the current root view. It's the caller's responsibility
@@ -297,8 +297,27 @@ NS_IMETHODIMP nsViewManager2::SetRootView(nsIView *aView)
   //now get the window too.
   NS_IF_RELEASE(mRootWindow);
 
-  if (nsnull != mRootView)
+  // The window must be specified through one of the following:
+  //* a) The aView has a nsIWidget instance or
+  //* b) the aWidget parameter is an nsIWidget instance to render into 
+  //*    that is not owned by a view.
+  //* c) aView has a parent view managed by a different view manager or
+
+  if (nsnull != aWidget) {
+    mRootWindow = aWidget;
+    NS_ADDREF(mRootWindow);
+    return NS_OK;
+  }
+
+  // case b) The aView has a nsIWidget instance
+  if (nsnull != mRootView) {
     mRootView->GetWidget(mRootWindow);
+    if (nsnull != mRootWindow) {
+      return NS_OK;
+    }
+  }
+
+  // case c)  aView has a parent view managed by a different view manager
 
   return NS_OK;
 }
@@ -1774,6 +1793,55 @@ NS_IMETHODIMP nsViewManager2::RemoveCompositeListener(nsICompositeListener* aLis
 	}
 	return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP nsViewManager2::GetWidgetForView(nsIView *aView, nsIWidget **aWidget)
+{
+  *aWidget = nsnull;
+  nsIView *view = aView;
+  PRBool hasWidget = PR_FALSE;
+  while (!hasWidget && view)
+  {
+	  view->HasWidget(&hasWidget);
+    if (!hasWidget)
+      view->GetParent(view);
+  }
+
+  if (hasWidget) {
+      // Widget was found in the view hierarchy
+    view->GetWidget(*aWidget);
+  } else {
+      // No widget was found in the view hierachy, so use try to use the mRootWindow
+    if (nsnull != mRootWindow) {
+#ifdef NS_DEBUG
+      nsCOMPtr<nsIViewManager> vm;
+      nsCOMPtr<nsIViewManager> thisInstance(this);
+      aView->GetViewManager(*getter_AddRefs(vm));
+      NS_ASSERTION(thisInstance == vm, "Must use the view instances view manager when calling GetWidgetForView");
+#endif
+      *aWidget = mRootWindow;
+      NS_ADDREF(mRootWindow);
+    }
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsViewManager2::GetWidget(nsIWidget **aWidget)
+{
+  NS_IF_ADDREF(mRootWindow);
+  *aWidget = mRootWindow;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager2::ForceUpdate()
+{
+  if (mRootWindow) {
+    mRootWindow->Update();
+  }
+  return NS_OK;
+}
+
 
 PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
                                           nscoord aOriginX, nscoord aOriginY, nsIView *aRealView,

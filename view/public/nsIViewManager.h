@@ -454,7 +454,6 @@ public:
   /**
    * Force update of view manager widget
    * Callers should use UpdateView(view, NS_VMREFRESH_IMMEDIATE) in most cases instead
-   * @param aWidget the widget that aView renders into.
    * @result error status
    */
 
