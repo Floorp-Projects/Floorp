@@ -727,7 +727,13 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          // use the window watcher service to get a nsIAuthPrompt impl
          var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                             .getService(Components.interfaces.nsIWindowWatcher);
-         return ww.getNewAuthPrompter(null);
+         return ww.getNewAuthPrompter(window);
+       }
+       else if (iid.equals(Components.interfaces.nsIPrompt)) {
+         // use the window watcher service to get a nsIPrompt impl
+         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                            .getService(Components.interfaces.nsIWindowWatcher);
+         return ww.getNewPrompter(window);
        }
        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
        return null;
