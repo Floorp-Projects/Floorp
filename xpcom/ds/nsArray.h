@@ -49,9 +49,6 @@
 { 0x35c66fd1, 0x95e9, 0x4e0a, \
   { 0x80, 0xc5, 0xc3, 0xbd, 0x2b, 0x37, 0x54, 0x81 } }
 
-#define NS_ARRAY_CONTRACTID \
-  "@mozilla.org/array;1"
-
 // adapter class to map nsIArray->nsCOMArray
 // do NOT declare this as a stack or member variable, use
 // nsCOMArray instead
