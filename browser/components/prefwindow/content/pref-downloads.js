@@ -46,8 +46,8 @@ var gHelperApps = null;
 
 var gEditFileHandler, gRemoveFileHandler, gHandlersList;
 
-const downloadDirPref = "browser.download.dir"; 
-const downloadModePref = "browser.download.folderList";
+var downloadDirPref = "browser.download.dir"; 
+var downloadModePref = "browser.download.folderList";
 const nsILocalFile = Components.interfaces.nsILocalFile;
     
 function selectFolder()
@@ -188,7 +188,8 @@ function updateSaveToFolder()
     return val;                
   }
 
-  const defaultFolderPref = "browser.download.defaultFolder";
+  var defaultFolderPref = "browser.download.defaultFolder";
+  var downloadDirPref = "browser.download.dir";
 
   var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-downloads.xul"];
   // Don't let the variable names here fool you. This code executes if the 
