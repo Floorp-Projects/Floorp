@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.4 2004/05/30 17:58:39 mconnor%myrealbox.com Exp $
+## $Id: mozilla.in,v 1.5 2004/06/01 17:29:53 mconnor%myrealbox.com Exp $
 ## 
 ## Usage:
 ##
@@ -70,7 +70,7 @@ moz_pis_startstop_scripts()
 }
 
 #uncomment for debugging
-#set -x
+set -x
 
 moz_libdir=%MOZAPPDIR%
 MRE_HOME=%MREDIR%
@@ -121,23 +121,23 @@ MOZILLA_BIN="%MOZILLA-BIN%"
 
 # The following is to check for a currently running instance.
 # This is taken almost verbatim from the Mozilla RPM package's launch script.
-MOZ_CLIENT_PROGRAM=$curdir/mozilla-xremote-client
-function check_running() {
+MOZ_CLIENT_PROGRAM=$dist_bin/mozilla-xremote-client
+check_running() {
     $MOZ_CLIENT_PROGRAM -a firefox 'ping()' 2>/dev/null >/dev/null
     RETURN_VAL=$?
-    if [ "$RETURN_VAL" -eq "2" ]; then
-        echo 0
-        return 0
-    else
+    if [ $RETURN_VAL -eq 0 ]; then
         echo 1
         return 1
+    else
+        echo 0
+        return 0
     fi
 }
                                                                                    
 ALREADY_RUNNING=`check_running`
-                                                                                   
-if [ "${ALREADY_RUNNING}" -eq "1" ] && [ -z "$1" ]; then
-    exec $MOZ_CLIENT_PROGRAM "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
+
+if [ $ALREADY_RUNNING -eq 1 ] && [ -z "$1" ]; then
+   exec $MOZ_CLIENT_PROGRAM -a firefox "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
 fi
 # End of section that checks for currently running instance. - jtg
 
