@@ -380,7 +380,7 @@ $vars->{'userdefaultquery'} = $userdefaultquery;
 $vars->{'orders'} = \@orders;
 $default{'querytype'} = $deforder || 'Importance';
 
-if (($::FORM{'query_format'} || $::FORM{'format'}) eq "create-series") {
+if (($::FORM{'query_format'} || $::FORM{'format'} || "") eq "create-series") {
     require Bugzilla::Chart;
     $vars->{'category'} = Bugzilla::Chart::getVisibleSeries();
 }
