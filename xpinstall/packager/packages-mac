@@ -9,203 +9,201 @@
 ; 
 
 [install]
-Components:libjar.shlb 
-Components:xpinstall.shlb 
-Essential Files:dom.shlb 
-Essential Files:JavaScript.shlb 
-Essential Files:libreg.shlb 
-Essential Files:LiveConnect.shlb 
-Essential Files:NetworkModular.shlb 
-Essential Files:NSPR20.shlb 
-Essential Files:NSRuntime.shlb 
-Essential Files:NSStdLib.shlb 
-Essential Files:oji.shlb 
-Essential Files:xpcom.shlb 
-Essential Files:xpistub.shlb 
-Essential Files:zlib.shlb 
+viewer:Component Registry
+viewer:Components:libjar.shlb 
+viewer:Components:xpinstall.shlb 
+viewer:Essential Files:dom.shlb 
+viewer:Essential Files:JavaScript.shlb 
+viewer:Essential Files:libreg.shlb 
+viewer:Essential Files:LiveConnect.shlb 
+viewer:Essential Files:NetworkModular.shlb 
+viewer:Essential Files:NSPR20.shlb 
+viewer:Essential Files:NSRuntime.shlb 
+viewer:Essential Files:NSStdLib.shlb 
+viewer:Essential Files:oji.shlb 
+viewer:Essential Files:xpcom.shlb 
+viewer:Essential Files:xpistub.shlb 
+viewer:Essential Files:zlib.shlb 
 
 [browser] 
-apprunner 
-Component Registry
-default_prefs.js 
-Mozilla Addressbook 
-Mozilla Editor 
-Mozilla Installer
-Mozilla Message Compose 
-Mozilla Messenger 
-Mozilla Preferences 
-Mozilla Profile Manager
-Mozilla Profile Wizard
-Essential Files:AppCores.shlb 
-Essential Files:AppShell.shlb 
-Essential Files:gfx.shlb 
-Essential Files:JPEG.shlb 
-Essential Files:libimg.shlb 
-Essential Files:libutil.shlb 
-Essential Files:plugin.shlb 
-Essential Files:RaptorShell.shlb 
-Essential Files:WASTELib 
-Essential Files:webshell.shlb 
-Essential Files:widget.shlb 
-Components:about.shlb 
-Components:about.xpt 
-Components:appshell.xpt 
-Components:bookmarks.shlb 
-Components:bookmarks.xpt 
-Components:BrowsingProfile.shlb 
-Components:Caps.shlb 
-Components:caps.xpt 
-Components:chardet.shlb 
-Components:ChomeRegistry.shlb 
-Components:Cookie.shlb 
-Components:data.shlb 
-Components:data.xpt 
-Components:dom.xpt 
-Components:editor.xpt 
-Components:EditorCore.shlb 
-Components:EditorTxmgr.shlb 
-Components:file.shlb 
-Components:file.xpt 
-Components:FindComponent.shlb 
-Components:ftp.shlb 
-Components:ftp.xpt 
-Components:gfx.xpt 
-Components:gifdecoder.shlb 
-Components:history.shlb 
-Components:history.xpt 
-Components:htmlparser.shlb 
-Components:http.shlb 
-Components:http.xpt 
-Components:jpgdecoder.shlb 
-Components:JSLoader.shlb 
-Components:jsurl.shlb 
-Components:layout.shlb 
-Components:libjar.xpt 
-Components:libpref.shlb 
-Components:libpref.xpt 
-Components:lwbrk.shlb 
-Components:mimetype.shlb 
-Components:mozBrowser.shlb 
-Components:mozBrowser.xpt 
-Components:mozcomps.xpt 
-Components:multiMixedConv.shlb 
-Components:netwerk.xpt 
-Components:Network.shlb 
-Components:nsIStringBundle.xpt 
-Components:nslocale.shlb 
-Components:nsLocale.xpt 
-Components:oji.xpt 
-Components:pngdecoder.shlb 
-Components:prefm.shlb 
-Components:prefm.xpt 
-Components:prefwindow.shlb 
-Components:prefwindow.xpt 
-Components:profile.shlb 
-Components:profileservices.xpt 
-Components:rdf.xpt 
-Components:RDFLibrary.shlb 
-Components:RegViewer.shlb 
-Components:RegViewer.xpt 
-Components:Related.shlb 
-Components:related.xpt 
-Components:resource.shlb 
-Components:Search.shlb 
-Components:search.xpt 
-Components:streamconv.shlb 
-Components:streamconv.xpt 
-Components:strres.shlb 
-Components:TextServices.shlb 
-Components:txmgr.xpt 
-Components:uconv.shlb 
-Components:uconv.xpt 
-Components:ucth.shlb 
-Components:ucvcn.shlb 
-Components:ucvja.shlb 
-Components:ucvko.shlb 
-Components:ucvlatin.shlb 
-Components:ucvtw.shlb 
-Components:ucvtw2.shlb 
-Components:unicharutil.shlb 
-Components:unicharutil.xpt 
-Components:view.shlb 
-Components:Wallet.shlb 
-Components:wallet.xpt 
-Components:WalletViewers.shlb 
-Components:widget.xpt 
-Components:xfer.shlb 
-Components:xpcom.xpt 
-Components:XPConnect.shlb 
-Components:xpconnect.xpt 
-Components:xpinstall.xpt 
-Components:Directory.shlb 
-Components:Directory.xpt 
-Components:data.shlb 
-chrome:bookmarks:*
-chrome:editor:*
--chrome:editor:content:default:EditorInitPage.html
--chrome:editor:content:default:EditorInitPagePlain.html
--chrome:editor:content:default:TextEditorAppShell.xul
--chrome:editor:content:default:sb-bookmarks-panel.xul
--chrome:editor:content:default:sb-bookmarks.js
--chrome:editor:content:default:sb-file-contextMenu.js
--chrome:editor:content:default:sb-file-panel.js
--chrome:editor:content:default:sb-file-panel.xul
--chrome:editor:content:default:sb-FileWidgetFileHandler.js
--chrome:editor:content:default:viewsource.js
--chrome:editor:content:default:viewsource.xul 
-chrome:directory:* 
-chrome:global:* 
-chrome:history:* 
-chrome:navigator:* 
-chrome:pref:* 
-chrome:profile:* 
-chrome:related:* 
-chrome:sidebar:* 
-chrome:wallet:*
-chrome:xpinstall:* 
-chrome:registry.rdf 
-chrome:xul.css
-defaults:pref:all.js 
-defaults:pref:config.js 
-defaults:pref:initpref.js 
-defaults:pref:macprefs.js 
-defaults:pref:xpinstall.js
-defaults:profile:*
-res:html.css
-res:ua.css
-res:maccharset.properties 
-res:charsetalias.properties 
-res:entityTables:*
-res:rdf:article.gif
-res:rdf:document.gif
-res:rdf:folder-closed.gif
-res:rdf:folder-open.gif
-res:rdf:loading.gif
-res:xpinstall:*
-res:throbber:*
-res:toolbar:*
+viewer:apprunner 
+viewer:Mozilla Addressbook 
+viewer:Mozilla Editor 
+viewer:Mozilla Installer
+viewer:Mozilla Message Compose 
+viewer:Mozilla Messenger 
+viewer:Mozilla Preferences 
+viewer:Mozilla Profile Manager
+viewer:Mozilla Profile Wizard
+viewer:Essential Files:AppCores.shlb 
+viewer:Essential Files:AppShell.shlb 
+viewer:Essential Files:gfx.shlb 
+viewer:Essential Files:JPEG.shlb 
+viewer:Essential Files:libimg.shlb 
+viewer:Essential Files:libutil.shlb 
+viewer:Essential Files:plugin.shlb 
+viewer:Essential Files:RaptorShell.shlb 
+viewer:Essential Files:WASTELib 
+viewer:Essential Files:webshell.shlb 
+viewer:Essential Files:widget.shlb 
+viewer:Components:about.shlb 
+viewer:Components:about.xpt 
+viewer:Components:appshell.xpt 
+viewer:Components:bookmarks.shlb 
+viewer:Components:bookmarks.xpt 
+viewer:Components:BrowsingProfile.shlb 
+viewer:Components:Caps.shlb 
+viewer:Components:caps.xpt 
+viewer:Components:chardet.shlb 
+viewer:Components:ChomeRegistry.shlb 
+viewer:Components:Cookie.shlb 
+viewer:Components:data.shlb 
+viewer:Components:data.xpt 
+viewer:Components:dom.xpt 
+viewer:Components:editor.xpt 
+viewer:Components:EditorCore.shlb 
+viewer:Components:EditorTxmgr.shlb 
+viewer:Components:file.shlb 
+viewer:Components:file.xpt 
+viewer:Components:FindComponent.shlb 
+viewer:Components:ftp.shlb 
+viewer:Components:ftp.xpt 
+viewer:Components:gfx.xpt 
+viewer:Components:gifdecoder.shlb 
+viewer:Components:history.shlb 
+viewer:Components:history.xpt 
+viewer:Components:htmlparser.shlb 
+viewer:Components:http.shlb 
+viewer:Components:http.xpt 
+viewer:Components:jpgdecoder.shlb 
+viewer:Components:JSLoader.shlb 
+viewer:Components:jsurl.shlb 
+viewer:Components:layout.shlb 
+viewer:Components:libjar.xpt 
+viewer:Components:libpref.shlb 
+viewer:Components:libpref.xpt 
+viewer:Components:lwbrk.shlb 
+viewer:Components:mimetype.shlb 
+viewer:Components:mozBrowser.shlb 
+viewer:Components:mozBrowser.xpt 
+viewer:Components:mozcomps.xpt 
+viewer:Components:multiMixedConv.shlb 
+viewer:Components:netwerk.xpt 
+viewer:Components:Network.shlb 
+viewer:Components:nsIStringBundle.xpt 
+viewer:Components:nslocale.shlb 
+viewer:Components:nsLocale.xpt 
+viewer:Components:oji.xpt 
+viewer:Components:pngdecoder.shlb 
+viewer:Components:prefm.shlb 
+viewer:Components:prefm.xpt 
+viewer:Components:prefwindow.shlb 
+viewer:Components:prefwindow.xpt 
+viewer:Components:profile.shlb 
+viewer:Components:profileservices.xpt 
+viewer:Components:rdf.xpt 
+viewer:Components:RDFLibrary.shlb 
+viewer:Components:RegViewer.shlb 
+viewer:Components:RegViewer.xpt 
+viewer:Components:Related.shlb 
+viewer:Components:related.xpt 
+viewer:Components:resource.shlb 
+viewer:Components:Search.shlb 
+viewer:Components:search.xpt 
+viewer:Components:streamconv.shlb 
+viewer:Components:streamconv.xpt 
+viewer:Components:strres.shlb 
+viewer:Components:TextServices.shlb 
+viewer:Components:txmgr.xpt 
+viewer:Components:uconv.shlb 
+viewer:Components:uconv.xpt 
+viewer:Components:ucth.shlb 
+viewer:Components:ucvcn.shlb 
+viewer:Components:ucvja.shlb 
+viewer:Components:ucvko.shlb 
+viewer:Components:ucvlatin.shlb 
+viewer:Components:ucvtw.shlb 
+viewer:Components:ucvtw2.shlb 
+viewer:Components:unicharutil.shlb 
+viewer:Components:unicharutil.xpt 
+viewer:Components:view.shlb 
+viewer:Components:Wallet.shlb 
+viewer:Components:wallet.xpt 
+viewer:Components:WalletViewers.shlb 
+viewer:Components:widget.xpt 
+viewer:Components:xfer.shlb 
+viewer:Components:xpcom.xpt 
+viewer:Components:XPConnect.shlb 
+viewer:Components:xpconnect.xpt 
+viewer:Components:xpinstall.xpt 
+viewer:Components:Directory.shlb 
+viewer:Components:Directory.xpt 
+viewer:Components:data.shlb 
+viewer:chrome:bookmarks:*
+viewer:chrome:editor:*
+viewer:-chrome:editor:content:default:EditorInitPage.html
+-viewer:chrome:editor:content:default:EditorInitPagePlain.html
+-viewer:chrome:editor:content:default:TextEditorAppShell.xul
+-viewer:chrome:editor:content:default:sb-bookmarks-panel.xul
+-viewer:chrome:editor:content:default:sb-bookmarks.js
+-viewer:chrome:editor:content:default:sb-file-contextMenu.js
+-viewer:chrome:editor:content:default:sb-file-panel.js
+-viewer:chrome:editor:content:default:sb-file-panel.xul
+-viewer:chrome:editor:content:default:sb-FileWidgetFileHandler.js
+-viewer:chrome:editor:content:default:viewsource.js
+-viewer:chrome:editor:content:default:viewsource.xul 
+viewer:chrome:directory:* 
+viewer:chrome:global:* 
+viewer:chrome:history:* 
+viewer:chrome:navigator:* 
+viewer:chrome:pref:* 
+viewer:chrome:profile:* 
+viewer:chrome:related:* 
+viewer:chrome:sidebar:* 
+viewer:chrome:wallet:*
+viewer:chrome:xpinstall:* 
+viewer:chrome:xul.css
+viewer:defaults:pref:all.js 
+viewer:defaults:pref:config.js 
+viewer:defaults:pref:initpref.js 
+viewer:defaults:pref:macprefs.js 
+viewer:defaults:pref:xpinstall.js
+viewer:defaults:profile:*
+viewer:res:html.css
+viewer:res:ua.css
+viewer:res:maccharset.properties 
+viewer:res:charsetalias.properties 
+viewer:res:entityTables:*
+viewer:res:rdf:article.gif
+viewer:res:rdf:document.gif
+viewer:res:rdf:folder-closed.gif
+viewer:res:rdf:folder-open.gif
+viewer:res:rdf:loading.gif
+viewer:res:xpinstall:*
+viewer:res:throbber:*
+viewer:res:toolbar:*
 
 [mail] 
-Components:MsgAddrbook.shlb 
-Components:MsgAddrbook.xpt 
-Components:mimeEmitter.shlb 
-Components:mailnews.shlb 
-Components:mailnews.xpt 
-Components:Mime.shlb 
-Components:Mime.xpt 
-Components:Mork.shlb 
-Components:MsgCompose.shlb 
-Components:MsgCompose.xpt 
-Components:MsgDB.shlb 
-Components:MsgDB.xpt 
-Components:MsgImap.shlb 
-Components:MsgImap.xpt 
-Components:MsgLocal.shlb 
-Components:MsgLocal.xpt 
-Components:MsgNews.shlb 
-Components:MsgNews.xpt 
-Components:vcard.shlb 
-chrome:addressbook:* 
-chrome:messenger:* 
-chrome:messengercompose:* 
-defaults:pref:mailnews.js
+viewer:Components:MsgAddrbook.shlb 
+viewer:Components:MsgAddrbook.xpt 
+viewer:Components:mimeEmitter.shlb 
+viewer:Components:mailnews.shlb 
+viewer:Components:mailnews.xpt 
+viewer:Components:Mime.shlb 
+viewer:Components:Mime.xpt 
+viewer:Components:Mork.shlb 
+viewer:Components:MsgCompose.shlb 
+viewer:Components:MsgCompose.xpt 
+viewer:Components:MsgDB.shlb 
+viewer:Components:MsgDB.xpt 
+viewer:Components:MsgImap.shlb 
+viewer:Components:MsgImap.xpt 
+viewer:Components:MsgLocal.shlb 
+viewer:Components:MsgLocal.xpt 
+viewer:Components:MsgNews.shlb 
+viewer:Components:MsgNews.xpt 
+viewer:Components:vcard.shlb 
+viewer:chrome:addressbook:* 
+viewer:chrome:messenger:* 
+viewer:chrome:messengercompose:* 
+viewer:defaults:pref:mailnews.js
