@@ -242,8 +242,11 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
        * message queue.  In that case, the message won't appear, and code will
        * be 0xFFFF.  We'll give the user a chance to debug it by calling
        * Break()
+       * Actually, that's a really bad idea since this happens a lot with threadsafe
+       * assertions and since it means that you can't actually run the debug build
+       * outside a debugger without it crashing constantly.
        */
-      if( code == MBID_ENTER )
+      if(( code == MBID_ENTER ) || (code == MBID_ERROR))
       {
          return;
          // If Retry, Fall Through
