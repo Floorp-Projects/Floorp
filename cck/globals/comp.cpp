@@ -26,6 +26,30 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 	*compNum = 0;
 	int invNum = *compNum;
 	CString componentstr;
+  bool bCalendarExists = FALSE;
+  bool bCalendarInserted = FALSE;
+
+  CString strCMRE = "Component Marker Recommended End";
+  CString strCMFE = "Component Marker Full End";
+  CString strCMCE = "Component Marker Custom End";
+
+  
+  // see if Calendar exists
+
+  int iLastSlash = iniSrcPath.ReverseFind(_T('\\'));
+
+  if (iLastSlash)
+  {
+    CString strCalendarXPIPath = iniSrcPath.Left(iLastSlash);
+    CFileStatus fs;
+
+    strCalendarXPIPath += "\\calendar.xpi";
+
+    if (CFile::GetStatus(strCalendarXPIPath,fs)) // exists
+      bCalendarExists = TRUE;
+  }
+
+
 
 	// Get all the component info from each component section
 	char component[MAX_SIZE];
@@ -37,11 +61,13 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 	
 	componentstr.Format("C%d", *compNum);
 	strcpy(tempcomponentstr, componentstr);
+
 	GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, 
 		MAX_SIZE, iniSrcPath);
 
 	GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, 
 		iniSrcPath);
+
 	while (*archive)
 	{
 		GetPrivateProfileString(component, "Description Short", "", 
@@ -51,7 +77,46 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 		GetPrivateProfileString(component, "Attributes", "", 
 			attr, MAX_SIZE, iniSrcPath);
 
-		if (strcmp(component, "Component AOD") == 0)
+
+    if (!bCalendarInserted && bCalendarExists)
+    {
+      CString str = component;
+
+      if (   str.Find(strCMRE) != -1
+          || str.Find(strCMFE) != -1
+          || str.Find(strCMCE) != -1) // found CMRE, CMFE, or CMCE
+      {
+
+        comps[*compNum].archive       = CString("calendar.xpi");
+	      comps[*compNum].compname      = CString("Component Calendar");
+	      comps[*compNum].name 	        = CString("Calendar");
+	      comps[*compNum].desc 	        = CString("Calendar Client");
+
+	      comps[*compNum].selected      = 
+	      comps[*compNum].forceupgrade  = 
+	      comps[*compNum].empty	        = 1;
+
+    	  comps[*compNum].invisible     = 
+	      comps[*compNum].launchapp     = 
+	      comps[*compNum].additional    = 
+	      comps[*compNum].disabled      = 
+	      comps[*compNum].uncompress    = 
+	      comps[*compNum].downloadonly  = 
+	      comps[*compNum].unselected    = 0;
+
+		    if (!(comps[*compNum].selected && comps[*compNum].invisible && 
+			    invisibleCount))
+        {
+			    (*compNum)++;
+        }
+
+        bCalendarInserted = TRUE;
+      }
+    }
+    
+
+    
+    if (strcmp(component, "Component AOD") == 0)
 			strcpy(attr, "SELECTED");
 
 		comps[*compNum].archive  = CString(archive);
@@ -73,25 +138,20 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 			invisibleCount))
 		{
 			(*compNum)++;
-			invNum++;
-			componentstr.Format("C%d", invNum);
-			strcpy(tempcomponentstr, componentstr);
-			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", 
-				component, MAX_SIZE, iniSrcPath);
-		}
-		else
-		{
-			invNum++;
-			componentstr.Format("C%d", invNum);
-			strcpy(tempcomponentstr, componentstr);
-			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", 
-				component, MAX_SIZE, iniSrcPath);
-		}
+    }
+
+    invNum++;
+		componentstr.Format("C%d", invNum);
+		strcpy(tempcomponentstr, componentstr);
+
+		GetPrivateProfileString("Setup Type2", tempcomponentstr, "", 
+				                    component, MAX_SIZE, iniSrcPath);
+
 		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, 
 			iniSrcPath);
 	}
 
-
+/*
   // add in Calendar if it exists
 
   int iLastSlash = iniSrcPath.ReverseFind(_T('\\'));
@@ -128,6 +188,7 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
     }  // file exists
 
   } // slash found
+*/
 
 	return TRUE;
 }
