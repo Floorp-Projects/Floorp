@@ -682,7 +682,7 @@ char* nsString::ToNewCString() const {
  * http://www.cis.ohio-state.edu/htbin/rfc/rfc2279.html
  */
 char* nsString::ToNewUTF8String() const {
-  nsCString temp(*this);
+  nsCString temp("");
   temp.SetCapacity(8); //ensure that we get an allocated buffer instead of the common empty one.
 
   // Caculate how many bytes we need
