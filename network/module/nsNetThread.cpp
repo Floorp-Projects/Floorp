@@ -113,6 +113,8 @@ nsresult NS_InitNetlib(void)
                                      NET_PluginStream);
     NET_RegisterContentTypeConverter("application/*", FO_NGLAYOUT, NULL,
                                      NET_PluginStream);
+    NET_RegisterContentTypeConverter(MESSAGE_RFC822, FO_NGLAYOUT, NULL,
+                                     NET_PluginStream);
 
     NET_RegisterEncodingConverter(ENCODING_GZIP,
                                   (void *) ENCODING_GZIP,
