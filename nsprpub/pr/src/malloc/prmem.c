@@ -233,7 +233,7 @@ pr_ZoneMalloc(PRUint32 size)
     }
     if (zone < MEM_ZONES) {
         pthread_t me = pthread_self();
-        unsigned int pool = (ptrdiff_t)me % THREAD_POOLS;
+        unsigned int pool = (PRUptrdiff)me % THREAD_POOLS;
         PRUint32     wasLocked;
         mz = &zones[zone][pool];
         wasLocked = mz->locked;
