@@ -1,0 +1,57 @@
+classic.jar:
+  skin/classic/communicator/brand.css
+  skin/classic/communicator/button.css
+  skin/classic/communicator/communicator.css
+  skin/classic/communicator/contents.rdf
+  skin/classic/communicator/dialogs.css
+  skin/classic/communicator/formatting.css
+  skin/classic/communicator/plugins.css
+  skin/classic/communicator/prefpanels.css
+  skin/classic/communicator/smileys.css
+  skin/classic/communicator/tasksOverlay.css
+  skin/classic/communicator/alerts/alert.css                  (alerts/alert.css)
+  skin/classic/communicator/icons/loading.gif                 (icons/loading.gif)
+  skin/classic/communicator/icons/lock-broken.gif             (icons/lock-broken.gif)
+  skin/classic/communicator/icons/lock-insecure.gif           (icons/lock-insecure.gif)
+  skin/classic/communicator/icons/lock-secure.gif             (icons/lock-secure.gif)
+  skin/classic/communicator/icons/offline.gif                 (icons/offline.gif)
+  skin/classic/communicator/icons/online.gif                  (icons/online.gif)
+  skin/classic/communicator/icons/smileys/cool_n.gif                (icons/smileys/cool_n.gif)
+  skin/classic/communicator/icons/smileys/cry_n.gif                 (icons/smileys/cry_n.gif)
+  skin/classic/communicator/icons/smileys/embarrassed_n.gif         (icons/smileys/embarrassed_n.gif)
+  skin/classic/communicator/icons/smileys/foot_n.gif                (icons/smileys/foot_n.gif)
+  skin/classic/communicator/icons/smileys/frown_n.gif               (icons/smileys/frown_n.gif)
+  skin/classic/communicator/icons/smileys/innocent_n.gif            (icons/smileys/innocent_n.gif)
+  skin/classic/communicator/icons/smileys/kiss_n.gif                (icons/smileys/kiss_n.gif)
+  skin/classic/communicator/icons/smileys/laughing_n.gif            (icons/smileys/laughing_n.gif)
+  skin/classic/communicator/icons/smileys/money_n.gif               (icons/smileys/money_n.gif)
+  skin/classic/communicator/icons/smileys/sealed_n.gif              (icons/smileys/sealed_n.gif)
+  skin/classic/communicator/icons/smileys/smile_n.gif               (icons/smileys/smile_n.gif)
+  skin/classic/communicator/icons/smileys/smiley-cool.png           (icons/smileys/smiley-cool.png)
+  skin/classic/communicator/icons/smileys/smiley-cry.png            (icons/smileys/smiley-cry.png)
+  skin/classic/communicator/icons/smileys/smiley-embarassed.png     (icons/smileys/smiley-embarassed.png)
+  skin/classic/communicator/icons/smileys/smiley-foot-in-mouth.png  (icons/smileys/smiley-foot-in-mouth.png)
+  skin/classic/communicator/icons/smileys/smiley-frown.png          (icons/smileys/smiley-frown.png)
+  skin/classic/communicator/icons/smileys/smiley-innocent.png       (icons/smileys/smiley-innocent.png)
+  skin/classic/communicator/icons/smileys/smiley-kiss.png           (icons/smileys/smiley-kiss.png)
+  skin/classic/communicator/icons/smileys/smiley-laughing.png       (icons/smileys/smiley-laughing.png)
+  skin/classic/communicator/icons/smileys/smiley-money-mouth.png    (icons/smileys/smiley-money-mouth.png)
+  skin/classic/communicator/icons/smileys/smiley-sealed.png         (icons/smileys/smiley-sealed.png)
+  skin/classic/communicator/icons/smileys/smiley-smile.png          (icons/smileys/smiley-smile.png)
+  skin/classic/communicator/icons/smileys/smiley-surprised.png      (icons/smileys/smiley-surprised.png)
+  skin/classic/communicator/icons/smileys/smiley-tongue-out.png     (icons/smileys/smiley-tongue-out.png)
+  skin/classic/communicator/icons/smileys/smiley-undecided.png      (icons/smileys/smiley-undecided.png)
+  skin/classic/communicator/icons/smileys/smiley-wink.png           (icons/smileys/smiley-wink.png)
+  skin/classic/communicator/icons/smileys/smiley-yell.png           (icons/smileys/smiley-yell.png)
+  skin/classic/communicator/icons/smileys/surprise_n.gif            (icons/smileys/surprise_n.gif)
+  skin/classic/communicator/icons/smileys/tongue_n.gif              (icons/smileys/tongue_n.gif)
+  skin/classic/communicator/icons/smileys/undecided_n.gif           (icons/smileys/undecided_n.gif)
+  skin/classic/communicator/icons/smileys/wink_n.gif                (icons/smileys/wink_n.gif)
+  skin/classic/communicator/icons/smileys/yell_n.gif                (icons/smileys/yell_n.gif)
+  skin/classic/communicator/pref/pref.css                     (pref/pref.css)
+  skin/classic/communicator/profile/migrate.gif               (profile/migrate.gif)
+  skin/classic/communicator/profile/profile.css               (profile/profile.css)
+  skin/classic/communicator/profile/profileicon-large.gif     (profile/profileicon-large.gif)
+  skin/classic/communicator/profile/profileManager.css        (profile/profileManager.css)
+  skin/classic/communicator/xpinstall/xpinstall.css           (xpinstall/xpinstall.css)
+  

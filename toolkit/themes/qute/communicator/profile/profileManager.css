@@ -1,0 +1,14 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#dialoginfo {
+  width: 36em;
+}
+
+#table-housing {
+  background-color: white;
+  height: 100%;
+}
+
+#buttons-box {
+  margin-left: 1em;
+}

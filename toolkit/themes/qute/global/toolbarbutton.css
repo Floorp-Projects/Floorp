@@ -1,0 +1,133 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== toolbarbutton.css =====================================================
+  == Styles used by the XUL button element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: toolbarbutton ::::: */
+
+toolbarbutton {
+  -moz-appearance: toolbarbutton;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  margin: 0;
+  border: 1px solid transparent;
+  padding: 4px;
+  background-color: transparent;
+  color: -moz-DialogText;
+}
+
+.toolbarbutton-icon {
+  margin-right: 2px;
+}
+
+.toolbarbutton-text {
+  margin: 0 !important;
+  text-align: center;
+}
+
+toolbarbutton:hover,
+toolbarbutton[buttonover="true"] {
+  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
+}
+
+toolbarbutton:hover:active,
+toolbarbutton[open="true"] {
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+  padding: 5px 3px 3px 5px;
+}
+
+toolbarbutton[disabled="true"],
+toolbarbutton[disabled="true"]:hover,
+toolbarbutton[disabled="true"]:hover:active,
+toolbarbutton[disabled="true"][open="true"] {
+  border-color: transparent;
+  padding: 4px;
+  color: GrayText;
+}
+
+/* ..... checked state ..... */
+
+toolbarbutton[checked="true"] {
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
+  padding: 5px 3px 3px 5px !important;
+  background-image: url("chrome://global/skin/toolbar/Lighten.png");
+  color: ButtonText !important;
+}
+
+/* ::::: toolbarbutton menu ::::: */
+
+.toolbarbutton-menu-dropmarker {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+.toolbarbutton-menu-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+}
+
+/* ::::: toolbarbutton menu-button ::::: */
+
+toolbarbutton[type="menu-button"] {
+  -moz-box-align: stretch;
+  -moz-box-orient: horizontal !important;
+}
+
+toolbarbutton[type="menu-button"],
+toolbarbutton[type="menu-button"]:hover,
+toolbarbutton[type="menu-button"]:hover:active,
+toolbarbutton[type="menu-button"][open="true"],
+toolbarbutton[type="menu-button"][disabled="true"],
+toolbarbutton[type="menu-button"][disabled="true"]:hover,
+toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
+  border-style: none;
+  padding: 0;
+}
+
+.toolbarbutton-menubutton-button {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  -moz-box-orient: vertical;
+}
+
+/* .......... dropmarker .......... */
+
+.toolbarbutton-menubutton-dropmarker {
+  -moz-box-align: center;
+  padding: 0 0 1px 0;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  -moz-image-region: auto; /* cut off inheritance */
+}
+
+.toolbarbutton-menubutton-dropmarker[disabled="true"] {
+  padding: 0 0 1px 0 !important;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif") !important;
+}
+
+toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
+toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+  padding: 1px 0 0 0;
+}

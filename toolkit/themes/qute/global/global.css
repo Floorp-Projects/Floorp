@@ -1,0 +1,165 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== global.css =====================================================
+  == Styles that apply everywhere.
+  ======================================================================= */
+
+/* all localizable skin settings shall live here */
+@import url("chrome://global/locale/intl.css");
+
+@import url("chrome://global/skin/formatting.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: XBL bindings ::::: */
+
+radio {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#radio");
+}
+
+menulist > menupopup,
+.menulist-menupopup {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
+}
+
+.menulist-compact {
+  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
+}
+
+/* ::::: root elements ::::: */
+
+window,
+page,
+dialog,
+wizard {
+  -moz-appearance: window;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  font: message-box;
+}
+
+/* deprecated */
+window.dialog {
+  padding: 8px 10px 10px 8px;
+}
+
+[wait-cursor] {
+  cursor: wait !important;
+}
+
+/* ::::: alert icons :::::*/
+
+.message-icon,
+.alert-icon,
+.error-icon,
+.question-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.message-icon {
+  list-style-image: url("chrome://global/skin/icons/Message.png");
+}
+
+.alert-icon {
+  list-style-image: url("chrome://global/skin/icons/Warning.png");
+}
+
+.error-icon {
+  list-style-image: url("chrome://global/skin/icons/Error.png");
+}
+
+.question-icon {
+  list-style-image: url("chrome://global/skin/icons/Question.png");
+}
+
+/* ::::: iframe ::::: */
+
+iframe {
+  border: none;
+  width: 100px;
+  height: 100px;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+/* ::::: statusbar ::::: */
+
+statusbar {
+  -moz-appearance: statusbar;
+  border-top: 1px solid ThreeDLightShadow;
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
+  background-color: -moz-Dialog;
+  min-height: 22px;
+}
+
+statusbarpanel {
+  -moz-appearance: statusbarpanel;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  border-left: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  padding: 0 4px;
+}
+
+.statusbar-resizerpanel {
+  -moz-box-align: end;
+  -moz-box-pack: end;
+  -moz-appearance: resizerpanel;
+  padding: 0px;
+  border: none;
+}
+
+.statusbarpanel-iconic {
+  padding: 0px;
+}
+
+resizer[dir="bottomright"] {
+  -moz-appearance: resizer;
+  cursor: se-resize;
+}
+
+/* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
+
+sidebarheader {
+  -moz-appearance: toolbox;
+  height: 25px;
+  background-color: -moz-Dialog;
+  border-bottom: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDHighlight;
+}
+
+sidebarheader > label {
+  padding-left: 4px;
+}
+
+/* ::::: miscellaneous ::::: */
+
+.toolbar-focustarget {
+  -moz-user-focus: ignore !important;
+}

@@ -1,0 +1,101 @@
+#downloadManager {
+  background-color: ThreeDFace;
+}
+
+/* Download View */
+#downloadView {
+  -moz-binding: url("chrome://mozapps/skin/downloads/downloads.xml#download-view");
+  margin: 10px 10px 5px 10px;
+  -moz-appearance: listbox;
+  -moz-user-focus: normal;
+}
+
+.downloadViewInner2 {
+  background-image: url("chrome://mozapps/skin/downloads/viewFader.png");
+  padding: 0px;
+}  
+
+.downloadViewInner1 {
+  background-color: Window;
+  background-image: url("chrome://mozapps/skin/downloads/downloadsBG.png");
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-position: bottom right;
+}
+
+/* Download Manager Command Bar */
+#commandBar {
+  padding: 0px 10px 5px 10px;
+}
+
+#cleanUpButton {
+  margin: 0px;
+  -moz-user-focus: ignore;
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanup.png");
+}
+
+#optionsButton {
+  margin: 0px;
+  -moz-user-focus: ignore;
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadOptions.png");
+}
+
+#cleanUpButton .button-icon, #optionsButton .button-icon {
+  margin: 0px 5px 0px 0px !important;
+}
+
+#cleanUpButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanupDisabled.png");
+}
+
+#commandBarSeparator {
+  margin-left: 5px;
+}
+
+/* Download View Items */
+download {
+  padding: 13px 10px 13px 13px;
+  min-height: 25px;
+  border-bottom: 1px dotted #C0C0C0;
+}
+
+download[selected="true"] {
+  background-image: url("chrome://mozapps/skin/downloads/downloadSelected.png") !important;
+  border-bottom: 1px dotted #7F9DB9;
+}
+
+download[state="0"], download[state="-1"], download[state="4"], 
+download[state="5"], download[state="6"] {
+  background-color: transparent;
+  background-image: url("chrome://mozapps/skin/downloads/downloadFader.png");
+}
+
+/* Download View Items, implementation */
+.downloadContentBox {
+  -moz-opacity: 0.0;
+}
+
+.downloadContentBox[animated="true"] {
+  -moz-opacity: 1.0;
+}
+
+.downloadTypeIcon {
+  margin-right: 10px;
+}
+
+.link {
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+  -moz-user-focus: normal;
+  border: 1px solid transparent;
+}
+
+.link:hover:active {
+  color: red;
+}
+
+.link:focus {
+  border: 1px dotted black;
+}
+

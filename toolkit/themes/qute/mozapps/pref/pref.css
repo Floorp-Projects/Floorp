@@ -1,0 +1,112 @@
+/*
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla.org Code.
+#
+# The Initial Developer of the Original Code is
+# Doron Rosenberg.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@netscape.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+.listBox {
+  -moz-appearance: listbox;
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+}
+
+.indent {
+  margin-left: 23px;
+  margin-right: 23px;
+}
+
+.small-indent {
+  margin-left: 15px; 
+}
+
+.uniWidthButton {
+  min-width: 8em;
+}
+
+/** Privacy/Advanced Panels Expander Boxes **/
+.settingsBox {
+  margin: 5px;
+  padding: 5px;
+}
+
+#fileExtension {
+  width: 5em; 
+}
+
+#fileExtension.pluginsList {
+  width: 5.5em; 
+}
+
+#typeIcon, 
+.extensionChildren::-moz-tree-image(fileExtension),
+.pluginTypesChildren::-moz-tree-image(fileExtension) {
+  margin: 0px 5px 0px 0px;
+}
+
+.pluginTypesChildren::-moz-tree-image(pluginEnabled) {
+  margin: 0px 5px 0px 0px;
+  list-style-image: url(chrome://mozapps/skin/pref/dot.gif);  
+}
+
+.pluginTypesChildren::-moz-tree-image(pluginEnabled, enabled) {
+  margin: 0px 5px 0px 0px;
+  list-style-image: url(chrome://mozapps/skin/pref/check.gif);  
+}
+
+.biggerIndent {
+  margin-left: 28px; 
+}
+
+#typeField {
+  font-weight: bold; 
+}
+
+#defaultAppName {
+  margin-left: 6px !important; 
+}/* #fileHandlersListContainer {  -moz-binding: url("chrome://mozapps/skin/downloads/downloads.xml#download-view");
+  -moz-appearance: listbox;
+  -moz-user-focus: normal;
+} * We apply the background to both of these elements since the tree leaves a 2-3px * strip on its right side unpainted. We can't just paint the background layer either * because the tree erases its background with white, obscuring the bottom layer. #fileHandlersList, #fileHandlersListContainer > .downloadViewInner1 {  background-image: url("chrome://mozapps/skin/downloads/downloadsBG.png");
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-position: bottom right;    -moz-appearance: none;  border: none;
+}
+*/

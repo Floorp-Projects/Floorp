@@ -1,0 +1,81 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== popup.css ===================================================
+  == Styles used by the XUL popup element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: menupopup ::::: */
+
+menupopup,
+popup {
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
+  padding: 1px;
+  min-width: 1px;
+  background-color: Menu;
+}
+
+/* ::::: tooltip ::::: */
+
+tooltip {
+  -moz-appearance: tooltip;
+  margin-top: 21px;
+  border: 1px solid InfoText;
+  padding: 2px 3px;
+  max-width: 40em;
+  background-color: InfoBackground;
+  color: InfoText;
+  font: message-box;
+}
+
+.tooltip-label {
+  margin: 0px !important;
+}
+
+tooltip[titletip="true"] {
+ /* See bug 32157 comment 128
+  * margin: -2px 0px 0px -3px;
+  */
+  max-width: none;
+}
+
+/* rules for popups associated with menulists */
+
+menulist > menupopup,
+.menulist-menupopup {
+  border-width: 1px;
+  -moz-border-top-colors: -moz-FieldText;
+  -moz-border-right-colors: -moz-FieldText;
+  -moz-border-bottom-colors: -moz-FieldText;
+  -moz-border-left-colors: -moz-FieldText;
+  padding: 0px;
+  min-width: 0px;
+  background-color: -moz-Field;
+}
+

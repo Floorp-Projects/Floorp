@@ -1,0 +1,45 @@
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+.tabbrowser-strip {
+
+}
+
+tabpanels {
+  -moz-appearance: none;
+}
+
+.tabbrowser-tabs {
+	padding-top: 1px;
+        background: transparent url("chrome://global/skin/icons/tabstrip-bottom.png") repeat-x bottom center !important;
+        	padding-left: 2px;
+}
+
+.tabs-left,
+.tabs-right {
+  width: 3px;
+  border-bottom-width: 0px;
+}
+
+.tab-icon {
+  margin-top: 1px;
+  margin-right: 3px;
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+tab[busy] > .tab-icon {
+  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
+  -moz-opacity: 0.5;
+}
+
+tab[selected="true"] {
+  font-weight: bold;
+  margin-bottom: 0px;
+}
+
+tab {
+  margin-bottom: 1px;
+}

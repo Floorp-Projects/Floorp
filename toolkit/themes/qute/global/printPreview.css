@@ -1,0 +1,38 @@
+/* ..... page navigation ..... */
+
+.home-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp-end.gif");
+}
+
+.end-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp-end.gif");
+}
+
+.left-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
+}
+
+.right-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
+}
+
+/* ...... scale in/decrement ..... */
+
+.up-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-sharp.gif");
+}
+
+.down-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
+}
+
+
+/* ..... orientation ..... */
+
+.toolbar-portrait-page {
+  list-style-image: url("chrome://global/skin/Portrait-small.png");
+}
+
+.toolbar-landscape-page {
+  list-style-image: url("chrome://global/skin/Landscape-small.png");
+}

@@ -1,0 +1,295 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== tree.css ===================================================
+  == Styles used by the XUL outline element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: tree ::::: */
+
+tree {
+  margin: 0px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-appearance: listbox;
+}
+
+/* ::::: tree rows ::::: */
+
+treechildren::-moz-tree-row {
+  border: 1px solid transparent;
+  min-height: 18px;
+  height: 1.3em;
+}
+
+treechildren::-moz-tree-row(selected) {
+  background-color: -moz-Dialog;
+}
+
+treechildren::-moz-tree-row(selected, focus) {
+  background-color: Highlight;
+}
+
+treechildren::-moz-tree-row(current, focus) {
+  border: 1px dotted #F5DB95;
+}
+
+/* ::::: tree cells ::::: */
+
+treechildren::-moz-tree-cell {
+  padding: 0px 2px 0px 2px;
+}
+
+treechildren::-moz-tree-cell-text {
+  color: inherit;
+}
+
+treechildren::-moz-tree-cell-text(selected) {
+  color: -moz-DialogText;
+}
+
+treechildren::-moz-tree-cell-text(selected, focus) {
+  color: HighlightText;
+}
+
+
+/* ::::: lines connecting cells ::::: */
+
+treechildren::-moz-tree-line {
+  border: 1px dotted ThreeDShadow;
+}
+
+treechildren::-moz-tree-line(selected, focus) {
+  border: 1px dotted HighlightText;
+}
+
+
+/* ::::: tree separator ::::: */
+
+treechildren::-moz-tree-separator {
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+}
+
+
+/* ::::: drop feedback ::::: */
+
+treechildren::-moz-tree-cell-text(primary, dropOn) {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+treechildren::-moz-tree-drop-feedback {
+  background-color: Highlight;
+  width: 50px;
+  height: 2px;
+  margin-left: 5px;
+}
+
+/* ::::: tree progress meter ::::: */
+
+treechildren::-moz-tree-progressmeter {
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  background-color: -moz-Dialog;
+  color: ThreeDShadow;
+}
+
+treechildren::-moz-tree-progressmeter(progressUndetermined) {
+  list-style-image: url("chrome://global/skin/progressmeter/progressmeter-busy.gif");
+}
+
+treechildren::-moz-tree-cell-text(progressmeter) {
+  margin: 2px 4px;
+}
+
+/* ::::: tree columns ::::: */
+
+treecol,
+treecolpicker {
+  -moz-appearance: treeheadercell;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  padding: 0px 4px;
+}
+
+.treecol-image {
+  padding: 0px 1px;
+}
+
+.treecol-text {
+  margin: 0px !important;
+}
+
+treecol[hideheader="true"] {
+  -moz-appearance: none;
+  border: none;
+  padding: 0;
+}
+
+/* ..... internal box ..... */
+
+treecol:hover:active,
+treecolpicker:hover:active {
+  border-top: 2px solid;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-left: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  padding: 1px 4px 0px 5px;
+}
+
+.treecol-image:hover:active {
+  padding: 1px 1px 0px 2px;
+}
+
+/* ::::: column drag and drop styles ::::: */
+
+treecol[dragging="true"] {
+  -moz-border-top-colors: ThreeDDarkShadow transparent !important;
+  -moz-border-right-colors: ThreeDDarkShadow transparent!important;
+  -moz-border-bottom-colors: ThreeDDarkShadow transparent !important;
+  -moz-border-left-colors: ThreeDDarkShadow transparent !important;
+  background-color: ThreeDShadow !important;
+  color: ThreeDHighlight !important;
+}
+
+treecol[insertafter="true"] {
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
+treecol[insertbefore="true"] {
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
+treechildren::-moz-tree-column(insertbefore) {
+  border-left: 1px solid ThreeDShadow;
+}
+
+treechildren::-moz-tree-column(insertafter) {
+  border-right: 1px solid ThreeDShadow;
+}
+
+/* ::::: sort direction indicator :::::  */
+
+.treecol-sortdirection {
+  list-style-image: none;
+}
+
+treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
+}
+
+treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
+}
+
+/* ::::: column picker :::::  */
+
+.tree-columnpicker-icon {
+  list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
+}
+
+/* ::::: twisty :::::  */
+
+treechildren::-moz-tree-twisty {
+  padding-right: 4px;
+  padding-top: 1px;
+  width: 9px; /* The image's width is 9 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
+}
+
+treechildren::-moz-tree-twisty(open) {
+  width: 9px; /* The image's width is 9 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
+}
+
+treechildren::-moz-tree-indentation {
+  width: 18px;
+}
+
+/* ::::: gridline style ::::: */
+
+treechildren.gridlines::-moz-tree-cell {
+  border-right: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+}
+
+treechildren.gridlines::-moz-tree-row {
+  border: none;
+}
+
+treechildren::-moz-tree-image(Name) {
+  padding-right: 2px;
+}
+
+treechildren::-moz-tree-image(Name) {
+  margin: 0px 2px;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+treechildren::-moz-tree-image(Name, container) {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+treechildren::-moz-tree-image(Name, open) {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+
+treechildren::-moz-tree-image(Name, separator) {
+  list-style-image: none;
+  width: 0px !important;
+  height: 0px !important;
+  margin: 0px 0px;
+}
+
+treechildren::-moz-tree-cell-text(Name, separator) {
+  color: ThreeDShadow;
+  margin: 0px 5px 0px 5px;
+}
+
+treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
+  color: HighlightText;
+}
