@@ -226,14 +226,19 @@ if ($webdotbase =~ /^https?:/) {
 
     # First, generate the png image file from the .dot source
 
-    my $dotfh;
     my ($pngfh, $pngfilename) = File::Temp::tempfile("XXXXXXXXXX",
                                                      SUFFIX => '.png',
                                                      DIR => $webdotdir);
-    open (DOT, '-|') or exec ($webdotbase, "-Tpng", $filename);
+    binmode $pngfh;
+    open(DOT, "$webdotbase -Tpng $filename|");
+    binmode DOT;
     print $pngfh $_ while <DOT>;
     close DOT;
     close $pngfh;
+    
+    # On Windows $pngfilename will contain \ instead of /
+    $pngfilename =~ s|\\|/|g if $^O eq 'MSWin32';
+    
     $vars->{'image_url'} = $pngfilename;
 
     # Then, generate a imagemap datafile that contains the corner data
@@ -243,7 +248,9 @@ if ($webdotbase =~ /^https?:/) {
     my ($mapfh, $mapfilename) = File::Temp::tempfile("XXXXXXXXXX",
                                                      SUFFIX => '.map',
                                                      DIR => $webdotdir);
-    open (DOT, '-|') or exec ($webdotbase, "-Tismap", $filename);
+    binmode $mapfh;
+    open(DOT, "$webdotbase -Tismap $filename|");
+    binmode DOT;
     print $mapfh $_ while <DOT>;
     close DOT;
     close $mapfh;
