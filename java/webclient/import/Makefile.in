@@ -39,10 +39,10 @@ import: $(JAVAXPIDLSRCS)
 $(JAVAXPIDLSRCS) :
 	cp $(DEPTH)/dist/idl/$(@F) .
 
-mvjava2stubs:
+mvjava2stubs: idl2java
 	mv *.java ../classes_spec/org/mozilla/webclient/stubs
 
-chPackageinStubs:
+chPackageinStubs: idl2java
 	perl chPackage.pl unix nsIProfile.java "org.mozilla.webclient.stubs"
 
 export:: import idl2java chPackageinStubs mvjava2stubs
