@@ -1048,17 +1048,9 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
         state.prevMaxPosBottomMargin = bottomMargin;
       }
     } else {
-      // Get style info
-      nsIStyleContext* kidSC;
-
-      kidFrame->GetStyleContext(aPresContext, kidSC);
-      nsStyleMolecule* kidMol =
-        (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-      nscoord topMargin = kidMol->margin.top;
-      NS_RELEASE(kidSC);
-
-      // Initialize y to start after the top margin
-      state.y = topMargin;
+      state.prevMaxNegBottomMargin = 0;
+      state.prevMaxPosBottomMargin = 0;
+      state.y = 0;
     }
 
     aSpaceManager->Translate(0, state.y);
@@ -1079,13 +1071,20 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       kidFrame->GetStyleContext(aPresContext, kidSC);
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
+      nscoord topMargin = GetTopMarginFor(aPresContext, state, kidFrame, kidMol);
 
       nsRect kidRect;
       nsSize kidAvailSize(state.availSize);
 
+      if (PR_FALSE == state.unconstrainedHeight) {
+        kidAvailSize.height -= topMargin;
+      }
+  
       // Reflow the child
+      state.spaceManager->Translate(0, topMargin);
       aStatus = ReflowChild(kidFrame, aPresContext, kidMol, state.spaceManager,
                             kidAvailSize, kidRect, nsnull);
+      state.spaceManager->Translate(0, -topMargin);
 
       // Did it fit?
       if ((kidFrame != mFirstChild) &&
@@ -1100,6 +1099,8 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       }
 
       // Place the child
+      state.y += topMargin;
+      state.spaceManager->Translate(0, topMargin);
       nsSize  kidMaxElementSize;  // XXX unused
       kidRect.x += kidMol->margin.left;
       kidRect.y += state.y;
