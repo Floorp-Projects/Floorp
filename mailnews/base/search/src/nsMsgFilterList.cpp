@@ -299,41 +299,41 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
                                    nsIMsgFilterHitNotify *listener,
                                    nsIMsgWindow *msgWindow)
 {
-	nsCOMPtr <nsIMsgFilter>	filter;
-	PRUint32		filterCount = 0;
-	nsresult		rv = GetFilterCount(&filterCount);
+  nsCOMPtr <nsIMsgFilter>	filter;
+  PRUint32		filterCount = 0;
+  nsresult		rv = GetFilterCount(&filterCount);
   NS_ENSURE_SUCCESS(rv,rv);
-
-	for (PRUint32 filterIndex = 0; filterIndex < filterCount; filterIndex++)
-	{
-		if (NS_SUCCEEDED(GetFilterAt(filterIndex, getter_AddRefs(filter))))
-		{
-			PRBool isEnabled;
-			nsMsgFilterTypeType curFilterType;
-
-			filter->GetEnabled(&isEnabled);
-			if (!isEnabled)
-				continue;
-
-			filter->GetFilterType(&curFilterType);  
-			 if (curFilterType & filterType)
-			{
-				nsresult matchTermStatus = NS_OK;
-				PRBool result;
-
-				matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize, &result);
-				if (NS_SUCCEEDED(matchTermStatus) && result && listener)
-				{
-					PRBool applyMore = PR_TRUE;
-
-					rv = listener->ApplyFilterHit(filter, msgWindow, &applyMore);
-					if (NS_FAILED(rv) || !applyMore)
-						break;
-				}
-			}
-		}
-	}
-	return rv;
+  
+  for (PRUint32 filterIndex = 0; filterIndex < filterCount; filterIndex++)
+  {
+    if (NS_SUCCEEDED(GetFilterAt(filterIndex, getter_AddRefs(filter))))
+    {
+      PRBool isEnabled;
+      nsMsgFilterTypeType curFilterType;
+      
+      filter->GetEnabled(&isEnabled);
+      if (!isEnabled)
+        continue;
+      
+      filter->GetFilterType(&curFilterType);  
+      if (curFilterType & filterType)
+      {
+        nsresult matchTermStatus = NS_OK;
+        PRBool result;
+        
+        matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize, &result);
+        if (NS_SUCCEEDED(matchTermStatus) && result && listener)
+        {
+          PRBool applyMore = PR_TRUE;
+          
+          rv = listener->ApplyFilterHit(filter, msgWindow, &applyMore);
+          if (NS_FAILED(rv) || !applyMore)
+            break;
+        }
+      }
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -380,8 +380,8 @@ nsMsgFilterList::SaveToDefaultFile()
 
 typedef struct
 {
-	nsMsgFilterFileAttribValue	attrib;
-	const char			*attribName;
+  nsMsgFilterFileAttribValue	attrib;
+  const char			*attribName;
 } FilterFileAttribEntry;
 
 static FilterFileAttribEntry FilterFileAttribTable[] =

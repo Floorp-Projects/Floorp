@@ -434,6 +434,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
 NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
 									const char *headers, PRUint32 headersSize, PRBool *pResult)
 {
+  NS_ENSURE_ARG_POINTER(folder);
     // use offlineMail because
     nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::offlineMail, folder);
     if (!scope) return NS_ERROR_OUT_OF_MEMORY;
