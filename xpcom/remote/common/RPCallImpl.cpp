@@ -212,8 +212,8 @@ NS_IMETHODIMP RPCallImpl::Demarshal(void *  data, PRUint32  _size) {
             if (callSide == onServer) { //we need to allocate memory for out parametr
                 value->val.p = allocator->Alloc(sizeof(nsXPTCMiniVariant)); // sizeof(nsXPTCMiniVariant) is good
                 params[i].Init(*value,type);
+		params[i].ptr = params[i].val.p = value->val.p;
                 params[i].flags |= nsXPTCVariant::PTR_IS_DATA;
-                params[i].ptr = params[i].val.p;
             }
             continue;
         }
@@ -263,7 +263,7 @@ NS_IMETHODIMP RPCallImpl::Demarshal(void *  data, PRUint32  _size) {
         params[i].Init(*value,type);
 	if (isOut) {
             params[i].flags |= nsXPTCVariant::PTR_IS_DATA;
-            params[i].ptr = params[i].val.p;
+            params[i].ptr = params[i].val.p = *value.val.p;
         }
     }
     return NS_OK;
@@ -297,7 +297,7 @@ PRBool RPCallImpl::GetArraySizeFromParam( nsIInterfaceInfo *interfaceInfo,
                                           const nsXPTParamInfo& param,
                                           uint16 methodIndex,
                                           uint8 paramIndex,
-                                          nsXPTCMiniVariant* nativeParams,
+                                          nsXPTCVariant* nativeParams,
                                           SizeMode mode,
                                           PRUint32* result) {
     //code borrowed from mozilla/js/src/xpconnect/src/xpcwrappedjsclass.cpp
