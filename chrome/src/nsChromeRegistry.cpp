@@ -3189,7 +3189,6 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
     mChromeDataSource = nsnull;
     mScrollbarSheet = mFormSheet = nsnull;
     mInstallInitialized = mProfileInitialized = PR_FALSE;
-    (void)FlushCaches();
 
     if (!nsCRT::strcmp("shutdown-cleanse", NS_ConvertUCS2toUTF8(someData).get())) {
       nsCOMPtr<nsIFile> userChromeDir;
