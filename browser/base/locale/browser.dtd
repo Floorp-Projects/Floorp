@@ -109,7 +109,7 @@
 <!ENTITY downloads.label              "Downloads">
 <!ENTITY downloads.tooltip            "Displays the progress of ongoing downloads">
 <!ENTITY downloads.accesskey          "D">
-<!ENTITY downloads.commandkey         "E">
+<!ENTITY downloads.commandkey         "e">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
 <!ENTITY javaConsoleCmd.accesskey     "J">

@@ -90,7 +90,6 @@
                 <menu label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">
                   <menupopup id="viewSidebarMenu">
-                    <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar" key="key_openDownloads"/>
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
                     <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
                   </menupopup>
@@ -248,10 +247,14 @@
         
           <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="menu_ToolsPopup">
-              <menuitem id="downloads" label="&downloads.label;" accesskey="&downloads.accesskey;"
-                        oncommand="toDownloads();"/>
-              <menuitem id="javascriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
-              <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
+              <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;" 
+                        key="key_openDownloads" command="Tools:Downloads"/>
+              <menuseparator id="devToolsSeparator"/>
+              <menuitem id="javascriptConsole" 
+                        label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" 
+                        oncommand="toJavaScriptConsole();"/>
+              <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
+                        key="key_viewInfo" command="View:PageInfo"/>
 #ifndef XP_MACOSX
               <menuseparator id="prefSep"/>
 #endif
