@@ -55,187 +55,241 @@ private:
     static gc_allocator<JSObject> alloc;
 };
 
+/**
+ * Private representation of a JavaScript array.
+ */
+class JSArray : public JSObject {
+public:
+    void* operator new(size_t) { return alloc.allocate(1, 0); }
+    uint32 length() { return elements.size(); }
+    JSValue& operator[](uint32 n)
+    {
+        // obviously, a sparse representation might be better.
+        uint32 size = elements.size();
+        if (n >= size) resize(n, size);
+        return elements[n];
+    }
+private:
+    void resize(uint32 n, uint32 size)
+    {
+        do {
+            size *= 2;
+        } while (n >= size);
+        elements.resize(size);
+    }
+private:
+    JSValues elements;
+    static gc_allocator<JSArray> alloc;
+};
+
 // static allocator (required when gc_allocator<T> is allocator<T>.
 gc_allocator<JSObject> JSObject::alloc;
+gc_allocator<JSArray> JSArray::alloc;
 
 // operand access macros.
 #define op1(i) (i->itsOperand1)
 #define op2(i) (i->itsOperand2)
 #define op3(i) (i->itsOperand3)
 
+// mnemonic names for operands.
+#define dst(i) op1(i)
+#define src1(i) op2(i)
+#define src2(i) op3(i)
+
 JSValue interpret(ICodeModule *iCode, const JSValues& args)
 {
-	JSValue result;
-	JSValues frame(args);
-	JSValues registers(iCode->itsMaxRegister + 1);
-	static JSObject globals;
-	
-	InstructionIterator begin_pc = iCode->its_iCode->begin();
+    // fake global variables object.
+    static JSObject globals;
+
+    JSValue result;
+    JSValues frame(args);
+    JSValues registers(iCode->itsMaxRegister + 1);
+
+    // ensure that frame is large enough.
+    uint32 frameSize = iCode->itsMaxVariable + 1;
+    if (frameSize > frame.size())
+        frame.resize(frameSize);
+    
+    InstructionIterator begin_pc = iCode->its_iCode->begin();
     InstructionIterator end_pc = iCode->its_iCode->end();
     InstructionIterator pc = begin_pc;
     while (pc != end_pc) {
         Instruction* instruction = *pc;
-	    switch (instruction->opcode()) {
-		case MOVE_TO:
-			{
-				Move* mov = static_cast<Move*>(instruction);
-				registers[op1(mov)] = registers[op2(mov)];
-			}
-			break;
+        switch (instruction->opcode()) {
+        case MOVE_TO:
+            {
+                Move* mov = static_cast<Move*>(instruction);
+                registers[dst(mov)] = registers[src1(mov)];
+            }
+            break;
         case LOAD_NAME:
-			{
-				LoadName* ln = static_cast<LoadName*>(instruction);
-                registers[op1(ln)] = globals[*op2(ln)];
-			}
-			break;
-		case SAVE_NAME:
-			{
-				SaveName* sn = static_cast<SaveName*>(instruction);
-				globals[*op1(sn)] = registers[op2(sn)];
-			}
-			break;
-		case NEW_OBJECT:
+            {
+                LoadName* ln = static_cast<LoadName*>(instruction);
+                registers[dst(ln)] = globals[*src1(ln)];
+            }
+            break;
+        case SAVE_NAME:
+            {
+                SaveName* sn = static_cast<SaveName*>(instruction);
+                globals[*dst(sn)] = registers[src1(sn)];
+            }
+            break;
+        case NEW_OBJECT:
             {
                 NewObject* no = static_cast<NewObject*>(instruction);
-                registers[op1(no)].obj = new JSObject();
+                registers[dst(no)].object = new JSObject();
             }
             break;
-		case GET_PROP:
+        case GET_PROP:
             {
                 GetProp* gp = static_cast<GetProp*>(instruction);
-                JSObject* obj = registers[op2(gp)].obj;
-                registers[op1(gp)] = (*obj)[*op3(gp)];
+                JSObject* object = registers[src1(gp)].object;
+                registers[dst(gp)] = (*object)[*src2(gp)];
             }
             break;
-		case SET_PROP:
+        case SET_PROP:
             {
                 SetProp* sp = static_cast<SetProp*>(instruction);
-                JSObject* obj = registers[op2(sp)].obj;
-                (*obj)[*op1(sp)] = registers[op3(sp)];
+                JSObject* object = registers[dst(sp)].object;
+                (*object)[*src1(sp)] = registers[src2(sp)];
             }
             break;
-		case LOAD_IMMEDIATE:
-			{
-				LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
-				registers[op1(li)] = JSValue(op2(li));
-			}
-			break;
-		case LOAD_VAR:
-			{
-				LoadVar* lv = static_cast<LoadVar*>(instruction);
-				registers[op1(lv)] = frame[op2(lv)];
-			}
-			break;
-		case SAVE_VAR:
-			{
-				SaveVar* sv = static_cast<SaveVar*>(instruction);
-				frame[op1(sv)] = registers[op2(sv)];
-			}
-			break;
-		case BRANCH:
-			{
-				ResolvedBranch* bra = static_cast<ResolvedBranch*>(instruction);
-				pc = begin_pc + op1(bra);
-				continue;
-			}
-			break;
-		case BRANCH_LT:
-			{
-				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
-				if (registers[op2(bc)].i32 < 0) {
-					pc = begin_pc + op1(bc);
-					continue;
-				}
-			}
-			break;
-		case BRANCH_LE:
-			{
-				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
-				if (registers[op2(bc)].i32 <= 0) {
-					pc = begin_pc + op1(bc);
-					continue;
-				}
-			}
-			break;
-		case BRANCH_EQ:
-			{
-				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
-				if (registers[op2(bc)].i32 == 0) {
-					pc = begin_pc + op1(bc);
-					continue;
-				}
-			}
-			break;
-		case BRANCH_NE:
-			{
-				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
-				if (registers[op2(bc)].i32 != 0) {
-					pc = begin_pc + op1(bc);
-					continue;
-				}
-			}
-			break;
-		case BRANCH_GE:
-			{
-				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
-				if (registers[op2(bc)].i32 >= 0) {
-					pc = begin_pc + op1(bc);
-					continue;
-				}
-			}
-			break;
-		case BRANCH_GT:
-			{
-				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
-				if (registers[op2(bc)].i32 > 0) {
-					pc = begin_pc + op1(bc);
-					continue;
-				}
-			}
-			break;
-		case ADD:
-			{
-				// could get clever here with Functional forms.
-				Arithmetic* add = static_cast<Arithmetic*>(instruction);
-				registers[op1(add)] = JSValue(registers[op2(add)].f64 + registers[op3(add)].f64);
-			}
-			break;
-		case SUBTRACT:
-			{
-				Arithmetic* sub = static_cast<Arithmetic*>(instruction);
-				registers[op1(sub)] = JSValue(registers[op2(sub)].f64 - registers[op3(sub)].f64);
-			}
-			break;
-		case MULTIPLY:
-			{
-				Arithmetic* mul = static_cast<Arithmetic*>(instruction);
-				registers[op1(mul)] = JSValue(registers[op2(mul)].f64 * registers[op3(mul)].f64);
-			}
-			break;
-		case DIVIDE:
-			{
-				Arithmetic* div = static_cast<Arithmetic*>(instruction);
-				registers[op1(div)] = JSValue(registers[op2(div)].f64 / registers[op3(div)].f64);
-			}
-			break;
-		case COMPARE_LT:
-		case COMPARE_LE:
-		case COMPARE_EQ:
-		case COMPARE_NE:
-		case COMPARE_GT:
-		case COMPARE_GE:
-			{
-				Arithmetic* cmp = static_cast<Arithmetic*>(instruction);
-				float64 diff = (registers[op2(cmp)].f64 - registers[op3(cmp)].f64);
-				registers[op1(cmp)].i32 = (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1));
-			}
-			break;
-		case NOT:
-			{
-				Move* nt = static_cast<Move*>(instruction);
-				registers[op1(nt)].i32 = !registers[op2(nt)].i32;
-			}
-			break;
+        case GET_ELEMENT:
+            {
+                GetElement* ge = static_cast<GetElement*>(instruction);
+                JSArray* array = registers[src1(ge)].array;
+                registers[dst(ge)] = (*array)[src2(ge)];
+            }
+            break;
+        case SET_ELEMENT:
+            {
+                SetElement* se = static_cast<SetElement*>(instruction);
+                JSArray* array = registers[dst(se)].array;
+                (*array)[src1(se)] = registers[src2(se)];
+            }
+            break;
+        case LOAD_IMMEDIATE:
+            {
+                LoadImmediate* li = static_cast<LoadImmediate*>(instruction);
+                registers[dst(li)] = JSValue(src1(li));
+            }
+            break;
+        case LOAD_VAR:
+            {
+                LoadVar* lv = static_cast<LoadVar*>(instruction);
+                registers[dst(lv)] = frame[src1(lv)];
+            }
+            break;
+        case SAVE_VAR:
+            {
+                SaveVar* sv = static_cast<SaveVar*>(instruction);
+                frame[dst(sv)] = registers[src1(sv)];
+            }
+            break;
+        case BRANCH:
+            {
+                ResolvedBranch* bra = static_cast<ResolvedBranch*>(instruction);
+                pc = begin_pc + dst(bra);
+                continue;
+            }
+            break;
+        case BRANCH_LT:
+            {
+                ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
+                if (registers[src1(bc)].i32 < 0) {
+                    pc = begin_pc + dst(bc);
+                    continue;
+                }
+            }
+            break;
+        case BRANCH_LE:
+            {
+                ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
+                if (registers[src1(bc)].i32 <= 0) {
+                    pc = begin_pc + dst(bc);
+                    continue;
+                }
+            }
+            break;
+        case BRANCH_EQ:
+            {
+                ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
+                if (registers[src1(bc)].i32 == 0) {
+                    pc = begin_pc + dst(bc);
+                    continue;
+                }
+            }
+            break;
+        case BRANCH_NE:
+            {
+                ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
+                if (registers[src1(bc)].i32 != 0) {
+                    pc = begin_pc + dst(bc);
+                    continue;
+                }
+            }
+            break;
+        case BRANCH_GE:
+            {
+                ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
+                if (registers[src1(bc)].i32 >= 0) {
+                    pc = begin_pc + dst(bc);
+                    continue;
+                }
+            }
+            break;
+        case BRANCH_GT:
+            {
+                ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
+                if (registers[src1(bc)].i32 > 0) {
+                    pc = begin_pc + dst(bc);
+                    continue;
+                }
+            }
+            break;
+        case ADD:
+            {
+                // could get clever here with Functional forms.
+                Arithmetic* add = static_cast<Arithmetic*>(instruction);
+                registers[dst(add)] = JSValue(registers[src1(add)].f64 + registers[src2(add)].f64);
+            }
+            break;
+        case SUBTRACT:
+            {
+                Arithmetic* sub = static_cast<Arithmetic*>(instruction);
+                registers[dst(sub)] = JSValue(registers[src1(sub)].f64 - registers[src2(sub)].f64);
+            }
+            break;
+        case MULTIPLY:
+            {
+                Arithmetic* mul = static_cast<Arithmetic*>(instruction);
+                registers[dst(mul)] = JSValue(registers[src1(mul)].f64 * registers[src2(mul)].f64);
+            }
+            break;
+        case DIVIDE:
+            {
+                Arithmetic* div = static_cast<Arithmetic*>(instruction);
+                registers[dst(div)] = JSValue(registers[src1(div)].f64 / registers[src2(div)].f64);
+            }
+            break;
+        case COMPARE_LT:
+        case COMPARE_LE:
+        case COMPARE_EQ:
+        case COMPARE_NE:
+        case COMPARE_GT:
+        case COMPARE_GE:
+            {
+                Arithmetic* cmp = static_cast<Arithmetic*>(instruction);
+                float64 diff = (registers[src1(cmp)].f64 - registers[src2(cmp)].f64);
+                registers[dst(cmp)].i32 = (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1));
+            }
+            break;
+        case NOT:
+            {
+                Move* nt = static_cast<Move*>(instruction);
+                registers[dst(nt)].i32 = !registers[src1(nt)].i32;
+            }
+            break;
         case RETURN:
             {
                 Return* ret = static_cast<Return*>(instruction);
@@ -245,13 +299,13 @@ JSValue interpret(ICodeModule *iCode, const JSValues& args)
             break;
         default:
             break;
-    	}
-    	
-    	// increment the program counter.
-    	++pc;
+        }
+        
+        // increment the program counter.
+        ++pc;
     }
 
-	return result;
+    return result;
 }
 
 }
