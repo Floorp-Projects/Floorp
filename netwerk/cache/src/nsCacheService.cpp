@@ -28,6 +28,7 @@
 #include "nsCacheDevice.h"
 #include "nsCacheRequest.h"
 #include "nsMemoryCacheDevice.h"
+#include "nsDiskCacheDevice.h"
 #include "nsAutoLock.h"
 #include "nsVoidArray.h"
 
@@ -84,8 +85,15 @@ nsCacheService::Init()
     rv = mMemoryDevice->Init();
     if (NS_FAILED(rv)) goto error;
     
-    //** create disk cache
-    
+    // create disk cache
+    mDiskDevice = new nsDiskCacheDevice;
+    if (!mDiskDevice) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto error;
+    }
+    rv = mDiskDevice->Init();
+    if (NS_FAILED(rv)) goto error;
+
     return NS_OK;
 
  error:
@@ -305,7 +313,7 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
 
     if (!entry && 
         ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_ON_DISK))) {
-        //** entry = mDiskDevice->FindEntry(key);
+        entry = mDiskDevice->FindEntry(key);
     }
 
     return entry;
