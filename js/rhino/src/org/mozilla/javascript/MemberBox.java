@@ -283,6 +283,7 @@ final class MemberBox implements Serializable
     private void writeObject(ObjectOutputStream out)
         throws IOException
     {
+        out.defaultWriteObject();
         writeMember(out, memberObject);
     }
 

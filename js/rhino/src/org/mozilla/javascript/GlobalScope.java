@@ -86,12 +86,14 @@ public class GlobalScope extends ScriptableObject
      * Caching is enabled by default.
      *
      * @param cachingEnabled if true, caching is enabled
+     *
+     * @see #clearCaches()
      */
     public void setCachingEnabled(boolean cachingEnabled)
     {
         if (isCachingEnabled && !cachingEnabled) {
             // Caching is being turned off. Empty caches.
-            classTable.clear();
+            clearCaches();
             // For compatibility disable invoker optimization as well
             setInvokerOptimizationEnabled(false);
         }
@@ -108,6 +110,16 @@ public class GlobalScope extends ScriptableObject
         }
         invokerOptimization = enabled;
     }
+    /**
+     * Empty internal caches.
+     * @see #setCachingEnabled(boolean)
+     */
+    public void clearCaches()
+    {
+        classTable.clear();
+        javaAdapterGeneratedClasses.clear();
+        invokerMaster = null;
+    }
 
     static void embed(ScriptableObject top)
     {
@@ -120,10 +132,14 @@ public class GlobalScope extends ScriptableObject
     }
 
     boolean isCachingEnabled = true;
-    transient Hashtable classTable = new Hashtable();
+    transient final Hashtable classTable = new Hashtable();
 
     boolean invokerOptimization = true;
     transient Object invokerMaster;
+
+    transient int javaAdapterSerial;
+    transient final Hashtable javaAdapterGeneratedClasses = new Hashtable(7);
+
 
 }
 

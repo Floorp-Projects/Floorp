@@ -123,20 +123,23 @@ public final class JavaAdapter
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
         Scriptable obj = ScriptRuntime.toObject(cx, scope, args[N - 1]);
 
+        GlobalScope global = GlobalScope.get(scope);
+        Hashtable generated = global.javaAdapterGeneratedClasses;
+
         JavaAdapterSignature sig;
         sig = new JavaAdapterSignature(superClass, interfaces, obj);
-        Class adapterClass = (Class) generatedClasses.get(sig);
+        Class adapterClass = (Class) generated.get(sig);
         if (adapterClass == null) {
             String adapterName;
-            synchronized (generatedClasses) {
-                adapterName = "adapter" + serial++;
+            synchronized (generated) {
+                adapterName = "adapter" + global.javaAdapterSerial++;
             }
             ObjToIntMap names = getObjectFunctionNames(obj);
             byte[] code = createAdapterCode(names, adapterName,
                                             superClass, interfaces, null);
 
             adapterClass = loadAdapterClass(cx, adapterName, code);
-            generatedClasses.put(sig, adapterClass);
+            generated.put(sig, adapterClass);
         }
 
         Class[] ctorParms = { ScriptRuntime.ScriptableClass };
@@ -152,17 +155,21 @@ public final class JavaAdapter
 
     // Needed by NativeJavaObject de-serializer
 
-    static Object createAdapterClass(Class superClass, Class[] interfaces,
+    static Object createAdapterClass(Scriptable scope, Class superClass,
+                                     Class[] interfaces,
                                      Scriptable obj, Scriptable self)
         throws ClassNotFoundException
     {
+        GlobalScope global = GlobalScope.get(scope);
+        Hashtable generated = global.javaAdapterGeneratedClasses;
+
         JavaAdapterSignature sig;
         sig = new JavaAdapterSignature(superClass, interfaces, obj);
-        Class adapterClass = (Class) generatedClasses.get(sig);
+        Class adapterClass = (Class) generated.get(sig);
         if (adapterClass == null) {
             String adapterName;
-            synchronized (generatedClasses) {
-                adapterName = "adapter" + serial++;
+            synchronized (generated) {
+                adapterName = "adapter" + global.javaAdapterSerial++;
             }
             ObjToIntMap names = getObjectFunctionNames(obj);
             byte[] code = createAdapterCode(names, adapterName,
@@ -170,7 +177,7 @@ public final class JavaAdapter
             Context cx = Context.enter();
             try {
                 adapterClass = loadAdapterClass(cx, adapterName, code);
-                generatedClasses.put(sig, adapterClass);
+                generated.put(sig, adapterClass);
             } finally {
                 Context.exit();
             }
@@ -884,8 +891,6 @@ public final class JavaAdapter
         return sb;
     }
 
-    private static int serial;
-    private static Hashtable generatedClasses = new Hashtable(7);
 }
 
 final class JavaAdapterConstructor extends JIFunction

@@ -56,7 +56,7 @@ import java.util.Date;
  * @see NativeJavaClass
  */
 
-public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
+public class NativeJavaObject implements Scriptable, Wrapper, Serializable {
 
     public NativeJavaObject() { }
 
@@ -868,11 +868,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
              value.toString(), JavaMembers.javaSignature(type));
     }
 
-    public void writeExternal(ObjectOutput out)
+    private void writeObject(ObjectOutputStream out)
         throws IOException
     {
-        out.writeObject(prototype);
-        out.writeObject(parent);
+        out.defaultWriteObject();
 
         if (javaObject != null) {
             Class joClass = javaObject.getClass();
@@ -915,11 +914,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         }
     }
 
-    public void readExternal(ObjectInput in)
+    private void readObject(ObjectInputStream in)
         throws IOException, ClassNotFoundException
     {
-        prototype = (Scriptable)in.readObject();
-        parent = (Scriptable)in.readObject();
+        in.defaultReadObject();
 
         if (in.readBoolean()) {
             Class superclass = Class.forName((String)in.readObject());
@@ -930,7 +928,8 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             for (int i=0; i < interfaceNames.length; i++)
                 interfaces[i] = Class.forName(interfaceNames[i]);
 
-            javaObject = JavaAdapter.createAdapterClass(superclass, interfaces,
+            javaObject = JavaAdapter.createAdapterClass(
+                parent, superclass, interfaces,
                 (Scriptable)in.readObject(), (Scriptable)in.readObject());
         } else {
             javaObject = in.readObject();
@@ -956,10 +955,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
      */
     protected Scriptable parent;
 
-    protected Object javaObject;
+    protected transient Object javaObject;
 
-    protected Class staticType;
-    protected JavaMembers members;
-    private Hashtable fieldAndMethods;
+    protected transient Class staticType;
+    protected transient JavaMembers members;
+    private transient Hashtable fieldAndMethods;
 
 }
