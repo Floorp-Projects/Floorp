@@ -607,6 +607,80 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
   return result;
 }
 
+NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIFrame* aRowGroup, 
+                                             PRInt32 aRowIndex,
+                                             PRInt32 anAdjustment)
+{
+  nsresult rv = NS_OK;
+  nsIFrame *rowFrame;
+  aRowGroup->FirstChild(nsnull, &rowFrame);
+  for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(&rowFrame))
+  {
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
+    if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
+    {
+      PRInt32 index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
+      if (index >= aRowIndex)
+        ((nsTableRowFrame *)rowFrame)->SetRowIndex(index+anAdjustment);
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay)
+    {
+      AdjustRowIndices(rowFrame, aRowIndex, anAdjustment);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsTableFrame::RemoveRowFromMap(nsTableRowFrame* aRow, PRInt32 aRowIndex)
+{
+  nsresult rv=NS_OK;
+
+  // Create a new row in the cell map at the specified index.
+  mCellMap->RemoveRowFromMap(aRowIndex);
+
+  // Iterate over our row groups and increment the row indices of all rows whose index
+  // is >= aRowIndex.
+  nsIFrame *rowGroupFrame=mFrames.FirstChild();
+  for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(&rowGroupFrame))
+  {
+    const nsStyleDisplay *rowGroupDisplay;
+    rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
+    if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
+    {
+      AdjustRowIndices(rowGroupFrame, aRowIndex, -1);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsTableFrame::InsertRowIntoMap(nsTableRowFrame* aRow, PRInt32 aRowIndex)
+{
+  nsresult rv=NS_OK;
+
+  // Create a new row in the cell map at the specified index.
+  mCellMap->InsertRowIntoMap(aRowIndex);
+
+  // Iterate over our row groups and increment the row indices of all rows whose index
+  // is >= aRowIndex.
+  nsIFrame *rowGroupFrame=mFrames.FirstChild();
+  for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(&rowGroupFrame))
+  {
+    const nsStyleDisplay *rowGroupDisplay;
+    rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
+    if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
+    {
+      AdjustRowIndices(rowGroupFrame, aRowIndex, 1);
+    }
+  }
+
+  // Init the row's index and add its cells to the cell map.
+  aRow->InitChildrenWithIndex(aRowIndex);
+
+  return rv;
+}
+
 /** sum the columns represented by all nsTableColGroup objects
   * if the cell map says there are more columns than this, 
   * add extra implicit columns to the content tree.
@@ -762,7 +836,6 @@ PRInt32 nsTableFrame::AddCellToTable(nsTableCellFrame* aCellFrame,
   NS_ASSERTION(nsnull != mCellMap,   "bad cellMap");
 
   // XXX: must be called only on first-in-flow!
-
   return mCellMap->AppendCell(aCellFrame, aRowIndex);
 }
 

@@ -235,7 +235,7 @@ nsTableRowFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::InitChildren()
+nsTableRowFrame::InitChildrenWithIndex(PRInt32 aRowIndex)
 {
   nsTableFrame* table = nsnull;
   nsresult  result=NS_OK;
@@ -248,8 +248,8 @@ nsTableRowFrame::InitChildren()
     if ((NS_OK==result) && (table != nsnull))
     {
       mInitializedChildren=PR_TRUE;
-      PRInt32 rowIndex = table->GetNextAvailRowIndex();
-      SetRowIndex(rowIndex);
+      SetRowIndex(aRowIndex);
+    
       for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
       {
         const nsStyleDisplay *kidDisplay;
@@ -258,12 +258,32 @@ nsTableRowFrame::InitChildren()
         {
           // add the cell frame to the table's cell map and get its col index
           PRInt32 colIndex;
-          colIndex = table->AddCellToTable((nsTableCellFrame *)kidFrame, rowIndex);
+          colIndex = table->AddCellToTable((nsTableCellFrame *)kidFrame, aRowIndex);
           // what column does this cell belong to?
-          // this sets the frame's notion of it's column index
+          // this sets the frame's notion of its column index
           ((nsTableCellFrame *)kidFrame)->InitCellFrame(colIndex);
         }
       }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableRowFrame::InitChildren()
+{
+  nsTableFrame* table = nsnull;
+  nsresult  result=NS_OK;
+
+  // each child cell can only be added to the table one time.
+  // for now, we remember globally whether we've added all or none
+  if (PR_FALSE==mInitializedChildren)
+  {
+    result = nsTableFrame::GetTableFrame(this, table);
+    if ((NS_OK==result) && (table != nsnull))
+    {
+      PRInt32 rowIndex = table->GetNextAvailRowIndex();
+      InitChildrenWithIndex(rowIndex);
     }
   }
   return NS_OK;

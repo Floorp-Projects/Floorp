@@ -54,7 +54,7 @@ nsCellMap::~nsCellMap()
   PRInt32 colX;
   for (PRInt32 rowX = 0; rowX < mapRowCount; rowX++) {
     nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
-    for (colX = 0; colX <= colCount; colX++) {
+    for (colX = 0; colX < colCount; colX++) {
       CellData* data = (CellData *)(row->ElementAt(colX));
       if (data) {
         delete data;
@@ -137,8 +137,70 @@ void nsCellMap::Grow(PRInt32 aNumMapRows,
   }
 }
 
+void nsCellMap::InsertRowIntoMap(PRInt32 aRowIndex)
+{
+  // XXX This function does not yet handle spans.  
+  // XXX Does this function need to worry about adjusting the collapsed row/col arrays?
+  nsVoidArray* row;
+  PRInt32 origNumCols = mNumCellsOrigInCol.Count();
+
+  row = (0 == origNumCols) ? new nsVoidArray() : new nsVoidArray(origNumCols);
+  
+  if (row) {
+    mRows.InsertElementAt(row, aRowIndex);
+  }
+    
+  PRInt32* val = new PRInt32(0);
+  if (val) {
+    mNumCellsOrigInRow.InsertElementAt(val, aRowIndex);
+  }
+
+  mRowCount++;
+  mNextAvailRowIndex++;
+}
+
+void nsCellMap::RemoveRowFromMap(PRInt32 aRowIndex)
+{
+  // XXX This function does not yet handle spans.  
+  // XXX Does this function need to worry about adjusting the collapsed row/col arrays?
+  
+  PRInt32 colCount = mNumCellsOrigInCol.Count();
+  for (PRInt32 i = 0; i < colCount; i++) {
+    // Adjust the column counts.
+    PRInt32 span;
+    PRBool originates;
+    GetCellInfoAt(aRowIndex, i, &originates, &span);
+    if (originates) {
+      // Decrement the column count.
+      PRInt32* cols = (PRInt32*)(mNumCellsOrigInCol.ElementAt(i));
+      *cols = *cols-1;
+    }
+  }
+
+  // Delete the originating row info.
+  PRInt32* numOrig = (PRInt32 *)mNumCellsOrigInRow.ElementAt(aRowIndex);
+  mNumCellsOrigInRow.RemoveElementAt(aRowIndex);
+  if (numOrig)
+    delete numOrig;
+
+  // Delete our row information.
+  nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aRowIndex));
+  for (PRInt32 colX = 0; colX < colCount; colX++) {
+    CellData* data = (CellData *)(row->ElementAt(colX));
+    if (data) {
+      delete data;
+    }
+  } 
+  mRows.RemoveElementAt(aRowIndex);
+  delete row;
+
+  // Decrement our row and next available index counts.
+  mRowCount--;
+  mNextAvailRowIndex--;
+}
+
 PRInt32 nsCellMap::AppendCell(nsTableCellFrame* aCellFrame, 
-                              PRInt32           aRowIndex)
+                           PRInt32           aRowIndex)
 {
   NS_ASSERTION(aCellFrame, "bad cell frame");
 
