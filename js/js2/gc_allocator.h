@@ -28,12 +28,52 @@ using std::ptrdiff_t;
 #endif
 
 namespace JavaScript {
+	extern "C" {
+		void* GC_malloc(size_t bytes);
+		void* GC_malloc_atomic(size_t bytes);
+		void GC_free(void* ptr);
+		void GC_gcollect(void);
+	}
 
-	// An allocator that can be used to allocate objects in the
-	// garbage collected heap.
+	/**
+	 * General case:  memory for type must be allocated as a conservatively
+	 * scanned block of memory.
+	 */
+	template <class T> struct gc_traits {
+		static T* allocate(size_t n) { return static_cast<T*>(GC_malloc(n * sizeof(T))); }
+	};
 	
-	template <class T>
-	class gc_allocator {
+	/**
+	 * Specializations for blocks of known types:  the macro define_atomic_type(_type)
+	 * specializes gc_traits<T> for types that need not be scanned by the
+	 * GC. Implementors are free to define other types as atomic, if they are
+	 * guaranteed not to contain pointers.
+	 */
+	#define define_atomic_type(_type) 											\
+	template <> struct gc_traits<_type> {										\
+		static _type* allocate(size_t n)										\
+		{																		\
+			return static_cast<_type*>(GC_malloc_atomic(n * sizeof(_type)));	\
+		}																		\
+	};
+	
+	define_atomic_type(char)
+	define_atomic_type(unsigned char)
+	define_atomic_type(short)
+	define_atomic_type(unsigned short)
+	define_atomic_type(int)
+	define_atomic_type(unsigned int)
+	define_atomic_type(long)
+	define_atomic_type(unsigned long)
+	define_atomic_type(float)
+	define_atomic_type(double)
+	
+	#undef define_atomic_type
+	
+	/**
+	 * An allocator that can be used to allocate objects in the garbage collected heap.
+	 */
+	template <class T> class gc_allocator {
 	public:
 		typedef T value_type;
 		typedef size_t size_type;
@@ -43,24 +83,25 @@ namespace JavaScript {
 		typedef T &reference;
 		typedef const T &const_reference;
 		
-		pointer address(reference r) {return &r;}
-		const_pointer address(const_reference r) {return &r;}
+		static pointer address(reference r) { return &r; }
+		static const_pointer address(const_reference r) { return &r; }
 		
 		gc_allocator() {}
-		template<class U> gc_allocator(const gc_allocator<U> &u) {}
-		~gc_allocator() {}
+		template<class U> gc_allocator(const gc_allocator<U>&) {}
+		// ~gc_allocator() {}
 		
-		pointer allocate(size_type n, const void *hint = 0);
-		void deallocate(pointer, size_type);
+		static pointer allocate(size_type n, const void* /* hint */ = 0) { return gc_traits<T>::allocate(n); }
+		static void deallocate(pointer, size_type) {}
 		
-		void construct(pointer p, const T &val) { new(p) T(val);}
-		void destroy(pointer p) { p->~T(); }
+		static void construct(pointer p, const T &val) { new(p) T(val);}
+		static void destroy(pointer p) { p->~T(); }
 		
-		size_type max_size() { return std::numeric_limits<size_type>::max() / sizeof(T); }
+		static size_type max_size() { return std::numeric_limits<size_type>::max() / sizeof(T); }
 
-		template<class U> struct rebind {typedef gc_allocator<U> other;};
+		template<class U> struct rebind { typedef gc_allocator<U> other; };
+		
+		static void collect() { GC_gcollect(); }
 	};
-
 }
 
 #endif /* gc_allocator_h */
