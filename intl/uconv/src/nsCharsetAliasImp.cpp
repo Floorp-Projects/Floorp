@@ -127,7 +127,7 @@ NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAReadableString& aCharset1, const 
 {
    nsresult res = NS_OK;
 
-   if(Compare(aCharset1, aCharset2, nsCaseInsensitiveStringComparator()) == 0) {
+   if(aCharset1.Equals(aCharset2, nsCaseInsensitiveStringComparator())) {
       *oResult = PR_TRUE;
       return res;
    }

@@ -588,12 +588,12 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         if(theCount) {
           PRInt32 theIndex=0;
           for(theIndex=0;theIndex<theCount;theIndex++){
-            nsAutoString theKey(aNode.GetKeyAt(theIndex));
-            if(!Compare(theKey, NS_LITERAL_STRING("ENTITY"), nsCaseInsensitiveStringComparator())) {
+            const nsAString& theKey = aNode.GetKeyAt(theIndex);
+            if(theKey.Equals(NS_LITERAL_STRING("ENTITY"), nsCaseInsensitiveStringComparator())) {
               const nsString& theName=aNode.GetValueAt(theIndex);
               theNamePtr=&theName;
             }
-            else if(!Compare(theKey, NS_LITERAL_STRING("VALUE"), nsCaseInsensitiveStringComparator())) {
+            else if(theKey.Equals(NS_LITERAL_STRING("VALUE"), nsCaseInsensitiveStringComparator())) {
               //store the named enity with the context...
               const nsString& theValue=aNode.GetValueAt(theIndex);
               theValuePtr=&theValue;

@@ -638,9 +638,8 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
       }
     }
     if (mLoader->mNavQuirkMode ||
-        Compare(contentType,
-                NS_LITERAL_CSTRING("text/css"),
-                nsCaseInsensitiveCStringComparator()) == 0 ||
+        contentType.Equals(NS_LITERAL_CSTRING("text/css"),
+                           nsCaseInsensitiveCStringComparator()) ||
         contentType.IsEmpty()) {
       /*
        * First determine the charset (if one is indicated)

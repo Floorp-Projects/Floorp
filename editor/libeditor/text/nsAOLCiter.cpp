@@ -107,7 +107,7 @@ nsAOLCiter::StripCites(const nsAReadableString& aInString, nsAWritableString& aO
   nsReadingIterator <PRUnichar> iter,enditer;
   aInString.BeginReading(iter);
   aInString.EndReading(enditer);
-  if (!Compare(Substring(aInString,0,2),NS_LITERAL_STRING(">>")))
+  if (Substring(aInString,0,2).Equals(NS_LITERAL_STRING(">>")))
   {
     iter.advance(2);
     while (nsCRT::IsAsciiSpace(*iter))

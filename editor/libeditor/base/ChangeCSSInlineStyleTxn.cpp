@@ -92,9 +92,8 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAReadableString &aValueList, cons
         }
       }
       else {
-        if (!Compare(nsDependentString(value),
-                     nsDependentString(start),
-                     nsCaseInsensitiveStringComparator())) {
+        if (nsDependentString(value).Equals(nsDependentString(start),
+                                            nsCaseInsensitiveStringComparator())) {
           result = PR_TRUE;
           break;
         }
@@ -370,8 +369,9 @@ ChangeCSSInlineStyleTxn::AcceptsMoreThanOneValue(nsIAtom *aCSSProperty)
 NS_IMETHODIMP
 ChangeCSSInlineStyleTxn::AddValueToMultivalueProperty(nsAWritableString & aValues, const nsAReadableString & aNewValue)
 {
-  if (!aValues.Length()
-      || !Compare(aValues, NS_LITERAL_STRING("none"), nsCaseInsensitiveStringComparator())) {
+  if (aValues.IsEmpty()
+      || aValues.Equals(NS_LITERAL_STRING("none"),
+                        nsCaseInsensitiveStringComparator())) {
     // the list of values is empty of the value is 'none'
     aValues.Assign(aNewValue);
   }
