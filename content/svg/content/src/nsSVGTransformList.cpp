@@ -387,7 +387,7 @@ NS_IMETHODIMP nsSVGTransformList::InsertItemBefore(nsIDOMSVGTransform *newItem, 
 
   if (!newItem) return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  PRInt32 count = mTransforms.Count();
+  PRUint32 count = mTransforms.Count();
 
   if (!mTransforms.InsertElementAt((void*)newItem, (index < count)? index: count)) {
     *_retval = nsnull;
@@ -411,7 +411,7 @@ NS_IMETHODIMP nsSVGTransformList::ReplaceItem(nsIDOMSVGTransform *newItem, PRUin
 
   if (!newItem) return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  if (index >= mTransforms.Count())
+  if (index >= PRUint32(mTransforms.Count()))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
   nsIDOMSVGTransform* oldItem = ElementAt(index);
