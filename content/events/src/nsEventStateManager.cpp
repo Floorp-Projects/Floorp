@@ -3620,12 +3620,32 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             disabled = PR_FALSE;
           }
         }
-        else if (nsHTMLAtoms::iframe==tag) {
-          disabled = PR_FALSE;
+        else if (nsHTMLAtoms::iframe==tag || nsHTMLAtoms::frame==tag) {
+          disabled = PR_TRUE;
+          if (child) {
+            nsCOMPtr<nsIDocument> doc, subDoc;
+            child->GetDocument(*getter_AddRefs(doc));
+            if (doc) {
+              doc->GetSubDocumentFor(child, getter_AddRefs(subDoc));
+              nsCOMPtr<nsISupports> container;
+              subDoc->GetContainer(getter_AddRefs(container));
+              nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+              if (docShell) {
+                nsCOMPtr<nsIContentViewer> contentViewer, zombieViewer;
+                docShell->GetContentViewer(getter_AddRefs(contentViewer));
+                if (contentViewer) {
+                  contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+                  if (!zombieViewer) {
+                    // If there are 2 viewers for the current docshell, that 
+                    // means the current document is a zombie document.
+                    // Only navigate into the frame/iframe if it's not a zombie
+                    disabled = PR_FALSE;
+                  }
+                }
+              }
+            }
+          }
         } 
-        else if (nsHTMLAtoms::frame==tag) {
-          disabled = PR_FALSE;
-        }
       }
       // Check the tabindex attribute, unless the model specifies text only.
       // If the model is unset then we'll depend on tabindex.
@@ -4684,7 +4704,11 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
 {
   // Focus an element in the current document, but don't switch document/window focus!
 
-  if (gLastFocusedDocument == mDocument) { // If we're already in this document, use normal focus method
+  if (gLastFocusedDocument == mDocument || 
+      !gLastFocusedContent) { 
+    // If we're already focused in this document, 
+    // or if there was no last focus
+    // use normal focus method
     if (mCurrentFocus != aContent) {
       if (aContent) 
         aContent->SetFocus(mPresContext);
@@ -4693,7 +4717,8 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
     }
     return;
   }
-  // The last focus wasn't in this document, so we may be getting our postion from the selection
+
+  // The last focus wasn't in this document, so we may be getting our position from the selection
   // while the window focus is currently somewhere else such as the find dialog
 
   // Temporarily save the current focus globals so we can leave them undisturbed after this method
