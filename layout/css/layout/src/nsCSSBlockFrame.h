@@ -41,6 +41,7 @@ struct nsCSSBlockReflowState : public nsReflowState {
                         nsCSSBlockFrame*     aBlock,
                         nsIStyleContext*     aBlockSC,
                         const nsReflowState& aReflowState,
+                        nsReflowMetrics&     aMetrics,
                         PRBool               aComputeMaxElementSize);
 
   ~nsCSSBlockReflowState();
@@ -76,8 +77,8 @@ struct nsCSSBlockReflowState : public nsReflowState {
   PRPackedBool mNoWrap;
   PRPackedBool mComputeMaxElementSize;
   nscoord mX, mY;
-  nscoord mPrevPosBottomMargin;
-  nscoord mPrevNegBottomMargin;
+  nscoord mPrevBottomMargin;
+  nscoord mOuterTopMargin;
   nscoord mKidXMost;
 
   // When a block that contains a block is unconstrained we need to
