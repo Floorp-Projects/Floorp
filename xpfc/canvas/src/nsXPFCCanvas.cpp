@@ -226,7 +226,7 @@ nsIXPFCCanvas * nsXPFCCanvas::CanvasFromName(nsString& aName)
    * If I am the canvas, just return
    */
 
-  if (aName == mNameID)
+  if (aName.EqualsIgnoreCase(mNameID))
     return this;
 
   /*
@@ -253,7 +253,7 @@ nsIXPFCCanvas * nsXPFCCanvas::CanvasFromName(nsString& aName)
 
     child = canvas->GetNameID();
 
-    if (child == aName) {
+    if (child.EqualsIgnoreCase(aName)) {
       NS_RELEASE(iterator);
       return canvas;
     }

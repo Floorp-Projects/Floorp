@@ -480,10 +480,8 @@ nsresult nsTrexTestShell::GetWebViewerContainer(nsIWebViewerContainer ** aWebVie
   return NS_OK;
 }
 
-nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
+nsresult nsTrexTestShell::SendJS(nsString& aCommand)
 {
-  PRThread *t;
-
   nsIWidget * iw = nsnull;
   nsresult res = mInput->QueryInterface(kIWidgetIID, (void**)&iw);
   nsIWidget * dw = nsnull;
@@ -497,40 +495,8 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
   mCommand.Truncate(0);
   aCommand.Copy(mCommand);
 
-#if 0
-
-
-  /*
-   * Start the client thread here
-   */
-
   mClientAddr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
-  mExitMon = mClientMon;
 
-  mExitCounter = &mNumThreads;
-
-
-  t = PR_CreateThread(PR_USER_THREAD,
-                      TrexTestClientThread, 
-                      (void *) this,
-                      PR_PRIORITY_NORMAL,
-                      PR_LOCAL_THREAD,
-                      PR_UNJOINABLE_THREAD,
-                      0);
-
-  mNumThreads++;
-
-  while (mNumThreads) {
-      PR_Wait(mClientMon, PR_INTERVAL_NO_TIMEOUT);
-  }
-
-  PR_ExitMonitor(mClientMon);
-
-  NS_RELEASE(iw);
-  NS_RELEASE(dw);
-
-  return (ReceiveCommand(mCommand,mCommand));
-#else
   jsval rval;
 
   JS_EvaluateUCScriptForPrincipals(mJSContext, 
@@ -542,8 +508,19 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
                                    0,
                                    &rval);
 
+  while (mNumThreads) {
+      PR_Wait(mClientMon, PR_INTERVAL_NO_TIMEOUT);
+  }
+
+  PR_ExitMonitor(mClientMon);
+
+  NS_RELEASE(iw);
+  NS_RELEASE(dw);
+
+  ReceiveCommand(mCommand,mCommand);
+
+
   return NS_OK;
-#endif
 }
 
 nsresult nsTrexTestShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
@@ -586,7 +563,7 @@ nsEventStatus nsTrexTestShell::HandleEvent(nsGUIEvent *aEvent)
               PRUint32 length;
               mInput->GetText(text, 1000, length);
 
-              SendCommand(text);
+              SendJS(text);
 
             }
             break;
@@ -752,7 +729,80 @@ PR_STATIC_CALLBACK(JSBool) ZuluCommand(JSContext *cx,
                                        jsval *argv, 
                                        jsval *rval)
 {
+  /*
+   * Start the client thread here
+   */
+
+  nsTrexTestShell * a = (nsTrexTestShell*) JS_GetPrivate(cx, obj);
+
+  *rval = JSVAL_NULL;
+
+  /*
+   * XXX: Extract the command & args from JS
+   */
+
+  nsString command = "";
+  
+  if (argc >= 1) 
+  {
+
+    PRUint32 count = 0;
+
+    while (count != argc)
+    {
+      JSString * jsstring0 = JS_ValueToString(cx, argv[count]);
+      if (nsnull != jsstring0) 
+      {
+
+        if (count != 0)
+          command += " ";        
+
+        command += JS_GetStringChars(jsstring0);
+      }
+
+      *rval = JSVAL_VOID;
+
+      count++;
+    }
+  }
+  else 
+  {
+    JS_ReportError(cx, "Function zulucommand requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  a->SendCommand(command);
+
+
   return JS_TRUE;
+}
+
+nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
+{
+  /*
+   * Launch a thread to deal with this
+   */
+
+  PRThread *t;
+
+  mExitMon = mClientMon;
+
+  mExitCounter = &(mNumThreads);
+
+  mCommand = aCommand;
+
+  t = PR_CreateThread(PR_USER_THREAD,
+                      TrexTestClientThread, 
+                      (void *) this,
+                      PR_PRIORITY_NORMAL,
+                      PR_LOCAL_THREAD,
+                      PR_UNJOINABLE_THREAD,
+                      0);
+
+  mNumThreads++;
+
+
+  return NS_OK;
 }
 
 
