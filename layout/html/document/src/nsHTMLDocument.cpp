@@ -15,6 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved. 
  */ 
+#define NS_IMPL_IDS
+#include "nsICharsetAlias.h"
+#undef NS_IMPL_IDS
+
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsHTMLDocument.h"
@@ -77,6 +81,7 @@
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
 #include "nsCharsetDetectionAdaptorCID.h"
+#include "nsICharsetAlias.h"
 #include "nsIPref.h"
 static char g_detector_progid[128];
 static PRBool gInitDetector = PR_FALSE;
@@ -121,6 +126,9 @@ static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 #endif // NECKO
+
+
+
 
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
@@ -375,6 +383,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsIWebShell* webShell;
+  nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
+  nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
 
 #ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
@@ -395,6 +405,45 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       lastModified = header;
       SetLastModified(lastModified);
     }
+	if(kCharsetFromHTTPHeader > charsetSource)
+	{
+		nsIAtom* contentTypeKey = NS_NewAtom("content-type");
+		nsXPIDLCString contenttypeheader;
+		rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
+		NS_RELEASE(contentTypeKey);
+		if (NS_SUCCEEDED(rv)) {
+			nsAutoString contentType;
+			contentType = contenttypeheader;
+			PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
+			if(kNotFound != start)
+			{
+				 start += 8; // 8 = "charset=".length
+				 PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
+				 if(kNotFound == end )
+					 end = contentType.Length();
+				 nsAutoString theCharset;
+				 contentType.Mid(theCharset, start, end - start);
+				 nsICharsetAlias* calias = nsnull;
+				 rv = nsServiceManager::GetService(
+									kCharsetAliasCID,
+									nsICharsetAlias::GetIID(),
+									(nsISupports**) &calias);
+				 if(NS_SUCCEEDED(rv) && (nsnull != calias) )
+				 {
+					  nsAutoString preferred;
+					  rv = calias->GetPreferred(theCharset, preferred);
+					  if(NS_SUCCEEDED(rv))
+					  {
+						  charset = preferred;
+		 				  charsetSource = kCharsetFromHTTPHeader;
+					  }
+					  nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
+				 }
+		   }
+		}
+	}
+
+
     // Don't propogate the result code beyond here, since it
     // could just be that the response header wasn't found.
     rv = NS_OK;
@@ -413,8 +462,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (NS_OK == rv) { 
     nsIHTMLContentSink* sink;
 
-    nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
-    nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
     const PRUnichar* requestCharset = nsnull;
     nsCharsetSource requestCharsetSource = kCharsetUninitialized;
     
@@ -429,12 +476,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     rv = NS_NewHTMLContentSink(&sink, this, aURL, webShell);
 
     if (NS_SUCCEEDED(rv)) {
-       const PRUnichar* defaultCharsetFromWebShell = NULL;
-       rv = webShell->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
-       if(NS_SUCCEEDED(rv)) {
-            charset = defaultCharsetFromWebShell;
-            charsetSource = kCharsetFromUserDefault;
-       }
+		if(kCharsetFromUserDefault > charsetSource) {
+		   const PRUnichar* defaultCharsetFromWebShell = NULL;
+		   rv = webShell->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
+		   if(NS_SUCCEEDED(rv)) {
+				charset = defaultCharsetFromWebShell;
+				charsetSource = kCharsetFromUserDefault;
+		   }
+		}
        // for html, we need to find out the Meta tag from the hint.
        rv = webShell->GetCharacterSetHint(&requestCharset, &requestCharsetSource);
        if(NS_SUCCEEDED(rv)) {
@@ -444,14 +493,16 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
             	charset = requestCharset;
             }
        }
-       const PRUnichar* forceCharsetFromWebShell = NULL;
-       rv = webShell->GetForceCharacterSet(&forceCharsetFromWebShell);
-       if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) {
-            charset = forceCharsetFromWebShell;
-            //TODO: we should define appropriate constant for force charset
-            charsetSource = kCharsetFromPreviousLoading;  
-       }
-
+	   if(kCharsetFromPreviousLoading > charsetSource)
+	   {
+		   const PRUnichar* forceCharsetFromWebShell = NULL;
+		   rv = webShell->GetForceCharacterSet(&forceCharsetFromWebShell);
+		   if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) {
+				charset = forceCharsetFromWebShell;
+				//TODO: we should define appropriate constant for force charset
+				charsetSource = kCharsetFromPreviousLoading;  
+		   }
+	   }
        nsresult rv_detect = NS_OK;
        if(! gInitDetector)
        {
@@ -475,7 +526,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
            gInitDetector = PR_TRUE;
        }
    
-       if((charsetSource < kCharsetFromAutoDetection)  && gPlugDetector)
+       if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
        {
            // we could do charset detection
            
@@ -520,10 +571,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
     NS_IF_RELEASE(webShell);
 #endif
-
-    // XXXX
-    // We should take care two more cases here
-    // 1. The charset attribute from HTTP header
 
     if (NS_SUCCEEDED(rv)) {
        rv = this->SetDocumentCharacterSet(charset);
