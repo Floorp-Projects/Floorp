@@ -92,6 +92,7 @@ nsCaret::nsCaret()
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
 , mShowDuringSelection(PR_FALSE)
+, mOptimizeDrawCaret(PR_FALSE)
 , mCachedOffsetValid(PR_FALSE)
 , mLastCaretFrame(nsnull)
 , mLastCaretView(nsnull)
@@ -445,6 +446,11 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsCaret::SetOptimizeDrawCaret(PRBool aOptimzeDrawCaret)
+{
+  mOptimizeDrawCaret = aOptimzeDrawCaret;
+  return NS_OK;
+}
 
 #ifdef XP_MAC
 #pragma mark -
@@ -1069,19 +1075,14 @@ void nsCaret::GetCaretRectAndInvert()
   {
     nsRect    caretRect = frameRect;
 
-    // if mCachedOffsetValid, apply cached FrameOffset, else compute it again
-    if (!mCachedOffsetValid) 
-    {
-      mLastCaretFrame->GetPointFromOffset(presContext, mRendContext, mLastContentOffset, &mCachedFrameOffset);
-      // XXX: The following line was commented out to disable the
-      //      offset caching code because it causes bad caret
-      //      placement. (bug 194774)
-      //
-      // mCachedOffsetValid = PR_TRUE;
+    // if use cache and cache is ready, apply it, else refresh it
+    if (!mOptimizeDrawCaret || !mCachedOffsetValid) {
+      mLastCaretFrame->GetPointFromOffset(presContext, mRendContext,mLastContentOffset, &mCachedFrameOffset);
+      mCachedOffsetValid = mOptimizeDrawCaret;
     }
 
     caretRect += mCachedFrameOffset;
-    
+
     if (mCaretTwipsWidth < 0)    // need to re-compute the pixel width
     {
       float tDevUnitsToTwips = 15;

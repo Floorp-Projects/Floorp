@@ -65,6 +65,8 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
     NS_IMETHOD    DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset);
 
+    NS_IMETHOD    SetOptimizeDrawCaret(PRBool aOptimzeDrawCaret);
+
     //nsISelectionListener interface
     NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
                               
@@ -103,9 +105,10 @@ protected:
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     PRPackedBool          mShowDuringSelection; // show when text is selected
 
-    PRPackedBool          mCachedOffsetValid;   //whether the cached frame offset is valid
-    nsPoint               mCachedFrameOffset;   //cached frame offset
-    
+    PRPackedBool          mOptimizeDrawCaret;   // flag for optimizing draw caret
+    PRPackedBool          mCachedOffsetValid;   // whether the cached frame offset is valid
+    nsPoint               mCachedFrameOffset;   // cached frame offset
+
     nsRect                mCaretRect;         // the last caret rect
     nsIFrame*             mLastCaretFrame;    // store the frame the caret was last drawn in.
     nsIView*              mLastCaretView;     // last view that we used for drawing. Cached so we can tell when we need to make a new RC
