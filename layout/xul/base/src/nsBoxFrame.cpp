@@ -1452,11 +1452,6 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
     else if (aAttribute == nsXULAtoms::mousethrough) {
       mInner->UpdateMouseThrough();
     }
-
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    nsBoxLayoutState state(aPresContext);
-    MarkDirty(state);
   }
   else if (aAttribute == nsXULAtoms::ordinal) {
     nsCOMPtr<nsIPresShell> shell;
@@ -1478,6 +1473,11 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
   else if (aAttribute == nsXULAtoms::accesskey) {
     RegUnregAccessKey(aPresContext, PR_TRUE);
   }
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsBoxLayoutState state(aPresContext);
+  MarkDirty(state);
 
   return rv;
 }
