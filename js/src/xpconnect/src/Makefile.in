@@ -39,6 +39,13 @@ IS_COMPONENT =  1
 endif
 endif
 
+# Neutrino Cross-Compiled for x86
+ifneq (,$(filter NTO,$(OS_TARGET)))
+ifeq (86,$(findstring 86,$(OS_TEST)))
+IS_COMPONENT =  1
+endif
+endif
+
 # Solaris/sparc
 ifneq (,$(filter SunOS,$(OS_ARCH)))
 ifneq (86,$(findstring 86,$(OS_TEST)))
