@@ -31,13 +31,15 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLStyleSheet.h"
-#include "nsIStyleRule.h"
+#include "nsIHTMLCSSStyleSheet.h"
+#include "nsICSSStyleRule.h"
 #include "nsIWebShell.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLContentContainer.h"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
+static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
@@ -71,6 +73,30 @@ public:
 
 //----------------------------------------------------------------------
 
+class BodyFixupRule : public nsIStyleRule {
+public:
+  BodyFixupRule(nsHTMLBodyElement* aPart, nsIHTMLCSSStyleSheet* aSheet);
+  ~BodyFixupRule();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+  // Strength is an out-of-band weighting, always maxint here
+  NS_IMETHOD GetStrength(PRInt32& aStrength);
+
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, 
+                          nsIPresContext* aPresContext);
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsHTMLBodyElement*    mPart;  // not ref-counted, cleared by content 
+  nsIHTMLCSSStyleSheet* mSheet; // not ref-counted, cleared by content 
+};
+
+//----------------------------------------------------------------------
+
 // special subclass of inner class to override set document
 class nsBodyInner: public nsGenericHTMLContainerElement
 {
@@ -80,30 +106,42 @@ public:
 
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
 
-  BodyRule*   mStyleRule;
+  BodyRule*       mContentStyleRule;
+  BodyFixupRule*  mInlineStyleRule;
 };
 
 nsBodyInner::nsBodyInner()
   : nsGenericHTMLContainerElement(),
-    mStyleRule(nsnull)
+    mContentStyleRule(nsnull),
+    mInlineStyleRule(nsnull)
 {
 }
 
 nsBodyInner::~nsBodyInner()
 {
-  if (nsnull != mStyleRule) {
-    mStyleRule->mPart = nsnull;
-    mStyleRule->mSheet = nsnull;
-    NS_RELEASE(mStyleRule);
+  if (nsnull != mContentStyleRule) {
+    mContentStyleRule->mPart = nsnull;
+    mContentStyleRule->mSheet = nsnull;
+    NS_RELEASE(mContentStyleRule);
+  }
+  if (nsnull != mInlineStyleRule) {
+    mInlineStyleRule->mPart = nsnull;
+    mInlineStyleRule->mSheet = nsnull;
+    NS_RELEASE(mInlineStyleRule);
   }
 }
 
 nsresult nsBodyInner::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
-  if (nsnull != mStyleRule) {
-    mStyleRule->mPart = nsnull;
-    mStyleRule->mSheet = nsnull;
-    NS_RELEASE(mStyleRule); // destroy old style rule since the sheet will probably change
+  if (nsnull != mContentStyleRule) {
+    mContentStyleRule->mPart = nsnull;
+    mContentStyleRule->mSheet = nsnull;
+    NS_RELEASE(mContentStyleRule); // destroy old style rule since the sheet will probably change
+  }
+  if (nsnull != mInlineStyleRule) {
+    mInlineStyleRule->mPart = nsnull;
+    mInlineStyleRule->mSheet = nsnull;
+    NS_RELEASE(mInlineStyleRule); // destroy old style rule since the sheet will probably change
   }
   return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep);
 }
@@ -161,6 +199,7 @@ protected:
   nsBodyInner mInner;
 
 friend BodyRule;
+friend BodyFixupRule;
 };
 
 
@@ -279,6 +318,120 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 NS_IMETHODIMP
 BodyRule::List(FILE* out, PRInt32 aIndent) const
 {
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+BodyFixupRule::BodyFixupRule(nsHTMLBodyElement* aPart, nsIHTMLCSSStyleSheet* aSheet)
+  : mPart(aPart),
+    mSheet(aSheet)
+{
+  NS_INIT_REFCNT();
+}
+
+BodyFixupRule::~BodyFixupRule()
+{
+}
+
+NS_IMPL_ADDREF(BodyFixupRule);
+NS_IMPL_RELEASE(BodyFixupRule);
+
+nsresult BodyFixupRule::QueryInterface(const nsIID& aIID,
+                                       void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kIStyleRuleIID)) {
+    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kICSSStyleRuleIID)) {
+    nsIStyleRule* inlineRule = nsnull;
+    if (nsnull != mPart) {
+      mPart->mInner.GetInlineStyleRule(inlineRule);
+    }
+    if (nsnull != inlineRule) {
+      nsresult result = inlineRule->QueryInterface(kICSSStyleRuleIID, aInstancePtrResult);
+      NS_RELEASE(inlineRule);
+      return result;
+    }
+    return NS_NOINTERFACE;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*) ((nsISupports*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
+{
+  aResult = PRBool(this == aRule);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::HashValue(PRUint32& aValue) const
+{
+  aValue = (PRUint32)(mPart);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  NS_IF_ADDREF(mSheet);
+  aSheet = mSheet;
+  return NS_OK;
+}
+
+// Strength is an out-of-band weighting, always MaxInt here
+NS_IMETHODIMP
+BodyFixupRule::GetStrength(PRInt32& aStrength)
+{
+  aStrength = 2000000000;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  // Invoke style mapping of inline rule
+  nsIStyleRule* inlineRule = nsnull;
+  if (nsnull != mPart) {
+    mPart->mInner.GetInlineStyleRule(inlineRule);
+    if (nsnull != inlineRule) {
+      inlineRule->MapStyleInto(aContext, aPresContext);
+      NS_RELEASE(inlineRule);
+    }
+  }
+
+  // XXX do any other body processing here
+
+  // Fixup default presentation colors (NAV QUIRK)
+  nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetStyleData(eStyleStruct_Color));
+
+  if (nsnull != styleColor) {
+    aPresContext->SetDefaultColor(styleColor->mColor);
+    aPresContext->SetDefaultBackgroundColor(styleColor->mBackgroundColor);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::List(FILE* out, PRInt32 aIndent) const
+{
+  // Indent
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+ 
+  fputs("Special BODY tag fixup rule\n", out);
   return NS_OK;
 }
 
@@ -522,21 +675,55 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetStyleRule(nsIStyleRule*& aResult)
+nsHTMLBodyElement::GetContentStyleRule(nsIStyleRule*& aResult)
 {
-  if (nsnull == mInner.mStyleRule) {
+  if (nsnull == mInner.mContentStyleRule) {
     nsIHTMLStyleSheet*  sheet = nsnull;
 
     if (nsnull != mInner.mDocument) {  // find style sheet
       sheet = GetAttrStyleSheet(mInner.mDocument);
     }
 
-    mInner.mStyleRule = new BodyRule(this, sheet);
+    mInner.mContentStyleRule = new BodyRule(this, sheet);
     NS_IF_RELEASE(sheet);
-    NS_IF_ADDREF(mInner.mStyleRule);
+    NS_IF_ADDREF(mInner.mContentStyleRule);
   }
-  NS_IF_ADDREF(mInner.mStyleRule);
-  aResult = mInner.mStyleRule;
+  NS_IF_ADDREF(mInner.mContentStyleRule);
+  aResult = mInner.mContentStyleRule;
+  return NS_OK;
+}
+
+static nsIHTMLCSSStyleSheet* GetInlineStyleSheet(nsIDocument* aDocument)
+{
+  nsIHTMLCSSStyleSheet*  sheet = nsnull;
+  nsIHTMLContentContainer*  htmlContainer;
+  
+  if (nsnull != aDocument) {
+    if (NS_OK == aDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer)) {
+      htmlContainer->GetInlineStyleSheet(&sheet);
+      NS_RELEASE(htmlContainer);
+    }
+  }
+  NS_ASSERTION(nsnull != sheet, "can't get inline style sheet");
+  return sheet;
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetInlineStyleRule(nsIStyleRule*& aResult)
+{
+  if (nsnull == mInner.mInlineStyleRule) {
+    nsIHTMLCSSStyleSheet*  sheet = nsnull;
+
+    if (nsnull != mInner.mDocument) {  // find style sheet
+      sheet = GetInlineStyleSheet(mInner.mDocument);
+    }
+
+    mInner.mInlineStyleRule = new BodyFixupRule(this, sheet);
+    NS_IF_RELEASE(sheet);
+    NS_IF_ADDREF(mInner.mInlineStyleRule);
+  }
+  NS_IF_ADDREF(mInner.mInlineStyleRule);
+  aResult = mInner.mInlineStyleRule;
   return NS_OK;
 }
 
