@@ -1352,7 +1352,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 /*JFD
 	PR_Close(m_print->out);
 */
-	XP_StatStruct stat;
+	XP_StatStruct fileStat;
 	char* curquote = NULL;
 	PRInt32 replyOnTop = 0, replyWithExtraLines = 0;
 
@@ -1368,7 +1368,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 
 /*JFD
 	if (XP_Stat(m_print->filename, &stat, xpTemporary) == 0) */ {
-		m_quotedText = (char*) PR_Malloc(stat.st_size + 1 + extra);
+		m_quotedText = (char*) PR_Malloc(fileStat.st_size + 1 + extra);
 		
 		/* Insert two line break at the begining of the quoted text */
 		if (!m_quotedText) return;
@@ -1437,8 +1437,8 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 				}
 
 				if (m_quotedText && curquote) {
-					PR_ASSERT(curquote + bufferLen <= m_quotedText + stat.st_size + extra);
-					if (curquote + bufferLen <= m_quotedText + stat.st_size + extra) {
+					PR_ASSERT(curquote + bufferLen <= m_quotedText + fileStat.st_size + extra);
+					if (curquote + bufferLen <= m_quotedText + fileStat.st_size + extra) {
 						PL_strcpy(curquote, newBuf);
 						curquote += bufferLen;
 					}
@@ -3761,7 +3761,7 @@ nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
     {
       char* names = NULL;
       char* addresses = NULL;
-      int num /*JFD = MSG_ParseRFC822Addresses(*tmp, &names, &addresses)*/;
+      num = 0 /*JFD = MSG_ParseRFC822Addresses(*tmp, &names, &addresses)*/;
       PR_ASSERT(num == 1);
       if (num == 1) 
       {
@@ -4062,11 +4062,10 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 			goto FAIL;
 		}
 		
-		int num /*JFD = MSG_ParseRFC822Addresses(value, &names, &addresses)*/;
+		int num  = 0 /*JFD = MSG_ParseRFC822Addresses(value, &names, &addresses)*/;
 		PR_Free(value);
 		value = NULL;
 		char* addr = NULL;
-		char* name = NULL;
 		for (int j=0 ; j<num ; j++) {
 			if (addr) {
 				addr = addr + PL_strlen(addr) + 1;
