@@ -58,7 +58,9 @@
 /* The "body=" pseudo-header (as in "mailto:me?body=hi+there") */
 #define MSG_DEFAULTBODY_HEADER_MASK			0x00200000
 
-#define MSG_X_TEMPLATE_HEADER_MASK          0x00400000
+#define MSG_X_TEMPLATE_HEADER_MASK      0x00400000
+
+#define MSG_FCC2_HEADER_MASK            0x00800000
 
 /* IMAP folders for posting */
 #define MSG_IMAP_FOLDER_HEADER_MASK			0x02000000

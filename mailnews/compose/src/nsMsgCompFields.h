@@ -94,6 +94,11 @@ public:
 	NS_IMETHOD SetFcc(const char *value) {return SetAsciiHeader(MSG_FCC_HEADER_MASK, value);}
 	const char* GetFcc() {return GetHeader(MSG_FCC_HEADER_MASK);}
 
+  NS_IMETHOD SetFcc2(const PRUnichar *value);
+	NS_IMETHOD GetFcc2(PRUnichar **_retval);
+	NS_IMETHOD SetFcc2(const char *value) {return SetAsciiHeader(MSG_FCC2_HEADER_MASK, value);}
+	const char* GetFcc2() {return GetHeader(MSG_FCC2_HEADER_MASK);}
+
 	NS_IMETHOD SetNewsFcc(const PRUnichar *value);
 	NS_IMETHOD GetNewsFcc(PRUnichar **_retval);
 	NS_IMETHOD SetNewsFcc(const char *value) {return SetAsciiHeader(MSG_NEWS_FCC_HEADER_MASK, value);}

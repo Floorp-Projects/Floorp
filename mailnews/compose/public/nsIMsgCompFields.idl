@@ -54,6 +54,9 @@ interface nsIMsgCompFields : nsISupports {
 	void SetFcc(in wstring value);
 	wstring GetFcc();
 
+	void SetFcc2(in wstring value);
+	wstring GetFcc2();
+
 	void SetNewsFcc(in wstring value);
 	wstring GetNewsFcc();
 

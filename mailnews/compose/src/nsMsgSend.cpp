@@ -182,7 +182,9 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mTempFileSpec = nsnull;
 	mHTMLFileSpec = nsnull;
   mCopyFileSpec = nsnull;
+  mCopyFileSpec2 = nsnull;
   mCopyObj = nsnull;
+  mNeedToPerformSecondFCC = PR_FALSE;
 
   mPreloadedAttachmentCount = 0;
   mRemoteAttachmentCount = 0;
@@ -266,7 +268,19 @@ nsMsgComposeAndSend::Clear()
     NS_IF_RELEASE(mCopyFileSpec);
   }
 
-	if (mTempFileSpec) 
+  if (mCopyFileSpec2)
+  {
+    nsFileSpec aFileSpec;
+    mCopyFileSpec2->GetFileSpec(&aFileSpec);
+    if (aFileSpec.Valid())
+      aFileSpec.Delete(PR_FALSE);
+
+    // jt -- *don't* use delete someone may still holding the nsIFileSpec
+    // pointer
+    NS_IF_RELEASE(mCopyFileSpec2);
+  }
+
+  if (mTempFileSpec) 
   {
     if (mReturnFileSpec == nsnull)
     {
@@ -2140,11 +2154,12 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
       // Display some feedback to user...
       char          *printfString = nsnull;
-      PRUnichar     *progressMsg = nsnull;
       PRUnichar     *msg = nsnull;
 
       msg = ComposeGetStringByID(NS_MSG_GATHERING_ATTACHMENT);
       nsCAutoString cProgressString(msg);
+      PR_FREEIF(msg);
+
       if (m_attachments[i].m_real_name)
         printfString = PR_smprintf(cProgressString, m_attachments[i].m_real_name);
       else
@@ -2153,13 +2168,10 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       if (printfString)
       {
         nsString formattedString(printfString);
-        progressMsg = nsCRT::strdup(formattedString.GetUnicode());	
+        SetStatusMessage((PRUnichar *)formattedString.GetUnicode());	
         PR_smprintf_free(printfString);  
       }
-
-      PR_FREEIF(msg);
-      SetStatusMessage(progressMsg);
-
+      
       int status = m_attachments[i].SnarfAttachment(mCompFields);
       if (status < 0)
         return status;
@@ -2284,6 +2296,24 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
       }
       else
         mCompFields->SetFcc("");
+    }
+  }
+
+  //
+  // Deal with an additional FCC operation for this email.
+  //
+  const char *fieldsFCC2 = fields->GetFcc2();
+  if ( (fieldsFCC2) && (*fieldsFCC2) )
+  {
+    if (PL_strcasecmp(fieldsFCC2, "nocopy://") == 0)
+    {
+      mCompFields->SetFcc2("");
+      mNeedToPerformSecondFCC = PR_FALSE;
+    }
+    else
+    {
+      mCompFields->SetFcc2(fieldsFCC2);
+      mNeedToPerformSecondFCC = PR_TRUE;
     }
   }
 
@@ -3096,6 +3126,67 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
   nsCOMPtr<nsIMsgCopyServiceListener> copyListener;
 
   PRInt32 i;
+
+  // This is one per copy so make sure we clean this up first.
+  if (mCopyObj)
+  {
+    delete mCopyObj;
+    mCopyObj = nsnull;
+  }
+
+  // Set a status message...
+  PRUnichar   *msg;
+  if (NS_SUCCEEDED(aStatus))
+    msg = ComposeGetStringByID(NS_MSG_START_COPY_MESSAGE_COMPLETE);
+  else
+    msg = ComposeGetStringByID(NS_MSG_START_COPY_MESSAGE_FAILED);
+
+  SetStatusMessage( msg );
+  PR_FREEIF(msg);
+
+  // Ok, now to support a second copy operation, we need to figure
+  // out which copy request just finished. If the user has requested
+  // a second copy operation, then we need to fire that off, but if they
+  // just wanted a single copy operation, we can tell everyone we are done
+  // and move on with life. Only do the second copy if the first one worked.
+  //
+  if ( NS_SUCCEEDED(aStatus) && (mNeedToPerformSecondFCC) )
+  {
+    mNeedToPerformSecondFCC = PR_FALSE;
+
+    const char *fcc2 = mCompFields->GetFcc2();
+    if (fcc2 && *fcc2)
+    {
+      nsresult rv = MimeDoFCC(mTempFileSpec,
+                              nsMsgDeliverNow,
+                              mCompFields->GetBcc(),
+                              fcc2, 
+                              mCompFields->GetNewspostUrl());
+      if (NS_FAILED(rv))
+      {
+        //
+        // If we hit here, the copy operation FAILED and we should at least tell the
+        // user that it did fail but the send operation has already succeeded.
+        //
+        PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
+        
+        PRUnichar  *eMsg = ComposeGetStringByID(NS_MSG_FAILED_COPY_OPERATION);
+        Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+        
+        nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
+        if (!oopsGiveMeBackTheComposeWindow)
+          rv = NS_OK;
+        else
+          aStatus = NS_ERROR_FAILURE;
+        
+        nsCRT::free(eMsg);
+      }
+      else
+        return NS_OK;
+    }
+  }
+
+  // If we are here, its real cleanup time! 
   for (i=0; i<mListenerArrayCount; i++)
   {
     if (mListenerArray[i] != nsnull)
@@ -3104,12 +3195,6 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
       if (copyListener)
         copyListener->OnStopCopy(aStatus);
     }
-  }
-
-  if (mCopyObj)
-  {
-    delete mCopyObj;
-    mCopyObj = nsnull;
   }
 
   return NS_OK;
@@ -3446,6 +3531,19 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   char          *envelopeLine = nsMsgGetEnvelopeLine();
   PRBool        folderIsLocal = PR_TRUE;
   char          *turi = nsnull;
+  char          *printfString = nsnull;
+  PRUnichar     *msg = nsnull; 
+  char          *folderName = nsnull;
+  char          *cProgressString = nsnull;
+
+  //
+  // Ok, this is here to keep track of this for 2 copy operations... 
+  //
+  if (mCopyFileSpec)
+  {
+    mCopyFileSpec2 = mCopyFileSpec;
+    mCopyFileSpec = nsnull;
+  }
 
   //
   // Create the file that will be used for the copy service!
@@ -3522,6 +3620,27 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   	turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
   status = MessageFolderIsLocal(mUserIdentity, mode, turi, &folderIsLocal);
   if (NS_FAILED(status)) { goto FAIL; }
+
+  // Tell the user we are copying the message... 
+  msg = ComposeGetStringByID(NS_MSG_START_COPY_MESSAGE);
+  cProgressString = nsString(msg).ToNewCString();
+  PR_FREEIF(msg);
+  folderName = GetFolderNameFromURLString(turi);
+  
+  if (cProgressString)
+  {
+    if (folderName)
+      printfString = PR_smprintf(cProgressString, folderName);
+    else
+      printfString = PR_smprintf(cProgressString, "?");
+    PR_FREEIF(cProgressString);
+    if (printfString)
+    {
+      nsString formattedString(printfString);
+      SetStatusMessage((PRUnichar *)formattedString.GetUnicode());	
+      PR_smprintf_free(printfString);  
+    }
+  }
 
   if ( (envelopeLine) && (folderIsLocal) )
   {

@@ -362,7 +362,9 @@ public:
   // These variables are needed for message Copy operations!
   //
   nsIFileSpec               *mCopyFileSpec;
+  nsIFileSpec               *mCopyFileSpec2;
   nsMsgCopy                 *mCopyObj;
+  PRBool                    mNeedToPerformSecondFCC;
 
   // For MHTML message creation
   nsIEditorShell            *mEditor;

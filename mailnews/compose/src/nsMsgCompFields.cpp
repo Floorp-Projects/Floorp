@@ -272,6 +272,16 @@ nsresult nsMsgCompFields::GetFcc(PRUnichar **_retval)
 	return GetHeader(MSG_FCC_HEADER_MASK, _retval);
 }
 
+nsresult nsMsgCompFields::SetFcc2(const PRUnichar *value)
+{
+	return SetHeader(MSG_FCC2_HEADER_MASK, value);
+}
+
+nsresult nsMsgCompFields::GetFcc2(PRUnichar **_retval)
+{
+	return GetHeader(MSG_FCC2_HEADER_MASK, _retval);
+}
+
 nsresult nsMsgCompFields::SetNewsFcc(const PRUnichar *value)
 {
 	return SetHeader(MSG_NEWS_FCC_HEADER_MASK, value);
@@ -621,6 +631,7 @@ nsresult nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
 	case MSG_HTML_PART_HEADER_MASK			: result = 20;		break;
     case MSG_DEFAULTBODY_HEADER_MASK		: result = 21;		break;
 	case MSG_X_TEMPLATE_HEADER_MASK			: result = 22;		break;
+	case MSG_FCC2_HEADER_MASK			: result = 23;		break;
     default:
 		NS_ASSERTION(0, "invalid header index");
 		result = -1;

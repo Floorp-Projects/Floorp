@@ -417,21 +417,23 @@ function SaveAsTemplate()
 function MessageFcc(menuItem)
 {
 	// Get the id for the folder we're FCC into
+  // This is the additional FCC in addition to the
+  // default FCC
 	destUri = menuItem.getAttribute('id');
 	if (msgCompose)
 	{
 		var msgCompFields = msgCompose.compFields;
 		if (msgCompFields)
 		{
-			if (msgCompFields.GetFcc() == destUri)
+			if (msgCompFields.GetFcc2() == destUri)
 			{
-				msgCompFields.SetFcc("nocopy://");
-				dump("FCC: none\n");
+				msgCompFields.SetFcc2("nocopy://");
+				dump("FCC2: none\n");
 			}
 			else
 			{
-				msgCompFields.SetFcc(destUri);
-				dump("FCC: " + destUri + "\n");
+				msgCompFields.SetFcc2(destUri);
+				dump("FCC2: " + destUri + "\n");
 			}
 		}
 	}	

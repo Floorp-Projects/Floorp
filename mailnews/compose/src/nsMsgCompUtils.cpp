@@ -1254,8 +1254,7 @@ mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_p)
 		if (NS_SUCCEEDED(rv)) {
 			char *n;
 			pHeader->ReformatHeaderAddresses(nsnull, string, &n);
-			if (n)
-				return n;
+			if (n)				return n;
 		}
 	}
 
@@ -1693,6 +1692,27 @@ nsMsgParseURLHost(const char *url)
     return nsnull;
   else
     return retVal;
+}
+
+char *
+GetFolderNameFromURLString(char *url)
+{
+  char *rightSlash = nsnull;
+
+  if (!url)
+    return nsnull;
+
+  rightSlash  = PL_strrchr(url, '/');
+  if (!rightSlash)
+    rightSlash = PL_strrchr(url, '\\');
+   
+  if (rightSlash)
+  {
+    char *retVal = PL_strdup(rightSlash + 1);
+    return retVal;
+  }
+
+  return nsnull;
 }
 
 char *
