@@ -52,7 +52,6 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-
 /* nsIAccessible getAccFirstChild (); */
 NS_IMETHODIMP nsHTMLTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
 {

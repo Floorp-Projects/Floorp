@@ -45,6 +45,7 @@ class nsIContent;
 class nsAccessible : public nsGenericAccessible
 {
 public:
+  NS_IMETHOD GetAccName(nsAWritableString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
@@ -141,6 +142,7 @@ class nsLinkableAccessible : public nsAccessible
     NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
     NS_IMETHOD AccDoAction(PRUint8 index);
     NS_IMETHOD GetAccState(PRUint32 *_retval);
+    NS_IMETHOD GetAccValue(nsAWritableString& _retval);
 
   protected:
     PRBool IsALink();

@@ -33,7 +33,6 @@ public:
   nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccName(nsAWritableString& _retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval); 
 };
 
 #endif  

@@ -61,10 +61,3 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAccValue(nsAWritableString& _retval)
-{
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) 
-    return elt->GetAttribute(NS_LITERAL_STRING("href"), _retval);
-  return NS_ERROR_FAILURE;;
-}
