@@ -1342,6 +1342,7 @@ protected:
   PRPackedBool mDidInitialReflow;
   PRPackedBool mIgnoreFrameDestruction;
   PRPackedBool mStylesHaveChanged;
+  PRPackedBool mHaveShutDown;
 
   nsIFrame*   mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
@@ -1623,7 +1624,7 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 PresShell::~PresShell()
 {
-  if (mStyleSet) {
+  if (!mHaveShutDown) {
     NS_NOTREACHED("Someone did not call nsIPresShell::destroy");
     Destroy();
   }
@@ -1637,7 +1638,9 @@ PresShell::~PresShell()
                mFirstCallbackEventRequest == nsnull &&
                mLastCallbackEventRequest == nsnull,
                "post-reflow queues not empty.  This means we're leaking");
-
+ 
+  delete mFrameManager;
+  delete mStyleSet;
   delete mFrameConstructor;
 
   NS_IF_RELEASE(mCurrentEventContent);
@@ -1814,6 +1817,9 @@ PresShell::Destroy()
   }
 #endif
 
+  if (mHaveShutDown)
+    return NS_OK;
+
   // If our paint suppression timer is still active, kill it.
   if (mPaintSuppressionTimer) {
     mPaintSuppressionTimer->Cancel();
@@ -1871,14 +1877,10 @@ PresShell::Destroy()
   // Destroy the frame manager. This will destroy the frame hierarchy
   if (mFrameManager) {
     mFrameManager->Destroy();
-    delete mFrameManager;
-    mFrameManager = nsnull;
   }
 
   // Let the style set do its cleanup.
   mStyleSet->Shutdown(mPresContext);
-  delete mStyleSet;
-  mStyleSet = nsnull;
 
   // We hold a reference to the pres context, and it holds a weak link back
   // to us. To avoid the pres context having a dangling reference, set its 
@@ -1901,6 +1903,8 @@ PresShell::Destroy()
 
   CancelAllReflowCommands();
   KillResizeEventTimer();
+
+  mHaveShutDown = PR_TRUE;
 
   return NS_OK;
 }
