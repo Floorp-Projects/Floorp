@@ -55,7 +55,6 @@
 
 #	$record->{'time'} # the time the notice was posted in time() format
 #	$record->{'mailaddr'} # the mail address of the user who posed the notice
-#	$record->{'rendered_notice'}; # the notice in a HTML displayble format
 
 # currently addnote.cgi saves additional debug information in these not
 # used fields:
@@ -79,7 +78,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.10 $ )[1];
+$VERSION = ( qw $Revision: 1.11 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -162,6 +161,8 @@ sub apply_db_updates {
 
   }
 
+  scalar(@sorted_files) || return 0;
+
   $METADATA{$tree}{'updates_since_trim'}+=   
     scalar(@sorted_files);
 
@@ -179,6 +180,13 @@ sub apply_db_updates {
 
   $self->unlink_files(@sorted_files);
   
+  $all_rendered_notices = $self->get_all_rendered_notices($tree);
+  my ($outfile) = (FileStructure::get_filename($tree, 'tree_HTML').
+                   "/all_notices.html");
+    
+  main::overwrite_file($outfile, $all_rendered_notices);
+
+
   return scalar(@sorted_files);
 }
 
@@ -235,6 +243,74 @@ sub status_table_start {
 }
 
 
+sub render_notice {
+    my ($notice) = @_;
+    
+    my $remote_host = $notice->{'remote_host'};
+    my $time = $notice->{'time'};
+    my $note = $notice->{'note'};
+    my $mailaddr = $notice->{'mailaddr'};
+    
+    my ($pretty_time) = HTMLPopUp::timeHTML($time);
+
+    my ($rendered_notice) = (
+                             "\t\t<p>\n".
+                             "\t\t\t[<b>".
+                             HTMLPopUp::Link(
+                                             "linktxt"=>$mailaddr,
+                                             "href"=>"mailto:$mailaddr",
+                                             "name"=>"$time/$mailaddr",
+                                             ).
+                           " - ".
+                           HTMLPopUp::Link(
+                                           "linktxt"=>$pretty_time,
+                                           "href"=>"\#$time",
+                                           ).
+                           "</b>]\n".
+                           "<!-- posted from remote host: $remote_host -->\n".
+                           "\t\t</p>\n".
+                           "\t\t<p>\n".
+                           "$note\n".
+                           "\t\t</p>\n"
+                          );
+
+    return $rendered_notice;
+}
+
+sub get_all_rendered_notices {
+    my ($self, $tree, ) = @_;
+    
+    my $rendered_notices;
+    
+    my @db_times = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+
+    foreach $time (@db_times) {    
+        
+        $localtime = localtime($time);
+        $rendered_notices .= (
+                              "\n\n".
+                              HTMLPopUp::Link(
+                                              "name"=>$time,
+                                              "href"=>"\#$time",
+                                              #"linktxt" => $localtime,
+                                              ).
+                              "<!-- $localtime -->".
+                              "\n".
+                              "");
+
+        foreach $author (keys %{ $DATABASE{$tree}{$time} }) {
+            my $new_notice = 
+                render_notice($DATABASE{$tree}{$time}{$author});
+            
+            $rendered_notices .= "<p>".$new_notice."</p>";
+        } # foreach $author
+        
+    } # foreach $time
+
+
+    return $rendered_notices;
+}
+
 
 sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
@@ -249,6 +325,8 @@ sub status_table_row {
   my $rendered_notice = '';
   my $num_notices = 0;
 
+  my ($first_notice_time) = $DB_TIMES[$NEXT_DB];
+
   while (1) {
     my ($time) = $DB_TIMES[$NEXT_DB];
 
@@ -256,7 +334,8 @@ sub status_table_row {
     ($time < $row_times->[$row_index]) && last;
 
     foreach $author (keys %{ $DATABASE{$tree}{$time} }) {
-      my $new_notice = $DATABASE{$tree}{$time}{$author}{'rendered_notice'};
+      my $new_notice = 
+          render_notice($DATABASE{$tree}{$time}{$author});
 
       $rendered_notice .= "<p>".$new_notice."</p>";
       push @authors, $author;
@@ -268,24 +347,11 @@ sub status_table_row {
   }
 
 
-  my $href = '';
+  # create a url to a cgi script so that those who do not use pop up
+  # menus can view the notice.
 
- # create a url to a cgi script so that those who do not use pop up
- # menus can view the notice.
-
-  $href = (
-           "$FileStructure::URLS{'shownote'}".
-           "\?".
-           "tree=$tree".
-           "\&".
-           "time=$DB_TIMES[$NEXT_DB]"
-          );
-  
- # I do not have time to actually write the cgi script for above.
- # Instead it would be useful to have a mailto so that users can mail
- # the authors of the notice.
-
-  $href = 'mailto:'.join(', ', main::uniq(@authors));
+  my $href = (FileStructure::get_filename($tree, 'tree_URL').
+              "/all_notices.html#$first_notice_time");
 
   if ($rendered_notice) {
 
