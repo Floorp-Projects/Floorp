@@ -646,138 +646,337 @@ typedef struct _mdata {
    Whenever you type in a content-type, you should use one of these defines
    instead, to help catch typos, and make central management of them easier.
  */
-
+#ifndef AUDIO_WILDCARD                      
 #define AUDIO_WILDCARD                      "audio/*"
+#endif
+#ifndef IMAGE_WILDCARD                      
 #define IMAGE_WILDCARD                      "image/*"
-
+#endif
+#ifndef APPLICATION_APPLEFILE               
 #define APPLICATION_APPLEFILE               "application/applefile"
+#endif
+#ifndef APPLICATION_BINHEX                  
 #define APPLICATION_BINHEX                  "application/mac-binhex40"
+#endif
+#ifndef APPLICATION_MACBINARY               
 #define APPLICATION_MACBINARY               "application/x-macbinary"
+#endif
+#ifndef APPLICATION_COMPRESS                
 #define APPLICATION_COMPRESS                "application/x-compress"
+#endif
+#ifndef APPLICATION_COMPRESS2               
 #define APPLICATION_COMPRESS2               "application/compress"
+#endif
+#ifndef APPLICATION_FORTEZZA_CKL            
 #define APPLICATION_FORTEZZA_CKL            "application/x-fortezza-ckl"
+#endif
+#ifndef APPLICATION_FORTEZZA_KRL            
 #define APPLICATION_FORTEZZA_KRL            "application/x-fortezza-krl"
+#endif
+#ifndef APPLICATION_GZIP                    
 #define APPLICATION_GZIP                    "application/x-gzip"
+#endif
+#ifndef APPLICATION_GZIP2                   
 #define APPLICATION_GZIP2                   "application/gzip"
+#endif
+#ifndef APPLICATION_HTTP_INDEX              
 #define APPLICATION_HTTP_INDEX              "application/http-index"
+#endif
+#ifndef APPLICATION_JAVASCRIPT              
 #define APPLICATION_JAVASCRIPT              "application/x-javascript"
+#endif
+#ifndef APPLICATION_NETSCAPE_REVOCATION     
 #define APPLICATION_NETSCAPE_REVOCATION     "application/x-netscape-revocation"
+#endif
+#ifndef APPLICATION_NS_PROXY_AUTOCONFIG     
 #define APPLICATION_NS_PROXY_AUTOCONFIG     "application/x-ns-proxy-autoconfig"
+#endif
+#ifndef APPLICATION_NS_JAVASCRIPT_AUTOCONFIG        
 #define APPLICATION_NS_JAVASCRIPT_AUTOCONFIG        "application/x-javascript-config"
+#endif
+#ifndef APPLICATION_OCTET_STREAM            
 #define APPLICATION_OCTET_STREAM            "application/octet-stream"
+#endif
+#ifndef APPLICATION_PGP                     
 #define APPLICATION_PGP                     "application/pgp"
+#endif
+#ifndef APPLICATION_PGP2                    
 #define APPLICATION_PGP2                    "application/x-pgp-message"
+#endif
+#ifndef APPLICATION_POSTSCRIPT              
 #define APPLICATION_POSTSCRIPT              "application/postscript"
+#endif
+#ifndef APPLICATION_PRE_ENCRYPTED           
 #define APPLICATION_PRE_ENCRYPTED           "application/pre-encrypted"
+#endif
+#ifndef APPLICATION_UUENCODE                
 #define APPLICATION_UUENCODE                "application/x-uuencode"
+#endif
+#ifndef APPLICATION_UUENCODE2               
 #define APPLICATION_UUENCODE2               "application/x-uue"
+#endif
+#ifndef APPLICATION_UUENCODE3               
 #define APPLICATION_UUENCODE3               "application/uuencode"
+#endif
+#ifndef APPLICATION_UUENCODE4               
 #define APPLICATION_UUENCODE4               "application/uue"
+#endif
+#ifndef APPLICATION_X509_CA_CERT            
 #define APPLICATION_X509_CA_CERT            "application/x-x509-ca-cert"
+#endif
+#ifndef APPLICATION_X509_SERVER_CERT        
 #define APPLICATION_X509_SERVER_CERT        "application/x-x509-server-cert"
+#endif
+#ifndef APPLICATION_X509_EMAIL_CERT         
 #define APPLICATION_X509_EMAIL_CERT         "application/x-x509-email-cert"
+#endif
+#ifndef APPLICATION_X509_USER_CERT          
 #define APPLICATION_X509_USER_CERT          "application/x-x509-user-cert"
+#endif
+#ifndef APPLICATION_X509_CRL                
 #define APPLICATION_X509_CRL                "application/x-pkcs7-crl"
+ #endif
+#ifndef APPLICATION_XPKCS7_MIME             
 #define APPLICATION_XPKCS7_MIME             "application/x-pkcs7-mime"
+#endif
+#ifndef APPLICATION_XPKCS7_SIGNATURE        
 #define APPLICATION_XPKCS7_SIGNATURE        "application/x-pkcs7-signature"
+#endif
+#ifndef APPLICATION_WWW_FORM_URLENCODED     
 #define APPLICATION_WWW_FORM_URLENCODED     "application/x-www-form-urlencoded"
+#endif
+#ifndef APPLICATION_OLEOBJECT               
 #define APPLICATION_OLEOBJECT               "application/oleobject"
+#endif
+#ifndef APPLICATION_OLEOBJECT2              
 #define APPLICATION_OLEOBJECT2              "application/x-oleobject"
+#endif
+#ifndef APPLICATION_JAVAARCHIVE             
 #define APPLICATION_JAVAARCHIVE             "application/java-archive"
+#endif
+#ifndef APPLICATION_MARIMBA                 
 #define APPLICATION_MARIMBA                 "application/marimba"
+#endif
+#ifndef APPLICATION_XMARIMBA                
 #define APPLICATION_XMARIMBA                "application/x-marimba"
-
-#define AUDIO_BASIC                         "audio/basic"
-
-#define IMAGE_GIF                           "image/gif"
-#define IMAGE_JPG                           "image/jpeg"
-#define IMAGE_PJPG                          "image/pjpeg"
-#define IMAGE_PNG                           "image/png"
-
-#ifndef IMAGE_ART
-#define IMAGE_ART                           "image/x-art"
 #endif
 
+#ifndef AUDIO_BASIC                         
+#define AUDIO_BASIC                         "audio/basic"
+#endif
+
+#ifndef IMAGE_GIF                           
+#define IMAGE_GIF                           "image/gif"
+#endif
+#ifndef IMAGE_JPG                           
+#define IMAGE_JPG                           "image/jpeg"
+#endif
+#ifndef IMAGE_PJPG                          
+#define IMAGE_PJPG                          "image/pjpeg"
+#endif
+#ifndef IMAGE_PNG                           
+#define IMAGE_PNG                           "image/png"
+#endif
+#ifndef IMAGE_ART                           
+#define IMAGE_ART                           "image/x-art"
+#endif
+#ifndef IMAGE_ART2                          
 #define IMAGE_ART2                          "image/x-jg"
+#endif
+#ifndef IMAGE_PPM                           
 #define IMAGE_PPM                           "image/x-portable-pixmap"
+#endif
+#ifndef IMAGE_XBM                           
 #define IMAGE_XBM                           "image/x-xbitmap"
+#endif
+#ifndef IMAGE_XBM2                          
 #define IMAGE_XBM2                          "image/x-xbm"
+#endif
+#ifndef IMAGE_XBM3                          
 #define IMAGE_XBM3                          "image/xbm"
+#endif
 
+#ifndef MESSAGE_EXTERNAL_BODY               
 #define MESSAGE_EXTERNAL_BODY               "message/external-body"
+#endif
+#ifndef MESSAGE_NEWS                        
 #define MESSAGE_NEWS                        "message/news"
+#endif
+#ifndef MESSAGE_RFC822                      
 #define MESSAGE_RFC822                      "message/rfc822"
+#endif
 
+#ifndef MULTIPART_ALTERNATIVE               
 #define MULTIPART_ALTERNATIVE               "multipart/alternative"
+#endif
+#ifndef MULTIPART_APPLEDOUBLE               
 #define MULTIPART_APPLEDOUBLE               "multipart/appledouble"
+#endif
+#ifndef MULTIPART_DIGEST                    
 #define MULTIPART_DIGEST                    "multipart/digest"
+#endif
+#ifndef MULTIPART_HEADER_SET                
 #define MULTIPART_HEADER_SET                "multipart/header-set"
+#endif
+#ifndef MULTIPART_MIXED                     
 #define MULTIPART_MIXED                     "multipart/mixed"
+#endif
+#ifndef MULTIPART_PARALLEL                  
 #define MULTIPART_PARALLEL                  "multipart/parallel"
+#endif
+#ifndef MULTIPART_SIGNED                    
 #define MULTIPART_SIGNED                    "multipart/signed"
+#endif
+#ifndef MULTIPART_RELATED                   
 #define MULTIPART_RELATED                   "multipart/related"
+#endif
+#ifndef SUN_ATTACHMENT                      
 #define SUN_ATTACHMENT                      "x-sun-attachment"
+#endif
 
+#ifndef TEXT_ENRICHED                       
 #define TEXT_ENRICHED                       "text/enriched"
+#endif
+#ifndef TEXT_CALENDAR                       
 #define TEXT_CALENDAR                       "text/calendar"
+#endif
+#ifndef TEXT_HTML                           
 #define TEXT_HTML                           "text/html"
+#endif
+#ifndef TEXT_MDL                            
 #define TEXT_MDL                            "text/mdl"
+#endif
+#ifndef TEXT_PLAIN                          
 #define TEXT_PLAIN                          "text/plain"
+#endif
+#ifndef TEXT_RICHTEXT                       
 #define TEXT_RICHTEXT                       "text/richtext"
+#endif
+#ifndef TEXT_VCARD                          
 #define TEXT_VCARD                          "text/x-vcard"
+#endif
+#ifndef TEXT_CSS                            
 #define TEXT_CSS                            "text/css"
+#endif
+#ifndef TEXT_JSSS                           
 #define TEXT_JSSS                           "text/jsss"
+#endif
+#ifndef TEXT_XML                            
 #define TEXT_XML                            "text/xml"
+#endif
 
+#ifndef VIDEO_MPEG                          
 #define VIDEO_MPEG                          "video/mpeg"
+#endif
 
-/* x-uuencode-apple-single. QuickMail made me do this. */
+
+#ifndef UUENCODE_APPLE_SINGLE               /* x-uuencode-apple-single. QuickMail made me do this. */
 #define UUENCODE_APPLE_SINGLE               "x-uuencode-apple-single"
+#endif
 
-/* The standard MIME message-content-encoding values:
- */
+
+/* The standard MIME message-content-encoding values:*/
+#ifndef ENCODING_7BIT                        
 #define ENCODING_7BIT                       "7bit"
+#endif
+#ifndef ENCODING_8BIT                       
 #define ENCODING_8BIT                       "8bit"
+#endif
+#ifndef ENCODING_BINARY                     
 #define ENCODING_BINARY                     "binary"
+#endif
+#ifndef ENCODING_BASE64                     
 #define ENCODING_BASE64                     "base64"
+#endif
+#ifndef ENCODING_QUOTED_PRINTABLE           
 #define ENCODING_QUOTED_PRINTABLE           "quoted-printable"
+#endif
+
 
 /* Some nonstandard encodings.  Note that the names are TOTALLY RANDOM,
    and code that looks for these in network-provided data must look for
-   all the possibilities.
- */
+   all the possibilities.*/
+#ifndef ENCODING_COMPRESS                    
 #define ENCODING_COMPRESS                   "x-compress"
+#endif
+#ifndef ENCODING_COMPRESS2                  
 #define ENCODING_COMPRESS2                  "compress"
+#endif
+#ifndef ENCODING_ZLIB                       
 #define ENCODING_ZLIB                       "x-zlib"
+#endif
+#ifndef ENCODING_ZLIB2                      
 #define ENCODING_ZLIB2                      "zlib"
+#endif
+#ifndef ENCODING_GZIP                       
 #define ENCODING_GZIP                       "x-gzip"
+#endif
+#ifndef ENCODING_GZIP2                      
 #define ENCODING_GZIP2                      "gzip"
+#endif
+#ifndef ENCODING_DEFLATE                    
 #define ENCODING_DEFLATE                    "x-deflate"
+#endif
+#ifndef ENCODING_DEFLATE2                   
 #define ENCODING_DEFLATE2                   "deflate"
+#endif
+#ifndef ENCODING_UUENCODE                   
 #define ENCODING_UUENCODE                   "x-uuencode"
+#endif
+#ifndef ENCODING_UUENCODE2                  
 #define ENCODING_UUENCODE2                  "x-uue"
+#endif
+#ifndef ENCODING_UUENCODE3                  
 #define ENCODING_UUENCODE3                  "uuencode"
+#endif
+#ifndef ENCODING_UUENCODE4                  
 #define ENCODING_UUENCODE4                  "uue"
+#endif
 
-/* Some names of parameters that various MIME headers include.
- */
+
+/* Some names of parameters that various MIME headers include.*/
+#ifndef PARAM_PROTOCOL                       
 #define PARAM_PROTOCOL                      "protocol"
+#endif
+#ifndef PARAM_MICALG                        
 #define PARAM_MICALG                        "micalg"
+#endif
+#ifndef PARAM_MICALG_MD2                    
 #define PARAM_MICALG_MD2                    "rsa-md2"
+#endif
+#ifndef PARAM_MICALG_MD5                    
 #define PARAM_MICALG_MD5                    "rsa-md5"
+#endif
+#ifndef PARAM_MICALG_SHA1                   
 #define PARAM_MICALG_SHA1                   "sha1"
+#endif
+#ifndef PARAM_MICALG_SHA1_2                 
 #define PARAM_MICALG_SHA1_2                 "sha-1"
+#endif
+#ifndef PARAM_MICALG_SHA1_3                 
 #define PARAM_MICALG_SHA1_3                 "rsa-sha1"
+#endif
+#ifndef PARAM_MICALG_SHA1_4                 
 #define PARAM_MICALG_SHA1_4                 "rsa-sha-1"
+#endif
+#ifndef PARAM_MICALG_SHA1_5                 
 #define PARAM_MICALG_SHA1_5                 "rsa-sha"
+#endif
+#ifndef PARAM_X_MAC_CREATOR                 
 #define PARAM_X_MAC_CREATOR                 "x-mac-creator"
+#endif
+#ifndef PARAM_X_MAC_TYPE                    
 #define PARAM_X_MAC_TYPE                    "x-mac-type"
+#endif
+
 
 
 /* This is like text/html, but also implies that the charset is that of
-   the window.  This type should not escape to the outside world!
- */
+   the window.  This type should not escape to the outside world!*/
+#ifndef INTERNAL_PARSER                      
 #define INTERNAL_PARSER                     "internal/parser"
+#endif
+
 
 /* This type represents a document whose type was unknown.  Note that this
    is not the same as "application/octet-stream".  UNKNOWN_CONTENT_TYPE is
@@ -789,7 +988,10 @@ typedef struct _mdata {
    feed a content type to an external consumer, we must translate this type
    to application/octet-stream first.
  */
+#ifndef UNKNOWN_CONTENT_TYPE               
 #define UNKNOWN_CONTENT_TYPE               "application/x-unknown-content-type"
+#endif
+
 
 /* I have no idea what these are... */
 #define MAGNUS_INTERNAL_UNKNOWN             "magnus-internal/unknown"
