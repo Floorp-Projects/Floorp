@@ -42,9 +42,6 @@ export LD_LIBRARY_PATH
 PATH=.:$PATH
 export PATH
 
-MOZILLA_FIVE_HOME=.
-export MOZILLA_FIVE_HOME
-
 BASEDIR=`dirname $0`
 if [ "$BASEDIR" = "" ]; then
     echo "dirname is not in your PATH"
