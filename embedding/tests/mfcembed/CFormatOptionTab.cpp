@@ -11,6 +11,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+const int kMinScaleRange = 30;
 
 /////////////////////////////////////////////////////////////////////////////
 typedef struct {
@@ -90,7 +91,7 @@ BOOL CFormatOptionTab::OnInitDialog()
     CWnd* scaleTxt     = GetDlgItem(IDC_SCALE_TXT);
     if (scale != NULL) 
     {
-        scale->SetRange(50, 100);
+        scale->SetRange(kMinScaleRange, 100);
         scale->SetBuddy(scaleTxt, FALSE);
         scale->SetTicFreq(10);
     }
@@ -168,7 +169,7 @@ void CFormatOptionTab::OnCustomdrawScale(NMHDR* pNMHDR, LRESULT* pResult)
 	  *pResult = 0;
 }
 
-static int GetIntFromStr(const char* aStr, int aMinVal = 50, int aMaxVal = 100)
+static int GetIntFromStr(const char* aStr, int aMinVal = kMinScaleRange, int aMaxVal = 100)
 {
     int val = aMinVal;
     sscanf(aStr, "%d", &val);
