@@ -1174,7 +1174,7 @@ nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
   rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
   if (NS_FAILED(rv)) return rv;
   folderArray->AppendElement(folderResource);
-  rv = DoCommand(db, forAll ? NC_RDF_COMPACTALL : NC_RDF_COMPACT,  folderArray, nsnull);
+  rv = DoCommand(db, NS_CONST_CAST(char*, forAll ? NC_RDF_COMPACTALL : NC_RDF_COMPACT),  folderArray, nsnull);
   if (NS_SUCCEEDED(rv) && mTxnMgr)
       mTxnMgr->Clear();
   return rv;
