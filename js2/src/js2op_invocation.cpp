@@ -72,17 +72,17 @@
                         }
 
                         ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                        runtimeFrame->instantiate(&meta->env);
+                        runtimeFrame->instantiate(meta->env);
                         PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
                         baseVal = OBJECT_TO_JS2VAL(pInst);
                         runtimeFrame->thisObject = baseVal;
     //                      assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                         if (!fWrap->code)
                             jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
-                        meta->env.addFrame(runtimeFrame);
+                        meta->env->addFrame(runtimeFrame);
                         if (fWrap->code) {  // native code, pass pointer to argument base
                             a = fWrap->code(meta, a, base(argCount), argCount);
-                            meta->env.removeTopFrame();
+                            meta->env->removeTopFrame();
                             pop(argCount + 1);
                             push(a);
                         }
@@ -114,23 +114,23 @@
                     a = JS2VAL_VOID;
                 else {
                     if (JS2VAL_IS_INACCESSIBLE(compileThis)) {
-                        Frame *g = meta->env.getPackageOrGlobalFrame();
+                        Frame *g = meta->env->getPackageOrGlobalFrame();
                         if (fWrap->compileFrame->prototype && (JS2VAL_IS_NULL(a) || JS2VAL_IS_VOID(a)) && (g->kind == GlobalObjectKind))
                             a = OBJECT_TO_JS2VAL(g);
                     }
                 }
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                runtimeFrame->instantiate(&meta->env);
+                runtimeFrame->instantiate(meta->env);
                 runtimeFrame->thisObject = a;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                 // XXX
                 runtimeFrame->assignArguments(base(argCount), argCount);
                 if (!fWrap->code)
                     jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
-                meta->env.addFrame(runtimeFrame);
+                meta->env->addFrame(runtimeFrame);
                 if (fWrap->code) {  // native code, pass pointer to argument base
                     a = fWrap->code(meta, a, base(argCount), argCount);
-                    meta->env.removeTopFrame();
+                    meta->env->removeTopFrame();
                     pop(argCount + 2);
                     push(a);
                 }
@@ -141,17 +141,17 @@
                 CallableInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                runtimeFrame->instantiate(&meta->env);
+                runtimeFrame->instantiate(meta->env);
                 runtimeFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                 if (!fWrap->code)
                     jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
-                meta->env.addFrame(meta->objectType(mc->thisObject));
-                meta->env.addFrame(runtimeFrame);
+                meta->env->addFrame(meta->objectType(mc->thisObject));
+                meta->env->addFrame(runtimeFrame);
                 if (fWrap->code) {
                     a = fWrap->code(meta, mc->thisObject, base(argCount), argCount);
-                    meta->env.removeTopFrame();
-                    meta->env.removeTopFrame();
+                    meta->env->removeTopFrame();
+                    meta->env->removeTopFrame();
                     pop(argCount + 2);
                     push(a);
                 }
@@ -190,14 +190,14 @@
         {
             Frame *f = bCon->mFrameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env.addFrame(f);
-            f->instantiate(&meta->env);
+            meta->env->addFrame(f);
+            f->instantiate(meta->env);
         }
         break;
 
     case ePopFrame: 
         {
-            meta->env.removeTopFrame();
+            meta->env->removeTopFrame();
         }
         break;
 

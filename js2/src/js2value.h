@@ -67,7 +67,6 @@
 
 /* Type tag bitfield length and derived macros. */
 #define JS2VAL_TAGBITS           4
-#define JS2VAL_UNNUMBER_MASK     JS2_BIT(3)
 #define JS2VAL_TAGMASK           JS2_BITMASK(JS2VAL_TAGBITS)
 #define JS2VAL_TAG(v)            ((v) & JS2VAL_TAGMASK)
 #define JS2VAL_SETTAG(v,t)       ((v) | (t))
@@ -89,7 +88,8 @@
 
 /* Predicates for type testing. */
 #define JS2VAL_IS_OBJECT(v)      ((JS2VAL_TAG(v) == JS2VAL_OBJECT) && !JS2VAL_IS_SPECIALREF(v))
-#define JS2VAL_IS_NUMBER(v)      ((JS2VAL_TAG(v) != JS2VAL_OBJECT) && !(JS2VAL_TAG(v) & JS2VAL_UNNUMBER_MASK))
+// XXX think about some way of making this faster...
+#define JS2VAL_IS_NUMBER(v)      (JS2VAL_IS_INT(v) || JS2VAL_IS_DOUBLE(v) || JS2VAL_IS_LONG(v) || JS2VAL_IS_ULONG(v) || JS2VAL_IS_FLOAT(v)) 
 #define JS2VAL_IS_INT(v)         (((v) & JS2VAL_INT) && (v) != JS2VAL_VOID)
 #define JS2VAL_IS_DOUBLE(v)      (JS2VAL_TAG(v) == JS2VAL_DOUBLE)
 #define JS2VAL_IS_STRING(v)      (JS2VAL_TAG(v) == JS2VAL_STRING)

@@ -147,7 +147,7 @@ namespace MetaData {
      */
     void JS2Metadata::ValidateStmtList(StmtNode *p) {
         while (p) {
-            ValidateStmt(&cxt, &env, Singular, p);
+            ValidateStmt(&cxt, env, Singular, p);
             p = p->next;
         }
     }
@@ -162,37 +162,47 @@ namespace MetaData {
     CallableInstance *JS2Metadata::validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
-        CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
-        env->addFrame(compileFrame);
-        VariableBinding *pb = f->function.parameters;
-        if (pb) {
-            NamespaceList publicNamespaceList;
-            publicNamespaceList.push_back(publicNamespace);
-            uint32 pCount = 0;
-            while (pb) {
-                pCount++;
-                pb = pb->next;
-            }
-            pb = f->function.parameters;
-            compileFrame->positional = new Variable *[pCount];
-            compileFrame->positionalCount = pCount;
-            pCount = 0;
-            while (pb) {
-                // XXX define a static binding for each parameter
-                Variable *v = new Variable();
-                compileFrame->positional[pCount++] = v;
-                pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos);
-                pb = pb->next;
-            }
-        }
-        ValidateStmt(cxt, env, Plural, f->function.body);
-        env->removeTopFrame();
-        restoreCompilationUnit(oldData);
-
         CallableInstance *fInst = new CallableInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
         f->fWrap = fInst->fWrap;
 
+        JS2Object::RootIterator ri = JS2Object::addRoot(&fInst);
+        Frame *curTopFrame = env->getTopFrame();
+
+        try {
+            CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+            env->addFrame(compileFrame);
+            VariableBinding *pb = f->function.parameters;
+            if (pb) {
+                NamespaceList publicNamespaceList;
+                publicNamespaceList.push_back(publicNamespace);
+                uint32 pCount = 0;
+                while (pb) {
+                    pCount++;
+                    pb = pb->next;
+                }
+                pb = f->function.parameters;
+                compileFrame->positional = new Variable *[pCount];
+                compileFrame->positionalCount = pCount;
+                pCount = 0;
+                while (pb) {
+                    // XXX define a static binding for each parameter
+                    Variable *v = new Variable();
+                    compileFrame->positional[pCount++] = v;
+                    pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos);
+                    pb = pb->next;
+                }
+            }
+            ValidateStmt(cxt, env, Plural, f->function.body);
+            env->removeTopFrame();
+            restoreCompilationUnit(oldData);
+        }
+        catch (Exception x) {
+            env->setTopFrame(curTopFrame);
+            JS2Object::removeRoot(ri);
+            throw x;
+        }
+        JS2Object::removeRoot(ri);
         return fInst;
     }
 
@@ -478,8 +488,6 @@ namespace MetaData {
                         compileThis = JS2VAL_INACCESSIBLE;
                     Frame *topFrame = env->getTopFrame();
 
-                    CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
-
                     switch (memberMod) {
                     case Attribute::NoModifier:
                     case Attribute::Static:
@@ -488,6 +496,7 @@ namespace MetaData {
                                 // XXX getter/setter --> ????
                             }
                             else {
+                                CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
                                 if (unchecked 
                                         && (f->attributes == NULL)
                                         && ((topFrame->kind == GlobalObjectKind)
@@ -507,6 +516,7 @@ namespace MetaData {
                     case Attribute::Final:
                         {
                     // XXX Here the spec. has ???, so the following is tentative
+                            CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
                             JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
                             InstanceMember *m = new InstanceMethod(fInst);
                             defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
@@ -515,6 +525,7 @@ namespace MetaData {
                     case Attribute::Constructor:
                         {
                     // XXX Here the spec. has ???, so the following is tentative
+                            CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
                             ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fInst));
                             defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
                         }
@@ -702,7 +713,7 @@ namespace MetaData {
     {
         size_t lastPos = p->pos;
         while (p) {
-            SetupStmt(&env, phase, p);
+            SetupStmt(env, phase, p);
             lastPos = p->pos;
             p = p->next;
         }
@@ -729,7 +740,7 @@ namespace MetaData {
                 ASSERT(phase == CompilePhase);
                 if (v->vb->type) {
                     v->type = NULL;
-                    v->type = EvalTypeExpression(&env, CompilePhase, v->vb->type);
+                    v->type = EvalTypeExpression(env, CompilePhase, v->vb->type);
                 }
                 else
                     v->type = objectClass;
@@ -1421,6 +1432,12 @@ namespace MetaData {
                     if (name == world.identifiers["virtual"]) {
                         ca = new CompoundAttribute();
                         ca->memberMod = Attribute::Virtual;
+                        return ca;
+                    }
+                    else
+                    if (name == world.identifiers["dynamic"]) {
+                        ca = new CompoundAttribute();
+                        ca->dynamic = true;
                         return ca;
                     }
                 }
@@ -2376,7 +2393,7 @@ doUnary:
                 break;
             fi++;
         }
-        if ((fi != getEnd()) && ((*fi)->kind == ClassKind))
+        if ((fi != getBegin()) && ((*fi)->kind == ClassKind))
             fi--;
         return fi;
     }
@@ -2384,7 +2401,7 @@ doUnary:
     // Returns the penultimate frame, either Package or Global
     Frame *Environment::getPackageOrGlobalFrame()
     {
-        return *(getEnd() - 1);
+        return *(getEnd() - 2);
     }
 
     // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
@@ -2497,7 +2514,7 @@ doUnary:
     // need to mark all the frames in the environment - otherwise a marked frame that
     // came initially from the bytecodeContainer may prevent the markChildren call
     // from finding frames further down the list.
-    void Environment::mark()
+    void Environment::markChildren()
     { 
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
@@ -2606,6 +2623,16 @@ doUnary:
                 }
                 fr = *++fi;
             }
+            fi = env->getBegin();
+            fr = *++fi;
+            while (fr != regionalFrame) {
+                for (b = fr->staticWriteBindings.lower_bound(*id),
+                        end = fr->staticWriteBindings.upper_bound(*id); (b != end); b++) {
+                    if (mn->matches(b->second->qname) && (b->second->content->kind != StaticMember::Forbidden))
+                        reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                }
+                fr = *++fi;
+            }
         }
         if (regionalFrame->kind == GlobalObjectKind) {
             GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
@@ -2625,6 +2652,7 @@ doUnary:
         }
         
         if (localFrame != regionalFrame) {
+            fi = env->getBegin();
             Frame *fr = *++fi;
             while (fr != regionalFrame) {
                 for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
@@ -2642,7 +2670,7 @@ doUnary:
         return mn;
     }
 
-    // Look through 'c' and all it's super classes for a identifier 
+    // Look through 'c' and all it's super classes for an identifier 
     // matching the qualified name and access.
     InstanceMember *JS2Metadata::findInstanceMember(JS2Class *c, QualifiedName *qname, Access access)
     {
@@ -2933,7 +2961,7 @@ doUnary:
         publicNamespace(new Namespace(engine->public_StringAtom)),
         bCon(new BytecodeContainer()),
         glob(new GlobalObject(world)),
-        env(new MetaData::SystemFrame(), glob),
+        env(new Environment(new MetaData::SystemFrame(), glob)),
         showTrees(false)
     {
         engine->meta = this;
@@ -2959,6 +2987,22 @@ doUnary:
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new StaticMember(Member::Forbidden);
 
+        // needed for class instance variables etc...
+        NamespaceList publicNamespaceList;
+        publicNamespaceList.push_back(publicNamespace);
+        Variable *v;
+
+        
+        
+// XXX Built-in Attributes... XXX 
+/*
+XXX see EvalAttributeExpression, where identifiers are being handled for now...
+
+        CompoundAttribute *attr = new CompoundAttribute();
+        attr->dynamic = true;
+        v = new Variable(attributeClass, OBJECT_TO_JS2VAL(attr), true);
+        defineStaticMember(env, &world.identifiers["dynamic"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+*/
 
 /*** ECMA 3  Global Object ***/
         // Non-function properties of the global object : 'undefined', 'NaN' and 'Infinity'
@@ -2978,49 +3022,44 @@ doUnary:
         writeDynamicProperty(objectClass->prototype, new Multiname(engine->toString_StringAtom, publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
 
-        // needed for class instance variables etc...
-        NamespaceList publicNamespaceList;
-        publicNamespaceList.push_back(publicNamespace);
-        Variable *v;
-
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
-        defineStaticMember(&env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineStaticMember(env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
  //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initDateObject(this);
 
 /*** ECMA 3  RegExp Class ***/
         MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, &world.identifiers["RegExp"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
-        defineStaticMember(&env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineStaticMember(env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initRegExpObject(this);
 
 /*** ECMA 3  String Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
-        defineStaticMember(&env, &world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineStaticMember(env, &world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initStringObject(this);
 
 /*** ECMA 3  Number Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(numberClass), true);
-        defineStaticMember(&env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineStaticMember(env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initNumberObject(this);
 
 /*** ECMA 3  Math Class ***/
         MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, &world.identifiers["Math"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
-        defineStaticMember(&env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineStaticMember(env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initMathObject(this);
 
 /*** ECMA 3  Array Class ***/
         MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, &world.identifiers["Array"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
-        defineStaticMember(&env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineStaticMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initArrayObject(this);
 
 /*** ECMA 3  Function Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(functionClass), true);
-        defineStaticMember(&env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineStaticMember(env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         // XXX more here!
 
     }
@@ -3090,7 +3129,7 @@ doUnary:
     bool JS2Metadata::relaxedHasType(js2val objVal, JS2Class *c)
     {
         JS2Class *t = objectType(objVal);
-        return c->isAncestor(t) || (JS2VAL_IS_NULL(objVal) && t->allowNull);
+        return t->isAncestor(c) || (JS2VAL_IS_NULL(objVal) && t->allowNull);
     }
 
 
@@ -3237,6 +3276,8 @@ doUnary:
             dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
         else 
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
+        if (dMap == NULL)
+            return false; // 'None'
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *name) {
                 i->second = newValue;
@@ -3879,7 +3920,7 @@ deleteClassProperty:
             bCon->mark();
         if (engine)
             engine->mark();
-        env.mark();
+        GCMARKOBJECT(env);
 
         GCMARKOBJECT(glob);
     
@@ -4206,7 +4247,7 @@ deleteClassProperty:
         }        
     }
 
-    // return true if 'heir' is a member of this class or of any antecedent
+    // return true if 'heir' is this class or is any antecedent
     bool JS2Class::isAncestor(JS2Class *heir)
     {
         JS2Class *kinsman = this;

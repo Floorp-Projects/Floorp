@@ -90,7 +90,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            push(meta->env.lexicalRead(meta, mn, phase));
+            push(meta->env->lexicalRead(meta, mn, phase));
 	}
         break;
 
@@ -98,7 +98,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            push(BOOLEAN_TO_JS2VAL(meta->env.lexicalDelete(meta, mn, phase)));
+            push(BOOLEAN_TO_JS2VAL(meta->env->lexicalDelete(meta, mn, phase)));
 	}
         break;
 
@@ -109,7 +109,7 @@
             a = top();
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env.lexicalWrite(meta, mn, a, true, phase);
+            meta->env->lexicalWrite(meta, mn, a, true, phase);
 	}
         break;
 
@@ -118,7 +118,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            a = meta->env.lexicalRead(meta, mn, phase);
+            a = meta->env->lexicalRead(meta, mn, phase);
             push(JS2VAL_NULL);
             push(a);
 	}
@@ -221,7 +221,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            Frame *f = meta->env.getTopFrame();
+            Frame *f = meta->env->getTopFrame();
             a = pop();
             (*f->temps)[slotIndex] = a;
         }
@@ -231,7 +231,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            Frame *f = meta->env.getTopFrame();
+            Frame *f = meta->env->getTopFrame();
             push((*f->temps)[slotIndex]);
         }
         break;

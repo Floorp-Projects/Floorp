@@ -754,7 +754,7 @@ namespace MetaData {
         activationStackTop->bCon = bCon;
         activationStackTop->pc = pc;
         activationStackTop->phase = phase;
-        activationStackTop->topFrame = meta->env.getTopFrame();
+        activationStackTop->topFrame = meta->env->getTopFrame();
         activationStackTop->execStackBase = stackBase;
         activationStackTop->retval = returnVal;
         activationStackTop++;
@@ -774,8 +774,8 @@ namespace MetaData {
         bCon = activationStackTop->bCon;
         pc = activationStackTop->pc;
         phase = activationStackTop->phase;
-        while (meta->env.getTopFrame() != activationStackTop->topFrame)
-            meta->env.removeTopFrame();
+        while (meta->env->getTopFrame() != activationStackTop->topFrame)
+            meta->env->removeTopFrame();
         sp = activationStackTop->execStackBase;
         if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead
             retval = activationStackTop->retval;

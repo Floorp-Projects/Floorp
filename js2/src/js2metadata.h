@@ -94,7 +94,9 @@ enum ObjectKind {
     MultinameKind,
     MethodClosureKind,
     AlienInstanceKind,
-    ForIteratorKind
+    ForIteratorKind,
+
+    EnvironmentKind         // Not an available JS2 runtime kind
 };
 
 enum Plurality { Singular, Plural };
@@ -877,9 +879,10 @@ public:
 typedef std::deque<Frame *> FrameList;
 typedef FrameList::iterator FrameListIterator;
 
-class Environment {
+// Deriving from JS2Object for gc sake only, these are supposed to be found as JS2 values
+class Environment : public JS2Object {
 public:
-    Environment(SystemFrame *systemFrame, Frame *nextToLast) { frameList.push_back(nextToLast); frameList.push_back(systemFrame);  }
+    Environment(SystemFrame *systemFrame, Frame *nextToLast) : JS2Object(EnvironmentKind) { frameList.push_back(nextToLast); frameList.push_back(systemFrame);  }
 
     JS2Class *getEnclosingClass();
     FrameListIterator getRegionalFrame();
@@ -887,7 +890,7 @@ public:
     FrameListIterator getBegin()            { return frameList.begin(); }
     FrameListIterator getEnd()              { return frameList.end(); }
     Frame *getPackageOrGlobalFrame();
-    Frame *getSystemFrame()                 { return frameList.back(); }
+    SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back()); }
 
     void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
 
@@ -901,7 +904,7 @@ public:
 
     void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);
 
-    void mark();
+    void markChildren();
 
 private:
     FrameList frameList;
@@ -986,6 +989,7 @@ public:
     js2val readEvalFile(const String& fileName);
     js2val readEvalFile(const char *fileName);
 
+// XXX - passing (Context *cxt, Environment *env) throughout - but do these really change?
 
     void ValidateStmtList(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateTypeExpression(Context *cxt, Environment *env, ExprNode *e)    { ValidateExpression(cxt, env, e); } 
@@ -1110,7 +1114,7 @@ public:
     BConList bConList;
 
     GlobalObject *glob;
-    Environment env;
+    Environment *env;
     Context cxt;
 
     TargetList targetList;          // stack of potential break/continue targets

@@ -100,13 +100,13 @@ namespace MetaData {
         publicNamespaceList.push_back(meta->publicNamespace);
 
         uint32 i;
-        meta->env.addFrame(meta->numberClass);
+        meta->env->addFrame(meta->numberClass);
         for (i = 0; i < N_CONSTANTS_COUNT; i++)
         {
             Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(NumberObjectConstants[i].value), true);
-            meta->defineStaticMember(&meta->env, &meta->world.identifiers[NumberObjectConstants[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            meta->defineStaticMember(meta->env, &meta->world.identifiers[NumberObjectConstants[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         }
-        meta->env.removeTopFrame();
+        meta->env->removeTopFrame();
 
     }
 

@@ -834,23 +834,23 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            a = meta->env.lexicalRead(meta, mn, phase);
+            a = meta->env->lexicalRead(meta, mn, phase);
             if (JS2VAL_IS_LONG(a)) {
                 int64 i = *JS2VAL_TO_LONG(a);
                 JSLL_ADD(i, i, 1);
-                meta->env.lexicalWrite(meta, mn, allocLong(i), true, phase);
+                meta->env->lexicalWrite(meta, mn, allocLong(i), true, phase);
                 push(a);
             }
             else {
                 if (JS2VAL_IS_ULONG(a)) {
                     uint64 i = *JS2VAL_TO_ULONG(a);
                     JSLL_ADD(i, i, 1);
-                    meta->env.lexicalWrite(meta, mn, allocULong(i), true, phase);
+                    meta->env->lexicalWrite(meta, mn, allocULong(i), true, phase);
                     push(a);
                 }
                 else {
                     float64 num = meta->toFloat64(a);
-                    meta->env.lexicalWrite(meta, mn, allocNumber(num + 1.0), true, phase);
+                    meta->env->lexicalWrite(meta, mn, allocNumber(num + 1.0), true, phase);
                     pushNumber(num);
                 }
             }
@@ -860,9 +860,9 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            a = meta->env.lexicalRead(meta, mn, phase);
+            a = meta->env->lexicalRead(meta, mn, phase);
             float64 num = meta->toFloat64(a);
-            meta->env.lexicalWrite(meta, mn, allocNumber(num - 1.0), true, phase);
+            meta->env->lexicalWrite(meta, mn, allocNumber(num - 1.0), true, phase);
             pushNumber(num);
         }
         break;
@@ -870,20 +870,20 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            a = meta->env.lexicalRead(meta, mn, phase);
+            a = meta->env->lexicalRead(meta, mn, phase);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            meta->env.lexicalWrite(meta, mn, a, true, phase);
+            meta->env->lexicalWrite(meta, mn, a, true, phase);
         }
         break;
     case eLexicalPreDec:
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            a = meta->env.lexicalRead(meta, mn, phase);
+            a = meta->env->lexicalRead(meta, mn, phase);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            meta->env.lexicalWrite(meta, mn, a, true, phase);
+            meta->env->lexicalWrite(meta, mn, a, true, phase);
         }
         break;
 

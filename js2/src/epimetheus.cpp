@@ -339,23 +339,24 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
 
 js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
-    // Set the environment to global object and system frame so that the
-    // load happens into the top frame.
     if (argc) {
         // Save off the current top frame and root it.
-        Frame *curTopFrame = meta->env.getTopFrame();
-        JS2Object::RootIterator ri = JS2Object::addRoot(&curTopFrame);
-        meta->env.setTopFrame(meta->env.getPackageOrGlobalFrame());
+        Environment *curEnv = meta->env;
+        JS2Object::RootIterator ri = JS2Object::addRoot(&curEnv);
+        // Set the environment to global object and system frame so that the
+        // load happens into the top frame.
+        meta->env = new Environment(curEnv->getSystemFrame(), curEnv->getPackageOrGlobalFrame());
+        
         js2val result = JS2VAL_UNDEFINED;
         try {
             result = meta->readEvalFile(*meta->toString(argv[0]));
         }
         catch (Exception x) {
-            meta->env.setTopFrame(curTopFrame);
+            meta->env = curEnv;
             JS2Object::removeRoot(ri);
             throw x;
         }
-        meta->env.setTopFrame(curTopFrame);
+        meta->env = curEnv;
         JS2Object::removeRoot(ri);
         return result;
     }
