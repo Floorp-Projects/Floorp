@@ -490,8 +490,16 @@ sub build_blame {
     }
 
     $::opt_rev = $tags->{$file} if defined $tags->{$file};
-    my $revision = &parse_cvs_file($rcs_filename);
-    @text = &extract_revision($revision);
+    my $revision = 0;
+    eval {
+      $revision = &parse_cvs_file($rcs_filename);
+    };
+    if ($@) {
+      warn "Error parsing $rcs_filename: $@\n";
+      $unblamed{$file} = 1;
+      next;
+    }
+    my @text = &extract_revision($revision);
     LINE: while (my ($line, $line_rec) = each %{$lines_hash}) {
       my $line_rev = $revision_map[$line-1];
       my $who = $revision_author{$line_rev};
