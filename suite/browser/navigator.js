@@ -811,7 +811,7 @@ function UpdateBookmarksLastVisitedDate(event)
    RefreshUrlbar();
   }
 
-  function OpenBookmarkURL(node, root)
+  function OpenBookmarkURL(node, datasources)
   {
     if (node.getAttribute('container') == "true") {
       return false;
@@ -820,27 +820,17 @@ function UpdateBookmarksLastVisitedDate(event)
 	var url = node.getAttribute('id');
 	try
 	{
-		var rootNode = document.getElementById(root);
-		var ds = null;
-		if (rootNode)
-		{
-			ds = rootNode.database;
-		}
 		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
 		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if (rdf)
+		if (rdf && datasources)
 		{
-			if (ds)
-			{
-				var src = rdf.GetResource(url, true);
-				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-				var target = ds.GetTarget(src, prop, true);
-				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-				if (target)	target = target.Value;
-				if (target)	url = target;
-				
-			}
+			var src = rdf.GetResource(url, true);
+			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+			var target = datasources.GetTarget(src, prop, true);
+			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (target)	target = target.Value;
+			if (target)	url = target;
 		}
 	}
 	catch(ex)
