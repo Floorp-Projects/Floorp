@@ -33,7 +33,7 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_SKIN = \
-	.\related-panel.css \
+	.\related.css \
 	.\sitemap.gif \
 	$(NULL)
 
