@@ -291,7 +291,7 @@ BOOL CStubsCX::CheckConfirm(MWContext *pContext, const char *pMessage,
  * Run a dialog allowing selection from a list
  */
 BOOL CStubsCX::SelectDialog(MWContext *pContext, const char *pMessage,
-	const char **pList, int *pCount) {
+	const char **pList, int16 *pCount) {
 
 	CUserSelectionDialog dialog(GetDialogOwner(), pMessage,
 			pList, *pCount);

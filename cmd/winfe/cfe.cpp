@@ -242,7 +242,7 @@ extern XP_Bool CFE_CheckConfirm(MWContext *pContext,
 extern XP_Bool CFE_SelectDialog(MWContext *pContext,
 	const char *pMessage,		/* message above the list */
 	const char **pList,		/* array of entries in the list */
-	int *pCount) {			/* in: # items in list */
+	int16 *pCount) {		/* in: # items in list */
 					/* out: 0-based index of selected item */
 
 	// skip destroyed contexts

@@ -394,18 +394,18 @@ class FAR CUserSelectionDialog : public CDialog
 {
 public:
     CUserSelectionDialog(CWnd *pParent, const char *pMessage,
-        const char **pUserList, int nUserListCount);
+        const char **pUserList, int16 nUserListCount);
     ~CUserSelectionDialog();
 
     enum { IDD = IDD_SELECT_BOX };
 
-	BOOL	DoModal(LPINT nSelection);
+	BOOL	DoModal(int16 *nSelection);
 
 protected:
     CString mMessage;
 	char		**mList;
-	int		mListCount;
-	int		mSelection;
+	int16		mListCount;
+	int16		mSelection;
 
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();

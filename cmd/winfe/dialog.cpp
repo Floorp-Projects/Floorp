@@ -1159,12 +1159,12 @@ BEGIN_MESSAGE_MAP(CUserSelectionDialog, CDialog)
 END_MESSAGE_MAP()
 
 CUserSelectionDialog::CUserSelectionDialog(CWnd *pParent, const char *pMessage,
-        const char **pUserList, int nUserListCount) :
+        const char **pUserList, int16 nUserListCount) :
 
 	CDialog(CUserSelectionDialog::IDD, pParent),
 	mMessage(pMessage) {
 
-	int	ctr;
+	int16	ctr;
 
 	mSelection = -1;
 	// copy pUserList
@@ -1191,7 +1191,7 @@ CUserSelectionDialog::CUserSelectionDialog(CWnd *pParent, const char *pMessage,
 
 CUserSelectionDialog::~CUserSelectionDialog() {
 
-	int ctr;
+	int16 ctr;
 
 	if (mList) {
 		for (ctr = 0; ctr < mListCount; ctr++)
@@ -1200,7 +1200,7 @@ CUserSelectionDialog::~CUserSelectionDialog() {
 	}
 }
 
-BOOL CUserSelectionDialog::DoModal(LPINT nSelection)
+BOOL CUserSelectionDialog::DoModal(int16 *nSelection)
 {
 	BOOL	rtnval = CDialog::DoModal() == IDOK;
 	*nSelection = mSelection;
@@ -1210,9 +1210,8 @@ BOOL CUserSelectionDialog::DoModal(LPINT nSelection)
 void CUserSelectionDialog::OnOK()
 {
 	CListBox *listItem = (CListBox *) GetDlgItem(IDC_LIST1);
-	mSelection = listItem->GetCurSel();
-	if (mSelection == LB_ERR)
-		mSelection = -1;
+	int selection = listItem->GetCurSel();
+	mSelection = selection == LB_ERR ? -1 : (int16) selection;
 	CDialog::OnOK();
 }
 
@@ -1222,7 +1221,7 @@ BOOL CUserSelectionDialog::OnInitDialog()
 
 	CStatic *messageItem = (CStatic *) GetDlgItem(IDC_STATIC1);
 	CListBox *listItem = (CListBox *) GetDlgItem(IDC_LIST1);
-	int ctr;
+	int16 ctr;
 
 	// set subwindows' text
 	messageItem->SetWindowText((const char *) mMessage);
