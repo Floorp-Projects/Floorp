@@ -180,7 +180,11 @@ js_alloc_atom(void *priv, const void *key)
 #endif
     atom->entry.key = key;
     atom->entry.value = NULL;
+#ifdef TOO_MUCH_GC
+    atom->flags = ATOM_PINNED;
+#else
     atom->flags = 0;
+#endif
     atom->kwindex = -1;
     atom->number = state->number++;
     return &atom->entry;
