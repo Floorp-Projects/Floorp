@@ -121,7 +121,7 @@ nsCacheManager::Contains(const char* i_url) const
         char extraBytesSeparator;
         */
     }
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(DEBUG_gagan)
 		fputs(i_url, stdout);
 		fputs(bStatus ? " is " : " is not ", stdout);
 		fputs("in cache\n", stdout);
