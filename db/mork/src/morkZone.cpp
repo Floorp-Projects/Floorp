@@ -197,7 +197,7 @@ mork_size morkZone::zone_grow_at(morkEnv* ev, mork_size inNeededSize)
   // try to find a run in old run list with at least inNeededSize bytes:
   morkRun* run = mZone_FreeOldRunList; // cursor in list scan
   morkRun* prev = 0; // the node before run in the list scan
-  
+ 
   while ( run ) // another run in list to check?
   {
     morkOldRun* oldRun = (morkOldRun*) run;
@@ -218,7 +218,8 @@ mork_size morkZone::zone_grow_at(morkEnv* ev, mork_size inNeededSize)
     else
       mZone_FreeOldRunList = run; // unlink run from head of list
       
-    run->RunSetSize(runSize);
+    morkOldRun *oldRun = (morkOldRun *) run;
+    oldRun->OldSetSize(runSize);
     mZone_At = (mork_u1*) run->RunAsBlock();
     mZone_AtSize = runSize;
 
