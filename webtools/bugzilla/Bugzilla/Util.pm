@@ -43,28 +43,7 @@ use Bugzilla::Error;
 use Bugzilla::Constants;
 use Date::Parse;
 use Date::Format;
-use Text::Autoformat qw(autoformat break_wrap);
-
-our $autoformat_options = {
-    # Reformat all paragraphs, not just the first one.
-    all        => 1,
-    # Break only on spaces, and let long lines overflow.
-    break      => break_wrap,
-    # Columns are COMMENT_COLS wide.
-    right      => COMMENT_COLS,
-    # Don't reformat into perfect paragraphs, just wrap.
-    fill       => 0,
-    # Don't compress whitespace.
-    squeeze    => 0,
-    # Lines starting with ">" are not wrapped.
-    ignore     => qr/^>/,
-    # Don't re-arrange numbered lists.
-    renumber   => 0,
-    # Keep short lines at the end of paragraphs as-is.
-    widow      => 0,
-    # Even if a paragraph looks centered, don't "auto-center" it.
-    autocentre => 0,
-};
+use Text::Wrap;
 
 # This is from the perlsec page, slightly modifed to remove a warning
 # From that page:
@@ -218,7 +197,26 @@ sub diff_strings {
 
 sub wrap_comment ($) {
     my ($comment) = @_;
-    return autoformat($comment, $autoformat_options);
+    my $wrappedcomment = "";
+
+    # Use 'local', as recommended by Text::Wrap's perldoc.
+    local $Text::Wrap::columns = COMMENT_COLS;
+    # Make words that are longer than COMMENT_COLS not wrap.
+    local $Text::Wrap::huge    = 'overflow';
+    # Don't mess with tabs.
+    local $Text::Wrap::unexpand = 0;
+
+    # If the line starts with ">", don't wrap it. Otherwise, wrap.
+    foreach my $line (split(/\r\n|\r|\n/, $comment)) {
+      if ($line =~ qr/^>/) {
+        $wrappedcomment .= ($line . "\n");
+      }
+      else {
+        $wrappedcomment .= (wrap('', '', $line) . "\n");
+      }
+    }
+
+    return $wrappedcomment;
 }
 
 sub format_time {

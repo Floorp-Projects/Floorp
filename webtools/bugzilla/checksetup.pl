@@ -313,8 +313,8 @@ my $modules = [
         version => '2.08' 
     }, 
     { 
-        name => 'Text::Autoformat', 
-        version => '0' 
+        name => 'Text::Wrap',
+        version => '2001.0131'
     }, 
     { 
         name => 'Mail::Mailer', 
