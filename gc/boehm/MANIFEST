@@ -1,7 +1,0 @@
-#
-# This is a list of local files which get copied to the mozilla:dist:gc directory
-#
-
-gc.h
-generic_threads.h
-gc_fragments.h

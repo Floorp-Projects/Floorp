@@ -1,8 +1,0 @@
-#
-# This is a list of local files which get copied to the mozilla:dist:webshell directory
-#
-
-nsIDocStreamLoaderFactory.h
-nsILinkHandler.h
-nsIWebShell.h
-nsIWebShellServices.h

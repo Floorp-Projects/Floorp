@@ -1,7 +1,0 @@
-nsICertificatePrincipal.idl
-nsICodebasePrincipal.idl
-nsIPrincipal.idl
-nsIScriptSecurityManager.idl
-nsISignatureVerifier.idl
-nsISecurityCheckedComponent.idl
-

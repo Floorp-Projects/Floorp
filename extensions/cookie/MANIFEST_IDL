@@ -1,9 +1,0 @@
-nsICookie.idl
-nsICookieManager.idl
-nsIImgManager.idl
-nsIPermission.idl
-nsIPermissionManager.idl
-nsICookieConsent.idl
-nsICookieAcceptDialog.idl
-nsICookiePromptService.idl
-nsICookiePermission.idl

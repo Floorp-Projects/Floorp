@@ -1,8 +1,0 @@
-#
-# This is a list of local files which get copied to the mozilla:dist:content directory
-#
-nsIBindingManager.h
-nsIXBLBinding.h
-nsIXBLDocumentInfo.h
-nsIXBLService.h
-

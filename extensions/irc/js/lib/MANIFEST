@@ -1,6 +1,0 @@
-utils.js
-events.js
-connection-xpcom.js
-command-manager.js
-irc.js
-irc-debug.js

@@ -1,7 +1,0 @@
-nsICaseConversion.h
-nsIOrderIdFormater.h
-nsITextTransform.h
-nsIUGenCategory.h
-nsIUGenDetailCategory.h
-nsUnicharUtilCIID.h
-nsHankakuToZenkakuCID.h
