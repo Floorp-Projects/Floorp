@@ -29,8 +29,8 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-PRInt32        nsRDFResource::gRefCnt;
-nsIRDFService* nsRDFResource::gRDFService;
+PRInt32        nsRDFResource::gRefCnt = 0;
+nsIRDFService* nsRDFResource::gRDFService = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
