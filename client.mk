@@ -32,13 +32,13 @@
 #    gmake -f client.mk
 #
 # Other targets (gmake -f client.mk [targets...]),
-#    checkout  (also pull_all)
-#    build     (also build_all)
+#    checkout
+#    build
 #    realclean (also clobber_all)
 #    clean     (also clobber)
 #
 # The nspr library is handled as follows,
-#    Read $HOME/.mozconfig.sh (or $(TOPSRCDIR)/mozconfig.sh) and
+#    Read $HOME/.mozconfig (or $(TOPSRCDIR)/mozconfig) and
 #    get the directory specified by --with-nspr.
 #    If the flag is not there, look for nspr in /usr/bin.
 #    Otherwise, build from tip and install in $(OBJDIR)/dist/nspr
@@ -72,7 +72,7 @@ MAKE		:= gmake
 endif
 
 WEBCONFIG_URL   := http://cvs-mirror.mozilla.org/webtools/build/config.cgi
-WEBCONFIG_FILE  := $(HOME)/.mozconfig.sh
+WEBCONFIG_FILE  := $(HOME)/.mozconfig
 
 CONFIG_GUESS	:= $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS
@@ -81,9 +81,9 @@ else
   IS_FIRST_CHECKOUT := 1
 endif
 
-# Load options from mozconfig.sh
+# Load options from mozconfig
 #   (See build pages, http://www.mozilla.org/build/unix.html, 
-#    for how to set up mozconfig.sh.)
+#    for how to set up mozconfig)
 MOZCONFIG2DEFS := build/autoconf/mozconfig2defs.sh
 FIND_MOZCONFIG := build/autoconf/find-mozconfig.sh
 run_for_side_effects := \
@@ -278,10 +278,10 @@ endif
 $(OBJDIR)/Makefile: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR); 
-	@echo LD_LIBRARY_PATH=$(MOZ_WITH_NSPR)/lib:$(LD_LIBRARY_PATH) \\
+	@echo LD_LIBRARY_PATH=$(NSPR_INSTALL_DIR)/lib:$(LD_LIBRARY_PATH) \\
 	@echo ../configure $(CONFIG_FLAGS)
 	@cd $(OBJDIR) && \
-	  LD_LIBRARY_PATH=$(MOZ_WITH_NSPR)/lib:$(LD_LIBRARY_PATH) \
+	  LD_LIBRARY_PATH=$(NSPR_INSTALL_DIR)/lib:$(LD_LIBRARY_PATH) \
 	  $(TOPSRCDIR)/configure $(CONFIG_FLAGS) \
 	  || echo Fix above errors and then restart with \"$(MAKE) -f client.mk build\"
 
