@@ -146,7 +146,7 @@ var notificationCallbacks =
     }
     Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
     return null;
-  },
+  }
 }
 
 
