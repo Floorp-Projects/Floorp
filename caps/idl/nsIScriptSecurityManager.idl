@@ -176,6 +176,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     void setCanEnableCapability(in string certificateID, in string capability, 
                                 in short canEnable);
+
+    ///////////////////////
+    /**
+     * Return the principal of the specified object in the specified context.
+     */
+    [noscript] nsIPrincipal getObjectPrincipal(in JSContextPtr cx,
+                                               in JSObjectPtr obj);
 };
 
 %{C++

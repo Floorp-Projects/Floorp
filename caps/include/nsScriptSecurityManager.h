@@ -139,9 +139,6 @@ private:
     GetSubjectPrincipal(JSContext* aCx, nsIPrincipal** result);
 
     nsresult
-    GetObjectPrincipal(JSContext* aCx, JSObject* aObj, nsIPrincipal** result);
-
-    nsresult
     GetFramePrincipal(JSContext* cx, JSStackFrame* fp, nsIPrincipal** result);
                                                      
     nsresult
