@@ -1368,17 +1368,11 @@ function getFindInstData()
 
 function MsgFind()
 {
-  // make sure the message pane has focus before we start a find since we only support searching
-  // within the message body
-  SetFocusMessagePane(); 
   findInPage(getFindInstData());
 }
 
 function MsgFindAgain(reverse)
 {
-  // make sure the message pane has focus before we start a find since we only support searching
-  // within the message body
-  SetFocusMessagePane(); 
   findAgainInPage(getFindInstData(), reverse);
 }
 
