@@ -257,7 +257,14 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
   //    status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
   status = ((MimeObjectClass*)COM_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
   if (status < 0) return status;
-  
+ 
+  // Don't quote vCards...
+  if (  (obj->options) && 
+    ((obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
+    (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting))
+    )
+    return 0;
+
   if (!clazz->vCardString) return 0;
   
   v = Parse_MIME(clazz->vCardString, nsCRT::strlen(clazz->vCardString));
@@ -1244,7 +1251,7 @@ static int WriteOutVCard (MimeObject *obj, VObject* v)
 	/* write out basic layer */
 	status = BeginLayer(obj, PR_TRUE);
 	if (status < 0) return status;
-	status = OutputBasicVcard(obj, v);
+  status = OutputBasicVcard(obj, v);
 	if (status < 0) return status;
 	status = EndLayer(obj, PR_TRUE, v);
 	if (status < 0) return status;
@@ -1715,13 +1722,24 @@ FindCharacterSet(MimeObject *obj)
 {
   char    *retCharSet = nsnull;
   char    *tCharSet = nsnull;
+  char    *workString = nsnull;
 
   if ( (!obj->headers) || (!obj->headers->all_headers) )
     return nsnull;
 
-  char *cTypePtr = (char *) PL_strcasestr(obj->headers->all_headers, HEADER_CONTENT_TYPE);
-  if (!cTypePtr)
+  workString = (char *)PR_Malloc(obj->headers->all_headers_size + 1);
+  if (!workString)
     return nsnull;
+
+  nsCRT::memset(workString, 0, obj->headers->all_headers_size + 1);
+  nsCRT::memcpy(workString, obj->headers->all_headers, obj->headers->all_headers_size);
+
+  char *cTypePtr = (char *) PL_strcasestr(workString, HEADER_CONTENT_TYPE);
+  if (!cTypePtr)
+  {
+    PR_FREEIF(workString);
+    return nsnull;
+  }
 
   while ( (*cTypePtr) && (*cTypePtr != CR) && (*cTypePtr != LF) )
   {
@@ -1752,6 +1770,7 @@ FindCharacterSet(MimeObject *obj)
     }
   }
 
+  PR_FREEIF(workString);
   return retCharSet;
 }
 
