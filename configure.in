@@ -3837,9 +3837,20 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth` -ne 0; then
     dnl libraries instead.
     dnl
     if test -z "$GSSAPI_LIBS" ; then
-        LIBS="$LIBS -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"
-        AC_CHECK_LIB(gssapi_krb5, gss_init_sec_context,
-            [GSSAPI_LIBS="-L$GSSAPI_DIR/lib -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"],)
+        dnl
+        dnl Some operating systems (like AIX) don't ship the k5crypto
+        dnl and com_err libraries with their Kerberos implementation,
+        dnl so check for their existance before including them in
+        dnl GSSAPI_LIBS.
+        dnl
+        _GSS_LIBS="-L$GSSAPI_DIR/lib -lgssapi_krb5 -lkrb5"
+        AC_CHECK_LIB(k5crypto, main, 
+            [AC_CHECK_LIB(com_err, main,
+                [_GSS_LIBS="$_GSS_LIBS -lk5crypto -lcom_err"],)]
+            ,)
+        LIBS="$LIBS $_GSS_LIBS"
+        AC_CHECK_FUNC(gss_init_sec_context, 
+            [GSSAPI_LIBS="$_GSS_LIBS"],)
         LIBS="$_SAVE_LIBS"
     fi
 
