@@ -251,7 +251,6 @@ function foundHeaderInfo(aSniffer, aData)
   // as converted text, pass the document to the web browser persist component.
   // If we're just saving the HTML (second option in the list), send only the URI.
   var source = (isDocument && fp.filterIndex != 1) ? aData.document : aSniffer.uri;
-  
   var persistArgs = {
     source      : source,
     contentType : (isDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
@@ -567,11 +566,10 @@ function makeProgressDialog()
 
 function makeURL(aURL)
 {
-  const stdURLContractID = "@mozilla.org/network/standard-url;1";
-  const stdURLIID = Components.interfaces.nsIURI;
-  var uri = Components.classes[stdURLContractID].createInstance(stdURLIID);
-  uri.spec = aURL;
-  return uri;
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                .getService(Components.interfaces.nsIIOService);
+  return ioService.newURI(aURL, null, null);
+  
 }
 
 function makeFilePicker()
