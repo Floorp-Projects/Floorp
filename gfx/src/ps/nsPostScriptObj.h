@@ -287,6 +287,13 @@ public:
    *	@update 2/1/99 dwc
    */
   void colorimage(nsIImage *aImage,int aX, int aY, int aWidth, int aHeight);
+
+  /** ---------------------------------------------------
+   *  output a grayscale postscript image
+   *	@update 9/1/99 dwc
+   */
+  void grayimage(nsIImage *aImage,int aX, int aY, int aWidth, int aHeight);
+
   /** ---------------------------------------------------
    *  ???
    *	@update 2/1/99 dwc
