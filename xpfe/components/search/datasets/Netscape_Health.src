@@ -10,7 +10,10 @@
      action      = "http://search.netscape.com/cgi-bin/search"
 >
 
-<INPUT NAME="all=no&cat=Health&search" user>
+<INPUT NAME="utf8" VALUE="1"> 
+<INPUT NAME="all" VALUE="no"> 
+<INPUT NAME="cat" VALUE="Health"> 
+<INPUT NAME="search" user> 
 
 <interpret
      resultListStart = "<B>Reviewed Web Sites</B>"
