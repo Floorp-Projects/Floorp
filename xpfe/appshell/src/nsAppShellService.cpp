@@ -901,7 +901,7 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
   } else if (topic.Equals(gEQDestroyedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
     if (eq)
-      mAppShell->ListenToEventQueue(eq, PR_TRUE);
+      mAppShell->ListenToEventQueue(eq, PR_FALSE);
   }
   return NS_OK;
 }
