@@ -1637,9 +1637,8 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_CLIP)
     // doesn't paint the caret for some reason.
     const nsStyleDisplay* disp = GetStyleDisplay();
-    if (disp->mOverflow != NS_STYLE_OVERFLOW_AUTO &&  // this is the default
-        disp->mOverflow != NS_STYLE_OVERFLOW_VISIBLE &&
-        disp->mOverflow != NS_STYLE_OVERFLOW_CLIP) {
+    if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
+        disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
       rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
                                NS_LITERAL_STRING("overflow: inherit;"),
                                PR_FALSE);
@@ -2996,16 +2995,6 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
   // incremental reflows to be initiated at the scroll frame, rather
   // than descending from the root frame of the frame hierarchy.
   first->AddStateBits(NS_FRAME_REFLOW_ROOT);
-
-//we must turn off scrollbars for singleline text controls
-  if (IsSingleLineTextControl()) 
-  {
-    nsIScrollableFrame *scrollableFrame = nsnull;
-    if (first)
-      first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
-    if (scrollableFrame)
-      scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
-  }
 
   //register keylistener
   nsCOMPtr<nsIDOMEventReceiver> erP;

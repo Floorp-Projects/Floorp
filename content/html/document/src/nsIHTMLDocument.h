@@ -111,6 +111,9 @@ public:
   virtual PRInt32 GetNumFormsSynchronous() = 0;
   
   virtual PRBool IsWriting() = 0;
+
+  virtual PRBool GetIsFrameset() = 0;
+  virtual void SetIsFrameset(PRBool aFrameset) = 0;
 };
 
 #endif /* nsIHTMLDocument_h___ */

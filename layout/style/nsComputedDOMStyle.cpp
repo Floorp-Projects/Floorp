@@ -2344,10 +2344,56 @@ nsComputedDOMStyle::GetOverflow(nsIFrame *aFrame,
   const nsStyleDisplay* display = nsnull;
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
-  if (display && display->mOverflow != NS_STYLE_OVERFLOW_AUTO) {
+  if (display && display->mOverflowX == display->mOverflowY) {
+    if (display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
+      const nsAFlatCString& overflow =
+        nsCSSProps::SearchKeywordTable(display->mOverflowX,
+                                       nsCSSProps::kOverflowKTable);
+      val->SetIdent(overflow);
+    } else {
+      val->SetIdent(nsLayoutAtoms::autoAtom);
+    }
+  } // XXX else what?
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetOverflowX(nsIFrame *aFrame,
+                                 nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay* display = nsnull;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
+
+  if (display && display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
     const nsAFlatCString& overflow =
-      nsCSSProps::SearchKeywordTable(display->mOverflow,
-                                     nsCSSProps::kOverflowKTable);
+      nsCSSProps::SearchKeywordTable(display->mOverflowX,
+                                     nsCSSProps::kOverflowSubKTable);
+    val->SetIdent(overflow);
+  } else {
+    val->SetIdent(nsLayoutAtoms::autoAtom);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetOverflowY(nsIFrame *aFrame,
+                                 nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay* display = nsnull;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
+
+  if (display && display->mOverflowY != NS_STYLE_OVERFLOW_AUTO) {
+    const nsAFlatCString& overflow =
+      nsCSSProps::SearchKeywordTable(display->mOverflowY,
+                                     nsCSSProps::kOverflowSubKTable);
     val->SetIdent(overflow);
   } else {
     val->SetIdent(nsLayoutAtoms::autoAtom);
@@ -3533,6 +3579,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     // COMPUTED_STYLE_MAP_ENTRY(outline_style,              OutlineStyle),
     // COMPUTED_STYLE_MAP_ENTRY(outline_width,              OutlineWidth),
     COMPUTED_STYLE_MAP_ENTRY(overflow,                      Overflow),
+    COMPUTED_STYLE_MAP_ENTRY(overflow_x,                    OverflowX),
+    COMPUTED_STYLE_MAP_ENTRY(overflow_y,                    OverflowY),
     //// COMPUTED_STYLE_MAP_ENTRY(padding,                  Padding),
     COMPUTED_STYLE_MAP_ENTRY(padding_bottom,                PaddingBottom),
     COMPUTED_STYLE_MAP_ENTRY(padding_left,                  PaddingLeft),

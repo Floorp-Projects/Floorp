@@ -108,7 +108,6 @@
 #include "nsTimer.h"
 #include "nsITimer.h"
 #include "nsDOMError.h"
-#include "nsIScrollable.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptContext.h"
 #include "nsStyleLinkElement.h"
@@ -3646,24 +3645,9 @@ HTMLContentSink::StartLayout()
 
   mLastNotificationTime = PR_Now();
 
-  // If it's a frameset document then disable scrolling.
-  // Else, reset scrolling to default settings for this shell.
-  // This must happen before the initial reflow, when we create the root frame
-  nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mDocShell);
-  if (scrollableContainer) {
-    if (mFrameset) {
-      scrollableContainer->
-        SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                       NS_STYLE_OVERFLOW_HIDDEN);
-      scrollableContainer->
-        SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                       NS_STYLE_OVERFLOW_HIDDEN);
-    } else {
-      scrollableContainer->ResetScrollbarPreferences();
-    }
-  }
+  mHTMLDocument->SetIsFrameset(mFrameset != nsnull);
 
-  nsContentSink::StartLayout(!!mFrameset);
+  nsContentSink::StartLayout(mFrameset != nsnull);
 }
 
 void
