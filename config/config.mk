@@ -859,3 +859,12 @@ ifneq (,$(CYGDRIVE_MOUNT))
 export CYGDRIVE_MOUNT
 endif
 endif
+
+#
+# Localization build automation
+#
+
+# Because you might wish to "make locales AB_CD=ab-CD", we don't hardcode
+# MOZ_UI_LOCALE directly, but use an intermediate variable that can be
+# overridden by the command line. (Besides, AB_CD is prettier).
+AB_CD = $(MOZ_UI_LOCALE)
