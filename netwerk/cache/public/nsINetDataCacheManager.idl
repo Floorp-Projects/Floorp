@@ -1,0 +1,133 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+interface nsISimpleEnumerator;
+interface nsICachedNetData;
+interface nsINetDataCache;
+interface nsINetDataDiskCache;
+interface nsIURI;
+
+/**
+ * The network-response cache manager is partly responsible for the caching of
+ * content and associated metadata that has been retrieved via the network.
+ * (The remaining responsibility for caching lies with individual network
+ * protocol handlers.)
+ *
+ * The cache manager supervises the actions of individual cache components,
+ * such as the memory cache, the disk cache and any extension caches, e.g. a
+ * read-only CD-ROM cache.  It also manages the coalescing of multiple,
+ * simultaneous requests for the same URI.  That is, if a cache entry fill is
+ * in progress while a second request is made for the same URI, the cache
+ * manager will seamlessly splice together the streams from the stored disk
+ * content and the content inbound from the network.
+ *
+ * @See nsINetDataCache
+ * @See nsICachedNetData
+ */
+[scriptable, uuid(71c8ab00-6d5c-11d3-90c8-000064657374)]
+interface nsINetDataCacheManager : nsISupports
+{
+    /**
+     * Flag for the GetCachedNetData() method: If set, the memory cache is
+     * neither searched nor will any data be stored into it.  This might be
+     * appropriate, for example, with images, because they have their own
+     * memory cache for storing *decoded* images.
+     */
+    const unsigned long BYPASS_MEMORY_CACHE       = 1 << 0;
+
+    /**
+     * Flag for the GetCachedNetData() method: If set, the disk cache is
+     * neither searched nor will any be data stored into it.  No extension
+     * caches be searched either.  This might be used to avoid leaving  
+     * persistent records of secure data.
+     */
+    const unsigned long BYPASS_PERSISTENT_CACHE   = 1 << 1;
+
+    /**
+     * Fetch the cache entry record for the given URI.  If one does not exist,
+     * create a new, empty record.  The normal search order for caches is:
+     *   + Memory cache
+     *   + Disk cache
+     *   + All extension caches
+     *
+     * When writing, data is typically stored in both the memory cache and the
+     * disk.  Both the search order and this write policy can be modified by
+     * setting one or more of the flag argument bits, as defined above.
+     *
+     * The optionally-NULL secondaryKey argument can be used for form
+     * post data in the case of HTTP.
+     */
+    nsICachedNetData GetCachedNetData(in nsIURI uri, in string secondaryKey, in unsigned long flags);
+
+    /**
+     * Returns true if cached content is available for the given URI, even if
+     * only partial data is stored.  The flags argument behaves the same as for
+     * the GetCachedNetData() method, above.
+     */
+    boolean Contains(in nsIURI uri, in unsigned long flags);
+
+    /**
+     * Total number of unexpired URI entries stored in all caches.  This number
+     * does not take into account duplicate URIs, e.g. because the memory cache
+     * and the disk cache might each contain an entry for the same URI.
+     */
+    readonly attribute unsigned long NumEntries;
+
+    /**
+     * Enumerate the unexpired URI entries stored in all caches.  Some URIs may
+     * be enumerated more than once, e.g.  because the the memory cache and the
+     * disk cache might each contain an entry for the same URI.
+     */
+    nsISimpleEnumerator EnumerateCacheEntries();
+
+    /*
+     * Enumerate all the loaded cache modules.  The first module enumerated will
+     * be the memory cache, the second will be the disk cache, followed by all
+     * the extension caches, in search order.
+     */
+    nsISimpleEnumerator EnumerateCacheModules();
+
+    /**
+     * Retrieve an interface pointer to the distinguished memory cache.
+     */
+    readonly attribute nsINetDataCache MemoryCache;
+
+    /**
+     * Retrieve an interface pointer to the distinguished disk cache.
+     */
+    readonly attribute nsINetDataDiskCache DiskCache;
+
+    /**
+     * Remove all entries from all writable caches.  This could be used, for
+     * example, after a guest ends a browser session.  This is equivalent to
+     * setting the DiskCacheCapacity to zero, except that all cache entries,
+     * even those in active use, will be deleted.  Also, any global cache
+     * database files will be deleted.
+     */
+    void RemoveAll();
+
+    /**
+     * This call may be used to free up memory used by the memory cache under
+     * conditions of high memory pressure.  It returns an estimate of the
+     * number of bytes of data free'ed.  This method can be invoked from any
+     * thread.
+     */
+    unsigned long EvictFromMemoryCache(in unsigned long bytesRequested);
+};

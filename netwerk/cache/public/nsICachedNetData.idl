@@ -1,0 +1,120 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIChannel.idl"
+
+interface nsIFileSpec;
+interface nsIURI;
+
+/**
+ * The nsICachedNetData represents a single entry in a cache that implements
+ * the nsINetDataCache interface.  It provides access to the cached network
+ * data and metadata, e.g. HTTP headers, for a single URI.
+ *
+ * @See nsINetDataCache
+ * @See nsINetDataDiskCache
+ * @See nsINetDataCacheManager
+ */
+[scriptable, uuid(6aeb2a40-6d43-11d3-90c8-000064657374)]
+interface nsICachedNetData : nsIChannel
+{
+    /**
+     * The secondaryKey is combined with the URI (for which an accessor is
+     * defined in the nsIChannel interface), to act as an index into the cache.
+     * The secondaryKey could be, for example, HTTP form post data.
+     */
+    readonly attribute string secondaryKey;
+
+    /**
+     * Opaque, protocol-specific data, e.g. HTTP headers, that can be
+     * updated for each cache entry independently of the content data.
+     */
+    attribute string MetaData;
+
+    /**
+     * Number of content bytes stored in the cache.  This may be less
+     * than the complete content length if a partial cache fill
+     * occurred.  Also, the cached content can be truncated by
+     * reducing the value of this attribute. 
+     */
+    attribute unsigned long StoredContentLength;
+
+    /**
+     * Indicates that the write stream supplying content data for the cache did
+     * not complete normally, so the content may be truncated.
+     */
+    readonly attribute boolean Partial;
+
+    /**
+     * True, if a write stream is open for this cache entry.  There can only
+     * be a single write stream open at a time for each cache entry.
+     */
+    readonly attribute boolean UpdateInProgress;
+
+    /* FIXME: Should use nsIDateTime interface, once it's created
+     *  instead of PRTime, for improved scriptability ?
+     */
+
+    /**
+     * Date/time of expiration for this record, at which point the data and
+     * meta-data are no longer valid and the record may be garbage-collected.
+     */
+    readonly attribute PRTime Expiration;
+
+    /**
+     * Date/time of last access (retrieval) of the data in this record.
+     */
+    readonly attribute PRTime LastRetrieval;
+
+	/**
+	 * The cache entry last used before this entry was last used.
+	 * (The "next least-recently-used" entry.)
+	 */
+	readonly attribute nsICachedNetData NextLRU;
+
+	/**
+	 * The cached response with the next closest expiration date (in
+	 * the future) to this one
+     */
+	readonly attribute nsICachedNetData NextToExpire;
+    
+    /**
+     * Number of times an output stream has been created for this cache entry
+     * since it was created.
+     */
+    readonly attribute long NumberRetrievals;
+
+    /** True, if a write stream is currently open for this cache entry */
+    readonly attribute boolean CacheFillInProgress;
+
+    /** 
+     * Delete this cache entry and its associated content. Any associated open
+     * streams are aborted.
+     */
+    void Delete();
+
+    /**
+     * When a cache stores each URI's content in a standalone disk file, this
+     * method will identify the corresponding file.  This may be used to
+     * implement the "stream-as-file" semantics required by some plugins.
+     * However, no cache is required to store the data from each URI in an
+     * individual file, so it is acceptable for an implementer of this method
+     * to signal NS_NOT_IMPLEMENTED.
+     */
+    readonly attribute nsIFileSpec Filename;
+};
