@@ -1288,7 +1288,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
    * not the TZ environment variable was set on the client.
    */
 
-  /* Get the time the cookie is supposed to expire according to the attribute*/
+  /* Get the time the cookie is supposed to expire according to the expires attribute*/
   ptr = PL_strcasestr(setCookieHeader, "expires=");
   if(ptr && !downgrade) {
     char *date =  ptr+8;
@@ -1319,6 +1319,16 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
       }
     }
   }
+
+
+  /* If max-age attribute is present, it overrides expires attribute */
+#define MAXAGE "max-age="
+  ptr = PL_strcasestr(setCookieHeader, MAXAGE);
+  if(ptr && !downgrade) {
+    ptr += PL_strlen(MAXAGE);
+    gmtCookieExpires = get_current_time() + atoi(ptr);
+  }
+
   cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires);
 }
 
@@ -1618,18 +1628,8 @@ COOKIE_Enumerate
   *host = cookie_FixQuoted(cookie->host);
   *path = cookie_FixQuoted(cookie->path);
   *isSecure = cookie->isSecure;
-  time_t expiresTime=0;
-  if (cookie->expires) {
-    /*
-     * Cookie expiration times on mac will not be decoded correctly because
-     * they were based on get_current_time() instead of time(nsnull) -- see comments in
-     * get_current_time.  So we need to adjust for that now in order for the
-     * display of the expiration time to be correct
-     */
-    expiresTime = cookie->expires + (time(nsnull) - get_current_time());
-  }
-  // *expires = expiresTime; -- no good no mac, using next line instead
-  LL_UI2L(*expires, expiresTime);
+  // *expires = cookie->expires; -- no good no mac, using next line instead
+  LL_UI2L(*expires, cookie->expires);
   return NS_OK;
 }
 
