@@ -411,8 +411,7 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
   if(mInstanceOwner != nsnull)
   {
     nsIPluginInstance *inst;
-    mInstanceOwner->GetInstance(inst);
-    if(inst != nsnull)
+    if(NS_OK == mInstanceOwner->GetInstance(inst))
     {
       inst->Stop();
       inst->SetWindow(nsnull);
