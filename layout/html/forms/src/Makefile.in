@@ -30,6 +30,9 @@ DEFINES += -D_IMPL_NS_HTML
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
+	nsFormControlHelper.cpp			\
+	nsComboboxControlFrame.cpp			\
+	nsListControlFrame.cpp			\
 	nsFormFrame.cpp			\
 	nsFormControlFrame.cpp		\
 	nsButtonControlFrame.cpp	\
