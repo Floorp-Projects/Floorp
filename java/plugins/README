@@ -45,9 +45,6 @@ How to Run:
 How to build and run test
 * go to the test directory and type "nmake /f makefile.win"
 
-* add context of java.zip to JRE\1.3\lib\rt.jar (this is a hack. It would be 
-  removed soon)		
-
 * Set PLUGLET environment to the  directory you have test.jar
 
 * Run appletviewer and load page test.html from test directory and if evething is ok you will see
