@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: db.c,v $ $Revision: 1.1 $ $Date: 2000/05/15 20:39:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: db.c,v $ $Revision: 1.2 $ $Date: 2000/05/15 20:59:11 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "ckdbm.h"
@@ -319,6 +319,126 @@ nss_dbm_db_new_handle
   return 0;
 }
 
+/*
+ * This attribute-type-dependent swapping should probably
+ * be in the Framework, because it'll be a concern of just
+ * about every Module.  Of course any Framework implementation
+ * will have to be augmentable or overridable by a Module.
+ */
+
+enum swap_type { type_byte, type_short, type_long, type_opaque };
+
+static enum swap_type
+nss_dbm_db_swap_type
+(
+  CK_ATTRIBUTE_TYPE type
+)
+{
+  switch( type ) {
+  case CKA_CLASS: return type_long;
+  case CKA_TOKEN: return type_byte;
+  case CKA_PRIVATE: return type_byte;
+  case CKA_LABEL: return type_opaque;
+  case CKA_APPLICATION: return type_opaque;
+  case CKA_VALUE: return type_opaque;
+  case CKA_CERTIFICATE_TYPE: return type_long;
+  case CKA_ISSUER: return type_opaque;
+  case CKA_SERIAL_NUMBER: return type_opaque;
+  case CKA_KEY_TYPE: return type_long;
+  case CKA_SUBJECT: return type_opaque;
+  case CKA_ID: return type_opaque;
+  case CKA_SENSITIVE: return type_byte;
+  case CKA_ENCRYPT: return type_byte;
+  case CKA_DECRYPT: return type_byte;
+  case CKA_WRAP: return type_byte;
+  case CKA_UNWRAP: return type_byte;
+  case CKA_SIGN: return type_byte;
+  case CKA_SIGN_RECOVER: return type_byte;
+  case CKA_VERIFY: return type_byte;
+  case CKA_VERIFY_RECOVER: return type_byte;
+  case CKA_DERIVE: return type_byte;
+  case CKA_START_DATE: return type_opaque;
+  case CKA_END_DATE: return type_opaque;
+  case CKA_MODULUS: return type_opaque;
+  case CKA_MODULUS_BITS: return type_long;
+  case CKA_PUBLIC_EXPONENT: return type_opaque;
+  case CKA_PRIVATE_EXPONENT: return type_opaque;
+  case CKA_PRIME_1: return type_opaque;
+  case CKA_PRIME_2: return type_opaque;
+  case CKA_EXPONENT_1: return type_opaque;
+  case CKA_EXPONENT_2: return type_opaque;
+  case CKA_COEFFICIENT: return type_opaque;
+  case CKA_PRIME: return type_opaque;
+  case CKA_SUBPRIME: return type_opaque;
+  case CKA_BASE: return type_opaque;
+  case CKA_VALUE_BITS: return type_long;
+  case CKA_VALUE_LEN: return type_long;
+  case CKA_EXTRACTABLE: return type_byte;
+  case CKA_LOCAL: return type_byte;
+  case CKA_NEVER_EXTRACTABLE: return type_byte;
+  case CKA_ALWAYS_SENSITIVE: return type_byte;
+  case CKA_MODIFIABLE: return type_byte;
+  case CKA_NETSCAPE_URL: return type_opaque;
+  case CKA_NETSCAPE_EMAIL: return type_opaque;
+  case CKA_NETSCAPE_SMIME_INFO: return type_opaque;
+  case CKA_NETSCAPE_SMIME_TIMESTAMP: return type_opaque;
+  case CKA_NETSCAPE_PKCS8_SALT: return type_opaque;
+  case CKA_NETSCAPE_PASSWORD_CHECK: return type_opaque;
+  case CKA_NETSCAPE_EXPIRES: return type_opaque;
+  case CKA_TRUST_DIGITAL_SIGNATURE: return type_long;
+  case CKA_TRUST_NON_REPUDIATION: return type_long;
+  case CKA_TRUST_KEY_ENCIPHERMENT: return type_long;
+  case CKA_TRUST_DATA_ENCIPHERMENT: return type_long;
+  case CKA_TRUST_KEY_AGREEMENT: return type_long;
+  case CKA_TRUST_KEY_CERT_SIGN: return type_long;
+  case CKA_TRUST_CRL_SIGN: return type_long;
+  case CKA_TRUST_SERVER_AUTH: return type_long;
+  case CKA_TRUST_CLIENT_AUTH: return type_long;
+  case CKA_TRUST_CODE_SIGNING: return type_long;
+  case CKA_TRUST_EMAIL_PROTECTION: return type_long;
+  case CKA_TRUST_IPSEC_END_SYSTEM: return type_long;
+  case CKA_TRUST_IPSEC_TUNNEL: return type_long;
+  case CKA_TRUST_IPSEC_USER: return type_long;
+  case CKA_TRUST_TIME_STAMPING: return type_long;
+  case CKA_NETSCAPE_DB: return type_opaque;
+  case CKA_NETSCAPE_TRUST: return type_opaque;
+  default: return type_opaque;
+  }
+}
+
+static void
+nss_dbm_db_swap_copy
+(
+  CK_ATTRIBUTE_TYPE type,
+  void *dest,
+  void *src,
+  CK_ULONG len
+)
+{
+  switch( nss_dbm_db_swap_type(type) ) {
+  case type_byte:
+  case type_opaque:
+    (void)memcpy(dest, src, len);
+    break;
+  case type_short:
+    {
+      CK_USHORT s, d;
+      (void)memcpy(&s, src, sizeof(CK_USHORT));
+      d = htons(s);
+      (void)memcpy(dest, &d, sizeof(CK_USHORT));
+      break;
+    }
+  case type_long:
+    {
+      CK_ULONG s, d;
+      (void)memcpy(&s, src, sizeof(CK_ULONG));
+      d = htonl(s);
+      (void)memcpy(dest, &d, sizeof(CK_ULONG));
+      break;
+    }
+  }
+}
+
 static CK_RV
 nss_dbm_db_wrap_object
 (
@@ -355,8 +475,7 @@ nss_dbm_db_wrap_object
     pulData[1 + i*3] = htonl(pTemplate[i].type);
     pulData[2 + i*3] = htonl(len);
     pulData[3 + i*3] = htonl(offset);
-    /* Replace this memcpy with one that properly swabs the data, switching on ATTR_TYPE */
-    (void)memcpy(&pcData[offset], pTemplate[i].pValue, len);
+    nss_dbm_db_swap_copy(pTemplate[i].type, &pcData[offset], pTemplate[i].pValue, len);
     offset += len;
   }
 
@@ -401,8 +520,7 @@ nss_dbm_db_unwrap_object
       return CKR_HOST_MEMORY;
     }
     
-    /* Replace this memcpy with one that properly swabs the data, switching on ATTR_TYPE */
-    (void)memcpy(p, &pcData[offset], len);
+    nss_dbm_db_swap_copy(pTemplate[i].type, p, &pcData[offset], len);
     pTemplate[i].ulValueLen = len;
     pTemplate[i].pValue = p;
   }
