@@ -56,8 +56,7 @@ INCLUDES += \
 
 LIBS+=\
 	-lraptorbase	\
-	-lplc21	\
-	-lplds21	\
+	$(NSPR_LIBS) \
 	-lxpcom	\
 	-lreg	\
 	$(NULL)
