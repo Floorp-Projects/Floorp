@@ -49,7 +49,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
   if (nsnull != view)
   {
-
     switch(aEvent->message)
     {
       case NS_SIZE:
@@ -263,12 +262,14 @@ nsIView* nsView::GetViewFor(nsIWidget* aWidget)
   if (NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
     view = (nsIView*)clientData;
 
+    if (nsnull != view) {
 #ifdef NS_DEBUG
-    // Verify the pointer is really a view
-    nsView* widgetView;
-    NS_ASSERTION((NS_SUCCEEDED(view->QueryInterface(kIViewIID, (void **)&widgetView))) &&
-                 (widgetView == view), "bad client data");
+      // Verify the pointer is really a view
+      nsView* widgetView;
+      NS_ASSERTION((NS_SUCCEEDED(view->QueryInterface(kIViewIID, (void **)&widgetView))) &&
+                   (widgetView == view), "bad client data");
 #endif
+    }  
   }
 
   return view;
