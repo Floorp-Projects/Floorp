@@ -15,7 +15,7 @@ This is a log of significant changes since the release of Rhino 1.5 Release 3.
 
 A new, incompatible Rhino debug API gives an option to monitor
 entering/leaving of script functions while decreasing the amount of code to
-implement the API in the Rhino core. Details are available <a href="rhino15R4-debugger.html">here</a>.
+implement the API in the Rhino core. Details are available <a href="rhino15R4-debugger.html">here</a>. With the new API <a href="debugger.html">Rhino Debugger</a> provides options to break on function enter/exit, can debug scripts defined by eval and Function construction and scripts loaded prior the debugger were started.
 
 <h3>WrapFactory introduced, WrapHandler deprecated</h3>
 A design flaw in the WrapHandler interface (a call to a Java contructor from
@@ -51,6 +51,155 @@ var fooJar = new Packages(loader);
 var obj = new fooJar.Foo(1, 2, 3);
 obj.someMethod();
 </pre>
+
+<h3>Resolved Bugzilla reports</h3>
+
+The following Rhino reports in <a href="http://bugzilla.mozilla.org/">Bugzilla</a> where resolved for Rhino 1.5 Release 4.
+<p>
+<a href="http://bugzilla.mozilla.org/show_bug.cgi?id=61579">61579</a> - 
+context.decompileScript doesn't work.
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=72021">72021</a> - 
+The ScriptRuntime class tries to convert even the String values to JavaNativeObject
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=83051">83051</a> - 
+A function defined under a with block can't be invoked outside it
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=104089">104089</a> - 
+Cannot reattach context to its thread because of the bug in Context class
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=105438">105438</a> - 
+SourceName and lineNumbers of syntax errors in Javascript files not dispalyed.
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=106548">106548</a> - 
+/^.*?$/ will not match anything
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=114583">114583</a> - 
+script compile/decompile bug
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=114969">114969</a> - 
+[], [^] are valid RegExp conditions
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=115717">115717</a> - 
+java.lang.ArrayIndexOutOfBoundsException on with/try/finally
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=120194">120194</a> - 
+JS toInt32(x) conversion doesn't match ECMAScript definition
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=122167">122167</a> - 
+string.replace() placeholder '$1' not working
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=123439">123439</a> - 
+Backreferences /(a)? etc./ must hold |undefined| if not used
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=124508">124508</a> - 
+regexp.lastIndex should be integer-valued double, not uint32
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=124900">124900</a> - 
+arguments object storing duplicate parameter values
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=125562">125562</a> - 
+Regexp performance improvement
+
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=126317">126317</a> - 
+Crash on re.exec(str) if re.lastIndex set to certain values
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=126722">126722</a> - 
+(undefined === null) evaluating to true in Rhino compiled mode
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=128468">128468</a> - 
+java.io.NotSerializableException: org.mozilla.javascript.NativeError
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=129365">129365</a> - 
+Incorrect licensing in dtoa.java
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=132217">132217</a> - 
+delete on global function should not delete the function
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=136893">136893</a> - 
+Rhino treatment of |for(i in undefined)|, |for(i in null)| 
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=137181">137181</a> - 
+delete on an arguments[i] not working correctly
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=145791">145791</a> - 
+ECMA conformance: Function.prototype.apply(), Function.prototype.call()
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=149285">149285</a> - 
+Complier does not report the correct line number on SyntaxError:Invalid assignment left-hand side.
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=151337">151337</a> - 
+EcmaError.getLineSource() returns 0x0 characters.
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=153223">153223</a> - 
+New RegExp engine in Rhino
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=154693">154693</a> - 
+Interpreted mode doesn't grok different functions on different objects
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=156510">156510</a> - 
+for (i in undefined) {} should not throw TypeError
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=157196">157196</a> - 
+ScriptableObject needs custom serialization implementation
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=157509">157509</a> - 
+No error on invalid usage of \ in identifiers
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=159334">159334</a> - 
+The javascript functions size is limited by a bug
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=166530">166530</a> - 
+ClassCostException in FunctionObject static initializer
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=169830">169830</a> - 
+Array.concat(function) doesn't add function to the array
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=173180">173180</a> - 
+Rhino UTF-8 decoder accepts overlong sequences
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=173906">173906</a> - 
+Dynamic scope not working correctly with optimzation level >= 1
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=175383">175383</a> - 
+ArrayIndexOutOfBoundsException in string.replace()
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=177314">177314</a> - 
+Rhino should allow '\400' to mean ' 0'
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=179068">179068</a> - 
+String literals in Rhino are limited to 64K
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=179366">179366</a> - 
+--&gt; after whitespace after line start should mean comments to line end
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=181654">181654</a> - 
+Calling toString for an object derived from the Error class throws TypeError
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=181834">181834</a> - 
+wrong scope used for inner functions when compiling functions with dynamic scopes (interpreted only)
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=181909">181909</a> - 
+some regression tests for Error invalid
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=182028">182028</a> - 
+Calling has() in get() of a ScriptableObject causes getter function to not be called
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=184107">184107</a> - 
+with(...) { function f ...} should set f in the global scope
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=184111">184111</a> - 
+ArrayOutOfBounds Exception thrown when using Rhino Javascript Debugger
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=185165">185165</a> - 
+Decompilation of "\\" gives broken "\"
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=189183">189183</a> - 
+Debugger source frame window layering fix
+
+<br><a href="http://bugzilla.mozilla.org/show_bug.cgi?id=189898">189898</a> - 
+Broken String.replace:  "XaXY".replace("XY", "--") gives --aXY
 
 <hr width="100%"><br>
 <a href="index.html">back to top</a></h3>
