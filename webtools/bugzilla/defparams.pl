@@ -395,11 +395,6 @@ DefParam("usebrowserinfo",
          "b",
          1);
 
-DefParam("usedependencies",
-         "Do you wish to use dependencies (allowing you to mark which bugs depend on which other ones)?",
-         "b",
-         1);
-
 DefParam("usevotes",
          "Do you wish to allow users to vote for bugs? Note that in order for this to be effective, you will have to change the maximum votes allowed in a product to be non-zero in <a href=\"editproducts.cgi\">the product edit page</a>.",
          "b",

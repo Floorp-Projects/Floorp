@@ -265,7 +265,6 @@
 
 [%# *** Dependencies Votes *** %]
 
-  [% IF Param('usedependencies') %]
   <table>
     <tr>
     [% PROCESS dependencies accesskey = "d"
@@ -287,7 +286,6 @@
        dep = { title => "<u>b</u>locks", fieldname => "blocked" } %]
     </tr>
   </table>
-  [% END %]
 
   [% IF use_votes %]
   <table>

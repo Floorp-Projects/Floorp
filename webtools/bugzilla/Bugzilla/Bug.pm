@@ -217,16 +217,14 @@ sub initBug  {
   if (@longdescs) {
     $self->{'longdescs'} = \@longdescs;
   }
-
-  if (&::Param("usedependencies")) {
-    my @depends = EmitDependList("blocked", "dependson", $bug_id);
-    if ( @depends ) {
+  
+  my @depends = EmitDependList("blocked", "dependson", $bug_id);
+  if (@depends) {
       $self->{'dependson'} = \@depends;
-    }
-    my @blocks = EmitDependList("dependson", "blocked", $bug_id);
-    if ( @blocks ) {
-      $self->{'blocks'} = \@blocks;
-    }
+  }  
+  my @blocks = EmitDependList("dependson", "blocked", $bug_id);
+  if (@blocks) {
+    $self->{'blocks'} = \@blocks;
   }
 
   return $self;
