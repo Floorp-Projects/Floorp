@@ -377,7 +377,7 @@ nsRefData			*theRefData;
 						therect.left = therect.right - 16;
 						therect.top = therect.bottom - 16;
 						DrawGrowIcon(whichwindow);
-						ValidRect(&therect);
+						//ValidRect(&therect);
 						
 						// Resize layout objects
 						theRefData = (nsRefData*)GetWRefCon (whichwindow);
