@@ -29,4 +29,6 @@
 #define NS_HTML   NS_IMPORT
 #endif
 
+#define INCLUDE_XUL 1
+
 #endif /* nslayout_h___ */
