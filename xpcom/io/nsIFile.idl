@@ -156,15 +156,6 @@ interface nsIFile : nsISupports
     void moveTo(in nsIFile newParentDir, [const] in string newName);
 
     /**
-     *  moveToFollowingLinks
-     *
-     *  This function is identical to moveTo except it, as
-     *  the name implies, follows symbolic links.
-     */
-      
-    void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
-    
-    /**
      *  This will try to execute this file.  It will not block for
      *  execution.  'args' will be passed through on the command line
      *  if the OS supports that.
