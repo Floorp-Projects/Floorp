@@ -79,7 +79,7 @@ nsMsgNewsFactory::nsMsgNewsFactory(const nsCID &aClass,
 {
 	NS_INIT_REFCNT();
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFactory::nsMsgNewsFactory()\n");
 #endif
 
@@ -123,7 +123,7 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
                              const nsIID &aIID,
                              void **aResult)  
 {  
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
 	printf("nsMsgNewsFactory::CreateInstance()\n");
 #endif
 	nsISupports *inst = nsnull;
