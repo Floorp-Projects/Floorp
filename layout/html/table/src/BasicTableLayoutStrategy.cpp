@@ -233,7 +233,8 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 }
 
 PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize, 
-                                            PRInt32 aNumCols)
+                                            PRInt32 aNumCols,
+                                            nscoord aMaxWidth)
 {
 #ifdef NS_DEBUG 
   nsIFrame* tablePIF = nsnull; 
@@ -251,7 +252,7 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize,
   mCols            = mTableFrame->GetEffectiveCOLSAttribute();
 
   // Step 1 - assign the width of all fixed-width columns
-  AssignPreliminaryColumnWidths();
+  AssignPreliminaryColumnWidths(aMaxWidth);
 
   // set aMaxElementSize here because we compute mMinTableWidth in AssignPreliminaryColumnWidths
   if (nsnull != aMaxElementSize) {
@@ -389,7 +390,7 @@ nscoord BasicTableLayoutStrategy::CalcHorizontalPadding(PRInt32 aColX)
 
 // Step 1 - assign the width of all fixed-width columns, all other columns get there max, 
 //          and calculate min/max table width
-PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
+PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth)
 {
   TDBG_SP("** %p: AssignPreliminaryColumnWidths **\n", mTableFrame);
   nsVoidArray *spanList    = nsnull;

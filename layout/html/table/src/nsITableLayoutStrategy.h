@@ -32,8 +32,9 @@ public:
   /** call once every time any table thing changes (content, structure, or style) 
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     * @param aNumCols         the total number of columns in the table
+    * @param aComputedWidth   the computed size of the table
     */
-  virtual PRBool Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols)=0;
+  virtual PRBool Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols, nscoord aComputedWidth)=0;
 
   /** compute the max-element-size for the table
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table

@@ -73,109 +73,135 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
   return result;
 }
 
-/* assign the width of all columns
+/*
+ * assign the width of all columns
  * if there is a colframe with a width attribute, use it as the column width
  * otherwise if there is a cell in the first row and it has a width attribute, use it
  *  if this cell includes a colspan, width is divided equally among spanned columns
  * otherwise the cell get a proportion of the remaining space 
  *  as determined by the table width attribute.  If no table width attribute, it gets 0 width
  */
-PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths()
+PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputedWidth)
 {
+  NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
   if (gsDebug==PR_TRUE) printf ("** %p: AssignPreliminaryColumnWidths **\n", mTableFrame);
-  
-  PRInt32 colIndex;
-  PRInt32 specifiedColumns=0;   // the number of columns whose width is given
-  nscoord totalWidth = 0;       // the sum of the widths of the columns whose width is given
 
-  PRBool * autoWidthColumns = new PRBool[mNumCols];
-  nsCRT::memset(autoWidthColumns, PR_TRUE, mNumCols*sizeof(PRBool));
+  const nsStylePosition* tablePosition;
+  mTableFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)tablePosition);
+  PRBool tableIsFixedWidth = eStyleUnit_Coord   == tablePosition->mWidth.GetUnit() ||
+                             eStyleUnit_Percent == tablePosition->mWidth.GetUnit();
+
+  const nsStyleSpacing* tableSpacing;
+  mTableFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)tableSpacing);
+  nsMargin borderPadding;
+  tableSpacing->CalcBorderPaddingFor(mTableFrame, borderPadding); 
+
+  PRInt32 colX;
+  // availWidth is used as the basis for percentage width columns. It is aComputedWidth
+  // minus table border, padding, & cellspacing
+  nscoord availWidth = aComputedWidth - borderPadding.left - borderPadding.right - 
+                       ((mNumCols + 1) * mTableFrame->GetCellSpacingX());
+  
+  PRInt32 specifiedCols = 0;  // the number of columns whose width is given
+  nscoord totalColWidth = 0;  // the sum of the widths of the columns 
+
+  nscoord* colWidths = new PRBool[mNumCols];
+  nsCRT::memset(colWidths, -1, mNumCols*sizeof(nscoord));
 
   // for every column, determine it's specified width
-  for (colIndex = 0; colIndex<mNumCols; colIndex++)
-  { 
+  for (colX = 0; colX < mNumCols; colX++) { 
     // Get column information
-    nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
-    NS_ASSERTION(nsnull!=colFrame, "bad col frame");
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+    NS_ASSERTION(nsnull != colFrame, "bad col frame");
 
     // Get the columns's style
     const nsStylePosition* colPosition;
     colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
 
-    // Get fixed column width if it has one
-    if (eStyleUnit_Coord==colPosition->mWidth.GetUnit()) 
-    {
-      nscoord colWidth = colPosition->mWidth.GetCoordValue();
-      mTableFrame->SetColumnWidth(colIndex, colWidth);
-      totalWidth += colWidth;
-      specifiedColumns++;
-      autoWidthColumns[colIndex]=PR_FALSE;
-      if (PR_TRUE==gsDebug)
-        printf ("from col, col %d set to width %d\n", colIndex, colWidth);
+    // get the fixed width if available
+    if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) { 
+      colWidths[colX] = colPosition->mWidth.GetCoordValue();
+    } // get the percentage width
+    else if (eStyleUnit_Percent == colPosition->mWidth.GetUnit()) { 
+      float percent = colPosition->mWidth.GetPercentValue();
+      colWidths[colX] = NSToCoordRound(percent * (float)availWidth); 
     }
-    else
-    {
-      nsTableCellFrame *cellFrame = mTableFrame->GetCellFrameAt(0, colIndex);
-      if (nsnull!=cellFrame)
-      {
+    else { // get width from the cell
+      nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(0, colX);
+      if (nsnull != cellFrame) {
         // Get the cell's style
         const nsStylePosition* cellPosition;
         cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
 
-        // Get fixed column width if it has one
-        if (eStyleUnit_Coord==cellPosition->mWidth.GetUnit()) 
-        {
-          PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(colIndex, cellFrame);
-          nscoord effectiveWidth = cellPosition->mWidth.GetCoordValue()/colSpan;
-          mTableFrame->SetColumnWidth(colIndex, effectiveWidth);
-          totalWidth += effectiveWidth;
-          specifiedColumns++;
-          autoWidthColumns[colIndex]=PR_FALSE;
-          if (PR_TRUE==gsDebug)
-              printf ("from cell, col %d set to width %d\n", colIndex, effectiveWidth);
+        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(colX, cellFrame);
+        // Get fixed cell width if available
+        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
+          colWidths[colX] = cellPosition->mWidth.GetCoordValue() / colSpan;
+        }
+        else if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
+          float percent = cellPosition->mWidth.GetPercentValue();
+          colWidths[colX] = NSToCoordRound(percent * (float)availWidth / (float)colSpan); 
         }
       }
     }
+    if (colWidths[colX] >= 0) {
+      totalColWidth += colWidths[colX];
+      specifiedCols++;
+      if (PR_TRUE==gsDebug) printf ("col %d set to width %d\n", colX, colWidths[colX]);
+    }
   }
-  
-  // for every column that did not have a specified width, compute its width from the remaining space
-  if (mNumCols > specifiedColumns)
-  {
-    // Get the table's style
-    const nsStylePosition* tablePosition;
-    mTableFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)tablePosition);
-    if (eStyleUnit_Coord==tablePosition->mWidth.GetUnit())
-    {
-      nscoord specifiedTableWidth = tablePosition->mWidth.GetCoordValue();
-      nscoord remainingTableWidth = specifiedTableWidth - totalWidth;
-      if (PR_TRUE==gsDebug)
-        printf ("%p: specifiedTW=%d, remainingTW=%d\n", 
-                mTableFrame, specifiedTableWidth, remainingTableWidth);
-      if (0<remainingTableWidth)
-      {
-        nscoord widthPerColumn = remainingTableWidth/(mNumCols-specifiedColumns);
-        for (colIndex = 0; colIndex<mNumCols; colIndex++)
-        {
-          if (PR_TRUE==autoWidthColumns[colIndex])
-          {
-            mTableFrame->SetColumnWidth(colIndex, widthPerColumn);
-            totalWidth += widthPerColumn; 
-            if (PR_TRUE==gsDebug)
-              printf ("auto col %d set to width %d\n", colIndex, widthPerColumn);
-          }
+ 
+  nscoord lastColAllocated = -1;
+  nscoord remainingWidth = availWidth - totalColWidth;
+  if (tableIsFixedWidth && (0 < remainingWidth)) {
+    if (mNumCols > specifiedCols) {
+      // allocate the extra space to the columns which have no width specified
+      if (PR_TRUE == gsDebug) printf ("%p: remainingTW=%d\n", mTableFrame, remainingWidth);
+      nscoord colAlloc = NSToCoordRound( ((float)remainingWidth) / (((float)mNumCols) - ((float)specifiedCols)));
+      for (colX = 0; colX < mNumCols; colX++) {
+        if (-1 == colWidths[colX]) {
+          colWidths[colX] = colAlloc;
+          totalColWidth += colAlloc; 
+          lastColAllocated = colX;
+          if (PR_TRUE == gsDebug) printf ("auto col %d set to width %d\n", colX, colAlloc);
         }
       }
     }
+    else { // allocate the extra space to the columns which have width specified
+      float divisor = (float)totalColWidth;
+      for (colX = 0; colX < mNumCols; colX++) {
+        if (colWidths[colX] > 0) {
+          nscoord colAlloc = NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
+          colWidths[colX] += colAlloc;
+          totalColWidth += colAlloc; 
+          lastColAllocated = colX;
+          if (PR_TRUE == gsDebug) printf ("col %d set to width %d\n", colX, colWidths[colX]);
+        }
+      }
+    }  
   }
-  // min/MaxTW is max of (specified table width, sum of specified column(cell) widths)
-  mMinTableWidth = mMaxTableWidth = totalWidth;
-  if (PR_TRUE==gsDebug)
-    printf ("%p: aMinTW=%d, aMaxTW=%d\n", mTableFrame, mMinTableWidth, mMaxTableWidth);
+
+  nscoord overAllocation = (availWidth >= 0) 
+    ? totalColWidth - availWidth : 0;
+  // set the column widths
+  for (colX = 0; colX < mNumCols; colX++) {
+    if (colWidths[colX] < 0) 
+      colWidths[colX] = 0;
+    // if there was too much allocated due to rounding, remove it from the last col
+    if ((colX == lastColAllocated) && (overAllocation != 0)) {
+      colWidths[colX] += overAllocation;
+      colWidths[colX] = PR_MAX(0, colWidths[colX]);
+    }
+    mTableFrame->SetColumnWidth(colX, colWidths[colX]);
+  }
+
+  // min/max TW is min/max of (specified table width, sum of specified column(cell) widths)
+  mMinTableWidth = mMaxTableWidth = totalColWidth;
+  if (PR_TRUE == gsDebug) printf ("%p: aMinTW=%d, aMaxTW=%d\n", mTableFrame, mMinTableWidth, mMaxTableWidth);
 
   // clean up
-  if (nsnull!=autoWidthColumns)
-  {
-    delete [] autoWidthColumns;
+  if (nsnull != colWidths) {
+    delete [] colWidths;
   }
   
   return PR_TRUE;

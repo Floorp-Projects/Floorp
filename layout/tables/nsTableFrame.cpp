@@ -2497,7 +2497,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (nsnull!=mTableLayoutStrategy)
       {
         if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount());
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.computedWidth);
         mColumnWidthsValid=PR_TRUE; //so we don't do this a second time below
       }
     }
@@ -2506,7 +2506,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
       if (nsnull!=mTableLayoutStrategy)
       {
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount());
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.computedWidth);
         mColumnWidthsValid=PR_TRUE;
       }
     }
@@ -3972,17 +3972,22 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
             this, maxWidth, aMaxSize.width, aMaxSize.height);
 
   // based on the compatibility mode, create a table layout strategy
-  if (nsnull==mTableLayoutStrategy)
-  {
+  if (nsnull == mTableLayoutStrategy) {
     nsCompatibility mode;
     aPresContext.GetCompatibilityMode(&mode);
     if (PR_FALSE==RequiresPass1Layout())
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
-    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount());
+    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount(), aReflowState.computedWidth);
     mColumnWidthsValid=PR_TRUE;
   }
+  // fixed-layout tables need to reinitialize the layout strategy. When there are scroll bars
+  // reflow gets called twice and the 2nd time has the correct space available.
+  else if (!RequiresPass1Layout()) {
+    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount(), aReflowState.computedWidth);
+  }
+
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
   mColumnWidthsSet=PR_TRUE;
 

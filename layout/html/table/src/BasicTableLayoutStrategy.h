@@ -91,7 +91,7 @@ public:
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     * @param aNumCols         the total number of columns in the table
     */
-  virtual PRBool Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols);
+  virtual PRBool Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols, nscoord aMaxSize);
 
   /** compute the max element size of the table.
     * assumes that Initialize has been called
@@ -123,10 +123,12 @@ protected:
     * Computes the minimum and maximum table widths. 
     * Set column width information in each column frame and in the table frame.
     *
+    * @param aMaxWidth - the computed width of the table or 
+    *  UNCONSTRAINED_SIZE if an auto width table
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignPreliminaryColumnWidths();
+  virtual PRBool AssignPreliminaryColumnWidths(nscoord aComputedWidth);
 
   /** compute the min and max width of this table.  Assumes AssignPreliminaryColumnWidths
     * has been called.  Sets mMinTableWidth and mMaxTableWidth as a side effect.
