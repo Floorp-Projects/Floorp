@@ -565,6 +565,10 @@ function enableBookmarks()
 
 function BrowserEditBookmarks()
 {
+  // Use a single sidebar bookmarks dialog
+  var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                                .getService(Components.interfaces.nsIWindowMediator);
+
   var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");
 
   if (bookmarksWindow) {
