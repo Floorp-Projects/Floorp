@@ -227,11 +227,25 @@ NS_IMETHODIMP nsImgManager::ShouldProcess(PRUint32          aContentType,
                                           nsISupports      *aExtra,
                                           PRInt16          *aDecision)
 {
-  //TODO: implement this to check images loaded into a raw document (as in,
-  //outside of a web page)
-
-  *aDecision = nsIContentPolicy::ACCEPT;
-  return NS_OK;
+  // For loads where aRequestingNode is chrome, we should just accept.  Those
+  // are most likely toplevel loads in windows, and chrome generally knows
+  // what it's doing anyway.
+  nsCOMPtr<nsIDocShellTreeItem> item =
+    do_QueryInterface(NS_CP_GetDocShellFromDOMNode(aRequestingNode));
+  
+  if (item) {
+    PRInt32 type;
+    item->GetItemType(&type);
+    if (type == nsIDocShellTreeItem::typeChrome) {
+      *aDecision = nsIContentPolicy::ACCEPT;
+      return NS_OK;
+    }
+  }
+  
+  // This isn't a load from chrome.  Just do a ShouldLoad() check --
+  // we want the same answer here
+  return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
+                    aRequestingNode, aMimeGuess, aExtra, aDecision);
 }
 
 NS_IMETHODIMP

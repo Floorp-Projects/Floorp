@@ -58,6 +58,11 @@
 #include "nsAutoPtr.h"
 #include "nsMediaDocument.h"
 #include "nsStyleSet.h"
+#include "nsIChannel.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMElement.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 
@@ -156,6 +161,31 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) {
     return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> domWindow =
+    do_QueryInterface(imgDoc->GetScriptGlobalObject());
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_UNEXPECTED);
+
+  // Do a ShouldProcess check to see whether to keep loading the image.
+  nsCOMPtr<nsIURI> channelURI;
+  channel->GetURI(getter_AddRefs(channelURI));
+
+  nsCAutoString mimeType;
+  channel->GetContentType(mimeType);
+    
+  PRInt16 decision = nsIContentPolicy::ACCEPT;
+  nsresult rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_IMAGE,
+                                             channelURI,
+                                             nsnull,
+                                             domWindow->GetFrameElementInternal(),
+                                             mimeType,
+                                             nsnull,
+                                             &decision);
+                                               
+  if (NS_FAILED(rv) || NS_CP_REJECTED(decision)) {
+    request->Cancel(NS_ERROR_CONTENT_BLOCKED);
+    return NS_OK;
   }
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgDoc->mImageElement);
