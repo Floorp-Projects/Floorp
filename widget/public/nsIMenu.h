@@ -100,10 +100,10 @@ class nsIMenu : public nsISupports {
     NS_IMETHOD GetItemCount(PRUint32 &aCount) = 0;
 
    /**
-    * Returns a Menu Item at a specified Index
+    * Returns a Menu or Menu Item at a specified Index
     *
     */
-    NS_IMETHOD GetItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem) = 0;
+    NS_IMETHOD GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem) = 0;
 
    /**
     * Inserts a Menu Item at a specified Index
