@@ -91,6 +91,7 @@ ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
     NS_ASSERTION(ds != nsnull, "null ptr");
     NS_ASSERTION(container != nsnull, "null ptr");
 
+    NS_INIT_REFCNT();
     NS_IF_ADDREF(mDataSource);
     NS_IF_ADDREF(mContainer);
 
@@ -124,7 +125,8 @@ NS_IMPL_ISUPPORTS(ContainerCursorImpl, kIRDFCursorIID);
 NS_IMETHODIMP
 ContainerCursorImpl::HasMoreElements(PRBool& result)
 {
-    return (mNext != nsnull);
+    result = (mNext != nsnull);
+    return NS_OK;
 }
 
 
@@ -183,14 +185,14 @@ ContainerCursorImpl::SkipToNext(void)
         rv = mDataSource->GetTarget(mContainer, ordinalProperty, PR_TRUE, mNext);
         NS_IF_RELEASE(ordinalProperty);
 
+        ++mCounter;
+
         if (NS_SUCCEEDED(rv)) {
             // Don't bother releasing mNext; we'll let the AddRef
             // serve as the implicit addref that GetNext() should
             // perform.
             break;
         }
-
-        ++mCounter;
     }
 
 done:
