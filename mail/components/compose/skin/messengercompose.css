@@ -429,7 +429,6 @@ treechildren::-moz-tree-image(remote-err) {
 /* ::::: format toolbar ::::: */
 
 #FormatToolbar > toolbarbutton {
-  min-width: 32px;
   list-style-image: url("chrome://messenger/skin/messengercompose/format-buttons.png");
 }
  
