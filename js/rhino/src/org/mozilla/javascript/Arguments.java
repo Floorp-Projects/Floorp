@@ -226,10 +226,10 @@ final class Arguments extends IdScriptableObject
                 if (value == UniqueTag.NULL_VALUE) { value = null; }
                 else if (value == null) {
                     NativeCall caller = activation.parentActivationCall;
-                    if (caller == null) {
-                        value = null;
-                    } else {
+                    if (caller != null) {
                         value = caller.get("arguments", caller);
+                    } else {
+                        value = null;
                     }
                 }
                 return value;

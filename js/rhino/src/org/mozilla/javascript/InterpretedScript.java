@@ -57,6 +57,9 @@ final class InterpretedScript extends NativeFunction implements Script
                        Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
+        if (!ScriptRuntime.hasTopCall(cx)) {
+            return ScriptRuntime.doTopCall(this, cx, scope, thisObj, args);
+        }
         return Interpreter.interpret(cx, scope, thisObj,
                                      args, null, 0, args.length,
                                      this, itsData);

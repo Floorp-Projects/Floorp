@@ -2547,11 +2547,8 @@ public class Context
     private boolean sealed;
     private Object sealKey;
 
-    Scriptable topActivationScope;
+    Scriptable topCallScope;
     NativeCall currentActivationCall;
-    Scriptable currentActivationScope;
-    int currentActivationDepth;
-
     XMLLib cachedXMLLib;
 
     // for Objects, Arrays to tag themselves as being printed out,

@@ -1085,9 +1085,12 @@ public class ScriptRuntime {
 
     public static Object setDefaultNamespace(Object namespace, Context cx)
     {
-        Scriptable scope = cx.currentActivationScope;
-        if (scope == null)
-            throw new IllegalStateException();
+        Scriptable scope = cx.currentActivationCall;
+        if (scope == null) {
+            scope = cx.topCallScope;
+            if (scope == null)
+                throw new IllegalStateException();
+        }
 
         XMLLib xmlLib = currentXMLLib(cx);
         Object ns = xmlLib.toDefaultXmlNamespace(cx, namespace);
@@ -1107,9 +1110,11 @@ public class ScriptRuntime {
 
     public static Object searchDefaultNamespace(Context cx)
     {
-        Scriptable scope = cx.currentActivationScope;
+        Scriptable scope = cx.currentActivationCall;
         if (scope == null) {
-            return null;
+            scope = cx.topCallScope;
+            if (scope == null)
+                throw new IllegalStateException();
         }
         Object nsObject;
         for (;;) {
@@ -1751,8 +1756,7 @@ public class ScriptRuntime {
             // been defined, creates a new property in the
             // global object. Find the global object by
             // walking up the scope chain.
-            Scriptable scope = cx.currentActivationScope;
-            bound = ScriptableObject.getTopLevelScope(scope);
+            bound = cx.topCallScope;
             bound.put(id, bound, value);
             /*
             This code is causing immense performance problems in
@@ -2749,27 +2753,64 @@ public class ScriptRuntime {
         return new ImporterTopLevel(cx);
     }
 
-    public static Scriptable enterScript(Context cx, Scriptable scope,
-                                         NativeFunction funObj,
-                                         Scriptable thisObj)
+    public static boolean hasTopCall(Context cx)
     {
-        boolean topLevel = (cx.currentActivationDepth == 0);
+        return (cx.topCallScope != null);
+    }
 
-        Scriptable varScope = scope;
-        // Never define any variables from var statements inside with object.
-        // See bug 38590.
-        while (varScope instanceof NativeWith) {
-            varScope = varScope.getParentScope();
+    public static Object doTopCall(Callable callable,
+                                   Context cx, Scriptable scope,
+                                   Scriptable thisObj, Object[] args)
+    {
+        if (cx.topCallScope != null)
+            throw new IllegalStateException();
+
+        Object result;
+        cx.topCallScope = ScriptableObject.getTopLevelScope(scope);
+        try {
+            result = callable.call(cx, scope, thisObj, args);
+        } finally {
+            releaseTopCall(cx);
         }
+        return result;
+    }
+
+    private static void releaseTopCall(Context cx)
+    {
+        cx.topCallScope = null;
+        // Cleanup cached references
+        cx.cachedXMLLib = null;
+
+        if (cx.currentActivationCall != null) {
+            // Function should always call exitActivationFunction
+            // if it creates activation record
+            throw new IllegalStateException();
+        }
+    }
+
+    public static void initScript(NativeFunction funObj, Scriptable thisObj,
+                                  Context cx, Scriptable scope,
+                                  boolean evalScript)
+    {
+        if (cx.topCallScope == null)
+            throw new IllegalStateException();
 
         String[] argNames = funObj.argNames;
         if (argNames != null) {
+
+            Scriptable varScope = scope;
+            // Never define any variables from var statements inside with
+            // object. See bug 38590.
+            while (varScope instanceof NativeWith) {
+                varScope = varScope.getParentScope();
+            }
+
             for (int i = argNames.length; i-- != 0;) {
                 String name = argNames[i];
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!hasProp(scope, name)) {
-                    if (topLevel) {
+                    if (!evalScript) {
                         // Global var definitions are supposed to be DONTDELETE
                         ScriptableObject.defineProperty(
                             varScope, name, Undefined.instance,
@@ -2780,29 +2821,6 @@ public class ScriptRuntime {
                 }
             }
         }
-
-        if (topLevel) {
-            if (cx.currentActivationScope != null)
-                throw new IllegalStateException();
-            cx.currentActivationScope = varScope;
-        }
-
-        increaseActivationDepth(cx);
-
-        return scope;
-    }
-
-    public static void exitScript(Context cx)
-    {
-        if (cx.currentActivationDepth == 0)
-            throw new IllegalStateException();
-        if (cx.currentActivationScope == null)
-            throw new IllegalStateException();
-
-        if (cx.currentActivationDepth == 1) {
-            cx.currentActivationScope = null;
-        }
-        decreaseActivationDepth(cx);
     }
 
     public static Scriptable enterActivationFunction(Context cx,
@@ -2811,64 +2829,21 @@ public class ScriptRuntime {
                                                      Scriptable thisObj,
                                                      Object[] args)
     {
+        if (cx.topCallScope == null)
+            throw new IllegalStateException();
+
         NativeCall call = new NativeCall(scope, funObj, thisObj, args);
         call.parentActivationCall = cx.currentActivationCall;
-        call.parentActivationScope = cx.currentActivationScope;
-
         cx.currentActivationCall = call;
-        cx.currentActivationScope = call;
-
-        increaseActivationDepth(cx);
 
         return call;
     }
 
     public static void exitActivationFunction(Context cx)
     {
-        if (cx.currentActivationDepth == 0)
-            throw new IllegalStateException();
-        if (cx.currentActivationScope == null)
-            throw new IllegalStateException();
-        if (cx.currentActivationCall != cx.currentActivationScope)
-            throw new IllegalStateException();
-
         NativeCall call = cx.currentActivationCall;
         cx.currentActivationCall = call.parentActivationCall;
-        cx.currentActivationScope = call.parentActivationScope;
-
         call.parentActivationCall = null;
-        call.parentActivationScope = null;
-
-        decreaseActivationDepth(cx);
-    }
-
-    private static void increaseActivationDepth(Context cx)
-    {
-        // The caller should initialize this already
-        if (cx.currentActivationScope == null)
-            throw new IllegalStateException();
-
-        if (cx.currentActivationDepth == 0) {
-            cx.topActivationScope = cx.currentActivationScope;
-        }
-        ++cx.currentActivationDepth;
-    }
-
-    private static void decreaseActivationDepth(Context cx)
-    {
-        --cx.currentActivationDepth;
-
-        if (cx.currentActivationDepth == 0) {
-            // The caller should do proper cleanup
-            if (cx.currentActivationScope != null)
-                throw new IllegalStateException();
-            if (cx.currentActivationCall != null)
-                throw new IllegalStateException();
-            cx.topActivationScope = null;
-
-            // Cleanup references
-            cx.cachedXMLLib = null;
-        }
     }
 
     static NativeCall findFunctionActivation(Context cx, Function f)
@@ -3185,12 +3160,12 @@ public class ScriptRuntime {
     private static XMLLib currentXMLLib(Context cx)
     {
         // Scripts should be running to access this
-        if (cx.topActivationScope == null)
+        if (cx.topCallScope == null)
             throw new IllegalStateException();
 
         XMLLib xmlLib = cx.cachedXMLLib;
         if (xmlLib == null) {
-            xmlLib = XMLLib.extractFromScope(cx.topActivationScope);
+            xmlLib = XMLLib.extractFromScope(cx.topCallScope);
             if (xmlLib == null)
                 throw new IllegalStateException();
             cx.cachedXMLLib = xmlLib;

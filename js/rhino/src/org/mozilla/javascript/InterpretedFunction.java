@@ -54,6 +54,9 @@ final class InterpretedFunction extends NativeFunction
                        Object[] args)
         throws JavaScriptException
     {
+        if (!ScriptRuntime.hasTopCall(cx)) {
+            return ScriptRuntime.doTopCall(this, cx, scope, thisObj, args);
+        }
         return Interpreter.interpret(cx, scope, thisObj,
                                      args, null, 0, args.length,
                                      this, itsData);

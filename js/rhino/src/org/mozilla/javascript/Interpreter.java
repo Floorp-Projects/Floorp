@@ -2041,8 +2041,18 @@ public class Interpreter
         }
 
         DebugFrame debuggerFrame = null;
+        boolean useActivationVars = false;
         if (cx.debugger != null) {
             debuggerFrame = cx.debugger.getFrame(cx, idata);
+            useActivationVars = (debuggerFrame != null);
+        }
+
+        if (idata.itsNeedsActivation || useActivationVars) {
+            if (argsDbl != null) {
+                args = getArgsArray(args, argsDbl, argShift, argCount);
+                argShift = 0;
+                argsDbl = null;
+            }
         }
 
         if (idata.itsFunctionType != 0) {
@@ -2055,19 +2065,14 @@ public class Interpreter
                 thisObj = ScriptRuntime.getThis(thisObj);
             }
 
-            if (idata.itsNeedsActivation) {
-                if (argsDbl != null) {
-                    args = getArgsArray(args, argsDbl, argShift, argCount);
-                    argShift = 0;
-                    argsDbl = null;
-                }
+            if (idata.itsNeedsActivation || useActivationVars) {
                 scope = ScriptRuntime.enterActivationFunction(cx, scope,
                                                               fnOrScript,
                                                               thisObj, args);
             }
-
         } else {
-            scope = ScriptRuntime.enterScript(cx, scope, fnOrScript, thisObj);
+            ScriptRuntime.initScript(fnOrScript, thisObj, cx, scope,
+                                     idata.itsFromEvalCode);
         }
 
         if (idata.itsNestedFunctions != null) {
@@ -2086,19 +2091,7 @@ public class Interpreter
         // the regexps re-wrapped during each script execution
         Scriptable[] scriptRegExps = null;
 
-        boolean useActivationVars = false;
         if (debuggerFrame != null) {
-            if (argsDbl != null) {
-                args = getArgsArray(args, argsDbl, argShift, argCount);
-                argShift = 0;
-                argsDbl = null;
-            }
-            if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation) {
-                useActivationVars = true;
-                scope = ScriptRuntime.enterActivationFunction(cx, scope,
-                                                              fnOrScript,
-                                                              thisObj, args);
-            }
             debuggerFrame.onEnter(cx, scope, thisObj, args);
         }
 
@@ -3119,11 +3112,9 @@ switch (op) {
         }
 
         if (idata.itsFunctionType != 0) {
-            if (idata.itsNeedsActivation || debuggerFrame != null) {
+            if (idata.itsNeedsActivation || useActivationVars) {
                 ScriptRuntime.exitActivationFunction(cx);
             }
-        } else {
-            ScriptRuntime.exitScript(cx);
         }
 
         if (javaException != null) {

@@ -374,6 +374,38 @@ public class Codegen extends Interpreter
                         (short)(ClassFileWriter.ACC_PUBLIC
                                 | ClassFileWriter.ACC_FINAL));
 
+        // Generate code for:
+        // if (!ScriptRuntime.hasTopCall(cx)) {
+        //     return ScriptRuntime.doTopCall(this, cx, scope, thisObj, args);
+        // }
+
+        int nonTopCallLabel = cfw.acquireLabel();
+        cfw.addALoad(1); //cx
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/ScriptRuntime",
+                      "hasTopCall",
+                      "(Lorg/mozilla/javascript/Context;"
+                      +")Z");
+        cfw.add(ByteCode.IFNE, nonTopCallLabel);
+        cfw.addALoad(0);
+        cfw.addALoad(1);
+        cfw.addALoad(2);
+        cfw.addALoad(3);
+        cfw.addALoad(4);
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/ScriptRuntime",
+                      "doTopCall",
+                      "(Lorg/mozilla/javascript/Callable;"
+                      +"Lorg/mozilla/javascript/Context;"
+                      +"Lorg/mozilla/javascript/Scriptable;"
+                      +"Lorg/mozilla/javascript/Scriptable;"
+                      +"[Ljava/lang/Object;"
+                      +")Ljava/lang/Object;");
+        cfw.add(ByteCode.ARETURN);
+        cfw.markLabel(nonTopCallLabel);
+
+        // No generate switch to call the real methods
+
         cfw.addALoad(0);
         cfw.addALoad(1);
         cfw.addALoad(2);
@@ -1261,20 +1293,22 @@ class BodyCodegen
                                    +"Lorg/mozilla/javascript/Scriptable;"
                                    +"[Ljava/lang/Object;"
                                    +")Lorg/mozilla/javascript/Scriptable;");
+            cfw.addAStore(variableObjectLocal);
         } else {
             debugVariableName = "global";
-            cfw.addALoad(contextLocal);
-            cfw.addALoad(variableObjectLocal);
             cfw.addALoad(funObjLocal);
             cfw.addALoad(thisObjLocal);
-            addScriptRuntimeInvoke("enterScript",
-                                   "(Lorg/mozilla/javascript/Context;"
+            cfw.addALoad(contextLocal);
+            cfw.addALoad(variableObjectLocal);
+            cfw.addPush(0); // false to indicate it is not eval script
+            addScriptRuntimeInvoke("initScript",
+                                   "(Lorg/mozilla/javascript/NativeFunction;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
-                                   +"Lorg/mozilla/javascript/NativeFunction;"
+                                   +"Lorg/mozilla/javascript/Context;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
-                                   +")Lorg/mozilla/javascript/Scriptable;");
+                                   +"Z"
+                                   +")V");
         }
-        cfw.addAStore(variableObjectLocal);
 
         enterAreaStartLabel = cfw.acquireLabel();
         epilogueLabel = cfw.acquireLabel();
@@ -1334,44 +1368,42 @@ class BodyCodegen
         }
 
         cfw.markLabel(epilogueLabel);
-        generateExitCode();
         if (fnCurrent == null) {
             cfw.addALoad(popvLocal);
+            cfw.add(ByteCode.ARETURN);
+        } else {
+            generateActivationExit();
+            cfw.add(ByteCode.ARETURN);
+
+            // Generate catch block to catch all and rethrow to call exit code
+            // under exception propagation as well.
+
+            int finallyHandler = cfw.acquireLabel();
+            cfw.markHandler(finallyHandler);
+            short exceptionObject = getNewWordLocal();
+            cfw.addAStore(exceptionObject);
+
+            // Duplicate generateActivationExit() in the catch block since it
+            // takes less space then full-fetured ByteCode.JSR/ByteCode.RET
+            generateActivationExit();
+
+            cfw.addALoad(exceptionObject);
+            releaseWordLocal(exceptionObject);
+            // rethrow
+            cfw.add(ByteCode.ATHROW);
+
+            // mark the handler
+            cfw.addExceptionHandler(enterAreaStartLabel, epilogueLabel,
+                                    finallyHandler, null); // catch any
         }
-        cfw.add(ByteCode.ARETURN);
-
-        // Generate catch block to catch all and rethrow to call exit code
-        // under exception propagation as well.
-
-        int finallyHandler = cfw.acquireLabel();
-        cfw.markHandler(finallyHandler);
-        short exceptionObject = getNewWordLocal();
-        cfw.addAStore(exceptionObject);
-
-        // Duplicate generateExitCode() in the catch block since it takes
-        // less space then full-fetured ByteCode.JSR/ByteCode.RET
-        generateExitCode();
-
-        cfw.addALoad(exceptionObject);
-        releaseWordLocal(exceptionObject);
-        // rethrow
-        cfw.add(ByteCode.ATHROW);
-
-        // mark the handler
-        cfw.addExceptionHandler(enterAreaStartLabel, epilogueLabel,
-                                finallyHandler, null); // catch any
     }
 
-    private void generateExitCode()
+    private void generateActivationExit()
     {
+        if (fnCurrent == null || hasVarsInRegs) throw Kit.codeBug();
         cfw.addALoad(contextLocal);
-        if (fnCurrent != null) {
-            addScriptRuntimeInvoke("exitActivationFunction",
-                                   "(Lorg/mozilla/javascript/Context;)V");
-        } else {
-            addScriptRuntimeInvoke("exitScript",
-                                   "(Lorg/mozilla/javascript/Context;)V");
-        }
+        addScriptRuntimeInvoke("exitActivationFunction",
+                               "(Lorg/mozilla/javascript/Context;)V");
     }
 
     private void generateStatement(Node node, Node parent)

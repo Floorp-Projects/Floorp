@@ -157,6 +157,5 @@ public final class NativeCall extends IdScriptableObject
     private Object[] originalArgs;
 
     NativeCall parentActivationCall;
-    Scriptable parentActivationScope;
 }
 
