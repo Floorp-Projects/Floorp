@@ -145,7 +145,7 @@ endif
 
 ifndef OBJS
 OBJS		= $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX))) \
-		  $(addprefix $(OBJDIR)/,$(ASFILES:.s=.$(OBJ_SUFFIX)))
+		  $(addprefix $(OBJDIR)/,$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX)))
 endif
 
 ifeq ($(OS_ARCH), WINNT)
@@ -387,6 +387,12 @@ endif
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) -c $<
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+$(OBJDIR)/%.$(OBJ_SUFFIX): %.asm
+	@$(MAKE_OBJDIR)
+	$(AS) -Fdo:./$(OBJDIR) $(ASFLAGS) $<
+endif
 
 %.i: %.c
 	$(CC) -C -E $(CFLAGS) $< > $*.i
