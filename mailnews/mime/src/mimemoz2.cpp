@@ -123,7 +123,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
 
   *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(MSG_AttachmentData));
   if (!*data) 
-    return MIME_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCRT::memset(*data, 0, (n + 1) * sizeof(MSG_AttachmentData));
 
@@ -142,7 +142,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     char          *imappart = NULL;
 
     if (!part) 
-      return MIME_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
 
     if (obj->options->missing_parts)
       imappart = mime_imap_part_address(child);
@@ -158,12 +158,12 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     }
   
     if (!urlSpec)
-      return MIME_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec);
 
     if ( (NS_FAILED(rv)) || (!tmp->url) )
-      return MIME_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
 
     tmp->real_type = child->content_type ? PL_strdup(child->content_type) : NULL;
     tmp->real_encoding = child->encoding ? PL_strdup(child->encoding) : NULL;

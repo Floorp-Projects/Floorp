@@ -651,6 +651,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 #define MimeHeaders_write(OPT,DATA,LENGTH) \
   	MimeOptions_write((OPT), (DATA), (LENGTH), PR_TRUE);
 
+#if 0
 static char *
 MimeHeaders_default_news_link_generator (const char *dest, void *closure,
 	                    									 MimeHeaders *headers)
@@ -802,6 +803,7 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
   PR_FREEIF(addresses);
   return result;
 }
+#endif
 
 #define MimeHeaders_grow_obuffer(hdrs, desired_size) \
   ((((long) (desired_size)) >= ((long) (hdrs)->obuffer_size)) ? \
@@ -842,6 +844,7 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
   return 0;
 }
 
+#if 0
 static char *
 MimeHeaders_localize_header_name(char *name, MimeDisplayOptions *opt)
 {
@@ -890,6 +893,7 @@ MimeHeaders_localize_header_name(char *name, MimeDisplayOptions *opt)
 
   return NULL;  
 }
+#endif
 
 int
 MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBool attachment)

@@ -1984,18 +1984,18 @@ GenerateFileNameFromURI(nsIURI *aURL)
     if (!newSpec)
       return nsnull;
 
-    char *cp = NULL, *cp1=NULL ;
+    char *cp2 = NULL, *cp3=NULL ;
 
     // strip '"' 
-    cp = newSpec;
-    while (*cp == '"') 
-      cp++;
-    if ((cp1 = PL_strchr(cp, '"')))
-      *cp1 = 0;
+    cp2 = newSpec;
+    while (*cp2 == '"') 
+      cp2++;
+    if ((cp3 = PL_strchr(cp2, '"')))
+      *cp3 = 0;
 
-    char *hostStr = nsMsgParseURL(cp, GET_HOST_PART);
+    char *hostStr = nsMsgParseURL(cp2, GET_HOST_PART);
     if (!hostStr)
-      hostStr = cp;
+      hostStr = cp2;
 
     nsXPIDLCString protocol;
     if (NS_SUCCEEDED(aURL->GetScheme(getter_Copies(protocol))) && (protocol))

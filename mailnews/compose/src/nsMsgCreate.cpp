@@ -286,7 +286,6 @@ GetIMessageFromURI(const PRUnichar *msgURI)
   nsIRDFResource            *myRDFNode = nsnull;
   nsCAutoString              convertString(msgURI);
 
-  char                      *tmpURI = nsnull;
   nsIMessage                *returnMessage;
 
   NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 

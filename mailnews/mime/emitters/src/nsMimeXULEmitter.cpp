@@ -319,15 +319,15 @@ nsMimeXULEmitter::EndBody()
   // writing to the output stream on the Complete() call.  
   mBodyFileSpec = nsMsgCreateTempFileSpec("nsMimeBody.html");
   if (!mBodyFileSpec)
-    return MIME_ERROR_WRITING_FILE;
+    return NS_ERROR_NULL_POINTER;
 
   nsOutputFileStream tempOutfile(*mBodyFileSpec);
   if (! tempOutfile.is_open())
-    return MIME_ERROR_WRITING_FILE;
+    return NS_ERROR_UNEXPECTED;
 
   char  *tmpBody = mBody.ToNewCString();
   if (tmpBody)
-    PRInt32 n = tempOutfile.write(tmpBody, mBody.Length());
+    tempOutfile.write(tmpBody, mBody.Length());
   tempOutfile.close();
 
   return NS_OK;
