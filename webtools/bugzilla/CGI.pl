@@ -963,6 +963,20 @@ sub PutFooter {
 }
 
 
+sub DisplayError {
+  my ($message, $title) = (@_);
+  $title ||= "Error";
+
+  print "Content-type: text/html\n\n";
+  PutHeader($title);
+
+  print PerformSubsts( Param("errorhtml") , {errormsg => $message} );
+
+  PutFooter();
+
+  return 1;
+}
+
 sub PuntTryAgain ($) {
     my ($str) = (@_);
     print PerformSubsts(Param("errorhtml"),

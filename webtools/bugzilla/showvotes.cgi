@@ -26,10 +26,49 @@ use strict;
 
 require "CGI.pl";
 
+ConnectToDatabase();
+
+################################################################################
+# START Form Data Validation
+################################################################################
+
+# For security and correctness, validate the value of the "voteon" form variable.
+# Valid values are those containing a number that is the ID of an existing bug.
+if (defined $::FORM{'voteon'}) {
+  $::FORM{'voteon'} =~ /^(\d+)$/;
+  $::FORM{'voteon'} = $1 || 0;
+  SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $::FORM{'voteon'}");
+  FetchSQLData() 
+    || DisplayError("You entered an invalid bug number to vote on.") && exit;
+}
+
+# For security and correctness, validate the value of the "bug_id" form variable.
+# Valid values are those containing a number that is the ID of an existing bug.
+if (defined $::FORM{'bug_id'}) {
+  $::FORM{'bug_id'} =~ /^(\d+)$/;
+  $::FORM{'bug_id'} = $1 || 0;
+  SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $::FORM{'bug_id'}");
+  FetchSQLData() 
+    || DisplayError("You entered an invalid bug number.") && exit;
+}
+
+# For security and correctness, validate the value of the "userid" form variable.
+# Valid values are those containing a number that is the ID of an existing user.
+if (defined $::FORM{'user'}) {
+  $::FORM{'user'} =~ /^(\d+)$/;
+  $::FORM{'user'} = $1 || 0;
+  SendSQL("SELECT userid FROM profiles WHERE userid = $::FORM{'user'}");
+  FetchSQLData() 
+    || DisplayError("You specified an invalid user number.") && exit;
+}
+
+################################################################################
+# END Form Data Validation
+################################################################################
+
 if (defined $::FORM{'voteon'} || (!defined $::FORM{'bug_id'} &&
                                   !defined $::FORM{'user'})) {
     confirm_login();
-    ConnectToDatabase();
     $::FORM{'user'} = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
 }
 
@@ -39,7 +78,6 @@ if (defined $::FORM{'bug_id'}) {
     my $id = $::FORM{'bug_id'};
     my $linkedid = qq{<a href="show_bug.cgi?id=$id">$id</a>};
     PutHeader("Show votes", "Show votes", "Bug $linkedid");
-    ConnectToDatabase();
     SendSQL("select profiles.login_name, votes.who, votes.count from votes, profiles where votes.bug_id = " . SqlQuote($id) . " and profiles.userid = votes.who");
     print "<table>\n";
     print "<tr><th>Who</th><th>Number of votes</th></tr>\n";
@@ -52,7 +90,6 @@ if (defined $::FORM{'bug_id'}) {
     print "</table>";
     print "<p>Total votes: $sum<p>\n";
 } elsif (defined $::FORM{'user'}) {
-    ConnectToDatabase();
     quietly_check_login();
     GetVersionTable();
     my $who = $::FORM{'user'};
