@@ -1032,62 +1032,83 @@ nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
   aScanner.EndReading(end);
   aScanner.CurrentPosition(current);
 
-  nsReadingIterator<PRUnichar> currentEnd = end, beginData = end;
-  PRBool balancedComment = PR_TRUE;
+  nsReadingIterator<PRUnichar> beginData = end;
 
-  static NS_NAMED_LITERAL_STRING(dashes,"--");
+  // Regular comment must start with <!--
+  if (current != end && *current == kMinus &&
+      ++current != end && *current == kMinus &&
+      ++current != end) {
+    nsReadingIterator<PRUnichar> currentEnd = end;
+    PRBool balancedComment = PR_FALSE;
+    static NS_NAMED_LITERAL_STRING(dashes,"--");
+    beginData = current;
 
-  while (FindInReadable(dashes, current, currentEnd)) {
-    current.advance(2);
-    if (beginData == end) {
-      beginData = current;
-    }
-    balancedComment = !balancedComment; // We need to match '--' with '--'
+    while (FindInReadable(dashes, current, currentEnd)) {
+      current.advance(2);
+
+      balancedComment = !balancedComment; // We need to match '--' with '--'
     
-    if (balancedComment && IsCommentEnd(current, end, gt)) {
-      // done
-      current.advance(-2);
-      if (beginData != current) { // protects from <!---->
+      if (balancedComment && IsCommentEnd(current, end, gt)) {
+        // done
+        current.advance(-2);
+        if (beginData != current) { // protects from <!---->
 #if 0
-        // XXX We should do this, but it HANGS until bug 112943 is fixed:
-        aString = Substring(beginData, current);
+          // XXX We should do this, but it HANGS until bug 112943 is fixed:
+          aString = Substring(beginData, current);
 #else
-        // XXX Instead we can do this EVIL HACK (from jag):
-        PRUint32 len = Distance(beginData, current);
-        aString.SetLength(len);
-        PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-        copy_string(beginData, current, dest);
+          // XXX Instead we can do this EVIL HACK (from jag):
+          PRUint32 len = Distance(beginData, current);
+          aString.SetLength(len);
+          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+          copy_string(beginData, current, dest);
 #endif
+        }
+        aScanner.SetPosition(++gt);
+        return NS_OK;
+      } else {
+        // Continue after the last '--'
+        currentEnd = end;
       }
-      aScanner.SetPosition(++gt);
-      return NS_OK;
-    } else {
-      // Continue after the last '--'
-      currentEnd = end;
     }
   }
 
-  // This might have been empty comment: <!>
-  // Or it could have been something completely bogus like: <!This is foobar>
-  // Handle both cases below
-  aScanner.CurrentPosition(current);
-  beginData = current;
-  if (FindCharInReadable('>', current, end)) {
+  // If beginData == end, we did not find opening '--'
+  if (beginData == end) {
+    // This might have been empty comment: <!>
+    // Or it could have been something completely bogus like: <!This is foobar>
+    // Handle both cases below
+    aScanner.CurrentPosition(current);
+    beginData = current;
+    if (FindCharInReadable('>', current, end)) {
 #if 0
-    // XXX We should do this, but it HANGS until bug 112943 is fixed:
-    aString = Substring(beginData, current);
+      // XXX We should do this, but it HANGS until bug 112943 is fixed:
+      aString = Substring(beginData, current);
 #else
-    // XXX Instead we can do this EVIL HACK (from jag):
-    PRUint32 len = Distance(beginData, current);
-    aString.SetLength(len);
-    PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-    copy_string(beginData, current, dest);
+      // XXX Instead we can do this EVIL HACK (from jag):
+      PRUint32 len = Distance(beginData, current);
+      aString.SetLength(len);
+      PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+      copy_string(beginData, current, dest);
 #endif    
-    aScanner.SetPosition(++current);
-    return NS_OK;
+      aScanner.SetPosition(++current);
+      return NS_OK;
+    }
   }
-  
-  return kEOF; // not really an nsresult, but...
+
+  if (aScanner.IsIncremental()) {
+    // We got here because we saw the beginning of a comment,
+    // but not yet the end, and we are still loading the page. In that
+    // case the return value here will cause us to unwind,
+    // wait for more content, and try again.
+    // XXX For performance reasons we should cache where we were, and
+    //     continue from there for next call
+    return kEOF; // not really an nsresult, but...
+  }
+
+  // XXX We should return kNotAComment, parse comment open as text, and parse
+  //     the rest of the document normally. Now we ALMOST do that: <! is
+  //     missing from the content model.
+  return NS_OK;
 }
 
 static
@@ -1256,7 +1277,10 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
     result=ConsumeComment(aScanner,mTextValue);
   }
 
-  mNewlineCount = !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) ? mTextValue.CountChar(kNewLine) : -1;
+  if (NS_SUCCEEDED(result)) {
+    mNewlineCount = !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) ? mTextValue.CountChar(kNewLine) : -1;
+  }
+
   return result;
 }
 
