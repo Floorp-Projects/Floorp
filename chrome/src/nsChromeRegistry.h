@@ -162,7 +162,7 @@ private:
   NS_IMETHOD IsProviderSelected(const nsCString& aProvider,
                                 const PRUnichar* aProviderName,
                                 nsIRDFResource* aSelectionArc,
-                                PRBool aUseProfile, PRBool* aResult);
+                                PRBool aUseProfile, PRInt32* aResult);
   NS_IMETHOD IsProviderSelectedForPackage(const nsCString& aProviderType,
                                           const PRUnichar *aProviderName, 
                                           const PRUnichar *aPackageName, 
