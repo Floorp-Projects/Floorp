@@ -97,36 +97,36 @@
 
 function CalendarEventDataSource( observer, UserPath, syncPath )
 {
-      try {
-          var iCalLibComponent = Components.classes["@mozilla.org/ical-container;1"].createInstance();
-      } catch ( e ) {
-          alert( "The ICAL Component is not registered properly. Please follow the instructions below:\n"+
-				 "Windows Users:\n"+
-				 "-Please quit Mozilla, run regxpcom and run Mozilla again.\n\n"+
-				 "Linux users:\n"+
-				 "1)Make sure you have write access to the component.reg file.\n"+
-				 "2)Make sure libical is installed properly. (See http://www.mozilla.org/projects/calendar/ for detailed instructions)\n"+
-				 "3)Quit Mozilla, cd to your mozilla/bin directory. Run ./regxpcom and run Mozilla again.\n"+
-				 "Note: If you get this error:\n"+
-				 "'./regxpcom: error while loading shared libraries: libxpcom.so: cannot open\n"+
-				 "shared object file: No such file or directory',\n"+
-				 "set LD_LIBRARY_PATH and MOZILLA_FIVE_HOME to your mozilla/bin directory first.\n"+
-                 "Example: export LD_LIBRARY_PATH=/home/user/mozilla/dist/bin\n"+
-				 "Example: export MOZILLA_FIVE_HOME=/home/user/mozilla/dist/bin\n\n"+
-				 "If these instructions don't solve the problem, please add yourself to the cc list of\n"+
-				 "bug 134432 at http://bugzilla.mozilla.org/show_bug.cgi?id=134432.\n"+
-				 "and give more feedback on your platform, Mozilla version, calendar install type:\n"+
-				 "(build or xpi), any errors you see on the console that you think is related and any\n"+
-				 " other problems you come across when following the above insructions.\n\n"+e );
-      }
-            
-      this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICalContainer);
-        
-      this.gICalLib.addObserver( observer );
-      
-      this.currentEvents = new Array();
-
-      this.prepareAlarms( );
+   try {
+       var iCalLibComponent = Components.classes["@mozilla.org/ical-container;1"].createInstance();
+   } catch ( e ) {
+       alert( "The ICAL Component is not registered properly. Please follow the instructions below:\n"+
+          "Windows Users:\n"+
+          "-Please quit Mozilla, run regxpcom and run Mozilla again.\n\n"+
+          "Linux users:\n"+
+          "1)Make sure you have write access to the component.reg file.\n"+
+          "2)Make sure libical is installed properly. (See http://www.mozilla.org/projects/calendar/ for detailed instructions)\n"+
+          "3)Quit Mozilla, cd to your mozilla/bin directory. Run ./regxpcom and run Mozilla again.\n"+
+          "Note: If you get this error:\n"+
+          "'./regxpcom: error while loading shared libraries: libxpcom.so: cannot open\n"+
+          "shared object file: No such file or directory',\n"+
+          "set LD_LIBRARY_PATH and MOZILLA_FIVE_HOME to your mozilla/bin directory first.\n"+
+              "Example: export LD_LIBRARY_PATH=/home/user/mozilla/dist/bin\n"+
+          "Example: export MOZILLA_FIVE_HOME=/home/user/mozilla/dist/bin\n\n"+
+          "If these instructions don't solve the problem, please add yourself to the cc list of\n"+
+          "bug 134432 at http://bugzilla.mozilla.org/show_bug.cgi?id=134432.\n"+
+          "and give more feedback on your platform, Mozilla version, calendar install type:\n"+
+          "(build or xpi), any errors you see on the console that you think is related and any\n"+
+          " other problems you come across when following the above insructions.\n\n"+e );
+   }
+         
+   this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICalContainer);
+     
+   this.gICalLib.addObserver( observer );
+   
+   this.currentEvents = new Array();
+   
+   this.prepareAlarms( );
 }
 
 
