@@ -75,7 +75,8 @@ public:
     kAlign           = 3004,
     kMakeHeader      = 3005,
     kMakeAddress     = 3006,
-    kMakePRE         = 3007
+    kMakePRE         = 3007,
+    kInsertElement   = 3008
   };
   
 protected:
@@ -175,7 +176,10 @@ class nsTextRulesInfo : public nsRulesInfo
     outString(0),
     typeInState(),
     maxLength(-1),
-    collapsedAction(nsIEditor::eDeleteNext) 
+    collapsedAction(nsIEditor::eDeleteNext),
+    bOrdered(PR_FALSE),
+    alignType(0),
+    insertElement(0)
     {};
 
   virtual ~nsTextRulesInfo() {};
@@ -195,6 +199,9 @@ class nsTextRulesInfo : public nsRulesInfo
   
   // kAlign
   const nsString *alignType;
+  
+  // kInsertElement
+  const nsIDOMElement* insertElement;
 };
 
 #endif //nsTextEditRules_h__

@@ -1063,6 +1063,13 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   if (!NS_SUCCEEDED(res) || !selection)
     return NS_ERROR_FAILURE;
 
+  // hand off to the rules system, see if it has anything to say about this
+  PRBool cancel;
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  ruleInfo.insertElement = aElement;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  if (cancel || (NS_FAILED(res))) return res;
+
   // Clear current selection.
   // Should put caret at anchor point?
   if (!aDeleteSelection)
@@ -1164,7 +1171,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     }
     // Now we can insert the new node
     res = InsertNode(aElement, parent, offsetForInsert);
-    
+
     // Set caret after element, but check for special case 
     //  of inserting table-related elements: set in first cell instead
     if (!SetCaretInTableCell(aElement))

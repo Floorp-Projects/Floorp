@@ -113,6 +113,8 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
       return WillMakeAddress(aSelection, aCancel);
     case kMakePRE:
       return WillMakePRE(aSelection, aCancel);
+    case kInsertElement:
+      return WillInsert(aSelection, aCancel);
   }
   return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel);
 }
