@@ -163,7 +163,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     fputs("^\n", gErrFile);
  out:
-    if (JSREPORT_IS_WARNING(report->flags))
+    if (!JSREPORT_IS_WARNING(report->flags))
         gExitCode = EXITCODE_RUNTIME_ERROR;
     JS_free(cx, prefix);
 }
