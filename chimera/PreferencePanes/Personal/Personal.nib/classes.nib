@@ -49,19 +49,7 @@
             OUTLETS = {_firstKeyView = id; _initialKeyView = id; _lastKeyView = id; _window = id; }; 
             SUPERCLASS = NSObject; 
         }, 
-        {CLASS = PersonalPane; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }, 
-        {
-            ACTIONS = {clearCookies = id; clearDiskCache = id; }; 
-            CLASS = PrivacyPane; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                mCookies = id; 
-                mEnableJS = NSButton; 
-                mEnableJava = NSButton; 
-                mPromptForCookie = NSButton; 
-            }; 
-            SUPERCLASS = NSPreferencePane; 
-        }
+        {CLASS = PersonalPane; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
     ); 
     IBVersion = 1; 
 }
