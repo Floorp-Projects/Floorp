@@ -3391,6 +3391,9 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
       nsAutoCharBuffer title;
       PRInt32 titleLength;
       WideCharToMultiByte(0, uchtemp, aTitle.Length(), title, titleLength);
+      if (titleLength > MAX_TITLEBAR_LENGTH) {
+        title.get()[MAX_TITLEBAR_LENGTH] = '\0';
+      }
       ::WinSetWindowText(GetMainWindow(), title.get());
       if (mChromeHidden) {
          /* If the chrome is hidden, set the text of the titlebar directly */
