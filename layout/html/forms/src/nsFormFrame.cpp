@@ -411,7 +411,6 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
             initiallyChecked = radioBtn->GetDefaultChecked();
           }
 
-          PRBool isRestored   = radioBtn->IsRestored();
           PRBool currentValue = radioBtn->GetChecked();
           if (currentValue != initiallyChecked ) {
             input->SetChecked(initiallyChecked);
