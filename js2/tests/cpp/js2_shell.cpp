@@ -265,7 +265,6 @@ void testCompile()
         Arena a;
         Parser p(world, a, testScript, widenCString("testCompile"));
         StmtNode *parsedStatements = p.parseProgram();
-        JSScope glob;
         ICodeGenerator icg(&world, &glob);
         icg.isScript();
         StmtNode *s = parsedStatements;

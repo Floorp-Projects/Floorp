@@ -158,9 +158,6 @@ namespace ICG {
         void endWith()
             { iCode->push_back(new Without()); }
         
-        void defFunction(const StringAtom& name, ICodeModule *code)
-            { iCode->push_back(new FunctionDef(name, code)); }
-
         void resetStatement() { resetTopRegister(); }
 
         void setRegisterForVariable(const StringAtom& name, TypedRegister r) 

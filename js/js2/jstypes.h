@@ -120,7 +120,7 @@ namespace JSTypes {
         const JSType*& operator=(const JSType* type)    { return (tag = type_tag, this->type = type); }
         
         bool isFunction() const                         { return (tag == function_tag); }
-        bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag)); }
+        bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag) || (tag == type_tag)); }
         bool isString() const                           { return (tag == string_tag); }
         bool isBoolean() const                          { return (tag == boolean_tag); }
         bool isNumber() const                           { return (tag == f64_tag) || (tag == integer_tag); }
@@ -440,11 +440,15 @@ namespace JSTypes {
     };
 
     class JSType : public JSObject {
+    protected:
+        String mName;
+        const JSType *mBaseType;
     public:
-        JSType(const JSType *baseType) : baseType(baseType) { }
-        const JSType *baseType;
+        JSType(const String &name, const JSType *baseType) : mName(name), mBaseType(baseType) { }
 
         enum { NoRelation = 0x7FFFFFFF };
+
+        const String& getName() const { return mName; }
 
         int32 distance(const JSType *other) const;
     };

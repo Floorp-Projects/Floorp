@@ -1245,12 +1245,10 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 superclass = static_cast<JSClass*>(superclassValue.object);
             }
             JSClass* thisClass = new JSClass(mGlobal, nameExpr->name, superclass);
-            JSValue thisValue(thisClass); thisValue.tag = JSValue::object_tag;
             // is it ok for a partially defined class to appear in global scope? this is needed
             // to handle recursive types, such as linked list nodes.
-            mGlobal->defineVariable(nameExpr->name, thisValue);
+            mGlobal->defineVariable(nameExpr->name, JSValue(thisClass));
             if (classStmt->body) {
-                bool hasMethods = false;
                 ICodeGenerator fcg(mWorld, thisClass->getScope());
                 StmtNode* s = classStmt->body->statements;
                 while (s) {
@@ -1282,20 +1280,12 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                         {
                             fcg.preprocess(s);
                             fcg.genStmt(s);
-                            hasMethods = true;
                         }
                         break;
                     default:
                         break;
                     }
                     s = s->next;
-                }
-                if (hasMethods) {
-                    // run the code which defines the functions in the class's scope.
-                    using Interpreter::Context;
-                    Context cx(*mWorld, thisClass->getScope());
-                    fcg.returnStmt(TypedRegister(NotARegister, &None_Type));
-                    cx.interpret(fcg.complete(), JSValues());
                 }
             }
         }
@@ -1316,7 +1306,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             //stdOut << icg;
             ICodeModule *icm = icg.complete();
             if (f->function.name->getKind() == ExprNode::identifier)
-                defFunction((static_cast<IdentifierExprNode *>(f->function.name))->name, icm);
+                mGlobal->defineFunction((static_cast<IdentifierExprNode *>(f->function.name))->name, icm);
         }
         break;
     case StmtNode::Var:
@@ -1530,7 +1520,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
         {
             LabelStmtNode *l = static_cast<LabelStmtNode *>(p);
             // ok, there's got to be a cleverer way of doing this...
-            if (currentLabelSet != NULL) {
+            if (currentLabelSet == NULL) {
                 currentLabelSet = new LabelSet();
                 currentLabelSet->push_back(&l->name);
                 genStmt(l->stmt, currentLabelSet);

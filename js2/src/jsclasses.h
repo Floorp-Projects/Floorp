@@ -70,20 +70,18 @@ namespace JSClasses {
      */
     class JSClass : public JSType {
     protected:
-        String mName;
         JSClass* mSuperClass;
         JSScope* mScope;        
         uint32 mSlotCount;
         std::map<String, JSSlot, std::less<const String>, gc_slot_allocator> mSlots;
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
-            : JSType(superClass), mName(name), mSuperClass(superClass), mSlotCount(0)
+            : JSType(name, superClass), mSuperClass(superClass), mSlotCount(0)
         {
             mScope = new JSScope(scope);
             setProperty(widenCString("methods"), JSValue(mScope));
         }
         
-        const String& getName()     { return mName; }
         JSClass* getSuperClass()    { return mSuperClass; }
         JSScope* getScope()         { return mScope; }
         
