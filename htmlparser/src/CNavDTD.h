@@ -532,7 +532,6 @@ protected:
     PRBool              mHasOpenBody;
     PRBool              mHadFrameset;
     PRBool              mHadBody;
-    PRBool              mDTDState;
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;
@@ -544,6 +543,7 @@ protected:
     PRBool              mSaveBadTokens;
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;
+    nsresult            mDTDState;
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
