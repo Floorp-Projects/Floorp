@@ -32,7 +32,7 @@ $chrome_color    = '#F0A000';
 $CVSROOT         = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 $ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin:/usr/local/bin"; # for cvs & m4
 
-%defaults = (
+%default = (
   'MOZ_CO_MODULE',  'SeaMonkeyEditor',
   'MOZ_CO_BRANCH',  'HEAD',
   'MOZ_OBJDIR',     '@TOPSRCDIR@',
@@ -44,8 +44,11 @@ $ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin:/usr/local/bin"; # for cvs & m
 #
 use POSIX qw(strftime);
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-$pull_date = strftime("%d %b %Y %H:%M %Z",$sec,$min,$hour,$mday,$mon,$year);
+$default{MOZ_CO_DATE} = strftime("%d %b %Y %H:%M %Z",
+                                 $sec,$min,$hour,$mday,$mon,$year);
 
+%fillin = %default;
+$fillin{MOZ_OBJDIR} = '@TOPSRCDIR@/obj-@CONFIG_GUESS@';
 
 if ($query->param()) {
   &parse_params;
@@ -60,6 +63,7 @@ if ($query->param()) {
     exit 0;
   }
 }
+
 print "Content-type: text/html\n\n";
 &print_configure_form;
 
@@ -70,6 +74,13 @@ sub parse_params {
   if ($query->param('pull_by_date') eq 'on') {
     my $pull_date = $query->param('pull_date');
     $query->param(-name=>'MOZ_CO_DATE', -values=>[ $pull_date ]);
+  }
+  if ($query->param('MOZ_OBJDIR') eq 'fillin') {
+    my $objdir = $query->param('objdir_fillin');
+    $query->param(-name=>'MOZ_OBJDIR', -values=>[ $objdir ]);
+  }
+  foreach $param ($query->param()) {
+    $fillin{$param} = $query->param($param) if defined($fillin{$param});
   }
 }
 
@@ -187,7 +198,7 @@ sub print_script {
       my $value = $query->param($param);
       $value =~ s/\s+$//;
       $value =~ s/^\s+//;
-      next if $value eq $defaults{$param};
+      next if $value eq $default{$param};
       $value = "\"$value\"" if $value =~ /\s/;
       print "# Options for client.mk.\n" if not $have_client_mk_options;
       print "mk_add_options $param=".$value."\n";
@@ -223,7 +234,7 @@ sub print_configure_form {
     <HEAD>
       <TITLE>Mozilla Unix Build Configurator</TITLE>
     </HEAD>
-    <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000" onLoad='fillTime();'>
+    <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
  
     <FORM action='config.cgi' method='POST' name='ff'>
     <INPUT Type='hidden' name='preview' value='1'>
@@ -268,25 +279,27 @@ sub print_configure_form {
     <table cellpadding=0 cellspacing=0 width="100%"><tr><td>
     Check out module
     </td><td>
-    <input type="text" name="MOZ_CO_MODULE" value="$defaults{MOZ_CO_MODULE}">
+    <input type="text" name="MOZ_CO_MODULE" value="$fillin{MOZ_CO_MODULE}">
     </td></tr><tr><td>
     Check out branch
     </td><td>
-    <input type="text" name="MOZ_CO_BRANCH" value="$defaults{MOZ_CO_BRANCH}">
+    <input type="text" name="MOZ_CO_BRANCH" value="$fillin{MOZ_CO_BRANCH}">
     </td></tr><tr><td>
     CVS flags
     </td><td>
     <code>cvs</code>&nbsp;
-    <input type="text" name="MOZ_CVS_FLAGS" value="$defaults{MOZ_CVS_FLAGS}"
+    <input type="text" name="MOZ_CVS_FLAGS" value="$fillin{MOZ_CVS_FLAGS}"
      size="16">
     &nbsp;<code>co</code>&nbsp;
-    <input type="text" name="MOZ_CO_FLAGS" value="$defaults{MOZ_CO_FLAGS}"
+    <input type="text" name="MOZ_CO_FLAGS" value="$fillin{MOZ_CO_FLAGS}"
      size="16">
     </td></tr><tr><td>
-    <input type="checkbox" name="pull_by_date">&nbsp;
+    <input type="checkbox" name="pull_by_date");
+  print 'checked' if $fillin{MOZ_CO_DATE} ne $default{MOZ_CO_DATE};
+  print qq(>&nbsp;
     Pull by date
     </td><td>
-    <input type='text' name='pull_date' value='$pull_date' size='25'>
+    <input type='text' name='pull_date' value='$fillin{MOZ_CO_DATE}' size='25'>
     </td></tr></table>
     </td></tr>
 
@@ -295,10 +308,18 @@ sub print_configure_form {
     <font face="Helvetica,Arial"><b>
     Object Directory:</b></font><br>
     </td></tr><tr><td><table><tr><td>
-    <input type="radio" name="MOZ_OBJDIR" value="$defaults{MOZ_OBJDIR}" checked>
+    <input type="radio" name="MOZ_OBJDIR" value="$default{MOZ_OBJDIR}");
+  print 'checked' if $fillin{MOZ_OBJDIR} eq $default{MOZ_OBJDIR};
+  print qq(>&nbsp;
     <code>mozilla</code></td><td> Build in the source tree. (default)<br></td></tr><tr><td>
-    <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/obj-\@CONFIG_GUESS\@">
-    <code>mozilla/obj-`config.guess`</code> </td><td>(e.g. <code>mozilla/obj-i686-pc-linux-gnu)</code><br>
+    <input type="radio" name="MOZ_OBJDIR" value="fillin");
+  print 'checked' if $fillin{MOZ_OBJDIR} ne $default{MOZ_OBJDIR};
+  print qq(>&nbsp;
+    <input type="text" name="objdir_fillin" value="$fillin{MOZ_OBJDIR}" size='30'>
+    </td><td>);
+  print '(e.g. <code>mozilla/obj-i686-pc-linux-gnu)</code>'
+    if $fillin{MOZ_OBJDIR} eq $default{MOZ_OBJDIR};
+  print qq(
     </td></tr></table>
     </td></tr>
 
