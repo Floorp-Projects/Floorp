@@ -390,6 +390,7 @@ class ReplaceData extends GlobData {
     static SubString interpretDollar(RegExpImpl res, char[] da, int dp,
                                      int bp, int[] skip)
     {
+        Context cx = Context.getCurrentContext();
         char[] ca;
         int cp;
         char dc;
@@ -398,13 +399,14 @@ class ReplaceData extends GlobData {
         /* Allow a real backslash (literal "\\") to escape "$1" etc. */
         if (da[dp] != '$')
             throw new RuntimeException();
-        if (dp > bp && da[dp-1] == '\\')
-            return null;
+        if ((cx.getLanguageVersion() != Context.VERSION_DEFAULT)
+                 && (cx.getLanguageVersion() <= Context.VERSION_1_4))
+			if (dp > bp && da[dp-1] == '\\')
+			    return null;
 
         /* Interpret all Perl match-induced dollar variables. */
         dc = da[dp+1];
         if (NativeRegExp.isDigit(dc)) {            
-            Context cx = Context.getCurrentContext();
             if ((cx.getLanguageVersion() != Context.VERSION_DEFAULT)
                      && (cx.getLanguageVersion() <= Context.VERSION_1_4)) {
                 if (dc == '0')
@@ -447,7 +449,6 @@ class ReplaceData extends GlobData {
           case '+':
             return res.lastParen;
           case '`':
-            Context cx = Context.getCurrentContext();
             if (cx.getLanguageVersion() == Context.VERSION_1_2) {
         	    /*
         	     * JS1.2 imitated the Perl4 bug where left context at each step

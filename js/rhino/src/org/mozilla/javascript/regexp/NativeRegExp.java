@@ -1692,14 +1692,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     break;
                 case REOP_SPACE:
                     if ((index < input.length)
-                                    && Character.isWhitespace(input[index]))
+                                    && TokenStream.isJSSpace(input[index]))
                         index++;
                     else
                         return -1;
                     break;
                 case REOP_NONSPACE:
                     if ((index < input.length)
-                                    && !Character.isWhitespace(input[index]))
+                                    && !TokenStream.isJSSpace(input[index]))
                         index++;
                     else
                         return -1;
