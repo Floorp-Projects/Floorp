@@ -106,7 +106,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
     rv = NS_NewHTMLContainer(aInstancePtrResult, atom);
     break;
   case eHTMLTag_br:
-    rv = NS_NewHTMLBreak(aInstancePtrResult, atom);
+    rv = NS_NewHTMLBR(aInstancePtrResult, atom);
     break;
   case eHTMLTag_colgroup:
     rv = NS_NewTableColGroupPart(aInstancePtrResult, atom);
