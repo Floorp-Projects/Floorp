@@ -105,3 +105,9 @@ nsresult nsPopupMenu::ShowMenu( PRInt32 aX, PRInt32 aY)
                  PU_KEYBOARD | PU_MOUSEBUTTON1 | PU_MOUSEBUTTON2);
    return NS_OK;
 }
+
+NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
+{
+  return NS_OK;
+
+}
