@@ -59,8 +59,8 @@ typedef struct
 {
     unsigned long      ulReserved;           
     unsigned long      ulRecipClass;  /* MAPI_TO, MAPI_CC, MAPI_BCC, MAPI_ORIG    */
-    LPTSTR             lpszName;      /* Recipient name to display */
-    LPTSTR             lpszAddress;   /* Recipient email address */
+    LPSTR             lpszName;      /* Recipient name to display */
+    LPSTR             lpszAddress;   /* Recipient email address */
     unsigned long      ulEIDSize_NotUsed;     
     unsigned char  *   lpEntryID_NotUsed ;
 } nsMapiRecipDesc, * lpnsMapiRecipDesc;
@@ -68,19 +68,18 @@ typedef struct
 typedef struct
 {
     unsigned long    ulReserved;					
-    LPTSTR           lpszSubject;  /* Message Subject */
-    LPTSTR           lpszNoteText; /* Message Text */
-    LPTSTR           lpszMessageType_NotUsed;		
-    LPTSTR           lpszDateReceived_notUsed;	 /* in YYYY/MM/DD HH:MM format */
-    LPTSTR           lpszConversationID_NotUsed; /* conversation thread ID */
+    LPSTR           lpszSubject;  /* Message Subject */
+    LPSTR           lpszNoteText; /* Message Text */
+    LPSTR           lpszMessageType;		
+    LPSTR           lpszDateReceived;	 /* in YYYY/MM/DD HH:MM format */
+    LPSTR           lpszConversationID_NotUsed; /* conversation thread ID */
     unsigned long    flFlags; /* unread,return receipt */
     lpnsMapiRecipDesc  lpOriginator;  /* Originator descriptor  */
     unsigned long      nRecipCount;   /* Number of recipients   */
-		[size_is (nRecipCount)]	lpnsMapiRecipDesc lpRecips;/* Recipient descriptors  */
+    [size_is (nRecipCount)]	lpnsMapiRecipDesc lpRecips;/* Recipient descriptors  */
     unsigned long      nFileCount;    /* # of file attachments  */
     [size_is (nFileCount)]	lpnsMapiFileDesc   lpFiles;       /* Attachment descriptors */
 } nsMapiMessage, * lpnsMapiMessage;
-
 
 [
     object,

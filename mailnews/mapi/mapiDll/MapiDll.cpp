@@ -210,7 +210,7 @@ ULONG FAR PASCAL MAPILogoff (LHANDLE aSession, ULONG aUIParam,
     return SUCCESS_SUCCESS;
 }
 
-ULONG FAR PASCAL MAPISendMail (LHANDLE lhSession, ULONG ulUIParam, lpnsMapiMessage lpMessage,
+ULONG FAR PASCAL MAPISendMail (LHANDLE lhSession, ULONG ulUIParam, nsMapiMessage *lpMessage,
                 FLAGS flFlags, ULONG ulReserved )
 {
     HRESULT hr = 0;
@@ -338,8 +338,9 @@ ULONG FAR PASCAL MAPIFindNext(LHANDLE lhSession, ULONG ulUIParam, LPTSTR lpszMes
 
 }
 
+
 ULONG FAR PASCAL MAPIReadMail(LHANDLE lhSession, ULONG ulUIParam, LPTSTR lpszMessageID,
-                              FLAGS flFlags, ULONG ulReserved, lpnsMapiMessage *lppMessage)
+                              FLAGS flFlags, ULONG ulReserved, nsMapiMessage **lppMessage)
 {
   nsIMapi *pNsMapi = NULL;
 

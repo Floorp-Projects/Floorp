@@ -524,7 +524,7 @@ DoMAPIReadMail(HWND hWnd)
   // Deal with error up front and return if need be...
   if (rc != SUCCESS_SUCCESS)
   {
-    wsprintf(msg, "FAILURE: Return code %d from MAPIReadMail\nError=[%s]", 
+    wsprintf(msg, "FAILURE: Return code %x from MAPIReadMail\nError=[%s]", 
                       rc, GetMAPIError(rc));
 
     ShowMessage(hWnd, msg);
@@ -759,7 +759,7 @@ GetMessage(HWND hWnd, LPSTR id)
   // Deal with error up front and return if need be...
   if (rc != SUCCESS_SUCCESS)
   {
-    wsprintf(msg, "FAILURE: Return code %d from MAPIReadMail\nError=[%s]", 
+    wsprintf(msg, "FAILURE: Return code %x from MAPIReadMail\nError=[%s]", 
                       rc, GetMAPIError(rc));
 
     ShowMessage(hWnd, msg);

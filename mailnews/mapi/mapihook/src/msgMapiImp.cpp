@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 #include <mapidefs.h>
 #include <mapi.h>
 #include "msgMapi.h"
@@ -68,10 +72,14 @@
 #include "nsIFileStreams.h"
 #include "nsNetCID.h"
 
+PRLogModuleInfo *MAPI;
+
 CMapiImp::CMapiImp()
 : m_cRef(1)
 {
     m_Lock = PR_NewLock();
+  if (!MAPI)
+    MAPI = PR_NewLogModule("MAPI");
 }
 
 CMapiImp::~CMapiImp() 
@@ -160,6 +168,7 @@ STDMETHODIMP CMapiImp::Login(unsigned long aUIArg, LOGIN_PW_TYPE aLogin, LOGIN_P
     PRBool bNewSession = PR_FALSE;
     char *id_key = nsnull;
 
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::Login using flags %d\n", aFlags));
     if (aFlags & MAPI_NEW_SESSION)
         bNewSession = PR_TRUE;
 
@@ -169,6 +178,7 @@ STDMETHODIMP CMapiImp::Login(unsigned long aUIArg, LOGIN_PW_TYPE aLogin, LOGIN_P
         if (nsMapiHook::VerifyUserName(aLogin, &id_key) == PR_FALSE)
         {
             *aSessionId = MAPI_E_LOGIN_FAILURE;
+            NS_ASSERTION(PR_FALSE, "failed verifying user name");
             return hr;
         }
     }
@@ -228,7 +238,8 @@ STDMETHODIMP CMapiImp::SendMail( unsigned long aSession, lpnsMapiMessage aMessag
 
     // Assign the pointers in the aMessage struct to the array of Recips and Files
     // recieved here from MS COM. These are used in BlindSendMail and ShowCompWin fns 
-    aMessage->lpRecips = aRecips ;
+    memcpy(aMessage->lpRecips, aRecips, aRecipCount * sizeof (nsMapiRecipDesc));
+//    aMessage->lpRecips = aRecips ;
     aMessage->lpFiles = aFiles ;
 
     /** create nsIMsgCompFields obj and populate it **/
@@ -365,7 +376,10 @@ LONG CMapiImp::InitContext(unsigned long session, MsgMapiListContext **listConte
     nsCOMPtr <nsIMsgFolder> inboxFolder;
     nsresult rv = GetDefaultInbox(getter_AddRefs(inboxFolder));
     if (NS_FAILED(rv))
+    {
+      NS_ASSERTION(PR_FALSE, "in init context, no inbox");
       return(MAPI_E_NO_MESSAGES);
+    }
 
     *listContext = new MsgMapiListContext;
     if (!*listContext)
@@ -376,6 +390,7 @@ LONG CMapiImp::InitContext(unsigned long session, MsgMapiListContext **listConte
     {
       pMapiConfig->SetMapiListContext(session, NULL);
       delete *listContext;
+      NS_ASSERTION(PR_FALSE, "in init context, unable to open db");
       return MAPI_E_NO_MESSAGES;
     }
     else
@@ -396,13 +411,22 @@ STDMETHODIMP CMapiImp::FindNext(unsigned long aSession, unsigned long ulUIParam,
 
   *lpszMessageID = '\0';
   nsMAPIConfiguration * pMapiConfig = nsMAPIConfiguration::GetMAPIConfiguration() ;
-  if (!pMapiConfig) return NS_ERROR_FAILURE ;  // get the singelton obj
+  if (!pMapiConfig) 
+  {
+    NS_ASSERTION(PR_FALSE, "failed to get config in findnext");
+    return NS_ERROR_FAILURE ;  // get the singelton obj
+  }
   MsgMapiListContext *listContext;
   LONG ret = InitContext(aSession, &listContext);
   if (ret != SUCCESS_SUCCESS)
+  {
+    NS_ASSERTION(PR_FALSE, "init context failed");
     return ret;
+  }
+  NS_ASSERTION(listContext, "initContext returned null context");
   if (listContext)
   {
+//    NS_ASSERTION(PR_FALSE, "find next init context succeeded");
     nsMsgKey nextKey = listContext->GetNext();
     if (nextKey == nsMsgKey_None)
     {
@@ -416,6 +440,7 @@ STDMETHODIMP CMapiImp::FindNext(unsigned long aSession, unsigned long ulUIParam,
     sprintf((char *) lpszMessageID, "%d", nextKey);
   }
 
+  PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::FindNext returning key %s\n", (char *) lpszMessageID));
   return(SUCCESS_SUCCESS);
 }
 
@@ -424,14 +449,23 @@ STDMETHODIMP CMapiImp::ReadMail(unsigned long aSession, unsigned long ulUIParam,
 {
   PRInt32 irv;
   nsCAutoString keyString((char *) lpszMessageID);
+  PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::ReadMail asking for key %s\n", (char *) lpszMessageID));
   nsMsgKey msgKey = keyString.ToInteger(&irv);
   if (irv)
+  {
+    NS_ASSERTION(PR_FALSE, "invalid lpszMessageID");
     return MAPI_E_INVALID_MESSAGE;
+  }
   MsgMapiListContext *listContext;
   LONG ret = InitContext(aSession, &listContext);
   if (ret != SUCCESS_SUCCESS)
+  {
+    NS_ASSERTION(PR_FALSE, "init context failed in ReadMail");
     return ret;
+  }
   *lppMessage = listContext->GetMessage (msgKey, flFlags);
+  NS_ASSERTION(*lppMessage, "get message failed");
+
   return (*lppMessage) ? SUCCESS_SUCCESS : E_FAIL;
 }
 
@@ -577,11 +611,11 @@ lpnsMapiMessage MsgMapiListContext::GetMessage (nsMsgKey key, unsigned long flFl
     if (msgHdr)
     {
       msgHdr->GetSubject (getter_Copies(subject));
-      message->lpszSubject = (PRUnichar *) CoTaskMemAlloc(subject.Length() + 1);
+      message->lpszSubject = (char *) CoTaskMemAlloc(subject.Length() + 1);
       strcpy((char *) message->lpszSubject, subject.get());
       PRUint32 date;
       (void) msgHdr->GetDateInSeconds(&date);
-      message->lpszDateReceived_notUsed = (PRUnichar *) ConvertDateToMapiFormat (date);
+      message->lpszDateReceived = ConvertDateToMapiFormat (date);
       
       // Pull out the flags info
       // anything to do with MAPI_SENT? Since we're only reading the Inbox, I guess not
@@ -617,19 +651,19 @@ lpnsMapiMessage MsgMapiListContext::GetMessage (nsMsgKey key, unsigned long flFl
       memset(message->lpRecips, 0, (numToRecips + numCCRecips) * sizeof(MapiRecipDesc));
       if (message->lpRecips)
       {
-        
         ConvertRecipientsToMapiFormat (parser, recipients, message->lpRecips, MAPI_TO);
         ConvertRecipientsToMapiFormat (parser, ccList, &message->lpRecips[numToRecips], MAPI_CC);
-        
-        message->nRecipCount = numToRecips + numCCRecips;
       }
-      
+  
+      PR_LOG(MAPI, PR_LOG_DEBUG, ("MsgMapiListContext::GetMessage flags=%x subject %s date %s sender %s\n", 
+        flFlags, (char *) message->lpszSubject,(char *) message->lpszDateReceived, author.get()) );
+
       // Convert any body text that we have locally
       if (!(flFlags & MAPI_ENVELOPE_ONLY))
-        message->lpszNoteText = (PRUnichar *) ConvertBodyToMapiFormat (msgHdr);
+        message->lpszNoteText = (char *) ConvertBodyToMapiFormat (msgHdr);
       
     }
-    if (! (flFlags & MAPI_PEEK))
+    if (! (flFlags & (MAPI_PEEK | MAPI_ENVELOPE_ONLY)))
       m_db->MarkRead(key, PR_TRUE, nsnull);
   }
   return message;
@@ -673,7 +707,7 @@ void MsgMapiListContext::ConvertRecipientsToMapiFormat (nsIMsgHeaderParser *pars
       {
         if (*walkNames)
         {
-          mapiRecips[i].lpszName = (PRUnichar *) CoTaskMemAlloc(strlen(walkNames) + 1);
+          mapiRecips[i].lpszName = (char *) CoTaskMemAlloc(strlen(walkNames) + 1);
           if (mapiRecips[i].lpszName )
             strcpy((char *) mapiRecips[i].lpszName, walkNames);
         }
@@ -684,7 +718,7 @@ void MsgMapiListContext::ConvertRecipientsToMapiFormat (nsIMsgHeaderParser *pars
       {
         if (*walkAddresses)
         {
-          mapiRecips[i].lpszAddress = (PRUnichar *) CoTaskMemAlloc(strlen(walkAddresses) + 1);
+          mapiRecips[i].lpszAddress = (char *) CoTaskMemAlloc(strlen(walkAddresses) + 1);
           if (mapiRecips[i].lpszAddress)
             strcpy((char *) mapiRecips[i].lpszAddress, walkAddresses);
         }
@@ -769,6 +803,8 @@ char *MsgMapiListContext::ConvertBodyToMapiFormat (nsIMsgDBHdr *hdr)
         strcpy(body + bytesCopied, curLine.get());
       bytesCopied += curLine.Length();
     }
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("ConvertBodyToMapiFormat size=%x allocated size %x body = %100.100s\n", 
+        bytesCopied, msgSize + 1, (char *) body) );
     body[bytesCopied] = '\0';   // rhp - fix last line garbage...
     return body;
   }
@@ -780,29 +816,13 @@ char *MsgMapiListContext::ConvertBodyToMapiFormat (nsIMsgDBHdr *hdr)
 // MSGMAPI API implementation
 
 
-extern "C" PRBool MSG_GetMapiMessageById (nsIMsgFolder *folder, nsMsgKey key, lpnsMapiMessage *message)
-{
-  PRBool success = FALSE;
-  MsgMapiListContext *context = new MsgMapiListContext();
-  if (context)
-  {
-    if (NS_SUCCEEDED(context->OpenDatabase(folder)))
-    {
-      *message = context->GetMessage (key, 0);
-      success = TRUE;
-    }
-    delete context;
-  }
-  return success;
-}
-
 
 static void msg_FreeMAPIFile(lpMapiFileDesc f)
 {
   if (f)
   {
-    PR_Free(f->lpszPathName);
-    PR_Free(f->lpszFileName);
+    CoTaskMemFree(f->lpszPathName);
+    CoTaskMemFree(f->lpszFileName);
   }
 }
 
@@ -810,9 +830,11 @@ static void msg_FreeMAPIRecipient(lpMapiRecipDesc rd)
 {
   if (rd)
   {
-    PR_Free(rd->lpszName);
-    PR_Free(rd->lpszAddress);
-    PR_Free(rd->lpEntryID);  
+    if (rd->lpszName)
+      CoTaskMemFree(rd->lpszName);
+    if (rd->lpszAddress)
+      CoTaskMemFree(rd->lpszAddress);
+    // CoTaskMemFree(rd->lpEntryID);  
   }
 }
 
@@ -822,11 +844,11 @@ extern "C" void MSG_FreeMapiMessage (lpMapiMessage msg)
   
   if (msg)
   {
-    PR_Free(msg->lpszSubject);
-    PR_Free(msg->lpszNoteText);
-    PR_Free(msg->lpszMessageType);
-    PR_Free(msg->lpszDateReceived);
-    PR_Free(msg->lpszConversationID);
+    CoTaskMemFree(msg->lpszSubject);
+    CoTaskMemFree(msg->lpszNoteText);
+    CoTaskMemFree(msg->lpszMessageType);
+    CoTaskMemFree(msg->lpszDateReceived);
+    CoTaskMemFree(msg->lpszConversationID);
     
     if (msg->lpOriginator)
       msg_FreeMAPIRecipient(msg->lpOriginator);
@@ -835,15 +857,15 @@ extern "C" void MSG_FreeMapiMessage (lpMapiMessage msg)
       if (&(msg->lpRecips[i]) != nsnull)
         msg_FreeMAPIRecipient(&(msg->lpRecips[i]));
       
-      PR_Free(msg->lpRecips);
+      CoTaskMemFree(msg->lpRecips);
       
       for (i=0; i<msg->nFileCount; i++)
         if (&(msg->lpFiles[i]) != nsnull)
           msg_FreeMAPIFile(&(msg->lpFiles[i]));
         
-        PR_Free(msg->lpFiles);
-        
-        PR_Free(msg);
+      CoTaskMemFree(msg->lpFiles);
+      
+      CoTaskMemFree(msg);
   }
 }
 

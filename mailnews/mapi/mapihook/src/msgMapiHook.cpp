@@ -424,8 +424,9 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
 
     if (aMessage->lpOriginator)
     {
-        PRUnichar * From = aMessage->lpOriginator->lpszAddress ;
-        aCompFields->SetFrom (nsDependentString(From)) ;
+        char * From = aMessage->lpOriginator->lpszAddress ;
+        nsAutoString FromStr; FromStr.AssignWithConversion(From);
+        aCompFields->SetFrom (FromStr) ;
     }
 
     nsAutoString To ;
@@ -445,19 +446,19 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
                 case MAPI_TO :
                     if (!To.IsEmpty())
                         To += Comma ;
-                    To += (PRUnichar *) aMessage->lpRecips[i].lpszAddress ;
+                    To.AppendWithConversion(aMessage->lpRecips[i].lpszAddress) ;
                     break ;
 
                 case MAPI_CC :
                     if (!Cc.IsEmpty())
                         Cc += Comma ;
-                    Cc += (PRUnichar *) aMessage->lpRecips[i].lpszAddress ;
+                    Cc.AppendWithConversion(aMessage->lpRecips[i].lpszAddress) ;
                     break ;
 
                 case MAPI_BCC :
                     if (!Bcc.IsEmpty())
                         Bcc += Comma ;
-                    Bcc += (PRUnichar *) aMessage->lpRecips[i].lpszAddress ; 
+                    Bcc.AppendWithConversion(aMessage->lpRecips[i].lpszAddress) ; 
                     break ;
                 }
             }
@@ -472,8 +473,10 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
     // set subject
     if (aMessage->lpszSubject)
     {
-        PRUnichar * Subject = aMessage->lpszSubject ;
-        aCompFields->SetSubject(nsDependentString(Subject)) ;
+        nsAutoString Subject;
+
+        Subject.AssignWithConversion(aMessage->lpszSubject);
+        aCompFields->SetSubject(Subject) ;
     }
 
     // handle attachments as File URL
@@ -483,8 +486,9 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
     // set body
     if (aMessage->lpszNoteText)
     {
-        PRUnichar * Body = aMessage->lpszNoteText ;
-        rv = aCompFields->SetBody(nsDependentString(Body)) ;
+        nsString Body;
+        Body.AssignWithConversion(aMessage->lpszNoteText);
+        rv = aCompFields->SetBody(Body) ;
     }
 
 #ifdef RAJIV_DEBUG
