@@ -64,18 +64,6 @@ public:
                     nsRect& aInFlowBounds,
                     nsRect& aCombinedRect);
 
-//XXX  nscoord GetCollapsedTopMargin() const {
-//XXX    return mTopMargin;
-//XXX  }
-
-//XXX  nscoord GetCollapsedBottomMargin() const {
-//XXX    return mBottomMargin;
-//XXX  }
-
-//XXX  nscoord GetCarriedOutTopMargin() const {
-//XXX    return mMetrics.mCarriedOutTopMargin;
-//XXX  }
-
   nscoord GetCarriedOutBottomMargin() const {
     return mMetrics.mCarriedOutBottomMargin;
   }
@@ -83,12 +71,6 @@ public:
   const nsSize& GetMaxElementSize() const {
     return mMaxElementSize;
   }
-
-  static void ComputeMarginsFor(nsIPresContext& aPresContext,
-                                nsIFrame* aFrame,
-                                const nsStyleSpacing* aSpacing,
-                                const nsHTMLReflowState& aParentRS,
-                                nsMargin& aResult);
 
   static void CollapseMargins(const nsMargin& aMargin,
                               nscoord aCarriedOutTopMargin,
@@ -98,6 +80,8 @@ public:
                               nscoord& aTopMarginResult,
                               nscoord& aBottomMarginResult);
 
+  // Compute the largest of two adjacent vertical margins, as per the
+  // CSS2 spec section 8.3.1
   static nscoord MaxMargin(nscoord a, nscoord b) {
     if (a < 0) {
       if (b < 0) {
@@ -112,6 +96,8 @@ public:
     if (a > b) return a;
     return b;
   }
+
+  static PRBool IsHTMLParagraph(nsIFrame* aFrame);
 
 protected:
   nsStyleUnit GetRealMarginLeftUnit();
@@ -131,9 +117,7 @@ protected:
   nsMargin mMargin;
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
-//XXX  nscoord mSpeculativeTopMargin;
-//XXX  nscoord mTopMargin;
-//XXX  nscoord mBottomMargin;
+  nscoord mTopMargin;
   nsSize mMaxElementSize;
   PRBool mIsTable;
 
