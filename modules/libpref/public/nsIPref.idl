@@ -42,6 +42,22 @@ interface nsIFileSpec;
 
 [scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
+%{C++
+  /* Pref types - see GetPrefType() */
+  enum { 
+      ePrefInvalid = 0,
+      ePrefLocked = 1, 
+      ePrefUserset = 2, 
+      ePrefConfig = 4, 
+      ePreRemote = 8,
+      ePrefLilocal = 16, 
+      ePrefString = 32, 
+      ePrefInt = 64, 
+      ePrefBool = 128,
+      ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool)
+  };
+%}
+
   // Initialize/shutdown
   void StartUp();
   void ReadUserPrefs();
@@ -70,6 +86,7 @@ interface nsIPref : nsISupports {
   [noscript] readonly attribute JSObject prefConfigObject;
 
   /* Getters */
+  long GetPrefType(in string pref);
   long GetIntPref(in string pref);
   boolean GetBoolPref(in string pref);
   [noscript] void GetBinaryPref(in string pref, in voidStar buf, inout long buf_length);
