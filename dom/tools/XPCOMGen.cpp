@@ -18,10 +18,12 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef XP_UNIX
 #include <direct.h>
+#endif
 #include <fstream.h>
 #include <ctype.h>
-#include "XPComGen.h"
+#include "XPCOMGen.h"
 #include "Exceptions.h"
 #include "plhash.h"
 #include "IdlSpecification.h"
