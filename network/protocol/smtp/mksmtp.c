@@ -1614,6 +1614,7 @@ NET_InitMailtoProtocol(void)
         mailto_proto_impl.init = net_MailtoLoad;
         mailto_proto_impl.process = net_ProcessMailto;
         mailto_proto_impl.interrupt = net_InterruptMailto;
+        mailto_proto_impl.resume = NULL;
         mailto_proto_impl.cleanup = net_CleanupMailto;
 
         NET_RegisterProtocolImplementation(&mailto_proto_impl, MAILTO_TYPE_URL);

@@ -3285,6 +3285,7 @@ NET_InitLDAPProtocol(void)
     ldap_proto_impl.init = net_LoadLdap;
     ldap_proto_impl.process = net_ProcessLdap;
     ldap_proto_impl.interrupt = net_InterruptLdap;
+    ldap_proto_impl.resume = NULL;
     ldap_proto_impl.cleanup = net_CleanupLdap;
 
     NET_RegisterProtocolImplementation(&ldap_proto_impl, LDAP_TYPE_URL);

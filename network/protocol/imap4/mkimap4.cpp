@@ -10283,6 +10283,7 @@ NET_InitIMAP4Protocol(void)
     imap4_proto_impl.init = NET_IMAP4Load;
     imap4_proto_impl.process = NET_ProcessIMAP4;
     imap4_proto_impl.interrupt = NET_InterruptIMAP4;
+    imap4_proto_impl.resume = NULL;
     imap4_proto_impl.cleanup = net_CleanupIMAP4;
 
     NET_RegisterProtocolImplementation(&imap4_proto_impl, IMAP_TYPE_URL);

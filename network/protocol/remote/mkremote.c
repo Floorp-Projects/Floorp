@@ -172,6 +172,7 @@ NET_InitRemoteProtocol(void)
     remote_proto_impl.init = NET_RemoteHostLoad;
     remote_proto_impl.process = net_ProcessRemote;
     remote_proto_impl.interrupt = net_InterruptRemote;
+    remote_proto_impl.resume = NULL;
     remote_proto_impl.cleanup = net_CleanupRemote;
 
     NET_RegisterProtocolImplementation(&remote_proto_impl, RLOGIN_TYPE_URL);

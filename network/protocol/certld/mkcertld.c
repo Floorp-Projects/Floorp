@@ -134,6 +134,7 @@ NET_InitCertLdapProtocol(void)
         certldap_proto_impl.init = net_CertLdapLoad;
         certldap_proto_impl.process = net_ProcessCertLdap;
         certldap_proto_impl.interrupt = net_InterruptCertLdap;
+        certldap_proto_impl.resume = NULL;
         certldap_proto_impl.cleanup = net_CleanupCertLdap;
 
         NET_RegisterProtocolImplementation(&certldap_proto_impl, INTERNAL_CERTLDAP_TYPE_URL);

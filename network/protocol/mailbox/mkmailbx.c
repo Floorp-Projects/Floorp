@@ -808,6 +808,7 @@ NET_InitMailboxProtocol(void)
     mailbox_proto_impl.init = net_MailboxLoad;
     mailbox_proto_impl.process = net_ProcessMailbox;
     mailbox_proto_impl.interrupt = net_InterruptMailbox;
+    mailbox_proto_impl.resume = NULL;
     mailbox_proto_impl.cleanup = net_CleanupMailbox;
 
     NET_RegisterProtocolImplementation(&mailbox_proto_impl, MAILBOX_TYPE_URL);
@@ -867,6 +868,7 @@ NET_InitMsgSearchProtocol(void)
     msgsearch_proto_impl.init = net_MsgSearchLoad;
     msgsearch_proto_impl.process = net_ProcessMsgSearch;
     msgsearch_proto_impl.interrupt = net_InterruptMsgSearch;
+    msgsearch_proto_impl.resume = NULL;
     msgsearch_proto_impl.cleanup = net_CleanupMsgSearch;
 
     NET_RegisterProtocolImplementation(&msgsearch_proto_impl, MSG_SEARCH_TYPE_URL);
