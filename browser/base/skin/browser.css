@@ -53,11 +53,6 @@ toolbarbutton.bookmark-item {
   color: black !important;
 }
 
-.bookmark-item:hover,
-.bookmark-item:hover:active {
-  color: black !important;
-}
-
 toolbarbutton.bookmark-item[container="true"],
 toolbarbutton.bookmark-item[container="true"]:hover {
   cursor: default;
