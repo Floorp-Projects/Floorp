@@ -76,7 +76,7 @@ moz_usage()
 {
     cat << EOF
 
-Usage:  ${cmdname) [options] [program]
+Usage:  ${cmdname} [options] [program]
 
   options:
 
@@ -90,19 +90,19 @@ Usage:  ${cmdname) [options] [program]
 
   Run the viewer
 
-    ${cmdname) viewer
+    ${cmdname} viewer
 
   Run the apprunner
 
-    ${cmdname) apprunner
+    ${cmdname} apprunner
 
   Debug the viewer in a debbuger
 
-    ${cmdname) -g viewer
+    ${cmdname} -g viewer
 
   Debug the apprunner in gdb
 
-    ${cmdname) -g viewer -d gdb
+    ${cmdname} -g viewer -d gdb
 
 EOF
 
