@@ -386,7 +386,7 @@
         <menuitem value="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    data=""/>
         <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt" key="fontfixedwidthkb"/>
         <menuseparator/>
-        <menuitem value="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   data="Arial, Helvetica, sans-serif"/>
+        <menuitem value="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   data="Helvetica, Arial, sans-serif"/>
         <menuitem value="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       data="Times New Roman, Times, serif"/>
         <menuitem value="&fontCourier.label;"       accesskey="&fontcourier.accesskey;"     data="Courier New, Courier, mono"/>
       </menupopup>
