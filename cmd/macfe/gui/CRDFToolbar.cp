@@ -18,6 +18,7 @@
 
 #include "CRDFToolbar.h"
 #include "CRDFToolbarItem.h"
+#include "URDFUtilities.h"
 
 #include <cassert>
 #include "htrdf.h"
@@ -45,10 +46,10 @@ pane_params_from( HT_View /*ht_view*/, LView* pp_superview )
 		pp_superview->GetFrameSize(superview_size);
 		info.width			= superview_size.width;
 
-		info.height			= 24; // NO! Get this value from the |HT_View|.
+		info.height			= 55; // NO! Get this value from the |HT_View|.
 		info.visible		= false;		// we'll get shown when bar is added.
 		info.enabled		= true;
-
+		
 		SBooleanRect bindings = { true, true, true, false };
 		info.bindings	= bindings;
 
@@ -169,8 +170,25 @@ CRDFToolbar :: FillInToolbar ( )
 void
 CRDFToolbar :: LayoutButtons ( )
 {
-	// scc will fill this in (thank god!)
+	Uint32 horiz = 20;
+	
+	HT_Cursor cursor = HT_NewCursor(TopNode());
+	if (cursor == NULL)
+		return;
 
+	HT_Resource item = NULL;
+	while (item = HT_GetNextItem(cursor)) {
+		CRDFToolbarItem* button = reinterpret_cast<CRDFToolbarItem*>(HT_GetNodeFEData(item));
+		if ( button ) {
+			button->ResizeFrameTo ( 50, 50, false );
+			button->PlaceInSuperFrameAt ( horiz, 5, false );
+		}
+		horiz += 55;
+	}
+	Refresh();
+
+	HT_DeleteCursor(cursor);
+	
 } // LayoutButtons
 
 
@@ -189,28 +207,19 @@ CRDFToolbar :: AddHTButton ( HT_Resource inNode )
 	
 //	DebugStr(LStr255(nodeName.c_str()));
 //	DebugStr(LStr255(commandURL.c_str()));
-	
-	// Fetch the button's tooltip and status bar text.
-	string tooltipText;
-	string statusBarText;
-	char* data = NULL;
-	if ( HT_GetTemplateData(inNode, gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data) && data )
-		tooltipText = data;
-	data = NULL;
-	if ( HT_GetTemplateData(inNode, gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data) && data )
-		statusBarText = data;
-	
+		
 	CRDFToolbarItem* newItem = NULL;
 	if (HT_IsURLBar(inNode))
-		newItem = new CRDFURLBar;
+		newItem = new CRDFURLBar(inNode);
 	else if (HT_IsSeparator(inNode))
-	{
-		newItem = new CRDFSeparator;
-		tooltipText = "Separator";
-		statusBarText = "Separator";
-	}
-	else newItem = new CRDFPushButton;
+		newItem = new CRDFSeparator(inNode);
+	else newItem = new CRDFPushButton(inNode);
 
+	if ( newItem ) {
+		newItem->PutInside ( this );
+		newItem->ResizeFrameTo ( 50, 50, false );		// give it a default size
+	}
+	
 /*
 	pButton->Create(this, GetDisplayMode(), CSize(60,42), CSize(85, 25), csAmpersandString,
 					tooltipText, statusBarText, CSize(23,17), 
@@ -241,6 +250,8 @@ CRDFToolbar::DrawSelf()
 				Point top_left = { frame.top, frame.left };
 				DrawImage(top_left, kTransformNone, frame.right-frame.left, frame.bottom-frame.top);
 			}
+		else
+			EraseBackground();
 		// Note: I don't want |CDragBar::DrawSelf()|s behavior, and |LView| doesn't implement
 		//	|DrawSelf|, so, nothing else to do here.
 	}
@@ -251,11 +262,36 @@ CRDFToolbar::ImageIsReady()
 		Refresh();
 	}
 
+
+//
+// DrawStandby
+//
+// Called when the bg image is not present (or there isn't one). Needs to repaint the background the
+// appropriate color.
+//
 void
 CRDFToolbar::DrawStandby( const Point&, const IconTransformType ) const
-	{
-		// TO BE WRITTEN
-	}
+{
+	EraseBackground();
+}
+
+
+//
+// EraseBackground
+//
+// Draw the bg of the toolbar to match what HT tells us. We know at this point that we don't have
+// a bg image, else it would have been drawn already.
+//
+void
+CRDFToolbar :: EraseBackground ( ) const
+{
+	Rect backRect = { 0, 0, mFrameSize.height, mFrameSize.width };
+	
+	URDFUtilities::SetupBackgroundColor ( TopNode(), gNavCenter->viewBGColor, kThemeListViewBackgroundBrush );
+	::EraseRect(&backRect);
+
+} // EraseBackground
+
 
 void
 CRDFToolbar::HandleNotification( HT_Notification, HT_Resource inNode, HT_Event event, void* /*inToken*/, uint32 /*inTokenType*/ )

@@ -58,6 +58,7 @@ class CRDFToolbar
 
 				// PowerPlant overrides
 			virtual void DrawSelf ( ) ;
+			virtual void EraseBackground ( ) const;
 			
 			virtual void FillInToolbar ( ) ;
 			virtual void LayoutButtons ( ) ;
