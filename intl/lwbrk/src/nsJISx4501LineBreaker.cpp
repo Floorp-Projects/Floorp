@@ -374,6 +374,9 @@ PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
    return this->GetClass(cur);
 }
 
+#define IS_HIGH_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xd800 && (PRUnichar)(u) <= (PRUnichar)0xdbff)
+#define IS_LOW_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xdc00 && (PRUnichar)(u) <= (PRUnichar)0xdfff)
+
 NS_IMETHODIMP nsJISx4501LineBreaker::BreakInBetween(
   const PRUnichar* aText1 , PRUint32 aTextLen1,
   const PRUnichar* aText2 , PRUint32 aTextLen2,
@@ -384,7 +387,9 @@ NS_IMETHODIMP nsJISx4501LineBreaker::BreakInBetween(
   if((nsnull == aText1) || (nsnull == aText2 ))
      return NS_ERROR_NULL_POINTER;
 
-  if((0 == aTextLen1) || (0==aTextLen2))
+  if((0 == aTextLen1) || (0==aTextLen2) ||
+     IS_HIGH_SURROGATE(aText1[aTextLen1-1]) && 
+     IS_LOW_SURROGATE(aText2[0]) )  //Do not separate a surrogate pair
   {
      *oCanBreak = PR_FALSE;
      return NS_OK;
