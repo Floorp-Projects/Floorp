@@ -858,13 +858,13 @@ GlobalWindowImpl::Home()
   nsString homeURL;
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv) || (prefs == nsnull)) {
+  if (NS_FAILED(rv) || (!prefs)) {
       return rv;
   }
 
   // if we get here, we know prefs is not null
   rv = prefs->CopyCharPref(PREF_BROWSER_STARTUP_HOMEPAGE, &url);
-  if (NS_FAILED(rv) || url == nsnull) {
+  if (NS_FAILED(rv) || (!url)) {
     // if all else fails, use this
     homeURL = DEFAULT_HOME_PAGE;
   }
