@@ -215,28 +215,28 @@ pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 
 // <ruslan>
-// pref("network.http.version", "1.1");	  // default
+pref("network.http.version", "1.1");	  // default
 // pref("network.http.version", "1.0");   // uncomment this out in case of problems
 // pref("network.http.version", "0.9");   // it'll work too if you're crazy
 // keep-alive option is effectively obsolete. Nevertheless it'll work with
 // some older 1.0 servers:
 
-// pref("network.http.keep-alive", true); // set it to false in case of problems
-// pref("network.http.proxy.keep-alive", true );
-// pref("network.http.keep-alive.timeout", 300);
+pref("network.http.keep-alive", true); // set it to false in case of problems
+pref("network.http.proxy.keep-alive", true );
+pref("network.http.keep-alive.timeout", 300);
 
-// pref("network.http.max-connections",  8);
-// pref("network.http.keep-alive.max-connections", 30); // max connections to be kept alive
-// pref("network.http.keep-alive.max-connections-per-server", 8);
+pref("network.http.max-connections",  8);
+pref("network.http.keep-alive.max-connections", 20); // max connections to be kept alive
+pref("network.http.keep-alive.max-connections-per-server", 8);
 
-// pref("network.http.connect.timeout", 30);	// in seconds
-// pref("network.http.request.timeout", 30);	// in seconds
+pref("network.http.connect.timeout",  30);	// in seconds
+pref("network.http.request.timeout", 120);	// in seconds
 
 // Enable http compression: comment this out in case of problems with 1.1
-// pref("network.http.accept-encoding" ,"gzip,deflate,compress,identity");
+pref("network.http.accept-encoding" ,"gzip,deflate,compress,identity");
 
-// pref("network.http.pipelining"      , false);
-// pref("network.http.proxy.pipelining", false);
+pref("network.http.pipelining"      , false);
+pref("network.http.proxy.pipelining", false);
 // </ruslan>
 
 // sspitzer:  change this back to "news" when we get to beta.
