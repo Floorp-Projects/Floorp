@@ -282,7 +282,14 @@ dnl nglayout only supports building with one toolkit
 dnl so ignore everything after the first ,
 AC_ARG_ENABLE(toolkit,
 [  --enable-toolkit=\$val	  enable \$val fe (defaults to gtk)],
-    [MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*//g" `], 
+    [ 
+      res=`echo $target_os| grep -c "^Rhapsody"`;
+      if test "$enableval" != "motif" && test "$enableval" != "gtk" && test $res = 0; then
+	AC_MSG_ERROR(Toolkit must be either gtk or motif.)
+      else
+	MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*//g" `
+      fi 
+    ], 
     MOZ_TOOLKIT=USE_DEFAULT)
 
 if [ test "$MOZ_TOOLKIT" = "USE_DEFAULT" ]; then
