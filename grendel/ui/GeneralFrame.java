@@ -282,7 +282,8 @@ public class GeneralFrame extends JFrame
     } catch (Throwable t) {
       t.printStackTrace();
     }
-
+    
+    menubar.setFont(new Font("Helvetica", Font.PLAIN, 12));
     return menubar;
   }
 

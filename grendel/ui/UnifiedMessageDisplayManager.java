@@ -41,11 +41,8 @@ import javax.swing.JToolBar;
 import javax.swing.JSplitPane;
 import javax.swing.event.ChangeEvent;
 
-//import netscape.orion.toolbars.NSToolbar;
-//import netscape.orion.toolbars.ToolbarFactory;
-//import netscape.orion.toolbars.ToolBarLayout;
-//import netscape.orion.uimanager.AbstractUICmd;
-//import netscape.orion.uimanager.IUICmd;
+import calypso.util.Preferences;
+import calypso.util.PreferencesFactory;
 
 import javax.mail.Store;
 import javax.mail.Folder;
@@ -199,18 +196,16 @@ class UnifiedMessageFrame extends GeneralFrame {
                              Util.MergeToolBars(folderToolBar,
                                                 messageToolBar));
 
-      fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
-      fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
-      // fToolBarPanelConstraints.weightx = 10.0;
-      fToolBarPanel.add(fToolBar, fToolBarPanelConstraints);
-      //  fToolBarPanelConstraints.weightx = 10.0;
-      fToolBar.add(fToolBar.makeNewSpring());
-      fToolBarPanelConstraints.weightx = 1.0;
-      fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
-      fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;
-      fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
+    fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+    fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
+    fToolBarPanel.add(fToolBar, fToolBarPanelConstraints);
+    fToolBar.add(fToolBar.makeNewSpring());
+    fToolBarPanelConstraints.weightx = 1.0;
+    fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
+    fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;
+    fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
       
-      fToolBarPanel.add(fAnimation, fToolBarPanelConstraints);
+    fToolBarPanel.add(fAnimation, fToolBarPanelConstraints);
 
     fStatusBar = buildStatusBar();
     fPanel.add(BorderLayout.SOUTH, fStatusBar);
@@ -300,7 +295,6 @@ class UnifiedMessageFrame extends GeneralFrame {
 
       splitter2.setTopComponent(fThreads);
       splitter2.setBottomComponent(fMessage);
-      //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
       splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -311,7 +305,6 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter1.setTopComponent(splitter2);
       splitter1.setBottomComponent(fMessage);
 
-      //      fSplitLeftLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_RIGHT)) {
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
       splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
@@ -321,7 +314,6 @@ class UnifiedMessageFrame extends GeneralFrame {
 
       splitter1.setTopComponent(fFolders);
       splitter1.setBottomComponent(splitter2);
-      //      fSplitRightLayoutAction.setSelected(IUICmd.kSelected);
     } else { // Default: SPLIT_TOP
       splitter2.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
       splitter1.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -331,7 +323,6 @@ class UnifiedMessageFrame extends GeneralFrame {
       
       splitter1.setTopComponent(splitter2);
       splitter1.setBottomComponent(fMessage);
-      //      fSplitTopLayoutAction.setSelected(IUICmd.kSelected);
     }
 
     fFolders.setPreferredSize(new Dimension(folderX, folderY));

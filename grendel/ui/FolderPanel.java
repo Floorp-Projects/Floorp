@@ -26,6 +26,7 @@ package grendel.ui;
 
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -366,6 +367,7 @@ public class FolderPanel extends GeneralPanel {
 
     fSelectionListener = new MessageSelectionListener();
     fMessageTree.getSelectionManager().addSelectionListener(fSelectionListener);
+    fMessageTree.setFont(new Font("Helvetica", Font.PLAIN, 12));
   }
 
   public void dispose() {
@@ -555,6 +557,7 @@ public class FolderPanel extends GeneralPanel {
 
       item = new JMenuItem(strings.getString("msgDeletePopupLabel"));
       item.addActionListener(new DeleteMessageAction());
+      item.setFont(new Font("Helvetica", Font.PLAIN, 12));
       popup.add(item);
 
       JMenu copyMenu = new JMenu(strings.getString("msgCopyPopupLabel"));

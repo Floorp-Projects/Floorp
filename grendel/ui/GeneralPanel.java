@@ -59,6 +59,7 @@ public class GeneralPanel extends JPanel {
 
   public GeneralPanel() {
     setLayout(new BorderLayout());
+    setFont(new Font("Helvetica", Font.PLAIN, 12));
   }
 
   public UIAction[] getActions() {

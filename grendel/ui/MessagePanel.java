@@ -26,6 +26,7 @@ package grendel.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -118,6 +119,7 @@ public class MessagePanel extends GeneralPanel {
       fTextArea = new JEditorPane();
       fTextArea.setEditable(false);
       fTextArea.setContentType("text/html");
+      fTextArea.setFont(new Font("Helvetica", Font.PLAIN, 12));
       fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
       add(new JScrollPane(fTextArea));
     }

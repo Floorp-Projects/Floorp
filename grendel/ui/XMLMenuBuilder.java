@@ -29,6 +29,7 @@ import java.util.Hashtable;
 import java.util.Properties;
 
 import java.awt.Container;
+import java.awt.Font;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -205,16 +206,16 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     if (item != null) {
       Element current = (Element)node;
       if (item instanceof JSeparator) {
-	parent.add(item);
+        parent.add(item);
       } else if (parent instanceof MenuCtrl) {
-	((MenuCtrl)parent).addItemByName(current.getAttribute(id_attr), 
-					 (JMenuItem)item);
-	System.out.println("adding " + current.getAttribute(id_attr));
+        ((MenuCtrl)parent).addItemByName(current.getAttribute(id_attr), 
+                                         (JMenuItem)item);
+        System.out.println("adding " + current.getAttribute(id_attr));
 	
       } else if (parent instanceof MenuBarCtrl) {
-	((MenuBarCtrl)parent).addItemByName(current.getAttribute(id_attr), 
-					    (JMenuItem)item);
-	System.out.println("adding " + current.getAttribute(id_attr));
+        ((MenuBarCtrl)parent).addItemByName(current.getAttribute(id_attr), 
+                                            (JMenuItem)item);
+        System.out.println("adding " + current.getAttribute(id_attr));
       }
     }
   }
@@ -242,8 +243,8 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
 
       // loop through all its children
       while (node != null) {
-	processNode(node, menu);
-	node = node.getNextSibling();
+        processNode(node, menu);
+        node = node.getNextSibling();
       }
     } else if (tag.equals(menuitem_tag)) { // menuitem tag
       String type = current.getAttribute(type_attr);
@@ -252,16 +253,17 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
       // which type of menuitem?
       if (type == null || type.equals("")) { 
         // no type ? it's a regular menuitem
-	comp = buildMenuItem(current);
+        comp = buildMenuItem(current);
       } else if (type.equals(separator_attr)) { // separator
-	comp = buildSeparator(current);
+        comp = buildSeparator(current);
       } else if (type.equals(checkbox_attr)) { // checkboxes
-	comp = buildCheckBoxMenuItem(current);
+        comp = buildCheckBoxMenuItem(current);
       } else if (type.equals(radio_attr)) { // radio
-	comp = buildRadioMenuItem(current);
+        comp = buildRadioMenuItem(current);
       }
     }
-
+    
+    comp.setFont(new Font("Helvetica", Font.PLAIN, 12));
     return comp;
   }
   
@@ -279,14 +281,15 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     // do we add to a button group?
     if (group != null) {
       if (button_group.containsKey(group)) {
-	bg = (ButtonGroup)button_group.get(group);
+        bg = (ButtonGroup)button_group.get(group);
       } else {
-	bg = new ButtonGroup();
-	button_group.put(group, bg);
+        bg = new ButtonGroup();
+        button_group.put(group, bg);
       }
       bg.add((JRadioButtonMenuItem)comp);
     }
-
+    
+    comp.setFont(new Font("Helvetica", Font.PLAIN, 12));
     return comp;
   }
 
@@ -298,6 +301,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   protected JCheckBoxMenuItem buildCheckBoxMenuItem(Element current) {
     JCheckBoxMenuItem item = new JCheckBoxMenuItem();
     finishComponent(item, current);
+    item.setFont(new Font("Helvetica", Font.PLAIN, 12));
     return item;
   }
 
@@ -318,6 +322,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   protected JMenuItem buildMenuItem(Element current) {
     JMenuItem item = new JMenuItem();
     finishComponent(item, current);
+    item.setFont(new Font("Helvetica", Font.PLAIN, 12));
     return item;
   }
 

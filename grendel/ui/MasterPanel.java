@@ -210,6 +210,7 @@ public class MasterPanel extends GeneralPanel {
     StoreFactory.Instance().addChangeListener(fStoreChangeListener);
     
     ActionFactory.SetComposeMessageThread(new ComposeMessageThread());
+    fPanel.setFont(new Font("Helvetica", Font.PLAIN, 12));
   }
 
   public void dispose() {
@@ -848,8 +849,10 @@ class FolderCellRenderer extends DefaultCellRenderer {
   Font          fBold;
 
   public FolderCellRenderer() {
-    fPlain = Font.decode("SansSerif-12");
-    fBold = Font.decode("SansSerif-bold-12");
+    //   fPlain = Font.decode("SansSerif-12");
+    // fBold = Font.decode("SansSerif-bold-12");
+    fPlain = new Font("Helvetica", Font.PLAIN, 12);
+    fBold = new Font("Helvetica", Font.BOLD, 12);
   }
 
   public void paint(Graphics g) {

@@ -30,118 +30,118 @@ import grendel.widgets.Spring;
 
 
 public class ToolBarLayout extends GridBagLayout {
-    static GridBagConstraints gbc = new GridBagConstraints();
-    public static final int HORIZONTAL = GridBagConstraints.HORIZONTAL;
-    public static final int VERTICAL = GridBagConstraints.VERTICAL;
-    static int orientation = GridBagConstraints.HORIZONTAL;
-    Insets myInsets = new Insets(5,5,5,5);
+  static GridBagConstraints gbc = new GridBagConstraints();
+  public static final int HORIZONTAL = GridBagConstraints.HORIZONTAL;
+  public static final int VERTICAL = GridBagConstraints.VERTICAL;
+  static int orientation = GridBagConstraints.HORIZONTAL;
+  Insets myInsets = new Insets(0,3,0,3);
 
-    public ToolBarLayout() {
-	super();
-	defaultConstraints.insets = myInsets;
-    }
+  public ToolBarLayout() {
+    super();
+    defaultConstraints.insets = myInsets;
+  }
+  
+  public ToolBarLayout(int anOrientation) {
+    super();
+    orientation = anOrientation;
+    defaultConstraints.insets = myInsets;
+  }
 
-    public ToolBarLayout(int anOrientation) {
-	super();
-	orientation = anOrientation;
-	defaultConstraints.insets = myInsets;
-    }
+  public int getGridX() {
+    return defaultConstraints.gridx;
+  }
 
-    public int getGridX() {
-	return defaultConstraints.gridx;
-    }
+  public void setGridX(int x) {
+    defaultConstraints.gridx = x;
+  }
 
-    public void setGridX(int x) {
-	defaultConstraints.gridx = x;
-    }
+  public int getGridY() {
+    return defaultConstraints.gridy;
+  }
 
-    public int getGridY() {
-	return defaultConstraints.gridy;
-    }
+  public void setGridY(int y) {
+    defaultConstraints.gridy = y;
+  }
 
-    public void setGridY(int y) {
-	defaultConstraints.gridy = y;
-    }
+  public double getWeightX() {
+    return defaultConstraints.weightx;
+  }
 
-    public double getWeightX() {
-	return defaultConstraints.weightx;
-    }
+  public void setWeightX(double x) {
+    defaultConstraints.weightx = x;
+  }
 
-    public void setWeightX(double x) {
-	defaultConstraints.weightx = x;
-    }
+  public double getWeightY() {
+    return defaultConstraints.weighty;
+  }
 
-    public double getWeightY() {
-	return defaultConstraints.weighty;
-    }
+  public void setWeightY(double y) {
+    defaultConstraints.weighty = y;
+  }
 
-    public void setWeightY(double y) {
-	defaultConstraints.weighty = y;
-    }
+  public int getAnchor() {
+    return defaultConstraints.anchor;
+  }
 
-    public int getAnchor() {
-	return defaultConstraints.anchor;
-    }
+  public void setAnchor(int anAnchor) {
+    defaultConstraints.anchor = anAnchor;
+  }
 
-    public void setAnchor(int anAnchor) {
-	defaultConstraints.anchor = anAnchor;
-    }
+  public Insets getInsets() {
+    return defaultConstraints.insets;
+  }
 
-    public Insets getInsets() {
-	return defaultConstraints.insets;
-    }
-
-    public void setInsets(Insets anInsets) {
-       defaultConstraints.insets = anInsets;
-    }
+  public void setInsets(Insets anInsets) {
+    defaultConstraints.insets = anInsets;
+  }
     
-    public int getIPadX() {
-	return defaultConstraints.ipadx;
-    }
+  public int getIPadX() {
+    return defaultConstraints.ipadx;
+  }
 
-    public void setIPadX(int x) {
-	defaultConstraints.ipadx = x;
-    }
+  public void setIPadX(int x) {
+    defaultConstraints.ipadx = x;
+  }
 
-    public int getIPadY() {
-	return defaultConstraints.ipady;
-    }
+  public int getIPadY() {
+    return defaultConstraints.ipady;
+  }
 
-    public void setIPadY(int y) {
-	defaultConstraints.ipady = y;
-    }
+  public void setIPadY(int y) {
+    defaultConstraints.ipady = y;
+  }
 
-    public int getGridWidth() {
-	return defaultConstraints.gridwidth;
-    }
+  public int getGridWidth() {
+    return defaultConstraints.gridwidth;
+  }
     
-    public void setGridWidth(int aGridWidth) {
-	defaultConstraints.gridwidth = aGridWidth;
-    }
+  public void setGridWidth(int aGridWidth) {
+    defaultConstraints.gridwidth = aGridWidth;
+  }
     
-    public int getGridHeight() {
-	return defaultConstraints.gridheight;
-    }
+  public int getGridHeight() {
+    return defaultConstraints.gridheight;
+  }
 
-    public void setGridHeight(int aGridHeight) {
-	defaultConstraints.gridheight = aGridHeight;
-    }
+  public void setGridHeight(int aGridHeight) {
+    defaultConstraints.gridheight = aGridHeight;
+  }
     
-    public int getFill() {
-	return defaultConstraints.fill;
-    }
+  public int getFill() {
+    return defaultConstraints.fill;
+  }
 
-    public void setFill(int aFill) {
-	defaultConstraints.fill = aFill;
-    }
+  public void setFill(int aFill) {
+    defaultConstraints.fill = aFill;
+  }
 
-    public Spring createSpring() {
-	setFill(orientation);
-	setWeightX(10.0);
-	Spring res = new Spring();
+  public Spring createSpring() {
+    setFill(orientation);
+    setWeightX(10.0);
+    Spring res = new Spring();
 
-	return res;
-    }
+    return res;
+  }
 }
 
     
