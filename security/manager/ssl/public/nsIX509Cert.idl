@@ -39,7 +39,11 @@
 [scriptable, uuid(e701dfd8-1dd1-11b2-a172-ffa6cc6156ad)]
 interface nsIX509CertValidity : nsISupports {
   readonly attribute PRTime notBefore;
+  readonly attribute wstring notBeforeLocalTime;
+  readonly attribute wstring notBeforeGMT;
   readonly attribute PRTime notAfter;
+  readonly attribute wstring notAfterLocalTime;
+  readonly attribute wstring notAfterGMT;
 };
 
 //

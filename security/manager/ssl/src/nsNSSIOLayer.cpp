@@ -50,6 +50,9 @@
 #include "nsNSSCertificate.h"
 #include "nsINSSDialogs.h"
 #include "nsIProxyObjectManager.h"
+#include "nsProxiedService.h"
+#include "nsIDateTimeFormat.h"
+#include "nsDateTimeFormatCID.h"
 
 #include "nsXPIDLString.h"
 #include "nsVoidArray.h"
@@ -131,6 +134,8 @@ void MyLogFunction(const char *fmt, ...)
 
 #define PR_LOG(module,level,args) MyLogFunction args
 #endif
+
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 static PRFileDesc*
 nsSSLIOLayerImportFD(PRFileDesc *fd,
@@ -1563,8 +1568,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 		PRUnichar *cn = NULL;
 		PRUnichar *org = NULL;
 		PRUnichar *issuer = NULL;
-		PRUnichar *unicodeNicknameChosen = NULL;
+		PRInt32 selectedIndex = -1;
 		PRUnichar **certNicknameList = NULL;
+		PRUnichar **certDetailsList = NULL;
 		PRBool canceled;
 
 
@@ -1634,45 +1640,188 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 		issuer = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->issuer)).ToNewUnicode();
 
 		certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * caNames->nnames);
-		for (i = 0; i < nicknames->numnicknames; i++) {
-			certNicknameList[i] = NS_ConvertUTF8toUCS2(nicknames->nicknames[i]).ToNewUnicode();
-		}
+		certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * caNames->nnames);
 
-		/* Throw up the client auth dialog and get back the nuckname of the cert */
+                nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+                NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
+                nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
+
+                if (proxyman && nssComponent)
+                for (i = 0, node = CERT_LIST_HEAD(certList);
+                     !CERT_LIST_END(node, certList);
+                     ++i, node = CERT_LIST_NEXT(node)
+                    )
+                {
+                    nsCOMPtr<nsNSSCertificate> c1 = new nsNSSCertificate(node->cert);
+
+                    nsCOMPtr<nsIX509Cert> c2;
+                    proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
+                                                 nsIX509Cert::GetIID(),
+                                                 c1,
+                                                 PROXY_SYNC | PROXY_ALWAYS,
+                                                 getter_AddRefs(c2));
+
+                    if (!c2)
+                      break;
+
+                    nsAutoString nickWithSerial;
+                    nsAutoString str;
+                    nsAutoString info;
+                    PRUnichar *temp1 = 0;
+
+                    nickWithSerial.Append(NS_ConvertUTF8toUCS2(nicknames->nicknames[i]));
+
+                    if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedFor").get(), info))) {
+                      str.Append(info);
+                      str.Append(NS_LITERAL_STRING("\n"));
+                    }
+
+                    if (NS_SUCCEEDED(c2->GetSubjectName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+                      str.Append(NS_LITERAL_STRING("  "));
+                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
+                        str.Append(info);
+                        str.Append(NS_LITERAL_STRING(": "));
+                      }
+                      str.Append(temp1);
+                      nsMemory::Free(temp1);
+                      str.Append(NS_LITERAL_STRING("\n"));
+                    }
+
+                    if (NS_SUCCEEDED(c2->GetSerialNumber(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+                      str.Append(NS_LITERAL_STRING("  "));
+                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSerialNo").get(), info))) {
+                        str.Append(info);
+                        str.Append(NS_LITERAL_STRING(": "));
+                      }
+                      str.Append(temp1);
+                      
+                      nickWithSerial.Append(NS_LITERAL_STRING(" ["));
+                      nickWithSerial.Append(temp1);
+                      nickWithSerial.Append(NS_LITERAL_STRING("]"));
+                      
+                      nsMemory::Free(temp1);
+                      str.Append(NS_LITERAL_STRING("\n"));
+                    }
+
+
+                    {
+                      nsCOMPtr<nsIX509CertValidity> validity;
+                      nsCOMPtr<nsIX509CertValidity> originalValidity;
+                      rv = c2->GetValidity(getter_AddRefs(originalValidity));
+                      if (NS_SUCCEEDED(rv) && originalValidity) {
+                        proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
+                                                     nsIX509CertValidity::GetIID(),
+                                                     originalValidity,
+                                                     PROXY_SYNC | PROXY_ALWAYS,
+                                                     getter_AddRefs(validity));
+                      }
+
+                      if (validity) {
+                        str.Append(NS_LITERAL_STRING("  "));
+                        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoValid").get(), info))) {
+                          str.Append(info);
+                        }
+
+                        if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+                          str.Append(NS_LITERAL_STRING(" "));
+                          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoFrom").get(), info))) {
+                            str.Append(info);
+                          }
+                          str.Append(NS_LITERAL_STRING(" "));
+                          str.Append(temp1);
+                          nsMemory::Free(temp1);
+                        }
+
+                        if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+                          str.Append(NS_LITERAL_STRING(" "));
+                          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoTo").get(), info))) {
+                            str.Append(info);
+                          }
+                          str.Append(NS_LITERAL_STRING(" "));
+                          str.Append(temp1);
+                          nsMemory::Free(temp1);
+                        }
+
+                        str.Append(NS_LITERAL_STRING("\n"));
+                      }
+                    }
+
+                    PRUint32 tempInt = 0;
+                    if (NS_SUCCEEDED(c2->GetPurposes(&tempInt, &temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+                      str.Append(NS_LITERAL_STRING("  "));
+                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoPurposes").get(), info))) {
+                        str.Append(info);
+                      }
+                      str.Append(NS_LITERAL_STRING(": "));
+                      str.Append(temp1);
+                      nsMemory::Free(temp1);
+                      str.Append(NS_LITERAL_STRING("\n"));
+                    }
+
+                    if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedBy").get(), info))) {
+                      str.Append(info);
+                      str.Append(NS_LITERAL_STRING("\n"));
+                    }
+
+                    if (NS_SUCCEEDED(c2->GetIssuerName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+                      str.Append(NS_LITERAL_STRING("  "));
+                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
+                        str.Append(info);
+                        str.Append(NS_LITERAL_STRING(": "));
+                      }
+                      str.Append(temp1);
+                      nsMemory::Free(temp1);
+                      str.Append(NS_LITERAL_STRING("\n"));
+                    }
+  
+                    /*
+                      the above produces output the following output:
+                    
+                      Issued to: 
+                        Subject: $subjectName
+                        Serial number: $serialNumber
+                        Valid from: $starting_date to $expriation_date
+                        Purposes: $purposes
+                      Issued by:
+                        Subject: $issuerName
+                    */
+
+		    certNicknameList[i] = nickWithSerial.ToNewUnicode();
+		    certDetailsList[i] = str.ToNewUnicode();
+                }
+
+		/* Throw up the client auth dialog and get back the index of the selected cert */
 		rv = getNSSDialogs((void**)&dialogs,
 			               NS_GET_IID(nsIClientAuthDialogs));
 
 		if (NS_FAILED(rv)) goto loser;
 
-		rv = dialogs->ChooseCertificate(NULL,
-								cn, org, issuer, (const PRUnichar**)certNicknameList, nicknames->numnicknames,
-								&unicodeNicknameChosen, &canceled);
+		rv = dialogs->ChooseCertificate(NULL, cn, org, issuer, 
+                  (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
+                  nicknames->numnicknames, &selectedIndex, &canceled);
+
+                for (i = 0; i < caNames->nnames; ++i) {
+                  nsMemory::Free(certNicknameList[i]);
+                  nsMemory::Free(certDetailsList[i]);
+                }
+                nsMemory::Free(certNicknameList);
+                nsMemory::Free(certDetailsList);
+
 		NS_RELEASE(dialogs);
 		if (NS_FAILED(rv)) goto loser;
 
 		if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
-        /* first we need to extract the real nickname in case the cert
-         * is an expired or not a valid one yet
-         */
-		char * nicknameChosen = NS_ConvertUCS2toUTF8(unicodeNicknameChosen).ToNewCString();
-		nsMemory::Free(unicodeNicknameChosen);
-        extracted = CERT_ExtractNicknameString(nicknameChosen,
-                                               NICKNAME_EXPIRED_STRING,
-                                               NICKNAME_NOT_YET_VALID_STRING);
-        if (extracted == NULL) {
-            goto loser;
-        }
-
-        /* find the cert under that nickname */
-        node = CERT_LIST_HEAD(certList);
-        while (!CERT_LIST_END(node, certList)) {
-            if (PL_strcmp(node->cert->nickname, extracted) == 0) {
+        for (i = 0, node = CERT_LIST_HEAD(certList);
+             !CERT_LIST_END(node, certList);
+             ++i, node = CERT_LIST_NEXT(node)
+            ) {
+            if (i == selectedIndex) {
                 cert = CERT_DupCertificate(node->cert);
                 break;
             }
-            node = CERT_LIST_NEXT(node);
         }
+
         if (cert == NULL) {
             goto loser;
         }

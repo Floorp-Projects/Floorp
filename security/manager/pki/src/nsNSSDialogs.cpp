@@ -682,7 +682,7 @@ nsNSSDialogs::CACertExists(nsIInterfaceRequestor *ctx,PRBool *_canceled)
 
 
 NS_IMETHODIMP
-nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn, const PRUnichar *organization, const PRUnichar *issuer, const PRUnichar **certNickList, PRUint32 count, PRUnichar **certNick, PRBool *canceled) 
+nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn, const PRUnichar *organization, const PRUnichar *issuer, const PRUnichar **certNickList, const PRUnichar **certDetailsList, PRUint32 count, PRInt32 *selectedIndex, PRBool *canceled) 
 {
   nsresult rv;
   PRUint32 i;
@@ -712,6 +712,11 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
 	  if (NS_FAILED(rv)) return rv;
   }
 
+  for (i = 0; i < count; i++) {
+	  rv = block->SetString(i+count+4, certDetailsList[i]);
+	  if (NS_FAILED(rv)) return rv;
+  }
+
   rv = block->SetInt(1, count);
   if (NS_FAILED(rv)) return rv;
 
@@ -728,7 +733,7 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   *canceled = (status == 0)?PR_TRUE:PR_FALSE;
   if (!*canceled) {
     // retrieve the nickname
-    rv = block->GetString(1, certNick);
+    rv = block->GetInt(2, selectedIndex);
   }
   return rv;
 }

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.44 2001/08/10 01:05:55 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.45 2001/08/14 00:01:11 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -482,7 +482,7 @@ private:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsX509CertValidity, nsIX509CertValidity)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsX509CertValidity, nsIX509CertValidity)
 
 nsX509CertValidity::nsX509CertValidity() : mTimesInitialized(PR_FALSE)
 {
@@ -519,6 +519,50 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBefore(PRTime *aNotBefore)
   return rv;
 }
 
+/* readonly attribute PRTime notBeforeLocalTime; */
+NS_IMETHODIMP nsX509CertValidity::GetNotBeforeLocalTime(PRUnichar **aNotBeforeLocalTime)
+{
+  NS_ENSURE_ARG(aNotBeforeLocalTime);
+  
+  if (!mTimesInitialized)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString date;
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(mNotBefore, PR_LocalTimeParameters, &explodedTime);
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                                      &explodedTime, date);
+  *aNotBeforeLocalTime = date.ToNewUnicode();
+  return NS_OK;
+}
+
+/* readonly attribute PRTime notBeforeGMT; */
+NS_IMETHODIMP nsX509CertValidity::GetNotBeforeGMT(PRUnichar **aNotBeforeGMT)
+{
+  NS_ENSURE_ARG(aNotBeforeGMT);
+
+  if (!mTimesInitialized)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString date;
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(mNotBefore, PR_GMTParameters, &explodedTime);
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                                      &explodedTime, date);
+  *aNotBeforeGMT = date.ToNewUnicode();
+  return NS_OK;
+}
+
 /* readonly attribute PRTime notAfter; */
 NS_IMETHODIMP nsX509CertValidity::GetNotAfter(PRTime *aNotAfter)
 {
@@ -530,6 +574,50 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfter(PRTime *aNotAfter)
     rv = NS_OK;
   }
   return rv;
+}
+
+/* readonly attribute PRTime notAfterLocalTime; */
+NS_IMETHODIMP nsX509CertValidity::GetNotAfterLocalTime(PRUnichar **aNotAfterLocaltime)
+{
+  NS_ENSURE_ARG(aNotAfterLocaltime);
+
+  if (!mTimesInitialized)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString date;
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(mNotAfter, PR_LocalTimeParameters, &explodedTime);
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                                      &explodedTime, date);
+  *aNotAfterLocaltime = date.ToNewUnicode();
+  return NS_OK;
+}
+
+/* readonly attribute PRTime notAfterGMT; */
+NS_IMETHODIMP nsX509CertValidity::GetNotAfterGMT(PRUnichar **aNotAfterGMT)
+{
+  NS_ENSURE_ARG(aNotAfterGMT);
+
+  if (!mTimesInitialized)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString date;
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(mNotAfter, PR_GMTParameters, &explodedTime);
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                                      &explodedTime, date);
+  *aNotAfterGMT = date.ToNewUnicode();
+  return NS_OK;
 }
 
 /* nsNSSCertificate */
@@ -603,6 +691,7 @@ nsNSSCertificate::GetDbKey(char * *aDbKey)
   SECItem key;
 
   NS_ENSURE_ARG(aDbKey);
+  *aDbKey = nsnull;
   srv = CERT_KeyFromIssuerAndSN(mCert->arena, &mCert->derIssuer,
                                 &mCert->serialNumber, &key);
   if (srv != SECSuccess) {
@@ -616,6 +705,7 @@ nsNSSCertificate::GetDbKey(char * *aDbKey)
 NS_IMETHODIMP 
 nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
 {
+  NS_ENSURE_ARG(aWindowTitle);
   if (mCert) {
     if (mCert->nickname) {
       *aWindowTitle = PL_strdup(mCert->nickname);
@@ -633,6 +723,7 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
 NS_IMETHODIMP
 nsNSSCertificate::GetNickname(PRUnichar **_nickname)
 {
+  NS_ENSURE_ARG(_nickname);
   const char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
   nsAutoString nn = NS_ConvertASCIItoUCS2(nickname);
   *_nickname = nn.ToNewUnicode();
@@ -643,6 +734,7 @@ nsNSSCertificate::GetNickname(PRUnichar **_nickname)
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(PRUnichar **_emailAddress)
 {
+  NS_ENSURE_ARG(_emailAddress);
   const char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
   nsAutoString em = NS_ConvertASCIItoUCS2(email);
   *_emailAddress = em.ToNewUnicode();
@@ -768,6 +860,7 @@ nsNSSCertificate::GetOrganizationalUnit(PRUnichar **aOrganizationalUnit)
 NS_IMETHODIMP
 nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
 {
+  NS_ENSURE_ARG(_rvChain);
   nsresult rv;
   /* Get the cert chain from NSS */
   CERTCertList *nssChain = NULL;
@@ -822,6 +915,8 @@ done:
 NS_IMETHODIMP
 nsNSSCertificate::GetSubjectName(PRUnichar **_subjectName)
 {
+  NS_ENSURE_ARG(_subjectName);
+  *_subjectName = nsnull;
   if (mCert->subjectName) {
     nsAutoString sn = NS_ConvertASCIItoUCS2(mCert->subjectName);
     *_subjectName = sn.ToNewUnicode();
@@ -834,6 +929,8 @@ nsNSSCertificate::GetSubjectName(PRUnichar **_subjectName)
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerName(PRUnichar **_issuerName)
 {
+  NS_ENSURE_ARG(_issuerName);
+  *_issuerName = nsnull;
   if (mCert->issuerName) {
     nsAutoString in = NS_ConvertASCIItoUCS2(mCert->issuerName);
     *_issuerName = in.ToNewUnicode();
@@ -846,6 +943,8 @@ nsNSSCertificate::GetIssuerName(PRUnichar **_issuerName)
 NS_IMETHODIMP
 nsNSSCertificate::GetSerialNumber(PRUnichar **_serialNumber)
 {
+  NS_ENSURE_ARG(_serialNumber);
+  *_serialNumber = nsnull;
   char *tmpstr = CERT_Hexify(&mCert->serialNumber, 1);
   if (tmpstr) {
     nsAutoString sn = NS_ConvertASCIItoUCS2(tmpstr);
@@ -860,6 +959,8 @@ nsNSSCertificate::GetSerialNumber(PRUnichar **_serialNumber)
 NS_IMETHODIMP
 nsNSSCertificate::GetRsaPubModulus(PRUnichar **_rsaPubModulus)
 {
+  NS_ENSURE_ARG(_rsaPubModulus);
+  *_rsaPubModulus = nsnull;
   //char *tmpstr = CERT_Hexify(&mCert->serialNumber, 1);
   char *tmpstr = PL_strdup("not yet implemented");
   if (tmpstr) {
@@ -875,6 +976,8 @@ nsNSSCertificate::GetRsaPubModulus(PRUnichar **_rsaPubModulus)
 NS_IMETHODIMP
 nsNSSCertificate::GetSha1Fingerprint(PRUnichar **_sha1Fingerprint)
 {
+  NS_ENSURE_ARG(_sha1Fingerprint);
+  *_sha1Fingerprint = nsnull;
   unsigned char fingerprint[20];
   char *fpStr = NULL;
   SECItem fpItem;
@@ -897,6 +1000,8 @@ nsNSSCertificate::GetSha1Fingerprint(PRUnichar **_sha1Fingerprint)
 NS_IMETHODIMP
 nsNSSCertificate::GetMd5Fingerprint(PRUnichar **_md5Fingerprint)
 {
+  NS_ENSURE_ARG(_md5Fingerprint);
+  *_md5Fingerprint = nsnull;
   unsigned char fingerprint[20];
   char *fpStr = NULL;
   SECItem fpItem;
@@ -919,6 +1024,8 @@ nsNSSCertificate::GetMd5Fingerprint(PRUnichar **_md5Fingerprint)
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuedDate(PRUnichar **_issuedDate)
 {
+  NS_ENSURE_ARG(_issuedDate);
+  *_issuedDate = nsnull;
   nsresult rv;
   PRTime beforeTime;
   nsCOMPtr<nsIX509CertValidity> validity;
@@ -940,6 +1047,8 @@ nsNSSCertificate::GetIssuedDate(PRUnichar **_issuedDate)
 NS_IMETHODIMP
 nsNSSCertificate::GetExpiresDate(PRUnichar **_expiresDate)
 {
+  NS_ENSURE_ARG(_expiresDate);
+  *_expiresDate = nsnull;
   nsresult rv;
   PRTime afterTime;
   nsCOMPtr<nsIX509CertValidity> validity;
