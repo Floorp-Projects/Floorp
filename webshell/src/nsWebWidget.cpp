@@ -431,8 +431,10 @@ NS_IMETHODIMP WebWidgetImpl::LoadURL(const nsString& aURLSpec)
   // Setup view manager's window
   nsRect bounds;
   mWindow->GetBounds(bounds);
-  if (nsnull != mPresShell) {
+  if ((nsnull != mPresContext) && (nsnull != mViewManager)) {
     float p2t = mPresContext->GetPixelsToTwips();
+    //reset scrolling offset to upper left
+    mViewManager->ResetScrolling();
     nscoord width = NS_TO_INT_ROUND(bounds.width * p2t);
     nscoord height = NS_TO_INT_ROUND(bounds.height * p2t);
     mViewManager->SetWindowDimensions(width, height);

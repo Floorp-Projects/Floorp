@@ -377,15 +377,17 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
 
 void nsScrollingView :: ComputeContainerSize()
 {
-  nsIView *scrollview = GetScrolledView();
+  nsIView       *scrollview = GetScrolledView();
+  nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
+  nsIWidget     *win;
+
+  static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
 
   if (nsnull != scrollview)
   {
     nscoord         dx = 0, dy = 0;
     nsIPresContext  *px = mViewManager->GetPresContext();
     nscoord         width, height;
-    nsIScrollbar    *scrollv = nsnull, *scrollh = nsnull;
-    nsIWidget       *win;
     PRUint32        oldsizey = mSizeY, oldsizex = mSizeX;
     nsRect          area(0, 0, 0, 0);
     nscoord         offx, offy;
@@ -402,8 +404,6 @@ void nsScrollingView :: ComputeContainerSize()
       offy = mOffsetY;
 
       win = mVScrollBarView->GetWidget();
-
-      static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
 
       if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollv))
       {
@@ -443,8 +443,6 @@ void nsScrollingView :: ComputeContainerSize()
 
       win = mHScrollBarView->GetWidget();
 
-      static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
-
       if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
       {
         if (mSizeX > mBounds.width)
@@ -481,6 +479,41 @@ void nsScrollingView :: ComputeContainerSize()
 
     NS_RELEASE(px);
     NS_RELEASE(scrollview);
+  }
+  else
+  {
+    if (nsnull != mHScrollBarView)
+    {
+      mHScrollBarView->SetVisibility(nsViewVisibility_kHide);
+
+      win = mHScrollBarView->GetWidget();
+
+      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
+      {
+        scrollh->SetParameters(0, 0, 0, 0);
+        NS_RELEASE(scrollh);
+      }
+
+      NS_RELEASE(win);
+    }
+
+    if (nsnull != mVScrollBarView)
+    {
+      mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
+
+      win = mVScrollBarView->GetWidget();
+
+      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollv))
+      {
+        scrollv->SetParameters(0, 0, 0, 0);
+        NS_RELEASE(scrollv);
+      }
+
+      NS_RELEASE(win);
+    }
+
+    mOffsetX = mOffsetY = 0;
+    mSizeX = mSizeY = 0;
   }
 }
 

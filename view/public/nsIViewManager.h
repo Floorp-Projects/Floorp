@@ -122,6 +122,11 @@ public:
   virtual void SetWindowOffsets(nscoord xoffset, nscoord yoffset) = 0;
 
   /**
+   * Reset the state of scrollbars and the scrolling region
+   */
+  virtual void ResetScrolling(void) = 0;
+
+  /**
    * Called to refresh an area of the root window. Often called in
    * response to a paint/redraw event from the native windowing system.
    * @param aContext rendering context to draw into
