@@ -511,7 +511,7 @@ input_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case FORM_TYPE_PASSWORD:
 #ifdef ENDER
       case FORM_TYPE_HTMLAREA :
-#endif //ENDER
+#endif /*ENDER*/
 	 {
 	    lo_FormElementTextData *text;
 
@@ -863,7 +863,7 @@ input_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case FORM_TYPE_PASSWORD:
 #ifdef ENDER
       case FORM_TYPE_HTMLAREA :
-#endif //ENDER
+#endif /*ENDER*/
      {
 	    lo_FormElementTextData *text;
 	    JSBool ok;
@@ -1338,7 +1338,7 @@ input_toString(JSContext *cx, JSObject *obj,
       case FORM_TYPE_TEXTAREA: /* XXX we ASSUME common struct prefixes */
 #ifdef ENDER
            case FORM_TYPE_HTMLAREA :
-#endif //ENDER
+#endif /*ENDER*/
 	{
 	    lo_FormElementTextareaData *textarea;
 
@@ -1897,7 +1897,7 @@ LM_ReflectFormElement(MWContext *context, int32 layer_id, int32 form_id,
       case FORM_TYPE_TEXTAREA:
 #ifdef ENDER
       case FORM_TYPE_HTMLAREA:
-#endif //ENDER
+#endif /*ENDER*/
         size = sizeof(JSTextInput);
         break;
 
@@ -2466,7 +2466,7 @@ lm_InputEvent(MWContext *context, LO_Element *element, JSEvent *pEvent,
 	  case FORM_TYPE_TEXTAREA:
 #ifdef ENDER
       case FORM_TYPE_HTMLAREA:
-#endif //ENDER
+#endif /*ENDER*/
 	    re_input_bytes = (char *)data->ele_textarea.current_text;
 	    multiline = JS_TRUE;
 	    break;
