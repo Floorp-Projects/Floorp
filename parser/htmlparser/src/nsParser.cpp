@@ -269,24 +269,6 @@ eParseMode nsParser::GetParseMode(void){
 }
 
 
-/**
- *  
- *  
- *  @update  gess 5/13/98
- *  @param   
- *  @return  
- */
-eParseMode DetermineParseMode() {
-  const char* theModeStr= PR_GetEnv("PARSE_MODE");
-  const char* other="other";
-  
-  eParseMode  result=eParseMode_navigator;
-
-  if(theModeStr) 
-    if(0==nsCRT::strcasecmp(other,theModeStr))
-      result=eParseMode_other;    
-  return result;
-}
 
 /**
  *  
@@ -358,6 +340,42 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
 
 
 /**
+ *  This is called (by willBuildModel) when it's time to find out 
+ *  what mode the parser/DTD should run for this document.
+ *  (Each parsercontext can have it's own mode).
+ *  
+ *  @update  gess 5/13/98
+ *  @return  parsermode (define in nsIParser.h)
+ */
+eParseMode DetermineParseMode(nsParser& aParser) {
+  const char* theModeStr= PR_GetEnv("PARSE_MODE");
+  const char* other="other";
+  
+  CScanner* theScanner=aParser.GetScanner();
+  if(theScanner){
+    nsString& theBuffer=theScanner->GetBuffer();
+    PRInt32 theIndex=theBuffer.Find("HTML 4.0");
+    if(kNotFound==theIndex)
+      theIndex=theBuffer.Find("html 4.0");
+    if(kNotFound<theIndex)
+      return eParseMode_raptor;
+    else {
+      PRInt32 theIndex=theBuffer.Find("noquirks");
+      if(kNotFound==theIndex)
+        theIndex=theBuffer.Find("NOQUIRKS");
+      if(kNotFound<theIndex)
+        return eParseMode_noquirks;
+    }
+  }
+
+  if(theModeStr) 
+    if(0==nsCRT::strcasecmp(other,theModeStr))
+      return eParseMode_other;    
+  return eParseMode_navigator;
+}
+
+
+/**
  * This gets called just prior to the model actually
  * being constructed. It's important to make this the
  * last thing that happens right before parsing, so we
@@ -370,17 +388,19 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
  */
 PRInt32 nsParser::WillBuildModel(nsString& aFilename){
 
-  mMajorIteration=-1;
-  mMinorIteration=-1;
-
-  mParserContext->mParseMode=DetermineParseMode();  
-  if(PR_TRUE==FindSuitableDTD(*mParserContext)) {
-    mParserContext->mDTD->SetParser(this);
-    mParserContext->mDTD->SetContentSink(mSink);
-    mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext));
+  mMajorIteration=-1; 
+  mMinorIteration=-1; 
+  PRInt32 result=kNoError;
+  if(mParserContext){
+    mParserContext->mParseMode=DetermineParseMode(*this);  
+    if(PR_TRUE==FindSuitableDTD(*mParserContext)) {
+      mParserContext->mDTD->SetParser(this);
+      mParserContext->mDTD->SetContentSink(mSink);
+      mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext));
+    }
   }
-
-  return kNoError;
+  else result=kInvalidParserContext;
+  return result;
 }
 
 /**
