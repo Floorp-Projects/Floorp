@@ -23,9 +23,6 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 
-static NS_DEFINE_IID(kIObserverServiceIID, NS_IOBSERVERSERVICE_IID);
-static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
-
  
 /***************************************************************
   First, define the tagstack class
@@ -673,12 +670,12 @@ void CObserverDictionary::UnregisterObservers() {
 void CObserverDictionary::RegisterObservers() {
   nsresult result = NS_OK;
   nsIObserverService* theObserverService = nsnull;
-  result = nsServiceManager::GetService(kObserverServiceCID, kIObserverServiceIID,
+  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(),
                                       (nsISupports**) &theObserverService, nsnull);
   if(result == NS_OK){
     nsString  theTopic("htmlparser");
     nsIEnumerator* theEnum;
-    result = theObserverService->EnumerateObserverList(&theEnum, &theTopic);
+    result = theObserverService->EnumerateObserverList(theTopic, &theEnum);
     if(result == NS_OK){
       nsIElementObserver* theElementObserver;
       nsISupports *inst;
