@@ -51,6 +51,7 @@ class nsCaret : public nsICaret,
  		NS_IMETHOD    SetCaretVisible(PRBool inMakeVisible);
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
   	NS_IMETHOD    Refresh(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect);
+		NS_IMETHOD 		GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRBool& outIsCollapsed);
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 	
 	  //nsIDOMSelectionListener interface
