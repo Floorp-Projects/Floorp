@@ -853,7 +853,7 @@ sub BuildStubs()
     my($distdirectory) = ":mozilla:dist";
 
     # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
-    my($C) = $main::CARBON ? "Carbon" : "";
+    my($C) = $main::options{carbon} ? "Carbon" : "";
 
     StartBuildModule("stubs");
 
@@ -930,6 +930,11 @@ sub BuildIDLProjects()
     # necko
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");
     BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",                 "uriloader");
+
+    if ($main::options{cache})
+    {
+        BuildIDLProject(":mozilla:netwerk:macbuild:cacheIDL.mcp", "cache");
+    }
 
     # psm glue
     BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",         "psmglue"); 
@@ -1033,21 +1038,16 @@ sub BuildRuntimeProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
 
     # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
-    my($C) = $main::CARBON ? "Carbon" : "";
+    my($C) = $main::options{carbon} ? "Carbon" : "";
     my($P) = $main::PROFILE ? "Profil" : "";
     my($EssentialFiles) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Essential Files:" : ":mozilla:dist:viewer:Essential Files:";
 
     #//
     #// Shared libraries
     #//
-    if ( $main::CARBON )
+    if ( $main::options{carbon} )
     {
-        if ( $main::CARBONLITE ) {
-            BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "Carbon Interfaces (Lite)");
-        }
-        else {
-            BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "Carbon Interfaces");       
-        }
+        BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "Carbon Interfaces");       
     }
     else
     {
@@ -1066,7 +1066,7 @@ sub BuildRuntimeProjects()
 
     BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",          "MoreFiles.o");
 
-    if ($main::GC_LEAK_DETECTOR && !$main::CARBON) {
+    if ($main::GC_LEAK_DETECTOR && !$main::options{carbon}) {
         BuildProject(":mozilla:gc:boehm:macbuild:gc.mcp",                    "gc.ppc.lib");
         MakeAlias(":mozilla:gc:boehm:macbuild:gc.PPC.lib",                   ":mozilla:dist:gc:gc.PPC.lib");
     	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp", "MemAllocatorGC.o");
@@ -1209,16 +1209,21 @@ sub BuildNeckoProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
 
     # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
-    my($C) = $main::CARBON ? "Carbon" : "";
+    my($C) = $main::options{carbon} ? "Carbon" : "";
 
     my($Components) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Components:" : ":mozilla:dist:viewer:Components:";
 
     StartBuildModule("necko");
 
     BuildOneProjectWithOutput(":mozilla:netwerk:macbuild:netwerk.mcp", "Necko$C$D.shlb", "Necko$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    
-    BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",                   "Necko2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",                "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",          "Necko2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+    if ($main::options{cache})
+    {
+        BuildOneProject(":mozilla:netwerk:macbuild:cache.mcp",         "Cache$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+
+    BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",       "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
           
     EndBuildModule("necko");
 }
@@ -1330,7 +1335,7 @@ sub BuildLayoutProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
     # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
-    my($C) = $main::CARBON ? "Carbon" : "";
+    my($C) = $main::options{carbon} ? "Carbon" : "";
     my($dist_dir) = GetBinDirectory();
     
     StartBuildModule("nglayout");
@@ -1446,7 +1451,7 @@ sub BuildEmbeddingProjects()
     BuildOneProject(":mozilla:embedding:base:macbuild:EmbedAPI.mcp", "EmbedAPI$D.o", 0, 0, 0);
     MakeAlias(":mozilla:embedding:base:macbuild:EmbedAPI$D.o", ":mozilla:dist:embedding:");
 
-    if ($main::options{embedding_test} && !$main::CARBON)
+    if ($main::options{embedding_test} && !$main::options{carbon})
     {
         if (-e GetCodeWarriorRelativePath("MacOS Support:PowerPlant"))
         {
