@@ -107,6 +107,7 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
                                   nsIURI *aURI,
                                   PRBool *aResult)
 {
+#if 0
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
@@ -172,6 +173,9 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
 	    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
     }
 
+#else
+    *aResult = PR_TRUE;
+#endif
     return NS_OK;
 }
 
