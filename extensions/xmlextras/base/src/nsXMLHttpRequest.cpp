@@ -46,7 +46,6 @@
 #include "nsIPrivateDOMImplementation.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsPrintfCString.h"
 #include "nsCRT.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
@@ -1047,13 +1046,13 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
 
-  // Allocate extra space for the trailing and leading CRLF
-  postData = (char*)nsMemory::Alloc(charLength + 5);
+  // Allocate extra space for the null-terminator
+  postData = (char*)nsMemory::Alloc(charLength + 1);
   if (!postData) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   rv = encoder->Convert(unicodeBuf,
-                        &unicodeLength, postData+2, &charLength);
+                        &unicodeLength, postData, &charLength);
   if (NS_FAILED(rv)) {
     nsMemory::Free(postData);
     return NS_ERROR_FAILURE;
@@ -1061,27 +1060,12 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (!httpChannel) {
+    nsMemory::Free(postData);
     return NS_ERROR_FAILURE;
   }
 
-  // If no content type header was set by the client, we set it to text/xml.
-  nsCAutoString header;
-  if( NS_FAILED(httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), header)) )
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                  NS_LITERAL_CSTRING("text/xml"),
-                                  PR_FALSE);
-
-  // set the content length header
-  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"),
-                                nsPrintfCString("%d", charLength),
-                                PR_FALSE);
-
-  // Shove in the trailing and leading CRLF
-  postData[0] = nsCRT::CR;
-  postData[1] = nsCRT::LF;
-  postData[2+charLength] = nsCRT::CR;
-  postData[2+charLength+1] = nsCRT::LF;
-  postData[2+charLength+2] = '\0';
+  // Null-terminate
+  postData[charLength] = '\0';
 
   nsCOMPtr<nsIStringInputStream> inputStream(do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
   if (NS_SUCCEEDED(rv)) {
@@ -1091,7 +1075,7 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
     }
   }
 
-  // If we got here then something went wrong before the stream was
+  // If we got here then something went wrong before the stream
   // adopted the buffer.
   nsMemory::Free(postData);
   return NS_ERROR_FAILURE;
@@ -1482,7 +1466,17 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
       NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
-      rv = uploadChannel->SetUploadStream(postDataStream, EmptyCString(), -1);
+      // If no content type header was set by the client, we set it to
+      // text/xml.
+      nsCAutoString contentType;
+      if (NS_FAILED(httpChannel->
+                      GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                       contentType)) ||
+          contentType.IsEmpty()) {
+        contentType = NS_LITERAL_CSTRING("text/xml");
+      }
+      
+      rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
       // Reset the method to its original value
       if (httpChannel) {
         httpChannel->SetRequestMethod(method);
