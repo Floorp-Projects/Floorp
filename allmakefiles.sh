@@ -17,19 +17,19 @@
 #
 
 # allmakefiles.sh - List of all makefiles. 
-#   This script outputs the list to the standard output.
+#   Appends the list of makefiles to the variable, MAKEFILES.
 #   There is no need to rerun autoconf after adding makefiles.
 #   You only need to run configure.
 #
 #   Unused makefiles may be commented out with '#'.
 #   ('#' must be the first character on the line).
 
-# add_makefiles - Shell function to write non-commented lines to stdout
+# add_makefiles - Shell function to add makefiles to MAKEFILES
 add_makefiles() {
   while read line; do
     case $line in
       \#*|dnl*) ;;
-      *) echo $line ;;
+      *) MAKEFILES="$MAKEFILES $line" ;;
     esac
   done
 }
