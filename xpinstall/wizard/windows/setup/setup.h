@@ -49,8 +49,12 @@ typedef int PRInt32;
 #include <commctrl.h>
 #include "setuprsc.h"
 #include "resource.h"
-#include "sdinst.h"
 #include "zipfile.h"
+
+/* required only by commercial seamonkey build */
+#ifndef MOZILLA_CLIENT
+#include "sdinst.h"
+#endif
 
 #define CLASS_NAME                      "Setup"
 #define FILE_INI_SETUP                  "setup.ini"
