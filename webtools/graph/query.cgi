@@ -112,10 +112,13 @@ sub show_graph {
 
   # Days, Time-axis
   print "<td>\n";
-  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&units=$UNITS&ltype=$LTYPE\">\n";
+  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&units=$UNITS&ltype=$LTYPE&points=$POINTS\">\n";
   print "<input type=hidden name=\"tbox\" value=\"$TBOX\">";
   print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
   print "<input type=hidden name=\"autoscale\" value=\"$AUTOSCALE\">";
+  print "<input type=hidden name=\"units\" value=\"$UNITS\">";
+  print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
+  print "<input type=hidden name=\"points\" value=\"$POINTS\">";
 
   print "Days:";
   if($DAYS) {
