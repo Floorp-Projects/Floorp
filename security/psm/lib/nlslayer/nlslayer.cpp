@@ -116,7 +116,6 @@ extern "C" nsIStringBundle* nlsCreateBundle(char* bundleURL)
 	nsresult ret;
 	nsIStringBundleService *service = nsnull;
 	nsIStringBundle* bundle = nsnull;
-	nsILocale *locale = nsnull;
 
 	// Get the string bundle service
 	ret = nsServiceManager::GetService(kStringBundleServiceCID,
@@ -127,7 +126,7 @@ extern "C" nsIStringBundle* nlsCreateBundle(char* bundleURL)
 	}
 
 	// Create the bundle
-	ret = service->CreateBundle(bundleURL, locale, &bundle);
+	ret = service->CreateBundle(bundleURL, &bundle);
 	if (NS_FAILED(ret)) {
 		return NULL;
 	}

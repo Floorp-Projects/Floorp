@@ -317,7 +317,7 @@ nsNSSComponent::InitializePIPNSSBundle()
   if (NS_FAILED(rv) || !bundleService) 
     return NS_ERROR_FAILURE;
   
-  bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL, nsnull,
+  bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL,
                               getter_AddRefs(mPIPNSSBundle));
   if (!mPIPNSSBundle)
     rv = NS_ERROR_FAILURE;
