@@ -580,6 +580,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
               if (res == NS_OK)
               {
                 parent->AddChild((nsIXPFCMenuItem *)container_item);
+                NS_RELEASE(parent);
               }
 
               mOrphanMenuList->Remove(child);
@@ -859,7 +860,6 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
       mOrphanMenuList->Append(container);
 
-      container->Release();
       
     }
 
@@ -867,6 +867,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
       mXPFCStack->Push(container);
 
     
+    container->Release();
 
     return NS_OK;
   } else if (mState == XPFC_PARSING_STATE_DIALOG)
