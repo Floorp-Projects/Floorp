@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
+#include "netCore.h"
 
 // used to dispatch urls to default protocol handlers
 #include "nsCExternalHandlerService.h"
@@ -135,12 +136,12 @@ nsresult nsExtProtocolChannel::OpenURL()
 {
   nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
   PRBool haveHandler = PR_FALSE;
-  nsXPIDLCString urlScheme;
-  mUrl->GetScheme(getter_Copies(urlScheme));
+  nsCAutoString urlScheme;
+  mUrl->GetScheme(urlScheme);
 
   if (extProtService)
   {
-    extProtService->ExternalProtocolHandlerExists(urlScheme, &haveHandler);
+    extProtService->ExternalProtocolHandlerExists(urlScheme.get(), &haveHandler);
     if (haveHandler)
       return extProtService->LoadUrl(mUrl);
   }
@@ -269,9 +270,9 @@ NS_INTERFACE_MAP_BEGIN(nsExternalProtocolHandler)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMETHODIMP nsExternalProtocolHandler::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsExternalProtocolHandler::GetScheme(nsACString &aScheme)
 {
-	*aScheme = ToNewCString(m_schemeName);
+	aScheme = m_schemeName;
 	return NS_OK;
 }
 
@@ -292,12 +293,12 @@ nsExternalProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_
 PRBool nsExternalProtocolHandler::HaveProtocolHandler(nsIURI * aURI)
 {
   PRBool haveHandler = PR_FALSE;
-  nsXPIDLCString scheme;
   if (aURI)
   {
-    aURI->GetScheme(getter_Copies(scheme));
+    nsCAutoString scheme;
+    aURI->GetScheme(scheme);
     nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-    extProtService->ExternalProtocolHandlerExists(scheme, &haveHandler);
+    extProtService->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
   }
 
   return haveHandler;
@@ -310,7 +311,10 @@ NS_IMETHODIMP nsExternalProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
+                                                const char *aCharset, // ignore charset info
+                                                nsIURI *aBaseURI,
+                                                nsIURI **_retval)
 {
   nsresult rv = NS_ERROR_UNKNOWN_PROTOCOL;
   nsCOMPtr<nsIURI> uri = do_CreateInstance(kSimpleURICID, &rv);

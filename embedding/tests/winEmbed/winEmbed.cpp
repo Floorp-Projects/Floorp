@@ -1205,8 +1205,8 @@ void WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
     webNavigation->GetCurrentURI(getter_AddRefs(currentURI));
     if (currentURI)
     {
-        nsXPIDLCString uriString;
-        currentURI->GetSpec(getter_Copies(uriString));
+        nsCAutoString uriString;
+        currentURI->GetAsciiSpec(uriString);
         HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
         SetDlgItemText(hwndDlg, IDC_ADDRESS, uriString.get());
     }

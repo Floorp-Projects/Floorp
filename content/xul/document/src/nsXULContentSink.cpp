@@ -611,7 +611,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
 
     if ((mimeType.IsEmpty()) || mimeType.EqualsIgnoreCase(kCSSType)) {
         nsCOMPtr<nsIURI> url;
-        rv = NS_NewURI(getter_AddRefs(url), aHref, mDocumentURL);
+        rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentURL);
         if (NS_OK != rv) {
             return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
         }
@@ -1072,7 +1072,7 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 
       // Add the overlay to our list of overlays that need to be processed.
       nsCOMPtr<nsIURI> url;
-      nsresult rv = NS_NewURI(getter_AddRefs(url), href, mDocumentURL);
+      nsresult rv = NS_NewURI(getter_AddRefs(url), href, nsnull, mDocumentURL);
       if (NS_FAILED(rv)) {
         // XXX This is wrong, the error message could be out of memory
         //     or something else equally bad, which we should propagate. 
@@ -1495,7 +1495,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
       // If there is a SRC attribute...
       if (! src.IsEmpty()) {
           // Use the SRC attribute value to load the URL
-          rv = NS_NewURI(getter_AddRefs(script->mSrcURI), src, mDocumentURL);
+          rv = NS_NewURI(getter_AddRefs(script->mSrcURI), src, nsnull, mDocumentURL);
           if (NS_FAILED(rv)) {
               delete script;
               return rv;
@@ -1546,10 +1546,10 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               // AbortFastLoads if things look bad.
               nsresult rv2 = NS_OK;
               if (script->mSrcURI) {
-                  nsXPIDLCString spec;
-                  script->mSrcURI->GetSpec(getter_Copies(spec));
+                  nsCAutoString spec;
+                  script->mSrcURI->GetAsciiSpec(spec);
                   rv2 = fastLoadService->StartMuxedDocument(script->mSrcURI,
-                                                            spec,
+                                                            spec.get(),
                                                             nsIFastLoadService::NS_FASTLOAD_READ);
                   if (NS_SUCCEEDED(rv2))
                       rv2 = fastLoadService->SelectMuxedDocument(script->mSrcURI);
@@ -1653,7 +1653,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
           qnameC.Assign(aAttributes[0]);
           PR_LOG(gLog, PR_LOG_ALWAYS,
                  ("xul: unable to parse attribute '%s' at line %d",
-                  NS_ConvertUCS2toUTF8(qnameC), -1)); // XXX pass in line number
+                  NS_ConvertUCS2toUTF8(qnameC).get(), -1)); // XXX pass in line number
 #endif
           // Bring it. We'll just fail to copy an attribute that we
           // can't parse. And that's one less attribute to worry
@@ -1675,9 +1675,9 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
           PR_LOG(gLog, PR_LOG_DEBUG,
                  ("xul: %.5d. %s    %s=%s",
                   -1, // XXX pass in line number
-                  NS_ConvertUCS2toUTF8(extraWhiteSpace),
-                  NS_ConvertUCS2toUTF8(qnameC),
-                  NS_ConvertUCS2toUTF8(valueC)));
+                  NS_ConvertUCS2toUTF8(extraWhiteSpace).get(),
+                  NS_ConvertUCS2toUTF8(qnameC).get(),
+                  NS_ConvertUCS2toUTF8(valueC).get()));
       }
 #endif
       ++attrs;

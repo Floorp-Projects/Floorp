@@ -316,7 +316,7 @@ private:
   nsPluginWindow    mPluginWindow;
   nsIPluginInstance *mInstance;
   nsObjectFrame     *mOwner;
-  char              *mDocumentBase;
+  nsCString          mDocumentBase;
   char              *mTagText;
   nsIWidget         *mWidget;
   nsIPresContext    *mContext;
@@ -526,7 +526,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
     nsCOMPtr<nsIURI> baseURL;
 
     if (NS_FAILED(GetBaseURL(*getter_AddRefs(baseURL)))) return; // XXX NS_NewURI fails without base
-    rv = NS_NewURI(getter_AddRefs(uri), data, baseURL);
+    rv = NS_NewURI(getter_AddRefs(uri), data, nsnull, baseURL);
     if (NS_FAILED(rv)) return;
 
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
@@ -939,14 +939,13 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
   //trim leading and trailing whitespace
   aSrc.Trim("\b\t\r\n ", PR_TRUE, PR_TRUE, PR_FALSE);
 
-  //create properly encoded absolute URI using the document charset
-  nsXPIDLCString encodedURI;
-  rv = NS_MakeAbsoluteURIWithCharset(getter_Copies(encodedURI),
-                                     aSrc, document, aBaseURI,
-                                     nsHTMLUtils::IOService,
-                                     nsHTMLUtils::CharsetMgr);
-  rv = NS_NewURI(aFullURI, encodedURI, aBaseURI);
-  return rv;
+  // get document charset
+  nsAutoString originCharset;
+  if (document && NS_FAILED(document->GetDocumentCharacterSet(originCharset)))
+    originCharset.Truncate();
+ 
+  return NS_NewURI(aFullURI, aSrc, NS_LossyConvertUCS2toASCII(originCharset).get(),
+                   aBaseURI, nsHTMLUtils::IOService);
 }
 
 #define JAVA_CLASS_ID "8AD9C840-044E-11D1-B3E9-00805F499D93"
@@ -2063,7 +2062,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mOwner = nsnull;
   mWidget = nsnull;
   mContext = nsnull;
-  mDocumentBase = nsnull;
   mTagText = nsnull;
   mPluginHost = nsnull;
   mContentFocused = PR_FALSE;
@@ -2108,11 +2106,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     mCachedAttrParamValues = nsnull;
   }
 
-  if (nsnull != mDocumentBase) {
-    nsCRT::free(mDocumentBase);
-    mDocumentBase = nsnull;
-  }
-  
   if (nsnull != mTagText) {
     nsCRT::free(mTagText);
     mTagText = nsnull;
@@ -2576,7 +2569,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 {
   NS_ENSURE_ARG_POINTER(result);
   nsresult rv = NS_OK;
-  if (nsnull == mDocumentBase) {
+  if (mDocumentBase.IsEmpty()) {
     if (nsnull == mContext) {
       *result = nsnull;
       return NS_ERROR_FAILURE;
@@ -2591,10 +2584,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
     nsCOMPtr<nsIURI> docURL;
     doc->GetBaseURL(*getter_AddRefs(docURL));  // should return base + doc url
 
-    rv = docURL->GetSpec(&mDocumentBase);
+    rv = docURL->GetSpec(mDocumentBase);
   }
   if (rv == NS_OK)
-    *result = mDocumentBase;
+    *result = ToNewCString(mDocumentBase);
   return rv;
 }
 

@@ -129,12 +129,12 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
     rv = mStreamChannel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString spec;
-    rv = uri->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = uri->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStreamIO> io;
-    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec, inStr, "text/html", size);
+    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec.get(), inStr, "text/html", size);
 
     nsCOMPtr<nsIStreamIOChannel> chan = do_QueryInterface(mStreamChannel, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -514,15 +514,13 @@ nsAboutCacheEntry::ParseURI(nsCString &clientID, PRBool &streamBased, nsCString 
     rv = mStreamChannel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString path;
-    rv = uri->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString p(path);
-
-    nsReadingIterator<char> i1, i2, i3, end;
-    p.BeginReading(i1);
-    p.EndReading(end);
+    nsACString::const_iterator i1, i2, i3, end;
+    path.BeginReading(i1);
+    path.EndReading(end);
 
     i2 = end;
     if (!FindInReadable(NS_LITERAL_CSTRING("?client="), i1, i2))

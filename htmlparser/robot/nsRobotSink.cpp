@@ -368,10 +368,8 @@ void RobotSink::ProcessLink(const nsString& aLink)
     rv = mDocumentURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
     if (NS_FAILED(rv)) return;
 
-    char *uriStr = ToNewCString(aLink);
-    if (!uriStr) return;
-    rv = service->NewURI(uriStr, baseUri, &uri);
-    nsCRT::free(uriStr);
+    NS_ConvertUCS2toUTF8 uriStr(aLink);
+    rv = service->NewURI(uriStr, nsnull, baseUri, &uri);
     NS_RELEASE(baseUri);
     if (NS_FAILED(rv)) return;
 
@@ -380,10 +378,9 @@ void RobotSink::ProcessLink(const nsString& aLink)
 
     if (NS_OK == rv) {
       absURLSpec.Truncate();
-      char* str;
-      absurl->GetSpec(&str);
-      absURLSpec.AssignWithConversion(str);
-      nsCRT::free(str);
+      nsCAutoString str;
+      absurl->GetSpec(str);
+      absURLSpec = NS_ConvertUTF8toUCS2(str);
     }
   }
 

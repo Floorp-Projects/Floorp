@@ -339,7 +339,7 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   nsresult rv;
   
   // Create a new URI
-  rv = NS_NewURI(getter_AddRefs(uri), aUrl, mDocumentURL);
+  rv = NS_NewURI(getter_AddRefs(uri), aUrl, nsnull, mDocumentURL);
   if (NS_FAILED(rv)) return rv;
 
   // Get security manager, check to see if we're allowed to load this URI
@@ -365,7 +365,7 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   SetBaseURL(uri);
 
   // Create a channel
-  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull, this);
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull, this);
   if (NS_FAILED(rv)) return rv;
 
   // Set a principal for this document

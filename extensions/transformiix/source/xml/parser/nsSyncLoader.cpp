@@ -210,7 +210,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
                                         getter_AddRefs(DOMDocument));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_OpenURI(getter_AddRefs(mChannel), documentURI, nsnull, loadGroup);
+    rv = NS_NewChannel(getter_AddRefs(mChannel), documentURI, nsnull, loadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make sure we've been opened

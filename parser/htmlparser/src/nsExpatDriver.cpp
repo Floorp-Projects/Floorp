@@ -457,7 +457,7 @@ IsLoadableDTD(const XML_Char* aFPIStr, nsCOMPtr<nsIURI>* aDTD)
   // exists in the special DTD directory
   if (!isLoadable) {
     // try to see if we can map the public ID to a known local DTD
-    nsXPIDLCString fileName;
+    nsCAutoString fileName;
     if (aFPIStr) {
       RemapDTD(aFPIStr, fileName);
     }
@@ -471,7 +471,7 @@ IsLoadableDTD(const XML_Char* aFPIStr, nsCOMPtr<nsIURI>* aDTD)
       if (NS_FAILED(res)) {
         return PR_FALSE;
       }
-      res = dtdURL->GetFileName(getter_Copies(fileName));
+      res = dtdURL->GetFileName(fileName);
       if (NS_FAILED(res) || fileName.IsEmpty()) {
         return PR_FALSE;
       }
@@ -483,7 +483,7 @@ IsLoadableDTD(const XML_Char* aFPIStr, nsCOMPtr<nsIURI>* aDTD)
       // Set aDTD to a file: url pointing to the local DTD
       nsFileURL dtdFile(dtdPath);
       nsCOMPtr<nsIURI> dtdURI;
-      NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
+      NS_NewURI(getter_AddRefs(dtdURI), nsDependentCString(dtdFile.GetURLString()));
       if (dtdURI) {
         *aDTD = dtdURI;
         isLoadable = PR_TRUE;
@@ -503,16 +503,16 @@ nsExpatDriver::OpenInputStream(const XML_Char* aFPIStr,
 {
   nsresult rv;
   nsCOMPtr<nsIURI> baseURI;  
-  rv = NS_NewURI(getter_AddRefs(baseURI), NS_ConvertUCS2toUTF8((const PRUnichar*)aBaseURL).get());
+  rv = NS_NewURI(getter_AddRefs(baseURI), NS_ConvertUCS2toUTF8((const PRUnichar*)aBaseURL));
   if (NS_SUCCEEDED(rv) && baseURI) {
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8((const PRUnichar*)aURLStr).get(), baseURI);
+    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8((const PRUnichar*)aURLStr), nsnull, baseURI);
     if (NS_SUCCEEDED(rv) && uri) {
       if (IsLoadableDTD(aFPIStr, address_of(uri))) {
         rv = NS_OpenURI(in, uri);
-        nsXPIDLCString absURL;
-        uri->GetSpec(getter_Copies(absURL));
-        CopyASCIItoUCS2(absURL, aAbsURL);
+        nsCAutoString absURL;
+        uri->GetSpec(absURL);
+        aAbsURL = NS_ConvertUTF8toUCS2(absURL);
       } 
       else {
         rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -722,7 +722,6 @@ NS_IMETHODIMP
 nsExpatDriver::ConsumeToken(nsScanner& aScanner,
                             PRBool& aFlushTokens)
 {
-
   // Ask the scanner to send us all the data it has
   // scanned and pass that data to expat.
   

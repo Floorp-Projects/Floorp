@@ -45,7 +45,7 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsNetCID.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
@@ -99,9 +99,8 @@ nsKeywordProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aRes
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsKeywordProtocolHandler::GetScheme(char* *result) {
-    *result = nsCRT::strdup("keyword");
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+nsKeywordProtocolHandler::GetScheme(nsACString &result) {
+    result = "keyword";
     return NS_OK;
 }
 
@@ -163,14 +162,16 @@ MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
 
 // digests a spec of the form "keyword:blah"
 NS_IMETHODIMP
-nsKeywordProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                               nsIURI **result) {
+nsKeywordProtocolHandler::NewURI(const nsACString &aSpec,
+                                 const char *aCharset, // ignore charset info
+                                 nsIURI *aBaseURI,
+                                 nsIURI **result) {
     nsresult rv;
     nsIURI* uri;
 
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull, NS_GET_IID(nsIURI), (void**)&uri);
     if (NS_FAILED(rv)) return rv;
-    rv = uri->SetSpec((char*)aSpec);
+    rv = uri->SetSpec(aSpec);
     if (NS_FAILED(rv)) return rv;
 
     *result = uri;
@@ -184,18 +185,18 @@ nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
     NS_ASSERTION((mKeywordURL.Length() > 0), "someone's trying to use the keyword handler even though it hasn't been init'd");
 
-    nsXPIDLCString path;
-    rv = uri->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    char *httpSpec = MangleKeywordIntoHTTPURL(path, mKeywordURL.get());
+    char *httpSpec = MangleKeywordIntoHTTPURL(path.get(), mKeywordURL.get());
     if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
 
     // now we have an HTTP url, give the user an HTTP channel
-    rv = serv->NewChannel(httpSpec, nsnull, result);
+    rv = serv->NewChannel(nsDependentCString(httpSpec), nsnull, nsnull, result);
     nsMemory::Free(httpSpec);
     return rv;
 

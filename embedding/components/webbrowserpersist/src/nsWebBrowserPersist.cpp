@@ -40,6 +40,7 @@
 #include "nsCExternalHandlerService.h"
 
 #include "nsIURL.h"
+#include "nsIFileURL.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -925,11 +926,9 @@ nsresult nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aP
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
-    nsXPIDLCString oldPath;
-    nsresult rv = aURI->GetPath(getter_Copies(oldPath));
+    nsCAutoString newPath;
+    nsresult rv = aURI->GetPath(newPath);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-    nsCAutoString newPath(oldPath);
 
     // Append a forward slash if necessary
     PRInt32 len = newPath.Length();
@@ -939,8 +938,8 @@ nsresult nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aP
     }
 
     // Store the path back on the URI
-    newPath.AppendWithConversion(aPath);
-    aURI->SetPath(newPath.get());
+    newPath += NS_ConvertUCS2toUTF8(aPath);
+    aURI->SetPath(newPath);
 
     return NS_OK;
 }
@@ -967,7 +966,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
 
     // Open a channel to the URI
     nsCOMPtr<nsIChannel> inputChannel;
-    rv = NS_OpenURI(getter_AddRefs(inputChannel), aURI,
+    rv = NS_NewChannel(getter_AddRefs(inputChannel), aURI,
             nsnull, nsnull, NS_STATIC_CAST(nsIInterfaceRequestor *, this),
             loadFlags);
     
@@ -1243,7 +1242,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
                 nsCOMPtr<nsIURL> urlToChopOffFile = do_QueryInterface(pathToFileParent);
                 if (urlToChopOffFile)
                 {
-                    urlToChopOffFile->SetFileName("");
+                    urlToChopOffFile->SetFileName(NS_LITERAL_CSTRING(""));
                 }
                 PRBool isEqual = PR_FALSE;
                 if (NS_SUCCEEDED(aDataPath->Equals(pathToFileParent, &isEqual))
@@ -1442,11 +1441,8 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
             nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
             NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
 
-            nsXPIDLCString fileName;
-            url->GetFileName(getter_Copies(fileName));
-
-            nsCString newFileName;
-            newFileName.Assign(fileName);
+            nsCAutoString newFileName;
+            url->GetFileName(newFileName);
 
             // Test if the current extension is current for the mime type
             PRBool hasExtension = PR_FALSE;
@@ -1463,7 +1459,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
                 // Test if previous extension is acceptable
                 nsCOMPtr<nsIURL> oldurl(do_QueryInterface(aOriginalURIWithExtension));
                 NS_ENSURE_TRUE(oldurl, NS_ERROR_FAILURE);
-                oldurl->GetFileExtension(getter_Copies(fileExt));
+                oldurl->GetFileExtension(fileExt);
                 PRBool useOldExt = PR_FALSE;
                 if (!fileExt.IsEmpty())
                 {
@@ -1479,7 +1475,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
                 if (!fileExt.IsEmpty())
                 {
                     newFileName.Append(".");
-                    newFileName.Append(fileExt.get());
+                    newFileName.Append(fileExt);
                 }
 
                 if (localFile)
@@ -1493,7 +1489,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
                 }
                 else
                 {
-                    url->SetFileName(newFileName.get());
+                    url->SetFileName(newFileName);
                 }
             }
 
@@ -2066,8 +2062,8 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), oldCValue.get(), mCurrentBaseURI);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-        nsXPIDLCString spec;
-        rv = uri->GetSpec(getter_Copies(spec));
+        nsCAutoString spec;
+        rv = uri->GetSpec(spec);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
         // Search for the URI in the map and replace it with the local file
@@ -2091,25 +2087,22 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
             {
                 nsCOMPtr<nsIURL> url(do_QueryInterface(fileAsURI));
                 NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
-                nsXPIDLCString filename;
-                url->GetFileName(getter_Copies(filename));
+                nsCAutoString filename;
+                url->GetFileName(filename);
 
                 nsCAutoString rawPathURL;
                 rawPathURL.Assign(data->mRelativePathToData);
                 rawPathURL.Append(filename);
 
                 nsCAutoString buf;
-                if (NS_EscapeURLPart(rawPathURL.get(), rawPathURL.Length(), 
-                    esc_Directory | esc_FileBaseName | esc_FileExtension, buf))
-                    newValue.AssignWithConversion(buf.get());
-                else
-                    newValue.AssignWithConversion(rawPathURL.get());
+                newValue = NS_ConvertUTF8toUCS2(
+                    NS_EscapeURL(rawPathURL, esc_FilePath, buf));
             }
             else
             {
-                nsXPIDLCString fileurl;
-                fileAsURI->GetSpec(getter_Copies(fileurl));
-                newValue.AssignWithConversion(fileurl);
+                nsCAutoString fileurl;
+                fileAsURI->GetSpec(fileurl);
+                newValue.Assign(NS_ConvertUTF8toUCS2(fileurl));
             }
             if (data->mIsSubFrame)
             {
@@ -2152,10 +2145,9 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
         rv = NS_NewURI(getter_AddRefs(newURI), oldCValue.get(), mCurrentBaseURI);
         if (NS_SUCCEEDED(rv))
         {
-            nsXPIDLCString uriSpec;
-            newURI->GetSpec(getter_Copies(uriSpec));
-            nsAutoString newValue; newValue.AssignWithConversion(uriSpec);
-            attrNode->SetNodeValue(newValue);
+            nsCAutoString uriSpec;
+            newURI->GetSpec(uriSpec);
+            attrNode->SetNodeValue(NS_ConvertUTF8toUCS2(uriSpec));
         }
     }
 
@@ -2309,8 +2301,8 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), aURI, mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-    nsXPIDLCString spec;
-    rv = uri->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = uri->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // Create a sensibly named filename for the URI and store in the URI map
@@ -2366,15 +2358,16 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
     nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
     if (url)
     {
-        char *nameFromURL = nsnull;
-        url->GetFileName(&nameFromURL);
-        if (nameFromURL)
+        nsCAutoString nameFromURL;
+        url->GetFileName(nameFromURL);
+        if (!nameFromURL.IsEmpty())
         {
             const PRInt32 kMaxFileNameLength = 20;
             // Unescape the file name (GetFileName escapes it)
             nsAutoString fileName;
             PRInt32 length = 0;
-            char *p = nsUnescape(nameFromURL);
+            NS_UnescapeURL(nameFromURL);
+            const char *p = nameFromURL.get();
             for (;*p && *p != ';' && *p != '?' && *p != '#' && *p != '.' &&
                   length < kMaxFileNameLength
                  ;p++, length++)
@@ -2390,7 +2383,6 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
                 }
             }
             aFilename = fileName;
-            nsCRT::free(nameFromURL);
         }
     }
 
@@ -2477,9 +2469,9 @@ nsWebBrowserPersist::SetDocumentBase(
         {
             return NS_ERROR_FAILURE;
         }
-        nsXPIDLCString uriSpec;
-        aBaseURI->GetSpec(getter_Copies(uriSpec));
-        nsString href; href.AssignWithConversion(uriSpec);
+        nsCAutoString uriSpec;
+        aBaseURI->GetSpec(uriSpec);
+        NS_ConvertUTF8toUCS2 href(uriSpec);
         baseElement->SetAttribute(NS_LITERAL_STRING("href"), href);
     }
     else

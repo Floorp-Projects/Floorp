@@ -115,13 +115,13 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
-  nsXPIDLCString path;
+  nsCAutoString path;
   nsXPIDLCString httpMethod;
 
   rv = httpChannel->GetURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->GetPath(getter_Copies(path));
+  rv = uri->GetPath(path);
   if (NS_FAILED(rv)) return rv;
 
   rv = httpChannel->GetRequestMethod(getter_Copies(httpMethod));

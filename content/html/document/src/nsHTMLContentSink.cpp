@@ -574,7 +574,7 @@ DummyParserRequest::DummyParserRequest(nsIHTMLContentSink* aSink)
 
   if (gRefCnt++ == 0) {
       nsresult rv;
-      rv = NS_NewURI(&gURI, "about:parser-dummy-request", nsnull);
+      rv = NS_NewURI(&gURI, NS_LITERAL_CSTRING("about:parser-dummy-request"));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:parser-dummy-request");
   }
 
@@ -2624,12 +2624,11 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mContextStack.AppendElement(mCurrentContext);
 
 #ifdef NS_DEBUG
-  char* spec;
-  (void)aURL->GetSpec(&spec);
+  nsCAutoString spec;
+  (void)aURL->GetSpec(spec);
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
-              this, spec));
-  nsCRT::free(spec);
+              this, spec.get()));
 #endif
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
@@ -3936,21 +3935,19 @@ HTMLContentSink::StartLayout()
   // frameset document, disable the scroll bars on the views.
 
   if (mDocumentURI) {
-    nsXPIDLCString ref;
+    nsCAutoString ref;
 
     // Since all URI's that pass through here aren't URL's we can't
     // rely on the nsIURI implementation for providing a way for
     // finding the 'ref' part of the URI, we'll haveto revert to
     // string routines for finding the data past '#'
 
-    rv = mDocumentURI->GetSpec(getter_Copies(ref));
-
-    nsDependentCString refstr(ref);
+    rv = mDocumentURI->GetSpec(ref);
 
     nsReadingIterator<char> start, end;
 
-    refstr.BeginReading(start);
-    refstr.EndReading(end);
+    ref.BeginReading(start);
+    ref.EndReading(end);
 
     if (FindCharInReadable('#', start, end)) {
       ++start; // Skip over the '#'
@@ -4454,7 +4451,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
     if (isStyleSheet) {
       nsIURI* url = nsnull;
       {
-        result = NS_NewURI(&url, aHref, mDocumentBaseURL);
+        result = NS_NewURI(&url, aHref, nsnull, mDocumentBaseURL);
       }
       if (NS_OK != result) {
         return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
@@ -5324,9 +5321,9 @@ HTMLContentSink::DumpContentModel()
       mDocument->GetRootContent(&root);
       if(root) {
         if(mDocumentURI) {
-          char* buff[1]={0};
-          mDocumentURI->GetSpec(buff);
-          fputs(buff[0],out);
+          nsCAutoString buf;
+          mDocumentURI->GetSpec(buf);
+          fputs(buf.get(),out);
         }
         fputs(";",out);
         result=root->DumpContent(out,0,PR_FALSE);

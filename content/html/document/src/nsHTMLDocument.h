@@ -260,7 +260,7 @@ protected:
   static PRBool TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor, 
                                 PRInt32& aCharsetSource, 
                                 nsAString& aCharset);
-  static PRBool TryBookmarkCharset(nsXPIDLCString* aUrlSpec,
+  static PRBool TryBookmarkCharset(nsAFlatCString* aUrlSpec,
                                    PRInt32& aCharsetSource, 
                                    nsAString& aCharset);
   static PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,

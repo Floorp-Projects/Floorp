@@ -42,6 +42,7 @@
 #include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsLiteralString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -58,7 +59,7 @@ nsAbout::NewChannel(nsIURI *aURI, nsIChannel **result)
         return rv;
 
     nsCOMPtr<nsIChannel> tempChannel;
-   	rv = ioService->NewChannel(kURI, nsnull, getter_AddRefs(tempChannel));
+   	rv = ioService->NewChannel(NS_LITERAL_CSTRING(kURI), nsnull, nsnull, getter_AddRefs(tempChannel));
 
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);

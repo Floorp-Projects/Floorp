@@ -65,7 +65,7 @@ nsresult
 nsFingerChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
 {
     nsresult rv;
-    nsXPIDLCString autoBuffer;
+    nsCAutoString autoBuffer;
 
     NS_ASSERTION(uri, "no uri");
 
@@ -77,12 +77,12 @@ nsFingerChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
 
     mPort = FINGER_PORT;
 
-    rv = mUrl->GetPath(getter_Copies(autoBuffer)); // autoBuffer = user@host
+    rv = mUrl->GetPath(autoBuffer); // autoBuffer = user@host
     if (NS_FAILED(rv)) return rv;
 
     // Now parse out the user and host
     const char* buf = autoBuffer.get();
-    const char* pos = PL_strchr(buf, '@');
+    const char* pos = strchr(buf, '@');
 
     // Catch the case of just the host being given
     if (!pos) {
@@ -383,9 +383,9 @@ nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
         nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
         if (converter) {
           nsAutoString title(NS_LITERAL_STRING("Finger information for "));
-          nsXPIDLCString userHost;
-          rv = mUrl->GetPath(getter_Copies(userHost));
-          title.AppendWithConversion(userHost);
+          nsCAutoString userHost;
+          rv = mUrl->GetPath(userHost);
+          title.Append(NS_ConvertUTF8toUCS2(userHost));
           converter->SetTitle(title.get());
           converter->PreFormatHTML(PR_TRUE);
         }

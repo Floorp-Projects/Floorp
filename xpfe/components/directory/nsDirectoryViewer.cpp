@@ -311,14 +311,13 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
       
-    nsXPIDLCString entryuriC;
-    uri->GetSpec(getter_Copies(entryuriC));
+    nsCAutoString entryuriC;
+    uri->GetSpec(entryuriC);
 
     nsCOMPtr<nsIRDFResource> entry;
-    rv = mDirRDF->GetResource(entryuriC, getter_AddRefs(entry));
+    rv = mDirRDF->GetResource(entryuriC.get(), getter_AddRefs(entry));
     
-    nsString uriUnicode;
-    uriUnicode.AssignWithConversion(entryuriC);
+    NS_ConvertUTF8toUCS2 uriUnicode(entryuriC);
 
     nsCOMPtr<nsIRDFLiteral> URLVal;
     rv = mDirRDF->GetLiteral(uriUnicode.get(), getter_AddRefs(URLVal));
@@ -665,11 +664,8 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 
   // note: don't register DS here (singleton case)
 
-  nsXPIDLCString url;
-  rv = aBaseURL->GetSpec(getter_Copies(url));
+  rv = aBaseURL->GetSpec(mBaseURL);
   if (NS_FAILED(rv)) return rv;
-
-  mBaseURL.Assign(url);
   
   // Mark the base url as a container
   nsCOMPtr<nsIRDFResource> baseRes;
@@ -1014,7 +1010,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           rv = NS_NewURI(getter_AddRefs(url), uri.get());
           nsCOMPtr<nsIChannel>	channel;
           if (NS_SUCCEEDED(rv) && (url)) {
-            rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, nsnull);
+            rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, nsnull);
           }
           if (NS_SUCCEEDED(rv) && (channel)) {
             channel->SetNotificationCallbacks(httpIndex);
@@ -1410,7 +1406,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIChannel> channel;
-    rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, aLoadGroup);
+    rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, aLoadGroup);
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIStreamListener> listener;

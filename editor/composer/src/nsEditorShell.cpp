@@ -57,6 +57,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIStyleSheet.h"
 #include "nsIURI.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 
 #include "nsIWebNavigation.h"
@@ -1844,16 +1845,16 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
       if (url)
       {
         // Prefix filename with scheme so user can tell if editing a remote vs. local file
-        nsXPIDLCString schemeChar;
-        docFileSpec->GetScheme(getter_Copies(schemeChar));
-        nsXPIDLCString fileNameChar;
-        url->GetFileName(getter_Copies(fileNameChar));
+        nsCAutoString schemeChar;
+        docFileSpec->GetScheme(schemeChar);
+        nsCAutoString fileNameChar;
+        url->GetFileName(fileNameChar);
         if (fileNameChar.Length() > 0)
         {
           windowCaption += NS_LITERAL_STRING(" [") +
-                           NS_ConvertASCIItoUCS2(schemeChar) +
+                           NS_ConvertUTF8toUCS2(schemeChar) +
                            NS_LITERAL_STRING(":/.../") +
-                           NS_ConvertASCIItoUCS2(fileNameChar) +
+                           NS_ConvertUTF8toUCS2(fileNameChar) +
                            NS_LITERAL_STRING("]");
         }
       }

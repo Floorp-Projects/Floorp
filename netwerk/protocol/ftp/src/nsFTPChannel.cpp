@@ -93,9 +93,9 @@ nsFTPChannel::nsFTPChannel()
 nsFTPChannel::~nsFTPChannel()
 {
 #if defined(PR_LOGGING)
-    nsXPIDLCString spec;
-    mURL->GetSpec(getter_Copies(spec));
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() for %s", (const char*)spec));
+    nsCAutoString spec;
+    mURL->GetAsciiSpec(spec);
+    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() for %s", spec.get()));
 #endif
     NS_IF_RELEASE(mFTPState);
     if (mLock) PR_DestroyLock(mLock);
@@ -128,7 +128,7 @@ nsFTPChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo, nsICacheSession* sessio
     mURL = uri;
     mProxyInfo = proxyInfo;
 
-    rv = mURL->GetHost(getter_Copies(mHost));
+    rv = mURL->GetAsciiHost(mHost);
     if (NS_FAILED(rv)) return rv;
 
     if (!mLock) {
@@ -170,12 +170,10 @@ NS_IMETHODIMP
 nsFTPChannel::GetName(PRUnichar* *result)
 {
     nsresult rv;
-    nsXPIDLCString urlStr;
-    rv = mURL->GetSpec(getter_Copies(urlStr));
+    nsCAutoString urlStr;
+    rv = mURL->GetSpec(urlStr);
     if (NS_FAILED(rv)) return rv;
-    nsString name;
-    name.AppendWithConversion(urlStr);
-    *result = ToNewUnicode(name);
+    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -280,13 +278,13 @@ nsFTPChannel::GenerateCacheKey(nsACString &cacheKey)
 {
     cacheKey.SetLength(0);
     
-    nsXPIDLCString spec;
-    mURL->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    mURL->GetAsciiSpec(spec);
 
     // Strip any trailing #ref from the URL before using it as the key
-    const char *p = PL_strchr(spec, '#');
+    const char *p = strchr(spec.get(), '#');
     if (p)
-        cacheKey.Append(spec, p - spec);
+        cacheKey.Append(Substring(spec, 0, p - spec.get()));
     else
         cacheKey.Append(spec);
     return NS_OK;

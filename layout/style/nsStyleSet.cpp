@@ -363,8 +363,8 @@ StyleSetImpl::StyleSetImpl()
   NS_INIT_REFCNT();
   if (gInstances++ == 0)
   {
-    const char kQuirk_href[] = "resource:/res/quirk.css";
-    NS_NewURI (&gQuirkURI, kQuirk_href);
+    static const char kQuirk_href[] = "resource:/res/quirk.css";
+    NS_NewURI (&gQuirkURI, NS_LITERAL_CSTRING(kQuirk_href));
     NS_ASSERTION (gQuirkURI != 0, "Cannot allocate nsStyleSetImpl::gQuirkURI");
   }
 }

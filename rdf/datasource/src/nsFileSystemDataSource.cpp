@@ -66,8 +66,8 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIURL.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
-#include "nsIFileChannel.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"
 #include "nsEscape.h"
@@ -248,7 +248,7 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
 
     nsCOMPtr<nsILocalFile> aDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID); 
 
-    rv = NS_InitFileFromURLSpec(aDir, uri);
+    rv = NS_InitFileFromURLSpec(aDir, nsDependentCString(uri));
     if (NS_FAILED(rv)) return(PR_FALSE);
 
     PRBool isDirFlag = PR_FALSE;
@@ -1276,7 +1276,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
         return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
-    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), parentURI)))
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), nsDependentCString(parentURI))))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
@@ -1401,7 +1401,7 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
         return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
-    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), nsDependentCString(uri))))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
@@ -1450,7 +1450,7 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
         return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
-    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), nsDependentCString(uri))))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
@@ -1512,7 +1512,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
         return(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIURI>    aIURI;
-    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), nsDependentCString(uri))))
         return(rv);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);

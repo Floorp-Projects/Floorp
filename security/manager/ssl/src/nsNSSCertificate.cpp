@@ -3768,7 +3768,7 @@ nsNSSCertificateDB::ImportCrl (char *aData, PRUint32 aLength, nsIURI * aURI, PRU
   CERTSignedData sd;
   SECStatus sec_rv;
   CERTSignedCrl *crl;
-  nsXPIDLCString url;
+  nsCAutoString url;
   nsCOMPtr<nsICrlEntry> crlEntry;
   PRBool importSuccessful;
   PRInt32 errorCode;
@@ -3777,7 +3777,7 @@ nsNSSCertificateDB::ImportCrl (char *aData, PRUint32 aLength, nsIURI * aURI, PRU
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv)) return rv;
 	         
-  aURI->GetSpec(getter_Copies(url));
+  aURI->GetSpec(url);
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena) {
     goto loser;

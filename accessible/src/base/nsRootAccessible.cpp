@@ -586,15 +586,15 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAWritableString& aURL)
   GetDocShellFromPS(presShell, getter_AddRefs(docShell));
 
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(docShell));
-  nsXPIDLCString theURL;
+  nsCAutoString theURL;
   if (webNav) {
     nsCOMPtr<nsIURI> pURI;
     webNav->GetCurrentURI(getter_AddRefs(pURI));
     if (pURI) 
-      pURI->GetSpec(getter_Copies(theURL));
+      pURI->GetSpec(theURL);
   }
   //XXXaaronl Need to use CopyUTF8toUCS2(nsDependentCString(theURL), aURL); when it's written
-  aURL.Assign(NS_ConvertUTF8toUCS2(theURL).get()); 
+  aURL.Assign(NS_ConvertUTF8toUCS2(theURL)); 
   return NS_OK;
 }
 

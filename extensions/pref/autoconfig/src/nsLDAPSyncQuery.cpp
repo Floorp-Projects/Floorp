@@ -386,8 +386,8 @@ nsresult nsLDAPSyncQuery::InitConnection()
 
     // host to connect to
     //
-    nsXPIDLCString host;
-    rv = mServerURL->GetHost(getter_Copies(host));
+    nsCAutoString host;
+    rv = mServerURL->GetAsciiHost(host);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_FAILURE;
@@ -416,7 +416,7 @@ nsresult nsLDAPSyncQuery::InitConnection()
         return NS_ERROR_FAILURE;
     }
 
-    rv = mConnection->Init(host, port, 0, selfProxy);
+    rv = mConnection->Init(host.get(), port, 0, selfProxy);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_UNEXPECTED; // this should never happen

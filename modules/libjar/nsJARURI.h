@@ -22,6 +22,7 @@
 #include "nsIJARURI.h"
 #include "nsISerializable.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 #define NS_JARURI_CID                                \
 { /* 0xc7e410d7-0x85f2-11d3-9f63-006008a6efe9 */     \
@@ -43,15 +44,13 @@ public:
     nsJARURI();
     virtual ~nsJARURI();
    
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-    nsresult Init();
-    nsresult FormatSpec(const char* entryPath, char* *result);
+    nsresult Init(const char *charsetHint);
+    nsresult FormatSpec(const nsACString &entryPath, nsACString &result);
 
 protected:
     nsCOMPtr<nsIURI> mJARFile;
-    char *mJAREntry;
+    nsCString        mJAREntry;
+    nsCString        mCharsetHint;
 };
 
 #endif // nsJARURI_h__

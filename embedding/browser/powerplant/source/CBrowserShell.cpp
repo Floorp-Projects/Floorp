@@ -206,10 +206,10 @@ NS_IMETHODIMP CBrowserShellProgressListener::OnLocationChange(nsIWebProgress *aW
 {
     NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
     
-    nsXPIDLCString spec;
+    nsCAutoString spec;
     
 	if (location)
-		location->GetSpec(getter_Copies(spec));
+		location->GetSpec(spec);
 		
 	MsgLocationChangeInfo info(mpOwner, spec.get());
     mpOwner->BroadcastMessage(msg_OnLocationChange, &info);
@@ -962,10 +962,8 @@ NS_METHOD CBrowserShell::GetCurrentURL(nsACString& urlText)
     nsCOMPtr<nsIURI> currentURI;
     rv = mWebBrowserAsWebNav->GetCurrentURI(getter_AddRefs(currentURI));
     if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString urlPath;
-    rv = currentURI->GetSpec(getter_Copies(urlPath));
+    rv = currentURI->GetSpec(urlText);
     if (NS_FAILED(rv)) return rv;
-    urlText.Assign(urlPath.get());
     
     return NS_OK;
 }

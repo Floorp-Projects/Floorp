@@ -444,11 +444,10 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
 
       // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
       // passed a zero length rel path.
-      nsXPIDLCString relPath;
-      docURL->GetSpec(getter_Copies(relPath));
-      NS_ASSERTION(relPath, "Rel path couldn't be formed in form submit!\n");
-      if (relPath) {
-        href.AppendWithConversion(relPath);
+      nsCAutoString relPath;
+      docURL->GetSpec(relPath);
+      if (!relPath.IsEmpty()) {
+        href = NS_ConvertUTF8toUCS2(relPath);
 
         // If re-using the same URL, chop off old query string (bug 25330)
         PRInt32 queryStart = href.FindChar('?');
@@ -456,6 +455,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
           href.Truncate(queryStart);
         }
       } else {
+        NS_ERROR("Rel path couldn't be formed in form submit!\n");
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
@@ -464,7 +464,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     nsCOMPtr<nsIURI> actionURL;
     nsXPIDLCString scheme;
     PRBool isJSURL = PR_FALSE;
-    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL))) {
+    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, nsnull, docURL))) {
       result = actionURL->SchemeIs("javascript", &isJSURL);
     }
     // Append the URI encoded variable/value pairs for GET's

@@ -312,9 +312,9 @@ nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt, nsre
   	{
       nsCOMPtr<nsIURI> channelURI;
       aChannel->GetURI(getter_AddRefs(channelURI));
-      nsXPIDLCString str;
-      channelURI->GetSpec(getter_Copies(str));
-      printf("Failed to load XBL document %s\n", (const char*)str);
+      nsCAutoString str;
+      channelURI->GetAsciiSpec(str);
+      printf("Failed to load XBL document %s\n", str.get());
   	}
 
     PRUint32 count = mBindingRequests.Count();
@@ -377,9 +377,9 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     doc->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIURI> uri;
     mBindingDocument->GetDocumentURL(getter_AddRefs(uri));
-    nsXPIDLCString str;
-    uri->GetSpec(getter_Copies(str));
-    bindingManager->RemoveLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, str)));
+    nsCAutoString str;
+    uri->GetSpec(str);
+    bindingManager->RemoveLoadingDocListener(str);
 
     nsCOMPtr<nsIContent> root;
     mBindingDocument->GetRootContent(getter_AddRefs(root));
@@ -392,7 +392,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIXBLDocumentInfo> info;
     nsCOMPtr<nsIBindingManager> xblDocBindingManager;
     mBindingDocument->GetBindingManager(getter_AddRefs(xblDocBindingManager));
-    xblDocBindingManager->GetXBLDocumentInfo(nsCAutoString(NS_STATIC_CAST(const char*, str)), getter_AddRefs(info));
+    xblDocBindingManager->GetXBLDocumentInfo(str, getter_AddRefs(info));
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
       NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
@@ -1047,13 +1047,12 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
       if (hasExtends && (hasDisplay || nameSpace.IsEmpty())) {
         // Look up the prefix.
         // We have a base class binding. Load it right now.
-        nsCAutoString urlCString; urlCString.AssignWithConversion(value);
+        NS_ConvertUCS2toUTF8 urlCString(value);
         nsCOMPtr<nsIURI> docURI;
         doc->GetDocumentURL(getter_AddRefs(docURI));
-        nsXPIDLCString urlStr;
-        docURI->Resolve(urlCString.get(), getter_Copies(urlStr));
-        urlCString = urlStr.get();
-        if (NS_FAILED(GetBindingInternal(aBoundElement, urlCString, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
+        nsCAutoString urlStr;
+        docURI->Resolve(urlCString, urlStr);
+        if (NS_FAILED(GetBindingInternal(aBoundElement, urlStr, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
           return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
         if (!aPeekOnly) {
           // Make sure to set the base prototype.
@@ -1141,7 +1140,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
       // Finally, if all lines of defense fail, we go and fetch the binding
       // document.
       nsCOMPtr<nsIURI> uri;
-      rv = NS_NewURI(getter_AddRefs(uri), aURLStr.get());
+      rv = NS_NewURI(getter_AddRefs(uri), aURLStr);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a url");
 
       nsCOMPtr<nsIDocument> document;
@@ -1206,7 +1205,7 @@ nsXBLService::FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult)
   // Create an XML content sink and a parser. 
   nsCOMPtr<nsIRequest> request;
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, nsnull);
+  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStreamListener> listener;
@@ -1310,7 +1309,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     aBoundDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
   nsCOMPtr<nsIRequest> request;
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup);
+  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIAtom> tagName;
@@ -1350,10 +1349,10 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     nsCOMPtr<nsIBindingManager> bindingManager;
     if (aBoundDocument)
       aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
-    nsXPIDLCString uri;
-    aURI->GetSpec(getter_Copies(uri));
+    nsCAutoString uri;
+    aURI->GetSpec(uri);
     if (bindingManager)
-      bindingManager->PutLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, uri)), xblListener);
+      bindingManager->PutLoadingDocListener(uri, xblListener);
 
     // Add our request.
     nsCAutoString bindingURI(uri);

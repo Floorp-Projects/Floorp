@@ -38,6 +38,7 @@
 #include "nsIndexedToHTML.h"
 #include "nsNetUtil.h"
 #include "nsIStringStream.h"
+#include "nsIFileURL.h"
 #include "nsEscape.h"
 #include "nsIDirIndex.h"
 #include "prtime.h"
@@ -121,11 +122,10 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mParser->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString tmp;
-    rv = uri->GetSpec(getter_Copies(tmp));
+    nsCAutoString baseUri;
+    rv = uri->GetAsciiSpec(baseUri);
     if (NS_FAILED(rv)) return rv;
 
-    nsCString baseUri(tmp);
     nsCString parentStr;
 
     // XXX - should be using the 300: line from the parser.
@@ -162,8 +162,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         rv = fileUrl->GetFile(getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
         
-        nsXPIDLCString url;
-        rv = NS_GetURLSpecFromFile(file, getter_Copies(url));
+        nsCAutoString url;
+        rv = NS_GetURLSpecFromFile(file, url);
         if (NS_FAILED(rv)) return rv;
         baseUri.Assign(url);
         
@@ -171,7 +171,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         rv = file->GetParent(getter_AddRefs(parent));
         if (NS_FAILED(rv)) return rv;
         if (parent) {
-            NS_GetURLSpecFromFile(parent, getter_Copies(url));
+            NS_GetURLSpecFromFile(parent, url);
             if (NS_FAILED(rv)) return rv;
             parentStr.Assign(url);
         }

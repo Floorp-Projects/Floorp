@@ -140,8 +140,8 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         request->Cancel(NS_BINDING_ABORTED);
 
         if (uri) {
-            nsXPIDLCString spec;
-            rv = uri->GetSpec(getter_Copies(spec));
+            nsCAutoString spec;
+            rv = uri->GetSpec(spec);
             if (NS_FAILED(rv))
                 return NS_ERROR_NULL_POINTER;
 
@@ -153,7 +153,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
                 if (globalObject)
                 {
                     PRBool value;
-                    rv = StartSoftwareUpdate(globalObject, NS_ConvertASCIItoUCS2(spec), 0, &value);
+                    rv = StartSoftwareUpdate(globalObject, NS_ConvertUTF8toUCS2(spec), 0, &value);
 
                     if (NS_SUCCEEDED(rv) && value)
                         return NS_OK;

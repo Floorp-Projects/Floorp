@@ -539,11 +539,11 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest * aRequest, const char * fil
       nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
       if (url)
       {
-        nsXPIDLCString fileExt;
-        rv = url->GetFileExtension(getter_Copies(fileExt));
-        if (NS_SUCCEEDED(rv) && *(fileExt.get()))
+        nsCAutoString fileExt;
+        rv = url->GetFileExtension(fileExt);
+        if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty())
         {
-          rv = mimeService->GetTypeFromExtension(fileExt, getter_Copies(contentType));
+          rv = mimeService->GetTypeFromExtension(fileExt.get(), getter_Copies(contentType));
           if (NS_SUCCEEDED(rv) && *(contentType.get()))
           mContentType = contentType;
         }

@@ -108,9 +108,9 @@ protected:
         ~nsIURIKey(void) {}
   
         PRUint32 HashCode(void) const {
-            nsXPIDLCString spec;
-            mKey->GetSpec(getter_Copies(spec));
-            return (PRUint32) PL_HashString(spec);
+            nsCAutoString spec;
+            mKey->GetSpec(spec);
+            return (PRUint32) PL_HashString(spec.get());
         }
 
         PRBool Equals(const nsHashKey *aKey) const {
@@ -311,10 +311,10 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
     nsCOMPtr<nsIURI> uri;
     doc->GetDocumentURL(getter_AddRefs(uri));
 
-    nsXPIDLCString str;
-    uri->GetSpec(getter_Copies(str));
+    nsCAutoString str;
+    uri->GetSpec(str);
     
-    nsCStringKey key((const char*)str);
+    nsCStringKey key(str.get());
     nsCOMPtr<nsIXBLDocumentInfo> info = getter_AddRefs(NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)));
     if (!info)
         mXBLDocTable.Put(&key, aDocumentInfo);
@@ -367,9 +367,9 @@ PRBool PR_CALLBACK FlushSkinXBL(nsHashKey* aKey, void* aData, void* aClosure)
   docInfo->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIURI> uri;
   doc->GetDocumentURL(getter_AddRefs(uri));
-  nsXPIDLCString str;
-  uri->GetPath(getter_Copies(str));
-  if (!PL_strncmp(str.get(), "/skin", 5)) {
+  nsCAutoString str;
+  uri->GetPath(str);
+  if (!strncmp(str.get(), "/skin", 5)) {
     // This is a skin binding. Add the key to the list.
     nsHashKeys* list = (nsHashKeys*)aClosure;
     list->AppendKey(aKey);
@@ -382,9 +382,9 @@ PRBool PR_CALLBACK FlushSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
   nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)aData;
   nsCOMPtr<nsIURI> uri;
   sheet->GetURL(*getter_AddRefs(uri));
-  nsXPIDLCString str;
-  uri->GetPath(getter_Copies(str));
-  if (!PL_strncmp(str.get(), "/skin", 5)) {
+  nsCAutoString str;
+  uri->GetPath(str);
+  if (!strncmp(str.get(), "/skin", 5)) {
     // This is a skin binding. Add the key to the list.
     nsHashKeys* list = (nsHashKeys*)aClosure;
     list->AppendKey(aKey);

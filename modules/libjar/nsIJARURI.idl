@@ -18,6 +18,10 @@
 
 #include "nsIURI.idl"
 
+%{C++
+#include "nsAString.h"
+%}
+
 /**
  * JAR URLs have the following syntax
  *
@@ -38,5 +42,5 @@ interface nsIJARURI : nsIURI {
      * Returns the entry specified for this JAR URI.
      * eg ocean.html
      */
-    attribute string JAREntry;
+    attribute AUTF8String JAREntry;
 };

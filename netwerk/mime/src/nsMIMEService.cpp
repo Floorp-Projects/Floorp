@@ -39,7 +39,7 @@
 #include "nsReadableUtils.h"
 #include "nsMIMEInfoImpl.h"
 #include "nsIURL.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
@@ -134,8 +134,8 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     #ifdef XP_MAC
     	if ( NS_SUCCEEDED( rv ) )
     	{
-    		nsXPIDLCString fileExt;
-        url->GetFileExtension(getter_Copies(fileExt));
+    		nsCAutoString fileExt;
+   			url->GetFileExtension(fileExt);
         
     		nsresult rv2;
     		nsCOMPtr<nsIFileURL> fileurl = do_QueryInterface( url, &rv2 );
@@ -146,37 +146,32 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     			if ( NS_SUCCEEDED( rv2 ) )
     			{
     				rv2 = GetTypeFromFile( file, aContentType );
-						if( NS_SUCCEEDED ( rv2 ) )
-							return rv2;
-					}			
+					if( NS_SUCCEEDED ( rv2 ) )
+						return rv2;
+				}			
+    		}
     	}
-    }
     #endif
     
     if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString ext;
-        rv = url->GetFileExtension(getter_Copies(ext));
+        nsCAutoString ext;
+        rv = url->GetFileExtension(ext);
         if (NS_FAILED(rv)) return rv;
-        rv = GetTypeFromExtension(ext, aContentType);
+        rv = GetTypeFromExtension(ext.get(), aContentType);
         return rv;
     }
 
-    nsXPIDLCString cStrSpec;
+    nsCAutoString specStr;
     // no url, let's give the raw spec a shot
-    rv = aURI->GetSpec(getter_Copies(cStrSpec));
+    rv = aURI->GetAsciiSpec(specStr);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString specStr; specStr.AssignWithConversion(cStrSpec);
-
     // find the file extension (if any)
-    nsAutoString extStr;
+    nsCAutoString extStr;
     PRInt32 extLoc = specStr.RFindChar('.');
     if (-1 != extLoc) {
         specStr.Right(extStr, specStr.Length() - extLoc - 1);
-        char *ext = ToNewCString(extStr);
-        if (!ext) return NS_ERROR_OUT_OF_MEMORY;
-        rv = GetTypeFromExtension(ext, aContentType);
-        nsMemory::Free(ext);
+        rv = GetTypeFromExtension(extStr.get(), aContentType);
     }
     else
         return NS_ERROR_FAILURE;

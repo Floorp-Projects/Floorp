@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Gagan Saksena <gagan@netscape.com>
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -48,6 +49,7 @@
 #include "nsNetCID.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
@@ -58,16 +60,12 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // nsSimpleURI methods:
 
 nsSimpleURI::nsSimpleURI(nsISupports* outer)
-    : mScheme(nsnull),
-      mPath(nsnull)
 {
     NS_INIT_AGGREGATED(outer);
 }
 
 nsSimpleURI::~nsSimpleURI()
 {
-    if (mScheme) nsCRT::free(mScheme);
-    if (mPath)   nsCRT::free(mPath);
 }
 
 NS_IMPL_AGGREGATED(nsSimpleURI);
@@ -100,11 +98,15 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
 {
     nsresult rv;
 
-    rv = aStream->ReadStringZ(&mScheme);
-    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString buf;
 
-    rv = aStream->ReadStringZ(&mPath);
+    rv = aStream->ReadStringZ(getter_Copies(buf));
     if (NS_FAILED(rv)) return rv;
+    mScheme = buf;
+
+    rv = aStream->ReadStringZ(getter_Copies(buf));
+    if (NS_FAILED(rv)) return rv;
+    mPath = buf;
 
     return NS_OK;
 }
@@ -114,10 +116,10 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 {
     nsresult rv;
 
-    rv = aStream->WriteStringZ(mScheme);
+    rv = aStream->WriteStringZ(mScheme.get());
     if (NS_FAILED(rv)) return rv;
 
-    rv = aStream->WriteStringZ(mPath);
+    rv = aStream->WriteStringZ(mPath.get());
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -127,127 +129,116 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 // nsIURI methods:
 
 NS_IMETHODIMP
-nsSimpleURI::GetSpec(char* *result)
+nsSimpleURI::GetSpec(nsACString &result)
 {
-    nsAutoString string;
-//    NS_LOCK_INSTANCE();
-
-      // STRING USE WARNING: perhaps |string| should be |nsCAutoString|? -- scc
-    string.AssignWithConversion(mScheme);
-    string.Append(PRUnichar(':'));
-    string.AppendWithConversion(mPath);
-
-//    NS_UNLOCK_INSTANCE();
-    *result = ToNewCString(string);
+    result = mScheme + NS_LITERAL_CSTRING(":") + mPath;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetSpec(const char* aSpec)
+nsSimpleURI::SetSpec(const nsACString &aSpec)
 {
-    nsAutoString spec;
-    spec.AssignWithConversion(aSpec);
+    nsCAutoString spec;
+
+    // nsSimpleURI currently restricts the charset to US-ASCII
+    NS_EscapeURL(PromiseFlatCString(aSpec), esc_OnlyNonASCII|esc_AlwaysCopy, spec);
 
     PRInt32 pos = spec.Find(":");
     if (pos == -1)
         return NS_ERROR_FAILURE;
-    nsAutoString scheme;
-    PRInt32 n = spec.Left(scheme, pos);
+
+    mScheme.Truncate();
+    mPath.Truncate();
+
+    PRInt32 n = spec.Left(mScheme, pos);
     NS_ASSERTION(n == pos, "Left failed");
-    nsAutoString path;
+
     PRInt32 count = spec.Length() - pos - 1;
-    n = spec.Mid(path, pos + 1, count);
+    n = spec.Mid(mPath, pos + 1, count);
     NS_ASSERTION(n == count, "Mid failed");
-    if (mScheme) 
-        nsCRT::free(mScheme);
-    mScheme = ToNewCString(scheme);
-    if (mScheme == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    ToLowerCase(mScheme);
-    if (mPath)   
-        nsCRT::free(mPath);
-    mPath = ToNewCString(path);
-    if (mPath == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
 
-NS_IMETHODIMP
-nsSimpleURI::GetScheme(char* *result)
-{
-    *result = nsCRT::strdup(mScheme);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::SetScheme(const char* scheme)
-{
-    if (mScheme) nsCRT::free(mScheme);
-    mScheme = nsCRT::strdup(scheme);
     ToLowerCase(mScheme);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetPrePath(char* *result)
+nsSimpleURI::GetScheme(nsACString &result)
 {
-    nsCAutoString prePath(mScheme);
-    prePath += ":";
-    *result = ToNewCString(prePath);
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    result = mScheme;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetPrePath(const char* scheme)
+nsSimpleURI::SetScheme(const nsACString &scheme)
 {
-    NS_NOTREACHED("nsSimpleURI::SetPrePath");
-    return NS_ERROR_NOT_IMPLEMENTED; 
+    mScheme = scheme;
+    ToLowerCase(mScheme);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetPreHost(char* *result)
+nsSimpleURI::GetPrePath(nsACString &result)
 {
-    return NS_ERROR_FAILURE;
+    result = mScheme + NS_LITERAL_CSTRING(":");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetPreHost(const char* preHost)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::GetUsername(char* *result)
+nsSimpleURI::GetUserPass(nsACString &result)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetUsername(const char* userName)
+nsSimpleURI::SetUserPass(const nsACString &userPass)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetPassword(char* *result)
+nsSimpleURI::GetUsername(nsACString &result)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetPassword(const char* password)
+nsSimpleURI::SetUsername(const nsACString &userName)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetHost(char* *result)
+nsSimpleURI::GetPassword(nsACString &result)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetHost(const char* host)
+nsSimpleURI::SetPassword(const nsACString &password)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::GetHostPort(nsACString &result)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::SetHostPort(const nsACString &result)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::GetHost(nsACString &result)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::SetHost(const nsACString &host)
 {
     return NS_ERROR_FAILURE;
 }
@@ -265,17 +256,16 @@ nsSimpleURI::SetPort(PRInt32 port)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetPath(char* *result)
+nsSimpleURI::GetPath(nsACString &result)
 {
-    *result = nsCRT::strdup(mPath);
+    result = mPath;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetPath(const char* path)
+nsSimpleURI::SetPath(const nsACString &path)
 {
-    if (mPath) nsCRT::free(mPath);
-    mPath = nsCRT::strdup(path);
+    mPath = path;
     return NS_OK;
 }
 
@@ -284,17 +274,15 @@ nsSimpleURI::Equals(nsIURI* other, PRBool *result)
 {
     PRBool eq = PR_FALSE;
     if (other) {
-//        NS_LOCK_INSTANCE();
         nsSimpleURI* otherUrl;
         nsresult rv =
             other->QueryInterface(kThisSimpleURIImplementationCID,
                                   (void**)&otherUrl);
         if (NS_SUCCEEDED(rv)) {
-            eq = PRBool((0 == PL_strcmp(mScheme, otherUrl->mScheme)) && 
-                        (0 == PL_strcmp(mPath, otherUrl->mPath)));
+            eq = PRBool((0 == strcmp(mScheme.get(), otherUrl->mScheme.get())) && 
+                        (0 == strcmp(mPath.get(), otherUrl->mPath.get())));
             NS_RELEASE(otherUrl);
         }
-//        NS_UNLOCK_INSTANCE();
     }
     *result = eq;
     return NS_OK;
@@ -306,9 +294,11 @@ nsSimpleURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
     NS_ENSURE_ARG_POINTER(o_Equals);
     if (!i_Scheme) return NS_ERROR_NULL_POINTER;
 
+    const char *this_scheme = mScheme.get();
+
     // mScheme is guaranteed to be lower case.
-    if (*i_Scheme == *mScheme || *i_Scheme == (*mScheme - ('a' - 'A')) ) {
-        *o_Equals = PL_strcasecmp(mScheme, i_Scheme) ? PR_FALSE : PR_TRUE;
+    if (*i_Scheme == *this_scheme || *i_Scheme == (*this_scheme - ('a' - 'A')) ) {
+        *o_Equals = PL_strcasecmp(this_scheme, i_Scheme) ? PR_FALSE : PR_TRUE;
     } else {
         *o_Equals = PR_FALSE;
     }
@@ -322,21 +312,44 @@ nsSimpleURI::Clone(nsIURI* *result)
     nsSimpleURI* url = new nsSimpleURI(nsnull);     // XXX outer?
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    url->mScheme = nsCRT::strdup(mScheme);
-    if (url->mScheme == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mPath = nsCRT::strdup(mPath);
-    if (url->mPath == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+
+    url->mScheme = mScheme;
+    url->mPath = mPath;
+
     *result = url;
     NS_ADDREF(url);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::Resolve(const char *relativePath, char **result) 
+nsSimpleURI::Resolve(const nsACString &relativePath, nsACString &result) 
 {
-    return DupString(result,(char*)relativePath);
+    result = relativePath;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::GetAsciiSpec(nsACString &result)
+{
+    nsCAutoString buf;
+    nsresult rv = GetSpec(buf);
+    if (NS_FAILED(rv)) return rv;
+    NS_EscapeURL(buf, esc_OnlyNonASCII|esc_AlwaysCopy, result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::GetAsciiHost(nsACString &result)
+{
+    result.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::GetOriginCharset(nsACString &result)
+{
+    result.Truncate();
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

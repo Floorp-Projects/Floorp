@@ -170,7 +170,7 @@ nsStringBundle::LoadProperties()
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL.get());
+  rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL);
   if (NS_FAILED(rv)) return rv;
 
   //   create and loader, then wait
@@ -198,7 +198,7 @@ nsStringBundle::LoadProperties()
 
  // do it synchronously
  nsCOMPtr<nsIURI> uri;
- rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL.get());
+ rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL);
  if (NS_FAILED(rv)) return rv;
 
  nsCOMPtr<nsIInputStream> in;

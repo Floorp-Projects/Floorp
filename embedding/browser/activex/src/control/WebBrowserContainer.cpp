@@ -155,9 +155,9 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
                 rv = channel->GetURI(getter_AddRefs(uri));
                 if (NS_SUCCEEDED(rv))
                 {
-                    nsXPIDLCString aURI;
-                    uri->GetSpec(getter_Copies(aURI));
-                    NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Start(..., %s, \"\")\n"), A2CT(aURI));
+                    nsCAutoString aURI;
+                    uri->GetAsciiSpec(aURI);
+                    NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Start(..., %s, \"\")\n"), A2CT(aURI.get()));
                 }
             }
 
@@ -188,12 +188,12 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
             rv = aChannel->GetURI(getter_AddRefs(pURI));
             if (NS_FAILED(rv)) return rv;
 
-            nsXPIDLCString aURI;
-            rv = pURI->GetSpec(getter_Copies(aURI));
+            nsCAutoString aURI;
+            rv = pURI->GetAsciiSpec(aURI);
             if (NS_FAILED(rv)) return rv;
 
             USES_CONVERSION;
-            BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI)); 
+            BSTR bstrURI = SysAllocString(A2OLE(aURI.get())); 
                 
             // Fire a DocumentComplete event
             CComVariant vURI(bstrURI);
@@ -219,15 +219,15 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 
         if (progressStateFlags & STATE_STOP)
         {
-            nsXPIDLCString aURI;
+            nsCAutoString aURI;
             if (m_pCurrentURI)
             {
-                m_pCurrentURI->GetSpec(getter_Copies(aURI));
+                m_pCurrentURI->GetAsciiSpec(aURI);
             }
 
             // Fire a NavigateComplete event
             USES_CONVERSION;
-            BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI));
+            BSTR bstrURI = SysAllocString(A2OLE(aURI.get()));
             m_pEvents1->Fire_NavigateComplete(bstrURI);
 
             // Fire a NavigateComplete2 event
@@ -324,8 +324,8 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
     NG_ASSERT(m_pCurrentURI);
     m_pCurrentURI->AddRef();
 
-    nsXPIDLCString aURI;
-    m_pCurrentURI->GetSpec(getter_Copies(aURI));
+    nsCAutoString aURI;
+    m_pCurrentURI->GetSpec(aURI);
 
     // Setup the post data
     CComVariant vPostDataRef;
@@ -336,7 +336,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
 
 
     // Fire a BeforeNavigate event
-    BSTR bstrURI = SysAllocString(A2OLE((const char *)aURI));
+    BSTR bstrURI = SysAllocString(A2OLE(aURI.get()));
     BSTR bstrTargetFrameName = NULL;
     BSTR bstrHeaders = NULL;
     VARIANT_BOOL bCancel = VARIANT_FALSE;

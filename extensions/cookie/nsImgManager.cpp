@@ -125,15 +125,15 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
                     if (NS_FAILED(rv) || !httpType) return rv;                    
                 }
 
-                nsXPIDLCString baseHost;
-                rv = baseURI->GetHost(getter_Copies(baseHost));
-                if (NS_FAILED(rv) || !baseHost) return rv;
+                nsCAutoString baseHost;
+                rv = baseURI->GetAsciiHost(baseHost);
+                if (NS_FAILED(rv)) return rv;
 
-                nsXPIDLCString host;
-                rv = aContentLoc->GetHost(getter_Copies(host));
-                if (NS_FAILED(rv) || !host) return rv;
+                nsCAutoString host;
+                rv = aContentLoc->GetAsciiHost(host);
+                if (NS_FAILED(rv)) return rv;
 
-                return ::IMAGE_CheckForPermission(host, baseHost,
+                return ::IMAGE_CheckForPermission(host.get(), baseHost.get(),
                                                   _retval);
             }
         }

@@ -50,6 +50,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURL.h"
+#include "nsIStandardURL.h"
 #include "nsNetUtil.h"
 #endif
 #ifndef NO_SUBSCRIPT_LOADER
@@ -266,7 +267,7 @@ EvalInSandbox(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         do_CreateInstance(kStandardURLContractID);
     if (!stdUrl ||
         NS_FAILED(stdUrl->Init(nsIStandardURL::URLTYPE_STANDARD, 80,
-                               URL8.get(), nsnull)) ||
+                               URL8, nsnull, nsnull)) ||
         !(iURL = do_QueryInterface(stdUrl))) {
         JS_ReportError(cx, "Can't create URL for evalInSandbox");
         return JS_FALSE;
@@ -1170,7 +1171,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 #ifdef XPCONNECT_STANDALONE
     localFile->GetPath(getter_Copies(displayPath));
 #else
-    NS_GetURLSpecFromFile(localFile, getter_Copies(displayPath));
+    NS_GetURLSpecFromFile(localFile, displayPath);
 #endif
     rv = localFile->OpenANSIFileDesc("r", &fileHandle);
     if (NS_FAILED(rv)) {

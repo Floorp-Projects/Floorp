@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,38 +59,46 @@
 [scriptable, uuid(d6116970-8034-11d3-9399-00104ba0fd40)]
 interface nsIURL : nsIURI
 {
-    ////////////////////////////////////////////////////////////////////////////
-    // The path attribute is broken down into the following attributes:
-    // filePath, param, query, and ref:
+    /*************************************************************************
+     * The URL path is broken down into the following principal components:
+     */
 
     /**
      * Returns a path including the directory and file portions of a
-     * URL. E.g. The filePath of "http://foo/bar.html#baz" is
-     * "/foo/bar.html". 
+     * URL.  For example, the filePath of "http://foo/bar.html#baz" is
+     * "/foo/bar.html".
+     *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    attribute string filePath;
+    attribute AUTF8String filePath;
 
     /**
      * Returns the parameters specified after the ; in the URL. 
      *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    attribute string param;
+    attribute AUTF8String param;
 
     /**
      * Returns the query portion (the part after the "?") of the URL.
      * If there isn't one, an empty string is returned.
+     *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    attribute string query;
+    attribute AUTF8String query;
 
     /**
      * Returns the reference portion (the part after the "#") of the URL.
      * If there isn't one, an empty string is returned.
+     *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    attribute string ref;
+    attribute AUTF8String ref;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // The filePath attribute is further broken down into the following
-    // attributes: directory, file:
+
+    /*************************************************************************
+     * The URL filepath is broken down into the following sub-components:
+     */
 
     /**
      * Returns the directory portion of a URL. 
@@ -102,8 +111,10 @@ interface nsIURL : nsIURI
      * And hence dont rely on this for something to be a definitely 
      * be a file. But you can get just the leading directory portion 
      * for sure.
+     *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    attribute string directory;
+    attribute AUTF8String directory;
 
     /**
      * Returns the file name portion of a URL.
@@ -113,68 +124,28 @@ interface nsIURL : nsIURI
      * empty string. Note that this is purely based on searching 
      * for the last trailing slash. And hence dont rely on this to 
      * be a definite file. 
+     *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    attribute string fileName;
+    attribute AUTF8String fileName;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // The fileName attribute is further broken down into the following
-    // attributes: fileName, fileExtension:
 
-    attribute string fileBaseName;
+    /*************************************************************************
+     * The URL filename is broken down even further:
+     */
 
     /**
-     * Returns the file extension portion of a filename in a url.
-     * If a file extension does not exist, the empty string is returned.
+     * Returns the file basename portion of a filename in a url.
+     *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    attribute string fileExtension;
+    attribute AUTF8String fileBaseName;
 
     /**
-     * Returns the query portion (the part after the "?") of the URL
-     * without unescaping the string.
-     * If there isn't one, an empty string is returned.
+     * Returns the file extension portion of a filename in a url.  If a file
+     * extension does not exist, the empty string is returned.
+     *
+     * ((( may contain unescaped UTF-8 characters )))
      */
-    readonly attribute string escapedQuery;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Protocol writers can obtain a default nsIURL implementation by calling the
- * component manager with NS_STANDARDURL_CID. The implementation returned will 
- * implement only the set of accessors specified by nsIURL. After obtaining the
- * instance from the component manager, the Init routine must be called on the
- * new instance to initialize it from the user's URL spec. 
- */
-
-[scriptable, uuid(8793370a-311f-11d4-9876-00c04fa0cf4a)]
-interface nsIStandardURL : nsISupports
-{
-    /**
-     * blah:foo/bar    => blah://foo/bar
-     * blah:/foo/bar   => blah:///foo/bar
-     * blah://foo/bar  => blah://foo/bar
-     * blah:///foo/bar => blah:///foo/bar
-     */
-    const unsigned long URLTYPE_STANDARD        = 1;
-
-    /**
-     * blah:foo/bar    => blah://foo/bar
-     * blah:/foo/bar   => blah://foo/bar
-     * blah://foo/bar  => blah://foo/bar
-     * blah:///foo/bar => blah://foo/bar
-     */
-    const unsigned long URLTYPE_AUTHORITY       = 2;
-
-    /**
-     * blah:foo/bar    => blah:///foo/bar
-     * blah:/foo/bar   => blah:///foo/bar
-     * blah://foo/bar  => blah://foo/bar
-     * blah:///foo/bar => blah:///foo/bar
-     */
-    const unsigned long URLTYPE_NO_AUTHORITY    = 3;
-
-    void init(in unsigned long urlType,
-              in long defaultPort,
-              in string initialSpec,
-              in nsIURI initialBaseURI);
+    attribute AUTF8String fileExtension;
 };

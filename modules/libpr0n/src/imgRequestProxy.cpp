@@ -30,6 +30,7 @@
 #include "nsAutoLock.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "ImageLogging.h"
 
@@ -141,20 +142,16 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 /* readonly attribute wstring name; */
 NS_IMETHODIMP imgRequestProxy::GetName(PRUnichar * *aName)
 {
-  nsAutoString name;
+  nsCAutoString name;
   if (mOwner) {
     nsCOMPtr<nsIURI> uri;
     mOwner->GetURI(getter_AddRefs(uri));
-    if (uri) {
-      nsXPIDLCString spec;
-      uri->GetSpec(getter_Copies(spec));
-      if (spec)
-        name.Append(NS_ConvertUTF8toUCS2(spec));
-    }
+    if (uri)
+      uri->GetSpec(name);
   }
 
-  *aName = nsCRT::strdup(name.get());
-  return NS_OK;
+  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
+  return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* boolean isPending (); */

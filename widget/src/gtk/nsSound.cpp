@@ -113,6 +113,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         const char *string)
 {
 
+#ifdef DEBUG
   // print a load error on bad status
   if (NS_FAILED(aStatus)) {
     if (aLoader) {
@@ -124,17 +125,15 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (channel) {
             channel->GetURI(getter_AddRefs(uri));
             if (uri) {
-                char* uriSpec;
-                uri->GetSpec(&uriSpec);
-#ifdef DEBUG
-                printf("Failed to load %s\n", uriSpec ? uriSpec : "");
-#endif
-                CRTFREEIF(uriSpec);
+                nsCAutoString uriSpec;
+                uri->GetSpec(uriSpec);
+                printf("Failed to load %s\n", uriSpec.get());
             }
         }
       }
     }
   }
+#endif
 
   int fd, mask = 0;
 

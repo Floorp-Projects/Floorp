@@ -53,8 +53,8 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
 {
   nsresult rv;
 
-  nsXPIDLCString specString;
-  rv = aURI->GetSpec(getter_Copies(specString));
+  nsCAutoString specString;
+  rv = aURI->GetSpec(specString);
 
   if (NS_FAILED(rv))
     return rv;
@@ -62,7 +62,7 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
   gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[OPEN_URI],
-		  (const char *)specString, &return_val);
+		  specString.get(), &return_val);
 
   *aAbortOpen = return_val;
 

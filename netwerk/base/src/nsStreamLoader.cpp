@@ -59,8 +59,8 @@ nsStreamLoader::Init(nsIURI* aURL,
   
   nsCOMPtr<nsIChannel> channel;
 
-  rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, aGroup,
-                  notificationCallbacks, loadAttributes);
+  rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, aGroup,
+                     notificationCallbacks, loadAttributes);
   if (NS_FAILED(rv)) return rv;
 
   if (referrer) {

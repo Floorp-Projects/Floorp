@@ -64,6 +64,7 @@
 #include "nsXPIDLString.h"
 #include "nsXULWindow.h"
 #include "nsWindowUtils.h"
+#include "nsReadableUtils.h"
 
 #include "nsAEUtils.h"
 
@@ -432,7 +433,10 @@ void nsWindowUtils::GetWindowUrlString(WindowPtr wind, char** outUrlStringPtr)
 	ThrowErrIfNil(sourceURL, paramErr);
 	
 	// Now get the string;
-	sourceURL->GetSpec(outUrlStringPtr);		
+	nsCAutoString spec;
+	sourceURL->GetSpec(spec);
+	
+	*outUrlStringPtr = ToNewCString(spec);		
 }
 
 

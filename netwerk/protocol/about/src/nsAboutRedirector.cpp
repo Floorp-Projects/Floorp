@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
+#include "nsString2.h"
 #include "plstr.h"
 #include "nsIScriptSecurityManager.h"
 
@@ -63,8 +64,8 @@ NS_IMETHODIMP
 nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     NS_ENSURE_ARG(aURI);
-    nsXPIDLCString path;
-    (void)aURI->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    (void)aURI->GetPath(path);
     nsresult rv;
     nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv))
@@ -73,10 +74,11 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
     static const char kChromePrefix[] = "chrome:";
     for (int i = 0; i< kRedirTotal; i++) 
     {
-        if (!PL_strcasecmp(path, kRedirMap[i][0]))
+        if (!PL_strcasecmp(path.get(), kRedirMap[i][0]))
         {
             nsCOMPtr<nsIChannel> tempChannel;
-             rv = ioService->NewChannel(kRedirMap[i][1], nsnull, getter_AddRefs(tempChannel));
+             rv = ioService->NewChannel(nsDependentCString(kRedirMap[i][1]),
+                                        nsnull, nsnull, getter_AddRefs(tempChannel));
              //-- If we're redirecting to a chrome URL, change the owner of the channel
              //   to keep the page from getting unnecessary privileges.
              if (NS_SUCCEEDED(rv) && result &&

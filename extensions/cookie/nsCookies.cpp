@@ -646,21 +646,19 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   if (cookie_list == nsnull) {
     return nsnull;
   }
-  char *host = nsnull;
-  char *path = nsnull;
-  PRUint32 start, end;
+  nsCAutoString host, path;
   // Get host and path
   nsresult result;
   NS_ASSERTION(ioService, "IOService not available");
-  result = ioService->ExtractUrlPart(address, nsIIOService::url_Host |
-                                     nsIIOService::url_Port, &start, &end, 
-                                     &host);
-  if (NS_FAILED(result) || !host) {
+  result = ioService->ExtractUrlPart(nsDependentCString(address),
+                                     nsIIOService::url_Host |
+                                     nsIIOService::url_Port, host);
+  if (NS_FAILED(result)) {
     return nsnull;
   }
-  result = ioService->ExtractUrlPart(address, nsIIOService::url_Path, 
-                                     &start, &end, &path);
-  if (NS_FAILED(result) || !path) {
+  result = ioService->ExtractUrlPart(nsDependentCString(address),
+                                     nsIIOService::url_Path, path);
+  if (NS_FAILED(result)) {
     return nsnull;
   }
 
@@ -671,25 +669,25 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
 
     /* check the host or domain first */
     if(cookie_s->isDomain) {
-      char *cp;
+      const char *cp;
 
       /* calculate the host length by looking at all characters up to a
        * colon or '\0'.  That way we won't include port numbers in domains
        */
-      for(cp=host; *cp != '\0' && *cp != ':'; cp++) {
+      for(cp=host.get(); *cp != '\0' && *cp != ':'; cp++) {
         ; /* null body */ 
       }
-      host_length = cp - host;
-      if(!cookie_IsInDomain(cookie_s->host, host, host_length)) {
+      host_length = cp - host.get();
+      if(!cookie_IsInDomain(cookie_s->host, (char*)host.get(), host_length)) {
         continue;
       }
-    } else if(PL_strcasecmp(host, cookie_s->host)) {
+    } else if(PL_strcasecmp(host.get(), cookie_s->host)) {
       /* hostname matchup failed. FAIL */
       continue;
     }
 
     /* shorter strings always come last so there can be no ambiquity */
-    if(cookie_s->path && !PL_strncmp(path, cookie_s->path, PL_strlen(cookie_s->path))) {
+    if(cookie_s->path && !PL_strncmp(path.get(), cookie_s->path, PL_strlen(cookie_s->path))) {
 
       /* if the cookie is secure and the path isn't, dont send it */
       if (cookie_s->isSecure & !isSecure) {
@@ -731,8 +729,6 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   }
 
   PR_FREEIF(name);
-  PR_FREEIF(path);
-  PR_FREEIF(host);
 
   /* may be nsnull */
   return(rv);
@@ -786,39 +782,39 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   if (!firstURL) {
     return PR_FALSE;
   }
-  char *curHost = nsnull;
-  char *firstHost = nsnull;
-  PRUint32 start,end;
+  nsCAutoString curHost, firstHost;
   nsresult rv;
   NS_ASSERTION(ioService, "IOService not available");
   // Get hosts
-  rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Host |
-                                 nsIIOService::url_Port, &start, &end, 
-                                 &curHost);
-  if (NS_FAILED(rv) || !curHost) {
+  rv = ioService->ExtractUrlPart(nsDependentCString(curURL),
+                                 nsIIOService::url_Host |
+                                 nsIIOService::url_Port,
+                                 curHost);
+  if (NS_FAILED(rv)) {
     return PR_FALSE;
   }
-  rv = ioService->ExtractUrlPart(firstURL, nsIIOService::url_Host |
-                                 nsIIOService::url_Port, &start, &end, 
-                                 &firstHost);
-  if (NS_FAILED(rv) || !firstHost) {
+  rv = ioService->ExtractUrlPart(nsDependentCString(firstURL),
+                                 nsIIOService::url_Host |
+                                 nsIIOService::url_Port,
+                                 firstHost);
+  if (NS_FAILED(rv)) {
     return PR_FALSE;
   }
   char * curHostColon = 0;
   char * firstHostColon = 0;
 
   /* strip ports */
-  curHostColon = PL_strchr(curHost, ':');
+  curHostColon = strchr(curHost.get(), ':');
   if(curHostColon) {
     *curHostColon = '\0';
   }
-  firstHostColon = PL_strchr(firstHost, ':');
+  firstHostColon = strchr(firstHost.get(), ':');
   if(firstHostColon) {
     *firstHostColon = '\0';
   }
 
   /* determine if it's foreign */
-  PRBool retval = (!cookie_SameDomain(curHost, firstHost));
+  PRBool retval = (!cookie_SameDomain((char*)curHost.get(), (char*)firstHost.get()));
 
   /* clean up our garbage and return */
   if(curHostColon) {
@@ -827,8 +823,6 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   if(firstHostColon) {
     *firstHostColon = ':';
   }
-  PR_FREEIF(curHost);
-  PR_FREEIF(firstHost);
   return retval;
 }
 
@@ -997,21 +991,21 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=nsnull, *host_from_header=nsnull;
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
-  char *cur_host = nsnull;
-  char *cur_path = nsnull;
-  PRUint32 start,end;
+  nsCAutoString cur_host, cur_path;
   nsresult rv;
   NS_ASSERTION(ioService, "IOService not available");
   // Get host and path
-  rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Host | 
-                                 nsIIOService::url_Port, &start, &end, 
-                                 &cur_host);
-  if (NS_FAILED(rv) || !cur_host) {
+  rv = ioService->ExtractUrlPart(nsDependentCString(curURL),
+                                 nsIIOService::url_Host | 
+                                 nsIIOService::url_Port,
+                                 cur_host);
+  if (NS_FAILED(rv)) {
     return;
   }
-  rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Path, 
-                                 &start, &end, &cur_path);
-  if (NS_FAILED(rv) || !cur_path) {
+  rv = ioService->ExtractUrlPart(nsDependentCString(curURL),
+                                 nsIIOService::url_Path, 
+                                 cur_path);
+  if (NS_FAILED(rv)) {
     return;
   }
   char *semi_colon, *ptr, *equal;
@@ -1031,16 +1025,12 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   }
 */
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
-    PR_Free(cur_path);
-    PR_Free(cur_host);
     return;
   }
 
 //printf("\nSetCookieString(URL '%s', header '%s') time %d == %s\n",curURL,setCookieHeader,timeToExpire,asctime(gmtime(&timeToExpire)));
   if(cookie_GetLifetimePref() == COOKIE_Discard) {
     if(cookie_GetLifetimeTime() < timeToExpire) {
-      PR_Free(cur_path);
-      PR_Free(cur_host);
       return;
     }
   }
@@ -1132,29 +1122,25 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
         /* did not pass two dot test. FAIL */
         PR_FREEIF(path_from_header);
         PR_Free(domain_from_header);
-        PR_Free(cur_path);
-        PR_Free(cur_host);
         // TRACEMSG(("DOMAIN failed two dot test"));
         nsCRT::free(setCookieHeaderInternal);
         return;
       }
 
       /* strip port numbers from the current host for the domain test */
-      colon = PL_strchr(cur_host, ':');
+      colon = strchr(cur_host.get(), ':');
       if(colon) {
         *colon = '\0';
       }
       domain_length   = PL_strlen(domain_from_header);
-      cur_host_length = PL_strlen(cur_host);
+      cur_host_length = cur_host.Length();
 
       /* check to see if the host is in the domain */
-      if (!cookie_IsInDomain(domain_from_header, cur_host, cur_host_length)) {
+      if (!cookie_IsInDomain(domain_from_header, (char*)cur_host.get(), cur_host_length)) {
           // TRACEMSG(("DOMAIN failed host within domain test."
 //        " Domain: %s, Host: %s", domain_from_header, cur_host));
         PR_FREEIF(path_from_header);
         PR_Free(domain_from_header);
-        PR_Free(cur_path);
-        PR_Free(cur_host);
         nsCRT::free(setCookieHeaderInternal);
         return;
       }
@@ -1180,16 +1166,14 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
         pref_scd = PR_FALSE;
       }
       if ( pref_scd == PR_TRUE ) {
-        cur_host[cur_host_length-domain_length] = '\0';
-        dot = PL_strchr(cur_host, '.');
-        cur_host[cur_host_length-domain_length] = '.';
+        cur_host.SetCharAt(cur_host_length-domain_length, '\0');
+        dot = strchr(cur_host.get(), '.');
+        cur_host.SetCharAt(cur_host_length-domain_length, '.');
         if (dot) {
         // TRACEMSG(("host minus domain failed no-dot test."
         //  " Domain: %s, Host: %s", domain_from_header, cur_host));
           PR_FREEIF(path_from_header);
           PR_Free(domain_from_header);
-          PR_Free(cur_path);
-          PR_Free(cur_host);
           nsCRT::free(setCookieHeaderInternal);
           return;
         }
@@ -1204,18 +1188,14 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   }
   if(!path_from_header) {
     /* strip down everything after the last slash to get the path. */
-    char * slash = PL_strrchr(cur_path, '/');
+    char * slash = PL_strrchr(cur_path.get(), '/');
     if(slash) {
       *slash = '\0';
     }
-    path_from_header = cur_path;
-  } else {
-    PR_Free(cur_path);
+    path_from_header = nsCRT::strdup(cur_path.get());
   }
   if(!host_from_header) {
-    host_from_header = cur_host;
-  } else {
-    PR_Free(cur_host);
+    host_from_header = nsCRT::strdup(cur_host.get());
   }
 
   /* keep cookies under the max bytes limit */
@@ -1387,12 +1367,12 @@ PUBLIC void
 COOKIE_SetCookieString(char * aURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
   nsCOMPtr<nsIURI> pFirstURL;
   nsresult rv;
-  nsXPIDLCString firstSpec;
+  nsCAutoString firstSpec;
 
   if (aHttpChannel) {
     rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return;
-    rv = pFirstURL->GetSpec(getter_Copies(firstSpec));
+    rv = pFirstURL->GetSpec(firstSpec);
     if (NS_FAILED(rv)) return;
   }
   COOKIE_SetCookieStringFromHttp(aURL, NS_CONST_CAST(char *, firstSpec.get()), aPrompter, setCookieHeader, 0, ioService, aHttpChannel);

@@ -913,7 +913,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         }
 
         nsCOMPtr<nsIURI> uri;
-        result = NS_NewURI(getter_AddRefs(uri), aSrc, aBaseURL);
+        result = NS_NewURI(getter_AddRefs(uri), aSrc, nsnull, aBaseURL);
         if (NS_FAILED(result)) return result;
 
         nsCOMPtr<nsIDocument> document;

@@ -151,19 +151,30 @@ nsCodebasePrincipal::GetURI(nsIURI **uri)
 NS_IMETHODIMP
 nsCodebasePrincipal::GetOrigin(char **origin) 
 {
-	nsXPIDLCString s;
-    if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s))))
-		return mURI->GetPrePath(origin);
+    nsresult rv;
+    nsCAutoString s;
+    if (NS_SUCCEEDED(mURI->GetHost(s)))
+        rv = mURI->GetPrePath(s);
+    else {
+        // Some URIs (e.g., nsSimpleURI) don't support host. Just
+        // get the full spec.
+        rv = mURI->GetSpec(s);
+    }
+    if (NS_FAILED(rv)) return rv;
 
-    // Some URIs (e.g., nsSimpleURI) don't support host. Just
-    // get the full spec.
-	return mURI->GetSpec(origin);
+    *origin = ToNewCString(s);
+    return *origin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
 nsCodebasePrincipal::GetSpec(char **spec) 
 {
-	return mURI->GetSpec(spec);
+    nsCAutoString buf;
+    nsresult rv = mURI->GetSpec(buf);
+    if (NS_FAILED(rv)) return rv;
+
+    *spec = ToNewCString(buf);
+    return *spec ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -189,44 +200,43 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
     nsCOMPtr<nsIURI> otherURI;
     if (NS_FAILED(otherCodebase->GetURI(getter_AddRefs(otherURI))))
         return NS_ERROR_FAILURE;
-    nsXPIDLCString otherScheme;
-    nsresult rv = otherURI->GetScheme(getter_Copies(otherScheme));
-    nsXPIDLCString myScheme;
+    nsCAutoString otherScheme;
+    nsresult rv = otherURI->GetScheme(otherScheme);
+    nsCAutoString myScheme;
     if (NS_SUCCEEDED(rv))
-        rv = mURI->GetScheme(getter_Copies(myScheme));
-    if (NS_SUCCEEDED(rv) && PL_strcmp(otherScheme, myScheme) == 0) 
-	{
-
-        if (PL_strcmp(otherScheme, "file") == 0)
+        rv = mURI->GetScheme(myScheme);
+    if (NS_SUCCEEDED(rv) && strcmp(otherScheme.get(), myScheme.get()) == 0) 
+    {
+        if (strcmp(otherScheme.get(), "file") == 0)
         {
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
         }
-        else if (PL_strcmp(otherScheme, "imap")    == 0 ||
-	             PL_strcmp(otherScheme, "mailbox") == 0 ||
-                 PL_strcmp(otherScheme, "news")    == 0) 
+        else if (strcmp(otherScheme.get(), "imap")    == 0 ||
+	             strcmp(otherScheme.get(), "mailbox") == 0 ||
+                 strcmp(otherScheme.get(), "news")    == 0) 
         {
             // Each message is a distinct trust domain; use the 
             // whole spec for comparison
-            nsXPIDLCString otherSpec;
-            if (NS_FAILED(otherURI->GetSpec(getter_Copies(otherSpec))))
+            nsCAutoString otherSpec;
+            if (NS_FAILED(otherURI->GetSpec(otherSpec)))
                 return NS_ERROR_FAILURE;
-            nsXPIDLCString mySpec;
-            if (NS_FAILED(mURI->GetSpec(getter_Copies(mySpec))))
+            nsCAutoString mySpec;
+            if (NS_FAILED(mURI->GetSpec(mySpec)))
                 return NS_ERROR_FAILURE;
-            *result = PL_strcmp(otherSpec, mySpec) == 0;
+            *result = strcmp(otherSpec.get(), mySpec.get()) == 0;
         } 
 		else
 		{
             // Need to check the host
-            nsXPIDLCString otherHost;
-            rv = otherURI->GetHost(getter_Copies(otherHost));
-            nsXPIDLCString myHost;
+            nsCAutoString otherHost;
+            rv = otherURI->GetHost(otherHost);
+            nsCAutoString myHost;
             if (NS_SUCCEEDED(rv))
-                rv = mURI->GetHost(getter_Copies(myHost));
-            *result = NS_SUCCEEDED(rv) && PL_strcmp(otherHost, myHost) == 0;
+                rv = mURI->GetHost(myHost);
+            *result = NS_SUCCEEDED(rv) && strcmp(otherHost.get(), myHost.get()) == 0;
             if (*result) 
-			{
+            {
                 int otherPort;
                 rv = otherURI->GetPort(&otherPort);
                 int myPort;
@@ -277,15 +287,12 @@ nsCodebasePrincipal::nsCodebasePrincipal() : mTrusted(PR_FALSE)
 nsresult
 nsCodebasePrincipal::Init(nsIURI *uri)
 {
-    char *codebase;
-    if (uri == nsnull || NS_FAILED(uri->GetSpec(&codebase))) 
+    nsCAutoString codebase;
+    if (uri == nsnull || NS_FAILED(uri->GetSpec(codebase))) 
         return NS_ERROR_FAILURE;
-    if (NS_FAILED(mJSPrincipals.Init(codebase)))
-	{
-        nsCRT::free(codebase);
+    if (NS_FAILED(mJSPrincipals.Init(ToNewCString(codebase))))
         return NS_ERROR_FAILURE;
-    }
-    // JSPrincipals::Init adopts codebase, so no need to free now
+    // JSPrincipals::Init adopts its input
     mURI = uri;
     return NS_OK;
 }
@@ -298,7 +305,7 @@ nsCodebasePrincipal::InitFromPersistent(const char* aPrefName, const char* aURLS
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), aURLStr, nsnull);
+    rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURLStr), nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Malformed URI in security.principal preference.");
     if (NS_FAILED(rv)) return rv;
 

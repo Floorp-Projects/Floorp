@@ -203,7 +203,7 @@ function addToUrlbarHistory()
        }
        
        try {
-         var uriToAdd  = ioService.newURI(urlToAdd, null);
+         var uriToAdd  = ioService.newURI(urlToAdd, null, null);
        }
        catch(e) {
          // it isn't a valid url
@@ -231,7 +231,7 @@ function addToUrlbarHistory()
 
           if (uriToAdd) {
             try {
-              var rdfUri = ioService.newURI(rdfValue, null);
+              var rdfUri = ioService.newURI(rdfValue, null, null);
                  
               if (rdfUri.equals(uriToAdd)) {
                 // URI already present in the database

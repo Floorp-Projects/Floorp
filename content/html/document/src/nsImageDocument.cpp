@@ -391,10 +391,10 @@ nsImageDocument::CreateSyntheticDocument()
   }
   image->SetDocument(this, PR_FALSE, PR_TRUE);
 
-  nsXPIDLCString src;
-  mDocumentURL->GetSpec(getter_Copies(src));
+  nsCAutoString src;
+  mDocumentURL->GetSpec(src);
 
-  nsString src_string; src_string.AssignWithConversion(src);
+  NS_ConvertUTF8toUCS2 src_string(src);
   nsHTMLValue val(src_string);
 
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
@@ -506,11 +506,9 @@ nsresult nsImageDocument::UpdateTitle( void )
 
     nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
     if (url) {
-      nsXPIDLCString pName;
-      url->GetFileName(getter_Copies(pName));
-      if(pName){
-        fileStr.Assign(NS_ConvertUTF8toUCS2(pName));
-      }
+      nsCAutoString pName;
+      url->GetFileName(pName);
+      fileStr.Assign(NS_ConvertUTF8toUCS2(pName));
     }
 
     if (mImageRequest) {

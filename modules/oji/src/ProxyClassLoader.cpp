@@ -115,11 +115,11 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
     if (NS_FAILED(rv)) return rv;
     
     // create a netscape.oji.ProxyClassLoader instance.
-    nsXPIDLCString spec;
-    rv = codebase->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = codebase->GetSpec(spec);
     if (NS_FAILED(rv)) return rv;
     
-    jstring jspec = env->NewStringUTF(spec);
+    jstring jspec = env->NewStringUTF(spec.get());
     if (!jspec) {
         env->ExceptionClear();
         return NS_ERROR_FAILURE;

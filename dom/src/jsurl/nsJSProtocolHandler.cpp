@@ -63,6 +63,7 @@
 #include "nsIJSConsoleService.h"
 #include "nsIConsoleService.h"
 #include "nsXPIDLString.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -124,21 +125,21 @@ nsresult nsJSThunk::EvaluateScript()
     NS_ENSURE_ARG_POINTER(mChannel);
 
     // Get the script string to evaluate...
-    nsXPIDLCString script;
-    rv = mURI->GetPath(getter_Copies(script));
+    nsCAutoString script;
+    rv = mURI->GetPath(script);
     if (NS_FAILED(rv)) return rv;
 
     // If mURI is just "javascript:", we bring up the JavaScript console
     // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
-    if (*((const char*)script) == '\0') {
+    if (script.IsEmpty()) {
         rv = BringUpConsole();
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
     // Get the url.
-    nsXPIDLCString url;
-    rv = mURI->GetSpec(getter_Copies(url));
+    nsCAutoString url;
+    rv = mURI->GetSpec(url);
     if (NS_FAILED(rv)) return rv;
 
     // Get an interface requestor from the channel callbacks.
@@ -258,7 +259,7 @@ nsresult nsJSThunk::EvaluateScript()
         rv = scriptContext->EvaluateString(scriptString,
                                            nsnull,      // obj
                                            principal,
-                                           url,         // url
+                                           url.get(),   // url
                                            1,           // line no
                                            nsnull,
                                            result,
@@ -388,7 +389,13 @@ nsJSThunk::GetOutputStream(nsIOutputStream* *aOutputStream)
 NS_IMETHODIMP
 nsJSThunk::GetName(char* *aName)
 {
-    return mURI->GetSpec(aName);
+    nsCAutoString buf;
+
+    nsresult rv = mURI->GetSpec(buf);
+    if (NS_FAILED(rv)) return rv;
+
+    *aName = ToNewCString(buf);
+    return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -722,11 +729,9 @@ nsJSProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsJSProtocolHandler::GetScheme(char* *result)
+nsJSProtocolHandler::GetScheme(nsACString &result)
 {
-    *result = nsCRT::strdup("javascript");
-    if (!*result)
-        return NS_ERROR_OUT_OF_MEMORY;
+    result = "javascript";
     return NS_OK;
 }
 
@@ -745,7 +750,9 @@ nsJSProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsJSProtocolHandler::NewURI(const nsACString &aSpec,
+                            const char *aCharset, // ignore charset info
+                            nsIURI *aBaseURI,
                             nsIURI **result)
 {
     nsresult rv;
@@ -765,7 +772,28 @@ nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     if (NS_FAILED(rv))
         return rv;
 
-    rv = url->SetSpec((char*)aSpec);
+    if (IsASCII(aSpec))
+        rv = url->SetSpec(aSpec);
+    else {
+        // need special encoding for unicode characters...
+        // XXXdarin iterate over the UTF-8 chars instead
+        NS_ConvertUTF8toUCS2 ucsSpec(aSpec);
+        nsCAutoString encSpec;
+
+        char buf[6+1]; // space for \uXXXX plus a NUL at the end
+        for (const PRUnichar *uch = ucsSpec.get(); *uch; ++uch) {
+            if (*uch > 0x7F) {
+                PR_snprintf(buf, sizeof(buf), "\\u%.4x", *uch);
+                encSpec.Append(buf);
+            }
+            else {
+                // it's ASCII so we're safe...
+                encSpec.Append(char(*uch));
+            }
+        }
+        rv = url->SetSpec(encSpec);
+    }
+
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

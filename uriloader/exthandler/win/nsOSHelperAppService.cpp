@@ -208,10 +208,10 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   if (aURL)
   {
     // extract the url spec from the url
-    nsXPIDLCString urlSpec;
-    aURL->GetSpec(getter_Copies(urlSpec));
+    nsCAutoString urlSpec;
+    aURL->GetSpec(urlSpec);
 
-    LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) urlSpec, NULL, NULL, SW_SHOWNORMAL);
+    LONG r = (LONG) ::ShellExecute( NULL, "open", urlSpec.get(), NULL, NULL, SW_SHOWNORMAL);
     if (r < 32) 
       rv = NS_ERROR_FAILURE;
   }

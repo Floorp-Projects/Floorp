@@ -73,14 +73,14 @@ nsViewSourceChannel::Init(nsIURI* uri)
 {
     nsresult rv;
 
-    nsXPIDLCString path;
-    rv = uri->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIIOService> pService(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
    
-    rv = pService->NewChannel(path, nsnull, getter_AddRefs(mChannel));
+    rv = pService->NewChannel(path, nsnull, nsnull, getter_AddRefs(mChannel));
     mHttpChannel = do_QueryInterface(mChannel);
     mCachingChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);

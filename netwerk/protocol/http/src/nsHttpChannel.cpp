@@ -32,8 +32,9 @@
 #include "nsIAuthPrompt.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
-#include "nsCExternalHandlerService.h"
+#include "nsIURL.h"
 #include "nsIMIMEService.h"
+#include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
@@ -122,14 +123,14 @@ nsHttpChannel::Init(nsIURI *uri,
     //
     // Construct connection info object
     //
-    nsXPIDLCString host;
+    nsCAutoString host;
     PRInt32 port = -1;
     PRBool usingSSL = PR_FALSE;
     
     rv = mURI->SchemeIs("https", &usingSSL);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mURI->GetHost(getter_Copies(host));
+    rv = mURI->GetAsciiHost(host);
     if (NS_FAILED(rv)) return rv;
 
     rv = mURI->GetPort(&port);
@@ -137,23 +138,7 @@ nsHttpChannel::Init(nsIURI *uri,
 
     LOG(("host=%s port=%d\n", host.get(), port));
 
-    nsCOMPtr<nsIIDNService> converter;
-    if ((converter = nsHttpHandler::get()->IDNConverter()) &&
-        !nsCRT::IsAscii(host))
-    {
-        nsXPIDLCString hostACE;
-        rv = converter->UTF8ToIDNHostName(host.get(), getter_Copies(hostACE));
-        if (NS_FAILED(rv)) return rv;
-
-        // replace the host portion in the URL
-        nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
-        NS_ASSERTION(url, "mURI is not an nsIURL");
-        if (url)
-            url->SetHost(hostACE.get());
-        // overwrite |host|
-        host.Assign(hostACE);
-    }
-    rv = mURI->GetSpec(getter_Copies(mSpec));
+    rv = mURI->GetAsciiSpec(mSpec);
     if (NS_FAILED(rv)) return rv;
 
     LOG(("uri=%s\n", mSpec.get()));
@@ -175,7 +160,7 @@ nsHttpChannel::Init(nsIURI *uri,
     // Set request headers
     //
     nsCAutoString hostLine;
-    if (PL_strchr(host.get(), ':')) {
+    if (strchr(host.get(), ':')) {
         // host is an IPv6 address literal and must be encapsulated in []'s
         hostLine.Assign('[');
         hostLine.Append(host);
@@ -398,19 +383,22 @@ nsHttpChannel::SetupTransaction()
 
     // use the URI path if not proxying (transparent proxying such as SSL proxy
     // does not count here).
-    nsXPIDLCString requestURIStr;
+    nsCAutoString buf, path;
     const char* requestURI;
-    if (mConnectionInfo->UsingSSL() ||
-        !mConnectionInfo->UsingHttpProxy()) {
-        rv = mURI->GetPath(getter_Copies(requestURIStr));
+    if (mConnectionInfo->UsingSSL() || !mConnectionInfo->UsingHttpProxy()) {
+        rv = mURI->GetPath(path);
         if (NS_FAILED(rv)) return rv;
-        requestURI = requestURIStr.get();
+        // path may contain UTF-8 characters, so ensure that their escaped.
+        if (NS_EscapeURL(path.get(), path.Length(), esc_OnlyNonASCII, buf))
+            requestURI = buf.get();
+        else
+            requestURI = path.get();
     }
     else
         requestURI = mSpec.get();
 
     // trim off the #ref portion if any...
-    char *p = PL_strchr(requestURI, '#');
+    char *p = strchr(requestURI, '#');
     if (p) *p = 0;
 
     mRequestHead.SetVersion(nsHttpHandler::get()->DefaultVersion());
@@ -736,11 +724,12 @@ nsHttpChannel::GenerateCacheKey(nsACString &cacheKey)
         cacheKey.Append("&uri=");
     }
     // Strip any trailing #ref from the URL before using it as the key
-    const char *p = PL_strchr(mSpec, '#');
+    const char *spec = mSpec.get();
+    const char *p = strchr(spec, '#');
     if (p)
-        cacheKey.Append(mSpec, p - mSpec);
+        cacheKey.Append(spec, p - spec);
     else
-        cacheKey.Append(mSpec);
+        cacheKey.Append(spec);
     return NS_OK;
 }
 
@@ -1222,7 +1211,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         PRInt32 proxyPort;
         
         // location is of the form "host:port"
-        char *p = PL_strchr(location, ':');
+        char *p = strchr(location, ':');
         if (p) {
             *p = 0;
             proxyPort = atoi(p+1);
@@ -1244,28 +1233,29 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         nsCOMPtr<nsIIOService> ioService;
         rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
 
-        rv = ioService->NewURI(location, mURI, getter_AddRefs(newURI));
+        rv = ioService->NewURI(nsDependentCString(location), nsnull, mURI,
+                               getter_AddRefs(newURI));
         if (NS_FAILED(rv)) return rv;
 
         // move the reference of the old location to the new one if the new
         // one has none.
         nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI, &rv);
         if (NS_SUCCEEDED(rv)) {
-            nsXPIDLCString ref;
-            rv = newURL->GetRef(getter_Copies(ref));
-            if (NS_SUCCEEDED(rv) && !ref) {
-                nsCOMPtr<nsIURL> baseURL = do_QueryInterface(mURI, &rv);
+            nsCAutoString ref;
+            rv = newURL->GetRef(ref);
+            if (NS_SUCCEEDED(rv) && ref.IsEmpty()) {
+                nsCOMPtr<nsIURL> baseURL( do_QueryInterface(mURI, &rv) );
                 if (NS_SUCCEEDED(rv)) {
-                    baseURL->GetRef(getter_Copies(ref));
-                    if (ref)
+                    baseURL->GetRef(ref);
+                    if (!ref.IsEmpty())
                         newURL->SetRef(ref);
                 }
             }
         }
 
         // build the new channel
-        rv = NS_OpenURI(getter_AddRefs(newChannel), newURI, ioService, mLoadGroup,
-                        mCallbacks, mLoadFlags | LOAD_REPLACE);
+        rv = NS_NewChannel(getter_AddRefs(newChannel), newURI, ioService, mLoadGroup,
+                           mCallbacks, mLoadFlags | LOAD_REPLACE);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1417,7 +1407,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     if (NS_FAILED(rv)) return rv;
 
     const char *host;
-    nsXPIDLCString path;
+    nsCAutoString path;
     nsXPIDLString *user;
     nsXPIDLString *pass;
     PRInt32 port;
@@ -1434,7 +1424,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
         user = &mUser;
         pass = &mPass;
 
-        rv = GetCurrentPath(getter_Copies(path));
+        rv = GetCurrentPath(path);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1506,7 +1496,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     //
     // if the credentials are not reusable, then we don't bother sticking them
     // in the auth cache.
-    return authCache->SetAuthEntry(host, port, path, realm.get(),
+    return authCache->SetAuthEntry(host, port, path.get(), realm.get(),
                                    reusable ? creds.get() : nsnull,
                                    user->get(), pass->get(),
                                    challenge.get(), metadata);
@@ -1570,17 +1560,21 @@ nsHttpChannel::GetUserPassFromURI(PRUnichar **user,
 {
     LOG(("nsHttpChannel::GetUserPassFromURI [this=%x]\n", this));
 
-    nsXPIDLCString buf;
+    nsCAutoString buf;
 
     *user = nsnull;
     *pass = nsnull;
 
-    mURI->GetUsername(getter_Copies(buf));
-    if (buf) {
-        *user = ToNewUnicode(buf);
-        mURI->GetPassword(getter_Copies(buf));
-        if (buf)
-            *pass = ToNewUnicode(buf);
+    // XXX i18n
+    mURI->GetUsername(buf);
+    if (!buf.IsEmpty()) {
+        NS_UnescapeURL(buf);
+        *user = ToNewUnicode(NS_ConvertASCIItoUCS2(buf));
+        mURI->GetPassword(buf);
+        if (!buf.IsEmpty()) {
+            NS_UnescapeURL(buf);
+            *pass = ToNewUnicode(NS_ConvertASCIItoUCS2(buf));
+        }
     }
 }
 
@@ -1756,8 +1750,8 @@ nsHttpChannel::AddAuthorizationHeaders()
                                    getter_Copies(mProxyPass));
 
         // check if server credentials should be sent
-        nsXPIDLCString path;
-        if (NS_SUCCEEDED(GetCurrentPath(getter_Copies(path))))
+        nsCAutoString path;
+        if (NS_SUCCEEDED(GetCurrentPath(path)))
             SetAuthorizationHeader(authCache, nsHttp::Authorization,
                                    mConnectionInfo->Host(),
                                    mConnectionInfo->Port(),
@@ -1768,7 +1762,7 @@ nsHttpChannel::AddAuthorizationHeaders()
 }
 
 nsresult
-nsHttpChannel::GetCurrentPath(char **path)
+nsHttpChannel::GetCurrentPath(nsACString &path)
 {
     nsresult rv;
     nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
@@ -1989,9 +1983,10 @@ nsHttpChannel::GetContentType(char **value)
     PRBool doMimeLookup = PR_TRUE;
     nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
     if (url) {
-        nsXPIDLCString ext;
-        url->GetFileExtension(getter_Copies(ext));
-        if (ext && (!PL_strcasecmp(ext, "dll") || !PL_strcasecmp(ext, "exe")))
+        nsCAutoString ext;
+        url->GetFileExtension(ext);
+        if (!nsCRT::strcasecmp(ext.get(), "dll") ||
+            !nsCRT::strcasecmp(ext.get(), "exe"))
             doMimeLookup = PR_FALSE;
     }
     if (doMimeLookup) {
@@ -2179,19 +2174,17 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
         PRBool isHTTPS = PR_FALSE;
         referrer->SchemeIs("https", &isHTTPS);
         if (isHTTPS) {
-            nsXPIDLCString referrerHost;
-            nsXPIDLCString host;
-            referrer->GetHost(getter_Copies(referrerHost));
-            mURI->GetHost(getter_Copies(host));
-            mURI->SchemeIs("https",&isHTTPS);
+            nsCAutoString referrerHost;
+            nsCAutoString host;
 
-            if (nsCRT::strcasecmp(referrerHost, host) != 0) {
-                return NS_OK;
-            }
+            referrer->GetAsciiHost(referrerHost);
+            mURI->GetAsciiHost(host);
+            mURI->SchemeIs("https", &isHTTPS);
 
-            if (!isHTTPS) {
+            if (nsCRT::strcasecmp(referrerHost.get(), host.get()) != 0)
                 return NS_OK;
-            }
+            if (!isHTTPS)
+                return NS_OK;
         }
     }
 
@@ -2205,18 +2198,26 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
     mRequestHead.SetHeader(nsHttp::Referer, nsnull);
 
     if (referrer) {
-        nsXPIDLCString spec;
-        referrer->GetSpec(getter_Copies(spec));
-        if (spec) {
-            nsCAutoString ref(spec.get());
-            // strip away any prehost; we don't want to be giving out passwords ;-)
-            nsXPIDLCString prehost;
-            referrer->GetPreHost(getter_Copies(prehost));
-            if (prehost && *prehost) {
-                PRUint32 prehostLoc = PRUint32(ref.Find(prehost.get(), PR_TRUE));
-                ref.Cut(prehostLoc, nsCharTraits<char>::length(prehost) + 1); // + 1 for @
+        nsCAutoString spec;
+        referrer->GetAsciiSpec(spec);
+        if (!spec.IsEmpty()) {
+            // strip away any userpass; we don't want to be giving out passwords ;-)
+            nsCAutoString userpass;
+            referrer->GetUserPass(userpass);
+            if (!userpass.IsEmpty()) {
+                // userpass is UTF8 encoded and spec is ASCII, so we might not find
+                // userpass as a substring of spec.
+                nsCOMPtr<nsIURI> clone;
+                nsresult rv = referrer->Clone(getter_AddRefs(clone));
+                if (NS_FAILED(rv)) return rv;
+
+                rv = clone->SetUserPass(NS_LITERAL_CSTRING(""));
+                if (NS_FAILED(rv)) return rv;
+
+                rv = clone->GetAsciiSpec(spec);
+                if (NS_FAILED(rv)) return rv;
             }
-            mRequestHead.SetHeader(nsHttp::Referer, ref.get());
+            mRequestHead.SetHeader(nsHttp::Referer, spec.get());
         }
     }
     return NS_OK;

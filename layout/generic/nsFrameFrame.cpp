@@ -1165,7 +1165,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), absURL, nsnull);
+  NS_NewURI(getter_AddRefs(uri), absURL);
 
   // Check for security
   nsCOMPtr<nsIScriptSecurityManager> secMan = 
@@ -1209,7 +1209,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
 
   // Check if we are allowed to load absURL
   nsCOMPtr<nsIURI> newURI;
-  rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);
+  rv = NS_NewURI(getter_AddRefs(newURI), absURL, nsnull, baseURI);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = secMan->CheckLoadURI(referrer, newURI, nsIScriptSecurityManager::STANDARD);
   if (NS_FAILED(rv))

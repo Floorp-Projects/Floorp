@@ -452,10 +452,10 @@ NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
                                                    nsIRequest* aRequest,
                                                    nsIURI* aURI)
 {
-   nsXPIDLCString spec;
+   nsCAutoString spec;
 
    if(aURI)
-      aURI->GetSpec(getter_Copies(spec));
+      aURI->GetSpec(spec);
 
    PRBool isSubFrameLoad = PR_FALSE; // Is this a subframe load
    if (aWebProgress) {
@@ -472,8 +472,7 @@ NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
    if(mBrowserWindow->mLocation && !isSubFrameLoad)
       {
       PRUint32 size;
-      nsAutoString tmp; tmp.AssignWithConversion(spec);
-
+      NS_ConvertUTF8toUCS2 tmp(spec);
       mBrowserWindow->mLocation->SetText(tmp,size);
       }
 
@@ -555,11 +554,11 @@ mCurrent=mTotal=mProgress=mMaxProgress=0;
 #endif
 
       if(mBrowserWindow->mStatus) {
-        nsXPIDLCString uriString;
+        nsCAutoString uriString;
 
-        uri->GetSpec(getter_Copies(uriString));
+        uri->GetSpec(uriString);
 
-        nsAutoString url; url.AssignWithConversion(uriString);
+        NS_ConvertUTF8toUCS2 url(uriString);
         url.Append(NS_LITERAL_STRING(": start"));
         PRUint32 size;
         mBrowserWindow->mStatus->SetText(url,size);
@@ -581,7 +580,7 @@ void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
   }
 #endif
 
-  nsXPIDLCString uriString;
+  nsCAutoString uriString;
   if(aRequest) {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
@@ -591,10 +590,10 @@ void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
     if (NS_SUCCEEDED(rv)) {
       channel->GetURI(getter_AddRefs(uri));
 
-      uri->GetSpec(getter_Copies(uriString));
+      uri->GetSpec(uriString);
     }
   }  
-  nsAutoString msg; msg.AssignWithConversion(uriString);
+  NS_ConvertUTF8toUCS2 msg(uriString);
 
   PRTime endLoadTime = PR_Now();
   if(mBrowserWindow->mShowLoadTimes)
@@ -624,17 +623,16 @@ void nsWebBrowserChrome::OnStatusDNS(nsIChannel* aChannel)
 
 void nsWebBrowserChrome::OnStatusConnecting(nsIChannel* aChannel)
 {
-   nsXPIDLCString uriString;
+   nsCAutoString uriString;
    if(aChannel)
       {
       nsCOMPtr<nsIURI> uri;
       aChannel->GetURI(getter_AddRefs(uri));
 
-      uri->GetSpec(getter_Copies(uriString));
+      uri->GetSpec(uriString);
       }
    
-   nsAutoString msg(NS_LITERAL_STRING("Connecting to "));
-   msg.AppendWithConversion(uriString);
+   NS_ConvertUTF8toUCS2 msg(NS_LITERAL_CSTRING("Connecting to ") + uriString);
       
    PRUint32 size;
    mBrowserWindow->mStatus->SetText(msg,size);

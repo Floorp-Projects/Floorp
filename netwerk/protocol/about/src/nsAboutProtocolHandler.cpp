@@ -90,11 +90,9 @@ nsAboutProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::GetScheme(char* *result)
+nsAboutProtocolHandler::GetScheme(nsACString &result)
 {
-    *result = nsCRT::strdup("about");
-    if (*result == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    result = "about";
     return NS_OK;
 }
 
@@ -113,7 +111,9 @@ nsAboutProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
+                               const char *aCharset, // ignore charset info
+                               nsIURI *aBaseURI,
                                nsIURI **result)
 {
     nsresult rv;
@@ -126,7 +126,7 @@ nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetSpec((char*)aSpec);
+    rv = url->SetSpec(aSpec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;
@@ -141,17 +141,15 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     // about:what you ask?
     nsresult rv;
-    char* whatStr;
-    rv = uri->GetPath(&whatStr);
+    nsCAutoString what;
+    rv = uri->GetPath(what);
     if (NS_FAILED(rv)) return rv;
     
     // look up a handler to deal with "whatStr"
     nsCAutoString contractID(NS_ABOUT_MODULE_CONTRACTID_PREFIX);
-    nsCAutoString what(whatStr);
-    nsCRT::free(whatStr);
 
     // only take up to a question-mark if there is one:
-    nsReadingIterator<char> begin, end;
+    nsACString::const_iterator begin, end;
     what.BeginReading(begin);
     what.EndReading(end);
     FindCharInReadable('?', begin, end); // moves begin to first '?' or to end

@@ -102,6 +102,7 @@
 #ifdef XP_WIN
 #include <SHLOBJ.H>
 #include <INTSHCUT.H>
+#include "nsIFileURL.h"
 #endif
 
 nsIRDFResource		*kNC_IEFavoritesRoot;
@@ -176,7 +177,7 @@ static const char kURINC_NewSearchFolder[]            = "NC:NewSearchFolder";
 static const char kDefaultPersonalToolbarFolder[]     = "Personal Toolbar Folder";
 static const char kBookmarkCommand[]                  = "http://home.netscape.com/NC-rdf#command?";
 
-#define bookmark_properties  "chrome://communicator/locale/bookmarks/bookmark.properties"
+#define bookmark_properties  NS_LITERAL_CSTRING("chrome://communicator/locale/bookmarks/bookmark.properties")
 #define NAVIGATOR_CHROME_URL "chrome://navigator/content/"
 
 ////////////////////////////////////////////////////////////////////////
@@ -1738,7 +1739,7 @@ nsBookmarksService::Init()
 
 	/* create a URL for the string resource file */
 	nsCOMPtr<nsIURI>	uri;
-	if (NS_SUCCEEDED(rv = mNetService->NewURI(bookmark_properties, nsnull,
+	if (NS_SUCCEEDED(rv = mNetService->NewURI(bookmark_properties, nsnull, nsnull,
 		getter_AddRefs(uri))))
 	{
 		/* create a bundle for the localization */
@@ -1746,15 +1747,10 @@ nsBookmarksService::Init()
 		if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kStringBundleServiceCID,
 			NS_GET_IID(nsIStringBundleService), getter_AddRefs(stringService))))
 		{
-			char	*spec = nsnull;
-			if (NS_SUCCEEDED(rv = uri->GetSpec(&spec)) && (spec))
+			nsCAutoString spec;
+			if (NS_SUCCEEDED(rv = uri->GetSpec(spec)))
 			{
-				if (NS_SUCCEEDED(rv = stringService->CreateBundle(spec,
-					getter_AddRefs(mBundle))))
-				{
-				}
-				nsCRT::free(spec);
-				spec = nsnull;
+				stringService->CreateBundle(spec.get(), getter_AddRefs(mBundle));
 			}
 		}
 	}
@@ -2102,7 +2098,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 			if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(uri), url)))
 			{
 				nsCOMPtr<nsIChannel>	channel;
-				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))
+				if (NS_SUCCEEDED(rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull)))
 				{
 					channel->SetLoadFlags(nsIRequest::VALIDATE_ALWAYS);
 					nsCOMPtr<nsIHttpChannel>	httpChannel = do_QueryInterface(channel);
@@ -2870,8 +2866,6 @@ nsBookmarksService::GetLastCharset(const char *aURI,  PRUnichar **aLastCharset)
 
 	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark) )))
 	{
-		PRBool			isBookmark = PR_FALSE;
-
 		// Note: always use mInner!! Otherwise, could get into an infinite loop
 		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
 
@@ -2959,8 +2953,6 @@ nsBookmarksService::UpdateLastVisitedDate(const char *aURL, const PRUnichar *aCh
 
 	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
 	{
-		PRBool			isBookmark = PR_FALSE;
-
 		// Note: always use mInner!! Otherwise, could get into an infinite loop
 		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
 
@@ -3225,8 +3217,8 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
         continue;
     }
     else {
-      nsXPIDLCString extension;
-      fileURL->GetFileExtension(getter_Copies(extension));
+      nsCAutoString extension;
+      fileURL->GetFileExtension(extension);
       ToLowerCase(extension);
       if (!extension.Equals(NS_LITERAL_CSTRING("url"))) 
         continue;
@@ -3237,10 +3229,9 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
       nsXPIDLCString url;
       ResolveShortcut(path.get(), getter_Copies(url));
 
-      nsXPIDLCString baseName;
-      fileURL->GetFileBaseName(getter_Copies(baseName));
-      nsAutoString bookmarkName; 
-      bookmarkName.AssignWithConversion(baseName);
+      nsCAutoString baseName;
+      fileURL->GetFileBaseName(baseName);
+      NS_ConvertUTF8toUCS2 bookmarkName(baseName);
 
       nsCOMPtr<nsIRDFResource> bookmark;
       rv = CreateBookmark(bookmarkName.get(), url.get(), aParentResource, getter_AddRefs(bookmark));
@@ -3513,7 +3504,7 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
     	}
 
     	nsCOMPtr<nsIURI>	nsURI;
-    	if (NS_FAILED(rv = mNetService->NewURI(uri, nsnull, getter_AddRefs(nsURI))))
+    	if (NS_FAILED(rv = mNetService->NewURI(nsDependentCString(uri), nsnull, nsnull, getter_AddRefs(nsURI))))
     	{
     	    return(rv);
     	}
@@ -3530,8 +3521,8 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
             return(NS_RDF_NO_VALUE);
         }
 
-    	nsXPIDLCString prePath;
-    	if (NS_FAILED(rv = nsURI->GetPrePath(getter_Copies(prePath))))
+    	nsCAutoString prePath;
+    	if (NS_FAILED(rv = nsURI->GetPrePath(prePath)))
     	{
     	    return rv;
     	}

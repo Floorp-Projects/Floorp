@@ -38,6 +38,10 @@
 
 #include "nsIProtocolHandler.idl"
 
+%{C++
+#include "nsAString.h"
+%}
+
 [scriptable, uuid(d12c08c6-9ef6-11d3-8cda-0060b0fc14a3)]
 interface nsIResProtocolHandler : nsIProtocolHandler
 {
@@ -55,7 +59,7 @@ interface nsIResProtocolHandler : nsIProtocolHandler
     /**
      * Gets the substitution for the root key.
      *
-     * @returns NS_ERROR_NOT_AVAILABLE if none exists.
+     * @throws NS_ERROR_NOT_AVAILABLE if none exists.
      */
     nsIURI getSubstitution(in string root);
 
@@ -69,7 +73,7 @@ interface nsIResProtocolHandler : nsIProtocolHandler
      * guaranteed to reference a resource that exists (ie. opening a channel to
      * the resolved URI may fail).
      *
-     * @returns NS_ERROR_NOT_AVAILABLE if resURI.host() is an unknown root key.
+     * @throws NS_ERROR_NOT_AVAILABLE if resURI.host() is an unknown root key.
      */
-    string resolveURI(in nsIURI resURI);
+    AUTF8String resolveURI(in nsIURI resURI);
 };

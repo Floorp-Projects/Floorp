@@ -746,12 +746,12 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
 
-  nsXPIDLCString hostname;
+  nsCAutoString hostname;
   nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!ioService) return NS_ERROR_FAILURE;
-  ioService->ExtractUrlPart(aURL, nsIIOService::url_Host, 0, 0, getter_Copies(hostname));
+  ioService->ExtractUrlPart(nsDependentCString(aURL), nsIIOService::url_Host, hostname);
 
-  SetRowValue(row, kToken_HostnameColumn, hostname);
+  SetRowValue(row, kToken_HostnameColumn, hostname.get());
 
   *aResult = row;
   NS_ADDREF(*aResult);
@@ -1044,17 +1044,17 @@ nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
          nsCAutoString(Substring(startPtr, startPtr + yarn.mYarn_Fill)).get());
   if (NS_FAILED(rv)) return PR_FALSE;
 
-  nsXPIDLCString urlHost;
-  rv = hostInfo->cachedUrl->GetHost(getter_Copies(urlHost));
+  nsCAutoString urlHost;
+  rv = hostInfo->cachedUrl->GetHost(urlHost);
   if (NS_FAILED(rv)) return PR_FALSE;
 
-  if (PL_strcmp(urlHost, hostInfo->host) == 0)
+  if (PL_strcmp(urlHost.get(), hostInfo->host) == 0)
     return PR_TRUE;
 
   // now try for a domain match, if necessary
   if (hostInfo->entireDomain) {
     // do a reverse-search to match the end of the string
-    char *domain = PL_strrstr(urlHost, hostInfo->host);
+    char *domain = PL_strrstr(urlHost.get(), hostInfo->host);
     
     // now verify that we're matching EXACTLY the domain, and
     // not some random string inside the hostname
@@ -1639,12 +1639,12 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
         if (!urlObj)
             return NS_ERROR_FAILURE;
 
-        nsXPIDLCString filename;
-        rv = urlObj->GetFileName(getter_Copies(filename));
-        if (NS_FAILED(rv) || !(const char*)filename) {
+        nsCAutoString filename;
+        rv = urlObj->GetFileName(filename);
+        if (NS_FAILED(rv) || filename.IsEmpty()) {
           // ok fine. we'll use the file path. then we give up!
-          rv = urlObj->GetPath(getter_Copies(filename));
-          if (PL_strcmp(filename, "/") == 0) {
+          rv = urlObj->GetPath(filename);
+          if (strcmp(filename.get(), "/") == 0) {
             // if the top of a site does not have a title
             // (common for redirections) then return the hostname
             return GetTarget(aSource, kNC_Hostname, aTruthValue, aTarget);

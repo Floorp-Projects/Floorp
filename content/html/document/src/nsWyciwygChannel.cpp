@@ -95,10 +95,10 @@ NS_IMETHODIMP
 nsWyciwygChannel::GetName(PRUnichar**aName)
 {
   NS_ENSURE_ARG_POINTER(aName);
-  nsXPIDLCString spec;
-  mURI->GetSpec(getter_Copies(spec));
-  *aName = ToNewUnicode(spec);
-  return NS_OK;
+  nsCAutoString spec;
+  mURI->GetSpec(spec);
+  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(spec));
+  return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
  
 NS_IMETHODIMP
@@ -359,7 +359,7 @@ nsWyciwygChannel::WriteToCache(const char * aScript)
   
     // Get the outputstream from the transport.
     if (mCacheTransport)
-      rv = mCacheTransport->OpenOutputStream(0, -1, 0, getter_AddRefs(mCacheOutputStream));    
+      rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mCacheOutputStream));    
   }
 
   if (mCacheOutputStream)
@@ -568,8 +568,8 @@ nsWyciwygChannel::Connect(PRBool aFirstTime)
   if (aFirstTime) {
     PRBool delayed = PR_FALSE;
 
-    nsXPIDLCString spec;
-    mURI->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    mURI->GetSpec(spec);
     // open a cache entry for this channel...
     rv = OpenCacheEntry(spec.get(), nsICache::ACCESS_READ, &delayed);        
 

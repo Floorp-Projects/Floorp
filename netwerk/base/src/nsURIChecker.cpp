@@ -81,7 +81,8 @@ nsURIChecker::SetStatusAndCallBack(nsIRequest* aRequest, nsresult aStatus)
 // nsIURIChecker methods
 //
 NS_IMETHODIMP
-nsURIChecker::AsyncCheckURI(const char* aURI, nsIRequestObserver *aObserver,
+nsURIChecker::AsyncCheckURI(const nsACString &aURI,
+                            nsIRequestObserver *aObserver,
                             nsISupports* aCtxt,
                             nsLoadFlags aLoadFlags,
                             nsIRequest** aRequestRet)
@@ -105,7 +106,7 @@ nsURIChecker::AsyncCheckURI(const char* aURI, nsIRequestObserver *aObserver,
 
     // Make the URI
     nsCOMPtr<nsIURI> URI;
-    rv = ios->NewURI(aURI, 0, getter_AddRefs(URI));
+    rv = ios->NewURI(aURI, nsnull, nsnull, getter_AddRefs(URI)); // XXX need charset for i18n URLs
     if (NS_FAILED(rv)) return rv;
 
     // Make a new channel:

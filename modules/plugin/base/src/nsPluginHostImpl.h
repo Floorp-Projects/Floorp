@@ -121,7 +121,7 @@ struct nsActivePlugin
 
   nsActivePlugin(nsPluginTag* aPluginTag,
                  nsIPluginInstance* aInstance, 
-                 char * url,
+                 const char * url,
                  PRBool aDefaultPlugin);
   ~nsActivePlugin();
 
@@ -142,8 +142,8 @@ public:
   PRBool add(nsActivePlugin * plugin);
   PRBool remove(nsActivePlugin * plugin, PRBool * aUnloadLibraryLater);
   nsActivePlugin * find(nsIPluginInstance* instance);
-  nsActivePlugin * find(char * mimetype);
-  nsActivePlugin * findStopped(char * url);
+  nsActivePlugin * find(const char * mimetype);
+  nsActivePlugin * findStopped(const char * url);
   PRUint32 getStoppedCount();
   nsActivePlugin * findOldestStopped();
   void removeAllStopped();

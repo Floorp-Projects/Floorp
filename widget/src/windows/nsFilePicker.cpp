@@ -34,6 +34,7 @@
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
+#include "nsIFileURL.h"
 #include "nsIStringBundle.h"
 #include <windows.h>
 #include <SHLOBJ.H>

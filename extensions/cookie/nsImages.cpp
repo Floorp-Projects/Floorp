@@ -204,11 +204,11 @@ IMAGE_Block(const char* imageURL,
     return NS_ERROR_NULL_POINTER;
   }
   nsresult rv = NS_OK;
-  char *host = nsnull;
-  PRUint32 start,end;
+  nsCAutoString host;
   NS_ASSERTION(ioService, "IOService not available");
-  rv = ioService->ExtractUrlPart(imageURL, nsIIOService::url_Host | 
-                                 nsIIOService::url_Port, &start, &end, &host);
-  Permission_AddHost(host, PR_FALSE, IMAGEPERMISSION, PR_TRUE);
+  rv = ioService->ExtractUrlPart(nsDependentCString(imageURL),
+                                 nsIIOService::url_Host | 
+                                 nsIIOService::url_Port, host);
+  Permission_AddHost((char*)host.get(), PR_FALSE, IMAGEPERMISSION, PR_TRUE);
   return NS_OK;
 }

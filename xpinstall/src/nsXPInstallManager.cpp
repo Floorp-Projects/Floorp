@@ -31,7 +31,7 @@
 #include "nsIServiceManager.h"
 
 #include "nsIURL.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"
@@ -435,7 +435,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 {
                     nsCOMPtr<nsIChannel> channel;
                 
-                    rv = NS_OpenURI(getter_AddRefs(channel), pURL, nsnull, nsnull, this);
+                    rv = NS_NewChannel(getter_AddRefs(channel), pURL, nsnull, nsnull, this);
                 
                     if (NS_SUCCEEDED(rv))
                     {
@@ -698,17 +698,17 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
         if (NS_SUCCEEDED(rv) && !mItem->mOutStream)
         {
-            nsCOMPtr<nsITransport> outChannel;
+            nsCOMPtr<nsITransport> outTransport;
             
             rv = fts->CreateTransport(mItem->mFile, 
                                       PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                       0664, 
-                                      getter_AddRefs( outChannel));
+                                      getter_AddRefs( outTransport));
                                       
             if (NS_SUCCEEDED(rv)) 
             {                          
                 // Open output stream.
-                rv = outChannel->OpenOutputStream(0, -1, 0,  getter_AddRefs( mItem->mOutStream ) );
+                rv = outTransport->OpenOutputStream(0, PRUint32(-1), 0,  getter_AddRefs( mItem->mOutStream ) );
             }
         }
     }

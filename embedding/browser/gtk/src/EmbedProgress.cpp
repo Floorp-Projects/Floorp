@@ -128,11 +128,11 @@ EmbedProgress::OnLocationChange(nsIWebProgress *aWebProgress,
 				nsIRequest     *aRequest,
 				nsIURI         *aLocation)
 {
-  nsXPIDLCString newURI;
+  nsCAutoString newURI;
   NS_ENSURE_ARG_POINTER(aLocation);
-  aLocation->GetSpec(getter_Copies(newURI));
+  aLocation->GetSpec(newURI);
 
-  mOwner->SetURI(newURI);
+  mOwner->SetURI(newURI.get());
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[LOCATION]);
   return NS_OK;
@@ -185,10 +185,8 @@ EmbedProgress::RequestToURIString(nsIRequest *aRequest, char **aString)
   if (!uri)
     return;
   
-  nsXPIDLCString uriString;
-  uri->GetSpec(getter_Copies(uriString));
-  if (!uriString)
-    return;
+  nsCAutoString uriString;
+  uri->GetSpec(uriString);
 
-  *aString = nsCRT::strdup((const char *)uriString);
+  *aString = strdup(uriString.get());
 }

@@ -439,6 +439,14 @@ pref("network.http.pipelining.maxrequests" , 4);
 pref("network.http.proxy.ssl.connect",true);
 // </ruslan>
 
+// This preference controls whether or not internationalized domain names (IDN)
+// are handled.  IDN requires a nsIIDNService implementation.
+pref("network.enableIDN", false);
+
+// This preference controls whether or not URLs with UTF-8 characters are
+// escaped.  Set this preference to TRUE for strict RFC2396 conformance.
+pref("network.standard-url.escape-utf8", true);
+
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
 

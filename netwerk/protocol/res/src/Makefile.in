@@ -30,6 +30,7 @@ MODULE		= necko
 LIBRARY_NAME	= nkres_s
 REQUIRES	= xpcom \
 		  string \
+		  uconv \
 		  $(NULL)
 
 CPPSRCS		=			 \

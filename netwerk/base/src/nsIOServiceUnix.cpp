@@ -43,11 +43,8 @@
 #include "nsPrintfCString.h"
 
 NS_IMETHODIMP
-nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
+nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
-    NS_ENSURE_ARG_POINTER(aURL);
-    *aURL = nsnull;
-    
     nsresult rv;
     nsXPIDLCString ePath;
 
@@ -58,7 +55,7 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
     NS_NAMED_LITERAL_CSTRING(prefix, "file://");
         
     // Escape the path with the directory mask
-    if (NS_EscapeURLPart(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
+    if (NS_EscapeURL(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
         escPath.Insert(prefix, 0);
     else
         escPath.Assign(prefix + ePath);
@@ -75,14 +72,13 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
         }
     }
     
-    *aURL = ToNewCString(escPath);
-    return *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    result = escPath;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::InitFileFromURLSpec(nsIFile* aFile, const char * aURL)
+nsIOService::InitFileFromURLSpec(nsIFile* aFile, const nsACString &aURL)
 {
-    NS_ENSURE_ARG(aURL);
     nsresult rv;
 
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile, &rv);
@@ -91,28 +87,18 @@ nsIOService::InitFileFromURLSpec(nsIFile* aFile, const char * aURL)
         return rv;
     }
     
-    nsXPIDLCString host, directory, fileBaseName, fileExtension;
-    
-    rv = ParseFileURL(aURL, getter_Copies(host), 
-                      getter_Copies(directory),
-                      getter_Copies(fileBaseName), 
-                      getter_Copies(fileExtension));
+    nsCAutoString directory, fileBaseName, fileExtension, path;
+
+    rv = ParseFileURL(aURL, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString path;
-
-    if (directory) {
-        if (!NS_EscapeURLPart(directory.get(), directory.Length(), esc_Directory, path))
-            path += directory;
-    }    
-    if (fileBaseName) {
-        if (!NS_EscapeURLPart(fileBaseName.get(), fileBaseName.Length(), esc_FileBaseName, path))
-            path += fileBaseName;
-    }
-    if (fileExtension) {
+    if (!directory.IsEmpty())
+        NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
+    if (!fileBaseName.IsEmpty())
+        NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);
+    if (!fileExtension.IsEmpty()) {
         path += '.';
-        if (!NS_EscapeURLPart(fileExtension.get(), fileExtension.Length(), esc_FileExtension, path))
-            path += fileExtension;
+        NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
     }
     
     NS_UnescapeURL((char *) path.get());

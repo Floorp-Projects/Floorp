@@ -2485,11 +2485,10 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   }
 
   fputs("CSS Style Sheet: ", out);
-  char* urlSpec = nsnull;
-  nsresult rv = mInner->mURL->GetSpec(&urlSpec);
-  if (NS_SUCCEEDED(rv) && urlSpec) {
-    fputs(urlSpec, out);
-    nsCRT::free(urlSpec);
+  nsCAutoString urlSpec;
+  nsresult rv = mInner->mURL->GetSpec(urlSpec);
+  if (NS_SUCCEEDED(rv) && !urlSpec.IsEmpty()) {
+    fputs(urlSpec.get(), out);
   }
 
   if (mMedia) {
@@ -2677,12 +2676,9 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::GetHref(nsAWritableString& aHref)
 {
   if (mInner && mInner->mURL) {
-    char* str = nsnull;
-    mInner->mURL->GetSpec(&str);
-    aHref.Assign(NS_ConvertASCIItoUCS2(str));
-    if (str) {
-      nsCRT::free(str);
-    }
+    nsCAutoString str;
+    mInner->mURL->GetSpec(str);
+    aHref.Assign(NS_ConvertUTF8toUCS2(str));
   }
   else {
     aHref.Truncate();

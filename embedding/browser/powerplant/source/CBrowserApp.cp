@@ -441,8 +441,8 @@ CBrowserApp::ObeyCommand(
                     rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
 
-                    nsXPIDLCString urlSpec;                    
-                    rv = NS_GetURLSpecFromFile(macFile, getter_Copies(urlSpec));
+                    nsCAutoString urlSpec;                    
+                    rv = NS_GetURLSpecFromFile(macFile, urlSpec);
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
                                             
            			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);

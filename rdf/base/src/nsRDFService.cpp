@@ -1507,13 +1507,9 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
     nsCAutoString spec;
 
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), aURI);
-    if (uri) {
-        // XXXwaterson eliminate `temp' when we have shared strings.
-        nsXPIDLCString temp;
-        uri->GetSpec(getter_Copies(temp));
-        spec = temp;
-    }
+    rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURI));
+    if (uri)
+        uri->GetSpec(spec);
     else
         spec = aURI;
 

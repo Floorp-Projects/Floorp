@@ -50,14 +50,17 @@ class nsIDocument;
 class nsIIOService;
 class nsIURI;
 class nsString;
+class nsACString;
 
 /**
  * A version of NS_MakeAbsoluteURI that's savvy to document character
  * set encodings, and will recode a relative spec in the specified
  * charset and URL-escape it before resolving.
+ *
+ * XXXdarin this should really return a nsIURI
  */
 nsresult
-NS_MakeAbsoluteURIWithCharset(char* *aResult,
+NS_MakeAbsoluteURIWithCharset(nsACString &aResult,
                               const nsString& aSpec,
                               nsIDocument* aDocument,
                               nsIURI* aBaseURI = nsnull,

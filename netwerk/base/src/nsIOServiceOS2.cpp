@@ -46,11 +46,8 @@
 static int isleadbyte(int c);
 
 NS_IMETHODIMP
-nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
+nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
-    NS_ENSURE_ARG_POINTER(aURL);
-    *aURL = nsnull;
-
     nsresult rv;
     nsXPIDLCString ePath;
 
@@ -73,7 +70,7 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
     NS_NAMED_LITERAL_CSTRING(prefix, "file:///");
 
     // Escape the path with the directory mask
-    if (NS_EscapeURLPart(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
+    if (NS_EscapeURL(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
         escPath.Insert(prefix, 0);
     else
         escPath.Assign(prefix + ePath);
@@ -89,15 +86,14 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
             escPath += "/";
         }
     }
-    
-    *aURL = ToNewCString(escPath);
-    return *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+
+    result = escPath;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char * aURL)
+nsIOService::InitFileFromURLSpec(nsIFile *aFile, const nsACString &aURL)
 {
-    NS_ENSURE_ARG(aURL);
     nsresult rv;
     
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile, &rv);
@@ -106,39 +102,24 @@ nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char * aURL)
         return rv;
     }
     
-    nsXPIDLCString host, directory, fileBaseName, fileExtension;
+    nsCAutoString directory, fileBaseName, fileExtension;
     
-    rv = ParseFileURL(aURL, getter_Copies(host),
-                      getter_Copies(directory),
-                      getter_Copies(fileBaseName),
-                      getter_Copies(fileExtension));
+    rv = ParseFileURL(aURL, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString path;
 
-    if (host) {
-        // We can end up with a host when given: file://C|/ instead of file:///
-        if (strlen((const char *)host) == 2 && ((const char *)host)[1] == '|') {
-            path += host;
-            path.SetCharAt(':', 1);
-        }
-        // Otherwise, ignore the host part...
-    }
-    if (directory) {
-        if (!NS_EscapeURLPart(directory.get(), directory.Length(), esc_Directory, path))
-            path += directory;
-        if (!host && path.Length() > 2 && path.CharAt(2) == '|')
+    if (!directory.IsEmpty()) {
+        NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
+        if (path.Length() > 2 && path.CharAt(2) == '|')
             path.SetCharAt(':', 2);
         path.ReplaceChar('/', '\\');
     }    
-    if (fileBaseName) {
-        if (!NS_EscapeURLPart(fileBaseName.get(), fileBaseName.Length(), esc_FileBaseName, path))
-            path += fileBaseName;
-    }
-    if (fileExtension) {
+    if (!fileBaseName.IsEmpty())
+        NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);
+    if (!fileExtension.IsEmpty()) {
         path += '.';
-        if (!NS_EscapeURLPart(fileExtension.get(), fileExtension.Length(), esc_FileExtension, path))
-            path += fileExtension;
+        NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
     }
     
     NS_UnescapeURL((char *) path.get());

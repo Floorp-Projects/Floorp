@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     rv = NS_NewURI(getter_AddRefs(uri), argv[1]);
     RETURN_IF_FAILED(rv, "NS_NewURI");
 
-    rv = NS_OpenURI(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
+    rv = NS_NewChannel(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
     RETURN_IF_FAILED(rv, "NS_OpenURI");
 
     rv = chan->AsyncOpen(listener, nsnull);

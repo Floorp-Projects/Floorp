@@ -557,7 +557,7 @@ function MakeAbsoluteUrl(url)
   
   // Make a URI object to use its "resolve" method
   var absoluteUrl = resultUrl;
-  var docUri = IOService.newURI(docUrl, null);
+  var docUri = IOService.newURI(docUrl, null, null);
 
   try {
     absoluteUrl = docUri.resolve(resultUrl);
@@ -710,11 +710,11 @@ function StripUsernamePasswordFromURI(uri)
   {
     try {
       url = uri.spec;
-      var preHost = uri.preHost;
-      if (preHost)
+      var userPass = uri.userPass;
+      if (userPass)
       {
-        start = url.indexOf(preHost);
-        url = url.slice(0, start) + url.slice(start+preHost.length+1);
+        start = url.indexOf(userPass);
+        url = url.slice(0, start) + url.slice(start+userPass.length+1);
       }
     } catch (e) {}    
   }

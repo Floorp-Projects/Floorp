@@ -433,7 +433,7 @@ nsresult StartLoadingURL(const char* aUrlString)
     if (pService) {
         nsCOMPtr<nsIURI> pURL;
 
-        rv = pService->NewURI(aUrlString, nsnull, getter_AddRefs(pURL));
+        rv = pService->NewURI(nsDependentCString(aUrlString), nsnull, nsnull, getter_AddRefs(pURL));
         if (NS_FAILED(rv)) {
             printf("ERROR: NewURI failed for %s\n", aUrlString);
             return rv;
@@ -448,9 +448,9 @@ nsresult StartLoadingURL(const char* aUrlString)
         NS_ADDREF(callbacks);
 
         // Async reading thru the calls of the event sink interface
-        rv = NS_OpenURI(getter_AddRefs(pChannel), pURL, pService,
-                        nsnull,     // loadGroup
-                        callbacks); // notificationCallbacks
+        rv = NS_NewChannel(getter_AddRefs(pChannel), pURL, pService,
+                           nsnull,     // loadGroup
+                           callbacks); // notificationCallbacks
         NS_RELEASE(callbacks);
         if (NS_FAILED(rv)) {
             printf("ERROR: NS_OpenURI failed for %s\n", aUrlString);

@@ -36,7 +36,7 @@
 #include "nsFtpProtocolHandler.h"
 #include "nsFTPChannel.h"
 #include "nsIURL.h"
-#include "nsIURLParser.h"
+#include "nsIStandardURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
@@ -147,11 +147,9 @@ nsFtpProtocolHandler::Init() {
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetScheme(char* *result)
+nsFtpProtocolHandler::GetScheme(nsACString &result)
 {
-    *result = nsCRT::strdup("ftp");
-    if (*result == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    result = "ftp";
     return NS_OK;
 }
 
@@ -170,7 +168,9 @@ nsFtpProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
+                             const char *aCharset,
+                             nsIURI *aBaseURI,
                              nsIURI **result)
 {
     nsresult rv = NS_OK;
@@ -179,10 +179,10 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             nsnull, NS_GET_IID(nsIStandardURL),
                                             getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
-    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 21, aSpec, aBaseURI);
+    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 21, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
-    return url->QueryInterface(NS_GET_IID(nsIURI), (void**)result);
+    return CallQueryInterface(url, result);
 }
 
 NS_IMETHODIMP
@@ -258,8 +258,8 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
     if (!mRootConnectionList)
         return NS_ERROR_NULL_POINTER;
 
-    nsXPIDLCString spec;
-    aKey->GetPrePath(getter_Copies(spec));
+    nsCAutoString spec;
+    aKey->GetPrePath(spec);
     
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Removing connection for %s\n", spec.get()));
    
@@ -294,8 +294,8 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn)
     if (!mRootConnectionList)
         return NS_ERROR_NULL_POINTER;
 
-    nsXPIDLCString spec;
-    aKey->GetPrePath(getter_Copies(spec));
+    nsCAutoString spec;
+    aKey->GetPrePath(spec);
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Inserting connection for %s\n", spec.get()));
 
     if (!mRootConnectionList)

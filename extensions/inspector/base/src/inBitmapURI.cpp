@@ -58,123 +58,127 @@ inBitmapURI::GetBitmapName(PRUnichar** aBitmapName)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-inBitmapURI::FormatSpec(char* *result)
+inBitmapURI::FormatSpec(nsACString &result)
 {
-  *result = ToNewCString(NS_LITERAL_CSTRING(NS_BITMAP_SCHEME "//") +
-                         mBitmapName);
-  return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  result = NS_LITERAL_CSTRING(NS_BITMAP_SCHEME "//") + mBitmapName;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIURI
 
 NS_IMETHODIMP
-inBitmapURI::GetSpec(char* *aSpec)
+inBitmapURI::GetSpec(nsACString &aSpec)
 {
   return FormatSpec(aSpec);
 }
 
 NS_IMETHODIMP
-inBitmapURI::SetSpec(const char* aSpec)
+inBitmapURI::SetSpec(const nsACString &aSpec)
 {
   nsresult rv;
   nsCOMPtr<nsIIOService> ioService (do_GetService(kIOServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 startPos, endPos;
-  rv = ioService->ExtractScheme(aSpec, &startPos, &endPos, nsnull);
+  nsCAutoString scheme;
+  rv = ioService->ExtractScheme(aSpec, scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (nsCRT::strncmp("moz-bitmap", &aSpec[startPos], endPos - startPos - 1) != 0)
+  if (strcmp("moz-bitmap", scheme.get()) != 0)
     return NS_ERROR_MALFORMED_URI;
 
-  nsCAutoString path(aSpec);
-  PRInt32 pos = path.FindChar(NS_BITMAP_DELIMITER);
+  nsACString::const_iterator end, colon, delim;
+  aSpec.BeginReading(colon);
+  aSpec.EndReading(end);
 
-  if (pos == -1) // additional parameters
-  {
-    path.Right(mBitmapName, path.Length() - endPos);
-  }
-  else
-  {
-    path.Mid(mBitmapName, endPos, pos - endPos);
-    // TODO: parse out other parameters
-  }
+  if (!FindCharInReadable(':', colon, end))
+    return NS_ERROR_MALFORMED_URI;
+
+  if (!FindCharInReadable(NS_BITMAP_DELIMITER, delim = ++colon, end))
+    delim = end;
+
+  mBitmapName = Substring(colon, delim);
+  // TODO: parse out other parameters
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inBitmapURI::GetPrePath(char** prePath)
+inBitmapURI::GetPrePath(nsACString &prePath)
 {
-  *prePath = nsCRT::strdup(NS_BITMAP_SCHEME);
-  return *prePath ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  prePath = NS_BITMAP_SCHEME;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-inBitmapURI::SetPrePath(const char* prePath)
+inBitmapURI::GetScheme(nsACString &aScheme)
 {
-  NS_NOTREACHED("inBitmapURI::SetPrePath");
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  aScheme = "moz-bitmap";
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-inBitmapURI::GetScheme(char * *aScheme)
-{
-  *aScheme = nsCRT::strdup("moz-bitmap");
-  return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-inBitmapURI::SetScheme(const char * aScheme)
+inBitmapURI::SetScheme(const nsACString &aScheme)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::GetUsername(char * *aUsername)
+inBitmapURI::GetUsername(nsACString &aUsername)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::SetUsername(const char * aUsername)
+inBitmapURI::SetUsername(const nsACString &aUsername)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::GetPassword(char * *aPassword)
+inBitmapURI::GetPassword(nsACString &aPassword)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::SetPassword(const char * aPassword)
+inBitmapURI::SetPassword(const nsACString &aPassword)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::GetPreHost(char * *aPreHost)
+inBitmapURI::GetUserPass(nsACString &aUserPass)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::SetPreHost(const char * aPreHost)
+inBitmapURI::SetUserPass(const nsACString &aUserPass)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::GetHost(char * *aHost)
+inBitmapURI::GetHostPort(nsACString &aHostPort)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::SetHost(const char * aHost)
+inBitmapURI::SetHostPort(const nsACString &aHostPort)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+inBitmapURI::GetHost(nsACString &aHost)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+inBitmapURI::SetHost(const nsACString &aHost)
 {
   return NS_ERROR_FAILURE;
 }
@@ -192,29 +196,47 @@ inBitmapURI::SetPort(PRInt32 aPort)
 }
 
 NS_IMETHODIMP
-inBitmapURI::GetPath(char * *aPath)
+inBitmapURI::GetPath(nsACString &aPath)
+{
+  aPath.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inBitmapURI::SetPath(const nsACString &aPath)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inBitmapURI::SetPath(const char * aPath)
+inBitmapURI::GetAsciiSpec(nsACString &aSpec)
 {
-  return NS_ERROR_FAILURE;
+  return GetSpec(aSpec);
+}
+
+NS_IMETHODIMP
+inBitmapURI::GetAsciiHost(nsACString &aHost)
+{
+  return GetHost(aHost);
+}
+
+NS_IMETHODIMP
+inBitmapURI::GetOriginCharset(nsACString &result)
+{
+  result.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 inBitmapURI::Equals(nsIURI *other, PRBool *result)
 {
-  nsXPIDLCString spec1;
-  nsXPIDLCString spec2;
+  nsCAutoString spec1;
+  nsCAutoString spec2;
 
-  other->GetSpec(getter_Copies(spec2));
-  GetSpec(getter_Copies(spec1));
-  if (!nsCRT::strcasecmp(spec1, spec2))
-    *result = PR_TRUE;
-  else
-    *result = PR_FALSE;
+  other->GetSpec(spec2);
+  GetSpec(spec1);
+
+  *result = !nsCRT::strcasecmp(spec1.get(), spec2.get());
   return NS_OK;
 }
 
@@ -235,7 +257,7 @@ inBitmapURI::Clone(nsIURI **result)
 }
 
 NS_IMETHODIMP
-inBitmapURI::Resolve(const char *relativePath, char **result)
+inBitmapURI::Resolve(const nsACString &relativePath, nsACString &result)
 {
   return NS_OK;
 }

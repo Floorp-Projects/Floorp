@@ -319,7 +319,7 @@ function LoadPreviewImage()
 
       if (GetScheme(imageSrc))
       {
-        var uri = IOService.newURI(imageSrc, null);
+        var uri = IOService.newURI(imageSrc, null, null);
         if (uri)
         {
           var imgCacheService = Components.classes["@mozilla.org/image/cache;1"].getService();

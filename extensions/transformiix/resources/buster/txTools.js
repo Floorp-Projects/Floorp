@@ -136,7 +136,7 @@ function loadFile(url)
     if (!serv)
         throw Components.results.ERR_FAILURE;
     
-    var chan = serv.newChannel(url, null);
+    var chan = serv.newChannel(url, null, null);
 
     var instream = 
         Components.classes[SIS_CTRID].createInstance(nsIScriptableInputStream);

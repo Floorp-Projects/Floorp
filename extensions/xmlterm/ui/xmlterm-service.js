@@ -158,7 +158,7 @@ XMLTermProtocolHandler.prototype.URIType =
                  Components.interfaces.nsIProtocolHandler.URI_NORELATIVE;
 
 XMLTermProtocolHandler.prototype.newURI =
-function (aSpec, aBaseURI)
+function (aSpec, aCharset, aBaseURI)
 {
     if (aBaseURI)
     {
@@ -191,7 +191,7 @@ function (aURI)
 
     // Open temporary XUL channel
     var xulURI = ioServ.newURI("chrome://xmlterm/content/xmltermDummy.xul",
-                               null);
+                               null, null);
     var temChannel = ioServ.newChannelFromURI(xulURI);
 
     // Get owner of XUL channel
@@ -232,7 +232,7 @@ function (aURI)
 
     var jarURI = "jar:file:"+file.path+"!/content/xmlterm/xmlterm.html";
 
-    var newChannel = ioServ.newChannel(jarURI, null);
+    var newChannel = ioServ.newChannel(jarURI, null, null);
 
     // Make new channel owned by system principal
     newChannel.owner = gSystemPrincipal;

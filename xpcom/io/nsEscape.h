@@ -47,9 +47,9 @@
 
 /* valid mask values for NET_Escape() and NET_EscapedSize(). */
 typedef enum {
-	url_XAlphas		= (1<<0)
-,	url_XPAlphas	= (1<<1)
-,	url_Path		= (1<<2)
+	url_XAlphas		= PR_BIT(0)
+,	url_XPAlphas	= PR_BIT(1)
+,	url_Path		= PR_BIT(2)
 } nsEscapeMask;
 
 #ifdef __cplusplus
@@ -86,7 +86,7 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer,
 
 
 /**
- * DEPRECATED API: use NS_EscapeURLPart/NS_UnescapeURL instead
+ * DEPRECATED API: use NS_EscapeURL/NS_UnescapeURL instead
  */
 NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result);
 NS_COM nsresult nsStdUnescape(char* str, char **result);
@@ -97,44 +97,88 @@ NS_COM nsresult nsStdUnescape(char* str, char **result);
 
 
 /**
- * Constants for partType in the call to NS_EscapeURLPart
+ * NS_EscapeURL/NS_UnescapeURL constants for |flags| parameter:
  */
 enum EscapeMask {
-  esc_Scheme        = 1,
-  esc_Username      = 2,
-  esc_Password      = 4,
-  esc_Host          = 8,
-  esc_Directory     = 16,
-  esc_FileBaseName  = 32,
-  esc_FileExtension = 64,
-  esc_Param         = 128,
-  esc_Query         = 256,
-  esc_Ref           = 512,
-  esc_Forced        = 1024  /* forces escaping of existing escape sequences */
+  /** url components **/
+  esc_Scheme         = PR_BIT(0),
+  esc_Username       = PR_BIT(1),
+  esc_Password       = PR_BIT(2),
+  esc_Host           = PR_BIT(3),
+  esc_Directory      = PR_BIT(4),
+  esc_FileBaseName   = PR_BIT(5),
+  esc_FileExtension  = PR_BIT(6),
+  esc_FilePath       = esc_Directory | esc_FileBaseName | esc_FileExtension,
+  esc_Param          = PR_BIT(7),
+  esc_Query          = PR_BIT(8),
+  esc_Ref            = PR_BIT(9),
+  /** special flags **/
+  esc_Forced         = PR_BIT(10), /* forces escaping of existing escape sequences */
+  esc_OnlyASCII      = PR_BIT(11), /* causes non-ascii octets to be skipped */
+  esc_OnlyNonASCII   = PR_BIT(12), /* causes ascii octets to be skipped */
+  esc_AlwaysCopy     = PR_BIT(13)  /* copy input to result buf even if escaping is unnecessary */
 };
 
 /**
- * NS_EscapeURLPart
+ * NS_EscapeURL
  *
  * Escapes invalid char's in an URL segment.  Has no side-effect if the URL
  * segment is already escaped.  Otherwise, the escaped URL segment is appended
  * to |result|.
  *
- * @param part     - url segment string
- * @param partLen  - url segment string length (-1 if unknown)
- * @param partType - url segment type flag
- * @param result   - result buffer, untouched if part is already escaped
+ * @param  str     url segment string
+ * @param  len     url segment string length (-1 if unknown)
+ * @param  flags   url segment type flag
+ * @param  result  result buffer, untouched if part is already escaped
  *
  * @return TRUE if escaping was performed, FALSE otherwise.
  */
-NS_COM PRBool NS_EscapeURLPart(const char *part,
-                               PRInt32 partLen,
-                               PRInt16 partType,
-                               nsACString &result);
+NS_COM PRBool NS_EscapeURL(const char *str,
+                           PRInt32 len,
+                           PRInt16 flags,
+                           nsACString &result);
 
 /**
- * Expands URL escape sequences.  Equivalent to nsUnescape.
+ * Expands URL escape sequences... beware embedded null bytes!
+ *
+ * @param  str     url string to unescape
+ * @param  len     length of |str|
+ * @param  flags   only esc_OnlyNonASCII and esc_AlwaysCopy are recognized
+ * @param  result  result buffer, untouched if |str| is already unescaped
+ *
+ * @return TRUE if unescaping was performed, FALSE otherwise.
  */
-NS_COM void NS_UnescapeURL(char *str);
+NS_COM PRBool NS_UnescapeURL(const char *str,
+                             PRInt32 len,
+                             PRInt16 flags,
+                             nsACString &result);
+
+/** returns resultant string length **/
+inline PRInt32 NS_UnescapeURL(char *str) { return nsUnescapeCount(str); }
+
+/**
+ * string friendly versions...
+ */
+inline const nsACString &
+NS_EscapeURL(const nsASingleFragmentCString &part, PRInt16 partType, nsACString &result) {
+    const char *temp;
+    if (NS_EscapeURL(part.BeginReading(temp), part.Length(), partType, result))
+        return result;
+    return part;
+}
+inline const nsACString &
+NS_UnescapeURL(const nsASingleFragmentCString &str, PRInt16 flags, nsACString &result) {
+    const char *temp;
+    if (NS_UnescapeURL(str.BeginReading(temp), str.Length(), flags, result))
+        return result;
+    return str;
+}
+// inline unescape
+inline nsAFlatCString &
+NS_UnescapeURL(nsAFlatCString &str)
+{
+    str.SetLength(nsUnescapeCount((char*)str.get()));
+    return str;
+}
 
 #endif //  _ESCAPE_H_

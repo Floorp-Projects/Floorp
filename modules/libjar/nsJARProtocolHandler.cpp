@@ -44,6 +44,7 @@
 #include "nsIURL.h"
 #include "nsJARChannel.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsNetCID.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
@@ -122,11 +123,9 @@ nsJARProtocolHandler::GetJARCache(nsIZipReaderCache* *result)
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsJARProtocolHandler::GetScheme(char* *result)
+nsJARProtocolHandler::GetScheme(nsACString &result)
 {
-    *result = nsCRT::strdup("jar");
-    if (*result == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    result = "jar";
     return NS_OK;
 }
 
@@ -148,24 +147,34 @@ nsJARProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsJARProtocolHandler::NewURI(const nsACString &aSpec,
+                             const char *aCharset,
+                             nsIURI *aBaseURI,
                              nsIURI **result)
 {
     nsresult rv = NS_OK;
     nsIURI* url;
 
-    rv = nsJARURI::Create(nsnull, NS_GET_IID(nsIJARURI), (void**)&url);
-    if (NS_FAILED(rv)) return rv;
+    nsJARURI *jarURI = new nsJARURI();
+    if (!jarURI)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    if (aBaseURI)
-    {
-        nsXPIDLCString aResolvedURI;
-        rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
+    NS_ADDREF(url = jarURI);
+
+    rv = jarURI->Init(aCharset);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
+        return rv;
+    }
+
+    if (aBaseURI) {
+        nsCAutoString aResolvedURI;
+        rv = aBaseURI->Resolve(aSpec, aResolvedURI);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec(aResolvedURI);
-    } else {
-        rv = url->SetSpec((char*)aSpec);
     }
+    else
+        rv = url->SetSpec(aSpec);
 
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);

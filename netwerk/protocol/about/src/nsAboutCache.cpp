@@ -317,15 +317,13 @@ nsAboutCache::ParseURI(nsIURI * uri, nsCString &deviceID)
 
     deviceID.Truncate();
 
-    nsXPIDLCString path;
-    rv = uri->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString p(path);
-
-    nsReadingIterator<char> start, valueStart, end;
-    p.BeginReading(start);
-    p.EndReading(end);
+    nsACString::const_iterator start, valueStart, end;
+    path.BeginReading(start);
+    path.EndReading(end);
 
     valueStart = end;
     if (!FindInReadable(NS_LITERAL_CSTRING("?device="), start, valueStart))

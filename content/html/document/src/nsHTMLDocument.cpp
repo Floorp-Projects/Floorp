@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFileChannel.h"
 #include "nsXPIDLString.h"
+#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsHTMLDocument.h"
@@ -607,7 +608,7 @@ nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
 }
 
 PRBool 
-nsHTMLDocument::TryBookmarkCharset(nsXPIDLCString* aUrlSpec,
+nsHTMLDocument::TryBookmarkCharset(nsAFlatCString* aUrlSpec,
                                    PRInt32& aCharsetSource, 
                                    nsAString& aCharset)
 {
@@ -621,7 +622,7 @@ nsHTMLDocument::TryBookmarkCharset(nsXPIDLCString* aUrlSpec,
     if (bookmarks) {
       if (aUrlSpec) {
         nsXPIDLString pBookmarkedCharset;
-        rv = bookmarks->GetLastCharset(*aUrlSpec, getter_Copies(pBookmarkedCharset));
+        rv = bookmarks->GetLastCharset(aUrlSpec->get(), getter_Copies(pBookmarkedCharset));
         if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE)) {
           aCharset = pBookmarkedCharset;
           aCharsetSource = kCharsetFromBookmarks;
@@ -947,11 +948,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  nsXPIDLCString scheme;
-  aURL->GetScheme(getter_Copies(scheme));
+  nsCAutoString scheme;
+  aURL->GetScheme(scheme);
 
-  nsXPIDLCString urlSpec;
-  aURL->GetSpec(getter_Copies(urlSpec));
+  nsCAutoString urlSpec;
+  aURL->GetSpec(urlSpec);
 
   PRInt32 charsetSource = kCharsetUninitialized;
   nsAutoString charset; 
@@ -968,11 +969,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (TryHttpHeaderCharset(httpChannel, charsetSource, charset)) {
       // Use the header's charset.
     }
-    else if (scheme && nsCRT::strcasecmp("about", scheme) &&          // don't try to access bookmarks for about:blank
+    else if (nsCRT::strcasecmp("about", scheme.get()) &&          // don't try to access bookmarks for about:blank
              TryBookmarkCharset(&urlSpec, charsetSource, charset)) {
       // Use the bookmark's charset.
     }
-    else if (cacheDescriptor && urlSpec &&
+    else if (cacheDescriptor && !urlSpec.IsEmpty() &&
              TryCacheCharset(cacheDescriptor, charsetSource, charset)) {
       // Use the cache's charset.
     }
@@ -1800,11 +1801,9 @@ nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
   aURI.Truncate();
   nsCOMPtr<nsIURI> uri(do_QueryInterface(mBaseURL ? mBaseURL : mDocumentURL));
   if (uri) {
-    nsXPIDLCString spec;
-    uri->GetSpec(getter_Copies(spec));
-    if (spec) {
-      CopyASCIItoUCS2(nsDependentCString(spec), aURI);
-    }
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    aURI = NS_ConvertUTF8toUCS2(spec);
   }
   return NS_OK;
 }
@@ -1872,11 +1871,10 @@ nsHTMLDocument::GetDomain(nsAWritableString& aDomain)
   if (NS_FAILED(GetDomainURI(getter_AddRefs(uri))))
     return NS_ERROR_FAILURE;
 
-  char *hostName;
-  if (NS_FAILED(uri->GetHost(&hostName)))
+  nsCAutoString hostName;
+  if (NS_FAILED(uri->GetHost(hostName)))
     return NS_ERROR_FAILURE;
-  aDomain.Assign(NS_ConvertASCIItoUCS2(hostName));
-  nsCRT::free(hostName);
+  aDomain.Assign(NS_ConvertUTF8toUCS2(hostName));
 
   return NS_OK;
 }
@@ -1909,16 +1907,14 @@ nsHTMLDocument::SetDomain(const nsAReadableString& aDomain)
   nsCOMPtr<nsIURI> uri;
   if (NS_FAILED(GetDomainURI(getter_AddRefs(uri))))
     return NS_ERROR_FAILURE;
-  nsXPIDLCString scheme;
-  if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
+  nsCAutoString scheme;
+  if (NS_FAILED(uri->GetScheme(scheme)))
     return NS_ERROR_FAILURE;
-  nsXPIDLCString path;
-  if (NS_FAILED(uri->GetPath(getter_Copies(path))))
+  nsCAutoString path;
+  if (NS_FAILED(uri->GetPath(path)))
     return NS_ERROR_FAILURE;
-  nsAutoString newURIString; newURIString.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
-  newURIString.Append(NS_LITERAL_STRING("://"));
-  newURIString += aDomain;
-  newURIString.AppendWithConversion(path);
+  NS_ConvertUTF8toUCS2 newURIString(scheme);
+  newURIString += NS_LITERAL_STRING("://") + aDomain + NS_ConvertUTF8toUCS2(path);
   nsIURI *newURI;
   if (NS_FAILED(NS_NewURI(&newURI, newURIString)))
     return NS_ERROR_FAILURE;
@@ -1959,10 +1955,9 @@ NS_IMETHODIMP
 nsHTMLDocument::GetURL(nsAWritableString& aURL)
 {
   if (nsnull != mDocumentURL) {
-    char* str;
-    mDocumentURL->GetSpec(&str);
-    aURL.Assign(NS_ConvertASCIItoUCS2(str));
-    nsCRT::free(str);
+    nsCAutoString str;
+    mDocumentURL->GetSpec(str);
+    aURL.Assign(NS_ConvertUTF8toUCS2(str));
   }
   return NS_OK;
 }
@@ -2268,7 +2263,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
-  result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, nsnull, group);
+  result = NS_NewChannel(getter_AddRefs(channel), aSourceURL, nsnull, group);
 
   if (NS_FAILED(result)) return result;
 
@@ -2432,7 +2427,7 @@ nsHTMLDocument::Open(nsIDOMDocument** aReturn)
   result = GetSourceDocumentURL(cx, getter_AddRefs(sourceURL));
   // Recover if we had a problem obtaining the source URL
   if (!sourceURL) {
-    result = NS_NewURI(getter_AddRefs(sourceURL), "about:blank");
+    result = NS_NewURI(getter_AddRefs(sourceURL), NS_LITERAL_CSTRING("about:blank"));
   }
 
   if (NS_SUCCEEDED(result)) {
@@ -2560,14 +2555,14 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsXPIDLCString spec;
+  nsCAutoString spec;
 
   if (mDocumentURL) {
-    rv = mDocumentURL->GetSpec(getter_Copies(spec));
+    rv = mDocumentURL->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!mDocumentURL || nsCRT::strcasecmp(spec, "about:blank") == 0) {
+  if (!mDocumentURL || nsCRT::strcasecmp(spec.get(), "about:blank") == 0) {
     // The current document's URL and principal are empty or "about:blank".
     // By writing to this document, the script acquires responsibility for the
     // document for security purposes. Thus a document.write of a script tag
@@ -3825,17 +3820,15 @@ nsresult
 nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 { 
   nsresult rv = NS_OK;
-  nsAutoString  url;
-  nsXPIDLCString originalSpec, urlPart;
-  
+  nsCAutoString url, originalSpec;
 
-  mDocumentURL->GetSpec(getter_Copies(originalSpec));
+  mDocumentURL->GetSpec(originalSpec);
   
   // Generate the wyciwyg url
-  url.Assign(NS_LITERAL_STRING( "wyciwyg://" ));
-  url.AppendInt(mWyciwygSessionCnt++, 10);
-  url.Append(NS_LITERAL_STRING("/"));
-  url.Append(NS_ConvertUTF8toUCS2(originalSpec));
+  url = NS_LITERAL_CSTRING("wyciwyg://")
+      + nsPrintfCString("%d", mWyciwygSessionCnt++)
+      + NS_LITERAL_CSTRING("/")
+      + originalSpec;
 
   nsCOMPtr<nsIURI> wcwgURI;
   NS_NewURI(getter_AddRefs(wcwgURI), url);
@@ -3844,10 +3837,10 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   // out-of-band document.write() script to cache
   nsCOMPtr<nsIChannel> channel;
   // Create a wyciwyg Channel
-  rv = NS_OpenURI(getter_AddRefs(channel), wcwgURI);
+  rv = NS_NewChannel(getter_AddRefs(channel), wcwgURI);
   if (NS_SUCCEEDED(rv) && channel) {    
     mWyciwygChannel = do_QueryInterface(channel);
-    mWyciwygChannel->CreateCacheEntry(NS_ConvertUCS2toUTF8(url).get());
+    mWyciwygChannel->CreateCacheEntry(url.get());
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup;

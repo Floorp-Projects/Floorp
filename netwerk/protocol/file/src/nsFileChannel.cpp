@@ -37,6 +37,7 @@
 
 #include "nsFileChannel.h"
 #include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -139,12 +140,10 @@ nsFileChannel::GetName(PRUnichar* *result)
     if (mCurrentRequest)
         return mCurrentRequest->GetName(result);
     nsresult rv;
-    nsXPIDLCString urlStr;
-    rv = mURI->GetSpec(getter_Copies(urlStr));
+    nsCAutoString name;
+    rv = mURI->GetSpec(name);
     if (NS_FAILED(rv)) return rv;
-    nsAutoString name;
-    name.AppendWithConversion(urlStr);
-    *result = ToNewUnicode(name);
+    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -258,7 +257,7 @@ nsFileChannel::Open(nsIInputStream **result)
     rv = EnsureTransport();
     if (NS_FAILED(rv)) goto done;
 
-    rv = mFileTransport->OpenInputStream(0, -1, 0, result);
+    rv = mFileTransport->OpenInputStream(0, PRUint32(-1), 0, result);
   done:
     if (NS_FAILED(rv)) {
         // release the transport so that we don't think we're in progress
@@ -293,7 +292,7 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) return rv;
     }
     
-    rv = mFileTransport->AsyncRead(this, ctxt, 0, -1, 0,
+    rv = mFileTransport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0,
                                    getter_AddRefs(mCurrentRequest));
 
     if (NS_FAILED(rv)) {

@@ -352,7 +352,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
             rv = securityContext->GetOrigin(codebase, sizeof(codebase) - 1);
             if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsIURI> codebaseURI;
-                rv = NS_NewURI(getter_AddRefs(codebaseURI), codebase);
+                rv = NS_NewURI(getter_AddRefs(codebaseURI), nsDependentCString(codebase));
                 if (NS_SUCCEEDED(rv)) {
                     nsCOMPtr<nsIPrincipal> principal;
                     rv = ssm->GetCodebasePrincipal(codebaseURI, getter_AddRefs(principal));

@@ -74,7 +74,7 @@ nsEntityConverter::LoadVersionPropertyFile()
 	nsIInputStream* in = NULL;
 	nsresult rv;
   
-  rv = NS_NewURI(&url,aUrl,NULL);
+  rv = NS_NewURI(&url,aUrl);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = NS_OpenURI(&in,url);
@@ -134,7 +134,7 @@ nsEntityConverter::LoadEntityPropertyFile(PRInt32 version)
   aUrl.Append(versionName);
   aUrl.Append(NS_LITERAL_STRING(".properties"));
 
-  rv = NS_NewURI(&url,aUrl,NULL);
+  rv = NS_NewURI(&url,aUrl);
 	if (NS_FAILED(rv)) return NULL;
 
 	rv = NS_OpenURI(&in,url);

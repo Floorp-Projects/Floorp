@@ -26,7 +26,7 @@
 #include "nsIURL.h"
 #include "nsIFile.h"
 #include "nsIChannel.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
@@ -202,12 +202,12 @@ nsresult nsExternalHelperAppService::InitDataSource()
   NS_ENSURE_SUCCESS(rv, rv);
   
   // Get file url spec to be used to initialize the DS.
-  nsXPIDLCString urlSpec;
-  rv = NS_GetURLSpecFromFile(mimeTypesFile, getter_Copies(urlSpec));
+  nsCAutoString urlSpec;
+  rv = NS_GetURLSpecFromFile(mimeTypesFile, urlSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the data source; if it is going to be created, then load is synchronous.
-  rv = rdf->GetDataSourceBlocking( urlSpec, getter_AddRefs( mOverRideDataSource ) );
+  rv = rdf->GetDataSourceBlocking( urlSpec.get(), getter_AddRefs( mOverRideDataSource ) );
   NS_ENSURE_SUCCESS(rv, rv);
 
   // initialize our resources if we haven't done so already...
@@ -238,7 +238,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsXPIDLCString fileExtension;
+  nsCAutoString fileExtension;
 
   // (1) Try to find a mime object by looking the mime type
   GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
@@ -250,8 +250,8 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
     if (url)
     {
-      url->GetFileExtension(getter_Copies(fileExtension));    
-      GetFromExtension(fileExtension, getter_AddRefs(mimeInfo));
+      url->GetFileExtension(fileExtension);    
+      GetFromExtension(fileExtension.get(), getter_AddRefs(mimeInfo));
       // only over write mimeInfo if we got a non-null mime info object.
       if (mimeInfo)
       {
@@ -277,7 +277,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     if (mimeInfo)
     {
       // the file extension was conviently already filled in by our call to FindOSMimeInfoForType.
-      mimeInfo->SetFileExtensions(fileExtension);
+      mimeInfo->SetFileExtensions(fileExtension.get());
       mimeInfo->SetMIMEType(aMimeContentType);
       // we may need to add a new method to nsIMIMEService so we can add this mime info object to our mime service.
     }
@@ -293,7 +293,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     if (fileExtension.IsEmpty()) {
       nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
       if (url) {
-        url->GetFileExtension(getter_Copies(fileExtension));    
+        url->GetFileExtension(fileExtension);
       }
     }
 
@@ -304,11 +304,13 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     if (matches) {
       mimeInfo->SetPrimaryExtension(fileExtension.get());
     } else {
-      mimeInfo->GetPrimaryExtension(getter_Copies(fileExtension));
+      nsXPIDLCString buf;
+      mimeInfo->GetPrimaryExtension(getter_Copies(buf));
+      fileExtension = buf;
     }
     
     // this code is incomplete and just here to get things started..
-    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
+    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension.get(), aWindowContext);
     handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
   }
   
@@ -970,13 +972,12 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   {
     // try to extract the file name from the url and use that as a first pass as the
     // leaf name of our temp file...
-    char *leafName = nsnull; // may be shortened by NS_UnescapeURL
-    url->GetFileName(&leafName);
-    if (leafName)
+    nsCAutoString leafName; // may be shortened by NS_UnescapeURL
+    url->GetFileName(leafName);
+    if (!leafName.IsEmpty())
     {
-      NS_UnescapeURL(leafName);
+      NS_UnescapeURL((char *) leafName.get());
       mSuggestedFileName = NS_ConvertUTF8toUCS2(leafName);
-      nsMemory::Free(leafName);
 
       // replace platform specific path separator and illegal characters to avoid any confusion
       mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
@@ -1814,8 +1815,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
 #ifdef XP_MAC
  	if (NS_SUCCEEDED(rv))
  	{
-    nsXPIDLCString fileExt;
-    url->GetFileExtension(getter_Copies(fileExt));     
+    nsCAutoString fileExt;
+    url->GetFileExtension(fileExt);
     
     nsresult rv2;
     nsCOMPtr<nsIFileURL> fileurl = do_QueryInterface( url, &rv2 );
@@ -1835,23 +1836,21 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
     
   if (NS_SUCCEEDED(rv)) 
   {
-      nsXPIDLCString ext;
-      rv = url->GetFileExtension(getter_Copies(ext));
+      nsCAutoString ext;
+      rv = url->GetFileExtension(ext);
       if (NS_FAILED(rv)) return rv;
       if (ext.IsEmpty()) {
           *aContentType = nsnull;
           return NS_ERROR_FAILURE;
       }
-      rv = GetTypeFromExtension(ext, aContentType);
+      rv = GetTypeFromExtension(ext.get(), aContentType);
       return rv;
   }
 
-  nsXPIDLCString cStrSpec;
+  nsCAutoString specStr;
   // no url, let's give the raw spec a shot
-  rv = aURI->GetSpec(getter_Copies(cStrSpec));
+  rv = aURI->GetSpec(specStr);
   if (NS_FAILED(rv)) return rv;
-
-  nsCAutoString specStr(cStrSpec);
 
   // find the file extension (if any)
   nsCAutoString extStr;

@@ -827,13 +827,13 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  nsXPIDLCString spec;
-  uri->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  uri->GetSpec(spec);
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (wwatch) {
     nsCOMPtr<nsIDOMWindow> newWindow;
-    wwatch->OpenWindow(parentWindow, spec, "", 0, 0,
+    wwatch->OpenWindow(parentWindow, spec.get(), "", 0, 0,
               getter_AddRefs(newWindow));
   }
 

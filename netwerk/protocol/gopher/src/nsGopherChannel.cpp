@@ -65,8 +65,8 @@ nsGopherChannel::nsGopherChannel()
 nsGopherChannel::~nsGopherChannel()
 {
 #ifdef PR_LOGGING
-    nsXPIDLCString spec;
-    mUrl->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    mUrl->GetAsciiSpec(spec);
     PR_LOG(gGopherLog, PR_LOG_ALWAYS, ("~nsGopherChannel() for %s", spec.get()));
 #endif
 }
@@ -90,13 +90,13 @@ nsGopherChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
     mUrl = uri;
     mProxyInfo = proxyInfo;
     
-    nsXPIDLCString buffer;
+    nsCAutoString buffer;
 
-    rv = url->GetPath(getter_Copies(buffer));
+    rv = url->GetPath(buffer); // unescaped down below
     if (NS_FAILED(rv))
         return rv;
 
-    rv = url->GetHost(getter_Copies(mHost));
+    rv = url->GetAsciiHost(mHost);
     if (NS_FAILED(rv))
         return rv;
     rv = url->GetPort(&mPort);
@@ -572,10 +572,9 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
             
             nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
             if (converter) {
-                nsXPIDLCString spec;
-                rv = mUrl->GetSpec(getter_Copies(spec));
-                nsUnescape(NS_CONST_CAST(char*, spec.get()));
-                converter->SetTitle(NS_ConvertASCIItoUCS2(spec).get());
+                nsCAutoString spec;
+                rv = mUrl->GetSpec(spec);
+                converter->SetTitle(NS_ConvertUTF8toUCS2(spec).get());
                 converter->PreFormatHTML(PR_TRUE);
             }
         } else 
@@ -657,15 +656,14 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
             mRequest.AppendWithConversion(search.get());
 
             // and update our uri
-            nsXPIDLCString spec;
-            rv = mUrl->GetSpec(getter_Copies(spec));
+            nsCAutoString spec;
+            rv = mUrl->GetAsciiSpec(spec);
             if (NS_FAILED(rv))
                 return rv;
 
-            nsCString strSpec(spec.get());
-            strSpec.Append('?');
-            strSpec.AppendWithConversion(search.get());
-            rv = mUrl->SetSpec(strSpec.get());
+            spec.Append('?');
+            spec.AppendWithConversion(search.get());
+            rv = mUrl->SetSpec(spec);
             if (NS_FAILED(rv))
                 return rv;
         } else {

@@ -120,18 +120,17 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 
 NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 {
-  char *url = nsnull;
+  nsCAutoString url;
   nsresult rv = NS_ERROR_FAILURE;
   
   if (aURL)
   {
-    aURL->GetSpec(&url);
-    if (url)
+    aURL->GetSpec(url);
+    if (!url.IsEmpty())
     {
       nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
       if (icService)
-        rv = icService->LaunchURL(url);
-      nsMemory::Free(url);
+        rv = icService->LaunchURL(url.get());
     }
   }
   return rv;

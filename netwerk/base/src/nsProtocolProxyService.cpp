@@ -291,8 +291,7 @@ void PR_CALLBACK nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
     }
 
     nsCOMPtr<nsIURI> pURL;
-    rv = pIOService->NewURI((const char*) pps->mPACURL, nsnull, 
-                            getter_AddRefs(pURL));
+    rv = pIOService->NewURI(pps->mPACURL, nsnull, nsnull, getter_AddRefs(pURL));
     if (NS_FAILED(rv)) {
         NS_ERROR("New URI failed");
         return;
@@ -320,10 +319,10 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
         return PR_TRUE;
 
     PRInt32 port;
-    nsXPIDLCString host;
+    nsCAutoString host;
     
-    nsresult rv = aURI->GetHost(getter_Copies(host));
-    if (NS_FAILED(rv) || !host || !*host) 
+    nsresult rv = aURI->GetAsciiHost(host);
+    if (NS_FAILED(rv) || host.IsEmpty())
         return PR_FALSE;
     
     rv = aURI->GetPort(&port);
@@ -332,7 +331,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
     }
     
     PRInt32 index = -1;
-    int host_len = PL_strlen(host);
+    int host_len = host.Length();
     int filter_host_len;
     
     while (++index < mFiltersArray.Count()) 
@@ -340,12 +339,10 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
         host_port* hp = (host_port*) mFiltersArray[index];
         
         // only if port doesn't exist or matches
-        if (((hp->port == -1) || (hp->port == port)) &&
-            hp->host)
-        {
+        if (((hp->port == -1) || (hp->port == port)) && hp->host) {
             filter_host_len = hp->host->Length();
             if ((host_len >= filter_host_len) && 
-                (0 == PL_strncasecmp(host + host_len - filter_host_len, 
+                (0 == PL_strncasecmp(host.get() + host_len - filter_host_len, 
                                      hp->host->get(), filter_host_len)))
                 return PR_FALSE;
         }
@@ -365,8 +362,8 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
     nsCOMPtr<nsIIOService> ios = do_GetService(kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString scheme;
-    rv = aURI->GetScheme(getter_Copies(scheme));
+    nsCAutoString scheme;
+    rv = aURI->GetScheme(scheme);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIProtocolHandler> handler;

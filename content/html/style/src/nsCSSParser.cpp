@@ -1144,11 +1144,8 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
   (*aAppendFunc)(rule, aData);
 
   if (mChildLoader) {
-    // XXX probably need a way to encode unicode junk for the part of
-    // the url that follows a "?"
     nsCOMPtr<nsIURI> url;
-    // XXX need to have nsILoadGroup passed in here
-    aErrorCode = NS_NewURI(getter_AddRefs(url), aURLSpec, mURL/*, group*/);
+    aErrorCode = NS_NewURI(getter_AddRefs(url), aURLSpec, nsnull, mURL);
 
     if (NS_FAILED(aErrorCode)) {
       // import url is bad

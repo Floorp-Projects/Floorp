@@ -394,7 +394,7 @@ PlaceHolderRequest::PlaceHolderRequest()
 
     if (gRefCnt++ == 0) {
         nsresult rv;
-        rv = NS_NewURI(&gURI, "about:xul-master-placeholder", nsnull);
+        rv = NS_NewURI(&gURI, NS_LITERAL_CSTRING("about:xul-master-placeholder"), nsnull);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:xul-master-placeholder");
     }
 }
@@ -2996,12 +2996,12 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
     // Add it to the persisted set for this document (if it's not
     // there already).
     {
-        nsXPIDLCString docurl;
-        rv = mDocumentURL->GetSpec(getter_Copies(docurl));
+        nsCAutoString docurl;
+        rv = mDocumentURL->GetSpec(docurl);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFResource> doc;
-        rv = gRDFService->GetResource(docurl, getter_AddRefs(doc));
+        rv = gRDFService->GetResource(docurl.get(), getter_AddRefs(doc));
         if (NS_FAILED(rv)) return rv;
 
         PRBool hasAssertion;
@@ -4149,11 +4149,9 @@ nsXULDocument::GetBaseURI(nsAWritableString &aURI)
 {
   aURI.Truncate();
   if (mDocumentBaseURL) {
-    nsXPIDLCString spec;
-    mDocumentBaseURL->GetSpec(getter_Copies(spec));
-    if (spec) {
-      CopyASCIItoUCS2(nsDependentCString(spec), aURI);
-    }
+    nsCAutoString spec;
+    mDocumentBaseURL->GetSpec(spec);
+    aURI = NS_ConvertUTF8toUCS2(spec);
   }
   return NS_OK;
 }
@@ -4345,11 +4343,11 @@ nsXULDocument::StartLayout(void)
 {
     if (! mRootContent) {
 #ifdef PR_LOGGING
-        nsXPIDLCString urlspec;
-        mDocumentURL->GetSpec(getter_Copies(urlspec));
+        nsCAutoString urlspec;
+        mDocumentURL->GetSpec(urlspec);
 
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
-               ("xul: unable to layout '%s'; no root content", (const char*) urlspec));
+               ("xul: unable to layout '%s'; no root content", urlspec.get()));
 #endif
         return NS_OK;
     }
@@ -5210,8 +5208,8 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     // sinking content, it "selects" the memorized document from the
     // FastLoad multiplexor, using the nsIURI* as a fast identifier.
     if (mIsFastLoad) {
-        nsXPIDLCString urlspec;
-        rv = aURI->GetSpec(getter_Copies(urlspec));
+        nsCAutoString urlspec;
+        rv = aURI->GetAsciiSpec(urlspec);
         if (NS_FAILED(rv)) return rv;
 
         // If StartMuxedDocument returns NS_ERROR_NOT_AVAILABLE, then
@@ -5220,7 +5218,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
         // will therefore arrange to update the file, writing new data
         // at the end while old (available) data continues to be read
         // from the pre-existing part of the file.
-        rv = gFastLoadService->StartMuxedDocument(aURI, urlspec,
+        rv = gFastLoadService->StartMuxedDocument(aURI, urlspec.get(),
                                           nsIFastLoadService::NS_FASTLOAD_READ |
                                           nsIFastLoadService::NS_FASTLOAD_WRITE);
         NS_ASSERTION(rv != NS_ERROR_NOT_AVAILABLE, "only reading FastLoad?!");
@@ -5278,11 +5276,11 @@ nsXULDocument::ApplyPersistentAttributes()
     rv = NS_NewISupportsArray(getter_AddRefs(elements));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString docurl;
-    mDocumentURL->GetSpec(getter_Copies(docurl));
+    nsCAutoString docurl;
+    mDocumentURL->GetSpec(docurl);
 
     nsCOMPtr<nsIRDFResource> doc;
-    gRDFService->GetResource(docurl, getter_AddRefs(doc));
+    gRDFService->GetResource(docurl.get(), getter_AddRefs(doc));
 
     nsCOMPtr<nsISimpleEnumerator> persisted;
     mLocalStore->GetTargets(doc, kNC_persist, PR_TRUE, getter_AddRefs(persisted));
@@ -5559,12 +5557,12 @@ nsXULDocument::PrepareToWalk()
         rv = mCurrentPrototype->GetURI(getter_AddRefs(url));
         if (NS_FAILED(rv)) return rv;
 
-        nsXPIDLCString urlspec;
-        rv = url->GetSpec(getter_Copies(urlspec));
+        nsCAutoString urlspec;
+        rv = url->GetSpec(urlspec);
         if (NS_FAILED(rv)) return rv;
 
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
-               ("xul: error parsing '%s'", (const char*) urlspec));
+               ("xul: error parsing '%s'", urlspec.get()));
 #endif
 
         return NS_OK;
@@ -5844,11 +5842,11 @@ nsXULDocument::ResumeWalk()
 
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-            nsXPIDLCString urlspec;
-            uri->GetSpec(getter_Copies(urlspec));
+            nsCAutoString urlspec;
+            uri->GetSpec(urlspec);
 
             PR_LOG(gXULLog, PR_LOG_DEBUG,
-                   ("xul: loading overlay %s", (const char*) urlspec));
+                   ("xul: loading overlay %s", urlspec.get()));
         }
 #endif
         // Look in the prototype cache for the prototype document with
@@ -6051,10 +6049,9 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             nsCOMPtr<nsIURI> uri;
             channel->GetURI(getter_AddRefs(uri));
             if (uri) {
-                nsXPIDLCString uriSpec;
-                uri->GetSpec(getter_Copies(uriSpec));
-                printf("Failed to load %s\n",
-                       uriSpec.get() ? (const char*) uriSpec : "");
+                nsCAutoString uriSpec;
+                uri->GetSpec(uriSpec);
+                printf("Failed to load %s\n", uriSpec.get());
             }
         }
     }
@@ -6093,9 +6090,9 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         // End muxing afterward.
         nsCOMPtr<nsIURI> uri = scriptProto->mSrcURI;
         if (mIsFastLoad) {
-            nsXPIDLCString urispec;
-            uri->GetSpec(getter_Copies(urispec));
-            rv = gFastLoadService->StartMuxedDocument(uri, urispec,
+            nsCAutoString urispec;
+            uri->GetAsciiSpec(urispec);
+            rv = gFastLoadService->StartMuxedDocument(uri, urispec.get(),
                                           nsIFastLoadService::NS_FASTLOAD_WRITE);
             NS_ASSERTION(rv != NS_ERROR_NOT_AVAILABLE, "reading FastLoad?!");
             if (NS_SUCCEEDED(rv))
@@ -7255,10 +7252,10 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
         nsCOMPtr<nsIURI> uri;
         aChannel->GetOriginalURI(getter_AddRefs(uri));
 
-        nsXPIDLCString spec;
-        uri->GetSpec(getter_Copies(spec));
+        nsCAutoString spec;
+        uri->GetSpec(spec);
 
-        printf("*** Failed to load overlay %s\n", (const char*) spec);
+        printf("*** Failed to load overlay %s\n", spec.get());
 #endif
 
         rv = mDocument->ResumeWalk();

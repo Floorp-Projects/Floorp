@@ -329,8 +329,8 @@ nsresult auxLoad(char *uriBuf)
     }
     printf("\n");
     uriList->AppendElement(uri);
-    rv = NS_OpenURI(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
-    RETURN_IF_FAILED(rv, "NS_OpenURI");
+    rv = NS_NewChannel(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
+    RETURN_IF_FAILED(rv, "NS_NewChannel");
     
     gKeepRunning++;
     rv = chan->AsyncOpen(listener, myBool);
@@ -384,7 +384,7 @@ int main(int argc, char **argv)
     rv = NS_NewURI(getter_AddRefs(baseURI), argv[1]);
     RETURN_IF_FAILED(rv, "NS_NewURI");
 
-    rv = NS_OpenURI(getter_AddRefs(chan), baseURI, nsnull, nsnull, callbacks);
+    rv = NS_NewChannel(getter_AddRefs(chan), baseURI, nsnull, nsnull, callbacks);
     RETURN_IF_FAILED(rv, "NS_OpenURI");
     gKeepRunning++;
 

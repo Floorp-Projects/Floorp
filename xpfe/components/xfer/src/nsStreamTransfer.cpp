@@ -40,7 +40,7 @@
 #include "nsStreamXferOp.h"
 #include "nsIFilePicker.h"
 #include "nsILocalFile.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
@@ -187,7 +187,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
     if ( NS_SUCCEEDED( rv ) && uri ) {
         // Construct channel from URI.
         nsCOMPtr<nsIChannel> channel;
-        rv = NS_OpenURI( getter_AddRefs( channel ), uri, nsnull );
+        rv = NS_NewChannel( getter_AddRefs( channel ), uri, nsnull );
 
         if ( NS_SUCCEEDED( rv ) && channel ) {
             // See if LOAD_FROM_CACHE is called for.
@@ -359,23 +359,21 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
 
             nsCOMPtr<nsIURL> url( do_QueryInterface( uri, &rv ) );
             if ( NS_SUCCEEDED( rv ) && url ) {
-                char *nameFromURL = 0;
-                rv = url->GetFileName( &nameFromURL );
-                if ( NS_SUCCEEDED( rv ) && nameFromURL ) {
+                nsCAutoString nameFromURL;
+                rv = url->GetFileName( nameFromURL );
+                if ( NS_SUCCEEDED( rv ) && !nameFromURL.IsEmpty() ) {
                     // Unescape the file name (GetFileName escapes it).
-                    nsUnescape( nameFromURL );
+                    nsUnescape( (char *) nameFromURL.get() );
 
                     //make sure nameFromURL only contains ascii,
                     //otherwise we have no idea about urlname's original charset, suggest nothing
-                    char *ptr;
-                    for (ptr = nameFromURL; *ptr; ptr++)
+                    const char *ptr;
+                    for (ptr = nameFromURL.get(); *ptr; ptr++)
                       if (*ptr & '\200')
                         break;
 
                     if (!(*ptr))
                       result = NS_ConvertASCIItoUCS2(nameFromURL).get();
-
-                    nsCRT::free( nameFromURL );
                 }
             }
         }

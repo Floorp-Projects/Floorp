@@ -26,8 +26,9 @@
 
 #include "nsHttp.h"
 #include "nsIProxyInfo.h"
-#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsDependentString.h"
+#include "nsSharableString.h"
 #include "plstr.h"
 #include "nsCRT.h"
 
@@ -38,7 +39,7 @@
 class nsHttpConnectionInfo
 {
 public:
-    nsHttpConnectionInfo(const char *host, PRInt32 port,
+    nsHttpConnectionInfo(const nsACString &host, PRInt32 port,
                          nsIProxyInfo* proxyInfo,
                          PRBool usingSSL=PR_FALSE)
         : mRef(0)
@@ -70,13 +71,16 @@ public:
         return n;
     }
 
-    nsresult SetOriginServer(const char* host, PRInt32 port)
+    nsresult SetOriginServer(const nsACString &host, PRInt32 port)
     {
-        if (host)
-            mHost.Adopt(nsCRT::strdup(host));
+        mHost = host;
         mPort = port == -1 ? DefaultPort() : port;
-        
         return NS_OK;
+    }
+
+    nsresult SetOriginServer(const char *host, PRInt32 port)
+    {
+        return SetOriginServer(nsDependentCString(host), port);
     }
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host() : nsnull; }
@@ -104,22 +108,21 @@ public:
                     info->ProxyPort() == ProxyPort());
 
         // otherwise, just check the hosts
-        return (!PL_strcasecmp(info->mHost, mHost) &&
+        return (!PL_strcasecmp(info->Host(), Host()) &&
                 info->mPort == mPort);
 
     }
 
-    const char   *Host()           { return mHost; }
-    PRInt32       Port()           { return mPort; }
-    nsIProxyInfo *ProxyInfo()      { return mProxyInfo; }
-    PRBool        UsingHttpProxy() { return mUsingHttpProxy; }
-    PRBool        UsingSSL()       { return mUsingSSL; }
-
-    PRInt32       DefaultPort()    { return mUsingSSL ? 443 : 80; }
+    const char   *Host() const           { return mHost.get(); }
+    PRInt32       Port() const           { return mPort; }
+    nsIProxyInfo *ProxyInfo()            { return mProxyInfo; }
+    PRBool        UsingHttpProxy() const { return mUsingHttpProxy; }
+    PRBool        UsingSSL() const       { return mUsingSSL; }
+    PRInt32       DefaultPort() const    { return mUsingSSL ? 443 : 80; }
             
 private:
     nsrefcnt               mRef;
-    nsXPIDLCString         mHost;
+    nsSharableCString      mHost;
     PRInt32                mPort;
     nsCOMPtr<nsIProxyInfo> mProxyInfo;
     PRPackedBool           mUsingHttpProxy;

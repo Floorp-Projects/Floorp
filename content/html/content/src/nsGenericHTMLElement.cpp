@@ -68,6 +68,7 @@
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsEscape.h"
 #include "nsStyleConsts.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
@@ -1416,8 +1417,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
     // Only bother to handle the mouse event if there was an href
     // specified.
     if (hrefCStr) {
-      nsAutoString href;
-      href.AssignWithConversion(hrefCStr);
+      NS_ConvertUTF8toUCS2 href(hrefCStr);
       // Strip off any unneeded CF/LF (for Bug 52119)
       // It can't be done in the parser because of Bug 15204
       href.StripChars("\r\n");
@@ -2261,7 +2261,7 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
 
     nsIURI* url = nsnull;
     {
-      result = NS_NewURI(&url, baseHref, docBaseURL);
+      result = NS_NewURI(&url, baseHref, nsnull, docBaseURL);
     }
     NS_IF_RELEASE(docBaseURL);
     *aBaseURL = url;
@@ -4483,10 +4483,10 @@ nsGenericHTMLElement::SetProtocolInHrefString(const nsAReadableString &aHref,
   aProtocol.EndReading(end);
   nsAString::const_iterator iter(start);
   FindCharInReadable(':', iter, end);
-  uri->SetScheme(NS_ConvertUCS2toUTF8(Substring(start, iter)).get());
+  uri->SetScheme(NS_ConvertUCS2toUTF8(Substring(start, iter)));
    
-  nsXPIDLCString newHref;
-  uri->GetSpec(getter_Copies(newHref));
+  nsCAutoString newHref;
+  uri->GetSpec(newHref);
 
   aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
 
@@ -4505,10 +4505,10 @@ nsGenericHTMLElement::SetHostnameInHrefString(const nsAReadableString &aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  uri->SetHost(NS_ConvertUCS2toUTF8(aHostname).get());
+  uri->SetHost(NS_ConvertUCS2toUTF8(aHostname));
 
-  nsXPIDLCString newHref;
-  uri->GetSpec(getter_Copies(newHref));
+  nsCAutoString newHref;
+  uri->GetSpec(newHref);
 
   aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
 
@@ -4531,10 +4531,10 @@ nsGenericHTMLElement::SetPathnameInHrefString(const nsAReadableString &aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  url->SetFilePath(NS_ConvertUCS2toUTF8(aPathname).get());
+  url->SetFilePath(NS_ConvertUCS2toUTF8(aPathname));
 
-  nsXPIDLCString newHref;
-  uri->GetSpec(getter_Copies(newHref));
+  nsCAutoString newHref;
+  uri->GetSpec(newHref);
   aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
 
   return NS_OK;
@@ -4555,17 +4555,17 @@ nsGenericHTMLElement::SetHostInHrefString(const nsAReadableString &aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString scheme;
-  uri->GetScheme(getter_Copies(scheme));
-  nsXPIDLCString preHost;
-  uri->GetPreHost(getter_Copies(preHost));
-  nsXPIDLCString path;
-  uri->GetPath(getter_Copies(path));
+  nsCAutoString scheme, userpass, path;
+  uri->GetScheme(scheme);
+  uri->GetUserPass(userpass);
+  uri->GetPath(path);
+
+  if (!userpass.IsEmpty())
+    userpass.Append('@');
 
   aResult.Assign(NS_ConvertUTF8toUCS2(scheme) + NS_LITERAL_STRING("://") +
-                 NS_ConvertUTF8toUCS2(preHost) + aHost +
+                 NS_ConvertUTF8toUCS2(userpass) + aHost +
                  NS_ConvertUTF8toUCS2(path));
-
   return NS_OK;
 }
 
@@ -4586,10 +4586,10 @@ nsGenericHTMLElement::SetSearchInHrefString(const nsAReadableString &aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  url->SetQuery(NS_ConvertUCS2toUTF8(aSearch).get());
+  url->SetQuery(NS_ConvertUCS2toUTF8(aSearch));
 
-  nsXPIDLCString newHref;
-  uri->GetSpec(getter_Copies(newHref));
+  nsCAutoString newHref;
+  uri->GetSpec(newHref);
   aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
 
   return NS_OK;
@@ -4612,10 +4612,10 @@ nsGenericHTMLElement::SetHashInHrefString(const nsAReadableString &aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = url->SetRef(NS_ConvertUCS2toUTF8(aHash).get());
+  rv = url->SetRef(NS_ConvertUCS2toUTF8(aHash));
 
-  nsXPIDLCString newHref;
-  uri->GetSpec(getter_Copies(newHref));
+  nsCAutoString newHref;
+  uri->GetSpec(newHref);
   aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
 
   return NS_OK;
@@ -4641,8 +4641,8 @@ nsGenericHTMLElement::SetPortInHrefString(const nsAReadableString &aHref,
 
   uri->SetPort(port);
 
-  nsXPIDLCString newHref;
-  uri->GetSpec(getter_Copies(newHref));
+  nsCAutoString newHref;
+  uri->GetSpec(newHref);
   aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
 
   return NS_OK;
@@ -4658,12 +4658,10 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
 
   NS_ENSURE_TRUE(nsHTMLUtils::IOService, NS_ERROR_FAILURE);
 
-  nsXPIDLCString protocol;
+  nsCAutoString protocol;
 
   nsresult rv =
-    nsHTMLUtils::IOService->ExtractScheme(NS_ConvertUCS2toUTF8(aHref).get(),
-                                          nsnull, nsnull,
-                                          getter_Copies(protocol));
+    nsHTMLUtils::IOService->ExtractScheme(NS_ConvertUCS2toUTF8(aHref), protocol);
 
   if (NS_SUCCEEDED(rv)) {
     aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol) + NS_LITERAL_STRING(":"));
@@ -4681,7 +4679,7 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
     }
 
     if (uri) {
-      uri->GetScheme(getter_Copies(protocol));
+      uri->GetScheme(protocol);
     }
 
     if (protocol.IsEmpty()) {
@@ -4708,22 +4706,12 @@ nsGenericHTMLElement::GetHostFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString host;
-  rv = uri->GetHost(getter_Copies(host));
+  nsCAutoString hostport;
+  rv = uri->GetHostPort(hostport);
   if (NS_FAILED(rv))
     return rv;
 
-  aHost.Assign(NS_ConvertASCIItoUCS2(host));
-
-  PRInt32 port;
-  uri->GetPort(&port);
-  if (-1 != port) {
-    aHost.Append(PRUnichar(':'));
-    nsAutoString portStr;
-    portStr.AppendInt(port, 10);
-    aHost.Append(portStr);
-  }
-
+  aHost.Assign(NS_ConvertUTF8toUCS2(hostport));
   return NS_OK;
 }
 
@@ -4738,13 +4726,12 @@ nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString host;
-  rv = url->GetHost(getter_Copies(host));
+  nsCAutoString host;
+  rv = url->GetHost(host);
   if (NS_FAILED(rv))
     return rv;
 
-  CopyASCIItoUCS2(host, aHostname);
-
+  aHostname.Assign(NS_ConvertUTF8toUCS2(host));
   return NS_OK;
 }
 
@@ -4764,14 +4751,12 @@ nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString file;
-  rv = url->GetFilePath(getter_Copies(file));
+  nsCAutoString file;
+  rv = url->GetFilePath(file);
   if (NS_FAILED(rv))
     return rv;
 
-  // XXX is filepath really ASCII and not UTF8?
-  CopyASCIItoUCS2(file, aPathname);
-
+  aPathname.Assign(NS_ConvertUTF8toUCS2(file));
   return NS_OK;
 }
 
@@ -4791,16 +4776,13 @@ nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;    
 
-  nsXPIDLCString search;
-  rv = url->GetEscapedQuery(getter_Copies(search));
+  nsCAutoString search;
+  rv = url->GetQuery(search);
   if (NS_FAILED(rv))
     return rv;
 
-  if (!search.IsEmpty()) {
-    // XXX is escapedQuery really ASCII or UTF8
-    CopyASCIItoUCS2(NS_LITERAL_CSTRING("?") + search, aSearch);
-  }
-
+  if (!search.IsEmpty())
+    aSearch.Assign(NS_LITERAL_STRING("?") + NS_ConvertUTF8toUCS2(search));
   return NS_OK;
 
 }
@@ -4849,14 +4831,13 @@ nsGenericHTMLElement::GetHashFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString ref;
-  rv = url->GetRef(getter_Copies(ref));
+  nsCAutoString ref;
+  rv = url->GetRef(ref);
   if (NS_FAILED(rv))
     return rv;
+  NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
 
-  if (!ref.IsEmpty()) {
-    CopyASCIItoUCS2(NS_LITERAL_CSTRING("#") + ref, aHash);
-  }
-
+  if (!ref.IsEmpty())
+    aHash.Assign(NS_LITERAL_STRING("#") + NS_ConvertASCIItoUCS2(ref));
   return NS_OK;
 }

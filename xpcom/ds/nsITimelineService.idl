@@ -187,13 +187,12 @@ public:
  */
 #define NS_TIMELINE_MARK_URI(text, uri) \
     { \
-        char *spec = NULL; \
+        nsCAutoString spec; \
         if (uri) { \
-            uri->GetSpec(&spec); \
+            uri->GetSpec(spec); \
         } \
-        if (spec != NULL) { \
-            NS_TimelineMark(text, spec); \
-            nsCRT::free(spec); \
+        if (!spec.IsEmpty()) { \
+            NS_TimelineMark(text, spec.get()); \
         } else { \
             NS_TimelineMark(text, "??"); \
         } \

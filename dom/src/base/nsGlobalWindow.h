@@ -408,7 +408,9 @@ public:
   NS_DECL_NSIDOMNSLOCATION
 
 protected:
-  nsresult SetURL(nsIURI* aURL);
+  nsresult GetURI(nsIURI** aURL);
+  nsresult GetWritableURI(nsIURI** aURL);
+  nsresult SetURI(nsIURI* aURL);
   nsresult SetHrefWithBase(const nsAReadableString& aHref, nsIURI* aBase,
                            PRBool aReplace);
   nsresult SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,

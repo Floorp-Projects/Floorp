@@ -900,7 +900,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
     rv = docURL->Clone(getter_AddRefs(actionURL));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    rv = NS_NewURI(getter_AddRefs(actionURL), action, docURL);
+    rv = NS_NewURI(getter_AddRefs(actionURL), action, nsnull, docURL);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -302,8 +302,8 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
       return NS_OK;
     }
 
-    nsXPIDLCString path;
-    rv = aURI->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = aURI->GetPath(path);
     NS_ENSURE_SUCCESS(rv, rv);
     // Bug 42616: Trim off named anchor and save it to add later
     PRInt32 namedAnchorPos = path.FindChar('#');
@@ -324,7 +324,7 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
     // Bug 42616: Add named anchor to end after query string
     path.Append(mQueryString + namedAnchor);
 
-    aURI->SetPath(path.get());
+    aURI->SetPath(path);
   }
 
   return rv;
@@ -736,8 +736,8 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
   nsCOMPtr<nsILinkHandler> handler;
   aPresContext->GetLinkHandler(getter_AddRefs(handler));
   if (handler) {
-    nsXPIDLCString actionURLSpec;
-    aActionURL->GetSpec(getter_Copies(actionURLSpec));
+    nsCAutoString actionURLSpec;
+    aActionURL->GetSpec(actionURLSpec);
 
     handler->OnLinkClick(aSource, eLinkVerb_Replace,
                          NS_ConvertUTF8toUCS2(actionURLSpec).get(),
