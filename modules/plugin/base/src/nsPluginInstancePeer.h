@@ -19,14 +19,14 @@
 #ifndef nsPluginInstancePeer_h___
 #define nsPluginInstancePeer_h___
 
-#include "nsIPluginInstancePeer.h"
+#include "nsIPluginInstancePeer2.h"
 #include "nsIWindowlessPlugInstPeer.h"
 #include "nsIPluginTagInfo.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIJVMPluginTagInfo.h"
 
 
-class nsPluginInstancePeerImpl : public nsIPluginInstancePeer,
+class nsPluginInstancePeerImpl : public nsIPluginInstancePeer2,
 								 public nsIWindowlessPluginInstancePeer,
                                  public nsIPluginTagInfo2,
                                  public nsIJVMPluginTagInfo
@@ -38,7 +38,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  //nsIPluginInstancePeer interface
+  // nsIPluginInstancePeer interface
 
   NS_IMETHOD
   GetValue(nsPluginInstancePeerVariable variable, void *value);
@@ -57,6 +57,8 @@ public:
 
   NS_IMETHOD
   SetWindowSize(PRUint32 width, PRUint32 height);
+
+  // nsIPluginInstancePeer2 interface
 
   NS_IMETHOD
   GetJSWindow(JSObject* *outJSWindow);

@@ -62,7 +62,6 @@ nsPluginInstancePeerImpl :: ~nsPluginInstancePeerImpl()
 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
-static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -74,9 +73,9 @@ nsresult nsPluginInstancePeerImpl :: QueryInterface(const nsIID& iid, void** ins
     if (instance == NULL)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(kIPluginInstancePeerIID))
+    if (iid.Equals(nsIPluginInstancePeer::GetIID()) || iid.Equals(nsIPluginInstancePeer2::GetIID()))
     {
-        *instance = (void *)(nsIPluginInstancePeer *)this;
+        *instance = (void *)(nsIPluginInstancePeer2*)this;
         AddRef();
         return NS_OK;
     }
