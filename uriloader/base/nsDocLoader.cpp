@@ -526,7 +526,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 
     if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
       //
-      // Make sure that hte document channel is null at this point...
+      // Make sure that the document channel is null at this point...
       // (unless its been redirected)
       //
       NS_ASSERTION((loadFlags & nsIChannel::LOAD_REPLACE) ||
