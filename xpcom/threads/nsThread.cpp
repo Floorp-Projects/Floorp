@@ -280,7 +280,10 @@ nsIThread::SetMainThread()
   // strictly speaking, it could be set twice. but practically speaking,
   // it's almost certainly an error if it is
   if (gMainThread != 0)
+  {
+    NS_ERROR("Setting main thread twice?");
     return NS_ERROR_FAILURE;
+  }
   return GetCurrent(&gMainThread);
 }
 
@@ -289,7 +292,7 @@ nsIThread::GetMainThread(nsIThread **result)
 {
   if (gMainThread == 0)
     return NS_ERROR_FAILURE;
-  if (*result == 0)
+  if (result == 0)
     return NS_ERROR_NULL_POINTER;
   *result = gMainThread;
   NS_ADDREF(gMainThread);
