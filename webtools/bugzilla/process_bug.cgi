@@ -556,8 +556,49 @@ if ( $::FORM{'id'} ) {
 }
 
 
-my $removedCcString = "";
 my $duplicate = 0;
+
+# We need to check the addresses involved in a CC change before we touch any bugs.
+# What we'll do here is formulate the CC data into two hashes of ID's involved
+# in this CC change.  Then those hashes can be used later on for the actual change.
+my (%cc_add, %cc_remove);
+if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
+    # If masscc is defined, then we came from buglist and need to either add or
+    # remove cc's... otherwise, we came from bugform and may need to do both.
+    my ($cc_add, $cc_remove) = "";
+    if (defined $::FORM{masscc}) {
+        if ($::FORM{ccaction} eq 'add') {
+            $cc_add = $::FORM{masscc};
+        } elsif ($::FORM{ccaction} eq 'remove') {
+            $cc_remove = $::FORM{masscc};
+        }
+    } else {
+        $cc_add = $::FORM{newcc};
+        # We came from bug_form which uses a select box to determine what cc's
+        # need to be removed...
+        if (defined $::FORM{removecc}) {
+            $cc_remove = join (",", @{$::MFORM{cc}});
+        }
+    }
+
+    if ($cc_add) {
+        foreach my $person (split(/[ ,]/, $cc_add)) {
+            # Ignore blanks
+            next unless $person;
+            my $pid = DBNameToIdAndCheck($person);
+            $cc_add{$pid} = $person;
+        }
+    }
+    if ($cc_remove) {
+        foreach my $person (split(/[ ,]/, $cc_remove)) {
+            # Ignore blanks
+            next unless $person;
+            my $pid = DBNameToIdAndCheck($person);
+            $cc_remove{$pid} = $person;
+        }
+    }
+}
+
 
 if ( Param('strictvaluechecks') ) {
     CheckFormFieldDefined(\%::FORM, 'knob');
@@ -980,6 +1021,7 @@ The changes made were:
         AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
     }
     
+    my $removedCcString = "";
     if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
         # Get the current CC list for this bug
         my %oncc;
@@ -988,49 +1030,26 @@ The changes made were:
             $oncc{FetchOneColumn()} = 1;
         }
 
-        # If masscc is defined, then we came from buglist and need to either add or
-        # remove cc's... otherwise, we came from bugform and may need to do both.
-        my ($cc_add, $cc_remove) = "";
-        if (defined $::FORM{masscc}) {
-            if ($::FORM{ccaction} eq 'add') {
-                $cc_add = $::FORM{masscc};
-            } elsif ($::FORM{ccaction} eq 'remove') {
-                $cc_remove = $::FORM{masscc};
-            }
-        } else {
-            $cc_add = $::FORM{newcc};
-            # We came from bug_form which uses a select box to determine what cc's
-            # need to be removed...
-            if (defined $::FORM{removecc}) {
-                $cc_remove = join (",", @{$::MFORM{cc}});
-            }
-        }
-
         my (@added, @removed) = ();
-        if ($cc_add) {
-            my @new = split(/[ ,]/, $cc_add);
-            foreach my $person (@new) {
-                my $pid = DBNameToIdAndCheck($person);
-                # If this person isn't already on the cc list, add them
-                if (! $oncc{$pid}) {
-                    SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $pid)");
-                    push (@added, $person);
-                }
+        foreach my $pid (keys %cc_add) {
+            # If this person isn't already on the cc list, add them
+            if (! $oncc{$pid}) {
+                SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $pid)");
+                push (@added, $cc_add{$pid});
+                $oncc{$pid} = 1;
             }
         }
-        if ($cc_remove) {
-            my @old = split (/[ ,]/, $cc_remove);
-            foreach my $person (@old) {
-                my $pid = DBNameToIdAndCheck($person);
-                # If the person is on the cc list, remove them
-                if ($oncc{$pid}) {
-                    SendSQL("DELETE FROM cc WHERE bug_id = $id AND who = $pid");
-                    push (@removed, $person);
-                }
+        foreach my $pid (keys %cc_remove) {
+            # If the person is on the cc list, remove them
+            if ($oncc{$pid}) {
+                SendSQL("DELETE FROM cc WHERE bug_id = $id AND who = $pid");
+                push (@removed, $cc_remove{$pid});
+                $oncc{$pid} = 0;
             }
-            # Save off the removedCcString so it can be fed to processmail
-            $removedCcString = join (",", @removed);
         }
+        # Save off the removedCcString so it can be fed to processmail
+        $removedCcString = join (",", @removed);
+
         # If any changes were found, record it in the activity log
         if (scalar(@removed) || scalar(@added)) {
             my $col = GetFieldID('cc');
