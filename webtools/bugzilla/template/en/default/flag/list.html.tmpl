@@ -33,21 +33,26 @@
         <td>
           <select name="flag-[% flag.id %]">
             <option value="X"></option>
-            [% IF flag.is_active %]
+            [% IF type.is_active %]
               <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
               <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
-              <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
+              [% IF type.is_requestable %]
+                <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
+              [% END %]
             [% ELSE %]
               <option value="[% flag.status %]" selected>[% flag.status %]</option>
             [% END %]
           </select>
         </td>
         <td>
-          [% IF flag.status == "?" && flag.requestee %]([% flag.requestee.nick FILTER html %])[% END %]
+          [% IF flag.status == "?" && flag.requestee %]([% flag.requestee.nick FILTER html %])
+          [% ELSIF type.is_requestable && type.is_active %]
+            <span style="white-space: nowrap;">(<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)</span>
+          [% END %]
         </td>
       </tr>
     [% END %]
-    [% IF !type.flags || type.flags.size == 0 %]
+    [% IF (!type.flags || type.flags.size == 0) && type.is_active %]
       <tr>
         <td>&nbsp;</td>
         <td>[% type.name %]</td>
@@ -63,7 +68,7 @@
         </td>
         <td>
           [% IF type.is_requestable && type.is_requesteeble %]
-            (<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)
+            <span style="white-space: nowrap;">(<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)</span>
           [% END %]
         </td>
       </tr>
@@ -71,7 +76,7 @@
   [% END %]
 
   [% FOREACH type = flag_types %]
-    [% NEXT UNLESS type.flags.size > 0 && type.is_multiplicable %]
+    [% NEXT UNLESS type.flags.size > 0 && type.is_multiplicable && type.is_active %]
     [% IF !separator_displayed %]
         <tr><td colspan="3"><hr></td></tr>
         [% separator_displayed = 1 %]
@@ -90,7 +95,7 @@
       </td>
       <td>
         [% IF type.is_requestable && type.is_requesteeble %]
-          (<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)
+            <span style="white-space: nowrap;">(<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)</span>
         [% END %]
       </td>
     </tr>
