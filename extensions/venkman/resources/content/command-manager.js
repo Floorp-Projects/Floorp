@@ -183,16 +183,11 @@ function cmgr_showpop (id)
             dd ("no commandManager in cx");
             return false;
         }
-        var name;
-        var menuid = menuitem.getAttribute("id");
-        var ary = menuid.match(/([^:]+)$/);
-        if (ary)
-            name = ary[1];
-        else
-            name = id;
-            
-        ASSERT (name in cx.commandManager.commands,
-                "menu contains unknown command '" + name + "'");
+        
+        var name = menuitem.getAttribute("commandname");
+        if (!ASSERT (name in cx.commandManager.commands,
+                     "menu contains unknown command '" + name + "'"))
+            return false;
 
         var command = cx.commandManager.commands[name];
 
@@ -460,6 +455,7 @@ function cmgr_addmenu (parent, command, attribs)
     var menuitem = document.createElement ("menuitem");
     var id = parent + ":" + command.name;
     menuitem.setAttribute ("id", id);
+    menuitem.setAttribute ("commandname", command.name);
     menuitem.setAttribute ("key", "key:" + command.name);
     menuitem.setAttribute ("accesskey", getAccessKey(command.label));
     menuitem.setAttribute ("label", command.label.replace("&", ""));
