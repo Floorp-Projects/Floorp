@@ -534,6 +534,41 @@ function tovr_appchild (child)
 }
 
 /*
+ * add a list of children to the end of the child list for this record.
+ * faster than multiple appendChild() calls.
+ */
+TreeOViewRecord.prototype.appendChildren =
+function tovr_appchild (children)
+{
+    var changeStart = (this.childData.length > 0) ?
+        this.childData[this.childData.length - 1].calculateVisualRow() :
+        this.calculateVisualRow();
+
+    var idx = this.childData.length;
+    var delta = 0;
+    var len = children.length;
+    for (var i = 0; i <  len; ++i)
+    {
+        var child = children[i];
+        child.isHidden = false;
+        child.parentRecord = this;
+        this.childData[idx] = child;
+        child.childIndex = idx++;
+        delta += child.visualFootprint;
+    }
+    
+    if ("isContainerOpen" in this && this.isContainerOpen)
+    {
+        if (this.calculateVisualRow() >= 0)
+        {
+            this.resort(true);  /* resort, don't invalidate.  we're going to do
+                                 * that in the onVisualFootprintChanged call. */
+        }
+        this.onVisualFootprintChanged(changeStart, delta);
+    }
+}
+
+/*
  * remove a child from this record. updates the tree too.  DONT call this with
  * an index not actually contained by this record.
  */
