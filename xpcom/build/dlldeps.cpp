@@ -150,4 +150,5 @@ void XXXNeverCalled()
     ToNewUnicode(str2);
     ToNewCString(str1);
     ToNewCString(str2);
+    PL_DHashTableFinish(NULL);
 }
