@@ -120,6 +120,9 @@ public:
 class nsTemplateMatchRefSet
 {
 public:
+    class ConstIterator;
+    friend class ConstIterator;
+
     nsTemplateMatchRefSet() {
         MOZ_COUNT_CTOR(nsTemplateMatchRefSet);
         Init(); }
@@ -167,6 +170,8 @@ protected:
      * Hashtable entry; holds weak reference to a match object.
      */
     struct Entry {
+        friend class ConstIterator;
+
         PLDHashEntryHdr  mHdr;
         nsTemplateMatch* mMatch;
     };
@@ -216,9 +221,6 @@ protected:
     MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aHdr, const void* aKey);
 
 public:
-    class ConstIterator;
-    friend class ConstIterator;
-
     /**
      * An iterator that can be used to enumerate the contents of the
      * set
