@@ -25,5 +25,13 @@ interface nsIMsgFolder;
 interface nsIMessage : nsIMsgHdr {
 
 	nsIMsgFolder GetMsgFolder();
+	void SetMsgFolder(in nsIMsgFolder folder);
+};
+
+[uuid(82702556-01A2-11d3-8A69-0060B0FC04D2)]    /* XXX regenerate */
+interface nsIDBMessage : nsIMessage {
+
+	void SetMsgDBHdr(in nsIMsgDBHdr hdr);
+	nsIMsgDBHdr GetMsgDBHdr();
 };
 

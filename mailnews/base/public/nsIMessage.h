@@ -36,9 +36,36 @@ class nsIMessage : public nsIMsgHdr {
   /* nsIMsgFolder GetMsgFolder (); */
   NS_IMETHOD GetMsgFolder(nsIMsgFolder **_retval) = 0;
 
+  /* void SetMsgFolder (in nsIMsgFolder folder); */
+  NS_IMETHOD SetMsgFolder(nsIMsgFolder *folder) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMessage *priv);
+#endif
+};
+
+/* starting interface:    nsIDBMessage */
+
+/* {82702556-01A2-11d3-8A69-0060B0FC04D2} */
+#define NS_IDBMESSAGE_IID_STR "82702556-01A2-11d3-8A69-0060B0FC04D2"
+#define NS_IDBMESSAGE_IID \
+  {0x82702556, 0x01A2, 0x11d3, \
+    { 0x8A, 0x69, 0x00, 0x60, 0xB0, 0xFC, 0x04, 0xD2 }}
+
+class nsIDBMessage : public nsIMessage {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDBMESSAGE_IID)
+
+  /* void SetMsgDBHdr (in nsIMsgDBHdr hdr); */
+  NS_IMETHOD SetMsgDBHdr(nsIMsgDBHdr *hdr) = 0;
+
+  /* nsIMsgDBHdr GetMsgDBHdr (); */
+  NS_IMETHOD GetMsgDBHdr(nsIMsgDBHdr **_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDBMessage *priv);
 #endif
 };
 

@@ -21,6 +21,7 @@
 #endif
 #include "nsFileSpec.h"
 
+class nsIMessage; /* forward decl */
 
 /* starting interface:    nsIMsgFolder */
 
@@ -207,7 +208,7 @@ class nsIMsgFolder : public nsIFolder {
   /* boolean IsLocked (); */
   NS_IMETHOD IsLocked(PRBool *_retval) = 0;
 
-  /* nsIMessage CreateMessageFromMsgDBHdr (in nsIMsgDBHdr msgHdr); */
+  /* nsIMessage CreateMessageFromMsgDBHdr (in nsIMsgDBHdr msgDBHdr); */
   NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
@@ -263,9 +264,6 @@ class nsIMsgNewsFolder : public nsISupports {
 class nsIMsgImapMailFolder : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGIMAPMAILFOLDER_IID)
-
-  /* readonly attribute nsNativeFileSpec pathName; */
-  NS_IMETHOD GetPathName(nsNativeFileSpec& aPathName) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
