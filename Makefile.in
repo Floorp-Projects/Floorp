@@ -49,7 +49,7 @@ ifdef GC_LEAK_DETECTOR
 DIRS += gc/boehm
 endif
 
-DIRS		+= dbm modules/libreg xpcom
+DIRS		+= modules/libreg xpcom
 
 ifndef MOZ_NATIVE_ZLIB
 DIRS		+= modules/zlib

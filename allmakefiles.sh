@@ -61,10 +61,10 @@ db/mdb/public/Makefile
 db/mork/Makefile
 db/mork/build/Makefile
 db/mork/src/Makefile
-dbm/Makefile
-dbm/include/Makefile
-dbm/src/Makefile
-dbm/tests/Makefile
+#dbm/Makefile
+#dbm/include/Makefile
+#dbm/src/Makefile
+#dbm/tests/Makefile
 dom/Makefile
 dom/public/Makefile
 dom/public/base/Makefile
