@@ -23,6 +23,7 @@
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,7 +87,7 @@
 <!ENTITY newevent.alarm.label        "Waarschuwing" >
 <!ENTITY newevent.server.label       "Kalenderbestand" >
 <!ENTITY newevent.invite.label       "Uitnodigen" >
-<!ENTITY newevent.email.label        "Email waarschuwing aan" >
+<!ENTITY newevent.email.label        "Waarschuwing zenden aan" >
 <!ENTITY newevent.beforealarm.label  "voordat de gebeurtenis start" >
 <!ENTITY newevent.beforealarmends.label  "voordat de gebeurtenis eindigd" >
 <!ENTITY newevent.repeat.label       "Herhaal over" >
@@ -108,6 +109,7 @@
 <!ENTITY newevent.recurrence.tab.label "Herhaling" >
 <!ENTITY newevent.contacts.tab.label "Contacten" >
 <!ENTITY newevent.files.tab.label "Bestanden" >
+<!ENTITY newevent.advanced.tab.label        "Geavanceerd" >
 <!ENTITY newevent.status.label "Status" >
 <!ENTITY newevent.status.longlabel "Gebeurtenisstatus">
 <!ENTITY newevent.status.needsaction.label "Handeling vereist" >
@@ -144,6 +146,10 @@
 <!ENTITY newtodo.categories.label "Categorie">
 <!ENTITY newtodo.starttime.warning "Uw startdatum valt nu uw vervaldatum.">
 <!ENTITY newtodo.cancelled.label "Geannuleerd">
+<!ENTITY newtodo.percentcomplete.label "&#37; voltooid">
+<!ENTITY newtodo.categories.label "Categorie">
+<!ENTITY newtodo.starttime.warning "Uw startdatum vindt na uw vervaldatum plaats.">
+<!ENTITY newtodo.cancelled.label "Geannuleerd">
 <!ENTITY newtodo.status.label "Status">
 <!ENTITY newtodo.beforealarm.label  "voordat de taak start" >
 <!ENTITY newtodo.beforealarmends.label  "voordat de taak vervalt" >
@@ -153,7 +159,7 @@
 <!ENTITY newtodo.duedate.warning    "Uw startdatum valt na uw vervaldatum.">
 <!ENTITY newtodo.repeatstart.warning "Startdatum vereist voor herhaling.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "Weet u zeker dat u alle geselecteerde gebeurtenissen wilt verwijderen?" >
 <!ENTITY calendar.confirm.deleteevent "Weet u zeker dat u de volgende gebeurtenis wilt verwijderen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Weet u zeker dat u de volgende naamloze gebeurtenis wilt verwijderen?" >
 
@@ -494,3 +500,9 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
+<!-- Temporary, until brand.dtd works again. bug 272643 -->
+<!ENTITY  lang.version          "1.7a">
+<!ENTITY  brandShortName        "Sunbird">
+<!ENTITY  brandFullName         "Mozilla Sunbird">
+<!ENTITY  vendorShortName       "Mozilla">
+<!ENTITY  releaseURL            "http://www.mozilla.org/projects/calendar">
