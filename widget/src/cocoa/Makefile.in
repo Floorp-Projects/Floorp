@@ -74,6 +74,7 @@ CPPSRCS         =  \
 		$(NULL)
 
 CMMSRCS = \
+    nsScrollbar.mm \
     nsToolkit.mm \
     nsAppShellCocoa.mm \
     nsCocoaWindow.mm \

@@ -77,6 +77,9 @@ private:
 	typedef nsBaseWidget Inherited;
 
 public:
+
+    enum { kTitleBarHeight = 20 };
+
     nsCocoaWindow();
     virtual ~nsCocoaWindow();
 

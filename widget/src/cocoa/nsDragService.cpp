@@ -718,13 +718,11 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
     
     // if someone was asking for text/plain, lookup unicode instead so we can convert it.
     PRBool needToDoConversionToPlainText = PR_FALSE;
-    const char* actualFlavor = mimeFlavor;
-    if ( strcmp(mimeFlavor,kTextMime) == 0 ) {
+    const char* actualFlavor = mimeFlavor.get();
+    if ( strcmp(actualFlavor,kTextMime) == 0 ) {
       actualFlavor = kUnicodeMime;
       needToDoConversionToPlainText = PR_TRUE;
     }
-    else
-      actualFlavor = mimeFlavor;
       
     *outDataSize = 0;
     nsCOMPtr<nsISupports> data;
