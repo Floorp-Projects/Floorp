@@ -458,6 +458,15 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_nameProp(BSTR __RPC_FAR *p)
 
 HRESULT CIEHtmlDocument::WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn)
 {
+    if (psarray->cDims != 1)
+    {
+        return E_INVALIDARG;
+    }
+    if (!(psarray->fFeatures & (FADF_BSTR | FADF_VARIANT)))
+    {
+        return E_INVALIDARG;
+    }
+
     HRESULT hr;
 
     hr = SafeArrayLock(psarray);
@@ -466,25 +475,35 @@ HRESULT CIEHtmlDocument::WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn)
         return hr;
     }
 
-    DWORD i = psarray->rgsabound[0].cElements;
-    VARIANT *v = (VARIANT *)psarray->pvData;
-    VARIANT vStr;
-
-    while (i--)
+    for (DWORD i = 0; i < psarray->rgsabound[0].cElements; i++)
     {
-        if ((hr = VariantChangeType(&vStr, v++, 0, VT_BSTR)))
+        nsString str;
+        if (psarray->fFeatures & FADF_BSTR)
         {
-            SafeArrayUnlock(psarray);
-            return hr;
+            BSTR *bstrArray = (BSTR *) psarray->pvData;
+            str = nsString(bstrArray[i], SysStringLen(bstrArray[i]));
+        }
+        else if (psarray->fFeatures & FADF_VARIANT)
+        {
+            VARIANT *vArray = (VARIANT *) psarray->pvData;
+            VARIANT vStr;
+            VariantInit(&vStr);
+            hr = VariantChangeType(&vStr, &vArray[i], 0, VT_BSTR);
+            if (FAILED(hr))
+            {
+                SafeArrayUnlock(psarray);
+                return hr;
+            }
+            str = nsString(vStr.bstrVal, SysStringLen(vStr.bstrVal));
+            VariantClear(&vStr);
         }
 
-        nsString str(vStr.bstrVal, SysStringLen(vStr.bstrVal));
         if (bLn && !i)
         {
             if (m_pNative->Writeln(str))
             {
                 SafeArrayUnlock(psarray);
-               return E_FAIL;
+                return E_FAIL;
             }
         }
         else
