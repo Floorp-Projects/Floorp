@@ -48,8 +48,8 @@ nsMsgFolder::nsMsgFolder(void)
     mName(""),
     mFlags(0),
     mParent(nsnull),
-    mNumUnreadMessages(0),
-    mNumTotalMessages(0),
+    mNumUnreadMessages(-1),
+    mNumTotalMessages(-1),
     mCsid(0),
     mDepth(0), 
     mPrefFlags(0)
@@ -454,7 +454,25 @@ NS_IMETHODIMP nsMsgFolder::Delete ()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder **folder, PRBool deleteStorage)
+NS_IMETHODIMP nsMsgFolder::DeleteSubFolders(nsISupportsArray *folders)
+{
+	nsresult rv;
+
+	PRUint32 count;
+	rv = folders->Count(&count);
+	nsCOMPtr<nsIMsgFolder> folder;
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(i));
+		folder = do_QueryInterface(supports);
+		if(folder)	
+			PropagateDelete(folder, PR_TRUE);
+	}
+	return rv;
+
+}
+
+NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage)
 {
 	nsresult status = NS_OK;
 
@@ -462,44 +480,38 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder **folder, PRBool deleteS
 
 	// first, find the folder we're looking to delete
 	PRUint32 cnt;
-  nsresult rv = mSubFolders->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt && *folder; i++)
+	nsresult rv = mSubFolders->Count(&cnt);
+	if (NS_FAILED(rv)) return rv;
+	for (PRUint32 i = 0; i < cnt; i++)
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
 		child = do_QueryInterface(supports, &status);
 		if(NS_SUCCEEDED(status))
+		{
+			if (folder == child.get())
 			{
-				if (*folder == child.get())
-				{
-					// maybe delete disk storage for it, and its subfolders
-					status = child->RecursiveDelete(deleteStorage);	
+				// maybe delete disk storage for it, and its subfolders
+				status = child->RecursiveDelete(deleteStorage);	
 
-					if (status == NS_OK) 
-					{
-#ifdef HAVE_MASTER
-						PR_ASSERT(mMaster);
-						// Send out a broadcast message that this folder is going away.
-						// Many important things happen on this broadcast.
-						mMaster->BroadcastFolderDeleted (child);
-#endif
-            mSubFolders->RemoveElement(child);
-					}
-				}
-				else
+				if (status == NS_OK) 
 				{
-					PRUint32 folderDepth, childDepth;
 
-					if(NS_SUCCEEDED((*folder)->GetDepth(&folderDepth)) &&
-					   NS_SUCCEEDED(child->GetDepth(&childDepth)) &&
-						folderDepth > childDepth)
-					{ 
-						status = child->PropagateDelete (folder, deleteStorage);
-					}
+					//Remove from list of subfolders.
+					mSubFolders->RemoveElement(child);
+					//Remove self as parent
+					child->SetParent(nsnull);
+					nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+					if(childSupports)
+						NotifyItemDeleted(childSupports);
+					break;
 				}
 			}
+			else
+			{
+				status = child->PropagateDelete (folder, deleteStorage);
+			}
+		}
 	}
-
 	
 	return status;
 }
@@ -524,14 +536,13 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 		if(NS_SUCCEEDED(status))
 		{
 			status = child->RecursiveDelete(deleteStorage);  // recur
-
-#ifdef HAVE_MASTER
-			// Send out a broadcast message that this folder is going away.
-			// Many important things happen on this broadcast.
-			mMaster->BroadcastFolderDeleted (child);
-#endif
 			mSubFolders->RemoveElement(child);  // unlink it from this's child list
+			child->SetParent(nsnull);
+			nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+			if(childSupports)
+				NotifyItemDeleted(childSupports);
 		}
+		cnt--;
 	}
 
 	// now delete the disk storage for _this_
@@ -728,7 +739,7 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv;
-	PRUint32 total = mNumTotalMessages;
+	PRInt32 total = mNumTotalMessages;
 	if (deep)
 	{
 		nsCOMPtr<nsIMsgFolder> folder;

@@ -129,7 +129,8 @@ public:
   NS_IMETHOD OnCloseFolder();
   NS_IMETHOD Delete();
 
-  NS_IMETHOD PropagateDelete(nsIMsgFolder **folder, PRBool deleteStorage);
+	NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
+	NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage);
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage);  // called by PropagateDelete
 
   NS_IMETHOD CreateSubfolder(const char *folderName);

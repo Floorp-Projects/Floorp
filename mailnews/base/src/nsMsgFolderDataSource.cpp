@@ -497,11 +497,12 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsIS
 {
 	nsresult rv;
 	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
 	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
 	{
-		//If we are adding a message
+		//If we are removing a message
 		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
@@ -509,6 +510,16 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsIS
 			{
 				//Notify folders that a message was deleted.
 				NotifyObservers(parentResource, kNC_MessageChild, itemNode, PR_FALSE);
+			}
+		}
+		//If we are removing a folder
+		else if(NS_SUCCEEDED(item->QueryInterface(nsIMsgFolder::GetIID(), getter_AddRefs(folder))))
+		{
+			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
+			if(NS_SUCCEEDED(rv))
+			{
+				//Notify folders that a message was deleted.
+				NotifyObservers(parentResource, kNC_Child, itemNode, PR_FALSE);
 			}
 		}
 	}
@@ -740,11 +751,11 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupp
   if (cnt > 0)
 		rv = folder->DeleteMessages(messageArray);
 
-/*	rv = folderArray->Count(&cnt);
+	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
 		rv = folder->DeleteSubFolders(folderArray);
-*/
+
 	return rv;
 }
 

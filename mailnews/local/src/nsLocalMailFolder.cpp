@@ -43,6 +43,7 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsIPop3Service.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsLocalFolderSummarySpec.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -527,50 +528,45 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::RemoveSubFolder(nsIMsgFolder *which)
+NS_IMETHODIMP nsMsgLocalMailFolder::RemoveSubFolder(nsIMsgFolder *folder)
 {
-#if 0
-  // Let the base class do list management
-  nsMsgFolder::RemoveSubFolder(which);
-#endif
 
   // Derived class is responsible for managing the subdirectory
-#ifdef HAVE_PORT
-  if (0 == m_subFolders->GetSize())
-    XP_RemoveDirectory (m_pathName, xpMailSubdirectory);
-#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 {
-#ifdef HAVE_PORT
-  nsMsgDatabase   *db;
-  // remove the summary file
-  nsresult status = CloseDatabase (m_pathName, &db);
-  if (0 == status) {
-    if (db != NULL)
-      db->Close();    // decrement ref count, so it will leave cache
-    XP_FileRemove (m_pathName, xpMailFolderSummary);
-  }
+	nsresult rv = GetDatabase();
 
-  if (0 == status) {
-    // remove the mail folder file
-    status = XP_FileRemove (m_pathName, xpMailFolder);
+	if(NS_SUCCEEDED(rv))
+	{
+		mDatabase->ForceClosed();
+		mDatabase = null_nsCOMPtr();
+	}
 
-    // if the delete seems to have failed, but the file doesn't
-    // exist, that's not really an error condition, is it now?
-    if (status) {
-      XP_StatStruct fileStat;
-      if (0 == XP_Stat(m_pathName, &fileStat, xpMailFolder))
-        status = 0;
-    }
-  }
+    nsFileSpec path;
+    rv = GetPath(path);
 
-  if (0 != status)
-    status = MK_UNABLE_TO_DELETE_FILE;
-  return status;  
-#endif
+	//Clean up .sbd folder if it exists.
+	if(NS_SUCCEEDED(rv))
+	{
+		nsLocalFolderSummarySpec	summarySpec(path);
+		// Remove summary file.
+		summarySpec.Delete(PR_FALSE);
+
+		//Delete mailbox
+		path.Delete(PR_FALSE);
+
+	    if (!path.IsDirectory())
+		  AddDirectorySeparator(path);
+
+		//If this is a directory, then remove it.
+	    if (path.IsDirectory())
+		{
+			path.Delete(PR_TRUE);
+		}
+	}
   return NS_OK;
 }
 
