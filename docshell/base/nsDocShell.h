@@ -42,6 +42,7 @@
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "nsDSURIContentListener.h"
 
@@ -63,7 +64,8 @@ class nsDocShell : public nsIDocShell,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
                    public nsITextScroll, 
-                   public nsIContentViewerContainer
+                   public nsIContentViewerContainer,
+                   public nsIInterfaceRequestor
 {
 friend class nsDSURIContentListener;
 

@@ -101,14 +101,14 @@ NS_IMETHODIMP nsDocShell::Create(nsISupports* aOuter, const nsIID& aIID,
 NS_IMPL_ADDREF(nsDocShell)
 NS_IMPL_RELEASE(nsDocShell)
 
-NS_IMPL_QUERY_HEAD(nsDocShell)
-   NS_IMPL_QUERY_BODY(nsIDocShell)
-   NS_IMPL_QUERY_BODY(nsIBaseWindow)
-   NS_IMPL_QUERY_BODY(nsIScrollable)
-   NS_IMPL_QUERY_BODY(nsITextScroll)
-//   NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
-NS_IMPL_QUERY_TAIL(nsIDocShell)
-
+NS_INTERFACE_MAP_BEGIN(nsDocShell)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShell)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShell)
+   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
+   NS_INTERFACE_MAP_ENTRY(nsITextScroll)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+NS_INTERFACE_MAP_END
 
 //*****************************************************************************
 // nsDocShell::nsIDocShell
