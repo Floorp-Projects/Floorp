@@ -196,6 +196,7 @@ protected:
     static nsIAtom* kIgnoreAtom;
 
     static nsIAtom* kSubcontainmentAtom;
+    static nsIAtom* kRootcontainmentAtom;
     static nsIAtom* kTreeTemplateAtom;
     static nsIAtom* kRuleAtom;
     static nsIAtom* kTreeContentsGeneratedAtom;

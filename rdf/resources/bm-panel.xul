@@ -12,6 +12,19 @@
       datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find" 
       ondblclick="return OpenURL(event,event.target.parentNode);">
 
+  <template containment="treeitem" rootcontainment="treebody" subcontainment="treechildren">
+  	<treeitem>
+		<treecell>
+			<treeindentation />
+			<titledbutton />
+			<text rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+		</treecell>
+		<treecell>
+			<text rdf:resource="http://home.netscape.com/NC-rdf#URL" />
+		</treecell>
+  	</treeitem>
+  </template>
+
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treehead>
