@@ -46,7 +46,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 {
   PRUnichar *aLocaleUnichar = NULL;
   nsString aCategory;
-  aCategory.AssignWithConversion("NSILOCALE_TIME");
+  aCategory.Assign(NS_LITERAL_STRING("NSILOCALE_TIME##PLATFORM"));
   nsresult res = NS_OK;
 
   // use cached info if match with stored locale
@@ -78,6 +78,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
       if (NS_SUCCEEDED(res)) {
         res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
         if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+          NS_ASSERTION(NS_SUCCEEDED(res), "failed to get app locale info");
           mAppLocale = aLocaleUnichar; // cache app locale name
         }
         appLocale->Release();
@@ -86,6 +87,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
   }
   else {
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    NS_ASSERTION(NS_SUCCEEDED(res), "failed to get locale info");
   }
 
   if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
