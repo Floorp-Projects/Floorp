@@ -1,34 +1,35 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
 #ifndef nsILinkHandler_h___
 #define nsILinkHandler_h___
 
 #include "nsweb.h"
 #include "nsISupports.h"
+
 class nsIFrame;
 class nsString;
 class nsIPostData;
 struct nsGUIEvent;
 
-/* 52bd1e30-ce3f-11d1-9328-00805f8add32 */
-#define NS_ILINKHANDLER_IID   \
-{ 0x52bd1e30, 0xce3f, 0x11d1, \
-  {0x93, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+// Interface ID for nsILinkHandler
+#define NS_ILINKHANDLER_IID \
+ { 0xa6cf905b, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 enum nsLinkState {
   eLinkState_Unvisited  = 0,
@@ -43,8 +44,6 @@ enum nsLinkState {
  */
 class nsILinkHandler : public nsISupports {
 public:
-  NS_IMETHOD Init() = 0;
-
   /**
    * Process a click on a link. aFrame is the frame that contains the
    * linked content. aURLSpec is an absolute url spec that defines the
