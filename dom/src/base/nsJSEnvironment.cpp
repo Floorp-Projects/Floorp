@@ -173,6 +173,24 @@ nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
 
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
 
+// Class to manage destruction of the singleton
+// JSEnvironment
+struct JSEnvironmentInit {
+  JSEnvironmentInit() {
+  }
+
+  ~JSEnvironmentInit() {
+    if (nsJSEnvironment::sTheEnvironment) {
+      delete nsJSEnvironment::sTheEnvironment;
+      nsJSEnvironment::sTheEnvironment = nsnull;
+    }
+  }
+};
+
+#ifndef XP_MAC
+static JSEnvironmentInit initJSEnvironment;
+#endif
+
 nsJSEnvironment *
 nsJSEnvironment::GetScriptingEnvironment()
 {

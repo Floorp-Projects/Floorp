@@ -46,10 +46,11 @@ public:
 
 class nsJSEnvironment {
 private:
-  static nsJSEnvironment *sTheEnvironment;
   JSRuntime *mRuntime;
 
 public:
+  static nsJSEnvironment *sTheEnvironment;
+
   nsJSEnvironment();
   ~nsJSEnvironment();
 
