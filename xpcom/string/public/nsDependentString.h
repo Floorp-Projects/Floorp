@@ -142,10 +142,4 @@ class NS_COM nsDependentCString
       nsConstBufferHandle<char> mHandle;
   };
 
-
-  // temporary |typedef|s till we fix commercial and soap
-  //  see http://bugzilla.mozilla.org/show_bug.cgi?id=75220
-typedef nsDependentString   nsLocalString;
-typedef nsDependentCString  nsLocalCString;
-
 #endif /* !defined(nsDependentString_h___) */
