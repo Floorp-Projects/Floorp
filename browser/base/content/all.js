@@ -406,7 +406,8 @@ pref("network.dir.format", 2);
 // post to the server specified by this pref.
 pref("network.hosts.nntp_server",           "news.mozilla.org");
 
-pref("network.image.imageBehavior",         0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
+pref("network.image.enable",                true); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
+pref("network.image.enableForOriginatingWebsiteOnly", false);
 pref("network.image.warnAboutImages",       false);
 pref("network.proxy.autoconfig_url",        "");
 pref("network.proxy.type",                  0);
@@ -427,10 +428,10 @@ pref("network.proxy.socks_port",            0);
 pref("network.proxy.socks_version",         5);
 pref("network.proxy.no_proxies_on",         "");
 pref("network.online",                      true); //online/offline
-pref("network.cookie.cookieBehavior",       3); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
+pref("network.cookie.enable",               true); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
 pref("network.cookie.warnAboutCookies",     false);
-pref("network.cookie.lifetime.enabled",     false);
-pref("network.cookie.lifetime.behavior",    0);
+pref("network.cookie.enableForCurrentSessionOnly", false);
+pref("network.cookie.enableForOriginatingWebsiteOnly", false);
 pref("network.cookie.lifetime.days",        90);
 
 // The following default value is for p3p medium mode.

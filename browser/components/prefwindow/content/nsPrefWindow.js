@@ -43,7 +43,7 @@ function nsPrefWindow( frame_id )
   if ( !frame_id )
     throw "Error: frame_id not supplied!";
 
-  this.contentFrame   = frame_id
+  this.contentFrame   = frame_id;
   this.wsm            = new nsWidgetStateManager( frame_id );
   this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "disabled"];
   this.pref           = null;
