@@ -41,8 +41,11 @@
 #include "prmem.h"
 #include "nsIServiceManager.h"
 #include "nsIModule.h"
+#include "nsIRegistry.h"
+#include "nsISupportsArray.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
@@ -307,8 +310,209 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& c
 
   return NS_OK;
 }
-/////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * An extesible implementation of the StringBudle interface.
+ *
+ * @created         28/Dec/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsExtensibleStringBundle : public nsIStringBundle
+{
+  NS_DECL_ISUPPORTS
+
+private:
+  
+  nsISupportsArray * mBundle;
+
+public:
+
+  nsExtensibleStringBundle(const char * aRegistryKey, nsILocale * aLocale, 
+      nsresult * aResult);
+  virtual ~nsExtensibleStringBundle();
+
+  //--------------------------------------------------------------------------
+  // Interface nsIStringBundle [declaration]
+
+  NS_IMETHOD GetStringFromID(PRInt32 aID, PRUnichar ** aResult);
+  NS_IMETHOD GetStringFromName(const PRUnichar *aName, PRUnichar ** aResult);
+  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator ** aResult); 
+};
+
+NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, nsIStringBundle::GetIID());
+
+nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey, 
+                                                  nsILocale * aLocale, 
+                                                  nsresult * aResult)
+{
+  NS_INIT_REFCNT();
+
+  nsresult res = NS_OK;
+  nsIEnumerator * components = NULL;
+  nsIRegistry * registry = NULL;
+  nsRegistryKey uconvKey, key;
+  nsIStringBundleService * sbServ = NULL;
+
+  // get the Bundle Service
+  res = nsServiceManager::GetService(kStringBundleServiceCID, 
+      kIStringBundleServiceIID, (nsISupports **)&sbServ);
+  if (NS_FAILED(res)) goto done;
+
+  // get the registry
+  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
+    nsIRegistry::GetIID(), (nsISupports**)&registry);
+  if (NS_FAILED(res)) goto done;
+
+  // open the registry
+  res = registry->OpenWellKnownRegistry(
+    nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(res)) goto done;
+
+  // get subtree
+  res = registry->GetSubtree(nsIRegistry::Common,  
+    aRegistryKey, &uconvKey);
+  if (NS_FAILED(res)) goto done;
+
+  // enumerate subtrees
+  res = registry->EnumerateSubtrees(uconvKey, &components);
+  if (NS_FAILED(res)) goto done;
+  res = components->First();
+  if (NS_FAILED(res)) goto done;
+
+  // create the bundles array
+  res = NS_NewISupportsArray(&mBundle);
+  if (NS_FAILED(res)) goto done;
+
+  while (NS_OK != components->IsDone()) {
+    nsISupports * base = NULL;
+    nsIRegistryNode * node = NULL;
+    char * name = NULL;
+    nsIStringBundle * bundle = NULL;
+
+    res = components->CurrentItem(&base);
+    if (NS_FAILED(res)) goto done1;
+
+    res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
+    if (NS_FAILED(res)) goto done1;
+
+    res = node->GetKey(&key);
+    if (NS_FAILED(res)) goto done1;
+
+    res = registry->GetString(key, "name", &name);
+    if (NS_FAILED(res)) goto done1;
+
+    // XXX Ok. We have a bug here right now: after this call, the registry 
+    // magic number gets corrupted, so the second file will not 
+    // be created/used. Workaround: use only one file. Hurts extensibility,
+    // but we can't see it until we need it. A work-around would be possible.
+    // But I think we should really fix the original bug...
+    res = sbServ->CreateBundle(name, aLocale, &bundle);
+    if (NS_FAILED(res)) goto done1;
+
+    res = mBundle->AppendElement(bundle);
+    if (NS_FAILED(res)) goto done1;
+
+    // printf("Name = %s\n", name);
+
+done1:
+    NS_IF_RELEASE(base);
+    NS_IF_RELEASE(node);
+    NS_IF_RELEASE(bundle);
+
+    if (name != NULL) nsCRT::free(name);
+
+    res = components->Next();
+    if (NS_FAILED(res)) break; // this is NOT supposed to fail!
+  }
+
+  // finish and clean up
+done:
+  if (registry != NULL) {
+    registry->Close();
+    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+  }
+  if (sbServ != NULL) nsServiceManager::ReleaseService(
+      kStringBundleServiceCID, sbServ);
+
+  NS_IF_RELEASE(components);
+}
+
+nsExtensibleStringBundle::~nsExtensibleStringBundle() 
+{
+  NS_IF_RELEASE(mBundle);
+}
+
+nsresult nsExtensibleStringBundle::GetStringFromID(PRInt32 aID, PRUnichar ** aResult)
+{
+  nsresult res = NS_OK;
+  PRUint32 size, i;
+
+  res = mBundle->Count(&size);
+  if (NS_FAILED(res)) return res;
+
+  for (i = 0; i < size; i++) {
+    nsISupports * sBundle = NULL;
+    nsIStringBundle * bundle = NULL;
+
+    res = mBundle->GetElementAt(i, &sBundle);
+    if (NS_FAILED(res)) goto done;
+
+    res = sBundle->QueryInterface(nsIStringBundle::GetIID(), (void **)(&bundle));
+    if (NS_FAILED(res)) goto done;
+
+    res = bundle->GetStringFromID(aID, aResult);
+    if (NS_FAILED(res)) goto done;
+
+done:
+    NS_IF_RELEASE(bundle);
+    NS_IF_RELEASE(sBundle);
+
+    if (NS_SUCCEEDED(res)) return res;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName, 
+                                                     PRUnichar ** aResult)
+{
+  nsresult res = NS_OK;
+  PRUint32 size, i;
+
+  res = mBundle->Count(&size);
+  if (NS_FAILED(res)) return res;
+
+  for (i = 0; i < size; i++) {
+    nsISupports * sBundle = NULL;
+    nsIStringBundle * bundle = NULL;
+
+    res = mBundle->GetElementAt(i, &sBundle);
+    if (NS_FAILED(res)) goto done;
+
+    res = sBundle->QueryInterface(nsIStringBundle::GetIID(), (void **)(&bundle));
+    if (NS_FAILED(res)) goto done;
+
+    res = bundle->GetStringFromName(aName, aResult);
+    if (NS_FAILED(res)) goto done;
+
+done:
+    NS_IF_RELEASE(bundle);
+    NS_IF_RELEASE(sBundle);
+
+    if (NS_SUCCEEDED(res)) return res;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsExtensibleStringBundle::GetEnumeration(nsIBidirectionalEnumerator ** aResult)
+{
+  // XXX write me
+  *aResult = NULL;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 class nsStringBundleService : public nsIStringBundleService
 {
@@ -362,6 +566,29 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
   }
 
   return ret;
+}
+
+NS_IMETHODIMP
+nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey, 
+                                              nsILocale* aLocale,
+                                              nsIStringBundle** aResult)
+{
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = NS_OK;
+
+  nsExtensibleStringBundle * bundle = new nsExtensibleStringBundle(
+      aRegistryKey, aLocale, &res);
+  if (!bundle) return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(res)) {
+    delete bundle;
+    return res;
+  }
+
+  res = bundle->QueryInterface(kIStringBundleIID, (void**) aResult);
+  if (NS_FAILED(res)) delete bundle;
+
+  return res;
 }
 
 /* void CreateXPCBundle ([const] in string aURLSpec, [const] in wstring aLocaleName, out nsIStringBundle aResult); */
