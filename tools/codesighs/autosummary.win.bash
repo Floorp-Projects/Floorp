@@ -102,30 +102,29 @@ SUMMARYFILE="$3"
 #
 #   Create our temporary directory.
 #
-TMPDIR="$TMP/codesighs.$PPID"
-mkdir -p $TMPDIR
+MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 
 
 #
 #   Find all map files.
 #
-ALLMAPSFILE="$TMPDIR/allmaps.list"
+ALLMAPSFILE="$MYTMPDIR/allmaps.list"
 find ./mozilla -type f -name *.map > $ALLMAPSFILE
 
 
 #
 #   Reduce the map files to a revelant set.
 #
-NOPATMAPSFILE="$TMPDIR/nopatmaps.list"
+NOPATMAPSFILE="$MYTMPDIR/nopatmaps.list"
 grep -vi $EXCLUDE_PATTERN_01 < $ALLMAPSFILE | grep -vi $EXCLUDE_PATTERN_02 | grep -vi $EXCLUDE_PATTERN_03 | grep -vi $EXCLUDE_PATTERN_04 > $NOPATMAPSFILE
-MAPSFILE="$TMPDIR/maps.list"
+MAPSFILE="$MYTMPDIR/maps.list"
 grep -vi $EXCLUDE_NAME_01 < $NOPATMAPSFILE | grep -vi $EXCLUDE_NAME_02 > $MAPSFILE
 
 
 #
 #   Produce the TSV output.
 #
-RAWTSVFILE="$TMPDIR/raw.tsv"
+RAWTSVFILE="$MYTMPDIR/raw.tsv"
 xargs -n 1 ./mozilla/dist/bin/msmap2tsv --input < $MAPSFILE > $RAWTSVFILE
 
 
@@ -141,7 +140,7 @@ sort -r $RAWTSVFILE > $COPYSORTTSV
 #       level report.
 #
 rm -f $SUMMARYFILE
-DIFFFILE="$TMPDIR/diff.txt"
+DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
   ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE >> $SUMMARYFILE
@@ -171,4 +170,4 @@ fi
 #
 #   Remove our temporary directory.
 #
-rm -rf $TMPDIR
+rm -rf $MYTMPDIR
