@@ -29,7 +29,7 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLToTXTSinkStream.h"
 #include "nsXIFDTD.h"
-
+#include "nsFileSpec.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
@@ -42,6 +42,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMTextListener.h"
+#include "nsIDiskDocument.h"
 #include "nsEditorCID.h"
 #include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
@@ -60,6 +61,10 @@
 #include "nsIFileStream.h"
 #include "nsIStringStream.h"
 
+#include "nsIAppSHell.h"
+#include "nsIToolkit.h"
+#include "nsWidgetsCID.h"
+#include "nsIFileWidget.h"
 
 class nsIFrame;
 
@@ -943,6 +948,65 @@ NS_IMETHODIMP nsTextEditor::ScrollDown(nsIAtom *aIncrement)
 NS_IMETHODIMP nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
   return nsEditor::ScrollIntoView(aScrollToBegin);
+}
+
+static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
+
+NS_IMETHODIMP nsTextEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
+{
+	nsresult rv = NS_OK;
+	
+  // get the document
+  nsCOMPtr<nsIDOMDocument> doc;
+  rv = GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(rv) || !doc)
+    return rv;
+  
+  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
+  if (!diskDoc)
+    return NS_ERROR_NO_INTERFACE;
+  
+  // find out if the doc already has a fileSpec associated with it.
+  nsFileSpec		docFileSpec;
+  PRBool mustShowFileDialog = saveAs || (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
+  PRBool replacing = !saveAs;
+  
+  if (mustShowFileDialog)
+  {
+  	nsCOMPtr<nsIFileWidget>	fileWidget;
+    rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, getter_AddRefs(fileWidget));
+    if (NS_SUCCEEDED(rv) && fileWidget)
+    {
+      nsAutoString  promptString("Save this document as:");			// XXX i18n, l10n
+  	  nsFileDlgResults dialogResult;
+  	  dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
+  	  if (dialogResult == nsFileDlgResults_Cancel)
+  	    return NS_OK;
+  	    
+  	  replacing = (dialogResult == nsFileDlgResults_Replace);
+  	}
+  }
+
+  nsAutoString  charsetStr("ISO-8859-1");
+  rv = diskDoc->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML, charsetStr);
+  
+  if (NS_FAILED(rv))
+  {
+    // show some error dialog?
+  }
+  
+  return rv;
+}
+
+NS_IMETHODIMP nsTextEditor::Save()
+{
+  return SaveDocument(PR_FALSE, PR_FALSE);
+}
+
+NS_IMETHODIMP nsTextEditor::SaveAs(PRBool aSavingCopy)
+{
+  return SaveDocument(PR_TRUE, aSavingCopy);
 }
 
 NS_IMETHODIMP nsTextEditor::Cut()

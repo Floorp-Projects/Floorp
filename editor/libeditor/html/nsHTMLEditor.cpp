@@ -349,6 +349,16 @@ NS_IMETHODIMP nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
   return nsTextEditor::ScrollIntoView(aScrollToBegin);
 }
 
+NS_IMETHODIMP nsHTMLEditor::Save()
+{
+	return nsTextEditor::Save();
+}
+
+NS_IMETHODIMP nsHTMLEditor::SaveAs(PRBool aSavingCopy)
+{
+	return nsTextEditor::SaveAs(aSavingCopy);
+}
+
 NS_IMETHODIMP nsHTMLEditor::Cut()
 {
   return nsTextEditor::Cut();

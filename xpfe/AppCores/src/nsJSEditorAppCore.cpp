@@ -410,6 +410,105 @@ EditorAppCoreSetParagraphFormat(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
 
 //
+// Native method Save
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSave(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Save()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function save requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SaveAs
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSaveAs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->SaveAs()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function saveAs requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CloseWindow
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->CloseWindow()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function closeWindow requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Undo
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1177,6 +1276,9 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"removeTextProperty",          EditorAppCoreRemoveTextProperty,     2},
   {"getTextProperty",          EditorAppCoreGetTextProperty,     6},
   {"setParagraphFormat",          EditorAppCoreSetParagraphFormat,     1},
+  {"save",          EditorAppCoreSave,     0},
+  {"saveAs",          EditorAppCoreSaveAs,     0},
+  {"closeWindow",          EditorAppCoreCloseWindow,     0},
   {"undo",          EditorAppCoreUndo,     0},
   {"redo",          EditorAppCoreRedo,     0},
   {"cut",          EditorAppCoreCut,     0},

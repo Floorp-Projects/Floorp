@@ -88,6 +88,10 @@ class nsEditorAppCore : public nsBaseAppCore,
 
 		NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);
 
+	  NS_IMETHOD    Save();
+  	NS_IMETHOD    SaveAs();
+  	NS_IMETHOD    CloseWindow();
+
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
     NS_IMETHOD    Back();

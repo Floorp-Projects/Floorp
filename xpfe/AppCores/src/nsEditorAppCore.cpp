@@ -55,6 +55,8 @@
 #include "nsEditorMode.h"
 #include "nsIDOMSelection.h"
 
+#include "nsIFileWidget.h"
+
 ///////////////////////////////////////
 // Editor Includes
 ///////////////////////////////////////
@@ -228,6 +230,7 @@ nsEditorAppCore::Init(const nsString& aId)
                                              (nsISupports**)&appCoreManager);
   if (NS_OK == rv) {
 	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
+    nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
   }
 	return rv;
 }
@@ -690,7 +693,69 @@ nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP    
 nsEditorAppCore::NewWindow()
 {  
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::Save()
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->Save();
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->Save();
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::SaveAs()
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->SaveAs(PR_FALSE);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->SaveAs(PR_FALSE);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::CloseWindow()
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    

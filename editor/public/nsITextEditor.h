@@ -42,11 +42,11 @@ class nsString;
  * a single line plain text editor is instantiated by using the SingleLinePlainTextGUIManager 
  * to limit UI and the SingleLinePlainTextEditRules to filter input and output.
  */
-class nsITextEditor  : public nsISupports{
+class nsITextEditor  : public nsISupports {
 public:
   typedef enum {ePlainText=0, eRichText=1} TextType;
   typedef enum {eSingleLine=0, eMultipleLines=1, ePassword=2} EditorType;
-
+	
   static const nsIID& GetIID() { static nsIID iid = NS_ITEXTEDITOR_IID; return iid; }
 
   /** Initialize the text editor 
@@ -228,6 +228,18 @@ public:
 
   /** select the entire contents of the document */
   NS_IMETHOD SelectAll()=0;
+
+  /** Respond to the menu 'Save' command; this may put up save UI if the document
+    * hasn't been saved yet.
+   */
+  NS_IMETHOD Save()=0;
+  
+  /** Respond to the menu 'Save As' command; this will put up save UI
+   * @param aSavingCopy        true if we are saving off a copy of the document
+   *                           without changing the disk file associated with the doc.
+   *                           This would correspond to a 'Save Copy As' menu command.
+   */  
+  NS_IMETHOD SaveAs(PRBool aSavingCopy)=0;
 
   /** cut the currently selected text, putting it into the OS clipboard
     * What if no text is selected?
