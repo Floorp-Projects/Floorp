@@ -80,7 +80,10 @@ var unifinderToDoDataSourceObserver =
 
    onDeleteItem : function( calendarToDo )
    {
-      toDoUnifinderRefresh();
+      if( !gICalLib.batchMode )
+      {
+         toDoUnifinderRefresh();
+      }
    },
 
    onAlarm : function( calendarToDo )
@@ -246,17 +249,25 @@ function unifinderMouseDownToDo( event )
 
 function unifinderDeleteToDoCommand( DoNotConfirm )
 {
-// TODO Implement Confirm
+   // TODO Implement Confirm
    var tree = document.getElementById( ToDoUnifinderTreeName );
-   if (tree.treeBoxObject.selection.count > 0)
-   {
-      var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
-      if(treeitem)
-      {
+   var start = new Object();
+   var end = new Object();
+   var numRanges = tree.view.selection.getRangeCount();
+
+   gICalLib.batchMode = true;
+
+   for (var t=0; t<numRanges; t++){
+      tree.view.selection.getRangeAt(t,start,end);
+      for (var v=start.value; v<=end.value; v++){
+         var treeitem = tree.treeBoxObject.view.getItemAtIndex( v );
          var todoId = treeitem.getAttribute("toDoID");
-         gICalLib.deleteTodo( todoId );
+         gICalLib.deleteTodo( todoId );   
       }
    }
+   gICalLib.batchMode = false;
+
+   toDoUnifinderRefresh();
 }
 
 function checkboxClick( ThisToDo, completed )
