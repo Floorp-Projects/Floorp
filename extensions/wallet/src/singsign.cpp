@@ -786,6 +786,8 @@ si_GetURL(const char * passwordRealm) {
     if (LIST_COUNT(si_signon_list)==0) {
       return NULL;
     }
+    /* XXX how can this be right -- seems wrong to give back a random password */
+    LOG(("  returning first element in the signon list\n"));
     return (si_SignonURLStruct *) (si_signon_list->ElementAt(0));
   }
 
@@ -844,7 +846,11 @@ si_GetCompositeURL(const char *primaryRealm, const char *legacyRealm)
   si_SignonURLStruct *primaryUrl, *legacyUrl;
 
   primaryUrl = si_GetURL(primaryRealm);
-  legacyUrl = si_GetURL(legacyRealm);
+
+  if (legacyRealm)
+    legacyUrl = si_GetURL(legacyRealm);
+  else
+    legacyUrl = nsnull;
 
   if (primaryUrl && legacyUrl) {
     LOG((">>> building composite URL struct\n"));
