@@ -38,6 +38,8 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../gtk -I$(srcdir)/.
 INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS= \
+	nsFontRetrieverService.cpp \
+	nsFontSizeIterator.cpp \
 	nsAppShell.cpp \
 	nsClipboard.cpp	\
 	nsComboBox.cpp \
