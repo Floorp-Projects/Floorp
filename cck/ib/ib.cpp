@@ -1784,6 +1784,8 @@ void CreateLinuxInstaller()
 {
 	char currentdir[_MAX_PATH];
 	_getcwd(currentdir,_MAX_PATH);
+	if (FileExists(xpiDstPath+"\\"+tarfile))
+		DeleteFile(xpiDstPath+"\\"+tarfile);
 	CopyDirectory(xpiDstPath, templinuxPath + xpiDir, TRUE);
 	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
 	DeleteFile(templinuxPath + xpiDir + "\\Config.ini");
@@ -1843,7 +1845,6 @@ void CreateLinuxInstaller()
 	templinuxPath.Replace("\\", "/");
 	templinuxPath.Replace(":","");
 	templinuxPath.Insert(0,"/cygdrive/");
-	DeleteFile(tarfile);
 	CString command = "tar -zcvf " + tarfile + " -C " +quotes+ templinuxPath + "/" + templinuxDir +quotes+ spaces + nsinstallerDir;    
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	_chdir(currentdir);
