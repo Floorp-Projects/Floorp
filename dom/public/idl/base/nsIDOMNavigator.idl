@@ -40,7 +40,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a6cf906e-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(8758b72b-63d4-4685-b908-4275126410fb)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString           appCodeName;
@@ -58,6 +58,7 @@ interface nsIDOMNavigator : nsISupports
   readonly attribute DOMString           securityPolicy;
   readonly attribute DOMString           userAgent;
   readonly attribute boolean             cookieEnabled;
+  readonly attribute boolean             onLine;
 
   boolean                   javaEnabled();
   boolean                   taintEnabled();

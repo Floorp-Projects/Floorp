@@ -6216,6 +6216,22 @@ NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
 }
 
 NS_IMETHODIMP
+NavigatorImpl::GetOnLine(PRBool* aOnline)
+{
+  NS_PRECONDITION(aOnline, "Null out param");
+  
+  *aOnline = PR_FALSE;  // No ioservice would mean this is the case
+  
+  nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
+  if (ios) {
+    ios->GetOffline(aOnline);
+    *aOnline = !*aOnline;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 NavigatorImpl::JavaEnabled(PRBool *aReturn)
 {
   nsresult rv = NS_OK;
