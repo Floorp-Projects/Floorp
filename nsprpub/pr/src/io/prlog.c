@@ -200,7 +200,7 @@ void _PR_InitLog(void)
         PRInt32 bufSize = DEFAULT_BUF_SIZE;
         while (pos < evlen) {
             PRIntn level = 1, count = 0, delta = 0;
-            count = sscanf(&ev[pos], "%64[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]%n:%d%n",
+            count = sscanf(&ev[pos], "%63[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]%n:%d%n",
                            module, &delta, &level, &delta);
             pos += delta;
             if (count == 0) break;
@@ -232,7 +232,7 @@ void _PR_InitLog(void)
             /*found:*/
             count = sscanf(&ev[pos], " , %n", &delta);
             pos += delta;
-            if (count == -1) break;
+            if (count == EOF) break;
         }
         PR_SetLogBuffering(isSync ? bufSize : 0);
 
@@ -300,7 +300,7 @@ static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
         while (pos < evlen) {
             PRIntn level = 1, count = 0, delta = 0;
 
-            count = sscanf(&ev[pos], "%64[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]%n:%d%n",
+            count = sscanf(&ev[pos], "%63[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]%n:%d%n",
                            module, &delta, &level, &delta);
             pos += delta;
             if (count == 0) break;
@@ -319,7 +319,7 @@ static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
             }
             count = sscanf(&ev[pos], " , %n", &delta);
             pos += delta;
-            if (count == -1) break;
+            if (count == EOF) break;
         }
     }
 } /* end _PR_SetLogModuleLevel() */
