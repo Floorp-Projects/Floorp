@@ -1059,11 +1059,6 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
 {
-  nsIFrame* insertionPoint = nsnull;
-  GetInsertionPoint(&aPresShell, this, aOldFrame, &insertionPoint);
-  if (insertionPoint)
-    return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
-
   SanityCheck(mFrames);
 
   // remove child from our info list
@@ -1088,23 +1083,6 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aPrevFrame,
                             nsIFrame* aFrameList)
 {
-   nsIFrame* insertionPoint = nsnull;
-   GetInsertionPoint(&aPresShell, this, aFrameList, &insertionPoint);
-   if (insertionPoint) {
-     // First insert the frames.
-     nsresult rv = insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
-     
-     // Now reparent the style contexts to keep the frames in sync.
-     nsIFrame* walkit = aFrameList;
-     nsCOMPtr<nsIStyleContext> styleContext;
-     insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
-     while (walkit) {
-       aPresContext->ReParentStyleContext(walkit, styleContext);
-       walkit->GetNextSibling(&walkit);
-     }
-     return rv;
-   }
-
    SanityCheck(mFrames);
 
    nsIBox* prevBox = GetBox(aPrevFrame);
@@ -1139,23 +1117,6 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
-   nsIFrame* insertionPoint = nsnull;
-   GetInsertionPoint(&aPresShell, this, aFrameList, &insertionPoint);
-   if (insertionPoint) {
-     // First append the frames.
-     nsresult rv = insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
-
-     // Now reparent the style contexts to keep the frames in sync.
-     nsIFrame* walkit = aFrameList;
-     nsCOMPtr<nsIStyleContext> styleContext;
-     insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
-     while (walkit) {
-       aPresContext->ReParentStyleContext(walkit, styleContext);
-       walkit->GetNextSibling(&walkit);
-     }
-     return rv;
-   }
-
    SanityCheck(mFrames);
 
     // append them after
@@ -1857,72 +1818,6 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     return rv;
 }
 
-void
-nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult)
-{
-  *aResult = nsnull;
-
-  nsCOMPtr<nsIContent> content;
-  aParent->GetContent(getter_AddRefs(content));
-  if (!content)
-    return;
-  nsCOMPtr<nsIDocument> document;
-  content->GetDocument(*getter_AddRefs(document));
-  if (!document)
-    return;
-
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  document->GetBindingManager(getter_AddRefs(bindingManager));
-  if (!bindingManager)
-    return;
-  nsCOMPtr<nsIContent> insertionElement;
-  nsIFrame* frame = nsnull;
-  if (aChild) {
-    nsCOMPtr<nsIContent> currContent;
-    aChild->GetContent(getter_AddRefs(currContent));
-
-    // Check to see if the content is anonymous.
-    nsCOMPtr<nsIContent> bindingParent;
-    currContent->GetBindingParent(getter_AddRefs(bindingParent));
-    if (bindingParent == content)
-      return; // It is anonymous. Don't use the insertion point, since that's only
-              // for the explicit kids.
-
-    bindingManager->GetInsertionPoint(content, currContent, getter_AddRefs(insertionElement));
-    if (insertionElement) {
-      aShell->GetPrimaryFrameFor(insertionElement, &frame);
-      if (frame) {
-        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
-        if (scroll)
-          scroll->GetScrolledFrame(nsnull, frame);
-        if (frame != aParent) {
-          nsIFrame* nestedPoint = nsnull;
-          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
-          *aResult = nestedPoint ? nestedPoint : frame;
-        }
-      }
-      return;
-    }
-  }
-  else {
-    PRBool dummy;
-    bindingManager->GetSingleInsertionPoint(content, getter_AddRefs(insertionElement), &dummy);
-    if (insertionElement) {
-      aShell->GetPrimaryFrameFor(insertionElement, &frame);
-      if (frame) {
-        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
-        if (scroll)
-          scroll->GetScrolledFrame(nsnull, frame);
-        if (frame != aParent) {
-          nsIFrame* nestedPoint = nsnull;
-          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
-          *aResult = nestedPoint ? nestedPoint : frame;
-        }
-      }
-      return;
-    }
-  }
-}
 
 //XXX the event come's in in view relative coords, but really should
 //be in frame relative coords by the time it hits our frame.

@@ -53,6 +53,9 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIXMLContent.h"
+#include "nsIDocument.h"
+#include "nsIBindingManager.h"
+#include "nsIScrollableFrame.h"
 
 #define NEW_CONTEXT_PARENTAGE_INVARIANT
 
@@ -298,6 +301,8 @@ public:
                               NSFMPropertyDtorFunc aPropDtorFunc);
   NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
                                  nsIAtom*  aPropertyName);
+
+  NS_IMETHOD GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult);
 
 #ifdef NS_DEBUG
   NS_IMETHOD DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame);
@@ -701,6 +706,23 @@ FrameManager::AppendFrames(nsIPresContext* aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
+  nsIFrame* insertionPoint = nsnull;
+  GetInsertionPoint(&aPresShell, aParentFrame, aFrameList, &insertionPoint);
+  if (insertionPoint) {
+    // First append the frames.
+    nsresult rv = insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+
+    // Now reparent the style contexts to keep the frames in sync.
+    nsIFrame* walkit = aFrameList;
+    nsCOMPtr<nsIStyleContext> styleContext;
+    insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
+    while (walkit) {
+      aPresContext->ReParentStyleContext(walkit, styleContext);
+      walkit->GetNextSibling(&walkit);
+    }
+    return rv;
+  }
+
   return aParentFrame->AppendFrames(aPresContext, aPresShell, aListName,
                                     aFrameList);
 }
@@ -713,6 +735,23 @@ FrameManager::InsertFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList)
 {
+  nsIFrame* insertionPoint = nsnull;
+  GetInsertionPoint(&aPresShell, aParentFrame, aFrameList, &insertionPoint);
+  if (insertionPoint) {
+    // First insert the frames.
+    nsresult rv = insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+    
+    // Now reparent the style contexts to keep the frames in sync.
+    nsIFrame* walkit = aFrameList;
+    nsCOMPtr<nsIStyleContext> styleContext;
+    insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
+    while (walkit) {
+      aPresContext->ReParentStyleContext(walkit, styleContext);
+      walkit->GetNextSibling(&walkit);
+    }
+    return rv;
+  }
+
   return aParentFrame->InsertFrames(aPresContext, aPresShell, aListName,
                                     aPrevFrame, aFrameList);
 }
@@ -724,6 +763,11 @@ FrameManager::RemoveFrame(nsIPresContext* aPresContext,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
 {
+  nsIFrame* insertionPoint = nsnull;
+  GetInsertionPoint(&aPresShell, aParentFrame, aOldFrame, &insertionPoint);
+  if (insertionPoint)
+    return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+
   return aParentFrame->RemoveFrame(aPresContext, aPresShell, aListName,
                                    aOldFrame);
 }
@@ -2276,6 +2320,76 @@ FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
   }
 
   return result;
+}
+
+NS_IMETHODIMP
+FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult)
+{
+  *aResult = nsnull;
+
+  nsCOMPtr<nsIContent> content;
+  aParent->GetContent(getter_AddRefs(content));
+  if (!content)
+    return NS_OK;
+  nsCOMPtr<nsIDocument> document;
+  content->GetDocument(*getter_AddRefs(document));
+  if (!document)
+    return NS_OK;
+
+  nsCOMPtr<nsIBindingManager> bindingManager;
+  document->GetBindingManager(getter_AddRefs(bindingManager));
+  if (!bindingManager)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> insertionElement;
+  nsIFrame* frame = nsnull;
+  if (aChild) {
+    nsCOMPtr<nsIContent> currContent;
+    aChild->GetContent(getter_AddRefs(currContent));
+
+    // Check to see if the content is anonymous.
+    nsCOMPtr<nsIContent> bindingParent;
+    currContent->GetBindingParent(getter_AddRefs(bindingParent));
+    if (bindingParent == content)
+      return NS_OK; // It is anonymous. Don't use the insertion point, since that's only
+                    // for the explicit kids.
+
+    bindingManager->GetInsertionPoint(content, currContent, getter_AddRefs(insertionElement));
+    if (insertionElement) {
+      aShell->GetPrimaryFrameFor(insertionElement, &frame);
+      if (frame) {
+        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
+        if (scroll)
+          scroll->GetScrolledFrame(nsnull, frame);
+        if (frame != aParent) {
+          nsIFrame* nestedPoint = nsnull;
+          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
+          *aResult = nestedPoint ? nestedPoint : frame;
+        }
+      }
+      return NS_OK;
+    }
+  }
+  else {
+    PRBool dummy;
+    bindingManager->GetSingleInsertionPoint(content, getter_AddRefs(insertionElement), &dummy);
+    if (insertionElement) {
+      aShell->GetPrimaryFrameFor(insertionElement, &frame);
+      if (frame) {
+        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
+        if (scroll)
+          scroll->GetScrolledFrame(nsnull, frame);
+        if (frame != aParent) {
+          nsIFrame* nestedPoint = nsnull;
+          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
+          *aResult = nestedPoint ? nestedPoint : frame;
+        }
+      }
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -39,6 +39,7 @@
 #include "nsMenuFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsIFrameManager.h"
 #include "nsMenuPopupFrame.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -211,6 +212,14 @@ nsMenuBarFrame::ToggleMenuActiveState()
       mCurrentMenu = firstFrame;
     }
   }
+}
+
+static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* aChild,
+                              nsIFrame** aResult)
+{
+  nsCOMPtr<nsIFrameManager> frameManager;
+  aShell->GetFrameManager(getter_AddRefs(frameManager));
+  frameManager->GetInsertionPoint(aShell, aFrame, aChild, aResult);
 }
 
 nsIMenuFrame*

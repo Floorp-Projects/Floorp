@@ -52,6 +52,7 @@
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableView.h"
+#include "nsIFrameManager.h"
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
@@ -740,6 +741,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* aChild,
+                              nsIFrame** aResult)
+{
+  nsCOMPtr<nsIFrameManager> frameManager;
+  aShell->GetFrameManager(getter_AddRefs(frameManager));
+  frameManager->GetInsertionPoint(aShell, aFrame, aChild, aResult);
+}
 
 NS_IMETHODIMP
 nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
