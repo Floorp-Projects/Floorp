@@ -86,7 +86,7 @@ protected:
     nsJSPrincipals mJSPrincipals;
     nsVoidArray mAnnotations;
     nsHashtable *mCapabilities;
-    nsCString mPrefName;
+    char *mPrefName;
     static int mCapabilitiesOrdinal;
 };
 

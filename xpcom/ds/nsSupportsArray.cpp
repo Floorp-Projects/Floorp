@@ -40,7 +40,6 @@
 #include <string.h>
 #include "nsSupportsArray.h"
 #include "nsSupportsArrayEnumerator.h"
-#include "nsAString.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include <string.h>

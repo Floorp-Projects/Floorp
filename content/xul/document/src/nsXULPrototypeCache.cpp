@@ -950,8 +950,9 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
 #endif
                         rv = NS_ERROR_UNEXPECTED;
                     } else {
-                        nsCAutoString fileChromePath;
-                        rv = objectInput->ReadCString(fileChromePath);
+                        nsXPIDLCString fileChromePath;
+                        rv = objectInput->ReadStringZ(
+                                                 getter_Copies(fileChromePath));
                         if (NS_SUCCEEDED(rv) && 
                             !fileChromePath.Equals(chromePath)) { 
                             rv = NS_ERROR_UNEXPECTED;

@@ -98,11 +98,15 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
 {
     nsresult rv;
 
-    rv = aStream->ReadCString(mScheme);
-    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString buf;
 
-    rv = aStream->ReadCString(mPath);
+    rv = aStream->ReadStringZ(getter_Copies(buf));
     if (NS_FAILED(rv)) return rv;
+    mScheme = buf;
+
+    rv = aStream->ReadStringZ(getter_Copies(buf));
+    if (NS_FAILED(rv)) return rv;
+    mPath = buf;
 
     return NS_OK;
 }

@@ -23,7 +23,6 @@
 #define nsBinaryStream_h___
 
 #include "nsCOMPtr.h"
-#include "nsAString.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIStreamBufferAccess.h"

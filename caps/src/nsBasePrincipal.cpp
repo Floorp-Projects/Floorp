@@ -32,7 +32,7 @@
 //////////////////////////
 
 nsBasePrincipal::nsBasePrincipal()
-    : mCapabilities(nsnull)
+    : mCapabilities(nsnull), mPrefName(nsnull)
 {
 }
 
@@ -48,6 +48,8 @@ nsBasePrincipal::~nsBasePrincipal(void)
 {
     mAnnotations.EnumerateForwards(deleteElement, nsnull);
     delete mCapabilities;
+    if (mPrefName)
+        Recycle(mPrefName);
 }
 
 NS_IMETHODIMP
@@ -235,7 +237,9 @@ nsBasePrincipal::InitFromPersistent(const char* aPrefName, const char* aID,
         mCapabilities->Reset();
 
     //-- Save the preference name
-    mPrefName = aPrefName;
+    mPrefName = PL_strdup(aPrefName);
+    if (!mPrefName)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     const char* ordinalBegin = PL_strpbrk(aPrefName, "1234567890");
     if (ordinalBegin) {
@@ -284,7 +288,7 @@ nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
                                 char** aGrantedList, char** aDeniedList)
 {
     //-- Preference name
-    *aPrefName = ToNewCString(mPrefName);
+    *aPrefName = nsCRT::strdup(mPrefName);
     if (!aPrefName)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -380,7 +384,7 @@ nsBasePrincipal::Read(nsIObjectInputStream* aStream)
     }
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_ReadOptionalCString(aStream, mPrefName);
+    rv = NS_ReadOptionalStringZ(aStream, &mPrefName);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -415,7 +419,7 @@ nsBasePrincipal::Write(nsIObjectOutputStream* aStream)
         rv = mCapabilities->Write(aStream, WriteScalarValue);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_WriteOptionalStringZ(aStream, mPrefName.get());
+    rv = NS_WriteOptionalStringZ(aStream, mPrefName);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
