@@ -35,6 +35,7 @@ namespace nsMimeMapperMac {
 
     // converts from mime type (eg: text/plain) to MacOS type (eg: 'TEXT').
   ResType MapMimeTypeToMacOSType ( const nsString & aMimeStr ) ;
+  void MapMacOSTypeToMimeType ( ResType inMacType, nsString & outMimeStr ) ;
 
 } // nsMimeMapperMac
 
