@@ -3059,6 +3059,8 @@ void
 GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
                                   const nsAString &aPopupURL)
 {
+  // fetch the URI of the window requesting the opened window
+
   nsCOMPtr<nsIDOMWindow> topWindow;
   GetTop(getter_AddRefs(topWindow));
   nsCOMPtr<nsIDOMDocument> topDoc;
@@ -3067,13 +3069,47 @@ GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
   nsCOMPtr<nsIURI> requestingURI;
   nsCOMPtr<nsIURI> popupURI;
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(topWindow));
-  nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
   if (webNav)
     webNav->GetCurrentURI(getter_AddRefs(requestingURI));
+
+  // build the URI of the would-have-been popup window
+  // (see nsWindowWatcher::URIfromURL)
+
+  // first, fetch the opener's base URI
+
+  nsIURI *baseURL = 0;
+
+  nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
+  nsCOMPtr<nsIDOMWindow> contextWindow;
+  if (stack) {
+    JSContext *cx = nsnull;
+    stack->Peek(&cx);
+    if (cx) {
+      nsCOMPtr<nsIScriptContext> currentCX;
+      nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(currentCX));
+      if (currentCX) {
+        nsCOMPtr<nsIScriptGlobalObject> gobj;
+        currentCX->GetGlobalObject(getter_AddRefs(gobj));
+        contextWindow = do_QueryInterface(gobj);
+      }
+    }
+  }
+  if (!contextWindow)
+    contextWindow = NS_STATIC_CAST(nsIDOMWindow*,this);
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  contextWindow->GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
+  if (doc)
+    baseURL = doc->GetBaseURL();
+
+  // use the base URI to build what would have been the popup's URI
+  nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
   if (ios)
-    ios->NewURI(NS_ConvertUCS2toUTF8(aPopupURL), 0, 0,
+    ios->NewURI(NS_ConvertUCS2toUTF8(aPopupURL), 0, baseURL,
                 getter_AddRefs(popupURI));
 
+  // fire an event chock full of informative URIs
   if (aBlocked)
     FirePopupBlockedEvent(topDoc, requestingURI, popupURI);
   if (aWindow)
