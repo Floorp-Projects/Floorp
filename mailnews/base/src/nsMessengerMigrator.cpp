@@ -1183,10 +1183,6 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   noServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // we don't want "nobody at Local Folders" to show up in the
-  // folder pane, so we set the pretty name to "Local Folders"
-  server->SetPrettyName(mLocalFoldersName.get());
-  
   // create the directory structure for old 4.x "Local Mail"
   // under <profile dir>/Mail/Local Folders or
   // <"mail.directory" pref>/Local Folders 
@@ -1247,6 +1243,10 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   if (!dirExists) {
     mailDirSpec->CreateDir();
   }
+  
+  // we don't want "nobody at Local Folders" to show up in the
+  // folder pane, so we set the pretty name to "Local Folders"
+  server->SetPrettyName(mLocalFoldersName.get());
   
   // pass the "Local Folders" server so the send later uri pref 
   // will be "mailbox://nobody@Local Folders/Unsent Messages"
