@@ -858,7 +858,6 @@ nsFormSubmission::GetEncoder(nsIForm* form,
      if (charset.Equals(NS_LITERAL_STRING("ISO-8859-1")))
        charset.Assign(NS_LITERAL_STRING("windows-1252"));
      rv = ccm->GetUnicodeEncoder(&charset, encoder);
-     nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
      NS_ENSURE_SUCCESS(rv, rv);
      // XXX Commenting this out for now since it was never called up until now
      // and no one appears to have noticed.  But it appears to be useful stuff,
