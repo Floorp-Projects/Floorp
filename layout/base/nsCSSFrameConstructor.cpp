@@ -78,6 +78,7 @@
 #include "nsIContentIterator.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBindingManager.h"
+#include "nsIXBLBinding.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -5318,7 +5319,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
       return rv;
 
     // Load the bindings.
-    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE);
+    nsCOMPtr<nsIXBLBinding> binding;
+    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
   
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsISupportsArray> anonymousItems;
@@ -5545,8 +5547,9 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
       return rv;
 
     // Load the bindings.
-    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE);
-  
+    nsCOMPtr<nsIXBLBinding> binding;
+    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+    
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsIContent> childElement;
     nsCOMPtr<nsISupportsArray> anonymousItems;
@@ -6370,20 +6373,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
                              PR_FALSE, childItems, PR_FALSE);
       
-
-      // if there are any anonymous children create frames for them
-      /* Not sure why we did this
-        nsCOMPtr<nsIAtom> tag(aTag);
-        if (aXBLBaseTag) {
-          aContent->GetTag(*getter_AddRefs(tag));
-        }
-      */    
       CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
                             childItems);
 
       // Set the frame's initial child list
       newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
-  
     }
 
     // Add the new frame to our list of frame items.
@@ -7681,6 +7675,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   // The following code allows the user to specify the base tag
   // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
   // can then be extended arbitrarily.
+  nsCOMPtr<nsIXBLBinding> binding;
   if (!aXBLBaseTag)
   {
     const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
@@ -7695,7 +7690,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
         return rv;
 
       // Load the bindings.
-      xblService->LoadBindings(aContent, ui->mBehavior, PR_FALSE);
+      xblService->LoadBindings(aContent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
 
       nsCOMPtr<nsIAtom> baseTag;
       PRInt32 nameSpaceID;
@@ -7703,7 +7698,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
  
       if (baseTag.get() != aTag) {
         // Construct the frame using the XBL base tag.
-        return ConstructFrameInternal( aPresShell, 
+        nsresult rv = ConstructFrameInternal( aPresShell, 
                                   aPresContext,
                                   aState,
                                   aContent,
@@ -7713,6 +7708,13 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                   aStyleContext,
                                   aFrameItems,
                                   PR_TRUE);
+        if (binding) {
+          nsCOMPtr<nsIBindingManager> bm;
+          mDocument->GetBindingManager(getter_AddRefs(bm));
+          if (bm)
+            bm->AddToAttachedQueue(binding);
+        }
+        return rv;
       }
     }
   }
@@ -7766,6 +7768,13 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 
     rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display, aContent,
                                      aParentFrame, aStyleContext, aFrameItems);
+  }
+
+  if (binding) {
+    nsCOMPtr<nsIBindingManager> bm;
+    mDocument->GetBindingManager(getter_AddRefs(bm));
+    if (bm)
+      bm->AddToAttachedQueue(binding);
   }
 
   return rv;
@@ -8402,6 +8411,12 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       // Construct a child frame
       ConstructFrame(shell, aPresContext, state, childContent, parentFrame, frameItems);
     }
+
+    // We built some new frames.  Initialize any newly-constructed bindings.
+    nsCOMPtr<nsIBindingManager> bm;
+    mDocument->GetBindingManager(getter_AddRefs(bm));
+    bm->ProcessAttachedQueue();
+
     // process the current pseudo frame state
     if (!state.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aPresContext, state.mPseudoFrames, frameItems);
@@ -8872,6 +8887,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       }
 
       rv =  ConstructFrame(shell, aPresContext, state, aChild, parentFrame, frameItems);
+      nsCOMPtr<nsIBindingManager> bm;
+      mDocument->GetBindingManager(getter_AddRefs(bm));
+      bm->ProcessAttachedQueue();
+
       // process the current pseudo frame state
       if (!state.mPseudoFrames.IsEmpty()) {
         ProcessPseudoFrames(aPresContext, state.mPseudoFrames, frameItems);
@@ -12408,6 +12427,10 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
     *aNewFrame = newFrame;
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+      nsCOMPtr<nsIBindingManager> bm;
+      mDocument->GetBindingManager(getter_AddRefs(bm));
+      bm->ProcessAttachedQueue();
+
       // Notify the parent frame
 #ifdef XULTREE
       if (aIsAppend)
