@@ -24,6 +24,8 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
+<?xul-overlay href="chrome://messenger/content/folderPane.xul"?>
+<?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
 <?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
 <?xml-stylesheet href="chrome://sidebar/skin/sidebarOverlay.css" type="text/css"?> 
 
@@ -98,8 +100,10 @@ Rights Reserved.
 
   <!-- The main mail three pane frame -->
   <box align="horizontal" style="height:100px" flex="1">
-    <box id="sidebarbox" />
-    <splitter id="sidebarsplitter" collapse="before" persist="state"/>
+      <box id="sidebar-box">
+        <html:div id="folder-panel"/>
+      </box>
+      <splitter id="sidebar-splitter" collapse="before" persist="state"/>
     <box align="vertical"  flex="1"  style="border-left:solid black 1px">
       <toolbox>
         <menubar>
@@ -166,6 +170,7 @@ Rights Reserved.
               <menuseparator/>
             </menupopup>
           </menu>
+>>>>>>> 1.79
 	
 	<menu id="menu_Edit">
 		<menupopup>
