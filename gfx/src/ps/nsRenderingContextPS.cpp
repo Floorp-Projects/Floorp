@@ -1328,12 +1328,10 @@ NS_IMETHODIMP
 nsRenderingContextPS::SetColor(const nsString& aColor)
 {
   nscolor rgb;
-  char cbuf[40];
-  aColor.ToCString(cbuf, sizeof(cbuf));
-  if (NS_ColorNameToRGB(cbuf, &rgb)) {
+  if (NS_ColorNameToRGB(aColor, &rgb)) {
     SetColor(rgb);
   }
-  else if (NS_HexToRGB(cbuf, &rgb)) {
+  else if (NS_HexToRGB(aColor, &rgb)) {
     SetColor(rgb);
   }
   return NS_OK;
