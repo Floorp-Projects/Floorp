@@ -170,6 +170,7 @@ sub GenerateSQL {
     }
 
     if (defined $F{'sql'}) {
+        die "Invalid sql: $F{'sql'}" if $F{'sql'} =~ /;/;
         push(@wherepart, "( $F{'sql'} )");
     }
 
@@ -887,6 +888,8 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     $::FORM{'order'} =~ s/assign\.login_name/map_assigned_to.login_name/g;
                                 # Another backwards compatability hack.
     
+    die "Invalid order: $::FORM{'order'}" unless
+        $::FORM{'order'} =~ /^([a-zA-Z0-9_., ]+)$/;
     ORDER: for ($::FORM{'order'}) {
         /\./ && do {
             # This (hopefully) already has fieldnames in it, so we're done.

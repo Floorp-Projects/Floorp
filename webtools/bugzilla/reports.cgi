@@ -206,7 +206,7 @@ and    bugs.reporter = report.userid
 FIN
 
 	if( $::FORM{'product'} ne "-All-" ) {
-		$query .= "and    bugs.product='$::FORM{'product'}'";
+		$query .= "and    bugs.product=".SqlQuote($::FORM{'product'});
 	}
 
 	$query .= <<FIN;
@@ -572,7 +572,7 @@ sub most_doomed_for_milestone
 	my $query;
 	$query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
 	if( $::FORM{'product'} ne "-All-" ) {
-		$query .= "and    bugs.product='$::FORM{'product'}'";
+		$query .= "and    bugs.product=".SqlQuote($::FORM{'product'});
 	}
 	$query .= <<FIN;
 and 	 
@@ -600,7 +600,7 @@ FIN
                 {
                 my $query = "select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"";
 	        if( $::FORM{'product'} ne "-All-" ) {
-                    $query .= "and    bugs.product='$::FORM{'product'}'";
+                    $query .= "and    bugs.product=".SqlQuote($::FORM{'product'})";
                     }
 	        $query .= <<FIN;
 and 	 
@@ -696,7 +696,7 @@ sub most_recently_doomed
 	my $query;
         $query = "select distinct assigned_to from bugs where bugs.bug_status='NEW' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";
 	if( $::FORM{'product'} ne "-All-" ) {
-		$query .= "and    bugs.product='$::FORM{'product'}'";
+		$query .= "and    bugs.product=".SqlQuote($::FORM{'product'});
 	}
 
 # End build up $query string

@@ -41,6 +41,7 @@ confirm_login();
 print "Content-type: text/html\n\n";
 
 my $id = $::FORM{'id'};
+die "invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
 PutHeader("Create an attachment", "Create attachment", "Bug $id");
 

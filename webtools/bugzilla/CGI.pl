@@ -842,6 +842,9 @@ sub CheckIfVotedConfirmed {
 sub DumpBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
+
+    die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
+
     if (defined $starttime) {
         $datepart = "and bugs_activity.bug_when >= $starttime";
     }

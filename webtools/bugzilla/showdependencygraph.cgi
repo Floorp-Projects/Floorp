@@ -26,6 +26,7 @@ use strict;
 require "CGI.pl";
 
 my $id = $::FORM{'id'};
+die "Invalid id: $id" unless $id =~ /^\s*\d+\s*$/;
 my $urlbase = Param("urlbase");
 
 my %seen;
