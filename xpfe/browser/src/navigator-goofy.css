@@ -143,7 +143,6 @@ box[type="unsecure"] {
 }
 
 toolbar[class="main-bar"] {
-     background-image: url(raindrops_light.gif);
 }
 
 window#main-window {
@@ -154,11 +153,13 @@ window#main-window {
 box#outer-box {
    width: 100%; 
    height:100%;
-   background-image: url(bg.jpg);
 }
 
 iframe#content-frame {
  width: 100px;
  height: 100px;
- margin: 10px;
+}
+
+toolbar titledbutton[pseudoclass~="hover"] {
+   border-width: 10px;
 }

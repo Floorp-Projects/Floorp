@@ -1,0 +1,763 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="navigator.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Startup()" title="Mozilla"> 
+
+  <html:script>
+  function Startup()
+  {
+    dump("Doing Startup...\n");
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    dump("Looking up BrowserAppCore...\n");
+    if (appCore == null) {
+      dump("Creating BrowserAppCore...\n");
+      appCore = new BrowserAppCore();
+      if (appCore != null) {
+        dump("BrowserAppCore has been created.\n");
+        appCore.Init("BrowserAppCore");
+	      appCore.setContentWindow(window.frames[0]);
+	      appCore.setWebShellWindow(window);
+	      appCore.setToolbarWindow(window);
+        appCore.setDisableCallback("DoDisableButtons();");
+        appCore.setEnableCallback("DoEnableButtons();");
+        dump("Adding BrowserAppCore to AppCoreManager...\n");
+        dump("...probably for a second time, because the constructor of nsBaseAppCore does this!\n");
+        XPAppCoresManager.Add(appCore);  
+      }
+    } else {
+      dump("BrowserAppCore has already been created! Why?\n");
+    }
+  }
+
+  function DoDisableButtons()
+  {
+    // Find buttons in the UI and disable them
+    dump("Browser disabling buttons\n");
+    document.getElementById('urlbar')
+  }
+
+  function DoEnableButtons()
+  {
+    // Find buttons in the UI and enable them
+    dump("Browser enabling buttons\n");
+  }
+
+  function RefreshUrlbar()
+  {
+   //Refresh the urlbar bar
+    document.getElementById('urlbar').value = window.frames[0].location.href;
+  }
+
+  function BrowserBack()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Going Back\n");
+      appCore.back();
+      RefreshUrlbar();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserForward()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Going Forward\n");
+      appCore.forward();
+	  RefreshUrlbar();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserHome()
+  {
+   window.frames[0].home();
+   RefreshUrlbar();
+  }
+
+  function OpenBookmarkURL(node)
+  {
+    if (node.getAttribute('type') !=
+        "http://home.netscape.com/NC-rdf#Bookmark") {
+      return false;
+    }
+    url = node.getAttribute('id');
+
+    // Ignore "NC:" urls.
+    if (url.substring(0, 3) == "NC:") {
+      return false;
+    }
+
+    window.frames[0].location.href = url;
+	RefreshUrlbar();
+  }
+
+  function BrowserNewWindow()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Opening New Window\n");
+      appCore.newWindow();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserAddBookmark(url,title)
+  {
+    // get RDF Core service
+    var rdfCore = XPAppCoresManager.Find("RDFCore");
+    if (!rdfCore) {
+      rdfCore = new RDFCore();
+      if (!rdfCore) {
+        return(false);
+      }
+      rdfCore.Init("RDFCore");
+      XPAppCoresManager.Add(rdfCore);
+    }
+    // Add it
+    rdfCore.addBookmark(url,title);
+  }
+
+  function BrowserEditBookmarks()
+  {
+    var toolkitCore = XPAppCoresManager.Find("toolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("toolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource://res/rdf/bookmarks.xul",window);
+    }
+  }
+
+  function BrowserPrintPreview()
+  {
+    // Borrowing this method to show how to 
+    // dynamically change icons
+    dump("BrowserPrintPreview\n");
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Changing Icons\n");
+      appCore.printPreview();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserSetDocumentCharacterSet(aCharset)
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      appCore.SetDocumentCharset(aCharset);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserClose()
+  {
+    dump("BrowserClose\n");
+  }
+
+  function BrowserExit()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Exiting\n");
+      appCore.exit();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserLoadURL()
+  {
+	appCore = XPAppCoresManager.Find("BrowserAppCore");
+	if (appCore == null)
+	{
+		dump("BrowserAppCore has not been initialized\n");
+		return;
+	}
+
+	// rjc: added support for URL shortcuts (3/30/1999)
+
+	// get RDF Core service
+	var rdfCoreFound = false;
+	var rdfCore = XPAppCoresManager.Find("RDFCore");
+	if (rdfCore)
+	{
+		rdfCoreFound = true;
+	}
+	else
+	{
+		rdfCore = new RDFCore();
+		if (rdfCore)
+		{
+			rdfCore.Init("RDFCore");
+			XPAppCoresManager.Add(rdfCore);
+			rdfCoreFound = true;
+		}
+	}
+	if (rdfCoreFound == true)
+	{
+		var shortcutURL = rdfCore.findBookmarkShortcut(document.getElementById('urlbar').value);
+
+		dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
+
+		if ((shortcutURL != null) && (shortcutURL != ""))
+		{
+			document.getElementById('urlbar').value = shortcutURL;
+		}
+	}
+
+	appCore.loadUrl(document.getElementById('urlbar').value);
+      
+  }
+
+  function WalletEditor()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Editor\n");
+      appCore.walletEditor();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function WalletSafeFillin()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Safe Fillin\n");
+      appCore.walletSafeFillin();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function WalletQuickFillin()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Quick Fillin\n");
+      appCore.walletQuickFillin();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function WalletSamples()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Samples\n");
+      appCore.walletSamples();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function OpenMessenger()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/mailnews/messenger/mailshell.xul",
+                             window);
+    }
+  }
+
+  function DoPreferences()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/samples/PrefsWindow.html",
+                             window);
+    }
+  }
+
+  function OpenEditor()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/samples/EditorAppShell.xul",
+                             window);
+    }
+  }
+
+
+  </html:script>
+
+  <broadcaster id="canGoBack"/>
+  <broadcaster id="canGoForward"/>
+  <broadcaster id="canReload"/>
+  <broadcaster id="canStop"/>
+  <broadcaster id="canPrint"/>
+  
+  <menubar>
+      <menu name="File">
+      <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
+      	<menu name="New">
+      		<menuitem name="Mail Message" onclick="MsgNewMessage();"/>
+		      <menuitem name="Chat Window" onclick=""/>
+		      <separator />
+		      <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
+		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
+		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();"/>
+    		</menu>
+      <menuitem name="Open" onclick="BrowserNewWindow();"/>
+      <separator />
+      <menuitem name="Send Page" onclick="BrowserReload();"/>
+	   <menuitem name="Edit Page" onclick="BrowserReload();" />
+	   <separator />
+      <menu name="Offline">
+	      <menuitem name="Go Offline" onclick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="Synchronize..." onclick="BrowserReload();"/>
+      </menu>
+      <separator />
+      <menuitem name="Print Setup" onclick=""/>
+      <menuitem name="Print Preview" onclick=""/>
+      <menuitem name="Print" onclick=""/>
+      <separator />
+      <menuitem name="Close" onclick="BrowserClose();"/>
+      <menuitem name="Quit" onclick="BrowserExit();"/>
+    </menu>
+	<menu name="Edit"> 
+      <menuitem name="Undo" onclick="BrowserReload();"/> 
+      <menuitem name="Redo" onclick="BrowserReload();"/> 
+      <separator /> 
+      <menuitem name="Cut" onclick="BrowserReload();"/> 
+      <menuitem name="Copy" onclick="BrowserReload();"/> 
+      <menuitem name="Paste" onclick="BrowserReload();"/> 
+      <menuitem name="Delete" onclick="BrowserReload();"/> 
+      <separator /> 
+      <menu name="Wallet"> 
+          <menuitem name="Safe Form Fill" onclick="WalletSafeFillin();"/> 
+          <menuitem name="Quick Form Fill" onclick="WalletQuickFillin();"/> 
+          <separator /> 
+          <menuitem name="Wallet Contents" onclick="WalletEditor();"/> 
+          <separator /> 
+          <menuitem name="Samples" onclick="WalletSamples();"/> 
+	  </menu> 
+      <separator /> 
+      <menuitem name="Select All" onclick="BrowserReload();"/> 
+      <separator /> 
+      <menuitem name="Preferences..." onclick="DoPreferences();"/> 
+    </menu> 
+
+    <menu name="View">
+      <menuitem name="Toolbars" onclick="BrowserReload();"/>
+      <menuitem name="Sidebar" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Enlarge Text Size" onclick="BrowserReload();"/>
+      <menuitem name="Reduce Text Size" onclick="BrowserReload();"/>
+      <separator />
+      <menu name="Use Stylesheet" onclick="BrowserReload();">
+	      <menuitem name="Default" onclick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="Easy Reading" onclick="BrowserReload();"/>
+	      <menuitem name="Maximum Information" onclick="BrowserReload();"/>
+	      <menuitem name="Bizarre" onclick="BrowserReload();"/>
+      </menu>
+      <separator />
+      <menuitem name="Reload" onclick="BrowserReload();"/>
+      <menuitem name="Show Images" onclick="BrowserReload();"/>
+      <menuitem name="Stop" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Page Source" onclick="BrowserReload();"/>
+      <menuitem name="Page Info" onclick="BrowserReload();"/>
+      <separator />
+      <menu name="Translate">
+	      <menuitem name="French To English" onclick="BrowserReload();"/>
+	      <menuitem name="German To English" onclick="BrowserReload();"/>
+	      <menuitem name="Spanish To English" onclick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="English To French" onclick="BrowserReload();"/>
+	      <menuitem name="German To French" onclick="BrowserReload();"/>
+	      <menuitem name="Spanish To French" onclick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="English To German" onclick="BrowserReload();"/>
+	      <menuitem name="French To German" onclick="BrowserReload();"/>
+	      <menuitem name="Spanish To German" onclick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="English To Spanish" onclick="BrowserReload();"/>
+	      <menuitem name="French To Spanish" onclick="BrowserReload();"/>
+	      <menuitem name="German To Spanish" onclick="BrowserReload();"/>
+    </menu>
+      <menu name="Character Set">
+	      <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+	      <menuitem name="ISO-2022-JP" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
+	      <menuitem name="Shift_JIS" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
+	      <menuitem name="EUC-JP" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+	   </menu>
+    </menu>
+    <menu name="Search">
+      <menuitem name="Find On This page..." onclick="BrowserReload();"/>
+      <menuitem name="Find Again" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Search Parent Item..." onclick="BrowserReload();"/>
+      <menuitem name="Search Parent2 Item..." onclick="BrowserReload();"/>
+      <menuitem name="App Specific" onclick="BrowserReload();"/>
+      <menuitem name="App Specific" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Search The Internet..." onclick="BrowserReload();"/>
+      <menuitem name="Search All Mail..." onclick="BrowserReload();"/>
+      <menuitem name="Search Bookmarks" onclick="BrowserReload();"/>
+      <menuitem name="Search People" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Search On This Computer..." onclick="BrowserReload();"/>
+    </menu>
+    <menu name="Go">
+      <menuitem name="Back" onclick="BrowserBack();"/>
+      <menuitem name="Forward" onclick="BrowserForward();" />
+      <menuitem name="Home" onclick="BrowserHome();"/>
+      <separator />
+      <menuitem name="Previous Site 1" onclick="BrowserBack();"/>
+      <menuitem name="Previous Site 2" onclick="BrowserBack();"/>
+      <menuitem name="Previous Site n" onclick="BrowserBack();"/>
+    </menu>
+    <menu name="Bookmarks" onclick="OpenBookmarkURL(event.target)" 
+						   datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
+		<menuitem name="Add Current Page" onclick="BrowserAddBookmark(window.frames[0].location.href,window.frames[0].document.title);"/>
+		<menuitem name="Manage Bookmarks..." onclick="BrowserEditBookmarks();"/>
+		<separator/>
+	</menu>
+	 <menu name="Tasks">
+      <menuitem name="Navigator" onclick="BrowserReload();"/>
+      <menuitem name="Messenger" onclick="OpenMessenger();" />
+      <menuitem name="Editor"    onclick="OpenEditor();" />
+      <menuitem name="Chat" onclick="BrowserReload();"/>
+      <menuitem name="Shopping Cart" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Services A" onclick="BrowserReload();"/>
+      <menuitem name="Services B" onclick="BrowserReload();" />
+      <menuitem name="Services C" onclick="BrowserReload();"/>
+      <menuitem name="Services D" onclick="BrowserReload();"/>
+      <separator />
+      <menu name="Tools">
+	      <menuitem name="Plugins Info" onclick="BrowserReload();"/>
+	      <menuitem name="Server Tools" onclick="BrowserReload();" />
+	      <menuitem name="Java/JS Console" onclick="BrowserReload();"/>
+	      <menuitem name="JavaScript Debugger" onclick="BrowserReload();"/>
+      </menu>
+      <separator />
+      <menuitem name="Security Info" onclick="BrowserReload();"/>
+      <separator/>
+      <menuitem name="Window 1" onclick="BrowserReload();" key="1"/>
+      <menuitem name="Window 2" onclick="BrowserReload();" />
+      <menuitem name="Window 3" onclick="BrowserReload();" />
+    </menu>
+    
+     <menu name="Help">
+      <menuitem name="Help Contents" onclick="BrowserReload();"/>
+      <separator />
+      <menuitem name="How To Tutorial" onclick="BrowserReload();"/>
+      <menuitem name="Help Channel" onclick="BrowserReload();" />
+      <separator />
+      <menuitem name="Software Updates" onclick="BrowserReload();"/>
+      <menuitem name="Technical Support" onclick="BrowserReload();"/>
+      <menuitem name="Release Notes" 
+	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+      
+      <separator />
+      <menuitem name="About Communicator Prototype" 
+	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+    </menu>
+
+    // Menu for testing.
+    <menu name="Debug">
+
+      <menu name="Verification"> // Build verification sites.
+        <menuitem name="Mozilla"  onclick="window.frames[0].location.href='http://www.mozilla.org'"/>
+        <menuitem name="Yahoo"  onclick="window.frames[0].location.href='http://www.yahoo.com'"/>
+        <menuitem name="Netscape"  onclick="window.frames[0].location.href='http://www.netscape.com'"/>
+      </menu>
+
+	  <menu name="Viewer">  // Viewer tests.
+        <menuitem name="Demo #0"  onclick="window.frames[0].location.href='resource:/res/samples/test0.html'"/>
+        <menuitem name="Demo #1"  onclick="window.frames[0].location.href='resource:/res/samples/test1.html'"/>
+        <menuitem name="Demo #2"  onclick="window.frames[0].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="Demo #3"  onclick="window.frames[0].location.href='resource:/res/samples/test3.html'"/>
+        <menuitem name="Demo #4"  onclick="window.frames[0].location.href='resource:/res/samples/test4.html'"/>
+        <menuitem name="Demo #5"  onclick="window.frames[0].location.href='resource:/res/samples/test5.html'"/>
+        <menuitem name="Demo #6"  onclick="window.frames[0].location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="Demo #7"  onclick="window.frames[0].location.href='resource:/res/samples/test7.html'"/>
+        <menuitem name="Demo #8"  onclick="window.frames[0].location.href='resource:/res/samples/test8.html'"/>
+        <menuitem name="Demo #9"  onclick="window.frames[0].location.href='resource:/res/samples/test9.html'"/>
+        <menuitem name="Demo #10" onclick="window.frames[0].location.href='resource:/res/samples/test10.html'"/>
+        <menuitem name="Demo #11" onclick="window.frames[0].location.href='resource:/res/samples/test11.html'"/>
+        <menuitem name="Demo #12" onclick="window.frames[0].location.href='resource:/res/samples/test12.html'"/>
+        <menuitem name="Demo #13" onclick="window.frames[0].location.href='resource:/res/samples/test13.html'"/>
+      </menu>
+
+      <menu name="XPToolkit"> // XPToolkit tests.
+        <menuitem name="Toolbar" onclick="window.frames[0].location.href='resource:/res/samples/toolbarTest1.xul'"/>
+        <menuitem name="Tree" onclick="window.frames[0].location.href='resource:/res/samples/treeTest1.xul'"/>
+      </menu>
+
+    </menu>
+
+  </menubar>
+  
+  <box id="outer-box" align="vertical">
+  <box align="horizontal" style="margin: 5px;">
+	<box align="vertical" flex="100%">
+	<spring flex="100%"/>
+	<html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
+	  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
+	<spring flex="100%"/>
+	</box>
+	<titledbutton id="Throbber" onclick="window.frames[0].home()">
+     <observes element="Browser:Throbber" attribute="busy"/>
+  </titledbutton>
+   </box>
+
+   <box align="horizontal" flex="100%">
+
+   <toolbox align="horizontal">
+    <toolbar class="main-bar" align="vertical">
+		  <titledbutton id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
+				  <observes element="canGoBack" attribute="disabled"/>			
+	      </titledbutton>
+
+	      <titledbutton id="forward-button" align="bottom" value="Forward" 
+				onclick="BrowserForward()">
+				  <observes element="canGoForward" attribute="disabled"/>
+	      </titledbutton>
+
+	      <titledbutton id="reload-button" align="bottom" value="Reload" 
+				  onclick="window.frames[0].location.reload()">
+				  <observes element="canReload" attribute="disabled"/>
+	      </titledbutton>
+
+	      <titledbutton id="stop-button" align="bottom" value="Stop" 
+				onclick="window.frames[0].stop()">
+	        <observes element="canStop" attribute="disabled"/>
+	      </titledbutton>
+	  
+	      <titledbutton id="print-button" align="bottom" value="Print"  
+				onclick="">
+	        <observes element="canPrint" attribute="disabled"/>
+	      </titledbutton>
+
+	</toolbar>
+
+    <toolbar class="main-bar" align="vertical">
+    	<titledbutton id="home-button" align="bottom" value="Home" 
+			onclick="BrowserHome()"/>
+		<titledbutton id="netscape-button" align="bottom" value="Netscape" 
+			onclick="window.frames[0].location.href='http://my.netscape.com'"/>
+		<spring flex="100%"/>
+	</toolbar>
+  </toolbox>
+  
+
+  
+  <html:iframe id="content-frame" html:name="content" html:src="BrowserInitPage.html" flex="100%" />
+
+  </box>
+ 
+  <html:script>
+        var bindCount = 0;
+        function onStatus() {
+            var status = document.getElementById("Browser:Status");
+            if ( status ) {
+                var text = status.getAttribute("text");
+                var statusText = document.getElementById("statusText");
+                if ( statusText ) {
+                    statusText.setAttribute( "value", text );
+                }
+                /*
+                if ( bindCount == 0 ) {
+                    // This presumably precedes the first onStartBinding, spin
+                    // the progress meter.
+                    var meter = document.getElementById("Browser:LoadingProgress");
+                    if ( meter ) {
+                        meter.setAttribute( "mode", "undetermined" );
+                    } 
+                }
+                */
+            } else {
+                dump("Can't find status broadcaster!\n");
+            }
+        }
+
+        function onSecurity() {
+            var security = document.getElementById("Browser:Security");
+            var indicator = document.getElementById("security-box");
+            var icon = document.getElementById("security-button");
+ 
+            if ( security.getAttribute("secure") == "true" ) {
+                indicator.setAttribute("class","secure");
+                icon.setAttribute("class","secure");
+            } else {
+                indicator.setAttribute("class","insecure");
+                icon.setAttribute("class","insecure");
+            }
+        }
+
+        function securityOn() {
+            var security = document.getElementById("Browser:Security");
+            if ( security.getAttribute("secure") == "false" ) {
+                security.setAttribute("secure","true");
+                // Temporary till onchange handlers work.
+                onSecurity();
+            }
+        }
+        function securityOff() {
+            var security = document.getElementById("Browser:Security");
+            if ( security.getAttribute("secure") == "true" ) {
+                security.setAttribute("secure","false");
+                // Temporary till onchange handlers work.
+                onSecurity();
+            }
+        }
+        function doTests() {
+            // Turn security on.
+            securityOn();
+        }
+        function onStartBinding() {
+            bindCount++;
+            if ( bindCount == 1 ) {
+                // Something is going on, turn on progress meter.
+                var meter = document.getElementById("Browser:LoadingProgress");
+                if ( meter ) {
+                    meter.setAttribute( "mode", "undetermined" );
+                } 
+            }
+        }
+        function onStopBinding() {
+            bindCount--;
+            if ( bindCount < 0 ) {
+                // Something unusual occurred (stop/back?).
+                bindCount = 0;
+            }
+            var stop = document.getElementById("Browser:OnStopBinding");
+            if ( bindCount == 0 ) {
+                // Turn off progress meter.
+                var meter  = document.getElementById("Browser:LoadingProgress");
+                var status = document.getElementById("Browser:Status");
+                status.setAttribute("value","Document: Done");
+                meter.setAttribute("value","0");
+                meter.setAttribute("mode","normal");
+            }
+        }
+        function onProgress() {
+            var throbber = document.getElementById("Browser:Throbber");
+            var meter    = document.getElementById("Browser:LoadingProgress");
+            if ( throbber && meter ) {
+                var busy = throbber.getAttribute("busy");
+                if ( busy == "true" ) {
+                    mode = "undetermined";
+                } else {
+                    mode = "normal";
+                }
+                meter.setAttribute("mode",mode);
+                if ( mode == "normal" ) {
+                    var status = document.getElementById("Browser:Status");
+                    if ( status ) {
+                        status.setAttribute("value","Document: Done");
+                    }
+                }
+            }
+        }
+        function dumpProgress() {
+            var broadcaster = document.getElementById("Browser:LoadingProgress");
+            var meter       = document.getElementById("meter");
+            dump( "bindCount=" + bindCount + "\n" );
+            dump( "broadcaster mode=" + broadcaster.getAttribute("mode") + "\n" );
+            dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
+            dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
+            dump( "meter value=" + meter.getAttribute("value") + "\n" );
+        }
+    </html:script>
+
+  <box align="horizontal" id="status-bar">
+ 
+    <broadcaster id="Browser:LoadingProgress"/>
+    <broadcaster id="Browser:Status"/>
+    <broadcaster id="Browser:OnStartBinding"/>
+    <broadcaster id="Browser:OnStopBinding"/>
+    <broadcaster id="Browser:Security" secure="false"/>
+    <broadcaster id="Browser:Throbber" busy="false"/>
+    
+    <titledbutton value="[Notification Component]" onclick="doTests()"/>
+
+	<box id="security-box" class="insecure" align="horizontal" flex="100%">
+		<box align="vertical" style="width:100px">
+			<spring flex="100%"/>
+			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
+				<observes element="Browser:LoadingProgress" attribute="mode"/>
+				<observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
+			</progressmeter>
+			<spring flex="100%"/>
+		</box>
+
+		<titledbutton id="statusText" align="right" flex="1%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
+		</titledbutton>
+
+		<spring flex="100%"/>
+
+		<titledbutton align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
+		</titledbutton>
+
+		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
+     </box>
+  </box>
+
+  <toolbox>
+	  <toolbar id="taskbar">
+	  	  <box align="horizontal">
+  	 	     <titledbutton align="left" class="popup"  value="Web" />
+  	 	     <titledbutton align="left" class="popup"  value="Mail" />
+  	 	     <titledbutton align="left" class="popup"  value="Chat" />
+		  </box>
+		  <spring flex="100%"/>
+	 	  <box align="horizontal">
+  	 		<titledbutton align="left"  class="popup"  value="DayPlanner" />
+  	 		<titledbutton align="left"  class="popup"  value="Shopping" />
+  	 		<titledbutton align="left"  class="popup"  value="My Desk" />
+          </box>
+		  <spring flex="100%"/>
+	   	  <box align="horizontal">
+  			<titledbutton align="left" class="popup" value="Open Windows" />
+  	 		<titledbutton align="left" id="mini-nav" value="" />
+  	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
+  	 		<titledbutton align="left" id="mini-addr" value="" />
+  	 		<titledbutton align="left" id="mini-comp" value="" />
+	      </box>
+	  </toolbar>
+	</toolbox>
+  </box>
+</window>
