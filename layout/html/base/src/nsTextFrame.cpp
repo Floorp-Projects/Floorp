@@ -4669,7 +4669,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     aTextData.mDescent = 0;
     return NS_FRAME_COMPLETE;
   }
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
   // see if we have implementation for GetTextDimensions()
   PRUint32 hints = 0;
   aReflowState.rendContext->GetHints(hints);
@@ -4680,7 +4680,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   }
   // Don't measure text runs with letter spacing active, it doesn't work
   // it also doesn't work if we are not word-wrapping (bug 42832)
-#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
+#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)*/
   TextRun textRun;
   PRUint32 estimatedNumChars = EstimateNumChars(maxWidth - aTextData.mX,
                                                 aTs.mAveCharWidth);
@@ -4973,7 +4973,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     continue;
 
   MeasureTextRun:
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
   // see if we have implementation for GetTextDimensions()
   if (hints & NS_RENDERING_HINT_FAST_MEASURE) {
     PRInt32 numCharsFit;
@@ -5085,9 +5085,9 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     estimatedNumChars = EstimateNumChars(maxWidth - aTextData.mX,
                                          aTs.mAveCharWidth);
   }
-#else /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
+#else /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) */
     int unused = -1;
-#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
+#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) */
   }
 
   // If we didn't actually measure any text, then make sure it looks
