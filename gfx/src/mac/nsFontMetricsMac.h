@@ -52,7 +52,7 @@ public:
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
-  NS_IMETHOD  GetWidths(const nscoord *aWidths);
+  NS_IMETHOD  GetWidths(const nscoord *&aWidths);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
 

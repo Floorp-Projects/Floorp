@@ -259,7 +259,7 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const nsString& aString, nscoord &aWi
   return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-NS_IMETHOPIMP nsFontMetricsMac :: GetWidth(const char *aString, nscoord &aWidth)
+NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const char *aString, nscoord &aWidth)
 {
  /* PRInt32 rc = 0 ;
   
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aL
 //  XChar2b * xstring ;
 //  XChar2b * thischar ;
 //  PRUint16 aunichar;
-  nscoord width ;
+  nscoord width = 0 ;
 //  PRUint32 i ;
 
 //  xstring = (XChar2b *) PR_Malloc(sizeof(XChar2b)*aLength);
