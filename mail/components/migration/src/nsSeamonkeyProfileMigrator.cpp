@@ -618,6 +618,11 @@ nsresult nsSeamonkeyProfileMigrator::CopyMailFolders(nsVoidArray* aMailServers, 
           nsXPIDLCString hostName; 
           serverBranch->GetCharPref("hostname", getter_Copies(hostName));
           targetMailFolder->Append(NS_ConvertASCIItoUCS2(hostName));  
+
+          // we should make sure the host name based directory we are going to migrate 
+          // the accounts into is unique. This protects against the case where the user
+          // has multiple servers with the same host name.
+          targetMailFolder->CreateUnique(nsIFile::DIRECTORY_TYPE, 0777);
         }
 
         rv = RecursiveCopy(sourceMailFolder, targetMailFolder);
