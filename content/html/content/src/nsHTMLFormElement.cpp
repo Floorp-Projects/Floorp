@@ -605,24 +605,7 @@ nsHTMLFormElement::Submit()
       mPendingSubmission = nsnull;
     }
 
-    // If we are in quirks mode or someone called form.submit()
-    // from inside the onSubmit handler, just submit synchronously.
-    // (bug 144534, 76694, 155453)
-    if (InNavQuirksMode(mDocument) || mGeneratingSubmit) {
-      rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
-    } else {
-      // Send the submit event to submit the form.
-      // Calling HandleDOMEvent() directly so that submit() will work even if
-      // the frame does not exist.  This does not have an effect right now, but
-      // If PresShell::HandleEventWithTarget() ever starts to work for elements
-      // without frames, that should be called instead.
-      nsFormEvent event;
-      event.eventStructType = NS_FORM_EVENT;
-      event.message         = NS_FORM_SUBMIT;
-      event.originator      = nsnull;
-      nsEventStatus status  = nsEventStatus_eIgnore;
-      HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-    }
+    rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
   }
   return rv;
 }
