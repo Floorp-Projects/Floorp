@@ -730,13 +730,6 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
                             nscoord aHeight,
                             PRBool aViewOnly)
 {
-#ifndef XP_MAC
-  // Do not create a widget if 'hidden' (except for Mac, where we
-  // always create a widget...)
-  if (IsHidden())
-    return NS_OK;
-#endif
-
   nsIView* view;
 
   // Create our view and widget
