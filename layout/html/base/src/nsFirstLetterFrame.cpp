@@ -56,7 +56,8 @@ public:
   NS_IMETHOD SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
-
+//override of nsFrame method
+  NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame);
 protected:
   virtual PRIntn GetSkipSides() const;
 
@@ -183,6 +184,21 @@ nsFirstLetterFrame::FindTextRuns(nsLineLayout& aLineLayout)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame)
+{
+  nsIFrame *kid;
+  nsresult result = FirstChild(nsnull, &kid);
+  if (NS_SUCCEEDED(result) && kid)
+  {
+    return kid->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
+  }
+  else
+    return nsFrame::GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
+}
+
+
 
 NS_IMETHODIMP
 nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,

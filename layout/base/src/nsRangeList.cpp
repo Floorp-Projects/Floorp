@@ -157,13 +157,14 @@ public:
 
   nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
+  NS_IMETHOD   CopyRangeToAnchorFocus(nsIDOMRange *aRange);
 //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame);
   NS_IMETHOD   SetOriginalAnchorPoint(nsIDOMNode *aNode, PRInt32 aOffset);
   NS_IMETHOD   GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
   NS_IMETHOD   LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
-                             SelectionDetails **aReturnDetails, SelectionType aType);
+                             SelectionDetails **aReturnDetails, SelectionType aType, PRBool aSlowCheck);
   NS_IMETHOD   Repaint(nsIPresContext* aPresContext);
 
   nsresult     StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
@@ -219,7 +220,7 @@ public:
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
-                             SelectionDetails **aReturnDetails);
+                             SelectionDetails **aReturnDetails, PRBool aSlowCheck);
   NS_IMETHOD SetMouseDownState(PRBool aState);
   NS_IMETHOD GetMouseDownState(PRBool *aState);
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
@@ -1216,10 +1217,33 @@ nsRangeList::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   default :return NS_ERROR_FAILURE;
   }
   pos.mPreferLeft = mHint;
-  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(context, &pos)) && pos.mResultContent)
+  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
     mHint = (HINT)pos.mPreferLeft;
     result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
+  }
+  else if (NS_FAILED(result))
+  {
+    if (nsIDOMKeyEvent::DOM_VK_UP == aKeycode)
+    {
+      pos.mPreferLeft = HINTRIGHT;
+      pos.mAmount = eSelectBeginLine;
+      InvalidateDesiredX();
+    }
+    else if(nsIDOMKeyEvent::DOM_VK_DOWN == aKeycode)
+    {
+      pos.mPreferLeft = HINTLEFT;
+      pos.mAmount = eSelectEndLine;
+      InvalidateDesiredX();
+    }
+    if (nsIDOMKeyEvent::DOM_VK_UP == aKeycode || nsIDOMKeyEvent::DOM_VK_DOWN == aKeycode )
+    {
+      if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
+      {
+        mHint = (HINT)pos.mPreferLeft;
+        result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
+      }
+    }
   }
   if (NS_SUCCEEDED(result))
     result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
@@ -1453,7 +1477,7 @@ nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
 
 NS_METHOD
 nsRangeList::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
-                             SelectionDetails **aReturnDetails)
+                             SelectionDetails **aReturnDetails, PRBool aSlowCheck)
 {
   if (!aContent || !aReturnDetails)
     return NS_ERROR_NULL_POINTER;
@@ -1464,7 +1488,7 @@ nsRangeList::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
   PRInt8 j;
   for (j = (PRInt8) SELECTION_NORMAL; j < (PRInt8)NUM_SELECTIONTYPES; j++){
     if (mDomSelections[j])
-     mDomSelections[j]->LookUpSelection(aContent, aContentOffset, aContentLength, aReturnDetails, (SelectionType)j);
+     mDomSelections[j]->LookUpSelection(aContent, aContentOffset, aContentLength, aReturnDetails, (SelectionType)j, aSlowCheck);
   }
   return NS_OK;
 }
@@ -2316,7 +2340,7 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, 
 
 NS_IMETHODIMP
 nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
-                           SelectionDetails **aReturnDetails, SelectionType aType)
+                           SelectionDetails **aReturnDetails, SelectionType aType, PRBool aSlowCheck)
 {
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
@@ -2402,7 +2426,7 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
         }
       }
       else {
-        if (cnt > 1){
+        if (cnt > 1 || aSlowCheck){
           //we only have to look at start offset because anything else would have been in the range
           PRInt32 resultnum = ComparePoints(startNode, startOffset 
                                   ,passedInNode, aContentOffset);
@@ -2413,6 +2437,7 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
           if (resultnum <0)
             continue;
         }
+
         if (!details){
           details = new SelectionDetails;
           newDetails = details;
@@ -2427,7 +2452,7 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
         newDetails->mStart = 0;
         newDetails->mEnd = aContentLength;
         newDetails->mType = aType;
-      }
+     }
     }
     else
       continue;
@@ -3061,6 +3086,7 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
                                      getter_AddRefs(subRange));
   if (NS_FAILED(res) || !subRange)
     return NS_ERROR_FAILURE;
+
   result = subRange->SetStart(startNode,startOffset);
   if (NS_FAILED(result))
     return result;
@@ -3282,6 +3308,31 @@ nsDOMSelection::GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset)
 }
 
 
+/*
+utility function
+*/
+NS_IMETHODIMP
+nsDOMSelection::CopyRangeToAnchorFocus(nsIDOMRange *aRange)
+{
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 startOffset;
+  PRInt32 endOffset;
+  aRange->GetStartParent(getter_AddRefs(startNode));
+  aRange->GetEndParent(getter_AddRefs(endNode));
+  aRange->GetStartOffset(&startOffset);
+  aRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(mAnchorFocusRange->SetStart(startNode,startOffset)))
+  {
+    if (NS_FAILED(mAnchorFocusRange->SetEnd(endNode,endOffset)))
+      return NS_ERROR_FAILURE;//???
+    if (NS_FAILED(mAnchorFocusRange->SetStart(startNode,startOffset)))
+      return NS_ERROR_FAILURE;//???
+  }
+  else if (NS_FAILED(mAnchorFocusRange->SetEnd(endNode,endOffset)))
+          return NS_ERROR_FAILURE;//???
+  return NS_OK;
+}
 
 /*
 Notes which might come in handy for extend:
@@ -3333,6 +3384,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     return res;
   nsCOMPtr<nsIDOMRange> range;
   res = mAnchorFocusRange->Clone(getter_AddRefs(range));
+  //range = mAnchorFocusRange;
 
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIDOMNode> endNode;
@@ -3399,6 +3451,9 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     else{
       selectFrames(presContext, difRange , PR_TRUE);
     }
+    res = CopyRangeToAnchorFocus(range);
+    if (NS_FAILED(res))
+      return res;
   }
   else if (result1 == 0 && result3 > 0){//2, a1
     //select from 2 to 1a
@@ -3418,6 +3473,9 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     else
 #endif
       selectFrames(presContext, range, PR_TRUE);
+    res = CopyRangeToAnchorFocus(range);
+    if (NS_FAILED(res))
+      return res;
   }
   else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
     //deselect from 2 to 1
@@ -3444,6 +3502,9 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     }
     else 
     {
+      res = CopyRangeToAnchorFocus(range);
+      if (NS_FAILED(res))
+        return res;
       selectFrames(presContext, difRange, 0);//deselect now if fixup succeeded
       difRange->SetEnd(FetchEndParent(range),FetchEndOffset(range));
       selectFrames(presContext, difRange, PR_TRUE);//must reselect last node maybe more if fixup did something
@@ -3477,8 +3538,17 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res |= difRange->SetEnd(FetchAnchorNode(), FetchAnchorOffset());
         if (NS_FAILED(res))
           return res;
+        res = CopyRangeToAnchorFocus(range);
+        if (NS_FAILED(res))
+          return res;
         //deselect from 1 to a
         selectFrames(presContext, difRange , PR_FALSE);
+      }
+      else
+      {
+        res = CopyRangeToAnchorFocus(range);
+        if (NS_FAILED(res))
+          return res;
       }
       //select from a to 2
       selectFrames(presContext, range , PR_TRUE);
@@ -3509,6 +3579,9 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     }
     else 
     {
+      res = CopyRangeToAnchorFocus(range);
+      if (NS_FAILED(res))
+        return res;
       selectFrames(presContext, difRange , PR_FALSE);
       difRange->SetStart(FetchStartParent(range),FetchStartOffset(range));
       selectFrames(presContext, difRange, PR_TRUE);//must reselect last node
@@ -3538,7 +3611,16 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       if (FetchFocusNode() != FetchAnchorNode() || FetchFocusOffset() != FetchAnchorOffset() ){//if collapsed diff dont do anything
         res = difRange->SetStart(FetchAnchorNode(), FetchAnchorOffset());
         res |= difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
+        res = CopyRangeToAnchorFocus(range);
+        if (NS_FAILED(res))
+          return res;
         selectFrames(presContext, difRange, 0);
+      }
+      else
+      {
+        res = CopyRangeToAnchorFocus(range);
+        if (NS_FAILED(res))
+          return res;
       }
       //select from 2 to a
       selectFrames(presContext, range , PR_TRUE);
@@ -3570,6 +3652,10 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     else {
       selectFrames(presContext, difRange, PR_TRUE);
     }
+    res = CopyRangeToAnchorFocus(range);
+    if (NS_FAILED(res))
+      return res;
+
   }
 
   DEBUG_OUT_RANGE(range);
@@ -3580,21 +3666,6 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     printf("    direction = 0  RIGHT TO LEFT\n");
 #endif
   SetDirection(dir);
-  /*hack*/
-  range->GetStartParent(getter_AddRefs(startNode));
-  range->GetEndParent(getter_AddRefs(endNode));
-  range->GetStartOffset(&startOffset);
-  range->GetEndOffset(&endOffset);
-  if (NS_FAILED(mAnchorFocusRange->SetStart(startNode,startOffset)))
-  {
-    if (NS_FAILED(mAnchorFocusRange->SetEnd(endNode,endOffset)))
-      return NS_ERROR_FAILURE;//???
-    if (NS_FAILED(mAnchorFocusRange->SetStart(startNode,startOffset)))
-      return NS_ERROR_FAILURE;//???
-  }
-  else if (NS_FAILED(mAnchorFocusRange->SetEnd(endNode,endOffset)))
-          return NS_ERROR_FAILURE;//???
-  /*end hack*/
 #ifdef DEBUG_SELECTION
   if (aParentNode)
   {

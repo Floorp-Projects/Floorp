@@ -1276,7 +1276,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           rv = GetContent(getter_AddRefs(content));
           if (NS_SUCCEEDED(rv) && content){
             rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                                  mContentLength , &details);// last param notused
+                                  mContentLength , &details, PR_FALSE);
           }
         }
       }
@@ -1718,7 +1718,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
           rv = GetContent(getter_AddRefs(content));
           if (NS_SUCCEEDED(rv)){
             rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                                  mContentLength , &details);// last param notused
+                                  mContentLength , &details, PR_FALSE);
           }
         }
       }
@@ -1820,7 +1820,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
           rv = GetContent(getter_AddRefs(content));
           if (NS_SUCCEEDED(rv)){
             rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                                  mContentLength , &details);// last param notused
+                                  mContentLength , &details, PR_FALSE);
           }
         }
       }
@@ -2093,10 +2093,10 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
   nsFrameState  frameState;
   GetFrameState(&frameState);
   PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
-  if (!aSelected && !isSelected) //already set thanks
+  /*if (!aSelected && !isSelected) //already set thanks
   {
     return NS_OK;
-  }
+  }*/
 
   PRBool found = PR_FALSE;
   PRBool wholeContentFound = PR_FALSE;//if the entire content we look at is selected.
@@ -2154,7 +2154,28 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
   if ( aSelected )
     frameState |=  NS_FRAME_SELECTED_CONTENT;
   else
-    frameState &= ~NS_FRAME_SELECTED_CONTENT;
+  {//we need to see if any other selection available.
+    SelectionDetails *details = nsnull;
+    nsCOMPtr<nsIPresShell> shell;
+    nsCOMPtr<nsIFrameSelection> frameSelection;
+
+    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell){
+      rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      if (NS_SUCCEEDED(rv) && frameSelection){
+        nsCOMPtr<nsIContent> content;
+        rv = GetContent(getter_AddRefs(content));
+        if (NS_SUCCEEDED(rv) && content){
+          rv = frameSelection->LookUpSelection(content, mContentOffset, 
+                                mContentLength , &details, PR_TRUE);
+// PR_TRUE last param used here! we need to see if we are still selected. so no shortcut
+
+        }
+      }
+    }
+    if (!details)
+      frameState &= ~NS_FRAME_SELECTED_CONTENT;
+  }
   SetFrameState(frameState);
   if (found){ //if range contains this frame...
     nsRect frameRect;

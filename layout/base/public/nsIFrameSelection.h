@@ -179,9 +179,10 @@ public:
    * @param aContentOffset is the starting content boundary
    * @param aContentLength is the length of the content piece asking
    * @param aReturnDetails linkedlist of return values for the selection. 
+   * @param aSlowCheck will check using slow method with no shortcuts
    */
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
-                             SelectionDetails **aReturnDetails) = 0;
+                             SelectionDetails **aReturnDetails, PRBool aSlowCheck) = 0;
 
   /** SetMouseDownState(PRBool);
    *  sets the mouse state to aState for resons of drag state.
