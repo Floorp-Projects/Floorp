@@ -357,10 +357,42 @@ nsWebBrowser* nsDocShellTreeOwner::WebBrowser()
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 { 
-   return NS_ERROR_FAILURE;
+   if(aTreeOwner)
+      {
+      nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome(do_GetInterface(aTreeOwner));
+      NS_ENSURE_TRUE(webBrowserChrome, NS_ERROR_INVALID_ARG);
+      NS_ENSURE_SUCCESS(SetWebBrowserChrome(webBrowserChrome), NS_ERROR_INVALID_ARG);
+      mTreeOwner = aTreeOwner;
+      }
+   else if(mWebBrowserChrome)
+      mTreeOwner = nsnull;
+   else
+      {
+      mTreeOwner = nsnull;
+      NS_ENSURE_SUCCESS(SetWebBrowserChrome(nsnull), NS_ERROR_FAILURE);
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWebBrowserChrome)
 {
-   return NS_ERROR_FAILURE;   
+   if(!aWebBrowserChrome)
+      {
+      mWebBrowserChrome = nsnull;
+      mOwnerWin = nsnull;
+      mOwnerRequestor = nsnull;
+      }
+   else
+      {
+      nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aWebBrowserChrome));
+      nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(aWebBrowserChrome));
+
+      NS_ENSURE_TRUE(baseWin && requestor, NS_ERROR_INVALID_ARG);
+
+      mWebBrowserChrome = aWebBrowserChrome;
+      mOwnerWin = baseWin;
+      mOwnerRequestor = requestor;
+      }
+   return NS_OK;
 }
