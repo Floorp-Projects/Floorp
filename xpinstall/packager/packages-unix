@@ -59,6 +59,7 @@ bin/libgtkxtbin.so
 bin/libjsj.so
 bin/libprotocol.so
 bin/libgkgfx.so
+bin/libmoz_art_lgpl.so
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
