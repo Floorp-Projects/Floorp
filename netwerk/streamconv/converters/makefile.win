@@ -39,6 +39,7 @@ CPP_OBJS =                                  \
         .\$(OBJDIR)\nsHTTPCompressConv.obj  \
         .\$(OBJDIR)\nsUnknownDecoder.obj    \
         .\$(OBJDIR)\nsTXTToHTMLConv.obj     \
+        .\$(OBJDIR)\nsIndexedToHTML.obj     \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

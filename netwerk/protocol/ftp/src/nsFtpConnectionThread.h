@@ -208,7 +208,7 @@ private:
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRUint32               mWriteCount;    // The amount of data to write to the server.
     PRPackedBool           mFireCallbacks; // Fire the listener callbacks.
-
+    PRBool                 mGenerateHTMLContent;
     PRPackedBool           mIPv6Checked;
     nsCOMPtr<nsIPrompt>    mPrompter;
     char                   *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
