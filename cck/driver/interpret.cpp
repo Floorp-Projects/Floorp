@@ -807,9 +807,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 							CString outputPath	= rootPath + "Configs\\" + configName + "\\Output";
 							char deletePath[MAX_SIZE];
 							strcpy(deletePath, outputPath);
-							int direxist = GetFileAttributes(outputPath+"\\Core");
-							if (direxist != -1)
-								CallDLL("IBEngine", "EraseDirectory", deletePath, w);
+							CallDLL("IBEngine", "EraseDirectory", deletePath, w);
 						}
 				}
 				else if (strcmp(pcmd, "WriteCache") ==0)
