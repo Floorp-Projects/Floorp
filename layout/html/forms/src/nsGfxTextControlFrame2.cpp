@@ -17,55 +17,52 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Owner:
+ * Michael F. Judge mjudge@netscape.com
+ *
  * Contributor(s): 
  */
 
-#include "nsGfxTextControlFrame2.h"
-#include "nsFormFrame.h"
-#include "nsIContent.h"
-#include "prtypes.h"
-#include "nsIAtom.h"
-#include "nsIPresContext.h"
-#include "nsIHTMLContent.h"
-#include "nsHTMLIIDs.h"
-#include "nsHTMLAtoms.h"
-#include "nsIPresState.h"
-#include "nsIFileWidget.h"
-#include "nsWidgetsCID.h"
-#include "nsIComponentManager.h"
-#include "nsIView.h"
-#include "nsHTMLParts.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsIFormControl.h"
-#include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
-#include "nsDocument.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIPresShell.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsIComponentManager.h"
-#include "nsIElementFactory.h"
+#include "nsWeakReference.h"
+#include "nsGfxTextControlFrame2.h"
+#include "nsIDocument.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIFormControl.h"
 #include "nsIServiceManager.h"
-
 #include "nsIFrameSelection.h"
 #include "nsIHTMLEditor.h"
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
 #include "nsFormControlHelper.h"
 #include "nsIDocumentEncoder.h"
-
 #include "nsICaret.h"
 #include "nsIDOMSelectionListener.h"
+#include "nsIController.h"
+#include "nsIControllers.h"
+#include "nsIEditorController.h"
+#include "nsIElementFactory.h"
 
 
 
-static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
+#include "nsIContent.h"
+#include "nsIAtom.h"
+#include "nsIPresContext.h"
+#include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
+#include "nsIComponentManager.h"
+#include "nsIView.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsISupportsArray.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsIPresShell.h"
+#include "nsIComponentManager.h"
+
+
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static void RemoveNewlines(nsString &aString);
 
 static void RemoveNewlines(nsString &aString)
@@ -390,6 +387,42 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
 //initialize the editor
     mEditor->Init(domdoc, shell, content, mSelCon, editorFlags);
+
+//initialize the controller for the editor
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+    nsCOMPtr<nsIDOMNSHTMLInputElement>    inputElement = do_QueryInterface(mContent);
+    nsCOMPtr<nsIControllers> controllers;
+    if (textAreaElement)
+      textAreaElement->GetControllers(getter_AddRefs(controllers));
+    else if (inputElement)
+      inputElement->GetControllers(getter_AddRefs(controllers));
+    else
+      return rv = NS_ERROR_FAILURE;
+    
+    if (NS_SUCCEEDED(rv))
+    {
+      PRUint32 count;
+      PRBool found = PR_FALSE;
+      rv = controllers->GetControllerCount(&count);
+      for (PRUint32 i = 0; i < count; i ++)
+      {
+        nsCOMPtr<nsIController> controller;
+        rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
+        if (NS_SUCCEEDED(rv) && controller)
+        {
+          nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+          if (editController)
+          {
+            editController->SetCommandRefCon(mEditor);
+            found = PR_TRUE;
+          }
+        }
+      }
+      if (!found)
+        rv = NS_ERROR_FAILURE;
+    }
+
+
 //get the caret
     nsCOMPtr<nsICaret> caret;
     if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
@@ -462,6 +495,9 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
   }
 
   nsresult rv = ReflowChild(child, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
+ // Place and size the child.
+  FinishReflowChild(child, aPresContext, aDesiredSize, aReflowState.mComputedBorderPadding.left,
+                    aReflowState.mComputedBorderPadding.top, 0);
 
   return rv;
 }
@@ -480,7 +516,7 @@ nsGfxTextControlFrame2::GetType(PRInt32* aType) const
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
     nsIFormControl* formControl = nsnull;
-    result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+    result = mContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
     if ((NS_OK == result) && formControl) {
       result = formControl->GetType(aType);
       NS_RELEASE(formControl);
@@ -606,7 +642,8 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
     list->GetNextSibling(&list);
   }
   nsresult result = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  mEditor->PostCreate();
+  if (mEditor)
+    mEditor->PostCreate();
   return result;
 }
 
