@@ -164,6 +164,8 @@ private:
   nsCOMPtr<nsICharsetConverterManager2> mCCManager;
   nsCOMPtr<nsIPref>                     mPrefService;
   nsCOMPtr<nsIObserver>                 mCharsetMenuObserver;
+  nsCOMPtr<nsISupportsArray>            mDecoderList;
+  nsCOMPtr<nsISupportsArray>            mEncoderList;
 
   nsresult Init();
   nsresult Done();
@@ -177,7 +179,7 @@ private:
   nsresult InitMailviewMenu();
   nsresult InitComposerMenu();
   nsresult InitOthers();
-  nsresult InitSecodaryTiers();
+  nsresult InitSecondaryTiers();
 
   nsresult InitStaticMenu(nsISupportsArray * aDecs, 
     nsIRDFResource * aResource, const char * aKey, nsVoidArray * aArray);
@@ -382,7 +384,7 @@ nsCharsetMenu::nsCharsetMenu()
   InitMaileditMenu();
   InitMailviewMenu();
   InitComposerMenu();
-  InitSecodaryTiers();
+  InitSecondaryTiers();
   InitOthers();
 }
 
@@ -657,6 +659,12 @@ nsresult nsCharsetMenu::InitResources()
   mCCManager = do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) return res;
 
+  res = mCCManager->GetDecoderList(getter_AddRefs(mDecoderList));
+  if (NS_FAILED(res)) return res;
+
+  res = mCCManager->GetEncoderList(getter_AddRefs(mEncoderList));
+  if (NS_FAILED(res)) return res;
+
   mPrefService = do_GetService(NS_PREF_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
 
@@ -691,16 +699,12 @@ nsresult nsCharsetMenu::InitBrowserMenu()
 {
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsISupportsArray> decs;
-  res = mCCManager->GetDecoderList(getter_AddRefs(decs));
-  if (NS_FAILED(res)) return res;
-
   nsCOMPtr<nsIRDFContainer> container;
   res = NewRDFContainer(mInner, kNC_BrowserCharsetMenuRoot, getter_AddRefs(container));
   if (NS_FAILED(res)) return res;
 
   // even if we fail, the show must go on
-  res = InitStaticMenu(decs, kNC_BrowserCharsetMenuRoot, 
+  res = InitStaticMenu(mDecoderList, kNC_BrowserCharsetMenuRoot, 
     kBrowserStaticPrefKey, &mBrowserMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser static charset menu");
 
@@ -715,7 +719,7 @@ nsresult nsCharsetMenu::InitBrowserMenu()
   // elements are numbered from 1 (why god, WHY?!?!?!)
   mBrowserMenuRDFPosition -= mBrowserCacheStart - 1;
 
-  res = InitCacheMenu(decs, kNC_BrowserCharsetMenuRoot, kBrowserCachePrefKey, 
+  res = InitCacheMenu(mDecoderList, kNC_BrowserCharsetMenuRoot, kBrowserCachePrefKey, 
     &mBrowserMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
 
@@ -729,16 +733,12 @@ nsresult nsCharsetMenu::InitMaileditMenu()
 {
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsISupportsArray> encs;
-  res = mCCManager->GetEncoderList(getter_AddRefs(encs));
-  if (NS_FAILED(res)) return res;
-
   nsCOMPtr<nsIRDFContainer> container;
 
   res = NewRDFContainer(mInner, kNC_MaileditCharsetMenuRoot, getter_AddRefs(container));
   if (NS_FAILED(res)) return res;
 
-  res = AddFromPrefsToMenu(NULL, container, kMaileditPrefKey, encs, NULL);
+  res = AddFromPrefsToMenu(NULL, container, kMaileditPrefKey, mEncoderList, NULL);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailedit charset menu from prefs");
 
   // register prefs callback
@@ -751,16 +751,12 @@ nsresult nsCharsetMenu::InitMailviewMenu()
 {
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsISupportsArray> decs;
-  res = mCCManager->GetDecoderList(getter_AddRefs(decs));
-  if (NS_FAILED(res)) return res;
-
   nsCOMPtr<nsIRDFContainer> container;
   res = NewRDFContainer(mInner, kNC_MailviewCharsetMenuRoot, getter_AddRefs(container));
   if (NS_FAILED(res)) return res;
 
   // even if we fail, the show must go on
-  res = InitStaticMenu(decs, kNC_MailviewCharsetMenuRoot, 
+  res = InitStaticMenu(mDecoderList, kNC_MailviewCharsetMenuRoot, 
     kMailviewStaticPrefKey, &mMailviewMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailview static charset menu");
 
@@ -775,7 +771,7 @@ nsresult nsCharsetMenu::InitMailviewMenu()
   // elements are numbered from 1 (why god, WHY?!?!?!)
   mMailviewMenuRDFPosition -= mMailviewCacheStart - 1;
 
-  res = InitCacheMenu(decs, kNC_MailviewCharsetMenuRoot, 
+  res = InitCacheMenu(mDecoderList, kNC_MailviewCharsetMenuRoot, 
     kMailviewCachePrefKey, &mMailviewMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailview cache charset menu");
 
@@ -786,16 +782,12 @@ nsresult nsCharsetMenu::InitComposerMenu()
 {
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsISupportsArray> decs;
-  res = mCCManager->GetDecoderList(getter_AddRefs(decs));
-  if (NS_FAILED(res)) return res;
-
   nsCOMPtr<nsIRDFContainer> container;
   res = NewRDFContainer(mInner, kNC_ComposerCharsetMenuRoot, getter_AddRefs(container));
   if (NS_FAILED(res)) return res;
 
   // even if we fail, the show must go on
-  res = InitStaticMenu(decs, kNC_ComposerCharsetMenuRoot, 
+  res = InitStaticMenu(mDecoderList, kNC_ComposerCharsetMenuRoot, 
     kComposerStaticPrefKey, &mComposerMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing composer static charset menu");
 
@@ -810,7 +802,7 @@ nsresult nsCharsetMenu::InitComposerMenu()
   // elements are numbered from 1 (why god, WHY?!?!?!)
   mComposerMenuRDFPosition -= mComposerCacheStart - 1;
 
-  res = InitCacheMenu(decs, kNC_ComposerCharsetMenuRoot, 
+  res = InitCacheMenu(mDecoderList, kNC_ComposerCharsetMenuRoot, 
     kComposerCachePrefKey, &mComposerMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing composer cache charset menu");
 
@@ -821,11 +813,7 @@ nsresult nsCharsetMenu::InitOthers()
 {
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsISupportsArray> decs;
-  res = mCCManager->GetDecoderList(getter_AddRefs(decs));
-  if (NS_FAILED(res)) return res;
-
-  res = InitMoreMenu(decs, kNC_DecodersRoot, ".notForBrowser");
+  res = InitMoreMenu(mDecoderList, kNC_DecodersRoot, ".notForBrowser");
   if (NS_FAILED(res)) return res;
 
   return res;
@@ -836,18 +824,14 @@ nsresult nsCharsetMenu::InitOthers()
  * menus are sharing the secondary tiers, one should call this method only 
  * once for all of them.
  */
-nsresult nsCharsetMenu::InitSecodaryTiers()
+nsresult nsCharsetMenu::InitSecondaryTiers()
 {
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsISupportsArray> decs;
-  res = mCCManager->GetDecoderList(getter_AddRefs(decs));
-  if (NS_FAILED(res)) return res;
-
-  res = InitMoreSubmenus(decs);
+  res = InitMoreSubmenus(mDecoderList);
   NS_ASSERTION(NS_SUCCEEDED(res), "err init browser charset more submenus");
 
-  res = InitMoreMenu(decs, kNC_BrowserMoreCharsetMenuRoot, ".notForBrowser");
+  res = InitMoreMenu(mDecoderList, kNC_BrowserMoreCharsetMenuRoot, ".notForBrowser");
   NS_ASSERTION(NS_SUCCEEDED(res), "err init browser charset more menu");
 
   res = InitAutodetMenu(kNC_BrowserAutodetMenuRoot);
