@@ -6,12 +6,107 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <binding id="tree">
-    <content>
+    <!-- <content>
       <children/>
       <xul:treerows>
         <children includes="treehead,treechildren"/>
       </xul:treerows> 
-    </content>    
+    </content> -->
+    <interface>
+      <property name="treeBoxObject"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
+                readonly="true"/>
+      <method name="getNextItem">
+        <argument name="startItem"/>
+        <argument name="delta"/>
+        <body>
+          return this.treeBoxObject.getNextItem(startItem, delta);
+        </body>
+      </method>
+      <method name="getPreviousItem">
+        <argument name="startItem"/>
+        <argument name="delta"/>
+        <body>
+          return this.treeBoxObject.getPreviousItem(startItem, delta);
+        </body>
+      </method>
+      <method name="getIndexOfItem">
+        <argument name="item"/>
+        <body>
+          return this.treeBoxObject.getIndexOfItem(item);
+        </body>
+      </method>
+      <method name="getItemAtIndex">
+        <argument name="index"/>
+        <body>
+          return this.treeBoxObject.getItemAtIndex(index);
+        </body>
+      </method>
+      <method name="ensureIndexIsVisible">
+        <argument name="index"/>
+        <body>
+          return this.treeBoxObject.ensureIndexIsVisible(index);
+        </body>
+      </method>
+      <method name="scrollToIndex">
+        <argument name="index"/>
+        <body>
+          return this.treeBoxObject.scrollToIndex(index);
+        </body>
+      </method>
+    </interface>
+    <handlers>
+      <handler type="keypress" keycode="vk_enter">
+        <![CDATA[
+         if (event.target != this || selectedItems.length != 1)
+           return;
+         this.selectedItems[0].toggleOpenState();
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_return">
+        <![CDATA[
+         if (event.target != this || selectedItems.length != 1)
+           return;
+         this.selectedItems[0].toggleOpenState();
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_left">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+           return;
+         this.selectedItems[0].close(); 
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_right">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+           return;
+         this.selectedItems[0].open();
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_up">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+           return;
+         var n = this.getPreviousItem(this.selectedItems[0], 1);
+         if (n) {
+           this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])-1);
+           this.selectItem(n);
+         }
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_down">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+           return;
+         var n = this.getNextItem(this.selectedItems[0], 1);
+         if (n) {
+           this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])+1);
+           this.selectItem(n);
+         }
+        ]]>
+      </handler>
+    </handlers>    
   </binding>
 
   <binding id="treerows">
@@ -30,12 +125,7 @@
       <![CDATA[
          if (event.target.tagName == 'treecell') {
            var n = event.target.parentNode.parentNode;
-           if ((n.getAttribute('container') == 'true') &&
-               (n.getAttribute('empty') != 'true')) {
-             if (n.getAttribute('open') == 'true')
-               n.removeAttribute('open');
-             else n.setAttribute('open', 'true');
-           }
+           n.toggleOpenState();
          }
       ]]>
       </handler>
@@ -43,18 +133,52 @@
       <![CDATA[
          if (event.target.getAttribute('twisty') == 'true') {
            var n = event.target.parentNode.parentNode.parentNode;
-           if ((n.getAttribute('container') == 'true') &&
-               (n.getAttribute('empty') != 'true')) {
-             if (n.getAttribute('open') == 'true')
-               n.removeAttribute('open');
-             else n.setAttribute('open', 'true');
-           }
+           n.toggleOpenState();
          }
       ]]>
       </handler>
       
     </handlers>
   </binding>
+ 
+  <binding id="treeitem">
+    <interface>
+      <method name="toggleOpenState">
+        <body>
+          <![CDATA[
+            if ((this.getAttribute('container') == 'true') &&
+                 (this.getAttribute('empty') != 'true')) {
+               if (this.getAttribute('open') == 'true')
+                 this.removeAttribute('open');
+               else this.setAttribute('open', 'true');
+            }
+          ]]>
+        </body>
+      </method>
+     <method name="open">
+       <body>
+          <![CDATA[
+            if ((this.getAttribute('container') == 'true') &&
+                 (this.getAttribute('empty') != 'true')) {
+               if (this.getAttribute('open') != 'true')
+                 this.setAttribute('open', 'true');
+            }
+          ]]>
+        </body>
+     </method>
+     <method name="close">
+       <body>
+          <![CDATA[
+            if ((this.getAttribute('container') == 'true') &&
+                 (this.getAttribute('empty') != 'true')) {
+               if (this.getAttribute('open') == 'true')
+                 this.removeAttribute('open');
+            }
+          ]]>
+        </body>
+     </method>    
+   </interface>
+  </binding>     
               
   <binding id="treecell-indented-folder">
     <content autostretch="never">
