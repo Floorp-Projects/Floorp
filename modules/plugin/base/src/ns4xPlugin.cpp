@@ -39,6 +39,12 @@
 #include <Resources.h>
 #endif
 
+//needed for nppdf plugin
+#if defined(MOZ_WIDGET_GTK)
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#include "gtkxtbin.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
@@ -234,6 +240,9 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*aResult);
+
+  if (!aFileName) //do not call NP_Initialize in this case, bug 74938
+    return NS_OK;
 
   // we must init here because the plugin may call NPN functions
   // when we call into the NP_Initialize entry point - NPN functions
@@ -1032,13 +1041,24 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   nsresult res;
 
-  if(!npp || !npp->ndata)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
   switch(variable) {
 #ifdef XP_UNIX
-  case NPNVxDisplay: 
+  case NPNVxDisplay : {
+#if defined(MOZ_WIDGET_GTK)
+    // adobe nppdf calls XtGetApplicationNameAndClass(display, &instance, &class)
+    // we have to init Xt toolkit before get XtDisplay
+    // just call gtk_xtbin_new(w,0) once
+    static GtkWidget *gtkXtBinHolder = 0;
+    if (!gtkXtBinHolder) {
+      gtkXtBinHolder = gtk_xtbin_new((GdkWindow*)&gdk_root_parent,0);
+      // it crashes on destroy, let it leak
+      // gtk_widget_destroy(gtkXtBinHolder);
+    }
+    (*(Display **)result) =  GTK_XTBIN(gtkXtBinHolder)->xtdisplay;
+    return NPERR_NO_ERROR;
+#endif
     return NPERR_GENERIC_ERROR;
+  }
 
   case NPNVxtAppContext: 
     return NPERR_GENERIC_ERROR;
@@ -1046,6 +1066,9 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
 #ifdef XP_PC
   case NPNVnetscapeWindow: {
+    if (!npp || !npp->ndata)
+      return NPERR_INVALID_INSTANCE_ERROR;
+
     ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
     nsIPluginInstancePeer *peer;
 

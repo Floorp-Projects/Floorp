@@ -393,7 +393,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
     nsresult rv;
-    const char* mimedescr, *name, *description;
+    const char* mimedescr = 0, *name = 0, *description = 0;
     char *mdesc,*start,*nexttoc,*mtype,*exten,*descr;
     int i,num;
 
@@ -422,20 +422,23 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         plugin = do_QueryInterface(factory);
     } else {
         // It's old sk00l
-        rv = ns4xPlugin::CreatePlugin(mgr, this->GetCString(), pLibrary, 
+        // if fileName parameter == 0 ns4xPlugin::CreatePlugin() will not call NP_Initialize()
+        rv = ns4xPlugin::CreatePlugin(mgr, 0, pLibrary, 
 				      getter_AddRefs(plugin));
         if (NS_FAILED(rv)) return rv;
     }
 
     if (plugin) {
+        info.fFileName = PL_strdup(this->GetCString());
         plugin->GetValue(nsPluginVariable_NameString, &name);
+        if (!name)
+            name = PL_strrchr(info.fFileName, '/') + 1;
         info.fName = PL_strdup(name);
 
         plugin->GetValue(nsPluginVariable_DescriptionString, &description);
+        if (!description)
+            description = "";
         info.fDescription = PL_strdup(description);
-
-        info.fFileName = PL_strdup(this->GetCString());
-
         plugin->GetMIMEDescription(&mimedescr);
     } else {
         info.fName = PL_strdup(this->GetCString());
