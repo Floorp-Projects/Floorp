@@ -1,0 +1,23 @@
+[xpi-bootstrap]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/xpcom.jst
+
+!optional @topsrcdir@/../redist/microsoft/system/msvcrt.dll
+!=The Microsoft redistributable system file msvcrt.dll was not found in
+!=$topsrcdir/../redist/microsoft/system/
+!=This file is required by the installer and browser. If you attempt to
+!=run the installer, you may encounter the following bug:
+!=http://bugzilla.mozilla.org/show_bug.cgi?id=27601
+
+!optional @topsrcdir@/../redist/microsoft/system/msvcirt.dll
+!=The Microsoft redistributable system file msvcirt.dll was not found in
+!=$topsrcdir/../redist/microsoft/system/
+!=This file is required by the installer and browser. If you attempt to
+!=run the installer, you may encounter the following bug:
+!=http://bugzilla.mozilla.org/show_bug.cgi?id=27601
+
+[gre-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/win_gre/gre.jst
+
+[psm-xpi]
+!error PSM is part of the GRE on win32.
+

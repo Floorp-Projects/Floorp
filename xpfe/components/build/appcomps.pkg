@@ -1,0 +1,43 @@
+# this file packages seamonkey and firebird appcomps...
+# be careful when you make changes
+
+[xpfe-browser browser]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+dist/bin/components/jsconsole-clhandler.js
+dist/bin/components/nsKillAll.js
+dist/bin/components/nsUpdateNotifier.js
+dist/bin/components/nsResetPref.js
+
+!xpt dist/bin/components/directory.xpt
+!xpt dist/bin/components/related.xpt
+!xpt dist/bin/components/search.xpt
+!xpt dist/bin/components/windowds.xpt
+!xpt dist/bin/components/mozbrwsr.xpt
+
+#if OS_ARCH==WINNT
+dist/bin/components/nsSetDefaultBrowser.js
+!xpt dist/bin/components/winhooks.xpt
+!xpt dist/bin/components/urlwidgt.xpt
+!xpt dist/bin/components/alerts.xpt
+#endif
+
+[xpfe-browser]
+dist/bin/components/nsSidebar.js
+dist/bin/components/nsDownloadProgressListener.js
+!xpt dist/bin/components/bookmarks.xpt
+!xpt dist/bin/components/downloadmanager.xpt
+!xpt dist/bin/components/autocomplete.xpt
+!xpt dist/bin/components/history.xpt
+!xpt dist/bin/components/urlbarhistory.xpt
+!xpt dist/bin/components/sidebar.xpt
+!xpt dist/bin/components/progressDlg.xpt
+
+[xpfe-mailnews]
+#if OS_ARCH==WINNT
+dist/bin/components/nsSetDefaultMail.js
+dist/bin/components/nsUnSetDefaultMail.js
+#endif

@@ -1,0 +1,19 @@
+[gecko]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+!xpt dist/bin/components/xpconnect.xpt
+
+# xpcshell is one of those interesting apps that is useful in both an application
+# directory and in the plain-jane GRE
+[gecko gecko-support]
+dist/bin/xpcshell@BINS@
+
+#if ENABLE_TESTS
+[gecko-tests]
+dist/bin/TestXPC@BINS@
+dist/bin/components/@DLLP@xpctest@DLLS@
+!xpt dist/bin/components/xpconnect_tests.xpt
+#endif

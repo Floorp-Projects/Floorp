@@ -1,0 +1,26 @@
+[xpfe-browser-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/browser.jst
+
+[xpfe-lang-enUS-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/langenus.jst
+
+[xpfe-locale-US-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/regus.jst
+
+[xpfe-default-US-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/deflenus.jst
+
+[xpfe-mailnews-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/mail.jst
+
+[spellcheck-enUS-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/spellcheck.jst
+
+# right now this is the "dummy XPI" but leaf thinks we can integrate talkback
+# more successfully later
+[talkback-xpi]
+@topsrcdir@/xpinstall/packager/windows/talkback.jst xpiroot/install.js
+
+[seamonkey-installer-stub-en-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/common/windows.t @topsrcdir@/xpinstall/packager/windows/mozilla-win32-stub-installer.jst
+dist/install-seamonkey/mozilla-win32-stub-installer.exe xpiroot/mozilla-win32-stub-installer.exe

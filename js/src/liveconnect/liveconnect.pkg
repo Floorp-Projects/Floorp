@@ -1,0 +1,3 @@
+# this is part of the GRE, but *not* part of the embedding packages
+[gre]
+dist/bin/@SHARED_LIBRARY@

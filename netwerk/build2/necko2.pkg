@@ -1,0 +1,8 @@
+[gecko]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+!xpt dist/bin/components/necko_data.xpt
+!xpt dist/bin/components/necko_viewsource.xpt

@@ -1,0 +1,28 @@
+[xpfe-browser]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+!xpt dist/bin/components/composer.xpt
+
+dist/bin/res/EditorOverride.css
+dist/bin/res/grabber.gif
+dist/bin/res/table-add-column-after-active.gif
+dist/bin/res/table-add-column-after-hover.gif
+dist/bin/res/table-add-column-after.gif
+dist/bin/res/table-add-column-before-active.gif
+dist/bin/res/table-add-column-before-hover.gif
+dist/bin/res/table-add-column-before.gif
+dist/bin/res/table-add-row-after-active.gif
+dist/bin/res/table-add-row-after-hover.gif
+dist/bin/res/table-add-row-after.gif
+dist/bin/res/table-add-row-before-active.gif
+dist/bin/res/table-add-row-before-hover.gif
+dist/bin/res/table-add-row-before.gif
+dist/bin/res/table-remove-column-active.gif
+dist/bin/res/table-remove-column-hover.gif
+dist/bin/res/table-remove-column.gif
+dist/bin/res/table-remove-row-active.gif
+dist/bin/res/table-remove-row-hover.gif
+dist/bin/res/table-remove-row.gif
