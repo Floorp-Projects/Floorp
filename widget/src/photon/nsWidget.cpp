@@ -391,6 +391,14 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
     return NS_OK;
   }
 
+#if 0
+  if(( 10 == aX ) && ( 10 == aY ))
+  {
+	printf("HACK: ignore move to 10 10\n");
+    return NS_OK;
+  }
+#endif
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  was at (%i,%i)\n", mBounds.x, mBounds.y ));
 
   mBounds.x = aX;
@@ -409,8 +417,13 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
     {
       if(( oldpos->x != pos.x ) || ( oldpos->y != pos.y ))
       {
+        int err;
         PtSetArg( &arg, Pt_ARG_POS, &pos, 0 );
-        PtSetResources( mWidget, 1, &arg );
+        err=PtSetResources( mWidget, 1, &arg );
+        if (err==-1)
+        {
+           printf("nsWidget::Move ERROR in PtSetRes (%p) to (%ld,%ld)\n", this, aX, aY );
+	    }
       }
     }
 
@@ -504,6 +517,7 @@ PRBool nsWidget::OnResize(nsRect &aRect)
   NS_ADDREF_THIS();
   result = DispatchWindowEvent(&event);
   NS_RELEASE_THIS();
+  delete foo;
 #else
     InitEvent(event, NS_SIZE);
     event.windowSize = &aRect;
@@ -529,7 +543,7 @@ PRBool nsWidget::OnResize(nsRect &aRect)
 //------
 PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnMove\n" ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnMove to (%d,%d)\n", aX, aY));
 
   nsGUIEvent event;
 
@@ -579,6 +593,8 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus(void)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetFocus - mWidget=<%p>!\n", mWidget));
+
   if (mWidget)
   {
     if (!PtIsFocused(mWidget))
@@ -1269,7 +1285,6 @@ void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
-//    NS_IF_ADDREF(event.widget);
 
     if (aPoint == nsnull)
     {
@@ -2124,7 +2139,7 @@ void nsWidget::UpdateWidgetDamage()
 
     if( !PtWidgetIsRealized( mWidget ))	
     {
-      NS_ASSERTION(0, "nsWidget::UpdateWidgetDamaged skipping update because widget is not Realized");
+      //NS_ASSERTION(0, "nsWidget::UpdateWidgetDamaged skipping update because widget is not Realized");
       return;
     }
 	
@@ -2246,6 +2261,12 @@ int nsWidget::WorkProc( void *data )
         nsRect           temp_rect;
 
         PtWidgetArea( dqe->widget, &area ); // parent coords
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%d,%d,%d,%d>\n", dqe->widget, area.pos.x, area.pos.y, area.size.w, area.size.h));
+        if (PtWidgetIsClass(dqe->widget, PtWindow))
+		{
+		  printf("nsWidget::WorkProc got PtWindow set area to 0\n");
+		  area.pos.x = area.pos.y = 0;
+		}
 
         dqe->inst->mUpdateArea->GetRects(&regionRectSet);
 
@@ -2276,7 +2297,6 @@ int nsWidget::WorkProc( void *data )
     mDmgQueueInited = PR_FALSE;
 
     int Global_Widget_Hold_Count;
-      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc before release  Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
       Global_Widget_Hold_Count =  PtRelease();
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc end, PtHold/PtRelease Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
 

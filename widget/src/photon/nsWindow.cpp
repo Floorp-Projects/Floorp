@@ -1010,7 +1010,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
   if ( !pWin )
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  aborted because instance is NULL!\n"));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted because instance is NULL!\n"));
     return;
   }
 
@@ -1020,7 +1020,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
   if ( /*pWin->mCreateHold || pWin->mHold ||*/ pWin->mIsResizing )
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  aborted due to hold-off!\n"));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted due to hold-off!\n"));
     return;
   }
 
@@ -1037,20 +1037,55 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     // the widgets canvas. Mozilla wants the paint coords relative to the parent widget, not the window.
 
     PtWidgetArea( pWidget, &area );
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area=<%d,%d,%d,%d>\n", area.pos.x, area.pos.y, area.size.w, area.size.h));
     PtWidgetOffset( pWidget, &offset );
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset=<%d,%d>\n", offset.x, offset.y));
     offset.x += area.pos.x;  
     offset.y += area.pos.y;  
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area+offset=<%d,%d,%d,%d>\n", area.pos.x, area.pos.y, area.size.w, area.size.h));
 
     // Convert damage rect to widget's coordinates...
+#if 1
+{
+  PhTile_t *top = damage;
+  do {
+    PhRect_t   rect = top->rect;    
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect=<%d,%d,%d,%d> next=<%p>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next));
+    top=top->next;
+  } while (top);
+}
+#endif
+
+#if 0
     rect = damage->rect;
+#else
+ 
+    PhTile_t *top = damage->next;
+    rect = top->rect;	
+    top=top->next;
+    while (top)
+	{
+      PhRect_t tmp_rect = top->rect;
+	  rect.ul.x = PR_MIN(rect.ul.x, tmp_rect.ul.x);
+	  rect.ul.y = PR_MIN(rect.ul.y, tmp_rect.ul.y);
+	  rect.lr.x = PR_MAX(rect.lr.x, tmp_rect.lr.x);
+	  rect.lr.y = PR_MAX(rect.lr.y, tmp_rect.lr.y);
+      top=top->next;
+	}
+#endif
+
     rect.ul.x -= offset.x;
     rect.ul.y -= offset.y;
     rect.lr.x -= offset.x;
     rect.lr.y -= offset.y;
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,%d,%d,%d> next=<%p>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, damage->next));
 
     // If the damage tile is not within our bounds, do nothing
     if(( rect.ul.x >= area.size.w ) || ( rect.ul.y >= area.size.h ) || ( rect.lr.x < 0 ) || ( rect.lr.y < 0 ))
+    {
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage tile is not within our bounds, do nothing\n"));
       return;
+	}
 
     // clip damage to widgets bounds...
     if( rect.ul.x < 0 ) rect.ul.x = 0;
@@ -1058,10 +1093,14 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
     if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
 
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
+
     nsDmg.x = rect.ul.x;
     nsDmg.y = rect.ul.y;
     nsDmg.width = rect.lr.x - rect.ul.x + 1;
     nsDmg.height = rect.lr.y - rect.ul.y + 1;
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height));
 
     if(( nsDmg.width <= 0 ) || ( nsDmg.height <= 0 ))
       return;
@@ -1071,12 +1110,20 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
     pev.rect = &nsDmg;
     pev.eventStructType = NS_PAINT_EVENT;
-
-//    int Global_Widget_Hold_Count;
-//    Global_Widget_Hold_Count =  PtHold();
-//    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::RawDrawFunc PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, pWin));
-
 #if 1
+	pev.point.x = nsDmg.x;
+	pev.point.y = nsDmg.y;
+
+    PRInt32 x,y,w,h;
+	pWin->mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc MUpdateArea BoundingBox <%d,%d,%d,%d>\n", x,y,w,h));
+
+    pev.rect = new nsRect(nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
+//  pev.rect = new nsRect(x,y,w,h);
+
+//#endif
+//#if 0
+
   // call the event callback
   if (pWin->mEventCallback) 
   {
@@ -1093,7 +1140,9 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 	  NS_RELEASE(pev.renderingContext);
     }
   }
-#else	
+#endif
+
+#if 0	
 
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&pev.renderingContext))
     {
@@ -1109,12 +1158,6 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
       NS_RELEASE(pev.renderingContext);
     }
 #endif
-
-//    Global_Widget_Hold_Count =  PtRelease();
-//    PR_LOG(PhWidLog, PR_LOG_DEBUG,(" nsWindow::RawDrawFunc PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, pWin));
-
-   //Kirk took this out  look at OnDrawSignal in GTK
-   //NS_RELEASE(pev.widget);
   }
   else
   {
@@ -1603,6 +1646,19 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move (%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n", this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
-  return this->nsWidget::Move(aX, aY);
+
+  /* Call my base class */
+  nsresult res = nsWidget::Move(aX, aY);
+
+  /* If I am a top-level window my origin shoudl always be 0,0 */
+  if ( (mWindowType == eWindowType_dialog) ||
+       (mWindowType == eWindowType_popup) ||
+	   (mWindowType == eWindowType_toplevel) )
+  {
+    printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
+    mBounds.x = mBounds.y = 0;
+  }
+
+  return res;
 }
 
