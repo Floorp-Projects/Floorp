@@ -1061,6 +1061,20 @@ then
 		[MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XLIBS)
 	AC_CHECK_LIB(Xmu, XmuLookupString, [XMU_LIBS="-lXmu"],
 		[MISSING_X="$MISSING_X -lXmu"], $X_PRE_LIBS $XLIBS $XT_LIBS $XEXT_LIBS)
+
+    dnl ========================================================
+    dnl =
+    dnl = Check for Xinerama
+    dnl =
+    dnl ========================================================
+    AC_CHECK_LIB(Xinerama, XineramaIsActive, [MOZ_XINERAMA_LIBS="-lXinerama"],,
+        $XLIBS $XEXT_LIBS)
+    AC_CHECK_HEADER(X11/extensions/Xinerama.h)
+
+    if test -n "$MOZ_XINERAMA_LIBS" && test -n "$ac_cv_header_X11_extensions_Xinerama_h"; then
+      MOZ_ENABLE_XINERAMA=1
+    fi
+        
 	LDFLAGS="$_SAVE_LDFLAGS"
 
 	dnl ========================================================
@@ -1664,6 +1678,9 @@ AC_SUBST(MOZ_ENABLE_XPRINT)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LDFLAGS)
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
+
+AC_SUBST(MOZ_XINERAMA_LIBS)
+AC_SUBST(MOZ_ENABLE_XINERAMA)
 
 XCFLAGS="$X_CFLAGS"
 
