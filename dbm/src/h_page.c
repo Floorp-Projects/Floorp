@@ -1205,7 +1205,7 @@ open_temp(HTAB *hashp)
 #else
 	if ((hashp->fp = mkstemp(filename)) != -1) {
 		(void)unlink(filename);
-#if !defined(macintosh)
+#if !defined(macintosh) && !defined(XP_OS2)
 		(void)fcntl(hashp->fp, F_SETFD, 1);
 #endif									  
 	}
