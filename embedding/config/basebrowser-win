@@ -265,6 +265,8 @@ res\ua.css
 res\forms.css
 res\arrow.gif
 res\arrowd.gif
+res\loading-image.gif
+res\broken-image.gif
 res\builtin\buttonBindings.xml
 res\builtin\buttons.css
 res\builtin\checkbox.css
