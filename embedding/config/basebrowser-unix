@@ -94,6 +94,10 @@ components/libtimer_gtk.so
 components/libgfx_gtk.so                     
 components/gfx.xpt 
 
+; gfx2
+components/libgfx2.so
+components/gfx2.xpt
+
 ; jar
 components/libjar50.so
 components/jar.xpt
@@ -128,6 +132,12 @@ libmozjpeg.so
 components/libnsgif.so                    
 components/libnsjpg.so                    
 components/libnspng.so
+components/libimglib2.so
+components/imglib2.xpt
+components/libimggif.so
+components/libimgjpeg.so
+components/libimgpng.so
+components/libimgppm.so
 
 ; prefs
 components/pref.xpt                     
