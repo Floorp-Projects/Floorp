@@ -592,7 +592,10 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         break;
 
       default:
-        if(nsCRT::IsAsciiAlpha(aChar)) {
+        // xml allows non ASCII tag names, consume as a start tag.
+        PRBool isXML=(mFlags & NS_IPARSER_FLAG_XML);
+        if(nsCRT::IsAsciiAlpha(aChar) ||
+            (isXML && (! nsCRT::IsAscii(aChar)))) { 
           // Get the original "<" (we've already seen it with a Peek)
           aScanner.GetChar(oldChar);
           result=ConsumeStartTag(aChar,aToken,aScanner,aFlushTokens);
