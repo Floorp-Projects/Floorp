@@ -919,7 +919,7 @@ NS_IMETHODIMP nsMsgSaveAsListener::OnDataAvailable(nsIRequest* request,
               PL_strncmp(start, "From - ", 7))
           {
               rv = m_outputStream->Write(start, end-start, &writeCount);
-              rv = m_outputStream->Write(CRLF, 2, &writeCount);
+              rv = m_outputStream->Write(MSG_LINEBREAK,sizeof(MSG_LINEBREAK) - 1, &writeCount);
           }
           start = end+linebreak_len;
           if (start >= m_dataBuffer + m_leftOver)
