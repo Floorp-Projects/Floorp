@@ -761,6 +761,7 @@ static unsigned gFirstUserCollection = 0;
             // middle of the string. Just bail and dont import this bookmark. The parser should be able
             // to recover on its own once it gets to the next "<A" token.
             [tokenScanner release];
+            [tokenTag release];
             [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
             continue;
           }
