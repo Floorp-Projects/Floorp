@@ -109,12 +109,24 @@
 #endif
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
+#define _PR_HAVE_GETADDRINFO
 #define _PR_INET6_PROBE
 #define _PR_ACCEPT_INHERIT_NONBLOCK
 #ifdef _PR_INET6
 #define _PR_HAVE_INET_NTOP
 #else
 #define AF_INET6 26
+struct addrinfo {
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    char *ai_canonname;
+    struct sockaddr *ai_addr;
+    struct addrinfo *ai_next;
+};
+#define AI_CANONNAME 0x0010
 #define AI_V4MAPPED 0x0001 
 #define AI_ALL      0x0002
 #define AI_ADDRCONFIG   0x0004

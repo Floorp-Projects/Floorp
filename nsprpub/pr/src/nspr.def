@@ -447,3 +447,11 @@ EXPORTS ;-
 ;+	global:
 		PR_GetPathSeparator;
 ;+} NSPR_4.3;
+;+
+;+NSPR_4.5 {
+;+	global:
+		PR_EnumerateAddrInfo;
+		PR_FreeAddrInfo;
+		PR_GetAddrInfoByName;
+		PR_GetCanonNameFromAddrInfo;
+;+} NSPR_4.4;

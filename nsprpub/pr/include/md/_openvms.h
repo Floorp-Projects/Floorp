@@ -105,11 +105,23 @@ struct ip_mreq {
 #endif
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
+#define _PR_HAVE_GETADDRINFO
 #define _PR_INET6_PROBE
 #ifdef _PR_INET6
 #define _PR_HAVE_INET_NTOP
 #else
 #define AF_INET6 26
+struct addrinfo {
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    char *ai_canonname;
+    struct sockaddr *ai_addr;
+    struct addrinfo *ai_next;
+};
+#define AI_CANONNAME 0x00000002
 #define AI_V4MAPPED 0x00000010
 #define AI_ALL      0x00000008
 #define AI_ADDRCONFIG 0x00000020

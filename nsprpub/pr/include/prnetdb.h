@@ -386,6 +386,88 @@ NSPR_API(PRStatus) PR_GetProtoByNumber(
     PRInt32 protocolnumber, char* buffer, PRInt32 bufsize, PRProtoEnt* result);
 
 /***********************************************************************
+** FUNCTION:
+** DESCRIPTION: PR_GetAddrInfoByName()
+**  Lookup a host by name. Equivalent to getaddrinfo(host, NULL, ...) of
+**  RFC 3493.
+**
+** INPUTS:
+**  char *hostname      Character string defining the host name of interest
+**  PRUint16 af         Must be PR_AF_UNSPEC
+**  PRIntn flags        Must be PR_AI_ADDRCONFIG
+** RETURN:
+**  PRAddrInfo*         Handle to a data structure containing the results
+**                      of the host lookup. Use PR_EnumerateAddrInfo to
+**                      inspect the PRNetAddr values stored in this object.
+**                      When no longer needed, this handle must be destroyed
+**                      with a call to PR_FreeAddrInfo.  If a lookup error
+**                      occurs, then NULL will be returned.
+***********************************************************************/
+typedef struct PRAddrInfo PRAddrInfo;
+
+NSPR_API(PRAddrInfo*) PR_GetAddrInfoByName(
+    const char *hostname, PRUint16 af, PRIntn flags);
+
+/***********************************************************************
+** FUNCTION:
+** DESCRIPTION: PR_FreeAddrInfo()
+**  Destroy the PRAddrInfo handle allocated by PR_GetAddrInfoByName().
+**
+** INPUTS:
+**  PRAddrInfo *addrInfo
+**                      The handle resulting from a successful call to
+**                      PR_GetAddrInfoByName().
+** RETURN:
+**  void
+***********************************************************************/
+NSPR_API(void) PR_FreeAddrInfo(PRAddrInfo *addrInfo);
+
+/***********************************************************************
+** FUNCTION:
+** DESCRIPTION: PR_EnumerateAddrInfo()
+**  A stateless enumerator over a PRAddrInfo handle acquired from
+**  PR_GetAddrInfoByName() to inspect the possible network addresses.
+**
+** INPUTS:
+**  void *enumPtr       Index pointer of the enumeration. The enumeration
+**                      starts and ends with a value of NULL.
+**  PRAddrInfo *addrInfo
+**                      The PRAddrInfo handle returned by a successful
+**                      call to PR_GetAddrInfoByName().
+**  PRUint16 port       The port number to be assigned as part of the
+**                      PRNetAddr.
+** OUTPUTS:
+**  PRNetAddr *result   A pointer to an address structure that will be
+**                      filled in by the call to the enumeration if the
+**                      result of the call is greater than zero.
+** RETURN:
+**  void*               The value that should be used for the next call
+**                      of the enumerator ('enumPtr'). The enumeration
+**                      is ended if this value is returned NULL.
+***********************************************************************/
+NSPR_API(void *) PR_EnumerateAddrInfo(
+    void *enumPtr, const PRAddrInfo *addrInfo, PRUint16 port, PRNetAddr *result);
+
+/***********************************************************************
+** FUNCTION:
+** DESCRIPTION: PR_GetCanonNameFromAddrInfo()
+**  Extracts the canonical name of the hostname passed to
+**  PR_GetAddrInfoByName().
+**
+** INPUTS:
+**  PRAddrInfo *addrInfo 
+**                      The PRAddrInfo handle returned by a successful
+**                      call to PR_GetAddrInfoByName().
+** RETURN:
+**  const char *        A const pointer to the canonical hostname stored
+**                      in the given PRAddrInfo handle. This pointer is
+**                      invalidated once the PRAddrInfo handle is destroyed
+**                      by a call to PR_FreeAddrInfo().
+***********************************************************************/
+NSPR_API(const char *) PR_GetCanonNameFromAddrInfo(
+    const PRAddrInfo *addrInfo);
+
+/***********************************************************************
 ** FUNCTIONS: PR_ntohs, PR_ntohl, PR_ntohll, PR_htons, PR_htonl, PR_htonll
 **
 ** DESCRIPTION: API entries for the common byte ordering routines.

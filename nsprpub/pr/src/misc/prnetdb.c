@@ -715,15 +715,51 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 	return rv;
 }
 
-#if defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
+#if !defined(_PR_INET6) && \
+        defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
 typedef struct hostent  * (*_pr_getipnodebyname_t)(const char *, int,
 										int, int *);
 typedef struct hostent  * (*_pr_getipnodebyaddr_t)(const void *, size_t,
 													int, int *);
 typedef void (*_pr_freehostent_t)(struct hostent *);
-extern void * _pr_getipnodebyname_fp;
-extern void * _pr_getipnodebyaddr_fp;
-extern void * _pr_freehostent_fp;
+static void * _pr_getipnodebyname_fp;
+static void * _pr_getipnodebyaddr_fp;
+static void * _pr_freehostent_fp;
+
+/*
+ * Look up the addresses of getipnodebyname, getipnodebyaddr,
+ * and freehostent.
+ */
+PRStatus
+_pr_find_getipnodebyname(void)
+{
+    PRLibrary *lib;	
+    PRStatus rv;
+#if defined(VMS)
+#define GETIPNODEBYNAME getenv("GETIPNODEBYNAME")
+#define GETIPNODEBYADDR getenv("GETIPNODEBYADDR")
+#define FREEHOSTENT     getenv("FREEHOSTENT")
+#else
+#define GETIPNODEBYNAME "getipnodebyname"
+#define GETIPNODEBYADDR "getipnodebyaddr"
+#define FREEHOSTENT     "freehostent"
+#endif
+    _pr_getipnodebyname_fp = PR_FindSymbolAndLibrary(GETIPNODEBYNAME, &lib);
+    if (NULL != _pr_getipnodebyname_fp) {
+        _pr_freehostent_fp = PR_FindSymbol(lib, FREEHOSTENT);
+        if (NULL != _pr_freehostent_fp) {
+            _pr_getipnodebyaddr_fp = PR_FindSymbol(lib, GETIPNODEBYADDR);
+            if (NULL != _pr_getipnodebyaddr_fp)
+                rv = PR_SUCCESS;
+            else
+                rv = PR_FAILURE;
+        } else
+            rv = PR_FAILURE;
+        (void)PR_UnloadLibrary(lib);
+    } else
+        rv = PR_FAILURE;
+    return rv;
+}
 #endif
 
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
@@ -1876,3 +1912,256 @@ PR_IMPLEMENT(PRUint64) PR_htonll(PRUint64 n)
     return n;
 #endif
 }  /* htonll */
+
+
+/*
+ * Implementation of PR_GetAddrInfoByName and friends
+ *
+ * Compile-time options:
+ *
+ *  _PR_HAVE_GETADDRINFO  Define this macro if the target system provides
+ *                        getaddrinfo. With this defined, NSPR will require
+ *                        getaddrinfo at run time. If this if not defined,
+ *                        then NSPR will attempt to dynamically resolve
+ *                        getaddrinfo, falling back to PR_GetHostByName if
+ *                        getaddrinfo does not exist on the target system.
+ *
+ * Since getaddrinfo is a relatively new system call on many systems,
+ * we are forced to dynamically resolve it at run time in most cases.
+ * The exception includes any system (such as Mac OS X) that is known to
+ * provide getaddrinfo in all versions that NSPR cares to support.
+ */
+
+#if defined(_PR_HAVE_GETADDRINFO)
+
+#if defined(_PR_INET6)
+
+typedef struct addrinfo PRADDRINFO;
+#define GETADDRINFO getaddrinfo
+#define FREEADDRINFO freeaddrinfo
+
+#elif defined(_PR_INET6_PROBE)
+
+typedef struct addrinfo PRADDRINFO;
+
+/* getaddrinfo/freeaddrinfo prototypes */ 
+#if defined(WIN32)
+#define FUNC_MODIFIER __stdcall
+#else
+#define FUNC_MODIFIER
+#endif
+typedef int (FUNC_MODIFIER * FN_GETADDRINFO)
+    (const char *nodename,
+     const char *servname,
+     const PRADDRINFO *hints,
+     PRADDRINFO **res);
+typedef int (FUNC_MODIFIER * FN_FREEADDRINFO)
+    (PRADDRINFO *ai);
+
+/* global state */
+static FN_GETADDRINFO   _pr_getaddrinfo   = NULL;
+static FN_FREEADDRINFO  _pr_freeaddrinfo  = NULL;
+
+#if defined(VMS)
+#define GETADDRINFO_SYMBOL getenv("GETADDRINFO")
+#define FREEADDRINFO_SYMBOL getenv("FREEADDRINFO")
+#else
+#define GETADDRINFO_SYMBOL "getaddrinfo"
+#define FREEADDRINFO_SYMBOL "freeaddrinfo"
+#endif
+
+PRStatus
+_pr_find_getaddrinfo(void)
+{
+    PRLibrary *lib;
+#ifdef WIN32
+    /*
+     * On windows, we need to search ws2_32.dll for getaddrinfo and
+     * freeaddrinfo.  This library might not be loaded yet.
+     */
+    lib = PR_LoadLibrary("ws2_32.dll");
+    if (!lib) {
+        return PR_FAILURE;
+    }
+    _pr_getaddrinfo = (FN_GETADDRINFO)
+        PR_FindFunctionSymbol(lib, GETADDRINFO_SYMBOL);
+    _pr_freeaddrinfo = (FN_FREEADDRINFO)
+        PR_FindFunctionSymbol(lib, FREEADDRINFO_SYMBOL);
+    if (!_pr_getaddrinfo || !_pr_freeaddrinfo) {
+        PR_UnloadLibrary(lib);
+        return PR_FAILURE;
+    }
+    /* Keep ws2_32.dll loaded. */
+    return PR_SUCCESS;
+#else
+    /*
+     * Resolve getaddrinfo by searching all loaded libraries.  Then
+     * search library containing getaddrinfo for freeaddrinfo.
+     */
+    _pr_getaddrinfo = (FN_GETADDRINFO)
+        PR_FindFunctionSymbolAndLibrary(GETADDRINFO_SYMBOL, &lib);
+    if (!_pr_getaddrinfo) {
+        return PR_FAILURE;
+    }
+    _pr_freeaddrinfo = (FN_FREEADDRINFO)
+        PR_FindFunctionSymbol(lib, FREEADDRINFO_SYMBOL);
+    PR_UnloadLibrary(lib);
+    if (!_pr_freeaddrinfo) {
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+#endif
+}
+
+#define GETADDRINFO (*_pr_getaddrinfo)
+#define FREEADDRINFO (*_pr_freeaddrinfo)
+
+#endif /* _PR_INET6 */
+
+#endif /* _PR_HAVE_GETADDRINFO */
+
+/*
+ * If getaddrinfo does not exist, then we will fall back on
+ * PR_GetHostByName, which requires that we allocate a buffer for the 
+ * PRHostEnt data structure and its members.
+ */
+typedef struct PRAddrInfoFB {
+    char      buf[PR_NETDB_BUF_SIZE];
+    PRHostEnt hostent;
+} PRAddrInfoFB;
+
+static PRAddrInfo *
+pr_GetAddrInfoByNameFB(const char  *hostname,
+                       PRUint16     af,
+                       PRIntn       flags)
+{
+    PRStatus rv;
+    PRAddrInfoFB *ai;
+    /* fallback on PR_GetHostByName */
+    ai = PR_NEW(PRAddrInfoFB);
+    if (!ai) {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+    rv = PR_GetHostByName(hostname, ai->buf, sizeof ai->buf, &ai->hostent);
+    if (rv == PR_FAILURE) {
+        PR_Free(ai);
+        return NULL;
+    }
+    return (PRAddrInfo *) ai;
+}
+
+PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
+                                                PRUint16     af,
+                                                PRIntn       flags)
+{
+    /* restrict input to supported values */
+    if (af != PR_AF_UNSPEC || flags != PR_AI_ADDRCONFIG) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return NULL;
+    }
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+#if !defined(_PR_HAVE_GETADDRINFO)
+    return pr_GetAddrInfoByNameFB(hostname, af, flags);
+#else
+#if defined(_PR_INET6_PROBE)
+    if (!_pr_ipv6_is_present) {
+        return pr_GetAddrInfoByNameFB(hostname, af, flags);
+    }
+#endif
+    {
+        PRADDRINFO *res, hints;
+        PRStatus rv;
+
+        /*
+         * we assume a RFC 2553 compliant getaddrinfo.  this may at some
+         * point need to be customized as platforms begin to adopt the
+         * RFC 3493.
+         */
+
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_flags = AI_CANONNAME;
+        hints.ai_family = AF_UNSPEC;
+
+        rv = GETADDRINFO(hostname, NULL, &hints, &res);
+        if (rv == 0)
+            return (PRAddrInfo *) res;
+
+        PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, rv);
+    }
+    return NULL;
+#endif
+}
+
+PR_IMPLEMENT(void) PR_FreeAddrInfo(PRAddrInfo *ai)
+{
+#if defined(_PR_HAVE_GETADDRINFO)
+#if defined(_PR_INET6_PROBE)
+    if (!_pr_ipv6_is_present)
+        PR_Free((PRAddrInfoFB *) ai);
+    else
+#endif
+        FREEADDRINFO((PRADDRINFO *) ai);
+#else
+    PR_Free((PRAddrInfoFB *) ai);
+#endif
+}
+
+PR_IMPLEMENT(void *) PR_EnumerateAddrInfo(void             *iterPtr,
+                                          const PRAddrInfo *base,
+                                          PRUint16          port,
+                                          PRNetAddr        *result)
+{
+#if defined(_PR_HAVE_GETADDRINFO)
+    PRADDRINFO *ai;
+#if defined(_PR_INET6_PROBE)
+    if (!_pr_ipv6_is_present) {
+        /* using PRAddrInfoFB */
+        PRIntn iter = (PRIntn) iterPtr;
+        iter = PR_EnumerateHostEnt(iter, &((PRAddrInfoFB *) base)->hostent, port, result);
+        if (iter < 0)
+            iter = 0;
+        return (void *) iter;
+    }
+#endif
+
+    if (iterPtr)
+        ai = ((PRADDRINFO *) iterPtr)->ai_next;
+    else
+        ai = (PRADDRINFO *) base;
+
+    if (ai) {
+        /* copy sockaddr to PRNetAddr */
+        memcpy(result, ai->ai_addr, ai->ai_addrlen);
+        if (ai->ai_addrlen < sizeof(PRNetAddr))
+            memset(((char*)result)+ai->ai_addrlen, 0, sizeof(PRNetAddr) - ai->ai_addrlen);
+
+        if (port != 0)
+            result->inet.port = PR_htons(port);
+    }
+
+    return ai;
+#else
+    /* using PRAddrInfoFB */
+    PRIntn iter = (PRIntn) iterPtr;
+    iter = PR_EnumerateHostEnt(iter, &((PRAddrInfoFB *) base)->hostent, port, result);
+    if (iter < 0)
+        iter = 0;
+    return (void *) iter;
+#endif
+}
+
+PR_IMPLEMENT(const char *) PR_GetCanonNameFromAddrInfo(const PRAddrInfo *ai)
+{
+#if defined(_PR_HAVE_GETADDRINFO)
+#if defined(_PR_INET6_PROBE)
+    if (!_pr_ipv6_is_present)
+        return ((const PRAddrInfoFB *) ai)->hostent.h_name;
+#endif
+    return ((const PRADDRINFO *) ai)->ai_canonname;
+#else
+    return ((const PRAddrInfoFB *) ai)->hostent.h_name;
+#endif
+}
