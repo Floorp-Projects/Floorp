@@ -220,7 +220,7 @@ CVSCO_GFX2 = cvs $(CVS_FLAGS) co $(GFX2_CO_FLAGS)
 ## The master target
 ############################################################
 
-pull_and_build_all: pull_all depend build_all
+pull_and_build_all: pull_all build_all_dep
 
 
 ## Rules for pulling the source from the cvs repository
@@ -294,6 +294,8 @@ clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
 build_all: build_nspr build_seamonkey
 
+build_all_dep: depend install
+	
 distclean: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake -f gmakefile.win distclean MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
@@ -404,9 +406,7 @@ install:
 	set CLIENT_DIRS=1
 	nmake -f makefile.win install
 
-export:
-	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	gmake -f gmakefile.win MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
+export: build_nspr
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	set DIST_DIRS=1
 	set LAYOUT_DIRS=1
