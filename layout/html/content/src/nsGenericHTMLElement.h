@@ -118,10 +118,12 @@ public:
   nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
                         PRBool aNotify);
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsString& aResult) const;
   nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
   nsresult GetAttributeNameAt(PRInt32 aIndex,
                               PRInt32& aNameSpaceID, 
-                              nsIAtom*& aName) const;
+                              nsIAtom*& aName,
+                              nsIAtom*& aPrefix) const;
   nsresult GetAttributeCount(PRInt32& aResult) const;
   nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult SetParentForFormControls(nsIContent* aParent,

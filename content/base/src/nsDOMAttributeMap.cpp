@@ -255,13 +255,14 @@ nsresult
 nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   PRInt32 nameSpaceID;
-  nsCOMPtr<nsIAtom> nameAtom;
+  nsCOMPtr<nsIAtom> nameAtom, prefix;
 
   nsresult rv = NS_OK;
   if (mContent &&
       NS_SUCCEEDED(mContent->GetAttributeNameAt(aIndex,
                                                 nameSpaceID,
-                                                *getter_AddRefs(nameAtom)))) {
+                                                *getter_AddRefs(nameAtom),
+                                                *getter_AddRefs(prefix)))) {
     nsAutoString value, name;
     mContent->GetAttribute(nameSpaceID, nameAtom, value);
 

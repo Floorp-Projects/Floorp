@@ -398,9 +398,10 @@ public:
     NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue, PRBool aNotify);
     NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue, PRBool aNotify);
     NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
+    NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsString& aResult) const;
     NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
     NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
-                                  nsIAtom*& aName) const;
+                                  nsIAtom*& aName, nsIAtom*& aPrefix) const;
     NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
     NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
     NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const;

@@ -176,14 +176,19 @@ public:
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                           nsString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                          nsIAtom*& aPrefix, nsString& aResult) const
+    { return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                             PRBool aNotify)
     { return NS_OK; }
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
                                 PRInt32& aNameSpaceID, 
-                                nsIAtom*& aName) const
+                                nsIAtom*& aName,
+                                nsIAtom*& aPrefix) const
     { 
       aName = nsnull;
+      aPrefix = nsnull;
       return NS_ERROR_ILLEGAL_VALUE;
     }
   NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const
@@ -378,30 +383,26 @@ nsDocumentFragment::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 nsDocumentFragment::GetNamespaceURI(nsString& aNamespaceURI)
 { 
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aNamespaceURI.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocumentFragment::GetPrefix(nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
   aPrefix.Truncate();
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocumentFragment::SetPrefix(const nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 NS_IMETHODIMP
 nsDocumentFragment::GetLocalName(nsString& aLocalName)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
   return GetNodeName(aLocalName);
 }
 

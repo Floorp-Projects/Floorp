@@ -1501,7 +1501,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
           for (index = 0; index < count; index++) {
             PRInt32 nameSpaceID;
             nsIAtom* atom;
-            iContent->GetAttributeNameAt(index, nameSpaceID, atom);
+            nsCOMPtr<nsIAtom> prefix;
+            iContent->GetAttributeNameAt(index, nameSpaceID, atom,
+                                         *getter_AddRefs(prefix));
             nsAutoString  value;
             if (NS_CONTENT_ATTR_HAS_VALUE == iContent->GetAttribute(nameSpaceID, atom, value)) {
               nsAutoString  name;

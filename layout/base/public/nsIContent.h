@@ -177,6 +177,29 @@ public:
                           nsString& aResult) const = 0;
 
   /**
+   * Get the current value and prefix of the attribute. This returns a form
+   * that is suitable for passing back into setAttribute.
+   *
+   * <UL>
+   *
+   * <LI>If the attribute is not set and has no default value, return
+   * NS_CONTENT_ATTR_NOT_THERE.
+   *
+   * <LI>If the attribute exists, but has no value, return
+   * NS_CONTENT_ATTR_NO_VALUE.
+   *
+   * <LI>If the attribute has a value, empty or otherwise, set ret to
+   * be the value, and return NS_CONTENT_ATTR_HAS_VALUE (== NS_OK).
+   *
+   * </UL>
+   *
+   * NOTE! aPrefix is an OUT parameter.
+   */
+
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          nsIAtom*& aPrefix, nsString& aResult) const = 0;
+
+  /**
    * Remove an attribute so that it is no longer explicitly specified.
    *
    * @param aAttribute the name of the attribute to unset
@@ -199,7 +222,8 @@ public:
    */
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
                                 PRInt32& aNameSpaceID, 
-                                nsIAtom*& aName) const = 0;
+                                nsIAtom*& aName,
+                                nsIAtom*& aPrefix) const = 0;
 
   /**
    * Get the number of all specified attributes.

@@ -352,10 +352,11 @@ nsRDFDOMDataSource::createContentAttributeArcs(nsIContent* content,
   // we have touse the viewerObjects
   PRInt32 i;
   for (i=0; i< attribs; i++) {
-    nsCOMPtr<nsIAtom> nameAtom;
+    nsCOMPtr<nsIAtom> nameAtom, prefix;
     PRInt32 nameSpace;
-    content->GetAttributeNameAt(i, nameSpace, *getter_AddRefs(nameAtom));
-    
+    content->GetAttributeNameAt(i, nameSpace, *getter_AddRefs(nameAtom),
+                                *getter_AddRefs(prefix));
+
     nsString attribValue;
     rv = content->GetAttribute(nameSpace, nameAtom, attribValue);
     if (NS_FAILED(rv)) continue;

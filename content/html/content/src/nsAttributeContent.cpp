@@ -136,8 +136,10 @@ public:
                           PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsString &aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName) const {
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsString &aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName, nsIAtom*& aPrefix) const {
     aName = nsnull;
+    aPrefix = nsnull;
     return NS_ERROR_ILLEGAL_VALUE;
   }
 

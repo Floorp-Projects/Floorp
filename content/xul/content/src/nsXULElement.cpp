@@ -2478,8 +2478,8 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
             for (PRInt32 i = 0; i < count; ++i) {
                 PRInt32 nameSpaceID;
-                nsCOMPtr<nsIAtom> attr;
-                GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
+                nsCOMPtr<nsIAtom> attr, prefix;
+                GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
 
                 PRBool reset = PR_FALSE;
 
@@ -3095,6 +3095,16 @@ nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
                            nsIAtom* aName,
                            nsString& aResult) const
 {
+    nsCOMPtr<nsIAtom> prefix;
+    return GetAttribute(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
+}
+
+NS_IMETHODIMP
+nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
+                           nsIAtom* aName,
+                           nsIAtom*& aPrefix,
+                           nsString& aResult) const
+{
     NS_ASSERTION(nsnull != aName, "must have attribute name");
     if (nsnull == aName) {
         return NS_ERROR_NULL_POINTER;
@@ -3300,8 +3310,16 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
 NS_IMETHODIMP
 nsXULElement::GetAttributeNameAt(PRInt32 aIndex,
                                  PRInt32& aNameSpaceID,
-                                 nsIAtom*& aName) const
+                                 nsIAtom*& aName,
+                                 nsIAtom*& aPrefix) const
 {
+    aPrefix = nsnull;
+
+
+
+
+
+
     if (Attributes()) {
         nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(aIndex));
         if (nsnull != attr) {
@@ -3380,8 +3398,9 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
         if (NS_SUCCEEDED(rv = GetAttributeCount(nattrs))) {
             for (PRInt32 i = 0; i < nattrs; ++i) {
                 nsIAtom* attr = nsnull;
+                nsCOMPtr<nsIAtom> prefix;
                 PRInt32 nameSpaceID;
-                GetAttributeNameAt(i, nameSpaceID, attr);
+                GetAttributeNameAt(i, nameSpaceID, attr, *getter_AddRefs(prefix));
 
                 nsAutoString v;
                 GetAttribute(nameSpaceID, attr, v);

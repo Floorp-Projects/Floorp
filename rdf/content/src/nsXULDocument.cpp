@@ -5783,8 +5783,8 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
         for (PRInt32 i = 0; i < count; ++i) {
             PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> attr;
-            rv = aOverlayNode->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
+            nsCOMPtr<nsIAtom> attr, prefix;
+            rv = aOverlayNode->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
             if (NS_FAILED(rv)) return rv;
 
             if (nameSpaceID == kNameSpaceID_None && attr.get() == kIdAtom)

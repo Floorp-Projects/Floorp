@@ -667,8 +667,8 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
         aResult.AppendWithConversion(' ');
 
         PRInt32 nameSpaceID;
-        nsCOMPtr<nsIAtom> name;
-        rv = aElement->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(name));
+        nsCOMPtr<nsIAtom> name, prefix;
+        rv = aElement->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString attr;

@@ -1496,12 +1496,13 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   if (!content) return PR_FALSE;  // ooops
   
   PRInt32 attrCount, i, nameSpaceID;
-  nsIAtom* attrName;
+  nsCOMPtr<nsIAtom> attrName, prefix;
   content->GetAttributeCount(attrCount);
   
   for (i=0; i<attrCount; i++)
   {
-    content->GetAttributeNameAt(i, nameSpaceID, attrName);
+    content->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
+                                *getter_AddRefs(prefix));
     nsAutoString attrString, tmp;
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
@@ -1529,14 +1530,15 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
   if (!content2) return PR_FALSE;  // ooops
   
   PRInt32 attrCount, i, nameSpaceID, realCount1=0, realCount2=0;
-  nsIAtom* attrName;
+  nsCOMPtr<nsIAtom> attrName, prefix;
   nsresult res, res2;
   content1->GetAttributeCount(attrCount);
   nsAutoString attrString, tmp, attrVal1, attrVal2;
   
   for (i=0; i<attrCount; i++)
   {
-    content1->GetAttributeNameAt(i, nameSpaceID, attrName);
+    content1->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
+                                 *getter_AddRefs(prefix));
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going
@@ -1554,7 +1556,8 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
   content2->GetAttributeCount(attrCount);
   for (i=0; i<attrCount; i++)
   {
-    content2->GetAttributeNameAt(i, nameSpaceID, attrName);
+    content2->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
+                                 *getter_AddRefs(prefix));
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going

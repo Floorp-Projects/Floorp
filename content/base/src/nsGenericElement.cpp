@@ -2571,6 +2571,16 @@ nsresult
 nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                                         nsString& aResult) const
 {
+  nsCOMPtr<nsIAtom> prefix;
+  return GetAttribute(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
+}
+
+nsresult 
+nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                                        nsIAtom*& aPrefix, nsString& aResult) const
+{
+  aPrefix = nsnull;
+
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   if (nsnull == aName) {
     return NS_ERROR_NULL_POINTER;
@@ -2658,8 +2668,11 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 nsresult
 nsGenericContainerElement::GetAttributeNameAt(PRInt32 aIndex,
                                               PRInt32& aNameSpaceID, 
-                                              nsIAtom*& aName) const
+                                              nsIAtom*& aName,
+                                              nsIAtom*& aPrefix) const
 {
+  aPrefix = nsnull;
+
   if (nsnull != mAttributes) {
     nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(aIndex);
     if (nsnull != attr) {

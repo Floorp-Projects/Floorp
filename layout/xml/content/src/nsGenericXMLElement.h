@@ -74,6 +74,12 @@ public:
     return nsGenericContainerElement::GetAttribute(aNameSpaceID, aName,
                                                    aResult);
   }
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                        nsIAtom*& aPrefix, nsString& aResult) const
+  {
+    return nsGenericContainerElement::GetAttribute(aNameSpaceID, aName,
+                                                   aPrefix, aResult);
+  }
   nsresult ParseAttributeString(const nsString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID);
