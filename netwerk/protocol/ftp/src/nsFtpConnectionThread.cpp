@@ -1454,6 +1454,9 @@ nsFtpConnectionThread::S_retr() {
     return rv;
 }
 
+#define NS_FTP_SEGMENT_SIZE        (2*1024)
+#define NS_FTP_BUFFER_SIZE         (8*1024)
+
 FTP_STATE
 nsFtpConnectionThread::R_retr() {
     nsresult rv;
@@ -1471,7 +1474,7 @@ nsFtpConnectionThread::R_retr() {
         }
 
         rv = NS_NewPipe(getter_AddRefs(mBufInStream), getter_AddRefs(mBufOutStream),
-                        nsnull, mBufferSegmentSize, mBufferMaxSize);
+                        nsnull, NS_FTP_SEGMENT_SIZE, NS_FTP_BUFFER_SIZE);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         return FTP_READ_DATA_BUF;
