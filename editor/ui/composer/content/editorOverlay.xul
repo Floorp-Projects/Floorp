@@ -34,8 +34,8 @@
   <keyset id="defaultKeySet">
 
     <!-- defined in globalOverlay -->
-	  <key id="key_newNavigator"/>
-	  <key id="key_newMessage"/>
+    <key id="key_newNavigator"/>
+    <key id="key_newMessage"/>
     <key id="key_newBlankPage"/>
 
     <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;" observes="Editor:Open" />
@@ -45,16 +45,18 @@
     <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" observes="Editor:Print" />
     <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;" observes="Editor:Exit" />
 
-    <key id="undokb"        xulkey="true" key="&editundo.keybinding;" observes="Editor:Undo" />
-    <key id="redokb"        xulkey="true" key="&editredo.keybinding;" observes="Editor:Redo" />
-    <key id="cutkb"         xulkey="true" key="&editcut.keybinding;" observes="Editor:Cut" />
-    <key id="copykb"        xulkey="true" key="&editcopy.keybinding;" observes="Editor:Copy" />
-    <key id="pastekb"       xulkey="true" key="&editpaste.keybinding;" observes="Editor:Paste" />
-    <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="Editor:PasteQuote" />
-    <key id="selectallkb"   xulkey="true" key="&editselectall.keybinding;" observes="Editor:SelectAll" />
-    <key id="findkb"        xulkey="true" key="&editfind.keybinding;" observes="Editor:Find" />
-    <key id="findnextkb"    xulkey="true" key="&editfindnext.keybinding;" observes="Editor:FindNext" />
-    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" observes="Editor:CheckSpelling" />
+    <key id="key_undo"/>
+    <key id="key_redo"/>
+    <key id="key_cut"/>
+    <key id="key_copy"/>
+    <key id="key_paste"/>
+    <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="cmd_pasteQuote" />
+    <key id="key_delete"/>
+    <key id="key_selectAll"/>
+    <key id="findkb"        xulkey="true" key="&editfind.keybinding;" observes="cmd_find" />
+    <key id="findnextkb"    xulkey="true" key="&editfindnext.keybinding;" observes="cmd_findNext" />
+    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" observes="cmd_checkSpelling" />
+    <key id="key_preferences"/>
 
     <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;" observes="Editor:Bold"/>
     <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;" observes="Editor:Italic"/>
@@ -130,13 +132,31 @@
 
   <broadcasterset id="broadcasterset">
     <!-- Complete broadcasters located in globalOverlay.xul -->
-	  <broadcaster id="cmd_newNavigator"/>
-	  <broadcaster id="cmd_newMessage"/>
+    <!-- File Menu -->
+    <broadcaster id="cmd_newNavigator"/>
+    <broadcaster id="cmd_newMessage"/>
     <broadcaster id="cmd_newCard"/>
     <broadcaster id="cmd_newEditor"/>
     <broadcaster id="cmd_newEditorTemplate"/>
     <broadcaster id="cmd_newEditorDraft"/>
 
+    <!-- Edit Menu -->
+    <broadcaster id="cmd_undo"/>
+    <broadcaster id="cmd_redo"/>
+    <broadcaster id="cmd_cut"/>
+    <broadcaster id="cmd_copy"/>
+    <broadcaster id="cmd_paste"/>
+
+    <broadcaster id="cmd_delete"/>
+    <broadcaster id="cmd_selectAll"/>
+    <broadcaster id="cmd_preferences"/>
+
+    <broadcaster id="cmd_find"          value="&findCmd.label;"            oncommand="EditorFind()"/>
+    <broadcaster id="cmd_findNext"      value="&findAgainCmd.label;"       oncommand="EditorFindNext()"/>
+    <broadcaster id="cmd_checkSpelling" value="&checkSpellingCmd.label;"   oncommand="CheckSpelling()"/>
+    <broadcaster id="cmd_pasteQuote"    value="&pasteAsQuotationCmd.label;" oncommand="goDoCommand('cmd_pasteQuote')"/>
+   
+    
     <!-- Formatting-related commands -->
     <broadcaster id="Editor:Bold"         bold="false"       oncommand="EditorToggleStyle('bold')"/>
     <broadcaster id="Editor:Italic"       italic="false"     oncommand="EditorToggleStyle('italic')"/>
@@ -158,19 +178,7 @@
     <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;"  oncommand="EditorPrintPreview()" disabled="true"/>
     <broadcaster id="Editor:Print"                                         oncommand="EditorPrint()"/>
     <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="EditorExit()"/>
-  
-    <broadcaster id="Editor:Undo"         value="&undoCmd.label;"          oncommand="EditorUndo()"/>
-    <broadcaster id="Editor:Redo"         value="&redoCmd.label;"          oncommand="EditorRedo()"/>
-    <broadcaster id="Editor:Cut"          value="&cutCmd.label;"           oncommand="EditorCut()"/>
-    <broadcaster id="Editor:Copy"         value="&copyCmd.label;"          oncommand="EditorCopy()"/>
-    <broadcaster id="Editor:Paste"        value="&pasteCmd.label;"         oncommand="EditorPaste()"/>
-    <broadcaster id="Editor:PasteQuote"   value="&pasteAsQuotationCmd.label;"  oncommand="EditorPasteAsQuotation()"/>
-    <broadcaster id="Editor:Clear"        value="&clearCmd.label;"         oncommand="_EditorNotImplemented()" disabled="true"/>
-    <broadcaster id="Editor:SelectAll"    value="&selectAllCmd.label;"     oncommand="EditorSelectAll()"/>
-    <broadcaster id="Editor:Find"                                          oncommand="EditorFind()"/>
-    <broadcaster id="Editor:FindNext"     value="&findAgainCmd.label;"     oncommand="EditorFindNext()"/>
-    <broadcaster id="Editor:CheckSpelling" value="&checkSpellingCmd.label;"  oncommand="CheckSpelling()"/>
-  
+    
     <!-- need to toggle the menu item text through style -->
     <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()" disabled="true"/>
     <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()" disabled="true"/>
@@ -183,26 +191,26 @@
     <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"   oncommand="EditorInsertHTML()"/>
     <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
     <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
-  	<broadcaster id="cmd_preferences"/>
+    <broadcaster id="cmd_preferences"/>
   </broadcasterset>
 
     <!-- Editor menu items -->
     <menu id="fileMenu" value="&fileMenu.label;" accesskey="&filemenu.accesskey;">
     <menupopup>
-  	  <!-- From globalOverlay.xul -->
+      <!-- From globalOverlay.xul -->
       <!-- Note slightly different menu item text (value) used here DOESN'T WORK IN MENUS! -->
-  		<menuitem id="menu_newEditor" observes="cmd_newEditor" value="&newBlankPage.label;"/>
-			<menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;">
-				<menupopup id="menu_NewPopup">
-	        <!-- From globalOverlay.xul -->
-					<menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>
-					<menuitem id="menu_newEditorDraft"     observes="cmd_newEditorDraft"/>
-					<menuseparator/>
-					<menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-					<menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
-					<menuitem id="menu_newCard"      observes="cmd_newCard"/>
-				</menupopup>
-			</menu>
+        <menuitem id="menu_newEditor" observes="cmd_newEditor" value="&newBlankPage.label;"/>
+            <menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;">
+                <menupopup id="menu_NewPopup">
+            <!-- From globalOverlay.xul -->
+                    <menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>
+                    <menuitem id="menu_newEditorDraft"     observes="cmd_newEditorDraft"/>
+                    <menuseparator/>
+                    <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
+                    <menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
+                    <menuitem id="menu_newCard"      observes="cmd_newCard"/>
+                </menupopup>
+            </menu>
       <menuitem accesskey="&fileopenremote.accesskey;" value="&openremoteCmd.label;" key="openremoteeditorkb" oncommand="EditorOpenRemote()"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open" value="&openFileCmd.label;"/>
       <menuseparator />
@@ -223,24 +231,25 @@
 
     <menu id="editMenu" value="&editMenu.label;" accesskey="&editmenu.accesskey;">
     <menupopup id="edEditMenuPopup">
-      <menuitem id="edEditMenuUndo" accesskey="&editundo.accesskey;"            key="undokb"         observes="Editor:Undo"/>
-      <menuitem id="edEditMenuRedo" accesskey="&editredo.accesskey;"            key="redokb"         observes="Editor:Redo"/>
+      <!-- from globalOverlay.xul -->
+      <menuitem id="menu_undo"/>
+      <menuitem id="menu_redo"/>
       <menuseparator id="edEditMenuSep1" />
-      <menuitem id="edEditMenuCut" accesskey="&editcut.accesskey;"             key="cutkb"          observes="Editor:Cut"/>
-      <menuitem id="edEditMenuCopy" accesskey="&editcopy.accesskey;"            key="copykb"         observes="Editor:Copy"/>
-      <menuitem id="edEditMenuPaste" accesskey="&editpaste.accesskey;"           key="pastekb"        observes="Editor:Paste"/>
-      <menuitem id="edEditMenuPasteQuote" accesskey="&editpastequotation.accesskey;"  key="pastequotationkb"  observes="Editor:PasteQuote"/>
-      <menuitem id="edEditMenuClear" accesskey="&editclear.accesskey;"                                observes="Editor:Clear"/>
+      <menuitem id="menu_cut"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_paste"/>
+      <menuitem id="menu_pastequote" accesskey="&editpastequotation.accesskey;"  key="pastequotationkb"  observes="cmd_pasteQuote"/>
+      <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
-      <menuitem id="edEditMenuSelectAll" accesskey="&editselectall.accesskey;"       key="selectallkb"    observes="Editor:SelectAll"/>
+      <menuitem id="menu_selectAll"/>
       <menuseparator id="edEditMenuSep3" />
-      <menuitem id="edEditMenuFind" accesskey="&editfind.accesskey;"            key="findkb"         observes="Editor:Find" value="&findCmd.label;"/>
-      <menuitem id="edEditMenuFindNext" accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="Editor:FindNext"/>
+      <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find"/>
+      <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator id="edEditMenuSep4" />
-      <menuitem id="edEditMenuSpelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="Editor:CheckSpelling"/>
+      <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_checkSpelling"/>
       <menuseparator id="edEditMenuSep5" />
       <!-- TODO: PREF PANELS FOR EDITOR. Replace pref-publish with pref-editor -->
-      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-publish.xul')"/>
+      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-composer.xul')"/>
     </menupopup>
     </menu>
 
@@ -444,11 +453,11 @@
     </menu>
 
     <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
-      			accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
-      			oncommand="EditorRemoveStyle('all')" position="6"/>
+                accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
+                oncommand="EditorRemoveStyle('all')" position="6"/>
     <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
-      			accesskey="&formatremovelinks.accesskey;"
-      			oncommand="EditorRemoveLinks()" position="7"/>
+                accesskey="&formatremovelinks.accesskey;"
+                oncommand="EditorRemoveLinks()" position="7"/>
     <menuseparator position="8"/>
 
     <!-- Heading submenu -->
@@ -583,7 +592,7 @@
 
     <popup id="TextColorPopup"  popupanchor="bottomleft">
       <titledbutton id="TextColorCaption" class="color-caption" value="&textColorCaption.label;" flex="1"/>
-  		<!-- TODO: Add "Last color picked" button and text -->
+        <!-- TODO: Add "Last color picked" button and text -->
       <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton'); parentNode.closePopup();"/>
       <titledbutton class="push" value="&formatToolbar.colorPicker.default.label;" onclick="EditorRemoveTextColor('TextColorPopupButton'); parentNode.closePopup();"/>
     </popup>
@@ -591,8 +600,8 @@
     <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup()">
       <!-- Text is filled in at runtime according to what background element will be set -->
       <titledbutton id="BackColorCaption" class="color-caption" value="Background Color" flex="1"/>
-  		<!-- TODO: Add "Last color picked" button and text -->
-  		<colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton'); parentNode.closePopup();"/>
+        <!-- TODO: Add "Last color picked" button and text -->
+        <colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton'); parentNode.closePopup();"/>
       <titledbutton class="push" value="&formatToolbar.colorPicker.default.label;" onclick="EditorRemoveBackColor('BackColorPopupButton'); parentNode.closePopup();"/>
     </popup>
 

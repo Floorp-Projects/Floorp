@@ -53,6 +53,8 @@ Contributor(s): ______________________________________. -->
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
+	<commandset id="selectEditMenuItems"/>
+	<commandset id="undoEditMenuItems"/>
 </commands>
 
 <!-- broadcasters are appended from the overlay -->

@@ -178,13 +178,36 @@ function goSetMenuValue(command, valueAttribute)
 
 function goUpdateGlobalEditMenuItems()
 {
+	dump("Updating edit menu items\n");
 	goUpdateCommand('cmd_undo');
 	goUpdateCommand('cmd_redo');
 	goUpdateCommand('cmd_cut');
 	goUpdateCommand('cmd_copy');
 	goUpdateCommand('cmd_paste');
+	goUpdateCommand('cmd_pasteQuote');
 	goUpdateCommand('cmd_selectAll');
 	goUpdateCommand('cmd_delete');
+}
+
+// update menu items that rely on the current selection
+function goUpdateSelectEditMenuItems()
+{
+	dump("Updating select menu items\n");
+	goUpdateCommand('cmd_cut');
+	goUpdateCommand('cmd_copy');
+	goUpdateCommand('cmd_delete');
+}
+
+// update menu items that relate to undo/redo
+function goUpdateUndoEditMenuItems()
+{
+	dump("Updating undo/redo menu items\n");
+	goUpdateCommand('cmd_undo');
+	goUpdateCommand('cmd_redo');
+
+	// we shouldn't really do this here, but we don't get the right notifications now
+	goUpdateCommand('cmd_paste');
+	goUpdateCommand('cmd_pasteQuote');
 }
 
 // this function is used to inform all the controllers attached to a node that an event has occurred

@@ -55,7 +55,18 @@
 
 	<commandset id="globalEditMenuItems"
 					commandupdater="true"
+					events="focus"
 					oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+
+	<commandset id="selectEditMenuItems"
+					commandupdater="true"
+					events="select"
+					oncommandupdate="goUpdateSelectEditMenuItems()"/>
+
+	<commandset id="undoEditMenuItems"
+					commandupdater="true"
+					events="undo"
+					oncommandupdate="goUpdateUndoEditMenuItems()"/>
 					
 	<broadcaster id="cmd_undo" 
 				 oncommand="goDoCommand('cmd_undo')"
