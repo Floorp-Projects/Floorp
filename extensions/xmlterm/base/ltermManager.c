@@ -563,11 +563,11 @@ int lterm_open(int lterm, char *const argv[],
     if ((lts->processType == LTERM_CSH_PROCESS) ||
       (lts->processType == LTERM_TCSH_PROCESS)) {
       /* C-shell family */
-      shellInitFormat = "setenv LTERM_COOKIE '%s'; if (-f $HOME/.xmltermrc) source $HOME/.xmltermrc\n";
+      shellInitFormat = "setenv LTERM_COOKIE '%s'\n";
 
     } else {
       /* Bourne-shell family */
-      shellInitFormat = "LTERM_COOKIE='%s'; export LTERM_COOKIE; if [ -f $HOME/.xmltermrc ]; then source $HOME/.xmltermrc; fi\n";
+      shellInitFormat = "LTERM_COOKIE='%s'; export LTERM_COOKIE\n";
     }
 
     /* **** WATCH OUT FOR BUFFER OVERFLOW!!! *** */
