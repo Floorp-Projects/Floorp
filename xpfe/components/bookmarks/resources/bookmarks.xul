@@ -62,6 +62,7 @@
 
   <menubar>
     <menu value="&menu.file.label;">
+	  <menupopup>
       <menuitem value="&menuitem.newWindow.label;"
                 onaction="window.open('resource:/res/samples/bookmarks.xul',
                                      'ManageBookmarks',
@@ -72,8 +73,10 @@
       <menuseparator/>
       <menuitem value="&menuitem.close.label;"
                 onaction="window.close()" />
+	  </menupopup>
     </menu>
     <menu value="&menu.edit.label;">
+	  <menupopup>
       <menuitem value="x&menuitem.undo.label;"/>
       <menuitem value="x&menuitem.redo.label;"/>
       <menuseparator/>
@@ -88,6 +91,7 @@
       <menuseparator/>
       <menuitem value="&menuitem.properties.label;"
                 onaction="BookmarkProperties();"/>
+	  </menupopup>
     </menu>
   </menubar>
 
