@@ -73,6 +73,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
+public:
+  void SetNextHandler(nsXBLEventHandler* aHandler) {
+    mNextHandler = aHandler;
+  }
+
+  void RemoveEventHandlers();
+
 protected:
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
   inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
@@ -104,6 +111,8 @@ protected:
   nsIContent* mBoundElement; // Both of these refs are weak.
   nsIContent* mHandlerElement;
   nsAutoString mEventName;
+
+  nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
 
 extern nsresult

@@ -41,6 +41,9 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMText.h"
+#include "nsIEventListenerManager.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsXBLBinding.h"
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -63,6 +66,7 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
   mBoundElement = aBoundElement;
   mHandlerElement = aHandlerElement;
   mEventName.Assign(aEventName);
+  mNextHandler = nsnull;
   gRefCnt++;
   if (gRefCnt == 1) {
     kKeyCodeAtom = NS_NewAtom("keycode");
@@ -617,6 +621,44 @@ nsXBLEventHandler::GetController(nsIController** aResult)
   else *aResult = nsnull;
 
   return NS_OK;
+}
+
+void
+nsXBLEventHandler::RemoveEventHandlers()
+{
+  // XXX Handle unhooking listeners attached to the document or window!
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBoundElement));
+  if (receiver) {
+    if (mNextHandler)
+      mNextHandler->RemoveEventHandlers();
+
+    // Figure out if we're using capturing or not.
+    PRBool useCapture = PR_FALSE;
+    nsAutoString capturer;
+    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kCapturerAtom, capturer);
+    if (capturer.EqualsWithConversion("true"))
+      useCapture = PR_TRUE;
+
+    // XXX Will potentially be comma-separated
+    nsAutoString type;
+    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kTypeAtom, type);
+   
+    // Figure out our type.
+    PRBool mouse = nsXBLBinding::IsMouseHandler(type);
+    PRBool key = nsXBLBinding::IsKeyHandler(type);
+    PRBool focus = nsXBLBinding::IsFocusHandler(type);
+    PRBool xul = nsXBLBinding::IsXULHandler(type);
+
+    // Remove the event listener.
+    if (mouse)
+      receiver->RemoveEventListener(type, (nsIDOMMouseListener*)this, useCapture);
+    else if(key)
+      receiver->RemoveEventListener(type, (nsIDOMKeyListener*)this, useCapture);
+    else if(focus)
+      receiver->RemoveEventListener(type, (nsIDOMFocusListener*)this, useCapture);
+    else
+      receiver->RemoveEventListener(type, (nsIDOMMenuListener*)this, useCapture);
+  }
 }
 
 /// Helpers that are relegated to the end of the file /////////////////////////////
