@@ -102,8 +102,6 @@ static void split_all_proxies(XFE_GlobalPrefs* prefs);
 static void split_proxy(char** proxy, int* port, int default_port);
 static void xfe_prefs_from_environment(XFE_GlobalPrefs* prefs);
 static char* xfe_organization(void);
-static void read_str(char* name, void* ptr);
-static void write_str(char* name, void* ptr);
 static void read_int(char* name, void* ptr);
 static void write_int(char* name, void* ptr);
 static void read_bool(char* name, void* ptr);
@@ -133,12 +131,12 @@ static int def = 0;
  */
 static struct pref_map pref_map[] = {
 
-{"browser.xfe.prefs_version", FIELD_OFFSET(version_number), read_str, write_str},
+{"browser.xfe.prefs_version", FIELD_OFFSET(version_number), fe_PrefReadString, fe_PrefWriteString},
 
-{"applications.tn3270", FIELD_OFFSET(tn3270_command), read_str, write_str},
-{"applications.telnet", FIELD_OFFSET(telnet_command), read_str, write_str},
-{"applications.rlogin", FIELD_OFFSET(rlogin_command), read_str, write_str},
-{"applications.rlogin_with_user", FIELD_OFFSET(rlogin_user_command), read_str, write_str},
+{"applications.tn3270", FIELD_OFFSET(tn3270_command), fe_PrefReadString, fe_PrefWriteString},
+{"applications.telnet", FIELD_OFFSET(telnet_command), fe_PrefReadString, fe_PrefWriteString},
+{"applications.rlogin", FIELD_OFFSET(rlogin_command), fe_PrefReadString, fe_PrefWriteString},
+{"applications.rlogin_with_user", FIELD_OFFSET(rlogin_user_command), fe_PrefReadString, fe_PrefWriteString},
 
 {"autoupdate.enabled", FIELD_OFFSET(auto_install), read_bool, write_bool},
 
@@ -156,9 +154,9 @@ static struct pref_map pref_map[] = {
 {"browser.history_file", FIELD_OFFSET(history_file), read_path, write_path, },
 {"browser.chrome.toolbar_tips", FIELD_OFFSET(toolbar_tips_p), read_bool, write_bool},
 {"browser.startup.page", FIELD_OFFSET(browser_startup_page), read_int, write_int},
-{"browser.startup.homepage", FIELD_OFFSET(home_document), read_str, write_str},
+{"browser.startup.homepage", FIELD_OFFSET(home_document), fe_PrefReadString, fe_PrefWriteString},
 {"browser.link_expiration", FIELD_OFFSET(global_history_expiration), read_int, write_int},
-{"browser.startup.license_accepted", FIELD_OFFSET(license_accepted), read_str, write_str},
+{"browser.startup.license_accepted", FIELD_OFFSET(license_accepted), fe_PrefReadString, fe_PrefWriteString},
 {"browser.user_history_file", FIELD_OFFSET(user_history_file), read_path, write_path, },
 {"browser.use_document_fonts", FIELD_OFFSET(use_doc_fonts), read_int, write_int},
 {"browser.enable_webfonts", FIELD_OFFSET(enable_webfonts), read_bool, write_bool},
@@ -170,10 +168,10 @@ static struct pref_map pref_map[] = {
 {"browser.enable_style_sheets", FIELD_OFFSET(enable_style_sheet), read_bool, write_bool},
 
 #ifdef EDITOR
-{"editor.author", FIELD_OFFSET(editor_author_name), read_str, write_str},
+{"editor.author", FIELD_OFFSET(editor_author_name), fe_PrefReadString, fe_PrefWriteString},
 {"editor.html_editor", FIELD_OFFSET(editor_html_editor), read_path, write_path, },
 {"editor.image_editor", FIELD_OFFSET(editor_image_editor), read_path, write_path, },
-{"editor.template_location", FIELD_OFFSET(editor_document_template), read_str, write_str},
+{"editor.template_location", FIELD_OFFSET(editor_document_template), fe_PrefReadString, fe_PrefWriteString},
 {"editor.auto_save_delay", FIELD_OFFSET(editor_autosave_period), read_int, write_int},
 {"editor.use_custom_colors", FIELD_OFFSET(editor_custom_colors), read_bool, write_bool},
 {"editor.background_color", FIELD_OFFSET(editor_background_color), read_color, write_color},
@@ -184,11 +182,11 @@ static struct pref_map pref_map[] = {
 {"editor.background_image", FIELD_OFFSET(editor_background_image), read_path, write_path, },
 {"editor.publish_keep_links", FIELD_OFFSET(editor_maintain_links), read_bool, write_bool},
 {"editor.publish_keep_images", FIELD_OFFSET(editor_keep_images), read_bool, write_bool},
-{"editor.publish_location", FIELD_OFFSET(editor_publish_location), read_str, write_str},
-{"editor.publish_username", FIELD_OFFSET(editor_publish_username), read_str, write_str},
-{"editor.publish_password", FIELD_OFFSET(editor_publish_password), read_str, write_str},
+{"editor.publish_location", FIELD_OFFSET(editor_publish_location), fe_PrefReadString, fe_PrefWriteString},
+{"editor.publish_username", FIELD_OFFSET(editor_publish_username), fe_PrefReadString, fe_PrefWriteString},
+{"editor.publish_password", FIELD_OFFSET(editor_publish_password), fe_PrefReadString, fe_PrefWriteString},
 {"editor.publish_save_password", FIELD_OFFSET(editor_save_publish_password), read_bool, write_bool},
-{"editor.publish_browse_location", FIELD_OFFSET(editor_browse_location), read_str, write_str},
+{"editor.publish_browse_location", FIELD_OFFSET(editor_browse_location), fe_PrefReadString, fe_PrefWriteString},
 {"editor.show_copyright", FIELD_OFFSET(editor_copyright_hint), read_bool, write_bool},
 #endif
 
@@ -208,27 +206,27 @@ static struct pref_map pref_map[] = {
 {"general.startup.calendar", FIELD_OFFSET(startup_calendar_p), read_bool, write_bool},
 {"general.always_load_images", FIELD_OFFSET(autoload_images_p), read_bool, write_bool},
 {"general.help_source.site", FIELD_OFFSET(help_source_site), read_int, write_int},
-{"general.help_source.url", FIELD_OFFSET(help_source_url), read_str, write_str},
+{"general.help_source.url", FIELD_OFFSET(help_source_url), fe_PrefReadString, fe_PrefWriteString},
 
 {"helpers.global_mime_types_file", FIELD_OFFSET(global_mime_types_file), read_path, write_path, },
 {"helpers.private_mime_types_file", FIELD_OFFSET(private_mime_types_file), read_path, write_path, },
 {"helpers.global_mailcap_file", FIELD_OFFSET(global_mailcap_file), read_path, write_path, },
 {"helpers.private_mailcap_file", FIELD_OFFSET(private_mailcap_file), read_path, write_path, },
 
-{"images.dither", FIELD_OFFSET(dither_images), read_str, write_str},
+{"images.dither", FIELD_OFFSET(dither_images), fe_PrefReadString, fe_PrefWriteString},
 {"images.incremental_display", FIELD_OFFSET(streaming_images), read_bool, write_bool},
 
 {"intl.character_set", FIELD_OFFSET(doc_csid), read_int, write_int},
 {"intl.font_charset", FIELD_OFFSET(font_charset), read_char_set, write_char_set},
 {"intl.font_spec_list", FIELD_OFFSET(font_spec_list), read_font_spec, write_font_spec},
-{"intl.accept_languages", FIELD_OFFSET(lang_regions), read_str, write_str},
+{"intl.accept_languages", FIELD_OFFSET(lang_regions), fe_PrefReadString, fe_PrefWriteString},
 
 #ifdef MOZ_MAIL_NEWS
 {"mail.play_sound", FIELD_OFFSET(enable_biff), read_bool, write_bool},
 {"mail.strictly_mime", FIELD_OFFSET(qp_p), read_bool, write_bool},
 {"mail.file_attach_binary", FIELD_OFFSET(file_attach_binary), read_bool, write_bool},
 {"mail.deliver_immediately", FIELD_OFFSET(queue_for_later_p), read_bool, write_bool},
-{"mail.default_cc", FIELD_OFFSET(mail_bcc), read_str, write_str},
+{"mail.default_cc", FIELD_OFFSET(mail_bcc), fe_PrefReadString, fe_PrefWriteString},
 {"mail.default_fcc", FIELD_OFFSET(mail_fcc), read_path, write_path, },
 {"mail.cc_self", FIELD_OFFSET(mailbccself_p), read_bool, write_bool},
 {"mail.use_fcc", FIELD_OFFSET(mailfcc_p), read_bool, write_bool},
@@ -237,15 +235,15 @@ static struct pref_map pref_map[] = {
 /* K&R says that enum types are int's... */
 {"mail.quoted_style", FIELD_OFFSET(citation_font), read_int, write_int},
 {"mail.quoted_size", FIELD_OFFSET(citation_size), read_int, write_int},
-{"mail.citation_color", FIELD_OFFSET(citation_color), read_str, write_str},
+{"mail.citation_color", FIELD_OFFSET(citation_color), fe_PrefReadString, fe_PrefWriteString},
 #endif /* MOZ_MAIL_NEWS */
 
-{"mail.identity.username", FIELD_OFFSET(real_name), read_str, write_str},
-{"mail.identity.useremail", FIELD_OFFSET(email_address), read_str, write_str},
-{"mail.identity.organization", FIELD_OFFSET(organization), read_str, write_str},
+{"mail.identity.username", FIELD_OFFSET(real_name), fe_PrefReadString, fe_PrefWriteString},
+{"mail.identity.useremail", FIELD_OFFSET(email_address), fe_PrefReadString, fe_PrefWriteString},
+{"mail.identity.organization", FIELD_OFFSET(organization), fe_PrefReadString, fe_PrefWriteString},
 
 #if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
-{"mail.identity.reply_to", FIELD_OFFSET(reply_to_address), read_str, write_str, },
+{"mail.identity.reply_to", FIELD_OFFSET(reply_to_address), fe_PrefReadString, fe_PrefWriteString, },
 {"mail.signature_file", FIELD_OFFSET(signature_file), read_path, write_path, },
 {"mail.attach_vcard", FIELD_OFFSET(attach_address_card), read_bool, write_bool},
 #endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
@@ -279,7 +277,7 @@ static struct pref_map pref_map[] = {
 {"mail.empty_trash", FIELD_OFFSET(emptyTrash), read_bool, write_bool},
 {"mail.remember_password", FIELD_OFFSET(rememberPswd), read_bool, write_bool},
 {"mail.support_skey", FIELD_OFFSET(support_skey), read_bool, write_bool},
-{"mail.pop_password", FIELD_OFFSET(pop3_password), read_str, write_str},
+{"mail.pop_password", FIELD_OFFSET(pop3_password), fe_PrefReadString, fe_PrefWriteString},
 {"mail.thread_mail", FIELD_OFFSET(mail_thread_p), read_bool, write_bool},
 {"mail.pane_config", FIELD_OFFSET(mail_pane_style), read_int, write_int},
 {"mail.sort_by", FIELD_OFFSET(mail_sort_style), read_int, write_int},
@@ -299,40 +297,38 @@ static struct pref_map pref_map[] = {
 {"mailnews.reply_with_extra_lines", FIELD_OFFSET(reply_with_extra_lines), read_int, write_int},
 #endif /* MOZ_MAIL_NEWS */
 
-{"network.cookie.warnAboutCookies", FIELD_OFFSET(warn_accept_cookie), read_bool, write_bool},
 #ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
 {"network.ftp.passive", FIELD_OFFSET(passive_ftp), read_bool, write_bool},
 #endif
 
-{"network.cookie.cookieBehavior", FIELD_OFFSET(accept_cookie), read_int, write_int},
 #ifdef MOZ_MAIL_NEWS
-{"network.hosts.smtp_server", FIELD_OFFSET(mailhost), read_str, write_str},
+{"network.hosts.smtp_server", FIELD_OFFSET(mailhost), fe_PrefReadString, fe_PrefWriteString},
 #endif /* MOZ_MAIL_NEWS */
 {"network.max_connections", FIELD_OFFSET(max_connections), read_int, write_int},
 {"network.tcpbufsize", FIELD_OFFSET(network_buffer_size), read_int, write_int},
 #ifdef MOZ_MAIL_NEWS
-{"network.hosts.nntp_server", FIELD_OFFSET(newshost), read_str, write_str},
+{"network.hosts.nntp_server", FIELD_OFFSET(newshost), fe_PrefReadString, fe_PrefWriteString},
 #endif /* MOZ_MAIL_NEWS */
-{"network.hosts.socks_server", FIELD_OFFSET(socks_host), read_str, write_str},
+{"network.hosts.socks_server", FIELD_OFFSET(socks_host), fe_PrefReadString, fe_PrefWriteString},
 {"network.hosts.socks_serverport", FIELD_OFFSET(socks_host_port), read_int, write_int},
-{"network.proxy.ftp", FIELD_OFFSET(ftp_proxy), read_str, write_str},
+{"network.proxy.ftp", FIELD_OFFSET(ftp_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.ftp_port", FIELD_OFFSET(ftp_proxy_port), read_int, write_int},
-{"network.proxy.http", FIELD_OFFSET(http_proxy), read_str, write_str},
+{"network.proxy.http", FIELD_OFFSET(http_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.http_port", FIELD_OFFSET(http_proxy_port), read_int, write_int},
-{"network.proxy.gopher", FIELD_OFFSET(gopher_proxy), read_str, write_str},
+{"network.proxy.gopher", FIELD_OFFSET(gopher_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.gopher_port", FIELD_OFFSET(gopher_proxy_port), read_int, write_int},
-{"network.proxy.wais", FIELD_OFFSET(wais_proxy), read_str, write_str},
+{"network.proxy.wais", FIELD_OFFSET(wais_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.wais_port", FIELD_OFFSET(wais_proxy_port), read_int, write_int},
 #ifndef NO_SECURITY
-{"network.proxy.ssl", FIELD_OFFSET(https_proxy), read_str, write_str},
+{"network.proxy.ssl", FIELD_OFFSET(https_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.ssl_port", FIELD_OFFSET(https_proxy_port), read_int, write_int},
 #endif
-{"network.proxy.no_proxies_on", FIELD_OFFSET(no_proxy), read_str, write_str},
+{"network.proxy.no_proxies_on", FIELD_OFFSET(no_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.type", FIELD_OFFSET(proxy_mode), read_int, write_int},
-{"network.proxy.autoconfig_url", FIELD_OFFSET(proxy_url), read_str, write_str},
+{"network.proxy.autoconfig_url", FIELD_OFFSET(proxy_url), fe_PrefReadString, fe_PrefWriteString},
 
 #if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
-{"news.default_cc", FIELD_OFFSET(news_bcc), read_str, write_str},
+{"news.default_cc", FIELD_OFFSET(news_bcc), fe_PrefReadString, fe_PrefWriteString},
 {"news.default_fcc", FIELD_OFFSET(news_fcc), read_path, write_path, },
 {"news.cc_self", FIELD_OFFSET(newsbccself_p), read_bool, write_bool},
 {"news.use_fcc", FIELD_OFFSET(newsfcc_p), read_bool, write_bool},
@@ -344,7 +340,7 @@ static struct pref_map pref_map[] = {
 {"news.max_articles", FIELD_OFFSET(news_max_articles), read_int, write_int},
 {"news.cache_xover", FIELD_OFFSET(news_cache_xover), read_bool, write_bool},
 {"news.show_first_unread", FIELD_OFFSET(show_first_unread_p), read_bool, write_bool},
-{"news.sash_geometry", FIELD_OFFSET(news_sash_geometry), read_str, write_str},
+{"news.sash_geometry", FIELD_OFFSET(news_sash_geometry), fe_PrefReadString, fe_PrefWriteString},
 {"news.thread_news", FIELD_OFFSET(news_thread_p), read_bool, write_bool},
 {"news.pane_config", FIELD_OFFSET(news_pane_style), read_int, write_int},
 {"news.sort_by", FIELD_OFFSET(news_sort_style), read_int, write_int},
@@ -377,14 +373,14 @@ static struct pref_map pref_map[] = {
 {"javascript.enabled", FIELD_OFFSET(enable_javascript), read_bool, write_bool},
 {"security.enable_ssl2", FIELD_OFFSET(ssl2_enable), read_bool, write_bool, True},
 {"security.enable_ssl3", FIELD_OFFSET(ssl3_enable), read_bool, write_bool, True},
-{"security.ciphers", FIELD_OFFSET(cipher), read_str, write_str, True},
-{"security.default_personal_cert", FIELD_OFFSET(def_user_cert), read_str, write_str, True},
+{"security.ciphers", FIELD_OFFSET(cipher), fe_PrefReadString, fe_PrefWriteString, True},
+{"security.default_personal_cert", FIELD_OFFSET(def_user_cert), fe_PrefReadString, fe_PrefWriteString, True},
 {"security.use_password", FIELD_OFFSET(use_password), read_bool, write_bool, True},
 {"security.ask_for_password", FIELD_OFFSET(ask_password), read_int, write_int, True},
 {"security.password_lifetime", FIELD_OFFSET(password_timeout), read_int, write_int, True},
 {"custtoolbar.has_toolbar_folder", FIELD_OFFSET(has_toolbar_folder), read_bool, write_bool},
-{"custtoolbar.personal_toolbar_folder", FIELD_OFFSET(personal_toolbar_folder), read_str, write_str},
-{"print.print_command", FIELD_OFFSET(print_command), read_str, write_str},
+{"custtoolbar.personal_toolbar_folder", FIELD_OFFSET(personal_toolbar_folder), fe_PrefReadString, fe_PrefWriteString},
+{"print.print_command", FIELD_OFFSET(print_command), fe_PrefReadString, fe_PrefWriteString},
 {"print.print_reversed", FIELD_OFFSET(print_reversed), read_bool, write_bool},
 {"print.print_color", FIELD_OFFSET(print_color), read_bool, write_bool},
 {"print.print_landscape", FIELD_OFFSET(print_landscape), read_bool, write_bool},
@@ -488,10 +484,10 @@ Bool
 XFE_UpgradePrefs(char* filename, XFE_GlobalPrefs* prefs)
 {
     int i;
-    char* tmp = NULL;
     void* field;
     Bool status;
 #ifdef MOZ_MAIL_NEWS
+    char* tmp = NULL;
     XP_Bool passwordProtectLocalCache;
 
     PREF_GetBoolPref("mail.password_protect_local_cache",
@@ -532,10 +528,10 @@ Bool
 XFE_SavePrefs(char* filename, XFE_GlobalPrefs* prefs)
 {
     int i;
-    char* tmp = NULL;
     void* field;
     Bool status;
 #ifdef MOZ_MAIL_NEWS
+    char* tmp = NULL;
     XP_Bool passwordProtectLocalCache;
 	
     PREF_GetBoolPref("mail.password_protect_local_cache",
@@ -907,11 +903,9 @@ XFE_GetDefaultCSID(void)
 }
 
 
-/*
- * read_str
- */
-static void
-read_str(char* name, void* field)
+/* Read a string-pref from the backend. */
+void
+fe_PrefReadString(char* prefName, void* field)
 {
     char buf[4096];
     int len = sizeof(buf);
@@ -919,22 +913,20 @@ read_str(char* name, void* field)
     memset(buf, 0, len);
 
     if ( def ) {
-        PREF_GetDefaultCharPref(name, buf, &len);
+        PREF_GetDefaultCharPref(prefName, buf, &len);
     } else {
-        PREF_GetCharPref(name, buf, &len);
+        PREF_GetCharPref(prefName, buf, &len);
     }
 
     *(char**) field = strdup(buf);
 }
 
 
-/*
- * write_str
- */
+/* Write a string-pref to the pref backend. */
 static void
-write_str(char* name, void* field)
+fe_PrefWriteString(char* prefName, void* field)
 {
-    PREF_SetCharPref(name, *(char**) field ? *(char**) field : "");
+    PREF_SetCharPref(prefName, *(char**) field ? *(char**) field : "");
 }
 
 
@@ -998,7 +990,7 @@ write_int(char* name, void* field)
 static void
 read_path(char* name, void* field)
 {
-    read_str(name, field);
+    fe_PrefReadString(name, field);
     fix_path(field);
 }
 
@@ -1010,7 +1002,7 @@ static void
 write_path(char* name, void* field)
 {
     fix_path(field);
-    write_str(name, field);
+    fe_PrefWriteString(name, field);
 }
 
 
@@ -1064,7 +1056,7 @@ read_char_set(char* name, void* field)
 
     if ( def ) return;
 
-    read_str(name, &char_set);
+    fe_PrefReadString(name, &char_set);
 
     if ( char_set && *char_set ) {
         fe_ReadFontCharSet(char_set);
@@ -1081,7 +1073,7 @@ write_char_set(char* name, void* field)
     char* char_set = *(char**) field;
 
     REPLACE_STRING(char_set, fe_GetFontCharSetSetting());
-    write_str(name, &char_set);
+    fe_PrefWriteString(name, &char_set);
 }
 
 
@@ -1103,7 +1095,7 @@ read_font_spec(char* name, void* field)
 
     if ( def ) return;
 
-    read_str(name, &font_spec);
+    fe_PrefReadString(name, &font_spec);
 
     if ( font_spec && *font_spec ) {
         char* copy = strdup(font_spec);
@@ -1144,7 +1136,7 @@ write_font_spec(char* name, void* field)
     REPLACE_STRING(font_spec, buf);
     fe_FreeFontSettings(set);
 
-    write_str(name, &font_spec);
+    fe_PrefWriteString(name, &font_spec);
 
     free(font_spec);
 }
@@ -1459,18 +1451,6 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			prefs->email_anonftp = BOOLP(value);
 		else if (!XP_STRCASECMP("ALERT_EMAIL_FORM_SUBMIT", name))
 			prefs->email_submit = BOOLP(value);
-		else if (!XP_STRCASECMP("ACCEPT_COOKIE", name)) {
-			if (atoi(value) == 0) {
-				/* do not show an alert before accepting a cookie */
-				prefs->accept_cookie = NET_Accept;
-				prefs->warn_accept_cookie = FALSE;
-			}
-			else {
-				/* show an alert before accepting a cookie */
-				prefs->accept_cookie = NET_Accept;
-				prefs->warn_accept_cookie = TRUE;
-			}
-		}
 
 #ifdef MOZ_MAIL_NEWS
       /* NEWS
