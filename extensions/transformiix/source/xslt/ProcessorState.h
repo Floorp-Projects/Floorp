@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -243,9 +243,11 @@ public:
     void setOutputMethod(const String& method);
 
     /**
-     * Adds the set of names to the Whitespace stripping element set
+     * Adds the set of names to the Whitespace stripping handling list.
+     * xsl:strip-space calls this with MB_TRUE, xsl:preserve-space 
+     * with MB_FALSE
     **/
-    void stripSpace(String& names);
+    void shouldStripSpace(String& names, MBool shouldStrip);
 
     /**
      * Adds a document to set of loaded documents
@@ -392,17 +394,12 @@ private:
     OutputFormat format;
 
     /**
-     * The set of whitespace preserving elements
+     * The list of whitespace preserving and stripping nametests
     **/
-    StringList       wsPreserve;
+    txList mWhiteNameTests;
 
     /**
-     * The set of whitespace stripping elements
-    **/
-    StringList       wsStrip;
-
-    /**
-     * The set of whitespace stripping elements
+     * Default whitespace stripping mode
     **/
     XMLSpaceMode       defaultSpace;
 
@@ -451,6 +448,31 @@ private:
 
 }; //-- ProcessorState
 
+/**
+ * txNameTestItem holds both an ElementExpr and a bool for use in
+ * whitespace stripping.
+**/
+class txNameTestItem {
+public:
+    txNameTestItem(String& aName, MBool stripSpace):
+        mNameTest(aName),mStrips(stripSpace) {}
+
+    MBool matches(Node* aNode, ContextState* aCS) {
+        return mNameTest.matches(aNode, 0, aCS);
+    }
+
+    MBool stripsSpace() {
+        return mStrips;
+    }
+
+    double getDefaultPriority() {
+        return mNameTest.getDefaultPriority(0, 0, 0);
+    }
+
+protected:
+    ElementExpr mNameTest;
+    MBool mStrips;
+};
 
 #endif
 

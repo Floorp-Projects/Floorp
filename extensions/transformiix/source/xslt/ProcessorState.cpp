@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -588,22 +588,6 @@ Node* ProcessorState::popCurrentNode() {
 } //-- popCurrentNode
 
 /**
- * Adds the set of names to the Whitespace preserving element set
-**/
-void ProcessorState::preserveSpace(String& names) {
-
-    //-- split names on whitespace
-    Tokenizer tokenizer(names);
-    String name;
-    while ( tokenizer.hasMoreTokens() ) {
-        tokenizer.nextToken(name);
-        wsPreserve.add(new String(name));
-        wsStrip.remove(name);
-    }
-
-} //-- preserveSpace
-
-/**
  * Adds the given XSLT action to the top of the action stack
 **/
 void ProcessorState::pushAction(Node* xsltAction) {
@@ -664,16 +648,31 @@ void ProcessorState::setOutputMethod(const String& method) {
 }
 
 /**
- * Adds the set of names to the Whitespace stripping element set
+ * Adds the set of names to the Whitespace handling list.
+ * xsl:strip-space calls this with MB_TRUE, xsl:preserve-space 
+ * with MB_FALSE
 **/
-void ProcessorState::stripSpace(String& names) {
+void ProcessorState::shouldStripSpace(String& names, MBool shouldStrip) {
     //-- split names on whitespace
     Tokenizer tokenizer(names);
     String name;
-    while ( tokenizer.hasMoreTokens() ) {
+    while (tokenizer.hasMoreTokens()) {
         tokenizer.nextToken(name);
-        wsStrip.add(new String(name));
-        wsPreserve.remove(name);
+        txNameTestItem* nti = new txNameTestItem(name,shouldStrip);
+        if (!nti) {
+            // XXX error report, parsing error or out of mem
+            break;
+        }
+        // XXX ToDo: get import precedence right, bug 83651
+        double priority = nti->getDefaultPriority();
+        txListIterator iter(&mWhiteNameTests);
+        while (iter.hasNext()) {
+            txNameTestItem* iNameTest = (txNameTestItem*)iter.next();
+            if (iNameTest->getDefaultPriority() <= priority) {
+                break;
+            }
+        }
+        iter.addBefore(nti);
     }
 
 } //-- stripSpace
@@ -785,10 +784,15 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
 
         case Node::ELEMENT_NODE :
         {
-            //-- check Whitespace element names against given Node
+            // check Whitespace stipping handling list against given Node
+            // XXX ToDo: get import precedence right, bug 83651
             String name = node->getNodeName();
-            if (wsPreserve.contains(name)) return MB_FALSE;
-            if (wsStrip.contains(name)) return MB_TRUE;
+            txListIterator iter(&mWhiteNameTests);
+            while (iter.hasNext()) {
+                txNameTestItem* iNameTest = (txNameTestItem*)iter.next();
+                if (iNameTest->matches(node,this))
+                    return iNameTest->stripsSpace();
+            }
             String method;
             if (format.getMethod(method).isEqual("html")) {
                 String ucName = name;
