@@ -23,20 +23,22 @@ main(int argc, char** argv)
 {
   nsIRDFService* pRDF = 0;
 
-  NS_RDFGetService( &pRDF );
+  NS_GetRDFService( &pRDF );
   PR_ASSERT( pRDF != 0 );
 
   nsIRDFDataBase* pDB;
-  char* url[] = { "rdf:sitemap.rdf", NULL };
+  char* url[] = { "file:///sitemap.rdf", NULL };
 
   /* turn on logging */
 
   pRDF->CreateDatabase( url, &pDB );
+  PR_ASSERT( pDB != 0 );
 
   /* execute queries */
 
-  pDB->Release();
-  pRDF->Release();
+  pDB->Release(); /* destroy the DB */
+
+  pRDF->Release(); /* shutdown the RDF system */
 
   return( 0 );
 }

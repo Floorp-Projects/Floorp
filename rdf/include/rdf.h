@@ -117,4 +117,12 @@ typedef struct RDF_EventStruct {
 
 NSPR_END_EXTERN_C
 
+#ifdef __cplusplus
+#include "nsIRDFDataSource.h"
+#include "nsIRDFDataBase.h"
+#include "nsIRDFObserver.h"
+#include "nsIRDFService.h"
+#include "nsIRDFCursor.h"
+#endif
+
 #endif /* rdf_h___ */

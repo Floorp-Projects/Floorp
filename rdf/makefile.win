@@ -1,9 +1,12 @@
 
 DEPTH=..
 
+MODULE = rdf
+
 DIRS=\
 	include \
 	src \
+	tests \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
