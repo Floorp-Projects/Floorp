@@ -658,6 +658,12 @@ done:
 	return ret;
 }
 
+// Get at the underlying Python object.
+PyObject *PyG_Base::UnwrapPythonObject(void)
+{
+    Py_INCREF(m_pPyObject);
+    return m_pPyObject;
+}
 /******************************************************
 
  Some special support to help with object identity.
