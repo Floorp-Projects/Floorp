@@ -28,6 +28,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME=xpctest
 MODULE=xpctest
+IS_COMPONENT =  1
 
 CPPSRCS=		\
 	xpctest_echo.cpp		\
