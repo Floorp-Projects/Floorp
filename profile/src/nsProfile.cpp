@@ -77,8 +77,8 @@
 #define REGISTRY_YES_STRING		"yes"
 #define REGISTRY_NO_STRING		"no"
 
-// this used to be cpwPreg.xul, that no longer exists.  we need to fix this.
-#define PROFILE_PREG_URL "chrome://profile/content/createProfileWizard.xul"
+// Use PregUrlPref to extract the activation url
+#define PREG_URL_PREF "browser.registration.url"
 
 #define PROFILE_SELECTION_URL "chrome://profile/content/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
@@ -251,6 +251,9 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     rv = prefs->GetBoolPref(PREG_PREF, &pregPref);
     //if (NS_FAILED(rv)) return rv;
 
+	nsXPIDLCString pregURL;
+	rv = prefs->CopyCharPref(PREG_URL_PREF, getter_Copies(pregURL));
+
     if (profileURLStr.Length() == 0)
     {
         // This means that there was no command-line argument to force
@@ -259,7 +262,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         if (numProfiles == 0)
         {
             if (pregPref)
-                profileURLStr = PROFILE_PREG_URL;
+                profileURLStr = pregURL;
             else
                 profileURLStr = PROFILE_WIZARD_URL;
         }
@@ -270,8 +273,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 
     // Provide Preg information
     if (pregPref && (PL_strcmp(isPregInfoSet, REGISTRY_YES_STRING) != 0))
-        profileURLStr = PROFILE_PREG_URL;
-
+        profileURLStr = pregURL;
 
     if (profileURLStr.Length() != 0)
     {
