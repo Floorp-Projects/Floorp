@@ -2,8 +2,8 @@
 
 # Read in '.mozconfig' script to set the initial options.
 # See the load-mozconfig.sh script for more details.
-_topsrcdir=`dirname $0`
-. $_topsrcdir/build/autoconf/load-mozconfig.sh
+_AUTOCONF_TOOLS_DIR=`dirname $0`/./build/autoconf
+. $_AUTOCONF_TOOLS_DIR/mozconfig2configure
 
 # Guess values for system-dependent variables and create Makefiles.
 # Generated automatically using autoconf version 2.13 
