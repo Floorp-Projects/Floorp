@@ -861,7 +861,8 @@ nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
     mUserSelect(aCopy.mUserSelect),
     mKeyEquivalent(nsnull),
     mUserFocus(aCopy.mUserFocus),
-    mResizer(aCopy.mResizer)
+    mResizer(aCopy.mResizer),
+    mCursor(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSUserInterface);
   CSS_IF_COPY(mCursor, nsCSSValueList);
