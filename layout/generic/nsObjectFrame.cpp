@@ -183,9 +183,11 @@ private:
 
   // Mac specific code to fix up port position and clip during paint
 #ifdef XP_MAC
-  static void DoMacFixUp(nsPluginWindow *pluginWindow, nsIWidget* aWidget);
-
+  // get the absolute widget position and clip
   static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, nsRect& aClipRect); 
+  static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
+  // convert relative coordinates to absolute
+  static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsIPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
 #endif	// XP_MAC
 
 nsObjectFrame::~nsObjectFrame()
@@ -220,6 +222,8 @@ nsObjectFrame::GetSkipSides() const
 #define IMAGE_EXT_JPG "jpg"
 #define IMAGE_EXT_PNG "png"
 #define IMAGE_EXT_XBM "xbm"
+
+// #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
 void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
 {
@@ -1185,10 +1189,8 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
 
         // beard: to preserve backward compatibility with Communicator 4.X, the
         // clipRect must be in port coordinates.
-#ifdef XP_MAC
-        DoMacFixUp(window,mWidget);
-#else
-        // this is only well-defined on the Mac OS anyway, or perhaps for windowless plugins.
+#ifndef XP_MAC
+       // this is only well-defined on the Mac OS anyway, or perhaps for windowless plugins.
         window->clipRect.top = 0;
         window->clipRect.left = 0;
         window->clipRect.bottom = window->clipRect.top + window->height;
@@ -2373,8 +2375,49 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 {
 #ifdef XP_MAC
   if (mInstance != NULL) {
+
     nsPluginPort* pluginPort = GetPluginPort();
 
+#ifdef DO_DIRTY_INTERSECT   // aDirtyRect isn't always correct, see bug 56128
+    nsPoint rel(aDirtyRect.x, aDirtyRect.y);
+    nsPoint abs(0,0);
+    nsCOMPtr<nsIWidget> containerWidget;
+  
+    // Convert dirty rect relative coordinates to absolute and also get the containerWidget
+    ConvertRelativeToWindowAbsolute(mOwner, mContext, rel, abs, *getter_AddRefs(containerWidget));
+
+    nsRect absDirtyRect = nsRect(abs.x, abs.y, aDirtyRect.width, aDirtyRect.height);
+
+    // Convert to absolute pixel values for the dirty rect
+    nsRect absDirtyRectInPixels;
+    ConvertTwipsToPixels(*mContext, absDirtyRect, absDirtyRectInPixels);
+#endif
+
+    // Add in child windows absolute position to get make the dirty rect
+    // relative to the top-level window.
+    nscoord absWidgetX = 0;
+    nscoord absWidgetY = 0;
+    nsRect widgetClip(0,0,0,0);
+    GetWidgetPosAndClip(mWidget,absWidgetX,absWidgetY,widgetClip);
+
+#ifdef DO_DIRTY_INTERSECT // skip intersection for now because possible bad aDirtyRect
+    absDirtyRectInPixels.x  += absWidgetX;
+    absDirtyRectInPixels.y  += absWidgetY;
+
+    widgetClip.IntersectRect(widgetClip, absDirtyRectInPixels);
+#endif
+
+    // set the port
+    mPluginWindow.x = absWidgetX;
+    mPluginWindow.y = absWidgetY;
+
+
+    // fix up the clipping region
+    mPluginWindow.clipRect.top = widgetClip.y;
+    mPluginWindow.clipRect.left = widgetClip.x;
+    mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
+    mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width;  
+  
     EventRecord updateEvent;
     ::OSEventAvail(0, &updateEvent);
     updateEvent.what = updateEvt;
@@ -2382,9 +2425,6 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 
     nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
     PRBool eventHandled = PR_FALSE;
-
-    DoMacFixUp(&mPluginWindow,mWidget);
-    
     mInstance->HandleEvent(&pluginEvent, &eventHandled);
 	}
 #endif
@@ -2514,8 +2554,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mPluginWindow.type = nsPluginWindowType_Window;
 
 #if defined(XP_MAC)
-          DoMacFixUp(&mPluginWindow,mWidget);
-
           // start a periodic timer to provide null events to the plugin instance.
           mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (rv == NS_OK)
@@ -2541,29 +2579,6 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 
   // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MAC
-static void DoMacFixUp(nsPluginWindow *pluginWindow, nsIWidget* aWidget)
-{
-  if (aWidget == nsnull || pluginWindow == nsnull)
-    return;
-
-  nsPluginRect& clipRect = pluginWindow->clipRect;
-  nscoord x,y; 
-  nsRect rect(0,0,0,0);
-
-  // find aWidget's absolute position (x,y) and the clipping region (rect)
-  GetWidgetPosAndClip(aWidget,x,y,rect);
-
-  // set the port location
-  pluginWindow->x = x;
-  pluginWindow->y = y;
-
-  // fix up the clipping region
-  clipRect.top = y;
-  clipRect.left = x;
-  clipRect.bottom = clipRect.top + rect.height;
-  clipRect.right = clipRect.right + rect.width;
-}
-
   // calculate the absolute position and clip for a widget 
   // and use other windows in calculating the clip
 static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
@@ -2603,11 +2618,80 @@ static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbs
     ancestorY -=wy; 
   } 
 
-  aClipRect.x = aAbsX; 
-  aClipRect.y = aAbsY; 
+  aClipRect.x += aAbsX; 
+  aClipRect.y += aAbsY; 
 
   //printf("--------------\n"); 
   //printf("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
   //printf("--------------\n"); 
 } 
+
+
+#ifdef DO_DIRTY_INTERSECT
+// Convert from a frame relative coordinate to a coordinate relative to its
+// containing window
+static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsIPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&
+aContainerWidget)
+{
+  aAbs.x = 0;
+  aAbs.y = 0;
+
+  nsIView *view = nsnull;
+  // See if this frame has a view
+  aFrame->GetView(aPresContext, &view);
+  if (nsnull == view) {
+   // Calculate frames offset from its nearest view
+   aFrame->GetOffsetFromView(aPresContext,
+                   aAbs,
+                   &view);
+  } else {
+   // Store frames offset from its view.
+   nsRect rect;
+   aFrame->GetRect(rect);
+   aAbs.x = rect.x;
+   aAbs.y = rect.y;
+  }
+
+  if (view != nsnull) {
+    // Caclulate the views offset from its nearest widget
+
+   nscoord viewx = 0; 
+   nscoord viewy = 0;
+   view->GetWidget(aContainerWidget);
+   if (nsnull == aContainerWidget) {
+     view->GetOffsetFromWidget(&viewx, &viewy, aContainerWidget/**getter_AddRefs(widget)*/);
+     aAbs.x += viewx;
+     aAbs.y += viewy;
+   
+   
+   // GetOffsetFromWidget does not include the views offset, so we need to add
+   // that in.
+    nsRect bounds;
+    view->GetBounds(bounds);
+    aAbs.x += bounds.x;
+    aAbs.y += bounds.y;
+    }
+   
+   nsRect widgetBounds;
+   aContainerWidget->GetBounds(widgetBounds); 
+  } else {
+   NS_ASSERTION(PR_FALSE, "the object frame does not have a view");
+  }
+
+  // Add relative coordinate to the absolute coordinate that has been calculated
+  aAbs += aRel;
+}
+
+// Convert from a frame relative coordinate to a coordinate relative to its
+// containing window
+static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
+{
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  aPixelRect.x = NSTwipsToIntPixels(aTwipsRect.x, t2p);
+  aPixelRect.y = NSTwipsToIntPixels(aTwipsRect.y, t2p);
+  aPixelRect.width = NSTwipsToIntPixels(aTwipsRect.width, t2p);
+  aPixelRect.height = NSTwipsToIntPixels(aTwipsRect.height, t2p);
+}
+#endif	// DO_DIRTY_INTERSECT
 #endif	// XP_MAC
