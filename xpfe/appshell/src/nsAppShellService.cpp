@@ -64,12 +64,6 @@
 #include "fullsoft.h"
 #endif
 
-#ifdef XP_PC
-#include "nsIPICS.h"
-static NS_DEFINE_IID(kIPICSIID, NS_IPICS_IID);
-static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
-#endif
-
 #include "nsMetaCharsetCID.h"
 #include "nsIMetaCharsetService.h"
 #include "nsXMLEncodingCID.h"
@@ -190,9 +184,6 @@ NS_IMETHODIMP
 nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 {
   nsresult rv;
-#ifdef XP_PC
-  nsIPICS *pics = NULL;
-#endif
   
 #ifdef MOZ_FULLCIRCLE
   FCInitialize();
@@ -231,14 +222,6 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
   if (NS_FAILED(rv)) {
     goto done;
   }
-
-#ifdef XP_PC
-  rv = nsComponentManager::CreateInstance(kPICSCID,
-							   NULL,
-							   kIPICSIID,
-							  (void **) &pics);
- 
-#endif
 
   nsIMetaCharsetService* metacharset;
   rv = nsServiceManager::GetService(kMetaCharsetCID,
