@@ -90,7 +90,8 @@ CLASS="productname"
       <A
 HREF="os-specific.html"
 >Section 4.4</A
->, so be sure to check out that section before
+>, so unless you are on Linux,
+      be sure to check out that section before
       you start your installation.
       </P
 ><DIV
@@ -148,7 +149,8 @@ ALIGN="LEFT"
 VALIGN="TOP"
 ><P
 >While installing Bugzilla, it is a good idea to ensure that there
-        is some kind of firewall between you and the rest of the Internet
+        is some kind of configurable firewall between you and the rest of the 
+        Internet
         as your machine may be insecure for periods during the install. Many
         installation steps require an active Internet connection to complete,
         but you must take care to ensure that at no point is your machine
@@ -160,19 +162,18 @@ VALIGN="TOP"
 ><P
 >This guide assumes that you already have your operating system
       installed, network configured, and have administrative access to the
-      shell on the machine you are installing Bugzilla onto. It is possible to
-      install and run Bugzilla without administrative access, but you have to
+      machine onto which you are installing Bugzilla. It is possible to
+      install and run Bugzilla itself without administrative access, but you 
+      have to
       either make sure all the required software is installed or get somebody
       with administrative access to install it for you.
       </P
 ><P
 >&#13;      You are strongly recommended to make a backup of your system
-      before installing Bugzilla and at regular intervals thereafter.
+      before installing Bugzilla (and at regular intervals thereafter :-).
       </P
 ><P
->The listing below is a basic step-by-step list. More information
-      can be found in the sections below. Minimum versions will be
-      included in parenthesis where appropriate.
+>Here's a basic step-by-step list:
       </P
 ><DIV
 CLASS="procedure"
@@ -184,7 +185,7 @@ TYPE="1"
 HREF="stepbystep.html#install-perl"
 >Install Perl</A
 >
-          (5.6)
+          (5.6.0 or above)
           </P
 ></LI
 ><LI
@@ -193,7 +194,7 @@ HREF="stepbystep.html#install-perl"
 HREF="stepbystep.html#install-mysql"
 >Install MySQL</A
 >
-          (3.23.41)
+          (3.23.41 or above)
           </P
 ></LI
 ><LI
@@ -240,17 +241,18 @@ NAME="install-perl"
 >4.1.1. Perl</H2
 ><P
 >Any machine that doesn't have Perl on it is a sad machine indeed.
-      Perl can be got in source form from <A
+      If your OS doesn't come with it, Perl can be got in source form 
+      from <A
 HREF="http://www.perl.com"
 TARGET="_top"
 >http://www.perl.com</A
 >.
       There are also binary versions available for many platforms, most of which
       are linked to from perl.com.
-      Although Bugzilla runs with perl 5.6,
+      Although Bugzilla runs with perl 5.6.0,
       it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
-      version 5.8.</P
+      version 5.8.2.</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -261,7 +263,8 @@ NAME="install-mysql"
 ></A
 >4.1.2. MySQL</H2
 ><P
->Visit the MySQL homepage at 
+>If your OS doesn't come with it or provide official packages,
+      visit the MySQL homepage at 
       <A
 HREF="http://www.mysql.com"
 TARGET="_top"
@@ -360,7 +363,7 @@ set-variable = max_allowed_packet=1M
 >If you are running Bugzilla and MySQL on the same machine, you may
       also wish to utilize the <TT
 CLASS="option"
->skip-networking</TT
+>--skip-networking</TT
 > option as
       mentioned in <A
 HREF="security.html#security-mysql"
@@ -374,7 +377,7 @@ CLASS="section"
 ><A
 NAME="install-setupdatabase"
 ></A
->4.1.2.1. Configuring MySQL</H3
+>4.1.2.1. Adding a user to MySQL</H3
 ><P
 >This first thing you'll want to do is make sure you've given the
         <SPAN
@@ -384,7 +387,8 @@ CLASS="QUOTE"
         <A
 HREF="security.html#security-mysql"
 >Section 4.5.2</A
->. For clarity, these instructions will
+>. Then, you need to add a user for
+        Bugzilla to use. For clarity, these instructions will
         assume that your MySQL user for Bugzilla will be <SPAN
 CLASS="QUOTE"
 >"bugs_user"</SPAN
@@ -427,14 +431,14 @@ VALIGN="TOP"
 CLASS="QUOTE"
 >"bugs"</SPAN
 > for both the user and
-          database name.
+          database name. Don't use it for the password, though...
           </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->Next, we use an SQL <B
+>We use an SQL <B
 CLASS="command"
 >GRANT</B
 > command to create a 
@@ -442,8 +446,7 @@ CLASS="command"
 CLASS="QUOTE"
 >"bugs_user"</SPAN
 >
-        user, and grant sufficient permissions for checksetup.pl, which we'll
-        use later, to work its magic. This also restricts the 
+        user. This also restricts the 
         <SPAN
 CLASS="QUOTE"
 >"bugs_user"</SPAN
@@ -513,7 +516,12 @@ CLASS="computeroutput"
           <TT
 CLASS="computeroutput"
 >CREATE TEMPORARY TABLES</TT
-> permissions.
+> permissions,
+          so add them to the list in the 
+          <TT
+CLASS="computeroutput"
+>GRANT</TT
+> command.
           </P
 ></TD
 ></TR
@@ -623,32 +631,30 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->If you symlink the bugzilla directory into your Apache's HTML
+>If you symlink the bugzilla directory into your Apache's 
+        <TT
+CLASS="filename"
+>html</TT
+>
         hierarchy, you may receive 
         <SPAN
 CLASS="errorname"
 >Forbidden</SPAN
 >
         errors unless you add the 
-        <SPAN
-CLASS="QUOTE"
->"FollowSymLinks"</SPAN
+        <TT
+CLASS="filename"
+>FollowSymLinks</TT
 >
-        directive to the &#60;Directory&#62; entry for the HTML root
-        in httpd.conf.</P
+        directive to the <TT
+CLASS="filename"
+>&#60;Directory&#62;</TT
+> entry for 
+        the HTML root directory in httpd.conf.</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-><P
->Once all the files are in a web accessible directory, make that
-      directory writable by your webserver's user. This is a temporary step
-      until you run the post-install 
-      <TT
-CLASS="filename"
->checksetup.pl</TT
->
-      script, which locks down your installation.</P
 ><DIV
 CLASS="caution"
 ><P
@@ -685,6 +691,166 @@ CLASS="option"
 ></TR
 ></TABLE
 ></DIV
+><P
+>Once all the files are in a web accessible directory, make that
+      directory writable by your webserver's user. This is a temporary step
+      until you run the post-install 
+      <TT
+CLASS="filename"
+>checksetup.pl</TT
+>
+      script, which locks down your installation.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN522"
+></A
+>4.1.5. <TT
+CLASS="filename"
+>checksetup.pl</TT
+></H2
+><P
+>Next, run the magic checksetup.pl script. 
+      This is designed to check whether you have all of the right
+      Perl modules in the correct
+      versions, and that Bugzilla is generally set up correctly. 
+      </P
+><P
+>&#13;      Eventually, 
+      it will make sure Bugzilla files and directories have reasonable
+      permissions, set up the 
+      <TT
+CLASS="filename"
+>data</TT
+>
+      directory, and create all the MySQL tables. But the first time you
+      run it, it's highly likely to tell you that you are missing a few
+      Perl modules. Make a note of which ones they are, and then proceed to
+      the next section to install them.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> ./checksetup.pl
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;      The first time you run it with all the correct modules installed, 
+      it will create a file called 
+      <TT
+CLASS="filename"
+>localconfig</TT
+>.</P
+><P
+>This file contains a variety of settings you may need to tweak
+      including how Bugzilla should connect to the MySQL database.</P
+><P
+>The connection settings include: 
+      <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>server's host: just use 
+          <SPAN
+CLASS="QUOTE"
+>"localhost"</SPAN
+>
+          if the MySQL server is local</P
+></LI
+><LI
+><P
+>database name: 
+          <SPAN
+CLASS="QUOTE"
+>"bugs_db"</SPAN
+>
+          if you're following these directions</P
+></LI
+><LI
+><P
+>MySQL username: 
+          <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+          if you're following these directions</P
+></LI
+><LI
+><P
+>Password for the 
+          <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+          MySQL account; (<SPAN
+CLASS="QUOTE"
+>"bugs_password"</SPAN
+> above)</P
+></LI
+></OL
+>
+      </P
+><P
+>Edit the file to change these. Once you are happy with the 
+      settings, <TT
+CLASS="filename"
+>su</TT
+> to the user
+      your web server runs as, and re-run 
+      <TT
+CLASS="filename"
+>checksetup.pl</TT
+>. (Note: on some security-conscious
+      systems, you may need to change the login shell for the webserver 
+      account before you can do this.)
+      On this second run, it will create the database and an administrator
+      account for which you will be prompted to provide information.</P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The checksetup.pl script is designed so that you can run it at
+        any time without causing harm. You should run it after any upgrade to
+        Bugzilla.</P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -693,7 +859,15 @@ CLASS="section"
 ><A
 NAME="install-perlmodules"
 ></A
->4.1.5. Perl Modules</H2
+>4.1.6. Perl Modules</H2
+><P
+>Don't be intimidated by this long list of modules. See
+      <A
+HREF="stepbystep.html#install-modules-bundle-bugzilla"
+>Section 4.1.6.1</A
+> for a way of 
+      installing all the ones you need with a single command.
+      </P
 ><P
 >Perl modules can be found using
       <A
@@ -709,8 +883,7 @@ HREF="glossary.html#gloss-ppm"
 CLASS="glossterm"
 >PPM</I
 ></A
-> on Win32. The root servers
-      have a real tendency to bog down, so please use mirrors.
+> on Win32.
       </P
 ><P
 >Good instuctions can be found for using each of these services on
@@ -930,28 +1103,10 @@ HREF="stepbystep.html#install-modules-bundle-bugzilla"
 ><LI
 ><P
 >&#13;            <A
-HREF="stepbystep.html#install-modules-appconfig"
->AppConfig</A
->
-            (1.52)
-          </P
-></LI
-><LI
-><P
->&#13;            <A
 HREF="stepbystep.html#install-modules-cgi"
 >CGI</A
 > 
             (2.88)
-          </P
-></LI
-><LI
-><P
->&#13;            <A
-HREF="stepbystep.html#install-modules-data-dumper"
->Data::Dumper</A
-> 
-            (any)
           </P
 ></LI
 ><LI
@@ -1098,7 +1253,7 @@ CLASS="section"
 ><A
 NAME="install-modules-bundle-bugzilla"
 ></A
->4.1.5.1. Bundle::Bugzilla</H3
+>4.1.6.1. Bundle::Bugzilla</H3
 ><P
 >If you are running at least perl 5.6.1, you can save yourself a lot
       of time by using Bundle::Bugzilla. This bundle contains every module
@@ -1175,22 +1330,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="install-modules-appconfig"
-></A
->4.1.5.2. AppConfig (1.52)</H3
-><P
->Dependency for Template Toolkit. We probably don't need to
-      specifically check for it anymore.
-      </P
-></DIV
-><DIV
-CLASS="section"
-><H3
-CLASS="section"
-><A
 NAME="install-modules-cgi"
 ></A
->4.1.5.3. CGI (2.88)</H3
+>4.1.6.2. CGI (2.88)</H3
 ><P
 >The CGI module parses form elements and cookies and does many
       other usefule things. It come as a part of recent perl distributions, but
@@ -1221,43 +1363,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="install-modules-data-dumper"
-></A
->4.1.5.4. Data::Dumper (any)</H3
-><P
->The Data::Dumper module provides data structure persistence for
-      Perl (similar to Java's serialization). It comes with later
-      sub-releases of Perl 5.004, but a re-installation just to be sure it's
-      available won't hurt anything.
-      </P
-><P
-CLASS="literallayout"
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
-HREF="http://search.cpan.org/dist/Data-Dumper/"
-TARGET="_top"
->http://search.cpan.org/dist/Data-Dumper/</A
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
-HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip"
-TARGET="_top"
->http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip</A
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
-HREF="http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html"
-TARGET="_top"
->http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html</A
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
-></DIV
-><DIV
-CLASS="section"
-><H3
-CLASS="section"
-><A
 NAME="install-modules-date-format"
 ></A
->4.1.5.5. TimeDate modules (2.21)</H3
+>4.1.6.3. TimeDate modules (2.21)</H3
 ><P
 >Many of the more common date/time/calendar related Perl modules
       have been grouped into a bundle similar to the MySQL modules bundle.
@@ -1292,7 +1400,7 @@ CLASS="section"
 ><A
 NAME="install-modules-dbi"
 ></A
->4.1.5.6. DBI (1.32)</H3
+>4.1.6.4. DBI (1.32)</H3
 ><P
 >The DBI module is a generic Perl module used the
       MySQL-related modules. As long as your Perl installation was done
@@ -1326,7 +1434,7 @@ CLASS="section"
 ><A
 NAME="install-modules-dbd-mysql"
 ></A
->4.1.5.7. MySQL-related modules</H3
+>4.1.6.5. MySQL-related modules</H3
 ><P
 >The Perl/MySQL interface requires a few mutually-dependent Perl
       modules. These modules are grouped together into the the
@@ -1371,7 +1479,7 @@ CLASS="section"
 ><A
 NAME="install-file-spec"
 ></A
->4.1.5.8. File::Spec (0.82)</H3
+>4.1.6.6. File::Spec (0.82)</H3
 ><P
 >File::Spec is a perl module that allows file operations, such as
       generating full path names, to work cross platform.
@@ -1403,7 +1511,7 @@ CLASS="section"
 ><A
 NAME="install-modules-file-temp"
 ></A
->4.1.5.9. File::Temp (any)</H3
+>4.1.6.7. File::Temp (any)</H3
 ><P
 >File::Temp is used to generate a temporary filename that is
       guaranteed to be unique. It comes as a standard part of perl
@@ -1435,7 +1543,7 @@ CLASS="section"
 ><A
 NAME="install-modules-template"
 ></A
->4.1.5.10. Template Toolkit (2.08)</H3
+>4.1.6.8. Template Toolkit (2.08)</H3
 ><P
 >When you install Template Toolkit, you'll get asked various
       questions about features to enable. The defaults are fine, except
@@ -1469,7 +1577,7 @@ CLASS="section"
 ><A
 NAME="install-modules-text-wrap"
 ></A
->4.1.5.11. Text::Wrap (2001.0131)</H3
+>4.1.6.9. Text::Wrap (2001.0131)</H3
 ><P
 >Text::Wrap is designed to proved intelligent text wrapping.
       </P
@@ -1495,14 +1603,10 @@ CLASS="section"
 ><A
 NAME="install-modules-gd"
 ></A
->4.1.5.12. GD (1.20) [optional]</H3
+>4.1.6.10. GD (1.20) [optional]</H3
 ><P
->The GD library was written by Thomas Boutell a long while ago to
-      programmatically generate images in C. Since then it's become the
-      defacto standard for programmatic image construction. The Perl bindings
-      to it found in the GD library are used on millions of web pages to
-      generate graphs on the fly. That's what Bugzilla will be using it for
-      so you must install it if you want any of the graphing to work.</P
+>You need the GD library if you want any of the graphing to work.
+      </P
 ><DIV
 CLASS="note"
 ><P
@@ -1605,7 +1709,7 @@ CLASS="section"
 ><A
 NAME="install-modules-chart-base"
 ></A
->4.1.5.13. Chart::Base (0.99c) [optional]</H3
+>4.1.6.11. Chart::Base (0.99c) [optional]</H3
 ><P
 >The Chart module provides Bugzilla with on-the-fly charting
       abilities. It can be installed in the usual fashion after it has been
@@ -1634,7 +1738,7 @@ CLASS="section"
 ><A
 NAME="install-modules-xml-parser"
 ></A
->4.1.5.14. XML::Parser (any) [Optional]</H3
+>4.1.6.12. XML::Parser (any) [optional]</H3
 ><P
 >XML::Parser is used by the <TT
 CLASS="filename"
@@ -1669,7 +1773,7 @@ CLASS="section"
 ><A
 NAME="install-modules-gd-graph"
 ></A
->4.1.5.15. GD::Graph (any) [Optional]</H3
+>4.1.6.13. GD::Graph (any) [optional]</H3
 ><P
 >In addition to GD listed above, the reporting interface of Bugzilla
       needs to have the GD::Graph module installed.
@@ -1701,7 +1805,7 @@ CLASS="section"
 ><A
 NAME="install-modules-gd-text-align"
 ></A
->4.1.5.16. GD::Text::Align (any) [Optional]</H3
+>4.1.6.14. GD::Text::Align (any) [optional]</H3
 ><P
 >GD::Text::Align, as the name implies, is used to draw aligned
       strings of text. It is needed by the reporting interface.
@@ -1733,7 +1837,7 @@ CLASS="section"
 ><A
 NAME="install-modules-mime-parser"
 ></A
->4.1.5.17. MIME::Parser (any) [Optional]</H3
+>4.1.6.15. MIME::Parser (any) [optional]</H3
 ><P
 >MIME::Parser is only needed if you want to use the e-mail interface
       located in the <TT
@@ -1768,7 +1872,7 @@ CLASS="section"
 ><A
 NAME="install-modules-patchreader"
 ></A
->4.1.5.18. PatchReader (0.9.1) [Optional]</H3
+>4.1.6.16. PatchReader (0.9.1) [optional]</H3
 ><P
 >PatchReader is only needed if you want to use Patch Viewer, a
       Bugzilla feature to format patches in a pretty HTML fashion.  There are a
@@ -1804,153 +1908,14 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN748"
-></A
->4.1.6. <TT
-CLASS="filename"
->checksetup.pl</TT
-></H2
-><P
->Next, run the magic checksetup.pl script. 
-      This is designed to make sure your perl modules are the correct
-      version and your MySQL database and other
-      configuration options are consistent with the Bugzilla CGI files. 
-      It will make sure Bugzilla files and directories have reasonable
-      permissions, set up the 
-      <TT
-CLASS="filename"
->data</TT
->
-      directory, and create all the MySQL tables. 
-      </P
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="screen"
->&#13;<TT
-CLASS="prompt"
->bash#</TT
-> ./checksetup.pl
-      </PRE
-></FONT
-></TD
-></TR
-></TABLE
-><P
->&#13;      The first time you run it, it will create a file called 
-      <TT
-CLASS="filename"
->localconfig</TT
->.</P
-><P
->This file contains a variety of settings you may need to tweak
-      including how Bugzilla should connect to the MySQL database.</P
-><P
->The connection settings include: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->server's host: just use 
-          <SPAN
-CLASS="QUOTE"
->"localhost"</SPAN
->
-          if the MySQL server is local</P
-></LI
-><LI
-><P
->database name: 
-          <SPAN
-CLASS="QUOTE"
->"bugs_db"</SPAN
->
-          if you're following these directions</P
-></LI
-><LI
-><P
->MySQL username: 
-          <SPAN
-CLASS="QUOTE"
->"bugs_user"</SPAN
->
-          if you're following these directions</P
-></LI
-><LI
-><P
->Password for the 
-          <SPAN
-CLASS="QUOTE"
->"bugs_user"</SPAN
->
-          MySQL account; (<SPAN
-CLASS="QUOTE"
->"bugs_password"</SPAN
-> above)</P
-></LI
-></OL
->
-      </P
-><P
->Once you are happy with the settings, 
-      <TT
-CLASS="filename"
->su</TT
-> to the user
-      your web server runs as, and re-run 
-      <TT
-CLASS="filename"
->checksetup.pl</TT
->. (Note: on some security-conscious
-      systems, you may need to change the login shell for the webserver 
-      account before you can do this.)
-      On this second run, it will create the database and an administrator
-      account for which you will be prompted to provide information.</P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->The checksetup.pl script is designed so that you can run it at
-        any time without causing harm. You should run it after any upgrade to
-        Bugzilla.</P
-></TD
-></TR
-></TABLE
-></DIV
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="AEN778"
+NAME="AEN768"
 ></A
 >4.1.7. Configuring Bugzilla</H2
+><P
+>&#13;      Once checksetup.pl has run successfully, Bugzilla should start up.
+      Proceed to the correct URL and log in with the administrator account
+      you defined in the last checksetup.pl run.
+      </P
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 

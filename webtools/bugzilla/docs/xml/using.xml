@@ -3,14 +3,17 @@
 <chapter id="using">
   <title>Using Bugzilla</title>
 
-  <para>This section contains information for end-users of Bugzilla. 
-  There is a Bugzilla test installation, called 
-  <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">Landfill</ulink>, 
-  which you are welcome to play with (if it's up.) 
-  However, it does not necessarily
-  have all Bugzilla features enabled, and runs an up-to-the-minute version, 
-  so some things may not quite work as this document describes.</para>
-    
+  <section id="using-intro">
+    <title>Introduction</title>
+    <para>This section contains information for end-users of Bugzilla. 
+    There is a Bugzilla test installation, called 
+    <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">Landfill</ulink>, 
+    which you are welcome to play with (if it's up.) 
+    However, it does not necessarily
+    have all Bugzilla features enabled, and runs an up-to-the-minute version, 
+    so some things may not quite work as this document describes.</para>
+  </section>
+      
   <section id="myaccount">
     <title>Create a Bugzilla Account</title>
 
@@ -296,6 +299,12 @@
       of each bug.</member>
 
       <member>
+      <emphasis>CSV:</emphasis>
+
+      get the buglist as comma-separated values, for import into e.g.
+      a spreadsheet.</member>
+      
+      <member>
       <emphasis>Change Columns:</emphasis>
 
       change the bug attributes which appear in the list.</member>
@@ -313,11 +322,18 @@
       Sends mail to the owners of all bugs on the list.</member>
 
       <member>
-      <emphasis>Edit this query:</emphasis>
+      <emphasis>Edit Search:</emphasis>
 
       If you didn't get exactly the results you were looking for, you can
       return to the Query page through this link and make small revisions
       to the query you just made so you get more accurate results.</member>
+      
+      <member>
+      <emphasis>Remember Search As:</emphasis>
+
+      You can give a search a name and remember it; a link will appear
+      in your page footer giving you quick access to run it again later.
+      </member>
     </simplelist>
     </para>
   </section>
@@ -365,6 +381,24 @@
         <para>Select "Commit" and send in your bug report.</para>
       </listitem>
     </orderedlist>
+    
+      <para>Try to make sure that everything said in the summary is also 
+      said in the first comment. Summaries are often updated and this will
+      ensure your original information is easily accessible.
+      </para>
+      
+      <para>
+      You do not need to put "any" or similar strings in the URL field.
+      If there is no specific URL associated with the bug, leave this 
+      field blank.
+      </para> 
+
+      <para>If you feel a bug you filed was incorrectly marked as a
+      DUPLICATE of another, please question it in your bug, not      
+      the bug it was duped to. Feel free to CC the person who duped it 
+      if they are not already CCed.
+      </para>
+      
   </section>
 
   <section id="patchviewer">
@@ -551,27 +585,6 @@
       attached files. This way, the test case works immediately 
       out of the bug.
       </para>     
-    </section>
-    
-    <section>
-      <title>Filing Bugs</title>
-      
-      <para>Try to make sure that everything said in the summary is also 
-      said in the first comment. Summaries are often updated and this will
-      ensure your original information is easily accessible.
-      </para>
-      
-      <para>
-      You do not need to put "any" or similar strings in the URL field.
-      If there is no specific URL associated with the bug, leave this 
-      field blank.
-      </para> 
-
-      <para>If you feel a bug you filed was incorrectly marked as a
-      DUPLICATE of another, please question it in your bug, not      
-      the bug it was duped to. Feel free to CC the person who duped it 
-      if they are not already CCed.
-      </para>
     </section>
   </section>
   

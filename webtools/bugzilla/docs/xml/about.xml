@@ -67,15 +67,13 @@
       ]]>
     </para>
     <para>
-      The newest version of this guide can always be found at <ulink
-      url="http://www.bugzilla.org"/>; however, you should read the version
+      The latest version of this guide can always be found at <ulink
+      url="http://www.bugzilla.org"/>, or checked out via CVS.
+      (Please follow the <ulink url="http://www.mozilla.org/cvs.html">Mozilla 
+      CVS</ulink> instructions and check out the 
+      <filename>mozilla/webtools/bugzilla/docs/</filename>
+      subtree.) However, you should read the version
       which came with the Bugzilla release you are using.
-    </para>
-    <para>
-      The latest version of this document can always be checked out via CVS.
-      Please follow the <ulink url="http://www.mozilla.org/cvs.html">Mozilla CVS</ulink>
-      instructions and check out the <filename>mozilla/webtools/bugzilla/docs/</filename>
-      subtree.
     </para>
     <para>
       The Bugzilla Guide is currently only available in English. 
@@ -116,7 +114,7 @@
     
     <para>
       Last but not least, all the members of the 
-      <ulink url="news://news.mozilla.org/netscape/public/mozilla/webtools">
+      <ulink url="news://news.mozilla.org/netscape.public.mozilla.webtools">
       netscape.public.mozilla.webtools</ulink>
       newsgroup. Without your discussions, insight, suggestions, and patches,
       this could never have happened.

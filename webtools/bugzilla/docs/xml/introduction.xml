@@ -17,30 +17,23 @@
   <section id="why-tracking">
     <title>Why use a bug-tracking system?</title>
     
-    <para>For many years, defect-tracking software was principally
-    the domain of large software development houses. Most smaller shops
-    simply relied on
-    shared lists and email to monitor the status of defects. This procedure
-    was error-prone and tended to cause those bugs judged least significant by
-    developers to be dropped or ignored.</para>
+    <para>Those who do not use a bug-tracking system tend to rely on
+    shared lists, email, spreadsheets and/or Post-It notes to monitor the 
+    status of defects. This procedure
+    is usually error-prone and tends to cause those bugs judged least 
+    significant by developers to be dropped or ignored.</para>
 
-    <para>Integrated
-    defect-tracking systems reduce downtime, increase productivity, and raise
-    customer satisfaction with their systems. Along with full disclosure, an
-    open bug-tracker allows you to keep in touch with your clients
-    and resellers, to communicate about problems effectively throughout the
-    data management chain. Many corporations have also discovered that
-    defect-tracking helps reduce costs by providing IT support
-    accountability, telephone support knowledge bases, and a common,
-    well-understood method for accounting for unusual system or software
-    issues.</para>
+    <para>Integrated defect-tracking systems make sure that nothing gets
+    swept under the carpet; they provide a method of creating, storing,
+    arranging and processing defect reports and enhancement requests.</para>
     
   </section>
     
   <section id="why-bugzilla">
     <title>Why use Bugzilla?</title>
 
-    <para>Bugzilla boasts many advanced features. These include: 
+    <para>Bugzilla is the leading open-source/free software bug tracking 
+    system. It boasts many advanced features, including: 
     <itemizedlist>
       <listitem>
         <para>Powerful searching</para>
@@ -75,12 +68,12 @@
       </listitem>
 
       <listitem>
-        <para>Web, XML, email and console interfaces</para>
+        <para>Completely customisable and/or localisable web user
+        interface</para>
       </listitem>
 
       <listitem>
-        <para>Completely customisable and/or localisable web user
-        interface</para>
+        <para>Additional XML, email and console interfaces</para>
       </listitem>
 
       <listitem>
@@ -102,8 +95,7 @@
     <ulink url="http://www.cvshome.org">CVS</ulink>, 
     <ulink url="http://www.mozilla.org/bonsai.html">Bonsai</ulink>, or 
     <ulink url="http://www.perforce.com">Perforce SCM</ulink>, Bugzilla
-    provides a powerful, easy-to-use solution to configuration management and
-    replication problems.</para>
+    provides a powerful, easy-to-use configuration management solution.</para>
   </section>
 </chapter>
 

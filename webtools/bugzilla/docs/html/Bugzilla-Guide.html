@@ -155,46 +155,51 @@ HREF="#using"
 ><DL
 ><DT
 >3.1. <A
+HREF="#using-intro"
+>Introduction</A
+></DT
+><DT
+>3.2. <A
 HREF="#myaccount"
 >Create a Bugzilla Account</A
 ></DT
 ><DT
->3.2. <A
+>3.3. <A
 HREF="#bug_page"
 >Anatomy of a Bug</A
 ></DT
 ><DT
->3.3. <A
+>3.4. <A
 HREF="#query"
 >Searching for Bugs</A
 ></DT
 ><DT
->3.4. <A
+>3.5. <A
 HREF="#list"
 >Bug Lists</A
 ></DT
 ><DT
->3.5. <A
+>3.6. <A
 HREF="#bugreports"
 >Filing Bugs</A
 ></DT
 ><DT
->3.6. <A
+>3.7. <A
 HREF="#patchviewer"
 >Patch Viewer</A
 ></DT
 ><DT
->3.7. <A
+>3.8. <A
 HREF="#hintsandtips"
 >Hints and Tips</A
 ></DT
 ><DT
->3.8. <A
+>3.9. <A
 HREF="#userpreferences"
 >User Preferences</A
 ></DT
 ><DT
->3.9. <A
+>3.10. <A
 HREF="#reporting"
 >Reports</A
 ></DT
@@ -598,25 +603,23 @@ NAME="newversions"
       
     </P
 ><P
->&#13;      The newest version of this guide can always be found at <A
+>&#13;      The latest version of this guide can always be found at <A
 HREF="http://www.bugzilla.org"
 TARGET="_top"
 >http://www.bugzilla.org</A
->; however, you should read the version
-      which came with the Bugzilla release you are using.
-    </P
-><P
->&#13;      The latest version of this document can always be checked out via CVS.
-      Please follow the <A
+>, or checked out via CVS.
+      (Please follow the <A
 HREF="http://www.mozilla.org/cvs.html"
 TARGET="_top"
->Mozilla CVS</A
->
-      instructions and check out the <TT
+>Mozilla 
+      CVS</A
+> instructions and check out the 
+      <TT
 CLASS="filename"
 >mozilla/webtools/bugzilla/docs/</TT
 >
-      subtree.
+      subtree.) However, you should read the version
+      which came with the Bugzilla release you are using.
     </P
 ><P
 >&#13;      The Bugzilla Guide is currently only available in English. 
@@ -648,7 +651,7 @@ NAME="credits"
 ><P
 >&#13;      Last but not least, all the members of the 
       <A
-HREF="news://news.mozilla.org/netscape/public/mozilla/webtools"
+HREF="news://news.mozilla.org/netscape.public.mozilla.webtools"
 TARGET="_top"
 >&#13;      netscape.public.mozilla.webtools</A
 >
@@ -669,7 +672,7 @@ NAME="conventions"
 ><DIV
 CLASS="informaltable"
 ><A
-NAME="AEN73"
+NAME="AEN72"
 ></A
 ><P
 ></P
@@ -693,7 +696,7 @@ VALIGN="MIDDLE"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->Warnings</TD
+>Warning</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -767,7 +770,7 @@ VALIGN="TOP"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->Notes</TD
+>Note</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -841,7 +844,7 @@ VALIGN="TOP"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->File and directory names</TD
+>File or directory name</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -855,7 +858,7 @@ CLASS="filename"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->Commands to be typed</TD
+>Command to be typed</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -869,7 +872,7 @@ CLASS="command"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->Applications names</TD
+>Application name</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -883,12 +886,7 @@ CLASS="application"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->&#13;          <I
-CLASS="foreignphrase"
->Prompt</I
->
-
-          of users command under bash shell</TD
+>&#13;          Normal user's prompt under bash shell</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -898,12 +896,7 @@ VALIGN="MIDDLE"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->&#13;          <I
-CLASS="foreignphrase"
->Prompt</I
->
-
-          of root users command under bash shell</TD
+>&#13;          Root user's prompt under bash shell</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -913,12 +906,7 @@ VALIGN="MIDDLE"
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
->&#13;          <I
-CLASS="foreignphrase"
->Prompt</I
->
-
-          of user command under tcsh shell</TD
+>&#13;          Normal user's prompt under tcsh shell</TD
 ><TD
 ALIGN="LEFT"
 VALIGN="MIDDLE"
@@ -1040,23 +1028,15 @@ NAME="why-tracking"
 ></A
 >2.2. Why use a bug-tracking system?</H1
 ><P
->For many years, defect-tracking software was principally
-    the domain of large software development houses. Most smaller shops
-    simply relied on
-    shared lists and email to monitor the status of defects. This procedure
-    was error-prone and tended to cause those bugs judged least significant by
-    developers to be dropped or ignored.</P
+>Those who do not use a bug-tracking system tend to rely on
+    shared lists, email, spreadsheets and/or Post-It notes to monitor the 
+    status of defects. This procedure
+    is usually error-prone and tends to cause those bugs judged least 
+    significant by developers to be dropped or ignored.</P
 ><P
->Integrated
-    defect-tracking systems reduce downtime, increase productivity, and raise
-    customer satisfaction with their systems. Along with full disclosure, an
-    open bug-tracker allows you to keep in touch with your clients
-    and resellers, to communicate about problems effectively throughout the
-    data management chain. Many corporations have also discovered that
-    defect-tracking helps reduce costs by providing IT support
-    accountability, telephone support knowledge bases, and a common,
-    well-understood method for accounting for unusual system or software
-    issues.</P
+>Integrated defect-tracking systems make sure that nothing gets
+    swept under the carpet; they provide a method of creating, storing,
+    arranging and processing defect reports and enhancement requests.</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -1067,7 +1047,8 @@ NAME="why-bugzilla"
 ></A
 >2.3. Why use Bugzilla?</H1
 ><P
->Bugzilla boasts many advanced features. These include: 
+>Bugzilla is the leading open-source/free software bug tracking 
+    system. It boasts many advanced features, including: 
     <P
 ></P
 ><UL
@@ -1105,12 +1086,12 @@ NAME="why-bugzilla"
 ></LI
 ><LI
 ><P
->Web, XML, email and console interfaces</P
+>Completely customisable and/or localisable web user
+        interface</P
 ></LI
 ><LI
 ><P
->Completely customisable and/or localisable web user
-        interface</P
+>Additional XML, email and console interfaces</P
 ></LI
 ><LI
 ><P
@@ -1145,8 +1126,7 @@ HREF="http://www.perforce.com"
 TARGET="_top"
 >Perforce SCM</A
 >, Bugzilla
-    provides a powerful, easy-to-use solution to configuration management and
-    replication problems.</P
+    provides a powerful, easy-to-use configuration management solution.</P
 ></DIV
 ></DIV
 ><DIV
@@ -1156,18 +1136,27 @@ CLASS="chapter"
 NAME="using"
 ></A
 >Chapter 3. Using Bugzilla</H1
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="using-intro"
+></A
+>3.1. Introduction</H1
 ><P
 >This section contains information for end-users of Bugzilla. 
-  There is a Bugzilla test installation, called 
-  <A
+    There is a Bugzilla test installation, called 
+    <A
 HREF="http://landfill.bugzilla.org/bugzilla-tip/"
 TARGET="_top"
 >Landfill</A
 >, 
-  which you are welcome to play with (if it's up.) 
-  However, it does not necessarily
-  have all Bugzilla features enabled, and runs an up-to-the-minute version, 
-  so some things may not quite work as this document describes.</P
+    which you are welcome to play with (if it's up.) 
+    However, it does not necessarily
+    have all Bugzilla features enabled, and runs an up-to-the-minute version, 
+    so some things may not quite work as this document describes.</P
+></DIV
 ><DIV
 CLASS="section"
 ><HR><H1
@@ -1175,7 +1164,7 @@ CLASS="section"
 ><A
 NAME="myaccount"
 ></A
->3.1. Create a Bugzilla Account</H1
+>3.2. Create a Bugzilla Account</H1
 ><P
 >If you want to use Bugzilla, first you need to create an account.
     Consult with the administrator responsible for your installation of
@@ -1245,7 +1234,7 @@ CLASS="section"
 ><A
 NAME="bug_page"
 ></A
->3.2. Anatomy of a Bug</H1
+>3.3. Anatomy of a Bug</H1
 ><P
 >The core of Bugzilla is the screen which displays a particular
     bug. It's a good place to explain some Bugzilla concepts. 
@@ -1512,7 +1501,7 @@ CLASS="section"
 ><A
 NAME="query"
 ></A
->3.3. Searching for Bugs</H1
+>3.4. Searching for Bugs</H1
 ><P
 >The Bugzilla Search page is is the interface where you can find
     any bug report, comment, or patch currently in the Bugzilla system. You
@@ -1542,7 +1531,7 @@ CLASS="section"
 ><A
 NAME="list"
 ></A
->3.4. Bug Lists</H1
+>3.5. Bug Lists</H1
 ><P
 >If you run a search, a list of matching bugs will be returned.
     </P
@@ -1563,6 +1552,15 @@ BORDER="0"
 
       this gives you a large page with a non-editable summary of the fields
       of each bug.</TD
+></TR
+><TR
+><TD
+>&#13;      <EM
+>CSV:</EM
+>
+
+      get the buglist as comma-separated values, for import into e.g.
+      a spreadsheet.</TD
 ></TR
 ><TR
 ><TD
@@ -1593,12 +1591,22 @@ BORDER="0"
 ><TR
 ><TD
 >&#13;      <EM
->Edit this query:</EM
+>Edit Search:</EM
 >
 
       If you didn't get exactly the results you were looking for, you can
       return to the Query page through this link and make small revisions
       to the query you just made so you get more accurate results.</TD
+></TR
+><TR
+><TD
+>&#13;      <EM
+>Remember Search As:</EM
+>
+
+      You can give a search a name and remember it; a link will appear
+      in your page footer giving you quick access to run it again later.
+      </TD
 ></TR
 ></TBODY
 ></TABLE
@@ -1614,7 +1622,7 @@ CLASS="section"
 ><A
 NAME="bugreports"
 ></A
->3.5. Filing Bugs</H1
+>3.6. Filing Bugs</H1
 ><P
 >Years of bug writing experience has been distilled for your
     reading pleasure into the 
@@ -1666,6 +1674,22 @@ TARGET="_top"
 >Select "Commit" and send in your bug report.</P
 ></LI
 ></OL
+><P
+>Try to make sure that everything said in the summary is also 
+      said in the first comment. Summaries are often updated and this will
+      ensure your original information is easily accessible.
+      </P
+><P
+>&#13;      You do not need to put "any" or similar strings in the URL field.
+      If there is no specific URL associated with the bug, leave this 
+      field blank.
+      </P
+><P
+>If you feel a bug you filed was incorrectly marked as a
+      DUPLICATE of another, please question it in your bug, not      
+      the bug it was duped to. Feel free to CC the person who duped it 
+      if they are not already CCed.
+      </P
 ></DIV
 ><DIV
 CLASS="section"
@@ -1674,7 +1698,7 @@ CLASS="section"
 ><A
 NAME="patchviewer"
 ></A
->3.6. Patch Viewer</H1
+>3.7. Patch Viewer</H1
 ><P
 >Viewing and reviewing patches in Bugzilla is often difficult due to
     lack of context, improper format and the inherent readability issues that
@@ -1732,7 +1756,7 @@ CLASS="section"
 ><A
 NAME="patchviewer_view"
 ></A
->3.6.1. Viewing Patches in Patch Viewer</H2
+>3.7.1. Viewing Patches in Patch Viewer</H2
 ><P
 >The main way to view a patch in patch viewer is to click on the
       "Diff" link next to a patch in the Attachments list on a bug. You may
@@ -1746,7 +1770,7 @@ CLASS="section"
 ><A
 NAME="patchviewer_diff"
 ></A
->3.6.2. Seeing the Difference Between Two Patches</H2
+>3.7.2. Seeing the Difference Between Two Patches</H2
 ><P
 >To see the difference between two patches, you must first view the
       newer patch in Patch Viewer.  Then select the older patch from the
@@ -1761,7 +1785,7 @@ CLASS="section"
 ><A
 NAME="patchviewer_context"
 ></A
->3.6.3. Getting More Context in a Patch</H2
+>3.7.3. Getting More Context in a Patch</H2
 ><P
 >To get more context in a patch, you put a number in the textbox at
       the top of Patch Viewer ("Patch / File / [textbox]") and hit enter.
@@ -1777,7 +1801,7 @@ CLASS="section"
 ><A
 NAME="patchviewer_collapse"
 ></A
->3.6.4. Collapsing and Expanding Sections of a Patch</H2
+>3.7.4. Collapsing and Expanding Sections of a Patch</H2
 ><P
 >To view only a certain set of files in a patch (for example, if a
       patch is absolutely huge and you want to only review part of it at a
@@ -1793,7 +1817,7 @@ CLASS="section"
 ><A
 NAME="patchviewer_link"
 ></A
->3.6.5. Linking to a Section of a Patch</H2
+>3.7.5. Linking to a Section of a Patch</H2
 ><P
 >To link to a section of a patch (for example, if you want to be
       able to give someone a URL to show them which part you are talking
@@ -1808,7 +1832,7 @@ CLASS="section"
 ><A
 NAME="patchviewer_bonsai_lxr"
 ></A
->3.6.6. Going to Bonsai and LXR</H2
+>3.7.6. Going to Bonsai and LXR</H2
 ><P
 >To go to Bonsai to get blame for the lines you are interested in,
       you can click the "Lines XX-YY" link on the section header you are
@@ -1826,7 +1850,7 @@ CLASS="section"
 ><A
 NAME="patchviewer_unified_diff"
 ></A
->3.6.7. Creating a Unified Diff</H2
+>3.7.7. Creating a Unified Diff</H2
 ><P
 >If the patch is not in a format that you like, you can turn it
       into a unified diff format by clicking the "Raw Unified" link at the top
@@ -1840,7 +1864,7 @@ CLASS="section"
 ><A
 NAME="hintsandtips"
 ></A
->3.7. Hints and Tips</H1
+>3.8. Hints and Tips</H1
 ><P
 >This section distills some Bugzilla tips and best practices
     that have been developed.</P
@@ -1849,9 +1873,9 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN358"
+NAME="AEN363"
 ></A
->3.7.1. Autolinkification</H2
+>3.8.1. Autolinkification</H2
 ><P
 >Bugzilla comments are plain text - so typing &#60;U&#62; will
       produce less-than, U, greater-than rather than underlined text.
@@ -1920,7 +1944,7 @@ CLASS="section"
 ><A
 NAME="quicksearch"
 ></A
->3.7.2. Quicksearch</H2
+>3.8.2. Quicksearch</H2
 ><P
 >Quicksearch is a single-text-box query tool which uses
       metacharacters to indicate what is to be searched. For example, typing
@@ -1953,7 +1977,7 @@ CLASS="section"
 ><A
 NAME="commenting"
 ></A
->3.7.3. Comments</H2
+>3.8.3. Comments</H2
 ><P
 >If you are changing the fields on a bug, only comment if
       either you have something pertinent to say, or Bugzilla requires it.
@@ -1977,7 +2001,7 @@ CLASS="section"
 ><A
 NAME="attachments"
 ></A
->3.7.4. Attachments</H2
+>3.8.4. Attachments</H2
 ><P
 >&#13;      Use attachments, rather than comments, for large chunks of ASCII data,
       such as trace, debugging output files, or log files. That way, it doesn't
@@ -1996,31 +2020,6 @@ NAME="attachments"
       out of the bug.
       </P
 ></DIV
-><DIV
-CLASS="section"
-><HR><H2
-CLASS="section"
-><A
-NAME="AEN388"
-></A
->3.7.5. Filing Bugs</H2
-><P
->Try to make sure that everything said in the summary is also 
-      said in the first comment. Summaries are often updated and this will
-      ensure your original information is easily accessible.
-      </P
-><P
->&#13;      You do not need to put "any" or similar strings in the URL field.
-      If there is no specific URL associated with the bug, leave this 
-      field blank.
-      </P
-><P
->If you feel a bug you filed was incorrectly marked as a
-      DUPLICATE of another, please question it in your bug, not      
-      the bug it was duped to. Feel free to CC the person who duped it 
-      if they are not already CCed.
-      </P
-></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -2029,7 +2028,7 @@ CLASS="section"
 ><A
 NAME="userpreferences"
 ></A
->3.8. User Preferences</H1
+>3.9. User Preferences</H1
 ><P
 >Once you have logged in, you can customise various aspects of 
     Bugzilla via the "Edit prefs" link in the page footer.
@@ -2041,7 +2040,7 @@ CLASS="section"
 ><A
 NAME="accountsettings"
 ></A
->3.8.1. Account Settings</H2
+>3.9.1. Account Settings</H2
 ><P
 >On this tab, you can change your basic account information,
       including your password, email address and real name. For security
@@ -2066,7 +2065,7 @@ CLASS="section"
 ><A
 NAME="emailsettings"
 ></A
->3.8.2. Email Settings</H2
+>3.9.2. Email Settings</H2
 ><P
 >On this tab you can reduce or increase the amount of email sent
       you from Bugzilla, opting in our out depending on your relationship to
@@ -2121,7 +2120,7 @@ CLASS="section"
 ><A
 NAME="permissionsettings"
 ></A
->3.8.3. Permissions</H2
+>3.9.3. Permissions</H2
 ><P
 >This is a purely informative page which outlines your current
       permissions on this installation of Bugzilla - what product groups you
@@ -2136,7 +2135,7 @@ CLASS="section"
 ><A
 NAME="reporting"
 ></A
->3.9. Reports</H1
+>3.10. Reports</H1
 ><P
 ><EM
 >To be written</EM
@@ -2170,7 +2169,8 @@ CLASS="productname"
       <A
 HREF="#os-specific"
 >Section 4.4</A
->, so be sure to check out that section before
+>, so unless you are on Linux,
+      be sure to check out that section before
       you start your installation.
       </P
 ><DIV
@@ -2228,7 +2228,8 @@ ALIGN="LEFT"
 VALIGN="TOP"
 ><P
 >While installing Bugzilla, it is a good idea to ensure that there
-        is some kind of firewall between you and the rest of the Internet
+        is some kind of configurable firewall between you and the rest of the 
+        Internet
         as your machine may be insecure for periods during the install. Many
         installation steps require an active Internet connection to complete,
         but you must take care to ensure that at no point is your machine
@@ -2240,19 +2241,18 @@ VALIGN="TOP"
 ><P
 >This guide assumes that you already have your operating system
       installed, network configured, and have administrative access to the
-      shell on the machine you are installing Bugzilla onto. It is possible to
-      install and run Bugzilla without administrative access, but you have to
+      machine onto which you are installing Bugzilla. It is possible to
+      install and run Bugzilla itself without administrative access, but you 
+      have to
       either make sure all the required software is installed or get somebody
       with administrative access to install it for you.
       </P
 ><P
 >&#13;      You are strongly recommended to make a backup of your system
-      before installing Bugzilla and at regular intervals thereafter.
+      before installing Bugzilla (and at regular intervals thereafter :-).
       </P
 ><P
->The listing below is a basic step-by-step list. More information
-      can be found in the sections below. Minimum versions will be
-      included in parenthesis where appropriate.
+>Here's a basic step-by-step list:
       </P
 ><DIV
 CLASS="procedure"
@@ -2264,7 +2264,7 @@ TYPE="1"
 HREF="#install-perl"
 >Install Perl</A
 >
-          (5.6)
+          (5.6.0 or above)
           </P
 ></LI
 ><LI
@@ -2273,7 +2273,7 @@ HREF="#install-perl"
 HREF="#install-mysql"
 >Install MySQL</A
 >
-          (3.23.41)
+          (3.23.41 or above)
           </P
 ></LI
 ><LI
@@ -2320,17 +2320,18 @@ NAME="install-perl"
 >4.1.1. Perl</H2
 ><P
 >Any machine that doesn't have Perl on it is a sad machine indeed.
-      Perl can be got in source form from <A
+      If your OS doesn't come with it, Perl can be got in source form 
+      from <A
 HREF="http://www.perl.com"
 TARGET="_top"
 >http://www.perl.com</A
 >.
       There are also binary versions available for many platforms, most of which
       are linked to from perl.com.
-      Although Bugzilla runs with perl 5.6,
+      Although Bugzilla runs with perl 5.6.0,
       it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
-      version 5.8.</P
+      version 5.8.2.</P
 ></DIV
 ><DIV
 CLASS="section"
@@ -2341,7 +2342,8 @@ NAME="install-mysql"
 ></A
 >4.1.2. MySQL</H2
 ><P
->Visit the MySQL homepage at 
+>If your OS doesn't come with it or provide official packages,
+      visit the MySQL homepage at 
       <A
 HREF="http://www.mysql.com"
 TARGET="_top"
@@ -2440,7 +2442,7 @@ set-variable = max_allowed_packet=1M
 >If you are running Bugzilla and MySQL on the same machine, you may
       also wish to utilize the <TT
 CLASS="option"
->skip-networking</TT
+>--skip-networking</TT
 > option as
       mentioned in <A
 HREF="#security-mysql"
@@ -2454,7 +2456,7 @@ CLASS="section"
 ><A
 NAME="install-setupdatabase"
 ></A
->4.1.2.1. Configuring MySQL</H3
+>4.1.2.1. Adding a user to MySQL</H3
 ><P
 >This first thing you'll want to do is make sure you've given the
         <SPAN
@@ -2464,7 +2466,8 @@ CLASS="QUOTE"
         <A
 HREF="#security-mysql"
 >Section 4.5.2</A
->. For clarity, these instructions will
+>. Then, you need to add a user for
+        Bugzilla to use. For clarity, these instructions will
         assume that your MySQL user for Bugzilla will be <SPAN
 CLASS="QUOTE"
 >"bugs_user"</SPAN
@@ -2507,14 +2510,14 @@ VALIGN="TOP"
 CLASS="QUOTE"
 >"bugs"</SPAN
 > for both the user and
-          database name.
+          database name. Don't use it for the password, though...
           </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->Next, we use an SQL <B
+>We use an SQL <B
 CLASS="command"
 >GRANT</B
 > command to create a 
@@ -2522,8 +2525,7 @@ CLASS="command"
 CLASS="QUOTE"
 >"bugs_user"</SPAN
 >
-        user, and grant sufficient permissions for checksetup.pl, which we'll
-        use later, to work its magic. This also restricts the 
+        user. This also restricts the 
         <SPAN
 CLASS="QUOTE"
 >"bugs_user"</SPAN
@@ -2593,7 +2595,12 @@ CLASS="computeroutput"
           <TT
 CLASS="computeroutput"
 >CREATE TEMPORARY TABLES</TT
-> permissions.
+> permissions,
+          so add them to the list in the 
+          <TT
+CLASS="computeroutput"
+>GRANT</TT
+> command.
           </P
 ></TD
 ></TR
@@ -2703,32 +2710,30 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->If you symlink the bugzilla directory into your Apache's HTML
+>If you symlink the bugzilla directory into your Apache's 
+        <TT
+CLASS="filename"
+>html</TT
+>
         hierarchy, you may receive 
         <SPAN
 CLASS="errorname"
 >Forbidden</SPAN
 >
         errors unless you add the 
-        <SPAN
-CLASS="QUOTE"
->"FollowSymLinks"</SPAN
+        <TT
+CLASS="filename"
+>FollowSymLinks</TT
 >
-        directive to the &#60;Directory&#62; entry for the HTML root
-        in httpd.conf.</P
+        directive to the <TT
+CLASS="filename"
+>&#60;Directory&#62;</TT
+> entry for 
+        the HTML root directory in httpd.conf.</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-><P
->Once all the files are in a web accessible directory, make that
-      directory writable by your webserver's user. This is a temporary step
-      until you run the post-install 
-      <TT
-CLASS="filename"
->checksetup.pl</TT
->
-      script, which locks down your installation.</P
 ><DIV
 CLASS="caution"
 ><P
@@ -2765,6 +2770,166 @@ CLASS="option"
 ></TR
 ></TABLE
 ></DIV
+><P
+>Once all the files are in a web accessible directory, make that
+      directory writable by your webserver's user. This is a temporary step
+      until you run the post-install 
+      <TT
+CLASS="filename"
+>checksetup.pl</TT
+>
+      script, which locks down your installation.</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="AEN522"
+></A
+>4.1.5. <TT
+CLASS="filename"
+>checksetup.pl</TT
+></H2
+><P
+>Next, run the magic checksetup.pl script. 
+      This is designed to check whether you have all of the right
+      Perl modules in the correct
+      versions, and that Bugzilla is generally set up correctly. 
+      </P
+><P
+>&#13;      Eventually, 
+      it will make sure Bugzilla files and directories have reasonable
+      permissions, set up the 
+      <TT
+CLASS="filename"
+>data</TT
+>
+      directory, and create all the MySQL tables. But the first time you
+      run it, it's highly likely to tell you that you are missing a few
+      Perl modules. Make a note of which ones they are, and then proceed to
+      the next section to install them.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> ./checksetup.pl
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;      The first time you run it with all the correct modules installed, 
+      it will create a file called 
+      <TT
+CLASS="filename"
+>localconfig</TT
+>.</P
+><P
+>This file contains a variety of settings you may need to tweak
+      including how Bugzilla should connect to the MySQL database.</P
+><P
+>The connection settings include: 
+      <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>server's host: just use 
+          <SPAN
+CLASS="QUOTE"
+>"localhost"</SPAN
+>
+          if the MySQL server is local</P
+></LI
+><LI
+><P
+>database name: 
+          <SPAN
+CLASS="QUOTE"
+>"bugs_db"</SPAN
+>
+          if you're following these directions</P
+></LI
+><LI
+><P
+>MySQL username: 
+          <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+          if you're following these directions</P
+></LI
+><LI
+><P
+>Password for the 
+          <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+          MySQL account; (<SPAN
+CLASS="QUOTE"
+>"bugs_password"</SPAN
+> above)</P
+></LI
+></OL
+>
+      </P
+><P
+>Edit the file to change these. Once you are happy with the 
+      settings, <TT
+CLASS="filename"
+>su</TT
+> to the user
+      your web server runs as, and re-run 
+      <TT
+CLASS="filename"
+>checksetup.pl</TT
+>. (Note: on some security-conscious
+      systems, you may need to change the login shell for the webserver 
+      account before you can do this.)
+      On this second run, it will create the database and an administrator
+      account for which you will be prompted to provide information.</P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The checksetup.pl script is designed so that you can run it at
+        any time without causing harm. You should run it after any upgrade to
+        Bugzilla.</P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -2773,7 +2938,15 @@ CLASS="section"
 ><A
 NAME="install-perlmodules"
 ></A
->4.1.5. Perl Modules</H2
+>4.1.6. Perl Modules</H2
+><P
+>Don't be intimidated by this long list of modules. See
+      <A
+HREF="#install-modules-bundle-bugzilla"
+>Section 4.1.6.1</A
+> for a way of 
+      installing all the ones you need with a single command.
+      </P
 ><P
 >Perl modules can be found using
       <A
@@ -2789,8 +2962,7 @@ HREF="#gloss-ppm"
 CLASS="glossterm"
 >PPM</I
 ></A
-> on Win32. The root servers
-      have a real tendency to bog down, so please use mirrors.
+> on Win32.
       </P
 ><P
 >Good instuctions can be found for using each of these services on
@@ -3010,28 +3182,10 @@ HREF="#install-modules-bundle-bugzilla"
 ><LI
 ><P
 >&#13;            <A
-HREF="#install-modules-appconfig"
->AppConfig</A
->
-            (1.52)
-          </P
-></LI
-><LI
-><P
->&#13;            <A
 HREF="#install-modules-cgi"
 >CGI</A
 > 
             (2.88)
-          </P
-></LI
-><LI
-><P
->&#13;            <A
-HREF="#install-modules-data-dumper"
->Data::Dumper</A
-> 
-            (any)
           </P
 ></LI
 ><LI
@@ -3178,7 +3332,7 @@ CLASS="section"
 ><A
 NAME="install-modules-bundle-bugzilla"
 ></A
->4.1.5.1. Bundle::Bugzilla</H3
+>4.1.6.1. Bundle::Bugzilla</H3
 ><P
 >If you are running at least perl 5.6.1, you can save yourself a lot
       of time by using Bundle::Bugzilla. This bundle contains every module
@@ -3255,22 +3409,9 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="install-modules-appconfig"
-></A
->4.1.5.2. AppConfig (1.52)</H3
-><P
->Dependency for Template Toolkit. We probably don't need to
-      specifically check for it anymore.
-      </P
-></DIV
-><DIV
-CLASS="section"
-><HR><H3
-CLASS="section"
-><A
 NAME="install-modules-cgi"
 ></A
->4.1.5.3. CGI (2.88)</H3
+>4.1.6.2. CGI (2.88)</H3
 ><P
 >The CGI module parses form elements and cookies and does many
       other usefule things. It come as a part of recent perl distributions, but
@@ -3301,43 +3442,9 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="install-modules-data-dumper"
-></A
->4.1.5.4. Data::Dumper (any)</H3
-><P
->The Data::Dumper module provides data structure persistence for
-      Perl (similar to Java's serialization). It comes with later
-      sub-releases of Perl 5.004, but a re-installation just to be sure it's
-      available won't hurt anything.
-      </P
-><P
-CLASS="literallayout"
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
-HREF="http://search.cpan.org/dist/Data-Dumper/"
-TARGET="_top"
->http://search.cpan.org/dist/Data-Dumper/</A
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
-HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip"
-TARGET="_top"
->http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip</A
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
-HREF="http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html"
-TARGET="_top"
->http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html</A
-><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
-></DIV
-><DIV
-CLASS="section"
-><HR><H3
-CLASS="section"
-><A
 NAME="install-modules-date-format"
 ></A
->4.1.5.5. TimeDate modules (2.21)</H3
+>4.1.6.3. TimeDate modules (2.21)</H3
 ><P
 >Many of the more common date/time/calendar related Perl modules
       have been grouped into a bundle similar to the MySQL modules bundle.
@@ -3372,7 +3479,7 @@ CLASS="section"
 ><A
 NAME="install-modules-dbi"
 ></A
->4.1.5.6. DBI (1.32)</H3
+>4.1.6.4. DBI (1.32)</H3
 ><P
 >The DBI module is a generic Perl module used the
       MySQL-related modules. As long as your Perl installation was done
@@ -3406,7 +3513,7 @@ CLASS="section"
 ><A
 NAME="install-modules-dbd-mysql"
 ></A
->4.1.5.7. MySQL-related modules</H3
+>4.1.6.5. MySQL-related modules</H3
 ><P
 >The Perl/MySQL interface requires a few mutually-dependent Perl
       modules. These modules are grouped together into the the
@@ -3451,7 +3558,7 @@ CLASS="section"
 ><A
 NAME="install-file-spec"
 ></A
->4.1.5.8. File::Spec (0.82)</H3
+>4.1.6.6. File::Spec (0.82)</H3
 ><P
 >File::Spec is a perl module that allows file operations, such as
       generating full path names, to work cross platform.
@@ -3483,7 +3590,7 @@ CLASS="section"
 ><A
 NAME="install-modules-file-temp"
 ></A
->4.1.5.9. File::Temp (any)</H3
+>4.1.6.7. File::Temp (any)</H3
 ><P
 >File::Temp is used to generate a temporary filename that is
       guaranteed to be unique. It comes as a standard part of perl
@@ -3515,7 +3622,7 @@ CLASS="section"
 ><A
 NAME="install-modules-template"
 ></A
->4.1.5.10. Template Toolkit (2.08)</H3
+>4.1.6.8. Template Toolkit (2.08)</H3
 ><P
 >When you install Template Toolkit, you'll get asked various
       questions about features to enable. The defaults are fine, except
@@ -3549,7 +3656,7 @@ CLASS="section"
 ><A
 NAME="install-modules-text-wrap"
 ></A
->4.1.5.11. Text::Wrap (2001.0131)</H3
+>4.1.6.9. Text::Wrap (2001.0131)</H3
 ><P
 >Text::Wrap is designed to proved intelligent text wrapping.
       </P
@@ -3575,14 +3682,10 @@ CLASS="section"
 ><A
 NAME="install-modules-gd"
 ></A
->4.1.5.12. GD (1.20) [optional]</H3
+>4.1.6.10. GD (1.20) [optional]</H3
 ><P
->The GD library was written by Thomas Boutell a long while ago to
-      programmatically generate images in C. Since then it's become the
-      defacto standard for programmatic image construction. The Perl bindings
-      to it found in the GD library are used on millions of web pages to
-      generate graphs on the fly. That's what Bugzilla will be using it for
-      so you must install it if you want any of the graphing to work.</P
+>You need the GD library if you want any of the graphing to work.
+      </P
 ><DIV
 CLASS="note"
 ><P
@@ -3685,7 +3788,7 @@ CLASS="section"
 ><A
 NAME="install-modules-chart-base"
 ></A
->4.1.5.13. Chart::Base (0.99c) [optional]</H3
+>4.1.6.11. Chart::Base (0.99c) [optional]</H3
 ><P
 >The Chart module provides Bugzilla with on-the-fly charting
       abilities. It can be installed in the usual fashion after it has been
@@ -3714,7 +3817,7 @@ CLASS="section"
 ><A
 NAME="install-modules-xml-parser"
 ></A
->4.1.5.14. XML::Parser (any) [Optional]</H3
+>4.1.6.12. XML::Parser (any) [optional]</H3
 ><P
 >XML::Parser is used by the <TT
 CLASS="filename"
@@ -3749,7 +3852,7 @@ CLASS="section"
 ><A
 NAME="install-modules-gd-graph"
 ></A
->4.1.5.15. GD::Graph (any) [Optional]</H3
+>4.1.6.13. GD::Graph (any) [optional]</H3
 ><P
 >In addition to GD listed above, the reporting interface of Bugzilla
       needs to have the GD::Graph module installed.
@@ -3781,7 +3884,7 @@ CLASS="section"
 ><A
 NAME="install-modules-gd-text-align"
 ></A
->4.1.5.16. GD::Text::Align (any) [Optional]</H3
+>4.1.6.14. GD::Text::Align (any) [optional]</H3
 ><P
 >GD::Text::Align, as the name implies, is used to draw aligned
       strings of text. It is needed by the reporting interface.
@@ -3813,7 +3916,7 @@ CLASS="section"
 ><A
 NAME="install-modules-mime-parser"
 ></A
->4.1.5.17. MIME::Parser (any) [Optional]</H3
+>4.1.6.15. MIME::Parser (any) [optional]</H3
 ><P
 >MIME::Parser is only needed if you want to use the e-mail interface
       located in the <TT
@@ -3848,7 +3951,7 @@ CLASS="section"
 ><A
 NAME="install-modules-patchreader"
 ></A
->4.1.5.18. PatchReader (0.9.1) [Optional]</H3
+>4.1.6.16. PatchReader (0.9.1) [optional]</H3
 ><P
 >PatchReader is only needed if you want to use Patch Viewer, a
       Bugzilla feature to format patches in a pretty HTML fashion.  There are a
@@ -3884,153 +3987,14 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN748"
-></A
->4.1.6. <TT
-CLASS="filename"
->checksetup.pl</TT
-></H2
-><P
->Next, run the magic checksetup.pl script. 
-      This is designed to make sure your perl modules are the correct
-      version and your MySQL database and other
-      configuration options are consistent with the Bugzilla CGI files. 
-      It will make sure Bugzilla files and directories have reasonable
-      permissions, set up the 
-      <TT
-CLASS="filename"
->data</TT
->
-      directory, and create all the MySQL tables. 
-      </P
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="screen"
->&#13;<TT
-CLASS="prompt"
->bash#</TT
-> ./checksetup.pl
-      </PRE
-></FONT
-></TD
-></TR
-></TABLE
-><P
->&#13;      The first time you run it, it will create a file called 
-      <TT
-CLASS="filename"
->localconfig</TT
->.</P
-><P
->This file contains a variety of settings you may need to tweak
-      including how Bugzilla should connect to the MySQL database.</P
-><P
->The connection settings include: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->server's host: just use 
-          <SPAN
-CLASS="QUOTE"
->"localhost"</SPAN
->
-          if the MySQL server is local</P
-></LI
-><LI
-><P
->database name: 
-          <SPAN
-CLASS="QUOTE"
->"bugs_db"</SPAN
->
-          if you're following these directions</P
-></LI
-><LI
-><P
->MySQL username: 
-          <SPAN
-CLASS="QUOTE"
->"bugs_user"</SPAN
->
-          if you're following these directions</P
-></LI
-><LI
-><P
->Password for the 
-          <SPAN
-CLASS="QUOTE"
->"bugs_user"</SPAN
->
-          MySQL account; (<SPAN
-CLASS="QUOTE"
->"bugs_password"</SPAN
-> above)</P
-></LI
-></OL
->
-      </P
-><P
->Once you are happy with the settings, 
-      <TT
-CLASS="filename"
->su</TT
-> to the user
-      your web server runs as, and re-run 
-      <TT
-CLASS="filename"
->checksetup.pl</TT
->. (Note: on some security-conscious
-      systems, you may need to change the login shell for the webserver 
-      account before you can do this.)
-      On this second run, it will create the database and an administrator
-      account for which you will be prompted to provide information.</P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->The checksetup.pl script is designed so that you can run it at
-        any time without causing harm. You should run it after any upgrade to
-        Bugzilla.</P
-></TD
-></TR
-></TABLE
-></DIV
-></DIV
-><DIV
-CLASS="section"
-><HR><H2
-CLASS="section"
-><A
-NAME="AEN778"
+NAME="AEN768"
 ></A
 >4.1.7. Configuring Bugzilla</H2
+><P
+>&#13;      Once checksetup.pl has run successfully, Bugzilla should start up.
+      Proceed to the correct URL and log in with the administrator account
+      you defined in the last checksetup.pl run.
+      </P
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 
@@ -4452,7 +4416,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN852"
+NAME="AEN843"
 ></A
 >4.3.1. Dependency Charts</H2
 ><P
@@ -4516,7 +4480,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN867"
+NAME="AEN858"
 ></A
 >4.3.2. Bug Graphs</H2
 ><P
@@ -4575,7 +4539,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN880"
+NAME="AEN871"
 ></A
 >4.3.3. The Whining Cron</H2
 ><P
@@ -5091,7 +5055,7 @@ NAME="win32-perlmodules"
 >Bugzilla on Windows requires the same perl modules found in
         <A
 HREF="#install-perlmodules"
->Section 4.1.5</A
+>Section 4.1.6</A
 >. The main difference is that
         windows uses <A
 HREF="#gloss-ppm"
@@ -6290,7 +6254,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1215"
+NAME="AEN1206"
 ></A
 >4.6.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -6315,7 +6279,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1220"
+NAME="AEN1211"
 ></A
 >4.6.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -8247,7 +8211,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1597"
+NAME="AEN1588"
 ></A
 >6.1.1. What to Edit</H2
 ><P
@@ -8399,7 +8363,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1620"
+NAME="AEN1611"
 ></A
 >6.1.2. How To Edit Templates</H2
 ><DIV
@@ -8479,7 +8443,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1630"
+NAME="AEN1621"
 ></A
 >6.1.3. Template Formats</H2
 ><P
@@ -8541,7 +8505,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1643"
+NAME="AEN1634"
 ></A
 >6.1.4. Particular Templates</H2
 ><P
@@ -9039,7 +9003,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1719"
+NAME="AEN1710"
 ></A
 >6.4.1. Bugzilla Database Basics</H2
 ><P
@@ -9153,7 +9117,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN1746"
+NAME="AEN1737"
 ></A
 >6.4.1.1. Bugzilla Database Tables</H3
 ><P
@@ -11428,7 +11392,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN2062"
+NAME="AEN2053"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12049,7 +12013,7 @@ NAME="gfdl"
 ><P
 >Version 1.1, March 2000</P
 ><A
-NAME="AEN2192"
+NAME="AEN2183"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12512,7 +12476,7 @@ NAME="gfdl-howto"
     of the License in the document and put the following copyright and
     license notices just after the title page:</P
 ><A
-NAME="AEN2282"
+NAME="AEN2273"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12549,7 +12513,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2287"
+NAME="AEN2278"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -13413,7 +13377,7 @@ NAME="gloss-zarro"
         Terry had the following to say:
         </P
 ><A
-NAME="AEN2522"
+NAME="AEN2513"
 ></A
 ><TABLE
 BORDER="0"

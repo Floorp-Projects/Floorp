@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.56 2004/01/15 22:34:35 gerv%gerv.net Exp $ -->
+<!-- $Id: installation.xml,v 1.57 2004/01/15 23:54:39 gerv%gerv.net Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -11,7 +11,8 @@
       <productname class="registered">Microsoft Windows</productname>.  Many
       operating systems have utilities that make installation easier or quirks
       that make it harder. We have tried to collect that information in
-      <xref linkend="os-specific"/>, so be sure to check out that section before
+      <xref linkend="os-specific"/>, so unless you are on Linux,
+      be sure to check out that section before
       you start your installation.
       </para>
 
@@ -25,7 +26,8 @@
 
       <warning>
         <para>While installing Bugzilla, it is a good idea to ensure that there
-        is some kind of firewall between you and the rest of the Internet
+        is some kind of configurable firewall between you and the rest of the 
+        Internet
         as your machine may be insecure for periods during the install. Many
         installation steps require an active Internet connection to complete,
         but you must take care to ensure that at no point is your machine
@@ -34,31 +36,30 @@
 
       <para>This guide assumes that you already have your operating system
       installed, network configured, and have administrative access to the
-      shell on the machine you are installing Bugzilla onto. It is possible to
-      install and run Bugzilla without administrative access, but you have to
+      machine onto which you are installing Bugzilla. It is possible to
+      install and run Bugzilla itself without administrative access, but you 
+      have to
       either make sure all the required software is installed or get somebody
       with administrative access to install it for you.
       </para>
 
       <para>
       You are strongly recommended to make a backup of your system
-      before installing Bugzilla and at regular intervals thereafter.
+      before installing Bugzilla (and at regular intervals thereafter :-).
       </para>
       
-      <para>The listing below is a basic step-by-step list. More information
-      can be found in the sections below. Minimum versions will be
-      included in parenthesis where appropriate.
+      <para>Here's a basic step-by-step list:
       </para>
 
       <procedure>
         <step>
           <para><link linkend="install-perl">Install Perl</link>
-          (&min-perl-ver;)
+          (&min-perl-ver; or above)
           </para>
         </step>
         <step>
           <para><link linkend="install-mysql">Install MySQL</link>
-          (&min-mysql-ver;)
+          (&min-mysql-ver; or above)
           </para>
         </step>
         <step>
@@ -83,7 +84,8 @@
       <title>Perl</title>
 
       <para>Any machine that doesn't have Perl on it is a sad machine indeed.
-      Perl can be got in source form from <ulink url="http://www.perl.com"/>.
+      If your OS doesn't come with it, Perl can be got in source form 
+      from <ulink url="http://www.perl.com"/>.
       There are also binary versions available for many platforms, most of which
       are linked to from perl.com.
       Although Bugzilla runs with perl &min-perl-ver;,
@@ -95,7 +97,8 @@
     <section id="install-mysql">
       <title>MySQL</title>
 
-      <para>Visit the MySQL homepage at 
+      <para>If your OS doesn't come with it or provide official packages,
+      visit the MySQL homepage at 
       <ulink url="http://www.mysql.com"/>
       to grab and install the latest stable release of the server. 
       </para>
@@ -136,16 +139,17 @@ set-variable = max_allowed_packet=1M
       </figure>
 
       <para>If you are running Bugzilla and MySQL on the same machine, you may
-      also wish to utilize the <option>skip-networking</option> option as
+      also wish to utilize the <option>--skip-networking</option> option as
       mentioned in <xref linkend="security-mysql"/> for the added security.
       </para>
       
       <section id="install-setupdatabase">
-        <title>Configuring MySQL</title>
+        <title>Adding a user to MySQL</title>
 
         <para>This first thing you'll want to do is make sure you've given the
         <quote>root</quote> user a password as suggested in
-        <xref linkend="security-mysql"/>. For clarity, these instructions will
+        <xref linkend="security-mysql"/>. Then, you need to add a user for
+        Bugzilla to use. For clarity, these instructions will
         assume that your MySQL user for Bugzilla will be <quote>bugs_user</quote>,
         the database will be called <quote>bugs_db</quote> and the password for
         the <quote>bugs_user</quote> user is <quote>bugs_password</quote>. You
@@ -154,14 +158,13 @@ set-variable = max_allowed_packet=1M
 
         <note>
           <para>Most people use <quote>bugs</quote> for both the user and
-          database name.
+          database name. Don't use it for the password, though...
           </para>
         </note>
 
-        <para>Next, we use an SQL <command>GRANT</command> command to create a 
+        <para>We use an SQL <command>GRANT</command> command to create a 
         <quote>bugs_user</quote>
-        user, and grant sufficient permissions for checksetup.pl, which we'll
-        use later, to work its magic. This also restricts the 
+        user. This also restricts the 
         <quote>bugs_user</quote>
         user to operations within a database called 
         <quote>bugs_db</quote>, and only allows the account to connect from 
@@ -179,7 +182,9 @@ set-variable = max_allowed_packet=1M
         <note>
           <para>If you are using MySQL 4, the bugs user also needs to be granted
           the <computeroutput>LOCK TABLES</computeroutput> and 
-          <computeroutput>CREATE TEMPORARY TABLES</computeroutput> permissions.
+          <computeroutput>CREATE TEMPORARY TABLES</computeroutput> permissions,
+          so add them to the list in the 
+          <computeroutput>GRANT</computeroutput> command.
           </para>
         </note>
       </section>      
@@ -217,20 +222,15 @@ set-variable = max_allowed_packet=1M
       directory.</para>
 
       <tip>
-        <para>If you symlink the bugzilla directory into your Apache's HTML
+        <para>If you symlink the bugzilla directory into your Apache's 
+        <filename>html</filename>
         hierarchy, you may receive 
         <errorname>Forbidden</errorname>
         errors unless you add the 
-        <quote>FollowSymLinks</quote>
-        directive to the &lt;Directory&gt; entry for the HTML root
-        in httpd.conf.</para>
+        <filename>FollowSymLinks</filename>
+        directive to the <filename>&lt;Directory&gt;</filename> entry for 
+        the HTML root directory in httpd.conf.</para>
       </tip>
-
-      <para>Once all the files are in a web accessible directory, make that
-      directory writable by your webserver's user. This is a temporary step
-      until you run the post-install 
-      <filename>checksetup.pl</filename>
-      script, which locks down your installation.</para>
 
       <caution>
         <para>The default Bugzilla distribution is not designed to be placed
@@ -239,15 +239,104 @@ set-variable = max_allowed_packet=1M
         <option>ScriptAlias</option> directive of Apache).
         </para>
       </caution>
+      
+      <para>Once all the files are in a web accessible directory, make that
+      directory writable by your webserver's user. This is a temporary step
+      until you run the post-install 
+      <filename>checksetup.pl</filename>
+      script, which locks down your installation.</para>
+
+    </section>
+
+    <section>
+      <title> 
+      <filename>checksetup.pl</filename>
+      </title>
+
+      <para>Next, run the magic checksetup.pl script. 
+      This is designed to check whether you have all of the right
+      Perl modules in the correct
+      versions, and that Bugzilla is generally set up correctly. 
+      </para>
+      
+      <para>
+      Eventually, 
+      it will make sure Bugzilla files and directories have reasonable
+      permissions, set up the 
+      <filename>data</filename>
+      directory, and create all the MySQL tables. But the first time you
+      run it, it's highly likely to tell you that you are missing a few
+      Perl modules. Make a note of which ones they are, and then proceed to
+      the next section to install them.
+      </para>
+
+      <screen>
+<prompt>bash#</prompt> ./checksetup.pl
+      </screen>
+
+      <para>
+      The first time you run it with all the correct modules installed, 
+      it will create a file called 
+      <filename>localconfig</filename>.</para>
+      
+      <para>This file contains a variety of settings you may need to tweak
+      including how Bugzilla should connect to the MySQL database.</para>
+
+      <para>The connection settings include: 
+      <orderedlist>
+        <listitem>
+          <para>server's host: just use 
+          <quote>localhost</quote>
+          if the MySQL server is local</para>
+        </listitem>
+
+        <listitem>
+          <para>database name: 
+          <quote>bugs_db</quote>
+          if you're following these directions</para>
+        </listitem>
+
+        <listitem>
+          <para>MySQL username: 
+          <quote>bugs_user</quote>
+          if you're following these directions</para>
+        </listitem>
+
+        <listitem>
+          <para>Password for the 
+          <quote>bugs_user</quote>
+          MySQL account; (<quote>bugs_password</quote> above)</para>
+        </listitem>
+      </orderedlist>
+      </para>
+
+      <para>Edit the file to change these. Once you are happy with the 
+      settings, <filename>su</filename> to the user
+      your web server runs as, and re-run 
+      <filename>checksetup.pl</filename>. (Note: on some security-conscious
+      systems, you may need to change the login shell for the webserver 
+      account before you can do this.)
+      On this second run, it will create the database and an administrator
+      account for which you will be prompted to provide information.</para>
+
+      <note>
+        <para>The checksetup.pl script is designed so that you can run it at
+        any time without causing harm. You should run it after any upgrade to
+        Bugzilla.</para>
+      </note>
     </section>
 
     <section id="install-perlmodules">
       <title>Perl Modules</title>
       
+      <para>Don't be intimidated by this long list of modules. See
+      <xref linkend="install-modules-bundle-bugzilla"/> for a way of 
+      installing all the ones you need with a single command.
+      </para>
+      
       <para>Perl modules can be found using
       <glossterm linkend="gloss-cpan">CPAN</glossterm> on Unix based systems or
-      <glossterm linkend="gloss-ppm">PPM</glossterm> on Win32. The root servers
-      have a real tendency to bog down, so please use mirrors.
+      <glossterm linkend="gloss-ppm">PPM</glossterm> on Win32.
       </para>
     
       <para>Good instuctions can be found for using each of these services on
@@ -310,7 +399,6 @@ set-variable = max_allowed_packet=1M
       <para>Perl Modules (minimum version):
       <orderedlist>
 
-        <!-- TODO: Don't think we actually care about AppConfig anymore -->
         <listitem>
           <para>
             <link linkend="install-modules-bundle-bugzilla">Bundle::Bugzilla</link>
@@ -320,22 +408,8 @@ set-variable = max_allowed_packet=1M
 
         <listitem>
           <para>
-            <link linkend="install-modules-appconfig">AppConfig</link>
-            (&min-appconfig-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
             <link linkend="install-modules-cgi">CGI</link> 
             (&min-cgi-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            <link linkend="install-modules-data-dumper">Data::Dumper</link> 
-            (&min-data-dumper-ver;)
           </para>
         </listitem>
 
@@ -477,14 +551,6 @@ ReadLine support enabled
         </calloutlist>
     </section>
 
-    <section id="install-modules-appconfig">
-      <title>AppConfig (&min-appconfig-ver;)</title>
-
-      <para>Dependency for Template Toolkit. We probably don't need to
-      specifically check for it anymore.
-      </para>
-    </section>
-
     <section id="install-modules-cgi">
       <title>CGI (&min-cgi-ver;)</title>
 
@@ -497,22 +563,6 @@ ReadLine support enabled
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/CGI.pm/"/>
         PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/CGI.zip"/>
         Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/CGI.html"/>
-      </literallayout>
-    </section>
-
-    <section id="install-modules-data-dumper">
-      <title>Data::Dumper (&min-data-dumper-ver;)</title>
-
-      <para>The Data::Dumper module provides data structure persistence for
-      Perl (similar to Java's serialization). It comes with later
-      sub-releases of Perl 5.004, but a re-installation just to be sure it's
-      available won't hurt anything.
-      </para>
-
-      <literallayout>
-        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Data-Dumper/"/>
-        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip"/>
-        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html"/>
       </literallayout>
     </section>
 
@@ -637,12 +687,8 @@ ReadLine support enabled
     <section id="install-modules-gd">
       <title>GD (&min-gd-ver;) [optional]</title>
 
-      <para>The GD library was written by Thomas Boutell a long while ago to
-      programmatically generate images in C. Since then it's become the
-      defacto standard for programmatic image construction. The Perl bindings
-      to it found in the GD library are used on millions of web pages to
-      generate graphs on the fly. That's what Bugzilla will be using it for
-      so you must install it if you want any of the graphing to work.</para>
+      <para>You need the GD library if you want any of the graphing to work.
+      </para>
 
       <note>
         <para>The Perl GD library requires some other libraries that may or
@@ -687,7 +733,7 @@ ReadLine support enabled
     </section>
 
     <section id="install-modules-xml-parser">
-      <title>XML::Parser (&min-xml-parser-ver;) [Optional]</title>
+      <title>XML::Parser (&min-xml-parser-ver;) [optional]</title>
 
       <para>XML::Parser is used by the <filename>importxml.pl</filename>
       script. You only need it if you are going to be importing bugs (such as
@@ -704,7 +750,7 @@ ReadLine support enabled
     </section>
 
     <section id="install-modules-gd-graph">
-      <title>GD::Graph (&min-gd-graph-ver;) [Optional]</title>
+      <title>GD::Graph (&min-gd-graph-ver;) [optional]</title>
 
       <para>In addition to GD listed above, the reporting interface of Bugzilla
       needs to have the GD::Graph module installed.
@@ -718,7 +764,7 @@ ReadLine support enabled
     </section>
 
     <section id="install-modules-gd-text-align">
-      <title>GD::Text::Align (&min-gd-text-align-ver;) [Optional]</title>
+      <title>GD::Text::Align (&min-gd-text-align-ver;) [optional]</title>
 
       <para>GD::Text::Align, as the name implies, is used to draw aligned
       strings of text. It is needed by the reporting interface.
@@ -732,7 +778,7 @@ ReadLine support enabled
     </section>
 
     <section id="install-modules-mime-parser">
-      <title>MIME::Parser (&min-mime-parser-ver;) [Optional]</title>
+      <title>MIME::Parser (&min-mime-parser-ver;) [optional]</title>
 
       <para>MIME::Parser is only needed if you want to use the e-mail interface
       located in the <filename class="directory">contrib</filename> directory.
@@ -746,7 +792,7 @@ ReadLine support enabled
     </section>
 
     <section id="install-modules-patchreader">
-      <title>PatchReader (&min-patchreader-ver;) [Optional]</title>
+      <title>PatchReader (&min-patchreader-ver;) [optional]</title>
 
       <para>PatchReader is only needed if you want to use Patch Viewer, a
       Bugzilla feature to format patches in a pretty HTML fashion.  There are a
@@ -767,77 +813,13 @@ ReadLine support enabled
   
 
     <section>
-      <title> 
-      <filename>checksetup.pl</filename>
-      </title>
-
-      <para>Next, run the magic checksetup.pl script. 
-      This is designed to make sure your perl modules are the correct
-      version and your MySQL database and other
-      configuration options are consistent with the Bugzilla CGI files. 
-      It will make sure Bugzilla files and directories have reasonable
-      permissions, set up the 
-      <filename>data</filename>
-      directory, and create all the MySQL tables. 
-      </para>
-
-      <screen>
-<prompt>bash#</prompt> ./checksetup.pl
-      </screen>
-
-      <para>
-      The first time you run it, it will create a file called 
-      <filename>localconfig</filename>.</para>
-      
-      <para>This file contains a variety of settings you may need to tweak
-      including how Bugzilla should connect to the MySQL database.</para>
-
-      <para>The connection settings include: 
-      <orderedlist>
-        <listitem>
-          <para>server's host: just use 
-          <quote>localhost</quote>
-          if the MySQL server is local</para>
-        </listitem>
-
-        <listitem>
-          <para>database name: 
-          <quote>bugs_db</quote>
-          if you're following these directions</para>
-        </listitem>
-
-        <listitem>
-          <para>MySQL username: 
-          <quote>bugs_user</quote>
-          if you're following these directions</para>
-        </listitem>
-
-        <listitem>
-          <para>Password for the 
-          <quote>bugs_user</quote>
-          MySQL account; (<quote>bugs_password</quote> above)</para>
-        </listitem>
-      </orderedlist>
-      </para>
-
-      <para>Once you are happy with the settings, 
-      <filename>su</filename> to the user
-      your web server runs as, and re-run 
-      <filename>checksetup.pl</filename>. (Note: on some security-conscious
-      systems, you may need to change the login shell for the webserver 
-      account before you can do this.)
-      On this second run, it will create the database and an administrator
-      account for which you will be prompted to provide information.</para>
-
-      <note>
-        <para>The checksetup.pl script is designed so that you can run it at
-        any time without causing harm. You should run it after any upgrade to
-        Bugzilla.</para>
-      </note>
-    </section>
-
-    <section>
       <title>Configuring Bugzilla</title>
+      <para>
+      Once checksetup.pl has run successfully, Bugzilla should start up.
+      Proceed to the correct URL and log in with the administrator account
+      you defined in the last checksetup.pl run.
+      </para>
+      
       <para>
       You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 

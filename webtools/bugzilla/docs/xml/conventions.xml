@@ -20,7 +20,7 @@
 
       <tbody>
         <row>
-          <entry>Warnings</entry>
+          <entry>Warning</entry>
 
           <entry>
             <caution>
@@ -40,7 +40,7 @@
         </row>
 
         <row>
-          <entry>Notes</entry>
+          <entry>Note</entry>
 
           <entry>
             <note>
@@ -60,7 +60,7 @@
         </row>
 
         <row>
-          <entry>File and directory names</entry>
+          <entry>File or directory name</entry>
 
           <entry>
             <filename>filename</filename>
@@ -68,7 +68,7 @@
         </row>
 
         <row>
-          <entry>Commands to be typed</entry>
+          <entry>Command to be typed</entry>
 
           <entry>
             <command>command</command>
@@ -76,7 +76,7 @@
         </row>
 
         <row>
-          <entry>Applications names</entry>
+          <entry>Application name</entry>
 
           <entry>
             <application>application</application>
@@ -85,27 +85,21 @@
 
         <row>
           <entry>
-          <foreignphrase>Prompt</foreignphrase>
-
-          of users command under bash shell</entry>
+          Normal user's prompt under bash shell</entry>
 
           <entry>bash$</entry>
         </row>
 
         <row>
           <entry>
-          <foreignphrase>Prompt</foreignphrase>
-
-          of root users command under bash shell</entry>
+          Root user's prompt under bash shell</entry>
 
           <entry>bash#</entry>
         </row>
 
         <row>
           <entry>
-          <foreignphrase>Prompt</foreignphrase>
-
-          of user command under tcsh shell</entry>
+          Normal user's prompt under tcsh shell</entry>
 
           <entry>tcsh$</entry>
         </row>

@@ -40,11 +40,11 @@
 <!ENTITY bz "http://www.bugzilla.org/">
 <!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">
-<!ENTITY newest-perl-ver "5.8">
+<!ENTITY newest-perl-ver "5.8.2">
 
 <!-- For minimum versions -->
 <!ENTITY min-mysql-ver "3.23.41">
-<!ENTITY min-perl-ver "5.6">
+<!ENTITY min-perl-ver "5.6.0">
 <!ENTITY min-template-ver "2.08">
 <!ENTITY min-file-temp-ver "any">
 <!ENTITY min-appconfig-ver "1.52">
