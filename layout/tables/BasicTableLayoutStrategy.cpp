@@ -261,7 +261,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
 
   // if this is a nested table and pass1 reflow, we are done
   if (maxWidth == NS_UNCONSTRAINEDSIZE)  {
-    return PR_TRUE;
+    return BCW_Wrapup(this, mTableFrame, allocTypes);
   }
 
   // allocate the rest unconstrained
