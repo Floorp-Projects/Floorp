@@ -953,6 +953,7 @@ unless ($sth->rows) {
              '"This is a test component in the test product database.  ' .
              'This ought to be blown away and replaced with real stuff in ' .
              'a finished installation of bugzilla.")');
+    $dbh->do('INSERT INTO milestones (product, value) VALUES ("TestProduct","---")');
 }
 
 
