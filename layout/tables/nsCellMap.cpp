@@ -1096,10 +1096,7 @@ PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32                 aColIndex,
       break;
     }
   }
-  if (effColSpan == 0) {
-    printf("cell = %p \n", aCell);
-    Dump();
-  }
+
   NS_ASSERTION(effColSpan > 0, "invalid col span or col index");
   return effColSpan;
 }
