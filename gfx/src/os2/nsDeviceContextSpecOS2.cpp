@@ -35,10 +35,40 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
 
-nsStringArray* nsDeviceContextSpecOS2::globalPrinterList = nsnull;
-int nsDeviceContextSpecOS2::globalNumPrinters = 0;
-
 PRINTDLG nsDeviceContextSpecOS2::PrnDlg;
+
+//----------------------------------------------------------------------------------
+// The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecOS2
+// The PrinterEnumerator creates the printer info
+// but the nsDeviceContextSpecOS2 cleans it up
+// If it gets created (via the Page Setup Dialog) but the user never prints anything
+// then it will never be delete, so this class takes care of that.
+class GlobalPrinters {
+public:
+  static GlobalPrinters* GetInstance()   { return &mGlobalPrinters; }
+  ~GlobalPrinters()                      { FreeGlobalPrinters(); }
+
+  void      FreeGlobalPrinters();
+  nsresult  InitializeGlobalPrinters();
+
+  PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
+  PRInt32   GetNumPrinters()             { return mGlobalNumPrinters; }
+  nsString* GetStringAt(PRInt32 aInx)    { return mGlobalPrinterList->StringAt(aInx); }
+
+protected:
+  GlobalPrinters() {}
+
+  static GlobalPrinters mGlobalPrinters;
+  static nsStringArray* mGlobalPrinterList;
+  static int            mGlobalNumPrinters;
+
+};
+//---------------
+// static members
+GlobalPrinters GlobalPrinters::mGlobalPrinters;
+nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
+int            GlobalPrinters::mGlobalNumPrinters = 0;
+//---------------
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecOS2
@@ -88,7 +118,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aIn
   }
 #endif /* USE_XPRINT */
 
-   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   if (aIID.Equals(kISupportsIID))
   {
@@ -105,38 +135,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aIn
 NS_IMPL_ADDREF(nsDeviceContextSpecOS2)
 NS_IMPL_RELEASE(nsDeviceContextSpecOS2)
 
-int nsDeviceContextSpecOS2::InitializeGlobalPrinters ()
-{
-   globalNumPrinters = PrnDlg.GetNumPrinters();
-   if (!globalNumPrinters) 
-      return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
-
-   globalPrinterList = new nsStringArray();
-   if (!globalPrinterList) 
-      return NS_ERROR_OUT_OF_MEMORY;
-
-   int defaultPrinter = PrnDlg.GetDefaultPrinter();
-
-   for (int i = 0; i < globalNumPrinters; i++) {
-     char *printer = PrnDlg.GetPrinter(i);
-     if ( defaultPrinter == i ) 
-        globalPrinterList->InsertStringAt(nsString(NS_ConvertASCIItoUCS2(printer)), 0);
-     else 
-        globalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(printer)));
-   } 
-   return NS_OK;
-}
-
-
-void nsDeviceContextSpecOS2::FreeGlobalPrinters ()
-{
-   delete globalPrinterList;
-   globalPrinterList = nsnull;
-   globalNumPrinters = 0;
-}
-   
-   
-
+  
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecOS2
  *  @update   dc 2/15/98
@@ -183,11 +182,10 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
   PRUnichar *printer        = nsnull;
   PRUnichar *printfile      = nsnull;
 
-  if( !globalPrinterList )
-    if (InitializeGlobalPrinters())
-       return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
-  if( globalNumPrinters && !globalPrinterList->Count() ) 
-     return NS_ERROR_OUT_OF_MEMORY;
+  rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
  
   if ( !aQuiet ) {
     rv = NS_ERROR_FAILURE;
@@ -231,11 +229,12 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
       if (buttonPressed == 1) 
         canPrint = PR_TRUE;
       else 
-        {
-           FreeGlobalPrinters();
-           return NS_ERROR_ABORT;
-        }
-    }
+      {
+         GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+         return NS_ERROR_ABORT;
+      }
+    } else 
+       return NS_ERROR_ABORT;
   } else {
     canPrint = PR_TRUE;
   }
@@ -251,7 +250,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
       mPrintSettings->GetNumCopies(&copies);
 
       if ((copies == 0)  ||  (copies > 999)) {
-         FreeGlobalPrinters();
+         GlobalPrinters::GetInstance()->FreeGlobalPrinters();
          return NS_ERROR_FAILURE;
       }
 
@@ -266,9 +265,14 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
     mPrData.toPrinter = !tofile;
     mPrData.copies = copies;
 
-    if (globalNumPrinters) {
-       for(int i = 0; (i < globalNumPrinters) && !mQueue; i++) {
-          if (!(globalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
+    rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+    if (NS_FAILED(rv))
+      return rv;
+
+    int numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+    if (numPrinters) {
+       for(int i = 0; (i < numPrinters) && !mQueue; i++) {
+          if (!(GlobalPrinters::GetInstance()->GetStringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
              mQueue = PrnDlg.SetPrinterQueue(i);
        }
     }
@@ -279,11 +283,11 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
     if (printer != nsnull) 
       nsMemory::Free(printer);
     
-    FreeGlobalPrinters();
+    GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_OK;
   }
 
-  FreeGlobalPrinters();
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
   return rv;
 }
 
@@ -365,21 +369,31 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   else 
     return NS_ERROR_NULL_POINTER;
   
+  nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(nsDeviceContextSpecOS2::globalNumPrinters * sizeof(PRUnichar*));
-  if (!array && nsDeviceContextSpecOS2::globalNumPrinters) 
+  PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+
+  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numPrinters * sizeof(PRUnichar*));
+  if (!array && numPrinters > 0) {
+    GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
-  
+  }
+
   int count = 0;
-  while( count < nsDeviceContextSpecOS2::globalNumPrinters )
+  while( count < numPrinters )
   {
-    PRUnichar *str = ToNewUnicode(*nsDeviceContextSpecOS2::globalPrinterList->StringAt(count));
+    PRUnichar *str = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(count));
 
     if (!str) {
       for (int i = count - 1; i >= 0; i--) 
         nsMemory::Free(array[i]);
       
       nsMemory::Free(array);
+
+      GlobalPrinters::GetInstance()->FreeGlobalPrinters();
       return NS_ERROR_OUT_OF_MEMORY;
     }
     array[count++] = str;
@@ -387,22 +401,63 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   }
   *aCount = count;
   *aResult = array;
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorOS2::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
-   for(int i = 0; i < nsDeviceContextSpecOS2::globalNumPrinters; i++) {
-     if (!(nsDeviceContextSpecOS2::globalPrinterList->StringAt(i)->CompareWithConversion(aPrinter, TRUE, -1))) {
-        if ( nsDeviceContextSpecOS2::PrnDlg.ShowProperties(i) ) 
-           return NS_OK;
-        else
-           return NS_ERROR_FAILURE;
-     }
-   }
-   return NS_ERROR_FAILURE;
+  nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+
+  for(int i = 0; i < numPrinters; i++) {
+    if (!(GlobalPrinters::GetInstance()->GetStringAt(i)->CompareWithConversion(aPrinter, TRUE, -1))) {
+       if ( nsDeviceContextSpecOS2::PrnDlg.ShowProperties(i) ) 
+          return NS_OK;
+       else
+          return NS_ERROR_FAILURE;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
+
+nsresult GlobalPrinters::InitializeGlobalPrinters ()
+{
+  if (PrintersAreAllocated()) 
+    return NS_OK;
+
+  mGlobalNumPrinters = 0;
+  mGlobalNumPrinters = nsDeviceContextSpecOS2::PrnDlg.GetNumPrinters();
+  if (!mGlobalNumPrinters) 
+    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
+
+  mGlobalPrinterList = new nsStringArray();
+  if (!mGlobalPrinterList) 
+     return NS_ERROR_OUT_OF_MEMORY;
+
+  int defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
+  for (int i = 0; i < mGlobalNumPrinters; i++) {
+    char *printer = nsDeviceContextSpecOS2::PrnDlg.GetPrinter(i);
+    if ( defaultPrinter == i ) 
+       mGlobalPrinterList->InsertStringAt(nsString(NS_ConvertASCIItoUCS2(printer)), 0);
+    else 
+       mGlobalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(printer)));
+  } 
+  return NS_OK;
+}
+
+void GlobalPrinters::FreeGlobalPrinters()
+{
+  delete mGlobalPrinterList;
+  mGlobalPrinterList = nsnull;
+  mGlobalNumPrinters = 0;
+}
+
 
 //---------------------------------------------------------------------------
 // OS/2 Printing   - was in libprint.cpp
