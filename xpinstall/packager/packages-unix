@@ -325,6 +325,9 @@ bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/components/absync.xpt
 bin/chrome/messenger.jar
+bin/components/libmsgsmime.so
+bin/components/msgsmime.xpt
+bin/components/smime-service.js
 
 
 [chatzilla]
