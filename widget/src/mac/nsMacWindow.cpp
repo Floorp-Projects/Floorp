@@ -538,35 +538,45 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       ::SetWindowActivationScope(mWindowPtr, kWindowActivationScopeNone);
     }
     else if ( mWindowType == eWindowType_toplevel ) {
-      EventTypeSpec scrollEventList[] = { {kEventClassMouse, kEventMouseWheelMoved} };
-      err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(ScrollEventHandler), 1, scrollEventList, this, NULL );
-        // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
-        // when the event target (the window) goes away. See CarbonEvents.h for info.
+      const EventTypeSpec scrollEventList[] = {
+        { kEventClassMouse, kEventMouseWheelMoved }
+      };
+      // note, passing NULL as the final param to IWEH() causes the UPP to be
+      // disposed automatically when the event target (the window) goes away.
+      // See CarbonEvents.h for info.
+      err = ::InstallWindowEventHandler(mWindowPtr,
+                                        NewEventHandlerUPP(ScrollEventHandler),
+                                        GetEventTypeCount(scrollEventList),
+                                        scrollEventList, this, NULL);
 
-      NS_ASSERTION(err == noErr, "Couldn't install Carbon Scroll Event handlers");
+      NS_ASSERTION(err == noErr,
+                   "Couldn't install Carbon Scroll Event handlers");
     }
 
-    if (mIsSheet)
-    {
-      // Mac OS X sheet support
-      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowUpdate},
-                                        {kEventClassWindow, kEventWindowDrawContent} };
-      err = ::InstallWindowEventHandler ( mWindowPtr,
-          NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
-
-      NS_ASSERTION(err == noErr, "Couldn't install sheet Event handlers");
-    }
-
-    // Since we can only call IWEH() once for each event class such as kEventClassWindow, we register all the event types that
-    // we are going to handle here
+    // Since we can only call IWEH() once for each event class such as
+    // kEventClassWindow, we register all the event types that  we are going to
+    // handle here.
     const EventTypeSpec windEventList[] = {
-                                            {kEventClassWindow, kEventWindowBoundsChanged}, // to enable live resizing
-                                            {kEventClassWindow, kEventWindowCollapse},      // to roll up popups when we're minimized
-                                            {kEventClassWindow, kEventWindowConstrain}      // to keep invisible windows off the screen
-                                          };
-    err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler),
-                                        GetEventTypeCount(windEventList), windEventList, this, NULL );
-    NS_ASSERTION(err == noErr, "Couldn't install Carbon window event handler");
+      // to enable live resizing
+      { kEventClassWindow, kEventWindowBoundsChanged },
+      // to roll up popups when we're minimized
+      { kEventClassWindow, kEventWindowCollapse },
+      // to keep invisible windows off the screen
+      { kEventClassWindow, kEventWindowConstrain },
+
+      // Last two are only for sheets.
+      { kEventClassWindow, kEventWindowUpdate },
+      { kEventClassWindow, kEventWindowDrawContent }
+    };
+
+    // kEventWindowUpdate and kEventWindowDrawContent are only for sheets.
+    PRUint32 typeCount = mIsSheet ? GetEventTypeCount(windEventList) :
+                                    GetEventTypeCount(windEventList) - 2;
+
+    err = ::InstallWindowEventHandler(mWindowPtr,
+                                      NewEventHandlerUPP(WindowEventHandler),
+                                      typeCount, windEventList, this, NULL);
+    NS_ASSERTION(err == noErr, "Couldn't install sheet Event handlers");
 
     // register tracking and receive handlers with the native Drag Manager
     if ( mDragTrackingHandlerUPP ) {
