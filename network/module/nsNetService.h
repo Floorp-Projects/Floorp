@@ -41,6 +41,8 @@ public:
     NS_IMETHOD OpenBlockingStream(nsIURL *aUrl, 
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream);
+    
+    NS_IMETHOD InterruptStream(nsIURL* aURL);
 
     NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
