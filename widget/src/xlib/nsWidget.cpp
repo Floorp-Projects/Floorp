@@ -1372,22 +1372,28 @@ Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
     case eCursor_standard:
       xcursor = XCreateFontCursor(mDisplay, XC_left_ptr);
       break;
-    case eCursor_sizeWE:
-      xcursor = XCreateFontCursor(mDisplay, XC_sb_h_double_arrow);
+    case eCursor_n_resize:
+      xcursor = XCreateFontCursor(mDisplay, XC_top_side);
       break;
-    case eCursor_sizeNS:
-      xcursor = XCreateFontCursor(mDisplay, XC_sb_v_double_arrow);
+    case eCursor_s_resize:
+      xcursor = XCreateFontCursor(mDisplay, XC_bottom_side);
       break;
-    case eCursor_sizeNW:
+    case eCursor_w_resize:
+      xcursor = XCreateFontCursor(mDisplay, XC_left_side);
+      break;
+    case eCursor_e_resize:
+      xcursor = XCreateFontCursor(mDisplay, XC_right_side);
+      break;
+    case eCursor_nw_resize:
       xcursor = XCreateFontCursor(mDisplay, XC_top_left_corner);
       break;
-    case eCursor_sizeSE:
+    case eCursor_se_resize:
       xcursor = XCreateFontCursor(mDisplay, XC_bottom_right_corner);
       break;
-    case eCursor_sizeNE:
+    case eCursor_ne_resize:
       xcursor = XCreateFontCursor(mDisplay, XC_top_right_corner);
       break;
-    case eCursor_sizeSW:
+    case eCursor_sw_resize:
       xcursor = XCreateFontCursor(mDisplay, XC_bottom_left_corner);
       break;
     case eCursor_arrow_south:
@@ -1439,7 +1445,7 @@ Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
     case eCursor_count_up:
     case eCursor_count_down:
     case eCursor_count_up_down:
-      // XXX: these CSS3 cursors need to be implemented
+      // XXX: these -moz- cursors need to be implemented
       // I simply have no idea how they should look like
       xcursor = XCreateFontCursor(mDisplay, XC_left_ptr);
       break;
@@ -1448,6 +1454,34 @@ Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
       break;
     case eCursor_zoom_out:
       newType = XLIB_ZOOM_OUT;
+      break;
+    case eCursor_not_allowed:
+    case eCursor_no_drop:
+      newType = XLIB_NOT_ALLOWED;
+      break;
+    case eCursor_col_resize:
+      newType = XLIB_COL_RESIZE;
+      break;
+    case eCursor_row_resize:
+      newType = XLIB_ROW_RESIZE;
+      break;
+    case eCursor_vertical_text:
+      newType = XLIB_VERTICAL_TEXT;
+      break;
+    case eCursor_all_scroll:
+      xcursor = XCreateFontCursor(mDisplay, XC_fleur);
+      break;
+    case eCursor_nesw_resize:
+      newType = XLIB_NESW_RESIZE;
+      break;
+    case eCursor_nwse_resize:
+      newType = XLIB_NWSE_RESIZE;
+      break;
+    case eCursor_ns_resize:
+      xcursor = XCreateFontCursor(mDisplay, XC_sb_v_double_arrow);
+      break;
+    case eCursor_ew_resize:
+      xcursor = XCreateFontCursor(mDisplay, XC_sb_h_double_arrow);
       break;
     default:
       break;

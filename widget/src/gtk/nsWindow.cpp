@@ -1131,24 +1131,28 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
     case eCursor_hyperlink:
       gdkcursor = gdk_cursor_new(GDK_HAND2);
       break;
-    case eCursor_sizeWE:
-      /* GDK_SB_H_DOUBLE_ARROW <==>.  The ideal choice is: =>||<= */
-      gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+    case eCursor_n_resize:
+      gdkcursor = gdk_cursor_new(GDK_TOP_SIDE);
       break;
-    case eCursor_sizeNS:
-      /* Again, should be =>||<= rotated 90 degrees. */
-      gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+    case eCursor_s_resize:
+      gdkcursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
       break;
-    case eCursor_sizeNW:
+    case eCursor_w_resize:
+      gdkcursor = gdk_cursor_new(GDK_LEFT_SIDE);
+      break;
+    case eCursor_e_resize:
+      gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+      break;
+    case eCursor_nw_resize:
       gdkcursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
       break;
-    case eCursor_sizeSE:
+    case eCursor_se_resize:
       gdkcursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
       break;
-    case eCursor_sizeNE:
+    case eCursor_ne_resize:
       gdkcursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
       break;
-    case eCursor_sizeSW:
+    case eCursor_sw_resize:
       gdkcursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
       break;
     case eCursor_arrow_north:
@@ -1163,52 +1167,80 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
     case eCursor_arrow_west_plus:
       gdkcursor = gdk_cursor_new(GDK_LEFT_SIDE);
       break;
-     case eCursor_arrow_east:
-     case eCursor_arrow_east_plus:
-       gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
-       break;
-     case eCursor_crosshair:
-       gdkcursor = gdk_cursor_new(GDK_CROSSHAIR);
-       break;
-     case eCursor_move:
-       gdkcursor = gdk_cursor_new(GDK_FLEUR);
-       break;
-     case eCursor_help:
-       newType = MOZ_CURSOR_QUESTION_ARROW;
-       break;
-     case eCursor_copy: // CSS3
-       newType = MOZ_CURSOR_COPY;
-       break;
-     case eCursor_alias:
-       newType = MOZ_CURSOR_ALIAS;
-       break;
-     case eCursor_context_menu:
-       newType = MOZ_CURSOR_CONTEXT_MENU;
-       break;
-     case eCursor_cell:
-       gdkcursor = gdk_cursor_new(GDK_PLUS);
-       break;
-     case eCursor_grab:
-       newType = MOZ_CURSOR_HAND_GRAB;
-       break;
-     case eCursor_grabbing:
-       newType = MOZ_CURSOR_HAND_GRABBING;
-       break;
-     case eCursor_spinning:
-       newType = MOZ_CURSOR_SPINNING;
-       break;
-     case eCursor_count_up:
-     case eCursor_count_down:
-     case eCursor_count_up_down:
-       // XXX: these CSS3 cursors need to be implemented
-       gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
-       break;
-     case eCursor_zoom_in:
-       newType = MOZ_CURSOR_ZOOM_IN;
-       break;
-     case eCursor_zoom_out:
-       newType = MOZ_CURSOR_ZOOM_OUT;
-       break;
+    case eCursor_arrow_east:
+    case eCursor_arrow_east_plus:
+      gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+      break;
+    case eCursor_crosshair:
+      gdkcursor = gdk_cursor_new(GDK_CROSSHAIR);
+      break;
+    case eCursor_move:
+      gdkcursor = gdk_cursor_new(GDK_FLEUR);
+      break;
+    case eCursor_help:
+      newType = MOZ_CURSOR_QUESTION_ARROW;
+      break;
+    case eCursor_copy: // CSS3
+      newType = MOZ_CURSOR_COPY;
+      break;
+    case eCursor_alias:
+      newType = MOZ_CURSOR_ALIAS;
+      break;
+    case eCursor_context_menu:
+      newType = MOZ_CURSOR_CONTEXT_MENU;
+      break;
+    case eCursor_cell:
+      gdkcursor = gdk_cursor_new(GDK_PLUS);
+      break;
+    case eCursor_grab:
+      newType = MOZ_CURSOR_HAND_GRAB;
+      break;
+    case eCursor_grabbing:
+      newType = MOZ_CURSOR_HAND_GRABBING;
+      break;
+    case eCursor_spinning:
+      newType = MOZ_CURSOR_SPINNING;
+      break;
+    case eCursor_count_up:
+    case eCursor_count_down:
+    case eCursor_count_up_down:
+      // XXX: these -moz- cursors need to be implemented
+      gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+      break;
+    case eCursor_zoom_in:
+      newType = MOZ_CURSOR_ZOOM_IN;
+      break;
+    case eCursor_zoom_out:
+      newType = MOZ_CURSOR_ZOOM_OUT;
+      break;
+    case eCursor_not_allowed:
+    case eCursor_no_drop:
+      newType = MOZ_CURSOR_NOT_ALLOWED;
+      break;
+    case eCursor_col_resize:
+      newType = MOZ_CURSOR_COL_RESIZE;
+      break;
+    case eCursor_row_resize:
+      newType = MOZ_CURSOR_ROW_RESIZE;
+      break;
+    case eCursor_vertical_text:
+      newType = MOZ_CURSOR_VERTICAL_TEXT;
+      break;
+    case eCursor_all_scroll:
+      gdkcursor = gdk_cursor_new(GDK_FLEUR);
+      break;
+    case eCursor_nesw_resize:
+      newType = MOZ_CURSOR_NESW_RESIZE;
+      break;
+    case eCursor_nwse_resize:
+      newType = MOZ_CURSOR_NWSE_RESIZE;
+      break;
+    case eCursor_ns_resize:
+      gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+      break;
+    case eCursor_ew_resize:
+      gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+      break;
     default:
       NS_ASSERTION(aCursorType, "Invalid cursor type");
       break;

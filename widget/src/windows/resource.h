@@ -50,3 +50,6 @@
 #define IDC_ALIAS                       4113
 #define IDC_ZOOMIN                      4114
 #define IDC_ZOOMOUT                     4115
+#define IDC_COLRESIZE                   4116
+#define IDC_ROWRESIZE                   4117
+#define IDC_VERTICALTEXT                4118

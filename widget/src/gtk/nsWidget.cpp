@@ -839,29 +839,35 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
         newCursor = gdk_cursor_new(GDK_HAND2);
         break;
 
-      case eCursor_sizeWE:
-        /* GDK_SB_H_DOUBLE_ARROW <==>.  The ideal choice is: =>||<= */
-        newCursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
-        break;
-
-      case eCursor_sizeNS:
-        /* Again, should be =>||<= rotated 90 degrees. */
-        newCursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+      case eCursor_n_resize:
+        newCursor = gdk_cursor_new(GDK_TOP_SIDE);
         break;
       
-      case eCursor_sizeNW:
+      case eCursor_s_resize:
+        newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
+        break;
+      
+      case eCursor_w_resize:
+        newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
+        break;
+
+      case eCursor_e_resize:
+        newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+        break;
+
+      case eCursor_nw_resize:
         newCursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
         break;
 
-      case eCursor_sizeSE:
+      case eCursor_se_resize:
         newCursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
         break;
 
-      case eCursor_sizeNE:
+      case eCursor_ne_resize:
         newCursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
         break;
 
-      case eCursor_sizeSW:
+      case eCursor_sw_resize:
         newCursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
         break;
 
@@ -897,12 +903,13 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
         newCursor = gdk_cursor_new(GDK_QUESTION_ARROW);
         break;
 
-      case eCursor_copy: // CSS3
+      case eCursor_copy:
       case eCursor_alias:
-      case eCursor_context_menu:
         // XXX: these CSS3 cursors need to be implemented
-        // For CSS3 Cursor Definitions, See:
-        // http://www.w3.org/TR/css3-ui/
+        break;
+
+      case eCursor_context_menu:
+        gdkcursor = gdk_cursor_new(GDK_RIGHTBUTTON);
         break;
 
       case eCursor_cell:
@@ -921,11 +928,52 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
       case eCursor_count_up:
       case eCursor_count_down:
       case eCursor_count_up_down:
-        // XXX: these CSS3 cursors need to be implemented
+        // XXX: these -moz- cursors need to be implemented
         break;
 
       case eCursor_zoom_in:
+        gdkcursor = gdk_cursor_new(GDK_PLUS);
+        break;
+
       case eCursor_zoom_out:
+        gdkcursor = gdk_cursor_new(GDK_EXCHANGE);
+        break;
+
+      case eCursor_not_allowed:
+      case eCursor_no_drop:
+        gdkcursor = gdk_cursor_new(GDK_X_CURSOR);
+        break;
+
+      case eCursor_col_resize:
+        gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+        break;
+
+      case eCursor_row_resize:
+        gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+        break;
+
+      case eCursor_vertical_text:
+        gdkcursor = gdk_cursor_new(GDK_XTERM);
+        break;
+
+      case eCursor_all_scroll:
+        gdkcursor = gdk_cursor_new(GDK_FLEUR);
+        break;
+
+      case eCursor_nesw_resize:
+        gdkcursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+        break;
+
+      case eCursor_nwse_resize:
+        gdkcursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+        break;
+
+      case eCursor_ns_resize:
+        gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+        break;
+
+      case eCursor_ew_resize:
+        gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
         break;
 
       default:

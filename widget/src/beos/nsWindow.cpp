@@ -1355,27 +1355,29 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(0);
 				break;
 	
-			case eCursor_sizeWE:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
-				break;
-	
-			case eCursor_sizeNS:
+			case eCursor_n_resize:
+			case eCursor_s_resize:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(2);
 				break;
 	
-			case eCursor_sizeNW:
+			case eCursor_w_resize:
+			case eCursor_e_resize:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				break;
+	
+			case eCursor_nw_resize:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(3);
 				break;
 	
-			case eCursor_sizeSE:
+			case eCursor_se_resize:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(4);
 				break;
 	
-			case eCursor_sizeNE:
+			case eCursor_ne_resize:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(5);
 				break;
 	
-			case eCursor_sizeSW:
+			case eCursor_sw_resize:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(6);
 				break;
 	
@@ -1416,6 +1418,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				break;
 
 			case eCursor_context_menu:
+				// XXX: No suitable cursor, needs implementing
 				break;
 				
 			case eCursor_cell:
@@ -1452,6 +1455,48 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
 			case eCursor_zoom_out:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(23);
+				break;
+
+			case eCursor_not_allowed:
+			case eCursor_no_drop:
+				// XXX: No suitable cursor, needs implementing
+				break;
+
+			case eCursor_col_resize:
+				// XXX not 100% appropriate perhaps
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				break;
+
+			case eCursor_row_resize:
+				// XXX not 100% appropriate perhaps
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(2);
+				break;
+
+			case eCursor_vertical_text:
+				// XXX not 100% appropriate perhaps
+				newCursor = B_CURSOR_I_BEAM;
+				break;
+
+			case eCursor_all_scroll:
+				// XXX: No suitable cursor, needs implementing
+				break;
+
+			case eCursor_nesw_resize:
+				// XXX not 100% appropriate perhaps
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				break;
+
+			case eCursor_nwse_resize:
+				// XXX not 100% appropriate perhaps
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				break;
+
+			case eCursor_ns_resize:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(2);
+				break;
+
+			case eCursor_ew_resize:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
 				break;
 
 			default:
