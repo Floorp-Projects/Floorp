@@ -457,16 +457,20 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsIPresContext& aPresContext,
                                            nsGUIEvent* aEvent,
                                            nsEventStatus& aEventStatus)
 {
-  // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
-  switch (aEvent->message) {
-    case NS_MOUSE_MOVE:
-      MouseDrag(aPresContext, aEvent);
-	    break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      EndMouseDrag();
-	    break;
+  if (mDragger) {
+    // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
+    switch (aEvent->message) {
+      case NS_MOUSE_MOVE:
+        MouseDrag(aPresContext, aEvent);
+	      break;
+      case NS_MOUSE_LEFT_BUTTON_UP:
+        EndMouseDrag();
+	      break;
+    }
+    aEventStatus = nsEventStatus_eConsumeNoDefault;
+  } else {
+    aEventStatus = nsEventStatus_eIgnore;
   }
-  aEventStatus = nsEventStatus_eConsumeNoDefault;
   return NS_OK;
 }
 
