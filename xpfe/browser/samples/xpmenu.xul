@@ -28,108 +28,108 @@ Contributor(s): ______________________________________. -->
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		align="vertical"> 
  <toolbox>
-   <xpmenubar chromeclass="menubar">
-	  <xpmenu value="File" accesskey="f">
+   <menubar chromeclass="menubar">
+	  <menu value="File" accesskey="f">
 	    <html:div><html:u>F</html:u>ile</html:div>
-		<xpmenuchildren> 
-		<xpmenu value="New" accesskey="n" key="newKey">
+		<menupopup> 
+		<menu value="New" accesskey="n" key="newKey">
 		  <titledbutton class="menu-left"/> 
 		  <html:div><html:u>N</html:u>ew </html:div> 
 	      <spring flex="100%"/> 
 	      <html:div>Ctrl+N</html:div>
 		  <titledbutton class="menu-right"/> 
-		  <xpmenuchildren>
-		    <xpmenuitem value="Lambda" accesskey="a" onaction="dump('Lambda lambda lambda!\n')"/>
-			<xpmenuitem value="Phi" accesskey="p"/>
-		  </xpmenuchildren>
-	    </xpmenu>
-	    <xpmenuitem>
+		  <menupopup>
+		    <menuitem value="Lambda" accesskey="a" onaction="dump('Lambda lambda lambda!\n')"/>
+			<menuitem value="Phi" accesskey="p"/>
+		  </menupopup>
+	    </menu>
+	    <menuitem>
 		  <titledbutton class="menu-left"/> 
 		  <html:div><html:u>O</html:u>pen...</html:div> 
 	      <spring flex="100%"/> 
 	      <html:div>Ctrl+O</html:div>
           <titledbutton class="menu-right"/>
-	    </xpmenuitem> 
-		  <xpmenuitem>
+	    </menuitem> 
+		  <menuitem>
 		      <titledbutton class="menu-left"/> 
 			  <html:div><html:u>C</html:u>lose</html:div>
 			  <spring flex="100%"/>
 			  <titledbutton class="menu-right"/>
-		  </xpmenuitem> 
-		  <xpmenuseparator/>
-		  <xpmenuitem disabled="true"> 
+		  </menuitem> 
+		  <menuseparator/>
+		  <menuitem disabled="true"> 
 		      <titledbutton class="menu-left"/> 
 			  <html:div><html:u>S</html:u>ave</html:div>
 		      <spring flex="100%"/> 
 		      <html:div>Ctrl+S</html:div>
 			  <titledbutton class="menu-right"/>  
-		  </xpmenuitem> 
-		  <xpmenuitem> 
+		  </menuitem> 
+		  <menuitem> 
 		      <titledbutton class="menu-left"/> 
 			  <html:div>S<html:u>a</html:u>ve as...</html:div>
 			  <spring flex="100%"/>
 			  <titledbutton class="menu-right"/>  
-		  </xpmenuitem> 
-		  <xpmenuitem>
+		  </menuitem> 
+		  <menuitem>
 		      <titledbutton class="menu-left"/> 
 			  <html:div><html:u>Q</html:u>uit</html:div>
 			  <spring flex="100%"/> 
 		      <html:div>Ctrl+Q</html:div>
 			  <titledbutton class="menu-right"/>  
-		  </xpmenuitem> 
-	  </xpmenuchildren> 
+		  </menuitem> 
+	  </menupopup> 
   
-	  </xpmenu>
-	  <xpmenu>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>E</html:u>dit</html:div>
-		<xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
-	  <xpmenu>
+		<menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>V</html:u>iew</html:div>
-		<xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
-	  <xpmenu>
+		<menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>S</html:u>earch</html:div>
-	    <xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
-	  <xpmenu>
+	    <menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>G</html:u>o</html:div>
-	    <xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
-	  <xpmenu>
+	    <menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>B</html:u>ookmarks</html:div>
-	    <xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
-	  <xpmenu>
+	    <menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>T</html:u>asks</html:div>
-	    <xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
-	  <xpmenu>
+	    <menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>D</html:u>ebug</html:div>
-		<xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
-	  <xpmenu>
+		<menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
+	  <menu>
 	    <html:div><html:u>Q</html:u>A</html:div>
-		<xpmenuchildren>
-		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
-		</xpmenuchildren>
-	  </xpmenu>
+		<menupopup>
+		  <menuitem><html:div>Sample Item</html:div></menuitem>
+		</menupopup>
+	  </menu>
 	  <spring flex="100%"/>
-    </xpmenubar>
+    </menubar>
   </toolbox>
 
 <html:iframe style="height: 300px" src="http://www.mozillazine.org/"/>

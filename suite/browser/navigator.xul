@@ -400,12 +400,12 @@ Contributor(s): ______________________________________. -->
        Please do be so kind as to reflect any changes made into that
        file as well, in anticipation of the happy day when the parser
        will let us use included files. -->
-
-  <menubar chromeclass="menubar">
+   <toolbox id="main-toolbox">
+    <menubar chromeclass="menubar">
       <menu value="&fileMenu.label;">
         <menupopup>
           <menuitem value="&browserCmd.label;" onaction="BrowserNewWindow();"/>
-            <menu value="New">
+		           <menu value="New">
               <menupopup>
                 <menuitem value="&newMailCmd.label;" onaction="MsgNewMessage();"/>
                   <menuseparator />
@@ -435,7 +435,8 @@ Contributor(s): ______________________________________. -->
           <menuitem value="&quitCmd.label;" onaction="BrowserExit();"/>
       </menupopup>
     </menu>
-    <menu value="&editMenu.label;">
+
+	<menu value="&editMenu.label;">
 	  <menupopup>
 		  <menuitem value="&undoCmd.label;" onaction="BrowserReload();"/> 
 		  <menuitem value="&redoCmd.label;" onaction="BrowserReload();"/> 
@@ -648,7 +649,7 @@ Contributor(s): ______________________________________. -->
   // Menu for testing.
   <menu value="&debugMenu.label;">
     <menupopup>
-      <menu value="&debugVerCmd.label;"> // Build verification sites.
+      <menu value="&debugVerCmd.label;">
 	   <menupopup>
         <menuitem value="&ver1Cmd.label;"   onaction="window.content.location.href='http://www.mozilla.org'"/>
         <menuitem value="&ver2Cmd.label;"     onaction="window.content.location.href='http://www.yahoo.com'"/>
@@ -679,7 +680,7 @@ Contributor(s): ______________________________________. -->
        </menupopup>
 	  </menu>
 
-      <menu value="&viewDemoMenu.label;">  // Viewer tests.
+      <menu value="&viewDemoMenu.label;">
 	   <menupopup>
         <menuitem value="&demo0Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test0.html'"/>
         <menuitem value="&demo1Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test1.html'"/>
@@ -701,7 +702,7 @@ Contributor(s): ______________________________________. -->
        </menupopup>
 	  </menu>
 
-      <menu value="&xptkMenu.label;"> // XPToolkit tests.
+      <menu value="&xptkMenu.label;">
 	   <menupopup>
         <menuitem value="&xptk1Cmd.label;" onaction="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
         <menuitem value="&xptk2Cmd.label;" onaction="window.content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
@@ -717,7 +718,7 @@ Contributor(s): ______________________________________. -->
      </menupopup>
   </menu>
 
-  <menu value="&QA.label;"> // QA tests.
+  <menu value="&QA.label;">
     <menupopup>
         <menuitem value="&QABugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
         <menuitem value="&QATempCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
@@ -727,10 +728,8 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&strresCmd.label;" onaction="window.content.location.href='resource:/res/strres-test.xul'"/>
 	</menupopup>
   </menu>
-
+    <spring flex="100%"/>
   </menubar>
-  
-   <toolbox id="main-toolbox">
     <toolbar class="main-bar" chromeclass="toolbar">
           <titledbutton id="back-button" align="top" value="&backButton.label;" onclick="BrowserBack()">    
                   <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>          

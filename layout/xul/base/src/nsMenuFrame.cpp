@@ -123,7 +123,7 @@ nsMenuFrame::Init(nsIPresContext&  aPresContext,
   return rv;
 }
 
-// The following methods are all overridden to ensure that the xpmenuchildren frame
+// The following methods are all overridden to ensure that the menupopup frame
 // is placed in the appropriate list.
 NS_IMETHODIMP
 nsMenuFrame::FirstChild(nsIAtom*   aListName,
@@ -149,7 +149,7 @@ nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
     nsFrameList frames(aChildList);
 
-    // We may have an xpmenuchildren in here. Get it out, and move it into
+    // We may have a menupopup in here. Get it out, and move it into
     // the popup frame list.
     nsIFrame* frame = frames.FirstChild();
     while (frame) {
@@ -157,15 +157,18 @@ nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
       frame->GetContent(getter_AddRefs(content));
       nsCOMPtr<nsIAtom> tag;
       content->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::xpmenuchildren) {
+      if (tag.get() == nsXULAtoms::menupopup) {
         // Remove this frame from the list and place it in the other list.
         frames.RemoveFrame(frame);
         mPopupFrames.AppendFrame(this, frame);
-        rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+        nsIFrame* first = frames.FirstChild();
+        rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, first);
         return rv;
       }
       frame->GetNextSibling(&frame);
     }
+
+    // Didn't find it.
     rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
   return rv;
@@ -222,17 +225,15 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     if (mMenuParent)
       mMenuParent->IsMenuBar(isMenuBar);
     
-    if (isMenuBar) {
+    if (isMenuBar && mIsMenu) {
       // The menu item was selected. Bring up the menu.
-      nsIFrame* frame = mPopupFrames.FirstChild();
-      if (frame) {
-        // We have children.
-        ToggleMenuState();
-        if (!IsOpen()) {
-          // We closed up. The menu bar should always be
-          // deactivated when this happens.
-          mMenuParent->SetActive(PR_FALSE);
-        }
+      
+      // We have children.
+      ToggleMenuState();
+      if (!IsOpen()) {
+        // We closed up. The menu bar should always be
+        // deactivated when this happens.
+        mMenuParent->SetActive(PR_FALSE);
       }
     }
   }
@@ -327,22 +328,25 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
   
+  // Generate the menu if it hasn't been generated already.  This
+  // takes it from display: none to display: block and gives us
+  // a menu forevermore.
+  if (child) {
+    nsCOMPtr<nsIAtom> generated = dont_AddRef(NS_NewAtom("menugenerated"));
+    nsString genVal;
+    child->GetAttribute(kNameSpaceID_None, generated, genVal);
+    if (genVal == "")
+      child->SetAttribute(kNameSpaceID_None, generated, "true", PR_TRUE);
+  }
+  
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
-
+  
   if (aActivateFlag) {
     // Execute the oncreate handler
     if (!OnCreate())
       return;
 
-    // Sync up the view.
-    PRBool onMenuBar = PR_TRUE;
-    if (mMenuParent)
-      mMenuParent->IsMenuBar(onMenuBar);
-
-    if (menuPopup)
-      menuPopup->SyncViewWithFrame(onMenuBar);
-      
     // Open the menu.
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::open, "true", PR_TRUE);
     if (child) {
@@ -351,6 +355,13 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
       
       // Tell the menu bar we're active.
       mMenuParent->SetActive(PR_TRUE);
+
+      // Sync up the view.
+      PRBool onMenuBar = PR_FALSE;
+      if (mMenuParent)
+        mMenuParent->IsMenuBar(onMenuBar);
+
+      menuPopup->SyncViewWithFrame(onMenuBar);
     }
 
     mMenuOpen = PR_TRUE;
@@ -363,14 +374,14 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     if (!OnDestroy())
       return;
 
+    // Make sure we clear out our own items.
+    if (menuPopup)
+      menuPopup->SetCurrentMenuItem(nsnull);
+
     mContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
     if (child)
       child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
     mMenuOpen = PR_FALSE;
-
-    // Make sure we clear out our own items.
-    if (menuPopup)
-      menuPopup->SetCurrentMenuItem(nsnull);
 
     // Set the focus back to our view's widget.
     nsIView*  view;
@@ -388,10 +399,19 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
 void
 nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 {
-  *aResult = nsnull;
-  nsIFrame* frame = mPopupFrames.FirstChild();
-  if (frame) {
-    frame->GetContent(aResult);
+  PRInt32 count;
+  mContent->ChildCount(count);
+
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+    mContent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (tag && tag.get() == nsXULAtoms::menupopup) {
+      *aResult = child.get();
+      NS_ADDREF(*aResult);
+      return;
+    }
   }
 }
 
@@ -434,6 +454,24 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   return rv;
 }
 
+
+NS_IMETHODIMP
+nsMenuFrame::DidReflow(nsIPresContext& aPresContext,
+                            nsDidReflowStatus aStatus)
+{
+  // Sync up the view.
+  PRBool onMenuBar = PR_FALSE;
+  if (mMenuParent)
+    mMenuParent->IsMenuBar(onMenuBar);
+
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  if (menuPopup && mMenuOpen)
+    menuPopup->SyncViewWithFrame(onMenuBar);
+
+  return nsBoxFrame::DidReflow(aPresContext, aStatus);
+}
+
 // Overridden Box method.
 NS_IMETHODIMP
 nsMenuFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
@@ -444,6 +482,10 @@ nsMenuFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incremental
   // Dirty any children that need it.
   nsIFrame* frame;
   aReflowState.reflowCommand->GetNext(frame, PR_FALSE);
+  if (frame == nsnull) {
+    incrementalChild = this;
+    return rv;
+  }
 
   // Now call our original box frame method
   rv = nsBoxFrame::Dirty(aReflowState, incrementalChild);
@@ -543,7 +585,7 @@ nsMenuFrame::IsMenu()
 {
   nsCOMPtr<nsIAtom> tag;
   mContent->GetTag(*getter_AddRefs(tag));
-  if (tag.get() == nsXULAtoms::xpmenu)
+  if (tag.get() == nsXULAtoms::menu)
     return PR_TRUE;
   return PR_FALSE;
 }
@@ -587,17 +629,20 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   
   PRInt32 childCount;
   mContent->ChildCount(childCount);
-  PRBool createContent = PR_FALSE;
-  if (childCount == 0)
-    createContent = PR_TRUE;
-  else if (childCount == 1) {
-    // Figure out if our child is a menuchildren tag.
+  PRBool createContent = PR_TRUE;
+  for (PRInt32 i = 0; i < childCount; i++) {
+    // XXX Should optimize this to look for a display type of none.
+    // Not sure how to do this.  For now screen out some known tags.
     nsCOMPtr<nsIContent> childContent;
-    mContent->ChildAt(0, *getter_AddRefs(childContent));
+    mContent->ChildAt(i, *getter_AddRefs(childContent));
     nsCOMPtr<nsIAtom> tag;
     childContent->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenuchildren)
-      createContent = PR_TRUE;
+    if (tag.get() != nsXULAtoms::menupopup &&
+      tag.get() != nsXULAtoms::templateAtom &&
+      tag.get() != nsXULAtoms::observes) {
+      createContent = PR_FALSE;
+      break;
+    }
   }
 
   if (!createContent)
@@ -672,32 +717,54 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 
   // Create a spring that serves as padding between the text and the
   // accelerator.
-  nsDocument->CreateElementWithNameSpace("spring", xulNamespace, getter_AddRefs(node));
-  content = do_QueryInterface(node);
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100", PR_FALSE);
-  aAnonymousChildren.AppendElement(content);
-
-  // Build the accelerator out of the corresponding key node.
-  nsString accelString;
-  BuildAcceleratorText(accelString);
-  if (accelString != "") {
-    // Create the accelerator (it's a div)
-    nsDocument->CreateElementWithNameSpace("div", htmlNamespace, getter_AddRefs(node));
+  if (!onMenuBar) {
+    nsDocument->CreateElementWithNameSpace("spring", xulNamespace, getter_AddRefs(node));
     content = do_QueryInterface(node);
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100", PR_FALSE);
     aAnonymousChildren.AppendElement(content);
+  
+    // Build the accelerator out of the corresponding key node.
+    nsString accelString;
+    BuildAcceleratorText(accelString);
+    if (accelString != "") {
+      // Create the accelerator (it's a div)
+      nsDocument->CreateElementWithNameSpace("div", htmlNamespace, getter_AddRefs(node));
+      content = do_QueryInterface(node);
+      aAnonymousChildren.AppendElement(content);
 
-    nsCOMPtr<nsIDOMText> accelNode;
-    document->CreateTextNode(accelString, getter_AddRefs(accelNode));
-    node->AppendChild(accelNode, getter_AddRefs(dummyResult));
-  }
+      nsCOMPtr<nsIDOMText> accelNode;
+      document->CreateTextNode(accelString, getter_AddRefs(accelNode));
+      node->AppendChild(accelNode, getter_AddRefs(dummyResult));
+    }
 
-  // Create the "menu-right" object.  It's a titledbutton.
-  if (!onMenuBar) { // XXX Maybe we should make one for a .menubar-right class so that the option exists
+    // Create the "menu-right" object.  It's a titledbutton.
+    // XXX Maybe we should make one for a .menubar-right class so that the option exists
     nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
     content = do_QueryInterface(node);
     content->SetAttribute(kNameSpaceID_None, classAtom, "menu-right", PR_FALSE);
     aAnonymousChildren.AppendElement(content);
   }
+
+  // Make this insertion explicit.
+  /*PRUint32 count = 0;
+  aAnonymousChildren.Count(&count);
+
+  PRUint32 i;
+  for (i=0; i < count; i++)
+  {
+    // get our child's content and set its parent to our content
+    nsCOMPtr<nsISupports> node;
+    aAnonymousChildren.GetElementAt(i,getter_AddRefs(node));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    mContent->AppendChildTo(content, PR_TRUE);
+  }
+
+  // Empty the array.
+  for (i=0; i < count; i++)
+  {
+    aAnonymousChildren.RemoveElementAt(0);
+  }
+*/
 
   return NS_OK;
 }
@@ -845,4 +912,69 @@ nsMenuFrame::OnDestroy()
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return PR_FALSE;
   return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsMenuFrame::RemoveFrame(nsIPresContext& aPresContext,
+                           nsIPresShell& aPresShell,
+                           nsIAtom* aListName,
+                           nsIFrame* aOldFrame)
+{
+  // need to rebuild all the springs.
+  for (int i=0; i < mSpringCount; i++) 
+    mSprings[i].clear();
+
+  nsIFrame* popup = mPopupFrames.FirstChild();
+  if (popup == aOldFrame) {
+    // Go ahead and remove this frame.
+    nsHTMLContainerFrame::RemoveFrame(aPresContext, aPresShell, nsLayoutAtoms::popupList, aOldFrame);
+    mPopupFrames.DestroyFrame(aPresContext, aOldFrame);
+    return NS_OK;
+  }
+
+  return nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+}
+
+NS_IMETHODIMP
+nsMenuFrame::InsertFrames(nsIPresContext& aPresContext,
+                            nsIPresShell& aPresShell,
+                            nsIAtom* aListName,
+                            nsIFrame* aPrevFrame,
+                            nsIFrame* aFrameList)
+{
+  // need to rebuild all the springs.
+  for (int i=0; i < mSpringCount; i++) 
+    mSprings[i].clear();
+
+  nsCOMPtr<nsIContent> menuChildren;
+  nsCOMPtr<nsIContent> frameChild;
+  GetMenuChildrenElement(getter_AddRefs(menuChildren));
+  aFrameList->GetContent(getter_AddRefs(frameChild));
+
+  if (menuChildren.get() == frameChild.get()) {
+    mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
+  }
+  return nsHTMLContainerFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);  
+}
+
+NS_IMETHODIMP
+nsMenuFrame::AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList)
+{
+  // need to rebuild all the springs.
+  for (int i=0; i < mSpringCount; i++) 
+    mSprings[i].clear();
+
+  nsCOMPtr<nsIContent> menuChildren;
+  nsCOMPtr<nsIContent> frameChild;
+  GetMenuChildrenElement(getter_AddRefs(menuChildren));
+  aFrameList->GetContent(getter_AddRefs(frameChild));
+
+  if (menuChildren.get() == frameChild.get()) {
+    mPopupFrames.AppendFrames(nsnull, aFrameList);
+  }
+  
+  return nsHTMLContainerFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
 }

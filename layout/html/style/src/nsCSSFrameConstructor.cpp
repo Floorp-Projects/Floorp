@@ -1826,10 +1826,10 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treecolgroup    == tag.get())  ||
         (nsXULAtoms::treefoot        == tag.get())  ||
         (nsXULAtoms::treepusher      == tag.get())  ||
-        (nsXULAtoms::xpmenu          == tag.get())  ||
-        (nsXULAtoms::xpmenuitem      == tag.get())  || 
-        (nsXULAtoms::xpmenubar       == tag.get())  ||
-        (nsXULAtoms::xpmenubutton    == tag.get())  ||
+        (nsXULAtoms::menu          == tag.get())  ||
+        (nsXULAtoms::menuitem      == tag.get())  || 
+        (nsXULAtoms::menubar       == tag.get())  ||
+        (nsXULAtoms::menupopup     == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
         (nsXULAtoms::toolbaritem     == tag.get())  ||
@@ -2781,8 +2781,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
       aTag !=  nsXULAtoms::slider &&
       aTag !=  nsXULAtoms::splitter &&
       aTag !=  nsXULAtoms::scrollbar &&
-      aTag !=  nsXULAtoms::xpmenu &&
-      aTag !=  nsXULAtoms::xpmenuitem
+      aTag !=  nsXULAtoms::menu &&
+      aTag !=  nsXULAtoms::menuitem
      ) {
      return NS_OK;
 
@@ -2822,53 +2822,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
     // create the frame and attach it to our frame
     ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
   }
-
-#ifdef XP_MENUS
-  if (aTag == nsXULAtoms::menu) {
-    // Create a menu button child if the menu has no children or
-    // only a menuchildren tag as its child.
-    PRInt32 childCount;
-    aContent->ChildCount(childCount);
-    PRBool createButton = PR_FALSE;
-    if (childCount == 0)
-      createButton = PR_TRUE;
-    else if (childCount == 1) {
-      // Figure out if our child is a menuchildren tag.
-      nsCOMPtr<nsIContent> childContent;
-      aContent->ChildAt(0, *getter_AddRefs(childContent));
-      nsCOMPtr<nsIAtom> tag;
-      childContent->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::menuchildren)
-        createButton = PR_TRUE;
-    }
-
-    if (createButton) {
-      nsCOMPtr<nsIDocument> idocument;
-      aContent->GetDocument(*getter_AddRefs(idocument));
-
-      nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
-
-      // create a child button
-      nsCOMPtr<nsIDOMElement> node;
-      document->CreateElement("menubutton",getter_AddRefs(node));
-      nsCOMPtr<nsIContent> content;
-      //content->SetNameSpaceID(nsXULAtoms::nameSpaceID);
-    
-      content = do_QueryInterface(node);
-
-      nsCOMPtr<nsIAtom> nameAtom = dont_AddRef(NS_NewAtom("name"));
-      nsCOMPtr<nsIAtom> valueAtom = dont_AddRef(NS_NewAtom("value"));
-
-      nsString result;
-      aContent->GetAttribute(kNameSpaceID_None, nameAtom, result);
-
-      content->SetAttribute(kNameSpaceID_None, valueAtom, result, PR_TRUE);
-      content->SetParent(aContent);
-
-      ConstructFrame(aPresContext, aState, content, aParentFrame, PR_FALSE, aChildItems);
-    }
-  }
-#endif // XP_MENUS
 
   return NS_OK;
 }
@@ -3036,27 +2989,25 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     // End of PROGRESS METER CONSTRUCTION logic
 
     // Menu Construction    
-    else if (aTag == nsXULAtoms::xpmenu ||
-             aTag == nsXULAtoms::xpmenuitem) {
+    else if (aTag == nsXULAtoms::menu ||
+             aTag == nsXULAtoms::menuitem) {
       // A derived class box frame
       // that has custom reflow to prevent menu children
       // from becoming part of the flow.
       processChildren = PR_TRUE; // Will need this to be custom.
       isReplaced = PR_TRUE;
-      rv = NS_NewMenuFrame(&newFrame, (aTag == nsXULAtoms::xpmenu));
+      rv = NS_NewMenuFrame(&newFrame, (aTag == nsXULAtoms::menu));
     }
-    else if (aTag == nsXULAtoms::xpmenubar) {
-      // XXX Will be a derived class toolbar frame.
+    else if (aTag == nsXULAtoms::menubar) {
+#ifdef XP_MAC // The Mac uses its native menu bar.
+      haltProcessing = PR_TRUE;
+      return NS_OK;
+#else
       processChildren = PR_TRUE;
       rv = NS_NewMenuBarFrame(&newFrame);
+#endif
     }
-    else if (aTag == nsXULAtoms::xpmenubutton) {
-      // XXX Will be a derived class titledbutton frame
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewTitledButtonFrame(&newFrame);
-    }
-    else if (aTag == nsXULAtoms::xpmenuchildren) {
+    else if (aTag == nsXULAtoms::menupopup) {
       // This is its own frame that derives from
       // box.
       processChildren = PR_TRUE;
