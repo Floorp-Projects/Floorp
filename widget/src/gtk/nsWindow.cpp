@@ -65,6 +65,7 @@ extern "C" int usleep(unsigned int);
 
 #undef DEBUG_DND_XLATE
 #undef DEBUG_FOCUS
+#undef DEBUG_GRAB
 #define MODAL_TIMERS_BROKEN
 
 #define CAPS_LOCK_IS_ON \
@@ -101,8 +102,8 @@ gboolean handle_toplevel_property_change (
     gpointer aData);
 
 // are we grabbing?
-PRBool      nsWindow::mIsGrabbing = PR_FALSE;
-nsWindow   *nsWindow::mGrabWindow = NULL;
+PRBool      nsWindow::sIsGrabbing = PR_FALSE;
+nsWindow   *nsWindow::sGrabWindow = NULL;
 
 // this is a hash table that contains a list of the
 // shell_window -> nsWindow * lookups
@@ -153,6 +154,7 @@ nsWindow::nsWindow()
   if (mLastDragMotionWindow == this)
     mLastDragMotionWindow = NULL;
   mBlockMozAreaFocusIn = PR_FALSE;
+  mLastGrabFailed = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -164,9 +166,9 @@ nsWindow::~nsWindow()
 {
   //  printf("%p nsWindow::~nsWindow\n", this);
   // make sure that we release the grab indicator here
-  if (mGrabWindow == this) {
-    mIsGrabbing = PR_FALSE;
-    mGrabWindow = NULL;
+  if (sGrabWindow == this) {
+    sIsGrabbing = PR_FALSE;
+    sGrabWindow = NULL;
   }
   // make sure that we unset the lastDragMotionWindow if
   // we are it.
@@ -737,20 +739,12 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   if (aDoCapture) {
 
     if (mSuperWin) {
-      mIsGrabbing = PR_TRUE;
-      mGrabWindow = this;
 
-      GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
+      NativeGrab(PR_TRUE);
 
-      gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
-                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                         GDK_POINTER_MOTION_MASK),
-                        (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+      sIsGrabbing = PR_TRUE;
+      sGrabWindow = this;
 
-      gdk_keyboard_grab(mSuperWin->bin_window, PR_TRUE, GDK_CURRENT_TIME);
-
-      gdk_cursor_destroy(cursor);
       SuppressModality(PR_TRUE);
     }
     gRollupConsumeRollupEvent = PR_TRUE;
@@ -759,14 +753,12 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
   } else {
     // make sure that the grab window is marked as released
-    if (mGrabWindow == this) {
-      mGrabWindow = NULL;
+    if (sGrabWindow == this) {
+      sGrabWindow = NULL;
     }
-    mIsGrabbing = PR_FALSE;
+    sIsGrabbing = PR_FALSE;
 
-    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
-
-    gdk_pointer_ungrab(GDK_CURRENT_TIME);
+    NativeGrab(PR_FALSE);
 
     gRollupListener = nsnull;
     gRollupWidget = nsnull;
@@ -774,6 +766,49 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   }
   
   return NS_OK;
+}
+
+// this function is the function that actually does the native window
+// grab passing in PR_TRUE will activate the grab, PR_FALSE will
+// release the grab
+
+void nsWindow::NativeGrab(PRBool aGrab)
+{
+  // unconditionally reset our state
+  mLastGrabFailed = PR_FALSE;
+
+  if (aGrab) {
+    GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
+    
+    gint retval;
+    retval = gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
+                               (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                                GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                                GDK_POINTER_MOTION_MASK),
+                               (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+#ifdef DEBUG_GRAB
+    printf("nsWindow::NativeGrab %p pointer_grab %d\n", this, retval);
+#endif
+    // check and set our flag if the grab failed
+    if (retval != 0)
+      mLastGrabFailed = PR_TRUE;
+
+    retval = gdk_keyboard_grab(mSuperWin->bin_window, PR_TRUE, GDK_CURRENT_TIME);
+#ifdef DEBUG_GRAB
+    printf("nsWindow::NativeGrab %p keyboard_grab %d\n", this, retval);
+#endif
+    // check and set our flag if the grab failed
+    if (retval != 0)
+      mLastGrabFailed = PR_TRUE;
+
+    gdk_cursor_destroy(cursor);
+  } else {
+#ifdef DEBUG_GRAB
+    printf("nsWindow::NativeGrab %p ungrab\n", this);
+#endif
+    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+    gdk_pointer_ungrab(GDK_CURRENT_TIME);
+  }
 }
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
@@ -2514,6 +2549,9 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
       if (mShell)
         gtk_widget_show(mShell);
     }
+    // and if we've been grabbed, grab for good measure.
+    if (sGrabWindow == this && mLastGrabFailed)
+      NativeGrab(PR_TRUE);
   }
   // hide
   else
@@ -3020,17 +3058,17 @@ nsWindow::GetMozArea()
 PRBool
 nsWindow::GrabInProgress(void)
 {
-  return nsWindow::mIsGrabbing;
+  return nsWindow::sIsGrabbing;
 }
 
 /* static */
 nsWindow *
 nsWindow::GetGrabWindow(void)
 {
-  if (nsWindow::mIsGrabbing)
+  if (nsWindow::sIsGrabbing)
   {
-    NS_ADDREF(mGrabWindow);
-    return mGrabWindow;
+    NS_ADDREF(sGrabWindow);
+    return sGrabWindow;
   }
   else
     return nsnull;
