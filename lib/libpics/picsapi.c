@@ -944,6 +944,10 @@ CSError_t ProcessService(CSLabel_t * pCSLabel, State_Parms_t * pParms, const cha
     return CSLabel_iterateSingleLabels(pCSLabel, ProcessSingleLabel, pParms, 0, szURL);
 }
 
+void TL_SetTrustAuthority( TrustLabel *ALabel, char *TrustAuthority );
+void TL_SetByField( TrustLabel *ALabel, char *szBy );
+void TL_SetURLField( TrustLabel *ALabel, char *szURL );
+
 /*----------------------------------------------------------------------------------------------------
  *  Purpose: the call back get the options and the ratings for a single label.
  * 		Create a TrustLabel to contain the info about the label and put on the 
