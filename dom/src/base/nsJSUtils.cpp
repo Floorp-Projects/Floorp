@@ -38,7 +38,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
-PRBool 
+NS_EXPORT PRBool 
 nsJSUtils::nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
                                            JSContext* aContext,
                                            jsval aId,
@@ -57,7 +57,7 @@ nsJSUtils::nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
   return JS_TRUE;
 }
 
-PRBool 
+NS_EXPORT PRBool 
 nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
                               JSContext* aContext,
                               jsval aId,
@@ -99,7 +99,7 @@ nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
   return nsCallJSScriptObjectGetProperty(aSupports, aContext, aId, aReturn);
 }
 
-PRBool 
+NS_EXPORT PRBool 
 nsJSUtils::nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
                                            JSContext* aContext,
                                            jsval aId,
@@ -118,7 +118,7 @@ nsJSUtils::nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
   return JS_TRUE;
 }
 
-void 
+NS_EXPORT void 
 nsJSUtils::nsConvertObjectToJSVal(nsISupports* aSupports,
                                   JSContext* aContext,
                                   jsval* aReturn)
@@ -142,7 +142,7 @@ nsJSUtils::nsConvertObjectToJSVal(nsISupports* aSupports,
   }
 }
 
-void 
+NS_EXPORT void 
 nsJSUtils::nsConvertStringToJSVal(const nsString& aProp,
                                   JSContext* aContext,
                                   jsval* aReturn)
@@ -153,7 +153,7 @@ nsJSUtils::nsConvertStringToJSVal(const nsString& aProp,
 }
 
 
-PRBool 
+NS_EXPORT PRBool 
 nsJSUtils::nsConvertJSValToObject(nsISupports** aSupports,
                                   REFNSIID aIID,
                                   const nsString& aTypeName,
@@ -190,7 +190,7 @@ nsJSUtils::nsConvertJSValToObject(nsISupports** aSupports,
   return JS_TRUE;
 }
 
-void 
+NS_EXPORT void 
 nsJSUtils::nsConvertJSValToString(nsString& aString,
                                   JSContext* aContext,
                                   jsval aValue)
@@ -204,7 +204,7 @@ nsJSUtils::nsConvertJSValToString(nsString& aString,
   }
 }
 
-PRBool
+NS_EXPORT PRBool
 nsJSUtils::nsConvertJSValToBool(PRBool* aProp,
                                 JSContext* aContext,
                                 jsval aValue)
@@ -221,7 +221,7 @@ nsJSUtils::nsConvertJSValToBool(PRBool* aProp,
   return JS_TRUE;
 }
 
-void 
+NS_EXPORT void 
 nsJSUtils::nsGenericFinalize(JSContext* aContext,
                              JSObject* aObj)
 {
@@ -241,7 +241,7 @@ nsJSUtils::nsGenericFinalize(JSContext* aContext,
   }
 }
 
-JSBool 
+NS_EXPORT JSBool 
 nsJSUtils::nsGenericEnumerate(JSContext* aContext,
                               JSObject* aObj)
 {
@@ -259,7 +259,7 @@ nsJSUtils::nsGenericEnumerate(JSContext* aContext,
   return JS_TRUE;
 }
 
-JSBool
+NS_EXPORT JSBool
 nsJSUtils::nsGlobalResolve(JSContext* aContext,
                            JSObject* aObj, 
                            jsval aId)
@@ -312,7 +312,7 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
   return PR_TRUE;
 }
 
-JSBool 
+NS_EXPORT JSBool 
 nsJSUtils::nsGenericResolve(JSContext* aContext,
                             JSObject* aObj, 
                             jsval aId)
