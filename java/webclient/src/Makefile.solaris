@@ -20,10 +20,10 @@ INCLUDE = ${JAVAINCLUDE} -I${DIST}/include ${GTKINCLUDES} ${GTKMOZILLAINCLUDE}
 DEFINES = -D_REENTRANT -DNECKO -DXP_UNIX -DDEBUG_RAPTOR_CANVAS -DMOZ_DLL_SUFFIX=\".so\"
 STUBDEFINES = -D_REENTRANT
 STUBINCLUDE = ${JAVAINCLUDE}
-STUBLIBS = ${JAVALIBS} -lC
+STUBLIBS = ${JAVALIBS} /usr/lib/libC.so.5
 # For the latest mozilla build
 LIBS =  ${GTKLIBS} ${JAVALIBS} \
--L${DIST}/bin -lraptorgfx -lexpat -lxmltok -ljsurl -lmozdbm -lmozjs -lsecfree -lmozutil -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorhtmlpars -lraptorplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_gtk_s -lC
+-L${DIST}/bin -lraptorgfx -lexpat -lxmltok -ljsurl -lmozdbm -lmozjs -lsecfree -lmozutil -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorhtmlpars -lraptorplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_gtk_s /usr/lib/libC.so.5
 LN = ln -f -s
 
 all: libwebclientstub.so libwebclient.so component.reg components
