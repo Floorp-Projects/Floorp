@@ -24,6 +24,62 @@
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
 
+const nsHTMLReflowState*
+nsHTMLReflowState::GetContainingBlockReflowState() const
+{
+  const nsReflowState* rs = parentReflowState;
+  while (nsnull != rs) {
+    if (nsnull != rs->frame) {
+      const nsStyleDisplay* display;
+      nsresult rv;
+      rv = rs->frame->GetStyleData(eStyleStruct_Display,
+                                   (const nsStyleStruct*&) display);
+      if (NS_SUCCEEDED(rv) && (nsnull != display)) {
+        switch (display->mDisplay) {
+        case NS_STYLE_DISPLAY_BLOCK:
+        case NS_STYLE_DISPLAY_COMPACT:
+        case NS_STYLE_DISPLAY_RUN_IN:
+        case NS_STYLE_DISPLAY_LIST_ITEM:
+          // XXX This cast is Not Good
+          return (const nsHTMLReflowState*)rs;
+        }
+      }
+    }
+    rs = rs->parentReflowState;
+  }
+  return nsnull;
+}
+
+nscoord
+nsHTMLReflowState::GetContainingBlockContentWidth() const
+{
+  nscoord width = 0;
+  const nsHTMLReflowState* rs = GetContainingBlockReflowState();
+  if (nsnull != rs) {
+    if (rs->HaveFixedContentWidth()) {
+      width = rs->minWidth;
+    }
+    else if (NS_UNCONSTRAINEDSIZE != rs->maxSize.width) {
+      width = rs->maxSize.width;
+      if (nsnull != rs->frame) {
+        // Subtract out the border and padding values because the
+        // percentage is to be computed relative to the content
+        // width, not the outer width.
+        const nsStyleSpacing* spacing;
+        nsresult rv;
+        rv = rs->frame->GetStyleData(eStyleStruct_Spacing,
+                                     (const nsStyleStruct*&) spacing);
+        if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
+          nsMargin borderPadding;
+          spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
+          width -= borderPadding.left + borderPadding.right;
+        }
+      }
+    }
+  }
+  return width;
+}
+
 // XXX there is no CLEAN way to detect the "replaced" attribute (yet)
 void
 nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
