@@ -92,7 +92,7 @@ class MessageDialogWrapper {
 
 class EvalTextArea extends JTextArea implements KeyListener,
 DocumentListener {
-    Main db;
+    DebugGui debugGui;
     private java.util.Vector history;
     private int historyIndex = -1;
     private int outputMark = 0;
@@ -102,9 +102,9 @@ DocumentListener {
         super.select(start, end);
     }
 
-    public EvalTextArea(Main db) {
+    public EvalTextArea(DebugGui debugGui) {
         super();
-        this.db = db;
+        this.debugGui = debugGui;
         history = new java.util.Vector();
         Document doc = getDocument();
         doc.addDocumentListener(this);
@@ -125,13 +125,13 @@ DocumentListener {
             ignored.printStackTrace();
         }
         String text = segment.toString();
-        if (db.stringIsCompilableUnit(text)) {
+        if (debugGui.main.stringIsCompilableUnit(text)) {
             if (text.trim().length() > 0) {
                history.addElement(text);
                historyIndex = history.size();
             }
             append("\n");
-            String result = db.eval(text);
+            String result = debugGui.main.eval(text);
             if (result.length() > 0) {
                 append(result);
                 append("\n");
@@ -267,9 +267,9 @@ implements ActionListener {
         evalTextArea.setEnabled(b);
     }
 
-    public EvalWindow(String name, Main db) {
+    public EvalWindow(String name, DebugGui debugGui) {
         super(name, true, false, true, true);
-        evalTextArea = new EvalTextArea(db);
+        evalTextArea = new EvalTextArea(debugGui);
         evalTextArea.setRows(24);
         evalTextArea.setColumns(80);
         JScrollPane scroller = new JScrollPane(evalTextArea);
@@ -609,7 +609,7 @@ class FindFunction extends JDialog implements ActionListener {
     private String value = null;
     private JList list;
     Hashtable functionNames;
-    Main db;
+    DebugGui debugGui;
     JButton setButton;
     JButton refreshButton;
     JButton cancelButton;
@@ -646,10 +646,10 @@ class FindFunction extends JDialog implements ActionListener {
                 SourceInfo si = item.getSourceInfo();
                 String url = si.getUrl();
                 int lineNumber = item.getFirstLine();
-                FileWindow w = db.getFileWindow(url);
+                FileWindow w = debugGui.getFileWindow(url);
                 if (w == null) {
-                    CreateFileWindow.action(db, si, lineNumber).run();
-                    w = db.getFileWindow(url);
+                    CreateFileWindow.action(debugGui, si, lineNumber).run();
+                    w = debugGui.getFileWindow(url);
                     w.setPosition(-1);
                 }
                 int start = w.getPosition(lineNumber-1);
@@ -659,7 +659,7 @@ class FindFunction extends JDialog implements ActionListener {
                 w.textArea.moveCaretPosition(end);
                 try {
                     w.show();
-                    db.requestFocus();
+                    debugGui.requestFocus();
                     w.requestFocus();
                     w.textArea.requestFocus();
                 } catch (Exception exc) {
@@ -676,12 +676,12 @@ class FindFunction extends JDialog implements ActionListener {
         }
     };
 
-    FindFunction(Main db, Hashtable functionNames,
+    FindFunction(DebugGui debugGui, Hashtable functionNames,
                  String title,
                  String labelText) {
-        super(db, title, true);
+        super(debugGui, title, true);
         this.functionNames = functionNames;
-        this.db = db;
+        this.debugGui = debugGui;
 
         cancelButton = new JButton("Cancel");
         setButton = new JButton("Select");
@@ -881,7 +881,7 @@ class FileHeader extends JPanel implements MouseListener {
 
 class FileWindow extends JInternalFrame implements ActionListener {
 
-    Main db;
+    DebugGui debugGui;
     SourceInfo sourceInfo;
     FileTextArea textArea;
     FileHeader fileHeader;
@@ -902,7 +902,7 @@ class FileWindow extends JInternalFrame implements ActionListener {
 
     void runToCursor(ActionEvent e) {
         try {
-            db.runToCursor(getUrl(),
+            debugGui.runToCursor(getUrl(),
                            textArea.getLineOfOffset(textArea.getCaretPosition()) + 1,
                            e);
         } catch (BadLocationException exc) {
@@ -910,13 +910,13 @@ class FileWindow extends JInternalFrame implements ActionListener {
     }
 
     void load() {
-        Scriptable scope = db.getScope();
+        Scriptable scope = debugGui.main.getScope();
         if (scope == null) {
-            MessageDialogWrapper.showMessageDialog(db, "Can't load scripts: no scope available", "Run", JOptionPane.ERROR_MESSAGE);
+            MessageDialogWrapper.showMessageDialog(debugGui, "Can't load scripts: no scope available", "Run", JOptionPane.ERROR_MESSAGE);
         } else {
             String url = getUrl();
             if (url != null) {
-                new Thread(new LoadFile(db,scope,url)).start();
+                new Thread(new LoadFile(debugGui,scope,url)).start();
             }
         }
     }
@@ -954,10 +954,10 @@ class FileWindow extends JInternalFrame implements ActionListener {
         }
     }
 
-    FileWindow(Main db, SourceInfo sourceInfo) {
+    FileWindow(DebugGui debugGui, SourceInfo sourceInfo) {
         super(SourceInfo.getShortName(sourceInfo.getUrl()),
               true, true, true, true);
-        this.db = db;
+        this.debugGui = debugGui;
         this.sourceInfo = sourceInfo;
         updateToolTip();
         currentPos = -1;
@@ -1014,18 +1014,20 @@ class FileWindow extends JInternalFrame implements ActionListener {
     }
 
     public void dispose() {
-        db.removeWindow(this);
+        debugGui.removeWindow(this);
         super.dispose();
     }
 
 };
 
-class MyTableModel extends AbstractTableModel {
-    Main db;
+class MyTableModel extends AbstractTableModel
+{
+    DebugGui debugGui;
     Vector expressions;
     Vector values;
-    MyTableModel(Main db) {
-        this.db = db;
+
+    MyTableModel(DebugGui debugGui) {
+        this.debugGui = debugGui;
         expressions = new Vector();
         values = new Vector();
         expressions.addElement("");
@@ -1071,7 +1073,7 @@ class MyTableModel extends AbstractTableModel {
             expressions.setElementAt(expr, row);
             String result = "";
             if (expr.length() > 0) {
-                result = db.eval(expr);
+                result = debugGui.main.eval(expr);
                 if (result == null) result = "";
             }
             values.setElementAt(result, row);
@@ -1094,7 +1096,7 @@ class MyTableModel extends AbstractTableModel {
             String expr = value.toString();
             String result = "";
             if (expr.length() > 0) {
-                result = db.eval(expr);
+                result = debugGui.main.eval(expr);
                 if (result == null) result = "";
             } else {
                 result = "";
@@ -1108,8 +1110,8 @@ class MyTableModel extends AbstractTableModel {
 
 class Evaluator extends JTable {
     MyTableModel tableModel;
-    Evaluator(Main db) {
-        super(new MyTableModel(db));
+    Evaluator(DebugGui debugGui) {
+        super(new MyTableModel(debugGui));
         tableModel = (MyTableModel)getModel();
     }
 }
@@ -1202,7 +1204,10 @@ class MyTreeTable extends JTreeTable {
     }
 };
 
-class ContextWindow extends JPanel implements ActionListener {
+class ContextWindow extends JPanel implements ActionListener
+{
+    DebugGui debugGui;
+
     JComboBox context;
     Vector toolTips;
     JTabbedPane tabs;
@@ -1213,11 +1218,10 @@ class ContextWindow extends JPanel implements ActionListener {
     Evaluator evaluator;
     EvalTextArea cmdLine;
     JSplitPane split;
-    Main db;
     boolean enabled;
-    ContextWindow(Main db) {
+    ContextWindow(final DebugGui debugGui) {
         super();
-        this.db = db;
+        this.debugGui = debugGui;
         enabled = false;
         JPanel left = new JPanel();
         JToolBar t1 = new JToolBar();
@@ -1314,8 +1318,8 @@ class ContextWindow extends JPanel implements ActionListener {
         c.anchor = GridBagConstraints.WEST;
         layout.setConstraints(tabs, c);
         left.add(tabs);
-        evaluator = new Evaluator(db);
-        cmdLine = new EvalTextArea(db);
+        evaluator = new Evaluator(debugGui);
+        cmdLine = new EvalTextArea(debugGui);
         //cmdLine.requestFocus();
         tableModel = evaluator.tableModel;
         jsp = new JScrollPane(evaluator);
@@ -1332,7 +1336,7 @@ class ContextWindow extends JPanel implements ActionListener {
         split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                                p1, p2);
         split.setOneTouchExpandable(true);
-        Main.setResizeWeight(split, 0.5);
+        DebugGui.setResizeWeight(split, 0.5);
         setLayout(new BorderLayout());
         add(split, BorderLayout.CENTER);
 
@@ -1342,7 +1346,6 @@ class ContextWindow extends JPanel implements ActionListener {
         final JPanel finalP2 = p2;
         final JSplitPane finalSplit = split;
         final JPanel finalThis = this;
-        final Main finalDb = db;
 
         ComponentListener clistener = new ComponentListener() {
                 boolean t1Docked = true;
@@ -1362,7 +1365,7 @@ class ContextWindow extends JPanel implements ActionListener {
                                 parent = parent.getParent();
                             }
                             JFrame frame = (JFrame)parent;
-                            finalDb.addTopLevel("Variables", frame);
+                            debugGui.addTopLevel("Variables", frame);
 
                             // We need the following hacks because:
                             // - We want an undocked toolbar to be
@@ -1403,7 +1406,7 @@ class ContextWindow extends JPanel implements ActionListener {
                                 parent = parent.getParent();
                             }
                             JFrame frame = (JFrame)parent;
-                            finalDb.addTopLevel("Evaluate", frame);
+                            debugGui.addTopLevel("Evaluate", frame);
                             frame.setResizable(true);
                             rightDocked = false;
                         } else {
@@ -1486,7 +1489,7 @@ class ContextWindow extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (!enabled) return;
         if (e.getActionCommand().equals("ContextSwitch")) {
-            ContextData contextData = db.currentContextData();
+            ContextData contextData = debugGui.main.currentContextData();
             if (contextData == null) { return; }
             int frameIndex = context.getSelectedIndex();
             context.setToolTipText(toolTips.elementAt(frameIndex).toString());
@@ -1527,7 +1530,8 @@ class ContextWindow extends JPanel implements ActionListener {
                     };
             }
             localsTable.resetTree(scopeModel);
-            db.contextSwitch (frame, frameIndex);
+            debugGui.main.contextSwitch(frameIndex);
+            debugGui.showStackFrame(frame);
             tableModel.updateModel();
         }
     }
@@ -1559,27 +1563,27 @@ class ContextWindow extends JPanel implements ActionListener {
 
 class CreateFileWindow implements Runnable {
 
-    Main db;
+    DebugGui debugGui;
     SourceInfo sourceInfo;
     int line;
     boolean activate;
 
     private CreateFileWindow() { }
 
-    static Runnable action(Main db, SourceInfo sourceInfo, int line) {
+    static Runnable action(DebugGui debugGui, SourceInfo sourceInfo, int line) {
         CreateFileWindow obj = new CreateFileWindow();
-        obj.db = db;
+        obj.debugGui = debugGui;
         obj.sourceInfo = sourceInfo;
         obj.line = line;
         obj.activate = true;
         return obj;
     }
 
-    static Runnable action(Main db,
+    static Runnable action(DebugGui debugGui,
                            SourceInfo sourceInfo, int line, boolean activate)
     {
         CreateFileWindow obj = new CreateFileWindow();
-        obj.db = db;
+        obj.debugGui = debugGui;
         obj.sourceInfo = sourceInfo;
         obj.line = line;
         obj.activate = activate;
@@ -1588,11 +1592,11 @@ class CreateFileWindow implements Runnable {
 
     public void run() {
         String url = sourceInfo.getUrl();
-        FileWindow w = new FileWindow(db, sourceInfo);
-        db.fileWindows.put(url, w);
+        FileWindow w = new FileWindow(debugGui, sourceInfo);
+        debugGui.fileWindows.put(url, w);
         if (line != -1) {
-            if (db.currentWindow != null) {
-                db.currentWindow.setPosition(-1);
+            if (debugGui.currentWindow != null) {
+                debugGui.currentWindow.setPosition(-1);
             }
             try {
                 w.setPosition(w.textArea.getLineStartOffset(line-1));
@@ -1604,11 +1608,11 @@ class CreateFileWindow implements Runnable {
                 }
             }
         }
-        db.desk.add(w);
+        debugGui.desk.add(w);
         if (line != -1) {
-            db.currentWindow = w;
+            debugGui.currentWindow = w;
         }
-        db.menubar.addFile(url);
+        debugGui.menubar.addFile(url);
         w.setVisible(true);
         if (activate) {
             try {
@@ -1623,20 +1627,22 @@ class CreateFileWindow implements Runnable {
 
 class SetFilePosition implements Runnable {
 
-    Main db;
+    DebugGui debugGui;
     FileWindow w;
     int line;
     boolean activate;
 
-    SetFilePosition(Main db, FileWindow w, int line) {
-        this.db = db;
+    SetFilePosition(DebugGui debugGui, FileWindow w, int line)
+    {
+        this.debugGui = debugGui;
         this.w = w;
         this.line = line;
         activate = true;
     }
 
-    SetFilePosition(Main db, FileWindow w, int line, boolean activate) {
-        this.db = db;
+    SetFilePosition(DebugGui debugGui, FileWindow w, int line, boolean activate)
+    {
+        this.debugGui = debugGui;
         this.w = w;
         this.line = line;
         this.activate = activate;
@@ -1647,25 +1653,25 @@ class SetFilePosition implements Runnable {
         try {
             if (line == -1) {
                 w.setPosition(-1);
-                if (db.currentWindow == w) {
-                    db.currentWindow = null;
+                if (debugGui.currentWindow == w) {
+                    debugGui.currentWindow = null;
                 }
             } else {
                 int loc = ta.getLineStartOffset(line-1);
-                if (db.currentWindow != null && db.currentWindow != w) {
-                    db.currentWindow.setPosition(-1);
+                if (debugGui.currentWindow != null && debugGui.currentWindow != w) {
+                    debugGui.currentWindow.setPosition(-1);
                 }
                 w.setPosition(loc);
-                db.currentWindow = w;
+                debugGui.currentWindow = w;
             }
         } catch (BadLocationException exc) {
             // fix me
         }
         if (activate) {
             if (w.isIcon()) {
-                db.desk.getDesktopManager().deiconifyFrame(w);
+                debugGui.desk.getDesktopManager().deiconifyFrame(w);
             }
-            db.desk.getDesktopManager().activateFrame(w);
+            debugGui.desk.getDesktopManager().activateFrame(w);
             try {
                 w.show();
                 w.toFront();  // required for correct frame layering (JDK 1.4.1)
@@ -1678,15 +1684,15 @@ class SetFilePosition implements Runnable {
 
 class UpdateFileText implements Runnable {
 
-    private Main main;
+    private DebugGui debugGui;
     private SourceInfo sourceInfo;
 
     private UpdateFileText() {}
 
-    static Runnable action(Main main, SourceInfo sourceInfo)
+    static Runnable action(DebugGui debugGui, SourceInfo sourceInfo)
     {
         UpdateFileText obj = new UpdateFileText();
-        obj.main = main;
+        obj.debugGui = debugGui;
         obj.sourceInfo = sourceInfo;
         return obj;
     }
@@ -1694,25 +1700,32 @@ class UpdateFileText implements Runnable {
     public void run()
     {
         String fileName = sourceInfo.getUrl();
-        FileWindow w = main.getFileWindow(fileName);
+        FileWindow w = debugGui.getFileWindow(fileName);
         if (w != null) {
             w.updateText();
             w.show();
         } else if (!fileName.equals("<stdin>")) {
-            CreateFileWindow.action(main, sourceInfo, -1).run();
+            CreateFileWindow.action(debugGui, sourceInfo, -1).run();
         }
     }
 }
 
-class Menubar extends JMenuBar implements ActionListener {
+class Menubar extends JMenuBar implements ActionListener
+{
+
+    DebugGui debugGui;
+    JMenu windowMenu;
+    JCheckBoxMenuItem breakOnExceptions;
+    JCheckBoxMenuItem breakOnEnter;
+    JCheckBoxMenuItem breakOnReturn;
 
     JMenu getDebugMenu() {
         return getMenu(2);
     }
 
-    Menubar(Main db) {
+    Menubar(DebugGui debugGui) {
         super();
-        this.db = db;
+        this.debugGui = debugGui;
         String[] fileItems  = {"Open...", "Run...", "", "Exit"};
         String[] fileCmds  = {"Open", "Load", "", "Exit"};
         char[] fileShortCuts = {'0', 'N', '\0', 'X'};
@@ -1829,20 +1842,20 @@ class Menubar extends JMenuBar implements ActionListener {
         } else {
             Object source = e.getSource();
             if (source == breakOnExceptions) {
-                db.setBreakOnExceptions(breakOnExceptions.isSelected());
+                debugGui.main.setBreakOnExceptions(breakOnExceptions.isSelected());
             }else if (source == breakOnEnter) {
-                db.setBreakOnEnter(breakOnEnter.isSelected());
+                debugGui.main.setBreakOnEnter(breakOnEnter.isSelected());
             }else if (source == breakOnReturn) {
-                db.setBreakOnReturn(breakOnReturn.isSelected());
+                debugGui.main.setBreakOnReturn(breakOnReturn.isSelected());
             }else {
-                db.actionPerformed(e);
+                debugGui.actionPerformed(e);
             }
                return;
         }
         try {
             UIManager.setLookAndFeel(plaf_name);
-            SwingUtilities.updateComponentTreeUI(db);
-            SwingUtilities.updateComponentTreeUI(db.dlg);
+            SwingUtilities.updateComponentTreeUI(debugGui);
+            SwingUtilities.updateComponentTreeUI(debugGui.dlg);
         } catch (Exception ignored) {
             //ignored.printStackTrace();
         }
@@ -1886,24 +1899,19 @@ class Menubar extends JMenuBar implements ActionListener {
         item.addActionListener(this);
     }
 
-    Main db;
-    JMenu windowMenu;
-    JCheckBoxMenuItem breakOnExceptions;
-    JCheckBoxMenuItem breakOnEnter;
-    JCheckBoxMenuItem breakOnReturn;
-};
+}
 
 class EnterInterrupt implements Runnable
 {
-    Main main;
+    DebugGui debugGui;
     StackFrame lastFrame;
     String threadTitle;
     String alertMessage;
 
-    EnterInterrupt(Main main, StackFrame lastFrame, String threadTitle,
+    EnterInterrupt(DebugGui debugGui, StackFrame lastFrame, String threadTitle,
                    String alertMessage)
     {
-        this.main = main;
+        this.debugGui = debugGui;
         this.lastFrame = lastFrame;
         this.threadTitle = threadTitle;
         this.alertMessage = alertMessage;
@@ -1911,54 +1919,40 @@ class EnterInterrupt implements Runnable
 
     public void run()
     {
-        String lastFrameUrl = lastFrame.getUrl();
-        int line = lastFrame.getLineNumber();
-        main.statusBar.setText("Thread: " + threadTitle);
+        debugGui.statusBar.setText("Thread: " + threadTitle);
 
-        if (lastFrameUrl != null && !lastFrameUrl.equals("<stdin>")) {
-            FileWindow w = main.getFileWindow(lastFrameUrl);
-            if (w != null) {
-                new SetFilePosition(main, w, line).run();
-            } else {
-                SourceInfo si = lastFrame.sourceInfo();
-                CreateFileWindow.action(main, si, line).run();
-            }
-        } else {
-            if (main.console.isVisible()) {
-                main.console.show();
-            }
-        }
+        debugGui.showStackFrame(lastFrame);
 
         if (alertMessage != null) {
-            MessageDialogWrapper.showMessageDialog(main,
+            MessageDialogWrapper.showMessageDialog(debugGui,
                                                    alertMessage,
                                                    "Exception in Script",
                                                    JOptionPane.ERROR_MESSAGE);
         }
 
-        JMenu menu = main.getJMenuBar().getMenu(0);
+        JMenu menu = debugGui.getJMenuBar().getMenu(0);
         //menu.getItem(0).setEnabled(false); // File->Load
-        menu = main.getJMenuBar().getMenu(2);
+        menu = debugGui.getJMenuBar().getMenu(2);
         menu.getItem(0).setEnabled(false); // Debug->Break
         int count = menu.getItemCount();
         for (int i = 1; i < count; ++i) {
             menu.getItem(i).setEnabled(true);
         }
         boolean b = false;
-        for (int ci = 0, cc = main.toolBar.getComponentCount(); ci < cc; ci++) {
-            main.toolBar.getComponent(ci).setEnabled(b);
+        for (int ci = 0, cc = debugGui.toolBar.getComponentCount(); ci < cc; ci++) {
+            debugGui.toolBar.getComponent(ci).setEnabled(b);
             b = true;
         }
-        main.toolBar.setEnabled(true);
+        debugGui.toolBar.setEnabled(true);
         // raise the debugger window
-        main.toFront();
+        debugGui.toFront();
 
         ContextData contextData = lastFrame.contextData();
 
-        main.context.enable();
-        JComboBox ctx = main.context.context;
-        Vector toolTips = main.context.toolTips;
-        main.context.disableUpdate();
+        debugGui.context.enable();
+        JComboBox ctx = debugGui.context.context;
+        Vector toolTips = debugGui.context.toolTips;
+        debugGui.context.disableUpdate();
         int frameCount = contextData.frameCount();
         ctx.removeAllItems();
         // workaround for JDK 1.4 bug that caches selected value even after
@@ -1978,7 +1972,7 @@ class EnterInterrupt implements Runnable
             location = "\"" + url + "\", line " + lineNumber;
             toolTips.addElement(location);
         }
-        main.context.enableUpdate();
+        debugGui.context.enableUpdate();
         ctx.setSelectedIndex(0);
         ctx.setMinimumSize(new Dimension(50, ctx.getMinimumSize().height));
     }
@@ -1987,11 +1981,11 @@ class EnterInterrupt implements Runnable
 class OpenFile implements Runnable
 {
     String fileName;
-    Main db;
-    OpenFile(Main db, String fileName)
+    DebugGui debugGui;
+    OpenFile(DebugGui debugGui, String fileName)
     {
         this.fileName = fileName;
-        this.db = db;
+        this.debugGui = debugGui;
     }
     public void run() {
         Context cx = Context.enter();
@@ -2005,7 +1999,7 @@ class OpenFile implements Runnable
                 EcmaError err = (EcmaError)exc;
                 msg = err.getSourceName() + ", line " + err.getLineNumber() + ": " + msg;
             }
-            MessageDialogWrapper.showMessageDialog(db,
+            MessageDialogWrapper.showMessageDialog(debugGui,
                                                    msg,
                                                    "Error Compiling File",
                                                    JOptionPane.ERROR_MESSAGE);
@@ -2018,11 +2012,11 @@ class OpenFile implements Runnable
 class LoadFile implements Runnable {
     Scriptable scope;
     String fileName;
-    Main db;
-    LoadFile(Main db, Scriptable scope, String fileName) {
+    DebugGui debugGui;
+    LoadFile(DebugGui debugGui, Scriptable scope, String fileName) {
         this.scope = scope;
         this.fileName = fileName;
-        this.db = db;
+        this.debugGui = debugGui;
     }
     public void run() {
         Context cx = Context.enter();
@@ -2037,7 +2031,7 @@ class LoadFile implements Runnable {
                 EcmaError err = (EcmaError)exc;
                 msg = err.getSourceName() + ", line " + err.getLineNumber() + ": " + msg;
             }
-            MessageDialogWrapper.showMessageDialog(db,
+            MessageDialogWrapper.showMessageDialog(debugGui,
                                                    msg,
                                                    "Run",
                                                    JOptionPane.ERROR_MESSAGE);
@@ -2347,7 +2341,482 @@ class SourceInfo {
 
 }
 
-public class Main extends JFrame implements Debugger, ContextListener {
+class DebugGui extends JFrame
+{
+    Main main;
+    JDesktopPane desk;
+    ContextWindow context;
+    Menubar menubar;
+    JToolBar toolBar;
+    JSInternalConsole console;
+    EvalWindow evalWindow;
+    JSplitPane split1;
+    JLabel statusBar;
+
+    java.util.Hashtable toplevels = new java.util.Hashtable();
+
+    java.util.Hashtable fileWindows = new java.util.Hashtable();
+    FileWindow currentWindow;
+
+    JFileChooser dlg;
+
+    DebugGui(Main main, String title) {
+        super(title);
+        this.main = main;
+        init();
+    }
+
+    public void setVisible(boolean b) {
+        super.setVisible(b);
+        if (b) {
+            // this needs to be done after the window is visible
+            console.consoleTextArea.requestFocus();
+            context.split.setDividerLocation(0.5);
+            try {
+                console.setMaximum(true);
+                console.setSelected(true);
+                console.show();
+                console.consoleTextArea.requestFocus();
+            } catch (Exception exc) {
+            }
+        }
+    }
+
+    void addTopLevel(String key, JFrame frame) {
+        if (frame != this) {
+            toplevels.put(key, frame);
+        }
+    }
+
+    void init()
+    {
+        menubar = new Menubar(this);
+        setJMenuBar(menubar);
+        toolBar = new JToolBar();
+        JButton button;
+        JButton breakButton, goButton, stepIntoButton,
+            stepOverButton, stepOutButton;
+        String [] toolTips = {"Break (Pause)",
+                              "Go (F5)",
+                              "Step Into (F11)",
+                              "Step Over (F7)",
+                              "Step Out (F8)"};
+        int count = 0;
+        button = breakButton = new JButton("Break");
+        JButton focusButton = button;
+        button.setToolTipText("Break");
+        button.setActionCommand("Break");
+        button.addActionListener(menubar);
+        button.setEnabled(true);
+        button.setToolTipText(toolTips[count++]);
+
+        button = goButton = new JButton("Go");
+        button.setToolTipText("Go");
+        button.setActionCommand("Go");
+        button.addActionListener(menubar);
+        button.setEnabled(false);
+        button.setToolTipText(toolTips[count++]);
+
+        button = stepIntoButton = new JButton("Step Into");
+        button.setToolTipText("Step Into");
+        button.setActionCommand("Step Into");
+        button.addActionListener(menubar);
+        button.setEnabled(false);
+        button.setToolTipText(toolTips[count++]);
+
+        button = stepOverButton = new JButton("Step Over");
+        button.setToolTipText("Step Over");
+        button.setActionCommand("Step Over");
+        button.setEnabled(false);
+        button.addActionListener(menubar);
+        button.setToolTipText(toolTips[count++]);
+
+        button = stepOutButton = new JButton("Step Out");
+        button.setToolTipText("Step Out");
+        button.setActionCommand("Step Out");
+        button.setEnabled(false);
+        button.addActionListener(menubar);
+        button.setToolTipText(toolTips[count++]);
+
+        Dimension dim = stepOverButton.getPreferredSize();
+        breakButton.setPreferredSize(dim);
+        breakButton.setMinimumSize(dim);
+        breakButton.setMaximumSize(dim);
+        breakButton.setSize(dim);
+        goButton.setPreferredSize(dim);
+        goButton.setMinimumSize(dim);
+        goButton.setMaximumSize(dim);
+        stepIntoButton.setPreferredSize(dim);
+        stepIntoButton.setMinimumSize(dim);
+        stepIntoButton.setMaximumSize(dim);
+        stepOverButton.setPreferredSize(dim);
+        stepOverButton.setMinimumSize(dim);
+        stepOverButton.setMaximumSize(dim);
+        stepOutButton.setPreferredSize(dim);
+        stepOutButton.setMinimumSize(dim);
+        stepOutButton.setMaximumSize(dim);
+        toolBar.add(breakButton);
+        toolBar.add(goButton);
+        toolBar.add(stepIntoButton);
+        toolBar.add(stepOverButton);
+        toolBar.add(stepOutButton);
+
+        JPanel contentPane = new JPanel();
+        contentPane.setLayout(new BorderLayout());
+        getContentPane().add(toolBar, BorderLayout.NORTH);
+        getContentPane().add(contentPane, BorderLayout.CENTER);
+        desk = new JDesktopPane();
+        desk.setPreferredSize(new Dimension(600, 300));
+        desk.setMinimumSize(new Dimension(150, 50));
+        desk.add(console = new JSInternalConsole("JavaScript Console"));
+        context = new ContextWindow(this);
+        context.setPreferredSize(new Dimension(600, 120));
+        context.setMinimumSize(new Dimension(50, 50));
+
+        split1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, desk,
+                                          context);
+        split1.setOneTouchExpandable(true);
+        DebugGui.setResizeWeight(split1, 0.66);
+        contentPane.add(split1, BorderLayout.CENTER);
+        statusBar = new JLabel();
+        statusBar.setText("Thread: ");
+        contentPane.add(statusBar, BorderLayout.SOUTH);
+        dlg = new JFileChooser();
+
+        javax.swing.filechooser.FileFilter filter =
+            new javax.swing.filechooser.FileFilter() {
+                    public boolean accept(File f) {
+                        if (f.isDirectory()) {
+                            return true;
+                        }
+                        String n = f.getName();
+                        int i = n.lastIndexOf('.');
+                        if (i > 0 && i < n.length() -1) {
+                            String ext = n.substring(i + 1).toLowerCase();
+                            if (ext.equals("js")) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+
+                    public String getDescription() {
+                        return "JavaScript Files (*.js)";
+                    }
+                };
+        dlg.addChoosableFileFilter(filter);
+        addWindowListener(new WindowAdapter() {
+                public void windowClosing(WindowEvent e) {
+                    main.Exit();
+                }
+            });
+    }
+
+    FileWindow getFileWindow(String url) {
+        if (url == null || url.equals("<stdin>")) {
+            return null;
+        }
+        return (FileWindow)fileWindows.get(url);
+    }
+
+    void removeWindow(FileWindow w) {
+        fileWindows.remove(w.getUrl());
+        JMenu windowMenu = getWindowMenu();
+        int count = windowMenu.getItemCount();
+        JMenuItem lastItem = windowMenu.getItem(count -1);
+        String name = SourceInfo.getShortName(w.getUrl());
+        for (int i = 5; i < count; i++) {
+            JMenuItem item = windowMenu.getItem(i);
+            if (item == null) continue; // separator
+            String text = item.getText();
+            //1 D:\foo.js
+            //2 D:\bar.js
+            int pos = text.indexOf(' ');
+            if (text.substring(pos + 1).equals(name)) {
+                windowMenu.remove(item);
+                // Cascade    [0]
+                // Tile       [1]
+                // -------    [2]
+                // Console    [3]
+                // -------    [4]
+                if (count == 6) {
+                    // remove the final separator
+                    windowMenu.remove(4);
+                } else {
+                    int j = i - 4;
+                    for (;i < count -1; i++) {
+                        JMenuItem thisItem = windowMenu.getItem(i);
+                        if (thisItem != null) {
+                            //1 D:\foo.js
+                            //2 D:\bar.js
+                            text = thisItem.getText();
+                            if (text.equals("More Windows...")) {
+                                break;
+                            } else {
+                                pos = text.indexOf(' ');
+                                thisItem.setText((char)('0' + j) + " " +
+                                                 text.substring(pos + 1));
+                                thisItem.setMnemonic('0' + j);
+                                j++;
+                            }
+                        }
+                    }
+                    if (count - 6 == 0 && lastItem != item) {
+                        if (lastItem.getText().equals("More Windows...")) {
+                            windowMenu.remove(lastItem);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        windowMenu.revalidate();
+    }
+
+    void showStackFrame(StackFrame frame)
+    {
+        String sourceName = frame.getUrl();
+        if (sourceName == null || sourceName.equals("<stdin>")) {
+            if (console.isVisible()) {
+                console.show();
+            }
+        } else {
+            int lineNumber = frame.getLineNumber();
+            FileWindow w = getFileWindow(sourceName);
+            if (w != null) {
+                (new SetFilePosition(this, w, lineNumber)).run();
+            } else {
+                SourceInfo si = frame.sourceInfo();
+                CreateFileWindow.action(this, si, lineNumber).run();
+            }
+        }
+    }
+
+    void runToCursor(String fileName,
+                     int lineNumber,
+                     ActionEvent evt) {
+        SourceInfo si = (SourceInfo)main.sourceNames.get(fileName);
+        if (si == null) {
+            System.out.println("debugger error: Couldn't find source: " + fileName);
+        }
+        if (si.breakableLine(lineNumber)) {
+            main.runToCursorFile = fileName;
+            main.runToCursorLine = lineNumber;
+            actionPerformed(evt);
+        }
+    }
+
+    JMenu getWindowMenu() {
+        return menubar.getMenu(3);
+    }
+
+    String chooseFile(String title) {
+        dlg.setDialogTitle(title);
+        File CWD = null;
+        String dir = System.getProperty("user.dir");
+        if (dir != null) {
+            CWD = new File(dir);
+        }
+        if (CWD != null) {
+            dlg.setCurrentDirectory(CWD);
+        }
+        int returnVal = dlg.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            try {
+                String result = dlg.getSelectedFile().getCanonicalPath();
+                CWD = dlg.getSelectedFile().getParentFile();
+                Properties props = System.getProperties();
+                props.put("user.dir", CWD.getPath());
+                System.setProperties(props);
+                return result;
+            }catch (IOException ignored) {
+            }catch (SecurityException ignored) {
+            }
+        }
+        return null;
+    }
+
+    JInternalFrame getSelectedFrame() {
+       JInternalFrame[] frames = desk.getAllFrames();
+       for (int i = 0; i < frames.length; i++) {
+           if (frames[i].isShowing()) {
+               return frames[i];
+           }
+       }
+       return frames[frames.length - 1];
+    }
+
+    void actionPerformed(ActionEvent e) {
+        String cmd = e.getActionCommand();
+        int returnValue = -1;
+        if (cmd.equals("Cut") || cmd.equals("Copy") || cmd.equals("Paste")) {
+            JInternalFrame f = getSelectedFrame();
+            if (f != null && f instanceof ActionListener) {
+                ((ActionListener)f).actionPerformed(e);
+            }
+        } else if (cmd.equals("Step Over")) {
+            returnValue = Main.STEP_OVER;
+        } else if (cmd.equals("Step Into")) {
+            returnValue = Main.STEP_INTO;
+        } else if (cmd.equals("Step Out")) {
+            returnValue = Main.STEP_OUT;
+        } else if (cmd.equals("Go")) {
+            returnValue = Main.GO;
+        } else if (cmd.equals("Break")) {
+            main.doBreak();
+        } else if (cmd.equals("Run to Cursor")) {
+            returnValue = Main.RUN_TO_CURSOR;
+        } else if (cmd.equals("Exit")) {
+            main.Exit();
+        } else if (cmd.equals("Open")) {
+            String fileName = chooseFile("Select a file to compile");
+            if (fileName != null) {
+                new Thread(new OpenFile(this, fileName)).start();
+            }
+        } else if (cmd.equals("Load")) {
+            Scriptable scope = main.getScope();
+            if (scope == null) {
+                MessageDialogWrapper.showMessageDialog(this, "Can't run scripts: no scope available", "Run", JOptionPane.ERROR_MESSAGE);
+            } else {
+                String fileName = chooseFile("Select a file to execute");
+                if (fileName != null) {
+                    new Thread(new LoadFile(this, scope,
+                                            fileName)).start();
+                }
+            }
+        } else if (cmd.equals("More Windows...")) {
+            MoreWindows dlg = new MoreWindows(this, fileWindows,
+                                              "Window", "Files");
+            dlg.showDialog(this);
+        } else if (cmd.equals("Console")) {
+            if (console.isIcon()) {
+                desk.getDesktopManager().deiconifyFrame(console);
+            }
+            console.show();
+            desk.getDesktopManager().activateFrame(console);
+            console.consoleTextArea.requestFocus();
+        } else if (cmd.equals("Cut")) {
+        } else if (cmd.equals("Copy")) {
+        } else if (cmd.equals("Paste")) {
+        } else if (cmd.equals("Go to function...")) {
+            FindFunction dlg = new FindFunction(this, main.functionNames,
+                                                "Go to function",
+                                                "Function");
+            dlg.showDialog(this);
+        } else if (cmd.equals("Tile")) {
+            JInternalFrame[] frames = desk.getAllFrames();
+            int count = frames.length;
+            int rows, cols;
+            rows = cols = (int)Math.sqrt(count);
+            if (rows*cols < count) {
+                cols++;
+                if (rows * cols < count) {
+                    rows++;
+                }
+            }
+            Dimension size = desk.getSize();
+            int w = size.width/cols;
+            int h = size.height/rows;
+            int x = 0;
+            int y = 0;
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    int index = (i*cols) + j;
+                    if (index >= frames.length) {
+                        break;
+                    }
+                    JInternalFrame f = frames[index];
+                    try {
+                        f.setIcon(false);
+                        f.setMaximum(false);
+                    } catch (Exception exc) {
+                    }
+                    desk.getDesktopManager().setBoundsForFrame(f, x, y,
+                                                               w, h);
+                    x += w;
+                }
+                y += h;
+                x = 0;
+            }
+        } else if (cmd.equals("Cascade")) {
+            JInternalFrame[] frames = desk.getAllFrames();
+            int count = frames.length;
+            int x, y, w, h;
+            x = y = 0;
+            h = desk.getHeight();
+            int d = h / count;
+            if (d > 30) d = 30;
+            for (int i = count -1; i >= 0; i--, x += d, y += d) {
+                JInternalFrame f = frames[i];
+                try {
+                    f.setIcon(false);
+                    f.setMaximum(false);
+                } catch (Exception exc) {
+                }
+                Dimension dimen = f.getPreferredSize();
+                w = dimen.width;
+                h = dimen.height;
+                desk.getDesktopManager().setBoundsForFrame(f, x, y, w, h);
+            }
+        } else {
+            Object obj = getFileWindow(cmd);
+            if (obj != null) {
+                FileWindow w = (FileWindow)obj;
+                try {
+                    if (w.isIcon()) {
+                        w.setIcon(false);
+                    }
+                    w.setVisible(true);
+                    w.moveToFront();
+                    w.setSelected(true);
+                } catch (Exception exc) {
+                }
+            }
+        }
+        if (returnValue != -1) {
+            disableInterruptOnlyGui();
+            main.setReturnValue(returnValue);
+        }
+    }
+
+    private void disableInterruptOnlyGui()
+    {
+        if (currentWindow != null) currentWindow.setPosition(-1);
+        JMenu menu = getJMenuBar().getMenu(0);
+        menu.getItem(0).setEnabled(true); // File->Load
+        menu = getJMenuBar().getMenu(2);
+        menu.getItem(0).setEnabled(true); // Debug->Break
+        int count = menu.getItemCount() - 1;
+        int i = 1;
+        for (; i < count; ++i) {
+            menu.getItem(i).setEnabled(false);
+        }
+        context.disable();
+        boolean b = true;
+        for (int ci = 0, cc = toolBar.getComponentCount(); ci < cc; ci++) {
+            toolBar.getComponent(ci).setEnabled(b);
+            b = false;
+        }
+    }
+
+    static void setResizeWeight(JSplitPane pane, double weight) {
+        // call through reflection for portability
+        // pre-1.3 JDK JSplitPane doesn't have this method
+        try {
+            Method m = JSplitPane.class.getMethod("setResizeWeight",
+                                                  new Class[]{double.class});
+            m.invoke(pane, new Object[]{new Double(weight)});
+        } catch (NoSuchMethodException exc) {
+        } catch (IllegalAccessException exc) {
+        } catch (java.lang.reflect.InvocationTargetException exc) {
+        }
+    }
+
+}
+
+public class Main implements Debugger, ContextListener {
+
+    DebugGui debugGui;
 
     /* ContextListener interface */
 
@@ -2376,22 +2845,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
         breakFlag = true;
     }
 
-    public void setVisible(boolean b) {
-        super.setVisible(b);
-        if (b) {
-            // this needs to be done after the window is visible
-            console.consoleTextArea.requestFocus();
-            context.split.setDividerLocation(0.5);
-            try {
-                console.setMaximum(true);
-                console.setSelected(true);
-                console.show();
-                console.consoleTextArea.requestFocus();
-            } catch (Exception exc) {
-            }
-        }
-    }
-
     static final int STEP_OVER = 0;
     static final int STEP_INTO = 1;
     static final int STEP_OUT = 2;
@@ -2400,10 +2853,10 @@ public class Main extends JFrame implements Debugger, ContextListener {
     static final int RUN_TO_CURSOR = 5;
     static final int EXIT = 6;
 
-    private int runToCursorLine;
-    private String runToCursorFile;
+    int runToCursorLine;
+    String runToCursorFile;
     private Hashtable scriptItems = new Hashtable();
-    private Hashtable sourceNames = new Hashtable();
+    Hashtable sourceNames = new Hashtable();
 
     Hashtable functionNames = new Hashtable();
 
@@ -2565,7 +3018,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             functionNames.put(name, item);
         }
 
-        swingInvokeLater(UpdateFileText.action(this, si));
+        swingInvokeLater(UpdateFileText.action(debugGui, si));
 
         return item;
     }
@@ -2617,152 +3070,12 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     /* end Debugger interface */
 
-    JDesktopPane desk;
-    ContextWindow context;
-    Menubar menubar;
-    JToolBar toolBar;
-    JSInternalConsole console;
-    EvalWindow evalWindow;
-    JSplitPane split1;
-    JLabel statusBar;
-
-    void init() {
-        setJMenuBar(menubar = new Menubar(this));
-        toolBar = new JToolBar();
-        JButton button;
-        JButton breakButton, goButton, stepIntoButton,
-            stepOverButton, stepOutButton;
-        String [] toolTips = {"Break (Pause)",
-                              "Go (F5)",
-                              "Step Into (F11)",
-                              "Step Over (F7)",
-                              "Step Out (F8)"};
-        int count = 0;
-        button = breakButton = new JButton("Break");
-        JButton focusButton = button;
-        button.setToolTipText("Break");
-        button.setActionCommand("Break");
-        button.addActionListener(menubar);
-        button.setEnabled(true);
-        button.setToolTipText(toolTips[count++]);
-
-        button = goButton = new JButton("Go");
-        button.setToolTipText("Go");
-        button.setActionCommand("Go");
-        button.addActionListener(menubar);
-        button.setEnabled(false);
-        button.setToolTipText(toolTips[count++]);
-
-        button = stepIntoButton = new JButton("Step Into");
-        button.setToolTipText("Step Into");
-        button.setActionCommand("Step Into");
-        button.addActionListener(menubar);
-        button.setEnabled(false);
-        button.setToolTipText(toolTips[count++]);
-
-        button = stepOverButton = new JButton("Step Over");
-        button.setToolTipText("Step Over");
-        button.setActionCommand("Step Over");
-        button.setEnabled(false);
-        button.addActionListener(menubar);
-        button.setToolTipText(toolTips[count++]);
-
-        button = stepOutButton = new JButton("Step Out");
-        button.setToolTipText("Step Out");
-        button.setActionCommand("Step Out");
-        button.setEnabled(false);
-        button.addActionListener(menubar);
-        button.setToolTipText(toolTips[count++]);
-
-        Dimension dim = stepOverButton.getPreferredSize();
-        breakButton.setPreferredSize(dim);
-        breakButton.setMinimumSize(dim);
-        breakButton.setMaximumSize(dim);
-        breakButton.setSize(dim);
-        goButton.setPreferredSize(dim);
-        goButton.setMinimumSize(dim);
-        goButton.setMaximumSize(dim);
-        stepIntoButton.setPreferredSize(dim);
-        stepIntoButton.setMinimumSize(dim);
-        stepIntoButton.setMaximumSize(dim);
-        stepOverButton.setPreferredSize(dim);
-        stepOverButton.setMinimumSize(dim);
-        stepOverButton.setMaximumSize(dim);
-        stepOutButton.setPreferredSize(dim);
-        stepOutButton.setMinimumSize(dim);
-        stepOutButton.setMaximumSize(dim);
-        toolBar.add(breakButton);
-        toolBar.add(goButton);
-        toolBar.add(stepIntoButton);
-        toolBar.add(stepOverButton);
-        toolBar.add(stepOutButton);
-
-        JPanel contentPane = new JPanel();
-        contentPane.setLayout(new BorderLayout());
-        getContentPane().add(toolBar, BorderLayout.NORTH);
-        getContentPane().add(contentPane, BorderLayout.CENTER);
-        desk = new JDesktopPane();
-        desk.setPreferredSize(new Dimension(600, 300));
-        desk.setMinimumSize(new Dimension(150, 50));
-        desk.add(console = new JSInternalConsole("JavaScript Console"));
-        context = new ContextWindow(this);
-        context.setPreferredSize(new Dimension(600, 120));
-        context.setMinimumSize(new Dimension(50, 50));
-
-        split1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, desk,
-                                          context);
-        split1.setOneTouchExpandable(true);
-        Main.setResizeWeight(split1, 0.66);
-        contentPane.add(split1, BorderLayout.CENTER);
-        statusBar = new JLabel();
-        statusBar.setText("Thread: ");
-        contentPane.add(statusBar, BorderLayout.SOUTH);
-        dlg = new JFileChooser();
-
-        javax.swing.filechooser.FileFilter filter =
-            new javax.swing.filechooser.FileFilter() {
-                    public boolean accept(File f) {
-                        if (f.isDirectory()) {
-                            return true;
-                        }
-                        String n = f.getName();
-                        int i = n.lastIndexOf('.');
-                        if (i > 0 && i < n.length() -1) {
-                            String ext = n.substring(i + 1).toLowerCase();
-                            if (ext.equals("js")) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-
-                    public String getDescription() {
-                        return "JavaScript Files (*.js)";
-                    }
-                };
-        dlg.addChoosableFileFilter(filter);
-        final Main self = this;
-        addWindowListener(new WindowAdapter() {
-                public void windowClosing(WindowEvent e) {
-                    self.Exit();
-                }
-            });
-    }
-
-
     ScopeProvider scopeProvider;
     Runnable exitAction;
 
 
     Scriptable getScope() {
         return (scopeProvider != null) ? scopeProvider.getScope() : null;
-    }
-
-    FileWindow getFileWindow(String url) {
-        if (url == null || url.equals("<stdin>")) {
-            return null;
-        }
-        return (FileWindow)fileWindows.get(url);
     }
 
     static void swingInvokeLater(Runnable f)
@@ -2772,21 +3085,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     int frameIndex = -1;
 
-    void contextSwitch (StackFrame frame, int frameIndex) {
+    void contextSwitch (int frameIndex) {
         this.frameIndex = frameIndex;
-        String sourceName = frame.getUrl();
-        if (sourceName == null || sourceName.equals("<stdin>")) {
-            console.show();
-        } else {
-            int lineNumber = frame.getLineNumber();
-            FileWindow w = getFileWindow(sourceName);
-            if (w != null) {
-                (new SetFilePosition(this, w, lineNumber)).run();
-            } else {
-                SourceInfo si = frame.sourceInfo();
-                CreateFileWindow.action(this, si, lineNumber).run();
-            }
-        }
     }
 
     boolean isInterrupted = false;
@@ -2863,8 +3163,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 alertMessage = exceptionString(frame, scriptException);
             }
 
-            Runnable enterAction
-                = new EnterInterrupt(this, frame, threadTitle, alertMessage);
+            Runnable enterAction = new EnterInterrupt(debugGui, frame, threadTitle, alertMessage);
             int returnValue = -1;
             if (!eventThreadFlag) {
                 synchronized (monitor) {
@@ -2946,271 +3245,12 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
     }
 
-    JFileChooser dlg;
-
-    String chooseFile(String title) {
-        dlg.setDialogTitle(title);
-        File CWD = null;
-        String dir = System.getProperty("user.dir");
-        if (dir != null) {
-            CWD = new File(dir);
-        }
-        if (CWD != null) {
-            dlg.setCurrentDirectory(CWD);
-        }
-        int returnVal = dlg.showOpenDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            try {
-                String result = dlg.getSelectedFile().getCanonicalPath();
-                CWD = dlg.getSelectedFile().getParentFile();
-                Properties props = System.getProperties();
-                props.put("user.dir", CWD.getPath());
-                System.setProperties(props);
-                return result;
-            }catch (IOException ignored) {
-            }catch (SecurityException ignored) {
-            }
-        }
-        return null;
-    }
-
-    JInternalFrame getSelectedFrame() {
-       JInternalFrame[] frames = desk.getAllFrames();
-       for (int i = 0; i < frames.length; i++) {
-           if (frames[i].isShowing()) {
-               return frames[i];
-           }
-       }
-       return frames[frames.length - 1];
-    }
-
-    void actionPerformed(ActionEvent e) {
-        String cmd = e.getActionCommand();
-        int returnValue = -1;
-        if (cmd.equals("Cut") || cmd.equals("Copy") || cmd.equals("Paste")) {
-            JInternalFrame f = getSelectedFrame();
-            if (f != null && f instanceof ActionListener) {
-                ((ActionListener)f).actionPerformed(e);
-            }
-        } else if (cmd.equals("Step Over")) {
-            returnValue = STEP_OVER;
-        } else if (cmd.equals("Step Into")) {
-            returnValue = STEP_INTO;
-        } else if (cmd.equals("Step Out")) {
-            returnValue = STEP_OUT;
-        } else if (cmd.equals("Go")) {
-            returnValue = GO;
-        } else if (cmd.equals("Break")) {
-            doBreak();
-        } else if (cmd.equals("Run to Cursor")) {
-            returnValue = RUN_TO_CURSOR;
-        } else if (cmd.equals("Exit")) {
-            Exit();
-        } else if (cmd.equals("Open")) {
-            String fileName = chooseFile("Select a file to compile");
-            if (fileName != null) {
-                new Thread(new OpenFile(this, fileName)).start();
-            }
-        } else if (cmd.equals("Load")) {
-            Scriptable scope = getScope();
-            if (scope == null) {
-                MessageDialogWrapper.showMessageDialog(this, "Can't run scripts: no scope available", "Run", JOptionPane.ERROR_MESSAGE);
-            } else {
-                String fileName = chooseFile("Select a file to execute");
-                if (fileName != null) {
-                    new Thread(new LoadFile(this, scope,
-                                            fileName)).start();
-                }
-            }
-        } else if (cmd.equals("More Windows...")) {
-            MoreWindows dlg = new MoreWindows(this, fileWindows,
-                                              "Window", "Files");
-            dlg.showDialog(this);
-        } else if (cmd.equals("Console")) {
-            if (console.isIcon()) {
-                desk.getDesktopManager().deiconifyFrame(console);
-            }
-            console.show();
-            desk.getDesktopManager().activateFrame(console);
-            console.consoleTextArea.requestFocus();
-        } else if (cmd.equals("Cut")) {
-        } else if (cmd.equals("Copy")) {
-        } else if (cmd.equals("Paste")) {
-        } else if (cmd.equals("Go to function...")) {
-            FindFunction dlg = new FindFunction(this, functionNames,
-                                                "Go to function",
-                                                "Function");
-            dlg.showDialog(this);
-        } else if (cmd.equals("Tile")) {
-            JInternalFrame[] frames = desk.getAllFrames();
-            int count = frames.length;
-            int rows, cols;
-            rows = cols = (int)Math.sqrt(count);
-            if (rows*cols < count) {
-                cols++;
-                if (rows * cols < count) {
-                    rows++;
-                }
-            }
-            Dimension size = desk.getSize();
-            int w = size.width/cols;
-            int h = size.height/rows;
-            int x = 0;
-            int y = 0;
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    int index = (i*cols) + j;
-                    if (index >= frames.length) {
-                        break;
-                    }
-                    JInternalFrame f = frames[index];
-                    try {
-                        f.setIcon(false);
-                        f.setMaximum(false);
-                    } catch (Exception exc) {
-                    }
-                    desk.getDesktopManager().setBoundsForFrame(f, x, y,
-                                                               w, h);
-                    x += w;
-                }
-                y += h;
-                x = 0;
-            }
-        } else if (cmd.equals("Cascade")) {
-            JInternalFrame[] frames = desk.getAllFrames();
-            int count = frames.length;
-            int x, y, w, h;
-            x = y = 0;
-            h = desk.getHeight();
-            int d = h / count;
-            if (d > 30) d = 30;
-            for (int i = count -1; i >= 0; i--, x += d, y += d) {
-                JInternalFrame f = frames[i];
-                try {
-                    f.setIcon(false);
-                    f.setMaximum(false);
-                } catch (Exception exc) {
-                }
-                Dimension dimen = f.getPreferredSize();
-                w = dimen.width;
-                h = dimen.height;
-                desk.getDesktopManager().setBoundsForFrame(f, x, y, w, h);
-            }
-        } else {
-            Object obj = getFileWindow(cmd);
-            if (obj != null) {
-                FileWindow w = (FileWindow)obj;
-                try {
-                    if (w.isIcon()) {
-                        w.setIcon(false);
-                    }
-                    w.setVisible(true);
-                    w.moveToFront();
-                    w.setSelected(true);
-                } catch (Exception exc) {
-                }
-            }
-        }
-        if (returnValue != -1) {
-            disableInterruptOnlyGui();
-            synchronized (monitor) {
-                this.returnValue = returnValue;
-                monitor.notify();
-            }
-        }
-    }
-
-    private void disableInterruptOnlyGui()
+    void setReturnValue(int returnValue)
     {
-        if (currentWindow != null) currentWindow.setPosition(-1);
-        JMenu menu = getJMenuBar().getMenu(0);
-        menu.getItem(0).setEnabled(true); // File->Load
-        menu = getJMenuBar().getMenu(2);
-        menu.getItem(0).setEnabled(true); // Debug->Break
-        int count = menu.getItemCount() - 1;
-        int i = 1;
-        for (; i < count; ++i) {
-            menu.getItem(i).setEnabled(false);
+        synchronized (monitor) {
+            this.returnValue = returnValue;
+            monitor.notify();
         }
-        context.disable();
-        boolean b = true;
-        for (int ci = 0, cc = toolBar.getComponentCount(); ci < cc; ci++) {
-            toolBar.getComponent(ci).setEnabled(b);
-            b = false;
-        }
-        //console.consoleTextArea.requestFocus();
-    }
-
-    void runToCursor(String fileName,
-                     int lineNumber,
-                     ActionEvent evt) {
-        SourceInfo si = (SourceInfo)sourceNames.get(fileName);
-        if (si == null) {
-            System.out.println("debugger error: Couldn't find source: " + fileName);
-        }
-        if (si.breakableLine(lineNumber)) {
-            runToCursorFile = fileName;
-            runToCursorLine = lineNumber;
-            actionPerformed(evt);
-        }
-    }
-
-    JMenu getWindowMenu() {
-        return menubar.getMenu(3);
-    }
-
-    void removeWindow(FileWindow w) {
-        fileWindows.remove(w.getUrl());
-        JMenu windowMenu = getWindowMenu();
-        int count = windowMenu.getItemCount();
-        JMenuItem lastItem = windowMenu.getItem(count -1);
-        String name = SourceInfo.getShortName(w.getUrl());
-        for (int i = 5; i < count; i++) {
-            JMenuItem item = windowMenu.getItem(i);
-            if (item == null) continue; // separator
-            String text = item.getText();
-            //1 D:\foo.js
-            //2 D:\bar.js
-            int pos = text.indexOf(' ');
-            if (text.substring(pos + 1).equals(name)) {
-                windowMenu.remove(item);
-                // Cascade    [0]
-                // Tile       [1]
-                // -------    [2]
-                // Console    [3]
-                // -------    [4]
-                if (count == 6) {
-                    // remove the final separator
-                    windowMenu.remove(4);
-                } else {
-                    int j = i - 4;
-                    for (;i < count -1; i++) {
-                        JMenuItem thisItem = windowMenu.getItem(i);
-                        if (thisItem != null) {
-                            //1 D:\foo.js
-                            //2 D:\bar.js
-                            text = thisItem.getText();
-                            if (text.equals("More Windows...")) {
-                                break;
-                            } else {
-                                pos = text.indexOf(' ');
-                                thisItem.setText((char)('0' + j) + " " +
-                                                 text.substring(pos + 1));
-                                thisItem.setMnemonic('0' + j);
-                                j++;
-                            }
-                        }
-                    }
-                    if (count - 6 == 0 && lastItem != item) {
-                        if (lastItem.getText().equals("More Windows...")) {
-                            windowMenu.remove(lastItem);
-                        }
-                    }
-                }
-                break;
-            }
-        }
-        windowMenu.revalidate();
     }
 
     boolean stringIsCompilableUnit(String expr) {
@@ -3296,8 +3336,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
     }
 
-    java.util.Hashtable fileWindows = new java.util.Hashtable();
-    FileWindow currentWindow;
     private Object monitor = new Object();
     private Object swingMonitor = new Object();
     private int returnValue = -1;
@@ -3309,27 +3347,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
     boolean breakOnExceptions;
     boolean breakOnEnter;
     boolean breakOnReturn;
-
-    static void setResizeWeight(JSplitPane pane, double weight) {
-        // call through reflection for portability
-        // pre-1.3 JDK JSplitPane doesn't have this method
-        try {
-            Method m = JSplitPane.class.getMethod("setResizeWeight",
-                                                  new Class[]{double.class});
-            m.invoke(pane, new Object[]{new Double(weight)});
-        } catch (NoSuchMethodException exc) {
-        } catch (IllegalAccessException exc) {
-        } catch (java.lang.reflect.InvocationTargetException exc) {
-        }
-    }
-
-    java.util.Hashtable toplevels = new java.util.Hashtable();
-
-    void addTopLevel(String key, JFrame frame) {
-        if (frame != this) {
-            toplevels.put(key, frame);
-        }
-    }
 
     private static java.awt.EventQueue awtEventQueue = null;
 
@@ -3359,9 +3376,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
     // public interface
     //
 
-    public Main(String title) {
-        super(title);
-        init();
+    public Main(String title)
+    {
+        debugGui = new DebugGui(this, title);
     }
 
    /**
@@ -3430,7 +3447,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
      */
 
     public InputStream getIn() {
-        return console.getIn();
+        return debugGui.console.getIn();
     }
 
     /**
@@ -3438,7 +3455,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
      */
 
     public PrintStream getOut() {
-        return console.getOut();
+        return debugGui.console.getOut();
     }
 
     /**
@@ -3446,7 +3463,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
      */
 
     public PrintStream getErr() {
-        return console.getErr();
+        return debugGui.console.getErr();
     }
 
     public static void main(String[] args)
@@ -3469,9 +3486,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 }
             });
 
-        sdb.pack();
-        sdb.setSize(600, 460);
-        sdb.setVisible(true);
+        sdb.debugGui.pack();
+        sdb.debugGui.setSize(600, 460);
+        sdb.debugGui.setVisible(true);
 
         org.mozilla.javascript.tools.shell.Main.exec(args);
     }
