@@ -169,21 +169,6 @@ esac
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
 AC_C_CONST
-
-dnl 
-dnl The following blurb posted to n.p.m.patches by:
-dnl Tim Rowley <tor@boojum.cs.brown.edu>
-dnl
-dnl The other change removes the "inline" check, as the results of it
-dnl where being used in the wrong way.  It would see that "cc" didn't
-dnl understand "inline" and then force a "-Dinline=" option in the
-dnl CFLAGS, which are used for both C and C++ compile lines.  As you
-dnl can imagine, removing the "inline" keyword from the C++ compiles
-dnl was Bad News(tm).
-dnl 
-dnl AC_C_INLINE
-dnl 
-
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
