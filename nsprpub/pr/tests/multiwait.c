@@ -33,6 +33,8 @@
 #include "plerror.h"
 #include "plgetopt.h"
 
+#include <string.h>
+
 typedef struct Shared
 {
     const char *title;
