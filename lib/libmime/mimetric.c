@@ -49,7 +49,7 @@ MimeRichtextConvert (char *line, int32 length,
 					 int (*output_fn) (char *buf, int32 size, void *closure),
 					 void *closure,
 					 char **obufferP,
-					 int32 *obuffer_sizeP,
+					 uint32 *obuffer_sizeP,
 					 XP_Bool enriched_p)
 {
   /* RFC 1341 (the original MIME spec) defined text/richtext.

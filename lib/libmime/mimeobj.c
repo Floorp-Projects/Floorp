@@ -213,7 +213,7 @@ MimeObject_parse_buffer (char *buffer, int32 size, MimeObject *obj)
   return msg_LineBuffer (buffer, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
 						 TRUE,
-						 ((int (*) (char *, int32, void *))
+						 ((long (*) (char *, uint32, void *))
 						  /* This cast is to turn void into MimeObject */
 						  obj->class->parse_line),
 						 obj);

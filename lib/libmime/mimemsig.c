@@ -22,6 +22,7 @@
 
 #include "mimemsig.h"
 #include "nspr.h"
+#include "xp_error.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartSigned, MimeMultipartSignedClass,

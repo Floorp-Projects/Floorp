@@ -1222,7 +1222,8 @@ void CSearchEditField::ResizeFrameBy(Int16 inWidthDelta, Int16 inHeightDelta,
 
 Boolean CSearchEditField::HandleKeyPress(const EventRecord &inKeyEvent)
 {
-	return LBroadcasterEditField::LEditField_HandleKeyPress(inKeyEvent);
+//	return LBroadcasterEditField::LEditField_HandleKeyPress(inKeyEvent);
+	return LEditField::HandleKeyPress(inKeyEvent);
 }
 
 

@@ -12,5 +12,5 @@ MacConfigInclude.h
 MacPrefix.h
 MacPrefix_debug.h
 
-MacConfig.h
+#//MacConfig.h		// moved to MANIFEST_config
 ComponentConfig.h

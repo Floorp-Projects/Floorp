@@ -30,6 +30,7 @@
 #include "libmime.h"
 #include "merrors.h"
 #include "mkimap4.h"
+#include "netutils.h"
 #ifdef XP_MAC
 #include "msg_srch.h"
 #endif

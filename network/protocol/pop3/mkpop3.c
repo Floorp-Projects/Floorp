@@ -26,6 +26,7 @@
 #include "rosetta.h"
 #include "mkutils.h"
 #include "mktcp.h"
+#include "netutils.h"
 
 /* A more guaranteed way of making sure that we never get duplicate messages
 is to always get each message's UIDL (if the server supports it)

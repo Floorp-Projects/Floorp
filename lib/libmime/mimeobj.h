@@ -185,8 +185,8 @@ struct MimeObject {
 	 should generally be considered fair game.
    */
   char *ibuffer, *obuffer;
-  int32 ibuffer_size, obuffer_size;
-  int32 ibuffer_fp, obuffer_fp;
+  uint32 ibuffer_size, obuffer_size;
+  uint32 ibuffer_fp, obuffer_fp;
 };
 
 

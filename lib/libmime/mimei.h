@@ -464,15 +464,15 @@ MimeSendMessage(MimeDisplayOptions* options, char* to, char* subject,
 
 /* #### These ought to be in libxp or nspr, not libmsg...
  */
-extern int msg_GrowBuffer (int32 desired_size, int32 element_size,
-						   int32 quantum, char **buffer, int32 *size);
+extern int msg_GrowBuffer (uint32 desired_size, uint32 element_size,
+						   uint32 quantum, char **buffer, uint32 *size);
 
 extern int msg_LineBuffer (const char *net_buffer, int32 net_buffer_size,
-						   char **bufferP, int32 *buffer_sizeP,
-						   int32 *buffer_fpP,
+						   char **bufferP, uint32 *buffer_sizeP,
+						   uint32 *buffer_fpP,
 						   XP_Bool convert_newlines_p,
-						   int (*per_line_fn) (char *line,
-											   int32 line_length,
+						   int32 (*per_line_fn) (char *line,
+											   uint32 line_length,
 											   void *closure),
 						   void *closure);
 

@@ -64,9 +64,8 @@ void CLocationIndependenceMediator::WritePrefs()
 #endif // MOZ_LOC_INDEP
 
 
-#ifdef MOZ_LI	/* MOZ_LI specific code */
 
-#include "uapp.h"
+#ifdef MOZ_LI	/* MOZ_LI specific code */
 //#include "pprthred.h"
 #include "plevent.h"
 #include <LCommander.h>
@@ -223,7 +222,11 @@ Boolean	CLICommander::AttemptQuit(long	inSaveOption)
 	return false;
 }
 
+#endif //MOZ_LI
+
 #ifndef MOZ_LITE
+#include "uapp.h"
+
 // InitializeLocationIndependence
 // Busy wait until all the Critical Files have been downloaded
 void CFrontApp::InitializeLocationIndependence()
@@ -234,5 +237,3 @@ void CFrontApp::InitializeLocationIndependence()
 //	newCommander->GetCriticalFiles();	
 }
 #endif
-
-#endif //MOZ_LI

@@ -2021,8 +2021,8 @@ struct mime_richtext_data {
   int format_out;
   NET_StreamClass *stream;          /* The stream to which we write HTML. */
   char *ibuffer, *obuffer;
-  int32 ibuffer_size, obuffer_size;
-  int32 ibuffer_fp;
+  uint32 ibuffer_size, obuffer_size;
+  uint32 ibuffer_fp;
   XP_Bool enriched_p;
 };
 
@@ -2035,8 +2035,8 @@ mime_richtext_stream_fn (char *buf, int32 size, void *closure)
   return mrd->stream->put_block (mrd->stream, buf, size);
 }
 
-static int
-mime_richtext_write_line (char* line, int32 size, void *closure)
+static long
+mime_richtext_write_line (char* line, uint32 size, void *closure)
 {
   struct mime_richtext_data *mrd = (struct mime_richtext_data *) closure;
   return MimeRichtextConvert (line, size, mime_richtext_stream_fn,

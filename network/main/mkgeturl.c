@@ -57,6 +57,16 @@
 #include "mkmocha.h"
 #endif /* 0 */
 
+#ifdef MOZ_MAIL_NEWS
+#include "mkcertld.h"
+#include "mkmailbx.h"
+#include "mknews.h"
+#include "mknewsgr.h"
+#include "mkpop3.h"
+#include "mkimap4.h"
+#include "mkldap.h"
+#endif /* MOZ_MAIL_NEWS */
+
 #include "glhist.h"
 #include "mkautocf.h"
 #include "mkabook.h"

@@ -51,7 +51,7 @@
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/
 
-#ifdef MOZ_SECURITY
+#ifndef NO_SECURITY
 #include "mimesec.h"
 #endif /* NO_SECURITY */
 

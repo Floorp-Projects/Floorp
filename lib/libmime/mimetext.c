@@ -235,7 +235,7 @@ MimeInlineText_parse_decoded_buffer (char *buf, int32 size, MimeObject *obj)
   return msg_LineBuffer (buf, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
 						 TRUE,
-						 ((int (*) (char *, int32, void *))
+						 ((long (*) (char *, uint32, void *))
 						  /* This cast is to turn void into MimeObject */
 						  MimeInlineText_rotate_convert_and_parse_line),
 						 obj);

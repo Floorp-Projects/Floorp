@@ -123,33 +123,36 @@ sub BuildMozilla()
 
 		BuildProject(":mozilla:build:mac:CustomLib:CustomLib.mcp",							"CustomStaticLib$D.o");
 		
-		if ( $main::MOZ_MEDIUM == 1 || $main::MOZ_DARK == 1 )
+		if ( $main::MOZ_LITE == 1 )
 		{
-			BuildProject(":mozilla:cmd:macfe:Composer:build:Composer.mcp",					"Composer$D.o");
-
-			if ( $main::MOZ_DARK == 1 )
-			{
-				BuildProject(":mozilla:lib:libmsg:macbuild:MsgLib.mcp",							"MsgLib$D.o");
-				BuildProject(":mozilla:cmd:macfe:MailNews:build:MailNews.mcp",					"MailNews$D.o");
-				BuildProject(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp","LDAPClient$D.o");
-			}
-			else
-			{
-				BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",				"MsgLib$D.o");
-				BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",				"MailNews$D.o");
-				BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",				"LDAPClient$D.o");
-			}
-
-			# Build the appropriate resources target
-			BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"Moz_Resources");
+			BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",						"MailNews$D.o");
+			BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",						"Composer$D.o");
+			BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"Nav_Resources");
 		}
 		else
 		{
-			# Build a project with dummy targets to make stub libraries
-			BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",						"Composer$D.o");
-			
-			# Build the appropriate resources target
-			BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"Nav_Resources");
+			if ( $main::MOZ_MEDIUM == 1 )
+			{
+				BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",						"MailNews$D.o");
+				BuildProject(":mozilla:cmd:macfe:Composer:build:Composer.mcp",					"Composer$D.o");
+				BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"Moz_Resources");
+			}
+			else
+			{
+				if ( $main::MOZ_DARK == 1 )
+				{
+					BuildProject(":ns:lib:libneo:mac:macbuild:NeoLib.mcp",							"NeoLib$D.o");
+					MakeAlias(   ":ns:lib:libneo:mac:macbuild:NeoLib$D.o", "$dist_dir");				
+					BuildProject(":mozilla:lib:libmsg:macbuild:MsgLib.mcp",							"MsgLib$D.o (secure)");
+					MakeAlias(   ":mozilla:lib:libmsg:macbuild:MsgLib$D.o", "$dist_dir");				
+					BuildProject(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp","LDAPClient$D.o");
+					MakeAlias(   ":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient$D.o", "$dist_dir");				
+
+					BuildProject(":mozilla:cmd:macfe:MailNews:build:MailNews.mcp",					"MailNews$D.o");
+					BuildProject(":mozilla:cmd:macfe:Composer:build:Composer.mcp",					"Composer$D.o");
+					BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"MozDark_Resources");
+				}
+			}
 		}
 		
 		BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 						"Client$D");
@@ -160,8 +163,11 @@ sub DistMozilla()
 	{
 		mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
 
-		#INCLUDE
+		#CONFIG
 		InstallFromManifest(":mozilla:config:mac:MANIFEST",								":mozilla:dist:config:");
+		InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						":mozilla:dist:config:");
+
+		#INCLUDE
 		InstallFromManifest(":mozilla:include:MANIFEST",								":mozilla:dist:include:");
 		InstallFromManifest(":mozilla:cmd:macfe:pch:MANIFEST",							":mozilla:dist:include:");
 
