@@ -68,7 +68,6 @@
 #include "nsIScrollableView.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
-#include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
 #include "nsILink.h"
 #include "nsITextContent.h"
@@ -379,7 +378,8 @@ NS_IMETHODIMP nsTypeAheadFind::Focus(nsIDOMEvent* aEvent)
   }
 
   // Add scroll position and selection listeners, so we can cancel current find when user navigates
-  GetSelection(presShell, nsnull, getter_AddRefs(mFocusedDocSelection)); // cache for reuse
+  GetSelection(presShell, nsnull, getter_AddRefs(mFocusedDocSelCon),
+               getter_AddRefs(mFocusedDocSelection)); // cache for reuse
   AttachNewScrollPositionListener(presShell);
   AttachNewSelectionListener();
 
@@ -447,8 +447,11 @@ NS_IMETHODIMP nsTypeAheadFind::KeyUp(nsIDOMEvent* aEvent) { return NS_OK; }
 
 NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 {
+  nsCOMPtr<nsIDOMNSEvent> nsEvent(do_QueryInterface(aEvent));
+  if (!nsEvent)
+    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMEventTarget> domEventTarget;
-  aEvent->GetTarget(getter_AddRefs(domEventTarget));
+  nsEvent->GetOriginalTarget(getter_AddRefs(domEventTarget));
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(domEventTarget));
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
@@ -487,7 +490,8 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_OK;
 
   nsCOMPtr<nsISelection> localSelection;
-  GetSelection(presShell, targetNode, getter_AddRefs(localSelection));  
+  nsCOMPtr<nsISelectionController> localSelCon;
+  GetSelection(presShell, targetNode, getter_AddRefs(localSelCon), getter_AddRefs(localSelection));  
 
   if (localSelection != mFocusedDocSelection || !mFocusedDocSelection)
     return NS_OK;   // Different selection for this node/frame. Must be in editable control.
@@ -530,7 +534,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   // ----------- Printable characters --------------
   else {
     PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
-    PRBool bufferLength =mTypeAheadBuffer.Length();
+    PRInt32 bufferLength = mTypeAheadBuffer.Length();
     if (uniChar < ' ')
       return NS_OK; // not a printable character
     if (uniChar == ' ') {
@@ -539,20 +543,22 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       else 
         aEvent->PreventDefault(); // Use the space if it's not the first character, but don't page down
     }
-    if (bufferLength > 0 && mTypeAheadBuffer.First() == uniChar) {
-      if (mTypeAheadBuffer.Length() == 1 && mTypeAheadBuffer.First() == uniChar && !mLiteralTextSearchOnly)
-        isLinksOnly = mIsRepeatingSameChar = PR_TRUE;  // only look for links when using repeated character method
+    if (bufferLength > 0) {
+      if (mTypeAheadBuffer.First() != uniChar)
+        mIsRepeatingSameChar = PR_FALSE;
+      else if (bufferLength == 1)
+        mIsRepeatingSameChar = PR_TRUE;
     }
-    else if (mIsRepeatingSameChar) {
-      isLinksOnly = mLinksOnlyPref;
-      mIsRepeatingSameChar = PR_FALSE;
-    }
-    if (bufferLength == 0 && (uniChar == '`' || uniChar=='\'' || uniChar=='\"')) {
-      mLinksOnly = !mLinksOnly; // If you type quote, you can search for all text - it reverses the setting
-      if (!mLinksOnly)
-        mLiteralTextSearchOnly = PR_TRUE;
-      return NS_OK;
-    }
+    if (bufferLength == 0)
+      if (uniChar == '`' || uniChar=='\'' || uniChar=='\"') {
+        mLinksOnly = PR_TRUE; // If you type quote, it starts a links only search
+        return NS_OK;
+      }
+      else if (uniChar == '/') {
+        mLinksOnly = PR_FALSE; // If you type / it starts a search for all text 
+        mLiteralTextSearchOnly = PR_TRUE;  // Repeated characters will not search for links
+        return NS_OK;
+      }
     mTypeAheadBuffer += uniChar;
     if (bufferLength == 0) {
       // --------- Initialize find -----------
@@ -568,15 +574,14 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   nsresult rv = NS_ERROR_FAILURE;
 
-#ifndef PREFER_LINK_CYCLE_ON_SAME_CHAR
-  if (!mDontTryExactMatch)
+  if (!mDontTryExactMatch)    // Regular find, not repeated char find
     rv = FindItNow(PR_FALSE, mLinksOnly, isFirstVisiblePreferred, isBackspace); // Prefer to find exact match
-  if (NS_FAILED(rv) && mIsRepeatingSameChar)   // mIsRepeatingSameChar
-#endif
-  {
-    mDontTryExactMatch = PR_TRUE;
-    rv = FindItNow(mIsRepeatingSameChar, isLinksOnly, isFirstVisiblePreferred, isBackspace);
+#ifndef NO_LINK_CYCLE_ON_SAME_CHAR
+  if (NS_FAILED(rv) && !mLiteralTextSearchOnly && mIsRepeatingSameChar) {
+    mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
+    rv = FindItNow(PR_TRUE, PR_TRUE, isFirstVisiblePreferred, isBackspace);
   }
+#endif
 
   // ------- If accessibility.typeaheadfind.timeout is set, cancel find after specified # milliseconds
   if (mTimeoutLength) {
@@ -743,6 +748,8 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
       // Select the found text and focus it
       mFocusedDocSelection->RemoveAllRanges();
       mFocusedDocSelection->AddRange(returnRange);
+      mFocusedDocSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, 
+                                                 nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
       nsCOMPtr<nsIEventStateManager> esm;
       presContext->GetEventStateManager(getter_AddRefs(esm));
       if (esm) {
@@ -793,12 +800,6 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
       mTypeAheadBuffer = mTypeAheadBuffer.Last();
       return FindItNow(aIsRepeatingSameChar, PR_TRUE, aIsFirstVisiblePreferred, aIsBackspace);
     }
-#ifdef PREFER_LINK_CYCLE_ON_SAME_CHAR
-    if (aIsRepeatingSameChar && mTypeAheadBuffer.Length() > 1 && mTypeAheadBuffer.Length() < 5) {
-      // Can't find a link that starts with the repeated char, so try a normal search
-      return FindItNow(PR_FALSE, mLinksOnly, aIsFirstVisiblePreferred, aIsBackspace);
-    }
-#endif
     
     // ------------- Failed --------------
     break;
@@ -1124,8 +1125,8 @@ void nsTypeAheadFind::AttachNewWindowFocusListener(nsIDOMEventTarget *aTarget)
 }
 
 
-void nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell, 
-                                   nsIDOMNode *aCurrentNode, nsISelection **aDomSel)
+void nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, 
+                                   nsISelectionController **aSelCon, nsISelection **aDomSel)
 {
   *aDomSel = nsnull;
 
@@ -1140,12 +1141,9 @@ void nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
     aPresShell->GetPrimaryFrameFor(content, &frame);
 
   if (presContext && frame) {
-    nsCOMPtr<nsISelectionController> selCon;
-    frame->GetSelectionController(presContext, getter_AddRefs(selCon));
-    if (selCon) {
-      nsCOMPtr<nsISelection> domSel;
-      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, aDomSel);
-    }
+    frame->GetSelectionController(presContext, aSelCon);
+    if (*aSelCon)
+      (*aSelCon)->GetSelection(nsISelectionController::SELECTION_NORMAL, aDomSel);
   }
 }
 

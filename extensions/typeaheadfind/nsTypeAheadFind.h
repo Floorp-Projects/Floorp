@@ -45,6 +45,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIScrollPositionListener.h"
 #include "nsISelectionListener.h"
+#include "nsISelectionController.h"
 #include "nsITimerCallback.h"
 #include "nsITimer.h"
 #include "nsUnicharUtils.h"
@@ -127,7 +128,7 @@ protected:
   void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
                              PRBool *aIsInsideLink, PRBool *aIsStartingLink);
   void GetSelection(nsIPresShell *aPresShell,   // If aCurrentNode is nsnull, gets selection for document
-                    nsIDOMNode *aCurrentNode, nsISelection **aDomSel);
+                    nsIDOMNode *aCurrentNode, nsISelectionController **aSelCon, nsISelection **aDomSel);
   void CancelFind();
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext, 
                          nsIDOMRange *aRange, PRBool aMustBeVisible, nsIDOMRange **aNewRange);
@@ -171,6 +172,7 @@ protected:
 
   // The focused content window that we're listening to and it's cached objects
   nsCOMPtr<nsISelection> mFocusedDocSelection;
+  nsCOMPtr<nsISelectionController> mFocusedDocSelCon;
   nsCOMPtr<nsIDOMWindow> mFocusedWindow;
   nsCOMPtr<nsIWeakReference> mFocusedWeakShell;
 };
