@@ -735,13 +735,13 @@ PUBLIC nsFileSpec Wallet_ProfileDirectory(char * file) {
   rv = nsServiceManager::GetService
     (kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
   if (NS_FAILED(rv) || !locator)
-    return NULL;
+    return (nsFileSpec)NULL;
   nsFileSpec dirSpec;
   rv = locator->GetFileLocation
      (nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
   nsServiceManager::ReleaseService(kFileLocatorCID, locator);
   if (NS_FAILED(rv))
-    return NULL;
+    return (nsFileSpec)NULL;
   return dirSpec+file;
 }
 
