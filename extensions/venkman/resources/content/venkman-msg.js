@@ -66,13 +66,17 @@ function getMsg (msgName)
 }
 
 /* message types, don't localize */
-const MT_CONT  = "CONT";
-const MT_ERROR = "ERROR";
-const MT_HELLO = "HELLO";
-const MT_HELP  = "HELP";
-const MT_INFO  = "INFO";
-const MT_STOP  = "STOP";
-const MT_USAGE = "USAGE";
+const MT_CONT      = "CONT";
+const MT_ERROR     = "ERROR";
+const MT_HELLO     = "HELLO";
+const MT_HELP      = "HELP";
+const MT_INFO      = "INFO";
+const MT_STOP      = "STOP";
+const MT_USAGE     = "USAGE";
+const MT_EVAL_IN   = "EVAL-IN";
+const MT_EVAL_OUT  = "EVAL-OUT";
+const MT_FEVAL_IN  = "FEVAL-IN";
+const MT_FEVAL_OUT = "FEVAL-OUT";
 
 /* exception number -> localized message name map, keep in sync with ERR_* from
  * venkman-static.js */
@@ -99,14 +103,16 @@ const MSG_TYPE_STRING     = getMsg("msg.type.string");
 const MSG_TYPE_UNKNOWN    = getMsg("msg.type.unknown");
 const MSG_TYPE_VOID       = getMsg("msg.type.void");
 
-const MSG_VAL_BREAKPOINT  = getMsg("msg.val.breakpoint");
-const MSG_VAL_DEBUG       = getMsg("msg.val.debug");
-const MSG_VAL_DEBUGGER    = getMsg("msg.val.debugger");
-const MSG_VAL_THROW       = getMsg("msg.val.throw");
+const MSG_WORD_BREAKPOINT  = getMsg("msg.val.breakpoint");
+const MSG_WORD_DEBUG       = getMsg("msg.val.debug");
+const MSG_WORD_DEBUGGER    = getMsg("msg.val.debugger");
+const MSG_WORD_THROW       = getMsg("msg.val.throw");
+const MSG_WORD_SCOPE       = getMsg("msg.val.scope");
 
 const MSG_VAL_CONSOLE     = getMsg("msg.val.console");
 const MSG_VAL_UNKNOWN     = getMsg("msg.val.unknown");
-const MSG_VAL_SCOPE       = getMsg("msg.val.scope");
+const MSG_VAL_OBJECT      = getMsg("msg.val.object");
+const MSG_VAL_EXPR        = getMsg("msg.val.expression");
 
 const MSG_HELLO1          = getMsg("msg.hello.1");
 const MSG_HELLO2          = getMsg("msg.hello.2");
@@ -122,12 +128,21 @@ const CMD_CONT_HELP       = getMsg("cmd.cont.help");
 const CMD_EVAL            = getMsg("cmd.eval");
 const CMD_EVAL_PARAMS     = getMsg("cmd.eval.params");
 const CMD_EVAL_HELP       = getMsg("cmd.eval.help");
+const CMD_EVALD           = getMsg("cmd.evald");
+const CMD_EVALD_PARAMS    = getMsg("cmd.evald.params");
+const CMD_EVALD_HELP      = getMsg("cmd.evald.help");
 const CMD_FRAME           = getMsg("cmd.frame");
 const CMD_FRAME_PARAMS    = getMsg("cmd.frame.params");
 const CMD_FRAME_HELP      = getMsg("cmd.frame.help");
 const CMD_HELP            = getMsg("cmd.help");
 const CMD_HELP_PARAMS     = getMsg("cmd.help.params");
 const CMD_HELP_HELP       = getMsg("cmd.help.help");
+const CMD_PROPS           = getMsg("cmd.props");
+const CMD_PROPS_PARAMS    = getMsg("cmd.props.params");
+const CMD_PROPS_HELP      = getMsg("cmd.props.help");
+const CMD_PROPSD          = getMsg("cmd.propsd");
+const CMD_PROPSD_PARAMS   = getMsg("cmd.propsd.params");
+const CMD_PROPSD_HELP     = getMsg("cmd.propsd.help");
 const CMD_SCOPE           = getMsg("cmd.scope");
 const CMD_SCOPE_PARAMS    = getMsg("cmd.scope.params");
 const CMD_SCOPE_HELP      = getMsg("cmd.scope.help");
@@ -142,6 +157,8 @@ const CMD_QUIT_HELP       = getMsg("cmd.quit.help");
 const MSN_ERR_NO_COMMAND     = "msg.err.nocommand";
 const MSN_ERR_NOTIMPLEMENTED = "msg.err.notimplemented";
 const MSN_ERR_AMBIGCOMMAND   = "msg.err.ambigcommand";
+const MSN_ERR_REQUIRED_PARAM = "err.required.param"; /* also used as exception */
+const MSN_ERR_INVALID_PARAM  = "err.invalid.param";  /* also used as exception */
 
 const MSN_NO_PROPERTIES      = "msg.noproperties";
 const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
