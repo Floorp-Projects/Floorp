@@ -432,32 +432,28 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                             if (NS_SUCCEEDED(rv)) {
                               PRUnichar* nameString = ToNewUnicode(field);
                               if (nameString) {
-                                /* note: we do not want to prefill if there is a default value */
                                 nsAutoString value;
-                                rv = inputElement->GetValue(value);
-                                if (NS_FAILED(rv) || value.Length() == 0) {
-                                  PRUnichar* valueString = NULL;
-                                  nsCOMPtr<nsIInterfaceRequestor> interfaces;
-                                  nsCOMPtr<nsIPrompt> prompter;
+                                PRUnichar* valueString = NULL;
+                                nsCOMPtr<nsIInterfaceRequestor> interfaces;
+                                nsCOMPtr<nsIPrompt> prompter;
 
-                                  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-                                  if (channel)
-                                    channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
-                                  if (interfaces)
-                                    interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
-                                  if (!prompter) {
-                                    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-                                    if (wwatch)
-                                      wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-                                  }
-                                  if (prompter) {
-                                    SINGSIGN_RestoreSignonData(prompter, spec, nameString, &valueString, elementNumber++);
-                                  }
-                                  if (valueString) {
-                                    value = valueString;
-                                    rv = inputElement->SetValue(value);
-                                    // warning! don't delete valueString
-                                  }
+                                nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+                                if (channel)
+                                  channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
+                                if (interfaces)
+                                  interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+                                if (!prompter) {
+                                  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                                  if (wwatch)
+                                    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+                                }
+                                if (prompter) {
+                                  SINGSIGN_RestoreSignonData(prompter, spec, nameString, &valueString, elementNumber++);
+                                }
+                                if (valueString) {
+                                  value = valueString;
+                                  rv = inputElement->SetValue(value);
+                                  // warning! don't delete valueString
                                 }
                                 Recycle(nameString);
                               }
