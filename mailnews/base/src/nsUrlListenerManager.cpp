@@ -40,7 +40,6 @@
 #include "nsUrlListenerManager.h"
 
 nsUrlListenerManager::nsUrlListenerManager() :
-    mRefCnt(0),
     m_listeners(nsnull)
 {
 	NS_INIT_REFCNT();

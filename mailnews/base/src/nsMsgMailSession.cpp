@@ -67,8 +67,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
   
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
-nsMsgMailSession::nsMsgMailSession():
-  mRefCnt(0)
+nsMsgMailSession::nsMsgMailSession()
 {
 
 	NS_INIT_REFCNT();
