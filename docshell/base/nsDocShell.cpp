@@ -157,6 +157,18 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
          aSink), NS_ERROR_FAILURE);
       return NS_OK;
       }
+   else if(aIID.Equals(NS_GET_IID(nsIPrompt)))
+      {
+        nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mTreeOwner));
+        if (prompter)
+        {
+            *aSink = prompter;
+            NS_ADDREF((nsISupports*)*aSink);
+            return NS_OK;
+        }
+        else
+            return NS_NOINTERFACE;
+      }
    else
       return QueryInterface(aIID, aSink);
 
