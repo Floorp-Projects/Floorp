@@ -2918,12 +2918,18 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
                                     floaterList.childList);
     }
   }
-  // See if it's a relatively positioned block
-  else if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) &&
-           ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay))) {
+  // See if it's relatively positioned
+  else if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
+    // Is it block-level or inline-level?
+    if (NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) {
+      // Create an area frame. No space manager, though
+      NS_NewAreaFrame(newFrame, NS_AREA_NO_SPACE_MGR);
+    } else {
+      // Create a positioned inline frame
+      NS_NewPositionedInlineFrame(newFrame);
+    }
 
-    // Create an area frame. No space manager, though
-    NS_NewAreaFrame(newFrame, NS_AREA_NO_SPACE_MGR);
+    // Initialize the frame
     newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
     // Create a view
@@ -2935,8 +2941,15 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     nsAbsoluteItems  absoluteItems(newFrame);
     nsAbsoluteItems  floaterList(newFrame);
     nsFrameItems     childItems;
-    ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
-                    childItems, aFixedItems, floaterList, PR_TRUE);
+    
+    if (NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) {
+      ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
+                      childItems, aFixedItems, floaterList, PR_TRUE);
+    
+    } else {
+      ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
+                      childItems, aFixedItems, aFloatingItems, PR_TRUE);
+    }
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);

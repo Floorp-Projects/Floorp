@@ -258,6 +258,7 @@ extern nsresult NS_NewViewportFrame(nsIFrame*& aNewFrame);
 extern nsresult NS_NewRootFrame(nsIFrame*& aNewFrame);
 extern nsresult NS_NewImageFrame(nsIFrame*& aFrameResult);
 extern nsresult NS_NewInlineFrame(nsIFrame*& aNewFrame);
+extern nsresult NS_NewPositionedInlineFrame(nsIFrame*& aNewFrame);
 extern nsresult NS_NewObjectFrame(nsIFrame*& aFrameResult);
 extern nsresult NS_NewSpacerFrame(nsIFrame*& aResult);
 extern nsresult NS_NewTextFrame(nsIFrame*& aResult);
