@@ -155,7 +155,7 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (webWindow)
     webWindow->GetWidget(*getter_AddRefs(parent));
 
-  appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
+  appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
                                nsnull, nsnull, 615, 650);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
@@ -193,7 +193,7 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (webWindow)
     webWindow->GetWidget(*getter_AddRefs(parent));
 
-  appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
+  appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
                                nsnull, nsnull, 615, 650);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
