@@ -95,6 +95,7 @@ toolbarbutton[checked="true"] {
 
 toolbarbutton[type="menu-button"] {
   -moz-box-align: stretch;
+  -moz-appearance: dualbutton;
   -moz-box-orient: horizontal !important;
 }
 
@@ -122,6 +123,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   padding: 3px;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
+  -moz-appearance: dualbutton-dropdown;
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {

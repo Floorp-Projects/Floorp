@@ -503,6 +503,7 @@ CSS_KEY(checkbox-container, checkboxcontainer)
 CSS_KEY(radio-container, radiocontainer)
 CSS_KEY(checkbox-label, checkboxlabel)
 CSS_KEY(radio-label, radiolabel)
+CSS_KEY(button-focus, buttonfocus)
 
 #ifdef MOZ_SVG
 //CSS_KEY(all, all)

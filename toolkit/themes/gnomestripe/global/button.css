@@ -43,6 +43,7 @@ button {
 }
 
 .button-box {
+  -moz-appearance: button-focus;
   border: 1px solid transparent;
   padding: 1px 4px 2px 3px;
 }

@@ -190,6 +190,9 @@
 #define NS_THEME_CHECKBOX_LABEL                            152
 #define NS_THEME_RADIO_LABEL                               153
 
+// The focus outline box inside of a button
+#define NS_THEME_BUTTON_FOCUS                              154
+
 // Window and dialog backgrounds
 #define NS_THEME_WINDOW                                    200
 #define NS_THEME_DIALOG                                    201

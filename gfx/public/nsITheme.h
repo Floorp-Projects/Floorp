@@ -55,9 +55,9 @@ class nsIContent;
 class nsIAtom;
 
 // IID for the nsITheme interface
-// {F791038C-F97E-4068-A542-0343AE440664}
+// {75220e36-b77a-464c-bd82-988cf86391cc}
 #define NS_ITHEME_IID     \
-{ 0xf791038c, 0xf97e, 0x4068, { 0xa5, 0x42, 0x3, 0x43, 0xae, 0x44, 0x6, 0x64 } }
+{ 0x75220e36, 0xb77a, 0x464c, { 0xbd, 0x82, 0x98, 0x8c, 0xf8, 0x63, 0x91, 0xcc } }
 
 // {D930E29B-6909-44e5-AB4B-AF10D6923705}
 #define NS_THEMERENDERER_CID \
@@ -77,6 +77,15 @@ public:
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsMargin* aResult)=0;
+
+  // This method can return PR_FALSE to indicate that the CSS padding value
+  // should be used.  Otherwise, it will fill in aResult with the desired
+  // padding and return PR_TRUE.
+
+  virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
+                                  nsIFrame* aFrame,
+                                  PRUint8 aWidgetType,
+                                  nsMargin* aResult) = 0;
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
