@@ -1145,8 +1145,9 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
       aReflowState.reflowCommand->GetNext(state.mNextRCFrame);
 #ifdef NOISY_REFLOW_REASON
       ListTag(stdout);
-      printf(": reflow=incremental next=%p", state.mNextRCFrame);
+      printf(": reflow=incremental");
       if (state.mNextRCFrame) {
+        printf(" next=");
         nsFrame::ListTag(stdout, state.mNextRCFrame);
       }
       printf("\n");
@@ -1486,7 +1487,8 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 
   // Determine the line being impacted
   PRBool isFloater;
-  nsLineBox* line = FindLineFor(aState.mNextRCFrame, isFloater);
+  nsLineBox* prevLine;
+  nsLineBox* line = FindLineFor(aState.mNextRCFrame, &prevLine, &isFloater);
   if (nsnull == line) {
     // This can't happen, but just in case it does...
     return PrepareResizeReflow(aState);
@@ -1497,27 +1499,34 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
     return PrepareResizeReflow(aState);
   }
 
-  // XXX need code for run-in/compact
-
-  // Mark (at least) the affected line dirty.
-  line->MarkDirty();
-  if (aState.mNoWrap || line->IsBlock()) {
-    // If we aren't wrapping then we know for certain that any changes
-    // to a childs reflow can't affect the line that follows. This is
-    // also true if the line is a block line.
+  // If the line that was affected is a block then just mark it dirty
+  // so that we reflow it.
+  if (line->IsBlock()) {
+    line->MarkDirty();
+#ifdef NOISY_INCREMENTAL_REFLOW
+    ListTag(stdout);
+    printf(": mark line %p dirty\n", line);
+#endif
   }
   else {
-    // XXX: temporary: For now we are conservative and mark this line
-    // and any inline lines that follow it dirty.
-    line = line->mNext;
-    while (nsnull != line) {
-      if (line->IsBlock()) {
-        break;
-      }
+    // Mark previous line dirty if its an inline line so that it can
+    // maybe pullup something from the line just affected.
+    if (prevLine && !prevLine->IsBlock()) {
+      prevLine->MarkDirty();
+#ifdef NOISY_INCREMENTAL_REFLOW
+      ListTag(stdout);
+      printf(": mark prev-line %p dirty\n", prevLine);
+#endif
+    }
+    else {
       line->MarkDirty();
-      line = line->mNext;
+#ifdef NOISY_INCREMENTAL_REFLOW
+      ListTag(stdout);
+      printf(": mark line %p dirty\n", line);
+#endif
     }
   }
+
   return NS_OK;
 }
 
@@ -1598,13 +1607,16 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 //----------------------------------------
 
 nsLineBox*
-nsBlockFrame::FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult)
+nsBlockFrame::FindLineFor(nsIFrame* aFrame,
+                          nsLineBox** aPrevLineResult,
+                          PRBool* aIsFloaterResult)
 {
-  aIsFloaterResult = PR_FALSE;
+  nsLineBox* prevLine = nsnull;
   nsLineBox* line = mLines;
+  PRBool isFloater = PR_FALSE;
   while (nsnull != line) {
     if (line->Contains(aFrame)) {
-      return line;
+      break;
     }
     if (nsnull != line->mFloaters) {
       nsVoidArray& a = *line->mFloaters;
@@ -1612,13 +1624,17 @@ nsBlockFrame::FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult)
       for (i = 0; i < n; i++) {
         nsPlaceholderFrame* ph = (nsPlaceholderFrame*) a[i];
         if (aFrame == ph->GetAnchoredItem()) {
-          aIsFloaterResult = PR_TRUE;
-          return line;
+          isFloater = PR_TRUE;
+          goto done;
         }
       }
     }
+    prevLine = line;
     line = line->mNext;
   }
+ done:
+  *aIsFloaterResult = isFloater;
+  *aPrevLineResult = prevLine;
   return line;
 }
 
@@ -3482,6 +3498,9 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
+  if (nsnull == aFrameList) {
+    return NS_OK;
+  }
   if (nsLayoutAtoms::floaterList == aListName) {
     // XXX we don't *really* care about this right now because we are
     // BuildFloaterList ing still
@@ -3511,6 +3530,16 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
   }
 
   // Add frames after the last child
+#ifdef NOISY_REFLOW_REASON
+  ListTag(stdout);
+  printf(": append ");
+  nsFrame::ListTag(stdout, aFrameList);
+  if (lastKid) {
+    printf(" after ");
+    nsFrame::ListTag(stdout, lastKid);
+  }
+  printf("\n");
+#endif
   nsresult rv = AddFrames(&aPresContext, aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
@@ -3552,6 +3581,16 @@ nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
     return NS_ERROR_INVALID_ARG;
   }
 
+#ifdef NOISY_REFLOW_REASON
+  ListTag(stdout);
+  printf(": insert ");
+  nsFrame::ListTag(stdout, aFrameList);
+  if (aPrevFrame) {
+    printf(" after ");
+    nsFrame::ListTag(stdout, aPrevFrame);
+  }
+  printf("\n");
+#endif
   nsresult rv = AddFrames(&aPresContext, aFrameList, aPrevFrame);
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
@@ -3905,10 +3944,14 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
   else if (nsnull != aListName) {
     return NS_ERROR_INVALID_ARG;
   }
-  else {
-    rv = DoRemoveFrame(&aPresContext, aOldFrame);
-  }
 
+#ifdef NOISY_REFLOW_REASON
+  ListTag(stdout);
+  printf(": remove ");
+  nsFrame::ListTag(stdout, aOldFrame);
+  printf("\n");
+#endif
+  rv = DoRemoveFrame(&aPresContext, aOldFrame);
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
