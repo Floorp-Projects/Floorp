@@ -166,7 +166,7 @@
             <row valign="middle">
               <checkbox id="TableImageCheckbox" value="&image.label;"/>
               <textfield id="TableImageInput" flex="1"/>
-              <button class="dialog" value="&ChooseImage.label;" id="TableImageButton" oncommand="ChooseCellImage()"/>
+              <button class="dialog" value="&ChooseImage.label;" id="TableImageButton" oncommand="ChooseTableImage()"/>
             </row>
           </rows>
         </grid>
