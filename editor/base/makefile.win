@@ -21,9 +21,9 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=ender
 
 CPPSRCS =				\
-	editor.cpp			\
-    editorInterfaces.cpp    \
-	nsEditFactory.cpp \
+      editor.cpp			\
+      editorInterfaces.cpp    \
+      nsEditFactory.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
