@@ -432,20 +432,20 @@ fi
 CFLAGS=$_SAVE_CFLAGS
 
 dnl Check cc for -pedantic flag support (adds compiler warnings)
-AC_MSG_CHECKING($CC for \"-pedantic\" support)
-_SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -pedantic"
-AC_CACHE_VAL(ac_cv_cc_pedantic_flag,
- [AC_TRY_COMPILE([],
-                 [int i;],
-                 [ac_cv_cc_pedantic_flag=true],
-                 [ac_cv_cc_pedantic_flag=false])])
-if test $ac_cv_cc_pedantic_flag = true ; then
-  AC_MSG_RESULT(yes)
-  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -pedantic"
-else
-  AC_MSG_RESULT(no)
-fi  
-CFLAGS=$_SAVE_CFLAGS
+dnl AC_MSG_CHECKING($CC for \"-pedantic\" support)
+dnl _SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -pedantic"
+dnl AC_CACHE_VAL(ac_cv_cc_pedantic_flag,
+dnl  [AC_TRY_COMPILE([],
+dnl                  [int i;],
+dnl                  [ac_cv_cc_pedantic_flag=true],
+dnl                  [ac_cv_cc_pedantic_flag=false])])
+dnl if test $ac_cv_cc_pedantic_flag = true ; then
+dnl   AC_MSG_RESULT(yes)
+dnl   WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -pedantic"
+dnl else
+dnl   AC_MSG_RESULT(no)
+dnl fi  
+dnl CFLAGS=$_SAVE_CFLAGS
 
 # Mozilla specific options
 # ========================================================
