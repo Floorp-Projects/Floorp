@@ -38,10 +38,23 @@ static Widget	_popup_target = NULL;
 static void		destroy_button		(Widget,XtPointer,XtPointer);
 static void		add_buttons			(Widget,XtPointer,XtPointer);
 static void		remove_buttons		(Widget,XtPointer,XtPointer);
+static void		button_layout_cb	(Widget,XtPointer,XtPointer);
 
 static void		popup_eh				(Widget,XtPointer,XEvent *,Boolean *);
 
 static void		update_popup_handler	(Widget,Widget);
+
+static XfeMenuItemRec button_layout_items[] =
+{
+	{ "LayoutLabelOnly",		XfeMENU_RADIO,		button_layout_cb		},
+	{ "LayoutLabelOnBottom",	XfeMENU_RADIO,		button_layout_cb		},
+	{ "LayoutLabelOnLeft",		XfeMENU_RADIO,		button_layout_cb		},
+	{ "LayoutLabelOnRight",		XfeMENU_RADIO,		button_layout_cb		},
+	{ "LayoutLabelOnTop",		XfeMENU_RADIO,		button_layout_cb		},
+	{ "LayoutPixmapOnly",		XfeMENU_RADIO,		button_layout_cb		},
+	{ NULL }
+};
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 static XfeMenuItemRec popup_items[] =
@@ -50,6 +63,8 @@ static XfeMenuItemRec popup_items[] =
 	{ "Sep",			XfeMENU_SEP							},
 	{ "AddButtons",		XfeMENU_PUSH,	add_buttons,	NULL,(XtPointer) 10 },
 	{ "RemoveButtons",	XfeMENU_PUSH,	remove_buttons,	NULL,(XtPointer) 10 },
+	{ "Sep",			XfeMENU_SEP							},
+	{ "ButtonLayout",	XfeMENU_PANE,	NULL,	button_layout_items	},
 	{ NULL }
 };
 /*----------------------------------------------------------------------*/
@@ -63,19 +78,30 @@ main(int argc,char *argv[])
     Widget		scale;
     Widget		hide;
     Widget		location_tool_bar;
-    
+    Cardinal	num_buttons = 20;
+    Cardinal	num_separators = 0;
+
 	XfeAppCreateSimple("ToolBarTest",&argc,argv,"MainFrame",&frame,&form);
-    
+
+    if (argc > 1)
+    {
+		num_buttons = atoi(argv[1]);
+    }
+
+    if (argc > 2)
+    {
+		num_separators = atoi(argv[2]);
+    }
+
 	_tool_bar = XfeCreateLoadedToolBar(form,
-									  "ToolBar",
-									  "Tool",
-									  50,
-/* 									  20, */
-									   0,
-									  XfeArmCallback,
-									  XfeDisarmCallback,
-									  XfeActivateCallback,
-									  NULL);
+									   "ToolBar",
+									   "Tool",
+									   num_buttons,
+									   num_separators,
+									   XfeArmCallback,
+									   XfeDisarmCallback,
+									   XfeActivateCallback,
+									   NULL);
 
 	_popup_menu = XfePopupMenuCreate(XfeAncestorFindApplicationShell(form),
 									 "PopupMenu",
@@ -237,6 +263,52 @@ remove_buttons(Widget w,XtPointer client_data,XtPointer call_data)
 		XfeWidgetToggleManaged(tw);
 	}
 #endif
+}
+/*----------------------------------------------------------------------*/
+static void
+button_layout_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	String		name = XtName(w);
+	String		parent_name = XtName(XtParent(w));
+	Arg			av[20];
+	Cardinal	ac = 0;
+
+	printf("button_layout_cb(%s,%s)\n",name,parent_name);
+
+ 	if (!XfeIsAlive(_tool_bar))
+ 	{
+		return;
+ 	}
+
+	if (strcmp(name,"LayoutLabelOnly") == 0)
+	{
+		XtSetArg(av[ac],XmNbuttonLayout,XmBUTTON_LABEL_ONLY); ac++;
+	}
+	else if (strcmp(name,"LayoutLabelOnBottom") == 0)
+	{
+		XtSetArg(av[ac],XmNbuttonLayout,XmBUTTON_LABEL_ON_BOTTOM); ac++;
+	}
+	else if (strcmp(name,"LayoutLabelOnLeft") == 0)
+	{
+		XtSetArg(av[ac],XmNbuttonLayout,XmBUTTON_LABEL_ON_LEFT); ac++;
+	}
+	else if (strcmp(name,"LayoutLabelOnRight") == 0)
+	{
+		XtSetArg(av[ac],XmNbuttonLayout,XmBUTTON_LABEL_ON_RIGHT); ac++;
+	}
+	else if (strcmp(name,"LayoutLabelOnTop") == 0)
+	{
+		XtSetArg(av[ac],XmNbuttonLayout,XmBUTTON_LABEL_ON_TOP); ac++;
+	}
+	else if (strcmp(name,"LayoutPixmapOnly") == 0)
+	{
+		XtSetArg(av[ac],XmNbuttonLayout,XmBUTTON_PIXMAP_ONLY); ac++;
+	}
+
+	if (ac)
+	{
+		XtSetValues(_tool_bar,av,ac);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
