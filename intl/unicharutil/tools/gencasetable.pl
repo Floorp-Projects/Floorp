@@ -36,6 +36,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# If you run this script because the Unicode standard has been updated,
+# check xpcom/string/public/nsCharTraits.h to see whether
+# nsCharTraits<PRUnichar>::ASCIIToLower needs to be updated. It only
+# needs to be update if the Unicode consortium adds (or removes)
+# a Unicode character whose lowercase form is an ASCII character.
+# Currently there are only two such characters: KELVIN SIGN and
+# LATIN CAPITAL LETTER I WITH DOT ABOVE.
+
 ######################################################################
 #
 # Initial global variable
