@@ -2635,15 +2635,17 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             attrs = JSPROP_ENUMERATE;
 
             /*
-             * Preserve the shortid when shadowing a property that uses the
-             * class getter and setter.  Those functions must see the shortid
-             * for id, not id, when they're called on the shadow we are about
-             * to create in obj's scope.
+             * Preserve the shortid, getter, and setter when shadowing any
+             * property that has a shortid.  An old API convention requires
+             * that the property's getter and setter functions receive the
+             * shortid, not id, when they are called on the shadow we are
+             * about to create in obj's scope.
              */
-            if ((sprop->flags & SPROP_HAS_SHORTID) &&
-                sprop->getter == getter && sprop->setter == setter) {
-                flags = sprop->flags;
+            if (sprop->flags & SPROP_HAS_SHORTID) {
+                flags = SPROP_HAS_SHORTID;
                 shortid = sprop->shortid;
+                getter = sprop->getter;
+                setter = sprop->setter;
             }
 
             /*
