@@ -243,7 +243,7 @@ nsWidgetStateManager.prototype =
           if( 'value' in aDataObject )
             {
               try {
-                element.selectedItem = element.getElementsByAttribute( "value", aDataObject.value )[0];
+                element.value = aDataObject.value;
               }
               catch (ex) {
                 dump(aElementID +", ex: " + ex + "\n");
