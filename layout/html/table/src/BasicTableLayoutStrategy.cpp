@@ -35,7 +35,7 @@ NS_DEF_PTR(nsIStyleContext);
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
+static PRBool gsDebug = PR_TRUE;
 static PRBool gsDebugCLD = PR_FALSE;
 static PRBool gsTiming = PR_FALSE;
 #else
@@ -136,13 +136,16 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContex
                                                      nsSize* aMaxElementSize)
 {
   PRBool result = PR_TRUE;
+  // initialize out parameters
+  aTotalFixedWidth=aMinTableWidth=aMaxTableWidth=0;
 
   // Step 1 - assign the width of all fixed-width columns
   AssignFixedColumnWidths(aPresContext, aMaxWidth, aNumCols,
                           aTotalFixedWidth, aMinTableWidth, aMaxTableWidth);
 
   if (nsnull!=aMaxElementSize)
-  {
+  { // this is where we initialize maxElementSize if it is non-null
+    aMaxElementSize->height = 0;
     aMaxElementSize->width = aMinTableWidth;
     if (gsDebug) printf("  setting aMaxElementSize->width = %d\n", aMaxElementSize->width);
   }
@@ -249,6 +252,7 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
       case eStyleUnit_Coord:
         haveColWidth = PR_TRUE;
         specifiedFixedColWidth = colPosition->mWidth.GetCoordValue();
+        mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);
         break;
 
       default:
@@ -300,49 +304,6 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
                 cellIndex, colSpan, cellMinSize->width, cellMinSize->height,
                 cellDesiredSize->width, cellDesiredSize->height);
 
-      PRBool haveCellWidth = PR_FALSE;
-      nscoord cellWidth;
-
-      /*
-       * The first cell in a column (in row 0) has special standing.
-       * if the first cell has a width specification, it overrides the
-       * COL width
-       */
-      if (0==cellIndex)
-      {
-        nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(0));
-        nsMargin  margin;
-        nsresult  result = data->GetMargin(margin);        
-        nsTableCellFrame *cellFrame = data->GetCellFrame();
-        nsTableCellPtr cell;
-        cellFrame->GetContent((nsIContent*&)(cell.AssignRef()));          // cell: REFCNT++
-
-        // Get the cell's style
-        nsIStyleContextPtr cellSC;
-        cellFrame->GetStyleContext(aPresContext, cellSC.AssignRef());
-        const nsStylePosition* cellPosition = (const nsStylePosition*)
-          cellSC->GetStyleData(eStyleStruct_Position);
-        switch (cellPosition->mWidth.GetUnit()) {
-        case eStyleUnit_Coord:
-          haveCellWidth = PR_TRUE;
-          cellWidth = cellPosition->mWidth.GetCoordValue();
-          break;
-
-        case eStyleUnit_Percent:
-        case eStyleUnit_Proportional:
-          // XXX write me when pct/proportional are supported
-          // XXX haveCellWidth = PR_TRUE;
-          // XXX cellWidth = cellPosition->mWidth;
-          break;
-
-        default:
-        case eStyleUnit_Inherit:
-        case eStyleUnit_Auto:
-          break;
-        }
-      }
-
-      // TODO - use cellWidth found above to influence the cell width here
       switch (colPosition->mWidth.GetUnit()) {
         case eStyleUnit_Coord:
           {
@@ -770,18 +731,24 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
         else
         {
           if (-1.0f != specifiedPercentageColWidth)
+          {
             percentage = (PRInt32)(specifiedPercentageColWidth*100.0f); // TODO: rounding errors?
+            // base the % on the total specified fixed width of the table
+            mTableFrame->SetColumnWidth(colIndex, (percentage*aTableFixedWidth)/100);
+            if (gsDebug==PR_TRUE) 
+              printf ("  3 percent specified: col %d given %d percent of aTableFixedWidth %d, set to width = %d\n", 
+                      colIndex, percentage, aTableFixedWidth, mTableFrame->GetColumnWidth(colIndex));
+          }
           if (-1==percentage)
+          {
             percentage = 100/numCols;
-          // base the % on the total max width 
-          mTableFrame->SetColumnWidth(colIndex, (percentage*aAvailWidth)/100);
+            // base the % on the remaining available width 
+            mTableFrame->SetColumnWidth(colIndex, (percentage*aAvailWidth)/100);
+          }
           // if the column was computed to be too small, enlarge the column
           if (mTableFrame->GetColumnWidth(colIndex) <= minColWidth)
             mTableFrame->SetColumnWidth(colIndex, minColWidth);
         }
-        if (gsDebug==PR_TRUE) 
-          printf ("  3 percent: col %d given %d percent of aAvailWidth %d, set to width = %d\n", 
-                  colIndex, percentage, aAvailWidth, mTableFrame->GetColumnWidth(colIndex));
       }
     }
     tableWidth += mTableFrame->GetColumnWidth(colIndex);
