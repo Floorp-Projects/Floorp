@@ -176,6 +176,7 @@ PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
     if (capacity < PL_DHASH_MIN_SIZE)
         capacity = PL_DHASH_MIN_SIZE;
     log2 = PR_CeilingLog2(capacity);
+    capacity = PR_BIT(log2);
     table->hashShift = PL_DHASH_BITS - log2;
     table->sizeLog2 = log2;
     table->sizeMask = PR_BITMASK(table->sizeLog2);
