@@ -952,9 +952,9 @@ BOOL nsAbWinHelper::SetMAPIProperties(const nsMapiEntry& aObject, ULONG aNbPrope
     }
     if (problems != NULL) {
         for (ULONG i = 0 ; i < problems->cProblem ; ++ i) {
-            PRINTF("Problem %d: index %d code %08x.\n", i, 
+            PRINTF(("Problem %d: index %d code %08x.\n", i, 
                 problems->aProblem [i].ulIndex, 
-                problems->aProblem [i].scode) ;
+                problems->aProblem [i].scode)) ;
         }
     }
     mLastError = object->SaveChanges(0) ;
