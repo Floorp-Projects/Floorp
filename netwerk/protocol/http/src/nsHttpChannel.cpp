@@ -829,6 +829,66 @@ nsHttpChannel::ProxyFailover()
     return rv;
 }
 
+PRBool
+nsHttpChannel::ResponseWouldVary()
+{
+    PRBool result = PR_FALSE;
+    nsCAutoString buf, metaKey;
+    mCachedResponseHead->GetHeader(nsHttp::Vary, buf);
+    if (!buf.IsEmpty()) {
+        NS_NAMED_LITERAL_CSTRING(prefix, "request-");
+
+        // enumerate the elements of the Vary header...
+        char *val = NS_CONST_CAST(char *, buf.get()); // going to munge buf
+        char *token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
+        while (token) {
+            //
+            // if "*", then assume response would vary.  technically speaking,
+            // "Vary: header, *" is not permitted, but we allow it anyways.
+            //
+            // if the response depends on the value of the "Cookie" header, then
+            // bail since we do not store cookies in the cache.  this is done
+            // for the following reasons:
+            //
+            //   1- cookies can be very large in size
+            //
+            //   2- cookies may contain sensitive information.  (for parity with
+            //      out policy of not storing Set-cookie headers in the cache
+            //      meta data, we likewise do not want to store cookie headers
+            //      here.)
+            //
+            // this implementation is obviously not fully standards compliant, but
+            // it is perhaps most prudent given the above issues.
+            //
+            if ((*token == '*') || (PL_strcasecmp(token, "cookie") == 0)) {
+                result = PR_TRUE;
+                break;
+            }
+            else {
+                // build cache meta data key...
+                metaKey = prefix + nsDependentCString(token);
+
+                // check the last value of the given request header to see if it has
+                // since changed.  if so, then indeed the cached response is invalid.
+                nsXPIDLCString lastVal;
+                mCacheEntry->GetMetaDataElement(metaKey.get(), getter_Copies(lastVal));
+                if (lastVal) {
+                    nsHttpAtom atom = nsHttp::ResolveAtom(token);
+                    const char *newVal = mRequestHead.PeekHeader(atom);
+                    if (newVal && (strcmp(newVal, lastVal) != 0)) {
+                        result = PR_TRUE; // yes, response would vary
+                        break;
+                    }
+                }
+                
+                // next token...
+                token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
+            }
+        }
+    }
+    return result;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel <byte-range>
 //-----------------------------------------------------------------------------
@@ -1244,6 +1304,11 @@ nsHttpChannel::CheckCache()
         LOG(("Validating based on MustValidate() returning TRUE\n"));
         doValidation = PR_TRUE;
     }
+
+    else if (ResponseWouldVary()) {
+        LOG(("Validating based on Vary headers returning TRUE\n"));
+        doValidation = PR_TRUE;
+    }
     // Check if the cache entry has expired...
     else {
         PRUint32 time = 0; // a temporary variable for storing time values...
@@ -1473,6 +1538,40 @@ nsHttpChannel::InitCacheEntry()
     // Store the HTTP authorization scheme used if any...
     rv = StoreAuthorizationMetaData();
     if (NS_FAILED(rv)) return rv;
+
+    // Iterate over the headers listed in the Vary response header, and
+    // store the value of the corresponding request header so we can verify
+    // that it has not varied when we try to re-use the cached response at
+    // a later time.  Take care not to store "Cookie" headers though.  We
+    // take care of "Vary: cookie" in ResponseWouldVary.
+    //
+    // NOTE: if "Vary: accept, cookie", then we will store the "accept" header
+    // in the cache.  we could try to avoid needlessly storing the "accept"
+    // header in this case, but it doesn't seem worth the extra code to perform
+    // the check.
+    {
+        nsCAutoString buf, metaKey;
+        mResponseHead->GetHeader(nsHttp::Vary, buf);
+        if (!buf.IsEmpty()) {
+            NS_NAMED_LITERAL_CSTRING(prefix, "request-");
+           
+            char *val = NS_CONST_CAST(char *, buf.get()); // going to munge buf
+            char *token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
+            while (token) {
+                if ((*token != '*') && (PL_strcasecmp(token, "cookie") != 0)) {
+                    nsHttpAtom atom = nsHttp::ResolveAtom(token);
+                    const char *requestVal = mRequestHead.PeekHeader(atom);
+                    if (requestVal) {
+                        // build cache meta data key and set meta data element...
+                        metaKey = prefix + nsDependentCString(token);
+                        mCacheEntry->SetMetaDataElement(metaKey.get(), requestVal);
+                    }
+                }
+                token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
+            }
+        }
+    }
+
 
     // Store the received HTTP head with the cache entry as an element of
     // the meta data.
