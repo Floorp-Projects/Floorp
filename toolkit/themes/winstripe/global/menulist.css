@@ -133,7 +133,6 @@ menulist[disabled="true"] {
 /* ::::: editable menulists ::::: */
 
 .menulist-editable-box {
-  padding: 3px 0px 3px 2px;
   padding-top: 3px;
   padding-bottom: 3px;
   -moz-padding-start: 2px;

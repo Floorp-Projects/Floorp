@@ -77,14 +77,14 @@ menubutton:not([disabled="true"]):hover:active {
 
 #help-back-button, 
 #help-forward-button[chromedir="rtl"] { -moz-image-region: rect(0px 24px 24px 0px); }
-#help-back-button[buttonover="true"], 
-#help-forward-button[buttonover="true"][chromedir="rtl"] { -moz-image-region: rect(24px 24px 48px 0px); }
+#help-back-button:hover, 
+#help-forward-button[chromedir="rtl"]:hover { -moz-image-region: rect(24px 24px 48px 0px); }
 #help-back-button[disabled="true"], 
 #help-forward-button[disabled="true"][chromedir="rtl"] { -moz-image-region: rect(48px 24px 72px 0px); }
 
 #help-forward-button, #help-back-button[chromedir="rtl"] { -moz-image-region: rect(0px 48px 24px 24px); }
-#help-forward-button[buttonover="true"], 
-#help-back-button[buttonover="true"][chromedir="rtl"] { -moz-image-region: rect(24px 48px 48px 24px); }
+#help-forward-button:hover, 
+#help-back-button[chromedir="rtl"]:hover { -moz-image-region: rect(24px 48px 48px 24px); }
 #help-forward-button[disabled="true"], 
 #help-back-button[disabled="true"][chromedir="rtl"] { -moz-image-region: rect(48px 48px 72px 24px); }
 
