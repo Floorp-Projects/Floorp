@@ -79,9 +79,9 @@ extern "C" char * strsignal(int);
 static char _progname[1024] = "huh?";
 
 //#if defined(LINUX) && defined(DEBUG) && (defined(__i386) || defined(PPC))
-//#if 0
+#if 0
 #define CRAWL_STACK_ON_SIGSEGV
-//#endif
+#endif
  
 #ifdef MOZ_WIDGET_PHOTON
 void abnormal_exit_handler(int signum)
