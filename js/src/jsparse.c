@@ -74,8 +74,7 @@ static JSParser FunctionExpr;
 #endif
 static JSParser Statements;
 static JSParser Statement;
-static JSParseNode *
-Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool multi);
+static JSParser Variables;
 static JSParser Expr;
 static JSParser AssignExpr;
 static JSParser CondExpr;
@@ -988,7 +987,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif /* JS_HAS_IN_OPERATOR */
 	    if (tt == TOK_VAR) {
 		(void) js_GetToken(cx, ts);
-		pn1 = Variables(cx, ts, tc, JS_FALSE);
+		pn1 = Variables(cx, ts, tc);
 	    } else {
 		pn1 = Expr(cx, ts, tc);
 	    }
@@ -1295,7 +1294,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	return pn;
 
       case TOK_VAR:
-	pn = Variables(cx, ts, tc, JS_TRUE);
+	pn = Variables(cx, ts, tc);
 	if (!pn)
 	    return NULL;
 	if (pn->pn_pos.end.lineno == ts->lineno &&
@@ -1440,7 +1439,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 
 static JSParseNode *
-Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool multi)
+Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn2;
     JSObject *obj, *pobj;
@@ -1630,7 +1629,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool multi)
 	    OBJ_DROP_PROPERTY(cx, pobj, prop);
 	if (!ok)
 	    return NULL;
-    } while (multi && js_MatchToken(cx, ts, TOK_COMMA));
+    } while (js_MatchToken(cx, ts, TOK_COMMA));
 
     pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
     return pn;
