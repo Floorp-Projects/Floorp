@@ -1154,7 +1154,6 @@ my %seen;
 my @bugarray;
 my %prodhash;
 my %statushash;
-my $buggroupset = "";
 my %ownerhash;
 
 my $pricol = -1;
@@ -1174,14 +1173,6 @@ my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
     my $g = shift @row;         # Bug's group set.
-    if ($buggroupset eq "") {
-        $buggroupset = $g;
-    } elsif ($buggroupset ne $g) {
-        $buggroupset = "x";     # We only play games with tweaking the
-                                # buggroupset if all the bugs have exactly
-                                # the same group.  If they don't, we leave
-                                # it alone.
-    }
     if (!defined $seen{$bug_id}) {
         $seen{$bug_id} = 1;
         $count++;
@@ -1460,22 +1451,56 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
-if ($::usergroupset ne '0' && $buggroupset =~ /^\d+$/) {
-    SendSQL("select bit, description, (bit & $buggroupset != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by description");
+if($::usergroupset ne '0') {
+    SendSQL("select bit, name, description, isactive ".
+            "from groups where bit & $::usergroupset != 0 ".
+            "and isbuggroup != 0 ".
+            "order by description");
     # We only print out a header bit for this section if there are any
     # results.
-    if(MoreSQLData()) {
-      print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
-    }
+    my $groupFound = 0;
+    my $inactiveFound = 0;
     while (MoreSQLData()) {
-        my ($bit, $description, $ison) = (FetchSQLData());
-        # Modifying this to use checkboxes instead
-        my $checked = $ison ? " CHECKED" : "";
-        # indent these a bit
-        print "&nbsp;&nbsp;&nbsp;&nbsp;";
-        print "<input type=checkbox name=\"bit-$bit\" value=1$checked>\n";
-        print "$description<br>\n";
+        my ($bit, $groupname, $description, $isactive) = (FetchSQLData());
+        if(($prodhash{$groupname}) || (!defined($::proddesc{$groupname}))) {
+          if(!$groupFound) {
+            print "<B>Groupset:</B><BR>\n";
+            print "<TABLE BORDER=1><TR>\n";
+            print "<TH ALIGN=center VALIGN=middle>Don't<br>change<br>this group<br>restriction</TD>\n";
+            print "<TH ALIGN=center VALIGN=middle>Remove<br>bugs<br>from this<br>group</TD>\n";
+            print "<TH ALIGN=center VALIGN=middle>Add<br>bugs<br>to this<br>group</TD>\n";
+            print "<TH ALIGN=left VALIGN=middle>Group name:</TD></TR>\n";
+            $groupFound = 1;
+          }
+          # Modifying this to use radio buttons instead
+          print "<TR>";
+          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"-1\" checked></TD>\n";
+          print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"0\"></TD>\n";
+          if ($isactive) {
+            print "<TD ALIGN=center><input type=radio name=\"bit-$bit\" value=\"1\"></TD>\n";
+          } else {
+            $inactiveFound = 1;
+            print "<TD>&nbsp;</TD>\n";
+          }
+          print "<TD>";
+          if(!$isactive) {
+            print "<I>";
+          }
+          print "$description";
+          if(!$isactive) {
+            print "</I>";
+          }
+          print "</TD></TR>\n";
+        }
+    }
+    # Add in some blank space for legibility
+    if($groupFound) {
+      print "</TABLE>\n";
+      if ($inactiveFound) {
+        print "<FONT SIZE=\"-1\">(Note: Bugs may not be added to inactive groups (<I>italicized</I>), only removed)</FONT><BR>\n";
       }
+      print "<BR><BR>\n";
+    }
 }
 
 
