@@ -1023,8 +1023,9 @@ case "$target" in
         DSO_LDOPTS='-shared'
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-        RC='$(CYGWIN_WRAPPER) $(WINDRES)'
-        RCFLAGS='-O coff'
+        RC='$(WINDRES)'
+        # Use temp file for windres (bug 213281)
+        RCFLAGS='-O coff --use-temp-file'
         MOZ_JPEG_LIBS='-L$(DIST)/lib -ljpeg$(MOZ_BITS)$(VERSION_NUMBER)'
         MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
         MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
