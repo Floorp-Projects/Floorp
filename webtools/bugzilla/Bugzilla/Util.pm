@@ -158,7 +158,7 @@ sub format_time {
         $hour  = substr($time,8,2);
         $min   = substr($time,10,2);
     }
-    elsif ($time =~ m/^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2})(:\d{2})?$/) {
+    elsif ($time =~ m/^(\d{4})[-\.](\d{2})[-\.](\d{2}) (\d{2}):(\d{2})(:\d{2})?$/) {
         $year  = $1;
         $month = $2;
         $day   = $3;
