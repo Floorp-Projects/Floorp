@@ -474,7 +474,9 @@ tbx_dirs()
     if [ "$O_WIN" = "ON" ] ; then
         TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/stalker_NT"
     else
+        Debug "Testing for TBX_LOGDIR ${TBX_LOGDIR}"
         if [ -n "${TBX_LOGDIR}" ] ; then
+            Debug "found TBX_LOGDIR ${TBX_LOGDIR}"
             TBX_LOGFILE_DIR="${TBX_LOGDIR}"
         elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8_64" ] ; then
             TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
@@ -495,10 +497,9 @@ tbx_dirs()
             fi
             #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs"
         fi
+        Debug "Set TBX_LOGFILE_DIR ${TBX_LOGFILE_DIR}"
     fi
-    echo "QA results in $RESULTDIR" >${TBX_LOGFILE_DIR}/qa.log
-    O_FILE=ON
-    FILENAME=${TBX_LOGFILE_DIR}/qa.log
+    
     set_daily_build_dirs
     UX_MASTERDIR=`cd ../../../..;pwd`
     NT_MASTERDIR=$UX_MASTERDIR
@@ -640,7 +641,14 @@ init_files()
     if [ $O_CRONFILE = "ON" ]
     then
         Debug "attempting to create resultfiles"
-        NEWFILENAME=$RESULTDIR/$HOST.`basename $0`
+        if [ "$O_TBX" = "ON" ] ; then
+            NEWFILENAME=${TBX_LOGFILE_DIR}/qa.log
+            if [ ! -w ${TBX_LOGFILE_DIR} ] ; then
+                Exit "can't touch $NEWFILENAME"
+            fi
+        else
+            NEWFILENAME=$RESULTDIR/$HOST.`basename $0`
+        fi
         if [ ! -d $RESULTDIR ]
         then
             mkdir -p $RESULTDIR || Exit "Error: can't make $RESULTDIR"
@@ -656,6 +664,7 @@ init_files()
         FILENAME=$NEWFILENAME
         Debug "Writing output to $FILENAME"
     fi
+
 }
 
 ################################### write_to_tmpfile ##########################
