@@ -111,6 +111,18 @@ nsURLFetcher::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHan
 }
 
 NS_IMETHODIMP 
+nsURLFetcher::IsPreferred(const char * aContentType,
+                                nsURILoadCommand aCommand,
+                                const char * aWindowTarget,
+                                char ** aDesiredContentType,
+                                PRBool * aCanHandleContent)
+
+{
+  return CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType,
+                          aCanHandleContent);
+}
+
+NS_IMETHODIMP 
 nsURLFetcher::CanHandleContent(const char * aContentType,
                                 nsURILoadCommand aCommand,
                                 const char * aWindowTarget,
