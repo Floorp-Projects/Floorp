@@ -363,6 +363,7 @@ input[type="submit"] {
   color: ButtonText; 
   font: -moz-button;
   white-space: pre;
+  vertical-align: text-bottom; /* needed for button */
   cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
