@@ -16,13 +16,6 @@
  * Reserved.
  */
 
-
-/*=============================================================================
- * This test program is designed to test the berkeley mailbox parser.
- * When the test program starts up, you are prompted for a mailbox name.
- * The code will then generate a stream of data for the mailbox parser.
-*===============================================================================*/
-
 #include <stdio.h>
 #include <assert.h>
 
@@ -94,10 +87,13 @@ nsresult newsTestDriver::RunDriver(nsFileSpec &folder)
     nsIMsgDatabase *newsDB = nsnull;
     rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDB);
     if (NS_SUCCEEDED(rv) && newsDB)
-	{
-		rv = newsDB->Open(folder, PR_TRUE, (nsIMsgDatabase **) &m_newsDB, PR_FALSE);
-		newsDB->Release();
-	}
+    {
+        rv = newsDB->Open(folder, PR_TRUE, (nsIMsgDatabase **) &m_newsDB, PR_FALSE);
+        newsDB->Release();
+    }
+    else {
+	printf("CreateInstance failed.  %d\n", rv);
+    }
     
     return status;
 }
