@@ -2833,6 +2833,9 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 loser:
 	secmod_freeParams(&paramStrings);
     }
+    if (CKR_OK == crv) {
+        pk11_InitFreeLists();
+    }
 
     return crv;
 }
@@ -3062,6 +3065,7 @@ CK_RV NSC_GetMechanismList(CK_SLOT_ID slotID,
     CK_ULONG i;
 
     switch (slotID) {
+    /* default: */
     case NETSCAPE_SLOT_ID:
 	*pulCount = mechanismCount;
 	if (pMechanismList != NULL) {

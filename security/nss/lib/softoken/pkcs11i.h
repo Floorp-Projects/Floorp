@@ -640,6 +640,7 @@ extern PK11Session *pk11_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify,
 extern void pk11_update_state(PK11Slot *slot,PK11Session *session);
 extern void pk11_update_all_states(PK11Slot *slot);
 extern void pk11_FreeContext(PK11SessionContext *context);
+extern void pk11_InitFreeLists(void);
 extern void pk11_CleanupFreeLists(void);
 
 extern NSSLOWKEYPublicKey *pk11_GetPubKey(PK11Object *object,
