@@ -174,11 +174,6 @@ protected:
                      nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
-  nsresult AddInlineFrames(nsIPresContext* aPresContext,
-                           nsLineBox** aPrevLinep,
-                           nsIFrame* aFirstInlineFrame,
-                           PRInt32 aPendingInlines);
-
   nsresult AddFirstLineFrames(nsIPresContext* aPresContext,
                               nsFirstLineFrame* aLineFrame,
                               nsIFrame* aFrameList,

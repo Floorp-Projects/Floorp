@@ -1033,8 +1033,11 @@ nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
   else if (aListName == nsLayoutAtoms::bulletList) {
     if (HaveOutsideBullet()) {
       *aFirstChild = mBullet;
-      return NS_OK;
     }
+    else {
+      *aFirstChild = nsnull;
+    }
+    return NS_OK;
   }
   *aFirstChild = nsnull;
   return NS_ERROR_INVALID_ARG;
@@ -1055,16 +1058,8 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
     NS_ADDREF(*aListName);
     break;
   case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
-    // XXX Having this check conditional breaks the area frame's absolute
-    // conditioning code...
-#if 0
-    if (HaveOutsideBullet()) {
-#endif
-      *aListName = nsLayoutAtoms::bulletList;
-      NS_ADDREF(*aListName);
-#if 0
-    }
-#endif
+    *aListName = nsLayoutAtoms::bulletList;
+    NS_ADDREF(*aListName);
     break;
   }
   return NS_OK;
@@ -3587,6 +3582,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
 
   // Attempt to find the line that contains the previous sibling
   nsLineBox* prevSibLine = nsnull;
+  PRInt32 prevSiblingIndex = -1;
   if (aPrevSibling) {
     // Its possible we have an nsFirstLineFrame managing some of our
     // child frames. If we do and the AddFrames is targetted at it,
@@ -3611,8 +3607,12 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     }
     else {
       // Find the line that contains the previous sibling
-      prevSibLine = nsLineBox::FindLineContaining(mLines, aPrevSibling);
+      prevSibLine = nsLineBox::FindLineContaining(mLines, aPrevSibling,
+                                                  &prevSiblingIndex);
+      NS_ASSERTION(nsnull != prevSibLine, "prev sibling not in line list");
       if (nsnull == prevSibLine) {
+        // Note: defensive code! FindLineContaining must not return
+        // null in this case, so if it does...
         aPrevSibling = nsnull;
       }
     }
@@ -3624,12 +3624,28 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
                               aFrameList, nsnull);
   }
 
-  // Update the sibling list first
-  nsFrameList newFrames(aFrameList);
-  nsIFrame* lastNewFrame = newFrames.LastChild();
+  // Find the frame following aPrevSibling so that we can join up the
+  // two lists of frames.
   nsIFrame* prevSiblingNextFrame = nsnull;
   if (aPrevSibling) {
     aPrevSibling->GetNextSibling(&prevSiblingNextFrame);
+
+    // Split line containing aPrevSibling in two if the insertion
+    // point is somewhere in the middle of the line.
+    PRInt32 rem = prevSibLine->mChildCount - prevSiblingIndex - 1;
+    if (rem) {
+      // Split the line in two where the frame(s) are being inserted.
+      nsLineBox* line = new nsLineBox(prevSiblingNextFrame, rem, 0);
+      if (!line) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      line->mNext = prevSibLine->mNext;
+      prevSibLine->mNext = line;
+      prevSibLine->mChildCount -= rem;
+      prevSibLine->MarkDirty();
+    }
+
+    // Now (partially) join the sibling lists together
     aPrevSibling->SetNextSibling(aFrameList);
   }
   else if (mLines) {
@@ -3638,81 +3654,17 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
 
   // Walk through the new frames being added and update the line data
   // structures to fit.
-  nsIFrame* frame = aFrameList;
-  nsIFrame* firstInlineFrame = nsnull;
-  nsIFrame* prevSibling = aPrevSibling;
-  PRInt32 pendingInlines = 0;
-  while (frame) {
-    if (nsLineLayout::TreatFrameAsBlock(frame)) {
-      // Flush out any pending inline frames
-      if (pendingInlines) {
-        AddInlineFrames(aPresContext, &prevSibLine, firstInlineFrame,
-                        pendingInlines);
-        pendingInlines = 0;
-      }
-
-#if 0
-      // If the block is going into the middle of a line, we need to
-      // split the line in two.
-      if (prevSibLine && !prevSibLine->IsBlock() &&
-          (prevSibLine->mChildCount > 1)) {
-        // Find the index of the block frame in the line. Note that if
-        // the block frame is inserted past the prevSibLine's current
-        // child count then we don't need to split the line in two
-        // (because prevSibLine's list of children is already correct)
-        PRInt32 ix = -1;
-        nsIFrame* f = prevSibLine->mFirstChild;
-        PRInt32 i, n = prevSibLine->mChildCount;
-        for (i = 0; i < n; i++) {
-          if (f == frame) {
-            ix = i;
-            break;
-          }
-          f->GetNextSibling(&f);
-        }
-        if (ix < 0) {
-          // The block frame is just past the end of the prevSibLine's
-          // list of children. No splitting is needed.
-        }
-        else {
-          // We found the block frame in the prevSibLine. Therefore,
-          // we need to split the line in two such that the frames
-          // following the block go into a new line.
-          nsIFrame* nextSib;
-          frame->GetNextSibling(&nextSib);
-          NS_ASSERTION(nsnull != nextSib, "weirdness");
-
-          // Make a new line with the split off frames
-          nsLineBox* line = new nsLineBox(, count, 0);
-          if (!line) {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-          line->mNext = prevSibLine->mNext;
-          prevSibLine->mNext = line;
-        }
-
-        if (prevSibling != lastKid) {
-          // Find the index of the block frame in the line
-          frame->GetNextSibling(&nextSib);
-          nsIFrame* saveNextSib = nextSib;
-          PRInt32 count = 1;
-          while (nextSib != lastKid) {
-            count++;
-            nextSib->GetNextSibling(&nextSib);
-          }
-
-
-          // Take away the split off frames from the prevSibLine count
-          NS_ASSERTION(prevSibLine->mChildCount >= count, "bad line count"); 
-          prevSibLine->mChildCount -= count;
-          prevSibLine->MarkDirty();
-        }
-      }
-#endif
-
-      // Create a new line for the block frame and add its line to the
-      // line list.
-      nsLineBox* line = new nsLineBox(frame, 1, LINE_IS_BLOCK);
+  nsIFrame* newFrame = aFrameList;
+  while (newFrame) {
+    PRUint32 isBlock = nsLineLayout::TreatFrameAsBlock(newFrame)
+      ? LINE_IS_BLOCK
+      : 0;
+    // If the frame is a block frame, or if there is no previous line
+    // or if the previous line is a block line then make a new line.
+    if (isBlock || !prevSibLine || prevSibLine->IsBlock()) {
+      // Create a new line for the frame and add its line to the line
+      // list.
+      nsLineBox* line = new nsLineBox(newFrame, 1, isBlock);
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -3729,22 +3681,16 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
       prevSibLine = line;
     }
     else {
-      if (0 == pendingInlines) {
-        firstInlineFrame = frame;
-      }
-      pendingInlines++;
+      prevSibLine->mChildCount++;
+      prevSibLine->MarkDirty();
     }
-    prevSibling = frame;
-    frame->GetNextSibling(&frame);
+
+    aPrevSibling = newFrame;
+    newFrame->GetNextSibling(&newFrame);
   }
   if (prevSiblingNextFrame) {
-    lastNewFrame->SetNextSibling(prevSiblingNextFrame);
-  }
-
-  // Flush out any lingering inline frames
-  if (pendingInlines) {
-    AddInlineFrames(aPresContext, &prevSibLine, firstInlineFrame,
-                    pendingInlines);
+    // Connect the last new frame to the remainder of the sibling list
+    aPrevSibling->SetNextSibling(prevSiblingNextFrame);
   }
 
   // Fixup any frames that should be in a first-line frame but aren't
@@ -3758,46 +3704,6 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
   VerifyLines(PR_TRUE);
 #endif
   MarkEmptyLines(aPresContext);
-  return NS_OK;
-}
-
-nsresult
-nsBlockFrame::AddInlineFrames(nsIPresContext* aPresContext,
-                              nsLineBox** aPrevLinep,
-                              nsIFrame* aFirstInlineFrame,
-                              PRInt32 aPendingInlines)
-{
-  NS_ASSERTION(aPendingInlines >= 0, "bad pending inline count"); 
-  nsLineBox* prevLine = *aPrevLinep;
-  if (prevLine) {
-    if (prevLine->IsBlock()) {
-      // The frames cannot go on the previous line
-      nsLineBox* line = new nsLineBox(aFirstInlineFrame, aPendingInlines, 0);
-      if (!line) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      line->mNext = prevLine->mNext;
-      prevLine->mNext = line;
-      *aPrevLinep = line;
-    }
-    else {
-      // The previous line contains inline frames. These inline frames
-      // can go there.
-      prevLine->MarkDirty();
-      prevLine->mChildCount += aPendingInlines;
-    }
-  }
-  else {
-    // Make a new line to hold the inline frames
-    nsLineBox* line = new nsLineBox(aFirstInlineFrame, aPendingInlines, 0);
-    if (!line) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    line->mNext = mLines;
-    mLines = line;
-    *aPrevLinep = line;
-  }
-
   return NS_OK;
 }
 
