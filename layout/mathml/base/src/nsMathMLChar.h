@@ -78,7 +78,8 @@ public:
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
-        nsIFrame*            aForFrame);
+        nsIFrame*            aForFrame,
+        const nsRect*        aSelectedRect = nsnull);
 
   // This is the method called to ask the char to stretch itself.
   // @param aContainerSize - IN - suggested size for the stretched char

@@ -71,6 +71,11 @@ public:
                    PRInt32         aModType, 
                    PRInt32         aHint);
 
+  // override the base method because we must keep separators in sync
+  virtual nsresult
+  ChildListChanged(nsIPresContext* aPresContext,
+                   PRInt32         aModType);
+
   // exported routine that both mfenced and mfrac share.
   // mfrac uses this when its bevelled attribute is set.
   static nsresult

@@ -72,6 +72,50 @@ nsMathMLmoFrame::~nsMathMLmoFrame()
 {
 }
 
+// since a mouse click implies selection, we cannot just rely on the
+// frame's state bit in our child text frame. So we will first check
+// its selected state bit, and use this little helper to double check.
+PRBool
+nsMathMLmoFrame::IsFrameInSelection(nsIPresContext* aPresContext,
+                                    nsIFrame*       aFrame)
+{
+  NS_ASSERTION(aFrame, "null arg");
+  if (!aFrame)
+    return PR_FALSE;
+
+  PRBool isSelected = PR_FALSE;
+  aFrame->GetSelected(&isSelected);
+  if (!isSelected)
+    return PR_FALSE;
+
+  SelectionDetails* details = nsnull;
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    nsCOMPtr<nsIFrameSelection> frameSelection;
+    nsCOMPtr<nsISelectionController> selCon;
+    rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+    if (NS_SUCCEEDED(rv) && selCon)
+      frameSelection = do_QueryInterface(selCon);
+    if (!frameSelection)
+      rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+    if (NS_SUCCEEDED(rv) && frameSelection) {
+      nsCOMPtr<nsIContent> content;
+      aFrame->GetContent(getter_AddRefs(content));   
+      frameSelection->LookUpSelection(content, 0, 1, &details, PR_TRUE);
+    }
+  }
+  if (!details)
+    return PR_FALSE;
+
+  while (details) {
+    SelectionDetails* next = details->mNext;
+    delete details;
+    details = next;
+  }
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
@@ -81,16 +125,26 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
 {
   nsresult rv = NS_OK;
   PRBool useMathMLChar =
-    NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
+    (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
+     NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) ||
     NS_MATHML_OPERATOR_IS_CENTERED(mFlags);
+
   if (!useMathMLChar || NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // let the base class paint the background, border, outline
     rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
                                        aDirtyRect, aWhichLayer);
   }
   if (useMathMLChar) {
-    rv = mMathMLChar.Paint(aPresContext, aRenderingContext,
-                           aDirtyRect, aWhichLayer, this);
+    // make our char selected if our inner child text frame is selected
+    PRBool isSelected = PR_FALSE;
+    nsRect selectedRect;
+    nsIFrame* firstChild = mFrames.FirstChild();
+    if (IsFrameInSelection(aPresContext, firstChild)) {
+      firstChild->GetRect(selectedRect);
+      isSelected = PR_TRUE;
+    }
+    rv = mMathMLChar.Paint(aPresContext, aRenderingContext, aDirtyRect,
+                           aWhichLayer, this, isSelected ? &selectedRect : nsnull);
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
@@ -146,6 +200,7 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
   // http://groups.google.com/groups?hl=en&th=66488daf1ade7635&rnum=1
   if (1 == length && data[0] == '-') {
     data = PRUnichar(0x2212);
+    mFlags |= NS_MATHML_OPERATOR_CENTERED;
   }
 
   // cache the special bits: mutable, accent, movablelimits, centered.
@@ -184,6 +239,11 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
   // cache the operator
   mMathMLChar.SetData(aPresContext, data);
   ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar, isMutable);
+
+  // cache the native direction -- beware of bug 133429...
+  // mEmbellishData.direction must always retain our native direction, whereas
+  // mMathMLChar.GetStretchDirection() may change later, when Stretch() is called
+  mEmbellishData.direction = mMathMLChar.GetStretchDirection();
 }
 
 // get our 'form' and lookup in the Operator Dictionary to fetch 
@@ -219,17 +279,18 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
     mEmbellishData.flags = 0;
     mEmbellishData.nextFrame = nsnull; 
     mEmbellishData.coreFrame = nsnull;
-    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
     mEmbellishData.leftSpace = 0;
     mEmbellishData.rightSpace = 0;
+    if (mMathMLChar.Length() != 1)
+      mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;  
+    // else... retain the native direction obtained in ProcessTextData()
 
-    if (!mFrames.FirstChild())
+    if (!mFrames.FirstChild()) {
       return;
+    }
 
     mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.nextFrame = nsnull; 
     mEmbellishData.coreFrame = this;
-    mEmbellishData.direction = mMathMLChar.GetStretchDirection();
 
     // there are two particular things that we also need to record so that if our
     // parent is <mover>, <munder>, or <munderover>, they will treat us properly:
@@ -264,6 +325,20 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
         mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_MOVABLELIMITS;
     }
 
+     // ---------------------------------------------------------------------
+     // we will be called again to re-sync the rest of our state next time...
+     // (nobody needs the other values below at this stage)
+     mFlags |= form;
+     return;
+  }
+
+  // beware of bug 133814 - there is a two-way dependency in the
+  // embellished hierarchy: our embellished ancestors need to set
+  // their flags based on some of our state (set above), and here we
+  // need to re-sync our 'form' depending on our outermost embellished
+  // container. A null form here means that an earlier attempt to stretch
+  // our mMathMLChar failed, in which case we don't bother re-stretching again
+  if (form) {
     // get our outermost embellished container and its parent. 
     // (we ensure that we are the core, not just a sibling of the core)
     nsIFrame* embellishAncestor = this;
@@ -298,6 +373,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
       mFlags &= ~NS_MATHML_OPERATOR_EMBELLISH_ISOLATED;
 
     // find our form
+    form = NS_MATHML_OPERATOR_FORM_INFIX;
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::form_, value)) {
       if (value.Equals(NS_LITERAL_STRING("prefix")))
@@ -312,12 +388,10 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
       else if (prevSibling && !nextSibling)
         form = NS_MATHML_OPERATOR_FORM_POSTFIX;
     }
-  }
+    mFlags &= ~NS_MATHML_OPERATOR_FORM; // clear the old form bits
+    mFlags |= form;
 
-  // lookup the operator dictionary
-  // the form can be null to mean that the stretching of our mMathMLChar
-  // failed earlier, in which case we won't bother re-stretching again
-  if (form) {
+    // lookup the operator dictionary
     float lspace = 0.0f;
     float rspace = 0.0f;
     nsAutoString data;
@@ -368,11 +442,8 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
         leftSpace = 0;
       else if (cssValue.IsLengthUnit())
         leftSpace = CalcLength(aPresContext, mStyleContext, cssValue);
+      mFlags |= NS_MATHML_OPERATOR_LEFTSPACE_ATTR;
     }
-  }
-  else if (mPresentationData.scriptLevel > 0 &&
-           NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
-    leftSpace = 0;
   }
 
   // rspace = number h-unit | namedspace
@@ -387,11 +458,8 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
         rightSpace = 0;
       else if (cssValue.IsLengthUnit())
         rightSpace = CalcLength(aPresContext, mStyleContext, cssValue);
+      mFlags |= NS_MATHML_OPERATOR_RIGHTSPACE_ATTR;
     }
-  }
-  else if (mPresentationData.scriptLevel > 0 &&
-           NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
-    rightSpace = 0;
   }
 
   // little extra tuning to round lspace & rspace to at least a pixel so that
@@ -543,11 +611,13 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   nscoord leading = 0, axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 
-  // Operators that exist in the dictionary, or those that are to be centered
+  // Operators that are stretchy, or those that are to be centered
   // to cater for fonts that are not math-aware, are handled by the MathMLChar
-  PRBool useMathMLChar = 
-    NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
-    NS_MATHML_OPERATOR_IS_CENTERED(mFlags);;
+  // ('form' is reset if stretch fails -- i.e., we don't bother to stretch next time)
+  PRBool useMathMLChar =
+    (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
+     NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) ||
+    NS_MATHML_OPERATOR_IS_CENTERED(mFlags);
 
   nsBoundingMetrics charSize;
   if (useMathMLChar) {
@@ -571,7 +641,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
       if (((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
            (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT))  &&
-          (mMathMLChar.GetStretchDirection() == NS_STRETCH_DIRECTION_VERTICAL))
+          (mEmbellishData.direction == NS_STRETCH_DIRECTION_VERTICAL))
       {
         isVertical = PR_TRUE;
       }
@@ -735,11 +805,30 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   // whose size is comparable to the size of a normal ASCII glyph.
   // So to avoid uneven spacing in either of these two cases, we use the height
   // of the ASCII font as a reference and try to match it if possible.
-  nscoord ascent, descent;
-  fm->GetMaxAscent(ascent);
-  fm->GetMaxDescent(descent);
-  aDesiredStretchSize.ascent = PR_MAX(mBoundingMetrics.ascent + leading, ascent);
-  aDesiredStretchSize.descent = PR_MAX(mBoundingMetrics.descent + leading, descent);
+
+  // special case for accents... keep them short to improve mouse operations...
+  // an accent can only be the non-first child of <mover>, <munder>, <munderover>
+  PRBool isAccent =
+    NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags);
+  if (isAccent) {
+    nsEmbellishData parentData;
+    GetEmbellishDataFrom(mParent, parentData);
+    isAccent =
+       (NS_MATHML_EMBELLISH_IS_ACCENTOVER(parentData.flags) ||
+        NS_MATHML_EMBELLISH_IS_ACCENTUNDER(parentData.flags)) &&
+       parentData.coreFrame != this;
+  }
+  if (isAccent) {
+    aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
+    aDesiredStretchSize.descent = mBoundingMetrics.descent + leading;
+  }
+  else {
+    nscoord ascent, descent;
+    fm->GetMaxAscent(ascent);
+    fm->GetMaxDescent(descent);
+    aDesiredStretchSize.ascent = PR_MAX(mBoundingMetrics.ascent + leading, ascent);
+    aDesiredStretchSize.descent = PR_MAX(mBoundingMetrics.descent + leading, descent);
+  }
   aDesiredStretchSize.height = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
   aDesiredStretchSize.width = mBoundingMetrics.width;
   aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
@@ -748,7 +837,6 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   // Place our mMathMLChar, its origin is in our coordinate system
   if (useMathMLChar) {
     nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
-    mMathMLChar.GetBoundingMetrics(charSize);
     mMathMLChar.SetRect(nsRect(0, dy, charSize.width, charSize.ascent + charSize.descent));
   }
 
@@ -759,45 +847,58 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
   if (!NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
 
-    // Account the spacing
-    mBoundingMetrics.width += mEmbellishData.leftSpace + mEmbellishData.rightSpace;
+    // Account the spacing if we are not an accent with explicit attributes
+    nscoord leftSpace = mEmbellishData.leftSpace;
+    if (isAccent && !NS_MATHML_OPERATOR_HAS_LEFTSPACE_ATTR(mFlags)) {
+      leftSpace = 0;
+    }
+    nscoord rightSpace = mEmbellishData.rightSpace;
+    if (isAccent && !NS_MATHML_OPERATOR_HAS_RIGHTSPACE_ATTR(mFlags)) {
+      rightSpace = 0;
+    }
+
+    mBoundingMetrics.width += leftSpace + rightSpace;
     aDesiredStretchSize.width = mBoundingMetrics.width;
     aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
-    nscoord dx = mEmbellishData.leftSpace;
-    if (dx) {
+    if (leftSpace) {
       // adjust the offsets
-      mBoundingMetrics.leftBearing += dx;
-      mBoundingMetrics.rightBearing += dx;
-      aDesiredStretchSize.mBoundingMetrics.leftBearing += dx;
-      aDesiredStretchSize.mBoundingMetrics.rightBearing += dx;
+      mBoundingMetrics.leftBearing += leftSpace;
+      mBoundingMetrics.rightBearing += leftSpace;
+      aDesiredStretchSize.mBoundingMetrics.leftBearing += leftSpace;
+      aDesiredStretchSize.mBoundingMetrics.rightBearing += leftSpace;
 
       nsRect rect;
       if (useMathMLChar) {
         mMathMLChar.GetRect(rect);
-        mMathMLChar.SetRect(nsRect(rect.x + dx, rect.y, rect.width, rect.height));
+        mMathMLChar.SetRect(nsRect(rect.x + leftSpace, rect.y, rect.width, rect.height));
       }
       else {
         nsIFrame* childFrame = mFrames.FirstChild();
         while (childFrame) {
           childFrame->GetRect(rect);
-          childFrame->MoveTo(aPresContext, rect.x + dx, rect.y);
+          childFrame->MoveTo(aPresContext, rect.x + leftSpace, rect.y);
           childFrame->GetNextSibling(&childFrame);
         }
       }
     }
   }
 
-  if (useMathMLChar && mFrames.FirstChild()) {
+  if (mFrames.GetLength() != 1)
+    return NS_OK;
+
+  nsRect rect;
+  nsIFrame* firstChild = mFrames.FirstChild();
+  firstChild->GetRect(rect);
+  if (useMathMLChar) {
     // even though our child text frame is not doing the rendering, we make it play
     // nice with other operations that the MathMLChar doesn't handle (e.g., caret)
     // use our whole height (i.e., with the leading that isn't part of the MathMLChar)
-    nsRect rect;
     mMathMLChar.GetRect(rect);
     rect.y = 0;
-    rect.height = aDesiredStretchSize.height;
-    mFrames.FirstChild()->SetRect(aPresContext, rect);
   }
+  rect.height = aDesiredStretchSize.height;
+  firstChild->SetRect(aPresContext, rect);
   return NS_OK;
 }
 
@@ -818,9 +919,22 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+nsMathMLmoFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                      nsIFrame*       aParent)
+{
+  // retain our native direction, it only changes if our text content changes
+  nsStretchDirection direction = mEmbellishData.direction;
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+  mEmbellishData.direction = direction;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMathMLmoFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
   // this will cause us to re-sync our flags from scratch
+  // but our returned 'form' is still not final (bug 133429), it will
+  // be recomputed to its final value during the next call in Reflow()
   mEmbellishData.coreFrame = nsnull;
   ProcessOperatorData(aPresContext);
   return NS_OK;
