@@ -698,6 +698,7 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     if (NS_FAILED(rv))
       return PR_FALSE; // dispatch a binding exception
   }
+  NS_ENSURE_TRUE(result, PR_FALSE);
 
   PRUint32 snapLen;
   rv = result->GetSnapshotLength(&snapLen);
