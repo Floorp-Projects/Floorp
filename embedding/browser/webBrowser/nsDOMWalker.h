@@ -23,7 +23,7 @@
 #ifndef NSDOMWALKER_H
 #define NSDOMWALKER_H
 
-#include <nsIDOMNode.h>
+#include "nsIDOMNode.h"
 
 class nsDOMWalkerCallback
 {
