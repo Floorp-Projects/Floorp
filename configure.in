@@ -883,6 +883,7 @@ case "$target" in
     ;;
     i?86)
     	USE_ELF_DYNSTR_GC=1
+        MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1
     ;;
     mips*)
         CFLAGS="$CFLAGS -Wa,-xgot"
@@ -3655,6 +3656,30 @@ MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
 [  --enable-elf-dynstr-gc  Enable elf dynstr garbage collector (opt builds only)],
     USE_ELF_DYNSTR_GC=1,
     USE_ELF_DYNSTR_GC= )
+
+dnl ========================================================
+dnl = --enable-old-abi-compat-wrappers
+dnl ========================================================
+dnl on x86 linux, the current builds of some popular plugins (notably
+dnl flashplayer and real) expect a few builtin symbols from libgcc
+dnl which were available in some older versions of gcc.  However,
+dnl they're _NOT_ available in newer versions of gcc (eg 3.1), so if
+dnl we want those plugin to work with a gcc-3.1 built binary, we need
+dnl to provide these symbols.  MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS defaults
+dnl to true on x86 linux, and false everywhere else.
+dnl
+
+MOZ_ARG_ENABLE_BOOL(old-abi-compat-wrappers,
+[  --enable-old-abi-compat-wrappers  Support old GCC ABI symbols to ease the pain of the linux compiler change],
+    MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1,
+    MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS= )
+if test "$MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS"; then
+    AC_LANG_SAVE
+    AC_LANG_CPLUSPLUS
+    AC_CHECK_FUNCS(__builtin_vec_new __builtin_vec_delete __builtin_new __builtin_delete __pure_virtual)
+    AC_LANG_RESTORE
+    AC_DEFINE(MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS)
+fi
 
 dnl ========================================================
 dnl = --enable-prebinding
