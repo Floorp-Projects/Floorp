@@ -58,6 +58,7 @@
 #include "nsBoxObject.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsBoxLayoutState.h"
 
 #ifdef USE_IMG2
 #include "imgIRequest.h"
@@ -1154,8 +1155,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   mInnerBox = GetInnerBox();
   mPageCount = mInnerBox.height/mRowHeight;
 
-  if (mRowHeight != oldRowHeight || oldPageCount != mPageCount)
-    InvalidateScrollbar();
+  if (mRowHeight != oldRowHeight || oldPageCount != mPageCount) {
+    // Schedule a ResizeReflow that will update our page count properly.
+    nsBoxLayoutState state(mPresContext);
+    MarkDirty(state);
+  }
 
   PRInt32 rowCount = 0;
   mView->GetRowCount(&rowCount);
