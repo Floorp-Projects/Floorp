@@ -55,6 +55,9 @@ MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod)
 nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName) :
   nsXBLProtoImplMember(aName), 
   mUncompiledMethod(nsnull)
+#ifdef DEBUG
+  , mIsCompiled(PR_FALSE)
+#endif
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplMethod);
 }
@@ -67,6 +70,8 @@ nsXBLProtoImplMethod::~nsXBLProtoImplMethod()
 void
 nsXBLProtoImplMethod::Destroy(PRBool aIsCompiled)
 {
+  NS_PRECONDITION(aIsCompiled == mIsCompiled,
+                  "Incorrect aIsCompiled in nsXBLProtoImplMethod::Destroy");
   if (aIsCompiled) {
     if (mJSMethodObject)
       RemoveJSGCRoot(&mJSMethodObject);
@@ -81,6 +86,8 @@ nsXBLProtoImplMethod::Destroy(PRBool aIsCompiled)
 void 
 nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
 {
+  NS_PRECONDITION(!mIsCompiled,
+                  "Must not be compiled when accessing uncompiled method");
   if (!mUncompiledMethod) {
     mUncompiledMethod = new nsXBLUncompiledMethod();
     if (!mUncompiledMethod)
@@ -93,6 +100,8 @@ nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
 void 
 nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
 {
+  NS_PRECONDITION(!mIsCompiled,
+                  "Must not be compiled when accessing uncompiled method");
   if (!mUncompiledMethod) {
     mUncompiledMethod = new nsXBLUncompiledMethod();
     if (!mUncompiledMethod)
@@ -105,6 +114,8 @@ nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
 void
 nsXBLProtoImplMethod::SetLineNumber(PRUint32 aLineNumber)
 {
+  NS_PRECONDITION(!mIsCompiled,
+                  "Must not be compiled when accessing uncompiled method");
   if (!mUncompiledMethod) {
     mUncompiledMethod = new nsXBLUncompiledMethod();
     if (!mUncompiledMethod)
@@ -121,6 +132,8 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
                                     void* aTargetClassObject,
                                     const nsCString& aClassStr)
 {
+  NS_PRECONDITION(mIsCompiled,
+                  "Should not be installing an uncompiled method");
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSObject * scriptObject = (JSObject *) aScriptObject;
   NS_ASSERTION(scriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
@@ -147,9 +160,16 @@ nsresult
 nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
                                     void* aClassObject)
 {
-  if (!aClassObject)
-    return NS_OK; // Nothing to do.
+  NS_PRECONDITION(!mIsCompiled,
+                  "Trying to compile an already-compiled method");
+  NS_PRECONDITION(aClassObject,
+                  "Must have class object to compile");
 
+#ifdef DEBUG
+  // We have some "ok" early returns after which we consider ourselves compiled
+  mIsCompiled = PR_TRUE;
+#endif
+  
   // No parameters or body was supplied, so don't install method.
   if (!mUncompiledMethod)
     return NS_OK;
@@ -167,6 +187,12 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     mUncompiledMethod = nsnull;
     return NS_OK;
   }
+
+#ifdef DEBUG
+  // OK, now we have some error early returns that mean we're not
+  // really compiled...
+  mIsCompiled = PR_FALSE;
+#endif
 
   // We have a method.
   // Allocate an array for our arguments.
@@ -221,16 +247,25 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     // Root the compiled prototype script object.
     JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                         aContext->GetNativeContext());
-    if (!cx) return NS_ERROR_UNEXPECTED;
-    AddJSGCRoot(&mJSMethodObject, "nsXBLProtoImplMethod::mJSMethodObject");
+    rv = cx ?
+      AddJSGCRoot(&mJSMethodObject, "nsXBLProtoImplMethod::mJSMethodObject") :
+      NS_ERROR_UNEXPECTED;
+    if (NS_FAILED(rv)) {
+      mJSMethodObject = nsnull;
+    }
   }
   
-  return NS_OK;
+#ifdef DEBUG
+  mIsCompiled = NS_SUCCEEDED(rv);
+#endif
+  return rv;
 }
 
 nsresult
 nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 {
+  NS_PRECONDITION(mIsCompiled, "Can't execute uncompiled method");
+  
   if (!mJSMethodObject) {
     // Nothing to do here
     return NS_OK;

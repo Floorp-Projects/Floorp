@@ -56,6 +56,9 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
   mGetterText(nsnull),
   mSetterText(nsnull),
   mJSAttributes(JSPROP_ENUMERATE)
+#ifdef DEBUG
+  , mIsCompiled(PR_FALSE)
+#endif
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplProperty);
 
@@ -79,6 +82,8 @@ nsXBLProtoImplProperty::~nsXBLProtoImplProperty()
 void
 nsXBLProtoImplProperty::Destroy(PRBool aIsCompiled)
 {
+  NS_PRECONDITION(aIsCompiled == mIsCompiled,
+                  "Incorrect aIsCompiled in nsXBLProtoImplProperty::Destroy");
   if (aIsCompiled) {
     if (mJSGetterObject)
       RemoveJSGCRoot(&mJSGetterObject);
@@ -96,6 +101,8 @@ nsXBLProtoImplProperty::Destroy(PRBool aIsCompiled)
 void 
 nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
 {
+  NS_PRECONDITION(!mIsCompiled,
+                  "Must not be compiled when accessing getter text");
   if (!mGetterText) {
     mGetterText = new nsXBLTextWithLineNumber();
     if (!mGetterText)
@@ -108,6 +115,8 @@ nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
 void 
 nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText)
 {
+  NS_PRECONDITION(!mIsCompiled,
+                  "Must not be compiled when accessing setter text");
   if (!mSetterText) {
     mSetterText = new nsXBLTextWithLineNumber();
     if (!mSetterText)
@@ -118,7 +127,10 @@ nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText)
 }
 
 void
-nsXBLProtoImplProperty::SetGetterLineNumber(PRUint32 aLineNumber) {
+nsXBLProtoImplProperty::SetGetterLineNumber(PRUint32 aLineNumber)
+{
+  NS_PRECONDITION(!mIsCompiled,
+                  "Must not be compiled when accessing getter text");
   if (!mGetterText) {
     mGetterText = new nsXBLTextWithLineNumber();
     if (!mGetterText)
@@ -129,7 +141,10 @@ nsXBLProtoImplProperty::SetGetterLineNumber(PRUint32 aLineNumber) {
 }
 
 void
-nsXBLProtoImplProperty::SetSetterLineNumber(PRUint32 aLineNumber) {
+nsXBLProtoImplProperty::SetSetterLineNumber(PRUint32 aLineNumber)
+{
+  NS_PRECONDITION(!mIsCompiled,
+                  "Must not be compiled when accessing setter text");
   if (!mSetterText) {
     mSetterText = new nsXBLTextWithLineNumber();
     if (!mSetterText)
@@ -148,6 +163,8 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
                                       void* aTargetClassObject,
                                       const nsCString& aClassStr)
 {
+  NS_PRECONDITION(mIsCompiled,
+                  "Should not be installing an uncompiled property");
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSObject * scriptObject = (JSObject *) aScriptObject;
   NS_ASSERTION(scriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
@@ -183,8 +200,10 @@ nsresult
 nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
                                       void* aClassObject)
 {
-  if (!aClassObject)
-    return NS_OK; // Nothing to do.
+  NS_PRECONDITION(!mIsCompiled,
+                  "Trying to compile an already-compiled property");
+  NS_PRECONDITION(aClassObject,
+                  "Must have class object to compile");
 
   if (!mName)
     return NS_ERROR_FAILURE; // Without a valid name, we can't install the member.
@@ -246,7 +265,15 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     mJSGetterObject = nsnull;
   }
   
-  nsresult rvG=rv;
+  if (NS_FAILED(rv)) {
+    // We failed to compile our getter.  So either we've set it to null, or
+    // it's still set to the text object.  In either case, it's safe to return
+    // the error here, since then we'll be cleaned up as uncompiled and that
+    // will be ok.  Going on and compiling the setter and _then_ returning an
+    // error, on the other hand, will try to clean up a compiled setter as
+    // uncompiled and crash.
+    return rv;
+  }
 
   PRBool deletedSetter = PR_FALSE;
   if (mSetterText) {
@@ -292,6 +319,10 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     delete mSetterText;
     mJSSetterObject = nsnull;
   }
+
+#ifdef DEBUG
+  mIsCompiled = NS_SUCCEEDED(rv);
+#endif
   
-  return NS_SUCCEEDED(rv) ? rvG : rv;
+  return rv;
 }

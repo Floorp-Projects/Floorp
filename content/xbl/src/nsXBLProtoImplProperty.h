@@ -88,6 +88,10 @@ protected:
   };
   
   uintN mJSAttributes;          // A flag for all our JS properties (getter/setter/readonly/shared/enum)
+
+#ifdef DEBUG
+  PRBool mIsCompiled;
+#endif
 };
 
 #endif // nsXBLProtoImplProperty_h__
