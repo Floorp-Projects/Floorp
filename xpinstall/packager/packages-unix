@@ -54,7 +54,6 @@ bin/regExport
 bin/regxpcom
 bin/splash.xpm
 
-bin/components/appcomps.xpt
 bin/components/libappcomps.so
 bin/components/bookmarks.xpt
 bin/components/directory.xpt
@@ -74,7 +73,6 @@ bin/components/intl.xpt
 bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/libnsappshell.so
-bin/components/libappcomps.so
 bin/components/libcaps.so
 bin/components/libchardet.so
 bin/components/libchrome.so
@@ -188,6 +186,7 @@ bin/components/xpcom_threads.xpt
 bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
+bin/components/libxremote_client.so
 
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
