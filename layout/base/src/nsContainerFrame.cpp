@@ -269,7 +269,23 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
       nsRect kidRect;
       kid->GetRect(kidRect);
       nsRect damageArea;
+#ifdef NS_DEBUG
+      PRBool overlap = PR_FALSE;
+      if (nsIFrame::GetShowFrameBorders() &&
+          ((kidRect.width == 0) || (kidRect.height == 0))) {
+        nscoord xmost = aDirtyRect.XMost();
+        nscoord ymost = aDirtyRect.YMost();
+        if ((aDirtyRect.x <= kidRect.x) && (kidRect.x < xmost) &&
+            (aDirtyRect.y <= kidRect.y) && (kidRect.y < ymost)) {
+          overlap = PR_TRUE;
+        }
+      }
+      else {
+        overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+      }
+#else
       PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+#endif
       if (overlap) {
         // Translate damage area into kid's coordinate system
         nsRect kidDamageArea(damageArea.x - kidRect.x,
@@ -278,7 +294,9 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
         aRenderingContext.PushState();
         aRenderingContext.Translate(kidRect.x, kidRect.y);
         kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
-        if (nsIFrame::GetShowFrameBorders()) {
+#ifdef NS_DEBUG
+        if (nsIFrame::GetShowFrameBorders() &&
+            (0 != kidRect.width) && (0 != kidRect.height)) {
           nsIView* view;
           GetView(view);
           if (nsnull != view) {
@@ -290,6 +308,7 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
           }
           aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
         }
+#endif
         aRenderingContext.PopState();
       }
     }
