@@ -299,7 +299,6 @@ NS_IMPL_ADDREF(ns4xPluginInstance);
 NS_IMPL_RELEASE(ns4xPluginInstance);
 
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
-static NS_DEFINE_IID(kIEventHandlerIID, NS_IEVENTHANDLER_IID); 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -311,13 +310,6 @@ NS_IMETHODIMP ns4xPluginInstance :: QueryInterface(const nsIID& iid, void** inst
     if (iid.Equals(kIPluginInstanceIID))
     {
         *instance = (void *)(nsIPluginInstance *)this;
-        AddRef();
-        return NS_OK;
-    }
-
-    if (iid.Equals(kIEventHandlerIID))
-    {
-        *instance = (void *)(nsIEventHandler *)this;
         AddRef();
         return NS_OK;
     }

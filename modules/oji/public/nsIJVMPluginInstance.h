@@ -29,12 +29,12 @@
 #ifndef nsIJVMPluginInstance_h___
 #define nsIJVMPluginInstance_h___
 
-#include "nsIPluginInstance.h"
+#include "nsISupports.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Java VM Plugin Instance Interface
 
-class nsIJVMPluginInstance : public nsIPluginInstance {
+class nsIJVMPluginInstance : public nsISupports {
 public:
 
     // This method is called when LiveConnect wants to find the Java object

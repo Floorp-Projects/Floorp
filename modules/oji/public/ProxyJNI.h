@@ -28,12 +28,12 @@
 #endif
 
 class nsIJVMPlugin;
-class nsISecureJNI2;
+class nsISecureEnv;
 
 /**
  * Creates a proxy JNIEnv using the given JVM plugin, and optional native JNIEnv*.
  */
-JNIEnv* CreateProxyJNI(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* secureEnv = NULL);
+JNIEnv* CreateProxyJNI(nsIJVMPlugin* jvmPlugin, nsISecureEnv* secureEnv = NULL);
 
 /**
  * Deletes the proxy JNIEnv. Releases the connection
@@ -45,6 +45,6 @@ void DeleteProxyJNI(JNIEnv* proxyEnv);
 /**
  * Returns the secure env associated with the given proxy env.
  */
-nsISecureJNI2* GetSecureEnv(JNIEnv* proxyEnv);
+nsISecureEnv* GetSecureEnv(JNIEnv* proxyEnv);
 
 #endif /* PROXY_JNI_H */

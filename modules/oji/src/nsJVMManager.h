@@ -56,7 +56,7 @@ public:
      * the same proxy JNI.
      */
 	NS_IMETHOD
-	CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv);
+	CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv);
 	
 	/**
 	 * Returns the proxy JNI associated with the current thread, or NULL if no

@@ -26,6 +26,7 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsIStreamListener.h"
 
+class nsIPlugin;
 class nsIURL;
 
 #define NS_IPLUGINHOST_IID \
@@ -44,6 +45,9 @@ public:
 
   NS_IMETHOD
   LoadPlugins(void) = 0;
+  
+  NS_IMETHOD
+  GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin) = 0;
 
   NS_IMETHOD
   InstantiateEmbededPlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner) = 0;

@@ -35,7 +35,7 @@
 #define nsIPluginInstance_h___
 
 #include "nsplugindefs.h"
-#include "nsIEventHandler.h"
+#include "nsISupports.h"
 
 #ifdef NEW_PLUGIN_STREAM_API
 #include "nsIPluginStreamListener.h"
@@ -61,7 +61,7 @@
  * Destroy -- called once, before the plugin instance peer is to be 
  * destroyed. This method is used to destroy the plugin instance.
  */
-class nsIPluginInstance : public nsIEventHandler {
+class nsIPluginInstance : public nsISupports {
 public:
 
     /**
@@ -198,6 +198,25 @@ public:
     NS_IMETHOD
     GetValue(nsPluginInstanceVariable variable, void *value) = 0;
 
+    /**
+     * Handles an event. An nsIEventHandler can also get registered with with
+     * nsIPluginManager2::RegisterWindow and will be called whenever an event
+     * comes in for that window.
+     *
+     * Note that for Unix and Mac the nsPluginEvent structure is different
+     * from the old NPEvent structure -- it's no longer the native event
+     * record, but is instead a struct. This was done for future extensibility,
+     * and so that the Mac could receive the window argument too. For Windows
+     * and OS2, it's always been a struct, so there's no change for them.
+     *
+     * (Corresponds to NPP_HandleEvent.)
+     *
+     * @param event - the event to be handled
+     * @param handled - set to PR_TRUE if event was handled
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    HandleEvent(nsPluginEvent* event, PRBool* handled) = 0;
 };
 
 #define NS_IPLUGININSTANCE_IID                       \

@@ -33,9 +33,9 @@ EXPORTS	=			  \
 	nsIJVMWindow.h  	  \
 	nsISymantecDebugManager.h \
 	nsISymantecDebugger.h  \
- nsISecureJNI2.h \
- ProxyJNI.h \
- nsIThreadManager.h
+	nsISecureEnv.h \
+	ProxyJNI.h \
+	nsIThreadManager.h
 
 include <$(DEPTH)/config/rules.mak>
 

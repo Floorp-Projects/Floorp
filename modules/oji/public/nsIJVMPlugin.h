@@ -29,11 +29,11 @@
 #ifndef nsIJVMPlugin_h___
 #define nsIJVMPlugin_h___
 
-#include "nsIPlugin.h"
+#include "nsISupports.h"
 #include "nsIPrincipal.h"
 #include "jni.h"
 
-class nsISecureJNI2;
+class nsISecureEnv;
 
 /**
  * This MIME type is what should be used to signify a Java VM plugin. 
@@ -45,54 +45,41 @@ class nsISecureJNI2;
 // This interface defines additional entry points that a plugin developer needs
 // to implement in order to implement a Java virtual machine plugin. 
 
-class nsIJVMPlugin : public nsIPlugin {
+class nsIJVMPlugin : public nsISupports {
 public:
+	// Causes the JVM to append a new directory to its classpath.
+	// If the JVM doesn't support this operation, an error is returned.
+	NS_IMETHOD
+	AddToClassPath(const char* dirPath) = 0;
 
-    // Causes the JVM to append a new directory to its classpath.
-    // If the JVM doesn't support this operation, an error is returned.
-    NS_IMETHOD
-    AddToClassPath(const char* dirPath) = 0;
+	// Causes the JVM to remove a directory from its classpath.
+	// If the JVM doesn't support this operation, an error is returned.
+	NS_IMETHOD
+	RemoveFromClassPath(const char* dirPath) = 0;
 
-    // Causes the JVM to remove a directory from its classpath.
-    // If the JVM doesn't support this operation, an error is returned.
-    NS_IMETHOD
-    RemoveFromClassPath(const char* dirPath) = 0;
+	// Returns the current classpath in use by the JVM.
+	NS_IMETHOD
+	GetClassPath(const char* *result) = 0;
 
-    // Returns the current classpath in use by the JVM.
-    NS_IMETHOD
-    GetClassPath(const char* *result) = 0;
+	NS_IMETHOD
+	GetJavaWrapper(JNIEnv* jenv, jint obj, jobject *jobj) = 0;
 
-    NS_IMETHOD
-    GetJavaWrapper(JNIEnv* jenv, jint obj, jobject *jobj) = 0;
+	/**
+	 * This creates a new secure communication channel with Java. The second parameter,
+	 * nativeEnv, if non-NULL, will be the actual thread for Java communication.
+	 * Otherwise, a new thread should be created.
+	 * @param	proxyEnv		the env to be used by all clients on the browser side
+	 * @return	outSecureEnv	the secure environment used by the proxyEnv
+	 */
+	NS_IMETHOD
+	CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv) = 0;
 
-    // Find or create a JNIEnv for the current thread.
-    // Returns NULL if an error occurs.
-    NS_IMETHOD_(nsrefcnt)
-    GetJNIEnv(JNIEnv* *result) = 0;
-
-    // This method must be called when the caller is done using the JNIEnv.
-    // This decrements a refcount associated with it may free it.
-    NS_IMETHOD_(nsrefcnt)
-    ReleaseJNIEnv(JNIEnv* env) = 0;
-
-	   /**
-	    * This creates a new secure communication channel with Java. The second parameter,
-	    * nativeEnv, if non-NULL, will be the actual thread for Java communication.
-	    * Otherwise, a new thread should be created.
-	    * @param	proxyEnv		the env to be used by all clients on the browser side
-	    * @return	outSecureEnv	the secure environment used by the proxyEnv
-	    */
-	   NS_IMETHOD
-	   CreateSecureEnv(JNIEnv* proxyEnv, nsISecureJNI2* *outSecureEnv) = 0;
-
-	   /**
-	    * Gives time to the JVM from the main event loop of the browser. This is
-	    * necessary when there aren't any plugin instances around, but Java threads exist.
-	    */
-#ifdef XP_MAC
-	   NS_IMETHOD
-	   SpendTime(PRUint32 timeMillis) = 0;
-#endif
+	/**
+	 * Gives time to the JVM from the main event loop of the browser. This is
+	 * necessary when there aren't any plugin instances around, but Java threads exist.
+	 */
+	NS_IMETHOD
+	SpendTime(PRUint32 timeMillis) = 0;
 };
 
 #define NS_IJVMPLUGIN_IID                            \

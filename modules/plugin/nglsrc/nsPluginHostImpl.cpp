@@ -48,6 +48,11 @@
 #include "winbase.h"
 #endif
 
+#ifdef XP_MAC
+#include "nsFileSpec.h"
+#include "nsPluginsDir.h"
+#endif
+
 //uncomment this to use netlib to determine what the
 //user agent string is. we really *want* to do this,
 //can't today since netlib returns 4.05, but this
@@ -1511,6 +1516,9 @@ NS_IMETHODIMP nsPluginHostImpl :: Init(void)
     NS_RELEASE(object);
   }
 
+  // eagerly load them as a test.
+  LoadPlugins();
+
   return rv;
 }
 
@@ -1810,6 +1818,98 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
     return NS_ERROR_FAILURE;
   }
 }
+
+NS_IMETHODIMP nsPluginHostImpl :: GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
+{
+	*aPlugin = NULL;
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#ifdef XP_MAC
+
+#include <Processes.h>
+#include <Folders.h>
+
+static nsresult getApplicationDir(nsNativeFileSpec& outAppDir)
+{
+	// Use the process manager to get the application's FSSpec,
+	// then construct an nsNativeFileSpec that encapsulates it.
+	FSSpec spec;
+	ProcessInfoRec info;
+	info.processInfoLength = sizeof(info);
+	info.processName = NULL;
+	info.processAppSpec = &spec;
+	ProcessSerialNumber psn = { 0, kCurrentProcess };
+	OSErr result = GetProcessInformation(&psn, &info);
+	nsNativeFileSpec appSpec(spec);
+	appSpec.GetParent(outAppDir);
+	return NS_OK;
+}
+
+nsPluginsDir::nsPluginsDir()
+{
+	// Use the folder manager to get location of Extensions folder, and
+	// build an FSSpec for "Netscape Plugins" within it.
+	FSSpec& pluginsDir = *this;
+	OSErr result = FindFolder(kOnSystemDisk,
+								 kExtensionFolderType,
+								 kDontCreateFolder,
+								&pluginsDir.vRefNum,
+								&pluginsDir.parID);
+	if (result == noErr) {
+		SetLeafName("Netscape Plugins");
+	}
+}
+
+nsPluginsDir::~nsPluginsDir() {}
+
+bool nsPluginsDir::IsPluginFile(const nsNativeFileSpec& fileSpec)
+{
+	return true;
+}
+
+// excuse me while I try to rewrite this using XP code...
+
+NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
+{
+	do {
+		// 1. scan the plugins directory (where is it?) for eligible plugin libraries.
+#if 0
+		nsNativeFileSpec applicationDir;
+		if (getApplicationDir(applicationDir) != NS_OK)
+			break;
+		
+		nsPluginsDir pluginsDir = applicationDir + "plugins";
+		if (! pluginsDir.Valid())
+			break;
+#else
+		nsPluginsDir pluginsDir;
+		if (! pluginsDir.Valid())
+			break;
+#endif
+
+		for (nsDirectoryIterator iter(pluginsDir); iter; iter++) {
+			const nsNativeFileSpec& pluginFile = iter;
+			// see if the file is in fact a library.
+			PRLibrary* pluginLibrary = LoadPluginLibrary(pluginFile);
+			if (pluginLibrary != NULL) {
+				// create a tag describing this plugin.
+				nsPluginTag* pluginTag = new nsPluginTag();
+				pluginTag->mNext = mPlugins;
+				mPlugins = pluginTag;
+				// GetLeafName() returns a copy allocated with new.
+				pluginTag->mName = pluginFile.GetLeafName();
+			}
+		}
+
+		mPluginsLoaded = PR_TRUE;
+		return NS_OK;
+	} while (0);
+	
+	return NS_ERROR_FAILURE;
+}
+
+#else
 
 NS_IMETHODIMP nsPluginHostImpl :: LoadPlugins(void)
 {
@@ -2169,8 +2269,29 @@ printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS
   return NS_OK;
 }
 
+#endif /* !XP_MAC */
 
 // private methods
+
+PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const nsNativeFileSpec &pluginSpec)
+{
+	PRLibrary* plugin = NULL;
+
+#ifdef XP_PC
+	plugin = PR_LoadLibrary((const char*)pluginSpec);
+#endif
+
+#ifdef XP_MAC
+	char* pluginName = pluginSpec.GetLeafName();
+	if (pluginName != NULL) {
+		plugin = PR_LoadLibrary(pluginName);
+		delete[] pluginName;
+	}
+#endif
+
+	return plugin;
+}
+
 
 PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const char* pluginPath, const char* path)
 {
@@ -2199,6 +2320,7 @@ PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const char* pluginPath, const cha
 	return NULL;
 #endif
 }
+
 
 /* Called by GetURL and PostURL */
 
