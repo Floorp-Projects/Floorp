@@ -40,11 +40,11 @@ endif
 ifdef BUILD_STATIC_LIBS
 EXTRA_DSO_LDOPTS = -L$(DEPTH)/dist/lib/components
 EXTRA_DSO_LIBS = $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
+_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 else
 EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
 endif
 
-_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
