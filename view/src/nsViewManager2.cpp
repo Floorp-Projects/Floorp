@@ -42,10 +42,11 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 //#define NO_DOUBLE_BUFFER
 
 // display list flags
-#define RENDER_VIEW		0x0000
-#define VIEW_INCLUDED	0x0001
-#define PUSH_CLIP		0x0002
-#define POP_CLIP		0x0004
+#define VIEW_RENDERED		0x00000001
+#define PUSH_CLIP			0x00000002
+#define POP_CLIP			0x00000004
+#define VIEW_TRANSPARENT	0x00000008
+#define VIEW_TRANSLUSCENT	0x00000010
 
 // display list elements
 struct DisplayListElement {
@@ -182,11 +183,6 @@ nsViewManager2::~nsViewManager2()
     mDisplayList = nsnull;
   }
   
-  if (nsnull != mFrontToBackList) {
-    delete mFrontToBackList;
-    mFrontToBackList = nsnull;
-  }
-
   if (nsnull != mTransRgn) {
     if (nsnull != mTransRects)
       mTransRgn->FreeRects(mTransRects);
@@ -641,16 +637,18 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 			}
 		}
 		mDisplayListCount = 0;
+		mOpaqueViewCount = 0;
 		CreateDisplayList(mRootView, &mDisplayListCount, origin.x, origin.y, aRootView, &aRect);
 		
 		// now, partition this display list into "front-to-back" bundles, and then draw each bundle
 		// with successively more and more restrictive clipping.
-		PartitionDisplayList();
+		if (mOpaqueViewCount > 0)
+			OptimizeDisplayList(aRect);
 		
 		// draw all views in the display list, from back to front.
 		for (PRInt32 i = mDisplayListCount - 1; i>= 0; --i) {
 			DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
-			if (element->mFlags & VIEW_INCLUDED) {
+			if (element->mFlags & VIEW_RENDERED) {
 				// typical case, just rendering a view.
 				RenderView(element->mView, aRC, aRect, element->mClip, aResult);
 			} else {
@@ -1928,26 +1926,30 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 		if (childCount > 0)
 			retval = AddToDisplayList(aIndex, aView, lrect, PUSH_CLIP);
 	} else if (!retval)	{
-		nsViewVisibility  vis;
+		nsViewVisibility  visibility;
 		float             opacity;
 		PRBool            overlap;
-		PRBool            trans;
+		PRBool            transparent;
 		nsRect            irect;
 
-		aView->GetVisibility(vis);
+		aView->GetVisibility(visibility);
 		aView->GetOpacity(opacity);
-		aView->HasTransparency(trans);
+		aView->HasTransparency(transparent);
 
 		if (aDamageRect)
 			overlap = irect.IntersectRect(lrect, *aDamageRect);
 		else
 			overlap = PR_TRUE;
 
-		if ((nsViewVisibility_kShow == vis) && (opacity > 0.0f) && overlap)
-		{
-			retval = AddToDisplayList(aIndex, aView, lrect, VIEW_INCLUDED);
+		if ((nsViewVisibility_kShow == visibility) && (opacity > 0.0f) && overlap) {
+			PRUint32 flags = VIEW_RENDERED;
+			if (transparent)
+				flags |= VIEW_TRANSPARENT;
+			if (opacity < 1.0f)
+				flags |= VIEW_TRANSLUSCENT;
+			retval = AddToDisplayList(aIndex, aView, lrect, flags);
 
-			if (retval || !trans && (opacity == 1.0f) && (irect == *aDamageRect))
+			if (retval || !transparent && (opacity == 1.0f) && (irect == *aDamageRect))
 				retval = PR_TRUE;
 		}
 
@@ -1982,49 +1984,46 @@ PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect 
 	element->mView = aView;
 	element->mClip = aRect;
 	element->mFlags = aFlags;
+	
+	if (aFlags == VIEW_RENDERED)
+		++mOpaqueViewCount;
 
 	return PR_FALSE;
 }
 
-nsresult nsViewManager2::PartitionDisplayList()
+nsresult nsViewManager2::OptimizeDisplayList(const nsRect& aDamageRect)
 {
-#if 0
-	nsVoidArray* frontToBackList = mFrontToBackList;
-	if (frontToBackList == nsnull) {
-		frontToBackList = mFrontToBackList = new nsVoidArray(8);
-		if (frontToBackList == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-	}
-#endif
-	
 	// walk the display list, looking for opaque views, and remove any views that are behind them and totally occluded.
 	PRInt32 count = mDisplayListCount;
+	PRInt32 opaqueCount = mOpaqueViewCount;
 	for (PRInt32 i = 0; i < count; ++i) {
 		DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
-		if (element->mFlags & VIEW_INCLUDED) {
-			nsIView* view = element->mView;
-			PRBool isTransparent;
-			view->HasTransparency(isTransparent);
-			if (!isTransparent) {
-				const nsRect& opaqueRect = element->mClip;
-				nscoord top = opaqueRect.y, left = opaqueRect.x,
-				        bottom = top + opaqueRect.height, right = left + opaqueRect.width;
+		if (element->mFlags & VIEW_RENDERED) {
+			// a view is opaque if it is neither transparent nor transluscent
+			if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUSCENT))) {
+				nsRect opaqueRect;
+				opaqueRect.IntersectRect(element->mClip, aDamageRect);
+				nscoord top = opaqueRect.y, left = opaqueRect.x;
+				nscoord bottom = top + opaqueRect.height, right = left + opaqueRect.width;
 				// search for views behind this one, that are completely obscured by it.
 				for (PRInt32 j = i + 1; j < count; ++j) {
 					DisplayListElement* lowerElement = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(j));
-					if (lowerElement->mFlags & VIEW_INCLUDED) {
-						const nsRect& lowerRect = lowerElement->mClip;
+					if (lowerElement->mFlags & VIEW_RENDERED) {
+						nsRect lowerRect;
+						lowerRect.IntersectRect(lowerElement->mClip, aDamageRect);
 						if (left <= lowerRect.x && top <= lowerRect.y &&
 						    right >= (lowerRect.x + lowerRect.width) &&
 						    bottom >= (lowerRect.y + lowerRect.height))
 						{
-							// remove this element from the display list, by clearing its VIEW_INCLUDED flag.
-							lowerElement->mFlags &= ~VIEW_INCLUDED;
+							// remove this element from the display list, by clearing its VIEW_RENDERED flag.
+							lowerElement->mFlags &= ~VIEW_RENDERED;
 						}
 					}
 				}
 			}
 		}
+		if (--opaqueCount == 0)
+			break;
 	}
 	
 	return NS_OK;
@@ -2079,8 +2078,8 @@ void nsViewManager2::ShowDisplayList(PRInt32 flatlen)
         newnestcnt++;
       }
 
-      if (flags & VIEW_INCLUDED)
-        printf("VIEW_INCLUDED ");
+      if (flags & VIEW_RENDERED)
+        printf("VIEW_RENDERED ");
 
       printf("\n");
     }
