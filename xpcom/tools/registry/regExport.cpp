@@ -106,7 +106,7 @@ int main( int argc, char *argv[] ) {
     nsCOMPtr<nsILocalFile> regFile;
     rv = NS_NewNativeLocalFile( nsDependentCString(argv[1]), PR_FALSE, getter_AddRefs(regFile) );
     if ( NS_FAILED(rv) ) {
-        printf( "Error instantiating local file for %s, rv=%x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
+        printf( "Error instantiating local file for %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
         return rv;
     }
 
