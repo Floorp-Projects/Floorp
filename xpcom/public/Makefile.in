@@ -28,6 +28,7 @@ EXPORTS		= \
 		  nsCom.h \
 		  nsAgg.h \
 		  nsDebug.h \
+		  nsEnumeratorUtils.h \
 		  nsError.h \
 		  nsHashtable.h \
 		  nsIAllocator.h \
@@ -53,6 +54,7 @@ EXPORTS		= \
 		  nsIEventQueueService.h \
 		  nsIGenericFactory.h \
 		  nsIRegistry.h \
+		  nsrootidl.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

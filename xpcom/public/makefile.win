@@ -24,6 +24,7 @@ EXPORTS =                      \
         nsAgg.h                \
         nsCom.h                \
         nsDebug.h              \
+        nsEnumeratorUtils.h    \
         nsError.h              \
         nsHashtable.h          \
         nsICollection.h        \
@@ -49,6 +50,7 @@ EXPORTS =                      \
         nsIAllocator.h         \
         nsIRegistry.h          \
         nsIGenericFactory.h    \
+        nsrootidl.h            \
         $(NULL)			
 
 MODULE = xpcom 

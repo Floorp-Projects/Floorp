@@ -53,11 +53,14 @@ C_OBJS =                              \
 
 CPPSRCS =                             \
         nsDebug.cpp                   \
+        nsEnumeratorUtils.cpp         \
         nsHashtable.cpp               \
         nsID.cpp                      \
         nsCOMPtr.cpp                  \
         nsProxyEvent.cpp              \
         nsComponentManager.cpp        \
+        nsEnumeratorUtils.cpp         \
+        nsEmptyEnumerator.cpp         \
         nsRepository.cpp              \
         nsServiceManager.cpp          \
         nsSupportsArray.cpp           \
@@ -78,6 +81,8 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsHashtable.obj               \
         .\$(OBJDIR)\nsID.obj                      \
         .\$(OBJDIR)\nsCOMPtr.obj                  \
+        .\$(OBJDIR)\nsEnumeratorUtils.obj         \
+        .\$(OBJDIR)\nsEmptyEnumerator.obj         \
         .\$(OBJDIR)\nsProxyEvent.obj              \
         .\$(OBJDIR)\nsComponentManager.obj        \
         .\$(OBJDIR)\nsRepository.obj              \
