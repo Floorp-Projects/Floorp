@@ -47,6 +47,7 @@
 
 #include "nsVCard.h"
 #include "nsVCardObj.h"
+#include "nsCRT.h"
 
 // String bundles...
 nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
@@ -1886,7 +1887,6 @@ char *
 VCardGetStringByID(PRInt32 aMsgId)
 {
   char          *tempString = nsnull;
-	char          *resultString = "???";
 	nsresult res = NS_OK;
 
 	if (!stringBundle)
@@ -1910,7 +1910,7 @@ VCardGetStringByID(PRInt32 aMsgId)
 		res = stringBundle->GetStringFromID(aMsgId, &ptrv);
 
 		if (NS_FAILED(res)) 
-      return resultString;
+      return nsCRT::strdup("???");
 		else
     {
       nsAutoString v("");
@@ -1920,7 +1920,7 @@ VCardGetStringByID(PRInt32 aMsgId)
 	}
 
   if (!tempString)
-    return resultString;
+    return nsCRT::strdup("???");
   else
     return tempString;
 }
