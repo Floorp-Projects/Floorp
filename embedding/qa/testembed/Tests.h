@@ -152,6 +152,7 @@ protected:
 	afx_msg void OnInterfacesNsicmdparams();
 	afx_msg void OnInterfacesRunalltestcases();
 	afx_msg void OnInterfacesNsichannel();
+	afx_msg void OnInterfacesNsihttpchannel();
 
 	//}}AFX_MSG
 
