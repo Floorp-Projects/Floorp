@@ -1320,6 +1320,15 @@ function ComposeStartup(recycled, aParams)
       }
     }
   }
+
+  // finally, see if we need to auto open the address sidebar. 
+  var sideBarBox = document.getElementById('sidebar-box');
+  if (sideBarBox.getAttribute("sidebarVisible") == "true")
+  {
+    // if we aren't supposed to have the side bar hidden, make sure it is visible
+    if (document.getElementById("sidebar").getAttribute("src") == "")
+      setTimeout(toggleAddressPicker, 0);   // do this on a delay so we don't hurt perf. on bringing up a new compose window
+  }
 }
 
 // The new, nice, simple way of getting notified when a new editor has been created
@@ -2890,12 +2899,15 @@ function toggleAddressPicker()
     if (sidebarUrl == "")
       sidebar.setAttribute("src", "chrome://messenger/content/addressbook/abContactsPanel.xul");
     menuItem.setAttribute("checked","true");
+
+    sidebarBox.setAttribute("sidebarVisible", "true");
   }
   else
   {
     sidebarBox.hidden = true;
     sidebarSplitter.hidden = true;
     menuItem.setAttribute("checked","false");
+    sidebarBox.setAttribute("sidebarVisible", "false");
   }
 
 }
