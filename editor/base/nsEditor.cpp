@@ -108,12 +108,10 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
-#include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
 static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
 static NS_DEFINE_CID(kEditorCID,            NS_EDITOR_CID);
@@ -1298,9 +1296,11 @@ NS_IMETHODIMP nsEditor::Paste()
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
                                           nsITransferable::GetIID(), 
                                           (void**) getter_AddRefs(trans));
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED(rv))
+  {
     // Get the nsITransferable interface for getting the data from the clipboard
-    if (trans) {
+    if (trans)
+    {
       // Create the desired DataFlavor for the type of data we want to get out of the transferable
       nsAutoString htmlFlavor(kHTMLMime);
       nsAutoString textFlavor(kTextMime);
@@ -1311,23 +1311,34 @@ NS_IMETHODIMP nsEditor::Paste()
       trans->AddDataFlavor(&imageFlavor);
 
       // Get the Data from the clipboard
-      if (NS_OK == clipboard->GetData(trans)) {
+      if (NS_SUCCEEDED(clipboard->GetData(trans)))
+      {
         nsAutoString flavor;
         char *       data;
         PRUint32     len;
-        if (NS_OK == trans->GetAnyTransferData(&flavor, (void **)&data, &len)) {
+        if (NS_SUCCEEDED(trans->GetAnyTransferData(&flavor, (void **)&data, &len)))
+        {
+#ifdef DEBUG
           printf("Got flavor [%s]\n", flavor.ToNewCString());
-          if (flavor.Equals(htmlFlavor)) {
-            if (data && len > 0) { // stuffToPaste is ready for insertion into the content
+#endif
+          if (flavor.Equals(htmlFlavor))
+          {
+            if (data && len > 0) // stuffToPaste is ready for insertion into the content
+            {
               stuffToPaste.SetString(data, len);
               rv = InsertText(stuffToPaste);
             }
-          } else if (flavor.Equals(textFlavor)) {
-            if (data && len > 0) { // stuffToPaste is ready for insertion into the content
+          }
+          else if (flavor.Equals(textFlavor))
+          {
+            if (data && len > 0) // stuffToPaste is ready for insertion into the content
+            {
               stuffToPaste.SetString(data, len);
               rv = InsertText(stuffToPaste);
             }
-          } else if (flavor.Equals(imageFlavor)) {
+          }
+          else if (flavor.Equals(imageFlavor))
+          {
             image = (nsIImage *)data;
             // Insert Image code here
             NS_RELEASE(image);
