@@ -304,7 +304,8 @@ NS_IMETHODIMP mozMySpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggesti
     rv = mSMgr.suggest(&slst, nsDependentString(tmpPtr[i]), &ccount); 
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, tmpPtr);
-  rv=mConverter->FromRootForm(aWord, (const PRUnichar **)slst, ccount, aSuggestions, aSuggestionCount);
+  if (ccount)
+    rv=mConverter->FromRootForm(aWord, (const PRUnichar **)slst, ccount, aSuggestions, aSuggestionCount);
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(ccount, slst);
   return rv;
 
