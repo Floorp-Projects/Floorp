@@ -16,20 +16,12 @@
  * Reserved.
  */
 #include "nsAbsoluteFrame.h"
-#include "nsIContentDelegate.h"
-#include "nsIPresContext.h"
-#include "nsIPtr.h"
-#include "nsIScrollableView.h"
-#include "nsIStyleContext.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsBodyFrame.h"
+#include "nsIAbsoluteItems.h"
+#include "nsIContentDelegate.h"
+#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsViewsCID.h"
-
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-
-NS_DEF_PTR(nsIStyleContext);
+#include "nsHTMLIIDs.h"
 
 nsresult
 nsAbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
@@ -49,7 +41,7 @@ nsAbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
 }
 
 nsAbsoluteFrame::nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent)
+  : nsFrame(aContent, aParent)
 {
 }
 
@@ -57,198 +49,54 @@ nsAbsoluteFrame::~nsAbsoluteFrame()
 {
 }
 
-NS_IMETHODIMP
-nsAbsoluteFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
+                                  nsReflowMetrics&     aDesiredSize,
+                                  const nsReflowState& aReflowState,
+                                  nsReflowStatus&      aStatus)
 {
-  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
-  return NS_OK;
-}
+  // Have we created the absolutely positioned item yet?
+  if (nsnull == mFrame) {
+    // If the content object is a container then wrap it in a body pseudo-frame
+    if (mContent->CanContainChildren()) {
+      nsBodyFrame::NewFrame(&mFrame, mContent, this);
 
-nsIView* nsAbsoluteFrame::CreateView(nsIView*               aContainingView,
-                                     const nsRect&          aRect,
-                                     const nsStylePosition* aPosition,
-                                     const nsStyleDisplay*  aDisplay) const
-{
-  nsIView*  view;
+      // Use our style context for the pseudo-frame
+      mFrame->SetStyleContext(aPresContext, mStyleContext);
 
-  static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-  static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
-  nsresult result = NSRepository::CreateInstance(kViewCID, 
-                                                 nsnull, 
-                                                 kIViewIID, 
-                                                 (void **)&view);
-  if (NS_OK == result) {
-    nsIViewManager* viewManager = aContainingView->GetViewManager();
-
-    // Initialize the view
-    NS_ASSERTION(nsnull != viewManager, "null view manager");
-
-    // See if the containing view is a scroll view
-    nsIScrollableView*  scrollView = nsnull;
-    nsresult            result;
-    nsViewClip          clip = {0, 0, 0, 0};
-    PRUint8             clipType = (aDisplay->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
-    nsViewClip*         pClip = nsnull;
-
-    // Is there a clip rect specified?
-    if (NS_STYLE_CLIP_RECT == clipType) {
-      if ((NS_STYLE_CLIP_LEFT_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mLeft = aDisplay->mClip.left;
-      }
-      if ((NS_STYLE_CLIP_RIGHT_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mRight = aDisplay->mClip.right;
-      }
-      if ((NS_STYLE_CLIP_TOP_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mTop = aDisplay->mClip.top;
-      }
-      if ((NS_STYLE_CLIP_BOTTOM_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mBottom = aDisplay->mClip.bottom;
-      }
-      pClip = &clip;
-    }
-    else if (NS_STYLE_CLIP_INHERIT == clipType) {
-      // XXX need to handle clip inherit (get from parent style context)
-      NS_NOTYETIMPLEMENTED("clip inherit");
-    }
-
-    PRInt32 zIndex = 0;
-    if (aPosition->mZIndex.GetUnit() == eStyleUnit_Integer) {
-      zIndex = aPosition->mZIndex.GetIntValue();
-    } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Auto) {
-      zIndex = 0;
-    } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Inherit) {
-      // XXX need to handle z-index "inherit"
-      NS_NOTYETIMPLEMENTED("zIndex: inherit");
-    }
-     
-    result = aContainingView->QueryInterface(kIScrollableViewIID, (void**)&scrollView);
-    if (NS_OK == result) {
-      nsIView* scrolledView = scrollView->GetScrolledView();
-
-      view->Init(viewManager, aRect, scrolledView, nsnull, nsnull, nsnull,
-        zIndex, pClip); 
-      viewManager->InsertChild(scrolledView, view, 0);
-      NS_RELEASE(scrolledView);
-      NS_RELEASE(scrollView);
     } else {
-      view->Init(viewManager, aRect, aContainingView, nsnull, nsnull, nsnull,
-        zIndex, pClip);
-      viewManager->InsertChild(aContainingView, view, 0);
-    }
+      // Ask the content delegate to create the frame
+      nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
   
-    NS_RELEASE(viewManager);
+      nsresult rv = delegate->CreateFrame(aPresContext, mContent, this,
+                                          mStyleContext, mFrame);
+      NS_RELEASE(delegate);
+      if (NS_OK != rv) {
+        return rv;
+      }
+    }
+
+    // Get the containing block
+    nsIFrame* containingBlock = GetContainingBlock();
+    NS_ASSERTION(nsnull != containingBlock, "no initial containing block");
+
+    // Query for its nsIAbsoluteItems interface
+    nsIAbsoluteItems* absoluteItemContainer;
+    containingBlock->QueryInterface(kIAbsoluteItemsIID, (void**)&absoluteItemContainer);
+
+    // Notify it that there's a new absolutely positioned frame, passing it the
+    // anchor frame
+    NS_ASSERTION(nsnull != absoluteItemContainer, "no nsIAbsoluteItems support");
+    absoluteItemContainer->AddAbsoluteItem(this);
   }
 
-  return view;
-}
-
-// Returns the offset from this frame to aFrameTo
-void nsAbsoluteFrame::GetOffsetFromFrame(nsIFrame* aFrameTo, nsPoint& aOffset) const
-{
-  nsIFrame* frame = (nsIFrame*)this;
-
-  aOffset.MoveTo(0, 0);
-  do {
-    nsPoint origin;
-
-    frame->GetOrigin(origin);
-    aOffset += origin;
-    frame->GetGeometricParent(frame);
-  } while ((nsnull != frame) && (frame != aFrameTo));
-}
-
-void nsAbsoluteFrame::ComputeViewBounds(nsIFrame*              aContainingBlock,
-                                        const nsStylePosition* aPosition,
-                                        nsRect&                aRect) const
-{
-  nsRect    containingRect;
-
-  // XXX We should be using the inner rect, and not just the bounding rect.
-  // Because of the way the frame sizing protocol works (it's top-down, and
-  // the size of a container is set after reflowing its children), get the
-  // rect from the containing block's view
-  nsIView*  containingView;
-  aContainingBlock->GetView(containingView);
-  containingView->GetBounds(containingRect);
-  NS_RELEASE(containingView);
-  containingRect.x = containingRect.y = 0;
-
-  // Compute the offset and size of the view based on the position properties
-  // and the inner rect of the containing block
-  const nsStylePosition*  position = (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-
-  // If either the left or top are 'auto' then get the offset of our frame from
-  // the containing block
-  nsPoint offset;  // offset from containing block
-  if ((eStyleUnit_Auto == position->mLeftOffset.GetUnit()) ||
-      (eStyleUnit_Auto == position->mTopOffset.GetUnit())) {
-    GetOffsetFromFrame(aContainingBlock, offset);
-  }
-
-  // x-offset
-  if (eStyleUnit_Auto == position->mLeftOffset.GetUnit()) {
-    // Use the current x-offset of our frame translated into the coordinate space
-    // of the containing block
-    aRect.x = offset.x;
-  } else if (eStyleUnit_Coord == position->mLeftOffset.GetUnit()) {
-    aRect.x = position->mLeftOffset.GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == position->mLeftOffset.GetUnit(),
-                 "unexpected offset type");
-    // Percentage values refer to the width of the containing block
-    aRect.x = containingRect.x + 
-              (nscoord)((float)containingRect.width *
-                        position->mLeftOffset.GetPercentValue());
-  }
-
-  // y-offset
-  if (eStyleUnit_Auto == position->mTopOffset.GetUnit()) {
-    // Use the current y-offset of our frame translated into the coordinate space
-    // of the containing block
-    aRect.y = offset.y;
-  } else if (eStyleUnit_Coord == position->mTopOffset.GetUnit()) {
-    aRect.y = position->mTopOffset.GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == position->mTopOffset.GetUnit(),
-                 "unexpected offset type");
-    // Percentage values refer to the height of the containing block
-    aRect.y = containingRect.y + 
-              (nscoord)((float)containingRect.height *
-                        position->mTopOffset.GetPercentValue());
-  }
-
-  // width
-  if (eStyleUnit_Auto == position->mWidth.GetUnit()) {
-    // Use the right-edge of the containing block
-    aRect.width = containingRect.width - aRect.x;
-  } else if (eStyleUnit_Coord == position->mWidth.GetUnit()) {
-    aRect.width = position->mWidth.GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == position->mWidth.GetUnit(),
-                 "unexpected width type");
-    aRect.width = (nscoord)((float)containingRect.width * 
-                            position->mWidth.GetPercentValue());
-  }
-
-  // height
-  if (eStyleUnit_Auto == position->mHeight.GetUnit()) {
-    // Allow it to be as high as it wants
-    aRect.height = NS_UNCONSTRAINEDSIZE;
-  } else if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
-    aRect.height = position->mHeight.GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == position->mHeight.GetUnit(),
-                 "unexpected height type");
-    aRect.height = (nscoord)((float)containingRect.height * 
-                             position->mHeight.GetPercentValue());
-  }
+  // Return our desired size as (0, 0)
+  return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
 nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
 {
   // Look for a containing frame that is absolutely positioned. If we don't
-  // find one then use the initial containg block which is the root frame
+  // find one then use the initial containg block which is the BODY
   nsIFrame* lastFrame = (nsIFrame*)this;
   nsIFrame* result;
 
@@ -269,89 +117,22 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
   }
 
   if (nsnull == result) {
-    result = lastFrame;
+    // Walk back down the tree until we find a frame that supports nsIAnchoredItems
+    // XXX This is pretty yucky, but there isn't currently a better way to do
+    // this...
+    lastFrame->FirstChild(result);
+
+    while (nsnull != result) {
+      nsIAbsoluteItems* interface;
+      if (NS_OK == result->QueryInterface(kIAbsoluteItemsIID, (void**)&interface)) {
+        break;
+      }
+
+      result->FirstChild(result);      
+    }
   }
 
   return result;
-}
-
-NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
-                                  nsReflowMetrics&     aDesiredSize,
-                                  const nsReflowState& aReflowState,
-                                  nsReflowStatus&      aStatus)
-{
-  // Have we created the absolutely positioned item yet?
-  if (nsnull == mFirstChild) {
-    // If the content object is a container then wrap it in a body pseudo-frame
-    if (mContent->CanContainChildren()) {
-      nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
-
-      // Use our style context for the pseudo-frame
-      mFirstChild->SetStyleContext(aPresContext, mStyleContext);
-
-    } else {
-      // Create the absolutely positioned item as a pseudo-frame child. We'll
-      // also create a view
-      nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
-  
-      nsresult rv = delegate->CreateFrame(aPresContext, mContent, this,
-                                          mStyleContext, mFirstChild);
-      NS_RELEASE(delegate);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-
-    // Get the containing block, and its associated view
-    nsIFrame* containingBlock = GetContainingBlock();
-    
-    // Use the position properties to determine the offset and size
-    const nsStylePosition*  position = (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-    nsRect                  rect;
-
-    ComputeViewBounds(containingBlock, position, rect);
-
-    // Create a view for the frame
-    const nsStyleDisplay*  display = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-    nsIView*         containingView;
-    containingBlock->GetView(containingView);
-    nsIView*         view = CreateView(containingView, rect, position, display);
-    NS_RELEASE(containingView);
-
-    mFirstChild->SetView(view);  
-    NS_RELEASE(view);
-
-    // Resize reflow the absolutely positioned element
-    nsSize  availSize(rect.width, rect.height);
-
-    if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
-      // Don't constrain the height since the container should be enlarged to
-      // contain overflowing frames
-      availSize.height = NS_UNCONSTRAINEDSIZE;
-    }
-
-    nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mFirstChild, aReflowState, availSize, eReflowReason_Initial);
-    mFirstChild->WillReflow(*aPresContext);
-    mFirstChild->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-
-    // Figure out what size to actually use. If the position style is 'auto' or
-    // the container should be enlarged to contain overflowing frames then use
-    // the desired size
-    if ((eStyleUnit_Auto == position->mWidth.GetUnit()) ||
-        ((desiredSize.width > availSize.width) &&
-         (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
-      rect.width = desiredSize.width;
-    }
-    if (eStyleUnit_Auto == position->mHeight.GetUnit()) {
-      rect.height = desiredSize.height;
-    }
-    mFirstChild->SetRect(rect);
-    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
-  }
-
-  // Return our desired size as (0, 0)
-  return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
 NS_METHOD nsAbsoluteFrame::ListTag(FILE* out) const
