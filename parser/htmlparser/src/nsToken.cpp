@@ -68,7 +68,6 @@ CToken::CToken(PRInt32 aTag) {
   mAttrCount=0;
   mNewlineCount=0;
   mTypeID=aTag;
-  mOrigin=eSource;
   // Note that the use count starts with 1 instead of 0. This
   // is because of the assumption that any token created is in
   // use and therefore does not require an explicit addref, or

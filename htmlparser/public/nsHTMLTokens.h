@@ -126,8 +126,6 @@ class CStartToken: public CHTMLToken {
     virtual const char*   GetClassName(void);
     virtual PRInt32       GetTokenType(void);
 
-            PRBool        IsAttributed(void);
-            void          SetAttributed(PRBool aValue);
             PRBool        IsEmpty(void);
             void          SetEmpty(PRBool aValue);
 #ifdef DEBUG
@@ -154,13 +152,13 @@ class CStartToken: public CHTMLToken {
   
             nsString          mTextValue;
             nsString          mTrailingContent;
-            PRInt32           mOrigin;
-  protected:
-            PRBool            mAttributed;      
-
-            PRBool            mEmpty;      
+  protected:    
             eContainerInfo    mContainerInfo;
             nsCOMPtr<nsIAtom> mIDAttributeAtom;
+            PRPackedBool      mEmpty;  
+#ifdef DEBUG
+            PRPackedBool      mAttributed;
+#endif
 };
 
 
@@ -379,12 +377,14 @@ class CAttributeToken: public CHTMLToken {
 #ifdef DEBUG
     virtual void          DebugDumpSource(nsOutputStream& out);
 #endif
-            PRBool        mLastAttribute;
-
-              PRBool   mHasEqualWithoutValue;
+    
+    PRPackedBool       mHasEqualWithoutValue;
   protected:
-              nsAutoString mTextValue;
-              nsSlidingSubstring mTextKey;              
+    nsAutoString       mTextValue;
+    nsSlidingSubstring mTextKey;
+#ifdef DEBUG
+    PRPackedBool       mLastAttribute;
+#endif
 }; 
 
 

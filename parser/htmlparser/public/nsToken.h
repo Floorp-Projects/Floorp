@@ -278,7 +278,6 @@ class CToken {
 
     static int GetTokenCount();
 
-    eTokenOrigin  mOrigin;
     PRInt32       mNewlineCount;
 
 protected:
@@ -287,9 +286,9 @@ protected:
      */
     virtual size_t SizeOf() const = 0;
 
-    PRInt32				mTypeID;
-    PRInt16				mAttrCount;
-    PRInt32       mUseCount;
+    PRInt32 mTypeID;
+    PRInt32 mUseCount;
+    PRInt16 mAttrCount;
 };
 
 
