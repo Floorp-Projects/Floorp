@@ -97,7 +97,7 @@ CTagStack::CTagStack(int aDefaultSize) {
   mSize=eStackSize;
 #endif
   mCount=0;
-  nsCRT::zero(mTags,mSize*sizeof(eHTMLTag_html));
+  nsCRT::zero(mTags,mSize*sizeof(eHTMLTags));
   nsCRT::zero(mBits,mSize*sizeof(PRBool));
 }
 
