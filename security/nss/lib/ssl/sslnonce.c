@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslnonce.c,v 1.15 2004/06/19 03:21:39 jpierre%netscape.com Exp $ */
+/* $Id: sslnonce.c,v 1.16 2004/12/17 02:01:35 julien.pierre.bugs%sun.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -229,6 +229,11 @@ CacheSID(sslSessionID *sid)
 
     if (sid->cached == in_client_cache)
 	return;
+
+    if (!sid->urlSvrName) {
+        /* don't cache this SID because it can never be matched */
+        return;
+    }
 
     /* XXX should be different trace for version 2 vs. version 3 */
     if (sid->version < SSL_LIBRARY_VERSION_3_0) {
