@@ -22,6 +22,18 @@
 #ifndef nsGfxListControlFrame_h___
 #define nsGfxListControlFrame_h___
 
+#ifdef DEBUG_evaughan
+//#define DEBUG_rods
+#endif
+
+#ifdef DEBUG_rods
+#define DO_REFLOW_DEBUG
+#define DO_REFLOW_COUNTER
+//#define DO_UNCONSTRAINED_CHECK
+//#define DO_PIXELS
+#endif
+
+#include "nsHTMLContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
@@ -29,9 +41,8 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIStatefulFrame.h"
-
-#include "nsHTMLContainerFrame.h"
 #include "nsIPresState.h"
+#include "nsCWeakReference.h"
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
@@ -39,11 +50,109 @@ class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
 class nsIViewManager;
 class nsIPresContext;
+class nsVoidArray;
 
-/**
- * Frame-based listbox.
- */
+class nsIScrollableView;
 
+class nsGfxListControlFrame;
+class nsAutoScrollTimer;
+
+#define NS_IGFXLIST_EVENT_LISTENER_IID \
+{/* e4bf05b0-457f-11d3-86ea-000064657374*/ \
+0x31015ed1, 0xf6a0, 0x11d3, \
+{0x97, 0x2, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56} }
+
+/******************************************************************************
+ * nsIGfxListEventListener
+ * Standard interface for event listeners that are attached to nsGfxListControls
+ ******************************************************************************/
+ 
+class nsIGfxListEventListener : public nsISupports
+{
+public:
+ 
+  static const nsIID& GetIID() { static nsIID iid = NS_IGFXLIST_EVENT_LISTENER_IID; return iid; }
+ 
+  /** SetFrame sets the frame we send event messages to, when necessary
+   *  @param aFrame -- the frame, can be null, not ref counted (guaranteed to outlive us!)
+   */
+  NS_IMETHOD SetFrame(nsGfxListControlFrame *aFrame)=0;
+
+};
+/******************************************************************************
+ * nsGfxListEventListener
+ * This class is responsible for propogating events to the nsGfxListControlFrame
+ * becuase it isn't ref-counted
+ ******************************************************************************/
+
+class nsGfxListEventListener; // forward declaration for factory
+
+/* factory for ender key listener */
+nsresult NS_NewGfxListEventListener(nsIGfxListEventListener ** aInstancePtrResult);
+
+class nsGfxListEventListener : public nsIGfxListEventListener,
+                               public nsIDOMKeyListener, 
+                               public nsIDOMMouseListener,
+                               public nsIDOMMouseMotionListener
+
+{
+public:
+
+  /** the default destructor */
+  virtual ~nsGfxListEventListener();
+
+  /** interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+  /** nsIDOMKeyListener interfaces 
+    * @see nsIDOMKeyListener
+    */
+  NS_IMETHOD SetFrame(nsGfxListControlFrame *aFrame);
+
+  /** nsIDOMKeyListener interfaces 
+    * @see nsIDOMKeyListener
+    */
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
+  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
+  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  /* END interfaces from nsIDOMKeyListener*/
+
+  /** nsIDOMMouseListener interfaces 
+    * @see nsIDOMMouseListener
+    */
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+  /* END interfaces from nsIDOMMouseListener*/
+
+  //nsIDOMEventMotionListener
+  /** nsIDOMEventMotionListener interfaces 
+    * @see nsIDOMEventMotionListener
+    */
+  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent);
+  /* END interfaces from nsIDOMMouseListener*/
+  
+  friend nsresult NS_NewGfxListEventListener(nsIGfxListEventListener ** aInstancePtrResult);
+
+protected:
+  /** the default constructor.  Protected, use the factory to create an instance.
+    * @see NS_NewEnderEventListener
+    */
+  nsGfxListEventListener();
+
+protected:
+  nsCWeakReference<nsGfxListControlFrame> mFrame;
+  nsCOMPtr<nsIContent>      mContent; // ref counted
+};
+
+/******************************************************************************
+ * nsGfxListControlFrame
+ ******************************************************************************/
 class nsGfxListControlFrame : public nsHTMLContainerFrame, 
                               public nsIFormControlFrame, 
                               public nsIListControlFrame,
@@ -127,6 +236,7 @@ public:
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
   NS_IMETHOD SetPresState(nsIPresState * aState) { mPresState = aState; return NS_OK;}
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
+
   NS_IMETHOD SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreStateInternal(nsIPresContext* aPresContext, nsIPresState* aState);
 
@@ -153,7 +263,7 @@ public:
 
   //nsIDOMEventMotionListener
   virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent);
 
   //nsIDOMKeyListener
   virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
@@ -167,24 +277,20 @@ public:
   static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRInt32 aIndex);
   static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRInt32 aIndex, nsString& aValue);
 
+  // Weak Reference
+  nsCWeakReferent *WeakReferent()
+    { return &mWeakReferent; }
+
 protected:
 
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
   NS_IMETHOD IsTargetOptionDisabled(PRBool &aIsDisabled);
-  nsresult   CountAllChild(nsIDOMNode * aNode, PRInt32& aCount);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
   PRBool     IsClickingInCombobox(nsIDOMEvent* aMouseEvent);
 
   nsGfxListControlFrame();
   virtual ~nsGfxListControlFrame();
 
-   // nsScrollFrame overrides
-   // Override the widget created for the list box so a Borderless top level widget is created
-   // for drop-down lists.
-  //virtual  nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
-  //virtual  nsresult GetScrollingParentView(nsIPresContext* aPresContext,
-  //                                         nsIFrame* aParent,
-  //                                         nsIView** aParentView);
   PRInt32  GetNumberOfOptions();
 
     // Utility methods
@@ -222,9 +328,17 @@ protected:
   PRBool   HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
   void     HandleListSelection(nsIDOMEvent * aDOMEvent);
   PRInt32  GetSelectedIndexFromFrame(nsIFrame *aHitFrame);
+  PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
 
+  void     GetScrollableView(nsIScrollableView*& aScrollableView);
+
+#ifdef DO_DRAGGING
+  // Special Drag Methods
+  nsresult StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
+  nsresult StopAutoScrollTimer();
+  nsresult DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
+#endif
   // onChange detection
-  nsresult InitSelectionCache(PRInt32 aLength);
   nsresult SelectionChanged(nsIContent* aContent);
   
   // Data Members
@@ -240,8 +354,9 @@ protected:
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
-  PRBool*      mSelectionCache;
-  PRInt32      mSelectionCacheLength;
+
+  nsVoidArray  * mSelectionCache;
+  PRInt32        mSelectionCacheLength;
 
   PRBool       mIsAllContentHere;
   PRBool       mIsAllFramesHere;
@@ -250,7 +365,11 @@ protected:
   PRBool       mOverrideReflowOpt;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
+
   nsCOMPtr<nsIPresState> mPresState;        // Need cache state when list is null
+
+  nsCOMPtr<nsIGfxListEventListener> mEventListener;           // ref counted
+  nsCWeakReferent mWeakReferent; // so this obj can be used as a weak ptr
 
   // XXX temprary only until full system mouse capture works
   PRBool mIsScrollbarVisible;
@@ -258,6 +377,17 @@ protected:
   //Resize Reflow OpitmizationSize;
   nsSize       mCacheSize;
   nsSize       mCachedMaxElementSize;
+  nsSize       mCachedUnconstrainedSize;
+  nsSize       mCachedAvailableSize;
+
+  // timer for autoscrolling.
+#ifdef DO_DRAGGING
+  nsAutoScrollTimer *mAutoScrollTimer; 
+#endif
+
+#ifdef DO_REFLOW_COUNTER
+  PRInt32 mReflowId;
+#endif
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
