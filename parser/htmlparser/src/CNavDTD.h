@@ -307,6 +307,17 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
+     *  This method is called to determine whether or not a tag
+     *  of one type can contain a tag of another type.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aParent -- int tag of parent container
+     *  @param   aChild -- int tag of child container
+     *  @return  PR_TRUE if parent can contain child
+     */
+    virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const;
+
+    /**
      *  This method is called to determine whether a tag
      *  of one of its children can contain a given child tag.
      *  

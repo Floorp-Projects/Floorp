@@ -218,6 +218,20 @@ eHTMLTags CTagStack::Last() const {
 }
 
 /**************************************************************
+  Now define the token deallocator class...
+ **************************************************************/
+class CNavTokenDeallocator: public nsDequeFunctor{
+public:
+  virtual void* operator()(void* anObject) {
+    CToken* aToken = (CToken*)anObject;
+    delete aToken;
+    return 0;
+  }
+};
+static CNavTokenDeallocator gTokenKiller;
+
+
+/**************************************************************
   Now define the tokenrecycler class...
  **************************************************************/
 
@@ -230,7 +244,7 @@ eHTMLTags CTagStack::Last() const {
 class nsCTokenRecycler : public nsITokenRecycler {
 public:
   
-      enum {eCacheMaxSize=100}; 
+//      enum {eCacheMaxSize=100}; 
 
                   nsCTokenRecycler();
   virtual         ~nsCTokenRecycler();
@@ -238,9 +252,8 @@ public:
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
 
 protected:
-    CToken* mTokenCache[eToken_last-1][eCacheMaxSize];
-    PRInt32 mCount[eToken_last-1];
-    PRInt32 mTotals[eToken_last-1];
+    nsDeque*  mTokenCache[eToken_last-1];
+//    PRInt32   mTotals[eToken_last-1];
 };
 
 
@@ -250,9 +263,11 @@ protected:
  * @param 
  */
 nsCTokenRecycler::nsCTokenRecycler() : nsITokenRecycler() {
-  nsCRT::zero(mTokenCache,sizeof(mTokenCache));
-  nsCRT::zero(mCount,sizeof(mCount));    
-  nsCRT::zero(mTotals,sizeof(mTotals));    
+  int i=0;
+  for(i=0;i<eToken_last-1;i++) {
+    mTokenCache[i]=new nsDeque(gTokenKiller);
+//    mTotals[i]=0;
+  }
 }
 
 /**
@@ -260,13 +275,11 @@ nsCTokenRecycler::nsCTokenRecycler() : nsITokenRecycler() {
  * @update  gess7/25/98
  */
 nsCTokenRecycler::~nsCTokenRecycler() {
-  //begin by deleting all the known (recycled tokens)...
-  int index1,index2;
-  for(index1=0;index1<eToken_last-1;index1++){
-    for(index2=0;index2<mCount[index1];index2++){
-      if(mTokenCache[index1][index2])
-        delete mTokenCache[index1][index2];
-    }
+  //begin by deleting all the known (recycled) tokens...
+  //We're also deleting the cache-deques themselves.
+  int i;
+  for(i=0;i<eToken_last-1;i++) {
+    delete mTokenCache[i];
   }
 }
 
@@ -280,15 +293,7 @@ nsCTokenRecycler::~nsCTokenRecycler() {
 void nsCTokenRecycler::RecycleToken(CToken* aToken) {
   if(aToken) {
     PRInt32 theType=aToken->GetTokenType();
-    if(mCount[theType-1]<eCacheMaxSize) {
-      mTokenCache[theType-1][mCount[theType-1]]=aToken;
-      mCount[theType-1]++;
-    } else {
-        //this is an overflow condition. More tokens of a given 
-        //type have been created than we can store in our recycler.
-        //In this case, just destroy the extra token.
-      delete aToken;
-    }
+    mTokenCache[theType-1]->Push(aToken);
   }
 }
 
@@ -301,17 +306,13 @@ void nsCTokenRecycler::RecycleToken(CToken* aToken) {
  */
 CToken* nsCTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString) {
 
-  CToken* result;
+  CToken* result=(CToken*)mTokenCache[aType-1]->Pop();
 
-  if(0<mCount[aType-1]) {
-    int cnt=CToken::GetTokenCount();
-    result=mTokenCache[aType-1][mCount[aType-1]-1];
+  if(result) {
     result->Reinitialize(aTag,aString);
-    mTokenCache[aType-1][mCount[aType-1]-1]=0;
-    mCount[aType-1]--;
   }
   else {
-    mTotals[aType-1]++;
+//    mTotals[aType-1]++;
     switch(aType){
       case eToken_start:      result=new CStartToken(aTag); break;
       case eToken_end:        result=new CEndToken(aTag); break;
@@ -465,17 +466,6 @@ void CNavDTD::InitializeDefaultTokenHandlers() {
 }
 
 
-class CNavTokenDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    CToken* aToken = (CToken*)anObject;
-    delete aToken;
-    return 0;
-  }
-};
-
-static CNavTokenDeallocator gTokenKiller;
-
 /**
  *  Default constructor
  *  
@@ -530,7 +520,7 @@ nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @return
  */
 nsITokenRecycler* CNavDTD::GetTokenRecycler(void){
-  return 0;
+//  return 0;
   return &gTokenRecycler;
 }
 
@@ -704,12 +694,14 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
 nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  eHTMLTags parentTag=GetTopNode();
-  nsresult   result=NS_OK;
-  PRBool    contains=CanContain(parentTag,aChildTag);
+  eHTMLTags theParentTag=GetTopNode();
+  nsresult  result=NS_OK;
+  PRBool    contains=CanContain(theParentTag,aChildTag);
 
   if(PR_FALSE==contains){
-    result=CreateContextStackFor(aChildTag);
+    if(CanPropagate(theParentTag,aChildTag))
+      result=CreateContextStackFor(aChildTag);
+    else result=kCantPropagate;
     if(NS_OK!=result) {
       //if you're here, then the new topmost container can't contain aToken.
       //You must determine what container hierarchy you need to hold aToken,
@@ -1687,6 +1679,29 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   return result;
 }
 
+/**
+ *  This method is called to determine whether or not 
+ *  the necessary intermediate tags should be propagated
+ *  between the given parent and given child.
+ *  
+ *  @update  gess 4/8/98
+ *  @param   aParent -- tag enum of parent container
+ *  @param   aChild -- tag enum of child container
+ *  @return  PR_TRUE if propagation should occur
+ */
+PRBool CNavDTD::CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const {
+  PRBool result=PR_TRUE;
+
+  switch(aParent) {
+    case eHTMLTag_td:
+      result=CanContain(aParent,aChild);
+      break;
+
+    default:
+      break;
+  }//switch
+  return result;
+}
 
 /**
  *  This method is called to determine whether or not a tag
@@ -2182,18 +2197,43 @@ PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
 
     case eHTMLTag_td:
     case eHTMLTag_tr:
-      theGatePos=GetTopmostIndexOf(gTableTags);
+      {      
+          /***************************************************************************
+           * This code may seem confusing, so let me explain it.
+           * We're trying to handle the case where a child tag may be prevented from
+           * closing a tag already on the stack. Here's a case:
+           *
+           *  <table>
+           *    <tr>
+           *      <td>
+           *        <table>
+           *          </tr>
+           *    
+           * In this case, the bottom </tr> is "gated" from closing the bottommost
+           * table.
+           *
+           * HOW THIS CODE WORKS:
+           *
+           *  This block of code compares all the members of the default parent 
+           *  hierarchy for the childtag against the open containers on our stack.
+           *  If they ever match, then the given child should be gated.
+           ***************************************************************************/
+
+        int theIndex; 
+        int theTopIndex=mContextStack.mCount-1;
+
+        eHTMLTags theParent=GetDefaultParentTagFor(aChildTag);
+        while(eHTMLTag_unknown!=theParent) {
+          for(theIndex=theTopIndex;theIndex>tagPos;theIndex--){
+            if(mContextStack.mTags[theIndex]==theParent){
+              theGatePos=theIndex;
+              break;
+            }
+          }
+          theParent=GetDefaultParentTagFor(theParent);
+        }
+      }
       break;
-    
-      /*      
-        eHTMLTag_table
-        eHTMLTag_tbody
-        eHTMLTag_thead
-        eHTMLTag_tfoot
-        eHTMLTag_caption  
-        eHTMLTag_col   
-        eHTMLTag_colgroup
-        */
 
     default:
       break;
@@ -2809,11 +2849,12 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
 
   //now, build up the stack according to the tags 
   //you have that aren't in the stack...
+  static CStartToken theToken(gEmpty);
   if(PR_TRUE==bResult){
     while(kPropagationStack.mCount>0) {
       eHTMLTags theTag=kPropagationStack.Pop();
-      CToken* theToken=gTokenRecycler.CreateTokenOfType(eToken_start,theTag,gEmpty);
-      HandleStartToken(theToken);
+      theToken.SetTypeID(theTag);  //open the container...
+      HandleStartToken(&theToken);
     }
     result=NS_OK;
   }
