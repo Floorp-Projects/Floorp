@@ -653,14 +653,11 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 		LocalToWindowCoordinate(wRect);
 		nsRectToMacRect(wRect, macRect);
 
-		GrafPtr savePort;
-		::GetPort(&savePort);
+		StPortSetter	portSetter(mWindowPtr);
 #if TARGET_CARBON
-		::SetPortWindowPort(mWindowPtr);
 		Rect savePortRect;
 		::GetWindowPortBounds(mWindowPtr, &savePortRect);
 #else
-		::SetPort(mWindowPtr);
 		Rect savePortRect = mWindowPtr->portRect;
 #endif
 		::SetOrigin(0, 0);
@@ -670,7 +667,6 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 		::InvalRect(&macRect);
 #endif
 //¥REVISIT		::SetOrigin(savePortRect.left, savePortRect.top);
-		::SetPort(savePort);
 	}
 	return NS_OK;
 }
@@ -811,13 +807,7 @@ NS_IMETHODIMP	nsWindow::Update()
 #endif
 
 		// draw the widget
-		GrafPtr savePort;
-		::GetPort(&savePort);
-#if TARGET_CARBON
-		::SetPortWindowPort(mWindowPtr);
-#else
-		::SetPort(mWindowPtr);
-#endif
+		StPortSetter	portSetter(mWindowPtr);
 
 		::BeginUpdate(mWindowPtr);
 		HandleUpdateEvent();
@@ -844,7 +834,6 @@ NS_IMETHODIMP	nsWindow::Update()
 #endif
 		::DisposeRgn(saveUpdateRgn);
 
-		::SetPort(savePort);
 		reentrant = PR_FALSE;
 	}
 
@@ -877,6 +866,9 @@ nsresult nsWindow::HandleUpdateEvent()
 	if (! mVisible)
 		return NS_OK;
 
+	// make sure the port is set
+	StPortSetter	portSetter(mWindowPtr);
+	
 	// get the damaged region from the OS
 #if TARGET_CARBON
 	RgnHandle damagedRgn = ::NewRgn();
@@ -896,7 +888,8 @@ nsresult nsWindow::HandleUpdateEvent()
 	nsRect bounds = mBounds;
 	LocalToWindowCoordinate(bounds);
 	::OffsetRgn(updateRgn, bounds.x, bounds.y);
-
+	
+	::SetOrigin(0, 0);
 	// check if the update region is visible
 	::SectRgn(damagedRgn, updateRgn, updateRgn);
 	if (!::EmptyRgn(updateRgn))
@@ -1583,17 +1576,13 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlobal
 		//
 		// When there is no parent, we're at the top level window. Use
 		// the origin (shifted into global coordinates) to find the offset.
-		GrafPtr oldPort;
-		::GetPort ( &oldPort );
-		::SetPort ( mWindowPtr );
+		StPortSetter	portSetter(mWindowPtr);
 		::SetOrigin(0,0);
 		
 		// convert origin into global coords and shift output rect by that ammount
 		Point origin = {0, 0};
 		::LocalToGlobal ( &origin );
 		aGlobalRect.MoveBy ( origin.h, origin.v );
-
-		::SetPort ( oldPort );			
 	}
 	
 	return NS_OK;
@@ -1627,17 +1616,13 @@ NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLocal
 		//
 		// When there is no parent, we're at the top level window. Use
 		// the origin (shifted into local coordinates) to find the offset.
-		GrafPtr oldPort;
-		::GetPort ( &oldPort );
-		::SetPort ( mWindowPtr );
+		StPortSetter	portSetter(mWindowPtr);
 		::SetOrigin(0,0);
 		
 		// convert origin into local coords and shift output rect by that ammount
 		Point origin = {0, 0};
 		::GlobalToLocal ( &origin );
 		aLocalRect.MoveBy ( origin.h, origin.v );
-
-		::SetPort ( oldPort );			
 	}
 	
 	return NS_OK;
