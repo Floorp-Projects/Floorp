@@ -18,7 +18,7 @@
 
 #include "nsFormControlFrame.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLContainer.h"
+#include "nsIHTMLContent.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"

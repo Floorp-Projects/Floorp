@@ -33,8 +33,6 @@
 #include "nsIPtr.h"
 #include "nsIView.h"
 #include "nsStyleUtil.h"
-// dependancy on content
-#include "nsHTMLTagContent.h"
 
 NS_DEF_PTR(nsIStyleContext);
 

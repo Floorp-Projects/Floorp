@@ -21,7 +21,6 @@
 
 #include "nsIFormControlFrame.h"
 #include "nsIFormManager.h"
-#include "nsHTMLContainer.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"

@@ -15,10 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-#include "nsHTMLContainer.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsIHTMLContent.h"
 #include "nsIWebShell.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -39,7 +38,6 @@
 #include "nsCSSLayout.h"
 #include "nsIDocumentLoader.h"
 #include "nsIPref.h"
-//#include "nsIDocumentWidget.h"
 #include "nsFrameSetFrame.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
