@@ -1075,7 +1075,7 @@ RDFTreeBuilderImpl::FindTreeElement(nsIContent* aElement,
     nsresult rv;
 
     // walk up the tree until you find <xul:tree>
-    nsCOMPtr<nsIContent> element(aElement);
+    nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
 
     while (element) {
         PRInt32 nameSpaceID;
