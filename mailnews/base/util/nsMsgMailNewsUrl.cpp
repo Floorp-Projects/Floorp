@@ -176,12 +176,9 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
 	rv = GetScheme(getter_Copies(scheme));
     if (NS_SUCCEEDED(rv))
     {
-        NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                        NS_MSGACCOUNTMANAGER_PROGID, &rv);
         if (NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsIMsgAccountManager> accountManager;
-        rv = session->GetAccountManager(getter_AddRefs(accountManager));
-        if(NS_FAILED(rv)) return rv;
         
         nsCOMPtr<nsIMsgIncomingServer> server;
         rv = accountManager->FindServer(GetUserName(),
