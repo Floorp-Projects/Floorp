@@ -1049,12 +1049,6 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawTile(imgIContainer *aImage, nscoord aX
   return img->DrawTile(*this, surface, so.width, so.height, dr);
 }
 
-/* [noscript] void drawScaledTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, in nscoord aTileWidth, in nscoord aTileHeight, [const] in nsRect aTargetRect); */
-NS_IMETHODIMP nsRenderingContextImpl::DrawScaledTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, nscoord aTileWidth, nscoord aTileHeight, const nsRect * aTargetRect)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 #endif
 
 NS_IMETHODIMP
