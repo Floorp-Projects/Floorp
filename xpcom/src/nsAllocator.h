@@ -68,14 +68,13 @@ public:
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsIFactory.h"
 
-class nsAllocatorFactory : nsIFactory {
+class nsAllocatorFactory : public nsIFactory {
 public:
     NS_IMETHOD CreateInstance(nsISupports *aOuter,
                               REFNSIID aIID,
