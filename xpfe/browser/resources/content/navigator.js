@@ -1849,38 +1849,38 @@ function dumpExpr( expr ) {
     dump( expr+"="+eval(expr)+"\n" );
 }
 
-var leakDetector = null;
-
 // Initialize the LeakDetector class.
 function LeakDetector(verbose)
 {
     this.verbose = verbose;
-    try {
-	    this.vtable = createInstance("@mozilla.org/xpcom/leakdetector;1", "nsILeakDetector");
-	} catch (err) {
-	}
+}
+try {
+    LeakDetector.prototype = Components.classes["@mozilla.org/xpcom/leakdetector;1"]
+                             .createInstance(Components.interfaces.nsILeakDetector);
+} catch (err) {
+    LeakDetector.prototype = Object.prototype;
 }
 var leakDetector = new LeakDetector(false);
 
 // Dumps current set of memory leaks.
 function dumpMemoryLeaks()
 {
-    leakDetector.vtable.dumpLeaks();
+    leakDetector.dumpLeaks();
 }
 
 // Traces all objects reachable from the chrome document.
 function traceChrome()
 {
-    leakDetector.vtable.traceObject(document, leakDetector.verbose);
+    leakDetector.traceObject(document, leakDetector.verbose);
 }
 
 // Traces all objects reachable from the content document.
 function traceDocument()
 {
     // keep the chrome document out of the dump.
-    leakDetector.vtable.markObject(document, true);
-    leakDetector.vtable.traceObject(window._content, leakDetector.verbose);
-    leakDetector.vtable.markObject(document, false);
+    leakDetector.markObject(document, true);
+    leakDetector.traceObject(window._content, leakDetector.verbose);
+    leakDetector.markObject(document, false);
 }
 
 // Controls whether or not we do verbose tracing.
