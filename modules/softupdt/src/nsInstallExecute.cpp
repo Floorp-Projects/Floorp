@@ -54,7 +54,7 @@ nsInstallExecute::nsInstallExecute(nsSoftwareUpdate* inSoftUpdate,
   if ((inArgs == NULL) || (inJarLocation == NULL) || 
       (inSoftUpdate == NULL)) {
     *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                               nsSoftUpdateError_INVALID_ARGUMENTS);
+                               SUERR_INVALID_ARGUMENTS);
     return;
   }
 
@@ -73,7 +73,7 @@ nsInstallExecute::nsInstallExecute(nsSoftwareUpdate* inSoftUpdate,
     if (target != NULL) {
       /* XXX: we need a way to indicate that a dialog box should appear.*/
       if (!privMgr->enablePrivilege( target, softUpdate->GetPrincipal(), 1 )) {
-        *errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        *errorMsg = SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
         return;
       }
     }
@@ -101,7 +101,7 @@ char* nsInstallExecute::Prepare(void)
 
   if (softUpdate == NULL) {
     return SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                           nsSoftUpdateError_INVALID_ARGUMENTS);
+                           SUERR_INVALID_ARGUMENTS);
   }
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
@@ -111,7 +111,7 @@ char* nsInstallExecute::Prepare(void)
     execTarget = nsTarget::findTarget(INSTALL_PRIV);
     if (execTarget != NULL) {
       if (!privMgr->enablePrivilege( execTarget, softUpdate->GetPrincipal(), 1 )) {
-        return SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        return SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
       }
     }
   }
@@ -123,7 +123,7 @@ char* nsInstallExecute::Prepare(void)
   }
 
   if (tempFile == NULL) {
-    return SU_GetErrorMsg3("Extraction of JAR file failed", nsSoftUpdateError_ACCESS_DENIED);
+    return SU_GetErrorMsg3("Extraction of JAR file failed", SUERR_ACCESS_DENIED);
   }
   
 #ifdef XP_MAC
@@ -149,7 +149,7 @@ char* nsInstallExecute::Complete(void)
 
   if (softUpdate == NULL) {
     return SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                           nsSoftUpdateError_INVALID_ARGUMENTS);
+                           SUERR_INVALID_ARGUMENTS);
   }
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
@@ -159,7 +159,7 @@ char* nsInstallExecute::Complete(void)
     execTarget = nsTarget::findTarget(INSTALL_PRIV);
     if (execTarget != NULL) {
       if (!privMgr->enablePrivilege( execTarget, softUpdate->GetPrincipal(), 1 )) {
-        return SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        return SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
       }
     }
   }

@@ -40,7 +40,7 @@ extern int MK_OUT_OF_MEMORY;
 
 /* xp_string defines */
 extern int SU_LOW_DISK_SPACE_WARNING;
-extern int SU_NOT_A_ENOUGH_SPACE;
+extern int SU_NOT_ENOUGH_SPACE;
 extern int SU_NOT_A_JAR_FILE;
 extern int SU_SECURITY_CHECK;
 extern int SU_INSTALL_FILE_HEADER;
@@ -60,13 +60,13 @@ extern uint32 FE_DiskSpaceAvailable (MWContext *context, const char *lpszPath );
 /* su_DownloadStream
  * keeps track of all SU specific data needed for the stream
  */ 
-typedef struct su_DownloadStream_struct	{
-	XP_File			fFile;
-	char *			fJarFile;	/* xpURL location of the downloaded file */
-	URL_Struct *	fURL;
-	MWContext *		fContext;
-	SoftUpdateCompletionFunction fCompletion;
-	void *			fCompletionClosure;
+typedef struct su_DownloadStream_struct {
+    XP_File         fFile;
+    char *          fJarFile;	/* xpURL location of the downloaded file */
+    URL_Struct *    fURL;
+    MWContext *     fContext;
+    SoftUpdateCompletionFunction fCompletion;
+    void *          fCompletionClosure;
     int32           fFlags;     /* download flags */
     pw_ptr          progress ;
 } su_DownloadStream;
@@ -368,7 +368,7 @@ void su_NetExitProc(URL_Struct* url, int result, MWContext * context)
 		
 		if (context)
 		{
-			FE_Alert(context, XP_GetString(SU_NOT_A_ENOUGH_SPACE));
+			FE_Alert(context, XP_GetString(SU_NOT_ENOUGH_SPACE));
 		}
 		PR_ExitMonitor(su_monitor);
 	} 
@@ -390,6 +390,16 @@ void su_NetExitProc(URL_Struct* url, int result, MWContext * context)
 #ifdef XP_MAC
 #pragma export on
 #endif
+
+
+XP_Bool SU_IsUpdateEnabled(void)
+{
+    XP_Bool enabled = FALSE;
+    PREF_GetBoolPref( AUTOUPDATE_ENABLE_PREF, &enabled);
+
+    return (enabled);
+}
+
 
 /* SU_StartSoftwareUpdate
  * Main public interface to software update
@@ -789,7 +799,7 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 /*	
 	if (result != 0)
 	{
-		PR_snprintf(s, 255, XP_GetString(SU_NOT_A_ENOUGH_SPACE), installerJarName);
+		PR_snprintf(s, 255, XP_GetString(SU_NOT_ENOUGH_SPACE), installerJarName);
 		FE_Alert(realStream->fContext, s);
 		result = su_DiskSpaceError;
 		goto fail;
@@ -910,7 +920,7 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	
 	if (result == ZIG_ERR_DISK)
 	{
-		PR_snprintf(s, 255, XP_GetString(SU_NOT_A_ENOUGH_SPACE), installerJarName);
+		PR_snprintf(s, 255, XP_GetString(SU_NOT_ENOUGH_SPACE), installerJarName);
 		FE_Alert(realStream->fContext, s);
 		result = su_DiskSpaceError;
 		goto fail;
@@ -1554,7 +1564,6 @@ XP_Bool su_RegPackTime()
         su_SetLastRegPackTime(nowSecInt);
         return FALSE;
     }
-
     i = nowSecInt - lastRegPackTime;
     if ((i > intervalSec) || (i < 0))
     {

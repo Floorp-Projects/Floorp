@@ -22,7 +22,7 @@
 
 #include "xp_mcom.h"
 
-#define REBOOT_NEEDED 999
+#define SU_REBOOT_NEEDED 999
 #define SU_SUCCESS    0
 
 XP_BEGIN_PROTOS

@@ -392,7 +392,7 @@ int    FE_ReplaceExistingFile(char *CurrentFname, XP_FileType ctype,
 #endif /* XP_OS2 */
 
             if ( NO_ERROR == err )
-                err = REBOOT_NEEDED;
+                err = SU_REBOOT_NEEDED;
 	    }
     } // (force || fe_FileNeedsUpdate( currentName, finalName ))
     else {

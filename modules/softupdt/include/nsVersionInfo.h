@@ -32,7 +32,7 @@ public:
 
   /* Public Methods */
 
-  nsVersionInfo(PRInt32 maj, PRInt32 min, PRInt32 rel, PRInt32 bld, PRInt32 checksum);
+  nsVersionInfo(PRInt32 maj, PRInt32 min, PRInt32 rel, PRInt32 bld);
   nsVersionInfo(char* version);
   ~nsVersionInfo();
 
@@ -59,7 +59,6 @@ private:
   PRInt32 minor;
   PRInt32 release;
   PRInt32 build;
-  PRInt32 check;
 
   /* Private Methods */
 

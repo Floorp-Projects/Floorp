@@ -59,27 +59,26 @@ PDBFILE=$(LIBNAME).pdb
 OBJS= \
 	.\$(OBJDIR)\softupdt.obj	\
 	.\$(OBJDIR)\su_trigger.obj	\
+	.\$(OBJDIR)\su_version.obj	\
 	.\$(OBJDIR)\su_patch.obj	\
 	.\$(OBJDIR)\su_folderspec.obj	\
 	.\$(OBJDIR)\su_instl.obj	\
+    .\$(OBJDIR)\su_mocha.obj    \
 	.\$(OBJDIR)\su_win.obj		\
-	.\$(OBJDIR)\vr_java.obj		\
-	.\$(OBJDIR)\su_wjava.obj	\
 	.\$(OBJDIR)\nsFolderSpec.obj	\
-	.\$(OBJDIR)\nsVersionInfo.obj	\
 	.\$(OBJDIR)\nsInstallDelete.obj	\
-	.\$(OBJDIR)\nsVersionRegistry.obj	\
 	.\$(OBJDIR)\nsInstallExecute.obj	\
-	.\$(OBJDIR)\nsWinProfile.obj	\
 	.\$(OBJDIR)\nsInstallFile.obj	\
-	.\$(OBJDIR)\nsWinProfileItem.obj	\
 	.\$(OBJDIR)\nsInstallPatch.obj	\
-	.\$(OBJDIR)\nsWinReg.obj	\
-	.\$(OBJDIR)\nsSUError.obj	\
-	.\$(OBJDIR)\nsWinRegItem.obj	\
 	.\$(OBJDIR)\nsSoftwareUpdate.obj	\
+	.\$(OBJDIR)\nsSUError.obj	\
+    .\$(OBJDIR)\nsUninstallObject.obj   \
+	.\$(OBJDIR)\nsVersionInfo.obj	\
+	.\$(OBJDIR)\nsWinProfile.obj	\
+	.\$(OBJDIR)\nsWinProfileItem.obj	\
+	.\$(OBJDIR)\nsWinReg.obj	\
+	.\$(OBJDIR)\nsWinRegItem.obj	\
 	.\$(OBJDIR)\nsWinRegValue.obj	\
-	.\$(OBJDIR)\nsTrigger.obj	\
 	$(NULL)
 
 

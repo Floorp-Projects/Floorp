@@ -19,6 +19,6 @@ DEPTH	= ../../..
 
 MODULE	= softupdt
 
-EXPORTS	= softupdt.h su_folderspec.h gdiff.h nsTrigger.h nsFolderSpec.h nsVersionInfo.h nsInstallDelete.h nsVersionRegistry.h nsInstallExecute.h nsWinProfile.h nsInstallFile.h nsWinProfileItem.h nsInstallObject.h nsWinReg.h nsInstallPatch.h nsUninstallObject.h nsWinRegItem.h nsSUError.h nsWinRegValue.h nsSoftUpdateEnums.h nsSoftwareUpdate.h 
+EXPORTS	= softupdt.h su_folderspec.h gdiff.h su_mocha.h nsFolderSpec.h nsVersionInfo.h nsInstallDelete.h nsInstallExecute.h nsWinProfile.h nsInstallFile.h nsWinProfileItem.h nsInstallObject.h nsWinReg.h nsInstallPatch.h nsUninstallObject.h nsWinRegItem.h nsSUError.h nsWinRegValue.h nsSoftUpdateEnums.h nsSoftwareUpdate.h 
 
 include $(DEPTH)/config/rules.mk

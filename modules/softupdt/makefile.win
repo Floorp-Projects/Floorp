@@ -29,3 +29,12 @@ build_classes:
 #        $(NMAKE) -f makefile.win java$(VERSION_NUMBER).jar
 #        cd $(DEPTH)\cmd\winfe\mkfiles32
 #        $(NMAKE) -f mozilla.mak
+
+blnk:
+	$(NMAKE) -f makefile.win
+	cd $(MOZ_SRC)\ns
+	$(NMAKE) -f client.mak build_client
+
+lnk:
+	cd $(MOZ_SRC)\ns
+	$(NMAKE) -f client.mak build_client

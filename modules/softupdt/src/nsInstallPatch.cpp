@@ -32,11 +32,12 @@
 
 #include "nsInstallPatch.h"
 #include "nsSoftUpdateEnums.h"
-#include "nsVersionRegistry.h"
 #include "nsSUError.h"
 
 #include "nsTarget.h"
 #include "nsPrivilegeManager.h"
+
+#include "VerReg.h"
 
 extern int SU_ERROR_NO_SUCH_COMPONENT;
 extern int SU_ERROR_INSTALL_FILE_UNEXPECTED;
@@ -61,6 +62,8 @@ nsInstallPatch::nsInstallPatch(nsSoftwareUpdate* inSoftUpdate,
                                char* inJarLocation,
                                char* *errorMsg) : nsInstallObject(inSoftUpdate)
 {
+  int err;
+
   vrName = NULL;
   versionInfo = NULL;
   jarLocation = NULL;
@@ -70,16 +73,25 @@ nsInstallPatch::nsInstallPatch(nsSoftwareUpdate* inSoftUpdate,
   *errorMsg = checkPrivileges();
   if (*errorMsg != NULL)
     return;
-  targetfile = nsVersionRegistry::componentPath( vrName );
+  
+  targetfile = (char*)XP_CALLOC(MAXREGPATHLEN, sizeof(char));
+  err = VR_GetPath( vrName, MAXREGPATHLEN, targetfile );
+  
+  if (err != REGERR_OK)
+  {
+     XP_FREEIF(targetfile);
+     targetfile = NULL;
+  }
+
   if ( targetfile == NULL ) {
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_NO_SUCH_COMPONENT, 
-                                nsSoftUpdateError_NO_SUCH_COMPONENT);
+                                SUERR_NO_SUCH_COMPONENT);
     return;
   }
 
   if ((inVRName == NULL) || (inJarLocation == NULL)) {
     *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                                nsSoftUpdateError_INVALID_ARGUMENTS);
+                                SUERR_INVALID_ARGUMENTS);
     return;
   }
 
@@ -106,7 +118,7 @@ nsInstallPatch::nsInstallPatch(nsSoftwareUpdate* inSoftUpdate,
 
   if ((inVRName == NULL) || (inJarLocation == NULL) || (folderSpec == NULL)) {
     *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                                nsSoftUpdateError_INVALID_ARGUMENTS);
+                                SUERR_INVALID_ARGUMENTS);
     return;
   }
 
@@ -147,7 +159,7 @@ char* nsInstallPatch::Prepare(void)
 
   if ((softUpdate == NULL) || (jarLocation == NULL) || (targetfile == NULL)) {
     return SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                           nsSoftUpdateError_INVALID_ARGUMENTS);
+                           SUERR_INVALID_ARGUMENTS);
   }
 
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
@@ -160,7 +172,7 @@ char* nsInstallPatch::Prepare(void)
     priv = nsTarget::findTarget(INSTALL_PRIV);
     if (priv != NULL) {
       if (!privMgr->enablePrivilege( priv, softUpdate->GetPrincipal(), 1)) {
-        return SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        return SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
       }
     }
   }
@@ -181,17 +193,17 @@ char* nsInstallPatch::Prepare(void)
 			{
 				if ( XP_STAT_READONLY( statinfo ) )
 				{
-					errorMsg = SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, nsSoftUpdateError_FILE_READ_ONLY);
+					errorMsg = SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, SUERR_FILE_READ_ONLY);
 					
 				}
 				else if (!S_ISDIR(statinfo.st_mode))
 				{
-					errorMsg =  SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, nsSoftUpdateError_FILE_IS_DIRECTORY);
+					errorMsg =  SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, SUERR_FILE_IS_DIRECTORY);
 				}
 			}
 			else
 			{
-				errorMsg =  SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, nsSoftUpdateError_FILE_DOES_NOT_EXIST);
+				errorMsg =  SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, SUERR_FILE_DOES_NOT_EXIST);
 			}
 			
 			XP_FREEIF(targetfileURL);
@@ -225,7 +237,7 @@ char* nsInstallPatch::Prepare(void)
     softUpdate->patchList->Put( &ikey, patchedfile );
   } else {
     char *msg = XP_Cat(targetfile, " not patched");
-    errorMsg = SU_GetErrorMsg3(msg, nsSoftUpdateError_INVALID_ARGUMENTS);
+    errorMsg = SU_GetErrorMsg3(msg, SUERR_INVALID_ARGUMENTS);
   }
 
   if ( deleteOldSrc ) {
@@ -247,7 +259,7 @@ char* nsInstallPatch::Complete(void)
   if ((softUpdate == NULL) || (targetfile == NULL) || 
       (patchedfile == NULL) || (vrName == NULL)) {
     return SU_GetErrorMsg3("Invalid arguments to the complete method", 
-                           nsSoftUpdateError_INVALID_ARGUMENTS);
+                           SUERR_INVALID_ARGUMENTS);
   }
 
   if ((errorMsg = checkPrivileges()) != NULL)
@@ -261,9 +273,8 @@ char* nsInstallPatch::Complete(void)
             
     err = NativeReplace( targetfile, patchedfile );
     
-    if ( 0 == err || nsSoftwareUpdate_REBOOT_NEEDED == err ) {
-      err = nsVersionRegistry::installComponent( vrName, targetfile, versionInfo);
-
+    if ( 0 == err || SU_REBOOT_NEEDED == err ) {
+      err = VR_Install( vrName, targetfile, versionInfo->toString(), PR_FALSE );
       if ( err != 0 ) {
         char *msg = XP_Cat("Install component failed ", targetfile);
         errorMsg = SU_GetErrorMsg3(msg, err);
@@ -325,7 +336,7 @@ char* nsInstallPatch::checkPrivileges(void)
     priv = nsTarget::findTarget(INSTALL_PRIV);
     if (priv != NULL) {
       if (!privMgr->enablePrivilege( priv, softUpdate->GetPrincipal(), 1)) {
-        return SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        return SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
       }
     }
   }
@@ -369,7 +380,7 @@ char* nsInstallPatch::NativePatch( char* srcfile, char* diffURL, char* *errorMsg
     err = SU_PatchFile( srcURL, xpURL, diffURL, xpURL, newfileURL, xpURL );
   } else {
     /* String conversions failed -- probably out of memory */
-    err = nsSoftUpdateError_INVALID_ARGUMENTS;
+    err = SUERR_INVALID_ARGUMENTS;
   }
   
   
@@ -416,7 +427,7 @@ int   nsInstallPatch::NativeReplace( char* target, char* newfile )
         /* file still exists */
         err = FE_ReplaceExistingFile( pNew, xpURL, pTarget, xpURL, 0 );
 #ifdef XP_WIN16
-        if ( err == nsSoftwareUpdate_REBOOT_NEEDED && !utilityScheduled) {
+        if ( err == SU_REBOOT_NEEDED && !utilityScheduled) {
           utilityScheduled = TRUE;
           FE_ScheduleRenameUtility();
         }

@@ -35,20 +35,20 @@ public:
   nsInstallObject(struct nsSoftwareUpdate* inSoftUpdate) {softUpdate = inSoftUpdate; }
 
   /* Override with your set-up action */
-  virtual char* Prepare();
+  virtual char* Prepare() = 0;
 
   /* Override with your Completion action */
-  virtual char* Complete();
+  virtual char* Complete() = 0;
 
   /* Override with an explanatory string for the progress dialog */
-  virtual char* toString();
+  virtual char* toString() = 0;
 	
   /* Override with your clean-up function */
-  virtual void Abort();
+  virtual void Abort() = 0;
   
   /* should these be protected? */
-  virtual PRBool CanUninstall();
-  virtual PRBool RegisterPackageNode();
+  virtual PRBool CanUninstall() = 0;
+  virtual PRBool RegisterPackageNode() = 0;
 
 private:
 

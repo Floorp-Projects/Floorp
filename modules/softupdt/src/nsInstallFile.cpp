@@ -22,9 +22,8 @@
 #include "su_instl.h"
 
 #include "nsSoftUpdateEnums.h"
-#include "NSReg.h"
+#include "VerReg.h"
 #include "nsInstallFile.h"
-#include "nsVersionRegistry.h"
 #include "nsSUError.h"
 
 #include "nsPrivilegeManager.h"
@@ -91,7 +90,7 @@ nsInstallFile::nsInstallFile(nsSoftwareUpdate* inSoftUpdate,
       (folderSpec == NULL) || (inSoftUpdate == NULL) ||
       (inVInfo == NULL)) {
     *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                               nsSoftUpdateError_INVALID_ARGUMENTS);
+                               SUERR_INVALID_ARGUMENTS);
     return;
   }
   vrName = new nsString(inVRName);
@@ -116,7 +115,7 @@ nsInstallFile::nsInstallFile(nsSoftwareUpdate* inSoftUpdate,
     nsTarget* install_target = nsTarget::findTarget(INSTALL_PRIV);
     if (install_target != NULL) {
       if (!privMgr->enablePrivilege(install_target, softUpdate->GetPrincipal(), 1)) {
-        *errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        *errorMsg = SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
         return;
       }
     }
@@ -171,17 +170,17 @@ char* nsInstallFile::Prepare()
 
   if (softUpdate == NULL) {
     errorMsg = SU_GetErrorMsg3("nsSoftwareUpdate object is null", 
-                               nsSoftUpdateError_INVALID_ARGUMENTS);
+                               SUERR_INVALID_ARGUMENTS);
     return errorMsg;
   }
   if (jarLocation == NULL) {
     errorMsg = SU_GetErrorMsg3("JAR file is null", 
-                               nsSoftUpdateError_INVALID_ARGUMENTS);
+                               SUERR_INVALID_ARGUMENTS);
     return errorMsg;
   }
   if (finalFile == NULL) {
     errorMsg = SU_GetErrorMsg3("folderSpec's full path (finalFile) was null", 
-                               nsSoftUpdateError_INVALID_ARGUMENTS);
+                               SUERR_INVALID_ARGUMENTS);
     return errorMsg;
   }
 
@@ -194,7 +193,7 @@ char* nsInstallFile::Prepare()
   if ((privMgr != NULL) && (impersonation != NULL)) {
     PRBool allowed = privMgr->enablePrivilege(impersonation, 1);
     if (allowed == PR_FALSE) {
-      errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+      errorMsg = SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
       return errorMsg;
     }
 
@@ -203,7 +202,7 @@ char* nsInstallFile::Prepare()
     if (install_target != NULL) {
       PRBool allowed = privMgr->enablePrivilege(install_target, softUpdate->GetPrincipal(), 1);
       if (allowed == PR_FALSE) {
-        errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        errorMsg = SU_GetErrorMsg3("Permssion was denied", SUERR_ACCESS_DENIED);
         return errorMsg;
       }
     }
@@ -238,15 +237,15 @@ char* nsInstallFile::Complete()
 
   if (softUpdate == NULL) {
     return SU_GetErrorMsg3("nsSoftwareUpdate object is null", 
-                           nsSoftUpdateError_INVALID_ARGUMENTS);
+                           SUERR_INVALID_ARGUMENTS);
   }
   if (vrName == NULL) {
     return SU_GetErrorMsg3("version registry name is null", 
-                           nsSoftUpdateError_INVALID_ARGUMENTS);
+                           SUERR_INVALID_ARGUMENTS);
   }
   if (finalFile == NULL) {
     return  SU_GetErrorMsg3("folderSpec's full path (finalFile) is null", 
-                            nsSoftUpdateError_INVALID_ARGUMENTS);
+                            SUERR_INVALID_ARGUMENTS);
   }
 
   /* Check the security for our target */
@@ -266,7 +265,7 @@ char* nsInstallFile::Complete()
       if (!privMgr->enablePrivilege(install_target, 
                                     softUpdate->GetPrincipal(), 1)) {
         return SU_GetErrorMsg3("Permssion was denied", 
-                               nsSoftUpdateError_ACCESS_DENIED);
+                               SUERR_ACCESS_DENIED);
       }
     }
   }
@@ -294,54 +293,78 @@ char* nsInstallFile::Complete()
   
   // Register file and log for Uninstall
   
-  if ( 0 == err || nsSoftwareUpdate_REBOOT_NEEDED == err ) {
+  if ( 0 == err || SU_REBOOT_NEEDED == err ) {
     // we ignore all registry errors because they're not
     // important enough to abort an otherwise OK install.
     if (!bChild) {
       int found;
       if (regPackageName) {
         char *reg_package_name = regPackageName->ToNewCString();
-        found = nsVersionRegistry::uninstallFileExists(reg_package_name, vr_name);
+        found = VR_UninstallFileExistsInList( reg_package_name, vr_name );
         delete reg_package_name;
       } else {
-        found = nsVersionRegistry::uninstallFileExists("", vr_name);
+        found = VR_UninstallFileExistsInList( "", vr_name );
       }
       if (found != REGERR_OK)
         bUpgrade = PR_FALSE;
       else
         bUpgrade = PR_TRUE;
-    } else if (REGERR_OK == nsVersionRegistry::inRegistry(vr_name)) {
+    } else if (REGERR_OK == VR_InRegistry(vr_name)) {
       bUpgrade = PR_TRUE;
     } else {
       bUpgrade = PR_FALSE;
     }
     
-    refCount = nsVersionRegistry::getRefCount(vr_name);
+    err = VR_GetRefCount( vr_name, &refCount );
+    if ( err != REGERR_OK ) 
+    {
+      refCount = 0;
+    }
+
+
     if (!bUpgrade) {
-      if (refCount != 0) {
+      if (refCount != 0) 
+      {
         rc = 1 + refCount;
-        nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, rc );
-      } else {
+        VR_Install( vr_name, final_file, versionInfo->toString(), PR_FALSE );
+        VR_SetRefCount( vr_name, rc );
+      } 
+      else 
+      {
         if (replace)
-          nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, 2);
+        {
+            VR_Install( vr_name, final_file, versionInfo->toString(), PR_FALSE);
+            VR_SetRefCount( vr_name, 2 );
+        }
         else
-          nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, 1);
+        {
+            VR_Install( vr_name, final_file, versionInfo->toString(), PR_FALSE );
+            VR_SetRefCount( vr_name, 1 );
+      
+        }
       }
-    } else if (bUpgrade) {
-      if (refCount == 0) {
-        nsVersionRegistry::installComponent(vr_name, final_file, versionInfo, 1);
-      } else {
-        nsVersionRegistry::installComponent(vr_name, final_file, versionInfo );
+    } 
+    else if (bUpgrade) 
+    {
+      if (refCount == 0) 
+      {
+          VR_Install( vr_name, final_file, versionInfo->toString(), PR_FALSE );
+          VR_SetRefCount( vr_name, 1 );
+      } 
+      else 
+      {
+          VR_Install( vr_name, final_file, versionInfo->toString(), PR_FALSE );
+          VR_SetRefCount( vr_name, 0 );
       }
     }
     
     if ( !bChild && !bUpgrade ) {
       if (regPackageName) {
         char *reg_package_name = regPackageName->ToNewCString();
-        nsVersionRegistry::uninstallAddFile(reg_package_name, vr_name);
+        VR_UninstallAddFileToList( reg_package_name, vr_name );
         delete reg_package_name;
       } else {
-        nsVersionRegistry::uninstallAddFile("", vr_name);
+        VR_UninstallAddFileToList( "", vr_name );
       }
     }
   }
@@ -446,7 +469,7 @@ int nsInstallFile::NativeComplete()
       /* File already exists, need to remove the original */
       result = FE_ReplaceExistingFile(currentName, xpURL, finalName, xpURL, force);
 
-      if ( result == nsSoftwareUpdate_REBOOT_NEEDED ) {
+      if ( result == SU_REBOOT_NEEDED ) {
 #ifdef XP_WIN16
         if (!utilityScheduled) {
           utilityScheduled = PR_TRUE;

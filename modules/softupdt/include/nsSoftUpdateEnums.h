@@ -20,48 +20,43 @@
 #define nsSoftUpdateEnums_h__
 
 
-typedef enum nsSoftUpdateError {
+  /* SoftwareUpdate Errors -200 to -300 */
+#define SUERR_BAD_PACKAGE_NAME          -200
+#define SUERR_UNEXPECTED_ERROR          -201
+#define SUERR_ACCESS_DENIED             -202
+#define SUERR_TOO_MANY_CERTIFICATES     -203 /* Installer file must have 1 certificate */
+#define SUERR_NO_INSTALLER_CERTIFICATE  -204 /* Installer file must have a certificate */
+#define SUERR_NO_CERTIFICATE            -205 /* Extracted file is not signed */
+#define SUERR_NO_MATCHING_CERTIFICATE   -206 /* Extracted file does not match installer certificate */
+#define SUERR_UNKNOWN_JAR_FILE          -207 /* JAR file has not been opened */
+#define SUERR_INVALID_ARGUMENTS         -208 /* Bad arguments to a function */
+#define SUERR_ILLEGAL_RELATIVE_PATH     -209 /* Illegal relative path */
+#define SUERR_USER_CANCELLED            -210 /* User cancelled */
+#define SUERR_INSTALL_NOT_STARTED       -211
+#define SUERR_SILENT_MODE_DENIED        -212
+#define SUERR_NO_SUCH_COMPONENT         -213 /* no such component in the registry. */
+#define SUERR_FILE_DOES_NOT_EXIST       -214 /* File cannot be deleted as it does not exist */
+#define SUERR_FILE_READ_ONLY            -215 /* File cannot be deleted as it is read only. */
+#define SUERR_FILE_IS_DIRECTORY         -216 /* File cannot be deleted as it is a directory */
+#define SUERR_NETWORK_FILE_IS_IN_USE    -217 /* File on the network is in-use */
+#define SUERR_APPLE_SINGLE_ERR          -218 /* error in AppleSingle unpacking */
+#define SUERR_INVALID_PATH_ERR          -219 /* GetFolder() did not like the folderID */
+#define SUERR_PATCH_BAD_DIFF            -220 /* error in GDIFF patch */
+#define SUERR_PATCH_BAD_CHECKSUM_TARGET -221 /* source file doesn't checksum  */
+#define SUERR_PATCH_BAD_CHECKSUM_RESULT -222 /* final patched file fails checksum  */
+#define SUERR_UNINSTALL_FAILED          -223 /* error while uninstalling a package  */
+#define SUERR_GESTALT_UNKNOWN_ERR       -5550         
+#define SUERR_GESTALT_INVALID_ARGUMENT  -5551
 
-  /* Errors -200 to -300 */
-  nsSoftUpdateError_BAD_PACKAGE_NAME = -200,
-  nsSoftUpdateError_UNEXPECTED_ERROR = -201,
-  nsSoftUpdateError_ACCESS_DENIED = -202,
-  nsSoftUpdateError_TOO_MANY_CERTIFICATES = -203,    /* Installer file must have 1 certificate */
-  nsSoftUpdateError_NO_INSTALLER_CERTIFICATE = -204, /* Installer file must have a certificate */
-  nsSoftUpdateError_NO_CERTIFICATE =  -205,          /* Extracted file is not signed */
-  nsSoftUpdateError_NO_MATCHING_CERTIFICATE = -206,  /* Extracted file does not match installer certificate */
-  nsSoftUpdateError_UNKNOWN_JAR_FILE = -207,         /* JAR file has not been opened */
-  nsSoftUpdateError_INVALID_ARGUMENTS = -208,        /* Bad arguments to a function */
-  nsSoftUpdateError_ILLEGAL_RELATIVE_PATH = -209,    /* Illegal relative path */
-  nsSoftUpdateError_USER_CANCELLED = -210,           /* User cancelled */
-  nsSoftUpdateError_INSTALL_NOT_STARTED = -211,
-  nsSoftUpdateError_SILENT_MODE_DENIED = -212,
-  nsSoftUpdateError_NO_SUCH_COMPONENT = -213,        /* no such component in the registry. */
-  nsSoftUpdateError_FILE_DOES_NOT_EXIST = -214,      /* File cannot be deleted as it does not exist */
-  nsSoftUpdateError_FILE_READ_ONLY = -215,	       /* File cannot be deleted as it is read only. */
-  nsSoftUpdateError_FILE_IS_DIRECTORY = -216,	       /* File cannot be deleted as it is a directory */
-  nsSoftUpdateError_NETWORK_FILE_IS_IN_USE = -217,	/* File on the network is in-use */
-  nsSoftUpdateError_APPLE_SINGLE_ERR = -218,         /* error in AppleSingle unpacking */
-  
-  nsSoftUpdateError_INVALID_PATH_ERR = -219,  /* GetFolder() did not like the folderID */
-  nsSoftUpdateError_PATCH_BAD_DIFF = -220,   /* error in GDIFF patch */
-  nsSoftUpdateError_PATCH_BAD_CHECKSUM_TARGET = -221,  /* source file doesn't checksum  */
-  nsSoftUpdateError_PATCH_BAD_CHECKSUM_RESULT = -222,  /* final patched file fails checksum  */
-  nsSoftUpdateError_UNINSTALL_FAILED = -223,  /* error while uninstalling a package  */
-  
-  nsSoftUpdateError_GESTALT_UNKNOWN_ERR = -5550,         
-  nsSoftUpdateError_GESTALT_INVALID_ARGUMENT = -5551,
-} nsSoftUpdateError;
+#define SU_SUCCESS 0
+#define SU_REBOOT_NEEDED 999
 
-#define nsSoftwareUpdate_SUCCESS 0
-#define nsSoftwareUpdate_REBOOT_NEEDED 999
+/* install types */
+#define SU_LIMITED_INSTALL  0
+#define SU_FULL_INSTALL     1
+#define SU_NO_STATUS_DLG    2
+#define SU_NO_FINALIZE_DLG  4
 
-typedef enum nsInstallType {
-  nsInstallType_LIMITED_INSTALL= 0,
-  nsInstallType_FULL_INSTALL = 1,
-  nsInstallType_NO_STATUS_DLG = 2,
-  nsInstallType_NO_FINALIZE_DLG = 4
-} nsInstallType;
 
 typedef enum nsVersionEnum {
   nsVersionEnum_MAJOR_DIFF       =  4,

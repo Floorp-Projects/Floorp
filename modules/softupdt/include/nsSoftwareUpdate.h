@@ -20,6 +20,7 @@
 #define nsSoftwareUpdate_h__
 
 #include "prtypes.h"
+#include "jsapi.h"
 #include "nsHashtable.h"
 #include "nsVector.h"
 
@@ -294,12 +295,16 @@ public:
                        char* subdir, 
                        PRBool forceInstall,
                        char* *errorMsg);
-    
+
+
+  
+  JSObject*  LoadStringObject(const char* filename);
+
 
   /* Uninstall */
   PRInt32 Uninstall(char* packageName, char* *errorMsg);
-
-
+  
+  
   /*******************************
    *
    * progress window

@@ -356,20 +356,20 @@ cleanup:
 		case GDIFF_ERR_BADDIFF:
 		case GDIFF_ERR_OPCODE:
 		case GDIFF_ERR_CHKSUMTYPE:
-				status = nsSoftUpdateError_PATCH_BAD_DIFF;
+				status = SUERR_PATCH_BAD_DIFF;
 				break;
 		case GDIFF_ERR_CHECKSUM_TARGET:
-				status = nsSoftUpdateError_PATCH_BAD_CHECKSUM_TARGET;
+				status = SUERR_PATCH_BAD_CHECKSUM_TARGET;
 				break;
 		case GDIFF_ERR_CHECKSUM_RESULT:
-				status = nsSoftUpdateError_PATCH_BAD_CHECKSUM_RESULT;
+				status = SUERR_PATCH_BAD_CHECKSUM_RESULT;
 				break;
 		case GDIFF_ERR_OLDFILE:
 		case GDIFF_ERR_ACCESS:
 		case GDIFF_ERR_MEM:
 		case GDIFF_ERR_UNKNOWN:
 		default:
-				status = nsSoftUpdateError_UNEXPECTED_ERROR;
+				status = SUERR_UNEXPECTED_ERROR;
 				break;
 	}
 

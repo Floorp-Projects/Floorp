@@ -29,20 +29,22 @@ PR_BEGIN_EXTERN_C
 
 /* Public Methods */
 
-nsVersionInfo::nsVersionInfo(PRInt32 maj, PRInt32 min, PRInt32 rel, PRInt32 bld, PRInt32 checksum)
+nsVersionInfo::nsVersionInfo(PRInt32 maj, PRInt32 min, PRInt32 rel, PRInt32 bld)
 {
   major   = maj;
   minor   = min;
   release = rel;
   build   = bld;
-  check   = checksum;
 }
 
 nsVersionInfo::nsVersionInfo(char* versionArg)
 {
   PRInt32 errorCode;
+
+  major = minor = release = build = 0;
+
   if (versionArg == NULL) {
-    versionArg = "0.0.0.0";
+    versionArg = "0";
   }
   nsString version(versionArg);
   int dot = version.Find('.', 0);
@@ -151,7 +153,7 @@ nsVersionEnum nsVersionInfo::compareTo(char* version)
 
 nsVersionEnum nsVersionInfo::compareTo(PRInt32 maj, PRInt32 min, PRInt32 rel, PRInt32 bld)
 {
-  nsVersionInfo* versionInfo = new nsVersionInfo(maj, min, rel, bld, 0);
+  nsVersionInfo* versionInfo = new nsVersionInfo(maj, min, rel, bld);
   nsVersionEnum ret_val = compareTo(versionInfo);
   delete versionInfo;
   return ret_val;

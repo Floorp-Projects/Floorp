@@ -30,7 +30,10 @@
 #include "prthread.h"
 #include "nsFolderSpec.h"
 #include "nsSUError.h"
+
+extern "C" {
 #include "su_folderspec.h"
+}
 
 #ifndef MAX_PATH
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -125,7 +128,7 @@ char* nsFolderSpec::SetDirectoryPath(char* *errorMsg)
 {
   if ((folderID == NULL) || (versionRegistryPath == NULL)) {
     *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
-                               nsSoftUpdateError_INVALID_ARGUMENTS);
+                               SUERR_INVALID_ARGUMENTS);
     return NULL;
   }
 
@@ -206,7 +209,7 @@ char* nsFolderSpec::PickDefaultDirectory(char* *errorMsg)
   urlPath = NativePickDefaultDirectory();
 
   if (urlPath == NULL)
-    *errorMsg = SU_GetErrorMsg3(folderID, nsSoftUpdateError_INVALID_PATH_ERR);
+    *errorMsg = SU_GetErrorMsg3(folderID, SUERR_INVALID_PATH_ERR);
 
   return urlPath;
 }
@@ -229,7 +232,7 @@ int nsFolderSpec::NativeGetDirectoryPath()
   switch (folderDirSpecID) 
     {
     case eBadFolder:
-      return nsSoftUpdateError_INVALID_PATH_ERR;
+      return SUERR_INVALID_PATH_ERR;
 
     case eCurrentUserFolder:
       {
@@ -260,7 +263,7 @@ int nsFolderSpec::NativeGetDirectoryPath()
     return 0;
   }
 
-  return nsSoftUpdateError_INVALID_PATH_ERR;
+  return SUERR_INVALID_PATH_ERR;
 }
 
 /* GetNativePath

@@ -59,6 +59,8 @@ extern int32 SU_PatchFile( char* srcfile, XP_FileType srctype,
 
 extern int32 SU_Uninstall(char *regPackageName);
 
+extern XP_Bool SU_IsUpdateEnabled(void);
+
 /* This method enumerates through the packages which can be uninstalled 
 * by finding the packages in the shared uninstall list and the packages 
 * in the current communicator uninstall list. 

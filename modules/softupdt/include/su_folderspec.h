@@ -103,13 +103,12 @@ XP_BEGIN_PROTOS
  */
 char * FE_GetDirectoryPath( su_DirSpecID folderID );
 int    FE_ReplaceExistingFile(char *, XP_FileType, char *, XP_FileType, XP_Bool);
+void PR_CALLBACK pickDirectoryCallback(void * a);
+
 
 #ifdef WIN32
 BOOL WFE_IsMoveFileExBroken();
 #endif
-
-PR_EXTERN(void) 
-pickDirectoryCallback(void * a);
 
 /* Makes sure that the path ends with a slash (or other platform end character)
  * @return  alloc'd new path that ends with a slash

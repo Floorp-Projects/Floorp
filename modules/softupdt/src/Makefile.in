@@ -45,32 +45,32 @@ endif
 
 CSRCS		= softupdt.c \
 		  su_trigger.c \
+		  su_version.c \
 		  su_patch.c \
 		  su_folderspec.c \
 		  su_instl.c \
-		  vr_java.c \
+          su_mocha.c \
 		  nsFolderSpec.c \
-		  nsVersionInfo.c \
 		  nsInstallDelete.c \
-		  nsVersionRegistry.c \
 		  nsInstallExecute.c \
-		  nsWinProfile.c \
 		  nsInstallFile.c \
-		  nsWinProfileItem.c \
 		  nsInstallPatch.c \
-		  nsWinReg.c \
-		  nsSUError.c \
-		  nsWinRegItem.c \
 		  nsSoftwareUpdate.c \
+		  nsSUError.c \
+          nsUninstallObject.c \
+		  nsVersionInfo.c \
+		  nsWinProfile.c \
+		  nsWinProfileItem.c \
+		  nsWinReg.c \
+		  nsWinRegItem.c \
 		  nsWinRegValue.c \
-		  nsTrigger.c \
 		  $(NULL)
 
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
 CSRCS		+= su_unix.c
 else
 CSRCS		+= os2updt.c su_wjava.c
-CPPSRCS		+= su_win.cpp nsFolderSpec.cpp nsVersionInfo.cpp nsInstallDelete.cpp nsVersionRegistry.cpp nsInstallExecute.cpp nsWinProfile.cpp nsInstallFile.cpp nsWinProfileItem.cpp nsInstallPatch.cpp nsWinReg.cpp nsSUError.cpp nsWinRegItem.cpp nsSoftwareUpdate.cpp nsWinRegValue.cpp nsTrigger.cpp
+CPPSRCS		+= su_win.cpp su_mocha.cpp nsFolderSpec.cpp nsVersionInfo.cpp nsInstallDelete.cpp nsInstallExecute.cpp nsWinProfile.cpp nsInstallFile.cpp nsWinProfileItem.cpp nsInstallPatch.cpp nsWinReg.cpp nsSUError.cpp nsWinRegItem.cpp nsSoftwareUpdate.cpp nsWinRegValue.cpp nsUninstallObject.cpp
 
 endif
 
