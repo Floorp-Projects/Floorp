@@ -501,8 +501,8 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
       // xbl:text set on us.
 
       if (dstAttr == nsXBLAtoms::xbltext ||
-          (realElement->Tag() == nsHTMLAtoms::html &&
-           realElement->IsContentOfType(nsIContent::eHTML)) &&
+          realElement->GetNodeInfo()->Equals(nsHTMLAtoms::html,
+                                             kNameSpaceID_XUL) &&
           dstAttr == nsHTMLAtoms::value) {
         // Flush out all our kids.
         PRUint32 childCount = realElement->GetChildCount();
@@ -898,8 +898,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
         realElement->SetAttr(kNameSpaceID_None, dst, value, PR_FALSE);
 
         if (dst == nsXBLAtoms::xbltext ||
-            (realElement->Tag() == nsHTMLAtoms::html &&
-             realElement->IsContentOfType(nsIContent::eHTML) &&
+            (realElement->GetNodeInfo()->Equals(nsHTMLAtoms::html,
+                                                kNameSpaceID_XUL) &&
              dst == nsHTMLAtoms::value && !value.IsEmpty())) {
           nsCOMPtr<nsIDOMText> textNode;
           nsCOMPtr<nsIDOMDocument> domDoc =
