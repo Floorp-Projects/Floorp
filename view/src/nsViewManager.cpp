@@ -104,7 +104,17 @@ nsrefcnt nsViewManager::AddRef(void)
 
 nsrefcnt nsViewManager::Release(void)
 {
-  if (--mRefCnt == 0) {
+  mRefCnt--;
+
+  if ((mRefCnt == 1) && (nsnull != mRootView))
+  {
+    nsIView *pRoot = mRootView;
+    mRootView = nsnull;         //set to null so that we don't get in here again
+    NS_RELEASE(pRoot);          //kill the root view
+  }
+
+  if (mRefCnt == 0)
+  {
     delete this;
     return 0;
   }
@@ -422,15 +432,47 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRInt32 zinde
 
   if ((nsnull != parent) && (nsnull != child))
   {
-    //XXX this is really dumb but it will at least do something
+    PRInt32 numkids = parent->GetChildCount();
+    nsIView *kid = nsnull, *prev = nsnull;
 
-    parent->InsertChild(child, nsnull);
+    //find the right insertion point...
+
+    for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+    {
+      PRInt32 idx;
+    
+      kid = parent->GetChild(cnt);
+
+      idx = kid->GetZIndex();
+
+      if (zindex < idx)
+        break;
+
+      prev = kid;
+    }
+
+    //in case this hasn't been set yet... maybe we should not do this? MMP
+
+    child->SetZIndex(zindex);
+    parent->InsertChild(child, prev);
+
+    //and mark this area as dirty if the view is visible...
+
+    if (child->GetVisibility() != nsViewVisibility_kHide)
+      UpdateView(child, nsnull, 0);
   }
 }
 
 void nsViewManager :: RemoveChild(nsIView *parent, nsIView *child)
 {
-  parent->RemoveChild(child);
+  NS_PRECONDITION(nsnull != parent, "null ptr");
+  NS_PRECONDITION(nsnull != child, "null ptr");
+
+  if ((nsnull != parent) && (nsnull != child))
+  {
+    UpdateView(child, nsnull, 0);
+    parent->RemoveChild(child);
+  }
 }
 
 void nsViewManager :: MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
