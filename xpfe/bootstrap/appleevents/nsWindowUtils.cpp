@@ -60,7 +60,6 @@
 #include "nsWindowUtils.h"
 #include "nsMacUtils.h"
 #include "nsXPIDLString.h"
-#include "nsXULWindow.h"
 #include "nsWindowUtils.h"
 #include "nsReadableUtils.h"
 
