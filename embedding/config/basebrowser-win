@@ -162,7 +162,12 @@ components\xppref32.dll
 
 ; profile
 components\profile.dll                  
-components\profile.xpt                  
+components\profile.xpt
+
+; wallet
+; Optional - only if you need password persistence
+components\wallet.dll
+components\wallet.xpt                  
 
 ; psm2
 ; Optional - only if you need PSM2 support
