@@ -302,8 +302,8 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
   nsCOMPtr<nsIURL> url;
-  PRBool methodIsPost = PR_FALSE;
   if (channel) {
+    PRBool methodIsPost = PR_FALSE;
     nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(channel);
     if (httpChan) {
       nsCAutoString requestMethod;
@@ -337,24 +337,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   GetFromTypeAndExtension(aMimeContentType, fileExtension.get(), getter_AddRefs(mimeInfo));
   LOG(("Type/Ext lookup found 0x%p\n", mimeInfo.get()));
 
-  // (2) if we don't have a match yet, see if this type is in our list of extras.
-  if (!mimeInfo)
-  {
-#ifdef XP_WIN
-    /* XXX Gross hack to wallpaper over the most common Win32
-     * extension issues caused by the fix for bug 116938.  See bug
-     * 120327, comment 271 for why this is needed.  Not even sure we
-     * want to remove this once we have fixed all this stuff to work
-     * right; any info we get from extras on this type is pretty much
-     * useless....
-     */
-    if (PL_strcasecmp(aMimeContentType, APPLICATION_OCTET_STREAM) != 0)
-#endif
-      GetMIMEInfoForMimeTypeFromExtras(aMimeContentType, getter_AddRefs(mimeInfo));
-    LOG(("Searched extras, found 0x%p\n", mimeInfo.get()));
-  }
-
-  // (3) if we STILL don't have a mime object for this content type then give up
+  // (2) if we don't have a mime object for this content type then give up
   // and create a new mime info object for it and use it
   if (!mimeInfo)
   {
@@ -372,26 +355,13 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   }
 
   *aStreamListener = nsnull;
-  // The primary extension for the mime info may be different from
-  // the URL extension.  If the URL extension matches the mime info,
-  // set it as the primary extension.  In either case, fileExtension
-  // should be the primary extension once we are doen.
-  // Ignore URL extension if data is output from a cgi script.
-  PRBool matches = PR_FALSE;
-  if (!fileExtension.IsEmpty()) {
-    mimeInfo->ExtensionExists(fileExtension.get(), &matches);
-  }
-  LOG(("Extension '%s' matches mime info: '%s'\n", fileExtension.get(), matches? "yes" : "no"));
-  if (matches) {
-    mimeInfo->SetPrimaryExtension(fileExtension.get());
-  } else {
-    nsXPIDLCString buf;
-    mimeInfo->GetPrimaryExtension(getter_Copies(buf));
-    fileExtension = buf;
-  }
+  // We want the mimeInfo's primary extension to pass it to
+  // CreateNewExternalHandler
+  nsXPIDLCString buf;
+  mimeInfo->GetPrimaryExtension(getter_Copies(buf));
 
   // this code is incomplete and just here to get things started..
-  nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension.get(), aWindowContext);
+  nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, buf.get(), aWindowContext);
   if (!handler)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aStreamListener = handler);
@@ -2128,11 +2098,12 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
   LOG(("Getting mimeinfo from type '%s' ext '%s'\n", aMIMEType, aFileExt));
 
   *_retval = nsnull;
-  // Ask the OS for a mime info
+
+  // (1) Ask the OS for a mime info
   *_retval = GetMIMEInfoFromOS(aMIMEType, aFileExt).get();
   LOG(("OS gave back 0x%p\n", *_retval));
 
-  // Now, let's see if we can find something in our datasource
+  // (2) Now, let's see if we can find something in our datasource
   nsCOMPtr<nsIMIMEInfo> dsInfoType;
   if (aMIMEType && *aMIMEType)
     GetMIMEInfoForMimeTypeFromDS(aMIMEType, getter_AddRefs(dsInfoType));
@@ -2162,10 +2133,45 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
     }
   }
 
+  // (3) No match yet. Ask extras.
+  if (!*_retval) {
+    if (aMIMEType && *aMIMEType) {
+#ifdef XP_WIN
+      /* XXX Gross hack to wallpaper over the most common Win32
+       * extension issues caused by the fix for bug 116938.  See bug
+       * 120327, comment 271 for why this is needed.  Not even sure we
+       * want to remove this once we have fixed all this stuff to work
+       * right; any info we get from extras on this type is pretty much
+       * useless....
+       */
+      if (PL_strcasecmp(aMimeContentType, APPLICATION_OCTET_STREAM) != 0)
+#endif
+        GetMIMEInfoForMimeTypeFromExtras(aMIMEType, _retval);
+      LOG(("Searched extras (by type), found 0x%p\n", *_retval));
+    }
+    // If that didn't work out, try file extension from extras
+    if (!*_retval && aFileExt && *aFileExt) {
+      GetMIMEInfoForExtensionFromExtras(aFileExt, _retval);
+      if (*_retval && aMIMEType && *aMIMEType)
+        (*_retval)->SetMIMEType(aMIMEType);
+      LOG(("Searched extras (by ext), found 0x%p\n", *_retval));
+    }
+  }
+
   // if we don't have a match, then we give up, we don't know
   // anything about it...  return an error.
-
   if (!*_retval) return NS_ERROR_FAILURE;
+
+  // Finally, check if we got a file extension and if yes, if it is an
+  // extension on the mimeinfo, in which case we want it to be the primary one
+  if (aFileExt && *aFileExt) {
+    PRBool matches = PR_FALSE;
+    (*_retval)->ExtensionExists(aFileExt, &matches);
+    LOG(("Extension '%s' matches mime info: '%s'\n", aFileExt, matches? "yes" : "no"));
+    if (matches)
+      (*_retval)->SetPrimaryExtension(aFileExt);
+  }
+
   return NS_OK;
 
 }
@@ -2200,9 +2206,6 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
         rv = NS_ERROR_FAILURE;
       }
     }
-  }
-  if (NS_FAILED(rv)) {
-    rv = GetMIMEInfoForExtensionFromExtras(aFileExt, getter_AddRefs(info));
   }
   if (NS_FAILED(rv)) {
     return rv;
