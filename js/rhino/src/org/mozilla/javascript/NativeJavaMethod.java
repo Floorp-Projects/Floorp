@@ -348,7 +348,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
     /**
      * Find the correct function to call given the set of methods
-     * or constructors and the arguments.
+     * or constructors and the arguments. Assume that all instances of
+     * {@link Wrapper} are alreday unwrapped by unwrapArgs.
      * If no function can be found to call, return null.
      */
     static Member findFunction(Member[] methodsOrCtors, Object[] args) {
