@@ -13,7 +13,7 @@ en-US.jar:
 +  locale/en-US/global/customizeToolbar.properties      (customizeToolbar.properties)
 +  locale/en-US/global/editMenuOverlay.dtd              (editMenuOverlay.dtd)
 +  locale/en-US/global/finddialog.dtd                   (finddialog.dtd)
-+  locale/en-US/global/finddialog.properties            (finddialog.propertie)
++  locale/en-US/global/finddialog.properties            (finddialog.properties)
 +  locale/en-US/global/intl.css                         (intl.css)
 +  locale/en-US/global/intl.properties                  (intl.properties)
 +  locale/en-US/global/keys.properties                  (keys.properties)
