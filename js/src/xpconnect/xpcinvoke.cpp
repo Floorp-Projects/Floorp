@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+/* Platform specific code to invoke XPCOM methods on native objects */
+
 #include "xpcprivate.h"
 
 #ifdef WIN32
