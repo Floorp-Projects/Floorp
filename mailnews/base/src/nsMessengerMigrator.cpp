@@ -1860,11 +1860,18 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	char is_newsgroup[512];
 	PRBool ok;
 
+	// check if the fat file exists
+	// if not, return and handle it gracefully
+	if (!fatFile.Exists()) {
+		return NS_OK;
+	}
+
 	nsInputFileStream inputStream(fatFile);
 	
+	// if it exists, but it is empty, just return and handle it gracefully
 	if (inputStream.eof()) {
 		inputStream.close();
-		return NS_ERROR_FAILURE;
+		return NS_OK;
 	}
 	
     /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
