@@ -488,9 +488,13 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
                                       kIViewManagerIID, 
                                       (void **)&mViewManager);
 
-    if ((NS_OK != rv) || (NS_OK != mViewManager->Init(mPresContext))) {
-        return rv;
+    nsIDeviceContext  *dx = mPresContext->GetDeviceContext();
+
+    if ((NS_OK != rv) || (NS_OK != mViewManager->Init(dx))) {
+      return rv;
     }
+
+    NS_IF_RELEASE(dx);
 
     nsRect tbounds = aBounds;
     tbounds *= mPresContext->GetPixelsToTwips();
