@@ -77,7 +77,8 @@ function Shutdown ()
   win.setAttribute("height", outerHeight);
   win.setAttribute("width", outerWidth);
 
-  gBookmarksShell.flushDataSource();
+  var bookmarksView = document.getElementById("bookmarks-view");
+  bookmarksView.flushBMDatasource();
 }
 
 function updateSendLinkItem()                                                   
