@@ -133,3 +133,6 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,shell32)
 endif
 
+ifdef MOZ_MOVEMAIL
+DEFINES	+= -DHAVE_MOVEMAIL
+endif
