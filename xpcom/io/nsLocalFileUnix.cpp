@@ -284,10 +284,9 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
         }
         
         mPath = homePath + Substring(filePath, 1, filePath.Length() - 1);
-    } else if (filePath.IsEmpty() || filePath.First() != '/') {
-      NS_ERROR("Relative paths not allowed");
-      return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     } else {
+        if (filePath.IsEmpty() || filePath.First() != '/') {
+            return NS_ERROR_FILE_UNRECOGNIZED_PATH;
         mPath = filePath;
     }
 
