@@ -33,8 +33,11 @@
 
 #include <X11/extensions/XIElib.h>
 
+#include "prenv.h"
+
 /*#define DEBUG_XIE 1*/
 
+static PRBool useXIE = PR_TRUE;
 static PRBool inited = PR_FALSE;
 static XiePhotospace gPhotospace;
 static XiePhotoElement *photoElement;
@@ -141,10 +144,31 @@ DrawScaledImageXIE(Display *display,
   printf("DrawScaledImageXIE\n");
 #endif
 
+  if (!useXIE) {
+#ifdef DEBUG_XIE
+    fprintf(stderr, "useXIE is false.\n");
+#endif
+    return PR_FALSE;
+  }
+
   if (!inited) {
     XieExtensionInfo *info;
-    if (!XieInitialize(display, &info))
+
+    if (useXIE) {
+      char *text = PR_GetEnv("MOZ_DISABLE_XIE");
+      if (text) {
+#ifdef DEBUG_XIE
+        fprintf(stderr, "MOZ_DISABLE_XIE set, disabling use of XIE.\n");
+#endif
+        useXIE = PR_FALSE;
+        return PR_FALSE;
+      }
+    }
+
+    if (!XieInitialize(display, &info)) {
+      useXIE = PR_FALSE;
       return PR_FALSE;
+    }
 
     inited = PR_TRUE;
 
@@ -161,7 +185,7 @@ DrawScaledImageXIE(Display *display,
   if (aSrcMask) {
     Drawable destMask;
 
-#ifdef DEBUG_XIE    
+#ifdef DEBUG_XIE
     fprintf(stderr, "DrawScaledImageXIE with alpha mask\n");
 #endif
 
