@@ -219,7 +219,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	// register our RDF datasources:
@@ -263,7 +263,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kAbDirectoryDataSourceCID, path);

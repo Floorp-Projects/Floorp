@@ -191,7 +191,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv = NS_OK;
 
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kMimeEmitterCID,
@@ -205,7 +205,7 @@ extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kMimeEmitterCID, path);

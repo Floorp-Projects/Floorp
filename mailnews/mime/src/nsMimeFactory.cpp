@@ -222,7 +222,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   nsresult rv = NS_OK;
   nsresult finalResult = NS_OK;
 
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // Content type handler object class access interface
