@@ -2146,14 +2146,16 @@ static PRInt32 pt_HPUXSendFile(PRFileDesc *sd, PRSendFileData *sfd,
     PRInt32 count;
     int syserrno;
 
-    /* Get file size */
-    if (fstat(sfd->fd->secret->md.osfd, &statbuf) == -1) {
-        _PR_MD_MAP_FSTAT_ERROR(errno);
-        return -1;
+    if (sfd->file_nbytes == 0) {
+        /* Get file size */
+        if (fstat(sfd->fd->secret->md.osfd, &statbuf) == -1) {
+            _PR_MD_MAP_FSTAT_ERROR(errno);
+            return -1;
+        } 		
+        file_nbytes_to_send = statbuf.st_size - sfd->file_offset;
+    } else {
+        file_nbytes_to_send = sfd->file_nbytes;
     }
-	file_nbytes_to_send = (sfd->file_nbytes ==  0) ?
-						statbuf.st_size - sfd->file_offset :
-						sfd->file_nbytes;
     nbytes_to_send = sfd->hlen + sfd->tlen + file_nbytes_to_send;
 
     hdtrl[0].iov_base = (void *) sfd->header;  /* cast away the 'const' */
