@@ -927,7 +927,9 @@ NS_IMETHODIMP nsMsgThread::GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result
       return ret;
     else
     {
+#ifdef DEBUG_bienvenu
       printf("need to reset thread root key\n");
+#endif
       PRUint32 numChildren;
       nsMsgKey threadParentKey = nsMsgKey_None;
       GetNumChildren(&numChildren);
