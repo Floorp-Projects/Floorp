@@ -124,11 +124,11 @@ BEGIN
 END
 sjis.uf RCDATA
 BEGIN
-#include "ufrmtbl\\sjis.uf"
+#include "ufrmtbl\\cp932.uf"
 END
 sjis.ut RCDATA
 BEGIN
-#include "utotbl\\sjis.ut"
+#include "utotbl\\cp932.ut"
 END
 u20ksc.uf RCDATA
 BEGIN
@@ -198,5 +198,14 @@ END
 cp874.ut RCDATA
 BEGIN
 #include "utotbl\\cp874.ut"
+END
+
+t61.uf RCDATA
+BEGIN
+#include "ufrmtbl\\t61.uf"
+END
+t61.ut RCDATA
+BEGIN
+#include "utotbl\\t61.ut"
 END
 	// #endif // ALL_UNICODE_TABLE

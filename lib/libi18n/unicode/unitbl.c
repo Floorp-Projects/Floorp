@@ -101,6 +101,7 @@ utablename utablenametbl[] =
 	{CS_SYMBOL,		{"MACSYMBO.UF",	0,	NULL},		{"MACSYMBO.UT",	0,	NULL}},
 	{CS_DINGBATS,	{"MACDINGB.UF",	0,	NULL},		{"MACDINGB.UT",	0,	NULL}},
 	{CS_TIS620,	{"CP874.UF",	0,	NULL},		{"CP874.UT",	0,	NULL}},
+	{CS_T61,	{"T61.UF",	0,	NULL},		{"T61.UT",	0,	NULL}},
 	{CS_DEFAULT,	{"",			0,	NULL},		{"",			0,	NULL}}
 };
 static tblrsrcinfo* unicode_FindUTableName(uint16 csid, int from)
