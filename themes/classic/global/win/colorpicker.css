@@ -1,3 +1,8 @@
+
+colorpicker {
+  -moz-user-focus: normal;  
+}
+
 /* colorpicker tiles */
 
 .colorpickertile {
@@ -10,12 +15,17 @@
   border-bottom         : 1px solid ThreeDHighlight;
 }
 
-.colorpickertile[hover="true"] {
-  border                : 1px solid #FFFFFF;
+.colorpickertile[selected="true"] {
+  border : 2px outset #C0C0C0;
+
 }
 
-.colorpickertile[selected="true"] {
-  border                : 1px solid #000000;
+.colorpickertile[hover="true"] {
+  border : 2px dotted #FFFFFF;
+}
+
+.cp-light[hover="true"] {
+  border : 2px dotted #909090;
 }
 
 /* colorpicker button */

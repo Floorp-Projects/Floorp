@@ -27,6 +27,10 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+colorpicker {
+  -moz-user-focus: normal;  
+}
+
 /* ::::: colorpicker button ::::: */
  
 colorpicker[type="button"] {
@@ -61,11 +65,15 @@ colorpicker[type="button"]:focus {
   border: 1px inset #C7D0D9;
 }
 
-.colorpickertile[hover="true"] {
-  border: 1px solid #FFFFFF;
-}
-
 .colorpickertile[selected="true"] {
-  border: 1px solid #000000;
+  border: 2px outset #C0C0C0;
+
 }
 
+.colorpickertile[hover="true"] {
+  border: 2px dotted #FFFFFF;
+}
+
+.cp-light[hover="true"] {
+  border : 2px dotted #909090;
+}

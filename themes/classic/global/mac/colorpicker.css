@@ -1,4 +1,8 @@
 
+colorpicker {
+  -moz-user-focus: normal;  
+}
+
 /* colorpicker tiles */
 
 .colorpickertile 
@@ -9,14 +13,19 @@
     border                : 1px inset #CCCCCC;
   }
 
-.colorpickertile[hover="true"] 
-  {
-    border                : 1px solid #FFFFFF;
-  }
-
 .colorpickertile[selected="true"] 
   {
-    border                : 1px solid #000000;
+    border : 2px outset #C0C0C0;
+  }
+
+.colorpickertile[hover="true"]
+  {
+    border : 2px dotted #FFFFFF;
+  }
+
+.cp-light[hover="true"]
+  {
+    border : 2px dotted #909090;
   }
 
 /* colorpicker button */
