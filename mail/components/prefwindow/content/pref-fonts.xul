@@ -20,7 +20,7 @@
 #   
 #   Contributor(s): 
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
@@ -81,6 +81,7 @@
         <column/>
         <column flex="1"/>
         <column/>
+        <column/>
       </columns>
       
       <rows>
@@ -99,6 +100,11 @@
                         label="&useDefaultFontSansSerif.label;"/>
             </menupopup>
           </menulist>
+          
+          <hbox align="center" pack="end">
+            <label value="&sizes.label;"/>
+          </hbox> 
+
           <menulist id="sizeVar" class="small-margin">
             <menupopup>
               <menuitem value="8" label="8"/>
@@ -129,9 +135,6 @@
               <menuitem value="72" label="72"/>
             </menupopup>
           </menulist>
-        </row>
-        <row>
-          <separator class="thin"/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
@@ -164,7 +167,10 @@
           <menulist id="monospace" class="prefpanel-font-list">
             <menupopup/>
           </menulist>
-          <menulist id="sizeMono">
+          <hbox align="center" pack="end">
+            <label value="&sizes.label;"/>
+          </hbox> 
+          <menulist id="sizeMono" class="small-margin">
             <menupopup>
               <menuitem value="8" label="8"/>
               <menuitem value="9" label="9"/>
