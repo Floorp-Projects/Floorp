@@ -145,6 +145,8 @@ desc=\"Lotus Organizer Document\"		icon=resource:/res/network/gopher-text.gif",
 desc=\"Lotus ScreenCam Movie\"	icon=resource:/res/network/gopher-text.gif",
 "exts=\"wpd,wp6\"                type=application/wordperfect5.1     \
 desc=\"WordPerfect Document\"      icon=resource:/res/network/gopher-text.gif",
+"exts=\"eml\"                 type=message/rfc822     \
+desc=\"RFC822 Messages\"      icon=resource:/res/network/gopher-text.gif",
 
 #ifdef XP_UNIX
 "exts=\"t,tr,roff\"                type=application/x-troff        \
