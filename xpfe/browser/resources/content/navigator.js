@@ -251,7 +251,6 @@ nsXULBrowserWindow.prototype =
       if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
         this.totalRequests += 1;
       }
-      EnableBusyCursor(throbberElement.getAttribute("busy") == "true");
     }
     else if (state & nsIWebProgressListener.STATE_STOP) {
       if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
@@ -284,8 +283,6 @@ nsXULBrowserWindow.prototype =
 
         // Set buttons in form menu
         setFormToolbar();
-
-        EnableBusyCursor(false);
       }
     }
     else if (state & nsIWebProgressListener.STATE_TRANSFERRING) {
@@ -1186,21 +1183,6 @@ function FillInHTMLTooltip(tipElement)
   }
 
   return retVal;
-}
-
-function EnableBusyCursor(doEnable)
-{
-  if (doEnable) {
-    // set the spinning cursor everywhere but mac, we have our own way to
-    // do this thankyouverymuch.
-    if (navigator.platform.indexOf("Mac") == -1) {
-      setCursor("spinning");
-      _content.setCursor("spinning");
-    }
-  } else {
-    setCursor("auto");
-    _content.setCursor("auto");
-  }
 }
 
 /**

@@ -1414,6 +1414,21 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
     }
   }
 
+  // Check whether or not to show the busy cursor
+  nsCOMPtr<nsISupports> pcContainer;
+  aPresContext->GetContainer(getter_AddRefs(pcContainer));    
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));    
+  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+  docShell->GetBusyFlags(&busyFlags);
+
+  // Show busy cursor everywhere before page loads
+  // and just replace the arrow cursor after page starts loading
+  if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY &&
+        (cursor == NS_STYLE_CURSOR_AUTO || cursor == NS_STYLE_CURSOR_DEFAULT))
+  {
+    cursor = NS_STYLE_CURSOR_SPINNING;
+  }
+ 
   if (aTargetFrame) {
     nsCOMPtr<nsIWidget> window;
     aTargetFrame->GetWindow(aPresContext, getter_AddRefs(window));

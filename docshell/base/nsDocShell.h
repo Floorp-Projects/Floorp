@@ -301,6 +301,7 @@ protected:
    PRInt32                    mLastViewMode;
    PRBool                     mRestoreViewMode;
    PRInt32                    mChildOffset;  // Offset in the parent's child list.
+   PRUint32                   mBusyFlags;
    // Reference to the SHEntry for this docshell until the page is destroyed.
    // Somebody give me better name
    nsCOMPtr<nsISHEntry>       OSHE; 

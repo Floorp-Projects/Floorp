@@ -131,7 +131,8 @@ nsDocShell::nsDocShell() :
   mUseExternalProtocolHandler (PR_FALSE),
   mParent(nsnull),
   mTreeOwner(nsnull),
-  mChromeEventHandler(nsnull)
+  mChromeEventHandler(nsnull),
+  mBusyFlags(BUSY_FLAGS_NONE)
 {
   NS_INIT_REFCNT();
 }
@@ -775,6 +776,14 @@ NS_IMETHODIMP nsDocShell::GetMarginHeight(PRInt32* aHeight)
 NS_IMETHODIMP nsDocShell::SetMarginHeight(PRInt32 aHeight)
 {
   mMarginHeight = aHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetBusyFlags(PRUint32 *aBusyFlags)
+{
+  NS_ENSURE_ARG_POINTER(aBusyFlags);
+
+  *aBusyFlags = mBusyFlags;
   return NS_OK;
 }
 
@@ -2563,7 +2572,33 @@ NS_IMETHODIMP
 nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
-  if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP)) {
+  // Update the busy cursor
+  if ((~aStateFlags & (STATE_START | STATE_IS_NETWORK)) == 0) {
+	// Page has begun to load
+    mBusyFlags = BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD;
+    nsCOMPtr<nsIWidget> mainWidget;
+    GetMainWidget(getter_AddRefs(mainWidget));
+    if(mainWidget)
+	{
+      mainWidget->SetCursor(eCursor_spinning);
+	}
+  }
+  else if ((~aStateFlags & (STATE_TRANSFERRING | STATE_IS_DOCUMENT)) == 0) {
+	// Page is loading
+    mBusyFlags = BUSY_FLAGS_BUSY | BUSY_FLAGS_PAGE_LOADING;
+  }
+  else if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
+	// Page has finished loading
+    mBusyFlags = BUSY_FLAGS_NONE;
+    nsCOMPtr<nsIWidget> mainWidget;
+    GetMainWidget(getter_AddRefs(mainWidget));
+    if(mainWidget)
+	{
+      mainWidget->SetCursor(eCursor_standard);
+	}
+  } 
+
+  if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_STOP)) == 0) {
     nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
 
     // Is the document stop notification for this document?
@@ -2573,7 +2608,7 @@ nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
       EndPageLoad(aProgress, channel, aStatus);
     }
   }
-  else if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_REDIRECTING)) {
+  else if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_REDIRECTING)) == 0) {
     // XXX Is it enough if I check just for the above 2 flags for redirection 
     nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
 
