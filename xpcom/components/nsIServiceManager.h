@@ -19,7 +19,7 @@
 #ifndef nsIServiceManager_h___
 #define nsIServiceManager_h___
 
-#include "nsISupports.h"
+#include "nsIComponentManager.h"
 #include "nsID.h"
 
 class nsIShutdownListener;
@@ -109,98 +109,19 @@ public:
     ReleaseService(const nsCID& aClass, nsISupports* service,
                    nsIShutdownListener* shutdownListener = NULL) = 0;
 
+    NS_IMETHOD
+    GetService(const char* aProgID, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL) = 0;
+
+    NS_IMETHOD
+    ReleaseService(const char* aProgID, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL) = 0;
+
 };
 
 #define NS_ERROR_SERVICE_NOT_FOUND      NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 22)
 #define NS_ERROR_SERVICE_IN_USE         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 23)
-
-////////////////////////////////////////////////////////////////////////////////
-// nsService: Template to make using services easier. Now you can replace this:
-//
-//      nsIMyService* service;
-//      rv = nsServiceManager::GetService(cid, iid, &service);
-//      if (NS_SUCCEEDED(rv)) {
-//              service->Doit(...);     // use my service
-//              rv = nsServiceManager::ReleaseService(cid, service);
-//      }
-//
-// with this:
-//
-//      nsService<nsIMyService> service(cid, &rv);
-//      if (NS_SUCCEEDED(rv)) {
-//              service->Doit(...);     // use my service
-//      }
-//
-// and the automatic destructor will take care of releasing the service.
-
-#ifdef XP_WIN
-
-template<class T> class nsService {
-protected:
-  const nsCID mCID;
-  T* mService;
-
-public:
-  nsService(nsISupports* aServMgr, const nsCID& aClass, nsresult *rv)
-    : mCID(aClass), mService(0) {
-    
-    nsIServiceManager* servMgr;
-    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
-    if (NS_SUCCEEDED(*rv)) {
-      *rv = servMgr->GetService(aClass, T::GetIID(), (nsISupports**)&mService);
-      NS_RELEASE(servMgr);
-    }
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
-  }
-
-  nsService(const nsCID& aClass, nsresult *rv)
-    : mCID(aClass), mService(0) {
-    *rv = nsServiceManager::GetService(aClass, T::GetIID(),
-                                       (nsISupports**)&mService);
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
-  }
-
-  ~nsService() {
-    if (mService) {       // mService could be null if the constructor fails
-      nsresult rv = nsServiceManager::ReleaseService(mCID, mService);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't release service.");
-    }
-  }
-
-  T* operator->() const {
-    NS_PRECONDITION(mService != 0, "Your code should test the error result from the constructor.");
-    return mService;
-  }
-
-  PRBool operator==(const T* other) {
-    return mService == other;
-  }
-
-  operator T*() const {
-    return mService;
-  }
-
-};
-
-#else
-
-#define NS_WITH_SERVICE(T, serv, isupports, cid, rv)                                \
-{                                                                                   \
-  T* serv;                                                                          \
-  const nsCID& _aClass = (cid);                                                     \
-  nsISupports* _isupp = (isupports);                                                \
-  nsIServiceManager* _servMgr;                                                      \
-  *(rv) = (_isupp)->QueryInterface(nsIServiceManager::GetIID(), (void**)&_servMgr); \
-  if (NS_SUCCEEDED(*rv)) {                                                          \
-    *(rv) = _servMgr->GetService(_aClass, T::GetIID(), (nsISupports**)&(serv));     \
-    NS_RELEASE(_servMgr);                                                           \
-  }                                                                                 \
-
-#define NS_END_WITH_SERVICE(cid, serv)                                              \
-  _servMgr->ReleaseService(cid, serv);                                              \
-}                                                                                   \
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,6 +168,161 @@ protected:
     static nsIServiceManager* mGlobalServiceManager;
 
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// nsService: Template to make using services easier. Now you can replace this:
+//
+//      nsIMyService* service;
+//      rv = nsServiceManager::GetService(cid, iid, &service);
+//      if (NS_SUCCEEDED(rv)) {
+//              service->Doit(...);     // use my service
+//              rv = nsServiceManager::ReleaseService(cid, service);
+//      }
+//
+// with this:
+//
+//      nsService<nsIMyService> service(cid, &rv);
+//      if (NS_SUCCEEDED(rv)) {
+//              service->Doit(...);     // use my service
+//      }
+//
+// and the automatic destructor will take care of releasing the service.
+
+#if 0   // sorry the T::GetIID() construct doesn't work with egcs
+
+template<class T> class nsService {
+protected:
+  nsCID mCID;
+  T* mService;
+
+public:
+  nsService(nsISupports* aServMgr, const nsCID& aClass, nsresult *rv)
+    : mCID(aClass), mService(0)
+  {
+    nsIServiceManager* servMgr;
+    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
+    if (NS_SUCCEEDED(*rv)) {
+      *rv = servMgr->GetService(mCID, T::GetIID(), (nsISupports**)&mService);
+      NS_RELEASE(servMgr);
+    }
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
+  }
+
+  nsService(nsISupports* aServMgr, const char* aProgID, nsresult *rv)
+    : mService(0)
+  {
+    *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get CLSID.");
+    if (NS_FAILED(*rv)) return;
+  
+    nsIServiceManager* servMgr;
+    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
+    if (NS_SUCCEEDED(*rv)) {
+      *rv = servMgr->GetService(mCID, T::GetIID(), (nsISupports**)&mService);
+      NS_RELEASE(servMgr);
+    }
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
+  }
+
+  nsService(const nsCID& aClass, nsresult *rv)
+    : mCID(aClass), mService(0) {
+    *rv = nsServiceManager::GetService(aClass, T::GetIID(),
+                                       (nsISupports**)&mService);
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
+  }
+
+  ~nsService() {
+    if (mService) {       // mService could be null if the constructor fails
+      nsresult rv = nsServiceManager::ReleaseService(mCID, mService);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't release service.");
+    }
+  }
+
+  T* operator->() const {
+    NS_PRECONDITION(mService != 0, "Your code should test the error result from the constructor.");
+    return mService;
+  }
+
+  PRBool operator==(const T* other) {
+    return mService == other;
+  }
+
+  operator T*() const {
+    return mService;
+  }
+
+};
+
+#else
+
+class nsService {
+protected:
+  nsCID mCID;
+  nsISupports* mService;
+
+public:
+  nsService(nsISupports* aServMgr, const nsCID& aClass, const nsIID& aIID, nsresult *rv)
+    : mCID(aClass), mService(0)
+  {
+    nsIServiceManager* servMgr;
+    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
+    if (NS_SUCCEEDED(*rv)) {
+      *rv = servMgr->GetService(mCID, aIID, &mService);
+      NS_RELEASE(servMgr);
+    }
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
+  }
+
+  nsService(nsISupports* aServMgr, const char* aProgID, const nsIID& aIID, nsresult *rv)
+    : mService(0)
+  {
+    *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get CLSID.");
+    if (NS_FAILED(*rv)) return;
+  
+    nsIServiceManager* servMgr;
+    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
+    if (NS_SUCCEEDED(*rv)) {
+      *rv = servMgr->GetService(mCID, aIID, &mService);
+      NS_RELEASE(servMgr);
+    }
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
+  }
+
+  nsService(const nsCID& aClass, const nsIID& aIID, nsresult *rv)
+    : mCID(aClass), mService(0) {
+    *rv = nsServiceManager::GetService(aClass, aIID,
+                                       (nsISupports**)&mService);
+    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
+  }
+
+  ~nsService() {
+    if (mService) {       // mService could be null if the constructor fails
+      nsresult rv = nsServiceManager::ReleaseService(mCID, mService);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't release service.");
+    }
+  }
+
+  nsISupports* operator->() const {
+    NS_PRECONDITION(mService != 0, "Your code should test the error result from the constructor.");
+    return mService;
+  }
+
+  PRBool operator==(const nsISupports* other) {
+    return mService == other;
+  }
+
+  operator nsISupports*() const {
+    return mService;
+  }
+
+};
+
+#define NS_WITH_SERVICE(T, var, isupports, cid, rvAddr)      \
+  nsService _serv##var(isupports, cid, T::GetIID(), rvAddr); \
+  T* var = (T*)(nsISupports*)_serv##var;
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_NewServiceManager: For when you want to create a service manager

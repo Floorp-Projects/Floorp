@@ -17,7 +17,6 @@
  */
 
 #include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
 #include "nsVector.h"
 #include "nsHashtable.h"
 #include "prcmon.h"
@@ -132,6 +131,15 @@ public:
 
     NS_IMETHOD
     ReleaseService(const nsCID& aClass, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    GetService(const char* aProgID, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    ReleaseService(const char* aProgID, nsISupports* service,
                    nsIShutdownListener* shutdownListener = NULL);
 
     nsServiceManagerImpl(void);
@@ -278,6 +286,29 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
 
     PR_CExitMonitor(this);
     return rv;
+}
+
+NS_IMETHODIMP
+nsServiceManagerImpl::GetService(const char* aProgID, const nsIID& aIID,
+                                 nsISupports* *result,
+                                 nsIShutdownListener* shutdownListener)
+{
+    nsCID aClass;
+    nsresult rv;
+    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    if (NS_FAILED(rv)) return rv;
+    return GetService(aClass, aIID, result, shutdownListener);
+}
+
+NS_IMETHODIMP
+nsServiceManagerImpl::ReleaseService(const char* aProgID, nsISupports* service,
+                                     nsIShutdownListener* shutdownListener)
+{
+    nsCID aClass;
+    nsresult rv;
+    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    if (NS_FAILED(rv)) return rv;
+    return ReleaseService(aClass, service, shutdownListener);
 }
 
 NS_IMETHODIMP
