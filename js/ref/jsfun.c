@@ -1035,10 +1035,10 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     }
 
     if (!JS_XDRStringOrNull(xdr, &atomstr) ||
-	!JS_XDRUint8(xdr, &fun->nargs) ||
-	!JS_XDRUint8(xdr, &fun->flags) ||
+	!JS_XDRUint16(xdr, &fun->nargs) ||
 	!JS_XDRUint16(xdr, &fun->extra) ||
-	!JS_XDRUint16(xdr, &fun->nvars))
+	!JS_XDRUint16(xdr, &fun->nvars) ||
+	!JS_XDRUint8(xdr, &fun->flags)) 
 	return JS_FALSE;
 
     /* do arguments and local vars */

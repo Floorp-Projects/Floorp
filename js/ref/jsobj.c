@@ -2455,27 +2455,41 @@ out:
 
 /* Routines to print out values during debugging. */
 
-void printVal(jsval val) {
-    jsuint i;
-    JSString *str;
+void printJschar(jschar *cp) {
+    fprintf(stderr, "jschar* (0x%x) \"", cp);
+    while (*cp)
+        fputc(*cp++, stderr);
+    fputc('"', stderr);
+    fputc('\n', stderr);
+}
 
+void printString(JSString *str) {
+    jsuint i;
+    fprintf(stderr, "string (0x%x) \"", str);
+    for (i=0; i < str->length; i++)
+        fputc(str->chars[i], stderr);
+    fputc('"', stderr);
+    fputc('\n', stderr);
+}
+
+void printVal(jsval val) {
     fprintf(stderr, "val %d (0x%x) = ", val, val);
     if (JSVAL_IS_INT(val)) {
         fprintf(stderr, "(int) %d\n", JSVAL_TO_INT(val));
     } else if (JSVAL_IS_STRING(val)) {
-        fprintf(stderr, "(string) \"");
-        str = JSVAL_TO_STRING(val);
-        for (i=0; i < str->length; i++)
-            fputc(str->chars[i], stderr);
-        fputc('"', stderr);
-        fputc('\n', stderr);
+        printString(JSVAL_TO_STRING(val));
     }
+    /* XXX more cases */
     fflush(stderr);
 }
 
 void printId(jsid id) {
     fprintf(stderr, "id %d (0x%x) is ", id, id);
     printVal(js_IdToValue(id));
+}
+
+void printAtom(JSAtom *atom) {
+    printString(ATOM_TO_STRING(atom));
 }
 
 #endif

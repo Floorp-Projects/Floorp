@@ -30,11 +30,11 @@ struct JSFunction {
     jsrefcount	 nrefs;		/* number of referencing objects */
     JSObject     *object;       /* back-pointer to GC'ed object header */
     JSNative     call;          /* native method pointer or null */
-    uint8        nargs;         /* minimum number of actual arguments */
-    uint8        flags;         /* bound method and other flags, see jsapi.h */
+    uint16       nargs;         /* minimum number of actual arguments */
     uint16       extra;         /* number of arg slots for local GC roots */
     uint16       nvars;         /* number of local variables */
-    uint16       spare;         /* reserved for future use */
+    uint8        flags;         /* bound method and other flags, see jsapi.h */
+    uint8        spare;         /* reserved for future use */
     JSAtom       *atom;         /* name for diagnostics and decompiling */
     JSScript     *script;       /* interpreted bytecode descriptor or null */
 };
