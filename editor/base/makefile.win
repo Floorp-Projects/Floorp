@@ -76,6 +76,7 @@ CPP_OBJS =                                \
   .\$(OBJDIR)\InsertTextTxn.obj           \
   .\$(OBJDIR)\JoinElementTxn.obj          \
   .\$(OBJDIR)\nsComposerCommands.obj      \
+  .\$(OBJDIR)\nsComposerController.obj    \
   .\$(OBJDIR)\nsEditorCommands.obj        \
   .\$(OBJDIR)\nsEditorController.obj      \
   .\$(OBJDIR)\nsEditorEventListeners.obj  \
