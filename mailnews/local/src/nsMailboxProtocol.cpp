@@ -265,7 +265,6 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 	// now mark the message as read
 	nsCOMPtr<nsIMsgDBHdr> msgHdr;
 	nsresult rv = NS_OK;
-	PRUint32 flags = 0;
 
 	rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
 	if (NS_SUCCEEDED(rv))
