@@ -267,7 +267,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 		else if (m_mailDB != NULL)
 		{
 			m_mailDB->AddNewHdrToDB(m_newMsgHdr, m_updateAsWeGo);
-			m_newMsgHdr->Release();
+		//	m_newMsgHdr->Release();
 			// should we release here?
 			m_newMsgHdr = NULL;
 		}
