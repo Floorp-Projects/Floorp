@@ -1477,7 +1477,7 @@ nsXPIProgressListener::AssertProgressInfoForDownload(nsDownload* aDownload)
   target->GetPath(path);
 
   mDownloadManager->AssertProgressInfoFor(path.get());
-};
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadsDataSource
