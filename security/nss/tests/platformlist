@@ -1,6 +1,6 @@
-AIX_3
+AIX_3_32_bit
 AIX_3_64_bit
-HP-UX_B.11.00
+HP-UX_B.11.00_32_bit
 HP-UX_B.11.00_64_bit
 OSF1_V4.0
 OSF1_V5.0
@@ -8,5 +8,5 @@ RH_Linux_6.2_(Zoot)
 RH_Linux_6.1_(Cartman)
 RH_Linux_6.0_(Hedwig)
 SunOS_5.6
-SunOS_5.8
+SunOS_5.8_32_bit
 SunOS_5.8_64_bit
