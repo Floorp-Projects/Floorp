@@ -46,9 +46,8 @@ function nsContextMenu( xulMenu ) {
 
 // Prototype for nsContextMenu "class."
 nsContextMenu.prototype = {
-    // Remove all the children which we added at oncreate.
+    // onDestroy is a no-op at this point.
     onDestroy : function () {
-        this.removeAllItems();
     },
     // Initialize context menu.
     initMenu : function ( popup, event ) {
@@ -58,23 +57,6 @@ nsContextMenu.prototype = {
         // Get contextual info.
         this.setTarget( document.popupNode );
     
-        // Populate menu from template.
-        var template = document.getElementById( "context-template" );
-        var items = template.childNodes;
-        for ( var i = 0; i < items.length; i++ ) {
-            // Replicate item.
-            //var item = items.item(i).cloneNode( false );
-    
-            // cloneNode not implemented, fake it.
-            var item = this.cloneNode( items.item(i) );
-    
-            // Change id.
-            item.setAttribute( "id", item.getAttribute( "id" ).replace( "template-", "context-" ) );
-    
-            // Add it to popup menu.
-            this.menu.appendChild( item );
-        }
-
         // Initialize (disable/remove) menu items.
         this.initItems();
     },
@@ -90,24 +72,14 @@ nsContextMenu.prototype = {
         var needSep = false;
     
         // Remove open/edit link if not applicable.
-        if ( !this.onLink ) {
-            this.removeItem( "context-openlink" );
-            this.removeItem( "context-editlink" );
-        } else {
-            needSep = true;
-        }
+        this.showItem( "context-openlink", this.onLink );
+        this.showItem( "context-editlink", this.onLink );
     
         // Remove open frame if not applicable.
-        if ( !this.inFrame ) {
-            this.removeItem( "context-openframe" );
-        } else {
-            needSep = true;
-        }
+        this.showItem( "context-openframe", this.inFrame );
     
-        if ( !needSep ) {
-            // Remove separator after open items.
-            this.removeItem( "context-sep-open" );
-        }
+        // Remove separator after open items if neither link nor frame.
+        this.showItem( "context-sep-open", this.onLink && !this.inFrame );
     },
     initNavigationItems : function () {
         // Back determined by canGoBack broadcaster.
@@ -125,49 +97,37 @@ nsContextMenu.prototype = {
         // Save page is always OK.
     
         // Save frame as depends on whether we're in a frame.
-        if ( !this.inFrame ) {
-            this.removeItem( "context-saveframe" );
-        }
+        this.showItem( "context-saveframe", this.inFrame );
     
         // Save link depends on whether we're in a link.
-        if ( !this.onLink ) {
-            this.removeItem( "context-savelink" );
-        }
+        this.showItem( "context-savelink", this.onLink );
     
         // Save background image depends on whether there is one.
-        if ( !this.hasBGImage ) {
-            this.removeItem( "context-savebgimage" );
-        }
+        this.showItem( "context-savebgimage", this.hasBGImage );
     
         // Save image depends on whether there is one.
-        if ( !this.onImage ) {
-            this.removeItem( "context-saveimage" );
-        }
+        this.showItem( "context-saveimage", this.onImage );
     },
     initViewItems : function () {
         // View source is always OK.
     
         // View frame source depends on whether we're in a frame.
-        if ( !this.inFrame ) {
-            this.removeItem( "context-viewframesource" );
-        }
+        this.showItem( "context-viewframesource", this.inFrame );
     
         // View Info don't work no way no how.
-        this.removeItem( "context-viewinfo" );
+        this.showItem( "context-viewinfo", false );
     
         // View Frame Info isn't working, either.
-        this.removeItem( "context-viewframeinfo" );
+        this.showItem( "context-viewframeinfo", false );
     
         // View Image depends on whether an image was clicked on.
-        if ( !this.onImage ) {
-            this.removeItem( "context-viewimage" );
-        }
+        this.showItem( "context-viewimage", this.onImage );
     },
     initMiscItems : function () {
         // Add bookmark always OK.
     
         // Send Page not working yet.
-        this.removeItem( "context-sendpage" );
+        this.showItem( "context-sendpage", false );
     },
     initClipboardItems : function () {
         // Select All is always OK.
@@ -176,14 +136,10 @@ nsContextMenu.prototype = {
         this.setItemAttr( "context-copy", "disabled", this.isNoTextSelected() );
     
         // Copy link location depends on whether we're on a link.
-        if ( !this.onLink ) {
-            this.removeItem( "context-copylink" );
-        }
+        this.showItem( "context-copylink", this.onLink );
     
         // Copy image location depends on whether we're on an image.
-        if ( !this.onImage ) {
-            this.removeItem( "context-copyimage" );
-        }
+        this.showItem( "context-copyimage", this.onImage );
     },
     // Set various context menu attributes based on the state of the world.
     setTarget : function ( node ) {
@@ -319,8 +275,8 @@ nsContextMenu.prototype = {
         this.copyToClipboard( this.imageURL() );
     },
     // Utilities
-    // Remove one item (specified via name or the item element itself).
-    removeItem : function ( itemOrId ) {
+    // Show/hide one item (specified via name or the item element itself).
+    showItem : function ( itemOrId, show ) {
         var item = null;
         if ( itemOrId.constructor == String ) {
             // Argument specifies item id.
@@ -330,18 +286,21 @@ nsContextMenu.prototype = {
             item = itemOrId;
         }
         if ( item ) {
-            // Change id so it doesn't interfere with this menu
-            // the next time it is displayed.
-            //item.setAttribute( "id", "_dead" );
-            this.menu.removeChild( item );
-        }
-    },
-    // Remove all menu items.
-    removeAllItems : function () {
-        if ( this.menu ) {
-            var items = this.menu.childNodes;
-            for ( var i = 0; i < items.length; i++ ) {
-                this.removeItem( items[i] );
+            var styleIn = item.getAttribute( "style" );
+            var styleOut = styleIn;
+            if ( show ) {
+                // Remove style="display:none;".
+                styleOut.replace( "display:none;", "" );
+            } else {
+                // Set style="display:none;".
+                if ( styleOut.indexOf( "display:none;" ) == -1 ) {
+                    // Add style the first time we need to.
+                    styleOut += "display:none;";
+                }
+            }
+            // Only set style if it's different.
+            if ( styleIn != styleOut ) {
+                item.setAttribute( "style", styleOut );
             }
         }
     },
