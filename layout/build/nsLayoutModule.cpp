@@ -131,6 +131,7 @@
 #include "nsXULAtoms.h"
 #include "nsLayoutCID.h"
 #include "nsImageLoadingContent.h"
+#include "nsStyleSet.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -357,6 +358,7 @@ Shutdown(nsIModule* aSelf)
   nsContentUtils::Shutdown();
   NS_NameSpaceManagerShutdown();
   nsImageLoadingContent::Shutdown();
+  nsStyleSet::FreeGlobals();
 }
 
 #ifdef NS_DEBUG
@@ -378,7 +380,6 @@ nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
-nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
 nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
 nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
@@ -437,7 +438,6 @@ MAKE_CTOR(CreateNewFrameUtil,             nsIFrameUtil,                NS_NewFra
 MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLayoutDebugger)
 #endif
 
-MAKE_CTOR(CreateNewCSSFrameConstructor, nsICSSFrameConstructor, NS_CreateCSSFrameConstructor)
 MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
 MAKE_CTOR(CreateNewLayoutHistoryState,  nsILayoutHistoryState,  NS_NewLayoutHistoryState)
 MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
@@ -466,7 +466,6 @@ MAKE_CTOR(CreateEventStateManager,        nsIEventStateManager,        NS_NewEve
 MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
 MAKE_CTOR(CreateDocumentViewer,           nsIDocumentViewer,           NS_NewDocumentViewer)
 MAKE_CTOR(CreateHTMLStyleSheet,           nsIHTMLStyleSheet,           NS_NewHTMLStyleSheet)
-MAKE_CTOR(CreateStyleSet,                 nsIStyleSet,                 NS_NewStyleSet)
 MAKE_CTOR(CreateCSSStyleSheet,            nsICSSStyleSheet,            NS_NewCSSStyleSheet)
 MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTMLDocument)
 MAKE_CTOR(CreateHTMLCSSStyleSheet,        nsIHTMLCSSStyleSheet,        NS_NewHTMLCSSStyleSheet)
@@ -677,11 +676,6 @@ static const nsModuleComponentInfo gComponents[] = {
     CreateNewLayoutDebugger },
 #endif
 
-  { "CSS Frame Constructor",
-    NS_CSSFRAMECONSTRUCTOR_CID,
-    nsnull,
-    CreateNewCSSFrameConstructor },
-
   { "Frame Traversal",
     NS_FRAMETRAVERSAL_CID,
     nsnull,
@@ -810,11 +804,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_HTMLSTYLESHEET_CID,
     nsnull,
     CreateHTMLStyleSheet },
-
-  { "Style Set",
-    NS_STYLESET_CID,
-    nsnull,
-    CreateStyleSet },
 
   { "CSS Style Sheet",
     NS_CSS_STYLESHEET_CID,

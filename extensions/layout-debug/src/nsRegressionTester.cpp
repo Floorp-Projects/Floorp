@@ -66,7 +66,6 @@
 #include "nsIPrefService.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
-#include "nsIStyleSet.h"
 
 
 

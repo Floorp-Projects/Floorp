@@ -42,8 +42,8 @@
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
-#include "nsIStyleSet.h"
 #include "nsIPresShell.h"
+#include "nsIStyleFrameConstruction.h"
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintPreviewContext.h"
@@ -163,11 +163,12 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
 
       // Create a continuing child of the previous page's last child
-      nsCOMPtr<nsIStyleSet>  styleSet;
       nsIFrame*     newFrame;
 
-      aPresContext->PresShell()->GetStyleSet(getter_AddRefs(styleSet));
-      styleSet->CreateContinuingFrame(aPresContext, prevLastChild, contentPage, &newFrame);
+      aPresContext->PresShell()->FrameConstructor()->
+        CreateContinuingFrame(aPresContext, prevLastChild,
+                              contentPage, &newFrame);
+
       // Make the new area frame the 1st child of the page content frame. There may already be
       // children placeholders which don't get reflowed but must not be destroyed until the 
       // page content frame is destroyed.

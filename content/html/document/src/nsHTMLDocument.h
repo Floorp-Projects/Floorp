@@ -91,7 +91,7 @@ public:
 
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
-                         nsIStyleSet* aStyleSet,
+                         nsStyleSet* aStyleSet,
                          nsIPresShell** aInstancePtrResult);
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,

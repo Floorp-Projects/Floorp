@@ -53,7 +53,7 @@
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIFrame.h"
@@ -195,7 +195,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsBidiUtils.h"
 
 static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
-static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 
 #ifdef NS_DEBUG
 
@@ -640,8 +639,8 @@ nsresult
 DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
 {
   // Create the style set...
-  nsCOMPtr<nsIStyleSet> styleSet;
-  nsresult rv = CreateStyleSet(mDocument, getter_AddRefs(styleSet));
+  nsStyleSet *styleSet;
+  nsresult rv = CreateStyleSet(mDocument, &styleSet);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now make the shell for the document
@@ -1192,8 +1191,8 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   if (mPresContext) {
     // 3) Create a new style set for the document
 
-    nsCOMPtr<nsIStyleSet> styleSet;
-    rv = CreateStyleSet(mDocument, getter_AddRefs(styleSet));
+    nsStyleSet *styleSet;
+    rv = CreateStyleSet(mDocument, &styleSet);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1587,79 +1586,83 @@ DocumentViewerImpl::ForceRefresh()
 
 nsresult
 DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
-                                   nsIStyleSet** aStyleSet)
+                                   nsStyleSet** aStyleSet)
 {
   // this should eventually get expanded to allow for creating
   // different sets for different media
-  nsresult rv;
-
   if (!mUAStyleSheet) {
     NS_WARNING("unable to load UA style sheet");
   }
 
-  rv = CallCreateInstance(kStyleSetCID, aStyleSet);
-  if (NS_OK == rv) {
-    PRInt32 index = aDocument->GetNumberOfStyleSheets(PR_TRUE);
+  nsStyleSet *styleSet = new nsStyleSet();
+  if (!styleSet) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    while (0 < index--) {
-      nsIStyleSheet *sheet = aDocument->GetStyleSheetAt(index, PR_TRUE);
+  PRInt32 index = aDocument->GetNumberOfStyleSheets(PR_TRUE);
 
-      /*
-       * GetStyleSheetAt will return all style sheets in the document but
-       * we're only interested in the ones that are enabled.
-       */
+  styleSet->BeginUpdate();
 
-      PRBool styleApplicable;
-      sheet->GetApplicable(styleApplicable);
+  while (0 < index--) {
+    nsIStyleSheet *sheet = aDocument->GetStyleSheetAt(index, PR_TRUE);
 
-      if (styleApplicable) {
-        (*aStyleSet)->AddDocStyleSheet(sheet, aDocument);
-      }
-    }
+    /*
+     * GetStyleSheetAt will return all style sheets in the document but
+     * we're only interested in the ones that are enabled.
+     */
 
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry =
-      do_GetService("@mozilla.org/chrome/chrome-registry;1");
+    PRBool styleApplicable;
+    sheet->GetApplicable(styleApplicable);
 
-    if (chromeRegistry) {
-      nsCOMPtr<nsISupportsArray> sheets;
-
-      // Now handle the user sheets.
-      nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
-      PRInt32 shellType;
-      docShell->GetItemType(&shellType);
-      PRBool isChrome = (shellType == nsIDocShellTreeItem::typeChrome);
-      sheets = nsnull;
-      chromeRegistry->GetUserSheets(isChrome, getter_AddRefs(sheets));
-      if(sheets){
-        nsCOMPtr<nsICSSStyleSheet> sheet;
-        PRUint32 count;
-        sheets->Count(&count);
-        // Insert the user sheets at the front of the user sheet list
-        // so that they are most significant user sheets.
-        for(PRUint32 i=0; i<count; i++) {
-          sheets->GetElementAt(i, getter_AddRefs(sheet));
-          (*aStyleSet)->InsertUserStyleSheetBefore(sheet, nsnull);
-        }
-      }
-
-      // Append chrome sheets (scrollbars + forms).
-      nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
-      chromeRegistry->GetAgentSheets(ds, getter_AddRefs(sheets));
-      if(sheets){
-        nsCOMPtr<nsICSSStyleSheet> sheet;
-        PRUint32 count;
-        sheets->Count(&count);
-        for(PRUint32 i=0; i<count; i++) {
-          sheets->GetElementAt(i, getter_AddRefs(sheet));
-          (*aStyleSet)->AppendAgentStyleSheet(sheet);
-        }
-      }
-    }
-
-    if (mUAStyleSheet) {
-      (*aStyleSet)->AppendAgentStyleSheet(mUAStyleSheet);
+    if (styleApplicable) {
+      styleSet->AddDocStyleSheet(sheet, aDocument);
     }
   }
+
+  nsCOMPtr<nsIChromeRegistry> chromeRegistry =
+    do_GetService("@mozilla.org/chrome/chrome-registry;1");
+
+  if (chromeRegistry) {
+    nsCOMPtr<nsISupportsArray> sheets;
+
+    // Now handle the user sheets.
+    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+    PRInt32 shellType;
+    docShell->GetItemType(&shellType);
+    PRBool isChrome = (shellType == nsIDocShellTreeItem::typeChrome);
+    chromeRegistry->GetUserSheets(isChrome, getter_AddRefs(sheets));
+    if (sheets) {
+      nsCOMPtr<nsICSSStyleSheet> sheet;
+      PRUint32 count;
+      sheets->Count(&count);
+      // Insert the user sheets at the front of the user sheet list
+      // so that they are most significant user sheets.
+      for (PRUint32 i=0; i<count; i++) {
+        sheets->GetElementAt(i, getter_AddRefs(sheet));
+        styleSet->PrependStyleSheet(nsStyleSet::eUserSheet, sheet);
+      }
+    }
+
+    // Append chrome sheets (scrollbars + forms).
+    nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
+    chromeRegistry->GetAgentSheets(ds, getter_AddRefs(sheets));
+    if (sheets) {
+      nsCOMPtr<nsICSSStyleSheet> sheet;
+      PRUint32 count;
+      sheets->Count(&count);
+      for (PRUint32 i=0; i<count; i++) {
+        sheets->GetElementAt(i, getter_AddRefs(sheet));
+        styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      }
+    }
+  }
+
+  if (mUAStyleSheet) {
+    styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, mUAStyleSheet);
+  }
+
+  styleSet->EndUpdate();
+  *aStyleSet = styleSet;
   return NS_OK;
 }
 

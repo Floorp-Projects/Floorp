@@ -60,6 +60,8 @@ REQUIRES	= xpcom \
 		  prefetch \
 		  $(NULL)
 
+EXPORTS		= nsStyleSet.h
+
 CPPSRCS		= \
 		nsContentSink.cpp \
 		nsPrintEngine.cpp \
@@ -125,3 +127,5 @@ INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../../layout/html/base/src \
 		$(NULL)
+
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -149,8 +149,7 @@ public:
                                        nsIFrame*        aFrame);
 
   // Request to create a continuing frame
-  NS_IMETHOD CreateContinuingFrame(nsIPresShell*   aPresShell, 
-                                   nsIPresContext* aPresContext,
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
                                    nsIFrame*       aFrame,
                                    nsIFrame*       aParentFrame,
                                    nsIFrame**      aContinuingFrame);

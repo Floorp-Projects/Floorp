@@ -35,7 +35,5 @@ EXPORTS		= $(srcdir)/xp_obs.h \
               $(srcdir)/stopwatch.h \
 			  $(srcdir)/nsTimer.h
 
-XPIDLSRCS	= nsITimeRecorder.idl
-
 include $(topsrcdir)/config/rules.mk
 

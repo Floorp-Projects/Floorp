@@ -43,6 +43,8 @@
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsISupportsArray.h"
+#include "nsIStyleRuleProcessor.h"
+#include "nsCOMArray.h"
 
 class nsIContent;
 class nsIAtom;
@@ -69,7 +71,7 @@ public:
 // MEMBER VARIABLES
   nsXBLResourceLoader* mLoader; // A loader object. Exists only long enough to load resources, and then it dies.
   nsCOMPtr<nsISupportsArray> mStyleSheetList; // A list of loaded stylesheets for this binding.
-  nsCOMPtr<nsISupportsArray> mRuleProcessors; // The list of stylesheets converted to rule processors.
+  nsCOMArray<nsIStyleRuleProcessor> mRuleProcessors; // The list of stylesheets converted to rule processors.
 };
 
 #endif

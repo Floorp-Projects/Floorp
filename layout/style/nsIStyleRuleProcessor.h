@@ -175,6 +175,10 @@ class nsIStyleRuleProcessor : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_RULE_PROCESSOR_IID)
 
+  // Shorthand for:
+  //  nsCOMArray<nsIStyleRuleProcessor>::nsCOMArrayEnumFunc
+  typedef PRBool (* PR_CALLBACK EnumFunc)(nsIStyleRuleProcessor*, void*);
+
   // populate rule node tree with nsIStyleRule*
   // rules are ordered, those with higher precedence are farthest from the root of the tree
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,

@@ -57,7 +57,6 @@
 
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
-#include "nsIStyleSet.h"
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"
 
@@ -126,18 +125,6 @@ document(nsIDocShell *aDocShell)
     CallQueryInterface(domDoc, &result);
     return result;
 }
-
-static already_AddRefed<nsIStyleSet>
-style_set(nsIDocShell *aDocShell)
-{
-    nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
-    if (!shell)
-        return nsnull;
-    nsIStyleSet *result = nsnull;
-    shell->GetStyleSet(&result);
-    return result;
-}
-
 
 nsLayoutDebuggingTools::nsLayoutDebuggingTools()
   : mPaintFlashing(PR_FALSE),
@@ -522,11 +509,11 @@ nsLayoutDebuggingTools::DumpStyleSheets()
 {
 #ifdef DEBUG
     FILE *out = stdout;
-    nsCOMPtr<nsIStyleSet> styleSet(style_set(mDocShell));
-    if (styleSet)
-        styleSet->List(out);
+    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
+    if (shell)
+        shell->ListStyleSheets(out);
     else
-        fputs("null style set\n", out);
+        fputs("null pres shell\n", out);
 #endif
     return NS_OK;
 }
@@ -538,18 +525,12 @@ nsLayoutDebuggingTools::DumpStyleContexts()
     FILE *out = stdout;
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
     if (shell) {
-        nsCOMPtr<nsIStyleSet> styleSet;
-        shell->GetStyleSet(getter_AddRefs(styleSet));
-        if (!styleSet) {
-            fputs("null style set\n", out);
+        nsIFrame* root;
+        shell->GetRootFrame(&root);
+        if (!root) {
+            fputs("null root frame\n", out);
         } else {
-            nsIFrame* root;
-            shell->GetRootFrame(&root);
-            if (!root) {
-                fputs("null root frame\n", out);
-            } else {
-                styleSet->ListContexts(root, out);
-            }
+            shell->ListStyleContexts(root, out);
         }
     } else {
         fputs("null pres shell\n", out);

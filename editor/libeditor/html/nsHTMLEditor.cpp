@@ -123,7 +123,6 @@
 // Misc
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
-#include "nsIStyleSet.h"
 #include "nsIPref.h"
 #include "nsITextContent.h"
 #include "nsWSRunObject.h"
@@ -3675,37 +3674,21 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   if (!sheet)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIStyleSheet> styleSheet;
-  styleSheet = do_QueryInterface(sheet);
-  nsCOMPtr<nsIStyleSet> styleSet;
-
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps)
     return NS_ERROR_NOT_INITIALIZED;
-  rv = ps->GetStyleSet(getter_AddRefs(styleSet));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!styleSet)
-    return NS_ERROR_NULL_POINTER;
 
   // Add the override style sheet
   // (This checks if already exists)
-  styleSet->AppendOverrideStyleSheet(styleSheet);
+  ps->AddOverrideStyleSheet(sheet);
 
   // Save doc pointer to be able to use nsIStyleSheet::SetEnabled()
-  nsCOMPtr<nsIDocument> document;
-  rv = ps->GetDocument(getter_AddRefs(document));
-  if (NS_FAILED(rv))
-    return rv;
+  nsIDocument *document = ps->GetDocument();
   if (!document)
     return NS_ERROR_NULL_POINTER;
-  styleSheet->SetOwningDocument(document);
+  sheet->SetOwningDocument(document);
 
-  // This notifies document observers to recompute style data
-  // (this doesn't affect style sheet because it is not a doc sheet)
-  // XXXbz this is a major misuse of the API....
-  document->BeginUpdate(UPDATE_STYLE);
-  document->SetStyleSheetApplicableState(styleSheet, PR_TRUE);
-  document->EndUpdate(UPDATE_STYLE);
+  ps->ReconstructStyleData();
 
   // Save as the last-loaded sheet
   mLastOverrideStyleSheetURL = aURL;
@@ -3747,27 +3730,8 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDocument> document;
-  rv = ps->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);;
-  if (!document)     return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIStyleSet> styleSet;
-  rv = ps->GetStyleSet(getter_AddRefs(styleSet));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!styleSet) return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(sheet);
-  if (!styleSheet) return NS_ERROR_NULL_POINTER;
-
-  styleSet->RemoveOverrideStyleSheet(styleSheet);
-
-  // This notifies document observers to recompute style data
-  // (this doesn't affect style sheet because it is not a doc sheet)
-  // XXXbz this is a major misuse of the API....
-  document->BeginUpdate(UPDATE_STYLE);
-  document->SetStyleSheetApplicableState(styleSheet, PR_FALSE);
-  document->EndUpdate(UPDATE_STYLE);
+  ps->RemoveOverrideStyleSheet(sheet);
+  ps->ReconstructStyleData();
 
   // Remove it from our internal list
   return RemoveStyleSheetFromList(aURL);

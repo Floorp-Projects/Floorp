@@ -51,7 +51,6 @@
 #include "nsStyleConsts.h"
 
 #include "nsCOMPtr.h"
-#include "nsIStyleSet.h"
 
 #define B_BORDER_TOP_STYLE    0x001
 #define B_BORDER_LEFT_STYLE   0x002

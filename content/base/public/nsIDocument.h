@@ -53,6 +53,7 @@
 #include "nsILoadGroup.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include <stdio.h>   // for FILE definition
 
 class nsIAtom;
 class nsIContent;
@@ -61,7 +62,7 @@ class nsIPresShell;
 
 class nsIStreamListener;
 class nsIStreamObserver;
-class nsIStyleSet;
+class nsStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
 class nsIViewManager;
@@ -253,7 +254,7 @@ public:
    */
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
-                         nsIStyleSet* aStyleSet,
+                         nsStyleSet* aStyleSet,
                          nsIPresShell** aInstancePtrResult) = 0;
   NS_IMETHOD_(PRBool) DeleteShell(nsIPresShell* aShell) = 0;
   NS_IMETHOD_(PRUint32) GetNumberOfShells() const = 0;

@@ -46,7 +46,7 @@
 #include "nsCRT.h"
 
 #include "nsCOMPtr.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 #include "prenv.h"
@@ -94,9 +94,8 @@ nsStyleContext::~nsStyleContext()
 
   nsIPresContext *presContext = mRuleNode->GetPresContext();
 
-  nsCOMPtr<nsIStyleSet> set;
-  presContext->PresShell()->GetStyleSet(getter_AddRefs(set));
-  set->NotifyStyleContextDestroyed(presContext, this);
+  presContext->PresShell()->StyleSet()->
+    NotifyStyleContextDestroyed(presContext, this);
 
   if (mParent) {
     mParent->RemoveChild(this);

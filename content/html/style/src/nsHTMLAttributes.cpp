@@ -52,7 +52,6 @@
 #include "nsCOMPtr.h"
 #include "nsUnicharUtils.h"
 
-#include "nsIStyleSet.h"
 #include "nsRuleWalker.h"
 
 MOZ_DECL_CTOR_COUNTER(HTMLAttribute)

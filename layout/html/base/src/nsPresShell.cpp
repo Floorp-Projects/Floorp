@@ -44,7 +44,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocumentObserver.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
@@ -112,9 +112,6 @@
 #include "nsLayoutErrors.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSRendering.h"
-#ifdef MOZ_PERF_METRICS
-#include "nsITimeRecorder.h"
-#endif
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
 #endif
@@ -163,7 +160,7 @@
 
 // For style data reconstruction
 #include "nsStyleChangeList.h"
-#include "nsIStyleFrameConstruction.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsIBindingManager.h"
 #ifdef MOZ_XUL
 #include "nsIMenuFrame.h"
@@ -185,29 +182,12 @@
 
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
-static NS_DEFINE_CID(kStyleSetCID, NS_STYLESET_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
 
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
-
-#ifdef MOZ_PERF_METRICS
-// local management of the style watch:
-//  aCtlValue should be set to all actions desired (bitwise OR'd together)
-//  aStyleSet cannot be null
-// NOTE: implementation is noop unless MOZ_PERF_METRICS is defined
-static void CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet);
-#define kStyleWatchEnable  1
-#define kStyleWatchDisable 2
-#define kStyleWatchPrint   4
-#define kStyleWatchStart   8
-#define kStyleWatchStop    16
-#define kStyleWatchReset   32
-#else /* !defined(MOZ_PERF_METRICS */
-#define CtlStyleWatch(ctlvalue_,styleset_) /* nothing */
-#endif /* !defined(MOZ_PERF_METRICS */
 
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
@@ -1023,7 +1003,7 @@ public:
   NS_IMETHOD Init(nsIDocument* aDocument,
                   nsIPresContext* aPresContext,
                   nsIViewManager* aViewManager,
-                  nsIStyleSet* aStyleSet,
+                  nsStyleSet* aStyleSet,
                   nsCompatibility aCompatMode);
   NS_IMETHOD Destroy();
 
@@ -1039,7 +1019,6 @@ public:
   NS_IMETHOD GetPresContext(nsIPresContext** aResult);
   NS_IMETHOD GetViewManager(nsIViewManager** aResult);
   nsIViewManager* GetViewManager() { return mViewManager; }
-  NS_IMETHOD GetStyleSet(nsIStyleSet** aResult);
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
@@ -1151,6 +1130,12 @@ public:
   NS_IMETHOD DisableThemeSupport();
   virtual PRBool IsThemeSupportEnabled();
 
+  virtual nsresult GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets);
+  virtual nsresult SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets);
+
+  virtual nsresult AddOverrideStyleSheet(nsIStyleSheet *aSheet);
+  virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet);
+
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus);
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
   NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent);
@@ -1218,6 +1203,13 @@ public:
   
 #endif
 
+#ifdef DEBUG
+  virtual void ListStyleContexts(nsIFrame *aRootFrame, FILE *out,
+                                 PRInt32 aIndent = 0);
+
+  virtual void ListStyleSheets(FILE *out, PRInt32 aIndent = 0);
+#endif
+
 #ifdef PR_LOGGING
   static PRLogModuleInfo* gLog;
 #endif
@@ -1245,7 +1237,6 @@ protected:
   nsresult RemoveDummyLayoutRequest(void);
 
   nsresult ReconstructFrames(void);
-  nsresult CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult);
   nsresult WillCauseReflow();
   nsresult DidCauseReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
@@ -1265,6 +1256,7 @@ protected:
   nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;
 #endif // IBMBIDI
 #ifdef NS_DEBUG
+  nsresult CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult);
   PRBool VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
 #endif
@@ -1605,7 +1597,7 @@ NS_IMETHODIMP
 PresShell::Init(nsIDocument* aDocument,
                 nsIPresContext* aPresContext,
                 nsIViewManager* aViewManager,
-                nsIStyleSet* aStyleSet,
+                nsStyleSet* aStyleSet,
                 nsCompatibility aCompatMode)
 {
   NS_PRECONDITION(nsnull != aDocument, "null ptr");
@@ -1624,6 +1616,12 @@ PresShell::Init(nsIDocument* aDocument,
   NS_ADDREF(mDocument);
   mViewManager = aViewManager;
 
+  // Create our frame constructor.
+  nsCSSFrameConstructor* fc = new nsCSSFrameConstructor();
+  NS_ENSURE_TRUE(fc, NS_ERROR_OUT_OF_MEMORY);
+  fc->Init(mDocument);
+  CallQueryInterface(fc, &mFrameConstructor);
+
   // The document viewer owns both view manager and pres shell.
   mViewManager->SetViewObserver(this);
 
@@ -1632,8 +1630,11 @@ PresShell::Init(nsIDocument* aDocument,
   NS_ADDREF(mPresContext);
   aPresContext->SetShell(this);
 
+  // Now we can initialize the style set.
+  nsresult result = aStyleSet->Init(aPresContext);
+  NS_ENSURE_SUCCESS(result, result);
+
   mStyleSet = aStyleSet;
-  NS_IF_ADDREF(mStyleSet);
 
   // Set the compatibility mode after attaching the pres context and
   // style set, but before creating any frames.
@@ -1643,9 +1644,9 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  nsresult result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
-                                                 NS_GET_IID(nsIFrameSelection),
-                                                 getter_AddRefs(mSelection));
+  result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
+                                              NS_GET_IID(nsIFrameSelection),
+                                              getter_AddRefs(mSelection));
   if (NS_FAILED(result))
     return result;
 
@@ -1822,7 +1823,10 @@ PresShell::Destroy()
 
   // Let the style set do its cleanup.
   mStyleSet->Shutdown(mPresContext);
-  NS_RELEASE(mStyleSet);
+  delete mStyleSet;
+  mStyleSet = nsnull;
+
+  NS_RELEASE(mFrameConstructor);
 
   // We hold a reference to the pres context, and it holds a weak link back
   // to us. To avoid the pres context having a dangling reference, set its 
@@ -1942,26 +1946,15 @@ PresShell::GetViewManager(nsIViewManager** aResult)
 }
 
 NS_IMETHODIMP
-PresShell::GetStyleSet(nsIStyleSet** aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mStyleSet;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
 { // first non-html sheet in style set that has title
   if (mStyleSet) {
-    PRInt32 count = mStyleSet->GetNumberOfDocStyleSheets();
+    PRInt32 count = mStyleSet->SheetCount(nsStyleSet::eDocSheet);
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml, "text/html");
     for (index = 0; index < count; index++) {
-      nsIStyleSheet* sheet = mStyleSet->GetDocStyleSheetAt(index);
+      nsIStyleSheet* sheet = mStyleSet->StyleSheetAt(nsStyleSet::eDocSheet,
+                                                     index);
       if (nsnull != sheet) {
         nsAutoString type;
         sheet->GetType(type);
@@ -1973,7 +1966,6 @@ PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
             index = count;  // stop looking
           }
         }
-        NS_RELEASE(sheet);
       }
     }
   }
@@ -1984,6 +1976,7 @@ NS_IMETHODIMP
 PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 {
   if (mDocument && mStyleSet) {
+    mStyleSet->BeginUpdate();
     PRInt32 count = mDocument->GetNumberOfStyleSheets(PR_FALSE);
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml,"text/html");
@@ -2002,13 +1995,14 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
               mStyleSet->AddDocStyleSheet(sheet, mDocument);
             }
             else {
-              mStyleSet->RemoveDocStyleSheet(sheet);
+              mStyleSet->RemoveStyleSheet(nsStyleSet::eDocSheet, sheet);
             }
           }
         }
       }
     }
-    
+
+    mStyleSet->EndUpdate();
     return ReconstructStyleData();
   }
   return NS_OK;
@@ -2158,13 +2152,6 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       if (NS_SUCCEEDED(result)) {
         result = SetPrefNoScriptRule();
       }
-
-      // update the styleset now that we are done inserting our rules
-      if (NS_SUCCEEDED(result)) {
-        if (mStyleSet) {
-          mStyleSet->NotifyStyleSheetStateChanged(PR_TRUE);
-        }
-      }
     }
 #ifdef DEBUG_attinasi
     printf( "Preference Style Rules set: error=%ld\n", (long)result);
@@ -2189,10 +2176,10 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
       // remove the sheet from the styleset: 
       // - note that we have to check for success by comparing the count before and after...
 #ifdef NS_DEBUG
-      PRInt32 numBefore = mStyleSet->GetNumberOfUserStyleSheets();
+      PRInt32 numBefore = mStyleSet->SheetCount(nsStyleSet::eUserSheet);
       NS_ASSERTION(numBefore > 0, "no user stylesheets in styleset, but we have one!");
 #endif
-      mStyleSet->RemoveUserStyleSheet(mPrefStyleSheet);
+      mStyleSet->RemoveStyleSheet(nsStyleSet::eUserSheet, mPrefStyleSheet);
 
 #ifdef DEBUG_attinasi
       NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfUserStyleSheets(),
@@ -2226,7 +2213,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
                                      0, &index);
           NS_ENSURE_SUCCESS(result, result);
         }
-        mStyleSet->AppendUserStyleSheet(mPrefStyleSheet);
+        mStyleSet->AppendStyleSheet(nsStyleSet::eUserSheet, mPrefStyleSheet);
       }
     }
   } else {
@@ -2737,23 +2724,23 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
                         (void*)this));
     MOZ_TIMER_RESET(mFrameCreationWatch);
     MOZ_TIMER_START(mFrameCreationWatch);
-    CtlStyleWatch(kStyleWatchEnable,mStyleSet);
 
     if (!rootFrame) {
       // Have style sheet processor construct a frame for the
       // precursors to the root content object's frame
-      mStyleSet->ConstructRootFrame(mPresContext, root, rootFrame);
+      mFrameConstructor->ConstructRootFrame(this, mPresContext,
+                                            root, rootFrame);
       mFrameManager->SetRootFrame(rootFrame);
     }
 
     // Have the style sheet processor construct frame for the root
     // content object down
-    mStyleSet->ContentInserted(mPresContext, nsnull, root, 0);
+    mFrameConstructor->ContentInserted(mPresContext, nsnull, nsnull, root, 0,
+                                       nsnull, PR_FALSE);
     VERIFY_STYLE_TREE;
     MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n",
                         (void*)this));
     MOZ_TIMER_STOP(mFrameCreationWatch);
-    CtlStyleWatch(kStyleWatchDisable,mStyleSet);
   }
 
   if (rootFrame) {
@@ -3565,10 +3552,8 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   --mUpdateCount;
 #endif
 
-  if (mStylesHaveChanged && (aUpdateType & UPDATE_STYLE)) {
-    mStylesHaveChanged = PR_FALSE;
+  if (mStylesHaveChanged && (aUpdateType & UPDATE_STYLE))
     return ReconstructStyleData();
-  }
   
   return NS_OK;
 }
@@ -3579,7 +3564,6 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 #ifdef MOZ_PERF_METRICS
   // Reset style resolution stopwatch maintained by style set
   MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", (void*)this));
-  CtlStyleWatch(kStyleWatchReset,mStyleSet);
 #endif  
   mDocumentLoading = PR_TRUE;
   return NS_OK;
@@ -3626,9 +3610,6 @@ PresShell::EndLoad(nsIDocument *aDocument)
 
   // Print style resolution stopwatch maintained by style set
   MOZ_TIMER_DEBUGLOG(("Stop: Style Resolution: PresShell::EndLoad(), this=%p\n", this));
-  CtlStyleWatch(kStyleWatchStop|kStyleWatchDisable, mStyleSet);
-  MOZ_TIMER_LOG(("Style resolution time (this=%p): ", this));
-  CtlStyleWatch(kStyleWatchPrint, mStyleSet);
 #endif  
   mDocumentLoading = PR_FALSE;
   return NS_OK;
@@ -3833,20 +3814,12 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIStyleSet> styleSet;
-  nsresult rv = GetStyleSet(getter_AddRefs(styleSet));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIStyleFrameConstruction> frameConstruction;
-  rv = styleSet->GetStyleFrameConstruction(getter_AddRefs(frameConstruction));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Don't call RecreateFramesForContent since that is not exported and we want
   // to keep the number of entrypoints down.
 
   nsStyleChangeList changeList;
   changeList.AppendChange(nsnull, aContent, nsChangeHint_ReconstructFrame);
-  return frameConstruction->ProcessRestyledFrames(changeList, mPresContext);
+  return mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
 }
 
 NS_IMETHODIMP
@@ -5201,7 +5174,8 @@ PresShell::ContentChanged(nsIDocument *aDocument,
                           nsISupports* aSubContent)
 {
   WillCauseReflow();
-  nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
+  nsresult rv = mFrameConstructor->ContentChanged(mPresContext,
+                                                  aContent, aSubContent);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 
@@ -5215,8 +5189,9 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
                                 PRInt32 aStateMask)
 {
   WillCauseReflow();
-  nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1,
-                                                aContent2, aStateMask);
+  nsresult rv = mFrameConstructor->ContentStatesChanged(mPresContext,
+                                                        aContent1,
+                                                        aContent2, aStateMask);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 
@@ -5237,7 +5212,9 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     WillCauseReflow();
-    rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aModType);
+    rv = mFrameConstructor->AttributeChanged(mPresContext, aContent,
+                                             aNameSpaceID, aAttribute,
+                                             aModType);
     VERIFY_STYLE_TREE;
     DidCauseReflow();
   }
@@ -5256,14 +5233,13 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   WillCauseReflow();
   MOZ_TIMER_DEBUGLOG(("Start: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_START(mFrameCreationWatch);
-  CtlStyleWatch(kStyleWatchEnable,mStyleSet);
 
-  nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
+  nsresult  rv = mFrameConstructor->ContentAppended(mPresContext, aContainer,
+                                                    aNewIndexInContainer);
   VERIFY_STYLE_TREE;
 
   MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_STOP(mFrameCreationWatch);
-  CtlStyleWatch(kStyleWatchDisable,mStyleSet);
   DidCauseReflow();
   return rv;
 }
@@ -5279,7 +5255,10 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   }
   
   WillCauseReflow();
-  nsresult  rv = mStyleSet->ContentInserted(mPresContext, aContainer, aChild, aIndexInContainer);
+  nsresult  rv = mFrameConstructor->ContentInserted(mPresContext, aContainer,
+                                                    nsnull, aChild,
+                                                    aIndexInContainer, nsnull,
+                                                    PR_FALSE);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
   return rv;
@@ -5300,8 +5279,9 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
     esm->ContentRemoved(aOldChild);
 
   WillCauseReflow();
-  nsresult  rv = mStyleSet->ContentReplaced(mPresContext, aContainer, aOldChild,
-                                            aNewChild, aIndexInContainer);
+  nsresult  rv = mFrameConstructor->ContentReplaced(mPresContext, aContainer,
+                                                    aOldChild, aNewChild,
+                                                    aIndexInContainer);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
   return rv;
@@ -5321,8 +5301,9 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
     esm->ContentRemoved(aChild);
 
   WillCauseReflow();
-  nsresult  rv = mStyleSet->ContentRemoved(mPresContext, aContainer,
-                                           aChild, aIndexInContainer);
+  nsresult  rv = mFrameConstructor->ContentRemoved(mPresContext, aContainer,
+                                                   aChild, aIndexInContainer,
+                                                   PR_FALSE);
 
   // If we have no root content node at this point, be sure to reset
   // mDidInitialReflow to PR_FALSE, this will allow InitialReflow()
@@ -5343,7 +5324,7 @@ PresShell::ReconstructFrames(void)
   nsresult rv = NS_OK;
           
   WillCauseReflow();
-  rv = mStyleSet->ReconstructDocElementHierarchy(mPresContext);
+  rv = mFrameConstructor->ReconstructDocElementHierarchy(mPresContext);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 
@@ -5353,19 +5334,11 @@ PresShell::ReconstructFrames(void)
 NS_IMETHODIMP
 PresShell::ReconstructStyleData()
 {
+  mStylesHaveChanged = PR_FALSE;
+
   nsIFrame* rootFrame;
   GetRootFrame(&rootFrame);
   if (!rootFrame)
-    return NS_OK;
-
-  nsCOMPtr<nsIStyleSet> set;
-  GetStyleSet(getter_AddRefs(set));
-  if (!set)
-    return NS_OK;
-
-  nsCOMPtr<nsIStyleFrameConstruction> cssFrameConstructor;
-  set->GetStyleFrameConstruction(getter_AddRefs(cssFrameConstructor));
-  if (!cssFrameConstructor)
     return NS_OK;
 
   nsCOMPtr<nsIFrameManager> frameManager;
@@ -5378,9 +5351,9 @@ PresShell::ReconstructStyleData()
                                       frameChange);
 
   if (frameChange & nsChangeHint_ReconstructDoc)
-    set->ReconstructDocElementHierarchy(mPresContext);
+    mFrameConstructor->ReconstructDocElementHierarchy(mPresContext);
   else
-    cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+    mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
 
   VERIFY_STYLE_TREE;
   
@@ -5423,13 +5396,6 @@ PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
                                             nsIStyleSheet* aStyleSheet,
                                             PRBool aApplicable)
 {
-  // first notify the style set that a sheet's state has changed
-  if (mStyleSet) {
-    nsresult rv = mStyleSet->NotifyStyleSheetStateChanged(aApplicable);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
   if (aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
@@ -6230,6 +6196,39 @@ PresShell::ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
   return ResizeReflow(aWidth, aHeight);
 }
 
+nsresult
+PresShell::GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets)
+{
+  aSheets.Clear();
+  PRInt32 sheetCount = mStyleSet->SheetCount(nsStyleSet::eAgentSheet);
+
+  for (PRInt32 i = 0; i < sheetCount; ++i) {
+    nsIStyleSheet *sheet = mStyleSet->StyleSheetAt(nsStyleSet::eAgentSheet, i);
+    if (!aSheets.AppendObject(sheet))
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PresShell::SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets)
+{
+  return mStyleSet->ReplaceSheets(nsStyleSet::eAgentSheet, aSheets);
+}
+
+nsresult
+PresShell::AddOverrideStyleSheet(nsIStyleSheet *aSheet)
+{
+  return mStyleSet->AppendStyleSheet(nsStyleSet::eOverrideSheet, aSheet);
+}
+
+nsresult
+PresShell::RemoveOverrideStyleSheet(nsIStyleSheet *aSheet)
+{
+  return mStyleSet->RemoveStyleSheet(nsStyleSet::eOverrideSheet, aSheet);
+}
+
 //--------------------------------------------------------
 // Start of protected and private methods on the PresShell
 //--------------------------------------------------------
@@ -6504,60 +6503,6 @@ PresShell::ClearReflowEventStatus()
   mReflowEventQueue = nsnull;
   return NS_OK;
 }
-
-nsresult
-PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIStyleSet> clone(do_CreateInstance(kStyleSetCID,&rv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRInt32 i, n;
-  n = aSet->GetNumberOfOverrideStyleSheets();
-  for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss;
-    ss = aSet->GetOverrideStyleSheetAt(i);
-    if (nsnull != ss) {
-      clone->AppendOverrideStyleSheet(ss);
-      NS_RELEASE(ss);
-    }
-  }
-
-  n = aSet->GetNumberOfDocStyleSheets();
-  for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss;
-    ss = aSet->GetDocStyleSheetAt(i);
-    if (nsnull != ss) {
-      clone->AddDocStyleSheet(ss, mDocument);
-      NS_RELEASE(ss);
-    }
-  }
-  n = aSet->GetNumberOfUserStyleSheets();
-  for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss;
-    ss = aSet->GetUserStyleSheetAt(i);
-    if (nsnull != ss) {
-      clone->AppendUserStyleSheet(ss);
-      NS_RELEASE(ss);
-    }
-  }
-
-  n = aSet->GetNumberOfAgentStyleSheets();
-  for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss;
-    ss = aSet->GetAgentStyleSheetAt(i);
-    if (nsnull != ss) {
-      clone->AppendAgentStyleSheet(ss);
-      NS_RELEASE(ss);
-    }
-  }
-  *aResult = clone.get();
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
 
 nsresult
 PresShell::ReflowCommandAdded(nsHTMLReflowCommand* aRC)
@@ -7027,6 +6972,45 @@ FindTopFrame(nsIFrame* aRoot)
 
 
 #ifdef DEBUG
+
+nsresult
+PresShell::CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult)
+{
+  nsStyleSet *clone = new nsStyleSet();
+  if (!clone) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PRInt32 i, n = aSet->SheetCount(nsStyleSet::eOverrideSheet);
+  for (i = 0; i < n; i++) {
+    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eOverrideSheet, i);
+    if (ss)
+      clone->AppendStyleSheet(nsStyleSet::eOverrideSheet, ss);
+  }
+
+  n = aSet->SheetCount(nsStyleSet::eDocSheet);
+  for (i = 0; i < n; i++) {
+    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eDocSheet, i);
+    if (ss)
+      clone->AddDocStyleSheet(ss, mDocument);
+  }
+  n = aSet->SheetCount(nsStyleSet::eUserSheet);
+  for (i = 0; i < n; i++) {
+    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eUserSheet, i);
+    if (ss)
+      clone->AppendStyleSheet(nsStyleSet::eUserSheet, ss);
+  }
+
+  n = aSet->SheetCount(nsStyleSet::eAgentSheet);
+  for (i = 0; i < n; i++) {
+    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eAgentSheet, i);
+    if (ss)
+      clone->AppendStyleSheet(nsStyleSet::eAgentSheet, ss);
+  }
+  *aResult = clone;
+  return NS_OK;
+}
+
 // After an incremental reflow, we verify the correctness by doing a
 // full reflow into a fresh frame tree.
 PRBool
@@ -7121,8 +7105,8 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
-  nsCOMPtr<nsIStyleSet> newSet;
-  rv = CloneStyleSet(mStyleSet, getter_AddRefs(newSet));
+  nsStyleSet *newSet;
+  rv = CloneStyleSet(mStyleSet, &newSet);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clone style set");
   rv = mDocument->CreateShell(cx, vm, newSet, &sh);
   sh->SetVerifyReflowEnable(PR_FALSE); // turn off verify reflow while we're reflowing the test frame tree
@@ -7167,6 +7151,26 @@ PresShell::VerifyIncrementalReflow()
 
   return ok;
 }
+
+// Layout debugging hooks
+void
+PresShell::ListStyleContexts(nsIFrame *aRootFrame, FILE *out, PRInt32 aIndent)
+{
+  nsStyleContext *sc = aRootFrame->GetStyleContext();
+  if (sc)
+    sc->List(out, aIndent);
+}
+
+void
+PresShell::ListStyleSheets(FILE *out, PRInt32 aIndent)
+{
+  PRInt32 sheetCount = mStyleSet->SheetCount(nsStyleSet::eDocSheet);
+  for (PRInt32 i = 0; i < sheetCount; ++i) {
+    mStyleSet->StyleSheetAt(nsStyleSet::eDocSheet, i)->List(out, aIndent);
+    fputs("\n", out);
+  }
+}
+
 #endif
 
 // PresShellViewEventListener
@@ -7286,39 +7290,6 @@ PresShellViewEventListener::DidRefreshRect(nsIViewManager *aViewManager,
 
   return RestoreCaretVisibility();
 }
-
-#ifdef MOZ_PERF_METRICS
-// Enable, Disable and Print, Start, Stop and/or Reset the StyleSet watch
-/*static*/
-void CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
-{
-  NS_ASSERTION(aStyleSet!=nsnull,"aStyleSet cannot be null in CtlStyleWatch");
-  nsresult rv = NS_OK;
-  if (aStyleSet != nsnull){
-    nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(aStyleSet, &rv);
-    if (NS_SUCCEEDED(rv) && watch) {
-      if (aCtlValue & kStyleWatchEnable){
-        watch->EnableTimer(NS_TIMER_STYLE_RESOLUTION);
-      }
-      if (aCtlValue & kStyleWatchDisable){
-        watch->DisableTimer(NS_TIMER_STYLE_RESOLUTION);
-      }
-      if (aCtlValue & kStyleWatchPrint){
-        watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);
-      }
-      if (aCtlValue & kStyleWatchStart){
-        watch->StartTimer(NS_TIMER_STYLE_RESOLUTION);
-      }
-      if (aCtlValue & kStyleWatchStop){
-        watch->StopTimer(NS_TIMER_STYLE_RESOLUTION);
-      }
-      if (aCtlValue & kStyleWatchReset){
-        watch->ResetTimer(NS_TIMER_STYLE_RESOLUTION);
-      }
-    }
-  }
-}
-#endif
 
 
 //=============================================================

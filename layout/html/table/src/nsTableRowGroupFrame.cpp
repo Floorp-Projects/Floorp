@@ -48,11 +48,11 @@
 #include "nsReflowPath.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsIStyleSet.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
+#include "nsIStyleFrameConstruction.h"
 
 #include "nsCellMap.h"//table cell navigation
 
@@ -890,14 +890,14 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCont
 // and the frames that follow
 void 
 nsTableRowGroupFrame::CreateContinuingRowFrame(nsIPresContext& aPresContext,
-                                               nsIStyleSet&    aStyleSet,
                                                nsIFrame&       aRowFrame,
                                                nsIFrame**      aContRowFrame)
 {
   // XXX what is the row index?
   if (!aContRowFrame) {NS_ASSERTION(PR_FALSE, "bad call"); return;}
   // create the continuing frame which will create continuing cell frames
-  aStyleSet.CreateContinuingFrame(&aPresContext, &aRowFrame, this, aContRowFrame);
+  aPresContext.PresShell()->FrameConstructor()->
+    CreateContinuingFrame(&aPresContext, &aRowFrame, this, aContRowFrame);
   if (!*aContRowFrame) return;
 
   // Add the continuing row frame to the child list
@@ -916,7 +916,6 @@ nsTableRowGroupFrame::CreateContinuingRowFrame(nsIPresContext& aPresContext,
 void
 nsTableRowGroupFrame::SplitSpanningCells(nsIPresContext&          aPresContext,
                                          const nsHTMLReflowState& aReflowState,
-                                         nsIStyleSet&             aStyleSet,                                         
                                          nsTableFrame&            aTable,
                                          nsTableRowFrame&         aFirstRow, 
                                          nsTableRowFrame&         aLastRow,  
@@ -961,14 +960,16 @@ nsTableRowGroupFrame::SplitSpanningCells(nsIPresContext&          aPresContext,
         }
         else {
           if (!aContRow) {
-            CreateContinuingRowFrame(aPresContext, aStyleSet, aLastRow, (nsIFrame**)&aContRow);
+            CreateContinuingRowFrame(aPresContext, aLastRow, (nsIFrame**)&aContRow);
           }
           if (aContRow) {
             if (row != &aLastRow) {
               // aContRow needs a continuation for cell, since cell spanned into aLastRow 
               // but does not originate there
               nsTableCellFrame* contCell = nsnull;
-              aStyleSet.CreateContinuingFrame(&aPresContext, cell, &aLastRow, (nsIFrame**)&contCell);
+              aPresContext.PresShell()->FrameConstructor()->
+                CreateContinuingFrame(&aPresContext, cell, &aLastRow,
+                                      (nsIFrame**)&contCell);
               PRInt32 colIndex;
               cell->GetColIndex(colIndex);
               aContRow->InsertCellFrame(contCell, colIndex);
@@ -1028,10 +1029,6 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
   nsTableRowFrame* prevRowFrame = nsnull;
   aDesiredSize.height = 0;
 
-  // get the style set
-  nsCOMPtr<nsIStyleSet>  styleSet;
-  aPresContext->PresShell()->GetStyleSet(getter_AddRefs(styleSet));
-
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   nscoord availWidth  = nsTableFrame::RoundToPixel(aReflowState.availableWidth, p2t);
   nscoord availHeight = nsTableFrame::RoundToPixel(aReflowState.availableHeight, p2t);
@@ -1086,7 +1083,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
             // If top of page and the height exceeded the avail height, then there will be data loss
             NS_WARN_IF_FALSE(rowMetrics.height <= rowReflowState.availableHeight, 
                             "data loss - incomplete row needed more height than available, on top of page");
-            CreateContinuingRowFrame(*aPresContext, *styleSet.get(), *rowFrame, (nsIFrame**)&contRow);
+            CreateContinuingRowFrame(*aPresContext, *rowFrame, (nsIFrame**)&contRow);
             if (contRow) {
               aDesiredSize.height += rowMetrics.height;
               if (prevRowFrame) 
@@ -1149,7 +1146,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
 
       nsTableRowFrame* firstTruncatedRow;
       nscoord yMost;
-      SplitSpanningCells(*aPresContext, aReflowState, *styleSet, *aTableFrame, *firstRowThisPage,
+      SplitSpanningCells(*aPresContext, aReflowState, *aTableFrame, *firstRowThisPage,
                          *lastRowThisPage, aReflowState.mFlags.mIsTopOfPage, availHeight, contRow, 
                          firstTruncatedRow, yMost);
       if (firstTruncatedRow) {
@@ -1176,7 +1173,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
           aStatus = NS_FRAME_NOT_COMPLETE;
 
           // Call SplitSpanningCells again with rowBefore as the last row on the page
-          SplitSpanningCells(*aPresContext, aReflowState, *styleSet, *aTableFrame, 
+          SplitSpanningCells(*aPresContext, aReflowState, *aTableFrame, 
                              *firstRowThisPage, *rowBefore, aReflowState.mFlags.mIsTopOfPage, 
                              availHeight, contRow, firstTruncatedRow, aDesiredSize.height);
           if (firstTruncatedRow) {
@@ -1184,7 +1181,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
               // We were better off with the 1st call to SplitSpanningCells, do it again
               UndoContinuedRow(aPresContext, contRow);
               lastRowThisPage = oldLastRowThisPage;
-              SplitSpanningCells(*aPresContext, aReflowState, *styleSet, *aTableFrame, *firstRowThisPage,
+              SplitSpanningCells(*aPresContext, aReflowState, *aTableFrame, *firstRowThisPage,
                                  *lastRowThisPage, aReflowState.mFlags.mIsTopOfPage, availHeight, contRow, 
                                  firstTruncatedRow, aDesiredSize.height);
               NS_WARNING("data loss in a row spanned cell");

@@ -119,3 +119,5 @@ LOCAL_INCLUDES += \
         -I$(srcdir)/../../../svg/content/src \
         -I$(srcdir)/../../../svg/base/src
 endif
+
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -336,7 +336,6 @@ protected:
 
   void SplitSpanningCells(nsIPresContext&          aPresContext,
                           const nsHTMLReflowState& aReflowState,
-                          nsIStyleSet&             aStyleSet,                                         
                           nsTableFrame&            aTableFrame,
                           nsTableRowFrame&         aFirstRow, 
                           nsTableRowFrame&         aLastRow,  
@@ -347,7 +346,6 @@ protected:
                           nscoord&                 aDesiredHeight);
 
   void CreateContinuingRowFrame(nsIPresContext& aPresContext,
-                                nsIStyleSet&    aStyleSet,
                                 nsIFrame&       aRowFrame,
                                 nsIFrame**      aContRowFrame);
 

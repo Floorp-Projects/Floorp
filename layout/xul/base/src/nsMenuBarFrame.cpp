@@ -66,6 +66,7 @@
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIStyleFrameConstruction.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #include "nsWidgetsCID.h"
@@ -296,12 +297,11 @@ nsMenuBarFrame::ToggleMenuActiveState()
 static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* aChild,
                               nsIFrame** aResult)
 {
-  nsCOMPtr<nsIStyleSet> styleSet;
-  aShell->GetStyleSet(getter_AddRefs(styleSet));
   nsIContent* child = nsnull;
   if (aChild)
     child = aChild->GetContent();
-  styleSet->GetInsertionPoint(aShell, aFrame, child, aResult);
+  aShell->FrameConstructor()->GetInsertionPoint(aShell, aFrame,
+                                                      child, aResult);
 }
 
 nsIMenuFrame*

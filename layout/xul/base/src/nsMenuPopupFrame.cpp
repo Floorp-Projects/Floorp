@@ -73,6 +73,7 @@
 #include "nsITimerInternal.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsIStyleFrameConstruction.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -1230,12 +1231,11 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* aChild,
                               nsIFrame** aResult)
 {
-  nsCOMPtr<nsIStyleSet> styleSet;
-  aShell->GetStyleSet(getter_AddRefs(styleSet));
   nsIContent* child = nsnull;
   if (aChild)
     child = aChild->GetContent();
-  styleSet->GetInsertionPoint(aShell, aFrame, child, aResult);
+  aShell->FrameConstructor()->GetInsertionPoint(aShell, aFrame,
+                                                      child, aResult);
 }
 
 NS_IMETHODIMP

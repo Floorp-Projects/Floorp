@@ -51,7 +51,6 @@
 #include "nsHTMLParts.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
-#include "nsIStyleSet.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
@@ -455,7 +454,7 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
 NS_IMETHODIMP
 nsHTMLDocument::CreateShell(nsIPresContext* aContext,
                             nsIViewManager* aViewManager,
-                            nsIStyleSet* aStyleSet,
+                            nsStyleSet* aStyleSet,
                             nsIPresShell** aInstancePtrResult)
 {
   return doCreateShell(aContext, aViewManager, aStyleSet, mCompatMode,

@@ -71,7 +71,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
-#include "nsIStyleSet.h"
 #include "nsLayoutAtoms.h"
 #include "nsImageMapUtils.h"
 #include "nsIFrameManager.h"

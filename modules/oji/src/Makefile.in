@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  windowwatcher \
 		  gfx \
+		  content \
 		  layout \
 		  docshell \
 		  webbrwsr \

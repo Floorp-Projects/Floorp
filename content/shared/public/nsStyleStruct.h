@@ -47,7 +47,6 @@
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
-#include "nsIStyleSet.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"

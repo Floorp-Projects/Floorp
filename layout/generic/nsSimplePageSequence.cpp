@@ -43,7 +43,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
-#include "nsIStyleSet.h"
 #include "nsIFontMetrics.h"
 #include "nsIPrintSettings.h"
 #include "nsPageFrame.h"
@@ -52,6 +51,7 @@
 #include "nsStyleConsts.h"
 #include "nsRegion.h"
 #include "nsLayoutAtoms.h"
+#include "nsIStyleFrameConstruction.h"
 
 // for header/footer gap & ExtraMargin for Print Preview
 #include "nsIPrefBranch.h"
@@ -204,7 +204,7 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext* aPresContex
                                                      nsIFrame**      aContinuingPage)
 {
   // Create the continuing frame
-  return aPresContext->PresShell()->GetStyleSet()->
+  return aPresContext->PresShell()->FrameConstructor()->
     CreateContinuingFrame(aPresContext, aPageFrame, this, aContinuingPage);
 }
 

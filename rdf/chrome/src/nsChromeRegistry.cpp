@@ -82,7 +82,6 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIPresShell.h"
 #include "nsIDocShell.h"
-#include "nsIStyleSet.h"
 #include "nsISupportsArray.h"
 #include "nsIDocumentObserver.h"
 #ifdef MOZ_XUL
@@ -1534,44 +1533,37 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   for (PRUint32 k = 0; k < shellCount; k++) {
     nsIPresShell *shell = document->GetShellAt(k);
 
-    nsCOMPtr<nsIStyleSet> styleSet;
-    rv = shell->GetStyleSet(getter_AddRefs(styleSet));
-    if (NS_FAILED(rv)) return rv;
-    if (styleSet) {
-      // Reload only the chrome URL agent style sheets.
-      nsCOMPtr<nsISupportsArray> agents;
-      rv = NS_NewISupportsArray(getter_AddRefs(agents));
+    // Reload only the chrome URL agent style sheets.
+    nsCOMArray<nsIStyleSheet> agentSheets;
+    rv = shell->GetAgentStyleSheets(agentSheets);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMArray<nsIStyleSheet> newAgentSheets;
+    for (PRInt32 l = 0; l < agentSheets.Count(); ++l) {
+      nsIStyleSheet *sheet = agentSheets[l];
+
+      nsCOMPtr<nsIURI> uri;
+      rv = sheet->GetURL(*getter_AddRefs(uri));
       if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsISupportsArray> newAgentSheets;
-      rv = NS_NewISupportsArray(getter_AddRefs(newAgentSheets));
-      if (NS_FAILED(rv)) return rv;
-
-      PRInt32 bc = styleSet->GetNumberOfAgentStyleSheets();
-      for (PRInt32 l = 0; l < bc; l++) {
-        nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetAgentStyleSheetAt(l));
-        nsCOMPtr<nsIURI> uri;
-        rv = sheet->GetURL(*getter_AddRefs(uri));
+      if (IsChromeURI(uri)) {
+        // Reload the sheet.
+        nsCOMPtr<nsICSSStyleSheet> newSheet;
+        rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
-
-        if (IsChromeURI(uri)) {
-          // Reload the sheet.
-          nsCOMPtr<nsICSSStyleSheet> newSheet;
-          rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
-          if (NS_FAILED(rv)) return rv;
-          if (newSheet) {
-            rv = newAgentSheets->AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
-            if (NS_FAILED(rv)) return rv;
-          }
-        }
-        else {  // Just use the same sheet.
-          rv = newAgentSheets->AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
+        if (newSheet) {
+          rv = newAgentSheets.AppendObject(newSheet) ? NS_OK : NS_ERROR_FAILURE;
           if (NS_FAILED(rv)) return rv;
         }
       }
-
-      styleSet->ReplaceAgentStyleSheets(newAgentSheets);
+      else {  // Just use the same sheet.
+        rv = newAgentSheets.AppendObject(sheet) ? NS_OK : NS_ERROR_FAILURE;
+        if (NS_FAILED(rv)) return rv;
+      }
     }
+
+    rv = shell->SetAgentStyleSheets(newAgentSheets);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // The document sheets just need to be done once; the document will notify

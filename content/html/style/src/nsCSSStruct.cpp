@@ -50,7 +50,6 @@
 #include "nsStyleConsts.h"
 
 #include "nsCOMPtr.h"
-#include "nsIStyleSet.h"
 
 #define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  { delete ptr; ptr = nsnull; }
 

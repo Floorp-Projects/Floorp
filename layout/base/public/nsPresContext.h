@@ -142,7 +142,6 @@ public:
 
   nsIDocument* GetDocument() { return GetPresShell()->GetDocument(); } 
   nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 
-  nsIStyleSet* GetStyleSet() { return GetPresShell()->GetStyleSet(); } 
   nsIFrameManager* GetFrameManager()
     { return GetPresShell()->GetFrameManager(); } 
 

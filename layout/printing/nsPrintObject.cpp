@@ -42,7 +42,7 @@
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
 nsPrintObject::nsPrintObject() :
-  mFrameType(eFrame),
+  mFrameType(eFrame), mStyleSet(nsnull),
   mRootView(nsnull), mContent(nsnull),
   mSeqFrame(nsnull), mPageFrame(nsnull), mPageNum(-1),
   mRect(0,0,0,0), mReflowRect(0,0,0,0),

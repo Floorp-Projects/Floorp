@@ -65,7 +65,6 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
-#include "nsIStyleSet.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
@@ -76,6 +75,7 @@
 #include "nsCSSRendering.h"
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
+#include "nsIStyleFrameConstruction.h"
 
 
 /********************************************************************************
@@ -3260,8 +3260,8 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
             // The child doesn't have a next-in-flow so create a continuing
             // frame. This hooks the child into the flow
             nsIFrame*     continuingFrame;
-  
-            aPresContext->PresShell()->GetStyleSet()->
+
+            aPresContext->PresShell()->FrameConstructor()->
               CreateContinuingFrame(aPresContext, kidFrame, this,
                                     &continuingFrame);
   

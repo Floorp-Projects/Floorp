@@ -50,7 +50,6 @@
 #include "nsICSSStyleSheet.h"
 
 #include "nsCOMPtr.h"
-#include "nsIStyleSet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSImportRule.h"

@@ -97,6 +97,7 @@ class nsIDTD;
 class nsXPathDocumentTearoff;
 class nsIRadioVisitor;
 class nsIFormControl;
+class nsStyleSet;
 struct nsRadioGroupStruct;
 
 
@@ -329,7 +330,7 @@ public:
    */
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
-                         nsIStyleSet* aStyleSet,
+                         nsStyleSet* aStyleSet,
                          nsIPresShell** aInstancePtrResult);
   NS_IMETHOD_(PRBool) DeleteShell(nsIPresShell* aShell);
   NS_IMETHOD_(PRUint32) GetNumberOfShells() const;
@@ -540,7 +541,7 @@ protected:
   virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
   nsresult doCreateShell(nsIPresContext* aContext,
-                         nsIViewManager* aViewManager, nsIStyleSet* aStyleSet,
+                         nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
                          nsCompatibility aCompatMode,
                          nsIPresShell** aInstancePtrResult);
 

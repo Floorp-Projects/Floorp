@@ -201,7 +201,7 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.  
     nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;
-    NS_NewISupportsArray(getter_AddRefs(mResources->mRuleProcessors));
+    mResources->mRuleProcessors.Clear();
     PRUint32 count;
     mResources->mStyleSheetList->Count(&count);
     for (PRUint32 i = 0; i < count; i++) {
@@ -211,7 +211,7 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
       nsCOMPtr<nsIStyleRuleProcessor> processor;
       sheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
       if (processor != prevProcessor) {
-        mResources->mRuleProcessors->AppendElement(processor);
+        mResources->mRuleProcessors.AppendObject(processor);
         prevProcessor = processor;
       }
     }

@@ -76,7 +76,6 @@
 #include "nsIHTMLContentContainer.h"
 
 #include "nsIStyleRuleProcessor.h"
-#include "nsIStyleSet.h"
 #include "nsIWeakReference.h"
 
 #include "jsapi.h"
@@ -359,8 +358,8 @@ public:
 
   // nsIStyleRuleSupplier
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
-  NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
-                       nsISupportsArrayEnumFunc aFunc,
+  NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
+                       nsIStyleRuleProcessor::EnumFunc aFunc,
                        RuleProcessorData* aData);
 
   // nsIDocumentObserver
@@ -379,7 +378,8 @@ protected:
   }
   nsIContent* GetOutermostStyleScope(nsIContent* aContent);
 
-  void WalkRules(nsISupportsArrayEnumFunc aFunc, RuleProcessorData* aData,
+  void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
+                 RuleProcessorData* aData,
                  nsIContent* aParent, nsIContent* aCurrContent);
 
   nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
@@ -1232,7 +1232,7 @@ nsBindingManager::GetOutermostStyleScope(nsIContent* aContent)
 }
 
 void
-nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc,
+nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                             RuleProcessorData* aData,
                             nsIContent* aParent, nsIContent* aCurrContent)
 {
@@ -1250,8 +1250,8 @@ nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc,
 }
 
 NS_IMETHODIMP
-nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
-                            nsISupportsArrayEnumFunc aFunc,
+nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
+                            nsIStyleRuleProcessor::EnumFunc aFunc,
                             RuleProcessorData* aData)
 {
   nsIContent *content = aData->mContent;
@@ -1275,7 +1275,7 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
       container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));  
       nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(do_QueryInterface(inlineSheet));
       if (inlineCSS)
-        (*aFunc)((nsISupports*)(inlineCSS.get()), aData);
+        (*aFunc)(inlineCSS, aData);
     }
   }
 
