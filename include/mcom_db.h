@@ -203,7 +203,9 @@ XP_END_PROTOS
 #include <errno.h>
 #endif
 
+#ifndef HAVE_SYS_CDEFS_H
 #include "cdefs.h"
+#endif
 
 #ifndef _WINDOWS  /* included above to prevent spurious warnings chouck 12-Sep-95 */
 #include <limits.h>
