@@ -154,16 +154,23 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
 {
   NS_PRECONDITION(nsnull != aFrameList, "null ptr");
   if (nsnull != aFrameList) {
+    nsIFrame* lastNewFrame = nsnull;
     if (nsnull != aParent) {
       nsIFrame* frame = aFrameList;
       while (nsnull != frame) {
         frame->SetParent(aParent);
+        lastNewFrame = frame;
         frame->GetNextSibling(&frame);
       }
     }
 
-    nsFrameList tmp(aFrameList);
-    nsIFrame* lastNewFrame = tmp.LastChild();
+    // Get the last new frame if necessary
+    if (!lastNewFrame) {
+      nsFrameList tmp(aFrameList);
+      lastNewFrame = tmp.LastChild();
+    }
+
+    // Link the new frames into the child list
     if (nsnull == aPrevSibling) {
       lastNewFrame->SetNextSibling(mFirstChild);
       mFirstChild = aFrameList;
