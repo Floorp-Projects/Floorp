@@ -352,28 +352,12 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           nsCOMPtr<nsIDOMNode> topParent;
           leftParent->GetParentNode(getter_AddRefs(topParent));
           
-          if (IsParagraph(leftParent))
-          {
-            // join para's, insert break
-            *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
-            if (NS_FAILED(res)) return res;
-            // fix up selection
-            res = aSelection->Collapse(selNode,selOffset);
-            if (NS_FAILED(res)) return res;
-            res = mEditor->InsertBreak();
-            return res;
-          }
-          if (IsListItem(leftParent) || IsHeader(leftParent))
-          {
-            // join blocks
-            *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
-            if (NS_FAILED(res)) return res;
-            // fix up selection
-            res = aSelection->Collapse(selNode,selOffset);
-            return res;
-          }
+          *aCancel = PR_TRUE;
+          res = JoinNodesSmart(leftParent,rightParent,&selNode,&selOffset);
+          if (NS_FAILED(res)) return res;
+          // fix up selection
+          res = aSelection->Collapse(selNode,selOffset);
+          return res;
         }
         
         // else blocks not same type, bail to default
@@ -411,28 +395,12 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           nsCOMPtr<nsIDOMNode> topParent;
           leftParent->GetParentNode(getter_AddRefs(topParent));
           
-          if (IsParagraph(leftParent))
-          {
-            // join para's, insert break
-            *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
-            if (NS_FAILED(res)) return res;
-            // fix up selection
-            res = aSelection->Collapse(selNode,selOffset);
-            if (NS_FAILED(res)) return res;
-            res = mEditor->InsertBreak();
-            return res;
-          }
-          if (IsListItem(leftParent) || IsHeader(leftParent))
-          {
-            // join blocks
-            *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
-            if (NS_FAILED(res)) return res;
-            // fix up selection
-            res = aSelection->Collapse(selNode,selOffset);
-            return res;
-          }
+          *aCancel = PR_TRUE;
+          res = JoinNodesSmart(leftParent,rightParent,&selNode,&selOffset);
+          if (NS_FAILED(res)) return res;
+          // fix up selection
+          res = aSelection->Collapse(selNode,selOffset);
+          return res;
         }
         
         // else blocks not same type, bail to default
@@ -2567,4 +2535,60 @@ nsHTMLEditRules::IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast)
   
   *aOutIsLast = (child.get() == aNode);
   return res;
+}
+
+
+nsresult 
+nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft, 
+                                 nsIDOMNode *aNodeRight, 
+                                 nsCOMPtr<nsIDOMNode> *aOutMergeParent, 
+                                 PRInt32 *aOutMergeOffset)
+{
+  // check parms
+  if (!aNodeLeft ||  
+      !aNodeRight || 
+      !aOutMergeParent ||
+      !aOutMergeOffset) 
+    return NS_ERROR_NULL_POINTER;
+  
+  nsresult res = NS_OK;
+  // caller responsible for:
+  //   left & right node are smae type
+  //   left & right node have smae parent
+  
+  nsCOMPtr<nsIDOMNode> parent;
+  aNodeLeft->GetParentNode(getter_AddRefs(parent));
+  
+  // defaults for outParams
+  *aOutMergeParent = aNodeRight;
+  res = mEditor->GetLengthOfDOMNode(aNodeLeft, *((PRUint32*)aOutMergeOffset));
+  if (NS_FAILED(res)) return res;
+
+  // seperate join rules for differing blocks
+  if (IsParagraph(aNodeLeft))
+  {
+    // for para's, merge deep & add a <br> after merging
+    res = mEditor->JoinNodeDeep(aNodeLeft, aNodeRight, aOutMergeParent, aOutMergeOffset);
+    if (NS_FAILED(res)) return res;
+    nsAutoString brType("br");
+    nsCOMPtr<nsIDOMNode> brNode;
+    res = mEditor->CreateNode(brType, *aOutMergeParent, *aOutMergeOffset, getter_AddRefs(brNode));
+    // out offset _after_ <br>
+    *aOutMergeOffset++;
+    return res;
+  }
+  else if (IsList(aNodeLeft) || mEditor->IsTextNode(aNodeLeft))
+  {
+    // for list's, merge shallow (wouldn't want to combine list items)
+    res = mEditor->JoinNodes(aNodeLeft, aNodeRight, parent);
+    if (NS_FAILED(res)) return res;
+    return res;
+  }
+  else
+  {
+    // for list items, divs, etc, merge smart
+    res = JoinNodesSmart(aNodeLeft, aNodeRight, aOutMergeParent, aOutMergeOffset);
+    if (NS_FAILED(res)) return res;
+    return res;
+  }
 }
