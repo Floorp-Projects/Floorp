@@ -72,6 +72,9 @@ CPPSRCS		= \
 		nsTextFormatter.cpp \
 		nsTimelineService.cpp \
 		nsValueArray.cpp \
+		nsCOMArray.cpp \
+		nsArray.cpp \
+		nsArrayEnumerator.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -107,6 +110,9 @@ EXPORTS		= \
 		plvector.h \
 		nsTextFormatter.h \
 		nsValueArray.h \
+		nsArray.h \
+		nsArrayEnumerator.h \
+		nsCOMArray.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
@@ -122,6 +128,7 @@ XPIDLSRCS	= \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
 		nsITimelineService.idl \
+		nsIArray.idl \
 		$(NULL)
 
 SDK_XPIDLSRCS   = \

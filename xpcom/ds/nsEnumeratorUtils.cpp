@@ -94,15 +94,15 @@ nsArrayEnumerator::GetNext(nsISupports** aResult)
     return NS_OK;
 }
 
-extern "C" NS_COM nsresult
+extern NS_COM nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsISupportsArray* array)
 {
     nsArrayEnumerator* enumer = new nsArrayEnumerator(array);
     if (enumer == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(enumer);
     *result = enumer; 
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -147,8 +147,8 @@ nsSingletonEnumerator::GetNext(nsISupports** aResult)
 
     mConsumed = PR_TRUE;
 
-    NS_ADDREF(mValue);
     *aResult = mValue;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
@@ -159,8 +159,8 @@ NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
     nsSingletonEnumerator* enumer = new nsSingletonEnumerator(singleton);
     if (enumer == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(enumer);
     *result = enumer; 
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -247,8 +247,8 @@ NS_NewAdapterEnumerator(nsISimpleEnumerator* *result,
     nsAdapterEnumerator* enumer = new nsAdapterEnumerator(enumerator);
     if (enumer == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(enumer);
     *result = enumer; 
+    NS_ADDREF(*result);
     return NS_OK;
 }
 

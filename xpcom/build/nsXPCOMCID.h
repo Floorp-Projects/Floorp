@@ -63,6 +63,13 @@
 #define NS_PROPERTIES_CONTRACTID "@mozilla.org/properties;1"
 
 /**
+ * XPCOM Array Object ContractID
+ * Simple array implementation which supports the nsIArray and
+ * nsIMutableArray interfaces.
+ */
+#define NS_ARRAY_CONTRACTID  "@mozilla.org/array;1"
+
+/**
  * The following are the CIDs and Contract IDs of the nsISupports wrappers for 
  * primative types.  
  */

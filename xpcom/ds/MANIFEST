@@ -1,5 +1,8 @@
+nsArray.h
+nsArrayEnumerator.h
 nsAtomService.h
 nsCppSharedAllocator.h
+nsCOMArray.h
 nsCRT.h
 nsDeque.h
 nsDoubleHashtable.h

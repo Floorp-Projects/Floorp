@@ -55,6 +55,7 @@
 #include "nsByteBuffer.h"
 
 #include "nsSupportsArray.h"
+#include "nsArray.h"
 #include "nsSupportsPrimitives.h"
 #include "nsConsoleService.h"
 #include "nsExceptionService.h"
@@ -176,6 +177,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsDoubleImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsVoidImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsInterfacePointerImpl)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsArray);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
@@ -306,6 +308,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(PERSISTENTPROPERTIES, nsPersistentProperties::Create),
 
     COMPONENT(SUPPORTSARRAY, nsSupportsArray::Create),
+    COMPONENT(ARRAY, nsArrayConstructor),
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor),
     COMPONENT(EXCEPTIONSERVICE, nsExceptionServiceConstructor),
     COMPONENT(ATOMSERVICE, nsAtomServiceConstructor),
@@ -518,7 +521,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     //    clients can create new objects.
 
     // Registry
-
+#if 0
     nsIFactory *registryFactory = NULL;
     rv = NS_RegistryGetFactory(&registryFactory);
     if (NS_FAILED(rv)) return rv;
@@ -530,8 +533,8 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                                   NS_REGISTRY_CONTRACTID,
                                   registryFactory, PR_TRUE);
     NS_RELEASE(registryFactory);
-
     if (NS_FAILED(rv)) return rv;
+#endif
 
     // Category Manager
     {
