@@ -102,7 +102,7 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 
 treeitem[selected="true"] > treerow {
  color: #000000;
- background-color: #B4C3D4;
+ background-color: #CCCCCC;
 }
 
 tree:focus > treechildren treeitem[selected="true"] > treerow,
