@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= editor
 DIRS		= public idl txtsvc libeditor txmgr composer
 
 # We need to export headers from composer/ even if we're not building composer.

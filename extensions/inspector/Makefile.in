@@ -27,6 +27,8 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE	= inspector
+
 DIRS=base build
 
 include $(topsrcdir)/config/rules.mk

@@ -57,6 +57,7 @@ VPATH	   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 endif
 
+MODULE = xmlterm
 
 # Debug option
 DEBUG = 1

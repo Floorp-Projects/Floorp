@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= layout_debug
 DIRS		= src ui
 
 include $(topsrcdir)/config/rules.mk

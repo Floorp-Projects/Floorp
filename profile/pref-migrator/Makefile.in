@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= prefmigr
 DIRS		= public src resources
 
 include $(topsrcdir)/config/rules.mk

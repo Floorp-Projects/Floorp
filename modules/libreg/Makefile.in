@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= libreg
+
 DIRS		= include src standalone
 
 include $(topsrcdir)/config/rules.mk

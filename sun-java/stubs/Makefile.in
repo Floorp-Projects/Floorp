@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= java
 DIRS		= jri include
 
 include $(topsrcdir)/config/rules.mk

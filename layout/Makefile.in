@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= layout
+
 DIRS		= base html xul
 
 ifdef MOZ_MATHML

@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= dbm
 DIRS		= include src
 
 ifdef ENABLE_TESTS

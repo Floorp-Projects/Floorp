@@ -25,6 +25,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+MODULE		= pipnss
 DIRS		= resources src public
 
 include $(topsrcdir)/config/rules.mk

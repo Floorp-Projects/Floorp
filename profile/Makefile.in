@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= profile
+
 DIRS		= public dirserviceprovider 
 
 ifndef MOZ_SINGLE_PROFILE

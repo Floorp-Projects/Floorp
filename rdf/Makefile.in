@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= rdf
 DIRS		= base util datasource resources build
 
 ifndef MOZ_XUL_APP

@@ -26,9 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+MODULE		= xpcom
 
-DIRS		+= tools
+DIRS		= public src tools
 
 include $(topsrcdir)/config/rules.mk
 

@@ -30,6 +30,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xpinstall
 DIRS		= public res src stub cleanup
 
 ifdef MOZ_INSTALLER
