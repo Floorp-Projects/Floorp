@@ -578,6 +578,8 @@ MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib -lxpcom_compat'
 
 USE_DEPENDENT_LIBS=1
 
+USE_GSSAPI=1
+
 _PLATFORM_DEFAULT_TOOLKIT=gtk
 MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwidget_$(MOZ_WIDGET_TOOLKIT)'
 MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT) $(MOZ_XLIBRGB_LDFLAGS)'
@@ -1197,6 +1199,9 @@ case "$target" in
     MOZ_ENABLE_COREXFONTS=
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
+
+    dnl Do not perform checks for GSSAPI.  We're going to use SSPI instead.
+    USE_GSSAPI=
 
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
@@ -3813,9 +3818,12 @@ dnl ========================================================
 dnl Check for GSSAPI libraries and headers needed for
 dnl integrated windows authentication support (disable
 dnl negotiateauth extension if GSSAPI is not available).
+dnl
+dnl If we are not using GSSAPI to implement this extension,
+dnl then we can obviously skip these checks.
 dnl ========================================================
 
-if test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth` -ne 0; then
+if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth` -ne 0; then
     dnl
     dnl Check for alternative location for GSSAPI libraries.
     dnl
