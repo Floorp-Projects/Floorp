@@ -2518,6 +2518,7 @@ NET_GetURL (URL_Struct *URL_s,
 		  {
 	    /* the cached file is valid so use it unilaterally
 	     */
+        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
 	    type = cache_method;
 		  }
 		else if(URL_s->real_content_length > URL_s->content_length)
@@ -2590,12 +2591,14 @@ NET_GetURL (URL_Struct *URL_s,
 			  {
 			/* the cached file is valid so use it unilaterally
 			 */
+        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
 		type = cache_method;
 			  }
 		  }
 		else if((NET_CacheUseMethod == CU_NEVER_CHECK || URL_s->history_num)
 				  && !URL_s->expires)
 		  {
+        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
 	    type = cache_method;
 		  }
 		else if(NET_CacheUseMethod == CU_CHECK_ALL_THE_TIME
@@ -2619,6 +2622,7 @@ NET_GetURL (URL_Struct *URL_s,
 			  * and it doesn't have an expiration date...
 			  * FORCE Reload it
 			  */
+        TIMING_MESSAGE(("cache,%s,forced reload:non-history http", URL_s->address));
 	    TRACEMSG(("Non history http file found. Force reloading it "));
 	    /* strip the cache file and
 	     * memory pointer
@@ -2636,6 +2640,7 @@ NET_GetURL (URL_Struct *URL_s,
 #endif /* MOZ_OFFLINE */
 	    )  /* *X* check for is offline */
 		  {
+            TIMING_MESSAGE(("cache,%s,forced reload:non-history cgi", URL_s->address));
 			TRACEMSG(("Non history cgi script found (probably)."
 					  " Force reloading it "));
 			/* cache testing stuff */
@@ -2660,6 +2665,7 @@ NET_GetURL (URL_Struct *URL_s,
 		  {
 		    /* the cached file is valid so use it unilaterally
 		     */
+        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
 	    type = cache_method;
 		  }
       }
