@@ -131,35 +131,22 @@ nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
   if (!mOperaProfile)
     GetOperaProfile(aProfile, getter_AddRefs(mOperaProfile));
 
-  const MIGRATIONDATA data[] = { { ToNewUnicode(OPERA_PREFERENCES_FILE_NAME),
-                                   nsIBrowserProfileMigrator::SETTINGS,
-                                   PR_FALSE },
-                                 { ToNewUnicode(OPERA_COOKIES_FILE_NAME),
-                                   nsIBrowserProfileMigrator::COOKIES,
-                                   PR_FALSE },
-                                 { ToNewUnicode(OPERA_HISTORY_FILE_NAME),
-                                   nsIBrowserProfileMigrator::HISTORY,
-                                   PR_FALSE },
-                                 { ToNewUnicode(OPERA_BOOKMARKS_FILE_NAME),
-                                   nsIBrowserProfileMigrator::BOOKMARKS,
-                                   PR_FALSE } };
+  MigrationData data[] = { { ToNewUnicode(OPERA_PREFERENCES_FILE_NAME),
+                             nsIBrowserProfileMigrator::SETTINGS,
+                             PR_FALSE },
+                           { ToNewUnicode(OPERA_COOKIES_FILE_NAME),
+                             nsIBrowserProfileMigrator::COOKIES,
+                             PR_FALSE },
+                           { ToNewUnicode(OPERA_HISTORY_FILE_NAME),
+                             nsIBrowserProfileMigrator::HISTORY,
+                             PR_FALSE },
+                           { ToNewUnicode(OPERA_BOOKMARKS_FILE_NAME),
+                             nsIBrowserProfileMigrator::BOOKMARKS,
+                             PR_FALSE } };
                                                                   
-  nsCOMPtr<nsIFile> sourceFile; 
-  PRBool exists;
-  for (PRInt32 i = 0; i < 4; ++i) {
-    // Don't list items that can only be imported in replace-mode when
-    // we aren't being run in replace-mode.
-    if (!aReplace && data[i].replaceOnly) 
-      continue;
-
-    mOperaProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(nsDependentString(data[i].fileName));
-    sourceFile->Exists(&exists);
-    if (exists)
-      *aResult |= data[i].sourceFlag;
-
-    nsCRT::free(data[i].fileName);
-  }
+  // Frees file name strings allocated above.
+  GetMigrateDataFromArray(data, sizeof(data)/sizeof(MigrationData), 
+                          aReplace, mOperaProfile, aResult);
 
   return NS_OK;
 }
@@ -274,7 +261,7 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 #define _OPM(type) nsOperaProfileMigrator::type
 
 static
-nsOperaProfileMigrator::PREFTRANSFORM gTransforms[] = {
+nsOperaProfileMigrator::PrefTransform gTransforms[] = {
   { "User Prefs", "Download Directory", _OPM(STRING), "browser.download.defaultFolder", _OPM(SetFile), PR_FALSE, -1 },
   { nsnull, "Enable Cookies", _OPM(INT), "network.cookie.cookieBehavior", _OPM(SetCookieBehavior), PR_FALSE, -1 },
   { nsnull, "Accept Cookies Session Only", _OPM(BOOL), "network.cookie.enableForCurrentSessionOnly", _OPM(SetBool), PR_FALSE, -1 },
@@ -301,7 +288,7 @@ nsOperaProfileMigrator::PREFTRANSFORM gTransforms[] = {
 nsresult 
 nsOperaProfileMigrator::SetFile(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   nsCOMPtr<nsILocalFile> lf(do_CreateInstance("@mozilla.org/file/local;1"));
   lf->InitWithNativePath(nsDependentCString(xform->stringValue));
   return aBranch->SetComplexValue(xform->targetPrefName, NS_GET_IID(nsILocalFile), lf);
@@ -310,7 +297,7 @@ nsOperaProfileMigrator::SetFile(void* aTransform, nsIPrefBranch* aBranch)
 nsresult 
 nsOperaProfileMigrator::SetCookieBehavior(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   PRInt32 val = (xform->intValue == 3) ? 0 : (xform->intValue == 0) ? 2 : 1;
   return aBranch->SetIntPref(xform->targetPrefName, val);
 }
@@ -318,21 +305,21 @@ nsOperaProfileMigrator::SetCookieBehavior(void* aTransform, nsIPrefBranch* aBran
 nsresult 
 nsOperaProfileMigrator::SetImageBehavior(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetIntPref(xform->targetPrefName, xform->boolValue ? 0 : 2);
 }
 
 nsresult 
 nsOperaProfileMigrator::SetBool(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetBoolPref(xform->targetPrefName, xform->boolValue);
 }
 
 nsresult 
 nsOperaProfileMigrator::SetWString(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
   nsAutoString data; data.AssignWithConversion(xform->stringValue);
   pls->SetData(data.get());
@@ -342,14 +329,14 @@ nsOperaProfileMigrator::SetWString(void* aTransform, nsIPrefBranch* aBranch)
 nsresult 
 nsOperaProfileMigrator::SetInt(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetIntPref(xform->targetPrefName, xform->intValue);
 }
 
 nsresult 
 nsOperaProfileMigrator::SetString(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetCharPref(xform->targetPrefName, xform->stringValue);
 }
 
@@ -369,8 +356,8 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
   nsCOMPtr<nsIPrefBranch> branch(do_GetService(NS_PREFSERVICE_CONTRACTID));
 
   // Traverse the standard transforms
-  PREFTRANSFORM* transform;
-  PREFTRANSFORM* end = gTransforms + sizeof(gTransforms)/sizeof(PREFTRANSFORM);
+  PrefTransform* transform;
+  PrefTransform* end = gTransforms + sizeof(gTransforms)/sizeof(PrefTransform);
 
   PRInt32 length;
   char* lastSectionName = nsnull;
@@ -1341,48 +1328,5 @@ nsOperaProfileMigrator::GetOperaProfile(const PRUnichar* aProfile, nsILocalFile*
 
   *aFile = file;
   NS_ADDREF(*aFile);
-}
-
-void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
-                  const char* aPortPref, nsIPrefBranch* aPrefs) 
-{
-  nsCAutoString hostPort(aHostPort);  
-  PRInt32 portDelimOffset = hostPort.RFindChar(':');
-  if (portDelimOffset) {
-    nsCAutoString host(Substring(hostPort, 0, portDelimOffset));    
-    nsCAutoString port(Substring(hostPort, portDelimOffset + 1, hostPort.Length() - portDelimOffset + 1));
-    
-    aPrefs->SetCharPref(aPref, host.get());
-    PRInt32 stringErr;
-    PRInt32 portValue = port.ToInteger(&stringErr);
-    aPrefs->SetIntPref(aPortPref, portValue);
-  }
-  else {
-    aPrefs->SetCharPref(aPref, hostPort.get());
-  }
-}
-
-void ParseOverrideServers(const char* aServers, nsIPrefBranch* aBranch)
-{
-  // First check to see if the value is "<local>", if so, set the field to 
-  // "localhost,127.0.0.1"
-  nsCAutoString override; override = aServers;
-  if (override.Equals("<local>")) {
-    aBranch->SetCharPref("network.proxy.no_proxies_on", "localhost,127.0.0.1");
-  }
-  else {
-    // If it's not, then replace every ";" character with ","
-    PRInt32 offset = 0, temp = 0;
-    while (offset != -1) {
-      offset = override.FindChar(';', offset);
-      const nsACString& host = Substring(override, temp, offset < 0 ? override.Length() - temp : offset - temp);
-      if (host.Equals("<local>"))
-        override.Replace(temp, 7, NS_LITERAL_CSTRING("localhost,127.0.0.1"));
-      temp = offset + 1;
-      if (offset != -1)
-        override.Replace(offset, 1, NS_LITERAL_CSTRING(","));
-    }
-    aBranch->SetCharPref("network.proxy.no_proxies_on", override.get());
-  }
 }
 

@@ -670,11 +670,11 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
 
 typedef HRESULT (WINAPI *PStoreCreateInstancePtr)(IPStore**, DWORD, DWORD, DWORD);
 
-typedef struct {
+struct SignonData {
   PRUnichar* user;
   PRUnichar* pass;
   char*      realm;
-} SIGNONDATA;
+};
 
 // The IEPStore GUID is the registry key under which IE Protected Store data lives. 
 // {e161255a-37c3-11d2-bcaa-00c04fd929db}
@@ -792,10 +792,10 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
               // method, and we own that buffer. We don't free it here, since we're going to be using 
               // it after the password harvesting stage to locate the username field. Only after the second
               // phase is complete do we free the buffer. 
-              SIGNONDATA* d = new SIGNONDATA;
+              SignonData* d = new SignonData;
               d->user = (PRUnichar*)username;
               d->pass = (PRUnichar*)pass;
-              d->realm = realm;
+              d->realm = realm; // freed in ResolveAndMigrateSignons
               aSignonsFound->AppendElement(d);
             }
           }
@@ -859,8 +859,8 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
           
           // Assume all keys that are valid URIs are signons, not saved form data, and that 
           // all keys that aren't valid URIs are form field names (containing form data).
-          char* realm = nsnull;
-          if (!KeyIsURI(key, &realm)) {
+          nsXPIDLCString realm;
+          if (!KeyIsURI(key, getter_Copies(realm))) {
             // Search the data for a username that matches one of the found signons. 
             EnumerateUsernames(key, (PRUnichar*)data, (count/sizeof(PRUnichar)), aSignonsFound);
           }
@@ -870,11 +870,11 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
       }
     }
     // Now that we've done resolving signons, we need to walk the signons list, freeing the data buffers 
-    // for each SIGNONDATA entry, since these buffers were allocated by the system back in |GetSignonListFromPStore|
+    // for each SignonData entry, since these buffers were allocated by the system back in |GetSignonListFromPStore|
     // but never freed. 
     PRInt32 signonCount = aSignonsFound->Count();
     for (PRInt32 i = 0; i < signonCount; ++i) {
-      SIGNONDATA* sd = (SIGNONDATA*)aSignonsFound->ElementAt(i);
+      SignonData* sd = (SignonData*)aSignonsFound->ElementAt(i);
       ::CoTaskMemFree(sd->user);  // |sd->user| is a pointer to the start of a buffer that also contains sd->pass
       nsCRT::free(sd->realm);
       delete sd;
@@ -899,7 +899,7 @@ nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData,
 
     // Compare the value at the current cursor position with the collected list of signons
     for (PRInt32 i = 0; i < signonCount; ++i) {
-      SIGNONDATA* sd = (SIGNONDATA*)aSignonsFound->ElementAt(i);
+      SignonData* sd = (SignonData*)aSignonsFound->ElementAt(i);
       if (curr.Equals(sd->user)) {
         // Bingo! Found a username in the saved data for this item. Now, add a Signon.
         nsDependentString usernameStr(sd->user), passStr(sd->pass);
@@ -982,8 +982,8 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
         if (suffix.EqualsIgnoreCase(":StringData")) {
           // :StringData contains the saved data
           const nsAString& key = Substring(itemNameString, 0, itemNameString.Length() - 11);
-          char* realm = nsnull;
-          if (!KeyIsURI(key, &realm))
+          nsXPIDLCString realm;
+          if (!KeyIsURI(key, getter_Copies(realm)))
             AddDataToFormHistory(key, (PRUnichar*)data, (count/sizeof(PRUnichar)));
         }
       }
@@ -1763,7 +1763,8 @@ nsIEProfileMigrator::CopySecurityPrefs(nsIPrefBranch* aPrefs)
   if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
                      "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
                      0, KEY_READ, &key) == ERROR_SUCCESS) {
-    DWORD length, value, type; 
+    DWORD value, type; 
+    DWORD length = sizeof DWORD;
     if (::RegQueryValueEx(key, "SecureProtocols", 0, &type, (LPBYTE)&value, &length) == ERROR_SUCCESS) {
       aPrefs->SetBoolPref("security.enable_ssl2", value & 0x08);
       aPrefs->SetBoolPref("security.enable_ssl3", value & 0x20);
@@ -1774,13 +1775,13 @@ nsIEProfileMigrator::CopySecurityPrefs(nsIPrefBranch* aPrefs)
   return NS_OK;
 }
 
-typedef struct {
+struct ProxyData {
   char*   prefix;
   PRInt32 prefixLength;
   PRBool  proxyConfigured;
   char*   hostPref;
   char*   portPref;
-} PROXYDATA;
+};
 
 nsresult
 nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
@@ -1816,7 +1817,7 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
     if (r == ERROR_SUCCESS) {
       nsCAutoString bufStr; bufStr = (char*)buf;
 
-      PROXYDATA data[] = {
+      ProxyData data[] = {
         { "ftp=",     4, PR_FALSE, "network.proxy.ftp",     "network.proxy.ftp_port"    },
         { "gopher=",  7, PR_FALSE, "network.proxy.gopher",  "network.proxy.gopher_port" },
         { "http=",    5, PR_FALSE, "network.proxy.http",    "network.proxy.http_port"   },

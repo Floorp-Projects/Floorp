@@ -24,6 +24,7 @@
 
 
 #include "nsINIParser.h"
+#include "nsCRT.h"
 
 nsINIParser::nsINIParser(const char *aFilename)
 {
@@ -84,6 +85,10 @@ bail:
 
 nsINIParser::~nsINIParser()
 {
+    if (mFileBuf) {
+        nsCRT::free(mFileBuf);
+        mFileBuf = nsnull;
+    }
     DUMP("~nsINIParser");
 }
 

@@ -67,6 +67,7 @@ REQUIRES	= \
 		  $(NULL)
 
 CPPSRCS  = nsProfileMigrator.cpp \
+           nsBrowserProfileMigratorUtils.cpp \
            nsNetscapeProfileMigratorBase.cpp \
            nsDogbertProfileMigrator.cpp \
            nsSeamonkeyProfileMigrator.cpp \
