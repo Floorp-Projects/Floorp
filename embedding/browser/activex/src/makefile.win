@@ -2,6 +2,6 @@
 
 DEPTH=..\..\..\..
 
-DIRS=control 
+DIRS=control control_kicker
 
 include <$(DEPTH)\config\rules.mak>
