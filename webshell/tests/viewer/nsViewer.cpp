@@ -81,8 +81,12 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
 
 
+//#define SAMPLES_BASE_URL "file:////home/kmcclusk/mozilla/dist/Linux2.0.31_x86_DBG.OBJ/bin/res/samples"
+//#define START_URL SAMPLES_BASE_URL "/test0.html"
+
+
 #define SAMPLES_BASE_URL "resource:/res/samples"
-#define START_URL SAMPLES_BASE_URL "/test0.html"
+#define DEFAULT_DOC "/test0.html"
 
 nsViewer* gTheViewer = nsnull;
 WindowData * gMainWindowData = nsnull;
@@ -654,7 +658,7 @@ void nsViewer::AddTestDocs(nsDocLoader* aDocLoader)
   char url[500];
   for (int docnum = 0; docnum < gNumSamples; docnum++)
   {
-    PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
+    PR_snprintf(url, 500, "%s/test%d.html", GetBaseURL(), docnum);
     aDocLoader->AddURL(url);
   }
 }
@@ -950,7 +954,7 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       if ((nsnull != wd) && (nsnull != wd->ww)) {
         PRIntn ix = aId - VIEWER_DEMO0;
         char* url = new char[500];
-        PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, ix);
+        PR_snprintf(url, 500, "%s/test%d.html", GetBaseURL(), ix);
         wd->observer->LoadURL(url);
         delete url;
       }
@@ -1117,7 +1121,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   }
   else {
       // Load the starting url if we have one
-    wd->observer->LoadURL(startURL ? startURL : START_URL);
+    wd->observer->LoadURL(startURL ? startURL : GetDefaultStartURL());
     if (gDoQuantify) {
       // Synthesize 20 ResizeReflow commands (+/- 10 pixels) and then
       // exit.
@@ -1142,6 +1146,19 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
 void nsViewer::AfterDispatch()
 {
    NET_PollSockets();
+}
+
+char* nsViewer::GetBaseURL()
+{
+  return(SAMPLES_BASE_URL);
+}
+
+char* nsViewer::GetDefaultStartURL()
+{
+static char defaultURL[MAXPATHLEN];
+
+  sprintf(defaultURL, "%s%s", GetBaseURL(), DEFAULT_DOC);
+  return(defaultURL);
 }
 
 void nsViewer::AddMenu(nsIWidget* aMainWindow)
