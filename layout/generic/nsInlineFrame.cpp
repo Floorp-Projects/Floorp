@@ -89,7 +89,7 @@ public:
   nsresult FrameAppendedReflow(nsInlineReflowState& aState,
                                nsInlineReflow& aInlineReflow);
 
-  nsresult FrameDeletedReflow(nsInlineReflowState& aState,
+  nsresult FrameRemovedReflow(nsInlineReflowState& aState,
                               nsInlineReflow& aInlineReflow);
 
   nsresult ChildIncrementalReflow(nsInlineReflowState& aState,
@@ -238,8 +238,7 @@ nsInlineFrame::AttributeChanged(nsIPresShell* aShell,
   }
   else if (nsHTMLAtoms::face == aAttribute) {
     ApplyStyleChangeToTree(*aPresContext, this);
-    ApplyReflowChangeToTree(*aPresContext, this);
-    ApplyRenderingChangeToTree(*aPresContext, this);
+    StyleChangeReflow(*aPresContext, this);
   }
   return NS_OK;
 }
@@ -376,8 +375,8 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
         rv = ResizeReflow(state, inlineReflow);
         break;
 
-      case nsIReflowCommand::FrameDeleted:
-        rv = FrameDeletedReflow(state, inlineReflow);
+      case nsIReflowCommand::FrameRemoved:
+        rv = FrameRemovedReflow(state, inlineReflow);
         break;
 
       default:
@@ -542,7 +541,7 @@ nsInlineFrame::FrameAppendedReflow(nsInlineReflowState& aState,
 }
 
 nsInlineReflowStatus
-nsInlineFrame::FrameDeletedReflow(nsInlineReflowState& aState,
+nsInlineFrame::FrameRemovedReflow(nsInlineReflowState& aState,
                                   nsInlineReflow& aInlineReflow)
 {
   // Get the deleted frame
