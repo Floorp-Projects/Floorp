@@ -328,6 +328,17 @@ bin\components\venkman-service.js
 bin\chrome\venkman.jar
 bin\chrome\icons\default\venkman-window.ico
 
+[talkback]
+bin\components\qfaservices.dll
+bin\components\qfaservices.xpt
+bin\components\BrandRes.dll
+bin\components\fullsoft.dll
+bin\components\master.ini
+bin\components\talkback-l10n.ini
+bin\components\talkback.cnt
+bin\components\talkback.exe
+bin\components\talkback.hlp
+
 [inspector]
 bin\components\inspector-cmdline.js
 bin\components\inspector.dll
