@@ -290,6 +290,7 @@ pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.propert
 pref("mailnews.start_page.enabled", true);
 
 pref("mailnews.remember_selected_message", true);
+pref("mailnews.thread_pane_column_unthreads", true);
 
 pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.properties");
 
