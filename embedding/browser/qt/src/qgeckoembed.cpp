@@ -417,9 +417,7 @@ QGeckoEmbed::reload(ReloadFlags flags)
 bool
 QGeckoEmbed::domKeyDownEvent(nsIDOMKeyEvent *keyEvent)
 {
-    qDebug("key event start");
     emit domKeyDown(keyEvent);
-    qDebug("key event stop");
     return false;
 }
 
@@ -434,7 +432,6 @@ bool
 QGeckoEmbed::domKeyUpEvent(nsIDOMKeyEvent *keyEvent)
 {
     emit domKeyUp(keyEvent);
-    qDebug("key release event stop");
     return false;
 }
 

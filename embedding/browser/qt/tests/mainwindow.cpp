@@ -34,7 +34,7 @@ MyMainWindow::MyMainWindow()
 
     action = new QAction(QPixmap::fromMimeSource( "stop.png" ), tr("Stop"), CTRL + Key_S,
                          toolbar, "stop");
-    connect(action, SIGNAL(activated()), this, SLOT(stopLoad()));
+    connect(action, SIGNAL(activated()), this, SLOT(stop()));
     action->addTo(toolbar);
 
     location = new QLineEdit(toolbar);
