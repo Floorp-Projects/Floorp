@@ -827,39 +827,32 @@ NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLe
 	PgSetFontCx( mGC, mPhotonFontName );
 	PgSetExtendedTextFlagsCx( mGC, Pg_TEXT_SIMPLE_METRICS );
 
-#if 0 /* turn this feature off since it has problems */
 	if( !aSpacing ) {
-#endif
 		mTranMatrix->TransformCoord( &aX, &aY );
 		PhPoint_t pos = { aX, aY };
 		PgDrawTextCharsCx( mSurfaceDC, aString, aLength, &pos, Pg_TEXT_LEFT);
-
-#if 0 /* turn this feature off since it has problems */
 		}
 	else {
-		nscoord* trSpacing;
-		nscoord trSpacingArray[500];
-		if( aLength > 500 )
-			trSpacing = new nscoord[aLength];
-		else trSpacing = trSpacingArray;
+    nscoord x = aX;
+    nscoord y = aY;
+    const char* end = aString + aLength;
+    while( aString < end ) {
+			const char *ch = aString;
+			int charlen = utf8len( aString, aLength );
+			if( charlen <= 0 )
+				break;
 
-		mTranMatrix->ScaleXCoords(aSpacing, aLength, trSpacing);
+			aString += charlen;
+			aLength -= charlen;
 
-		nscoord x = aX;
-		nscoord y = aY;
-		mTranMatrix->TransformCoord(&x, &y);
-		PhPoint_t pos = { x, y };
-
-		const char *current = aString;
-		for( int i=0; i<aLength; i++ ) {
-			PgDrawTextCx( mSurfaceDC, current++, 1, &pos, Pg_TEXT_LEFT);
-			pos.x += trSpacing[i];
+      nscoord xx = x;
+      nscoord yy = y;
+      mTranMatrix->TransformCoord(&xx, &yy);
+      PhPoint_t pos = { xx, yy };
+			PgDrawText( ch, charlen, &pos, Pg_TEXT_LEFT);
+			x += *aSpacing++;
+			}
 		}
-
-	if( trSpacing != trSpacingArray )
-		delete [] trSpacing;
-	}
-#endif
 
 	PgSetExtendedTextFlagsCx( mGC, 0 );
 
