@@ -7291,41 +7291,42 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
   // relatively positioned
   nsIFrame* containingBlock = nsnull;
   for (nsIFrame* frame = aFrame; frame; frame->GetParent(&frame)) {
-    const nsStyleDisplay* disp;
-
     // Is it positioned?
+    // If it's a table then ignore it, because for the time being tables
+    // are not containers for absolutely positioned child frames
+    const nsStyleDisplay* disp;
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp);
-    if ((disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) ||
-        (disp->mPosition == NS_STYLE_POSITION_RELATIVE)) {
-      
-      // If it's a table then ignore it, because for the time being tables
-      // are not containers for absolutely positioned child frames
-      if (disp->mDisplay != NS_STYLE_DISPLAY_TABLE) {
-        nsCOMPtr<nsIAtom> frameType;
-        // This may set frameType to null.
-        frame->GetFrameType(getter_AddRefs(frameType));
 
-        if (nsLayoutAtoms::scrollFrame == frameType) {
-          // We want the scrolled frame, not the scroll frame
-          nsIFrame* scrolledFrame;
-          frame->FirstChild(aPresContext, nsnull, &scrolledFrame);
-          if (scrolledFrame) {
-            scrolledFrame->GetFrameType(getter_AddRefs(frameType));
-            if (nsLayoutAtoms::areaFrame == frameType) {
-              containingBlock = scrolledFrame;
+    if (disp->IsPositioned() && disp->mDisplay != NS_STYLE_DISPLAY_TABLE) {
+      nsCOMPtr<nsIAtom> frameType;
+      frame->GetFrameType(getter_AddRefs(frameType));
+
+      if (nsLayoutAtoms::scrollFrame == frameType) {
+        // We want the scrolled frame, not either of the two scroll frames
+        nsIFrame* scrolledFrame;
+        frame->FirstChild(aPresContext, nsnull, &scrolledFrame);
+        if (scrolledFrame) {
+          scrolledFrame->GetFrameType(getter_AddRefs(frameType));
+          if (nsLayoutAtoms::areaFrame == frameType) {
+            containingBlock = scrolledFrame;
+            break;
+          } else if (nsLayoutAtoms::scrollFrame == frameType) {
+            scrolledFrame->FirstChild(aPresContext, nsnull, &scrolledFrame);
+            if (scrolledFrame) {
+              scrolledFrame->GetFrameType(getter_AddRefs(frameType));
+              if (nsLayoutAtoms::areaFrame == frameType) {
+                containingBlock = scrolledFrame;
+                break;
+              }
             }
           }
-
-        } else if ((nsLayoutAtoms::areaFrame == frameType) ||
-                   (nsLayoutAtoms::positionedInlineFrame == frameType)) {
-          containingBlock = frame;
         }
-      }
-    }
 
-    // See if we found a containing block
-    if (containingBlock) {
-      break;
+      } else if ((nsLayoutAtoms::areaFrame == frameType) ||
+                 (nsLayoutAtoms::positionedInlineFrame == frameType)) {
+        containingBlock = frame;
+        break;
+      }
     }
   }
 
