@@ -765,9 +765,9 @@ nsWindow::Invalidate(PRBool aIsSynchronous)
         return NS_OK;
 
     gdk_window_invalidate_rect(mDrawingarea->inner_window,
-                               &rect, TRUE);
+                               &rect, FALSE);
     if (aIsSynchronous)
-        gdk_window_process_updates(mDrawingarea->inner_window, TRUE);
+        gdk_window_process_updates(mDrawingarea->inner_window, FALSE);
 
     return NS_OK;
 }
@@ -790,9 +790,9 @@ nsWindow::Invalidate(const nsRect &aRect,
         return NS_OK;
 
     gdk_window_invalidate_rect(mDrawingarea->inner_window,
-                               &rect, TRUE);
+                               &rect, FALSE);
     if (aIsSynchronous)
-        gdk_window_process_updates(mDrawingarea->inner_window, TRUE);
+        gdk_window_process_updates(mDrawingarea->inner_window, FALSE);
 
     return NS_OK;
 }
@@ -813,7 +813,7 @@ nsWindow::InvalidateRegion(const nsIRegion* aRegion,
                  rect.x, rect.y, rect.width, rect.height, aIsSynchronous));
 
         gdk_window_invalidate_region(mDrawingarea->inner_window,
-                                     region, TRUE);
+                                     region, FALSE);
     }
     else {
         LOGDRAW(("Invalidate (region) [%p] with empty region\n",
@@ -829,7 +829,7 @@ nsWindow::Update()
     if (!mDrawingarea)
         return NS_OK;
 
-    gdk_window_process_updates(mDrawingarea->inner_window, TRUE);
+    gdk_window_process_updates(mDrawingarea->inner_window, FALSE);
     return NS_OK;
 }
 
