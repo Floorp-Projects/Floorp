@@ -26,6 +26,7 @@
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsIMIMEInfo.h"
+#include "nsMIMEInfoWin.h"
 #include "nsMimeTypes.h"
 #include "nsILocalFile.h"
 #include "nsIProcess.h"
@@ -66,52 +67,6 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
-
-NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
-{
-  nsresult rv = NS_OK;
-
-  if (aMIMEInfo)
-  {
-    nsCOMPtr<nsIFile> application;
-    nsCAutoString path;
-    aTempFile->GetNativePath(path);
-
-    nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
-    aMIMEInfo->GetPreferredAction(&action);
-    
-    aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-    if (application && action == nsIMIMEInfo::useHelperApp)
-    {
-      // if we were given an application to use then use it....otherwise
-      // make the registry call to launch the app
-      const char * strPath = path.get();
-      nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
-      nsresult rv;
-      if (NS_FAILED(rv = process->Init(application)))
-        return rv;
-      PRUint32 pid;
-      if (NS_FAILED(rv = process->Run(PR_FALSE, &strPath, 1, &pid)))
-        return rv;
-    }    
-    else // use the system default
-    {
-      // Launch the temp file, unless it is an executable.
-      nsCOMPtr<nsILocalFile> local(do_QueryInterface(aTempFile));
-      if (!local)
-        return NS_ERROR_FAILURE;
-
-      PRBool executable = PR_TRUE;
-      local->IsExecutable(&executable);
-      if (executable)
-        return NS_ERROR_FAILURE;
-
-      rv = local->Launch();
-    }
-  }
-
-  return rv;
-}
 
 // The windows registry provides a mime database key which lists a set of mime types and corresponding "Extension" values. 
 // we can use this to look up our mime type to see if there is a preferred extension for the mime type.
@@ -377,7 +332,7 @@ static PRBool typeFromExtEquals(const char *aExt, const char *aType)
   return eq;
 }
 
-already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetByExtension(const char *aFileExt, const char *aTypeHint)
+already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char *aFileExt, const char *aTypeHint)
 {
   if (!aFileExt || !*aFileExt)
     return nsnull;
@@ -408,7 +363,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetByExtension(const char *a
     nsAutoString description;
     PRBool found = GetValueString(hKey, NULL, description);
 
-    nsIMIMEInfo* mimeInfo = new nsMIMEInfoImpl();
+    nsMIMEInfoWin* mimeInfo = new nsMIMEInfoWin();
     if (mimeInfo)
     {
       NS_ADDREF(mimeInfo);
@@ -471,7 +426,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     }
   }
   // If we found an extension for the type, do the lookup
-  nsIMIMEInfo* mi = nsnull;
+  nsMIMEInfoWin* mi = nsnull;
   if (!fileExtension.IsEmpty())
     mi = GetByExtension(fileExtension.get(), aMIMEType).get();
   LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi));
@@ -494,7 +449,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     }
   }
   if (!mi || !hasDefault) {
-    nsCOMPtr<nsIMIMEInfo> miByExt = GetByExtension(aFileExt, aMIMEType);
+    nsRefPtr<nsMIMEInfoWin> miByExt = GetByExtension(aFileExt, aMIMEType);
     LOG(("Ext. lookup for '%s' found 0x%p\n", aFileExt, miByExt.get()));
     if (!miByExt && mi)
       return mi;
@@ -504,7 +459,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     }
     if (!miByExt && !mi) {
       *aFound = PR_FALSE;
-      mi = new nsMIMEInfoImpl();
+      mi = new nsMIMEInfoWin();
       if (mi) {
         NS_ADDREF(mi);
         if (aMIMEType && *aMIMEType)
@@ -519,10 +474,8 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     // if we get here, mi has no default app. copy from extension lookup.
     nsCOMPtr<nsIFile> defaultApp;
     nsXPIDLString desc;
-    miByExt->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
     miByExt->GetDefaultDescription(getter_Copies(desc));
 
-    mi->SetDefaultApplicationHandler(defaultApp);
     mi->SetDefaultDescription(desc.get());
   }
   return mi;

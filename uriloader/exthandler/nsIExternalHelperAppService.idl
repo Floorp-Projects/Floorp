@@ -65,16 +65,9 @@ interface nsIExternalHelperAppService : nsISupports
  * This is a private interface shared between external app handlers and the platform specific
  * external helper app service
  */
-[scriptable, uuid(491D04D5-449C-11d4-98D0-001083010E9B)]
+[scriptable, uuid(d0b5d7d3-9565-403d-9fb5-e5089c4567c6)]
 interface nsPIExternalAppLauncher : nsISupports
 {
-  /**
-   * Used by the handler to actually launch the helper application.
-   * @param aTempFile The file which contains the data we want the helper app
-   *                  to use when it is launched
-   */
-  void launchAppWithTempFile(in nsIMIMEInfo aMIMEInfo, in nsIFile aTempFile);
-
   /**
    * mscott --> eventually I should move this into a new service so other
    * consumers can add temporary files they want deleted on exit.

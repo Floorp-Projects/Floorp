@@ -32,6 +32,7 @@
 #include "nsIPromptService.h"
 #include "nsMemory.h"
 #include "nsCRT.h"
+#include "nsMIMEInfoMac.h"
 
 #include "nsIInternetConfigService.h"
 
@@ -49,57 +50,6 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
-
-NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
-{
-  nsresult rv = NS_OK;
-  if (aMIMEInfo)
-  {
-    nsCOMPtr<nsIFile> application;
-
-    nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
-    aMIMEInfo->GetPreferredAction(&action);
-
-    if (action==nsIMIMEInfo::useHelperApp)
-      aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-    else
-      aMIMEInfo->GetDefaultApplicationHandler(getter_AddRefs(application));
-
-    if (application) {
-      nsCOMPtr<nsILocalFileMac> app = do_QueryInterface(application, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
-    }
-#ifdef XP_MACOSX
-    else
-    { // We didn't get an application to handle the file from aMIMEInfo, ask LaunchServices directly
-      nsCOMPtr <nsILocalFileMac> tempFile = do_QueryInterface(aTempFile, &rv);
-      if (NS_FAILED(rv)) return rv;
-      
-      FSRef tempFileRef;
-      tempFile->GetFSRef(&tempFileRef);
-
-      FSRef appFSRef;
-      if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nsnull) == noErr)
-      {
-        nsCOMPtr<nsILocalFileMac> app(do_CreateInstance("@mozilla.org/file/local;1"));
-        if (!app) return NS_ERROR_FAILURE;
-        app->InitWithFSRef(&appFSRef);
-        
-        nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
-      }
-    }
-#endif    
-  }
-  return rv;
-}
 
 NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
@@ -269,13 +219,19 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
 
     // If we got two matches, and the type has no default app, copy default app
     if (!hasDefault && miByType && miByExt) {
-      nsCOMPtr<nsIFile> defaultApp;
-      nsXPIDLString desc;
-      miByExt->GetDefaultDescription(getter_Copies(desc));
-      miByExt->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
-
-      miByType->SetDefaultDescription(desc.get());
-      miByType->SetDefaultApplicationHandler(defaultApp);
+      // IC currently always uses nsMIMEInfoBase-derived classes.
+      // When it stops doing that, this code will need changing.
+      // Using dynamic_cast here so we can fail sorta gracefully if this is no
+      // nsMIMEInfoBase.
+      nsMIMEInfoBase* byType = dynamic_cast<nsMIMEInfoBase*>(miByType.get());
+      nsMIMEInfoBase* byExt = dynamic_cast<nsMIMEInfoBase*>(miByExt.get());
+      if (!byType || !byExt) {
+        NS_ERROR("IC gave us an nsIMIMEInfo that's no nsMIMEInfoBase! Fix nsOSHelperAppService.");
+        return nsnull;
+      }
+      // Copy the attributes of miByType onto miByExt
+      byType->CopyBasicDataTo(byExt);
+      miByType = miByExt;
     }
     if (miByType)
       miByType.swap(mimeInfo);
@@ -286,7 +242,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
   if (!mimeInfo) {
     *aFound = PR_FALSE;
     PR_LOG(mLog, PR_LOG_DEBUG, ("Creating new mimeinfo\n"));
-    mimeInfo = new nsMIMEInfoImpl();
+    mimeInfo = new nsMIMEInfoMac();
     if (!mimeInfo)
       return nsnull;
     NS_ADDREF(mimeInfo);

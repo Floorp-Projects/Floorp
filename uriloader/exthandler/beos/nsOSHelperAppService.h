@@ -51,9 +51,6 @@ public:
 	nsOSHelperAppService();
 	virtual ~nsOSHelperAppService();
 
-	// override nsIExternalHelperAppService methods....
-	NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
-
 	already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char * aFileExt, PRBool *aFound);
 
 	// override nsIExternalProtocolService methods

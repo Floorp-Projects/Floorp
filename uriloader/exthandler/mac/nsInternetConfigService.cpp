@@ -39,7 +39,8 @@
 #include "nsInternetConfigService.h"
 #include "nsCOMPtr.h"
 #include "nsIMIMEInfo.h"
-#include "nsMIMEInfoImpl.h"
+#include "nsMIMEInfoMac.h"
+#include "nsAutoPtr.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
@@ -357,7 +358,7 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
 {
   // create a mime info object and we'll fill it in based on the values from IC mapping entry
   nsresult  rv = NS_OK;
-  nsCOMPtr<nsIMIMEInfo> info (new nsMIMEInfoImpl());
+  nsRefPtr<nsMIMEInfoMac> info (new nsMIMEInfoMac());
   if (info)
   {
     nsCAutoString mimetype ((char *)&entry.MIMEType[1], entry.MIMEType[0]);
@@ -399,7 +400,7 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
         {
           nsCOMPtr<nsIFile> nsfile = do_QueryInterface(file, &rv);
           if (rv == NS_OK)
-            info->SetDefaultApplicationHandler(nsfile);
+            info->SetDefaultApplication(nsfile);
         }
       }
     }

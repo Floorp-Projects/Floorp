@@ -43,6 +43,7 @@
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
 #include "nsMIMEInfoImpl.h"
+#include "nsAutoPtr.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -230,7 +231,7 @@ nsGNOMERegistry::LoadURL(nsIURI *aURL)
   return NS_ERROR_FAILURE;
 }
 
-/* static */ already_AddRefed<nsIMIMEInfo>
+/* static */ already_AddRefed<nsMIMEInfoBase>
 nsGNOMERegistry::GetFromExtension(const char *aFileExt)
 {
   if (!gconfLib)
@@ -252,19 +253,17 @@ nsGNOMERegistry::GetFromExtension(const char *aFileExt)
   return GetFromType(mimeType);
 }
 
-/* static */ already_AddRefed<nsIMIMEInfo>
+/* static */ already_AddRefed<nsMIMEInfoBase>
 nsGNOMERegistry::GetFromType(const char *aMIMEType)
 {
   if (!gconfLib)
     return nsnull;
 
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
-
   GnomeVFSMimeApplication *handlerApp = _gnome_vfs_mime_get_default_application(aMIMEType);
   if (!handlerApp)
     return nsnull;
 
-  mimeInfo = new nsMIMEInfoImpl();
+  nsRefPtr<nsMIMEInfoImpl> mimeInfo = new nsMIMEInfoImpl();
   NS_ENSURE_TRUE(mimeInfo, nsnull);
 
   mimeInfo->SetMIMEType(aMIMEType);
@@ -297,7 +296,7 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
   NS_NewNativeLocalFile(nsDependentCString(commandPath), PR_TRUE,
                         getter_AddRefs(appFile));
   if (appFile) {
-    mimeInfo->SetDefaultApplicationHandler(appFile);
+    mimeInfo->SetDefaultApplication(appFile);
     mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(handlerApp->name).get());
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
   }
@@ -306,7 +305,7 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
 
   _gnome_vfs_mime_application_free(handlerApp);
 
-  nsIMIMEInfo* retval;
+  nsMIMEInfoBase* retval;
   NS_ADDREF((retval = mimeInfo));
   return retval;
 }

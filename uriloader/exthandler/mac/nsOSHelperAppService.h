@@ -37,9 +37,6 @@ public:
   nsOSHelperAppService();
   virtual ~nsOSHelperAppService();
 
-  // override nsIExternalHelperAppService methods....
-  NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
-
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   NS_IMETHOD LoadUrl(nsIURI * aURL);

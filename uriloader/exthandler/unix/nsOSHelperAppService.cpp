@@ -45,6 +45,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "prenv.h"      // for PR_GetEnv()
+#include "nsAutoPtr.h"
 #include <stdlib.h>		// for system()
 
 #define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
@@ -73,55 +74,6 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
-
-NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
-{
-  LOG(("-- nsOSHelperAppService::LaunchAppWithTempFile"));
-  nsresult rv = NS_OK;
-  if (aMIMEInfo)
-  {
-    nsCOMPtr<nsIFile> application;
-
-    nsCAutoString path;
-    aTempFile->GetNativePath(path);
-    LOG(("Launching helper on '%s'\n", path.get()));
-        
-    nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
-    aMIMEInfo->GetPreferredAction(&action);
-
-    if (action == nsIMIMEInfo::useHelperApp)
-    {
-      aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-    }
-    else
-    {
-      aMIMEInfo->GetDefaultApplicationHandler(getter_AddRefs(application));
-    }
-    
-    // The nsIMIMEInfo should have either the default or preferred 
-    // application handler attribute set to match the preferredAction!
-    if (!application)
-      return NS_ERROR_FILE_NOT_FOUND;
-    
-    if (LOG_ENABLED()) {
-      nsCAutoString appPath;
-      application->GetNativePath(appPath);
-      LOG(("The helper is '%s'\n", appPath.get()));
-    }
-      
-    // if we were given an application to use then use it....otherwise
-    // make the registry call to launch the app
-    const char * strPath = path.get();
-    nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
-    if (NS_FAILED(rv = process->Init(application)))
-      return rv;
-    PRUint32 pid;
-    if (NS_FAILED(rv = process->Run(PR_FALSE, &strPath, 1, &pid)))
-      return rv;
-  }
-
-  return rv;
-}
 
 /*
  * Take a command with all the mailcap escapes in it and unescape it
@@ -336,7 +288,7 @@ IsNetscapeFormat(const nsAString& aBuffer) {
   NS_NAMED_LITERAL_STRING(MCOMHeader, "#--MCOM MIME Information");
 
   return StringBeginsWith(aBuffer, netscapeHeader) ||
-         StringBeginsWith(aBuffer, MCOMHeader);  
+         StringBeginsWith(aBuffer, MCOMHeader);
 }
 
 /*
@@ -1353,9 +1305,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
       while (colon_iter != end_iter && *colon_iter != ':') {
         ++colon_iter;
       }
-      // XXX provided the string code has all it's bugs fixed, we should be able to
-      // remove this PromiseFlatCString call.
-      localFile->InitWithNativePath(PromiseFlatCString(Substring(start_iter, colon_iter)));
+      localFile->InitWithNativePath(Substring(start_iter, colon_iter));
       rv = localFile->AppendRelativePath(nsDependentString(platformAppPath));
       if (NS_SUCCEEDED(rv)) {
         localFile->Exists(&exists);
@@ -1382,7 +1332,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   return rv;
 }
 
-already_AddRefed<nsIMIMEInfo>
+already_AddRefed<nsMIMEInfoBase>
 nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   // if the extension is null, return immediately
   if (!aFileExt || !*aFileExt)
@@ -1390,7 +1340,7 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   
   LOG(("Here we do an extension lookup for '%s'\n", aFileExt));
 
-  nsAutoString mimeType, majorType, minorType,
+  nsAutoString majorType, minorType,
                mime_types_description, mailcap_description,
                handler, mozillaFlags;
   
@@ -1404,7 +1354,7 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     
 #ifdef MOZ_WIDGET_GTK2
     LOG(("Looking in GNOME registry\n"));
-    nsIMIMEInfo *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt).get();
+    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt).get();
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry\n"));
       return gnomeInfo;
@@ -1421,9 +1371,12 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   if (NS_FAILED(rv))
     return nsnull;
 
+  NS_LossyConvertUTF16toASCII asciiMajorType(majorType);
+  NS_LossyConvertUTF16toASCII asciiMinorType(minorType);
+
   LOG(("Type/Description results:  majorType='%s', minorType='%s', description='%s'\n",
-          NS_LossyConvertUCS2toASCII(majorType).get(),
-          NS_LossyConvertUCS2toASCII(minorType).get(),
+          asciiMajorType.get(),
+          asciiMinorType.get(),
           NS_LossyConvertUCS2toASCII(mime_types_description).get()));
 
   if (majorType.IsEmpty() && minorType.IsEmpty()) {
@@ -1431,13 +1384,12 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     return nsnull;
   }
 
-  nsIMIMEInfo* mimeInfo = new nsMIMEInfoImpl();
+  nsCAutoString mimeType(asciiMajorType + NS_LITERAL_CSTRING("/") + asciiMinorType);
+  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(mimeType.get());
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
   
-  mimeType = majorType + NS_LITERAL_STRING("/") + minorType;
-  mimeInfo->SetMIMEType(NS_ConvertUCS2toUTF8(mimeType).get());
   mimeInfo->AppendExtension(aFileExt);
   nsHashtable typeOptions; // empty hash table
   rv = LookUpHandlerAndDescription(majorType, minorType, typeOptions,
@@ -1464,7 +1416,7 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
     
     if (NS_SUCCEEDED(rv)) {
-      mimeInfo->SetDefaultApplicationHandler(handlerFile);
+      mimeInfo->SetDefaultApplication(handlerFile);
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
       mimeInfo->SetDefaultDescription(handler.get());
     }
@@ -1477,7 +1429,7 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   return mimeInfo;
 }
 
-already_AddRefed<nsIMIMEInfo>
+already_AddRefed<nsMIMEInfoBase>
 nsOSHelperAppService::GetFromType(const char *aMIMEType) {
   // if the type is null, return immediately
   if (!aMIMEType || !*aMIMEType)
@@ -1528,7 +1480,7 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
     
 #ifdef MOZ_WIDGET_GTK2
     LOG(("Looking in GNOME registry\n"));
-    nsIMIMEInfo *gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType).get();
+    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType).get();
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry\n"));
       return gnomeInfo;
@@ -1580,13 +1532,12 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
     return nsnull;
   }
   
-  nsIMIMEInfo* mimeInfo = new nsMIMEInfoImpl();
+  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(aMIMEType);
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
 
   mimeInfo->SetFileExtensions(NS_ConvertUCS2toUTF8(extensions).get());
-  mimeInfo->SetMIMEType(aMIMEType);
   if (! mime_types_description.IsEmpty()) {
     mimeInfo->SetDescription(mime_types_description.get());
   } else {
@@ -1600,7 +1551,7 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
   }
   
   if (NS_SUCCEEDED(rv)) {
-    mimeInfo->SetDefaultApplicationHandler(handlerFile);
+    mimeInfo->SetDefaultApplication(handlerFile);
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
     mimeInfo->SetDefaultDescription(handler.get());
   } else {
@@ -1616,12 +1567,12 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
                                         const char *aFileExt,
                                         PRBool     *aFound) {
   *aFound = PR_TRUE;
-  nsIMIMEInfo* retval = GetFromType(aType).get();
+  nsMIMEInfoBase* retval = GetFromType(aType).get();
   PRBool hasDefault = PR_FALSE;
   if (retval)
     retval->GetHasDefaultHandler(&hasDefault);
   if (!retval || !hasDefault) {
-    nsCOMPtr<nsIMIMEInfo> miByExt = GetFromExtension(aFileExt);
+    nsRefPtr<nsMIMEInfoBase> miByExt = GetFromExtension(aFileExt);
     // If we had no extension match, but a type match, use that
     if (!miByExt && retval)
       return retval;
@@ -1649,14 +1600,9 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
       return retval;
     }
 
-    // Copy default handler
-    nsCOMPtr<nsIFile> defaultHandler;
-    nsXPIDLString desc;
-    miByExt->GetDefaultApplicationHandler(getter_AddRefs(defaultHandler));
-    miByExt->GetDefaultDescription(getter_Copies(desc));
-
-    retval->SetDefaultApplicationHandler(defaultHandler);
-    retval->SetDefaultDescription(desc.get());
+    // Copy the attributes of retval onto miByExt, to return it
+    retval->CopyBasicDataTo(miByExt);
+    miByExt.swap(retval);
   }
   return retval;
 }
