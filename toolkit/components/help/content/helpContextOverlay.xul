@@ -32,24 +32,24 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 
-<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" [
+<!DOCTYPE overlay [
     <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
     %helpDTD;
 ]>
 <overlay id="contentAreaContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <!-- Help Window's right-click menu -->
+# Help Window's right-click menu
   <popupset id="contentAreaContextSet">
     <popup id="contentAreaContextMenu">
       <menuitem id="context-back"
-                label="&goBackCmd.label;"
-                accesskey="&goBackCmd.accesskey;"
+                label="&backButton.label;"
+                accesskey="&backButton.accesskey;"
                 observes="canGoBack"
                 oncommand="goBack()"/>
       <menuitem id="context-forward"
-                label="&goForwardCmd.label;"
-                accesskey="&goForwardCmd.accesskey;"
+                label="&forwardButton.label;"
+                accesskey="&forwardButton.accesskey;"
                 observes="canGoForward"
                 oncommand="goForward()"/>
       <menuitem id="context-reload"
@@ -59,9 +59,11 @@
       <menuseparator/>
       <menuitem id="zoom-out"
       		label="&textZoomReduceBtn.label;"
+      		accesskey="&textZoomReduceBtn.accesskey;"
       		oncommand="ZoomManager.prototype.getInstance().reduce();"/>
       <menuitem id="zoom-in"
       		label="&textZoomEnlargeBtn.label;"
+      		accesskey="textZoomEnlargeBtn.accesskey;"
       		oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     </popup>
   </popupset>

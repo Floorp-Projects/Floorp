@@ -342,7 +342,7 @@ function goForward() {
 
 function goHome() {
     // Load "Welcome" page
-    loadURI("chrome://help/locale/welcome.xhtml");
+    loadURI("chrome://help/locale/firefox_welcome.xhtml");
 }
 
 function print() {
