@@ -62,7 +62,8 @@ nsStyleLinkElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
 }
 
 NS_IMETHODIMP 
-nsStyleLinkElement::InitStyleLinkElement(nsIParser* aParser, PRBool aDontLoadStyle)
+nsStyleLinkElement::InitStyleLinkElement(nsIParser* aParser,
+                                         PRBool aDontLoadStyle)
 {
   mParser = aParser;
   mDontLoadStyle = aDontLoadStyle;
@@ -73,7 +74,12 @@ nsStyleLinkElement::InitStyleLinkElement(nsIParser* aParser, PRBool aDontLoadSty
 NS_IMETHODIMP
 nsStyleLinkElement::GetSheet(nsIDOMStyleSheet** aSheet)
 {
-  CallQueryInterface(mStyleSheet, aSheet);
+  NS_ENSURE_ARG_POINTER(aSheet);
+  *aSheet = nsnull;
+
+  if (mStyleSheet) {
+    CallQueryInterface(mStyleSheet, aSheet);
+  }
 
   // Always return NS_OK to avoid throwing JS exceptions if mStyleSheet 
   // is not a nsIDOMStyleSheet
@@ -152,7 +158,8 @@ const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
 NS_IMETHODIMP
-nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, PRInt32 aDocIndex)
+nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
+                                     PRInt32 aDocIndex)
 {
   if (mDontLoadStyle || !mUpdatesEnabled) {
     return NS_OK;
@@ -174,7 +181,8 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
   thisContent->GetDocument(*getter_AddRefs(doc));
 
   if (aNotify && mStyleSheet && !doc && aOldDocument) {
-    // We're removing the link element from the document, unload the stylesheet.
+    // We're removing the link element from the document, unload the
+    // stylesheet.
     aOldDocument->RemoveStyleSheet(mStyleSheet);
     mStyleSheet = nsnull;
 
