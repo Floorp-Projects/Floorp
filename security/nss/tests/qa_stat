@@ -424,6 +424,14 @@ qa_errorlist()
         grep -vi "fatal" |
         grep -vi "TCP connection reset" |
         grep  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP  -i failed  
+    grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "segmentation violation" \
+        ${MACHINES_TO_CHECK}*/output.log
+    grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "memory fault" \
+        ${MACHINES_TO_CHECK}*/output.log
+    grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "bus error" \
+        ${MACHINES_TO_CHECK}*/output.log
+    grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "core dumped" \
+        ${MACHINES_TO_CHECK}*/output.log
     grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP fatal \
         ${MACHINES_TO_CHECK}*/output.log
     grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP -i\
@@ -629,6 +637,8 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
   for w in `ls */results.html`
   do
       diff -b $w bct/$w  2>>$BCMISSINGLIST | 
+           grep -v "Listing signed files in jar .signtool -v.*Passed" |
+           grep -v "Listing signed files in jar .signtool -w.*Passed" |
            grep -v "backward compatibility" |
            grep -v "Can.t run pk12util tests for NSS 3.2" |
            grep -v "porting Alice.s email cert " |
@@ -641,6 +651,8 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
                 echo "diff $w bct/$w"
                 echo "========================================="
                 diff -b $w bct/$w 2>&1 | 
+                     grep -v "Listing signed files in jar .signtool -v.*Passed" |
+                     grep -v "Listing signed files in jar .signtool -w.*Passed" |
                      grep -v "backward compatibility" |
                      grep -v "Can.t run pk12util tests for NSS 3.2" |
                      grep -v "porting Alice.s email cert " |
