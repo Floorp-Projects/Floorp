@@ -121,13 +121,6 @@ sub try(&;$) {
         }
     };
     if (defined($continuation)) {
-        if ($@ ne '') {
-            if (not ref($@) or
-                not $@->isa('PLIF::Exception')) {
-                # an unexpected exception
-                $@ = PLIF::Exception->create('message' => $@);
-            }
-        }
         $continuation->handle($@);
         return;
     } else {
@@ -218,13 +211,31 @@ sub create {
 sub handle {
     my $self = shift;
     my($exception) = @_;
+    $self->{'resolved'} = 1;
+    if ($exception ne '') {
+        if (not ref($exception) or
+            not $exception->isa('PLIF::Exception')) {
+            # an unexpected exception
+            $exception = PLIF::Exception->create('message' => $exception);
+        }
+    } else {
+        $exception = undef;
+    }
     my $reraise = undef;
     handler: while (1) {
         if (defined($exception)) {
             foreach my $handler (@{$self->{'handlers'}}) {
                 if ($exception->isa($handler->[0])) {
-                    my $result = &{$handler->[1]}($exception);
-                    if (not defined($result) or
+                    my $result = eval { &{$handler->[1]}($exception) };
+                    if ($@) {
+                        if (not ref($@) or
+                            not $@->isa('PLIF::Exception')) {
+                            # an unexpected exception
+                            $@ = PLIF::Exception->create('message' => $@);
+                        }
+                        $reraise = $@;
+                        last handler;
+                    } elsif (not defined($result) or
                         not ref($result) or
                         not $result->isa('PLIF::Exception::Internal::Unhandled')) {
                         last handler;
@@ -234,7 +245,15 @@ sub handle {
                 }
             }
             if (defined($self->{'except'})) {
-                &{$self->{'except'}}($exception);
+                my $result = eval { &{$self->{'except'}}($exception) };
+                if ($@) {
+                    if (not ref($@) or
+                        not $@->isa('PLIF::Exception')) {
+                        # an unexpected exception
+                        $@ = PLIF::Exception->create('message' => $@);
+                    }
+                    $reraise = $@;
+                }
             } else {
                 # unhandled exception
                 $reraise = $exception;
@@ -245,8 +264,8 @@ sub handle {
     if (defined($self->{'finally'})) {
         &{$self->{'finally'}}();
     }
-    $self->{'resolved'} = 1;
     if (defined($reraise)) {
+        # note that if the finally block raises an exception, we drop this one
         $reraise->raise();
     }
 }
