@@ -57,15 +57,15 @@
             <html:option value="2">&modelDeleteImmediately.label;</html:option>
           </html:select>
         </html:div>
-        <html:div><html:input type="checkbox"/>&expungeOnExit.label;</html:div>
-        <html:div><html:input type="checkbox"/>&emptyTrashOnExit.label;</html:div>
+        <html:div><html:input name="server.cleanupInboxOnExit" type="checkbox"/>&expungeOnExit.label;</html:div>
+        <html:div><html:input name="server.emptyTrashOnExit" type="checkbox"/>&emptyTrashOnExit.label;</html:div>
       </box>
       <!-- News -->
       <box align="vertical" flex="100%">
         <html:div>
-		<html:input type="checkbox"/>&maxMessagesStart.label;
+		<html:input name="server.notifyOn" type="checkbox"/>&maxMessagesStart.label;
 		<html:spacer/>
-		<html:input type="text" size="6"/>
+		<html:input name="server.maxArticles" type="text" size="6"/>
 		<html:spacer/>&maxMessagesEnd.label;
         </html:div>
       </box>
