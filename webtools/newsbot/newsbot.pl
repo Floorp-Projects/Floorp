@@ -204,7 +204,7 @@ if ($index > 15) {
 for (my $i=$index; $i > $min ; $i--) {
     print ("  <item>\n");
     print ("    <title>" . $articles[$i]->{'Subject'} . "</title>\n");
-    print ("    <link>http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . $articles[$i]->{'Message-ID'} . "&gt;</link>\n");
+    print ("    <link>http://http://groups.google.com/groups?q=msgid:" . $articles[$i]->{'Message-ID'} . "&amp;ic=1</link>\n");
     print ("  </item>\n\n");
     }
 
@@ -231,11 +231,8 @@ print "<FONT SIZE=-1>\nPosted: " . %article->{'Date'} ."\n</FONT>";
 print "<BR>";
 print %article->{'Newsgroups'} . "\n";
 print "<BR>\n";
-print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . %article->{'Message-ID'} . "&gt;\">\n";
-print "View Article</A> -\n";
-print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/thread/%3c" . %article->{'Message-ID'} ."%3e%231/1\">\n";
-print "View Thread\n";
-print "</A>\n";
+print "<A HREF=\"http://groups.google.com/groups?q=msgid:" . %article->{'Message-ID'} . "&amp;ic=1\">\n";
+print "View Article</A>\n";
 print "<!--Submitted to NewsBot by: " . %article->{'submitter'} . "-->\n";
 print "<!--" . %article->{'submitdate'} . "-->\n";
 print "</TD></TR>\n";
