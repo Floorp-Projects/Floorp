@@ -1650,7 +1650,7 @@ void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin
 	if (!classid)
 		TRACE("Bad object tag NULL\n");
 
-	if (classid && !XP_STRCMP(classid,"builtin:tree")){
+    if (!classid || XP_STRCMP(classid,"builtin:htmlarea")){ //left to default to tree here
 #endif //ENDER
 		CRDFContentView* pWnd = (CRDFContentView*)pBuiltin_struct->FE_Data;
 		if (pWnd)
