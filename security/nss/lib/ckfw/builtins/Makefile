@@ -30,17 +30,21 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.8 $ $Date: 2001/05/23 05:55:13 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.9 $ $Date: 2002/02/11 05:48:27 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
+
+EXTRA_LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)nssckfw.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
+	$(NULL)
+
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
-EXTRA_LIBS = \
-        $(DIST)/lib/nssckfw.lib \
-        $(DIST)/lib/nssb.lib \
+EXTRA_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
 	wsock32.lib \
@@ -49,19 +53,9 @@ EXTRA_LIBS = \
 
 else
 
-ifeq ($(OS_ARCH), OS2)
-PLC_STATIC_LIB = $(DIST)/lib/plc4.$(LIB_SUFFIX)
-PLDS_STATIC_LIB = $(DIST)/lib/plds4.$(LIB_SUFFIX)
-else
-PLC_STATIC_LIB = $(DIST)/lib/libplc4.$(LIB_SUFFIX)
-PLDS_STATIC_LIB = $(DIST)/lib/libplds4.$(LIB_SUFFIX)
-endif
-
 EXTRA_LIBS += \
-        $(DIST)/lib/libnssckfw.$(LIB_SUFFIX) \
-        $(DIST)/lib/libnssb.$(LIB_SUFFIX) \
-	$(PLC_STATIC_LIB) \
-	$(PLDS_STATIC_LIB) \
+	$(DIST)/lib/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)plds4.$(LIB_SUFFIX) \
 	$(NULL)
 
 endif

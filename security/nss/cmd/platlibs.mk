@@ -82,39 +82,39 @@ OS_LIBS += \
 else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
+CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
 ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
+	CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)crypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
-	CRYPTOLIB+=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
+	CRYPTOLIB+=$(DIST)/lib/$(LIB_PREFIX)bsafe.$(LIB_SUFFIX)
+	CRYPTOLIB+=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
 endif
 EXTRA_LIBS += \
-	$(DIST)/lib/libsmime.$(LIB_SUFFIX) \
-	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
-	$(DIST)/lib/libjar.$(LIB_SUFFIX) \
-	$(DIST)/lib/libzlib.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnss.$(LIB_SUFFIX) \
-	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsectool.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpkcs12.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnsspki.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsoftokn.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnsspki.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnssdev.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnssb.$(LIB_SUFFIX) \
-	$(DIST)/lib/libswfci.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)sectool.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkcs12.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkcs7.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)certhi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)cryptohi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)certhi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)swfci.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
-	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifeq ($(OS_ARCH), AIX) 
@@ -163,7 +163,7 @@ else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 EXTRA_LIBS += \
-	$(DIST)/lib/libsectool.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)sectool.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifeq ($(OS_ARCH), AIX) 
