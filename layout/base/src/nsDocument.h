@@ -110,10 +110,14 @@ public:
 
   virtual nsIArena* GetArena();
 
-  NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
+  NS_IMETHOD StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                               nsIChannel* aChannel,
+#else
+                               nsIURI *aUrl, 
+#endif
                                nsIContentViewerContainer* aContainer,
-                               nsIStreamListener **aDocListener,
-                               const char* aCommand);
+                               nsIStreamListener **aDocListener);
 
   /**
    * Return the title of the document. May return null.
@@ -414,7 +418,11 @@ protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
+#ifdef NECKO
+  virtual nsresult Reset(nsIChannel* aChannel);
+#else
   virtual nsresult Reset(nsIURI* aURL);
+#endif
 
 	// this enum is temporary; there should be no knowledge of HTML in
 	// nsDocument. That will be fixed when content sink stream factories

@@ -26,6 +26,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
+#include "nsILoadGroup.h"
 
 #include "prprf.h" // PR_sscanf
 
@@ -176,7 +177,8 @@ nsFTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval
 NS_IMETHODIMP
 nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                         nsISupports *ctxt,
-                        nsIStreamListener *listener)
+                        nsIStreamListener *listener,
+                        nsILoadGroup* group)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -186,7 +188,8 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
                          PRUint32 startPosition,
                          PRInt32 writeCount,
                          nsISupports *ctxt,
-                         nsIStreamObserver *observer)
+                         nsIStreamObserver *observer,
+                         nsILoadGroup* group)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -211,6 +214,14 @@ nsFTPChannel::GetContentType(char* *contentType) {
     // XXX for ftp we need to do a file extension-to-type mapping lookup
     // XXX in some hash table/registry of mime-types
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+  *aLoadGroup = mLoadGroup;
+  NS_ADDREF(*aLoadGroup);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

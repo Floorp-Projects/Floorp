@@ -52,6 +52,7 @@ class nsIDOMDocumentFragment;
 class nsILineBreaker;
 class nsIWordBreaker;
 class nsIDOMSelection;
+class nsIChannel;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -85,10 +86,14 @@ public:
   // returns the arena associated with this document.
   virtual nsIArena* GetArena() = 0;
 
-  NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
+  NS_IMETHOD StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                               nsIChannel* aChannel,
+#else
+                               nsIURI *aUrl, 
+#endif
                                nsIContentViewerContainer* aContainer,
-                               nsIStreamListener **aDocListener,
-                               const char* aCommand) = 0;
+                               nsIStreamListener **aDocListener) = 0;
 
   /**
    * Return the title of the document. May return null.

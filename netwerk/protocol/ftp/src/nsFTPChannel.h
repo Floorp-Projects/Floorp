@@ -46,17 +46,21 @@ public:
     NS_IMETHOD GetURI(nsIURI * *aURL);
     NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval);
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
-    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
+    NS_IMETHOD AsyncRead(PRUint32 startPosition,
+                         PRInt32 readCount, 
                          nsISupports *ctxt,
-                         nsIStreamListener *listener);
+                         nsIStreamListener *listener,
+                         nsILoadGroup *group);
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition,
                           PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIStreamObserver *observer);
+                          nsIStreamObserver *observer,
+                          nsILoadGroup *group);
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
 
     // nsIFTPChannel methods:
     NS_IMETHOD Get(void);
@@ -94,6 +98,7 @@ protected:
     PRBool                  mConnected;
     nsIStreamListener*      mListener;
     PRUint32                mLoadAttributes;
+    nsILoadGroup*           mLoadGroup;
 };
 
 #endif /* nsFTPChannel_h___ */

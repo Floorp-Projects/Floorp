@@ -139,8 +139,9 @@ interface nsIIOService : nsISupports
      * their use is not required by other parts of the system, they are primarily
      * a convenience for the caller. The outer parameter can be used for aggregation.
      */
-    nsILoadGroup NewLoadGroup(in nsILoadGroup parent, 
-                              in nsISupports outer);
+    nsILoadGroup NewLoadGroup(in nsISupports outer,
+                              in nsIStreamObserver observer, 
+                              in nsILoadGroup parent);
 
     /**
      * Returns a simple channel implementation that uses the given input

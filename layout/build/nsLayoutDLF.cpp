@@ -22,10 +22,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
@@ -125,9 +122,13 @@ public:
   NS_DECL_ISUPPORTS
 
   // for nsIDocumentLoaderFactory
-  NS_IMETHOD CreateInstance(nsIURI* aURL,
+  NS_IMETHOD CreateInstance(const char* aCommand,
+#ifdef NECKO
+                            nsIChannel* aChannel,
+#else
+                            nsIURI* aURL,
+#endif
                             const char* aContentType, 
-                            const char* aCommand,
                             nsIContentViewerContainer* aContainer,
                             nsISupports* aExtraInfo,
                             nsIStreamListener** aDocListener,
@@ -148,15 +149,24 @@ public:
 
   nsresult InitUAStyleSheet();
 
-  nsresult CreateDocument(nsIURI* aURL, 
-                          const char* aCommand,
+  nsresult CreateDocument(const char* aCommand,
+#ifdef NECKO
+                          nsIChannel* aChannel,
+#else
+                          nsIURI* aURL, 
+#endif
                           nsIContentViewerContainer* aContainer,
                           const nsCID& aDocumentCID,
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aDocViewer);
 
-  nsresult CreateRDFDocument(const char* aContentType, nsIURI* aURL, 
-                             const char* aCommand,
+  nsresult CreateRDFDocument(const char* aCommand,
+#ifdef NECKO
+                             nsIChannel* aChannel,
+#else
+                             nsIURI* aURL, 
+#endif
+                             const char* aContentType,
                              nsIContentViewerContainer* aContainer,
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
@@ -230,16 +240,19 @@ nsLayoutDLF::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP
-nsLayoutDLF::CreateInstance(nsIURI* aURL, 
+nsLayoutDLF::CreateInstance(const char *aCommand,
+#ifdef NECKO
+                            nsIChannel* aChannel,
+#else
+                            nsIURI* aURL, 
+#endif
                             const char* aContentType, 
-                            const char *aCommand,
                             nsIContentViewerContainer* aContainer,
                             nsISupports* aExtraInfo,
                             nsIStreamListener** aDocListener,
                             nsIContentViewer** aDocViewer)
 {
   nsresult rv = NS_ERROR_FAILURE;
-
 
   // XXX vile hack
   if(0==PL_strcmp(aCommand,"view-source")) {
@@ -254,7 +267,13 @@ nsLayoutDLF::CreateInstance(nsIURI* aURL,
   int typeIndex=0;
   while(gHTMLTypes[typeIndex]) {
     if (0== PL_strcmp(gHTMLTypes[typeIndex++], aContentType)) {
-      return CreateDocument(aURL, aCommand, aContainer, kHTMLDocumentCID,
+      return CreateDocument(aCommand, 
+#ifdef NECKO
+                            aChannel,
+#else
+                            aURL,
+#endif
+                            aContainer, kHTMLDocumentCID,
                             aDocListener, aDocViewer);
     }
   }
@@ -263,7 +282,13 @@ nsLayoutDLF::CreateInstance(nsIURI* aURL,
   typeIndex = 0;
   while(gXMLTypes[typeIndex]) {
     if (0== PL_strcmp(gXMLTypes[typeIndex++], aContentType)) {
-      return CreateDocument(aURL, aCommand, aContainer, kXMLDocumentCID,
+      return CreateDocument(aCommand, 
+#ifdef NECKO
+                            aChannel,
+#else
+                            aURL,
+#endif
+                            aContainer, kXMLDocumentCID,
                             aDocListener, aDocViewer);
     }
   }
@@ -272,7 +297,13 @@ nsLayoutDLF::CreateInstance(nsIURI* aURL,
   typeIndex = 0;
   while (gRDFTypes[typeIndex]) {
     if (0 == PL_strcmp(gRDFTypes[typeIndex++], aContentType)) {
-      return CreateRDFDocument(aContentType, aURL, aCommand, aContainer,
+      return CreateRDFDocument(aCommand, 
+#ifdef NECKO
+                               aChannel,
+#else
+                               aURL,
+#endif
+                               aContentType, aContainer,
                                aExtraInfo, aDocListener, aDocViewer);
     }
   }
@@ -281,7 +312,13 @@ nsLayoutDLF::CreateInstance(nsIURI* aURL,
   typeIndex = 0;
   while(gImageTypes[typeIndex]) {
     if (0== PL_strcmp(gImageTypes[typeIndex++], aContentType)) {
-      return CreateDocument(aURL, aCommand, aContainer, kImageDocumentCID,
+      return CreateDocument(aCommand, 
+#ifdef NECKO
+                            aChannel,
+#else
+                            aURL,
+#endif
+                            aContainer, kImageDocumentCID,
                             aDocListener, aDocViewer);
     }
   }
@@ -329,14 +366,24 @@ nsLayoutDLF::CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
 }
 
 nsresult
-nsLayoutDLF::CreateDocument(nsIURI* aURL, 
-                            const char* aCommand,
+nsLayoutDLF::CreateDocument(const char* aCommand,
+#ifdef NECKO
+                            nsIChannel* aChannel,
+#else
+                            nsIURI* aURL, 
+#endif
                             nsIContentViewerContainer* aContainer,
                             const nsCID& aDocumentCID,
                             nsIStreamListener** aDocListener,
                             nsIContentViewer** aDocViewer)
 {
   nsresult rv = NS_ERROR_FAILURE;
+
+#ifdef NECKO
+  nsCOMPtr<nsIURI> aURL;
+  rv = aChannel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+#endif
 
 #ifdef NOISY_CREATE_DOC
   if (nsnull != aURL) {
@@ -371,7 +418,11 @@ nsLayoutDLF::CreateDocument(nsIURI* aURL,
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
     // aDocListener.
-    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
+#ifdef NECKO
+    rv = doc->StartDocumentLoad(aCommand, aChannel, aContainer, aDocListener);
+#else
+    rv = doc->StartDocumentLoad(aCommand, aURL, aContainer, aDocListener);
+#endif
     if (NS_FAILED(rv))
       break;
 
@@ -476,9 +527,13 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
 
 // ...note, this RDF document _may_ be XUL :-)
 nsresult
-nsLayoutDLF::CreateRDFDocument(const char* aContentType,
+nsLayoutDLF::CreateRDFDocument(const char* aCommand,
+#ifdef NECKO
+                               nsIChannel* aChannel,
+#else
                                nsIURI* aURL, 
-                               const char* aCommand,
+#endif
+                               const char* aContentType,
                                nsIContentViewerContainer* aContainer,
                                nsISupports* aExtraInfo,
                                nsIStreamListener** aDocListener,
@@ -491,13 +546,23 @@ nsLayoutDLF::CreateRDFDocument(const char* aContentType,
     return rv;
   }
 
+#ifdef NECKO
+  nsCOMPtr<nsIURI> aURL;
+  rv = aChannel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+#endif
+
   /* 
    * Initialize the document to begin loading the data...
    *
    * An nsIStreamListener connected to the parser is returned in
    * aDocListener.
    */
-  rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
+#ifdef NECKO
+  rv = doc->StartDocumentLoad(aCommand, aChannel, aContainer, aDocListener);
+#else
+  rv = doc->StartDocumentLoad(aCommand, aURL, aContainer, aDocListener);
+#endif
   if (NS_SUCCEEDED(rv)) {
     /*
      * Bind the document to the Content Viewer...
@@ -554,15 +619,7 @@ nsLayoutDLF::InitUAStyleSheet()
 #ifndef NECKO
     rv = NS_NewURL(&uaURL, nsString(UA_CSS_URL)); // XXX this bites, fix it
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(UA_CSS_URL, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&uaURL);
-    NS_RELEASE(uri);
+    rv = NS_NewURI(&uaURL, UA_CSS_URL); // XXX this bites, fix it
 #endif // NECKO
     if (NS_SUCCEEDED(rv)) {
       nsICSSLoader* cssLoader;

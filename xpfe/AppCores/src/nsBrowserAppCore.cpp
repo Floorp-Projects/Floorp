@@ -1270,7 +1270,7 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 #ifdef NECKO
 nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIChannel* channel, const char* aContentType,
+                                 nsIChannel* channel,
                                  nsIContentViewer* aViewer)
 #else
 nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 

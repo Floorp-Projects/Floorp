@@ -43,6 +43,10 @@
 #include "nsExpatDTD.h"
 #include "nsINameSpaceManager.h"
 #include "nsICSSLoader.h"
+#ifdef NECKO
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
+#endif
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -150,9 +154,20 @@ nsrefcnt nsXMLDocument::Release()
 }
 
 nsresult
+#ifdef NECKO
+nsXMLDocument::Reset(nsIChannel* aChannel)
+#else
 nsXMLDocument::Reset(nsIURI* aURL)
+#endif
 {
+#ifdef NECKO
+  nsresult result = nsDocument::Reset(aChannel);
+  nsCOMPtr<nsIURI> aURL;
+  result = aChannel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(result)) return result;
+#else
   nsresult result = nsDocument::Reset(aURL);
+#endif
   if (NS_FAILED(result)) {
     return result;
   }
@@ -188,20 +203,34 @@ nsXMLDocument::GetContentType(nsString& aContentType) const
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::StartDocumentLoad(nsIURI *aUrl, 
-                                 nsIContentViewerContainer* aContainer,
-                                 nsIStreamListener **aDocListener,
-                                 const char* aCommand)
+nsXMLDocument::StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                               nsIChannel* aChannel,
+#else
+                               nsIURI *aUrl, 
+#endif
+                               nsIContentViewerContainer* aContainer,
+                               nsIStreamListener **aDocListener)
 {
-  nsresult rv = nsDocument::StartDocumentLoad(aUrl, 
+  nsresult rv = nsDocument::StartDocumentLoad(aCommand,
+#ifdef NECKO
+                                              aChannel,
+#else
+                                              aUrl, 
+#endif
                                               aContainer, 
-                                              aDocListener,
-                                              aCommand);
+                                              aDocListener);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsIWebShell* webShell;
+
+#ifdef NECKO
+  nsCOMPtr<nsIURI> aUrl;
+  rv = aChannel->GetURI(getter_AddRefs(aUrl));
+  if (NS_FAILED(rv)) return rv;
+#endif
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);

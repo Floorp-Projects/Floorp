@@ -421,7 +421,8 @@ nsresult StartLoadingURL(const char* aUrlString)
         rv = pChannel->AsyncRead(0,         // staring position
                                  -1,        // number of bytes to read
                                  info,      // ISupports context
-                                 listener); // IStreamListener consumer
+                                 listener,  // IStreamListener consumer
+                                 nsnull);   // load group
         if (NS_SUCCEEDED(rv)) {
             gKeepRunning += 1;
         }

@@ -1282,11 +1282,13 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
     if (urlClone) {
 #endif
 #ifdef NECKO
+#if 0
       nsILoadGroup* loadGroup = nsnull;
       if (mDocument) {
         loadGroup = mDocument->GetDocumentLoadGroup();
       }
-      result = NS_OpenURI(&in, urlClone, loadGroup);
+#endif
+      result = NS_OpenURI(&in, urlClone/*, loadGroup*/);
 #else
       result = NS_OpenURL(urlClone, &in);
 #endif

@@ -26,7 +26,7 @@
 
 class nsIBuffer;
 class nsHTTPResponse;
-class nsIHTTPChannel;
+class nsHTTPChannel;
 
 /* 
     The nsHTTPResponseListener class is the response reader listener that 
@@ -85,7 +85,7 @@ protected:
     PRBool              m_bHeadersDone;
     PRBool              m_bFirstLineParsed;
     nsHTTPResponse*     m_pResponse;
-    nsIHTTPChannel*     m_pConnection;
+    nsHTTPChannel*      m_pConnection;
     nsIStreamListener*  m_pConsumer;
     PRUint32            m_ReadLength; // Already read
 

@@ -59,10 +59,14 @@ public:
                          nsIStyleSet* aStyleSet,
                          nsIPresShell** aInstancePtrResult);
 
-  NS_IMETHOD StartDocumentLoad(nsIURI* aUrl, 
+  NS_IMETHOD StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                               nsIChannel* aChannel,
+#else
+                               nsIURI *aUrl, 
+#endif
                                nsIContentViewerContainer* aContainer,
-                               nsIStreamListener** aDocListener,
-                               const char* aCommand);
+                               nsIStreamListener **aDocListener);
 
   NS_IMETHOD EndLoad();
 
@@ -182,7 +186,11 @@ protected:
   PRBool GetBodyContent();
   nsresult GetBodyElement(nsIDOMHTMLBodyElement** aBody);
 
+#ifdef NECKO
+  virtual nsresult Reset(nsIChannel* aChannel);
+#else
   virtual nsresult Reset(nsIURI *aURL);
+#endif
   nsresult WriteCommon(const nsString& aText,
                        PRBool aNewlineTerminate);
   nsresult ScriptWriteCommon(JSContext *cx, 

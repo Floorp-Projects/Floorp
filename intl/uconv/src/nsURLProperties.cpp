@@ -57,7 +57,7 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
   res = NS_NewURI(&url, aUrl, nsnull);
   if (NS_FAILED(res)) return;
 
-  res = NS_OpenURI(&in, url, nsnull);   // XXX no nsILoadGroup here, so we can't cancel this load!
+  res = NS_OpenURI(&in, url);
   NS_RELEASE(url);
   if (NS_FAILED(res)) return;
 #endif // NECKO

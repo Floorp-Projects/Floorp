@@ -17,150 +17,23 @@
  */
 
 #include "nsLoadGroup.h"
-#include "nsIIOService.h"
+#include "nsIStreamObserver.h"
 #include "nsIChannel.h"
-#include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kLoadGroupCID, NS_LOADGROUP_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsLoadGroupEntry : public nsIStreamListener
-{
-protected:
-    typedef nsresult (*PropagateUpFun)(nsIStreamObserver* obs, void* closure);
-
-    nsresult PropagateUp(PropagateUpFun fun, void* closure) {
-        nsresult rv;
-        PRUint32 i;
-
-        for (nsLoadGroup* group = mGroup; group != nsnull; group = group->mParent) {
-            PRUint32 count = 0;
-            if (group->mObservers) {
-                rv = group->mObservers->Count(&count);
-                if (NS_FAILED(rv)) return rv;
-            }
-            for (i = 0; i < count; i++) {
-                nsIStreamObserver* obs =
-                    NS_STATIC_CAST(nsIStreamObserver*, group->mObservers->ElementAt(i));
-                if (obs == nsnull)
-                    return NS_ERROR_FAILURE;
-                rv = fun(obs, closure);
-                NS_RELEASE(obs);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-        return NS_OK;
-    }
-
-    struct OnStartRequestArgs {
-        nsIChannel*         channel;
-        nsISupports*        context;
-    };
-
-    static nsresult
-    OnStartRequestFun(nsIStreamObserver* obs, void* closure) {
-        OnStartRequestArgs* args = (OnStartRequestArgs*)closure;
-        return obs->OnStartRequest(args->channel, args->context);
-    }
-
-    struct OnStopRequestArgs {
-        nsIChannel* channel;
-        nsISupports* ctxt;
-        nsresult status;
-        const PRUnichar* errorMsg;
-    };
-
-    static nsresult
-    OnStopRequestFun(nsIStreamObserver* obs, void* closure) {
-        OnStopRequestArgs* args = (OnStopRequestArgs*)closure;
-        return obs->OnStopRequest(args->channel, args->ctxt, 
-                                  args->status, args->errorMsg);
-    }
-
-    struct OnDataAvailableArgs {
-        nsIChannel* channel;
-        nsISupports* ctxt;
-        nsIInputStream *inStr;
-        PRUint32 sourceOffset;
-        PRUint32 count;
-    };
-
-    static nsresult
-    OnDataAvailableFun(nsIStreamObserver* obs, void* closure) {
-        OnDataAvailableArgs* args = (OnDataAvailableArgs*)closure;
-        nsIStreamListener* l = NS_STATIC_CAST(nsIStreamListener*, obs);
-        return l->OnDataAvailable(args->channel, args->ctxt, args->inStr,
-                                  args->sourceOffset, args->count);
-    }
-
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt) {
-        OnStartRequestArgs args;
-        args.channel = channel;
-        args.context = ctxt;
-        return PropagateUp(OnStartRequestFun, &args);
-    }
-
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, 
-                             const PRUnichar *errorMsg) {
-        OnStopRequestArgs args;
-        args.channel = channel;
-        args.ctxt = ctxt;
-        args.status = status;
-        args.errorMsg = errorMsg;
-        return PropagateUp(OnStartRequestFun, &args);
-    }
-	
-    // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, 
-                               PRUint32 sourceOffset, PRUint32 count) {
-        OnDataAvailableArgs args;
-        args.channel = channel;
-        args.ctxt = ctxt;
-        args.inStr = inStr;
-        args.sourceOffset = sourceOffset;
-        args.count = count;
-        return PropagateUp(OnDataAvailableFun, &args);
-    }
-    
-    // nsLoadGroupEntry methods:
-    nsLoadGroupEntry(nsLoadGroup* group, nsIChannel* channel, nsISupports* ctxt)
-        : mGroup(group), mChannel(channel), mContext(ctxt) {
-        NS_INIT_REFCNT();
-        NS_ADDREF(mGroup);
-        NS_ADDREF(mChannel);
-        NS_IF_ADDREF(mContext);
-    }
-
-    virtual ~nsLoadGroupEntry() {
-        NS_RELEASE(mGroup);
-        NS_RELEASE(mChannel);
-        NS_IF_RELEASE(mContext);
-    }
-
-protected:
-    nsLoadGroup*        mGroup;
-    nsIChannel*         mChannel;
-    nsISupports*        mContext;
-};
-
-NS_IMPL_ISUPPORTS(nsLoadGroupEntry, nsCOMTypeInfo<nsIStreamListener>::GetIID());
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
-    : mChannels(nsnull), mSubGroups(nsnull), mObservers(nsnull),
+    : mChannels(nsnull), mSubGroups(nsnull), 
       mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
-      mParent(nsnull), mObserver(nsnull)
+      mObserver(nsnull), mParent(nsnull), mForegroundCount(0)
 {
     NS_INIT_AGGREGATED(outer);
 }
@@ -171,7 +44,6 @@ nsLoadGroup::~nsLoadGroup()
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
     NS_IF_RELEASE(mChannels);
     NS_IF_RELEASE(mSubGroups);
-    NS_IF_RELEASE(mObservers);
     NS_IF_RELEASE(mObserver);
     NS_IF_RELEASE(mParent);
 }
@@ -219,9 +91,12 @@ nsLoadGroup::PropagateDown(PropagateDownFun fun)
         if (NS_FAILED(rv)) return rv;
     }
     for (i = 0; i < count; i++) {
-        nsIRequest* req = NS_STATIC_CAST(nsIRequest*, mChannels->ElementAt(i));
+        // Operate the elements from back to front so that if items get
+        // get removed from the list it won't affect our iteration
+        nsIRequest* req =
+            NS_STATIC_CAST(nsIRequest*, mChannels->ElementAt(count - 1 - i));
         if (req == nsnull)
-            return NS_ERROR_FAILURE;
+            continue;
         rv = fun(req);
         NS_RELEASE(req);
         if (NS_FAILED(rv)) return rv;
@@ -233,9 +108,12 @@ nsLoadGroup::PropagateDown(PropagateDownFun fun)
         if (NS_FAILED(rv)) return rv;
     }
     for (i = 0; i < count; i++) {
-        nsIRequest* req = NS_STATIC_CAST(nsIRequest*, mSubGroups->ElementAt(i));
+        // Operate the elements from back to front so that if items get
+        // get removed from the list it won't affect our iteration
+        nsIRequest* req =
+            NS_STATIC_CAST(nsIRequest*, mSubGroups->ElementAt(count - 1 - i));
         if (req == nsnull)
-            return NS_ERROR_FAILURE;
+            continue;
         rv = fun(req);
         NS_RELEASE(req);
         if (NS_FAILED(rv)) return rv;
@@ -247,18 +125,14 @@ NS_IMETHODIMP
 nsLoadGroup::IsPending(PRBool *result)
 {
     nsresult rv;
-    PRUint32 count = 0;
-    if (mChannels) {
-        rv = mChannels->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-    }
-    if (count > 0) {
-        *result = PR_FALSE;
+    if (mForegroundCount > 0) {
+        *result = PR_TRUE;
         return NS_OK;
     }
 
+    // else check whether any of our sub-groups are pending
     PRUint32 i;
-    count = 0;
+    PRUint32 count = 0;
     if (mSubGroups) {
         rv = mSubGroups->Count(&count);
         if (NS_FAILED(rv)) return rv;
@@ -266,18 +140,18 @@ nsLoadGroup::IsPending(PRBool *result)
     for (i = 0; i < count; i++) {
         nsIRequest* req = NS_STATIC_CAST(nsIRequest*, mSubGroups->ElementAt(i));
         if (req == nsnull)
-            return NS_ERROR_FAILURE;
+            continue;
         PRBool pending;
         rv = req->IsPending(&pending);
         NS_RELEASE(req);
         if (NS_FAILED(rv)) return rv;
         if (pending) {
-            *result = PR_FALSE;
+            *result = PR_TRUE;
             return NS_OK;
         }
     }
 
-    *result = PR_TRUE;
+    *result = PR_FALSE;
     return NS_OK;
 }
 
@@ -321,6 +195,36 @@ nsLoadGroup::Resume()
 // nsILoadGroup methods:
 
 NS_IMETHODIMP
+nsLoadGroup::Init(nsIStreamObserver *observer, nsILoadGroup *parent)
+{
+    nsresult rv;
+
+    NS_IF_RELEASE(mObserver);
+    if (observer) {
+        nsCOMPtr<nsIEventQueue> eventQueue;
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+                                                getter_AddRefs(eventQueue));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIStreamObserver> asyncObserver;
+        rv = NS_NewAsyncStreamObserver(getter_AddRefs(asyncObserver),
+                                       eventQueue, observer);
+        if (NS_FAILED(rv)) return rv;
+
+        mObserver = asyncObserver;
+        NS_ADDREF(mObserver);
+    }
+
+    if (parent) {
+        rv = parent->AddSubGroup(this);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLoadGroup::GetDefaultLoadAttributes(PRUint32 *aDefaultLoadAttributes)
 {
     *aDefaultLoadAttributes = mDefaultLoadAttributes;
@@ -335,49 +239,61 @@ nsLoadGroup::SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::AsyncRead(nsIChannel *channel, 
-                       PRUint32 startPosition, 
-                       PRInt32 readCount, 
-                       nsISupports *ctxt, 
-                       nsIStreamListener *listener)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroup::AsyncWrite(nsIChannel *channel, 
-                        nsIInputStream *fromStream, 
-                        PRUint32 startPosition, 
-                        PRInt32 writeCount, 
-                        nsISupports *ctxt, 
-                        nsIStreamObserver *observer)
-{
-    return NS_OK;
-}
-
-#if 0
-NS_IMETHODIMP
-nsLoadGroup::AddChannel(nsIChannel *channel)
+nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
 {
     nsresult rv;
     if (mChannels == nsnull) {
         rv = NS_NewISupportsArray(&mChannels);
         if (NS_FAILED(rv)) return rv;
     }
-    rv = mChannels->AppendElement(channel);
+    rv = mChannels->AppendElement(channel) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->SetLoadAttributes(mDefaultLoadAttributes);
-    return NS_OK;
+    if (NS_FAILED(rv)) return rv;
+
+    nsLoadFlags flags;
+    rv = channel->GetLoadAttributes(&flags);
+    if (NS_SUCCEEDED(rv)) {
+        if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
+            mForegroundCount++;
+            if (mForegroundCount == 1 && mObserver) {
+                rv = mObserver->OnStartRequest(channel, ctxt);
+                // return with rv, below
+            }
+        }
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
-nsLoadGroup::RemoveChannel(nsIChannel *channel)
+nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
+                           nsresult status, const PRUnichar *errorMsg)
 {
+    nsresult rv;
     NS_ASSERTION(mChannels, "Forgot to call AddChannel");
-    return mChannels->RemoveElement(channel);
+
+    nsLoadFlags flags;
+    rv = channel->GetLoadAttributes(&flags);
+    if (NS_SUCCEEDED(rv)) {
+        if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
+			NS_ASSERTION(mForegroundCount > 0, "mForegroundCount messed up");
+            --mForegroundCount;
+            if (mObserver) {
+                PRBool pending;
+                rv = IsPending(&pending);
+                if (NS_SUCCEEDED(rv) && !pending) {
+                    rv = mObserver->OnStopRequest(channel, ctxt, status, errorMsg);
+                    // return with rv, below
+                }
+            }
+        }
+    }
+
+    nsresult rv2 = mChannels->RemoveElement(channel) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
+    return rv || rv2;
 }
-#endif
 
 NS_IMETHODIMP
 nsLoadGroup::GetChannels(nsISimpleEnumerator * *aChannels)
@@ -388,35 +304,6 @@ nsLoadGroup::GetChannels(nsISimpleEnumerator * *aChannels)
         if (NS_FAILED(rv)) return rv;
     }
     return NS_NewArrayEnumerator(aChannels, mChannels);
-}
-
-NS_IMETHODIMP
-nsLoadGroup::AddObserver(nsIStreamObserver *observer)
-{
-    nsresult rv;
-    if (mObservers == nsnull) {
-        rv = NS_NewISupportsArray(&mObservers);
-        if (NS_FAILED(rv)) return rv;
-    }
-    return mObservers->AppendElement(observer);
-}
-
-NS_IMETHODIMP
-nsLoadGroup::RemoveObserver(nsIStreamObserver *observer)
-{
-    NS_ASSERTION(mObservers, "Forgot to call AddObserver");
-    return mObservers->RemoveElement(observer);
-}
-
-NS_IMETHODIMP
-nsLoadGroup::GetObservers(nsISimpleEnumerator * *aObservers)
-{
-    nsresult rv;
-    if (mObservers == nsnull) {
-        rv = NS_NewISupportsArray(&mObservers);
-        if (NS_FAILED(rv)) return rv;
-    }
-    return NS_NewArrayEnumerator(aObservers, mObservers);
 }
 
 NS_IMETHODIMP
@@ -435,7 +322,7 @@ nsLoadGroup::AddSubGroup(nsILoadGroup *group)
         rv = NS_NewISupportsArray(&mSubGroups);
         if (NS_FAILED(rv)) return rv;
     }
-    return mSubGroups->AppendElement(group);
+    return mSubGroups->AppendElement(group) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
 }
 
 NS_IMETHODIMP
@@ -452,7 +339,7 @@ nsLoadGroup::RemoveSubGroup(nsILoadGroup *group)
     subGroup->mParent = nsnull;   // weak ref -- don't Release
     NS_RELEASE(subGroup);
 
-    return mSubGroups->RemoveElement(group);
+    return mSubGroups->RemoveElement(group) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
 }
 
 NS_IMETHODIMP

@@ -104,7 +104,6 @@ nsChromeProtocolHandler::MakeAbsolute(const char* aSpec,
     url->GetSpec(result);
     NS_RELEASE(url);
     return rv;
-
 }
 
 NS_IMETHODIMP

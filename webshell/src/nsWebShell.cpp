@@ -26,6 +26,7 @@
 #include "nsIStreamListener.h"
 #ifdef NECKO
 #include "nsIPrompt.h"
+#include "nsNeckoUtil.h"
 #else
 #include "nsINetSupport.h"
 #include "nsIRefreshUrl.h"
@@ -310,9 +311,9 @@ public:
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
                                nsIChannel* channel, 
                                PRInt32 aStatus,
-							   nsIDocumentLoaderObserver * );
+                               nsIDocumentLoaderObserver * );
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-                            nsIChannel* channel, const char* aContentType, 
+                            nsIChannel* channel,
                             nsIContentViewer* aViewer);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
                                nsIChannel* channel, PRUint32 aProgress, 
@@ -1861,18 +1862,8 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       nsCOMPtr<nsIURI>  url;
 #ifndef NECKO
       rv = NS_NewURL(getter_AddRefs(url), aUrlSpec);
-#else      
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      nsIURI *uri = nsnull;
-      char *uriSpec = aUrlSpec.ToNewCString();
-      rv = service->NewURI(uriSpec, nsnull, &uri);
-      nsCRT::free(uriSpec);
-      if (NS_FAILED(rv)) return rv;
-
-      rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-      NS_RELEASE(uri);      
+#else 
+      rv = NS_NewURI(getter_AddRefs(url), aUrlSpec);
 #endif // NECKO
       if (NS_FAILED(rv)) return rv;      
       if (url && docURL && EqualBaseURLs(docURL, url)) {
@@ -1960,13 +1951,16 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 #endif
                     const PRUint32 aLocalIP)
 {
-
   nsresult rv;
-  PRInt32 colon, fSlash;
-  PRUnichar port;
   nsAutoString urlSpec;
   convertFileToURL(nsString(aURLSpec), urlSpec);
-
+//#ifdef NECKO
+//  nsCOMPtr<nsIURI> url;
+//  rv = NS_NewURI(getter_AddRefs(url), urlSpec);
+//  if (NS_FAILED(rv)) return rv;
+//#else
+  PRInt32 colon, fSlash;
+  PRUnichar port;
   fSlash=urlSpec.Find('/');
 
   // if no scheme (protocol) is found, assume http.
@@ -2102,6 +2096,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   nsAutoString  newURL(urlString);
 
   return DoLoadURL(newURL, aCommand, aPostData, aType, aLocalIP);
+//#endif
 }
 
 NS_IMETHODIMP nsWebShell::Stop(void)
@@ -3037,8 +3032,8 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
                            nsIChannel* channel, 
 #else
                            nsIURI* aURL, 
-#endif
                            const char* aContentType, 
+#endif
                            nsIContentViewer* aViewer)
 {
   nsresult rv;
@@ -3078,7 +3073,7 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
 #ifdef NECKO
-    mDocLoaderObserver->OnStartURLLoad(mDocLoader, channel, aContentType, aViewer);
+    mDocLoaderObserver->OnStartURLLoad(mDocLoader, channel, aViewer);
 #else
     mDocLoaderObserver->OnStartURLLoad(mDocLoader, aURL, aContentType, aViewer);
 #endif
@@ -3772,8 +3767,8 @@ PRBool nsWebShellFactory::mStartedServices = PR_FALSE;
 void
 nsWebShellFactory::StartServices()
 {
-  // XXX TEMPORARY Till we have real pluggable protocol handlers
 #ifndef NECKO
+  // XXX TEMPORARY Till we have real pluggable protocol handlers
   NET_InitJavaScriptProtocol();
 #endif // NECKO
   mStartedServices = PR_TRUE;

@@ -537,20 +537,14 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       href.Append(data);
     }
     nsAutoString absURLSpec;
-    nsAutoString base;
 #ifndef NECKO
-    NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+    nsAutoString base;
+    result = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
 #else
-
-    nsIURI *baseUri = nsnull;
-    result = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-    if (NS_FAILED(result)) return result;
-
-    NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
-
-    NS_RELEASE(baseUri);
+    result = NS_MakeAbsoluteURI(href, docURL, absURLSpec);
 #endif // NECKO
     NS_IF_RELEASE(docURL);
+    if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
     nsIPostData* postData = nsnull;

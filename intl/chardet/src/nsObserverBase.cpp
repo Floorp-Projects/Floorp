@@ -36,14 +36,14 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
 {
    nsresult res = NS_OK;
    nsresult rv = NS_OK;
-   // shoudl docLoader a memeber to increase performance ???
+   // should docLoader a member to increase performance ???
    nsIDocumentLoader * docLoader = nsnull;
    nsIContentViewerContainer * cvc  = nsnull;
    nsIWebShellServices* wss = nsnull;
 
    if(NS_FAILED(rv =nsServiceManager::GetService(kDocLoaderServiceCID,
-                                                   kIDocumentLoaderIID,
-                                                   (nsISupports**)&docLoader)))
+                                                 kIDocumentLoaderIID,
+                                                 (nsISupports**)&docLoader)))
      goto done;
    
    if(NS_FAILED(rv =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))

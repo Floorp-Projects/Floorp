@@ -52,7 +52,7 @@ public:
     NS_IMETHOD NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *eventQueue, nsIStreamListener **_retval);
     NS_IMETHOD NewSyncStreamListener(nsIInputStream **inStream, nsIBufferOutputStream **outStream, nsIStreamListener **_retval);
     NS_IMETHOD NewChannelFromNativePath(const char *nativePath, nsIFileChannel **_retval);
-    NS_IMETHOD NewLoadGroup(nsILoadGroup* parent, nsISupports* outer, nsILoadGroup **result);
+    NS_IMETHOD NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer, nsILoadGroup* parent, nsILoadGroup **result);
     NS_IMETHOD NewInputStreamChannel(nsIURI* uri, const char *contentType, nsIInputStream *inStr, nsIChannel **result);
 
     // nsIOService methods:

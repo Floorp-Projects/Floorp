@@ -258,9 +258,20 @@ nsrefcnt nsHTMLDocument::Release()
 }
 
 nsresult 
+#ifdef NECKO
+nsHTMLDocument::Reset(nsIChannel* aChannel)
+#else
 nsHTMLDocument::Reset(nsIURI *aURL)
+#endif
 {
+#ifdef NECKO
+  nsresult result = nsDocument::Reset(aChannel);
+  nsCOMPtr<nsIURI> aURL;
+  result = aChannel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(result)) return result;
+#else
   nsresult result = nsDocument::Reset(aURL);
+#endif
   if (NS_FAILED(result)) {
     return result;
   }
@@ -331,20 +342,34 @@ nsHTMLDocument::CreateShell(nsIPresContext* aContext,
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::StartDocumentLoad(nsIURI *aURL,
+nsHTMLDocument::StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                                  nsIChannel* aChannel,
+#else
+                                  nsIURI *aURL, 
+#endif
                                   nsIContentViewerContainer* aContainer,
-                                  nsIStreamListener **aDocListener,
-                                  const char* aCommand)
+                                  nsIStreamListener **aDocListener)
 {
-  nsresult rv = nsDocument::StartDocumentLoad(aURL, 
+  nsresult rv = nsDocument::StartDocumentLoad(aCommand,
+#ifdef NECKO
+                                              aChannel, 
+#else
+                                              aURL, 
+#endif
                                               aContainer, 
-                                              aDocListener,
-                                              aCommand);
+                                              aDocListener);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsIWebShell* webShell;
+
+#ifdef NECKO
+  nsCOMPtr<nsIURI> aURL;
+  rv = aChannel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+#endif
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -1413,7 +1438,11 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
   if (nsnull == mParser) {
+#ifdef NECKO
+    // XXX help!
+#else
     result = Reset(aSourceURL);
+#endif
     if (NS_OK == result) {
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);

@@ -544,7 +544,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
 #ifdef NECKO
     nsCOMPtr<nsIChannel> channel;
-    rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull);     // XXX need the nsILoadGroup here!
+    rv = NS_OpenURI(getter_AddRefs(channel), aURL);
     if (NS_FAILED(rv))
     {
         NS_ERROR("unable to open channel");

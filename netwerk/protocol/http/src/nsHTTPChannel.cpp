@@ -168,7 +168,8 @@ nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retva
 NS_IMETHODIMP
 nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *aContext,
-                         nsIStreamListener *listener)
+                         nsIStreamListener *listener,
+                         nsILoadGroup* group)
 {
     nsresult rv = NS_OK;
 
@@ -186,6 +187,7 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         NS_ADDREF(m_pResponseDataListener);
 
         mResponseContext = aContext;
+        mLoadGroup = group;
 
         rv = Open();
     }
@@ -198,7 +200,8 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition,
                           PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIStreamObserver *observer)
+                          nsIStreamObserver *observer,
+                          nsILoadGroup* group)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -270,6 +273,14 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+  *aLoadGroup = mLoadGroup;
+  NS_ADDREF(*aLoadGroup);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -528,7 +539,7 @@ nsHTTPChannel::Open(void)
 
             // Write the request to the server...
             rv = stream->GetLength(&count);
-            rv = channel->AsyncWrite(stream, 0, count, this , m_pRequest);
+            rv = channel->AsyncWrite(stream, 0, count, this , m_pRequest, nsnull);
             if (NS_FAILED(rv)) return rv;
 
             m_State = HS_WAITING_FOR_RESPONSE;

@@ -23,6 +23,7 @@ interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIStreamObserver;
 interface nsIStreamListener;
+interface nsILoadGroup;
 
 typedef unsigned long nsLoadFlags;
 
@@ -69,7 +70,8 @@ interface nsIChannel : nsIRequest
     void AsyncRead(in unsigned long startPosition,
                    in long readCount,
                    in nsISupports ctxt,
-                   in nsIStreamListener listener);
+                   in nsIStreamListener listener,
+                   in nsILoadGroup group);
 
     /**
      * Writes asynchronously to the URL's specified destination. Notifications
@@ -84,7 +86,8 @@ interface nsIChannel : nsIRequest
                     in unsigned long startPosition,
                     in long writeCount,
                     in nsISupports ctxt,
-                    in nsIStreamObserver observer);
+                    in nsIStreamObserver observer,
+                    in nsILoadGroup group);
 
     /**
      * Load attribute flags. These may be or'd together.
@@ -94,13 +97,17 @@ interface nsIChannel : nsIRequest
      * overlap. Otherwise, users won't be able to create a single flag word
      * of load attributes that applies to a number of different channel types.
      */
-    const unsigned long LOAD_NORMAL     = 0;            /* no special load attributes -- use defaults */
-    const unsigned long LOAD_QUIET      = 1 << 0;       /* don't deliver status notifications to the nsIProgressEventSink */
+    const unsigned long LOAD_NORMAL     = 0;      /* no special load attributes -- use defaults */
+    const unsigned long LOAD_BACKGROUND = 1 << 0; /* don't deliver status notifications to the
+                                                   * nsIProgressEventSink, or keep this load from
+                                                   * completing the nsILoadGroup it may belong to */
 
     /**
      * Accesses the load attributes for the channel. E.g. setting the load 
      * attributes with the LOAD_QUIET bit set causes the loading process to
-     * not deliver status notifications to the program performing the load.
+     * not deliver status notifications to the program performing the load,
+     * and to not contribute to keeping any nsILoadGroup it may be contained
+     * in from firing its OnLoadComplete notification.
      */
     attribute nsLoadFlags LoadAttributes;
 
@@ -111,5 +118,11 @@ interface nsIChannel : nsIRequest
      * most likely wants to verify with the actual data. 
      */
     readonly attribute string ContentType;
+
+    /**
+     * Returns the load group in which the channel is a currently a member.
+     */
+    readonly attribute nsILoadGroup LoadGroup;
+
 };
 

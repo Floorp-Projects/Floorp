@@ -20,8 +20,7 @@
 #include "nsIWebShell.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsFileSpec.h"
 #include "nsIDocumentLoader.h"
@@ -412,18 +411,7 @@ GtkMozillaContainer::StartStream(const char *base_url, const char *action,
 #ifndef NECKO  
   rv = NS_NewURL(&url, url_str, NULL, mWebShell);
 #else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  char *uriStr = url_str.ToNewCString();
-  if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
-  rv = service->NewURI(uriStr, nsnull, &uri);
-  nsCRT::uriStr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-  NS_RELEASE(uri);
+  rv = NS_NewURI(&url, url_str, NULL);  // XXX where should the container go? (mWebShell)
 #endif // NECKO
 
   if (NS_FAILED(rv)) {

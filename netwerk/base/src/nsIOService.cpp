@@ -328,8 +328,8 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
 }
 
 NS_IMETHODIMP
-nsIOService::NewLoadGroup(nsILoadGroup* parent, nsISupports* outer, 
-                          nsILoadGroup **result)
+nsIOService::NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
+                          nsILoadGroup* parent, nsILoadGroup **result)
 {
     nsresult rv;
     nsILoadGroup* group;
@@ -337,12 +337,10 @@ nsIOService::NewLoadGroup(nsILoadGroup* parent, nsISupports* outer,
                              (void**)&group);
     if (NS_FAILED(rv)) return rv;
 
-    if (parent) {
-        rv = parent->AddSubGroup(group);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(group);
-            return rv;
-        }
+    rv = group->Init(observer, parent);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(group);
+        return rv;
     }
 
     *result = group;

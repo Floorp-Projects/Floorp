@@ -120,14 +120,17 @@ public:
   NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
   NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                        nsISupports *ctxt,
-                       nsIStreamListener *listener);
+                       nsIStreamListener *listener,
+                       nsILoadGroup* group);
   NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, 
                         PRUint32 startPosition, PRInt32 writeCount,
                         nsISupports *ctxt,
-                        nsIStreamObserver *observer);
+                        nsIStreamObserver *observer,
+                        nsILoadGroup* group);
   NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
   NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
   NS_IMETHOD GetContentType(char * *aContentType);
+  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
 
   // nsIBufferObserver methods:
   NS_IMETHOD OnFull (nsIBuffer* aBuffer);
@@ -219,6 +222,7 @@ protected:
 
   nsSocketTransportService* mService;
   PRUint32                  mLoadAttributes;
+  nsCOMPtr<nsILoadGroup>    mLoadGroup;
 };
 
 

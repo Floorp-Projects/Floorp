@@ -37,6 +37,7 @@ nsAboutBlank::NewChannel(const char *verb,
     nsresult rv;
     nsIChannel* channel;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
     nsISupports* s;
     rv = NS_NewStringInputStream(&s, kBlankPage);

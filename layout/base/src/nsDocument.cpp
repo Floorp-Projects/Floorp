@@ -23,6 +23,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsILoadGroup.h"
+#include "nsIChannel.h"
 #else
 #include "nsIURLGroup.h"
 #endif
@@ -829,7 +830,11 @@ nsIArena* nsDocument::GetArena()
 }
 
 nsresult
+#ifdef NECKO
+nsDocument::Reset(nsIChannel* aChannel)
+#else
 nsDocument::Reset(nsIURI *aURL)
+#endif
 {
   nsresult rv = NS_OK;
 
@@ -883,14 +888,16 @@ nsDocument::Reset(nsIURI *aURL)
 
   NS_IF_RELEASE(mNameSpaceManager);
 
+#ifdef NECKO
+  (void)aChannel->GetURI(&mDocumentURL);
+  (void)aChannel->GetLoadGroup(&mDocumentLoadGroup);
+#else
   mDocumentURL = aURL;
   if (nsnull != aURL) {
     NS_ADDREF(aURL);
-
-#ifndef NECKO
     rv = aURL->GetLoadGroup(&mDocumentLoadGroup);
-#endif
   }
+#endif
 
   if (NS_OK == rv) {
     rv = NS_NewNameSpaceManager(&mNameSpaceManager);
@@ -900,12 +907,20 @@ nsDocument::Reset(nsIURI *aURL)
 }
 
 nsresult
-nsDocument::StartDocumentLoad(nsIURI *aURL, 
+nsDocument::StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                              nsIChannel* aChannel,
+#else
+                              nsIURI *aURL, 
+#endif
                               nsIContentViewerContainer* aContainer,
-                              nsIStreamListener **aDocListener,
-                              const char* aCommand)
+                              nsIStreamListener **aDocListener)
 {
+#ifdef NECKO
+  return Reset(aChannel);
+#else
   return Reset(aURL);
+#endif
 }
 
 const nsString* nsDocument::GetDocumentTitle() const
