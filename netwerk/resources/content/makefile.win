@@ -24,8 +24,8 @@ DEPTH=..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) redirect_loop.xul $(DIST)\bin\chrome\necko\content
+	$(MAKE_INSTALL) redirect_loop.xul $(DIST)\bin\chrome\packages\core\necko\content
 
 clobber::
-	rm -f $(DIST)\bin\chrome\necko\content\redirect_loop.xul
+	rm -f $(DIST)\bin\chrome\packages\core\necko\content\redirect_loop.xul
 

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR	= $(DIST)/bin/chrome/necko/content
+CHROME_DIR	= $(DIST)/bin/chrome/packages/core/necko/content
 
 EXPORT_RESOURCES = \
 		redirect_loop.xul \
