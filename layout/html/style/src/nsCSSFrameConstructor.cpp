@@ -871,14 +871,14 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
         if (NS_SUCCEEDED(result) && containerElement)
         {
           containerContent = do_QueryInterface(containerElement);
-        }
+        }//do NOT use YET set this up for later checkin. this will be the content of the new frame.
 
         if (NS_STYLE_DISPLAY_BLOCK == displayValue) {
           NS_NewBlockFrame(aPresShell, &containerFrame);
         } else {
           NS_NewInlineFrame(aPresShell, &containerFrame);
         }        
-        InitAndRestoreFrame(aPresContext, aState, containerContent?containerContent:aContent, 
+        InitAndRestoreFrame(aPresContext, aState, aContent, 
                             aFrame, pseudoStyleContext, nsnull, containerFrame);
 
         // Mark the frame as being associated with generated content
