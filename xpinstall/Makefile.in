@@ -21,6 +21,7 @@
 # Contributors:
 #     Daniel Veditz <dveditz@netscape.com>
 #     Douglas Turner <dougt@netscape.com>
+#     Samir Gehani <sgehani@netscape.com>
 
 
 DEPTH = ..
@@ -30,7 +31,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public
+DIRS = public res src
 
 include $(topsrcdir)/config/config.mk
 

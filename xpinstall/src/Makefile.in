@@ -34,14 +34,18 @@ LIBRARY_NAME	= xpinstall
 IS_COMPONENT	= 1
 REQUIRES        = dom js netlib raptor xpcom
 
+# XXX shouldn't need to export this
+EXPORTS         = nsXPITriggerInfo.h \
+                  $(NULL)
+
 CPPSRCS = \
     nsInstall.cpp               \
     nsInstallTrigger.cpp        \
-    nsInstallVersion.cpp		  \
+    nsInstallVersion.cpp        \
     nsInstallFolder.cpp         \
     nsJSInstall.cpp             \
     nsJSInstallTriggerGlobal.cpp\
-    nsJSInstallVersion.cpp		  \
+    nsJSInstallVersion.cpp      \
     nsSoftwareUpdate.cpp        \
     nsSoftwareUpdateRun.cpp     \
     nsInstallFile.cpp           \
@@ -54,7 +58,6 @@ CPPSRCS = \
     nsLoggingProgressNotifier.cpp   \
     ScheduledTasks.cpp          \
     nsInstallProgressDialog.cpp	\
-    nsInstallProgressDialog.cpp \
     nsXPITriggerInfo.cpp        \
     nsXPInstallManager.cpp      \
     nsInstallFileOpItem.cpp     \
