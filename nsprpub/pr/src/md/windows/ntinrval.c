@@ -68,13 +68,11 @@ _PR_MD_GET_INTERVAL()
         return (PRUint32)count.LowPart;
     } else
 #if defined(__MINGW32__)
-      return time();
-#else
-#if defined(WIN16)
+        return time();
+#elif defined(WIN16)
         return clock();        /* milliseconds since application start */
 #else
         return timeGetTime();  /* milliseconds since system start */
-#endif
 #endif
 }
 
