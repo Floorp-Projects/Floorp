@@ -2931,7 +2931,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	}
 
 	/* load in the column attributes */
-	if (server->dirType == PABDirectory)
+	if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
 		server->columnAttributes = DIR_GetStringPref(prefstring, "columns", tempstring, kDefaultPABColumnHeaders);
 	else
 		server->columnAttributes = DIR_GetStringPref(prefstring, "columns", tempstring, kDefaultLDAPColumnHeaders);
@@ -2943,7 +2943,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 		DIR_ConvertServerFileName(server);
 
     // the string "s" is the default uri ( <scheme> + "://" + <filename> )
-  nsCString s((server->dirType == PABDirectory) ? kMDBDirectoryRoot : kLDAPDirectoryRoot);
+  nsCString s((server->dirType == PABDirectory || server->dirType == MAPIDirectory) ? kMDBDirectoryRoot : kLDAPDirectoryRoot);
     s.Append (server->fileName);
     server->uri = DIR_GetStringPref (prefstring, "uri", tempstring, s.get ());
     
@@ -2992,7 +2992,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	else 
 	{ 
 		/* try to read it in from the old integer style char set preference */
-		if (server->dirType == PABDirectory)
+		if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
 			server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultPABCSID);
 		else
 			server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultLDAPCSID);	
@@ -3767,7 +3767,7 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
       DIR_SetStringPref(prefstring, "uri", tempstring, server->uri, "");
 
 	/* save the column attributes */
-	if (server->dirType == PABDirectory)
+	if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
 		DIR_SetStringPref(prefstring, "columns", tempstring, server->columnAttributes, kDefaultPABColumnHeaders);
 	else
 		DIR_SetStringPref(prefstring, "columns", tempstring, server->columnAttributes, kDefaultLDAPColumnHeaders);
