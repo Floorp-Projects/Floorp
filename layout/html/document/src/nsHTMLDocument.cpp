@@ -181,6 +181,59 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
         }
 	return 0;
 }
+
+// These functions are copied from nsprpub/lib/ds/plhash.c, with one
+// change to free the string used as a key.
+
+static void * PR_CALLBACK
+NamedItemsAllocTable(void *pool, PRSize size)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    return PR_MALLOC(size);
+}
+
+static void PR_CALLBACK
+NamedItemsFreeTable(void *pool, void *item)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    PR_Free(item);
+}
+
+static PLHashEntry * PR_CALLBACK
+NamedItemsAllocEntry(void *pool, const void *key)
+{
+#if defined(XP_MAC)
+#pragma unused (pool,key)
+#endif
+
+    return PR_NEW(PLHashEntry);
+}
+
+static void PR_CALLBACK
+NamedItemsFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    if (flag == HT_FREE_ENTRY) {
+        Recycle((char *)he->key);
+        PR_Free(he);
+    }
+}
+
+static PLHashAllocOps namedItemsHashAllocOps = {
+    NamedItemsAllocTable, NamedItemsFreeTable,
+    NamedItemsAllocEntry, NamedItemsFreeEntry
+};
+
+
 // ==================================================================
 // =
 // ==================================================================
@@ -2778,20 +2831,10 @@ nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
   return NS_OK;
 }
 
-PRIntn 
-nsHTMLDocument::RemoveStrings(PLHashEntry *he, PRIntn i, void *arg)
-{
-  char *str = (char *)he->key;
-
-  Recycle(str);
-  return HT_ENUMERATE_REMOVE;
-}
-
 void
 nsHTMLDocument::DeleteNamedItems()
 {
   if (nsnull != mNamedItems) {
-    PL_HashTableEnumerateEntries(mNamedItems, RemoveStrings, nsnull);
     PL_HashTableDestroy(mNamedItems);
     mNamedItems = nsnull;
   }
@@ -2836,7 +2879,6 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent, PRBool aInForm)
 
   if (IsNamedItem(aContent, tag, aInForm, value)) {
       char *nameStr = value.ToNewCString();
-      // XXX What about the string held in the hash table entry
       PL_HashTableRemove(mNamedItems, nameStr);
       Recycle(nameStr);
   }
@@ -2864,6 +2906,10 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
 
   if (IsNamedItem(aContent, tag, aInForm, value)) {
     char *nameStr = value.ToNewCString();
+    // NSPR hashtables will leak keys if given the same entry twice, so
+    // remove first.  If it's not in the table, this will fail silently
+    // and quickly (it's one extra lookup).
+    PL_HashTableRemove(mNamedItems, nameStr);
     PL_HashTableAdd(mNamedItems, nameStr, aContent);
   }
 
@@ -2942,7 +2988,8 @@ nsHTMLDocument::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc,
       // is added and removed.
       if (nsnull == mNamedItems) {
         mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
-                                      PL_CompareValues, nsnull, nsnull);
+                                      PL_CompareValues, &namedItemsHashAllocOps,
+                                      nsnull);
         RegisterNamedItems(mRootContent, PR_FALSE);
       }
 

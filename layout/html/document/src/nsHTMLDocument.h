@@ -190,7 +190,6 @@ protected:
   PRBool       mShouldMatchCase;
 
 protected:
-  static PRIntn PR_CALLBACK RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
   void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);
   void UnregisterNamedItems(nsIContent *aContent, PRBool aInForm);
   nsIContent* FindNamedItem(nsIContent *aContent, const nsString& aName,
