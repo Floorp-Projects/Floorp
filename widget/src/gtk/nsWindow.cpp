@@ -55,6 +55,7 @@ nsWindow::nsWindow()
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
+  mBorderStyle = GTK_WINDOW_TOPLEVEL;
   mFont = nsnull;
 }
 
@@ -115,6 +116,28 @@ NS_METHOD nsWindow::RemoveTooltips()
   return NS_OK;
 }
 
+NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
+{
+  if (nsnull != aInitData) {
+    switch(aInitData->mBorderStyle)
+    {
+      case eBorderStyle_none:
+        break;
+      case eBorderStyle_dialog:
+        mBorderStyle = GTK_WINDOW_DIALOG;
+        break;
+      case eBorderStyle_window:
+        mBorderStyle = GTK_WINDOW_TOPLEVEL;
+        break;
+      case eBorderStyle_3DChildWindow:
+        break;
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Create the native widget
@@ -140,6 +163,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
   if (!parentWidget) {
 
+//    mainWindow = gtk_window_new(mBorderStyle);
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(mainWindow),
     				mBounds.width,
@@ -216,94 +240,6 @@ void nsWindow::InitCallbacks(char * aName)
 
 //-------------------------------------------------------------------------
 //
-// Invalidate this component visible area
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-  if (mWidget == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!GTK_IS_WIDGET (mWidget)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  GdkEventExpose event;
-
-  event.type = GDK_EXPOSE;
-  event.send_event = PR_TRUE;
-  event.window = GTK_WIDGET(mWidget)->window;
-  event.area.width = mBounds.width;
-  event.area.height = mBounds.height;
-  event.area.x = 0;
-  event.area.y = 0;
-
-  event.count = 0;
-
-  gdk_window_ref (event.window);
-  gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
-  gdk_window_unref (event.window);
-
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Invalidate this component visible area
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
-{
-  if (mWidget == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!GTK_IS_WIDGET (mWidget)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  GdkEventExpose event;
-
-  event.type = GDK_EXPOSE;
-  event.send_event = PR_TRUE;
-  event.window = GTK_WIDGET(mWidget)->window;
-
-  event.area.width = aRect.width;
-  event.area.height = aRect.height;
-  event.area.x = aRect.x;
-  event.area.y = aRect.y;
-
-  event.count = 0;
-
-  gdk_window_ref (event.window);
-  gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
-  gdk_window_unref (event.window);
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Force a synchronous repaint of the window
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Update()
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
 // Return some native data according to aDataType
 //
 //-------------------------------------------------------------------------
@@ -354,12 +290,9 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
-  if (mVBox) // Top level widget (has correct parent)
-  {
-    char * titleStr = aTitle.ToNewCString();
-    gtk_window_set_title(GTK_WINDOW(mVBox->parent), titleStr);
-    delete[] titleStr;
-  }
+  char * titleStr = aTitle.ToNewCString();
+  gtk_window_set_title(GTK_WINDOW(mVBox->parent), titleStr);
+  delete[] titleStr;
   return NS_OK;
 }
 
@@ -464,5 +397,6 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 
   gtk_box_pack_start(GTK_BOX(mVBox), menubar, PR_FALSE, PR_FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
+
   return NS_OK;
 }

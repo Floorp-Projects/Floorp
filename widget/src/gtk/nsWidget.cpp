@@ -93,6 +93,8 @@ NS_IMETHODIMP nsWidget::Destroy(void)
     nsBaseWidget::Destroy();
   }
   if (mWidget) {
+    // prevent the widget from causing additional events
+    mEventCallback = nsnull;
     ::gtk_widget_destroy(mWidget);
     mWidget = nsnull;
     if (PR_FALSE == mOnDestroyCalled)
@@ -139,29 +141,16 @@ nsIWidget *nsWidget::GetParent(void)
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
-#ifdef DBG
-    g_print("nsWidget::Show(%6d)    - %s %p\n", bState, mWidget->name, this);
-#endif
-    if (bState) {
-      if (mWidget) {
-        gtk_widget_show(mWidget);
-      } else {
-#ifdef DEBUG_shaver
-        g_print("showing a NULL-be-widgeted widget @ %p\n", this);
-#endif
-        return NS_ERROR_NULL_POINTER;
-      }
-    } else {
-    if (mWidget) {
-      gtk_widget_hide(mWidget);
-    } else {
-#ifdef DEBUG_shaver
-    g_print("hiding a NULL-be-widgeted widget @ %p\n", this);
-#endif
+  if (!mWidget)
     return NS_ERROR_NULL_POINTER;
-    }
-  }
+
+  if (bState)
+    ::gtk_widget_show(mWidget);
+  else
+    ::gtk_widget_hide(mWidget);
+
   mShown = bState;
+
   return NS_OK;
 }
 
@@ -184,27 +173,21 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
 
-  gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
-
+  ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  printf("nsWidget::Resize called.\n");
-
-  if (mBounds.width == aWidth && mBounds.height == aHeight)
-    return NS_ERROR_FAILURE;
-
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  gtk_widget_set_usize(mWidget, aWidth, aHeight);
+  ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+
+  if (aRepaint)
+    if (GTK_WIDGET_VISIBLE (mWidget))
+      ::gtk_widget_queue_draw (mWidget);
 
 /*
-  if (aRepaint)
-    gtk_widget_queue_resize(mWidget);
-*/
-
   if (aRepaint && GTK_IS_WIDGET (mWidget) &&
       GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
 
@@ -224,13 +207,14 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
     gdk_window_unref (event.window);
   }
-
+*/
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 			   PRUint32 aHeight, PRBool aRepaint)
 {
+/*
   GtkAllocation alloc;
   alloc.x = aX;
   alloc.y = aY;
@@ -249,7 +233,9 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
   
   if (aRepaint)
     gtk_widget_queue_draw(mWidget);
-
+*/
+  Move(aX,aY);
+  Resize(aWidth,aHeight,aRepaint);
   return NS_OK;
 }
 
@@ -260,7 +246,7 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Enable(PRBool bState)
 {
-    gtk_widget_set_sensitive(mWidget, bState);
+    ::gtk_widget_set_sensitive(mWidget, bState);
     return NS_OK;
 }
 
@@ -271,7 +257,7 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus(void)
 {
-    gtk_widget_grab_focus(mWidget);
+    ::gtk_widget_grab_focus(mWidget);
     return NS_OK;
 }
 
@@ -361,7 +347,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 
     if (nsnull != newCursor) {
 	    mCursor = aCursor;
-	    gdk_window_set_cursor(mWidget->window, newCursor);
+	    ::gdk_window_set_cursor(mWidget->window, newCursor);
     }
   }
   return NS_OK;
@@ -369,18 +355,45 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 
 NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::Invalidate");
-    return NS_OK;
+  if (mWidget == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!GTK_IS_WIDGET (mWidget)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  ::gtk_widget_queue_draw(mWidget);
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::Invalidate");
-    return NS_OK;
+  if (mWidget == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!GTK_IS_WIDGET (mWidget)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+    return NS_ERROR_FAILURE;
+  }
+  ::gtk_widget_queue_draw_area(mWidget,
+                               aRect.width, aRect.height,
+                               aRect.x, aRect.y);
+
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::Update(void)
 {
+  
     NS_NOTYETIMPLEMENTED("nsWidget::Update");
     return NS_OK;
 }
@@ -464,7 +477,7 @@ NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
     return NS_OK;
 }
 
-nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
+nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 		      const nsRect &aRect,
 		      EVENT_CALLBACK aHandleEventFunction,
 		      nsIDeviceContext *aContext,
@@ -482,12 +495,10 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
 
-  if (aParent) {
-    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-
-  } else if (aNativeParent) {
+  if (aNativeParent) {
     parentWidget = GTK_WIDGET(aNativeParent);
-
+  } else if (aParent) {
+    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
   } else if(aAppShell) {
     nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
     if (shellWidget)
@@ -527,9 +538,9 @@ NS_METHOD nsWidget::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
-                           aContext, aAppShell, aToolkit, aInitData,
-			   nsnull));
+    return(CreateWidget(aParent, aRect, aHandleEventFunction,
+			aContext, aAppShell, aToolkit, aInitData,
+			nsnull));
 }
 
 //-------------------------------------------------------------------------
@@ -545,9 +556,9 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
-                           aContext, aAppShell, aToolkit, aInitData,
-			   aParent));
+    return(CreateWidget(nsnull, aRect, aHandleEventFunction,
+			aContext, aAppShell, aToolkit, aInitData,
+			aParent));
 }
 
 //-------------------------------------------------------------------------

@@ -23,7 +23,7 @@
 
 // XXX -- This is a HACK
 
-PLEventQueue*  gUnixMainEventQueue = nsnull;
+//PLEventQueue*  gUnixMainEventQueue = nsnull;
 
 //-------------------------------------------------------------------------
 //
@@ -58,9 +58,6 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
 //  gtk_rc_init();
 
-  // Windows and Mac don't create anything here, so why should we?
-//  mTopLevel = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-/* we should probibly set even handlers here */
   return NS_OK;
 }
 
@@ -69,7 +66,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 // PLEventQueue Processor
 //
 //-------------------------------------------------------------------------
-
+/*
 static void nsUnixEventProcessorCallback(gpointer data,
                                          gint source,
                                          GdkInputCondition condition)
@@ -78,7 +75,7 @@ static void nsUnixEventProcessorCallback(gpointer data,
                "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
   PR_ProcessPendingEvents(gUnixMainEventQueue);
 }
-
+*/
 //-------------------------------------------------------------------------
 //
 // Enter a message handler loop
@@ -93,6 +90,7 @@ extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
 
 NS_METHOD nsAppShell::Run()
 {
+/*
   gUnixMainEventQueue = PR_CreateEventQueue("viewer-event-queue", PR_GetCurrentThread());
 
   // XXX Setup webshell's event queue. This must be changed
@@ -102,7 +100,7 @@ NS_METHOD nsAppShell::Run()
                 GDK_INPUT_READ,
                 nsUnixEventProcessorCallback,
                 NULL);
-
+*/
   gtk_main();
 
   return NS_OK;
