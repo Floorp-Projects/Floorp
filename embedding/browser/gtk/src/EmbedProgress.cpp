@@ -23,6 +23,8 @@
 
 #include <nsXPIDLString.h>
 #include <nsIChannel.h>
+#include <nsIWebProgress.h>
+#include <nsIDOMWindow.h>
 
 #include "nsIURI.h"
 #include "nsCRT.h"
@@ -132,9 +134,29 @@ EmbedProgress::OnLocationChange(nsIWebProgress *aWebProgress,
   NS_ENSURE_ARG_POINTER(aLocation);
   aLocation->GetSpec(newURI);
 
-  mOwner->SetURI(newURI.get());
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[LOCATION]);
+  // Make sure that this is the primary frame change and not
+  // just a subframe.
+  PRBool isSubFrameLoad = PR_FALSE;
+  if (aWebProgress) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<nsIDOMWindow> topDomWindow;
+
+    aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+
+    // get the root dom window
+    if (domWindow)
+      domWindow->GetTop(getter_AddRefs(topDomWindow));
+
+    if (domWindow != topDomWindow)
+      isSubFrameLoad = PR_TRUE;
+  }
+
+  if (!isSubFrameLoad) {
+    mOwner->SetURI(newURI.get());
+    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		    moz_embed_signals[LOCATION]);
+  }
+
   return NS_OK;
 }
 
