@@ -1143,6 +1143,7 @@ sub MakeResourceAliases()
         _InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",           "$messenger_chrome_dir:content:default:", 0);
         _InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
         _InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",     "$messenger_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST", "$messenger_chrome_dir:locale:en-US:", 0);
         _InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",        "$messenger_chrome_dir:skin:default:", 0);
         _InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_chrome_dir:content:default:", 0);
         _InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
@@ -1158,11 +1159,13 @@ sub MakeResourceAliases()
         _InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",           "$messengercomposer_chrome_dir:skin:default:", 0);
         _InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",   "$messengercomposer_chrome_dir:locale:en-US:", 0);
         _InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercomposer_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",  "$messengercomposer_chrome_dir:locale:en-US:", 0);
 
         _InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",       "$addressbook_chrome_dir:content:default:", 0);
         _InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",          "$addressbook_chrome_dir:skin:default:", 0);
         _InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",  "$addressbook_chrome_dir:locale:en-US:", 0);
         _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_chrome_dir:locale:en-US:", 0);
     }
 	
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
