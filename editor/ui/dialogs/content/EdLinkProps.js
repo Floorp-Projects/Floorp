@@ -20,11 +20,10 @@ function Startup()
   editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
 
   if(!editorShell) {
-    dump("EditorAppCore not found!!!\n");
+    dump("editorShell not found!!!\n");
     window.close();
     return;  
   }
-  dump("EditorAppCore found for Link Properties dialog\n");
   
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -152,9 +151,6 @@ function onOK()
     }
     dump("Inserting\n");
     editorShell.InsertElement(anchorElement, true);
-    //if (newElement != anchorElement) {
-    //  dump("Returned element from insertElement is different from orginal element.\n");
-    //}
   } else if (insertLinkAroundSelection) {
     dump("Setting link around selected text\n");
     editorShell.InsertLinkAroundSelection(anchorElement);

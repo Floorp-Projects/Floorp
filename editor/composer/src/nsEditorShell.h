@@ -136,6 +136,7 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD GetSelectedElement(const PRUnichar *tagName, nsIDOMElement **_retval);
 	  NS_IMETHOD CreateElementWithDefaults(const PRUnichar *tagName, nsIDOMElement **_retval);
 	  NS_IMETHOD InsertElement(nsIDOMElement *element, PRBool deleteSelection);
+    NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement);
 	  NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement *anchorElement);
 	  NS_IMETHOD SelectElement(nsIDOMElement *element);
 	  NS_IMETHOD SetSelectionAfterElement(nsIDOMElement *element);

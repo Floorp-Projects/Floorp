@@ -36,7 +36,10 @@ function EditorStartup(editorType)
   SetupToolbarElements();
 
   // Set focus to the edit window
-  window.focus();
+  // (A bug currently prevents this from working,
+  //  the actual edit window is a child of the webshell window 
+  //  designated as the contentWindow)
+  contentWindow.focus();
 }
 
 function SetupToolbarElements()
@@ -311,7 +314,23 @@ function EditorInsertImage()
 function EditorInsertHLine()
 {
   if (window.editorShell) {
-    window.openDialog("chrome://editordlgs/content/EdHLineProps.xul", "dlg", "chrome", "");
+
+    // Inserting an HLine is different in that we don't use properties dialog
+    //  unless we are editing an existing line's attributes
+    //  We get the last-used attributes from the prefs and insert immediately
+
+    tagName = "hr";
+    hLine = window.editorShell.GetSelectedElement(tagName);
+
+    if (hLine) {
+      // We only open the dialog for an existing HRule
+      window.openDialog("chrome://editordlgs/content/EdHLineProps.xul", "dlg", "chrome", "");
+    } else {
+      hLine = window.editorShell.CreateElementWithDefaults(tagName);
+      if (hLine) {
+        window.editorShell.InsertElement(hLine, false);
+      }
+    }
   }
   contentWindow.focus();
 }

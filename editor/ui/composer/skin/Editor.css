@@ -23,9 +23,9 @@ select.combobox {
 }
 
 titledbutton#TextColorPopup {
-  margin-right: -2px;
+  margin-right: -3px;
 }
 
 titledbutton#BackColorPopup {
-  margin-left: -2px;
+  margin-left: -3px;
 }
