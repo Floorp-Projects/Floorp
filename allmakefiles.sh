@@ -499,6 +499,8 @@ editor/ui/composer/skin/Makefile
 editor/ui/dialogs/Makefile
 editor/ui/dialogs/content/Makefile
 editor/ui/dialogs/skin/Makefile
+editor/ui/dialogs/locale/Makefile
+editor/ui/dialogs/locale/en-US/Makefile
 
 END_EDITOR_MAKEFILES
 fi
