@@ -104,6 +104,8 @@ CRDFToolbarButton::CRDFToolbarButton()
     currentRow = 0;
 
 	m_pTreeView = NULL;
+
+	m_BorderStyle = "Beveled";
 }
 
 
@@ -606,6 +608,98 @@ int CRDFToolbarButton::OnMouseActivate( CWnd* pDesktopWnd, UINT nHitTest, UINT m
 	return MA_ACTIVATE;
 }
 
+void CRDFToolbarButton::DrawUpButton(HDC hDC, CRect & rect)
+{
+	if (m_BorderStyle == "None")
+		return;
+
+	CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+	COLORREF shadow = pToolbar->GetShadowColor();
+	COLORREF highlight = pToolbar->GetHighlightColor();
+	COLORREF rollover = pToolbar->GetRolloverColor();
+
+	if (m_BorderStyle == "Beveled")
+	{
+		HBRUSH br = ::CreateSolidBrush(highlight);
+
+		CRect rc(rect.left+1, rect.top+1, rect.right-1, 2);
+		::FillRect(hDC, rc, br);
+		rc.SetRect(rect.left+1, rect.top+1, rect.left+2, rect.bottom - 1);
+		::FillRect(hDC, rc, br);
+		::DeleteObject(br);
+		
+		br = ::CreateSolidBrush(shadow);
+		rc.SetRect(rect.left+1, rect.bottom - 2, rect.right - 1 , rect.bottom - 1);
+		::FillRect(hDC, rc, br);
+		rc.SetRect(rect.right - 2, rect.top, rect.right - 1, rect.bottom - 1);
+		::FillRect(hDC, rc, br);
+		::DeleteObject(br);
+	}
+	else if (m_BorderStyle == "Solid")
+	{
+		HBRUSH br = ::CreateSolidBrush(rollover);
+		FrameRect(hDC, &rect, br );
+		::DeleteObject(br);
+	}
+} 
+
+void CRDFToolbarButton::DrawDownButton(HDC hDC, CRect & rect)
+{
+	if (m_BorderStyle == "None")
+		return;
+
+	CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+	COLORREF pressed = pToolbar->GetPressedColor();
+
+	if (m_BorderStyle == "Beveled")
+	{
+		DrawCheckedButton(hDC, rect);
+	}
+	else if (m_BorderStyle == "Solid")
+	{
+
+		HBRUSH br = ::CreateSolidBrush(pressed);
+		::FrameRect(hDC, &rect, br );
+		::DeleteObject(br);
+	}
+}
+
+void CRDFToolbarButton::DrawCheckedButton(HDC hDC, CRect & rect)
+{
+	if (m_BorderStyle == "None")
+		return;
+
+	CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+	COLORREF shadow = pToolbar->GetShadowColor();
+	COLORREF highlight = pToolbar->GetHighlightColor();
+	COLORREF pressed = pToolbar->GetPressedColor();
+
+	if (m_BorderStyle == "Beveled")
+	{
+		// Hilight
+		CRect rc(rect.left+1, rect.bottom - 2, rect.right - 1, rect.bottom - 1);
+		HBRUSH br = ::CreateSolidBrush(highlight);
+		::FillRect(hDC, rc, br);
+		rc.SetRect(rect.right - 2, rect.top+1, rect.right - 1, rect.bottom - 1);
+		::FillRect(hDC, rc, br);
+	
+		// Shadow
+		::DeleteObject(br);
+		br = ::CreateSolidBrush(shadow);
+		rc.SetRect(rect.left+1, rect.top+1, rect.right - 1, 2);
+		::FillRect(hDC, rc, br);
+		rc.SetRect(rect.left+1, rect.top+1, rect.left+2, rect.bottom - 1);
+		::FillRect(hDC, rc, br);
+		::DeleteObject(br);
+	}
+	else if (m_BorderStyle == "Solid")
+	{
+
+		HBRUSH br = ::CreateSolidBrush(pressed);
+		::FrameRect(hDC, &rect, br );
+		::DeleteObject(br);
+	}
+}
 
 void CRDFToolbarButton::OnPaint()
 {
@@ -648,6 +742,24 @@ void CRDFToolbarButton::OnPaint()
 		CRect innerRect = rcClient;
 
 		innerRect.InflateRect(-BORDERSIZE, -BORDERSIZE);
+
+		// Set our button border style.
+		void* data;
+		HT_GetTemplateData(HT_TopNode(HT_GetView(m_Node)), gNavCenter->buttonBorderStyle,
+							HT_COLUMN_STRING, &data);
+		if (data)
+		{
+			// We have a button border style specified for the toolbar.
+			m_BorderStyle = (char*)data;
+		}
+
+		// Important distinction: don't want to go to the template.
+		HT_GetNodeData(m_Node, gNavCenter->buttonBorderStyle, HT_COLUMN_STRING, &data);
+		if (data)
+		{
+			// The button overrode the toolbar or chrome template.
+			m_BorderStyle = (char*)data;
+		}
 
 		int oldMode = ::SetBkMode(hMemDC, TRANSPARENT);
 		if (foundOnRDFToolbar())

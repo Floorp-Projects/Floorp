@@ -68,6 +68,8 @@ protected:
 	CRDFCommandMap m_MenuCommandMap;	// Command map for back-end generated right mouse menu commands.
 	
 	int m_nActualBitmapHeight;		// The actual bitmap's height.
+	
+	CString m_BorderStyle;			// Solid, beveled, or none.
 
 public:
 	CRDFToolbarButton();
@@ -118,7 +120,10 @@ public:
 	void LoadComplete(HT_Resource r);
 	virtual void DrawCustomIcon(HDC hDC, int x, int y);
 	virtual void DrawLocalIcon(HDC hDC, int x, int y);
-	
+	virtual void DrawUpButton(HDC hDC, CRect & rect);
+	virtual void DrawDownButton(HDC hDC, CRect & rect);
+	virtual void DrawCheckedButton(HDC hDC, CRect & rect);
+
 	virtual HT_View GetHTView() { return HT_GetView(m_Node); }
 
 	virtual BOOL NeedsUpdate();
