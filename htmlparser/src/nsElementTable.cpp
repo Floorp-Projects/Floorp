@@ -103,13 +103,13 @@ TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 // The following tag lists are used to define common set of root notes for the HTML elements...
 //*********************************************************************************************
 
-TagList  gRootTags={4,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet}};
+TagList  gRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_select}}; // Added SELECT to fix bug 98645
 TagList  gTableRootTags={6,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_th}};
 TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
  
 TagList  gLIRootTags={8,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td,eHTMLTag_th}};
 
-TagList  gOLRootTags={4,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td,eHTMLTag_th}};
+TagList  gOLRootTags={5,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td,eHTMLTag_th,eHTMLTag_select}};
 TagList  gTDRootTags={6,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_table,eHTMLTag_applet}};
 TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
 
