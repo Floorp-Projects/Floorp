@@ -22,6 +22,7 @@
 
 #include "msgCore.h"
 #include "nsIMAPHostSessionList.h"
+#include "nsIEventQueue.h"
 #include "nsIMAPBodyShell.h"
 #include "nsImapProtocol.h"
 
