@@ -36,15 +36,6 @@
 // Constant used to estimate frequency of access to a document based on size
 #define CACHE_CONST_B   1.35
 
-// A cache whose space is managed by this replacement policy
-class nsReplacementPolicy::CacheInfo {
-public:
-    CacheInfo(nsINetDataCache* aCache):mCache(aCache),mNext(0) {}
-
-    nsINetDataCache* mCache;
-    CacheInfo*       mNext;
-};
-
 nsReplacementPolicy::nsReplacementPolicy()
     : mRankedEntries(0), mCaches(0), mRecordsRemovedSinceLastRanking(0),
       mNumEntries(0), mCapacityRankedEntriesArray(0), mLastRankTime(0) {}

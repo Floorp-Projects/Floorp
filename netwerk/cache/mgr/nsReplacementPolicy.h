@@ -86,7 +86,14 @@ private:
     nsresult CheckForTooManyCacheEntries();
     nsresult LoadAllRecordsInAllCacheDatabases();
 
-    class CacheInfo;
+    // A cache whose space is managed by this replacement policy
+    class CacheInfo {
+    public:
+        CacheInfo(nsINetDataCache* aCache):mCache(aCache),mNext(0) {}
+
+        nsINetDataCache* mCache;
+        CacheInfo*       mNext;
+    };
 
 private:
 
