@@ -305,7 +305,7 @@ if (defined $::next_bug) {
     print "<HR>\n";
 
     navigation_header();
-    do "bug_form.tcl";
+    do "bug_form.pl";
 } else {
     print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
 }
