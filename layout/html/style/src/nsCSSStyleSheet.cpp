@@ -751,7 +751,7 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
   PRInt32 index = mWeightedRules->Count();
   while (0 <= --index) {
     nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
-    if (rule->GetWeight() > weight) { // insert before rules with equal or lesser weight
+    if (rule->GetWeight() >= weight) { // insert before rules with equal or lesser weight
       NS_RELEASE(rule);
       break;
     }
@@ -780,7 +780,7 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
   PRInt32 index = -1;
   while (++index < count) {
     nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
-    if (rule->GetWeight() < weight) { // insert after rules with equal or greater weight (before lower weight)
+    if (rule->GetWeight() <= weight) { // insert after rules with greater weight (before equal or lower weight)
       NS_RELEASE(rule);
       break;
     }
