@@ -459,8 +459,8 @@ PRBool test_006(void)
                 b++;
             }
 
-            free(rv);
         }
+        PL_strfree(rv);
     }
 
     printf("PASS\n");
