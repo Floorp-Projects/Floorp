@@ -85,9 +85,6 @@ nsresult imgRequest::Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheE
   mCacheEntry = aCacheEntry;
 #endif
 
-  // XXX do not init the image here.  this has to be done from the image decoder.
-  mImage = do_CreateInstance("@mozilla.org/image/container;1");
-
   return NS_OK;
 }
 
@@ -296,7 +293,7 @@ NS_IMETHODIMP imgRequest::Resume()
 
 /** imgIRequest methods **/
 
-/* readonly attribute imgIContainer image; */
+/* attribute imgIContainer image; */
 NS_IMETHODIMP imgRequest::GetImage(imgIContainer * *aImage)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -304,6 +301,16 @@ NS_IMETHODIMP imgRequest::GetImage(imgIContainer * *aImage)
 
   *aImage = mImage;
   NS_IF_ADDREF(*aImage);
+  return NS_OK;
+}
+NS_IMETHODIMP imgRequest::SetImage(imgIContainer *aImage)
+{
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequest::SetImage\n", this));
+
+  if (mImage) return NS_ERROR_FAILURE;
+  
+  mImage = aImage;
   return NS_OK;
 }
 
@@ -421,7 +428,8 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
   LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
 
   nsCOMPtr<imgIDecoderObserver> container = do_QueryInterface(mImage);
-  container->OnDataAvailable(request, cx, frame, rect);
+  if (container)
+    container->OnDataAvailable(request, cx, frame, rect);
   
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();

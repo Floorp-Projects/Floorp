@@ -150,13 +150,17 @@ NS_IMETHODIMP imgRequestProxy::Resume()
 
 /**  imgIRequest methods **/
 
-/* readonly attribute imgIContainer image; */
+/* attribute imgIContainer image; */
 NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
 {
   if (!mOwner)
     return NS_ERROR_FAILURE;
 
   return mOwner->GetImage(aImage);
+}
+NS_IMETHODIMP imgRequestProxy::SetImage(imgIContainer *aImage)
+{
+  return NS_ERROR_FAILURE;
 }
 
 /* readonly attribute unsigned long imageStatus; */
