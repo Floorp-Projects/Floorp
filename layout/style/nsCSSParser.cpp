@@ -1580,6 +1580,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         // XXX parse lang pseudo class
         dataMask |= SEL_MASK_PCLASS;
         aSelector.AddPseudoClass(pseudo);
+        NS_RELEASE(pseudo);
       }
       else {
         if (0 == (dataMask & SEL_MASK_PELEM)) {
@@ -1604,7 +1605,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           return PR_FALSE;
         }
       }
-      NS_RELEASE(pseudo);
     }
     else if (mToken.IsSymbol('[')) {  // attribute
       mToken.AppendToString(aSource);
