@@ -1296,7 +1296,10 @@ function my_whoisreply (e)
                              this);
     }
 
-    this.display(text, e.code);
+    if (e.user)
+        e.user.display(text, e.code);
+    else
+        this.display(text, e.code);
 }
 
 CIRCNetwork.prototype.on330 = /* ircu's 330 numeric ("X is logged in as Y") */
