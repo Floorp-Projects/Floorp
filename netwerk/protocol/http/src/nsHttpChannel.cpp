@@ -693,7 +693,10 @@ nsHttpChannel::ProcessResponse()
     if (httpStatus != 401 && httpStatus != 407)
         CheckForSuperfluousAuth();
 
-    // handle different server response categories
+    // handle different server response categories.  Note that we handle
+    // caching or not caching of error pages in
+    // nsHttpResponseHead::MustValidate; if you change this switch, update that
+    // one
     switch (httpStatus) {
     case 200:
     case 203:
@@ -718,24 +721,15 @@ nsHttpChannel::ProcessResponse()
     case 301:
     case 302:
     case 307:
-        // these redirects can be cached (don't store the response body)
-        rv = ProcessRedirection(httpStatus);
-        if (NS_SUCCEEDED(rv))
-            CloseCacheEntry(InitCacheEntry());
-        else {
-            LOG(("ProcessRedirection failed [rv=%x]\n", rv));
-            rv = ProcessNormal();
-        }
-        break;
     case 303:
 #if 0
     case 305: // disabled as a security measure (see bug 187996).
 #endif
-        // these redirects cannot be cached
-        CloseCacheEntry(NS_ERROR_ABORT);
-
+        // don't store the response body for redirects
         rv = ProcessRedirection(httpStatus);
-        if (NS_FAILED(rv)) {
+        if (NS_SUCCEEDED(rv))
+            CloseCacheEntry(InitCacheEntry());
+        else {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
             rv = ProcessNormal();
         }
@@ -752,7 +746,6 @@ nsHttpChannel::ProcessResponse()
         rv = ProcessAuthentication(httpStatus);
         if (NS_FAILED(rv)) {
             LOG(("ProcessAuthentication failed [rv=%x]\n", rv));
-            CloseCacheEntry(NS_ERROR_ABORT);
             CheckForSuperfluousAuth();
             rv = ProcessNormal();
         }
@@ -766,7 +759,6 @@ nsHttpChannel::ProcessResponse()
         }
         // fall through
     default:
-        CloseCacheEntry(NS_ERROR_ABORT);
         rv = ProcessNormal();
         break;
     }
