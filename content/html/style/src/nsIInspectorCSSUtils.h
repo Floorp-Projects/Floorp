@@ -79,9 +79,8 @@ public:
     NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect) = 0;
 
     // Hooks to methods that need layout atoms (static vars in layout)
-    NS_IMETHOD GetStyleContextForContent(nsIPresShell* aPresShell,
-                                         nsIContent* aContent,
-                                         nsIStyleContext** aStyleContext) = 0;
+    NS_IMETHOD GetStyleContextForFrame(nsIFrame* aFrame,
+                                       nsIStyleContext** aStyleContext) = 0;
 };
 
 #endif /* nsIInspectorCSSUtils_h___ */
