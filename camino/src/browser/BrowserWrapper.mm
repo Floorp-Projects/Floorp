@@ -322,7 +322,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     mListenersAttached = YES;
     
     // We need to hook up our click and context menu listeners.
-    // XXX broken
     ContentClickListener* clickListener = new ContentClickListener([mWindow delegate]);
     if (!clickListener)
       return;
@@ -338,15 +337,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)didBecomeActiveBrowser
 {
-  {
-#if 0
-    [mDefaultStatusString autorelease];
-    mDefaultStatusString = nil;
-    [mLoadingStatusString autorelease];
-    mLoadingStatusString = [NSLocalizedString(@"DocumentDone", @"") retain];
-#endif
-  }
-
   [self ensureContentClickListeners];
   [self updateOfflineStatus];
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -367,11 +357,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onLoadingStarted 
 {
-  if (mDefaultStatusString)
-  {
-    [mDefaultStatusString autorelease];
-    mDefaultStatusString = nil;
-  }
+  [mDefaultStatusString autorelease];
+  mDefaultStatusString = nil;
 
   mProgress = 0.0;
   mIsBusy = YES;
@@ -396,25 +383,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onLoadingCompleted:(BOOL)succeeded
 {
-#if 0
-  if (mActivateOnLoad)
-  {
-    // if we're the front/key window, focus the content area. If we're not,
-    // set gecko as the first responder so that it will be activated when
-    // the window is focused. If the user is typing in the urlBar, however,
-    // don't mess with the focus at all.
-    if (mDelegate)
-    {
-      if (![mDelegate userChangedLocationField] && [mWindow isKeyWindow])
-        [mBrowserView setActive:YES];
-      else
-        [mWindow makeFirstResponder:mBrowserView];
-      
-    }
-    mActivateOnLoad = NO;
-  }
-#endif
-  
   [mDelegate loadingDone:mActivateOnLoad];
   mActivateOnLoad = NO;
   

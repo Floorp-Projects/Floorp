@@ -71,7 +71,7 @@ class nsISupportsArray;
 
 @interface BrowserWrapper : NSView <CHBrowserListener, CHBrowserContainer>
 {
-  NSWindow*                 mWindow;           // the window we are or will be in
+  NSWindow*                 mWindow;           // the window we are or will be in (never nil)
   
   // XXX the BrowserWrapper really shouldn;t know anything about the tab that it's in
   NSTabViewItem*            mTabItem;

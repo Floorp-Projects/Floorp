@@ -1220,6 +1220,10 @@ enum BWCOpenDest {
 {
   if (activateContent)
   {
+    // if we're the front/key window, focus the content area. If we're not,
+    // set gecko as the first responder so that it will be activated when
+    // the window is focused. If the user is typing in the urlBar, however,
+    // don't mess with the focus at all.
     if ([[self window] isKeyWindow])
     {
       if (![self userChangedLocationField])
