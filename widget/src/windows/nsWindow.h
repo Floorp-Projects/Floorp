@@ -116,12 +116,13 @@ public:
             HWND            GetWindowHandle() { return mWnd; }
             WNDPROC         GetPrevWindowProc() { return mPrevWndProc; }
 
-    virtual PRBool          DispatchMouseEvent(PRUint32 aEventType);
+    virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
     virtual PRBool          AutoErase();
+    nsPoint*                GetLastPoint() { return &mLastPoint; }
 
 protected:
 
-    virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
+  virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
 
      // Allow Derived classes to modify the height that is passed
      // when the window is created or resized.
@@ -133,6 +134,7 @@ protected:
             void            SubclassWindow(BOOL bState);
 
     virtual void            OnDestroy();
+    virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode);
@@ -149,13 +151,15 @@ protected:
     static PRBool ConvertStatus(nsEventStatus aStatus);
     DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
 
-    void InitEvent(nsGUIEvent& event, PRUint32 aEventType);
+    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
     PRBool DispatchEvent(nsGUIEvent* event);
     PRBool DispatchStandardEvent(PRUint32 aMsg);
     void AddTooltip(HWND hwndOwner, nsRect* aRect, int aId);
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
 protected:
+    static      nsWindow* gCurrentWindow;
+    nsPoint     mLastPoint;
     HWND        mWnd;
     HWND        mTooltip;
     HPALETTE    mPalette;

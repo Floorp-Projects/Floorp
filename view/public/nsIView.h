@@ -382,4 +382,7 @@ public:
 //during event propagation, see if child views can handle the event
 #define NS_VIEW_FLAG_CHECK_CHILDREN 0x0008
 
+//during event propagation, see if sibling views can handle the event
+#define NS_VIEW_FLAG_CHECK_SIBLINGS 0x0010
+
 #endif

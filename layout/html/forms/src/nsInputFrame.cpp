@@ -374,6 +374,9 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
     }
   }
 
+  //printf(" %d %d %d %d (%d,%d) \n", this, aEvent->widget, aEvent->widgetSupports, 
+  //       aEvent->message, aEvent->point.x, aEvent->point.y);
+
   switch (aEvent->message) {
     case NS_MOUSE_ENTER:
 	    mLastMouseState = eMouseEnter;
@@ -401,7 +404,8 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 	    mLastMouseState = eMouseNone;
 	    break;
   }
-  return nsEventStatus_eConsumeDoDefault;
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  return NS_OK;
 }
 
 void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,

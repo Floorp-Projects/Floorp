@@ -122,9 +122,14 @@ void nsCheckButton::GetLabel(nsString& aBuffer)
 
 //-------------------------------------------------------------------------
 //
-// paint message. Don't send the paint out
+// move, paint, resizes message - ignore
 //
 //-------------------------------------------------------------------------
+PRBool nsCheckButton::OnMove(PRInt32, PRInt32)
+{
+  return PR_FALSE;
+}
+
 PRBool nsCheckButton::OnPaint()
 {
     return PR_FALSE;

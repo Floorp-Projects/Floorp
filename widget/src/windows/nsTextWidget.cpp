@@ -64,9 +64,14 @@ nsresult nsTextWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// paint message. Don't send the paint out
+// move, paint, resizes message - ignore
 //
 //-------------------------------------------------------------------------
+PRBool nsTextWidget::OnMove(PRInt32, PRInt32)
+{
+  return PR_FALSE;
+}
+
 PRBool nsTextWidget::OnPaint()
 {
     return PR_FALSE;

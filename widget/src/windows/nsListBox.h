@@ -40,7 +40,8 @@ public:
     BASE_SUPPORT
 
     virtual nsresult  QueryObject(const nsIID& aIID, void** aInstancePtr);
-    PRBool            OnPaint();
+    virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
+    virtual PRBool    OnPaint();
     virtual PRBool    OnResize(nsRect &aWindowRect);
 
     // nsIWidget interface

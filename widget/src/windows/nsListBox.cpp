@@ -243,9 +243,14 @@ nsresult nsListBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// paint message. Don't send the paint out
+// move, paint, resizes message - ignore
 //
 //-------------------------------------------------------------------------
+PRBool nsListBox::OnMove(PRInt32, PRInt32)
+{
+  return PR_FALSE;
+}
+
 PRBool nsListBox::OnPaint()
 {
     return PR_FALSE;

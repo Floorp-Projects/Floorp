@@ -184,9 +184,14 @@ nsresult nsComboBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// paint message. Don't send the paint out
+// move, paint, resizes message - ignore
 //
 //-------------------------------------------------------------------------
+PRBool nsComboBox::OnMove(PRInt32, PRInt32)
+{
+  return PR_FALSE;
+}
+
 PRBool nsComboBox::OnPaint()
 {
     return PR_FALSE;

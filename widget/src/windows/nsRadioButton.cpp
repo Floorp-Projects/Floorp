@@ -161,9 +161,14 @@ void nsRadioButton::GetLabel(nsString& aBuffer)
 
 //-------------------------------------------------------------------------
 //
-// paint message. Don't send the paint out
+// move, paint, resizes message - ignore
 //
 //-------------------------------------------------------------------------
+PRBool nsRadioButton::OnMove(PRInt32, PRInt32)
+{
+  return PR_FALSE;
+}
+
 PRBool nsRadioButton::OnPaint()
 {
     return PR_FALSE;

@@ -48,6 +48,7 @@ public:
     // nsIButton part
   virtual void SetLabel(const nsString& aText);
   virtual void GetLabel(nsString& aBuffer);
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
 
