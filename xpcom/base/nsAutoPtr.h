@@ -78,7 +78,12 @@ class nsAutoPtr
       */
 
     private:
-      void**  begin_assignment();
+      void**
+      begin_assignment()
+        {
+          assign(0);
+          return NS_REINTERPRET_CAST(void**, &mRawPtr);
+        }
 
       void
       assign( T* newPtr )
@@ -229,14 +234,6 @@ class nsAutoPtr
 #endif
         }
   };
-
-template <class T>
-void**
-nsAutoPtr<T>::begin_assignment()
-  {
-    assign(0);
-    return NS_REINTERPRET_CAST(void**, &mRawPtr);
-  }
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
@@ -521,7 +518,12 @@ class nsAutoArrayPtr
       */
 
     private:
-      void**  begin_assignment();
+      void**
+      begin_assignment()
+        {
+          assign(0);
+          return NS_REINTERPRET_CAST(void**, &mRawPtr);
+        }
 
       void
       assign( T* newPtr )
@@ -672,14 +674,6 @@ class nsAutoArrayPtr
 #endif
         }
   };
-
-template <class T>
-void**
-nsAutoArrayPtr<T>::begin_assignment()
-  {
-    assign(0);
-    return NS_REINTERPRET_CAST(void**, &mRawPtr);
-  }
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
@@ -965,8 +959,21 @@ class nsRefPtr
       */
 
     private:
-      void    assign_with_AddRef( T* );
-      void**  begin_assignment();
+
+      void
+      assign_with_AddRef( T* rawPtr )
+        {
+          if ( rawPtr )
+            rawPtr->AddRef();
+          assign_assuming_AddRef(rawPtr);
+        }
+
+      void**
+      begin_assignment()
+        {
+          assign_assuming_AddRef(0);
+          return NS_REINTERPRET_CAST(void**, &mRawPtr);
+        }
 
       void
       assign_assuming_AddRef( T* newPtr )
@@ -1129,23 +1136,6 @@ class nsRefPtr
 #endif
         }
   };
-
-template <class T>
-void
-nsRefPtr<T>::assign_with_AddRef( T* rawPtr )
-  {
-    if ( rawPtr )
-      rawPtr->AddRef();
-    assign_assuming_AddRef(rawPtr);
-  }
-
-template <class T>
-void**
-nsRefPtr<T>::begin_assignment()
-  {
-    assign_assuming_AddRef(0);
-    return NS_REINTERPRET_CAST(void**, &mRawPtr);
-  }
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
