@@ -77,6 +77,7 @@ stub_pass_1(TreeState *state)
         fprintf(state->file,
                 "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM %s.idl\n */\n"
                 "#include \"jsapi.h\"\n"
+                "#include \"prlong.h\" // for PRInt64 ops\n"
                 "#include \"%s.h\"\n"
                 "\n"
                 "static char XXXnsresult2string_fmt[] = \"XPCOM error %%#x\";\n"
@@ -155,9 +156,26 @@ emit_convert_result(TreeState *state, const char *from, const char *to,
     switch (type) {
       case IDLN_TYPE_INTEGER:
         fprintf(state->file,
-                "%s  if (!JS_NewNumberValue(cx, (jsdouble) %s, %s))\n"
-                "%s    return JS_FALSE;\n",
-                extra_indent, from, to,
+                "%s  {\n"
+                "%s    jsdouble d;\n",
+                extra_indent,
+                extra_indent);
+        if (IDL_INTEGER_TYPE_LONGLONG == IDL_TYPE_INTEGER(state->tree).f_type) {
+            fprintf(state->file,
+                "%s    LL_L2D(d, %s);\n",
+                extra_indent, from);
+        }
+        else {
+            fprintf(state->file,
+                "%s    d = (jsdouble) %s;\n",
+                extra_indent, from);
+        }
+        fprintf(state->file,
+                "%s    if (!JS_NewNumberValue(cx, (jsdouble) d, %s))\n"
+                "%s      return JS_FALSE;\n"
+                "%s  }\n",
+                extra_indent, to,
+                extra_indent,
                 extra_indent);
         break;
       case IDLN_TYPE_STRING:
