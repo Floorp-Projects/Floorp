@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.16 2001/07/11 23:57:01 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.17 2001/08/24 21:15:52 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -4269,8 +4269,10 @@ SEC_OpenPermCertDB(CERTCertDBHandle *handle, PRBool readOnly,
 	    DestroyDBEntry((certDBEntry *)versionEntry);
 	    PORT_Free(certdbname);
 	    return(SECFailure);
+	} else {
+	    DestroyDBEntry((certDBEntry *)versionEntry);
+	    versionEntry = NULL;
 	}
-
     }
 
 
