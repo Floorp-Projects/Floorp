@@ -40,6 +40,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsSupportsPrimitives.h"
 #include "nsNetUtil.h"
 
 #include "prmem.h"
@@ -95,8 +96,6 @@
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_MIGRATOR 1
 #endif
-
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -236,7 +235,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
   { \
     nsresult macro_rv; \
     nsCOMPtr <nsIFileSpec>macro_spec;	\
-    macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
+    macro_rv = m_prefs->GetComplexValue(PREFNAME, NS_GET_IID(nsIFileSpec), getter_AddRefs(macro_spec)); \
     if (NS_SUCCEEDED(macro_rv)) { \
 	char *macro_oldStr = nsnull; \
 	macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
@@ -256,9 +255,9 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
     nsresult macro_rv; \
     nsCOMPtr <nsIFileSpec>macro_spec;	\
 	char *macro_val = nsnull; \
-	macro_rv = m_prefs->CopyCharPref(PREFNAME, &macro_val); \
+	macro_rv = m_prefs->GetCharPref(PREFNAME, &macro_val); \
 	if (NS_SUCCEEDED(macro_rv) && macro_val && PL_strlen(macro_val)) { \
-		macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
+		macro_rv = m_prefs->GetComplexValue(PREFNAME, NS_GET_IID(nsIFileSpec), getter_AddRefs(macro_spec)); \
 		if (NS_SUCCEEDED(macro_rv)) { \
 			char *macro_oldStr = nsnull; \
 			macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
@@ -279,9 +278,9 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
     nsresult macro_rv; \
     nsCOMPtr <nsILocalFile> macro_file; \
     char *macro_oldStr = nsnull; \
-    macro_rv = m_prefs->CopyCharPref(PREFNAME, &macro_oldStr); \
+    macro_rv = m_prefs->GetCharPref(PREFNAME, &macro_oldStr); \
     if (NS_SUCCEEDED(macro_rv) && macro_oldStr && PL_strlen(macro_oldStr)) { \
-      macro_rv = m_prefs->GetFileXPref(PREFNAME, getter_AddRefs(macro_file)); \
+      macro_rv = m_prefs->GetComplexValue(PREFNAME, NS_GET_IID(nsILocalFile), getter_AddRefs(macro_file)); \
       if (NS_SUCCEEDED(macro_rv)) { \
         MACRO_OBJECT->MACRO_METHOD(macro_file); \
       } \
@@ -293,7 +292,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
   { \
     nsresult macro_rv; \
     char *macro_oldStr = nsnull; \
-    macro_rv = m_prefs->CopyCharPref(PREFNAME, &macro_oldStr); \
+    macro_rv = m_prefs->GetCharPref(PREFNAME, &macro_oldStr); \
     if (NS_SUCCEEDED(macro_rv)) { \
       MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
     } \
@@ -304,8 +303,10 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
   { \
     nsresult macro_rv; \
     PRUnichar *macro_oldStr = nsnull; \
-    macro_rv = m_prefs->CopyUnicharPref(PREFNAME, &macro_oldStr); \
+    nsCOMPtr<nsISupportsString> macro_tmpstr; \
+    macro_rv = m_prefs->GetComplexValue(PREFNAME, NS_GET_IID(nsISupportsString), getter_AddRefs(macro_tmpstr)); \
     if (NS_SUCCEEDED(macro_rv)) { \
+      macro_tmpstr->ToString(&macro_oldStr); \
       MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
     } \
     PR_FREEIF(macro_oldStr); \
@@ -337,7 +338,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
     char prefName[BUF_STR_LEN]; \
     char *macro_oldStr = nsnull; \
     PR_snprintf(prefName, BUF_STR_LEN, PREFFORMATSTR, PREFFORMATVALUE); \
-    macro_rv = m_prefs->CopyCharPref(prefName, &macro_oldStr); \
+    macro_rv = m_prefs->GetCharPref(prefName, &macro_oldStr); \
     if (NS_SUCCEEDED(macro_rv)) { \
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(macro_oldStr); \
     } \
@@ -416,7 +417,7 @@ nsresult nsMessengerMigrator::Init()
 nsresult 
 nsMessengerMigrator::Shutdown()
 {
-	m_prefs = nsnull;
+  m_prefs = nsnull;
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
@@ -428,7 +429,7 @@ nsMessengerMigrator::getPrefService()
   nsresult rv = NS_OK;
 
   if (!m_prefs) {
-    m_prefs = do_GetService(kPrefServiceCID, &rv);
+    m_prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   }
 
   if (NS_FAILED(rv)) return rv;
@@ -489,7 +490,7 @@ nsMessengerMigrator::ProceedWithMigration()
 	) {
     // if they were using pop or movemail, "mail.pop_name" must have been set
     // otherwise, they don't really have anything to migrate
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &prefvalue);
+    rv = m_prefs->GetCharPref(PREF_4X_MAIL_POP_NAME, &prefvalue);
     if (NS_SUCCEEDED(rv)) {
 	    if (!prefvalue || !*prefvalue) {
 	      rv = NS_ERROR_FAILURE;
@@ -499,7 +500,7 @@ nsMessengerMigrator::ProceedWithMigration()
   else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
     // if they were using imap, "network.hosts.imap_servers" must have been set
     // otherwise, they don't really have anything to migrate
-    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &prefvalue);
+    rv = m_prefs->GetCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &prefvalue);
     if (NS_SUCCEEDED(rv)) {
 	    if (!prefvalue || !*prefvalue) {
 	      rv = NS_ERROR_FAILURE;
@@ -553,7 +554,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // for a new profile, that pref won't be set.
   if (migrating) {
     nsCOMPtr<nsILocalFile> localFile;
-    rv = m_prefs->GetFileXPref(PREF_MAIL_DIRECTORY, getter_AddRefs(localFile));
+    rv = m_prefs->GetComplexValue(PREF_MAIL_DIRECTORY, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
         mailDir = localFile;
   }
@@ -741,7 +742,10 @@ nsMessengerMigrator::UpgradePrefs()
     if (NS_FAILED(rv)) return rv;
 
     // we're done migrating, let's save the prefs
-    rv = m_prefs->SavePrefFile(nsnull);
+    nsCOMPtr<nsIPrefService> prefService(do_QueryInterface(m_prefs, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefService->SavePrefFile(nsnull);
     if (NS_FAILED(rv)) return rv;
 
 	// remove the temporary identity we used for migration purposes
@@ -757,8 +761,8 @@ nsMessengerMigrator::SetUsernameIfNecessary()
     nsresult rv;
     nsXPIDLCString usernameIn4x;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USERNAME, getter_Copies(usernameIn4x));
-    if (NS_SUCCEEDED(rv) && ((const char *)usernameIn4x) && (PL_strlen((const char *)usernameIn4x))) {
+    rv = m_prefs->GetCharPref(PREF_4X_MAIL_IDENTITY_USERNAME, getter_Copies(usernameIn4x));
+    if (NS_SUCCEEDED(rv) && !usernameIn4x.IsEmpty()) {
         return NS_OK;
     }
 
@@ -775,7 +779,12 @@ nsMessengerMigrator::SetUsernameIfNecessary()
         return NS_OK;
     }
 
-    rv = m_prefs->SetUnicharPref(PREF_4X_MAIL_IDENTITY_USERNAME, (const PRUnichar *)fullnameFromSystem);
+    nsCOMPtr<nsISupportsString> str(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv)) {
+        str->SetData(fullnameFromSystem);
+        rv = m_prefs->SetComplexValue(PREF_4X_MAIL_IDENTITY_USERNAME, NS_GET_IID(nsISupportsString), str);
+    }
+
     return rv;
 }
 
@@ -860,10 +869,10 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
     nsXPIDLCString pop_username;
     nsXPIDLCString pop_hostname;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME,getter_Copies(pop_username));
+    rv = m_prefs->GetCharPref(PREF_4X_MAIL_POP_NAME,getter_Copies(pop_username));
     if (NS_FAILED(rv)) return rv;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
+    rv = m_prefs->GetCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
     if (NS_FAILED(rv)) return rv;
 
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), pop_hostname.get(), DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
@@ -874,7 +883,7 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
     nsXPIDLCString pop_username;
 
-	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(pop_username));
+	rv = m_prefs->GetCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(pop_username));
     if (NS_FAILED(rv)) return rv;
 
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
@@ -935,7 +944,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   }
 
   nsXPIDLCString default_pref_value;
-  rv = m_prefs->CopyCharPref(default_pref_name, getter_Copies(default_pref_value));
+  rv = m_prefs->GetCharPref(default_pref_name, getter_Copies(default_pref_value));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // if the old pref value was "", old_uri will be default value (mail.identity.default.fcc_folder)
@@ -998,7 +1007,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 		prefname = PR_smprintf("mail.imap.server.%s.userName", hostname.get());
 		if (!prefname) return NS_ERROR_FAILURE;
 
-		rv = m_prefs->CopyCharPref(prefname, &imap_username);
+		rv = m_prefs->GetCharPref(prefname, &imap_username);
 		PR_FREEIF(prefname);
 		if (NS_FAILED(rv) || !imap_username || !*imap_username) {
 			*new_uri = PR_smprintf("");
@@ -1035,7 +1044,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   char *usernameAtHostname = nsnull;
   nsCOMPtr <nsIFileSpec> mail_dir;
   char *mail_directory_value = nsnull;
-  rv = m_prefs->GetFilePref(PREF_PREMIGRATION_MAIL_DIRECTORY, getter_AddRefs(mail_dir));
+  rv = m_prefs->GetComplexValue(PREF_PREMIGRATION_MAIL_DIRECTORY, NS_GET_IID(nsIFileSpec), getter_AddRefs(mail_dir));
   if (NS_SUCCEEDED(rv)) {
 	rv = mail_dir->GetUnixStyleFilePath(&mail_directory_value);
   }
@@ -1045,7 +1054,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 #endif
     PR_FREEIF(mail_directory_value);
 
-    rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mail_dir));
+    rv = m_prefs->GetComplexValue(PREF_MAIL_DIRECTORY, NS_GET_IID(nsIFileSpec), getter_AddRefs(mail_dir));
     if (NS_SUCCEEDED(rv)) {
 	rv = mail_dir->GetUnixStyleFilePath(&mail_directory_value);
     } 
@@ -1060,10 +1069,10 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     nsXPIDLCString pop_username;
     nsXPIDLCString pop_hostname;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(pop_username));
+    rv = m_prefs->GetCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(pop_username));
     if (NS_FAILED(rv)) return rv;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
+    rv = m_prefs->GetCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
     if (NS_FAILED(rv)) return rv;
 
     // Need to escape hostname in case it contains spaces.
@@ -1083,7 +1092,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
 	nsXPIDLCString movemail_username;
 
-	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(movemail_username));
+	rv = m_prefs->GetCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(movemail_username));
 	if (NS_FAILED(rv)) return rv; 
 	
     nsXPIDLCString escaped_movemail_username;
@@ -1191,7 +1200,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // if the "mail.directory" pref is set, use that.
   // if they used -installer, this pref will point to where their files got copied
   nsCOMPtr<nsILocalFile> localFile;
-  rv = m_prefs->GetFileXPref(PREF_MAIL_DIRECTORY, getter_AddRefs(localFile));
+  rv = m_prefs->GetComplexValue(PREF_MAIL_DIRECTORY, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
   if (NS_SUCCEEDED(rv))
     mailDir = localFile;
   
@@ -1294,7 +1303,7 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   // get the pop username
   // movemail used the pop username in 4.x
   nsXPIDLCString username;
-  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
+  rv = m_prefs->GetCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
   if (NS_FAILED(rv)) return rv;
 
   //
@@ -1318,7 +1327,7 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
 
   // if they used -installer, this pref will point to where their files got copied
-  rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
+  rv = m_prefs->GetComplexValue(PREF_MAIL_DIRECTORY, NS_GET_IID(nsIFileSpec), getter_AddRefs(mailDir));
   // create the directory structure for old 4.x pop mail
   // under <profile dir>/Mail/movemail or
   // <"mail.directory" pref>/movemail
@@ -1404,12 +1413,12 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 
   // get the pop username
   nsXPIDLCString username;
-  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
+  rv = m_prefs->GetCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
   if (NS_FAILED(rv)) return rv;
 
   // get the hostname and port
   nsXPIDLCString hostAndPort;
-  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER,
+  rv = m_prefs->GetCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER,
                              getter_Copies(hostAndPort));
   if (NS_FAILED(rv)) return rv;
 
@@ -1461,7 +1470,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   // if the "mail.directory" pref is set, use that.
   // if they used -installer, this pref will point to where their files got copied
   nsCOMPtr<nsILocalFile> localFile;
-  rv = m_prefs->GetFileXPref(PREF_MAIL_DIRECTORY, getter_AddRefs(localFile));
+  rv = m_prefs->GetComplexValue(PREF_MAIL_DIRECTORY, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
   if (NS_SUCCEEDED(rv))
     mailDir = localFile;
   
@@ -1621,7 +1630,7 @@ nsMessengerMigrator::MigrateImapAccounts(nsIMsgIdentity *identity)
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
 
-  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &hostList);
+  rv = m_prefs->GetCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &hostList);
   if (NS_FAILED(rv)) return rv;
   
   if (!hostList || !*hostList) return NS_OK;  // NS_ERROR_FAILURE?
@@ -1670,7 +1679,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   nsXPIDLCString username;
   char *imapUsernamePref =
     PR_smprintf("mail.imap.server.%s.userName", hostAndPort);
-  rv = m_prefs->CopyCharPref(imapUsernamePref, getter_Copies(username));
+  rv = m_prefs->GetCharPref(imapUsernamePref, getter_Copies(username));
   PR_FREEIF(imapUsernamePref);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -1756,7 +1765,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   // if they used -installer, this pref will point to where their files got copied
   // if the "mail.imap.root_dir" pref is set, use that.
   nsCOMPtr<nsILocalFile> localFile;
-  rv = m_prefs->GetFileXPref(PREF_IMAP_DIRECTORY, getter_AddRefs(localFile));
+  rv = m_prefs->GetComplexValue(PREF_IMAP_DIRECTORY, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
   if (NS_SUCCEEDED(rv))
     imapMailDir = localFile;
   
@@ -1913,10 +1922,9 @@ static PRBool charEndsWith(const char *str, const char *endStr)
 #endif
 
 void
-nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosure)
+nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref)
 {
   nsresult rv = NS_OK;
-  nsIPref *prefs = (nsIPref *)aClosure;
 
 #ifdef DEBUG_AB_MIGRATION
   printf("investigate pref: %s\n",aPref);
@@ -1928,11 +1936,11 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   // check for pab without a filename and if so, set it to pab.na2.
   // This is an ugly hack for installations that haven't set 
   // pab.filename.
-      rv = prefs->CopyCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, getter_Copies(abFileName));
+      rv = m_prefs->GetCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, getter_Copies(abFileName));
       if (NS_FAILED(rv))
       {
         // pab.filename not set - set it to pab.na2 and pretend aPref is it.
-        prefs->SetCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, "pab.na2");
+        m_prefs->SetCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, "pab.na2");
         aPref = "ldap_2.servers.pab.filename";
       }
 
@@ -1944,13 +1952,13 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   nsCAutoString serverPrefName(aPref);
   PRInt32 fileNamePos = serverPrefName.Find(".filename");
   serverPrefName.Truncate(fileNamePos + 1);
-  serverPrefName.Append("serverName");
+  serverPrefName.AppendLiteral("serverName");
   nsXPIDLCString serverName;
-  rv = prefs->CopyCharPref(serverPrefName.get(), getter_Copies(serverName));
+  rv = m_prefs->GetCharPref(serverPrefName.get(), getter_Copies(serverName));
   if (NS_SUCCEEDED(rv) && !serverName.IsEmpty())
     return; // skip this - it's an ldap server
       
-  rv = prefs->CopyCharPref(aPref,getter_Copies(abFileName));
+  rv = m_prefs->GetCharPref(aPref,getter_Copies(abFileName));
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to get ab filename");
   if (NS_FAILED(rv)) return;
   
@@ -1967,7 +1975,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (charEndsWith((const char *)abFileName, ADDRESSBOOK_PREF_VALUE_5x_SUFFIX)) return;
     
   nsCAutoString abName;
-  abName = (const char *)abFileName;
+  abName = abFileName;
   PRInt32 len = abName.Length();
   PRInt32 suffixLen = PL_strlen(ADDRESSBOOK_PREF_VALUE_4x_SUFFIX);
   NS_ASSERTION(len > suffixLen, "ERROR: bad length of addressbook filename");
@@ -2015,15 +2023,15 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
 
   // get the csid from the prefs
   nsCAutoString csidPrefName;
-  csidPrefName = ADDRESSBOOK_PREF_NAME_ROOT;
+  csidPrefName.AssignLiteral(ADDRESSBOOK_PREF_NAME_ROOT);
   csidPrefName += abName; 
-  csidPrefName += ADDRESSBOOK_PREF_CSID_SUFFIX;
+  csidPrefName.AppendLiteral(ADDRESSBOOK_PREF_CSID_SUFFIX);
   nsXPIDLCString csidPrefValue;
-  rv = prefs->CopyCharPref(csidPrefName.get(),getter_Copies(csidPrefValue));
+  rv = m_prefs->GetCharPref(csidPrefName.get(),getter_Copies(csidPrefValue));
   if (NS_FAILED(rv)) { 
 	// if we fail to get the pref value, set it to "", which will
 	// later cause us to use the system charset
-	csidPrefValue.Adopt(nsCRT::strdup(""));
+	csidPrefValue.Truncate();
   }
 
   nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
@@ -2034,13 +2042,13 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (NS_FAILED(rv)) return;
 
 // HACK:  I need to rename pab.ldif -> abook.ldif, because a bunch of places are hacked to point to abook.mab, and when I import abook.ldif it will create abook.mab. this is a temporary hack and will go away soon.
-  if (!PL_strcmp(abName.get(),"pab")) {
+  if (abName.EqualsLiteral("pab")) {
 	abName = "abook";
   }
 
   nsCAutoString ldifFileName;
   ldifFileName = abName;
-  ldifFileName += TEMP_LDIF_FILE_SUFFIX;
+  ldifFileName.AppendLiteral(TEMP_LDIF_FILE_SUFFIX);
   rv = tmpLDIFFileSpec->AppendRelativeUnixPath(ldifFileName.get());
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to append filename");
   if (NS_FAILED(rv)) return;
@@ -2065,8 +2073,8 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   
   nsCAutoString newPrefValue;
   newPrefValue = abName;
-  newPrefValue += ADDRESSBOOK_PREF_VALUE_5x_SUFFIX;
-  rv = prefs->SetCharPref(aPref,newPrefValue.get());
+  newPrefValue.AppendLiteral(ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
+  rv = m_prefs->SetCharPref(aPref,newPrefValue.get());
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to set pref");
   if (NS_FAILED(rv)) return;
  
@@ -2108,7 +2116,17 @@ nsMessengerMigrator::MigrateAddressBooks()
     return NS_OK;
   }
 
-  rv = m_prefs->EnumerateChildren(ADDRESSBOOK_PREF_NAME_ROOT, migrateAddressBookPrefEnum, (void *)m_prefs);
+  PRUint32 num;
+  char **arr;
+
+  rv = m_prefs->GetChildList(ADDRESSBOOK_PREF_NAME_ROOT, &num, &arr);
+  if (NS_SUCCEEDED(rv)) {
+    for (PRUint32 i = 0; i < num; i++)
+      migrateAddressBookPrefEnum(arr[i]);
+
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(num, arr);
+  }
+
   return rv;
 }
 
@@ -2136,7 +2154,7 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 #ifdef USE_NEWSRC_MAP_FILE
     // if they used -installer, this pref will point to where their files got copied
     nsCOMPtr<nsILocalFile> localFile;
-    rv = m_prefs->GetFileXPref(PREF_NEWS_DIRECTORY, getter_AddRefs(localFile));
+    rv = m_prefs->GetComplexValue(PREF_NEWS_DIRECTORY, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
         newsDir = localFile;
 #else
@@ -2291,7 +2309,7 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	inputStream.close();
 #else /* USE_NEWSRC_MAP_FILE */
     nsCOMPtr<nsILocalFile> prefLocal;
-    rv = m_prefs->GetFileXPref(PREF_NEWS_DIRECTORY, getter_AddRefs(prefLocal));
+    rv = m_prefs->GetComplexValue(PREF_NEWS_DIRECTORY, NS_GET_IID(nsILocalFile), getter_AddRefs(prefLocal));
     if (NS_FAILED(rv)) return rv;
     newsDir = prefLocal;
     

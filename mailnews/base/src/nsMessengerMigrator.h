@@ -40,7 +40,8 @@
 #include "nsIMessengerMigrator.h"
 #include "nsCOMPtr.h"
 #include "nsISmtpServer.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIMsgIdentity.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIObserver.h"
@@ -130,7 +131,7 @@ private:
 
   nsresult MigrateAddressBookPrefs();
   nsresult MigrateAddressBooks();
-  static void migrateAddressBookPrefEnum(const char *aPref, void *aClosure);
+  void migrateAddressBookPrefEnum(const char *aPref);
         
   nsresult ProceedWithMigration();
   
@@ -143,7 +144,7 @@ private:
   
   nsresult ResetState();
 
-  nsCOMPtr <nsIPref> m_prefs;
+  nsCOMPtr <nsIPrefBranch> m_prefs;
   PRBool m_haveShutdown;
   PRInt32 m_oldMailType;
   PRBool m_alreadySetNntpDefaultLocalPath;
