@@ -48,7 +48,7 @@ BEGIN { use_ok('RelationSet'); }
 BEGIN { use_ok('Bug'); }
 
 # and now we test the scripts
-@testitems = qw(
+@testitems = split("\n",qq(
 bug_form.pl #4
 buglist.cgi #5
 changepassword.cgi #6
@@ -97,20 +97,26 @@ token.cgi #48
 userprefs.cgi #49
 whineatnews.pl #50
 xml.cgi #51
-);
+));
 our $warnings;
+my $verbose = $::ENV{VERBOSE};
 $perlapp='/usr/bonsaitools/bin/perl';
 foreach $file (@testitems) {
+        $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+        next if (!$file); # skip null entries
 	$command = "$perlapp"." -c $file 2>&1";
 	$loginfo=`$command`;
 #	  print '@@'.$loginfo.'##';
 	if ($loginfo =~ /syntax ok$/im) {
 		$warnings{$_} = 1 foreach ($loginfo =~ /\((W.*?)\)/mg);
-		if ($1) { ok(0,$file."--WARNING"); }
-		else {
-			ok(1,$file."--ERROR-AND-WARNING-FREE");
+		if ($1) {
+                        if ($verbose) { print STDERR $loginfo; }
+                        ok(0,$file."--WARNING");
+                } else {
+			ok(1,$file);
 		}
 	} else {
+                if ($verbose) { print STDERR $loginfo; }
 		ok(0,$file."--ERROR");
-	}
+        }
 }
