@@ -16,6 +16,8 @@
 #include "mkstream.h"
 #include "glhist.h"
 #include "shist.h"
+#include "prmem.h"
+#include "plstr.h"
 
 #include "abouturl.h"
 
