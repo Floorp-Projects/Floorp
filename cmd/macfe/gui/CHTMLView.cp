@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <CAutoPtrXP.h>
 
-#include "CHTMLClickrecord.h"
+#include "CHTMLClickRecord.h"
 #include "BookmarksFile.h"
 #include "CBrowserContext.h"
 #include "CBrowserWindow.h"
@@ -708,6 +708,13 @@ Int16 CHTMLView::DefaultCSIDForNewWindow(void)
 		if(0 == csid)
 			csid = mContext->GetDefaultCSID();
 	}
+	// If we have auto-detected csid but no corresponding encoding menu item (e.g. JIS), 
+	//  use CS_SJIS_AUTO for CS_JIS, CS_KSC_8BIT_AUTO for CS_2022_KR.
+	if (CS_JIS == (~CS_AUTO & csid))
+		csid = CS_SJIS_AUTO;
+	else if (CS_2022_KR == (~CS_AUTO & csid) || CS_KSC_8BIT == csid)
+		csid = CS_KSC_8BIT_AUTO;
+		
 	return csid;
 }
 Int16 CHTMLView::GetWinCSID(void) const
@@ -2470,14 +2477,26 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 			break;
 
 		case cmd_ViewSource:
-		{
-			// there is no need to dispose of |url| because layout takes care of it (I think).
-			// All I know is that if we do dispose it here, bad things happen later...(pinkerton).
-			URL_Struct* url = NET_CreateURLStruct(mContext->GetCurrentURL(), NET_DONT_RELOAD);
-			mContext->ImmediateLoadURL(url, FO_VIEW_SOURCE);
-			cmdHandled = true;
+			{
+				MWContext* mwcontext = *GetContext();
+				if (!mwcontext) break;
+				URL_Struct* url = SHIST_CreateURLStructFromHistoryEntry(
+							mwcontext,
+							GetContext()->GetCurrentHistoryEntry()
+							);
+				
+				if (!url) break;
+
+				SHIST_SavedData 	savedData;
+				XP_MEMCPY(&savedData, &url->savedData, sizeof(SHIST_SavedData));
+				XP_MEMSET( &url->savedData, 0, sizeof( SHIST_SavedData ) );
+				LO_CloneFormData(&savedData, mwcontext, url);
+
+				mContext->ImmediateLoadURL(url, FO_VIEW_SOURCE);
+				cmdHandled = true;
+			}
 			break;
-		}
+
 		case cmd_AddToBookmarks:
 		{
 			// two cases: is this the "Add URL to bookmarks" from context menu or
@@ -2642,14 +2661,19 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 } // CHTMLView::ObeyCommand
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-Boolean CHTMLView::SetDefaultCSID(Int16 default_csid)
+Boolean CHTMLView::SetDefaultCSID(Int16 default_csid, Boolean forceRepaginate /* = false */)
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 {
-	if (mContext && default_csid != mContext->GetDefaultCSID())
+	if (mContext)
 	{
-		mContext->SetDefaultCSID(default_csid);
-		mContext->SetWinCSID(INTL_DocToWinCharSetID(default_csid));
-		mContext->Repaginate();
+		if (default_csid != mContext->GetDefaultCSID())
+		{
+			mContext->SetDefaultCSID(default_csid);
+			mContext->SetWinCSID(INTL_DocToWinCharSetID(default_csid));
+			forceRepaginate = true;
+		}
+		if (forceRepaginate)
+			mContext->Repaginate();
 	}
 	return true;
 } // CHTMLView::SetDefaultCSID
@@ -2687,6 +2711,8 @@ URL_Struct *CHTMLView::GetURLForPrinting(Boolean& outSuppressURLCaption, MWConte
 
 	URL_Struct* url = SHIST_CreateWysiwygURLStruct(context, current);
 	ThrowIfNil_(url);
+	
+	LO_SaveFormData(context);
 	
 	outSuppressURLCaption = false;
 	
@@ -6815,17 +6841,22 @@ void CHTMLView::CalcAbsoluteElementPosition(
 	long elementPosTop 		= inElement->lo_any.y + inElement->lo_any.y_offset;
 
 #ifdef LAYERS
-	int32	layerOriginX,layerOriginY;
+	if (inElement->type != LO_FORM_ELE	// coordinates of these types...
+		&& inElement->type != LO_EMBED	// ... are already document-relative
+		&& inElement->type != LO_JAVA)
+	{
+		int32	layerOriginX,layerOriginY;
 
-	if (mCurrentDrawable != NULL)
-		mCurrentDrawable->GetLayerOrigin ( &layerOriginX, &layerOriginY );
-	else {
-		layerOriginX = mLayerOrigin.h;
-		layerOriginY = mLayerOrigin.v;
+		if (mCurrentDrawable != NULL)
+			mCurrentDrawable->GetLayerOrigin ( &layerOriginX, &layerOriginY );
+		else {
+			layerOriginX = mLayerOrigin.h;
+			layerOriginY = mLayerOrigin.v;
+		}
+			
+		elementPosLeft += layerOriginX;
+		elementPosTop += layerOriginY;
 	}
-		
-	elementPosLeft += layerOriginX;
-	elementPosTop += layerOriginY;
 #endif
 
 	outFrame.left = elementPosLeft;

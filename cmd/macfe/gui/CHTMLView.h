@@ -134,7 +134,7 @@ class CHTMLView :
 		virtual Int16			GetWinCSID(void) const;
 		virtual Int16			DefaultCSIDForNewWindow(void);
 		
-		virtual Boolean			SetDefaultCSID(Int16);
+		virtual Boolean			SetDefaultCSID(Int16 default_csid, Boolean forceRepaginate = false);
 		virtual void			SetFontInfo();
 
 		void					SetWindowBackgroundColor();
@@ -849,9 +849,10 @@ inline GrafPtr CHTMLView::GetCachedPort(void)
 
 class CDragURLTask : public CBrowserDragTask
 {
-public:
+private:	
 	typedef CBrowserDragTask super;
 	
+public:	
 					CDragURLTask(
 									const EventRecord&	inEventRecord,
 									const Rect& 		inGlobalFrame,
