@@ -201,7 +201,16 @@ NS_METHOD
 nsHTTPHandler::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI,
                             char **_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX optimize this to not needlessly construct the URL
+
+    nsresult rv;
+    nsIURI* url;
+    rv = NewURI(aRelativeSpec, aBaseURI, &url);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = url->GetSpec(_retval);
+    NS_RELEASE(url);
+    return rv;
 }
 
 NS_METHOD
