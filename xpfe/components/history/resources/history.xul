@@ -28,7 +28,6 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
 
@@ -94,8 +93,6 @@
       <menu id="menu_New">
         <menupopup id="menu_NewPopup">
 	    <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-	    <menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
-	    <menuitem id="menu_newCard"      observes="cmd_newCard"/>
 	    <menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
         </menupopup>
       </menu>
