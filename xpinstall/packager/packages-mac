@@ -195,7 +195,6 @@ viewer:chrome:skins:*
 ; all the pref files must be part of base
 ; to prevent migration bugs
 viewer:defaults:pref:*
-viewer:defaults:profile:*
 viewer:res:arrow.gif
 viewer:res:charsetalias.properties 
 viewer:res:acceptlanguage.properties
