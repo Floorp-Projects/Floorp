@@ -203,6 +203,9 @@ extern void
 js_FlushPropertyCache(JSContext *cx);
 
 extern void
+js_FlushPropertyCacheByObject(JSContext *cx, JSObject *obj);
+
+extern void
 js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop);
 
 extern void
