@@ -505,7 +505,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, 
   rect.width = xrect.width;
   rect.height = xrect.height;
 
-  SetClipRectInPixels(rect, aCombine);
+  SetClipRectInPixels(rect, aCombine, aClipEmpty);
 
   if (::XEmptyRegion(mRegion) == True)
     aClipEmpty = PR_TRUE;
@@ -529,9 +529,10 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
 
   if (NS_OK == rv) {
     nsRect rect;
+    PRBool clipState;
     pRegion = (nsIRegion *)&aRegion;
     pRegion->Init();    
-    this->GetClipRect(rect);
+    GetClipRect(rect, clipState);
     pRegion->Union(rect.x,rect.y,rect.width,rect.height);
   }
 
