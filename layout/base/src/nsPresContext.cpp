@@ -111,6 +111,7 @@ nsPresContext::nsPresContext()
   mDefaultBackgroundImageRepeat = NS_STYLE_BG_REPEAT_XY;
   mDefaultBackgroundImageOffsetX = mDefaultBackgroundImageOffsetY = 0;
   mDefaultDirection = NS_STYLE_DIRECTION_LTR;
+  mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
 }
 
 nsPresContext::~nsPresContext()
@@ -351,9 +352,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
           nsAutoString charset;
           doc->AddCharSetObserver(this);
           doc->GetDocumentCharacterSet(charset);
-          mLangService->LookupCharSet(charset.GetUnicode(),
-                                      getter_AddRefs(mLanguage));
-          GetFontPreferences();
+          UpdateCharSet(charset.GetUnicode());
         }
       }
     }
@@ -373,14 +372,44 @@ nsPresContext::GetShell(nsIPresShell** aResult)
   return NS_OK;
 }
 
+void
+nsPresContext::UpdateCharSet(const PRUnichar* aCharSet)
+{
+  if (mLangService) {
+    mLangService->LookupCharSet(aCharSet, getter_AddRefs(mLanguage));
+    GetFontPreferences();
+    if (mLanguage) {
+      nsCOMPtr<nsIAtom> langGroupAtom;
+      mLanguage->GetLanguageGroup(getter_AddRefs(langGroupAtom));
+      NS_ASSERTION(langGroupAtom, "non-NULL language group atom expected");
+      if (langGroupAtom.get() == nsLayoutAtoms::Japanese) {
+        mLanguageSpecificTransformType =
+        eLanguageSpecificTransformType_Japanese;
+      }
+      else if (langGroupAtom.get() == nsLayoutAtoms::Korean) {
+        mLanguageSpecificTransformType =
+        eLanguageSpecificTransformType_Korean;
+      }
+      else {
+        mLanguageSpecificTransformType =
+        eLanguageSpecificTransformType_None;
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsPresContext::Observe(nsISupports* aSubject, const PRUnichar* aTopic,
                        const PRUnichar* aData)
 {
-  if (mLangService) {
-    mLangService->LookupCharSet(aData, getter_AddRefs(mLanguage));
-    GetFontPreferences();
+  if (nsAutoString(aTopic).EqualsWithConversion("charset")) {
+    UpdateCharSet(aData);
   }
+  else {
+    NS_WARNING("unrecognized topic in nsPresContext::Observe");
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -1131,6 +1160,20 @@ nsPresContext::GetLanguage(nsILanguageAtom** aLanguage)
 
   *aLanguage = mLanguage;
   NS_IF_ADDREF(*aLanguage);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetLanguageSpecificTransformType(
+                nsLanguageSpecificTransformType* aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+  NS_ASSERTION(mLanguageSpecificTransformType !=
+               eLanguageSpecificTransformType_Unknown,
+               "language specific transform type not set yet");
+
+  *aType = mLanguageSpecificTransformType;
 
   return NS_OK;
 }

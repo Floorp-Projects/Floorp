@@ -164,6 +164,10 @@ LAYOUT_ATOM(onoverflow, "onoverflow")
 LAYOUT_ATOM(onunderflow, "onunderflow")
 LAYOUT_ATOM(onoverflowchanged, "onoverflowchanged")
 
+  // Alphabetical list of languages for lang-specific transforms
+LAYOUT_ATOM(Japanese, "ja")
+LAYOUT_ATOM(Korean, "ko")
+
   // other
 LAYOUT_ATOM(wildcard, "*")
 LAYOUT_ATOM(mozdirty, "_moz_dirty")

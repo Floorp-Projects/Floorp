@@ -141,6 +141,8 @@ public:
   NS_IMETHOD GetDefaultDirection(PRUint8* aDirection);
   NS_IMETHOD SetDefaultDirection(PRUint8 aDirection);
   NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage);
+  NS_IMETHOD GetLanguageSpecificTransformType(
+              nsLanguageSpecificTransformType* aType);
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
@@ -166,6 +168,7 @@ protected:
                                               // since there is no dependency from gfx back to layout.
   nsCOMPtr<nsILanguageAtomService> mLangService;
   nsCOMPtr<nsILanguageAtom> mLanguage;
+  nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   nsCOMPtr<nsIImageGroup> mImageGroup;
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsISupports*          mContainer;     // [WEAK]
@@ -198,6 +201,7 @@ protected:
 protected:
   void   GetUserPreferences();
   void   GetFontPreferences();
+  void   UpdateCharSet(const PRUnichar* aCharSet);
 
 private:
   friend int PR_CALLBACK PrefChangedCallback(const char*, void*);
