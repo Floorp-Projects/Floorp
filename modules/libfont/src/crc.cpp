@@ -26,6 +26,9 @@
 
 #include "libfont.h"
 
+#if defined(XP_WIN32) && _MSC_VER >= 1200
+#include "nf.h"
+#endif
 #include "Mcrc.h"
 #include "Pcrc.h"
 #include "rc.h"

@@ -892,7 +892,7 @@ _winfp_GetRenderableFont(struct winfp* self, jint op, struct nfrc* rc, void *fh,
 
 		hFont	= pSampleRFdata->mRF_hFont;
 
-		hOldFont = SelectObject( hDC, hFont);
+		hOldFont = (HFONT)SelectObject( hDC, hFont);
 
 		reCode = GetTextMetrics( hDC, &textMetric );
 
