@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.37 $ 
-# $Date: 2002/05/03 03:28:18 $ 
+# $Revision: 1.38 $ 
+# $Date: 2002/05/03 04:12:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -150,19 +150,22 @@ $EMPTY_TABLE_CELL = "";
 # These uses determine the columns of the build page and their
 # include order is the order in which the columns are displayed.
 
+# The time Column can occur more then once if you like.
+
+
 # The main choice of implementations is how to gather information
 # about checkins.  You can currently choose whether you are using
 # bonsai or are using CVS raw.
 
 @DBImpl = (
+	   'TinderDB::BT_Generic',
+#	   'TinderDB::BT_Req',
 	   'TinderDB::Time',
 	   'TinderDB::Notice',
 #	   'TinderDB::VC_CVS',
 	   'TinderDB::VC_Bonsai',
 #          'TinderDB::VC_Perforce',
-	   'TinderDB::BT_Generic',
 	   'TinderDB::Build',
-	   'TinderDB::Time',
 	  );
 
 # What border should the status legends use?  new browsers allow us to
@@ -174,10 +177,19 @@ $DB_LEGEND_BORDER = "";
 
 # Should the vector of times, which represent the rows use a uniform
 # spacing or should we put one row for each time we have data for.  It
-# is recomended to set this to 1 so that verticle length anywhere on the
+# is recomended to set this to uniform vertical length anywhere on the
 # table corresponds to the same amount of elapsed time.
 
-$UNIFORM_ROW_SPACING = 0;
+#$ROW_SPACING_DISIPLINE = 'uniform';
+
+# use all event times to create times column.
+
+#$ROW_SPACING_DISIPLINE = 'event_driven';
+
+# use build event times to create times column.
+# traditional Tinderbox1 discipline.
+
+$ROW_SPACING_DISIPLINE = 'build_event_driven';
 
 # Spacing on html page (in minutes), this restricts the
 # minimum time between builds (to this value plus 5 minutes).
