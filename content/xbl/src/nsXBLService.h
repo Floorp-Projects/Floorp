@@ -67,7 +67,7 @@ class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupports
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement,
+  NS_IMETHOD GetContentList(nsIContent* aContent, nsIDOMNodeList** aResult, nsIContent** aChildElement,
                             PRBool* aMultipleInsertionPoints);
 
   // Gets the object's base class type.

@@ -55,6 +55,7 @@
 #include "nsITextContent.h"
 #include "nsIMemory.h"
 #include "nsIObserverService.h"
+#include "nsIDOMNodeList.h"
 
 #include "nsIXBLBinding.h"
 #include "nsIXBLPrototypeBinding.h"
@@ -710,11 +711,10 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
 // For a given element, returns a flat list of all the anonymous children that need
 // frames built.
 NS_IMETHODIMP
-nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aParent, 
+nsXBLService::GetContentList(nsIContent* aContent, nsIDOMNodeList** aResult, nsIContent** aParent, 
                              PRBool* aMultipleInsertionPoints)
 { 
-  // Iterate over all of the bindings one by one and build up an array
-  // of anonymous items.
+  // Locate the primary binding and get the node list from its mContent parent.
   *aResult = nsnull;
   *aParent = nsnull;
   *aMultipleInsertionPoints = PR_FALSE;
@@ -728,31 +728,8 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
   
   nsCOMPtr<nsIXBLBinding> binding;
   bindingManager->GetBinding(aContent, getter_AddRefs(binding));
-    
-  while (binding) {
-    // Get the anonymous content.
-    nsCOMPtr<nsIContent> content;
-    binding->GetAnonymousContent(getter_AddRefs(content));
-    if (content) {
-      PRInt32 childCount;
-      content->ChildCount(childCount);
-      for (PRInt32 i = 0; i < childCount; i++) {
-        nsCOMPtr<nsIContent> anonymousChild;
-        content->ChildAt(i, *getter_AddRefs(anonymousChild));
-        if (!(*aResult)) 
-          NS_NewISupportsArray(aResult); // This call addrefs the array.
-
-        (*aResult)->AppendElement(anonymousChild);
-      }
-
-      binding->GetSingleInsertionPoint(aParent, aMultipleInsertionPoints);
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIXBLBinding> nextBinding;
-    binding->GetBaseBinding(getter_AddRefs(nextBinding));
-    binding = nextBinding;
-  }
+  
+  binding->GetAnonymousNodes(getter_AddRefs(aResult), aParent, aMultipleInsertionPoints);
   return NS_OK;
 }
 
@@ -1030,7 +1007,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
     }
   }
   else if (hasBase) {
-    // Check for the presence of a 'extends' and 'display' attributes
+    // Check for the presence of 'extends' and 'display' attributes
     nsAutoString display, extends;
     child->GetAttribute(kNameSpaceID_None, kDisplayAtom, display);
     child->GetAttribute(kNameSpaceID_None, kExtendsAtom, extends);
@@ -1038,16 +1015,13 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
     PRBool hasExtends = !extends.IsEmpty();
     
     nsAutoString value(extends);
-
-    PRBool prefixIsDisplay = PR_FALSE;
-            
-    if (!hasDisplay && !hasExtends) 
+         
+    if (!hasExtends) 
       protoBinding->SetHasBasePrototype(PR_FALSE);
     else {
       nsAutoString prefix;
       PRInt32 offset;
       if (hasDisplay) {
-        prefixIsDisplay = PR_TRUE;
         offset = display.FindChar(':');
         if (-1 != offset) {
           display.Left(prefix, offset);
@@ -1073,8 +1047,10 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
           if (nameSpace) {
             nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
             if (tagSpace) {
-              // We extend some widget/frame. We don't really have a base binding.
-              protoBinding->SetHasBasePrototype(PR_FALSE);
+              if (!hasDisplay) {
+                // We extend some widget/frame. We don't really have a base binding.
+                protoBinding->SetHasBasePrototype(PR_FALSE);
+              }
               PRInt32 nameSpaceID;
               tagSpace->GetNameSpaceID(nameSpaceID);
               nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(display));

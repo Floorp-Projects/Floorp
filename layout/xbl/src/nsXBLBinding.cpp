@@ -1410,10 +1410,11 @@ NS_IMETHODIMP
 nsXBLBinding::GetInsertionPoint(nsIContent* aChild, nsIContent** aResult)
 {
   *aResult = nsnull;
-  if (!mContent)
-    return NS_OK;
-
-  return mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult);
+  if (mContent)
+    return mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult);
+  else if (mNextBinding)
+    return mNextBinding->GetInsertionPoint(aChild, aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1421,10 +1422,11 @@ nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleIns
 {
   *aResult = nsnull;
   *aMultipleInsertionPoints = PR_FALSE;
-  if (!mContent)
-    return NS_OK;
-
-  return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aMultipleInsertionPoints);
+  if (mContent)
+    return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aMultipleInsertionPoints);
+  else if (mNextBinding)
+    return mNextBinding->GetSingleInsertionPoint(aResult, aMultipleInsertionPoints);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1474,6 +1476,20 @@ nsXBLBinding::ImplementsInterface(REFNSIID aIID, PRBool* aResult)
   mPrototypeBinding->ImplementsInterface(aIID, aResult);
   if (!*aResult && mNextBinding)
     return mNextBinding->ImplementsInterface(aIID, aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::GetAnonymousNodes(nsIDOMNodeList** aResult, nsIContent** aParent, PRBool* aMultipleInsertionPoints)
+{
+  *aResult = nsnull;
+  if (mContent) {
+    GetSingleInsertionPoint(aParent, aMultipleInsertionPoints);
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
+    return elt->GetChildNodes(aResult);
+  }
+  else if (mNextBinding)
+    return mNextBinding->GetAnonymousNodes(aResult, aParent, aMultipleInsertionPoints);
   return NS_OK;
 }
 
