@@ -32,13 +32,12 @@
  * the provisions above, a recipient may use your version of this
  * file under either the MPL or the GPL.
  */
-#if defined NS_TRACE_MALLOC
+#ifdef NS_TRACE_MALLOC
 
 /*
  * TODO:
  * - #ifdef __linux__/x86 and port to other platforms
  * - unify calltree with gc/boehm somehow (common utility libs)
- * - provide NS_DumpTraceMallocStats() and hook up to some xul kbd event
  * - provide NS_TraceMallocTimestamp() or do it internally
  */
 #include <stdlib.h>
@@ -52,9 +51,6 @@
 #include "prprf.h"
 #include "nsTraceMalloc.h"
 
-#define __USE_GNU 1
-#include <dlfcn.h>
-
 /* From libiberty, why isn't this in <libiberty.h> ? */
 extern char *cplus_demangle(const char *, int);
 
@@ -62,6 +58,127 @@ extern __ptr_t __libc_malloc(size_t);
 extern __ptr_t __libc_calloc(size_t, size_t);
 extern __ptr_t __libc_realloc(__ptr_t, size_t);
 extern void    __libc_free(__ptr_t);
+
+/* XXX I wish dladdr could find local text symbols (static functions). */
+#define __USE_GNU 1
+#include <dlfcn.h>
+
+#if 1
+#define my_dladdr dladdr
+#else
+/* XXX this version, which uses libbfd, runs mozilla clean out of memory! */
+#include <bfd.h>
+#include <elf.h>        /* damn dladdr ignores local symbols! */
+#include <link.h>
+
+extern struct link_map *_dl_loaded;
+
+static int my_dladdr(const void *address, Dl_info *info)
+{
+    const ElfW(Addr) addr = (ElfW(Addr)) address;
+    struct link_map *lib, *matchlib;
+    unsigned int n, size;
+    bfd *abfd;
+    PTR minisyms;
+    long nsyms;
+    bfd_byte *mini, *endmini;
+    asymbol *sym, *storage;
+    bfd_vma target, symaddr;
+    static const char *sname;
+
+    /* Find the highest-addressed object not greater than address. */
+    matchlib = NULL;
+    for (lib = _dl_loaded; lib; lib = lib->l_next) {
+        if (lib->l_addr != 0 &&         /* 0 means map not set up yet? */
+            lib->l_addr <= addr &&
+            (!matchlib || matchlib->l_addr < lib->l_addr)) {
+            matchlib = lib;
+        }
+    }
+    if (!matchlib)
+        return 0;
+
+    /*
+     * We know the address lies within matchlib, if it's in any shared object.
+     * Make sure it isn't past the end of matchlib's segments.
+     */
+    n = (size_t) matchlib->l_phnum;
+    if (n > 0) {
+        do {
+            --n;
+        } while (matchlib->l_phdr[n].p_type != PT_LOAD);
+        if (addr >= (matchlib->l_addr +
+                     matchlib->l_phdr[n].p_vaddr +
+                     matchlib->l_phdr[n].p_memsz)) {
+            /* Off the end of the highest-addressed shared object. */
+            return 0;
+        }
+    }
+
+    /*
+     * Now we know what object the address lies in.  Set up info for a file
+     * match, then find the greatest info->dli_saddr <= addr.
+     */
+    info->dli_fname = matchlib->l_name;
+    info->dli_fbase = (void*) matchlib->l_addr;
+    info->dli_sname = NULL;
+    info->dli_saddr = NULL;
+
+    /* Ah, the joys of libbfd.... */
+    abfd = bfd_openr(matchlib->l_name, "elf32-i386");
+    if (!abfd)
+        return 0;
+    if (!bfd_check_format(abfd, bfd_object)) {
+        printf("%s is not an object file, according to libbfd.\n",
+               matchlib->l_name);
+        return 0;
+    }
+    nsyms = bfd_read_minisymbols(abfd, 0, &minisyms, &size);
+    if (nsyms < 0) {
+        bfd_close(abfd);
+        return 0;
+    }
+
+    if (nsyms > 0) {
+        storage = bfd_make_empty_symbol(abfd);
+        if (!storage) {
+            bfd_close(abfd);
+            return 0;
+        }
+        target = (bfd_vma) addr - (bfd_vma) matchlib->l_addr;
+        endmini = (bfd_byte*) minisyms + nsyms * size;
+
+        for (mini = (bfd_byte*) minisyms; mini < endmini; mini += size) {
+            sym = bfd_minisymbol_to_symbol(abfd, 0, (const PTR)mini, storage);
+            if (!sym) {
+                bfd_close(abfd);
+                return 0;
+            }
+            if (sym->flags & (BSF_GLOBAL | BSF_LOCAL | BSF_WEAK)) {
+                symaddr = sym->value + sym->section->vma;
+                if (symaddr == 0 || symaddr > target)
+                    continue;
+                if (!info->dli_sname || info->dli_saddr < (void*) symaddr) {
+                    info->dli_sname = sym->name;
+                    info->dli_saddr = (void*) symaddr;
+                }
+            }
+        }
+
+        /* Emulate dladdr by allocating and owning info->dli_sname's storage. */
+        if (info->dli_sname) {
+            if (sname)
+                __libc_free((void*) sname);
+            sname = strdup(info->dli_sname);
+            if (!sname)
+                return 0;
+            info->dli_sname = sname;
+        }
+    }
+    bfd_close(abfd);
+    return 1;
+}
+#endif /* 0 */
 
 typedef struct logfile logfile;
 
@@ -334,7 +451,7 @@ static callsite *calltree(uint32 *bp)
 
         /* Not in tree, let's find our symbolic callsite info. */
         info.dli_fname = info.dli_sname = NULL;
-        ok = dladdr((void*) pc, &info);
+        ok = my_dladdr((void*) pc, &info);
         if (ok < 0) {
             tmstats.dladdr_failures++;
             return NULL;
@@ -757,22 +874,23 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd, int sitefd)
     if (logfd >= 0)
         logfp->fd = logfd;
 
-    /* If sitefd is open, give it to logfile1, else alias sitefp to logfile0. */
-    if (sitefd >= 0)
+    /* If sitefd is open, log callsite info to it, else alias it to logfp. */
+    if (sitefd >= 0 && sitefd != logfd) {
+        /* Flush site traces first, then if logfd is open, any malloc traces. */
         sitefp->fd = sitefd;
-    else if (logfd >= 0)
-        sitefp = logfp;
-
-    /* Now flush any buffered sites, methods, and libraries. */
-    if (sitefp->fd >= 0) {
-        (void) write(sitefp->fd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
+        (void) write(sitefd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
         flush_logfile(sitefp);
-    }
-
-    /* And flush any malloc traces, if we're logging them at this point. */
-    if (logfp != sitefp && logfd >= 0) {
+        if (logfd >= 0) {
+            (void) write(logfd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
+            flush_logfile(logfp);
+        }
+    } else if (logfd >= 0) {
+        /* No site file, flush site traces to a common site/malloc log file. */
+        sitefp->fd = logfd;
         (void) write(logfd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
-        flush_logfile(logfp);
+        flush_logfile(sitefp);
+        sitefp->fd = -1;
+        sitefp = logfp;
     }
 
     atexit(NS_TraceMallocShutdown);
