@@ -18,7 +18,7 @@
    - Copyright (C) 1998-1999 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
-   - Contributor(s): 
+   - Contributor(s): loadrunner@betak.net
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
@@ -36,34 +36,35 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    orient="vertical">
+    orient="vertical"
+    style="width: 32em;">
 
-  <!-- Methods common to all editor dialogs -->
-  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script type="application/x-javascript" src="chrome://editor/content/EditorSaveAsCharset.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+    <!-- Methods common to all editor dialogs -->
+    <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+    <script type="application/x-javascript" src="chrome://editor/content/EditorSaveAsCharset.js"/>
+    <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+    
+    <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+    <broadcaster id="args" value=""/>
+    <keyset id="dialogKeys"/>
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
-  <broadcaster id="args" value=""/>
-  <keyset id="dialogKeys"/>
-
-  <box orient="vertical">
     <titledbox orient="vertical"><label align="left" value="&documentTitleTitle.label;"/>
-      <!-- Text labels filled in from editor.properties -->
-      <text id="EnterTitleLabel" class="label"/> 
-	    <textbox id="TitleInput" flex="1" oninput="TitleChanged();"/>
-      <html id="TitleHelp" class="label wrap" style="width:1em" flex="1"/>
+        <!-- Text labels filled in from editor.properties -->
+        <text id="EnterTitleLabel" class="label"/> 
+        <textbox id="TitleInput" oninput="TitleChanged();"/>
+        <html id="TitleHelp" class="label wrap" style="width:1em" />
     </titledbox>
 
-    <titledbox orient="vertical"><label value="&documentCharsetTitle.label;"/>
-      <text class="label" value="&documentCharsetDesc.label;"/>
-      <box flex="1">
-        <tree class="list" id="CharsetTree" rows="10" flex="1" onselect="SelectCharset();">
-          <treecolgroup><treecol flex="1"/></treecolgroup>
+    <titledbox orient="vertical" flex="1"><label value="&documentCharsetTitle.label;"/>
+        <text class="label" value="&documentCharsetDesc.label;"/>
+        <tree class="list" id="CharsetTree" rows="7" flex="1" onselect="SelectCharset();">
+            <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
-      </box>
     </titledbox>
-  </box>
-  <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/> 
+
+    <checkbox id="ExportToText" label="&documentExportToText.label;" />
+    <separator class="groove"/>
+ 
+    <!-- from global dialogOverlay -->
+    <box id="okCancelButtons"/> 
 </window>
