@@ -50,6 +50,7 @@ public:
   // nsSocketTransportStream methods:
   nsresult Init(nsSocketTransport* aTransport, PRBool aBlockingFlag);
   nsresult BlockTransport(void);
+  nsresult GetWriteAmount(PRUint32* aResultSize);
 
   void Lock(void)   { NS_ASSERTION(mMonitor, "Monitor null."); PR_EnterMonitor(mMonitor); }
   void Notify(void) { NS_ASSERTION(mMonitor, "Monitor null."); PR_Notify(mMonitor); }
@@ -65,6 +66,7 @@ private:
   PRBool  mIsStreamBlocking;
 
   PRMonitor*                mMonitor;
+  nsIBuffer*                mBuffer;
   nsIBufferInputStream*     mStream;
   nsSocketTransport*        mTransport;
 };
