@@ -82,6 +82,7 @@ function createShortcuts()
   scDescPalmSyncUninstall   = "Address Book Palm Sync Uninstall";
   filePalmSyncReadme        = getFolder("Program", "palm.html");
   scDescPalmSyncReadme      = "Palm Sync User Guide";
+  fileMailIcon              = getFolder("Chrome", "icons/default/messengerWindow.ico");
   scExeDesc                 = "Mail";
   scParam                   = "-mail";
   scFolderName              = "$ProductName$";
@@ -189,7 +190,7 @@ function createShortcuts()
       File.dirCreate(fFolderPath);
 
     /* create the shortcuts */
-    File.windowsShortcut(fileExe, fFolderPath, scExeDesc, fProgram, scParam, fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath, scExeDesc, fProgram, scParam, fileMailIcon, 0);
 
     // only create these two shortcuts if the files exist
     if(File.exists(filePalmSyncInstallExe))
