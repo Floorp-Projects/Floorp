@@ -1079,7 +1079,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	m_runningURL->GetPostMessageFile(&filePath);
 	if (filePath && *filePath)
 	{
-		nsInputFileStream * fileStream = new nsInputFileStream(*filePath, PR_RDONLY, 00700);
+		nsInputFileStream * fileStream = new nsInputFileStream(nsFileSpec(*filePath), PR_RDONLY, 00700);
 		if (fileStream)
 		{
 			PRInt32 amtInBuffer = 0; 
