@@ -50,16 +50,23 @@
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
 
+#if POOLED_TOKEN_ALLOCATION
+typedef nsDependentCString nsTokenString;
+#else
+typedef nsCString nsTokenString;
+#endif
+
 class Token {
 public:
-    Token(const char* word, PRUint32 count = 0) : mWord(word), mCount(count), mProbability(0) {}
-    Token(const Token& token) : mWord(token.mWord), mCount(token.mCount), mProbability(token.mProbability) {}
-    ~Token() {}
+    Token(const char* word, PRUint32 len, PRUint32 count) : mWord(word, len), mCount(count), mProbability(0) {}
+    Token(const Token& token) : mWord(token.mWord.get(), token.mWord.Length()), mCount(token.mCount), mProbability(token.mProbability) {}
     
-    nsCString mWord;
-    PRUint32 mCount;        // TODO:  put good/bad count values in same token object.
-    double mProbability;    // TODO:  cache probabilities
+    nsTokenString mWord;        // TODO:  change to const char*?
+    PRUint32 mCount;            // TODO:  put good/bad count values in same token object.
+    double mProbability;        // TODO:  cache probabilities
 };
+
+#if !POOLED_TOKEN_ALLOCATION
 
 static void* PR_CALLBACK cloneToken(nsHashKey *aKey, void *aData, void* aClosure)
 {
@@ -74,6 +81,8 @@ static PRIntn PR_CALLBACK destroyToken(nsHashKey *aKey, void *aData, void* aClos
     return kHashEnumerateNext;
 }
 
+#endif
+
 struct VisitClosure {
     bool (*f) (Token*, void*);
     void* data;
@@ -87,8 +96,52 @@ static PRIntn PR_CALLBACK visitToken(nsHashKey *aKey, void *aData, void* aClosur
             kHashEnumerateNext : kHashEnumerateStop);
 }
 
+#if POOLED_TOKEN_ALLOCATION
+
+Tokenizer::Tokenizer() : mTokens(NULL, NULL, NULL, NULL)
+{
+    PL_InitArenaPool(&mTokenPool, "Tokens Arena", 4096 * sizeof(Token), sizeof(double));
+    PL_InitArenaPool(&mWordPool, "Words Arena", 32768, sizeof(char));
+}
+
+Tokenizer::~Tokenizer()
+{
+    PL_FinishArenaPool(&mTokenPool);
+    PL_FinishArenaPool(&mWordPool);
+}
+
+char* Tokenizer::copyWord(const char* word, PRUint32 len)
+{
+    void* result;
+    PRUint32 size = 1 + len;
+    PL_ARENA_ALLOCATE(result, &mWordPool, size);
+    if (result)
+        memcpy(result, word, size);
+    return (char*) result;
+}
+
+Token* Tokenizer::newToken(const char* word, PRUint32 count)
+{
+    void* p;
+    PL_ARENA_ALLOCATE(p, &mTokenPool, sizeof(Token));
+    if (p) {
+        PRUint32 len = strlen(word);
+        return new(p) Token(copyWord(word, len), len, count);
+    }
+    return NULL;
+}
+
+#else
+
 Tokenizer::Tokenizer() : mTokens(cloneToken, NULL, destroyToken, NULL) {}
 Tokenizer::~Tokenizer() {}
+
+inline Token* Tokenizer::newToken(const char* word, PRUint32 count)
+{
+    return new Token(word, count);
+}
+
+#endif
 
 inline Token* Tokenizer::get(const char* word)
 {
@@ -102,11 +155,14 @@ Token* Tokenizer::add(const char* word, PRUint32 count)
     nsCStringKey key(word);
     Token* token = (Token*) mTokens.Get(&key);
     if (!token) {
-        // FIXME:  share the word string with the hash table key!!!
-        // do this by using nsDependentCString?
-        token = new Token(word, count);
-        if (token)
-            mTokens.Put(&key, token);
+        token = newToken(word, count);
+        if (token && token->mWord.get()) {
+            // NOTE:  to save space, sharedKey shares the string pointer with the token itself.
+            // This is safe, as long as the token's lifetime exceeds the hash table / key itself.
+            // Since the token string is now arena allocated, this will always be true.
+            nsCStringKey sharedKey(token->mWord.get(), token->mWord.Length(), nsCStringKey::NEVER_OWN);
+            mTokens.Put(&sharedKey, token);
+        }
     } else {
         token->mCount += count;
     }
@@ -258,19 +314,7 @@ NS_IMETHODIMP TokenStreamListener::OnDataAvailable(nsIRequest *aRequest, nsISupp
     while (aCount > 0) {
         PRUint32 readCount, totalCount = (aCount + mLeftOverCount);
         if (totalCount >= mBufferSize) {
-#if GROWABLE_BUFFER
-            PRUint32 newBufferSize = mBufferSize * 2;
-            while (totalCount >= newBufferSize)
-                newBufferSize *= 2;
-            char* newBuffer = new char[newBufferSize];
-            if (!newBuffer) return NS_ERROR_OUT_OF_MEMORY;
-            memcpy(newBuffer, mBuffer, mLeftOverCount);
-            delete[] mBuffer;
-            mBuffer = newBuffer;
-            mBufferSize = newBufferSize;
-#else
             readCount = mBufferSize - mLeftOverCount - 1;
-#endif
         } else {
             readCount = aCount;
         }
@@ -308,6 +352,18 @@ NS_IMETHODIMP TokenStreamListener::OnDataAvailable(nsIRequest *aRequest, nsISupp
             mLeftOverCount = totalCount - consumedCount;
             if (mLeftOverCount)
                 memmove(buffer, buffer + consumedCount, mLeftOverCount);
+        } else {
+            /* didn't find a delimiter, keep the whole buffer around. */
+            mLeftOverCount = totalCount;
+            if (totalCount >= (mBufferSize / 2)) {
+                PRUint32 newBufferSize = mBufferSize * 2;
+                char* newBuffer = new char[newBufferSize];
+                if (!newBuffer) return NS_ERROR_OUT_OF_MEMORY;
+                memcpy(newBuffer, mBuffer, mLeftOverCount);
+                delete[] mBuffer;
+                mBuffer = newBuffer;
+                mBufferSize = newBufferSize;
+            }
         }
     }
     
@@ -468,7 +524,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
     delete[] tokens;
 
     if (listener)
-        listener->OnMessageClassified(messageURI, isJunk ? nsIJunkMailPlugin::JUNK : nsIJunkMailPlugin::GOOD);
+        listener->OnMessageClassified(messageURI, isJunk ? nsMsgJunkStatus(nsIJunkMailPlugin::JUNK) : nsMsgJunkStatus(nsIJunkMailPlugin::GOOD));
 }
 
 /* void shutdown (); */
@@ -522,7 +578,9 @@ NS_IMETHODIMP nsBayesianFilter::ClassifyMessages(PRUint32 aCount, const char **a
 
 class MessageObserver : public TokenAnalyzer {
 public:
-    MessageObserver(nsBayesianFilter* filter, PRInt32 oldClassification, PRInt32 newClassification,
+    MessageObserver(nsBayesianFilter* filter,
+                    nsMsgJunkStatus oldClassification,
+                    nsMsgJunkStatus newClassification,
                     nsIJunkMailClassificationListener* listener)
         :   mFilter(filter), mSupports(filter), mListener(listener),
             mOldClassification(oldClassification),
@@ -539,8 +597,8 @@ private:
     nsBayesianFilter* mFilter;
     nsCOMPtr<nsISupports> mSupports;
     nsCOMPtr<nsIJunkMailClassificationListener> mListener;
-    PRInt32 mOldClassification;
-    PRInt32 mNewClassification;
+    nsMsgJunkStatus mOldClassification;
+    nsMsgJunkStatus mNewClassification;
 };
 
 static void forgetTokens(Tokenizer& corpus, Token* tokens[], PRUint32 count)
@@ -559,8 +617,9 @@ static void rememberTokens(Tokenizer& corpus, Token* tokens[], PRUint32 count)
     }
 }
 
-void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* messageURL, PRInt32 oldClassification,
-                                      PRInt32 newClassification, nsIJunkMailClassificationListener* listener)
+void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* messageURL,
+                                      nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification,
+                                      nsIJunkMailClassificationListener* listener)
 {
     Token** tokens = messageTokens.getTokens();
     if (!tokens) return;
@@ -780,8 +839,10 @@ void nsBayesianFilter::readTrainingData()
 }
 
 /* void setMessageClassification (in string aMsgURL, in long aOldClassification, in long aNewClassification); */
-NS_IMETHODIMP nsBayesianFilter::SetMessageClassification(const char *aMsgURL, PRInt32 aOldClassification,
-                                                         PRInt32 aNewClassification, nsIJunkMailClassificationListener *aListener)
+NS_IMETHODIMP nsBayesianFilter::SetMessageClassification(const char *aMsgURL,
+                                                         nsMsgJunkStatus aOldClassification,
+                                                         nsMsgJunkStatus aNewClassification,
+                                                         nsIJunkMailClassificationListener *aListener)
 {
     MessageObserver* analyzer = new MessageObserver(this, aOldClassification, aNewClassification, aListener);
     return tokenizeMessage(aMsgURL, analyzer);

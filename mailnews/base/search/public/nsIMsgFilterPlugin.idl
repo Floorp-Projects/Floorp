@@ -106,7 +106,7 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
      * cause the training set to be updated appropriately.
      */
     void setMessageClassification(in string aMsgURI,
-                                  in long aOldClassification,
-                                  in long aNewClassification,
+                                  in nsMsgJunkStatus aOldClassification,
+                                  in nsMsgJunkStatus aNewClassification,
                                   in nsIJunkMailClassificationListener aListener);
 };

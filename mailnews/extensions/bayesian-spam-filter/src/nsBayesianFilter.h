@@ -42,9 +42,12 @@
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsIMsgFilterPlugin.h"
+#include "plarena.h"
 
 class Token;
 class TokenAnalyzer;
+
+#define POOLED_TOKEN_ALLOCATION 1
 
 class Tokenizer {
 public:
@@ -75,7 +78,15 @@ public:
     void visit(bool (*f) (Token*, void*), void* data);
 
 private:
+    Token* newToken(const char* word, PRUint32 count);
+    char* copyWord(const char* word, PRUint32 size);
+
+private:
     nsObjectHashtable mTokens;
+#if POOLED_TOKEN_ALLOCATION
+    PLArenaPool mTokenPool;
+    PLArenaPool mWordPool;
+#endif
 };
 
 class nsBayesianFilter : public nsIJunkMailPlugin {
@@ -89,7 +100,7 @@ public:
     
     nsresult tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer);
     void classifyMessage(Tokenizer& messageTokens, const char* messageURI, nsIJunkMailClassificationListener* listener);
-    void observeMessage(Tokenizer& messageTokens, const char* messageURI, PRInt32 oldClassification, PRInt32 newClassification, nsIJunkMailClassificationListener* listener);
+    void observeMessage(Tokenizer& messageTokens, const char* messageURI, nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification, nsIJunkMailClassificationListener* listener);
 
     void writeTrainingData();
     void readTrainingData();
