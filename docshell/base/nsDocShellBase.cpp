@@ -20,14 +20,32 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+#include "nsDocShellBase.h"
 #include "nsIComponentManager.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDeviceContext.h"
 #include "nsCURILoader.h"
+#include "nsLayoutCID.h"
+#include "nsNeckoUtil.h"
+#include "nsRect.h"
 
-#include "nsDocShellBase.h"
+#ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
+#define WEB_TRACE(_bit,_args)            \
+  PR_BEGIN_MACRO                         \
+    if (WEB_LOG_TEST(gLogModule,_bit)) { \
+      PR_LogPrint _args;                 \
+    }                                    \
+  PR_END_MACRO
+#else
+#define WEB_TRACE(_bit,_args)
+#endif
+
+
+
 
 //*****************************************************************************
 //***    nsDocShellBase: Object Management
@@ -119,12 +137,114 @@ NS_IMETHODIMP nsDocShellBase::GetCurrentURI(nsIURI** aURI)
 }
 
 // SetDocument is only meaningful for doc shells that support DOM documents.  Not all do.
-NS_IMETHODIMP nsDocShellBase::SetDocument(nsIDOMDocument* aDocument, 
-   nsIPresContext* presContext)
+NS_IMETHODIMP
+nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 {
-   NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
-   return NS_ERROR_NOT_IMPLEMENTED;
+
+  // The tricky part is bypassing the normal load process and just putting a document into
+  // the webshell.  This is particularly nasty, since webshells don't normally even know
+  // about their documents
+
+  // (1) Create a document viewer 
+  nsCOMPtr<nsIContentViewer> documentViewer;
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
+  static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+  NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
+                                                       nsIDocumentLoaderFactory::GetIID(),
+                                                       (void**)getter_AddRefs(docFactory)),
+                    NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
+  if (!doc) { return NS_ERROR_NULL_POINTER; }
+  NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(this,
+                                                          doc,
+                                                          "view",
+                                                          getter_AddRefs(documentViewer)),
+                    NS_ERROR_FAILURE); 
+
+  // (2) Feed the docshell to the content viewer
+  NS_ENSURE_SUCCESS(documentViewer->SetContainer(this), NS_ERROR_FAILURE);
+
+  // (3) Tell the content viewer container to embed the content viewer.
+  //     (This step causes everything to be set up for an initial flow.)
+  NS_ENSURE_SUCCESS(Embed(documentViewer, "view", nsnull), NS_ERROR_FAILURE);
+
+  // XXX: It would be great to get rid of this dummy channel!
+  const nsAutoString uriString = "about:blank";
+  nsCOMPtr<nsIURI> uri;
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
+  if (!uri) { return NS_ERROR_OUT_OF_MEMORY; }
+
+  nsCOMPtr<nsIChannel> dummyChannel;
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
+
+  // (4) fire start document load notification
+  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, nsnull), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(FireStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
+
+  // (5) hook up the document and its content
+  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
+  if (!doc) { return NS_ERROR_OUT_OF_MEMORY; }
+  NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
+  doc->SetRootContent(rootContent);
+
+  // (6) reflow the document
+  //XXX: SetScrolling doesn't make any sense
+  //SetScrolling(-1, PR_FALSE);
+  PRInt32 i;
+  PRInt32 ns = doc->GetNumberOfShells();
+  for (i = 0; i < ns; i++) 
+  {
+    nsCOMPtr<nsIPresShell> shell(dont_AddRef(doc->GetShellAt(i)));
+    if (shell) 
+    {
+      // Make shell an observer for next time
+      NS_ENSURE_SUCCESS(shell->BeginObservingDocument(), NS_ERROR_FAILURE);
+
+      // Resize-reflow this time
+      nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(documentViewer);
+      if (!docViewer) { return NS_ERROR_OUT_OF_MEMORY; }
+      nsCOMPtr<nsIPresContext> presContext;
+      NS_ENSURE_SUCCESS(docViewer->GetPresContext(*(getter_AddRefs(presContext))), NS_ERROR_FAILURE);
+      if (!presContext) { return NS_ERROR_OUT_OF_MEMORY; }
+      float p2t;
+      presContext->GetScaledPixelsToTwips(&p2t);
+
+      nsRect r;
+      NS_ENSURE_SUCCESS(GetPosition(&r.x, &r.y), NS_ERROR_FAILURE);;
+      NS_ENSURE_SUCCESS(GetSize(&r.width, &r.height), NS_ERROR_FAILURE);;
+      NS_ENSURE_SUCCESS(shell->InitialReflow(NSToCoordRound(r.width * p2t), NSToCoordRound(r.height * p2t)), NS_ERROR_FAILURE);
+
+      // Now trigger a refresh
+      nsCOMPtr<nsIViewManager> vm;
+      NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
+      if (vm) 
+      {
+        PRBool enabled;
+        documentViewer->GetEnableRendering(&enabled);
+        if (enabled) {
+          vm->EnableRefresh();
+        }
+        NS_ENSURE_SUCCESS(vm->SetWindowDimensions(NSToCoordRound(r.width * p2t), 
+                                                  NSToCoordRound(r.height * p2t)), 
+                          NS_ERROR_FAILURE);
+      }
+    }
+  }
+
+  // (7) fire end document load notification
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDocumentLoaderObserver> dlObserver; 
+  // XXX: this was just "this", and webshell container relied on getting a webshell
+  // through this interface.  No one else uses it anywhere afaict  
+  //if (!dlObserver) { return NS_ERROR_NO_INTERFACE; }
+  NS_ENSURE_SUCCESS(FireEndDocumentLoad(mDocLoader, dummyChannel, rv, dlObserver), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
+
+  return NS_OK;
 }
+
+
 
 // caller is responsible for calling nsString::Recycle(*aName);
 NS_IMETHODIMP nsDocShellBase::GetName(PRUnichar** aName)
@@ -283,6 +403,24 @@ NS_IMETHODIMP nsDocShellBase::SetZoom(float zoom)
    NS_ENSURE_SUCCESS(deviceContext->SetZoom(zoom), NS_ERROR_FAILURE);
 
    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocShellBase::GetDocLoaderObserver(nsIDocumentLoaderObserver * *aDocLoaderObserver)
+{
+  NS_ENSURE_ARG_POINTER(aDocLoaderObserver);
+
+  *aDocLoaderObserver = mDocLoaderObserver;
+  NS_IF_ADDREF(*aDocLoaderObserver);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocShellBase::SetDocLoaderObserver(nsIDocumentLoaderObserver * aDocLoaderObserver)
+{
+  // it's legal for aDocLoaderObserver to be null.  
+  mDocLoaderObserver = aDocLoaderObserver;
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -464,6 +602,87 @@ NS_IMETHODIMP nsDocShellBase::GetPrintable(PRBool* printable)
    *printable = PR_FALSE;
    return NS_OK;
 } 
+
+
+
+//*****************************************************************************
+// nsDocShellBase::nsIDocShellContainer
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShellBase::GetChildCount(PRInt32 *aChildCount)
+{
+  NS_ENSURE_ARG_POINTER(aChildCount);
+  *aChildCount = mChildren.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::AddChild(nsIDocShell *aChild)
+{
+  NS_ENSURE_ARG_POINTER(aChild);
+
+  NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
+  mChildren.AppendElement(aChild);
+  NS_ADDREF(aChild);
+  return NS_OK;
+}
+
+// XXX: tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
+NS_IMETHODIMP nsDocShellBase::RemoveChild(nsIDocShell *aChild)
+{
+  NS_ENSURE_ARG_POINTER(aChild);
+
+  PRBool childRemoved = mChildren.RemoveElement(aChild);
+  if (PR_TRUE==childRemoved)
+  {
+    aChild->SetParent(nsnull);
+    NS_RELEASE(aChild);
+  }
+  return NS_OK;
+}
+
+/* readonly attribute nsIEnumerator childEnumerator; */
+NS_IMETHODIMP nsDocShellBase::GetChildEnumerator(nsIEnumerator * *aChildEnumerator)
+{
+  NS_ENSURE_ARG_POINTER(aChildEnumerator);
+
+  return NS_OK;
+}
+
+/* depth-first search for a child shell with aName */
+NS_IMETHODIMP nsDocShellBase::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
+{
+  NS_ENSURE_ARG_POINTER(aName);
+  NS_ENSURE_ARG_POINTER(_retval);
+  
+  *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
+  nsAutoString name(aName);
+  PRUnichar *childName;
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) 
+  {
+    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i); // doesn't addref the result
+    if (nsnull != child) {
+      child->GetName(&childName);
+      if (name.Equals(childName)) {
+        *_retval = child;
+        NS_ADDREF(child);
+        break;
+      }
+
+      // See if child contains the shell with the given name
+      nsCOMPtr<nsIDocShellContainer> childAsContainer = do_QueryInterface(child);
+      if (child)
+      {
+        NS_ENSURE_SUCCESS(childAsContainer->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+      }
+      if (_retval) {  // found it
+        break;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 
 //*****************************************************************************
 // nsDocShellBase::nsIGenericWindow
@@ -763,18 +982,42 @@ NS_IMETHODIMP nsDocShellBase::SetParentNativeWindow(nativeWindow parentNativeWin
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetVisibility(PRBool* visibility)
+NS_IMETHODIMP nsDocShellBase::GetVisibility(PRBool* aVisibility)
 {
-   NS_ENSURE_ARG_POINTER(visibility);
+  NS_ENSURE_ARG_POINTER(aVisibility);
 
-   if(!mCreated)
-      *visibility = mBaseInitInfo->visible;
-   else
-      {
-      //XXX Query underlying control
-      }
+  if(!mCreated) {
+    *aVisibility = mBaseInitInfo->visible;
+  }
+  else
+  {
+    // get the pres shell
+    nsCOMPtr<nsIPresShell> presShell;
+    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-   return NS_OK;
+    // get the view manager
+    nsCOMPtr<nsIViewManager> vm;
+    NS_ENSURE_SUCCESS(presShell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+
+    // get the root view
+    nsIView *rootView=nsnull; // views are not ref counted
+    NS_ENSURE_SUCCESS(vm->GetRootView(rootView), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+
+    // convert the view's visibility attribute to a bool
+    nsViewVisibility vis;
+    NS_ENSURE_TRUE(rootView->GetVisibility(vis), NS_ERROR_FAILURE); 
+    if (nsViewVisibility_kHide==vis) {
+      *aVisibility = PR_FALSE;
+    }
+    else {
+      *aVisibility = PR_TRUE;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetVisibility(PRBool visibility)
@@ -1061,6 +1304,106 @@ NS_IMETHODIMP nsDocShellBase::ScrollByPages(PRInt32 numPages)
 }
 
 //*****************************************************************************
+// nsDocShellBase::nsIContentViewerContainer
+//*****************************************************************************   
+NS_IMETHODIMP nsDocShellBase::QueryCapability(const nsIID &aIID, void** aResult)
+{
+  NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
+  return NS_OK;
+};
+
+NS_IMETHODIMP nsDocShellBase::Embed(nsIContentViewer* aContentViewer, 
+                                    const char      * aCommand,
+                                    nsISupports     * aExtraInfo)
+{
+  NS_ENSURE_ARG_POINTER(aContentViewer);
+  // null aCommand is ok
+  // null aExtraInfo is ok
+
+  WEB_TRACE(WEB_TRACE_CALLS,
+      ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
+       this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
+
+  nsRect bounds;
+  // (1) reset state, clean up any left-over data from previous embedding
+  mContentViewer = nsnull;
+  if (nsnull != mScriptContext) {
+    mScriptContext->GC();
+  }
+  
+  // (2) set the new content viewer
+  mContentViewer = aContentViewer;
+
+  // XXX: comment from webshell code --
+  // check to see if we have a window to embed into --dwc0001
+  /* Note we also need to check for the presence of a native widget. If the
+     webshell is hidden before it's embedded, which can happen in an onload
+     handler, the native widget is destroyed before this code is run.  This
+     appears to be mostly harmless except on Windows, where the subsequent
+     attempt to create a child window without a parent is met with disdain
+     by the OS. It's handy, then, that GetNativeData on Windows returns
+     null in this case. */
+  /* XXX native window
+  if(mWindow && mWindow->GetNativeData(NS_NATIVE_WIDGET)) 
+  {
+    mWindow->GetClientBounds(bounds);
+    bounds.x = bounds.y = 0;
+    rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET),
+                              mDeviceContext,
+                              mPrefs,
+                              bounds,
+                              mScrollPref);
+
+    // If the history state has been set by session history,
+    // set it on the pres shell now that we have a content
+    // viewer.
+
+    //XXX: history, should be removed
+    if (mContentViewer && mHistoryState) {
+      nsCOMPtr<nsIDocumentViewer> docv = do_QueryInterface(mContentViewer);
+      if (nsnull != docv) {
+        nsCOMPtr<nsIPresShell> shell;
+        rv = docv->GetPresShell(*getter_AddRefs(shell));
+        if (NS_SUCCEEDED(rv)) {
+          rv = shell->SetHistoryState((nsILayoutHistoryState*) mHistoryState);
+        }
+      }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      mContentViewer->Show();
+    }
+  } else {
+    mContentViewer = nsnull;
+  }
+  */
+
+  // Now that we have switched documents, forget all of our children
+  DestroyChildren();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::GetContentViewer(nsIContentViewer** aResult)
+{
+  NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::HandleUnknownContentType(nsIDocumentLoader* aLoader,
+                                      nsIChannel* channel,
+                                      const char *aContentType,
+                                      const char *aCommand)
+{
+  NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
+  return NS_OK;
+}
+
+
+  
+  
+  
+//*****************************************************************************
 // nsDocShellBase: Helper Routines
 //*****************************************************************************   
 
@@ -1137,5 +1480,192 @@ nsresult nsDocShellBase::EnsureContentListener()
 void nsDocShellBase::SetCurrentURI(nsIURI* aUri)
 {
    mCurrentURI = aUri; //This assignment addrefs
+}
+
+NS_IMETHODIMP
+nsDocShellBase::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
+                                      nsIURI           * aURL,  //XXX: should be the channel?
+                                      const char       * aCommand)
+{
+  NS_ENSURE_ARG_POINTER(aLoader);
+  NS_ENSURE_ARG_POINTER(aURL);
+  NS_ENSURE_ARG_POINTER(aCommand);
+
+  nsCOMPtr<nsIDocumentViewer> docViewer;
+  if (mScriptGlobal && (aLoader == mDocLoader)) 
+  {
+    docViewer = do_QueryInterface(mContentViewer);
+    if (docViewer)
+    {
+      nsCOMPtr<nsIPresContext> presContext;
+      NS_ENSURE_SUCCESS(docViewer->GetPresContext(*(getter_AddRefs(presContext))), NS_ERROR_FAILURE);
+      if (presContext)
+      {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_PAGE_UNLOAD;
+        NS_ENSURE_SUCCESS(mScriptGlobal->HandleDOMEvent(*presContext, 
+                                                        &event, 
+                                                        nsnull, 
+                                                        NS_EVENT_FLAG_INIT, 
+                                                        status),
+                          NS_ERROR_FAILURE);
+      }
+    }
+  }
+
+  if (aLoader == mDocLoader) 
+  {
+    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
+
+    if (!mDocLoaderObserver && mParent) 
+    {
+      /* If this is a frame (in which case it would have a parent && doesn't
+       * have a documentloaderObserver, get it from the rootWebShell
+       */
+      nsCOMPtr<nsIDocShell> root;
+      NS_ENSURE_SUCCESS(GetRootDocShell(getter_AddRefs(root)), NS_ERROR_FAILURE);
+
+      if (root)
+        NS_ENSURE_SUCCESS(root->GetDocLoaderObserver(getter_AddRefs(dlObserver)), NS_ERROR_FAILURE);
+    }
+    else
+    {
+      dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
+    }
+    /*
+     * Fire the OnStartDocumentLoad of the webshell observer
+     */
+    /* XXX This code means "notify dlObserver only if we're the top level webshell.
+           I don't know why that would be, can't subdocument have doc loader observers?
+     */
+    if (/*(nsnull != mContainer) && */(nsnull != dlObserver))
+    {
+       NS_ENSURE_SUCCESS(dlObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand), 
+                         NS_ERROR_FAILURE);
+    }
+  }
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsDocShellBase::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
+                                    nsIChannel       * aChannel,
+                                    nsresult           aStatus,
+                                    nsIDocumentLoaderObserver * aDocLoadObserver)
+{
+#ifdef MOZ_PERF_METRICS
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
+  NS_STOP_STOPWATCH(mTotalTime)
+  RAPTOR_STOPWATCH_TRACE(("Total (Layout + Page Load) Time (webshell=%p): ", this));
+  mTotalTime.Print();
+  RAPTOR_STOPWATCH_TRACE(("\n"));
+#endif
+
+  NS_ENSURE_ARG_POINTER(aLoader);
+  NS_ENSURE_ARG_POINTER(aChannel);
+  // null aDocLoadObserver is legal
+
+  nsCOMPtr<nsIURI> aURL;
+  NS_ENSURE_SUCCESS(aChannel->GetURI(getter_AddRefs(aURL)), NS_ERROR_FAILURE);
+
+  if (aLoader == mDocLoader)
+  {
+    if (mScriptGlobal && mContentViewer)
+    {
+      nsCOMPtr<nsIDocumentViewer> docViewer;
+      docViewer = do_QueryInterface(mContentViewer);
+      if (docViewer)
+      {
+        nsCOMPtr<nsIPresContext> presContext;
+        NS_ENSURE_SUCCESS(docViewer->GetPresContext(*(getter_AddRefs(presContext))), NS_ERROR_FAILURE);
+        if (presContext)
+        {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_PAGE_LOAD;
+          NS_ENSURE_SUCCESS(mScriptGlobal->HandleDOMEvent(*presContext, 
+                                                          &event, 
+                                                          nsnull, 
+                                                          NS_EVENT_FLAG_INIT, 
+                                                          status),
+                            NS_ERROR_FAILURE);
+        }
+      }
+    }
+
+    // Fire the EndLoadURL of the web shell container
+    /* XXX: what replaces mContainer?
+    if (nsnull != aURL) 
+    {
+      nsAutoString urlString;
+      char* spec;
+      rv = aURL->GetSpec(&spec);
+      if (NS_SUCCEEDED(rv)) 
+      {
+        urlString = spec;
+        if (nsnull != mContainer) {
+          rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
+        }
+        nsCRT::free(spec);
+      }
+    }
+    */
+
+    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
+    if (!mDocLoaderObserver && mParent) 
+    {
+      // If this is a frame (in which case it would have a parent && doesn't
+      // have a documentloaderObserver, get it from the rootWebShell
+      nsCOMPtr<nsIDocShell> root;
+      NS_ENSURE_SUCCESS(GetRootDocShell(getter_AddRefs(root)), NS_ERROR_FAILURE);
+
+      if (root)
+        NS_ENSURE_SUCCESS(root->GetDocLoaderObserver(getter_AddRefs(dlObserver)), NS_ERROR_FAILURE);
+    }
+    else
+    {
+      /* Take care of the Trailing slash situation */
+/* XXX: session history stuff, should be taken care of external to the docshell
+      if (mSHist)
+        CheckForTrailingSlash(aURL);
+*/
+      dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
+    }
+
+    /*
+     * Fire the OnEndDocumentLoad of the DocLoaderobserver
+     */
+    if (dlObserver && aURL) {
+       NS_ENSURE_SUCCESS(dlObserver->OnEndDocumentLoad(mDocLoader, aChannel, aStatus, aDocLoadObserver), 
+                         NS_ERROR_FAILURE);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::DestroyChildren()
+{
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) 
+  {
+    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
+    NS_WARN_IF_FALSE(shell, "docshell has null child");
+    if (shell)
+    {
+      shell->SetParent(nsnull);
+      // XXX: will shells have a separate Destroy?  See webshell::Destroy for what it does
+      //shell->Destroy();
+      NS_RELEASE(shell);
+    }
+  }
+  mChildren.Clear();
+  return NS_OK;
 }
 
