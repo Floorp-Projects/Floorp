@@ -235,7 +235,7 @@ char* nsInstallFileOpItem::toString()
 
 PRInt32 nsInstallFileOpItem::Prepare()
 {
-	return NULL;
+	return nsInstall::SUCCESS;
 }
 
 void nsInstallFileOpItem::Abort()
