@@ -864,7 +864,8 @@ void nsDeviceContextMac :: InitFontInfoList()
 										(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
 			unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
 
-    		FontNameKey key(unicodeFontName);
+			nsAutoString temp(unicodeFontName);
+    		FontNameKey key(temp);
 			gFontInfoList->Put(&key, (void*)fontFamily);
         }
         if (converter)

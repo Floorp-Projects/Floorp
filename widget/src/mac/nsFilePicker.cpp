@@ -496,6 +496,7 @@ nsFilePicker :: MapFilterToFileTypes ( )
 	
 	// grab the IC mappingDB so that it's a little faster looping over the file
 	// types.
+#if !TARGET_CARBON
 	icErr = ICStart(&icInstance, 'MOZZ');
 	if (icErr == noErr)
 	{
@@ -510,6 +511,7 @@ nsFilePicker :: MapFilterToFileTypes ( )
 			goto bail_w_IC;
 	}
 	else
+#endif
 		goto bail_wo_IC;
 	
 	

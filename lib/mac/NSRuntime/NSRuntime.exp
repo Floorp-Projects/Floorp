@@ -3,8 +3,6 @@ __del_arr
 __new_arr
 __init_arr
 __copy
-__som_check_ev
-__som_check_new
 __vt__Q23std13bad_exception		# std::bad_exception::__vt
 #__vt__Q23std9exception			# std::exception::__vt
 #what__Q23std9exceptionCFv		# std::exception::what() const

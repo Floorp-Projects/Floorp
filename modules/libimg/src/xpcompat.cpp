@@ -29,6 +29,9 @@
  * of the XP_ library.
  */
 #include "xpcompat.h"
+#if TARGET_CARBON
+# include <time.h>
+#endif
 #include <stdlib.h>
 #include "prlog.h"
 #include "prmem.h"
