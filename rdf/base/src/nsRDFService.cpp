@@ -1007,9 +1007,10 @@ RDFServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     PLHashEntry** hep =
         PL_HashTableRawLookup(mNamedDataSources, (*mNamedDataSources->keyHash)(uri), uri);
 
-    NS_ASSERTION(*hep != nsnull, "datasource was never registered");
-    if (! *hep)
-        return NS_ERROR_ILLEGAL_VALUE;
+    // It may well be that this datasource was never registered. If
+    // so, don't unregister it.
+    if (! *hep || ((*hep)->value != aDataSource))
+        return NS_OK;
 
     PL_strfree((char*) (*hep)->key);
 
