@@ -376,6 +376,9 @@ nsresult nsMsgGroupView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, P
           m_levels.InsertAt(threadIndex, 0, 1);
           m_levels.SetAt(threadIndex + 1, 1);
         }
+        // the call to NoteChange() has to happen after we add the key
+        // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
+        NoteChange(threadIndex + msgIndexInThread, 1, nsMsgViewNotificationCode::insertOrDelete);
       }
       NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
     }
