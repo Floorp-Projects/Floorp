@@ -208,6 +208,7 @@ static PRFileDesc *pt_SetMethods(
     PRIntn osfd, PRDescType type, PRBool isAcceptedSocket, PRBool imported);
 
 static PRLock *_pr_flock_lock;  /* For PR_LockFile() etc. */
+static PRCondVar *_pr_flock_cv;  /* For PR_LockFile() etc. */
 static PRLock *_pr_rename_lock;  /* For PR_Rename() */
 
 /**************************************************************************/
@@ -1052,6 +1053,8 @@ void _PR_InitIO()
 
     _pr_flock_lock = PR_NewLock();
     PR_ASSERT(NULL != _pr_flock_lock);
+    _pr_flock_cv = PR_NewCondVar(_pr_flock_lock);
+    PR_ASSERT(NULL != _pr_flock_cv);
     _pr_rename_lock = PR_NewLock();
     PR_ASSERT(NULL != _pr_rename_lock); 
 
@@ -4162,10 +4165,22 @@ PR_IMPLEMENT(PRStatus) PR_LockFile(PRFileDesc *fd)
     PR_Lock(_pr_flock_lock);
     if (0 == fd->secret->lockCount)
     {
+        fd->secret->lockCount = -1;
+        PR_Unlock(_pr_flock_lock);
         status = _PR_MD_LOCKFILE(fd->secret->md.osfd);
-        if (PR_SUCCESS == status) fd->secret->lockCount = 1;
+        PR_Lock(_pr_flock_lock);
+        if (PR_SUCCESS == status)
+        {
+            fd->secret->lockCount = 1;
+            PR_NotifyAllCondVar(_pr_flock_cv);
+        }
     }
-    else fd->secret->lockCount += 1;
+    else
+    {
+        while (-1 == fd->secret->lockCount)
+            PR_WaitCondVar(_pr_flock_cv, PR_INTERVAL_NO_TIMEOUT);
+        fd->secret->lockCount += 1;
+    }
     PR_Unlock(_pr_flock_lock);
  
     return status;

@@ -49,6 +49,7 @@
 #endif /* XP_UNIX */
 
 extern PRLock *_pr_flock_lock;
+extern PRCondVar *_pr_flock_cv;
 
 static PRInt32 PR_CALLBACK FileRead(PRFileDesc *fd, void *buf, PRInt32 amount)
 {
@@ -633,10 +634,17 @@ PR_IMPLEMENT(PRStatus) PR_LockFile(PRFileDesc *fd)
 
     PR_Lock(_pr_flock_lock);
     if (fd->secret->lockCount == 0) {
+        fd->secret->lockCount == -1;
+        PR_Unlock(_pr_flock_lock);
         status = _PR_MD_LOCKFILE(fd->secret->md.osfd);
-        if (status == PR_SUCCESS)
+        PR_Lock(_pr_flock_lock);
+        if (status == PR_SUCCESS) {
             fd->secret->lockCount = 1;
+            PR_NotifyAllCondVar(_pr_flock_cv);
+        }
     } else {
+        while (fd->secret->lockCount == -1)
+            PR_WaitCondVar(_pr_flock_cv, PR_INTERVAL_NO_TIMEOUT);
         fd->secret->lockCount++;
     }
     PR_Unlock(_pr_flock_lock);
