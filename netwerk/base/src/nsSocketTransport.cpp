@@ -124,6 +124,7 @@ nsSocketTransport::nsSocketTransport()
   mLock         = nsnull;
 
   mSuspendCount = 0;
+  mCancelOperation = PR_FALSE;
 
   mReadWriteState = 0;  
   SetReadType (eSocketRead_None);
@@ -287,6 +288,18 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
       done = PR_TRUE;
       rv = NS_OK;
       continue;
+    }
+
+    if (mCancelOperation) {
+      PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+             ("Transport [this=%x] has been cancelled.\n", this));
+
+      // Cancel any read and/or write requests...
+      SetFlag(eSocketRead_Done);
+      SetFlag(eSocketWrite_Done);
+      mCurrentState = eSocketState_Done;
+
+      rv = NS_BINDING_ABORTED;
     }
 
     switch (mCurrentState) {
@@ -1060,7 +1073,15 @@ nsSocketTransport::Cancel(void)
 {
   nsresult rv = NS_OK;
 
-  rv = NS_ERROR_NOT_IMPLEMENTED;
+  // Enter the socket transport lock...
+  nsAutoLock aLock(mLock);
+
+  mCancelOperation = PR_TRUE;
+  //
+  // Wake up the transport on the socket transport thread so it can
+  // be removed from the select list...  
+  //
+  rv = mService->AddToWorkQ(this);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("Canceling nsSocketTransport [this=%x].  rv = %x\n",
