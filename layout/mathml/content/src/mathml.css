@@ -213,10 +213,10 @@ mtd[-moz-math-firstrow="true"] {
   padding-top: 0ex;
 }
 mtd[-moz-math-lastrow="true"] {
-  padding-bottom: 0em;
+  padding-bottom: 0ex;
 }
 mtd[-moz-math-firstcolumn="true"] {
-  padding-left: 0ex;
+  padding-left: 0em;
 }
 mtd[-moz-math-lastcolumn="true"] {
   padding-right: 0em;
@@ -242,7 +242,7 @@ mtable[frame="dashed"] > mtr > mtd[-moz-math-lastcolumn="true"] {
 /**********************************************************************/
 /* internal settings to support 'rowlines' and 'columnlines'. To
    achieve the recommended behavior, the back-end code will avoid setting
-   unsuitable rules on the cells on the first row and the the first column.
+   unsuitable rules on the cells on the first row and the first column.
    In general, however, authors can use the 'border' property of CSS to
    achieve varying effects down to the level of the table cell. */
 mtd[-moz-math-rowline="none"] {

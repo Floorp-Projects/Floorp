@@ -231,11 +231,11 @@ MapAttributesInto(nsIPresContext* aPresContext,
     }
   }
   else {
-    // set the special -moz-math-rowindex to annotate that we are on the first row
+    // set the special -moz-math-firstrow to annotate that we are on the first row
     hasChanged = PR_TRUE;
     aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::firstrow, trueStr, PR_FALSE);
   }
-  // if we are on the last row, set the special -moz-math-rowindex
+  // if we are on the last row, set the special -moz-math-lastrow
   sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex+1, colIndex);
   if (!sibling) {
     hasChanged = PR_TRUE;
@@ -275,11 +275,11 @@ MapAttributesInto(nsIPresContext* aPresContext,
     }
   }
   else {
-    // set the special -moz-math-columnindex to annotate that we are on the first column
+    // set the special -moz-math-firstcolumn to annotate that we are on the first column
     hasChanged = PR_TRUE;
     aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::firstcolumn, trueStr, PR_FALSE);
   }
-  // if we are on the last column, set the special -moz-math-columnindex
+  // if we are on the last column, set the special -moz-math-lastcolumn
   sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex, colIndex+1);
   if (!sibling) {
     hasChanged = PR_TRUE;
