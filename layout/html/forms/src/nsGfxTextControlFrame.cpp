@@ -204,6 +204,13 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   nsresult result;
   if (mTempObserver)
   {
+    if (mWebShell) {
+      nsCOMPtr<nsIDocumentLoader> docLoader;
+      mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+      if (docLoader) {
+        docLoader->RemoveObserver(mTempObserver);
+      }
+    }
     mTempObserver->SetFrame(nsnull);
     NS_RELEASE(mTempObserver);
   }
@@ -1414,10 +1421,10 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
      * The above code for setting presContext data should happen on a presContext that
      * I create and pass into the webshell, rather than having the webshell create its own
      */
-    nsIStyleContext* sc = nsnull;
-    result = frame->GetStyleContext(&sc);
+    nsCOMPtr<nsIStyleContext> sc;
+    result = frame->GetStyleContext(getter_AddRefs(sc));
     if (NS_FAILED(result)) { return result; }
-    if (nsnull==sc) { return NS_ERROR_NULL_POINTER; }
+    if (sc) { return NS_ERROR_NULL_POINTER; }
     sc->RemapStyle(presContext);
 	  // end HACK
 
