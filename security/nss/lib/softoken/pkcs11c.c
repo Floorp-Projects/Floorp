@@ -1917,6 +1917,37 @@ pk11_HashSign(PK11HashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
     return rv;
 }
 
+static SECStatus
+nsc_DSA_Verify_Stub(void *ctx, CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen,
+			    CK_BYTE_PTR pData, CK_ULONG ulDataLen)
+{
+    SECItem signature, digest;
+
+    signature.data = pSignature;
+    signature.len = ulSignatureLen;
+    digest.data = pData;
+    digest.len = ulDataLen;
+    return DSA_VerifyDigest((DSAPublicKey *)ctx, &signature, &digest);
+}
+
+static SECStatus
+nsc_DSA_Sign_Stub(void *ctx, CK_BYTE_PTR pSignature,
+			    CK_ULONG_PTR ulSignatureLen, CK_ULONG maxulSignatureLen,
+			    CK_BYTE_PTR pData, CK_ULONG ulDataLen)
+{
+    SECItem signature = { 0 }, digest;
+    SECStatus rv;
+
+    (void)SECITEM_AllocItem(NULL, &signature, maxulSignatureLen);
+    digest.data = pData;
+    digest.len = ulDataLen;
+    rv = DSA_SignDigest((DSAPrivateKey *)ctx, &signature, &digest);
+    *ulSignatureLen = signature.len;
+    PORT_Memcpy(pSignature, signature.data, signature.len);
+    SECITEM_FreeItem(&signature, PR_FALSE);
+    return rv;
+}
+
 /* NSC_SignInit setups up the signing operations. There are three basic
  * types of signing:
  *	(1) the tradition single part, where "Raw RSA" or "Raw DSA" is applied
@@ -2059,9 +2090,9 @@ finish_rsa:
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->cipherInfo = DSA_CreateSignContext(privKey);
-	context->update     = (PK11Cipher) DSA_SignDigest;
-	context->destroy    = (PK11Destroy) DSA_DestroySignContext;
+	context->cipherInfo = &(privKey->u.dsa);
+	context->update     = (PK11Cipher) nsc_DSA_Sign_Stub;
+	context->destroy    = pk11_Null;
 
         if (key->objectInfo != privKey) SECKEY_LowDestroyPrivateKey(privKey);
 	break;
@@ -2465,9 +2496,9 @@ finish_rsa:
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->cipherInfo = DSA_CreateVerifyContext(pubKey);
-	context->verify     = (PK11Verify) DSA_VerifyDigest;
-	context->destroy    = (PK11Destroy) DSA_DestroyVerifyContext;
+	context->cipherInfo = &(pubKey->u.dsa);
+	context->verify     = (PK11Verify) nsc_DSA_Verify_Stub;
+	context->destroy    = pk11_Null;
 	break;
 
     case CKM_MD2_HMAC_GENERAL:
@@ -2517,7 +2548,6 @@ finish_rsa:
     pk11_FreeSession(session);
     return CKR_OK;
 }
-
 
 /* NSC_Verify verifies a signature in a single-part operation, 
  * where the signature is an appendix to the data, 
