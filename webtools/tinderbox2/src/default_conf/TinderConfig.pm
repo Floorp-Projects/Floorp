@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.40 $ 
-# $Date: 2002/05/03 19:43:58 $ 
+# $Revision: 1.41 $ 
+# $Date: 2002/05/03 21:09:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -141,8 +141,8 @@ $PopUpImpl = (
 # you are a first time user you may find that setting this to "&nbsp;"
 # is clearer.
 
-#$EMPTY_TABLE_CELL = "&nbsp;";
-$EMPTY_TABLE_CELL = "";
+$EMPTY_TABLE_CELL = "&nbsp;";
+#$EMPTY_TABLE_CELL = "";
 
 
 # Use the DB implementations you wish to use.

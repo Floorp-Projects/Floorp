@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.28 $ 
-# $Date: 2002/05/03 03:38:44 $ 
+# $Revision: 1.29 $ 
+# $Date: 2002/05/03 21:09:51 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.28 $ )[1];
+$VERSION = ( qw $Revision: 1.29 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -111,6 +111,8 @@ $VC_NAME = $TinderConfig::VC_NAME || "CVS";
 # how we recoginise bug number in the checkin comments.
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
     "(\d\d\d+)";
+
+$EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL ||
 
 # remove all records from the database which are older then last_time.
 
@@ -346,6 +348,7 @@ sub status_table_start {
   }
 
   $LAST_TREESTATE = '';
+  $NEXT_ROW{$tree} = 0;
 
   return ;  
 }
@@ -358,6 +361,75 @@ sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
 
   my (@outrow) = ();
+
+  # skip this column because it is part of a multi-row missing data
+  # cell?
+
+  if ( $NEXT_ROW{$tree} !=  $row_index ) {
+      
+      push @outrow, ("\t<!-- skipping: VC_Bonsai: ".
+                     "tree: $tree, ".
+                     "additional_skips: ".
+                     ($NEXT_ROW{$tree} -  $row_index).", ".
+                     "previous_end: ".localtime($current_rec->{'timenow'}).", ".
+                     " -->\n");
+   return @outrow;
+  }
+    
+  # If there is no treestate, then the tree state has not changed
+  # since an early time.  The earliest time was assigned a state in
+  # apply_db_updates().  It is possible that there are no treestates at
+  # all this should not prevent the VC column from being rendered.
+
+  if (!($LAST_TREESTATE)) {
+      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
+  }
+
+  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
+  my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
+
+  my $cell_options;
+  my $text_browser_color_string;
+  
+  if ( ($LAST_TREESTATE) && ($cell_color) ) {
+      $cell_options = "bgcolor=$cell_color ";
+
+      $text_browser_color_string = 
+        HTMLPopUp::text_browser_color_string($cell_color, $char);
+  }
+
+  # create a multi-row dummy cell for missing data?
+
+  if  ( $DB_TIMES[$NEXT_DB] < $row_times->[$row_index] ) {
+      
+      my ($rowspan) = 1;
+      while ( 
+              ( ($row_index + $rowspan) <= $#{$row_times}) &&
+              ( $DB_TIMES[$NEXT_DB]  <  
+                $row_times->[$row_index + $rowspan] ) 
+              ) {
+          $rowspan++ ;
+      }
+      
+      my ($cell_color) = BuildStatus::status2html_colors('not_running');
+      my ($cell_options) = ("rowspan=$rowspan ".
+                            "bgcolor=$cell_color ");
+      my ($lc_time) = localtime($current_rec->{'timenow'});
+
+      push @outrow, ("\t<!-- not_running: Build:".
+                     "tree: $tree, ".
+                     "build: $buildname, ".
+                     "previous_end: $lc_time, ".
+                     "-->\n".
+                     
+                     "\t\t<td align=center $cell_options>".
+                     "$EMPTY_TABLE_CELL</td>\n");
+
+      $NEXT_ROW{$tree} =  $row_index + $rowspan;
+
+      return @outrow;
+  }
+
 
   # we assume that tree states only change rarely so there are very
   # few cells which have more then one state associated with them.
@@ -393,41 +465,6 @@ sub status_table_row {
       }
     }
   } # while (1)
-
-  # If there is no treestate, then the tree state has not changed
-  # since an early time.  The earliest time was assigned a state in
-  # apply_db_updates().  It is possible that there are no treestates at
-  # all this should not prevent the VC column from being rendered.
-
-  if (!($LAST_TREESTATE)) {
-      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
-  }
-
-  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
-  my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
-
-  my $cell_options;
-  my $text_browser_color_string;
-  my $empty_cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
-  
-  if ( ($LAST_TREESTATE) && ($cell_color) ) {
-       $cell_options = "bgcolor=$cell_color ";
-
-       $text_browser_color_string = 
-         HTMLPopUp::text_browser_color_string($cell_color, $char);
-
-       # for those who like empty cells to be truely empty, we need to
-       # be sure that they see the different cell colors when they
-       # change.
-
-       if (
-           ($cell_color !~ m/white/) &&
-           (!($text_browser_color_string)) &&
-           (!($empty_cell_contents)) &&
-           1) {
-               $empty_cell_contents = "&nbsp;";
-           }
-  }
 
   my $query_links = '';
   $query_links.=  "\t\t".$text_browser_color_string."\n";
@@ -600,13 +637,8 @@ sub status_table_row {
                "\t</td>\n".
                "");
     
-  } else {
+  } 
 
-    @outrow = ("\t<!-- skipping: VC_Bonsai: tree: $tree -->".
-               "<td align=center $cell_options>$empty_cell_contents</td>\n");
-  }
-  
-  
   return @outrow; 
 }
 
