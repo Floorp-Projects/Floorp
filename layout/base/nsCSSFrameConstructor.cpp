@@ -1510,17 +1510,13 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresShell*        aPresSh
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
           // We're the child of another row group. If it's lazy, we're lazy.
           nsTreeRowGroupFrame* treeFrame = (nsTreeRowGroupFrame*)aParentFrame;
-          if (treeFrame->IsLazy()) {
-            ((nsTreeRowGroupFrame*)aNewGroupFrame)->MakeLazy();
-            ((nsTreeRowGroupFrame*)aNewGroupFrame)->SetFrameConstructor(this);
-          }
+          ((nsTreeRowGroupFrame*)aNewGroupFrame)->SetFrameConstructor(this);
         }
         else if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
           // We're the child of a table.
           // See if our parent is a tree.
           // We will want to have a scrollbar.
           ((nsTreeRowGroupFrame*)aNewGroupFrame)->SetFrameConstructor(this);
-          ((nsTreeRowGroupFrame*)aNewGroupFrame)->SetShouldHaveScrollbar();
         }
       }
 
@@ -1888,8 +1884,7 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresShell*        aPresShell,
       (display->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP)) {
       // Stop the processing if we're lazy. The tree row group frame builds its children
       // as needed.
-      if (((nsTreeRowGroupFrame*)aParentFrame)->IsLazy())
-        return NS_OK;
+      return NS_OK;
   }
   
   aContent->ChildCount(count);
@@ -5916,7 +5911,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
         // Convert to a tree row group frame.
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
-        if (treeRowGroup && treeRowGroup->IsLazy()) {
+        if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
@@ -6215,7 +6210,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
         // Convert to a tree row group frame.
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
-        if (treeRowGroup && treeRowGroup->IsLazy()) {
+        if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
@@ -6834,7 +6829,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         nsIFrame* parentFrame;
         childFrame->GetParent(&parentFrame);
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-        if (treeRowGroup && treeRowGroup->IsLazy()) {
+        if (treeRowGroup) {
           treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
           return NS_OK;
         }
@@ -6861,7 +6856,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
           // Convert to a tree row group frame.
           nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-          if (treeRowGroup && treeRowGroup->IsLazy()) {
+          if (treeRowGroup) {
             treeRowGroup->ReflowScrollbar(aPresContext);
             return NS_OK;
           }
