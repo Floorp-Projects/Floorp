@@ -242,6 +242,7 @@ protected:
    BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]
    HWND      mHackDestroyWnd; // access GetMainWindow() window from destructor
    QMSG      mQmsg;
+   PRBool    mIsTopWidgetWindow;
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
