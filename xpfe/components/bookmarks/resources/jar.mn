@@ -19,19 +19,19 @@
 
 comm.jar:
 	content/communicator/bookmarks/addBookmark.xul
-+	content/communicator/bookmarks/addBookmark.js
+	content/communicator/bookmarks/addBookmark.js
 	content/communicator/bookmarks/bm-find.js
 	content/communicator/bookmarks/bm-find.xul
 	content/communicator/bookmarks/bm-props.js
 	content/communicator/bookmarks/bm-props.xul
-+	content/communicator/bookmarks/bookmarksDD.js
-+	content/communicator/bookmarks/bookmarks.xul
+	content/communicator/bookmarks/bookmarksDD.js
+	content/communicator/bookmarks/bookmarks.xul
 	content/communicator/bookmarks/bookmarks.js
-+	content/communicator/bookmarks/bookmarksTree.js
+	content/communicator/bookmarks/bookmarksTree.js
 	content/communicator/bookmarks/bookmarksOverlay.xul
-+	content/communicator/bookmarks/bookmarksOverlay.js
-+	content/communicator/bookmarks/bookmarksPanel.xul
-+	content/communicator/bookmarks/bookmarksPanel.js
+	content/communicator/bookmarks/bookmarksOverlay.js
+	content/communicator/bookmarks/bm-panel.xul
+	content/communicator/bookmarks/bookmarksPanel.js
 	content/communicator/bookmarks/pref-bookmarks.xul
 
 en-US.jar:
