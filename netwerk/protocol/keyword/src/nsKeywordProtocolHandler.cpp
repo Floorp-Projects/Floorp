@@ -42,14 +42,13 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 
-static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
-static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,17 +57,16 @@ nsKeywordProtocolHandler::nsKeywordProtocolHandler() {
 
 nsresult
 nsKeywordProtocolHandler::Init() {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString url;
-    rv = prefs->CopyCharPref("keyword.URL", getter_Copies(url));
+    rv = prefs->GetCharPref("keyword.URL", getter_Copies(url));
     // if we can't find a keyword.URL keywords won't work.
     if (NS_FAILED(rv) || !url || !*url) return NS_ERROR_FAILURE;
 
     mKeywordURL.Assign(url);
-
     return NS_OK;
 }
 

@@ -64,7 +64,8 @@
 #include "nsCPasswordManager.h"
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsMimeTypes.h"
 #include "nsIStringBundle.h"
 #include "nsEventQueueUtils.h"
@@ -75,9 +76,8 @@
 #include "nsIResumableChannel.h"
 #include "nsIResumableEntityID.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+static NS_DEFINE_CID(kStreamListenerTeeCID,      NS_STREAMLISTENERTEE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 
@@ -1057,13 +1057,13 @@ nsFtpState::S_pass() {
     if (mAnonymous) {
         char* anonPassword = nsnull;
         PRBool useRealEmail = PR_FALSE;
-        nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv));
-        if (NS_SUCCEEDED(rv) && pPref) {
-            rv = pPref->GetBoolPref("advanced.mailftp", &useRealEmail);
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            rv = prefs->GetBoolPref("advanced.mailftp", &useRealEmail);
             if (NS_SUCCEEDED(rv) && useRealEmail)
-                rv = pPref->CopyCharPref("network.ftp.anonymous_password", &anonPassword);
+                prefs->GetCharPref("network.ftp.anonymous_password", &anonPassword);
         }
-        if (NS_SUCCEEDED(rv) && useRealEmail && anonPassword && *anonPassword != '\0') {
+        if (useRealEmail && anonPassword && *anonPassword != '\0') {
             passwordStr.Append(anonPassword);
             nsMemory::Free(anonPassword);
         }

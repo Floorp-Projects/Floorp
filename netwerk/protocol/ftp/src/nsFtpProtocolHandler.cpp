@@ -43,7 +43,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "prlog.h"
-#include "nsIPref.h"
 #include "nsNetUtil.h"
 #include "nsIErrorService.h" 
 #include "nsIPrefService.h"
