@@ -288,6 +288,7 @@ nsNntpIncomingServer::WriteNewsrcFile()
         newsrcStream.close();
         
         rv = SetNewsrcHasChanged(PR_FALSE);
+		if (NS_FAILED(rv)) return rv;
     }
 #ifdef DEBUG_NEWS
     else {
@@ -797,13 +798,42 @@ nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 NS_IMETHODIMP
 nsNntpIncomingServer::Subscribe(const char *aName)
 {
+#ifdef DEBUG_NEWS
 	printf("subscribe to news group: %s\n",aName);
+#endif
 	return SubscribeToNewsgroup(aName);
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::Unsubscribe(const char *aName)
 {
+	nsresult rv;
+#ifdef DEBUG_NEWS
 	printf("unsubscribe to news group: %s\n",aName);
+#endif
+
+	nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_FAILED(rv)) return rv;
+	if (!rootFolder) return NS_ERROR_FAILURE;
+
+    nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
+    if (NS_FAILED(rv)) return rv;	
+	if (!serverFolder) return NS_ERROR_FAILURE;
+
+	nsCOMPtr <nsIFolder> subFolder;
+	rv = serverFolder->FindSubFolder(aName, getter_AddRefs(subFolder));
+    if (NS_FAILED(rv)) return rv;	
+
+    nsCOMPtr <nsIMsgFolder> newsgroupFolder = do_QueryInterface(subFolder, &rv);
+    if (NS_FAILED(rv)) return rv;	
+	if (!newsgroupFolder) return NS_ERROR_FAILURE;
+
+	rv = serverFolder->PropagateDelete(newsgroupFolder, PR_TRUE /* delete storage */);
+    if (NS_FAILED(rv)) return rv;	
+
+	/* since we've unsubscribed to a newsgroup, the newsrc needs to be written out */
+    rv = SetNewsrcHasChanged(PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
 	return NS_OK;
 }

@@ -317,25 +317,25 @@ function Subscribe(windowTitle, preselectedMsgFolder)
 
 function SubscribeOKCallback(serverURI, changeTable)
 {
-	dump("in SubscribeOKCallback(" + serverURI +")\n");
-	dump("change table = " + changeTable + "\n");
+	//dump("in SubscribeOKCallback(" + serverURI +")\n");
+	//dump("change table = " + changeTable + "\n");
 	
 	var folder = GetMsgFolderFromUri(serverURI);
 	var server = folder.server;
 	var subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
 
 	for (var name in changeTable) {
-		dump(name + " = " + changeTable[name] + "\n");
+		//dump(name + " = " + changeTable[name] + "\n");
 		if (changeTable[name] == true) {
-			dump("from js, subscribe to " + name +"\n");
+			//dump("from js, subscribe to " + name +"\n");
 			subscribableServer.subscribe(name);
 		}
 		else if (changeTable[name] == false) {
-			dump("from js, unsubscribe to " + name +"\n");
+			//dump("from js, unsubscribe to " + name +"\n");
 			subscribableServer.unsubscribe(name);
 		}
 		else {
-			dump("no change to " + name + "\n");
+			//dump("no change to " + name + "\n");
 		}
 	}
 }

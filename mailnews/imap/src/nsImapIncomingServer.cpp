@@ -1959,7 +1959,7 @@ nsImapIncomingServer::StartPopulatingSubscribeDS()
     rv = SetIncomingServer(this);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetDelimiter('/');		// not always true?
+    rv = SetDelimiter('/');		// is this aways the case?  need to talk to jefft
     if (NS_FAILED(rv)) return rv;
 
 	return mInner->StartPopulatingSubscribeDS();
@@ -2022,14 +2022,18 @@ nsImapIncomingServer::SubscribeToFolder(const char *aName, PRBool subscribe)
     if (NS_FAILED(rv)) return rv;
 
 	if (subscribe) {
+#ifdef DEBUG_sspitzer
 			printf("subscribe to folder: %s\n",aName);
+#endif
 			rv = imapService->SubscribeFolder(queue,
                                rootMsgFolder,
                                folderName.GetUnicode(),
                                nsnull, nsnull);
 	}
 	else {
+#ifdef DEBUG_sspitzer
 			printf("unsubscribe to folder: %s\n",aName);
+#endif
 			rv = imapService->UnsubscribeFolder(queue,
                                rootMsgFolder,
                                folderName.GetUnicode(),

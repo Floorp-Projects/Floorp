@@ -8,6 +8,18 @@ var gStatusBar = null;
 var gNameField = null;
 var gFolderDelimiter = ".";
 
+function SetUpRDF()
+{
+	if (!RDF) {
+			RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+	}
+		
+	if (!gSubscribeDS) {
+		gSubscribeDS = RDF.GetDataSource("rdf:subscribe");
+	}
+}
+
 function Stop()
 {
 	dump("Stop()\n");
@@ -59,7 +71,15 @@ function SetUpServerMenu()
     var serverMenu = document.getElementById("serverMenu");
     var menuitems = serverMenu.getElementsByAttribute("id", gServerURI);
 
-    serverMenu.selectedItem = menuitems[0];
+	try {
+		dump("menuitems="+menuitems+"\n");
+		dump("menuitems[0]="+menuitems[0]+"\n");
+		dump("serverMenu="+serverMenu+"\n");
+    	serverMenu.selectedItem = menuitems[0];
+	}
+	catch (ex) {
+		dump("failed to set the selected server: " + ex + "\n");
+	}
 
 	SetServerTypeSpecificTextValues();
 }
@@ -76,6 +96,7 @@ var MySubscribeListener = {
 function SetUpTree()
 {
 	dump("SetUpTree()\n");
+	SetUpRDF();
 	
 	gSubscribeTree.setAttribute('ref',null);
 
@@ -122,10 +143,12 @@ function SubscribeOnLoad()
 		var uri = window.arguments[0].preselectedURI;
 		dump("subscribe: got a uri," + uri + "\n");
 		folder = GetMsgFolderFromUri(uri);
+		dump("xxx todo:  make sure this is a subscribable server\n");
 		gServerURI = folder.server.serverURI;
 	}
 	else {
 		dump("subscribe: no uri\n");
+		dump("xxx todo:  use the default news server\n");
 		var serverMenu = document.getElementById("serverMenu");
 		var menuitems = serverMenu.getElementsByTagName("menuitem");
 		gServerURI = menuitems[1].id;
@@ -134,10 +157,6 @@ function SubscribeOnLoad()
 	SetUpServerMenu();
 	SetUpTree();
 
-	RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-		
-	gSubscribeDS = RDF.GetDataSource("rdf:subscribe");
   
   gNameField.focus();
 }
