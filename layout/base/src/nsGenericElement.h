@@ -46,6 +46,7 @@ class nsIDOMScriptObjectFactory;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsDOMAttributeMap;
+class nsIURL;
 
 
 // Class that holds the child list of a content element and also
@@ -173,8 +174,8 @@ public:
                                   REFNSIID aIID);
 
   void TriggerLink(nsIPresContext& aPresContext,
-		   nsLinkVerb aVerb,
-                   const nsString& aBase,
+                   nsLinkVerb aVerb,
+                   nsIURL* aBaseURL,
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec,
                    PRBool aClick);
