@@ -56,6 +56,7 @@ CPPSRCS=				\
 
 EXPORTS =				\
 	nsGlobalVariables.h		\
+	nsIHTMLContent.h	\
 	$(NULL)
 
 MODULE = raptor

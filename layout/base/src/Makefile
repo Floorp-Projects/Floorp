@@ -42,6 +42,7 @@ CPPSRCS =				\
 MODULE = raptor
 
 EXPORTS = \
+	nsDocument.h \
 	nsSelectionRange.h \
 	nsSelectionPoint.h \
 	nsXIFConverter.h \

@@ -61,6 +61,7 @@ CPPSRCS=				\
 
 EXPORTS =				\
 	nsGlobalVariables.h		\
+	nsIHTMLContent.h	\
 	$(NULL)
 
 EXPORTS :=  $(addprefix $(srcdir)/, $(EXPORTS))
