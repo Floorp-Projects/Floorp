@@ -148,11 +148,11 @@ treecolpicker {
   -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
-  padding: 0px 4px;
+  padding: 1px 4px 0px 5px;
 }
 
 .treecol-image {
-  padding: 0px 1px;
+  padding: 1px 1px 0px 2px;
 }
 
 .treecol-text {
@@ -176,12 +176,7 @@ treecolpicker:hover:active {
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-bottom-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-  padding: 1px 4px 0px 5px;
-}
-
-.treecol-image:hover:active {
-  padding: 1px 1px 0px 2px;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;  
 }
 
 /* ::::: column drag and drop styles ::::: */
