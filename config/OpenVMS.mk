@@ -70,5 +70,4 @@ LD		= vmsld $(OS_LDFLAGS) \
 		  MODULE=$(LIBRARY_NAME) DIST=$(DIST) \
 		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=))
 DSO_LDOPTS	=
-EXTRA_DSO_LDOPTS+= $(EXTRA_LIBS)
 MKSHLIB		= $(LD)
