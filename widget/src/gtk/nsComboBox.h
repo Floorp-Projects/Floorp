@@ -66,8 +66,6 @@ protected:
   virtual void OnUnmapSignal(GtkWidget* aWidget);
   static gint UnmapSignal(GtkWidget* aGtkWidget, nsComboBox* aCombo);
 
-
-  GtkWidget  *mAlign;  /* workaround for gtkcombo bug */
   GtkWidget  *mCombo;  /* workaround for gtkcombo bug */
   GList *mItems;
   PRBool  mMultiSelect;
