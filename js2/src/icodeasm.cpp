@@ -72,8 +72,12 @@ namespace ICodeASM {
         uint statementNo = 0;
         iter begin = source.begin();
         iter end = source.end();
+
+        mInstructions = new VM::InstructionStream();
         mMaxRegister = 0;
         mInstructionCount = 0;
+        mLabels.clear();
+        mNamedLabels.clear();
         
         while (begin < end)
         {
@@ -561,7 +565,7 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseICodeModuleOperand (iter /*begin*/, iter end, string **/*rval*/)
+    ICodeParser::ParseICodeModuleOperand (iter /*begin*/, iter end, string ** /*rval*/)
     {
         NOT_REACHED ("ICode modules are hard, lets go shopping.");
         return end;
@@ -577,7 +581,7 @@ namespace ICodeASM {
     
     iter
     ICodeParser::ParseJSClassOperand (iter /*begin*/, iter end,
-                                      string **/*rval*/)
+                                      string ** /*rval*/)
     {
         NOT_REACHED ("JSClasses are hard, lets go shopping.");
         return end;
@@ -608,7 +612,7 @@ namespace ICodeASM {
     
     iter
     ICodeParser::ParseJSFunctionOperand (iter /*begin*/, iter end,
-                                         string **/*rval*/)
+                                         string ** /*rval*/)
     {
         NOT_REACHED ("JSFunctions are hard, lets go shopping.");
         return end;
@@ -670,7 +674,7 @@ namespace ICodeASM {
             begin = ParseUInt32 (tl.begin, end, &ofs);
             VM::Label *new_label = new VM::Label(mInstructions);
             new_label->mOffset = ofs;
-            mUnnamedLabels.push_back (new_label);
+            mLabels.push_back (new_label);
             *rval = new_label;
         } else {
             /* label expressed as "label_name", look for it in the
@@ -686,6 +690,7 @@ namespace ICodeASM {
                 new_label->mOffset = VM::NotALabel;
                 *rval = new_label;
                 mNamedLabels[str->c_str()] = new_label;
+                mLabels.push_back (new_label);
             }       
             delete str;
         }
@@ -733,14 +738,10 @@ namespace ICodeASM {
         StatementNode node;
         node.icodeID = icodeID;
 
-        fprintf (stderr, "parsing instruction %s\n", icodemap[icodeID].name);
-        
 #       define CASE_TYPE(T, C, CTYPE)                                      \
            case ot##T:                                                     \
            {                                                               \
               C rval;                                                      \
-              fprintf (stderr, "parsing operand type %u\n",                \
-                       static_cast<uint32>(ot##T));                        \
               node.operand[i].type = ot##T;                                \
               curpos = Parse##T##Operand (curpos, end, &rval);             \
               node.operand[i].data = CTYPE<int64>(rval);                   \
@@ -782,8 +783,7 @@ namespace ICodeASM {
 
 #       undef CASE_TYPE
 
-        VM::Instruction *i = InstructionFromNode(&node);
-        mInstructions->push_back (i);
+        mInstructions->push_back (InstructionFromNode(&node));
         ++mInstructionCount;
         
         TokenLocation tl = SeekTokenStart (curpos, end);
@@ -839,6 +839,7 @@ namespace ICodeASM {
                 VM::Label *new_label = new VM::Label (mInstructions);
                 new_label->mOffset = mInstructionCount;
                 mNamedLabels[label_str.c_str()] = new_label;
+                mLabels.push_back(new_label);
             } else {
                 /* if it was already referenced, check to see if the offset
                  * was already set */

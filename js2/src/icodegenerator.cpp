@@ -2435,7 +2435,6 @@ void ICodeGenerator::readICode(const char *fileName)
                     element->getValue(widenCString("result"), resultTypeName);
 #ifdef ROB_DONE
                     JSType *resultType = findType(mWorld->identifiers[resultTypeName]);
-#endif
                     String &body = element->body();
                     if (body.length()) {
                         std::string str(body.length(), char());
@@ -2446,7 +2445,6 @@ void ICodeGenerator::readICode(const char *fileName)
 
                         icp.ParseSourceFromString(str);
 
-#ifdef ROB_DONE
                         ICodeModule *icm = new ICodeModule(icp.instructionStream(), 
                                                             NULL,       /* VariableList *variables */
                                                             icp.maxRegister, 
@@ -2456,8 +2454,8 @@ void ICodeGenerator::readICode(const char *fileName)
                                                             false,      /* bool hasNamedRestParameter */
                                                             resultType);
                         thisClass->defineMethod(methodName, new JSFunction(icm));
-#endif
                     }
+#endif
 
                 }
                 else {
