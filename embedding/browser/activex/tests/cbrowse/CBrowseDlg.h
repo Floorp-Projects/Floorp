@@ -99,6 +99,8 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnViewViewSource();
 	afx_msg void OnStop();
+	afx_msg void OnFileSaveAs();
+	afx_msg void OnFilePrint();
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();
