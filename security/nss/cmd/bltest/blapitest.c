@@ -387,6 +387,14 @@ typedef struct
 		         ((float)(time1))/info->repetitions); \
 	}
 
+SECStatus
+fillitem(SECItem *item, int numbytes, char *filename)
+{
+	if (item->len == 0)
+		return get_and_write_random_bytes(item, numbytes, filename);
+	return SECSuccess;
+}
+
 /************************
 **  DES 
 ************************/
@@ -424,14 +432,6 @@ des_common(DESContext *descx, blapitestInfo *info)
 		}
 	}
 	return rv;
-}
-
-SECStatus
-fillitem(SECItem *item, int numbytes, char *filename)
-{
-	if (item->len == 0)
-		return get_and_write_random_bytes(item, numbytes, filename);
-	return SECSuccess;
 }
 
 /*  DES codebook mode */
@@ -475,13 +475,16 @@ des_cbc_test(blapitestInfo *info)
 		 *  So, once the performance test is done, reset the context
 		 *  and perform a single iteration to obtain the correct result.
 		 */
+		int tmp = info->repetitions;
 		rv = des_common(descx, info);
 		DES_DestroyContext(descx, PR_TRUE);
 		descx = DES_CreateContext(info->key.data, info->iv.data, NSS_DES_CBC, 
 	                          info->encrypt);
 		info->performance = PR_FALSE;
+		info->repetitions = 1;
 		rv = des_common(descx, info);
 		info->performance = PR_TRUE;
+		info->repetitions = tmp;
 	} else {
 		rv = des_common(descx, info);
 	}
@@ -531,13 +534,16 @@ des_ede_cbc_test(blapitestInfo *info)
 		 *  So, once the performance test is done, reset the context
 		 *  and perform a single iteration to obtain the correct result.
 		 */
+		int tmp = info->repetitions;
 		rv = des_common(descx, info);
 		DES_DestroyContext(descx, PR_TRUE);
 		descx = DES_CreateContext(info->key.data, info->iv.data, 
 		                          NSS_DES_EDE3_CBC, info->encrypt);
 		info->performance = PR_FALSE;
+		info->repetitions = 1;
 		rv = des_common(descx, info);
 		info->performance = PR_TRUE;
+		info->repetitions = tmp;
 	} else {
 		rv = des_common(descx, info);
 	}
@@ -826,9 +832,10 @@ rsa_test(blapitestInfo *info)
 	SECItem expitem;
 	SECStatus rv;
 	PRIntervalTime time1, time2;
-	int i, numiter;
+	int i, j, numiter;
 	numiter = info->repetitions;
 	fillitem(&info->in, info->bufsize, "tmp.pt");
+	info->in.data[0] = 0x00;
 	if (info->key.len > 0) {
 		key = rsakey_from_filedata(&info->key);
 	} else {
@@ -849,14 +856,22 @@ rsa_test(blapitestInfo *info)
 		SECITEM_CopyItem(key->arena, &pubkey.publicExponent, 
 		                             &key->publicExponent);
 		TIMESTART();
-		for (i=0; i<numiter; i++)
-			rv = RSA_PublicKeyOp(&pubkey, info->out.data, info->in.data);
+		for (i=0; i<numiter; i++) {
+			for (j=0; j<info->in.len; j+=pubkey.modulus.len) {
+				rv = RSA_PublicKeyOp(&pubkey, &info->out.data[j], 
+				                              &info->in.data[j]);
+			}
+		}
 		TIMEFINISH("RSA ENCRYPT", info->in.len);
 		CHECKERROR(rv, __LINE__);
 	} else {
 		TIMESTART();
-		for (i=info->repetitions; i>0; i--)
-			rv = RSA_PrivateKeyOp(key, info->out.data, info->in.data);
+		for (i=info->repetitions; i>0; i--) {
+			for (j=0; j<info->in.len; j+=key->modulus.len) {
+				rv = RSA_PrivateKeyOp(key, &info->out.data[j], 
+				                           &info->in.data[j]);
+			}
+		}
 		TIMEFINISH("RSA DECRYPT", info->in.len);
 		CHECKERROR(rv, __LINE__);
 	}
