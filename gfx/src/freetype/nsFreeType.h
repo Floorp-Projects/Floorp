@@ -156,7 +156,8 @@ protected:
   FTC_Manager_New_t         nsFTC_Manager_New;
   FTC_Image_Cache_New_t     nsFTC_Image_Cache_New;
   // this array needs to be big enough to hold all the function pointers
-  static FtFuncList FtFuncs[17];
+  // plus one extra for the null at the end
+  static FtFuncList FtFuncs[18];
   
 protected:
   PRBool mEnableFreeType2;
