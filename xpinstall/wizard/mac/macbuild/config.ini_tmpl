@@ -1,6 +1,6 @@
 [General]
 Subfolder=Mozilla Folder
-URL=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+URL=ftp://ftp.mozilla.org/pub/mozilla/nightly/<#buildID>/mac-xpi/
 
 
 [Dialog License]
@@ -52,7 +52,8 @@ Description Short=XPCOM
 ; *** LOCALIZE ME BABY ***
 Description Long=Installer technology software
 Archive=xpcom.xpi
-Install Size=<#xpcom_size>
+Install Size=<#xpcom_actualSize>
+Archive Size=<#xpcom_archiveSize>
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
@@ -60,7 +61,8 @@ Description Short=Navigator
 ; *** LOCALIZE ME BABY ***
 Description Long=Web browser software
 Archive=browser.xpi
-Install Size=<#browser_size>
+Install Size=<#browser_actualSize>
+Archive Size=<#browser_archiveSize>
 Attributes=SELECTED
 
 [Component2]
@@ -68,7 +70,8 @@ Description Short=Mail & News
 ; *** LOCALIZE ME BABY ***
 Description Long=Email and Newsgroup software
 Archive=mail.xpi
-Install Size=<#mail_size>
+Install Size=<#mail_actualSize>
+Archive Size=<#mail_archiveSize>
 Attributes=SELECTED
 
 [Component3]
@@ -76,7 +79,8 @@ Description Short=Chatzilla
 ; *** LOCALIZE ME BABY ***
 Description Long=Chatzilla IRC client
 Archive=chatzilla.xpi
-Install Size=<#chatzilla_size>
+Install Size=<#chatzilla_actualSize>
+Archive Size=<#chatzilla_archiveSize>
 Attributes=SELECTED
 
 [Component4]
@@ -84,7 +88,8 @@ Description Short=English US Language Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=English US Language Pack
 Archive=deflenus.xpi
-Install Size=<#deflenus_size>
+Install Size=<#deflenus_actualSize>
+Archive Size=<#deflenus_archiveSize>
 Attributes=SELECTED|INVISIBLE
 
 [Component5]
@@ -92,7 +97,8 @@ Description Short=English (US) Language Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=English (US) Language Pack
 Archive=langenus.xpi
-Install Size=<#langenus_size>
+Install Size=<#langenus_actualSize>
+Archive Size=<#langenus_archiveSize>
 Attributes=SELECTED|INVISIBLE
 
 [Component6]
@@ -100,7 +106,8 @@ Description Short=US Region Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=Regional contents for US users
 Archive=regus.xpi
-Install Size=<#regus_size>
+Install Size=<#regus_actualSize>
+Archive Size=<#regus_archiveSize>
 Attributes=SELECTED|INVISIBLE
 
 [Dialog Start Install]
