@@ -92,7 +92,7 @@ static char** MakeStringArray(PRUint32 variants, char* data)
   if((variants == 0) || (data == NULL))
     return NULL;
 
-	buffer = (char **)PR_Malloc(variants * sizeof(char *));
+	buffer = (char **)PR_Calloc(variants, sizeof(char *));
 	if(!buffer)
 	    return NULL;
 	buffer[count] = index;
