@@ -54,12 +54,12 @@ nsScrollPortFrame::NeedsClipWidget()
 
   while (parentFrame) {
     if ((NS_SUCCEEDED(parentFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame)))) {
-      return(PR_TRUE);
+      return(PR_FALSE);
     }
     parentFrame->GetParent(&parentFrame); 
   }
  
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 #ifdef NS_DEBUG
