@@ -94,6 +94,7 @@
 #include "nsITimer.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIXMLContent.h"
 #include "nsIXMLElementFactory.h"
 #include "nsIXULCommandDispatcher.h"
@@ -2992,11 +2993,11 @@ nsXULDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 
                 if (! container) continue;
 
-                nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(container);
-                if (! webshell) continue;
+                nsCOMPtr<nsIBaseWindow> webShellWin = do_QueryInterface(container);
+                if(!webShellWin) continue;
 
-                rv = webshell->SetTitle(title.GetUnicode());
-                if (NS_FAILED(rv)) return PR_FALSE;
+                NS_ENSURE_SUCCESS(webShellWin->SetTitle(title.GetUnicode()),
+                  PR_FALSE);
             }
         }
         else if (PL_strcmp("location", s) == 0) {
@@ -3396,7 +3397,10 @@ nsXULDocument::StartLayout(void)
 
         // Perform the resize
         PRInt32 chromeX,chromeY,chromeWidth,chromeHeight;
-        webShell->GetBounds(chromeX,chromeY,chromeWidth,chromeHeight);
+        nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(webShell));
+        NS_ABORT_IF_FALSE(webShellWin, "QI Failed!!!!");
+        webShellWin->GetPositionAndSize(&chromeX, &chromeY, &chromeWidth,
+         &chromeHeight);
 
         float t2p;
         cx->GetTwipsToPixels(&t2p);
