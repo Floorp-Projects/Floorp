@@ -22,7 +22,9 @@
 
 static const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
 static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
+
 struct mdbOid gDBFolderInfoOID;
+
 static const char *	kNumVisibleMessagesColumnName = "numVisMsgs";
 static const char *	kNumMessagesColumnName ="numMsgs";
 static const char *	kNumNewMessagesColumnName = "numNewMsgs";
@@ -38,6 +40,7 @@ static const char *	kTotalPendingMessagesColumnName = "totPendingMsgs";
 static const char *	kUnreadPendingMessagesColumnName = "unreadPendingMsgs";
 static const char * kMailboxNameColumnName = "mailboxName";
 static const char * kKnownArtsSetColumnName = "knownArts";
+static const char * kExpiredMarkColumnName = "expiredMark";
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
   : m_folderDate(0)      // now
@@ -145,11 +148,29 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 		nsIMdbStore *store = m_mdb->GetStore();
 		if (store)
 		{
+			mdb_pos		rowPos;
 			mdb_count outTableCount; // current number of such tables
 			mdb_bool mustBeUnique; // whether port can hold only one of these
 			ret = store->GetTableKind(m_mdb->GetEnv(), m_rowScopeToken, m_tableKindToken, &outTableCount, 
 				&mustBeUnique, &m_mdbTable);
-			PR_ASSERT(mustBeUnique && outTableCount == 1);
+			NS_ASSERTION(mustBeUnique && outTableCount == 1, "only one global db info allowed");
+
+			// find singleton row for global info.
+			ret = m_mdbTable->HasOid(m_mdb->GetEnv(), &gDBFolderInfoOID, &rowPos);
+			if (ret == NS_OK)
+			{
+				nsIMdbTableRowCursor *rowCursor;
+				ret= m_mdbTable->GetTableRowCursor(m_mdb->GetEnv(), rowPos, &rowCursor);
+				if (ret == NS_OK)
+				{
+					ret = rowCursor->NextRow(m_mdb->GetEnv(), &m_mdbRow, &rowPos);
+					rowCursor->Release();
+					if (ret == NS_OK)
+					{
+						LoadMemberVariables();
+					}
+				}
+			}
 		}
 	}
 	return ret;
@@ -178,8 +199,22 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 		store->StringToToken(env,  kImapUidValidityColumnName, &m_imapUidValidityColumnToken);
 		store->StringToToken(env,  kTotalPendingMessagesColumnName, &m_totalPendingMessagesColumnToken);
 		store->StringToToken(env,  kUnreadPendingMessagesColumnName, &m_unreadPendingMessagesColumnToken);
+		store->StringToToken(env,  kExpiredMarkColumnName, &m_expiredMarkColumnToken);
 		m_mdbTokensInitialized  = PR_TRUE;
 	}
+	return ret;
+}
+
+nsresult nsDBFolderInfo::LoadMemberVariables()
+{
+	nsresult ret = NS_OK;
+	// it's really not an error for these properties to not exist...
+	GetInt32PropertyWithToken(m_numVisibleMessagesColumnToken, m_numVisibleMessages);
+	GetInt32PropertyWithToken(m_numMessagesColumnToken, m_numMessages);
+	GetInt32PropertyWithToken(m_numNewMessagesColumnToken, m_numNewMessages);
+	GetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
+	GetInt32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
+	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
 	return ret;
 }
 
@@ -194,11 +229,13 @@ void nsDBFolderInfo::SetHighWater(nsMsgKey highWater, PRBool force /* = FALSE */
 void	nsDBFolderInfo::SetFolderSize(PRUint32 size)
 {
 	m_folderSize = size;
+	SetUint32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
 }
 
 void	nsDBFolderInfo::SetFolderDate(time_t folderDate)
 {
 	m_folderDate = folderDate;
+	SetUint32PropertyWithToken(m_folderDateColumnToken, m_folderSize);
 }
 
 
@@ -209,6 +246,8 @@ nsMsgKey	nsDBFolderInfo::GetHighWater()
 
 void nsDBFolderInfo::SetExpiredMark(nsMsgKey expiredKey)
 {
+	m_expiredMark = expiredKey;
+	SetUint32PropertyWithToken(m_expiredMarkColumnToken, expiredKey);
 }
 
 int	nsDBFolderInfo::GetDiskVersion() 
@@ -393,6 +432,7 @@ PRInt32	nsDBFolderInfo::GetImapUidValidity()
 void nsDBFolderInfo::SetImapUidValidity(PRInt32 uidValidity) 
 {
 	m_ImapUidValidity = uidValidity;
+	SetUint32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
 }
 
 nsMsgKey nsDBFolderInfo::GetLastMessageLoaded() 
@@ -443,14 +483,51 @@ nsresult	nsDBFolderInfo::SetProperty(const char *propertyName, nsString &propert
 
 	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
 	if (err == NS_OK)
-	{
-		struct mdbYarn yarn;
+		return SetPropertyWithToken(property_token, propertyStr);
 
-		yarn.mYarn_Grow = NULL;
-		err = m_mdbRow->AddColumn(m_mdb->GetEnv(), property_token, m_mdb->nsStringToYarn(&yarn, &propertyStr));
-		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
-	}
 	return err;
 }
 
+nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr)
+{
+	struct mdbYarn yarn;
+
+	yarn.mYarn_Grow = NULL;
+	nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, m_mdb->nsStringToYarn(&yarn, &propertyStr));
+	delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+	return err;
+}
+
+nsresult	nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue)
+{
+	nsString propertyStr;
+	propertyStr.Append(propertyValue, 10);
+	return SetPropertyWithToken(aProperty, propertyStr);
+}
+
+nsresult nsDBFolderInfo::GetPropertyWithToken(mdb_token aProperty, nsString &resultProperty)
+{
+	return m_mdb->RowCellColumnTonsString(m_mdbRow, aProperty, resultProperty);
+}
+
+nsresult nsDBFolderInfo::GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue)
+{
+	return m_mdb->RowCellColumnToUInt32(m_mdbRow, aProperty, propertyValue);
+}
+
+nsresult nsDBFolderInfo::GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue)
+{
+	return m_mdb->RowCellColumnToUInt32(m_mdbRow, aProperty, (PRUint32 &) propertyValue);
+}
+
+nsresult nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint32 &propertyValue)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		return GetUint32PropertyWithToken(property_token, propertyValue);
+	return err;
+}
 

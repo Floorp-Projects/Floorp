@@ -206,6 +206,7 @@ public:
 	//helper function to fill in nsStrings from hdr row cell contents.
 	nsresult				RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
 	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result);
+	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result);
 
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);

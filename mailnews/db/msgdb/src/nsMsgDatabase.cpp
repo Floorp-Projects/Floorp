@@ -431,7 +431,11 @@ nsresult nsMsgDatabase::InitExistingDB()
 	{
 		err = GetStore()->GetTable(GetEnv(), &gAllMsgHdrsTableOID, &m_mdbAllMsgHeadersTable);
 		if (err == NS_OK)
+		{
 			m_dbFolderInfo = new nsDBFolderInfo(this);
+			if (m_dbFolderInfo)
+				m_dbFolderInfo->InitFromExistingDB();
+		}
 
 	}
 	return err;
@@ -1276,6 +1280,11 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 		YarnTonsString(&yarn, &resultStr);
 	}
 	return err;
+}
+
+nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 &uint32Result)
+{
+	return RowCellColumnToUInt32(hdrRow, columnToken, &uint32Result);
 }
 
 nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result)

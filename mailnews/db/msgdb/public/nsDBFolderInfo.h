@@ -40,6 +40,8 @@ class nsMsgDatabase;
 class nsDBFolderInfo
 {
 public:
+	friend class nsMsgDatabase;
+
 	nsDBFolderInfo(nsMsgDatabase *mdb);
 	virtual ~nsDBFolderInfo();
 	nsrefcnt			AddRef(void);                                       
@@ -99,10 +101,17 @@ public:
 
 	virtual void		SetKnownArtsSet(nsString &newsArtSet);
 	virtual void		GetKnownArtsSet(nsString &newsArtSet);
+
 	// get and set arbitrary property, aka row cell value.
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
 	nsresult	SetProperty(const char *propertyName, nsString &propertyStr);
 	nsresult	SetUint32Property(const char *propertyName, PRUint32 propertyValue);
+	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr);
+	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
+	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString &resultProperty);
+	nsresult	GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
+	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue);
+	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue);
 
 	PRUint16	m_version;			// for upgrading...
 	PRInt32		m_sortType;			// the last sort type open on this db.
@@ -132,6 +141,7 @@ protected:
 	// initialize from appropriate table and row in existing db.
 	nsresult			InitFromExistingDB();
 	nsresult			InitMDBInfo();
+	nsresult			LoadMemberVariables();
 
 	nsString	m_mailboxName;		// name presented to the user, will match imap server name
 	PRInt32		m_numVisibleMessages;	// doesn't include expunged or ignored messages (but does include collapsed).
@@ -166,6 +176,7 @@ protected:
 	mdb_token			m_imapUidValidityColumnToken;
 	mdb_token			m_totalPendingMessagesColumnToken;
 	mdb_token			m_unreadPendingMessagesColumnToken;
+	mdb_token			m_expiredMarkColumnToken;
 
 };
 
