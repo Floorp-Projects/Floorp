@@ -421,8 +421,6 @@ NS_IMETHODIMP nsPop3Protocol::OnStopBinding(nsIURL* aURL, nsresult aStatus,
 
 nsPop3Protocol::nsPop3Protocol(nsIURL* aURL) : nsMsgLineBuffer(NULL, FALSE)
 {
-    nsresult rv = 0;
-
 	NS_INIT_REFCNT();
 	Initialize(aURL);
 }
@@ -462,7 +460,6 @@ void nsPop3Protocol::Initialize(nsIURL * aURL)
 		if (NS_SUCCEEDED(rv) && m_nsIPop3URL)
 		{
 			// extract the file name and create a file transport...
-			const char * fileName = nsnull;
             nsINetService* pNetService;
             rv = nsServiceManager::GetService(kNetServiceCID,
                                               nsINetService::GetIID(),
@@ -2536,8 +2533,6 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
                having to worry about the server timing out on us while
                we wait for user input. */
 			  {
-            char *fmt1 = 0, *fmt2 = 0;
-            
             /* If we're just checking for new mail (biff) then don't
                prompt the user for a password; just tell him we don't
                know whether he has new mail. */

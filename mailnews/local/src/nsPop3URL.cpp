@@ -346,7 +346,7 @@ nsresult nsPop3URL::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     // protocol spec. A protocol spec is an alphanumeric string of 1 or
     // more characters that is terminated with a colon.
     PRBool isAbsolute = PR_FALSE;
-    char* cp;
+    char* cp = nsnull;
     char* ap = cSpec;
     char ch;
     while (0 != (ch = *ap)) {
