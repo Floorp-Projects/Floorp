@@ -398,6 +398,10 @@ public:
 
   void FreeLineBox(nsLineBox* aLine);
 
+  void StoreMaxElementSize(nsIFrame* aFloater, const nsSize& aSize) {
+    mBand.StoreMaxElementSize(mPresContext, aFloater, aSize);
+  }
+
   //----------------------------------------
 
   // This state is the "global" state computed once for the reflow of
@@ -3149,27 +3153,12 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
     // Setup a reflowState to get the style computed margin-top value
 
-    // Get reflow reason set correctly. It's possible that a child was
-    // created and then it was decided that it could not be reflowed
-    // (for example, a block frame that isn't at the start of a
-    // line). In this case the reason will be wrong so we need to check
-    // the frame state.
-    nsReflowReason reason = eReflowReason_Resize;
-    nsFrameState state;
-    frame->GetFrameState(&state);
-    if (NS_FRAME_FIRST_REFLOW & state) {
-      reason = eReflowReason_Initial;
-    }
-    else if (aState.mNextRCFrame == frame) {
-      reason = eReflowReason_Incremental;
-    }
-
     // The availSpace here is irrelevant to our needs - all we want
     // out if this setup is the margin-top value which doesn't depend
     // on the childs available space.
     nsSize availSpace(aState.mContentArea.width, NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowState reflowState(*aState.mPresContext, aState.mReflowState,
-                                  frame, availSpace, reason);
+                                  frame, availSpace);
 
     // Now compute the collapsed margin-top value
     topMargin =
@@ -4082,7 +4071,7 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
                                         nsSize* aMaxElementSize)
 {
   nscoord maxWidth, maxHeight;
-  aState.mBand.GetMaxElementSize(&maxWidth, &maxHeight);
+  aState.mBand.GetMaxElementSize(aState.mPresContext, &maxWidth, &maxHeight);
 #ifdef NOISY_MAX_ELEMENT_SIZE
   IndentBy(stdout, GetDepth());
   if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
@@ -5075,6 +5064,10 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
   aCombinedRect = metrics.mCombinedArea;
   floater->SizeTo(metrics.width, metrics.height);
+
+  // Stash away the max-element-size for later
+  aState.StoreMaxElementSize(floater, brc.GetMaxElementSize());
+
   return NS_OK;
 }
 
