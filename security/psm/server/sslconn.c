@@ -786,7 +786,7 @@ SSMStatus SSM_GetSSLSocket(SSMSSLDataConnection* conn)
 
     /* set up SSL secure socket */
     SSM_DEBUG("setting up secure socket.\n");
-    socket = PR_NewTCPSocket();
+    socket = PR_OpenTCPSocket(PR_AF_INET6);
     if (socket == NULL) {
         goto loser;
     }
@@ -821,7 +821,8 @@ SSMStatus SSM_GetSSLSocket(SSMSSLDataConnection* conn)
     if (PR_StringToNetAddr(conn->hostIP, &addr) != PR_SUCCESS) {
         PRIntn hostIndex;
 
-        prstatus = PR_GetHostByName(conn->hostName, buffer, 256, &hostentry);
+        prstatus = PR_GetIPNodeByName(conn->hostName, PR_AF_INET6, PR_AI_DEFAULT,
+			                          buffer, sizeof(buffer), &hostentry);
 	if (prstatus != PR_SUCCESS) {
 	    goto loser;
 	}
@@ -840,7 +841,14 @@ SSMStatus SSM_GetSSLSocket(SSMSSLDataConnection* conn)
 
 	SSM_DEBUG("Connected to target.\n");
     } else {
-        if (PR_InitializeNetAddr(PR_IpAddrNull, (PRUint16)conn->port, &addr) != PR_SUCCESS) {
+	if (PR_NetAddrFamily(&addr) == PR_AF_INET) {
+	    PRIPv6Addr v6addr;
+	    PR_ConvertIPv4AddrToIPv6(addr.inet.ip, &v6addr);
+	    if (PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, (PRUint16)conn->port, &addr) != PR_SUCCESS) {
+		goto loser;
+	    }
+	    addr.ipv6.ip = v6addr;
+	} else if (PR_SetNetAddr(PR_IpAddrNull, PR_AF_INET6, (PRUint16)conn->port, &addr) != PR_SUCCESS) {
 	    goto loser;
 	}
 	if (PR_Connect(conn->socketSSL, &addr, PR_INTERVAL_NO_TIMEOUT) != PR_SUCCESS) {
