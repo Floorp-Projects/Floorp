@@ -889,7 +889,12 @@ nsHTTPChannel::GenerateCacheKey(nsAWritableCString &cacheKey)
         cacheKey.Append(buf);
         cacheKey.Append("&url=");
     }
-    cacheKey.Append(mRequest->Spec());
+    // Strip any trailing #ref from the URL before using it as the key
+    char *p = PL_strchr(mRequest->Spec(), '#');
+    if (p)
+        cacheKey.Append(mRequest->Spec(), p - mRequest->Spec());
+    else
+        cacheKey.Append(mRequest->Spec());
     return NS_OK;
 }
 
