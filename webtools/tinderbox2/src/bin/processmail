@@ -11,8 +11,8 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2000/09/18 19:40:56 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/09/22 15:16:52 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
@@ -51,13 +51,14 @@ use lib '#tinder_libdir#';
 
 use TinderConfig;
 use TreeData;
+use FileStructure;
 use HTMLPopUp;
 use VCDisplay;
 use Error_Parse;
 use Utils;
 use Persistence;
 use TinderDB::Build;
-
+use MailProcess;
 
 
 
@@ -141,7 +142,9 @@ The required tinderbox variable:
 	                          format, this is effectively the build number}
 	tinderbox: starttime : {the time the build was started in time()
 	                          format, this is effectively the build number}
-	tinderbox: buildname : {the official name of the build}
+	tinderbox: buildname : {the official name of the build, often the name
+				of the machine where the build was performed 
+				and the OS of the machine}
 	tinderbox: errorparser : {the error parser to use when 
 	                            processing the log file}
 	tinderbox: status :{the results of the build, must be a valid status 
@@ -234,26 +237,6 @@ EOF
 
 
 
-sub fatal_mailprocessing_error {
-# all fatal errors come through this function
-
-# log errors to the log file on the server end and send them to stderr
-# so that sendmail can put the error message in the bounced mail.
-
-  my  @error = @_;
-  foreach $_ (@error) {
-    print LOG "[$LOCALTIME] $_";
-    print STDERR "[$LOCALTIME] $_";
-  }
-  print LOG "\n";
-  print STDERR "\n";
-
-  close(LOG);
-  exit 9; 
-}
-
-
-
 sub set_filenames{
 
   # These are temporary files, used by the mail processsor and will be
@@ -276,9 +259,6 @@ sub set_filenames{
                'brief-log' => (FileStructure::get_filename($tree, 'brief-log').
                                "/Tmp.$main::UID.html"),
 
-               'update_file' => (FileStructure::get_filename($tree, 'TinderDB_Dir').
-                                 "Tmp.Build.Update.$uid"),
-
               );
 
 
@@ -294,12 +274,8 @@ sub set_filenames{
            'brief-log' => (FileStructure::get_filename($tree, 'brief-log').
                                "/$main::UID.html"),
 
-           'update_file' => (FileStructure::get_filename($tree, 'TinderDB_Dir').
-                             "Build.Update.$uid"),
-
            'update_time_stamp' => (FileStructure::get_filename($tree, 'update_time_stamp').
                                    ""),
-
               );
 
   foreach $file ( (values %FILE), (values %TMP_FILE) ) {
@@ -329,119 +305,6 @@ sub set_filenames{
   return 1;
 }
 
-
-sub parse_args {
-
-  Getopt::Long::config('require_order', 'auto_abbrev', 'ignore_case');
-
-  %option_linkage = (
-		     "version" => \$version,
-		     "help" => \$help,
-		     "skip-check" => \$SKIP_CHECK,
-		     "force-time" => \$FORCE_TIME,
-		    );
-
-
-  GetOptions (\%option_linkage, qw(
-		  version! help! force-time! skip-check!
-		)) ||
-		    die("Illegal options in \@ARGV: '@ARGV',");
-
-  if ($version) {
-    print "$0: Version: $VERSION\n";
-    exit 0;  
-  }
-  
-  if ($help) {
-    usage();
-  }
-
-  if ($ENV{"REQUEST_METHOD"}) {
-    die("$0: is not a web program, can not be run from the webserver\n");
-  }
-
-  return 1;
-} # parse_args
-
-
-
-sub parse_mail_header {
-
-# remove the headers from the input stream. Currently only use is in
-# error handling for external trees.  
-
-# This function does not use any other functions and can not fail.
-
-# I hope to put some sanity checks into the code. 
-
-# 1) build machines should not lie in the buildname line about their
-#    hostname
-
-# 2) check the time the mail was sent with the time we recieved it
-
-  my $line = '';
-  my $name = '';
-  my ($header, $value) = ();
-  while (defined($line = <>) ) {
-    chomp($line);
-
-    # if line is empty, there are no more headers
-
-    !($line) &&
-      return;
-
-    # if the line does not begin with a tab and has a colon then it is
-    # of the form header: value.  The header may contain _, -, and god
-    # knows what else.
-
-    if( $line =~ /^([-_\w]*)\:[ \t]+([^\n]*)$/ ){
-      ($header, $value)=(lc($1), $2);
-      $MAIL_HEADER{$header} .= $value;
-    }
-
-    # if the line begins with a tab then it is just a continuation of
-    # the Received: header
-
-    if( $line =~ /^\t/ ){
-      $MAIL_HEADER{$header} .= $line;
-    }
-  }
-
-  # not reached
-  return ;
-}
-
-
-
-sub parse_tinderbox_vars {
-
-# Ignore all lines in the mail till we find the tinderbox lines, so
-# the lines we want should be at the top of the mail.  We ignore the
-# line following the variables and hope it is blank.
-
-# This function does not use any other functions and failures are
-# expected to be rare.
-
-  my ($found_vars)= 0;
-  my ($line) = '';
-
-  while(defined($line = <>)) {
-    
-    if ( $line =~ m/^\s*tinderbox\s*:\s*([a-zA-Z0-9-_]*)\s*:\s*(.*)\n$/ ) {
-      $TINDERBOX{$1} .= $2;
-      $found_vars= 1;
-    } elsif ( $line =~ m/^tinderbox\s*:\s*END\b/ ) {
-      return ;
-    } elsif ($found_vars) {
-      return ;
-    }
-
-  }
-
-  # bounce the mail message
-
-  die("No Tinderbox variables found in message.\n");
-}
 
 
 sub fix_nonunix_times {
@@ -478,23 +341,6 @@ sub backward_compatibility {
 
   return 1;
 }
-
-
-# create a string which shows the contents of the tinderbox variables.
-# this output is appended to the log file, to show what values were
-# generated from the log.
-
-sub format_tinder_vars {
-
-  my $output ='';
-  
-  foreach $key (sort keys %TINDERBOX) {    
-    $output .= HTMLPopUp::escapeHTML("tinderbox\: $key\: $TINDERBOX{$key}\n");
-  }
-
-  return $output
-}
-
 
 
 
@@ -544,6 +390,7 @@ sub check_required_vars {
     
     $build_start = <STAMP>;
     chomp $build_start;
+    $build_start = main::extract_digits($build_start);
     
     close (STAMP) ||
       die("Could not close file: $stamp_file, $!\n");
@@ -553,17 +400,17 @@ sub check_required_vars {
           "Something is very wrong with the clock on the build machine, ".
           "time is going backwards.\n".
           "old starttime: $build_start, ".
-          "new starttime: $TINDERBOX{'starttime'},".
+          "new starttime: $TINDERBOX{'starttime'}, ".
           "delta: ". ($TINDERBOX{'starttime'}-$build_start).
           "\n");
 
     # Keep the spacing between builds greater then our minumum HTML
     # grid spacing.  There can be very frequent updates but different
     # builds must be spaced apart.
-
-    ($build_start > ($TinderDB::MIN_TABLE_SPACING + (60*2)) ) ||
+    my $safe_min = TinderDB::MIN_TABLE_SPACING + ($main::SECONDS_PER_MINUTE*2);
+    ($build_start > $safe_min) ||
        die("New build started too frequently.  Builds must start".
-           "at least ".($TinderDB::MIN_TABLE_SPACING + (60*2)).
+           "at least ".($safe_min).
            " seconds apart.  Build not accepted.\n");
   }      
 
@@ -576,6 +423,7 @@ sub check_required_vars {
   # potentially many old mail messages were to be delivered at the
   # same time) the developers would notice and complain.
 
+  $TINDERBOX{'starttime'} = main::extract_digits($TINDERBOX{'starttime'});
   if ($build_start != $TINDERBOX{'starttime'} ) {
     overwrite_file( $stamp_file, 
                     "$TINDERBOX{'starttime'}\n");
@@ -583,14 +431,14 @@ sub check_required_vars {
   
   if( $TINDERBOX{'tree'} eq ''){
     $err_string .= "Variable: 'tinderbox: tree' not set.\n";
-  }
-  elsif( !(TreeData::tree_exists($TINDERBOX{'tree'})) ){
+  } elsif ( !(TreeData::tree_exists($TINDERBOX{'tree'})) ) {
 
     $err_string .= "Variable: 'tinderbox: tree' ".
       "is not set to a valid tree.\n";
   }
-  elsif(($MAIL_HEADER{'to'} =~ m/external/i ||
-         $MAIL_HEADER{'cc'} =~ m/external/i) &&
+
+  if(($MAIL_HEADER{'To'} =~ m/external/i ||
+         $MAIL_HEADER{'CC'} =~ m/external/i) &&
         $TINDERBOX{'tree'} !~ m/external/i) {
     $err_string .= "Data from an external source didn't specify ".
       "an 'external' tree.\n";
@@ -629,12 +477,13 @@ sub check_required_vars {
   # of the error parser that we need.  I think programs which use an
   # autoload for libaraies are messy since they cause variable run
   # time requirements.
-  
+
+  $TINDERBOX{'timenow'} = main::extract_digits($TINDERBOX{'timenow'});
   if ($TINDERBOX{'timenow'} eq '') {
     $err_string .= "Variable: 'timenow' not set.\n";
   } else {
     
-    if( abs($TINDERBOX{'timenow'} - $TIME) < (60*60*10) ){
+    if( abs($TINDERBOX{'timenow'} - $TIME) < ($main::SECONDS_PER_HOUR*10) ){
       $timenow = $TINDERBOX{'timenow'};
     } else {
       $err_string .= (
@@ -644,17 +493,19 @@ sub check_required_vars {
                       "or your clock is set incorrectly, ".
                       "or the mail was delayed for a long time.\n".
                       "variable timenow: $TINDERBOX{'timenow'}, timenow: $TIME,  (".
-                      ( ($TINDERBOX{'timenow'}-$TIME) / 60 ).
+                      ( ($TINDERBOX{'timenow'}-$TIME) / 
+                        $main::SECONDS_PER_MINUTE ).
                       " minutes)\n".
                      "");
     }
     
   }
 
+  $TINDERBOX{'starttime'} = main::extract_digits($TINDERBOX{'starttime'});
   if( $TINDERBOX{'starttime'} eq ''){
     $err_string .= "Variable: 'tinderbox: starttime' not set.\n";
   } else {
-    if( abs($TINDERBOX{'starttime'} - $TIME) < (60*60*10) ){
+    if( abs($TINDERBOX{'starttime'} - $TIME) < ($main::SECONDS_PER_HOUR*10) ){
       $starttime = $TINDERBOX{'starttime'};
     } else {
       $err_string .= (
@@ -664,7 +515,8 @@ sub check_required_vars {
                       "or your clock is set incorrectly, ".
                       "or the mail was delayed for a long time.\n".
                       "starttime: $TINDERBOX{'starttime'}, timenow: $TIME, (".
-                      ( ($TINDERBOX{'starttime'}-$TIME) / 60 ).
+                      ( ($TINDERBOX{'starttime'}-$TIME) / 
+                        $main::SECONDS_PER_MINUTE ).
                       " minutes)\n".
                      "");
     }
@@ -783,7 +635,7 @@ sub log_header {
   # whole log file the tinderbox variables may contain 'derived' data
   # which was not in the original mail message.
 
-  $out .= format_tinder_vars();
+  $out .= MailProcess::format_tinder_vars(%TINDERBOX);
   $out .= "</pre>\n";
   
   $out .= "<H2>Pick an error message to see Log</H2>\n";
@@ -1176,30 +1028,44 @@ sub assemble_files {
 }
 
 
-sub write_update_file {
+# --------------------main-------------------------
+{
+  set_static_vars();
+  get_env();
+  MailProcess::parse_mailprocess_args();
 
-  # write out an build update file so that the server to know about
-  # the new info.
+  $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
 
-  # Notice that we write this out after the WHOLE log has been parsed.
-  # We may add to and modify the hash during the processing of the log.
-  
-  my ($tree) = $TINDERBOX{'tree'};
-  my ($uid) = join('.', 
-                   $tree,
-                   $TINDERBOX{'buildname'},
-                   $TINDERBOX{'timenow'}
-                  );
+  %MAIL_HEADER =  MailProcess::parse_mail_header();
+  %TINDERBOX = MailProcess::parse_tinderbox_vars();
+  fix_nonunix_times();
+  backward_compatibility();
+  set_filenames();
 
-  my ($update_file) = (FileStructure::get_filename($tree, 'TinderDB_Dir').
-                       "/Build.Update.$uid");
+  # Testing is easier if the update files appear at the top of the
+  # status page, even though they are checked out of CVS.
 
-  # We are done, tell the tinderserver about this build.  
+  if ($FORCE_TIME) {
+    $TINDERBOX{'starttime'} = time() - ($main::SECONDS_PER_MINUTE*10);
+    $TINDERBOX{'timenow'} = time() - 10;
+  }
 
-  Persistence::save_structure( 
-                              \%TINDERBOX,
-                              $update_file,
-                             );
+  # when we are testing turn off the checks
+
+  ($SKIP_CHECK) ||
+    check_required_vars();
+
+  parse_mail_body();
+  assemble_files();
+
+  my ($uniq_id) = join('.', 
+                       $tree,
+                       $TINDERBOX{'buildname'},
+                       $TINDERBOX{'timenow'}
+                      );
+
+  MailProcess::write_update_file('Build', $uniq_id, 
+                                 $TINDERBOX{'tree'}, %TINDERBOX);
 
   # clean up all the temp files created in this script
   
@@ -1210,41 +1076,6 @@ sub write_update_file {
         die("Could not unlink: '$tmpfile'. $!\n");    
 
   }
-  return ;
-}
-
-
-# --------------------main-------------------------
-{
-  set_static_vars();
-  get_env();
-  parse_args();
-
-  $SIG{'__DIE__'} = \&fatal_mailprocessing_error;
-
-  parse_mail_header();
-  parse_tinderbox_vars();
-  fix_nonunix_times();
-  backward_compatibility();
-  set_filenames();
-
-  # when we are testing turn off the checks
-
-  ($SKIP_CHECK) ||
-    check_required_vars();
-
-  parse_mail_body();
-  assemble_files();
-
-  # Testing is easier if the update files appear at the top of the
-  # status page, even though they are checked out of CVS.
-
-  if ($FORCE_TIME) {
-    $TINDERBOX{'starttime'} = time() - (10*60);
-    $TINDERBOX{'timenow'} = time() - 10;
-  }
-
-  write_update_file();
 
   exit 0;
 }
