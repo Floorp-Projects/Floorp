@@ -1,0 +1,267 @@
+; Base Embedding Package File for MacOS CFM (built with CodeWarrior)
+;
+;
+;
+
+[Embed]
+
+
+
+; 
+; NSPR:
+; 
+Essential Files/NSPR20.shlb   
+Essential Files/NSRuntime.shlb
+Essential Files/NSStdLib.shlb
+
+; 
+; Javascript:
+; 
+Essential Files/JavaScript.shlb
+Essential Files/LiveConnect.shlb
+
+; 
+; DOM:
+; 
+Components/dom.shlb  
+
+; 
+; XPCOM:
+; 
+Essential Files/xpcom.shlb
+Essential Files/libreg.shlb
+
+; 
+; Imaging:
+; 
+Essential Files/zlib.shlb
+
+; 
+; Components: (need to trim fat)
+; 
+
+; accessibility (out of process API support)
+; see http://www.mozilla.org/projects/ui/accessibility/vendors-win.html
+; Components/accessibility.dll     
+; Components/accessibility.xpt     
+
+; appshell 
+Components/AppShell.shlb     
+Components/appshell.xpt     
+
+; caps
+Components/Caps.shlb
+Components/caps.xpt
+
+; chrome
+Components/ChromeRegistry.shlb
+Components/chrome.xpt    
+
+; cookies
+Components/Cookie.shlb
+Components/cookie.xpt
+
+; docshell
+Components/docshell.shlb
+Components/docshell.xpt   
+
+; dom
+Components/dom.shlb
+Components/dom.xpt       
+Components/dom_base.xpt
+Components/dom_core.xpt
+Components/dom_css.xpt
+Components/dom_events.xpt
+Components/dom_html.xpt
+Components/dom_range.xpt
+Components/dom_stylesheets.xpt
+Components/dom_traversal.xpt
+Components/dom_views.xpt
+Components/dom_xbl.xpt
+Components/dom_xul.xpt
+
+; editor
+Components/Composer.shlb
+; Components/EditorCore.shlb ; why not?
+Components/editor.xpt
+
+; embedding     
+Components/webBrowser.shlb     
+Components/embeddingbrowser.xpt
+Components/EmbedComponents.shlb
+Components/EmbedComponents.xpt
+Components/EmbedBase.xpt
+Components/webshell.xpt
+
+; find functionality
+; Optional - only if your code uses nsIWebBrowserFind
+Components/TextServices.shlb
+Components/txtsvc.xpt
+
+; gfx
+Essential Files/gfx.shlb
+Components/gfxComponent.shlb
+
+; javascript
+Components/JSUrl.shlb
+Components/jsurl.xpt
+
+; layout
+Components/content.shlb
+res/dtd/*
+Components/layout.shlb
+Components/htmlparser.shlb
+Components/htmlparser.xpt
+Components/view.shlb
+Components/content.xpt     
+Components/layout.xpt   
+
+; netwerk
+
+Components/Necko.shlb     
+Components/necko.xpt     
+Components/Necko2.shlb    
+Components/Cache.shlb
+Components/cache.xpt     
+
+; imagelib
+Components/libimg2.shlb
+Components/libimg2.xpt
+Components/gifdecoder2.shlb
+Components/jpegdecoder2.shlb
+Components/pngdecoder2.shlb
+Components/mngdecoder.shlb
+Components/gfx2.shlb
+Components/gfx2.xpt
+
+; jar
+Components/libjar.shlb
+Components/libjar.xpt
+
+; prefs
+Components/libpref.shlb
+Components/libpref.xpt
+
+; plugins
+; Optional - only if you need plugin support
+Components/plugin.shlb
+Components/pluginClassic.shlb
+Components/plugin.xpt
+Components/oji.shlb
+Components/oji.xpt
+
+; profile
+Components/profile.shlb
+Components/profileservices.xpt
+
+; wallet
+; Optional - only if you need password persistence
+Components/Wallet.shlb
+Components/wallet.xpt      
+
+; psm2
+; Optional - only if you need PSM2 support
+Components/pipboot.shlb
+Components/pipboot.xpt
+Components/PIPNSS.shlb
+Components/pipnss.xpt
+chrome/pipnss.jar
+Components/PIPPKI.shlb
+Components/pippki.xpt
+chrome/pippki.jar
+defaults/pref/security-prefs.js
+Essential Files/NSS3.shlb
+Essential Files/SMIME3.shlb
+Essential Files/Softoken3.shlb
+Essential Files/SSL3.shlb
+
+; appcomps
+; Optional - only if you want global history (requires mork) or
+;   directory viewer (off by default for ftp view)
+Components/mozcomps.xpt
+Components/mork.shlb
+
+; rdf
+Components/RDFLibrary.shlb
+Components/rdf.xpt
+
+; session history
+Components/shistory.shlb
+Components/shistory.xpt
+
+; required l10n libraries
+
+Components/unicharutil.shlb
+Components/unicharutil.xpt
+Components/uconv.shlb
+Components/uconv.xpt
+Components/lwbrk.shlb
+Components/nslocale.shlb
+Components/nslocale.xpt
+Components/ucvlatin.shlb
+Components/chardet.shlb
+Components/chardet.xpt
+Components/Universalchardet.shlb
+; optional - on english only systems
+; Components/ucvja.shlb for japanese 
+; Components/ucvko.shlb for korean
+; Components/ucvcn.shlb for simplified chinese
+; Components/ucvtw.shlb for traditional chinese
+; Components/ucvtw2.shlb for traditional chinese
+; Components/ucvibm.shlb for ibm
+
+
+res/language.properties
+res/langGroups.properties
+res/charsetData.properties
+res/charsetalias.properties
+res/maccharset.properties
+
+; required i18n libs
+Components/strres.shlb
+
+; required prefs files
+defaults/pref/all.js
+defaults/pref/initpref.js
+defaults/pref/macprefs.js
+
+; uriloader
+Components/uriLoader.shlb
+Components/uriLoader.xpt
+
+; widget
+Essential Files/WidgetSupport.shlb
+Components/widget.shlb
+Components/widget.xpt
+
+; xpconnect
+Components/XPConnect.shlb
+Components/xpconnect.xpt
+
+; xpcom
+Components/xpcom.xpt
+
+; 
+; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
+; 
+chrome/embed.jar
+
+; 
+; res:
+; 
+res/html.css
+res/quirk.css
+res/viewsource.css
+res/ua.css
+res/forms.css
+res/arrow.gif
+res/arrowd.gif
+res/loading-image.gif
+res/broken-image.gif
+res/builtin/htmlBindings.xml
+res/builtin/platformHTMLBindings.xml
+res/entityTables/html40Latin1.properties
+res/entityTables/html40Special.properties
+res/entityTables/html40Symbols.properties
+res/entityTables/htmlEntityVersions.properties
+res/entityTables/transliterate.properties
