@@ -76,8 +76,10 @@ class FTPDataSourceCallback : public nsIStreamListener
 private:
 	nsIRDFDataSource	*mDataSource;
 	nsIRDFResource		*mParent;
-	
 	static PRInt32		gRefCnt;
+
+    // pseudo-constants
+	static nsIRDFResource	*kNC_Child;
 
 public:
 
@@ -105,7 +107,6 @@ class FTPDataSource : public nsIRDFFTPDataSource
 {
 private:
 	char			*mURI;
-	nsVoidArray		*mObservers;
 
 	static PRInt32		gRefCnt;
 
@@ -120,12 +121,17 @@ private:
 	NS_METHOD	GetFTPListing(nsIRDFResource *source, nsVoidArray **array);
 	NS_METHOD	GetURL(nsIRDFResource *source, nsVoidArray **array);
 
+protected:
+	nsIRDFDataSource	*mInner;
+
 public:
 
 	NS_DECL_ISUPPORTS
 
 			FTPDataSource(void);
 	virtual		~FTPDataSource(void);
+
+//friend	class		FTPDataSourceCallback;
 
 	// nsIRDFDataSource methods
 
