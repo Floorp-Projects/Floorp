@@ -1870,7 +1870,10 @@ struct PRPollDesc {
 ** PRPollDesc.in_flags should be set to the desired request
 ** (read/write/except or some combination). Upon successful return from
 ** this call PRPollDesc.out_flags will be set to indicate what kind of
-** i/o can be performed on the respective descriptor.
+** i/o can be performed on the respective descriptor. PR_Poll() uses the
+** out_flags fields as scratch variables during the call. If PR_Poll()
+** returns 0 or -1, the out_flags fields do not contain meaningful values
+** and must not be used.
 **
 ** INPUTS:
 **      PRPollDesc *pds         A pointer to an array of PRPollDesc
@@ -1889,11 +1892,7 @@ struct PRPollDesc {
 **      PRInt32                 Number of PRPollDesc's with events or zero
 **                              if the function timed out or -1 on failure.
 **                              The reason for the failure is obtained by
-**                              calling PR_GetError().  PR_Poll() uses the
-**                              out_flags fields as scratch variables
-**                              during the call.  If PR_Poll() returns 0
-**                              or -1, the out_flags fields do not contain
-**                              meaningful values and must not be used.
+**                              calling PR_GetError().
 **************************************************************************
 */
 NSPR_API(PRInt32) PR_Poll(
