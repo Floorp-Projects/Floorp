@@ -710,13 +710,13 @@ void nsFileSpec::SetLeafName(const char* inLeafName)
 
 //----------------------------------------------------------------------------------------
 char* nsFileSpec::GetLeafName() const
-// Result needs to be delete[]ed.
+// Result needs to be nsCRT::free()ed.
 //----------------------------------------------------------------------------------------
 {
 	char leaf[64];
 	memcpy(leaf, &mSpec.name[1], mSpec.name[0]);
 	leaf[mSpec.name[0]] = '\0';
-	return PL_strdup(leaf);
+	return nsCRT::strdup(leaf);
 } // nsFileSpec::GetLeafName
 
 //----------------------------------------------------------------------------------------
@@ -868,8 +868,11 @@ nsresult nsFileSpec::Move(const nsFileSpec& newParentDir)
                                     const_cast<StringPtr>(GetLeafPName())));
 
     if ( NS_SUCCEEDED(result) )
-        *this = newParentDir + GetLeafName();
-    
+    {
+        char* leafName = GetLeafName();
+        *this = newParentDir + leafName;
+        nsCRT::free(leafName);
+    }
     return result;
 } // nsFileSpec::Move
 

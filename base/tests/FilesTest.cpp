@@ -455,7 +455,7 @@ int FilesTest::IterateDirectoryChildren(nsFileSpec& startChild)
     {
         char* itemName = ((nsFileSpec&)i).GetLeafName();
         mConsole << '\t' << itemName << nsEndl;
-        delete [] itemName;
+        nsCRT::free(itemName);
     }
 
     mConsole << "Backwards listing of " << (const char*)grandparentPath << ":" << nsEndl;
@@ -463,7 +463,7 @@ int FilesTest::IterateDirectoryChildren(nsFileSpec& startChild)
     {
         char* itemName = ((nsFileSpec&)j).GetLeafName();
         mConsole << '\t' << itemName << nsEndl;
-        delete [] itemName;
+        nsCRT::free(itemName);
     }
     Inspect();
     return 0;
@@ -531,7 +531,10 @@ int FilesTest::Copy(const char* file, const char* dir)
    
     nsresult error = filePath.Copy(dirPath);
 
-    dirPath += filePath.GetLeafName();
+    char* leafName = filePath.GetLeafName();
+    dirPath += leafName;
+    nsCRT::free(leafName);
+    
     if (! dirPath.Exists() || ! filePath.Exists() || NS_FAILED(error))
         return Failed();
 
@@ -560,8 +563,9 @@ int FilesTest::Move(const char* file, const char* dir)
    
     nsresult error = srcSpec.Move(dirPath);
 
-
-    dirPath += srcSpec.GetLeafName();
+    char* leafName = srcSpec.GetLeafName();
+    dirPath += leafName;
+    nsCRT::free(leafName);
     if (! dirPath.Exists() || ! srcSpec.Exists() || NS_FAILED(error))
         return Failed();
 
