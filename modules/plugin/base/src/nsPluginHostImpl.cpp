@@ -3424,7 +3424,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
     nsIPluginInstance* instance;
     aOwner->GetInstance(instance);
-    if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
+    if(!aMimeType || PL_strncasecmp(aMimeType, "application/x-java-vm", 21))
       rv = NewFullPagePluginStream(aStreamListener, instance);
     NS_IF_RELEASE(instance);
     return NS_OK;
@@ -3652,8 +3652,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 
   PRBool isJavaPlugin = PR_FALSE;
   if (aMimeType && 
-      (PL_strcasecmp(aMimeType, "application/x-java-vm") == 0 ||
-         PL_strcasecmp(aMimeType, "application/x-java-applet") == 0))
+      (PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
+         PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0))
   {
     isJavaPlugin = PR_TRUE;
   }
