@@ -55,13 +55,15 @@
 
 /* temporary hacks to test if this compiles */
 typedef void MSG_GroupName;
-
+class nsNNTPHost;
 
 #ifdef XP_UNIX
 static const char LINEBREAK_START = '\012';
 #else
 static const char LINEBREAK_START = '\015';
 #endif
+
+#define PROTOCOL_DEBUG
 
 /* externally declare this function...it doesn't exist in mailnews yet though...hmmm */
 
@@ -71,6 +73,9 @@ extern int msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 						   PRBool convert_newlines_p,
 						   PRInt32 (*per_line_fn) (char *line, PRUint32 line_length, void *closure),
 						   void *closure);
+
+
+static NS_DEFINE_IID(kINNTPHostIID, NS_INNTPHOST_IID);
 
 class nsNNTPHost : public nsINNTPHost {
 public:
@@ -82,7 +87,7 @@ public:
 #endif
                
 	virtual ~nsNNTPHost();
-    static void operator delete(void *);
+//    static void operator delete(void *);
     NS_DECL_ISUPPORTS
     // nsINNTPHost
     
@@ -100,7 +105,7 @@ public:
     NS_IMPL_CLASS_GETSET(LastUpdatedTime, PRInt64, m_lastGroupUpdate);
 
     NS_IMETHOD GetNewsgroupList(const char *groupname,
-                                nsINNTPNewsgroupList **_retval);
+		nsINNTPNewsgroupList **_retval) { NS_ASSERTION(0, "unimplemented"); return NS_OK;};
 
     NS_IMETHOD GetNewsgroupAndNumberOfID(const char *message_id,
                                          nsINNTPNewsgroup **group,
@@ -108,7 +113,7 @@ public:
 
     /* get this from MSG_Master::FindNewsFolder */
     NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create,
-                             nsINNTPNewsgroup **_retval);
+		nsINNTPNewsgroup **_retval) { NS_ASSERTION(0, "unimplemented!"); return NS_OK;}
     
 	NS_IMETHOD AddPropertyForGet (const char *property, const char *value);
 	NS_IMETHOD QueryPropertyForGet (const char *property, char **_retval);
@@ -119,7 +124,7 @@ public:
     NS_IMETHOD QuerySearchableGroupCharsets(const char *group, char **);
 
     // Virtual groups
-    NS_IMETHOD AddVirtualGroup(const char *responseText);
+    NS_IMETHOD AddVirtualGroup(const char *responseText) { return NS_OK;}
     NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual);
     NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual,
                                  nsMsgGroupRecord *inGroupRecord);
@@ -176,14 +181,14 @@ public:
        "/groupname" appended to it, and the
        whole thing can be passed to the XP_File
        stuff with a type of xpXoverCache. */
-    NS_IMETHOD GetDbDirName(char * *aDbDirName);
+    NS_IMETHOD GetDbDirName(char * *aDbDirName) {NS_ASSERTION(0, "unimplemented"); return NS_OK;};
     /* helper for internal accesses - part of the Pre-Mozilla API) */
     const char *GetDBDirName();
 
     /* Returns a list of newsgroups.  The result
        must be free'd using PR_Free(); the
        individual strings must not be free'd. */
-    NS_IMETHOD GetGroupList(char **_retval);
+    NS_IMETHOD GetGroupList(char **_retval) { return NS_OK;}
 
     NS_IMETHOD DisplaySubscribedGroup(const char *groupname,
                                       PRInt32 first_message,
@@ -470,9 +475,6 @@ protected:
 	
 };
 
-
-
-
 nsNNTPHost * nsNNTPHost::M_FileOwner = NULL;
 
 extern "C" {
@@ -495,6 +497,7 @@ nsNNTPHost::nsNNTPHost(MSG_Master* master, const char* name,
 nsNNTPHost::nsNNTPHost(const char *name, PRInt32 port)
 {
 #endif
+	NS_INIT_REFCNT();
 	m_hostname = new char [PL_strlen(name) + 1];
 	PL_strcpy(m_hostname, name);
 
@@ -517,15 +520,15 @@ nsNNTPHost::nsNNTPHost(const char *name, PRInt32 port)
 	m_supportsExtensions = PR_FALSE;
 	m_pushAuth = PR_FALSE;
 	m_groupSucceeded = PR_FALSE;
+	m_lastGroupUpdate = 0;
+	m_groupTree = NULL;
 }
 
-#if 0
 /* we're not supposed to implement this */
  
 nsNNTPHost::~nsNNTPHost()
 {
 }
-#endif
 
 nsresult
 nsNNTPHost::CleanUp() { 
@@ -541,8 +544,10 @@ nsNNTPHost::CleanUp() {
 	delete m_groupTree;
 	if (m_block)
 		delete [] m_block;
+#ifdef UNREADY_CODE
 	if (m_groupFile)
 		XP_FileClose (m_groupFile);
+#endif
 	PR_FREEIF(m_groupFilePermissions);
 	if (M_FileOwner == this) M_FileOwner = NULL;
 	PR_FREEIF(m_hostinfofilename);
@@ -573,6 +578,11 @@ nsNNTPHost::CleanUp() {
 void
 nsNNTPHost::OpenGroupFile(const XP_FilePerm permissions)
 {
+#ifdef PROTOCOL_DEBUG
+
+
+#endif
+#ifdef UNREADY_CODE
 	PR_ASSERT(permissions);
 	if (!permissions) return;
 	if (m_groupFile) {
@@ -591,6 +601,7 @@ nsNNTPHost::OpenGroupFile(const XP_FilePerm permissions)
 	PR_FREEIF(m_groupFilePermissions);
 	m_groupFilePermissions = PL_strdup(permissions);
 	m_groupFile = XP_FileOpen(m_hostinfofilename, xpXoverCache, permissions);
+#endif
 }
 
 
@@ -803,7 +814,7 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
 	PR_ASSERT(m_hostinfo);
 	if (!m_hostinfo) return -1;
     */
-
+#ifdef UNREADY_CODE
 	int status = 0;
 
 	PR_FREEIF(m_optionLines);
@@ -882,6 +893,9 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
             NS_RELEASE(catContainer);
 		}
 	}
+
+#endif
+
 	return 0;
 }
 
@@ -890,7 +904,7 @@ nsresult
 nsNNTPHost::WriteNewsrc()
 {
 	if (!m_groups) return NS_ERROR_NOT_INITIALIZED;
-
+#ifdef UNREADY_CODE
 	PR_ASSERT(m_dirty);
 	// Just to be sure.  It's safest to go ahead and write it out anyway,
 	// even if we do somehow get called without the dirty bit set.
@@ -990,13 +1004,18 @@ nsNNTPHost::WriteNewsrc()
 	}
 	m_dirty = PR_FALSE;
 	if (m_writetimer) {
+#ifdef UNREADY_CODE
 		FE_ClearTimeout(m_writetimer);
+#endif
 		m_writetimer = NULL;
 	}
 
 	if (m_groupTreeDirty) SaveHostInfo();
 
 	return status;
+#else
+	return 0;
+#endif
 }
 
 
@@ -1012,10 +1031,11 @@ nsresult
 nsNNTPHost::MarkDirty()
 {
 	m_dirty = PR_TRUE;
-
+#ifdef UNREADY_CODE
 	if (!m_writetimer)
 		m_writetimer = FE_SetTimeout((TimeoutCallbackFunction)nsNNTPHost::WriteTimer, this,
 								 5L * 60L * 1000L); // Hard-coded -- 5 minutes.
+#endif
     return NS_OK;
 }
 
@@ -1041,7 +1061,7 @@ nsNNTPHost::SetNewsRCFilename(char* name)
 
 	m_hostinfofilename = PR_smprintf("%s/hostinfo.dat", GetDBDirName());
 	if (!m_hostinfofilename) return MK_OUT_OF_MEMORY;
-
+#ifdef UNREADY_CODE
 	XP_StatStruct st;
 	if (XP_Stat (m_hostinfofilename, &st, xpXoverCache) == 0) {
 		m_fileSize = st.st_size;
@@ -1122,12 +1142,16 @@ nsNNTPHost::SetNewsRCFilename(char* name)
 		return MK_OUT_OF_MEMORY;
 
 	return ReadInitialPart();
+#else
+	return 0;
+#endif
 }
 
 
 int
 nsNNTPHost::ReadInitialPart()
 {
+#ifdef UNREADY_CODE
 	OpenGroupFile();
 	if (!m_groupFile) return -1;
 
@@ -1184,6 +1208,7 @@ nsNNTPHost::ReadInitialPart()
 		m_fileSize = 0;
 	}
 	m_groupTree->SetFileOffset(m_fileStart);
+#endif
 	return 0;
 }
 
@@ -1218,6 +1243,7 @@ int
 nsNNTPHost::SaveHostInfo()
 {                   
 	int status = 0;
+#ifdef UNREADY_CODE
 	nsMsgGroupRecord* grec;
 	XP_File in = NULL;
 	XP_File out = NULL;
@@ -1422,6 +1448,7 @@ FAIL:
 	if (out) XP_FileClose(out);
 	if (filename) PR_Free(filename);
 	m_block[0] = '\0';
+#endif
 	return status;
 }
 
@@ -1520,6 +1547,7 @@ DONE:
 int
 nsNNTPHost::Inhale(PRBool force)
 {
+#ifdef UNREADY_CODE
 	if (m_groupTreeDirty) SaveHostInfo();
 	if (force) {
 		while (m_groupTree->GetChildren()) {
@@ -1562,6 +1590,9 @@ nsNNTPHost::Inhale(PRBool force)
 	m_block[0] = '\0';
 	if (status >= 0) m_inhaled = PR_TRUE;
 	return status;
+#else
+	return 0;
+#endif
 }
 
 
@@ -1952,7 +1983,10 @@ nsNNTPHost::GetDBDirName()
 		char* ptr = PL_strchr(m_dbfilename, ':');
 		if (ptr) *ptr = '.'; // Windows doesn't like colons in filenames.
 #endif
+
+#ifdef UNREADY_CODE
 		XP_MakeDirectory(m_dbfilename, xpXoverCache);
+#endif
 	}
 	return m_dbfilename;
 }
@@ -2250,13 +2284,16 @@ nsNNTPHost::GetURLBase()
 
 int nsNNTPHost::RemoveHost()
 {
+#ifdef UNREADY_CODE
 	if (m_groupFile) {
 		XP_FileClose(m_groupFile);
 		m_groupFile = NULL;
 	}
 	m_dirty = 0;
 	if (m_writetimer) {
+#ifdef UNREADY_CODE
 		FE_ClearTimeout(m_writetimer);
+#endif
 		m_writetimer = NULL;
 	}
 
@@ -2288,6 +2325,7 @@ int nsNNTPHost::RemoveHost()
     // maybe NS_RELEASE(this); ?
 #if 0
 	delete this;
+#endif
 #endif
 
 	return 0;
@@ -2588,6 +2626,7 @@ nsNNTPHost::FindGroupInBlock(nsMsgGroupRecord* parent,
 							   const char* groupname,
 							   PRInt32* comp)
 {
+#ifdef UNREADY_CODE
 	char* ptr;
 	char* ptr2;
 	char* tmp;
@@ -2670,6 +2709,9 @@ RELOAD:
 	if (length < 0) length = 0;
 	m_block[length] = '\0';
 	goto RESTART;
+#else
+	return nsnull;
+#endif
 }
 
 
@@ -2677,6 +2719,7 @@ nsMsgGroupRecord*
 nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, const char* groupname,
 							  PRInt32 min, PRInt32 max)
 {
+#ifdef UNREADY_CODE
 	OpenGroupFile();
 	if (!m_groupFile) return NULL;
 
@@ -2720,6 +2763,9 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, const char* groupname,
 		}
 	}
 	return result;
+#else
+	return 0;
+#endif
 }
 
 
@@ -2752,21 +2798,26 @@ nsNNTPHost::FindOrCreateGroup(const char* groupname,
 		buf[length] = '\0';
 		
 		nsMsgGroupRecord* prev = parent;
-		nsMsgGroupRecord* ptr;
+		nsMsgGroupRecord* ptr = NULL;
 		int comp = 0;  // Initializing to zero.
-		for (ptr = parent->GetChildren() ; ptr ; ptr = ptr->GetSibling()) 
+		if (parent)
 		{
-			comp = nsMsgGroupRecord::GroupNameCompare(ptr->GetPartName(), buf);
-			if (comp >= 0) 
-				break;
-			prev = ptr;
+			for (ptr = parent->GetChildren() ; ptr ; ptr = ptr->GetSibling()) 
+			{
+				comp = nsMsgGroupRecord::GroupNameCompare(ptr->GetPartName(), buf);
+				if (comp >= 0) 
+					break;
+				prev = ptr;
+			}
 		}
 
 		if (ptr == NULL || comp != 0) 
 		{
 			// We don't have this one in memory.  See if we can load it in.
-			if (!m_inhaled) {
-				if (ptr == NULL) {
+			if (!m_inhaled && parent) 
+			{
+				if (ptr == NULL) 
+				{
 					ptr = parent->GetSiblingOrAncestorSibling();
 				}
 				length = end - groupname;
@@ -2779,10 +2830,14 @@ nsNNTPHost::FindOrCreateGroup(const char* groupname,
 									  ptr ? ptr->GetFileOffset() : m_fileSize);
 				delete [] tmp;
 				tmp = NULL;
-			} else {
+			} 
+			else 
+			{
 				ptr = NULL;
 			}
-			if (!ptr) {
+
+			if (!ptr) 
+			{
 				m_groupTreeDirty = 2;
 				ptr = nsMsgGroupRecord::Create(parent, buf, time(0),
 											  m_uniqueId++, 0);
@@ -2814,6 +2869,7 @@ nsNNTPHost::NoticeNewGroup(const char* groupname, nsMsgGroupRecord **outGroupRec
 int
 nsNNTPHost::AssureAllDescendentsLoaded(nsMsgGroupRecord* group)
 {
+#ifdef UNREADY_CODE
 	int status = 0;
 	PR_ASSERT(group);
 	if (!group) return -1;
@@ -2856,6 +2912,9 @@ nsNNTPHost::AssureAllDescendentsLoaded(nsMsgGroupRecord* group)
 
 	if (status >= 0) group->SetIsDescendentsLoaded(PR_TRUE);
 	return status;
+#else
+	return 0;
+#endif
 }
 
 nsresult
@@ -2992,6 +3051,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 
 int nsNNTPHost::DeleteFiles ()
 {
+#ifdef UNREADY_CODE
 	// hostinfo.dat
 	PR_ASSERT(m_hostinfofilename);
 	if (m_hostinfofilename)
@@ -3008,7 +3068,7 @@ int nsNNTPHost::DeleteFiles ()
 	PR_ASSERT(dbdirname);
 	if (dbdirname)
 		return XP_RemoveDirectory (dbdirname, xpXoverCache);
-
+#endif
 	return 0;
 }
 
