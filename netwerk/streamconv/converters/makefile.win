@@ -35,13 +35,17 @@ EXPORTS =                           \
 LLIBS= $(LLIBS) \
         $(DIST)\lib\xpcom.lib \
         $(LIBNSPR)            \
+!ifdef MOZ_PERF
+        $(DIST)\lib\util.lib \
+!endif
         $(NULL)
 
 #
 # Add these for perf info...
 #
 #        $(DIST)\lib\timer_s.lib \
-#        $(DIST)\lib\util.lib \
+
+
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 # Add this for performance TXT-HTML performance #'s: -DMOZ_PERF_METRICS
