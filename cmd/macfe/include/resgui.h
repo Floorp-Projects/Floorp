@@ -90,6 +90,14 @@
 #define cmd_ShowLocationBar			1500
 #define cmd_HideLocationBar			1501
 
+// Privacy commands
+#define	cmd_PrivAnonMode			1550
+#define	cmd_PrivDisplayPolicy		1551
+#define	cmd_PrivDisplayCookies		1552
+#define	cmd_PrivDisplaySignons		1553
+#define	cmd_PrivDisplaySiteInfo		1554
+#define	cmd_PrivAboutPrivacy		1555
+
 	/* nav center toggle in Netscape_Constants.h */
 #define cmd_FancyFTP				1020
 #define cmd_SaveDefaultCharset		1021

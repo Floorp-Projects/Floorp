@@ -183,6 +183,8 @@ PREventQueue *mozilla_event_queue = NULL;
 #endif
 #include <Balloons.h>
 
+#include "privacy.h"
+
 // HERE ONLY UNTIL NAV SERVICES CODE MERGED INTO TIP
 Boolean SimpleOpenDlog ( short numTypes, const OSType typeList[], FSSpec* outFSSpec ) ;
 
@@ -2521,9 +2523,18 @@ void CFrontApp::FindCommandStatus( CommandT command, Boolean& enabled,
 		
 		case cmd_BookmarksWindow:
 		case cmd_HistoryWindow:
+		case cmd_PrivDisplayCookies:
+		case cmd_PrivDisplaySignons:
+		case cmd_PrivAboutPrivacy:
 			enabled = !Memory_MemoryIsLow();
 			break;
 			
+		case cmd_PrivAnonMode:
+			usesMark = true;
+			mark = PRVCY_IsAnonymous() ? 0x12 : 0;
+			enabled = TRUE;
+			break;
+
 		case cmd_LaunchImportModule:
 			enabled = mImportModuleExists;
 			break;
@@ -2650,6 +2661,31 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 			navCenter->Show();
 		}
 			break;
+		
+		case cmd_PrivAnonMode:
+		{
+			PRVCY_ToggleAnonymous();
+			SetUpdateCommandStatus(true);
+			break;
+		}
+		
+		case cmd_PrivDisplayCookies:
+		{
+			NET_DisplayCookieInfoAsHTML(nil);
+			break;
+		}
+		
+		case cmd_PrivDisplaySignons:
+		{
+			SI_DisplaySignonInfoAsHTML(nil);
+			break;
+		}
+		
+		case cmd_PrivAboutPrivacy:
+		{
+			DoGetURL(PRVCY_TutorialURL());
+			break;
+		}
 		
 		case cmd_NCOpenNewWindow:
 		{

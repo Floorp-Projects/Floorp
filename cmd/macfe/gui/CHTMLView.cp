@@ -2325,6 +2325,8 @@ void CHTMLView::FindCommandStatus(CommandT inCommand,
 			}
 			break;
 		case cmd_FTPUpload:  // fix for #313498
+		case cmd_PrivDisplayPolicy:
+		case cmd_PrivDisplaySiteInfo:
 			outEnabled = false;
 			break;
 		default:
@@ -2663,6 +2665,8 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 		
 		case cmd_FTPUpload:
 		case msg_TabSelect:
+		case cmd_PrivDisplayPolicy:
+		case cmd_PrivDisplaySiteInfo:
 			cmdHandled = true;
 			break;
 		

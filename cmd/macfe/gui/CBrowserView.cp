@@ -45,6 +45,7 @@ extern "C" {
 #include "resgui.h"
 
 #include "CMochaHacks.h"
+#include "privacy.h"
 
 class CBrowserViewDoDragReceiveMochaCallback;
 
@@ -202,6 +203,18 @@ void CBrowserView::FindCommandStatus(CommandT inCommand,
 			outEnabled = HasFTPUpload( GetContext() ) && !isHTMLHelp;
 			break;
 
+		case cmd_PrivDisplayPolicy:
+			mwcontext = *GetContext();
+			if (mwcontext && !XP_IsContextBusy(mwcontext))
+				outEnabled = PRVCY_CurrentHasPrivacyPolicy(mwcontext);
+			else
+				outEnabled = false;
+			break;
+
+		case cmd_PrivDisplaySiteInfo:
+			outEnabled = true;
+			break;
+
 		default:
 			Inherited::FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
 			break;
@@ -211,6 +224,7 @@ void CBrowserView::FindCommandStatus(CommandT inCommand,
 Boolean	CBrowserView::ObeyCommand(CommandT inCommand, void* ioParam)
 {
 	Boolean cmdHandled = false;
+	MWContext* mwcontext;
 	
 	switch (inCommand)
 	{
@@ -264,6 +278,8 @@ Boolean	CBrowserView::ObeyCommand(CommandT inCommand, void* ioParam)
 					request->files_to_post = newFileList;
 					GetContext()->SwitchLoadURL( request, FO_CACHE_AND_PRESENT );
 				}
+				
+				cmdHandled = true;
 			}
 			break;
 
@@ -273,6 +289,21 @@ Boolean	CBrowserView::ObeyCommand(CommandT inCommand, void* ioParam)
 //				CURLDispatcher::GetURLDispatcher()->DispatchToView(mContext, aboutURL, FO_CACHE_AND_PRESENT, false, 1010, false);
 //			break;
 		
+		case cmd_PrivDisplayPolicy:
+			mwcontext = *GetContext();
+			char * url = PRVCY_GetCurrentPrivacyPolicyURL(mwcontext);
+			URL_Struct* theURL = NET_CreateURLStruct(url, NET_DONT_RELOAD);
+			if (theURL)
+				FE_MakeNewWindow(NULL, theURL, NULL, NULL);
+			cmdHandled = true;
+			break;
+		
+		case cmd_PrivDisplaySiteInfo:
+			mwcontext = *GetContext();
+			PRVCY_SiteInfo(mwcontext);
+			cmdHandled = true;
+			break;
+
 		default:
 			cmdHandled = Inherited::ObeyCommand(inCommand, ioParam);
 			break;

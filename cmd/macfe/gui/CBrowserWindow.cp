@@ -426,6 +426,8 @@ void CBrowserWindow::FindCommandStatus(
 		case cmd_Reload:
 		case cmd_FontLarger:
 		case cmd_FontSmaller:
+		case cmd_PrivDisplayPolicy:
+		case cmd_PrivDisplaySiteInfo:
 		{
 			// Need to be very careful what gets delegated here, in order to aviod infinite
 			// recursion a la bug #313498.  Handling the command status in CBrowserView is not
@@ -601,6 +603,8 @@ Boolean	CBrowserWindow::ObeyCommand(
 			case cmd_FTPUpload:
 			case cmd_FontLarger:
 			case cmd_FontSmaller:
+			case cmd_PrivDisplayPolicy:
+			case cmd_PrivDisplaySiteInfo:
 				{
 					// Delegate this to the view.
 					GetHTMLView()->ObeyCommand(inCommand, ioParam);
