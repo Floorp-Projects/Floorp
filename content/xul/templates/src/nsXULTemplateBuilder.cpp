@@ -106,7 +106,6 @@
 #include "nsXULAtoms.h"
 #include "nsXULElement.h"
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "prlog.h"
 #include "rdf.h"
 #include "pldhash.h"
