@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.256 $ ';
+$::UtilsVersion = '$Revision: 1.257 $ ';
 
 package TinderUtils;
 
@@ -1565,7 +1565,7 @@ sub run_all_tests {
     # Before running tests, run regxpcom so that we don't crash when
     # people change contractids on us (since we don't autoreg opt builds)
     #
-    unlink("$binary_dir/component.reg") or warn "$binary_dir/component.reg not removed\n";
+    unlink("$binary_dir/components/compreg.dat") or warn "$binary_dir/components/compreg.dat not removed\n";
     if($Settings::RegxpcomTest) {
         AliveTest("regxpcom", $build_dir, ["$binary_dir/regxpcom"],
                   $Settings::RegxpcomTestTimeout);
