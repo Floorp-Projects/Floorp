@@ -39,9 +39,9 @@
 #define nsView_h___
 
 #include "nsIView.h"
+#include "nsIWidget.h"
 #include "nsRect.h"
 #include "nsCRT.h"
-#include "nsIWidget.h"
 #include "nsIFactory.h"
 #include "nsIViewObserver.h"
 #include "nsEvent.h"
@@ -133,7 +133,8 @@ public:
                            nsWidgetInitData *aWidgetInitData = nsnull,
                            nsNativeWidget aNative = nsnull,
                            PRBool aEnableDragDrop = PR_TRUE,
-                           PRBool aResetVisibility = PR_TRUE);
+                           PRBool aResetVisibility = PR_TRUE,
+                           nsContentType aContentType = eContentTypeInherit);
   NS_IMETHOD  GetWidget(nsIWidget *&aWidget) const;
   NS_IMETHOD  HasWidget(PRBool *aHasWidget) const;
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;

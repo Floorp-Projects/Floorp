@@ -204,6 +204,11 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_count_up_down
                 }; 
 
+enum nsContentType {
+  eContentTypeInherit = -1,
+  eContentTypeUI = 0,         // eContentTypeUI must equal 0
+  eContentTypeContent = 1     // eContentTypeUI must equal 1
+};
 
 /**
  * Basic struct for widget initialization data.
@@ -218,7 +223,7 @@ struct nsWidgetInitData {
       mListenForResizes(PR_FALSE),
       mWindowType(eWindowType_child),
       mBorderStyle(eBorderStyle_default),
-      mContentType(1),  // nsIDocShellTreeItem::typeContent
+      mContentType(eContentTypeInherit),
       mUnicode(PR_TRUE)
   {
   }
@@ -228,7 +233,7 @@ struct nsWidgetInitData {
   PRPackedBool  mListenForResizes;
   nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
-  PRUint32 mContentType; // from nsIDocShellTreeItem.idl content types - typeChrome, typeContent, etc.
+  nsContentType mContentType;  // Exposed so screen readers know what's UI
   PRPackedBool mUnicode;
 };
 

@@ -32,6 +32,7 @@
 #include "nsIComponentManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIInterfaceRequestor.h"
@@ -1042,7 +1043,9 @@ NS_IMETHODIMP nsWebBrowser::Create()
       nsWidgetInitData  widgetInit;
 
       widgetInit.clipChildren = PR_TRUE;
-      widgetInit.mContentType = mContentType;
+      widgetInit.mContentType = (mContentType == typeChrome || 
+        mContentType == typeChromeWrapper)? eContentTypeUI: eContentTypeContent;
+
       widgetInit.mWindowType = eWindowType_child;
       nsRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       

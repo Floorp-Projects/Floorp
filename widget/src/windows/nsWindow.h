@@ -493,6 +493,7 @@ protected:
     void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
 
     void ConstrainZLevel(HWND *aAfter);
+    PRBool SetWin32ContentType();
 
 private:
 
@@ -529,6 +530,7 @@ protected:
 
     char        mLeadByte;
     PRUint32    mBlurEventSuppressionLevel;
+    nsContentType mContentType;
 
     // XXX Temporary, should not be caching the font
     nsFont *    mFont;

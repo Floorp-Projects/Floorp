@@ -220,7 +220,6 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   // Create a widget for ourselves.
   nsWidgetInitData widgetData;
   widgetData.mWindowType = eWindowType_popup;
-  widgetData.mContentType = nsIDocShellTreeItem::typeChrome;
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 
@@ -238,10 +237,12 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   printf("XP Popups: This is a nag to indicate that an inconsistent hack is being done on the Mac for popups.\n");
 #endif  
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
-  ourView->CreateWidget(kCPopupCID, &widgetData, nsnull);
+  ourView->CreateWidget(kCPopupCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
+                        eContentTypeUI);
 #else
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  ourView->CreateWidget(kCChildCID, &widgetData, nsnull);
+  ourView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
+                        eContentTypeUI);
 #endif   
 
   MoveToAttributePosition();

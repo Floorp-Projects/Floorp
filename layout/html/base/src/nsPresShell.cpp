@@ -42,6 +42,7 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIStyleSet.h"
 #include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
@@ -7251,7 +7252,9 @@ PresShell::VerifyIncrementalReflow()
   }
 
   //now create the widget for the view
-  rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget);
+  nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mDocument));
+  rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE, 
+                          PR_TRUE, xulDoc? eContentTypeUI: eContentTypeContent);
   if (NS_OK != rv) {
     NS_ASSERTION(NS_OK == rv, "failed to create scroll view widget");
   }

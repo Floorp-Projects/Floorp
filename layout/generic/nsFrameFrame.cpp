@@ -71,6 +71,7 @@
 #include "nsFrameSetFrame.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
 #include "nsLayoutAtoms.h"
 #include "nsIChromeEventHandler.h"
@@ -1166,8 +1167,10 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   nsWidgetInitData initData;
   initData.clipChildren = PR_TRUE;
   initData.clipSiblings = PR_TRUE;
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(mContent));
 
-  rv = view->CreateWidget(kCChildCID, &initData);
+  rv = view->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
+                          xulElement? eContentTypeUI: eContentTypeContent);
   SetView(aPresContext, view);
 
   nsContainerFrame::SyncFrameViewProperties(aPresContext, this, nsnull, view);
