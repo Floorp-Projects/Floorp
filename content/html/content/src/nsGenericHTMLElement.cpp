@@ -55,7 +55,6 @@
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsBodyFrame.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMScriptObjectFactory.h"
