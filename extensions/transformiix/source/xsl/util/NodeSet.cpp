@@ -24,7 +24,10 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *    -- moved initialization of DEFAULT_SIZE from NodeSet.h to here
  *
- * $Id: NodeSet.cpp,v 1.2 1999/11/15 07:13:16 nisheeth%netscape.com Exp $
+ * Olivier Gerardin, ogerardin@vo.lu
+ *    -- fixed numberValue()
+ *
+ * $Id: NodeSet.cpp,v 1.3 2000/03/19 08:01:58 kvisco%ziplink.net Exp $
  */
 
 #include "NodeSet.h"
@@ -33,7 +36,7 @@
  * NodeSet <BR />
  * This class was ported from XSL:P. <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:16 $
+ * @version $Revision: 1.3 $ $Date: 2000/03/19 08:01:58 $
 **/
 
 
@@ -327,7 +330,14 @@ MBool NodeSet::booleanValue() {
  * @return the Number value
 **/
 double NodeSet::numberValue() {
-    return 0.0;
+  // OG+
+  // As per the XPath spec, the number value of a node-set is the number value
+  // of its string value.
+  String str;
+  stringValue(str);
+  Double dbl(str);
+  return dbl.doubleValue();
+  // OG-
 } //-- numberValue
 
 /**
