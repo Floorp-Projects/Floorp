@@ -50,8 +50,6 @@ public:
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
 
-  NS_IMETHOD  GetWindowOffsets(nsIView *aView, nscoord *xoffset, nscoord *yoffset) const;
-
   NS_IMETHOD  ResetScrolling(void);
 
   NS_IMETHOD  Composite(void);

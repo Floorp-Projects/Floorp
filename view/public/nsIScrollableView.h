@@ -52,19 +52,10 @@ public:
   NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) = 0;
 
   /**
-   * Set the offset into the container of the
-   * top/left most visible coordinate
-   * @param aOffsetX X offset in twips
-   * @param aOffsetY Y offset in twips
+   * Set the view that we are scrolling within the
+   * scrolling view. 
    */
-  NS_IMETHOD  SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY) = 0;
-
-  /**
-   * Get the offset of the top/left most visible coordinate
-   * @param aOffsetX return value for X coordinate in twips
-   * @param aOffsetY return value for Y coordinate in twips
-   */
-  NS_IMETHOD  GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY) = 0;
+  NS_IMETHOD  SetScrolledView(nsIView *aScrolledView) = 0;
 
   /**
    * Get the view that we are scrolling within the

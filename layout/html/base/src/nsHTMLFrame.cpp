@@ -36,6 +36,10 @@
 #include "nsHTMLAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
+#include "nsIScrollableView.h"
+
+// Interface IDs
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 class RootFrame : public nsContainerFrame {
 public:
@@ -60,6 +64,8 @@ class RootContentFrame : public nsContainerFrame {
 public:
   RootContentFrame(nsIContent* aContent, nsIFrame* aParent);
 
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                       nsDidReflowStatus aStatus);
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -258,13 +264,38 @@ RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
     NS_ASSERTION(nsnull != viewManager, "null view manager");
 
     view->Init(viewManager, mRect, rootView);
-    viewManager->InsertChild(rootView, view, 0);
-
     NS_RELEASE(viewManager);
+
+    // We expect the root view to be a scrolling view
+    nsIScrollableView* scrollView;
+    if (NS_SUCCEEDED(rootView->QueryInterface(kScrollViewIID, (void**)&scrollView))) {
+      scrollView->SetScrolledView(view);
+    }
 
     // Remember our view
     SetView(view);
+
+    // Don't allow our view's position to be changed. It's controlled by the
+    // scrollview
+    mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
   }
+}
+
+NS_IMETHODIMP
+RootContentFrame::DidReflow(nsIPresContext& aPresContext,
+                            nsDidReflowStatus aStatus)
+{
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    // Size the view. Don't position it...
+    nsIView*  view;
+    nsIViewManager  *vm;
+
+    GetView(view);
+    view->GetViewManager(vm);
+    vm->ResizeView(view, mRect.width, mRect.height);
+    NS_RELEASE(vm);
+  }
+  return nsContainerFrame::DidReflow(aPresContext, aStatus);
 }
 
 // Determine the margins to place around the child frame. Note that
