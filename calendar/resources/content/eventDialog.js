@@ -1092,7 +1092,8 @@ function removeSelectedExceptionDate()
 
    var SelectedItem = Listbox.selectedItem;
 
-   Listbox.removeChild( SelectedItem );
+   if( SelectedItem )
+      Listbox.removeChild( SelectedItem );
 }
 
 function addException( dateToAdd )
