@@ -35,8 +35,8 @@ DIRS	=
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 
+
 EX_LIBS = \
-	$(DIST)/bin/libraptorbase.so	\
 	$(DIST)/bin/libpng.so \
 	$(DIST)/bin/libpref.so \
 	$(DIST)/bin/libraptorbase.so \
@@ -52,11 +52,6 @@ EX_LIBS = \
 	$(DIST)/bin/libraptorlayout_s.so \
 	$(DIST)/bin/libraptorview.so \
 	$(DIST)/bin/libreg.so \
-	$(DIST)/bin/libremoturl.so \
-	$(DIST)/bin/libsecfree.so \
-	$(DIST)/bin/libstubnj.so \
-	$(DIST)/bin/libstubsj.so \
-	$(DIST)/bin/libtestdynamic.so \
 	$(DIST)/bin/libabouturl.so \
 	$(DIST)/bin/libfileurl.so \
 	$(DIST)/bin/libftpurl.so \
@@ -76,19 +71,6 @@ EX_LIBS = \
 	$(DIST)/bin/libnspr21.so \
 	$(DIST)/bin/libplc21.so \
 	$(DIST)/bin/libplds21.so \
-	$(DIST)/bin/libpng.so \
-	$(DIST)/bin/libpref.so \
-	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libraptorgfx.so \
-	$(DIST)/bin/libraptorhtml.so \
-	$(DIST)/bin/libraptorhtmlbase_s.so \
-	$(DIST)/bin/libraptorhtmldoc_s.so \
-	$(DIST)/bin/libraptorhtmlforms_s.so \
-	$(DIST)/bin/libraptorhtmlpars.so \
-	$(DIST)/bin/libraptorhtmlstyle_s.so \
-	$(DIST)/bin/libraptorhtmltable_s.so \
-	$(DIST)/bin/libraptorlayout_s.so \
-	$(DIST)/bin/libraptorview.so \
 	$(DIST)/bin/libraptorwebwidget.so \
 	$(DIST)/bin/libreg.so \
 	$(DIST)/bin/libremoturl.so \
