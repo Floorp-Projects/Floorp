@@ -50,12 +50,12 @@ DIRS = \
   modules\libutil		\
   sun-java			\
   js				\
+  base                          \
   modules\security\freenav	\
-  modules\libpref		\
   modules\libimg		\
   modules\plugin		\
   modules\oji		\
-  base                          \
+  modules\libpref		\
   intl                          \
   caps                          \
   lib\xp			\
