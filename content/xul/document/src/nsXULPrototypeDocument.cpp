@@ -30,6 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
@@ -44,6 +45,7 @@
 class nsXULPrototypeDocument : public nsIXULPrototypeDocument,
                                public nsIScriptObjectOwner,
                                public nsIScriptGlobalObject,
+                               public nsIScriptGlobalObjectOwner,
                                public nsIScriptObjectPrincipal
 {
 public:
@@ -90,6 +92,9 @@ public:
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
+
+    // nsIScriptGlobalObjectOwner methods
+    NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
 
     // nsIScriptObjectPrincipal methods
     NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
@@ -157,12 +162,16 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
     delete mRoot;
 }
 
+NS_IMPL_ADDREF(nsXULPrototypeDocument)
+NS_IMPL_RELEASE(nsXULPrototypeDocument)
 
-NS_IMPL_ISUPPORTS4(nsXULPrototypeDocument,
-                   nsIXULPrototypeDocument,
-                   nsIScriptObjectOwner,
-                   nsIScriptGlobalObject,
-                   nsIScriptObjectPrincipal);
+NS_INTERFACE_MAP_BEGIN(nsXULPrototypeDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIXULPrototypeDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -457,6 +466,51 @@ nsXULPrototypeDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 {
     NS_NOTREACHED("waaah!");
     return NS_ERROR_UNEXPECTED;
+}
+
+//----------------------------------------------------------------------
+//
+// nsIScriptGlobalObjectOwner methods
+//
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetScriptGlobalObject(nsIScriptGlobalObject** _result)
+{
+    *_result = NS_STATIC_CAST(nsIScriptGlobalObject*, this);
+    NS_ADDREF(*_result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::ReportScriptError(const char* aErrorString,
+                                          const char* aFileName,
+                                          PRInt32 aLineNo,
+                                          const char* aLineBuf)
+{
+    // XXX Eventually replace this with something that shows a dialog
+    // box or similar fanciness.
+    nsAutoString error = "JavaScript Error: ";
+    error += aErrorString;
+    error += "\n";
+
+    if (aFileName) {
+        error += "URL: ";
+        error += aFileName;
+    }
+
+    if (aLineNo) {
+        error += ", line";
+        error += aLineNo;
+    }
+
+    if (aLineBuf) {
+        error += "\n";
+        error += aLineBuf;
+        error += "\n";
+    }
+
+    printf("%s\n", (const char*) nsCAutoString(error));
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------
