@@ -1376,6 +1376,8 @@ public class Interpreter extends LabelTable {
         cx.interpreterSecurityDomain = theData.securityDomain;
         Object result = undefined;
         
+        Scriptable theThisObj = theData.itsThisObj;            
+        
         while (pc < iCodeLength) {
             try {
                 switch ((int)(iCode[pc] & 0xff)) {
@@ -1659,8 +1661,7 @@ public class Interpreter extends LabelTable {
                         lhs = stack[stackTop];
                         stack[stackTop] = ScriptRuntime.callSpecial(
                                             cx, lhs, rhs, outArgs, 
-                                            theData.itsThisObj,
-                                            scope, name, i);
+                                            theThisObj, scope, name, i);
                         pc += 6;
                         break;
                     case TokenStream.CALL :
@@ -1765,7 +1766,7 @@ public class Interpreter extends LabelTable {
                         stack[++stackTop] = null;
                         break;
                     case TokenStream.THIS :
-                        stack[++stackTop] = theData.itsThisObj;
+                        stack[++stackTop] = theThisObj;
                         break;
                     case TokenStream.FALSE :
                         stack[++stackTop] = Boolean.FALSE;
