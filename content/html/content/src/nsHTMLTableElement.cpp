@@ -40,6 +40,7 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsDOMError.h"
 #include "GenericElementCollection.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
@@ -908,18 +909,20 @@ nsHTMLTableElement::DeleteRow(PRInt32 aValue)
   GetRows(getter_AddRefs(rows));
   nsCOMPtr<nsIDOMNode> row;
 
-  rows->Item(aValue, getter_AddRefs(row));
+  nsresult rv = rows->Item(aValue, getter_AddRefs(row));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (row) {
-    nsCOMPtr<nsIDOMNode> parent=nsnull;
-
-    row->GetParentNode(getter_AddRefs(parent));
-
-    if (parent) {
-      nsCOMPtr<nsIDOMNode> deleted_row;
-      parent->RemoveChild(row, getter_AddRefs(deleted_row));
-    }
+  if (!row) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
+
+  nsCOMPtr<nsIDOMNode> parent;
+
+  row->GetParentNode(getter_AddRefs(parent));
+  NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMNode> deleted_row;
+  parent->RemoveChild(row, getter_AddRefs(deleted_row));
 
   return NS_OK;
 }
