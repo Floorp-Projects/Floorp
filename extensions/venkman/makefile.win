@@ -35,6 +35,6 @@ DEPTH		= ..\..
 
 include <$(DEPTH)\config\config.mak>
 
-DIRS            = resources src idl
+DIRS            = resources
 
 include <$(DEPTH)\config\rules.mak>

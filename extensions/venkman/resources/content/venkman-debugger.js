@@ -47,10 +47,18 @@ function sh_scripthook (cx, script, creating)
 }
 
 var interruptHooker = new Object();
-interruptHooker.onExecutionHook =
+interruptHooker.onExecute =
 function ih_exehook (cx, state, type, rv)
 {
     dd ("onInterruptHook (" + cx + ", " + state + ", " + type + ")");
+    return jsdIExecutionHook.HOOK_RETURN_CONTINUE;
+}
+
+var debuggerHooker = new Object();
+debuggerHooker.onExecute =
+function dh_exehook (cx, state, type, rv)
+{
+    dd ("onDebuggerHook (" + cx + ", " + state + ", " + type + ")");
     return jsdIExecutionHook.HOOK_RETURN_CONTINUE;
 }
 
@@ -59,5 +67,6 @@ function initDebugger()
     dbg = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
     dbg.init();
     dbg.scriptHook = scriptHooker;
-    dbg.interruptHook = interruptHooker;
+    dbg.debuggerHook = debuggerHooker;
+    //dbg.interruptHook = interruptHooker;
 }
