@@ -27,12 +27,6 @@
   padding-top: 1px;
 }
 
-
-#searchBox {
-  border-top: 1px solid ThreeDHighlight;
-  height: 30px;
-}
-
 #searchInput[searchCriteria="true"]  {
   color: grey;
 }

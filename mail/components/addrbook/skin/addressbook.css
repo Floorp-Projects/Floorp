@@ -227,6 +227,7 @@ toolbar[iconsize="small"] #button-abdelete[disabled] {
 /* ::::: directory pane adjustments ::::: */
 
 #abDirTreeHeaderContainer {
+  border-top: 1px solid ThreeDHighlight; 
 }
 
 #abDirTreeHeader {
@@ -262,6 +263,7 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
 /* ::::: splitters ::::: */
 
 #dirTree-splitter {
+  border-top: 1px solid ThreeDHighlight;
   border-left: none;
   border-right: none;
   border-bottom: none;
@@ -358,4 +360,9 @@ html|a {
 
 html|p {
   border: none !important;
+}
+
+#searchBox {
+  border-top: 1px solid ThreeDHighlight;
+  height: 30px;
 }
