@@ -43,10 +43,10 @@ ifndef RELEASE_TREE
 		ifdef USE_SHIPS 
 			RELEASE_TREE = $(BUILD_SHIP)
 		else
-			RELEASE_TREE = /m/dist
+			RELEASE_TREE = /share/builds/components
 		endif
 	else
-		RELEASE_TREE = /m/dist
+		RELEASE_TREE = /share/builds/components
 	endif
 		ifeq ($(OS_TARGET), WINNT)
 		ifdef BUILD_SHIP
