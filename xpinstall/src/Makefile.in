@@ -24,14 +24,15 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nsxpi
 LIBRARY_NAME	= nsxpi
 IS_COMPONENT	= 1
+
 REQUIRES	= dom js netlib raptor xpcom
 
 # XXX shouldn't need to export this
@@ -64,12 +65,13 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public
 
-EXTRA_DSO_LDOPTS =\
-			$(MOZ_NECKO_UTIL_LIBS) \
-			$(MOZ_REGISTRY_LIBS) \
-			-L$(DIST)/bin \
-			-ljsdom \
-			$(ZLIB_LIBS)
+EXTRA_DSO_LDOPTS = \
+		$(MOZ_NECKO_UTIL_LIBS) \
+		$(MOZ_REGISTRY_LIBS) \
+		-L$(DIST)/bin \
+		-ljsdom \
+		$(ZLIB_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
