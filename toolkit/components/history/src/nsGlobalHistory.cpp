@@ -69,7 +69,7 @@
 #include "prprf.h"
 #include "prtime.h"
 #include "rdf.h"
-#include "nsQuickSort.h"
+#include "nsCOMArray.h"
 #include "nsIIOService.h"
 #include "nsILocalFile.h"
 
@@ -4174,8 +4174,8 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
     mdb_err err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(rowCursor));
     NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
 
-    // Store hits in an auto array initially
-    nsAutoVoidArray array;
+    // Store hits in an nsIArray initially
+    nsCOMArray<nsIMdbRow> resultArray;
 
     nsIMdbRow *row = nsnull;
     mdb_pos pos;
@@ -4192,7 +4192,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
 
       NS_ConvertUTF8toUCS2 utf8Url(url);
       if (AutoCompleteCompare(utf8Url, aSearchString, aExclude))
-        array.AppendElement(row);
+        resultArray.AppendObject(row);
     } while (row);
     
     // Setup the structure we pass into the sort function,
@@ -4217,22 +4217,14 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
     closure.prefixes[4] = NS_STATIC_CAST(nsAFlatString*, &prefixFFStr);
     closure.prefixes[5] = NS_STATIC_CAST(nsAFlatString*, &prefixFStr);
 
-    // Turn auto array into flat array for quick sort, now that we
-    // know how many items there are
-    PRUint32 count = array.Count();
-    nsIMdbRow** items = new nsIMdbRow*[count];
-    PRUint32 i;
-    for (i = 0; i < count; ++i)
-      items[i] = (nsIMdbRow*)array.ElementAt(i);
-
     // sort it
-    NS_QuickSort(items, count, sizeof(nsIMdbRow*),
-                 AutoCompleteSortComparison,
-                 NS_STATIC_CAST(void*, &closure));
+    resultArray.Sort(AutoCompleteSortComparison, NS_STATIC_CAST(void*, &closure));
 
     // place the sorted array into the autocomplete results
+    PRUint32 count = resultArray.Count();
+    PRUint32 i;
     for (i = 0; i < count; ++i) {
-      result->AddRow(items[i]);
+      result->AddRow(resultArray[i]);
     }
 
     // Determine the result of the search
@@ -4246,8 +4238,6 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
       result->SetDefaultIndex(-1);
     }
     
-    delete[] items;
-
     *aResult = result;
     NS_ADDREF(*aResult);
   }
@@ -4353,7 +4343,7 @@ nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
 }
 
 int PR_CALLBACK 
-nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
+nsGlobalHistory::AutoCompleteSortComparison(nsIMdbRow *row1, nsIMdbRow *row2, 
                                             void *closureVoid) 
 {
   //
@@ -4361,8 +4351,6 @@ nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
   // sort implementation is documented in bug 78270.
   //
   // cast our function parameters back into their real form
-  nsIMdbRow *row1 = *(nsIMdbRow**) v1;
-  nsIMdbRow *row2 = *(nsIMdbRow**) v2;
   AutoCompleteSortClosure* closure = 
       NS_STATIC_CAST(AutoCompleteSortClosure*, closureVoid);
 

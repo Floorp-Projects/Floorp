@@ -224,7 +224,7 @@ protected:
                              const nsAString& aUserURL,
                              AutocompleteExclude* aExclude);
   PR_STATIC_CALLBACK(int)
-  AutoCompleteSortComparison(const void *v1, const void *v2, void *closureVoid);
+  AutoCompleteSortComparison(nsIMdbRow *row1, nsIMdbRow *row2, void *closureVoid);
 
   // AutoCompleteSortClosure - used to pass info into 
   // AutoCompleteSortComparison from the NS_QuickSort() function
