@@ -180,7 +180,7 @@ span[\_moz_anonclass="mozResizingShadow"],
 img[\_moz_anonclass="mozResizingShadow"] {
   -moz-outline: thin dashed black;
   -moz-user-select: none;
-  -moz-opacity: 0.5;
+  opacity: 0.5;
   position: absolute;
   z-index: 2147483647; /* max value for this property */
 }

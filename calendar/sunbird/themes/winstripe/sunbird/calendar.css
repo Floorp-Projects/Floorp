@@ -832,7 +832,7 @@ toolbar[iconsize="small"] #calendar-new-task-button:hover:active {
 
 #navigator-throbber[busy="true"] {
   list-style-image: url('chrome://calendar/skin/Throbber.gif');
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 toolbar[iconsize="small"] #navigator-throbber {
@@ -1169,7 +1169,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 
 /*user enableable background*/
 .month-day-box-class[background="true"]{
-    -moz-opacity: 0.9;
+    opacity: 0.9;
     border-left: 1px solid #3f7d91;
     border-top: 1px solid #3f7d91;
 }

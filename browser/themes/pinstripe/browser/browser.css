@@ -679,7 +679,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 

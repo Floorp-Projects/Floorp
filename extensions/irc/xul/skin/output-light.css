@@ -60,7 +60,7 @@ a.chatzilla-link {
 .header {
     color: darkslategrey;
     background-color: #EEEEEE;
-/*    -moz-opacity: 0.9;*/
+/*    opacity: 0.9;*/
     border: 1px #777499 solid;
     -moz-border-radius: 7px;
 }

@@ -58,11 +58,11 @@ download[state="5"], download[state="6"] {
 
 /* Download View Items, implementation */
 .downloadContentBox {
-  -moz-opacity: 0.0;
+  opacity: 0.0;
 }
 
 .downloadContentBox[animated="true"] {
-  -moz-opacity: 1.0;
+  opacity: 1.0;
 }
 
 .downloadTypeIcon {

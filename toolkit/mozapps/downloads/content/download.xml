@@ -207,7 +207,7 @@
           else if (aDownload._atiStep  == aDownload._ati_kLowerBounds)
             aDownload._atiIsIncrementing = true;
 
-          aIcon.setAttribute("style", "-moz-opacity: 0." + aDownload._atiStep );
+          aIcon.setAttribute("style", "opacity: 0." + aDownload._atiStep );
         ]]>
         </body>
       </method>
@@ -246,7 +246,7 @@
             return;
             
           aDownload._adlStep += aDownload._adl_kIncrement;
-          aContent.setAttribute("style", "-moz-opacity: " + aDownload._adlStep + "!important;");
+          aContent.setAttribute("style", "opacity: " + aDownload._adlStep + "!important;");
           
           setTimeout(aDownload._adlTimerCallback, aDownload._adl_kTimeout, aDownload, aContent);
         ]]>

@@ -63,7 +63,7 @@ a.chatzilla-link:visited {
 .header {
     color: lightslategrey;
     background-color: #333333;
-/*    -moz-opacity: 0.9;  causes memory leak? */
+/*    opacity: 0.9;  causes memory leak? */
     -moz-border-radius: 7px;
 }
 

@@ -607,7 +607,7 @@ function onOpacityScrollbarAttrModified(aEvent)
       gDialog.opacityLabel.setAttribute("value", "transparent");
     else
       gDialog.opacityLabel.setAttribute("value", v);    
-    AddStyleToElement(gDialog.selectedObject, "-moz-opacity", v);
+    AddStyleToElement(gDialog.selectedObject, "opacity", v);
     SetModifiedFlagOnStylesheet();
   }
 }
@@ -784,7 +784,7 @@ function InitBackgroundTabPanel()
     return;
 
   gDialog.opacityScrollbar.removeEventListener("DOMAttrModified", onOpacityScrollbarAttrModified, false);
-  var opacity = getSpecifiedStyle("-moz-opacity");
+  var opacity = getSpecifiedStyle("opacity");
   if (opacity == "")
     opacity = 1;
   gDialog.opacityScrollbar.setAttribute("curpos", opacity*1000);

@@ -77,7 +77,7 @@
    */
   background: inherit;
   border: inherit;
-  -moz-opacity: inherit;
+  opacity: inherit;
   page-break-before: inherit;
   page-break-after: inherit;
 }
@@ -189,7 +189,7 @@
   right: inherit;
   z-index: inherit;
   clip: inherit;
-  -moz-opacity: inherit;
+  opacity: inherit;
 }
 
 /* Printing */
