@@ -39,6 +39,7 @@ REQUIRES = \
     plugin \
     string \
     $(NULL)
+XPIFILE         = mozactivex.xpi
 
 FORCE_SHARED_LIB = 1
 NO_DIST_INSTALL	= 1
@@ -117,11 +118,11 @@ DEFINES += -DWIN32_LEAN_AND_MEAN
 LOCAL_INCLUDES = -I$(MOZCTLSRC)
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-LOCAL_INCLUDES += -I.\_java
+LOCAL_INCLUDES += -I./_java
 endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-LOCAL_INCLUDES += -I.\_xpidlgen
+LOCAL_INCLUDES += -I./_xpidlgen
 endif
 
 OS_LIBS += \
@@ -168,7 +169,7 @@ install-class:
 	$(INSTALL) MozAxPlugin.class $(DIST)/bin/plugins
 
 install-typelib:
-	$(INSTALL) _xpidlgen/nsIMozAxPlugin.xpt $(DIST)/bin/components
+	$(INSTALL) _xpidlgen/nsIMozAxPlugin.xpt $(DIST)/bin/plugins
 
 libs:: install-plugin
 
@@ -182,6 +183,24 @@ endif
 
 clean::
 	-rm $(DEFFILE)
+
+## Note: Ensure you create the redist dir containing the correct runtime dlls
+
+xpi:: install.js $(SHARED_LIBRARY)
+	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) install.js
+	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) $(SHARED_LIBRARY)
+	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) $(subst \,/,$(MOZ_SRC))/redist/microsoft/system/msvcrt.dll
+	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) $(subst \,/,$(MOZ_SRC))/redist/microsoft/system/msvcp60.dll
+
+ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+xpi::
+	$(ZIP_PROG) -9 $(DIST)/bin/$(XPIFILE) MozAxPlugin.class
+endif
+
+ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+xpi::
+	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) _xpidlgen/nsIMozAxPlugin.xpt
+endif
 
 $(DEFFILE):
 	-rm $@
