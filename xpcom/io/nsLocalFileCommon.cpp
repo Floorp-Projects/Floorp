@@ -155,11 +155,11 @@ static PRInt32 SplitPath(PRUnichar *path, PRUnichar **nodeArray, PRInt32 arrayLe
     for (PRUnichar *cp = path; *cp != 0; cp++) {
       if (*cp == kPathSeparatorChar) {
         *cp++ = 0;
-        if (*cp != 0) {
-          if (nodePtr - nodeArray >= arrayLen)
-            return -1;
-          *nodePtr++ = cp;
-        }
+        if (*cp == 0)
+          break;
+        if (nodePtr - nodeArray >= arrayLen)
+          return -1;
+        *nodePtr++ = cp;
       }
     }
     return nodePtr - nodeArray;
