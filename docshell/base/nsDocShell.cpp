@@ -6012,17 +6012,23 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     newSpec.EndReading(refEnd);
     
     PRInt32 hashNew = newSpec.FindChar(kHash);
-    if (hashNew <= 0) {
-        return NS_OK;           // Strange URI or no new anchor
+    if (hashNew == 0) {
+        return NS_OK;           // Strange URI
     }
 
-    // found it
-    urlEnd = urlStart;
-    urlEnd.advance(hashNew);
+    if (hashNew > 0) {
+        // found it
+        urlEnd = urlStart;
+        urlEnd.advance(hashNew);
         
-    refStart = urlEnd;
-    ++refStart;             // advanced past '#'
+        refStart = urlEnd;
+        ++refStart;             // advanced past '#'
         
+    }
+    else {
+        // no hash at all
+        urlEnd = refStart = refEnd;
+    }
     const nsACString& sNewLeft = Substring(urlStart, urlEnd);
     const nsACString& sNewRef =  Substring(refStart, refEnd);
                                           
@@ -6041,6 +6047,17 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     }
     else {
         currentSpec.EndReading(currentLeftEnd);
+    }
+
+    // If we have no new anchor, we do not want to scroll, unless there is a
+    // current anchor and we are doing a history load.  So return if we have no
+    // new anchor, and there is no current anchor or the load is not a history
+    // load.
+    NS_ASSERTION(hashNew != 0 && hashCurrent != 0,
+                 "What happened to the early returns above?");
+    if (hashNew == kNotFound &&
+        (hashCurrent == kNotFound || aLoadType != LOAD_HISTORY)) {
+        return NS_OK;
     }
 
     // Compare the URIs.
