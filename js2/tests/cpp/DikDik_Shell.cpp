@@ -221,6 +221,10 @@ static bool processArgs(Context *cx, int argc, char **argv, int *result)
     for (int i = 0; i < argc; i++)  {    
         if (argv[i][0] == '-') {
             switch (argv[i][1]) {
+            default:
+                stdOut << "unrecognized command line switch\n";
+                i = argc;
+                break;
             case 'f':
                 {
                     try {
@@ -235,7 +239,12 @@ static bool processArgs(Context *cx, int argc, char **argv, int *result)
                 break;
             }
         }
-
+        else {
+            if ((argv[i][0] == '/') && (argv[i][1] == '/')) {
+                // skip rest of command line
+                break;
+            }
+        }
     }
     return doInteractive;
 }
@@ -246,12 +255,14 @@ static bool processArgs(Context *cx, int argc, char **argv, int *result)
 
 int main(int argc, char **argv)
 {
-#if defined(XP_MAC) && !defined(XP_MAC_MPW)
-    initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
-#endif
-
     using namespace JavaScript;
     using namespace Shell;
+
+#if defined(XP_MAC) && !defined(XP_MAC_MPW)
+    initConsole("\pJavaScript Shell", "Welcome to DikDik.\n", argc, argv);
+#else
+    stdOut << "Welcome to DikDik.\n";
+#endif
 
     try {
         JSObject *globalObject;

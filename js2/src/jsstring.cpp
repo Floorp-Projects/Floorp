@@ -67,9 +67,18 @@ JSValue String_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv,
     return thatValue;
 }
 
+JSValue String_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    if (argc == 0)
+        return JSValue(&cx->Empty_StringAtom);
+    else
+        return argv[0].toString(cx);
+}
+
+
 JSValue String_fromCharCode(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
-    String *resultStr = new String();   // can't use cx->mEmptyString because we're modifying this below
+    String *resultStr = new String();   // can't use cx->Empty_StringAtom; because we're modifying this below
     resultStr->reserve(argc);
     for (uint32 i = 0; i < argc; i++)
         *resultStr += (char16)(argv[i].toUInt16(cx).f64);

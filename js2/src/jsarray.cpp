@@ -62,7 +62,17 @@ JSValue Array_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, 
     JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj);
     if (argc > 0) {
         if (argc == 1) {
-            arrInst->mLength = (uint32)(argv[0].toNumber(cx).f64);
+            if (argv[0].isNumber()) {
+                uint32 i = (uint32)(argv[0].f64);
+                if (i == argv[0].f64)
+                    arrInst->mLength = i;
+                else
+                    cx->reportError(Exception::rangeError, "Array length too large");
+            }
+            else {
+                arrInst->mLength = 1;
+                arrInst->defineVariable(cx, widenCString("0"), (NamespaceList *)(NULL), Property::Enumerable, Object_Type, argv[0]);
+            }
         }
         else {
             arrInst->mLength = argc;
@@ -93,7 +103,8 @@ static JSValue Array_toString(Context *cx, const JSValue& thisValue, JSValue * /
             const String *id = numberToString(i);
             arrInst->getProperty(cx, *id, NULL);
             JSValue result = cx->popValue();
-            s->append(*result.toString(cx).string);
+            if (!result.isUndefined() && !result.isNull())
+                s->append(*result.toString(cx).string);
             if (i < (arrInst->mLength - 1))
                 s->append(widenCString(","));
         }
@@ -385,9 +396,154 @@ static JSValue Array_slice(Context *cx, const JSValue& thisValue, JSValue *argv,
     return JSValue(A);
 }
 
-static JSValue Array_sort(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+typedef struct CompareArgs {
+    Context     *context;
+    JSFunction  *target;
+} CompareArgs;
+
+typedef struct QSortArgs {
+    JSValue      *vec;
+    JSValue      *pivot;
+    CompareArgs  *arg;
+} QSortArgs;
+
+static int sort_compare(JSValue *a, JSValue *b, CompareArgs *arg);
+
+static void
+js_qsort_r(QSortArgs *qa, int lo, int hi)
 {
-    return kUndefinedValue;
+    JSValue *pivot, *vec, *a, *b;
+    int i, j, lohi, hilo;
+
+    CompareArgs *arg;
+
+    pivot = qa->pivot;
+    vec = qa->vec;
+    arg = qa->arg;
+
+    while (lo < hi) {
+        i = lo;
+        j = hi;
+        a = vec + i;
+        *pivot = *a;
+        while (i < j) {
+            b = vec + j;
+            if (sort_compare(b, pivot, arg) >= 0) {
+                j--;
+                continue;
+            }
+            *a = *b;
+            while (sort_compare(a, pivot, arg) <= 0) {
+                i++;
+                a = vec + i;
+                if (i == j)
+                    goto store_pivot;
+            }
+            *b = *a;
+        }
+        if (i > lo) {
+      store_pivot:
+            *a = *pivot;
+        }
+        if (i - lo < hi - i) {
+            lohi = i - 1;
+            if (lo < lohi)
+                js_qsort_r(qa, lo, lohi);
+            lo = i + 1;
+        } else {
+            hilo = i + 1;
+            if (hilo < hi)
+                js_qsort_r(qa, hilo, hi);
+            hi = i - 1;
+        }
+    }
+}
+
+static void js_qsort(JSValue *vec, size_t nel, CompareArgs *arg)
+{
+    JSValue *pivot;
+    QSortArgs qa;
+
+    pivot = new JSValue();
+    qa.vec = vec;
+    qa.pivot = pivot;
+    qa.arg = arg;
+    js_qsort_r(&qa, 0, (int)(nel - 1));
+    delete(pivot);
+}
+
+static int sort_compare(JSValue *a, JSValue *b, CompareArgs *arg)
+{
+    JSValue av = *(const JSValue *)a;
+    JSValue bv = *(const JSValue *)b;
+    CompareArgs *ca = (CompareArgs *) arg;
+    Context *cx = ca->context;
+
+    if (ca->target == NULL) {
+        int32 result;
+        if (av.isUndefined() || bv.isUndefined()) {
+	    /* Put undefined properties at the end. */
+	    result = (av.isUndefined()) ? 1 : -1;
+    	}
+        else {
+            const String *astr = av.toString(cx).string;
+            const String *bstr = bv.toString(cx).string;
+            result = astr->compare(*bstr);
+        }
+        return result;
+    }
+    else {
+        JSValue argv[2];
+	argv[0] = av;
+	argv[1] = bv;
+        JSValue result = cx->invokeFunction(ca->target, kNullValue, argv, 2);
+        return (int32)(result.toInt32(cx).f64);
+    }
+}
+
+
+static JSValue Array_sort(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    ASSERT(thisValue.isObject());
+    ContextStackReplacement csr(cx);
+
+    CompareArgs ca;
+    ca.context = cx;
+
+    if (argc > 0) {
+        if (!argv[0].isFunction())
+            cx->reportError(Exception::typeError, "sort needs a compare function");
+        ca.target = argv[0].function;
+    }
+    else
+        ca.target = NULL;
+
+    JSObject *thisObj = thisValue.object;
+    thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
+    JSValue result = cx->popValue();
+    uint32 length = (uint32)(result.toUInt32(cx).f64);
+
+    if (length > 0) {
+        uint32 i;
+        JSValue *vec = new JSValue[length];
+
+        for (i = 0; i < length; i++) {
+            const String *id = numberToString(i);
+            thisObj->getProperty(cx, *id, CURRENT_ATTR);
+            vec[i] = cx->popValue();
+            delete id;
+        }
+
+        js_qsort(vec, length, &ca);
+
+        for (i = 0; i < length; i++) {
+            const String *id = numberToString(i);
+            thisObj->setProperty(cx, *id, CURRENT_ATTR, vec[i]);
+            delete id;
+        }
+        delete[] vec;
+    }
+    return thisValue;
 }
 
 static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)

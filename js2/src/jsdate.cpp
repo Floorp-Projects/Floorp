@@ -426,6 +426,74 @@ static JSValue Date_makeTime(Context *cx, const JSValue& thisValue, JSValue *arg
     return JSValue(*date);
 }
     
+static JSValue Date_makeDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc, uint32 maxargs, bool local)
+{
+    uint32 i;
+    float64 lorutime; /* local or UTC version of *date */
+    float64 args[3], *argp, *stop;
+    float64 year, month, day;
+    float64 result;
+
+    float64 *date = Date_getProlog(cx, thisValue);
+
+    result = *date;
+
+    /* see complaint about ECMA in date_MakeTime */
+    if (argc == 0)
+	argc = 1;   /* should be safe, because length of all settors is 1 */
+    else if (argc > maxargs)
+	argc = maxargs;   /* clamp argc */
+
+    for (i = 0; i < argc; i++) {
+        argv[i] = argv[i].toNumber(cx);        
+        if (JSDOUBLE_IS_NaN(argv[i])) {
+            *date = nan;
+            return kNaNValue;
+        }
+	args[i] = argv[i].toInteger(cx).f64;
+    }
+
+    /* return NaN if date is NaN and we're not setting the year,
+     * If we are, use 0 as the time. */
+    if (!(JSDOUBLE_IS_FINITE(result))) {
+	if (argc < 3)
+	    return kNaNValue;
+	else
+	    lorutime = +0.;
+    } else {
+	if (local)
+	    lorutime = LocalTime(result);
+	else
+	    lorutime = result;
+    }
+
+    argp = args;
+    stop = argp + argc;
+    if (maxargs >= 3 && argp < stop)
+	year = *argp++;
+    else
+	year = YearFromTime(lorutime);
+
+    if (maxargs >= 2 && argp < stop)
+	month = *argp++;
+    else
+	month = MonthFromTime(lorutime);
+
+    if (maxargs >= 1 && argp < stop)
+	day = *argp++;
+    else
+	day = DateFromTime(lorutime);
+
+    day = MakeDay(year, month, day); /* day within year */
+    result = MakeDate(day, TimeWithinDay(lorutime));
+
+    if (local)
+	result = UTC(result);
+
+    *date = TIMECLIP(result);
+    return JSValue(*date);
+}
+
 /* find UTC time from given date... no 1900 correction! */
 static float64 date_msecFromDate(float64 year, float64 mon, float64 mday, float64 hour, float64 min, float64 sec, float64 msec)
 {
@@ -1258,32 +1326,32 @@ static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv
 
 static JSValue Date_setFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    return Date_makeTime(cx, thisValue, argv, argc, 3, true);
+    return Date_makeDate(cx, thisValue, argv, argc, 3, true);
 }
 
 static JSValue Date_setUTCFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    return Date_makeTime(cx, thisValue, argv, argc, 3, false);
+    return Date_makeDate(cx, thisValue, argv, argc, 3, false);
 }
 
 static JSValue Date_setMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    return Date_makeTime(cx, thisValue, argv, argc, 2, true);
+    return Date_makeDate(cx, thisValue, argv, argc, 2, true);
 }
 
 static JSValue Date_setUTCMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    return Date_makeTime(cx, thisValue, argv, argc, 2, false);
+    return Date_makeDate(cx, thisValue, argv, argc, 2, false);
 }
 
 static JSValue Date_setDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    return Date_makeTime(cx, thisValue, argv, argc, 1, true);
+    return Date_makeDate(cx, thisValue, argv, argc, 1, true);
 }
 
 static JSValue Date_setUTCDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    return Date_makeTime(cx, thisValue, argv, argc, 1, false);
+    return Date_makeDate(cx, thisValue, argv, argc, 1, false);
 }
 
 static JSValue Date_setHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)

@@ -36,6 +36,7 @@ namespace JS2Runtime {
 
 
     extern JSValue String_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue String_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
     extern JSValue String_fromCharCode(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
     Context::PrototypeFunctions *getStringProtos();

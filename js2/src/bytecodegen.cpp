@@ -533,17 +533,6 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
 {
     mScopeChain->addScope(fnc->mParameterBarrel);
     mScopeChain->addScope(&fnc->mActivation);
-    // OPT - no need to push the parameter and function
-    // scopes if the function doesn't contain any 'eval'
-    // calls, all other references to the variables mapped
-    // inside these scopes will have been turned into
-    // localVar references.
-/*
-    addByte(PushScopeOp);
-    addPointer(fnc->mParameterBarrel);
-    addByte(PushScopeOp);   
-    addPointer(&fnc->mActivation);
-*/
 
 #ifdef DEBUG
     if (f.name) {
@@ -632,13 +621,8 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
     if (f.body)
         hasReturn = genCodeForStatement(f.body, NULL, NotALabel);
     
-/*
-    // OPT - see above
-    addByte(PopScopeOp);
-    addByte(PopScopeOp);
-*/  
     if (isConstructor) {
-        ASSERT(!hasReturn);     // is this useful? Won't the semantics have done it?
+        ASSERT(!hasReturn);     // XXX is this useful? Won't the semantics have done it?
         addOp(LoadThisOp);
         ASSERT(mStackTop == 1);
         addOpSetDepth(ReturnOp, 0);

@@ -1515,7 +1515,7 @@ XXX ...couldn't get this to work...
 
         void resizeStack(uint32 n)
         {
-            ASSERT(n < mStackMax);
+            ASSERT(n <= mStackMax);
             mStackTop = n;
         }
 
@@ -1619,6 +1619,13 @@ XXX ...couldn't get this to work...
 
     };
 
+    /*
+        (a local instance of) This class is used when a function in the
+        interpreter execution codepath may need to re-invoke the interpreter
+        (by calling an internal method that MAY have an override). The stack
+        replacement simply inserts a stack big enough for whatever action is
+        about to occur.
+    */
     class ContextStackReplacement {
     public:
         enum { ReplacementStackSize = 4 };

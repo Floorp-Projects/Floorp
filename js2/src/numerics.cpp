@@ -1683,8 +1683,6 @@ double JS::stringToDouble(const char16 *str, const char16 *strEnd, const char16 
     double value = strToDouble(cstr.get(), estr);
     ptrdiff_t i = estr - cstr.get();
     numEnd = i ? str1 + i : str;
-    if ((value == 0.0) && (i == 0))
-        return nan;
     return value;
 }
 

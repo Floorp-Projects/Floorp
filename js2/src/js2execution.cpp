@@ -202,8 +202,9 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
         mScopeChain = new ScopeChain(this, mWorld);
         mScopeChain->addScope(getGlobalObject());
     }
-    if (mThis.isObject())
-        mScopeChain->addScope(mThis.object);
+    
+//    if (mThis.isObject())
+//        mScopeChain->addScope(mThis.object);
 //    mScopeChain->addScope(mActivationStack.top());
 
     mCurModule = bcm;
@@ -225,8 +226,8 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
 
         // the following (delete's) are a bit iffy - depends on whether
         // a closure capturing the contents has come along...
-        if (mThis.isObject())
-            mScopeChain->popScope();
+//        if (mThis.isObject())
+//          mScopeChain->popScope();
         delete[] mStack;
         delete[] mLocals;
         if (scopeChain == NULL)
@@ -249,8 +250,8 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
 
     // the following (delete's) are a bit iffy - depends on whether
     // a closure capturing the contents has come along...
-    if (mThis.isObject())
-        mScopeChain->popScope();
+//    if (mThis.isObject())
+//        mScopeChain->popScope();
     delete[] mStack;
     delete[] mLocals;
     if (scopeChain == NULL)
@@ -401,6 +402,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
         try {
             if (mDebugFlag) {
                 FunctionName *fnName;
+                uint32 x = mScopeChain->mScopeStack.size();
                 if (mCurModule->mFunction && (fnName = mCurModule->mFunction->getFunctionName())) {
                     StringFormatter s;
                     PrettyPrinter pp(s);
@@ -409,10 +411,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     std::string str(fnStr.length(), char());
                     std::transform(fnStr.begin(), fnStr.end(), str.begin(), narrow);
                     uint32 len = strlen(str.c_str());
-                    printFormat(stdOut, "%.30s+%.4d%*c%d        ", str.c_str(), (pc - mCurModule->mCodeBase), (len > 30) ? 0 : (len - 30), ' ', stackSize());
+                    printFormat(stdOut, "%.30s+%.4d%*c%d %d        ", str.c_str(), (pc - mCurModule->mCodeBase), (len > 30) ? 0 : (len - 30), ' ', stackSize(), x);
                 }
                 else
-                    printFormat(stdOut, "+%.4d%*c%d        ", (pc - mCurModule->mCodeBase), 30, ' ', stackSize());
+                    printFormat(stdOut, "+%.4d%*c%d %d        ", (pc - mCurModule->mCodeBase), 30, ' ', stackSize(), x);
                 printInstruction(stdOut, toUInt32(pc - mCurModule->mCodeBase), *mCurModule);
             }
             switch ((ByteCodeOp)(*pc++)) {
@@ -639,8 +641,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                                                                     mArgumentBase, oldThis,
                                                                     pc, mCurModule));
                         mScopeChain = target->getScopeChain();
-                        if (mThis.isObject())
-                            mScopeChain->addScope(mThis.object);
+//                        if (mThis.isObject())
+//                            mScopeChain->addScope(mThis.object);
 
                         if (!target->isChecked()) {
                             JSArrayInstance *args = (JSArrayInstance *)Array_Type->newInstance(this);
@@ -692,7 +694,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     }
                     mActivationStack.pop();
                     delete[] mLocals;
-                    delete[] mStack;                    
+                    delete[] mStack;
+
+                    mScopeChain->popScope();
+                    mScopeChain->popScope();
 
                     mCurModule = prev->mModule;
                     pc = prev->mPC;
@@ -720,6 +725,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     mActivationStack.pop();
                     delete[] mLocals;
                     delete[] mStack;                    
+
+                    mScopeChain->popScope();
+                    mScopeChain->popScope();
 
                     mCurModule = prev->mModule;
                     pc = prev->mPC;
@@ -2225,8 +2233,19 @@ float64 stringToNumber(const String *string)
     if (sBegin)
         if ((sBegin[0] == '0') && ((sBegin[1] & ~0x20) == 'X'))
             return stringToInteger(sBegin, string->end(), numEnd, 16);
-        else
-            return stringToDouble(sBegin, string->end(), numEnd);
+        else {
+            float64 result = stringToDouble(sBegin, string->end(), numEnd);
+            if (numEnd != string->end()) {
+                const char16 *sEnd = string->end();
+                while (numEnd != sEnd) {
+                    if (!isSpace(*numEnd++))
+                        return nan;
+                }
+                return result;
+            }
+            else
+                return result;
+        }
     else
         return 0.0;
 }

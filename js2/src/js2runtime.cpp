@@ -175,9 +175,11 @@ bool JSObject::hasProperty(const String &name, NamespaceList *names, Access acc,
 bool JSObject::deleteProperty(const String &name, NamespaceList *names)
 {    
     PropertyIterator i = findNamespacedProperty(name, names);
-    if ((PROPERTY_ATTR(i) & Property::DontDelete) == 0) {
-        mProperties.erase(i);
-        return true;
+    if (i != mProperties.end()) {
+        if ((PROPERTY_ATTR(i) & Property::DontDelete) == 0) {
+            mProperties.erase(i);
+            return true;
+        }
     }
     return false;
 }
@@ -1962,6 +1964,14 @@ static JSValue Number_Constructor(Context *cx, const JSValue& thisValue, JSValue
     return v;
 }
 
+static JSValue Number_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    if (argc == 0)
+        return kPositiveZero;
+    else
+        return argv[0].toNumber(cx);
+}
+
 static JSValue Number_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     if (!thisValue.isObject() || (thisValue.getType() != Number_Type))
@@ -2387,14 +2397,17 @@ void Context::initBuiltins()
 
     Function_Type->mTypeCast = new JSFunction(this, Function_Constructor, Object_Type);
 
+    Number_Type->mTypeCast = new JSFunction(this, Number_TypeCast, Number_Type);
+
     Array_Type->defineUnaryOperator(Index, new JSFunction(this, Array_GetElement, Object_Type));
     Array_Type->defineUnaryOperator(IndexEqual, new JSFunction(this, Array_SetElement, Object_Type));
+    Array_Type->mTypeCast = new JSFunction(this, Array_Constructor, Array_Type);
 
     Date_Type->mTypeCast = new JSFunction(this, Date_TypeCast, String_Type);
     Date_Type->defineStaticMethod(this, widenCString("parse"), NULL, new JSFunction(this, Date_parse, Number_Type));
     Date_Type->defineStaticMethod(this, widenCString("UTC"), NULL, new JSFunction(this, Date_UTC, Number_Type));
 
-    String_Type->mTypeCast = new JSFunction(this, String_Constructor, String_Type);
+    String_Type->mTypeCast = new JSFunction(this, String_TypeCast, String_Type);
 
 }
 
