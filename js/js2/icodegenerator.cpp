@@ -430,7 +430,8 @@ TypedRegister ICodeGenerator::methodCall(TypedRegister targetBase, TypedRegister
 TypedRegister ICodeGenerator::staticCall(JSClass *c, const StringAtom &name, RegisterList args)
 {
     TypedRegister dest(getRegister(), &Any_Type);
-    StaticCall *instr = new StaticCall(dest, c, &name, args);
+    const JSSlot& slot = c->getStatic(name);
+    StaticCall *instr = new StaticCall(dest, c, slot.mIndex, args);
     iCode->push_back(instr);
     return dest;
 }
@@ -694,8 +695,10 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 v = getSlot(base, slotIndex);
                 break;
             }
-            if (use == ExprNode::dot) 
+            if (use == ExprNode::dot) {
+                ret = v;
                 break;
+            }
             ret = op(mapExprNodeToICodeOp(use), v, ret);
             // fall thru...
         case ExprNode::assignment:
