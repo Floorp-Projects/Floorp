@@ -1259,7 +1259,8 @@ nsListBoxBodyFrame::ListBoxInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameLi
 void 
 nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* aChildContent)
 {
-  ++mRowCount;
+  if (mRowCount >= 0)
+    ++mRowCount;
 
   nsIPresShell *shell = aPresContext->PresShell();
   // The RDF content builder will build content nodes such that they are all 
@@ -1299,7 +1300,8 @@ nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* 
 void
 nsListBoxBodyFrame::OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aChildFrame, PRInt32 aIndex)
 {
-  --mRowCount;
+  if (mRowCount >= 0)
+    --mRowCount;
 
   if (!aChildFrame) {
     // The row we are removing is out of view, so we need to try to
