@@ -38,13 +38,13 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.15 2000/04/05 02:36:47 mkaply%us.ibm.com Exp $
+   $Id: color.cpp,v 3.16 2000/07/10 07:13:27 cls%seawood.org Exp $
 */
 
 
 #include "if.h"
 #include "nsQuickSort.h"
-#include "xp_mcom.h" //for XP_RANDOM
+#include "xp_str.h" //for XP_RANDOM
 
 #ifdef PROFILE
 #pragma profile on

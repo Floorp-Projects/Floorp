@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include "platform.h"
+#include "xp_core.h"
 
 #define XP_STRCASECMP  strcasecomp
 #define XP_STRNCASECMP strncasecomp
@@ -34,7 +35,6 @@
 #define XP_TO_UPPER(i)  xp_toupper(i)	
 #define XP_TO_LOWER(i) 	xp_tolower(i)
 
-#ifdef XP_UNIX /* because I can't verify yet.. */
 #ifdef DEBUG
 	XP_BEGIN_PROTOS
 		extern char * NOT_NULL (const char *x);
@@ -136,7 +136,6 @@
 #endif
 #endif
 
-#endif /* XP_UNIX -- ifdef'd because I can't yet verify */
 XP_BEGIN_PROTOS
 
 /*

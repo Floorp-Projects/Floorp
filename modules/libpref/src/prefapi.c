@@ -22,6 +22,7 @@
 
 #include "prefapi.h"
 #include "jsapi.h"
+#include "xp_core.h" /* Needed for XP_ defines */
 
 #define PREF_SUPPORT_OLD_PATH_STRINGS 1
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
@@ -52,8 +53,10 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "prprf.h"
+#if 0
 #include "xpassert.h"
 #include "xp_str.h"
+#endif
 #include "nsQuickSort.h"
 
 #ifdef XP_OS2

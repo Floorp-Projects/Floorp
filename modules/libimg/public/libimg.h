@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.7 2000/03/19 16:58:09 morse%netscape.com Exp $
+ *  $Id: libimg.h,v 3.8 2000/07/10 07:13:26 cls%seawood.org Exp $
  */
 
 
@@ -32,7 +32,9 @@
 #include "prtypes.h"
 #include "il_types.h"
 
+#if 0
 #include "dummy_nc.h"
+#endif
 
 #include "ilISystemServices.h"
 #include "ilIImageRenderer.h"

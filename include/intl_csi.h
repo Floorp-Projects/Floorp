@@ -182,6 +182,7 @@ PUBLIC void INTL_CSIReportMetaCharsetTag(
     int type
 );
 
+#if 0
 /**
  * Returns the context's charset info object.
  *
@@ -192,6 +193,7 @@ PUBLIC void INTL_CSIReportMetaCharsetTag(
 PUBLIC INTL_CharSetInfo LO_GetDocumentCharacterSetInfo(
     MWContext *context
 );
+#endif
 
 /**
  * Returns the document charset ID of the given charset info object.

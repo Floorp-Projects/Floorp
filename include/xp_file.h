@@ -24,6 +24,7 @@
 #ifndef _XP_File_
 #define _XP_File_
 
+#include "xp_core.h"
 #include "xp_path.h"
 
 #define XP_FILE_NATIVE_PATH char *

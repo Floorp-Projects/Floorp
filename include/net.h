@@ -34,9 +34,10 @@
 #ifndef _NET_PROTO_H_
 #define _NET_PROTO_H_
 
+#include "ntypes.h"
+#if 0
 #include "xp_core.h"
 #include "prio.h"
-#include "ntypes.h"
 #include "shistele.h"
 #include "xp_list.h"
 #include "msgtypes.h"
@@ -215,6 +216,7 @@ Net_GetUrlExitFunc (URL_Struct *URL_s, int status, MWContext *window_id);
 typedef void
 Net_GetUrlProgressFunc (URL_Struct *URL_s, int status, MWContext *window_id);
 
+#endif
 
 /* A structure to store all headers that can be passed into HTTPLOAD. 
  * Used for supporting URLConnection object of Java
@@ -226,6 +228,7 @@ typedef struct _NET_AllHeaders {
     uint32 max_index;           /* maximum no of free slots allocated */
 } NET_AllHeaders;
 
+#if 0
 /* Forward declaration to make compiler happy on OSF1 */
 #if defined (OSF1)
 #ifdef XP_CPLUSPLUS
@@ -252,12 +255,14 @@ typedef struct _ExtCacheDBInfo {
 
 } ExtCacheDBInfo;
 */
+#endif
 
 typedef enum {
     Normal_priority,
     Prefetch_priority,              /* passed in to prefetch a URL in the background */
     CurrentlyPrefetching_priority   /* a prefetch url currently loading */
 } URLLoadPriority;
+
 
 /* passing in structure 
  *
@@ -304,11 +309,13 @@ struct URL_Struct_ {
                                  * proxying
                                  */
     char  * window_target;      /* named window support */
+#if 0
     Chrome * window_chrome;     /* pointer to a Chrome structure that
                                  * if non-null specifies the characteristics
                                  * of the target window named in 
                                  * the window_target variable
                                  */
+#endif
 
     /* attributes of the URL that are assembled
      * during and after transfer of the data
@@ -348,6 +355,7 @@ struct URL_Struct_ {
                                            * the filename of its local cache 
                                            * file containing it's data
                                            */
+#if 0
 #ifdef NU_CACHE
     void*    cache_object;
 #else
@@ -357,6 +365,7 @@ struct URL_Struct_ {
                                            * memory segments
                                            * containing it's data
                                            */
+#endif
 #endif
 
     void   * fe_data;                     /* random front end data to be passed
@@ -387,11 +396,13 @@ struct URL_Struct_ {
 
     int32   position_tag;                 /* tag number of last position */
 
+#if 0
     SHIST_SavedData savedData;            /* layout data */
 
     Net_GetUrlExitFunc *pre_exit_fn;      /* If set, called just before the
                                              exit routine that was passed
                                              in to NET_GetURL. */
+#endif
 
     /* Security information */
     int     security_on;                  /* is security on? */
@@ -507,6 +518,7 @@ struct URL_Struct_ {
 #endif
 };
 
+#if 0
 #ifndef NU_CACHE /* Not on my branch you don't */
 /*  silly macro's (methods) to access the URL Struct that nobody uses
  */
@@ -2453,4 +2465,5 @@ extern XP_Bool NET_IsOffline();
 
 XP_END_PROTOS
 
+#endif /* 0 */
 #endif /* _NET_PROTO_H_ */

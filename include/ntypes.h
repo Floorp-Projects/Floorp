@@ -26,13 +26,14 @@
 
 #include "xp_core.h"
 
+#if 0
 /*
 	netlib
 */
 typedef int FO_Present_Types;
 typedef struct URL_Struct_ URL_Struct;
 typedef struct _NET_StreamClass NET_StreamClass;
-
+#endif
 
 /*
  * libi18n
@@ -58,6 +59,7 @@ typedef enum NET_ReloadMethod
      SERVER_ONLY       /* server only, force_reload */
 } NET_ReloadMethod;
 
+#if 0
 /*
    plugins
 */
@@ -210,6 +212,8 @@ typedef enum
 
 
 struct LJAppletData;
+
+#endif /* 0 */
 
 #endif /* _NetscapeTypes_ */
 
