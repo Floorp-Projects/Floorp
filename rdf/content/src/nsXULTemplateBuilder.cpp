@@ -71,6 +71,8 @@
 #include "nsIHTMLContent.h"
 #include "nsRDFGenericBuilder.h"
 
+#include "nsIDOMXULDocument.h"
+
 #define	XUL_TEMPLATES	1
 
 ////////////////////////////////////////////////////////////////////////
@@ -1348,11 +1350,146 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
             if (NS_FAILED(rv)) return rv;
 
+#ifdef XUL_TEMPLATES
+		nsAutoString	templateID;
+		if (NS_SUCCEEDED(rv = element->GetAttribute(kNameSpaceID_None,
+			kTreeTemplateAtom, templateID)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+		{
+			nsCOMPtr<nsIDocument> doc;
+			if (NS_SUCCEEDED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc))))
+			{
+				nsCOMPtr<nsIDOMElement>		domElement;
+				nsCOMPtr<nsIDOMXULDocument>	xulDoc;
+				nsCOMPtr<nsIContent>		templateNode;
+
+				xulDoc = do_QueryInterface(doc);
+				if (xulDoc)
+				{
+					xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+					if (domElement)
+					{
+						templateNode = do_QueryInterface(domElement);
+						if (templateNode)
+						{
+							// this node was created by a XUL template, so update it accordingly
+							rv = UpdateWidgetItemAttribute(templateNode, element, PR_TRUE, aPredicate, target);
+						}
+					}
+				}
+			}
+			return(rv);
+		}
+#endif
+            // fall through if node wasn't created by a XUL template
             return SetWidgetAttribute(element, aPredicate, target);
         }
     }
     return NS_OK;
 }
+
+
+
+nsresult
+RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
+	nsIContent* aTreeItemElement, PRBool truth, nsIRDFResource* aProperty, nsIRDFNode* aValue)
+{
+	nsresult		rv = NS_OK;
+	PRInt32			nameSpaceID;
+	nsCOMPtr<nsIAtom>	tag;
+	rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag));
+	if (NS_FAILED(rv))	return(rv);
+
+	// check whether this item is a containment item for aValue 
+	nsAutoString	idValue;
+	if (NS_SUCCEEDED(rv = aTemplateNode->GetAttribute(kNameSpaceID_None,
+                      kURIAtom, idValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+	{
+		if (idValue.EqualsIgnoreCase("..."))
+		{
+			// no matter what, it's also been set as an attribute.
+			nsAutoString		idNodeValue("");
+			if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(aValue, idNodeValue)))
+			{
+				if (truth)
+				{
+					rv = aTreeItemElement->SetAttribute(nameSpaceID, tag, idNodeValue, PR_TRUE);
+				}
+				else
+				{
+					rv = aTreeItemElement->UnsetAttribute(nameSpaceID, tag, PR_TRUE);
+				}
+			}
+		}
+	}
+
+	// check all attributes on the template node; if they reference a resource,
+	// update the equivalent attribute on the content node
+	PRInt32		numAttribs;
+	if (NS_SUCCEEDED(rv = aTemplateNode->GetAttributeCount(numAttribs)) &&
+			(rv == NS_CONTENT_ATTR_HAS_VALUE))
+	{
+		for (PRInt32 aLoop=0; aLoop<numAttribs; aLoop++)
+		{
+			PRInt32			attribNameSpaceID;
+			nsCOMPtr<nsIAtom>	attribName;
+			if (NS_SUCCEEDED(rv = aTemplateNode->GetAttributeNameAt(aLoop,
+				attribNameSpaceID, *getter_AddRefs(attribName))))
+			{
+				nsAutoString	attribValue;
+				if (NS_SUCCEEDED(rv = aTemplateNode->GetAttribute(attribNameSpaceID,
+						attribName,attribValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+				{
+					if (attribValue.Find("rdf:") == 0)
+					{
+						// found an attribute which wants to bind its value
+						// to RDF so look it up in the graph
+						attribValue.Cut(0,4);
+						char	*prop = attribValue.ToNewCString();
+						if (nsnull == prop)	continue;
+						nsCOMPtr<nsIRDFResource>	propRes;
+						rv = gRDFService->GetResource(prop, getter_AddRefs(propRes));
+						delete [] prop;
+						if (NS_FAILED(rv))	continue;
+
+						if (propRes == aProperty)
+						{
+							nsAutoString		attribValue("");
+							if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(aValue, attribValue)))
+							{
+								if ((attribValue.Length() > 0) && (truth))
+								{
+									aTreeItemElement->SetAttribute(attribNameSpaceID,
+										attribName, attribValue, PR_TRUE);
+								}
+								else
+								{
+									aTreeItemElement->UnsetAttribute(attribNameSpaceID,
+										attribName, PR_TRUE);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// sync up template kids with content kids
+	PRInt32			count;
+	if (NS_FAILED(rv = aTemplateNode->ChildCount(count)))	return(rv);
+	for (PRInt32 loop=0; loop<count; loop++)
+	{
+		nsCOMPtr<nsIContent>	aTemplateKid;
+		if (NS_FAILED(rv = aTemplateNode->ChildAt(loop, *getter_AddRefs(aTemplateKid))))
+			continue;
+		nsCOMPtr<nsIContent>	aTreeItemKid;
+		if (NS_FAILED(rv = aTreeItemElement->ChildAt(loop, *getter_AddRefs(aTreeItemKid))))
+			continue;
+		rv = UpdateWidgetItemAttribute(aTemplateKid, aTreeItemKid, truth, aProperty, aValue);
+	}
+	return(rv);
+}
+
 
 
 NS_IMETHODIMP
@@ -1435,6 +1572,38 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
             rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
             if (NS_FAILED(rv)) return rv;
 
+#ifdef XUL_TEMPLATES
+		nsAutoString	templateID;
+		if (NS_SUCCEEDED(rv = element->GetAttribute(kNameSpaceID_None,
+			kTreeTemplateAtom, templateID)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+		{
+			nsCOMPtr<nsIDocument> doc;
+			if (NS_SUCCEEDED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc))))
+			{
+				nsCOMPtr<nsIDOMElement>		domElement;
+				nsCOMPtr<nsIDOMXULDocument>	xulDoc;
+				nsCOMPtr<nsIContent>		templateNode;
+
+				xulDoc = do_QueryInterface(doc);
+				if (xulDoc)
+				{
+					xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+					if (domElement)
+					{
+						templateNode = do_QueryInterface(domElement);
+						if (templateNode)
+						{
+							// this node was created by a XUL template, so update it accordingly
+							rv = UpdateWidgetItemAttribute(templateNode, element, PR_FALSE, aPredicate, target);
+						}
+					}
+				}
+			}
+			return(rv);
+		}
+#endif
+
+            // fall through if node wasn't created by a XUL template
             if (rv == NS_RDF_NO_VALUE) {
                 return UnsetWidgetAttribute(element, aPredicate, aObject);
             }
