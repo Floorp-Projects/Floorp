@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.10 $ $Date: 2002/06/24 22:36:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.11 $ $Date: 2002/07/09 04:40:35 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -237,7 +237,8 @@ within_token_delay_period(NSSSlot *slot)
     }
     time = PR_IntervalNow();
     lastTime = slot->lastTokenPing;
-    if ((time > lastTime) && ((time - lastTime) < s_token_delay_time)) {
+    if ((lastTime) &&
+	(time > lastTime) && ((time - lastTime) < s_token_delay_time)) {
 	return PR_TRUE;
     }
     slot->lastTokenPing = time;
