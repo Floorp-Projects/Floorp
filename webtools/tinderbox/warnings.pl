@@ -147,8 +147,6 @@ $source_root = 'mozilla';
 #
 print STDERR "Building hash of file names...";
 ($file_bases, $file_fullpaths) = build_file_hash($cvs_root, $tree);
-$file_bases = {};
-$file_fullpaths = {};
 print STDERR "done.\n";
 
 # Find the build we want and generate warnings for it
