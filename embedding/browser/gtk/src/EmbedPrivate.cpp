@@ -405,12 +405,18 @@ EmbedPrivate::SetURI(const char *aURI)
 void
 EmbedPrivate::LoadCurrentURI(void)
 {
-  if (mURI.Length())
+  if (mURI.Length()) {
+    nsCOMPtr<nsPIDOMWindow> piWin;
+    GetPIDOMWindow(getter_AddRefs(piWin));
+
+    nsAutoPopupStatePusher popupStatePusher(piWin, openAllowed);
+
     mNavigation->LoadURI(mURI.get(),                        // URI string
                          nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
                          nsnull,                            // Referring URI
                          nsnull,                            // Post data
                          nsnull);                           // extra headers
+  }
 }
 
 void
