@@ -205,10 +205,10 @@ net_ParseFileURL(const nsACString &inURL,
 // path manipulation functions
 //----------------------------------------------------------------------------
 
-// Replace all /./ with a / while resolving relative URLs
+// Replace all /./ with a / while resolving URLs
 // But only till #? 
 void 
-net_CoalesceDirsRel(char* io_Path)
+net_CoalesceDirs(netCoalesceFlags flags, char* path)
 {
     /* Stolen from the old netlib's mkparse.c.
      *
@@ -216,83 +216,23 @@ net_CoalesceDirsRel(char* io_Path)
      *                       and    /foo/./foo1   ->  /foo/foo1
      *                       and    /foo/foo1/..  ->  /foo/
      */
-    char *fwdPtr = io_Path;
-    char *urlPtr = io_Path;
-    
-    for(; (*fwdPtr != '\0') && 
-            (*fwdPtr != '?') && 
-            (*fwdPtr != '#'); ++fwdPtr)
-    {
-
-#if defined(XP_WIN)
-        // At first, If this is DBCS character, it skips next character.
-        if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') {
-            *urlPtr++ = *fwdPtr++;
-            *urlPtr++ = *fwdPtr;
-            continue;
-        }
-#endif
-
-        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/' )
-        {
-            // remove . followed by slash
-            fwdPtr += 1;
-        }
-        else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
-                (*(fwdPtr+3) == '/' || 
-                    *(fwdPtr+3) == '\0' || // This will take care of 
-                    *(fwdPtr+3) == '?' ||  // something like foo/bar/..#sometag
-                    *(fwdPtr+3) == '#'))
-        {
-            // remove foo/.. 
-            // reverse the urlPtr to the previous slash 
-            if(urlPtr != io_Path) 
-                urlPtr--; // we must be going back at least by one 
-            for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
-                ;  // null body 
-
-            // forward the fwd_prt past the ../
-            fwdPtr += 2;
-            // special case if we have reached the end to preserve the last /
-            if (*fwdPtr == '.' && *(fwdPtr+1) == '\0')
-                urlPtr +=1;
-        }
-        else
-        {
-            // copy the url incrementaly 
-            *urlPtr++ = *fwdPtr;
-        }
-    }
-    // Copy remaining stuff past the #?;
-    for (; *fwdPtr != '\0'; ++fwdPtr)
-    {
-        *urlPtr++ = *fwdPtr;
-    }
-    *urlPtr = '\0';  // terminate the url 
-
-    /* 
-     *  Now lets remove trailing . case
-     *     /foo/foo1/.   ->  /foo/foo1/
-     */
-
-    if ((urlPtr > (io_Path+1)) && (*(urlPtr-1) == '.') && (*(urlPtr-2) == '/'))
-        *(urlPtr-1) = '\0';
-}
-
-// Replace all /./ with a / while resolving absolute URLs
-// But only till #? 
-void 
-net_CoalesceDirsAbs(char* io_Path)
-{
-    /* Stolen from the old netlib's mkparse.c.
-     *
-     * modifies a url of the form   /foo/../foo1  ->  /foo1
-     *                       and    /foo/./foo1   ->  /foo/foo1
-     *                       and    /foo/foo1/..  ->  /foo/
-     */
-    char *fwdPtr = io_Path;
-    char *urlPtr = io_Path;
+    char *fwdPtr = path;
+    char *urlPtr = path;
     PRUint32 traversal = 0;
+    PRUint32 special_ftp_len = 0;
+
+    /* Remember if this url is a special ftp one: */
+    if (flags & NET_COALESCE_DOUBLE_SLASH_IS_ROOT) 
+    {
+       /* some schemes (for example ftp) have the speciality that 
+          the path can begin // or /%2F to mark the root of the 
+          servers filesystem, a simple / only marks the root relative 
+          to the user loging in. We remember the length of the marker */
+        if (nsCRT::strncasecmp(path,"/%2F",4) == 0)
+            special_ftp_len = 4;
+        else if (nsCRT::strncmp(path,"//",2) == 0 )
+            special_ftp_len = 2; 
+    }
 
     for(; (*fwdPtr != '\0') && 
             (*fwdPtr != '?') && 
@@ -301,7 +241,8 @@ net_CoalesceDirsAbs(char* io_Path)
 
 #if defined(XP_WIN)
         // At first, If this is DBCS character, it skips next character.
-        if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') {
+        if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') 
+        {
             *urlPtr++ = *fwdPtr++;
             *urlPtr++ = *fwdPtr;
             continue;
@@ -321,23 +262,47 @@ net_CoalesceDirsAbs(char* io_Path)
         {
             // remove foo/.. 
             // reverse the urlPtr to the previous slash if possible
-            if(traversal > 0 )
+            // if url does not allow relative root then drop .. above root 
+            // otherwise retain them in the path 
+            if(traversal > 0 || !(flags & 
+                                  NET_COALESCE_ALLOW_RELATIVE_ROOT))
             { 
-                if (urlPtr != io_Path)
+                if (urlPtr != path)
                     urlPtr--; // we must be going back at least by one 
-                for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
+                for(;*urlPtr != '/' && urlPtr != path; urlPtr--)
                     ;  // null body 
                 --traversal; // count back
                 // forward the fwdPtr past the ../
                 fwdPtr += 2;
+                // if we have reached the beginning of the path
+                // while searching for the previous / and we remember
+                // that it is an url that begins with /%2F then
+                // advance urlPtr again by 3 chars because /%2F already 
+                // marks the root of the path
+                if (urlPtr == path && special_ftp_len > 3) 
+                {
+                    ++urlPtr;
+                    ++urlPtr;
+                    ++urlPtr;
+                }
                 // special case if we have reached the end 
                 // to preserve the last /
                 if (*fwdPtr == '.' && *(fwdPtr+1) == '\0')
                     ++urlPtr;
-            } else {
+            } 
+            else 
+            {
                 // there are to much /.. in this path, just copy them instead.
                 // forward the urlPtr past the /.. and copying it
-                *urlPtr++ = *fwdPtr;
+
+                // However if we remember it is an url that starts with
+                // /%2F and urlPtr just points at the "F" of "/%2F" then do 
+                // not overwrite it with the /, just copy .. and move forward
+                // urlPtr. 
+                if (special_ftp_len > 3 && urlPtr == path+special_ftp_len-1)
+                    ++urlPtr;
+                else 
+                    *urlPtr++ = *fwdPtr;
                 ++fwdPtr;
                 *urlPtr++ = *fwdPtr;
                 ++fwdPtr;
@@ -346,11 +311,11 @@ net_CoalesceDirsAbs(char* io_Path)
         }
         else
         {
-            if(*fwdPtr == '/' && *(fwdPtr+1) != '.')
-            {
-                // count the hierachie
+            // count the hierachie, but only if we do not have reached
+            // the root of some special urls with a special root marker 
+            if (*fwdPtr == '/' &&  *(fwdPtr+1) != '.' &&
+               (special_ftp_len != 2 || *(fwdPtr+1) != '/'))
                 traversal++;
-            }  
             // copy the url incrementaly 
             *urlPtr++ = *fwdPtr;
         }
@@ -367,7 +332,7 @@ net_CoalesceDirsAbs(char* io_Path)
      *     /foo/foo1/.   ->  /foo/foo1/
      */
 
-    if ((urlPtr > (io_Path+1)) && (*(urlPtr-1) == '.') && (*(urlPtr-2) == '/'))
+    if ((urlPtr > (path+1)) && (*(urlPtr-1) == '.') && (*(urlPtr-2) == '/'))
         *(urlPtr-1) = '\0';
 }
 

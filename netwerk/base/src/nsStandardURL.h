@@ -51,6 +51,7 @@
 #include "nsIObserver.h"
 #include "nsIIOService.h"
 #include "nsCOMPtr.h"
+#include "nsURLHelper.h"
 
 class nsIBinaryInputStream;
 class nsIBinaryOutputStream;
@@ -146,7 +147,7 @@ private:
     void     InvalidateCache(PRBool invalidateCachedFile = PR_TRUE);
 
     PRBool   EncodeHost(const char *host, nsCString &result);
-    void     CoalescePath(char *path);
+    void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
     PRUint32 AppendSegmentToBuf(char *, PRUint32, const char *, URLSegment &, const nsCString *esc=nsnull);
     PRUint32 AppendToBuf(char *, PRUint32, const char *, PRUint32);
@@ -156,6 +157,7 @@ private:
     PRBool   HostsAreEquivalent(nsStandardURL *other);
 
     PRBool   SegmentIs(const URLSegment &s1, const char *val);
+    PRBool   SegmentIs(const char* spec, const URLSegment &s1, const char *val);
     PRBool   SegmentIs(const URLSegment &s1, const char *val, const URLSegment &s2);
 
     PRInt32  ReplaceSegment(PRUint32 pos, PRUint32 len, const char *val, PRUint32 valLen);
