@@ -366,10 +366,12 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.setAttribute( "left", left );
    
    eventBox.setAttribute( "class", "week-view-event-class" );
-   eventBox.setAttribute( "style", "width: "+Width+"; height: "+Height+";" );
    eventBox.setAttribute( "eventbox", "weekview" );
    eventBox.setAttribute( "onclick", "weekEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
+   eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
+   eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
+   eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
    eventBox.setAttribute( "id", "week-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "name", "week-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
@@ -383,12 +385,18 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    ** The event description. This doesn't go multi line, but does crop properly.
    */
    var eventDescriptionElement = document.createElement( "label" );
+   eventDescriptionElement.calendarEventDisplay = calendarEventDisplay;
+   eventDescriptionElement.setAttribute( "class", "week-view-event-label-class" );
    eventDescriptionElement.setAttribute( "value", eventText );
    eventDescriptionElement.setAttribute( "flex", "1" );
    var DescriptionText = document.createTextNode( " " );
    eventDescriptionElement.appendChild( DescriptionText );
    eventDescriptionElement.setAttribute( "style", "height: "+Height+";" );
    eventDescriptionElement.setAttribute( "crop", "end" );
+   eventDescriptionElement.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
+   eventDescriptionElement.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
+   eventDescriptionElement.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
+
    eventBox.appendChild( eventDescriptionElement );
    
    
@@ -664,24 +672,6 @@ WeekView.prototype.clearSelectedEvent = function( )
 }
 
 
-/** PUBLIC  -- monthview only
-*
-*   Called when an event box item is single clicked
-*/
-
-WeekView.prototype.clickEventBox = function( eventBox, event )
-{
-   this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-
-   // Do not let the click go through, suppress default selection
-   
-   if ( event )
-   {
-      event.stopPropagation();
-   }
-}
-
-
 /** PUBLIC
 *
 *   This is called when we are about the make a new event
@@ -714,55 +704,6 @@ WeekView.prototype.clearSelectedDate = function( )
    }
 }
 
-
-var gStartDate = null;
-var gDayIndex = null;
-
-var eventEndObserver = {
-  getSupportedFlavours : function () {
-    var weekflavours = new FlavourSet();
-    weekflavours.appendFlavour("text/unicode");
-    return weekflavours;
-  },
-  onDragOver: function (evt,flavour,session){
-      if( evt.target.getAttribute( "day" ) != gDayIndex )
-         return false;
-      dump( "\nDragged Over" );
-      evt.target.setAttribute( "draggedover", "true" );    
-  },
-  onDrop: function (evt,dropdata,session){
-      var EndDate = new Date( gStartDate.getTime() );
-      EndDate.setHours( evt.target.getAttribute( "hour" ) );
-      if( EndDate.getTime() < gStartDate.getTime() )
-      {
-         var Temp = EndDate;
-         EndDate = gStartDate;
-         gStartDate = Temp;
-      }
-
-      newEvent( gStartDate, EndDate );  
-      var allDraggedElements = document.getElementsByAttribute( "draggedover", "true" );
-      for( var i = 0; i < allDraggedElements.length; i++ )
-      {
-         allDraggedElements[i].removeAttribute( "draggedover" );
-      }
-  }
-};
-
-var eventStartObserver  = {
-  onDragStart: function (evt, transferData, action){
-      gDayIndex = evt.target.getAttribute( "day" );
-
-      var newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
-      
-      gStartDate = new Date( newDate );
-      gStartDate.setHours( evt.target.getAttribute( "hour" ) );
-      gStartDate.setMinutes( 0 );
-      gStartDate.setSeconds( 0 );
-      transferData.data=new TransferData();
-      transferData.data.addDataForFlavour("text/unicode",0);
-  }
-};
 
 WeekView.prototype.getWeekNumber = function()
 {
