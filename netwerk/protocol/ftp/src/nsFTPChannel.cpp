@@ -31,7 +31,6 @@
 #include "nsILoadGroup.h"
 #include "nsIFTPContext.h"
 #include "nsIMIMEService.h"
-#include "nsIPrincipal.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -399,15 +398,17 @@ nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+nsFTPChannel::GetOwner(nsISupports * *aOwner)
 {
-    *aPrincipal = nsnull;
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+nsFTPChannel::SetOwner(nsISupports * aOwner)
 {
+    mOwner = aOwner;
     return NS_OK;
 }
 

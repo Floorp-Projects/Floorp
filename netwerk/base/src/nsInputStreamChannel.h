@@ -23,6 +23,7 @@
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 
 class nsInputStreamChannel : public nsIChannel
 {
@@ -45,10 +46,11 @@ public:
     nsresult Init(nsIURI* uri, const char* contentType, nsIInputStream* in);
 
 protected:
-    nsIURI*             mURI;
-    char*               mContentType;
-    nsIInputStream*     mInputStream;
-    nsILoadGroup*       mLoadGroup;
+    nsCOMPtr<nsIURI>            mURI;
+    char*                       mContentType;
+    nsCOMPtr<nsIInputStream>    mInputStream;
+    nsCOMPtr<nsILoadGroup>      mLoadGroup;
+    nsCOMPtr<nsISupports>       mOwner;
 };
 
 #define NS_INPUTSTREAMCHANNEL_CID                    \

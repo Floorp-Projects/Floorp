@@ -1314,7 +1314,9 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
     mDocumentURL = syntheticURL;
 
-    rv = aChannel->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
+    nsCOMPtr<nsISupports> owner;
+    rv = aChannel->GetOwner(getter_AddRefs(owner));
+    mDocumentPrincipal = do_QueryInterface(owner);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef NECKO

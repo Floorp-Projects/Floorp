@@ -188,7 +188,8 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         {
             return NS_ERROR_FAILURE;
         }
-        (*result)->SetPrincipal(principal);
+        nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+        (*result)->SetOwner(owner);
 #ifdef DEBUG_norris
         nsXPIDLCString spec;
         uri->GetSpec(getter_Copies(spec));

@@ -31,17 +31,14 @@ static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 // nsInputStreamChannel methods:
 
 nsInputStreamChannel::nsInputStreamChannel()
-    : mURI(nsnull), mContentType(nsnull), mInputStream(nsnull), mLoadGroup(nsnull)
+    : mContentType(nsnull)
 {
     NS_INIT_REFCNT(); 
 }
 
 nsInputStreamChannel::~nsInputStreamChannel()
 {
-    NS_IF_RELEASE(mURI);
     if (mContentType) nsCRT::free(mContentType);
-    NS_IF_RELEASE(mInputStream);
-    NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_METHOD
@@ -62,12 +59,10 @@ nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
                            nsIInputStream* in)
 {
     mURI = uri;
-    NS_IF_ADDREF(mURI);
     mContentType = nsCRT::strdup(contentType);
     if (mContentType == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     mInputStream = in;
-    NS_IF_ADDREF(mInputStream);
     return NS_OK;
 }
 
@@ -244,15 +239,17 @@ nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+nsInputStreamChannel::GetOwner(nsISupports * *aOwner)
 {
-    *aPrincipal = nsnull;
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+nsInputStreamChannel::SetOwner(nsISupports * aOwner)
 {
+    mOwner = aOwner;
     return NS_OK;
 }
 

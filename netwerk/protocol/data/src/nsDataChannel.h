@@ -66,6 +66,7 @@ protected:
     nsILoadGroup            *mLoadGroup;
     nsCString               mContentType;
     PRInt32                 mContentLength;
+    nsCOMPtr<nsISupports>   mOwner;
 
 };
 
