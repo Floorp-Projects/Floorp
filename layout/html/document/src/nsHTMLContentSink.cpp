@@ -3256,27 +3256,35 @@ nsresult
 HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-
-  // Create content object
-  nsAutoString tag("BASE");
-  nsCOMPtr<nsIHTMLContent> element;
-  result = NS_CreateHTMLElement(getter_AddRefs(element), tag);
-  if (NS_SUCCEEDED(result)) {
-    element->SetContentID(mContentIDCounter++);
-
-    // Add in the attributes and add the style content object to the
-    // head container.
-    element->SetDocument(mDocument, PR_FALSE);
-    result = AddAttributes(aNode, element);
+  nsIHTMLContent* parent = nsnull;
+  
+  if(mCurrentContext!=nsnull) {
+    parent=mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
+  }
+ 
+  if(parent!=nsnull) {
+    // Create content object
+    nsAutoString tag("BASE");
+    nsCOMPtr<nsIHTMLContent> element;
+    result = NS_CreateHTMLElement(getter_AddRefs(element), tag);
     if (NS_SUCCEEDED(result)) {
-      mHead->AppendChildTo(element, PR_FALSE);
+      element->SetContentID(mContentIDCounter++);
 
-      nsAutoString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
-        ProcessBaseHref(value);
-      }
-      if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
-        ProcessBaseTarget(value);
+      // Add in the attributes and add the style content object to the
+      // head container.
+      element->SetDocument(mDocument, PR_FALSE);
+      result = AddAttributes(aNode, element);
+      if (NS_SUCCEEDED(result)) {
+        parent->AppendChildTo(element, PR_FALSE);
+        if(!mInsideNoXXXTag) {
+          nsAutoString value;
+          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
+            ProcessBaseHref(value);
+          }
+          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
+            ProcessBaseTarget(value);
+          }
+        }
       }
     }
   }
@@ -3587,63 +3595,72 @@ nsresult
 HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 {
   nsresult  result = NS_OK;
-  PRInt32   i;
-  PRInt32   count = aNode.GetAttributeCount();
-
-  nsAutoString href;
-  nsAutoString rel; 
-  nsAutoString title; 
-  nsAutoString type; 
-  nsAutoString media; 
-
-  for (i = 0; i < count; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
-    if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, i, href);
-      href.StripWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("rel")) {
-      GetAttributeValueAt(aNode, i, rel);
-      rel.CompressWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, i, title);
-      title.CompressWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, i, type);
-      type.StripWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, i, media);
-      media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
-    }
+  nsIHTMLContent* parent = nsnull;
+  
+  if(mCurrentContext!=nsnull) {
+    parent=mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
   }
+  
+  if(parent!=nsnull) {
+    // Create content object
+    nsAutoString tag("LINK");
+    nsIHTMLContent* element = nsnull;
+    result = NS_CreateHTMLElement(&element, tag);
+    if (NS_SUCCEEDED(result)) {
+      element->SetContentID(mContentIDCounter++);
 
-  // Create content object
-  nsAutoString tag("LINK");
-  nsIHTMLContent* element = nsnull;
-  result = NS_CreateHTMLElement(&element, tag);
-  if (NS_SUCCEEDED(result)) {
-    element->SetContentID(mContentIDCounter++);
-
-    // Add in the attributes and add the style content object to the
-    // head container.    
-    element->SetDocument(mDocument, PR_FALSE);
-    result = AddAttributes(aNode, element);
-    if (NS_FAILED(result)) {
-      NS_RELEASE(element);
+      // Add in the attributes and add the style content object to the
+      // head container.    
+      element->SetDocument(mDocument, PR_FALSE);
+      result = AddAttributes(aNode, element);
+      if (NS_FAILED(result)) {
+        NS_RELEASE(element);
+        return result;
+      }
+      parent->AppendChildTo(element, PR_FALSE);
+    }
+    else {
       return result;
     }
-    mHead->AppendChildTo(element, PR_FALSE);
-  }
-  else {
-    return result;
-  }
+    
+    // XXX need prefs. check here.
+    if(!mInsideNoXXXTag) {
+      PRInt32   i;
+      PRInt32   count = aNode.GetAttributeCount();
 
-  result = ProcessStyleLink(element, href, rel, title, type, media);
+      nsAutoString href;
+      nsAutoString rel; 
+      nsAutoString title; 
+      nsAutoString type; 
+      nsAutoString media; 
 
-  NS_RELEASE(element);
+      for (i = 0; i < count; i++) {
+        const nsString& key = aNode.GetKeyAt(i);
+        if (key.EqualsIgnoreCase("href")) {
+          GetAttributeValueAt(aNode, i, href);
+          href.StripWhitespace();
+        }
+        else if (key.EqualsIgnoreCase("rel")) {
+          GetAttributeValueAt(aNode, i, rel);
+          rel.CompressWhitespace();
+        }
+        else if (key.EqualsIgnoreCase("title")) {
+          GetAttributeValueAt(aNode, i, title);
+          title.CompressWhitespace();
+        }
+        else if (key.EqualsIgnoreCase("type")) {
+          GetAttributeValueAt(aNode, i, type);
+          type.StripWhitespace();
+        }
+        else if (key.EqualsIgnoreCase("media")) {
+          GetAttributeValueAt(aNode, i, media);
+          media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+        }
+      }
+      result = ProcessStyleLink(element, href, rel, title, type, media);
+    }
+    NS_RELEASE(element);
+  }
   return result;
 }
 
@@ -3691,8 +3708,13 @@ nsresult
 HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
+  nsIHTMLContent* parent = nsnull;
+  
+  if(mCurrentContext!=nsnull) {
+    parent=mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
+  }
 
-  if (nsnull != mHead) {
+  if (nsnull != parent) {
     // Create content object
     nsAutoString tmp("meta");
     nsIAtom* atom = NS_NewAtom(tmp);
@@ -3711,124 +3733,128 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
         NS_RELEASE(it);
         return rv;
       }
-      mHead->AppendChildTo(it, PR_FALSE);
+      parent->AppendChildTo(it, PR_FALSE);
+            
+      // XXX It's just not sufficient to check if the parent is head. Also check for
+      // the preference.
+      if(!mInsideNoXXXTag) {
 
-      // set any HTTP-EQUIV data into document's header data as well as url
-      nsAutoString header;
-      it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
-      if (header.Length() > 0) {
-        nsAutoString result;
-        it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
-        if (result.Length() > 0) {
-          // XXX necko isn't going to process headers coming in from the parser
-          //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
+        // set any HTTP-EQUIV data into document's header data as well as url
+        nsAutoString header;
+        it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
+        if (header.Length() > 0) {
+          nsAutoString result;
+          it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
+          if (result.Length() > 0) {
+            // XXX necko isn't going to process headers coming in from the parser
+            //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
           
-          // see if we have a refresh "header".
-          if (!header.Compare("refresh", PR_TRUE)) {
-              // Refresh headers are parsed with the following format in mind
-              // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
-              // By the time we are here, the following is true:
-              // header = "REFRESH"
-              // result = "5; URL=http://uri" // note the URL attribute is optional, if it
-              //   is absent, the currently loaded url is used.
-              const PRUnichar *uriCStr = nsnull;
-              nsAutoString uriAttribStr;
+            // see if we have a refresh "header".
+            if (!header.Compare("refresh", PR_TRUE)) {
+                // Refresh headers are parsed with the following format in mind
+                // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
+                // By the time we are here, the following is true:
+                // header = "REFRESH"
+                // result = "5; URL=http://uri" // note the URL attribute is optional, if it
+                //   is absent, the currently loaded url is used.
+                const PRUnichar *uriCStr = nsnull;
+                nsAutoString uriAttribStr;
 
-              // first get our baseURI
-              rv = mWebShell->GetURL(&uriCStr);
-              if (NS_FAILED(rv)) return rv;
+                // first get our baseURI
+                rv = mWebShell->GetURL(&uriCStr);
+                if (NS_FAILED(rv)) return rv;
 
-              nsCOMPtr<nsIURI> baseURI;
-              rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
-              if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsIURI> baseURI;
+                rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
+                if (NS_FAILED(rv)) return rv;
 
-              // next get any uri provided as an attribute in the tag.
-              PRInt32 loc = result.Find("url", PR_TRUE);
-              PRInt32 urlLoc = loc;
-              if (loc > -1) {
-                  // there is a url attribute, let's use it.
-                  loc += 3; 
-                  // go past the '=' sign
-                  loc = result.Find("=", PR_TRUE, loc);
-                  if (loc > -1) {
-                      loc++;
-                      result.Mid(uriAttribStr, loc, result.Length() - loc);
-                      uriAttribStr.CompressWhitespace();
-                      // remove any single or double quotes from the ends of the string
-                      uriAttribStr.Trim("\"'");
-                      uriCStr = uriAttribStr.GetUnicode();
-                  }
-              }
+                // next get any uri provided as an attribute in the tag.
+                PRInt32 loc = result.Find("url", PR_TRUE);
+                PRInt32 urlLoc = loc;
+                if (loc > -1) {
+                    // there is a url attribute, let's use it.
+                    loc += 3; 
+                    // go past the '=' sign
+                    loc = result.Find("=", PR_TRUE, loc);
+                    if (loc > -1) {
+                        loc++;
+                        result.Mid(uriAttribStr, loc, result.Length() - loc);
+                        uriAttribStr.CompressWhitespace();
+                        // remove any single or double quotes from the ends of the string
+                        uriAttribStr.Trim("\"'");
+                        uriCStr = uriAttribStr.GetUnicode();
+                    }
+                }
 
-              nsCOMPtr<nsIURI> uri;
-              rv = NS_NewURI(getter_AddRefs(uri), uriCStr, baseURI);
-              if (loc > -1 && NS_SUCCEEDED(rv)) {
-                  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-                  if (NS_SUCCEEDED(rv))
-                      rv = securityManager->CheckLoadURI(baseURI, uri);
-              }
-              if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsIURI> uri;
+                rv = NS_NewURI(getter_AddRefs(uri), uriCStr, baseURI);
+                if (loc > -1 && NS_SUCCEEDED(rv)) {
+                    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    if (NS_SUCCEEDED(rv))
+                        rv = securityManager->CheckLoadURI(baseURI, uri);
+                }
+                if (NS_FAILED(rv)) return rv;
 
-              // the units of the numeric value contained in the result are seconds.
-              // we need them in milliseconds before handing off to the refresh interface.
+                // the units of the numeric value contained in the result are seconds.
+                // we need them in milliseconds before handing off to the refresh interface.
 
-              PRInt32 millis;
-              if (urlLoc > 1) {
-                  nsString2 seconds;
-                  result.Left(seconds, urlLoc-1);
-                  millis = seconds.ToInteger(&loc) * 1000;
-              } else {
-                  millis = result.ToInteger(&loc) * 1000;
-              }
+                PRInt32 millis;
+                if (urlLoc > 1) {
+                    nsString2 seconds;
+                    result.Left(seconds, urlLoc-1);
+                    millis = seconds.ToInteger(&loc) * 1000;
+                } else {
+                    millis = result.ToInteger(&loc) * 1000;
+                }
 
-              nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell, &rv);
-              if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell, &rv);
+                if (NS_FAILED(rv)) return rv;
 
-              rv = reefer->RefreshURI(uri, millis, PR_FALSE);
-              if (NS_FAILED(rv)) return rv;
-          } // END refresh
-          else if (!header.Compare("set-cookie", PR_TRUE)) {
-              nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
-              if (NS_FAILED(rv)) return rv;
+                rv = reefer->RefreshURI(uri, millis, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+            } // END refresh
+            else if (!header.Compare("set-cookie", PR_TRUE)) {
+                nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+                if (NS_FAILED(rv)) return rv;
 
-              // first get our baseURI
-              const PRUnichar *uriCStr = nsnull;
-              rv = mWebShell->GetURL(&uriCStr);
-              if (NS_FAILED(rv)) return rv;
+                // first get our baseURI
+                const PRUnichar *uriCStr = nsnull;
+                rv = mWebShell->GetURL(&uriCStr);
+                if (NS_FAILED(rv)) return rv;
 
-              nsCOMPtr<nsIURI> baseURI;
-              rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
-              if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsIURI> baseURI;
+                rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
+                if (NS_FAILED(rv)) return rv;
 
-              rv = cookieServ->SetCookieString(baseURI, result);
-              if (NS_FAILED(rv)) return rv;
-          } // END set-cookie
+                rv = cookieServ->SetCookieString(baseURI, result);
+                if (NS_FAILED(rv)) return rv;
+            } // END set-cookie
 
-          header.ToLowerCase();
-          nsIAtom* fieldAtom = NS_NewAtom(header);
-          mDocument->SetHeaderData(fieldAtom, result);
+            header.ToLowerCase();
+            nsIAtom* fieldAtom = NS_NewAtom(header);
+            mDocument->SetHeaderData(fieldAtom, result);
 
-          if (fieldAtom == nsHTMLAtoms::headerDefaultStyle) {
-            mPreferredStyle = result;
-            mCSSLoader->SetPreferredSheet(mPreferredStyle);
-          }
-          else if (fieldAtom == nsHTMLAtoms::link) {
-            rv = ProcessLink(it, result);
-          }
-          else if (fieldAtom == nsHTMLAtoms::headerContentBase) {
-            ProcessBaseHref(result);
-          }
-          else if (fieldAtom == nsHTMLAtoms::headerWindowTarget) {
-            ProcessBaseTarget(result);
-          }
-          NS_IF_RELEASE(fieldAtom);
-        }
-      }
-
+            if (fieldAtom == nsHTMLAtoms::headerDefaultStyle) {
+              mPreferredStyle = result;
+              mCSSLoader->SetPreferredSheet(mPreferredStyle);
+            }
+            else if (fieldAtom == nsHTMLAtoms::link) {
+              rv = ProcessLink(it, result);
+            }
+            else if (fieldAtom == nsHTMLAtoms::headerContentBase) {
+              ProcessBaseHref(result);
+            }
+            else if (fieldAtom == nsHTMLAtoms::headerWindowTarget) {
+              ProcessBaseTarget(result);
+            }
+            NS_IF_RELEASE(fieldAtom);
+          }//if (result.Length() > 0) 
+        }//if (header.Length() > 0) 
+      }//if(!mInsideNoXXXTag)
       NS_RELEASE(it);
-    }
-  }
+    }//if (NS_OK == rv) 
+  }//if (nsnull != parent)
 
   return rv;
 }
@@ -4257,131 +4283,139 @@ nsresult
 HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  PRInt32 i, count = aNode.GetAttributeCount();
-
-  nsAutoString src;
-  nsAutoString title; 
-  nsAutoString type; 
-  nsAutoString media; 
-
-  for (i = 0; i < count; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
-    if (key.EqualsIgnoreCase("src")) {
-      GetAttributeValueAt(aNode, i, src);
-      src.StripWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, i, title);
-      title.CompressWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, i, type);
-      type.StripWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, i, media);
-      media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
-    }
+  nsIHTMLContent* parent = nsnull;
+  
+  if(mCurrentContext!=nsnull) {
+    parent=mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
   }
 
-  // Create content object
-  nsAutoString tag("STYLE");
-  nsIHTMLContent* element = nsnull;
-  rv = NS_CreateHTMLElement(&element, tag);
-  if (NS_SUCCEEDED(rv)) {
-    element->SetContentID(mContentIDCounter++);
+  if(parent!=nsnull) {
+    // Create content object
+    nsAutoString tag("STYLE");
+    nsIHTMLContent* element = nsnull;
+    rv = NS_CreateHTMLElement(&element, tag);
+    if (NS_SUCCEEDED(rv)) {
+      element->SetContentID(mContentIDCounter++);
 
-    // Add in the attributes and add the style content object to the
-    // head container.
-    element->SetDocument(mDocument, PR_FALSE);
-    rv = AddAttributes(aNode, element);
-    if (NS_FAILED(rv)) {
-      NS_RELEASE(element);
-      return rv;
-    }
-    mHead->AppendChildTo(element, PR_FALSE);
-  }
-  else {
-    return rv;
-  }
-
-  nsAutoString  mimeType;
-  nsAutoString  params;
-  SplitMimeType(type, mimeType, params);
-
-  PRBool blockParser = PR_FALSE;  // hardwired off for now
-
-  if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) { 
-
-    if (0 < title.Length()) {  // possibly preferred sheet
-      if (0 == mPreferredStyle.Length()) {
-        mPreferredStyle = title;
-        mCSSLoader->SetPreferredSheet(title);
-        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
+      // Add in the attributes and add the style content object to the
+      // head container.
+      element->SetDocument(mDocument, PR_FALSE);
+      rv = AddAttributes(aNode, element);
+      if (NS_FAILED(rv)) {
+        NS_RELEASE(element);
+        return rv;
       }
+      parent->AppendChildTo(element, PR_FALSE);
     }
 
-    // The skipped content contains the inline style data
-    const nsString& content = aNode.GetSkippedContent();
-    PRBool doneLoading = PR_FALSE;
+    if(!mInsideNoXXXTag && NS_SUCCEEDED(rv)) {
 
-    nsIUnicharInputStream* uin = nsnull;
-    if (0 == src.Length()) {
+      PRInt32 i, count = aNode.GetAttributeCount();
 
-      // Create a text node holding the content
-      nsIContent* text;
-      rv = NS_NewTextNode(&text);
-      if (NS_OK == rv) {
-        nsIDOMText* tc;
-        rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
-        if (NS_OK == rv) {
-          tc->SetData(content);
-          NS_RELEASE(tc);
+      nsAutoString src;
+      nsAutoString title; 
+      nsAutoString type; 
+      nsAutoString media; 
+
+      for (i = 0; i < count; i++) {
+        const nsString& key = aNode.GetKeyAt(i);
+        if (key.EqualsIgnoreCase("src")) {
+          GetAttributeValueAt(aNode, i, src);
+          src.StripWhitespace();
         }
-        element->AppendChildTo(text, PR_FALSE);
-        text->SetDocument(mDocument, PR_FALSE);
-        NS_RELEASE(text);
+        else if (key.EqualsIgnoreCase("title")) {
+          GetAttributeValueAt(aNode, i, title);
+          title.CompressWhitespace();
+        }
+        else if (key.EqualsIgnoreCase("type")) {
+          GetAttributeValueAt(aNode, i, type);
+          type.StripWhitespace();
+        }
+        else if (key.EqualsIgnoreCase("media")) {
+          GetAttributeValueAt(aNode, i, media);
+          media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+        }
       }
 
-      // Create a string to hold the data and wrap it up in a unicode
-      // input stream.
-      rv = NS_NewStringUnicharInputStream(&uin, new nsString(content));
-      if (NS_OK != rv) {
-        return rv;
-      }
 
-      // Now that we have a url and a unicode input stream, parse the
-      // style sheet.
-      rv = mCSSLoader->LoadInlineStyle(element, uin, title, media, kNameSpaceID_HTML,
-                                       mStyleSheetCount++, 
-                                       ((blockParser) ? mParser : nsnull),
-                                       doneLoading, this);
-      NS_RELEASE(uin);
-    } 
-    else {
-      // src with immediate style data doesn't add up
-      // XXX what does nav do?
-      // Use the SRC attribute value to load the URL
-      nsIURI* url = nsnull;
-      {
-        rv = NS_NewURI(&url, src, mDocumentBaseURL);
-      }
-      if (NS_OK != rv) {
-        return rv;
-      }
+      nsAutoString  mimeType;
+      nsAutoString  params;
+      SplitMimeType(type, mimeType, params);
 
-      rv = mCSSLoader->LoadStyleLink(element, url, title, media, kNameSpaceID_HTML,
-                                     mStyleSheetCount++, 
-                                     ((blockParser) ? mParser : nsnull), 
-                                     doneLoading, this);
-      NS_RELEASE(url);
-    }
-    if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
-      rv = NS_ERROR_HTMLPARSER_BLOCK;
-    }
-  }
+      PRBool blockParser = PR_FALSE;  // hardwired off for now
 
-  NS_RELEASE(element);
+      if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) { 
+
+        if (0 < title.Length()) {  // possibly preferred sheet
+          if (0 == mPreferredStyle.Length()) {
+            mPreferredStyle = title;
+            mCSSLoader->SetPreferredSheet(title);
+            mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
+          }
+        }
+
+        // The skipped content contains the inline style data
+        const nsString& content = aNode.GetSkippedContent();
+        PRBool doneLoading = PR_FALSE;
+
+        nsIUnicharInputStream* uin = nsnull;
+        if (0 == src.Length()) {
+
+          // Create a text node holding the content
+          nsIContent* text;
+          rv = NS_NewTextNode(&text);
+          if (NS_OK == rv) {
+            nsIDOMText* tc;
+            rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+            if (NS_OK == rv) {
+              tc->SetData(content);
+              NS_RELEASE(tc);
+            }
+            element->AppendChildTo(text, PR_FALSE);
+            text->SetDocument(mDocument, PR_FALSE);
+            NS_RELEASE(text);
+          }
+
+          // Create a string to hold the data and wrap it up in a unicode
+          // input stream.
+          rv = NS_NewStringUnicharInputStream(&uin, new nsString(content));
+          if (NS_OK != rv) {
+            return rv;
+          }
+
+          // Now that we have a url and a unicode input stream, parse the
+          // style sheet.
+          rv = mCSSLoader->LoadInlineStyle(element, uin, title, media, kNameSpaceID_HTML,
+                                           mStyleSheetCount++, 
+                                           ((blockParser) ? mParser : nsnull),
+                                           doneLoading, this);
+          NS_RELEASE(uin);
+        } 
+        else {
+          // src with immediate style data doesn't add up
+          // XXX what does nav do?
+          // Use the SRC attribute value to load the URL
+          nsIURI* url = nsnull;
+          {
+            rv = NS_NewURI(&url, src, mDocumentBaseURL);
+          }
+          if (NS_OK != rv) {
+            return rv;
+          }
+
+          rv = mCSSLoader->LoadStyleLink(element, url, title, media, kNameSpaceID_HTML,
+                                         mStyleSheetCount++, 
+                                         ((blockParser) ? mParser : nsnull), 
+                                         doneLoading, this);
+          NS_RELEASE(url);
+        }
+        if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
+          rv = NS_ERROR_HTMLPARSER_BLOCK;
+        }
+      }//if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css"))
+    }//if(!mInsideNoXXXTag && NS_SUCCEEDED(rv))
+    NS_RELEASE(element);
+  }//if(parent!=nsnull)
 
   return rv;
 }
