@@ -73,6 +73,7 @@ PR_BEGIN_EXTERN_C
     extern const char*      CacheObject_GetPostData(const void* pThis);
     extern PRUint32         CacheObject_GetPostDataLen(const void* pThis);
     extern PRUint32         CacheObject_GetSize(const void* pThis);
+    extern PRUint32         CacheObject_GetState(const void* pThis);
     extern PRUint32         CacheObject_Hits(const void* pThis);
     extern PRBool           CacheObject_IsExpired(const void* pThis);
     extern PRBool           CacheObject_IsPartial(const void* pThis);
@@ -92,6 +93,7 @@ PR_BEGIN_EXTERN_C
     extern void             CacheObject_SetPageServicesURL(void* pThis, const char* i_Url);
     extern void             CacheObject_SetPostData(void* pThis, const char* i_PostData, const PRUint32 i_Len);
     extern void             CacheObject_SetSize(void* pThis, const PRUint32 i_Size);
+    extern void             CacheObject_SetState(void* pThis, const PRUint32 i_State);
     extern PRBool           CacheObject_Synch(void* pThis);
     extern PRUint32         CacheObject_Write(void* pThis, const char* i_buffer, const PRUint32 i_length);
 
