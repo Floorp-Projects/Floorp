@@ -20,6 +20,7 @@
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextSpecMac.h"
 #include "nsString.h"
+#include "nsHashtable.h"
 
 #include <StringCompare.h>
 #include <Fonts.h>
@@ -46,9 +47,9 @@ nsDeviceContextMac :: ~nsDeviceContextMac()
 
 //------------------------------------------------------------------------
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextMac, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextMac)
-NS_IMPL_RELEASE(nsDeviceContextMac)
+NS_IMPL_QUERY_INTERFACE(nsDeviceContextMac, kDeviceContextIID);
+NS_IMPL_ADDREF(nsDeviceContextMac);
+NS_IMPL_RELEASE(nsDeviceContextMac);
 
 //------------------------------------------------------------------------
 
@@ -305,7 +306,47 @@ NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 }
 
 
+#pragma mark -
+
 //------------------------------------------------------------------------
+// Override to tweak font settings
+nsresult nsDeviceContextMac::CreateFontAliasTable()
+{
+  nsresult result = NS_OK;
+
+  if (nsnull == mFontAliasTable) {
+    mFontAliasTable = new nsHashtable();
+    if (nsnull != mFontAliasTable)
+    {
+			nsAutoString  fontTimes("Times");
+			nsAutoString  fontTimesNewRoman("Times New Roman");
+			nsAutoString  fontTimesRoman("Times Roman");
+			nsAutoString  fontArial("Arial");
+			nsAutoString  fontHelvetica("Helvetica");
+			nsAutoString  fontCourier("Courier");
+			nsAutoString  fontCourierNew("Courier New");
+			nsAutoString  fontUnicode("Unicode");
+			nsAutoString  fontBitstreamCyberbit("Bitstream Cyberbit");
+			nsAutoString  fontNullStr;
+
+      AliasFont(fontTimes, fontTimesNewRoman, fontTimesRoman, PR_FALSE);
+      AliasFont(fontTimesRoman, fontTimesNewRoman, fontTimes, PR_FALSE);
+      AliasFont(fontTimesNewRoman, fontTimesRoman, fontTimes, PR_FALSE);
+      AliasFont(fontArial, fontHelvetica, fontNullStr, PR_FALSE);
+      AliasFont(fontHelvetica, fontArial, fontNullStr, PR_FALSE);
+      AliasFont(fontCourier, fontCourierNew, fontNullStr, PR_FALSE);		// changed from DeviceContextImpl
+      AliasFont(fontCourierNew, fontCourier, fontNullStr, PR_FALSE);
+      AliasFont(fontUnicode, fontBitstreamCyberbit, fontNullStr, PR_FALSE); // XXX ????
+    }
+    else {
+      result = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  return result;
+}
+
+//------------------------------------------------------------------------
+//#define FONT_CACHE
 
 bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aFontNum)
 {
@@ -315,6 +356,7 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 
 	//¥TODO?: Maybe we shouldn't call that function so often. If nsFont could store the
 	//				fontNum, nsFontMetricsMac::SetFont() wouldn't need to call this at all.
+#ifdef FONT_CACHE
 	static nsString		lastFontName;
 	static short			lastFontNum;
 	static bool				lastFontExists;
@@ -323,6 +365,7 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 		aFontNum = lastFontNum;
 		return lastFontExists;
 	}
+#endif
 
 	aStr[0] = aFontName.Length();
 	aFontName.ToCString((char*)&aStr[1], sizeof(aStr)-1);
@@ -335,9 +378,11 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 	}else
 		fontExists = true;
 
+#ifdef FONT_CACHE
 	lastFontExists = fontExists;
 	lastFontNum = aFontNum;
 	lastFontName = aFontName;
+#endif
 
 	return fontExists;
 }
