@@ -44,8 +44,8 @@ nsUserTarget::~nsUserTarget(void)
 }
 
 #define OPTION "<option>"
-nsIPrivilege * 
-nsUserTarget::EnablePrivilege(nsIPrincipal * prin, void *data)
+NS_IMETHODIMP
+nsUserTarget::EnablePrivilege(nsIPrincipal * prin, void * data, nsIPrivilege * * result)
 {
 	PRInt16 prinType;
 	prin->GetType(& prinType);
@@ -59,5 +59,6 @@ nsUserTarget::EnablePrivilege(nsIPrincipal * prin, void *data)
 			privDuration = nsIPrivilege::PrivilegeDuration_Session;
 		}
 	} 
-	return nsPrivilegeManager::FindPrivilege(privState, privDuration);
+	* result = nsPrivilegeManager::FindPrivilege(privState, privDuration);
+	return NS_OK;
 }

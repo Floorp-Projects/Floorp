@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/*describes principals for use with signed scripts*/
 #ifndef _NS_CERTIFICATE_PRINCIPAL_H_
 #define _NS_CERTIFICATE_PRINCIPAL_H_
 #include "nsVector.h"

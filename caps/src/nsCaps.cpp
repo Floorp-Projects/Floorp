@@ -30,7 +30,6 @@
 #include "nsPrivilegeTable.h"
 #include "nsITarget.h"
 #include "nsCCapsManager.h"
-#include "nsCCapsManagerFactory.h"
 
 /* 
  * With the introduction of '-reg_mode' flag, 
@@ -54,54 +53,44 @@ static PRBool bNSCapsInitialized_g = PR_FALSE;
  */
 
 /* wrappers for nsPrivilegeManager object */
+/*
 PR_IMPLEMENT(PRBool) 
 nsCapsInitialize() 
 {
 	if(bNSCapsInitialized_g == PR_TRUE) return PR_TRUE;
 	bNSCapsInitialized_g = PR_TRUE;
 	nsIPrincipal * sysPrin = NULL;
-/*
 #if defined(_WIN32)
 //	sysPrin = CreateSystemPrincipal("java/classes/java40.jar", "java/lang/Object.class");
 #else
 //	sysPrin = CreateSystemPrincipal("java40.jar", "java/lang/Object.class");
 #endif
-*/
 //	if (sysPrin == NULL) {
 //		nsresult res;
 //		sysPrin = new nsCertificatePrincipal((PRInt16 *)nsIPrincipal::PrincipalType_Certificate,(const unsigned char **) "52:54:45:4e:4e:45:54:49", 
 //									(unsigned int *)strlen("52:54:45:4e:4e:45:54:49"),1,& res);
 //  }
-  nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-  if (nsPrivManager == NULL) {
-    nsPrivilegeManagerInitialize();
-//    nsPrivilegeInitialize();
-    nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-  }
-  PR_ASSERT(nsPrivManager != NULL);
-  nsPrivManager->RegisterSystemPrincipal(sysPrin);
+	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
+	if (nsPrivManager == NULL) nsPrivilegeManagerInitialize();
+	PR_ASSERT(nsPrivManager != NULL);
+	nsPrincipalManager * nsPrinManager = nsPrincipalManager::GetPrincipalManager();
+	if (nsPrinManager == NULL) nsPrincipalManagerInitialize();
+	nsPrinManager->RegisterSystemPrincipal(sysPrin);
   // New a class factory object and the constructor will register itself
   // as the factory object in the repository. All other modules should
   // FindFactory and use createInstance to create a instance of nsCCapsManager
   // and ask for nsICapsManager interface.
-  /*
-  nsCCapsManagerFactory *pNSCCapsManagerFactory = new nsCCapsManagerFactory();
-  if ( pNSCCapsManagerFactory == NULL )
-  {
-     return PR_FALSE;
-  }
-  */
   return PR_TRUE;
 }
-
+*/
 
 /* wrappers for nsPrivilegeManager object */
 PR_IMPLEMENT(PRBool) 
 nsCapsRegisterPrincipal(class nsIPrincipal *principal) 
 {
-  nsPrivilegeManager * nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-  if(nsPrivManager == NULL) return PR_FALSE; 
-  nsPrivManager->RegisterPrincipal(principal);
+  nsPrincipalManager * nsPrinManager = nsPrincipalManager::GetPrincipalManager();
+  if(nsPrinManager == NULL) return PR_FALSE; 
+  nsPrinManager->RegisterPrincipal(principal);
   return PR_TRUE;
 }
 

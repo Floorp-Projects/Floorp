@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/* describes principals by their orginating uris*/
 #ifndef _NS_CODEBASE_PRINCIPAL_H_
 #define _NS_CODEBASE_PRINCIPAL_H_
 

@@ -15,6 +15,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/*describes the state and duration of privileges*/
 #include "nsISupports.idl"
 
 [uuid(0bbbb636-3e11-11d3-ba10-0060b0f199a2)]

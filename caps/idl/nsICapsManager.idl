@@ -62,11 +62,9 @@ interface nsICapsManager : nsISupports {
 };
 
 %{C++
-#define NS_CCAPSMANAGER_CID                          \
-{ /* fd347500-307f-11d2-97f0-00805f8a28d0 */         \
-    0xfd347500,                                      \
-    0x307f,                                          \
-    0x11d2,                                          \
-    {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
-}
+#define NS_CCAPSMANAGER_CID \
+{ 0xe6724a60, 0x4b90, 0x11d3, \
+{ 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
+#define NS_CCAPSMANAGER_PROGID "component://netscape/ccapsmanager"
+#define NS_CCAPSMANAGER_CLASSNAME "ccapsmanager"
 %}

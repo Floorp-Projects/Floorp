@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/*describes the state and duration of privileges*/
 #ifndef _NS_PRIVILEGE_H_
 #define _NS_PRIVILEGE_H_
 

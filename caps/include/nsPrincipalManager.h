@@ -12,23 +12,26 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/*creates, registers, and performs logical operations on principals*/
 #ifndef _NS_PRINCIPAL_MANAGER_H_
 #define _NS_PRINCIPAL_MANAGER_H_
 
 #include "nsIPrincipalManager.h"
-#include "nsPrivilegeManager.h"
-
-PRBool nsPrincipalManagerInitialize(void);
+#include "nsHashtable.h"
 
 class nsPrincipalManager : public nsIPrincipalManager {
 
 public:
 
 	NS_DECL_ISUPPORTS
+
+	static nsPrincipalManager *
+	GetPrincipalManager();
+
+	virtual ~nsPrincipalManager(void);
 
 	NS_IMETHOD
 	CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal * * prin);
@@ -38,6 +41,12 @@ public:
 
 	NS_IMETHOD
 	RegisterPrincipal(nsIPrincipal * prin);
+
+	NS_IMETHOD
+	UnregisterPrincipal(nsIPrincipal * prin, PRBool * result);
+
+	void 
+	RegisterSystemPrincipal(nsIPrincipal * principal);
 
 	NS_IMETHOD
 	CanExtendTrust(nsIPrincipalArray * fromPrinArray, nsIPrincipalArray * toPrinArray, PRBool * result);
@@ -69,9 +78,6 @@ public:
 	static nsIPrincipal * 
 	GetUnknownPrincipal(void);
 
-	static nsPrincipalManager * 
-	GetPrincipalManager(void);
-
 	const char * 
 	GetAllPrincipalsString(void);
 
@@ -81,22 +87,16 @@ public:
 	void
 	RemoveFromPrincipalNameToPrincipalTable(nsIPrincipal * prin);
 
-	void
-	SetSystemPrincipal(nsIPrincipal * prin);
-
 	nsIPrincipalArray * 
 	GetClassPrincipalsFromStack(PRInt32 callerDepth);
 
 	nsIPrincipalArray * 
 	GetClassPrincipalsFromStack(nsIScriptContext * context, PRInt32 callerDepth);
 
-	nsPrincipalManager(void);
-	virtual ~nsPrincipalManager(void);
 
 private:
+	nsPrincipalManager(void);
 	nsHashtable * itsPrinNameToPrincipalTable;
-	static PRBool theInited;
-
 };
 
 #endif /* _NS_PRINCIPAL_MANAGER_H_*/

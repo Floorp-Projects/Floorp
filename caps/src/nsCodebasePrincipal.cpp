@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/* describes principals by thier orginating uris*/
 #include "nsCodebasePrincipal.h"
 #include "xp.h"
 

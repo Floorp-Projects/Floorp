@@ -331,7 +331,7 @@ sun-java/stubs/src/Makefile
 caps/Makefile
 caps/idl/Makefile
 caps/include/Makefile
-caps/public/Makefile
+# caps/public/Makefile
 caps/src/Makefile
 view/Makefile
 view/public/Makefile

@@ -29,46 +29,34 @@
 #include "jarutil.h"
 #endif /* MOZ_SECURITY */
 
-static NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
-static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 #define ALL_JAVA_PERMISSION "AllJavaPermission"
 
-NS_IMPL_AGGREGATED(nsCCapsManager);
+static NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
+static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
 
-NS_METHOD
-nsCCapsManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMPL_ISUPPORTS(nsCCapsManager, kICapsManagerIID);
+
+
+nsCCapsManager *
+nsCCapsManager::GetSecurityManager()
 {
-    if (aIID.Equals(kISupportsIID)) {
-      *aInstancePtr = GetInner();
-      AddRef();
-      return NS_OK;
-    }
-    if (aIID.Equals(kICapsManagerIID)) {
-        *aInstancePtr = this;
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
+	static nsCCapsManager * capsMan = NULL;
+	if (!capsMan)
+		capsMan = new nsCCapsManager();
+	return capsMan;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////
-// from nsICapsManager:
 
 NS_IMETHODIMP
 nsCCapsManager::GetPrincipalManager(nsIPrincipalManager * * prinMan)
 {
-	* prinMan = principalManager;
+	* prinMan = (nsIPrincipalManager *)nsPrincipalManager::GetPrincipalManager();
 	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCCapsManager::GetPrivilegeManager(nsIPrivilegeManager * * privMan)
 {
-	* privMan = privilegeManager;
+	* privMan = (nsIPrivilegeManager *)nsPrivilegeManager::GetPrivilegeManager();
 	return NS_OK;
 }
 
@@ -92,9 +80,9 @@ nsCCapsManager::GetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
 	nsITarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
 	nsresult result = NS_OK;
 	if( target == NULL ) return NS_OK;
-	if (privilegeManager != NULL) {
+	if (nsPrivilegeManager::GetPrivilegeManager() != NULL) {
 		nsIPrivilege * privilege;
-		privilegeManager->GetPrincipalPrivilege(target, prin, NULL, & privilege);
+		nsPrivilegeManager::GetPrivilegeManager()->GetPrincipalPrivilege(target, prin, NULL, & privilege);
 // ARIEL WORK ON THIS SHIT
 //		* privilegeState = this->ConvertPrivilegeToPermission(privilege);
 	}
@@ -106,11 +94,11 @@ nsCCapsManager::SetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
 {
 	nsITarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
 	if(target == NULL ) return NS_OK;
-	if (privilegeManager != NULL) {
+//	if (privilegeManager != NULL) {
 // WORK ON THIS ARIEL
 //		nsPrivilege* privilege = this->ConvertPermissionToPrivilege(privilegeState);
 //		privilegeManager->SetPermission(prin, target, privilegeState);
-	}
+//	}
 	return NS_OK;
 }
 
@@ -122,11 +110,11 @@ nsCCapsManager::AskPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
 		* privilegeState = nsIPrivilege::PrivilegeState_Blank;
 		return NS_OK;
 	}
-	if (privilegeManager != NULL) {
+	if (nsPrivilegeManager::GetPrivilegeManager() != NULL) {
 		PRBool perm;
-		privilegeManager->AskPermission(prin, target, NULL, & perm);
+		nsPrivilegeManager::GetPrivilegeManager()->AskPermission(prin, target, NULL, & perm);
 		nsIPrivilege * privilege;
-		privilegeManager->GetPrincipalPrivilege(target, prin, NULL,& privilege);
+		nsPrivilegeManager::GetPrivilegeManager()->GetPrincipalPrivilege(target, prin, NULL,& privilege);
   //	   * privilegeState = ConvertPrivilegeToPermission(privilege);
 	}
 	return NS_OK;
@@ -141,7 +129,7 @@ nsCCapsManager::AskPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
 NS_METHOD
 nsCCapsManager::Initialize(PRBool * result)
 {
-	* result = nsCapsInitialize();
+//	* result = nsCapsInitialize();
 	return NS_OK;
 }
 
@@ -174,7 +162,6 @@ NS_METHOD
 nsCCapsManager::EnablePrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool * ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
-	nsresult result = NS_OK;
 	if( target == NULL )
 	{
 		* ret_val = PR_FALSE;
@@ -200,14 +187,12 @@ NS_METHOD
 nsCCapsManager::IsPrivilegeEnabled(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
-	nsresult result = NS_OK;
 	if( target == NULL )
 	{
 		* ret_val = PR_FALSE;
 		return NS_OK;
 	}
-	if (privilegeManager != NULL)
-		privilegeManager->IsPrivilegeEnabled(context, target, callerDepth, ret_val);
+	nsPrivilegeManager::GetPrivilegeManager()->IsPrivilegeEnabled(context, target, callerDepth, ret_val);
 	return NS_OK;
 }
 
@@ -215,13 +200,11 @@ NS_METHOD
 nsCCapsManager::RevertPrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
-	nsresult result = NS_OK;
 	if( target == NULL ) {
 		* ret_val = PR_FALSE;
 		return NS_OK;
 	}
-	if (privilegeManager != NULL)
-		privilegeManager->RevertPrivilege(context, target, callerDepth,ret_val);
+	nsPrivilegeManager::GetPrivilegeManager()->RevertPrivilege(context, target, callerDepth,ret_val);
 	return NS_OK;
 }
 
@@ -229,13 +212,11 @@ NS_METHOD
 nsCCapsManager::DisablePrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
-	nsresult result = NS_OK;
 	if( target == NULL ) {
 		* ret_val = PR_FALSE;
 		return NS_OK;
 	}
-	if (privilegeManager != NULL)
-		privilegeManager->DisablePrivilege(context, target, callerDepth,ret_val);
+	nsPrivilegeManager::GetPrivilegeManager()->DisablePrivilege(context, target, callerDepth,ret_val);
 	return NS_OK;
 }
 
@@ -323,7 +304,6 @@ NS_METHOD
 nsCCapsManager::IsAllowed(void *annotation, const char * targetName, PRBool * ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char *)targetName);
-	nsresult result = NS_OK;
 	if( target == NULL ) {
 		*ret_val = PR_FALSE;
 		return NS_OK;
@@ -339,23 +319,21 @@ nsCCapsManager::IsAllowed(void *annotation, const char * targetName, PRBool * re
 	return NS_OK;
 }
 
-nsCCapsManager::nsCCapsManager(nsISupports * aOuter):privilegeManager(NULL) 
+nsCCapsManager::nsCCapsManager()
 {
-	NS_INIT_AGGREGATED(aOuter);
-//	PRBool result;
-//	privilegeManager = (Initialize(& result) == NS_OK) ? new nsPrivilegeManager(): NULL;
+	NS_INIT_REFCNT();
+	NS_ADDREF(this);
 }
 
 nsCCapsManager::~nsCCapsManager()
 {
 }
-
+/*
 void
 nsCCapsManager::CreateNSPrincipalArray(nsIPrincipalArray* prinArray, 
                                        nsIPrincipalArray* *pPrincipalArray)
 {
 	//prin arrays will either be removed, or updated to use the nsIPrincipal Object
-/*
  nsIPrincipal* pNSIPrincipal;
  nsPrincipal *pNSPrincipal  = NULL;
 
@@ -374,8 +352,8 @@ nsCCapsManager::CreateNSPrincipalArray(nsIPrincipalArray* prinArray,
     newPrinArray->Set(index, pNSIPrincipal);
  }
  *pPrincipalArray = newPrinArray;
- */
 }
+*/
 /*
 NS_METHOD
 nsCCapsManager::GetNSPrincipalArray(nsPrincipalArray* prinArray, 
@@ -528,22 +506,3 @@ nsCCapsManager::ConvertPermissionToPrivilege(nsPermission state)
     return nsPrivilege::findPrivilege(permission, duration);
 }
 */
-void
-nsCCapsManager::SetSystemPrivilegeManager()
-{
-	nsIPrivilegeManager * pNSPrivilegeManager = (nsIPrivilegeManager *)nsPrivilegeManager::GetPrivilegeManager();
-	if ((privilegeManager  != NULL ) && (privilegeManager != pNSPrivilegeManager)) {
-		delete privilegeManager;
-		privilegeManager = pNSPrivilegeManager;
-	}
-}
-
-void
-nsCCapsManager::SetSystemPrincipalManager()
-{
-	nsIPrincipalManager * prinMan = (nsIPrincipalManager *)nsPrincipalManager::GetPrincipalManager();
-	if ((principalManager != NULL ) && (principalManager != prinMan)) {
-		delete principalManager;
-		principalManager = prinMan;
-	}
-}

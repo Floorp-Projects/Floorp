@@ -1,3 +1,21 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+/*used to pass principals through xpcom in arrays*/
 #include "nsPrincipalArray.h"
 
 static NS_DEFINE_IID(kIPrincipalArrayIID, NS_IPRINCIPALARRAY_IID);
@@ -66,13 +84,13 @@ nsPrincipalArray::ComparePrincipalArray(nsIPrincipalArray * other, PRInt16 * com
 	nsIPrincipal * prin;
 	PRUint32 i;
 	other->GetPrincipalArraySize(& i);
-	for (i; i-- > 0;) {
+	while (i-- > 0) {
 		other->GetPrincipalArrayElement(i,& prin);
 		PrincipalKey prinKey(prin);
 		p2Hashtable->Put(& prinKey, (void *)PR_TRUE);
 	}
 	this->GetPrincipalArraySize(& i);
-	for (i; i-- > 0;) {
+	while (i-- > 0) {
 		this->GetPrincipalArrayElement(i,& prin);
 		PrincipalKey prinKey(prin);
 		value = (PRBool)p2Hashtable->Get(&prinKey);
@@ -84,7 +102,7 @@ nsPrincipalArray::ComparePrincipalArray(nsIPrincipalArray * other, PRInt16 * com
 		if (value == PR_TRUE) p2Hashtable->Put(&prinKey, (void *)PR_FALSE);
 	}
 	other->GetPrincipalArraySize(& i);
-	for (i; i-- > 0;) {
+	while(i-- > 0) {
 		other->GetPrincipalArrayElement(i,& prin);
 		PrincipalKey prinKey(prin);
 		value = (PRBool)p2Hashtable->Get(&prinKey);
@@ -105,16 +123,16 @@ nsPrincipalArray::IntersectPrincipalArray(nsIPrincipalArray * other, nsIPrincipa
 	this->GetPrincipalArraySize(& thisLength);
 	other->GetPrincipalArraySize(& otherLength);
 	nsVector * in = new nsVector();
-	PRUint32 count = 0;
-	nsIPrincipal * prin1, * prin2;
-	PRUint32 i = 0, j=0;
+	nsIPrincipal * prin1 = NULL, * prin2 = NULL;
+	PRUint32 i = 0, j = 0, count = 0;
 	in->SetSize(thisLength, 1);
 	PRUint32 inLength = in->GetSize();
+	PRBool doesIntersect = PR_FALSE, eq = PR_FALSE;
 	for (i=0; i < thisLength; i++) {
 		for (j=0; j < otherLength; j++) {
 			this->GetPrincipalArrayElement(i,& prin1);
 			other->GetPrincipalArrayElement(j,& prin2);
-			PRBool eq;
+
 			prin1->Equals(prin2, & eq);
 			if (eq) {
 				in->Set(i, (void *)PR_TRUE);
@@ -126,10 +144,9 @@ nsPrincipalArray::IntersectPrincipalArray(nsIPrincipalArray * other, nsIPrincipa
 		}
 	}
 	* result = new nsPrincipalArray(count);
-	PRBool doesIntersect;
 	PR_ASSERT(inLength == thisLength);
 	PR_ASSERT(inLength == inLength);
-	for (i=0; i < inLength; i++) {
+	for (i = 0; i < inLength; i++) {
 		doesIntersect = (PRBool)in->Get(i);
 		if (doesIntersect) {
 			PR_ASSERT(j < count);

@@ -22,14 +22,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= caps
-LIBRARY_NAME	= caps
+MODULE = caps
+LIBRARY_NAME = caps
+
+IS_COMPONENT = 1
 
 CPPSRCS		= \
 		admin.cpp \
 		nsCaps.cpp \
 		nsCCapsManager.cpp \
-		nsCCapsManagerFactory.cpp \
 		nsCertificatePrincipal.cpp \
 		nsCodebasePrincipal.cpp \
 		nsPrincipalArray.cpp \
@@ -37,6 +38,7 @@ CPPSRCS		= \
 		nsPrivilege.cpp \
 		nsPrivilegeManager.cpp \
 		nsPrivilegeTable.cpp \
+		nsSecurityManagerFactory.cpp \
 		nsSystemPrivilegeTable.cpp \
 		nsTarget.cpp \
 		nsUserDialogHelper.cpp \
