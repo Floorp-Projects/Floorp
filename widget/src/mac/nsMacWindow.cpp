@@ -542,8 +542,21 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   {
     if ( mAcceptsActivation )
     {
+    Rect	windowrect;
+    Point	topleft,botright;
+    
       ::ShowWindow(mWindowPtr);
       ::SelectWindow(mWindowPtr);
+      windowrect = (**((WindowPeek)mWindowPtr)->contRgn).rgnBBox;
+      
+      // on some windows (with pop ups) the ::ShowWindow will not invalidate the parent 
+      // properly
+      topleft = topLeft(windowrect);
+      GlobalToLocal(&topleft);
+      botright = botRight(windowrect);
+      GlobalToLocal(&botright);
+      SetRect(&windowrect,topleft.h,topleft.v,botright.h,botright.v);
+      ::InvalRect(&windowrect);
     }
     else
     {
