@@ -1846,7 +1846,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
             {
               PRBool isInbox = 
                 PL_strcasecmp("Inbox", folderNameForProposedUrl) == 0;
-              if (!curSelectedUrlFolderName.IsEmpty())
+              if (!curSelectedUrlFolderName.IsEmpty() || !pendingUrlFolderName.IsEmpty())
               {
                 PRBool matched = isInbox ?
                   PL_strcasecmp(curSelectedUrlFolderName.get(),
