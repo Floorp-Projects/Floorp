@@ -231,6 +231,14 @@
       </para>
 
       <para>
+        <command>global/variables.none.tmpl</command>:
+        This defines a list of terms that may be changed in order to "brand"
+        the Bugzilla instance. In this way, terms like "bugs" can be
+        replaced with "issues" across the whole Bugzilla installation.
+        The name "Bugzilla" and other words can be customized as well.
+      </para>
+      
+      <para>
         <command>bug/create/user-message.html.tmpl</command>:
         This is a message that appears near the top of the bug reporting page.
         By modifying this, you can tell your users how they should report
