@@ -58,15 +58,6 @@
 #elif defined (XP_BEOS)
 #endif
 
-#if defined(XP_PC)
-#define WIN_MOZ_REG "mozregistry.dat"
-#elif defined(XP_MAC)
-#define MAC_MOZ_REG "Mozilla Registry"
-#elif defined(XP_UNIX)
-#define UNIX_MOZ_REG_FOLDER ".mozilla"
-#define UNIX_MOZ_REG_FILE   "registry"
-#endif
-
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -114,64 +105,6 @@ nsProfileAccess::nsProfileAccess()
     // Get the profile registry path
     NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_FILE, getter_AddRefs(mNewRegFile));
 
-    PRBool regDataMoved = PR_FALSE;
-    PRBool oldMozRegFileExists = PR_FALSE;
-
-    // Get the old moz registry
-    nsCOMPtr<nsIFile> mozRegFile;
-
-#if defined(XP_OS2)
-    NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(mozRegFile));
-    if (mozRegFile)
-        mozRegFile->Append(WIN_MOZ_REG);
-#elif defined(XP_PC)
-    NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(mozRegFile));
-    if (mozRegFile)
-        mozRegFile->Append(WIN_MOZ_REG);
-#elif defined(XP_MAC)
-    NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(mozRegFile));
-    if (mozRegFile)
-        mozRegFile->Append(MAC_MOZ_REG);
-#elif defined(XP_UNIX)
-    NS_GetSpecialDirectory(NS_UNIX_HOME_DIR, getter_AddRefs(mozRegFile));
-    if (mozRegFile)
-    { 
-        mozRegFile->Append(UNIX_MOZ_REG_FOLDER);
-        mozRegFile->Append(UNIX_MOZ_REG_FILE);
-    }
-#endif
-
-    // Check if the old profile registry exists, before we decide 
-    // on transfering the data.
-    if (mozRegFile)
-        mozRegFile->Exists(&oldMozRegFileExists);
-
-    if (oldMozRegFileExists) {
-        // Check to see if there is a requirement to move the registry data..
-        GetMozRegDataMovedFlag(&regDataMoved);
-
-        // If we have not transfered the data from old registry,
-        // do it now....
-        if (!regDataMoved)
-        {
-            // Get the data from old moz registry
-            FillProfileInfo(mozRegFile);
-
-            // Internal data structure now has all the data from old
-            // registry. Update the new registry with this info.
-            mProfileDataChanged = PR_TRUE;
-            UpdateRegistry(mNewRegFile);
-
-            // Set the flag in the new registry to indicate that we have 
-            // transfered the data from the old registry
-            SetMozRegDataMovedFlag(mNewRegFile);
-
-            // Time to clean the internal data structure and make it
-            // ready for reading values from the new registry.
-            ResetProfileMembers();
-        }
-    } 
-    // Now the new registry is the one with all profile information
     // Read the data into internal data structure....
     FillProfileInfo(mNewRegFile);
 }
@@ -767,7 +700,13 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     rv = registry->GetKey(nsIRegistry::Common, 
                           kRegistryProfileSubtreeString.get(), 
                           &profilesTreeKey);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+    {
+        rv = registry->AddKey(nsIRegistry::Common, 
+                                kRegistryProfileSubtreeString.get(), 
+                                &profilesTreeKey);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // Set the current profile
     if (!mCurrentProfile.IsEmpty()) {
@@ -1271,79 +1210,6 @@ nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
     }
 }
 
-// Get the flag that from the new reigstry which indicates that it  
-// got the transfered data from old mozilla registry
-nsresult
-nsProfileAccess::GetMozRegDataMovedFlag(PRBool *isDataMoved)
-{
-    nsresult rv = NS_OK;
-    nsXPIDLCString regFile;
-
-    nsRegistryKey profilesTreeKey;
-    nsXPIDLString tmpRegDataMoved;
-    
-    if (mNewRegFile)
-        mNewRegFile->GetPath(getter_Copies(regFile));   
-
-    nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    rv = registry->Open(regFile);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = registry->GetKey(nsIRegistry::Common, 
-                            kRegistryProfileSubtreeString.get(), 
-                            &profilesTreeKey);
-
-    if (NS_SUCCEEDED(rv)) 
-    {
-        rv = registry->GetString(profilesTreeKey, 
-                         kRegistryMozRegDataMovedString.get(), 
-                         getter_Copies(tmpRegDataMoved));
-         
-        nsAutoString isDataMovedString(tmpRegDataMoved);
-        if (isDataMovedString.Equals(kRegistryYesString))
-            *isDataMoved = PR_TRUE;
-    }
-    else
-    {
-        rv = registry->AddKey(nsIRegistry::Common, 
-                                kRegistryProfileSubtreeString.get(), 
-                                &profilesTreeKey);
-    }
-    return rv;        
-}
-
-// Set the flag in the new reigstry which indicates that it  
-// got the transfered data from old mozilla registry
-nsresult
-nsProfileAccess::SetMozRegDataMovedFlag(nsIFile* regName)
-{
-    nsresult rv = NS_OK;
-    nsXPIDLCString regFile;
-
-    if (regName)
-        regName->GetPath(getter_Copies(regFile));   
-
-    nsRegistryKey profilesTreeKey;
-    
-    nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    rv = registry->Open(regFile);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = registry->GetKey(nsIRegistry::Common, 
-                            kRegistryProfileSubtreeString.get(), 
-                            &profilesTreeKey);
-
-    if (NS_SUCCEEDED(rv)) 
-    {
-        rv = registry->SetString(profilesTreeKey, 
-                         kRegistryMozRegDataMovedString.get(), 
-                         kRegistryYesString.get());
-    }
-
-    return rv;        
-}
 
 // Clear the profile member data structure 
 // We need to fill in the data from the new registry
