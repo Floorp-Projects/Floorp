@@ -87,6 +87,9 @@ private:
     nsresult UndefineFileLocations();
     nsresult Update4xProfileInfo();
     char * GetOldRegLocation();
+    nsresult UpdateCurrentProfileModTime(PRBool updateRegistry);
+    nsresult MigrateProfileInternal(const PRUnichar *profileName,
+                                    nsIFile *oldProfDir, nsIFile *newProfDir);
 
     PRBool mStartingUp;
     PRBool mAutomigrate;
@@ -94,13 +97,14 @@ private:
     PRBool mDiskSpaceErrorQuitCalled;
     PRBool mProfileChangeVetoed;
 
+    nsString mCurrentProfileName;
     PRBool mCurrentProfileAvailable;
 
     PRBool mIsUILocaleSpecified;
-    nsAutoString mUILocaleName;
+    nsString mUILocaleName;
 
     PRBool mIsContentLocaleSpecified;
-    nsAutoString mContentLocaleName;
+    nsString mContentLocaleName;
     
 public:
     nsProfile();

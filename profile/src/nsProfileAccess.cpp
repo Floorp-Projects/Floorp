@@ -42,9 +42,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 
-#define MAX_PERSISTENT_DATA_SIZE  1000
-#define NUM_HEX_BYTES             8
-#define ISHEX(c) ( ((c) >= '0' && (c) <= '9') || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F') )
 
 #if defined (XP_UNIX)
 #define USER_ENVIRONMENT_VARIABLE "USER"
@@ -76,7 +73,9 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 #define kRegistryDirectoryString (NS_LITERAL_STRING("directory"))
 #define kRegistryNeedMigrationString (NS_LITERAL_STRING("NeedMigration"))
 #define kRegistryMozRegDataMovedString (NS_LITERAL_STRING("OldRegDataMoved"))
-
+#define kRegistryCreationTimeString (NS_LITERAL_CSTRING("CreationTime"))
+#define kRegistryLastModTimeString (NS_LITERAL_CSTRING("LastModTime"))
+#define kRegistryMigratedFromString (NS_LITERAL_CSTRING("MigFromDir"))
 #define kRegistryVersionString (NS_LITERAL_STRING("Version"))
 #define kRegistryVersion_1_0 (NS_LITERAL_STRING("1.0"))
 #define kRegistryCurrentVersion (NS_LITERAL_STRING("1.0"))
@@ -223,10 +222,9 @@ nsProfileAccess::GetValue(const PRUnichar* profileName, ProfileStruct** aProfile
 nsresult
 nsProfileAccess::SetValue(ProfileStruct* aProfile)
 {
-    NS_ASSERTION(aProfile, "Invalid profile");
+    NS_ENSURE_ARG(aProfile);
 
     PRInt32	index = 0;
-    PRBool isNewProfile = PR_FALSE;
     ProfileStruct* profileItem;
 
     index = FindProfileIndex(aProfile->profileName.get(), aProfile->isImportType);
@@ -234,43 +232,21 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
     if (index >= 0)
     {
         profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+        *profileItem = *aProfile;
+        profileItem->updateProfileEntry = PR_TRUE;
     }
     else
     {
-        isNewProfile = PR_TRUE;
-
-        profileItem	= new ProfileStruct();
+        profileItem	= new ProfileStruct(*aProfile);
         if (!profileItem)
             return NS_ERROR_OUT_OF_MEMORY;
-
-        profileItem->profileName        = aProfile->profileName;
-    }
-
-    aProfile->CopyProfileLocation(profileItem);
-
-    profileItem->isMigrated = aProfile->isMigrated;
-
-    profileItem->isImportType = aProfile->isImportType;
-
     profileItem->updateProfileEntry = PR_TRUE;
 
-    if (!aProfile->NCProfileName.IsEmpty())
-        profileItem->NCProfileName = aProfile->NCProfileName;
-
-    if (!aProfile->NCDeniedService.IsEmpty())
-        profileItem->NCDeniedService = aProfile->NCDeniedService;
-
-    if (!aProfile->NCEmailAddress.IsEmpty())
-        profileItem->NCEmailAddress = aProfile->NCEmailAddress;
-
-    if (!aProfile->NCHavePregInfo.IsEmpty())
-        profileItem->NCHavePregInfo = aProfile->NCHavePregInfo;
-
-
-    if (isNewProfile) {
+        if (!mProfiles) {
+            mProfiles = new nsVoidArray;
         if (!mProfiles)
-            mProfiles = new nsVoidArray();
-
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
         mProfiles->AppendElement((void*)profileItem);
     }
 
@@ -349,12 +325,6 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
     rv = registry->GetString(profilesTreeKey, 
                              kRegistryVersionString.get(), 
                              getter_Copies(tmpVersion));
-
-    if (tmpVersion == nsnull)
-    {
-        fixRegEntries = PR_TRUE;
-        mProfileDataChanged = PR_TRUE;
-    }
 
     // Get the preg info
     rv = registry->GetString(profilesTreeKey, 
@@ -440,8 +410,23 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         profileItem->updateProfileEntry     = PR_TRUE;
         profileItem->profileName      = NS_STATIC_CAST(const PRUnichar*, profile);        
         
-        rv = profileItem->InternalizeLocation(registry, profKey, PR_FALSE, fixRegEntries);
+        PRInt64 tmpLongLong;
+        rv = registry->GetLongLong(profKey,
+                                   kRegistryCreationTimeString.get(),
+                                   &tmpLongLong);
+        if (NS_SUCCEEDED(rv))
+            profileItem->creationTime = tmpLongLong;
+
+        rv = registry->GetLongLong(profKey,
+                                   kRegistryLastModTimeString.get(),
+                                   &tmpLongLong);
+        if (NS_SUCCEEDED(rv))
+            profileItem->lastModTime = tmpLongLong;
+        
+        rv = profileItem->InternalizeLocation(registry, profKey, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Internalizing profile location failed");
+        // Not checking the error since most won't have this info
+        profileItem->InternalizeMigratedFromLocation(registry, profKey);
         
         profileItem->isMigrated       = isMigratedString.Equals(kRegistryYesString);
 
@@ -768,6 +753,14 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
                                 kRegistryNCHavePREGInfoString.get(), 
                                 profileItem->NCHavePregInfo.get());
 
+            registry->SetLongLong(profKey,
+                                  kRegistryCreationTimeString.get(),
+                                  &profileItem->creationTime);
+
+            registry->SetLongLong(profKey,
+                                  kRegistryLastModTimeString.get(),
+                                  &profileItem->lastModTime);
+            
             rv = profileItem->ExternalizeLocation(registry, profKey);
             if (NS_FAILED(rv)) {
                 NS_ASSERTION(PR_FALSE, "Could not update profile location");
@@ -775,6 +768,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
                 if (NS_FAILED(rv)) return rv;
                 continue;
             }
+            profileItem->ExternalizeMigratedFromLocation(registry, profKey);
 
             profileItem->updateProfileEntry = PR_FALSE;
         }
@@ -818,11 +812,20 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
                                 kRegistryNCHavePREGInfoString.get(), 
                                 profileItem->NCHavePregInfo.get());
 
+            registry->SetLongLong(profKey,
+                                  kRegistryCreationTimeString.get(),
+                                  &profileItem->creationTime);
+
+            registry->SetLongLong(profKey,
+                                  kRegistryLastModTimeString.get(),
+                                  &profileItem->lastModTime);
+
             rv = profileItem->ExternalizeLocation(registry, profKey);
             if (NS_FAILED(rv)) {
                 NS_ASSERTION(PR_FALSE, "Could not update profile location");
                 continue;
             }
+            profileItem->ExternalizeMigratedFromLocation(registry, profKey);
 
             profileItem->updateProfileEntry = PR_FALSE;
         }
@@ -873,6 +876,40 @@ nsProfileAccess::GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFil
     }
     return NS_ERROR_FAILURE;    
 }
+
+nsresult
+nsProfileAccess::SetMigratedFromDir(const PRUnichar *profileName, nsILocalFile *originalDir)
+{
+    NS_ENSURE_ARG(profileName);
+    NS_ENSURE_ARG(originalDir);
+
+    PRInt32 index = FindProfileIndex(profileName, PR_FALSE);
+    if (index >= 0)
+    {
+        ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+        profileItem->migratedFrom = originalDir;
+        profileItem->updateProfileEntry = PR_TRUE;
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsProfileAccess::SetProfileLastModTime(const PRUnichar *profileName, PRInt64 lastModTime)
+{
+    NS_ENSURE_ARG(profileName);
+
+    PRInt32 index = FindProfileIndex(profileName, PR_FALSE);
+    if (index >= 0)
+    {
+        ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+        profileItem->lastModTime = lastModTime;
+        profileItem->updateProfileEntry = PR_TRUE;
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
 // Return the list of profiles, 4x, 5x, or both.
 nsresult
 nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result)
@@ -1063,7 +1100,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
 
         profileItem->updateProfileEntry    = PR_TRUE;
         profileItem->profileName  = convertedProfName;
-        rv = profileItem->InternalizeLocation(oldReg, key, PR_TRUE, PR_FALSE);
+        rv = profileItem->InternalizeLocation(oldReg, key, PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get 4x profile location");
         profileItem->isMigrated = PR_FALSE;
         profileItem->isImportType = fromImport;
@@ -1218,20 +1255,53 @@ nsProfileAccess::DetermineForceMigration(PRBool *forceMigration)
 // class ProfileStruct
 // **********************************************************************
 
-ProfileStruct::ProfileStruct(const ProfileStruct& src) :
-    profileName(src.profileName), isMigrated(src.isMigrated),
-    NCProfileName(src.NCProfileName), NCDeniedService(src.NCDeniedService),
-    NCEmailAddress(src.NCEmailAddress), NCHavePregInfo(src.NCHavePregInfo),
-    updateProfileEntry(src.updateProfileEntry),
-    isImportType(src.isImportType),
-    regLocationData(src.regLocationData)
+ProfileStruct::ProfileStruct() :
+    isMigrated(PR_FALSE), updateProfileEntry(PR_FALSE),
+    isImportType(PR_FALSE),
+    creationTime(LL_ZERO), lastModTime(LL_ZERO)
 {
-    if (src.resolvedLocation) {
+}
+
+ProfileStruct::ProfileStruct(const ProfileStruct& src)
+{
+    *this = src;
+}
+
+ProfileStruct& ProfileStruct::operator=(const ProfileStruct& rhs)
+{
+    profileName = rhs.profileName;
+    isMigrated = rhs.isMigrated;
+    NCProfileName = rhs.NCProfileName;
+    NCDeniedService = rhs.NCDeniedService;
+    NCEmailAddress = rhs.NCEmailAddress;
+    NCHavePregInfo = rhs.NCHavePregInfo;
+    updateProfileEntry = rhs.updateProfileEntry;
+    isImportType = rhs.isImportType;
+    creationTime = rhs.creationTime;
+    lastModTime = rhs.lastModTime;
+
+    nsresult rv;
         nsCOMPtr<nsIFile> file;
-        nsresult rv = src.resolvedLocation->Clone(getter_AddRefs(file));
+    
+    resolvedLocation = nsnull;
+    if (rhs.resolvedLocation) {
+        regLocationData.Truncate(0);
+        rv = rhs.resolvedLocation->Clone(getter_AddRefs(file));
         if (NS_SUCCEEDED(rv))
             resolvedLocation = do_QueryInterface(file);
+        file = nsnull;
     }
+    else
+        regLocationData = rhs.regLocationData;
+    
+    migratedFrom = nsnull;    
+    if (rhs.migratedFrom) {
+        rv = rhs.migratedFrom->Clone(getter_AddRefs(file));
+        if (NS_SUCCEEDED(rv))
+            migratedFrom = do_QueryInterface(file);
+    }
+    
+    return *this;
 }
 
 nsresult ProfileStruct::GetResolvedProfileDir(nsILocalFile **aDirectory)
@@ -1270,7 +1340,7 @@ nsresult ProfileStruct::CopyProfileLocation(ProfileStruct *destStruct)
     return NS_OK;
 }
 
-nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey, PRBool is4x, PRBool isOld50)
+nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey, PRBool is4x)
 {
     nsresult rv;
     nsCOMPtr<nsILocalFile> tempLocal;
@@ -1315,90 +1385,24 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
     {
         nsXPIDLString regData;
 
-        if (isOld50) // Some format which was used around M10-M11. Can we forget about it?
-        {
-
-            rv = aRegistry->GetString(profKey, 
-                                      kRegistryDirectoryString.get(), 
-                                      getter_Copies(regData));
-            if (NS_FAILED(rv)) return rv;
-
-            PRBool haveHexBytes = PR_TRUE;
-
-            // Decode the directory name to return the ordinary string
-            nsCAutoString regDataCString; regDataCString.AssignWithConversion(regData);
-            nsInputStringStream stream(regDataCString.get());
-
-            char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
-            // The first 8 bytes of the data should be a hex version of the data size to follow.
-            PRInt32 bytesRead = NUM_HEX_BYTES;
-            bytesRead = stream.read(bigBuffer, bytesRead);
-
-            if (bytesRead != NUM_HEX_BYTES)
-                haveHexBytes = PR_FALSE;
-
-            if (haveHexBytes)
-            {
-                bigBuffer[NUM_HEX_BYTES] = '\0';
-                
-                for (int i = 0; i < NUM_HEX_BYTES; i++)
-                {
-                    if (!(ISHEX(bigBuffer[i])))
-                    {
-                        haveHexBytes = PR_FALSE;
-                        break;
-                    }
-                }
-            }
-
-            nsAutoString dirNameString;
-            if (haveHexBytes)
-            {
-                PR_sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
-                if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
-                {
-                    // Try to tolerate encoded values with no length header
-                    bytesRead = NUM_HEX_BYTES + 
-                                stream.read(bigBuffer + NUM_HEX_BYTES, 
-                                     MAX_PERSISTENT_DATA_SIZE - NUM_HEX_BYTES);
-                }
-                else
-                {
-                    // Now we know how many bytes to read, do it.
-                    bytesRead = stream.read(bigBuffer, bytesRead);
-                }
-
-                // Make sure we are null terminated
-                bigBuffer[bytesRead]='\0';
-
-                dirNameString.AssignWithConversion(nsDependentCString(bigBuffer, bytesRead).get());
-            }
-            else
-                dirNameString = regData;
-                
-            rv = NS_NewUnicodeLocalFile(dirNameString.get(), PR_TRUE, getter_AddRefs(tempLocal));
-        }
-        else
-        {
-            rv = aRegistry->GetString(profKey, 
-                                      kRegistryDirectoryString.get(), 
-                                      getter_Copies(regData));
-            if (NS_FAILED(rv)) return rv;
-            regLocationData = regData;
+        rv = aRegistry->GetString(profKey, 
+                                  kRegistryDirectoryString.get(), 
+                                  getter_Copies(regData));
+        if (NS_FAILED(rv)) return rv;
+        regLocationData = regData;
 
 #ifdef XP_MAC
-            // For a brief time, this was a unicode path
-            PRInt32 firstColon = regLocationData.FindChar(PRUnichar(':'));
-            if (firstColon == -1)
-            {
-                rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(tempLocal));
-                if (NS_SUCCEEDED(rv))
-                    rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData).get());
-            }
-            else
-#endif
-            rv = NS_NewUnicodeLocalFile(regLocationData.get(), PR_TRUE, getter_AddRefs(tempLocal));
+        // For a brief time, this was a unicode path
+        PRInt32 firstColon = regLocationData.FindChar(PRUnichar(':'));
+        if (firstColon == -1)
+        {
+            rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(tempLocal));
+            if (NS_SUCCEEDED(rv))
+                rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData).get());
         }
+        else
+#endif
+        rv = NS_NewUnicodeLocalFile(regLocationData.get(), PR_TRUE, getter_AddRefs(tempLocal));
     }
 
     if (NS_SUCCEEDED(rv) && tempLocal)
@@ -1456,6 +1460,59 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         rv = NS_ERROR_FAILURE;
     }
         
+    return rv;
+}
+
+nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, nsRegistryKey profKey)
+{
+    nsresult rv;
+    nsXPIDLCString regData;
+    nsCOMPtr<nsILocalFile> tempLocal;
+    
+    rv = aRegistry->GetStringUTF8(profKey, 
+                                  kRegistryMigratedFromString.get(), 
+                                  getter_Copies(regData));
+    if (NS_SUCCEEDED(rv))
+    {
+#ifdef XP_MAC
+        rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(tempLocal));
+        if (NS_SUCCEEDED(rv))
+        {
+            // The persistent desc on Mac is base64 encoded so plain ASCII
+            rv = tempLocal->SetPersistentDescriptor(regData.get());
+            if (NS_SUCCEEDED(rv))
+                migratedFrom = tempLocal;
+        }
+#else
+        rv = NS_NewUnicodeLocalFile(NS_ConvertUTF8toUCS2(regData).get(), PR_TRUE, getter_AddRefs(tempLocal));
+        if (NS_SUCCEEDED(rv))
+            migratedFrom = tempLocal;
+#endif
+    }
+    return rv;
+}
+
+nsresult ProfileStruct::ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, nsRegistryKey profKey)
+{
+    nsresult rv = NS_OK;
+    nsXPIDLCString regData;
+    
+    if (migratedFrom)
+    {
+#if XP_MAC
+        rv = migratedFrom->GetPersistentDescriptor(getter_Copies(regData));
+#else
+        nsXPIDLString ucPath;
+        rv = resolvedLocation->GetUnicodePath(getter_Copies(ucPath));
+        if (NS_SUCCEEDED(rv))
+            regData = NS_ConvertUCS2toUTF8(ucPath);
+#endif
+
+        if (NS_SUCCEEDED(rv))
+            rv = aRegistry->SetStringUTF8(profKey,
+                                          kRegistryMigratedFromString.get(),
+                                          regData.get());
+    }
     return rv;
 }
 

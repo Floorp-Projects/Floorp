@@ -623,6 +623,15 @@ pref("mousewheel.withaltkey.sysnumlines",false);
 
 pref("profile.confirm_automigration",true);
 
+// the amount of time (in seconds) that must elapse
+// before we think your mozilla profile is defunct
+// and you'd benefit from re-migrating from 4.x
+// see bug #137886 for more details
+//
+// if -1, we never think your profile is defunct
+// and users will never see the remigrate UI.
+pref("profile.seconds_until_defunct", -1);
+
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
 

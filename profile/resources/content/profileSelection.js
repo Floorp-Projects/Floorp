@@ -183,7 +183,7 @@ function onStart()
           }
         }
       }      
-      profile.migrateProfile( profilename, true );
+      profile.migrateProfile( profilename );
     }
     else
       return false;

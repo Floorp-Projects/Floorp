@@ -87,7 +87,8 @@ interface nsIProfileInternal : nsIProfile {
 
     void migrateProfileInfo();
     void migrateAllProfiles();
-    void migrateProfile(in wstring profileName, in boolean showProgressAsModalWindow);
+    void migrateProfile(in wstring profileName);
+    void remigrateProfile(in wstring profileName);
     void forgetCurrentProfile();
 
     /**
@@ -108,6 +109,12 @@ interface nsIProfileInternal : nsIProfile {
      */
     nsILocalFile getOriginalProfileDir(in wstring profileName);
 
+    /**
+     * Returns the date on which a profile was last used.
+     * value is in milliseconds since midnight Jan 1, 1970 GMT (same as nsIFile)
+     */
+    PRInt64 getProfileLastModTime(in wstring profileName);
+    
     attribute boolean automigrate;
     readonly attribute nsIFile defaultProfileParentDir;
     readonly attribute wstring firstProfile;

@@ -76,7 +76,7 @@ function RenameProfile()
           }
         }
       }      
-      profile.migrateProfile( profilename, true );
+      profile.migrateProfile( profilename );
     }
     else
       return false;

@@ -96,6 +96,9 @@ protected:
 
   static void* PR_CALLBACK HandleExitEvent(PLEvent* aEvent);
   static void PR_CALLBACK DestroyExitEvent(PLEvent* aEvent);
+
+private:
+  nsresult CheckAndRemigrateDefunctProfile();
 };
 
 #endif

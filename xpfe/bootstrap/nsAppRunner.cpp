@@ -96,6 +96,9 @@
 #include "nsIXRemoteService.h"
 #endif
 
+// see DoOnShutdown()
+#include "nsIProfile.h"
+
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
 #endif
@@ -106,7 +109,7 @@
 
 #include "nsITimelineService.h"
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth) || defined(DEBUG_pra)
+#if defined(DEBUG_pra)
 #define DEBUG_CMD_LINE
 #endif
 
@@ -772,6 +775,17 @@ nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool heedGeneralStartupPre
 static nsresult DoOnShutdown()
 {
   nsresult rv;
+
+  // call ShutDownCurrentProfile() so we update the last modified time of the profile
+  {
+    // scoping this in a block to force release
+    nsCOMPtr<nsIProfile> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager, so unable to update last modified time");
+    if (NS_SUCCEEDED(rv)) {
+      // 0 is undefined, we use this secret value so that we don't notify
+      profileMgr->ShutDownCurrentProfile(0);
+    }
+  }
 
   // save the prefs, in case they weren't saved
   {

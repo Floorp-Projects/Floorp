@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  uconv \
 		  locale \
 		  xremoteservice \
+		  profile \
 		  $(NULL)
 # for jprof
 REQUIRES	+= jprof
