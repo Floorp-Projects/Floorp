@@ -957,8 +957,8 @@ nsMsgAccountManager::upgradePrefs()
       oldAccountsValueBuf = nsnull;
       
       PR_snprintf(prefNameBuf, 1024, "mail.account.account%d.identities", i);
-      PR_snprintf(prefValueBuf, 1024, "identity%d", i);
-      m_prefs->SetCharPref(prefNameBuf, prefValueBuf);
+      // in 4.x, we only had one identity, so everyone gets that one in 5.0 when they upgrade
+      m_prefs->SetCharPref(prefNameBuf, "identity1");
 
       PR_snprintf(prefNameBuf, 1024, "mail.account.account%d.server", i);
       PR_snprintf(prefValueBuf, 1024, "server%d", i);
