@@ -189,9 +189,12 @@ public:
 
    * RangeAdd -- informs content that it owns one or both range endpoints
    * RangeRemove -- informs content that it no longer owns a range endpoint
+   * GetRangeList -- returns the list of ranges that have one or both endpoints
+   *                 within this content item
    */
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange) = 0;
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange) = 0;
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const = 0;
   
   /**
    * Add this object's size information to the sizeof handler and

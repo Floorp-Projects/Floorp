@@ -45,6 +45,7 @@
 #include "nsStyleConsts.h"
 #include "nsXIFConverter.h"
 #include "nsFrame.h"
+#include "nsRange.h"
 #include "nsIPresShell.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -2300,6 +2301,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
+    nsRange::OwnerChildInserted(mContent, aIndex);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
@@ -2322,6 +2324,7 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
+    nsRange::OwnerChildReplaced(mContent, aIndex, oldKid);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
@@ -2344,6 +2347,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
+    // ranges don't need adjustment since new child is at end of list
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE);
@@ -2362,6 +2366,7 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
     PRBool rv = mChildren.RemoveElementAt(aIndex);
+    nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     if (aNotify) {
       if (nsnull != doc) {
         doc->ContentRemoved(mContent, oldKid, aIndex);
