@@ -224,8 +224,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
 
       nsIView* view = frame->GetView();
       if (view) {
-        nsRegion region;
-        region.Copy(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
+        nsRegion region(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
         view->GetViewManager()->SetViewChildClipRegion(view, &region);
       }
 

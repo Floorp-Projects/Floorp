@@ -3,14 +3,14 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is mozilla.org code.
- * 
+ *
  * The Initial Developer of the Original Code is Dainis Jonitis,
  * <Dainis_Jonitis@swh-t.lv>.  Portions created by Dainis Jonitis are
  * Copyright (C) 2001 Dainis Jonitis. All Rights Reserved.
@@ -31,12 +31,12 @@ nsresult nsRegionImpl::Init (void)
 void nsRegionImpl::SetTo (const nsIRegion &aRegion)
 {
   const nsRegionImpl* pRegion = NS_STATIC_CAST (const nsRegionImpl*, &aRegion);
-  mRegion.Copy (pRegion->mRegion);
+  mRegion = pRegion->mRegion;
 }
 
 void nsRegionImpl::SetTo (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  mRegion.Copy (nsRect (aX, aY, aWidth, aHeight));
+  mRegion = nsRect (aX, aY, aWidth, aHeight);
 }
 
 void nsRegionImpl::Intersect (const nsIRegion &aRegion)
@@ -85,7 +85,7 @@ PRBool nsRegionImpl::IsEqual (const nsIRegion &aRegion)
 
 void nsRegionImpl::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  nsRect BoundRect = mRegion.GetBounds();
+  const nsRect& BoundRect = mRegion.GetBounds();
   *aX = BoundRect.x;
   *aY = BoundRect.y;
   *aWidth  = BoundRect.width;
