@@ -87,6 +87,10 @@ import::
 		"$(XPHEADER_JAR)=$(IMPORT_XP_DIR)|$(SOURCE_XP_DIR)/public/|v" \
 		"$(MDHEADER_JAR)=$(IMPORT_MD_DIR)|$(SOURCE_MD_DIR)/include|"        \
 		"$(MDBINARY_JAR)=$(IMPORT_MD_DIR)|$(SOURCE_MD_DIR)|"
+# On Mac OS X ranlib needs to be rerun after static libs are moved.
+ifeq ($(OS_TARGET),Darwin)
+	find $(SOURCE_MD_DIR)/lib -name "*.a" -exec $(RANLIB) {} \;
+endif
 
 export:: 
 	+$(LOOP_OVER_DIRS)
