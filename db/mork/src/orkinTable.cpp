@@ -890,7 +890,7 @@ orkinTable::GetSearchColumns( // query columns used by FindRowMatches()
   MORK_USED_1(outColSet);
   mdb_count count = 0;
   mdb_err outErr = 0;
-  nsIMdbThumb* outThumb = 0;
+//  nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
