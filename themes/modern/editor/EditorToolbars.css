@@ -374,6 +374,10 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/table-clicked.gif");
   }
 
+#spellingButton {
+	list-style-image:url("chrome://editor/skin/images/spell.gif");
+}
+
 #spellingButton[disabled="true"],
 #spellingButton[disabled="true"]:hover,
 #spellingButton[disabled="true"]:hover:active
