@@ -378,7 +378,7 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
                         m_window);
                   }
                   else
-                    m_curTempFile->Delete(PR_FALSE);
+                    tempFileSpec->Delete(PR_FALSE);
                 }
                 currentOp->ClearOperation(nsIMsgOfflineImapOperation::kAppendDraft);
                 m_currentDB->DeleteHeader(mailHdr, nsnull, PR_TRUE, PR_TRUE);
