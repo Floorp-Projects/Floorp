@@ -36,6 +36,10 @@ public:
 
   void* operator new(size_t size, const PRUnichar* us, PRInt32 uslen);
 
+  void operator delete(void* ptr) {
+    ::operator delete(ptr);
+  }
+
   virtual void ToString(nsString& aBuf) const;
 
   virtual const PRUnichar* GetUnicode() const;
@@ -75,7 +79,7 @@ NS_IMPL_ISUPPORTS(AtomImpl, kIAtomIID);
 void* AtomImpl::operator new(size_t size, const PRUnichar* us, PRInt32 uslen)
 {
   size = size + uslen * sizeof(PRUnichar);
-  AtomImpl* ii = (AtomImpl*) new char[size];
+  AtomImpl* ii = (AtomImpl*) ::operator new(size);
   nsCRT::memcpy(ii->mString, us, uslen * sizeof(PRUnichar));
   ii->mString[uslen] = 0;
   return ii;
