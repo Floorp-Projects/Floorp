@@ -84,7 +84,7 @@ GARBAGE	= $(GARBAGE) _gen
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-LINCS=$(LINCS) -I$(PUBLIC)\plugin -I$(PUBLIC)\xpcom -I$(PUBLIC)\java -I$(PUBLIC)\plugimpl -I$(PUBLIC)\raptor -I_jri
+LINCS=$(LINCS) -I$(XPIDL_GEN_DIR) -I_jri
 
 !ifdef NEW_PLUGIN_STREAM_API
 LCFLAGS = $(LCFLAGS) -DNEW_PLUGIN_STREAM_API
