@@ -1927,10 +1927,7 @@ nsGfxTextControlFrame2::SetInitialValue()
     SetTextControlFrameState(defaultValue);
 
     rv = mEditor->EnableUndo(PR_TRUE);
-
-    if (NS_FAILED(rv))
-      return rv;
-
+    NS_ASSERTION(!rv,"Transaction Manager must have failed");
     // Now restore the original editor flags.
 
     rv = mEditor->SetFlags(editorFlags);
