@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -54,6 +54,13 @@ nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstanceP
 
 	*aInstancePtrResult = NULL;
 
+	if (aIID.Equals(kIBrowserWindowIID))
+	{
+		*aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
+		AddRef();
+		return NS_OK;
+	}
+
 	if (aIID.Equals(kIStreamObserverIID))
 	{
 		*aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
@@ -84,6 +91,160 @@ nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstanceP
 
 	return NS_NOINTERFACE;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIBrowserWindow implementation
+
+NS_IMETHODIMP
+CWebShellContainer::Init(nsIAppShell* aAppShell, nsIPref* aPrefs, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::MoveTo(PRInt32 aX, PRInt32 aY)
+{
+	NG_TRACE_METHOD(CWebShellContainer::MoveTo);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetBounds(nsRect& aResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetBounds);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetWindowBounds(nsRect& aResult)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::Show()
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::Hide()
+{
+	NG_TRACE_METHOD(CWebShellContainer::Hide);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::Close()
+{
+	NG_TRACE_METHOD(CWebShellContainer::Close);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::SetChrome(PRUint32 aNewChromeMask)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetChrome(PRUint32& aChromeMaskResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetChrome);
+	aChromeMaskResult = 0;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::SetTitle(const PRUnichar* aTitle)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetTitle(const PRUnichar** aResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetTitle);
+	*aResult = nsnull;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::SetStatus(const PRUnichar* aStatus)
+{
+	NG_TRACE_METHOD(CWebShellContainer::SetStatus);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetStatus(const PRUnichar** aResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetStatus);
+	*aResult = nsnull;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
+{
+	NG_TRACE_METHOD(CWebShellContainer::SetProgress);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::ShowMenuBar(PRBool aShow)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::IsMenuBarVisible(PRBool *aVisible)
+{
+	NG_TRACE_METHOD(CWebShellContainer::IsMenuBarVisible);
+	*aVisible = PR_FALSE;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetWebShell(nsIWebShell*& aResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetWebShell);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetContentWebShell(nsIWebShell **aResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetContentWebShell);
+	*aResult = nsnull;
+	return NS_OK;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -222,7 +383,7 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt
 NS_IMETHODIMP
 CWebShellContainer::NewWebShell(PRUint32 aChromeMask, PRBool aVisible, nsIWebShell *&aNewWebShell)
 {
-	NG_TRACE(_T("CWebShellContainer::NewWebShell()\n"));
+	NG_TRACE_METHOD(CWebShellContainer::NewWebShell);
 	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 	return rv;
 }
@@ -251,7 +412,7 @@ CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& a
 NS_IMETHODIMP
 CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
 {
-	NG_TRACE(_T("CWebShellContainer::FocusAvailable()\n"));
+	NG_TRACE_METHOD(CWebShellContainer::FocusAvailable);
 	return NS_OK;
 }
 
@@ -259,9 +420,11 @@ CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocus
 NS_IMETHODIMP
 CWebShellContainer::ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameNode)
 {
+	NG_TRACE_METHOD(CWebShellContainer::ContentShellAdded);
 	nsresult rv = NS_OK;
 	return rv;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
@@ -270,7 +433,11 @@ CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCo
                          const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow)
 {
-  return NS_OK;
+	NG_TRACE_METHOD(CWebShellContainer::CreatePopup);
+	HMENU hMenu = ::CreatePopupMenu();
+	InsertMenu(hMenu, 0, MF_BYPOSITION, 1, _T("TODO"));
+	TrackPopupMenu(hMenu, TPM_LEFTALIGN, aXPos, aYPos, NULL, NULL, NULL);
+	return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
