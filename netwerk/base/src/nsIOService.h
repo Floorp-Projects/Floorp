@@ -103,6 +103,11 @@ protected:
     void GetPrefBranch(nsIPrefBranch **);
     void ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
+    nsresult ParseFileURL(const char* inURL,
+                                 char **outHost,
+                                 char **outDirectory,
+                                 char **outFileBaseName,
+                                 char **outFileExtension);
 protected:
     PRPackedBool      mOffline;
     PRPackedBool      mOfflineForProfileChange;

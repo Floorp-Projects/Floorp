@@ -702,4 +702,32 @@ NS_NewProxyInfo(const char* type, const char* host, PRInt32 port, nsIProxyInfo* 
     return pps->NewProxyInfo(type, host, port, result);
 }
 
+inline nsresult
+NS_InitFileFromURLSpec(nsIFile* aFile, const char *inURL,
+                       nsIIOService *ioService=nsnull)
+{
+    nsCOMPtr<nsIIOService> serv;
+    if (ioService == nsnull) {
+        nsresult rv;
+        serv = do_GetIOService(&rv);
+        if (NS_FAILED(rv)) return rv;
+        ioService = serv.get();
+    }
+    return ioService->InitFileFromURLSpec(aFile, inURL);
+}
+
+inline nsresult
+NS_GetURLSpecFromFile(nsIFile* aFile, char **aUrl,
+                      nsIIOService *ioService=nsnull)
+{
+    nsCOMPtr<nsIIOService> serv;
+    if (ioService == nsnull) {
+        nsresult rv;
+        serv = do_GetIOService(&rv);
+        if (NS_FAILED(rv)) return rv;
+        ioService = serv.get();
+    }
+    return ioService->GetURLSpecFromFile(aFile, aUrl);
+}
+
 #endif // nsNetUtil_h__

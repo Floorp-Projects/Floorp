@@ -209,4 +209,25 @@ interface nsIIOService : nsISupports
      */
     string resolveRelativePath(in string relativePath,
                                in string basePath);
+
+    /**
+     * conversions between nsILocalFile and a file url string
+     */
+
+    /**
+     * getURLSpecFromFile
+     * gets a file:// url out of an nsIFile
+     * @param file the file to extract the path from
+     * @return a file:// style url string
+     */
+    string getURLSpecFromFile(in nsIFile file);
+
+    /**
+     * initFileFromURL
+     * Sets the native path of the file given the url string
+     * @param file the file to initialize with the given spec
+     * @param url the url string which will be used to initialize the file
+     *
+     */
+    void initFileFromURLSpec(in nsIFile file, in string url);
 };
