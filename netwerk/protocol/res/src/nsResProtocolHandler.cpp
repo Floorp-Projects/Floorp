@@ -25,6 +25,9 @@
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsResChannel.h"
+#include "prenv.h"
+#include "prmem.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
