@@ -6,16 +6,13 @@
 
 #include "nsString.h"
 #include "nsSharedString.h"
+
 #ifdef TEST_STD_STRING
 #include "nsStdStringWrapper.h"
 #else
-
-typedef nsString nsStdString;
-typedef nsCString nsStdCString;
-
+  typedef nsString nsStdString;
+  typedef nsCString nsStdCString;
 #endif
-
-// #define NS_USE_WCHAR_T
 
 template <class CharT>
 basic_nsLiteralString<CharT>
@@ -34,7 +31,7 @@ NS_SPECIALIZE_TEMPLATE
 basic_nsLiteralString<PRUnichar>
 literal_hello( PRUnichar* )
   {
-#ifdef NS_USE_WCHAR_T
+#ifdef HAVE_CPP_2BYTE_WCHAR_T
     return basic_nsLiteralString<PRUnichar>(L"Hello");
 #else
     static PRUnichar constant_unicode[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
@@ -214,6 +211,7 @@ test_SetLength( basic_nsAWritableString<CharT>& aWritable )
 
     string_class_traits<CharT>::implementation_t oldValue(aWritable);
 
+
     size_t oldLength = aWritable.Length();
 
     if ( oldValue != Substring(aWritable, 0, oldLength) )
@@ -261,6 +259,7 @@ test_insert( basic_nsAWritableString<CharT>& aWritable )
     int tests_failed = 0;
 
     string_class_traits<CharT>::implementation_t oldValue(aWritable);
+
     if ( oldValue != aWritable )
       {
         cout << "FAILED saving the old string value in |test_insert|." << endl;
@@ -268,6 +267,7 @@ test_insert( basic_nsAWritableString<CharT>& aWritable )
       }
 
     string_class_traits<CharT>::implementation_t insertable( string_class_traits<CharT>::literal_hello() );
+
     insertable.SetLength(1);
     aWritable.Insert(insertable, 0);
 
@@ -354,25 +354,16 @@ main()
 
 
     {
-#ifdef NS_USE_WCHAR_T
-      nsLiteralString s0(L"Hello");
-#else
-      PRUnichar b0[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
-      nsLiteralString s0(b0);
-#endif
-      tests_failed += test_readable_hello(s0);
+      tests_failed += test_readable_hello(NS_LITERAL_STRING("Hello"));
 
       nsLiteralCString s1("Hello");
       tests_failed += test_readable_hello(s1);
     }
 
     {
-#ifdef NS_USE_WCHAR_T
-      nsString s3(L"Hello");
-#else
-      PRUnichar b3[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
-      nsString s3(b3);
-#endif
+
+      nsString s3( NS_LITERAL_STRING("Hello") );
+
       tests_failed += test_readable_hello(s3);
       tests_failed += test_writable(s3);
 
@@ -382,12 +373,8 @@ main()
     }
 
     {
-#ifdef NS_USE_WCHAR_T
-      nsStdString s5(L"Hello");
-#else
-      PRUnichar b5[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
-      nsStdString s5(b5);
-#endif
+      nsStdString s5( NS_LITERAL_STRING("Hello") );
+
       tests_failed += test_readable_hello(s5);
       tests_failed += test_writable(s5);
 
@@ -397,19 +384,9 @@ main()
     }
 
     {
-#ifdef NS_USE_WCHAR_T
-      nsLiteralString s7(L"He");
-      nsString        s8(L"l");
-      nsStdString     s9(L"lo");
-#else
-      PRUnichar b7[] = { 'H', 'e', PRUnichar() };
-      PRUnichar b8[] = { 'l', PRUnichar() };
-      PRUnichar b9[] = { 'l', 'o', PRUnichar() };
-
-      nsLiteralString s7(b7);
-      nsString        s8(b8);
-      nsStdString     s9(b9);
-#endif
+      nsLiteralString s7(NS_LITERAL_STRING("He"));
+      nsString        s8(NS_LITERAL_STRING("l"));
+      nsStdString     s9(NS_LITERAL_STRING("lo"));
 
       tests_failed += test_readable_hello(s7+s8+s9);
 
