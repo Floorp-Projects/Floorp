@@ -278,8 +278,12 @@ function UpdateStatusMessageCounts(folder)
 	var totalElement = GetTotalCountElement();
 	if(folder && unreadElement && totalElement)
 	{
-		var numUnread = folder.getNumUnread(false);
-		var numTotal = folder.getTotalMessages(false);
+		var numUnread =
+            Bundle.formatStringFromName("unreadMsgStatus",
+                                        [ folder.getNumUnread(false)], 1);
+		var numTotal =
+            Bundle.formatStringFromName("totalMsgStatus",
+                                        [folder.getTotalMessages(false)], 1);
 
 		unreadElement.setAttribute("value", numUnread);
 		totalElement.setAttribute("value", numTotal);

@@ -349,12 +349,10 @@ Rights Reserved.
 				<!-- message view -->
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
-			<box id="status-bar">
-				<text value="&unreadCountText.label;"/>
-				<text id="unreadMessageCount" style="min-width: 5px"/>
-				<text value="&totalCountText.label;"/>
-				<text id="totalMessageCount" style="min-width: 5px"/>
-			</box>
+			<statusbar id="status-bar">
+				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
+				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
+			</statusbar>
 		</box>
 	</box>
 
