@@ -223,10 +223,6 @@ components\uconv.dll
 components\uconv.xpt
 components\unicharutil.xpt
 
-; update
-components\nsBackgroundUpdateService.js
-components\update.xpt
-
 ; dom
 components\dom.xpt                      
 components\dom_base.xpt

@@ -22,8 +22,6 @@ icon.png,                                            classic/icon.png
 # communicator
 #################################################################################################
 skin/classic/communicator/alerts,                    classic/skin/classic/communicator/alerts
-skin/classic/communicator/profile,                   classic/skin/classic/communicator/profile
-
 skin/classic/communicator/contents.rdf,              classic/skin/classic/communicator/contents.rdf
 skin/classic/communicator/communicator.css,          classic/skin/classic/communicator/communicator.css
 skin/classic/communicator/smileys.css,               classic/skin/classic/communicator/smileys.css

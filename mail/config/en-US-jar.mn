@@ -37,8 +37,6 @@ locale/en-US/global,                                      en-US/locale/en-US/glo
 # communicator
 #################################################################################################
 locale/en-US/communicator/dom,                            en-US/locale/en-US/communicator/dom
-locale/en-US/communicator/profile,                        en-US/locale/en-US/communicator/profile
-
 locale/en-US/communicator/layout,                        en-US/locale/en-US/communicator/layout
 
 locale/en-US/communicator/contentAreaCommands.dtd,        en-US/locale/en-US/communicator/contentAreaCommands.dtd
