@@ -31,13 +31,23 @@
 XP_BEGIN_PROTOS
 
 extern void
-SI_DisplaySignonInfoAsHTML();
+SINGSIGN_DisplaySignonInfoAsHTML();
 
 extern void
-SI_RememberSignonData(char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
+SINGSIGN_RememberSignonData(char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
 
 extern void
-SI_RestoreSignonData(char* URLName, char* name, char** value);
+SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value);
+
+extern int
+SINGSIGN_PromptUsernameAndPassword 
+    (char *prompt, char **username, char **password, char *URLName);
+
+extern char *
+SINGSIGN_PromptPassword (char *prompt, char *URLName, PRBool pickFirstUser);
+
+extern char *
+SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName);
 
 XP_END_PROTOS
 

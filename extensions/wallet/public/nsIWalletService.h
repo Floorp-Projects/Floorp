@@ -54,6 +54,13 @@ struct nsIWalletService : public nsISupports
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) = 0;
     NS_IMETHOD SI_RestoreSignonData
         (char* URLNAME, char* name, char** value)=0;
+
+    NS_IMETHOD SI_PromptUsernameAndPassword
+        (char *prompt, char **username, char **password, char *URLName)=0;
+    NS_IMETHOD SI_PromptPassword
+        (char *prompt, char **password, char *URLName, PRBool pickFirstUser)=0;
+    NS_IMETHOD SI_Prompt
+        (char *prompt, char **username, char *URLName)=0;
 };
 
 #endif /* nsIWalletService_h___ */

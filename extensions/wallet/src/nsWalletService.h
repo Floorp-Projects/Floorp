@@ -39,6 +39,12 @@ public:
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
     NS_IMETHOD SI_RestoreSignonData
         (char* URLNAME, char* name, char** value);
+    NS_IMETHOD SI_PromptUsernameAndPassword
+        (char *prompt, char **username, char **password, char *URLName);
+    NS_IMETHOD SI_PromptPassword
+        (char *prompt, char **password, char *URLName, PRBool pickFirstUser);
+    NS_IMETHOD SI_Prompt
+        (char *prompt, char **username, char *URLName);
 
 protected:
     virtual ~nsWalletlibService();

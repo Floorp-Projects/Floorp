@@ -20,6 +20,7 @@
 #if defined(SingleSignon)
 
 #define alphabetize 1
+#include "singsign.h"
 #include "libi18n.h"            /* For the character code set conversions */
 #ifndef ClientWallet
 #include "allxpstr.h"		/* Already included in wallet.cpp */
@@ -102,15 +103,6 @@ struct LO_FormSubmitData_struct {
 #define StrAllocCat(dest, src) Local_SACat (&(dest), src)
   
 /* temporary */
-/*
- * Need this for now because the normal call to FE_Confirm goes through
- * a pointer in the context (context->func->confirm) and the context
- * doesn't exist when we get control from layout, namely when SI_RememberSignonData
- * is called
- *
- * Same applies to FE_SelectDialog because context doesn't exist when
- * SI_RestoreSignonData is called
- */
 static const char *pref_useDialogs =
     "wallet.useDialogs";
 PRIVATE PRBool si_useDialogs = PR_FALSE;
@@ -159,6 +151,83 @@ si_GetUsingDialogsPref(void)
 {
     si_RegisterUsingDialogsPrefCallbacks();
     return si_useDialogs;
+}
+
+/*
+ * Need these because the normal call to FE_* routines goes through
+ * a pointer in the context (context->funcs->confirm) but the context
+ * doesn't exist in the new world order
+ */
+
+PRBool
+MyFE_PromptUsernameAndPassword
+        (char *msg, char **username, char **password) {
+
+  if (!si_GetUsingDialogsPref()) {
+    *username = "your name";
+    *password = "your password";
+    return PR_TRUE;
+  }
+
+  XP_Bool bResult = FALSE;
+  char buf[256];
+
+  printf("%s\n", msg);
+  printf("%cUser (default=%s): ", '\007', *username);
+  gets(buf);
+  if (strlen(buf)) {
+    *username = PL_strdup(buf);
+  }
+
+  printf("%cPassword (default=%s): ", '\007', *password);
+  gets(buf);
+  if (strlen(buf)) {
+    *password = PL_strdup(buf);
+  }
+
+  if (**username) {
+     bResult = TRUE;
+  } else {
+    PR_FREEIF(*username);
+    PR_FREEIF(*password);
+  }
+  return bResult;
+}
+
+char*
+MyFE_PromptPassword (char *msg) {
+  if (!si_GetUsingDialogsPref()) {
+    return "your password";
+  }
+
+  char *result = nsnull;
+  char buf[256];
+  printf("%s\n", msg);
+  printf("%cPassword: ", '\007');
+  gets(buf);
+  if (PL_strlen(buf)) {
+    result = PL_strdup(buf);
+  }
+  return result;
+}
+
+char*
+MyFE_Prompt(char *msg, char* defaultUsername) {
+  if (!si_GetUsingDialogsPref()) {
+    return "your name";
+  }
+
+  char *result = nsnull;
+  char buf[256];
+  printf("%s\n", msg);
+  printf("%cPrompt (default=%s): ", '\007', defaultUsername);
+  fgets(buf, sizeof buf, stdin);
+  if (PL_strlen(buf)) {
+    result = PL_strdup(buf);
+  } else {
+    result = PL_strdup(defaultUsername);
+  }
+  return result;
 }
 
 PRBool
@@ -2139,7 +2208,7 @@ si_RemoveAllSignonData() {
  * Check for a signon submission and remember the data if so
  */
 PUBLIC void
-SI_RememberSignonData
+SINGSIGN_RememberSignonData
        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
 {
     int i, j;
@@ -2247,7 +2316,7 @@ SI_RememberSignonData
 }
 
 PUBLIC void
-SI_RestoreSignonData
+SINGSIGN_RestoreSignonData
     (char* URLName, char* name, char** value)
 {
     si_SignonUserStruct* user;
@@ -2349,6 +2418,7 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password)
     type_array[1] = FORM_TYPE_PASSWORD;
 
     /* Save the signon data */
+    si_LoadSignonData(TRUE);
     si_PutData(URLName, &submit, PR_TRUE);
 
     /* Free up the data memory just allocated */
@@ -2388,6 +2458,8 @@ si_RestoreOldSignonDataFromBrowser
         si_unlock_signon_list();
         return;
     }
+    si_LoadSignonData(TRUE); /* this destroys "user" so need to recalculate it */
+    user = si_GetUser(URLName, pickFirstUser, "username");
 
     /* restore the data from previous time this URL was visited */
     data_ptr = user->signonData_list;
@@ -2403,20 +2475,19 @@ si_RestoreOldSignonDataFromBrowser
 
 /* Browser-generated prompt for user-name and password */
 PUBLIC int
-SI_PromptUsernameAndPassword
-    (MWContext *context, char *prompt,
-    char **username, char **password, char *URLName)
+SINGSIGN_PromptUsernameAndPassword
+    (char *prompt, char **username, char **password, char *URLName)
 {
     int status;
     char *copyOfPrompt=0;
 
-    /* just for safety -- really is a problem in SI_Prompt */
+    /* just for safety -- really is a problem in SINGSIGN_Prompt */
     StrAllocCopy(copyOfPrompt, prompt);
 
     /* do the FE thing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
-        status = FE_PromptUsernameAndPassword
-                     (context, copyOfPrompt, username, password);
+        status = MyFE_PromptUsernameAndPassword
+                     (copyOfPrompt, username, password);
         XP_FREEIF(copyOfPrompt);
         return status;
     }
@@ -2426,8 +2497,8 @@ SI_PromptUsernameAndPassword
         (URLName, PR_FALSE, username, password);
 
     /* get new username/password from user */
-    status = FE_PromptUsernameAndPassword
-                 (context, copyOfPrompt, username, password);
+    status = MyFE_PromptUsernameAndPassword
+                 (copyOfPrompt, username, password);
 
     /* remember these values for next time */
     if (status && si_OkToSave(URLName, *username)) {
@@ -2441,19 +2512,19 @@ SI_PromptUsernameAndPassword
 
 /* Browser-generated prompt for password */
 PUBLIC char *
-SI_PromptPassword
-    (MWContext *context, char *prompt, char *URLName, PRBool pickFirstUser)
+SINGSIGN_PromptPassword
+    (char *prompt, char *URLName, PRBool pickFirstUser)
 {
     char *password=0, *username=0, *copyOfPrompt=0, *result;
     char *urlname = URLName;
     char *s;
 
-    /* just for safety -- really is a problem in SI_Prompt */
+    /* just for safety -- really is a problem in SINGSIGN_Prompt */
     StrAllocCopy(copyOfPrompt, prompt);
 
     /* do the FE thing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
-        result = FE_PromptPassword(context, copyOfPrompt);
+        result = MyFE_PromptPassword(copyOfPrompt);
         XP_FREEIF(copyOfPrompt);
         return result;
     }
@@ -2475,11 +2546,11 @@ SI_PromptPassword
     /* return if a password was found */
     /*
      * Note that we reject a password of " ".  It is a dummy password
-     * that was put in by a preceding call to SI_Prompt.  This occurs
-     * in mknews which calls on SI_Prompt to get the username and then
-     * SI_PromptPassword to get the password (why they didn't simply
-     * call on SI_PromptUsernameAndPassword is beyond me).  So the call
-     * to SI_Prompt will save the username along with the dummy password.
+     * that was put in by a preceding call to SINGSIGN_Prompt.  This occurs
+     * in mknews which calls on SINGSIGN_Prompt to get the username and then
+     * SINGSIGN_PromptPassword to get the password (why they didn't simply
+     * call on SINGSIGN_PromptUsernameAndPassword is beyond me).  So the call
+     * to SINGSIGN_Prompt will save the username along with the dummy password.
      * In this call to SI_Password, the real password gets saved in place
      * of the dummy one.
      */
@@ -2489,7 +2560,7 @@ SI_PromptPassword
     }
 
     /* if no password found, get new password from user */
-    password = FE_PromptPassword(context, copyOfPrompt);
+    password = MyFE_PromptPassword(copyOfPrompt);
 
     /* if username wasn't even found, extract it from URLName */
     if (!username) {
@@ -2524,8 +2595,7 @@ SI_PromptPassword
 
 /* Browser-generated prompt for username */
 PUBLIC char *
-SI_Prompt (MWContext *context, char *prompt,
-    char* defaultUsername, char *URLName)
+SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
 {
     char *password=0, *username=0, *copyOfPrompt=0, *result;
 
@@ -2538,7 +2608,7 @@ SI_Prompt (MWContext *context, char *prompt,
 
     /* do the FE thing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
-        result = FE_Prompt(context, copyOfPrompt, defaultUsername);
+        result = MyFE_Prompt(copyOfPrompt, defaultUsername);
         XP_FREEIF(copyOfPrompt);
         return result;
     }
@@ -2552,7 +2622,7 @@ SI_Prompt (MWContext *context, char *prompt,
     }
 
     /* prompt for new username */
-    result = FE_Prompt(context, copyOfPrompt, username);
+    result = MyFE_Prompt(copyOfPrompt, username);
 
     /* remember this username for next time */
     if (result && XP_STRLEN(result)) {
@@ -2565,7 +2635,7 @@ SI_Prompt (MWContext *context, char *prompt,
         } else {
             /*
              * We put in a dummy password of " " which we will test
-             * for in a following call to SI_PromptPassword.  See comments
+             * for in a following call to SINGSIGN_PromptPassword.  See comments
              * in that routine.
              */
             si_RememberSignonDataFromBrowser (URLName, result, " ");
@@ -2777,7 +2847,7 @@ struct _SignonViewerDialog {
 };
 
 PUBLIC void
-SI_DisplaySignonInfoAsHTML(MWContext *context)
+SINGSIGN_DisplaySignonInfoAsHTML()
 {
     char *buffer = (char*)XP_ALLOC(BUFLEN);
     char *buffer2 = 0;
@@ -3248,7 +3318,7 @@ SI_RememberSignonData
 }
 
 void
-SI_DisplaySignonInfoAsHTML(struct MWContext *context)
+SI_DisplaySignonInfoAsHTML()
 {
 }
 }

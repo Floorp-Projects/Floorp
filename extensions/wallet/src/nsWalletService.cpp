@@ -17,27 +17,12 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-//#include "nsRepository.h"
 #include "nsWalletService.h"
-//#include "nsINetService.h"
 #include "nsIServiceManager.h"
-//static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-//static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-
-//#include "nsIWebShell.h"
-//static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-//static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-
 #include "wallet.h"
 #include "singsign.h"
 
-//#if defined(HAS_C_PLUS_PLUS_CASTS)
-//#define NS_STATIC_CAST(__type, __ptr)	   static_cast<__type>(__ptr)
-//#else
-//#define NS_STATIC_CAST(__type, __ptr)	   ((__type)(__ptr))
-//#endif
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 
 nsWalletlibService::nsWalletlibService()
 {
@@ -92,23 +77,38 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWalletlibService::SI_DisplaySignonInfoAsHTML(){
-    ::SI_DisplaySignonInfoAsHTML();
+NS_IMETHODIMP nsWalletlibService::SI_DisplaySignonInfoAsHTML(){
+    ::SINGSIGN_DisplaySignonInfoAsHTML();
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWalletlibService::SI_RememberSignonData
+NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
-    ::SI_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
+    ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWalletlibService::SI_RestoreSignonData
+NS_IMETHODIMP nsWalletlibService::SI_RestoreSignonData
         (char* URLName, char* name, char** value) {
-    ::SI_RestoreSignonData(URLName, name, value);
+    ::SINGSIGN_RestoreSignonData(URLName, name, value);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::SI_PromptUsernameAndPassword
+        (char *prompt, char **username, char **password, char *URLName) {
+    ::SINGSIGN_PromptUsernameAndPassword(prompt, username, password, URLName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::SI_PromptPassword
+        (char *prompt, char **password, char *URLName, PRBool pickFirstUser) {
+    *password = ::SINGSIGN_PromptPassword(prompt, URLName, pickFirstUser);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::SI_Prompt 
+        (char *prompt, char **username, char *URLName) {
+    *username = ::SINGSIGN_Prompt(prompt, *username, URLName);
     return NS_OK;
 }
 
