@@ -190,25 +190,25 @@ morkEnv::OidAsHex(void* outBuf, const mdbOid& inOid)
 mork_u1
 morkEnv::HexToByte(mork_ch inFirstHex, mork_ch inSecondHex)
 {
-	mork_u1 hi = 0; // high four hex bits
-	mork_flags f = morkCh_GetFlags(inFirstHex);
-	if ( morkFlags_IsDigit(f) )
-		hi = inFirstHex - '0';
-	else if ( morkFlags_IsUpper(f) )
-		hi = (inFirstHex - 'A') + 10;
-	else if ( morkFlags_IsLower(f) )
-		hi = (inFirstHex - 'a') + 10;
-	
-	mork_u1 lo = 0; // low four hex bits
-	f = morkCh_GetFlags(inSecondHex);
-	if ( morkFlags_IsDigit(f) )
-		lo = inSecondHex - '0';
-	else if ( morkFlags_IsUpper(f) )
-		lo = (inSecondHex - 'A') + 10;
-	else if ( morkFlags_IsLower(f) )
-		lo = (inSecondHex - 'a') + 10;
-		
-	return (mork_u1) ((hi << 4) | lo);
+  mork_u1 hi = 0; // high four hex bits
+  mork_flags f = morkCh_GetFlags(inFirstHex);
+  if ( morkFlags_IsDigit(f) )
+    hi = inFirstHex - '0';
+  else if ( morkFlags_IsUpper(f) )
+    hi = (inFirstHex - 'A') + 10;
+  else if ( morkFlags_IsLower(f) )
+    hi = (inFirstHex - 'a') + 10;
+  
+  mork_u1 lo = 0; // low four hex bits
+  f = morkCh_GetFlags(inSecondHex);
+  if ( morkFlags_IsDigit(f) )
+    lo = inSecondHex - '0';
+  else if ( morkFlags_IsUpper(f) )
+    lo = (inSecondHex - 'A') + 10;
+  else if ( morkFlags_IsLower(f) )
+    lo = (inSecondHex - 'a') + 10;
+    
+  return (mork_u1) ((hi << 4) | lo);
 }
 
 mork_size

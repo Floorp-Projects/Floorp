@@ -491,12 +491,12 @@ orkinTable::PosToOid( // get row member for a table position
     morkTable* table = (morkTable*) mHandle_Object;
     morkRow* row = table->SafeRowAt(ev, inRowPos);
     if ( row )
-    	roid = row->mRow_Oid;
+      roid = row->mRow_Oid;
     
     outErr = ev->AsErr();
   }
   if ( outOid )
-  	*outOid = roid;
+    *outOid = roid;
   return outErr;
 }
 
@@ -522,7 +522,7 @@ orkinTable::OidToPos( // test for the table position of a row member
 orkinTable::PosToRow( // get row member for a table position
   nsIMdbEnv* mev, // context
   mdb_pos inRowPos, // zero-based ordinal position of row in table
-	nsIMdbRow** acqRow) // acquire row at table position inRowPos
+  nsIMdbRow** acqRow) // acquire row at table position inRowPos
 {
   mdb_err outErr = 0;
   nsIMdbRow* outRow = 0;
@@ -534,11 +534,11 @@ orkinTable::PosToRow( // get row member for a table position
     morkRow* row = table->SafeRowAt(ev, inRowPos);
     if ( row && store )
       outRow = row->AcquireRowHandle(ev, store);
-    	
+      
     outErr = ev->AsErr();
   }
   if ( acqRow )
-  	*acqRow = outRow;
+    *acqRow = outRow;
   return outErr;
 }
 

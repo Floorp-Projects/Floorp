@@ -825,27 +825,27 @@ morkBuf* morkParser::ReadValue(morkEnv* ev)
     {
       if ( c == '\\' ) // "\" escapes the next char? 
       {
-			  if ( (c = s->Getc(ev)) == 0xA || c == 0xD ) // linebreak after \?
-			    c = this->eat_line_break(ev, c);
+        if ( (c = s->Getc(ev)) == 0xA || c == 0xD ) // linebreak after \?
+          c = this->eat_line_break(ev, c);
 
         if ( c == EOF || ev->Bad() )
           break; // end while loop
       }
       else if ( c == '$' ) // "$" escapes next two hex digits?
       {
-      	if ( (c = s->Getc(ev)) != EOF && ev->Good() )
-      	{
-	      	mork_ch first = (mork_ch) c; // first hex digit
-	      	if ( (c = s->Getc(ev)) != EOF && ev->Good() )
-	      	{
-		      	mork_ch second = (mork_ch) c; // second hex digit
-		      	c = ev->HexToByte(first, second);
-	      	}
-	      	else
-	      		break;
-      	}
-      	else
-      		break;
+        if ( (c = s->Getc(ev)) != EOF && ev->Good() )
+        {
+          mork_ch first = (mork_ch) c; // first hex digit
+          if ( (c = s->Getc(ev)) != EOF && ev->Good() )
+          {
+            mork_ch second = (mork_ch) c; // second hex digit
+            c = ev->HexToByte(first, second);
+          }
+          else
+            break;
+        }
+        else
+          break;
       }
       spool->Putc(ev, c);
     }

@@ -210,7 +210,7 @@ morkPortTableCursor::init_space_tables_map(morkEnv* ev)
   morkRowSpace* space = mPortTableCursor_RowSpace;
   if ( space && ev->Good() )
   {
-	  morkTableMapIter* ti = &mPortTableCursor_TableIter;
+    morkTableMapIter* ti = &mPortTableCursor_TableIter;
     ti->InitTableMapIter(ev, &space->mRowSpace_Tables);
     if ( ev->Good() )
       mPortTableCursor_TablesDidEnd = morkBool_kFalse;
