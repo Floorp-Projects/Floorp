@@ -44,9 +44,9 @@ nsImapSearchResultSequence *nsImapSearchResultSequence::CreateSearchResultSequen
 
 void nsImapSearchResultSequence::Clear(void)
 {
-  PRInt32 i = mCount;
+  PRInt32 i = mImpl->mCount;
   while (0 <= --i) {
-    char* string = (char*)mArray[i];
+    char* string = (char*)mImpl->mArray[i];
     delete string;
   }
   nsVoidArray::Clear();
