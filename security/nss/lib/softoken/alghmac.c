@@ -64,6 +64,11 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
     int i;
     unsigned char hashed_secret[SHA1_LENGTH];
 
+    /* required by FIPS 198 */
+    if (secret_len < hash_obj->length/2) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
     cx = (HMACContext*)PORT_ZAlloc(sizeof(HMACContext));
     if (cx == NULL)
 	return NULL;
@@ -76,6 +81,7 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
     if (secret_len > HMAC_PAD_SIZE) {
 	cx->hashobj->begin( cx->hash);
 	cx->hashobj->update(cx->hash, secret, secret_len);
+	PORT_Assert(cx->hashobj->length <= sizeof hashed_secret);
 	cx->hashobj->end(   cx->hash, hashed_secret, &secret_len, 
 	                 sizeof hashed_secret);
 	if (secret_len != cx->hashobj->length)
@@ -118,8 +124,10 @@ SECStatus
 HMAC_Finish(HMACContext *cx, unsigned char *result, unsigned int *result_len,
 	    unsigned int max_result_len)
 {
-    if (max_result_len < cx->hashobj->length)
+    if (max_result_len < cx->hashobj->length) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
+    }
 
     cx->hashobj->end(cx->hash, result, result_len, max_result_len);
     if (*result_len != cx->hashobj->length)
