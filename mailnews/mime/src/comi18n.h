@@ -29,6 +29,8 @@ extern "C" {
 #define kMAX_CSNAME 64
 #endif
 
+#include "xp_core.h"
+  
 /**
  * If a header is MIME encoded then decode a header and sets a charset name.
  * This is a replacement for INTL_DecodeMimePartIIStr.
@@ -125,9 +127,9 @@ char * Strstr_UTF8(const char *s1, const char *s2);
 /*
  * To be removed. Existing for the backword compatibility. 
  */
-char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid, PRBool dontConvert);
-char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid,PRBool bUseMime);
-char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, PRBool bUseMime, int encodedWordSize);
+char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid, XP_Bool dontConvert);
+char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid, XP_Bool bUseMime);
+char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, XP_Bool bUseMime, int encodedWordSize);
 
 #ifdef __cplusplus
 } /* extern "C" */

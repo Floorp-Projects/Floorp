@@ -1309,12 +1309,12 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
 // BEGIN PUBLIC INTERFACE
 extern "C" {
 #define PUBLIC
-PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid, PRBool dontConvert)
+PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid, XP_Bool dontConvert)
 {
 // Obsolescent
   return PL_strdup(header);
 }
-PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid, PRBool bUseMime)
+PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid, XP_Bool bUseMime)
 {
 // Obsolescent
   return PL_strdup(subject);
@@ -1323,7 +1323,7 @@ PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid, PRBool bUseM
     The reason why we specify a different length here is because we are not encoding
     the string for use in a mail message, but rather want to stuff as much content
     into the subject string as possible. */
-PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, PRBool bUseMime, int encodedWordSize)
+PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, XP_Bool bUseMime, int encodedWordSize)
 {
 // Obsolescent
   return PL_strdup(subject);
