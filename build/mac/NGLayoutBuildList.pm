@@ -143,7 +143,7 @@ sub BuildDist()
 
 	my($distdirectory) = ":mozilla:dist";
 	
-	if ($main::MOZ_FULLCIRCLE = 1)
+	if ($main::MOZ_FULLCIRCLE)
 	{
 		if ( $main::DEBUG )
 		{
@@ -302,7 +302,7 @@ sub BuildDist()
    InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",						"$distdirectory:editor:txmgr");
 
    #FULL CIRCLE    
-   if ($main::MOZ_FULLCIRCLE = 1)
+   if ($main::MOZ_FULLCIRCLE)
    {
 		InstallFromManifest(":ns:fullsoft:public:MANIFEST",								"$distdirectory");
 	
