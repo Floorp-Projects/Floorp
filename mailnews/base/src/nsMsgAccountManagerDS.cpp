@@ -32,6 +32,8 @@
 #include "nsIServiceManager.h"
 #include "nsIMsgMailSession.h"
 
+#include "nsCOMPtr.h"
+
 #include "plstr.h"
 #include "prmem.h"
 
@@ -82,7 +84,7 @@ private:
   // to an nsIRDFResource and append it to the array (in data)
   static PRBool createServerResources(nsISupports *element, void *data);
   
-  nsIMsgAccountManager *mAccountManager;
+  nsCOMPtr<nsIMsgAccountManager> mAccountManager;
 
 };
 
@@ -106,7 +108,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Server);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
-  mAccountManager(nsnull)
+  mAccountManager(null_nsCOMPtr())
 {
 #ifdef DEBUG_alecf
   fprintf(stderr, "nsMsgAccountManagerDataSource() being created\n");
@@ -136,7 +138,7 @@ nsMsgAccountManagerDataSource::Init(const char *uri)
         if (NS_FAILED(rv)) return rv;
         
         // maybe the account manager should be a service too? not sure.
-        rv = mailSession->GetAccountManager(&mAccountManager);
+        rv = mailSession->GetAccountManager(getter_AddRefs(mAccountManager));
         if (NS_FAILED(rv)) return rv;
     }
     
@@ -172,17 +174,16 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
 
   // create array and enumerator
   // even if we're not handling this we need to return something empty?
-  nsISupportsArray *nodes;
-  rv = NS_NewISupportsArray(&nodes);
+  nsCOMPtr<nsISupportsArray> nodes;
+  rv = NS_NewISupportsArray(getter_AddRefs(nodes));
   if (NS_FAILED(rv)) return rv;
   
   nsISimpleEnumerator* enumerator =
     new nsArrayEnumerator(nodes);
   if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
-    
-  NS_ADDREF(enumerator);
-  *_retval = enumerator;
 
+  *_retval = enumerator;
+  NS_ADDREF(*_retval);
 
   // if the property is "account" or "child" then return the
   // list of accounts
@@ -195,8 +196,8 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
   if (NS_SUCCEEDED(rv) &&
       PL_strcmp(source_value, "msgaccounts:/")==0) {
     
-    nsISupportsArray *servers;
-    mAccountManager->GetAllServers(&servers);
+    nsCOMPtr<nsISupportsArray> servers;
+    rv = mAccountManager->GetAllServers(getter_AddRefs(servers));
 
     // fill up the nodes array with the RDF Resources for the servers
     serverCreationParams params = { nodes, getRDFService() };
@@ -216,13 +217,11 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   nsresult rv;
   // get parameters out of the data argument
   serverCreationParams *params = (serverCreationParams*)data;
-  nsISupportsArray *servers = params->serverArray;
-  nsIRDFService *rdf = params->rdfService;
+  nsCOMPtr<nsISupportsArray> servers = dont_QueryInterface(params->serverArray);
+  nsCOMPtr<nsIRDFService> rdf = dont_QueryInterface(params->rdfService);
 
   // the server itself is in the element argument
-  nsIMsgIncomingServer *server;
-  rv = element->QueryInterface(nsIMsgIncomingServer::GetIID(),
-                               (void **)&server);
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(element, &rv);
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // get the URI from the incoming server
@@ -232,15 +231,13 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
 
   // get the corresponding RDF resource
   // RDF will create the server resource if it doesn't already exist
-  nsIRDFResource *serverResource;
-  rv = rdf->GetResource(serverUri, &serverResource);
+  nsCOMPtr<nsIRDFResource> serverResource;
+  rv = rdf->GetResource(serverUri, getter_AddRefs(serverResource));
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // add the resource to the array
   rv = servers->AppendElement(serverResource);
   if (NS_FAILED(rv)) return PR_TRUE;
-  
-  NS_RELEASE(server);
   
   return PR_TRUE;
 }
@@ -253,20 +250,18 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   nsresult rv;
   
   // we have to return something, so always create the array/enumerators
-  nsISupportsArray *arcs;
-  rv = NS_NewISupportsArray(&arcs);
+  nsCOMPtr<nsISupportsArray> arcs;
+  rv = NS_NewISupportsArray(getter_AddRefs(arcs));
 
   if (NS_FAILED(rv)) return rv;
   
   nsArrayEnumerator* enumerator =
     new nsArrayEnumerator(arcs);
 
-  *_retval = enumerator;
-  
-  // do we NS_RELEASE the arcs?
   if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(enumerator);
+  
+  *_retval = enumerator;
+  NS_ADDREF(*_retval);
   
   char *value=nsnull;
   source->GetValue(&value);
