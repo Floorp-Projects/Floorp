@@ -3014,3 +3014,58 @@ fe_getFrameFromContext(MWContext* context)
   }
   return 0; /* warning control -- shouldn't actually get here */
 }
+
+extern "C" int
+fe_add_to_all_MWContext_list(MWContext *context)
+{
+	struct fe_MWContext_cons *cons;
+
+	XP_ASSERT(context);
+
+	if (!context)
+		return 0;
+
+	cons = XP_NEW_ZAP(struct fe_MWContext_cons);
+
+	if (!cons)
+		return -1;
+
+	cons->context     = context;
+	cons->next        = fe_all_MWContexts;
+	fe_all_MWContexts = cons;
+
+	return 0;
+}
+
+extern "C" int
+fe_remove_from_all_MWContext_list(MWContext *context)
+{
+	struct fe_MWContext_cons *rest, *prev;
+
+	XP_ASSERT(context);
+
+	if (!context)
+		return 0;
+
+    for (prev = 0, rest = fe_all_MWContexts ; rest ;
+		 prev = rest, rest = rest->next)
+	{
+		 if (rest->context == context)
+			 break;
+	}
+
+	XP_ASSERT(rest);
+
+	if (!rest)
+		return -1;
+
+	if (prev)
+		prev->next = rest->next;
+	else
+		fe_all_MWContexts = rest->next;
+
+	free(rest);
+
+	return 0;
+}
+

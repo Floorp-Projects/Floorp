@@ -29,6 +29,7 @@
 #include "il_util.h"
 #include "layers.h"
 #include "BrowserFrame.h"
+#include "csid.h"
 
 #include <Xfe/Chrome.h>
 
@@ -78,7 +79,7 @@ static ToolbarSpec goodies_menu_spec[] = {
 
 static ToolbarSpec editor_style_toolbar_spec[] = {
 
-	{ xfeCmdSetParagraphStyle, COMBOBOX },
+//	{ xfeCmdSetParagraphStyle, COMBOBOX },
 	{ xfeCmdSetFontFace,       COMBOBOX },
 	{ xfeCmdSetFontSize,       COMBOBOX },
 	{ xfeCmdSetFontColor,      COMBOBOX },
@@ -86,7 +87,7 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 
 	{ xfeCmdToggleCharacterStyleBold,	   TOGGLEBUTTON, &ed_bold_group },
 	{ xfeCmdToggleCharacterStyleItalic,	   TOGGLEBUTTON, &ed_italic_group },
-	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
+//	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
 //	{ xfeCmdClearAllStyles,                PUSHBUTTON  , &ed_clear_group },
 	TOOLBAR_SEPARATOR,
 
@@ -100,6 +101,10 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 	  (MenuSpec*)&alignment_menu_spec },
 	{ "editorGoodiesMenu", CASCADEBUTTON, &ed_insert_group, 0, 0, 0,
 	  (MenuSpec*)&goodies_menu_spec },
+	TOOLBAR_SEPARATOR,
+
+	{ xfeCmdSpellCheck,	PUSHBUTTON,           &ed_spellcheck_group },
+
 	{ NULL }
 };
 
@@ -112,7 +117,7 @@ XFE_EmbeddedEditor::XFE_EmbeddedEditor(XFE_Component *toplevel_component,
 			       MWContext *context) 
   : XFE_View(toplevel_component, parent_view, context)
 {
-  Widget chrome;
+  Widget chrome, evw, tbar=0, tbox=0;
   XFE_Frame *frame = fe_getFrameFromContext(context);
 
   XP_ASSERT(frame);
@@ -131,7 +136,8 @@ XFE_EmbeddedEditor::XFE_EmbeddedEditor(XFE_Component *toplevel_component,
 
   chrome = XtVaCreateWidget("EditorChrome", xfeChromeWidgetClass, parent,
 							XmNusePreferredWidth,   False,
-							XmNusePreferredHeight,   False,
+							XmNusePreferredHeight,  False,
+							XmNmappedWhenManaged,   False,
 							NULL);
   XtManageChild(chrome);
 
@@ -150,17 +156,27 @@ XFE_EmbeddedEditor::XFE_EmbeddedEditor(XFE_Component *toplevel_component,
 				this,
 				m_editorContext);
 
-  XtVaSetValues(chrome,XmNcenterView, m_editorView->getBaseWidget(),NULL);
+  evw  = m_editorView->getBaseWidget();
+
+  if (m_toolbox)
+    tbox = m_toolbox->getBaseWidget();
+
+  if (m_toolbar)
+    tbar = m_toolbar->getBaseWidget();
+
+  XtVaSetValues(chrome, XmNcenterView, evw, NULL);
 
   fe_set_scrolled_default_size(m_editorContext);
 
   // We need to make sure the view is realized before
   // calling fe_InitScrolling() to avoid crashing.
-  XtRealizeWidget(m_editorView->getBaseWidget());
+  XtRealizeWidget(evw);
 
-  // XtRealizeWidget(m_toolbox->getBaseWidget());
-  // if (! XtIsRealized(chrome))
-  //   XtRealizeWidget(chrome);
+  if (tbox)
+    XtManageChild(tbox);
+
+  if (tbar)
+    XtManageChild(tbar);
 
   fe_get_final_context_resources(m_editorContext);
   fe_find_scrollbar_sizes(m_editorContext);
@@ -172,7 +188,7 @@ XFE_EmbeddedEditor::XFE_EmbeddedEditor(XFE_Component *toplevel_component,
   int cols2pixels, rows2pixels;
 
   /* get some idea of the size of the default font */
-  int16 charset;
+  int16 charset = CS_LATIN1;
   // For some reason, the next line needs a cast otherwise it complains
   // that an object of type void* can't be assigned to an entity of
   // type fe_Font*; that even though fe_LoadFontFromFace() is declared
@@ -203,7 +219,7 @@ XFE_EmbeddedEditor::XFE_EmbeddedEditor(XFE_Component *toplevel_component,
   Dimension ht  = (rows+1)*rows2pixels
                   + CONTEXT_DATA(m_editorView->getContext())->sb_h;
 
-  XtVaSetValues(m_editorView->getBaseWidget(),
+  XtVaSetValues(evw,
 				XmNwidth, wid,
 				XmNheight, ht,
 				0);
@@ -220,12 +236,12 @@ XFE_EmbeddedEditor::XFE_EmbeddedEditor(XFE_Component *toplevel_component,
   //
   //      -Kin
 
-  if (m_toolbox)
+  if (tbox)
   {
-      XtVaSetValues(m_toolbox->getBaseWidget(),
+      XtVaSetValues(tbox,
                     XmNwidth, wid,
                     0);
-      XtVaGetValues(m_toolbox->getBaseWidget(),
+      XtVaGetValues(tbox,
                     XmNheight, &tbht,
                     0);
   }
@@ -283,6 +299,11 @@ XFE_EmbeddedEditor::XFE_EmbeddedEditor(XFE_Component *toplevel_component,
 
   toplevel_component->registerInterest(XFE_View::commandNeedsUpdating,
 							           this, command_update_cb);
+
+  // We don't want the chrome to show on the page until it
+  // has been positioned by layout via htmlarea_display().
+  XtUnmanageChild(chrome);
+  XtVaSetValues(chrome, XmNmappedWhenManaged, True, 0);
 }
 
 XFE_EmbeddedEditor::~XFE_EmbeddedEditor()
@@ -404,7 +425,6 @@ command_update_cb(XFE_NotificationCenter*, XFE_NotificationCenter* obj,
   }
 }
 
-
 extern "C" Widget
 XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
 							const char *default_url, MWContext *context)
@@ -488,59 +508,5 @@ XFE_DestroyEmbeddedEditor(Widget w, MWContext *context)
   }
 }
 
-
-extern "C" int
-fe_add_to_all_MWContext_list(MWContext *context)
-{
-	struct fe_MWContext_cons *cons;
-
-	XP_ASSERT(context);
-
-	if (!context)
-		return 0;
-
-	cons = XP_NEW_ZAP(struct fe_MWContext_cons);
-
-	if (!cons)
-		return -1;
-
-	cons->context     = context;
-	cons->next        = fe_all_MWContexts;
-	fe_all_MWContexts = cons;
-
-	return 0;
-}
-
-extern "C" int
-fe_remove_from_all_MWContext_list(MWContext *context)
-{
-	struct fe_MWContext_cons *rest, *prev;
-
-	XP_ASSERT(context);
-
-	if (!context)
-		return 0;
-
-    for (prev = 0, rest = fe_all_MWContexts ; rest ;
-		 prev = rest, rest = rest->next)
-	{
-		 if (rest->context == context)
-			 break;
-	}
-
-	XP_ASSERT(rest);
-
-	if (!rest)
-		return -1;
-
-	if (prev)
-		prev->next = rest->next;
-	else
-		fe_all_MWContexts = rest->next;
-
-	free(rest);
-
-	return 0;
-}
-
 #endif /* ENDER */
+
