@@ -149,7 +149,7 @@ class nsDerivedSafe : public T
     */
   {
     private:
-#ifdef HAVE_CPP_USING
+#ifdef HAVE_ACCESS_CHANGING_CPP_USING
       using T::AddRef;
       using T::Release;
 #else
@@ -171,7 +171,7 @@ class nsDerivedSafe : public T
         */
   };
 
-#if !defined(HAVE_CPP_USING) && defined(NEED_CPP_UNUSED_IMPLEMENTATIONS)
+#if !defined(HAVE_ACCESS_CHANGING_CPP_USING) && defined(NEED_CPP_UNUSED_IMPLEMENTATIONS)
 template <class T>
 nsrefcnt
 nsDerivedSafe<T>::AddRef()

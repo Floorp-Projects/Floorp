@@ -73,7 +73,7 @@ protected:
 public:
   nsString( const nsAReadableString& );
 
-#ifdef HAVE_CPP_USING
+#ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
   using nsAWritableString::Assign;
   using nsAWritableString::Append;
   using nsAWritableString::Insert;
@@ -473,7 +473,7 @@ public:
    * @return  this
    */
 #ifdef NEW_STRING_APIS
-  #ifdef HAVE_CPP_USING
+  #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
     using nsAWritableString::operator=;
   #else
     nsString& operator=( const nsAReadableString& aReadable ) { nsAWritableString::operator=(aReadable); return *this; }
@@ -500,7 +500,7 @@ public:
    * @return  this
    */
 #ifdef NEW_STRING_APIS
-  #ifdef HAVE_CPP_USING
+  #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
     using nsAWritableString::operator+=;
   #else
     nsString& operator+=( const nsAReadableString& aReadable ) { nsAWritableString::operator+=(aReadable); return *this; }

@@ -42,8 +42,8 @@
   // for |min|, |copy|
 
 
-#ifdef HAVE_CPP_USING
-using namespace std;
+#ifdef HAVE_CPP_NAMESPACE_STD
+using std::bidirectional_iterator_tag;
 #endif
 
 /*

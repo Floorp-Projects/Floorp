@@ -159,18 +159,26 @@ typedef PRUint16 PRUnichar;
     Need to add an autoconf test for this.
   */
 
-#define NS_MIN min
-#define NS_MAX max
-
   /* under Metrowerks (Mac), we don't have autoconf yet */
 #ifdef __MWERKS__
   #define HAVE_CPP_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
-  #define HAVE_CPP_USING
+  #define HAVE_ACCESS_CHANGING_CPP_USING
+  #define HAVE_AMBIGUITY_RESOLVING_CPP_USING
   #define HAVE_CPP_EXPLICIT
   #define HAVE_CPP_BOOL
+  #define HAVE_CPP_NAMESPACE_STD
 #endif
+
+#ifdef HAVE_CPP_NAMESPACE_STD
+  #define NS_STD_ std
+#else
+  #define NS_STD_
+#endif
+
+#define NS_MIN NS_STD_ ::min
+#define NS_MAX NS_STD_ ::max
 
   /* under VC++ (Windows), we don't have autoconf yet */
 #if defined(_MSC_VER) && (_MSC_VER>=1100)
@@ -179,24 +187,25 @@ typedef PRUint16 PRUnichar;
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
   #define HAVE_CPP_EXPLICIT
-  #define HAVE_CPP_USING
+  #define HAVE_ACCESS_CHANGING_CPP_USING
+  #define HAVE_AMBIGUITY_RESOLVING_CPP_USING
 
   #if (_MSC_VER<1100)
       // before 5.0, VC++ couldn't handle explicit
     #undef HAVE_CPP_EXPLICIT
   #elif (_MSC_VER==1100)
       // VC++5.0 has an internal compiler error (sometimes) without this
-    #undef HAVE_CPP_USING
+    #undef HAVE_ACCESS_CHANGING_CPP_USING
+    #undef HAVE_AMBIGUITY_RESOLVING_CPP_USING
   #endif
 
   /* VC++ is special and doesn't use naked min() and max() */
   #undef NS_MIN
-  #define NS_MIN _cpp_min
+  #define NS_MIN std::_cpp_min
 
   #undef NS_MAX
-  #define NS_MAX _cpp_max
+  #define NS_MAX std::_cpp_max
 #endif
-
 
 #ifdef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
   #define NS_SPECIALIZE_TEMPLATE  template <>
