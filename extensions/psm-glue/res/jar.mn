@@ -1,0 +1,9 @@
+packages/core.jar:
+        communicator/content/securityOverlay.xul        (content/securityOverlay.xul)
+        communicator/content/securityUI.js              (content/securityUI.js)
+        communicator/content/PSMTaskMenu.xul            (content/PSMTaskMenu.xul)
+
+locales/en-US.jar:
+        communicator/locale/PSMTaskMenu.dtd             (locale/en-US/PSMTaskMenu.dtd)
+        communicator/locale/security.properties         (locale/en-US/security.properties)
+        communicator/locale/securityOverlay.dtd         (locale/en-US/securityOverlay.dtd)
