@@ -24,9 +24,10 @@
 class nsPropertiesFactory : nsIFactory
 {
 public:
-  NS_DECL_ISUPPORTS
+  nsPropertiesFactory();
+  virtual ~nsPropertiesFactory();
 
-  nsPropertiesFactory() { NS_INIT_REFCNT(); }
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID,
                             void** aResult);
