@@ -60,8 +60,7 @@ my $template = Template->new(
     # actually have to function in this test, just be defined.
     FILTERS =>
     {
-      url => sub { return $_ } ,
-    } 
+    },
 }
 );
 

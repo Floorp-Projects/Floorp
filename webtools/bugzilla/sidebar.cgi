@@ -40,11 +40,6 @@ my $template = Template->new(
     # Allow templates to be specified with relative paths.
     RELATIVE => 1,
     POST_CHOMP =>1,
-    # Functions for processing text within templates
-    FILTERS => 
-      {
-        url => \&url_quote,
-      },
   }
 );
 

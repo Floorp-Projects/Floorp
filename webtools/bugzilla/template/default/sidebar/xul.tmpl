@@ -100,7 +100,7 @@ function normal_keypress_handler( aEvent ) {
 [% END %]
 
 [% FOREACH name = namedqueries %]
-      <text class="text-link" onclick="load_relative_url('buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% name FILTER url %]')" value="[% name FILTER html %]"/>
+      <text class="text-link" onclick="load_relative_url('buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% name FILTER uri %]')" value="[% name FILTER html %]"/>
 [% END %]
 
 [% IF NOT username %]
