@@ -35,8 +35,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.32 $ 
-# $Date: 2003/05/26 13:34:11 $ 
+# $Revision: 1.33 $ 
+# $Date: 2003/06/18 15:48:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_CVS.pm,v $ 
 # $Name:  $ 
@@ -139,7 +139,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.32 $ )[1];
+$VERSION = ( qw $Revision: 1.33 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -756,7 +756,7 @@ sub status_table_row {
   my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
   my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
 
-  my $cell_options;
+  my $cell_options = '';
   my $text_browser_color_string;
   my $empty_cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
 
