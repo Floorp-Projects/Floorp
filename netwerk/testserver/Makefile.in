@@ -30,7 +30,8 @@ JSRCS = \
 	$(NULL)
 
 
-# Hack rule, this probably needs to be changed.
+# Hack rule, this probably needs to be changed
+# to something official.  Works on Solaris for me. -mcafee
 install::
 	javac $(JSRCS)
 
