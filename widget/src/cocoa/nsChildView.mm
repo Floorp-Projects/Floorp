@@ -2275,8 +2275,6 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
   outGeckoEvent->eventStructType = NS_KEY_EVENT;
   [self convert:aKeyEvent message:aMessage toGeckoEvent:outGeckoEvent];
 
-  printf("The key code is: %d\n", [aKeyEvent keyCode]);
-  
   // Initialize the out boolean for whether or not we are using
   // charCodes to false.
   if (aIsChar)
