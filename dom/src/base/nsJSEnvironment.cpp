@@ -256,29 +256,25 @@ NS_ScriptErrorReporter(JSContext *cx,
 #ifdef DEBUG
   // Print it to stderr as well, for the benefit of those invoking
   // mozilla with -console.
-  nsAutoString error;
-  error.Assign(NS_LITERAL_STRING("JavaScript "));
+  nsCAutoString error;
+  error.Assign("JavaScript ");
   if (JSREPORT_IS_STRICT(report->flags))
-    error.Append(NS_LITERAL_STRING("strict "));
+    error.Append("strict ");
   if (JSREPORT_IS_WARNING(report->flags))
-    error.Append(NS_LITERAL_STRING("warning: \n"));
+    error.Append("warning: ");
   else
-    error.Append(NS_LITERAL_STRING("error: \n"));
-  error.AppendWithConversion(report->filename);
-  error.Append(NS_LITERAL_STRING(" line "));
+    error.Append("error: ");
+  error.Append(report->filename);
+  error.Append(", line ");
   error.AppendInt(report->lineno, 10);
-  error.Append(NS_LITERAL_STRING(": "));
-  error.Append(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage));
-  error.Append(NS_LITERAL_STRING("\n"));
+  error.Append(": ");
+  AppendUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
+                    error);
   if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
-    error.Append(NS_LITERAL_STRING("Error was suppressed by event handler\n"));
+    error.Append(" Error was suppressed by event handler\n");
 
-  char *errorStr = ToNewCString(error);
-  if (errorStr) {
-    fprintf(stderr, "%s\n", errorStr);
-    fflush(stderr);
-    nsMemory::Free(errorStr);
-  }
+  fprintf(stderr, "%s\n", error.get());
+  fflush(stderr);
 #endif
 
 #ifdef PR_LOGGING
