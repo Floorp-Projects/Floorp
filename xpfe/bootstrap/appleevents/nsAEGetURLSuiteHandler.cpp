@@ -47,7 +47,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
 #include "nsIWindowMediator.h"
 #include "nsIXULWindow.h"
 

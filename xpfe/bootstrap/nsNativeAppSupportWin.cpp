@@ -65,7 +65,8 @@
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIWindowsHooks.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
@@ -2056,7 +2057,7 @@ nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
   if ( firstTime ) {
     firstTime = PR_FALSE;
     // Check pref for whether to set ddeexec subkey entries.
-    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID ) );
+    nsCOMPtr<nsIPrefBranch> prefService( do_GetService( NS_PREFSERVICE_CONTRACTID ) );
     PRBool supportDDEExec = PR_FALSE;
     if ( prefService ) {
         prefService->GetBoolPref( "advanced.system.supportDDEExec", &supportDDEExec );
@@ -2592,7 +2593,7 @@ nsNativeAppSupportWin::OnLastWindowClosing() {
     // check for multi-profile situation and turn off turbo mode
     // if there are multiple profiles.
     PRBool singleProfileOnly = PR_FALSE;
-    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID, &rv ) );
+    nsCOMPtr<nsIPrefBranch> prefService( do_GetService( NS_PREFSERVICE_CONTRACTID, &rv ) );
     if ( NS_SUCCEEDED( rv ) ) {
         prefService->GetBoolPref( "browser.turbo.singleProfileOnly", &singleProfileOnly );
     }
