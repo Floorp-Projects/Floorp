@@ -96,14 +96,26 @@
               // 0 = blank 
               // 1 = home (browser.startup.homepage)
               // 2 = last 
-              choice = pref.GetIntPref("browser.startup.page");
+		choice = 1;
+		try {
+              		choice = pref.GetIntPref("browser.startup.page");
+		}
+		catch (ex) {
+			dump("failed to get the browser.startup.page pref\n");
+		}
 		dump("browser.startup.page = " + choice + "\n");
     	  switch (choice) {
     		case 0:
                 		startpage = "about:blank";
           			break;
     		case 1:
-                		startpage = pref.CopyCharPref("browser.startup.homepage");
+				try {
+                			startpage = pref.CopyCharPref("browser.startup.homepage");
+				}
+				catch (ex) {
+					dump("failed to get the browser.startup.homepage pref\n");
+					startpage = "about:blank";
+				}
           			break;
     		case 2:
                 		var history = Components.classes['component://netscape/browser/global-history'];
