@@ -13,7 +13,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsINNTPNewsgroup */
+/* starting interface:    nsINNTPNewsgroup */
 
 /* {1A39CD90-ACAF-11d2-B7EE-00805F05FFA5} */
 #define NS_INNTPNEWSGROUP_IID_STR "1A39CD90-ACAF-11d2-B7EE-00805F05FFA5"
@@ -23,10 +23,7 @@
 
 class nsINNTPNewsgroup : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_INNTPNEWSGROUP_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPNEWSGROUP_IID)
 
   /* attribute string name; */
   NS_IMETHOD GetName(char * *aName) = 0;

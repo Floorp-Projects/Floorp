@@ -14,7 +14,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsINNTPHost */
+/* starting interface:    nsINNTPHost */
 
 /* {6b128da0-d74f-11d2-b7f9-00805f05ffa5} */
 #define NS_INNTPHOST_IID_STR "6b128da0-d74f-11d2-b7f9-00805f05ffa5"
@@ -24,10 +24,7 @@
 
 class nsINNTPHost : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_INNTPHOST_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPHOST_IID)
 
   /* attribute boolean supportsExtensions; */
   NS_IMETHOD GetSupportsExtensions(PRBool *aSupportsExtensions) = 0;

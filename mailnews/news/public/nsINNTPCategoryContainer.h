@@ -14,7 +14,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsINNTPCategoryContainer */
+/* starting interface:    nsINNTPCategoryContainer */
 
 /* {cb36d510-b249-11d2-b7ef-00805f05ffa5} */
 #define NS_INNTPCATEGORYCONTAINER_IID_STR "cb36d510-b249-11d2-b7ef-00805f05ffa5"
@@ -24,10 +24,7 @@
 
 class nsINNTPCategoryContainer : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_INNTPCATEGORYCONTAINER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPCATEGORYCONTAINER_IID)
 
   /* attribute nsINNTPNewsgroup rootCategory; */
   NS_IMETHOD GetRootCategory(nsINNTPNewsgroup * *aRootCategory) = 0;

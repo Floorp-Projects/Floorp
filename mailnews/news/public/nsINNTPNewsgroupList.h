@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsINNTPNewsgroupList */
+/* starting interface:    nsINNTPNewsgroupList */
 
 /* {E628ED19-9452-11d2-B7EA-00805F05FFA5} */
 #define NS_INNTPNEWSGROUPLIST_IID_STR "E628ED19-9452-11d2-B7EA-00805F05FFA5"
@@ -22,10 +22,7 @@
 
 class nsINNTPNewsgroupList : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_INNTPNEWSGROUPLIST_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPNEWSGROUPLIST_IID)
 
   /* long GetRangeOfArtsToDownload (in long first_message, in long last_message, in long maxextra, out long real_first_message, out long real_last_message); */
   NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_message, PRInt32 last_message, PRInt32 maxextra, PRInt32 *real_first_message, PRInt32 *real_last_message, PRInt32 *_retval) = 0;

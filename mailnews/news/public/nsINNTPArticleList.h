@@ -15,7 +15,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsINNTPArticleList */
+/* starting interface:    nsINNTPArticleList */
 
 /* {921AC214-96B5-11d2-B7EB-00805F05FFA5} */
 #define NS_INNTPARTICLELIST_IID_STR "921AC214-96B5-11d2-B7EB-00805F05FFA5"
@@ -25,10 +25,7 @@
 
 class nsINNTPArticleList : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_INNTPARTICLELIST_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPARTICLELIST_IID)
 
   /* void Init (in nsINNTPHost newsHost, in nsINNTPNewsgroup newsgroup); */
   NS_IMETHOD Init(nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup) = 0;
