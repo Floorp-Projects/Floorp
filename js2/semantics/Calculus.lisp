@@ -2152,6 +2152,7 @@
   type      ;That variable's type
   mode)     ;:const if the variable is read-only;
 ;           ;:var if it's writable;
+;           ;:uninitialized if it's writable but not initialized;
 ;           ;:function if it's bound by flet;
 ;           ;:reserved if it's bound by reserve;
 ;           ;:unused if it's defined but shouldn't be used
@@ -2194,7 +2195,7 @@
   (assert-true (and
                 (symbolp name)
                 (type? type)
-                (member mode '(:const :var :function :reserved :unused))))
+                (member mode '(:const :var :uninitialized :function :reserved :unused))))
   (unless shadow
     (let ((binding (type-env-get-local type-env name)))
       (when binding
@@ -2557,7 +2558,7 @@
                (values (list 'function (type-env-local-name symbol-binding))
                        (type-env-local-type symbol-binding)
                        (list 'expr-annotation:local symbol)))
-             ((:reserved :unused) (error "Unused variable ~A referenced" symbol)))
+             ((:uninitialized :reserved :unused) (error "Unused variable ~A referenced" symbol)))
            (let ((primitive (symbol-primitive symbol)))
              (if primitive
                (values (primitive-value-code primitive) (primitive-type primitive) (list 'expr-annotation:primitive symbol))
@@ -3888,7 +3889,7 @@
 
 ; (const <name> <type> <value>)
 ; (var <name> <type> <value>)
-(defun scan-var (world type-env rest-statements last special-form name type-expr value-expr)
+(defun scan-const (world type-env rest-statements last special-form name type-expr value-expr)
   (let* ((symbol (scan-name world name))
          (type (scan-type world type-expr))
          (placeholder-type-env (type-env-add-binding type-env symbol type :unused)))
@@ -3903,6 +3904,21 @@
            (cons (list special-form name type-expr value-annotated-expr) rest-annotated-stmts)))))))
 
 
+; (var <name> <type> [<value>])
+(defun scan-var (world type-env rest-statements last special-form name type-expr &optional value-expr)
+  (if value-expr
+    (scan-const world type-env rest-statements last special-form name type-expr value-expr)
+    (let* ((symbol (scan-name world name))
+           (type (scan-type world type-expr)))
+      (let ((local-type-env (type-env-add-binding type-env symbol type :uninitialized)))
+        (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                             (scan-statements world local-type-env rest-statements last t)
+          (values
+           (list `(let (,symbol) ,@rest-codes))
+           rest-live
+           (cons (list special-form name type-expr) rest-annotated-stmts)))))))
+
+
 ; (reserve <name>)
 ; Used to reserve <name> as a variable that can be later defined by a (some <name> ... :define-true) expression.
 (defun scan-reserve (world type-env rest-statements last special-form name)
@@ -3912,8 +3928,7 @@
     (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
                          (scan-statements world local-type-env rest-statements last t)
       (values
-       (list `(let (,symbol)
-                ,@rest-codes))
+       (list `(let (,symbol) ,@rest-codes))
        rest-live
        rest-annotated-stmts))))
 
@@ -3943,9 +3958,12 @@
          (symbol-binding (type-env-get-local type-env symbol))
          type)
     (if symbol-binding
-      (if (eq (type-env-local-mode symbol-binding) :var)
-        (setq type (type-env-local-type symbol-binding))
-        (error "Local variable ~A not writable" name))
+      (case (type-env-local-mode symbol-binding)
+        (:var (setq type (type-env-local-type symbol-binding)))
+        (:uninitialized
+         (setq type (type-env-local-type symbol-binding))
+         (setq type-env (type-env-add-binding type-env symbol type :var t)))
+        (t (error "Local variable ~A not writable" name)))
       (progn
         (setq type (symbol-type symbol))
         (unless type
@@ -3964,7 +3982,7 @@
          (cons (list special-form name value-annotated-expr (not symbol-binding)) rest-annotated-stmts))))))
 
 
-; (&= <record-expr> <value-expr>)
+; (&= <label> <record-expr> <value-expr>)
 ; Writes the value of the field.
 (defun scan-&= (world type-env rest-statements last special-form label record-expr value-expr)
   (multiple-value-bind (record-code record-type tags record-annotated-expr) (scan-union-tag-value world type-env record-expr)
@@ -4048,7 +4066,7 @@
      (value-expr
       (multiple-value-setq (value-code value-annotated-expr)
         (scan-typed-value world type-env value-expr type)))
-     ((not (type= type (world-bottom-type world)))
+     ((not (type= type (world-void-type world)))
       (error "Return statement needs a value")))
     (scan-statements world type-env rest-statements last nil)
     (values
@@ -4490,7 +4508,7 @@
     
     (:statement
      (exec scan-exec depict-exec)
-     (const scan-var depict-var)
+     (const scan-const depict-var)
      (var scan-var depict-var)
      (reserve scan-reserve nil)
      (function scan-function depict-function)
