@@ -26,16 +26,16 @@
 
 static PRBool rdf_inited = PR_FALSE;
 
-nsCOMPtr<nsIRDFContainerUtils> gRDFCU = NULL;
-nsCOMPtr<nsIRDFService> gRDF = NULL;
-nsCOMPtr<nsIBookmarksService> gBookmarks = NULL;
-nsCOMPtr<nsIRDFDataSource> gBookmarksDataSource = NULL;
+nsCOMPtr<nsIRDFContainerUtils> gRDFCU = nsnull;
+nsCOMPtr<nsIRDFService> gRDF = nsnull;
+nsCOMPtr<nsIBookmarksService> gBookmarks = nsnull;
+nsCOMPtr<nsIRDFDataSource> gBookmarksDataSource = nsnull;
 
-nsCOMPtr<nsIRDFResource> kNC_BookmarksRoot = NULL;
-nsCOMPtr<nsIRDFResource> kNC_Name = NULL;
-nsCOMPtr<nsIRDFResource> kNC_URL = NULL;
-nsCOMPtr<nsIRDFResource> kNC_Folder = NULL;
-nsCOMPtr<nsIRDFResource> kRDF_type = NULL;
+nsCOMPtr<nsIRDFResource> kNC_BookmarksRoot = nsnull;
+nsCOMPtr<nsIRDFResource> kNC_Name = nsnull;
+nsCOMPtr<nsIRDFResource> kNC_URL = nsnull;
+nsCOMPtr<nsIRDFResource> kNC_Folder = nsnull;
+nsCOMPtr<nsIRDFResource> kRDF_type = nsnull;
 
 
 nsresult rdf_InitRDFUtils()

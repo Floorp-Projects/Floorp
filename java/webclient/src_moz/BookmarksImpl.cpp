@@ -61,7 +61,7 @@ Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
     jint result = -1;
 	nsAutoString uri("NC:BookmarksRoot");
     
-    const char *url = env->GetStringUTFChars(urlString, NULL);
+    const char *url = env->GetStringUTFChars(urlString, nsnull);
 	uri.Append("#$");
 	uri.Append(url);
     printf("debug: edburns: nativeNewRDFNode: url: %s\n", url);

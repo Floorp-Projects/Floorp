@@ -53,7 +53,7 @@ char *DocumentLoaderObserverImpl::maskNames[] = {
   "STATUS_URL_LOAD_EVENT_MASK",
   "UNKNOWN_CONTENT_EVENT_MASK",
   "FETCH_INTERRUPT_EVENT_MASK",
-  NULL
+  nsnull
 };
 
 
@@ -77,7 +77,7 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
 						       jobject yourTarget) :
   mJNIEnv(env), mInitContext(yourInitContext), mTarget(yourTarget)
 {
-    if (NULL == gVm) { // declared in jni_util.h
+    if (nsnull == gVm) { // declared in jni_util.h
       env->GetJavaVM(&gVm);  // save this vm reference away for the callback!
     }
 
@@ -88,9 +88,9 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
            nativeThreadID);
 #endif
     
-	char *currentThreadName = NULL;
+	char *currentThreadName = nsnull;
 
-	if (NULL != (currentThreadName = util_GetCurrentThreadName(env))) {
+	if (nsnull != (currentThreadName = util_GetCurrentThreadName(env))) {
         printf("debug: edburns: DocumentLoaderObserverImpl ctor threadName: %s\n",
                currentThreadName);
         delete currentThreadName;
@@ -105,30 +105,30 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
 void DocumentLoaderObserverImpl::InitializeMaskValues()
 {
     // if we don't have a VM, do nothing
-    if (NULL == gVm) {
+    if (nsnull == gVm) {
       return;
     }
 
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
 
-    if (NULL == env) {
+    if (nsnull == env) {
       return;
     }
 
     jclass documentLoadEventClass = env->FindClass("org/mozilla/webclient/DocumentLoadEvent");
 
-    if (NULL == documentLoadEventClass) {
+    if (nsnull == documentLoadEventClass) {
       return;
     }
 
     int i = 0;
     jfieldID fieldID;
 
-    while (NULL != maskNames[i]) {
+    while (nsnull != maskNames[i]) {
       fieldID = env->GetStaticFieldID(documentLoadEventClass, maskNames[i],
 				      "J");
 
-      if (NULL == fieldID) {
+      if (nsnull == fieldID) {
 	return;
       }
 
@@ -139,10 +139,10 @@ void DocumentLoaderObserverImpl::InitializeMaskValues()
  
 NS_IMETHODIMP DocumentLoaderObserverImpl::QueryInterface(REFNSIID aIID, void** aInstance)
 {
-  if (NULL == aInstance)
+  if (nsnull == aInstance)
     return NS_ERROR_NULL_POINTER;
 
-  *aInstance = NULL;
+  *aInstance = nsnull;
 
  
   if (aIID.Equals(kIDocumentLoaderObserverIID)) {

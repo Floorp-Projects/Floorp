@@ -27,7 +27,7 @@
 
 #include "jni_util.h"
 
-JavaVM *gVm = NULL;
+JavaVM *gVm = nsnull;
 
 void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
@@ -45,11 +45,11 @@ void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
     // Throw the exception with the error code and description
     jmethodID jID = env->GetMethodID(excCls, "<init>", "(Ljava/lang/String;)V");		// void Exception(String)
     
-    if (jID != NULL) {
+    if (jID != nsnull) {
 	jstring	exceptionString = env->NewStringUTF(message);
 	jthrowable newException = (jthrowable) env->NewObject(excCls, jID, exceptionString);
         
-        if (newException != NULL) {
+        if (newException != nsnull) {
 	    env->Throw(newException);
 	}
 	else {
@@ -90,26 +90,26 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
                           jobject webclientEventListener, 
                           jlong eventType)
 {
-    if (NULL == gVm) {
+    if (nsnull == gVm) {
         return;
     }
 
 	JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
 
-    if (NULL == env) {
+    if (nsnull == env) {
       return;
     }
 
     jthrowable exception;
 
-    if (NULL != (exception = env->ExceptionOccurred())) {
+    if (nsnull != (exception = env->ExceptionOccurred())) {
         env->ExceptionDescribe();
     }
 
     jclass clazz = env->GetObjectClass(nativeEventThread);
     jmethodID mid = env->GetMethodID(clazz, "nativeEventOccurred", 
                                      "(Lorg/mozilla/webclient/WebclientEventListener;J)V");
-    if ( mid != NULL) {
+    if ( mid != nsnull) {
         env->CallVoidMethod(nativeEventThread, mid, webclientEventListener,
                             eventType);
     } else {
@@ -128,22 +128,22 @@ char *util_GetCurrentThreadName(JNIEnv *env)
 	jclass threadClass = env->FindClass("java/lang/Thread");
 	jobject currentThread;
 	jstring name;
-	char *result = NULL;
+	char *result = nsnull;
 	const char *cstr;
 	jboolean isCopy;
 
-	if (NULL != threadClass) {
+	if (nsnull != threadClass) {
 		jmethodID currentThreadID = 
 			env->GetStaticMethodID(threadClass,"currentThread",
 								   "()Ljava/lang/Thread;");
 		currentThread = env->CallStaticObjectMethod(threadClass, 
 													currentThreadID);
-		if (NULL != currentThread) {
+		if (nsnull != currentThread) {
 			jmethodID getNameID = env->GetMethodID(threadClass,
 												   "getName",
 												   "()Ljava/lang/String;");
 			name = (jstring) env->CallObjectMethod(currentThread, getNameID, 
-												   NULL);
+												   nsnull);
 			result = strdup(cstr = env->GetStringUTFChars(name, &isCopy));
 			if (JNI_TRUE == isCopy) {
 				env->ReleaseStringUTFChars(name, cstr);
@@ -157,7 +157,7 @@ char *util_GetCurrentThreadName(JNIEnv *env)
 void util_DumpJavaStack(JNIEnv *env)
 {
 	jclass threadClass = env->FindClass("java/lang/Thread");
-	if (NULL != threadClass) {
+	if (nsnull != threadClass) {
 		jmethodID dumpStackID = env->GetStaticMethodID(threadClass,
 													   "dumpStack",
 													   "()V");
@@ -264,7 +264,7 @@ JNU_GetEnv(JavaVM *vm, jint version)
     //    void *result;
     //vm->GetEnv(&result, version);
 
-    JNIEnv *result = NULL;
+    JNIEnv *result = nsnull;
     vm->AttachCurrentThread((void **)&result, (void *) version);
 
     return result;

@@ -85,7 +85,7 @@ class nsActionEvent {
 public:
                         nsActionEvent  ();
         virtual        ~nsActionEvent  () {};
-        virtual void *  handleEvent    (void) = 0; //{ return NULL;};
+        virtual void *  handleEvent    (void) = 0; //{ return nsnull;};
                 void    destroyEvent   (void) { delete this; };
             operator    PLEvent*       ()     { return &mEvent; };
 

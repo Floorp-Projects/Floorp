@@ -57,9 +57,9 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
              nativeThreadID);
 #endif
 
-      char *currentThreadName = NULL;
+      char *currentThreadName = nsnull;
       
-      if (NULL != (currentThreadName = util_GetCurrentThreadName(env))) {
+      if (nsnull != (currentThreadName = util_GetCurrentThreadName(env))) {
           printf("debug: edburns: HistoryImpl_nativeBack() java threadName: %s\n",
                  currentThreadName);
           delete currentThreadName;
@@ -105,7 +105,7 @@ JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeCanBack
 JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetBackList
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-    jobjectArray result = NULL;
+    jobjectArray result = nsnull;
 
     return result;
 }
@@ -173,7 +173,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImp
 JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetForwardList
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-    jobjectArray result = NULL;
+    jobjectArray result = nsnull;
 
     return result;
 }
@@ -181,7 +181,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_Histor
 JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistory
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-    jobjectArray result = NULL;
+    jobjectArray result = nsnull;
 
     return result;
 }
@@ -190,7 +190,7 @@ JNIEXPORT jobject JNICALL
 Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistoryEntry
 (JNIEnv *env, jobject obj, jint webShellPtr, jint historyIndex)
 {
-    jobject result = NULL;
+    jobject result = nsnull;
 
     return result;
 }
@@ -307,7 +307,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl
 	urlString = env->NewStringUTF((const char *) charResult);
       }
       else {
-	::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned NULL");
+	::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned nsnull");
 	return nsnull;
       }
       

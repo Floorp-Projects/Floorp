@@ -83,11 +83,11 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->initComplete = FALSE;
     initContext->initFailCode = 0;
     initContext->parentHWnd = parentHWnd;
-    initContext->webShell = NULL;
-    initContext->embeddedThread = NULL;
-    initContext->sessionHistory = NULL;
-    initContext->actionQueue = NULL;
-    initContext->nativeEventThread = NULL;
+    initContext->webShell = nsnull;
+    initContext->embeddedThread = nsnull;
+    initContext->sessionHistory = nsnull;
+    initContext->actionQueue = nsnull;
+    initContext->nativeEventThread = nsnull;
     initContext->env = env;
     initContext->stopThread = FALSE;
     initContext->x = x;
@@ -98,7 +98,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 #ifdef XP_UNIX
     jclass cls = env->GetObjectClass(aBrowserControlImpl);  // Get Class for BrowserControlImpl object
     jclass clz = env->FindClass("org/mozilla/webclient/BrowserControlImpl");
-    if (NULL == clz) {
+    if (nsnull == clz) {
       ::util_ThrowExceptionToJava(env, "Exception: Could not find class for BrowserControlImpl");
       return (jint) 0;
     }
@@ -109,25 +109,25 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     }
     // Get myCanvas IVar
     jfieldID fid = env->GetFieldID(cls, "myCanvas", "Lorg/mozilla/webclient/BrowserControlCanvas;");
-    if (NULL == fid) {
+    if (nsnull == fid) {
       ::util_ThrowExceptionToJava(env, "Exception: field myCanvas not found in the jobject for BrowserControlImpl");
           return (jint) 0;
     }
     jobject canvasObj = env->GetObjectField(aBrowserControlImpl, fid);
     jclass canvasCls = env->GetObjectClass(canvasObj);
-    if (NULL == canvasCls) {
+    if (nsnull == canvasCls) {
       ::util_ThrowExceptionToJava(env, "Exception: Could Not find Class for CanvasObj");
       return (jint) 0;
     }
     jfieldID gtkfid = env->GetFieldID(canvasCls, "gtkWinPtr", "I");
-    if (NULL == gtkfid) {
+    if (nsnull == gtkfid) {
       ::util_ThrowExceptionToJava(env, "Exception: field gtkWinPtr not found in the jobject for BrowserControlCanvas");
       return (jint) 0;
     }
     jint mozPtr = env->GetIntField(canvasObj, gtkfid);
     initContext->gtkWinPtr = (int) mozPtr;
 #else
-    initContext->gtkWinPtr = NULL;
+    initContext->gtkWinPtr = nsnull;
 #endif
     
     return (jint) initContext;

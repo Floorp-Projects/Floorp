@@ -55,7 +55,7 @@ destroyEvent (PLEvent * event)
 {
         nsActionEvent * actionEvent = (nsActionEvent*) event->owner;
 
-        if (actionEvent != NULL) {
+        if (actionEvent != nsnull) {
                 actionEvent->destroyEvent();
         }
 } // destroyEvent()
@@ -106,7 +106,7 @@ wsResizeEvent::handleEvent ()
                                        getter_AddRefs(baseWindow));
         
         if (NS_FAILED(rv)) {
-            return NULL;
+            return nsnull;
         }
         rv = baseWindow->SetPositionAndSize(mLeft, mBottom, mWidth, mHeight, 
                                             PR_TRUE);
@@ -115,7 +115,7 @@ wsResizeEvent::handleEvent ()
         
         return (void *) rv;
     }
-    return NULL;
+    return nsnull;
 } // handleEvent()
 
 
@@ -145,7 +145,7 @@ wsLoadURLEvent::handleEvent ()
 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -179,7 +179,7 @@ wsStopEvent::handleEvent ()
 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -209,13 +209,13 @@ wsShowEvent::handleEvent ()
                                                getter_AddRefs(baseWindow));
                 
                 if (NS_FAILED(rv)) {
-                    return NULL;
+                    return nsnull;
                 }
                 baseWindow->SetVisibility(PR_TRUE);
                 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -245,13 +245,13 @@ wsHideEvent::handleEvent ()
                                                getter_AddRefs(baseWindow));
                 
                 if (NS_FAILED(rv)) {
-                    return NULL;
+                    return nsnull;
                 }
                 baseWindow->SetVisibility(PR_FALSE);
                 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -283,13 +283,13 @@ wsMoveToEvent::handleEvent ()
                                                getter_AddRefs(baseWindow));
                 
                 if (NS_FAILED(rv)) {
-                    return NULL;
+                    return nsnull;
                 }
                 rv = baseWindow->SetPosition(mX, mY);
 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -318,13 +318,13 @@ wsSetFocusEvent::handleEvent ()
                                                getter_AddRefs(baseWindow));
                 
                 if (NS_FAILED(rv)) {
-                    return NULL;
+                    return nsnull;
                 }
                 rv = baseWindow->SetFocus();
 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -351,7 +351,7 @@ wsRemoveFocusEvent::handleEvent ()
 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -382,13 +382,13 @@ wsRepaintEvent::handleEvent ()
                                                getter_AddRefs(baseWindow));
                 
                 if (NS_FAILED(rv)) {
-                    return NULL;
+                    return nsnull;
                 }
                 rv = baseWindow->Repaint(mForceRepaint);
 
                 printf("result = %lx\n", rv);
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 
@@ -406,7 +406,7 @@ wsCanBackEvent::wsCanBackEvent(nsISessionHistory* yourSessionHistory) :
 void *
 wsCanBackEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory) {
         nsresult rv;
         PRBool canGoBack;
@@ -443,7 +443,7 @@ wsCanForwardEvent::wsCanForwardEvent(nsISessionHistory* yourSessionHistory) :
 void *
 wsCanForwardEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory) {
         nsresult rv;
         PRBool canGoForward;
@@ -483,7 +483,7 @@ wsBackEvent::wsBackEvent(nsISessionHistory* yourSessionHistory,
 void *
 wsBackEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory && mWebShell) {
         printf("handleEvent(Back())\n");
 
@@ -513,7 +513,7 @@ wsForwardEvent::wsForwardEvent(nsISessionHistory *yourSessionHistory,
 void *
 wsForwardEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory && mWebShell) {
                 
         printf("handleEvent(Forward())\n");
@@ -544,7 +544,7 @@ wsGoToEvent::wsGoToEvent(nsISessionHistory *yourSessionHistory,
 void *
 wsGoToEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory && mWebShell) {
                 
         printf("handleEvent(GoTo(%ld))\n", mHistoryIndex);
@@ -573,7 +573,7 @@ wsGetHistoryLengthEvent::wsGetHistoryLengthEvent(nsISessionHistory* yourSessionH
 void *
 wsGetHistoryLengthEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory) {
                 
         printf("handleEvent(wsGetHistoryLengthEvent())\n");
@@ -604,7 +604,7 @@ wsGetHistoryIndexEvent::wsGetHistoryIndexEvent(nsISessionHistory *yourSessionHis
 void *
 wsGetHistoryIndexEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory) {
                 
         printf("handleEvent(wsGetHistoryIndexEvent())\n");
@@ -635,12 +635,12 @@ wsGetURLEvent::wsGetURLEvent(nsISessionHistory* yourSessionHistory) :
 void *
 wsGetURLEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory) {
         
         
         PRInt32 currentIndex;
-        char *currentURL = NULL;
+        char *currentURL = nsnull;
         nsresult rv;
 
         rv = mHistory->GetCurrentIndex(&currentIndex);
@@ -680,10 +680,10 @@ wsGetURLForIndexEvent::wsGetURLForIndexEvent(nsISessionHistory *yourSessionHisto
 void *
 wsGetURLForIndexEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     if (mHistory) {
         nsresult rv;
-        char *indexURL = NULL;
+        char *indexURL = nsnull;
 
         printf("handleEvent(GetURLForIndex(%ld))\n", mHistoryIndex);
         
@@ -730,7 +730,7 @@ wsRefreshEvent::handleEvent ()
 
                 return (void *) rv;
         }
-        return NULL;
+        return nsnull;
 } // handleEvent()
 
 wsAddDocLoaderObserverEvent::wsAddDocLoaderObserverEvent(nsIDocShell* yourDocShell,
@@ -743,7 +743,7 @@ wsAddDocLoaderObserverEvent::wsAddDocLoaderObserverEvent(nsIDocShell* yourDocShe
 void *
 wsAddDocLoaderObserverEvent::handleEvent ()
 {
-    void *result = NULL;
+    void *result = nsnull;
     
     if (mDocShell && mDocObserver) {
         printf("handleEvent(AddDocLoaderObserver())\n");

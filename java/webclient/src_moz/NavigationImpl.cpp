@@ -44,7 +44,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     
     if (env->ExceptionOccurred()) {
 	::util_ThrowExceptionToJava(env, "raptorWebShellLoadURL Exception: unable to extract Java string");
-	if (urlStringChars != NULL)
+	if (urlStringChars != nsnull)
 	  env->ReleaseStringChars(urlString, urlStringChars);
 	return;
       }
@@ -53,7 +53,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellLoadURL");
-      if (urlStringChars != NULL)
+      if (urlStringChars != nsnull)
 	env->ReleaseStringChars(urlString, urlStringChars);
       return;
     }

@@ -154,7 +154,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource
 (JNIEnv *, jobject)
 {
-    jstring result = NULL;
+    jstring result = nsnull;
     
     return result;
 }
@@ -167,7 +167,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
 (JNIEnv *, jobject)
 {
-    jbyteArray result = NULL;
+    jbyteArray result = nsnull;
 
     return result;
 }

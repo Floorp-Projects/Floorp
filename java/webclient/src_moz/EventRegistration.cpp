@@ -39,7 +39,7 @@ void addDocumentLoadListener(JNIEnv *env, WebShellInitContext *initContext,
     }
 
     if (initContext->initComplete) {
-        // Assert (NULL != initContext->nativeEventThread)
+        // Assert (nsnull != initContext->nativeEventThread)
         
         // create the c++ "peer" for the DocumentLoadListener, which is an
         // nsIDocumentLoaderObserver.

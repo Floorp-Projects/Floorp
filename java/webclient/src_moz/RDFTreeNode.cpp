@@ -148,10 +148,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
         (nsIRDFResource *) nativeRDFNode;
     nsCOMPtr<nsIRDFNode> node;
     nsCOMPtr<nsIRDFLiteral> literal;
-    jstring result = NULL;
+    jstring result = nsnull;
     PRBool isContainer = PR_FALSE;
     nsresult rv;
-    const PRUnichar *textForNode = NULL;
+    const PRUnichar *textForNode = nsnull;
 
     rv = gRDFCU->IsContainer(gBookmarksDataSource, currentResource, 
                              &isContainer);
@@ -211,10 +211,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
         }
     }
 
-    if (NULL != textForNode) {
+    if (nsnull != textForNode) {
         nsString * string = new nsString(textForNode);
         int length = 0;
-        if (NULL != string) {
+        if (nsnull != string) {
             length = string->Length();
         }
 

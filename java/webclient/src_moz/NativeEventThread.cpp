@@ -92,7 +92,7 @@ nsresult InitMozillaStuff (WebShellInitContext * arg);
 // Local data
 //
 
-static nsISessionHistory *gHistory = NULL;
+static nsISessionHistory *gHistory = nsnull;
 
 char * errorMessages[] = {
 	"No Error",
@@ -112,7 +112,7 @@ char * errorMessages[] = {
 
 const char *gSupportedListenerInterfaces[] = {
     "org/mozilla/webclient/DocumentLoadListener",
-    NULL
+    nsnull
 };
 
 // these index into the gSupportedListenerInterfaces array, this should
@@ -134,12 +134,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     nsresult rv = NS_ERROR_FAILURE;
     WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
 
-    if (NULL == initContext) {
+    if (nsnull == initContext) {
 	    ::util_ThrowExceptionToJava(env, 
                                     "NULL webShellPtr passed to nativeInitialize.");
         return;
     }
-    if (NULL == gVm) { // declared in jni_util.h
+    if (nsnull == gVm) { // declared in jni_util.h
         env->GetJavaVM(&gVm);  // save this vm reference
     }
 
@@ -166,7 +166,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
 {
     WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
     
-    if (NULL == initContext) {
+    if (nsnull == initContext) {
 	    ::util_ThrowExceptionToJava(env, 
                                     "NULL webShellPtr passed to nativeProcessEvents.");
         return;
@@ -200,22 +200,22 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
 {
     WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
 
-    if (initContext == NULL) {
+    if (initContext == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeAddListener");
         return;
     }
     
-    if (NULL == initContext->nativeEventThread) {
+    if (nsnull == initContext->nativeEventThread) {
         // store the java EventRegistrationImpl class in the initContext
         initContext->nativeEventThread = obj; // VERY IMPORTANT!!
         // This enables the listener to call back into java
     }
     
-    jclass clazz = NULL;
+    jclass clazz = nsnull;
     int listenerType = 0;
 
-    while (NULL != gSupportedListenerInterfaces[listenerType]) {
-        if (NULL == 
+    while (nsnull != gSupportedListenerInterfaces[listenerType]) {
+        if (nsnull == 
             (clazz = 
              env->FindClass(gSupportedListenerInterfaces[listenerType]))) {
             return;
@@ -232,10 +232,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         return;
     }
 
-    jobject globalRef = NULL;
+    jobject globalRef = nsnull;
 
     // PENDING(edburns): make sure do DeleteGlobalRef on the removeListener
-    if (NULL == (globalRef = env->NewGlobalRef(typedListener))) {
+    if (nsnull == (globalRef = env->NewGlobalRef(typedListener))) {
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't create NewGlobalRef\n\tfor argument");
         return;
     }
@@ -268,8 +268,8 @@ int processEventLoop(WebShellInitContext * initContext)
     // PENDING(mark): Does this work on the Mac?
     MSG msg;
     
-    if (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-        if (::GetMessage(&msg, NULL, 0, 0)) {
+    if (::PeekMessage(&msg, nsnull, 0, 0, PM_NOREMOVE)) {
+        if (::GetMessage(&msg, nsnull, 0, 0)) {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
         }
@@ -285,7 +285,7 @@ int processEventLoop(WebShellInitContext * initContext)
             
             PLEvent * event = ::PL_GetEvent(initContext->actionQueue);
             
-            if (event != NULL) {
+            if (event != nsnull) {
                 ::PL_HandleEvent(event);
             }
         }
@@ -349,9 +349,9 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     if (initContext->embeddedThread) {
 
 #if DEBUG_RAPTOR_CANVAS
-		printf("InitMozillaStuff(%lx): embeddedThread != NULL\n", initContext);
+		printf("InitMozillaStuff(%lx): embeddedThread != nsnull\n", initContext);
 #endif
-		if (initContext->actionQueue == NULL) {
+		if (initContext->actionQueue == nsnull) {
 #if DEBUG_RAPTOR_CANVAS
 			printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
 #endif
@@ -428,7 +428,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
         nsServiceManager::ReleaseService(kPrefCID, prefs);
     }
 
-    if (NULL == gHistory) {
+    if (nsnull == gHistory) {
         rv = nsComponentManager::CreateInstance(kSessionHistoryCID, nsnull, kISessionHistoryIID, 
                                                 (void**)&gHistory);
         if (NS_FAILED(rv)) {

@@ -127,14 +127,14 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
     jint nativeEnum, nativeContainer;
     
     objClass = env->GetObjectClass(obj);
-    if (NULL == objClass) {
+    if (nsnull == objClass) {
         printf("nativeFinalize: Can't get object class for RDFEnumeration.\n");
         return;
     }
 
     // release the nsISimpleEnumerator
     nativeEnumFieldID = env->GetFieldID(objClass, "nativeEnum", "I");
-    if (NULL == nativeEnumFieldID) {
+    if (nsnull == nativeEnumFieldID) {
         printf("nativeFinalize: Can't get fieldID for nativeEnum.\n");
         return;
     }
@@ -146,7 +146,7 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
     
     // release the nsIRDFContainer
     nativeContainerFieldID = env->GetFieldID(objClass, "nativeContainer", "I");
-    if (NULL == nativeContainerFieldID) {
+    if (nsnull == nativeContainerFieldID) {
         printf("nativeFinalize: Can't get fieldID for nativeContainer.\n");
         return;
     }
@@ -174,13 +174,13 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
     jfieldID nativeContainerFieldID;
 
     objClass = env->GetObjectClass(obj);
-    if (NULL == objClass) {
+    if (nsnull == objClass) {
         printf("getNativeEnumFromJava: Can't get object class for RDFEnumeration.\n");
         return -1;
     }
 
     nativeEnumFieldID = env->GetFieldID(objClass, "nativeEnum", "I");
-    if (NULL == nativeEnumFieldID) {
+    if (nsnull == nativeEnumFieldID) {
         printf("getNativeEnumFromJava: Can't get fieldID for nativeEnum.\n");
         return -1;
     }
@@ -238,7 +238,7 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
     // validity of the nsISimpleEnumerator that came from the container.
     // Just to be safe, I'm doing so.
     nativeContainerFieldID = env->GetFieldID(objClass, "nativeContainer", "I");
-    if (NULL == nativeContainerFieldID) {
+    if (nsnull == nativeContainerFieldID) {
         printf("getNativeEnumFromJava: Can't get fieldID for nativeContainer.\n");
         return -1;
     }

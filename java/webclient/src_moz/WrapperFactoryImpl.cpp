@@ -69,7 +69,7 @@ const char *gImplementedInterfaces[] = {
         "webclient.History",
         "webclient.EventRegistration",
         "webclient.Bookmarks",
-        NULL
+        nsnull
         };
 
 extern "C" void NS_SetupRegistry();
@@ -86,10 +86,10 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitializ
     const char *nativePath = (const char *) env->GetStringUTFChars(verifiedBinDirAbsolutePath, 0);
     gBinDir = nativePath;
     
-    NS_InitXPCOM(NULL, &gBinDir);
+    NS_InitXPCOM(nsnull, &gBinDir);
     NS_SetupRegistry();
-    nsComponentManager::RegisterComponentLib(kSessionHistoryCID, NULL, 
-					     NULL, APPSHELL_DLL, 
+    nsComponentManager::RegisterComponentLib(kSessionHistoryCID, nsnull, 
+					     nsnull, APPSHELL_DLL, 
 					     PR_FALSE, PR_FALSE);
     NS_AutoregisterComponents();
     gFirstTime = PR_FALSE;
@@ -115,11 +115,11 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeDoesImplemen
     
     int i = 0;
 
-    if (NULL == iName) {
+    if (nsnull == iName) {
         return result;
     }
 
-    while (NULL != gImplementedInterfaces[i]) {
+    while (nsnull != gImplementedInterfaces[i]) {
         if (0 == nsCRT::strcmp(gImplementedInterfaces[i++], iName)) {
             result = JNI_TRUE;
             break;
