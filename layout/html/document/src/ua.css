@@ -314,6 +314,7 @@ ul, menu, dir {
   margin: 1em 0;
   padding-left: 40px;
   counter-reset: -html-counter 0;
+  float-edge: margin-box;
 }
 
 ol {
@@ -322,15 +323,13 @@ ol {
   margin: 1em 0;
   padding-left: 40px;
   counter-reset: -html-counter 0;
+  float-edge: margin-box;
 }
 
 /* make orphaned li's have inside bullet */
 li {
   display: list-item;
   list-style-position: inside; 
-  float-edge: margin-box;
-  /* make li's float around floaters in a compatible manner */
-  -moz-compat-floater-margin: 40px;
 }
 
 /* restore outside position for lists inside li's */
