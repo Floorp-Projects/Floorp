@@ -67,7 +67,7 @@ LINCS=-I$(PUBLIC)\raptor                \
 #      -I..\browser
 
 MAKE_OBJ_TYPE = EXE
-PROGRAM = .\$(OBJDIR)\apprunner.exe
+PROGRAM = .\$(OBJDIR)\mozilla.exe
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -77,9 +77,9 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the exe
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \
- $(DIST)\lib\raptorgfxwin.lib   \
+ $(DIST)\lib\gkgfxwin.lib   \
 !ifdef DETECT_WEBSHELL_LEAKS
- $(DIST)\lib\raptorweb.lib       \
+ $(DIST)\lib\gkweb.lib       \
 !endif
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib    \
@@ -98,4 +98,4 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\apprunner.exe
+	rm -f $(DIST)\bin\mozilla.exe

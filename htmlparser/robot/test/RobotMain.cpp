@@ -6,7 +6,7 @@
 #include "nsParserCIID.h"
 
 #ifdef XP_PC
-#define PARSER_DLL "raptorhtmlpars.dll"
+#define PARSER_DLL "gkparser.dll"
 #else
 #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
 #endif

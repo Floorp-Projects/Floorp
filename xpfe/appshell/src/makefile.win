@@ -84,7 +84,7 @@ LINCS=-I$(PUBLIC)\raptor                \
      $(NULL)
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = nsappshell
+DLLNAME = appshell
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \
@@ -95,7 +95,7 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the DLL
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib        \
- $(DIST)\lib\raptorgfxwin.lib   \
+ $(DIST)\lib\gkgfxwin.lib   \
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib         \
 !else

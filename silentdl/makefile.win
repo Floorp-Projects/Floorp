@@ -51,7 +51,7 @@ LLIBS =				            \
     $(DIST)\lib\js3250.lib      \
     $(DIST)\lib\jsdombase_s.lib \
     $(DIST)\lib\jsdomevents_s.lib \
-	$(DIST)\lib\raptorgfxwin.lib	\
+	$(DIST)\lib\gkgfxwin.lib	\
 	$(LIBNSPR)		            \
     $(NULL)
 

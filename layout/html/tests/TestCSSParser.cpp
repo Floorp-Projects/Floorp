@@ -44,7 +44,7 @@
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
-#define LAYOUT_DLL    "raptorhtml.dll"
+#define LAYOUT_DLL    "gkhtml.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"

@@ -29,8 +29,8 @@ OBJS =										\
 LLIBS=							\
  $(DIST)\lib\xpcom.lib			\
  $(LIBNSPR)						\
- $(DIST)\lib\raptorgfxwin.lib	\
- $(DIST)\lib\raptorwidget.lib	\
+ $(DIST)\lib\gkgfxwin.lib	\
+ $(DIST)\lib\gkwidget.lib	\
  $(DIST)\lib\msgdb.lib			\
  $(DIST)\lib\msgbsutl.lib	\
  $(DIST)\lib\msglocal_s.lib		\

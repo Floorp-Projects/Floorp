@@ -65,9 +65,9 @@
 
 #if defined(XP_PC)
 #define DOM_DLL    "jsdom.dll"
-#define LAYOUT_DLL "raptorhtml.dll"
+#define LAYOUT_DLL "gkhtml.dll"
 #define NETLIB_DLL "netlib.dll"
-#define PARSER_DLL "raptorhtmlpars.dll"
+#define PARSER_DLL "gkparser.dll"
 #define RDF_DLL    "rdf.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #elif defined(XP_UNIX) || defined(XP_BEOS)

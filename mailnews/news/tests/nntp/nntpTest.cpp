@@ -49,7 +49,7 @@
 #define XPCOM_DLL	"xpcom32.dll"
 #define NEWS_DLL	"msgnews.dll"
 #define PREF_DLL	"xppref32.dll"
-#define APPSHELL_DLL	"nsappshell.dll"
+#define APPSHELL_DLL "appshell.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"

@@ -84,7 +84,7 @@ LLIBS	= \
 !endif
  $(DIST)\lib\xpcom.lib \
  $(DIST)\lib\xpcom.lib \
- $(DIST)\lib\raptorhtmlpars.lib \
+ $(DIST)\lib\gkparser.lib \
  $(HASHLIBS)
 
 include <$(DEPTH)\config\rules.mak>

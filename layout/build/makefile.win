@@ -37,7 +37,7 @@ EXPORTS=nsLayoutCID.h
 
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = raptorhtml
+DLLNAME = gkhtml
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \
@@ -80,7 +80,7 @@ LLIBS=					\
 !endif
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom.lib		\
- $(DIST)\lib\raptorgfxwin.lib		\
+ $(DIST)\lib\gkgfxwin.lib		\
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\jsdom.lib		        \
 !ifdef NECKO

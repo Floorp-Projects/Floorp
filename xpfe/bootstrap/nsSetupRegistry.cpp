@@ -51,7 +51,7 @@ static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #ifdef XP_PC
 
-#define APPSHELL_DLL "nsappshell.dll"
+#define APPSHELL_DLL "appshell.dll"
 #define BROWSER_DLL  "nsbrowser.dll"
 #define APPCORES_DLL  "appcores.dll"
 #define EDITOR_DLL "ender.dll"

@@ -51,7 +51,7 @@ CPP_OBJS=                               \
  $(NULL)
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME = regviewer
+DLLNAME = regviewr
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \

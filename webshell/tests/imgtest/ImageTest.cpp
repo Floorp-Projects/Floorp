@@ -350,8 +350,8 @@ static HWND CreateTopLevel(const char* clazz, const char* title,
   return window;
 }
 
-#define WIDGET_DLL "raptorwidget.dll"
-#define GFXWIN_DLL "raptorgfxwin.dll"
+#define WIDGET_DLL "gkwidget.dll"
+#define GFXWIN_DLL "gkgfxwin.dll"
 
 int PASCAL
 WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow)

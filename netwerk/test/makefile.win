@@ -38,7 +38,7 @@ INCS = $(INCS)                  \
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
- $(DIST)\lib\raptorgfxwin.lib		\
+ $(DIST)\lib\gkgfxwin.lib		\
  $(LIBNSPR)				\
  $(NULL)
 

@@ -54,9 +54,9 @@ LLIBS=				\
  $(DIST)\lib\raptorhtmldoc_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\
  $(DIST)\lib\raptorhtmltable_s.lib	\
- $(DIST)\lib\raptorhtmlpars.lib	\
+ $(DIST)\lib\gkparser.lib	\
  $(DIST)\lib\raptorlayout_s.lib	\
- $(DIST)\lib\raptorgfxwin.lib	\
+ $(DIST)\lib\gkgfxwin.lib	\
  $(DIST)\lib\raptorevents_s.lib	\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib	\
  $(DIST)\lib\util.lib		\

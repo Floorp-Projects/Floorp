@@ -33,9 +33,9 @@ LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
- $(DIST)\lib\raptorgfxwin.lib \
+ $(DIST)\lib\gkgfxwin.lib \
  $(DIST)\lib\widgetsupport_s.lib \
- $(DIST)\lib\raptorwidget.lib \
+ $(DIST)\lib\gkwidget.lib \
 !ifdef NECKO
 !else
  $(DIST)\lib\netlib.lib\

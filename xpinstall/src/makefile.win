@@ -28,7 +28,8 @@ DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE = DLL
-MODULE=nsxpi
+MODULE=xpinstal
+XPIDL_MODULE=xpinstall
 
 DLL=.\$(OBJDIR)\$(MODULE).dll
 

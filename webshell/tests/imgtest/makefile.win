@@ -30,8 +30,8 @@ OBJS =                                  \
 	$(NULL)
 
 LLIBS=				\
- $(DIST)\lib\raptorgfxwin.lib 	\
- $(DIST)\lib\raptorweb.lib		\
+ $(DIST)\lib\gkgfxwin.lib 	\
+ $(DIST)\lib\gkweb.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)			\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib		\

@@ -21,7 +21,7 @@ include <$(DEPTH)/config/config.mak>
 
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
-DLLNAME=necko_file
+DLLNAME=nkfile
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS)                 \

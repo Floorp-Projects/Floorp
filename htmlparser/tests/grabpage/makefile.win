@@ -31,7 +31,7 @@ LINCS=					\
   -I$(PUBLIC)\netlib
 
 LLIBS=					\
- $(DIST)\lib\raptorhtmlpars.lib		\
+ $(DIST)\lib\gkparser.lib		\
  $(DIST)\lib\netlib.lib			\
  $(DIST)\lib\xpcom.lib	        \
  $(LIBNSPR)				\

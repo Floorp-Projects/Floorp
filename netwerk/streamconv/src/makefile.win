@@ -19,7 +19,7 @@ MODULE = streamconv
 
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
-DLLNAME=streamconv
+DLLNAME=stremcnv
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS) \

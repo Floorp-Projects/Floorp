@@ -22,7 +22,7 @@
 #define PICS_DLL   "pics.dll"
 #define PREF_DLL   "xppref32.dll"
 #define BASE_DLL   "raptorbase.dll"
-#define RAPTORHTMLPARS_DLL "raptorhtmlpars.dll"
+#define RAPTORHTMLPARS_DLL "gkparser.dll"
 #define NETLIB_DLL "netlib.dll"
 
 

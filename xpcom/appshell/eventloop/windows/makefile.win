@@ -24,7 +24,7 @@ DEPTH=..\..\..\..
 MODULE=xpcom_eventloop_windows
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=eventloop
+DLLNAME=evntloop
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 XPIDLSRCS=									\

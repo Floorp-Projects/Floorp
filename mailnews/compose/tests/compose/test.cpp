@@ -62,7 +62,7 @@
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
 #define PREF_DLL   "xppref32.dll"
-#define APPSHELL_DLL "nsappshell.dll"
+#define APPSHELL_DLL "appshell.dll"
 #define MIME_DLL "mime.dll"
 #define UNICHAR_DLL  "uconv.dll"
 #else
