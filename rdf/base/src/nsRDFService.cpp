@@ -872,7 +872,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 
         // Safely convert it to a C-string for the XPCOM APIs
         char buf[64];
-        char* progID = buf;
+        char* progID = buf, *p;
         if (progIDStr.Length() >= sizeof(buf))
             progID = new char[progIDStr.Length() + 1];
 
@@ -880,6 +880,11 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
             return NS_ERROR_OUT_OF_MEMORY;
 
         progIDStr.ToCString(progID, progIDStr.Length() + 1);
+
+        /* strip params to get ``base'' progID for data source */
+        p = PL_strchr(progID, ';');
+        if (p)
+            *p = '\0';
 
         rv = nsComponentManager::CreateInstance(progID, nsnull,
                                                 nsIRDFDataSource::GetIID(),
