@@ -54,7 +54,6 @@
 
 class nsIRegion;
 class nsIEvent;
-class nsPresContext;
 class nsISupportsArray;
 struct DisplayListElement2;
 struct DisplayZTreeNode;
