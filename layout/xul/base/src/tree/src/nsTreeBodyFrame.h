@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Brian Ryner <bryner@brianryner.com>
  *   Jan Varga <varga@nixcorp.com>

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Ben Goodger <ben@netscape.com>
  *   Joe Hewitt <hewitt@netscape.com>
  *   Jan Varga <varga@nixcorp.com>
