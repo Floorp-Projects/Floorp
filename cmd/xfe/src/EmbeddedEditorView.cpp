@@ -42,9 +42,9 @@ void xfe2_EditorInit(MWContext *context);
 int fe_add_to_all_MWContext_list(MWContext *context);
 int fe_remove_from_all_MWContext_list(MWContext *context);
 void DisplayPixmap(MWContext *context, IL_Pixmap* image,
-							  IL_Pixmap *mask, long int x, long int y,
-							  jint x_offset, jint y_offset, jint width,
-							  jint height);
+							  IL_Pixmap *mask, PRInt32 x, PRInt32 y,
+							  PRInt32 x_offset, PRInt32 y_offset, PRInt32 width,
+							  PRInt32 height);
 void fe_find_scrollbar_sizes(MWContext *context);
 void fe_get_final_context_resources(MWContext *context);
 }
