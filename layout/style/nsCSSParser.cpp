@@ -1541,7 +1541,8 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
   PRUnichar     combinator = PRUnichar(0);
   PRInt32       weight = 0;
   PRBool        havePseudoElement = PR_FALSE;
-  for (;;) {
+  PRBool        done = PR_FALSE;
+  while (!done) {
     nsCSSSelector selector;
     if (! ParseSelector(aErrorCode, selector)) {
       break;
@@ -1607,15 +1608,27 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
     }
 
     combinator = PRUnichar(0);
-    if (GetToken(aErrorCode, PR_TRUE)) {
-      if ((eCSSToken_Symbol == mToken.mType) && 
-          (('+' == mToken.mSymbol) || ('>' == mToken.mSymbol))) {
-        combinator = mToken.mSymbol;
-        list->mSelectors->SetOperator(combinator);
+    if (!GetToken(aErrorCode, PR_FALSE)) {
+      break;
+    }
+
+    // Assume we are done unless we find a combinator here.
+    done = PR_TRUE;
+    if (eCSSToken_WhiteSpace == mToken.mType) {
+      if (!GetToken(aErrorCode, PR_TRUE)) {
+        break;
       }
-      else {
-        UngetToken(); // give it back to selector
-      }
+      done = PR_FALSE;
+    }
+
+    if (eCSSToken_Symbol == mToken.mType && 
+        ('+' == mToken.mSymbol) || ('>' == mToken.mSymbol)) {
+      done = PR_FALSE;
+      combinator = mToken.mSymbol;
+      list->mSelectors->SetOperator(combinator);
+    }
+    else {
+      UngetToken(); // give it back to selector
     }
 
     if (havePseudoElement) {
