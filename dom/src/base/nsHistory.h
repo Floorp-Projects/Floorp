@@ -27,6 +27,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsISHistory.h"
 
 class nsIDocShell;
 
@@ -51,6 +52,8 @@ public:
   NS_IMETHOD    Forward();
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);
   NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn);
+
+  NS_IMETHOD    GetSessionHistoryFromDocShell(nsIDocShell * aDocShell, nsISHistory ** aReturn);
 
 protected:
   nsIDocShell* mDocShell;
