@@ -86,6 +86,7 @@
 #include "nsIXULContent.h"
 #include "nsIXULDocument.h"
 #include "nsXULTreeElement.h"
+#include "nsXULEditorElement.h"
 #include "rdfutil.h"
 #include "prlog.h"
 #include "rdf.h"
@@ -437,6 +438,7 @@ private:
     static nsIAtom*             kTreeColAtom;
     static nsIAtom*             kTreeItemAtom;
     static nsIAtom*             kTreeRowAtom;
+    static nsIAtom*             kEditorAtom;
 
 
     
@@ -511,6 +513,7 @@ nsIAtom*             RDFElementImpl::kTreeChildrenAtom;
 nsIAtom*             RDFElementImpl::kTreeColAtom;
 nsIAtom*             RDFElementImpl::kTreeItemAtom;
 nsIAtom*             RDFElementImpl::kTreeRowAtom;
+nsIAtom*             RDFElementImpl::kEditorAtom;
 
 // This is a simple datastructure that maps an event handler attribute
 // name to an appropriate IID. Atoms are computed to improve
@@ -652,6 +655,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kTreeColAtom        = NS_NewAtom("treecol");
         kTreeItemAtom       = NS_NewAtom("treeitem");
         kTreeRowAtom        = NS_NewAtom("treerow");
+        kEditorAtom         = NS_NewAtom("editor");
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
@@ -744,6 +748,7 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kTreeColAtom);
         NS_IF_RELEASE(kTreeItemAtom);
         NS_IF_RELEASE(kTreeRowAtom);
+        NS_IF_RELEASE(kEditorAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -829,13 +834,24 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(nsIStyleRule::GetIID())) {
         *result = NS_STATIC_CAST(nsIStyleRule*, this);
     }
-    else if ((iid.Equals(nsIDOMXULTreeElement::GetIID()) ||
+    else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
               iid.Equals(nsIXULTreeContent::GetIID())) &&
              (mNameSpaceID == kNameSpaceID_XUL) &&
              (mTag == kTreeAtom)) {
         // We delegate XULTreeElement APIs to an aggregate object
         if (! mInnerXULElement) {
             if ((mInnerXULElement = new nsXULTreeElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return mInnerXULElement->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULEditorElement)) &&
+             (mNameSpaceID == kNameSpaceID_XUL) &&
+             (mTag == kEditorAtom)) {
+        // We delegate XULEditorElement APIs to an aggregate object
+        if (! mInnerXULElement) {
+            if ((mInnerXULElement = new nsXULEditorElement(this)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1655,6 +1671,9 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
 
         if (mTag == kTreeAtom) {
             fn = NS_NewScriptXULTreeElement;
+        }
+        else if (mTag == kEditorAtom) {
+            fn = NS_NewScriptXULEditorElement;
         }
         else {
             fn = NS_NewScriptXULElement;

@@ -2,6 +2,7 @@ nsIDOMXULCommandDispatcher.h
 nsIDOMXULDocument.h
 nsIDOMXULElement.h
 nsIDOMXULTreeElement.h
+nsIDOMXULEditorElement.h
 nsIXULParentDocument.h
 nsIXULChildDocument.h
 nsIXULContentSink.h
