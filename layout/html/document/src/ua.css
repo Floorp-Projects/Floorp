@@ -98,7 +98,6 @@
 
 *|*:-moz-table-cell {
   display: table-cell !important;
-  padding: 1px;
   white-space: inherit;
 }
 
