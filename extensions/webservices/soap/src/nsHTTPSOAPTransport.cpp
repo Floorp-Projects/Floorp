@@ -563,4 +563,4 @@ nsHTTPSSOAPTransport::~nsHTTPSSOAPTransport()
 {
 }
 
-NS_IMPL_ISUPPORTS1_CI(nsHTTPSSOAPTransport, nsISupports)
+NS_IMPL_ISUPPORTS1_CI(nsHTTPSSOAPTransport, nsISOAPTransport)
