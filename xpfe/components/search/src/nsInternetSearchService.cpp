@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,7 +60,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsFileStream.h"
+#include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsICharsetConverterManager.h"
@@ -3270,10 +3270,12 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 #ifdef	DEBUG_SEARCH_OUTPUT
 	printf("InternetSearchDataSource::FindData - reading in '%s'\n", baseFilename);
 #endif
+        nsCOMPtr<nsILocalFile> engineFile;
+        rv = NS_NewNativeLocalFile(nsDependentCString(baseFilename), PR_TRUE, getter_AddRefs(engineFile));
+        if (NS_FAILED(rv)) return rv;
 
-	nsFileSpec	engineSpec(baseFilename);
-	nsString	data;
-	rv = ReadFileContents(engineSpec, data);
+        nsString	data;
+        rv = ReadFileContents(engineFile, data);
 
 	nsCRT::free(baseFilename);
 	baseFilename = nsnull;
@@ -4291,58 +4293,34 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 
 		// check for various icons
 		PRBool		foundIconFlag = PR_FALSE;
-		nsFileSpec	iconSpec;
 		nsAutoString	temp;
 		
-		nsCOMPtr<nsILocalFile> iconFile;
+		nsCOMPtr<nsILocalFile> iconFile, loopFile;
 
-		uri.Left(temp, uri.Length()-4);
-		temp.Append(NS_LITERAL_STRING(".gif"));
-		const	nsFileSpec	gifIconFile(temp);
-		if (gifIconFile.IsFile())
-		{
-			iconSpec = gifIconFile;
-			foundIconFlag = PR_TRUE;
-		}
-    if (!foundIconFlag)
-		{
-			uri.Left(temp, uri.Length()-4);
-			temp.Append(NS_LITERAL_STRING(".jpg"));
-			const	nsFileSpec	jpgIconFile(temp);
-			if (jpgIconFile.IsFile())
-			{
-				iconSpec = jpgIconFile;
-				foundIconFlag = PR_TRUE;
-			}
-		}
-    if (!foundIconFlag)
-		{
-			uri.Left(temp, uri.Length()-4);
-			temp.Append(NS_LITERAL_STRING(".jpeg"));
-			const	nsFileSpec	jpegIconFile(temp);
-			if (jpegIconFile.IsFile())
-			{
-				iconSpec = jpegIconFile;
-				foundIconFlag = PR_TRUE;
-			}
-		}
-    if (!foundIconFlag)
-		{
-			uri.Left(temp, uri.Length()-4);
-			temp.Append(NS_LITERAL_STRING(".png"));
-			const	nsFileSpec	pngIconFile(temp);
-			if (pngIconFile.IsFile())
-			{
-				iconSpec = pngIconFile;
-				foundIconFlag = PR_TRUE;
-			}
-		}
+                static const char *extensions[] = {
+                        ".gif",
+                        ".jpg",
+                        ".jpeg",
+                        ".png",
+                        nsnull,
+                };
+
+                int ext_count = 0;
+                while (extensions[ext_count] != nsnull) {
+                        temp = Substring(uri, 0, uri.Length()-4);
+                        temp.Append(NS_ConvertASCIItoUCS2(extensions[ext_count]));
+                        rv = NS_NewLocalFile(temp, PR_TRUE, getter_AddRefs(loopFile));
+                        if (NS_FAILED(rv)) return rv;
+                        rv = loopFile->IsFile(&foundIconFlag);
+                        if (NS_FAILED(rv)) return rv;
+                        if (foundIconFlag) 
+                        {
+                                iconFile = loopFile;
+                                break;
+                        } 
+                        ext_count++;
+                }
 		
-		if (foundIconFlag)
-		{
-		  NS_NewNativeLocalFile(nsDependentCString((const char *)iconSpec), PR_TRUE, getter_AddRefs(iconFile));
-		}
-
 		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile, checkMacFileType);
 	}
 	
@@ -4352,23 +4330,41 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 
 
 nsresult
-InternetSearchDataSource::ReadFileContents(const nsFileSpec &fileSpec, nsString& sourceContents)
+InternetSearchDataSource::ReadFileContents(nsILocalFile *localFile, nsString& sourceContents)
 {
 	nsresult			rv = NS_ERROR_FAILURE;
-	PRUint32			contentsLen;
+	PRInt64				contentsLen, total = 0;
 	char				*contents;
 
-	sourceContents.Truncate();
+        NS_ENSURE_ARG_POINTER(localFile);
 
-	contentsLen = fileSpec.GetFileSize();
-	if (contentsLen > 0)
-	{
-		contents = new char [contentsLen + 1];
-		if (contents)
-		{
-			nsInputFileStream inputStream(fileSpec);	// defaults to read only
-		       	PRInt32 howMany = inputStream.read(contents, contentsLen);
-		        if (PRUint32(howMany) == contentsLen)
+        sourceContents.Truncate();
+
+        rv = localFile->GetFileSize(&contentsLen);
+        if (NS_FAILED(rv)) return rv;
+        if (contentsLen > 0)
+        {
+                contents = new char [contentsLen + 1];
+                if (contents)
+                {
+                        nsCOMPtr<nsIInputStream> inputStream;
+                        rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), localFile);
+                        if (NS_FAILED(rv)) {
+                        	delete [] contents;
+                        	return rv;
+                        }
+                        PRUint32 howMany;
+                        while (total < contentsLen) {
+                                rv = inputStream->Read(contents+total, 
+                                                       PRUint32(contentsLen),
+                                                       &howMany);
+                                if (NS_FAILED(rv)) {
+                                        delete [] contents;
+                                        return rv;
+                                }
+                                total += howMany;
+                        }
+                        if (total == contentsLen)
 		        {
 				contents[contentsLen] = '\0';
 				sourceContents.AssignWithConversion(contents, contentsLen);
