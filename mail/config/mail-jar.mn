@@ -1,0 +1,151 @@
+# Specify files or whole directories from the chrome that thunderbird
+# needs to include.
+#
+# Format is:
+# 
+# <destination in comm.jar>,<source in unzipped chrome>
+
+#################################################################################################
+# Files we need from messenger.jar
+#################################################################################################
+content/messenger,                                   msg/content/messenger
+content/messenger-mapi,                              msg/content/messenger-mapi
+content/messenger-mdn,                               msg/content/messenger-mdn
+content/mesenger-region,                             msg/content/messenger-region
+content/messenger-smime,                             msg/content/messenger-smime
+content/messenger-views,                             msg/content/messenger-views
+content/messenger/messengercompose,                  msg/content/messenger/messengercompose
+content/messenger/addressbook,			     msg/content/messenger/addressbook
+
+#################################################################################################
+# Files we need from comm.jar
+#################################################################################################
+
+content/editor,				              comm/content/editor
+content/editor-region,				      comm/content/editor-region
+content/communicator-region,                          comm/content/communicator-region,
+content/communicator-platform,                        comm/content/communicator-platform
+content/communicator/contents.rdf, 		      comm/content/communicator/contents.rdf
+content/communicator/communicator.css,                comm/content/communicator/communicator.css
+content/communicator/communicatorOverlay.xul,         comm/content/communicator/communicatorOverlay.xul 
+content/communicator/utilityOverlay.xul,              comm/content/communicator/utilityOverlay.xul 
+content/communicator/utilityOverlay.js,               comm/content/communicator/utilityOverlay.js 
+content/communicator/tasksOverlay.js,                 comm/content/communicator/tasksOverlay.js 
+content/communicator/tasksOverlay.xul,                comm/content/communicator/tasksOverlay.xul 
+content/communicator/browserBindings.xul,             comm/content/communicator/browserBindings.xul 
+content/communicator/editorBindings.xul,              comm/content/communicator/editorBindings.xul 
+content/communicator/platformBrowserBindings.xul,     comm/content/communicator/platformBrowserBindings.xul 
+content/communicator/platformEditorBindings.xul,      comm/content/communicator/platformEditorBindings.xul 
+content/communicator/platformCommunicatorOverlay.xul, comm/content/communicator/platformCommunicatorOverlay.xul 
+content/communicator/contentAreaUtils.js,             comm/content/communicator/contentAreaUtils.js 
+content/communicator/contentAreaDD.js,                comm/content/communicator/contentAreaDD.js 
+content/communicator/contentAreaClick.js,             comm/content/communicator/contentAreaClick.js 
+content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/contentAreaContextOverlay.xul 
+content/communicator/nsContextMenu.js,                comm/content/communicator/nsContextMenu.js
+content/communicator/viewZoomOverlay.xul,             comm/content/communicator/viewZoomOverlay.xul
+content/communicator/viewZoomOverlay.js,              comm/content/communicator/viewZoomOverlay.js
+content/communicator/findUtils.js,                    comm/content/communicator/findUtils.js
+content/communicator/printPageSetup.js,               comm/content/communicator/printPageSetup.js
+content/communicator/printPageSetup.xul,              comm/content/communicator/printPageSetup.xul
+content/communicator/printPreviewBindings.xml,        comm/content/communicator/printPreviewBindings.xml
+content/communicator/printing.js,                     comm/content/communicator/printing.js
+
+# from xpfe\components jar.mn
+content/communicator/alerts,                          comm/content/communicator/alerts
+content/communicator/pref/pref-advanced.xul,          comm/content/communicator/pref/pref-advanced.xul
+content/communicator/pref/pref-appearance.xul,        comm/content/communicator/pref/pref-appearance.xul
+content/communicator/pref/overrideHandler.js,         comm/content/communicator/pref/overrideHandler.js
+content/communicator/pref/pref-colors.js,             comm/content/communicator/pref/pref-colors.js
+content/communicator/pref/pref-colors.xul,            comm/content/communicator/pref/pref-colors.xul
+content/communicator/pref/pref-help.js,               comm/content/communicator/pref/pref-help.js
+content/communicator/pref/pref-themes.xul,            comm/content/communicator/pref/pref-themes.xul
+content/communicator/pref/pref-themes.js,             comm/content/communicator/pref/pref-themes.js
+content/communicator/pref/pref-charset.js,            comm/content/communicator/pref/pref-charset.js
+content/communicator/pref/pref-charset.xul,           comm/content/communicator/pref/pref-charset.xul
+content/communicator/pref/pref-fonts.js,              comm/content/communicator/pref/pref-fonts.js
+content/communicator/pref/pref-fonts.xul,             comm/content/communicator/pref/pref-fonts.xul
+content/communicator/pref/pref-languages.xul,         comm/content/communicator/pref/pref-languages.xul
+content/communicator/pref/pref-languages-add.xul,     comm/content/communicator/pref/pref-languages-add.xul
+content/communicator/pref/pref-languages.js,          comm/content/communicator/pref/pref-languages.js
+content/communicator/pref/pref-proxies.js,            comm/content/communicator/pref/pref-proxies.js
+content/communicator/pref/pref-policies.xul,          comm/content/communicator/pref/pref-policies.xul
+content/communicator/pref/pref-proxies.xul,           comm/content/communicator/pref/pref-proxies.xul
+content/communicator/pref/pref.xul,                   comm/content/communicator/pref//pref.xul
+content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
+content/communicator/downloadmanager, 		      comm/content/communicator/downloadmanager
+
+# from profile
+content/communicator/profile,                         comm/content/communicator/profile
+
+# from layout
+content/xbl-marquee,    			      comm/content/xbl-marquee
+content/necko, 				              comm/content/necko
+content/mozldap,  				      comm/content/mozldap
+
+# from navigator
+content/navigator-region,			      comm/content/navigator-region
+
+#################################################################################################
+# Files we need from global.jar
+#################################################################################################
+content/global-region,                                toolkit/content/global-region
+content/global-platform,                              toolkit/content/global-platform
+content/global/bindings,                              toolkit/content/global/bindings
+content/global/platformDialogOverlay.xul,             toolkit/content/global/platformDialogOverlay.xul
+content/global/platformXUL.css,                       toolkit/content/global/platformXUL.css
+content/global/contents.rdf,                          toolkit/content/global/contents.rdf
+content/global/hiddenWindow.xul,                      toolkit/content/global/hiddenWindow.xul 
+content/global/globalOverlay.xul,                     toolkit/content/global/globalOverlay.xul 
+content/global/globalOverlay.js,                      toolkit/content/global/globalOverlay.js 
+content/global/dialogOverlay.xul,                     toolkit/content/global/dialogOverlay.xul 
+content/global/dialogOverlay.js,                      toolkit/content/global/dialogOverlay.js 
+content/global/commonDialog.xul,                      toolkit/content/global/commonDialog.xul 
+content/global/commonDialog.js,                       toolkit/content/global/commonDialog.js 
+content/global/strres.js,                             toolkit/content/global/strres.js 
+content/global/charsetOverlay.xul,                    toolkit/content/global/charsetOverlay.xul 
+content/global/charsetOverlay.js,                     toolkit/content/global/charsetOverlay.js 
+content/global/selectDialog.js,                       toolkit/content/global/selectDialog.js 
+content/global/selectDialog.xul,                      toolkit/content/global/selectDialog.xul 
+content/global/nsWidgetStateManager.js,               toolkit/content/global/nsWidgetStateManager.js 
+content/global/widgetStateManager.js,                 toolkit/content/global/widgetStateManager.js 
+content/global/wizardHandlerSet.js,                   toolkit/content/global/wizardHandlerSet.js 
+content/global/wizardManager.js,                      toolkit/content/global/wizardManager.js 
+content/global/wizardOverlay.js,                      toolkit/content/global/wizardOverlay.js 
+content/global/wizardOverlay.xul,                     toolkit/content/global/wizardOverlay.xul 
+content/global/nsTreeController.js,                   toolkit/content/global/nsTreeController.js 
+content/global/nsTreeSorting.js,                      toolkit/content/global/nsTreeSorting.js 
+content/global/nsClipboard.js,                        toolkit/content/global/nsClipboard.js 
+content/global/nsDragAndDrop.js,                      toolkit/content/global/nsDragAndDrop.js 
+content/global/nsTransferable.js,                     toolkit/content/global/nsTransferable.js 
+content/global/nsUserSettings.js,                     toolkit/content/global/nsUserSettings.js 
+content/global/xul.css,                               toolkit/content/global/xul.css 
+content/global/printdialog.xul,                       toolkit/content/global/printdialog.xul
+content/global/printdialog.js,                        toolkit/content/global/printdialog.js
+content/global/printProgress.xul,                     toolkit/content/global/printProgress.xul
+content/global/printProgress.js,                      toolkit/content/global/printProgress.js
+content/global/printPreviewProgress.xul,              toolkit/content/global/printPreviewProgress.xul
+content/global/printPreviewProgress.js,               toolkit/content/global/printPreviewProgress.js
+content/global/MPL-1.1.html,                          toolkit/content/global/MPL-1.1.html
+content/global/NPL-1.1.html,                          toolkit/content/global/NPL-1.1.html
+content/global/customizeToolbar.xul,                  toolkit/content/global/customizeToolbar.xul
+content/global/customizeToolbar.js,                   toolkit/content/global/customizeToolbar.js
+content/global/customizeToolbar.css,                  toolkit/content/global/customizeToolbar.css
+
+# from xpfe\components
+content/global/console.js,                            toolkit/content/global/console.js
+content/global/console.xul,                           toolkit/content/global/console.xul
+content/global/console.css,                           toolkit/content/global/console.css
+content/global/consoleBindings.xml,                   toolkit/content/global/consoleBindings.xml
+content/global/finddialog.js,                         toolkit/content/global/finddialog.js
+content/global/finddialog.xul,                        toolkit/content/global/finddialog.xul
+content/global/autocomplete.xml,                      toolkit/content/global/autocomplete.xml
+content/global/autocomplete.css,                      toolkit/content/global/autocomplete.css
+content/global/filepicker.js,			      toolkit/content/global/filepicker.js
+content/global/filepicker.xul,		              toolkit/content/global/filepicker.xul
+
+# embedding\components\ui
+content/global/nsHelperAppDlg.xul,                    toolkit/content/global/nsHelperAppDlg.xul
+content/global/nsProgressDlg.xul,                     toolkit/content/global/nsProgressDlg.xul
+content/global/nsProgressDialog.xul,                  toolkit/content/global/nsProgressDialog.xul
+content/global/nsProgressDlg.js,                      toolkit/content/global/nsProgressDlg.js
+
