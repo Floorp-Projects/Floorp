@@ -44,6 +44,36 @@ PRIntn  stressIterations = 15;
 PRIntn  maxAlloc = (1024 * 1024);
 PRIntn  stressThreads = 4;
 
+void DumpAll( void )
+{
+	return;
+}
+
+/*
+** Test Arena grow.
+*/
+static void ArenaGrow( void )
+{
+    PLArenaPool ap;
+    void    *ptr;
+	PRInt32	i;
+
+    PL_InitArenaPool( &ap, "TheArena", 4096, sizeof(double));
+    PL_ARENA_ALLOCATE( ptr, &ap, 512 );
+
+	PR_LOG( tLM, PR_LOG_DEBUG, ("Before growth -- Pool: %p. alloc: %p ", &ap, ptr ));
+
+	for( i = 0; i < 10; i++ )
+	{
+		PL_ARENA_GROW( ptr, &ap, 512, 7000 );
+		PR_LOG( tLM, PR_LOG_DEBUG, ("After growth -- Pool: %p. alloc: %p ", &ap, ptr ));
+	}
+
+
+    return;
+} /* end ArenaGrow() */
+
+
 /*
 ** Test arena Mark and Release.
 */
@@ -254,6 +284,10 @@ PRIntn main(PRIntn argc, char *argv[])
 
     srand( (unsigned)time( NULL ) ); /* seed random number generator */
     tLM = PR_NewLogModule("testcase");
+
+
+
+	ArenaGrow();
 
     MarkAndRelease();
 
