@@ -321,6 +321,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpfe:communicator:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:communicator:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:components:bookmarks:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:resources:content:mac:jar.mn", $chrome_dir, \%jars);
