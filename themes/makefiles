@@ -8,7 +8,6 @@ themes/modern/communicator/regviewer/Makefile
 themes/modern/communicator/related/Makefile
 themes/modern/communicator/search/Makefile
 themes/modern/communicator/sidebar/Makefile
-themes/modern/communicator/wallet/Makefile
 themes/modern/communicator/xpinstall/Makefile
 themes/modern/editor/Makefile
 themes/modern/editor/images/Makefile
@@ -27,7 +26,6 @@ themes/classic/communicator/related/Makefile
 themes/classic/communicator/search/Makefile
 themes/classic/communicator/sidebar/Makefile
 themes/classic/communicator/sidebar/unix/Makefile
-themes/classic/communicator/wallet/Makefile
 themes/classic/communicator/xpinstall/Makefile
 themes/classic/Makefile
 themes/classic/editor/images/Makefile
