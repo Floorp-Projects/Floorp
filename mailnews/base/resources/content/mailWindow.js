@@ -54,7 +54,7 @@ var folderDataSource;
 var messageDataSource;
 
 //Progress and Status variables
-var gStatusObserver;
+var gStatusText;
 var bindCount = 0;
 var gThrobberObserver;
 var gMeterObserver;
@@ -211,32 +211,34 @@ nsMsgStatusFeedback.prototype =
 		},
 	ShowStatusString : function(statusText)
 		{
+       if (!gStatusText )
+        gStatusText = document.getElementById("statusText");
        if ( statusText == "" )
-           statusText = defaultStatus;
-       var statusTextNode = document.getElementById("statusText");
-        if ( statusTextNode ) 
-            statusTextNode.setAttribute( "value", statusText );
+          statusText = defaultStatus;
+       gStatusText.value = statusText;
+            // .setAttribute( "value", statusText );
 		},
 	StartMeteors : function()
 		{
-    var progressNode = document.getElementById('Messenger:Throbber');
-    if (progressNode)
-      progressNode.setAttribute("busy", "true");
+      if (!gThrobberObserver)
+        gThrobberObserver = document.getElementById("Messenger:Throbber");
+      gThrobberObserver.setAttribute("busy", "true");
       onProgress();
 		},
 	StopMeteors : function()
 		{
-      var progressNode = document.getElementById('Messenger:Throbber');
-      if (progressNode)
-        progressNode.setAttribute("busy", "false");
+      if (!gThrobberObserver)
+        gThrobberObserver = document.getElementById("Messenger:Throbber");
+      gThrobberObserver.setAttribute("busy", "false");
       onProgress();
 		},
 	ShowProgress : function(percentage)
 		{
-      var progressNode = document.getElementById('Messenger:LoadingProgress');
+      if (!gMeterObserver)
+        gMeterObserver = document.getElementById("Messenger:LoadingProgress");
       if (percentage >= 0)
-        progressNode.setAttribute("mode", "normal");
-      progressNode.setAttribute("value", percentage);
+        gMeterObserver.setAttribute("mode", "normal");
+      gMeterObserver.setAttribute("value", percentage);
 		},
 	CloseWindow : function(percent)
 		{
