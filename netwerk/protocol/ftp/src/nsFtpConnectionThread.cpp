@@ -461,7 +461,7 @@ nsFtpConnectionThread::Run() {
             case FTP_R_PWD:
                 {
                 // fun response interpretation begins :)
-                PRInt32 start = mResponseMsg.Find('"', PR_FALSE, 5);
+                PRInt32 start = mResponseMsg.Find('"', 5, PR_FALSE);
                 nsString2 lNewMsg;
                 if (start > -1) {
                     mResponseMsg.Left(lNewMsg, start);
@@ -492,7 +492,7 @@ nsFtpConnectionThread::Run() {
 
                 if (mUseDefaultPath && mServerType != FTP_VMS_TYPE) {
                     // we want to use the default path specified by the PWD command.
-                    PRInt32 start = lNewMsg.Find('"', PR_FALSE, 1);
+                    PRInt32 start = lNewMsg.Find('"', 1, PR_FALSE);
                     nsString2 path, ptr;
                     lNewMsg.Right(path, start);
 
