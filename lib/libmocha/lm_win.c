@@ -3264,6 +3264,7 @@ lm_DefineWindowProps(JSContext *cx, MochaDecoder *decoder)
 
     obj = decoder->window_object;
     return (JSBool)(JS_DefineFunctions(cx, obj, lm_window_methods) &&
+           lm_InitSecurity(decoder) &&
            lm_InitEventClasses(decoder) &&
            lm_InitDocumentClass(decoder) &&
            lm_DefineDocument(decoder, LO_DOCUMENT_LAYER_ID) &&

@@ -508,6 +508,9 @@ lm_RegisterComponentMethod(const char *comp, const char *targetName,
  * Class initializers (the wave of the future).
  */
 extern JSBool
+lm_InitSecurity(MochaDecoder *decoder);
+
+extern JSBool
 lm_InitDocumentClass(MochaDecoder *decoder);
 
 extern JSBool
@@ -663,6 +666,9 @@ lm_CheckPermissions(JSContext *cx, JSObject *obj, JSTarget target);
 
 extern JSBool
 lm_GetCrossOriginEnabled(void);
+
+extern JSBool
+lm_GetUnsignedExecutionEnabled(void);
 
 extern JSBool
 lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,

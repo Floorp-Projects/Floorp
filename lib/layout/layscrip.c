@@ -457,11 +457,8 @@ static void
 lo_script_archive_exit_fn(URL_Struct *url_struct, int status, MWContext *context)
 {
     ScriptData *data = NULL;
-#ifdef JAVA
-	/* Vars only used in JAVA context */
     char *name;
     JSPrincipals *principals;
-#endif
     ETEvalStuff * stuff;
 
     data = (ScriptData *) url_struct->fe_data;
@@ -475,16 +472,6 @@ lo_script_archive_exit_fn(URL_Struct *url_struct, int status, MWContext *context
     stuff->version = data->version;
     stuff->data = context;
 
-#ifndef JAVA
-    /* No Java; execute without principals. */
-    if (data->buffer) {
-	stuff->principals = NULL;
-        ET_EvaluateScript(context, data->buffer, stuff, lo_ScriptEvalExitFn);
-    }
-    else {
-	XP_FREE(stuff);
-    }
-#else
     name = data->archiveSrc ? data->archiveSrc : data->id;
     principals = LM_NewJSPrincipals(url_struct, name, data->codebase);
     if (principals != NULL) {
@@ -538,14 +525,9 @@ lo_script_archive_exit_fn(URL_Struct *url_struct, int status, MWContext *context
 	XP_FREE(stuff);
     }
 	 
-#endif /* ifdef JAVA */
-
     lo_DestroyScriptData(data);
 
-#ifdef JAVA	/* Label only used in this context */
 out:
-#endif
-
     /* Always free (or drop a ref on) the url_struct before returning. */
     NET_FreeURLStruct(url_struct);
 }    

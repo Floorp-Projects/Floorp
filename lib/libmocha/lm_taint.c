@@ -56,6 +56,10 @@ static char access_error_message[] =
 static char container_error_message[] =
     "script at '%s' is not signed by sufficient principals to access "
     "signed container";
+static char enablePrivilegeStr[] =      "enablePrivilege";
+static char isPrivilegeEnabledStr[] =   "isPrivilegeEnabled";
+static char disablePrivilegeStr[] =     "disablePrivilege";
+static char revertPrivilegeStr[] =      "revertPrivilege";
 
 #define FILE_URL_PREFIX_LEN     (sizeof file_url_prefix - 1)
 #define WYSIWYG_TYPE_LEN        10      /* wysiwyg:// */
@@ -65,6 +69,145 @@ PRBool lm_console_is_ready = PR_FALSE;
 
 static void lm_PrintToConsole(const char *data);
 static void setupJSCapsCallbacks();
+
+/* XXX what about the PREXTERN? */
+typedef PRBool
+(*nsCapsFn)(void* context, struct nsTarget *target, PRInt32 callerDepth);
+
+static JSBool
+callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
+             jsval *rval, nsCapsFn fn, char *name)
+{
+    JSString *str;
+    char *cstr;
+    struct nsTarget *target;
+
+    if (argc == 0 || !JSVAL_IS_STRING(argv[0])) {
+        JS_ReportError(cx, "String argument expected for %s.", name);
+        return JS_FALSE;
+    }
+    /* 
+     * We don't want to use JS_ValueToString because we want to be able
+     * to have an object to represent a target in subsequent versions.
+     * XXX but then use of an object will cause errors here....
+     */
+    str = JSVAL_TO_STRING(argv[0]);
+    if (!str)
+        return JS_FALSE;
+
+    cstr = JS_GetStringBytes(str);
+    if (cstr == NULL)
+        return JS_FALSE;
+
+    target = nsCapsFindTarget(cstr);
+    if (target == NULL)
+        return JS_FALSE;
+    /* stack depth of 1: first frame is for the native function called */
+    if (!(*fn)(cx, target, 1)) {
+        // XXX report error, later, throw exception
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+
+JSBool
+lm_netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc, 
+                                        jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsIsPrivilegeEnabled,
+                        isPrivilegeEnabledStr);
+}
+
+JSBool
+lm_netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc, 
+                                     jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsEnablePrivilege,
+                        enablePrivilegeStr);
+}
+
+JSBool
+lm_netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc, 
+                                      jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsDisablePrivilege,
+                        disablePrivilegeStr);
+}
+
+JSBool
+lm_netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc, 
+                                     jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsRevertPrivilege,
+                        revertPrivilegeStr);
+}
+
+static JSFunctionSpec PrivilegeManager_static_methods[] = {
+    { isPrivilegeEnabledStr, lm_netscape_security_isPrivilegeEnabled,   1},
+    { enablePrivilegeStr,    lm_netscape_security_enablePrivilege,	1},
+    { disablePrivilegeStr,   lm_netscape_security_disablePrivilege,	1},
+    { revertPrivilegeStr,    lm_netscape_security_revertPrivilege,	1},
+    {0}
+};
+
+JSBool
+lm_InitSecurity(MochaDecoder *decoder)
+{
+    JSContext  *cx;
+    JSObject   *obj;
+    JSObject   *proto;
+    JSClass    *objectClass;
+    jsval      v;
+    JSObject   *securityObj;
+
+    /* 
+     * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege, 
+     * et. al. so that code that worked with 4.0 can still work.
+     */
+
+    /* 
+     * Find Object.prototype's class by walking up the window object's 
+     * prototype chain.
+     */
+    cx = decoder->js_context;
+    obj = decoder->window_object;
+    while (proto = JS_GetPrototype(cx, obj))
+        obj = proto;
+    objectClass = JS_GetClass(obj);
+
+    if (!JS_GetProperty(cx, decoder->window_object, "netscape", &v))
+        return JS_FALSE;
+    if (JSVAL_IS_OBJECT(v)) {
+        /* 
+         * "netscape" property of window object exists; must be LiveConnect
+         * package. Get the "security" property.
+         */
+        obj = JSVAL_TO_OBJECT(v);
+        if (!JS_GetProperty(cx, obj, "security", &v) || !JSVAL_IS_OBJECT(v))
+            return JS_FALSE;
+        securityObj = JSVAL_TO_OBJECT(v);
+    } else {
+        /* define netscape.security object */
+        obj = JS_DefineObject(cx, decoder->window_object, "netscape", 
+                              objectClass, NULL, 0);
+        if (obj == NULL)
+            return JS_FALSE;
+        securityObj = JS_DefineObject(cx, obj, "security", objectClass, 
+                                      NULL, 0);
+        if (securityObj == NULL)
+            return JS_FALSE;
+    }
+
+    /* Define PrivilegeManager object with the necessary "static" methods. */
+    obj = JS_DefineObject(cx, securityObj, "PrivilegeManager", objectClass, 
+                          NULL, 0);
+    if (obj == NULL)
+        return JS_FALSE;
+
+    return JS_DefineFunctions(cx, obj, PrivilegeManager_static_methods);
+}
+
 
 static void
 lm_PrintToConsole(const char *data) 
@@ -470,9 +613,11 @@ lm_GetSubjectOriginURL(JSContext *cx)
     JSPrincipals *principals;
     JSStackFrame *fp;
     JSScript *script;
+    MochaDecoder *running;
+#ifdef JAVA
     JRIEnv *env;
     char *str;
-    MochaDecoder *running;
+#endif
 
     fp = NULL;
     while ((fp = JS_FrameIterator(cx, &fp)) != NULL) {
@@ -1753,6 +1898,10 @@ LM_RegisterPrincipals(MochaDecoder *decoder, JSPrincipals *principals,
     }
 
     if (!verified) {
+        if (!lm_GetUnsignedExecutionEnabled()) {
+            /* Execution of unsigned scripts disabled. Return now. */
+            return NULL;
+        }
         /* No cert principals; try codebase principal */
         if (principals == NULL || principals == containerPrincipals) {
             if (container == inner ||
@@ -1863,7 +2012,6 @@ static JSFrameIterator *
 lm_NewJSFrameIterator(void *context) 
 {
     JSContext *cx = (JSContext *)context;
-    char *errorString;
     JSFrameIterator *result;
     void *array;
     JRIEnv *env = NULL;
@@ -1949,7 +2097,6 @@ struct NSJSJavaFrameWrapper *
 lm_NewNSJSJavaFrameWrapperCB(void *context) 
 {
     struct NSJSJavaFrameWrapper *result;
-    JRIEnv *env;
 
     result = (struct NSJSJavaFrameWrapper *)PR_CALLOC(sizeof(struct NSJSJavaFrameWrapper));
     if (result == NULL) {
@@ -2048,6 +2195,7 @@ setupJSCapsCallbacks()
     if (privManagerInited) return;
     privManagerInited = TRUE;
 
+    nsCapsInitialize();
     setNewNSJSJavaFrameWrapperCallback(lm_NewNSJSJavaFrameWrapperCB);
     setFreeNSJSJavaFrameWrapperCallback(lm_FreeNSJSJavaFrameWrapperCB);
     setGetStartFrameCallback(lm_GetStartFrameCB);

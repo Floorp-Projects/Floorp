@@ -576,6 +576,7 @@ static XP_Bool lm_enabled = TRUE;
 static XP_Bool lm_enabledMailNews = TRUE;
 static XP_Bool lm_enabledSigning = TRUE;
 static XP_Bool lm_enabledCrossOrigin = TRUE;
+static XP_Bool lm_enabledUnsignedExecution = TRUE;
 
 /*
  * Is this window enbled to do JS?
@@ -639,10 +640,21 @@ lm_GetCrossOriginEnabled()
     return (JSBool) lm_enabledCrossOrigin;
 }
 
+/*
+ * Is execution of unsigned scripts enabled?
+ */
+JSBool
+lm_GetUnsignedExecutionEnabled()
+{
+    return (JSBool) lm_enabledUnsignedExecution;
+}
+
 static char lm_jsEnabled[] = "javascript.enabled";
 static char lm_jsEnabledMN[] = "javascript.allow.mailnews";
 static char lm_jsEnabledSigning[] = "javascript.allow.signing";
 static char lm_jsEnabledCrossOrigin[] = "javascript.allow.crossOrigin";
+static char lm_jsEnabledUnsignedExecution[] = 
+                "javascript.allow.unsignedExecution";
 
 PR_STATIC_CALLBACK(int)
 lm_PrefChangedFunc(const char *pref, void *data)
@@ -651,6 +663,8 @@ lm_PrefChangedFunc(const char *pref, void *data)
     PREF_GetBoolPref(lm_jsEnabledMN, &lm_enabledMailNews);
     PREF_GetBoolPref(lm_jsEnabledSigning, &lm_enabledSigning);
     PREF_GetBoolPref(lm_jsEnabledCrossOrigin, &lm_enabledCrossOrigin);
+    PREF_GetBoolPref(lm_jsEnabledUnsignedExecution, 
+                     &lm_enabledUnsignedExecution);
 
     /*
      * If we started up w/ JS turned off we will have not bothered
@@ -672,11 +686,13 @@ lm_ReallyInitMocha(void)
 {
     int priority;
 
-    /* register callback incase pref changes while we're running */
+    /* register callback in case pref changes while we're running */
     PREF_RegisterCallback(lm_jsEnabled, lm_PrefChangedFunc, NULL);
     PREF_RegisterCallback(lm_jsEnabledMN, lm_PrefChangedFunc, NULL);
     PREF_RegisterCallback(lm_jsEnabledSigning, lm_PrefChangedFunc, NULL);
     PREF_RegisterCallback(lm_jsEnabledCrossOrigin, lm_PrefChangedFunc, NULL);
+    PREF_RegisterCallback(lm_jsEnabledUnsignedExecution, lm_PrefChangedFunc, 
+                          NULL);
 
     if ( mochaInited ) {
         return;
@@ -798,12 +814,16 @@ LM_InitMocha(void)
     PREF_RegisterCallback(lm_jsEnabledMN, lm_PrefChangedFunc, NULL);
     PREF_RegisterCallback(lm_jsEnabledSigning, lm_PrefChangedFunc, NULL);
     PREF_RegisterCallback(lm_jsEnabledCrossOrigin, lm_PrefChangedFunc, NULL);
+    PREF_RegisterCallback(lm_jsEnabledUnsignedExecution, lm_PrefChangedFunc, 
+                          NULL);
 
     /* get our enabled-ness states */
     PREF_GetBoolPref(lm_jsEnabled, &lm_enabled);
     PREF_GetBoolPref(lm_jsEnabledMN, &lm_enabledMailNews);
     PREF_GetBoolPref(lm_jsEnabledSigning, &lm_enabledSigning);
     PREF_GetBoolPref(lm_jsEnabledCrossOrigin, &lm_enabledCrossOrigin);
+    PREF_GetBoolPref(lm_jsEnabledUnsignedExecution, 
+                     &lm_enabledUnsignedExecution);
 
     /* set up the initial queue stack pointers */
     if (!et_TopQueue) {
