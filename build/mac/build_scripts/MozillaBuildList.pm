@@ -345,6 +345,7 @@ sub ProcessJarManifests()
       CreateJarFromManifest(":mozilla:extensions:venkman:resources:jar.mn", $chrome_dir, \%jars);
     }
     
+    CreateJarFromManifest(":mozilla:accessible:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:docshell:base:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:editor:jar.mn", $chrome_dir, \%jars);
