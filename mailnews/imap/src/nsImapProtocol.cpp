@@ -7198,6 +7198,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
   nsresult rv = NS_OK;
   
   PRInt32 port;
+  if (!m_url)
+    return NS_ERROR_NULL_POINTER;
   rv = m_url->GetPort(&port);
   if (NS_FAILED(rv))
       return rv;
