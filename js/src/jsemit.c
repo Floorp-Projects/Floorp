@@ -2464,15 +2464,13 @@ GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
 uintN
 js_SrcNoteLength(jssrcnote *sn)
 {
-    intN arity;
+    uintN arity;
     jssrcnote *base;
 
     arity = (intN)js_SrcNoteArity[SN_TYPE(sn)];
-    if (!arity)
-	return 1;
-    for (base = sn++; --arity >= 0; sn++) {
+    for (base = sn++; arity--; sn++) {
 	if (*sn & SN_3BYTE_OFFSET_FLAG)
-	    sn +=2;
+	    sn += 2;
     }
     return sn - base;
 }
