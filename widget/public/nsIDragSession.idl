@@ -23,7 +23,6 @@
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 #include "nsITransferable.idl"
-#include "nsIDragTracker.idl"
 
 
 %{ C++

@@ -52,7 +52,6 @@
   { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } };
 
 class nsIMenu;
-class nsIPopUpMenu;
 class nsIWidget;
 class nsIMenuListener;
 class nsIChangeManager;
