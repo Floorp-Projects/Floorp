@@ -94,7 +94,7 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
 # list.  Thus we have to make sure this bug ID is also valid,
 # since a malicious cracker might alter their cookies for the purpose
 # gaining access to bugs they are not authorized to access.
-if ( $::COOKIE{"BUGLIST"} ne "" && defined $::FORM{'id'} ) {
+if ( defined $::COOKIE{"BUGLIST"} && defined $::FORM{'id'} ) {
     my @buglist = split( /:/ , $::COOKIE{"BUGLIST"} );
     my $idx = lsearch( \@buglist , $::FORM{"id"} );
     if ($idx < $#buglist) {
