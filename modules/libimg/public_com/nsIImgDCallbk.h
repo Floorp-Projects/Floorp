@@ -28,6 +28,8 @@ class nsIImgDCallbk : public nsISupports
 {
 public:
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMGDCALLBK_IID)
+
   NS_IMETHOD ImgDCBFlushImage()=0;
   NS_IMETHOD ImgDCBImageSize()=0;
   NS_IMETHOD ImgDCBResetPalette()=0;

@@ -33,6 +33,7 @@
 class nsIImgDecoder : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMGDECODER_IID)
 
 	NS_IMETHOD ImgDInit()=0;
 
