@@ -67,7 +67,6 @@ PRBool nsAppShell::mPtInited = PR_FALSE;
 //
 //-------------------------------------------------------------------------
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
 //-------------------------------------------------------------------------
 //
