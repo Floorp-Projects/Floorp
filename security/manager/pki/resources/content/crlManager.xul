@@ -37,18 +37,16 @@
 <window id="crlviewer"
         class="dialog"
         title="&validation.crlmanager.label;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
-        orient="vertical"
         onload="onLoad();">
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/crlManager.js"/>
 
-  <text class="label" value="&validation.crlmanager.label;"/>
+  <description value="&validation.crlmanager.label;"/>
   <separator class="thin"/>
-  <tree id="crltree" class="inset" style="height: 10em;"
+  <tree id="crltree" style="height: 10em;"
    multiple="false" onclick="EnableCrlActions()" flex="1">
     <treecolgroup>
       <treecol flex="3" width="0"/>
@@ -74,7 +72,7 @@
     <treechildren id="crlList" flex="1"/>
   </tree>
   <hbox>
-    <button id="deleteCrl" class="dialog push" disabled="true"
+    <button id="deleteCrl" disabled="true"
             label="&validation.deletecrl.label;"
             oncommand="DeleteCrlSelected();"/>
   </hbox>

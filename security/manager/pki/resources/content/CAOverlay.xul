@@ -27,13 +27,12 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="CAOverlay" 
-         xmlns:html="http://www.w3.org/1999/xhtml" 
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="CACerts">
-    <html>&certmgr.cas;</html>
+    <description>&certmgr.cas;</description>
     <separator class="thin"/>
     <outliner id="ca-outliner" multiple="true" enableColumnDrag="true"
               onselect="ca_enableButtons()" flex="1">
@@ -48,18 +47,18 @@
       <outlinerbody flex="1" ondblclick="viewCerts();"/>
     </outliner>
     <hbox>
-      <button id="ca_viewButton" class="normal" 
+      <button id="ca_viewButton"
               label="&certmgr.view.label;"
               disabled="true" oncommand="viewCerts();"/>
-      <button id="ca_editButton" class="normal" 
+      <button id="ca_editButton"
               label="&certmgr.edit.label;"
               disabled="true" oncommand="editCerts();"/>
 <!-- future - import a DER cert?
-      <button id="ca_addButton" class="normal" 
+      <button id="ca_addButton"
               label="&certmgr.add.label;"
               oncommand="addCerts();"/>
 -->
-      <button id="ca_deleteButton" class="normal" 
+      <button id="ca_deleteButton"
               label="&certmgr.delete.label;"
               disabled="true" oncommand="deleteCerts();"/>
     </hbox>

@@ -39,24 +39,22 @@
   <script type="application/x-javascript" src="chrome://pippki/content/device_manager.js"/>
 
   <vbox>
-    <html>&loaddevice.info;</html>
+    <description>&loaddevice.info;</description>
     <hbox>
-      <html>&loaddevice.modname;</html>
+      <label value="&loaddevice.modname;"/>
       <textbox id="device_name" flex="1" value="&loaddevice.modname.default;"/>
     </hbox>
     <hbox>
-      <html>&loaddevice.filename;</html>
+      <label value="&loaddevice.filename;"/>
       <textbox id="device_path" flex="1"/>
       <button label="&loaddevice.browse;" flex="1" oncommand="doBrowseFiles();"/>
     </hbox>
     <hbox>
       <button id="ok_button"
               label="&ok.label;" 
-              class="normal" 
               oncommand="doLoadDevice();"/> 
       <button id="cancel_button" 
               label="&cancel.label;" 
-              class="normal" 
               oncommand="window.close();"/> 
     </hbox>
   </vbox>

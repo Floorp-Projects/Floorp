@@ -25,9 +25,7 @@
 
 <window
   id="serverCrlNextupdate"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   style="width: 30em; height: 16em"
   onload="onLoad();"
 >
@@ -43,16 +41,16 @@
 
 <vbox style="margin: 5px;" flex="100%">
 
-  <html id="message1" flex="100%"/>
+  <description id="message1" flex="100%"/>
   <separator/>
-  <html id="message2" flex="100%"/>
+  <description id="message2" flex="100%"/>
   <separator/>
-  <text value="&serverCrlNextupdate.message;" flex="100%"/>
+  <label value="&serverCrlNextupdate.message;" flex="100%"/>
   <separator/>
   <hbox>
-  <button id="ok-button" class="dialog" label="&ok.label;" primary="true"
-     onclick="doOK();" /> 
-  <button id="help-button" class="dialog" label="&help.label;"
+  <button id="ok-button" label="&ok.label;"
+     oncommand="doOK();" /> 
+  <button id="help-button" label="&help.label;"
     oncommand="openHelp('chrome://help/content/help.xul?exp_crl');" /> 
   </hbox>
 </vbox>

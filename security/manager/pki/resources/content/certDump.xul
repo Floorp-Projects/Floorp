@@ -26,13 +26,12 @@
 <!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="certDumpOverlay" 
-         xmlns:html="http://www.w3.org/1999/xhtml" 
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <vbox class="box-padded" id="certPrettyPrint" flex="1">
-  <text class="header" value="&certmgr.hierarchy.label;"/>
-  <tree class="inset" id="treesetDump" rows="4"
+  <label class="header" value="&certmgr.hierarchy.label;"/>
+  <tree id="treesetDump" rows="4"
         onselect="updateCertDump();">
     <treecolgroup>
       <treecol flex="1"/>
@@ -45,7 +44,7 @@
     <splitter/>
     <outlinerbody flex="1" onselect="displaySelected();"/>
   </outliner>
-  <text class="header" value="&certmgr.fields.label;"/>
+  <label class="header" value="&certmgr.fields.label;"/>
   <textbox class="inset" id="certDumpVal"  multiline="true" rows="8"
            readonly="true" style="font-family: -moz-fixed;"/>
 </vbox>

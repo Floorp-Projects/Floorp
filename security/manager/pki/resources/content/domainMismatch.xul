@@ -21,9 +21,7 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
 <window id="domainMismatch" title="&domainMismatch.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   width="320"
   onload="onLoad();">
 
@@ -41,12 +39,12 @@
 
 <vbox style="margin: 5px;" flex="1">
 
-  <html id="message1"/>
+  <description id="message1"/>
   <separator/>
-  <html id="message2" flex="100%"/>
+  <description id="message2" flex="100%"/>
 
   <hbox>
-  <button id="examineCert-button" class="dialog" label="&examineCert.label;"
+  <button id="examineCert-button" label="&examineCert.label;"
      oncommand="viewCert();"/> 
   </hbox>
   <separator/>
@@ -58,11 +56,11 @@
   </keyset>
  
   <hbox>
-  <button id="ok-button" class="dialog" label="&ok.label;" primary="true"
-          oncommand="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" label="&cancel.label;"
+  <button id="ok-button" label="&ok.label;"
+          oncommand="doOK();"/> 
+  <button id="cancel-button" label="&cancel.label;"
           oncommand="doCancel();"/> 
-  <button id="help-button" class="dialog" label="&help.label;"
+  <button id="help-button" label="&help.label;"
           oncommand="openHelp('chrome://help/content/help.xul?bad_name_web_cert');"/> 
   </hbox>
 </vbox>

@@ -31,10 +31,8 @@
   %prefPass;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical" title="certs.title;"
-        onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();">
 
   <script type="application/x-javascript" src="chrome://pippki/content/pref-masterpass.js"/>
 
@@ -53,64 +51,60 @@
   <hbox class="box-smallheader" title="&lheader;"/>
 
   <!-- Change Password -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&changepassword.label;"/>
-    <html>&changepassword.text;</html>
-    <hbox autostretch="never">
-      <button class="dialog" label="&changepassword.button;" disabled="false"
+    <description>&changepassword.text;</description>
+    <hbox align="center">
+      <button label="&changepassword.button;"
               oncommand="ChangePW();"
               id="changePasswordButton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="security.disable_button.changePassword"/>
     </hbox>
   </groupbox>
 
   <!-- Password Prefs -->
-  <groupbox orient="vertical">
+  <groupbox>
 
     <checkbox id="askEveryTimeHidden"
-              pref="true" preftype="bool" prefstring="signon.expireMasterPassword"
-              prefattribute="checked" hidden="true"/>
+              prefstring="signon.expireMasterPassword"
+              hidden="true"/>
 
     <caption label="&managepassword.label;"/>
-    <html>&managepassword.text;</html>
-    <hbox autostretch="never">
-      <radiogroup id="passwordAskTimes" orient="vertical" 
-                  pref="true" preftype="int" 
-                  prefstring="security.ask_for_password" prefattribute="value"
+    <description>&managepassword.text;</description>
+    <hbox align="center">
+      <radiogroup id="passwordAskTimes"
+                  prefstring="security.ask_for_password"
                   flex="1">
         <!-- note that these values are different than what NSS uses, which
              are (0, -1, 1) respectively -->
-        <radio value="0" label="&managepassword.askfirsttime;" id="askFirstTime" group="passwordAskTimes" 
+        <radio value="0" label="&managepassword.askfirsttime;" id="askFirstTime"
                style="margin: 0px;" oncommand="changePasswordSettings();"/>
-        <radio value="1" label="&managepassword.askeverytime;" id="askEveryTime" group="passwordAskTimes"
+        <radio value="1" label="&managepassword.askeverytime;" id="askEveryTime"
                style="margin: 0px;" oncommand="changePasswordSettings();"/>
         <hbox align="center">
-          <radio value="2" label="&managepassword.asktimeout;" id="askTimeout" group="passwordAskTimes"
+          <radio value="2" label="&managepassword.asktimeout;" id="askTimeout"
                  style="margin: 0px;" oncommand="changePasswordSettings();"/>
           <textbox id="passwordTimeout" size="4"
-                   pref="true" preftype="int"
+                   preftype="int"
                    prefstring="security.password_lifetime"
-                   prefattribute="value"
                    oninput="changePasswordSettings();"/>
-          <text value="&managepassword.timeout.unit;" style="margin: 4px;"/>
+          <label value="&managepassword.timeout.unit;" style="margin: 4px;"/>
         </hbox>
       </radiogroup>
     </hbox>
   </groupbox>
 
   <!-- Reset Password -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&resetpassword.label;"/>
-    <html>&resetpassword.text1;</html>
-    <html>&resetpassword.text2;</html>
-    <hbox autostretch="never">
-      <button class="dialog" label="&resetpassword.button;" disabled="false"
+    <description>&resetpassword.text1;</description>
+    <description>&resetpassword.text2;</description>
+    <hbox align="center">
+      <button label="&resetpassword.button;"
               oncommand="ResetPW();"
               id="resetPasswordButton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="security.disable_button.resetPassword"/>
     </hbox>
   </groupbox>
 
-</window>
+</page>

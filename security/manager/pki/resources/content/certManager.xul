@@ -47,8 +47,8 @@
     <column flex="1"/>
     <rows>
       <row flex="1">
-        <tabbox flex="1" orient="vertical">
-          <tabs id="certMgrTabbox" orient="horizontal">
+        <tabbox flex="1">
+          <tabs id="certMgrTabbox">
             <tab id="mine_tab" label="&certmgr.tab.mine;"/>
             <tab id="others_tab" label="&certmgr.tab.others;"/>
             <tab id="websites_tab" label="&certmgr.tab.websites;"/>
@@ -64,7 +64,7 @@
       </row>
       <row>
         <hbox flex="1">
-          <button id="HelpButton" class="normal" 
+          <button id="HelpButton"
                   label="&certmgr.help.label;" 
                   accesskey="&certmgr.helpButtonAccessKey;"
                   oncommand="doHelpButton();"/>

@@ -40,13 +40,12 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="WebSitesOverlay" 
-         xmlns:html="http://www.w3.org/1999/xhtml" 
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="othersCerts">
-    <html>&certmgr.others;</html>
+    <description>&certmgr.others;</description>
     <separator class="thin"/>
     <outliner id="email-outliner" multiple="true"
               onselect="email_enableButtons()" flex="1">
@@ -65,18 +64,18 @@
       <outlinerbody flex="1" ondblclick="viewCerts();"/>
     </outliner>
     <hbox>
-      <button id="email_viewButton" class="normal" 
+      <button id="email_viewButton"
               label="&certmgr.view.label;"
               disabled="true" oncommand="viewCerts();"/>
-      <button id="email_editButton" class="normal" 
+      <button id="email_editButton"
               label="&certmgr.edit.label;"
               disabled="true" oncommand="editCerts();"/>
 <!-- future - import a DER cert?
-      <button id="email_addButton" class="normal" 
+      <button id="email_addButton"
               label="&certmgr.add.label;"
               oncommand="addCerts();"/>
 -->
-      <button id="email_deleteButton" class="normal" 
+      <button id="email_deleteButton"
               label="&certmgr.delete.label;"
               disabled="true" oncommand="deleteCerts();"/>
     </hbox>

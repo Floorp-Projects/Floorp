@@ -188,15 +188,15 @@
   </tabs>
   <tabpanels id="tabpanels">
     <vbox id="securityPanel" flex="1">
-      <text id="security-identity" class="header label"/>
-      <html id="security-identity-text" flex="1"/>
+      <label id="security-identity" class="header"/>
+      <description id="security-identity-text" flex="1"/>
       <hbox>
-        <button id="security-view-cert" class="normal" label="&pageInfo.view.label;" 
+        <button id="security-view-cert" label="&pageInfo.view.label;" 
                 oncommand="security.viewCert();"/>
-        <html id="security-view-text" flex="1"/>
+        <description id="security-view-text" flex="1"/>
       </hbox>
       <separator class="groove"/>
-      <text id="security-privacy" class="header label"/>
+      <label id="security-privacy" class="header"/>
       <vbox flex="1">
         <html id="security-privacy-msg1"/>
         <html id="security-privacy-msg2"/>

@@ -27,7 +27,6 @@
 
 <window id="deleteCertificate" 
   title="&certmgr.deletecert.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();"
   style="width:8ex">
@@ -44,18 +43,18 @@
   </keyset>
 
   <vbox flex="1">
-     <html id="confirm"/>
+     <description id="confirm"/>
      <separator />
      <vbox id="certlist" flex="100%"/>
-     <html id="impact"/>
+     <description id="impact"/>
      <separator />
 
     <hbox align="center">
-      <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
+      <button id="ok-button" label="&certmgr.ok.label;"
               oncommand="doOK();"/> 
-      <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
+      <button id="cancel-button" label="&certmgr.cancel.label;"
               oncommand="window.close();"/> 
-      <button id="help-button" class="dialog" label="&certmgr.help.label;"
+      <button id="help-button" label="&certmgr.help.label;"
               oncommand="doHelp();"/> 
     </hbox>
   </vbox>

@@ -31,10 +31,8 @@
   %prefValidationDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="onLoad();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="onLoad();">
 
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript">
@@ -48,28 +46,26 @@
   <!-- Fancy panel header -->
   <hbox class="box-smallheader" title="&validation.title;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&validation.crl.label;"/>
-    <html>&validation.crl.description;</html>
-    <hbox autostretch="never">
-      <button class="dialog" label="&validation.managecrls.button;"
+    <description>&validation.crl.description;</description>
+    <hbox align="center">
+      <button label="&validation.managecrls.button;"
               oncommand="openCrlManager();"
               id="managecrlbutton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="security.OCSP.disable_button.managecrl"/>
     </hbox>
   </groupbox>
 
-  <groupbox orient="vertical" autostretch="never" >
+  <groupbox align="start">
     <caption label="&validation.ocsp.label;"/>
-    <html>&validation.ocsp.description;</html>
+    <description>&validation.ocsp.description;</description>
     <!-- Prefs -->
-    <radiogroup id="securityOCSPEnabled" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="security.OCSP.enabled"
-                prefattribute="value">
-        <radio group="securityOCSPEnabled" value="0" label="&disableOCSP.label;" oncommand="doEnabling();"/>
-        <radio group="securityOCSPEnabled" value="1" label="&certOCSP.label;" oncommand="doEnabling();"/>
-        <radio group="securityOCSPEnabled" value="2" label="&proxyOCSP.label;" oncommand="doEnabling();"/>
+    <radiogroup id="securityOCSPEnabled"
+                prefstring="security.OCSP.enabled">
+        <radio value="0" label="&disableOCSP.label;" oncommand="doEnabling();"/>
+        <radio value="1" label="&certOCSP.label;" oncommand="doEnabling();"/>
+        <radio value="2" label="&proxyOCSP.label;" oncommand="doEnabling();"/>
 
         <grid class="indent" flex="1">
           <columns>
@@ -79,19 +75,18 @@
           
           <rows>
             <row align="center">
-              <text class="label" value="&signingCA.label;" for="signingCA"/>
-              <menulist id="signingCA" pref="true" preftype="string" prefstring="security.OCSP.signingCA"
-                        prefattribute="value" flex="1" oncommand="changeURL()">
+              <label value="&signingCA.label;" control="signingCA"/>
+              <menulist id="signingCA" preftype="string" prefstring="security.OCSP.signingCA"
+                        flex="1" oncommand="changeURL()">
                 <menupopup/>
               </menulist>
             </row>
             <row align="center">
-              <text class="label" value="&serviceURL.label;" for="serviceURL"/>
-              <textbox id="serviceURL" pref="true" preftype="string" prefstring="security.OCSP.URL"
-                       prefattribute="value" flex="1"/>
+              <label value="&serviceURL.label;" control="serviceURL"/>
+              <textbox id="serviceURL" prefstring="security.OCSP.URL"/>
             </row>
          </rows>
        </grid>
     </radiogroup>
   </groupbox>
-</window>
+</page>

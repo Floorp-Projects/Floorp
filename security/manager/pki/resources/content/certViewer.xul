@@ -33,7 +33,6 @@
 
 <window id="certDetails" 
   title="&certmgr.certdetail.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();">
 
@@ -48,10 +47,10 @@
 
   <grid flex="1">
     <column flex="1"/>
-    <rows autostretch="always">
+    <rows>
       <row flex="1">
-        <tabbox flex="1" orient="vertical">
-          <tabs orient="horizontal">
+        <tabbox flex="1">
+          <tabs>
             <tab id="general_tab" label="&certmgr.detail.general_tab.title;"/>
             <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"/>
           </tabs>
@@ -66,11 +65,11 @@
       </row>
       <row>
         <hbox align="right" flex="1">
-          <button id="HelpButton" class="normal" 
+          <button id="HelpButton"
                   label="&certmgr.help.label;" 
                   accesskey="&certmgr.helpButtonAccessKey;"
                   oncommand="openHelp('chrome://help/content/help.xul?cert_details');"/>
-          <button id="closeButton" class="normal" 
+          <button id="closeButton"
                   label="&certmgr.close.label;" 
                   accesskey="&certmgr.closeWindowAccessKey;"
                   oncommand="window.close();"/>

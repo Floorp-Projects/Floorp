@@ -30,7 +30,6 @@
 
 
 <window id="ssl_warning" title="&chooseToken.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   height="360"
   width="400"
@@ -48,19 +47,19 @@
 </keyset>
 
 <vbox style="margin: 5px;" flex="1">
-    <groupbox orient="vertical">
-    <html>&chooseToken.message1;</html>
+    <groupbox>
+    <description>&chooseToken.message1;</description>
     <menulist id="tokens">
         <menupopup/>
     </menulist>
     </groupbox>
   <separator />
   <hbox>
-  <button id="ok-button" class="dialog" label="&ok.label;"
-          oncommand="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" label="&cancel.label;"
+  <button id="ok-button" label="&ok.label;"
+          oncommand="doOK();"/> 
+  <button id="cancel-button" label="&cancel.label;"
           oncommand="doCancel();"/> 
-  <button id="help-button" class="dialog" label="&help.label;"
+  <button id="help-button" label="&help.label;"
           oncommand="openHelp('chrome://help/content/help.xul?which_token');"/> 
   </hbox>
 </vbox>
