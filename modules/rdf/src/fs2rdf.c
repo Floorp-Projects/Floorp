@@ -733,9 +733,9 @@ CreateFSUnit (char *nname, PRBool isDirectoryFlag)
 
 	if (startsWith("file:///", nname))
 	{
-		if ((r =(RDF_Resource)PL_HashTableLookup(resourceHash, nname)) == NULL)
+		if ((r = RDF_GetResource(NULL, nname, 0)) == NULL)
 		{
-			if ((r = NewRDFResource(nname)) != NULL)
+			if ((r = RDF_GetResource(NULL, nname, 1)) != NULL)
 			{
 				setResourceType(r, LFS_RT);
 				setContainerp(r, isDirectoryFlag);
@@ -743,4 +743,4 @@ CreateFSUnit (char *nname, PRBool isDirectoryFlag)
 		}	
 	}
 	return(r);
-} 
+}

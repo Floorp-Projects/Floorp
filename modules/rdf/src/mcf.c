@@ -106,7 +106,7 @@ RDF_GetDB (const char** dataSources)
   RDF r = (RDF) getMem(sizeof(struct RDF_DBStruct)) ;
   RDFL nrl = (RDFL)getMem(sizeof(struct RDF_ListStruct));
   while (*(dataSources + n++)) {} 
-  r->translators = (RDFT*)getMem((n) * sizeof(RDFT));
+  r->translators = (RDFT*)getMem((n-1) * sizeof(RDFT));
   n = 0;
   while ((next = (char*) *(dataSources + n)) != NULL) {
     RDFL rl = (RDFL)getMem(sizeof(struct RDF_ListStruct));
@@ -122,7 +122,7 @@ RDF_GetDB (const char** dataSources)
     n++;
   }
   r->numTranslators = m;
-  r->translatorArraySize = n;
+  r->translatorArraySize = n-1;
   nrl->rdf = r;
   nrl->next = gAllDBs;
   gAllDBs = nrl;
@@ -150,7 +150,7 @@ RDF_AddDataSource(RDF rdf, char* dataSource)
   }
 #endif
 #endif
-  if (rdf->numTranslators >= rdf->translatorArraySize) {
+  if (rdf->numTranslators == rdf->translatorArraySize) {
     RDFT* tmp = (RDFT*)getMem((rdf->numTranslators+5)*(sizeof(RDFT)));
     memcpy(tmp, rdf->translators, (rdf->numTranslators * sizeof(RDFT)));
     rdf->translatorArraySize = rdf->numTranslators + 5;
@@ -449,69 +449,30 @@ resourceTypeFromID (char* id)
 
 
 
-RDF_Resource
-specialUrlResource (char* id)
-{
-	if (strcmp(id, "NC:PersonalToolbar") == 0)
-		return RDFUtil_GetPTFolder();
-	return NULL;
-}
-
-
-
-RDF_Resource
-NewRDFResource (char* id)
-{
-	RDF_Resource	existing;
-	
-	if ((existing = (RDF_Resource)getMem(sizeof(struct RDF_ResourceStruct))) != NULL)
-	{
-		existing->url = copyString(id);
-		PL_HashTableAdd(resourceHash, existing->url, existing);
-	}
-	return(existing);
-}
-
-
-
-RDF_Resource
-QuickGetResource (char* id)
-{
-	RDF_Resource	existing;
-
-	if ((existing = (RDF_Resource)PL_HashTableLookup(resourceHash, id)) == NULL)
-	{
-		existing = NewRDFResource(id);
-	}
-	return(existing);
-}
-
-
-
 PR_PUBLIC_API(RDF_Resource)
 RDF_GetResource (RDF db, char* id, PRBool createp)
 {
-  char* nid = NULL;
-  RDF_Resource existing = NULL;
-  if (id == NULL) {
-	if (!createp) {
-		return NULL;
-	} else {
-		id = nid = makeNewID();
-	}
+  char* nid;
+  RDF_Resource existing;
+  if (id != NULL) {
+    existing = (RDF_Resource)PL_HashTableLookup(resourceHash, id);
+    if (existing != null) return addDep(db, existing);
+    if (!createp) {
+      return null;
+    } else {
+      nid = copyString(id);
+    }
+  } else if (createp != false) {
+    nid = makeNewID();
   }
-  existing = specialUrlResource(id);
-  if (existing) return existing;
-  existing = (RDF_Resource)PL_HashTableLookup(resourceHash, id);
-  if (existing) return addDep(db, existing);
-  if (!createp) return NULL;
-  existing =  NewRDFResource(id);  
-  setResourceType(existing, resourceTypeFromID(id));
+  existing = (RDF_Resource)getMem(sizeof(struct RDF_ResourceStruct)); 
+  existing->url = nid;
+  PL_HashTableAdd(resourceHash, nid, existing);
+  setResourceType(existing, resourceTypeFromID(nid));
   setContainerp(existing, iscontainerp(existing));
-  if (nid) freeMem(nid);
-  return addDep(db, existing); 
+  return addDep(db, existing);
+  
 }
-
 
 
   

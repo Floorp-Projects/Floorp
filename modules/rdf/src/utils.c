@@ -736,7 +736,7 @@ MakeCookieStore (char* url)
       ntr->nextValue = CookieGetNextValue;
       ntr->disposeCursor = CookieDisposeCursor;
       gCookieStore = ntr;
-      /*       NET_InitRDFCookieResources (    ) ; */
+      NET_InitRDFCookieResources (    ) ;
       return ntr;
     } else return gCookieStore;
   } else return NULL;

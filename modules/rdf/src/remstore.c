@@ -220,7 +220,7 @@ remoteStoreRemove (RDFT mcf, RDF_Resource u, RDF_Resource s,
   nextAs = prevAs = u->rarg1;
   while (nextAs != null) {
     if (asEqual(mcf, nextAs, u, s, v, type)) {
-      if (prevAs == nextAs) {
+      if (prevAs == null) {
 	u->rarg1 = nextAs->next;
       } else {
 	prevAs->next = nextAs->next;

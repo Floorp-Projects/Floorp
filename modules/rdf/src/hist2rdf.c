@@ -373,11 +373,11 @@ updateNewHistItem (DBT *key, DBT *data)
     HIST_COPY_INT32(&first, (time_t *)((char *)data->data + sizeof(int32)));
     HIST_COPY_INT32(&numaccess, (time_t *)((char *)data->data + 2*sizeof(int32)));
     
-    if (hostHash) collateOneHist(grdf, gNavCenter->RDF_HistoryBySite, 
+    if (hostHash) collateOneHist(grdf, gNavCenter->RDF_History, 
 				 (char*)key->data,                        /* url */
 				 ((char*)data->data + 4*sizeof(int32)),   /* title */
 				 last, first, numaccess, 0);
-    if (ByDateOpened) collateOneHist(grdf, gNavCenter->RDF_HistoryByDate, 
+    if (ByDateOpened) collateOneHist(grdf, gNavCenter->RDF_History, 
 				     (char*)key->data,                        /* url */
 				     ((char*)data->data + 4*sizeof(int32)),   /* title */
 				     last, first, numaccess, 1);
@@ -519,7 +519,7 @@ historyUnassert (RDFT hst,  RDF_Resource u, RDF_Resource s, void* v,
     RDF_Resource parents[5];
     int8 n = 0;
     Assertion as = u->rarg1;
-    memset(parents, '\0', 5 * sizeof(RDF_Resource));
+	memset(parents, '\0', 5 * sizeof(RDF_Resource));
     while (as) {
       if ((as->type == RDF_RESOURCE_TYPE) && (as->s == gCoreVocab->RDF_parent) && 
 	  (resourceType((RDF_Resource)as->value) == HISTORY_RT) && (n < 5)) {
@@ -527,25 +527,14 @@ historyUnassert (RDFT hst,  RDF_Resource u, RDF_Resource s, void* v,
       }
       as = as->next;
     }
-    if (containerp(u)) {
-      Assertion as = u->rarg2;
-      while (as) {
-        if ((as->db == gHistoryStore) && (as->s == gCoreVocab->RDF_parent)) {
-          GH_DeleteHistoryItem (resourceID(as->u));          
-        } 
-        as = as->invNext;
-      }
-    } else {
-      GH_DeleteHistoryItem (resourceID(u));
-    }
-      
+    GH_DeleteHistoryItem ( resourceID(u));
     while (n > 0) {
-      n = n - 1;
-      if (parents[n]) {
-        Assertion nas = remoteStoreRemove (gHistoryStore, u, gCoreVocab->RDF_parent, 
-                                           parents[n], RDF_RESOURCE_TYPE);
-        freeMem(nas);
-      } 
+		n = n - 1;
+		if (parents[n]) {
+		    Assertion nas = remoteStoreRemove (gHistoryStore, u, gCoreVocab->RDF_parent, 
+			     parents[n], RDF_RESOURCE_TYPE);
+			freeMem(nas);
+		} 
     }
     return 1;
   }
@@ -559,7 +548,7 @@ HistPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inverse
 {
   if ((s ==  gCoreVocab->RDF_parent) && inversep && (rdf == gHistoryStore) &&
       ((u == gNavCenter->RDF_HistoryByDate) ||  (u == gNavCenter->RDF_HistoryBySite))) {
-       collateHistory(rdf, u, (u == gNavCenter->RDF_HistoryByDate)); 
+      /* collateHistory(rdf, gNavCenter->RDF_History, (u == gNavCenter->RDF_HistoryByDate)); */
   } 
 }
 
@@ -582,10 +571,10 @@ MakeHistoryStore (char* url)
       ntr->possiblyAccessFile = HistPossiblyAccessFile;
       gHistoryStore = ntr;
       ntr->url = copyString(url);
-      /*   collateHistory(ntr, gNavCenter->RDF_History, 1);
+      collateHistory(ntr, gNavCenter->RDF_History, 1);
       remoteStoreAdd(ntr, sep, gCoreVocab->RDF_parent, gNavCenter->RDF_History, RDF_RESOURCE_TYPE, 1);
       bySite = 1;
-      collateHistory(ntr, gNavCenter->RDF_History, 0); */
+      collateHistory(ntr, gNavCenter->RDF_History, 0);
       return ntr;
     } else return gHistoryStore;
   } else return NULL;

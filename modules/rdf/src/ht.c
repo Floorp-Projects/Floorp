@@ -1172,7 +1172,7 @@ gNavCenterDataSources1[15] =
 #endif
 
 	"rdf:lfs",  "rdf:ht",
-	"rdf:columns",  "rdf:find", NULL
+	"rdf:columns", "rdf:CookieStore", "rdf:find", NULL
 };
 
 static int32 htCounter = 0;
