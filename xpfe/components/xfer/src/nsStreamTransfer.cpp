@@ -33,6 +33,7 @@
 #include "nsIHTTPChannel.h"
 #include "nsIStringBundle.h"
 #include "nsIAllocator.h"
+#include "nsIFileStream.h"
 
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
@@ -170,7 +171,9 @@ NS_IMETHODIMP
 nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
                                                      nsIDOMWindowInternal *parent,
                                                      char const *contentType,
-                                                     char const *suggestedName ) {
+                                                     char const *suggestedName,
+                                                     PRBool      doNotValidate,
+                                                     nsIInputStream *postData ) {
     nsresult rv = NS_OK;
 
     // Construct URI from spec.
@@ -183,6 +186,25 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
         rv = NS_OpenURI( getter_AddRefs( channel ), uri, nsnull );
 
         if ( NS_SUCCEEDED( rv ) && channel ) {
+            // See if VALIDATE_NEVER is called for.
+            if ( doNotValidate ) {
+                channel->SetLoadAttributes( nsIChannel::VALIDATE_NEVER );
+            }
+            // Post data provided?
+            if ( postData ) {
+                // See if it's an http channel.
+                nsCOMPtr<nsIHTTPChannel> httpChannel( do_QueryInterface( channel ) );
+                if ( httpChannel ) {
+                    // Rewind stream and attach to channel.
+                    nsCOMPtr<nsIRandomAccessStore> stream( do_QueryInterface( postData ) );
+                    if ( stream ) {
+                        stream->Seek( PR_SEEK_SET, 0 );
+                        httpChannel->SetUploadStream( postData );
+                        nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+                        httpChannel->SetRequestMethod(method);
+                    }
+                }
+            }
             // Transfer channel to output file chosen by user.
             rv = this->SelectFileAndTransferLocation( channel, parent, contentType, suggestedName );
         } else {

@@ -215,7 +215,6 @@ nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports 
                         rv = parent->OpenDialog( jsContext, argv, 6, getter_AddRefs( dialog ) );
                         // Pop arguments.
                         JS_PopArguments( jsContext, stackPtr );
-
                     }
                 }
             }

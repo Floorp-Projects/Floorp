@@ -55,12 +55,18 @@ interface nsIStreamTransfer : nsIAppShellComponent {
     /*------------------ SelectFileAndTransferLocationSpec ---------------------
     | Prompt the user for a destination file and then transfer the data, using |
     | the argument URL as source, to that file, while showing a progress       |
-    | dialog.  You can provide a content type and/or a suggested file name.    |
+    | dialog.  The "don't validate" flag indicates whether or not to use the   |
+    | VALIDATE_NEVER load flag to force loading from the cache. That would be  |
+    | appropriate when saving a page being viewed, for example.  An post data  |
+    | input stream can be passed in and it will be attached to the http        |
+    | channel as the "upload stream."                                          |
     --------------------------------------------------------------------------*/
     void SelectFileAndTransferLocationSpec( in string       aURL,
                                             in nsIDOMWindowInternal parent,
                                             in string       contentType,
-                                            in string       suggestedName );
+                                            in string       suggestedName,
+                                            in boolean      doNotValidate,
+                                            in nsIInputStream postData );
 };
 
 

@@ -85,10 +85,9 @@ function savePage( url )
   // Use stream xfer component to prompt for destination and save.
   var xfer = getService("component://netscape/appshell/component/xfer", "nsIStreamTransfer");
   try {
-    // When Necko lands, we need to receive the real nsIChannel and
-    // do SelectFileAndTransferLocation!
-    // Use this for now...
-    xfer.SelectFileAndTransferLocationSpec( url, window, "", "" );
+    // Save; use page in cache if possible.
+    var postData = appCore.postData;
+    xfer.SelectFileAndTransferLocationSpec( url, window, "", "", true, postData );
   } 
   catch( exception ) { 
     // suppress NS_ERROR_ABORT exceptions for cancellation 
@@ -1536,6 +1535,8 @@ function dumpObject( anObject, prefix ) {
 function dumpExpr( expr ) {
     dump( expr+"="+eval(expr)+"\n" );
 }
+
+var leakDetector = null;
 
 // Initialize the LeakDetector class.
 function LeakDetector(verbose)

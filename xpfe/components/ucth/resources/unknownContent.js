@@ -117,14 +117,12 @@ function save()
     xfer = xfer.QueryInterface( Components.interfaces.nsIStreamTransfer );
     var retry = false;
     try {
-        // When Necko lands, we need to receive the real nsIChannel and
-        // do SelectFileAndTransferLocation!
-
-        // Use this for now...
         var result = xfer.SelectFileAndTransferLocationSpec( data.location,
                                                              window,
                                                              data.contentType.toString(),
-                                                             fileNameFromContentDisp( data.contentDisp ) );
+                                                             fileNameFromContentDisp( data.contentDisp ),
+                                                             true,
+                                                             null );
     } catch( exception ) {
         // Failed (or cancelled), give them another chance.
         retry = true;

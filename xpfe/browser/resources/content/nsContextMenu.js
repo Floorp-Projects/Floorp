@@ -392,19 +392,19 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on frame.
     saveFrame : function () {
-        this.savePage( this.target.ownerDocument.location.href );
+        this.savePage( this.target.ownerDocument.location.href, true );
     },
     // Save URL of clicked-on link.
     saveLink : function () {
-        this.savePage( this.linkURL() );
+        this.savePage( this.linkURL(), false );
     },
     // Save URL of clicked-on image.
     saveImage : function () {
-        this.savePage( this.imageURL );
+        this.savePage( this.imageURL, true );
     },
     // Save URL of background image.
     saveBGImage : function () {
-        this.savePage( this.bgImageURL() );
+        this.savePage( this.bgImageURL(), true );
     },
     // Generate link URL and put it on clibboard.
     copyLink : function () {
@@ -726,20 +726,21 @@ nsContextMenu.prototype = {
 
     },
     // Save specified URL in user-selected file.
-    savePage : function ( url ) {
+    savePage : function ( url, doNotValidate ) {
+        var postData = null; // No post data, usually.
         // Default is to save current page.
         if ( !url ) {
             url = window._content.location.href;
+            // Post data comes from appcore.
+            if ( window.appCore ) {
+                postData = window.appCore.postData;
+            }
         }
         // Use stream xfer component to prompt for destination and save.
         var xfer = this.getService( "component://netscape/appshell/component/xfer",
                                     "nsIStreamTransfer" );
         try {
-            // When Necko lands, we need to receive the real nsIChannel and
-            // do SelectFileAndTransferLocation!
-
-            // Use this for now...
-            xfer.SelectFileAndTransferLocationSpec( url, window, "", "" );
+            xfer.SelectFileAndTransferLocationSpec( url, window, "", "", doNotValidate, postData );
         } catch( exception ) {
             // Failed (or cancelled), give them another chance.
             dump( "SelectFileAndTransferLocationSpec failed, rv=" + exception + "\n" );
