@@ -33,38 +33,41 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="findDialog"
   onload="onLoad();"
   onunload="onUnload();"
   title="&findDialog.title;"
-  align="vertical"
+  debug="false"
   class="dialog"
-  style="padding:5px;">
+  align="vertical"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
 
   <html:script language="JavaScript" src="chrome://global/content/finddialog.js"/>
 
-  <box align="horizontal">
-    <html:label style="padding-top:5px; padding-right:5px;">&findField.label;</html:label>
-    <box align="vertical" style="padding:0px; width: 250px;">
-      <html:input id="dialog.findKey" type="text" flex="100%" onkeyup="onTyping(event.which)"/>
+  <box>
+  
+    <!-- hack. we seem to need this separator to get it to render -->
+    <separator orient="vertical" class="thin"/>
 
-      <html:div style="padding-left: 4px;">
-        <html:input type="checkbox" id="dialog.caseSensitive"/>
-        <html:label class="disabled" for="dialog.caseSensitive">&caseSensitiveCheckbox.label;</html:label>
-      </html:div>
+    <box orient="vertical">
+      <text class="label" value="&findField.label;"/>
+    </box>
     
-      <html:div style="padding-left: 4px;">
-        <html:input type="checkbox" id="dialog.wrap"/>
-        <html:label class="disabled" for="dialog.wrap">&wrapCheckbox.label;</html:label>
-      </html:div>
-      <html:div style="padding-left: 4px;">
-        <html:input type="checkbox" id="dialog.searchBackwards"/>
-        <html:label class="disabled" for="dialog.searchBackwards">&backwardsCheckbox.label;</html:label>
-      </html:div>
+    <box orient="vertical">
+      <textfield id="dialog.findKey" onkeyup="onTyping(event.which)"/>
+      <box orient="vertical" autostretch="never">
+        <checkbox id="dialog.caseSensitive" value="&caseSensitiveCheckbox.label;"/>
+        <checkbox id="dialog.wrap" value="&wrapCheckbox.label;"/>
+        <checkbox id="dialog.searchBackwards" value="&backwardsCheckbox.label;"/>
+      </box>
     </box>
   </box>
 
   <!-- used to store the find text -->
   <foo style="display:none;" id="fBLT" value="&findButton.label;"/>
+
+  <separator/>
 
   <!-- Places to overlay common dialog buttons and keyset -->
   <box id="okCancelButtons"/>
