@@ -24,11 +24,10 @@
 // so don't edit it!
 #include "CPMozillaControl.h"
 
-class CWebShellContainer;
-
 // Commands sent via WM_COMMAND
 #define ID_PRINT     1
 #define ID_PAGESETUP 2
+#define ID_VIEWSOURCE 3
 
 // Some definitions which are used to make firing events easier
 #define CDWebBrowserEvents1 CProxyDWebBrowserEvents<CMozillaBrowser>
@@ -37,6 +36,8 @@ class CWebShellContainer;
 // A list of objects
 typedef CComPtr<IUnknown> CComUnkPtr;
 typedef std::vector<CComUnkPtr> ObjectList;
+
+class CWebShellContainer;
 
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
@@ -129,6 +130,7 @@ END_MSG_MAP()
 	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 // ISupportsErrorInfo
 	STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);
@@ -148,6 +150,9 @@ protected:
 
 	// Pointer to web shell manager
 	CWebShellContainer	*	m_pWebShellContainer;
+
+	// CComObject to IHTMLDocument implementer
+	CIEHtmlDocumentInstance * m_pDocument;
 
 	// Mozilla interfaces
     nsIWebShell			*	m_pIWebShell;
