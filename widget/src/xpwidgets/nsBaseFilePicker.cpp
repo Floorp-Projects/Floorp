@@ -42,9 +42,9 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
-#include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIWidget.h"
@@ -75,26 +75,21 @@ nsBaseFilePicker::~nsBaseFilePicker()
 
 nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
 {
+  nsCOMPtr<nsIWidget> widget;
+
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(dw);
   if (sgo) {
-    nsIDocShell *docShell = sgo->GetDocShell();
-    
-    if (docShell) {
-      nsCOMPtr<nsIPresShell> presShell;
-      nsresult rv = docShell->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(sgo->GetDocShell()));
 
-      if (NS_SUCCEEDED(rv) && presShell) {
-        nsIView *view;
-        rv = presShell->GetViewManager()->GetRootView(view);
-              
-        if (NS_SUCCEEDED(rv)) {
-          return view->GetWidget();
-        }
-      }
+    if (baseWin) {
+      baseWin->GetParentWidget(getter_AddRefs(widget));
     }
   }
 
-  return nsnull;
+  // This will return a pointer that we're about to release, but
+  // that's ok since the docshell (nsIBaseWindow) holds the widget
+  // alive.
+  return widget.get();
 }
 
 //-------------------------------------------------------------------------
