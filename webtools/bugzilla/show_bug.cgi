@@ -35,7 +35,7 @@ use Bugzilla::Bug;
 
 my $cgi = Bugzilla->cgi;
 
-if ($::FORM{'GoAheadAndLogIn'}) {
+if ($cgi->param('GoAheadAndLogIn')) {
     Bugzilla->login(LOGIN_REQUIRED);
 } else {
     Bugzilla->login();
@@ -53,7 +53,8 @@ if (!defined $cgi->param('id') && $single) {
     exit;
 }
 
-my $format = GetFormat("bug/show", $::FORM{'format'}, $::FORM{'ctype'});
+my $format = GetFormat("bug/show", scalar $cgi->param('format'), 
+                       scalar $cgi->param('ctype'));
 
 GetVersionTable();
 
@@ -82,8 +83,8 @@ $vars->{'bugs'} = \@bugs;
 
 # Next bug in list (if there is one)
 my @bug_list;
-if ($::COOKIE{"BUGLIST"}) {
-    @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
+if ($cgi->cookie("BUGLIST")) {
+    @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
 }
 
 $vars->{'bug_list'} = \@bug_list;
