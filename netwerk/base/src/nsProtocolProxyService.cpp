@@ -423,7 +423,9 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, n
         else if (PL_strncasecmp(start, kProxyType_SOCKS4, 6) == 0)
             type = kProxyType_SOCKS4;
         else if (PL_strncasecmp(start, kProxyType_SOCKS5, 6) == 0)
-            type = kProxyType_SOCKS5;
+            // map "SOCKS5" to "socks" to match contract-id of registered
+            // SOCKS-v5 socket provider.
+            type = kProxyType_SOCKS;
         break;
     }
     if (type) {
@@ -529,33 +531,33 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo **aResult)
     if (!mHTTPProxyHost.IsEmpty() && mHTTPProxyPort > 0 &&
         scheme.Equals(NS_LITERAL_CSTRING("http"))) {
         host = ToNewCString(mHTTPProxyHost);
-        type = "http";
+        type = kProxyType_HTTP;
         port = mHTTPProxyPort;
     }
     else if (!mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0 &&
              scheme.Equals(NS_LITERAL_CSTRING("https"))) {
         host = ToNewCString(mHTTPSProxyHost);
-        type = "http";
+        type = kProxyType_HTTP;
         port = mHTTPSProxyPort;
     }
     else if (!mFTPProxyHost.IsEmpty() && mFTPProxyPort > 0 &&
              scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
         host = ToNewCString(mFTPProxyHost);
-        type = "http";
+        type = kProxyType_HTTP;
         port = mFTPProxyPort;
     }
     else if (!mGopherProxyHost.IsEmpty() && mGopherProxyPort > 0 &&
              scheme.Equals(NS_LITERAL_CSTRING("gopher"))) {
         host = ToNewCString(mGopherProxyHost);
-        type = "http";
+        type = kProxyType_HTTP;
         port = mGopherProxyPort;
     }
     else if (!mSOCKSProxyHost.IsEmpty() && mSOCKSProxyPort > 0) {
         host = ToNewCString(mSOCKSProxyHost);
         if (mSOCKSProxyVersion == 4) 
-            type = "socks4";
+            type = kProxyType_SOCKS4;
         else
-            type = "socks";
+            type = kProxyType_SOCKS;
         port = mSOCKSProxyPort;
     }
 
@@ -571,17 +573,22 @@ nsProtocolProxyService::NewProxyInfo(const char *aType,
                                      PRInt32 aPort,
                                      nsIProxyInfo **aResult)
 {
-    const char *type = nsnull;
+    static const char *types[] = {
+        kProxyType_HTTP,
+        kProxyType_SOCKS,
+        kProxyType_SOCKS4
+    };
 
-    // canonicalize type
-    if (PL_strcasecmp(aType, "http") == 0)
-        type = "http";
-    else if (PL_strcasecmp(aType, "socks") == 0)
-        type = "socks";
-    else if (PL_strcasecmp(aType, "socks4") == 0)
-        type = "socks4";
-    else
-        return NS_ERROR_INVALID_ARG;
+    // resolve type; this allows us to avoid copying the type string into each
+    // proxy info instance.  we just reference the string literals directly :)
+    const char *type = nsnull;
+    for (PRUint32 i=0; i<NS_ARRAY_LENGTH(types); ++i) {
+        if (PL_strcasecmp(aType, types[i]) == 0) {
+            type = types[i];
+            break;
+        }
+    }
+    NS_ENSURE_TRUE(type, NS_ERROR_INVALID_ARG);
 
     if (aPort <= 0)
         aPort = -1;
@@ -626,13 +633,12 @@ nsProtocolProxyService::ConfigureFromPAC(const char *url)
             nsProtocolProxyService::DestroyPACLoadEvent);
 
     // post the event into the ui event queue
-    if (eq->PostEvent(event) == PR_FAILURE) {
+    rv = eq->PostEvent(event);
+    if (NS_FAILED(rv)) {
         NS_ERROR("Failed to post PAC load event to UI EventQueue");
-        NS_RELEASE_THIS();
-        delete event;
-        return NS_ERROR_FAILURE;
+        PL_DestroyEvent(event);
     }
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
