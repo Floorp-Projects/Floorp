@@ -30,7 +30,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+
+#ifndef XP_MAC
 #include <libIDL/IDL.h>
+#else
+#include <IDL.h>
+#endif
 
 /*
  * Internal operation flags.
