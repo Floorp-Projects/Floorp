@@ -310,7 +310,7 @@ nsHttpTransaction::Restart()
     // limit the number of restart attempts - bug 92224
     if (++mRestartCount >= nsHttpHandler::get()->MaxRequestAttempts()) {
         LOG(("reached max request attempts, failing transaction @%x\n", this));
-        return NS_BINDING_FAILED;
+        return NS_ERROR_NET_RESET;
     }
 
     LOG(("restarting transaction @%x\n", this));
