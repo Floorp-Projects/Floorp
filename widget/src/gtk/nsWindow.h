@@ -44,9 +44,6 @@ public:
     nsWindow();
     virtual ~nsWindow();
 
-    // nsIsupports
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
     NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);  
 
@@ -137,7 +134,7 @@ protected:
   PRBool      mDisplayed;
   PRBool      mIsDestroyingWindow;
 
-  GtkWindowType mBorderStyle;
+  nsBorderStyle mBorderStyle;
 
   // XXX Temporary, should not be caching the font
   nsFont *    mFont;

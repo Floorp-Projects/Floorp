@@ -19,6 +19,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtkprivate.h>
+#include "gtk_moz_window.h"
 
 #include "nsWindow.h"
 #include "nsWidgetsCID.h"
@@ -36,31 +37,6 @@
 #include "nsClipboard.h"
 
 #include "stdio.h"
-
-//#define DBG 0
-
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- *
-*/
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kCWindow, NS_WINDOW_CID);
-    if (aIID.Equals(kCWindow)) {
-        *aInstancePtr = (void*) ((nsWindow*)this);
-        AddRef();
-        return NS_OK;
-    }
-    return nsWidget::QueryInterface(aIID,aInstancePtr);
-}
 
 
 
@@ -244,27 +220,8 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
-    switch(aInitData->mBorderStyle)
-    {
-      case eBorderStyle_none:
-        g_print("border style is:  eBorderStyle_none\n");
-        break;
-      case eBorderStyle_dialog:
-        g_print("border style is:  eBorderStyle_dialog\n");
-        mBorderStyle = GTK_WINDOW_DIALOG;
-        break;
-      case eBorderStyle_window:
-        g_print("border style is:  eBorderStyle_window\n");
-        mBorderStyle = GTK_WINDOW_TOPLEVEL;
-        break;
-      case eBorderStyle_BorderlessTopLevel:
-        g_print("border style is:  eBorderStyle_BorderlessTopLevel\n");
-      	mBorderStyle = GTK_WINDOW_POPUP;
-        break;
-      case eBorderStyle_3DChildWindow:
-        g_print("border style is:  eBorderStyle_3dChildWindow\n");
-        break;
-    }
+    mBorderStyle = aInitData->mBorderStyle;
+
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -297,6 +254,8 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
   gtk_widget_set_app_paintable(mWidget, PR_TRUE);
 
+  gtk_widget_set_name(mWidget, "nsWindow");
+
   AddToEventMask(mWidget,
                  GDK_BUTTON_PRESS_MASK |
                  GDK_BUTTON_RELEASE_MASK |
@@ -309,58 +268,46 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                  GDK_POINTER_MOTION_MASK);
 
 
-  if (mBorderStyle == GTK_WINDOW_POPUP)
+  switch(mBorderStyle)
   {
-    mShell = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_container_add(GTK_CONTAINER(mShell), mWidget);
-
-
-    // Distinguish top-level windows from child windows
+  case eBorderStyle_dialog:
     mIsToplevel = PR_TRUE;
 
-
-    // link the window to its parent if it has one
-    if (parentWidget)
-    {
-      GtkWidget *tlw = gtk_widget_get_toplevel(parentWidget);
-      if (GTK_IS_WINDOW(tlw))
-        gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
-    }
-
-
-    // is this needed?
-
-    /*
-      gtk_signal_connect(GTK_OBJECT(mShell),
-      "delete_event",
-      GTK_SIGNAL_FUNC(handle_delete_event),
-      this);
-    */
-  }
-
-  else if (!parentWidget) {
-    // mainWindow = gtk_window_new(mBorderStyle);
-    mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    mShell = gtk_window_new(GTK_WINDOW_DIALOG);
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
 
-    // VBox for the menu, etc.
-    mVBox = gtk_vbox_new(PR_FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(mShell), mVBox);
-    gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
-
-    // Distinguish top-level windows from child windows
-    mIsToplevel = PR_TRUE;
+    gtk_container_add(GTK_CONTAINER(mShell), mWidget);
 
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "delete_event",
                        GTK_SIGNAL_FUNC(handle_delete_event),
                        this);
+    break;
+
+  case eBorderStyle_BorderlessTopLevel:
+    mIsToplevel = PR_TRUE;
+    mShell = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_container_add(GTK_CONTAINER(mShell), mWidget);
+    break;
+
+  case eBorderStyle_window:
+    if (!parentWidget)
+    {
+      mIsToplevel = PR_TRUE;
+      mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+      gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
+
+      // VBox for the menu, etc.
+      mVBox = gtk_vbox_new(PR_FALSE, 0);
+      gtk_container_add(GTK_CONTAINER(mShell), mVBox);
+      gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
+
+      gtk_signal_connect(GTK_OBJECT(mShell),
+                         "delete_event",
+                         GTK_SIGNAL_FUNC(handle_delete_event),
+                         this);
+    }
   }
-  
-  // Force cursor to default setting
-  gtk_widget_set_name(mWidget, "nsWindow");
-  //  mCursor = eCursor_select;
-  //  SetCursor(eCursor_standard);
 
   // Initialize this window instance as a drag target.
   gtk_drag_dest_set (mWidget,
@@ -368,6 +315,13 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      target_table, n_targets - 1, /* no rootwin */
                      GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
 
+
+  if (mIsToplevel && parentWidget)
+  {
+    GtkWidget *tlw = gtk_widget_get_toplevel(parentWidget);
+    if (GTK_IS_WINDOW(tlw))
+      gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
+  }
 
   return NS_OK;
 }
@@ -659,7 +613,12 @@ NS_METHOD nsWindow::Show(PRBool bState)
   if (bState)
   {
     // show mWidget
-    ::gtk_widget_show(mWidget);
+#if 0
+    gtk_widget_realize(mWidget);
+    GTK_WIDGET_SET_FLAGS (mWidget, GTK_VISIBLE);
+    gtk_signal_emit_by_name(GTK_OBJECT(mWidget), "map");
+#endif
+    gtk_widget_show(mWidget);
 
     // are we a toplevel window?
     if (mIsToplevel && mShell)
@@ -776,7 +735,8 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
       mShell->allocation.width = aWidth;
       mShell->allocation.height = aHeight;
 
-      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
+      //      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
+      gtk_widget_set_usize(mShell, aWidth, aHeight);
     }
 
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
@@ -873,7 +833,7 @@ nsWindow::OnRealize()
 {
   SetIcon();
 
-
+  /*
   nsGUIEvent gevent;
   gevent.message = NS_GOTFOCUS;
   gevent.widget  = (nsWidget *)this;
@@ -887,7 +847,7 @@ nsWindow::OnRealize()
   NS_ADDREF_THIS();
   DispatchFocus(gevent);
   NS_RELEASE_THIS();
-
+  */
   g_print("generating focus event\n");
 }
 

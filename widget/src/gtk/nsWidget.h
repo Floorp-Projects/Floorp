@@ -114,6 +114,8 @@ class nsWidget : public nsBaseWidget
     void ReleaseNativeData(PRUint32 aDataType);
 #endif
 
+
+    NS_IMETHOD GetAbsoluteBounds(nsRect &aRect);
     NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
 

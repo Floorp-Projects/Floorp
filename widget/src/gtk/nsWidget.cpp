@@ -26,6 +26,7 @@
 #include "nsILookAndFeel.h"
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
+#include "gtk_moz_window.h"
 #include <gdk/gdkx.h>
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -89,6 +90,28 @@ nsWidget::~nsWidget()
   if (!sWidgetCount--) {
     NS_IF_RELEASE(sLookAndFeel);
   }
+}
+
+NS_METHOD nsWidget::GetAbsoluteBounds(nsRect &aRect)
+{
+  gint x;
+  gint y;
+
+  g_print("nsWidget::GetAbsoluteBounds\n");
+  if (mWidget)
+  {
+    if (mWidget->window)
+    {
+      gdk_window_get_origin(mWidget->window, &x, &y);
+      aRect.x = x;
+      aRect.y = y;
+      g_print("  x = %i, y = %i\n", x, y);
+    }
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
