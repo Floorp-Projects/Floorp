@@ -91,11 +91,13 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
     if (aData && aData != gCtx->sdlg) return;
+#ifdef MOZ_WIDGET_GTK
     if (gCtx->bMoving)
     {
         gCtx->bMoving = FALSE;
         return;
     }
+#endif
 
     // verify selected destination directory exists
     if (OK != nsSetupTypeDlg::VerifyDestination())
@@ -139,12 +141,14 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
         }
     }
 
+#ifdef MOZ_WIDGET_GTK
     // When Next() is not invoked from a signal handler, the caller passes
     // aData as NULL so we know not to do the bMoving hack. 
     if (aData)
     {
         gCtx->bMoving = TRUE;
     }
+#endif
 }
 
 int
@@ -668,7 +672,7 @@ nsSetupTypeDlg::SelectFolderOK(GtkWidget *aWidget, GtkFileSelection *aFileSel)
     DUMP("SelectFolderOK");
 
     struct stat destStat;
-    char *selDir = gtk_file_selection_get_filename(
+    const char *selDir = gtk_file_selection_get_filename(
                     GTK_FILE_SELECTION(aFileSel));
 
     // put the candidate file name in the global variable, then verify it
@@ -1011,7 +1015,7 @@ nsSetupTypeDlg::ConstructPath(char *aDest, char *aTrunk, char *aLeaf)
 int
 nsSetupTypeDlg::CheckDestEmpty()
 {
-    DUMP("DeleteOldInst");
+    DUMP("CheckDestEmpty");
 
     DIR *destDirD;
     struct dirent *de;
@@ -1052,7 +1056,7 @@ nsSetupTypeDlg::VerifyDiskSpace(void)
     int dsAvail, dsReqd;
     char dsAvailStr[128], dsReqdStr[128];
     char message[512];
-    GtkWidget *noDSDlg, *label, *okButton, *packer;
+    GtkWidget *noDSDlg, *label, *okButton;
 
     // find disk space available at destination
     dsAvail = DSAvailable();
@@ -1077,24 +1081,22 @@ nsSetupTypeDlg::VerifyDiskSpace(void)
             gtk_window_set_modal(GTK_WINDOW(noDSDlg), TRUE);
             label = gtk_label_new(message);
             okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
-            packer = gtk_packer_new(); 
 
-            if (noDSDlg && label && okButton && packer)
+            if (noDSDlg && label && okButton)
             {
                 gtk_window_set_title(GTK_WINDOW(noDSDlg), gCtx->opt->mTitle);
                 gtk_window_set_position(GTK_WINDOW(noDSDlg), 
                         GTK_WIN_POS_CENTER);
                 gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
-                gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
-                gtk_packer_add_defaults(GTK_PACKER(packer), label,
-                        GTK_SIDE_BOTTOM, GTK_ANCHOR_CENTER, GTK_FILL_X);
+                gtk_misc_set_padding(GTK_MISC(label), 20, 20);
+                gtk_misc_set_alignment(GTK_MISC(label), 0.5, 1);
                 gtk_box_pack_start(GTK_BOX(
-                            GTK_DIALOG(noDSDlg)->action_area), okButton,
+                        GTK_DIALOG(noDSDlg)->action_area), okButton,
                         FALSE, FALSE, 10);
                 gtk_signal_connect(GTK_OBJECT(okButton), "clicked", 
                         GTK_SIGNAL_FUNC(NoDiskSpaceOK), noDSDlg);
                 gtk_box_pack_start(GTK_BOX(
-                            GTK_DIALOG(noDSDlg)->vbox), packer, FALSE, FALSE, 10);
+                        GTK_DIALOG(noDSDlg)->vbox), label, FALSE, FALSE, 10);
 
                 GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
                 gtk_widget_grab_default(okButton);

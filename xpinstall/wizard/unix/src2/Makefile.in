@@ -74,9 +74,9 @@ CPPSRCS		= \
         $(NULL)
 
 LIBS        = \
-        `$(GTK_CONFIG) --libs` \
-        -ljar$(VERSION_NUMBER)_s \
-        -lxpnet_s \
+        $(TK_LIBS) \
+        $(DIST)/lib/$(LIB_PREFIX)jar$(VERSION_NUMBER)_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
         -lpthread \
         $(NULL)
 
@@ -89,4 +89,4 @@ EXTRA_DEPS = \
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += `$(GTK_CONFIG) --cflags`
+CXXFLAGS += $(TK_CFLAGS)
