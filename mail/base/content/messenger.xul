@@ -328,7 +328,7 @@
 
   </box> <!-- end of mailContentWrapper -->
 
-  <statusbar id="status-bar" class="chromeclass-status mailwindow-statusbar">
+  <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="unreadMessageCount"/>
     <statusbarpanel id="totalMessageCount"/>
   </statusbar>

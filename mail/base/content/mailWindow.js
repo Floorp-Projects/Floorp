@@ -235,13 +235,6 @@ function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
     menu.setAttribute('ref', 'msgaccounts:/');
   }
 }
-function dumpProgress() {
-    var broadcaster = document.getElementById("Messenger:LoadingProgress");
-    dump( "broadcaster mode=" + broadcaster.getAttribute("mode") + "\n" );
-    dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
-    dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
-    dump( "meter value=" + meter.getAttribute("value") + "\n" );
-}
 
 // We're going to implement our status feedback for the mail window in JS now.
 // the following contains the implementation of our status feedback object

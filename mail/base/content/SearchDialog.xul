@@ -249,7 +249,7 @@
 
   <statusbar class="chromeclass-status" id="status-bar"> 
     <statusbarpanel class="statusbarpanel-progress">
-      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
     <statusbarpanel id="statusText" crop="right" flex="1"/>
   </statusbar> 

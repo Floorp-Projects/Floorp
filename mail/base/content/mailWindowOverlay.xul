@@ -1667,22 +1667,18 @@
           accesskey="&advancedButton.accesskey;" hidden="true"/>
 </hbox>
 
-<hbox id="junkBar" collapsed="true">
-  <hbox align="center">
-    <image id="junkBarImage"/>
-  </hbox>
-  <hbox align="center">
-    <label id="junkBarMessage" value="&junkBarMessage.label;"/>
-  </hbox>
+<hbox id="junkBar" collapsed="true" align="center">
+  <image id="junkBarImage"/>
+  <label id="junkBarMessage" value="&junkBarMessage.label;"/>
   <spacer flex="1"/>
-  <button label="&notJunkButton.label;" oncommand="JunkSelectedMessages(false)" />
+  <button label="&notJunkButton.label;" oncommand="JunkSelectedMessages(false)"/>
 </hbox>
 
 <statusbar class="chromeclass-status" id="status-bar">
   <hbox insertbefore="unreadMessageCount" flex="1">
     <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
-      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
   </hbox>
 </statusbar> 
