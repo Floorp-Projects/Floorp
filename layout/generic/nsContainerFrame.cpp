@@ -207,9 +207,11 @@ nsContainerFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags)
 {
+  NS_ASSERTION(aFrame, "no frame to paint!");
+  if (!aFrame) return;
   nsIView *pView;
   aFrame->GetView(aPresContext, &pView);
-  if (nsnull == pView) {
+  if (!pView) {
     nsRect kidRect;
     aFrame->GetRect(kidRect);
     nsFrameState state;
