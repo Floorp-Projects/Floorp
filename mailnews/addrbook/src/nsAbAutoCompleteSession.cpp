@@ -103,119 +103,138 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
 }
 
 void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pNameStr, 
-    const PRUnichar*pEmailStr, MatchType type, nsIAutoCompleteResults* results)
+    const PRUnichar* pEmailStr, const PRUnichar* pNotesStr, PRBool bIsMailList, MatchType type, nsIAutoCompleteResults* results)
 {
-    nsresult rv;
-    PRUnichar* fullAddrStr = nsnull;
+  nsresult rv;
+  PRUnichar* fullAddrStr = nsnull;
 
-    if (type == DEFAULT_MATCH)
+  if (type == DEFAULT_MATCH)
+  {
+    if (mDefaultDomain[0] == 0)
+      return;
+
+    nsAutoString aStr = pNameStr;
+    aStr.AppendWithConversion('@');
+    aStr += mDefaultDomain;
+    fullAddrStr = aStr.ToNewUnicode();
+  }
+  else
+  {
+    if (mParser)
     {
-        if (mDefaultDomain[0] == 0)
-            return;
+      char * fullAddress = nsnull;
+      char * utf8Name = nsAutoString(pNameStr).ToNewUTF8String();
+      char * utf8Email;
+      if (bIsMailList)
+      {
+        if (pNotesStr && pNotesStr[0] != 0)
+          utf8Email = nsAutoString(pNotesStr).ToNewUTF8String();   
+        else
+          utf8Email = nsAutoString(pNameStr).ToNewUTF8String();   
+      }
+      else
+        utf8Email = nsAutoString(pEmailStr).ToNewUTF8String();   
 
-        nsAutoString aStr = pNameStr;
-        aStr.AppendWithConversion('@');
-        aStr += mDefaultDomain;
-        fullAddrStr = aStr.ToNewUnicode();
+      mParser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
+      if (fullAddress && *fullAddress)
+      {
+        /* We need to convert back the result from UTF-8 to Unicode */
+        PRInt32 strLen;
+        INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&fullAddrStr, &strLen);
+        PR_Free(fullAddress);
+      }
+      Recycle(utf8Name);
+      Recycle(utf8Email);
     }
-    else
-        if (mParser)
-        {
-            char * utf8Name = nsAutoString(pNameStr).ToNewUTF8String();
-            char * utf8Email = nsAutoString(pEmailStr).ToNewUTF8String();   
-    	    char * fullAddress = nsnull;
-
-            mParser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
-    	    if (fullAddress && *fullAddress)
-    	    {
-            	/* We need to convert back the result from UTF-8 to Unicode */
-            	PRInt32 strLen;
-            	INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&fullAddrStr, &strLen);
-            	PR_Free(fullAddress);
-    	    }
-            Recycle(utf8Name);
-            Recycle(utf8Email);
-        }
-    
+  
     if (!fullAddrStr)
     {
-        //oops, parser problem! I will try to do my best...
-        nsAutoString aStr = pNameStr;
-        aStr.AppendWithConversion(" <");
+      //oops, parser problem! I will try to do my best...
+      nsAutoString aStr = pNameStr;
+      aStr.AppendWithConversion(" <");
+      if (bIsMailList)
+      {
+        if (pNotesStr && pNotesStr[0] != 0)
+          aStr += pNotesStr;
+        else
+          aStr += pNameStr;
+      }
+      else
         aStr += pEmailStr;
-        aStr.AppendWithConversion(">");
-        fullAddrStr = aStr.ToNewUnicode();
+      aStr.AppendWithConversion(">");
+      fullAddrStr = aStr.ToNewUnicode();
     }
+  }
     
-    if (! ItsADuplicate(fullAddrStr, results))
-    {    
-        nsCOMPtr<nsIAutoCompleteItem> newItem;
-    	rv = nsComponentManager::CreateInstance(kAutoCompleteItemCID, nsnull, NS_GET_IID(nsIAutoCompleteItem), getter_AddRefs(newItem));
-        if (NS_SUCCEEDED(rv))
-        {
-            nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pNameStr, pEmailStr, type);
-            NS_IF_ADDREF(param);
-            newItem->SetParam(param);
-            NS_IF_RELEASE(param);
+  if (! ItsADuplicate(fullAddrStr, results))
+  {    
+    nsCOMPtr<nsIAutoCompleteItem> newItem;
+    rv = nsComponentManager::CreateInstance(kAutoCompleteItemCID, nsnull, NS_GET_IID(nsIAutoCompleteItem), getter_AddRefs(newItem));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pNameStr, pEmailStr, pNotesStr, bIsMailList, type);
+      NS_IF_ADDREF(param);
+      newItem->SetParam(param);
+      NS_IF_RELEASE(param);
 
-            newItem->SetValue(fullAddrStr);
-            nsCOMPtr<nsISupportsArray> array;
-            rv = results->GetItems(getter_AddRefs(array));
-            if (NS_SUCCEEDED(rv))
-            {
-                PRInt32 insertPosition = 0;
-                PRInt32 i;
-                for (i = 0; i <= type; insertPosition += mMatchTypeConters[i++])
-                    ; 
-                rv = array->InsertElementAt(newItem, insertPosition);
-                if (NS_SUCCEEDED(rv))
-                    mMatchTypeConters[type] ++;
-            }
-        }
-    }    
-    PR_Free(fullAddrStr);
+      newItem->SetValue(fullAddrStr);
+      nsCOMPtr<nsISupportsArray> array;
+      rv = results->GetItems(getter_AddRefs(array));
+      if (NS_SUCCEEDED(rv))
+      {
+        PRInt32 insertPosition = 0;
+        PRInt32 i;
+        for (i = 0; i <= type; insertPosition += mMatchTypeConters[i++])
+          ; 
+        rv = array->InsertElementAt(newItem, insertPosition);
+        if (NS_SUCCEEDED(rv))
+          mMatchTypeConters[type] ++;
+      }
+    }
+  }    
+  PR_Free(fullAddrStr);
 }
 
 PRBool nsAbAutoCompleteSession::CheckEntry(const PRUnichar* searchStr, PRUint32 searchStrLen,
 	const PRUnichar* nickName, const PRUnichar* userName, const PRUnichar* emailAddress, MatchType* matchType)
 {
     // First check for a Nickname exact match
-    if (nsCRT::strcasecmp(searchStr, nickName) == 0)
+    if (nickName && nsCRT::strcasecmp(searchStr, nickName) == 0)
     {
         *matchType = NICKNAME_EXACT_MATCH;
         return PR_TRUE;
     }
 
     // Then check for a Name exact match
-    if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)userName) == 0)
+    if (userName && nsCRT::strcasecmp(searchStr, userName) == 0)
     {
         *matchType = NAME_EXACT_MATCH;
         return PR_TRUE;
     }
 
     // Then check for a Email exact match
-    if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)emailAddress) == 0)
+    if (emailAddress && nsCRT::strcasecmp(searchStr, emailAddress) == 0)
     {
         *matchType = EMAIL_EXACT_MATCH;
         return PR_TRUE;
     }
 
     // Then check for a NickName partial match
-    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)nickName, searchStrLen) == 0)
+    if (nickName && nsCRT::strncasecmp(searchStr, nickName, searchStrLen) == 0)
     {
     	*matchType = NICKNAME_MATCH;
         return PR_TRUE;
     }
 
     // Then check for a Name partial match
-    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)userName, searchStrLen) == 0)
+    if (userName && nsCRT::strncasecmp(searchStr, userName, searchStrLen) == 0)
     {
     	*matchType = NAME_MATCH;
         return PR_TRUE;
     }
 
     // Then check for a Email partial match
-    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)emailAddress, searchStrLen) == 0)
+    if (emailAddress && nsCRT::strncasecmp(searchStr, emailAddress, searchStrLen) == 0)
     {
     	*matchType = EMAIL_MATCH;
         return PR_TRUE;
@@ -226,52 +245,74 @@ PRBool nsAbAutoCompleteSession::CheckEntry(const PRUnichar* searchStr, PRUint32 
 
 nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results)
 {
-    nsresult rv;    
-    nsCOMPtr<nsIEnumerator> cardsEnumerator;
-    nsCOMPtr<nsIAbCard> card;
-    
-    PRUint32 searchStrLen = nsCRT::strlen(searchStr);
+  nsresult rv;    
+  nsCOMPtr<nsIEnumerator> cardsEnumerator;
+  nsCOMPtr<nsIAbCard> card;
+  
+  PRUint32 searchStrLen = nsCRT::strlen(searchStr);
 
-    rv = directory->GetChildCards(getter_AddRefs(cardsEnumerator));
-    if (NS_SUCCEEDED(rv) && cardsEnumerator)
-    {
+  rv = directory->GetChildCards(getter_AddRefs(cardsEnumerator));
+  if (NS_SUCCEEDED(rv) && cardsEnumerator)
+  {
 		nsCOMPtr<nsISupports> item;
-	    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next())
-	    {
-            rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
-            if (NS_SUCCEEDED(rv))
-            {
-                card = do_QueryInterface(item, &rv);
-	            if (NS_SUCCEEDED(rv))
-	            {
-            	    nsXPIDLString pEmailStr;
-            	    nsXPIDLString pNameStr;
-            	    nsXPIDLString pNickNameStr;
+	  for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next())
+	  {
+      rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
+      if (NS_SUCCEEDED(rv))
+      {
+        card = do_QueryInterface(item, &rv);
+	      if (NS_SUCCEEDED(rv))
+	      {
+          nsXPIDLString pEmailStr;
+          nsXPIDLString pNameStr;
+          nsXPIDLString pNickNameStr;
+          nsXPIDLString pNotesStr;
+					PRBool bIsMailList;
 
-                    // Don't bother with card without an email address
-             	    rv = card->GetPrimaryEmail(getter_Copies(pEmailStr));
-                    if (NS_FAILED(rv))
-                        continue;
-                    if (!(const PRUnichar*)pEmailStr || ((const PRUnichar*)pEmailStr)[0] == 0)
-                        continue;
-                    
-                    //Now, retrive the user name and nickname
-             	    rv = card->GetDisplayName(getter_Copies(pNameStr));
-             	    if (NS_FAILED(rv))
-             	        continue;
-             	    rv = card->GetNickName(getter_Copies(pNickNameStr));
-             	    if (NS_FAILED(rv))
-             	        continue;
-                    
+					rv = card->GetIsMailList(&bIsMailList);
+          if (NS_FAILED(rv))
+            continue;
+					if (bIsMailList)
+          {
+            rv = card->GetNotes(getter_Copies(pNotesStr));
+						if (NS_FAILED(rv))
+							continue;
+          }
+          else
+					{
+            rv = card->GetPrimaryEmail(getter_Copies(pEmailStr));
+						if (NS_FAILED(rv))
+							continue;
+						// Don't bother with card without an email address
+						if (!(const PRUnichar*)pEmailStr || ((const PRUnichar*)pEmailStr)[0] == 0)
+							continue;
+						//...and does it looks like a valid address?
+						PRInt32 i;
+						for (i = 0; ((const PRUnichar*)pEmailStr)[i] != 0 &&
+								((const PRUnichar*)pEmailStr)[i] != '@'; i ++)
+							;
+						if (((const PRUnichar*)pEmailStr)[i] == 0)
+							continue;
+					}
+            
+            //Now, retrive the user name and nickname
+          rv = card->GetDisplayName(getter_Copies(pNameStr));
+          if (NS_FAILED(rv))
+             	continue;
+          rv = card->GetNickName(getter_Copies(pNickNameStr));
+          if (NS_FAILED(rv))
+             	continue;
+            
 					MatchType matchType;
  					if (CheckEntry(searchStr, searchStrLen, (const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, &matchType))
-        			    AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NICKNAME_EXACT_MATCH, results);
-	            }
-            }
-        }
+        		AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr,
+                        (const PRUnichar*)pNotesStr, bIsMailList, matchType, results);
+	      }
+      }
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 
@@ -379,7 +420,7 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchS
             
 			MatchType matchType;
 			if (CheckEntry(searchStr, searchStrLen, param->mNickName, param->mUserName, param->mEmailAddress, &matchType))
-        		AddToResult(param->mNickName, param->mUserName, param->mEmailAddress, matchType, results);
+        AddToResult(param->mNickName, param->mUserName, param->mEmailAddress, param->mNotes, param->mIsMailList, matchType, results);
 
 			NS_RELEASE(param);
 	    }
@@ -430,7 +471,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         if (mDefaultDomain[0] != 0)
         {
             PRUnichar emptyStr = 0;
-            AddToResult(&emptyStr, uSearchString, &emptyStr, DEFAULT_MATCH, results);
+            AddToResult(&emptyStr, uSearchString, &emptyStr, &emptyStr, PR_FALSE, DEFAULT_MATCH, results);
             addedDefaultItem = PR_TRUE;
         }
 

@@ -65,9 +65,10 @@ public:
 protected:    
     void ResetMatchTypeConters();
     PRBool ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results);
-    void AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pNameStr, const PRUnichar*pEmailStr, MatchType type, nsIAutoCompleteResults* results);
-	PRBool CheckEntry(const PRUnichar* searchStr, PRUint32 searchStrLen,const PRUnichar* nickName, const PRUnichar* userName, const PRUnichar* emailAddress, MatchType* matchType);
-	nsresult SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results);
+    void AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pNameStr, const PRUnichar* pEmailStr,
+      const PRUnichar* pNotes, PRBool bIsMailList, MatchType type, nsIAutoCompleteResults* results);
+	  PRBool CheckEntry(const PRUnichar* searchStr, PRUint32 searchStrLen,const PRUnichar* nickName,const PRUnichar* userName, const PRUnichar* emailAddress, MatchType* matchType);
+	  nsresult SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results);
     nsresult SearchDirectory(nsString& fileName, const PRUnichar* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
     nsresult SearchPreviousResults(const PRUnichar *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
 
@@ -86,15 +87,18 @@ class nsAbAutoCompleteParam : public nsISupports
 {
 public:
 	NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ABAUTOCOMPLETEPARAM_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ABAUTOCOMPLETEPARAM_IID)
 	
-	nsAbAutoCompleteParam(const PRUnichar* nickName, const PRUnichar* userName, const PRUnichar* emailAddress, nsAbAutoCompleteSession::MatchType type)
+	nsAbAutoCompleteParam(const PRUnichar* nickName, const PRUnichar* userName,const PRUnichar* emailAddress,
+    const PRUnichar* notes, PRBool isMailList, nsAbAutoCompleteSession::MatchType type)
 	{
-	    NS_INIT_REFCNT();
-	    mNickName = nsCRT::strdup(nickName);
-	    mUserName = nsCRT::strdup(userName);
-	    mEmailAddress = nsCRT::strdup(emailAddress);
-	    mType = type;
+	  NS_INIT_REFCNT();
+		mNickName = nsCRT::strdup(nickName ? nickName : NS_LITERAL_STRING(""));
+		mUserName = nsCRT::strdup(userName ? userName : NS_LITERAL_STRING(""));
+		mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_LITERAL_STRING(""));
+		mNotes = nsCRT::strdup(notes ? notes : NS_LITERAL_STRING(""));
+    mIsMailList = isMailList;
+    mType = type;
 	}
 	
 	virtual ~nsAbAutoCompleteParam()
@@ -105,12 +109,16 @@ public:
 	        nsCRT::free(mUserName);
 	    if (mEmailAddress)
 	        nsCRT::free(mEmailAddress);
+	    if (mNotes)
+	        nsCRT::free(mNotes);
 	};
 	
 protected:
     PRUnichar* mNickName;
     PRUnichar* mUserName;
     PRUnichar* mEmailAddress;
+    PRUnichar* mNotes;
+    PRBool mIsMailList;
     nsAbAutoCompleteSession::MatchType  mType;
 
 public:
