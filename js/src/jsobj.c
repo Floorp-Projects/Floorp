@@ -170,7 +170,7 @@ static JSBool
 obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSObject *pobj;
-    uint32 slot;
+    uint32 slot, attrs;
 
     if (!JSVAL_IS_OBJECT(*vp))
         return JS_TRUE;
@@ -178,6 +178,11 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     slot = (uint32) JSVAL_TO_INT(id);
     if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
         return JS_FALSE;
+
+    /* __parent__ is readonly and permanent, only __proto__ may be set. */
+    if (!OBJ_CHECK_ACCESS(cx, obj, id, JSACC_PROTO | JSACC_WRITE, vp, &attrs))
+        return JS_FALSE;
+
     return js_SetProtoOrParent(cx, obj, slot, pobj);
 }
 

@@ -78,14 +78,16 @@ typedef enum JSType {
 
 /* JSObjectOps.checkAccess mode enumeration. */
 typedef enum JSAccessMode {
-    JSACC_PROTO,                /* XXXbe redundant w.r.t. id */
-    JSACC_PARENT,               /* XXXbe redundant w.r.t. id */
-    JSACC_IMPORT,               /* import foo.bar */
-    JSACC_WATCH,                /* a watchpoint on object foo for id 'bar' */
-    JSACC_READ,                 /* a "get" of foo.bar */
-    JSACC_WRITE,                /* a "set" of foo.bar = baz */
+    JSACC_PROTO  = 0,           /* XXXbe redundant w.r.t. id */
+    JSACC_PARENT = 1,           /* XXXbe redundant w.r.t. id */
+    JSACC_IMPORT = 2,           /* import foo.bar */
+    JSACC_WATCH  = 3,           /* a watchpoint on object foo for id 'bar' */
+    JSACC_READ   = 4,           /* a "get" of foo.bar */
+    JSACC_WRITE  = 8,           /* a "set" of foo.bar = baz */
     JSACC_LIMIT
 } JSAccessMode;
+
+#define JSACC_TYPEMASK          (JSACC_WRITE - 1)
 
 /*
  * This enum type is used to control the behavior of a JSObject property
