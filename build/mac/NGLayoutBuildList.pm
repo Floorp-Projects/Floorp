@@ -627,6 +627,7 @@ sub BuildClientDist()
    _InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",				"$distdirectory:idl:");
    _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
    
    print("--- Client Dist export complete ----\n")
