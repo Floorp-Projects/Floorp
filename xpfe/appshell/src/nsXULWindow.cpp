@@ -819,7 +819,7 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
       nsCOMPtr<nsIXULWindow> listXULWindow(do_QueryInterface(supportsWindow));
       nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
 
-      if (listXULWindow.get() != ourXULWindow) {
+      if (listXULWindow != ourXULWindow) {
         listBaseWindow->GetPosition(&listX, &listY);
 
         if (ABS(listX-aRequestedX) <= kSlop && ABS(listY-aRequestedY) <= kSlop) {
