@@ -30,6 +30,9 @@ import netscape.security.*;
 
 public class CPGenerator
 {
+    public static final int    		IDLE = 1;
+    public static final int     	DOWNLOADING = 2;
+    public static final int			UNJARRING = 3;
 	public static final int			SENDING = 4;
 	public static final int			RECEIVING_RESPONSE = 5;
 	public static final int			WAITING = 6;
@@ -63,7 +66,7 @@ public class CPGenerator
 
     //static CPGeneratorProgress    progress = null;
 
-//  static final String         regservMimeData = "http://seaspace.netscape.com:8080/programs/ias5/regserv/docs/reg.cgi";
+//  static final String				regservMimeData = "http://seaspace.netscape.com:8080/programs/ias5/regserv/docs/reg.cgi";
 
     public static int getState()
     {
@@ -604,6 +607,8 @@ public class CPGenerator
 
 	private static void downloadAndUnzipMetadata( String rootURL ) throws Throwable
 	{
+		state = DOWNLOADING;
+		
 	    String          zipFileURL =  rootURL + "metadata.jar";
 		String			localFileName = getLocalPath() + "metadata.jar";
 		
@@ -613,6 +618,8 @@ public class CPGenerator
 
 	private static void downloadJarFiles( Vector ispList, String rootURL ) throws Throwable
 	{
+		state = DOWNLOADING;
+		
 		// * download the ".jar" for each ISP
 		for ( int i = 0; i < ispList.size(); i++ )
 		{
@@ -627,7 +634,7 @@ public class CPGenerator
 		
 		    String          ispLocalFileName = getJarFilePath( ispData );
 		
-		    currentFile = new String( ispData.name );
+		    currentFile = new String( ispData.getName() );
 		
 			Trace.TRACE( "downloading: " + zipFileURL );
 		    ServerDownload.downloadURL( zipFileURL, ispLocalFileName );
@@ -636,6 +643,8 @@ public class CPGenerator
 
 	private static void decompressJarFiles( Vector ispList ) throws Throwable
 	{
+		state = UNJARRING;
+		
 		// * decompress the ".jar" for each ISP
 		for ( int i = 0; i < ispList.size(); i++ )
 		{
@@ -681,7 +690,7 @@ public class CPGenerator
 			nvSet.setValue( ispDirectorySymbol, new String( ispData.language + "/" + ispData.name + "/client_data" ) );
 			parseFeatureSet( nvSet, featureMappings );
 			returnSets.addElement( nvSet );
-				//nvSet.printNameValueSet();
+			//nvSet.printNameValueSet();
 		}
 		return returnSets;
 	}
@@ -690,13 +699,18 @@ public class CPGenerator
 		String sRootURL, String metadataMode, String reggieData[] )
 	{
 		done = false;
-
+		state = IDLE;
+		
         Trace.TRACE( "Hello" );
 
         NameValueSet    featureMappings = null;
         boolean         result = false;
 
 		localPath = new String( inLocalPath );
+		
+		
+		ServerDownload.resetBytesDownloaded();
+		ServerDownload.resetBytesUnjarred();
 		
         try
         {
@@ -713,12 +727,7 @@ public class CPGenerator
 			if ( metadataMode.toLowerCase().compareTo( "no" ) != 0 )
 				downloadAndUnzipMetadata( sRootURL );
 			
-			ServerDownload.resetBytesDownloaded();
-			
 			downloadJarFiles( ispList, sRootURL );
-			
-			ServerDownload.resetBytesDownloaded();
-			
 			decompressJarFiles( ispList );
 			
 			//Trace.TRACE( "features.cfg settings: " );
@@ -754,55 +763,51 @@ public class CPGenerator
 			bufferedReader.close();
 			
 			done = true;
+			Thread.yield();
 			result = true;
+			state = IDLE;
 			//System.in.read(); // prevent console window from going away
 		}
 
 		catch ( MalformedURLException e )
 		{
-			done = true;
-			result = false;
 		    Trace.TRACE( e.getMessage() );
 		    e.printStackTrace();
 		}
 		catch ( ConnectException e )
 		{
-			done = true;
-			result = false;
 		    Trace.TRACE( e.getMessage() );
 		    e.printStackTrace();
 		}
 		catch ( UnknownHostException e )
 		{
-			done = true;
-			result = false;
 			Trace.TRACE( e.getMessage() );
 		    e.printStackTrace();
 		}
 		catch ( FileNotFoundException e )
 		{
-			done = true;
-			result = false;
 		    Trace.TRACE( e.getMessage() );
 		    e.printStackTrace();
 		}
 		catch ( Exception e )
 		{
-			done = true;
-			result = false;
 		    Trace.TRACE( e.getMessage() );
 		    e.printStackTrace();
 		}
 		catch ( Throwable e )
 		{
-		    done = true;
-		    result = false;
 		    Trace.TRACE( "caught an exception" );
 		    Trace.TRACE( e.getMessage() );
 		    e.printStackTrace();
 		}
-
+		finally
+		{
+			done = true;
+			state = IDLE;
+		}
+		
 		Trace.TRACE( "returning result: " + result );
+		done = false;
 		return result;
     }
 }

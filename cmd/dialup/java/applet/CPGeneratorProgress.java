@@ -27,8 +27,8 @@ import java.lang.*;
 
 public class CPGeneratorProgress extends ProgressApplet
 {
-    final static String DOWNLOAD_STRING = "Downloading:";
-    final static String UNJAR_STRING = "Uncompressing:";
+    final static String DOWNLOAD_STRING = "Downloading...";
+    final static String UNJAR_STRING = "Uncompressing...";
     final static String DONE_STRING = "Done...";
     final static String CONTACTING_SERVER = "Contacting registration server...";
     final static String SENDING = "Sending registration information...";
@@ -37,14 +37,8 @@ public class CPGeneratorProgress extends ProgressApplet
     final static String ABORT = "There were problems with the server connection...";
     final static String DIALING_STRING = "Calling registration server...";
 
-    protected int getState()
-    {
-        if ( ServerDownload.getState() == ServerDownload.IDLE )
-            return CPGenerator.getState();
-        else
-            return ServerDownload.getState();
-    }
-
+	final static double PEG_DOWNLOAD = 0.90;
+	
 	public void init()
 	{
 		super.init();
@@ -61,14 +55,14 @@ public class CPGeneratorProgress extends ProgressApplet
 				
 				int             lastState = CPGenerator.DONE;
 				int             thisState = CPGenerator.DONE;
-				String          lastString = "";
-				String          thisString = "";
+				//String          lastString = "";
+				//String          thisString = "";
 				
 				while ( CPGenerator.done == false )
 				{
 					//Trace.TRACE( "CPGenerator not done" );
-					thisState = getState();
-					thisString = new String( CPGenerator.currentFile );
+					thisState = CPGenerator.getState();
+					//thisString = new String( CPGenerator.currentFile );
 					
 					if ( thisState != lastState )
 					{
@@ -76,53 +70,76 @@ public class CPGeneratorProgress extends ProgressApplet
 						
 						switch ( thisState )
 						{
-							case ServerDownload.DOWNLOADING:
-								buffer = DOWNLOAD_STRING;
+							case CPGenerator.IDLE:
+							buffer = "";
 							break;
 							
-							case ServerDownload.UNJARRING:
-								buffer = UNJAR_STRING;
+							case CPGenerator.DOWNLOADING:
+							buffer = DOWNLOAD_STRING;
+							break;
+							
+							case CPGenerator.UNJARRING:
+							buffer = UNJAR_STRING;
 							break;
 							
 							case CPGenerator.CONTACTING_SERVER:
-								buffer = CONTACTING_SERVER;
+							buffer = CONTACTING_SERVER;
 							break;
 							
 							case CPGenerator.SENDING:
-								buffer = SENDING;
+							buffer = SENDING;
 							break;
 							
 							case CPGenerator.WAITING:
-								buffer = WAITING;
+							buffer = WAITING;
 							break;
 							
 							case CPGenerator.RECEIVING_RESPONSE:
-								buffer = RECEIVING_RESPONSE;
+							buffer = RECEIVING_RESPONSE;
 							break;
 							
 							case CPGenerator.DONE:
-								buffer = DONE_STRING;
+							buffer = DONE_STRING;
 							break;
 							
 							case CPGenerator.ABORT:
-								buffer = ABORT;
+							buffer = ABORT;
 							break;
-	                    }
+						}
 						
 						status.setText( buffer );
 						lastState = thisState;
 					}
 					
-					if ( thisString.compareTo( lastString ) != 0 )
-					{
-						progress.setText( thisString );
-						lastString = thisString;
-					}
+					//if ( thisString.compareTo( lastString ) != 0 )
+					//{
+					//	progress.setText( thisString );
+					//	lastString = thisString;
+					//}
 					
 					if ( ServerDownload.getBytesDownloaded() == 0 || CPGenerator.totalBytes == 0 )
 						progressBar.setPercent( 0.0 );
 					else
-						progressBar.setPercent( (double)ServerDownload.getBytesDownloaded() / (double)CPGenerator.totalBytes );
+					{
+						double percent;
+						
+						if ( thisState == CPGenerator.DOWNLOADING )
+						{
+							percent =	(double)ServerDownload.getBytesDownloaded() /
+										(double)CPGenerator.totalBytes;
+												
+							percent = percent * PEG_DOWNLOAD;
+						}
+						else
+						{
+							percent = 	(double)ServerDownload.getBytesUnjarred() /
+										(double)CPGenerator.totalBytes;
+							percent = ( 1.0 - PEG_DOWNLOAD ) * percent;
+							percent = percent + PEG_DOWNLOAD;
+						}
+							
+						progressBar.setPercent( percent );
+					}
 					
 					repaint();
 					Thread.yield();

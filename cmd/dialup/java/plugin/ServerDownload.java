@@ -42,23 +42,25 @@ class UnjarException extends Exception
 public class ServerDownload
 {
     public static final boolean SLEEP = false;
-    public static final int     IDLE = 0;
-    public static final int     DOWNLOADING = 1;
-    public static final int     UNJARRING = 2;
 
-    static int                  state = IDLE;
     static int                  bytesDownloaded = 0;
-
-    public static int getState()
-    {
-        return state;
-    }
-
+	static int					bytesUnjarred = 0;
+	
     public static int getBytesDownloaded()
     {
         return bytesDownloaded;
     }
-
+	
+	public static int getBytesUnjarred()
+	{
+		return bytesUnjarred;
+	}
+	
+	public static void resetBytesUnjarred()
+	{
+		bytesUnjarred = 0;
+	}
+	
     public static void resetBytesDownloaded()
     {
         bytesDownloaded = 0;
@@ -106,8 +108,6 @@ public class ServerDownload
     public static boolean unjarURL( String sURL, String sLocalFolder, boolean bDelTempFile )
     throws Exception
     {
-        state = IDLE;
-
         boolean             bResult = false;
 
         // * downloaded file name: append filename to provided local folder
@@ -155,8 +155,6 @@ public class ServerDownload
         String                  sFolderName;
 
         //Trace.TRACE( "downloading " + sURL );
-
-        state = ServerDownload.DOWNLOADING;
 
         urlSrc = new URL( sURL );
 
@@ -220,7 +218,6 @@ public class ServerDownload
 
         bResult = true;
 
-        state = IDLE;
         return bResult;
   }
 
@@ -234,8 +231,6 @@ public class ServerDownload
     public static boolean unJarFile( String sCompFile, boolean bDeleteJarFile )
     throws Exception
     {
-        state = UNJARRING;
-
         boolean             bResult = false;
         final int           nBuffSize = 500;
 
@@ -284,7 +279,7 @@ public class ServerDownload
                     fileout = new FileOutputStream( zEntryFile.getPath() );
                     while ( ( nBytesRead = inflaterin.read( buffer, 0, nBuffSize ) ) != -1 )
                     {
-                        bytesDownloaded += nBytesRead;
+                        bytesUnjarred += nBytesRead;
                         fileout.write( buffer, 0, nBytesRead );
 
                         if ( SLEEP )
@@ -314,7 +309,6 @@ public class ServerDownload
                 inflaterin.close();
         }
 
-        state = IDLE;
         return bResult;
     }
 }
