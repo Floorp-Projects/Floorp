@@ -305,7 +305,7 @@ class StringImpl
                                             mLastResult = chars.get_result();
                                             // Set our string to match the new chars
                                             chars.Seek(PR_SEEK_SET, 0);
-                                            size_t newLength;
+                                            PRUint32 newLength;
                                             chars.Available(&newLength);
                                             mString.Assign(cstring, newLength);
                                             // Set our const string also...
