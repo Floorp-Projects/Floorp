@@ -42,6 +42,11 @@ class nsTextRun;
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
+#define NS_BLOCK_FRAME_CID \
+ { 0xa6cf90df, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
+extern const nsIID kBlockFrameCID;
+
 // Base class for block and inline frames
 class nsBlockFrame : public nsBlockFrameSuper
 {
@@ -125,6 +130,8 @@ public:
 
   virtual void DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                       nsIFrame* aNextInFlow);
+
+  nsIFrame* GetTopBlockChild();
 
 protected:
   nsBlockFrame();
@@ -218,9 +225,12 @@ protected:
   //----------------------------------------
   // Methods for individual frame reflow
 
-  virtual void WillReflowFrame(nsBlockReflowState& aState,
-                               nsLineBox* aLine,
-                               nsIFrame* aFrame);
+  void WillReflowFrame(nsBlockReflowState& aState,
+                       nsLineBox* aLine,
+                       nsIFrame* aFrame);
+
+  PRBool ShouldApplyTopMargin(nsBlockReflowState& aState,
+                              nsLineBox* aLine);
 
   nsresult ReflowBlockFrame(nsBlockReflowState& aState,
                             nsLineBox* aLine,
