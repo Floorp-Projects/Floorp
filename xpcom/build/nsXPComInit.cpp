@@ -39,6 +39,7 @@
 #include "nsSupportsArray.h"
 #include "nsSupportsPrimitives.h"
 #include "nsUnicharBuffer.h"
+#include "nsConsoleService.h"
 
 #include "nsComponentManager.h"
 #include "nsIServiceManager.h"
@@ -75,6 +76,7 @@
 
 // base
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_CID(kConsoleServiceCID, NS_CONSOLESERVICE_CID);
 // ds
 static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
 static NS_DEFINE_CID(kByteBufferCID, NS_BYTEBUFFER_CID);
@@ -138,6 +140,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsFloatImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsDoubleImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsVoidImpl)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
     
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,6 +355,12 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 NS_SUPPORTSARRAY_CLASSNAME,
                                 NS_SUPPORTSARRAY_PROGID,
                                 nsSupportsArray::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kConsoleServiceCID,
+                                NS_CONSOLESERVICE_CLASSNAME,
+                                NS_CONSOLESERVICE_PROGID,
+                                nsConsoleServiceConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kAtomServiceCID,

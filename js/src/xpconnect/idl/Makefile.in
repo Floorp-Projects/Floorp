@@ -48,6 +48,7 @@ XPIDLSRCS	= \
 		nsIJSRuntimeService.idl \
 		nsIXPConnect.idl \
 		nsIXPCSecurityManager.idl \
+		nsIScriptError.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -81,6 +81,8 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 
+#include "nsIScriptError.h"
+
 #ifdef XPC_TOOLS_SUPPORT
 #include "nsIXPCToolsProfiler.h"
 #include "nsIPref.h"
@@ -1466,5 +1468,29 @@ xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt);
 // inlines which call methods on classes above.
 
 #include "xpcmaps.h"
+
+// Definition of nsScriptError, defined here because we lack a place to put
+// XPCOM objects associated with the JavaScript engine.
+class nsScriptError : public nsIScriptError {
+public:
+    nsScriptError();
+
+    virtual ~nsScriptError();
+
+  // TODO - do something reasonable on getting null from these babies.
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICONSOLEMESSAGE
+    NS_DECL_NSISCRIPTERROR
+
+private:
+    nsString mMessage;
+    nsString mSourceName;
+    PRUint32 mLineNumber;
+    nsString mSourceLine;
+    PRUint32 mColumnNumber;
+    PRUint32 mFlags;
+    nsCString mCategory;
+};
 
 #endif /* xpcprivate_h___ */

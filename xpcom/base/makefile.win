@@ -55,6 +55,9 @@ XPIDLSRCS =               \
         .\nsISupports.idl \
         .\nsISystemInfo.idl \
         .\nsIWeakReference.idl \
+	.\nsIConsoleService.idl \
+	.\nsIConsoleMessage.idl \
+	.\nsIConsoleListener.idl \
         $(NULL)
 
 ################################################################################
@@ -88,6 +91,8 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsSystemInfo.obj  \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         .\$(OBJDIR)\nsWeakReference.obj \
+        .\$(OBJDIR)\nsConsoleService.obj \
+        .\$(OBJDIR)\nsConsoleMessage.obj \
 !ifdef GC_LEAK_DETECTOR
         .\$(OBJDIR)\nsGarbageCollector.obj \
         .\$(OBJDIR)\nsLeakDetector.obj \

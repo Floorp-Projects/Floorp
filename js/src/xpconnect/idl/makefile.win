@@ -43,6 +43,7 @@ XPIDLSRCS = \
 	.\nsIJSRuntimeService.idl \
 	.\nsIXPConnect.idl \
 	.\nsIXPCSecurityManager.idl \
+	.\nsIScriptError.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -66,6 +66,7 @@ CPPSRCS		= \
 		xpcwrappednativeclass.cpp \
 		xpcwrappednativejsops.cpp \
 		xpcwrappednativescope.cpp \
+		nsScriptError.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

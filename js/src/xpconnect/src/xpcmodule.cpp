@@ -44,6 +44,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect, nsXPConnect::GetXPConnect)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSContextStack, nsXPCThreadJSContextStackImpl::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSRuntimeService, nsJSRuntimeServiceImpl::GetSingleton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
 // XXX progids need to be standardized!
 static nsModuleComponentInfo components[] = {
@@ -51,7 +52,8 @@ static nsModuleComponentInfo components[] = {
   {nsnull, NS_XPCONNECT_CID,                  "nsIXPConnect",           nsIXPConnectConstructor       },
   {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID, "nsThreadJSContextStack", nsIJSContextStackConstructor  },
   {nsnull, NS_XPCEXCEPTION_CID,               "nsXPCException",         nsXPCExceptionConstructor     },
-  {nsnull, NS_JS_RUNTIME_SERVICE_CID,         "nsJSRuntimeService",     nsIJSRuntimeServiceConstructor}
+  {nsnull, NS_JS_RUNTIME_SERVICE_CID,         "nsJSRuntimeService",     nsIJSRuntimeServiceConstructor},
+  {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_PROGID, nsScriptErrorConstructor}
 };
 
 PR_STATIC_CALLBACK(void)
