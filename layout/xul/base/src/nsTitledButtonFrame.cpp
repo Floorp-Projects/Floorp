@@ -230,25 +230,29 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
     }
   }
 
+  // Always set the image loader's base URL, because someone may
+  // decide to change a button _without_ an image to have an image
+  // later.
+  nsIURL* baseURL = nsnull;
+  nsIHTMLContent* htmlContent;
+  if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+    htmlContent->GetBaseURL(baseURL);
+    NS_RELEASE(htmlContent);
+  }
+  else {
+    nsIDocument* doc;
+    if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+      doc->GetBaseURL(baseURL);
+      NS_RELEASE(doc);
+    }
+  }
+  mImageLoader.SetBaseURL(baseURL);
+  NS_IF_RELEASE(baseURL);
+
   if (mHasImage == PR_TRUE) {
-     	  mImageLoader.SetURLSpec(src);
-        nsIURL* baseURL = nsnull;
-        nsIHTMLContent* htmlContent;
-        if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-          htmlContent->GetBaseURL(baseURL);
-          NS_RELEASE(htmlContent);
-        }
-        else {
-          nsIDocument* doc;
-          if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
-            doc->GetBaseURL(baseURL);
-            NS_RELEASE(doc);
-          }
-        }
-        mImageLoader.SetBaseURL(baseURL);
-        NS_IF_RELEASE(baseURL);
+    mImageLoader.SetURLSpec(src);
   } else 
-	   mHasImage = PR_FALSE;
+    mHasImage = PR_FALSE;
   
    // get the alignment
   nsAutoString value;
