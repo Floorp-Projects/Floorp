@@ -40,16 +40,19 @@
 <!ENTITY event.menu.title   "Podawk" >
 <!ENTITY eventMenuCmd.accesskey     "P" >
 
-<!ENTITY event.new.event           "Nowy podawk" >
+<!ENTITY event.new.event           "Nowy podawk…" >
 <!ENTITY event.new.event.accesskey "o" >
 
-<!ENTITY event.new.todo     "Nowy nadawk" >
+<!ENTITY event.new.todo     "Nowy nadawk…" >
 <!ENTITY event.new.todo.accesskey "a" >
 
-<!ENTITY calendar.new.server.label "Nowa protyka">
+<!ENTITY calendar.new.server.label "Nowa protyka dataju…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Wobdźěłać" >
+<!ENTITY calendar.open.file.label "Wočinić protyka dataju…">
+<!ENTITY calendar.open.file.accesskey "o">
+
+<!ENTITY event.edit.event   "Wobdźěłać…" >
 <!ENTITY event.edit.event.accesskey "b" >
 
 <!ENTITY event.delete.event "Wotstronić" >
@@ -58,7 +61,7 @@
 <!ENTITY event.delete.tasks "Wubrany(e) nadawk(i) wotstronić">
 <!ENTITY event.delete.tasks.accesskey   "t">
 
-<!ENTITY event.mail.event   "Wubrany(e) podawk(i) emailować" >
+<!ENTITY event.mail.event   "Wubrany(e) podawk(i) emailować…" >
 <!ENTITY event.mail.event.accesskey "m" >
 
 <!ENTITY calendar.print.label   "Podawki ćišćeć..." >
@@ -119,10 +122,10 @@
 <!ENTITY goNextCmd.accesskey            "h" >
 
 <!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.accesskey            "k">
 
 <!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.accesskey            "T">
 
 <!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">

@@ -410,7 +410,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Lägg Till Ny Kalender">
+<!ENTITY calendar.server.dialog.title.new           "Ny Kalender Fil">
+<!ENTITY calendar.server.dialog.title.open          "Öppna Kalender Fil">
 <!ENTITY calendar.server.dialog.title.edit          "Redigera Kalender">
 <!ENTITY calendar.server.dialog.name.label          "Namn">
 <!ENTITY calendar.server.dialog.publish.label       "Publicera ändringar automatiskt? För länkade kalendrar betyder detta att en ny version kommer att laddas ner innan du skapar, redigerar eller raderar en händelse. Den kommer sedan att utföra dina förändringar och ladda upp den nya filen till servern.">

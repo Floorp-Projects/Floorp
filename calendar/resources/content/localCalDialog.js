@@ -49,18 +49,26 @@
 * NOTES
 *   Code for creating a new local calendar.
 *
-*  Invoke this dialog to create a new event as follows:
+*  Invoke this dialog to create a new calendar file as follows:
 
    var args = new Object();
-   args.mode = "new";               // "new" or "edit"
+   args.mode = "new";               // "new", "open", or "edit"
    args.onOk = <function>;          // funtion to call when OK is clicked
     
    calendar.openDialog("caNewCalendar", "chrome://calendar/content/localCalDialog.xul", true, args );
 *
-*  Invoke this dialog to edit an existing event as follows:
+*  Invoke this dialog to open an existing local calendar file as follows:
+
+   var args = new Object();
+   args.mode = "open";               // "new", "open", or "edit"
+   args.onOk = <function>;          // funtion to call when OK is clicked
+    
+   calendar.openDialog("caNewCalendar", "chrome://calendar/content/localCalDialog.xul", true, args );
+*
+*  Invoke this dialog to edit a known calendar file as follows:
 *
    var args = new Object();
-   args.mode = "edit";                    // "new" or "edit"
+   args.mode = "edit";                    // "new", "open", or "edit"
    args.onOk = <function>;                // funtion to call when OK is clicked
 
 * When the user clicks OK the onOk function will be called with a calendar event object.
@@ -79,7 +87,7 @@
 var gCalendarObject;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
 
-var gMode = ''; //what mode are we in? new or edit...
+var gMode = ''; //what mode are we in? new or open or edit...
 
 /*-----------------------------------------------------------------
 *   W I N D O W      F U N C T I O N S
@@ -107,13 +115,17 @@ function loadCalendarServerDialog()
    {
       titleDataItem = document.getElementById( "data-event-title-new" );
    }
+   else if( "open" == args.mode )
+   {
+      titleDataItem = document.getElementById( "data-event-title-open" );
+   }
    else
    {
       titleDataItem = document.getElementById( "data-event-title-edit" );
 
       document.getElementById( "server-path-textbox" ).setAttribute( "readonly", "true" );
    }
-   
+
 
    // CofC - calendar coloring change
    document.getElementById("calendar-color").color = gCalendarObject.color;
@@ -173,7 +185,14 @@ function launchFilePicker()
 
    // caller can force disable of sand box, even if ON globally
 
-   fp.init(window, gCalendarBundle.getString( "Save" ), nsIFilePicker.modeSave);
+   // Note: because all changes are saved immediately,
+   // must save a file name for new calendar files as well.
+   if (gMode == "new")
+     fp.init(window, gCalendarBundle.getString( "New" ), nsIFilePicker.modeSave);
+   else if (gMode == "open")
+     fp.init(window, gCalendarBundle.getString( "Open" ), nsIFilePicker.modeOpen);
+   else /* gMode == "edit" */
+     fp.init(window, gCalendarBundle.getString( "Save" ), nsIFilePicker.modeSave);
 
    var ServerName = document.getElementById( "server-name-textbox" ).value;
 

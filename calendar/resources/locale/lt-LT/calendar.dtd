@@ -409,7 +409,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Naujas kalendorius">
+<!ENTITY calendar.server.dialog.title.new           "Naujas kalendorius byla">
+<!ENTITY calendar.server.dialog.title.open          "Atverti kalendorius byla">
 <!ENTITY calendar.server.dialog.title.edit          "Kalendoriaus aprašo taisa">
 <!ENTITY calendar.server.dialog.name.label          "Vardas:">
 <!ENTITY calendar.server.dialog.publish.label       "Automatiškai publikuoti pakeitimus. (Tai reiškia, kad dirbant su nuotoliniais kalendoriais, prieš pridedant, taisant arba šalinant įvykį, pirma bus atsiųsta jo naujausia versija, po to atliktas Jūsų veiksmas su įvykiais ir tik tada kalendoriaus byla bus išsiųsta į žiniatinklį.)">

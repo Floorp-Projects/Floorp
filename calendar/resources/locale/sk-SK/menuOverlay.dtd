@@ -40,16 +40,19 @@
 <!ENTITY event.menu.title   "Udalosť">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
-<!ENTITY event.new.event           "Nová udalosť">
+<!ENTITY event.new.event           "Nová udalosť…">
 <!ENTITY event.new.event.accesskey "u">
 
-<!ENTITY event.new.todo     "Nová úloha">
+<!ENTITY event.new.todo     "Nová úloha…">
 <!ENTITY event.new.todo.accesskey "a">
 
-<!ENTITY calendar.new.server.label "Nový Kalendár">
+<!ENTITY calendar.new.server.label "Nový Kalendár Súbor…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Upraviť">
+<!ENTITY calendar.open.file.label "Otvoriť Kalendár Súbor…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event   "Upraviť…">
 <!ENTITY event.edit.event.accesskey "r">
 
 <!ENTITY event.delete.event "Odstrániť vybranú udalosť(i)">
@@ -58,7 +61,7 @@
 <!ENTITY event.delete.tasks "Odstrániť vybranú úlohu(y)">
 <!ENTITY event.delete.tasks.accesskey   "b">
 
-<!ENTITY event.mail.event   "Odoslať vybranú udalosť(i)">
+<!ENTITY event.mail.event   "Odoslať vybranú udalosť(i)…">
 <!ENTITY event.mail.event.accesskey "O">
 
 <!ENTITY calendar.print.label   "Tlačiť aktívny kalendár...">

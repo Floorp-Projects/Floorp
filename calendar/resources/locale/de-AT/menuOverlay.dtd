@@ -39,16 +39,19 @@
 <!ENTITY event.menu.title   "Ereignis">
 <!ENTITY eventMenuCmd.accesskey     "r">
 
-<!ENTITY event.new.event           "Neues Ereignis">
+<!ENTITY event.new.event           "Neues Ereignis…">
 <!ENTITY event.new.event.accesskey "N">
 
-<!ENTITY event.new.todo     "Neue Aufgabe">
+<!ENTITY event.new.todo     "Neue Aufgabe…">
 <!ENTITY event.new.todo.accesskey "f">
 
-<!ENTITY calendar.new.server.label "Neuer Kalender">
+<!ENTITY calendar.new.server.label "Neuer Kalender Datei…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Bearbeiten">
+<!ENTITY calendar.open.file.label "Öffnen Kalender Datei…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event   "Bearbeiten…">
 <!ENTITY event.edit.event.accesskey "e">
 
 <!ENTITY event.delete.event "Gewählte(s) Ereignis löschen">
@@ -57,7 +60,7 @@
 <!ENTITY event.delete.tasks "Gewählte Aufgabe(n) löschen">
 <!ENTITY event.delete.tasks.accesskey   "A">
 
-<!ENTITY event.mail.event   "Ausgewählte(s) Ereignis(se) per E-Mail senden">
+<!ENTITY event.mail.event   "Ausgewählte(s) Ereignis(se) per E-Mail senden…">
 <!ENTITY event.mail.event.accesskey "M">
 
 <!ENTITY calendar.print.label   "Aktive Kalender drucken...">

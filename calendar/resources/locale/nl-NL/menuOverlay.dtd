@@ -40,16 +40,19 @@
 <!ENTITY event.menu.title   "Gebeurtenis">
 <!ENTITY eventMenuCmd.accesskey     "@">
 
-<!ENTITY event.new.event           "Nieuwe gebeurtenis">
+<!ENTITY event.new.event           "Nieuwe gebeurtenis…">
 <!ENTITY event.new.event.accesskey "G">
 
-<!ENTITY event.new.todo     "Nieuwe taak">
+<!ENTITY event.new.todo     "Nieuwe taak…">
 <!ENTITY event.new.todo.accesskey "T">
 
-<!ENTITY calendar.new.server.label "Nieuwe kalender">
+<!ENTITY calendar.new.server.label "Nieuwe kalenderbestand…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Bewerken">
+<!ENTITY calendar.open.file.label "Openen kalenderbestand…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event   "Bewerken…">
 <!ENTITY event.edit.event.accesskey "E">
 
 <!ENTITY event.delete.event "Verwijder geselecteerd(e) gebeurtenis(sen)">
@@ -58,7 +61,7 @@
 <!ENTITY event.delete.tasks "Verwijder geselecteerd(e) ta(a)k(en)">
 <!ENTITY event.delete.tasks.accesskey   "T">
 
-<!ENTITY event.mail.event   "Mail geselecteerd(e) gebeurtenis(sen)">
+<!ENTITY event.mail.event   "Mail geselecteerd(e) gebeurtenis(sen)…">
 <!ENTITY event.mail.event.accesskey "M">
 
 <!ENTITY calendar.print.label   "Gebeurtenissen afdrukken...">

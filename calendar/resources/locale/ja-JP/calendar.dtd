@@ -412,7 +412,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "新しいカレンダーを追加">
+<!ENTITY calendar.server.dialog.title.new           "New Calendar File">
+<!ENTITY calendar.server.dialog.title.open          "Open Calendar File">
 <!ENTITY calendar.server.dialog.title.edit          "カレンダーを編集">
 <!ENTITY calendar.server.dialog.name.label          "名前">
 <!ENTITY calendar.server.dialog.publish.label       "自動的に変更を公開しますか？サーバにある新しいカレンダーをダウンロードして、追加や編集、イベント削除を行い、その新しいファイルをアップロードします。">

@@ -72,6 +72,7 @@
    
    <dataset>
        <data id="data-event-title-new"             value="&calendar.server.dialog.title.new;" />
+       <data id="data-event-title-open"            value="&calendar.server.dialog.title.open;" />
        <data id="data-event-title-edit"            value="&calendar.server.dialog.title.edit;" />
    </dataset>
 

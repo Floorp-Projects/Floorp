@@ -38,16 +38,19 @@
 <!ENTITY event.menu.title   "Wydarzenie">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
-<!ENTITY event.new.event           "Nowe wydarzenie">
+<!ENTITY event.new.event           "Nowe wydarzenie…">
 <!ENTITY event.new.event.accesskey "n">
 
-<!ENTITY event.new.todo     "Nowe zadanie">
+<!ENTITY event.new.todo     "Nowe zadanie…">
 <!ENTITY event.new.todo.accesskey "t">
 
-<!ENTITY calendar.new.server.label "Nowy kalendarz">
+<!ENTITY calendar.new.server.label "Nowy plik kalendarza…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Edytuj">
+<!ENTITY calendar.open.file.label "Otwórz plik kalendarza…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event   "Edytuj…">
 <!ENTITY event.edit.event.accesskey "e">
 
 <!ENTITY event.delete.event "Usuń zaznaczone wydarzenie(a)">
@@ -56,7 +59,7 @@
 <!ENTITY event.delete.tasks "Usuń zaznaczone zadanie(a)">
 <!ENTITY event.delete.tasks.accesskey   "t">
 
-<!ENTITY event.mail.event   "Wyślij zaznaczone wydarzenie(a)">
+<!ENTITY event.mail.event   "Wyślij zaznaczone wydarzenie(a)…">
 <!ENTITY event.mail.event.accesskey "m">
 
 <!ENTITY calendar.print.label   "Drukuj aktywny kalendarz...">
@@ -117,10 +120,10 @@
 <!ENTITY goNextCmd.accesskey            "n">
 
 <!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.accesskey            "k">
 
 <!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.accesskey            "T">
 
 <!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">

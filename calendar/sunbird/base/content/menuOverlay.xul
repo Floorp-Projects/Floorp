@@ -95,6 +95,8 @@
            label="&fileMenu.label;"
            accesskey="&fileMenu.accesskey;">
        <menupopup id="menu_FilePopup">
+
+         <!-- create new event or task (top of 1st menu, for new users) -->
          <menuitem id="calendar-new-event-menu"
                    key="new_event_key"
                    label="&event.new.event;"
@@ -105,32 +107,65 @@
                    label="&event.new.todo;"
                    accesskey="&event.new.todo.accesskey;"
                    observes="new_todo_command"/>
-         <menuitem id="calendar-new-calendar-menu"
-                   key="new_calendar_key"
-                   label="&calendar.new.server.label;"
-                   accesskey="&calendar.new.server.accesskey;"
-                   observes="new_local_calendar_command"/>
          <menuitem id="unifinder-modify-menu"
                    key="modify_event_key"
                    label="&event.edit.event;"
                    accesskey="&event.edit.event.accesskey;"
                    observes="modify_command"/>
-         <menuitem id="calendar-close"
-                   key="key_close"
-                   label="&calendar.menu.options.close;"
-                   accesskey="&calendar.menu.options.close.accesskey;"
-                   observes="close_calendar_command"/>
          <menuseparator/>
+
+         <!-- files -->
+         <menuitem id="calendar-new-calendar-menu"
+                   key="new_calendar_key"
+                   label="&calendar.new.server.label;"
+                   accesskey="&calendar.new.server.accesskey;"
+                   observes="new_local_calendar_command"/>
+         <menuitem id="calendar-open-calendar-menu"
+                   key="open_calendar_key"
+                   label="&calendar.open.file.label;"
+                   accesskey="&calendar.open.file.accesskey;"
+                   observes="open_local_calendar_command"/>
+         <menuitem id="calendar-addserver-menu"
+                   label="&calendar.subscribe.label;"
+                   accesskey="&calendar.subscribe.accesskey;"
+                   observes="new_server_command"/>
+         <menuseparator/>
+
+         <!-- import: pulling data into existing files -->
+         <menuitem id="calendar-import-menu"
+                   key="import_key"
+                   label="&calendar.import.label;"
+                   accesskey="&calendar.import.accesskey;"
+                   observes="import_command"/>
+         <menuseparator/>
+
+         <!-- export: getting data out of existing files -->
+         <menuitem id="calendar-export-menu"
+                   key="export_key"
+                   label="&calendar.export.label;"
+                   accesskey="&calendar.export.accesskey;"
+                   observes="export_command"/>
          <menuitem id="calendar-mail-event"
                    key="send_event_key"
                    label="&event.mail.event;"
                    accesskey="&event.mail.event.accesskey;"
                    observes="send_event_command"/>
-         <menuseparator id="calendar-print-sep"/>
+         <menuitem id="calendar-publish-menu"
+                   label="&calendar.publish.label;"
+                   accesskey="&calendar.publish.accesskey;"
+                   observes="publish_events_command"/>
          <menuitem id="calendar-print-menu"
                    label="&calendar.print.label;"
                    accesskey="&calendar.print.accesskey;"
                    observes="print_command"/>
+         <menuseparator id="calendar-print-sep"/>
+
+         <!-- window/Application -->
+         <menuitem id="calendar-close"
+                   key="key_close"
+                   label="&calendar.menu.options.close;"
+                   accesskey="&calendar.menu.options.close.accesskey;"
+                   observes="close_calendar_command"/>
        </menupopup>
      </menu>
 
@@ -276,33 +311,15 @@
        </menupopup>
      </menu>
    
-     <menu id="tasksMenu"
+     <menu id="menu_Tools"
            label="&toolsMenu.label;"
            accesskey="&toolsMenu.accesskey;">
-       <menupopup id="taskPopup">
+       <menupopup id="toolsPopup">
          <menuitem id="calendar-wizard-menu"
                    key="wizard_key"
                    label="&calendar.wizard.label;"
                    accesskey="&calendar.wizard.accesskey;"
                    observes="wizard_command"/>
-         <menuitem id="calendar-import-menu"
-                   key="import_key"
-                   label="&calendar.import.label;"
-                   accesskey="&calendar.import.accesskey;"
-                   observes="import_command"/>
-         <menuitem id="calendar-export-menu"
-                   key="export_key"
-                   label="&calendar.export.label;"
-                   accesskey="&calendar.export.accesskey;"
-                   observes="export_command"/>
-         <menuitem id="calendar-addserver-menu"
-                   label="&calendar.subscribe.label;"
-                   accesskey="&calendar.subscribe.accesskey;"
-                   observes="new_server_command"/>
-         <menuitem id="calendar-publish-menu"
-                   label="&calendar.publish.label;"
-                   accesskey="&calendar.publish.accesskey;"
-                   observes="publish_events_command"/>
          <menuseparator/>
              <menuitem id="javascriptConsole"
                        label="&javaScriptConsoleCmd.label;"

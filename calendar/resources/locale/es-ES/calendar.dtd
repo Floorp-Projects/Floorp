@@ -405,7 +405,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Añadir nuevo calendario">
+<!ENTITY calendar.server.dialog.title.new           "Nuevo archivo del calendario">
+<!ENTITY calendar.server.dialog.title.open          "Abrir archivo del calendario">
 <!ENTITY calendar.server.dialog.title.edit          "Editar calendario">
 <!ENTITY calendar.server.dialog.name.label          "Nombre">
 <!ENTITY calendar.server.dialog.publish.label       "¿Publicar cambios automáticamente? Para calendarios remotos, esto descargará una nueva versión antes de que añada, edite o borre un evento. Se realizará la acción, y se descargará al servidor el nuevo archivo.">

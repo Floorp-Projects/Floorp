@@ -128,7 +128,23 @@ function calendarManager( CalendarWindow )
 /*
 ** Launch the new calendar file dialog
 */
-calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( aName, aPath )
+calendarManager.prototype.launchNewCalendarFileDialog = function calMan_launchNewCalendarFileDialog( aName, aPath )
+{
+  this.launchNewOrOpenCalendarFileDialog(aName, aPath, "new");
+}
+
+/*
+** Launch the open calendar file dialog
+*/
+calendarManager.prototype.launchOpenCalendarFileDialog = function calMan_launchOpenCalendarFileDialog( aName, aPath )
+{
+  this.launchNewOrOpenCalendarFileDialog(aName, aPath, "open");
+}
+
+/*
+** PRIVATE: Launch the new file dialog or open calendar file dialog
+*/
+calendarManager.prototype.launchNewOrOpenCalendarFileDialog = function calMan_launchNewOrOpenCalendarFileDialog( aName, aPath, aMode )
 {
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
@@ -140,7 +156,7 @@ calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCal
       ThisCalendarObject.path = aPath;
 
    var args = new Object();
-   args.mode = "new";
+   args.mode = aMode;
 
    var thisManager = this;
 
@@ -648,7 +664,7 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
                FilePath = profileFile.path;
                saveDataToFile(FilePath, CalendarData, null);
       
-               CalendarManager.launchAddCalendarDialog( CalendarName, FilePath );
+               CalendarManager.launchOpenCalendarFileDialog( CalendarName, FilePath );
             }
          }
          var result = this.getRemoteCalendarText( Channel, onResponse, null );
@@ -765,6 +781,11 @@ calendarManager.prototype.getProfileDirectory = function calMan_getProfileDirect
 calendarManager.prototype.getDefaultServer = function calMan_getDefaultServer()
 {
    return( this.rootContainer.getSubNodes()[0].getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+}
+
+calendarManager.prototype.getDefaultCalendarName = function calMan_getDefaultName()
+{
+   return( this.rootContainer.getSubNodes()[0].getAttribute( "http://home.netscape.com/NC-rdf#name" ) );
 }
 
 
@@ -1099,8 +1120,8 @@ var calendarManagerDNDObserver = {
          // url has spec, fileName, fileBaseName, fileExtension and others
          var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance();
          url = url.QueryInterface(Components.interfaces.nsIURL);
-	      url.spec = droppedUrl;
-	      gCalendarWindow.calendarManager.launchAddCalendarDialog(url.fileBaseName, url.spec )
+	     url.spec = droppedUrl;
+         gCalendarWindow.calendarManager.launchOpenCalendarFileDialog(url.fileBaseName, url.spec );
 
          break;
 

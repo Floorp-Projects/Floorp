@@ -43,16 +43,19 @@
 <!ENTITY event.menu.title   "イベント">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
-<!ENTITY event.new.event           "新しいイベント">
+<!ENTITY event.new.event           "新しいイベント…">
 <!ENTITY event.new.event.accesskey "N">
 
-<!ENTITY event.new.todo     "新しい ToDo">
+<!ENTITY event.new.todo     "新しい ToDo…">
 <!ENTITY event.new.todo.accesskey "T">
 
-<!ENTITY calendar.new.server.label "新しいカレンダー">
+<!ENTITY calendar.new.server.label "新しいカレンダー…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "編集">
+<!ENTITY calendar.open.file.label "Open Calendar File…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event   "編集…">
 <!ENTITY event.edit.event.accesskey "E">
 
 <!ENTITY event.delete.event "選択イベントを削除)">
@@ -61,7 +64,7 @@
 <!ENTITY event.delete.tasks "選択 ToDo を削除)">
 <!ENTITY event.delete.tasks.accesskey   "T">
 
-<!ENTITY event.mail.event   "選択イベントを送信">
+<!ENTITY event.mail.event   "選択イベントを送信…">
 <!ENTITY event.mail.event.accesskey "M">
 
 <!ENTITY calendar.print.label   "アクティブなカレンダーを印刷...">

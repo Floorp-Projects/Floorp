@@ -42,16 +42,19 @@
 <!ENTITY event.menu.title   "Esemény">
 <!ENTITY eventMenuCmd.accesskey     "s">
 
-<!ENTITY event.new.event           "Új esemény">
+<!ENTITY event.new.event           "Új esemény…">
 <!ENTITY event.new.event.accesskey "e">
 
-<!ENTITY event.new.todo     "Új tennivaló">
+<!ENTITY event.new.todo     "Új tennivaló…">
 <!ENTITY event.new.todo.accesskey "t">
 
-<!ENTITY calendar.new.server.label "Új naptár">
+<!ENTITY calendar.new.server.label "Új naptár fájl…">
 <!ENTITY calendar.new.server.accesskey "p">
 
-<!ENTITY event.edit.event   "Szerkesztés">
+<!ENTITY calendar.open.file.label "Megnyitás naptár fajl…">
+<!ENTITY calendar.open.file.accesskey "M">
+
+<!ENTITY event.edit.event   "Szerkesztés…">
 <!ENTITY event.edit.event.accesskey "z">
 
 <!ENTITY event.delete.event "Kiválasztott események törlése">
@@ -60,7 +63,7 @@
 <!ENTITY event.delete.tasks "Kiválasztott tennivalók törlése">
 <!ENTITY event.delete.tasks.accesskey   "t">
 
-<!ENTITY event.mail.event   "Kiválasztott események elküldése">
+<!ENTITY event.mail.event   "Kiválasztott események elküldése…">
 <!ENTITY event.mail.event.accesskey "e">
 
 <!ENTITY calendar.print.label   "Az aktív naptár nyomtatása...">

@@ -409,7 +409,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Nowu protyku přidać">
+<!ENTITY calendar.server.dialog.title.new           "Nowu protyku dataju">
+<!ENTITY calendar.server.dialog.title.open          "Wočinić protyku dataju">
 <!ENTITY calendar.server.dialog.title.edit          "Protyku wobdźěłać">
 <!ENTITY calendar.server.dialog.name.label          "Mjeno">
 <!ENTITY calendar.server.dialog.publish.label       "Změny awtomatisce publikować? Za nazdalne protyki budźe to nowu wersiju sćahnyć, prjedy hač podawk přidaće, wobdźěłaće abo wotstroniće. Budźe so potom waša akcija wuwjesć a nowa dataja na server pósłać.">

@@ -40,16 +40,19 @@
 <!ENTITY event.menu.title   "Digwyddiad Newydd">
 <!ENTITY eventMenuCmd.accesskey     "D">
 
-<!ENTITY event.new.event           "Digwyddiad Newydd">
+<!ENTITY event.new.event           "Digwyddiad Newydd…">
 <!ENTITY event.new.event.accesskey "d">
 
-<!ENTITY event.new.todo     "Tasg Newydd">
+<!ENTITY event.new.todo     "Tasg Newydd…">
 <!ENTITY event.new.todo.accesskey "t">
 
-<!ENTITY calendar.new.server.label "Calendr Newydd">
+<!ENTITY calendar.new.server.label "Ffeil Calendr Newydd">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Golygu">
+<!ENTITY calendar.open.file.label "Ffeil Calendr Agor">
+<!ENTITY calendar.open.file.accesskey "A">
+
+<!ENTITY event.edit.event   "Golygu…">
 <!ENTITY event.edit.event.accesskey "g">
 
 <!ENTITY event.delete.event "Dileu">
@@ -58,10 +61,10 @@
 <!ENTITY event.delete.tasks "Dileu Tasg(au) Dewisol">
 <!ENTITY event.delete.tasks.accesskey   "D">
 
-<!ENTITY event.mail.event   "E-bostio Digwyddiad Newydd">
+<!ENTITY event.mail.event   "E-bostio Digwyddiad Newydd…">
 <!ENTITY event.mail.event.accesskey "E">
 
-<!ENTITY calendar.print.label   "Gosodiad Tudalen......">
+<!ENTITY calendar.print.label   "Gosodiad Tudalen…">
 <!ENTITY calendar.print.accesskey   "o">
 
 <!ENTITY calendar.printpreview.label    "Rhagolwg Argraffu">
@@ -119,10 +122,10 @@
 <!ENTITY goNextCmd.accesskey            "N">
 
 <!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.accesskey            "k">
 
 <!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.accesskey            "T">
 
 <!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">

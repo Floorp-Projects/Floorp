@@ -40,16 +40,19 @@
 <!ENTITY event.menu.title   "Dogodek">
 <!ENTITY eventMenuCmd.accesskey     "k">
 
-<!ENTITY event.new.event           "Nov dogodek">
+<!ENTITY event.new.event           "Nov dogodek…">
 <!ENTITY event.new.event.accesskey "g">
 
-<!ENTITY event.new.todo     "Nov opravek">
+<!ENTITY event.new.todo     "Nov opravek…">
 <!ENTITY event.new.todo.accesskey "o">
 
-<!ENTITY calendar.new.server.label "Nov koledar">
+<!ENTITY calendar.new.server.label "Nov Datoteka Koledar…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Uredi">
+<!ENTITY calendar.open.file.label "Odpri Datoteka Koledar…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event   "Uredi…">
 <!ENTITY event.edit.event.accesskey "d">
 
 <!ENTITY event.delete.event "Izbriši izbrane dogodke">
@@ -58,7 +61,7 @@
 <!ENTITY event.delete.tasks "Izbriši izbrane opravke">
 <!ENTITY event.delete.tasks.accesskey   "v">
 
-<!ENTITY event.mail.event   "Pošlji izbrane dogodke po e-pošti">
+<!ENTITY event.mail.event   "Pošlji izbrane dogodke po e-pošti…">
 <!ENTITY event.mail.event.accesskey "t">
 
 <!ENTITY calendar.print.label   "Natisni aktivne koledarje ...">

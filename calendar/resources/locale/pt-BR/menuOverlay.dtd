@@ -41,16 +41,19 @@
 <!ENTITY event.menu.title   "Evento">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
-<!ENTITY event.new.event           "Novo Evento">
+<!ENTITY event.new.event           "Novo Evento…">
 <!ENTITY event.new.event.accesskey "n">
 
-<!ENTITY event.new.todo     "Nova Tarefa">
+<!ENTITY event.new.todo     "Nova Tarefa…">
 <!ENTITY event.new.todo.accesskey "t">
 
-<!ENTITY calendar.new.server.label "Novo Calend&#xE1;rio">
+<!ENTITY calendar.new.server.label "Novo Arquivo de Calend&#xE1;rio…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Editar">
+<!ENTITY calendar.open.file.label "Abrir Arquivo de Calend&#xE1;rio…">
+<!ENTITY calendar.open.file.accesskey "A">
+
+<!ENTITY event.edit.event   "Editar…">
 <!ENTITY event.edit.event.accesskey "e">
 
 <!ENTITY event.delete.event "Apagar Evento(s) Selecionado(s)">
@@ -59,7 +62,7 @@
 <!ENTITY event.delete.tasks "Apagar Tarefa(s) Selecionada(s)">
 <!ENTITY event.delete.tasks.accesskey   "t">
 
-<!ENTITY event.mail.event   "Enviar Evento(s) Selecionado(s)">
+<!ENTITY event.mail.event   "Enviar Evento(s) Selecionado(s)…">
 <!ENTITY event.mail.event.accesskey "m">
 
 <!ENTITY calendar.print.label   "Imprimir Calend&#xE1;rios Ativos...">

@@ -409,7 +409,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Ychwanegu Calendr Newydd">
+<!ENTITY calendar.server.dialog.title.new           "Ffeil Calendr Newydd">
+<!ENTITY calendar.server.dialog.title.open          "Ffeil Calendr Agor">
 <!ENTITY calendar.server.dialog.title.edit          "Golygu'r Calendr">
 <!ENTITY calendar.server.dialog.name.label          "Enw">
 <!ENTITY calendar.server.dialog.publish.label       "Cyhoeddi newidiadau'n awtomatig? Ar gyfer calendrau pell, bydd hyn yn llwytho fersiwn newydd cyn i chi ychwanegu, golygu neu ddileu digwyddiad. Yna bydd yn cyflawni eich gweithred, a llwytho'r ffeil i fyny i'r gwasanaethwr.">

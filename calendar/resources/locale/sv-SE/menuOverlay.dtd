@@ -41,16 +41,19 @@
 <!ENTITY event.menu.title   "Händelse">
 <!ENTITY eventMenuCmd.accesskey     "h">
 
-<!ENTITY event.new.event           "Ny Händelse">
+<!ENTITY event.new.event           "Ny Händelse…">
 <!ENTITY event.new.event.accesskey "n">
 
-<!ENTITY event.new.todo     "Ny Uppgift">
+<!ENTITY event.new.todo     "Ny Uppgift…">
 <!ENTITY event.new.todo.accesskey "u">
 
-<!ENTITY calendar.new.server.label "Ny Kalender">
+<!ENTITY calendar.new.server.label "Ny Kalender Fil…">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event   "Redigera">
+<!ENTITY calendar.open.file.label "Oppna Kalender Fil…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event   "Redigera…">
 <!ENTITY event.edit.event.accesskey "e">
 
 <!ENTITY event.delete.event "Radera Vald(a) Händelse(r)">
@@ -59,7 +62,7 @@
 <!ENTITY event.delete.tasks "Radera Vald(a) Uppgifte(r)">
 <!ENTITY event.delete.tasks.accesskey   "r">
 
-<!ENTITY event.mail.event   "Maila Vald(a) Händelse(r)">
+<!ENTITY event.mail.event   "Maila Vald(a) Händelse(r)…">
 <!ENTITY event.mail.event.accesskey "m">
 
 <!ENTITY calendar.print.label   "Skriv Ut Aktiva Kalendrar...">
@@ -120,10 +123,10 @@
 <!ENTITY goNextCmd.accesskey            "ä">
 
 <!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.accesskey            "k">
 
 <!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.accesskey            "T">
 
 <!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">

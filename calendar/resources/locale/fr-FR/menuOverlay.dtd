@@ -40,17 +40,20 @@
 <!ENTITY event.menu.title       "Événement">
 <!ENTITY eventMenuCmd.accesskey "v">
 
-<!ENTITY event.new.event           "Nouvel événement">
+<!ENTITY event.new.event           "Nouvel événement…">
 <!ENTITY event.new.event.accesskey "N">
 
-<!ENTITY event.new.todo           "Nouvelle tâche">
+<!ENTITY event.new.todo           "Nouvelle tâche…">
 <!ENTITY event.new.todo.accesskey "T">
 
-<!ENTITY calendar.new.server.label "Nouveau calendrier">
+<!ENTITY calendar.new.server.label     "Nouveau fichier du calendrier…">
 <!ENTITY calendar.new.server.accesskey "a">
 
-<!ENTITY event.edit.event        "Modifier">
-<!ENTITY event.edit.event.accesskey        "e">
+<!ENTITY calendar.open.file.label     "Ouvrez le fichier du calendrier…">
+<!ENTITY calendar.open.file.accesskey "O">
+
+<!ENTITY event.edit.event           "Modifier…">
+<!ENTITY event.edit.event.accesskey "e">
 
 <!ENTITY event.delete.event        "Supprimer le(s) événement(s) sélectionné(s)">
 <!ENTITY event.delete.event.accesskey        "s">
@@ -58,7 +61,7 @@
 <!ENTITY event.delete.tasks        "Supprimer la ou les tâche(s)">
 <!ENTITY event.delete.tasks.accesskey        "t">
 
-<!ENTITY event.mail.event        "Envoyer le(s) événement(s) par courriel">
+<!ENTITY event.mail.event        "Envoyer le(s) événement(s) par courriel…">
 <!ENTITY event.mail.event.accesskey        "m">
 
 <!ENTITY calendar.print.label        "Imprimer le(s) calendrier(s) actif(s)…">

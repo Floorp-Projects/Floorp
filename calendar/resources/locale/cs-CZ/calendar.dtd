@@ -409,7 +409,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Přidat nový kalendář">
+<!ENTITY calendar.server.dialog.title.new           "Nový kalendář soubory">
+<!ENTITY calendar.server.dialog.title.open          "Otev?ít kalendář soubory">
 <!ENTITY calendar.server.dialog.title.edit          "Upravit kalendář">
 <!ENTITY calendar.server.dialog.name.label          "Název">
 <!ENTITY calendar.server.dialog.publish.label       "Publikovat změny automaticky? Pro vzdálené kalendáře to znamená, že bude stažena jeho aktuální verze před přidáním, editací či vymazáním události. Následně se provede nahrání nového souboru na server.">

@@ -407,6 +407,7 @@
 
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Neuen Kalender hinzufügen">
+<!ENTITY calendar.server.dialog.title.open          "Öffnen Kalender hinzufügen">
 <!ENTITY calendar.server.dialog.title.edit          "Kalender bearbeiten">
 <!ENTITY calendar.server.dialog.name.label          "Name">
 <!ENTITY calendar.server.dialog.publish.label       "Änderungen automatisch publizieren? Bei entfernten Kalendern lädt dies eine neue Version herunter, bevor Sie ein Ereignis hinzufügen, bearbeiten oder löschen. Dann wird Ihre Aktion ausgeführt und die neue Datei auf den Server geladen.">

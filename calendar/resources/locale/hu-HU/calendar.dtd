@@ -411,7 +411,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Új naptár hozzáadása">
+<!ENTITY calendar.server.dialog.title.new           "Új naptár fájl">
+<!ENTITY calendar.server.dialog.title.open          "Megnyitás naptár fájl">
 <!ENTITY calendar.server.dialog.title.edit          "Naptár szerkesztése">
 <!ENTITY calendar.server.dialog.name.label          "Név">
 <!ENTITY calendar.server.dialog.publish.label       "A változások automatikus közzététele. Ebben az esetben távoli naptárakat előbb letölti, mielőtt hozzáadhat, szerkeszthet, vagy törölhet egy eseményt. Ezek után végrehajtja a változtatásait, majd feltölti az új fájlt a kiszolgálóra.">

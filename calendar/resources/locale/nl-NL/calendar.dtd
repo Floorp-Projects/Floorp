@@ -409,7 +409,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Nieuwe kalender toevoegen">
+<!ENTITY calendar.server.dialog.title.new           "Nieuwe kalenderbestand">
+<!ENTITY calendar.server.dialog.title.open          "Openen kalenderbestand">
 <!ENTITY calendar.server.dialog.title.edit          "Bewerk kalender">
 <!ENTITY calendar.server.dialog.name.label          "Naam">
 <!ENTITY calendar.server.dialog.publish.label       "Veranderingen automatisch publiceren? Voor kalenders op andere computers zal dit een nieuwe versie ophalen voordat u een gebeurtenis toevoegd, berwerkt of verwijdert. Vervolgens zal het uw handeling uitvoeren en het nieuwe bestand naar de server uploaden.">
