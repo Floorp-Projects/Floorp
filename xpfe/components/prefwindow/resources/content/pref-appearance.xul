@@ -41,7 +41,7 @@
   <![CDATA[
     // the first elements in this array will be poked from chromeregistry loaded
     // overlays once overlays.rdf works properly 
-    _elementIDs = ["generalStartupBrowser", "generalStartupMail", "generalStartupEditor", "toolbarStyle"];
+    _elementIDs = ["generalStartupBrowser", "generalStartupMail", "generalStartupEditor", /*"toolbarStyle" */];
   ]]>
   </script>
           
@@ -74,7 +74,7 @@
   </titledbox>
   
   <!-- displaying none for beta -->
-  <titledbox id="toolbarStyleBox" orient="vertical">
+  <titledbox id="toolbarStyleBox" orient="vertical" style="display: none;">
   	<title><text value="&showToolsLegend.label;"/></title>
     <radiogroup id="toolbarStyle" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"

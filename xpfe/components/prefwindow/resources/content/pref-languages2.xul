@@ -71,6 +71,7 @@
       <box orient="vertical">
         <button class="dialog" value="&languages.customize.addButton.label;" oncommand="AddLanguage();"/>
         <button class="dialog" value="&languages.customize.deleteButton.label;" oncommand="RemoveActiveLanguage();"/>
+        <spring flex="1"/>
       </box>
     </box>
 	</titledbox>
