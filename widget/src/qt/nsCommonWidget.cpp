@@ -337,9 +337,10 @@ nsCommonWidget::Move(PRInt32 x, PRInt32 y)
 
     QPoint pos(x, y);
     if (mContainer) {
-        //if (mContainer->isPopup() && mContainer->parentWidget()) {
-        //pos = mContainer->parentWidget()->mapToGlobal(pos);
-        //}
+        if (mContainer->isPopup() && mContainer->parentWidget()) {
+            pos = mContainer->parentWidget()->mapToGlobal(pos);
+        }
+        qDebug("pos is [%d,%d]", pos.x(), pos.y());
         mContainer->move(pos);
     }
     else if (mWidget)
@@ -364,10 +365,10 @@ nsCommonWidget::Resize(PRInt32 aWidth,
     if (mWidget) {
 
         if (AreBoundsSane()) {
-            if (mContainer) {
-                mContainer->setGeometry( mBounds.x, mBounds.y,
-                                         mBounds.width, mBounds.height);
-            }
+            //if (mContainer) {
+            //mContainer->setGeometry( mBounds.x, mBounds.y,
+            //mBounds.width, mBounds.height);
+            //}
 
             mWidget->resize(mBounds.width, mBounds.height);
 
@@ -378,8 +379,8 @@ nsCommonWidget::Resize(PRInt32 aWidth,
         }
     } else if (mWidget) {
         if (AreBoundsSane() && mListenForResizes) {
-            if (mContainer)
-                mContainer->resize(mBounds.width, mBounds.height);
+            //if (mContainer)
+            //  mContainer->resize(mBounds.width, mBounds.height);
             mWidget->resize(mBounds.width, mBounds.height);
         }
     }
@@ -416,9 +417,9 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     qDebug("2 Resize: mWidget=%p, aWidth=%d, aHeight=%d, aX = %d, aY = %d", (void*)mWidget, aWidth, aHeight, aX, aY);
 
     if (AreBoundsSane()) {
-        if (mContainer)
-            mContainer->setGeometry(mBounds.x, mBounds.y,
-                                    mBounds.width, mBounds.height);
+        //if (mContainer)
+        //mContainer->setGeometry(mBounds.x, mBounds.y,
+        //mBounds.width, mBounds.height);
 
         mWidget->setGeometry( mBounds.x, mBounds.y,
                               mBounds.width, mBounds.height);
@@ -1001,10 +1002,10 @@ nsCommonWidget::moveEvent(QMoveEvent *e)
     // by the layout engine.  Width and height are set elsewhere.
     QPoint pos = e->pos();
 
-    //if (mWidget->isPopup()) {
-    //     pos = mWidget->parentWidget()->mapToGlobal(pos);
-    //     qDebug("global pos: %d/%d", pos.x(), pos.y());
-    //}
+    if (mWidget->isPopup()) {
+        pos = mWidget->parentWidget()->mapToGlobal(pos);
+        //     qDebug("global pos: %d/%d", pos.x(), pos.y());
+    }
     if (mContainer) {
         // Need to translate this into the right coordinates
         nsRect oldrect, newrect;
@@ -1374,13 +1375,27 @@ bool nsCommonWidget::ignoreEvent(nsEventStatus aStatus) const
 NS_METHOD nsCommonWidget::SetModal(PRBool aModal)
 {
     qDebug("------------> SetModal mWidget=%p",(void*) mWidget);
-    return NS_ERROR_FAILURE;
+    //mWidget->setModal(aModal);
+    return NS_OK;
 }
 
 // generic xp assumption is that events should be processed
 NS_METHOD nsCommonWidget::ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow)
 {
     qDebug("ModalEventFilter mWidget=%p", (void*)mWidget);
+
+    if (!aRealEvent) {
+        *aForWindow = PR_FALSE;
+        return NS_OK;
+    }
+
     *aForWindow = PR_TRUE;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsCommonWidget::GetScreenBounds(nsRect &aRect)
+{
+	nsRect origin(0,0,mBounds.width,mBounds.height);
+	WidgetToScreen(origin, aRect);
+	return NS_OK;
 }
