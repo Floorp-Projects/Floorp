@@ -108,7 +108,7 @@ HRESULT CControlSite::ClassImplementsCategory(const CLSID &clsid, const CATID &c
     CATID catidNext = GUID_NULL;
     while (spEnumCATID->Next(1, &catidNext, NULL) == S_OK)
     {
-        if (memcmp(&catid, &catidNext, sizeof(CATID)) == 0)
+        if (::IsEqualCATID(catid, catidNext))
         {
             bFound = TRUE;
         }
