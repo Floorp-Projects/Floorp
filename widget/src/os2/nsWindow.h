@@ -28,6 +28,8 @@
  * 03/23/2000       IBM Corp.      Added InvalidateRegion method.
  * 04/12/2000       IBM Corp.      Changed params on DispatchMouseEvent to match Windows..
  * 04/14/2000       IBM Corp.      Declared EventIsInsideWindow for CaptureRollupEvents
+ * 06/15/2000       IBM Corp.      Added NS2PM for rectangles
+ * 06/21/2000       IBM Corp.      Added CaptureMouse
  *
  */
 
@@ -100,6 +102,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD Enable( PRBool bState);
    NS_IMETHOD SetFocus();
    NS_IMETHOD IsVisible( PRBool &aState);
+   NS_IMETHOD CaptureMouse(PRBool aCapture);
 
    NS_IMETHOD ModalEventFilter( PRBool aRealEvent, void *aEvent,
                                 PRBool *aForWindow );
