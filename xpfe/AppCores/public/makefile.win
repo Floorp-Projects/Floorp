@@ -24,7 +24,6 @@ MODULE=appcores
 EXPORTS=  \
 		nsIDOMAppCoresManager.h		\
 		nsIDOMBaseAppCore.h		\
-		nsIDOMDOMPropsCore.h		\
 		nsIDOMProfileCore.h		\
 		nsIDOMRDFCore.h			\
 		nsIDOMToolkitCore.h		\
