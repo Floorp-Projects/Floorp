@@ -241,10 +241,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aEventStatus);
   *aEventStatus = nsEventStatus_eConsumeDoDefault;
   
-  if (IsDisabled()) // Disabled menus process no events.
-    return NS_OK;
-
-  if (aEvent->message == NS_KEY_PRESS) {
+  if (aEvent->message == NS_KEY_PRESS && !IsDisabled()) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     PRUint32 keyCode = keyEvent->keyCode;
     if (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) {
@@ -252,7 +249,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
         OpenMenu(PR_TRUE);
     }
   }
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsDisabled()) {
     PRBool isMenuBar = PR_FALSE;
     if (mMenuParent)
       mMenuParent->IsMenuBar(isMenuBar);
@@ -271,14 +268,14 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       }
     }
   }
-  else if ( aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP && mMenuParent ) {
+  else if ( aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP && mMenuParent && !IsDisabled()) {
     // if this menu is a context menu it accepts right-clicks...fire away!
     PRBool isContextMenu = PR_FALSE;
     mMenuParent->GetIsContextMenu(isContextMenu);
     if ( isContextMenu )
       Execute();
   }
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() && mMenuParent) {
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() && mMenuParent && !IsDisabled()) {
     // First, flip "checked" state if we're a checkbox menu, or
     // an un-checked radio menu
     if (mType == eMenuType_Checkbox ||
@@ -340,7 +337,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     
     // If we're a menu (and not a menu item),
     // kick off the timer.
-    if (!isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
+    if (!IsDisabled() && !isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
 
       PRInt32 menuDelay = 300;   // ms
 
