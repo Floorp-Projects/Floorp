@@ -206,10 +206,16 @@ nsMsgStripLine (char * string)
 char * 
 mime_generate_headers (nsMsgCompFields *fields,
 									     const char *charset,
-									     nsMsgDeliverMode deliver_mode)
+									     nsMsgDeliverMode deliver_mode, PRInt32 *status)
 {
   nsresult rv;
+  *status = 0;
+
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_FAILED(rv)) {
+	*status = rv;
+    return nsnull;
+  }
 
 	int size = 0;
 	char *buffer = 0, *buffer_tail = 0;
@@ -232,7 +238,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 
 	NS_ASSERTION (fields, "null fields");
 	if (!fields)
-		return NULL;
+		return nsnull;
 
 	/* Multiply by 3 here to make enough room for MimePartII conversion */
 	pFrom = fields->GetFrom(); if (pFrom)						size += 3 * PL_strlen (pFrom);
@@ -254,7 +260,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 
 	buffer = (char *) PR_Malloc (size);
 	if (!buffer)
-		return 0; /* NS_ERROR_OUT_OF_MEMORY */
+		return nsnull; /* NS_ERROR_OUT_OF_MEMORY */
 	
 	buffer_tail = buffer;
 
@@ -468,7 +474,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 			ptr = PL_strdup(pNewsGrp);
 			if (!ptr) {
 				PR_FREEIF(buffer);
-				return 0; /* NS_ERROR_OUT_OF_MEMORY */
+				return nsnull; /* NS_ERROR_OUT_OF_MEMORY */
 			}
   	  		n2 = nsMsgStripLine(ptr);
 			NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is
@@ -513,8 +519,10 @@ mime_generate_headers (nsMsgCompFields *fields,
       // ConvertNewsgroupsString takes "news://news.mozilla.org./netscape.test,news://news.mozilla.org./netscape.junk"
       // and turns it into "netscape.test,netscape.junk"
       rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
-      if (NS_FAILED(rv)) 
+      if (NS_FAILED(rv)) {
+		*status = rv;
         return nsnull;
+	  }
 #ifdef NS_DEBUG
       else 
       {
@@ -522,8 +530,10 @@ mime_generate_headers (nsMsgCompFields *fields,
       }
 #endif
     }
-    else 
+    else {
+	  *status = rv;
       return nsnull;
+	}
 
     PUSH_STRING ("Newsgroups: ");
 		PUSH_STRING (newHeader);
@@ -564,7 +574,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 			ptr = PL_strdup(pFollow);
 			if (!ptr) {
 				PR_FREEIF(buffer);
-				return 0; /* NS_ERROR_OUT_OF_MEMORY */
+				return nsnull; /* NS_ERROR_OUT_OF_MEMORY */
 			}
 			n2 = nsMsgStripLine (ptr);
 			NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is

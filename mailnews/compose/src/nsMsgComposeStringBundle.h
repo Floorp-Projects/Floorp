@@ -102,4 +102,7 @@ private:
 
 #define NS_MSG_MULTILINGUAL_SEND                    NS_MSG_GENERATE_SUCCESS(12553)
 
+/* 12554 is taken by NS_ERROR_NNTP_NO_CROSS_POSTING.  use 12555 as the next one */
+
+
 #endif /* _nsMsgComposeStringBundle_H_ */

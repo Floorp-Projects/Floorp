@@ -61,7 +61,7 @@ nsresult    mime_sanity_check_fields (
 
 char        *mime_generate_headers (nsMsgCompFields *fields,
 									                  const char *charset,
-									                  nsMsgDeliverMode deliver_mode);
+									                  nsMsgDeliverMode deliver_mode, PRInt32 *status);
 
 char        *mime_make_separator(const char *prefix);
 char        *mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress);

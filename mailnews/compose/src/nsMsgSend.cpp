@@ -836,7 +836,10 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   /* Write out the message headers.
    */
 	headers = mime_generate_headers (mCompFields, mCompFields->GetCharacterSet(),
-								                   m_deliver_mode);
+								                   m_deliver_mode, &status);
+	if (status < 0) 
+		goto FAIL;
+
 	if (!headers)
 		goto FAILMEM;
 

@@ -714,7 +714,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
           printf("no cross posting to multiple hosts!\n");
 #endif
           CRTFREEIF(list);
-          return NS_ERROR_FAILURE;
+          return NS_ERROR_NNTP_NO_CROSS_POSTING;
         }
       }
 
