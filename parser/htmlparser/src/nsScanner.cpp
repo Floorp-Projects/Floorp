@@ -246,7 +246,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
   if(mUnicodeDecoder) {
     PRInt32 unicharBufLen = 0;
       mUnicodeDecoder->Length(aBuffer, 0, aLen, &unicharBufLen);
-      PRUnichar *unichars = new PRUnichar [ unicharBufLen ];
+      PRUnichar *unichars = new PRUnichar [ unicharBufLen+1 ];
 	  nsresult res;
 	  do {
 	    PRInt32 srcLength = aLen;
