@@ -75,6 +75,12 @@ ifdef PROGRAM
 PROGRAM			:= $(addprefix $(OBJDIR)/, $(PROGRAM))
 endif
 
+#
+# Library rules
+#
+# If NO_STATIC_LIB is set, the static library will not be built.
+# If NO_SHARED_LIB is set, the shared library will not be built.
+#
 ifndef LIBRARY
 ifdef LIBRARY_NAME
 LIBRARY			:= lib$(LIBRARY_NAME).$(LIB_SUFFIX)
@@ -88,6 +94,7 @@ DEF_FILE		:= $(LIBRARY:.lib=.def)
 endif
 endif
 LIBRARY			:= $(addprefix $(OBJDIR)/, $(LIBRARY))
+ifndef NO_SHARED_LIB
 ifdef MKSHLIB
 ifeq ($(OS_ARCH),OS2)
 SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
@@ -116,6 +123,11 @@ endif
 endif
 endif
 endif
+endif
+endif
+
+ifdef NO_STATIC_LIB
+LIBRARY			= $(NULL)
 endif
 
 ifndef TARGETS
@@ -222,6 +234,14 @@ LOOP_OVER_DIRS		=					\
 	done
 endif
 
+#
+# Now we can differentiate between objects used to build a library, and
+# objects used to build an executable in the same directory.
+#
+ifndef PROGOBJS
+PROGOBJS		= $(OBJS)
+endif
+
 ################################################################################
 
 all:: export libs install
@@ -260,9 +280,12 @@ endif
 export::
 	+$(LOOP_OVER_DIRS)
 
+ifndef LIBS_NEQ_INSTALL
 libs install:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(MAPS)
+ifndef NO_STATIC_LIB
 ifdef LIBRARY
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
+endif
 endif
 ifdef MAPS
 	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
@@ -274,6 +297,27 @@ ifdef PROGRAM
 	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
 endif
 	+$(LOOP_OVER_DIRS)
+else
+libs:: $(LIBRARY) $(SHARED_LIBRARY)
+ifndef NO_STATIC_LIB
+ifdef LIBRARY
+	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
+endif
+endif
+ifdef SHARED_LIBRARY
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+endif
+	+$(LOOP_OVER_DIRS)
+
+install::
+ifdef MAPS
+	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
+endif
+ifdef PROGRAM
+	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
+endif
+	+$(LOOP_OVER_DIRS)
+endif
 
 clean clobber::
 	rm -rf $(ALL_TRASH)
@@ -287,15 +331,19 @@ alltags:
 	rm -f TAGS
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs etags -a
 
-$(PROGRAM): $(OBJS)
+$(PROGRAM): $(PROGOBJS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),OS2)
-	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(OBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
+	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
 else
 ifeq ($(OS_ARCH),WINNT)
-	$(CC) $(OBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(CCF) -o $@ $(OBJS) $(LDFLAGS)
+ifdef CPP_PROG_LINK
+	$(CCC) $(CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS)
+else
+	$(CCF) -o $@ $(PROGOBJS) $(LDFLAGS)
+endif
 endif
 endif
 
