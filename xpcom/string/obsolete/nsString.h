@@ -301,6 +301,9 @@ public:
 #endif
 
 
+  // Takes ownership of aPtr, sets the current length to aLength if specified.
+  void Adopt( char* aPtr, PRInt32 aLength = -1 );
+
   /**********************************************************************
     Searching methods...                
    *********************************************************************/

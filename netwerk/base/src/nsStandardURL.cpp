@@ -413,8 +413,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     if (mDirectory.mLen > 1)
         CoalescePath(buf + mDirectory.mPos);
 
-    mSpec = buf; // XXX too bad there isn't some way of avoiding this strdup!
-    free(buf);
+    mSpec.Adopt(buf);
     return NS_OK;
 }
 
