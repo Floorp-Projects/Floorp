@@ -254,7 +254,7 @@ nsMenuBar::CheckRebuild(PRBool & aNeedsRebuild)
 }
 
 nsEventStatus
-nsMenuBar::SetRebuild(PRBool & aNeedsRebuild)
+nsMenuBar::SetRebuild(PRBool aNeedsRebuild)
 {
   return nsEventStatus_eIgnore;
 }
