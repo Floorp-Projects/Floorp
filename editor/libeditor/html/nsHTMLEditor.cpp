@@ -699,10 +699,35 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
     
     if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextBit))
     {
-      PRBool bHandled = PR_FALSE;
-      res = TabInTable(isShift, &bHandled);
+      nsCOMPtr<nsIDOMSelection>selection;
+      res = GetSelection(getter_AddRefs(selection));
       if (NS_FAILED(res)) return res;
-      if (bHandled) return res;
+      PRInt32 offset;
+      nsCOMPtr<nsIDOMNode> node, blockParent;
+      res = GetStartNodeAndOffset(selection, &node, &offset);
+      if (NS_FAILED(res)) return res;
+      if (!node) return NS_ERROR_FAILURE;
+  
+      if (IsBlockNode(node)) blockParent = node;
+      else blockParent = GetBlockNodeParent(node);
+      
+      if (blockParent)
+      {
+        PRBool bHandled = PR_FALSE;
+        
+        if (IsTableElement(blockParent))
+          res = TabInTable(isShift, &bHandled);
+        else if (nsHTMLEditUtils::IsListItem(blockParent))
+        {
+          nsAutoString indentstr;
+          if (isShift) indentstr = "outdent";
+          else         indentstr = "indent";
+          res = Indent(indentstr);
+          bHandled = PR_TRUE;
+        }
+        if (NS_FAILED(res)) return res;
+        if (bHandled) return res;
+      }
     }
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN
              || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
@@ -801,9 +826,9 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
   {
     if (inIsShift) res = iter->Prev();
     else res = iter->Next();
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) break;
     res = iter->CurrentNode(getter_AddRefs(cNode));
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) break;
     node = do_QueryInterface(cNode);
     if (IsTableCell(node) && (GetEnclosingTable(node) == tbl))
     {
@@ -813,7 +838,35 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
       return NS_OK;
     }
   } while (iter->IsDone() == NS_ENUMERATOR_FALSE);
-  return NS_OK;
+  
+  if (!(*outHandled) && !inIsShift)
+  {
+    // if we havent handled it yet then we must have run off the end of
+    // the table.  Insert a new row.
+    res = InsertTableRow(1, PR_TRUE);
+    if (NS_FAILED(res)) return res;
+    *outHandled = PR_TRUE;
+    // put selection in right place
+    nsCOMPtr<nsIDOMSelection>selection;
+    res = GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsIDOMElement> tbl;
+    nsCOMPtr<nsIDOMElement> cell;
+    nsCOMPtr<nsIDOMNode> cellParent;
+    PRInt32 cellOffset, row, column;
+    // leveraging charlie's table code: find where row is....
+    res = GetCellContext(selection, tbl, cell, cellParent, cellOffset, row, column);
+    if (NS_FAILED(res)) return res;
+    // so that we can ask for first cell in that row...
+    res = GetCellAt(tbl, row, 0, *(getter_AddRefs(cell)));
+    if (NS_FAILED(res)) return res;
+    // and then set selection there.
+    node = do_QueryInterface(cell);
+    if (node) selection->Collapse(node,0);
+    return NS_OK;
+  }
+  
+  return res;
 }
 
 NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRInt32 *aInOutOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
@@ -956,6 +1009,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
+  nsAutoTxnsConserveSelection dontSpazMySelection(this);
   
   PRBool cancel, handled;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kSetTextProperty);
@@ -993,7 +1047,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
       if ((startNode == endNode) && IsTextNode(startNode))
       {
         // MOOSE: workaround for selection bug:
-        selection->ClearSelection();
+        //selection->ClearSelection();
 
         PRInt32 startOffset, endOffset;
         range->GetStartOffset(&startOffset);
@@ -1049,7 +1103,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         }
         
         // MOOSE: workaround for selection bug:
-        selection->ClearSelection();
+        //selection->ClearSelection();
         
         // first check the start parent of the range to see if it needs to 
         // be seperately handled (it does if it's a text node, due to how the
@@ -1580,7 +1634,7 @@ PRBool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
   else
   {
     nsCOMPtr<nsIDOMNode> firstNode;
-    GetFirstEditableNode(aNode, &firstNode);
+    GetFirstEditableChild(aNode, &firstNode);
     if (!firstNode) return PR_TRUE; 
     PRInt32 offset;
     nsEditor::GetChildOffset(firstNode, aNode, offset);
@@ -1603,7 +1657,7 @@ PRBool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
   else
   {
     nsCOMPtr<nsIDOMNode> lastNode;
-    GetLastEditableNode(aNode, &lastNode);
+    GetLastEditableChild(aNode, &lastNode);
     if (!lastNode) return PR_TRUE; 
     PRInt32 offset;
     nsEditor::GetChildOffset(lastNode, aNode, offset);
@@ -1832,6 +1886,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, kOpRemoveTextProperty, nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
+  nsAutoTxnsConserveSelection dontSpazMySelection(this);
   
   PRBool cancel, handled;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveTextProperty);
@@ -2085,8 +2140,10 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsIDOMSelection *aSel
     if (child)
     {
       // Stop if we find a table
-      //  don't want to go into nested tables
+      // don't want to go into nested tables
       if (IsTable(child)) break;
+      // hey, it'g gotta be a container too!
+      if (!IsContainer(child)) break;
       node = child;
     }
   }
@@ -3450,28 +3507,6 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   } else if (TagName.EqualsWithConversion("td"))
   {
     newElement->SetAttribute(NS_ConvertASCIItoUCS2("valign"),NS_ConvertASCIItoUCS2("top"));
-
-// I'm def'ing this out to see if auto br insertion is working here
-#if 0
-    // Insert the default space in a cell so border displays
-    nsCOMPtr<nsIDOMNode> newCellNode = do_QueryInterface(newElement);
-    if (newCellNode)
-    {
-      // TODO: This should probably be in the RULES code or 
-      //       preference based for "should we add the nbsp"
-      nsCOMPtr<nsIDOMText>newTextNode;
-      nsAutoString space;
-      // Set contents to the &nbsp character by concatanating the char code
-      space += nbsp;
-      // If we fail here, we return NS_OK anyway, since we have an OK cell node
-      nsresult result = doc->CreateTextNode(space, getter_AddRefs(newTextNode));
-      if (NS_FAILED(result)) return result;
-      if (!newTextNode) return NS_ERROR_NULL_POINTER;
-
-      nsCOMPtr<nsIDOMNode>resultNode;
-      result = newCellNode->AppendChild(newTextNode, getter_AddRefs(resultNode));
-    }
-#endif
   }
   // ADD OTHER TAGS HERE
 
@@ -5235,34 +5270,6 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
             node = firstChild;
           }
         }
-# if 0 
-// I've ifdef'd this out because it isn't finished and I'm not sure what the intent is.
-        PRInt32 offset = 0;
-        nsCOMPtr<nsIDOMNode>lastChild;
-        res = parent->GetLastChild(getter_AddRefs(lastChild));
-        if (NS_SUCCEEDED(res) && lastChild && node != lastChild)
-        {
-          if (node == lastChild)
-          {
-            // Check if node is text and has more than just a &nbsp
-            nsCOMPtr<nsIDOMCharacterData>textNode = do_QueryInterface(node);
-            nsAutoString text;
-            PRUnichar nbspStr[2] = {nbsp, 0};
-            if (textNode && textNode->GetData(text))
-            {
-              // Set selection relative to the text node
-              parent = node;
-              PRInt32 len = text.Length();
-              if (len > 1 || text != nbspStr)
-              {
-                offset = len;
-              }
-            }
-          } else {
-            // We have > 1 node, so set to end of content
-          }
-        }
-#endif
         // Set selection at beginning of deepest node
         nsCOMPtr<nsIDOMSelection> selection;
         res = GetSelection(getter_AddRefs(selection));
@@ -5791,6 +5798,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, kOpSetTextProperty, nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
+  nsAutoTxnsConserveSelection dontSpazMySelection(this);
 
   // get selection range enumerator
   nsCOMPtr<nsIEnumerator> enumerator;
@@ -5822,7 +5830,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
     if ((startNode == endNode) && IsTextNode(startNode))
     {
       // MOOSE: workaround for selection bug:
-      selection->ClearSelection();
+      //selection->ClearSelection();
 
       PRInt32 startOffset, endOffset;
       range->GetStartOffset(&startOffset);
@@ -5878,7 +5886,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
       }
       
       // MOOSE: workaround for selection bug:
-      selection->ClearSelection();
+      //selection->ClearSelection();
 
       // now that we have the list, do the font size change on each node
       PRUint32 listCount;

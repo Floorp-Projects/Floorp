@@ -1462,6 +1462,7 @@ nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection,
   
   // else it's not that easy...
   nsAutoSelectionReset selectionResetter(aSelection, mEditor);
+  nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
   *aHandled = PR_TRUE;
 
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
@@ -2421,8 +2422,9 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     else
     {
       node = nsEditor::GetChildAt(parent,offset);
-      if (!node) node = parent;  
     }
+    if (!node) node = parent;
+    
     
     // if this is an inline node who's block parent is the body,
     // back up through any prior inline nodes that
@@ -2477,12 +2479,10 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     }
     else
     {
+      if (offset) offset--; // we want node _before_ offset
       node = nsEditor::GetChildAt(parent,offset);
-      if (!node) node = parent;  
     }
-
-    if (!node)
-      node = parent;
+    if (!node) node = parent;
     
     // if this is an inline node who's block parent is the body, 
     // look ahead through any further inline nodes that
