@@ -193,13 +193,13 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     if (last) {
         /* Always force, so we wait for any racing GC to finish. */
         js_ForceGC(cx);
-	js_FreeAtomState(cx, &rt->atomState);
+        js_FreeAtomState(cx, &rt->atomState);
 
         /* Take the runtime down now that it has no contexts. */
-	JS_LOCK_RUNTIME(rt);
-    	rt->state = JSRTS_DOWN;
-	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
-	JS_UNLOCK_RUNTIME(rt);
+        JS_LOCK_RUNTIME(rt);
+        rt->state = JSRTS_DOWN;
+        JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+        JS_UNLOCK_RUNTIME(rt);
     } else {
         if (gcmode == JS_FORCE_GC)
             js_ForceGC(cx);
