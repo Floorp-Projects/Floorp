@@ -55,18 +55,24 @@ public:
   virtual char *getCellTipString(int /* row */, int /* column */) {return NULL;}
   virtual char *getCellDocString(int /* row */, int /* column */) {return NULL;}
 
-  // Open properties dialog
-  //void openPropertiesWindow();
-  //void closePropertiesWindow();
+	// Open properties dialog
+	//void openPropertiesWindow();
+	//void closePropertiesWindow();
+	
+	// Override RDFBase notify method
+	void notify(HT_Resource n, HT_Event whatHappened);
+	
+	// RDF Specific calls
+	void setHTTitlebarProperties(HT_View view, Widget titleBar);
+	
+	// Set the HTML pane height (as a percentage of the view)
+	void setHtmlPaneHeightPercent(PRUint32 heightPercent);
 
-  // Override RDFBase notify method
-  void notify(HT_Resource n, HT_Event whatHappened);
-
-  // RDF Specific calls
-  void setHTTitlebarProperties(HT_View view, Widget titleBar);
-
-  // Set the HTML pane height (as a percentage of the view)
-  void setHtmlPaneHeight(PRUint32 height);
+	// Set the HTML pane height (as a fixed pixel height)
+	void setHtmlPaneHeightFixed(PRUint32 heightPercent);
+	
+	// Set the HTML pane sizing policy
+	void setHtmlPaneSizing(EHtmlPaneSizing sizing);
 
 protected:
 
@@ -104,7 +110,7 @@ private:
 	// The height of the HTML pane as a percentage of the view
 	PRUint32			_htmlPaneHeightPercent;
 
-	// The height of the HTML pane as a fixed pixel count
+	// The height of the HTML pane as a fixed pixel height
 	PRUint32			_htmlPaneHeightFixed;
 
 	// Type of html pain sizing
@@ -117,7 +123,6 @@ private:
     void createViewLabel();
     void createDivisionForm();
     void createHtmlPane();
-
 };
 
 #endif /* _xfe_rdfchrometreeview_h */

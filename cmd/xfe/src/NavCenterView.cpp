@@ -28,8 +28,6 @@
 #include "IconGroup.h"
 #include "xp_ncent.h"
 
-//#include <Xfe/XfeAll.h>
-
 #include <Xm/Form.h>
 
 #ifdef MOZ_SELECTOR_BAR
@@ -419,12 +417,17 @@ XFE_NavCenterView::createSelectorBar()
 void
 XFE_NavCenterView::createTree()
 {
-  _rdftree = new XFE_RDFChromeTreeView(this, getBaseWidget(),
-                                       this, m_contextData);
+	_rdftree = new XFE_RDFChromeTreeView(this, getBaseWidget(),
+										 this, m_contextData);
+	
+	_rdftree->setStandAloneState(_isStandalone);
+	
+//  	_rdftree->setHtmlPaneSizing(XFE_HTML_PANE_FIXED);
+//  	_rdftree->setHtmlPaneHeightFixed(10);
 
-  _rdftree->setStandAloneState(_isStandalone);
+//  	_rdftree->setHtmlPaneSizing(XFE_HTML_PANE_PERCENT);
+//  	_rdftree->setHtmlPaneHeightPercent(50);
 
-  // _rdftree->setHtmlPaneHeight(50);
 }
 //////////////////////////////////////////////////////////////////////////
 void
