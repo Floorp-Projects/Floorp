@@ -49,10 +49,6 @@
 <!ENTITY locationbarCmd.label "Location Bar">
 <!ENTITY locationbarCmd.accesskey "L">
 
-<!ENTITY useStyleSheetMenu.label "Use Style">
-<!ENTITY useStyleSheetMenu.accesskey "u">
-<!ENTITY useStyleSheetPersistentOnly.label "Basic Page Style">
-<!ENTITY useStyleSheetPersistentOnly.accesskey "B">
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.commandkey "u">
@@ -61,9 +57,6 @@
 <!ENTITY pageInfoCmd.commandkey "i">
 <!ENTITY fullScreenCmd.label "Full Screen">
 <!ENTITY fullScreenCmd.accesskey "f">
-<!ENTITY translateMenu.label "Translate">
-<!ENTITY translateMenu.accesskey "T">
-<!ENTITY translate.commandKey "t">
 
 <!ENTITY closeWindow.label "Close Window">
 
