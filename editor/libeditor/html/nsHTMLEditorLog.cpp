@@ -822,7 +822,7 @@ nsHTMLEditorLog::StartLogging(nsIFile *aLogFile)
   mFileStream = do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &result);
   if (NS_FAILED(result)) return result;
 
-  result = mFileStream->Init(aLogFile, -1, -1);
+  result = mFileStream->Init(aLogFile, -1, -1, 0);
   if (NS_FAILED(result))
   {
     mFileStream = nsnull;
