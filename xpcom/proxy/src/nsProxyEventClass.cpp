@@ -233,13 +233,13 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
     var[0].val.p     = (void*)&aIID;
     var[1].val.p     = (void*)aInstancePtr;
 
-    nsIInterfaceInfo *interfaceInfo;
+    nsCOMPtr<nsIInterfaceInfo> interfaceInfo;
     const nsXPTMethodInfo *mi;
 
 	nsCOMPtr<nsIInterfaceInfoManager> iim = getter_AddRefs(XPTI_GetInterfaceInfoManager());
 
 	if (!iim) return NS_NOINTERFACE;
-	iim->GetInfoForName("nsISupports", &interfaceInfo);
+	iim->GetInfoForName("nsISupports", getter_AddRefs(interfaceInfo));
     interfaceInfo->GetMethodInfo(0, &mi); // 0 is QueryInterface
 
     rv = self->CallMethod(0, mi, var);
