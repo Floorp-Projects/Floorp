@@ -75,4 +75,5 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+	$(MAKE_INSTALL) redirect.html $(DIST)\bin\res\errors
 

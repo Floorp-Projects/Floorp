@@ -1375,6 +1375,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   nsresult rv;
   nsCOMPtr<nsIURI> newURI;
   nsCOMPtr<nsIChannel> channel;
+  PRBool  checkSecurity = PR_TRUE;
 
   *aResult = nsnull;
 
@@ -1387,6 +1388,19 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     
   rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
   if (NS_FAILED(rv)) return rv;
+
+  PRBool eq = PR_FALSE;
+  rv = mURI -> Equals (newURI, &eq);
+
+  if (eq)
+  {
+    // loop detected
+    // ruslan/24884
+    rv = serv->NewURI (LOOPING_REDIRECT_ERROR_URI, mURI, getter_AddRefs (newURI));
+    if (NS_FAILED(rv)) return rv;
+    
+    checkSecurity = PR_FALSE;
+  }
 
   //
   // Move the Reference of the old location to the new one 
@@ -1431,11 +1445,14 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   nsAllocator::Free(newURLSpec);
 #endif /* PR_LOGGING */
 
-  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+  if (checkSecurity)
+  {
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  rv = securityManager->CheckLoadURI(mOriginalURI ? mOriginalURI : mURI, newURI, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
+    rv = securityManager->CheckLoadURI(mOriginalURI ? mOriginalURI : mURI, newURI, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+  }
 
   rv = NS_OpenURI(getter_AddRefs(channel), newURI, serv, mLoadGroup,
                   mCallbacks, mLoadAttributes, 
@@ -1496,7 +1513,10 @@ nsresult nsHTTPChannel::ResponseCompleted (nsIStreamListener *aListener,
         nsresult rv1 = ReadFromCache ();
         
         if (NS_SUCCEEDED (rv1))
+        {
             aStatus = NS_ERROR_GENERATE_SUCCESS (NS_ERROR_MODULE_NETWORK, NS_ERROR_GET_CODE (aStatus));
+            return NS_OK;
+        }
     }
 #endif
 
