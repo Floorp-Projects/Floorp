@@ -119,8 +119,11 @@ real_checkout:
 	else true; \
 	fi
 
-build:
-	$(MAKE) -f client.mk build
+build_all_dep: alldep
+build_all_depend: alldep
+
+build alldep:
+	$(MAKE) -f client.mk $@
 	cd `$(MAKE) --no-print-directory -f client.mk echo_objdir` && \
 	$(MAKE) -C embedding/config && \
 	CONFIG_FILES=camino/Makefile ./config.status && \
