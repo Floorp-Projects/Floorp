@@ -71,6 +71,8 @@ nsDiskCacheRecord::nsDiskCacheRecord(nsIDBAccessor* db, nsNetDiskCache* aCache) 
 {
 
   NS_INIT_REFCNT();
+  NS_ASSERTION(mDiskCache, "Must have an nsNetDiskCache");
+  NS_ADDREF(mDiskCache);
 }
 
 // mem alloced. so caller should do free() on key. 
@@ -124,6 +126,7 @@ nsDiskCacheRecord::~nsDiskCacheRecord()
   if(mMetaData)
     nsAllocator::Free(mMetaData) ;
 
+  NS_IF_RELEASE(mDiskCache);
 }
 
 //
