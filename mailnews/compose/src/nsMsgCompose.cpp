@@ -1793,9 +1793,6 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 #endif
 			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
-
-      // Need to relelase the mComposeObj...
-      mComposeObj->mMsgSend = nsnull;
 		}
 	}
 
