@@ -36,8 +36,8 @@ REQUIRES= xpcom \
 		  $(NULL)
 
 CPP_OBJS=\
-	nsCharsetMenu.obj \
-	nsFontPackageHandler.obj \
+	.\$(OBJDIR)\nsCharsetMenu.obj \
+	.\$(OBJDIR)\nsFontPackageHandler.obj \
 	$(NULL)
 
 EXPORTS = \
