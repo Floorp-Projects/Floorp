@@ -14,7 +14,6 @@
 #include "DlgFind.h"
 #include "DlgAdd.h"
 #include "Encoding.h"
-#include "globals.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -42,6 +41,7 @@ BEGIN_MESSAGE_MAP(CPrefEditView, CTreeView)
 	//{{AFX_MSG_MAP(CPrefEditView)
 	ON_NOTIFY_REFLECT(NM_DBLCLK, OnDblclk)
 	ON_NOTIFY_REFLECT(NM_RCLICK, OnRclick)
+  ON_NOTIFY_REFLECT(TVN_ITEMEXPANDED, OnExpanded)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
 	ON_COMMAND(ID_EDITPREFITEM, OnEditPrefItem)
@@ -101,6 +101,12 @@ void CPrefEditView::DoOpenItem()
   else
   {
     treeCtrl.Expand(hTreeCtrlItem, TVE_TOGGLE);
+    
+    // This doesn't call OnExpanded() as you'd expect. Fix up the images.
+    if (treeCtrl.GetItemState(hTreeCtrlItem, TVIS_EXPANDED) & TVIS_EXPANDED) 
+      treeCtrl.SetItemImage(hTreeCtrlItem, bm_openFolder, bm_openFolder);
+    else
+      treeCtrl.SetItemImage(hTreeCtrlItem, bm_closedFolder, bm_closedFolder);
   }
 
 }
@@ -241,15 +247,12 @@ void CPrefEditView::startElement(const char *name, const char **atts)
   // If new prefsgroup, add an item to the tree control to hold other items.
   if (stricmp(name, "PREFSGROUP") == 0)
   {
-    int imageIndex = 0;     // tree ctrl images
-    int imageIndexSel = bm_closedFolder;
-
     // Assumes this element has one tag and that it's the uiname for the group.
     CString strLabel = atts[1];
 
     // Open a new level in the tree control.
     CTreeCtrl &treeCtrl = GetTreeCtrl();
-    m_hgroup = treeCtrl.InsertItem( strLabel, imageIndex, imageIndexSel, m_hgroup, TVI_LAST);
+    m_hgroup = treeCtrl.InsertItem( strLabel, bm_closedFolder, bm_closedFolder, m_hgroup, TVI_LAST);
 
   }
 
@@ -329,18 +332,18 @@ HTREEITEM CPrefEditView::InsertPrefElement(CPrefElement* pe, HTREEITEM group)
   ASSERT(pe);
   ASSERT(group);
 
-  int imageIndex = 0;     // tree ctrl images
-  int imageIndexSel = bm_closedFolder;
-  if (pe->IsDefault())
-    imageIndexSel = imageIndex = bm_unlockedPadGray;
-  else
-    imageIndexSel = imageIndex = bm_unlockedPad;
+  int imageIndex = bm_closedFolder;
 
-  if (pe->IsLocked())
-    imageIndexSel = imageIndex = bm_lockedPad;
+  if (pe->IsDefault())
+    imageIndex = bm_unlockedPadGray;
+  else
+    imageIndex = bm_unlockedPad;
+
+  if (pe->IsLocked() && pe->IsLockable())
+    imageIndex = bm_lockedPad;
 
   CTreeCtrl &treeCtrl = GetTreeCtrl();
-  HTREEITEM hNewItem = treeCtrl.InsertItem(ConvertUTF8toANSI(pe->GetPrettyNameValueString()), imageIndex, imageIndexSel, group, TVI_LAST);
+  HTREEITEM hNewItem = treeCtrl.InsertItem(ConvertUTF8toANSI(pe->GetPrettyNameValueString()), imageIndex, imageIndex, group, TVI_LAST);
 
   // Save pointer to this pref element in the tree.
   treeCtrl.SetItemData(hNewItem, (DWORD)pe);
@@ -402,8 +405,6 @@ BOOL CPrefEditView::LoadTreeControl()
   }
 
   XML_ParserFree(parser);
-
-  CheckForRemoteAdmins();
 
   free(buffer);
   return TRUE;
@@ -780,19 +781,16 @@ void CPrefEditView::EditSelectedPrefsItem()
     treeCtrl.SetItemText(hTreeCtrlItem, ConvertUTF8toANSI(pe->GetPrettyNameValueString()));
 
     int imageIndex = 0;     // tree ctrl images
-    int imageIndexSel = 0;
 
     if (pe->IsDefault())
-      imageIndexSel = imageIndex = bm_unlockedPadGray;
+      imageIndex = bm_unlockedPadGray;
     else
-      imageIndexSel = imageIndex = bm_unlockedPad;
+      imageIndex = bm_unlockedPad;
 
-    if (pe->IsLocked())
-      imageIndexSel = imageIndex = bm_lockedPad;
+    if (pe->IsLocked() && pe->IsLockable())
+      imageIndex = bm_lockedPad;
 
-    treeCtrl.SetItemImage(hTreeCtrlItem, imageIndex, imageIndexSel);
-
-    CheckForRemoteAdmins();
+    treeCtrl.SetItemImage(hTreeCtrlItem, imageIndex, imageIndex);
 
   }
 }
@@ -878,15 +876,15 @@ void CPrefEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 // Check to see if any of the prefs were marked for remote admin
 // if any have, set the global RemoteAdminFound to true
 
-void CPrefEditView::CheckForRemoteAdmins()
+BOOL CPrefEditView::CheckForRemoteAdmins()
 {
   CTreeCtrl &treeCtrl = GetTreeCtrl();
   HTREEITEM hRoot = treeCtrl.GetRootItem();
 
   if (IsRemoteAdministered(hRoot))
-	  SetGlobal("RemoteAdminPrefFound","1");
+    return TRUE;
   else
-	  SetGlobal("RemoteAdminPrefFound","0");
+    return FALSE;
 }
 
 
@@ -921,3 +919,30 @@ bool CPrefEditView::IsRemoteAdministered(HTREEITEM hItem)
 	return bRemoted;
   
 }
+
+// Show expanded groups as open folder, collapsed groups as closed folder.
+void CPrefEditView::OnExpanded(NMHDR* pNMHDR, LRESULT* pResult)
+{
+  LPNMTREEVIEW pnmtv = (LPNMTREEVIEW)pNMHDR;
+
+  if (pnmtv)
+  {
+    int imageIndex = 0;     // tree ctrl images
+
+    HTREEITEM hTreeCtrlItem = pnmtv->itemNew.hItem;
+    if (hTreeCtrlItem)
+    {
+      CTreeCtrl &treeCtrl = GetTreeCtrl();
+      if ((pnmtv->itemNew.state & TVIS_EXPANDED) == TVIS_EXPANDED)
+        treeCtrl.SetItemImage(hTreeCtrlItem, bm_openFolder, bm_openFolder);
+      else
+        treeCtrl.SetItemImage(hTreeCtrlItem, bm_closedFolder, bm_closedFolder);
+
+    }
+
+  }
+
+  *pResult = 0;
+
+ }
+

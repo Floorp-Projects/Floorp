@@ -34,7 +34,7 @@ public:
   void DoFindFirst();   // open the Find Pref dialog
   void DoFindNext();    // find next item
   void DoAdd();         // open the Add Pref dialog
-  void CheckForRemoteAdmins(); // see if any prefs were marked remote admin
+  BOOL CheckForRemoteAdmins(); // see if any prefs were marked remote admin
 
   // These are only for the XML parser to call.
   void startElement(const char *name, const char **atts);
@@ -72,6 +72,7 @@ protected:
   afx_msg void OnDelPref();
 	afx_msg void OnRclick(NMHDR* pNMHDR, LRESULT* pResult);
   afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+  afx_msg void OnExpanded(NMHDR* pNMHDR, LRESULT* pResult);
 
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

@@ -1227,6 +1227,11 @@ void CWizardUI::UpdateGlobals()
 			CString localPrefsFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
 
       ((CPrefEditView*)curWidget->control)->DoSavePrefsTree(localPrefsFile);
+      if (((CPrefEditView*)curWidget->control)->CheckForRemoteAdmins())
+        SetGlobal("RemoteAdminPrefFound","1");
+      else
+        SetGlobal("RemoteAdminPrefFound","0");
+
     }
     else if (curWidget->type == "JSEditBox")
     {

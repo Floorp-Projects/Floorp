@@ -918,17 +918,17 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						userAgent++;
 				}
 			}
-	  else if (strcmp(pcmd, "CheckRemoteAdminsFound") == 0)
-	  {
-		  CString remoteAdminPrefFound = GetGlobal("RemoteAdminPrefFound");
-		  if (remoteAdminPrefFound)
-		  {
-  	  		WIDGET* w = findWidget("RemoteAdmin");
-			if (w)
-			  ((CButton*)w->control)->SetCheck(atoi(remoteAdminPrefFound));
-		  }
+      else if (strcmp(pcmd, "CheckRemoteAdminsFound") == 0)
+      {
+	      CString remoteAdminPrefFound = GetGlobal("RemoteAdminPrefFound");
+	      if (remoteAdminPrefFound)
+	      {
+  	        WIDGET* w = findWidget("RemoteAdmin");
+	      if (w)
+		      ((CButton*)w->control)->SetCheck(atoi(remoteAdminPrefFound));
+	      }
 
-	  }
+      }
       else if (strcmp(pcmd, "ValidateRemoteAdmin") == 0)
       {
         // if checkbox is set, then there must be a URL.
@@ -1444,12 +1444,6 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 
         ((CPrefEditView*)w->control)->SetFocus();
       }
- 	  else if (strcmp(pcmd, "CheckRemoteAdmins") == 0)
-	  {
-        WIDGET *w = findWidget(parms);
-        if (w->type == "PrefsTree")
-          ((CPrefEditView*)w->control)->CheckForRemoteAdmins();
-	  }
       else if (strcmp(pcmd, "CheckCustPage1Settings") == 0)
       {
      	  CString str;
