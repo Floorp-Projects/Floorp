@@ -332,7 +332,10 @@ function createSearchRow(index, scope, searchTerm)
     var listcells = searchrow.childNodes;
     var j=0;
     for (var i=0; i<listcells.length; i+=2) {
-        stringNodes[j++] = listcells[i];
+      stringNodes[j++] = listcells[i];
+
+      // see bug #183994 for why these cells are hidden
+      listcells[i].hidden = true;
     }
     searchTermObj.booleanNodes = stringNodes;
 

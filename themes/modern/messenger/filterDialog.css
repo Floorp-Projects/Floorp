@@ -52,3 +52,25 @@ treechildren:-moz-tree-image(activeColumn) {
 treechildren:-moz-tree-image(activeColumn, Enabled-true) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
+
+menulist {
+  min-width: 15em;
+}
+
+menulist > menupopup > menuitem {
+  padding-right: 2px;
+}
+
+textbox {
+  margin: 1px 4px;
+}
+
+listbox {
+  padding-top: 2px;
+}
+
+#FilterEditor {
+  width: 560px;
+  min-height:1px;
+}
+

@@ -58,3 +58,20 @@
   margin: 5px;
   height: 100px;
 }
+
+menulist {
+  min-width: 15em;
+}
+
+menulist > menupopup > menuitem {
+  padding-right: 2px;
+}
+
+textbox {
+  margin: 1px 4px;
+}
+
+listbox {
+  padding-top: 2px;
+}
+

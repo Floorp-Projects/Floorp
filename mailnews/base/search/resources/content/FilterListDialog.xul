@@ -32,6 +32,7 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="mailnews:filterlist"
+  width="480" height="360"
   onload="onLoad();"
   onclose="return onFilterClose();"
   persist="width height screenX screenY"
@@ -195,10 +196,12 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
 
   <separator/>
 
-  <hbox id="statusContainerBox" align="center">
-    <spacer flex="1"/>
-    <label id="statusText" crop="right" flex="1"/> 
-    <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
-  </hbox>
+  <statusbar class="chromeclass-status" id="status-bar">    
+    <statusbarpanel class="statusbarpanel-progress">
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+    </statusbarpanel>
+    <statusbarpanel id="statusText" crop="right" flex="1"/>
+  </statusbar> 
+
 </window>
 

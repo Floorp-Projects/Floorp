@@ -127,7 +127,7 @@ function filterEditorOnLoad()
       var count = 1;
       var name = stub;
 
-      // Set the default filter name to be "untitled filter"
+      // Set the default filter name to be "Untitled Filter"
       while (duplicateFilterNameExists(name)) 
       {
         count++;
@@ -490,6 +490,10 @@ function saveFilter()
   {
     str = gFilterBundle.getString("mustSelectAction");
     window.alert(str);
+
+    // reset gFilter so that filter is still saved next time around
+    // see bug #186217
+    gFilter = null;
     return false;
   }
 
