@@ -2365,6 +2365,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       // see if we need to add xmlns declarations
       nsCOMPtr<nsIContent> content( do_QueryInterface(parent) );
       PRUint32 count = content->GetAttrCount();
+      PRBool setDefaultNamespace = PR_FALSE;
       if (count > 0) {
         PRUint32 index;
         nsAutoString nameStr, prefixStr, valueStr;
@@ -2387,8 +2388,24 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
               attrName->ToString(nameStr);
               tagName.Append(nameStr);
             }
+            else {
+              setDefaultNamespace = PR_TRUE;
+            }
             tagName.Append(NS_LITERAL_STRING("=\"") + uriStr + NS_LITERAL_STRING("\""));
           }
+        }
+      }
+      if (!setDefaultNamespace) {
+        nsINodeInfo* info = content->GetNodeInfo();
+        if (info && !info->GetPrefixAtom() &&
+            info->NamespaceID() != kNameSpaceID_None) {
+          // We have no namespace prefix, but have a namespace ID.  Push
+          // default namespace attr in, so that our kids will be in our
+          // namespace.
+          nsAutoString uri;
+          info->GetNamespaceURI(uri);
+          tagName.Append(NS_LITERAL_STRING(" xmlns=\"") + uri +
+                         NS_LITERAL_STRING("\""));
         }
       }
 
