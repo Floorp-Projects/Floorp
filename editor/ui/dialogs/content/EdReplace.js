@@ -210,6 +210,15 @@ function onReplace()
   // Transfer dialog contents to the find service.
   saveFindData();
 
+  // For reverse finds, need to remember the caret position
+  // before current selection
+  var newRange;
+  if (gReplaceDialog.searchBackwards.checked && selection.rangeCount > 0)
+  {
+    newRange = selection.getRangeAt(0).cloneRange();
+    newRange.collapse(true);
+  }
+
   // nsPlaintextEditor::InsertText fails if the string is empty,
   // so make that a special case:
   var replStr = gReplaceDialog.replaceInput.value;
@@ -217,6 +226,13 @@ function onReplace()
     gEditor.deleteSelection(0);
   else
     gEditor.insertText(replStr);
+
+  // For reverse finds, need to move caret just before the replaced text
+  if (gReplaceDialog.searchBackwards.checked && newRange)
+  {
+    gEditor.selection.removeAllRanges();
+    gEditor.selection.addRange(newRange);
+  }
 
   return true;
 }
