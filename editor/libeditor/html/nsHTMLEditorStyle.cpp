@@ -1411,7 +1411,10 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
     if (NS_FAILED(res)) return res;
   }
 
-  nsAutoString nodeType(aSizeChange==1 ? NS_LITERAL_STRING("big") : NS_LITERAL_STRING("small"));
+  NS_NAMED_LITERAL_STRING(bigSize, "big");
+  NS_NAMED_LITERAL_STRING(smallSize, "small");
+  nsAutoString nodeType = (aSizeChange==1) ? bigSize : smallSize;
+
   // look for siblings that are correct type of node
   nsCOMPtr<nsIDOMNode> sibling;
   GetPriorHTMLSibling(node, address_of(sibling));
