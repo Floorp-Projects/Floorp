@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uriloader
 LIBRARY_NAME	= uriloader
-SHORT_LIBNAME	= uriloadr
+SHORT_LIBNAME	= urildr
 IS_COMPONENT	= 1
 REQUIRES	= xpcom necko caps mime exthandler rdf
 

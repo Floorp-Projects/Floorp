@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webshell
 LIBRARY_NAME	= webshell
-SHORT_LIBNAME	= webshell
+SHORT_LIBNAME	= gkweb
 EXTRA_DSO_LIBS	= jsdom docshell
 
 ifeq ($(OS_ARCH),Rhapsody)
