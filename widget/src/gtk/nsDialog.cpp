@@ -24,8 +24,6 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-#include "nsXtEventHandler.h"
-
 #include <gtk/gtk.h>
 
 NS_IMPL_ADDREF(nsDialog)
@@ -51,12 +49,12 @@ NS_METHOD nsDialog::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData) 
 {
   aParent->AddChild(this);
-  GtkWidget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else if (aAppShell) {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);
@@ -79,7 +77,7 @@ NS_METHOD nsDialog::Create(nsIWidget *aParent,
   // Drawing area will spontaneously resize to fit it's contents
   // which is undesirable.
 
-  mWidget = mShell->vbox;
+  /*mWidget = mShell->vbox; */
   /*
   mWidget = ::XtVaCreateManagedWidget("drawingArea",
                                     newManageClass,
