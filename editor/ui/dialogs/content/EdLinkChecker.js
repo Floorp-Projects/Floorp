@@ -74,9 +74,9 @@ function Startup()
     objects = editor.getLinkedObjects();
   } catch (e) {}
 
-  if (!objects || objects.count == 0)
+  if (!objects || objects.Count() == 0)
   {
-    AlertWithTitle(GetString("Alert"), GetString("NoLinksToCheck");
+    AlertWithTitle(GetString("Alert"), GetString("NoLinksToCheck"));
     window.close();
     return;
   }
@@ -89,7 +89,7 @@ function Startup()
 
 
   // Loop over the nodes that have links:
-  for (var i = 0; i < objects.count; i++)
+  for (var i = 0; i < objects.Count(); i++)
   {
     var refobj = objects.GetElementAt(gNumLinksToCheck).QueryInterface(Components.interfaces.nsIURIRefObject);
     // Loop over the links in this node:

@@ -25,8 +25,6 @@
  */
 
 // Each editor window must include this file
-// Variables  shared by all dialogs:
-var editorShell;
 
 // Object to attach commonly-used widgets (all dialogs should use this)
 var gDialog = {};
@@ -53,30 +51,6 @@ var gLocation;
 
 // The element being edited - so AdvancedEdit can have access to it
 var globalElement;
-
-//XXX THIS METHOD IS GOING AWAY SOON! 
-// We are removing all editorShell calls
-// Use GetCurrentEditor() to get the nsIEditor/nsIHTMLEditor interface
-// Do not modify it or rely on it in any way!
-function InitEditorShell()
-{
-    // get the editor shell from the parent window
-
-  editorShell = window.opener.editorShell;
-  if (editorShell) {
-    editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-  }
-  if (!editorShell) {
-    dump("EditorShell not found!!!\n");
-    window.close();
-    return false;
-  }
-
-  // Save as a property of the window so it can be used by child dialogs
-
-  window.editorShell = editorShell;
-  return true;
-}
 
 /* Validate contents of an input field 
  *

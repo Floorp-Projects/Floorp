@@ -43,8 +43,7 @@ function KeepCurrentPage()
 function UseOtherPage()
 {
   // Reload the URL -- that will get other editor's contents
-  // XXX TODO: Need to replace editorShell.LoadUrl with something in nsIEditingSession?
-  setTimeout("editorShell.LoadUrl(GetDocumentUrl())", 10);
+  setTimeout("window.opener.EditorLoadUrl(GetDocumentUrl())", 10);
   SaveWindowLocation();
   return true;
 }

@@ -19,24 +19,28 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   Charles Manske (cmanske@netscape.com)
+ *   Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
 var gMisspelledWord;
-var gSpellChecker;
+var gSpellChecker = null;
 var gAllowSelectWord = true;
 var gPreviousReplaceWord = "";
 var gFirstTime = true;
 var gSendMailMessageMode = false;
 
-// dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  if (!GetCurrentEditor())
+  {
+    window.close();
     return;
-
+  }
   // Get the spellChecker shell
   gSpellChecker = Components.classes['@mozilla.org/editor/editorspellchecker;1'].createInstance(Components.interfaces.nsIEditorSpellCheck);
-  if (!gSpellChecker) {
+  if (!gSpellChecker)
+  {
     dump("SpellChecker not found!!!\n");
     window.close();
     return;
@@ -144,7 +148,7 @@ function InitLanguageMenu(curLang)
   
   var menuStr2;
   var isoStrArray;
-  var defaultIndex = 0;
+  var defaultItem = null;
   var langId;
   var i;
   for (i = 0; i < dictList.length; i++)
@@ -183,15 +187,15 @@ function InitLanguageMenu(curLang)
 
   for (i = 0; i < dictList.length; i++)
   {
-    gDialog.LanguageMenulist.appendItem(dictList[i][0], dictList[i][1]);
+    var item = gDialog.LanguageMenulist.appendItem(dictList[i][0], dictList[i][1]);
     if (curLang && dictList[i][1] == curLang)
-      defaultIndex = i+2; //first two items are pre-populated and fixed
+      defaultItem = item;
   }
 
   // Now make sure the correct item in the menu list is selected.
 
-  if (dictList.length > 0)
-    gDialog.LanguageMenulist.selectedIndex = defaultIndex;
+  if (defaultItem)
+    gDialog.LanguageMenulist.selectedItem = defaultItem;
 }
 
 function DoEnabling()
@@ -264,8 +268,7 @@ function CheckWord()
   word = gDialog.ReplaceWordInput.value;
   if (word) 
   {
-    isMisspelled = gSpellChecker.CheckCurrentWord(word);
-    if (isMisspelled)
+    if (gSpellChecker.CheckCurrentWord(word))
     {
       FillSuggestedList(word);
       SetReplaceEnable();
@@ -351,9 +354,12 @@ function Replace()
   var newWord = gDialog.ReplaceWordInput.value;
   if (gMisspelledWord && gMisspelledWord != newWord)
   {
-    editorShell.BeginBatchChanges();
-    var isMisspelled = gSpellChecker.ReplaceWord(gMisspelledWord, newWord, false);
-    editorShell.EndBatchChanges();
+    var editor = GetCurrentEditor();
+    editor.beginTransaction();
+    try {
+      gSpellChecker.ReplaceWord(gMisspelledWord, newWord, false);
+    } catch (e) {}
+    editor.endTransaction();
   }
   NextWord();
 }
@@ -363,9 +369,12 @@ function ReplaceAll()
   var newWord = gDialog.ReplaceWordInput.value;
   if (gMisspelledWord && gMisspelledWord != newWord)
   {
-    editorShell.BeginBatchChanges();
-    isMisspelled = gSpellChecker.ReplaceWord(gMisspelledWord, newWord, true);
-    editorShell.EndBatchChanges();
+    var editor = GetCurrentEditor();
+    editor.beginTransaction();
+    try {
+      gSpellChecker.ReplaceWord(gMisspelledWord, newWord, true);
+    } catch (e) {}
+    editor.endTransaction();
   }
   NextWord();
 }
@@ -510,7 +519,6 @@ function onClose()
       gSpellChecker.UninitSpellChecker();
     } finally { gSpellChecker = null; }
   }
-
   window.opener.cancelSendMessage = false;
   window.close();
 }

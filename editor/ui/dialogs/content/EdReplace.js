@@ -42,7 +42,6 @@ function initDialogObject()
   gReplaceDialog.replace         = document.getElementById("replace");
   gReplaceDialog.replaceAndFind  = document.getElementById("replaceAndFind");
   gReplaceDialog.replaceAll      = document.getElementById("replaceAll");
-  gEditor                        = null;
 }
 
 function loadDialog()
@@ -69,6 +68,14 @@ function loadDialog()
 
 function onLoad()
 {
+  // If we don't get the editor, then we won't allow replacing.
+  gEditor = GetCurrentEditor();
+  if (!gEditor)
+  {
+    window.close();
+    return;
+  }
+
   // Get the xul <editor> element:
   var editorXUL = window.opener.document.getElementById("content-frame");
 
@@ -83,11 +90,6 @@ function onLoad()
 
   // Init gReplaceDialog.
   initDialogObject();
-
-  try {
-    gEditor = editorXUL.editorShell.editor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
-  } catch(e) { dump("Couldn't get an editor! " + e + "\n"); }
-  // If we don't get the editor, then we won't allow replacing.
 
   // Change "OK" to "Find".
   //dialog.find.label = document.getElementById("fBLT").getAttribute("label");

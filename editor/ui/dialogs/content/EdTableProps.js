@@ -87,7 +87,7 @@ var gActiveEditor;
 // dialog initialization code
 function Startup()
 {
-  gActiveEditor = GetCurrentEditor();
+  gActiveEditor = GetCurrentTableEditor();
   if (!gActiveEditor)
   {
     window.close();
