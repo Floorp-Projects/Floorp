@@ -1474,15 +1474,6 @@ extern int MSG_ResultsRecipients(MSG_Pane* composepane,
 extern void MSG_SetPostDeliveryActionInfo (MSG_Pane* pane, 
 										   void *actionInfo);
 extern uint32 MSG_GetActionInfoFlags (void *actionInfo);
-#ifdef XP_UNIX
-/* This is how the XFE implements non-POP message delivery.  The given donefunc
-   will be called when the incorporate actually finishes, which may be before
-   or after this function returns. The boolean passed to the donefunc will be
-   TRUE if the incorporate succeeds, and FALSE if it fails for any reason. */
-extern void MSG_IncorporateFromFile(MSG_Pane* pane, XP_File infid,
-									void (*donefunc)(void*, XP_Bool),
-									void* doneclosure);
-#endif /* XP_UNIX */
 
 /* ===========================================================================
    							PREFERENCES
@@ -2182,11 +2173,6 @@ extern void MSG_SetBiffStateAndUpdateFE(MSG_BIFF_STATE newState);
 /* Set the preference of how often to run biff.  If zero is passed in, then
    never check. */
 extern void MSG_SetBiffInterval(int32 seconds);
-#ifdef XP_UNIX
-/* Set the file to stat, instead of using pop3.  This is for the Unix movemail
-   nonsense.  If the filename is NULL (the default), then use pop3. */
-extern void MSG_SetBiffStatFile(const char* filename);
-#endif
 /* Causes a biff check to occur immediately.  This gets caused
    automatically by MSG_SetBiffInterval or whenever libmsg gets new mail. */
 extern void FE_UpdateBiff(MSG_BIFF_STATE state);
