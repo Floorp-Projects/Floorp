@@ -118,6 +118,11 @@ nsWindowMediator::~nsWindowMediator()
 
 NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
 {
+  if (GetInfoFor(inWindow)) {
+    NS_ERROR("multiple window registration");
+    return NS_ERROR_FAILURE;
+  }
+
   mTimeStamp++;
 
   // Create window info struct and add to list of windows
