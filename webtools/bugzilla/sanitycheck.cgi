@@ -234,7 +234,7 @@ while (@row = FetchSQLData()) {
         Alert("Duplicate entry in keyworddefs for id $id");
     }
     $keywordids{$id} = 1;
-    if ($name =~ /,/ || $name =~ /^\s/ || $name =~ /\s$/) {
+    if ($name =~ /[\s,]/) {
         Alert("Bogus name in keyworddefs for id $id");
     }
 }

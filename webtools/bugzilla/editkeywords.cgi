@@ -88,8 +88,8 @@ sub Validate ($$) {
         PutTrailer($localtrailer);
         exit;
     }
-    if ($name =~ /,/) {
-        print "You may not use commas in a keyword name.\n";
+    if ($name =~ /[\s,]/) {
+        print "You may not use commas or whitespace in a keyword name.\n";
         print "Please press <b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
         exit;
