@@ -126,6 +126,7 @@ CPPSRCS = $(CPPSRCS)                      \
            nsInternetCiter.cpp            \
            nsTableEditor.cpp              \
            nsWrapUtils.cpp                \
+           nsWSRunObject.cpp              \
            TextEditorTest.cpp             \
            TypeInState.cpp                \
            SetDocTitleTxn.cpp             \
@@ -146,6 +147,7 @@ CPP_OBJS = $(CPP_OBJS)                                \
            .\$(OBJDIR)\nsInternetCiter.obj            \
            .\$(OBJDIR)\nsTableEditor.obj              \
            .\$(OBJDIR)\nsWrapUtils.obj                \
+           .\$(OBJDIR)\nsWSRunObject.obj              \
            .\$(OBJDIR)\TextEditorTest.obj             \
            .\$(OBJDIR)\TypeInState.obj                \
            .\$(OBJDIR)\SetDocTitleTxn.obj             \
