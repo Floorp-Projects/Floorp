@@ -58,7 +58,7 @@ public class NativeMath extends ScriptableObject {
         // These functions exist in java.lang.Math, but
         // are overloaded. Define our own wrappers.
         String[] localNames = { "acos", "asin", "abs", "exp", "max", "min",
-                                            "round", "pow", "log" };
+                                "round", "pow", "log" };
 
         m.defineFunctionProperties(localNames, NativeMath.class,
                                    ScriptableObject.DONTENUM);
