@@ -264,8 +264,13 @@ nsXULMenuListElement::SetSelectedItem(nsIDOMElement* aElement)
 
   mSelectedItem = aElement;
   
-  if (!mSelectedItem)
+  if (!mSelectedItem) {
+    // Remove all the old attributes.
+    mOuter->RemoveAttribute(nsAutoString("value"));
+    mOuter->RemoveAttribute(nsAutoString("src"));
+    mOuter->RemoveAttribute(nsAutoString("data"));
     return NS_OK;
+  }
 
   mSelectedItem->SetAttribute(NS_ConvertASCIItoUCS2("selected"), NS_ConvertASCIItoUCS2("true"));
 
