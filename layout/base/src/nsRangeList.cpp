@@ -1,29 +1,30 @@
-#include "nsIRangeList.h"
+#include "nsICollection.h"
 #include "nsIFactory.h"
+#include "nsIEnumerator.h"
+#include "nsIDOMRange.h"
 
-
-static NS_DEFINE_IID(kIRangeListIterator, NS_IRANGELISTITERATOR);
-static NS_DEFINE_IID(kIRangeList, NS_IRANGELIST);
+static NS_DEFINE_IID(kIRangeListIterator, NS_IENUMERATOR_IID);
+static NS_DEFINE_IID(kIRangeList, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
 class nsRangeListIterator;
 
-class nsRangeList : public nsIRangeList
+class nsRangeList : public nsICollection
 {
 public:
-/*BEGIN nsIRangeList interfaces
-see the nsIRangeList for more details*/
+/*BEGIN nsICollection interfaces
+see the nsICollection for more details*/
 
   /*interfaces for addref and release and queryinterface*/
   
   NS_DECL_ISUPPORTS
-  virtual nsresult AddRange(nsIDOMRange *aRange);
+  virtual nsresult AddItem(nsISupports *aRange);
 
-  virtual nsresult RemoveRange(nsIDOMRange *aRange);
+  virtual nsresult RemoveItem(nsISupports *aRange);
 
   virtual nsresult Clear();
-/*END nsIRangeList interfaces*/
+/*END nsICollection interfaces*/
 
   nsRangeList();
   virtual ~nsRangeList();
@@ -38,21 +39,27 @@ private:
 };
 
 
-class nsRangeListIterator : public nsIRangeListIterator
+class nsRangeListIterator : public nsIEnumerator
 {
 public:
-/*BEGIN nsIRangeListIterator interfaces
-see the nsIRangeListIterator for more details*/
+/*BEGIN nsIEnumerator interfaces
+see the nsIEnumerator for more details*/
 
   NS_DECL_ISUPPORTS
 
-  nsresult Next(nsIDOMRange **aRange);
+  virtual nsresult First();
 
-  nsresult Prev(nsIDOMRange **aRange);
+  virtual nsresult Last();
 
-  nsresult Reset();
+  virtual nsresult Next();
 
-/*END nsIRangeListIterator interfaces*/
+  virtual nsresult Prev();
+
+  virtual nsresult CurrentItem(nsISupports **aRange);
+
+  virtual nsresult IsDone(PRBool *adone);
+
+/*END nsIEnumerator interfaces*/
 
 private:
   friend class nsRangeList;
@@ -65,7 +72,7 @@ private:
 
 
 
-nsresult NS_NewRangeList(nsIRangeList **aRangeList)
+nsresult NS_NewRangeList(nsICollection **aRangeList)
 {
   nsRangeList *rlist = new nsRangeList;
   if (!rlist)
@@ -109,43 +116,78 @@ nsRangeListIterator::~nsRangeListIterator()
 
 
 nsresult
-nsRangeListIterator::Next(nsIDOMRange **aRange)
+nsRangeListIterator::Next()
 {
-  if (!aRange)
-    return NS_ERROR_NULL_POINTER;
-  if (mIndex < mRangeList->mCount)
+  if (mIndex < mRangeList->mCount -1 )
   {
-    *aRange = mRangeList->mRangeArray[mIndex++];
-    NS_ADDREF(*aRange);
+    mIndex++;
     return NS_OK;
   }
-  return NS_COMFALSE;
+  mIndex = mRangeList->mCount -1;
+  return NS_ERROR_FAILURE;
 }
 
 
 
 nsresult
-nsRangeListIterator::Prev(nsIDOMRange **aRange)
+nsRangeListIterator::Prev()
 {
-  if (!aRange)
-    return NS_ERROR_NULL_POINTER;
-  if (mIndex > 0)
+  if (mIndex > 0 )
   {
-    *aRange = mRangeList->mRangeArray[mIndex--];
-    NS_ADDREF(*aRange);
+    mIndex--;
     return NS_OK;
   }
-  return NS_COMFALSE;
+  mIndex = 0;
+  return NS_ERROR_FAILURE;
 }
 
 
 
 nsresult
-nsRangeListIterator::Reset()
+nsRangeListIterator::First()
 {
   if (!mRangeList)
     return NS_ERROR_NULL_POINTER;
   mIndex = 0;
+  return NS_OK;
+}
+
+
+
+nsresult
+nsRangeListIterator::Last()
+{
+  if (!mRangeList)
+    return NS_ERROR_NULL_POINTER;
+  mIndex = mRangeList->mCount -1;
+  return NS_OK;
+}
+
+
+
+nsresult 
+nsRangeListIterator::CurrentItem(nsISupports **aItem)
+{
+  if (!aItem)
+    return NS_ERROR_NULL_POINTER;
+  if (mIndex >=0 && mIndex< mRangeList->mCount)
+  {
+    return mRangeList->mRangeArray[mIndex]->QueryInterface(kISupportsIID, (void **)aItem);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+
+nsresult
+nsRangeListIterator::IsDone(PRBool *aDone)
+{
+  if (!aDone)
+    return NS_ERROR_NULL_POINTER;
+  if ((mIndex == mRangeList->mCount -1) || !mRangeList->mCount) //empty lists are always done
+    *aDone = PR_TRUE;
+  else
+    *aDone = PR_FALSE;
   return NS_OK;
 }
 
@@ -169,12 +211,12 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kIRangeList)) {
-    *aInstancePtr = mRangeList;
+    *aInstancePtr = (void *)mRangeList;
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
   if (aIID.Equals(kIRangeListIterator)) {
-    *aInstancePtr = (void*)(nsIRangeListIterator*)this;
+    *aInstancePtr = (void*)(nsIEnumerator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -253,7 +295,7 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kIRangeList)) {
-    *aInstancePtr = (void*)(nsIRangeList*)this;
+    *aInstancePtr = (void*)(nsIEnumerator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -269,26 +311,25 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult
-nsRangeList::AddRange(nsIDOMRange *aRange)
+nsRangeList::AddItem(nsISupports *aItem)
 {
-  if (!aRange)
+  if (!aItem)
     return NS_ERROR_NULL_POINTER;
   ResizeBuffer(++mCount);
-  mRangeArray[mCount -1] = aRange;
-  NS_ADDREF(aRange);
+  aItem->QueryInterface(kISupportsIID,(void **)mRangeArray[mCount -1]);
   return NS_OK;
 }
 
 
 
 nsresult
-nsRangeList::RemoveRange(nsIDOMRange *aRange)
+nsRangeList::RemoveItem(nsISupports *aItem)
 {
-  if (!aRange)
+  if (!aItem)
     return NS_ERROR_NULL_POINTER;
   for (PRUint32 i = 0; i < mCount;i++)
   {
-    if (mRangeArray[i] == aRange)
+    if (mRangeArray[i] == aItem)
     {
       NS_RELEASE(mRangeArray[i]);
       mRangeArray[i] = mRangeArray[--mCount];
