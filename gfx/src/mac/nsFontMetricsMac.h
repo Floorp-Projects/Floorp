@@ -100,7 +100,8 @@ protected:
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;
-  nscoord						mSpaceWidth;
+  nscoord           mSpaceWidth;
+  nscoord           mXHeight;
   nsCOMPtr<nsIAtom> mLangGroup;
   nsFont            *mFont;
   nsIDeviceContext  *mContext;

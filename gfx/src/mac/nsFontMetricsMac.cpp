@@ -110,6 +110,15 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
   mMaxAdvance = NSToCoordRound(float(::CharWidth('M')) * dev2app);	// don't use fInfo.widMax here
   mSpaceWidth = NSToCoordRound(float(::CharWidth(' ')) * dev2app);
 
+  Point frac;
+  frac.h = frac.v = 1;
+  unsigned char x = 'x';
+  short ascent;
+  if (noErr == ::OutlineMetrics(1, &x, frac, frac, &ascent, 0, 0, 0, 0))
+    mXHeight = NSToCoordRound(float(ascent) * dev2app);
+  else
+    mXHeight = NSToCoordRound(float(mMaxAscent) * 0.71f); // 0.71 = 5 / 7
+
   return NS_OK;
 }
 
@@ -257,9 +266,7 @@ nsFontMetricsMac::Destroy()
 NS_IMETHODIMP
 nsFontMetricsMac :: GetXHeight(nscoord& aResult)
 {
-  float  dev2app;
-  mContext->GetDevUnitsToAppUnits(dev2app);
-  aResult = NSToCoordRound(float(mMaxAscent * 0.71f));		// 0.71 = 5 / 7
+  aResult = mXHeight;
   return NS_OK;
 }
 
