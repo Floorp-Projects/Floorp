@@ -39,6 +39,7 @@
 #include "nsFilePicker.h"
 #include "nsMacWindow.h"
 #include "nsMacMessageSink.h"
+#include "nsWatchTask.h"
 
 
 
@@ -170,6 +171,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
+  nsWatchTask::GetTask().EventLoopReached();
+  
 	switch ( msg ) {
 	case kNavCBEvent:
 		switch ( cbRec->eventData.eventDataParms.event->what ) {
