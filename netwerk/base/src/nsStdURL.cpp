@@ -55,10 +55,13 @@ nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
       mPath(nsnull),
 	  mDirectory(nsnull),
 	  mFileName(nsnull),
+	  mParam(nsnull),
       mQuery(nsnull),
       mRef(nsnull)
 {
 	mSpec = i_Spec ? nsCRT::strdup(i_Spec) : nsnull;
+	if (mSpec)
+		ReplaceDotMess(mSpec);
     NS_INIT_AGGREGATED(outer);
 	if (i_Spec) 
 		Parse();
@@ -74,9 +77,35 @@ nsStdURL::nsStdURL(const nsStdURL& otherURL)
     mPath = otherURL.mPath ? nsCRT::strdup(otherURL.mPath) : nsnull;
     mDirectory = otherURL.mDirectory ? nsCRT::strdup(otherURL.mDirectory) : nsnull;
     mFileName = otherURL.mFileName ? nsCRT::strdup(otherURL.mFileName) : nsnull;
+	mParam = otherURL.mParam ? nsCRT::strdup(otherURL.mParam) : nsnull;
     mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
     mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
     NS_INIT_AGGREGATED(nsnull); // Todo! How?
+}
+
+nsStdURL& 
+nsStdURL::operator=(const nsStdURL& otherURL)
+{
+    mSpec = otherURL.mSpec ? nsCRT::strdup(otherURL.mSpec) : nsnull;
+    mScheme = otherURL.mScheme ? nsCRT::strdup(otherURL.mScheme) : nsnull;
+    mPreHost = otherURL.mPreHost ? nsCRT::strdup(otherURL.mPreHost) : nsnull;
+    mHost = otherURL.mHost ? nsCRT::strdup(otherURL.mHost) : nsnull;
+    mPath = otherURL.mPath ? nsCRT::strdup(otherURL.mPath) : nsnull;
+    mDirectory = otherURL.mDirectory ? nsCRT::strdup(otherURL.mDirectory) : nsnull;
+    mFileName = otherURL.mFileName ? nsCRT::strdup(otherURL.mFileName) : nsnull;
+	mParam = otherURL.mParam ? nsCRT::strdup(otherURL.mParam) : nsnull;
+    mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
+    mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
+    NS_INIT_AGGREGATED(nsnull); // Todo! How?
+	return *this;
+}
+
+PRBool
+nsStdURL::operator==(const nsStdURL& otherURL) const
+{
+	PRBool retValue = PR_FALSE;
+	((nsStdURL*)(this))->Equals((nsIURI*)&otherURL,&retValue);
+	return retValue;
 }
 
 nsStdURL::~nsStdURL()
@@ -86,6 +115,7 @@ nsStdURL::~nsStdURL()
     CRTFREEIF(mHost);
     CRTFREEIF(mPath);
     CRTFREEIF(mRef);
+	CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
     CRTFREEIF(mSpec);
 	CRTFREEIF(mDirectory);
@@ -580,13 +610,7 @@ nsStdURL::ReconstructSpec()
 	{
 		finalSpec += mPath;
 	}
-    //Pathetic hack since nsString returns a new'd string 
-    char* tempSpec = finalSpec.ToNewCString();
-    if(!tempSpec)
-        return NS_ERROR_OUT_OF_MEMORY;
-    mSpec = nsCRT::strdup(tempSpec);
-    nsCRT::free(tempSpec);
-    
+    mSpec = finalSpec.ToNewCString();
     return (mSpec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -674,7 +698,8 @@ nsStdURL::SetFileName(char* i_FileName)
     if (!i_FileName)
         return NS_ERROR_NULL_POINTER;
     
-    //Cleanout query and ref
+    //Cleanout param, query and ref
+	CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
     CRTFREEIF(mRef);
 
@@ -695,6 +720,17 @@ nsStdURL::SetRef(char* i_Ref)
 		status = DupString(&mRef, i_Ref+1);
 	else
 		status = DupString(&mRef, i_Ref);
+    return (NS_FAILED(status) ? status : ReconstructPath());
+}
+
+NS_IMETHODIMP
+nsStdURL::SetParam(char* i_Param)
+{
+    nsresult status;
+    if (i_Param && (*i_Param == ';'))
+        status = DupString(&mParam, i_Param+1);
+	else
+        status = DupString(&mParam, i_Param);
     return (NS_FAILED(status) ? status : ReconstructPath());
 }
 
@@ -753,13 +789,11 @@ nsStdURL::ReconstructPath(void)
     {
         path += mFileName;
     }
-/* TODO Add parameters as well... 
-    if (mParams)
+    if (mParam)
     {
         path += ';';
-        path += mParams;
+        path += mParam;
     }
-*/
     if (mQuery)
     {
         path += '?';
@@ -770,15 +804,9 @@ nsStdURL::ReconstructPath(void)
         path += '#';
         path += mRef;
     }
-    //Sad hack since nsString returns new'd string
-    char* tempPath = path.ToNewCString();
-    if (!tempPath)
-        return NS_ERROR_OUT_OF_MEMORY;
 
-    ReplaceDotMess(tempPath);
-
-    mPath = nsCRT::strdup(tempPath);
-    nsCRT::free(tempPath);
+    mPath = path.ToNewCString();
+	ReplaceDotMess(mPath);
     return (mPath ? ReconstructSpec() : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -790,6 +818,7 @@ nsStdURL::ParsePath(void)
 {
     CRTFREEIF(mDirectory);
 	CRTFREEIF(mFileName);
+	CRTFREEIF(mParam);
 	CRTFREEIF(mQuery);
 	CRTFREEIF(mRef);
 
@@ -847,9 +876,7 @@ nsStdURL::ParsePath(void)
 		brk = PL_strpbrk(lastbrk+1, delimiters);
 		switch (*lastbrk)
 		{
-			case ';' : /*
-					   ExtractString(lastbrk, &mParam, 1, (brk ? (brk-lastbrk-1) : (len - (lastbrk-file) -1)));
-					   */
+			case ';' : ExtractString(lastbrk, &mParam, 1, (brk ? (brk-lastbrk-1) : (len - (lastbrk-file) -1)));
 				break;
 			case '?' : ExtractString(lastbrk, &mQuery, 1, (brk ? (brk-lastbrk-1) : (len - (lastbrk-file) -1)));
 				break;
@@ -876,6 +903,7 @@ nsStdURL::SetSpec(char* i_Spec)
     CRTFREEIF(mPath);
     CRTFREEIF(mDirectory);
     CRTFREEIF(mFileName);
+	CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
     CRTFREEIF(mRef);
     return (NS_FAILED(status) ? status : Parse());
@@ -894,6 +922,7 @@ nsStdURL::SetPath(char* i_Path)
 void ReplaceDotMess(char* io_Path)
 {
     // Replace all /./ with a /
+	// Also changes all \ to /
     /* Stolen from netlib's mkparse.c.
      *
      * modifies a url of the form   /foo/../foo1  ->  /foo1
@@ -904,7 +933,9 @@ void ReplaceDotMess(char* io_Path)
     
     for(; *fwdPtr != '\0'; ++fwdPtr)
     {
-        if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/')
+		if (*fwdPtr == '\\')
+			*fwdPtr = '/';
+        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/')
         {
             // remove ./
             fwdPtr += 1;
@@ -942,7 +973,7 @@ nsStdURL::DirFile(char **o_DirFile)
 	{
 		temp = mDirectory;
         // if we have anything in the dir besides just the / 
-        if (PL_strlen(mDirectory)>1)
+        if (mDirectory[1])
             temp += '/'; 
 	}
 	if (mFileName)

@@ -55,8 +55,8 @@ interface nsIURL : nsIURI
 	/**
 	 * Returns the parameters specified after the ; in the URL. 
 	 *
-    attribute string Param;
 	 */
+    attribute string Param;
 
     /**
      * Returns the query portion (the part after the "?") of the URL.
