@@ -31,7 +31,7 @@ sub RegisterConfig {
       # [ name, save?, settable? ]
         ['log', 0, 0, {}], # log -> channel -> patternName -> [<who> text]
         ['bufferSize', 1, 1, 20], # number of comments to remember, per channel/pattern combination
-        ['patterns', 1, 1, {'uris'=>'<?(:?[Uu][Rr][LlIi]:)?\s*(?:https?|ftp)://[^\s>"]+>?'}], # list of patternNames and patterns (regexp)
+        ['patterns', 1, 1, {'links'=>'<?(:?[Uu][Rr][LlIi]:)?\s*(?:https?|ftp)://[^\s>"]+>?'}], # list of patternNames and patterns (regexp)
         ['blockedPatterns', 1, 1, []], # list of patterns (regexp) to ignore
     );
 }
@@ -66,15 +66,20 @@ sub Log {
 sub DoLog {
     my $self = shift;
     my ($event, $message) = @_;
-    foreach my $pattern (keys %{$self->{'patterns'}}) {
-        my $regexp = $self->sanitizeRegexp($self->{'patterns'}->{$pattern});
-        if ($message =~ /$regexp/s) {
-            # wohay, we have a candidate!
-            # now check for possible blockers...
-            unless ($self->isBlocked($message)) {
-                $self->debug("LOGGING: $message");
-                push(@{$self->{'log'}->{$event->{'channel'}}->{$pattern}}, $message);
-                shift(@{$self->{'log'}->{$event->{'channel'}}->{$pattern}}) if (@{$self->{'log'}->{$event->{'channel'}}->{$pattern}} > $self->{'bufferSize'});
+    if ($event->{'channel'} ne '') {
+        # don't log private messages
+        foreach my $pattern (keys %{$self->{'patterns'}}) {
+            my $regexp = $self->sanitizeRegexp($self->{'patterns'}->{$pattern});
+            if ($message =~ /$regexp/s) {
+                # wohay, we have a candidate!
+                # now check for possible blockers...
+                unless ($self->isBlocked($message)) {
+                    $self->debug("LOGGING: $message");
+                    push(@{$self->{'log'}->{$event->{'channel'}}->{$pattern}}, $message);
+                    if (@{$self->{'log'}->{$event->{'channel'}}->{$pattern}} > $self->{'bufferSize'}) {
+                        shift(@{$self->{'log'}->{$event->{'channel'}}->{$pattern}});
+                    }
+                }
             }
         }
     }
