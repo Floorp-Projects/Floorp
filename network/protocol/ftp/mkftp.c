@@ -703,6 +703,11 @@ net_send_password_response(ActiveEntry * ce)
 		PR_FREEIF(ftp_last_password);
 
         cd->next_state = FTP_ERROR_DONE;
+#if defined(SingleSignon)
+	if (cd->cc) { /* just for safety, probably cd->cc can never be null */
+	    SI_RemoveUser(cd->cc->hostname, cd->cc->hostname, TRUE);
+	}
+#endif
         FE_Alert(ce->window_id, cd->return_msg ? cd->return_msg :
 								 XP_GetString( XP_COULD_NOT_LOGIN_TO_FTP_SERVER ) );
 		/* no error status message in this case 
@@ -3708,11 +3713,16 @@ net_get_ftp_password(ActiveEntry *ce)
             	PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE,
 							XP_GetString(XP_PROMPT_ENTER_PASSWORD),
 							host_string);
+#if defined(SingleSignon)
+		cd->password = (char *)SI_PromptPassword(ce->window_id,
+				cd->output_buffer, host_string,
+				FALSE /* pickFirstUser */,
+				TRUE /* useLastPassword */);
+#else
             	cd->password = (char *)PC_PromptPassword(ce->window_id,
-													 cd->output_buffer,
-													 &cd->store_password,
+				cd->output_buffer, &cd->store_password,
 													 FALSE /* not secure */);
-
+#endif
             	if(!cd->password)
 			  	{
 					PR_Free(host_string);
