@@ -181,9 +181,10 @@ private:
 
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIFile>            mPermissionsFile;
-  PRBool                       mChangedList;
   nsTHashtable<nsHostEntry>    mHostTable;
   PRUint32                     mHostCount;
+  PRPackedBool                 mChangedList;
+  PRPackedBool                 mHasUnknownTypes;
 
   // An array to store the strings identifying the different types.
   char                        *mTypeArray[NUMBER_OF_TYPES];
