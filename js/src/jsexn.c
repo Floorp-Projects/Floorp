@@ -20,6 +20,7 @@
  * JS standard exception implementation.
  */
 
+#include <string.h>
 #include "jsstddef.h"
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
@@ -104,10 +105,10 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
 							report->uclinebuf);
     } else
 	newReport->uclinebuf = newReport->uctokenptr = NULL;
-    
+   
     if (report->ucmessage != NULL) {
         jsint len = js_strlen(report->ucmessage) + 1;
-        newReport->ucmessage = (const jschar *)JS_malloc(cx, len);
+        newReport->ucmessage = (const jschar *)JS_malloc(cx, len * sizeof(jschar));
         js_strncpy((jschar *)newReport->ucmessage, report->ucmessage, len);
         
         if (report->messageArgs) {
@@ -125,9 +126,9 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
                 js_strncpy((jschar *)(newReport->messageArgs[i]),
                            report->messageArgs[i], len);
             }
-            report->messageArgs[i] = NULL;
+            newReport->messageArgs[i] = NULL;
         } else {
-            report->messageArgs = NULL;
+            newReport->messageArgs = NULL;
         }
     } else {
         newReport->ucmessage = NULL;
