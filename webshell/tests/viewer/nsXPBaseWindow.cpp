@@ -465,6 +465,8 @@ NS_IMETHODIMP nsXPBaseWindow::AddEventListener(nsIDOMNode * aNode)
 {
   nsIDOMEventReceiver * receiver;
 
+  NS_PRECONDITION(nsnull != aNode, "adding event listener to null node");
+
   if (NS_OK == aNode->QueryInterface(kIDOMEventReceiverIID, (void**) &receiver)) {
     receiver->AddEventListener((nsIDOMMouseListener*)this, kIDOMMouseListenerIID);
     NS_RELEASE(receiver);
@@ -477,6 +479,8 @@ NS_IMETHODIMP nsXPBaseWindow::AddEventListener(nsIDOMNode * aNode)
 NS_IMETHODIMP nsXPBaseWindow::RemoveEventListener(nsIDOMNode * aNode)
 {
   nsIDOMEventReceiver * receiver;
+
+  NS_PRECONDITION(nsnull != aNode, "removing event listener from null node");
 
   if (NS_OK == aNode->QueryInterface(kIDOMEventReceiverIID, (void**) &receiver)) {
     receiver->RemoveEventListener(this, kIDOMMouseListenerIID);
