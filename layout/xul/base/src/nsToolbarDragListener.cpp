@@ -150,19 +150,42 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
     return;
   }
   
+  //
+  // Get the mouse coordinates from the DOM event, but they will be in the 
+  // window/widget coordinate system. We must first get them into the frame-relative
+  // coordinate system. Yuck.
+  //
+  
+  // get mouse coordinates and translate them into twips
   nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aDragEvent));
   PRInt32 x,y = 0;
   uiEvent->GetClientX(&x);
   uiEvent->GetClientY(&y);
-
-  // translate the mouse coords into twips
   float p2t;
   mPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord xp       = NSIntPixelsToTwips(x, p2t);
   nscoord yp       = NSIntPixelsToTwips(y, p2t);
-  nsPoint pnt(xp, yp);
+  
+  // compute the offset to top level in twips
+  PRInt32 frameOffsetX = 0, frameOffsetY = 0;
+  nsIFrame* curr = dropAreaFrame;
+  curr->GetParent(&curr);
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  while ( curr ) {
+    nsPoint origin;
+    curr->GetOrigin(origin);      // in twips    
+    frameOffsetX += origin.x;     // build the offset incrementally
+    frameOffsetY += origin.y;    
+    curr->GetParent(&curr);       // moving up the chain
+  } // until we reach the top  
 
+  // subtract the offset from the x,y coord to put into frame relative coordinates.
+  xp -= frameOffsetX;
+  yp -= frameOffsetY;
+  nsPoint pnt(xp, yp);
+  
   // get the toolbar's rect
   nsRect tbRect;
   dropAreaFrame->GetRect(tbRect);
@@ -173,7 +196,10 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
   nsRect    rect;             // child frame's rect
   nsRect    prevRect(-1, -1, 0, 0);
 
+  //
   // Now loop through the child and see if the mouse is over a child
+  //
+  
   dropAreaFrame->FirstChild(nsnull, &childFrame); 
   while ( childFrame ) {    
 
@@ -237,18 +263,17 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
             }
           }
           
-          found = PR_TRUE;
           *outXLoc = xc;
         }
         else {
           // mouse is over something (probably a spacer) so return the left side of
           // the spacer.
-          found = PR_TRUE;
           *outXLoc = rect.x - tbRect.x;
           *outIndex = count;
         }
         
         // found something, break out of the loop
+        found = PR_TRUE;
         break;
       }
     } // if mouse is in an item
@@ -265,7 +290,6 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
     else
       *outXLoc = onePixel;
   }
-
 }
 
 
