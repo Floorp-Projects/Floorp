@@ -344,7 +344,7 @@ protected:
 static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
 static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kDocumentLoaderCID,      NS_DOCUMENTLOADER_CID);
+static NS_DEFINE_IID(kDocLoaderServiceCID,    NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 
 // IID's
@@ -720,10 +720,16 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
       NS_RELEASE(parentLoader);
     }
   } else {
-    rv = nsRepository::CreateInstance(kDocumentLoaderCID,
-                                      nsnull,
+    nsIDocumentLoader* docLoaderService;
+
+    // Get the global document loader service...  
+    rv = nsServiceManager::GetService(kDocLoaderServiceCID,
                                       kIDocumentLoaderIID,
-                                      (void**)&mDocLoader);
+                                      (nsISupports **)&docLoaderService);
+    if (NS_SUCCEEDED(rv)) {
+      rv = docLoaderService->CreateDocumentLoader(&mDocLoader);
+      nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
+    }
   }
   if (NS_FAILED(rv)) {
     goto done;
