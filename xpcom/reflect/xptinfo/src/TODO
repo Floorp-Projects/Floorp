@@ -1,0 +1,14 @@
+/* jband - 03/24/00 -  */
+
+- improve error handling
+- verification
+- check for truncated xpt files and version problems
+- integreate autoreg call with xpcom's component autoreg scheme
+- support xpt files in more than just the components dir; e.g. plugins?
+- TESTS!
+
+- switch to MoveTo for .dat file
+- use only 32 bits for file size?
+- verify the merge stuff really works
+- better autoreg logging
+- support #ifdef'ing out the zip #includes and uses
