@@ -681,10 +681,8 @@ gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event,
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  if (event->length) {
-    InitKeyPressEvent(event,p, kevent);
-    win->OnKey(kevent);
-  }
+  InitKeyPressEvent(event,p, kevent);
+  win->OnKey(kevent);
 
   win->Release();
   gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
@@ -772,10 +770,8 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
     win->OnKey(kevent);
   }
 #else
-  if (event->length) {
-     InitKeyPressEvent(event,p,kevent);
-     win->OnKey(kevent);
-   }
+  InitKeyPressEvent(event,p,kevent);
+  win->OnKey(kevent);
 #endif
 
   win->Release();
