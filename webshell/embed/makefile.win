@@ -18,7 +18,10 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS= ActiveX \
+DIRS= \
+!if "$(MSSDK)" != ""
+      ActiveX \
+!endif
 !if defined(NGPREFS)
       ngprefs \
 !endif
