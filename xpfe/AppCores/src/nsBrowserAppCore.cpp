@@ -594,6 +594,14 @@ nsBrowserAppCore::LoadInitialPage(void)
      rv = LoadUrl(nsString(urlstr));
      return rv;
   }
+  else {
+    //Load the BrowserInit Page for now. This s'd be replaced by code
+    //that will look for Prefs and load the default home page
+    rv = LoadUrl(nsString("resource:/res/samples/BrowserInitPage.html"));
+    return rv;
+  }
+
+#if 0
   // No URL was provided in the command line. Load the default provided
   // in the navigator.xul;
 
@@ -616,6 +624,8 @@ nsBrowserAppCore::LoadInitialPage(void)
     rv = LoadUrl(value);
     return rv;
     }
+#endif  /* 0 */
+
     if (APP_DEBUG) printf("Quitting LoadInitialPage\n");
     return NS_OK;
 }
