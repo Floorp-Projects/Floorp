@@ -1245,7 +1245,6 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
   return map;
 }
 
-#ifdef MOZ_MATHML
 // The following function returns the glyph indices of a Unicode string.
 // To this end, GetGlyphIndices() retrieves the CMAP of the current font
 // in the DC:
@@ -1330,7 +1329,7 @@ GetGlyphIndices(HDC              aDC,
       p[1] = tmp;
       p += 2;
     }
-
+#ifdef MOZ_MATHML
     // cache these for later re-use
     if (aCMAP) {
       nsAutoString name;
@@ -1344,6 +1343,7 @@ GetGlyphIndices(HDC              aDC,
         }
       }
     }
+#endif
   }
 
   // --------------
@@ -1399,7 +1399,115 @@ GetGlyphIndices(HDC              aDC,
   }
   return nsnull;
 }
-#endif
+
+// ----------------------------------------------------------------------
+// We use GetGlyphOutlineW() or GetGlyphOutlineA() to get the metrics. 
+// GetGlyphOutlineW() is faster, but not implemented on all platforms.
+// nsGlyphAgent provides an interface to hide these details, and it
+// also hides the parameters/setup needed to call GetGlyphOutline.
+
+enum nsGlyphAgentEnum {
+  eGlyphAgent_UNKNOWN = -1,
+  eGlyphAgent_UNICODE,
+  eGlyphAgent_ANSI
+};
+
+class nsGlyphAgent
+{
+public:
+  nsGlyphAgent()
+  {
+    mState = eGlyphAgent_UNKNOWN;
+    // set glyph transform matrix to identity
+    FIXED zero, one;
+    zero.fract = 0; one.fract = 0;
+    zero.value = 0; one.value = 1; 
+    mMat.eM12 = mMat.eM21 = zero;
+    mMat.eM11 = mMat.eM22 = one;  	
+  }
+
+  ~nsGlyphAgent()
+  {}
+
+  nsGlyphAgentEnum GetState()
+  {
+    return mState;
+  }
+
+  DWORD GetGlyphMetrics(HDC           aDC,
+                        PRUint8       aChar,
+                        GLYPHMETRICS* aGlyphMetrics);
+
+  DWORD GetGlyphMetrics(HDC           aDC, 
+                        PRUnichar     aChar,
+                        PRUint16      aGlyphIndex,
+                        GLYPHMETRICS* aGlyphMetrics);
+private:
+  MAT2 mMat;    // glyph transform matrix (always identity in our context)
+
+  nsGlyphAgentEnum mState; 
+                // eGlyphAgent_UNKNOWN : glyph agent is not yet fully initialized
+                // eGlyphAgent_UNICODE : this platform implements GetGlyphOutlineW()
+                // eGlyphAgent_ANSI : this platform doesn't implement GetGlyphOutlineW()
+};
+
+// Version of GetGlyphMetrics() for a non-Unicode font.
+// Here we use a simple wrapper on top of GetGlyphOutlineA().
+DWORD
+nsGlyphAgent::GetGlyphMetrics(HDC           aDC,
+                              PRUint8       aChar,
+                              GLYPHMETRICS* aGlyphMetrics)
+{
+  return GetGlyphOutlineA(aDC, aChar, GGO_METRICS, aGlyphMetrics, 0, nsnull, &mMat);
+}
+
+// Version of GetGlyphMetrics() for a Unicode font.
+// Here we use GetGlyphOutlineW() or GetGlyphOutlineA() to get the metrics. 
+// aGlyphIndex should be 0 if the caller doesn't know the glyph index of the char.
+DWORD
+nsGlyphAgent::GetGlyphMetrics(HDC           aDC,
+                              PRUnichar     aChar,
+                              PRUint16      aGlyphIndex,
+                              GLYPHMETRICS* aGlyphMetrics)
+{
+  if (eGlyphAgent_UNKNOWN == mState) { // first time we have been in this function
+    // see if this platform implements GetGlyphOutlineW()
+    DWORD len = GetGlyphOutlineW(aDC, aChar, GGO_METRICS, aGlyphMetrics, 0, nsnull, &mMat);
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
+      // next time, we won't bother trying GetGlyphOutlineW()
+      mState = eGlyphAgent_ANSI;
+    }
+    else {
+      // all is well with GetGlyphOutlineW(), we will be using it from now on
+      mState = eGlyphAgent_UNICODE;
+      return len;
+    }
+  }
+
+  if (eGlyphAgent_UNICODE == mState) {
+    return GetGlyphOutlineW(aDC, aChar, GGO_METRICS, aGlyphMetrics, 0, nsnull, &mMat);
+  }
+  else {
+    // we are on a platform that doesn't implement GetGlyphOutlineW()
+    // (see Q241358: The GetGlyphOutlineW Function Fails on Windows 95 & 98
+    //  http://support.microsoft.com/support/kb/articles/Q241/3/58.ASP)
+    // we will use glyph indices as a work around.
+    if (0 == aGlyphIndex) { // caller doesn't know the glyph index, so find it
+      GetGlyphIndices(aDC, nsnull, &aChar, 1, &aGlyphIndex, 1);
+    }
+    if (0 < aGlyphIndex) {
+      return GetGlyphOutlineA(aDC, aGlyphIndex, GGO_METRICS | GGO_GLYPH_INDEX, aGlyphMetrics, 0, nsnull, &mMat);
+    }
+  }
+
+  // if we ever reach here, something went wrong in GetGlyphIndices() above
+  // because the current font in aDC wasn't a Unicode font
+  return GDI_ERROR;
+}
+
+// the global glyph agent that we will be using
+nsGlyphAgent gGlyphAgent;
+
 
 // Subclass for common unicode fonts (e.g, Times New Roman, Arial, etc.).
 // Offers the fastest rendering because no mapping table is needed (here, 
@@ -2615,34 +2723,18 @@ HDC   dc1 = NULL;
     mUnderlineSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
     mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
 
-#ifdef MOZ_MATHML
-    mItalicSlope = float(oMetrics.otmsCharSlopeRun)/float(oMetrics.otmsCharSlopeRise);
-    if (oMetrics.otmItalicAngle > 0) mItalicSlope = -mItalicSlope; // back-slanted font
-
     // Begin -- section of code to get the real x-height with GetGlyphOutline()
-    PRUnichar x = 'x';
-    // set glyph transform matrix to identity
-    MAT2 mat2;
-    FIXED zero, one;
-    zero.fract = 0; one.fract = 0;
-    zero.value = 0; one.value = 1; 
-    mat2.eM12 = mat2.eM21 = zero;
-    mat2.eM11 = mat2.eM22 = one;
-    // get the glyph outline of 'x'
     GLYPHMETRICS gm;
-    DWORD len = GetGlyphOutlineW(dc, x, GGO_METRICS, &gm, 0, nsnull, &mat2);
-    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
-      PRUint16 str;
-      PRUint16* pstr = GetGlyphIndices(dc, nsnull, &x, 1, &str, 1);
-      if (pstr) {
-        len = GetGlyphOutlineA(dc, pstr[0], GGO_METRICS | GGO_GLYPH_INDEX, &gm, 0, nsnull, &mat2);
-      }
-    }                                                                
+    DWORD len = gGlyphAgent.GetGlyphMetrics(dc, PRUnichar('x'), 0, &gm);
     if (GDI_ERROR != len && gm.gmBlackBoxY > 0)
     {
       mXHeight = NSToCoordRound(gm.gmBlackBoxY * dev2app);
     }
     // End -- getting x-height
+
+#ifdef MOZ_MATHML
+    mItalicSlope = float(oMetrics.otmsCharSlopeRun)/float(oMetrics.otmsCharSlopeRise);
+    if (oMetrics.otmItalicAngle > 0) mItalicSlope = -mItalicSlope; // back-slanted font
 #endif
   }
   else {
@@ -2898,35 +2990,24 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
   aBoundingMetrics.Clear();
   if (aString && 0 < aLength) {
     PRUint16 str[CHAR_BUFFER_SIZE];
-    PRUint16* pstr = nsnull;
+    PRUint16* pstr = (PRUint16*)&str;
 
-    // set glyph transform matrix to identity
-    MAT2 mat2;
-    FIXED zero, one;
-    zero.fract = 0; one.fract = 0;
-    zero.value = 0; one.value = 1; 
-    mat2.eM12 = mat2.eM21 = zero; 
-    mat2.eM11 = mat2.eM22 = one; 
-   
-    // measure the string
-    nscoord descent;
-    GLYPHMETRICS gm;
-    DWORD len = GetGlyphOutlineW(aDC, aString[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
-    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
-//      printf("GetGlyphOutlineW() not implemented on this platform! ");
-//      DumpFontInfo();
-
-      // we are on a platform that doesn't implement GetGlyphOutlineW() !
-      // (see Q241358: The GetGlyphOutlineW Function Fails on Windows 95 & 98
-      //  http://support.microsoft.com/support/kb/articles/Q241/3/58.ASP)
-
-      // use glyph indices as a work around
+    // at this stage, the glyph agent should have already been initialized
+    // given that it was used to compute the x-height in RealizeFont()
+    NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
+    if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
+      // we are on a platform that doesn't implement GetGlyphOutlineW() 
+      // we need to use glyph indices
       pstr = GetGlyphIndices(aDC, &mCMAP, aString, aLength, str, CHAR_BUFFER_SIZE);
       if (!pstr) {
         return NS_ERROR_UNEXPECTED;
       }
-      len = GetGlyphOutlineA(aDC, pstr[0], GGO_METRICS | GGO_GLYPH_INDEX, &gm, 0, nsnull, &mat2);
-    }                                                                
+    }
+
+    // measure the string
+    nscoord descent;
+    GLYPHMETRICS gm;                                                
+    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, aString[0], pstr[0], &gm);
     if (GDI_ERROR == len) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -2943,10 +3024,7 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
       // loop over each glyph to get the ascent and descent
       PRUint32 i;
       for (i = 1; i < aLength; i++) {
-        if (pstr) // avoid GetGlyphOutlineW since it had problems
-          len = GetGlyphOutlineA(aDC, pstr[i], GGO_METRICS | GGO_GLYPH_INDEX, &gm, 0, nsnull, &mat2);
-        else
-          len = GetGlyphOutlineW(aDC, aString[i], GGO_METRICS, &gm, 0, nsnull, &mat2);        
+        len = gGlyphAgent.GetGlyphMetrics(aDC, aString[i], pstr[i], &gm);
         if (GDI_ERROR == len) {
           return NS_ERROR_UNEXPECTED;
         }
@@ -2982,7 +3060,7 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
       }
     }
 
-    if (pstr && pstr != str) {
+    if (pstr != str) {
       delete[] pstr;
     }
   }
@@ -3076,18 +3154,10 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
     PRInt32 srcLength = aLength, destLength = aLength;
     mConverter->Convert(aString, &srcLength, pstr, &destLength);
 
-    // set glyph transform matrix to identity
-    MAT2 mat2;
-    FIXED zero, one;
-    zero.fract = 0; one.fract = 0;
-    zero.value = 0; one.value = 1; 
-    mat2.eM12 = mat2.eM21 = zero; 
-    mat2.eM11 = mat2.eM22 = one; 
-
     // measure the string
     nscoord descent;
     GLYPHMETRICS gm;
-    DWORD len = GetGlyphOutlineA(aDC, PRUint8(pstr[0]), GGO_METRICS, &gm, 0, nsnull, &mat2);
+    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
     if (GDI_ERROR == len) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -3104,7 +3174,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
       // loop over each glyph to get the ascent and descent
       PRUint32 i;
       for (i = 1; i < aLength; i++) {
-        len = GetGlyphOutlineA(aDC, PRUint8(pstr[i]), GGO_METRICS, &gm, 0, nsnull, &mat2);
+        len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[i]), &gm);
         if (GDI_ERROR == len) {
           return NS_ERROR_UNEXPECTED;
         }
@@ -3257,19 +3327,25 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
     PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
                              aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
     if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
+    PRUint16 s[CHAR_BUFFER_SIZE];
+    PRUint16* ps = (PRUint16*)&s;
 
-    // set glyph transform matrix to identity
-    MAT2 mat2;
-    FIXED zero, one;
-    zero.fract = 0; one.fract = 0;
-    zero.value = 0; one.value = 1; 
-    mat2.eM12 = mat2.eM21 = zero; 
-    mat2.eM11 = mat2.eM22 = one; 
+    // at this stage, the glyph agent should have already been initialized
+    // given that it was used to compute the x-height in RealizeFont()
+    NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
+    if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
+      // we are on a platform that doesn't implement GetGlyphOutlineW() 
+      // we need to use glyph indices
+      ps = GetGlyphIndices(aDC, &mCMAP, str, aLength, s, CHAR_BUFFER_SIZE);
+      if (!ps) {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
 
     // measure the string
     nscoord descent;
     GLYPHMETRICS gm;
-    DWORD len = GetGlyphOutline(aDC, pstr[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
+    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[0], ps[0], &gm);
     if (GDI_ERROR == len) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -3286,7 +3362,7 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
       // loop over each glyph to get the ascent and descent
       PRUint32 i;
       for (i = 1; i < aLength; i++) {
-        len = GetGlyphOutline(aDC, pstr[i], GGO_METRICS, &gm, 0, nsnull, &mat2);
+        len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[i], ps[i], &gm);        
         if (GDI_ERROR == len) {
           return NS_ERROR_UNEXPECTED;
         }
@@ -3303,7 +3379,7 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
       SIZE size;
       ::GetTextExtentPointW(aDC, pstr, aLength, &size);
       aBoundingMetrics.width = size.cx;
-      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
+      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
     }
 
     // italic correction
@@ -3324,6 +3400,9 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
 
     if (pstr != str) {
       delete[] pstr;
+    }
+    if (ps != s) {
+      delete[] ps;
     }
   }
   return NS_OK;
@@ -3571,18 +3650,10 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
 
     HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
 
-    // set glyph transform matrix to identity
-    MAT2 mat2;
-    FIXED zero, one;
-    zero.fract = 0; one.fract = 0;
-    zero.value = 0; one.value = 1; 
-    mat2.eM12 = mat2.eM21 = zero; 
-    mat2.eM11 = mat2.eM22 = one; 
-
     // measure the string
     nscoord descent;
     GLYPHMETRICS gm;
-    DWORD len = GetGlyphOutline(aDC, pstr[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
+    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
     if (GDI_ERROR == len) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -3599,7 +3670,7 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
       // loop over each glyph to get the ascent and descent
       int i;
       for (i = 1; i < nb; i++) {
-        len = GetGlyphOutline(aDC, pstr[i], GGO_METRICS, &gm, 0, nsnull, &mat2);
+        len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
         if (GDI_ERROR == len) {
           return NS_ERROR_UNEXPECTED;
         }
