@@ -18,8 +18,11 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 
-# cd /u/terry/warproot/projects/bonsai
-cd /d/webdocs/projects/bonsai
+if {[llength $argv] > 0} {
+    cd [lindex $argv 0]
+} else {
+    cd [file dirname $argv0]
+}
 
 set filename data/admin.[id process]
 
