@@ -68,7 +68,7 @@
 
   function Translate(src, dest)
   {
-	var service = "http://levis.alis.com:8080";
+	var service = "http://levis.alis.com:8081";
 	service += "?AlisSourceLang=" + src;
 	service += "&AlisTargetLang=" + dest;
 	service += "&AlisMTEngine=SSI";
