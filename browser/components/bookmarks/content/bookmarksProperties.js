@@ -40,21 +40,20 @@
 // Ask rjc@netscape.com if you want to know why exactly this is.
 
 // This is the set of fields that are visible in the window.
-var gFields     = ["name", "shortcut", "description", "url"];
+var gFields;
 
 // ...and this is a parallel array that contains the RDF properties
 // that they are associated with.
-var gProperties = [NC_NS + "Name",
-                   NC_NS + "ShortcutURL",
-                   NC_NS + "Description",
-                   NC_NS + "URL"];
+var gProperties;
 
-var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
-
-var gBookmarkURL = "";
+var Bookmarks;
+var gBookmarkURL;
 
 function showDescription()
 {
+  initServices();
+  initBMService();
+
   gBookmarkURL = window.arguments[0];
   var resource = RDF.GetResource(gBookmarkURL);
 
@@ -79,6 +78,20 @@ function showDescription()
 
 function Init()
 {
+  // This is the set of fields that are visible in the window.
+  gFields     = ["name", "shortcut", "description", "url"];
+
+  // ...and this is a parallel array that contains the RDF properties
+  // that they are associated with.
+
+  gProperties = [NC_NS + "Name",
+                 NC_NS + "ShortcutURL",
+                 NC_NS + "Description",
+                 NC_NS + "URL"];
+
+  Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+  gBookmarkURL = "";
+
   var x;
   var resource = RDF.GetResource(gBookmarkURL);
   // Initialize the properties panel by copying the values from the

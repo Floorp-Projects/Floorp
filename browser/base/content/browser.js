@@ -376,6 +376,11 @@ function Startup()
 
 function delayedStartup(aElt)
 {
+
+  // loads the services
+  initServices();
+  initBMService();
+
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
   
   if (gMustLoadSidebar) {
@@ -4151,7 +4156,7 @@ function handleLinkClick(event, href, linkNode)
           return true;
       } 
       var saveModifier = true;
-      if (pref) {
+      if (gPrefService) {
         try {
           saveModifier = gPrefService.getBoolPref("ui.key.saveLink.shift");
         }

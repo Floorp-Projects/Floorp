@@ -36,40 +36,80 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-const NC_NS     = "http://home.netscape.com/NC-rdf#";
-const RDF_NS    = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const NC_NS_CMD = NC_NS + "command?cmd=";
+var NC_NS, RDF_NS, XUL_NS, NC_NS_CMD;
 
 // definition of the services frequently used for bookmarks
-// PCH: a better place would be in a specific file.
-const kRDFContractID   = "@mozilla.org/rdf/rdf-service;1";
-const kRDFSVCIID       = Components.interfaces.nsIRDFService;
-const kRDFRSCIID       = Components.interfaces.nsIRDFResource;
-const kRDFLITIID       = Components.interfaces.nsIRDFLiteral
-var   RDF              = Components.classes[kRDFContractID].getService(kRDFSVCIID);
-//XXX RDF is defined as a |var| to avoid const redefinitions in sidebarOverlay.js
+var kRDFContractID;
+var kRDFSVCIID;
+var kRDFRSCIID;
+var kRDFLITIID;
+var RDF;
 
-const kRDFCContractID  = "@mozilla.org/rdf/container;1";
-const kRDFCIID         = Components.interfaces.nsIRDFContainer;
-const RDFC             = Components.classes[kRDFCContractID].getService(kRDFCIID);
+var kRDFCContractID;
+var kRDFCIID;
+var RDFC;
 
-const kRDFCUContractID = "@mozilla.org/rdf/container-utils;1";
-const kRDFCUIID        = Components.interfaces.nsIRDFContainerUtils;
-const RDFCU            = Components.classes[kRDFCUContractID].getService(kRDFCUIID);
+var kRDFCUContractID;
+var kRDFCUIID;
+var RDFCU;
 
-const BMDS             = RDF.GetDataSource("rdf:bookmarks");
-const BMSVC            = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
+var BMDS;
+var BMSVC;
 
-const kSOUNDContractID = "@mozilla.org/sound;1";
-const kSOUNDIID        = Components.interfaces.nsISound;
-const SOUND            = Components.classes[kSOUNDContractID].createInstance(kSOUNDIID);
+var kSOUNDContractID;
+var kSOUNDIID;
+var SOUND;
 
-const kWINDOWContractID = "@mozilla.org/appshell/window-mediator;1";
-const kWINDOWIID        = Components.interfaces.nsIWindowMediator;
-const WINDOWSVC         = Components.classes[kWINDOWContractID].getService(kWINDOWIID);
+var kWINDOWContractID;
+var kWINDOWIID;
+var WINDOWSVC;
 
-var   gBMtxmgr;
+var gBMtxmgr;
+
+// should be moved in a separate file
+function initServices()
+{
+  NC_NS     = "http://home.netscape.com/NC-rdf#";
+  RDF_NS    = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+  XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  NC_NS_CMD = NC_NS + "command?cmd=";
+
+  kRDFContractID   = "@mozilla.org/rdf/rdf-service;1";
+  kRDFSVCIID       = Components.interfaces.nsIRDFService;
+  kRDFRSCIID       = Components.interfaces.nsIRDFResource;
+  kRDFLITIID       = Components.interfaces.nsIRDFLiteral;
+  RDF              = Components.classes[kRDFContractID].getService(kRDFSVCIID);
+
+  kRDFCContractID  = "@mozilla.org/rdf/container;1";
+  kRDFCIID         = Components.interfaces.nsIRDFContainer;
+  RDFC             = Components.classes[kRDFCContractID].getService(kRDFCIID);
+
+  kRDFCUContractID = "@mozilla.org/rdf/container-utils;1";
+  kRDFCUIID        = Components.interfaces.nsIRDFContainerUtils;
+  RDFCU            = Components.classes[kRDFCUContractID].getService(kRDFCUIID);
+
+  kSOUNDContractID = "@mozilla.org/sound;1";
+  kSOUNDIID        = Components.interfaces.nsISound;
+  SOUND            = Components.classes[kSOUNDContractID].createInstance(kSOUNDIID);
+
+  kWINDOWContractID = "@mozilla.org/appshell/window-mediator;1";
+  kWINDOWIID        = Components.interfaces.nsIWindowMediator;
+  WINDOWSVC         = Components.classes[kWINDOWContractID].getService(kWINDOWIID);
+
+}
+
+function initBMService()
+{
+  BMDS  = RDF.GetDataSource("rdf:bookmarks");
+  BMSVC = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
+  BookmarkInsertTransaction.prototype.RDFC = RDFC;
+  BookmarkInsertTransaction.prototype.BMDS = BMDS;
+  BookmarkRemoveTransaction.prototype.RDFC = RDFC;
+  BookmarkRemoveTransaction.prototype.BMDS = BMDS;
+  BookmarkImportTransaction.prototype.RDFC = RDFC;
+  BookmarkImportTransaction.prototype.BMDS = BMDS;
+}
+
 /**
  * XXX - 04/16/01
  *  ACK! massive command name collision problems are causing big issues
@@ -1548,33 +1588,9 @@ var BookmarksUtils = {
       title = url;
     }
 
-    this.addBookmark(url, title, docCharset, aShowDialog);
-  },
-  
-  // still to be done, ignore that
-  addBookmark: function (aURL, aTitle, aCharSet, aShowDialog)
-  {
-    if (aShowDialog)
-      openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "", 
-                 "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharSet);
-    else {
-      // User has elected to override the file dialog and always file bookmarks
-      // into the default bookmark folder. 
-      var rSource;
-      if (!BMSVC.IsBookmarked(aURL))
-        rSource = BookmarksUtils.createBookmark(aTitle, aURL, aCharSet);
-      else
-        rSource = RDF.GetResource(aURL);
-
-      var selection, target;
-      selection = BookmarksUtils.getSelectionFromResource(rSource);
-      target    = BookmarksUtils.getNewBookmarkFolder();
-      target    = BookmarksUtils.getSelectionFromResource(target);
-      target    = BookmarksUtils.getTargetFromSelection(target);
-      var transactionSet = new BookmarksTransactionSet;
-      var transaction    = BookmarksUtils.getInsertTransaction("newbookmark", selection, target);
-      this.doBookmarkTransaction(transaction);
-    }
+    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "", 
+               "centerscreen,chrome,dialog=yes,resizable=no,dependent", title,
+               url, null, docCharset);
   }, 
 
   getBrowserTargetFromEvent: function (aEvent)

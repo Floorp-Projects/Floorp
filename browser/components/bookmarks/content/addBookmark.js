@@ -107,6 +107,8 @@ var gCreateInFolder = "NC:NewBookmarkFolder";
 
 function Startup()
 {
+  initServices();
+  initBMService();
   gFld_Name = document.getElementById("name");
   gFld_URL = document.getElementById("url");
   gCB_AddGroup = document.getElementById("addgroup");
