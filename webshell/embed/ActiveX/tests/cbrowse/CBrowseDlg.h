@@ -32,6 +32,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
 	enum { IDD = IDD_CBROWSE_DIALOG };
+	CTreeCtrl	m_tcDOM;
 	CButton	m_btnRunTest;
 	CComboBox	m_cmbURLs;
 	CTreeCtrl	m_tcTests;
@@ -62,6 +63,7 @@ protected:
 	afx_msg void OnForward();
 	afx_msg void OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnRefreshDOM();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

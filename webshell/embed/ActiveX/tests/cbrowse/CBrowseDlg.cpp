@@ -18,6 +18,8 @@ static char THIS_FILE[] = __FILE__;
 
 #include <signal.h>
 
+#include <stack>
+
 void __cdecl fperr(int sig)
 {
 	CString sError;
@@ -63,6 +65,7 @@ void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CBrowseDlg)
+	DDX_Control(pDX, IDC_DOMLIST, m_tcDOM);
 	DDX_Control(pDX, IDC_RUNTEST, m_btnRunTest);
 	DDX_Control(pDX, IDC_URL, m_cmbURLs);
 	DDX_Control(pDX, IDC_TESTLIST, m_tcTests);
@@ -81,6 +84,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_BN_CLICKED(IDC_FORWARD, OnForward)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TESTLIST, OnSelchangedTestlist)
 	ON_NOTIFY(NM_DBLCLK, IDC_TESTLIST, OnDblclkTestlist)
+	ON_BN_CLICKED(IDC_REFRESHDOM, OnRefreshDOM)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -89,6 +93,7 @@ END_MESSAGE_MAP()
 #define IL_TEST			2
 #define IL_TESTFAILED	3
 #define IL_TESTPASSED	4
+#define IL_NODE			IL_TEST
 
 /////////////////////////////////////////////////////////////////////////////
 // CBrowseDlg message handlers
@@ -109,6 +114,8 @@ BOOL CBrowseDlg::OnInitDialog()
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TEST));
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTFAILED));
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTPASSED));
+	
+	// Create the test tree
 	m_tcTests.SetImageList(&m_cImageList, TVSIL_NORMAL);
 	for (int i = 0; i < nTestSets; i++)
 	{
@@ -126,6 +133,9 @@ BOOL CBrowseDlg::OnInitDialog()
 			}
 		}
 	}
+
+	// Create the DOM tree
+	m_tcDOM.SetImageList(&m_cImageList, TVSIL_NORMAL);
 
 	// Set up some URLs. The first couple are internal
 	m_cmbURLs.AddString(m_szTestURL);
@@ -444,3 +454,98 @@ void CBrowseDlg::OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult)
 	OnRuntest();
 	*pResult = 0;
 }
+
+struct _ElementPos
+{
+	HTREEITEM m_htiParent;
+	CIPtr(IHTMLElementCollection) m_cpElementCollection;
+	int m_nIndex;
+
+	_ElementPos(HTREEITEM htiParent, IHTMLElementCollection *pElementCollection, int nIndex)
+	{
+		m_htiParent = htiParent;
+		m_cpElementCollection = pElementCollection;
+		m_nIndex = nIndex;
+	}
+	_ElementPos()
+	{
+	}
+};
+
+void CBrowseDlg::OnRefreshDOM() 
+{
+	m_tcDOM.DeleteAllItems();
+
+	std::stack<_ElementPos> cStack;
+
+	CComPtr<IUnknown> cpUnkPtr;
+	m_pControlSite->GetControlUnknown(&cpUnkPtr);
+	CIPtr(IWebBrowserApp) cpWebBrowser = cpUnkPtr;
+	if (cpWebBrowser == NULL)
+	{
+		return;
+	}
+
+	CIPtr(IDispatch) cpDispDocument;
+	cpWebBrowser->get_Document(&cpDispDocument);
+	if (cpDispDocument == NULL)
+	{
+		return;
+	}
+
+	// Recurse the DOM, building a tree
+	
+	CIPtr(IHTMLDocument2) cpDocElement = cpDispDocument;
+	
+	CIPtr(IHTMLElementCollection) cpColl;
+	HRESULT hr = cpDocElement->get_all( &cpColl );
+
+	cStack.push(_ElementPos(NULL, cpColl, 0));
+	while (!cStack.empty())
+	{
+		// Pop next position from stack
+		_ElementPos pos = cStack.top();
+		cStack.pop();
+
+		// Iterate through elemenets in collection
+		LONG nElements = 0;;
+		pos.m_cpElementCollection->get_length(&nElements);
+		for (int i = pos.m_nIndex; i < nElements; i++ )
+		{
+			CComVariant vName(i);
+			CComVariant vIndex;
+			CIPtr(IDispatch) cpDisp;
+
+			hr = pos.m_cpElementCollection->item( vName, vIndex, &cpDisp );
+			if ( hr != S_OK )
+			{
+				continue;
+			}
+			CIPtr(IHTMLElement) cpElem = cpDisp;
+			if (cpElem == NULL)
+			{
+				continue;
+			}
+
+			// Get tag name
+			BSTR bstrTagName = NULL;
+			hr = cpElem->get_tagName(&bstrTagName);
+			CString szTagName = bstrTagName;
+			SysFreeString(bstrTagName);
+
+			// Add an icon to the tree
+			HTREEITEM htiParent = m_tcDOM.InsertItem(szTagName, IL_CLOSEDFOLDER, IL_CLOSEDFOLDER, pos.m_htiParent);
+
+			CIPtr(IDispatch) cpDispColl;
+			hr = cpElem->get_children(&cpDispColl);
+			if (hr == S_OK)
+			{
+				CIPtr(IHTMLElementCollection) cpChildColl = cpDispColl;
+				cStack.push(_ElementPos(pos.m_htiParent, pos.m_cpElementCollection, pos.m_nIndex + 1));
+				cStack.push(_ElementPos(htiParent, cpChildColl, 0));
+				break;
+			}
+		}
+	}
+}
+
