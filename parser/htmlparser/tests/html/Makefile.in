@@ -20,13 +20,13 @@
 #
 
 DEPTH		  = ../../..
-topsrcdir	= y:/mozilla
-srcdir		= y:/mozilla/htmlparser/tests/html
-VPATH		  = y:/mozilla/htmlparser/tests/html
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= TestParser.exe
+PROGRAM		= TestParser$(BIN_SUFFIX)
 
 REQUIRES	= \
    xpcom \
