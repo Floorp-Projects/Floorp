@@ -254,9 +254,7 @@ nsMenuBarX :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
 void
 nsMenuBarX :: AquifyMenuBar ( )
 {
-  nsCOMPtr<nsIDocument> containingDoc;
-  mMenuBarContent->GetDocument ( getter_AddRefs(containingDoc) );
-  nsCOMPtr<nsIDOMDocument> domDoc ( do_QueryInterface(containingDoc) );
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mMenuBarContent->GetDocument()));
   if ( domDoc ) {
     // remove quit item and its separator
     HideItem ( domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull );
