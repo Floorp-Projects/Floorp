@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications, Inc.  Portions created by Netscape are
- * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * Copyright (C) 1999,2002 Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
@@ -26,9 +26,10 @@ interface nsIWebBrowser;
 interface nsIDocShellTreeItem;
 
 /**
- * The nsIWebBrowserChrome
+ * nsIWebBrowserChrome corresponds to the top-level, outermost window
+ * containing an embedded Gecko web browser.
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(BA434C60-9D52-11d3-AFB0-00A024FFC08C)]
@@ -38,26 +39,27 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long STATUS_SCRIPT_DEFAULT = 0x00000002;
     const unsigned long STATUS_LINK           = 0x00000003;
 
-    /*
-        Called when the status text in the chrome needs to be updated.
-        The statusType indicates what is setting the text, the text is nsnull
-        when there is no longer any status
+    /**
+     * Called when the status text in the chrome needs to be updated.
+     * @param statusType indicates what is setting the text
+     * @param status status string. null is an acceptable value meaning
+     *               no status.
      */
     void setStatus(in unsigned long statusType, in wstring status);
 
-    /*
-        This is the currently loaded webBrowser.  The browser chrome may be
-	told to set the webBrowser object to a new object via setting of this
-	attribute.  In this case the implementer is responsible for taking the 
-	new webBrowser object and doing any necessary initialization or setup 
-	as if it had created the webBrowser itself.  This includes positioning
-	setting up listeners etc.
-    */
+    /**
+     * The currently loaded WebBrowser.  The browser chrome may be
+     * told to set the WebBrowser object to a new object by setting this
+     * attribute.  In this case the implementer is responsible for taking the 
+     * new WebBrowser object and doing any necessary initialization or setup 
+     * as if it had created the WebBrowser itself.  This includes positioning
+     * setting up listeners etc.
+     */
     attribute nsIWebBrowser webBrowser;
 
-    /*
-        Definitions for the chrome flags
-    */
+    /**
+     * Definitions for the chrome flags
+     */
     const unsigned long CHROME_DEFAULT          = 0x00000001;
     const unsigned long CHROME_WINDOW_BORDERS   = 0x00000002;
     const unsigned long CHROME_WINDOW_CLOSE     = 0x00000004;
@@ -91,39 +93,44 @@ interface nsIWebBrowserChrome : nsISupports
     
     const unsigned long CHROME_ALL              = 0x00000ffe;
     
-    /*
-        The chrome flags for this browser chrome
-    */
+    /**
+     * The chrome flags for this browser chrome. The implementation should
+     * reflect the value of this attribute by hiding or showing its chrome
+     * appropriately.
+     */
     attribute unsigned long chromeFlags;
 
-    /*
-        Asks the implementer to destroy the window associated with this
-        webbrowser object.
-    */
+    /**
+     * Asks the implementer to destroy the window associated with this
+     * WebBrowser object.
+     */
     void destroyBrowserWindow();
 
-
-    /*
-        Tells the chrome to size itself such that the browser will be the 
-        specified size.
-    */
+    /**
+     * Tells the chrome to size itself such that the browser will be the 
+     * specified size.
+     * @param aCX new width of the browser
+     * @param aCY new height of the browser
+     */
     void sizeBrowserTo(in long aCX, in long aCY);
     
-    /*
-        Shows the window as a modal window.
-    */
+    /**
+     * Shows the window as a modal window.
+     * @return (the function error code) the status value specified by
+     *         in exitModalEventLoop.
+     */
     void showAsModal();
     
     /**
-        Is the window modal (that is, currently executing a modal loop)?
-        @return true if it's a modal window
-    */
+     * Is the window modal (that is, currently executing a modal loop)?
+     * @return true if it's a modal window
+     */
     boolean isWindowModal();
 
     /**
-        Exit a modal event loop if we're in one. The implementation
-	should also exit out of the loop if the window is destroyed.
-        @param aStatus - the result code to return from showAsModal
-    */
+     * Exit a modal event loop if we're in one. The implementation
+     * should also exit out of the loop if the window is destroyed.
+     * @param aStatus - the result code to return from showAsModal
+     */
     void exitModalEventLoop(in nsresult aStatus);
 };
