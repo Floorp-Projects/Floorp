@@ -1420,7 +1420,8 @@ nsBrowserAppCore::OpenWindow()
 
   nsFileURL fileURL(fileSpec);
   char buffer[1024];
-  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)nsAutoCString(fileURL.GetAsString()) );
+  const nsAutoCString cstr(fileURL.GetAsString());
+  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
   ExecuteScript( mToolbarScriptContext, buffer );
   }
 #endif
