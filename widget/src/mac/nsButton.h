@@ -72,6 +72,7 @@ public:
 private:
 
 	void StringToStr255(const nsString& aText, Str255& aStr255);
+	void DrawWidget(PRBool	aMouseInside);
 
   // this should not be public
   static PRInt32 GetOuterOffset() {
@@ -98,6 +99,7 @@ private:
   friend class AggButton;
   
   ControlHandle	mControl;
+  PRBool				mMouseDownInButton;
 
 
 };
