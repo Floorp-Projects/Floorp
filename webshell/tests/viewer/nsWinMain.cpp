@@ -42,18 +42,34 @@ nsNativeViewerApp::Run()
   OpenWindow();
  
   // Process messages
-  MSG msg;
-  while (::GetMessage(&msg, NULL, 0, 0)) {
-    if (!JSConsole::sAccelTable ||
-        !gConsole ||
-        !gConsole->GetMainWindow() ||
-        !TranslateAccelerator(gConsole->GetMainWindow(),
-                              JSConsole::sAccelTable, &msg)) {
+  MSG  msg;
+  int  keepGoing = 1;
 
-	  TranslateMessage(&msg);
-      DispatchMessage(&msg);
-	}
-  }
+  // Pump all messages
+  do {
+    BOOL  havePriorityMessage;
+
+    // Give priority to system messages (in particular keyboard, mouse,
+    // timer, and paint messages).
+    // Note: on Win98 and NT 5.0 we can also use PM_QS_INPUT and PM_QS_PAINT flags.
+    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE)) {
+      keepGoing = (msg.message != WM_QUIT);
+    
+    } else {
+      // Block and wait for any posted application message
+      keepGoing = ::GetMessage(&msg, NULL, 0, 0);
+    }
+
+    // If we successfully retrieved a message then dispatch it
+    if (keepGoing >= 0) {
+      if (!JSConsole::sAccelTable || !gConsole || !gConsole->GetMainWindow() ||
+          !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+  } while (keepGoing != 0);
+
   return msg.wParam;
 }
 
