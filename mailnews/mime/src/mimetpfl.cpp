@@ -281,26 +281,34 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
 
-  // If we have been told not to mess with this text, then don't do this search..or if the converter
-  // is null for some reason
-  PRBool skipScanning = (!conv) ||
-                        (obj->options && obj->options->force_user_charset) || 
-                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting)) ||
-                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) ||
-                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs)));
-
-  if (!skipScanning)
+  PRBool skipConversion =
+       !conv ||
+       ( obj->options
+           &&
+           (
+             obj->options->force_user_charset ||
+             obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs
+           ) );
+    
+  if (!skipConversion)
   {
     //XXX I18N Converting char* to PRUnichar*
     nsString strline(linep, (length - (linep - line)) );
     PRUnichar* wresult = nsnull;
     nsresult rv = NS_OK;
+    PRBool whattodo = obj->options->whattodo;
+    if
+      (
+        obj->options
+          &&
+          (
+            obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+            obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+          )
+      )
+      whattodo = 0;
 
-    // we should modify scantxt to take a char * instead of a unicode string so we can
-    // reduce the number of string copying going on.
-  
-    rv = conv->ScanTXT(strline.GetUnicode(),obj->options->whattodo, &wresult);
-
+    rv = conv->ScanTXT(strline.GetUnicode(), whattodo, &wresult);
     if (NS_FAILED(rv))
       return -1;
 

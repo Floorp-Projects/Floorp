@@ -153,6 +153,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   // Ok, there is always the issue of guessing how much space we will need for emoticons.
   // So what we will do is count the total number of "special" chars and multiply by 82 
   // (max len for a smiley line) and add one for good measure
+  //XXX: make dynamic
   PRInt32   specialCharCount = 0;
   for (PRInt32 z=0; z<length; z++)
   {
@@ -172,22 +173,32 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
 
-  // If we have been told not to mess with this text, then don't do this search!
-  PRBool skipScanning = (!conv) ||
-                        (obj->options && obj->options->force_user_charset) || 
-                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting)) ||
-                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting)) ||
-                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs));
+  PRBool skipConversion =
+       !conv ||
+       ( obj->options &&
+         (
+           obj->options->force_user_charset ||
+           obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs
+         ) );
     
-  if (!skipScanning)
+  if (!skipConversion)
   {
     nsString strline(line, length);
     nsresult rv = NS_OK;
     PRUnichar* wresult = nsnull;
-    
-    // we should force scanTXT to take a char * instead of a unicode string
-    // so we don't have to make an extra copy of the line just to convert it to unicode
-    rv = conv->ScanTXT(strline.GetUnicode(), obj->options->whattodo, &wresult);
+    PRBool whattodo = obj->options->whattodo;
+    if
+      (
+        obj->options
+          &&
+          (
+            obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
+            obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
+          )
+      )
+      whattodo = 0;
+
+    rv = conv->ScanTXT(strline.GetUnicode(), whattodo, &wresult);
     if (NS_FAILED(rv))
       return -1;
 
