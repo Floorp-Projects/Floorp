@@ -1729,6 +1729,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
   // NRA Dump stopwatch stop info here
 #ifdef RAPTOR_PERF_METRICS
+  NS_STOP_STOPWATCH(mWatch)
   mWatch.Print();
 #endif
 
