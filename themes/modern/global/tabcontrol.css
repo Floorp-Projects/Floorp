@@ -16,6 +16,7 @@ tab {
 
 .tab-image-middle {
   background		: url(chrome://global/skin/tab-unselect-middle.gif) repeat-x bottom;
+  min-height: 21px;
 }
 
 .tab-image-right {
@@ -34,37 +35,37 @@ tab:hover:active {
   color				: #FEFEFE;
 }
 
-tab:hover:active > .tab-image-left { 
+tab:hover:active > box > .tab-image-left { 
   background		: url(chrome://global/skin/tab-clicked-left.gif) no-repeat bottom;
 }
 
-tab:hover:active > .tab-image-middle { 
+tab:hover:active > box > .tab-image-middle { 
   background		: url(chrome://global/skin/tab-clicked-middle.gif) repeat-x bottom;
 }
 
-tab:hover:active > .tab-image-right { 
+tab:hover:active > box > .tab-image-right { 
   background		: url(chrome://global/skin/tab-clicked-right.gif) no-repeat bottom;
 }
 
 
 /* when a tab is selected this is how it should look */
 tab[selected="true"], tab:hover:active[selected="true"],
-tab[selected="1"], tab:hover:active[selected="1"]{
+tab[selected="1"], tab:hover:active[selected="1"] {
 	color			: #1C1D1F;
 }
 
-tab[selected="true"] > .tab-image-left,
-tab:hover:active[selected="true"] > .tab-image-left { 
+tab[selected="true"] > box > .tab-image-left,
+tab:hover:active[selected="true"] > box > .tab-image-left { 
   background		: url(chrome://global/skin/tab-select-left.gif) no-repeat bottom;
 }
 
-tab[selected="true"] > .tab-image-middle,
-tab:hover:active[selected="true"] > .tab-image-middle { 
+tab[selected="true"] > box > .tab-image-middle,
+tab:hover:active[selected="true"] > box > .tab-image-middle { 
   background		: url(chrome://global/skin/tab-select-middle.gif) repeat-x bottom;
 }
 
-tab[selected="true"] > .tab-image-right,
-tab:hover:active[selected="true"] > .tab-image-right { 
+tab[selected="true"] > box > .tab-image-right,
+tab:hover:active[selected="true"] > box > .tab-image-right { 
   background		: url(chrome://global/skin/tab-select-right.gif) no-repeat bottom;
 }
 
@@ -91,7 +92,7 @@ tabbox {
 }
 
     /* top tabs */
-tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
+tabcontrol[align="vertical"] > tabbox[align="horizontal"] > tab { 
   padding: 0px; 
   margin: 0px;
 }
@@ -100,56 +101,56 @@ tabcontrol[align="vertical"] tabbox[align="horizontal"] tab {
 /* Found in editor.xul & editorOverlay.xul 
  * SMALL TABS FOR NOW */
 
-.tab-bottom:hover:active > .tab-image-middle > .tab-text {
-		
+.tab-bottom:hover:active > box > .tab-image-middle > .tab-text {
+  color				: #FEFEFE;
 }
 
-.tab-bottom > .tab-image-left {
+.tab-bottom > box > .tab-image-left {
   background		: url(chrome://global/skin/tab-bot-unselect-left.gif) no-repeat;
   width				: 11px;
   height			: 19px;
 }
 
-.tab-bottom > .tab-image-middle {
+.tab-bottom > box > .tab-image-middle {
   background		: url(chrome://global/skin/tab-bot-unselect-middle.gif) repeat-x;
 }
 
-.tab-bottom > .tab-image-right {
+.tab-bottom > box > .tab-image-right {
   background		: url(chrome://global/skin/tab-bot-unselect-right.gif) no-repeat;
   width				: 11px;
   height			: 19px;
 }
 
-.tab-bottom > .tab-image-middle > .tab-text {
+.tab-bottom > box > .tab-image-middle > .tab-text {
   padding			: 4px 0px 1px 0px;
 }
 
-.tab-bottom:hover:active > .tab-image-left { 
+.tab-bottom:hover:active > box > .tab-image-left { 
   background		: url(chrome://global/skin/tab-bot-clicked-left.gif) no-repeat;
 }
 
-.tab-bottom:hover:active > .tab-image-middle { 
+.tab-bottom:hover:active > box > .tab-image-middle { 
   background		: url(chrome://global/skin/tab-bot-clicked-middle.gif) repeat-x;
 }
 
-.tab-bottom:hover:active > .tab-image-right { 
+.tab-bottom:hover:active > box > .tab-image-right { 
   background		: url(chrome://global/skin/tab-bot-clicked-right.gif) no-repeat;
 }
 
 /* when a tab is selected this is how it should look */
 
-.tab-bottom[selected="1"] > .tab-image-left,
-.tab-bottom:hover:active[selected="1"] > .tab-image-left { 
+.tab-bottom[selected="true"] > box > .tab-image-left,
+.tab-bottom:hover:active[selected="true"] > box > .tab-image-left { 
   background		: url(chrome://global/skin/tab-bot-select-left.gif) no-repeat;
 }
 
-.tab-bottom[selected="1"] > .tab-image-middle,
-.tab-bottom:hover:active[selected="1"] > .tab-image-middle { 
+.tab-bottom[selected="true"] > box > .tab-image-middle,
+.tab-bottom:hover:active[selected="true"] > box > .tab-image-middle { 
   background		: url(chrome://global/skin/tab-bot-select-middle.gif) repeat-x;
 }
 
-.tab-bottom[selected="1"] > .tab-image-right,
-.tab-bottom:hover:active[selected="1"] > .tab-image-right { 
+.tab-bottom[selected="true"] > box > .tab-image-right,
+.tab-bottom:hover:active[selected="true"] > box > .tab-image-right { 
   background		: url(chrome://global/skin/tab-bot-select-right.gif) no-repeat;
 }
 

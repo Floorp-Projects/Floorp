@@ -189,18 +189,20 @@
 
   <binding id="tab" extends="chrome://global/content/tabBindings.xml#tab">
     <content>
-      <xul:spring class="tab-image-left" inherits="selected"/>
-      <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected" autostretch="never">
-	      <xul:image class="tab-left"/>
-    	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+      <xul:box flex="1" orient="horizontal">
+        <xul:spring class="tab-image-left" inherits="selected"/>
+        <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected" autostretch="never">
+  	      <xul:image class="tab-left"/>
+      	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+        </xul:box>
+        <xul:spring class="tab-image-right" inherits="selected"/>
       </xul:box>
-      <xul:spring class="tab-image-right" inherits="selected"/>
     </content>
   </binding>
 
   <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
     <content>
-      <xul:spring class="tab-border-top-left-cap"/>
+    <xul:spring class="tab-border-top-left-cap"/>
 	  <xul:spring class="tab-border-top-left"/>
 	  <xul:box inherits="align">
 		  <children/>
@@ -208,84 +210,6 @@
 	  <xul:spring class="tab-border-top-right" flex="1"/>
 	  <xul:spring class="tab-border-top-right-cap"/>
 	</content>
-  </binding>
-
-
-<!-- BUGGY TEXTFIELD: DO NOT USE -->
-
-  <binding id="textfield" extends="chrome://global/content/xulBindings.xml#textfield">
-    <content>
-      <xul:box class="textfield-left" orient="vertical">
-      	<xul:spring class="textfield-left-top"/>
-      	<xul:spring class="textfield-left-middle" flex="1"/>
-      	<xul:spring class="textfield-left-bottom"/>
-      </xul:box>
-	  <xul:box class="textfield-middle" orient="vertical" flex="1">
-      	<xul:spring class="textfield-middle-top"/>
-      	<xul:box class="textfield-internal-box" flex="1">
-          <html:input class="textfield-input" flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
-      	</xul:box>
-      	<xul:spring class="textfield-middle-bottom"/>
-      </xul:box>      
-      <xul:box class="textfield-right" orient="vertical">
-      	<xul:spring class="textfield-right-top"/>
-      	<xul:spring class="textfield-right-middle" flex="1"/>
-      	<xul:spring class="textfield-right-bottom"/>
-      </xul:box>
-    </content>
-    <!--
-    <implementation>
-      <property name="value"      onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.value = val; return val;"
-                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.value;"/>
-      <property name="type"       onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.type = val; return val;"
-                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.type;"/>
-      <property name="maxlength"  onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.maxlength = val; return val;"
-                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.maxlength;"/>
-      <property name="disabled"   onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.disabled = val; return val;"
-                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.disabled;"/>
-      <property name="size"       onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.size = val; return val;"
-                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.size;"/>
-      <property name="readonly"   onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.readonly = val; return val;"
-                                  onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.readonly;"/>
-
-      <method name="select">
-        <body>
-          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.select();
-        </body>
-      </method>
-      
-      <method name="focus">
-        <body>
-          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.focus();
-        </body>
-      </method>
-
-      <method name="blur">
-        <body>
-          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.blur();
-        </body>
-      </method>
-
-      <property name="controllers"    onget="return document.getAnonymousNodes(this)[1].controllers"/>
-      <property name="textLength"     onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.textLength;"/>
-      <property name="selectionStart" onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionStart = val; return val;"
-                                      onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionStart;"/>
-      <property name="selectionEnd"   onset="document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionEnd = val; return val;"
-                                      onget="return document.getAnonymousNodes(this)[1].childNodes[1].firstChild.selectionEnd;"/>
-
-      <method name="setSelectionRange">
-        <parameter name="aSelectionStart"/>
-        <parameter name="aSelectionEnd"/>
-        <body>
-          document.getAnonymousNodes(this)[1].childNodes[1].firstChild.setSelectionRange( aSelectionStart, aSelectionEnd );
-        </body>
-      </method>
-    </implementation>
-    <handlers>
-      <handler event="focus" phase="capturing" action="this.setAttribute('focused','true');"/>
-      <handler event="blur" phase="capturing" action="this.removeAttribute('focused');"/>
-    </handlers>    
--->
   </binding>
 
 </bindings>
