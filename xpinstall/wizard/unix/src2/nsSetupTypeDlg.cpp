@@ -661,11 +661,14 @@ nsSetupTypeDlg::SelectFolderOK(GtkWidget *aWidget, GtkFileSelection *aFileSel)
     struct stat destStat;
     char *selDir = gtk_file_selection_get_filename(
                     GTK_FILE_SELECTION(aFileSel));
-    if (0 == stat(selDir, &destStat))
-        if (!S_ISDIR(destStat.st_mode)) /* not a directory so don't tear down */
-            return;
+
+    // put the candidate file name in the global variable, then verify it
 
     strcpy(gCtx->opt->mDestination, selDir);
+
+    if (0 == stat(selDir, &destStat))
+        if (!S_ISDIR(destStat.st_mode) || VerifyDestination() != OK ) /* not a directory, or we don't have access permissions, so don't tear down */
+            return;
 
     // update folder path displayed
     gtk_label_set_text(GTK_LABEL(sFolder), gCtx->opt->mDestination);
@@ -703,45 +706,41 @@ nsSetupTypeDlg::VerifyDestination()
     GtkWidget *yesButton, *noButton, *label;
     GtkWidget *noPermsDlg, *okButton;
     char message[MAXPATHLEN];
-    
+  
     stat_err = stat(gCtx->opt->mDestination, &stbuf);
     if (stat_err == 0)
     {
-        // check perms on dir: we need rwx for user
-        if ( !(stbuf.st_mode & S_IREAD)  ||
-             !(stbuf.st_mode & S_IWRITE) ||
-             !(stbuf.st_mode & S_IEXEC)   ) 
+      if (access(gCtx->opt->mDestination, R_OK | W_OK | X_OK ) != 0)
+      {
+        sprintf(message, gCtx->Res("NO_PERMS"), gCtx->opt->mDestination);
+
+        noPermsDlg = gtk_dialog_new();
+        label = gtk_label_new(message);
+        okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+
+        if (noPermsDlg && label && okButton)
         {
-            sprintf(message, gCtx->Res("NO_PERMS"), gCtx->opt->mDestination);
+          gtk_window_set_title(GTK_WINDOW(noPermsDlg), gCtx->opt->mTitle);
+          gtk_window_set_position(GTK_WINDOW(noPermsDlg), 
+            GTK_WIN_POS_CENTER);
+          gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+          gtk_box_pack_start(GTK_BOX(
+            GTK_DIALOG(noPermsDlg)->action_area), okButton, FALSE, FALSE, 10);
+          gtk_signal_connect(GTK_OBJECT(okButton), "clicked", 
+            GTK_SIGNAL_FUNC(NoPermsOK), noPermsDlg);
+          gtk_box_pack_start(GTK_BOX(
+            GTK_DIALOG(noPermsDlg)->vbox), label, FALSE, FALSE, 10);
 
-            noPermsDlg = gtk_dialog_new();
-            label = gtk_label_new(message);
-            okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
-
-            if (noPermsDlg && label && okButton)
-            {
-                gtk_window_set_title(GTK_WINDOW(noPermsDlg), gCtx->opt->mTitle);
-                gtk_window_set_position(GTK_WINDOW(noPermsDlg), 
-                    GTK_WIN_POS_CENTER);
-                gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
-                gtk_box_pack_start(GTK_BOX(
-                    GTK_DIALOG(noPermsDlg)->action_area), okButton,
-                    FALSE, FALSE, 10);
-                gtk_signal_connect(GTK_OBJECT(okButton), "clicked", 
-                    GTK_SIGNAL_FUNC(NoPermsOK), noPermsDlg);
-                gtk_box_pack_start(GTK_BOX(
-                   GTK_DIALOG(noPermsDlg)->vbox), label, FALSE, FALSE, 10);
-
-                gtk_widget_show_all(noPermsDlg);
-            }
-
-            return E_NO_PERMS;
+          gtk_widget_show_all(noPermsDlg);
         }
-        else
-        {
-            // perms OK, we can proceed
-            return OK;
-        }
+
+        return E_NO_PERMS;
+      }
+      else
+      {
+        // perms OK, we can proceed
+        return OK;
+      }
     }
 
     // destination doesn't exist so ask user if we should create it
