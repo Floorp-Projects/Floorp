@@ -68,7 +68,7 @@ protected:
   nsIDocument* mDocument;                   // [WEAK]
   nsSupportsArray mObservers;
   nsSupportsArray mPendingRequests;
-  PRInt32 mSuspendCount;
+  PRBool mEnabled;
 };
 
 #endif //__nsScriptLoader_h__

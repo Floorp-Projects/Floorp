@@ -5612,7 +5612,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     if (mDocument) {
       mDocument->GetScriptLoader(getter_AddRefs(loader));
       if (loader) {
-        loader->Suspend();
+        loader->SetEnabled(PR_FALSE);
       }
     }
   } else {
@@ -5645,7 +5645,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // suspended the script loader. Now that the script content
   // has been handled let's resume the script loader.
   if (loader) {
-    loader->Resume();
+    loader->SetEnabled(PR_TRUE);
   }
 
   // If the act of insertion evaluated the script, we're fine.

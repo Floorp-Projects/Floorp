@@ -69,9 +69,9 @@ public:
   
   nsCOMPtr<nsIDOMHTMLScriptElement> mElement;
   nsCOMPtr<nsIScriptLoaderObserver> mObserver;
-  PRBool mLoading;             // Are we still waiting for a load to complete?
-  PRBool mWasPending;          // Processed immediately or pending
-  PRBool mIsInline;            // Is the script inline or loaded?
+  PRPackedBool mLoading;             // Are we still waiting for a load to complete?
+  PRPackedBool mWasPending;          // Processed immediately or pending
+  PRPackedBool mIsInline;            // Is the script inline or loaded?
   //  nsSharableString mScriptText;  // Holds script for loaded scripts
   nsString mScriptText;
   const char* mJSVersion;      // We don't own this string
@@ -124,7 +124,7 @@ nsScriptLoadRequest::FireScriptEvaluated(nsresult aResult)
 //////////////////////////////////////////////////////////////
 
 nsScriptLoader::nsScriptLoader() 
-  : mDocument(nsnull), mSuspendCount(0)
+  : mDocument(nsnull), mEnabled(PR_TRUE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -251,7 +251,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
 
   // Check to see that the element is not in a container that
   // suppresses script evaluation within it.
-  if (mSuspendCount || InNonScriptingContainer(aElement)) {
+  if (!mEnabled || InNonScriptingContainer(aElement)) {
     return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
   }
 
@@ -834,18 +834,16 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 }
 
 NS_IMETHODIMP
-nsScriptLoader::Suspend()
+nsScriptLoader::GetEnabled(PRBool *aEnabled)
 {
-  mSuspendCount++;
-
+  NS_ENSURE_ARG_POINTER(aEnabled);
+  *aEnabled = mEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptLoader::Resume()
+nsScriptLoader::SetEnabled(PRBool aEnabled)
 {
-  NS_ASSERTION((mSuspendCount > 0), "nsScriptLoader call to resume() unbalanced");
-  mSuspendCount--;
-
+  mEnabled = aEnabled;
   return NS_OK;
 }

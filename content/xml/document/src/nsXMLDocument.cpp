@@ -469,6 +469,32 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                  PRBool aReset,
                                  nsIContentSink* aSink)
 {
+  if (nsCRT::strcmp(kLoadAsData, aCommand) == 0) {
+    // We need to disable script & style loading in this case.
+    // We leave them disabled even in EndLoad(), and let anyone
+    // who puts the document on display to worry about enabling.
+
+    // scripts
+    nsCOMPtr<nsIScriptLoader> loader;
+    nsresult rv = GetScriptLoader(getter_AddRefs(loader));
+    if (NS_FAILED(rv))
+      return rv;
+    if (loader) {
+      loader->SetEnabled(PR_FALSE); // Do not load/process scripts when loading as data
+    }
+
+    // styles
+    nsCOMPtr<nsICSSLoader> cssLoader;
+    rv = GetCSSLoader(*getter_AddRefs(cssLoader));
+    if (NS_FAILED(rv))
+      return rv;
+    if (cssLoader) {
+      cssLoader->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
+    }
+  } else if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
+    aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
+  }
+
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer, 
