@@ -32,7 +32,7 @@ NS_DECLARE_ID(kMacRomanToUnicodeCID,
 
 #define NS_MACROMANTOUNICODE_CONTRACTID "@mozilla.org/intl/unicode/decoder;1?charset=x-mac-roman"
 
-//#define NS_ERROR_UCONV_NOMACROMANTOUNICODE  \
+//#define NS_ERROR_UCONV_NOMACROMANTOUNICODE   
 //  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
 
 //----------------------------------------------------------------------

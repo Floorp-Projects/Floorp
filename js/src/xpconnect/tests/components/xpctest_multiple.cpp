@@ -181,7 +181,7 @@ private:
     const char *name;
 };
 
-NS_IMPL_ISUPPORTS3(xpcTestChild2,nsIXPCTestChild2,nsIXPCTestParentOne,nsIXPCTestParentTwo);
+NS_IMPL_ISUPPORTS3_CI(xpcTestChild2,nsIXPCTestChild2,nsIXPCTestParentOne,nsIXPCTestParentTwo);
 
 xpcTestChild2 :: xpcTestChild2() 
 {

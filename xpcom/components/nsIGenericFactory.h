@@ -35,6 +35,9 @@
 
 #define NS_GENERICFACTORY_CONTRACTID "@mozilla.org/generic-factory;1"
 #define NS_GENERICFACTORY_CLASSNAME "Generic Factory"
+
+struct nsModuleComponentInfo; // forward declaration
+
 /**
  * Provides a Generic nsIFactory implementation that can be used by
  * DLLs with very simple factory needs.
@@ -43,27 +46,14 @@ class nsIGenericFactory : public nsIFactory {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IGENERICFACTORY_IID; return iid; }
     
-    typedef NS_CALLBACK(ConstructorProcPtr) (nsISupports *aOuter, REFNSIID aIID, void **aResult);
-    typedef NS_CALLBACK(DestructorProcPtr) (void);
-
-	/**
-	 * Establishes the generic factory's constructor function, which will be called
-	 * by CreateInstance.
-	 */
-    NS_IMETHOD SetConstructor(ConstructorProcPtr constructor) = 0;
-
-	/**
-	 * Establishes the generic factory's destructor function, which will be called
-	 * whe the generic factory is deleted. This is used to notify the DLL that
-	 * an instance of one of its generic factories is going away.
-	 */
-    NS_IMETHOD SetDestructor(DestructorProcPtr destructor) = 0;
+    NS_IMETHOD SetComponentInfo(nsModuleComponentInfo *info) = 0;
+    NS_IMETHOD GetComponentInfo(nsModuleComponentInfo **infop) = 0;
 };
 
 extern NS_COM nsresult
-NS_NewGenericFactory(nsIGenericFactory* *result,
-                     nsIGenericFactory::ConstructorProcPtr constructor,
-                     nsIGenericFactory::DestructorProcPtr destructor = nsnull);
+NS_NewGenericFactory(nsIGenericFactory **result,
+                     nsModuleComponentInfo *info);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Generic Modules
@@ -72,14 +62,27 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 
 #include "nsIModule.h"
 
+typedef NS_CALLBACK(NSConstructorProcPtr) (nsISupports *aOuter, REFNSIID aIID,
+                                           void **aResult);
+
 typedef NS_CALLBACK(NSRegisterSelfProcPtr) (nsIComponentManager *aCompMgr,
                                             nsIFile *aPath,
                                             const char *registryLocation,
-                                            const char *componentType);
+                                            const char *componentType,
+                                            const nsModuleComponentInfo *info);
 
 typedef NS_CALLBACK(NSUnregisterSelfProcPtr) (nsIComponentManager *aCompMgr,
                                               nsIFile *aPath,
-                                              const char *registryLocation);
+                                              const char *registryLocation,
+                                              const nsModuleComponentInfo *info);
+
+typedef NS_CALLBACK(NSFactoryDestructorProcPtr) (void);
+
+typedef NS_CALLBACK(NSGetInterfacesProcPtr) (PRUint32 *countp,
+                                             nsIID* **array);
+
+typedef NS_CALLBACK(NSGetLanguageHelperProcPtr) (PRUint32 language,
+                                                 nsISupports **helper);
 
 /**
  * Use this type to define a list of module component info to pass to 
@@ -91,9 +94,14 @@ struct nsModuleComponentInfo {
     const char*                                 mDescription;
     nsCID                                       mCID;
     const char*                                 mContractID;
-    nsIGenericFactory::ConstructorProcPtr       mConstructor;
+    NSConstructorProcPtr                        mConstructor;
     NSRegisterSelfProcPtr                       mRegisterSelfProc;
     NSUnregisterSelfProcPtr                     mUnregisterSelfProc;
+    NSFactoryDestructorProcPtr                  mFactoryDestructor;
+    NSGetInterfacesProcPtr                      mGetInterfacesProc;
+    NSGetLanguageHelperProcPtr                  mGetLanguageHelperProc;
+    nsIClassInfo **                             mClassInfoGlobal;
+    PRUint32                                    mFlags;
 };
 
 typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);

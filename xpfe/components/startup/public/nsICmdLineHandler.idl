@@ -36,9 +36,11 @@
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 
+struct nsModuleComponentInfo;   // forward declaration
+
 #define CMDLINEHANDLER_REGISTERPROC_DECLS \
-static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType);  \
-static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation);
+static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType, const nsModuleComponentInfo *info);  \
+static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const nsModuleComponentInfo *info);
 
 #define CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
 NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
@@ -87,7 +89,7 @@ NS_IMETHODIMP macro_class::GetOpenWindowWithArgs(PRBool *aOpenWindowWithArgs) \
     *aOpenWindowWithArgs = macro_open_window_with_args; \
     return NS_OK; \
 } \
-NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType) \
+NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType, const nsModuleComponentInfo *info) \
 { \
     nsresult rv; \
     nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv); \
@@ -96,7 +98,7 @@ NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPat
     rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_pretty_name, macro_contractid, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
 	return NS_OK; \
 } \
-NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation) \
+NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const nsModuleComponentInfo *info) \
 { \
     nsresult rv; \
     nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv); \

@@ -32,7 +32,7 @@ NS_DECLARE_ID(kUnicodeToCP1252CID,
 
 #define NS_UNICODETOCP1252_CONTRACTID "@mozilla.org/intl/unicode/encoder;1?charset=windows-1252"
 
-//#define NS_ERROR_UCONV_NOUNICODETOCP1252  \
+//#define NS_ERROR_UCONV_NOUNICODETOCP1252  
 //  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
 
 //----------------------------------------------------------------------

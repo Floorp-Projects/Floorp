@@ -74,12 +74,14 @@ interface nsIClassInfo : nsISupports
     nsISupports getHelperForLanguage(in PRUint32 language);
 
     /**
-     * null if not supported
+     * A contract ID through which an instance of this class can be created
+     * (or accessed as a service, if |flags & SINGLETON|), or null.
      */
     readonly attribute string   contractID;
 
     /**
-     * null if not supported
+     * A class ID through which an instance of this class can be created
+     * (or accessed as a service, if |flags & SINGLETON|), or null.
      */
     readonly attribute nsCIDPtr classID;
 

@@ -60,7 +60,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleImpl)
 static NS_METHOD nsSampleRegistrationProc(nsIComponentManager *aCompMgr,
                                           nsIFile *aPath,
                                           const char *registryLocation,
-                                          const char *componentType)
+                                          const char *componentType,
+                                          const nsModuleComponentInfo *info)
 {
     // Do any registration specific activity like adding yourself to a
     // category. The Generic Module will take care of registering your
@@ -74,7 +75,8 @@ static NS_METHOD nsSampleRegistrationProc(nsIComponentManager *aCompMgr,
 
 static NS_METHOD nsSampleUnregistrationProc(nsIComponentManager *aCompMgr,
                                             nsIFile *aPath,
-                                            const char *registryLocation)
+                                            const char *registryLocation,
+                                            const nsModuleComponentInfo *info)
 {
     // Undo any component specific registration like adding yourself to a
     // category here. The Generic Module will take care of unregistering your
@@ -87,11 +89,18 @@ static NS_METHOD nsSampleUnregistrationProc(nsIComponentManager *aCompMgr,
     return NS_OK;
 }
 
+// For each class that wishes to support nsIClassInfo, add a line like this
+NS_DECL_CLASSINFO(nsSampleImpl)
+
 static nsModuleComponentInfo components[] =
 {
   { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_CONTRACTID, nsSampleImplConstructor,
     nsSampleRegistrationProc /* NULL if you dont need one */,
-    nsSampleUnregistrationProc /* NULL if you dont need one */
+    nsSampleUnregistrationProc /* NULL if you dont need one */,
+    NULL /* no factory destructor */,
+    NS_CI_INTERFACE_GETTER_NAME(nsSampleImpl),
+    NULL /* no language helper */,
+    &NS_CLASSINFO_NAME(nsSampleImpl)
   }
 };
 

@@ -41,6 +41,9 @@
 #include "nsIGenericFactory.h"
 #include "nsCRT.h"
 
+NS_DECL_CLASSINFO(xpcTestCallJS)
+NS_DECL_CLASSINFO(xpcTestChild2)
+
 // XXX contractids need to be standardized!
 static nsModuleComponentInfo components[] = {
   {nsnull, NS_ECHO_CID,                   "@mozilla.org/js/xpc/test/Echo;1",                 xpctest::ConstructEcho                  },
@@ -54,10 +57,10 @@ static nsModuleComponentInfo components[] = {
   {nsnull, NS_XPCTESTOUT_CID,             "@mozilla.org/js/xpc/test/Out;1",             xpctest::ConstructXPCTestOut            },
   {nsnull, NS_XPCTESTINOUT_CID,           "@mozilla.org/js/xpc/test/InOut;1",           xpctest::ConstructXPCTestInOut          },
   {nsnull, NS_XPCTESTCONST_CID,           "@mozilla.org/js/xpc/test/Const;1",           xpctest::ConstructXPCTestConst          },
-  {nsnull, NS_XPCTESTCALLJS_CID,          "@mozilla.org/js/xpc/test/CallJS;1",          xpctest::ConstructXPCTestCallJS         },
+  {nsnull, NS_XPCTESTCALLJS_CID,          "@mozilla.org/js/xpc/test/CallJS;1",          xpctest::ConstructXPCTestCallJS, NULL, NULL, NULL, NS_CI_INTERFACE_GETTER_NAME(xpcTestCallJS), NULL, &NS_CLASSINFO_NAME(xpcTestCallJS) },
   {nsnull, NS_XPCTESTPARENTONE_CID,       "@mozilla.org/js/xpc/test/ParentOne;1",       xpctest::ConstructXPCTestParentOne      },
   {nsnull, NS_XPCTESTPARENTTWO_CID,       "@mozilla.org/js/xpc/test/ParentTwo;1",       xpctest::ConstructXPCTestParentTwo      },
-  {nsnull, NS_XPCTESTCHILD2_CID,          "@mozilla.org/js/xpc/test/Child2;1",          xpctest::ConstructXPCTestChild2         },
+  {nsnull, NS_XPCTESTCHILD2_CID,          "@mozilla.org/js/xpc/test/Child2;1",          xpctest::ConstructXPCTestChild2, NULL, NULL, NULL, NS_CI_INTERFACE_GETTER_NAME(xpcTestChild2), NULL, &NS_CLASSINFO_NAME(xpcTestChild2) },
   {nsnull, NS_XPCTESTCHILD3_CID,          "@mozilla.org/js/xpc/test/Child3;1",          xpctest::ConstructXPCTestChild3         },
   {nsnull, NS_XPCTESTCHILD4_CID,          "@mozilla.org/js/xpc/test/Child4;1",          xpctest::ConstructXPCTestChild4         },
   {nsnull, NS_XPCTESTCHILD5_CID,          "@mozilla.org/js/xpc/test/Child5;1",          xpctest::ConstructXPCTestChild5         },

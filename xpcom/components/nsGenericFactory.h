@@ -24,41 +24,33 @@
 #define nsGenericFactory_h___
 
 #include "nsIGenericFactory.h"
+#include "nsIClassInfo.h"
 
 /**
  * Most factories follow this simple pattern, so why not just use a function pointer
  * for most creation operations?
  */
-class nsGenericFactory : public nsIGenericFactory {
+class nsGenericFactory : public nsIGenericFactory, public nsIClassInfo {
 public:
     static const nsCID& CID() { static nsCID cid = NS_GENERICFACTORY_CID; return cid; }
 
-	nsGenericFactory(ConstructorProcPtr constructor = NULL);
+	nsGenericFactory(nsModuleComponentInfo *info = NULL);
 	virtual ~nsGenericFactory();
 	
 	NS_DECL_ISUPPORTS
+    NS_DECL_NSICLASSINFO
 	
+    /* nsIGenericFactory methods */
+    NS_IMETHOD SetComponentInfo(nsModuleComponentInfo *info);
+    NS_IMETHOD GetComponentInfo(nsModuleComponentInfo **infop);
+
 	NS_IMETHOD CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 	NS_IMETHOD LockFactory(PRBool aLock);
 
-	/**
-	 * Establishes the generic factory's constructor function, which will be called
-	 * by CreateInstance.
-	 */
-    NS_IMETHOD SetConstructor(ConstructorProcPtr constructor);
-
-	/**
-	 * Establishes the generic factory's destructor function, which will be called
-	 * whe the generic factory is deleted. This is used to notify the DLL that
-	 * an instance of one of its generic factories is going away.
-	 */
-    NS_IMETHOD SetDestructor(DestructorProcPtr destructor);
-
 	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 private:
-	ConstructorProcPtr mConstructor;
-	DestructorProcPtr mDestructor;
+    nsModuleComponentInfo *mInfo;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

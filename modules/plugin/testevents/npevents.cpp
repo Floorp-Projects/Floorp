@@ -280,7 +280,8 @@ NS_METHOD
 EventsPluginInstance::RegisterSelf(nsIComponentManager* aCompMgr,
                                    nsIFile* aPath,
                                    const char* aRegistryLocation,
-                                   const char* aComponentType)
+                                   const char* aComponentType,
+                                   const nsModuleComponentInfo *info)
 {
     nsresult rv;
 
@@ -306,7 +307,8 @@ EventsPluginInstance::RegisterSelf(nsIComponentManager* aCompMgr,
 NS_METHOD
 EventsPluginInstance::UnregisterSelf(nsIComponentManager* aCompMgr,
                                      nsIFile* aPath,
-                                     const char* aRegistryLocation)
+                                     const char* aRegistryLocation,
+                                     const nsModuleComponentInfo *info)
 {
     nsresult rv;
 

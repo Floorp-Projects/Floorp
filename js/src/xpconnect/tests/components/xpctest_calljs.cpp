@@ -51,7 +51,7 @@ private:
 };
 
 
-NS_IMPL_ISUPPORTS2(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable);
+NS_IMPL_ISUPPORTS2_CI(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable);
 
 XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(xpcTestCallJS);
 

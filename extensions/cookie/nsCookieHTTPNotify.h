@@ -35,6 +35,8 @@
 #define NS_COOKIEHTTPNOTIFY_CONTRACTID "@mozilla.org/cookie-notifier;1"
 #define NS_COOKIEHTTPNOTIFY_CLASSNAME "Cookie Notifier"
 
+struct nsModuleComponentInfo;   // forward declaration
+
 class nsCookieHTTPNotify : public nsIHTTPNotify {
 public:
 
@@ -56,10 +58,12 @@ public:
   static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
                                 nsIFile *aPath,
                                 const char *registryLocation,
-                                const char *componentType);
+                                const char *componentType,
+                                const nsModuleComponentInfo *info);
   static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
                                   nsIFile *aPath,
-                                  const char *registryLocation);
+                                  const char *registryLocation,
+                                  const nsModuleComponentInfo *info);
 
 private:
     nsCOMPtr<nsIAtom> mCookieHeader;
