@@ -10,15 +10,16 @@
   var view = ({
     rowCount : 5000000,
 	getRowProperties : function(index, prop) {},
-	getCellProperties : function(index, prop) {},
-	outliner : null,
-	setOutliner : function(out) { this.outliner = out; },
+	getCellProperties : function(index, col, prop) {},
+	getColumnProperties : function(col, elt, prop) {},
+	outlinerbox : null,
+	setOutliner : function(out) { this.outlinerbox = out; },
 	getCellText : function(i, col) { return "Text at row #" + i + " in col " + col; }
 	});
   
   function setView(outliner, v) {
     dump('Outliner is ' + outliner + '\n');
-	outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = v;
+	outliner.outlinerBoxObject.view = v;
   }
 </script>
 

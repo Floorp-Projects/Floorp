@@ -33,6 +33,7 @@
 
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSAtoms.h"
 
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
@@ -52,6 +53,7 @@
 #include "nsIView.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
+#include "nsBoxObject.h"
 
 #define ELLIPSIS "..."
 
@@ -199,7 +201,7 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
-:nsLeafBoxFrame(aPresShell), mPresContext(nsnull),
+:nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE),
  mTopRowIndex(0), mRowHeight(0), mIndentation(0), mColumns(nsnull), mScrollbar(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
@@ -308,6 +310,12 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetView(nsIOutlinerView * *aView)
 
 NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 {
+  // First clear out the old view.
+  if (mView) {
+    mView->SetOutliner(nsnull);
+    mView = nsnull;
+  }
+
   // Outliner, meet the view.
   mView = aView;
  
@@ -320,7 +328,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
  
   if (mView) {
     // View, meet the outliner.
-    mView->SetOutliner(this);
+    mView->SetOutliner(mOutlinerBoxObject);
     
     // Give the view a new empty selection object to play with.
     nsCOMPtr<nsIOutlinerSelection> sel;
@@ -332,6 +340,26 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     InvalidateScrollbar();
   }
  
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsOutlinerBodyFrame::GetFocused(PRBool* aFocused)
+{
+  *aFocused = mFocused;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsOutlinerBodyFrame::SetFocused(PRBool aFocused)
+{
+  mFocused = aFocused;
+  if (mView) {
+    nsCOMPtr<nsIOutlinerSelection> sel;
+    mView->GetSelection(getter_AddRefs(sel));
+    if (sel)
+      sel->InvalidateSelection();
+  }
   return NS_OK;
 }
 
@@ -429,9 +457,16 @@ nsOutlinerBodyFrame::UpdateScrollbar()
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
 {
-  if (!mScrollbar)
+  if (!mScrollbar) {
     // Try to find it.
-    mScrollbar = InitScrollbarFrame(mPresContext, mParent, this);
+    nsCOMPtr<nsIContent> parContent;
+    mContent->GetParent(*getter_AddRefs(parContent));
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    nsIFrame* outlinerFrame;
+    shell->GetPrimaryFrameFor(parContent, &outlinerFrame);
+    mScrollbar = InitScrollbarFrame(mPresContext, outlinerFrame, this);
+  }
 
   if (!mScrollbar || !mView)
     return NS_OK;
@@ -571,10 +606,14 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
 void
 nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aColID)
 {
-  // XXX Automatically fill in the following props: container, open, selected, focused
-  // And colID too, if it is non-empty.
+  // XXX Automatically fill in the following props: container, open
+  // And colID too, if it is non-empty?
   mScratchArray->Clear();
   
+  // Check for focus.
+  if (mFocused)
+    mScratchArray->AppendElement(nsXULAtoms::focus);
+
   if (aRowIndex != -1) {
     nsCOMPtr<nsIOutlinerSelection> selection;
     mView->GetSelection(getter_AddRefs(selection));
@@ -685,12 +724,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   
   // Update our page count, our available height and our row height.
   PRInt32 oldRowHeight = mRowHeight;
+  PRInt32 oldPageCount = mPageCount;
   mRowHeight = GetRowHeight();
   mIndentation = GetIndentation();
   mInnerBox = GetInnerBox();
   mPageCount = mInnerBox.height/mRowHeight;
 
-  if (mRowHeight != oldRowHeight)
+  if (mRowHeight != oldRowHeight || oldPageCount != mPageCount)
     InvalidateScrollbar();
 
   PRInt32 rowCount = 0;

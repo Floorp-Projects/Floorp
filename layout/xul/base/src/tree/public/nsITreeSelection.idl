@@ -66,6 +66,9 @@ interface nsIOutlinerSelection : nsISecurityCheckedComponent
   long getRangeCount();
   void getRangeAt(in long i, out long min, out long max);
 
+  // Can be used to invalidate the selection.
+  void invalidateSelection();
+
   // Called when the row count changes to adjust selection indices.
   void adjustSelection(in long index, in long count);
 

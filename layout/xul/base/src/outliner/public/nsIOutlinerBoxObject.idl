@@ -36,6 +36,9 @@ interface nsIOutlinerBoxObject : nsISupports
   // outliner tag or by setting this attribute to a new value.
   attribute nsIOutlinerView view;
 
+  // Whether or not we are currently focused.
+  attribute boolean focused;
+
   // Obtain the outlinerbody content node
   readonly attribute nsIDOMElement outlinerBody;
 
