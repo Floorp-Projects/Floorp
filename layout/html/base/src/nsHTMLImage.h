@@ -63,10 +63,10 @@ public:
     }
   }
 
-  nsresult LoadImage(nsIPresContext* aPresContext,
-                     nsIFrame* aForFrame,
-                     PRBool aNeedSizeUpdate,
-                     PRIntn& aLoadStatus);
+  nsresult StartLoadImage(nsIPresContext* aPresContext,
+                          nsIFrame* aForFrame,
+                          PRBool aNeedSizeUpdate,
+                          PRIntn& aLoadStatus);
 
   void GetDesiredSize(nsIPresContext* aPresContext,
                       const nsReflowState& aReflowState,

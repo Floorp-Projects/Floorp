@@ -217,10 +217,10 @@ nsHTMLImageLoader::SetBaseHREF(const nsString& aBaseHREF)
 }
 
 nsresult
-nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
-                             nsIFrame* aForFrame,
-                             PRBool aNeedSizeUpdate,
-                             PRIntn& aLoadStatus)
+nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
+                                  nsIFrame* aForFrame,
+                                  PRBool aNeedSizeUpdate,
+                                  PRIntn& aLoadStatus)
 {
   aLoadStatus = NS_IMAGE_LOAD_STATUS_NONE;
 
@@ -256,8 +256,8 @@ nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
   if (nsnull == mImageLoader) {
     // Start image loading. Note that we don't specify a background color
     // so transparent images are always rendered using a transparency mask
-    rv = aPresContext->LoadImage(src, nsnull, aForFrame, aNeedSizeUpdate,
-                                 mImageLoader);
+    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aNeedSizeUpdate,
+                                      mImageLoader);
     if (NS_OK != rv) {
       return rv;
     }
@@ -274,7 +274,7 @@ nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
     else {
       // Try again, this time using the broke-image url
       mLoadImageFailed = PR_TRUE;
-      return LoadImage(aPresContext, aForFrame, aNeedSizeUpdate, aLoadStatus);
+      return StartLoadImage(aPresContext, aForFrame, aNeedSizeUpdate, aLoadStatus);
     }
   }
   return NS_OK;
@@ -290,13 +290,13 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
   PRIntn loadStatus;
   if (0 != ss) {
     if (NS_SIZE_HAS_BOTH == ss) {
-      LoadImage(aPresContext, aReflowState.frame, PR_FALSE, loadStatus);
+      StartLoadImage(aPresContext, aReflowState.frame, PR_FALSE, loadStatus);
       aDesiredSize.width = styleSize.width;
       aDesiredSize.height = styleSize.height;
     }
     else {
       // Preserve aspect ratio of image with unbound dimension.
-      LoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
+      StartLoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
       if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
           (nsnull == mImageLoader)) {
         // Provide a dummy size for now; later on when the image size
@@ -335,7 +335,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
   else {
-    LoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
+    StartLoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
     if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
         (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
@@ -863,7 +863,7 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
       // Fire up a new image load request
       PRIntn loadStatus;
       mImageLoader.SetURL(newSRC);
-      mImageLoader.LoadImage(aPresContext, this, PR_FALSE, loadStatus);
+      mImageLoader.StartLoadImage(aPresContext, this, PR_FALSE, loadStatus);
 
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
          ("ImageFrame::ContentChanged: loadImage status=%x",
