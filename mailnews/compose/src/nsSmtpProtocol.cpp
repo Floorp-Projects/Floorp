@@ -1671,7 +1671,7 @@ nsresult nsSmtpProtocol::RequestOverrideInfo(nsISmtpServer * aSmtpServer)
     PRBool requiresPassword = PR_TRUE;
 
 		aSmtpServer->GetUsername(getter_Copies(userName));
-    m_logonRedirector->RequiresPassword(userName, &requiresPassword);
+    m_logonRedirector->RequiresPassword(userName, redirectionTypeStr.get(), &requiresPassword);
     if (requiresPassword)
 		  GetPassword(getter_Copies(password));
 

@@ -2530,7 +2530,7 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
       PRBool requiresPassword = PR_TRUE;
       
       GetRealUsername(getter_Copies(userName));
-      m_logonRedirector->RequiresPassword(userName, &requiresPassword);
+      m_logonRedirector->RequiresPassword(userName, redirectorType.get(), &requiresPassword);
       
       if (requiresPassword)
       {

@@ -46,7 +46,7 @@ interface nsIMsgLogonRedirector : nsISupports
   // caching so the redirection requestor doesn't have to prompt for a password every time the requestor
   // wishes to log on.
   // aUserName --> the user name we wish to log in under...
-  boolean requiresPassword(in string aUserName);
+  boolean requiresPassword(in string aUserName, in string aRedirectorType);
   void logon(in string userName, in string password, in string redirectorType, in nsIPrompt aPrompt, in nsIMsgLogonRedirectionRequester listener, in nsMsgLogonRedirectionServiceID aServiceID); 
   void logoff(in string userName); /* might not need this one */ 
 }; 
