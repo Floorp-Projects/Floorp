@@ -964,6 +964,24 @@ PRBool nsXULWindow::LoadSizeFromXUL()
   }
 
   if (gotSize) {
+    // constrain to screen size
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    GetWindowDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsCOMPtr<nsIDOMScreen> screen;
+      domWindow->GetScreen(getter_AddRefs(screen));
+      if (screen) {
+        PRInt32 screenWidth;
+        PRInt32 screenHeight;
+        screen->GetAvailWidth(&screenWidth);
+        screen->GetAvailHeight(&screenHeight);
+        if (specWidth > screenWidth)
+          specWidth = screenWidth;
+        if (specHeight > screenHeight)
+          specHeight = screenHeight;
+      }
+    }
+
     mIntrinsicallySized = PR_FALSE;
     if (specWidth != currWidth || specHeight != currHeight)
       SetSize(specWidth, specHeight, PR_FALSE);
