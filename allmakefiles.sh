@@ -47,6 +47,8 @@ base/src/motif/Makefile
 base/src/rhapsody/Makefile
 base/src/gtk/Makefile
 base/tests/Makefile
+build/package/rpm/mozilla.spec
+build/package/rpm/nspr-pthreads.spec
 config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
