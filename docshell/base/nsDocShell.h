@@ -84,8 +84,6 @@ public:
 
    // XXX: move to a macro
    // nsIContentViewerContainer
-   NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
-
    NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
                    const char* aCommand,
                    nsISupports* aExtraInfo);
