@@ -43,11 +43,7 @@ CPPSRCS		= \
 		nsMimeContentTypeHandler.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+DEFINES		+= -D_IMPL_NS_HTML
 
 # glue lib should be static
 FORCE_STATIC_LIB = 1

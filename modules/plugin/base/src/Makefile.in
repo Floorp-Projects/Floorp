@@ -72,10 +72,14 @@ CPPSRCS		= \
 ifeq ($(OS_ARCH), BeOS)
 	CPPSRCS += nsPluginsDirBeOS.cpp
 else
+ifeq ($(OS_ARCH),WINNT)
+	CPPSRCS += nsPluginsDirWin.cpp
+else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsPluginsDirOS2.cpp
 else
 	CPPSRCS += nsPluginsDirUnix.cpp
+endif
 endif
 endif
 
@@ -84,8 +88,6 @@ EXPORTS		= \
 		nsIPluginHost.h \
 		nsIPluginInstanceOwner.h \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 EXTRA_DSO_LIBS  += gkgfx
 
@@ -97,6 +99,12 @@ EXTRA_DSO_LDOPTS = \
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_PLUGIN
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+CXXFLAGS	+= -GX
+OS_LIBS		+= version.lib
+endif
 
 ifdef MOZ_ENABLE_GTK
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)

@@ -38,8 +38,6 @@ FILES := \
 	mimeTypes.rdf \
 	$(NULL)
 
-FILES := $(addprefix $(srcdir)/, $(FILES))
-
-libs::
-	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile
-	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/US
+libs:: $(FILES)
+	$(INSTALL) $^ $(DIST)/bin/defaults/profile
+	$(INSTALL) $^ $(DIST)/bin/defaults/profile/US

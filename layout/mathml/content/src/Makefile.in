@@ -41,13 +41,14 @@ include $(topsrcdir)/config/config.mk
 
 DEFINES += -D_IMPL_NS_HTML
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
+
 CPPSRCS =				\
 	nsMathMLAtoms.cpp  \
         nsMathMLOperators.cpp \
 	$(NULL)
-
-
-MKSHLIB :=
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

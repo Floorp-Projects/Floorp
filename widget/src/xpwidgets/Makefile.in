@@ -42,7 +42,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
-DEFINES		+= -DUSE_TLS_FOR_TOOLKIT
+DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
 
 CPPSRCS		= \
 		nsBaseWidget.cpp \
@@ -59,7 +59,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 CPPSRCS += nsWidgetAtoms.cpp
 endif
 
-ifneq (,$(filter beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter beos os2 mac windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseFilePicker.cpp
 REQUIRES += docshell view intl
 endif

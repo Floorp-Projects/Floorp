@@ -13,7 +13,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2001 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -26,32 +26,46 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= widget_$(MOZ_WIDGET_TOOLKIT)
-EXPORT_LIBRARY = 1
-SHORT_LIBNAME	= wdgt$(MOZ_WIDGET_TOOLKIT)
+MODULE		= widget
+LIBRARY_NAME	= gkwidget
+EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+RESFILE		= widget.res
+MODULE_NAME	= nsWidgetModule
 
-CPPSRCS		= nsWidgetSupport.cpp
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  uconv \
+		  gfx \
+		  dom \
+		  timer \
+		  accessibility \
+		  $(NULL)
+
+CPPSRCS		= nsWinWidgetFactory.cpp
+
+EXTRA_DSO_LIBS	= gkgfx
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
-		-I$(srcdir) \
+		-I$(srcdir)/../windows \
 		$(NULL)
 
+OS_LIBS		+= comctl32.lib comdlg32.lib uuid.lib ole32.lib shell32.lib oleaut32.lib
+
 SHARED_LIBRARY_LIBS = \
-		$(addprefix $(DIST)/lib/libwidget,$(addsuffix _s.$(LIB_SUFFIX),$(MOZ_WIDGET_TOOLKIT))) \
-		$(DIST)/lib/libxpwidgets_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)widget_windows.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(TOOLKIT_LIBS) \
-		$(XLDFLAGS) \
-		$(XLIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS	+= $(TK_CFLAGS)
 
 DEFINES		+= -D_IMPL_NS_WIDGET
 

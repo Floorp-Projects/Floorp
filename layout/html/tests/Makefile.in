@@ -42,6 +42,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/../style/src
 EXTRA_DSO_LIBS += gkgfx
 
 LIBS		= \
+		$(LIBS_DIR) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkhtmlforms_s.$(LIB_SUFFIX) \

@@ -9,6 +9,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE	= libart_lgpl
 LIBRARY_NAME = moz_art_lgpl
 
+ifeq ($(OS_ARCH),WINNT)
+DEFFILE	= $(srcdir)/libart.def
+endif
+
 CSRCS  = \
 	art_affine.c \
 	art_alphagamma.c \
@@ -99,7 +103,7 @@ EXPORTS = \
 	$(NULL)
 
 ifdef ENABLE_TESTS
-SIMPLE_PROGRAMS	= testart testuta
+SIMPLE_PROGRAMS	= testart$(BIN_SUFFIX) testuta$(BIN_SUFFIX)
 endif
 
 include $(topsrcdir)/config/config.mk
@@ -110,7 +114,11 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES	+= -DLIBART_COMPILATION
 
+ifeq ($(OS_ARCH),WINNT)
+LIBS += $(IMPORT_LIBRARY)
+else
 LIBS += -L. -l$(LIBRARY_NAME)
+endif
 
-$(SIMPLE_PROGRAMS): $(SHARED_LIBRARY)
+$(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(SHARED_LIBRARY)
 

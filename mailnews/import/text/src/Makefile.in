@@ -42,17 +42,15 @@ REQUIRES	= xpcom \
 		  mork \
 		  $(NULL)
 
-CPPSRCS		= 	nsTextFactory.cpp 				\
-        		nsTextStringBundle.cpp			\
-        		nsTextImport.cpp				\
-        		nsTextAddress.cpp 				\
-			$(NULL)
-			
+CPPSRCS		= \
+		nsTextFactory.cpp 				\
+		nsTextStringBundle.cpp			\
+		nsTextImport.cpp				\
+		nsTextAddress.cpp 				\
+		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-	-L$(DIST)/bin \
-	$(NSPR_LIBS) \
-	$(XPCOM_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

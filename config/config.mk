@@ -162,23 +162,20 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 # NSS libs needed for final link in static build
 # 
 NSS_LIBS	= \
-	$(DIST)/lib/libsmime.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcrmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnss.$(LIB_SUFFIX) \
-	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpkcs12.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-	$(DIST)/lib/libfreebl.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)certhi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)cryptohi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)softoken.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkcs12.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkcs7.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
 	$(NULL)
 
 MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
@@ -563,8 +560,6 @@ endif
 endif
 endif
 
-ifneq ($(OS_ARCH),WINNT)
-
 ifdef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_DIR	=
 MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND)
@@ -576,8 +571,6 @@ ifneq ($(OS_ARCH),OS2)
 MKDEPEND_BUILTIN = $(MKDEPEND_DIR)/mkdepend
 endif
 endif
-endif
-
 endif
 
 #

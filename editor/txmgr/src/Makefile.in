@@ -44,8 +44,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

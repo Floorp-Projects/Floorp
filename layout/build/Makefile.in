@@ -33,6 +33,9 @@ SHORT_LIBNAME	= gkhtml
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
 EXTRA_DSO_LIBS	= gkgfx
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS	+= mozutil_s
+endif
 
 REQUIRES	= xpcom \
 		  string \
@@ -66,12 +69,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-ifdef MOZ_PERF_METRICS
-SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
 ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/$(LIB_PREFIX)gkmathmlcon_s.$(LIB_SUFFIX) \
@@ -86,7 +83,7 @@ SHARED_LIBRARY_LIBS += \
 endif
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \

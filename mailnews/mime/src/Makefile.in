@@ -67,9 +67,6 @@ REQUIRES += \
             msgsmime
 endif
                   
-REQUIRES += \
-		  $(NULL)
-
 CPPSRCS		= \
 		nsMimeObjectClassAccess.cpp \
 		nsMimeConverter.cpp \
@@ -117,9 +114,6 @@ CPPSRCS += \
                 mimecms.cpp \
                 mimemcms.cpp
 endif
-
-CPPSRCS += \
-		$(NULL)
 
 EXPORTS		= \
 		nsMimeObjectClassAccess.h \

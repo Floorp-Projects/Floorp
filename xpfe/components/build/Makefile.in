@@ -55,6 +55,10 @@ REQUIRES	+= mozldap
 DEFINES		+= -DMOZ_LDAP_XPCOM
 endif
 
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS	+= mozutil_s
+endif
+
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
@@ -66,10 +70,6 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)urlbarhistory_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifdef MOZ_PERF_METRICS
-SHARED_LIBRARY_LIBS	+= $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
-endif
-
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../autocomplete/src  \
 	-I$(srcdir)/../bookmarks/src     \
@@ -80,6 +80,19 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../urlbarhistory/src \
 	$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
+	$(NULL)
+OS_LIBS		+= ole32.lib
+LOCAL_INCLUDES	+= \
+	-I$(srcdir)/../urlwidget \
+	-I$(srcdir)/../winhooks \
+	$(NULL)
+endif
+
 EXTRA_DSO_LDOPTS = \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
@@ -89,3 +102,4 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+ 

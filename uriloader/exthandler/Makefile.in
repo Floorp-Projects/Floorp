@@ -26,10 +26,16 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-VPATH		= @srcdir@;@srcdir@/os2
+OSDIR		= os2
 else
-VPATH		= @srcdir@:@srcdir@/unix
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OSDIR		= win
+else
+OSDIR		= unix
 endif
+endif
+
+VPATH		:= @srcdir@ @srcdir@/$(OSDIR)
 
 MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
@@ -46,12 +52,6 @@ REQUIRES	= xpcom \
 		  plugin \
 		  pref \
 		  $(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-OSDIR	= os2
-else
-OSDIR	= unix
-endif
 
 OSHELPER	= nsOSHelperAppService.cpp
 
@@ -73,6 +73,9 @@ CPPSRCS	= \
 	$(OSHELPER) \
 	$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS		+= shell32.lib
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

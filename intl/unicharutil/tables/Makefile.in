@@ -28,10 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(srcdir)/htmlEntityVersions.properties $(DIST)/bin/res/entityTables
-	$(INSTALL) $(srcdir)/html40Latin1.properties $(DIST)/bin/res/entityTables
-	$(INSTALL) $(srcdir)/html40Symbols.properties $(DIST)/bin/res/entityTables
-	$(INSTALL) $(srcdir)/html40Special.properties $(DIST)/bin/res/entityTables 
-	$(INSTALL) $(srcdir)/transliterate.properties $(DIST)/bin/res/entityTables 
+_PROP_TABLES = \
+	htmlEntityVersions.properties \
+	html40Latin1.properties \
+	html40Symbols.properties \
+	html40Special.properties \
+	transliterate.properties \
+	$(NULL)
+
+libs:: $(_PROP_TABLES)
+	$(INSTALL) $^ $(DIST)/bin/res/entityTables
 

@@ -41,6 +41,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= java
 LIBRARY_NAME	= jsj
 EXPORT_LIBRARY = 1
+ifeq ($(OS_ARCH),WINNT)
+MAPFILE		= $(LIBRARY_NAME).map
+endif
 REQUIRES	= js \
 		  xpcom \
 		  xpconnect \
@@ -69,7 +72,6 @@ EXPORTS		= \
 		$(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSException.h \
 		$(NULL)
 
-LLIBS		= $(NSPR_LIBS) $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib
 
 include $(topsrcdir)/config/config.mk
 
@@ -84,8 +86,6 @@ CPPSRCS		= \
 		nsCLiveconnect.cpp \
 		nsCLiveconnectFactory.cpp \
 		$(NULL)
-
-LLIBS		+= $(DIST)/lib/xpcom32.lib
 
 EXPORTS		+= \
 		$(srcdir)/nsILiveconnect.h \

@@ -64,8 +64,8 @@ CPPSRCS		= \
 		nsNewsFolder.cpp \
 		nsNntpIncomingServer.cpp \
 		nsNewsUtils.cpp \
-        nsNewsDownloadDialogArgs.cpp \
-        nsNewsDownloader.cpp \
+		nsNewsDownloadDialogArgs.cpp \
+		nsNewsDownloader.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -79,14 +79,11 @@ EXPORTS		= \
 		nsNewsFolder.h \
 		nsNntpIncomingServer.h \
 		nsNewsUtils.h \
-        nsNewsDownloadDialogArgs.h \
+		nsNewsDownloadDialogArgs.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		$(XPCOM_LIBS) \
-		-lmsgbaseutil \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

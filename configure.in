@@ -928,7 +928,7 @@ case "$target" in
         MOZ_DEBUG_LDFLAGS='/DEBUG /DEBUGTYPE:CV'
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.lib'
-        MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
+        MOZ_ZLIB_LIBS='$(DIST)/lib/zlib.lib'
         MOZ_PNG_LIBS='$(DIST)/lib/mozpng.lib'
         MOZ_MNG_LIBS='$(DIST)/lib/mozmng.lib'
         MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
@@ -954,6 +954,7 @@ case "$target" in
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
     no_x=yes
+    AC_DEFINE(NO_X11)
 
     dnl Remove cygwinism from MOZ_BUILD_ROOT
     if test `echo $MOZ_BUILD_ROOT | grep -c ^/cygdrive/` != 0; then
@@ -1594,8 +1595,9 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
-if test "$no_x" != "yes"
-then
+if test "$no_x" = "yes"; then
+    AC_DEFINE(NO_X11)
+else
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
 	XLIBS="-lX11 $XLIBS"
 	_SAVE_LDFLAGS="$LDFLAGS"
@@ -2391,7 +2393,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     if test "$VACPP" = "yes"; then
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
     elif test "$_WIN32_MSVC"; then
-            NSPR_LIBS='$(DIST)/lib/libnspr'$NSPR_VERSION'.lib $(DIST)/lib/libplc'$NSPR_VERSION'.lib $(DIST)/lib/libplds'$NSPR_VERSION'.lib '
+            NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
             NSPR_CFLAGS='-I$(DIST)/include/nspr'
     else
         NSPR_LIBS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --libs`'
@@ -3057,6 +3059,13 @@ dnl not be the case, 18352 has been filed.
 dnl http://bugzilla.mozilla.org/show_bug.cgi?id=18352
 MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help transformiix venkman inspector"
 MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm access-builtin ctl" 
+
+dnl universalchardet is only built on win32 (bug XXXXXX)
+case "$target_os" in
+msvc*|mksnt*|mingw*|cygwin*)
+    MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT universalchardet irc"
+    ;;
+esac
 
 dnl Check if Thai Rendering Extension needs to be enabled
 if test -n "$SUNCTL"; then
@@ -4059,7 +4068,14 @@ if test "$MOZ_SVG"; then
     dnl libart's configure hasn't been run yet, but we know what the
     dnl answer should be anyway
     MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
-    MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
+    case "$target_os" in
+    msvc*|mksnt*|cygwin*|mingw*)
+        MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(LIB_SUFFIX)' 
+        ;;
+    *)
+        MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
+        ;;
+    esac
   else
 dnl Disable system libart until the pixel format changes are merged upstream
     AC_MSG_ERROR([SVG requires a modified version of libart. To pull and build
@@ -4473,7 +4489,7 @@ unset MAKEFILES
 unset CONFIG_FILES
 
 if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist"
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
     if test -n "$HAVE_64BIT_OS"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi

@@ -56,6 +56,12 @@ mailnews/import/public/Makefile
 mailnews/import/src/Makefile
 mailnews/import/text/Makefile
 mailnews/import/text/src/Makefile
+mailnews/import/eudora/Makefile
+mailnews/import/eudora/src/Makefile
+mailnews/import/oexpress/Makefile
+mailnews/import/outlook/Makefile
+mailnews/import/outlook/src/Makefile
+mailnews/extensions/Makefile
 mailnews/extensions/smime/Makefile
 mailnews/extensions/smime/build/Makefile
 mailnews/extensions/smime/src/Makefile
@@ -63,3 +69,8 @@ mailnews/extensions/smime/public/Makefile
 mailnews/extensions/smoketest/Makefile
 mailnews/extensions/smoketest/resources/Makefile
 mailnews/extensions/smoketest/resources/content/Makefile
+mailnews/mapi/Makefile
+mailnews/mapi/resources/content/Makefile
+mailnews/mapi/resources/locale/en-US/Makefile
+mailnews/mapi/resources/locale/Makefile
+mailnews/mapi/resources/Makefile

@@ -27,7 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= oji
-XPIDL_MODULE	= ojiimpl
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCJVMManagerModule
 REQUIRES	= xpcom \
@@ -74,7 +73,6 @@ EXPORTS		= \
 		nsJVMPluginTagInfo.h \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 endif
 
 EXTRA_DSO_LDOPTS = \
@@ -86,5 +84,4 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DJSJDLL=\"$(JSJDLL)\"
-
+DEFINES		+= -DJSJDLL=\"$(JSJDLL)\"

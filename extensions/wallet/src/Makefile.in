@@ -70,8 +70,7 @@ DEFAULTS_FILES	= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
+		$(LIBS_DIRS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

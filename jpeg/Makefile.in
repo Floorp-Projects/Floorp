@@ -30,6 +30,9 @@ MODULE		= jpeg
 LIBRARY_NAME	= mozjpeg
 EXPORT_LIBRARY = 1
 
+ifeq ($(OS_ARCH),WINNT)
+MAPFILE=$(LIBRARY_NAME).map
+endif
 
 CSRCS		= \
 		jdapimin.c \
@@ -74,9 +77,7 @@ EXPORTS		= \
 		jos2fig.h \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
 CSRCS		+= \
 		jcapimin.c \
 		jcparam.c \
@@ -100,4 +101,11 @@ endif
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
+#//  -Zi -GM needed to compile mmx functions in assembly.
+CFLAGS	+= -Zi -GM
+endif
+endif
 

@@ -144,6 +144,7 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
 EXTRA_DSO_LDOPTS += \
   $(MOZ_UNICHARUTIL_LIBS) \
   $(MOZ_COMPONENT_LIBS) \
+  $(MOZ_UNICHARUTIL_LIBS) \
   $(MOZ_JS_LIBS) \
   $(NULL)
 

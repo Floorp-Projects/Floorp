@@ -43,7 +43,7 @@ EXPORTS		= \
 		nsMargin.h \
 		nsTransform2D.h \
 		nsIRenderingContext.h \
-        nsRenderingContextImpl.h \
+		nsRenderingContextImpl.h \
 		nsIFontMetrics.h \
 		nsIDeviceContext.h \
 		nsIImage.h \
@@ -61,8 +61,6 @@ EXPORTS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 EXPORTS		+= nsIPrintingContext.h
 endif
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 

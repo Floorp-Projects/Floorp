@@ -53,13 +53,13 @@ endif
 
 EXTRA_DSO_LIBS = \
     gkconshared_s \
+    gkgfx \
     $(NULL)
 
 EXTRA_DSO_LDOPTS =           \
-    $(MOZ_COMPONENT_LIBS)    \
-    -L$(DIST)/lib            \
+    $(LIBS_DIR)              \
     $(EXTRA_DSO_LIBS)        \
-    -lgkgfx                  \
+    $(MOZ_COMPONENT_LIBS)    \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

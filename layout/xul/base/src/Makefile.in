@@ -53,36 +53,36 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-       nsScrollBoxObject.cpp \
-       nsScrollBoxFrame.cpp \
-       nsTreeLayout.cpp \
-       nsXULTreeCellFrame.cpp \
-       nsXULTreeFrame.cpp \
-       nsXULTreeSliceFrame.cpp \
-       nsXULTreeGroupFrame.cpp \
-       nsXULTreeOuterGroupFrame.cpp \
-       nsBrowserBoxObject.cpp \
-       nsIFrameBoxObject.cpp \
-       nsEditorBoxObject.cpp \
-       nsMenuBoxObject.cpp \
-       nsTreeBoxObject.cpp \
-       nsPopupBoxObject.cpp \
-       nsBoxObject.cpp \
-       nsImageBoxFrame.cpp \
-       nsRootBoxFrame.cpp \
-       nsDocElementBoxFrame.cpp \
+		nsScrollBoxObject.cpp \
+		nsScrollBoxFrame.cpp \
+		nsTreeLayout.cpp \
+		nsXULTreeCellFrame.cpp \
+		nsXULTreeFrame.cpp \
+		nsXULTreeSliceFrame.cpp \
+		nsXULTreeGroupFrame.cpp \
+		nsXULTreeOuterGroupFrame.cpp \
+		nsBrowserBoxObject.cpp \
+		nsIFrameBoxObject.cpp \
+		nsEditorBoxObject.cpp \
+		nsMenuBoxObject.cpp \
+		nsTreeBoxObject.cpp \
+		nsPopupBoxObject.cpp \
+		nsBoxObject.cpp \
+		nsImageBoxFrame.cpp \
+		nsRootBoxFrame.cpp \
+		nsDocElementBoxFrame.cpp \
 		nsBox.cpp \
-        nsBoxLayoutState.cpp \
-        nsBoxToBlockAdaptor.cpp \
-        nsButtonBoxFrame.cpp \
-        nsContainerBox.cpp \
-        nsLeafBoxFrame.cpp \
-        nsSprocketLayout.cpp \
-        nsBoxLayout.cpp \
-        nsStackLayout.cpp \
-        nsTextBoxFrame.cpp \
-        nsStackFrame.cpp \
-        nsSpringFrame.cpp \
+		nsBoxLayoutState.cpp \
+		nsBoxToBlockAdaptor.cpp \
+		nsButtonBoxFrame.cpp \
+		nsContainerBox.cpp \
+		nsLeafBoxFrame.cpp \
+		nsSprocketLayout.cpp \
+		nsBoxLayout.cpp \
+		nsStackLayout.cpp \
+		nsTextBoxFrame.cpp \
+		nsStackFrame.cpp \
+		nsSpringFrame.cpp \
 		nsGroupBoxFrame.cpp \
 		nsFrameNavigator.cpp \
 		nsSplitterFrame.cpp \
@@ -91,7 +91,7 @@ CPPSRCS		= \
 		nsBoxFrame.cpp \
 		nsProgressMeterFrame.cpp \
 		nsTreeIndentationFrame.cpp \
-    nsTreeItemDragCapturer.cpp \
+		nsTreeItemDragCapturer.cpp \
 		nsScrollbarFrame.cpp \
 		nsScrollbarButtonFrame.cpp \
 		nsSliderFrame.cpp \
@@ -105,7 +105,7 @@ CPPSRCS		= \
 		nsRepeatService.cpp \
 		nsTitleBarFrame.cpp \
 		nsResizerFrame.cpp \
-  nsXULTooltipListener.cpp \
+		nsXULTooltipListener.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -117,8 +117,12 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
+
 LOCAL_INCLUDES	= \
-    -I$(srcdir) \
+		-I$(srcdir) \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../html/style/src \
 		-I$(srcdir)/../../../html/base/src \

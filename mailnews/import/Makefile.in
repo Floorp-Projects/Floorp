@@ -28,5 +28,12 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src text
 
+ifeq ($(OS_ARCH),WINNT)
+DIRS		+= eudora
+ifneq ($(_MSC_VER),1100)
+DIRS		+= oexpress outlook
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 

@@ -35,7 +35,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsEditorModule
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_NECKO_UTIL_LIBS)   \
 		$(MOZ_UNICHARUTIL_LIBS)  \
 		$(MOZ_COMPONENT_LIBS)    \
 		$(MOZ_JS_LIBS)           \

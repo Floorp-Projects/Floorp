@@ -37,8 +37,8 @@ XPIDLSRCS	= \
 		nsINntpService.idl \
 		nsINNTPNewsgroupPost.idl \
 		nsINntpUrl.idl \
-        nsIMsgNewsFolder.idl \
-        nsINewsDownloadDialogArgs.idl \
+		nsIMsgNewsFolder.idl \
+		nsINewsDownloadDialogArgs.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

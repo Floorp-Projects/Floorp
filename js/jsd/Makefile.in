@@ -37,10 +37,10 @@ REQUIRES	= js
 ifndef JSD_STANDALONE
 REQUIRES += \
 		  string \
-          xpcom \
+		  xpcom \
 		  xpconnect \
 		  widget \
-          dom \
+		  dom \
 		  $(NULL)
 endif
 
@@ -78,3 +78,5 @@ MODULE_NAME	= JavaScript_Debugger
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DEXPORT_JSD_API

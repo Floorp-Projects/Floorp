@@ -28,5 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src build
 
+# win32 thinks it needs resources/ but it doesn't
+
 include $(topsrcdir)/config/rules.mk
 

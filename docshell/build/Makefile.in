@@ -59,15 +59,14 @@ SHARED_LIBRARY_LIBS= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS= \
-		-L$(DIST)/bin \
-		$(EXTRA_DSO_LIBS) \
+		$(LIBS_DIR) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= \
+LOCAL_INCLUDES	= \
 		-I$(srcdir)			\
 		-I$(srcdir)/../base		\
 		$(NULL)

@@ -26,11 +26,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= bookmarks directory filepicker find history search sidebar related regviewer xfer prefwindow shistory console autocomplete urlbarhistory intl build
+DIRS		= bookmarks directory filepicker find history search sidebar related regviewer xfer prefwindow shistory console autocomplete urlbarhistory intl
 
 ifdef MOZ_ENABLE_XREMOTE
 DIRS		+= xremote
 endif
+
+ifeq ($(OS_ARCH),WINNT)
+DIRS		+= winhooks urlwidget
+endif
+
+DIRS		+= build
 
 include $(topsrcdir)/config/rules.mk
 

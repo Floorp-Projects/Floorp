@@ -35,10 +35,8 @@ EXPORTS		= \
 		nsICSSStyleSheet.h \
 		nsICSSLoaderObserver.h \
 		nsIComputedDOMStyle.h \
-    nsIMediaList.h \
+		nsIMediaList.h \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 

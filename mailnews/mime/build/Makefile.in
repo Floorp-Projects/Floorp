@@ -54,10 +54,9 @@ SHARED_LIBRARY_LIBS = \
                 $(NULL)
 
 EXTRA_DSO_LDOPTS = \
-                -L$(DIST)/bin \
-                -L$(DIST)/lib \
-		        $(EXTRA_DSO_LIBS) \
-				$(MOZ_UNICHARUTIL_LIBS) \
+		$(LIBS_DIR) \
+	        $(EXTRA_DSO_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
                 $(NULL)
 

@@ -35,7 +35,7 @@ BUILD_STATIC_LIBS=
 BUILD_SHARED_LIBS=1
 
 # Linux and Solaris installer needs standalone libjar
-ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
+ifneq (,$(filter Linux SunOS WINNT,$(OS_ARCH)))
 DIRS		= standalone
 endif
 
@@ -62,10 +62,13 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DZLIB_DLL=1
+endif
+
 EXTRA_DSO_LDOPTS += \
-		-L$(DIST)/bin \
+		$(LIBS_DIR) \
 		$(ZLIB_LIBS) \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

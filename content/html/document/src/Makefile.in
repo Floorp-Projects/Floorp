@@ -73,14 +73,20 @@ EXPORTS		= \
 		nsIHTMLContentContainer.h \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
+
+ifdef XP_NEW_SELECTION
+DEFINES		+= -DXP_NEW_SELECTION
+endif
 
 INCLUDES	+= \
 		-I$(srcdir)/../../base/src \

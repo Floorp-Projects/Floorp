@@ -58,6 +58,14 @@ endif
 ifdef HAVE_64BIT_OS
 DEFAULT_GMAKE_FLAGS += USE_64=1
 endif
+ifeq ($(OS_ARCH),WINNT)
+DEFAULT_GMAKE_FLAGS += OS_TARGET=WIN95
+ifdef MOZ_DEBUG
+ifndef MOZ_NO_DEBUG_RTL
+DEFAULT_GMAKE_FLAGS += USE_DEBUG_RTL=1
+endif
+endif
+endif # WINNT
 
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile
 
@@ -70,7 +78,7 @@ depend dependclean export::
 
 libs::
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
-	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) libdbm.$(LIB_SUFFIX)
+	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))

@@ -64,6 +64,7 @@ EXTRA_DSO_LIBS = msgbsutl
 else
 EXTRA_DSO_LIBS = msgbaseutil
 endif
+EXTRA_DSO_LIBS += rdfutil_s
 
 CPPSRCS		= nsMsgFactory.cpp
 EXPORTS		= nsMsgBaseCID.h
@@ -74,17 +75,14 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/lib	\
-		$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
-		-L$(DIST)/bin \
+		$(LIBS_DIR)	\
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+LOCAL_INCLUDES = -I$(srcdir)/../src
 
-INCLUDES += -I$(srcdir)/../src \
-	$(NULL)
+include $(topsrcdir)/config/rules.mk
 

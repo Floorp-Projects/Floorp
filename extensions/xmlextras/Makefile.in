@@ -32,7 +32,7 @@ ifdef MOZ_SOAP
 DIRS += schema soap wsdl
 endif
 
-DIRS += build
+DIRS += build/src
 
 ifdef ENABLE_TESTS
 DIRS += tests

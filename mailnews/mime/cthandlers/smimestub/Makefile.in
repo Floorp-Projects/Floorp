@@ -42,7 +42,14 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+MAPFILE		= smimestb.map
+DEFFILE		= $(srcdir)/smime.def
+endif
+
 EXTRA_DSO_LIBS	= mimecthglue_s
+
+DEFINES		+= -D_IMPL_NS_HTML
 
 CPPSRCS		= \
 		nsSMIMEStub.cpp \
@@ -50,8 +57,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

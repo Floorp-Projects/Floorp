@@ -114,6 +114,25 @@ EXPORTS		= \
                 nsAbDirectoryRDFResource.h \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+EXPORTS		+= \
+		nsAbOutlookCard.h \
+		nsAbOutlookDirFactory.h \
+		nsAbOutlookDirectory.h \
+		$(NULL)
+
+CPPSRCS		+= \
+		nsAbOutlookCard.cpp \
+		nsAbOutlookDirFactory.cpp \
+		nsAbOutlookDirectory.cpp \
+		nsAbQueryStringToExpression.cpp \
+		nsAbWinHelper.cpp \
+		nsMapiAddressBook.cpp \
+		nsWabAddressBook.cpp \
+		$(NULL)
+
+endif
+
 ifdef MOZ_LDAP_XPCOM
 REQUIRES	+= mozldap
 

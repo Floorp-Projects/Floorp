@@ -62,8 +62,8 @@ SHARED_LIBRARY_LIBS = \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+	$(LIBS_DIR) \
 	$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
-	-L$(DIST)/bin \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)

@@ -56,11 +56,13 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsBrowserInstance.cpp
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
+		$(LIBS_DIR) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif

@@ -36,5 +36,7 @@ CPPSRCS		= TestTXMgr.cpp
 
 LIBS		= $(MOZ_COMPONENT_LIBS)
 
+DEFINES		+= -DUSE_NSREG
+
 include $(topsrcdir)/config/rules.mk
 

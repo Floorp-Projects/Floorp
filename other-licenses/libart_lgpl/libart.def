@@ -71,6 +71,7 @@ EXPORTS
  art_svp_free
  art_svp_from_vpath
  art_svp_intersect
+ art_svp_intersector
  art_svp_point_dist
  art_svp_point_wind
  art_svp_render_aa
@@ -80,6 +81,8 @@ EXPORTS
  art_svp_union
  art_svp_vpath_stroke
  art_svp_vpath_stroke_raw
+ art_svp_writer_rewind_new
+ art_svp_writer_rewind_reap
  art_uta_add_line
  art_uta_free
  art_uta_from_irect

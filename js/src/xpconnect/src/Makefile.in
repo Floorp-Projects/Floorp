@@ -97,10 +97,15 @@ EXTRA_DSO_LDOPTS += \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DJSFILE -DJS_THREADSAFE 
+DEFINES		+= -DJSFILE -DJS_THREADSAFE -DEXPORT_XPC_API
 
 ifdef MOZ_XPCTOOLS
 DEFINES         +=  -DXPC_TOOLS_SUPPORT
 REQUIRES	+= xpctools
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+# use pre-compiled headers
+CXXFLAGS	+= -YX -Fp$(LIBRARY_NAME).pch
+endif

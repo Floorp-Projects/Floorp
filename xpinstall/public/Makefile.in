@@ -34,7 +34,7 @@ MODULE		= xpinstall
 XPIDLSRCS	= \
 		nsIXPINotifier.idl \
 		nsIXPIProgressDlg.idl \
-        nsPIXPIProxy.idl \
+		nsPIXPIProxy.idl \
 		nsPIXPIStubHook.idl \
 		nsPIXPIManagerCallbacks.idl \
 		$(NULL)
@@ -45,8 +45,6 @@ EXPORTS		= \
 		nsSoftwareUpdateIIDs.h \
 		nsISoftwareUpdate.h \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 PREF_JS_EXPORTS	= $(srcdir)/xpinstall.js
 

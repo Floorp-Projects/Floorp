@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 		  mime \
 		  mimetype \
 		  windowwatcher \
+		  profile \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -97,9 +98,13 @@ CPPSRCS		= \
 		nsMsgThreadedDBView.cpp \
 		nsMsgSpecialViews.cpp \
 		nsMsgSearchDBView.cpp \
-    nsMsgOfflineManager.cpp \
-    nsMsgProgress.cpp \
+		nsMsgOfflineManager.cpp \
+		nsMsgProgress.cpp \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS		+= nsMessengerWinIntegration.cpp 
+endif
 
 EXPORTS		= \
 		nsMessenger.h \

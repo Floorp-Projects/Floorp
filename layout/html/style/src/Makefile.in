@@ -58,8 +58,6 @@ EXPORTS		= \
 		nsICSSFrameConstructor.h \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
@@ -67,7 +65,11 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
-INCLUDES	+= \
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
+
+LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../table/src \
@@ -79,12 +81,12 @@ INCLUDES	+= \
 		$(NULL)
 
 ifdef MOZ_MATHML
-INCLUDES += \
+LOCAL_INCLUDES += \
         -I$(srcdir)/../../../mathml/content/src \
         -I$(srcdir)/../../../mathml/base/src
 endif
 
 ifdef MOZ_SVG
-INCLUDES += \
+LOCAL_INCLUDES += \
         -I$(srcdir)/../../../svg/base/src
 endif

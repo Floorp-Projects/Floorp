@@ -49,19 +49,23 @@ CPPSRCS 	= \
 		nsInspectorModule.cpp \
 		$(NULL)
 
-LOCAL_INCLUDES += -I$(srcdir)/../../base/src
+LOCAL_INCLUDES = -I$(srcdir)/../../base/src
 
 # Linking against a part of another library is evil.  It also currently
 # prevents building on Mac OS X (DARWIN).
 EXTRA_DSO_LIBS = rdfutil_s gkgfx gkconshared_s
+
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += -I$(srcdir)/../../base/src/win
+EXTRA_DSO_LIBS += inscreencap_s
+endif
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
-	-L$(DIST)/bin \
-	-L$(DIST)/lib \
+	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(PNG_LIBS) \

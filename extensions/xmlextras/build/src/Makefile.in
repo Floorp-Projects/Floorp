@@ -52,8 +52,12 @@ SHARED_LIBRARY_LIBS = \
 
 
 ifdef MOZ_SOAP
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)xmlextrasschema_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)xmlextraswsdl_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)xmlextrassoap_s.$(LIB_SUFFIX)
-DEFINES = -DMOZ_SOAP
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)xmlextrasschema_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)xmlextraswsdl_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)xmlextrassoap_s.$(LIB_SUFFIX) \
+	$(NULL)
+DEFINES += -DMOZ_SOAP
 endif
 
 LOCAL_INCLUDES	= \
@@ -64,6 +68,7 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(ZLIB_LIBS) \
 		$(MOZ_JS_LIBS) \

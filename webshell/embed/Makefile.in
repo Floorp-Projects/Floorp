@@ -30,5 +30,11 @@ ifdef MOZ_ENABLE_XLIB
 DIRS		= xlib
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+ifdef NGPREFS
+DIRS		+= ngprefs/win
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 

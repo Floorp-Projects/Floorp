@@ -136,6 +136,7 @@ gfx/src/qt/Makefile
 gfx/src/xlib/Makefile
 gfx/src/os2/Makefile
 gfx/src/xlibrgb/Makefile
+gfx/src/windows/Makefile
 gfx/tests/Makefile
 "
 
@@ -174,6 +175,7 @@ intl/locale/idl/Makefile
 intl/locale/src/Makefile
 intl/locale/src/unix/Makefile
 intl/locale/src/os2/Makefile
+intl/locale/src/windows/Makefile
 intl/locale/tests/Makefile
 intl/lwbrk/Makefile
 intl/lwbrk/src/Makefile
@@ -505,6 +507,7 @@ webshell/tests/viewer/unix/gtk/Makefile
 webshell/tests/viewer/unix/qt/Makefile
 webshell/tests/viewer/unix/xlib/Makefile
 webshell/embed/Makefile
+webshell/embed/ngprefs/win/Makefile
 "
 
 MAKEFILES_widget="
@@ -523,6 +526,10 @@ widget/src/os2/Makefile
 widget/src/os2/res/Makefile
 widget/src/os2/tests/Makefile
 widget/src/qt/Makefile
+widget/src/windows/Makefile
+widget/src/windows/expose/Makefile
+widget/src/windows/expose/ISimpleDOMNode/Makefile
+widget/src/windows/expose/ISimpleDOMDocument/Makefile
 widget/src/xlibxtbin/Makefile
 widget/src/xpwidgets/Makefile
 widget/src/support/Makefile
@@ -584,6 +591,7 @@ MAKEFILES_xpcom_tests="
 xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile
 xpcom/tests/services/Makefile
+xpcom/tests/windows/Makefile
 "
 
 MAKEFILES_string="$MAKEFILES_xpcom"
@@ -599,6 +607,14 @@ xpinstall/wizard/libxpnet/Makefile
 xpinstall/wizard/libxpnet/src/Makefile
 xpinstall/wizard/libxpnet/test/Makefile
 xpinstall/wizard/unix/src2/Makefile
+xpinstall/wizard/windows/nsinstall/Makefile
+xpinstall/wizard/windows/nsztool/Makefile
+xpinstall/wizard/windows/uninstall/Makefile
+xpinstall/wizard/windows/setup/Makefile
+xpinstall/wizard/windows/setuprsc/Makefile
+xpinstall/wizard/windows/ren8dot3/Makefile
+xpinstall/wizard/windows/ds32/Makefile
+xpinstall/wizard/windows/GetShortPathName/Makefile
 "
 
 MAKEFILES_xpfe="
@@ -632,6 +648,7 @@ xpfe/components/prefwindow/Makefile
 xpfe/components/prefwindow/resources/Makefile
 xpfe/components/prefwindow/resources/content/Makefile
 xpfe/components/prefwindow/resources/content/unix/Makefile
+xpfe/components/prefwindow/resources/content/win/Makefile
 xpfe/components/prefwindow/resources/locale/Makefile
 xpfe/components/prefwindow/resources/locale/en-US/Makefile
 xpfe/components/prefwindow/resources/locale/en-US/unix/Makefile
@@ -658,6 +675,8 @@ xpfe/components/autocomplete/src/Makefile
 xpfe/components/urlbarhistory/Makefile
 xpfe/components/urlbarhistory/public/Makefile
 xpfe/components/urlbarhistory/src/Makefile
+xpfe/components/urlwidget/Makefile
+xpfe/components/winhooks/Makefile
 xpfe/components/console/Makefile
 xpfe/components/build/Makefile
 xpfe/appshell/Makefile
@@ -697,6 +716,9 @@ MAKEFILES_embedding="
 embedding/Makefile
 embedding/base/Makefile
 embedding/browser/Makefile
+embedding/browser/activex/src/Makefile
+embedding/browser/activex/src/control/Makefile
+embedding/browser/activex/src/control_kicker/Makefile
 embedding/browser/build/Makefile
 embedding/browser/chrome/Makefile
 embedding/browser/webBrowser/Makefile
@@ -714,6 +736,10 @@ embedding/components/windowwatcher/src/Makefile
 embedding/components/ui/Makefile
 embedding/components/ui/helperAppDlg/Makefile
 embedding/config/Makefile
+embedding/tests/Makefile
+embedding/tests/winEmbed/Makefile
+embedding/tests/mfcEmbed/Makefile
+embedding/tests/mfcEmbed/components/Makefile
 "
 
 MAKEFILES_psm2="
@@ -757,6 +783,7 @@ extensions/inspector/Makefile
 extensions/inspector/base/Makefile
 extensions/inspector/base/public/Makefile
 extensions/inspector/base/src/Makefile
+extensions/inspector/base/src/win/Makefile
 extensions/inspector/build/Makefile
 extensions/inspector/build/src/Makefile
 extensions/inspector/resources/Makefile
@@ -804,6 +831,8 @@ fi
         modules/libpr0n/decoders/jpeg/Makefile
         modules/libpr0n/decoders/bmp/Makefile
         modules/libpr0n/decoders/mng/Makefile
+        modules/libpr0n/decoders/icon/Makefile
+        modules/libpr0n/decoders/icon/win/Makefile
 "
 
     MAKEFILES_gfx2="

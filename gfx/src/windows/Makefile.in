@@ -1,0 +1,104 @@
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is mozilla.org code
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 2001 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= gfxwin
+LIBRARY_NAME	= gfxwin
+EXPORT_LIBRARY = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsGfxModule
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  widget \
+		  intl \
+		  view \
+		  pref \
+		  uconv \
+		  unicharutil \
+		  locale \
+		  necko \
+		  $(NULL)
+
+CPPSRCS		= \
+		nsDeviceContextWin.cpp \
+		nsDrawingSurfaceWin.cpp \
+		nsRenderingContextWin.cpp \
+		nsFontMetricsWin.cpp \
+		nsImageWin.cpp \
+		nsRegionWin.cpp \
+		nsDeviceContextSpecWin.cpp \
+		nsDeviceContextSpecFactoryW.cpp \
+		nsScreenWin.cpp \
+		nsScreenManagerWin.cpp \
+		nsPrintOptionsWin.cpp \
+		nsGfxFactoryWin.cpp \
+		nsCompressedCharMap.cpp \
+		$(NULL)
+
+EXPORTS	= nsIRenderingContextWin.h nsIDrawingSurfaceWin.h
+
+EXTRA_DSO_LIBS	= gkgfx mozutil_s
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
+		$(NULL)
+
+OS_LIBS		+= comdlg32.lib
+
+GARBAGE		+= nsCompressedCharMap.cpp
+
+include $(topsrcdir)/config/rules.mk
+
+export:: ../nsCompressedCharMap.cpp
+	$(INSTALL) $(srcdir)/../nsCompressedCharMap.cpp .
+
+libs:: fontEncoding.properties
+	$(INSTALL) $^ $(DIST)/bin/res/fonts
+
+DEFINES	+= -D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN -DSTRICT 
+
+EXTRA_DSO_LDOPTS += \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
+
+ifdef NGLAYOUT_DDRAW
+DEFINES	+= DNGLAYOUT_DDRAW
+ifeq ($(MOZ_VCVER),50)
+LOCAL_INCLUDES += -I$(NGLAYOUT_DDRAW)/include
+else
+LOCAL_INCLUDES += -I$(NGLAYOUT_DDRAW)/inc
+endif
+EXTRA_DSO_LDOPTS += $(NGLAYOUT_DDRAW/lib/ddraw.lib
+OS_LIBS	+= ole32.lib
+endif
+
+

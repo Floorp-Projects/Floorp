@@ -32,6 +32,13 @@ ifneq (,$(filter beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifdef ACCESSIBILITY
+DIRS		+= windows/expose
+endif
+DIRS		+= windows build
+endif
+
 #
 # Dont build the DSO under the 'build' directory as windows does.
 #

@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  intl \
 		  embedcomponents \
+		  timer \
 		  $(NULL)
 
 EXPORTS         = \
@@ -51,6 +52,10 @@ CPPSRCS         = \
                 nsSetupRegistry.cpp \
                 nsEmbedAPI.cpp \
                 $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS		+= nsEmbedWin32.cpp
+endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

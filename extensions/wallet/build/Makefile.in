@@ -53,5 +53,10 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS		+= shell32.lib
+endif
+
 include $(topsrcdir)/config/rules.mk
+
 

@@ -45,6 +45,11 @@ REQUIRES	= xpcom \
 		  msgdb \
 		  $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+MAPFILE		= vcard.map
+DEFFILE		= $(srcdir)/vcard.def
+endif
+
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl
 else
@@ -52,6 +57,8 @@ EXTRA_DSO_LIBS = msgbaseutil
 endif
 
 EXTRA_DSO_LIBS += mimecthglue_s
+
+DEFINES		+= -D_IMPL_NS_HTML
 
 CPPSRCS		= \
 		mimevcrd.cpp \
@@ -61,8 +68,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

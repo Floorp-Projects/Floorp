@@ -75,9 +75,9 @@ XPIDLSRCS	= \
 		nsIMsgPrintEngine.idl \
 		nsISubscribableServer.idl \
 		nsIMsgDBView.idl \
-    nsIMsgOfflineManager.idl \
-    nsIMsgProgress.idl \
-	nsIMessengerOSIntegration.idl \
+		nsIMsgOfflineManager.idl \
+		nsIMsgProgress.idl \
+		nsIMessengerOSIntegration.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

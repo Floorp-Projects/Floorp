@@ -43,11 +43,15 @@ CPPSRCS		= $(MODULES_LIBJAR_LCPPSRCS)
 
 FORCE_STATIC_LIB = 1
 
-#ifndef MOZ_NATIVE_ZLIB
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozz_s.$(LIB_SUFFIX)
-#endif
+ifneq ($(OS_ARCH),WINNT)
+SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)mozz_s.$(LIB_SUFFIX)
+endif
 
 GARBAGE		+= $(MODULES_LIBJAR_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+
+ifeq ($(OS_ARCH),WINNT)
+USE_NON_MT_LIBS=1
+endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -44,6 +44,4 @@ EXPORTS		= \
 		xpc_map_end.h \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
