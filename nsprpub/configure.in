@@ -876,8 +876,9 @@ case "$target" in
     else
         DLL_SUFFIX=so.1.0
     fi
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     DSO_CFLAGS=-fPIC
-    DSO_LDOPTS=-Bshareable
+    DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
     MDCPUCFG_H=_freebsd.cfg
     PR_MD_CSRCS=freebsd.c
     ;;
@@ -1997,8 +1998,15 @@ if test -n "$USE_PTHREADS"; then
    if test $? -eq 0; then
 	if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`" && test -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
 	    ac_cv_have_dash_pthread=yes
-	    CFLAGS="$CFLAGS -pthread"
-	    CXXFLAGS="$CXXFLAGS -pthread"
+		case "$target_os" in
+	    freebsd*)
+# Freebsd doesn't use -pthread for compiles, it uses them for linking
+            ;;
+	    *)
+            CFLAGS="$CFLAGS -pthread"
+            CXXFLAGS="$CXXFLAGS -pthread"
+            ;;
+        esac
 	fi
     fi
     rm -f conftest*
@@ -2029,7 +2037,17 @@ if test -n "$USE_PTHREADS"; then
             _PTHREAD_LDFLAGS=
         fi
 	    ;;
-    *-freebsd*|*-openbsd*|*-bsdi*|*-netbsd*)
+    *-freebsd*)
+	    AC_DEFINE(_REENTRANT)
+	    AC_DEFINE(_THREAD_SAFE)
+	    dnl -pthread links in -lc_r, so don't specify it explicitly.
+	    if test "$ac_cv_have_dash_pthread" = "yes"; then
+	        _PTHREAD_LDFLAGS="-pthread"
+	    else
+	        _PTHREAD_LDFLAGS="-lc_r"
+	    fi
+	    ;;
+    *-openbsd*|*-bsdi*|*-netbsd*)
 	    AC_DEFINE(_THREAD_SAFE)
 	    dnl -pthread links in -lc_r, so don't specify it explicitly.
 	    if test "$ac_cv_have_dash_pthread" = "yes"; then
