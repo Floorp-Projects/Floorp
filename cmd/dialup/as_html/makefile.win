@@ -23,6 +23,7 @@ SIGNDIR=signed
 !include <$(DEPTH)\config\rules.mak>
 
 export:: $(JAVA_DESTPATH)\$(PACKAGE)
+	-erase compare.js
 	-mkdir $(SIGNDIR)\$(PACKAGE)
 	echo copying html
 	copy *.htm $(SIGNDIR) 
