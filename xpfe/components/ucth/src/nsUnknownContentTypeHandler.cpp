@@ -35,6 +35,11 @@
 #include "nsXPIDLString.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIExternalHelperAppService.h"
+#include "nsIStringBundle.h"
+#include "nsIFilePicker.h"
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+#define HELPERAPP_DIALOG_URL       "chrome://global/locale/helperAppLauncher.properties"
 
 // {42770B50-03E9-11d3-8068-00600811A9C3}
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
@@ -218,6 +223,42 @@ nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports 
     }
     return rv;
 }
+
+// prompt the user for a file name to save the unknown content to as instructed
+NS_IMETHODIMP
+nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, const PRUnichar * aDefaultFile, const PRUnichar * aSuggestedFileExtension, nsILocalFile ** aNewFile)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker", &rv);
+  if (filePicker)
+  {
+    nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+    nsCOMPtr<nsIStringBundle> stringBundle;
+    NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
+
+    NS_ENSURE_SUCCESS(stringService->CreateBundle(HELPERAPP_DIALOG_URL, nsnull, getter_AddRefs(stringBundle)), 
+                    NS_ERROR_FAILURE);
+
+    nsXPIDLString windowTitle;
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("saveDialogTitle"), getter_Copies(windowTitle));
+
+    nsCOMPtr<nsIDOMWindowInternal> parent( do_GetInterface( aWindowContext ) );
+    filePicker->Init(parent, windowTitle, nsIFilePicker::modeSave);
+    filePicker->SetDefaultString(aDefaultFile);
+    filePicker->AppendFilter(aSuggestedFileExtension, aSuggestedFileExtension);
+    filePicker->AppendFilters(nsIFilePicker::filterAll);
+
+    PRInt16 dialogResult;
+    filePicker->Show(&dialogResult);
+    if (dialogResult == nsIFilePicker::returnCancel)
+      rv = NS_ERROR_FAILURE;
+    else          
+      rv = filePicker->GetFile(aNewFile);
+  }
+
+  return rv;
+}
+
 
 NS_IMETHODIMP      
 nsUnknownContentTypeHandler::CreateComponent( nsISupports  *aOuter,
