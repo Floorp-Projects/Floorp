@@ -32,6 +32,7 @@ client.UPDATE_DELAY = 500;
 client.EXPAND_HEIGHT = "200px";
 client.COLLAPSE_HEIGHT = "25px";
 client.MAX_MESSAGES = 200;
+client.MAX_HISTORY = 2; //50;
 client.TYPE = "IRCClient";
 client.OP1_IMG = "g_green_on.gif"; /* user is op image */
 client.OP0_IMG = "g_green.gif"; /* user isnt op image */
@@ -46,6 +47,9 @@ client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
 client.name = "*client*";
 client.viewsArray = new Array();
 client.lastListType = "chan-users";
+client.inputHistory = new Array();
+client.lastHistoryReferenced = -1;
+client.incompleteLine = "";
 
 CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";

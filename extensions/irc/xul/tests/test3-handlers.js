@@ -95,10 +95,26 @@ function onInputKeyUp (e)
             break;
 
         case 38: /* up */
+            if (client.lastHistoryReferenced < client.inputHistory.length - 1)
+                e.target.value =
+                    client.inputHistory[++client.lastHistoryReferenced];
             break;
 
         case 40: /* down */
+            if (client.lastHistoryReferenced > 0)
+                e.target.value =
+                    client.inputHistory[--client.lastHistoryReferenced];
+            else
+            {
+                client.lastHistoryReferenced = -1;
+                e.target.value = client.incompleteLine;
+            }
+            
             break;
+
+        default:
+            client.incompleteLine = e.target.value;
+
             
     }
 
@@ -138,6 +154,15 @@ function onInputCompleteLine(e)
     if (e.target.getAttribute ("expanded") != "YES")
     {
         e.line = e.line.replace (/\n/g, "");
+
+        if (client.inputHistory[0] != e.line)
+            client.inputHistory.unshift (e.line);
+
+        if (client.inputHistory.length > client.MAX_HISTORY)
+            client.inputHistory.pop();
+        
+        client.lastHistoryReferenced = -1;
+        client.incompleteLine = "";
         
         if (e.line[0] == client.COMMAND_CHAR)
         {

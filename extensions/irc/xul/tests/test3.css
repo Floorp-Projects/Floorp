@@ -26,6 +26,8 @@
  *
  */
 
+@import url(chrome://global/skin/);
+
 window {
 
     font-size: 12px;
@@ -130,11 +132,14 @@ toolbar {
 }
 
 /* input textbox */
+/*
 .input-window {
 
+    overflow: clip;
     width: 100%;
 
 }
+*/
 
 .output-container {
 

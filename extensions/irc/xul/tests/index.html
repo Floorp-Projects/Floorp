@@ -35,7 +35,10 @@
       </script>
       Welcome to the Mozilla IRC client tests page.  If you are generally 
       impatient, you can jump right to 
-      <a href="#samples">the sample clients</a>, if not, read on.
+      <a href="#samples">the sample clients</a>, if not, read on.  For even more
+      information, see the 
+      <a href="http://www.mozilla.org/projects/rt-messaging/chatzilla/">
+        Chatzilla homepage</a>.
 
       <center>
 	<table border="1" bgcolor="lightgrey">
@@ -92,18 +95,20 @@
       Currently, the security code which prevents unsigned scripts from 
       doing Bad Things is incomplete.  If the status boxes above are blank,
       this is most likely the cause.  In order to work around this limitation,
-      you must edit your <b>all.js</b> file, changing line:
+      you must edit your <b>all.js</b> file, changing lines:
       <pre>
+pref("security.checkdomprops", true);
 pref("security.checkxpconnect", true);
       </pre>
       To read:
       <pre>
+pref("security.checkdomprops", false);
 pref("security.checkxpconnect", false);
       </pre>
       This will disable the security code so that the IRC client can create
       the XPCOM component it needs.
     <p>
-      <a name="samples">
+      <a name="samples"></a>
       <hr>
       <h2>Sample clients...</h2>
       <br>
@@ -149,7 +154,7 @@ pref("security.checkxpconnect", false);
     <address><a href="mailto:rginda@ndcico.com"></a></address>
 <!-- Created: Wed Sep 15 23:34:25 XXX 1999 -->
 <!-- hhmts start -->
-Last modified: Thu Oct 28 20:07:26 PDT 1999
+Last modified: Tue Dec  7 03:32:00 XXX 1999
 <!-- hhmts end -->
   </body>
 </html>
