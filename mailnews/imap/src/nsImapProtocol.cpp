@@ -355,7 +355,6 @@ nsImapProtocol::nsImapProtocol() : nsMsgProtocol(nsnull),
   m_retryUrlOnError = PR_FALSE;
   m_useIdle = PR_TRUE; // by default, use it
   m_ignoreExpunges = PR_FALSE;
-  m_gotFEEventCompletion = PR_FALSE;
   m_useSecAuth = PR_FALSE;
   m_connectionStatus = 0;
   m_hostSessionList = nsnull;
@@ -384,7 +383,6 @@ nsImapProtocol::nsImapProtocol() : nsMsgProtocol(nsnull),
   m_pseudoInterruptMonitor = nsnull;
   m_dataMemberMonitor = nsnull;
   m_threadDeathMonitor = nsnull;
-  m_eventCompletionMonitor = nsnull;
   m_waitForBodyIdsMonitor = nsnull;
   m_fetchMsgListMonitor = nsnull;
   m_fetchBodyListMonitor = nsnull;
@@ -503,7 +501,6 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
     m_pseudoInterruptMonitor = PR_NewMonitor();
     m_dataMemberMonitor = PR_NewMonitor();
     m_threadDeathMonitor = PR_NewMonitor();
-    m_eventCompletionMonitor = PR_NewMonitor();
     m_waitForBodyIdsMonitor = PR_NewMonitor();
     m_fetchMsgListMonitor = PR_NewMonitor();
     m_fetchBodyListMonitor = PR_NewMonitor();
@@ -559,11 +556,6 @@ nsImapProtocol::~nsImapProtocol()
   {
     PR_DestroyMonitor(m_threadDeathMonitor);
     m_threadDeathMonitor = nsnull;
-  }
-  if (m_eventCompletionMonitor)
-  {
-      PR_DestroyMonitor(m_eventCompletionMonitor);
-      m_eventCompletionMonitor = nsnull;
   }
   if (m_waitForBodyIdsMonitor)
   {
@@ -987,24 +979,16 @@ NS_IMETHODIMP nsImapProtocol::OnInputStreamReady(nsIAsyncInputStream *inStr)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsImapProtocol::NotifyFEEventCompletion()
+void nsImapProtocol::SetResponseTimer(PRUint32 seconds)
 {
-    PR_EnterMonitor(m_eventCompletionMonitor);
-    PR_Notify(m_eventCompletionMonitor);
-    m_gotFEEventCompletion = PR_TRUE;
-    PR_ExitMonitor(m_eventCompletionMonitor);
-    return NS_OK;
 }
 
-void
-nsImapProtocol::WaitForFEEventCompletion()
+void nsImapProtocol::CancelResponseTimer()
 {
-  PR_EnterMonitor(m_eventCompletionMonitor);
-  if (!m_gotFEEventCompletion)
-    PR_Wait(m_eventCompletionMonitor, PR_INTERVAL_NO_TIMEOUT);
-  m_gotFEEventCompletion = PR_FALSE;
-  PR_ExitMonitor(m_eventCompletionMonitor);
+}
+
+/* static */ void nsImapProtocol::OnResponseTimeout(nsITimer *timer, void *aImapProtocol)
+{
 }
 
 NS_IMETHODIMP
@@ -1053,11 +1037,6 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
   PR_EnterMonitor(m_threadDeathMonitor);
   m_threadShouldDie = PR_TRUE;
   PR_ExitMonitor(m_threadDeathMonitor);
-
-  PR_EnterMonitor(m_eventCompletionMonitor);
-  PR_NotifyAll(m_eventCompletionMonitor);
-  PR_ExitMonitor(m_eventCompletionMonitor);
-
 
   PR_EnterMonitor(m_dataAvailableMonitor);
   PR_Notify(m_dataAvailableMonitor);
@@ -5208,10 +5187,8 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         {
           nsMsgKey newKey = GetServerStateParser().CurrentResponseUID();
           if (m_imapMailFolderSink)
-          {
             m_imapMailFolderSink->SetAppendMsgUid(newKey, m_runningUrl);
-            WaitForFEEventCompletion();
-          }
+
           nsXPIDLCString oldMsgId;
           rv = m_runningUrl->CreateListOfMessageIdsString(getter_Copies(oldMsgId));
           if (NS_SUCCEEDED(rv) && !oldMsgId.IsEmpty())

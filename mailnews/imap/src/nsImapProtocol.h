@@ -86,6 +86,7 @@
 #include "nsIImapHeaderXferInfo.h"
 #include "nsMsgLineBuffer.h"
 #include "nsIAsyncInputStream.h"
+#include "nsITimer.h"
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
 
@@ -173,8 +174,6 @@ public:
   NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool * aCanRunUrl,
                           PRBool * hasToWait);
   NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, nsIImapIncomingServer *aServer, nsIEventQueue * aSinkEventQueue);
-  // Notify FE Event has been completed
-  NS_IMETHOD NotifyFEEventCompletion();
   
   NS_IMETHOD GetRunningImapURL(nsIImapUrl **aImapUrl);
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -351,7 +350,6 @@ public:
   void RefreshFolderACLView(const char *mailboxName, nsIMAPNamespace *nsForMailbox);
   
   nsresult SetFolderAdminUrl(const char *mailboxName);
-  void WaitForFEEventCompletion();
   void HandleMemoryFailure();
   void HandleCurrentUrlError();
   
@@ -365,7 +363,6 @@ private:
   // the following flag is used to determine when a url is currently being run. It is cleared when we 
   // finish processng a url and it is set whenever we call Load on a url
   PRBool                        m_urlInProgress;	
-  PRBool                        m_gotFEEventCompletion;
   nsCOMPtr<nsIImapUrl>		m_runningUrl; // the nsIImapURL that is currently running
   nsImapAction	m_imapAction;  // current imap action associated with this connnection...
   
@@ -397,7 +394,6 @@ private:
   PRMonitor    *m_pseudoInterruptMonitor;
   PRMonitor    *m_dataMemberMonitor;
   PRMonitor    *m_threadDeathMonitor;
-  PRMonitor    *m_eventCompletionMonitor;
   PRMonitor    *m_waitForBodyIdsMonitor;
   PRMonitor    *m_fetchMsgListMonitor;
   PRMonitor   *m_fetchBodyListMonitor;
@@ -597,6 +593,13 @@ private:
   
   nsIImapHostSessionList * m_hostSessionList;
 
+  // Response timer to drop hung connections
+  nsCOMPtr<nsITimer> m_responseTimer;
+  void SetResponseTimer(PRUint32 seconds);
+  void CancelResponseTimer();
+  static void OnResponseTimeout(nsITimer *timer, void *aImapProtocol);
+
+  
   PRBool m_fromHeaderSeen;
   
   // these settings allow clients to override various pieces of the connection info from the url

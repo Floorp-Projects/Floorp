@@ -49,7 +49,7 @@ interface nsIMsgFolder;
 interface nsIImapHostSessionList;
 interface nsIMsgWindow;
 
-[scriptable, uuid(132231ca-c796-11d3-b9f5-00108335942a)]
+[scriptable, uuid(0f660d51-e3f1-4f80-86b5-66fa31732f2b)]
 interface nsIImapProtocol : nsISupports {
 	/////////////////////////////////////////////////////////////////////////
 	/* LoadUrl should really be pushed into a generic protocol interface
@@ -80,8 +80,6 @@ interface nsIImapProtocol : nsISupports {
 	/////////////////////////////////////////////////////////////////////////
 	void Initialize(in nsIImapHostSessionList aHostSessionList, in nsIImapIncomingServer aServer, 
                   in nsIEventQueue aSinkEventQueue) ;
-
-  void NotifyFEEventCompletion();
 
 	void NotifyHdrsToDownload(out unsigned long keys, in unsigned long keyCount);
 	void NotifyBodysToDownload(out unsigned long keys, in unsigned long count);
