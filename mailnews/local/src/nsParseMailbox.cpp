@@ -252,7 +252,7 @@ PRInt32 nsParseMailboxProtocol::EmbeddedLineHandler(char *line, PRUint32 lineLen
 			s++;
 		if ((end - s) < 20 || !IsEnvelopeLine(s, end - s))
 		{
-			char buf[500];
+//			char buf[500];
 //			PR_snprintf (buf, sizeof(buf),
 //						 XP_GetString(MK_MSG_NON_MAIL_FILE_READ_QUESTION),
 //						 folder_name);
@@ -298,12 +298,15 @@ nsParseMailMessageState::nsParseMailMessageState()
 	m_IgnoreXMozillaStatus = FALSE;
 	m_state = MBOX_PARSE_BODY;
 	Clear();
+	NS_NewRFC822Parser(&m_rfc822AddressParser);
 }
 
 nsParseMailMessageState::~nsParseMailMessageState()
 {
 	ClearAggregateHeader (m_toList);
 	ClearAggregateHeader (m_ccList);
+	
+	NS_RELEASE(m_rfc822AddressParser);
 }
 
 void nsParseMailMessageState::Init(PRUint32 fileposition)
@@ -361,10 +364,7 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 		  /* Otherwise, this line belongs to a header.  So append it to the
 			 header data, and stay in MBOX `MIME_PARSE_HEADERS' state.
 		   */
-			status = GrowHeaders (lineLength + m_headers_fp + 1);
-			if (status < 0) return status;
-			XP_MEMCPY (m_headers + m_headers_fp, line, lineLength);
-			m_headers_fp += lineLength;
+			m_headers.AppendBuffer(line, lineLength);
 		}
 	}
 	else if ( m_state == MBOX_PARSE_BODY)
@@ -518,7 +518,7 @@ void nsParseMailMessageState::GetAggregateHeader (nsVoidArray &list, struct mess
 	{
 		header = (struct message_header*) list.ElementAt(i);
 		length += (header->length + 1); //+ for ","
-		XP_ASSERT(header->length == XP_STRLEN(header->value));
+		NS_ASSERTION(header->length == XP_STRLEN(header->value), "header corrupted");
 	}
 
 	if (length > 0)
@@ -571,8 +571,8 @@ int nsParseMailMessageState::StartNewEnvelope(const char *line, PRUint32 lineLen
  */
 int nsParseMailMessageState::ParseHeaders ()
 {
-  char *buf = m_headers;
-  char *buf_end = buf + m_headers_fp;
+  char *buf = m_headers.GetBuffer();
+  char *buf_end = buf + m_headers.GetSize();
   while (buf < buf_end)
 	{
 	  char *colon = XP_STRCHR (buf, ':');
@@ -719,13 +719,9 @@ int nsParseMailMessageState::ParseEnvelope (const char *line, PRUint32 line_size
 	char *s;
 	int status = 0;
 
-	status = GrowEnvelope (line_size + 1);
-	if (status < 0) return status;
-	XP_MEMCPY (m_envelope, line, line_size);
-	m_envelope_fp = line_size;
-	m_envelope [line_size] = 0;
-	end = m_envelope + line_size;
-	s = m_envelope + 5;
+	m_envelope.AppendBuffer(line, line_size);
+	end = m_envelope.GetBuffer() + line_size;
+	s = m_envelope.GetBuffer() + 5;
 
 	while (s < end && XP_IS_SPACE (*s))
 		s++;
@@ -737,7 +733,7 @@ int nsParseMailMessageState::ParseEnvelope (const char *line, PRUint32 line_size
 	while (s < end && XP_IS_SPACE (*s))
 		s++;
 	m_envelope_date.value = s;
-	m_envelope_date.length = (PRUint16) (line_size - (s - m_envelope));
+	m_envelope_date.length = (PRUint16) (line_size - (s - m_envelope.GetBuffer()));
 	while (XP_IS_SPACE (m_envelope_date.value [m_envelope_date.length - 1]))
 		m_envelope_date.length--;
 
@@ -747,6 +743,8 @@ int nsParseMailMessageState::ParseEnvelope (const char *line, PRUint32 line_size
 
 	return 0;
 }
+
+#ifdef WE_CONDENSE_MIME_STRINGS
 
 extern "C" 
 {
@@ -805,6 +803,7 @@ msg_condense_mime2_string(char *sourceStr)
 	
 	return returnVal;
 }
+#endif // WE_CONDENSE_MIME_STRINGS
 
 int nsParseMailMessageState::InternSubject (struct message_header *header)
 {
@@ -833,8 +832,11 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 //  if (!*key) return 0; /* To catch a subject of "Re:" */
 
 	// Condense the subject text into as few MIME-2 encoded words as possible.
+#ifdef WE_CONDENSE_MIME_STRINGS
 	char *condensedKey = msg_condense_mime2_string(key);
-
+#else
+	char *condensedKey = NULL;
+#endif
 	m_newMsgHdr->SetSubject(condensedKey ? condensedKey : key);
 	PR_FREEIF(condensedKey);
 
@@ -848,19 +850,23 @@ nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header,
 									 char **ret_name)
 {
 	char	*s;
+	nsresult ret;
 
 	if (!header || header->length == 0)
 		return NS_OK;
 
 	NS_ASSERTION (header->length == (short) XP_STRLEN (header->value), "invalid message_header");
 	NS_ASSERTION (ret_name != NULL, "null ret_name");
-	/* #### The mallocs here might be a performance bottleneck... */
-	s = MSG_ExtractRFC822AddressName (header->value);
-	if (! s)
-		return NS_ERROR_OUT_OF_MEMORY;
 
-	*ret_name = s;
-	return NS_OK;
+	if (m_rfc822AddressParser)
+	{
+		ret = m_rfc822AddressParser->ExtractRFC822AddressName (header->value, &s);
+		if (! s)
+			return NS_ERROR_OUT_OF_MEMORY;
+
+		*ret_name = s;
+	}
+	return ret;
 }
 
 // we've reached the end of the envelope, and need to turn all our accumulated message_headers
@@ -883,9 +889,6 @@ int nsParseMailMessageState::FinalizeHeaders()
 	struct message_header md5_header;
 	unsigned char md5_bin [16];
 	char md5_data [50];
-
-	struct	message_header dummyMessageIdHeader;
-	char	dummyMessageId [50];
 
 	const char *s;
 	PRUint32 flags = 0;
@@ -941,7 +944,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 			 edited the subject line by hand?) */
 		}
 		delta = (m_headerstartpos +
-			 (mozstatus->value - m_headers) -
+			 (mozstatus->value - m_headers.GetBuffer()) -
 			 (2 + X_MOZILLA_STATUS_LEN)		/* 2 extra bytes for ": ". */
 			 ) - m_envelope_pos;
 	}
@@ -1067,19 +1070,19 @@ int nsParseMailMessageState::FinalizeHeaders()
 					m_newMsgHdr->SetReferences(references->value);
 				if (date)
 				{
-					time_t	date = 0;
+					time_t	resDate = 0;
 					PRTime resultTime, intermediateResult, microSecondsPerSecond;
 					PRStatus status = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
 
 					LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
 					LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
-					LL_L2I(date, intermediateResult);
-					if (date < 0) 
-						date = 0;
+					LL_L2I(resDate, intermediateResult);
+					if (resDate < 0) 
+						resDate = 0;
 
 					// no reason to store milliseconds, since they aren't specified
 					if (PR_SUCCESS == status)
-						m_newMsgHdr->SetDate(date);
+						m_newMsgHdr->SetDate(resDate);
 				}
 				if (priority)
 					m_newMsgHdr->SetPriority(priority->value);

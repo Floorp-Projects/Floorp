@@ -24,6 +24,7 @@
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
 #include "nsMsgLineBuffer.h"
+#include "nsMsgRFC822Parser.h"
 
 class nsByteArray;
 class nsMailDatabase;
@@ -65,7 +66,7 @@ typedef enum
 
 
 // This object maintains the parse state for a single mail message.
-class nsParseMailMessageState 
+class nsParseMailMessageState
 {
 public:
 					nsParseMailMessageState();
@@ -85,6 +86,9 @@ public:
 
 	static PRBool	IsEnvelopeLine(const char *buf, PRInt32 buf_size);
 	static PRBool	msg_StripRE(const char **stringP, PRUint32 *lengthP);
+	static int		msg_UnHex(char C); 
+
+	nsIMsgRFC822Parser* m_rfc822AddressParser;
 
 	nsMailDatabase	*GetMailDB() {return m_mailDB;}
 	nsMsgHdr		*m_newMsgHdr;		/* current message header we're building */
@@ -135,6 +139,14 @@ public:
 	
 	PRBool			m_IgnoreXMozillaStatus;
 };
+
+// this should go in some utility class.
+inline int	nsParseMailMessageState::msg_UnHex(char C)
+{
+	return ((C >= '0' && C <= '9') ? C - '0' :
+		((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
+		 ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)));
+}
 
 // This class is part of the mailbox parsing state machine 
 class nsParseMailboxProtocol : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler 
