@@ -29,6 +29,7 @@ DIRS=   typelib        \
         proxy          \
         tools          \
         build          \
+        sample         \
         tests
 
 include <$(DEPTH)\config\rules.mak>
