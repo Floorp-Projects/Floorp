@@ -155,15 +155,15 @@ nsHTTPChannel::~nsHTTPChannel()
 }
 
 #ifdef MOZ_NEW_CACHE
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
-                              nsIHTTPChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsHTTPChannel,
                               nsIChannel,
-                              nsIInterfaceRequestor,
-                              nsIProgressEventSink,
-                              nsIProxy,
                               nsIRequest,
+                              nsIHTTPChannel,
+                              nsIProgressEventSink,
+                              nsIInterfaceRequestor,
+                              nsIProxy,
+                              nsICachingChannel,
                               nsICacheListener);
-                              //nsICachingChannel);
 #else
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
                               nsIHTTPChannel,
@@ -3276,6 +3276,51 @@ nsHTTPChannel::SetApplyConversion(PRBool aApplyConversion)
 
 
 #ifdef MOZ_NEW_CACHE
+
+NS_IMETHODIMP
+nsHTTPChannel::GetCacheToken(nsISupports **token)
+{
+    NS_ENSURE_ARG_POINTER(token);
+    if (!mCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+    return CallQueryInterface(mCacheEntry, token);
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetCacheToken(nsISupports *token)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetCacheAsFile(PRBool *value)
+{
+    NS_ENSURE_ARG_POINTER(value);
+    if (!mCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+    nsCacheStoragePolicy storagePolicy;
+    mCacheEntry->GetStoragePolicy(&storagePolicy);
+    *value = (storagePolicy == nsICache::STORE_ON_DISK_AS_FILE);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetCacheAsFile(PRBool value)
+{
+    if (!mCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+    return mCacheEntry->SetStoragePolicy(value ? 
+                                         nsICache::STORE_ON_DISK_AS_FILE :
+                                         nsICache::STORE_ANYWHERE);
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetCacheFile(nsIFile **cacheFile)
+{
+    if (!mCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+    return mCacheEntry->GetFile(cacheFile);
+}
 
 NS_IMETHODIMP
 nsHTTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,

@@ -49,7 +49,7 @@
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
-//#include "nsICachingChannel.h"
+#include "nsICachingChannel.h"
 #else
 #include "nsIStreamAsFile.h"
 #include "nsICachedNetData.h"
@@ -82,7 +82,7 @@ class nsHTTPChannel : public nsIHTTPChannel,
                       public nsIProgressEventSink,
                       public nsIProxy,
 #ifdef MOZ_NEW_CACHE
-                    //public nsICachingChannel,
+                      public nsICachingChannel,
                       public nsICacheListener
 #else
                       public nsIStreamAsFile
@@ -104,7 +104,7 @@ public:
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSIPROXY
 #ifdef MOZ_NEW_CACHE
- // NS_DECL_NSICACHINGCHANNEL
+    NS_DECL_NSICACHINGCHANNEL
     NS_DECL_NSICACHELISTENER
 #else
 	NS_DECL_NSISTREAMASFILE
