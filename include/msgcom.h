@@ -1274,7 +1274,7 @@ typedef enum {
 	MSG_IMAPUpgradeDont			/* Cancel or error - don't upgrade now */
 } MSG_IMAPUpgradeType;
 
-#if defined(XP_WIN) || defined (XP_MAC) || defined(XP_UNIX)
+#if defined(XP_WIN) || defined (XP_MAC) || defined(XP_UNIX) || defined(XP_BEOS)
 #define FE_IMPLEMENTS_IMAP_SUBSCRIBE_UPGRADE
 #endif
 
@@ -2182,7 +2182,7 @@ extern MSG_FolderInfo* MSG_GetFolderInfo(MSG_Pane* folderpane,
 										 MSG_ViewIndex index);
 
 
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_UNIX)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_UNIX) || defined(XP_BEOS)
 #define FE_IMPLEMENTS_NEW_GET_FOLDER_INFO
 #endif
 
