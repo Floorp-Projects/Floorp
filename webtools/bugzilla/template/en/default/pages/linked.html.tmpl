@@ -26,18 +26,29 @@
   Copy and paste the text below:
 </p>
 
-<p>
-  <tt>
-    [% quoteUrls(form.text) FILTER html %]
-  </tt>
-</p>
+<hr>
 
 <p>
-  It will end up looking like this:
+<pre>
+[%- quoteUrls(form.text) FILTER html -%]
+</pre>
 </p>
 
+<hr>
+
 <p>
-  [% quoteUrls(form.text) %]
+  If you place it in <tt>&lt;pre&gt;</tt> tags, 
+  the text will end up looking like this:
 </p>
+
+<hr>
+
+<p>
+<pre>
+[%- quoteUrls(form.text) -%]
+</pre>
+</p>
+
+<hr>
 
 [% INCLUDE global/footer.html.tmpl %]
