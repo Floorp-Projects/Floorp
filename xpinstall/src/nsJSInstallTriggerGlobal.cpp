@@ -183,7 +183,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     if ( ida ) 
     {
       jsval v;
-      PRUnichar *name, *URL;
+      const PRUnichar *name, *URL;
 
       for (int i = 0; i < ida->length; i++ )
       {
