@@ -3180,13 +3180,14 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   // Update max-element-size
+  // Update max-element-size
   if (aState.mComputeMaxElementSize) {
-    nsSize& lineMaxElementSize = aState.mMaxElementSize;
-    if (lineMaxElementSize.width > aState.mMaxElementSize.width) {
-      aState.mMaxElementSize.width = lineMaxElementSize.width;
+    const nsSize& kidMaxElementSize = ir.GetMaxElementSize();
+    if (kidMaxElementSize.width > aState.mMaxElementSize.width) {
+      aState.mMaxElementSize.width = kidMaxElementSize.width;
     }
-    if (lineMaxElementSize.height > aState.mMaxElementSize.height) {
-      aState.mMaxElementSize.height = lineMaxElementSize.height;
+    if (kidMaxElementSize.height > aState.mMaxElementSize.height) {
+      aState.mMaxElementSize.height = kidMaxElementSize.height;
     }
   }
 
