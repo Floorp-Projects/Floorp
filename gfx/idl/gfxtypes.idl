@@ -74,4 +74,4 @@ typedef long                gfx_format;
 typedef PRInt32             nscoord;
 
 [ptr] native nsRect(nsRect);
-
+[ptr] native nsIntRect(nsIntRect);

@@ -224,4 +224,76 @@ FILE* operator<<(FILE* out, const nsRect& rect)
   return out;
 }
 
+#ifdef NS_COORD_IS_FLOAT
+// Computes the area in which aRect1 and aRect2 overlap and fills 'this' with
+// the result. Returns FALSE if the rectangles don't intersect.
+PRBool nsIntRect::IntersectRect(const nsIntRect &aRect1, const nsIntRect &aRect2)
+{
+  PRInt32  xmost1 = aRect1.XMost();
+  PRInt32  ymost1 = aRect1.YMost();
+  PRInt32  xmost2 = aRect2.XMost();
+  PRInt32  ymost2 = aRect2.YMost();
+  PRInt32  temp;
+
+  x = MAX(aRect1.x, aRect2.x);
+  y = MAX(aRect1.y, aRect2.y);
+
+  // Compute the destination width
+  temp = MIN(xmost1, xmost2);
+  if (temp <= x) {
+    Empty();
+    return PR_FALSE;
+  }
+  width = temp - x;
+
+  // Compute the destination height
+  temp = MIN(ymost1, ymost2);
+  if (temp <= y) {
+    Empty();
+    return PR_FALSE;
+  }
+  height = temp - y;
+
+  return PR_TRUE;
+}
+
+// Computes the smallest rectangle that contains both aRect1 and aRect2 and
+// fills 'this' with the result. Returns FALSE if both aRect1 and aRect2 are
+// empty and TRUE otherwise
+PRBool nsIntRect::UnionRect(const nsIntRect &aRect1, const nsIntRect &aRect2)
+{
+  PRBool  result = PR_TRUE;
+
+  // Is aRect1 empty?
+  if (aRect1.IsEmpty()) {
+    if (aRect2.IsEmpty()) {
+      // Both rectangles are empty which is an error
+      Empty();
+      result = PR_FALSE;
+    } else {
+      // aRect1 is empty so set the result to aRect2
+      *this = aRect2;
+    }
+  } else if (aRect2.IsEmpty()) {
+    // aRect2 is empty so set the result to aRect1
+    *this = aRect1;
+  } else {
+    PRInt32 xmost1 = aRect1.XMost();
+    PRInt32 xmost2 = aRect2.XMost();
+    PRInt32 ymost1 = aRect1.YMost();
+    PRInt32 ymost2 = aRect2.YMost();
+
+    // Compute the origin
+    x = MIN(aRect1.x, aRect2.x);
+    y = MIN(aRect1.y, aRect2.y);
+
+    // Compute the size
+    width = MAX(xmost1, xmost2) - x;
+    height = MAX(ymost1, ymost2) - y;
+  }
+
+  return result;
+}
+#endif
+
 #endif // DEBUG

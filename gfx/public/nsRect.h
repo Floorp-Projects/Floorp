@@ -56,8 +56,10 @@ struct NS_GFX nsRect {
   nsRect(const nsRect& aRect) {*this = aRect;}
   nsRect(const nsPoint& aOrigin, const nsSize &aSize) {x = aOrigin.x; y = aOrigin.y;
                                                        width = aSize.width; height = aSize.height;}
-  nsRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {x = aX; y = aY;
-                                                                   width = aWidth; height = aHeight;}
+  nsRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {
+    x = aX; y = aY; width = aWidth; height = aHeight;
+    VERIFY_COORD(x); VERIFY_COORD(y); VERIFY_COORD(width); VERIFY_COORD(height);
+  }
 
   // Emptiness. An empty rect is one that has no area, i.e. its height or width
   // is <= 0
@@ -153,6 +155,50 @@ struct NS_GFX nsRect {
   nscoord XMost() const {return x + width;}
   nscoord YMost() const {return y + height;}
 };
+
+#ifdef NS_COORD_IS_FLOAT
+struct NS_GFX nsIntRect {
+  PRInt32 x, y;
+  PRInt32 width, height;
+
+  // Constructors
+  nsIntRect() : x(0), y(0), width(0), height(0) {}
+  nsIntRect(const nsIntRect& aRect) {*this = aRect;}
+  nsIntRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) {
+    x = aX; y = aY; width = aWidth; height = aHeight;
+  }
+
+  // Emptiness. An empty rect is one that has no area, i.e. its height or width
+  // is <= 0
+  PRBool IsEmpty() const {
+    return (PRBool) ((height <= 0) || (width <= 0));
+  }
+
+  void SetRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) {
+    x = aX; y = aY; width = aWidth; height = aHeight;
+  }
+
+  // Computes the area in which aRect1 and aRect2 overlap, and fills 'this' with
+  // the result. Returns FALSE if the rectangles don't intersect, and sets 'this'
+  // rect to be an empty rect.
+  //
+  // 'this' can be the same object as either aRect1 or aRect2
+  PRBool IntersectRect(const nsIntRect& aRect1, const nsIntRect& aRect2);
+
+  // Computes the smallest rectangle that contains both aRect1 and aRect2 and
+  // fills 'this' with the result. Returns FALSE and sets 'this' rect to be an
+  // empty rect if both aRect1 and aRect2 are empty
+  //
+  // 'this' can be the same object as either aRect1 or aRect2
+  PRBool UnionRect(const nsIntRect& aRect1, const nsIntRect& aRect2);
+
+  // Helper methods for computing the extents
+  PRInt32 XMost() const {return x + width;}
+  PRInt32 YMost() const {return y + height;}
+};
+#else
+typedef nsRect nsIntRect;
+#endif
 
 #ifdef DEBUG
 // Diagnostics

@@ -38,20 +38,119 @@
 #ifndef NSCOORD_H
 #define NSCOORD_H
 
-#include "nscore.h"
+#include <math.h>
+
+#include "nsDebug.h"
 
 /*
- * Basic type used for the geometry classes. By making it a typedef we can
- * easily change it in the future.
+ * Basic type used for the geometry classes.
  *
- * All coordinates are maintained as signed 32-bit integers in the twips
- * coordinate space. A twip is 1/20th of a point, and there are 72 points per
- * inch.
+ * Normally all coordinates are maintained in the twips coordinate
+ * space. A twip is 1/20th of a point, and there are 72 points per
+ * inch. However, nscoords do appear in pixel space and other
+ * coordinate spaces.
  *
  * Twips are used because they are a device-independent unit of measure. See
  * header file nsUnitConversion.h for many useful macros to convert between
  * different units of measure.
  */
+
+// This controls whether we're using integers or floats for coordinates. We
+// want to eventually use floats. If you change this, you need to manually
+// change the definition of nscoord in gfx/idl/gfxtypes.idl.
+//#define NS_COORD_IS_FLOAT
+
+inline void VERIFY_COORD(nscoord aCoord) {
+#ifdef NS_COORD_IS_FLOAT
+  NS_ASSERTION(floorf(aCoord) == aCoord,
+               "Coords cannot have fractions");
+#endif
+}
+
+inline float NS_IEEEPositiveInfinity() {
+  float f;
+  *(PRUint32*)&f = 0x7F800000;
+  return f;
+}
+inline PRBool NS_IEEEIsNan(float aF) {
+  PRUint32 bits = *(PRUint32*)&aF;
+  return (bits & 0x7F800000) == 0x7F800000 &&
+    (bits & 0x007FFFFF) != 0;
+}
+
+#ifdef NS_COORD_IS_FLOAT
+typedef float nscoord;
+#define nscoord_MAX NS_IEEEPositiveInfinity()
+#else
 typedef PRInt32 nscoord;
+#define nscoord_MAX nscoord(1 << 30)
+#endif
+
+#define nscoord_MIN (-nscoord_MAX)
+
+inline nscoord NSCoordMultiply(nscoord aCoord, float aVal) {
+  VERIFY_COORD(aCoord);
+#ifdef NS_COORD_IS_FLOAT
+  return floorf(aCoord*aVal);
+#else
+  return (PRInt32)(aCoord*aVal);
+#endif
+}
+
+inline nscoord NSCoordMultiply(nscoord aCoord, PRInt32 aVal) {
+  VERIFY_COORD(aCoord);
+  return aCoord*aVal;
+}
+
+inline nscoord NSCoordDivide(nscoord aCoord, float aVal) {
+  VERIFY_COORD(aCoord);
+#ifdef NS_COORD_IS_FLOAT
+  return floorf(aCoord/aVal);
+#else
+  return (PRInt32)(aCoord/aVal);
+#endif
+}
+
+inline nscoord NSCoordDivide(nscoord aCoord, PRInt32 aVal) {
+  VERIFY_COORD(aCoord);
+#ifdef NS_COORD_IS_FLOAT
+  return floorf(aCoord/aVal);
+#else
+  return aCoord/aVal;
+#endif
+}
+
+/**
+ * Convert an nscoord to a PRInt32. This *does not* do rounding because
+ * coords are never fractional. They can be out of range, so this does
+ * clamp out of bounds coord values to PR_INT32_MIN and PR_INT32_MAX.
+ */
+inline PRInt32 NSCoordToInt(nscoord aCoord) {
+  VERIFY_COORD(aCoord);
+#ifdef NS_COORD_IS_FLOAT
+  NS_ASSERTION(!NS_IEEEIsNan(aCoord), "NaN encountered in int conversion");
+  if (aCoord < -2147483648.0f) {
+    // -2147483648 is the smallest 32-bit signed integer that can be
+    // exactly represented as a float
+    return PR_INT32_MIN;
+  } else if (aCoord > 2147483520.0f) {
+    // 2147483520 is the largest 32-bit signed integer that can be
+    // exactly represented as an IEEE float
+    return PR_INT32_MAX;
+  } else {
+    return (PRInt32)aCoord;
+  }
+#else
+  return aCoord;
+#endif
+}
+
+inline float NSCoordToFloat(nscoord aCoord) {
+  VERIFY_COORD(aCoord);
+#ifdef NS_COORD_IS_FLOAT
+  NS_ASSERTION(!NS_IEEEIsNan(aCoord), "NaN encountered in float conversion");
+#endif
+  return aCoord;
+}
 
 #endif /* NSCOORD_H */

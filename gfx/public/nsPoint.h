@@ -45,8 +45,8 @@ struct nsPoint {
 
   // Constructors
   nsPoint() {}
-  nsPoint(const nsPoint& aPoint) {x = aPoint.x; y = aPoint.y;}
-  nsPoint(nscoord aX, nscoord aY) {x = aX; y = aY;}
+  nsPoint(const nsPoint& aPoint) { x = aPoint.x; y = aPoint.y;}
+  nsPoint(nscoord aX, nscoord aY) { VERIFY_COORD(aX); VERIFY_COORD(aY); x = aX; y = aY;}
 
   void MoveTo(nscoord aX, nscoord aY) {x = aX; y = aY;}
   void MoveBy(nscoord aDx, nscoord aDy) {x += aDx; y += aDy;}
@@ -77,10 +77,22 @@ struct nsPoint {
   }
 };
 
-/** ---------------------------------------------------
- *  A point structure with floats for the Quadratic bezier curve
- *	@update 4/27/2000 dwc
- */
+#ifdef NS_COORD_IS_FLOAT
+struct nsIntPoint {
+  PRInt32 x, y;
+
+  // Constructors
+  nsIntPoint() {}
+  nsIntPoint(const nsIntPoint& aPoint) { x = aPoint.x; y = aPoint.y;}
+  nsIntPoint(PRInt32 aX, PRInt32 aY) { x = aX; y = aY;}
+
+  void MoveTo(PRInt32 aX, PRInt32 aY) {x = aX; y = aY;}
+};
+
+typedef nsPoint nsFloatPoint;
+#else
+typedef nsPoint nsIntPoint;
+
 struct nsFloatPoint {
   float x, y;
 
@@ -118,5 +130,6 @@ struct nsFloatPoint {
     return *this;
   }
 };
+#endif // !NS_COORD_IS_FLOAT
 
 #endif /* NSPOINT_H */

@@ -41,7 +41,7 @@
 #include "nsCoord.h"
 
 // Maximum allowable size
-#define NS_MAXSIZE  nscoord(1 << 30)
+#define NS_MAXSIZE nscoord_MAX
 
 struct nsSize {
   nscoord width, height;
@@ -70,5 +70,19 @@ struct nsSize {
                                            height += aSize.height;
                                            return *this;}
 };
+
+#ifdef NS_COORD_IS_FLOAT
+struct nsIntSize {
+  PRInt32 width, height;
+
+  nsIntSize() {}
+  nsIntSize(const nsIntSize& aSize) {width = aSize.width; height = aSize.height;}
+  nsIntSize(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
+
+  void SizeTo(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
+};
+#else
+typedef nsSize nsIntSize;
+#endif
 
 #endif /* NSSIZE_H */
