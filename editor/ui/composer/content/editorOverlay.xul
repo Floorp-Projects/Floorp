@@ -181,9 +181,10 @@
     <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="EditorExit()"/>
     
     <!-- need to toggle the menu item text through style -->
-    <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()" disabled="true"/>
-    <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()" disabled="true"/>
-  
+ 	<broadcaster id="cmd_viewCompToolbar"   oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');" checked="true"/>
+ 	<broadcaster id="cmd_viewFormatToolbar" oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');" checked="true"/>
+	<broadcaster id="cmd_viewtaskbar"       oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+
     <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertOrEditLink()"/>
     <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertOrEditNamedAnchor()"/>
     <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"   oncommand="EditorInsertOrEditImage()"/>
@@ -257,9 +258,11 @@
   <!-- view menu items -->
     <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
       <menupopup> 
-        <menuitem id="compToolbarMenuitem" accesskey="&viewcompositiontb.accesskey;" observes="Editor:ToggleCompositionToolbar"/>
-        <menuitem id="formatToolbarMenuitem" accesskey="&viewformattingtb.accesskey;"  observes="Editor:ToggleFormattingToolbar"/>
-        <menuitem id="editorTaskBar" value="&showTaskbarCmd.label;" accesskey="&showTaskbarCmd.accesskey;" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+
+  		<menuitem value="&compositionToolbarCmd.label;" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
+  		<menuitem value="&formattingToolbarCmd.label;"  accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
+  		<menuitem value="&taskbarCmd.label;"            accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
+
       </menupopup>
     </menu>
     <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();"/>

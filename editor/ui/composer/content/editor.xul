@@ -129,7 +129,7 @@
 <toolbox id="EditorToolbox">
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar id="EditToolbar" class="standard" persist="collapsed">
+  <toolbar id="EditToolbar" chromeclass="toolbar" class="standard" persist="collapsed">
     <titledbutton id="newButton"/>
     <titledbutton id="openButton"/>
     <titledbutton id="saveButton"/>
@@ -151,7 +151,7 @@
 			</titledbutton>
 		</box>
   </toolbar>
-  <toolbar id="FormatToolbar" persist="collapsed">
+  <toolbar id="FormatToolbar" chromeclass="toolbar" persist="collapsed">
     <html:div>
       <!-- items are filled out from editorOverlay -->
       <html:select id="ParagraphSelect"/>
