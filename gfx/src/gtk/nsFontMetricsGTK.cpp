@@ -38,11 +38,6 @@
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
 
-#ifdef DEBUG_pavlov
-#define NOISY_FONTS
-#define REALLY_NOISY_FONTS
-#endif
-
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
   NS_INIT_REFCNT();
