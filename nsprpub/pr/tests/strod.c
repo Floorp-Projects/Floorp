@@ -27,7 +27,7 @@
 static void Help(void)
 {
     PRFileDesc *err = PR_GetSpecialFD(PR_StandardError);
-    PR_fprintf(err, "Usage: /.strod [-c n] [-l n] [-h]\n");
+    PR_fprintf(err, "Usage: /.strod [-n n] [-l n] [-h]\n");
     PR_fprintf(err, "\t-n n Number to translate    (default: 1234567890123456789)\n");
     PR_fprintf(err, "\t-l n Times to loop the test (default: 1)\n");
     PR_fprintf(err, "\t-h   This message and nothing else\n");

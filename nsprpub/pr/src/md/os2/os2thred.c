@@ -19,14 +19,21 @@
 #include "primpl.h"
 #include <process.h>  /* for _beginthread() */
 
-APIRET (* APIENTRY QueryThreadContext)(OS2TID, ULONG, PCONTEXTRECORD);
+#ifdef XP_OS2_VACPP
+#include <time.h>     /* for _tzset() */
+#endif
+
+/* --- Declare these to avoid "implicit" warnings --- */
+PR_EXTERN(void) _PR_MD_NEW_SEM(_MDSemaphore *md, PRUintn value);
+PR_EXTERN(void) _PR_MD_DESTROY_SEM(_MDSemaphore *md);
 
 /* --- globals ------------------------------------------------ */
 _NSPR_TLS*        pThreadLocalStorage = 0;
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
+APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
 
 PR_IMPLEMENT(void)
-_PR_MD_ENSURE_TLS()
+_PR_MD_ENSURE_TLS(void)
 {
    if(!pThreadLocalStorage)
    {
@@ -47,6 +54,10 @@ _PR_MD_EARLY_INIT()
    if (DosLoadModule(NULL, 0, "DOSCALL1.DLL", &hmod) == 0)
        DosQueryProcAddr(hmod, 877, "DOSQUERYTHREADCONTEXT",
                         (PFN *)&QueryThreadContext);
+
+#ifdef XP_OS2_VACPP
+   _tzset();
+#endif
 }
 
 PR_IMPLEMENT(void)
@@ -65,14 +76,12 @@ _PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread)
 PR_IMPLEMENT(PRStatus)
 _PR_MD_INIT_THREAD(PRThread *thread)
 {
-   APIRET rc;
-
    if (thread->flags & _PR_PRIMORDIAL)
       _PR_MD_INIT_PRIMORDIAL_THREAD(thread);
 
    /* Create the blocking IO semaphore */
    _PR_MD_NEW_SEM(&thread->md.blocked_sema, 1);
-   return (thread->md.blocked_sema.sem != NULL) ? PR_SUCCESS : PR_FAILURE;
+   return (thread->md.blocked_sema.sem != 0) ? PR_SUCCESS : PR_FAILURE;
 }
 
 PR_IMPLEMENT(PRStatus) 
@@ -83,7 +92,7 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
                   PRThreadState state, 
                   PRUint32 stackSize)
 {
-    thread->md.handle = thread->id = (OS2TID) _beginthread(
+    thread->md.handle = thread->id = (TID) _beginthread(
                     (void(* _Optlink)(void*))start,
                     NULL, 
                     thread->stack->stackSize,
@@ -139,8 +148,14 @@ _PR_MD_SET_PRIORITY(_MDThread *thread, PRThreadPriority newPri)
 PR_IMPLEMENT(void)
 _PR_MD_CLEAN_THREAD(PRThread *thread)
 {
-   /* Just call _PR_MD_EXIT_THREAD for now */
-   _PR_MD_EXIT_THREAD(thread);
+	if (&thread->md.blocked_sema) {
+	  _PR_MD_DESTROY_SEM(&thread->md.blocked_sema);
+	}
+	
+	if (thread->md.handle) {
+	  DosKillThread(thread->md.handle);
+	  thread->md.handle = 0;
+	}
 }
 
 PR_IMPLEMENT(void)
@@ -160,7 +175,9 @@ _PR_MD_EXIT_THREAD(PRThread *thread)
            DosKillThread( thread->md.handle );
            DosResumeThread( thread->md.handle );
        } else {
+#ifndef XP_OS2_EMX
            _endthread();
+#endif
        }
        thread->md.handle = 0;
     }

@@ -61,6 +61,15 @@ ifeq ($(OS_ARCH), HP-UX)
     endif
 endif
 
+ifdef XP_OS2_EMX
+XCFLAGS = $(OS_EXE_CFLAGS)
+XLDOPTS = -Zlinker /PM:VIO
+endif
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_CFLAGS = $(OS_EXE_CFLAGS)
+endif
+
 include $(MOD_DEPTH)/config/rules.mk
 
 PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
@@ -81,5 +90,8 @@ export:: $(TARGETS)
 
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(LINK) $(EXEFLAGS) $<
+else
 	$(CC) $(XCFLAGS) $< $(XLDOPTS) -o $@
-
+endif

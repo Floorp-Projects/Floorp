@@ -47,7 +47,7 @@
 #include <string.h>
 
 /* for getcwd */
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined (XP_OS2_EMX)
 #include <unistd.h>
 #elif defined(XP_PC)
 #include <direct.h>

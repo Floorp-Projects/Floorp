@@ -18,17 +18,24 @@
 
 #include "nspr.h"
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_OS2)
 
 #include <stdio.h>
 
+#ifndef XP_OS2
 #include <unistd.h>
+#endif
 #include <sys/time.h>
 
 #if defined(HAVE_SVID_GETTOD)
 #define GTOD(_a) gettimeofday(_a)
 #else
 #define GTOD(_a) gettimeofday((_a), NULL)
+#endif
+
+#if defined (XP_OS2_VACPP)
+#define INCL_DOSPROCESS
+#include <os2.h>
 #endif
 
 static PRIntn rv = 0;

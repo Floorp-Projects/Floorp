@@ -50,6 +50,8 @@
 #define EXISTING_FILENAME "/bin/sh"
 #elif defined(WIN32)
 #define EXISTING_FILENAME "c:/boot.ini"
+#elif defined(OS2)
+#define EXISTING_FILENAME "c:/config.sys"
 #else
 #error "Unknown OS"
 #endif
@@ -64,7 +66,9 @@ int main(int argc, char **argv)
 #endif
 	
     PR_STDIO_INIT();
+
 	t1 = PR_Open(EXISTING_FILENAME, PR_RDONLY, 0666);
+
 	if (t1 == NULL) {
 		printf ("error code is %d \n", PR_GetError());
 		printf ("File %s should be found\n",

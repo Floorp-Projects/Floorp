@@ -32,8 +32,6 @@ PRInt32 _os2_highMask = 0;
 PR_IMPLEMENT(void)
 _PR_MD_INTERVAL_INIT()
 {
-   ULONG count;
-
    if (DosTmrQueryFreq(&_os2_ticksPerSec) == NO_ERROR)
    {
       while(_os2_ticksPerSec > PR_INTERVAL_MAX) {

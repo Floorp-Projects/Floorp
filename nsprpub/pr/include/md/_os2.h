@@ -20,17 +20,30 @@
 #define nspr_os2_defs_h___
 
 #define INCL_DOS
+#define INCL_DOSPROCESS
 #define INCL_DOSERRORS
 #define INCL_WIN
 #define INCL_WPS
-#define TID OS2TID   /* global rename in OS2 H's!               */
 #include <os2.h>
-#undef TID           /* and restore                             */
 #include <sys/select.h>
 
 #include "prio.h"
 
 #include <errno.h>
+
+#ifdef XP_OS2_EMX
+/*
+ * EMX-specific tweaks:
+ *    o Use stricmp instead of strcmpi.
+ *    o Use errno rather than sock_errno()
+ *    o Use close rather than soclose
+ *    o Ignore sock_init calls.
+ */
+#define strcmpi stricmp 
+#define sock_errno() errno
+#define soclose close
+#define sock_init()
+#endif
 
 /*
  * Internal configuration macros
@@ -44,11 +57,7 @@
 #undef  HAVE_THREAD_AFFINITY
 #define HAVE_SOCKET_REUSEADDR
 #define HAVE_SOCKET_KEEPALIVE
-
-/*********************************************                                                
-/* We don't have atomic ops on OS/2 natively */
-/* #define _PR_HAVE_ATOMIC_OPS               */
-/*********************************************/
+#undef  _PR_HAVE_ATOMIC_OPS
 
 #define HANDLE unsigned long
 #define HINSTANCE HMODULE
@@ -73,8 +82,6 @@ typedef int (*FARPROC)();
 #define _MD_MAGIC_DIR		0x55555555
 #define _MD_MAGIC_CV        0x66666666
 
-#define CALLBACK
-
 typedef struct _MDSemaphore
 {
    HEV sem;
@@ -91,7 +98,7 @@ struct _MDThread {
     PRBool           inCVWaitQueue;     /* PR_TRUE if the thread is in the
                                          * wait queue of some cond var.
                                          * PR_FALSE otherwise.  */
-    OS2TID           handle;            /* OS/2 thread handle */
+    TID              handle;            /* OS/2 thread handle */
     void            *sp;                /* only valid when suspended */
     PRUint32         magic;             /* for debugging */
     PR_CONTEXT_TYPE  gcContext;         /* Thread context for GC */
@@ -176,32 +183,35 @@ struct _MDProcess {
 
 /* --- IO stuff --- */
 
-#define _MD_OPEN                      _PR_MD_OPEN
-#define _MD_READ                      _PR_MD_READ
-#define _MD_WRITE                     _PR_MD_WRITE
-#define _MD_WRITEV                    _PR_MD_WRITEV
-#define _MD_LSEEK                     _PR_MD_LSEEK
-#define _MD_LSEEK64                   _PR_MD_LSEEK64
+#define _MD_OPEN                      (_PR_MD_OPEN)
+#define _MD_READ                      (_PR_MD_READ)
+#define _MD_WRITE                     (_PR_MD_WRITE)
+#define _MD_WRITEV                    (_PR_MD_WRITEV)
+#define _MD_LSEEK                     (_PR_MD_LSEEK)
+#define _MD_LSEEK64                   (_PR_MD_LSEEK64)
 extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 #define _MD_CLOSE_FILE                _MD_CloseFile
-#define _MD_GETFILEINFO               _PR_MD_GETFILEINFO
-#define _MD_GETOPENFILEINFO           _PR_MD_GETOPENFILEINFO
-#define _MD_GETOPENFILEINFO64(a, b)   _PR_MD_GETOPENFILEINFO64(a, b)
-#define _MD_STAT                      _PR_MD_STAT
-#define _MD_RENAME                    _PR_MD_RENAME     
-#define _MD_ACCESS                    _PR_MD_ACCESS     
-#define _MD_DELETE                    _PR_MD_DELETE     
-#define _MD_MKDIR                     _PR_MD_MKDIR      
-#define _MD_RMDIR                     _PR_MD_RMDIR      
-#define _MD_LOCKFILE                  _PR_MD_LOCKFILE
-#define _MD_TLOCKFILE                 _PR_MD_TLOCKFILE
-#define _MD_UNLOCKFILE                _PR_MD_UNLOCKFILE
+#define _MD_GETFILEINFO               (_PR_MD_GETFILEINFO)
+#define _MD_GETFILEINFO64             (_PR_MD_GETFILEINFO64)
+#define _MD_GETOPENFILEINFO           (_PR_MD_GETOPENFILEINFO)
+#define _MD_GETOPENFILEINFO64         (_PR_MD_GETOPENFILEINFO64)
+#define _MD_STAT                      (_PR_MD_STAT)
+#define _MD_RENAME                    (_PR_MD_RENAME)
+#define _MD_ACCESS                    (_PR_MD_ACCESS)
+#define _MD_DELETE                    (_PR_MD_DELETE)
+#define _MD_MKDIR                     (_PR_MD_MKDIR)
+#define _MD_RMDIR                     (_PR_MD_RMDIR)
+#define _MD_LOCKFILE                  (_PR_MD_LOCKFILE)
+#define _MD_TLOCKFILE                 (_PR_MD_TLOCKFILE)
+#define _MD_UNLOCKFILE                (_PR_MD_UNLOCKFILE)
 
 /* --- Socket IO stuff --- */
 
 /* The ones that don't map directly may need to be re-visited... */
+#ifdef XP_OS2_VACPP
 #define EPIPE                     EBADF
 #define EIO                       ECONNREFUSED
+#endif
 #define _MD_EACCES                EACCES
 #define _MD_EADDRINUSE            EADDRINUSE
 #define _MD_EADDRNOTAVAIL         EADDRNOTAVAIL
@@ -229,17 +239,17 @@ extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 
 extern void _MD_MakeNonblock(PRFileDesc *f);
 #define _MD_MAKE_NONBLOCK             _MD_MakeNonblock
-#define _MD_SHUTDOWN                  _PR_MD_SHUTDOWN
+#define _MD_SHUTDOWN                  (_PR_MD_SHUTDOWN)
 #define _MD_LISTEN(s, backlog)        listen(s->secret->md.osfd,backlog)
 extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_CLOSE_SOCKET              _MD_CloseSocket
-#define _MD_SENDTO                    _PR_MD_SENDTO
-#define _MD_RECVFROM                  _PR_MD_RECVFROM
+#define _MD_SENDTO                    (_PR_MD_SENDTO)
+#define _MD_RECVFROM                  (_PR_MD_RECVFROM)
 #define _MD_SOCKETPAIR(s, type, proto, sv) -1
-#define _MD_GETSOCKNAME               _PR_MD_GETSOCKNAME
-#define _MD_GETPEERNAME               _PR_MD_GETPEERNAME
-#define _MD_GETSOCKOPT                _PR_MD_GETSOCKOPT
-#define _MD_SETSOCKOPT                _PR_MD_SETSOCKOPT
+#define _MD_GETSOCKNAME               (_PR_MD_GETSOCKNAME)
+#define _MD_GETPEERNAME               (_PR_MD_GETPEERNAME)
+#define _MD_GETSOCKOPT                (_PR_MD_GETSOCKOPT)
+#define _MD_SETSOCKOPT                (_PR_MD_SETSOCKOPT)
 #define _MD_SELECT                    select
 #define _MD_FSYNC                     _PR_MD_FSYNC
 
@@ -249,21 +259,21 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_ATOMIC_DECREMENT(x)       _PR_MD_ATOMIC_DECREMENT(x)
 #define _MD_ATOMIC_SET(x,y)           _PR_MD_ATOMIC_SET(x, y)
 
-#define _MD_INIT_IO                   _PR_MD_INIT_IO
-#define _MD_TRANSMITFILE              _PR_MD_TRANSMITFILE
-
+#define _MD_INIT_IO                   (_PR_MD_INIT_IO)
+#define _MD_TRANSMITFILE              (_PR_MD_TRANSMITFILE)
+#define _MD_PR_POLL                   (_PR_MD_PR_POLL)
 
 /* win95 doesn't have async IO */
-#define _MD_SOCKET                    _PR_MD_SOCKET
+#define _MD_SOCKET                    (_PR_MD_SOCKET)
 extern PRInt32 _MD_SocketAvailable(PRFileDesc *fd);
 #define _MD_SOCKETAVAILABLE           _MD_SocketAvailable
-#define _MD_CONNECT                   _PR_MD_CONNECT
+#define _MD_CONNECT                   (_PR_MD_CONNECT)
 extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
         PRIntervalTime timeout);
 #define _MD_ACCEPT                    _MD_Accept
-#define _MD_BIND                      _PR_MD_BIND
-#define _MD_RECV                      _PR_MD_RECV
-#define _MD_SEND                      _PR_MD_SEND
+#define _MD_BIND                      (_PR_MD_BIND)
+#define _MD_RECV                      (_PR_MD_RECV)
+#define _MD_SEND                      (_PR_MD_SEND)
 
 /* --- Scheduler stuff --- */
 /* #define _MD_PAUSE_CPU                 _PR_MD_PAUSE_CPU */
@@ -275,9 +285,9 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define PR_PATH_SEPARATOR		';'
 #define PR_PATH_SEPARATOR_STR		";"
 #define _MD_ERRNO()                   errno
-#define _MD_OPEN_DIR                  _PR_MD_OPEN_DIR
-#define _MD_CLOSE_DIR                 _PR_MD_CLOSE_DIR
-#define _MD_READ_DIR                  _PR_MD_READ_DIR
+#define _MD_OPEN_DIR                  (_PR_MD_OPEN_DIR)
+#define _MD_CLOSE_DIR                 (_PR_MD_CLOSE_DIR)
+#define _MD_READ_DIR                  (_PR_MD_READ_DIR)
 
 /* --- Segment stuff --- */
 #define _MD_INIT_SEGS()
@@ -285,26 +295,26 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_FREE_SEGMENT(seg)
 
 /* --- Environment Stuff --- */
-#define _MD_GET_ENV                 _PR_MD_GET_ENV
-#define _MD_PUT_ENV                 _PR_MD_PUT_ENV
+#define _MD_GET_ENV                 (_PR_MD_GET_ENV)
+#define _MD_PUT_ENV                 (_PR_MD_PUT_ENV)
 
 /* --- Threading Stuff --- */
 #define _MD_DEFAULT_STACK_SIZE      32767L
-#define _MD_INIT_THREAD             _PR_MD_INIT_THREAD
-#define _MD_INIT_ATTACHED_THREAD    _PR_MD_INIT_THREAD
-#define _MD_INIT_PRIMORDIAL_THREAD  _PR_MD_INIT_PRIMORDIAL_THREAD
-#define _MD_CREATE_THREAD           _PR_MD_CREATE_THREAD
-#define _MD_YIELD                   _PR_MD_YIELD
-#define _MD_SET_PRIORITY            _PR_MD_SET_PRIORITY
-#define _MD_CLEAN_THREAD            _PR_MD_CLEAN_THREAD
-#define _MD_SETTHREADAFFINITYMASK   _PR_MD_SETTHREADAFFINITYMASK
-#define _MD_GETTHREADAFFINITYMASK   _PR_MD_GETTHREADAFFINITYMASK
-#define _MD_EXIT_THREAD             _PR_MD_EXIT_THREAD
-#define _MD_SUSPEND_THREAD          _PR_MD_SUSPEND_THREAD
-#define _MD_RESUME_THREAD           _PR_MD_RESUME_THREAD
-#define _MD_SUSPEND_CPU             _PR_MD_SUSPEND_CPU
-#define _MD_RESUME_CPU              _PR_MD_RESUME_CPU
-#define _MD_WAKEUP_CPUS             _PR_MD_WAKEUP_CPUS
+#define _MD_INIT_THREAD             (_PR_MD_INIT_THREAD)
+#define _MD_INIT_ATTACHED_THREAD    (_PR_MD_INIT_THREAD)
+#define _MD_INIT_PRIMORDIAL_THREAD  (_PR_MD_INIT_PRIMORDIAL_THREAD)
+#define _MD_CREATE_THREAD           (_PR_MD_CREATE_THREAD)
+#define _MD_YIELD                   (_PR_MD_YIELD)
+#define _MD_SET_PRIORITY            (_PR_MD_SET_PRIORITY)
+#define _MD_CLEAN_THREAD            (_PR_MD_CLEAN_THREAD)
+#define _MD_SETTHREADAFFINITYMASK   (_PR_MD_SETTHREADAFFINITYMASK)
+#define _MD_GETTHREADAFFINITYMASK   (_PR_MD_GETTHREADAFFINITYMASK)
+#define _MD_EXIT_THREAD             (_PR_MD_EXIT_THREAD)
+#define _MD_SUSPEND_THREAD          (_PR_MD_SUSPEND_THREAD)
+#define _MD_RESUME_THREAD           (_PR_MD_RESUME_THREAD)
+#define _MD_SUSPEND_CPU             (_PR_MD_SUSPEND_CPU)
+#define _MD_RESUME_CPU              (_PR_MD_RESUME_CPU)
+#define _MD_WAKEUP_CPUS             (_PR_MD_WAKEUP_CPUS)
 #define _MD_BEGIN_SUSPEND_ALL()
 #define _MD_BEGIN_RESUME_ALL()
 #define _MD_END_SUSPEND_ALL()
@@ -318,18 +328,18 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_FREE_LOCK(lock)           DosCloseMutexSem(((lock)->mutex))
 #define _MD_LOCK(lock)                DosRequestMutexSem(((lock)->mutex), SEM_INDEFINITE_WAIT)
 #define _MD_TEST_AND_LOCK(lock)       (DosRequestMutexSem(((lock)->mutex), SEM_INDEFINITE_WAIT),PR_SUCCESS)
-#define _MD_UNLOCK                    _PR_MD_UNLOCK
+#define _MD_UNLOCK                    (_PR_MD_UNLOCK)
 
 /* --- lock and cv waiting --- */
-#define _MD_WAIT                      _PR_MD_WAIT
-#define _MD_WAKEUP_WAITER             _PR_MD_WAKEUP_WAITER
+#define _MD_WAIT                      (_PR_MD_WAIT)
+#define _MD_WAKEUP_WAITER             (_PR_MD_WAKEUP_WAITER)
 
 /* --- CVar ------------------- */
-#define _MD_WAIT_CV					  _PR_MD_WAIT_CV
-#define _MD_NEW_CV					  _PR_MD_NEW_CV
-#define _MD_FREE_CV					  _PR_MD_FREE_CV
-#define _MD_NOTIFY_CV				  _PR_MD_NOTIFY_CV	
-#define _MD_NOTIFYALL_CV			  _PR_MD_NOTIFYALL_CV
+#define _MD_WAIT_CV					  (_PR_MD_WAIT_CV)
+#define _MD_NEW_CV					  (_PR_MD_NEW_CV)
+#define _MD_FREE_CV					  (_PR_MD_FREE_CV)
+#define _MD_NOTIFY_CV				  (_PR_MD_NOTIFY_CV	)
+#define _MD_NOTIFYALL_CV			  (_PR_MD_NOTIFYALL_CV)
 
    /* XXXMB- the IOQ stuff is certainly not working correctly yet. */
 /* extern  struct _MDLock              _pr_ioq_lock; */
@@ -344,7 +354,7 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_ENABLE_CLOCK_INTERRUPTS()
 #define _MD_BLOCK_CLOCK_INTERRUPTS()
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS()
-#define _MD_EARLY_INIT                _PR_MD_EARLY_INIT
+#define _MD_EARLY_INIT                (_PR_MD_EARLY_INIT)
 #define _MD_FINAL_INIT()
 #define _MD_INIT_CPUS()
 #define _MD_INIT_RUNNING_CPU(cpu)
@@ -372,14 +382,15 @@ extern PRStatus _PR_WaitOS2Process(struct PRProcess *process,
 extern PRStatus _PR_KillOS2Process(struct PRProcess *process);
 
 #define _MD_CLEANUP_BEFORE_EXIT()
+#define _MD_EXIT                          (_PR_MD_EXIT)
 #define _MD_INIT_CONTEXT
 #define _MD_SWITCH_CONTEXT
 #define _MD_RESTORE_CONTEXT
 
 /* --- Intervals --- */
-#define _MD_INTERVAL_INIT                 _PR_MD_INTERVAL_INIT
-#define _MD_GET_INTERVAL                  _PR_MD_GET_INTERVAL
-#define _MD_INTERVAL_PER_SEC              _PR_MD_INTERVAL_PER_SEC
+#define _MD_INTERVAL_INIT                 (_PR_MD_INTERVAL_INIT)
+#define _MD_GET_INTERVAL                  (_PR_MD_GET_INTERVAL)
+#define _MD_INTERVAL_PER_SEC              (_PR_MD_INTERVAL_PER_SEC)
 #define _MD_INTERVAL_PER_MILLISEC()       (_PR_MD_INTERVAL_PER_SEC() / 1000)
 #define _MD_INTERVAL_PER_MICROSEC()       (_PR_MD_INTERVAL_PER_SEC() / 1000000)
 
@@ -393,7 +404,7 @@ typedef struct __NSPR_TLS
 } _NSPR_TLS;
 
 extern _NSPR_TLS*  pThreadLocalStorage;
-PR_IMPLEMENT(void) _PR_MD_ENSURE_TLS();
+PR_EXTERN(void) _PR_MD_ENSURE_TLS(void);
 
 #define _MD_CURRENT_THREAD() pThreadLocalStorage->_pr_currentThread
 #define _MD_SET_CURRENT_THREAD(_thread) _PR_MD_ENSURE_TLS(); pThreadLocalStorage->_pr_currentThread = (_thread)
@@ -403,6 +414,11 @@ PR_IMPLEMENT(void) _PR_MD_ENSURE_TLS();
 
 #define _MD_CURRENT_CPU() pThreadLocalStorage->_pr_currentCPU
 #define _MD_SET_CURRENT_CPU(_cpu) _PR_MD_ENSURE_TLS(); pThreadLocalStorage->_pr_currentCPU = (_cpu)
+
+/* lth. #define _MD_SET_INTSOFF(_val) (_pr_ints_off = (_val)) */
+/* lth. #define _MD_GET_INTSOFF() _pr_ints_off */
+/* lth. #define _MD_INCREMENT_INTSOFF() (_pr_ints_off++) */
+/* lth. #define _MD_DECREMENT_INTSOFF() (_pr_ints_off--) */
 
 /* --- Scheduler stuff --- */
 #define LOCK_SCHEDULER()                 0
@@ -437,10 +453,7 @@ extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define _MD_CLOSE_FILE_MAP _MD_CloseFileMap
 
 /* Some stuff for setting up thread contexts */
-#undef DWORD
-#undef PDWORD
-typedef unsigned long DWORD;
-typedef unsigned long *PDWORD;
+typedef ULONG DWORD, *PDWORD;
 
 /* The following definitions and two structures are new in OS/2 Warp 4.0.
  */
@@ -481,7 +494,7 @@ typedef struct _CONTEXTRECORD {
 #pragma pack()
 #endif
 
-extern APIRET (* APIENTRY QueryThreadContext)(OS2TID, ULONG, PCONTEXTRECORD);
+extern APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
 
 /*
 #define _pr_tid            (((PTIB2)_getTIBvalue(offsetof(TIB, tib_ptib2)))->tib2_ultid)
@@ -493,6 +506,6 @@ extern APIRET (* APIENTRY QueryThreadContext)(OS2TID, ULONG, PCONTEXTRECORD);
  * not emulating anything.  Just mapping.
  */
 #define FreeLibrary(x) DosFreeModule(x)
-#define OutputDebugString(str) ;
+#define OutputDebugString(x)
                                
 #endif /* nspr_os2_defs_h___ */

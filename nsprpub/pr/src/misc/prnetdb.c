@@ -296,10 +296,18 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
     }
     else
     {
+#ifdef XP_OS2_VACPP
+	    h = gethostbyname((char *)name);
+#else
         h = gethostbyname(name);
+#endif
     }
 #else
+#ifdef XP_OS2_VACPP
+	h = gethostbyname((char *)name);
+#else
     h = gethostbyname(name);
+#endif
 #endif /* _PR_INET6 */
     
 	if (NULL == h)
@@ -347,8 +355,11 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 		addr = &hostaddr->inet.ip;
 		addrlen = sizeof(hostaddr->inet.ip);
 	}
-
+#ifdef XP_OS2_VACPP
+	h = gethostbyaddr((char *)addr, addrlen, hostaddr->raw.family);
+#else
 	h = gethostbyaddr(addr, addrlen, hostaddr->raw.family);
+#endif
 	if (NULL == h) PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, _MD_GETHOST_ERRNO());
 	else
 	{
@@ -382,7 +393,11 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 
 static struct protoent *getprotobyname_r(const char* name)
 {
+#ifdef XP_OS2_VACPP
+	return getprotobyname((char *)name);
+#else
 	return getprotobyname(name);
+#endif
 } /* getprotobyname_r */
 
 static struct protoent *getprotobynumber_r(PRInt32 number)
@@ -721,7 +736,11 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
     {
 	    PRUint32 *ip = (PRUint32*)&addr->inet.ip;
 
+#ifdef XP_OS2_VACPP
+        *ip = inet_addr((char *)string);
+#else
         *ip = inet_addr(string);
+#endif
 	    if ((PRUint32) -1 == *ip)
         {
             /*

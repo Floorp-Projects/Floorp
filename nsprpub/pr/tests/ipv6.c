@@ -124,7 +124,7 @@ PRIntn main(PRIntn argc, char **argv)
 
     if (version)
     {
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_OS2)
 #define NSPR_LIB "nspr21"
 #elif defined(WIN32)
 #define NSPR_LIB "libnspr21"
@@ -213,6 +213,7 @@ PRIntn main(PRIntn argc, char **argv)
         {
             PRIntn index = 0;
             PRNetAddr address;
+            memset(&address, 0, sizeof(PRNetAddr));
             PR_fprintf(err, "success .. enumerating results\n");
             do
             {

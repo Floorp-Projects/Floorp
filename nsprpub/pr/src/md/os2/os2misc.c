@@ -20,6 +20,7 @@
  * os2misc.c
  *
  */
+#include <string.h>
 #include "primpl.h"
 
 char *
@@ -335,8 +336,6 @@ PRProcess * _PR_CreateOS2Process(
    }
 
    if (attr) {
-       PRBool redirected = PR_FALSE;
-
       /* On OS/2, there is really no way to pass file handles for stdin, stdout, 
        * and stderr to a new process.  Instead, we can make it a child process       
        * and make the given file handles a copy of our stdin, stdout, and stderr.
@@ -434,7 +433,7 @@ PRStatus _PR_WaitOS2Process(PRProcess *process,
                             &pidEnded, process->md.pid);
 
     if (ulRetVal != NO_ERROR) {
-       printf("\nDosWaitChild rc = %i\n", ulRetVal);
+       printf("\nDosWaitChild rc = %lu\n", ulRetVal);
         PR_SetError(PR_UNKNOWN_ERROR, ulRetVal);
         return PR_FAILURE;
     }
@@ -455,7 +454,6 @@ PRStatus _PR_KillOS2Process(PRProcess *process)
 PRStatus _MD_OS2GetHostName(char *name, PRUint32 namelen)
 {
     PRIntn rv;
-    PRInt32 syserror;
 
     rv = gethostname(name, (PRInt32) namelen);
     if (0 == rv) {

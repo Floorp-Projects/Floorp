@@ -175,6 +175,8 @@ and to ensure that no more events will be delivered for that owner.
 #include <windef.h>
 #elif defined(WIN16)
 #include <windows.h>
+#elif defined(XP_OS2)
+#include <os2.h>
 #endif
 
 PR_BEGIN_EXTERN_C
@@ -373,7 +375,7 @@ PL_DestroyEvent(PLEvent* self);
 PR_EXTERN(void)
 PL_DequeueEvent(PLEvent* self, PLEventQueue* queue);
 
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
 PR_EXTERN(HWND)
 PR_GetEventReceiverWindow();
 #endif

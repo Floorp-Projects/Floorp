@@ -406,7 +406,11 @@ static PRStatus PR_CALLBACK SocketBind(PRFileDesc *fd, const PRNetAddr *addr)
 
 #ifdef HAVE_SOCKET_REUSEADDR
 	if ( setsockopt (fd->secret->md.osfd, (int)SOL_SOCKET, SO_REUSEADDR, 
+#ifdef XP_OS2_VACPP
+	    (char *)&one, sizeof(one) ) < 0) {
+#else
 	    (const void *)&one, sizeof(one) ) < 0) {
+#endif
 		return PR_FAILURE;
 	}
 #endif
@@ -1067,7 +1071,11 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	/* "Keep-alive" packets are specific to TCP. */
 	if (domain == AF_INET && type == SOCK_STREAM) {
 		if (setsockopt(osfd, (int)SOL_SOCKET, SO_KEEPALIVE,
+#ifdef XP_OS2_VACPP
+            (char *)&one, sizeof(one) ) < 0) {
+#else
 		    (const void *) &one, sizeof(one) ) < 0) {
+#endif
 			_PR_MD_CLOSE_SOCKET(osfd);
 			return 0;
 		}

@@ -23,7 +23,6 @@
 #ifndef assert
   #include <assert.h>
 #endif  
-#include <nerrno.h>
 
 PR_EXTERN(void) _MD_os2_map_opendir_error(PRInt32 err);
 #define	_PR_MD_MAP_OPENDIR_ERROR	_MD_os2_map_opendir_error

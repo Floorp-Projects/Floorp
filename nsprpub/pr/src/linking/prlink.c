@@ -447,11 +447,9 @@ PR_LoadLibrary(const char *name)
 
 #ifdef XP_OS2  /* Why isn't all this stuff in MD code?! */
     {
-        NODL_PROC *pfn;
         HMODULE h;
         UCHAR pszError[_MAX_PATH];
         ULONG ulRc = NO_ERROR;
-        int first_try = 1;
 
         retry:
               ulRc = DosLoadModule(pszError, _MAX_PATH, (PSZ) name, &h);
@@ -800,7 +798,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
     }
     
 #ifdef XP_OS2
-    DosQueryProcAddr(lm->dlh, 0, name, (PFN *) &f);
+    DosQueryProcAddr(lm->dlh, 0, (PSZ) name, (PFN *) &f);
 #endif  /* XP_OS2 */
 
 #if defined(WIN32) || defined(WIN16)

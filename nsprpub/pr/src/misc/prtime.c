@@ -576,6 +576,10 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
      * hence, does not recognize negative values of clock as pre-1/1/70.
      * We have to manually check (WIN16 only) for negative value of
      * clock and return NULL.
+     *
+     * With negative values of clock, emx returns the struct tm for
+     * clock plus ULONG_MAX. So we also have to check for the invalid
+     * structs returned for timezones west of Greenwich when clock == 0.
      */
     
 #if defined(XP_MAC)
@@ -584,8 +588,9 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
     tmPtr = localtime(clock);
 #endif
 
-#if defined(WIN16)
-    if ( (PRInt32) *clock < 0 )
+#if defined(WIN16) || defined(XP_OS2_EMX)
+    if ( (PRInt32) *clock < 0 ||
+         ( (PRInt32) *clock == 0 && tmPtr->tm_year != 70))
         result = NULL;
     else
         *result = *tmPtr;
