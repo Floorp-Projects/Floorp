@@ -210,26 +210,21 @@ public class NativeJavaPackage extends ScriptableObject {
                             : packageName + "." + name;
         Context cx = Context.getContext();
         ClassShutter shutter = cx.getClassShutter();
-        Scriptable newValue;
-        try {
-            if (shutter != null && !shutter.visibleToScripts(newPackage))
-                throw new ClassNotFoundException();
-            Class newClass = classLoader != null
-                ? classLoader.loadClass(newPackage)
-                : ScriptRuntime.loadClassName(newPackage);
-            newValue = new NativeJavaClass(getTopLevelScope(this), newClass);
-            newValue.setParentScope(this);
-            newValue.setPrototype(this.prototype);
-        } catch (ClassNotFoundException ex) {
-            if (createPkg) {
-                NativeJavaPackage pkg = new NativeJavaPackage(newPackage,
-                                                              classLoader);
-                pkg.setParentScope(this);
-                pkg.setPrototype(this.prototype);
-                newValue = pkg;
-            } else {
-                newValue = null;
+        Scriptable newValue = null;
+        if (shutter == null || shutter.visibleToScripts(newPackage)) {
+            Class cl = findClass(classLoader, newPackage);
+            if (cl != null) {
+                newValue = new NativeJavaClass(getTopLevelScope(this), cl);
+                newValue.setParentScope(this);
+                newValue.setPrototype(this.prototype);
             }
+        }
+        if (newValue == null && createPkg) {
+            NativeJavaPackage pkg = new NativeJavaPackage(newPackage,
+                                                          classLoader);
+            pkg.setParentScope(this);
+            pkg.setPrototype(this.prototype);
+            newValue = pkg;
         }
         if (newValue != null) {
             // Make it available for fast lookup and sharing of
@@ -275,6 +270,19 @@ public class NativeJavaPackage extends ScriptableObject {
         }
         throw Context.reportRuntimeError(
             Context.getMessage0("msg.not.java.obj"));
+    }
+
+    private static Class findClass(ClassLoader loader, String className) {
+        try {
+            if (loader != null) {
+                return loader.loadClass(className);
+            } else {
+                return ScriptRuntime.loadClassName(className);
+            }
+        } catch (ClassNotFoundException ex) {
+        } catch (SecurityException ex) {
+        }
+        return null;
     }
 
     private String packageName;
