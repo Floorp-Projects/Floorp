@@ -409,11 +409,21 @@ public class JavaAdapter extends ScriptableObject {
                     loadedScope = true;
                 }
                 cfw.add(ByteCode.ALOAD, scopeLocal);
+
+                // Get argument Class 
+                cfw.addLoadConstant(parms[i].getName());
+                cfw.add(ByteCode.INVOKESTATIC, 
+                        "java/lang/Class", 
+                        "forName", 
+                        "(Ljava/lang/String;)",                        
+                        "Ljava/lang/Class;");
+      
                 cfw.add(ByteCode.INVOKESTATIC, 
                         "org/mozilla/javascript/Context", 
                         "toObject", 
                         "(Ljava/lang/Object;" +
-                         "Lorg/mozilla/javascript/Scriptable;)",
+                         "Lorg/mozilla/javascript/Scriptable;" +
+                         "Ljava/lang/Class;)",                         
                         "Lorg/mozilla/javascript/Scriptable;");
             }
             cfw.add(ByteCode.AASTORE);

@@ -518,16 +518,21 @@ public class ScriptRuntime {
      *
      * See ECMA 9.9.
      */
-    public static Scriptable toObject(Scriptable scope, Object val)
+    public static Scriptable toObject(Scriptable scope, Object val) {
+        return toObject(scope, val, null);
+    }
+
+    public static Scriptable toObject(Scriptable scope, Object val, 
+                                      Class staticClass)
     {
         if (val == null) {
-            throw Context.reportRuntimeError(getMessage
-                                             ("msg.null.to.object", null));
+            throw Context.reportRuntimeError(
+                getMessage("msg.null.to.object", null));
         }
         if (val instanceof Scriptable) {
             if (val == Undefined.instance) {
-                throw Context.reportRuntimeError(getMessage
-                                                 ("msg.undef.to.object", null));
+                throw Context.reportRuntimeError(
+                    getMessage("msg.undef.to.object", null));
             }
             return (Scriptable) val;
         }
@@ -538,7 +543,7 @@ public class ScriptRuntime {
 
         if (className == null) {
             // Extension: Wrap as a LiveConnect object.
-            Object wrapped = NativeJavaObject.wrap(scope, val, null);
+            Object wrapped = NativeJavaObject.wrap(scope, val, staticClass);
             if (wrapped instanceof Scriptable)
                 return (Scriptable) wrapped;
             throw errorWithClassName("msg.invalid.type", val);
