@@ -735,35 +735,30 @@ CBrowserContainer::doEndURLLoad(const PRUnichar *aDocumentName)
 ///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener
 
-/* void onStartURIOpen (in nsIURI aURI, in string aWindowTarget, out boolean aAbortOpen); */
-NS_IMETHODIMP CBrowserContainer::OnStartURIOpen(nsIURI *pURI, const char *aWindowTarget, PRBool *aAbortOpen)
+NS_IMETHODIMP CBrowserContainer::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
-NS_IMETHODIMP CBrowserContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+NS_IMETHODIMP CBrowserContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP CBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+NS_IMETHODIMP CBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
-NS_IMETHODIMP CBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+NS_IMETHODIMP CBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
-NS_IMETHODIMP CBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+NS_IMETHODIMP CBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -351,16 +351,20 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
   PRBool metaKeyArg  = jmetaKeyArg    == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
   nsresult rv = event->InitMouseEvent(*cvalue,
-				      ctrlKeyArg, 
-				      altKeyArg, 
-				      shiftKeyArg, 
-				      metaKeyArg, 
+				      canBubble,
+				      cancelable,
+				      (nsIDOMAbstractView*) jviewArg,
+				      (PRUint16)jdetailArg,
 				      (PRInt32)jscreenXArg, 
 				      (PRInt32)jscreenYArg, 
 				      (PRInt32)jclientXArg, 
-				      (PRInt32)jclientYArg, 
+				      (PRInt32)jclientYArg, 			       
+				      ctrlKeyArg,
+				      altKeyArg,
+				      shiftKeyArg,
+				      metaKeyArg,
 				      (PRUint16)jbuttonArg, 
-				      (PRUint16)jdetailArg);
+				      (nsIDOMEventTarget*) jrelatedNodeArg);
 
   nsMemory::Free(cvalue);
 
