@@ -2697,7 +2697,8 @@ INTL_ResourceCharSet(void);
  */ 
 typedef enum { 
     INTL_FileNameCsidSel = 1, 
-    INTL_DefaultTextWidgetCsidSel = 2 
+    INTL_DefaultTextWidgetCsidSel = 2,
+    INTL_OldBookmarkCsidSel = 3 
 } INTL_CharSetID_Selector; 
 
 /* Typedef for charset ID. 
