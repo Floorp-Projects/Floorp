@@ -2037,7 +2037,7 @@ $table{whine_events} =
 # to type MyISAM if so.  ISAM tables are deprecated in MySQL 3.23,
 # which Bugzilla now requires, and they don't support more than 16 
 # indexes per table, which Bugzilla needs.
-my $sth = $dbh->prepare("SHOW TABLE STATUS FROM $::db_name");
+my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$::db_name`");
 $sth->execute;
 my @isam_tables = ();
 while (my ($name, $type) = $sth->fetchrow_array) {
