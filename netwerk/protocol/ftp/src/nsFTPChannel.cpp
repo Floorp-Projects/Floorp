@@ -639,6 +639,13 @@ nsFTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
                                      nsresult status)
 {
     nsresult rv;
+    
+    if (mCanceled) {
+        NS_ASSERTION(NS_FAILED(mStatus), "Must be canceled with a failure status code");
+        OnStartRequest(NS_STATIC_CAST(nsIRequest*, this), nsnull);
+        OnStopRequest(NS_STATIC_CAST(nsIRequest*, this), nsnull,  mStatus);
+        return mStatus;
+    }
 
     if (NS_SUCCEEDED(status)) {
         mCacheEntry = entry;
