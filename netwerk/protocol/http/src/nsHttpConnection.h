@@ -152,9 +152,12 @@ public:
 
         NS_INIT_ISUPPORTS();
 
-        mHost.Adopt(nsCRT::strdup(host));
-        mProxyHost.Adopt(nsCRT::strdup(proxyHost));
-        mProxyType.Adopt(nsCRT::strdup(proxyType));
+        if (host)
+          mHost.Adopt(nsCRT::strdup(host));
+        if (proxyHost)
+          mProxyHost.Adopt(nsCRT::strdup(proxyHost));
+        if (proxyType)
+          mProxyType.Adopt(nsCRT::strdup(proxyType));
 
         mPort = port == -1 ? DefaultPort() : port;
     }
