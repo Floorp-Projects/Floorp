@@ -144,6 +144,9 @@ private:
     NS_IMETHOD
     InitFromPrefs();
 
+    static nsresult 
+    PrincipalPrefNames(const char* pref, char** grantedPref, char** deniedPref);
+
     static void
     EnumeratePolicyCallback(const char *prefName, void *data);
 
@@ -153,7 +156,7 @@ private:
     static int PR_CALLBACK
     JSEnabledPrefChanged(const char *pref, void *data);
 
-    static int
+    static int PR_CALLBACK
     PrincipalPrefChanged(const char *pref, void *data);
 
     nsObjectHashtable *mOriginToPolicyMap;

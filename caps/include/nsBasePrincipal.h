@@ -57,12 +57,14 @@ public:
 
     NS_IMETHOD 
     DisableCapability(const char *capability, void **annotation);
+    
+    NS_IMETHOD 
+    GetPreferences(char** aPrefName, char** aID, 
+                   char** aGrantedList, char** aDeniedList);
 
     nsresult
-    InitFromPersistent(const char *name, const char *data);
-
-    NS_IMETHOD 
-    ToStreamableForm(char** aName, char** aData);
+    InitFromPersistent(const char* aPrefName,const char* aID, 
+                       const char* aGrantedList, const char* aDeniedList);
 
     static const char Invalid[];
 

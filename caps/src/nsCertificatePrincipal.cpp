@@ -101,17 +101,18 @@ nsCertificatePrincipal::ToUserVisibleString(char **result)
 }
 
 NS_IMETHODIMP 
-nsCertificatePrincipal::ToStreamableForm(char** aName, char** aData)
+nsCertificatePrincipal::GetPreferences(char** aPrefName, char** aID, 
+                                       char** aGrantedList, char** aDeniedList)
 {
     if (!mPrefName) {
-        nsCAutoString s("security.principal.certificate");
+        nsCAutoString s;
+        s.Assign("security.principal.certificate.p");
         s.AppendInt(mCapabilitiesOrdinal++);
+        s.Append(".id");
         mPrefName = s.ToNewCString();
     }
-    *aName = nsCRT::strdup(mPrefName);
-    if (!*aName)
-        return NS_ERROR_FAILURE;
-    return nsBasePrincipal::ToStreamableForm(aName, aData);
+    return nsBasePrincipal::GetPreferences(aPrefName, aID, 
+                                           aGrantedList, aDeniedList);
 }
 
 NS_IMETHODIMP
@@ -156,31 +157,14 @@ nsCertificatePrincipal::HashValue(PRUint32 *result)
 // Constructor, Destructor, initialization //
 /////////////////////////////////////////////
 NS_IMETHODIMP
-nsCertificatePrincipal::InitFromPersistent(const char *name, const char* data)
+nsCertificatePrincipal::InitFromPersistent(const char* aPrefName, const char*  aCertID, 
+                                           const char* aGrantedList, const char* aDeniedList)
 {
-    // Parses preference strings of the form 
-    // <certificateID><space><capabilities list>"
-    // ie. "AB:CD:12:34 UniversalBrowserRead=Granted"
-
-    if (!data)
-        return NS_ERROR_ILLEGAL_VALUE;
-
-    char* idEnd = PL_strchr(data, ' '); // Find end of certID
-    if (idEnd)
-        *idEnd = '\0';
-
-    if (NS_FAILED(Init(data))) 
+    if (NS_FAILED(Init(aCertID))) 
         return NS_ERROR_FAILURE;
     
-    if (idEnd)
-    {
-        data = idEnd+1;
-        while (*data == ' ')
-            data++;
-        if (data)
-            return nsBasePrincipal::InitFromPersistent(name, data);
-    }
-    return NS_OK;
+    return nsBasePrincipal::InitFromPersistent(aPrefName, aCertID, 
+                                               aGrantedList, aDeniedList);
 }
 
 NS_IMETHODIMP

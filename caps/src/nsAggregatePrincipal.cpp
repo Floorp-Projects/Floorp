@@ -368,12 +368,14 @@ nsAggregatePrincipal::DisableCapability(const char *capability, void **annotatio
 }
 
 NS_IMETHODIMP
-nsAggregatePrincipal::ToStreamableForm(char** aName, char** aData)
+nsAggregatePrincipal::GetPreferences(char** aPrefName, char** aID, 
+                                     char** aGrantedList, char** aDeniedList)
 {
     nsCOMPtr<nsIPrincipal> PrimaryChild;
     if (NS_FAILED(GetPrimaryChild(getter_AddRefs(PrimaryChild))))
         return NS_ERROR_FAILURE;
-    return PrimaryChild->ToStreamableForm(aName, aData);
+    return PrimaryChild->GetPreferences(aPrefName, aID, 
+                                          aGrantedList, aDeniedList);
 }
 
 /////////////////////////////////////////////

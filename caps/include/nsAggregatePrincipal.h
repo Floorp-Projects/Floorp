@@ -80,9 +80,10 @@ public:
 
     NS_IMETHOD 
     DisableCapability(const char *capability, void **annotation);
-
-    NS_IMETHOD
-    ToStreamableForm(char** aName, char** aData);
+    
+    NS_IMETHOD 
+    GetPreferences(char** aPrefName, char** aID, 
+                   char** aGrantedList, char** aDeniedList);
     
     nsAggregatePrincipal();
 
