@@ -38,9 +38,9 @@ nsFileStream::~nsFileStream()
     Close();
 }
 
-NS_IMPL_ISUPPORTS2(nsFileStream, 
-                   nsIBaseStream,
-                   nsISeekableStream);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsFileStream, 
+                              nsIBaseStream,
+                              nsISeekableStream);
 
 NS_IMETHODIMP
 nsFileStream::Close()
