@@ -316,9 +316,13 @@ pref("mail.identity.default.compose_html", true);
 pref("mail.identity.default.valid", true);
 pref("mail.identity.default.fcc",true);
 pref("mail.identity.default.fcc_folder","mailbox://nobody@Local%20Folders/Sent");
+
+// keep these defaults for backwards compatibility and migration
+// but .doBcc and .doBccList are the right ones from now on.
 pref("mail.identity.default.bcc_self",false);
 pref("mail.identity.default.bcc_others",false);
 pref("mail.identity.default.bcc_list","");
+
 pref("mail.identity.default.draft_folder","mailbox://nobody@Local%20Folders/Drafts");
 pref("mail.identity.default.stationery_folder","mailbox://nobody@Local%20Folders/Templates");
 pref("mail.identity.default.directoryServer","");
