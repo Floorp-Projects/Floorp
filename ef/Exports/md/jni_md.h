@@ -27,7 +27,7 @@ typedef long jint;
 typedef __int64 jlong;
 typedef signed char jbyte;
 
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(FREEBSD)
 #define JNIEXPORT
 #define JNIIMPORT
 #define JNICALL(returnType) __attribute__((stdcall)) returnType
