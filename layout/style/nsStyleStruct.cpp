@@ -605,6 +605,28 @@ nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
   }
 }
 
+void 
+nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide, nscoord& aWidth) const
+{
+  aWidth = 0;
+  // using mCachedBorder as above, doesn't work properly 
+  nsStyleCoord  coord;
+  switch(aSide) {
+  case NS_SIDE_TOP:
+    coord = mBorder.GetTop(coord);
+    break;
+  case NS_SIDE_RIGHT:
+    coord = mBorder.GetRight(coord);
+    break;
+  case NS_SIDE_BOTTOM:
+    coord = mBorder.GetBottom(coord);
+    break;
+  default: // NS_SIDE_LEFT
+    coord = mBorder.GetLeft(coord);
+  }
+  aWidth = CalcSideFor(aFrame, coord, NS_SPACING_BORDER, aSide, mBorderWidths, 3);
+}
+
 nsStyleOutline::nsStyleOutline(nsIPresContext* aPresContext)
 {
   // XXX support mBorderWidths until deprecated methods are removed
@@ -862,7 +884,7 @@ nsStyleTable::nsStyleTable()
   mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
   mCols  = NS_STYLE_TABLE_COLS_NONE;
   mFrame = NS_STYLE_TABLE_FRAME_NONE;
-  mRules = NS_STYLE_TABLE_RULES_ALL;
+  mRules = NS_STYLE_TABLE_RULES_NONE;
   mSpan = 1;
 }
 

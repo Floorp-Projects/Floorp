@@ -4646,6 +4646,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsLayoutAtoms::scrollFrame,           "scroll",    "scroll");
   AddFrameTypeInfo(nsLayoutAtoms::tableCaptionFrame,     "caption",   "tableCaption");
   AddFrameTypeInfo(nsLayoutAtoms::tableCellFrame,        "cell",      "tableCell");
+  AddFrameTypeInfo(nsLayoutAtoms::bcTableCellFrame,      "bcCell",    "bcTableCell");
   AddFrameTypeInfo(nsLayoutAtoms::tableColFrame,         "col",       "tableCol");
   AddFrameTypeInfo(nsLayoutAtoms::tableColGroupFrame,    "colG",      "tableColGroup");
   AddFrameTypeInfo(nsLayoutAtoms::tableFrame,            "tbl",       "table");

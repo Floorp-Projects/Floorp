@@ -113,7 +113,8 @@ nsStyleCoord nsTableColFrame::GetStyleWidth() const
   nsStyleCoord styleWidth = position->mWidth;
   // the following should not be necessary since html.css defines table-col and
   // :table-col to inherit. However, :table-col is not inheriting properly
-  if (eStyleUnit_Auto == styleWidth.GetUnit()) {
+  if (eStyleUnit_Auto == styleWidth.GetUnit() ||
+      eStyleUnit_Inherit == styleWidth.GetUnit()) {
     nsIFrame* parent;
     GetParent(&parent);
     nsCOMPtr<nsIStyleContext> styleContext;
@@ -303,6 +304,22 @@ nsTableColFrame::Init(nsIPresContext*  aPresContext,
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
 
   return rv;
+}
+
+nsTableColFrame*  
+nsTableColFrame::GetNextCol() const
+{
+  nsIFrame* childFrame;
+  GetNextSibling(&childFrame);
+  while (childFrame) {
+    nsCOMPtr<nsIAtom> frameType;
+    childFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableColFrame == frameType.get()) {
+      return (nsTableColFrame*)childFrame;
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
+  return nsnull;
 }
 
 NS_IMETHODIMP

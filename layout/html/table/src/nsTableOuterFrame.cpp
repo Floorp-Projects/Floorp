@@ -232,7 +232,14 @@ nsTableOuterFrame::SetInitialChildList(nsIPresContext* aPresContext,
   }
   else {
     mFrames.SetFrames(aChildList);
-    mInnerTableFrame = aChildList;
+    mInnerTableFrame = nsnull;
+    if (aChildList) {
+      nsCOMPtr<nsIAtom> fType;
+      aChildList->GetFrameType(getter_AddRefs(fType));
+      if (nsLayoutAtoms::tableFrame == fType.get()) {
+        mInnerTableFrame = (nsTableFrame*)aChildList;
+      }
+    }
   }
 
   return NS_OK;
@@ -466,21 +473,46 @@ FixAutoMargins(nscoord            aAvailWidth,
   }
 }
 
+void
+nsTableOuterFrame::InitChildReflowState(nsIPresContext&    aPresContext,                     
+                                        nsHTMLReflowState& aReflowState)
+                                    
+{
+  nsMargin collapseBorder;
+  nsMargin collapsePadding(0,0,0,0);
+  nsMargin* pCollapseBorder  = nsnull;
+  nsMargin* pCollapsePadding = nsnull;
+  if ((aReflowState.frame == mInnerTableFrame) && (mInnerTableFrame->IsBorderCollapse())) {
+    if (mInnerTableFrame->NeedToCalcBCBorders()) {
+      mInnerTableFrame->CalcBCBorders(aPresContext);
+    }
+    pCollapseBorder  = mInnerTableFrame->GetBCBorder(aPresContext, PR_FALSE, collapseBorder);
+    pCollapsePadding = &collapsePadding;
+  }
+  aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder, pCollapsePadding);
+}
+
 // get the margin and padding data. nsHTMLReflowState doesn't handle the
 // case of auto margins
 void
-GetMarginPadding(nsIPresContext*          aPresContext,                     
-                 const nsHTMLReflowState& aOuterRS,
-                 nsIFrame*                aChildFrame,
-                 nsMargin&                aMargin,
-                 nsMargin&                aMarginNoAuto,
-                 nsMargin&                aPadding)
+nsTableOuterFrame::GetMarginPadding(nsIPresContext*          aPresContext,                     
+                                    const nsHTMLReflowState& aOuterRS,
+                                    nsIFrame*                aChildFrame,
+                                    nsMargin&                aMargin,
+                                    nsMargin&                aMarginNoAuto,
+                                    nsMargin&                aPadding)
 {
+  if (!aPresContext) ABORT0();
+  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   // construct a reflow state to compute margin and padding. Auto margins
   // will not be computed at this time.
+
+  // create an init the child reflow state
   nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame, 
                             nsSize(aOuterRS.availableWidth, aOuterRS.availableHeight), 
-                            eReflowReason_Resize);
+                            eReflowReason_Resize, PR_FALSE);
+  InitChildReflowState(*aPresContext, childRS);
+
   nsRect childRect;
   aChildFrame->GetRect(childRect);
   FixAutoMargins(aOuterRS.availableWidth, childRect.width, childRS); 
@@ -931,6 +963,7 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
                                     nsReflowReason             aReflowReason,
                                     nsReflowStatus&            aStatus)
 { 
+  if (!aPresContext) ABORT1(NS_ERROR_NULL_POINTER);
   aMargin = aPadding = nsMargin(0,0,0,0);
 
   nscoord availWidth = GetChildAvailWidth(aPresContext, aChildFrame, aOuterRS,
@@ -946,9 +979,10 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
     availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
   }
 
-  nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
-                            nsSize(availWidth, availHeight));
-  childRS.reason = aReflowReason;
+  // create and init the child reflow state
+  nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame, nsSize(availWidth, availHeight), 
+                            aReflowReason);
+  InitChildReflowState(*aPresContext, childRS);
   childRS.mPercentHeightObserver = nsnull; // the observer is for non table related frames inside cells
 
 

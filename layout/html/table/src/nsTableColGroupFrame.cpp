@@ -250,29 +250,6 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext* aPresContext,
     return NS_OK; 
   }
 
-  nsIFrame* kidFrame = aChildList;
-  while (kidFrame) {
-    nsIAtom* kidType;
-    kidFrame->GetFrameType(&kidType);
-    if (nsLayoutAtoms::tableColFrame == kidType) {
-      // Set the preliminary values for the column frame
-      PRInt32 span = ((nsTableColFrame*)kidFrame)->GetSpan();
-      if (span > 1) {
-        nsTableColFrame* firstSpannedCol;
-        tableFrame->CreateAnonymousColFrames(*aPresContext, *this, span - 1, eColAnonymousCol,
-                                             PR_FALSE, (nsTableColFrame*)kidFrame, (nsIFrame **)&firstSpannedCol);
-        nsIFrame* spanner = kidFrame;
-        kidFrame->GetNextSibling(&kidFrame); // need to do this before we insert the new frames
-        nsFrameList newChildren(aChildList); // used as a convience to hook up siblings
-        newChildren.InsertFrames(this, (nsTableColFrame*)spanner, (nsIFrame *)firstSpannedCol);
-        NS_RELEASE(kidType);
-        continue;
-      }
-    }
-    NS_IF_RELEASE(kidType);
-    kidFrame->GetNextSibling(&kidFrame); 
-  }
-
   mFrames.AppendFrames(this, aChildList);
   return NS_OK;
 }

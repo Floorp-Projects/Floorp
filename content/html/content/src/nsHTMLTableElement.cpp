@@ -1412,39 +1412,44 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
   }
   else if (aData->mSID == eStyleStruct_Border && aData->mMarginData) {
-    const nsStyleDisplay* readDisplay = (nsStyleDisplay*)
-                  aData->mStyleContext->GetStyleData(eStyleStruct_Display);
-  
+    if (!aData->mStyleContext) return;
+    const nsStyleTableBorder* tableStyle =
+      (const nsStyleTableBorder*)aData->mStyleContext->GetStyleData(eStyleStruct_TableBorder);
+    const nsStyleDisplay* readDisplay = 
+      (nsStyleDisplay*) aData->mStyleContext->GetStyleData(eStyleStruct_Display);  
     if (readDisplay &&
         (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
-      // set the cell's border from the table
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::border, value);
-      if (((value.GetUnit() == eHTMLUnit_Pixel) &&
-           (value.GetPixelValue() > 0)) ||
-          (value.GetUnit() == eHTMLUnit_Empty)) {
-        if (aData->mMarginData->mBorderWidth->mLeft.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderWidth->mLeft.SetFloatValue(1.0f, eCSSUnit_Pixel);
-        if (aData->mMarginData->mBorderWidth->mRight.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderWidth->mRight.SetFloatValue(1.0f, eCSSUnit_Pixel);
-        if (aData->mMarginData->mBorderWidth->mTop.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderWidth->mTop.SetFloatValue(1.0f, eCSSUnit_Pixel);
-        if (aData->mMarginData->mBorderWidth->mBottom.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderWidth->mBottom.SetFloatValue(1.0f, eCSSUnit_Pixel);
+      if (NS_STYLE_BORDER_SEPARATE == tableStyle->mBorderCollapse) {
+        // Set the cell's border from the table in the separate border model. If there is a border
+        // on the table, then the mapping to rules=all will take care of borders in the collapsing model.
+        nsHTMLValue value;
+        aAttributes->GetAttribute(nsHTMLAtoms::border, value);
+        if (((value.GetUnit() == eHTMLUnit_Pixel) &&
+             (value.GetPixelValue() > 0)) ||
+            (value.GetUnit() == eHTMLUnit_Empty)) {
+          if (aData->mMarginData->mBorderWidth->mLeft.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderWidth->mLeft.SetFloatValue(1.0f, eCSSUnit_Pixel);
+          if (aData->mMarginData->mBorderWidth->mRight.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderWidth->mRight.SetFloatValue(1.0f, eCSSUnit_Pixel);
+          if (aData->mMarginData->mBorderWidth->mTop.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderWidth->mTop.SetFloatValue(1.0f, eCSSUnit_Pixel);
+          if (aData->mMarginData->mBorderWidth->mBottom.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderWidth->mBottom.SetFloatValue(1.0f, eCSSUnit_Pixel);
 
-        PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
-                              ? NS_STYLE_BORDER_STYLE_BG_INSET : NS_STYLE_BORDER_STYLE_INSET;
+          PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
+                                ? NS_STYLE_BORDER_STYLE_BG_INSET : NS_STYLE_BORDER_STYLE_INSET;
           // BG_INSET results in a border color based on background colors
           // used for NavQuirks only...
 
-        if (aData->mMarginData->mBorderStyle->mLeft.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderStyle->mLeft.SetIntValue(borderStyle, eCSSUnit_Enumerated);
-        if (aData->mMarginData->mBorderStyle->mRight.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderStyle->mRight.SetIntValue(borderStyle, eCSSUnit_Enumerated);
-        if (aData->mMarginData->mBorderStyle->mTop.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderStyle->mTop.SetIntValue(borderStyle, eCSSUnit_Enumerated);
-        if (aData->mMarginData->mBorderStyle->mBottom.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderStyle->mBottom.SetIntValue(borderStyle, eCSSUnit_Enumerated);
+          if (aData->mMarginData->mBorderStyle->mLeft.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderStyle->mLeft.SetIntValue(borderStyle, eCSSUnit_Enumerated);
+          if (aData->mMarginData->mBorderStyle->mRight.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderStyle->mRight.SetIntValue(borderStyle, eCSSUnit_Enumerated);
+          if (aData->mMarginData->mBorderStyle->mTop.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderStyle->mTop.SetIntValue(borderStyle, eCSSUnit_Enumerated);
+          if (aData->mMarginData->mBorderStyle->mBottom.GetUnit() == eCSSUnit_Null)
+            aData->mMarginData->mBorderStyle->mBottom.SetIntValue(borderStyle, eCSSUnit_Enumerated);
+        }
       }
     }
     else {
@@ -1458,7 +1463,6 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
                             ? NS_STYLE_BORDER_STYLE_BG_OUTSET :
                               NS_STYLE_BORDER_STYLE_OUTSET;
-
       // bordercolor
       nsHTMLValue value;
       aAttributes->GetAttribute(nsHTMLAtoms::bordercolor, value);
@@ -1475,6 +1479,18 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
           aData->mMarginData->mBorderColor->mBottom.SetColorValue(color);
 
         borderStyle = NS_STYLE_BORDER_STYLE_OUTSET; // use css outset
+      }
+      else if (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse) {
+        // make the color grey
+        nscolor color = NS_RGB(80, 80, 80);
+        if (aData->mMarginData->mBorderColor->mLeft.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderColor->mLeft.SetColorValue(color);
+        if (aData->mMarginData->mBorderColor->mRight.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderColor->mRight.SetColorValue(color);
+        if (aData->mMarginData->mBorderColor->mTop.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderColor->mTop.SetColorValue(color);
+        if (aData->mMarginData->mBorderColor->mBottom.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderColor->mBottom.SetColorValue(color);
       }
 
       // border and frame
@@ -1500,7 +1516,6 @@ nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 
       (aAttribute == nsHTMLAtoms::cellpadding) ||
       (aAttribute == nsHTMLAtoms::cellspacing) ||
       (aAttribute == nsHTMLAtoms::cols) ||
-      (aAttribute == nsHTMLAtoms::rules) ||
       (aAttribute == nsHTMLAtoms::border) ||
       (aAttribute == nsHTMLAtoms::frame) ||
       (aAttribute == nsHTMLAtoms::width) ||
@@ -1512,7 +1527,10 @@ nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 
   else if (aAttribute == nsHTMLAtoms::bordercolor) {
     aHint = NS_STYLE_HINT_VISUAL;
   }
-  else if (aAttribute == nsHTMLAtoms::align) {
+  else if ((aAttribute == nsHTMLAtoms::align) || 
+           (aAttribute == nsHTMLAtoms::rules)) {
+           // Changing to rules will force border-collapse. Unfortunately, if border-collapse was 
+           // already in effect, then a frame change is not necessary.
     aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
   else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {

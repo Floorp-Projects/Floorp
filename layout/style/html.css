@@ -168,6 +168,10 @@ table[align="right"] {
   text-align: start;
 }
 
+table[rules] {
+  border-collapse: collapse;
+}
+
 *|*:table-outer {
   display: table;
   margin: 0;
@@ -219,6 +223,11 @@ tr {
 
 col, *|*:table-column {
   display: table-column;
+  border: inherit;
+  width: inherit;
+  height: inherit;
+  background: inherit;
+  border: inherit;
 }
 
 colgroup, *|*:table-column-group {

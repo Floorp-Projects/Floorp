@@ -93,7 +93,8 @@ public:
     * @param aPixelToTwips  - the number of twips in a pixel.
     * @return               - the basis for percent calculations
     */
-  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+  virtual nscoord CalcPctAdjTableWidth(nsIPresContext&          aPresContext,
+                                       const nsHTMLReflowState& aReflowState,
                                        nscoord                  aAvailWidth,
                                        float                    aPixelToTwips);
   void Dump(PRInt32 aIndent);
@@ -159,7 +160,8 @@ protected:
     * @param aPixelToTwips     - the number of twips in a pixel.
     * @return                  - the adjusted basis including table border, padding and cell spacing
     */
-  nscoord AssignPctColumnWidths(const nsHTMLReflowState& aReflowState,
+  nscoord AssignPctColumnWidths(nsIPresContext&          aPresContext,
+                                const nsHTMLReflowState& aReflowState,
                                 nscoord                  aBasis,
                                 PRBool                   aTableIsAutoWidth,
                                 float                    aPixelToTwips);

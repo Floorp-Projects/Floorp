@@ -465,7 +465,8 @@ struct nsStyleBorder: public nsStyleStruct {
 
   // XXX these are deprecated methods
   void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
- 
+  void CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide, nscoord& aWidth) const;
+  
 protected:
   PRPackedBool  mHasCachedBorder;
   nsMargin      mCachedBorder;

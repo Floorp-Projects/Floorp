@@ -51,6 +51,9 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
+#define IS_TABLE_CELL(frameType)\
+((nsLayoutAtoms::tableCellFrame == frameType) || (nsLayoutAtoms::bcTableCellFrame == frameType))
+
 #ifdef NS_DEBUG
 #undef NOISY_VERTICAL_ALIGN
 #else
@@ -140,7 +143,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace,
-                                     nsReflowReason           aReason)
+                                     nsReflowReason           aReason,
+                                     PRBool                   aInit)
   : mReflowDepth(aParentReflowState.mReflowDepth + 1),
     mFlags(aParentReflowState.mFlags)
 {
@@ -159,7 +163,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
 
-  Init(aPresContext);
+  if (aInit) {
+    Init(aPresContext);
+  }
 
 #ifdef IBMBIDI
   mRightEdge = aParentReflowState.mRightEdge;
@@ -228,7 +234,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
 void
 nsHTMLReflowState::Init(nsIPresContext* aPresContext,
                         nscoord         aContainingBlockWidth,
-                        nscoord         aContainingBlockHeight)
+                        nscoord         aContainingBlockHeight,
+                        nsMargin*       aBorder,
+                        nsMargin*       aPadding)
 {
   mCompactMarginWidth = 0;
 #ifdef DEBUG
@@ -244,7 +252,7 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   GetStyleData(frame, &mStyleText);
 
   mFrameType = DetermineFrameType(frame, mStyleDisplay);
-  InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
+  InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight, aBorder, aPadding);
 }
 
 const nsHTMLReflowState*
@@ -261,7 +269,7 @@ nsHTMLReflowState::GetContainingBlockReflowState(const nsHTMLReflowState* aParen
         if (aParentRS->parentReflowState) {
           nsCOMPtr<nsIAtom> fType;
           aParentRS->parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
-          if (nsLayoutAtoms::tableCellFrame == fType.get()) {
+          if (IS_TABLE_CELL(fType.get())) {
             aParentRS = aParentRS->parentReflowState;
           }
         }
@@ -1575,7 +1583,9 @@ static PRBool BlinkIsAllowed(void)
 void
 nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
                                    nscoord         aContainingBlockWidth,
-                                   nscoord         aContainingBlockHeight)
+                                   nscoord         aContainingBlockHeight,
+                                   nsMargin*       aBorder,
+                                   nsMargin*       aPadding)
 {
   // If this is the root frame, then set the computed width and
   // height equal to the available space
@@ -1633,7 +1643,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
         }
         else {
           cbrs->frame->GetFrameType(getter_AddRefs(fType));
-          if (nsLayoutAtoms::tableCellFrame == fType.get()) {
+          if (IS_TABLE_CELL(fType.get())) {
             // use the cell's computed height 
             aContainingBlockHeight =
               ((nsHTMLReflowState*)cbrs)->mComputedHeight;
@@ -1647,10 +1657,26 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     // XXX fix to provide 0,0 for the top&bottom margins for
     // inline-non-replaced elements
     ComputeMargin(aContainingBlockWidth, cbrs);
-    ComputePadding(aContainingBlockWidth, cbrs);
-    if (!mStyleBorder->GetBorder(mComputedBorderPadding)) {
-      // CSS2 has no percentage borders
-      mComputedBorderPadding.SizeTo(0, 0, 0, 0);
+    if (aPadding) { // padding is an input arg
+      mComputedPadding.top    = aPadding->top;
+      mComputedPadding.right  = aPadding->right;
+      mComputedPadding.bottom = aPadding->bottom;
+      mComputedPadding.left   = aPadding->left;
+    }
+    else {
+      ComputePadding(aContainingBlockWidth, cbrs);
+    }
+    if (aBorder) {  // border is an input arg
+      mComputedBorderPadding.top    = aBorder->top;
+      mComputedBorderPadding.right  = aBorder->right;
+      mComputedBorderPadding.bottom = aBorder->bottom;
+      mComputedBorderPadding.left   = aBorder->left;
+    }
+    else {
+      if (!mStyleBorder->GetBorder(mComputedBorderPadding)) {
+        // CSS2 has no percentage borders
+        mComputedBorderPadding.SizeTo(0, 0, 0, 0);
+      }
     }
     mComputedBorderPadding += mComputedPadding;
 

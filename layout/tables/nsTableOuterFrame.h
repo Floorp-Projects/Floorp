@@ -47,6 +47,7 @@ class nsReflowTimer;
 #endif
 
 struct nsStyleTable;
+class nsTableFrame;
 
 class nsTableCaptionFrame : public nsBlockFrame
 {
@@ -200,6 +201,9 @@ protected:
 
   nsTableOuterFrame();
   virtual ~nsTableOuterFrame();
+
+  void InitChildReflowState(nsIPresContext&    aPresContext,                     
+                            nsHTMLReflowState& aReflowState);
 
   /** Always returns 0, since the outer table frame has no border of its own
     * The inner table frame can answer this question in a meaningful way.
@@ -362,11 +366,17 @@ protected:
                         PRBool          aInnerChanged,
                         PRBool          aCaptionChanged);
 
+  void GetMarginPadding(nsIPresContext*          aPresContext,                     
+                        const nsHTMLReflowState& aOuterRS,
+                        nsIFrame*                aChildFrame,
+                        nsMargin&                aMargin,
+                        nsMargin&                aMarginNoAuto,
+                        nsMargin&                aPadding);
 
 private:
   // used to keep track of this frame's children. They are redundant with mFrames, but more convient
-  nsIFrame* mInnerTableFrame; 
-  nsIFrame* mCaptionFrame;
+  nsTableFrame* mInnerTableFrame; 
+  nsIFrame*     mCaptionFrame;
 
   // used to track caption max element size 
   PRInt32   mMinCaptionWidth;

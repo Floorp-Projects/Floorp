@@ -38,6 +38,7 @@
 #define CellData_h__
 
 #include "nsISupports.h"
+#include "nsCoord.h"
 
 class nsTableCellFrame;
 
@@ -51,8 +52,9 @@ public:
 
   ~CellData();
 
+  void   Init(nsTableCellFrame* aCellFrame);
   PRBool IsOrig() const;
-
+  PRBool IsDead() const;
   PRBool IsSpan() const;
 
   PRBool IsRowSpan() const;
@@ -84,6 +86,93 @@ protected:
   };
 };
 
+// Border Collapsing Cell Data
+enum BCBorderOwner 
+{
+  eTableOwner        =  0,
+  eColGroupOwner     =  1, 
+  eAjaColGroupOwner  =  2, // col group to the left 
+  eColOwner          =  3,
+  eAjaColOwner       =  4, // col to the left
+  eRowGroupOwner     =  5, 
+  eAjaRowGroupOwner  =  6, // row group above
+  eRowOwner          =  7, 
+  eAjaRowOwner       =  8, // row above
+  eCellOwner         =  9,
+  eAjaCellOwner      = 10, // cell to the top or to the left
+};
+
+// These are the max sizes that are stored. If they are exceeded, then the max is stored and
+// the actual value is computed when needed.
+#define MAX_BORDER_WIDTH      64
+#define MAX_CORNER_SUB_WIDTH 128
+
+// BCData stores the top and left border info and the corner connecting the two.
+class BCData
+{
+public:
+  BCData();
+
+  ~BCData();
+
+  nscoord GetLeftEdge(BCBorderOwner& aOwner,
+                      PRBool&        aStart) const;
+
+  void SetLeftEdge(BCBorderOwner aOwner,
+                   nscoord       aSize,
+                   PRBool        aStart);
+
+  nscoord GetTopEdge(BCBorderOwner& aOwner,
+                     PRBool&        aStart) const;
+
+  void SetTopEdge(BCBorderOwner aOwner,
+                  nscoord       aSize,
+                  PRBool        aStart);
+
+  PRUint8 GetCorner(PRUint8&       aCornerOwner,
+                    PRPackedBool&  aBevel) const;
+
+  void SetCorner(PRUint8 aOwner,
+                 PRUint8 aSubSize,
+                 PRBool  aBevel);
+
+  PRBool IsLeftStart() const;
+
+  void SetLeftStart(PRBool aValue);
+
+  PRBool IsTopStart() const;
+
+  void SetTopStart(PRBool aValue);
+
+               
+protected:
+  unsigned mLeftOwner:     4; // owner of left border     
+  unsigned mLeftSize:      6; // size in pixels of left border
+  unsigned mLeftStart:     1; // set if this is the start of a vertical border segment
+  unsigned mCornerSide:    2; // side of the owner of the upper left corner relative to the corner
+  unsigned mCornerSubSize: 7; // size of the largest border not in the dominate plane (for example, if
+                              // corner is owned by the segment to its top or bottom, then the size is the
+                              // max of the border sizes of the segments to its left or right.
+  unsigned mCornerBevel:   1; // is the corner beveled (only two segments, perpendicular, not dashed or dotted).
+  unsigned mTopOwner:      4; // owner of top border    
+  unsigned mTopSize:       6; // size in pixels of top border
+  unsigned mTopStart:      1; // set if this is the start of a horizontal border segment
+};
+
+// BCCellData entries replace CellData entries in the cell map if the border collapsing model is in
+// effect. BCData for a row and col entry contains the left and top borders of cell at that row and 
+// col and the corner connecting the two. The right borders of the cells in the last col and the bottom
+// borders of the last row are stored in separate BCData entries in the cell map.
+class BCCellData : public CellData
+{
+public:
+  BCCellData(nsTableCellFrame* aOrigCell);
+  ~BCCellData();
+
+  BCData mData;
+};
+
+
 #define SPAN             0x00000001 // there a row or col span 
 #define ROW_SPAN         0x00000002 // there is a row span
 #define ROW_SPAN_0       0x00000004 // the row span is 0
@@ -103,9 +192,19 @@ inline nsTableCellFrame* CellData::GetCellFrame() const
   return nsnull;
 }
 
+inline void CellData::Init(nsTableCellFrame* aCellFrame) 
+{
+  mOrigCell = aCellFrame;
+}
+
 inline PRBool CellData::IsOrig() const
 {
-  return (SPAN != (SPAN & mBits));
+  return ((nsnull != mOrigCell) && (SPAN != (SPAN & mBits)));
+}
+
+inline PRBool CellData::IsDead() const
+{
+  return (0 == mBits);
 }
 
 inline PRBool CellData::IsSpan() const
@@ -211,6 +310,90 @@ inline void CellData::SetOverlap(PRBool aOverlap)
       mBits &= ~OVERLAP;
     }
   }
+}
+
+inline BCData::BCData()
+{
+  mLeftOwner = mTopOwner = eCellOwner;
+  mLeftStart = mTopStart = 1;
+  mLeftSize = mCornerSide = mCornerSubSize = mTopSize = 0;
+}
+
+inline BCData::~BCData()
+{
+}
+
+inline nscoord BCData::GetLeftEdge(BCBorderOwner& aOwner,
+                                   PRBool&        aStart) const
+{
+  aOwner = (BCBorderOwner)mLeftOwner;
+  aStart = (PRBool)mLeftStart;
+
+  return (nscoord)mLeftSize;
+}
+
+inline void BCData::SetLeftEdge(BCBorderOwner  aOwner,
+                                nscoord        aSize,
+                                PRBool         aStart)
+{
+  mLeftOwner = aOwner;
+  mLeftSize  = (aSize > MAX_BORDER_WIDTH) ? MAX_BORDER_WIDTH : aSize;
+  mLeftStart = aStart;
+}
+
+inline nscoord BCData::GetTopEdge(BCBorderOwner& aOwner,
+                                  PRBool&        aStart) const
+{
+  aOwner = (BCBorderOwner)mTopOwner;
+  aStart = (PRBool)mTopStart;
+
+  return (nscoord)mTopSize;
+}
+
+inline void BCData::SetTopEdge(BCBorderOwner  aOwner,
+                               nscoord        aSize,
+                               PRBool         aStart)
+{
+  mTopOwner = aOwner;
+  mTopSize  = (aSize > MAX_BORDER_WIDTH) ? MAX_BORDER_WIDTH : aSize;
+  mTopStart = aStart;
+}
+
+inline PRUint8 BCData::GetCorner(PRUint8&       aOwnerSide,
+                                 PRPackedBool&  aBevel) const
+{
+  aOwnerSide = mCornerSide;
+  aBevel     = (PRBool)mCornerBevel;
+  return (PRUint8)mCornerSubSize;
+}
+
+inline void BCData::SetCorner(PRUint8 aSubSize,
+                              PRUint8 aOwnerSide,
+                              PRBool  aBevel)
+{
+  mCornerSubSize = (aSubSize > MAX_CORNER_SUB_WIDTH) ? MAX_CORNER_SUB_WIDTH : aSubSize;
+  mCornerSide    = aOwnerSide;
+  mCornerBevel   = aBevel;
+}
+
+inline PRBool BCData::IsLeftStart() const
+{
+  return (PRBool)mLeftStart;
+}
+
+inline void BCData::SetLeftStart(PRBool aValue)
+{
+  mLeftStart = aValue;
+}
+
+inline PRBool BCData::IsTopStart() const
+{
+  return (PRBool)mTopStart;
+}
+
+inline void BCData::SetTopStart(PRBool aValue)
+{
+  mTopStart = aValue;
 }
 
 #endif

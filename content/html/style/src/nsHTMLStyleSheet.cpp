@@ -475,6 +475,254 @@ TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
+static void 
+ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct, 
+                           nsRuleData*    aRuleData,
+                           PRUint8        aSide,
+                           PRBool         aGroup,
+                           PRUint8        aRulesArg1,
+                           PRUint8        aRulesArg2,
+                           PRUint8        aRulesArg3)
+{
+  if (!aStyleStruct || !aRuleData || !aRuleData->mPresContext) return;
+
+  nsCOMPtr<nsIStyleContext> tableContext = getter_AddRefs(aRuleData->mStyleContext->GetParent()); if (!tableContext) return;
+  if (!aGroup) {
+    tableContext = getter_AddRefs(tableContext->GetParent()); if (!tableContext) return;
+  } 
+  
+  const nsStyleTable* tableData = 
+    (const nsStyleTable*)tableContext->GetStyleData(eStyleStruct_Table);
+  if (tableData && ((aRulesArg1 == tableData->mRules) ||
+                    (aRulesArg2 == tableData->mRules) ||
+                    (aRulesArg3 == tableData->mRules))) {
+    const nsStyleBorder* tableBorderData = 
+      (const nsStyleBorder*)tableContext->GetStyleData(eStyleStruct_Border); if (!tableBorderData) return;
+    PRUint8 tableBorderStyle = tableBorderData->GetBorderStyle(aSide);
+
+    nsStyleBorder* borderData = (nsStyleBorder*)aStyleStruct; if (!borderData) return;
+    PRUint8 borderStyle = borderData->GetBorderStyle(aSide);
+    // XXX It appears that the style system erronously applies the custom style rule after css style, 
+    // consequently it does not properly fit into the casade. For now, assume that a border style of none
+    // implies that the style has not been set.
+    if (NS_STYLE_BORDER_STYLE_NONE == borderStyle) {
+      // use the table's border style if it is dashed or dotted, otherwise use solid
+      PRUint8 bStyle = ((NS_STYLE_BORDER_STYLE_NONE != tableBorderStyle) &&
+                        (NS_STYLE_BORDER_STYLE_HIDDEN != tableBorderStyle)) 
+                        ? tableBorderStyle : NS_STYLE_BORDER_STYLE_SOLID;
+      if ((NS_STYLE_BORDER_STYLE_DASHED != bStyle) && 
+          (NS_STYLE_BORDER_STYLE_DOTTED != bStyle) && 
+          (NS_STYLE_BORDER_STYLE_SOLID  != bStyle)) {
+        bStyle = NS_STYLE_BORDER_STYLE_SOLID;
+      }
+      bStyle |= NS_STYLE_BORDER_STYLE_RULES_MASK;
+      borderData->SetBorderStyle(aSide, bStyle);
+
+      nscolor borderColor;
+      PRBool transparent, foreground;
+      borderData->GetBorderColor(aSide, borderColor, transparent, foreground);
+      if (transparent || foreground) {
+        // use the table's border color if it is set, otherwise use black
+        nscolor tableBorderColor;
+        tableBorderData->GetBorderColor(aSide, tableBorderColor, transparent, foreground);
+        borderColor = (transparent || foreground) ? NS_RGB(0,0,0) : tableBorderColor;
+        borderData->SetBorderColor(aSide, borderColor);
+      }
+      // set the border width to be 1 pixel
+      float p2t;
+      aRuleData->mPresContext->GetScaledPixelsToTwips(&p2t);
+      nscoord onePixel = NSToCoordRound(p2t);
+      nsStyleCoord coord(onePixel);
+      switch(aSide) {
+      case NS_SIDE_TOP:
+        borderData->mBorder.SetTop(coord);
+        break;
+      case NS_SIDE_RIGHT:
+        borderData->mBorder.SetRight(coord);
+        break;
+      case NS_SIDE_BOTTOM:
+        borderData->mBorder.SetBottom(coord);
+        break;
+      default: // NS_SIDE_LEFT
+        borderData->mBorder.SetLeft(coord);
+        break;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------
+// this rule handles borders on a <thead>, <tbody>, <tfoot> when rules is set on its <table>
+// -----------------------------------------------------------
+class TableTbodyRule: public GenericTableRule {
+public:
+  TableTbodyRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~TableTbodyRule();
+
+  void Reset()
+  {
+    GenericTableRule::Reset();
+  }
+
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+};
+
+TableTbodyRule::TableTbodyRule(nsIHTMLStyleSheet* aSheet)
+: GenericTableRule(aSheet)
+{
+}
+
+TableTbodyRule::~TableTbodyRule()
+{
+}
+
+static void TbodyPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+{
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_ROWS);
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_BOTTOM, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_ROWS);
+}
+
+NS_IMETHODIMP
+TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+    aRuleData->mCanStoreInRuleTree = PR_FALSE;
+    aRuleData->mPostResolveCallback = &TbodyPostResolveCallback;
+  }
+  return NS_OK;
+}
+// -----------------------------------------------------------
+
+// -----------------------------------------------------------
+// this rule handles borders on a <row> when rules is set on its <table>
+// -----------------------------------------------------------
+class TableRowRule: public GenericTableRule {
+public:
+  TableRowRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~TableRowRule();
+
+  void Reset()
+  {
+    GenericTableRule::Reset();
+  }
+
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+};
+
+TableRowRule::TableRowRule(nsIHTMLStyleSheet* aSheet)
+: GenericTableRule(aSheet)
+{
+}
+
+TableRowRule::~TableRowRule()
+{
+}
+
+static void RowPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+{
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_ROWS, NS_STYLE_TABLE_RULES_ROWS);
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_BOTTOM, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_ROWS, NS_STYLE_TABLE_RULES_ROWS);
+}
+
+NS_IMETHODIMP
+TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+    aRuleData->mCanStoreInRuleTree = PR_FALSE;
+    aRuleData->mPostResolveCallback = &RowPostResolveCallback;
+  }
+  return NS_OK;
+}
+
+// -----------------------------------------------------------
+// this rule handles borders on a <colgroup> when rules is set on its <table>
+// -----------------------------------------------------------
+class TableColgroupRule: public GenericTableRule {
+public:
+  TableColgroupRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~TableColgroupRule();
+
+  void Reset()
+  {
+    GenericTableRule::Reset();
+  }
+
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+};
+
+TableColgroupRule::TableColgroupRule(nsIHTMLStyleSheet* aSheet)
+: GenericTableRule(aSheet)
+{
+}
+
+TableColgroupRule::~TableColgroupRule()
+{
+}
+
+static void ColgroupPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+{
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_COLS);
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_RIGHT, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_COLS);
+}
+
+NS_IMETHODIMP
+TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+    aRuleData->mCanStoreInRuleTree = PR_FALSE;
+    aRuleData->mPostResolveCallback = &ColgroupPostResolveCallback;
+  }
+  return NS_OK;
+}
+
+// -----------------------------------------------------------
+// this rule handles borders on a <col> when rules is set on its <table>
+// -----------------------------------------------------------
+class TableColRule: public GenericTableRule {
+public:
+  TableColRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~TableColRule();
+
+  void Reset()
+  {
+    GenericTableRule::Reset();
+  }
+
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+};
+
+TableColRule::TableColRule(nsIHTMLStyleSheet* aSheet)
+: GenericTableRule(aSheet)
+{
+}
+
+TableColRule::~TableColRule()
+{
+}
+
+static void ColPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+{
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_RIGHT, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
+}
+
+NS_IMETHODIMP
+TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+    aRuleData->mCanStoreInRuleTree = PR_FALSE;
+    aRuleData->mPostResolveCallback = &ColPostResolveCallback;
+  }
+  return NS_OK;
+}
 // -----------------------------------------------------------
 
 class AttributeKey: public nsHashKey
@@ -653,6 +901,10 @@ protected:
   HTMLColorRule*       mVisitedRule;
   HTMLColorRule*       mActiveRule;
   HTMLDocumentColorRule* mDocumentColorRule;
+  TableTbodyRule*      mTableTbodyRule;
+  TableRowRule*        mTableRowRule;
+  TableColgroupRule*   mTableColgroupRule;
+  TableColRule*        mTableColRule;
   TableTHRule*         mTableTHRule;
     // NOTE: if adding more rules, be sure to update 
     // the SizeOf method to include them
@@ -710,6 +962,26 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
 nsresult
 HTMLStyleSheetImpl::Init()
 {
+  mTableTbodyRule = new TableTbodyRule(this);
+  if (!mTableTbodyRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mTableTbodyRule);
+
+  mTableRowRule = new TableRowRule(this);
+  if (!mTableRowRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mTableRowRule);
+
+  mTableColgroupRule = new TableColgroupRule(this);
+  if (!mTableColgroupRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mTableColgroupRule);
+
+  mTableColRule = new TableColRule(this);
+  if (!mTableColRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mTableColRule);
+
   mTableTHRule = new TableTHRule(this);
   if (!mTableTHRule)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -749,6 +1021,22 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
   if (nsnull != mDocumentColorRule) {
     mDocumentColorRule->mSheet = nsnull;
     NS_RELEASE(mDocumentColorRule);
+  }
+  if (nsnull != mTableTbodyRule) {
+    mTableTbodyRule->mSheet = nsnull;
+    NS_RELEASE(mTableTbodyRule);
+  }
+  if (nsnull != mTableRowRule) {
+    mTableRowRule->mSheet = nsnull;
+    NS_RELEASE(mTableRowRule);
+  }
+  if (nsnull != mTableColgroupRule) {
+    mTableColgroupRule->mSheet = nsnull;
+    NS_RELEASE(mTableColgroupRule);
+  }
+  if (nsnull != mTableColRule) {
+    mTableColRule->mSheet = nsnull;
+    NS_RELEASE(mTableColRule);
   }
   if (nsnull != mTableTHRule) {
     mTableTHRule->mSheet = nsnull;
@@ -848,6 +1136,18 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
       else if (tag == nsHTMLAtoms::th) {
         ruleWalker->Forward(mTableTHRule);
       }
+      else if (tag == nsHTMLAtoms::tr) {
+        ruleWalker->Forward(mTableRowRule);
+      }
+      else if ((tag == nsHTMLAtoms::thead) || (tag == nsHTMLAtoms::tbody) || (tag == nsHTMLAtoms::tfoot)) {
+        ruleWalker->Forward(mTableTbodyRule);
+      }
+      else if (tag == nsHTMLAtoms::col) {
+        ruleWalker->Forward(mTableColRule);
+      }
+      else if (tag == nsHTMLAtoms::colgroup) {
+        ruleWalker->Forward(mTableColgroupRule);
+      }
       else if (tag == nsHTMLAtoms::table) {
         if (aData->mIsQuirkMode)
           ruleWalker->Forward(mDocumentColorRule);
@@ -888,7 +1188,13 @@ NS_IMETHODIMP
 HTMLStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
                                   nsIAtom* aMedium)
 {
-  // no pseudo frame style
+  nsIAtom* pseudoTag = aData->mPseudoTag;
+  if (pseudoTag == nsHTMLAtoms::tableColPseudo) {
+    nsRuleWalker *ruleWalker = aData->mRuleWalker;
+    if (ruleWalker) {
+      ruleWalker->Forward(mTableColRule);
+    }
+  }
   return NS_OK;
 }
 
@@ -1008,6 +1314,11 @@ HTMLStyleSheetImpl::Reset(nsIURI* aURL)
     NS_RELEASE(mActiveRule);
   }
   mDocumentColorRule->Reset();
+
+  mTableTbodyRule->Reset();
+  mTableRowRule->Reset();
+  mTableColgroupRule->Reset();
+  mTableColRule->Reset();
   mTableTHRule->Reset();
 
   mMappedAttrTable.Enumerate(MappedDropSheet);
@@ -1264,6 +1575,10 @@ MappedSizeAttributes(nsHashKey *aKey, void *aData, void* closure)
 *       - mVisitedRule
 *       - mActiveRule
 *       - mDocumentColorRule
+*       - mTableTbodyRule
+*       - mTableRowRule
+*       - mTableColgroupRule
+*       - mTableColRule
 *       - mTableTHRule
 *       - mMappedAttrTable
 *    2) Delegates (really) to the MappedAttributes in the mMappedAttrTable
@@ -1298,6 +1613,10 @@ HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   // - mVisitedRule  : sizeof object
   // - mActiveRule  : sizeof object
   // - mDocumentColorRule  : sizeof object
+  // - mTableTbodyRule : sizeof object
+  // - mTableRowRule : sizeof object
+  // - mTableColgroupRule : sizeof object
+  // - mTableColRule : sizeof object
   // - mTableTHRule : sizeof object
   // - mMappedAttrTable
 
@@ -1319,6 +1638,26 @@ HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   if(uniqueItems->AddItem((void*)mDocumentColorRule)){
     localSize = sizeof(*mDocumentColorRule);
     tag = getter_AddRefs(NS_NewAtom("DocumentColorRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(uniqueItems->AddItem((void*)mTableTbodyRule)){
+    localSize = sizeof(*mTableTbodyRule);
+    tag = getter_AddRefs(NS_NewAtom("TableTbodyRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(uniqueItems->AddItem((void*)mTableRowRule)){
+    localSize = sizeof(*mTableRowRule);
+    tag = getter_AddRefs(NS_NewAtom("TableRowRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(uniqueItems->AddItem((void*)mTableColgroupRule)){
+    localSize = sizeof(*mTableColgroupRule);
+    tag = getter_AddRefs(NS_NewAtom("TableColgroupRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(uniqueItems->AddItem((void*)mTableColRule)){
+    localSize = sizeof(*mTableColRule);
+    tag = getter_AddRefs(NS_NewAtom("TableColRule"));
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(uniqueItems->AddItem((void*)mTableTHRule)){
