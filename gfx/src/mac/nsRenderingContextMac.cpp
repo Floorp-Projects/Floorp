@@ -497,26 +497,9 @@ nscolor nsRenderingContextMac :: GetColor() const
 
 void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 {
-  NS_IF_RELEASE(mFontMetrics);
-  if (mFontCache)
-	mFontCache->GetMetricsFor(aFont, mFontMetrics);
-
-/*
-  if (mFontMetrics)
-  {  
-//    mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
-    mCurrFontHandle = (Font)mFontMetrics->GetFontHandle();
-    
-    ::XSetFont(mRenderingSurface->display,
-	             mRenderingSurface->gc,
-	             mCurrFontHandle);
-      
-//    ::XFlushGC(mRenderingSurface->display,
-//	             mRenderingSurface->gc);
-  }
-*/
-	//NS_IF_RELEASE(mFontMetrics);
-	//mFontCache->GetMetricsFor(aFont, mFontMetrics);
+	NS_IF_RELEASE(mFontMetrics);
+	if (mFontCache)
+		mFontCache->GetMetricsFor(aFont, mFontMetrics);
 
 	if (mFontMetrics)
 	{
@@ -526,7 +509,7 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 
 		float  dev2app;
 		mContext->GetDevUnitsToAppUnits(dev2app);
-		::TextSize(aFont.size / dev2app);
+		::TextSize(short(float(aFont.size) / dev2app));
 
 		Style textFace = normal;
 		switch (aFont.style)
@@ -929,62 +912,11 @@ PRInt32 y = aY;
 void nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-
-PRInt32 x = aX;
-PRInt32 y = aY;
-
-	::SetPort(mRenderingSurface);
-	::SetClip(mMainRegion);
-	
-  // Substract xFontStruct ascent since drawing specifies baseline
-  if (mFontMetrics)
-  	{
-  	nscoord ascent = 0;
-  	mFontMetrics->GetMaxAscent(ascent);
-    y += ascent;
-		}
-  mTMatrix->TransformCoord(&x, &y);
-
 	nsString nsStr;
-	char * cStr = new char[aLength+1];
 	nsStr.SetString(aString, aLength);
-	nsStr.ToCString(cStr, aLength+1);
-
-		::MoveTo(x,y);
-		::DrawText(cStr, 0, aLength);
-
+	char* cStr = nsStr.ToNewCString();
+		DrawString(cStr, aLength, aX, aY, aWidth);
 	delete[] cStr;
-
-  if (mFontMetrics)
-  {
-    const nsFont* font = nsnull;
-    mFontMetrics->GetFont(font);
-    PRUint8 deco = font->decorations;
-
-    if (deco & NS_FONT_DECORATION_OVERLINE)
-      DrawLine(aX, aY, aX + aWidth, aY);
-
-    if (deco & NS_FONT_DECORATION_UNDERLINE)
-    {
-      nscoord ascent = 0;
-      nscoord descent = 0;
-      mFontMetrics->GetMaxDescent(ascent);
-      mFontMetrics->GetMaxAscent(descent);
-
-      DrawLine(aX, aY + ascent + (descent >> 1),
-               aX + aWidth, aY + ascent + (descent >> 1));
-    }
-
-    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
-    {
-    	
-      nscoord height = 0;
-      mFontMetrics->GetHeight(height);
-
-      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
-    }
-  }
-
 }
 
 //------------------------------------------------------------------------
@@ -992,7 +924,9 @@ PRInt32 y = aY;
 void nsRenderingContextMac :: DrawString(const nsString& aString,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-  DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth);
+	char* cStr = aString.ToNewCString();
+		DrawString(cStr, aString.Length(), aX, aY, aWidth);
+	delete[] cStr;
 }
 
 //------------------------------------------------------------------------
