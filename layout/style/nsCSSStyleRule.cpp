@@ -862,7 +862,7 @@ public:
   DOMCSSDeclarationImpl(nsICSSStyleRule *aRule);
   virtual ~DOMCSSDeclarationImpl(void);
 
-  virtual nsresult GetParentRule(nsIDOMCSSRule **aParent);
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate);
@@ -1002,7 +1002,7 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aURI,
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP
 DOMCSSDeclarationImpl::GetParentRule(nsIDOMCSSRule **aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
