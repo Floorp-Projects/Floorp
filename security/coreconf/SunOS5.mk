@@ -60,9 +60,6 @@ ifeq ($(USE_PTHREADS),1)
 else
 	ifeq ($(LOCAL_THREADS_ONLY),1)
 		IMPL_STRATEGY = _LOCAL
-		DEFINES += -D_PR_LOCAL_THREADS_ONLY
-	else
-		DEFINES += -D_PR_GLOBAL_THREADS_ONLY
 	endif
 endif
 

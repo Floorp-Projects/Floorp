@@ -47,7 +47,6 @@ OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_S
 
 ifdef USE_PTHREADS
 	OS_LIBS		= -lc_r
-	DEFINES		+= -D_PR_NEED_FAKE_POLL
 else
 	OS_LIBS		= -lc
 endif
