@@ -157,14 +157,14 @@ function WM_ProgressUpdate( currentPageNumber )
 {
   var statusbar = document.getElementById ( "status" );
   if ( statusbar ) {
-    var string = "";
-    string += (currentPageNumber + 1);
-    try {
-      string += ( " " + this.bundle.GetStringFromName("oflabel") + " " );
-    } catch (e) {
-      // mac string bundle hack
-      string += " of ";
-    }
+      var string;
+      try {
+          string = this.bundle.formatStringFromName("oflabel",
+                                                    [currentPageNumber,
+                                                    this.GetMapLength], 2);
+      } catch (e) {
+          string = "";
+      }
     string += this.GetMapLength();
     statusbar.setAttribute( "progress", string );
   }
