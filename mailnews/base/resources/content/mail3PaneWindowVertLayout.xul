@@ -67,7 +67,7 @@ Rights Reserved.
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
 				commandupdater="true"
-				events="focus,tree-select"
+				events="focus,folderTree-select,threadTree-select"
 				oncommandupdate="CommandUpdate_Mail()"/>
 	<commandset id="ThreadTreeUpdate_Mail"
 				commandupdater="true"
