@@ -50,6 +50,12 @@ DIRS += \
 	imap4 \
 	certld \
 	$(NULL)
+else
+ifdef MOZ_MAIL_COMPOSE
+DIRS += \
+	smtp \
+	$(NULL)
+endif
 endif
 
 DIRS += http
