@@ -22,8 +22,8 @@
  
 #include "nsMacMIMEDataSource.h"
 #include "nsString.h"
-#include "MacTypes.h"
-#include "InternetConfig.h"
+
+#include <MacTypes.h>
 
 // Yumm
 static void ConvertCharStringToStr255( char* inString, Str255& outString  )
@@ -48,16 +48,16 @@ static nsresult MakeMIMEInfo( ICMapEntry &entry, nsIMIMEInfo*& info )
 	if ( NS_FAILED( rv ) )
 		return rv;
 	// Stuff in the data;
-	info->SetMacCreator( entry.file_type );
-	info->SetMacType( entry.file_creator);
+	info->SetMacCreator( entry.fileType );
+	info->SetMacType( entry.fileCreator);
 	
-	nsCString description( (char*)&entry.entry_name[1], entry.entry_name[0]);
+	nsCString description( (char*)&entry.entryName[1], entry.entryName[0]);
 	nsString  unicodeDescription;
 	unicodeDescription.AssignWithConversion ( description );
 	info->SetDescription( unicodeDescription.GetUnicode() );
 	
 
-	nsCString mimetype((char*) &entry.MIME_type[1], entry.MIME_type[0] );
+	nsCString mimetype((char*) &entry.MIMEType[1], entry.MIMEType[0] );
 	info->SetMIMEType( mimetype.GetBuffer() );
 	
 	// remove the .
@@ -95,7 +95,7 @@ NS_IMETHODIMP nsMacMIMEDataSource::GetFromExtension(const char *aFileExt, nsIMIM
 		Str255 pFileName;
 		ConvertCharStringToStr255( filename, pFileName  );
 		ICMapEntry entry;
-		ICError err = ::ICMapFilename( instance, pFileName, &entry );
+		OSStatus err = ::ICMapFilename( instance, pFileName, &entry );
 		if( err == noErr )
 		{
 			rv = MakeMIMEInfo( entry, *_retval );
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsMacMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 a
 		Str255 pFileName;
 		ConvertCharStringToStr255( filename, pFileName  );
 		ICMapEntry entry;
-		ICError err = ::ICMapTypeCreator( instance, aType, aCreator, pFileName, &entry );
+		OSStatus err = ::ICMapTypeCreator( instance, aType, aCreator, pFileName, &entry );
 		if( err == noErr )
 		{
 			rv = MakeMIMEInfo( entry, *_retval );

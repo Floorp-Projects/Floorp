@@ -23,6 +23,7 @@
 #include "nsInternetConfig.h"
 #include "nsString.h"
 #include "nsDebug.h"
+
 #include <CodeFragments.h>   
 #include <Processes.h>
 ICInstance nsInternetConfig::sInstance = NULL;
