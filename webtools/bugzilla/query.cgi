@@ -280,7 +280,7 @@ $vars->{'product'} = \@products;
 if (Param('useclassification')) {
     my @classifications = ();
 
-    foreach my $c (sort(GetSelectableClassifications())) {
+    foreach my $c (GetSelectableClassifications()) {
         # Create hash to hold attributes for each classification.
         my %classification = (
             'name'       => $c,

@@ -664,7 +664,7 @@ sub GetSelectableProductHash {
 sub GetSelectableClassifications {
     my @selectable_classes = ();
 
-    foreach my $c (keys %::classdesc) {
+    foreach my $c (sort keys %::classdesc) {
         if ( scalar(GetSelectableProducts(0,$c)) > 0) {
            push(@selectable_classes,$c);
         }
