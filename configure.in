@@ -914,6 +914,8 @@ MOZ_ARG_DISABLE_BOOL(brprof,
 [  --disable-brprof        Disable browsing profile cookie],
   [MOZ_BRPROF= ] )
 
+AC_DEFINE(MOZ_BRPROF)
+
 dnl ========================================================
 dnl =
 dnl = Compiler Options
