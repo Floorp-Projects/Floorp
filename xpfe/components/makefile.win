@@ -21,6 +21,6 @@
 
 DEPTH=..\..
 
-DIRS= public bookmarks directory find history prefwindow search sidebar regviewer related ucth xfer shistory
+DIRS= public bookmarks directory find history prefwindow search sidebar regviewer related ucth xfer shistory timebomb
 
 include <$(DEPTH)\config\rules.mak>
