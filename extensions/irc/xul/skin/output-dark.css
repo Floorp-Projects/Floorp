@@ -1,0 +1,193 @@
+/* -*- Mode: Text; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Chatzilla.
+ *
+ * The Initial Developer of the Original Code is New Dimensions Consulting,
+ * Inc. Portions created by New Dimensions Consulting, Inc. are
+ * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *  Robert Ginda, rginda@ndcico.com, original author
+ * 
+ * Styles for output window
+ *
+ */
+
+/* 
+ *  a dark background/light text version of the output window.
+ *  see output-base.css for details. 
+ */
+
+@import url(chrome://chatzilla/content/output-base.css);
+
+body.chatzilla-body {               /* The topmost container in the ChatZilla */
+    background: black;              /* output window. */
+    color: lightgrey;    
+}
+
+a.chatzilla-link {
+    color: #fffdd6;
+}
+
+a.chatzilla-link:visited {
+    color: lightgrey;
+}
+
+.msg-data[msg-type="JOIN"]  a.chatzilla-link,
+.msg-data[msg-type="PART"]  a.chatzilla-link {
+    color: lightcyan;
+}
+
+.msg-data[msg-type="KICK"]  a.chatzilla-link {
+    color: #ff5700;
+}
+
+.chatzilla-rheet {
+    color: magenta !important;
+}
+
+.chatzilla-highlight[name="Large"] {
+    font-size: 12pt;
+}
+
+.chatzilla-highlight[name="Small"] {
+    font-size: 8pt;
+}
+
+.chatzilla-highlight[name="Bold text"] {
+    font-weight: bold;
+}
+
+.chatzilla-highlight[name="Slate"] {
+    color: white;
+    background: #15272d;
+}
+
+.chatzilla-highlight[name="Plum"] {
+    color: white;
+    background: #442144;
+}
+
+.chatzilla-highlight[name="Brown"] {
+    color: white;
+    background: #562a14;
+}
+
+.msg-type {                                 /* .msg-type = message type       */
+    color: silver;                          /* indicator                      */
+}
+
+.msg-user {                                 /* msg-user = nickname portion of */
+    color: white;                           /* a message (channel and query   */
+}                                           /* views)                         */
+ 
+.msg-data[mark="even"] {                    /* use even/odd marks to create a */
+    color: white;                           /* subtle brightness change when  */
+}                                           /* the speaker changes.           */
+
+.msg-data[msg-type="JOIN"],
+.msg-data[msg-type="PART"] {
+    color: lightblue;
+}
+
+.msg-data[msg-type="PART"] {
+    color: lightblue;
+}
+
+.msg-data[msg-type="HELLO"] {
+    color: yellow;
+}
+
+.msg-data[msg-type="ERROR"] {
+    background: red;
+    color: white;
+}
+
+.msg-data[msg-type="USAGE"] {
+    color: white;
+}
+
+.msg-data[msg-type="ACTION"] {
+    color: #6ac9ee;
+}
+
+.msg-data[msg-type="NICK"] {
+    color: #96fa94;
+}
+
+.msg-data[msg-type="NOTICE"],
+.msg-data[msg-type="MODE"] {
+    color: #60e066;
+}
+
+.msg-data[msg-type="NOTICE"] a.chatzilla-link,
+.msg-data[msg-type="MODE"] a.chatzilla-link {
+    color: #6dff74;
+}
+
+.msg-data[msg-type="KICK"] {
+    color: #d85d24;
+}
+
+.msg-data[msg-type="QUIT"] {
+    color: #f7b183;
+}
+
+/* important="true" means that the message has text from your /stalk list in
+ * it, has your nickname in it, or was spoken by someone in your /stalk list.
+ */
+.msg[important="true"] {
+    background: #333333;
+}
+
+.msg-user:before,
+.msg-user:after {
+    color: blue;
+}
+
+.msg-user[msg-user="ME!"]:before,
+.msg-user[msg-user="ME!"]:after {
+    color: #6afc73;
+}
+
+.msg-user[msg-type="ACTION"]:before,
+.msg-user[msg-type="ACTION"]:after {
+    color: cyan;
+}
+
+.msg-user[msg-type="NOTICE"]:before,
+.msg-user[msg-type="NOTICE"]:after {
+    color: #6afc73;
+}
+
+/* private messages *not* in a query window */
+.msg-user[dest-type="IRCUser"]:before,
+.msg-user[dest-type="IRCUser"]:after {
+    color: #6afc73;
+}
+
+.msg-user[msg-dest="ME!"]:before,
+.msg-user[msg-dest="ME!"]:after {
+    color: magenta;
+}
+
+/* private messages in a query window */
+.msg-user[view-type="IRCUser"]:before,
+.msg-user[view-type="IRCUser"]:after {
+    color: white;
+}
+
+.msg-user[view-type="IRCUser"][msg-user="ME!"]:before,
+.msg-user[view-type="IRCUser"][msg-user="ME!"]:after {
+    color: #6afc73;
+}
