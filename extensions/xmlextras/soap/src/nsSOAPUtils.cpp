@@ -532,6 +532,14 @@ nsresult
   *i2 = 's';
   i2--;
   *i2 = 'n';
+
+  // Declare the fabricated prefix
+  if (aScope) {
+    tstr.Assign(nsSOAPUtils::kXMLNamespacePrefix);
+    tstr.Append(aPrefix);
+    rc = aScope->SetAttributeNS(nsSOAPUtils::kXMLNamespaceNamespaceURI,
+                                tstr, externalURI);
+  }
   return NS_OK;
 }
 

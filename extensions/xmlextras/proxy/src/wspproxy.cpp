@@ -228,6 +228,10 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     return rv;
   }
 
+  nsAutoString soapAction;
+  operationBinding->GetSoapAction(soapAction);
+  call->SetActionURI(soapAction);
+
   PRUint16 style;
   operationBinding->GetStyle(&style);
   // If the style is RPC, find the method name and target object URI.
@@ -676,7 +680,9 @@ WSPProxy::XPTCMiniVariantToVariant(uint8 aTypeTag, nsXPTCMiniVariant aResult,
           return rv;
         }
         var->SetAsInterface(NS_GET_IID(nsIPropertyBag), propBag);
-        NS_RELEASE(instance);
+        // AFAICT, there is no need to release the instance here 
+        // because the caller who owns the object should be releasing it.
+        // NS_RELEASE(instance); 
       }
       else {
         var->SetAsEmpty();
