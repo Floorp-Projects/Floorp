@@ -611,6 +611,8 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
       NET_PollSockets();
     }
   }
+  if (dl != nsnull)
+    delete dl;
   ReleaseMemory();
   if (!prevInstance) {
     UnregisterClass(class1Name, gInstance);
