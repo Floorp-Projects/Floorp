@@ -74,7 +74,10 @@ interface nsISyncLoadDOMService : nsISupports
      * @returns The document loaded from the URI.
      */
     nsIDOMDocument loadDocument(in nsIChannel aChannel, in nsIURI aLoaderURI);
-    
+
+    nsIDOMDocument loadDocumentAsXML(in nsIChannel aChannel,
+                                     in nsIURI aLoaderURI);
+
     /**
      * Synchronously load the document from the specified channel. The channel
      * must be possible to open synchronously.
