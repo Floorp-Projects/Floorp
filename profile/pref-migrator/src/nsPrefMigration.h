@@ -55,8 +55,8 @@
 
 #define MIGRATION_SUCCESS    0
 #define MIGRATION_RETRY      1
-#define MIGRATION_CREATE_NEW 2
-#define MIGRATION_CANCEL     3
+#define MIGRATION_CANCEL     2
+#define MIGRATION_CREATE_NEW 3
 
 #define MAX_DRIVES 4
 
