@@ -50,6 +50,7 @@
 #include "nsSpecialSystemDirectory.h"
 
 #include <ctype.h>  // toupper()
+#include "nsString.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
@@ -516,6 +517,26 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         // Propagate the error onto the content sink.
         CErrorToken *errTok = (CErrorToken *)aToken;
+        
+        // XXX Dump error to error output stream just in case the content
+        // sink is RDF or XUL and does not implement error handling.  We need to factor
+        // code better among HTMLContentSink, XMLContentSink, RDFContentSink,
+        // and XULContentSink.  Until that happens, instead of cutting and
+        // pasting error handling code for each content sink, I output an
+        // error to cerr here.
+        const nsParserError* error = errTok->GetError();
+        if (error) {
+          char* temp;          
+          cerr << "XML Error in file '" << (temp = mFilename.ToNewCString()) << "', ";
+          delete [] temp;
+          cerr << "Line Number: " << error->lineNumber << ", ";
+          cerr << "Col Number: " << error->colNumber << ", ";
+          cerr << "Description: " << (temp = error->description.ToNewCString()) << "\n";
+          delete [] temp;
+          cerr << "Source Line: " << (temp = error->sourceLine.ToNewCString()) << "\n";
+          delete [] temp;
+        }
+
         result = mSink->NotifyError(errTok->GetError());
       }
       break;

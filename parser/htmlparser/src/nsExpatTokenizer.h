@@ -74,6 +74,8 @@ protected:
     void SetupExpatCallbacks(void);
 
     void PushXMLErrorToken(const char *aBuffer, PRUint32 aLength);
+	void SetErrorContextInfo(nsParserError* aError, PRUint32 aByteIndex,
+		const char* aSourceBuffer, PRUint32 aLength);
 
     /* The callback handlers that get called from the expat parser */
     static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
@@ -104,6 +106,7 @@ protected:
       XML_Encoding *info);
   
     XML_Parser mExpatParser;
+	PRUint32 mBytesParsed;
 };
 
 extern NS_HTMLPARS nsresult NS_Expat_Tokenizer(nsIDTD** aInstancePtrResult);
