@@ -44,10 +44,9 @@ public:
   NS_IMETHOD GetPrivateRoot(nsIDOMWindow** aResult)=0;
 
   NS_IMETHOD GetLocation(nsIDOMLocation** aLocation) = 0;
-//  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) =0;// XXX This may be temporary - rods
 
-  NS_IMETHOD SetXPConnectObject(const PRUnichar* aProperty, nsISupports* aXPConnectObj)=0;
-  NS_IMETHOD GetXPConnectObject(const PRUnichar* aProperty, nsISupports** aXPConnectObj)=0;
+  NS_IMETHOD SetObjectProperty(const PRUnichar* aProperty, nsISupports* aObject)=0;
+  NS_IMETHOD GetObjectProperty(const PRUnichar* aProperty, nsISupports** aObject)=0;
   
   // This is private because activate/deactivate events are not part of the DOM spec.
   NS_IMETHOD Activate() = 0;

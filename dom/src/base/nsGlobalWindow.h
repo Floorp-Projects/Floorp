@@ -140,10 +140,9 @@ public:
    NS_IMETHOD GetPrivateRoot(nsIDOMWindow** aResult);
 
    NS_IMETHOD GetLocation(nsIDOMLocation** aLocation);
-   //NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
    
-   NS_IMETHOD SetXPConnectObject(const PRUnichar* aProperty, nsISupports* aXPConnectObj);
-   NS_IMETHOD GetXPConnectObject(const PRUnichar* aProperty, nsISupports** aXPConnectObj);
+   NS_IMETHOD SetObjectProperty(const PRUnichar* aProperty, nsISupports* aObject);
+   NS_IMETHOD GetObjectProperty(const PRUnichar* aProperty, nsISupports** aObject);
 
    NS_IMETHOD Activate();
    NS_IMETHOD Deactivate();
