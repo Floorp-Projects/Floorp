@@ -49,11 +49,27 @@
 #include "nsIServiceManager.h"
 #include "nsLanguageAtomService.h"
 #include "nsLocaleCID.h"
-#include "nsIWin32LocaleImpl.h"
 
 #ifdef XP_WIN
+#include "nsIWin32LocaleImpl.h"
 #include "nsCollationWin.h"
 #include "nsDateTimeFormatWin.h"
+#endif
+
+#ifdef XP_MAC
+#ifdef USE_UCCOLLATIONKEY
+#include "nsCollationMacUC.h"
+#else
+#include "nsCollationMac.h"
+#endif
+#include "nsDateTimeFormatMac.h"
+#include "nsMacLocale.h"
+#endif
+
+#ifdef XP_UNIX
+#include "nsCollationUnix.h"
+#include "nsDateTimeFormatUnix.h"
+#include "nsPosixLocale.h"
 #endif
 
 #define NSLOCALE_MAKE_CTOR(ctor_, iface_, func_)          \
