@@ -21,7 +21,7 @@
  *    Sammy Ford
  *    Dan Haddix (dan6992@hotmail.com)
  *    John Ratke (jratke@owc.net)
- *    Ryan Cassin (kidteckco@hotmail.com)
+ *    Ryan Cassin (rcassin@supernova.org)
  */
 
 /* Main Composer window UI control */
@@ -114,11 +114,14 @@ var DocumentStateListener =
     // Call EditorSetDefaultPrefs first so it gets the default author before initing toolbars
     EditorSetDefaultPrefs();
     EditorInitToolbars();
-    
+    DoRecentFilesMenuSave();  // Save the recent files menu
+	 
     // udpate menu items now that we have an editor to play with
     dump("Updating 'create' commands\n");
     window._content.focus();
+
     window.updateCommands("create");
+    BuildRecentMenu();
   },
   
   NotifyDocumentWillBeDestroyed: function() {},
@@ -444,7 +447,7 @@ function onParagraphFormatChange(paraMenuList, commandID)
   var menuList = document.getElementById("ParagraphSelect");
   if (!menuList) return;
 
-  dump("Updating font face with " + state + "\n");
+  dump("Updating paragraph format with " + state + "\n");
   
   // force match with "normal"
   if (state == "body")
@@ -931,20 +934,145 @@ function EditorOpenUrl(url)
   }
 }
 
-function InitRecentFilesMenu()
+function DoRecentFilesMenuSave()
 {
-  //Build submenu of
-  var popup = document.getElementById("menupopup_RecentFiles");
-  if (popup)
+  // Can't do anything if no prefs
+  if (!gPrefs) return;
+
+  var curTitle = window.editorShell.editorDocument.title;
+  var curUrl = window.editorShell.editorDocument.location;
+  var newDoc = (curUrl == "about:blank");
+
+  if(!newDoc) // Can't preform this function if document is new
   {
-    // Delete existing menu
-    while (popup.firstChild)
-      popup.removeChild(popup.firstChild);
+    // Always put latest-opened URL at start of array
+    ShuffleRecentMenu(curUrl)
+    SaveRecentFilesPrefs(curTitle, curUrl, "0");
+  }
+}
 
-    // Rebuild from values in prefs (use gPrefs)
-    //  but be sure to exclude the current page from the list!
-    //TODO: Kathy will do this
+function ShuffleRecentMenu(curUrl)
+{
+  // This function simply saves the remaining items (from entry 2 and beyond) to the prefs file.
+  var historyCount = 10;  // This will be changed by the next line, but if they don't have that pref, this is a good default
+  try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {} // Number of items in recent files menu
+  var titleArray = new Array(historyCount);
+  var urlArray = new Array(historyCount);
+  
+  for (i = 0; i < historyCount; i++)
+  {
+    titleArray[i] = getUnicharPref("editor.history_title_"+i);
+    urlArray[i] = getUnicharPref("editor.history_url_"+i);
+  }
 
+  var placeholder = 1; // i+1, holds number that decides which menuitem the recent file is going in
+  for (i = 0; i < historyCount; i++)
+  {
+    // If we skip over an item in the array, placeholder is not incremented
+    if (urlArray[i] != curUrl)
+    {
+      // Save the menu one spot down in the list
+      SaveRecentFilesPrefs(titleArray[i], urlArray[i], placeholder);
+      placeholder++;
+    }
+  }
+  gPrefs.SavePrefFile(); // Save the prefs file
+}
+
+function SaveRecentFilesPrefs(title, url, i)
+{
+  if (!url || url.length == 0) {
+    return;
+  }
+    
+  // Now save the title and url of the document recently opened to the array
+  setUnicharPref("editor.history_title_"+i, title);
+  setUnicharPref("editor.history_url_"+i, url);
+}
+
+function BuildRecentMenu()
+{
+  // Populate the Recent Files Menu.
+  // Can't do anything if we don't have any prefs
+  if(!gPrefs) return;
+  // Build the submenu
+  var popup = document.getElementById("menupopup_RecentFiles");
+  if (!popup) return;
+  // Delete existing menu
+  while (popup.firstChild)
+    popup.removeChild(popup.firstChild);
+
+  // Again, this is changed in the next line but if the pref never existed, this default coincides with above
+  var historyCount = 10; 
+  try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {}
+
+  for(i = 0; i < historyCount; i++)
+  {
+    var title = getUnicharPref("editor.history_title_"+i);
+	 var url = getUnicharPref("editor.history_url_"+i);
+
+	 if (!url || url.length == 0)
+	   break;
+	 
+	 AppendRecentMenuitem(i+1, popup, title, url, i+2);
+  }
+}
+
+function AppendRecentMenuitem(accessKey, menupopup, title, url, menuIndex)
+{
+  if (menupopup)
+  {
+    menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+    if (menuItem)
+    {
+      // Build the menuitem using the title (or url) and accesskey
+      var itemString;
+      if (accessKey > 9) 
+      {
+        // Access key is two digits so spaces are put in where the access key
+        // would go and the title is added.
+        itemString = "   "+title;  // Set title and spaces (no access key)
+        if (title.length < 1)
+          // There is no title to display on the menuitem so use the URL instead
+          itemString = "    "+url;
+	  } else {
+        itemString = accessKey+" "+title;  // Set the menuitem to use the title and accesskey
+        if (title.length < 1)
+          // There is no title to display on the menuitem so use the URL instead
+          itemString = accessKey+" "+url;
+        menuItem.setAttribute("accesskey", accessKey);
+      }
+
+      menuItem.setAttribute("value", itemString);
+      menuItem.setAttribute("data", url);
+      menuItem.setAttribute("oncommand", "EditorOpenUrl(getAttribute('data'))");
+      menupopup.appendChild(menuItem);
+    }
+  }
+}
+
+function setUnicharPref(aPrefName, aPrefValue)
+{
+  if (!gPrefs) return "";
+  try
+  {
+    gPrefs.SetUnicharPref(aPrefName, aPrefValue);
+  }
+  catch(e)
+  {
+  }
+}
+
+function  getUnicharPref(aPrefName, aDefVal)
+{
+  if (!gPrefs) return "";
+  try
+  {
+    return gPrefs.CopyUnicharPref(aPrefName);
+  }
+  catch(e)
+  {
+    return "";
   }
 }
 
