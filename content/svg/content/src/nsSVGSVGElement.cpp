@@ -307,8 +307,10 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
+  }
 
-    // DOM property: preserveAspectRatio , #IMPLIED attrib: preserveAspectRatio
+  // DOM property: preserveAspectRatio , #IMPLIED attrib: preserveAspectRatio
+  {
     nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
     rv = NS_NewSVGPreserveAspectRatio(getter_AddRefs(preserveAspectRatio));
     NS_ENSURE_SUCCESS(rv,rv);
@@ -317,7 +319,7 @@ nsSVGSVGElement::Init()
                                           preserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsSVGAtoms::preserveAspectRatio,
-                                      mPreserveAspectRatio);
+                           mPreserveAspectRatio);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
