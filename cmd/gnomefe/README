@@ -1,0 +1,24 @@
+This should build out of the box with the mozilla cvs source code.
+It's not close to being functional, but it does build.
+
+Here's what I do to build this:
+
+In the mozilla top level directory run "autoconf".  This will create
+the configure script.  You can then create a directory, inside or out
+that will contain the build object files and final binaries.  cd into
+that directory and run "configure" with the flag "--enable-fe=gnome".
+This should create all of the directories and Makefiles.  From there
+you should be able to type "make" and take a nap for an hour or so.
+
+Here is an example:
+
+bash$ cvs -z3 co mozilla
+[ checkout deleted ]
+bash$ cd mozilla
+bash$ autoconf
+bash$ cd ..
+bash$ ../mozilla/configure --enable-fe=gnome
+[ configure deleted ]
+bash$ make
+
+That should be it.  Anything else is an error.  Happy hacking!
