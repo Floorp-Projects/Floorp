@@ -1417,7 +1417,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
       if (NS_SUCCEEDED(rv) && prefs)
       {
         rv = prefs->GetBoolPref(PREF_MAIL_SEND_STRUCT,&enable_structs);
-        if (NS_FAILED(rv) || enable_structs)
+        if (enable_structs)
           whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
       }
       
