@@ -2565,26 +2565,31 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 	str->Assign((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
 }
 
-
+// WARNING - if yarn is empty, *pResult will not be changed!!!!
+// this is so we can leave default values as they were.
 /* static */void nsMsgDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult)
 {
 	PRUint32 result;
 	char *p = (char *) yarn->mYarn_Buf;
 	PRInt32 numChars = PR_MIN(8, yarn->mYarn_Fill);
 	PRInt32 i;
-	for (i=0, result = 0; i<numChars; i++, p++)
-	{
-		char C = *p;
+ 
+  if (numChars > 0)
+  {
+	  for (i=0, result = 0; i<numChars; i++, p++)
+	  {
+		  char C = *p;
 
-		PRInt8 unhex = ((C >= '0' && C <= '9') ? C - '0' :
-			((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
-			 ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : -1)));
-		if (unhex < 0)
-			break;
-		result = (result << 4) | unhex;
-	}
+		  PRInt8 unhex = ((C >= '0' && C <= '9') ? C - '0' :
+			  ((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
+			   ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : -1)));
+		  if (unhex < 0)
+			  break;
+		  result = (result << 4) | unhex;
+	  }
     
-	*pResult = result;
+	  *pResult = result;
+  }
 }
 
 /* static */void nsMsgDatabase::PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
