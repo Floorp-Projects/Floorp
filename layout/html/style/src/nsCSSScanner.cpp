@@ -541,7 +541,8 @@ PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
   }
   if ((ch <= 255) && ((lexTable[ch] & IS_HEX_DIGIT) != 0)) {
     PRInt32 rv = 0;
-    for (int i = 0; i < 6; i++) { // up to six digits
+    int i;
+    for (i = 0; i < 6; i++) { // up to six digits
       ch = Read(aErrorCode);
       if (ch < 0) {
         // Whoops: error or premature eof
@@ -570,6 +571,13 @@ PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
       if ((0 <= ch) && (ch <= 255) && 
           ((lexTable[ch] & IS_WHITESPACE) != 0)) {
         ch = Read(aErrorCode);
+        // special case: if trailing whitespace is CR/LF, eat both chars (not part of spec, but should be)
+        if (ch == '\r') {
+          ch = Peek(aErrorCode);
+          if (ch == '\n') {
+            ch = Read(aErrorCode);
+          }
+        }
       }
     }
     return rv;
