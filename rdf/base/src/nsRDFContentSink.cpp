@@ -650,7 +650,7 @@ RDFContentSinkImpl::AddComment(const nsIParserNode& aNode)
     nsAutoString text;
     nsresult result = NS_OK;
 
-    text = aNode.GetText();
+    text.Assign(aNode.GetText());
 
     // XXX add comment here...
 
@@ -1023,7 +1023,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString uri = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(uri);
 
-            rdf_MakeAbsoluteURI(nsAutoString(docURI), uri);
+            rdf_MakeAbsoluteURI(NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, docURI)), uri);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
@@ -1051,9 +1051,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             // Construct an in-line resource whose URI is the
             // document's URI plus the XML name specified in the ID
             // attribute.
-            name.Insert('#', 0);
+            name.Insert(NS_ConvertASCIItoUCS2("#"), 0);
             
-            rdf_MakeAbsoluteURI(nsAutoString(docURI), name);
+            rdf_MakeAbsoluteURI(NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, docURI)), name);
 
             return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
         }
@@ -1104,7 +1104,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             // appropriate...
             char* documentURL;
             mDocumentURL->GetSpec(&documentURL);
-            rdf_MakeAbsoluteURI(nsAutoString(documentURL), uri);
+            rdf_MakeAbsoluteURI(NS_ConvertASCIItoUCS2(documentURL), uri);
             nsCRT::free(documentURL);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
@@ -1235,7 +1235,7 @@ RDFContentSinkImpl::ReinitContainer(nsIRDFResource* aContainerType, nsIRDFResour
     nsresult rv;
 
     nsCOMPtr<nsIRDFLiteral> one;
-    rv = gRDFService->GetLiteral(nsAutoString("1").GetUnicode(), getter_AddRefs(one));
+    rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("1").GetUnicode(), getter_AddRefs(one));
     if (NS_FAILED(rv)) return rv;
 
     // Re-initialize the 'nextval' property
@@ -1563,7 +1563,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
         NS_ADDREF(ns);
     }
     else {
-        mNameSpaceManager->RegisterNameSpace(kRDFNameSpaceURI, mRDFNameSpaceID);
+        mNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kRDFNameSpaceURI), mRDFNameSpaceID);
         mNameSpaceManager->CreateRootNameSpace(ns);
     }
 
@@ -1589,7 +1589,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
                 }
 
                 // Get the attribute value (the URI for the namespace)
-                uri = aNode.GetValueAt(i);
+                uri.Assign(aNode.GetValueAt(i));
                 nsRDFParserUtils::StripAndConvert(uri);
 
                 // Open a local namespace

@@ -594,7 +594,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         if (NS_FAILED(rv)) return rv;
 
         aResult.Truncate();
-        aResult.Append(value, 10);
+        aResult.AppendInt(value, 10);
         return NS_OK;
     }
 
@@ -604,7 +604,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         const char* p;
         rv = resource->GetValueConst(&p);
         if (NS_FAILED(rv)) return rv;
-        aResult = p;
+        aResult.AssignWithConversion(p);
         return NS_OK;
     }
 
@@ -617,7 +617,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
 {
     nsresult rv;
 
-    aResult = '<';
+    aResult.AssignWithConversion('<');
 
     nsCOMPtr<nsINameSpace> ns;
 
@@ -626,7 +626,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
     if (NS_FAILED(rv)) return rv;
 
     if (kNameSpaceID_HTML == elementNameSpaceID) {
-        aResult.Append("html:");
+        aResult.AppendWithConversion("html:");
     }
     else {
         nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(aElement) );
@@ -645,7 +645,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
                 const PRUnichar *unicodeString;
                 prefix->GetUnicode(&unicodeString);
                 aResult.Append(unicodeString);
-                aResult.Append(':');
+                aResult.AppendWithConversion(':');
             }
         }
     }
@@ -663,7 +663,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < count; ++i) {
-        aResult.Append(' ');
+        aResult.AppendWithConversion(' ');
 
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> name;
@@ -674,17 +674,17 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
         nsXULContentUtils::GetAttributeLogString(aElement, nameSpaceID, name, attr);
 
         aResult.Append(attr);
-        aResult.Append("=\"");
+        aResult.AppendWithConversion("=\"");
 
         nsAutoString value;
         rv = aElement->GetAttribute(nameSpaceID, name, value);
         if (NS_FAILED(rv)) return rv;
 
         aResult.Append(value);
-        aResult.Append("\"");
+        aResult.AppendWithConversion("\"");
     }
 
-    aResult.Append('>');
+    aResult.AppendWithConversion('>');
     return NS_OK;
 }
 
@@ -721,7 +721,7 @@ nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
                 const PRUnichar *unicodeString;
                 prefix->GetUnicode(&unicodeString);
                 aResult.Append(unicodeString);
-                aResult.Append(':');
+                aResult.AppendWithConversion(':');
             }
         }
     }
@@ -741,7 +741,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
 
     if (aElementID.FindChar(':') > 0) {
         // Assume it's absolute already. Use as is.
-        aURI = aElementID;
+        aURI.AssignWithConversion(aElementID.GetUnicode());
     }
     else {
         nsresult rv;
@@ -895,7 +895,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute,
 
     // XXX check to see if we need to insert a '/' or a '#'. Oy.
     if (uri.Length() > 0 && uri.Last() != '#' && uri.Last() != '/' && aAttribute.First() != '#')
-        uri.Append('#');
+        uri.AppendWithConversion('#');
 
     uri.Append(aAttribute);
 
@@ -941,13 +941,13 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     rv = aElement->GetAttribute(kNameSpaceID_None, kEventsAtom, events);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        events = "*";
+        events.AssignWithConversion("*");
 
     nsAutoString targets;
     rv = aElement->GetAttribute(kNameSpaceID_None, kTargetsAtom, targets);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        targets = "*";
+        targets.AssignWithConversion("*");
 
     nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
     NS_ASSERTION(domelement != nsnull, "not a DOM element");

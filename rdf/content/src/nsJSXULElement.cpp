@@ -323,7 +323,7 @@ XULElementAddBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIElementIID,
-                                           "Element",
+                                           NS_ConvertASCIItoUCS2("Element"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -372,7 +372,7 @@ XULElementRemoveBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsva
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIElementIID,
-                                           "Element",
+                                           NS_ConvertASCIItoUCS2("Element"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

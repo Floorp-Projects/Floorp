@@ -169,7 +169,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         if (NS_SUCCEEDED(rv)) {
           nsIDOMElement* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIElementIID, "Element",
+                                                  kIElementIID, NS_ConvertASCIItoUCS2("Element"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }
@@ -185,7 +185,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         if (NS_SUCCEEDED(rv)) {
           nsIDOMWindow* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIWindowIID, "Window",
+                                                  kIWindowIID, NS_ConvertASCIItoUCS2("Window"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }
@@ -298,7 +298,7 @@ XULCommandDispatcherAddCommandUpdater(JSContext *cx, JSObject *obj, uintN argc, 
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIElementIID,
-                                           "Element",
+                                           NS_ConvertASCIItoUCS2("Element"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -347,7 +347,7 @@ XULCommandDispatcherRemoveCommandUpdater(JSContext *cx, JSObject *obj, uintN arg
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIElementIID,
-                                           "Element",
+                                           NS_ConvertASCIItoUCS2("Element"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

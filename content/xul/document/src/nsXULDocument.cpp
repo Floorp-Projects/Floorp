@@ -387,7 +387,6 @@ nsXULDocument::nsXULDocument(void)
       mScriptGlobalObject(nsnull),
       mScriptObject(nsnull),
       mNextSrcLoadWaiter(nsnull),
-      mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
       mIsKeyBindingDoc(PR_FALSE),
       mIsPopup(PR_FALSE),
@@ -397,6 +396,7 @@ nsXULDocument::nsXULDocument(void)
       mCurrentScriptProto(nsnull)
 {
     NS_INIT_REFCNT();
+    mCharSetID.AssignWithConversion("UTF-8");
 }
 
 nsXULDocument::~nsXULDocument()
@@ -636,7 +636,7 @@ nsXULDocument::GetArena()
 NS_IMETHODIMP
 nsXULDocument::GetContentType(nsString& aContentType) const
 {
-    aContentType.Assign("text/xul");
+    aContentType.AssignWithConversion("text/xul");
     return NS_OK;
 }
 
@@ -715,7 +715,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
                                  nsIStreamListener **aDocListener)
 {
     nsresult rv;
-    mCommand = aCommand;
+    mCommand.AssignWithConversion(aCommand);
 
     mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
 
@@ -852,7 +852,7 @@ nsXULDocument::GetLineBreaker(nsILineBreaker** aResult)
                                           (nsISupports **)&lf);
      if (NS_SUCCEEDED(result)) {
       nsILineBreaker *lb = nsnull ;
-      nsAutoString lbarg("");
+      nsAutoString lbarg;
       result = lf->GetBreaker(lbarg, &lb);
       if(NS_SUCCEEDED(result)) {
          mLineBreaker = dont_AddRef(lb);
@@ -883,7 +883,7 @@ nsXULDocument::GetWordBreaker(nsIWordBreaker** aResult)
                                           (nsISupports **)&lf);
      if (NS_SUCCEEDED(result)) {
       nsIWordBreaker *lb = nsnull ;
-      nsAutoString lbarg("");
+      nsAutoString lbarg;
       result = lf->GetBreaker(lbarg, &lb);
       if(NS_SUCCEEDED(result)) {
          mWordBreaker = dont_AddRef(lb);
@@ -1468,7 +1468,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
         if (NS_FAILED(rv)) return rv;
 
-        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.Equals("true"))) {
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.EqualsWithConversion("true"))) {
             OpenWidgetItem(aElement);
         }
         else {
@@ -1684,7 +1684,7 @@ nsXULDocument::SelectAll()
     nsIContent * end   = nsnull;
     nsIContent * body  = nsnull;
 
-    nsAutoString bodyStr("BODY");
+    nsAutoString bodyStr; bodyStr.AssignWithConversion("BODY");
     PRInt32 i, n;
     mRootContent->ChildCount(n);
     for (i=0;i<n;i++) {
@@ -2130,7 +2130,7 @@ nsXULDocument::SetForm(nsIDOMHTMLFormElement* aForm)
 
     // Forms are containers, and as such take up a bit of space.
     // Set a style attribute to keep the hidden form from showing up.
-    mHiddenForm->SetAttribute("style", "margin:0em");
+    mHiddenForm->SetAttribute(NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin:0em"));
     return NS_OK;
 }
 
@@ -2238,8 +2238,7 @@ nsXULDocument::LoadFromStream(nsIInputStream& xulStream,
     rv = PrepareToLoad(aContainer, aCommand, nsnull, nsnull, getter_AddRefs(parser));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString theMimeType(kXULTextContentType);
-    parser->Parse(xulStream,theMimeType);
+    parser->Parse(xulStream,NS_ConvertASCIItoUCS2(kXULTextContentType));
     return NS_OK;
 }
 
@@ -2514,7 +2513,8 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAtt
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> attr;
-    rv = gRDFService->GetResource(nsCAutoString(attrstr), getter_AddRefs(attr));
+    nsCAutoString temp_attrstr; temp_attrstr.AssignWithConversion(attrstr);
+    rv = gRDFService->GetResource(temp_attrstr, getter_AddRefs(attr));
     if (NS_FAILED(rv)) return rv;
 
     // Turn the value into a literal
@@ -2804,7 +2804,7 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
     // document's command dispatcher
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.EqualsWithConversion("true")) {
         rv = gXULUtils->SetCommandUpdater(this, aElement);
         if (NS_FAILED(rv)) return rv;
     }
@@ -2874,7 +2874,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     // element from the document's command dispatcher.
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.EqualsWithConversion("true")) {
         nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
         NS_ASSERTION(domelement != nsnull, "not a DOM element");
         if (! domelement)
@@ -2955,7 +2955,7 @@ nsXULDocument::RemoveElementsFromMapByContent(const nsString& aID,
 NS_IMETHODIMP
 nsXULDocument::GetNodeName(nsString& aNodeName)
 {
-    aNodeName.Assign("#document");
+    aNodeName.AssignWithConversion("#document");
     return NS_OK;
 }
 
@@ -3476,8 +3476,8 @@ nsXULDocument::Init()
 
         if (CommandDispatcher) {
             // Take the focus tracker and add it as an event listener for focus and blur events.
-            AddEventListener("focus", CommandDispatcher, PR_TRUE);
-            AddEventListener("blur", CommandDispatcher, PR_TRUE);
+            AddEventListener(NS_ConvertASCIItoUCS2("focus"), CommandDispatcher, PR_TRUE);
+            AddEventListener(NS_ConvertASCIItoUCS2("blur"), CommandDispatcher, PR_TRUE);
         }
     }
     // Get the local store. Yeah, I know. I wish GetService() used a
@@ -3576,7 +3576,7 @@ nsXULDocument::Init()
 
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
-        gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+        gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
 
 
         rv = nsServiceManager::GetService(kXULContentUtilsCID,
@@ -3690,7 +3690,7 @@ nsXULDocument::GetElementsByTagName(nsIDOMNode* aNode,
     if (!element)
       return NS_OK;
 
-    if (aTagName.Equals("*")) {
+    if (aTagName.EqualsWithConversion("*")) {
         if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
             NS_ERROR("unable to append element to node list");
             return rv;
@@ -3762,7 +3762,7 @@ nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
         return rv;
     }
 
-    if ((attrValue == aValue) || (attrValue.Length() > 0 && aValue.Equals("*"))) {
+    if ((attrValue == aValue) || (attrValue.Length() > 0 && aValue.EqualsWithConversion("*"))) {
         if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
             NS_ERROR("unable to append element to node list");
             return rv;
@@ -4221,8 +4221,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     parser->SetCommand(nsCRT::strcmp(aCommand, "view-source") ? eViewNormal :
       eViewSource);
 
-    nsAutoString utf8("UTF-8");
-    parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
+    parser->SetDocumentCharset(NS_ConvertASCIItoUCS2("UTF-8"), kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 
     *aResult = parser;
@@ -4282,7 +4281,7 @@ nsXULDocument::ApplyPersistentAttributes()
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString id;
-        rv = gXULUtils->MakeElementID(this, nsAutoString(uri), id);
+        rv = gXULUtils->MakeElementID(this, NS_ConvertASCIItoUCS2(uri), id);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to compute element ID");
         if (NS_FAILED(rv)) return rv;
 
@@ -4560,7 +4559,7 @@ nsXULDocument::PrepareToWalk()
         // Create the document's "hidden form" element which will wrap all
         // HTML form elements that turn up.
         nsCOMPtr<nsIContent> form;
-        rv = gHTMLElementFactory->CreateInstanceByTag(nsAutoString("form"),
+        rv = gHTMLElementFactory->CreateInstanceByTag(NS_ConvertASCIItoUCS2("form"),
                                                       getter_AddRefs(form));
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create form element");
         if (NS_FAILED(rv)) return rv;
@@ -5058,7 +5057,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
     scriptProto->mSrcLoading = PR_FALSE;
 
     if (NS_SUCCEEDED(aStatus)) {
-        nsString stringStr(string, stringLen);
+        nsString stringStr; stringStr.AssignWithConversion(string, stringLen);
         rv = scriptProto->Compile(stringStr.GetUnicode(), stringLen,
                                   scriptProto->mSrcURI, 1,
                                   this, mMasterPrototype);
@@ -5224,9 +5223,9 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
                 nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(result);
                 keyListener->Init(domElement, this);
 
-                AddEventListener("keypress", domEventListener, PR_FALSE);
-                AddEventListener("keydown",  domEventListener, PR_FALSE);
-                AddEventListener("keyup",    domEventListener, PR_FALSE);
+                AddEventListener(NS_ConvertASCIItoUCS2("keypress"), domEventListener, PR_FALSE);
+                AddEventListener(NS_ConvertASCIItoUCS2("keydown"),  domEventListener, PR_FALSE);
+                AddEventListener(NS_ConvertASCIItoUCS2("keyup"),    domEventListener, PR_FALSE);
             }
         }
     }
@@ -5334,12 +5333,12 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 	// check for magical attributes
 	nsAutoString		attrib;
 	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kCoalesceAtom, attrib))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.Equals("false")))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.EqualsWithConversion("false")))
 	{
 		db->SetCoalesceDuplicateArcs(PR_FALSE);
 	}
 	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kAllowNegativesAtom, attrib))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.Equals("false")))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.EqualsWithConversion("false")))
 	{
 		db->SetAllowNegativeAssertions(PR_FALSE);
 	}
@@ -5403,7 +5402,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
         first = last + 1;
 
         // A special 'dummy' datasource
-        if (uriStr.Equals("rdf:null"))
+        if (uriStr.EqualsWithConversion("rdf:null"))
             continue;
 
         rv = rdf_MakeAbsoluteURI(docurl, uriStr);
@@ -5719,7 +5718,7 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
             rv = mObservesElement->GetAttribute(kNameSpaceID_None, kObservesAtom, broadcasterID);
             if (NS_FAILED(rv)) return;
 
-            attribute = "*";
+            attribute.AssignWithConversion("*");
         }
 
         nsAutoString tagStr;
@@ -5809,7 +5808,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
         listener = do_QueryInterface(aElement);
 
-        attribute = "*";
+        attribute.AssignWithConversion("*");
     }
 
     // Make sure we got a valid listener.
@@ -5938,7 +5937,7 @@ nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResu
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
   nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
-  progID.Append(nameSpace);
+  progID.AppendWithConversion(nameSpace);
 
   // Retrieve the appropriate factory.
   NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
@@ -6107,7 +6106,7 @@ XULElementFactoryImpl::XULElementFactoryImpl()
 
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
-        gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+        gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
   }
 }
 

@@ -145,7 +145,7 @@ nsXULCommandDispatcher::SetFocusedElement(nsIDOMElement* aElement)
 {
   mCurrentElement = aElement;
   if (mCurrentElement)
-    UpdateCommands(nsAutoString("focus"));
+    UpdateCommands(NS_ConvertASCIItoUCS2("focus"));
   return NS_OK;
 }
 
@@ -243,7 +243,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsString& aEventName)
 
     nsAutoString id;
     if (mCurrentElement) {
-        rv = mCurrentElement->GetAttribute(nsAutoString("id"), id);
+        rv = mCurrentElement->GetAttribute(NS_ConvertASCIItoUCS2("id"), id);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
         if (NS_FAILED(rv)) return rv;
     }
@@ -391,7 +391,7 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
         }
 
         if (!mCurrentElement)
-          UpdateCommands(nsAutoString("focus"));
+          UpdateCommands(NS_ConvertASCIItoUCS2("focus"));
       }
     }
   }
@@ -470,7 +470,7 @@ nsXULCommandDispatcher::SetScriptObject(void *aScriptObject)
 PRBool
 nsXULCommandDispatcher::Matches(const nsString& aList, const nsString& aElement)
 {
-    if (aList.Equals("*"))
+    if (aList.EqualsWithConversion("*"))
         return PR_TRUE; // match _everything_!
 
     PRInt32 indx = aList.Find(aElement);

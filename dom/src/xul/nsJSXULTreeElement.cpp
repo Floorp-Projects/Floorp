@@ -235,7 +235,7 @@ XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -282,7 +282,7 @@ XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -399,7 +399,7 @@ XULTreeElementAddItemToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -446,7 +446,7 @@ XULTreeElementRemoveItemFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -493,7 +493,7 @@ XULTreeElementAddCellToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -540,7 +540,7 @@ XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -587,7 +587,7 @@ XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -634,7 +634,7 @@ XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -682,14 +682,14 @@ XULTreeElementSelectItemRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -737,14 +737,14 @@ XULTreeElementSelectCellRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -861,7 +861,7 @@ XULTreeElementEnsureElementIsVisible(JSContext *cx, JSObject *obj, uintN argc, j
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -909,7 +909,7 @@ XULTreeElementGetRowIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIXULElementIID,
-                                           "XULElement",
+                                           NS_ConvertASCIItoUCS2("XULElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
