@@ -868,8 +868,8 @@ case "$target" in
     WIDGET_DLL='\"wdgt$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
     GFXWIN_DLL='\"gfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
 
-    case "$target" in
-    *-*-os2_emx)
+    # EMX/GCC build
+    if test "$GNU_CC"; then
         _PEDANTIC=''
         AR=emxomfar
         AR_FLAGS='-p256 r $@'
@@ -885,9 +885,10 @@ case "$target" in
         MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
-        ;;
+    fi
 
-    *-*-os2_vacpp)
+    # Visual Age C++ build
+    if test "$VACPP" = "yes"; then
 #        MOZ_BUILD_ROOT="$ROOT"`pwd -D`
         AR=-ilib
         AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
@@ -919,8 +920,7 @@ case "$target" in
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MKSHLIB='$(LD) $(DSO_LDOPTS)'
         MKCSHLIB='$(LD) $(DSO_LDOPTS)'
-        ;;
-    esac
+    fi
     ;;
 
 alpha*-*-osf*)
@@ -1042,7 +1042,7 @@ if test -z "$MKSHLIB_FORCE_ALL" || test -z "$MKSHLIB_UNFORCE_ALL"; then
     NO_LD_ARCHIVE_FLAGS=1
 fi
 case "$target" in
-*-*-os2_*)
+*-*-os2*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
 *-aix4.3*)
@@ -1092,12 +1092,10 @@ AC_STRUCT_ST_BLKSIZE
 dnl Visual Age for os/2 also defines size_t and off_t in certain 
 dnl  header files.  These defines make Visual Age use the mozilla
 dnl  defines types.
-case "$target" in
-    *-*-os2_vacpp)
-        AC_DEFINE(__size_t)
-        AC_DEFINE(__off_t)
-        ;;
-esac
+if test "$VACPP" = "yes"; then
+   AC_DEFINE(__size_t)
+   AC_DEFINE(__off_t)
+fi
 
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
@@ -2129,14 +2127,12 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     AC_MSG_WARN(Building local copy of NSPR)
     NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --cflags`'
-    case "$target" in
-    *-*-os2_vacpp)
+    # explicitly set libs for Visual Age C++ for OS/2
+    if test "$VACPP" = "yes"; then
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
-        ;;
-    *)
+    else
         NSPR_LIBS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --libs`'
-        ;;
-    esac
+    fi
 fi
 
 dnl system JPEG support
@@ -4082,11 +4078,9 @@ if test "$OS_TARGET" = "OS2"; then
   AC_DEFINE(XP_OS2)
   AC_DEFINE(BSD_SELECT)
   AC_DEFINE(XP_OS2_FIX)
-  case "$target" in
-    *-*-os2_vacpp)
-        LIBS='so32dll.lib tcp32dll.lib'
-        ;;
-  esac
+  if test "$VACPP" = "yes"; then
+      LIBS='so32dll.lib tcp32dll.lib'
+  fi
 elif test "$OS_TARGET" = "WINNT"; then
   AC_DEFINE(XP_PC)
 elif test "$OS_TARGET" = "BeOS"; then
@@ -4212,14 +4206,10 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    case "$target" in
-    *-*-os2_vacpp)
-        ;;
-    *)
+    if test ! "$VACPP"; then
         NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --libs`
         $PERL -pi.bak -e "s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $NSPR_LIBS }" config/autoconf.mk
-        ;;
-    esac
+    fi
     NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
     $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
     rm -f config/autoconf.mk.bak
