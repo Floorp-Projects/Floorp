@@ -27,9 +27,9 @@
 var UBound = 0;
 var bug = '(none)';
 var summary = 'Testing is operator on user-defined classes';
-var cnYes = 'objC is C == true';
-var cnNo = 'objC is C == false';
-var cnRed = 'red';
+var cnYES = 'instance X is class X == true';
+var cnNO = 'instance X is class X == false';
+var cnRED = 'red';
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -50,7 +50,7 @@ class C
 {
   constructor function C ()
   {
-    this.color = cnRed;
+    this.color = cnRED;
   }
 
 } 
@@ -59,13 +59,13 @@ class D
 {
   constructor function D()
   {
-    this.color = cnRed;
+    this.color = cnRED;
   }
 
 } 
 
 
-var objA1:Object = new A;
+var objA1:Object = {};
 var objA2:Object = new A;
 var objA3:Object = (new A);
 
@@ -157,8 +157,8 @@ test();
 function addThis()
 {
   statusitems[UBound] = status;
-  actualvalues[UBound] = isClass(actual);
-  expectedvalues[UBound] = isClass(expect);
+  actualvalues[UBound] = isOfClass(actual);
+  expectedvalues[UBound] = isOfClass(expect);
   UBound++;
 }
 
@@ -178,7 +178,7 @@ function test()
 }
 
 
-function isClass(yes)
+function isOfClass(yes)
 {
-  return yes? cnYes : cnNo;
+  return yes? cnYES : cnNO;
 }
