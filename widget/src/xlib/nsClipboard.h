@@ -60,9 +60,15 @@ protected:
 
   static nsEventStatus PR_CALLBACK Callback(nsGUIEvent *event);
   PRBool  mIgnoreEmptyNotification;
+  inline nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
+  NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
 
 private:
   static nsCOMPtr<nsITransferable>   mTransferable;
+  nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
+  nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
+  nsCOMPtr<nsITransferable>   mSelectionTransferable;
+  nsCOMPtr<nsITransferable>   mGlobalTransferable;
 
 
   // Used for communicating pasted data

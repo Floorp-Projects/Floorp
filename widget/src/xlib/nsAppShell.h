@@ -51,6 +51,7 @@ class nsAppShell : public nsIAppShell
   virtual void *        GetNativeData(PRUint32 aDataType);
   static void           DispatchXEvent(XEvent *event);
  private:
+  int                   xlib_fd;
   nsDispatchListener*     mDispatchListener;
   static void HandleButtonEvent(XEvent *event, nsWidget *aWidget);
   static void HandleMotionNotifyEvent(XEvent *event, nsWidget *aWidget);
