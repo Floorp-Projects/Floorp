@@ -87,6 +87,8 @@
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
+#include "nsIStringBundle.h"
+
 #ifdef MOZ_LOGGING
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
 #define FORCE_PR_LOG 1
@@ -127,6 +129,9 @@ JSRuntime *nsJSEnvironment::sRuntime;
 
 static const char kJSRuntimeServiceContractID[] =
   "@mozilla.org/js/xpc/RuntimeService;1";
+
+static const char kDOMStringBundleURL[] =
+  "chrome://communicator/locale/dom/dom.properties";
 
 static PRThread *gDOMThread;
 
@@ -528,29 +533,48 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   ireq->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
   NS_ENSURE_TRUE(prompt, JS_TRUE);
 
-  NS_NAMED_LITERAL_STRING(title, "Script warning");
-  NS_NAMED_MULTILINE_LITERAL_STRING(msg,
-      NS_L("A script on this page is causing mozilla to ")
-      NS_L("run slowly. If it continues to run, your ")
-      NS_L("computer may become unresponsive.\n\nDo you ")
-      NS_L("want to abort the script?"));
+  // Get localizable strings
+  nsCOMPtr<nsIStringBundleService>
+    stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (!stringService)
+    return JS_TRUE;
 
-  // Open the dialog.
-  PRInt32 buttonPressed = 0;
-  nsresult rv =
-    prompt->ConfirmEx(title.get(), msg.get(),
-                      (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                      (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                      nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
+  nsCOMPtr<nsIStringBundle> bundle;
+  stringService->CreateBundle(kDOMStringBundleURL, getter_AddRefs(bundle));
+  if (!bundle)
+    return JS_TRUE;
+  
+  nsXPIDLString title, msg, stopButton, waitButton;
 
-  if (NS_FAILED(rv) || (buttonPressed == 1)) {
-    // Allow the script to run this long again
-    ctx->mBranchCallbackTime = PR_Now();
+  nsresult rv;
 
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("KillScriptMessage").get(),
+                                  getter_Copies(msg));
+  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("KillScriptTitle").get(),
+                                  getter_Copies(title));
+  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("StopScriptButton").get(),
+                                  getter_Copies(stopButton));
+  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("WaitForScriptButton").get(),
+                                  getter_Copies(waitButton));
+
+  //GetStringFromName can return NS_OK and still give NULL string
+  if (NS_FAILED(rv) || !title || !msg || !stopButton || !waitButton) {
+    NS_ERROR("Failed to get localized strings.");
     return JS_TRUE;
   }
 
-  return JS_FALSE;
+  PRInt32 buttonPressed = 1; //In case user exits dialog by clicking X
+
+  // Open the dialog.
+  rv = prompt->ConfirmEx(title, msg,
+                         (nsIPrompt::BUTTON_TITLE_IS_STRING *
+                          nsIPrompt::BUTTON_POS_0) +
+                         (nsIPrompt::BUTTON_TITLE_IS_STRING *
+                          nsIPrompt::BUTTON_POS_1),
+                          stopButton, waitButton,
+                          nsnull, nsnull, nsnull, &buttonPressed);
+
+  return NS_FAILED(rv) || buttonPressed != 0;
 }
 
 #define JS_OPTIONS_DOT_STR "javascript.options."
