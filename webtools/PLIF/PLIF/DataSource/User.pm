@@ -156,12 +156,12 @@ sub getFieldsHierarchically {
     my $fields = {};
     foreach my $field (@{$self->getFields($app)}) {
         if (not defined($fields->{$field->[2]})) {
-            $fields->{$field->[2]} = { $field->[3] => [$field->[0], $field->[1], $field->[4], ] };
+            $fields->{$field->[2]} = { $field->[3] => { 'type' => $field->[0], 'fieldID' => $field->[1], 'typeData' => $field->[4], } };
         } else {
-            $fields->{$field->[2]}->{$field->[3]} = [$field->[0], $field->[1], $field->[4]];
+            $fields->{$field->[2]}->{$field->[3]} = { 'type' => $field->[0], 'fieldID' => $field->[1], 'typeData' => $field->[4], };
         }
     }
-    return $fields; # { category => { name => [type, fieldID, typeData] } }
+    return $fields; # { category => { name => { 'type' => '', 'fieldID' => 0, 'typeData' => '', } } }
 }
 
 sub getFieldByID {
