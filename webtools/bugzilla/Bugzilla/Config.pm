@@ -158,7 +158,7 @@ sub Param {
     return $param{$param} if exists $param{$param};
 
     # Else error out
-    die "No value for param $param";
+    die "No value for param $param (try running checksetup.pl again)";
 }
 
 sub GetParamList {
