@@ -26,7 +26,7 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
 var NC = "http://home.netscape.com/NC-rdf#";
 
-var sidebar = new Object;
+var sidebarObj = new Object;
 var original_panels = new Array();
 
 function debug(msg)
@@ -36,20 +36,20 @@ function debug(msg)
 
 function Init()
 {
-  sidebar.datasource_uri = window.arguments[0];
-  sidebar.resource       = window.arguments[1];
-  debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
-  debug("sidebar.resource       = " + sidebar.resource);
+  sidebarObj.datasource_uri = window.arguments[0];
+  sidebarObj.resource       = window.arguments[1];
+  debug("sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
+  debug("sidebarObj.resource       = " + sidebarObj.resource);
 
   // This will load the datasource, if it isn't already.
-  sidebar.datasource = RDF.GetDataSource(sidebar.datasource_uri);
+  sidebarObj.datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
 
   // Add the necessary datasources to the select list
   var select_list = document.getElementById('selected-panels');
-  select_list.database.AddDataSource(sidebar.datasource);
+  select_list.database.AddDataSource(sidebarObj.datasource);
 
   // Root the customize dialog at the correct place.
-  select_list.setAttribute('ref', sidebar.resource);
+  select_list.setAttribute('ref', sidebarObj.resource);
 
   saveInitialPanels();
   enableButtons();
@@ -265,7 +265,7 @@ function Save()
   // object. This makes it easier to manipulate the RDF:Seq correctly.
   var container = Components.classes["component://netscape/rdf/container"].createInstance();
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
-  container.Init(sidebar.datasource, RDF.GetResource(sidebar.resource));
+  container.Init(sidebarObj.datasource, RDF.GetResource(sidebarObj.resource));
 
   for (var ii = container.GetCount(); ii >= 1; --ii) {
     debug('removing panel ' + ii);
@@ -279,7 +279,7 @@ function Save()
   }
 
   // Write the modified panels out.
-  sidebar.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
+  sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
 
   window.close();
 }

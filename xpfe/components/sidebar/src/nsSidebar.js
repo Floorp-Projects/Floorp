@@ -32,217 +32,197 @@
  * for portability reasons -- and even when you're building completely
  * platform-specific code, you can't throw across an XPCOM method boundary.)
  */
-function mySidebar() { /* big comment for no code, eh? */ }
+
+const DEBUG = true; /* set to false to suppress debug messages */
+const PANELS_RDF_FILE  = 66626; /* the magic number to find panels.rdf */
+
+const SIDEBAR_PROGID   = "component://mozilla/sidebar";
+const SIDEBAR_CID      = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
+const CONTAINER_PROGID = "component://netscape/rdf/container";
+const LOCATOR_PROGID   = "component://netscape/filelocator";
+const nsISupports      = Components.interfaces.nsISupports;
+const nsIFactory       = Components.interfaces.nsIFactory;
+const nsISidebar       = Components.interfaces.nsISidebar;
+const nsIRDFContainer  = Components.interfaces.nsIRDFContainer;
+const nsIFileLocator   = Components.interfaces.nsIFileLocator;
+const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
+
+function nsSidebar()
+{
+    const RDF_PROGID = "component://netscape/rdf/rdf-service";
+    const nsIRDFService = Components.interfaces.nsIRDFService;
+    
+    this.rdf = Components.classes[RDF_PROGID].getService(nsIRDFService);
+    this.datasource_uri = getSidebarDatasourceURI(PANELS_RDF_FILE);
+    debug('datasource_uri is ' + this.datasource_uri);
+    this.resource = 'urn:sidebar:current-panel-list';
+    this.datasource = this.rdf.GetDataSource(this.datasource_uri);
+}
+
+nsSidebar.prototype.nc = "http://home.netscape.com/NC-rdf#";
+
+nsSidebar.prototype.setWindow =
+function (aWindow)
+{    
+    this.window = aWindow;    
+}
+
+nsSidebar.prototype.isPanel =
+function (aContentURL)
+{
+    var container = 
+        Components.classes[CONTAINER_PROGID].createInstance(nsIRDFContainer);
+
+    container.Init(this.datasource, this.rdf.GetResource(this.resource));
+    
+    /* Create a resource for the new panel and add it to the list */
+    var panel_resource = 
+        this.rdf.GetResource("urn:sidebar:3rdparty-panel:" + aContentURL);
+
+    return (container.IndexOf(panel_resource) != -1);
+}
+
 
 /* decorate prototype to provide ``class'' methods and property accessors */
-mySidebar.prototype = {
-    open: function () {
-        debug("mySidebar::open()");
-        if (!document) return;
-        splitter = top.document.getElementById('sidebar-splitter')
-        if (!splitter) return;
-        splitter.removeAttribute('collapsed');
-    },
-    addPanel: function (aTitle, aContentURL, aCustomizeURL) {
-        debug("mySidebar::addPanel("+aTitle+", "+aContentURL+", "
-             + aCustomizeURL+")");
-
-        var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
-        appShell = appShell.QueryInterface(Components.interfaces.nsIAppShellService);
-
-        // Grab the nsINetSupportDialog. It does not have a prog id
-        // registered, so use the CID instead. Ugly.
-        //var prompt = Components.classes['{05650684-eb9f-11d2-8e19-9ac64aca4d3c}'].getService();
-        var prompt = Components.classes['component://netscape/appshell/netSupportDialog'].getService();
-        prompt = prompt.QueryInterface(Components.interfaces.nsIPrompt);
-
-        // Create a "container" wrapper around the
-        // "urn:sidebar:current-panel-list" object. This makes it easier
-        // to manipulate the RDF:Seq correctly.
-        var container = Components.classes["component://netscape/rdf/container"].createInstance();
-        container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
-        debug("  this.datasource ="+this.datasource);
-        debug("  this.resource ="+this.resource);
-        container.Init(this.datasource, this.rdf.GetResource(this.resource));
-
-        // Create a resource for the new panel and add it to the list
-        var panel_resource = this.rdf.GetResource("urn:sidebar:3rdparty-panel:"+aContentURL);
-        var panel_index = container.IndexOf(panel_resource);
-        if (panel_index != -1) {
-            dump(prompt);
-            prompt.alert("That panel already exists in your sidebar.")
-            return;
-        }
-        if (!prompt.confirm("Are you sure you want to add this panel to your sidebar?")) {
-            return;
-        }
-
-        container.AppendElement(panel_resource);
-
-        // Now make some sidebar-ish assertions about it...
-        this.datasource.Assert(panel_resource,
-                               this.rdf.GetResource(this.nc + "title"),
-                               this.rdf.GetLiteral(aTitle),
-                               true);
-        this.datasource.Assert(panel_resource,
-                               this.rdf.GetResource(this.nc + "content"),
-                               this.rdf.GetLiteral(aContentURL),
-                               true);
-        if (aCustomizeURL && aCustomizeURL != "") {
-            this.datasource.Assert(panel_resource,
-                                   this.rdf.GetResource(this.nc + "customize"),
-                                   this.rdf.GetLiteral(aCustomizeURL),
-                                   true);
-        }
-        
-        // Write the modified panels out.
-        this.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
-
-    },
-    setPanelTitle: function (aTitle) {
-        debug("mySidebar::setPanelTitle("+aTitle+")");
-    },
-    init: function() {
-        // the magic number to find panels.rdf
-        var PANELS_RDF_FILE = 66626;
-
-        // The rdf service
-        this.rdf = 'component://netscape/rdf/rdf-service'
-        this.rdf = Components.classes[this.rdf].getService();
-        this.rdf = this.rdf.QueryInterface(Components.interfaces.nsIRDFService);
-        this.nc = "http://home.netscape.com/NC-rdf#";
-        this.datasource_uri = getSidebarDatasourceURI(PANELS_RDF_FILE);
-        debug('Sidebar datasource_uri is '+this.datasource_uri);
-        this.resource = 'urn:sidebar:current-panel-list';
-        this.datasource = this.rdf.GetDataSource(this.datasource_uri);
-    }
-}
-
-var myModule = {
-    firstTime: true,
-
-    /*
-     * RegisterSelf is called at registration time (component installation
-     * or the only-until-release startup autoregistration) and is responsible
-     * for notifying the component manager of all components implemented in
-     * this module.  The fileSpec, location and type parameters are mostly
-     * opaque, and should be passed on to the registerComponent call
-     * unmolested.
-     */
-    registerSelf: function (compMgr, fileSpec, location, type) {
-        if (0 && this.firstTime) {
-            debug("*** Deferring registration of sidebar JS components");
-            this.firstTime = false;
-            throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-        }
-        debug("*** Registering sidebar JS components");
-        compMgr.registerComponentWithType(this.myCID,
-                                          "Sidebar JS Component",
-                                          "component://mozilla/sidebar.js",
-                                          fileSpec,
-                                          location, true, true, 
-                                          type);
-    },
-
-    /*
-     * The GetClassObject method is responsible for producing Factory and
-     * SingletonFactory objects (the latter are specialized for services).
-     */
-    getClassObject: function (compMgr, cid, iid) {
-        if (!cid.equals(this.myCID))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-
-        if (!iid.equals(Components.interfaces.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-        return this.myFactory;
-    },
-
-    /* CID for this class */
-    myCID: Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}"),
-
-    /* factory object */
-    myFactory: {
-        /*
-         * Construct an instance of the interface specified by iid,
-         * possibly aggregating with the provided |outer|.  (If you don't
-         * know what aggregation is all about, you don't need to.  It reduces
-         * even the mightiest of XPCOM warriors to snivelling cowards.)
-         */
-        CreateInstance: function (outer, iid) {
-            debug("CI: " + iid);
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-            /*
-             * If we had a QueryInterface method (see above), we would write
-             * the following as:
-             *    return (new mySidebar()).QueryInterface(iid);
-             * because our QI would check the IID correctly for us.
-             */
-            
-            if (!iid.equals(Components.interfaces.nsISidebar) &&
-                !iid.equals(Components.interfaces.nsISupports)) {
-                throw Components.results.NS_ERROR_INVALID_ARG;
-            }
-
-            return new mySidebar();
-        }
-    },
-
-    /*
-     * canUnload is used to signal that the component is about to be unloaded.
-     * C++ components can return false to indicate that they don't wish to
-     * be unloaded, but the return value from JS components' canUnload is
-     * ignored: mark-and-sweep will keep everything around until it's no
-     * longer in use, making unconditional ``unload'' safe.
-     *
-     * You still need to provide a (likely useless) canUnload method, though:
-     * it's part of the nsIModule interface contract, and the JS loader _will_
-     * call it.
-     */
-    canUnload: function(compMgr) {
-        debug("*** Unloading sidebar JS components.");
-        return true;
-    }
-};
-    
-function NSGetModule(compMgr, fileSpec) {
-    return myModule;
-}
-
-function debug(s)
+nsSidebar.prototype.addPanel =
+function (aTitle, aContentURL, aCustomizeURL)
 {
-   dump(s+"\n");
+    debug("addPanel(" + aTitle + ", " + aContentURL + ", " +
+          aCustomizeURL + ")");
+
+    if (!this.window)
+    {
+        debug ("no window object set, bailing out.");
+        throw Components.results.NS_ERROR_NOT_INITIALIZED;
+    }
+
+    /* Create a "container" wrapper around the
+     * "urn:sidebar:current-panel-list" object. This makes it easier
+     * to manipulate the RDF:Seq correctly. */
+    var container = 
+        Components.classes[CONTAINER_PROGID].createInstance(nsIRDFContainer);
+    container.Init(this.datasource, this.rdf.GetResource(this.resource));
+    
+    /* Create a resource for the new panel and add it to the list */
+    var panel_resource = 
+        this.rdf.GetResource("urn:sidebar:3rdparty-panel:" + aContentURL);
+    var panel_index = container.IndexOf(panel_resource);
+    if (panel_index != -1)
+    {
+        this.window.alert(aContentURL + " already exists in your sidebar.");
+        return;
+    }
+    
+    var rv = this.window.confirm("Add " + aContentURL + " to your sidebar?");
+    if (!rv)
+        return;
+
+    container.AppendElement(panel_resource);
+
+    /* Now make some sidebar-ish assertions about it... */
+    this.datasource.Assert(panel_resource,
+                           this.rdf.GetResource(this.nc + "title"),
+                           this.rdf.GetLiteral(aTitle),
+                           true);
+    this.datasource.Assert(panel_resource,
+                           this.rdf.GetResource(this.nc + "content"),
+                           this.rdf.GetLiteral(aContentURL),
+                           true);
+    if (aCustomizeURL)
+        this.datasource.Assert(panel_resource,
+                               this.rdf.GetResource(this.nc + "customize"),
+                               this.rdf.GetLiteral(aCustomizeURL),
+                               true);
+        
+    /* Write the modified panels out. */
+    this.datasource.QueryInterface(nsIRDFRemoteDataSource).Flush();
+
+}
+ 
+var sidebarModule = new Object();
+
+sidebarModule.registerSelf =
+function (compMgr, fileSpec, location, type)
+{
+    debug("registering (all right -- a JavaScript module!)");
+    compMgr.registerComponentWithType(SIDEBAR_CID, "Sidebar JS Component",
+                                      SIDEBAR_PROGID, fileSpec, location,
+                                      true, true, type);
 }
 
-function getSidebarDatasourceURI(panels_file_id) {
-  try {
-	  var fileLocatorInterface = Components.interfaces.nsIFileLocator;
-	  var fileLocatorProgID = 'component://netscape/filelocator';
-	  var fileLocatorService  = Components.classes[fileLocatorProgID].getService();
-	  // use the fileLocator to look in the profile directory 
-          // to find 'panels.rdf', which is the
-	  // database of the user's currently selected panels.
-	  fileLocatorService = fileLocatorService.QueryInterface(fileLocatorInterface);
+sidebarModule.getClassObject =
+function (compMgr, cid, iid) {
+    if (!cid.equals(SIDEBAR_CID))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    
+    if (!iid.equals(Components.interfaces.nsIFactory))
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    
+    return sidebarFactory;
+}
 
-	  // if <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
-	  // bin/defaults/profile/panels.rdf to <profile>/panels.rdf
-	  var sidebar_file = fileLocatorService.GetFileLocation(panels_file_id);
+sidebarModule.canUnload =
+function(compMgr)
+{
+    debug("Unloading component.");
+    return true;
+}
+    
+/* factory object */
+sidebarFactory = new Object();
 
-	  if (!sidebar_file.exists()) {	
-		// this should not happen, as GetFileLocation() should copy
-		// defaults/panels.rdf to the users profile directory
-        debug("sidebar file does not exist");
-		return null;
-	  }
+sidebarFactory.CreateInstance =
+function (outer, iid) {
+    debug("CI: " + iid);
+    if (outer != null)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-	  debug("sidebar uri is " + sidebar_file.URLString);
-	  return sidebar_file.URLString;
-  }
-  catch (ex) {
-	// this should not happen
-    debug("Exception raise getting sidebar datasource uri");
-	return null;
-  }
+    if (!iid.equals(nsISidebar) && !iid.equals(nsISupports))
+        throw Components.results.NS_ERROR_INVALID_ARG;
+
+    return new nsSidebar();
+}
+
+/* entrypoint */
+function NSGetModule(compMgr, fileSpec) {
+    return sidebarModule;
+}
+
+/* static functions */
+if (DEBUG)
+    debug = function (s) { dump("-*- sidebar: " + s + "\n"); }
+else
+    debug = function (s) {}
+
+function getSidebarDatasourceURI(panels_file_id)
+{
+    try 
+    {
+        /* use the fileLocator to look in the profile directory 
+         * to find 'panels.rdf', which is the
+         * database of the user's currently selected panels. */
+        var fileLocatorService  =
+            Components.classes[LOCATOR_PROGID].getService(nsIFileLocator);
+
+        /* if <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
+         *bin/defaults/profile/panels.rdf to <profile>/panels.rdf */
+        var sidebar_file = fileLocatorService.GetFileLocation(panels_file_id);
+
+        if (!sidebar_file.exists())
+        {
+            /* this should not happen, as GetFileLocation() should copy
+             * defaults/panels.rdf to the users profile directory */
+            debug("sidebar file does not exist");
+            return null;
+        }
+
+        debug("sidebar uri is " + sidebar_file.URLString);
+        return sidebar_file.URLString;
+    }
+    catch (ex)
+    {
+        /* this should not happen */
+        debug("caught " + ex + " getting sidebar datasource uri");
+        return null;
+    }
 }
