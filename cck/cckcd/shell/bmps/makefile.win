@@ -26,5 +26,5 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\cck\InitDist.win>
 
 export::
-	$(MAKE_INSTALL) *.bmp $(CCKDIST)\CCKTool\Shell\bmps
-	$(MAKE_INSTALL) *.ico $(CCKDIST)\CCKTool\Shell\bmps
+	$(MAKE_INSTALL) *.bmp $(CCKDIST)\Shell\bmps
+	$(MAKE_INSTALL) *.ico $(CCKDIST)\Shell\bmps
