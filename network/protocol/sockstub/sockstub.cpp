@@ -464,8 +464,10 @@ net_flush_sockstub_data(ActiveEntry * ce)
         // temporary hack by mscott
         // otherwise data isn't ready yet:
         cd->pause_for_read = TRUE;
+#if 0
         ce->status = 1;
         return STATUS(ce->status);
+#endif
 
         int err = PR_GetError();
 
