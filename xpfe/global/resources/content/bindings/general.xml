@@ -246,6 +246,14 @@
     </content>
   </binding>
 
+  <binding id="statusbarpanel-menu-iconic" display="xul:menu"
+           extends="chrome://global/content/bindings/general.xml#statusbarpanel">
+    <content>
+      <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
+      <children/>
+    </content>
+  </binding>
+
   <binding id="image">
     <implementation implements="nsIDOMXULImageElement, nsIAccessibleProvider">
       <property name="src"
