@@ -8,6 +8,8 @@ function onJunkMailLoad()
     // XXX todo, what if no folder?
     setupForAccountFromFolder(window.arguments[0].folder.URI);
   }
+
+  doSetOKCancel(onAccept, onCancel, doHelpButton);
 }
 
 function onServerClick(event)
@@ -175,4 +177,11 @@ function conditionallyEnableUI(id)
 function doHelpButton()
 {
   // implement help
+
+  return false; // don't close the top-level window
+}
+
+function onCancel()
+{
+  return true; // close the top-level window
 }

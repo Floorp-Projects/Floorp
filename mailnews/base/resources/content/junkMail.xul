@@ -8,16 +8,13 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/junkMail.dtd">
 
-<dialog id="junkMail"
+<window id="junkMail"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         windowtype="mailnews:junk"
         title="&window.title;"
         onload="onJunkMailLoad()"
-        buttons="accept,cancel,help"
-        ondialogaccept="return onAccept();"
-        ondialoghelp="return doHelpButton();"
         persist="screenX screenY width height">
 
 <stringbundleset id="stringbundleset">
@@ -107,6 +104,10 @@
     </hbox>
   </vbox>
 
+  <separator/>
+
+  <hbox id="okCancelHelpButtonsRight"/>
+
 </vbox>
 
-</dialog>
+</window>
