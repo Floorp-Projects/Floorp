@@ -702,7 +702,7 @@ if ($my_db_check) {
       die "Your MySQL server is either too old or a known broken version.\n",
           "   Bugzilla requires version $sql_want or later of MySQL.\n",
           ($sql_vers eq "3.23.29") ? "Version 3.23.29 has a broken encrypt() command.  3.23.30 fixes this.\n" : "",
-          "   Please visit http://www.mysql.org and download a newer version.\n";
+          "   Please visit http://www.mysql.com and download a newer version.\n";
     }
 
     my @databases = $dbh->func('_ListDBs');
