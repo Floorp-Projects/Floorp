@@ -210,7 +210,7 @@ sub main {
 }
 
 sub p1_Start {
-    # pass 1, find all <ENTRY/>, <EXTERNALREF/>, and <GROUP/> tags 
+    # pass 1, find all <ENTRY/>, <EXTERNALREF/>, and <GROUP/> tags
     # (as well as groups implied by <TYPE/> and <DEPRECATED/> tags), so we
     # can do things like auto link <C/> tags that refer to entrys,
     # and validate <S/> tags in pass 2.
@@ -401,7 +401,7 @@ sub EndTag {
     if (grep(/^$tagname$/, @CDATA_TAGS)) {
         $iscontainer = 1;
         if ($pending_text eq "") {
-            print STDERR "WARNING: Empty container '$tagname' at line " . 
+            print STDERR "WARNING: Empty container '$tagname' at line " .
               $expat->current_line . " ignored.\n";
             #$expat->xpcroak ("Empty container '$tagname'.");
         }
@@ -461,7 +461,7 @@ sub EndTag {
             } else {
                 expat->xpcroak 
                   ("OOPS: Unhandled container formatting tag '$tagname'");
-            } 
+            }
         } else {
             if ($tagname eq $TAGS[$P]) {
                 # paragraph
@@ -733,7 +733,7 @@ sub add_entry_complete {
     my ($html) = @_;
 
     print COMPLETE "<a name='" . $c->{$TAGS[$ENTRY]} . "'></a>\n";
-    print COMPLETE $html;    
+    print COMPLETE $html;
 
 }
 
