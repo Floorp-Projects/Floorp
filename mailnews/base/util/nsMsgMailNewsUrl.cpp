@@ -30,6 +30,9 @@
 #include "nsILoadGroup.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
+#include "nsIInterfaceRequestor.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -81,6 +84,17 @@ nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 	m_runningUrl = aRunningUrl;
 	nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
 
+  // put this back - we need it for urls that don't run through the doc loader
+	if (NS_SUCCEEDED(GetStatusFeedback(getter_AddRefs(statusFeedback))) && statusFeedback)
+	{
+		if (m_runningUrl)
+			statusFeedback->StartMeteors();
+		else
+		{
+			statusFeedback->ShowProgress(0);
+			statusFeedback->StopMeteors();
+		}
+	}
 	if (m_urlListeners)
 	{
 		if (m_runningUrl)
@@ -231,6 +245,29 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
             nsCOMPtr<nsIDocShell> docShell;
             m_msgWindow->GetRootDocShell(getter_AddRefs(docShell));
             nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+
+#if 0   // since we're not going through the doc loader for most mail/news urls,
+       //, this code isn't useful
+        // but I can imagine it could be useful at some point.
+
+            // load group needs status feedback set, since it's
+            // not the main window load group.
+            nsCOMPtr<nsIMsgStatusFeedback> statusFeedback;
+            m_msgWindow->GetStatusFeedback(getter_AddRefs(statusFeedback));
+
+            if (statusFeedback)
+            {
+              nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
+              nsCOMPtr<nsIWebProgressListener> webProgressListener(do_QueryInterface(statusFeedback));
+
+              // register our status feedback object
+              if (statusFeedback && docShell)
+              {
+                webProgressListener = do_QueryInterface(statusFeedback);
+                webProgress->AddProgressListener(webProgressListener);
+              }
+            }
+#endif
 			if (webShell)
 			{
 				nsCOMPtr <nsIDocumentLoader> docLoader;

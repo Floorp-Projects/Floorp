@@ -51,8 +51,8 @@ protected:
 	PRInt32					m_lastPercent;
 	PRInt64					m_lastProgressTime;
 
-  PRBool mQueuedMeteorStarts;
-  PRBool mQueuedMeteorStops;
+  PRInt32 mQueuedMeteorStarts;
+  PRInt32 mQueuedMeteorStops;
   nsCOMPtr<nsITimer> mStartTimer;
   nsCOMPtr<nsITimer> mStopTimer;
 

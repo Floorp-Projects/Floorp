@@ -113,26 +113,28 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
                                    nsresult aStatus)
 {
   nsresult rv;
-  if (aProgressStateFlags & flag_start)
+  if (aProgressStateFlags & flag_is_network)
   {
-    m_lastPercent = 0;
-    StartMeteors();
-    nsXPIDLString loadingDocument;
-    rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").GetUnicode(),
-                                    getter_Copies(loadingDocument));
-    if (NS_SUCCEEDED(rv))
-      ShowStatusString(loadingDocument);
+    if (aProgressStateFlags & flag_start)
+    {
+      m_lastPercent = 0;
+      StartMeteors();
+      nsXPIDLString loadingDocument;
+      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").GetUnicode(),
+                                      getter_Copies(loadingDocument));
+      if (NS_SUCCEEDED(rv))
+        ShowStatusString(loadingDocument);
+    }
+    else if (aProgressStateFlags & flag_stop)
+    {
+      StopMeteors();
+      nsXPIDLString documentDone;
+      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").GetUnicode(),
+                                      getter_Copies(documentDone));
+      if (NS_SUCCEEDED(rv))
+        ShowStatusString(documentDone);
+    }
   }
-  else if (aProgressStateFlags & flag_stop)
-  {
-    StopMeteors();
-    nsXPIDLString documentDone;
-    rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").GetUnicode(),
-                                    getter_Copies(documentDone));
-    if (NS_SUCCEEDED(rv))
-      ShowStatusString(documentDone);
-  }
-
   return NS_OK;
 }
 
@@ -181,8 +183,6 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
   
   if (mStatusFeedback)
     mStatusFeedback->ShowProgress(percentage);
-  if (mQueuedMeteorStarts <= 0)
-    mQueuedMeteorStarts++;
 	return NS_OK;
 }
 
@@ -299,7 +299,8 @@ nsMsgStatusFeedback::notifyStopMeteors(nsITimer *aTimer, void *aClosure)
 void
 nsMsgStatusFeedback::NotifyStartMeteors(nsITimer *aTimer)
 {
-  mQueuedMeteorStarts--;
+  if (mQueuedMeteorStarts > 0)
+    mQueuedMeteorStarts--;
   
   // meteors already spinning, so noop
   if (m_meteorsSpinning) return;
@@ -307,16 +308,17 @@ nsMsgStatusFeedback::NotifyStartMeteors(nsITimer *aTimer)
   // we'll be stopping them soon, don't bother starting.
   if (mQueuedMeteorStops > 0) return;
   
+  m_meteorsSpinning = PR_TRUE;
   // actually start the meteors
   if (mStatusFeedback)
     mStatusFeedback->StartMeteors();
-  m_meteorsSpinning = PR_TRUE;
 }
 
 void
 nsMsgStatusFeedback::NotifyStopMeteors(nsITimer* aTimer)
 {
-  mQueuedMeteorStops--;
+  if (mQueuedMeteorStops > 0)
+    mQueuedMeteorStops--;
   
   // meteors not spinning
   if (!m_meteorsSpinning) return;
