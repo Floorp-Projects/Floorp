@@ -79,14 +79,6 @@ static const nsModuleComponentInfo pModuleInfo[] =
     OE_ICALTODO_CID,
     OE_ICALTODO_CONTRACTID,
     oeICalTodoImplConstructor,
-  },
-  {
-    "Calendar Startup Handler",
-    OE_ICALSTARTUPHANDLER_CID,
-    OE_ICALSTARTUPHANDLER_CONTRACTID,
-    oeICalStartupHandlerConstructor,
-    oeICalStartupHandler::RegisterProc,
-    oeICalStartupHandler::UnregisterProc
   }
 };
 

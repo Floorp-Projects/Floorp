@@ -35,7 +35,7 @@
 
 /* components defined in this file */
 const CLINE_SERVICE_CONTRACTID =
-    "@mozilla.org/commandlinehandler/general-startup;1?type=webcal";
+    "@mozilla.org/commandlinehandler/general-startup;1?type=calendar";
 const CLINE_SERVICE_CID =
     Components.ID("{65ef4b0b-d116-4b93-bf8a-84525992bf27}");
 const ICALCNT_HANDLER_CONTRACTID =
@@ -72,13 +72,13 @@ const nsISupports        = Components.interfaces.nsISupports;
 function CLineService()
 {}
 
-CLineService.prototype.commandLineArgument = "-webcal";
-CLineService.prototype.prefNameForStartup = "general.startup.webcal";
+CLineService.prototype.commandLineArgument = "-calendar";
+CLineService.prototype.prefNameForStartup = "general.startup.calendar";
 CLineService.prototype.chromeUrlForTask = "chrome://calendar/content";
-CLineService.prototype.helpText = "Start with a Calendar client";
+CLineService.prototype.helpText = "Start with calendar";
 CLineService.prototype.handlesArgs = false;
 CLineService.prototype.defaultArgs = "";
-CLineService.prototype.openWindowWithArgs = false;
+CLineService.prototype.openWindowWithArgs = true;
 
 /* factory for command line handler service (CLineService) */
 var CLineFactory = new Object();
@@ -292,7 +292,7 @@ var CalendarModule = new Object();
 CalendarModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-    dump("*** Registering -webcal handler.\n");
+    dump("*** Registering -calendar handler.\n");
 
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 

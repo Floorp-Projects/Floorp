@@ -68,7 +68,6 @@ CPPSRCS		= \
 		oeICalImpl.cpp \
 		oeICalContainerImpl.cpp \
 		oeDateTimeImpl.cpp \
-		oeICalStartupHandler.cpp \
 		$(NULL)
 
 CSRCS           = \
