@@ -49,25 +49,19 @@ nsHTTPConnection::nsHTTPConnection(
         request from the handler
     */
     m_pRequest = new nsHTTPRequest(m_pURL);
-    if (!m_pRequest)
+    if (m_pRequest) {
+        NS_ADDREF(m_pRequest);
+        m_pRequest->SetConnection(this);
+    } else {
         NS_ERROR("unable to create new nsHTTPRequest!");
-    m_pRequest->SetConnection(this);
-    
+    }
 }
 
 nsHTTPConnection::~nsHTTPConnection()
 {
     //TODO if we keep our copy of m_pURL, then delete it too.
-    if (m_pRequest)
-    {
-        delete m_pRequest;
-        m_pRequest = 0;
-    }
-    if (m_pResponse)
-    {
-        delete m_pResponse;
-        m_pResponse = 0;
-    }
+    NS_IF_RELEASE(m_pRequest);
+    NS_IF_RELEASE(m_pResponse);
 
     NS_IF_RELEASE(m_pResponseDataListener);
 }
@@ -136,6 +130,16 @@ nsHTTPConnection::SetRequestHeader(const char* i_Header, const char* i_Value)
 {
     NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
     return m_pRequest->SetHeader(i_Header, i_Value);
+}
+
+NS_METHOD
+nsHTTPConnection::SetResponse(nsHTTPResponse* i_pResp) 
+{ 
+  NS_IF_RELEASE(m_pResponse);
+  m_pResponse = i_pResp;
+  NS_IF_ADDREF(m_pResponse);
+
+  return NS_OK;
 }
 
 NS_METHOD
@@ -311,10 +315,15 @@ nsHTTPConnection::GetURL(nsIURL* *o_URL) const
 NS_IMETHODIMP
 nsHTTPConnection::GetResponseDataListener(nsIStreamListener* *aListener)
 {
-    if (m_pResponseDataListener) {
-        *aListener = m_pResponseDataListener;
-        NS_ADDREF(m_pResponseDataListener);
-    }
-    return NS_OK;
+  nsresult rv = NS_OK;
+
+  if (aListener) {
+    *aListener = m_pResponseDataListener;
+    NS_IF_ADDREF(m_pResponseDataListener);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+
+  return rv;
 }
 

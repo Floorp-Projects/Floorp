@@ -97,7 +97,7 @@ public:
     
     nsIEventQueue*          EventQueue(void) const { return m_pEventQ; };
 
-    NS_IMETHOD              SetResponse(nsHTTPResponse* i_pResp) { if (i_pResp) m_pResponse = i_pResp; return NS_OK;};
+    NS_IMETHOD              SetResponse(nsHTTPResponse* i_pResp);
 
     NS_IMETHOD              GetResponseDataListener(nsIStreamListener* *aListener);
 
