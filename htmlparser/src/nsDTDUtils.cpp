@@ -194,22 +194,36 @@ void nsEntryStack::Append(nsEntryStack *aStack) {
 } 
  
 /**
+ * This method removes the node for the given tag
+ * from anywhere within this entry stack, and shifts
+ * other entries down.
  * 
+ * NOTE: It's odd to be removing an element from the middle
+ *       of a stack, but it's necessary because of how MALFORMED
+ *       html can be. 
  * 
- * @update  gess 01/25/00
+ * anIndex: the index within the stack of the tag to be removed
+ * aTag: the id of the tag to be removed
+ * @update  gess 02/25/00
  */
-nsIParserNode* nsEntryStack::Remove(eHTMLTags aTag) {
+nsIParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
   nsIParserNode* result=0;
 
-  if(0<mCount) {
-    result=mEntries[--mCount].mNode;
+  if((0<mCount) && (anIndex<mCount)){
+    result=mEntries[anIndex].mNode;
 
     ((nsCParserNode*)result)->mUseCount--;
     ((nsCParserNode*)result)->mToken->mUseCount--;
+
+    PRInt32 theIndex=0;
+    mCount-=1;
+    for(theIndex=anIndex;theIndex<mCount;theIndex++){
+      mEntries[theIndex]=mEntries[theIndex+1];
+    }
     mEntries[mCount].mNode=0;
     mEntries[mCount].mStyles=0;
 
-    nsEntryStack* theStyleStack=mEntries[mCount].mParent;
+    nsEntryStack* theStyleStack=mEntries[anIndex].mParent;
 
     if(theStyleStack) {
       //now we have to tell the residual style stack where this tag
@@ -219,7 +233,7 @@ nsIParserNode* nsEntryStack::Remove(eHTMLTags aTag) {
 
       nsTagEntry *theStyleEntry=theStyleStack->mEntries;
       for(sindex=scount-1;sindex>0;sindex--){            
-        if(theStyleEntry->mTag==mEntries[mCount].mTag) {
+        if(theStyleEntry->mTag==aTag) {
           theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
           break;
         }
@@ -267,7 +281,7 @@ nsIParserNode* nsEntryStack::Pop(void) {
   }
   return result;
 } 
- 
+
 /**
  * 
  * @update  harishd 04/04/99

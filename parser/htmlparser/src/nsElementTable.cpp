@@ -1304,9 +1304,6 @@ int nsHTMLElement::GetSynonymousGroups(eHTMLTags aTag) {
     case kPhrase:
     case kSpecial:
     case kFontStyle: 
-      result=theGroup; 
-      break;
-
     case kHTMLContent:
     case kHeadContent:
     case kHeadMisc:
@@ -1394,7 +1391,8 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
       // DIR is a block closure -- Ref. Bug# 25845
 
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
-                                    /* eHTMLTag_td,eHTMLTag_tfoot,eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr, */
+                                    eHTMLTag_td,eHTMLTag_th,
+                                    /* eHTMLTag_tfoot, eHTMLTag_thead,eHTMLTag_tr, */
                                     eHTMLTag_nobr,eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul,eHTMLTag_dir};
 
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
@@ -1815,7 +1813,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
     }
   }
-  else if(IsMemberOf(kFormControl|kExtensions)){
+  else if(IsMemberOf(kFormControl|kExtensions|kPreformatted)){
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
@@ -1830,10 +1828,24 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     }
   }
   else if(IsResidualStyleTag(mTagID)){
-    eHTMLTags theTag=aContext.Last();
-    if(IsResidualStyleTag(theTag)) {
-      result=theTag;
+
+      //we intentionally make 2 passes: 
+      //The first pass tries to exactly match, the 2nd pass matches the group.
+    PRInt32 theIndexCopy=theIndex;
+    while(--theIndex>=anIndex){
+      eHTMLTags theTag=aContext.TagAt(theIndex);
+      if(theTag==mTagID) {
+        return theTag;
+      }
     }
+    theIndex=theIndexCopy;
+    while(--theIndex>=anIndex){
+      eHTMLTags theTag=aContext.TagAt(theIndex);
+      if(gHTMLElements[theTag].IsMemberOf(mParentBits)) {
+        return theTag;
+      }
+    }
+
   }
   return result;
 }

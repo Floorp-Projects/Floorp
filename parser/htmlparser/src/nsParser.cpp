@@ -467,8 +467,6 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
   return PR_FALSE;
 }
 
-#if 0 
-//Lots of test cases for different doctypes...
 char* doctypes[] = {
   "<!DOCTYPE \"-//W3O//DTD W3 HTML 3.0//EN//\">", 
 
@@ -556,7 +554,7 @@ char* doctypes[] = {
   "<!DOCTYPE \"-//IETF//DTD HTML i18n//EN\">",
   0
   };
-#endif
+
 
 /**
  *  This is called when it's time to find out 
@@ -668,8 +666,6 @@ eParseMode DetermineParseMode(nsParser& aParser) {
 }
 
 
-
-
 /**
  * This gets called just prior to the model actually
  * being constructed. It's important to make this the
@@ -692,9 +688,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
       if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
         mParserContext->mDTD=aDefaultDTD;
         if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand,mParserContext->mScanner->GetBuffer())) {
-
           mParserContext->mParseMode=DetermineParseMode(*this);  
-
           mParserContext->mStreamListenerState=eOnDataAvail;
           mParserContext->mDTD->WillBuildModel( aFilename,
                                                 PRBool(0==mParserContext->mPrevContext),
@@ -939,7 +933,6 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!  
 
-
 #if 0
     //this is only for debug purposes
   aSourceBuffer.DebugDump();
@@ -1074,8 +1067,28 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
       //use this to force a buffer-full of content as part of a paste operation...
     theBuffer.Append("<title>title</title><a href=\"one\">link</a>");
 #else
+
+//#define USEFILE
+#ifdef USEFILE
+
+  const char* theFile="c:/temp/rhp.html";
+  fstream input(theFile,ios::in);
+  char buffer[1024];
+  int count=1;
+  while(count) {
+    input.getline(buffer,sizeof(buffer));
+    count=input.gcount();
+    if(0<count) {
+      buffer[count-1]=0;
+      theBuffer.Append(buffer,count-1);
+    }
+  }
+
+#else
       //this is the normal code path for paste...
     theBuffer.Append(aSourceBuffer); 
+#endif
+
 #endif
 
   if(theBuffer.Length()){
