@@ -380,17 +380,29 @@ WCCFLAGS1 := $(subst /,\\,$(CFLAGS))
 WCCFLAGS2 := $(subst -I,-i=,$(WCCFLAGS1))
 WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+USE_CYGWIN := $(if $(findstring ;,$(PATH)),,1))
+endif
+
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+ifdef USE_CYGWIN
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell cygpath -a -w $<))
+else
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+endif
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
 $(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+ifdef USE_CYGWIN
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell cygpath -a -w $<))
+else
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+endif
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
@@ -418,7 +430,11 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 $(OBJDIR)/$(PROG_PREFIX)%: %.cpp
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+ifdef USE_CYGWIN
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell cygpath -a -w $<))
+else
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+endif
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
@@ -438,7 +454,11 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+ifdef USE_CYGWIN
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell cygpath -a -w $<))
+else
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+endif
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
