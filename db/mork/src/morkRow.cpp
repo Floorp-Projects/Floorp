@@ -199,6 +199,121 @@ morkRow::AcquireCellHandle(morkEnv* ev, morkCell* ioCell,
   return (nsIMdbCell*) 0;
 }
 
+mork_count
+morkRow::CountOverlap(morkEnv* ev, morkCell* ioVector, mork_fill inFill)
+  // Count cells in ioVector that change existing cells in this row when
+  // ioVector is added to the row (as in TakeCells()).   This is the set
+  // of cells with the same columns in ioVector and mRow_Cells, which do
+  // not have exactly the same value in mCell_Atom, and which do not both
+  // have change status equal to morkChange_kCut (because cutting a cut
+  // cell still yields a cell that has been cut).  CountOverlap() also
+  // modifies the change attribute of any cell in ioVector to kDup when
+  // the change was previously kCut and the same column cell was found
+  // in this row with change also equal to kCut; this tells callers later
+  // they need not look for that cell in the row again on a second pass.
+{
+  mork_count outCount = 0;
+  mork_pos pos = 0; // needed by GetCell()
+  morkCell* cells = ioVector;
+  morkCell* end = cells + inFill;
+  --cells; // prepare for preincrement
+  while ( ++cells < end && ev->Good() )
+  {
+    mork_column col = cells->GetColumn();
+    
+    morkCell* old = this->GetCell(ev, col, &pos);
+    if ( old ) // same column?
+    {
+      mork_change newChg = cells->GetChange();
+      mork_change oldChg = old->GetChange();
+      if ( newChg != morkChange_kCut || oldChg != newChg ) // not cut+cut?
+      {
+        if ( cells->mCell_Atom != old->mCell_Atom ) // not same atom?
+          ++outCount; // cells will replace old significantly when added
+      }
+      else
+        cells->SetColumnAndChange(col, morkChange_kDup); // note dup status
+    }
+  }
+  return outCount;
+}
+
+void
+morkRow::MergeCells(morkEnv* ev, morkCell* ioVector,
+  mork_fill inVecLength, mork_fill inOldRowFill, mork_fill inOverlap)
+  // MergeCells() is the part of TakeCells() that does the insertion.
+  // inOldRowFill is the old value of mRow_Length, and inOverlap is the
+  // number of cells in the intersection that must be updated.
+{
+  morkCell* newCells = mRow_Cells + inOldRowFill; // 1st new cell in row
+  morkCell* newEnd = newCells + mRow_Length; // one past last cell
+
+  morkCell* srcCells = ioVector;
+  morkCell* srcEnd = srcCells + inVecLength;
+  
+  --srcCells; // prepare for preincrement
+  while ( ++srcCells < srcEnd && ev->Good() )
+  {
+    mork_change srcChg = srcCells->GetChange();
+    if ( srcChg != morkChange_kDup ) // anything to be done?
+    {
+      morkCell* dstCell = 0;
+      if ( inOverlap )
+      {
+        mork_pos pos = 0; // needed by GetCell()
+        dstCell = this->GetCell(ev, srcCells->GetColumn(), &pos);
+      }
+      if ( dstCell )
+      {
+        --inOverlap; // one fewer intersections to resolve
+        // swap the atoms in the cells to avoid ref counting here:
+        morkAtom* dstAtom = dstCell->mCell_Atom;
+        *dstCell = *srcCells; // bitwise copy, taking src atom
+        srcCells->mCell_Atom = dstAtom; // forget cell ref, if any
+      }
+      else if ( newCells < newEnd ) // another new cell exists?
+      {
+        dstCell = newCells++; // alloc another new cell
+        // take atom from source cell, transferring ref to this row:
+        *dstCell = *srcCells; // bitwise copy, taking src atom
+        srcCells->mCell_Atom = 0; // forget cell ref, if any
+      }
+      else // oops, we ran out...
+        ev->NewError("out of new cells");
+    }
+  }
+}
+
+void
+morkRow::TakeCells(morkEnv* ev, morkCell* ioVector, mork_fill inVecLength,
+  morkStore* ioStore)
+{
+  if ( ioVector && inVecLength && ev->Good() )
+  {
+    ++mRow_Seed; // intend to change structure of mRow_Cells
+    mork_pos length = (mork_pos) mRow_Length;
+    
+    mork_count overlap = this->CountOverlap(ev, ioVector, inVecLength);
+
+    mork_size growth = inVecLength - overlap; // cells to add
+    mork_size newLength = length + growth;
+    
+    if ( growth && ev->Good() ) // need to add any cells?
+    {
+      morkPool* pool = ioStore->StorePool();
+      if ( !pool->AddRowCells(ev, this, length + growth) )
+        ev->NewError("cannot take cells");
+    }
+    if ( ev->Good() )
+    {
+      if ( mRow_Length >= newLength )
+        this->MergeCells(ev, ioVector, inVecLength, length, overlap);
+      else
+        ev->NewError("not enough new cells");
+    }
+  }
+}
+
 morkCell*
 morkRow::NewCell(morkEnv* ev, mdb_column inColumn,
   mork_pos* outPos, morkStore* ioStore)
@@ -284,8 +399,7 @@ void
 morkRow::OnZeroTableUse(morkEnv* ev)
 // OnZeroTableUse() is called when CutTableUse() returns zero.
 {
-	// OK, this is a P1 showstopper bug, so I'll comment it out.
-//  ev->NewWarning("need to implement OnZeroTableUse");
+  // ev->NewWarning("need to implement OnZeroTableUse");
 }
 
 void

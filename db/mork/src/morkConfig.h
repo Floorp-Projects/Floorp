@@ -32,6 +32,7 @@
 // { %%%%% begin platform defs peculiar to Mork %%%%%
 #ifdef XP_MAC
 #define MORK_MAC 1
+#define MORK_OBSOLETE 1
 #endif
 
 #ifdef XP_OS2
@@ -46,9 +47,14 @@
 #ifdef XP_UNIX
 #define MORK_UNIX 1
 #endif
+
+#ifdef MORK_OBSOLETE
+#undef MORK_MAC
+#endif
+
 // } %%%%% end platform defs peculiar to Mork %%%%%
 
-#if defined (MORK_WIN) || defined(MORK_UNIX) 
+#if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC)
 #include "stdio.h" 
 #include "ctype.h" 
 #include "errno.h" 
@@ -60,12 +66,12 @@
 
 #define MORK_FILETELL(file) ftell(file) 
 #define MORK_FILESEEK(file, where, how) fseek(file, where, how) 
-#define MORK_FILEREAD(outbuf, insize, file) fread(outbuf, insize, 1, file) 
+#define MORK_FILEREAD(outbuf, insize, file) fread(outbuf, 1, insize, file) 
 #define MORK_FILEFLUSH(file) fflush(file) 
 #define MORK_FILECLOSE(file) fclose(file) 
 #endif /*MORK_WIN*/
 
-#ifdef MORK_MAC 
+#ifdef MORK_OBSOLETE
 #include "xp_file.h" 
 #include "ctype.h" 
 
@@ -76,17 +82,17 @@
 #define MORK_FILEREAD(outbuf, insize, file) XP_FileRead(outbuf, insize, file) 
 #define MORK_FILEFLUSH(file) XP_FileFlush(file) 
 #define MORK_FILECLOSE(file) XP_FileClose(file) 
-#endif /*MORK_MAC*/
+#endif /*MORK_OBSOLETE*/
 
 /* ===== ===== ===== ===== line characters ===== ===== ===== ===== */
-#define mork_kCR '\015'
-#define mork_kLF '\012'
+#define mork_kCR 0x0D
+#define mork_kLF 0x0A
 #define mork_kVTAB '\013'
 #define mork_kFF '\014'
 #define mork_kTAB '\011'
 #define mork_kCRLF "\015\012"     /* A CR LF equivalent string */
 
-#ifdef MORK_MAC
+#if defined(MORK_MAC) || defined(MORK_OBSOLETE)
 #  define mork_kNewline             "\015"
 #  define mork_kNewlineSize 1
 #else
@@ -113,17 +119,13 @@ extern void mork_assertion_signal(const char* inMessage);
 // { %%%%% begin standard c utility methods %%%%%
 /*define MORK_USE_XP_STDLIB 1*/
 
-#ifdef MORK_MAC 
+#ifdef MORK_OBSOLETE 
 #define MORK_PROVIDE_STDLIB 1
-#endif /*MORK_MAC*/
+#endif /*MORK_OBSOLETE*/
 
-#ifdef MORK_WIN 
+#if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC)
 #define MORK_USE_C_STDLIB 1
 #endif /*MORK_WIN*/
-
-#ifdef MORK_UNIX
-#define MORK_USE_NSPR_STDLIB 1
-#endif
 
 #ifdef MORK_USE_C_STDLIB
 #define MORK_MEMCMP(src1,src2,size)  memcmp(src1,src2,size)
@@ -167,16 +169,6 @@ MORK_LIB(mork_size) mork_strlen(const void* inString);
 #define MORK_STRLEN(string)          XP_STRLEN(string)
 #endif /*MORK_USE_XP_STDLIB*/
 
-#ifdef MORK_USE_NSPR_STDLIB
-#define MORK_MEMCMP(src1,src2, size) memcmp(src1, src2, size)
-#define MORK_MEMCPY(src1,src2, size) memcpy(src1, src2, size)
-#define MORK_MEMMOVE(dest, src, size) memmove(src1, src2, size)
-#define MORK_MEMSET(dest,byte,size)  memset(dest,byte,size)
-#define MORK_STRCPY(dest,src)        PL_strcpy(dest,src)
-#define MORK_STRCMP(one,two)         PL_strcmp(one,two)
-#define MORK_STRNCMP(one,two,length) PL_strncmp(one,two,length)
-#define MORK_STRLEN(string)          PL_strlen(string)
-#endif
 
 // } %%%%% end standard c utility methods %%%%%
 

@@ -147,6 +147,35 @@ morkTable::CloseTable(morkEnv* ev) /*i*/ // called by CloseMorkNode();
 // } ===== end morkNode methods =====
 // ````` ````` ````` ````` ````` 
 
+mork_u2
+morkTable::AddCellUse(morkEnv* ev)
+{
+  if ( mTable_CellUses < morkTable_kMaxCellUses ) // not already maxed out?
+    ++mTable_CellUses;
+    
+  return mTable_CellUses;
+}
+
+mork_u2
+morkTable::CutCellUse(morkEnv* ev)
+{
+  if ( mTable_CellUses ) // any outstanding uses to cut?
+  {
+    if ( mTable_CellUses < morkTable_kMaxCellUses ) // not frozen at max?
+      --mTable_CellUses;
+  }
+  else
+    this->CellUsesUnderflowWarning(ev);
+    
+  return mTable_CellUses;
+}
+
+/*static*/ void
+morkTable::CellUsesUnderflowWarning(morkEnv* ev)
+{
+  ev->NewWarning("mTable_CellUses underflow");
+}
+
 /*static*/ void
 morkTable::NonTableTypeError(morkEnv* ev)
 {

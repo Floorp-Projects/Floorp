@@ -51,6 +51,7 @@ class nsIMdbTable;
 #define morkTable_kStartRowArraySize 11 /* modest starting size for array */
 
 #define morkTable_kStartRowMapSlotCount 128
+#define morkTable_kMaxCellUses 0x0FFFF /* max for 16-bit unsigned int */
 
 class morkTable : public morkObject { 
 
@@ -85,7 +86,8 @@ public: // state is public because the entire Mork system is private
   mork_kind       mTable_Kind;
   
   mork_bool       mTable_MustBeUnique;
-  mork_u1         mTable_Pad[ 3 ]; // padding to u4 alignment
+  mork_u1         mTable_Pad;       // padding for u4 alignment
+  mork_u2         mTable_CellUses;  // persistent references from cells
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -109,12 +111,18 @@ public: // dynamic type identification
   { return IsNode() && mNode_Derived == morkDerived_kTable; }
 // } ===== end morkNode methods =====
 
-public: // typing
+public: // errors
   static void NonTableTypeError(morkEnv* ev);
   static void NonTableTypeWarning(morkEnv* ev);
   static void NilRowSpaceError(morkEnv* ev);
 
+public: // warnings
+  static void CellUsesUnderflowWarning(morkEnv* ev);
+
 public: // other table methods
+  
+  mork_u2 AddCellUse(morkEnv* ev);
+  mork_u2 CutCellUse(morkEnv* ev);
 
   // void DirtyAllTableContent(morkEnv* ev);
 
@@ -137,7 +145,7 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
     morkEnv* ev, morkTable** ioSlot)
   { morkNode::SlotWeakNode((morkNode*) me, ev, (morkNode**) ioSlot); }
   
-  static void SlotStrongTableS(morkTable* me,
+  static void SlotStrongTable(morkTable* me,
     morkEnv* ev, morkTable** ioSlot)
   { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
 };

@@ -92,6 +92,10 @@
 #include "morkRowMap.h"
 #endif
 
+#ifndef _MORKPARSER_
+#include "morkParser.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // ````` ````` ````` ````` ````` 
@@ -212,6 +216,15 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
 , mStore_OidAtomSpace( 0 )
 , mStore_GroundAtomSpace( 0 )
 , mStore_GroundColumnSpace( 0 )
+
+, mStore_MorkNoneToken( 0 )
+, mStore_CharsetToken( 0 )
+, mStore_AtomScopeToken( 0 )
+, mStore_RowScopeToken( 0 )
+, mStore_TableScopeToken( 0 )
+, mStore_ColumnScopeToken( 0 )
+, mStore_TableKindToken( 0 )
+
 , mStore_RowSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_AtomSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_Pool(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
@@ -219,6 +232,9 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
   if ( ev->Good() )
   {
     mNode_Derived = morkDerived_kStore;
+    
+    if ( ev->Good() )
+      mStore_MorkNoneToken = this->StringToToken(ev, "mork:none");
     
     if ( ev->Good() )
       mStore_CharsetToken = this->StringToToken(ev, "charset");
@@ -301,6 +317,28 @@ morkStore::AcquireStoreHandle(morkEnv* ev)
   return outStore;
 }
 
+
+morkMaxBookAtom*
+morkStore::StageAliasAsBookAtom(morkEnv* ev, const morkMid* inMid,
+   morkAtomSpace* ioSpace, mork_cscode inForm)
+{
+  if ( inMid && inMid->mMid_Buf )
+  {
+    const morkBuf* buf = inMid->mMid_Buf;
+    mork_size length = buf->mBuf_Fill;
+    if ( length <= morkBookAtom_kMaxBodySize )
+    {
+      mork_aid dummyAid = 1;
+      mStore_BookAtom.InitMaxBookAtom(ev, *buf, 
+        inForm, ioSpace, dummyAid);
+      return &mStore_BookAtom;
+    }
+  }
+  else
+    ev->NilPointerError();
+    
+  return (morkMaxBookAtom*) 0;
+}
 
 morkMaxBookAtom*
 morkStore::StageYarnAsBookAtom(morkEnv* ev, const mdbYarn* inYarn,
@@ -436,6 +474,15 @@ morkStream* morkStore::LazyGetOutStream(morkEnv* ev)
   return mStore_OutStream;
 }
 
+void
+morkStore::ForgetBuilder(morkEnv* ev)
+{
+  if ( mStore_Builder )
+    morkBuilder::SlotStrongBuilder((morkBuilder*) 0, ev, &mStore_Builder);
+  if ( mStore_InStream )
+    morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_InStream);
+}
+
 morkBuilder* morkStore::LazyGetBuilder(morkEnv* ev)
 {
   if ( !mStore_Builder )
@@ -556,7 +603,7 @@ morkStore::CreateStoreFile(morkEnv* ev,
   }
   return ev->Good();
 }
-  
+ 
 morkAtom*
 morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
 {
@@ -586,10 +633,125 @@ morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
   return outAtom;
 }
 
-// mork_bool
-// morkStore::CutBookAtom(morkEnv* ev, morkBookAtom* ioAtom)
-// {
-// }
+mork_bool
+morkStore::MidToOid(morkEnv* ev, const morkMid& inMid, mdbOid* outOid)
+{
+  *outOid = inMid.mMid_Oid;
+  const morkBuf* buf = inMid.mMid_Buf;
+  if ( buf && !outOid->mOid_Scope )
+  {
+    mdbOid oid = inMid.mMid_Oid;
+    if ( buf->mBuf_Fill <= morkBookAtom_kMaxBodySize )
+    {
+      if ( buf->mBuf_Fill == 1 )
+      {
+        mork_u1* name = (mork_u1*) buf->mBuf_Body;
+        if ( name )
+        {
+          outOid->mOid_Scope = (mork_scope) *name;
+          return ev->Good();
+        }
+      }
+      morkAtomSpace* groundSpace = this->LazyGetGroundColumnSpace(ev);
+      if ( groundSpace )
+      {
+        mork_cscode form = 0; // default
+        mork_aid aid = 1; // dummy
+        mStore_BookAtom.InitMaxBookAtom(ev, *buf, form, groundSpace, aid);
+        morkMaxBookAtom* keyAtom = &mStore_BookAtom;
+        morkAtomBodyMap* map = &groundSpace->mAtomSpace_AtomBodies;
+        morkBookAtom* bookAtom = map->GetAtom(ev, keyAtom);
+        if ( bookAtom )
+          outOid->mOid_Scope = bookAtom->mBookAtom_Id;
+        else
+        {
+          bookAtom = groundSpace->MakeBookAtomCopy(ev, *keyAtom);
+          if ( bookAtom )
+          {
+            outOid->mOid_Scope = bookAtom->mBookAtom_Id;
+            bookAtom->MakeCellUseForever(ev);
+          }
+        }
+      }
+    }
+  }
+  return ev->Good();
+}
+
+morkRow*
+morkStore::MidToRow(morkEnv* ev, const morkMid& inMid)
+{
+  mdbOid tempOid;
+  this->MidToOid(ev, inMid, &tempOid);
+  return this->OidToRow(ev, &tempOid);
+}
+
+morkTable*
+morkStore::MidToTable(morkEnv* ev, const morkMid& inMid)
+{
+  mdbOid tempOid;
+  this->MidToOid(ev, inMid, &tempOid);
+  return this->OidToTable(ev, &tempOid);
+}
+
+mork_bool
+morkStore::MidToYarn(morkEnv* ev, const morkMid& inMid, mdbYarn* outYarn)
+{
+  mdbOid tempOid;
+  this->MidToOid(ev, inMid, &tempOid);
+  return this->OidToYarn(ev, tempOid, outYarn);
+}
+
+mork_bool
+morkStore::OidToYarn(morkEnv* ev, const mdbOid& inOid, mdbYarn* outYarn)
+{
+  morkBookAtom* atom = 0;
+      
+  morkAtomSpace* atomSpace = mStore_AtomSpaces.GetAtomSpace(ev, inOid.mOid_Scope);
+  if ( atomSpace )
+  {
+    morkAtomAidMap* map = &atomSpace->mAtomSpace_AtomAids;
+    atom = map->GetAid(ev, (mork_aid) inOid.mOid_Id);
+  }
+  atom->GetYarn(outYarn); // note this is safe even when atom==nil
+
+  return ev->Good();
+}
+
+morkBookAtom*
+morkStore::MidToAtom(morkEnv* ev, const morkMid& inMid)
+{
+  morkBookAtom* outAtom = 0;
+  mdbOid oid;
+  if ( this->MidToOid(ev, inMid, &oid) )
+  {
+    morkAtomSpace* atomSpace = mStore_AtomSpaces.GetAtomSpace(ev, oid.mOid_Scope);
+    if ( atomSpace )
+    {
+      morkAtomAidMap* map = &atomSpace->mAtomSpace_AtomAids;
+      outAtom = map->GetAid(ev, (mork_aid) oid.mOid_Id);
+    }
+  }
+  return outAtom;
+}
+
+/*static*/ void
+morkStore::SmallTokenToOneByteYarn(morkEnv* ev, mdb_token inToken,
+  mdbYarn* outYarn)
+{
+  if ( outYarn->mYarn_Buf && outYarn->mYarn_Size ) // any space in yarn at all?
+  {
+    mork_u1* buf = (mork_u1*) outYarn->mYarn_Buf; // for byte arithmetic
+    buf[ 0 ] = (mork_u1) inToken; // write the single byte
+    outYarn->mYarn_Fill = 1;
+    outYarn->mYarn_More = 0;
+  }
+  else // just record we could not write the single byte
+  {
+    outYarn->mYarn_More = 1;
+    outYarn->mYarn_Fill = 0;
+  }
+}
 
 void
 morkStore::TokenToString(morkEnv* ev, mdb_token inToken, mdbYarn* outTokenName)
@@ -604,21 +766,159 @@ morkStore::TokenToString(morkEnv* ev, mdb_token inToken, mdbYarn* outTokenName)
     atom->GetYarn(outTokenName); // note this is safe even when atom==nil
   }
   else // token is an "immediate" single byte string representation?
+    this->SmallTokenToOneByteYarn(ev, inToken, outTokenName);
+}
+  
+void
+morkStore::SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
+  const mdbOid* inOid)
+{
+// mork_token   mStore_MorkNoneToken;    // token for "mork:none"   // fill=9
+// mork_column  mStore_CharsetToken;     // token for "charset"     // fill=7
+// mork_column  mStore_AtomScopeToken;   // token for "atomScope"   // fill=9
+// mork_column  mStore_RowScopeToken;    // token for "rowScope"    // fill=8
+// mork_column  mStore_TableScopeToken;  // token for "tableScope"  // fill=10
+// mork_column  mStore_ColumnScopeToken; // token for "columnScope" // fill=11
+// mork_kind    mStore_TableKindToken;   // token for "tableKind"   // fill=9
+// ---------------------ruler-for-token-length-above---123456789012
+
+  if ( inOid->mOid_Scope == morkStore_kColumnSpaceScope && inAtom->IsWeeBook() )
   {
-    mdbYarn* y = outTokenName;
-    if ( y->mYarn_Buf && y->mYarn_Size ) // any space in yarn at all?
+    const mork_u1* body = ((const morkWeeBookAtom*) inAtom)->mWeeBookAtom_Body;
+    mork_size size = inAtom->mAtom_Size;
+
+    if ( size >= 7 && size <= 11 )
     {
-      mork_u1* buf = (mork_u1*) y->mYarn_Buf; // for byte arithmetic
-      buf[ 0 ] = (mork_u1) inToken; // write the single byte
-      y->mYarn_Fill = 1;
-      y->mYarn_More = 0;
-    }
-    else // just record we could not write the single byte
-    {
-      y->mYarn_More = 1;
-      y->mYarn_Fill = 0;
+      if ( size == 9 )
+      {
+        if ( *body == 'm' )
+        {
+          if ( MORK_MEMCMP(body, "mork:none", 9) == 0 )
+            mStore_MorkNoneToken = inAtom->mBookAtom_Id;
+        }
+        else if ( *body == 'a' )
+        {
+          if ( MORK_MEMCMP(body, "atomScope", 9) == 0 )
+            mStore_AtomScopeToken = inAtom->mBookAtom_Id;
+        }
+        else if ( *body == 't' )
+        {
+          if ( MORK_MEMCMP(body, "tableKind", 9) == 0 )
+            mStore_TableKindToken = inAtom->mBookAtom_Id;
+        }
+      }
+      else if ( size == 7 && *body == 'c' )
+      {
+        if ( MORK_MEMCMP(body, "charset", 7) == 0 )
+          mStore_CharsetToken = inAtom->mBookAtom_Id;
+      }
+      else if ( size == 8 && *body == 'r' )
+      {
+        if ( MORK_MEMCMP(body, "rowScope", 8) == 0 )
+          mStore_RowScopeToken = inAtom->mBookAtom_Id;
+      }
+      else if ( size == 10 && *body == 't' )
+      {
+        if ( MORK_MEMCMP(body, "tableScope", 10) == 0 )
+          mStore_TableScopeToken = inAtom->mBookAtom_Id;
+      }
+      else if ( size == 11 && *body == 'c' )
+      {
+        if ( MORK_MEMCMP(body, "columnScope", 11) == 0 )
+          mStore_ColumnScopeToken = inAtom->mBookAtom_Id;
+      }
     }
   }
+}
+
+morkAtom*
+morkStore::AddAlias(morkEnv* ev, const morkMid& inMid, mork_cscode inForm)
+{
+  morkBookAtom* outAtom = 0;
+  if ( ev->Good() )
+  {
+    const mdbOid* oid = &inMid.mMid_Oid;
+    morkAtomSpace* atomSpace = this->LazyGetAtomSpace(ev, oid->mOid_Scope);
+    if ( atomSpace )
+    {
+      morkMaxBookAtom* keyAtom =
+        this->StageAliasAsBookAtom(ev, &inMid, atomSpace, inForm);
+      if ( keyAtom )
+      {
+         morkAtomAidMap* map = &atomSpace->mAtomSpace_AtomAids;
+        outAtom = map->GetAid(ev, (mork_aid) oid->mOid_Id);
+        if ( outAtom )
+        {
+          if ( !outAtom->EqualFormAndBody(ev, keyAtom) )
+              ev->NewError("duplicate alias ID");
+        }
+        else
+        {
+          keyAtom->mBookAtom_Id = oid->mOid_Id;
+          outAtom = atomSpace->MakeBookAtomCopyWithAid(ev,
+            *keyAtom, (mork_aid) oid->mOid_Id);
+            
+          if ( outAtom && outAtom->IsWeeBook() )
+          {
+            if ( oid->mOid_Scope == morkStore_kColumnSpaceScope )
+            {
+              mork_size size = outAtom->mAtom_Size;
+              if ( size >= 7 && size <= 11 )
+                this->SyncTokenIdChange(ev, outAtom, oid);
+            }
+          }
+        }
+      }
+    }
+  }
+  return outAtom;
+}
+
+mork_token
+morkStore::BufToToken(morkEnv* ev, const morkBuf* inBuf)
+{
+  mork_token outToken = 0;
+  if ( ev->Good() )
+  {
+    const mork_u1* s = (const mork_u1*) inBuf->mBuf_Body;
+    mork_bool nonAscii = ( *s > 0x7F );
+    mork_size length = inBuf->mBuf_Fill;
+    if ( nonAscii || length > 1 ) // more than one byte?
+    {
+      mork_cscode form = 0; // default charset
+      morkAtomSpace* space = this->LazyGetGroundColumnSpace(ev);
+      if ( space )
+      {
+        morkMaxBookAtom* keyAtom = 0;
+        if ( length <= morkBookAtom_kMaxBodySize )
+        {
+          mork_aid aid = 1; // dummy
+          mStore_BookAtom.InitMaxBookAtom(ev, *inBuf, form, space, aid);
+          keyAtom = &mStore_BookAtom;
+        }
+        if ( keyAtom )
+        {
+          morkAtomBodyMap* map = &space->mAtomSpace_AtomBodies;
+          morkBookAtom* bookAtom = map->GetAtom(ev, keyAtom);
+          if ( bookAtom )
+            outToken = bookAtom->mBookAtom_Id;
+          else
+          {
+            bookAtom = space->MakeBookAtomCopy(ev, *keyAtom);
+            if ( bookAtom )
+            {
+              outToken = bookAtom->mBookAtom_Id;
+              bookAtom->MakeCellUseForever(ev);
+            }
+          }
+        }
+      }
+    }
+    else // only a single byte in inTokenName string:
+      outToken = *s;
+  }
+  
+  return outToken;
 }
 
 mork_token
@@ -702,6 +1002,8 @@ morkStore::HasTableKind(morkEnv* ev, mdb_scope inRowScope,
   mdb_kind inTableKind, mdb_count* outTableCount)
 {
   mork_bool outBool = morkBool_kFalse;
+
+  ev->StubMethodOnlyError();
   
   return outBool;
 }
@@ -790,6 +1092,19 @@ morkStore::GetPortTableCursor(morkEnv* ev, mdb_scope inRowScope,
 }
 
 morkRow*
+morkStore::NewRow(morkEnv* ev, mdb_scope inRowScope)
+{
+  morkRow* outRow = 0;
+  if ( ev->Good() )
+  {
+    morkRowSpace* rowSpace = this->LazyGetRowSpace(ev, inRowScope);
+    if ( rowSpace )
+      outRow = rowSpace->NewRow(ev);
+  }
+  return outRow;
+}
+
+morkRow*
 morkStore::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)
 {
   morkRow* outRow = 0;
@@ -803,16 +1118,42 @@ morkStore::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)
 }
 
 morkRow*
-morkStore::NewRow(morkEnv* ev, mdb_scope inRowScope)
+morkStore::OidToRow(morkEnv* ev, const mdbOid* inOid)
+  // OidToRow() finds old row with oid, or makes new one if not found.
 {
   morkRow* outRow = 0;
   if ( ev->Good() )
   {
-    morkRowSpace* rowSpace = this->LazyGetRowSpace(ev, inRowScope);
+    morkRowSpace* rowSpace = this->LazyGetRowSpace(ev, inOid->mOid_Scope);
     if ( rowSpace )
-      outRow = rowSpace->NewRow(ev);
+    {
+      outRow = rowSpace->mRowSpace_Rows.GetOid(ev, inOid);
+      if ( !outRow && ev->Good() )
+        outRow = rowSpace->NewRowWithOid(ev, inOid);
+    }
   }
   return outRow;
+}
+
+morkTable*
+morkStore::OidToTable(morkEnv* ev, const mdbOid* inOid)
+  // OidToTable() finds old table with oid, or makes new one if not found.
+{
+  morkTable* outTable = 0;
+  if ( ev->Good() )
+  {
+    morkRowSpace* rowSpace = this->LazyGetRowSpace(ev, inOid->mOid_Scope);
+    if ( rowSpace )
+    {
+      outTable = rowSpace->mRowSpace_Tables.GetTable(ev, inOid->mOid_Id);
+      if ( !outTable && ev->Good() )
+      {
+        mork_kind tableKind = mStore_MorkNoneToken;
+        outTable = rowSpace->NewTableWithTid(ev, inOid->mOid_Id, tableKind);
+      }
+    }
+  }
+  return outTable;
 }
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

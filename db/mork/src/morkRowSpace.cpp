@@ -231,6 +231,37 @@ morkRowSpace::FindTableByKind(morkEnv* ev, mork_kind inTableKind)
 }
 
 morkTable*
+morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
+  mork_kind inTableKind)
+{
+  morkTable* outTable = 0;
+  
+  if ( inTableKind )
+  {
+    mdb_bool mustBeUnique = morkBool_kFalse;
+    nsIMdbHeap* heap = mSpace_Store->mPort_Heap;
+    morkTable* table = new(*heap, ev)
+      morkTable(ev, morkUsage::kHeap, heap, mSpace_Store, heap, this,
+        inTid, inTableKind, mustBeUnique);
+    if ( table )
+    {
+      if ( mRowSpace_Tables.AddTable(ev, table) )
+      {
+        outTable = table;
+        if ( mRowSpace_NextTableId <= inTid )
+          mRowSpace_NextTableId = inTid + 1;
+      }
+      else
+        table->CutStrongRef(ev);
+    }
+  }
+  else
+    this->ZeroKindError(ev);
+    
+  return outTable;
+}
+
+morkTable*
 morkRowSpace::NewTable(morkEnv* ev, mork_kind inTableKind,
   mdb_bool inMustBeUnique)
 {
@@ -328,7 +359,12 @@ morkRowSpace::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)
       row->InitRow(ev, inOid, this, /*length*/ 0, pool);
       
       if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
+      {
         outRow = row;
+        mork_rid rid = inOid->mOid_Id;
+        if ( mRowSpace_NextRowId <= rid )
+          mRowSpace_NextRowId = rid + 1;
+      }
       else
         pool->ZapRow(ev, row);
     }

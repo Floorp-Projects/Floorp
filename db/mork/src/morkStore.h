@@ -115,6 +115,7 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 **| all other explicitly tokenized strings.
 |*/
 #define morkStore_kGroundColumnSpace 'c' /* for mStore_GroundColumnSpace*/
+#define morkStore_kColumnSpaceScope ((mork_scope) 'c') /*kGroundColumnSpace*/
 #define morkStore_kGroundAtomSpace 'a' /* for mStore_GroundAtomSpace*/
 #define morkStore_kStreamBufSize (8 * 1024) /* okay buffer size */
 
@@ -150,6 +151,7 @@ public: // state is public because the entire Mork system is private
 
   morkStream*      mStore_OutStream; // stream using file used by the writer
   
+  mork_token       mStore_MorkNoneToken; // token for "mork:none"
   mork_column      mStore_CharsetToken; // token for "charset"
   mork_column      mStore_AtomScopeToken; // token for "atomScope"
   mork_column      mStore_RowScopeToken; // token for "rowScope"
@@ -164,8 +166,16 @@ public: // state is public because the entire Mork system is private
 
   // we alloc a max size book atom to reuse space for atom map key searches:
   morkMaxBookAtom  mStore_BookAtom; // staging area for atom map searches
+ 
+public: // coping with any changes to store token slots above:
+ 
+  void SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
+    const mdbOid* inOid);
 
 public: // building an atom inside mStore_BookAtom from a char* string
+
+  morkMaxBookAtom* StageAliasAsBookAtom(morkEnv* ev,
+    const morkMid* inMid, morkAtomSpace* ioSpace, mork_cscode inForm);
 
   morkMaxBookAtom* StageYarnAsBookAtom(morkEnv* ev,
     const mdbYarn* inYarn, morkAtomSpace* ioSpace);
@@ -186,6 +196,7 @@ public: // lazy creation of members and nested row or atom spaces
 
   morkStream*      LazyGetInStream(morkEnv* ev);
   morkBuilder*     LazyGetBuilder(morkEnv* ev); 
+  void             ForgetBuilder(morkEnv* ev); 
 
   morkStream*      LazyGetOutStream(morkEnv* ev);
   
@@ -221,6 +232,8 @@ public: // typing
 public: //  store utilties
   
   morkAtom* YarnToAtom(morkEnv* ev, const mdbYarn* inYarn);
+  morkAtom* AddAlias(morkEnv* ev, const morkMid& inMid,
+    mork_cscode inForm);
 
 public: // other store methods
 
@@ -239,10 +252,29 @@ public: // other store methods
     const char* inFilePath,
     const mdbOpenPolicy* inOpenPolicy);
     
-  // mork_bool CutBookAtom(morkEnv* ev, morkBookAtom* ioAtom);
+  mork_token BufToToken(morkEnv* ev, const morkBuf* inBuf);
   mork_token StringToToken(morkEnv* ev, const char* inTokenName);
   mork_token QueryToken(morkEnv* ev, const char* inTokenName);
   void TokenToString(morkEnv* ev, mdb_token inToken, mdbYarn* outTokenName);
+  
+  mork_bool MidToOid(morkEnv* ev, const morkMid& inMid,
+     mdbOid* outOid);
+  mork_bool OidToYarn(morkEnv* ev, const mdbOid& inOid, mdbYarn* outYarn);
+  mork_bool MidToYarn(morkEnv* ev, const morkMid& inMid,
+     mdbYarn* outYarn);
+
+  morkBookAtom* MidToAtom(morkEnv* ev, const morkMid& inMid);
+  morkRow* MidToRow(morkEnv* ev, const morkMid& inMid);
+  morkTable* MidToTable(morkEnv* ev, const morkMid& inMid);
+  
+  morkRow* OidToRow(morkEnv* ev, const mdbOid* inOid);
+  // OidToRow() finds old row with oid, or makes new one if not found.
+
+  morkTable* OidToTable(morkEnv* ev, const mdbOid* inOid);
+  // OidToTable() finds old table with oid, or makes new one if not found.
+  
+  static void SmallTokenToOneByteYarn(morkEnv* ev, mdb_token inToken,
+    mdbYarn* outYarn);
   
   mork_bool HasTableKind(morkEnv* ev, mdb_scope inRowScope, 
     mdb_kind inTableKind, mdb_count* outTableCount);

@@ -46,9 +46,6 @@
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
-// ````` ````` ````` ````` ````` 
-// { ===== begin morkNode interface =====
-
 void
 morkCell::SetYarn(morkEnv* ev, const mdbYarn* inYarn, morkStore* ioStore)
 {

@@ -65,31 +65,31 @@ class morkBuilder /*d*/ : public morkParser {
   // after finding ends of group transactions, we can re-seek the start:
   // mork_pos      mParser_GroupContentStartPos; // start of this group
     
+  // mdbOid        mParser_TableOid; // table oid if inside a table
+  // mdbOid        mParser_RowOid;   // row oid if inside a row
   // mork_gid      mParser_GroupId; // group ID if inside a group
-  // mork_tid      mParser_TableId; // table ID if inside a table
-  // mork_rid      mParser_RowId;   // row ID if inside a row
     
   // mork_bool     mParser_InPort;  // called OnNewPort but not OnPortEnd?
   // mork_bool     mParser_InDict;  // called OnNewDict but not OnDictEnd?
   // mork_bool     mParser_InCell;  // called OnNewCell but not OnCellEnd?
   // mork_bool     mParser_InMeta;  // called OnNewMeta but not OnMetaEnd?
     
-  // morkAlias     mParser_Alias;   // current alias being parsed
-  // note that mParser_Alias.mAlias_Buf points at mParser_ScopeSpool below:
+  // morkMid     mParser_Mid;   // current alias being parsed
+  // note that mParser_Mid.mMid_Buf points at mParser_ScopeCoil below:
     
-  // blob spools allocated in mParser_Heap
-  // morkSpool     mParser_ScopeSpool;   // place to accumulate ID scope blobs
-  // morkSpool     mParser_ValueSpool;   // place to accumulate value blobs
-  // morkSpool     mParser_ColumnSpool;  // place to accumulate column blobs
-  // morkSpool     mParser_StringSpool;  // place to accumulate string blobs
+  // blob coils allocated in mParser_Heap
+  // morkCoil     mParser_ScopeCoil;   // place to accumulate ID scope blobs
+  // morkCoil     mParser_ValueCoil;   // place to accumulate value blobs
+  // morkCoil     mParser_ColumnCoil;  // place to accumulate column blobs
+  // morkCoil     mParser_StringCoil;  // place to accumulate string blobs
     
-  // morkSpoolSink mParser_ScopeSink;  // writes to mParser_ScopeSpool
-  // morkSpoolSink mParser_ValueSink;  // writes to mParser_ValueSpool
-  // morkSpoolSink mParser_ColumnSink; // writes to mParser_ColumnSpool
-  // morkSpoolSink mParser_StringSink; // writes to mParser_StringSpool
+  // morkSpool    mParser_ScopeSpool;  // writes to mParser_ScopeCoil
+  // morkSpool    mParser_ValueSpool;  // writes to mParser_ValueCoil
+  // morkSpool    mParser_ColumnSpool; // writes to mParser_ColumnCoil
+  // morkSpool    mParser_StringSpool; // writes to mParser_StringCoil
 
   // yarns allocated in mParser_Heap
-  // morkYarn      mParser_AliasYarn;   // place to receive from AliasToYarn()
+  // morkYarn      mParser_MidYarn;   // place to receive from MidToYarn()
   
   // span showing current ongoing file position status:
   // morkSpan      mParser_PortSpan; // span of current db port file
@@ -118,8 +118,8 @@ protected: // protected morkBuilder members
   morkRow*         mBuilder_Row;      // current row being built (or nil)
   morkCell*        mBuilder_Cell;     // current cell within CellsVec (or nil)
   
-  morkRowSpace*    mBuilder_RowSpace;  // space for mBuilder_CurrentRowScope
-  morkAtomSpace*   mBuilder_AtomSpace; // space for mBuilder_CurrentAtomScope
+  morkRowSpace*    mBuilder_RowSpace;  // space for mBuilder_CellRowScope
+  morkAtomSpace*   mBuilder_AtomSpace; // space for mBuilder_CellAtomScope
   
   morkAtomSpace*   mBuilder_OidAtomSpace;   // ground atom space for oids
   morkAtomSpace*   mBuilder_ScopeAtomSpace; // ground atom space for scopes
@@ -133,6 +133,8 @@ protected: // protected morkBuilder members
   mork_cscode      mBuilder_r;          // token for "r"
   mork_cscode      mBuilder_a;          // token for "a"
   mork_cscode      mBuilder_t;          // token for "t"
+  
+  mork_token       mBuilder_MorkNoneToken; // token for "mork:none"
   
   // tokens that become set as the result of meta cells in port rows:
   mork_cscode      mBuilder_PortForm;       // default port charset format
@@ -151,21 +153,25 @@ protected: // protected morkBuilder members
   mork_scope       mBuilder_RowAtomScope;  // row atom scope
 
   // meta tokens currently in force, driven by meta info slots above:
-  mork_cscode      mBuilder_CurrentForm;       // current charset format
-  mork_scope       mBuilder_CurrentRowScope;   // current row scope
-  mork_scope       mBuilder_CurrentAtomScope;  // current atom scope
+  mork_cscode      mBuilder_CellForm;       // cell charset format
+  mork_scope       mBuilder_CellAtomScope;  // cell atom scope
+
+  mork_cscode      mBuilder_DictForm;       // dict charset format
+  mork_scope       mBuilder_DictAtomScope;  // dict atom scope
+
+  mork_token*      mBuilder_MetaTokenSlot; // pointer to some slot above
   
   // If any of these 'cut' bools are true, it means a minus was seen in the
   // Mork source text to indicate removal of content from some container.
   // (Note there is no corresponding 'add' bool, since add is the default.)
   // CutRow implies the current row should be cut from the table.
   // CutCell implies the current column should be cut from the row.
-  mork_bool        mBuilder_CutRow;    // row with kCut change
-  mork_bool        mBuilder_CutCell;   // cell with kCut change
+  mork_bool        mBuilder_DoCutRow;    // row with kCut change
+  mork_bool        mBuilder_DoCutCell;   // cell with kCut change
   mork_u1          mBuilder_Pad1;      // pad to u4 alignment
   mork_u1          mBuilder_Pad2;      // pad to u4 alignment
   
-  morkCell         mBuilder_CellsVec[ morkBuilder_kCellsVecSize ];
+  morkCell         mBuilder_CellsVec[ morkBuilder_kCellsVecSize + 1 ];
   mork_fill        mBuilder_CellsVecFill; // count used in CellsVec
   // Note when mBuilder_CellsVecFill equals morkBuilder_kCellsVecSize, and 
   // another cell is added, this means all the cells in the vector above
@@ -199,14 +205,28 @@ public: // dynamic type identification
   { return IsNode() && mNode_Derived == morkDerived_kBuilder; }
 // } ===== end morkNode methods =====
 
-public: // typing
+public: // errors
   static void NonBuilderTypeError(morkEnv* ev);
+  static void NilBuilderCellError(morkEnv* ev);
+  static void NilBuilderRowError(morkEnv* ev);
+  static void NilBuilderTableError(morkEnv* ev);
+  static void NonColumnSpaceScopeError(morkEnv* ev);
+  
+  void LogGlitch(morkEnv* ev, const morkGlitch& inGlitch, 
+    const char* inKind);
+
+public: // other builder methods
+
+  morkCell* AddBuilderCell(morkEnv* ev,
+    const morkMid& inMid, mork_change inChange);
+
+  void FlushBuilderCells(morkEnv* ev);
   
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // in virtual morkParser methods, data flow subclass to parser
 
-    virtual void AliasToYarn(morkEnv* ev,
-      const morkAlias& inAlias,  // typically an alias to concat with strings
+    virtual void MidToYarn(morkEnv* ev,
+      const morkMid& inMid,  // typically an alias to concat with strings
       mdbYarn* outYarn);
     // The parser might ask that some aliases be turned into yarns, so they
     // can be concatenated into longer blobs under some circumstances.  This
@@ -216,60 +236,64 @@ public: // in virtual morkParser methods, data flow subclass to parser
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // out virtual morkParser methods, data flow parser to subclass
 
-    virtual void OnNewPort(morkEnv* ev, const morkPlace& inPlace);
-    virtual void OnPortGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
-    virtual void OnPortEnd(morkEnv* ev, const morkSpan& inSpan);  
+  virtual void OnNewPort(morkEnv* ev, const morkPlace& inPlace);
+  virtual void OnPortGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
+  virtual void OnPortEnd(morkEnv* ev, const morkSpan& inSpan);  
 
-    virtual void OnNewGroup(morkEnv* ev, const morkPlace& inPlace, mork_gid inGid);
-    virtual void OnGroupGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
-    virtual void OnGroupCommitEnd(morkEnv* ev, const morkSpan& inSpan);  
-    virtual void OnGroupAbortEnd(morkEnv* ev, const morkSpan& inSpan);  
+  virtual void OnNewGroup(morkEnv* ev, const morkPlace& inPlace, mork_gid inGid);
+  virtual void OnGroupGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
+  virtual void OnGroupCommitEnd(morkEnv* ev, const morkSpan& inSpan);  
+  virtual void OnGroupAbortEnd(morkEnv* ev, const morkSpan& inSpan);  
 
-    virtual void OnNewPortRow(morkEnv* ev, const morkPlace& inPlace, 
-      const morkAlias& inAlias, mork_change inChange);
-    virtual void OnPortRowGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
-    virtual void OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan);  
+  virtual void OnNewPortRow(morkEnv* ev, const morkPlace& inPlace, 
+    const morkMid& inMid, mork_change inChange);
+  virtual void OnPortRowGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
+  virtual void OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan);  
 
-    virtual void OnNewTable(morkEnv* ev, const morkPlace& inPlace,
-      const morkAlias& inAlias, mork_change inChange);
-    virtual void OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch);
-    virtual void OnTableEnd(morkEnv* ev, const morkSpan& inSpan);
-      
-    virtual void OnNewMeta(morkEnv* ev, const morkPlace& inPlace);
-    virtual void OnMetaGlitch(morkEnv* ev, const morkGlitch& inGlitch);
-    virtual void OnMetaEnd(morkEnv* ev, const morkSpan& inSpan);
+  virtual void OnNewTable(morkEnv* ev, const morkPlace& inPlace,
+    const morkMid& inMid, mork_change inChange);
+  virtual void OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch);
+  virtual void OnTableEnd(morkEnv* ev, const morkSpan& inSpan);
+    
+  virtual void OnNewMeta(morkEnv* ev, const morkPlace& inPlace);
+  virtual void OnMetaGlitch(morkEnv* ev, const morkGlitch& inGlitch);
+  virtual void OnMetaEnd(morkEnv* ev, const morkSpan& inSpan);
 
-    virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
-      const morkAlias& inAlias, mork_change inChange);
-    virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
-    virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan);  
+  virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
+    const morkMid& inMid, mork_change inChange);
+  virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
+  virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan);  
 
-    virtual void OnNewDict(morkEnv* ev, const morkPlace& inPlace);
-    virtual void OnDictGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
-    virtual void OnDictEnd(morkEnv* ev, const morkSpan& inSpan);  
+  virtual void OnNewDict(morkEnv* ev, const morkPlace& inPlace);
+  virtual void OnDictGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
+  virtual void OnDictEnd(morkEnv* ev, const morkSpan& inSpan);  
 
-    virtual void OnAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias);
+  virtual void OnAlias(morkEnv* ev, const morkSpan& inSpan,
+    const morkMid& inMid);
 
-    virtual void OnAliasGlitch(morkEnv* ev, const morkGlitch& inGlitch);
+  virtual void OnAliasGlitch(morkEnv* ev, const morkGlitch& inGlitch);
 
-    virtual void OnNewCell(morkEnv* ev, const morkPlace& inPlace,
-      const morkAlias& inAlias, mork_change inChange);
-    virtual void OnCellGlitch(morkEnv* ev, const morkGlitch& inGlitch);
-    virtual void OnCellForm(morkEnv* ev, mork_cscode inCharsetFormat);
-    virtual void OnCellEnd(morkEnv* ev, const morkSpan& inSpan);
-      
-    virtual void OnValue(morkEnv* ev, const morkSpan& inSpan,
-      const morkBuf& inBuf);
+  virtual void OnNewCell(morkEnv* ev, const morkPlace& inPlace,
+    const morkMid* inMid, const morkBuf* inBuf, mork_change inChange);
+  // Exactly one of inMid and inBuf is nil, and the other is non-nil.
+  // When hex ID syntax is used for a column, then inMid is not nil, and
+  // when a naked string names a column, then inBuf is not nil.
 
-    virtual void OnValueAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias);
+  virtual void OnCellGlitch(morkEnv* ev, const morkGlitch& inGlitch);
+  virtual void OnCellForm(morkEnv* ev, mork_cscode inCharsetFormat);
+  virtual void OnCellEnd(morkEnv* ev, const morkSpan& inSpan);
+    
+  virtual void OnValue(morkEnv* ev, const morkSpan& inSpan,
+    const morkBuf& inBuf);
 
-    virtual void OnRowAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias);
+  virtual void OnValueMid(morkEnv* ev, const morkSpan& inSpan,
+    const morkMid& inMid);
 
-    virtual void OnTableAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias);
+  virtual void OnRowMid(morkEnv* ev, const morkSpan& inSpan,
+    const morkMid& inMid);
+
+  virtual void OnTableMid(morkEnv* ev, const morkSpan& inSpan,
+    const morkMid& inMid);
   
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // public non-poly morkBuilder methods
