@@ -49,13 +49,14 @@ sub purge($) {
     my ($dirname) = @_;
     my ($file, $dir, $tmp, $listfile);
     my (@dirlist, @filelist, @masterlist, @removelist);
-
-    #print "Inside purge: $dirname, $listfile\n";
+    my $ignoredir = 0;
 
     $listfile = "$dirname/.headerlist";
 
-    # Return if master listfile does not exist
-    return if (! -e "$listfile" );
+    #print "Inside purge: $dirname, $listfile\n";
+
+    # Ignore files and just process subdirs if there's no master filelist
+    $ignoredir = 1 if (! -e "$listfile" );
 
     # Create lists of current files and subdirectories
     my $SDIR = new IO::Handle;
@@ -65,25 +66,27 @@ sub purge($) {
 	if ( -d "$dirname/$file" ) {
 	    push @dirlist, "$file";
 	} else {
-	    push @filelist, "$file";
+	    push @filelist, "$file" if (!$ignoredir);
 	}
     }
     closedir($SDIR);
 
-    # Read in "master" file list
-    undef @masterlist;
-    my $MLIST = new IO::Handle;
-    open($MLIST, "$listfile") || die "$listfile: $!\n";
-    while ($tmp = <$MLIST>) {
-	chomp($tmp);
-	push @masterlist, "$tmp";
-    }
-    close($MLIST);
+    if (!$ignoredir) {
+	# Read in "master" file list
+	undef @masterlist;
+	my $MLIST = new IO::Handle;
+	open($MLIST, "$listfile") || die "$listfile: $!\n";
+	while ($tmp = <$MLIST>) {
+	    chomp($tmp);
+	    push @masterlist, "$tmp";
+	}
+	close($MLIST);
 
-    # compare master list with read list
-    undef @removelist;
-    foreach $file (@filelist) {
-	push @removelist, $file if (!grep(/$file/, @masterlist));
+	# compare master list with read list
+	undef @removelist;
+	foreach $file (@filelist) {
+	    push @removelist, $file if (!grep(/$file/, @masterlist));
+	}
     }
 
     # Call purge recursively
@@ -92,14 +95,16 @@ sub purge($) {
 	purge("$dirname/$dir");
     }
 
-    # Remove files
-    foreach $file (@removelist) {
-	print "purge old header: $dirname/$file\n";
-	unlink("$dirname/$file");
+    if (!$ignoredir) {
+	# Remove files
+	foreach $file (@removelist) {
+	    print "purge old header: $dirname/$file\n";
+	    unlink("$dirname/$file");
+	}
     }
 
     #Unlink listfile now that we're done processing this dir
-    unlink("$listfile");
+    unlink("$listfile") if (!$ignoredir);
     
 }
 
