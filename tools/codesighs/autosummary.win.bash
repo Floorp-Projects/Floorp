@@ -109,7 +109,9 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 #   Find the types of files we are interested in.
 #
 ONEFINDPASS="$MYTMPDIR/onefind.list"
-find $OBJROOT -type f -name "*.obj" -or -name "*.map" > $ONEFINDPASS
+find $OBJROOT -type f -name "*.obj" -or -name "*.map" | while read FNAME; do
+    cygpath -m $FNAME >> $ONEFINDPASS
+done
 
 
 #
