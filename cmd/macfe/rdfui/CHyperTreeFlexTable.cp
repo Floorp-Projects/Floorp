@@ -426,9 +426,17 @@ CHyperTreeFlexTable :: DrawIconsSelf( const STableCell& inCell, IconTransformTyp
 		icon->SetImageURL ( url );
 		icon->DrawImage ( topLeft, kTransformNone, width, height );
 	}
-	else
+	else {		
+		// use the "open state" transform if container is open, but only if the triggers are hidden.
+		// The Finder doesn't use the open state in list view because it uses the triangles
+		// to show that. However, if they aren't being shown, we need another way to indicate
+		// an open container to the user.
+		if ( HT_IsContainerOpen(cellNode) &&
+				URDFUtilities::PropertyValueBool( TopNode(), gNavCenter->showTreeConnections, true) == false )
+			inTransformType |= kTransformOpen;
 		CStandardFlexTable::DrawIconsSelf(inCell, inTransformType, inIconRect);
-
+	}
+	
 } // DrawIconsSelf
 
 
@@ -905,6 +913,8 @@ CHyperTreeFlexTable :: OpenRow ( TableIndexT inRow )
 				HT_GetOpenState(node, &openState);
 				SetCellExpansion(STableCell(inRow, FindTitleColumnID()), !openState);
 			}
+			// redraw the container to get the new icon state
+			RefreshRowRange( inRow, inRow );
 		}
 	} // if valid node
 
