@@ -111,15 +111,15 @@
 <!ENTITY miscLicenseState.label "state:">
 <!ENTITY miscLicenseState.accesskey "t">
 <!ENTITY miscMaiden.label "Mother's Maiden Name:">
-<!ENTITY miscMaiden.accesskey "a">
+<!ENTITY miscMaiden.accesskey "M">
 <!ENTITY miscBirthday.label "Birthday:">
+<!ENTITY miscBirthday.accesskey "B">
 <!ENTITY miscBirthdayMonth.label "mo">
-<!ENTITY miscBirthdayMonth.accesskey "m">
 <!ENTITY miscBirthdayDay.label "dy">
 <!ENTITY miscBirthdayYear.label "yr">
 <!ENTITY miscAnniv.label "Anniversary:">
+<!ENTITY miscAnniv.accesskey "A">
 <!ENTITY miscAnnivMonth.label "mo">
-<!ENTITY miscAnnivMonth.accesskey "o">
 <!ENTITY miscAnnivDay.label "dy">
 <!ENTITY miscAnnivYear.label "yr">
 
