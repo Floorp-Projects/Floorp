@@ -416,9 +416,11 @@ COffscreenDrawable::SetDimensions(int32 inWidth, int32 inHeight)
 			GetGWorld ( &gp, &gd );
 			SetGWorld ( mGWorld, NULL );
 			
-			// DEBUG - so we know for sure when we draw unitialized pixels!
-			ForeColor ( redColor );
-			PaintRect ( &mGWorld->portRect );
+			#if DEBUG
+				// DEBUG - so we know for sure when we draw unitialized pixels!
+				ForeColor ( redColor );
+				PaintRect ( &mGWorld->portRect );
+			#endif
 			
 			SetGWorld ( gp, gd );
 			
