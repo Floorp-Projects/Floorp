@@ -107,12 +107,10 @@ GECKO_LIBS =  		-lraptorgfx 		-ljsdom 		-ljsurl 		$(NULL)
 IMGLIB_LIBS =          -limg                $(NULL)
 
 
-NETLIB_LIBS = -lneckoutil_s
-
 JSJ_LIB = 
 TK_LIBS = 
 
-ALL_MOZ_LIBS =          $(GECKO_LIBS)          $(NETLIB_LIBS)         $(IMGLIB_LIBS)         $(BASE_LIBS)           $(JSJ_LIB)             $(NSPR_LIBS)           $(TK_LIBS)             $(NULL)
+ALL_MOZ_LIBS =          $(GECKO_LIBS)          $(IMGLIB_LIBS)         $(BASE_LIBS)           $(JSJ_LIB)             $(NSPR_LIBS)           $(TK_LIBS)             $(NULL)
 
 
 MOZILLA_LIBS = -L$(MOZILLA_DIR)/dist/lib          $(ALL_MOZ_LIBS)
