@@ -35,13 +35,14 @@ my $startfrom = ParseTimeAndCheck(FormData('startfrom'));
 
 Lock();
 LoadTreeConfig();
+LoadDirList();
 LoadCheckins();
 @::CheckInList = ();
-WriteCheckins();
-Unlock();
 
 
 $| = 1;
+
+ConnectToDatabase();
 
 print "<TITLE> Rebooting, please wait...</TITLE>
 
@@ -50,88 +51,83 @@ print "<TITLE> Rebooting, please wait...</TITLE>
 <h3>$::TreeInfo{$::TreeID}->{'description'}</h3>
 
 <p>
-Searching for first checkin after " . MyFmtClock($startfrom) . "...<p>\n";
+Searching for first checkin after " . SqlFmtClock($startfrom) . "...<p>\n";
 
+my $branch = $::TreeInfo{$::TreeID}->{'branch'};
+print "<p> $branch <p> \n";
 
-my $mungedname = $::TreeInfo{$::TreeID}->{'repository'};
-$mungedname =~ s@/@_@g;
-$mungedname =~ s/^_//;
+my $sqlstring = "select type, UNIX_TIMESTAMP(when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid and branches.branch='$branch' and when>='" . SqlFmtClock($startfrom) . "' order by when;";
+print "<p> $sqlstring <p>\n";
+SendSQL("$sqlstring");
 
-my $filename = "data/checkinlog/$mungedname";
+my ($change, $date, $who, $repos, $dir, $file, $rev, $sticky, $branch, $linesa, $linesr, $log);
+my ($lastchange, $lastdate, $lastwho, $lastrepos, $lastdir, $lastrev, $laststicky, $lastbranch, $lastlinesa, $lastlinesr, $lastlog);
+my ($id, $info, $lastdate, @files, @fullinfo);
+my ($d, $f, $okdir, $full);
+my ($r);
+$lastdate = "";
+$lastdir = "";
+@files = ();
+@fullinfo = ();
+while (($change, $date, $who, $repos, $dir, $file, $rev, $sticky, $branch, $linesa, $linesr, $log) = FetchSQLData()) {
+#	print "<p>$change $date $who $repos $dir $file $rev $sticky $branch $linesa $linesr $log<p>\n ";
+if (($date ne $lastdate && $lastdate ne "") || ($dir ne $lastdir && $lastdir ne "")) {
 
-open(FID, "<$filename") || die "Can't open $filename";
+	$okdir = 0;
+LEGALDIR:
+	foreach $d (sort( grep(!/\*$/, @::LegalDirs))) {
+		if ($lastdir =~ m!^$d\b!) {
+			$okdir = 1;
+			last LEGALDIR;
+		}
+	}
+	if ($okdir) {
+		print "<br>";
+		print "$lastchange $lastdate $lastwho $lastrepos <br> $lastdir ";
+		print "<br>";
+		foreach $f (@files) { print "$f ";}
+		print " <br>$lastrev $laststicky $lastbranch $lastlinesa $lastlinesr <br>$lastlog";
+		print "\n<br>--------------------------------------------------------<br>\n";
+		$r++;
+		$id = "::checkin_${lastdate}_$r";
+		push @::CheckInList, $id;
+	
+		$info = eval("\\\%$id");
+		%$info = (
+		person	  => $lastwho,
+		date	  => $lastdate,
+		dir	  => $lastdir,
+		files	  => join('!NeXt!', @files),
+		'log'	  => MarkUpText(html_quote(trim($lastlog))),
+		treeopen => $::TreeOpen,
+		fullinfo => join('!NeXt!', @fullinfo)
+		);
+	}
 
-my $foundfirst = 0;
+@files = ();
+@fullinfo = ();
+}
+$lastchange = $change;
+$lastdate = $date;
+$lastwho = $who;
+$lastrepos = $repos;
+$lastdir = $dir;
+$lastrev = $rev;
+$laststicky = $sticky;
+$lastbranch = $branch;
+$lastlinesa = $linesa;
+$lastlinesr = $linesr;
+$lastlog = $log;
 
-my $buffer = "";
-
-
-my $tempfile = "data/repophook.$$";
-
-my $count = 0;
-my $lastdate = 0;
-
-sub FlushBuffer {
-    if (!$foundfirst || $buffer eq "") {
-        return;
-    }
-    open(TMP, ">$tempfile") || die "Can't open $tempfile";
-    print TMP "junkline\n\n$buffer\n";
-    close(TMP);
-    system("./addcheckin.pl -treeid $::TreeID $tempfile");
-#    unlink($tempfile);
-    $buffer = "";
-    $count++;
-    if ($count % 100 == 0) {
-        print "$count scrutinized...<br>\n";
-    }
+if (!($file=~/Tag:/ || ($file=~/$branch/) && ($branch) )) {
+push @files, $file;
+push @fullinfo, "$file|$rev|$linesa|$linesr|";
+}
 }
 
-my $now = time();
+WriteCheckins();
+Unlock();
 
-while (<FID>) {
-    chomp();
-    my $line = $_;
-    if ($line =~ /^.\|/) {
-        my ($chtype, $date) = (split(/\|/, $line));
-        if ($date < $lastdate) {
-            print "Ick; dates out of order!<br>\n";
-            print "<pre>" . value_quote($line) . "</pre><p>\n";
-        }
-        $lastdate = $date;
-        if ($foundfirst) {
-            $buffer .= "$line\n";
-        } else {
-            if ($date >= $startfrom) {
-                if ($date >= $now) {
-                    print "Found a future date! (ignoring):<br>\n";
-                    print "<pre>" . value_quote($line) . "</pre><p>\n";
-                } else {
-                    $foundfirst = 1;
-                    print "Found first line: <br>\n";
-                    print "<pre>" . value_quote($line) . "</pre><p>\n";
-                    print "OK, now processing checkins...<p>";
-                    $buffer = "$line\n";
-                    $count = 0;
-                }
-            } else {
-                $count++;
-                if ($count % 2000 == 0) {
-                    print "Skipped $count lines...<p>\n";
-                }
-            }
-        }
-    } elsif ($line =~ /^:ENDLOGCOMMENT$/) {
-        $buffer .= "$line\n";
-        FlushBuffer();
-    } else {
-        $buffer .= "$line\n";
-    }
-}
-
-FlushBuffer();
-        
-                
-print "OK, done. \n";
+print "<p>OK, done. \n";
 
 PutsTrailer();
