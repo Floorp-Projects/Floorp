@@ -37,6 +37,14 @@ class nsISupportsArray;
 #define NS_STYLECOLOR_SID   \
 {0x05953860, 0xca9c, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+// SID 0ba04d20-d89e-11d1-8031-006008159b5a
+#define NS_STYLESPACING_SID   \
+{0x0ba04d20, 0xd89e, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+// SID 0a7036d0-d89e-11d1-8031-006008159b5a
+#define NS_STYLEBORDER_SID   \
+{0x0a7036d0, 0xd89e, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
 // SID 4fb83b60-cf27-11d1-8031-006008159b5a
 #define NS_STYLELIST_SID   \
 {0x4fb83b60, 0xcf27, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
@@ -73,6 +81,26 @@ struct nsStyleColor : public nsStyleStruct {
   nscoord mBackgroundXPosition;
   nscoord mBackgroundYPosition;
   nsString mBackgroundImage;            // absolute url string
+};
+
+struct nsStyleSpacing: public nsStyleStruct {
+  nsMargin  mMargin;
+  nsMargin  mPadding;
+  nsMargin  mBorder;                    // automatic computed value
+  nsMargin  mBorderPadding;             // automatic computed value
+protected:
+  nsStyleSpacing(void);
+  ~nsStyleSpacing(void);
+};
+
+struct nsStyleBorder: public nsStyleStruct {
+  PRUint8   mSizeFlag[4];               // See nsStyleConsts.h
+  nsMargin  mSize;
+  PRUint8   mStyle[4];                  // See nsStyleConsts.h
+  nscolor   mColor[4];
+protected:
+  nsStyleBorder(void);
+  ~nsStyleBorder(void);
 };
 
 struct nsStyleList : public nsStyleStruct {

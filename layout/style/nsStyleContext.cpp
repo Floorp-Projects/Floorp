@@ -27,6 +27,7 @@
 
 #include "nsIFrame.h"
 
+//#define DEBUG_REFS
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -37,11 +38,17 @@ static const PRBool gsDebug = PR_FALSE;
 
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
+
+// --------------------
+// nsStyleFont
+//
 nsStyleFont::nsStyleFont(const nsFont& aFont)
   : mFont(aFont)
 {
@@ -74,6 +81,9 @@ void StyleFontImpl::InheritFrom(const nsStyleFont& aCopy)
   mThreeD = aCopy.mThreeD;
 }
 
+// --------------------
+// nsStyleColor
+//
 struct StyleColorImpl: public nsStyleColor {
   StyleColorImpl(void)
   {
@@ -105,6 +115,77 @@ void StyleColorImpl::InheritFrom(const nsStyleColor& aCopy)
 }
 
 
+// --------------------
+// nsStyleSpacing
+//
+nsStyleSpacing::nsStyleSpacing(void)
+  : mMargin(0, 0, 0, 0),
+    mPadding(0, 0, 0, 0),
+    mBorderPadding(0, 0, 0, 0)
+{
+}
+
+nsStyleSpacing::~nsStyleSpacing(void)
+{
+}
+
+struct StyleSpacingImpl: public nsStyleSpacing {
+  StyleSpacingImpl(void)
+    : nsStyleSpacing()
+  {}
+
+  ~StyleSpacingImpl(void)
+  {}
+
+  virtual const nsID& GetID(void)
+  { return kStyleSpacingSID;  }
+
+  virtual void InheritFrom(const nsStyleSpacing& aCopy);
+};
+
+void StyleSpacingImpl::InheritFrom(const nsStyleSpacing& aCopy)
+{
+  // spacing values not inherited
+}
+
+// --------------------
+// nsStyleBorder
+//
+
+nsStyleBorder::nsStyleBorder(void)
+  : mSize(0, 0, 0, 0)
+{
+  mSizeFlag[0] = mSizeFlag[1] = mSizeFlag[2] = mSizeFlag[3] = NS_STYLE_BORDER_WIDTH_LENGTH_VALUE;
+  mStyle[0] = mStyle[1] = mStyle[2] = mStyle[3] = NS_STYLE_BORDER_STYLE_NONE;
+  mColor[0] = mColor[1] = mColor[2] = mColor[3] = NS_RGB(0, 0, 0);
+}
+
+nsStyleBorder::~nsStyleBorder(void)
+{
+}
+
+struct StyleBorderImpl: public nsStyleBorder {
+  StyleBorderImpl(void)
+    : nsStyleBorder()
+  {}
+
+  ~StyleBorderImpl(void)
+  {}
+
+  virtual const nsID& GetID(void)
+  { return kStyleBorderSID;  }
+
+  virtual void InheritFrom(const nsStyleBorder& aCopy);
+};
+
+void StyleBorderImpl::InheritFrom(const nsStyleBorder& aCopy)
+{
+  // border values not inherited
+}
+
+// --------------------
+// nsStyleList
+//
 struct StyleListImpl: public nsStyleList {
   StyleListImpl(void)
   {
@@ -129,6 +210,9 @@ void StyleListImpl::InheritFrom(const nsStyleList& aCopy)
   mListStylePosition = aCopy.mListStylePosition;
 }
 
+// --------------------
+// nsStyleMolecule
+//
 nsStyleMolecule::nsStyleMolecule()
 {
 }
@@ -191,6 +275,7 @@ public:
   virtual nsStyleStruct* GetData(const nsIID& aSID);
 
   virtual void InheritFrom(const StyleContextImpl& aParent);
+  virtual void PostProcessData(void);
 
   virtual void HackStyleFor(nsIPresContext* aPresContext,
                             nsIContent* aContent,
@@ -204,10 +289,16 @@ public:
   // the style data...
   StyleFontImpl     mFont;
   StyleColorImpl    mColor;
+  StyleSpacingImpl  mSpacing;
+  StyleBorderImpl   mBorder;
   StyleListImpl     mList;
 // xxx backward support hack
   StyleMoleculeImpl mMolecule;
 };
+
+#ifdef DEBUG_REFS
+static PRInt32 gInstanceCount;
+#endif
 
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* aRules, 
                                    nsIPresContext* aPresContext)
@@ -215,6 +306,8 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* a
     mRules(aRules),
     mFont(aPresContext->GetDefaultFont()),
     mColor(),
+    mSpacing(),
+    mBorder(),
     mList(),
     mMolecule()
 {
@@ -233,12 +326,20 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* a
       NS_RELEASE(rule);
     }
   }
+#ifdef DEBUG_REFS
+  ++gInstanceCount;
+  fprintf(stdout, "%d + StyleContext\n", gInstanceCount);
+#endif
 }
 
 StyleContextImpl::~StyleContextImpl()
 {
   mParent = nsnull; // weak ref
   NS_IF_RELEASE(mRules);
+#ifdef DEBUG_REFS
+  --gInstanceCount;
+  fprintf(stdout, "%d - StyleContext\n", gInstanceCount);
+#endif
 }
 
 NS_IMPL_ISUPPORTS(StyleContextImpl, kIStyleContextIID)
@@ -304,6 +405,12 @@ nsStyleStruct* StyleContextImpl::GetData(const nsIID& aSID)
   if (aSID.Equals(kStyleColorSID)) {
     return &mColor;
   }
+  if (aSID.Equals(kStyleSpacingSID)) {
+    return &mSpacing;
+  }
+  if (aSID.Equals(kStyleBorderSID)) {
+    return &mBorder;
+  }
   if (aSID.Equals(kStyleListSID)) {
     return &mList;
   }
@@ -317,17 +424,39 @@ void StyleContextImpl::InheritFrom(const StyleContextImpl& aParent)
 {
   mFont.InheritFrom(aParent.mFont);
   mColor.InheritFrom(aParent.mColor);
+  mSpacing.InheritFrom(aParent.mSpacing);
+  mBorder.InheritFrom(aParent.mBorder);
   mList.InheritFrom(aParent.mList);
   mMolecule.InheritFrom(aParent.mMolecule);
+}
+
+static void CalcBorderSize(nscoord& aSize, PRUint8 aFlag)
+{
+  static const nscoord kBorderSize[3] = // XXX need real numbers here (this is probably wrong anyway)
+      { NS_POINTS_TO_TWIPS_INT(1), 
+        NS_POINTS_TO_TWIPS_INT(3), 
+        NS_POINTS_TO_TWIPS_INT(5) };
+  if (aFlag < NS_STYLE_BORDER_WIDTH_LENGTH_VALUE) {
+    aSize = kBorderSize[aFlag];
+  }
+}
+
+void StyleContextImpl::PostProcessData(void)
+{
+  CalcBorderSize(mBorder.mSize.top, mBorder.mSizeFlag[NS_SIDE_TOP]);
+  CalcBorderSize(mBorder.mSize.right, mBorder.mSizeFlag[NS_SIDE_RIGHT]);
+  CalcBorderSize(mBorder.mSize.bottom, mBorder.mSizeFlag[NS_SIDE_BOTTOM]);
+  CalcBorderSize(mBorder.mSize.left, mBorder.mSizeFlag[NS_SIDE_LEFT]);
+
+  mSpacing.mBorder = mBorder.mSize;
+  mSpacing.mBorderPadding = mSpacing.mPadding;
+  mSpacing.mBorderPadding += mBorder.mSize;
 }
 
 void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
                                     nsIContent* aContent,
                                     nsIFrame* aParentFrame)
 {
-/*
-  mColor.mColor = NS_RGB(0, 0, 0);
-*/
 
   mMolecule.display = NS_STYLE_DISPLAY_BLOCK;
   mMolecule.whiteSpace = NS_STYLE_WHITESPACE_NORMAL;
@@ -346,8 +475,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
     if (buf.EqualsIgnoreCase("B")) {
 //      float p2t = aPresContext->GetPixelsToTwips();
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-//      mColor.mBackgroundColor = NS_RGB(128, 128, 255);
-//      mColor.mBackgroundFlags = 0;
 //      mMolecule.border.top = nscoord(5 * p2t);
 //      mMolecule.border.right = nscoord(5 * p2t);
 //      mMolecule.border.bottom = nscoord(5 * p2t);
@@ -386,8 +513,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
       mMolecule.whiteSpace = NS_STYLE_WHITESPACE_PRE;
       mMolecule.margin.top = NS_POINTS_TO_TWIPS_INT(3);
       mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(3);
-//      mColor.mBackgroundImage = "resource:/res/gear1.gif";
-//      mColor.mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
     } else if (buf.EqualsIgnoreCase("U")) {
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
     } else if (buf.EqualsIgnoreCase("FONT")) {
@@ -397,11 +522,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
       mFont.mThreeD = 1;
     } else if (buf.EqualsIgnoreCase("TT")) {
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-//      mFont.mFont.name.SetLength(0);
-//      mFont.mFont.name.Append("Courier");
-//      mMolecule.positionFlags = NS_STYLE_POSITION_RELATIVE;
-//      mMolecule.left = -50;
-//      mMolecule.top = -50;
     } else if (buf.EqualsIgnoreCase("IMG")) {
       float p2t = aPresContext->GetPixelsToTwips();
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
@@ -433,11 +553,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
 //      mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(2);
     } else if (buf.EqualsIgnoreCase("BODY")) {
       float p2t = aPresContext->GetPixelsToTwips();
-//      mColor.mBackgroundColor = NS_RGB(255, 255, 255);
-//      mColor.mBackgroundFlags = 0;
-      //mColor.mBackgroundFlags = 0;
-      //mColor.mBackgroundImage = "resource:/res/rock_gra.gif";
-      //mColor.mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
       mMolecule.padding.top = nscoord(5 * p2t);
       mMolecule.padding.right = nscoord(5 * p2t);
       mMolecule.padding.bottom = nscoord(5 * p2t);
@@ -501,8 +616,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
       mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(cellPadding);
       mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(cellPadding);
       mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(cellPadding);
-//      mColor.mBackgroundColor = NS_RGB(255, 255, 0);
-//      mColor.mBackgroundFlags = 0;
       mMolecule.border.top = nscoord(1 * p2t);
       mMolecule.border.right = nscoord(1 * p2t);
       mMolecule.border.bottom = nscoord(1 * p2t);
@@ -534,11 +647,7 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
     NS_RELEASE(content);
     NS_RELEASE(parentTag);
     if (buf.EqualsIgnoreCase("B")) {
-//      mFont.mFont.size = NS_POINTS_TO_TWIPS_INT(18);
-//      mFont.mFont.weight = NS_FONT_WEIGHT_BOLD;
     } else if (buf.EqualsIgnoreCase("A")) {
-//      mColor.mColor = NS_RGB(0,0,255);
-//      mFont.mFont.decorations = NS_FONT_DECORATION_UNDERLINE;
       // This simulates a <PRE><A>text inheritance rule
       // Check the parent of the A
       nsIFrame* parentParentFrame;
@@ -554,29 +663,17 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
         NS_RELEASE(parentParentContent);
         if (buf.EqualsIgnoreCase("PRE")) {
           mMolecule.whiteSpace = NS_STYLE_WHITESPACE_PRE;
-//          mFont.mFont.name.SetLength(0);
-//          mFont.mFont.name.Append("Courier");
         }
       }
     } else if (buf.EqualsIgnoreCase("THREED")) {
-//      mFont.mFont.size = NS_POINTS_TO_TWIPS_INT(18);
-//      mFont.mFont.weight = NS_FONT_WEIGHT_BOLD;
       mFont.mThreeD = 1;
     } else if (buf.EqualsIgnoreCase("I")) {
-//      mFont.mFont.style = NS_FONT_STYLE_ITALIC;
     } else if (buf.EqualsIgnoreCase("BLINK")) {
-//      mFont.mFont.decorations |= NS_STYLE_TEXT_DECORATION_BLINK;
     } else if (buf.EqualsIgnoreCase("TT")) {
-//      mFont.mFont.name.SetLength(0);
-//      mFont.mFont.name.Append("Courier");
     } else if (buf.EqualsIgnoreCase("S")) {
-//      mFont.mFont.decorations = NS_FONT_DECORATION_LINE_THROUGH;
     } else if (buf.EqualsIgnoreCase("U")) {
-//      mFont.mFont.decorations = NS_FONT_DECORATION_UNDERLINE;
     } else if (buf.EqualsIgnoreCase("PRE")) {
       mMolecule.whiteSpace = NS_STYLE_WHITESPACE_PRE;
-//      mFont.mFont.name.SetLength(0);
-//      mFont.mFont.name.Append("Courier");
     }
   }
 
@@ -623,6 +720,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   context->HackStyleFor(aPresContext, aContent, aParentFrame);
+  context->PostProcessData();
 
   return context->QueryInterface(kIStyleContextIID, (void **) aInstancePtrResult);
 }
