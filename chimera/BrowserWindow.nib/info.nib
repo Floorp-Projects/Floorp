@@ -23,7 +23,7 @@
 		<key>463</key>
 		<string>22 619 200 180 0 0 1152 848 </string>
 		<key>56</key>
-		<string>128 644 343 68 0 0 1152 848 </string>
+		<string>612 634 343 68 0 0 1600 1002 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>248.0</string>
@@ -39,11 +39,7 @@
 	<string>4</string>
 	<key>IBLockedObjects</key>
 	<array/>
-	<key>IBOpenObjects</key>
-	<array>
-		<integer>56</integer>
-	</array>
 	<key>IBSystem Version</key>
-	<string>5S60</string>
+	<string>5S66</string>
 </dict>
 </plist>
