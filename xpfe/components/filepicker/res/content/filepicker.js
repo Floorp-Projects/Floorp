@@ -186,6 +186,14 @@ function onOK()
   /* XXX we need an XP way to test for an absolute path! */
   if (input[0] == '/')   /* an absolute path was entered */
     file.initWithUnicodePath(input);
+  else if ((input.indexOf("/../") > 0) ||
+           (input.substr(-3) == "/..") ||
+           (input.substr(0,3) == "../") ||
+           (input == "..")) {
+    /* appendRelativePath doesn't allow .. */
+    file.initWithUnicodePath(file.unicodePath + "/" + input);
+    file.normalize();
+  }
   else {
     try {
       file.appendRelativeUnicodePath(input);
