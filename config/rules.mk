@@ -492,7 +492,7 @@ ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
@@ -501,7 +501,7 @@ ifdef BEOS_PROGRAM_RESOURCE
 endif
 endif
 else
-	$(CC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
 	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
@@ -522,10 +522,10 @@ endif
 #
 $(SIMPLE_PROGRAMS):%: %.o $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 else
-	$(CC) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
@@ -536,17 +536,17 @@ endif
 #
 pure:	$(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(PURIFY) $(CCC) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CCC) $(CXXFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(PURIFY) $(CC) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CC) $(CFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 	$(INSTALL) -m 555 $^.pure $(DIST)/bin
 
 quantify: $(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(QUANTIFY) $(CCC) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(QUANTIFY) $(CCC) $(CXXFLAGS) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(QUANTIFY) $(CC) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(QUANTIFY) $(CC) $(CFLAGS) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 	$(INSTALL) -m 555 $^.quantify $(DIST)/bin
 
