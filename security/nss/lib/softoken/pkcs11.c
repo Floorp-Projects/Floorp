@@ -3309,16 +3309,16 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
 						 flags | CKF_SERIAL_SESSION);
     if (session == NULL) return CKR_HOST_MEMORY;
 
-    PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
     if (slot->readOnly && (flags & CKF_RW_SESSION)) {
 	/* NETSCAPE_SLOT_ID is Read ONLY */
 	session->info.flags &= ~CKF_RW_SESSION;
     }
-    slot->sessionCount++;
-    if (session->info.flags & CKF_RW_SESSION) {
-	slot->rwSessionCount++;
-    }
+    PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
+    ++slot->sessionCount;
     PK11_USE_THREADS(PZ_Unlock(slot->slotLock);)
+    if (session->info.flags & CKF_RW_SESSION) {
+	PR_AtomicIncrement(&slot->rwSessionCount);
+    }
 
     do {
         do {
@@ -3365,19 +3365,18 @@ CK_RV NSC_CloseSession(CK_SESSION_HANDLE hSession)
     }
     PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,hSession));)
 
-    PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
     if (sessionFound) {
-	slot->sessionCount--;
+	PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
+	if (--slot->sessionCount == 0) {
+	    pw = slot->password;
+	    slot->isLoggedIn = PR_FALSE;
+	    slot->password = NULL;
+	}
+	PK11_USE_THREADS(PZ_Unlock(slot->slotLock);)
 	if (session->info.flags & CKF_RW_SESSION) {
-	    slot->rwSessionCount--;
+	    PR_AtomicDecrement(&slot->rwSessionCount);
 	}
     }
-    if (slot->sessionCount == 0) {
-	pw = slot->password;
-	slot->isLoggedIn = PR_FALSE;
-	slot->password = NULL;
-    }
-    PK11_USE_THREADS(PZ_Unlock(slot->slotLock);)
 
     pk11_FreeSession(session);
     if (pw) SECITEM_ZfreeItem(pw, PR_TRUE);
@@ -3423,11 +3422,11 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
 		session->next = session->prev = NULL;
 		PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,i));)
 		PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
-		slot->sessionCount--;
-		if (session->info.flags & CKF_RW_SESSION) {
-		    slot->rwSessionCount--;
-		}
+		--slot->sessionCount;
 		PK11_USE_THREADS(PZ_Unlock(slot->slotLock);)
+		if (session->info.flags & CKF_RW_SESSION) {
+		    PR_AtomicDecrement(&slot->rwSessionCount);
+		}
 	    } else {
 		PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,i));)
 	    }
