@@ -21,7 +21,10 @@ LIBRARY_NAME=raptorxmldoc_s
 MODULE=raptor 
 REQUIRES=xpcom raptor pref
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN \
+!if defined(MOZ_XSL)
+-DXSL
+!endif
 
 CPPSRCS=					\
 	nsXMLContentSink.cpp			\
@@ -33,13 +36,13 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLDocument.obj		\
 	$(NULL)
 
-EXPORTS =					\
+EXPORTS = 					\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
   -I..\..\..\html\content\src -I..\..\..\html\document\src \
-  -I..\..\..\xul\content\src \
+  -I..\..\..\xul\content\src -I..\..\..\xsl\document\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
   -I$(PUBLIC)\expat
 

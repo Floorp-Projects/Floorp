@@ -23,6 +23,9 @@
 #include "nsMarkupDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
+#ifdef XSL
+#include "nsITransformMediator.h"
+#endif
 
 class nsIParser;
 class nsIDOMNode;
@@ -64,6 +67,9 @@ public:
 
   // nsIXMLDocument interface
   NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
+#ifdef XSL
+  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
+#endif
 
   // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
@@ -81,6 +87,9 @@ protected:
 
   nsIParser *mParser;
   nsICSSLoader* mCSSLoader;
+#ifdef XSL
+  nsITransformMediator* mTransformMediator;
+#endif
 };
 
 

@@ -91,11 +91,14 @@ nsXMLDocument::nsXMLDocument()
   // XUL world lives within XML world until it gets a place of its own
   nsXULAtoms::AddrefAtoms();
 #endif
+#ifdef XSL
+  mTransformMediator = nsnull;
+#endif
 }
 
 nsXMLDocument::~nsXMLDocument()
 {
-  NS_IF_RELEASE(mParser);
+  NS_IF_RELEASE(mParser);  
   if (nsnull != mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mAttrStyleSheet);
@@ -110,6 +113,9 @@ nsXMLDocument::~nsXMLDocument()
   }
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
+#endif
+#ifdef XSL
+  NS_IF_RELEASE(mTransformMediator);
 #endif
 }
 
@@ -461,6 +467,17 @@ nsXMLDocument::GetContentById(const nsString& aName, nsIContent** aContent)
   return NS_OK;
 }
 
+#ifdef XSL
+NS_IMETHODIMP 
+nsXMLDocument::SetTransformMediator(nsITransformMediator* aMediator)
+{
+  NS_ASSERTION(nsnull == mTransformMediator, "nsXMLDocument::SetTransformMediator(): \
+    Cannot set a second transform mediator\n");
+  mTransformMediator = aMediator;
+  NS_IF_ADDREF(mTransformMediator);
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP
 nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)

@@ -17,32 +17,31 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptorxmldoc_s 
+LIBRARY_NAME=raptorxsldoc_s 
 MODULE=raptor 
 REQUIRES=xpcom raptor pref
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN \
-!if defined(MOZ_XSL)
--DXSL
-!endif
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
-	nsXMLContentSink.cpp			\
-	nsXMLDocument.cpp			\
+	nsXSLContentSink.cpp			\
+	nsTransformMediator.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
-	.\$(OBJDIR)\nsXMLContentSink.obj	\
-	.\$(OBJDIR)\nsXMLDocument.obj		\
+	.\$(OBJDIR)\nsXSLContentSink.obj	\
+	.\$(OBJDIR)\nsTransformMediator.obj     \
 	$(NULL)
 
 EXPORTS = 					\
+	nsIDocumentTransformer.h		\
+	nsITransformMediator.h			\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
   -I..\..\..\html\content\src -I..\..\..\html\document\src \
-  -I..\..\..\xul\content\src -I..\..\..\xsl\document\src \
+  -I..\..\..\xul\content\src -I..\..\..\xml\document\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
   -I$(PUBLIC)\expat
 
