@@ -24,8 +24,8 @@
 #ifndef nsPromiseFlatString_h___
 #define nsPromiseFlatString_h___
 
-#ifndef nsCommonString_h___
-#include "nsCommonString.h"
+#ifndef nsSharableString_h___
+#include "nsSharableString.h"
 #endif
 
   /**
@@ -76,7 +76,7 @@
    * a string that happens to be flat, your promise is just a reference to that other string
    * and all calls are forwarded through to it.  If you apply it to a non-flat string,
    * then a temporary flat string is created for you, by allocating and copying.  In the unlikely
-   * event that you end up assigning the result into a sharing string (e.g., |nsCommon[C]String|),
+   * event that you end up assigning the result into a sharing string (e.g., |nsSharable[C]String|),
    * the right thing happens.
    */
 
@@ -112,7 +112,7 @@ class NS_COM nsPromiseFlatString
       void operator=( const nsPromiseFlatString& );
 
     private:
-      nsCommonString        mFlattenedString;
+      nsSharableString      mFlattenedString;
       const nsAFlatString*  mPromisedString;
   };
 
@@ -148,7 +148,7 @@ class NS_COM nsPromiseFlatCString
       void operator=( const nsPromiseFlatCString& );
 
     private:
-      nsCommonCString       mFlattenedString;
+      nsSharableCString     mFlattenedString;
       const nsAFlatCString* mPromisedString;
   };
 
