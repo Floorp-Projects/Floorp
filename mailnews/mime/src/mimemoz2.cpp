@@ -1405,10 +1405,7 @@ MimeGetStringByIDREAL(PRInt32 stringID)
     res = prefs->CopyCharPref("mail.strings.mime", &propertyURL);
 
   if (!NS_SUCCEEDED(res) || !prefs)
-    propertyURL = PL_strdup(MIME_URL);
-
-  // nobody seems to be using propertyURL, so I'm freeing it again!
-  PL_strfree(propertyURL);
+    propertyURL = MIME_URL;
 
   NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &res); 
   if (!NS_SUCCEEDED(res) || (nsnull == pNetService)) 
@@ -1422,7 +1419,11 @@ MimeGetStringByIDREAL(PRInt32 stringID)
     nsIURL      *url = nsnull;
     nsILocale   *locale = nsnull;
 
-    res = pNetService->CreateURL(&url, nsString(MIME_URL), nsnull, nsnull, nsnull);
+    res = pNetService->CreateURL(&url, nsString(propertyURL), nsnull, nsnull, nsnull);
+    // Cleanup property URL
+    if (propertyURL != MIME_URL)
+      PR_FREEIF(propertyURL);
+
     if (NS_FAILED(res)) 
     {
       return PL_strdup("???");   // Don't I18N this string...failsafe return value
