@@ -122,8 +122,8 @@ public:
   NS_IMETHOD SetLastModified(const nsAString& aLastModified);
   NS_IMETHOD SetReferrer(const nsAString& aReferrer);
 
-  NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
-  NS_IMETHOD SetDTDMode(nsDTDMode aMode);
+  NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
+  NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
 
   NS_IMETHOD_(PRBool) IsWriting() { return mWriteLevel != PRUint32(0); }
 
@@ -232,7 +232,7 @@ protected:
   nsString*   mLastModified;
   nsString*   mReferrer;
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
-  nsDTDMode mDTDMode;
+  nsCompatibility mCompatMode;
   nsCOMPtr<nsISupportsArray> mImageMaps;
 
   nsContentList *mImages;

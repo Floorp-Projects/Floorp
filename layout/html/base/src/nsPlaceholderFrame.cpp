@@ -89,7 +89,9 @@ nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
+nsPlaceholderFrame::IsEmpty(nsCompatibility aCompatMode,
+                            PRBool aIsPre,
+                            PRBool *aResult)
 {
   *aResult = PR_TRUE;
   return NS_OK;

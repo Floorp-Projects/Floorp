@@ -741,7 +741,8 @@ static PRInt32 ParsePS(const nsString& aBuffer, PRInt32 aIndex)
 // return PR_TRUE on success (includes not present), PR_FALSE on failure
 static PRBool ParseDocTypeDecl(const nsString &aBuffer,
                                PRInt32 *aResultFlags,
-                               nsString &aPublicID)
+                               nsString &aPublicID,
+                               nsString &aSystemID)
 {
   PRBool haveDoctype = PR_FALSE;
   *aResultFlags = 0;
@@ -782,7 +783,7 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
   theIndex = ParsePS(aBuffer, theIndex+4);
   PRInt32 tmpIndex = aBuffer.Find("PUBLIC", PR_TRUE, theIndex, 1);
 
-  if(kNotFound != tmpIndex) {
+  if (kNotFound != tmpIndex) {
     theIndex = ParsePS(aBuffer, tmpIndex+6);
 
     // We get here only if we've read <!DOCTYPE HTML PUBLIC
@@ -799,8 +800,7 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
     // the final quote, so there are (end-start) characters.
 
     PRInt32 PublicIDStart = theIndex + 1;
-    PRInt32 PublicIDEnd =
-        aBuffer.FindChar(lit, PublicIDStart);
+    PRInt32 PublicIDEnd = aBuffer.FindChar(lit, PublicIDStart);
     if (kNotFound == PublicIDEnd)
       return PR_FALSE;
     theIndex = ParsePS(aBuffer, PublicIDEnd + 1);
@@ -816,10 +816,11 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
       // We found a system identifier.
       *aResultFlags |= PARSE_DTD_HAVE_SYSTEM_ID;
       PRInt32 SystemIDStart = theIndex + 1;
-      PRInt32 SystemIDEnd =
-          aBuffer.FindChar(next, SystemIDStart);
+      PRInt32 SystemIDEnd = aBuffer.FindChar(next, SystemIDStart);
       if (kNotFound == SystemIDEnd)
         return PR_FALSE;
+      aSystemID =
+        Substring(aBuffer, SystemIDStart, SystemIDEnd - SystemIDStart);
     } else if (next == PRUnichar('[')) {
       // We found an internal subset.
       *aResultFlags |= PARSE_DTD_HAVE_INTERNAL_SUBSET;
@@ -830,8 +831,7 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
 
     // Since a public ID is a minimum literal, we must trim
     // and collapse whitespace
-    aBuffer.Mid(aPublicID, PublicIDStart,
-                PublicIDEnd - PublicIDStart);
+    aPublicID = Substring(aBuffer, PublicIDStart, PublicIDEnd - PublicIDStart);
     aPublicID.CompressWhitespace(PR_TRUE, PR_TRUE);
     *aResultFlags |= PARSE_DTD_HAVE_PUBLIC_ID;
   } else {
@@ -839,27 +839,37 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
     if (kNotFound != tmpIndex) {
       // DOCTYPES with system ID but no Public ID
       *aResultFlags |= PARSE_DTD_HAVE_SYSTEM_ID;
-
-      // XXX This should skip the quotes and then check for an internal
-      // subset, but that doesn't matter to the one caller of this
-      // function, so I won't bother for now...
-
-    } else {
-      PRUnichar nextChar = aBuffer.CharAt(theIndex);
-      if (nextChar == PRUnichar('['))
-        *aResultFlags |= PARSE_DTD_HAVE_INTERNAL_SUBSET;
-      else if (nextChar != PRUnichar('>'))
+      
+      theIndex = ParsePS(aBuffer, tmpIndex+6);
+      PRUnichar next = aBuffer.CharAt(theIndex);
+      if (next != PRUnichar('\"') && next != PRUnichar('\''))
         return PR_FALSE;
+
+      PRInt32 SystemIDStart = theIndex + 1;
+      PRInt32 SystemIDEnd = aBuffer.FindChar(next, SystemIDStart);
+
+      if (kNotFound == SystemIDEnd)
+        return PR_FALSE;
+      aSystemID =
+        Substring(aBuffer, SystemIDStart, SystemIDEnd - SystemIDStart);
+      theIndex = ParsePS(aBuffer, SystemIDEnd + 1);
     }
+
+    PRUnichar nextChar = aBuffer.CharAt(theIndex);
+    if (nextChar == PRUnichar('['))
+      *aResultFlags |= PARSE_DTD_HAVE_INTERNAL_SUBSET;
+    else if (nextChar != PRUnichar('>'))
+      return PR_FALSE;
   }
   return PR_TRUE;
 }
 
 struct PubIDInfo {
   enum eMode {
-    eQuirks,        /* always quirks mode, unless there's an internal subset */
-    eQuirks3,       /* ditto, but but pre-HTML4 (no tbody) */
-    eStrictIfSysID  /* quirks if no system ID, strict if system ID */
+    eQuirks,         /* always quirks mode, unless there's an internal subset */
+    eQuirks3,        /* ditto, but but pre-HTML4 (no tbody) */
+    eAlmostStandards,/* eCompatibility_AlmostStandards */
+    eFullStandards   /* eCompatibility_FullStandards */
       /*
        * public IDs that should trigger strict mode are not listed
        * since we want all future public IDs to trigger strict mode as
@@ -868,7 +878,8 @@ struct PubIDInfo {
   };
 
   const char* name;
-  eMode mode;
+  eMode mode_if_no_sysid;
+  eMode mode_if_sysid;
 };
 
 #define ELEMENTS_OF(array_) (sizeof(array_)/sizeof(array_[0]))
@@ -883,79 +894,81 @@ struct PubIDInfo {
 // identifiers below are in lower case (with the correct case following,
 // in comments).  The case is verified, |#ifdef DEBUG|, below.
 static const PubIDInfo kPublicIDs[] = {
-  {"+//silmaril//dtd html pro v0r11 19970101//en" /* "+//Silmaril//dtd html Pro v0r11 19970101//EN" */, PubIDInfo::eQuirks3},
-  {"-//advasoft ltd//dtd html 3.0 aswedit + extensions//en" /* "-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//EN" */, PubIDInfo::eQuirks3},
-  {"-//as//dtd html 3.0 aswedit + extensions//en" /* "-//AS//DTD HTML 3.0 asWedit + extensions//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 2.0 level 1//en" /* "-//IETF//DTD HTML 2.0 Level 1//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 2.0 level 2//en" /* "-//IETF//DTD HTML 2.0 Level 2//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 2.0 strict level 1//en" /* "-//IETF//DTD HTML 2.0 Strict Level 1//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 2.0 strict level 2//en" /* "-//IETF//DTD HTML 2.0 Strict Level 2//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 2.0 strict//en" /* "-//IETF//DTD HTML 2.0 Strict//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 2.0//en" /* "-//IETF//DTD HTML 2.0//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 2.1e//en" /* "-//IETF//DTD HTML 2.1E//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 3.0//en" /* "-//IETF//DTD HTML 3.0//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 3.0//en//" /* "-//IETF//DTD HTML 3.0//EN//" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 3.2 final//en" /* "-//IETF//DTD HTML 3.2 Final//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 3.2//en" /* "-//IETF//DTD HTML 3.2//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html 3//en" /* "-//IETF//DTD HTML 3//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 0//en" /* "-//IETF//DTD HTML Level 0//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 0//en//2.0" /* "-//IETF//DTD HTML Level 0//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 1//en" /* "-//IETF//DTD HTML Level 1//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 1//en//2.0" /* "-//IETF//DTD HTML Level 1//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 2//en" /* "-//IETF//DTD HTML Level 2//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 2//en//2.0" /* "-//IETF//DTD HTML Level 2//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 3//en" /* "-//IETF//DTD HTML Level 3//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html level 3//en//3.0" /* "-//IETF//DTD HTML Level 3//EN//3.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 0//en" /* "-//IETF//DTD HTML Strict Level 0//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 0//en//2.0" /* "-//IETF//DTD HTML Strict Level 0//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 1//en" /* "-//IETF//DTD HTML Strict Level 1//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 1//en//2.0" /* "-//IETF//DTD HTML Strict Level 1//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 2//en" /* "-//IETF//DTD HTML Strict Level 2//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 2//en//2.0" /* "-//IETF//DTD HTML Strict Level 2//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 3//en" /* "-//IETF//DTD HTML Strict Level 3//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict level 3//en//3.0" /* "-//IETF//DTD HTML Strict Level 3//EN//3.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict//en" /* "-//IETF//DTD HTML Strict//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict//en//2.0" /* "-//IETF//DTD HTML Strict//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html strict//en//3.0" /* "-//IETF//DTD HTML Strict//EN//3.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html//en" /* "-//IETF//DTD HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html//en//2.0" /* "-//IETF//DTD HTML//EN//2.0" */, PubIDInfo::eQuirks3},
-  {"-//ietf//dtd html//en//3.0" /* "-//IETF//DTD HTML//EN//3.0" */, PubIDInfo::eQuirks3},
-  {"-//metrius//dtd metrius presentational//en" /* "-//Metrius//DTD Metrius Presentational//EN" */, PubIDInfo::eQuirks},
-  {"-//microsoft//dtd internet explorer 2.0 html strict//en" /* "-//Microsoft//DTD Internet Explorer 2.0 HTML Strict//EN" */, PubIDInfo::eQuirks3},
-  {"-//microsoft//dtd internet explorer 2.0 html//en" /* "-//Microsoft//DTD Internet Explorer 2.0 HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//microsoft//dtd internet explorer 2.0 tables//en" /* "-//Microsoft//DTD Internet Explorer 2.0 Tables//EN" */, PubIDInfo::eQuirks3},
-  {"-//microsoft//dtd internet explorer 3.0 html strict//en" /* "-//Microsoft//DTD Internet Explorer 3.0 HTML Strict//EN" */, PubIDInfo::eQuirks3},
-  {"-//microsoft//dtd internet explorer 3.0 html//en" /* "-//Microsoft//DTD Internet Explorer 3.0 HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//microsoft//dtd internet explorer 3.0 tables//en" /* "-//Microsoft//DTD Internet Explorer 3.0 Tables//EN" */, PubIDInfo::eQuirks3},
-  {"-//netscape comm. corp.//dtd html//en" /* "-//Netscape Comm. Corp.//DTD HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//netscape comm. corp.//dtd strict html//en" /* "-//Netscape Comm. Corp.//DTD Strict HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//o'reilly and associates//dtd html 2.0//en" /* "-//O'Reilly and Associates//DTD HTML 2.0//EN" */, PubIDInfo::eQuirks3},
-  {"-//o'reilly and associates//dtd html extended 1.0//en" /* "-//O'Reilly and Associates//DTD HTML Extended 1.0//EN" */, PubIDInfo::eQuirks3},
-  {"-//o'reilly and associates//dtd html extended relaxed 1.0//en" /* "-//O'Reilly and Associates//DTD HTML Extended Relaxed 1.0//EN" */, PubIDInfo::eQuirks3},
-  {"-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//en" /* "-//SoftQuad Software//DTD HoTMetaL PRO 6.0::19990601::extensions to HTML 4.0//EN" */, PubIDInfo::eQuirks},
-  {"-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//en" /* "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//EN" */, PubIDInfo::eQuirks},
-  {"-//spyglass//dtd html 2.0 extended//en" /* "-//Spyglass//DTD HTML 2.0 Extended//EN" */, PubIDInfo::eQuirks3},
-  {"-//sq//dtd html 2.0 hotmetal + extensions//en" /* "-//SQ//DTD HTML 2.0 HoTMetaL + extensions//EN" */, PubIDInfo::eQuirks3},
-  {"-//sun microsystems corp.//dtd hotjava html//en" /* "-//Sun Microsystems Corp.//DTD HotJava HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//sun microsystems corp.//dtd hotjava strict html//en" /* "-//Sun Microsystems Corp.//DTD HotJava Strict HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd html 3 1995-03-24//en" /* "-//W3C//DTD HTML 3 1995-03-24//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd html 3.2 draft//en" /* "-//W3C//DTD HTML 3.2 Draft//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd html 3.2 final//en" /* "-//W3C//DTD HTML 3.2 Final//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd html 3.2//en" /* "-//W3C//DTD HTML 3.2//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd html 3.2s draft//en" /* "-//W3C//DTD HTML 3.2S Draft//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd html 4.0 frameset//en" /* "-//W3C//DTD HTML 4.0 Frameset//EN" */, PubIDInfo::eQuirks},
-  {"-//w3c//dtd html 4.0 transitional//en" /* "-//W3C//DTD HTML 4.0 Transitional//EN" */, PubIDInfo::eQuirks},
-  {"-//w3c//dtd html 4.01 frameset//en" /* "-//W3C//DTD HTML 4.01 Frameset//EN" */, PubIDInfo::eStrictIfSysID},
-  {"-//w3c//dtd html 4.01 transitional//en" /* "-//W3C//DTD HTML 4.01 Transitional//EN" */, PubIDInfo::eStrictIfSysID},
-  {"-//w3c//dtd html experimental 19960712//en" /* "-//W3C//DTD HTML Experimental 19960712//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd html experimental 970421//en" /* "-//W3C//DTD HTML Experimental 970421//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3c//dtd w3 html//en" /* "-//W3C//DTD W3 HTML//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3o//dtd w3 html 3.0//en" /* "-//W3O//DTD W3 HTML 3.0//EN" */, PubIDInfo::eQuirks3},
-  {"-//w3o//dtd w3 html 3.0//en//" /* "-//W3O//DTD W3 HTML 3.0//EN//" */, PubIDInfo::eQuirks3},
-  {"-//w3o//dtd w3 html strict 3.0//en//" /* "-//W3O//DTD W3 HTML Strict 3.0//EN//" */, PubIDInfo::eQuirks3},
-  {"-//webtechs//dtd mozilla html 2.0//en" /* "-//WebTechs//DTD Mozilla HTML 2.0//EN" */, PubIDInfo::eQuirks3},
-  {"-//webtechs//dtd mozilla html//en" /* "-//WebTechs//DTD Mozilla HTML//EN" */, PubIDInfo::eQuirks3},
-  {"html" /* "HTML" */, PubIDInfo::eQuirks3},
+  {"+//silmaril//dtd html pro v0r11 19970101//en" /* "+//Silmaril//dtd html Pro v0r11 19970101//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//advasoft ltd//dtd html 3.0 aswedit + extensions//en" /* "-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//as//dtd html 3.0 aswedit + extensions//en" /* "-//AS//DTD HTML 3.0 asWedit + extensions//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 level 1//en" /* "-//IETF//DTD HTML 2.0 Level 1//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 level 2//en" /* "-//IETF//DTD HTML 2.0 Level 2//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 strict level 1//en" /* "-//IETF//DTD HTML 2.0 Strict Level 1//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 strict level 2//en" /* "-//IETF//DTD HTML 2.0 Strict Level 2//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 strict//en" /* "-//IETF//DTD HTML 2.0 Strict//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0//en" /* "-//IETF//DTD HTML 2.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.1e//en" /* "-//IETF//DTD HTML 2.1E//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3.0//en" /* "-//IETF//DTD HTML 3.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3.0//en//" /* "-//IETF//DTD HTML 3.0//EN//" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3.2 final//en" /* "-//IETF//DTD HTML 3.2 Final//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3.2//en" /* "-//IETF//DTD HTML 3.2//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3//en" /* "-//IETF//DTD HTML 3//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 0//en" /* "-//IETF//DTD HTML Level 0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 0//en//2.0" /* "-//IETF//DTD HTML Level 0//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 1//en" /* "-//IETF//DTD HTML Level 1//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 1//en//2.0" /* "-//IETF//DTD HTML Level 1//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 2//en" /* "-//IETF//DTD HTML Level 2//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 2//en//2.0" /* "-//IETF//DTD HTML Level 2//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 3//en" /* "-//IETF//DTD HTML Level 3//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 3//en//3.0" /* "-//IETF//DTD HTML Level 3//EN//3.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 0//en" /* "-//IETF//DTD HTML Strict Level 0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 0//en//2.0" /* "-//IETF//DTD HTML Strict Level 0//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 1//en" /* "-//IETF//DTD HTML Strict Level 1//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 1//en//2.0" /* "-//IETF//DTD HTML Strict Level 1//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 2//en" /* "-//IETF//DTD HTML Strict Level 2//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 2//en//2.0" /* "-//IETF//DTD HTML Strict Level 2//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 3//en" /* "-//IETF//DTD HTML Strict Level 3//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 3//en//3.0" /* "-//IETF//DTD HTML Strict Level 3//EN//3.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict//en" /* "-//IETF//DTD HTML Strict//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict//en//2.0" /* "-//IETF//DTD HTML Strict//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict//en//3.0" /* "-//IETF//DTD HTML Strict//EN//3.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html//en" /* "-//IETF//DTD HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html//en//2.0" /* "-//IETF//DTD HTML//EN//2.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html//en//3.0" /* "-//IETF//DTD HTML//EN//3.0" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//metrius//dtd metrius presentational//en" /* "-//Metrius//DTD Metrius Presentational//EN" */, PubIDInfo::eQuirks, PubIDInfo::eQuirks},
+  {"-//microsoft//dtd internet explorer 2.0 html strict//en" /* "-//Microsoft//DTD Internet Explorer 2.0 HTML Strict//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 2.0 html//en" /* "-//Microsoft//DTD Internet Explorer 2.0 HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 2.0 tables//en" /* "-//Microsoft//DTD Internet Explorer 2.0 Tables//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 3.0 html strict//en" /* "-//Microsoft//DTD Internet Explorer 3.0 HTML Strict//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 3.0 html//en" /* "-//Microsoft//DTD Internet Explorer 3.0 HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 3.0 tables//en" /* "-//Microsoft//DTD Internet Explorer 3.0 Tables//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//netscape comm. corp.//dtd html//en" /* "-//Netscape Comm. Corp.//DTD HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//netscape comm. corp.//dtd strict html//en" /* "-//Netscape Comm. Corp.//DTD Strict HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//o'reilly and associates//dtd html 2.0//en" /* "-//O'Reilly and Associates//DTD HTML 2.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//o'reilly and associates//dtd html extended 1.0//en" /* "-//O'Reilly and Associates//DTD HTML Extended 1.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//o'reilly and associates//dtd html extended relaxed 1.0//en" /* "-//O'Reilly and Associates//DTD HTML Extended Relaxed 1.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//en" /* "-//SoftQuad Software//DTD HoTMetaL PRO 6.0::19990601::extensions to HTML 4.0//EN" */, PubIDInfo::eQuirks, PubIDInfo::eQuirks},
+  {"-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//en" /* "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//EN" */, PubIDInfo::eQuirks, PubIDInfo::eQuirks},
+  {"-//spyglass//dtd html 2.0 extended//en" /* "-//Spyglass//DTD HTML 2.0 Extended//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//sq//dtd html 2.0 hotmetal + extensions//en" /* "-//SQ//DTD HTML 2.0 HoTMetaL + extensions//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//sun microsystems corp.//dtd hotjava html//en" /* "-//Sun Microsystems Corp.//DTD HotJava HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//sun microsystems corp.//dtd hotjava strict html//en" /* "-//Sun Microsystems Corp.//DTD HotJava Strict HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3 1995-03-24//en" /* "-//W3C//DTD HTML 3 1995-03-24//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2 draft//en" /* "-//W3C//DTD HTML 3.2 Draft//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2 final//en" /* "-//W3C//DTD HTML 3.2 Final//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2//en" /* "-//W3C//DTD HTML 3.2//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2s draft//en" /* "-//W3C//DTD HTML 3.2S Draft//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 4.0 frameset//en" /* "-//W3C//DTD HTML 4.0 Frameset//EN" */, PubIDInfo::eQuirks, PubIDInfo::eQuirks},
+  {"-//w3c//dtd html 4.0 transitional//en" /* "-//W3C//DTD HTML 4.0 Transitional//EN" */, PubIDInfo::eQuirks, PubIDInfo::eQuirks},
+  {"-//w3c//dtd html 4.01 frameset//en" /* "-//W3C//DTD HTML 4.01 Frameset//EN" */, PubIDInfo::eQuirks, PubIDInfo::eAlmostStandards},
+  {"-//w3c//dtd html 4.01 transitional//en" /* "-//W3C//DTD HTML 4.01 Transitional//EN" */, PubIDInfo::eQuirks, PubIDInfo::eAlmostStandards},
+  {"-//w3c//dtd html experimental 19960712//en" /* "-//W3C//DTD HTML Experimental 19960712//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html experimental 970421//en" /* "-//W3C//DTD HTML Experimental 970421//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd w3 html//en" /* "-//W3C//DTD W3 HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd xhtml 1.0 frameset//en" /* "-//W3C//DTD XHTML 1.0 Frameset//EN" */, PubIDInfo::eAlmostStandards, PubIDInfo::eAlmostStandards},
+  {"-//w3c//dtd xhtml 1.0 transitional//en" /* "-//W3C//DTD XHTML 1.0 Transitional//EN" */, PubIDInfo::eAlmostStandards, PubIDInfo::eAlmostStandards},
+  {"-//w3o//dtd w3 html 3.0//en" /* "-//W3O//DTD W3 HTML 3.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3o//dtd w3 html 3.0//en//" /* "-//W3O//DTD W3 HTML 3.0//EN//" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//w3o//dtd w3 html strict 3.0//en//" /* "-//W3O//DTD W3 HTML Strict 3.0//EN//" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//webtechs//dtd mozilla html 2.0//en" /* "-//WebTechs//DTD Mozilla HTML 2.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-//webtechs//dtd mozilla html//en" /* "-//WebTechs//DTD Mozilla HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"html" /* "HTML" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
 };
 
 #ifdef DEBUG
@@ -984,7 +997,7 @@ static void VerifyPublicIDs()
 }
 #endif
 
-static void DetermineHTMLParseMode(nsString& aBuffer,
+static void DetermineHTMLParseMode(const nsString& aBuffer,
                                    nsDTDMode& aParseMode,
                                    eParserDocType& aDocType)
 {
@@ -992,26 +1005,28 @@ static void DetermineHTMLParseMode(nsString& aBuffer,
   VerifyPublicIDs();
 #endif
   PRInt32 resultFlags;
-  nsAutoString publicIDUCS2;
-  if (ParseDocTypeDecl(aBuffer, &resultFlags, publicIDUCS2)) {
+  nsAutoString publicIDUCS2, sysIDUCS2;
+  if (ParseDocTypeDecl(aBuffer, &resultFlags, publicIDUCS2, sysIDUCS2)) {
     if (!(resultFlags & PARSE_DTD_HAVE_DOCTYPE)) {
 
       // no DOCTYPE
       aParseMode = eDTDMode_quirks;
       aDocType = eHTML_Quirks;
-        // Why do this?  If it weren't for this, |aBuffer| could be
-        // |const nsString&|, which it really should be.
-      aBuffer.InsertWithConversion(
-        "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n",
-        0);
 
     } else if ((resultFlags & PARSE_DTD_HAVE_INTERNAL_SUBSET) ||
                !(resultFlags & PARSE_DTD_HAVE_PUBLIC_ID)) {
 
-      // A doctype with an internal subset is always strict.
-      // A doctype without a public ID is always strict.
+      // A doctype with an internal subset is always full_standards.
+      // A doctype without a public ID is always full_standards.
       aDocType = eHTML_Strict;
-      aParseMode = eDTDMode_strict;
+      aParseMode = eDTDMode_full_standards;
+
+      // Special hack for IBM's custom DOCTYPE.
+      if (!(resultFlags & PARSE_DTD_HAVE_INTERNAL_SUBSET) &&
+          sysIDUCS2 == NS_LITERAL_STRING(
+               "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")) {
+        aParseMode = eDTDMode_almost_standards;
+      }
 
     } else {
 
@@ -1043,14 +1058,17 @@ static void DetermineHTMLParseMode(nsString& aBuffer,
           minimum = index + 1;
 
         if (maximum < minimum) {
-          // The DOCTYPE is not in our list, so it must be strict.
-          aParseMode = eDTDMode_strict;
+          // The DOCTYPE is not in our list, so it must be full_standards.
+          aParseMode = eDTDMode_full_standards;
           aDocType = eHTML_Strict;
           return;
         }
       }
 
-      switch (kPublicIDs[index].mode) {
+      switch ((resultFlags & PARSE_DTD_HAVE_SYSTEM_ID)
+                ? kPublicIDs[index].mode_if_sysid
+                : kPublicIDs[index].mode_if_no_sysid)
+      {
         case PubIDInfo::eQuirks3:
           aParseMode = eDTDMode_quirks;
           aDocType = eHTML3_Quirks;
@@ -1059,14 +1077,13 @@ static void DetermineHTMLParseMode(nsString& aBuffer,
           aParseMode = eDTDMode_quirks;
           aDocType = eHTML_Quirks;
           break;
-        case PubIDInfo::eStrictIfSysID:
-          if (resultFlags & PARSE_DTD_HAVE_SYSTEM_ID) {
-            aParseMode = eDTDMode_strict;
-            aDocType = eHTML_Strict;
-          } else {
-            aParseMode = eDTDMode_quirks;
-            aDocType = eHTML_Quirks;
-          }
+        case PubIDInfo::eAlmostStandards:
+          aParseMode = eDTDMode_almost_standards;
+          aDocType = eHTML_Strict;
+          break;
+        case PubIDInfo::eFullStandards:
+          aParseMode = eDTDMode_full_standards;
+          aDocType = eHTML_Strict;
           break;
         default:
           NS_NOTREACHED("no other cases!");
@@ -1081,22 +1098,13 @@ static void DetermineHTMLParseMode(nsString& aBuffer,
 }
 
 static 
-void DetermineParseMode(nsString& aBuffer,
+void DetermineParseMode(const nsString& aBuffer,
                         nsDTDMode& aParseMode,
                         eParserDocType& aDocType,
                         const nsACString& aMimeType)
 {
   if (aMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))) {
-    // For XML (XHTML) documents served as text/html, we will use strict
-    // mode.  XML declarations must be the first thing in the document,
-    // and must be lowercase.  (XXX What about a byte order mark?)
-    if (kNotFound != aBuffer.Find("<?xml", PR_FALSE, 0, 1)) {
-      // XXX This isn't changing the layout mode correctly (bug 98218)!
-      aDocType = eHTML_Strict;
-      aParseMode = eDTDMode_strict;
-    } else {
-      DetermineHTMLParseMode(aBuffer, aParseMode, aDocType);
-    }
+    DetermineHTMLParseMode(aBuffer, aParseMode, aDocType);
   } else if (aMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType)) ||
              aMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType)) ||
              aMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType)) ||
@@ -1105,7 +1113,7 @@ void DetermineParseMode(nsString& aBuffer,
     aParseMode = eDTDMode_quirks;
   } else { // Some form of XML
     aDocType = eXML;
-    aParseMode = eDTDMode_strict;
+    aParseMode = eDTDMode_full_standards;
   }
 }
 

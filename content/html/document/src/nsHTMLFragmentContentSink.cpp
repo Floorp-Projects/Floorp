@@ -89,7 +89,7 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
 
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
@@ -715,7 +715,7 @@ nsHTMLFragmentContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
  */
 
 NS_IMETHODIMP
-nsHTMLFragmentContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
+nsHTMLFragmentContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
 {
   return NS_OK;
 }

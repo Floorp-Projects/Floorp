@@ -21,9 +21,8 @@
  *
  * Contributor(s):
  *
- *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -35,43 +34,13 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsMarkupDocument_h___
-#define nsMarkupDocument_h___
+#ifndef nsCompatibility_h___
+#define nsCompatibility_h___
 
-#include "nsDocument.h"
-#include "nsCompatibility.h"
-
-/**
-  * MODULE NOTES:
-  * @update  gpk 7/17/98
-  *
-  * This class is designed to sit between nsDocument and 
-  * classes like nsHTMLDocument. It contains methods which
-  * are outside the scope of nsDocument but might be used
-  * by both HTML and XML documents.
-  *
-  */
-
-
-class nsMarkupDocument : public nsDocument {
-public:
-  nsMarkupDocument();
-  virtual ~nsMarkupDocument();
-
-  // XXX Temp hack: moved from nsDocument
-  NS_IMETHOD CreateShell(nsIPresContext* aContext,
-                         nsIViewManager* aViewManager,
-                         nsIStyleSet* aStyleSet,
-                         nsIPresShell** aInstancePtrResult);
-protected:
-  // To allow different implementations to choose the quirks mode
-  // differently for their |CreateShell| without overriding the whole
-  // thing.
-  nsresult doCreateShell(nsIPresContext* aContext,
-                         nsIViewManager* aViewManager,
-                         nsIStyleSet* aStyleSet,
-                         nsCompatibility aCompatMode,
-                         nsIPresShell** aInstancePtrResult);
+enum nsCompatibility {
+  eCompatibility_FullStandards   = 1,
+  eCompatibility_AlmostStandards = 2,
+  eCompatibility_NavQuirks       = 3
 };
 
-#endif /* nsMarkupDocument_h___ */
+#endif /* nsCompatibility_h___ */

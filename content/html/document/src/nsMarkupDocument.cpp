@@ -65,15 +65,15 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
   // Don't add anything here.  Add it to |doCreateShell| instead.  This
   // exists so nsHTMLDocument can pass PR_TRUE for the 4th parameter
   // some of the time.
-  return doCreateShell(aContext, aViewManager, aStyleSet, PR_FALSE,
-                       aInstancePtrResult);
+  return doCreateShell(aContext, aViewManager, aStyleSet,
+                       eCompatibility_FullStandards, aInstancePtrResult);
 }
 
 nsresult
 nsMarkupDocument::doCreateShell(nsIPresContext* aContext,
                                 nsIViewManager* aViewManager,
                                 nsIStyleSet* aStyleSet,
-                                PRBool aIsQuirksMode,
+                                nsCompatibility aCompatMode,
                                 nsIPresShell** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -84,7 +84,7 @@ nsMarkupDocument::doCreateShell(nsIPresContext* aContext,
     return rv;
   }
 
-  rv = shell->Init(this, aContext, aViewManager, aStyleSet, aIsQuirksMode);
+  rv = shell->Init(this, aContext, aViewManager, aStyleSet, aCompatMode);
   if (NS_FAILED(rv)) {
     return rv;
   }

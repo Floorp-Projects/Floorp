@@ -292,7 +292,7 @@ nsLoggingSink::AddProcessingInstruction(const nsIParserNode& aNode){
  */
 
 NS_IMETHODIMP
-nsLoggingSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode) {
+nsLoggingSink::AddDocTypeDecl(const nsIParserNode& aNode) {
 
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
@@ -302,7 +302,7 @@ nsLoggingSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode) {
 
   //then proxy the call to the real sink if you have one.
   if(mSink) {
-    theResult=mSink->AddDocTypeDecl(aNode,aMode);
+    theResult=mSink->AddDocTypeDecl(aNode);
   }
   
   return theResult;

@@ -3283,7 +3283,7 @@ nsBrowserWindow::SetCompatibilityMode(PRUint32 aMode)
   if (pref) { 
     int32 prefInt = USE_DTD;
     if (STANDARD == aMode) {
-      prefInt = eCompatibility_Standard;
+      prefInt = eCompatibility_FullStandards;
     }
     else if (QUIRKS == aMode) {
       prefInt = eCompatibility_NavQuirks;

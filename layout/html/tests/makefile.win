@@ -24,6 +24,7 @@ REQUIRES	= xpcom \
 		  string \
 		  layout \
 		  content \
+		  layout \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

@@ -497,7 +497,9 @@ public:
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
 
-  NS_IMETHOD IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult);
+  NS_IMETHOD IsEmpty(nsCompatibility aCompatMode,
+                     PRBool aIsPre,
+                     PRBool* aResult);
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -2156,7 +2158,6 @@ nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
                                   PRBool*              aIsVisible)
 {
   if (aCheckVis) {
-    nsIStyleContext* sc = mStyleContext;
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
     if (!vis->IsVisible()) {
@@ -5839,9 +5840,11 @@ nsTextFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsTextFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult)
+nsTextFrame::IsEmpty(nsCompatibility aCompatMode,
+                     PRBool aIsPre,
+                     PRBool* aResult)
 {
-    // XXXldb Should this check aIsQuirkMode as well???
+    // XXXldb Should this check aCompatMode as well???
   if (aIsPre) {
     *aResult = PR_FALSE;
     return NS_OK;

@@ -1016,7 +1016,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     if ((pos->mHeight.GetUnit() != eStyleUnit_Coord) &&
         (pos->mHeight.GetUnit() != eStyleUnit_Percent)) {
       // Standard mode should probably be 0 pixels high instead of 1
-      PRInt32 pixHeight = (eCompatibility_Standard == compatMode) ? 1 : 2;
+      PRInt32 pixHeight = (eCompatibility_NavQuirks == compatMode) ? 2 : 1;
       kidSize.height = NSIntPixelsToTwips(pixHeight, p2t);
       if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->height))
         pMaxElementSize->height = kidSize.height;

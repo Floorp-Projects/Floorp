@@ -2941,7 +2941,8 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 }
 
 NS_IMETHODIMP
-nsBlockFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
+nsBlockFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
+                      PRBool *aResult)
 {
   // XXXldb In hindsight, I'm not sure why I made this check the margin,
   // but it seems to work right and I'm a little hesitant to change it.
@@ -2971,10 +2972,6 @@ nsBlockFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
   }
 
 
-  // IsEmpty treats standards and quirks mode differently. We want
-  // quirks behavior for a table cell block.
-  PRBool quirkMode = aIsQuirkMode || IsTDTableCellBlock(*this);
-
   const nsStyleText* styleText = NS_STATIC_CAST(const nsStyleText*,
       mStyleContext->GetStyleData(eStyleStruct_Text));
   PRBool isPre =
@@ -2985,7 +2982,7 @@ nsBlockFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
        line != line_end;
        ++line)
   {
-    line->IsEmpty(quirkMode, isPre, aResult);
+    line->IsEmpty(aCompatMode, isPre, aResult);
     if (! *aResult)
       break;
   }
@@ -6555,30 +6552,6 @@ nsBlockFrame::BuildFloaterList()
 
 // XXX keep the text-run data in the first-in-flow of the block
 
-
-PRBool
-nsBlockFrame::IsTDTableCellBlock(nsIFrame& aFrame) 
-{
-  nsIFrame* parent;
-  aFrame.GetParent(&parent);
-  if (parent) {
-    nsCOMPtr<nsIAtom> frameType;
-    parent->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableCellFrame == frameType) {
-      nsCOMPtr<nsIContent> content;
-      aFrame.GetContent(getter_AddRefs(content));
-      if (content && content->IsContentOfType(nsIContent::eHTML)) {
-        nsCOMPtr<nsIAtom> tag;
-        content->GetTag(*getter_AddRefs(tag));
-        if (tag == nsHTMLAtoms::td) {
-          return PR_TRUE;
-        }
-      }
-    }
-  }
-  return PR_FALSE;
-}
-
 #ifdef DEBUG
 void
 nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
@@ -6663,5 +6636,4 @@ nsBlockFrame::GetDepth() const
   }
   return depth;
 }
-
 #endif

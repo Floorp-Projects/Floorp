@@ -1256,21 +1256,14 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 PRBool
 nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 {
-  PRBool status = PR_FALSE;
-
   nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDoc));
-
-  if (doc) {
-    nsDTDMode mode;
-
-    doc->GetDTDMode(mode);
-
-    if (mode == eDTDMode_quirks) {
-      status = PR_TRUE;
-    }
+  if (!doc) {
+    return PR_FALSE;
   }
 
-  return status;
+  nsCompatibility mode;
+  doc->GetCompatibilityMode(mode);
+  return mode == eCompatibility_NavQuirks;
 }
 
 nsresult

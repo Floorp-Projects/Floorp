@@ -2632,7 +2632,7 @@ nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
+nsFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre, PRBool *aResult)
 {
   *aResult = PR_FALSE;
   return NS_OK;

@@ -1134,7 +1134,7 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
         ruleWalker->Forward(mTableColgroupRule);
       }
       else if (tag == nsHTMLAtoms::table) {
-        if (aData->mIsQuirkMode)
+        if (aData->mCompatMode == eCompatibility_NavQuirks)
           ruleWalker->Forward(mDocumentColorRule);
       }
     } // end html element

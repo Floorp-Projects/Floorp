@@ -191,7 +191,7 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
   mCurrentSpan = mRootSpan = nsnull;
   mSpanDepth = 0;
 
-  SetFlag(LL_KNOWSTRICTMODE, PR_FALSE);
+  mPresContext->GetCompatibilityMode(&mCompatMode);
 }
 
 nsLineLayout::nsLineLayout(nsIPresContext* aPresContext)
@@ -232,24 +232,6 @@ nsLineLayout::~nsLineLayout()
     }
     pfd = nextFrame;
   }
-}
-
-PRBool
-nsLineLayout::InStrictMode()
-{
-  if (!GetFlag(LL_KNOWSTRICTMODE)) {
-    SetFlag(LL_KNOWSTRICTMODE, PR_TRUE);
-    SetFlag(LL_INSTRICTMODE, PR_TRUE);
-    // ask the cached presentation context for the compatibility mode
-    if (mPresContext) {
-      nsCompatibility mode;
-      mPresContext->GetCompatibilityMode(&mode);
-      if (eCompatibility_NavQuirks == mode) {
-        SetFlag(LL_INSTRICTMODE, PR_FALSE);
-      }
-    }
-  }
-  return GetFlag(LL_INSTRICTMODE);
 }
 
 // Find out if the frame has a non-null prev-in-flow, i.e., whether it
@@ -2221,20 +2203,20 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // "normally" according to css2 or should it effectively
   // "disappear".
   //
-  // In general, if the document being processed is in strict mode then 
-  // it should act normally (with two exceptions). The 1st exception
-  // is when a span is continued and yet the span is empty (e.g. compressed 
-  // whitespace). For this kind of span we treat it as if it were not there 
-  // so that it doesn't impact the line-height. The 2nd exception is if the
-  // span's containing block is a table cell block and the content is a TD.
+  // In general, if the document being processed is in full standards
+  // mode then it should act normally (with one exception). The
+  // exception case is when a span is continued and yet the span is
+  // empty (e.g. compressed whitespace). For this kind of span we treat
+  // it as if it were not there so that it doesn't impact the
+  // line-height.
   //
-  // In compatability mode, we should sometimes make it disappear. The
-  // cases that matter are those where the span contains no real text
-  // elements that would provide an ascent and descent and
-  // height. However, if css style elements have been applied to the
-  // span (border/padding/margin) so that it's clear the document
-  // author is intending css2 behavior then we act as if strict mode
-  // is set.
+  // In almost standards mode or quirks mode, we should sometimes make
+  // it disappear. The cases that matter are those where the span
+  // contains no real text elements that would provide an ascent and
+  // descent and height. However, if css style elements have been
+  // applied to the span (border/padding/margin) so that it's clear the
+  // document author is intending css2 behavior then we act as if strict
+  // mode is set.
   //
   // This code works correctly for preMode, because a blank line
   // in PRE mode is encoded as a text node with a LF in it, since
@@ -2248,7 +2230,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   PRBool zeroEffectiveSpanBox = PR_FALSE;
   // XXXldb If we really have empty continuations, then all these other
   // checks don't make sense for them.
-  if ((emptyContinuation || !InStrictMode() || nsBlockFrame::IsTDTableCellBlock(*spanFrame)) &&
+  if ((emptyContinuation || mCompatMode != eCompatibility_FullStandards) &&
       ((psd == mRootSpan) ||
        ((0 == spanFramePFD->mBorderPadding.top) &&
         (0 == spanFramePFD->mBorderPadding.right) &&
@@ -2282,7 +2264,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // within other inline frames.
       if (flag != PFD_ISTEXTFRAME) {
         PRBool empty;
-        pfd->mFrame->IsEmpty(PR_TRUE, preMode, &empty);
+        pfd->mFrame->IsEmpty(mCompatMode, preMode, &empty);
         if (!empty) {
           flag = PFD_ISTEXTFRAME;
         }

@@ -357,7 +357,8 @@ CNavDTD::CanParse(CParserContext& aParserContext,
           aParserContext.SetMimeType(NS_LITERAL_CSTRING(kHTMLTextContentType));
           if(!theBufHasXML) {
             switch(aParserContext.mDTDMode) {
-              case eDTDMode_strict:
+              case eDTDMode_full_standards:
+              case eDTDMode_almost_standards:
                 result=eValidDetect;
                 break;
               default:
@@ -1994,7 +1995,9 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
             // If the bit kHandleStrayTag is set then we automatically open up a matching
             // start tag ( compatibility ).  Currently this bit is set on P tag.
             // This also fixes Bug: 22623
-            if(gHTMLElements[theChildTag].HasSpecialProperty(kHandleStrayTag) && mDTDMode!=eDTDMode_strict) {
+            if(gHTMLElements[theChildTag].HasSpecialProperty(kHandleStrayTag) &&
+               mDTDMode != eDTDMode_full_standards &&
+               mDTDMode != eDTDMode_almost_standards) {
               // Oh boy!! we found a "stray" tag. Nav4.x and IE introduce line break in
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
@@ -2343,23 +2346,9 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   
-    /*************************************************************
-      While the parser is happy to deal with various modes, the
-      rest of layout prefers only 2: strict vs. quirks. So we'll
-      constrain the modes when reporting to layout.
-     *************************************************************/
-    nsDTDMode theMode=mDTDMode;
-    switch(mDTDMode) {
-      case eDTDMode_strict:
-        theMode=eDTDMode_strict;
-        break;
-      default:
-        theMode=eDTDMode_quirks;
-    }
-
-    result = (mSink)? mSink->AddDocTypeDecl(*theNode,theMode):NS_OK;
+  result = (mSink)? mSink->AddDocTypeDecl(*theNode):NS_OK;
     
-    IF_FREE(theNode, &mNodeAllocator);
+  IF_FREE(theNode, &mNodeAllocator);
   
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   START_TIMER();

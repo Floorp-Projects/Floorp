@@ -90,8 +90,6 @@ public:
   void EndSpan(nsIFrame* aFrame, nsSize& aSizeResult,
                nsSize* aMaxElementSize);
 
-  PRBool InStrictMode();
-
   PRInt32 GetCurrentSpanCount() const;
 
   void SplitLineTo(PRInt32 aNewCount);
@@ -137,9 +135,7 @@ protected:
 #define LL_IMPACTEDBYFLOATERS          0x00000040
 #define LL_LASTFLOATERWASLETTERFRAME   0x00000080
 #define LL_CANPLACEFLOATER             0x00000100
-#define LL_KNOWSTRICTMODE              0x00000200
-#define LL_INSTRICTMODE                0x00000400
-#define LL_LINEENDSINBR                0x00000800
+#define LL_LINEENDSINBR                0x00000200
 #define LL_LASTFLAG                    LL_LINEENDSINBR
 
   PRUint16 mFlags;
@@ -223,6 +219,11 @@ public:
     SetFlag(LL_LINEENDSINBR, aOn); 
   }
 
+  PRBool InStrictMode()
+  {
+    return mCompatMode != eCompatibility_NavQuirks;
+  }
+
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
@@ -268,6 +269,7 @@ protected:
   const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
   nsBlockReflowState* mBlockRS;/* XXX hack! */
+  nsCompatibility mCompatMode;
   nscoord mMinLineHeight;
   PRPackedBool mComputeMaxElementSize;
   PRUint8 mTextAlign;

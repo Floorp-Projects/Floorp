@@ -2664,7 +2664,22 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
           mStartParent->GetOwnerDocument(getter_AddRefs(ownerDoc));
           nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(ownerDoc));
           if (htmlDoc) {
-            htmlDoc->GetDTDMode(mode);
+            nsCompatibility compatMode;
+            htmlDoc->GetCompatibilityMode(compatMode);
+            switch (compatMode) {
+              case eCompatibility_NavQuirks:
+                mode = eDTDMode_quirks;
+                break;
+              case eCompatibility_AlmostStandards:
+                mode = eDTDMode_almost_standards;
+                break;
+              case eCompatibility_FullStandards:
+                mode = eDTDMode_full_standards;
+                break;
+              default:
+                NS_NOTREACHED("unknown mode");
+                break;
+            }
           }
           result = parser->ParseFragment(aFragment, (void*)0,
                                          tagStack,
