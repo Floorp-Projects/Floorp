@@ -58,9 +58,6 @@ extern TID QueryCurrentTID(void);
 #define TIMERCLASS    ("WarpzillaTimerClass")
 #define CALLBACK      _System
 typedef ULONG         DWORD;
-typedef BOOL          bool;
-#define true          TRUE
-#define false         FALSE
 
 #define HEARTBEATTIMEOUT 50
 #define HEARTBEATTIMERID 0x7ffe
