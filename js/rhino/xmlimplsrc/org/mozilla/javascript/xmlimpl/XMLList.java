@@ -154,7 +154,7 @@ class XMLList extends XMLObjectImpl implements Function
 
             frag = frag.substring(0, frag.length() - 3) + "</fragment>";
 
-            XML orgXML = new XML(lib, frag);
+            XML orgXML = XML.createFromJS(lib, frag);
 
             // Now orphan the children and add them to our XMLList.
             XMLList children = (XMLList)orgXML.children();
@@ -204,7 +204,7 @@ class XMLList extends XMLObjectImpl implements Function
         if (index >= 0 && index < length())
         {
             XML.XScriptAnnotation anno = _annos.item(index);
-            retVal = XML.XScriptAnnotation.getXML(lib, anno);
+            retVal = XML.getFromAnnotation(lib, anno);
         }
         else
         {
@@ -461,7 +461,7 @@ class XMLList extends XMLObjectImpl implements Function
         {
             if (targetProperty == null)
             {
-                xmlValue = new XML(lib, value.toString());
+                xmlValue = XML.createFromJS(lib, value.toString());
             }
             else
             {
@@ -527,7 +527,7 @@ class XMLList extends XMLObjectImpl implements Function
             // Don't all have same parent, no underlying doc to alter
             if (index < length())
             {
-                XML xmlNode = XML.XScriptAnnotation.getXML(lib, _annos.item(index));
+                XML xmlNode = XML.getFromAnnotation(lib, _annos.item(index));
 
                 if (xmlValue instanceof XML)
                 {
@@ -650,7 +650,8 @@ class XMLList extends XMLObjectImpl implements Function
      */
     XML item (int index)
     {
-        return _annos != null ? getXmlFromAnnotation(index) : XML.createXML(lib, null);
+        return _annos != null
+            ? getXmlFromAnnotation(index) : XML.createEmptyXML(lib);
     }
 
 

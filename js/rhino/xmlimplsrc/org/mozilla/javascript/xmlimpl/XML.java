@@ -64,47 +64,12 @@ class XML extends XMLObjectImpl
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        XScriptAnnotation (XML xml, XmlCursor curs)
-        {
-            init(curs);
-            _xScriptXML = xml;
-        }
-
-
         XScriptAnnotation (XmlCursor curs)
-        {
-            init(curs);
-        }
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //
-        //  Utility functions
-        //
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        static XML getXML (XMLLibImpl lib, XScriptAnnotation anno)
-        {
-            if (anno._xScriptXML == null)
-            {
-                anno._xScriptXML = new XML(lib, anno);
-            }
-
-            return anno._xScriptXML;
-        }
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //
-        //  Private functions
-        //
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        private void init (XmlCursor curs)
         {
             _name = curs.getName();
         }
-    };
+
+    }
 
     /**
      *
@@ -174,26 +139,6 @@ class XML extends XMLObjectImpl
 
     /**
      *
-     */
-    XML(XMLLibImpl lib)
-    {
-        super(lib, lib.xmlPrototype);
-        XmlObject xo = XmlObject.Factory.newInstance();
-
-        XmlCursor curs = xo.newCursor();
-        try
-        {
-            _anno = new XScriptAnnotation(curs);
-            curs.setBookmark(_anno);
-        }
-        finally
-        {
-            curs.dispose();
-        }
-    }
-
-    /**
-     *
      * @param anno
      */
     private XML(XMLLibImpl lib, XScriptAnnotation anno)
@@ -203,13 +148,113 @@ class XML extends XMLObjectImpl
         _anno._xScriptXML = this;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Public factories for creating a XScript XML object given an XBean cursor.
+    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    static XML createEmptyXML(XMLLibImpl lib)
+    {
+        XScriptAnnotation anno;
+
+        XmlObject xo = XmlObject.Factory.newInstance();
+        XmlCursor curs = xo.newCursor();
+        try {
+            anno = new XScriptAnnotation(curs);
+            curs.setBookmark(anno);
+        } finally {
+            curs.dispose();
+        }
+
+        return new XML(lib, anno);
+    }
+
+    private static XML createXML (XMLLibImpl lib, XmlCursor curs)
+    {
+        if (curs.currentTokenType().isStartdoc())
+        {
+            curs.toFirstContentToken();
+        }
+
+        XScriptAnnotation anno = findAnnotation(curs);
+
+        return new XML(lib, anno);
+    }
+
+    /**
+     * Special constructor for making an attribute
+     *
+     */
+    private static XML createAttributeXML(XMLLibImpl lib, XmlCursor cursor)
+    {
+        if (!cursor.isAttr())
+            throw new IllegalArgumentException();
+
+        XScriptAnnotation anno = new XScriptAnnotation(cursor);
+        cursor.setBookmark(anno);
+
+        return new XML(lib, anno);
+    }
+
+
     /**
      *
-     * @param inputObject
+     * @param qname
+     * @param value
+     * @return
      */
-    XML(XMLLibImpl lib, Object inputObject)
+    static XML createTextElement(XMLLibImpl lib, javax.xml.namespace.QName qname, String value)
     {
-        super(lib, lib.xmlPrototype);
+        XScriptAnnotation anno;
+
+        XmlObject xo = XmlObject.Factory.newInstance();
+        XmlCursor cursor = xo.newCursor();
+        try {
+            cursor.toNextToken();
+
+            cursor.beginElement(qname.getLocalPart(), qname.getNamespaceURI());
+            //if(namespace.length() > 0)
+            //    cursor.insertNamespace("", namespace);
+            cursor.insertChars(value);
+
+            cursor.toStartDoc();
+            cursor.toNextToken();
+            anno = new XScriptAnnotation(cursor);
+            cursor.setBookmark(anno);
+        } finally {
+            cursor.dispose();
+        }
+
+        return new XML(lib, anno);
+    }
+
+    static XML createFromXmlObject(XMLLibImpl lib, XmlObject xo)
+    {
+        XScriptAnnotation anno;
+        XmlCursor curs = xo.newCursor();
+        try {
+            anno = new XScriptAnnotation(curs);
+            curs.setBookmark(anno);
+        } finally {
+            curs.dispose();
+        }
+        return new XML(lib, anno);
+    }
+
+    static XML createFromJS(XMLLibImpl lib, Object inputObject)
+    {
+        if (inputObject instanceof Wrapper) {
+            Object wrapped = ((Wrapper)inputObject).unwrap();
+            if (wrapped instanceof XmlObject) {
+                return createFromXmlObject(lib, (XmlObject)wrapped);
+            }
+            if (wrapped instanceof XmlCursor) {
+                return createXML(lib, (XmlCursor)wrapped);
+            }
+        }
+
         XmlObject xo;
         boolean isText = false;
         String frag;
@@ -360,104 +405,28 @@ todo need to handle namespace prefix not found in XML look for namespace type in
             curs.toFirstContentToken();
         }
 
+        XScriptAnnotation anno;
         try
         {
-            _anno = new XScriptAnnotation(curs);
-            curs.setBookmark(_anno);
+            anno = new XScriptAnnotation(curs);
+            curs.setBookmark(anno);
         }
         finally
         {
             curs.dispose();
         }
+
+        return new XML(lib, anno);
     }
 
-    /**
-     * Special constructor for making an attribute
-     *
-     */
-    private XML(XMLLibImpl lib, XmlCursor cursor)
+    static XML getFromAnnotation(XMLLibImpl lib, XScriptAnnotation anno)
     {
-        super(lib, lib.xmlPrototype);
-        if(cursor == null || !cursor.isAttr())
+        if (anno._xScriptXML == null)
         {
-            // Make default empty XML
-            XmlObject xo = XmlObject.Factory.newInstance();
-
-            XmlCursor curs = xo.newCursor();
-            try
-            {
-                _anno = new XScriptAnnotation(this, curs);
-                curs.setBookmark(_anno);
-            }
-            finally
-            {
-                curs.dispose();
-            }
-        }
-        else
-        {
-            _anno = new XScriptAnnotation(this, cursor);
-            cursor.setBookmark(_anno);
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //  Public factories for creating a XScript XML object given an XBean cursor.
-    //
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    static XML createXML (XMLLibImpl lib, XmlCursor curs)
-    {
-        XML xml = new XML(lib);
-
-        if (curs == null)
-        {
-            curs = xml.newCursor();
-
-            xml._anno = findAnnotation(curs);
-
-            curs.dispose();
-        }
-        else
-        {
-            if (curs.currentTokenType().isStartdoc())
-            {
-                curs.toFirstContentToken();
-            }
-
-            xml._anno = findAnnotation(curs);
+            anno._xScriptXML = new XML(lib, anno);
         }
 
-        return xml;
-    }
-
-    /**
-     *
-     * @param qname
-     * @param value
-     * @return
-     */
-    static XML createTextElement(XMLLibImpl lib, javax.xml.namespace.QName qname, String value)
-    {
-        XmlObject xo = XmlObject.Factory.newInstance();
-        XmlCursor cursor = xo.newCursor();
-        cursor.toNextToken();
-
-        cursor.beginElement(qname.getLocalPart(), qname.getNamespaceURI());
-        //if(namespace.length() > 0)
-        //    cursor.insertNamespace("", namespace);
-        cursor.insertChars(value);
-
-        cursor.toStartDoc();
-        cursor.toNextToken();
-        XScriptAnnotation anno = new XScriptAnnotation(cursor);
-        cursor.setBookmark(anno);
-        cursor.dispose();
-
-        XML result = new XML(lib, anno);
-        return result;
+        return anno._xScriptXML;
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1131,7 +1100,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
 
         if (attrCurs.currentTokenType().isAttr())
         {
-            result = new XML(lib, attrCurs);
+            result = createAttributeXML(lib, attrCurs);
         }
 
         return result;
@@ -2161,7 +2130,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
             srcCurs.toFirstContentToken();
         }
 
-        XML xml = XML.createXML(lib, null);
+        XML xml = createEmptyXML(lib);
 
         XmlCursor destCurs = xml.newCursor();
         destCurs.toFirstContentToken();
@@ -2564,7 +2533,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
                 }
                 else
                 {
-                    parent = XScriptAnnotation.getXML(lib, findAnnotation(curs));
+                    parent = getFromAnnotation(lib, findAnnotation(curs));
                 }
             }
             else
@@ -3062,14 +3031,14 @@ todo need to handle namespace prefix not found in XML look for namespace type in
                                    Object[] args)
     {
         if (args.length == 0) {
-            return new XML(lib);
+            return createEmptyXML(lib);
         } else {
             Object arg0 = args[0];
             if (!inNewExpr && arg0 instanceof XML) {
                 // XML(XML) returns the same object.
                 return arg0;
             }
-            return new XML(lib, arg0);
+            return createFromJS(lib, arg0);
         }
     }
 

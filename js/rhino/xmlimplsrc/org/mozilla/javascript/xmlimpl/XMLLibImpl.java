@@ -80,7 +80,7 @@ public final class XMLLibImpl extends XMLLib
 
     private void exportToScope(boolean sealed)
     {
-        xmlPrototype = new XML(this);
+        xmlPrototype = XML.createEmptyXML(this);
         xmlListPrototype = new XMLList(this);
         namespacePrototype = new Namespace(this, "", "");
         qnamePrototype = new QName(this, "", "", "");
