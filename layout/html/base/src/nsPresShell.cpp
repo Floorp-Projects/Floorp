@@ -1123,7 +1123,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsReflowStatus        status;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(rootFrame, &rcx);
+    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+	if (NS_FAILED(rv)) return rv;
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
@@ -1221,7 +1222,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsReflowStatus        status;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(rootFrame, &rcx);
+    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+	if (NS_FAILED(rv)) return rv;
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
@@ -1506,7 +1508,8 @@ PresShell::StyleChangeReflow()
     nsReflowStatus        status;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(rootFrame, &rcx);
+    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+	if (NS_FAILED(rv)) return rv;
 
     // XXX We should be using eReflowReason_StyleChange
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
@@ -1871,7 +1874,8 @@ PresShell::ProcessReflowCommands()
 #endif
 
     mFrameManager->GetRootFrame(&rootFrame);
-    CreateRenderingContext(rootFrame, &rcx);
+    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+	if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
     if (GetVerifyReflowEnable()) {
