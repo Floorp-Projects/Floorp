@@ -1099,6 +1099,23 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         break;
       }
     }
+
+    // height
+    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+    if (value.GetUnit() != eHTMLUnit_Null) {
+      nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      switch (value.GetUnit()) {
+      case eHTMLUnit_Percent:
+        position->mHeight.SetPercentValue(value.GetPercentValue());
+        break;
+
+      case eHTMLUnit_Pixel:
+        position->mHeight.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        break;
+      }
+    }
+
     // border and frame
     MapTableBorderInto(aAttributes, aContext, aPresContext);
 
