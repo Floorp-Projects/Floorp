@@ -295,6 +295,7 @@ protected:
 
   // meta-data tokens
   mdb_column kToken_LastPageVisited;
+  mdb_column kToken_ByteOrder;
 
   //
   // AddPage-oriented stuff
@@ -322,6 +323,16 @@ protected:
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32* aResult);
 
   nsresult FindRow(mdb_column aCol, const char *aURL, nsIMdbRow **aResult);
+
+  //
+  // byte order
+  //
+  nsresult SaveByteOrder(const char *aByteOrder);
+  nsresult GetByteOrder(char **_retval);
+  nsresult InitByteOrder(PRBool aForce);
+  void SwapBytes(const PRUint16 *source, PRUint16 *dest, int len);
+  void SwapBytes(const PRUint32 *source, PRUint32 *dest, int len);
+  PRBool mReverseByteOrder;
 
   //
   // misc unrelated stuff

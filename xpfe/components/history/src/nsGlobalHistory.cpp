@@ -787,6 +787,7 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   mdb_err err;
 
   PRInt32 len = (nsCRT::strlen(aValue) * sizeof(PRUnichar));
+  PRUnichar *swapval = nsnull;
 
   // eventually turn this on when we're confident in mork's abilitiy
   // to handle yarn forms properly
@@ -796,10 +797,20 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   mdbYarn yarn = { (void *)utf8Value.get(), utf8Value.Length(), utf8Value.Length(), 0, 1, nsnull };
 #else
 
+  if (mReverseByteOrder) {
+    // The file is other-endian.  Byte-swap the value.
+    swapval = (PRUnichar *)malloc(len);
+    if (!swapval)
+      return NS_ERROR_OUT_OF_MEMORY;
+    SwapBytes(aValue, swapval, len / sizeof(PRUnichar));
+    aValue = swapval;
+  }
   mdbYarn yarn = { (void *)aValue, len, len, 0, 0, nsnull };
   
 #endif
   err = aRow->AddColumn(mEnv, aCol, &yarn);
+  if (swapval)
+    free(swapval);
   if (err != 0) return NS_ERROR_FAILURE;
   return NS_OK;
 }
@@ -848,7 +859,19 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   
   switch (yarn.mYarn_Form) {
   case 0:                       // unicode
-    aResult.Assign((const PRUnichar *)yarn.mYarn_Buf, yarn.mYarn_Fill/sizeof(PRUnichar));
+    if (mReverseByteOrder) {
+      // The file is other-endian; we must byte-swap the result.
+      PRUnichar *swapval;
+      int len = yarn.mYarn_Fill / sizeof(PRUnichar);
+      swapval = (PRUnichar *)malloc(yarn.mYarn_Fill);
+      if (!swapval)
+        return NS_ERROR_OUT_OF_MEMORY;
+      SwapBytes((const PRUnichar *)yarn.mYarn_Buf, swapval, len);
+      aResult.Assign(swapval, len);
+      free(swapval);
+    }
+    else
+      aResult.Assign((const PRUnichar *)yarn.mYarn_Buf, yarn.mYarn_Fill/sizeof(PRUnichar));
     break;
 
     // eventually we'll be supporting this in SetRowValue()
@@ -862,6 +885,43 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   return NS_OK;
 }
 
+// Copy an array of 16-bit values, reversing the byte order.
+void
+nsGlobalHistory::SwapBytes(const PRUint16 *source, PRUint16 *dest, int len)
+{
+  PRUint16 c;
+  const PRUint16 *inp;
+  PRUint16 *outp;
+  int i;
+
+  inp = source;
+  outp = dest;
+  for (i = 0; i < len; i++) {
+    c = *inp++;
+    *outp++ = (((c >> 8) & 0xff) | (c << 8));
+  }
+  return;
+}
+      
+// Copy an array of 32-bit values, reversing the byte order.
+void
+nsGlobalHistory::SwapBytes(const PRUint32 *source, PRUint32 *dest, int len)
+{
+  PRUint32 c;
+  const PRUint32 *inp;
+  PRUint32 *outp;
+  int i;
+
+  inp = source;
+  outp = dest;
+  for (i = 0; i < len; i++) {
+    c = *inp++;
+    *outp++ = (((c >> 24) & 0xff) | ((c >> 8) & 0xff00) |
+               ((c << 8) & 0xff0000) | (c << 24));
+  }
+  return;
+}
+      
 nsresult
 nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
                              PRInt64 *aResult)
@@ -1078,6 +1138,10 @@ nsGlobalHistory::RemoveAllPages()
   rv = RemoveMatchingRows(matchAllCallback, nsnull, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
   
+  // Reset the file byte order.
+  rv = InitByteOrder(PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
   return Commit(kCompressCommit);
 }
 
@@ -1204,6 +1268,42 @@ nsGlobalHistory::GetLastPageVisited(char **_retval)
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
   
   *_retval = ToNewCString(lastPageVisited);
+  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
+}
+
+// Set the byte order in the history file.  The given string value should
+// be either "BE" (big-endian) or "LE" (little-endian).
+nsresult
+nsGlobalHistory::SaveByteOrder(const char *aByteOrder)
+{
+  if (PL_strcmp(aByteOrder, "BE") != 0 && PL_strcmp(aByteOrder, "LE") != 0) {
+    NS_WARNING("Invalid byte order argument.");
+    return NS_ERROR_INVALID_ARG;
+  }
+  NS_ENSURE_STATE(mMetaRow);
+
+  mdb_err err = SetRowValue(mMetaRow, kToken_ByteOrder, aByteOrder);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+// Get the file byte order.
+nsresult
+nsGlobalHistory::GetByteOrder(char **_retval)
+{ 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
+
+  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_STATE(mMetaRow);
+
+  nsCAutoString byteOrder;
+  mdb_err err = GetRowValue(mMetaRow, kToken_ByteOrder, byteOrder);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+
+  *_retval = ToNewCString(byteOrder);
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -2410,6 +2510,9 @@ nsGlobalHistory::OpenDB()
     LL_I2L(mFileSizeOnDisk, 0);
   }
   
+  // See if we need to byte-swap.
+  InitByteOrder(PR_FALSE);
+
   return NS_OK;
 }
 
@@ -2509,6 +2612,12 @@ nsGlobalHistory::OpenNewFile(nsIMdbFactory *factory, const char *filePath)
   if (err != 0) return NS_ERROR_FAILURE;
   if (!mTable) return NS_ERROR_FAILURE;
 
+  // Create the meta row.
+  mdbOid oid = { kToken_HistoryRowScope, 1 };
+  err = mTable->GetMetaRow(mEnv, &oid, nsnull, getter_AddRefs(mMetaRow));
+  if (err != 0)
+    NS_WARNING("Could not get meta row\n");
+
   // Force a commit now to get it written out.
   nsCOMPtr<nsIMdbThumb> thumb;
   err = mStore->LargeCommit(mEnv, getter_AddRefs(thumb));
@@ -2524,6 +2633,39 @@ nsGlobalHistory::OpenNewFile(nsIMdbFactory *factory, const char *filePath)
   } while ((err == 0) && !broken && !done);
 
   if ((err != 0) || !done) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+// Set the history file byte order if necessary, and determine if
+// we need to byte-swap Unicode values.
+// If the force argument is true, the file byte order will be set
+// to that of this machine.
+nsresult
+nsGlobalHistory::InitByteOrder(PRBool aForce)
+{
+#ifdef IS_LITTLE_ENDIAN
+  NS_NAMED_LITERAL_CSTRING(machine_byte_order, "LE");
+#endif
+#ifdef IS_BIG_ENDIAN
+  NS_NAMED_LITERAL_CSTRING(machine_byte_order, "BE");
+#endif
+  nsXPIDLCString file_byte_order;
+  nsresult rv = NS_OK;
+
+  if (!aForce)
+    rv = GetByteOrder(getter_Copies(file_byte_order));
+  if (aForce || NS_FAILED(rv) ||
+      !(file_byte_order.Equals(NS_LITERAL_CSTRING("BE")) ||
+        file_byte_order.Equals(NS_LITERAL_CSTRING("LE")))) {
+    // Byte order is not yet set, or needs to be reset; initialize it.
+    mReverseByteOrder = PR_FALSE;
+    rv = SaveByteOrder(machine_byte_order.get());
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  else
+    mReverseByteOrder = !file_byte_order.Equals(machine_byte_order);
 
   return NS_OK;
 }
@@ -2681,6 +2823,7 @@ nsGlobalHistory::CreateTokens()
 
   // meta-data tokens
   err = mStore->StringToToken(mEnv, "LastPageVisited", &kToken_LastPageVisited);
+  err = mStore->StringToToken(mEnv, "ByteOrder", &kToken_ByteOrder);
 
   return NS_OK;
 }
