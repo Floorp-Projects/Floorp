@@ -1400,7 +1400,7 @@ sub BuildImglib2Projects()
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:gifdecoder2.mcp",        "gifdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:jpegdecoder2.mcp",       "jpegdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:icondecoder.mcp",        "icondecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-#        BuildOneProject(":mozilla:modules:libpr0n:macbuild:bmpdecoder.mcp",         "bmpdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:modules:libpr0n:macbuild:bmpdecoder.mcp",         "bmpdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         
         # MNG
         if ($main::options{mng})
