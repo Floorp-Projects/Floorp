@@ -428,6 +428,9 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
     result = NS_OK;
   	}
 
+  /* force SetCursor to actually set the cursor, even though our internal state indicates that we already
+     have the standard cursor */
+  mCursor = eCursor_wait;
   SetCursor( mCursor );
 
   return result;
