@@ -361,25 +361,34 @@ nsHTTPChannel::SetLoadGroup(nsILoadGroup *aGroup)
     //since it might get deleted off the creators thread. And the
     //stream listener could be elsewhere...
 
-    /* 
-        Set up a request object - later set to a clone of a default 
-        request from the handler. TODO
-    */
-    nsresult rv;
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsILoadGroup> oldLoadGroup = mLoadGroup;
 
-    //
-    // Initialize the load group and copy any default load attributes...
-    //
     mLoadGroup = aGroup;
     if (mLoadGroup) {
-        mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
+      mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
     }
+  
+    // if we had an old group....
+    if (oldLoadGroup) {
+      // then remove ourselves from the group...and add ourselves to the new group...
+      (void)oldLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+      mLoadGroup->AddChannel(this, nsnull);
+    }
+    else {
+      // this is the first load group we've been given...so do any extra
+      // start up work...
 
-    mRequest = new nsHTTPRequest(mURI);
-    if (mRequest == nsnull)
+      /* 
+        Set up a request object - later set to a clone of a default 
+        request from the handler. TODO
+      */
+      mRequest = new nsHTTPRequest(mURI);
+      if (mRequest == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mRequest);
-    rv = mRequest->SetConnection(this);
+      NS_ADDREF(mRequest);
+      rv = mRequest->SetConnection(this);
+    }
     return rv;
 }
 
