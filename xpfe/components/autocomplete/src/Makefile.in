@@ -32,6 +32,11 @@ REQUIRES	= xpcom string layout dom
 
 CPPSRCS		= nsAutoComplete.cpp
 
+ifdef MOZ_LDAP_XPCOM
+REQUIRES	+= mozldap necko
+CPPSRCS		+= nsLDAPAutoCompleteSession.cpp
+endif
+
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 

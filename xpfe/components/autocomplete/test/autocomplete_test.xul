@@ -109,28 +109,82 @@ function function1()
 function Initialize()
 {
     dump("Initialize!!\n");
-    var secondAutoComplete = document.getElementById("test2");
-    abSession = secondAutoComplete.autoCompleteSession.QueryInterface(Components.interfaces.nsIAbAutoCompleteSession)
-    dump("abSession = " + secondAutoComplete + ", abSession = " + secondAutoComplete.autoCompleteSession + "\n");
-    abSession.defaultDomain = "mozilla.org";
 
     var myAutoComplete = document.getElementById("test");
-    dump("myAutoComplete = " + myAutoComplete + ", session = " + myAutoComplete.autoCompleteSession + "\n");
+    dump("myAutoComplete = " + myAutoComplete + ", session = " + myAutoComplete.mSessions + "\n");
     myAutoComplete.autoCompleteSession = AutoCompleteSession;
+
+    var secondAutoComplete = document.getElementById("test2");
+    abSession = secondAutoComplete.mSessions['addrbook'].QueryInterface(Components.interfaces.nsIAbAutoCompleteSession);
+    abSession.defaultDomain = "mozilla.org";
+
+    var thirdAutoComplete = document.getElementById("test3");
+    var abSession3 = thirdAutoComplete.mSessions['ldap'].QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
+    dump("\nthirdAutoComplete = " + thirdAutoComplete + "\n");
+    dump("thirdAutoComplete.mSessions['ldap'] = " +
+         thirdAutoComplete.mSessions['ldap'] + "\n");
+    dump("abSession3 = " + abSession3 + "\n");
+
+    var serverURL = Components.classes["@mozilla.org/network/ldap-url;1"].
+                    createInstance().QueryInterface(                                               Components.interfaces.nsILDAPURL);
+
+    //serverURL.spec = "ldap://ldap.bigfoot.com:389/??one?";
+    serverURL.spec = "ldap://nsdirectory.netscape.com/ou=People," +
+                     "dc=netscape,dc=com??one";
+
+    abSession3.serverURL = serverURL;
+    abSession3.filterTemplate = "sn=";
+    abSession3.outputFormat = "cn &lt;mail&gt;";
+    abSession3.sizeLimit = 10;
+
+    var fourthAutoComplete = document.getElementById("test3");
+    var abSession4 = fourthAutoComplete.mSessions['ldap'].QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
+    dump("\nfourthAutoComplete = " + fourthAutoComplete + "\n");
+    dump("fourthAutoComplete.mSessions['ldap'] = " +
+         fourthAutoComplete.mSessions['ldap'] + "\n");
+    dump("abSession4 = " + abSession4 + "\n");
+
+    var serverURL4 = Components.classes["@mozilla.org/network/ldap-url;1"].
+                    createInstance().QueryInterface(                                               Components.interfaces.nsILDAPURL);
+
+    //serverURL4.spec = "ldap://ldap.bigfoot.com:389/??one?";
+    serverURL4.spec = "ldap://nsdirectory.netscape.com/ou=People," +
+                      "dc=netscape,dc=com??one";
+
+    abSession3.serverURL = serverURL4;
+    abSession3.filterTemplate = "sn=";
+    abSession3.outputFormat = "cn &lt;mail&gt;";
+    abSession3.sizeLimit = 10;
+
 }
 
 </script>
 
-<!--autocomplete id="test" timeout="300" /-->
+<html>Inline JS:</html>
+<textbox id="test" timeout="300" type="autocomplete" />
 
-<autocomplete id="test2"
-    searchSessionType="addrbook"
+<html>addrbook:</html>
+<textbox id="test2" 
+    type="autocomplete"
+    searchSessions="addrbook"
     timeout="300"
     onkeypress="if (event.keyCode == 13) dump('Done, value=' + this.value + '\n');"
 />
 
-<!--autocomplete
-    searchSessionClass="netscape%2Fmessenger%2Fautocomplete%26type%3Daddrbook"
+<html>ldap:</html>
+<textbox id="test3"
+    type="autocomplete"
+    searchSessions="ldap"
     timeout="300"
-/-->
+    onkeypress="if (event.keyCode == 13) dump('Done, value=' + this.value + '\n');"
+/>
+
+<html>composite (addrbook, ldap):</html>
+<textbox id="test3"
+    type="autocomplete"
+    searchSessions="addrbook ldap"
+    timeout="300"
+    onkeypress="if (event.keyCode == 13) dump('Done, value=' + this.value + '\n');"
+/>
+
 </window>
