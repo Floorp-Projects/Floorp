@@ -497,6 +497,10 @@ RDFContainerUtilsImpl::IndexOf(nsIRDFDataSource* aDataSource, nsIRDFResource* aC
     // Assume we can't find it.
     *aIndex = -1;
 
+    // If the resource is null, bail quietly
+    if (! aElement)
+      return NS_OK;
+
     // We'll assume that fan-out is much higher than fan-in, so grovel
     // through the inbound arcs, look for an ordinal resource, and
     // decode it.

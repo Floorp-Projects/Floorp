@@ -814,20 +814,27 @@ var BookmarksUtils = {
     var rName = BMDS.GetTarget(aFolder, nameArc, true);
     rName = rName.QueryInterface(Components.interfaces.nsIRDFLiteral);
     
-	var newFolder = this.createFolderWithID(rName.Value, aRelativeItem, aParent);
+    var newFolder = this.createFolderWithID(rName.Value, aRelativeItem, aParent);
     
     // Now need to append kiddies. 
     try {
       const kRDFCContractID = "@mozilla.org/rdf/container;1";
       const kRDFCIID = Components.interfaces.nsIRDFContainer;
       var RDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
-      RDFC.Init(BMDS, aFolder);
+      const kRDFCUContractID = "@mozilla.org/rdf/container-utils;1";
+      const kRDFCUIID = Components.interfaces.nsIRDFContainerUtils;
+      var RDFCU = Components.classes[kRDFCUContractID].getService(kRDFCUIID);
 
+      RDFC.Init(BMDS, aFolder);
       var elts = RDFC.GetElements();
       RDFC.Init(BMDS, newFolder);
+
       while (elts.hasMoreElements()) {
         var curr = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        RDFC.AppendElement(curr);
+        if (RDFCU.IsContainer(BMDS, curr))
+          BookmarksUtils.cloneFolder(curr, newFolder);
+        else
+          RDFC.AppendElement(curr);
       }
     }
     catch (e) {
@@ -847,8 +854,8 @@ var BookmarksUtils = {
     catch (e) {
       return null;
     }
-    var ix = RDFC.IndexOf(aRelativeItem);
 
+    var ix = RDFC.IndexOf(aRelativeItem);
     var BMSvc = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
     return BMSvc.createFolderWithDetails(aTitle, aParentFolder, ix);
   },
