@@ -46,9 +46,17 @@ CONFIGS = $(wildcard $(srcdir)/*.cfg)
 include $(topsrcdir)/config/rules.mk
 
 export:: $(MDCPUCFG_H)
-	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)
 	$(INSTALL) -m 444 $(CONFIGS) $(HEADERS) $(dist_includedir)/md
+	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)
+ifeq ($(OS_ARCH),OpenVMS)
+# On OpenVMS mv updates the file's modified time, so we create a hard link.
+	cd $(dist_includedir); \
+	if test ! -f prcpucfg.h; then \
+	    dcl set file /enter=prcpucfg.h $(MDCPUCFG_H); \
+	fi
+else
 	mv -f $(dist_includedir)/$(MDCPUCFG_H) $(dist_includedir)/prcpucfg.h
+endif
 
 real_install::
 	$(NSINSTALL) -D $(DESTDIR)$(includedir)/md
