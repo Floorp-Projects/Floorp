@@ -134,6 +134,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             aEvent->widget->SetFocus();
           }
         }
+        NS_RELEASE(newFocus);
       }
     }
     //Break left out on purpose
