@@ -103,7 +103,7 @@ endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/,$(EXTRA_DSO_LIBS)))
-EXTRA_DSO_LIBS		:= $(filter-out %/bin %lib,$(EXTRA_DSO_LIBS))
+EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
 else
 EXTRA_DSO_LIBS		:= $(addprefix -l,$(EXTRA_DSO_LIBS))
 endif
@@ -541,7 +541,7 @@ else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin
 endif
 endif
-        +$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_DIRS)
 endif # OS2
 
 checkout:
@@ -684,7 +684,7 @@ $(DEF_FILE): $(DEF_OBJS)
 ifeq ($(XPCOM_SWITCH),1)
 	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
 else
-	$(FILTER) $(DEF_OBJS) | grep -v getter_Copies__FR >> $(DEF_FILE)
+	$(FILTER) $(DEF_OBJS) | grep -v getter_Copies__FR| grep -v getc | grep -v putc | grep -v __ctime >> $(DEF_FILE)
 endif
 	$(ADD_TO_DEF_FILE)
 $(IMPORT_LIBRARY): $(OBJS) $(DEF_FILE)
@@ -711,6 +711,7 @@ endif
 
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
 	rm -f $@
+ifneq ($(OS_ARCH),OS2)
 ifneq ($(OS_ARCH),OpenVMS)
 ifdef NO_LD_ARCHIVE_FLAGS
 ifdef SHARED_LIBRARY_LIBS
@@ -733,6 +734,13 @@ endif
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) VMSuni.opt;
 	@echo "`translate $@`" > $(@:$(DLL_SUFFIX)=.vms)
 endif
+else # OS2
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(MKSHLIB) /FREE /DE /NOE /NOL /NOBR /DLL /O:$@ /INC:_dllentry /M $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
+else
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
+endif
+endif # OS2
 	chmod +x $@
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
 
@@ -803,8 +811,11 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 %.i: %.c
 	$(CC) -C -E $(COMPILE_CFLAGS) $< > $*.i
 
+# need 3 separate lines for OS/2
 %: %.pl
-	rm -f $@; cp $< $@; chmod +x $@
+	rm -f $@
+	cp $< $@
+	chmod +x $@
 
 %: %.sh
 	rm -f $@; cp $< $@; chmod +x $@
