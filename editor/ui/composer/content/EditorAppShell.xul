@@ -190,6 +190,7 @@
 <!ENTITY outputXIFCmd.label "Output XIF">
 <!ENTITY insertTextCmd.label "Insert Text">
 <!ENTITY testSelectionCmd.label "Test Selection">
+<!ENTITY showEmbeddedCmd.label "Show Embedded Objects">
 <!ENTITY dumpContentCmd.label "Dump Content Tree">
 <!ENTITY testDocumentCmd.label "Test Document">
 <!ENTITY runUnitTestsCmd.label "Run Unit Tests">
@@ -481,6 +482,7 @@
       <menuitem name="&insertTextCmd.label;" onclick="EditorInsertText('All good things come to those who wait. ')"/>
       <separator />
       <menuitem name="&testSelectionCmd.label;" onclick="EditorTestSelection()"/>
+      <menuitem name="&showEmbeddedCmd.label;" onclick="EditorShowEmbeddedObjects()"/>
       <menuitem name="&dumpContentCmd.label;" onclick="EditorDumpContent()"/>
       <menuitem name="&testDocumentCmd.label;" onclick="EditorTestDocument()"/>
       <menuitem name="&runUnitTestsCmd.label;" onclick="EditorUnitTests()"/>

@@ -2026,6 +2026,30 @@ nsEditorShell::SetSelectionAfterElement(nsIDOMElement* aElement)
   return result;
 }
 
+NS_IMETHODIMP
+nsEditorShell::GetEmbeddedObjects(nsISupportsArray **aObjectArray)
+{
+  if (!aObjectArray)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult result;
+
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+      if (htmlEditor)
+        result = htmlEditor->GetEmbeddedObjects(aObjectArray);
+    }
+    break;
+
+    default:
+      result = NS_NOINTERFACE;
+  }
+  return result;
+}
+
 NS_IMETHODIMP    
 nsEditorShell::StartSpellChecking(PRUnichar **aFirstMisspelledWord)
 {

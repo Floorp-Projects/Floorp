@@ -2685,7 +2685,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray* aNodeList)
+nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 {
   if (!aNodeList)
     return NS_ERROR_NULL_POINTER;
@@ -2695,9 +2695,10 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray* aNodeList)
 #else
   nsresult res;
 
-  res = NS_NewISupportsArray(&aNodeList);
-  if (NS_FAILED(res))
+  res = NS_NewISupportsArray(aNodeList);
+  if (NS_FAILED(res) || !*aNodeList)
     return res;
+  //NS_ADDREF(*aNodeList);
 
   nsCOMPtr<nsIContentIterator> iter;
   res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
@@ -2722,11 +2723,12 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray* aNodeList)
     iter->Init(rootContent);
 
     // loop through the content iterator for each content node
-    nsCOMPtr<nsIContent> content;
-    res = iter->CurrentNode(getter_AddRefs(content));
-
     while (NS_COMFALSE == iter->IsDone())
     {
+      nsCOMPtr<nsIContent> content;
+      res = iter->CurrentNode(getter_AddRefs(content));
+      if (NS_FAILED(res))
+        break;
       nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
       if (node)
       {
@@ -2736,7 +2738,11 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray* aNodeList)
 
         // See if it's an image or an embed
         if (tagName == "img" || tagName == "embed")
-          aNodeList->AppendElement(node);
+          (*aNodeList)->AppendElement(node);
+        else if (tagName == "a")
+        {
+          // XXX Only include links if they're links to file: URLs
+        }
       }
       iter->Next();
     }

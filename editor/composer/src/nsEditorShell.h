@@ -52,7 +52,7 @@ class nsIPresShell;
 class nsIHTMLEditor;
 class nsITextEditor;
 class nsIOutputStream;
-
+class nsISupportsArray;
 
 
 #define NS_EDITORAPPCORE_CID                          \
@@ -147,7 +147,10 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD SelectElement(nsIDOMElement *element);
 	  NS_IMETHOD SetSelectionAfterElement(nsIDOMElement *element);
 
-	  /* void SetParagraphFormat (in string value); */
+    /* Get list of embedded objects, e.g. for mail compose */
+    NS_IMETHOD GetEmbeddedObjects(nsISupportsArray **aObjectArray);
+
+    /* void SetParagraphFormat (in string value); */
 	  NS_IMETHOD SetParagraphFormat(PRUnichar *value);
 	  NS_IMETHOD GetParagraphFormat(PRUnichar * *aParagraphFormat);
 
@@ -249,12 +252,12 @@ class nsEditorShell :   public nsIEditorShell,
 #endif // NECKO
 
   protected:
-    nsCOMPtr<nsISpellChecker> mSpellChecker;
-    nsStringArray   mSuggestedWordList;
-    PRInt32         mSuggestedWordIndex;
-    NS_IMETHOD      DeleteSuggestedWordList();
-    nsStringArray   mDictionaryList;
-    PRInt32         mDictionaryIndex;
+    nsIDOMWindow       *mToolbarWindow;				// weak reference
+    nsIDOMWindow       *mContentWindow;				// weak reference
+
+    nsIWebShellWindow  *mWebShellWin;					// weak reference
+    nsIWebShell        *mWebShell;						// weak reference
+    nsIWebShell        *mContentAreaWebShell;	// weak reference
 
   	typedef enum {
   	  eUninitializedEditorType = 0,
@@ -278,13 +281,6 @@ class nsEditorShell :   public nsIEditorShell,
     nsString            mEnableScript;     
     nsString            mDisableScript;     
 
-    nsIDOMWindow       *mToolbarWindow;				// weak reference
-    nsIDOMWindow       *mContentWindow;				// weak reference
-
-    nsIWebShellWindow  *mWebShellWin;					// weak reference
-    nsIWebShell        *mWebShell;						// weak reference
-    nsIWebShell        *mContentAreaWebShell;	// weak reference
-
 		EEditorType					mEditorType;
 		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)
     nsCOMPtr<nsISupports>	 	mEditor;						// this can be either an HTML or plain text (or other?) editor
@@ -296,6 +292,13 @@ class nsEditorShell :   public nsIEditorShell,
 #endif    
 
     PRInt32 mWrapColumn;      // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
+
+    nsCOMPtr<nsISpellChecker> mSpellChecker;
+    nsStringArray   mSuggestedWordList;
+    PRInt32         mSuggestedWordIndex;
+    NS_IMETHOD      DeleteSuggestedWordList();
+    nsStringArray   mDictionaryList;
+    PRInt32         mDictionaryIndex;
 };
 
 #endif // nsEditorAppCore_h___

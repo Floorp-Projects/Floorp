@@ -718,6 +718,13 @@ function EditorTestSelection()
   dump(output + "\n\n");
 }
 
+function EditorShowEmbeddedObjects()
+{
+  dump("\nEmbedded Objects:\n");
+  var objectArray = editorShell.GetEmbeddedObjects();
+  dump(objectArray.length + " embedded objects\n");
+}
+
 function EditorUnitTests()
 {
   dump("Running Unit Tests\n");

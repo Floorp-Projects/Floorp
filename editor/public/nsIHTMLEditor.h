@@ -187,7 +187,7 @@ public:
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;
 
 // MHTML helper methods
-  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray* aNodeList)=0;
+  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList)=0;
 
 // Table editing Methods
   NS_IMETHOD InsertTable()=0;
