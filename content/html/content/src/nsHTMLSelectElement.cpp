@@ -1348,6 +1348,8 @@ nsHTMLSelectElement::IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled)
   *aIsDisabled = PR_FALSE;
   nsCOMPtr<nsIDOMNode> optionNode;
   Item(aIndex, getter_AddRefs(optionNode));
+  NS_ENSURE_TRUE(optionNode, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(optionNode);
   if (option) {
     PRBool isDisabled;
