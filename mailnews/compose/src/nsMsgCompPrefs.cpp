@@ -44,21 +44,13 @@ nsMsgCompPrefs::nsMsgCompPrefs()
 		{
 			char * aString = nsnull;
 
-			identity->GetOrganization(&aString);
-			if (aString)
-				m_organization = PL_strdup(aString);
+			identity->GetOrganization(&m_organization);
 
-			identity->GetFullName(&aString);
-			if (aString)
-				m_userFullName = PL_strdup(aString);
+			identity->GetFullName(&m_userFullName);
 				
-			identity->GetEmail(&aString);
-			if (aString)
-				m_userEmail = PL_strdup(aString);
+			identity->GetEmail(&m_userEmail);
 
-			identity->GetReplyTo(&aString);
-			if (aString)
-				m_replyTo = PL_strdup(aString);
+			identity->GetReplyTo(&m_replyTo);
 
 			identity->GetUseHtml(&m_useHTML);
 			identity->GetWrapColumn(&m_wrapColumn);
