@@ -41,19 +41,6 @@
 
 
 // File constants copied from file-utils.js
-const PERM_IRWXU = 00700;  /* read, write, execute/search by owner */
-const PERM_IRUSR = 00400;  /* read permission, owner */
-const PERM_IWUSR = 00200;  /* write permission, owner */
-const PERM_IXUSR = 00100;  /* execute/search permission, owner */
-const PERM_IRWXG = 00070;  /* read, write, execute/search by group */
-const PERM_IRGRP = 00040;  /* read permission, group */
-const PERM_IWGRP = 00020;  /* write permission, group */
-const PERM_IXGRP = 00010;  /* execute/search permission, group */
-const PERM_IRWXO = 00007;  /* read, write, execute/search by others */
-const PERM_IROTH = 00004;  /* read permission, others */
-const PERM_IWOTH = 00002;  /* write permission, others */
-const PERM_IXOTH = 00001;  /* execute/search permission, others */
-
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
 const MODE_RDWR     = 0x04;
@@ -219,7 +206,7 @@ function readDataFromFile( aFilePath )
    inputStream = Components.classes[FILEIN_CTRID].createInstance( nsIFileInputStream );
    try
    {
-      inputStream.init( LocalFileInstance, MODE_RDONLY, PERM_IWOTH | PERM_IWGRP, tmp );
+      inputStream.init( LocalFileInstance, MODE_RDONLY, 0444, tmp );
       
       scriptableInputStream = Components.classes[SCRIPTSTREAM_CTRID].createInstance( nsIScriptableInputStream);
       scriptableInputStream.init( inputStream );
@@ -446,7 +433,7 @@ function saveDataToFile(aFilePath, aDataStream)
    outputStream = Components.classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
    try
    {
-      outputStream.init(LocalFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERM_IWOTH | PERM_IWGRP);
+      outputStream.init(LocalFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664);
       outputStream.write(aDataStream, aDataStream.length);
       // outputStream.flush();
       outputStream.close();
