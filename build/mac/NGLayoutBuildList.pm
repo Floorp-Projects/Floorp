@@ -1593,7 +1593,7 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	# Applications
-	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",			"mozBrowser$D.shlb", "mozBrowser.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	print("--- XPApp projects complete ----\n");
