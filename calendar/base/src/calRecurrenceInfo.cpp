@@ -169,6 +169,7 @@ calRecurrenceInfo::GetRecurCount(PRInt32 *aRecurCount)
         int count = 0;
         while (!icaltime_is_null_time(next)) {
             count++;
+            next = icalrecur_iterator_next(recur_iter);
         }
 
         *aRecurCount = count;
