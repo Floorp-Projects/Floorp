@@ -60,7 +60,7 @@ enum {FORWARD  =1, BACKWARD = 0};
 #define DEBUG_OUT_RANGE(x)  
 #endif //MOZ_DEBUG
 
-#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
+//#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 //#define DEBUG_NAVIGATION
 
 class nsRangeListIterator;
@@ -1269,11 +1269,14 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     content = do_QueryInterface(aParentNode);
     nsIAtom *tag;
     content->GetTag(tag);
-    nsString tagString;
-    tag->ToString(tagString);
-    char * tagCString = tagString.ToNewCString();
-    printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
-    delete [] tagCString;
+    if (tag)
+    {
+	    nsString tagString;
+	    tag->ToString(tagString);
+	    char * tagCString = tagString.ToNewCString();
+	    printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
+	    delete [] tagCString;
+    }
   }
   else {
     printf ("Sel. Collapse set to null parent.\n");
