@@ -11,7 +11,7 @@ void				FE_DestroyMailCompositionContext(MWContext*) {return;}
 const char *		FE_UsersSignature() {return NULL;}
 const char *		FE_UsersOrganization() {return NULL;}
 const char *		FE_UsersFullName() {return NULL;}
-const char *		FE_UsersMailAddress() {return NULL;}
+const char *		FE_UsersMailAddress() {return PL_strdup("qatest02@netscape.com");}
 void				FE_UpdateCompToolbar(MSG_Pane*) {return;}
 void				FE_SetWindowLoading(MWContext *, URL_Struct *,Net_GetUrlExitFunc **) {return;}
 
@@ -23,12 +23,24 @@ URL_Struct *		NET_CreateURLStruct (const char *, NET_ReloadMethod) {return NULL;
 char *				NET_UnEscape (char * ) {return NULL;}
 char *				NET_EscapeHTML(const char * string) {return NULL;}
 char *				NET_ParseURL (const char *, int ) {return NULL;}
-int					NET_URL_Type (const char *) {return NULL;}
+int					NET_URL_Type (CONST char *) {return NULL;}
+XP_Bool				NET_IsLocalFileURL(char *address) {return PR_TRUE;}
+char *				NET_Escape (const char * str, int mask) {return PL_strdup(str);}
+int					NET_InterruptWindow(MWContext * window_id) {return 0;}
+XP_Bool				NET_IsOffline() {return PR_FALSE;}
+//char *				NET_ExplainErrorDetails (int code, ...) {return NULL;}
+char*				NET_ScanHTMLForURLs(const char* input) {return NULL;}
 
 int					XP_FileRemove(const char *, XP_FileType) {return 0;}
 XP_FILE_URL_PATH	XP_PlatformFileToURL (const XP_FILE_NATIVE_PATH ) {return NULL;}
 MWContext *			XP_FindContextOfType(MWContext *, MWContextType) {return NULL;}
 char *				XP_StripLine (char *) {return NULL;}
+XP_File				XP_FileOpen (const char* name, XP_FileType type, const XP_FilePerm permissions) {return NULL;}
+int					XP_Stat(const char * name, XP_StatStruct * outStat, XP_FileType type) {return 0;}
+int					XP_FileTruncate(const char* name, XP_FileType type, int32 length) {return 0;}
+char *				XP_AppVersion = "5.0a0";
+XP_BEGIN_PROTOS int					XP_LocalZoneOffset() {return -480;} XP_END_PROTOS
+Bool				XP_IsContextBusy(MWContext * context) {return PR_FALSE;}
 
 const char *		MSG_GetSpecialFolderName(int ) {return NULL;}
 const char *		MSG_GetQueueFolderName() {return NULL;}
@@ -37,26 +49,55 @@ char *				MSG_ExtractRFC822AddressMailboxes (const char *) {return NULL;}
 int					MSG_ExplodeHeaderField(MSG_HEADER_SET,const char * ,MSG_HeaderEntry **) {return NULL;}
 int					MSG_ParseRFC822Addresses (const char *,char **, char **) {return NULL;}
 char *				MSG_MakeFullAddress (const char* , const char* ) {return NULL;}
+char *				MSG_ReformatRFC822Addresses (const char *line) {return PL_strdup(line);}
+void				MSG_MailCompositionAllConnectionsComplete (MSG_Pane* /*pane*/) {return;}
+
 
 void				INTL_DestroyCharCodeConverter(CCCDataObject) {return;}
-unsigned char *		INTL_CallCharCodeConverter(CCCDataObject,const unsigned char *,PRInt32) {return NULL;}
+unsigned char *		INTL_CallCharCodeConverter(CCCDataObject,const unsigned char *,int32) {return NULL;}
 int					INTL_GetCharCodeConverter(int16 ,int16 ,CCCDataObject) {return NULL;}
 CCCDataObject		INTL_CreateCharCodeConverter() {return NULL;}
 int16				INTL_GetCSIWinCSID(INTL_CharSetInfo) {return NULL;}
 INTL_CharSetInfo	LO_GetDocumentCharacterSetInfo(MWContext *) {return NULL;}
+int16				INTL_GetCSIDocCSID(INTL_CharSetInfo obj) {return 2;}
+int16				INTL_DefaultMailCharSetID(int16 csid) {return 2;}
+int16				INTL_DefaultNewsCharSetID(int16 csid) {return 2;}
+void				INTL_MessageSendToNews(XP_Bool toNews) {return;}
+char *				INTL_EncodeMimePartIIStr(char *header, int16 wincsid, XP_Bool bUseMime) {return NULL;}
+int					INTL_IsLeadByte(int charSetID,unsigned char ch) {return 0;}
+CCCDataObject		INTL_CreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned char *buffer,uint32 buffer_size) {return NULL;}
+char *				INTL_GetAcceptLanguage() {return "en";}
+void				INTL_CharSetIDToName(int16 charSetID,char *charset_return) {PL_strcpy (charset_return,"us-ascii"); return;}
+
+MimeEncoderData *	MimeB64EncoderInit(int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
+MimeEncoderData *	MimeQPEncoderInit (int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
+MimeEncoderData *	MimeUUEncoderInit (char *filename, int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
+int					MimeEncoderDestroy(MimeEncoderData *data, XP_Bool abort_p) {return 0;}
+int					MimeEncoderWrite (MimeEncoderData *data, const char *buffer, int32 size) {return 0;}
+char *				MimeGuessURLContentName(MWContext *context, const char *url) {return NULL;}
+void				MIME_GetMessageCryptoState(MWContext *,PRBool *,PRBool *,PRBool *,PRBool *) {return;}
+
+int					strcasecomp  (const char *, const char *) {return 0;}
+int					strncasecomp (const char *, const char *, int ) {return NULL;}
+char *				strcasestr (const char * str, const char * substr) {return NULL;}
 
 XP_FILE_NATIVE_PATH WH_FileName (const char *, XP_FileType ) {return NULL;}
-void				MIME_GetMessageCryptoState(MWContext *,PRBool *,PRBool *,PRBool *,PRBool *) {return;}
+char *				WH_TempName(XP_FileType type, const char * prefix) {return PL_strdup("c:\\temp\\nsmail01.txt");}
+
+HJ10196
 History_entry *		SHIST_GetCurrent(History *) {return NULL;}
 int					MISC_ValidateReturnAddress (MWContext *,const char *) {return NULL;}
+char *				msg_MagicFolderName(MSG_Prefs* prefs, uint32 flag, int *pStatus) {return NULL;}
 
 extern "C" {
 int MK_MSG_SAVE_TEMPLATE;
 int MK_MSG_INVALID_FOLLOWUP_TO_HEADER;
 int MK_MSG_INVALID_NEWS_HEADER;
 int	MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS;
+int MK_MSG_FAILED_COPY_OPERATION;
 
 void FE_MsgShowHeaders(MSG_Pane *, MSG_HEADER_SET) {return;}
 HJ98703
 }
+
 
