@@ -269,7 +269,7 @@ function js_file_menu(dir,file,rev,root,d) {
 }
 
 
-</script>
+//--></script>
 
 <layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
 </layer>
