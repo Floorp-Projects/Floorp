@@ -1241,9 +1241,11 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             argc = 0;
         } else {
             /* The second arg must be an array (or arguments object). */
-            aobj = JSVAL_TO_OBJECT(argv[1]);
-            if (OBJ_GET_CLASS(cx, aobj) != &js_ArgumentsClass &&
-                OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass) {
+            if (JSVAL_IS_PRIMITIVE(argv[1]) || 
+                (aobj = JSVAL_TO_OBJECT(argv[1]), 
+                OBJ_GET_CLASS(cx, aobj) != &js_ArgumentsClass && 
+                OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass))
+            { 
 	        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_APPLY_ARGS);
                 return JS_FALSE;
