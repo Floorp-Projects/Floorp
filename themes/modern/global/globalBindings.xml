@@ -143,6 +143,9 @@
     <content>
       <xul:hbox class="menubutton-single-internal-box" flex="1">
         <xul:button class="menubutton-single-button" flex="1" inherits="open,label,disabled">
+          <xul:image class="button-icon-mid" inherits="src=image"/>
+          <xul:label class="button-text-mid" flex="1"
+                    inherits="value=label,crop,accesskey"/>
           <xul:image class="menubutton-single-dropmarker" inherits="open,disabled"/>
         </xul:button>
       </xul:hbox>
