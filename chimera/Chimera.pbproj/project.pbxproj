@@ -3511,6 +3511,7 @@
 				F513437602DA286001A967F3,
 				F513437702DA286001A967F3,
 				F513437802DA286001A967F3,
+				F5E47654030C5FD501A967F3,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -5625,6 +5626,7 @@
 				F513437B02DA286101A967F3,
 				F513437C02DA286101A967F3,
 				F513437D02DA286101A967F3,
+				F5E47655030C5FD501A967F3,
 				F5BAAB9B02AC4AA701A967F3,
 				F5BAAB9E02AC4AA701A967F3,
 				F5BAABA002AC4AA701A967F3,
@@ -7633,6 +7635,18 @@
 		};
 		F5E37B1202EE95E201A967F3 = {
 			fileRef = F50D9DF602EE2B9A01BB4219;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E47654030C5FD501A967F3 = {
+			isa = PBXFileReference;
+			name = libuniversalchardet.a;
+			path = ../extensions/universalchardet/src/libuniversalchardet.a;
+			refType = 2;
+		};
+		F5E47655030C5FD501A967F3 = {
+			fileRef = F5E47654030C5FD501A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
