@@ -1681,7 +1681,8 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
             mDocument->GetScriptGlobalObject(getter_AddRefs(global));
             if (global) {
                 nsCOMPtr<nsIScriptContext> context;
-                if (NS_OK == global->GetContext(getter_AddRefs(context))) {
+                global->GetContext(getter_AddRefs(context));
+                if (context) {
                     context->RemoveReference((void*) &mScriptObject, mScriptObject);
                 }
             }
@@ -1697,7 +1698,8 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
             mDocument->GetScriptGlobalObject(getter_AddRefs(global));
             if (global) {
                 nsCOMPtr<nsIScriptContext> context;
-                if (NS_OK == global->GetContext(getter_AddRefs(context))) {
+                global->GetContext(getter_AddRefs(context));
+                if (context) {
                     context->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXULElement::mScriptObject");
                 }
             }
