@@ -198,8 +198,9 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mInternalState=NS_OK;
   
 #ifdef RAPTOR_PERF_METRICS
-  mParseTime.Reset();
-  mDTDTime.Reset();
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
+  mParseTime.Reset();  
+  mDTDTime.Reset();  
   mTokenizeTime.Reset();
 #endif
 }
@@ -660,6 +661,7 @@ nsresult nsParser::EnableParser(PRBool aState){
       result=mInternalState;
   }
   else {
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: nsParser::EnableParser(), this=%p\n", this));
     NS_STOP_STOPWATCH(mParseTime);
   }
 
@@ -935,6 +937,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
   nsresult result=NS_OK;
   if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
 
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
     NS_START_STOPWATCH(mParseTime)
 
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
@@ -951,6 +954,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
           ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
           DidBuildModel(mStreamStatus);
           NS_STOP_STOPWATCH(mTotalTime);
+          RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
           NS_STOP_STOPWATCH(mParseTime);
 
 
@@ -965,19 +969,18 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
           // printf("Total Time: ");
           // mTotalTime.Print();
           // printf("\n");
-
-          RAPTOR_STOPWATCH_TRACE(("Parse Time: "));
+          
+          RAPTOR_STOPWATCH_TRACE(("Parse Time (this=%p): ", this));
           mParseTime.Print();
           RAPTOR_STOPWATCH_TRACE(("\n"));
 
-          printf("DTD Time: ");
+          RAPTOR_STOPWATCH_TRACE(("DTD Time: "));
           mDTDTime.Print();
-          printf("\n");
+          RAPTOR_STOPWATCH_TRACE(("\n"));
 
-          printf("Tokenize Time: ");
+          RAPTOR_STOPWATCH_TRACE(("Tokenize Time: "));
           mTokenizeTime.Print();
-          printf("\n");
-
+          RAPTOR_STOPWATCH_TRACE(("\n"));
 #endif
           return mInternalState;
         }
@@ -998,6 +1001,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
     }
   }//if
 
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
   NS_STOP_STOPWATCH(mParseTime);
 
   return result;
@@ -1029,9 +1033,9 @@ nsresult nsParser::BuildModel() {
     }
 
     nsIDTD* theRootDTD=theRootContext->mDTD;
-    if(theRootDTD) {
+    if(theRootDTD) {      
       NS_START_STOPWATCH(mDTDTime);
-      result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
+      result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);      
       NS_STOP_STOPWATCH(mDTDTime);
     }
   }
@@ -1476,8 +1480,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
   ++mMajorIteration; 
 
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
-  if(theTokenizer){
-
+  if(theTokenizer){    
     NS_START_STOPWATCH(mTokenizeTime);
 
     WillTokenize(aIsFinalChunk);
