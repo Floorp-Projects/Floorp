@@ -48,7 +48,7 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIFrame.h"
 #include "nsIImageFrame.h"
-//#include "nsIImageMap.h"
+#include "nsIImageMap.h"
 
 
 // --- area -----
@@ -158,7 +158,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32
   // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame
 
   *x = *y = *width = *height = 0;
-/*
+
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
@@ -199,7 +199,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32
   GetScrollOffset(&pageRectPixels);
   *x += orgRectPixels.x - pageRectPixels.x;
   *y += orgRectPixels.y - pageRectPixels.y;
-*/
+
   return NS_OK;
 }
 
