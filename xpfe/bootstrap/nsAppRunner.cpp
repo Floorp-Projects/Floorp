@@ -934,7 +934,6 @@ static void DumpHelp(char *appname)
   printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-installer%sStart with 4.x migration window.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-pref%sStart with pref window.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-width <value>%sSet width of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, appname);
   printf("%s-CreateProfile <profile>%sCreate and start with <profile>.\n",HELP_SPACER_1,HELP_SPACER_2);
