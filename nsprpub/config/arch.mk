@@ -69,6 +69,9 @@ endif
 ifeq ($(OS_ARCH),Mac OS)
 OS_ARCH		:= Rhapsody
 endif
+ifeq ($(OS_ARCH),Darwin)
+OS_ARCH		:= Rhapsody
+endif
 ifeq ($(OS_ARCH),ncr)
 OS_ARCH		:= NCR
 endif
