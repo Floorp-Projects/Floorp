@@ -155,6 +155,12 @@ char *
 xpidl_strdup(const char *s);
 
 /*
+ * Return a pointer to the start of the base filename of path
+ */
+const char *
+xpidl_basename(const char * path);
+
+/*
  * Process an XPIDL node and its kids, if any.
  */
 gboolean
