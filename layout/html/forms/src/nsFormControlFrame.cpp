@@ -65,7 +65,10 @@
 //#define DEBUG_rods
 #endif
 
-#define FCF_NOISY
+#ifdef DEBUG_rods
+//#define FCF_NOISY
+#endif
+
 #ifdef FCF_NOISY
 #define REFLOW_DEBUG_MSG(_msg1) printf((_msg1))
 #define REFLOW_DEBUG_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
