@@ -66,25 +66,25 @@ enum netCoalesceFlags
 //----------------------------------------------------------------------------
 
 /* shutdown frees URL parser */
-void net_ShutdownURLHelper();
+NS_HIDDEN_(void) net_ShutdownURLHelper();
 
 /* access URL parsers */
-nsIURLParser *net_GetAuthURLParser();
-nsIURLParser *net_GetNoAuthURLParser();
-nsIURLParser *net_GetStdURLParser();
+NS_HIDDEN_(nsIURLParser *) net_GetAuthURLParser();
+NS_HIDDEN_(nsIURLParser *) net_GetNoAuthURLParser();
+NS_HIDDEN_(nsIURLParser *) net_GetStdURLParser();
 
 /* convert between nsIFile and file:// URL spec */
-nsresult net_GetURLSpecFromFile(nsIFile *, nsACString &);
-nsresult net_GetFileFromURLSpec(const nsACString &, nsIFile **);
+NS_HIDDEN_(nsresult) net_GetURLSpecFromFile(nsIFile *, nsACString &);
+NS_HIDDEN_(nsresult) net_GetFileFromURLSpec(const nsACString &, nsIFile **);
 
 /* extract file path components from file:// URL */
-nsresult net_ParseFileURL(const nsACString &inURL,
-                          nsACString &outDirectory,
-                          nsACString &outFileBaseName,
-                          nsACString &outFileExtension);
+NS_HIDDEN_(nsresult) net_ParseFileURL(const nsACString &inURL,
+                                      nsACString &outDirectory,
+                                      nsACString &outFileBaseName,
+                                      nsACString &outFileExtension);
 
 /* handle .. in dirs while resolving URLs */
-void net_CoalesceDirs(netCoalesceFlags flags, char* path);
+NS_HIDDEN_(void) net_CoalesceDirs(netCoalesceFlags flags, char* path);
 
 /**
  * Resolves a relative path string containing "." and ".."
@@ -99,9 +99,9 @@ void net_CoalesceDirs(netCoalesceFlags flags, char* path);
  *
  * @return a new string, representing canonical uri
  */
-nsresult net_ResolveRelativePath(const nsACString &relativePath,
-                                 const nsACString &basePath,
-                                 nsACString &result);
+NS_HIDDEN_(nsresult) net_ResolveRelativePath(const nsACString &relativePath,
+                                             const nsACString &basePath,
+                                             nsACString &result);
 
 /**
  * Extract URI-Scheme if possible
@@ -111,13 +111,13 @@ nsresult net_ResolveRelativePath(const nsACString &relativePath,
  * @param endPos    end of scheme; index of colon (may be null)
  * @param scheme    scheme copied to this buffer on return (may be null)
  */
-nsresult net_ExtractURLScheme(const nsACString &inURI,
-                              PRUint32 *startPos, 
-                              PRUint32 *endPos,
-                              nsACString *scheme = nsnull);
+NS_HIDDEN_(nsresult) net_ExtractURLScheme(const nsACString &inURI,
+                                          PRUint32 *startPos, 
+                                          PRUint32 *endPos,
+                                          nsACString *scheme = nsnull);
 
 /* check that the given scheme conforms to RFC 2396 */
-PRBool net_IsValidScheme(const char *scheme, PRUint32 schemeLen);
+NS_HIDDEN_(PRBool) net_IsValidScheme(const char *scheme, PRUint32 schemeLen);
 
 inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
 {
@@ -139,22 +139,22 @@ inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
  * @param result the out param to write to if filtering happens
  * @return whether result was written to
  */
-PRBool net_FilterURIString(const char *str, nsACString& result);
+NS_HIDDEN_(PRBool) net_FilterURIString(const char *str, nsACString& result);
 
 /*****************************************************************************
  * generic string routines follow (XXX move to someplace more generic).
  */
 
 /* convert to lower case */
-void net_ToLowerCase(char* str, PRUint32 length);
-void net_ToLowerCase(char* str);
+NS_HIDDEN_(void) net_ToLowerCase(char* str, PRUint32 length);
+NS_HIDDEN_(void) net_ToLowerCase(char* str);
 
 /**
  * returns pointer to first character of |str| in the given set.  if not found,
  * then |end| is returned.  stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-char *net_FindCharInSet(const char *str, const char *end, const char *set);
+NS_HIDDEN_(char *) net_FindCharInSet(const char *str, const char *end, const char *set);
 
 /**
  * returns pointer to first character of |str| NOT in the given set.  if all
@@ -162,19 +162,19 @@ char *net_FindCharInSet(const char *str, const char *end, const char *set);
  * included in |set|, then stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-char *net_FindCharNotInSet(const char *str, const char *end, const char *set);
+NS_HIDDEN_(char *) net_FindCharNotInSet(const char *str, const char *end, const char *set);
 
 /**
  * returns pointer to last character of |str| in the given set.  if not found,
  * then |str - 1| is returned.
  */
-char *net_RFindCharInSet(const char *str, const char *end, const char *set);
+NS_HIDDEN_(char *) net_RFindCharInSet(const char *str, const char *end, const char *set);
 
 /**
  * returns pointer to last character of |str| NOT in the given set.  if all
  * characters are in the given set, then |str - 1| is returned.
  */
-char *net_RFindCharNotInSet(const char *str, const char *end, const char *set);
+NS_HIDDEN_(char *) net_RFindCharNotInSet(const char *str, const char *end, const char *set);
 
 /* inline versions */
 
