@@ -185,20 +185,24 @@ public:
 
         nsresult rv;
         if (!loader.get()) {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "NFE: getting loader for %s\n", type);
+#endif
             rv = mgr->GetLoaderForType(type, getter_AddRefs(loader));
             if(NS_FAILED(rv))
                 return rv;
         }
+
+#ifdef DEBUG_shaver
+        char *cidStr = cid.ToString();
+        fprintf(stderr, "NFE: getting factory for %s \n", cidStr);
+        delete [] cidStr;
+#endif
         rv = loader->GetFactory(cid, location, type, aFactory);
         if (NS_SUCCEEDED(rv))
             factory = do_QueryInterface(*aFactory);
         return rv;
     }
-
-#if 0 /* unused? */
-    nsresult Init(nsHashtable* dllHashtable, const nsCID &aClass, const char *aLibrary,
-                  PRTime lastModTime, PRUint32 fileSize);
-#endif
 
     nsCID cid;
     char *location;
