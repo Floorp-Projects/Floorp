@@ -349,6 +349,12 @@ nsEditorShell::ResetEditingState()
   // one URL into the content area. Let's tear down what we have, and rip 'em a
   // new one.
 
+  nsCOMPtr<nsIEditor> editor(do_QueryInterface(mEditor));
+  if (editor)
+  {
+    editor->PreDestroy();
+  }
+
   // Unload existing stylesheets
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (styleSheets)
