@@ -116,7 +116,7 @@ nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
     mStreamIO = io;
     nsXPIDLCString name;
     rv = mStreamIO->GetName(getter_Copies(name));
-    mStreamName = name;
+    mStreamName = NS_STATIC_CAST(const char*, name);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
 
     mService = aService;
@@ -669,7 +669,7 @@ nsFileTransport::Process(void)
             msg.AssignWithConversion("Read ");
             nsXPIDLCString spec;
             (void)
-            msg.Append(mStreamName);
+            msg.AppendWithConversion(mStreamName);
             (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
         }
         mContext = null_nsCOMPtr();
@@ -818,7 +818,7 @@ nsFileTransport::Process(void)
             // XXX fix up this message for i18n
             nsAutoString msg;
             msg.AssignWithConversion("Wrote ");
-            msg.Append(mStreamName);
+            msg.AssignWithConversion(mStreamName);
             (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
         }
         mContext = null_nsCOMPtr();
