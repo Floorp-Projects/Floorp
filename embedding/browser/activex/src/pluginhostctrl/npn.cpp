@@ -104,8 +104,7 @@ _OpenURL(NPP npp, const char *szURL, const char *szTarget, void *pNotifyData, co
                 USES_CONVERSION;
                 DWORD cbNewURL = (url.Length() + bstrCurrentURL.Length() + 1) * sizeof(WCHAR);
                 DWORD cbNewURLUsed = 0;
-                WCHAR *pszNewURL = (WCHAR *) malloc(cbNewURL);
-                memset(pszNewURL, 0, cbNewURL);
+                WCHAR *pszNewURL = (WCHAR *) calloc(cbNewURL, 1);
                 ATLASSERT(pszNewURL);
 
                 CoInternetCombineUrl(

@@ -707,15 +707,13 @@ void add_macro(char *pString, macro_list **ppList)
 
     /*  Allocate a new list entry for the macro.
      */
-    pEntry = (macro_list *)malloc(sizeof(macro_list));
-    memset(pEntry, 0, sizeof(macro_list));
+    pEntry = (macro_list *)calloc(1, sizeof(macro_list));
 
     /*  Very first part of the string is the macro name.
      *  How long is it?
      */
     iLength = macro_length(pString);
-    pEntry->m_pMacro = (char *)malloc(iLength + 1);
-    memset(pEntry->m_pMacro, 0, iLength + 1);
+    pEntry->m_pMacro = (char *)calloc(iLength + 1, 1);
     strncpy(pEntry->m_pMacro, pString, iLength);
 
     /*  Skip to the values.
@@ -803,11 +801,9 @@ void add_values(char *pString, char_list **ppList)
 
 	/*  Allocate a new list entry for the next value.
 	 */
-	pEntry = (char_list *)malloc(sizeof(char_list));
-	memset(pEntry, 0, sizeof(char_list));
+	pEntry = (char_list *)calloc(1, sizeof(char_list));
 
-	pEntry->m_pString = (char *)malloc(iLength + 1);
-	memset(pEntry->m_pString, 0, iLength + 1);
+	pEntry->m_pString = (char *)calloc(iLength + 1, 1);
 	strncpy(pEntry->m_pString, pString, iLength);
 
 	/*  Add new value entry to the end of the list.

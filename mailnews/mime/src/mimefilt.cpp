@@ -374,8 +374,7 @@ main (int argc, char **argv)
 
   PR_Init("mimefilt", 24, 1, 0);
 
-  cdb_handle = (CERTCertDBHandle *)  malloc(sizeof(*cdb_handle));
-  memset(cdb_handle, 0, sizeof(*cdb_handle));
+  cdb_handle = (CERTCertDBHandle *)  calloc(1, sizeof(*cdb_handle));
 
   if (SECSuccess != CERT_OpenCertDB(cdb_handle, PR_FALSE, test_cdb_name_cb, NULL))
 	CERT_OpenVolatileCertDB(cdb_handle);

@@ -117,8 +117,7 @@ Init () {
     gDesc = RDF_GetResource("Description", 1);
     gEditor = RDF_GetResource("editor", 1);
     gNewsGroup = RDF_GetResource("newsGroup", 1);
-    gTemplate = (char*) malloc(MAX_TEMPLATE_SIZE+1);
-    memset(gTemplate, '\0', MAX_TEMPLATE_SIZE);
+    gTemplate = (char*) calloc(MAX_TEMPLATE_SIZE+1, 1);
     n = fread(gTemplate, 1, MAX_TEMPLATE_SIZE, templateFile);
     gTemplate[n] = '\0';
     fclose(templateFile);
@@ -226,19 +225,6 @@ void describeCategory (WriteClientProc callBack, void* obj, RDF_Resource u) {
 
 #define MRN 1000
 
-char* 
-xGetMem (size_t n) {
-  char* ans = (char*) malloc(n);
-  if (ans) memset(ans, '\0', n);
-  return ans;
-}
-
-
-void 
-xFreeMem(void* item) {
-  free(item);
-}
-
 RDF_Resource
 stToProp (char c) {
   if (!c || (c == 'a')) {
@@ -260,8 +246,8 @@ AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query, char* cooki
     size_t catn = 0;
     size_t itemn = 0;    
     size_t index;
-    RDF_Resource* cats = (RDF_Resource*)xGetMem(sizeof(RDF_Resource) * (MRN + 1));
-    RDF_Resource* items =  (RDF_Resource*)xGetMem(sizeof(RDF_Resource) * (MRN + 1));
+    RDF_Resource* cats = (RDF_Resource*)calloc(MRN+1, sizeof(RDF_Resource));
+    RDF_Resource* items =  (RDF_Resource*)calloc(MRN+1, sizeof(RDF_Resource));
     char showDesc = cookiePropValue(cookie, "searchDesc");
 
     (*callBack)(obj, PREFIX);
@@ -302,8 +288,8 @@ AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query, char* cooki
       (*callBack)(obj, "</UL>");      
     }
 
-   xFreeMem(items);
-   xFreeMem(cats);
+   free(items);
+   free(cats);
 }
 
 

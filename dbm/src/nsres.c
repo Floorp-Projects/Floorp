@@ -79,8 +79,7 @@ NSRESHANDLE NSResCreateTable(const char *filename, NSRESTHREADINFO *threadinfo)
 
 	flag = O_RDWR | O_CREAT;
 
-	hres = (RESHANDLE) malloc ( sizeof(struct RESDATABASE) );
-	memset(hres, 0, sizeof(struct RESDATABASE));
+	hres = (RESHANDLE) calloc ( 1, sizeof(struct RESDATABASE) );
 
 	if (threadinfo && threadinfo->lock && threadinfo->fn_lock 
 	  && threadinfo->fn_unlock)
@@ -111,8 +110,7 @@ NSRESHANDLE NSResOpenTable(const char *filename, NSRESTHREADINFO *threadinfo)
 
 	flag = O_RDONLY;  /* only open database for reading */
 
-	hres = (RESHANDLE) malloc ( sizeof(struct RESDATABASE) );
-	memset(hres, 0, sizeof(struct RESDATABASE));
+	hres = (RESHANDLE) calloc ( 1, sizeof(struct RESDATABASE) );
 
 	if (threadinfo && threadinfo->lock && threadinfo->fn_lock 
 	  && threadinfo->fn_unlock)

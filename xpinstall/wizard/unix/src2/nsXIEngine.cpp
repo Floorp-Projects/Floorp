@@ -579,8 +579,7 @@ nsXIEngine::ParseURL(char *aURL, char **aHost, char **aDir)
     hostTerminator = strchr(host, '/'); 
     if (!hostTerminator) return E_BAD_FTP_URL;
     
-    *aHost = (char *) malloc(sizeof(char) * (hostTerminator - host + 1));
-    memset(*aHost, 0, (hostTerminator - host + 1));
+    *aHost = (char *) calloc(hostTerminator - host + 1, 1);
     strncpy(*aHost, host, hostTerminator - host);
 
     dirTerminator = strrchr(hostTerminator + 1, '/');

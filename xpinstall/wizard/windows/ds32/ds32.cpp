@@ -392,8 +392,7 @@ int ParseArgumentList(struct Params *ArgList, int argc, char *argv[])
     ArgList->Sector         = -1;
     ArgList->SuppressHeader = 0;
     ArgList->AutoInfoFormat = 0;
-    ArgList->DirName        = (char *)malloc(sizeof(char)*MAX_BUF);
-    memset(ArgList->DirName, 0, MAX_BUF);
+    ArgList->DirName        = (char *)calloc(MAX_BUF, 1);
 
     for(i = 1; i < argc; i++)
     {

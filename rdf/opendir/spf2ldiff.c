@@ -119,9 +119,7 @@ startsWith (const char* pattern, const char* uuid)
 
 char* 
 getMem (size_t n) {
-  char* ans = (char*) malloc(n);
-  if (ans) memset(ans, '\0', n);
-  return ans;
+  return (char*) calloc(1, n);
 }
 
 void 
