@@ -19,14 +19,17 @@
 /* Main Composer window UI control */
 
 var toolbar;
+var documentModified;
 
 function EditorStartup(editorType)
 {
   dump("Doing Startup...\n");
   contentWindow = window.content;
 
+  // set up event listeners
+  window.content.addEventListener("load", EditorDocumentLoaded, true, false);  
+  
   dump("Trying to make an Editor Shell through the component manager...\n");
-
   editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
   if (editorShell)
     editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
@@ -557,6 +560,66 @@ function EditorRunLog()
   EditorExecuteScript(fs);
 }
 
+function EditorDocumentLoaded()
+{
+  dump("The document was loaded in the content area\n");
+
+  //window.content.addEventListener("keyup", EditorReflectDocState, true, false);	// post process, no capture
+  //window.content.addEventListener("dblclick", EditorDoDoubleClick, true, false);
+
+  documentModified = (window.editorShell.documentStatus != 0);
+  return true;
+}
+
+function UpdateSaveButton(modified)
+{
+  var saveButton = document.getElementById("saveButton");
+   if (saveButton)
+  {
+    if (modified) {
+      saveButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveMod.gif");
+    } else {
+      saveButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveFile.gif");
+    }
+    dump("updating button\n");
+  }
+  else
+  {
+    dump("could not find button\n");
+  }
+}
+
+function EditorDoDoubleClick()
+{
+  dump("doing double click\n");
+}
+
+function EditorReflectDocState()
+{
+  var docState = window.editorShell.documentStatus;
+  var stateString;
+  
+  if (docState == 0) {
+    stateString = "unmodified";
+  } else {
+    stateString = "modified";
+  }
+  
+  var oldModified = documentModified;
+  documentModified = (window.editorShell.documentStatus != 0);
+  
+  if (oldModified != documentModified)
+    UpdateSaveButton(documentModified);
+  
+  dump("Updating save state " + stateString + "\n");
+  
+  return true;
+}
+
+function EditorDocStateChanged()
+{
+}
+
 function EditorGetNodeFromOffsets(offsets)
 {
   var node = null;
@@ -686,12 +749,16 @@ function OpenFile(url)
 // --------------------------- Status calls ---------------------------
 function onBoldChange()
 {
-	bold = toolbar.IsBold.getAttribute("bold");
-	if ( bold == "true" ) {
-		toolbar.boldButton.setAttribute( "disabled", false );
+  var boldButton = document.getElementByID("BoldButton");
+  if (boldButton)
+  {
+	bold = boldButton.getAttribute("bold");
+    if ( bold == "true" ) {
+      boldButton.setAttribute( "disabled", false );
+	} else {
+	  boldButton.setAttribute( "disabled", true );
 	}
-	else {
-		toolbar.boldButton.setAttribute( "disabled", true );
-	}
+  }
+	dump("  Bold state changed\n");
 }
 
