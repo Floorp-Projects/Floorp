@@ -907,17 +907,29 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                 oldsize = alloc->size;
             }
         }
+#ifdef EXIT_TMMON_AROUND_REALLOC
+        /* XXX rusty.lynch@intel.com found that oldsize gets corrupted on
+               his SMP Linux box occasionally, unless tmmon is held across
+               the call to __libc_realloc.  Figure out why that stack var
+               is being trashed, and until then use his workaround. */
         if (tmmon)
             PR_ExitMonitor(tmmon);
+#endif
     }
 
     ptr = __libc_realloc(ptr, size);
 
     if (!ptr && size) {
         tmstats.realloc_failures++;
+#ifndef EXIT_TMMON_AROUND_REALLOC
+        if (tmmon && suppress_tracing == 0)
+            PR_ExitMonitor(tmmon);
+#endif
     } else if (suppress_tracing == 0) {
+#ifdef EXIT_TMMON_AROUND_REALLOC
         if (tmmon)
             PR_EnterMonitor(tmmon);
+#endif
         site = backtrace(1);
         if (site)
             log_event3(logfp, 'R', site->serial, oldsize, size);
