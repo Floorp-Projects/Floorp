@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.68 $ $Date: 2002/09/27 15:55:01 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.69 $ $Date: 2002/09/30 20:33:44 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -512,8 +512,6 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 	memset(rvTrust, 0, sizeof(*rvTrust));
     }
     if (NSSCertificate_IsPrivateKeyAvailable(c, NULL, NULL)) {
-	if (!rvTrust) {
-	}
 	rvTrust->sslFlags |= CERTDB_USER;
 	rvTrust->emailFlags |= CERTDB_USER;
 	rvTrust->objectSigningFlags |= CERTDB_USER;
