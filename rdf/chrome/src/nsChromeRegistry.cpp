@@ -436,7 +436,7 @@ nsChromeRegistry::GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString&
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to obtain the package resource.");
     return rv;
-  }
+  }  
 
   // Follow the "selectedSkin" or "selectedLocale" arc.
   nsCOMPtr<nsIRDFResource> arc;
@@ -447,26 +447,26 @@ nsChromeRegistry::GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString&
     arc = mSelectedLocale;
   }
 
-  if (!arc)
-    return NS_ERROR_FAILURE;
+  if (arc) {
+    
+    nsCOMPtr<nsIRDFNode> selectedProvider;
+    if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, arc, PR_TRUE, getter_AddRefs(selectedProvider)))) {
+      NS_ERROR("Unable to obtain the provider.");
+      return rv;
+    }
 
-  nsCOMPtr<nsIRDFNode> selectedProvider;
-  if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, arc, PR_TRUE, getter_AddRefs(selectedProvider)))) {
-    NS_ERROR("Unable to obtain the provider.");
-    return rv;
+    if (!selectedProvider)
+      return NS_ERROR_FAILURE;
+
+    resource = do_QueryInterface(selectedProvider);
+    if (!resource)
+      return NS_ERROR_FAILURE;
   }
-
-  if (!selectedProvider)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIRDFResource> selectedResource(do_QueryInterface(selectedProvider));
-  if (!selectedResource)
-    return NS_ERROR_FAILURE;
 
   // From this resource, follow the "baseURL" arc.
   nsChromeRegistry::FollowArc(mChromeDataSource,
                               aBaseURL, 
-                              selectedResource,
+                              resource,
                               mBaseURL);
   return NS_OK;
 }
@@ -799,8 +799,9 @@ nsChromeRegistry::ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocu
   return rv;
 }
 
-NS_IMETHODIMP nsChromeRegistry::ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI,
-                                                                  char *aOverlayURI)
+NS_IMETHODIMP nsChromeRegistry::ReallyUpdateOverlayFromDataSource(const PRUnichar *aDocURI,
+                                                                  char *aOverlayURI,
+                                                                  PRBool aRemove)
 {
   nsresult rv;
   nsCOMPtr<nsIURL> url;
@@ -844,18 +845,26 @@ NS_IMETHODIMP nsChromeRegistry::ReallyRemoveOverlayFromDataSource(const PRUnicha
   nsCOMPtr<nsIRDFLiteral> literal;
   mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
 
-  container->RemoveElement(literal, PR_TRUE);
+  if (aRemove)
+    container->RemoveElement(literal, PR_TRUE);
+  else {
+    PRInt32 index;
+    container->IndexOf(literal, &index);
+    if (index == -1)
+      container->AppendElement(literal);
+  }
 
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(dataSource, &rv);
   if (NS_FAILED(rv))
     return NS_OK;
-  
+
   remote->Flush();
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::RemoveOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource)
+NS_IMETHODIMP nsChromeRegistry::UpdateOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource,
+                                              PRBool aRemove)
 {
   nsCOMPtr<nsIRDFContainer> container;
   nsresult rv;
@@ -894,7 +903,7 @@ NS_IMETHODIMP nsChromeRegistry::RemoveOverlay(nsIRDFDataSource *aDataSource, nsI
       if (NS_FAILED(rv))
         return rv;
 
-      ReallyRemoveOverlayFromDataSource(valueStr, value);
+      ReallyUpdateOverlayFromDataSource(valueStr, value, aRemove);
     }
     arcs->HasMoreElements(&moreElements);
   }
@@ -904,15 +913,25 @@ NS_IMETHODIMP nsChromeRegistry::RemoveOverlay(nsIRDFDataSource *aDataSource, nsI
 }
 
 
-NS_IMETHODIMP nsChromeRegistry::RemoveOverlays(nsAutoString aPackage,
-                                               nsAutoString aProvider,
-                                               nsIRDFContainer *aContainer,
-                                               nsIRDFDataSource *aDataSource)
+NS_IMETHODIMP nsChromeRegistry::UpdateOverlays(nsIRDFDataSource *aDataSource,
+                                               PRBool aRemove)
 {
   nsresult rv;
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetResource("chrome:overlays", getter_AddRefs(resource));
+
+  if (!resource)
+    return NS_OK;
+
+  nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("component://netscape/rdf/container"));
+  if (!container)
+    return NS_OK;
+
+  if (NS_FAILED(container->Init(aDataSource, resource)))
+    return NS_OK;
 
   nsCOMPtr<nsISimpleEnumerator> arcs;
-  if (NS_FAILED(aContainer->GetElements(getter_AddRefs(arcs))))
+  if (NS_FAILED(container->GetElements(getter_AddRefs(arcs))))
     return NS_OK;
 
   PRBool moreElements;
@@ -927,7 +946,7 @@ NS_IMETHODIMP nsChromeRegistry::RemoveOverlays(nsAutoString aPackage,
 
     if (NS_SUCCEEDED(rv))
     {
-      RemoveOverlay(aDataSource, resource);
+      UpdateOverlay(aDataSource, resource, aRemove);
     }
 
     arcs->HasMoreElements(&moreElements);
@@ -1232,6 +1251,23 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
     if (val.Find(prefix) == 0) {
       // It's valid.
       
+      if (aProviderType.Equals("package")) {
+        // Get the literal for our base URL.
+        nsAutoString unistr;unistr.AssignWithConversion(aBaseURL);
+        nsCOMPtr<nsIRDFLiteral> literal;
+        mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
+
+        nsCOMPtr<nsIRDFNode> retVal;
+        installSource->GetTarget(resource, mBaseURL, PR_TRUE, getter_AddRefs(retVal));
+        if (retVal)
+          installSource->Change(resource, mBaseURL, retVal, literal);
+        else
+          installSource->Assert(resource, mBaseURL, literal, PR_TRUE);
+
+        // install our overlays
+        UpdateOverlays(dataSource, PR_FALSE);
+      }
+
       nsCOMPtr<nsIRDFContainer> container;
       rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
                                             nsnull,
@@ -1252,20 +1288,21 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
           installContainer->Init(installSource, resource);
         }
 
-        { // Restrict variable scope
-	  // Put all our elements into the install container.
-	  nsCOMPtr<nsISimpleEnumerator> seqKids;
-	  container->GetElements(getter_AddRefs(seqKids));
-	  PRBool moreKids;
-	  seqKids->HasMoreElements(&moreKids);
-	  while (moreKids) {
-	    nsCOMPtr<nsISupports> supp;
-	    seqKids->GetNext(getter_AddRefs(supp));
-	    nsCOMPtr<nsIRDFNode> kid = do_QueryInterface(supp);
-	    installContainer->AppendElement(kid);
-	    seqKids->HasMoreElements(&moreKids);
-	  }
-	}
+        // Put all our elements into the install container.
+        nsCOMPtr<nsISimpleEnumerator> seqKids;
+        container->GetElements(getter_AddRefs(seqKids));
+        PRBool moreKids;
+        seqKids->HasMoreElements(&moreKids);
+        while (moreKids) {
+          nsCOMPtr<nsISupports> supp;
+          seqKids->GetNext(getter_AddRefs(supp));
+          nsCOMPtr<nsIRDFNode> kid = do_QueryInterface(supp);
+          installContainer->AppendElement(kid);
+          seqKids->HasMoreElements(&moreKids);
+        }
+
+        // If we're a package, set up our base URL arc.
+        
 
         // See if we're a packages seq.  If so, we need to set up the baseURL and
         // the package arcs.

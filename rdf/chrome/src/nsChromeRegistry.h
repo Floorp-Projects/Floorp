@@ -59,17 +59,16 @@ protected:
    
   nsresult GetResource(const nsCAutoString& aChromeType, nsIRDFResource** aResult);
   
-  NS_IMETHOD RemoveOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource);
-  NS_IMETHOD RemoveOverlays(nsAutoString aPackage,
-                            nsAutoString aProvider,
-                            nsIRDFContainer *aContainer,
-                            nsIRDFDataSource *aDataSource);
+  NS_IMETHOD UpdateOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, PRBool aRemove);
+  NS_IMETHOD UpdateOverlays(nsIRDFDataSource *aDataSource,
+                            PRBool aRemove);
   
   void LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString & aURL);
   void GetUserSheetURL(nsCString & aURL);
 
 private:
-  NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
+  NS_IMETHOD ReallyUpdateOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI,
+                                               PRBool aRemove);
   NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
                             PRBool aUseProfileDirOnly = PR_FALSE);
 
