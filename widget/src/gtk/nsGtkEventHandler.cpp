@@ -29,6 +29,7 @@
 #include "nsIMenuListener.h"
 
 #include "stdio.h"
+#include "ctype.h"
 
 #define DBG 0
 
@@ -231,12 +232,19 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
 //==============================================================
 
 #if 1
-PRUint32 nsConvertCharCodeToUnicode(gchar* gdkString)
+PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 {
+  // ALT keys in gdk give the upper case character in string,
+  // but we want the lower case char in char code
+  // unless shift was also pressed.
+  if ((aGEK->state & GDK_MOD1_MASK) && !(aGEK->state & GDK_SHIFT_MASK)
+      && isupper(aGEK->string[0]))
+    return tolower(aGEK->string[0]);
+
   //
   // placeholder for something a little more interesting and correct
   //
-  return gdkString[0];
+  return aGEK->string[0];
 }
 
 //==============================================================
@@ -275,7 +283,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
 
   if (aGEK!=nsnull) {
     anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
-    anEvent.charCode = nsConvertCharCodeToUnicode(aGEK->string);
+    anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
 #ifdef DEBUG_pavlov
     g_print("%s\n", aGEK->string);
 #endif
