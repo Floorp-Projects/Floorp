@@ -434,12 +434,10 @@
         <parameter name="aWidth"/>
         <body><![CDATA[
           if (!this.mPopupOpen) {
-            if (!this.mInput) {
-              this.mInput = aInput;
-              this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
-              this.invalidate();
-            }
-
+            this.mInput = aInput;
+            this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
+            this.invalidate();
+            
             this.showCommentColumn = this.mInput.showCommentColumn;
             
             this.removeAttribute("hidden");
