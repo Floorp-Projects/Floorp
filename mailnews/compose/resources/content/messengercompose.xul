@@ -64,13 +64,31 @@ Rights Reserved.
 <broadcaster id="args" value="editorType=default"/>
 
 <broadcasterset id="broadcasterset">
+	<!-- File Menu -->
 	<broadcaster id="cmd_close" oncommand="CloseWindow()"/>
  	<broadcaster id="cmd_quit"/>
+	<!-- Edit Menu -->
+	<broadcaster id="cmd_undo" oncommand="ComposeNYI()"/>
+	<broadcaster id="cmd_redo" oncommand="ComposeNYI()"/>
+	<broadcaster id="cmd_cut" oncommand="ComposeNYI()"/>
+	<broadcaster id="cmd_copy" oncommand="ComposeNYI()"/>
+	<broadcaster id="cmd_paste" oncommand="ComposeNYI()"/>
+	<broadcaster id="cmd_delete" oncommand="ComposeNYI()"/>
+	<broadcaster id="cmd_selectAll" oncommand="ComposeNYI()"/>
 </broadcasterset>
 
 <keyset id="keyset">
+	<!-- File Menu -->
 	<key id="key_close"/>
 	<key id="key_quit"/>
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete"/>
+	<key id="key_selectAll"/>
 </keyset>
 
 <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
@@ -110,22 +128,25 @@ Rights Reserved.
 	</menu>
 	<menu id="menu_Edit">
 		<menupopup>
-		<menuitem value="&undoCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuseparator/>
-		<menuitem value="&cutCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&copyCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&pasteCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&pasteAsQuotCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&deleteCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&selectAllCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuseparator/>
-		<menuitem value="&findCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&findAgainCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuseparator/>
-		<menuitem value="&doNotCompleteAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&showMatchingAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuseparator/>
-		<menuitem value="&prefsCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem id="menu_undo"/>
+			<menuitem id="menu_redo"/>
+			<menuseparator/>
+			<menuitem id="menu_cut"/>
+			<menuitem id="menu_copy"/>
+			<menuitem id="menu_paste"/>
+			<menuitem value="&pasteAsQuotCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuseparator/>
+			<menuitem id="menu_delete"/>
+			<menuseparator/>
+			<menuitem id="menu_selectAll"/>
+			<menuseparator/>
+			<menuitem value="&findCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem value="&findAgainCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuseparator/>
+			<menuitem value="&doNotCompleteAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem value="&showMatchingAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuseparator/>
+			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messengercompose/content/pref-messages.xul')"/>
 		</menupopup>
 	</menu>
 	<menu id="menu_View">

@@ -25,18 +25,11 @@
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
-<!ENTITY undoCmd.label ".Undo">
-<!ENTITY cutCmd.label ".Cut">
-<!ENTITY copyCmd.label ".Copy">
-<!ENTITY pasteCmd.label ".Paste">
 <!ENTITY pasteAsQuotCmd.label ".Paste as Quotation">
-<!ENTITY deleteCmd.label ".Delete">
-<!ENTITY selectAllCmd.label ".Select All">
 <!ENTITY findCmd.label ".Find">
 <!ENTITY findAgainCmd.label ".Find Again">
 <!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
 <!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
-<!ENTITY prefsCmd.label ".Preferences...">
 
 <!-- View menu items -->
 <!ENTITY showCmd.label ".Show">
