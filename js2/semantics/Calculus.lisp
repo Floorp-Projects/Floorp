@@ -3069,7 +3069,7 @@
 
 
 ; Scan a local function.
-;   arg-binding-exprs should have the form ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])).
+;   arg-binding-exprs should have the form ((<var1> <type1> [:var | :unused]) ... (<varn> <typen> [:var | :unused])).
 ;   result-type-expr should be a type expression.
 ;   body-statements contains the function's body statements.
 ; Return three values:
@@ -3092,7 +3092,7 @@
       (dolist (arg-binding-expr arg-binding-exprs)
         (unless (and (consp arg-binding-expr)
                      (consp (cdr arg-binding-expr))
-                     (member (cddr arg-binding-expr) '(nil (:unused)) :test #'equal))
+                     (member (cddr arg-binding-expr) '(nil (:var) (:unused)) :test #'equal))
           (error "Bad function binding ~S" arg-binding-expr))
         (let ((arg-symbol (scan-name world (first arg-binding-expr)))
               (arg-type (scan-type world (second arg-binding-expr)))
@@ -3113,7 +3113,7 @@
                 body-annotated-stmts)))))
 
 
-; (lambda ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
+; (lambda ((<var1> <type1> [:var | :unused]) ... (<varn> <typen> [:var | :unused])) <result-type> . <statements>)
 (defun scan-lambda (world type-env special-form arg-binding-exprs result-type-expr &rest body-statements)
   (multiple-value-bind (args-and-body-codes type body-annotated-stmts)
                        (scan-function-or-lambda world type-env arg-binding-exprs result-type-expr body-statements)
@@ -3121,6 +3121,13 @@
      (list 'function (cons 'lambda args-and-body-codes))
      type
      (list* 'expr-annotation:special-form special-form arg-binding-exprs result-type-expr body-annotated-stmts))))
+
+
+; (coerce-parameters (<type1> ... <typen>) <function-expr>)
+; Coerces the function <function-expr> to a function with the same number of parameters but with types
+; <type1> through <typen>, which may be more general than <function-expr>'s parameter types.  A dynamic check
+; ensures that the run-time values belong to <function-expr>'s parameter types.
+;*****
 
 
 ; (if <condition-expr> <true-expr> <false-expr>)
@@ -4017,7 +4024,7 @@
        rest-annotated-stmts))))
 
 
-; (function (<name> (<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
+; (function (<name> (<var1> <type1> [:var | :unused]) ... (<varn> <typen> [:var | :unused])) <result-type> . <statements>)
 (defun scan-function (world type-env rest-statements last special-form name-and-arg-binding-exprs result-type-expr &rest body-statements)
   (unless (consp name-and-arg-binding-exprs)
     (error "Bad function name and bindings: ~S" name-and-arg-binding-exprs))
