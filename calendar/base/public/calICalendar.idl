@@ -96,16 +96,16 @@ interface calICalendar : nsISupports
    * XXX what do we guarantee about item ordering, especially regarding
    * which items are returned when aCount != 0
    *
-   * @param aItemType	The interface that we want returned.  This could be 
-   * 			either something that inherits from calIItemBase,
-   * 			or it could be calIOccurence.
+   * @param aItemType	  The interface that we want returned.  This could be 
+   * 			              either something that inherits from calIItemBase,
+   * 			              or it could be calIOccurence.
    *
    * @param aRangeStart Items starting at this time or after should be 
    *                    returned.  If invalid, assume "since the beginning
    *                    of time".
    * @param aRangeEnd   Items starting at this time or before should be
-   *			returned.  If invalid, assume "until the end of time".
-   * @param aCount	Maximum number of items to return.  
+   *			              returned.  If invalid, assume "until the end of time".
+   * @param aCount	    Maximum number of items to return.  
    */
   void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
                  in unsigned long aCount, in calIDateTime aRangeStart,
