@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.1 2000/03/31 19:57:24 relyea%netscape.com Exp $
+ * $Id: blapi.h,v 1.2 2000/05/27 01:29:35 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -231,12 +231,12 @@ extern SECStatus RC4_Decrypt(RC4Context *cx, unsigned char *output,
 ** Create a new RC2 context suitable for RC2 encryption/decryption.
 ** 	"key" raw key data
 ** 	"len" the number of bytes of key data
-** 	"iv" is the CBC initialization vector (if mode is SEC_RC2_CBC)
-** 	"mode" one of SEC_RC2 or SEC_RC2_CBC
-**	"effectiveKeyLen" is some RSA thing that pkcs7 and pkcs11 know
-**	   about. For most applications, it should be the same as len.
+** 	"iv" is the CBC initialization vector (if mode is NSS_RC2_CBC)
+** 	"mode" one of NSS_RC2 or NSS_RC2_CBC
+**	"effectiveKeyLen" is the effective key length (as specified in 
+**	    RFC 2268) in bytes (not bits).
 **
-** When mode is set to SEC_RC2_CBC the RC2 cipher is run in "cipher block
+** When mode is set to NSS_RC2_CBC the RC2 cipher is run in "cipher block
 ** chaining" mode.
 */
 extern RC2Context *RC2_CreateContext(unsigned char *key, unsigned int len,
@@ -288,10 +288,10 @@ extern SECStatus RC2_Decrypt(RC2Context *cx, unsigned char *output,
 ** Create a new RC5 context suitable for RC5 encryption/decryption.
 **      "key" raw key data
 **      "len" the number of bytes of key data
-**      "iv" is the CBC initialization vector (if mode is SEC_RC5_CBC)
-**      "mode" one of SEC_RC5 or SEC_RC5_CBC
+**      "iv" is the CBC initialization vector (if mode is NSS_RC5_CBC)
+**      "mode" one of NSS_RC5 or NSS_RC5_CBC
 **
-** When mode is set to SEC_RC5_CBC the RC5 cipher is run in "cipher block
+** When mode is set to NSS_RC5_CBC the RC5 cipher is run in "cipher block
 ** chaining" mode.
 */
 extern RC5Context *RC5_CreateContext(SECItem *key, unsigned int rounds,
