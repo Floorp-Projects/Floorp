@@ -85,10 +85,6 @@ public:
                                 const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
                                 nsSize& aBounds, PRBool& aWidthExplicit, 
                                 PRBool& aHeightExplicit, nscoord& aRowSize);
-  // nsLeafFrame overrides
-
-  NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
-  NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
 
   /** 
     * Respond to a gui event
@@ -107,6 +103,9 @@ public:
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
+
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                       nsDidReflowStatus aStatus);
 
   /**
     * Respond to the request to resize and/or reflow
