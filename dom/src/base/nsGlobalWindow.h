@@ -46,6 +46,7 @@ class nsIEventListenerManager;
 class nsIDOMBarProp;
 class nsIDOMDocument;
 class nsIDocument;
+class nsIContent;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIBrowserWindow;
@@ -260,7 +261,7 @@ protected:
   BarPropImpl *mStatusbar;
   BarPropImpl *mScrollbars;
   
-  nsIDocument* mChromeDocument;
+  nsIContent* mChromeElement;
 
   nsTimeoutImpl *mTimeouts;
   nsTimeoutImpl **mTimeoutInsertionPoint;
