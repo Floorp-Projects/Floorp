@@ -605,6 +605,9 @@
 ;   A list of terminals that may precede a / or /= terminal;
 ;   The intersection of the $regular-expression and /|/= lists.
 ;   The intersection of the $regular-expression|$virtual-semicolon and /|/= lists.
+;
+; USE ONLY ON canonical-lr-1 grammars.
+; DON'T RUN THIS AFTER CALLING forward-parser-states.
 (defun show-regexp-and-division-predecessors (grammar)
   (let* ((nstates (length (grammar-states grammar)))
          (state-predecessors (make-array nstates :element-type 'terminalset :initial-element *empty-terminalset*)))
@@ -619,12 +622,13 @@
           (div-predecessors *empty-terminalset*))
       (all-state-transitions
        #'(lambda (state transitions-hash)
-           (when (gethash '$regular-expression transitions-hash)
-             (terminalset-union-f regexp-predecessors (svref state-predecessors (state-number state))))
-           (if (or (gethash '/ transitions-hash) (gethash '/= transitions-hash))
-             (terminalset-union-f div-predecessors (svref state-predecessors (state-number state)))
-             (when (gethash '$virtual-semicolon transitions-hash)
-               (terminalset-union-f virtual-predecessors (svref state-predecessors (state-number state))))))
+           (let ((predecessors (svref state-predecessors (state-number state))))
+             (when (gethash '$regular-expression transitions-hash)
+               (terminalset-union-f regexp-predecessors predecessors))
+             (if (or (gethash '/ transitions-hash) (gethash '/= transitions-hash))
+               (terminalset-union-f div-predecessors predecessors)
+               (when (gethash '$virtual-semicolon transitions-hash)
+                 (terminalset-union-f virtual-predecessors predecessors)))))
        grammar)
       (values
        (terminalset-list grammar regexp-predecessors)
@@ -697,4 +701,6 @@
 |#
 
 (ensure-lf-subset *jg*)
+(forward-parser-states *jg*)
+#+allegro (clean-grammar *jg*) ;Remove this line if you wish to print the grammar's state tables.
 (length (grammar-states *jg*))

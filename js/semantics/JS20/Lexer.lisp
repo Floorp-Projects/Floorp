@@ -616,4 +616,5 @@ fjds*/y//z")
 (js-pmetaparse "3a+in'a+b\\040\\077\\700\\150\\15A\\69\"de'\"'\"")
 |#
 
+#+allegro (clean-grammar *lg*) ;Remove this line if you wish to print the grammar's state tables.
 (length (grammar-states *lg*))
