@@ -43,19 +43,24 @@ interface nsIURI;
 /**
  * The chrome registry implements this interface to give overlays
  * to the gecko XUL engine.
- *
- * @status UNDER_REVIEW
  */
 
-[scriptable, uuid(3b1b0a68-261c-44e1-abfe-fc7637b6977a)]
+[scriptable, uuid(1d5b5b94-dc47-4050-93b7-ac092e383cad)]
 interface nsIXULOverlayProvider : nsISupports
 {
     /**
-     * Method will be called by the gecko XUL engine when loading a chrome
-     * XUL page.
+     * Get the XUL overlays for a particular chrome URI.
      *
      * @param aURI  The URI being loaded
      * @return      An enumerator of nsIURI for the overlays of this URI 
      */
-    nsISimpleEnumerator /*nsIURI*/ getOverlaysForURI(in nsIURI aURI);
+    nsISimpleEnumerator /*nsIURI*/ getXULOverlays(in nsIURI aURI);
+
+    /**
+     * Get the style overlays for a particular chrome URI.
+     *
+     * @param aURI  The URI being loaded
+     * @return      An enumerator of nsIURI for the overlays of this URI 
+     */
+    nsISimpleEnumerator /*nsIURI*/ getStyleOverlays(in nsIURI aURI);
 };

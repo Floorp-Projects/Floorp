@@ -652,6 +652,7 @@ nsXULDocument::SetPrincipal(nsIPrincipal *aPrincipal)
     NS_NOTREACHED("SetPrincipal");
 }
 
+
 void
 nsXULDocument::EndLoad()
 {
@@ -679,30 +680,40 @@ nsXULDocument::EndLoad()
         gXULCache->WritePrototype(mCurrentPrototype);
 
     if (isChrome) {
-        nsCOMPtr<nsIXULChromeRegistry> reg =
-            do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return;
+        nsCOMPtr<nsIXULOverlayProvider> reg =
+            do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+        nsCOMPtr<nsICSSLoader> cssLoader = GetCSSLoader();
+        
+        if (reg && cssLoader) {
+            nsCOMPtr<nsISimpleEnumerator> overlays;
+            reg->GetStyleOverlays(uri, getter_AddRefs(overlays));
 
-        nsCOMPtr<nsISupportsArray> sheets;
-        reg->GetStyleSheets(uri, getter_AddRefs(sheets));
-
-        // Walk the sheets and add them to the prototype. Also put them
-        // into the document.
-        if (sheets) {
+            PRBool moreSheets;
+            nsCOMPtr<nsISupports> next;
+            nsCOMPtr<nsIURI> sheetURI;
             nsCOMPtr<nsICSSStyleSheet> sheet;
-            PRUint32 count;
-            sheets->Count(&count);
-            for (PRUint32 i = 0; i < count; ++i) {
-                sheet = do_QueryElementAt(sheets, i);
-                if (sheet) {
-                    nsCOMPtr<nsIURI> sheetURL;
-                    sheet->GetURL(*getter_AddRefs(sheetURL));
 
-                    if (useXULCache && IsChromeURI(sheetURL)) {
-                        mCurrentPrototype->AddStyleSheetReference(sheetURL);
-                    }
-                    AddStyleSheet(sheet, 0);
+            while (NS_SUCCEEDED(rv = overlays->HasMoreElements(&moreSheets)) &&
+                   moreSheets) {
+                overlays->GetNext(getter_AddRefs(next));
+
+                sheetURI = do_QueryInterface(next);
+                if (!uri) {
+                    NS_ERROR("Chrome registry handed me a non-nsIURI object!");
+                    continue;
                 }
+
+                if (useXULCache && IsChromeURI(sheetURI)) {
+                    mCurrentPrototype->AddStyleSheetReference(sheetURI);
+                }
+
+                cssLoader->LoadAgentSheet(sheetURI, getter_AddRefs(sheet));
+                if (!sheet) {
+                    NS_WARNING("Couldn't load chrome style overlay.");
+                    continue;
+                }
+
+                AddStyleSheet(sheet, 0);
             }
         }
 
@@ -2684,7 +2695,7 @@ nsXULDocument::AddChromeOverlays()
     NS_ENSURE_TRUE(chromeReg, NS_OK);
 
     nsCOMPtr<nsISimpleEnumerator> overlays;
-    rv = chromeReg->GetOverlaysForURI(docUri, getter_AddRefs(overlays));
+    rv = chromeReg->GetXULOverlays(docUri, getter_AddRefs(overlays));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool moreOverlays;

@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  chrome \
 		  docshell \
 		  pref \
+		  profile \
 		  xpconnect \
 		  util \
 		  unicharutil \
@@ -91,6 +92,7 @@ CPPSRCS		= \
 		nsGenericDOMNodeList.cpp \
 		nsGenericElement.cpp \
 		nsContentUtils.cpp \
+		nsLayoutStylesheetCache.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
 		nsNodeInfo.cpp \

@@ -64,6 +64,8 @@
 #include "nsIFile.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 
 #include "nsNetUtil.h"
 #include "nsURIHashKey.h"
@@ -71,11 +73,13 @@
 #include "nsDataHashtable.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-class nsXULPrototypeCache : public nsIXULPrototypeCache
+class nsXULPrototypeCache : public nsIXULPrototypeCache,
+                                   nsIObserver
 {
 public:
     // nsISupports
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
 
     NS_IMETHOD GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result);
     NS_IMETHOD PutPrototype(nsIXULPrototypeDocument* aDocument);
@@ -92,7 +96,6 @@ public:
     NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** _result);
     NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
     NS_IMETHOD FlushXBLInformation();
-    NS_IMETHOD FlushSkinFiles();
 
     NS_IMETHOD Flush();
 
@@ -109,6 +112,8 @@ protected:
 
     nsXULPrototypeCache();
     virtual ~nsXULPrototypeCache();
+
+    void FlushSkinFiles();
 
     JSRuntime*  GetJSRuntime();
 
@@ -209,6 +214,13 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
     NS_ADDREF(result);
     rv = result->QueryInterface(aIID, aResult);
+
+    nsCOMPtr<nsIObserverService> obsSvc(do_GetService("@mozilla.org/observer-service;1"));
+    if (obsSvc && NS_SUCCEEDED(rv)) {
+        obsSvc->AddObserver(result, "chrome-flush-skin-caches", PR_FALSE);
+        obsSvc->AddObserver(result, "chrome-flush-caches", PR_FALSE);
+    }
+
     NS_RELEASE(result);
 
     return rv;
@@ -216,6 +228,23 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 
 //----------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsXULPrototypeCache::Observe(nsISupports* aSubject,
+                             const char *aTopic,
+                             const PRUnichar *aData)
+{
+    if (!strcmp(aTopic, "chrome-flush-skin-caches")) {
+        FlushSkinFiles();
+    }
+    else if (!strcmp(aTopic, "chrome-flush-caches")) {
+        Flush();
+    }
+    else {
+        NS_WARNING("Unexpected observer topic.");
+    }
+    return NS_OK;
+}
 
 
 NS_IMETHODIMP
@@ -431,7 +460,7 @@ FlushScopedSkinStylesheets(nsIURI* aKey, nsCOMPtr<nsIXBLDocumentInfo> &aDocInfo,
   return PL_DHASH_NEXT;
 }
 
-NS_IMETHODIMP
+void
 nsXULPrototypeCache::FlushSkinFiles()
 {
   // Flush out skin XBL files from the cache.
@@ -444,7 +473,6 @@ nsXULPrototypeCache::FlushSkinFiles()
   // scoped skin stylesheets are flushed and refetched by the
   // prototype bindings.
   mXBLDocTable.Enumerate(FlushScopedSkinStylesheets, nsnull);
-  return NS_OK;
 }
 
 

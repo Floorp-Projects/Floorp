@@ -60,9 +60,9 @@ class nsIFastLoadService;
 #define NS_XULPROTOTYPECACHE_CID \
 { 0x3a0a0fc1, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
-// {3A0A0FC0-8349-11d3-BE47-00104BDE6048}
+// {CD196299-18E9-4642-AD43-666315C4D241}
 #define NS_IXULPROTOTYPECACHE_IID \
-{ 0x3a0a0fc0, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
+{ 0xcd196299, 0x18e9, 0x4642, { 0xad, 0x43, 0x66, 0x63, 0x15, 0xc4, 0xd2, 0x41 } };
 
 
 class nsIXULPrototypeCache : public nsISupports
@@ -86,12 +86,6 @@ public:
     NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocument) = 0;
 
     NS_IMETHOD FlushXBLInformation() = 0;
-
-    /*
-     * Flush only the skin files from the cache while retaining all other
-     * files.
-     */
-    NS_IMETHOD FlushSkinFiles() = 0;
 
     /**
      * Flush the cache; remove all XUL prototype documents, style

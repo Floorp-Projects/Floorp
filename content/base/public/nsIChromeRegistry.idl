@@ -29,7 +29,7 @@
 #include "nsISupportsArray.idl"
 interface nsIDocShell;
 
-[scriptable, uuid(D8C7D8A1-E84C-11d2-BF87-00105A1B0627)]
+[scriptable, uuid(68389281-f6d0-4533-841d-344a2018140c)]
 interface nsIChromeRegistry : nsISupports
 {
   const PRInt32 NONE = 0;
@@ -63,21 +63,6 @@ interface nsIChromeRegistry : nsISupports
    * @param aChromeURL the URL that is to be converted.
    */
   AUTF8String convertChromeURL(in nsIURI aChromeURL);
-
-  /**
-   * get the style sheets for a specific chrome URL
-   */
-  nsISupportsArray getStyleSheets(in nsIURI aChromeURL);
-
-  /**
-   * get the user-specified style sheets
-   */
-  nsISupportsArray getUserSheets(in boolean useChromeSheets);
-
-  /**
-   * get the style sheets required for a specific running docshell
-   */
-  nsISupportsArray getAgentSheets(in nsIDocShell docShell);
 
   /**
    * refresh the chrome list at runtime, looking for new packages/etc
@@ -164,4 +149,19 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
 
 #define NS_CHROMEREGISTRY_CONTRACTID \
   "@mozilla.org/chrome/chrome-registry;1"
+
+/**
+ * Chrome registry will notify various caches that all chrome files need
+ * flushing.
+ */
+#define NS_CHROME_FLUSH_TOPIC \
+  "chrome-flush-caches"
+
+/**
+ * Chrome registry will notify various caches that skin files need flushing.
+ * If "chrome-flush-caches" is notified, this topic will *not* be notified.
+ */
+#define NS_CHROME_FLUSH_SKINS_TOPIC \
+  "chrome-flush-skin-caches"
+
 %}

@@ -36,11 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+class nsIAtom;
+class nsICSSStyleSheet;
 class nsIRDFService;
 class nsIRDFDataSource;
 class nsIRDFResource;
 class nsIRDFNode;
-class nsICSSLoader;
 class nsISimpleEnumerator;
 class nsSupportsHashtable;
 class nsIRDFContainer;
@@ -51,12 +52,10 @@ class nsIDocument;
 #include "nsIChromeRegistry.h"
 #include "nsIXULOverlayProvider.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsICSSStyleSheet.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsIZipReader.h"
-#include "nsICSSLoader.h"
 #include "nsCOMArray.h"
      
 // for component registration
@@ -116,16 +115,13 @@ protected:
                                  PRBool aIsOverlay, PRBool
                                  aUseProfile, PRBool aRemove);
  
-  nsresult LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsACString & aURL);
   nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
-  
-  nsresult GetUserSheetURL(PRBool aIsChrome, nsACString & aURL);
-  nsresult GetFormSheetURL(nsACString& aURL);
-  
+
   nsresult LoadInstallDataSource();
   nsresult LoadProfileDataSource();
-  
-  nsresult FlushCaches();
+
+  void FlushSkinCaches();
+  void FlushAllCaches();
 
 private:
   nsresult LoadDataSource(const nsACString &aFileName,
@@ -255,21 +251,11 @@ protected:
   nsCOMPtr<nsIRDFResource> mPackageVersion;
   nsCOMPtr<nsIRDFResource> mDisabled;
 
-  // Style Sheets
-  nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;
-  nsCOMPtr<nsICSSStyleSheet> mUserChromeSheet;
-  nsCOMPtr<nsICSSStyleSheet> mUserContentSheet;
-  nsCOMPtr<nsICSSStyleSheet> mFormSheet;
-
-  nsCOMPtr<nsICSSLoader> mCSSLoader;
-  
   nsCOMPtr<nsIZipReader> mOverrideJAR;
   nsCString              mOverrideJARURL;
   
   // useful atoms - these are static atoms, so don't use nsCOMPtr
   static nsIAtom* sCPrefix;            // "c"
-  
-  PRBool mUseXBLForms;
   
   PRPackedBool mInstallInitialized;
   PRPackedBool mProfileInitialized;
@@ -283,4 +269,3 @@ protected:
   // make sure we only look once for the JAR override
   PRPackedBool mSearchedForOverride;
 };
-

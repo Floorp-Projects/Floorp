@@ -45,14 +45,12 @@ REQUIRES	= xpcom \
 		  content \
 		  necko \
 		  dom \
-		  intl \
 		  widget \
 		  js \
 		  appshell \
 		  caps \
 		  pref \
 		  docshell \
-		  imglib2 \
 		  xpconnect \
 		  jar \
 		  $(NULL)

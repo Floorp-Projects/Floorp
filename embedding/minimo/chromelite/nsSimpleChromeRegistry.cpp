@@ -45,8 +45,6 @@ NS_IMPL_ISUPPORTS1(nsSimpleChromeRegistry, nsIChromeRegistry)
 
 nsSimpleChromeRegistry::nsSimpleChromeRegistry()
 {
-  nsCOMPtr<nsISupportsArray> foo;
-  GetAgentSheets(nsnull, getter_AddRefs(foo));
 }
 
 nsSimpleChromeRegistry::~nsSimpleChromeRegistry()
@@ -63,74 +61,6 @@ NS_IMETHODIMP
 nsSimpleChromeRegistry::ConvertChromeURL(nsIURI *aChromeURL, nsACString & _retval)
 {
     return aChromeURL->GetSpec(_retval);
-}
-
-NS_IMETHODIMP 
-nsSimpleChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsArray **_retval)
-{
-    *_retval = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSimpleChromeRegistry::GetUserSheets(PRBool useChromeSheets, nsISupportsArray **_retval)
-{
-    *_retval = nsnull;
-    return NS_OK;
-}
-
-
-nsresult 
-nsSimpleChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsACString& aURL)
-{
-  *aSheet = nsnull;
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
-  if (NS_FAILED(rv)) return rv;
-  
-  if (!mCSSLoader) {
-    mCSSLoader = do_CreateInstance(kCSSLoaderCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  
-  if (mCSSLoader)
-    rv = mCSSLoader->LoadAgentSheet(uri, aSheet);
-    
-#ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    nsXPIDLCString spec;
-    uri->GetSpec(spec);
-    printf("chrome: failed to load: %s\n", spec.get());   
-  }
-#endif
-
-  return rv;
-}
-
-NS_IMETHODIMP 
-nsSimpleChromeRegistry::GetAgentSheets(nsIDocShell *docShell, nsISupportsArray **_retval)
-{
-    nsresult rv = NS_NewISupportsArray(_retval);
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Determine the agent sheets that should be loaded.
-    if (!mScrollbarSheet)
-      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), NS_LITERAL_CSTRING("chrome://global/skin/scrollbars.css"));
-    
-    if (!mFormSheet)
-      LoadStyleSheet(getter_AddRefs(mFormSheet), NS_LITERAL_CSTRING("resource:/res/platform-forms.css"));
-    
-    
-    if (mScrollbarSheet) {
-      (*_retval)->AppendElement(mScrollbarSheet);
-    }
-    if (mFormSheet) {
-      (*_retval)->AppendElement(mFormSheet);
-    }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP nsSimpleChromeRegistry::CheckForNewChrome()
