@@ -503,35 +503,21 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   // Get the current focused object from the command dispatcher
   nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
   mDOMDocument->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
-
+ 
   nsCOMPtr<nsIDOMWindow> domWindow;
   commandDispatcher->GetFocusedWindow(getter_AddRefs(domWindow));
   piWindow = do_QueryInterface(domWindow);
 
-  nsCAutoString keyFile, platformKeyFile;
- 
-  nsCOMPtr<nsIDOMXULDocument> document;
-  GetKeyBindingDocument(platformKeyFile, getter_AddRefs(document));
-
   // Locate the key node and execute the JS on a match.
   PRBool handled = PR_FALSE;
-  if (document) // Local focused ELEMENT handling stage.
-    LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
-
-  if (!handled) {
-    GetKeyBindingDocument(keyFile, getter_AddRefs(document));
-    if (document) // Local focused ELEMENT handling stage.
-      LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
-  }
-
+  
   nsCAutoString browserFile = "chrome://global/content/browserBindings.xul";
   nsCAutoString editorFile = "chrome://global/content/editorBindings.xul";
   nsCAutoString browserPlatformFile = "chrome://global/content/platformBrowserBindings.xul";
   nsCAutoString editorPlatformFile = "chrome://global/content/platformEditorBindings.xul";
 
   nsresult result;
+  nsCOMPtr<nsIDOMXULDocument> document;
 
   if (!handled) {
     while (piWindow && !handled) {
@@ -585,7 +571,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
     }
   }
 
-executingKeyBind = PR_FALSE;
+  executingKeyBind = PR_FALSE;
   return ret;
 }
 
