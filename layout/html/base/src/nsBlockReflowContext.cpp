@@ -92,7 +92,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame, const nsRect& aSpace,
   mY = y;
   nsSize availSize(aSpace.width, aSpace.height);
   if (NS_UNCONSTRAINEDSIZE != aSpace.width) {
-    availSize.width -= mMargin.left;
+    availSize.width -= mMargin.left + mMargin.right;
   }
   if (NS_UNCONSTRAINEDSIZE != aSpace.height) {
     availSize.height -= mMargin.top + mMargin.bottom;
@@ -278,7 +278,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
       // margins this code is not yet complete. This code may need to
       // move to before reflowing the frame instead of after (because
       // of floater positioning).
-      nscoord remainder = mSpace.XMost() - (x + mMetrics.width);
+      nscoord remainder = mSpace.XMost() - (x + mMetrics.width + mMargin.right);
       if (remainder >= 0) {
         // The block frame didn't use all of the available space. Apply
         // auto margins.
