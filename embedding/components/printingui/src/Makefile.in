@@ -30,6 +30,10 @@ ifdef MOZ_ENABLE_GTK
 DIRS        += gtk
 endif
 
+ifdef MOZ_ENABLE_XLIB
+DIRS        += gtk
+endif
+
 ifdef MOZ_ENABLE_QT
 DIRS        += gtk
 endif
