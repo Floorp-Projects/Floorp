@@ -4846,6 +4846,15 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
+nsBlockFrame::HandleEvent(nsIPresContext& aPresContext, 
+                          nsGUIEvent*     aEvent,
+                          nsEventStatus&  aEventStatus)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 {
   nsresult rv = GetFrameForPointUsing(aPoint, nsnull, aFrame);
@@ -4864,8 +4873,7 @@ nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
       return NS_OK;
     }
   }
-  *aFrame = this;
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////

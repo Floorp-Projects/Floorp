@@ -322,7 +322,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   nsIFrame* kid;
   nsRect kidRect;
   nsPoint tmp;
-  *aFrame = nsnull;
+  *aFrame = this;
 
   FirstChild(aList, &kid);
   while (nsnull != kid) {
@@ -347,8 +347,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
     }
     kid->GetNextSibling(&kid);
   }
-  *aFrame = this;
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
