@@ -65,4 +65,18 @@ NS_NewISupportsArray__FPP16nsISupportsArray		# NS_NewISupportsArray(nsISupportsA
 #AddRef__17SupportsArrayImplFv		# SupportsArrayImpl::AddRef()
 #__dt__17SupportsArrayImplFv		# SupportsArrayImpl::~SupportsArrayImpl()
 #__ct__17SupportsArrayImplFv		# SupportsArrayImpl::SupportsArrayImpl()
+PL_VectorAssertValid
+PL_VectorRemove
+PL_VectorInsert
+PL_VectorAdd
+PL_VectorSet
+PL_VectorClone
+PL_VectorCopy
+PL_VectorCompact
+PL_VectorIsValidIndex
+PL_VectorSetSize
+PL_VectorFinalize
+PL_VectorInitialize
+PL_VectorDestroy
+PL_NewVector
 
