@@ -115,7 +115,10 @@ void XXXNeverCalled()
     dummyComparitor dummy;
     nsVoidArray();
     nsSmallVoidArray();
-    nsDoubleHashtableStringSupports dhss;
+    nsStringHashSet();
+    nsCStringHashSet();
+    nsInt32HashSet();
+    nsVoidHashSet();
     nsValueArray(0);
     nsAVLTree(dummy, nsnull);
     nsSupportsArray();
