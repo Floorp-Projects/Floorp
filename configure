@@ -3042,7 +3042,7 @@ if test "$no_x" != "yes"; then
 	MOTIF_XINCS="-xif -I$x_includes"
     fi
 
-    detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS"
+    detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS"
     MOTIF_VERSION=`${detect_motif}`
     MOTIF_INCLUDES=`${detect_motif} -if`
     MOTIF_STATIC_FLAGS=`${detect_motif} -sf`
