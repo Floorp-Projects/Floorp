@@ -1518,7 +1518,9 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   rr.y += WEBSHELL_TOP_INSET;
   rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
   rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
-  mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
+  if (mWebShell) {
+    mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
+  }
 }
 
 NS_IMETHODIMP
