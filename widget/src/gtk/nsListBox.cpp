@@ -399,28 +399,3 @@ nsListBox::OnDestroySignal(GtkWidget* aGtkWidget)
     nsWidget::OnDestroySignal(aGtkWidget);
   }
 }
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsListBox::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsListBox::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsListBox::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}

@@ -337,28 +337,3 @@ nsComboBox::OnDestroySignal(GtkWidget* aGtkWidget)
     nsWidget::OnDestroySignal(aGtkWidget);
   }
 }
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsComboBox::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsComboBox::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsComboBox::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}

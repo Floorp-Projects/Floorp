@@ -216,23 +216,3 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
   }
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsCheckButton::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsCheckButton::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
-{
-  return PR_FALSE;
-}

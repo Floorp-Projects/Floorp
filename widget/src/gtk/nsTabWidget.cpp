@@ -104,19 +104,7 @@ PRUint32 nsTabWidget::GetSelectedTab(PRUint32& aTabNumber)
 
 //-------------------------------------------------------------------------
 //
-// paint message. Don't send the paint out
-//
 //-------------------------------------------------------------------------
-PRBool nsTabWidget::OnPaint()
-{
-  return PR_FALSE;
-}
-
-PRBool nsTabWidget::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}
-
 NS_METHOD nsTabWidget::GetBounds(nsRect &aRect)
 {
   return nsWidget::GetBounds(aRect);

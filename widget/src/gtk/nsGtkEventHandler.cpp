@@ -86,7 +86,7 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_SUBTRACT,   GDK_KP_Subtract },
   { NS_VK_DECIMAL,    GDK_KP_Decimal },
   { NS_VK_DIVIDE,     GDK_KP_Divide },
-  { NS_VK_RETURN,      GDK_KP_Enter },
+  { NS_VK_RETURN,     GDK_KP_Enter },
 
   { NS_VK_COMMA,      GDK_comma },
   { NS_VK_PERIOD,     GDK_period },
@@ -106,24 +106,34 @@ int nsConvertKey(int keysym)
 {
   int i;
   int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
+
+
+  // First, try to handle alphanumeric input, not listed in nsKeycodes:
+  // most likely, more letters will be getting typed in than things in
+  // the key list, so we will look through these first.
+
+  // since X has different key symbols for upper and lowercase letters and
+  // mozilla does not, convert gdk's to mozilla's
+  if (keysym >= GDK_a && keysym <= GDK_z)
+    return keysym - GDK_a + NS_VK_A;
+  if (keysym >= GDK_A && keysym <= GDK_Z)
+    return keysym - GDK_A + NS_VK_A;
+
+  // numbers
+  if (keysym >= GDK_0 && keysym <= GDK_9)
+    return keysym - GDK_0 + NS_VK_0;
+
+  // keypad numbers
+  if (keysym >= GDK_KP_0 && keysym <= GDK_KP_9)
+    return keysym - GDK_KP_0 + NS_VK_NUMPAD0;
+
+  // misc other things
   for (i = 0; i < length; i++) {
     if (nsKeycodes[i].keysym == keysym)
       return(nsKeycodes[i].vkCode);
   }
 
-  // First, try to handle alphanumeric input, not listed in nsKeycodes:
-  if (keysym >= GDK_a && keysym <= GDK_z)
-    return keysym - GDK_a + NS_VK_A;
-
-  if (keysym >= GDK_A && keysym <= GDK_Z)
-    return keysym - GDK_A + NS_VK_A;
-
-  if (keysym >= GDK_0 && keysym <= GDK_9)
-    return keysym - GDK_0 + NS_VK_0;
-
-  if (keysym >= GDK_KP_0 && keysym <= GDK_KP_9)
-    return keysym - GDK_KP_0 + NS_VK_NUMPAD0;
-
+  // function keys
   if (keysym >= GDK_F1 && keysym <= GDK_F24)
     return keysym - GDK_F1 + NS_VK_F1;
 

@@ -271,23 +271,6 @@ NS_METHOD nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
   return NS_OK;
 }
 
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsScrollbar::OnPaint (nsPaintEvent & aEvent)
-{
-  return PR_FALSE;
-}
-
-
-PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
 //-------------------------------------------------------------------------
 int nsScrollbar::AdjustScrollBarPosition (int aPosition)
 {
@@ -310,91 +293,91 @@ PRBool nsScrollbar::OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos)
       // scroll one line right or down
     case NS_SCROLLBAR_LINE_NEXT:
       {
-	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
-	// newPosition += mLineIncrement;
-	newPosition += 10;
-	PRUint32 thumbSize;
-	PRUint32 maxRange;
-	GetThumbSize (thumbSize);
-	GetMaxRange (maxRange);
-	PRUint32 max = maxRange - thumbSize;
-	if (newPosition > (int) max)
-	  newPosition = (int) max;
+        newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
+        // newPosition += mLineIncrement;
+        newPosition += 10;
+        PRUint32 thumbSize;
+        PRUint32 maxRange;
+        GetThumbSize (thumbSize);
+        GetMaxRange (maxRange);
+        PRUint32 max = maxRange - thumbSize;
+        if (newPosition > (int) max)
+          newPosition = (int) max;
 
-	// if an event callback is registered, give it the chance
-	// to change the increment
-	if (mEventCallback)
-	  {
-	    aEvent.position = (PRUint32) newPosition;
-	    result = ConvertStatus ((*mEventCallback) (&aEvent));
-	    newPosition = aEvent.position;
-	  }
-	break;
+        // if an event callback is registered, give it the chance
+        // to change the increment
+        if (mEventCallback)
+          {
+            aEvent.position = (PRUint32) newPosition;
+            result = ConvertStatus ((*mEventCallback) (&aEvent));
+            newPosition = aEvent.position;
+          }
+        break;
       }
 
 
       // scroll one line left or up
     case NS_SCROLLBAR_LINE_PREV:
       {
-	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
+        newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
 
-	// newPosition -= mLineIncrement;
-	newPosition -= 10;
-	if (newPosition < 0)
-	  newPosition = 0;
+        // newPosition -= mLineIncrement;
+        newPosition -= 10;
+        if (newPosition < 0)
+          newPosition = 0;
 
-	// if an event callback is registered, give it the chance
-	// to change the decrement
-	if (mEventCallback)
-	  {
-	    aEvent.position = (PRUint32) newPosition;
-	    aEvent.widget = (nsWidget *) this;
-	    result = ConvertStatus ((*mEventCallback) (&aEvent));
-	    newPosition = aEvent.position;
-	  }
-	break;
+        // if an event callback is registered, give it the chance
+        // to change the decrement
+        if (mEventCallback)
+          {
+            aEvent.position = (PRUint32) newPosition;
+            aEvent.widget = (nsWidget *) this;
+            result = ConvertStatus ((*mEventCallback) (&aEvent));
+            newPosition = aEvent.position;
+          }
+        break;
       }
 
       // Scrolls one page right or down
     case NS_SCROLLBAR_PAGE_NEXT:
       {
-	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
-	PRUint32 thumbSize;
-	GetThumbSize (thumbSize);
-	PRUint32 maxRange;
-	GetThumbSize (thumbSize);
-	GetMaxRange (maxRange);
-	PRUint32 max = maxRange - thumbSize;
-	if (newPosition > (int) max)
-	  newPosition = (int) max;
+        newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
+        PRUint32 thumbSize;
+        GetThumbSize (thumbSize);
+        PRUint32 maxRange;
+        GetThumbSize (thumbSize);
+        GetMaxRange (maxRange);
+        PRUint32 max = maxRange - thumbSize;
+        if (newPosition > (int) max)
+          newPosition = (int) max;
 
-	// if an event callback is registered, give it the chance
-	// to change the increment
-	if (mEventCallback)
-	  {
-	    aEvent.position = (PRUint32) newPosition;
-	    result = ConvertStatus ((*mEventCallback) (&aEvent));
-	    newPosition = aEvent.position;
-	  }
-	break;
+        // if an event callback is registered, give it the chance
+        // to change the increment
+        if (mEventCallback)
+          {
+            aEvent.position = (PRUint32) newPosition;
+            result = ConvertStatus ((*mEventCallback) (&aEvent));
+            newPosition = aEvent.position;
+          }
+        break;
       }
 
       // Scrolls one page left or up.
     case NS_SCROLLBAR_PAGE_PREV:
       {
-	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
-	if (newPosition < 0)
-	  newPosition = 0;
+        newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
+        if (newPosition < 0)
+          newPosition = 0;
 
-	// if an event callback is registered, give it the chance
-	// to change the increment
-	if (mEventCallback)
-	  {
-	    aEvent.position = (PRUint32) newPosition;
-	    result = ConvertStatus ((*mEventCallback) (&aEvent));
-	    newPosition = aEvent.position;
-	  }
-	break;
+        // if an event callback is registered, give it the chance
+        // to change the increment
+        if (mEventCallback)
+          {
+            aEvent.position = (PRUint32) newPosition;
+            result = ConvertStatus ((*mEventCallback) (&aEvent));
+            newPosition = aEvent.position;
+          }
+        break;
       }
 
 
@@ -402,17 +385,17 @@ PRBool nsScrollbar::OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos)
       // the cPos parameter.
     case NS_SCROLLBAR_POS:
       {
-	newPosition = cPos;
+        newPosition = cPos;
 
-	// if an event callback is registered, give it the chance
-	// to change the increment
-	if (mEventCallback)
-	  {
-	    aEvent.position = (PRUint32) newPosition;
-	    result = ConvertStatus ((*mEventCallback) (&aEvent));
-	    newPosition = aEvent.position;
-	  }
-	break;
+        // if an event callback is registered, give it the chance
+        // to change the increment
+        if (mEventCallback)
+          {
+            aEvent.position = (PRUint32) newPosition;
+            result = ConvertStatus ((*mEventCallback) (&aEvent));
+            newPosition = aEvent.position;
+          }
+        break;
       }
     }
   /*

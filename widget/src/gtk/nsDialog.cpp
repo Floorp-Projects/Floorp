@@ -146,18 +146,3 @@ NS_METHOD nsDialog::GetLabel(nsString& aBuffer)
   return NS_OK;
 
 }
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsDialog::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsDialog::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}

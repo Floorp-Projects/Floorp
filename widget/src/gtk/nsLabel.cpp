@@ -161,24 +161,3 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
   aBuffer.Append(text);
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsLabel::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsLabel::OnPaint(nsPaintEvent &aEvent)
-{
-  //printf("** nsLabel::OnPaint **\n");
-  return PR_FALSE;
-}
-
-PRBool nsLabel::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}

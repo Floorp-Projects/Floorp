@@ -210,23 +210,3 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
   }
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsRadioButton::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsRadioButton::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsRadioButton::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}
