@@ -593,9 +593,6 @@ ProfileErr CUserProfile::HandleProfileDialog(
 	newButton = dialog.GetDialog()->FindPaneByID( 1 );
 	optionsButton = dialog.GetDialog()->FindPaneByID( 'Ebut' );
 	
-	if ( okButton )
-		okButton->SetDefaultButton(true);
-
 	if ( wantsProfileManager )
 		ThrowIfNil_( okButton && deleteButton && renameButton && newButton );
 	else
