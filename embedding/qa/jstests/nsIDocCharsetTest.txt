@@ -1,10 +1,10 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
-<title> nsIDocCharset </title>
-<!-- Descrpt: nsIDocCharset interface test
+<title> nsIDocCharset Interface Test </title>
+<!-- Descrpt: nsIDocCharset Interface Test Case
      Author: dsirnapalli@netscape.com
      Revs: 09.10.01 - Created
-
+     Last Run On:10.23.01.
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
    - except in compliance with the License. You may obtain a copy of
@@ -27,7 +27,7 @@
 <head>
 
 <!-- script below is ngdriverspecific  -->
-<script type="text/javascript" src="http://testlib.js">
+<script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
 </script>
 
 <script type="text/javascript">
@@ -79,7 +79,16 @@ function constructResult(initialcharset, charset)
   if(initialcharset == null) initailcharsetcolor = "red" ;
   if(charset != setCharsetValueTo) charsetcolor = "red" ;
 
-  results = results + "<html><br>";
+  results = results + "<html>";
+
+  results = results + "<font color='#CC6600'> NOTE: </font>" + "<br>";
+  results = results + "For the Test Case to run correctly include the following line into your prefs.js file." + "<br>";
+  results = results + 'user_pref("signed.applets.codebase_principal_support", true);' + "<br>";
+  results = results + 'prefs.js can be found at' + '<br>';
+  results = results + 'WINNT:C:\\WINNT\\Profiles\\profileyouareusing\\Application Data\\MfcEmbed\\Profiles\\default\\somefolder.slt\\prefs.js' + '<br>';
+  results = results + 'WIN98:C:\\WINDOWS\\Application Data\\MfcEmbed\\Profiles\\default\\somefolder.slt\\prefs.js' + '<br>';
+  results = results + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
+
   results = results + "  <table bgcolor='white' border='4'>";
   results = results + "  <tbody>";
   results = results + "  <caption> <center> <b> nsIDocCharset Results </b> </center> </caption><br>";
@@ -103,6 +112,8 @@ function constructResult(initialcharset, charset)
   results = results + "    </tr>";
   results = results + "  </tbody>";
   results = results + "  </table>";
+
+  results = results + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
   results = results + "</html>";
 
   document.results.textarea.value = results;
