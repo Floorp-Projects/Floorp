@@ -1,3 +1,4 @@
+nsAlgorithm.h
 nsAVLTree.h
 nsAtomService.h
 nsCppSharedAllocator.h
