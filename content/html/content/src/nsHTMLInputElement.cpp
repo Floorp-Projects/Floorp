@@ -626,10 +626,10 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
 {
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type ||
-      NS_FORM_INPUT_FILE == type) {
+  if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD ||
+      type == NS_FORM_INPUT_FILE) {
 
-    if (aCheckSecurity && NS_FORM_INPUT_FILE == type) {
+    if (aCheckSecurity && type == NS_FORM_INPUT_FILE) {
       nsresult rv;
       nsCOMPtr<nsIScriptSecurityManager> securityManager = 
                do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -672,22 +672,32 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
     if (textControlFrame) {
       textControlFrame->OwnsValue(&frameOwnsValue);
     }
+    // If the frame owns the value, set the value in the frame
     if (frameOwnsValue) {
       nsCOMPtr<nsIPresContext> presContext;
       GetPresContext(this, getter_AddRefs(presContext));
       formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
-    } else {
-      if (mValue) {
-        nsMemory::Free(mValue);
-      }
-
-      mValue = ToNewUTF8String(aValue);
-
-      SetValueChanged(PR_TRUE);
-      return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+      return NS_OK;
     }
 
-    return NS_OK;
+    // If the frame does not own the value, set mValue
+    if (mValue) {
+      nsMemory::Free(mValue);
+    }
+
+    mValue = ToNewUTF8String(aValue);
+
+    SetValueChanged(PR_TRUE);
+    return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // If the value of a hidden input was changed, we mark it changed so that we
+  // will know we need to save / restore the value.  Yes, we are overloading
+  // the meaning of ValueChanged just a teensy bit to save a measly byte of
+  // storage space in nsHTMLInputElement.  Yes, you are free to make a new flag,
+  // NEED_TO_SAVE_VALUE, at such time as mBitField becomes a 16-bit value.
+  if (type == NS_FORM_INPUT_HIDDEN) {
+    SetValueChanged(PR_TRUE);
   }
 
   // Treat value == defaultValue for other input elements.
@@ -2090,7 +2100,6 @@ nsHTMLInputElement::Reset()
       SetCheckedChanged(PR_FALSE);
       break;
     }
-    case NS_FORM_INPUT_HIDDEN:
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEXT:
     {
@@ -2110,6 +2119,8 @@ nsHTMLInputElement::Reset()
       rv = SetValueGuaranteed(NS_LITERAL_STRING(""), nsnull);
       break;
     }
+    // Value is the same as defaultValue for hidden inputs
+    case NS_FORM_INPUT_HIDDEN:
     default:
       break;
   }
@@ -2382,6 +2393,7 @@ nsHTMLInputElement::SaveState()
       break;
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_HIDDEN:
       {
         if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
           rv = GetPrimaryPresState(this, getter_AddRefs(state));
@@ -2418,6 +2430,7 @@ nsHTMLInputElement::DoneCreatingElement()
     case NS_FORM_INPUT_RADIO:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_HIDDEN:
       restored = RestoreFormControlState(this, this);
       break;
   }
@@ -2461,6 +2474,7 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
 
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_HIDDEN:
       {
         nsAutoString value;
         rv = aState->GetStateProperty(NS_LITERAL_STRING("v"), value);
