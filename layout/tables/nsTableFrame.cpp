@@ -3935,7 +3935,7 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
 
   if (eStyleUnit_Auto == aState.mStylePosition->mWidth.GetUnit()) {
     if (0 == width) {
-      width = NS_UNCONSTRAINEDSIZE;
+      width = aState.availableWidth;
     }
     if (NS_UNCONSTRAINEDSIZE != aState.availableWidth) {
       nsMargin margin(0,0,0,0);

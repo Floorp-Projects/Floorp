@@ -212,8 +212,9 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
 
   // determine if the table is auto/fixed and get the fixed width if available
   nscoord maxWidth = mTableFrame->CalcBorderBoxWidth(aReflowState);
-  if (NS_UNCONSTRAINEDSIZE == maxWidth) { 
-    NS_ASSERTION(PR_FALSE, "cannot balance with an unconstrained width");
+  if (NS_UNCONSTRAINEDSIZE == maxWidth) {
+    maxWidth = PR_MIN(maxWidth, aReflowState.availableWidth);
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != maxWidth, "cannot balance with an unconstrained width");
     return PR_FALSE;
   }
   // initialize the col percent and cell percent values to 0.
