@@ -189,6 +189,17 @@ protected:
   PRBool           mStartedOutput; // we've produced at least a character
 
   nsString         mURL;
+  PRInt32          mStructs;           // Output structs (pref)
+  PRBool           mHeaderStrategy;    /* Header strategy (pref)
+                                          0 = no indention
+                                          1 = indention, increased with
+                                              header level (default)
+                                          2 = numbering and slight indention */
+  PRInt32          mHeaderCounter[7];  /* For header-numbering:
+                                          Number of previous headers of
+                                          the same depth and in the same
+                                          section.
+                                          mHeaderCounter[1] for <h1> etc. */
 
   // The tag stack: the stack of tags we're operating on, so we can nest:
   nsHTMLTag       *mTagStack;

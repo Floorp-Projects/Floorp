@@ -301,6 +301,8 @@ pref("signon.rememberSignons",              true);
 pref("network.sendRefererHeader",           2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("network.padPacURL",                   ""); // The proxy autodiscovery url
+pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
+pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 pref("wallet.captureForms",                 true);
 pref("wallet.notified",                     false);
 pref("wallet.fetchPatches",                 false);
