@@ -21,9 +21,9 @@
 # 
 
 #
-# $Id: genstats.cgi,v 1.2 1999/08/26 03:44:00 dmose%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.3 1999/08/27 01:00:07 dmose%mozilla.org Exp $ 
 #
-# generate various statistics related to external participation in mozilla.org
+# generate statistics related to non-Netscape participation in mozilla.org
 #
 
 use diagnostics;
@@ -36,7 +36,7 @@ use Date::Format;
 
 @::STATINFO = (
 
-	["Active external checkers-in (source only)",
+	["Active non-Netscape checkers-in (source only)",
 						# statistic title
 	 "bonsai",				# database
 	 "checkins.when",			# timestamp field
@@ -45,7 +45,7 @@ use Date::Format;
 		"people.id=checkins.whoid"
 	],
 
-	["New external checkers-in (source or docs)",
+	["New non-Netscape checkers-in (source or docs)",
 						# statistic title
 	 "mozusers",				# database
 	 "changes.when",			# timestamp field
@@ -54,7 +54,7 @@ use Date::Format;
 		"('cvs_group','gila_group') and changes.email=users.email"
 	],
 
-	["Useful external browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
+	["Useful non-Netscape browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
 					 	# statistic title
 	 "bugs",				# database
 	 "bugs.creation_ts",			# timestamp field
@@ -65,7 +65,7 @@ use Date::Format;
 		"('BROWSER','MailNews','NSPR','CCK')"	
 	],
 
-	["Useful external bugs (includes NEW; excludes WORKSFORME)",
+	["Useful non-Netscape bugs (includes NEW; excludes WORKSFORME)",
 					 	# statistic title
 	 "bugs",				# database
 	 "bugs.creation_ts",			# timestamp field
@@ -75,7 +75,7 @@ use Date::Format;
 		"('DUPLICATE','INVALID','WORKSFORME')"
 	],
 
-	["Useful external patches (as attributed in CVS logs)",
+	["Useful non-Netscape patches (as attributed in CVS logs)",
 					 	# statistic title
 	 "bonsai",				# database
 	 "checkins.when",			# timestamp field
@@ -85,7 +85,7 @@ use Date::Format;
 		'"[[:<:]][a-zA-Z0-9_\\.\\-]+@[a-zA-Z0-9_\\.\\-]+[[:>:]]"'
 	],
 
-	["Useful external browser patches submitted via Bugzilla" 
+	["Useful non-Netscape browser patches submitted via Bugzilla" 
 	                 . " (includes NEW; excludes WORKSFORME)",
 						# statistic title
 	 "bugs",				# database
@@ -98,7 +98,7 @@ use Date::Format;
 		"('BROWSER','MailNews','NSPR','CCK')"	
 	],
 
-	["External checkins",			# title
+	["Non-Netscape checkins",			# title
 	 "bonsai",				# database 
          "when",				# timestamp field
 	 "people.who",				# email addr field
@@ -106,7 +106,7 @@ use Date::Format;
 		"where checkins.descid=descs.id and people.id=checkins.whoid"
 	],
 
-	["External files checked in",		# title
+	["Non-Netscape files checked in",		# title
 	 "bonsai",				# database 
          "when",				# timestamp field
 	 "people.who",				# email addr field
@@ -134,8 +134,8 @@ if (!param()) {
 
 	print "mozilla.org counts as ";
 	print radio_group(-name=>"mozillaOrgCountsAs",
-			  "-values"=>["internal","external"],
-			  -default=>"external");
+			  "-values"=>["Netscape","non-Netscape"],
+			  -default=>"non-Netscape");
 	print p();
 
 	print "include the current (incomplete) month?";
@@ -201,16 +201,16 @@ if ( $months < $lastMonth ) {
 #
 my $curYear=$startYear;
 my $curMonth=$startMonth;
-my $internalSQL;
+my $NetscapeSQL;
 my $q;
 
-# set up the appropriate SQL to describe what an "internal" checkin looks 
-# like, depending on whether mozilla.org is considered internal
+# set up the appropriate SQL to describe what an "Netscape" checkin looks 
+# like, depending on whether mozilla.org is considered Netscape
 #
-if ($F::mozillaOrgCountsAs eq "internal") {
-	$internalSQL = ' regexp "[@%]netscape\\.com|[@%]mozilla\\.org"';
-} elsif ($F::mozillaOrgCountsAs eq "external" ) {
-	$internalSQL = ' regexp "[@%]netscape\\.com"';
+if ($F::mozillaOrgCountsAs eq "Netscape") {
+	$NetscapeSQL = ' regexp "[@%]netscape\\.com|[@%]mozilla\\.org"';
+} elsif ($F::mozillaOrgCountsAs eq "non-Netscape" ) {
+	$NetscapeSQL = ' regexp "[@%]netscape\\.com"';
 } else {
 	die ("Internal error: mozillaOrgCountsAs not set");
 }
@@ -244,7 +244,7 @@ for ( ; $curYear <= $lastYear ; $curYear++ ) {
 			# run the query
 			#
 			$q = $::db->query($::STATINFO[$_][4] . ' and ' . 
-			 $::STATINFO[$_][3] . ' not ' . $internalSQL . ' and ' 
+			 $::STATINFO[$_][3] . ' not ' . $NetscapeSQL . ' and ' 
                          . 'YEAR(' . $::STATINFO[$_][2] . ")=$curYear and "
 			 . "MONTH(". $::STATINFO[$_][2] . ")=$curMonth");
 
