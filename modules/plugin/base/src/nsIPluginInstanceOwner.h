@@ -97,6 +97,30 @@ public:
    */
   NS_IMETHOD
   GetDocument(nsIDocument* *aDocument) = 0;
+
+  /**
+   * Invalidate the rectangle
+   */
+  NS_IMETHOD
+  InvalidateRect(nsPluginRect *invalidRect) = 0;
+
+  /**
+   * Invalidate the region
+   */
+  NS_IMETHOD
+  InvalidateRegion(nsPluginRegion invalidRegion) = 0;
+
+  /**
+   * Force a redraw
+   */
+  NS_IMETHOD
+  ForceRedraw() = 0;
+
+  /**
+   * Get the specified variable
+   */
+  NS_IMETHOD
+  GetValue(nsPluginInstancePeerVariable variable, void *value) = 0;
 };
 
 #endif

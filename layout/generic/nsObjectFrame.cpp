@@ -136,6 +136,14 @@ public:
   
   NS_IMETHOD GetDocument(nsIDocument* *aDocument);
 
+  NS_IMETHOD InvalidateRect(nsPluginRect *invalidRect);
+
+  NS_IMETHOD InvalidateRegion(nsPluginRegion invalidRegion);
+
+  NS_IMETHOD ForceRedraw();
+
+  NS_IMETHOD GetValue(nsPluginInstancePeerVariable variable, void *value);
+
   //nsIPluginTagInfo interface
 
   NS_IMETHOD GetAttributes(PRUint16& n, const char*const*& names,
@@ -572,11 +580,14 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 
     viewMan->InsertChild(parView, view, 0);
 
-    result = view->CreateWidget(kWidgetCID);
+    if(aViewOnly != PR_TRUE) {
 
-    if (NS_OK != result) {
-      result = NS_OK;       //XXX why OK? MMP
-      goto exit;            //XXX sue me. MMP
+      result = view->CreateWidget(kWidgetCID);
+
+      if (NS_OK != result) {
+        result = NS_OK;       //XXX why OK? MMP
+        goto exit;            //XXX sue me. MMP
+      }
     }
   }
 
@@ -1287,6 +1298,17 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
         nscoord           offx, offy;
 
         GetOffsetFromView(aPresContext, origin, &parentWithView);
+
+        // if it's windowless we want to get the offset from the parent frame
+        if (window->type == nsPluginWindowType_Drawable)
+        {
+          nsIFrame* parentFrame;
+
+          GetParentWithView(aPresContext, &parentFrame);
+
+          if(parentFrame != nsnull)
+            parentFrame->GetOffsetFromView(aPresContext, origin, &parentWithView);
+        }
 
 #if 0
         // beard:  how do we get this?
@@ -2019,6 +2041,106 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
     mContext->GetShell(getter_AddRefs(shell));
 
     rv = shell->GetDocument(aDocument);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if(invalidRect)
+  {
+    //no reference count on view
+    nsIView* view;
+    rv = mOwner->GetView(mContext, &view);
+
+    if((rv == NS_OK) && view)
+    {
+      float ptot;
+      mContext->GetPixelsToTwips(&ptot);
+
+      nsRect rect((int)(ptot * invalidRect->left),
+            (int)(ptot * invalidRect->top),
+            (int)(ptot * (invalidRect->right - invalidRect->left)),
+            (int)(ptot * (invalidRect->bottom - invalidRect->top)));
+
+      nsIViewManager* manager;
+      rv = view->GetViewManager(manager);
+
+      //set flags to not do a synchronous update, force update does the redraw
+      if((rv == NS_OK) && manager)
+      {
+        rv = manager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
+        NS_RELEASE(manager);
+      }
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(nsPluginRegion invalidRegion)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
+{
+  //no reference count on view
+  nsIView* view;
+  nsresult rv = mOwner->GetView(mContext, &view);
+
+  if((rv == NS_OK) && view)
+  {
+    nsIViewManager* manager;
+    rv = view->GetViewManager(manager);
+
+    if((rv == NS_OK) && manager)
+    {
+      rv = manager->Composite();
+      NS_RELEASE(manager);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable variable, void *value)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  switch(variable)
+  {
+    case nsPluginInstancePeerVariable_NetscapeWindow:
+    {
+      //no reference count on view
+      nsIView* view;
+      rv = mOwner->GetView(mContext, &view);
+
+      if((rv == NS_OK) && view)
+      {
+        nsIViewManager* manager;
+        rv = view->GetViewManager(manager);
+
+        if((rv == NS_OK) && manager)
+        {
+          nsIWidget* widget;
+          rv = manager->GetWidget(&widget);
+
+          if((rv == NS_OK) && widget)
+          {
+            void** pvalue = (void**)value;
+            *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
+            
+            NS_RELEASE(widget);
+          }
+          NS_RELEASE(manager);
+        }
+      }
+
+      break;
+    }
   }
   return rv;
 }
@@ -3064,7 +3186,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       {
         mOwner->GetView(mContext, &view);
         if (view)
+        {
           view->GetWidget(mWidget);
+          PRBool fTransparent;
+          mInstance->GetValue(nsPluginInstanceVariable_TransparentBool, (void *)&fTransparent);
+          view->SetContentTransparency(fTransparent);
+        }
 
         if (PR_TRUE == windowless)
         {
@@ -3077,10 +3204,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         else if (mWidget)
         {
           mWidget->Resize(mPluginWindow.width, mPluginWindow.height, PR_FALSE);
+
           mPluginWindow.window = GetPluginPort();
           mPluginWindow.type = nsPluginWindowType_Window;
 
 #if defined(XP_MAC)
+          // Is this needed in the windowless case ???
           // start a periodic timer to provide null events to the plugin instance.
           mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (rv == NS_OK)

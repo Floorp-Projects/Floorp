@@ -112,6 +112,15 @@ public:
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
 
   NS_IMETHOD GetDocument(nsIDocument* *aDocument);
+
+  NS_IMETHOD InvalidateRect(nsPluginRect *invalidRect);
+
+  NS_IMETHOD InvalidateRegion(nsPluginRegion invalidRegion);
+
+  NS_IMETHOD ForceRedraw();
+
+  NS_IMETHOD GetValue(nsPluginInstancePeerVariable variable, void *value);
+
   //nsIEventListener interface
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
 
@@ -682,6 +691,25 @@ nsresult PluginViewerImpl::GetDocument(nsIDocument* *aDocument)
   return NS_OK;
 }
 
+NS_IMETHODIMP pluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP pluginInstanceOwner::InvalidateRegion(nsPluginRegion invalidRegion)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP pluginInstanceOwner::ForceRedraw()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP pluginInstanceOwner::GetValue(nsPluginInstancePeerVariable variable, void *value)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 /* ========================================================================================
  * nsIContentViewerFile
  * ======================================================================================== */
