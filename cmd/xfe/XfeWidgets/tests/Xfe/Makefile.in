@@ -44,6 +44,7 @@ CSRCS			= \
 				ArrowTest.c \
 				ButtonTest.c \
 				CascadeTest.c \
+				DividerTest.c \
 				LabelTest.c \
 				LogoTest.c \
 				PaneTestFour.c \
