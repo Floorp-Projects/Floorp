@@ -1296,6 +1296,11 @@ NS_IMETHODIMP nsChromeRegistry::SelectLocale(const PRUnichar* aLocale,
 NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName, 
                                                   PRUnichar **_retval)
 {
+  // check if mChromeDataSource is null; do we need to apply this to every instance?
+  // is there a better way to test if the data source is ready?
+  if (!mChromeDataSource) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsString packageStr(aPackageName);
   nsCAutoString resourceStr("urn:mozilla:package:");
