@@ -57,7 +57,7 @@ nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
     if (server) 
 	{
 		// load up required server information
-		server->GetUserName(&userName);
+		server->GetUsername(&userName);
         server->GetPassword(&popPassword);
 		server->GetHostName(&hostname);
     }
@@ -115,7 +115,7 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
     if (server) 
 	{
 		// load up required server information
-        server->GetUserName(&userName);
+        server->GetUsername(&userName);
 		server->GetPassword(&popPassword);
 		server->GetHostName(&popHost);
     }
