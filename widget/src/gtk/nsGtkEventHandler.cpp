@@ -133,40 +133,45 @@ int nsConvertKey(XID keysym)
  return((int)keysym);
 }
 
-#if 0
 //==============================================================
-void nsGtkWidget_InitNSEvent(XEvent   * anXEv,
-                            XtPointer  p,
+void nsGtkWidget_InitNSEvent(GdkEvent *aGev,
+                            gpointer   p,
                             nsGUIEvent &anEvent,
                             PRUint32   aEventType) 
 {
+  GdkEventButton *anXEv = (GdkEventButton*)aGev;
+
   anEvent.message = aEventType;
-  anEvent.widget  = (nsWindow *) p;
+  anEvent.widget  = (nsWidget *) p;
   anEvent.eventStructType = NS_GUI_EVENT;
 
   if (anXEv != NULL) {
-    anEvent.point.x = anXEv->xbutton.x;
-    anEvent.point.y = anXEv->xbutton.y;
+    anEvent.point.x = anXEv->x;
+    anEvent.point.y = anXEv->y;
   }
 
-  anEvent.time = 0; //XXX: Implement this
+  anEvent.time = anXEv->time;
 }
 
 //==============================================================
-void nsGtkWidget_InitNSMouseEvent(XEvent   * anXEv,
-                                 XtPointer  p,
+void nsGtkWidget_InitNSMouseEvent(GdkEvent *aGev,
+                                 gpointer     p,
                                  nsMouseEvent &anEvent,
-                                 PRUint32   aEventType) 
+                                 PRUint32     aEventType) 
 {
+  GdkEventButton *anXEv = (GdkEventButton*)aGev;
+
   // Do base initialization
-  nsGtkWidget_InitNSEvent(anXEv, p, anEvent, aEventType);
+  nsGtkWidget_InitNSEvent(aGev, p, anEvent, aEventType);
 
   if (anXEv != NULL) { // Do Mouse Event specific intialization
-    anEvent.time       = anXEv->xbutton.time;
+    anEvent.time       = anXEv->time;
+/*
     anEvent.isShift    = (anXEv->xbutton.state & ShiftMask) ? PR_TRUE : PR_FALSE;
     anEvent.isControl  = (anXEv->xbutton.state & ControlMask) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt      = (anXEv->xbutton.state & Mod1Mask) ? PR_TRUE : PR_FALSE;
-    anEvent.clickCount = 1; //XXX Fix for double-clicks
+*/
+    anEvent.clickCount = anXEv->button; //XXX Fix for double-clicks
     anEvent.eventStructType = NS_MOUSE_EVENT;
 
   }
@@ -191,6 +196,7 @@ typedef struct COLLAPSE_INFO {
 } CollapseInfo;
 
 //==============================================================
+#if 0
 static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data) 
 {
     CollapseInfo *cinfo = (CollapseInfo*)client_data; 
@@ -210,34 +216,32 @@ static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data)
     }
     return False;
 }
-
-#endif /* 0 */
+#endif
 
 //==============================================================
-void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, gpointer p)
 {
-#if 0
-  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsWindow *widgetWindow = (nsWindow *)p;
 
   nsPaintEvent pevent;
   nsRect       rect;
-  nsGtkWidget_InitNSEvent(event, p, pevent, NS_PAINT);
+  nsGtkWidget_InitNSEvent((GdkEvent*)event, p, pevent, NS_PAINT);
   pevent.rect = (nsRect *)&rect;
   XEvent xev;
 
-  rect.x      = event->xexpose.x;
-  rect.y      = event->xexpose.y;
-  rect.width  = event->xexpose.width;
-  rect.height = event->xexpose.height;
+  rect.x      = event->area.x;
+  rect.y      = event->area.y;
+  rect.width  = event->area.width;
+  rect.height = event->area.height;
 
 
   if (widgetWindow->GetResized())
    return;
 
-  if (event->type == NoExpose) {
+  if (event->type == GDK_NO_EXPOSE) {
     return;
   }
-
+/* FIXME
   Display* display = XtDisplay(w);
   Window   window = XtWindow(w);
 
@@ -249,77 +253,64 @@ void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * 
       rect.width  = xev.xexpose.width;
       rect.height = xev.xexpose.height;
   }
-
+*/
   widgetWindow->OnPaint(pevent);
-#endif
 }
 
 //==============================================================
-void nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
-  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
   widgetWindow->DispatchMouseEvent(mevent);
-#endif
 }
 
 //==============================================================
-void nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
-  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
   widgetWindow->DispatchMouseEvent(mevent);
-#endif
 }
 
 //==============================================================
-void nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
-  nsPaintEvent pevent ;
-  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsPaintEvent pevent;
+  nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
-#endif
 }
 
 //==============================================================
-void nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
-  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
-#endif
 }
 
 //==============================================================
-void nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
-  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_ENTER);
   widgetWindow->DispatchMouseEvent(mevent);
-#endif
 }
 
 //==============================================================
-void nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
   if (DBG) fprintf(stderr, "***************** nsGtkWidget_LeaveMask_EventHandler\n");
-  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsWindow * widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
   widgetWindow->DispatchMouseEvent(mevent);
-#endif
 }
 
 //==============================================================
@@ -562,7 +553,7 @@ void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
 }
 
 //==============================================================
-void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
 #if 0
   nsKeyEvent kevent;
@@ -573,7 +564,7 @@ void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * 
 }
 
 //==============================================================
-void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
 #if 0
   nsKeyEvent kevent;
