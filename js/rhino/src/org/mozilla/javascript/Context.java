@@ -1360,90 +1360,6 @@ public class Context {
     }
 
     /**
-     * @deprecated Use <tt>ClassNameHelper.get(cx).getClassName()</tt> instead.
-     * @see ClassNameHelper#getClassName()
-     */
-    public String getClassName() {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        return nameHelper != null ? nameHelper.getClassName() : null;
-    }
-
-    /**
-     * @deprecated Use <tt>ClassNameHelper.get(cx).setClassName(className)</tt> instead.
-     * @see ClassNameHelper#setClassName()
-     */
-    public void setClassName(String className) {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null)
-              nameHelper.setClassName(className);
-    }
-
-    /**
-     * @deprecated Use
-     * <tt>ClassNameHelper.get(cx).getTargetClassFileName()</tt> instead.
-     * @see ClassNameHelper#getTargetClassFileName()
-     */
-    public String getTargetClassFileName() {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null) {
-            return nameHelper.getTargetClassFileName();
-        }
-        return null;
-    }
-
-    /**
-     * @deprecated Use
-     * <tt>ClassNameHelper.get(cx).setTargetClassFileName(classFileName)</tt> instead.
-     * @see ClassNameHelper#setTargetClassFileName()
-     */
-    public void setTargetClassFileName(String classFileName) {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null) {
-            nameHelper.setTargetClassFileName(classFileName);
-        }
-    }
-
-    /**
-     * @deprecated Use <tt>ClassNameHelper.get(cx).getTargetPackage()</tt> instead.
-     * @see ClassNameHelper#getTargetPackage()
-     */
-    public String getTargetPackage() {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        return nameHelper != null ? nameHelper.getTargetPackage() : null;
-    }
-
-    /**
-     * @deprecated Use <tt>ClassNameHelper.get(cx).setTargetPackage(targetPackage)</tt>
-     * instead.
-     * @see ClassNameHelper#setTargetPackage()
-     */
-    public void setTargetPackage(String targetPackage) {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null)
-            nameHelper.setTargetPackage(targetPackage);
-    }
-
-    /**
-     * @deprecated Use <tt>ClassNameHelper.get(cx).getClassRepository()</tt> instead.
-     * @see ClassNameHelper#getClassRepository()
-     */
-    public ClassRepository getClassRepository() {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        return nameHelper != null ? nameHelper.getClassRepository() : null;
-    }
-
-    /**
-     * @deprecated Use
-     * <tt>ClassNameHelper.get(cx).setClassRepository(classRepository)</tt> instead.
-     * @see ClassNameHelper#setClassRepository()
-     */
-    public void setClassRepository(ClassRepository classRepository) {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null)
-            nameHelper.setClassRepository(classRepository);
-    }
-
-    /**
      * Set the security controller for this context.
      * <p> SecurityController may only be set if it is currently null.
      * Otherwise a SecurityException is thrown.
@@ -1479,31 +1395,6 @@ public class Context {
 
     final ClassShutter getClassShutter() {
         return classShutter;
-    }
-
-    /**
-     * @deprecated Use
-     * <tt>ClassNameHelper.get(cx).setTargetExtends(extendsClass)</tt> instead.
-     * @see ClassNameHelper#setTargetExtends()
-     */
-    public void setTargetExtends(Class extendsClass) {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null) {
-            nameHelper.setTargetExtends(extendsClass);
-        }
-    }
-
-    /**
-     * @deprecated Use
-     * <tt>ClassNameHelper.get(cx).setTargetImplements(implementsClasses)</tt>
-     * instead.
-     * @see ClassNameHelper#setTargetImplements()
-     */
-    public void setTargetImplements(Class[] implementsClasses) {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null) {
-            nameHelper.setTargetImplements(implementsClasses);
-        }
     }
 
     /**
