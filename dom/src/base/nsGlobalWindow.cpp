@@ -810,7 +810,7 @@ GlobalWindowImpl::Home()
   nsString homeURL("http://www.netscape.com");
   PRUnichar* urlToLoad = homeURL.ToNewUnicode();
   mWebShell->LoadURL(urlToLoad);
-  delete urlToLoad;
+  delete[] urlToLoad;
   return NS_OK;
 }
 
