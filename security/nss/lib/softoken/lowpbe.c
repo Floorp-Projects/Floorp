@@ -116,8 +116,8 @@ nsspkcs5_PBKDF1(const SECHashObject *hashObj, SECItem *salt, SECItem *pwd,
 	rv = SECFailure;
 
 	/* allocate buffers */
-	hash->data = (unsigned char *)PORT_ZAlloc(SHA1_LENGTH);
 	hash->len = hashObj->length;
+	hash->data = (unsigned char *)PORT_ZAlloc(hash->len);
 	pre_hash->data = (unsigned char *)PORT_ZAlloc(ph_len);
 
 	/* in pbeSHA1TripleDESCBC there was an allocation error that made
