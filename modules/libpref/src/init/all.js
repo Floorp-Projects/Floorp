@@ -143,78 +143,59 @@ pref("browser.search.defaultenginename", "chrome://navigator/locale/navigator.pr
 
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
-pref("capability.policy.default.barprop.visible.write", "UniversalBrowserWrite");
+//pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");
+pref("capability.policy.default.Document.close", "allAccess");
+pref("capability.policy.default.Document.open", "allAccess");
+pref("capability.policy.default.Document.write", "allAccess");
+pref("capability.policy.default.Document.writeln", "allAccess");
 
-pref("capability.policy.default.domexception.code", "allAccess");
-pref("capability.policy.default.domexception.message", "allAccess");
-pref("capability.policy.default.domexception.name", "allAccess");
-pref("capability.policy.default.domexception.result", "allAccess");
-pref("capability.policy.default.domexception.tostring", "allAccess");
+pref("capability.policy.default.Domexception.code", "allAccess");
+pref("capability.policy.default.Domexception.message", "allAccess");
+pref("capability.policy.default.Domexception.name", "allAccess");
+pref("capability.policy.default.Domexception.result", "allAccess");
+pref("capability.policy.default.Domexception.tostring", "allAccess");
 
-pref("capability.policy.default.history.current.read", "UniversalBrowserRead");
-pref("capability.policy.default.history.next.read", "UniversalBrowserRead");
-pref("capability.policy.default.history.previous.read", "UniversalBrowserRead");
-pref("capability.policy.default.history.item.read", "UniversalBrowserRead");
+pref("capability.policy.default.History.back", "allAccess");
+pref("capability.policy.default.History.current", "UniversalBrowserRead");
+pref("capability.policy.default.History.forward", "allAccess");
+pref("capability.policy.default.History.go", "allAccess");
+pref("capability.policy.default.History.item", "UniversalBrowserRead");
+pref("capability.policy.default.History.length", "UniversalBrowserRead");
+pref("capability.policy.default.History.next", "UniversalBrowserRead");
+pref("capability.policy.default.History.previous", "UniversalBrowserRead");
+pref("capability.policy.default.History.toString", "UniversalBrowserRead");
 
-pref("capability.policy.default.location.hash.write", "allAccess");
-pref("capability.policy.default.location.host.write", "allAccess");
-pref("capability.policy.default.location.hostname.write", "allAccess");
-pref("capability.policy.default.location.href.write", "allAccess");
-pref("capability.policy.default.location.pathname.write", "allAccess");
-pref("capability.policy.default.location.port.write", "allAccess");
-pref("capability.policy.default.location.protocol.write", "allAccess");
-pref("capability.policy.default.location.search.write", "allAccess");
+pref("capability.policy.default.Location.hash.set", "allAccess");
+pref("capability.policy.default.Location.host.set", "allAccess");
+pref("capability.policy.default.Location.hostname.set", "allAccess");
+pref("capability.policy.default.Location.href.set", "allAccess");
+pref("capability.policy.default.Location.pathname.set", "allAccess");
+pref("capability.policy.default.Location.port.set", "allAccess");
+pref("capability.policy.default.Location.protocol.set", "allAccess");
+pref("capability.policy.default.Location.search.set", "allAccess");
 
-pref("capability.policy.default.navigator.preference.read", "UniversalPreferencesRead");
-pref("capability.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
+pref("capability.policy.default.Navigator.preference", "allAccess");
+pref("capability.policy.default.Navigator.preferenceinternal.get", "UniversalPreferencesRead");
+pref("capability.policy.default.Navigator.preferenceinternal.set", "UniversalPreferencesWrite");
 
-pref("capability.policy.default.windowinternal.blur", "allAccess");
-pref("capability.policy.default.windowinternal.close", "allAccess");
-pref("capability.policy.default.windowinternal.focus", "allAccess");
-pref("capability.policy.default.windowinternal.location.write", "allAccess");
-
+pref("capability.policy.default.Window.blur", "allAccess");
+pref("capability.policy.default.Window.close", "allAccess");
+pref("capability.policy.default.Window.closed", "allAccess");
+pref("capability.policy.default.Window.Components", "allAccess");
+pref("capability.policy.default.Window.document", "allAccess");
+pref("capability.policy.default.Window.focus", "allAccess");
+pref("capability.policy.default.Window.history", "allAccess");
+pref("capability.policy.default.Window.location", "allAccess");
 // window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
-pref("capability.policy.default.windowinternal.opendialog", "noAccess");
+pref("capability.policy.default.Window.opendialog", "noAccess");
 
-// Mailnews DOM restrictions - see bug 66938
-pref("capability.policy.mailnews.characterdata.data", "noAccess");
-pref("capability.policy.mailnews.characterdata.substringdata", "noAccess");
-pref("capability.policy.mailnews.element.getattribute", "noAccess");
-pref("capability.policy.mailnews.element.getattributenode", "noAccess");
-pref("capability.policy.mailnews.element.getattributenodens", "noAccess");
-pref("capability.policy.mailnews.element.getattributens", "noAccess");
-pref("capability.policy.mailnews.htmlanchorelement.href", "noAccess");
-pref("capability.policy.mailnews.htmlareaelement.href", "noAccess");
-pref("capability.policy.mailnews.htmlbaseelement.href", "noAccess");
-pref("capability.policy.mailnews.htmlblockquoteelement.cite", "noAccess");
-pref("capability.policy.mailnews.domexception.tostring", "noAccess");
-pref("capability.policy.mailnews.htmldocument.domain", "noAccess");
-pref("capability.policy.mailnews.htmldocument.url", "noAccess");
-pref("capability.policy.mailnews.htmlelement.innerhtml", "noAccess");
-pref("capability.policy.mailnews.htmlimageelement.src", "noAccess");
-pref("capability.policy.mailnews.image.lowsrc", "noAccess");
-pref("capability.policy.mailnews.node.attributes", "noAccess");
-pref("capability.policy.mailnews.node.nodevalue", "noAccess");
-pref("capability.policy.mailnews.nsdocument.location", "noAccess");
-pref("capability.policy.mailnews.window.name.write", "noAccess");
-pref("capability.policy.mailnews.windowinternal.location", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.hash", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.host", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.hostname", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.pathname", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.port", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.protocol", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.search", "noAccess");
-pref("capability.policy.mailnews.nshtmlanchorelement.text", "noAccess");
-pref("capability.policy.mailnews.nshtmlareaelement.hash", "noAccess");
-pref("capability.policy.mailnews.nshtmlareaelement.host", "noAccess");
-pref("capability.policy.mailnews.nshtmlareaelement.hostname", "noAccess");
-pref("capability.policy.mailnews.nshtmlareaelement.pathname", "noAccess");
-pref("capability.policy.mailnews.nshtmlareaelement.port", "noAccess");
-pref("capability.policy.mailnews.nshtmlareaelement.protocol", "noAccess");
-pref("capability.policy.mailnews.nshtmlareaelement.search", "noAccess");
-pref("capability.policy.mailnews.range.tostring", "noAccess");
-pref("capability.policy.mailnews.sites", "mailbox: imap: news: pop: pop3:");
+pref("capability.policy.mailnews.Domexception.tostring", "noAccess");
+pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
+pref("capability.policy.mailnews.HTMLDocument.URL", "noAccess");
+//pref("capability.policy.mailnews.nsdocument.location", "noAccess");
+pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
+pref("capability.policy.mailnews.Window.name.set", "noAccess");
+pref("capability.policy.mailnews.Window.location", "noAccess");
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
