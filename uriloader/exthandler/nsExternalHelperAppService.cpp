@@ -192,6 +192,7 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_XML, "xml" },
   { TEXT_RDF, "rdf" },
   { TEXT_XUL, "xul" },
+  { IMAGE_PNG, "png" },
   // -- end extensions used during startup
   { TEXT_CSS, "css" },
   { IMAGE_JPG, "jpeg" },
