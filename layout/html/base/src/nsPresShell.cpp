@@ -1142,6 +1142,7 @@ public:
 
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus);
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
+  NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent);
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
 #ifdef IBMBIDI
@@ -5796,6 +5797,23 @@ NS_IMETHODIMP
 PresShell::GetEventTargetFrame(nsIFrame** aFrame)
 {
 	*aFrame = GetCurrentEventFrame();
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent)
+{
+  if (mCurrentEventContent) {
+    *aContent = mCurrentEventContent;
+    NS_IF_ADDREF(*aContent);
+  } else {
+    nsIFrame* currentEventFrame = GetCurrentEventFrame();
+    if (currentEventFrame) {
+      currentEventFrame->GetContentForEvent(mPresContext, aEvent, aContent);
+    } else {
+      *aContent = nsnull;
+    }
+  }
 	return NS_OK;
 }
 
