@@ -27,6 +27,7 @@ IDLSRCS =	\
 	nsIDOMBaseAppCore.idl	\
 	nsIDOMBrowserAppCore.idl	\
 	nsIDOMMailCore.idl	\
+	nsIDOMRDFCore.idl	\
 	nsIDOMToolbar.idl	\
 	$(NULL)
 
