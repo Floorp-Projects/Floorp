@@ -52,8 +52,7 @@ DIRS += \
         browser/src \
         $(NULL)
 else
-ifdef MOZ_SUNBIRD
-else
+ifndef MOZ_SUNBIRD
 DIRS += browser components/shistory communicator global
 endif
 endif
