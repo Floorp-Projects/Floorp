@@ -35,20 +35,24 @@ EXPORTS		= \
 		nsIDOMComment.h \
 		nsIDOMDOMImplementation.h \
 		nsIDOMDocument.h \
-		nsIDOMDocumentType.h \
 		nsIDOMDocumentFragment.h \
+		nsIDOMDocumentStyle.h \
+		nsIDOMDocumentType.h \
+		nsIDOMDocumentView.h \
 		nsIDOMElement.h \
 		nsIDOMEntity.h \
+		nsIDOMMediaList.h \
 		nsIDOMNotation.h \
+		nsIDOMNSDocument.h \
 		nsIDOMEntityReference.h \
 		nsIDOMNode.h \
 		nsIDOMNamedNodeMap.h \
 		nsIDOMNodeList.h \
 		nsIDOMProcessingInstruction.h \
-		nsIDOMText.h \
 		nsIDOMStyleSheet.h \
 		nsIDOMStyleSheetCollection.h \
-		nsIDOMNSDocument.h \
+		nsIDOMStyleSheetList.h \
+		nsIDOMText.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
