@@ -299,9 +299,6 @@
     0x91fd6b19, 0xe0bc, 0x11d3,			\
   { 0x8f, 0x97, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
 
-
-#endif // nsMessageBaseCID_h__
-
 //
 // nsMsgServiceProviderService
 //
@@ -319,3 +316,16 @@
 #define NS_MSGLOGONREDIRECTORSERVICE_CID \
 {0x0d7456ae, 0xe28a, 0x11d3, \
   {0xa5, 0x60, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7}}
+
+//
+// nsSubscribeDataSource
+//
+#define NS_SUBSCRIBEDATASOURCE_PROGID \
+  NS_RDF_DATASOURCE_PROGID_PREFIX "subscribe"
+
+/* 00e89c82-1dd2-11b2-9a1c-e75995d7d595 */
+#define NS_SUBSCRIBEDATASOURCE_CID \
+{ 0x00e89c82, 0x1dd2, 0x11b2, \
+  { 0x9a, 0x1c, 0xe7, 0x59, 0x95, 0xd7, 0xd5, 0x95}} 
+
+#endif // nsMessageBaseCID_h__
