@@ -2174,6 +2174,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Netscape__Network_privacy_policy"
+         nc:name="Netscape  Network privacy policy"
+	 nc:link="chrome://help/locale/privacy_help.html#Netscape__Network_privacy_policySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Netscape__privacy_policy"
+         nc:name="Netscape  privacy policy"
+	 nc:link="chrome://help/locale/privacy_help.html#Netscape__privacy_policySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Netscape_Calendar"
          nc:name="Netscape Calendar"
 	 nc:link="chrome://help/locale/glossary.html#Netscape_CalendarSDX"/>
