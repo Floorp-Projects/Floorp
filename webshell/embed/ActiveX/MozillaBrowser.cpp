@@ -43,31 +43,10 @@ extern "C" void NS_SetupRegistry();
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
 static const std::string c_szDefaultPage   = "resource:/res/MozillaControl.html";
 
-class CMozDir
-{
-	TCHAR m_szOldDir[1024];
-public:
-	CMozDir()
-	{
-		GetCurrentDirectory(1024, m_szOldDir);
-		CRegKey cKey;
-		if (cKey.Open(HKEY_LOCAL_MACHINE, _T("Software\\Mozilla")) == ERROR_SUCCESS)
-		{
-			TCHAR szCurDir[1024];
-			DWORD dwSize = sizeof(szCurDir) / sizeof(szCurDir[0]);
-			if (cKey.QueryValue(szCurDir, _T("MozillaDir"), &dwSize) == ERROR_SUCCESS)
-			{
-				SetCurrentDirectory(szCurDir);
-			}
-			cKey.Close();
-		}
-	}
-	~CMozDir()
-	{
-		// Restore old working directory
-		SetCurrentDirectory(m_szOldDir);
-	}
-};
+#define MOZ_CONTROL_REG_KEY                  _T("Software\\Mozilla\\")
+#define MOZ_CONTROL_REG_VALUE_DIR            _T("Dir")
+#define MOZ_CONTROL_REG_VALUE_COMPONENT_PATH _T("ComponentPath")
+#define MOZ_CONTROL_REG_VALUE_COMPONENT_FILE _T("ComponentFile")
 
 BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
@@ -112,38 +91,28 @@ CMozillaBrowser::CMozillaBrowser()
  	// the IHTMLDocument, lazy allocation.
  	m_pDocument = NULL;
 
-	// Change the current directory to the Mozilla dist so that registration
-	// works properly
+	// Open registry keys
+	m_SystemKey.Create(HKEY_LOCAL_MACHINE, MOZ_CONTROL_REG_KEY);
+	m_UserKey.Create(HKEY_CURRENT_USER, MOZ_CONTROL_REG_KEY);
 
-	// Register components
-	if (!m_bRegistryInitialized)
-	{
-		NS_SetupRegistry();
-		m_bRegistryInitialized = TRUE;
-	}
+	// Component path and file
+	m_pComponentPath = NULL;
+	m_pComponentFile = NULL;
 
-	// Create the Event Queue for the UI thread...
-	//
-	// If an event queue already exists for the thread, then 
-	// CreateThreadEventQueue(...) will fail...
-	nsresult rv;
-	nsIEventQueueService* eventQService = NULL;
-
-	rv = nsServiceManager::GetService(kEventQueueServiceCID,
-								kIEventQueueServiceIID,
-								(nsISupports **)&eventQService);
-	if (NS_SUCCEEDED(rv)) {
-		rv = eventQService->CreateThreadEventQueue();
-		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
-	}
-
+	// Initialise the web shell
+	InitWebShell();
 }
 
 
 CMozillaBrowser::~CMozillaBrowser()
 {
-	// XXX: Do not call DestroyThreadEventQueue(...) for now...
 	NG_TRACE_METHOD(CMozillaBrowser::~CMozillaBrowser);
+	// Close the web shell
+	TermWebShell();
+
+	// Close registry keys
+	m_SystemKey.Close();
+	m_UserKey.Close();
 }
 
 
@@ -463,6 +432,67 @@ static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+// Initialises the web shell engine
+HRESULT CMozillaBrowser::InitWebShell()
+{
+	// Initialise XPCOM
+    nsIServiceManager *pIServiceManager = nsnull;
+	TCHAR szComponentPath[MAX_PATH];
+	TCHAR szComponentFile[MAX_PATH];
+	DWORD dwComponentPath = sizeof(szComponentPath) / sizeof(szComponentPath[0]);
+	DWORD dwComponentFile = sizeof(szComponentFile) / sizeof(szComponentFile[0]);
+
+	memset(szComponentPath, 0, sizeof(szComponentPath));
+	memset(szComponentFile, 0, sizeof(szComponentFile));
+	if (m_SystemKey.QueryValue(szComponentPath, MOZ_CONTROL_REG_VALUE_COMPONENT_PATH, &dwComponentPath) == ERROR_SUCCESS &&
+		m_SystemKey.QueryValue(szComponentFile, MOZ_CONTROL_REG_VALUE_COMPONENT_FILE, &dwComponentFile) == ERROR_SUCCESS)
+	{
+		USES_CONVERSION;
+		
+		m_pComponentPath = new nsFileSpec(T2A(szComponentPath));
+		m_pComponentFile = new nsFileSpec(T2A(szComponentFile));
+
+		NS_InitXPCOM(&pIServiceManager, m_pComponentFile, m_pComponentPath);
+	}
+	else
+	{
+		NS_InitXPCOM(&pIServiceManager, nsnull, nsnull);
+	}
+
+	// Register components
+	if (!m_bRegistryInitialized)
+	{
+		NS_SetupRegistry();
+		m_bRegistryInitialized = TRUE;
+	}
+
+	// Create the Event Queue for the UI thread...
+	//
+	// If an event queue already exists for the thread, then 
+	// CreateThreadEventQueue(...) will fail...
+	nsresult rv;
+	nsIEventQueueService* eventQService = NULL;
+
+	rv = nsServiceManager::GetService(kEventQueueServiceCID,
+								kIEventQueueServiceIID,
+								(nsISupports **)&eventQService);
+	if (NS_SUCCEEDED(rv)) {
+		rv = eventQService->CreateThreadEventQueue();
+		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
+	}
+
+	return S_OK;
+}
+
+// Terminates the web shell engine
+HRESULT CMozillaBrowser::TermWebShell()
+{
+	// XXX: Do not call DestroyThreadEventQueue(...) for now...
+	// TODO terminate XPCOM
+	// TODO delete m_pComponentFile && m_pComponentPath
+	return S_OK;
+}
+
 // Create and initialise the web shell
 HRESULT CMozillaBrowser::CreateWebShell() 
 {
@@ -491,6 +521,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	if (NS_FAILED(rv))
 	{
 		NG_ASSERT(0);
+		NG_TRACE(_T("Could not create preference object rv=%08x\n"), (int) rv);
 		m_sErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
 	}
@@ -502,6 +533,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	if (NS_FAILED(rv))
 	{
 		NG_ASSERT(0);
+		NG_TRACE(_T("Could not create web shell rv=%08x\n"), (int) rv);
 		m_sErrorMessage = _T("Error - could not create web shell, check PATH settings");
 		return E_FAIL;
 	}
@@ -534,7 +566,6 @@ HRESULT CMozillaBrowser::CreateWebShell()
 ///	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetWebShellType(nsWebShellContent);
-
 
 	m_pIWebShell->Show();
 
@@ -689,15 +720,15 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 	
 	nsIContentViewer* pIContentViewer = nsnull;
 	res = m_pIWebShell->GetContentViewer(&pIContentViewer);
-	if ( NS_SUCCEEDED(res) )
+	if (NS_SUCCEEDED(res) && pIContentViewer)
 	{
 		nsIDocumentViewer* pIDocViewer = nsnull;
 		res = pIContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &pIDocViewer);
-		if ( NS_SUCCEEDED(res) )
+		if (NS_SUCCEEDED(res) && pIDocViewer)
 		{
 			nsIPresContext * pIPresContent = nsnull;
 			res = pIDocViewer->GetPresContext(pIPresContent);
-			if ( NS_SUCCEEDED(res) )
+			if (NS_SUCCEEDED(res) && pIPresContent)
 			{
 				res = pIPresContent->GetShell(pPresShell);
 				NS_RELEASE(pIPresContent);
@@ -734,15 +765,15 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	
 	nsIContentViewer * pCViewer = nsnull;
 	res = m_pIWebShell->GetContentViewer(&pCViewer);
-	if ( NS_SUCCEEDED(res) )
+	if (NS_SUCCEEDED(res) && pCViewer)
 	{
 		nsIDocumentViewer * pDViewer = nsnull;
 		res = pCViewer->QueryInterface(kIDocumentViewerIID, (void**) &pDViewer);
-		if ( NS_SUCCEEDED(res) )
+		if (NS_SUCCEEDED(res) && pDViewer)
 		{
 			nsIDocument * pDoc = nsnull;
 			res = pDViewer->GetDocument(pDoc);
-			if ( NS_SUCCEEDED(res) )
+			if (NS_SUCCEEDED(res) && pDoc)
 			{
 				res = pDoc->QueryInterface(kIDOMDocumentIID, (void**) pDocument);
 				NS_RELEASE(pDoc);
@@ -2438,6 +2469,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 			if (pDropTarget)
 			{
 				pDropTarget->AddRef();
+				pDropTarget->SetOwner(this);
 
 				// Ask the site if it wants to replace this drop target for another one
 				CIPtr(IDropTarget) spDropTarget;
