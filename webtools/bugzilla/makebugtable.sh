@@ -32,7 +32,7 @@ bug_id mediumint not null auto_increment primary key,
 groupset bigint not null,
 assigned_to mediumint not null, # This is a comment.
 bug_file_loc text,
-bug_severity enum("critical", "major", "normal", "minor", "trivial", "enhancement") not null,
+bug_severity enum("blocker", "critical", "major", "normal", "minor", "trivial", "enhancement") not null,
 bug_status enum("NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
 creation_ts datetime,
 delta_ts timestamp,

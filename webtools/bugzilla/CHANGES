@@ -10,6 +10,12 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+4/30/99 Added a new severity, "blocker".  To get this into your running
+Bugzilla, do the following:
+
+	alter table bugs change column bug_severity bug_severity enum("blocker", "critical", "major", "normal", "minor", "trivial", "enhancement") not null;
+
+
 4/22/99 There was a bug where the long descriptions of bugs had a variety of
 newline characters at the end, depending on the operating system of the browser
 that submitted the text.  This bug has been fixed, so that no further changes
