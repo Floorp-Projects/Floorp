@@ -136,7 +136,9 @@ ifneq ($(CPU_ARCH),x86)
 ASFLAGS			+= -x assembler-with-cpp
 else
 ifndef BUILD_OPT
+ifndef USE_AUTOCONF
 OPTIMIZER		= -Wa,-s -gstabs
+endif
 endif
 endif
 OS_GPROF_FLAGS		= -pg
