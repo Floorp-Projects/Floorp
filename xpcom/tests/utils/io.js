@@ -10,11 +10,11 @@ IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 implied. See the License for the specific language governing
 rights and limitations under the License.
 
-The Original Code is Alphanumerica code.
-The Initial Developer of the Original Code is Alphanumerica.
+The Original Code is Collabnet code.
+The Initial Developer of the Original Code is Collabnet.
 
-Portions created by Alphanumerica are
-Copyright (C) 2000 Alphanumerica.  All
+Portions created by Collabnet are
+Copyright (C) 2000 Collabnet.  All
 Rights Reserved.
 
 Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
@@ -76,19 +76,19 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 
 ////////////////// Globals //////////////////////
 
-var FilePath    = new Components.Constructor( "component://mozilla/file/local", "nsILocalFile", "initWithPath");
-var FileChannel = new Components.Constructor( "component://netscape/network/local-file-channel", "nsIFileChannel" );
-var InputStream = new Components.Constructor( "component://netscape/scriptableinputstream", "nsIScriptableInputStream" );
+const FilePath    = new Components.Constructor( "component://mozilla/file/local", "nsILocalFile", "initWithPath");
+const FileChannel = new Components.Constructor( "component://netscape/network/local-file-channel", "nsIFileChannel" );
+const InputStream = new Components.Constructor( "component://netscape/scriptableinputstream", "nsIScriptableInputStream" );
 
 ////////////////// Globals //////////////////////
 
 
 ////////////////// File Object Class /////////////////////
 
-function File(path, mode){
+function File(path, mode) {
     
     if(path)
-    this.open(path,mode);
+      this.open(path, mode);
 
 } // constructor
 
@@ -106,18 +106,17 @@ inputStream     : null,
 
 exists : function (path) {
 
-    if(!path){
+    if(!path)
+    {
         dump("Missing path argument . . . \n\n");
-        return;
+        return false;
     }
 
-    //dump("\n\n**** Checking to see if the file exists ****\n\n");
+    try
 
-    try{ 
-
-        var file                = new FilePath(path);
-        var fileExists          = file.exists();
-
+    { 
+      var file                = new FilePath(path);
+      var fileExists          = file.exists();
     }
 
     catch(error) { dump("**** ERROR:"+error+"\n\n"); }
@@ -131,48 +130,49 @@ exists : function (path) {
 /********************* OPEN *****************************/
 
 
-open : function(path, setMode){
+open : function(path, setMode) {
 
     if(!setMode)
-        setMode="r";
+      setMode="r";
 
-switch(setMode){
+  switch(setMode)
 
+  {
 
-case "w":
+  case "w":
 
     //dump("open file for writing\n\n");
 
-    if(!path || !setMode){
-        dump("Missing path or mode in arguments . . .\n\n");
-        return;
+    if(!path || !setMode)
+    {
+      dump("Missing path or mode in arguments . . .\n\n");
+      return false;
     }
 
-    try{
+    try
 
-        //dump("Closing any existing handles . . . \n\n");
-        this.close();
+    {
+      //dump("Closing any existing handles . . . \n\n");
+      this.close();
+      this.fileInst           = new FilePath( path );
+      var fileExists          = this.exists( path );
 
-        this.fileInst           = new FilePath( path );
-
-        var fileExists          = this.exists( path );
-
-    if(fileExists){
-
-        //dump("deleting old file and creating a new one . . . \n\n"); 
-        this.fileInst["delete"](false);
-        fileExists=false;
-
+    if(fileExists)
+    {
+      //dump("deleting old file and creating a new one . . . \n\n"); 
+      this.fileInst["delete"](false);
+      fileExists=false;
     }
 
-    if (!fileExists){
-        //dump("\n\nCreating new file "+path+"\n\n");
-        this.fileInst.create(0, 0644);
-        fileExists=true;
+    if (!fileExists)
+    {
+      //dump("\n\nCreating new file "+path+"\n\n");
+      this.fileInst.create(0, 0644);
+      fileExists=true;
     }
 
     this.mode=8;
-    return;
+    return true;
 
     }
 
@@ -181,69 +181,71 @@ case "w":
 
 
 
-case "a":
+  case "a":
 
     //dump("open file for appending\n\n");
 
-    if(!path || !setMode){
-        dump("Missing path or mode in arguments . . .\n\n");
-        return;
+    if(!path || !setMode)
+    {
+      dump("Missing path or mode in arguments . . .\n\n");
+      return false;
     }
 
-    try{
+    try
 
-        //dump("Closing any existing handles . . . \n\n");
-        this.close();
+    {
+      //dump("Closing any existing handles . . . \n\n");
+      this.close();
 
-        this.fileInst           = new FilePath(path);
+      this.fileInst           = new FilePath(path);
+      fileExists              = this.exists(path);
 
-        var fileExists          = this.exists(path);
-
-    if ( !fileExists ){
-        //dump("\n\nCreating new file "+path+"\n\n");
-        this.fileInst.create(0, 0644);
-        fileExists=true;
+    if ( !fileExists )
+    {
+      //dump("\n\nCreating new file "+path+"\n\n");
+      this.fileInst.create(0, 0644);
+      fileExists=true;
     }
 
-   this.mode=16;
-   return;
+    this.mode=16;
+    return true;
 
     }
-
 
     catch (error){ dump("**** ERROR:"+error+"\n\n"); }
     break;
 
 
-
-case "r":
+  case "r":
 
     //dump("open file for reading\n\n");
 
-    if(!path){
-        dump("Missing path argument . . . \n\n");
-        return;
+    if(!path)
+    {
+      dump("Missing path argument . . . \n\n");
+      return false;
     }
 
     //dump("Closing any existing handles . . . \n\n");
     this.close();
 
-    try {
+    try 
 
-        this.fileInst                = new FilePath(path);
-        this.fileChannel             = new FileChannel();
-        this.inputStream             = new InputStream();    
-
+    {
+      this.fileInst                = new FilePath(path);
+      this.fileChannel             = new FileChannel();
+      this.inputStream             = new InputStream();    
     }
         
     catch (error){ dump("**** ERROR:"+error+"\n\n"); }
     break;
 
-
     default:
     dump("\n\n**** WARNING: \""+setMode+"\" is an Invalid file mode\n\n");
 
     }
+
+  return true;
 
 },
 
@@ -252,35 +254,37 @@ case "r":
 
 /********************* WRITE ****************************/
 
-write : function(buffer, perms){
+write : function(buffer, perms) {
 
-    if(!this.fileInst){
-        dump("Please open a file handle first . . .\n");
-        return;
+    if(!this.fileInst)
+    {
+      dump("Please open a file handle first . . .\n");
+      return false;
     }
     
     if(!buffer)
-        buffer                  = " ";
-        var buffSize            = buffer.length;
+      buffer                  = " ";
 
-    try{
+      var buffSize            = buffer.length;
 
-    if(!this.fileChannel)
-        this.fileChannel        = new FileChannel();
+    try
+    {
+      if(!this.fileChannel)
+        this.fileChannel      = new FileChannel();
 
-    if(perms){
-
-        var checkPerms  = this.validatePermissions( perms );
+    if(perms)
+    {
+        var checkPerms        = this.validatePermissions( perms );
 
     if(!checkPerms){
-        dump("**** Sorry invalid permissions set\n\n");
-        return;
+      dump("**** Sorry invalid permissions set\n\n");
+      return false;
     }               
 
-     }
+    }
 
     if(!perms)
-        perms=0644;
+      perms=0644;
 
     //dump("trying to initialize filechannel\n\n");
 
@@ -298,13 +302,14 @@ write : function(buffer, perms){
 
         
     if( outStream.write(buffer, buffSize) )
-        //dump("Write to file successful . . . \n\n");
-
-    outStream.flush();
+      dump("Write to file successful . . . \n\n");
+      outStream.flush();
 
     }
 
     catch (error){ dump("**** ERROR:"+error+"\n\n"); }
+
+  return true;
 
 },
 
@@ -315,23 +320,26 @@ write : function(buffer, perms){
 
 read : function() {
 
-    try {
+    try 
 
-    if(!this.fileInst || !this.fileChannel || !this.inputStream){
-        dump("Please open a valid file handle for reading . . .\n");
-        return null;
+    {
+
+    if(!this.fileInst || !this.fileChannel || !this.inputStream)
+    {
+      dump("Please open a valid file handle for reading . . .\n");
+      return null;
     }
         
-
     var fileExists          = this.exists(this.fileInst.path);
 
-    if(!fileExists) {
+    if(!fileExists) 
+    {
         dump("WARNING: \""+this.fileInst.path+"\" does not exist...\n");
-        return;
+        return false;
     }
 
-    var offset      = this.fileInst.fileSize;
-    var perm        = this.fileInst.permissions;     
+    var offset              = this.fileInst.fileSize;
+    var perm                = this.fileInst.permissions;     
 
     //dump("PATH i am trying to read = " + this.fileInst.path + "\n");
 
@@ -353,6 +361,8 @@ read : function() {
 
     catch (error){ dump("**** ERROR:"+error+"\n\n"); }
 
+    return false;
+
 },
 
 /********************* READ *****************************/
@@ -361,54 +371,60 @@ read : function() {
 
 /********************* MKDIR ****************************/
 
-mkdir : function(path, permissions){
+mkdir : function(path, permissions) {
 
-    //dump("Closing any existing handles . . . \n\n");
-    this.close();
+  //dump("Closing any existing handles . . . \n\n");
+  this.close();
 
-    if(!path){
-        dump("Missing path in argument . . .\n\n");
-        return;
-    }
+  if(!path)
+  {
+      dump("Missing path in argument . . .\n\n");
+      return false;
+  }
 
-    var fileExists  = this.exists(path);
+  var fileExists  = this.exists(path);
 
-    if(permissions){
-        var checkPerms  = this.validatePermissions(permissions);
+  if(permissions){
+    var checkPerms  = this.validatePermissions(permissions);
 
-    if(!checkPerms){
-        dump("**** Sorry invalid permissions set\n\n");
-        return;
-    }               
+  if(!checkPerms){
+    dump("**** Sorry invalid permissions set\n\n");
+    return false;
+  }               
 
-    var baseTen     = permissions.toString(10);
+  var baseTen       = permissions.toString(10);
 
-    if(baseTen.substring(0,1) != 0)
-        permissions = 0+baseTen;
+  if(baseTen.substring(0,1) != 0)
+    permissions = 0+baseTen;
 
-    }
+  }
 
 
-    try{ 
+  try
 
-    this.fileInst  = new FilePath(path);
+  { 
 
-    if (!fileExists){
+  this.fileInst  = new FilePath(path);
 
-    if(!permissions)
-        permissions     = 0755;
-        //dump("\n\nCreating new Directory \""+path+"\"\n\n");
-        this.fileInst.create( 1, parseInt(permissions) );  //*NOTE* permission 0777 doesn't seem to work here -pete
+  if (!fileExists)
+  {
 
-    }
+  if(!permissions)
+    permissions     = 0755;
+    //dump("\n\nCreating new Directory \""+path+"\"\n\n");
+    this.fileInst.create( 1, parseInt(permissions) ); 
+  }
 
-    else{ return; /**dump("Sorry Directory "+path+" already exists\n\n");***/ }
+  else 
+    return false; 
     
-    }
+  }
 
-    catch (error){ dump("**** ERROR:"+error+"\n\n"); }
+  catch (error){ dump("**** ERROR:"+error+"\n\n"); }
 
-    this.close();
+  this.close();
+
+  return true;
 
 },
 
@@ -420,19 +436,23 @@ rm : function (path) {
 
     this.close();
 
-    if(!path){
-        dump("Missing path in argument . . .\n\n");
-        return;
+    if(!path)
+    {
+      dump("Missing path in argument . . .\n\n");
+      return false;
     }
 
     if(!this.exists(path))
-    return;
+      return false;
 
-    try{ 
+    try
+
+    { 
     this.fileInst            = new FilePath(path);
-    if(this.fileInst.isDirectory()){
-    dump("Sorry file is a directory. Try rmdir() instead . . .\n");
-    return;
+    if(this.fileInst.isDirectory())
+    {
+      dump("Sorry file is a directory. Try rmdir() instead . . .\n");
+      return false;
     }
 
     this.fileInst['delete'](false);
@@ -442,6 +462,8 @@ rm : function (path) {
     catch (error){ dump("**** ERROR:"+error+"\n\n"); }
     this.close();
 
+  return true;
+
 },
 
 /********************* RM *******************************/
@@ -450,23 +472,28 @@ rm : function (path) {
 
 rmdir : function (path) {
 
-    this.close();
+  this.close();
 
-    if(!path){
-        dump("Missing path in argument . . .\n\n");
-        return;
-    }
+  if(!path)
+  {
+    dump("Missing path in argument . . .\n\n");
+    return false;
+  }
 
-    if(!this.exists(path))
-    return;
+  if(!this.exists(path))
+  return false;
 
-    try{ 
-    this.fileInst            = new FilePath(path);
-    this.fileInst['delete'](true);
-    }
+  try
 
-    catch (error){ dump("**** ERROR:"+error+"\n\n"); }
-    this.close();
+  { 
+  this.fileInst            = new FilePath(path);
+  this.fileInst['delete'](true);
+  }
+
+  catch (error){ dump("**** ERROR:"+error+"\n\n"); }
+  this.close();
+
+  return true;
 
 },
 
@@ -476,14 +503,16 @@ rmdir : function (path) {
 
 copy  : function (source, dest) {
 
-  if(!source || !dest){
-  dump('not enough args . . . \n\n');
-  return;
+  if(!source || !dest)
+  {
+    dump('not enough args . . . \n\n');
+    return false;
   }
 
-  if(!this.exists(source)){
-  dump("Sorry, source file "+source+" doesn't exist\n\n");
-  return;
+  if(!this.exists(source))
+  {
+    dump("Sorry, source file "+source+" doesn't exist\n\n");
+    return false;
   }
 
   var fileInst      = new FilePath(source);
@@ -491,40 +520,49 @@ copy  : function (source, dest) {
 
   var copyName      = fileInst.leafName;
 
-  if(fileInst.isDirectory()){
-  dump("Sorry, you can't copy a directory yet\n\n");
-  return
+  if(fileInst.isDirectory())
+  {
+    dump("Sorry, you can't copy a directory yet\n\n");
+    return false;
   }
 
-  if(!this.exists(dest) || !dir.isDirectory()){
-  copyName          = dir.leafName;
-  dump(dir.path.replace(copyName,'')+'\n\n');
-  var dir           = new FilePath(dir.path.replace(copyName,''));
-    if(!this.exists(dir.path)){
-    dump("Sorry, dest directory "+dir.path+" doesn't exist\n\n");
-    return;
+  if(!this.exists(dest) || !dir.isDirectory())
+  {
+    copyName          = dir.leafName;
+    dump(dir.path.replace(copyName,'')+'\n\n');
+    dir               = new FilePath(dir.path.replace(copyName,''));
+    if(!this.exists(dir.path))
+    {
+      dump("Sorry, dest directory "+dir.path+" doesn't exist\n\n");
+      return false;
     }
-      if(!dir.isDirectory()){
-      dump("Sorry, destination dir "+dir.path+" is not a valid dir path\n\n");
-      return;
+      if(!dir.isDirectory())
+      {
+        dump("Sorry, destination dir "+dir.path+" is not a valid dir path\n\n");
+        return false;
       }
   }
 
-  if(this.exists(this.append(dir.path, copyName))){
-  dump('Sorry destination file '+this.append(dir.path, copyName)+' already exists . . .\n\n');
-  return;
+  if(this.exists(this.append(dir.path, copyName)))
+  {
+    dump('Sorry destination file '+this.append(dir.path, copyName)+' already exists . . .\n\n');
+    return false;
   }
 
   dump("copyName = "+copyName+"\n\n");
   dump("dir is directory = "+dir.isDirectory()+"\n\n");
 
-  try{ 
+  try
+
+  { 
   fileInst.copyTo(dir, copyName);
   dump('copy successful!\n\n');
   }
 
   catch (error){ dump("**** ERROR:"+error+"\n\n"); }
   this.close();
+
+  return true;
 
 },
 
@@ -534,12 +572,13 @@ copy  : function (source, dest) {
 
 leaf  : function (path) {
 
-  if(!path){
-  dump('Please enter a file path as arg\n');
-  return null;
+  if(!path)
+  {
+    dump('Please enter a file path as arg\n');
+    return null;
   }
 
-  var fileInst = new FilePath(path);
+  fileInst = new FilePath(path);
 
   return fileInst.leafName;
 
@@ -551,30 +590,32 @@ leaf  : function (path) {
 
 readDir : function (dirPath) {
 
-  if(!dirPath){
-  dump('Please enter a dir path as arg\n');
-  return null;
+  if(!dirPath)
+  {
+    dump('Please enter a dir path as arg\n');
+    return null;
   }
 
-  if(!this.exists(dirPath)){
-  dump("Sorry, directory "+dirPath+" doesn't exist\n\n");
-  return;
+  if(!this.exists(dirPath))
+  {
+    dump("Sorry, directory "+dirPath+" doesn't exist\n\n");
+    return false;
   }
 
   var file      = new FilePath(dirPath);
 
-  if(!file.isDirectory()){
-  dump("Sorry, "+dirPath+" is not a directory\n\n");
-  return;
+  if(!file.isDirectory())
+  {
+    dump("Sorry, "+dirPath+" is not a directory\n\n");
+    return false;
   }
 
   var files     = file.directoryEntries;
   var listings  = new Array();
 
-  while(files.hasMoreElements()){
+  while(files.hasMoreElements())
   listings.push(files.getNext().QueryInterface(Components.interfaces.nsILocalFile).path);
-  }
-
+  
   return listings;
 
 },
@@ -585,22 +626,23 @@ readDir : function (dirPath) {
 
 append : function (dirPath, fileName) {
 
-    if(!dirPath || !fileName){
-        dump("Missing path argument . . . \n\n");
-        return;
+    if(!dirPath || !fileName)
+    {
+      dump("Missing path argument . . . \n\n");
+      return false;
     }
 
     //dump("\n\n**** Checking to see if the directory exists "+fileName+"****\n\n");
     this.exists(dirPath);
 
-    try{ 
+    try
 
-    //if(!this.fileInst)
+    { 
         this.fileInst           = new FilePath(dirPath);
 
+        var fileAppended;
         fileAppended            = this.fileInst.append(fileName);
         fileAppended            = this.fileInst.path;
-
     }
 
     catch(error) { dump("**** ERROR:"+error+"\n\n"); }
@@ -614,12 +656,12 @@ append : function (dirPath, fileName) {
 
 /********************* VALIDATE PERMISSIONS *************/
 
-validatePermissions : function(num){
+validatePermissions : function(num) {
 
     //dump("Checking for valid permission\n\n");
 
     if ( parseInt(num.toString(10).length) < 3 ) 
-        return false;
+      return false;
 
     return true;
 
@@ -629,7 +671,7 @@ validatePermissions : function(num){
 
 /********************* CLOSE ****************************/
 
-close : function(){
+close : function() {
 
     /***************** Destroy Instances *********************/
 
@@ -641,7 +683,8 @@ close : function(){
     if(this.mode)           this.mode=null;
 
     /***************** Destroy Instances *********************/
-
+  
+  return true;
 
 }
 
