@@ -2171,8 +2171,13 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
   NS_ENSURE_ARG_POINTER(destFolder);
   nsCOMPtr<nsISupportsArray> messageArray;
   NS_NewISupportsArray(getter_AddRefs(messageArray));
-  for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++) {
-    nsMsgKey key = m_keys.GetAt(indices[index]);
+  for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++) 
+  {
+    nsMsgKey key;
+    nsMsgViewIndex viewIndex = indices[index];
+    if (viewIndex == nsMsgViewIndex_None)
+      continue;
+    key = m_keys.GetAt(viewIndex);
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
     rv = m_db->GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
     if (NS_SUCCEEDED(rv) && msgHdr)
@@ -2181,7 +2186,7 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
       // if we are deleting rows, save off the keys
       if (m_deletingRows)
         mIndicesToNoteChange.Add(indices[index]);
-  }
+    }
   }
   
   nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
@@ -3998,19 +4003,19 @@ nsresult nsMsgDBView::CollapseByIndex(nsMsgViewIndex index, PRUint32 *pNumCollap
 
 nsresult nsMsgDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool /*ensureListed*/)
 {
-	nsresult rv = NS_MSG_MESSAGE_NOT_FOUND;
-	// views can override this behaviour, which is to append to view.
-	// This is the mail behaviour, but threaded views will want
-	// to insert in order...
-	nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    nsresult rv = NS_MSG_MESSAGE_NOT_FOUND;
+    // views can override this behaviour, which is to append to view.
+    // This is the mail behaviour, but threaded views will want
+    // to insert in order...
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
     NS_ASSERTION(m_db, "m_db is null");
     if (m_db)
       rv = m_db->GetMsgHdrForKey(newKey, getter_AddRefs(msgHdr));
-	if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
-	{
-		rv = AddHdr(msgHdr);
-	}
-	return rv;
+    if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
+    {
+	rv = AddHdr(msgHdr);
+    }
+    return rv;
 }
 
 nsresult nsMsgDBView::GetThreadContainingIndex(nsMsgViewIndex index, nsIMsgThread **resultThread)
