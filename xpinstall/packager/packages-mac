@@ -225,6 +225,8 @@ viewer:chrome:pipnss.jar
 ; to prevent migration bugs
 viewer:defaults:pref:*
 viewer:res:arrow.gif
+viewer:res:loading-image.gif
+viewer:res:broken-image.gif
 viewer:res:charsetalias.properties 
 viewer:res:charsetData.properties 
 viewer:res:langGroups.properties
