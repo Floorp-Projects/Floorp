@@ -74,7 +74,7 @@ public:
 
   nsresult Init();
 
-  void FireOnload();
+  void FireOnLoad();
 
   nsIXMLHttpRequest *XMLHttpRequest()
   {

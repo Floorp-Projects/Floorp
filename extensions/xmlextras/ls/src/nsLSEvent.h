@@ -40,8 +40,11 @@
 #define nsLSEvent_h__
 
 #include "nsIDOMEvent.h"
+#include "nsIDOMLSLoadEvent.h"
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
+#include "nsLSParser.h"
 
 class nsIDOMEventTarget;
 
@@ -63,5 +66,36 @@ protected:
 
   PRTime mTime;
 };
+
+
+class nsLSParserLoadEvent : public nsLSEvent,
+                            public nsIDOMLSLoadEvent
+{
+public:
+  nsLSParserLoadEvent(nsLSParser *aParser)
+    : mParser(aParser)
+  {
+  }
+
+  virtual ~nsLSParserLoadEvent()
+  {
+  }
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMEvent
+  NS_FORWARD_NSIDOMEVENT(nsLSEvent::)
+
+  // nsIDOMLSLoadEvent
+  NS_DECL_NSIDOMLSLOADEVENT
+
+protected:
+  virtual nsresult GetTargetInternal(nsIDOMEventTarget **aTarget);
+  virtual nsresult GetTypeInternal(nsAString& aType);
+
+  nsRefPtr<nsLSParser> mParser;
+};
+
 
 #endif

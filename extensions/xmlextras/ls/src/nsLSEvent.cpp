@@ -129,3 +129,46 @@ nsLSEvent::InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg,
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+// QueryInterface implementation for nsLSParserLoadEvent
+NS_INTERFACE_MAP_BEGIN(nsLSParserLoadEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsLSEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsLSEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMLSLoadEvent)
+  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(LSLoadEvent)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsLSParserLoadEvent)
+NS_IMPL_RELEASE(nsLSParserLoadEvent)
+
+
+nsresult
+nsLSParserLoadEvent::GetTargetInternal(nsIDOMEventTarget **aTarget)
+{
+  NS_ADDREF(*aTarget = mParser.get());
+
+  return NS_OK;
+}
+
+nsresult
+nsLSParserLoadEvent::GetTypeInternal(nsAString& aType)
+{
+  aType = NS_LITERAL_STRING("ls-load");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLSParserLoadEvent::GetNewDocument(nsIDOMDocument **aNewDocument)
+{
+  return mParser->XMLHttpRequest()->GetResponseXML(aNewDocument);
+}
+
+NS_IMETHODIMP
+nsLSParserLoadEvent::GetInput(nsIDOMLSInput **aInput)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+

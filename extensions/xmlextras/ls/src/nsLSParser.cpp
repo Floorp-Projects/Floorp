@@ -44,7 +44,6 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMLSLoadEvent.h"
 
 #include "nsIDOMClassInfo.h"
 
@@ -124,19 +123,21 @@ public:
 
   NS_DECL_NSIDOMEVENTLISTENER
 
-private:
+protected:
   nsRefPtr<nsLSParser> mParser;
 };
+
 
 NS_IMPL_ISUPPORTS1(nsLSParserEventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
 nsLSParserEventListener::HandleEvent(nsIDOMEvent *aEvent)
 {
-  mParser->FireOnload();
+  mParser->FireOnLoad();
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsLSParser::Parse(nsIDOMLSInput *input, nsIDOMDocument **_retval)
@@ -235,78 +236,8 @@ nsLSParser::DispatchEvent(nsIDOMEvent *aEvt, PRBool *_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-class nsLSParserLoadEvent : public nsLSEvent,
-                            public nsIDOMLSLoadEvent
-{
-public:
-  nsLSParserLoadEvent(nsLSParser *aParser)
-    : mParser(aParser)
-  {
-  }
-
-  virtual ~nsLSParserLoadEvent()
-  {
-  }
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMEvent
-  NS_FORWARD_NSIDOMEVENT(nsLSEvent::)
-
-  // nsIDOMLSLoadEvent
-  NS_DECL_NSIDOMLSLOADEVENT
-
-protected:
-  virtual nsresult GetTargetInternal(nsIDOMEventTarget **aTarget);
-  virtual nsresult GetTypeInternal(nsAString& aType);
-
-  nsRefPtr<nsLSParser> mParser;
-};
-
-// QueryInterface implementation for nsLSParserLoadEvent
-NS_INTERFACE_MAP_BEGIN(nsLSParserLoadEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsLSEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsLSEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLSLoadEvent)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(LSLoadEvent)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(nsLSParserLoadEvent)
-NS_IMPL_RELEASE(nsLSParserLoadEvent)
-
-
-nsresult
-nsLSParserLoadEvent::GetTargetInternal(nsIDOMEventTarget **aTarget)
-{
-  NS_ADDREF(*aTarget = mParser.get());
-
-  return NS_OK;
-}
-
-nsresult
-nsLSParserLoadEvent::GetTypeInternal(nsAString& aType)
-{
-  aType = NS_LITERAL_STRING("ls-load");
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLSParserLoadEvent::GetNewDocument(nsIDOMDocument **aNewDocument)
-{
-  return mParser->XMLHttpRequest()->GetResponseXML(aNewDocument);
-}
-
-NS_IMETHODIMP
-nsLSParserLoadEvent::GetInput(nsIDOMLSInput **aInput)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
-nsLSParser::FireOnload()
+nsLSParser::FireOnLoad()
 {
   for (PRInt32 i = 0; i < mLoadListeners.Count(); ++i) {
     nsRefPtr<nsLSParserLoadEvent> event = new nsLSParserLoadEvent(this);
