@@ -231,9 +231,26 @@ IDirectDraw2 *nsRenderingContextWin::mDDraw2 = NULL;
 nsresult nsRenderingContextWin::mDDrawResult = NS_OK;
 #endif
 
+#define NOT_SETUP 0x33
+static PRBool gIsWIN95 = NOT_SETUP;
+
 nsRenderingContextWin :: nsRenderingContextWin()
 {
   NS_INIT_REFCNT();
+
+  // The first time in we initialize gIsWIN95 flag
+  if (NOT_SETUP == gIsWIN95) {
+    OSVERSIONINFO os;
+    os.dwOSVersionInfoSize = sizeof(os);
+    ::GetVersionEx(&os);
+    // XXX This may need tweaking for win98
+    if (VER_PLATFORM_WIN32_NT == os.dwPlatformId) {
+      gIsWIN95 = PR_FALSE;
+    }
+    else {
+      gIsWIN95 = PR_TRUE;
+    }
+  }
 
 #ifdef NGLAYOUT_DDRAW
   CreateDDraw();
@@ -368,8 +385,9 @@ NS_IMPL_QUERY_INTERFACE(nsRenderingContextWin, kRenderingContextIID)
 NS_IMPL_ADDREF(nsRenderingContextWin)
 NS_IMPL_RELEASE(nsRenderingContextWin)
 
-nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
-                                       nsIWidget *aWindow)
+NS_IMETHODIMP
+nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
+                              nsIWidget *aWindow)
 {
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
@@ -392,8 +410,9 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   return CommonInit();
 }
 
-nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
-                                       nsDrawingSurface aSurface)
+NS_IMETHODIMP
+nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
+                              nsDrawingSurface aSurface)
 {
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
@@ -477,7 +496,8 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   return SetupDC(nsnull, mDC);
 }
 
-nsresult nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+NS_IMETHODIMP
+nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
   NS_ASSERTION(!(nsnull != mMainDC), "offscreen surface already selected");
 
@@ -493,6 +513,17 @@ nsresult nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface
   }
 
   return SetupDC(mMainDC, mDC);
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin::GetHints(PRUint32& aResult)
+{
+  PRUint32 result = 0;
+  if (gIsWIN95) {
+    result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
+  }
+  aResult = result;
+  return NS_OK;
 }
 
 void nsRenderingContextWin :: Reset()
@@ -1192,7 +1223,7 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aRect)
   ((nsImageWin *)aImage)->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
 }
 
-nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
+NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
 {
   if ((nsnull != mDC) && (nsnull != mMainDC))
   {

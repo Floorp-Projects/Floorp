@@ -142,8 +142,9 @@ NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
 NS_IMPL_ADDREF(nsRenderingContextUnix)
 NS_IMPL_RELEASE(nsRenderingContextUnix)
 
-nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
-					nsIWidget *aWindow)
+NS_IMETHODIMP
+nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
+                               nsIWidget *aWindow)
 {
 
   if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
@@ -176,8 +177,9 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   return (CommonInit());
 }
 
-nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
-					nsDrawingSurface aSurface)
+NS_IMETHODIMP
+nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
+                               nsDrawingSurface aSurface)
 {
 
   mContext = aContext;
@@ -230,9 +232,22 @@ nsresult nsRenderingContextUnix :: CommonInit()
   return NS_OK;
 }
 
-nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+NS_IMETHODIMP
+nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
   mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextUnix::GetHints(PRUint32& aResult)
+{
+  PRUint32 result = 0;
+
+  // XXX see if we are rendering to the local display or to a remote
+  // dispaly and set the NS_RENDERING_HINT_REMOTE_RENDERING accordingly
+
+  aResult = result;
   return NS_OK;
 }
 
@@ -1085,7 +1100,8 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
   } 
 }
 
-nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
+NS_IMETHODIMP
+nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 {
 
   ::XCopyArea(mRenderingSurface->display, 
