@@ -128,7 +128,6 @@ protected:
 
 
   nsresult ProcessBASETag(nsIContent* aContent);
-  nsresult ProcessMETATag(nsIContent* aContent);
 
   
   // nsContentSink override
