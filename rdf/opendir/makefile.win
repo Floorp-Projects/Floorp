@@ -2,7 +2,7 @@
 # Microsoft Visual C makefile for WAI sample
 
 
-INCLUDES = -I..\..\..\include -I..\..\include
+INCLUDES = -I..\..\..\include -I..\..\include -IC:\Netscape\Suitespot\include -IC:\Netscape\Suitespot\wai\include
 NSLIB = ..\..\..\lib
 WAILIB= c:\netscape\suitespot\wai\lib
 LIBS = $(WAILIB)\ONEiiop10.lib WSOCK32.lib
@@ -16,12 +16,13 @@ OBJS = opendir.o \
        remstore.o \
        hash.o  \
        genopendir.o \
+       gs.o   \
        $(NULL)	
     
 
 all: opendir
 
-opendir: opendir.c rdf.c rdfparse.c remstore.c hash.c genopendir.c
+opendir: opendir.c rdf.c rdfparse.c remstore.c hash.c genopendir.c gs.c
 	$(CC) $(CPPFLAGS) $(LIBS) $? -o  $@
 
 clean:

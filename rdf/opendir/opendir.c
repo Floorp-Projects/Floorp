@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 	WAIregisterService(obj, host);
         RDF_Initialize();
         printf("RDF Initialized!\n");
-        RDF_ReadFile("excite.rdf");
+        RDF_ReadFile("opendir.rdf");
  
         printf("done");
 

@@ -43,7 +43,8 @@ char* RDF_ResourceID(RDF_Resource u);
 int RDF_Assert(RDFT db, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
 int RDF_Unassert (RDFT db, RDF_Resource u, RDF_Resource s,  void* v, RDF_ValueType type);
 
-int RDF_HasAssertion (RDFT db, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
+int RDF_HasAssertion (RDFT db, RDF_Resource u, RDF_Resource s, void* v, 
+                      RDF_ValueType type);
 void* RDF_OnePropValue (RDFT db, RDF_Resource u, RDF_Resource s, RDF_ValueType type);
 RDF_Cursor RDF_GetTargets (RDFT db, RDF_Resource u, RDF_Resource s, RDF_ValueType type);
 RDF_Cursor RDF_GetSourcess (RDFT db, RDF_Resource u, RDF_Resource s);

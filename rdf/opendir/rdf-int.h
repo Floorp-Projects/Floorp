@@ -50,7 +50,8 @@ typedef struct _RDF_ResourceStruct {
 typedef enum {
   GET_SLOT_VALUES,
   ARC_LABELS_IN,
-  ARC_LABELS_OUT
+  ARC_LABELS_OUT,
+  SEARCH
 } QueryType;
 
 
@@ -75,12 +76,14 @@ typedef struct _RDF_CursorStruct {
   RDF_Resource u; 
   RDF_Resource s;
   void *value;
-  struct _RDF_AssertionStruct* pdata;
+  void* pdata;
+  void* pdata1;
   int inversep;
   RDF_ValueType type;
   int count;
   RDFT db;
   QueryType queryType;
+  char* searchString;
 } RDF_CursorStruct;
 
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "rdf-int.h"
-
+#include "gs.h"
 
 int
 asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v, 
@@ -81,6 +81,8 @@ remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
     newAs->invNext  = iu->rarg2;
     iu->rarg2       = newAs;
   }
+  if (type == RDF_STRING_TYPE)   RDFGS_AddSearchIndex(mcf, (char*) v, s, u);
+  
   return newAs;
 }
 
