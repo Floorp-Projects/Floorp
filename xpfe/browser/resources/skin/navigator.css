@@ -208,39 +208,6 @@ spring.personaltoolbarspacer {
    width: 1em;
 }
 
-
-/**
- * Navigation Toolbar
- */
-toolbar#nav-bar {
-	background-image: url("chrome://navigator/skin/navbar-bg.gif");
-	background-repeat: repeat-x;
-	background-position: 0% 0%;
-	background-color: #CCCCCC;
-	padding: 0px;
-	padding-bottom: 4px;
-}
-
-toolbar#nav-bar #toolbar_throbber_box { 
-	background-color: #CCCCCC;
-	min-width: 68px;
-	max-width: 68px;
-	background-image: url("chrome://navigator/skin/n-box-navbar.gif");
-	background-repeat: no-repeat;
-	background-position: 100% 0%;
-}
-
-toolbar#nav-bar titledbutton#Throbber
-{
-	margin-top: 0px;
-	margin-left: 9px;
-}
-
-toolbar#nav-bar titledbutton#Throbber:active {
-	margin-top: 1px;
-	margin-left: 10px;
-}
-
 /**
  * toolbox
  */

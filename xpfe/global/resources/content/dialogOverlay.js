@@ -70,3 +70,14 @@ function moveToAlertPosition()
 	window.moveTo( opener.screenX + xOffset, opener.screenY + yOffset );
 
 }
+
+function centerWindowOnScreen()
+{
+	var xOffset = screen.availWidth/2 - window.outerWidth/2;
+	var yOffset = screen.availHeight/2 - window.outerHeight/2; //(opener.outerHeight *2)/10;
+	
+	xOffset = ( xOffset > 0 ) ? xOffset : 0;
+  yOffset = ( yOffset > 0 ) ? yOffset : 0;
+	dump( "Move window by " + xOffset + ","+yOffset+"\n");
+	window.moveTo( xOffset, yOffset);
+}
