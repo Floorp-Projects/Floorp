@@ -42,8 +42,11 @@
 // Cache capacities in MB, overridable via APIs
 #define DEFAULT_MEMORY_CACHE_CAPACITY  1024
 #define DEFAULT_DISK_CACHE_CAPACITY   10000
+#define DEFAULT_NUM_CACHE_ACCESSED_LIMIT    100
 const char* CACHE_MEM_CAPACITY = "browser.cache.memory_cache_size";
 const char* CACHE_DISK_CAPACITY = "browser.cache.disk_cache_size";
+
+const char * const NUM_CACHE_ACCESSED_LIMIT  = "browser.cache.num.accessed.limit";
 
 static int PR_CALLBACK diskCacheSizeChanged(const char *pref, void *closure)
 {
@@ -79,7 +82,10 @@ NS_IMPL_ISUPPORTS(nsCacheManager, NS_GET_IID(nsINetDataCacheManager))
 nsCacheManager::nsCacheManager()
     : mActiveCacheRecords(0),
     mDiskCacheCapacity(DEFAULT_DISK_CACHE_CAPACITY),
-    mMemCacheCapacity(DEFAULT_MEMORY_CACHE_CAPACITY)
+    mMemCacheCapacity(DEFAULT_MEMORY_CACHE_CAPACITY),
+    mNumCacheAccessed(0),
+    mNumCacheAccessedLimit(DEFAULT_NUM_CACHE_ACCESSED_LIMIT),
+    mRecoveryCleanupNotDone(PR_FALSE)
 {
     NS_ASSERTION(!gCacheManager, "Multiple cache managers created");
     gCacheManager = this;
@@ -92,6 +98,8 @@ nsCacheManager::~nsCacheManager()
     delete mActiveCacheRecords;
     delete mMemSpaceManager;
     delete mDiskSpaceManager;
+    mNumCacheAccessed = 0;
+    mRecoveryCleanupNotDone = PR_FALSE;
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     if ( NS_SUCCEEDED (rv ) )
@@ -105,6 +113,7 @@ nsCacheManager::~nsCacheManager()
 nsresult nsCacheManager::InitPrefs()
 {
 	nsresult rv;
+    PRInt32 numCacheAccessedLimit = DEFAULT_NUM_CACHE_ACCESSED_LIMIT;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
 	if ( NS_FAILED (rv ) )
 		return rv; 
@@ -118,6 +127,14 @@ nsresult nsCacheManager::InitPrefs()
 	// Init the prefs 
 	diskCacheSizeChanged( CACHE_DISK_CAPACITY, this );	
     memCacheSizeChanged( CACHE_MEM_CAPACITY, this );
+    rv = prefs->GetIntPref(NUM_CACHE_ACCESSED_LIMIT, &numCacheAccessedLimit);
+    if ( NS_SUCCEEDED( rv ) )
+    {
+        if (numCacheAccessedLimit)
+        {
+            mNumCacheAccessedLimit = numCacheAccessedLimit;
+        }
+    }
 	return rv;
 }
 
@@ -238,6 +255,18 @@ nsCacheManager::GetCachedNetData(const char *aUriSpec, const char *aSecondaryKey
     nsINetDataCache *cache;
     nsReplacementPolicy *spaceManager;
 	
+
+    mNumCacheAccessed++;
+    if (mNumCacheAccessed)
+    {
+        if (mNumCacheAccessedLimit)
+        {
+            if (mNumCacheAccessed%mNumCacheAccessedLimit == 0)
+            {
+                mRecoveryCleanupNotDone = PR_TRUE;
+            }
+        }
+    }
     rv = GetCacheAndReplacementPolicy( aFlags, cache, spaceManager );
     if (NS_FAILED(rv))
         return rv;
@@ -474,6 +503,23 @@ nsCacheManager::Clear( PRUint32 aCacheToClear )
 			return rv;	
 	}
 	return rv;
+}
+
+NS_IMETHODIMP
+nsCacheManager::RecoveryCleanup()
+{
+    if (mNumCacheAccessed)
+    {
+        if (mRecoveryCleanupNotDone)
+        {
+            if (mDiskCache)
+            {
+                mDiskCache->RecoveryCleanup();
+                mRecoveryCleanupNotDone = PR_FALSE;
+            }
+        }
+    }
+    return NS_OK;
 }
 
 nsresult
