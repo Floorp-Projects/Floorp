@@ -4369,12 +4369,7 @@ nsresult nsEditor::EndUpdateViewBatch()
 #else
       mViewManager->EndUpdateViewBatch();
 #endif
-      nsCOMPtr<nsIPresShell> presShell;
-      rv = GetPresShell(getter_AddRefs(presShell));
-      if (NS_SUCCEEDED(rv) && presShell)
-      {
-        presShell->EndBatchingReflows(PR_TRUE);
-      }
+      presShell->EndBatchingReflows(PR_TRUE);
     }
   }  
 
