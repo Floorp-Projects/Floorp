@@ -928,12 +928,6 @@ qa_stat_init
 
 if [  "$O_TBX" = "ON" -o "$O_LOCAL" = "ON" ] ; then
     tbx_main
-    rm $RESULTDIR/QAstatus
-    if [ $TBX_EXIT = 0 ] ; then
-        echo "QA passed" >${TESTDIR}/QAstatus
-    else
-        echo "QA failed" >${TESTDIR}/QAstatus
-    fi
 else
     qa_stat_main
 fi

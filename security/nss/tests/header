@@ -1323,7 +1323,18 @@ Exit()
     fi
     #chmod a+rw ${RESULTDIR} ${RESULTDIR}/* ${RESULTDIR}/*/* &
     if [ -n "$O_TBX" -a "$O_TBX" = "ON" ] ; then
+        rm ${TESTDIR}/QAstatus
+
+        if [ "$1" = "killed... cleaning up..." ] ; then
+            echo "QA killed" >${TESTDIR}/QAstatus
+        elif [ "$TBX_EXIT" = 0 ] ; then
+            echo "QA passed" >${TESTDIR}/QAstatus
+        else
+            echo "QA failed" >${TESTDIR}/QAstatus
+        fi
+
         exit $TBX_EXIT
+         
     else
         exit
     fi
