@@ -84,8 +84,14 @@ endif
 # Load options from myconfig.sh
 #   (See build pages, http://www.mozilla.org/build/unix.html, 
 #    for how to set up myconfig.sh.)
+#   Check out the conversion script if it hasn't been checked out.
+MYCONFIG2DEFS := build/autoconf/myconfig2defs.sh
 run_for_side_effects := \
-	$(shell build/autoconf/myconfig2defs.sh $(TOPSRCDIR)/.client-defs.mk)
+	$(shell if test ! -f $(TOPSRCDIR)/$(MYCONFIG2DEFS); then \
+		      cd $(ROOTDIR); \
+                      cvs co mozilla/$(MYCONFIG2DEFS); \
+		fi; \
+		$(TOPSRCDIR)/$(MYCONFIG2DEFS) $(TOPSRCDIR)/.client-defs.mk)
 -include $(TOPSRCDIR)/.client-defs.mk
 
 ifdef MOZ_OBJDIR
