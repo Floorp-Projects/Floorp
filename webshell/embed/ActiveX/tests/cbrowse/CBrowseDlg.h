@@ -39,6 +39,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
 	enum { IDD = IDD_CBROWSE_DIALOG };
+	CButton	m_btnEditMode;
 	CComboBox	m_cmbURLs;
 	BOOL	m_bNewWindow;
 	//}}AFX_DATA
@@ -77,6 +78,7 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnEditMode();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

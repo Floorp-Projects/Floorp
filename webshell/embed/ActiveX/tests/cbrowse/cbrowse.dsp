@@ -128,6 +128,14 @@ SOURCE=..\..\ControlSiteIPFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditToolBar.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\MozActiveX.java
+# End Source File
+# Begin Source File
+
 SOURCE=.\PickerDlg.cpp
 # End Source File
 # Begin Source File
@@ -197,6 +205,10 @@ SOURCE=..\..\ControlSiteIPFrame.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditToolBar.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PickerDlg.h
 # End Source File
 # Begin Source File
@@ -262,6 +274,10 @@ SOURCE=.\res\testfailed.ico
 # Begin Source File
 
 SOURCE=.\res\testpassed.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\toolbar1.bmp
 # End Source File
 # End Group
 # Begin Group "Scripts"

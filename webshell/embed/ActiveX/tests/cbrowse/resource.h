@@ -18,6 +18,7 @@
 #define IDD_TAB_MESSAGES                135
 #define IDD_TAB_TESTS                   136
 #define IDD_TAB_DOM                     137
+#define IDR_DHTMLEDIT                   138
 #define IDC_URL                         1000
 #define IDC_GO                          1001
 #define IDC_BROWSER_MARKER              1002
@@ -39,14 +40,23 @@
 #define IDC_PROGRESS                    1020
 #define IDC_CHECK1                      1021
 #define IDC_EDIT1                       1022
+#define IDC_EDITMODE                    1023
+#define IDB_BOLD                        32771
+#define IDB_ITALIC                      32772
+#define IDB_UNDERLINE                   32773
+#define IDB_H1                          32774
+#define IDB_H2                          32775
+#define IDB_PARAGRAPH                   32776
+#define ID_ORDEREDLIST                  32777
+#define IDB_UNORDEREDLIST               32778
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
-#define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_RESOURCE_VALUE        140
+#define _APS_NEXT_COMMAND_VALUE         32779
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           107
 #endif
 #endif

@@ -103,16 +103,18 @@ CAPTION "CBrowse"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "",IDC_TAB_MARKER,"Static",SS_BLACKFRAME,7,223,279,89
-    RTEXT           "&URL:",IDC_STATIC,6,8,18,8
-    DEFPUSHBUTTON   "&Go",IDC_GO,134,7,25,13
-    CONTROL         "",IDC_BROWSER_MARKER,"Static",SS_BLACKFRAME,7,25,279,
-                    191
-    COMBOBOX        IDC_URL,26,7,106,52,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
+    RTEXT           "&URL:",IDC_STATIC,6,13,18,8
+    DEFPUSHBUTTON   "&Go",IDC_GO,134,11,25,13
+    CONTROL         "",IDC_BROWSER_MARKER,"Static",SS_BLACKFRAME,7,29,279,
+                    187
+    COMBOBOX        IDC_URL,26,11,106,52,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "<",IDC_BACKWARD,162,7,14,13
-    PUSHBUTTON      ">",IDC_FORWARD,178,7,14,13
+    PUSHBUTTON      "<",IDC_BACKWARD,162,11,14,13
+    PUSHBUTTON      ">",IDC_FORWARD,178,11,14,13
     CONTROL         "&New window",IDC_NEWWINDOW,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,200,9,57,10
+                    WS_TABSTOP,199,7,53,10
+    CONTROL         "&Edit mode",IDC_EDITMODE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,199,17,47,10
 END
 
 
@@ -323,6 +325,33 @@ END
 //
 
 IDR_CBROWSERCTLSITE     REGISTRY DISCARDABLE    "CBrowserCtlSite.rgs"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_DHTMLEDIT TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      IDB_BOLD
+    BUTTON      IDB_ITALIC
+    BUTTON      IDB_UNDERLINE
+    SEPARATOR
+    BUTTON      IDB_H1
+    BUTTON      IDB_H2
+    BUTTON      IDB_PARAGRAPH
+    SEPARATOR
+    BUTTON      ID_ORDEREDLIST
+    BUTTON      IDB_UNORDEREDLIST
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_DHTMLEDIT           BITMAP  DISCARDABLE     "res\\toolbar1.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

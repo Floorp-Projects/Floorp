@@ -62,6 +62,7 @@ void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CBrowseDlg)
+	DDX_Control(pDX, IDC_EDITMODE, m_btnEditMode);
 	DDX_Control(pDX, IDC_URL, m_cmbURLs);
 	DDX_Check(pDX, IDC_NEWWINDOW, m_bNewWindow);
 	//}}AFX_DATA_MAP
@@ -77,6 +78,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
+	ON_BN_CLICKED(IDC_EDITMODE, OnEditMode)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -685,4 +687,22 @@ void CBrowseDlg::OnDestroy()
 {
 	CDialog::OnDestroy();
 	delete this;	
+}
+
+void CBrowseDlg::OnEditMode() 
+{
+	CComPtr<IUnknown> spUnkBrowser;
+	m_pControlSite->GetControlUnknown(&spUnkBrowser);
+
+	CIPtr(IOleCommandTarget) spCommandTarget = spUnkBrowser;
+	if (spCommandTarget)
+	{
+		DWORD nCmdID = (m_btnEditMode.GetCheck()) ? IDM_EDITMODE : IDM_BROWSEMODE;
+		spCommandTarget->Exec(&CGID_MSHTML, nCmdID, 0, NULL, NULL);
+	}
+
+//	if (m_pControlSite)
+//	{
+//		m_pControlSite->SetAmbientUserMode((m_btnEditMode.GetCheck() == 0) ? FALSE : TRUE);
+//	}
 }
