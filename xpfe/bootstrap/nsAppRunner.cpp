@@ -627,6 +627,7 @@ void DumpHelp(char *appname)
   printf("  -width <value>   Set width of startup window to <value>.\n");
   printf("  -v or -version   Print %s version.\n", appname);
   printf("  -CreateProfile <profile>    Create and start with <profile>.\n");
+  printf("  -P <profile>     Start with <profile>.\n");
   printf("  -ProfileWizard   Start with profile wizard.\n");
   printf("  -ProfileManager  Start with profile manager.\n");
   printf("  -SelectProfile   Start with profile selection dialog.\n");
