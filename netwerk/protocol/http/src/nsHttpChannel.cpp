@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim:expandtab:ts=4 sw=4:
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -3162,7 +3163,7 @@ nsHttpChannel::SetRedirectionLimit(PRUint32 value)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetContentEncodings(nsISimpleEnumerator** aEncodings)
+nsHttpChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings)
 {
     NS_PRECONDITION(aEncodings, "Null out param");
     const char *encoding = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
@@ -3173,8 +3174,9 @@ nsHttpChannel::GetContentEncodings(nsISimpleEnumerator** aEncodings)
     nsContentEncodings* enumerator = new nsContentEncodings(this, encoding);
     if (!enumerator)
         return NS_ERROR_OUT_OF_MEMORY;
-    
-    return CallQueryInterface(enumerator, aEncodings);
+
+    NS_ADDREF(*aEncodings = enumerator);
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -3704,7 +3706,7 @@ nsHttpChannel::nsContentEncodings::~nsContentEncodings()
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::nsContentEncodings::HasMoreElements(PRBool* aMoreEncodings)
+nsHttpChannel::nsContentEncodings::HasMore(PRBool* aMoreEncodings)
 {
     if (mReady) {
         *aMoreEncodings = PR_TRUE;
@@ -3717,9 +3719,9 @@ nsHttpChannel::nsContentEncodings::HasMoreElements(PRBool* aMoreEncodings)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
+nsHttpChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
 {
-    *aNextEncoding = nsnull;
+    aNextEncoding.Truncate();
     if (!mReady) {
         nsresult rv = PrepareForNext();
         if (NS_FAILED(rv)) {
@@ -3733,16 +3735,11 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
     encoding.BeginReading(start);
     encoding.EndReading(end);
 
-    nsCOMPtr<nsISupportsCString> str;
-    str = do_CreateInstance("@mozilla.org/supports-cstring;1");
-    if (!str)
-        return NS_ERROR_FAILURE;
-
     PRBool haveType = PR_FALSE;
     if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("gzip"),
                                       start,
                                       end)) {
-        str->SetData(NS_LITERAL_CSTRING(APPLICATION_GZIP));
+        aNextEncoding = NS_LITERAL_CSTRING(APPLICATION_GZIP);
         haveType = PR_TRUE;
     }
 
@@ -3751,7 +3748,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
         if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("compress"),
                                           start,
                                           end)) {
-            str->SetData(NS_LITERAL_CSTRING(APPLICATION_COMPRESS));
+            aNextEncoding = NS_LITERAL_CSTRING(APPLICATION_COMPRESS);
                                            
             haveType = PR_TRUE;
         }
@@ -3762,7 +3759,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
         if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("deflate"),
                                           start,
                                           end)) {
-            str->SetData(NS_LITERAL_CSTRING(APPLICATION_ZIP));
+            aNextEncoding = NS_LITERAL_CSTRING(APPLICATION_ZIP);
             haveType = PR_TRUE;
         }
     }
@@ -3772,7 +3769,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
     mReady = PR_FALSE;
     
     if (haveType)
-        return CallQueryInterface(str, aNextEncoding);
+        return NS_OK;
 
     NS_WARNING("Unknown encoding type");
     return NS_ERROR_FAILURE;
@@ -3782,7 +3779,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
 // nsHttpChannel::nsContentEncodings::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsHttpChannel::nsContentEncodings, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS1(nsHttpChannel::nsContentEncodings, nsIUTF8StringEnumerator)
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsContentEncodings <private>

@@ -22,7 +22,7 @@
 
 #include "nsISupports.idl"
 
-interface nsISimpleEnumerator;
+interface nsIUTF8StringEnumerator;
 /**
  * A channel interface which allows special handling of encoded content
  */
@@ -47,7 +47,7 @@ interface nsIEncodedChannel : nsISupports
      * Also note that contentEncodings only exist during or after OnStartRequest.
      * Calling contentEncodings before OnStartRequest is an error.
      */
-    readonly attribute nsISimpleEnumerator contentEncodings;
+    readonly attribute nsIUTF8StringEnumerator contentEncodings;
 
     /**
      * This attribute controls whether or not content conversion should be
