@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Igor Bukanov
  * Frank Mitchell
  * Mike Shaver
  *
@@ -387,8 +388,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             }
             else {
                 Object javaObj = fromObj;
-                if (javaObj instanceof NativeJavaObject) {
-                    javaObj = ((NativeJavaObject)javaObj).unwrap();
+                if (javaObj instanceof Wrapper) {
+                    javaObj = ((Wrapper)javaObj).unwrap();
                 }
                 if (to.isInstance(javaObj)) {
                     result = CONVERSION_NONTRIVIAL;

@@ -136,9 +136,9 @@ public class NativeJavaArray extends NativeJavaObject {
     }
 
     public boolean hasInstance(Scriptable value) {
-        if (!(value instanceof NativeJavaObject))
+        if (!(value instanceof Wrapper))
             return false;
-        Object instance = ((NativeJavaObject)value).unwrap();
+        Object instance = ((Wrapper)value).unwrap();
         return cls.isInstance(instance);
     }
 

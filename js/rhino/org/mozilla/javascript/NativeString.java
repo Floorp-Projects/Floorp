@@ -52,7 +52,7 @@ import java.util.Vector;
  * @author Mike McCabe
  * @author Norris Boyd
  */
-public class NativeString extends ScriptableObject implements Wrapper {
+public class NativeString extends ScriptableObject {
 
     /**
      * Zero-parameter constructor: just used to create String.prototype
@@ -702,15 +702,6 @@ public class NativeString extends ScriptableObject implements Wrapper {
         return new Boolean(target.equalsIgnoreCase(strOther));
     }
    
-   
-   /**
-     * Unwrap this NativeString as a j.l.String for LiveConnect use.
-     */
-
-    public Object unwrap() {
-        return string;
-    }
-
     public static Object jsFunction_match(Context cx, Scriptable thisObj,
                                           Object[] args, Function funObj)
         throws JavaScriptException

@@ -208,10 +208,9 @@ public class NativeJavaPackage extends ScriptableObject {
                                                  Object[] args, 
                                                  Function funObj)
     {
-        if (args.length > 0  && args[0] instanceof NativeJavaObject) {
-            NativeJavaObject nativeJavaObj = (NativeJavaObject) args[0];
+        if (args.length > 0  && args[0] instanceof Wrapper) {
             Scriptable result = getTopLevelScope(thisObj);
-            Class cl = nativeJavaObj.unwrap().getClass();
+            Class cl = ((Wrapper) args[0]).unwrap().getClass();
             // Evaluate the class name by getting successive properties of 
             // the string to find the appropriate NativeJavaClass object
             String name = "Packages." + cl.getName();

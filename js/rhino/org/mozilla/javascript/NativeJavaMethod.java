@@ -100,8 +100,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 return "string";
             if (ScriptRuntime.NumberClass.isAssignableFrom(type))
                 return "number";
-            if (value instanceof NativeJavaObject) {
-                return ((NativeJavaObject)value).unwrap().getClass().getName();
+            if (value instanceof Wrapper) {
+                return ((Wrapper)value).unwrap().getClass().getName();
             }
             if (value instanceof Scriptable) {
                 if (value instanceof Function)
@@ -198,7 +198,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             javaObject = null;  // don't need an object
         } else {
             Scriptable o = thisObj;
-            while (!(o instanceof NativeJavaObject)) {
+            while (!(o instanceof Wrapper)) {
                 o = o.getPrototype();
                 if (o == null) {
                     Object errArgs[] = { names[0] };
@@ -206,7 +206,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                         Context.getMessage("msg.nonjava.method", errArgs));
                 }
             }
-            javaObject = ((NativeJavaObject) o).unwrap();        
+            javaObject = ((Wrapper) o).unwrap();        
         }
         try {
             if (debug) {

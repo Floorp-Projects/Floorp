@@ -1580,11 +1580,11 @@ public class ScriptRuntime {
                 if (typeX == ScriptableClass) {
                     if (x == y)
                         return true;
-                    if (x instanceof NativeJavaObject &&
-                        y instanceof NativeJavaObject)
+                    if (x instanceof Wrapper &&
+                        y instanceof Wrapper)
                     {
-                        return ((NativeJavaObject) x).unwrap() ==
-                               ((NativeJavaObject) y).unwrap();
+                        return ((Wrapper) x).unwrap() ==
+                               ((Wrapper) y).unwrap();
                     }
                     return false;
                 }
@@ -1660,9 +1660,9 @@ public class ScriptRuntime {
         if (type == ScriptableClass) {
             if (x == y)
                 return true;
-            if (x instanceof NativeJavaObject && y instanceof NativeJavaObject)
-                return ((NativeJavaObject) x).unwrap() ==
-                       ((NativeJavaObject) y).unwrap();
+            if (x instanceof Wrapper && y instanceof Wrapper)
+                return ((Wrapper) x).unwrap() ==
+                       ((Wrapper) y).unwrap();
             return false;
         }
         if (type == UndefinedClass)
