@@ -158,6 +158,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mFont               = nsnull;
     mOS2Toolkit         = nsnull;
     mIsScrollBar         = FALSE;
+    mInSetFocus         = FALSE;
 
   mIsTopWidgetWindow = PR_FALSE;
 }
@@ -1400,10 +1401,15 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
     }
     else
     if (mWnd) {
+        if (!mInSetFocus) {
 #ifdef DEBUG_FOCUS
-        printf("[%x] SetFocus (%d)\n", this, mWindowIdentifier);
+           printf("[%x] SetFocus (%d)\n", this, mWindowIdentifier);
 #endif
-        WinSetFocus( HWND_DESKTOP, mWnd);
+           mInSetFocus = TRUE;
+           WinSetFocus( HWND_DESKTOP, mWnd);
+           mInSetFocus = FALSE;
+        }
+
     }
     return NS_OK;
 }
