@@ -392,7 +392,9 @@ function GetActualSize()
 function SetActualSize()
 {
   dialog.widthInput.value = actualWidth ? actualWidth : "";
+  dialog.widthUnitsMenulist.selectedIndex = 0;
   dialog.heightInput.value = actualHeight ? actualHeight : "";
+  dialog.heightUnitsMenulist.selectedIndex = 0;
   doDimensionEnabling();
 }
 
@@ -466,8 +468,12 @@ function doDimensionEnabling()
 
   // Counteracting another weird caret 
   //  (appears in Height input, but not really focused!)
-  if (enable)
-    dialog.widthInput.focus();
+
+// not sure why we want to give the width field focus;
+// it certainly doesn't make sense to do this in a generic 
+// enable/disable function which could be called at any time
+  //if (enable)
+  //  dialog.widthInput.focus();
 }
 
 function doOverallEnabling()
@@ -487,25 +493,22 @@ function doOverallEnabling()
 
 function ToggleConstrain()
 {
-  // If just turned on, save the current width and height as basis for constrian ratio
+  // If just turned on, save the current width and height as basis for constrain ratio
   // Thus clicking on/off lets user say "Use these values as aspect ration"
-  if (dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled)
+  if (dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled
+     && (dialog.widthUnitsMenulist.selectedIndex == 0)
+     && (dialog.heightUnitsMenulist.selectedIndex == 0))
   {
     constrainWidth = Number(dialog.widthInput.value.trimString());
     constrainHeight = Number(dialog.heightInput.value.trimString());
   }
-  document.getElementById('widthInput').focus()
+// the following line is *really* annoying!
+//  document.getElementById('widthInput').focus()
 
 }
 
 function constrainProportions( srcID, destID )
 {
-  // Return if we don't have proper data or checkbox isn't checked and enabled
-//  if (!constrainWidth || !constrainHeight ||
-  if (!actualWidth || !actualHeight ||
-      !(dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled))
-    return;
-  
   var srcElement = document.getElementById ( srcID );
   if ( !srcElement )
     return;
@@ -514,9 +517,23 @@ function constrainProportions( srcID, destID )
   if ( !destElement )
     return;
 
+  // always force an integer (whether we are constraining or not)
   forceInteger( srcID );
 
+//  if (!constrainWidth || !constrainHeight ||
+  if (!actualWidth || !actualHeight ||
+      !(dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled))
+    return;
+ 
+  // double-check that neither width nor height is in percent mode; bail if so!
+  if ( (dialog.widthUnitsMenulist.selectedIndex != 0)
+     || (dialog.heightUnitsMenulist.selectedIndex != 0) ) 
+    return;
+
   // This always uses the actual width and height ratios
+  // which is kind of funky if you change one number without the constrain
+  // and then turn constrain on and change a number
+  // I prefer the old strategy (below) but I can see some merit to this solution 
   if (srcID == "widthInput")
     destElement.value = Math.round( srcElement.value * actualHeight / actualWidth );
   else
