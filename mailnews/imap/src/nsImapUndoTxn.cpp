@@ -209,7 +209,7 @@ nsImapMoveCopyMsgTxn::RedoTransaction(void)
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
 	if (NS_FAILED(rv)) return rv;
-	if (m_isMove)
+	if (m_isMove || !m_dstFolder)
     {
         if (m_srcIsPop3)
         {

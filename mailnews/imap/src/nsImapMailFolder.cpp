@@ -1779,12 +1779,10 @@ nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsC
 
 nsresult nsImapMailFolder::MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBool deleted, nsIMsgDatabase *db)
 {
-  PRBool allKeysImapDeleted;
-  db->AllMsgKeysImapDeleted(keyArray, &allKeysImapDeleted);
-	for (PRUint32 kindex = 0; kindex < keyArray->GetSize(); kindex++)
-	{
-		nsMsgKey key = keyArray->ElementAt(kindex);
-    db->MarkImapDeleted(key, deleted || !allKeysImapDeleted, nsnull);
+  for (PRUint32 kindex = 0; kindex < keyArray->GetSize(); kindex++)
+  {
+    nsMsgKey key = keyArray->ElementAt(kindex);
+    db->MarkImapDeleted(key, deleted, nsnull);
   }
   return NS_OK;
 }
@@ -3904,10 +3902,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 }
               }
             }
-            NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
-
           }
-
           break;
         case nsIImapUrl::nsImapAddMsgFlags:
         {
@@ -5367,13 +5362,13 @@ nsImapMailCopyState::~nsImapMailCopyState()
     PR_FREEIF(m_dataBuffer);
     if (m_msgService && m_message)
     {
-        nsCOMPtr<nsIRDFResource> msgNode(do_QueryInterface(m_message));
-        if (msgNode)
-        {
-            nsXPIDLCString uri;
-            msgNode->GetValue(getter_Copies(uri));
-            ReleaseMessageServiceFromURI(uri, m_msgService);
-        }
+      nsCOMPtr <nsIMsgFolder> srcFolder = do_QueryInterface(m_srcSupport);
+      if (srcFolder)
+      {
+        nsXPIDLCString uri;
+        srcFolder->GetUriForMsg(m_message, getter_Copies(uri));
+        ReleaseMessageServiceFromURI(uri, m_msgService);
+      }
     }
     if (m_tmpFileSpec)
     {

@@ -124,11 +124,11 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
   }
   if (m_messageService)
   {
-    nsCOMPtr<nsIRDFResource> msgNode(do_QueryInterface(m_message));
-    if (msgNode)
+    nsCOMPtr <nsIMsgFolder> srcFolder = do_QueryInterface(m_srcSupport);
+    if (srcFolder && m_message)
     {
       nsXPIDLCString uri;
-      msgNode->GetValue(getter_Copies(uri));
+      srcFolder->GetUriForMsg(m_message, getter_Copies(uri));
       ReleaseMessageServiceFromURI(uri, m_messageService);
     }
   }
