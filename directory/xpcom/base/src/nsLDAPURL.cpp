@@ -244,11 +244,16 @@ NS_IMETHODIMP nsLDAPURL::Equals(nsIURI *other, PRBool *_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// boolean schemeIs(in PRUint32 scheme);
+// boolean schemeIs(in const char * scheme);
 //
-NS_IMETHODIMP nsLDAPURL::SchemeIs(PRUint32 i_Scheme, PRBool *o_Equals)
+NS_IMETHODIMP nsLDAPURL::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 {
-    *o_Equals = (i_Scheme == nsIURI::LDAP);
+    if (!i_Scheme) return NS_ERROR_INVALID_ARG;
+    id (*i_Scheme == 'l' || *i_Scheme == 'L') {
+        *o_Equals = PL_strcasecmp("ldap", i_Scheme) ? PR_FALSE : PR_TRUE;
+    } else {
+        *o_Equals = PR_FALSE;
+    }
 
     return NS_OK;
 }

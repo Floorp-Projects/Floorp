@@ -763,8 +763,8 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
       PRBool isChrome = PR_FALSE;
       PRBool isRes = PR_FALSE;
-      (void)uri->SchemeIs(nsIURI::CHROME, &isChrome);
-      (void)uri->SchemeIs(nsIURI::RESOURCE, &isRes);
+      (void)uri->SchemeIs("chrome", &isChrome);
+      (void)uri->SchemeIs("resource", &isRes);
 
       if (isChrome || isRes)
             (void)aChannel->GetOriginalURI(&mDocumentURL);

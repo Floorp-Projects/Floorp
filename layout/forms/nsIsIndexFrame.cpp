@@ -444,7 +444,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     nsXPIDLCString scheme;
     PRBool isJSURL = PR_FALSE;
     if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL))) {
-      result = actionURL->SchemeIs(nsIURI::JAVASCRIPT, &isJSURL);
+      result = actionURL->SchemeIs("javascript", &isJSURL);
     }
     // Append the URI encoded variable/value pairs for GET's
     if (!isJSURL) { // Not for JS URIs, see bug 26917

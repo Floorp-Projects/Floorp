@@ -96,8 +96,8 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
         PRBool isFile = PR_FALSE;
         PRBool isRes = PR_FALSE;
 
-        if (NS_FAILED(mURI->SchemeIs(nsIURI::FILE, &isFile)) || 
-            NS_FAILED(mURI->SchemeIs(nsIURI::RESOURCE, &isRes)) ||
+        if (NS_FAILED(mURI->SchemeIs("file", &isFile)) || 
+            NS_FAILED(mURI->SchemeIs("resource", &isRes)) ||
             (!isFile && !isRes))
         {
             *result = nsIPrincipal::ENABLE_DENIED;

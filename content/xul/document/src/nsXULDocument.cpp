@@ -174,7 +174,7 @@ static PRBool IsChromeURI(nsIURI* aURI)
 {
     // why is this check a member function of nsXULDocument? -gagan
     PRBool isChrome=PR_FALSE;
-    if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) && isChrome)
+    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
         return PR_TRUE;
     return PR_FALSE;
 }

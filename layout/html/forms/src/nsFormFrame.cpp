@@ -806,7 +806,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
       nsXPIDLCString scheme;
       PRBool isMailto = PR_FALSE;
-      if (actionURL && NS_FAILED(result = actionURL->SchemeIs(nsIURI::MAILTO,
+      if (actionURL && NS_FAILED(result = actionURL->SchemeIs("mailto",
                       &isMailto)))
         return result;
       if (isMailto) {

@@ -82,8 +82,8 @@ static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 {
   PRBool isChrome = PR_FALSE;
   PRBool isResource = PR_FALSE;
-  if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) && 
-      NS_SUCCEEDED(aURI->SchemeIs(nsIURI::RESOURCE, &isResource)))
+  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && 
+      NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)))
       return (isChrome || isResource);
   return PR_FALSE;
 }
@@ -91,7 +91,7 @@ static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 static PRBool IsResourceURI(nsIURI* aURI)
 {
   PRBool isResource = PR_FALSE;
-  if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::RESOURCE, &isResource)) && isResource)
+  if (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) && isResource)
       return PR_TRUE; 
   return PR_FALSE;
 }

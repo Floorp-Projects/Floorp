@@ -860,7 +860,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   // The following check takes the place of nsScriptSecurityManager::CheckLoadURI
   // since loads of http URLs are always allowed.
   PRBool isHTTP = PR_FALSE;
-  uri->SchemeIs(nsIURI::HTTP, &isHTTP);
+  uri->SchemeIs("http", &isHTTP);
   if (!isHTTP)
       return NS_ERROR_INVALID_ARG;
 

@@ -204,8 +204,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     PRBool isChrome = PR_FALSE;
     PRBool isRes = PR_FALSE;
 
-    url->SchemeIs(nsIURI::CHROME, &isChrome);
-    url->SchemeIs(nsIURI::RESOURCE, &isRes);
+    url->SchemeIs("chrome", &isChrome);
+    url->SchemeIs("resource", &isRes);
     if (!isChrome && !isRes)
       return NS_OK;
 

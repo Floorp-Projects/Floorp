@@ -1090,7 +1090,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 static PRBool IsChromeURI(nsIURI* aURI)
 {
     PRBool isChrome=PR_FALSE;
-    if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) && isChrome)
+    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
         return PR_TRUE;
     return PR_FALSE;
 }
