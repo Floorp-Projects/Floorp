@@ -17,6 +17,7 @@
  */
 
 #include "nsIThread.h"
+#include "nsIRunnable.h"
 #if 0   // obsolete old implementation
 #include "nsIByteBufferInputStream.h"
 #endif
