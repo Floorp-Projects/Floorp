@@ -284,9 +284,8 @@ PR_GetLibraryPath()
 
     ev = getenv("LD_LIBRARY_PATH");
     
-    /* if we couldn't find something make up a default */
     if (!ev)
-        ev = "/usr/local/netscape;/usr/local/netscape/java/bin"; /* do we put the classes in here too? */
+        ev = "";
     
     len = strlen(ev) + 1;        /* +1 for the null */
     p = (char*) PR_MALLOC(len);
@@ -300,10 +299,7 @@ PR_GetLibraryPath()
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #if defined(USE_DLFCN) || defined(USE_MACH_DYLD) || defined(XP_BEOS)
     {
-    char *home;
-    char *local;
     char *p=NULL;
-    char * mozilla_home=NULL;
     int len;
 
 #ifdef XP_BEOS
@@ -317,46 +313,14 @@ PR_GetLibraryPath()
         ev = "/usr/lib:/lib";
     }
 #endif
-    home = getenv("HOME");
-
-    /*
-    ** Augment the path automatically by adding in ~/.netscape and
-    ** /usr/local/netscape
-    */
     len = strlen(ev) + 1;        /* +1 for the null */
-    if (home && home[0]) {
-        len += strlen(home) + 1;    /* +1 for the colon */
-    }
 
-    mozilla_home = getenv("MOZILLA_HOME");
-    if (mozilla_home && mozilla_home[0]) {
-      len += strlen(mozilla_home) + 5 ;  /* +5 for initial : and trailing "/lib" */
-    }
-
-#ifdef XP_BEOS
-    local = ":~/config/netscape/lib" PR_LINKER_ARCH;
-#else
-    local = ":/usr/local/netscape/lib/" PR_LINKER_ARCH;
-#endif
-    len += strlen(local);        /* already got the : */
-    p = (char*) PR_MALLOC(len+50);
+    p = (char*) PR_MALLOC(len);
     if (p) {
         strcpy(p, ev);
-        if (home) {
-            strcat(p, ":");
-            strcat(p, home);
-        }
-        if (mozilla_home && mozilla_home[0]) {
-          strcat(p, ":");
-          strcat(p, mozilla_home); 
-          strcat(p, "/lib");
-        }
-        strcat(p, local);
     }   /* if (p)  */
     ev = p;
     PR_LOG(_pr_io_lm, PR_LOG_NOTICE, ("linker path '%s'", ev));
-
-        printf("linker_path = %s\n", ev); 
 
     }
 #else
