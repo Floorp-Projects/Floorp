@@ -30,9 +30,9 @@ function goQuitApplication()
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	var enumerator = windowManagerInterface.getEnumerator( null );
 	
-	while ( enumerator.HasMoreElements()  )
+	while ( enumerator.hasMoreElements()  )
 	{
-		var  windowToClose = enumerator.GetNext();
+		var  windowToClose = enumerator.getNext();
 		var domWindow = windowManagerInterface.convertISupportsToDOMWindow( windowToClose );
 		domWindow.focus();
 		if ( domWindow.tryToClose == null )

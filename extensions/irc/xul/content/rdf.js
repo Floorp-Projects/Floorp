@@ -157,9 +157,9 @@ function rdf_inittree (n1, a, recurse)
 
     var targets = this.ds.GetTargets(n1, a, true);
 
-    while (targets.HasMoreElements())
+    while (targets.hasMoreElements())
     {
-        var n2 = targets.GetNext().QueryInterface(nsIRDFNode);
+        var n2 = targets.getNext().QueryInterface(nsIRDFNode);
 
         if (recurse)
         {
@@ -168,9 +168,9 @@ function rdf_inittree (n1, a, recurse)
                 var resN2 = n2.QueryInterface(nsIRDFResource);
                 var arcs = this.ds.ArcLabelsOut(resN2);
 
-                while (arcs.HasMoreElements())
+                while (arcs.hasMoreElements())
                 {
-                    arc = arcs.GetNext().QueryInterface(nsIRDFNode);
+                    arc = arcs.getNext().QueryInterface(nsIRDFNode);
                     this.clearTargets (resN2, arc, true);
                 }
             }

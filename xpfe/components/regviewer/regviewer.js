@@ -74,8 +74,8 @@ function OnSelect(event)
 
       var source = RDF.GetResource(uri);
       var arcs = Registry.ArcLabelsOut(source);
-      while (arcs.HasMoreElements()) {
-          var property = arcs.GetNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      while (arcs.hasMoreElements()) {
+          var property = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
           if (property == kRegistry_Subkeys)
               continue;
 

@@ -329,9 +329,9 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
   if ( !enumerator )
     return false;
 
-  while ( enumerator.HasMoreElements() )
+  while ( enumerator.hasMoreElements() )
   {
-    var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.GetNext() );
+    var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
     if ( window )
     {
       var didFindWindow = editorShell.checkOpenWindowForURLMatch(urlToMatch, window)

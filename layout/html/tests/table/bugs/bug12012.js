@@ -372,8 +372,8 @@ function ReadAndSort () {
 		allAppts = new Array();
 	
 		try {
-			while (enumerator.HasMoreElements()) {
-				var service = enumerator.GetNext().QueryInterface(
+			while (enumerator.hasMoreElements()) {
+				var service = enumerator.getNext().QueryInterface(
 												Components.interfaces.nsIRDFResource);
 		
 				// get the title text

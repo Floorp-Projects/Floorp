@@ -296,8 +296,8 @@ function getDirectoryContents(parentElement, dirContents)
 
   var splitFilters = currentFilter.split("; ");
 
-  while (dirContents.HasMoreElements()) {
-    var file = dirContents.GetNext().QueryInterface(nsILocalFile);
+  while (dirContents.hasMoreElements()) {
+    var file = dirContents.getNext().QueryInterface(nsILocalFile);
 
     /* split up the current filter since there might be more than one thing in it */
     try {

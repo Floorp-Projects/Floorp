@@ -349,9 +349,9 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
       var emailAddress = {};
       var name = {};
 
-      while (enumerator.HasMoreElements())
+      while (enumerator.hasMoreElements())
       {
-        var headerResult = enumerator.GetNext();
+        var headerResult = enumerator.getNext();
         headerResult = enumerator.QueryInterface(Components.interfaces.nsIMsgHeaderParserResult);
         
         // get the email and name fields

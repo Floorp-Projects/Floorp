@@ -131,8 +131,8 @@ function dataSourceToObject(datasource, root)
     var result = null;
     var arcs = datasource.ArcLabelsOut(root);
 
-    while (arcs.HasMoreElements()) {
-        var arc = arcs.GetNext().QueryInterface(nsIRDFResource);
+    while (arcs.hasMoreElements()) {
+        var arc = arcs.getNext().QueryInterface(nsIRDFResource);
 
         var arcName = arc.Value;
         arcName = arcName.substring(NClength, arcName.length);

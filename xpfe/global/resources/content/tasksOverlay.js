@@ -173,7 +173,7 @@ function CycleWindow( inType, inChromeURL )
 	}
 	
 	var enumerator = windowManagerInterface.getEnumerator( inType );
-	firstWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
+	firstWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
 	if ( firstWindow == topWindowOfType )
 	{
 		dump( "top most window is first window \n");
@@ -182,18 +182,18 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("find topmost window \n");
-		while ( enumerator.HasMoreElements() )
+		while ( enumerator.hasMoreElements() )
 		{
-			var nextWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
+			var nextWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
 			if ( nextWindow == topWindowOfType )
 				break;
 		}	
 	}
 	desiredWindow = firstWindow;
-	if ( enumerator.HasMoreElements() )
+	if ( enumerator.hasMoreElements() )
 	{
 		dump( "Give focus to next window in the list \n");
-		desiredWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );		
+		desiredWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );		
 	}
 	
 	if ( desiredWindow )

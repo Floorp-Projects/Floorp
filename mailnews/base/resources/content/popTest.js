@@ -413,8 +413,8 @@ function nsIEnumerator2JSArray(enumerator, iface) {
 function nsISimpleEnumerator2JSArray(enumerator, iface) {
     var array = new Array;
     var i=0;
-    while (enumerator.HasMoreElements()) {
-       var element = enumerator.GetNext();
+    while (enumerator.hasMoreElements()) {
+       var element = enumerator.getNext();
        array[i] = element.QueryInterface(iface);
        i++;
     }
