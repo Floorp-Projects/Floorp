@@ -18,9 +18,8 @@
 
 #include "nsGraphicState.h"
 #include "nsDrawingSurfaceMac.h"
-#include "nsTransform2D.h"
 #include "nsRegionMac.h"
-
+#include "nsIFontMetrics.h"
 
 nsGraphicStatePool sGraphicStatePool;
 
@@ -29,20 +28,18 @@ nsGraphicStatePool sGraphicStatePool;
 
 nsGraphicStatePool::nsGraphicStatePool()
 {
-	for (short i = 0; i < kGSPoolCount; i ++)
-	{
-		mGSArray[i].mGS = new nsGraphicState();
-		mGSArray[i].mFree = PR_TRUE;
-	}
+	mFreeList = nsnull;
 }
 
 //------------------------------------------------------------------------
 
 nsGraphicStatePool::~nsGraphicStatePool()
 {
-	for (short i = 0; i < kGSPoolCount; i ++)
-	{
-		delete mGSArray[i].mGS;
+	nsGraphicState* gs = mFreeList;
+	while (gs != nsnull) {
+		nsGraphicState* next = gs->mNext;
+		delete gs;
+		gs = next;
 	}
 }
 
@@ -50,31 +47,24 @@ nsGraphicStatePool::~nsGraphicStatePool()
 
 nsGraphicState* nsGraphicStatePool::GetNewGS()
 {
-	for (short i = 0; i < kGSPoolCount; i ++)
-	{
-		if (mGSArray[i].mFree)
-		{
-			mGSArray[i].mFree = PR_FALSE;
-			return mGSArray[i].mGS;
-		}
+	nsGraphicState* gs = mFreeList;
+	if (gs != nsnull) {
+		mFreeList = gs->mNext;
+		return gs;
 	}
-	return (new nsGraphicState());	// we overflew the pool: return a new GraphicState
+	return new nsGraphicState;
 }
 
 //------------------------------------------------------------------------
 
 void nsGraphicStatePool::ReleaseGS(nsGraphicState* aGS)
 {
-	for (short i = 0; i < kGSPoolCount; i ++)
-	{
-		if (mGSArray[i].mGS == aGS)
-		{
-			mGSArray[i].mGS->Clear();
-			mGSArray[i].mFree = PR_TRUE;
-			return;
-		}
-	}
-	delete aGS;	// we overflew the pool: delete the GraphicState
+	// clear the graphics state? this will cause its transformation matrix and regions
+	// to be released. I'm dubious about that. in fact, shouldn't the matrix always be
+	// a member object of the graphics state? why have a separate allocation at all?
+	aGS->Clear();
+	aGS->mNext = mFreeList;
+	mFreeList = aGS;
 }
 
 
@@ -97,20 +87,14 @@ nsGraphicState::~nsGraphicState()
 
 void nsGraphicState::Clear()
 {
-	if (mTMatrix)
-	{
-		delete mTMatrix;
-		mTMatrix = nsnull;
-	}
+	mTMatrix.SetToIdentity();
 
-	if (mMainRegion)
-	{
+	if (mMainRegion) {
 		sNativeRegionPool.ReleaseRegion(mMainRegion); //::DisposeRgn(mMainRegion);
 		mMainRegion = nsnull;
 	}
 
-	if (mClipRegion)
-	{
+	if (mClipRegion) {
 		sNativeRegionPool.ReleaseRegion(mClipRegion); //::DisposeRgn(mClipRegion);
 		mClipRegion = nsnull;
 	}
@@ -181,41 +165,41 @@ void nsGraphicState::Init(nsIWidget* aWindow)
 
 void nsGraphicState::Duplicate(nsGraphicState* aGS)
 {
-	// delete old values
-	Clear();
+	// clear old values? no need, just copying them any way.
+	// Clear();
 
 	// copy new ones
-	if (aGS->mTMatrix)
-		mTMatrix = new nsTransform2D(aGS->mTMatrix);
-	else
-		mTMatrix = nsnull;
+	mTMatrix.SetMatrix(&aGS->mTMatrix);
 
 	mOffx						= aGS->mOffx;
 	mOffy						= aGS->mOffy;
 
-	mMainRegion					= DuplicateRgn(aGS->mMainRegion);
-	mClipRegion					= DuplicateRgn(aGS->mClipRegion);
+	mMainRegion			= DuplicateRgn(aGS->mMainRegion, mMainRegion);
+	mClipRegion			= DuplicateRgn(aGS->mClipRegion, mClipRegion);
 
 	mColor					= aGS->mColor;
 	mFont						= aGS->mFont;
+	
+	NS_IF_RELEASE(mFontMetrics);
 	mFontMetrics		= aGS->mFontMetrics;
 	NS_IF_ADDREF(mFontMetrics);
 
 	mCurrFontHandle	= aGS->mCurrFontHandle;
+	
+	mChanges				= aGS->mChanges;
 }
 
 
 //------------------------------------------------------------------------
 
-RgnHandle nsGraphicState::DuplicateRgn(RgnHandle aRgn)
+RgnHandle nsGraphicState::DuplicateRgn(RgnHandle aRgn, RgnHandle aDestRgn)
 {
-	RgnHandle dupRgn = nsnull;
-	if (aRgn)
-	{
-		dupRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
+	RgnHandle dupRgn = aDestRgn;
+	if (aRgn)	{
+		if (nsnull == dupRgn)
+			dupRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 		if (dupRgn)
 			::CopyRgn(aRgn, dupRgn);
 	}
 	return dupRgn;
 }
-
