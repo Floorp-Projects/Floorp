@@ -2847,7 +2847,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     }
 
-    *aRetValue = result;
+    //*aRetValue = result;
 
     return result;
 }
