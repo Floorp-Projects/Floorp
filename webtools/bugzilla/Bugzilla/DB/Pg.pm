@@ -42,10 +42,12 @@ package Bugzilla::DB::Pg;
 use strict;
 
 use Bugzilla::Error;
+use DBD::Pg;
 
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
 
+use constant BLOB_TYPE => { pg_type => DBD::Pg::PG_BYTEA };
 use constant REQUIRED_VERSION => '7.03.0000';
 use constant PROGRAM_NAME => 'PostgreSQL';
 use constant MODULE_NAME  => 'Pg';

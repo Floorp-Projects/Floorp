@@ -51,6 +51,16 @@ use Bugzilla::Error;
 use Bugzilla::DB::Schema;
 use Bugzilla::User;
 
+#####################################################################
+# Constants
+#####################################################################
+
+use constant BLOB_TYPE => DBI::SQL_BLOB;
+
+#####################################################################
+# Deprecated Functions
+#####################################################################
+
 # All this code is backwards compat fu. As such, its a bit ugly. Note the
 # circular dependencies on Bugzilla.pm
 # This is old cruft which will be removed, so theres not much use in
@@ -786,6 +796,11 @@ Subclasses of Bugzilla::DB are required to define certain constants. These
 constants are required to be subroutines or "use constant" variables.
 
 =over 4
+
+=item C<BLOB_TYPE>
+
+The C<\%attr> argument that must be passed to bind_param in order to 
+correctly escape a C<LONGBLOB> type.
 
 =item C<REQUIRED_VERSION>
 

@@ -913,7 +913,6 @@ sub insert
   $filename = SqlQuote($filename);
   my $description = SqlQuote($::FORM{'description'});
   my $contenttype = SqlQuote($::FORM{'contenttype'});
-  my $thedata = SqlQuote($data);
   my $isprivate = $::FORM{'isprivate'} ? 1 : 0;
 
   # Figure out when the changes were made.
@@ -921,8 +920,17 @@ sub insert
   my $sql_timestamp = SqlQuote($timestamp); 
 
   # Insert the attachment into the database.
-  SendSQL("INSERT INTO attachments (bug_id, creation_ts, filename, description, mimetype, ispatch, isprivate, submitter_id, thedata) 
-           VALUES ($::FORM{'bugid'}, $sql_timestamp, $filename, $description, $contenttype, $::FORM{'ispatch'}, $isprivate, $::userid, $thedata)");
+  my $sth = $dbh->prepare("INSERT INTO attachments
+      (thedata, bug_id, creation_ts, filename, description,
+       mimetype, ispatch, isprivate, submitter_id) 
+      VALUES (?, $::FORM{'bugid'}, $sql_timestamp, $filename, 
+              $description, $contenttype, $::FORM{'ispatch'},
+              $isprivate, $::userid)");
+  # We only use $data here in this INSERT with a placeholder,
+  # so it's safe.
+  trick_taint($data);
+  $sth->bind_param(1, $data, $dbh->BLOB_TYPE);
+  $sth->execute();
 
   # Retrieve the ID of the newly created attachment record.
   my $attachid = $dbh->bz_last_key('attachments', 'attach_id');
