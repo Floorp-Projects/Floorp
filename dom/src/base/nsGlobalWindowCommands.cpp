@@ -819,8 +819,8 @@ nsWindowCommandRegistration::RegisterWindowCommands(
   NS_REGISTER_FIRST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectAllString);
   NS_REGISTER_LAST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectNoneString);
 
-  NS_REGISTER_ONE_COMMAND(nsGoForwardCommand, "cmd_browserBack");
-  NS_REGISTER_ONE_COMMAND(nsGoBackCommand, "cmd_browserForward");
+  NS_REGISTER_ONE_COMMAND(nsGoBackCommand, "cmd_browserBack");
+  NS_REGISTER_ONE_COMMAND(nsGoForwardCommand, "cmd_browserForward");
 
   return rv;
 }
