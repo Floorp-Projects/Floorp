@@ -107,6 +107,16 @@ public:
     return nsnull;
   }
 
+  NS_IMETHOD_(nsIAtom *) GetIDAttributeName() const
+  {
+    return nsnull;
+  }
+  
+  NS_IMETHOD_(nsIAtom *) GetClassAttributeName() const
+  {
+    return nsnull;
+  }
+  
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr, 
                                  nsINodeInfo** aNodeInfo)
   {

@@ -426,6 +426,8 @@ public:
     NS_IMETHOD GetNameSpaceID(PRInt32* aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom** aResult) const;
     NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const;
+    NS_IMETHOD_(nsIAtom *) GetIDAttributeName() const;
+    NS_IMETHOD_(nsIAtom *) GetClassAttributeName() const;
     NS_IMETHOD NormalizeAttrString(const nsAString& aStr, nsINodeInfo** aNodeInfo);
     NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAString& aValue, PRBool aNotify);
     NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue, PRBool aNotify);

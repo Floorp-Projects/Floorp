@@ -55,7 +55,7 @@ public:
   NS_IMETHOD GetQualifiedName(nsAString &aQualifiedName) const;
   NS_IMETHOD GetLocalName(nsAString& aLocalName) const;
   NS_IMETHOD GetNamespaceURI(nsAString& aNameSpaceURI) const;
-  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult) const;
+  NS_IMETHOD_(nsIAtom*) GetIDAttributeAtom() const;
   NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult);
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) const;
   NS_IMETHOD_(PRBool) Equals(const nsAString& aName) const;

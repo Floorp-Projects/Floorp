@@ -203,6 +203,20 @@ public:
   NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify) = 0;
 
   /**
+   * Returns an atom holding the name of the attribute of type ID on
+   * this content node (if applicable).  Returns null for non-element
+   * content nodes.
+   */
+  NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const = 0;
+
+  /**
+   * Returns an atom holding the name of the "class" attribute on this
+   * content node (if applicable).  Returns null for non-element
+   * content nodes.
+   */
+  NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const = 0;
+
+  /**
    * Normalizes an attribute string into an atom that represents the
    * qualified attribute name of the attribute. This method is intended
    * for character case conversion if the content object is case

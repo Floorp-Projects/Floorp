@@ -84,6 +84,7 @@ public:
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
   NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  NS_IMETHOD_(nsIAtom *) GetIDAttributeName() const;
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo** aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 

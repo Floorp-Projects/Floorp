@@ -1435,6 +1435,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
                                     nsIAtom* aAttribute)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
+  NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
   if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
       aNameSpaceID == kNameSpaceID_None) {
@@ -1450,7 +1451,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
         return rv;
       }
     }
-  } else if (aAttribute == nsHTMLAtoms::id &&
+  } else if (aAttribute == aContent->GetIDAttributeName() &&
              aNameSpaceID == kNameSpaceID_None) {
     nsresult rv = RemoveFromIdTable(aContent);
 
@@ -1467,6 +1468,7 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
+  NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
   if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
       aNameSpaceID == kNameSpaceID_None) {
@@ -1482,11 +1484,13 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
         return rv;
       }
     }
-  } else if (aAttribute == nsHTMLAtoms::id &&
+  } else if (aAttribute == aContent->GetIDAttributeName() &&
              aNameSpaceID == kNameSpaceID_None) {
     nsAutoString value;
 
-    aContent->GetAttr(aNameSpaceID, nsHTMLAtoms::id, value);
+    aContent->GetAttr(aNameSpaceID,
+                      aContent->GetIDAttributeName(),
+                      value);
 
     if (!value.IsEmpty()) {
       nsresult rv = AddToIdTable(value, aContent);
@@ -3497,12 +3501,14 @@ nsHTMLDocument::RemoveFromNameTable(const nsAString& aName,
 nsresult
 nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
 {
-  if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
+  nsIAtom* idAttr = aContent->GetIDAttributeName();
+  
+  if (!idAttr || !aContent->HasAttr(kNameSpaceID_None, idAttr)) {
     return NS_OK;
   }
 
   nsAutoString value;
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
+  aContent->GetAttr(kNameSpaceID_None, idAttr, value);
 
   if (value.IsEmpty()) {
     return NS_OK;
@@ -3582,13 +3588,15 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
     UpdateNameTableEntry(value, aContent);
   }
 
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
-
-  if (!value.IsEmpty()) {
-    nsresult rv = UpdateIdTableEntry(value, aContent);
-
-    if (NS_FAILED(rv)) {
-      return rv;
+  nsIAtom* idAttr = aContent->GetIDAttributeName();
+  if (idAttr) {
+    aContent->GetAttr(kNameSpaceID_None, idAttr, value);
+    if (!value.IsEmpty()) {
+      nsresult rv = UpdateIdTableEntry(value, aContent);
+      
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
   }
 
@@ -3624,10 +3632,13 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
   }
 
   if (!aEntry.mIdContent) {
-    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
+    nsIAtom* idAttr = aContent->GetIDAttributeName();
+    if (idAttr) {
+      aContent->GetAttr(kNameSpaceID_None, idAttr, value);
 
-    if (value.Equals(aName)) {
-      aEntry.mIdContent = aContent;
+      if (value.Equals(aName)) {
+        aEntry.mIdContent = aContent;
+      }
     }
   }
 

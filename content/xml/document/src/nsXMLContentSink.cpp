@@ -1059,6 +1059,8 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
 {
   static const char kMathMLStyleSheetURI[] = "resource://gre/res/mathml.css";
 
+  aNodeInfo->SetIDAttributeAtom(nsHTMLAtoms::id);
+  
   // this bit of code is to load mathml.css on demand
   nsIDocument* doc = aNodeInfo->GetDocument();
   if (doc) {

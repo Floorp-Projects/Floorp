@@ -149,13 +149,10 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 }
 
 
-NS_IMETHODIMP
-nsNodeInfo::GetIDAttributeAtom(nsIAtom** aResult) const
+NS_IMETHODIMP_(nsIAtom*)
+nsNodeInfo::GetIDAttributeAtom() const
 {
-  *aResult = mIDAttributeAtom;
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
+  return mIDAttributeAtom;
 }
 
 NS_IMETHODIMP

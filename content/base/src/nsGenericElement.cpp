@@ -2135,6 +2135,18 @@ nsGenericElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIAtom*)
+nsGenericElement::GetIDAttributeName() const
+{
+  return mNodeInfo->GetIDAttributeAtom();
+}
+
+NS_IMETHODIMP_(nsIAtom*)
+nsGenericElement::GetClassAttributeName() const
+{
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsGenericElement::Compact()
 {

@@ -299,6 +299,12 @@ nsSVGElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return NS_OK;  
 }
 
+NS_IMETHODIMP_(nsIAtom*)
+nsSVGElement::GetIDAttributeName() const
+{
+  return nsSVGAtoms::id;
+}
+
 NS_IMETHODIMP
 nsSVGElement::NormalizeAttrString(const nsAString& aStr,
                                   nsINodeInfo** aNodeInfo)
