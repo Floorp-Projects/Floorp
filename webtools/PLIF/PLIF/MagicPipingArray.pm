@@ -56,14 +56,7 @@ sub AUTOLOAD {
     foreach my $object (@$self) {
         my $method = $object->can($name);
         if ($method) {
-            my @result = &$method($object, @_);
-            if (@result <= 1) {
-                if (@result and defined($result[0])) {
-                    push(@allResults, @result);
-                }
-            } else {
-                push(@allResults, [@result]);
-            }
+            push(@allResults, [&$method($object, @_)]);
         } else {
             confess("Failed to find method or property '$name' in object '$object' of MagicPipingArray '$self', aborting"); # die with stack trace
         }
