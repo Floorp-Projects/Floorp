@@ -116,9 +116,7 @@ NS_IMETHODIMP nsHTMLLinkAccessibleWrap::IsValid(PRBool *aIsValid)
 /* boolean isSelected (); */
 NS_IMETHODIMP nsHTMLLinkAccessibleWrap::IsSelected(PRBool *aIsSelected)
 {
-  nsCOMPtr<nsIDOMNode> focusedNode;
-  GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode));
-  *aIsSelected = (focusedNode == mDOMNode);
+  *aIsSelected = (gLastFocusedNode == mDOMNode);
   return NS_OK;
 }
 

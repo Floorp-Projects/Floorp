@@ -509,47 +509,6 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   return PR_FALSE;
 }
 
-nsresult nsAccessible::GetFocusedNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aFocusedNode)
-{
-  nsIFocusController *focusController = nsnull;
-  nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
-  if (content)
-    document = content->GetDocument();
-
-  if (!document)
-    document = do_QueryInterface(aCurrentNode);
-  if (document) {
-    nsCOMPtr<nsPIDOMWindow> ourWindow(do_QueryInterface(document->GetScriptGlobalObject()));
-    if (ourWindow) 
-      focusController = ourWindow->GetRootFocusController();
-  }
-
-  if (focusController) {
-    nsCOMPtr<nsIDOMNode> focusedNode;
-    nsCOMPtr<nsIDOMElement> focusedElement; 
-    focusController->GetFocusedElement(getter_AddRefs(focusedElement));
-    if (!focusedElement) {
-      nsCOMPtr<nsIDOMWindowInternal> windowInternal;
-      focusController->GetFocusedWindow(getter_AddRefs(windowInternal));
-      nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(windowInternal));
-      if (window) {
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        window->GetDocument(getter_AddRefs(domDoc));
-        focusedNode = do_QueryInterface(domDoc);
-      }
-    }
-    else
-      focusedNode = do_QueryInterface(focusedElement);
-    if (focusedNode) {
-      *aFocusedNode = focusedNode;
-      NS_ADDREF(*aFocusedNode);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
 /* readonly attribute wstring state; */
 NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState) 
 { 
@@ -569,8 +528,7 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
     else { 
       *aState |= STATE_FOCUSABLE;
       nsCOMPtr<nsIDOMNode> focusedNode;
-      if (gLastFocusedNode == mDOMNode ||
-        (NS_SUCCEEDED(GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode))) && focusedNode == mDOMNode)) {
+      if (gLastFocusedNode == mDOMNode) {
         *aState |= STATE_FOCUSED;
       }
     }
@@ -592,22 +550,13 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 { 
   *aFocusedChild = nsnull;
 
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-
-  nsCOMPtr<nsIDOMNode> focusedNode;
-  if (accService &&
-       NS_SUCCEEDED(GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode)))) {
-    nsCOMPtr<nsIAccessible> accessible;
-    if (NS_SUCCEEDED(accService->GetAccessibleInWeakShell(focusedNode, 
-                                                          mWeakShell,
-                                                          getter_AddRefs(accessible)))) {
-      *aFocusedChild = accessible;
-      NS_ADDREF(*aFocusedChild);
-      return NS_OK;
-    }
+  if (!gLastFocusedNode) {
+    return NS_ERROR_FAILURE;
   }
- 
-  return NS_ERROR_FAILURE;  
+
+  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+  return accService->GetAccessibleInWeakShell(gLastFocusedNode, mWeakShell, 
+                                              aFocusedChild);
 }
 
   /* nsIAccessible getChildAtPoint (in long x, in long y); */

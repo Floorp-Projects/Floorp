@@ -498,19 +498,10 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetState(PRUint32 *_retval)
   PRBool selected = PR_FALSE;   // Radio buttons can be selected
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton(do_QueryInterface(mDOMNode));
-  if (radioButton) 
+  if (radioButton) {
     radioButton->GetSelected(&selected);
-
-  if (selected) {
-    *_retval |= STATE_CHECKED;
-    // If our parent radio group is focused, then consider this radio button focused
-    nsCOMPtr<nsIDOMNode> parentNode;
-    mDOMNode->GetParentNode(getter_AddRefs(parentNode));
-    if (parentNode) {
-      nsCOMPtr<nsIDOMNode> focusedNode;
-      GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode));
-      if (focusedNode == parentNode)
-        *_retval |= STATE_FOCUSED;
+    if (selected) {
+      *_retval |= STATE_CHECKED;
     }
   }
 
@@ -526,10 +517,15 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetParent(nsIAccessible **  aParent)
   if (! mParent) {
     nsCOMPtr<nsIAccessible> tempParent;
     nsAccessible::GetParent(getter_AddRefs(tempParent));
-    if (tempParent)
+    if (tempParent) {
       tempParent->GetParent(getter_AddRefs(mParent));
+      if (!mParent) {
+        *aParent = nsnull;
+        return NS_ERROR_FAILURE; // Shutting down
+      }
+    }
   }
-  NS_ASSERTION(mParent,"Whoa! This RadioButtonAcc doesn't have a parent! Better find out why.");
+ 
   *aParent = mParent;
   NS_ADDREF(*aParent);
   return NS_OK;

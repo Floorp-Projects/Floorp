@@ -347,18 +347,14 @@ STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
 STDMETHODIMP nsAccessibleWrap::get_accFocus( 
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
-  // Return the current nsIAccessible that has focus
+  // Unless we manage a child's focus we return VT_EMPTY.
+  // Since documents manage the child focus in Mozilla, we 
+  // only return a focused IAccessible in 
+  // nsDocAccessibleWrap::get_accFocus)()
+
   VariantInit(pvarChild);
-
-  nsCOMPtr<nsIAccessible> focusedAccessible;
-  if (NS_SUCCEEDED(GetFocusedChild(getter_AddRefs(focusedAccessible)))) {
-    pvarChild->vt = VT_DISPATCH;
-    pvarChild->pdispVal = NativeAccessible(focusedAccessible);
-    return S_OK;
-  }
-
   pvarChild->vt = VT_EMPTY;
-  return E_FAIL;
+  return S_OK;
 }
 
 /**

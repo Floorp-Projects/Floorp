@@ -152,6 +152,27 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
   return nsAccessibleWrap::get_accChild(varChild, ppdispChild);
 }
 
+STDMETHODIMP nsDocAccessibleWrap::get_accFocus( 
+      /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
+{
+  // Return the current IAccessible child that has focus
+  VariantInit(pvarChild);
+  pvarChild->vt = VT_EMPTY;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  if (NS_SUCCEEDED(GetFocusedChild(getter_AddRefs(accessible)))) {
+    if (accessible == (nsIAccessible*)this) {
+      pvarChild->vt = VT_I4;
+      pvarChild->lVal = CHILDID_SELF;
+    }
+    else {
+      pvarChild->vt = VT_DISPATCH;
+      pvarChild->pdispVal = NativeAccessible(accessible);
+    }
+  }
+  return S_OK;
+}
+
 STDMETHODIMP nsDocAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
   // MSAA expects that client area accessibles return the native accessible for 

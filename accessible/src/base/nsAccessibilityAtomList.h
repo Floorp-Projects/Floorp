@@ -70,3 +70,4 @@ ACCESSIBILITY_ATOM(ul, "ul")
 
   // Alphabetical list of attributes
 ACCESSIBILITY_ATOM(id, "id")
+ACCESSIBILITY_ATOM(tabindex, "tabindex")
