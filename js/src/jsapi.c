@@ -2465,6 +2465,23 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
 }
 
 JS_PUBLIC_API(JSBool)
+JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp)
+{
+    JSBool ok;
+    JSObject *obj2;
+    JSProperty *prop;
+
+    CHECK_REQUEST(cx);
+    ok = LookupProperty(cx, obj, name, &obj2, &prop);
+    if (ok) {
+        *foundp = (prop != NULL);
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+    }
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
     JSBool ok;
@@ -2567,6 +2584,25 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
     CHECK_REQUEST(cx);
     return DefineUCProperty(cx, obj, name, namelen, value, getter, setter,
                             attrs, SPROP_HAS_SHORTID, tinyid);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_HasUCProperty(JSContext *cx, JSObject *obj,
+                 const jschar *name, size_t namelen,
+                 JSBool *vp)
+{
+    JSBool ok;
+    JSObject *obj2;
+    JSProperty *prop;
+
+    CHECK_REQUEST(cx);
+    ok = LookupUCProperty(cx, obj, name, namelen, &obj2, &prop);
+    if (ok) {
+        *vp = (prop != NULL);
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+    }
+    return ok;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2701,6 +2737,23 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
                                sprop->shortid)
           != NULL);
     OBJ_DROP_PROPERTY(cx, obj, prop);
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
+{
+    JSBool ok;
+    JSObject *obj2;
+    JSProperty *prop;
+
+    CHECK_REQUEST(cx);
+    ok = OBJ_LOOKUP_PROPERTY(cx, obj, INT_TO_JSVAL(index), &obj2, &prop);
+    if (ok) {
+        *foundp = (prop != NULL);
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+    }
     return ok;
 }
 
@@ -4133,6 +4186,17 @@ JS_ClearPendingException(JSContext *cx)
 #if JS_HAS_EXCEPTIONS
     cx->throwing = JS_FALSE;
     cx->exception = JSVAL_VOID;
+#endif
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ReportPendingException(JSContext *cx)
+{
+#if JS_HAS_EXCEPTIONS
+    CHECK_REQUEST(cx);
+    return js_ReportUncaughtException(cx);
+#else
+    return JS_TRUE;
 #endif
 }
 
