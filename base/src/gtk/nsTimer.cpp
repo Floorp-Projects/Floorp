@@ -85,6 +85,7 @@ void TimerImpl::FireTimeout()
 
 TimerImpl::TimerImpl()
 {
+  //  printf("TimerImple::TimerImpl called for %p\n", this);
   NS_INIT_REFCNT();
   mFunc = NULL;
   mCallback = NULL;
@@ -96,6 +97,9 @@ TimerImpl::TimerImpl()
 
 TimerImpl::~TimerImpl()
 {
+  //printf("TimerImpl::~TimerImpl called for %p\n", this);
+  Cancel();
+  NS_IF_RELEASE(mCallback);
 }
 
 nsresult 
@@ -104,9 +108,16 @@ TimerImpl::Init(nsTimerCallbackFunc aFunc,
 //              PRBool aRepeat, 
                 PRUint32 aDelay)
 {
+  //printf("TimerImpl::Init called with func + closure for %p\n", this);
     mFunc = aFunc;
     mClosure = aClosure;
     // mRepeat = aRepeat;
+
+  if ((aDelay > 10000) || (aDelay < 0)) {
+    printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
+           aDelay);
+    return Init(aDelay);
+  }
 
     mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 
@@ -118,8 +129,14 @@ TimerImpl::Init(nsITimerCallback *aCallback,
 //              PRBool aRepeat, 
                 PRUint32 aDelay)
 {
+  //printf("TimerImpl::Init called with callback only for %p\n", this);
     mCallback = aCallback;
     // mRepeat = aRepeat;
+  if ((aDelay > 10000) || (aDelay < 0)) {
+    printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
+           aDelay);
+    return Init(aDelay);
+  }
 
     mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 
@@ -129,6 +146,8 @@ TimerImpl::Init(nsITimerCallback *aCallback,
 nsresult
 TimerImpl::Init(PRUint32 aDelay)
 {
+  //printf("TimerImpl::Init called with delay %d only for %p\n", aDelay, this);
+
     mDelay = aDelay;
     NS_ADDREF(this);
 
@@ -141,7 +160,11 @@ NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
 void
 TimerImpl::Cancel()
 {
-  gtk_timeout_remove(mTimerId);
+  //printf("TimerImpl::Cancel called for %p\n", this);
+  TimerImpl *me = this;
+  if (mTimerId)
+    gtk_timeout_remove(mTimerId);
+  NS_RELEASE(me);
 }
 
 NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
@@ -161,6 +184,7 @@ NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 
 gint nsTimerExpired(gpointer aCallData)
 {
+  //printf("nsTimerExpired for %p\n", aCallData);
   TimerImpl* timer = (TimerImpl *)aCallData;
   timer->FireTimeout();
   return 0;
