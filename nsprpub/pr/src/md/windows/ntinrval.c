@@ -55,6 +55,7 @@ _PR_MD_INTERVAL_INIT()
     LARGE_INTEGER count;
 
     if (QueryPerformanceFrequency(&count)) {
+        PR_ASSERT(count.HighPart == 0);
         while(count.LowPart > PR_INTERVAL_MAX) {
             count.LowPart >>= 1;
             _nt_bitShift++;
