@@ -137,7 +137,36 @@
   (defparameter *um* (lexer-metagrammar *ul*)))
 
 
+(defun dump-units ()
+  (values
+   (depict-rtf-to-local-file
+    "JS20/UnitGrammar.rtf"
+    "JavaScript 2 Unit Grammar"
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *uw* :heading-offset 1 :visible-semantics nil)))
+   (depict-rtf-to-local-file
+    "JS20/UnitSemantics.rtf"
+    "JavaScript 2 Unit Semantics"
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *uw* :heading-offset 1)))
+   (depict-html-to-local-file
+    "JS20/UnitGrammar.html"
+    "JavaScript 2 Unit Grammar"
+    t
+    #'(lambda (html-stream)
+        (depict-world-commands html-stream *uw* :heading-offset 1 :visible-semantics nil))
+    :external-link-base "notation.html")
+   (depict-html-to-local-file
+    "JS20/UnitSemantics.html"
+    "JavaScript 2 Unit Semantics"
+    t
+    #'(lambda (html-stream)
+        (depict-world-commands html-stream *uw* :heading-offset 1))
+    :external-link-base "notation.html")))
+
 #|
+(dump-units)
+
 (depict-rtf-to-local-file
  "JS20/UnitCharClasses.rtf"
  "JavaScript 2 Unit Character Classes"
@@ -150,31 +179,6 @@
        (depict rtf-stream "Grammar"))
      (depict-grammar rtf-stream *ug*)))
 
-(values
- (depict-rtf-to-local-file
-  "JS20/UnitGrammar.rtf"
-  "JavaScript 2 Unit Grammar"
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *uw* :heading-offset 1 :visible-semantics nil)))
- (depict-rtf-to-local-file
-  "JS20/UnitSemantics.rtf"
-  "JavaScript 2 Unit Semantics"
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *uw* :heading-offset 1)))
- (depict-html-to-local-file
-  "JS20/UnitGrammar.html"
-  "JavaScript 2 Unit Grammar"
-  t
-  #'(lambda (html-stream)
-      (depict-world-commands html-stream *uw* :heading-offset 1 :visible-semantics nil))
-  :external-link-base "notation.html")
- (depict-html-to-local-file
-  "JS20/UnitSemantics.html"
-  "JavaScript 2 Unit Semantics"
-  t
-  #'(lambda (html-stream)
-      (depict-world-commands html-stream *uw* :heading-offset 1))
-  :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/UnitGrammar.txt") (print-lexer *ul* s) (print-grammar *ug* s))
 
