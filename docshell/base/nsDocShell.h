@@ -76,6 +76,7 @@
 #include "nsIDocShellHistory.h"
 #include "nsIURIFixup.h"
 #include "nsIWebBrowserFind.h"
+#include "nsIHttpChannel.h"
 
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
 
@@ -238,6 +239,7 @@ protected:
     NS_IMETHOD CloneAndReplace(nsISHEntry * srcEntry, PRUint32 aCloneID,
         nsISHEntry * areplaceEntry, nsISHEntry ** destEntry);
     nsresult GetRootSessionHistory(nsISHistory ** aReturn);
+    nsresult GetHttpChannel(nsIChannel * aChannel, nsIHttpChannel ** aReturn);
     
     // Global History
     NS_IMETHOD ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd);
