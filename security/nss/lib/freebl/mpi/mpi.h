@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.2 2000/07/17 22:31:18 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.3 2000/07/19 23:18:08 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -56,8 +56,8 @@
 
 #include <limits.h>
 
-#define  NEG    1
-#define  ZPOS   0
+#define  MP_NEG    1
+#define  MP_ZPOS   0
 
 #define  MP_OKAY          0 /* no error, all is well */
 #define  MP_YES           0 /* yes (boolean result)  */
@@ -72,12 +72,12 @@ typedef char              mp_sign;
 typedef unsigned int      mp_size;
 typedef int               mp_err;
 
-#ifndef USE_32
-#if defined(ULONG_LONG_MAX)			/* GCC */
+#ifndef MP_USE_32
+#if defined(ULONG_LONG_MAX)			/* GCC, HPUX */
 #define MP_ULONG_LONG_MAX ULONG_LONG_MAX
 #elif defined(ULLONG_MAX)			/* Solaris */
 #define MP_ULONG_LONG_MAX ULLONG_MAX
-#elif defined(ULONGLONG_MAX)			/* IRIX */
+#elif defined(ULONGLONG_MAX)			/* IRIX, AIX */
 #define MP_ULONG_LONG_MAX ULONGLONG_MAX
 #endif
 
@@ -85,55 +85,46 @@ typedef int               mp_err;
 #if MP_ULONG_LONG_MAX == ULONG_MAX
 typedef unsigned int      mp_digit;
 typedef unsigned long     mp_word;
-#define DIGIT_MAX         UINT_MAX
+#define MP_DIGIT_MAX      UINT_MAX
 #define MP_WORD_MAX       ULONG_MAX
 #else
 typedef unsigned long     mp_digit;
 typedef unsigned long long mp_word;
-#define DIGIT_MAX         ULONG_MAX
+#define MP_DIGIT_MAX      ULONG_MAX
 #define MP_WORD_MAX       MP_ULONG_LONG_MAX
 #endif
 #endif
 #endif /* !USE_32 */
 
-#if !defined(DIGIT_MAX)
+#if !defined(MP_DIGIT_MAX)
 #if ULONG_MAX == UINT_MAX
 typedef unsigned short    mp_digit;
 typedef unsigned int      mp_word;
-#define DIGIT_MAX         USHRT_MAX
+#define MP_DIGIT_MAX      USHRT_MAX
 #define MP_WORD_MAX       UINT_MAX
 #else
 typedef unsigned int      mp_digit;
 typedef unsigned long     mp_word;
-#define DIGIT_MAX         UINT_MAX
+#define MP_DIGIT_MAX      UINT_MAX
 #define MP_WORD_MAX       ULONG_MAX
 #endif
 #endif
 
-#define DIGIT_BIT         (CHAR_BIT*sizeof(mp_digit))
+#define MP_DIGIT_BIT      (CHAR_BIT*sizeof(mp_digit))
 #define MP_WORD_BIT       (CHAR_BIT*sizeof(mp_word))
-#define RADIX             (1+(mp_word)DIGIT_MAX)
+#define MP_RADIX          (1+(mp_word)MP_DIGIT_MAX)
 
-#define DIGIT_FMT         "%04X"     /* printf() format for 1 digit */
+#define MP_DIGIT_FMT      "%04X"     /* printf() format for 1 digit */
 
 /* Macros for accessing the mp_int internals           */
-#define  SIGN(MP)     ((MP)->sign)
-#define  USED(MP)     ((MP)->used)
-#define  ALLOC(MP)    ((MP)->alloc)
-#define  DIGITS(MP)   ((MP)->dp)
-#define  DIGIT(MP,N)  (MP)->dp[(N)]
-
-#if MP_ARGCHK == 1
-#define  ARGCHK(X,Y)  {if(!(X)){return (Y);}}
-#elif MP_ARGCHK == 2
-#include <assert.h>
-#define  ARGCHK(X,Y)  assert(X)
-#else
-#define  ARGCHK(X,Y)  /*  */
-#endif
+#define  MP_SIGN(MP)     ((MP)->sign)
+#define  MP_USED(MP)     ((MP)->used)
+#define  MP_ALLOC(MP)    ((MP)->alloc)
+#define  MP_DIGITS(MP)   ((MP)->dp)
+#define  MP_DIGIT(MP,N)  (MP)->dp[(N)]
 
 /* This defines the maximum I/O base (minimum is 2)   */
-#define MAX_RADIX         64
+#define MP_MAX_RADIX         64
 
 typedef struct {
   mp_sign       sign;    /* sign of this quantity      */
@@ -239,5 +230,36 @@ int    mp_tovalue(char ch, int r);
 
 /* Error strings           */
 const  char  *mp_strerror(mp_err ec);
+
+/* Octet string conversion functions */
+mp_err mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, int len);
+int    mp_unsigned_octet_size(const mp_int *mp);
+mp_err mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, int maxlen);
+mp_err mp_to_signed_octets(const mp_int *mp, unsigned char *str, int maxlen);
+mp_err mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, int len);
+
+#if defined(MP_API_COMPATIBLE)
+#define NEG             MP_NEG
+#define ZPOS            MP_ZPOS
+#define DIGIT_MAX       MP_DIGIT_MAX
+#define DIGIT_BIT       MP_DIGIT_BIT
+#define DIGIT_FMT       MP_DIGIT_FMT
+#define RADIX           MP_RADIX
+#define MAX_RADIX       MP_MAX_RADIX
+#define SIGN(MP)        MP_SIGN(MP)
+#define USED(MP)        MP_USED(MP)
+#define ALLOC(MP)       MP_ALLOC(MP)
+#define DIGITS(MP)      MP_DIGITS(MP)
+#define DIGIT(MP,N)     MP_DIGIT(MP,N)
+
+#if MP_ARGCHK == 1
+#define  ARGCHK(X,Y)  {if(!(X)){return (Y);}}
+#elif MP_ARGCHK == 2
+#include <assert.h>
+#define  ARGCHK(X,Y)  assert(X)
+#else
+#define  ARGCHK(X,Y)  /*  */
+#endif
+#endif /* defined MP_API_COMPATIBLE */
 
 #endif /* end _H_MPI_ */
