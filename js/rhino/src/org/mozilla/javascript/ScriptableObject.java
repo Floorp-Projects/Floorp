@@ -179,30 +179,38 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     private Object getByGetter(GetterSlot slot, Scriptable start) {
-        try {
-            if (slot.delegateTo == null) {
+        Object getterThis;
+        Object[] args;
+        if (slot.delegateTo == null) {
+            if (start != this) {
                 // Walk the prototype chain to find an appropriate
                 // object to invoke the getter on.
                 Class clazz = slot.getter.getDeclaringClass();
                 while (!clazz.isInstance(start)) {
                     start = start.getPrototype();
+                    if (start == this) {
+                        break;
+                    }
                     if (start == null) {
                         start = this;
                         break;
                     }
                 }
-                return slot.getter.invoke(start, ScriptRuntime.emptyArgs);
             }
-            Object[] args = { this };
-            return slot.getter.invoke(slot.delegateTo, args);
-        }
-        catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
+            getterThis = start;
+            args = ScriptRuntime.emptyArgs;
+        } else {
+            getterThis = slot.delegateTo;
+            args = new Object[] { this };
         }
 
+        try {
+            return slot.getter.invoke(getterThis, args);
+        } catch (InvocationTargetException e) {
+            throw WrappedException.wrapException(e);
+        } catch (IllegalAccessException e) {
+            throw WrappedException.wrapException(e);
+        }
     }
 
     /**
@@ -273,14 +281,19 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Object actualArg
                 = FunctionObject.convertArg(cx, start, value, desired);
         if (slot.delegateTo == null) {
-            // Walk the prototype chain to find an appropriate
-            // object to invoke the setter on.
-            Class clazz = slot.setter.getDeclaringClass();
-            while (!clazz.isInstance(start)) {
-                start = start.getPrototype();
-                if (start == null) {
-                    start = this;
-                    break;
+            if (start != this) {
+                // Walk the prototype chain to find an appropriate
+                // object to invoke the setter on.
+                Class clazz = slot.setter.getDeclaringClass();
+                while (!clazz.isInstance(start)) {
+                    start = start.getPrototype();
+                    if (start == this) {
+                        break;
+                    }
+                    if (start == null) {
+                        start = this;
+                        break;
+                    }
                 }
             }
             setterThis = start;
