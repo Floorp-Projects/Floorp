@@ -29,43 +29,48 @@
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" align="vertical"
     persist="hidden width collapsed">
-    <!-- Make sure title-box and title-spitter stay in sync. -->
-    <box id="title-box" class="sidebar-main-header" hidden="true">
-      <html:div class="panel-bar">
-        &sidebar.panels.label;
-      </html:div>
-      <spring flex="100%"/>
-      <titledbutton class="toolbar-flat"
-        value="&sidebar.customize.label;" 
-        oncommand="SidebarCustomize();"/>
-    </box>
-    <splitter id="title-splitter" class="sidebar-main-header" collapse="after"
-      persist="state" onmouseup="PersistHeight();"
-      hidden="true">
-      <html:div class="panel-bar">
-        &sidebar.panels.label;
-      </html:div>
-      <spring flex="100%"/>
-      <titledbutton class="toolbar-flat"
-        value="&sidebar.customize.label;" 
-        oncommand="SidebarCustomize();"/>
-    </splitter>
+    <sidebarheader id="title-box" class="sidebar-main-header" 
+      value="&sidebar.panels.label;"
+      collapse="after" persist="state" onmouseup="PersistHeight();">
+      <button value="&sidebar.customize.label;" class="standard"
+            oncommand="SidebarCustomize();" />
+<!--      <menu id="panel-picker" class="standard" 
+        onclick="SidebarBuildPickerPopup();" 
+        value="&sidebar.picker.label;" >
+        <menupopup id="panel-picker-popup" class="standard" popupanchor="topright"
+          datasources="rdf:null"
+          ref="urn:sidebar:current-panel-list">
+          <template>
+            <rule>
+              <menuitem uri="rdf:*" type="checkbox" class="standard"
+                oncommand="SidebarTogglePanel(event.target);"
+                value="rdf:http://home.netscape.com/NC-rdf#title"
+                exclude="rdf:http://home.netscape.com/NC-rdf#exclude"/>
+            </rule>
+          </template>
+          <menuitem value="&sidebar.customize.label;" class="standard"
+            oncommand="SidebarCustomize();" />
+          <menuseparator class="standard" />
+        </menupopup>
+      </menu>
+-->
+    </sidebarheader>
+
     <box id="sidebar-panels" align="vertical"
       datasources="rdf:null"
       ref="urn:sidebar:current-panel-list" 
-      persist='open-panel-src height collapsed' flex="1*">
+      persist='last-selected-panel height collapsed' flex="1*">
       <template>
         <rule>
           <box uri="rdf:*" class="texttab" align="left" 
             value="rdf:http://home.netscape.com/NC-rdf#title"
             onclick="SidebarSelectPanel(this)"
             exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
-            iframe-src="rdf:http://home.netscape.com/NC-rdf#content"
             hidden="true"/>
           <box uri="rdf:*" flex='1*' hidden="true">
-            <html:iframe class="panel-frame" flex='1*' hidden="true"
+            <iframe class="panel-frame" flex='1*' hidden="true"
               src="rdf:http://home.netscape.com/NC-rdf#content" />
-            <html:iframe class="panel-frame" flex='1*' hidden="true"
+            <iframe class="panel-frame" flex='1*' hidden="true"
               src="rdf:http://home.netscape.com/NC-rdf#content"
               type="content" />
           </box>
@@ -73,7 +78,6 @@
       </template>
     </box>
   </box>
-<!--            type="rdf:http://home.netscape.com/NC-rdf#sandbox" -->
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
