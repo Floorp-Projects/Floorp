@@ -59,11 +59,15 @@
 #include "nsIRDFService.h"
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
+#include "nsICategoryManager.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+
+#define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
+static PRBool gInitPasswordManager = PR_FALSE;
 
 nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractID)
 {
@@ -600,6 +604,19 @@ nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end)
       NS_ENSURE_SUCCESS(rv,rv);
       break;
     }
+  }
+  return NS_OK;
+}
+
+nsresult CreateServicesForPasswordManager()
+{
+  if (!gInitPasswordManager) 
+  {
+     // Initialize the password manager category
+    gInitPasswordManager = PR_TRUE;
+    return NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
+                                  nsnull,
+                                  NS_PASSWORDMANAGER_CATEGORY);
   }
   return NS_OK;
 }

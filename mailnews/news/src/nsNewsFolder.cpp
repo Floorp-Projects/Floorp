@@ -1306,6 +1306,10 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), signonURL);
 
+    //this is need to make sure wallet service has been created
+    rv = CreateServicesForPasswordManager();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = observerService->NotifyObservers(uri, "login-failed", nsnull);
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;
@@ -1325,6 +1329,11 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
 
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), signonURL);
+
+    //this is need to make sure wallet service has been created
+    rv = CreateServicesForPasswordManager();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = observerService->NotifyObservers(uri, "login-failed", nsnull);
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;

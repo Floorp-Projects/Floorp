@@ -46,6 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsISmtpUrl.h"
 #include "nsCRT.h"
+#include "nsMsgUtils.h"
 
 NS_IMPL_ADDREF(nsSmtpServer)
 NS_IMPL_RELEASE(nsSmtpServer)
@@ -372,7 +373,6 @@ nsSmtpServer::GetUsernamePasswordWithUI(const PRUnichar * aPromptMessage, const
 
     if (m_password.IsEmpty()) {
         NS_ENSURE_ARG_POINTER(aDialog);
-        
         // prompt the user for the password
         if (NS_SUCCEEDED(rv))
         {
@@ -432,6 +432,11 @@ nsSmtpServer::ForgetPassword()
 
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), serverUri);
+
+    //this is need to make sure wallet service has been created
+    rv = CreateServicesForPasswordManager();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = observerService->NotifyObservers(uri, "login-failed", nsnull);
     NS_ENSURE_SUCCESS(rv,rv);
 

@@ -83,5 +83,7 @@ NS_MSG_BASE PRBool IsValidFolderURI(const char *aFolderURI);
 NS_MSG_BASE nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end);
 NS_MSG_BASE PRBool IsAFromSpaceLine(char *start, const char *end);
 
+NS_MSG_BASE nsresult CreateServicesForPasswordManager();
+
 #endif
 
