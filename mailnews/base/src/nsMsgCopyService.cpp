@@ -34,17 +34,17 @@ MOZ_DECL_CTOR_COUNTER(nsCopySource);
 nsCopySource::nsCopySource() : m_processed(PR_FALSE)
 {
 	MOZ_COUNT_CTOR(nsCopySource);
-    nsresult rv;
-    rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
+  nsresult rv;
+  rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
 }
 
 nsCopySource::nsCopySource(nsIMsgFolder* srcFolder) :
     m_processed(PR_FALSE)
 {
 	MOZ_COUNT_CTOR(nsCopySource);
-    nsresult rv;
-    rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
-    m_msgFolder = do_QueryInterface(srcFolder, &rv);
+  nsresult rv;
+  rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
+  m_msgFolder = do_QueryInterface(srcFolder, &rv);
 }
 
 nsCopySource::~nsCopySource()
@@ -77,15 +77,15 @@ nsCopyRequest::~nsCopyRequest()
  	MOZ_COUNT_DTOR(nsCopyRequest);
 
 	PRInt32 j;
-    nsCopySource* ncs;
-    
-    j = m_copySourceArray.Count();
-    while(j-- > 0)
-    {
-        ncs = (nsCopySource*) m_copySourceArray.ElementAt(j);
-        m_copySourceArray.RemoveElementAt(j);
-        delete ncs;
-    }
+  nsCopySource* ncs;
+  
+  j = m_copySourceArray.Count();
+  while(j-- > 0)
+  {
+      ncs = (nsCopySource*) m_copySourceArray.ElementAt(j);
+      m_copySourceArray.RemoveElementAt(j);
+      delete ncs;
+  }
 }
 
 nsresult
@@ -94,30 +94,29 @@ nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
                     PRBool bVal, nsIMsgCopyServiceListener* listener,
                     nsIMsgWindow* msgWindow)
 {
-    nsresult rv = NS_OK;
-    m_requestType = type;
-    m_srcSupport = do_QueryInterface(aSupport, &rv);
-    if (NS_FAILED(rv)) return rv;
-    m_dstFolder = do_QueryInterface(dstFolder, &rv);
-    if (NS_FAILED(rv)) return rv;
-    m_isMoveOrDraftOrTemplate = bVal;
-    if (listener)
-        m_listener = do_QueryInterface(listener, &rv);
-    if (msgWindow)
+  nsresult rv = NS_OK;
+  m_requestType = type;
+  m_srcSupport = aSupport;
+  m_dstFolder = dstFolder;
+  m_isMoveOrDraftOrTemplate = bVal;
+  if (listener)
+      m_listener = listener;
+  if (msgWindow)
 	{
-        m_msgWindow = do_QueryInterface(msgWindow, &rv);
+    m_msgWindow = msgWindow;
 		msgWindow->GetTransactionManager(getter_AddRefs(m_txnMgr));
 	}
-    return rv;
+  
+  return rv;
 }
 
 nsCopySource*
 nsCopyRequest::AddNewCopySource(nsIMsgFolder* srcFolder)
 {
-    nsCopySource* newSrc = new nsCopySource(srcFolder);
-    if (newSrc)
-        m_copySourceArray.AppendElement((void*) newSrc);
-    return newSrc;
+  nsCopySource* newSrc = new nsCopySource(srcFolder);
+  if (newSrc)
+      m_copySourceArray.AppendElement((void*) newSrc);
+  return newSrc;
 }
 
 // ************* nsMsgCopyService ****************
@@ -126,139 +125,129 @@ nsCopyRequest::AddNewCopySource(nsIMsgFolder* srcFolder)
 
 nsMsgCopyService::nsMsgCopyService()
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 nsMsgCopyService::~nsMsgCopyService()
 {
 
-    PRInt32 i;
-    nsCopyRequest* copyRequest;
-    
-    i = m_copyRequests.Count();
+  PRInt32 i;
+  nsCopyRequest* copyRequest;
+  
+  i = m_copyRequests.Count();
 
-    while(i-- > 0)
-    {
-        copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
-        ClearRequest(copyRequest, NS_ERROR_FAILURE);
-    }
+  while(i-- > 0)
+  {
+      copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+      ClearRequest(copyRequest, NS_ERROR_FAILURE);
+  }
 }
 
                               
 nsresult
 nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
 {
-    PR_CEnterMonitor(this);
-
-    if (aRequest)
-    {
-        // undo stuff
-        if (aRequest->m_copySourceArray.Count() > 1 && 
-            aRequest->m_txnMgr)
-            aRequest->m_txnMgr->EndBatch();
-            
-        m_copyRequests.RemoveElement(aRequest);
-        if (aRequest->m_listener)
-            aRequest->m_listener->OnStopCopy(rv);
-        delete aRequest;
-    }
-    
-    PR_CExitMonitor(this);
-
-    return rv;
+  if (aRequest)
+  {
+    // undo stuff
+    if (aRequest->m_copySourceArray.Count() > 1 && 
+        aRequest->m_txnMgr)
+        aRequest->m_txnMgr->EndBatch();
+        
+    m_copyRequests.RemoveElement(aRequest);
+    if (aRequest->m_listener)
+        aRequest->m_listener->OnStopCopy(rv);
+    delete aRequest;
+  }
+  
+  return rv;
 }
 
 nsresult 
 nsMsgCopyService::DoCopy(nsCopyRequest* aRequest)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_ERROR_NULL_POINTER;
 
-    if (aRequest)
-    {
-        PR_CEnterMonitor(this);
-        m_copyRequests.AppendElement((void*) aRequest);
-        PR_CExitMonitor(this);
-        rv = DoNextCopy();
-    }
+  if (aRequest)
+  {
+      m_copyRequests.AppendElement((void*) aRequest);
+      rv = DoNextCopy();
+  }
 
-    return rv;
+  return rv;
 }
 
 nsresult
 nsMsgCopyService::DoNextCopy()
 {
-    nsresult rv = NS_OK;
-    nsCopyRequest* copyRequest = nsnull;
-    nsCopySource* copySource = nsnull;
-    PRInt32 i, j, cnt, scnt;
-    PR_CEnterMonitor(this);
+  nsresult rv = NS_OK;
+  nsCopyRequest* copyRequest = nsnull;
+  nsCopySource* copySource = nsnull;
+  PRInt32 i, j, cnt, scnt;
 
-    cnt = m_copyRequests.Count();
-    if (cnt > 0)
+  cnt = m_copyRequests.Count();
+  if (cnt > 0)
+  {
+    // ** jt -- always FIFO
+    for (i=0; i < cnt; i++)
     {
-        // ** jt -- always FIFO
-        for (i=0; i < cnt; i++)
+      copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+      scnt = copyRequest->m_copySourceArray.Count();
+      if (!copyRequest->m_processed)
+      {
+        if (scnt <= 0) goto found; // must be CopyFileMessage
+        for (j=0; j < scnt; j++)
         {
-            copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
-            scnt = copyRequest->m_copySourceArray.Count();
-            if (!copyRequest->m_processed)
-            {
-                if (scnt <= 0) goto found; // must be CopyFileMessage
-                for (j=0; j < scnt; j++)
-                {
-                    copySource = (nsCopySource*)
-                        copyRequest->m_copySourceArray.ElementAt(j);
-                    if (!copySource->m_processed) goto found;
-                }
-                if (j >= scnt) // all processed set the value
-                    copyRequest->m_processed = PR_TRUE;
-            }
+          copySource = (nsCopySource*)
+              copyRequest->m_copySourceArray.ElementAt(j);
+          if (!copySource->m_processed) goto found;
         }
-    found:
-        if (copyRequest && !copyRequest->m_processed)
-        {
-            if (copyRequest->m_listener)
-                copyRequest->m_listener->OnStartCopy();
-            if (copyRequest->m_requestType == nsCopyMessagesType &&
-                copySource)
-            {
-                copySource->m_processed = PR_TRUE;
-                rv = copyRequest->m_dstFolder->CopyMessages
-                    (copySource->m_msgFolder, copySource->m_messageArray,
-                     copyRequest->m_isMoveOrDraftOrTemplate,
-                     copyRequest->m_msgWindow, copyRequest->m_listener);
-                                                                
-            }
-            else if (copyRequest->m_requestType == nsCopyFileMessageType)
-            {
-                nsCOMPtr<nsIFileSpec>
-                    aSpec(do_QueryInterface(copyRequest->m_srcSupport, &rv));
-                if (NS_SUCCEEDED(rv))
-                {
-                    // ** in case of saving draft/template; the very first
-                    // time we may not have the original message to replace
-                    // with; if we do we shall have an instance of copySource
-                    nsCOMPtr<nsIMessage> aMessage;
-                    if (copySource)
-                    {
-                        nsCOMPtr<nsISupports> aSupport;
-                        aSupport =
-                            getter_AddRefs(copySource->m_messageArray->ElementAt(0));
-                        aMessage = do_QueryInterface(aSupport, &rv);
-                        copySource->m_processed = PR_TRUE;
-                    }
-                    copyRequest->m_processed = PR_TRUE;
-                    rv = copyRequest->m_dstFolder->CopyFileMessage
-                        (aSpec, aMessage,
-                         copyRequest->m_isMoveOrDraftOrTemplate,
-                         copyRequest->m_msgWindow,
-                         copyRequest->m_listener);
-                }
-            }
-        }
+        if (j >= scnt) // all processed set the value
+            copyRequest->m_processed = PR_TRUE;
+      }
     }
-    
-    PR_CExitMonitor(this);
+    found:
+      if (copyRequest && !copyRequest->m_processed)
+      {
+          if (copyRequest->m_listener)
+              copyRequest->m_listener->OnStartCopy();
+          if (copyRequest->m_requestType == nsCopyMessagesType &&
+              copySource)
+          {
+              copySource->m_processed = PR_TRUE;
+              rv = copyRequest->m_dstFolder->CopyMessages
+                  (copySource->m_msgFolder, copySource->m_messageArray,
+                   copyRequest->m_isMoveOrDraftOrTemplate,
+                   copyRequest->m_msgWindow, copyRequest->m_listener);
+                                                              
+          }
+          else if (copyRequest->m_requestType == nsCopyFileMessageType)
+          {
+            nsCOMPtr<nsIFileSpec> aSpec(do_QueryInterface(copyRequest->m_srcSupport, &rv));
+            if (NS_SUCCEEDED(rv))
+            {
+                // ** in case of saving draft/template; the very first
+                // time we may not have the original message to replace
+                // with; if we do we shall have an instance of copySource
+                nsCOMPtr<nsIMessage> aMessage;
+                if (copySource)
+                {
+                    nsCOMPtr<nsISupports> aSupport;
+                    aSupport =
+                        getter_AddRefs(copySource->m_messageArray->ElementAt(0));
+                    aMessage = do_QueryInterface(aSupport, &rv);
+                    copySource->m_processed = PR_TRUE;
+                }
+                copyRequest->m_processed = PR_TRUE;
+                rv = copyRequest->m_dstFolder->CopyFileMessage
+                    (aSpec, aMessage,
+                     copyRequest->m_isMoveOrDraftOrTemplate,
+                     copyRequest->m_msgWindow,
+                     copyRequest->m_listener);
+            }
+          }
+      }
+    }
     if (NS_FAILED(rv))
         ClearRequest(copyRequest, rv);
     return rv;
@@ -268,24 +257,21 @@ nsCopyRequest*
 nsMsgCopyService::FindRequest(nsISupports* aSupport,
                               nsIMsgFolder* dstFolder)
 {
-    nsCopyRequest* copyRequest = nsnull;
-    PRInt32 cnt, i;
+  nsCopyRequest* copyRequest = nsnull;
+  PRInt32 cnt, i;
 
-    PR_CEnterMonitor(this);
+  cnt = m_copyRequests.Count();
+  for (i=0; i < cnt; i++)
+  {
+    copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+    if (copyRequest->m_srcSupport.get() == aSupport &&
+        copyRequest->m_dstFolder.get() == dstFolder)
+        break;
+    else
+        copyRequest = nsnull;
+  }
 
-    cnt = m_copyRequests.Count();
-    for (i=0; i < cnt; i++)
-    {
-        copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
-        if (copyRequest->m_srcSupport.get() == aSupport &&
-            copyRequest->m_dstFolder.get() == dstFolder)
-            break;
-        else
-            copyRequest = nsnull;
-    }
-
-    PR_CExitMonitor(this);
-    return copyRequest;
+  return copyRequest;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, NS_GET_IID(nsIMsgCopyService))
@@ -326,8 +312,8 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
     // folder easily
     for (i=0; i<cnt; i++)
     {
-        aSupport = getter_AddRefs(messages->ElementAt(i));
-        msgArray->AppendElement(aSupport);
+      aSupport = getter_AddRefs(messages->ElementAt(i));
+      msgArray->AppendElement(aSupport);
     }
 
     rv = msgArray->Count(&rv);
@@ -395,40 +381,40 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
     nsCopyRequest* copyRequest;
     nsCopySource* copySource = nsnull;
     nsCOMPtr<nsISupports> aSupport;
-	nsCOMPtr<nsITransactionManager> txnMgr;
+	  nsCOMPtr<nsITransactionManager> txnMgr;
 
     if (!fileSpec || !dstFolder) return rv;
 
 	if (window)
 		window->GetTransactionManager(getter_AddRefs(txnMgr));
-    copyRequest = new nsCopyRequest();
-    if (!copyRequest) return rv;
-    aSupport = do_QueryInterface(fileSpec, &rv);
-    if (NS_FAILED(rv)) goto done;
+  copyRequest = new nsCopyRequest();
+  if (!copyRequest) return rv;
+  aSupport = do_QueryInterface(fileSpec, &rv);
+  if (NS_FAILED(rv)) goto done;
 
-    rv = copyRequest->Init(nsCopyFileMessageType, aSupport, dstFolder,
-                           isDraft, listener, window);
-    if (NS_FAILED(rv)) goto done;
+  rv = copyRequest->Init(nsCopyFileMessageType, aSupport, dstFolder,
+                         isDraft, listener, window);
+  if (NS_FAILED(rv)) goto done;
 
-    if (msgToReplace)
+  if (msgToReplace)
+  {
+    copySource = copyRequest->AddNewCopySource(dstFolder);
+    if (!copySource)
     {
-        copySource = copyRequest->AddNewCopySource(dstFolder);
-        if (!copySource)
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
-        copySource->AddMessage(msgToReplace);
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
     }
+    copySource->AddMessage(msgToReplace);
+  }
 
 done:
     if (NS_FAILED(rv))
     {
-        delete copyRequest;
+      delete copyRequest;
     }
     else
     {
-        rv = DoCopy(copyRequest);
+      rv = DoCopy(copyRequest);
     }
 
     return rv;
@@ -439,15 +425,15 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
                                    nsIMsgFolder* dstFolder,
                                    nsresult result)
 {
-    nsresult rv;
-    rv = DoNextCopy();
-    nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
-    if (copyRequest && copyRequest->m_processed)
+  nsresult rv;
+  rv = DoNextCopy();
+  nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
+  if (copyRequest && copyRequest->m_processed)
 	{
-        ClearRequest(copyRequest, result);
+    ClearRequest(copyRequest, result);
 	}
 
-    return rv;
+  return rv;
 }
 
 nsresult
