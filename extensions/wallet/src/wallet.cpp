@@ -3187,8 +3187,8 @@ WLLT_InitReencryptCallback(nsIDOMWindowInternal* window) {
 
 PRIVATE void
 wallet_DecodeVerticalBars(nsString& s) {
-  s.ReplaceSubstring(NS_LITERAL_STRING("^2"), NS_LITERAL_STRING("|"));
-  s.ReplaceSubstring(NS_LITERAL_STRING("^1"), NS_LITERAL_STRING("^"));
+  s.ReplaceSubstring(NS_LITERAL_STRING("^2").get(), NS_LITERAL_STRING("|").get());
+  s.ReplaceSubstring(NS_LITERAL_STRING("^1").get(), NS_LITERAL_STRING("^").get());
 }
 
 /*
