@@ -69,6 +69,7 @@ EXTRA_DSO_LIBS	= gkgfx mozutil_s
 
 EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
