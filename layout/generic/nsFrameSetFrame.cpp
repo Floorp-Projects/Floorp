@@ -399,8 +399,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
     if (!child->IsContentOfType(nsIContent::eHTML))
       continue;
 
-    nsCOMPtr<nsIAtom> tag;
-    child->GetTag(getter_AddRefs(tag));
+    nsIAtom *tag = child->Tag();
     if (tag == nsHTMLAtoms::frameset || tag == nsHTMLAtoms::frame) {
       nsRefPtr<nsStyleContext> kidSC;
       nsresult result;
@@ -719,14 +718,10 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
   if (content) { 
     nsCOMPtr<nsIContent> contentParent = content->GetParent();
 
-    if (contentParent && contentParent->IsContentOfType(nsIContent::eHTML)) {
-      nsCOMPtr<nsIAtom> tag;
-      contentParent->GetTag(getter_AddRefs(tag));
-
-      if (tag == nsHTMLAtoms::frameset) {
-        nsIFrame* fptr = aChild->GetParent();
-        parent = (nsHTMLFramesetFrame*) fptr;
-      }
+    if (contentParent && contentParent->IsContentOfType(nsIContent::eHTML) &&
+        contentParent->Tag() == nsHTMLAtoms::frameset) {
+      nsIFrame* fptr = aChild->GetParent();
+      parent = (nsHTMLFramesetFrame*) fptr;
     }
   }
 

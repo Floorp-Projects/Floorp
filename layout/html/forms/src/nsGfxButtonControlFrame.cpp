@@ -104,25 +104,12 @@ nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
     rv = PR_TRUE;
   }
   else if (NS_FORM_INPUT_BUTTON == type) {
-  
     // Check to see if parent is a file input
-    nsresult result;
-    nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
-    if (parentContent) {
-      nsCOMPtr<nsIAtom> atom;
-      result = parentContent->GetTag(getter_AddRefs(atom));
-      if (NS_SUCCEEDED(result) && atom) {
-        if (atom == nsHTMLAtoms::input) {
+    nsCOMPtr<nsIFormControl> formCtrl =
+      do_QueryInterface(mContent->GetParent());
 
-          // It's an input, is it a file input?
-          nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == parentContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
-            if (value.EqualsIgnoreCase("file")) {
-              rv = PR_TRUE;
-            }
-          }
-        }
-      }
+    if (formCtrl && formCtrl->GetType() == NS_FORM_INPUT_FILE) {
+      rv = PR_TRUE;
     }
   }
   return rv;

@@ -148,7 +148,7 @@ protected:
   PRBool IsInPre();
   PRBool IsInOL();
   PRBool IsCurrentNodeConverted(const nsIParserNode* aNode);
-  nsresult GetIdForContent(nsIContent* aContent, PRInt32* aID);
+  static PRInt32 GetIdForContent(nsIContent* aContent);
   nsresult DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag);
   nsresult DoCloseContainer(PRInt32 aTag);
   nsresult DoAddLeaf(const nsIParserNode* aNode,

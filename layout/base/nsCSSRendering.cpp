@@ -194,7 +194,7 @@ protected:
 static InlineBackgroundData gInlineBGData;
 
 static void GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
-static nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
+static void GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
 
 // FillRect or InvertRect depending on the renderingaInvert parameter
 static void FillOrInvertRect(nsIRenderingContext& aRC,nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aInvert);
@@ -1555,32 +1555,30 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
       nsIContent *pContent;
       if ((pContent = doc->GetRootContent())) {
         // make sure that this is the HTML element
-        nsCOMPtr<nsIAtom> tag;
-        pContent->GetTag(getter_AddRefs(tag));
+        nsIAtom *tag = pContent->Tag();
         NS_ASSERTION(tag, "Tag could not be retrieved from root content element");
-        if (tag) {
-          if (tag == nsHTMLAtoms::html ||
-              tag == nsHTMLAtoms::body) {
-            // use this guy's color
-            nsIFrame *pFrame = nsnull;
-            if (NS_SUCCEEDED(shell->GetPrimaryFrameFor(pContent, &pFrame)) && pFrame) {
-              nsStyleContext *pContext = pFrame->GetStyleContext();
-              if (pContext) {
-                const nsStyleBackground* color = pContext->GetStyleBackground();
-                if (0 == (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
-                  aBGColor = color;
-                  // set the reslt to TRUE to indicate we mapped the color
-                  result = PR_TRUE;
-                }
-              }// if context
-            }// if frame
-          }// if tag == html or body
+        if (tag == nsHTMLAtoms::html ||
+            tag == nsHTMLAtoms::body) {
+          // use this guy's color
+          nsIFrame *pFrame = nsnull;
+          if (NS_SUCCEEDED(shell->GetPrimaryFrameFor(pContent, &pFrame)) &&
+              pFrame) {
+            nsStyleContext *pContext = pFrame->GetStyleContext();
+            if (pContext) {
+              const nsStyleBackground* color = pContext->GetStyleBackground();
+              if (0 == (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+                aBGColor = color;
+                // set the reslt to TRUE to indicate we mapped the color
+                result = PR_TRUE;
+              }
+            }// if context
+          }// if frame
+        }// if tag == html or body
 #ifdef DEBUG
-          else {
-            printf( "Root Content is not HTML or BODY: cannot get bgColor of HTML or BODY\n");
-          }
+        else {
+          printf( "Root Content is not HTML or BODY: cannot get bgColor of HTML or BODY\n");
+        }
 #endif
-        }// if tag
       }// if content
       NS_RELEASE(doc);
     }// if doc
@@ -1599,39 +1597,36 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
 // The check is a bit expensive, however until the canvas frame is somehow cached on the 
 // body frame, or the root element, we need to walk the frames up until we find the canvas
 //
-nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame)
+void
+GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame,
+                            nsIFrame **aBGFrame)
 {
-  NS_ASSERTION(aFrame && aBGFrame, "illegal null parameter");
+  if (!aFrame || !aBGFrame) {
+    NS_ERROR("illegal null parameter");
 
-  nsresult rv = NS_OK;
-
-  if (aFrame && aBGFrame) {
-    *aBGFrame = aFrame; // default to the frame passed in
-
-    nsIContent* pContent = aFrame->GetContent();
-    if (pContent) {
-      // make sure that this is the HTML or BODY element
-      nsCOMPtr<nsIAtom> tag;
-      pContent->GetTag(getter_AddRefs(tag));
-      if (tag) {
-        if (tag.get() == nsHTMLAtoms::html ||
-            tag.get() == nsHTMLAtoms::body) {
-          // the frame is the body frame, so we provide the canvas frame
-          nsIFrame *pCanvasFrame = aFrame->GetParent();
-          while (pCanvasFrame) {
-            if (pCanvasFrame->GetType() == nsLayoutAtoms::canvasFrame) {
-              *aBGFrame = pCanvasFrame;
-              break;
-            }
-            pCanvasFrame = pCanvasFrame->GetParent();
-          }
-        }// if tag == html or body
-      }// if tag
-    }
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
+    return;
   }
-  return rv;
+
+  *aBGFrame = aFrame; // default to the frame passed in
+
+  nsIContent* pContent = aFrame->GetContent();
+  if (pContent) {
+    // make sure that this is the HTML or BODY element
+    nsIAtom *tag = pContent->Tag();
+
+    if (tag == nsHTMLAtoms::html ||
+        tag == nsHTMLAtoms::body) {
+      // the frame is the body frame, so we provide the canvas frame
+      nsIFrame *pCanvasFrame = aFrame->GetParent();
+      while (pCanvasFrame) {
+        if (pCanvasFrame->GetType() == nsLayoutAtoms::canvasFrame) {
+          *aBGFrame = pCanvasFrame;
+          break;
+        }
+        pCanvasFrame = pCanvasFrame->GetParent();
+      }
+    }// if tag == html or body
+  }
 }
 
 // helper macro to determine if the borderstyle 'a' is a MOZ-BG-XXX style
@@ -2743,10 +2738,8 @@ FindElementBackground(nsIPresContext* aPresContext,
 
   if (!parentFrame)
     return PR_TRUE; // no parent to look at
-  
-  nsCOMPtr<nsIAtom> tag;
-  content->GetTag(getter_AddRefs(tag));
-  if (tag != nsHTMLAtoms::body)
+
+  if (content->Tag() != nsHTMLAtoms::body)
     return PR_TRUE; // not frame for <BODY> element
 
   // We should only look at the <html> background if we're in an HTML document

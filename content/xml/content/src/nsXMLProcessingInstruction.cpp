@@ -112,12 +112,10 @@ nsXMLProcessingInstruction::GetAttrValue(const nsAString& aAttr,
   return nsParserUtils::GetQuotedAttributeValue(data, aAttr, aValue);
 }
 
-NS_IMETHODIMP
-nsXMLProcessingInstruction::GetTag(nsIAtom** aResult) const
+nsIAtom *
+nsXMLProcessingInstruction::Tag() const
 {
-  *aResult = nsLayoutAtoms::processingInstructionTagName;
-  NS_ADDREF(*aResult);
-  return NS_OK;
+  return nsLayoutAtoms::processingInstructionTagName;
 }
 
 NS_IMETHODIMP_(PRBool)

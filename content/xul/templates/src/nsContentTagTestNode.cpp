@@ -85,11 +85,7 @@ nsContentTagTestNode::FilterInstantiations(InstantiationSet& aInstantiations, vo
             return NS_ERROR_UNEXPECTED;
         }
 
-        nsCOMPtr<nsIAtom> tag;
-        rv = VALUE_TO_ICONTENT(value)->GetTag(getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        if (tag != mTag) {
+        if (VALUE_TO_ICONTENT(value)->Tag() != mTag) {
             aInstantiations.Erase(inst--);
         }
     }

@@ -45,6 +45,7 @@
 #include "nsIFrame.h"
 #include "nsTreeBodyFrame.h"
 #include "nsIAtom.h"
+#include "nsINodeInfo.h"
 #include "nsXULAtoms.h"
 #include "nsChildIterator.h"
 
@@ -124,14 +125,14 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
   ChildIterator iter, last;
   for (ChildIterator::Init(aParent, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> content = *iter;
-    nsCOMPtr<nsIAtom> tag;
-    content->GetTag(getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::treechildren) {
+
+    nsINodeInfo *ni = content->GetNodeInfo();
+    if (ni && ni->Equals(nsXULAtoms::treechildren, kNameSpaceID_XUL)) {
       *aResult = content;
       NS_ADDREF(*aResult);
       break;
     }
-    else if (tag != nsXULAtoms::templateAtom) {
+    else if (ni && !ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL)) {
       FindBodyElement(content, aResult);
       if (*aResult)
         break;

@@ -536,9 +536,8 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
   if (!aContent->IsContentOfType(nsIContent::eHTML)) {
     return NS_OK;
   }
-  
-  nsCOMPtr<nsIAtom> tagAtom;
-  aContent->GetTag(getter_AddRefs(tagAtom));
+
+  nsIAtom *tagAtom = aContent->Tag();
 
   nsresult rv = NS_OK;
 
@@ -1304,11 +1303,12 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
   if (!doc)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMDocumentType> docType;
-  
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+  NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
+
   // Create a new doctype node
-  rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
-                             aName, nsnull, nsnull,
+  nsCOMPtr<nsIDOMDocumentType> docType;
+  rv = NS_NewDOMDocumentType(getter_AddRefs(docType), name, nsnull, nsnull,
                              aPublicId, aSystemId, aSubset);
   if (NS_FAILED(rv) || !docType) {
     return rv;

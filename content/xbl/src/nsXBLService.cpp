@@ -673,7 +673,8 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult)
+nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
+                         nsIAtom** aResult)
 {
   nsIDocument* document = aContent->GetDocument();
   if (document) {
@@ -684,7 +685,8 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** 
   }
 
   aContent->GetNameSpaceID(aNameSpaceID);
-  aContent->GetTag(aResult); // Addref happens here.
+  NS_ADDREF(*aResult = aContent->Tag());
+
   return NS_OK;
 }
 
@@ -1057,14 +1059,17 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       bindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
     }
 
-    nsCOMPtr<nsIAtom> tagName;
+    nsINodeInfo *ni = nsnull;
     if (aBoundElement)
-      aBoundElement->GetTag(getter_AddRefs(tagName));
+      ni = aBoundElement->GetNodeInfo();
+
     if (!info && bindingManager &&
-        (tagName != nsXULAtoms::scrollbar) &&
-        (tagName != nsXULAtoms::thumb) &&
-        (tagName != nsHTMLAtoms::input) &&
-        (tagName != nsHTMLAtoms::select) && !aForceSyncLoad) {
+        (!ni || (!ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) &&
+                 !ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL))) &&
+        (!ni || (!ni->Equals(nsHTMLAtoms::input) &&
+                 !ni->Equals(nsHTMLAtoms::select) &&
+                 !aBoundElement->IsContentOfType(nsIContent::eHTML))) &&
+         !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be
@@ -1146,13 +1151,15 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (aBoundDocument)
     loadGroup = aBoundDocument->GetDocumentLoadGroup();
 
-  nsCOMPtr<nsIAtom> tagName;
+  nsINodeInfo *ni = nsnull;
   if (aBoundElement)
-    aBoundElement->GetTag(getter_AddRefs(tagName));
+    ni = aBoundElement->GetNodeInfo();
 
-  if (tagName == nsXULAtoms::scrollbar ||
-      tagName == nsXULAtoms::thumb || 
-      tagName == nsHTMLAtoms::select || IsResourceURI(aDocumentURI))
+  if (ni && (ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
+             ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL) || 
+             (ni->Equals(nsHTMLAtoms::select) &&
+              aBoundElement->IsContentOfType(nsIContent::eHTML))) ||
+      IsResourceURI(aDocumentURI))
     aForceSyncLoad = PR_TRUE;
 
   if(!aForceSyncLoad) {

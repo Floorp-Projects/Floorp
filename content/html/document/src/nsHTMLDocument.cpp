@@ -1426,12 +1426,9 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 
   if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
       aNameSpaceID == kNameSpaceID_None) {
-    nsCOMPtr<nsIAtom> tag;
     nsAutoString value;
 
-    aContent->GetTag(getter_AddRefs(tag));
-
-    if (IsNamedItem(aContent, tag, value)) {
+    if (IsNamedItem(aContent, aContent->Tag(), value)) {
       nsresult rv = RemoveFromNameTable(value, aContent);
 
       if (NS_FAILED(rv)) {
@@ -1459,12 +1456,9 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
 
   if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
       aNameSpaceID == kNameSpaceID_None) {
-    nsCOMPtr<nsIAtom> tag;
     nsAutoString value;
 
-    aContent->GetTag(getter_AddRefs(tag));
-
-    if (IsNamedItem(aContent, tag, value)) {
+    if (IsNamedItem(aContent, aContent->Tag(), value)) {
       nsresult rv = UpdateNameTableEntry(value, aContent);
 
       if (NS_FAILED(rv)) {
@@ -3499,9 +3493,7 @@ nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
 nsresult
 nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-
-  aContent->GetTag(getter_AddRefs(tag));
+  nsIAtom *tag = aContent->Tag();
 
   if (tag == nsLayoutAtoms::textTagName) {
     // Text nodes are not named items nor can they have children.
@@ -3538,9 +3530,7 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
 nsresult
 nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-
-  aContent->GetTag(getter_AddRefs(tag));
+  nsIAtom *tag = aContent->Tag();
 
   if (tag == nsLayoutAtoms::textTagName) {
     // Text nodes are not named items nor can they have children.
@@ -3582,8 +3572,7 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
   NS_ASSERTION(aEntry.mContentList,
                "Entry w/o content list passed to FindNamedItems()!");
 
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
+  nsIAtom *tag = aContent->Tag();
 
   if (tag == nsLayoutAtoms::textTagName) {
     // Text nodes are not named items nor can they have children.
@@ -3734,9 +3723,8 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
   nsIContent *e = entry->mIdContent;
 
-  if (e && e != ID_NOT_IN_DOCUMENT) {
-    nsCOMPtr<nsIAtom> tag;
-    e->GetTag(getter_AddRefs(tag));
+  if (e && e != ID_NOT_IN_DOCUMENT && e->IsContentOfType(nsIContent::eHTML)) {
+    nsIAtom *tag = e->Tag();
 
     if (tag == nsHTMLAtoms::embed  ||
         tag == nsHTMLAtoms::img    ||

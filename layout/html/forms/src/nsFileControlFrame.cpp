@@ -447,22 +447,11 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
 
   while (childFrame) {
     // see if the child is a text control
-    nsIContent* content = childFrame->GetContent();
-    if (content) {
-      nsCOMPtr<nsIAtom> atom;
-      nsresult res = content->GetTag(getter_AddRefs(atom));
-      if (NS_SUCCEEDED(res) && atom) {
-        if (atom.get() == nsHTMLAtoms::input) {
+    nsCOMPtr<nsIFormControl> formCtrl =
+      do_QueryInterface(childFrame->GetContent());
 
-          // It's an input, is it a text input?
-          nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
-            if (value.EqualsIgnoreCase("text")) {
-              result = (nsNewFrame*)childFrame;      
-            }
-          }
-        }
-      }
+    if (formCtrl && formCtrl->GetType() == NS_FORM_INPUT_TEXT) {
+      result = (nsNewFrame*)childFrame;
     }
 
     // if not continue looking

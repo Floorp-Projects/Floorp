@@ -335,10 +335,6 @@ public:
                          const nsRect& aDamageRect,
                          PRBool aImmediate = PR_FALSE) const;
 
-  // Helper function to return the index in parent of the frame's content
-  // object. Returns -1 on error or if the frame doesn't have a content object
-  static PRInt32 ContentIndexInContainer(const nsIFrame* aFrame);
-
   // Helper function that tests if the frame tree is too deep; if it
   // is it marks the frame as "unflowable" and zeros out the metrics
   // and returns PR_TRUE. Otherwise, the frame is unmarked
@@ -419,6 +415,10 @@ public:
   // Helper function that verifies that each frame in the list has the
   // NS_FRAME_IS_DIRTY bit set
   static void VerifyDirtyBitSet(nsIFrame* aFrameList);
+
+  // Helper function to return the index in parent of the frame's content
+  // object. Returns -1 on error or if the frame doesn't have a content object
+  static PRInt32 ContentIndexInContainer(const nsIFrame* aFrame);
 
   void ListTag(FILE* out) const {
     ListTag(out, (nsIFrame*)this);

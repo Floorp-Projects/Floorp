@@ -756,8 +756,7 @@ nsWebCrawler::RecordLoadedURL(const nsString& aURL)
 void
 nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
 {
-  nsCOMPtr<nsIAtom> atom;
-  aNode->GetTag(getter_AddRefs(atom));
+  nsIAtom *atom = aNode->Tag();
   if ((atom == mLinkTag) || (atom == mFrameTag) || (atom == mIFrameTag)) {
     // Get absolute url that tag targets
     nsAutoString base, src, absURLSpec;

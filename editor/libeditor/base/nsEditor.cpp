@@ -3785,22 +3785,19 @@ NS_IMETHODIMP nsEditor::ResetModificationCount()
 ///////////////////////////////////////////////////////////////////////////
 // GetTag: digs out the atom for the tag of this node
 //                    
-nsCOMPtr<nsIAtom> 
+nsIAtom *
 nsEditor::GetTag(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIAtom> atom;
-  
-  if (!aNode) 
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+
+  if (!content) 
   {
-    NS_NOTREACHED("null node passed to nsEditor::GetTag()");
-    return atom;
+    NS_ASSERTION(aNode, "null node passed to nsEditor::Tag()");
+
+    return nsnull;
   }
   
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (content)
-    content->GetTag(getter_AddRefs(atom));
-
-  return atom;
+  return content->Tag();
 }
 
 
@@ -3816,14 +3813,14 @@ nsEditor::GetTagString(nsIDOMNode *aNode, nsAString& outString)
     return NS_ERROR_NULL_POINTER;
   }
   
-  nsCOMPtr<nsIAtom> atom = GetTag(aNode);
-  if (atom)
+  nsIAtom *atom = GetTag(aNode);
+  if (!atom)
   {
-    atom->ToString(outString);
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
-  
-  return NS_ERROR_FAILURE;
+
+  atom->ToString(outString);
+  return NS_OK;
 }
 
 
@@ -3839,10 +3836,7 @@ nsEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
     return PR_FALSE;
   }
   
-  nsCOMPtr<nsIAtom> atom1 = GetTag(aNode1);
-  nsCOMPtr<nsIAtom> atom2 = GetTag(aNode2);
-  
-  return (atom1 == atom2);
+  return GetTag(aNode1) == GetTag(aNode2);
 }
 
 

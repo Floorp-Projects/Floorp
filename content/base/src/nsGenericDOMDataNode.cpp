@@ -834,11 +834,10 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   return ret;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetContentID(PRUint32* aID)
+PRUint32
+nsGenericDOMDataNode::ContentID() const
 {
-  *aID = 0;
-  return NS_OK;
+  return 0;
 }
 
 NS_IMETHODIMP
@@ -987,12 +986,10 @@ nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
   return NS_ERROR_FAILURE;
 }
 
-
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetRangeList(nsVoidArray** aResult) const
+const nsVoidArray *
+nsGenericDOMDataNode::GetRangeList() const
 {
-  *aResult = LookupRangeList();
-  return NS_OK;
+  return LookupRangeList();
 }
 
 NS_IMETHODIMP

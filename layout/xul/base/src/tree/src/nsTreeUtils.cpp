@@ -84,14 +84,14 @@ nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* 
 }
 
 nsresult
-nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
+nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag,
+                               nsIContent** aResult)
 {
   ChildIterator iter, last;
   for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> child = *iter;
-    nsCOMPtr<nsIAtom> tag;
-    child->GetTag(getter_AddRefs(tag));
-    if (tag == aTag) {
+
+    if (child->Tag() == aTag) {
       NS_ADDREF(*aResult = child);
       return NS_OK;
     }

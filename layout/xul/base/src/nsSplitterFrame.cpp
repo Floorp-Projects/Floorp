@@ -809,10 +809,10 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
       PRInt32 dummy;
       xblService->ResolveTag(content, &dummy, getter_AddRefs(atom));
     } else
-      content->GetTag(getter_AddRefs(atom));
+      atom = content->Tag();
 
     // skip over any splitters
-    if (atom.get() != nsXULAtoms::splitter) { 
+    if (atom != nsXULAtoms::splitter) { 
         nsSize prefSize(0,0);
         nsSize minSize(0,0);
         nsSize maxSize(0,0);

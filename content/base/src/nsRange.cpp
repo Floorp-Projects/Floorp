@@ -873,12 +873,12 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
   iter->Init(aSourceNode);
 
   nsCOMPtr<nsIContent> cN;
-  nsVoidArray* theRangeList;
+  const nsVoidArray* theRangeList;
   
   iter->CurrentNode(getter_AddRefs(cN));
   while (cN && (NS_ENUMERATOR_FALSE == iter->IsDone()))
   {
-    cN->GetRangeList(&theRangeList);
+    theRangeList = cN->GetRangeList();
     if (theRangeList)
     {
        nsRange* theRange;
@@ -910,7 +910,7 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
             }          
           }
           // must refresh theRangeList - it might have gone away!
-          cN->GetRangeList(&theRangeList);
+          theRangeList = cN->GetRangeList();
           if (theRangeList)
             theCount = theRangeList->Count();
           else
@@ -2331,8 +2331,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
 
   nsCOMPtr<nsIContent> parent( do_QueryInterface(aParentNode) );
   // quick return if no range list
-  nsVoidArray *theRangeList;
-  parent->GetRangeList(&theRangeList);
+  const nsVoidArray *theRangeList = parent->GetRangeList();
   if (!theRangeList) return NS_OK;
 
   nsresult res;
@@ -2384,8 +2383,7 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   nsresult res = PopRanges(domNode, aOffset, removed);
 
   // quick return if no range list
-  nsVoidArray *theRangeList;
-  parent->GetRangeList(&theRangeList);
+  const nsVoidArray *theRangeList = parent->GetRangeList();
   if (!theRangeList) return NS_OK;
   
   PRInt32   count = theRangeList->Count();
@@ -2444,8 +2442,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   if (!aTextNode) return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIContent> textNode( do_QueryInterface(aTextNode) );
-  nsVoidArray *theRangeList;
-  aTextNode->GetRangeList(&theRangeList);
+  const nsVoidArray *theRangeList = aTextNode->GetRangeList();
   // the caller already checked to see if there was a range list
   
   nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(textNode));

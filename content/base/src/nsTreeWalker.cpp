@@ -99,7 +99,7 @@ nsTreeWalker::~nsTreeWalker()
  * nsISupports stuff
  */
 
-// QueryInterface implementation for nsDOMDocumentType
+// QueryInterface implementation for nsTreeWalker
 NS_INTERFACE_MAP_BEGIN(nsTreeWalker)
     NS_INTERFACE_MAP_ENTRY(nsIDOMTreeWalker)
     NS_INTERFACE_MAP_ENTRY(nsISupports)

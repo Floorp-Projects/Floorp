@@ -4014,9 +4014,8 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         // Ensure it's an anchor element
         content = do_QueryInterface(node);
         if (content) {
-          nsCOMPtr<nsIAtom> tag;
-          content->GetTag(getter_AddRefs(tag));
-          if (tag == nsHTMLAtoms::a) {
+          if (content->Tag() == nsHTMLAtoms::a &&
+              content->IsContentOfType(nsIContent::eHTML)) {
             break;
           }
           content = nsnull;

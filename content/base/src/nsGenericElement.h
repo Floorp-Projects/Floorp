@@ -368,19 +368,19 @@ public:
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
   NS_IMETHOD GetNameSpaceID(PRInt32* aNameSpaceID) const;
-  NS_IMETHOD GetTag(nsIAtom** aResult) const;
+  virtual nsIAtom *Tag() const;
   NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const;
   NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const;
   NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
-  NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
+  virtual const nsVoidArray *GetRangeList() const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-  NS_IMETHOD GetContentID(PRUint32* aID);
+  virtual PRUint32 ContentID() const;
   NS_IMETHOD SetContentID(PRUint32 aID);
   NS_IMETHOD SetFocus(nsIPresContext* aContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aContext);

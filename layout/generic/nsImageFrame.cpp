@@ -1211,13 +1211,10 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   if (!inner.IsEmpty()) {
     nsIContent* content = GetContent();
     if (content) {
-      nsCOMPtr<nsIAtom> tag;
-      content->GetTag(getter_AddRefs(tag));
-      if (tag) {
-        nsAutoString altText;
-        nsCSSFrameConstructor::GetAlternateTextFor(content, tag, altText);
-        DisplayAltText(aPresContext, aRenderingContext, altText, inner);
-      }
+      nsAutoString altText;
+      nsCSSFrameConstructor::GetAlternateTextFor(content, content->Tag(),
+                                                 altText);
+      DisplayAltText(aPresContext, aRenderingContext, altText, inner);
     }
   }
 

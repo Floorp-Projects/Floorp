@@ -219,9 +219,9 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   widgetData.clipSiblings = PR_TRUE;
 
   nsIContent* parentContent = aContent->GetParent();
-  nsCOMPtr<nsIAtom> tag;
+  nsIAtom *tag = nsnull;
   if (parentContent)
-    parentContent->GetTag(getter_AddRefs(tag));
+    tag = parentContent->Tag();
   widgetData.mDropShadow = !(tag && tag == nsXULAtoms::menulist);
   
   // XXX make sure we are hidden (shouldn't this be done automatically?)
@@ -581,10 +581,8 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   // nsXULTooltipListener).  For regular popups, use popupNode (set by
   // nsXULPopupListener).
 
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(getter_AddRefs(tag));
   nsCOMPtr<nsIDOMNode> targetNode;
-  if (tag == nsXULAtoms::tooltip)
+  if (mContent->Tag() == nsXULAtoms::tooltip)
     inPopupDoc->GetTooltipNode(getter_AddRefs(targetNode));
   else
     inPopupDoc->GetPopupNode(getter_AddRefs(targetNode));
@@ -928,12 +926,10 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIDocument> document;
   presShell->GetDocument(getter_AddRefs(document));
-  
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(getter_AddRefs(tag));
-  PRBool sizedToPopup = (tag != nsXULAtoms::tooltip)
-                        && (nsMenuFrame::IsSizedToPopup(aFrame->GetContent(), PR_FALSE));
-  
+
+  PRBool sizedToPopup = (mContent->Tag() != nsXULAtoms::tooltip) &&
+    (nsMenuFrame::IsSizedToPopup(aFrame->GetContent(), PR_FALSE));
+
   // If we stick to our parent's width, set it here before we move the
   // window around, because moving is done with respect to the width...
   if (sizedToPopup) {
@@ -1392,8 +1388,7 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
   nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
 
   if (parentContent) {
-    nsCOMPtr<nsIAtom> parentTag;
-    parentContent->GetTag(getter_AddRefs(parentTag));
+    nsIAtom *parentTag = parentContent->Tag();
     if (parentTag == nsXULAtoms::menulist)
       return NS_OK;  // Consume outside clicks for combo boxes on all platforms
     if (parentTag == nsXULAtoms::menu || parentTag == nsXULAtoms::popupset) {
@@ -1626,19 +1621,15 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
 
   PRUint32 matchCount = 0, matchShortcutCount = 0;
   PRBool foundActive = PR_FALSE;
-  PRBool isMenu = PR_FALSE;
   PRBool isShortcut;
   nsIMenuFrame* frameBefore = nsnull;
   nsIMenuFrame* frameAfter = nsnull;
   nsIMenuFrame* frameShortcut = nsnull;
 
   nsIContent* parentContent = mContent->GetParent();
-  if (parentContent) {
-    nsCOMPtr<nsIAtom> tag;
-    parentContent->GetTag(getter_AddRefs(tag));
-    if (tag != nsXULAtoms::menulist)
-      isMenu = PR_TRUE;
-  }
+
+  PRBool isMenu =
+    parentContent && parentContent->Tag() != nsXULAtoms::menulist;
 
   static DOMTimeStamp lastKeyTime = 0;
   DOMTimeStamp keyTime;
@@ -2048,14 +2039,11 @@ nsMenuPopupFrame::RemoveKeyboardNavigator()
 PRBool 
 nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
-  if (tag && (tag.get() == nsXULAtoms::menu ||
-              tag.get() == nsXULAtoms::menuitem ||
-              tag.get() == nsHTMLAtoms::option))
-      return PR_TRUE;
+  nsIAtom *tag = aContent->Tag();
 
-  return PR_FALSE;
+  return (tag == nsXULAtoms::menu ||
+          tag == nsXULAtoms::menuitem ||
+          tag == nsHTMLAtoms::option);
 }
 
 PRBool 

@@ -457,14 +457,13 @@ public:
   /** returns PR_TRUE if aNode is of the type implied by aTag */
   static inline PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   {
-    nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
-    return (nodeAtom == aTag);
+    return GetTag(aNode) == aTag;
   }
 
   // we should get rid of this method if we can
   static inline PRBool NodeIsTypeString(nsIDOMNode *aNode, const nsAString &aTag)
   {
-    nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
+    nsIAtom *nodeAtom = GetTag(aNode);
     return nodeAtom && nodeAtom->Equals(aTag);
   }
 
@@ -509,7 +508,7 @@ public:
 
   /** from html rules code - migration in progress */
   static nsresult GetTagString(nsIDOMNode *aNode, nsAString& outString);
-  static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
+  static nsIAtom *GetTag(nsIDOMNode *aNode);
   virtual PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
   static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
   static PRBool IsTextNode(nsIDOMNode *aNode);

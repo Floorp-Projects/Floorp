@@ -2431,11 +2431,9 @@ nsTypeAheadFind::IsTargetContentOkay(nsIContent *aContent)
     // not support nsIFormControl or eHTML_FORM_CONTROL, and it's not worth 
     // having a table of atoms just for it. Instead, we're paying for 1 extra 
     // string compare per keystroke, which isn't too bad.
-    nsCOMPtr<nsIAtom> targetTagAtom;
-    aContent->GetTag(getter_AddRefs(targetTagAtom));
-    nsAutoString targetTagString;
-    targetTagAtom->ToString(targetTagString);
-    if (targetTagString.Equals(NS_LITERAL_STRING("isindex"))) {
+    const char *tagStr;
+    aContent->Tag()->GetUTF8String(&tagStr);
+    if (strcmp(tagStr, "isindex") == 0) {
       return PR_FALSE;
     }
   }

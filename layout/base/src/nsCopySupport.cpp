@@ -359,8 +359,12 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
        selContent = selContent->GetParent())
   {
     // checking for selection inside a plaintext form widget
-    nsCOMPtr<nsIAtom> atom;
-    selContent->GetTag(getter_AddRefs(atom));
+
+    if (!selContent->IsContentOfType(nsIContent::eHTML)) {
+      continue;
+    }
+
+    nsIAtom *atom = selContent->Tag();
 
     if (atom == nsHTMLAtoms::input ||
         atom == nsHTMLAtoms::textarea)

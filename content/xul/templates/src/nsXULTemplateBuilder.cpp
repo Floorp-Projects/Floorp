@@ -1379,18 +1379,9 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
 PRBool
 nsXULTemplateBuilder::IsTemplateElement(nsIContent* aContent)
 {
-    PRInt32 nameSpaceID;
-    aContent->GetNameSpaceID(&nameSpaceID);
+    nsINodeInfo *ni = aContent->GetNodeInfo();
 
-    if (nameSpaceID == kNameSpaceID_XUL) {
-        nsCOMPtr<nsIAtom> tag;
-        aContent->GetTag(getter_AddRefs(tag));
-
-        if (tag.get() == nsXULAtoms::Template)
-            return PR_TRUE;
-    }
-
-    return PR_FALSE;
+    return ni && ni->Equals(nsXULAtoms::Template, kNameSpaceID_XUL);
 }
 
 nsresult
@@ -1545,14 +1536,9 @@ nsXULTemplateBuilder::CompileRules()
 
     for (PRUint32 i = 0; i < count; i++) {
         nsIContent *rule = tmpl->GetChildAt(i);
+        nsINodeInfo *ni = rule->GetNodeInfo();
 
-        if (!rule->IsContentOfType(nsIContent::eXUL))
-            continue;
-
-        nsCOMPtr<nsIAtom> tag;
-        rule->GetTag(getter_AddRefs(tag));
-
-        if (tag == nsXULAtoms::rule) {
+        if (ni && ni->Equals(nsXULAtoms::rule, kNameSpaceID_XUL)) {
             ++nrules;
 
             // If the <rule> has a <conditions> element, then
@@ -1737,11 +1723,9 @@ nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
     for (PRUint32 i = 0; i < count; ++i) {
         nsIContent *condition = aConditions->GetChildAt(i);
 
-        nsCOMPtr<nsIAtom> tag;
-        condition->GetTag(getter_AddRefs(tag));
-
         TestNode* testnode = nsnull;
-        rv = CompileCondition(tag, aRule, condition, aParentNode, &testnode);
+        rv = CompileCondition(condition->Tag(), aRule, condition,
+                              aParentNode, &testnode);
         if (NS_FAILED(rv)) return rv;
 
         // XXXwaterson proably wrong to just drill it straight down

@@ -1879,10 +1879,10 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
 nsresult
 nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
 {
+    nsINodeInfo *ni = aElement->GetNodeInfo();
+
     // We need to pay special attention to the keyset tag to set up a listener
-    nsCOMPtr<nsIAtom> tag;
-    aElement->GetTag(getter_AddRefs(tag));
-    if (tag == nsXULAtoms::keyset) {
+    if (ni && ni->Equals(nsXULAtoms::keyset, kNameSpaceID_XUL)) {
         // Create our XUL key listener and hook it up.
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
         if (xblService) {
@@ -2660,14 +2660,11 @@ nsXULDocument::ContextStack::IsInsideXULTemplate()
     if (mDepth) {
         for (nsIContent* element = mTop->mElement; element;
              element = element->GetParent()) {
-            PRInt32 nameSpaceID;
-            element->GetNameSpaceID(&nameSpaceID);
-            if (nameSpaceID == kNameSpaceID_XUL) {
-                nsCOMPtr<nsIAtom> tag;
-                element->GetTag(getter_AddRefs(tag));
-                if (tag == nsXULAtoms::Template) {
-                    return PR_TRUE;
-                }
+
+            nsINodeInfo *ni = element->GetNodeInfo();
+
+            if (ni && ni->Equals(nsXULAtoms::Template, kNameSpaceID_XUL)) {
+                return PR_TRUE;
             }
         }
     }
@@ -3588,8 +3585,9 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
         xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
     }
     else {
-        aElement->GetNameSpaceID(&nameSpaceID);
-        aElement->GetTag(getter_AddRefs(baseTag));
+        nsINodeInfo *ni = aElement->GetNodeInfo();
+        nameSpaceID = ni->NamespaceID();
+        baseTag = ni->NameAtom();
     }
 
     if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::tree)) {
@@ -3963,14 +3961,12 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
         // Tell the world we failed
         nsresult rv;
 
-        nsCOMPtr<nsIAtom> tag;
-        rv = mObservesElement->GetTag(getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return;
+        nsIAtom *tag = mObservesElement->Tag();
 
         nsAutoString broadcasterID;
         nsAutoString attribute;
 
-        if (tag.get() == nsXULAtoms::observes) {
+        if (tag == nsXULAtoms::observes) {
             rv = mObservesElement->GetAttr(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
             if (NS_FAILED(rv)) return;
 
@@ -4041,19 +4037,13 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
     *aDidResolve = PR_FALSE;
 
-    PRInt32 nameSpaceID;
-    rv = aElement->GetNameSpaceID(&nameSpaceID);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIAtom> tag;
-    rv = aElement->GetTag(getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsIDOMElement> listener;
     nsAutoString broadcasterID;
     nsAutoString attribute;
 
-    if ((nameSpaceID == kNameSpaceID_XUL) && (tag.get() == nsXULAtoms::observes)) {
+    nsINodeInfo *ni = aElement->GetNodeInfo();
+
+    if (ni && ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL)) {
         // It's an <observes> element, which means that the actual
         // listener is the _parent_ node. This element should have an
         // 'element' attribute that specifies the ID of the
@@ -4061,13 +4051,9 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         // specifies the name of the attribute to observe.
         nsIContent* parent = aElement->GetParent();
 
-        nsCOMPtr<nsIAtom> parentTag;
-        rv = parent->GetTag(getter_AddRefs(parentTag));
-        if (NS_FAILED(rv)) return rv;
-
         // If we're still parented by an 'overlay' tag, then we haven't
         // made it into the real document yet. Defer hookup.
-        if (parentTag == nsXULAtoms::overlay) {
+        if (parent->GetNodeInfo()->Equals(nsXULAtoms::overlay, kNameSpaceID_XUL)) {
             *aNeedsHookup = PR_TRUE;
             return NS_OK;
         }
@@ -4095,11 +4081,13 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE && !broadcasterID.IsEmpty()) {
-              // We've got something in the command attribute.  We only treat this as
-              // a normal broadcaster if we are not a menuitem or a key.
+                // We've got something in the command attribute.  We
+                // only treat this as a normal broadcaster if we are
+                // not a menuitem or a key.
 
-              aElement->GetTag(getter_AddRefs(tag));
-              if (tag.get() == nsXULAtoms::menuitem || tag.get() == nsXULAtoms::key) {
+                nsINodeInfo *ni = aElement->GetNodeInfo();
+                if (ni->Equals(nsXULAtoms::menuitem, kNameSpaceID_XUL) ||
+                    ni->Equals(nsXULAtoms::key, kNameSpaceID_XUL)) {
                 *aNeedsHookup = PR_FALSE;
                 return NS_OK;
               }
@@ -4146,12 +4134,8 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         if (! content)
             return rv;
 
-        nsCOMPtr<nsIAtom> tag2;
-        rv = content->GetTag(getter_AddRefs(tag2));
-        if (NS_FAILED(rv)) return rv;
-
         nsAutoString tagStr;
-        rv = tag2->ToString(tagStr);
+        rv = content->Tag()->ToString(tagStr);
         if (NS_FAILED(rv)) return rv;
 
         nsCAutoString tagstrC, attributeC,broadcasteridC;

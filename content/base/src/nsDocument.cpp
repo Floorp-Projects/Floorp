@@ -343,7 +343,10 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  return NS_NewDOMDocumentType(aReturn, aQualifiedName, nsnull, nsnull,
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aQualifiedName);
+  NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_NewDOMDocumentType(aReturn, name, nsnull, nsnull,
                                aPublicId, aSystemId, nsString());
 }
 
@@ -1602,7 +1605,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   mScriptGlobalObject = aScriptGlobalObject;
 }
 
-nsIScriptLoader*
+nsIScriptLoader *
 nsDocument::GetScriptLoader()
 {
   if (!mScriptLoader) {

@@ -2632,6 +2632,8 @@ NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
   return NS_OK;
 }
 
+#ifdef NS_DEBUG
+
 PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 {
   PRInt32 result = -1;
@@ -2646,8 +2648,6 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 
   return result;
 }
-
-#ifdef NS_DEBUG
 
 #ifdef DEBUG_waterson
 
@@ -2707,10 +2707,9 @@ nsresult
 nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
 {
   aResult = aType;
-  if (nsnull != mContent) {
-    nsCOMPtr<nsIAtom> tag;
-    mContent->GetTag(getter_AddRefs(tag));
-    if (tag && tag != nsLayoutAtoms::textTagName) {
+  if (mContent) {
+    nsIAtom *tag = mContent->Tag();
+    if (tag != nsLayoutAtoms::textTagName) {
       nsAutoString buf;
       tag->ToString(buf);
       aResult.Append(NS_LITERAL_STRING("(") + buf + NS_LITERAL_STRING(")"));
@@ -4756,18 +4755,11 @@ static void
 GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
            char* aResult)
 {
-  char namebuf[40];
-  namebuf[0] = 0;
+  const char *nameStr = "";
   if (aContent) {
-    nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(getter_AddRefs(tag));
-    if (tag) {
-      nsAutoString tmp;
-      tag->ToString(tmp);
-      tmp.ToCString(namebuf, sizeof(namebuf));
-    }
+    aContent->Tag()->GetUTF8String(&nameStr);
   }
-  PR_snprintf(aResult, aResultSize, "%s@%p", namebuf, aFrame);
+  PR_snprintf(aResult, aResultSize, "%s@%p", nameStr, aFrame);
 }
 
 void

@@ -39,6 +39,7 @@
 #ifndef nsDOMDocumentType_h___
 #define nsDOMDocumentType_h___
 
+#include "nsCOMPtr.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
 #include "nsGenericDOMDataNode.h"
@@ -53,7 +54,7 @@ class nsDOMDocumentType : public nsGenericDOMDataNode,
                           public nsIDOMDocumentType
 {
 public:
-  nsDOMDocumentType(const nsAString& aName,
+  nsDOMDocumentType(nsIAtom *aName,
                     nsIDOMNamedNodeMap *aEntities,
                     nsIDOMNamedNodeMap *aNotations,
                     const nsAString& aPublicId,
@@ -72,12 +73,12 @@ public:
   NS_DECL_NSIDOMDOCUMENTTYPE
 
   // nsIContent
-  NS_IMETHOD GetTag(nsIAtom** aResult) const;
+  virtual nsIAtom *Tag() const;
 
 protected:
-  nsString mName;
-  nsIDOMNamedNodeMap* mEntities;
-  nsIDOMNamedNodeMap* mNotations;
+  nsCOMPtr<nsIAtom> mName;
+  nsCOMPtr<nsIDOMNamedNodeMap> mEntities;
+  nsCOMPtr<nsIDOMNamedNodeMap> mNotations;
   nsString mPublicId;
   nsString mSystemId;
   nsString mInternalSubset;
@@ -85,7 +86,7 @@ protected:
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                      const nsAString& aName,
+                      nsIAtom *aName,
                       nsIDOMNamedNodeMap *aEntities,
                       nsIDOMNamedNodeMap *aNotations,
                       const nsAString& aPublicId,

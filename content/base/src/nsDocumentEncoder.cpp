@@ -388,21 +388,8 @@ nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
 PRBool 
 nsDocumentEncoder::IsTag(nsIDOMNode* aNode, nsIAtom* aAtom)
 {
-  if (aNode)
-  {
-    nsCOMPtr<nsIAtom> atom;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    if (content)
-      content->GetTag(getter_AddRefs(atom));
-    if (atom)
-    {
-      if (atom.get() == aAtom)
-      {
-        return PR_TRUE;
-      }
-    }
-  }
-  return PR_FALSE;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  return content && content->Tag() == aAtom;
 }
 
 static nsresult
@@ -683,7 +670,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
     }
     else
     {
-      if (aNode != mCommonParent.get())
+      if (aNode != mCommonParent)
       {
         if (IncludeInContext(aNode))
         {
@@ -723,7 +710,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
         // to add one here in order to include it in the children we serialize.
         nsCOMPtr<nsIDOMNode> endParent;
         aRange->GetEndContainer(getter_AddRefs(endParent));
-        if (aNode != endParent.get())
+        if (aNode != endParent)
         {
           endOffset++;
         }
@@ -742,7 +729,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
       }
 
       // serialize the end of this node
-      if (aNode != mCommonParent.get())
+      if (aNode != mCommonParent)
       {
         rv = SerializeNodeEnd(aNode, aString);
         NS_ENSURE_SUCCESS(rv, rv); 
@@ -1117,15 +1104,14 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
        selContent = selContent->GetParent())
   {
     // checking for selection inside a plaintext form widget
-    nsCOMPtr<nsIAtom> atom;
-    selContent->GetTag(getter_AddRefs(atom));
-    if (atom.get() == nsHTMLAtoms::input ||
-        atom.get() == nsHTMLAtoms::textarea)
+    nsIAtom *atom = selContent->Tag();
+    if (atom == nsHTMLAtoms::input ||
+        atom == nsHTMLAtoms::textarea)
     {
       mIsTextWidget = PR_TRUE;
       break;
     }
-    else if (atom.get() == nsHTMLAtoms::body)
+    else if (atom == nsHTMLAtoms::body)
     {
       // check for moz prewrap style on body.  If it's there we are 
       // in a plaintext editor.  This is pretty cheezy but I haven't 
@@ -1264,41 +1250,34 @@ nsHTMLCopyEncoder::IncludeInContext(nsIDOMNode *aNode)
   if (!content)
     return PR_FALSE;
 
-  nsCOMPtr<nsIAtom> tag;
+  nsIAtom *tag = content->Tag();
 
-  content->GetTag(getter_AddRefs(tag));
-
-  if (tag.get() == nsHTMLAtoms::b        ||
-      tag.get() == nsHTMLAtoms::i        ||
-      tag.get() == nsHTMLAtoms::u        ||
-      tag.get() == nsHTMLAtoms::a        ||
-      tag.get() == nsHTMLAtoms::tt       ||
-      tag.get() == nsHTMLAtoms::s        ||
-      tag.get() == nsHTMLAtoms::big      ||
-      tag.get() == nsHTMLAtoms::small    ||
-      tag.get() == nsHTMLAtoms::strike   ||
-      tag.get() == nsHTMLAtoms::em       ||
-      tag.get() == nsHTMLAtoms::strong   ||
-      tag.get() == nsHTMLAtoms::dfn      ||
-      tag.get() == nsHTMLAtoms::code     ||
-      tag.get() == nsHTMLAtoms::cite     ||
-      tag.get() == nsHTMLAtoms::variable ||
-      tag.get() == nsHTMLAtoms::abbr     ||
-      tag.get() == nsHTMLAtoms::font     ||
-      tag.get() == nsHTMLAtoms::script   ||
-      tag.get() == nsHTMLAtoms::span     ||
-      tag.get() == nsHTMLAtoms::pre      ||
-      tag.get() == nsHTMLAtoms::h1       ||
-      tag.get() == nsHTMLAtoms::h2       ||
-      tag.get() == nsHTMLAtoms::h3       ||
-      tag.get() == nsHTMLAtoms::h4       ||
-      tag.get() == nsHTMLAtoms::h5       ||
-      tag.get() == nsHTMLAtoms::h6) 
-  {
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  return (tag == nsHTMLAtoms::b        ||
+          tag == nsHTMLAtoms::i        ||
+          tag == nsHTMLAtoms::u        ||
+          tag == nsHTMLAtoms::a        ||
+          tag == nsHTMLAtoms::tt       ||
+          tag == nsHTMLAtoms::s        ||
+          tag == nsHTMLAtoms::big      ||
+          tag == nsHTMLAtoms::small    ||
+          tag == nsHTMLAtoms::strike   ||
+          tag == nsHTMLAtoms::em       ||
+          tag == nsHTMLAtoms::strong   ||
+          tag == nsHTMLAtoms::dfn      ||
+          tag == nsHTMLAtoms::code     ||
+          tag == nsHTMLAtoms::cite     ||
+          tag == nsHTMLAtoms::variable ||
+          tag == nsHTMLAtoms::abbr     ||
+          tag == nsHTMLAtoms::font     ||
+          tag == nsHTMLAtoms::script   ||
+          tag == nsHTMLAtoms::span     ||
+          tag == nsHTMLAtoms::pre      ||
+          tag == nsHTMLAtoms::h1       ||
+          tag == nsHTMLAtoms::h2       ||
+          tag == nsHTMLAtoms::h3       ||
+          tag == nsHTMLAtoms::h4       ||
+          tag == nsHTMLAtoms::h5       ||
+          tag == nsHTMLAtoms::h6);
 }
 
 
@@ -1457,11 +1436,8 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
           nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
           if (content)
           {
-            nsCOMPtr<nsIAtom> atom;
-            content->GetTag(getter_AddRefs(atom));
-
             PRInt32 id;
-            parserService->HTMLAtomTagToId(atom, &id);
+            parserService->HTMLAtomTagToId(content->Tag(), &id);
 
             PRBool isBlock = PR_FALSE;
             parserService->IsBlock(id, isBlock);
@@ -1546,11 +1522,8 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
           nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
           if (content)
           {
-            nsCOMPtr<nsIAtom> atom;
-            content->GetTag(getter_AddRefs(atom));
-
             PRInt32 id;
-            parserService->HTMLAtomTagToId(atom, &id);
+            parserService->HTMLAtomTagToId(content->Tag(), &id);
 
             PRBool isBlock = PR_FALSE;
             parserService->IsBlock(id, isBlock);

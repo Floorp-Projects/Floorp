@@ -141,10 +141,9 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     else
       child = GetNextSibling();
 
-    nsCOMPtr<nsIAtom> tag;
     if (child) {
-      child->GetContent()->GetTag(getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::splitter) {
+      nsINodeInfo *ni = child->GetContent()->GetNodeInfo();
+      if (ni && ni->Equals(nsXULAtoms::splitter, kNameSpaceID_XUL)) {
         *aFrame = child;
         return NS_OK;
       }

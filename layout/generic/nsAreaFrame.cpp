@@ -40,6 +40,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
+#include "nsINodeInfo.h"
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
 #include "nsHTMLValue.h"
@@ -87,18 +88,10 @@ nsAreaFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
   if (!mContent)
     return NS_ERROR_FAILURE;
 
-  PRBool isXUL = mContent->IsContentOfType(nsIContent::eXUL);
-  if (!isXUL)
-    return NS_OK;
-
-  // find out what type of element this is
-  nsCOMPtr<nsIAtom> atom;
-  nsresult rv = mContent->GetTag(getter_AddRefs(atom));
-  if (NS_FAILED(rv))
-    return rv;
+  nsINodeInfo *ni = mContent->GetNodeInfo();
 
   // only support accesskeys for the following elements
-  if (atom != nsXULAtoms::label)
+  if (!ni || !ni->Equals(nsXULAtoms::label, kNameSpaceID_XUL))
     return NS_OK;
 
   // To filter out <label>s without a control attribute.
@@ -120,7 +113,7 @@ nsAreaFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
   nsCOMPtr<nsIEventStateManager> esm;
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
-  rv = NS_OK;
+  nsresult rv = NS_OK;
 
   if (esm) {
     PRUint32 key = accessKey.First();

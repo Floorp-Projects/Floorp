@@ -3183,42 +3183,35 @@ nsTextServicesDocument::ClearDidSkip(nsIContentIterator* aFilteredIter)
 PRBool
 nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
 {
-  nsCOMPtr<nsIAtom> atom;
+  nsIAtom *atom = aContent->Tag();
 
-  aContent->GetTag(getter_AddRefs(atom));
-
-  if (!atom)
-    return PR_TRUE;
-
-  nsIAtom *atomPtr = atom.get();
-
-  return (sAAtom       != atomPtr &&
-          sAddressAtom != atomPtr &&
-          sBigAtom     != atomPtr &&
-          sBlinkAtom   != atomPtr &&
-          sBAtom       != atomPtr &&
-          sCiteAtom    != atomPtr &&
-          sCodeAtom    != atomPtr &&
-          sDfnAtom     != atomPtr &&
-          sEmAtom      != atomPtr &&
-          sFontAtom    != atomPtr &&
-          sIAtom       != atomPtr &&
-          sKbdAtom     != atomPtr &&
-          sKeygenAtom  != atomPtr &&
-          sNobrAtom    != atomPtr &&
-          sSAtom       != atomPtr &&
-          sSampAtom    != atomPtr &&
-          sSmallAtom   != atomPtr &&
-          sSpacerAtom  != atomPtr &&
-          sSpanAtom    != atomPtr &&
-          sStrikeAtom  != atomPtr &&
-          sStrongAtom  != atomPtr &&
-          sSubAtom     != atomPtr &&
-          sSupAtom     != atomPtr &&
-          sTtAtom      != atomPtr &&
-          sUAtom       != atomPtr &&
-          sVarAtom     != atomPtr &&
-          sWbrAtom     != atomPtr);
+  return (sAAtom       != atom &&
+          sAddressAtom != atom &&
+          sBigAtom     != atom &&
+          sBlinkAtom   != atom &&
+          sBAtom       != atom &&
+          sCiteAtom    != atom &&
+          sCodeAtom    != atom &&
+          sDfnAtom     != atom &&
+          sEmAtom      != atom &&
+          sFontAtom    != atom &&
+          sIAtom       != atom &&
+          sKbdAtom     != atom &&
+          sKeygenAtom  != atom &&
+          sNobrAtom    != atom &&
+          sSAtom       != atom &&
+          sSampAtom    != atom &&
+          sSmallAtom   != atom &&
+          sSpacerAtom  != atom &&
+          sSpanAtom    != atom &&
+          sStrikeAtom  != atom &&
+          sStrongAtom  != atom &&
+          sSubAtom     != atom &&
+          sSupAtom     != atom &&
+          sTtAtom      != atom &&
+          sUAtom       != atom &&
+          sVarAtom     != atom &&
+          sWbrAtom     != atom);
 }
 
 PRBool
@@ -4989,11 +4982,9 @@ void
 nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
 {
   nsString tmpStr, str;
-  nsCOMPtr<nsIAtom> atom;
   nsresult result;
 
-  aContent->GetTag(getter_AddRefs(atom));
-  atom->ToString(tmpStr);
+  aContent->Tag()->ToString(tmpStr);
   printf("%s", NS_LossyConvertUCS2toASCII(tmpStr).get());
 
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);

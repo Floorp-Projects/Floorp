@@ -197,11 +197,11 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-  NS_IMETHOD GetContentID(PRUint32* aID);
+  virtual PRUint32 ContentID() const;
   NS_IMETHOD SetContentID(PRUint32 aID);
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
-  NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
+  virtual const nsVoidArray *GetRangeList() const;
   NS_IMETHOD SetFocus(nsIPresContext *aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext *aPresContext);
 

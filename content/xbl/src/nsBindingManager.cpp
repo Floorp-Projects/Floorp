@@ -594,23 +594,24 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
 }
 
 NS_IMETHODIMP
-nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult)
+nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
+                             nsIAtom** aResult)
 {
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aContent, getter_AddRefs(binding));
   
   if (binding) {
-    nsCOMPtr<nsIAtom> tag;
-    binding->GetBaseTag(aNameSpaceID, getter_AddRefs(tag));
-    if (tag) {
-      *aResult = tag;
-      NS_ADDREF(*aResult);
+    binding->GetBaseTag(aNameSpaceID, aResult);
+
+    if (*aResult) {
       return NS_OK;
     }
   }
 
   aContent->GetNameSpaceID(aNameSpaceID);
-  return aContent->GetTag(aResult);
+  NS_ADDREF(*aResult = aContent->Tag());
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

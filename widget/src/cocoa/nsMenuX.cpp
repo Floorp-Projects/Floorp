@@ -580,8 +580,7 @@ nsEventStatus nsMenuX::MenuConstruct(
     nsIContent *child = menuPopup->GetChildAt(i);
     if ( child ) {
       // depending on the type, create a menu item, separator, or submenu
-      nsCOMPtr<nsIAtom> tag;
-      child->GetTag ( getter_AddRefs(tag) );
+      nsIAtom *tag = child->Tag();
       if ( tag == nsWidgetAtoms::menuitem )
         LoadMenuItem(this, child);
       else if ( tag == nsWidgetAtoms::menuseparator )
@@ -624,8 +623,7 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
     nsIContent *child = menuPopup->GetChildAt(i);
     if ( child ) {      
       // depending on the type, create a menu item, separator, or submenu
-      nsCOMPtr<nsIAtom> tag;
-      child->GetTag ( getter_AddRefs(tag) );
+      nsIAtom *tag = child->Tag();
       if ( tag == nsWidgetAtoms::menuitem )
         LoadMenuItem(this, child);
       else if ( tag == nsWidgetAtoms::menuseparator )
@@ -1018,8 +1016,7 @@ nsMenuX::OnCreate()
     PRUint32 count = popupContent->GetChildCount();
     for (PRUint32 i = 0; i < count; i++) {
       nsIContent *grandChild = popupContent->GetChildAt(i);
-      nsCOMPtr<nsIAtom> tag;
-      grandChild->GetTag(getter_AddRefs(tag));
+      nsIAtom *tag = grandChild->Tag();
       if (tag == nsWidgetAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;

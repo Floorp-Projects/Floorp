@@ -271,9 +271,9 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
   PRInt32 j = 0;
   for (PRUint32 i = 0; i < count; i++) {
     nsIContent *child = parent->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    child->GetTag(getter_AddRefs(tag));
-    if (tag == nsXULAtoms::treecol) {
+    nsINodeInfo *ni = child->GetNodeInfo();
+
+    if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) {
       if (child == mColElement) {
         mColIndex = j;
         break;
@@ -420,11 +420,10 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   nsCOMPtr<nsIContent> baseElement;
   GetBaseElement(getter_AddRefs(baseElement));
-  nsCOMPtr<nsIAtom> tag;
-  baseElement->GetTag(getter_AddRefs(tag));
 
   PRInt32 desiredRows;
-  if (tag == nsHTMLAtoms::select) {
+  if (baseElement->Tag() == nsHTMLAtoms::select &&
+      baseElement->IsContentOfType(nsIContent::eHTML)) {
     aSize.width = CalcMaxRowWidth(aBoxLayoutState);
     nsAutoString size;
     baseElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, size);
@@ -1640,9 +1639,11 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
 {
   nsCOMPtr<nsIContent> baseElement;
   GetBaseElement(getter_AddRefs(baseElement));
-  nsCOMPtr<nsIAtom> tag;
-  baseElement->GetTag(getter_AddRefs(tag));
-  if (tag == nsHTMLAtoms::select) {
+
+  nsINodeInfo *ni = baseElement->GetNodeInfo();
+
+  if (baseElement->Tag() == nsHTMLAtoms::select &&
+      baseElement->IsContentOfType(nsIContent::eHTML)) {
     // If we are an intrinsically sized select widget, we may need to
     // resize, if the widest item was removed or a new item was added.
     // XXX optimize this more
@@ -3429,9 +3430,9 @@ nsTreeBodyFrame::EnsureColumns()
 
     // Note: this is dependent on the anonymous content for select
     // defined in select.xml
-    nsCOMPtr<nsIAtom> parentTag;
-    parent->GetTag(getter_AddRefs(parentTag));
-    if (parentTag == nsHTMLAtoms::select) {
+    nsINodeInfo *ni = parent->GetNodeInfo();
+    if (parent->Tag() == nsHTMLAtoms::select &&
+        parent->IsContentOfType(nsIContent::eHTML)) {
       // We can avoid crawling the content nodes in this case, since we know
       // that we have a single column, and we know where it's at.
 
@@ -3469,9 +3470,9 @@ nsTreeBodyFrame::EnsureColumns()
       nsIFrame* frame = nsnull;
       colBox->GetFrame(&frame);
       nsIContent* content = frame->GetContent();
-      nsCOMPtr<nsIAtom> tag;
-      content->GetTag(getter_AddRefs(tag));
-      if (tag == nsXULAtoms::treecol) {
+
+      nsINodeInfo *ni = content->GetNodeInfo();
+      if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) {
         // Create a new column structure.
         nsTreeColumn* col = new nsTreeColumn(content, frame);
         if (normalDirection) {
@@ -3495,13 +3496,18 @@ nsTreeBodyFrame::EnsureColumns()
 nsresult
 nsTreeBodyFrame::GetBaseElement(nsIContent** aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-  nsIContent* parent;
-  for (parent = mContent;
-       parent && NS_SUCCEEDED(parent->GetTag(getter_AddRefs(tag)))
-         && tag != nsXULAtoms::tree && tag != nsHTMLAtoms::select;
-       parent = parent->GetParent()) {
-    // Do nothing; we just go up till we hit the right tag or run off the tree
+  nsINodeInfo *ni;
+  nsIContent* parent = mContent;
+  while (parent) {
+    ni = parent->GetNodeInfo();
+
+    if (ni && (ni->Equals(nsXULAtoms::tree, kNameSpaceID_XUL) ||
+               (ni->Equals(nsHTMLAtoms::select) &&
+                parent->IsContentOfType(nsIContent::eHTML)))) {
+      break;
+    }
+
+    parent = parent->GetParent();
   }
 
   NS_IF_ADDREF(*aContent = parent);

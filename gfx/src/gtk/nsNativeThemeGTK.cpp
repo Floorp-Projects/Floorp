@@ -266,12 +266,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         nsIContent* content = aFrame->GetContent();
         if (content->IsContentOfType(nsIContent::eXUL))
           aFrame = aFrame->GetParent();
-        else {
-          nsCOMPtr<nsIAtom> tag;
-          content->GetTag(getter_AddRefs(tag));
-          if (tag == mInputAtom)
-            atom = mInputCheckedAtom;
-        }
+        else if (content->Tag() == mInputAtom)
+          atom = mInputCheckedAtom;
       }
 
       if (!atom)

@@ -121,7 +121,6 @@
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_CID(kAttributeContentCID, NS_ATTRIBUTECONTENT_CID);
 
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
@@ -1438,23 +1437,24 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
 
         // Creates the content and frame and return if successful
         nsresult rv = NS_ERROR_FAILURE;
-        if (nsnull != attrName) {
+        if (attrName) {
           nsIFrame*   textFrame = nsnull;
-          nsCOMPtr<nsIContent> content(do_CreateInstance(kAttributeContentCID));
-          if (content) {
-            nsCOMPtr<nsIAttributeContent> attrContent(do_QueryInterface(content));
-            if (attrContent) {
-              attrContent->Init(aContent, attrNameSpace, attrName);  
-            }
+          nsCOMPtr<nsIContent> content;
+          rv = NS_NewAttributeContent(getter_AddRefs(content));
 
-            // Set aContent as the parent content and set the document object. This
-            // way event handling works
+          nsCOMPtr<nsIAttributeContent> attrContent(do_QueryInterface(content));
+          if (attrContent) {
+            attrContent->Init(aContent, attrNameSpace, attrName);  
+
+            // Set aContent as the parent content and set the document
+            // object. This way event handling works
             content->SetParent(aContent);
             content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 
             // Create a text frame and initialize it
             NS_NewTextFrame(shell, &textFrame);
-            textFrame->Init(aPresContext, content, aParentFrame, aStyleContext, nsnull);
+            textFrame->Init(aPresContext, content, aParentFrame, aStyleContext,
+                            nsnull);
 
             // Return the text frame
             *aFrame = textFrame;
@@ -2980,13 +2980,15 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
   nsIFrame* parentFrame = nsnull;
   aIsPseudoParent = PR_FALSE;
 
-  // XXX form code needs to be fixed so that the forms can work without a frame.
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
+  // XXX form code needs to be fixed so that the forms can work
+  // without a frame.
+  nsIAtom *tag = aContent->Tag();
 
   // Do not construct pseudo frames for trees 
-  if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent, aStyleContext)) {
-    // this frame may have a pseudo parent, use block frame type to trigger foreign
+  if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag, aContent,
+                               aStyleContext)) {
+    // this frame may have a pseudo parent, use block frame type to
+    // trigger foreign
     GetParentFrame(aPresShell, aPresContext, aTableCreator, *aParentFrameIn, 
                    nsLayoutAtoms::blockFrame, aState, parentFrame, aIsPseudoParent);
     if (!aIsPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5087,9 +5089,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
 #ifdef MOZ_XUL
       // Only cut XUL scrollbars off if they're not in a XUL document.  This allows
       // scrollbars to be styled from XUL (although not from XML or HTML).
-      nsCOMPtr<nsIAtom> tag;
-      content->GetTag(getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::scrollbar) {
+      if (content->Tag() == nsXULAtoms::scrollbar) {
         nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
         if (xulDoc)
           content->SetBindingParent(aParent);
@@ -6165,10 +6165,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_TRUE,
                     childItems, PR_TRUE);
 
-    nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(getter_AddRefs(tag));
-    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
-                          PR_FALSE, childItems);
+    CreateAnonymousFrames(aPresShell, aPresContext, aContent->Tag(), aState,
+                          aContent, newFrame, PR_FALSE, childItems);
 
     // Set the scrolled frame's initial child lists
     scrolledFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
@@ -6228,10 +6226,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame, PR_TRUE,
                     childItems, PR_TRUE);
 
-    nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(getter_AddRefs(tag));
-    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
-                          PR_FALSE, childItems);
+    CreateAnonymousFrames(aPresShell, aPresContext, aContent->Tag(), aState,
+                          aContent, newFrame, PR_FALSE, childItems);
 
     // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
@@ -6577,15 +6573,11 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
   if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
     return aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
   } else {
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIAtom> tag;
-      aContent->GetTag(getter_AddRefs(tag));
-      NS_ASSERTION(tag == nsLayoutAtoms::textTagName,
-                   "shouldn't waste time creating style contexts for "
-                   "comments and processing instructions");
-    }
-#endif
+
+    NS_ASSERTION(aContent->Tag() == nsLayoutAtoms::textTagName,
+                 "shouldn't waste time creating style contexts for "
+                 "comments and processing instructions");
+
     return aPresContext->ResolveStyleContextForNonElement(parentStyleContext);
   }
 }
@@ -7023,8 +7015,7 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*            aPresShell,
   }
 
   // Get the element's tag
-  nsCOMPtr<nsIAtom>  tag;
-  aContent->GetTag(getter_AddRefs(tag));
+  nsIAtom *tag = aContent->Tag();
 
   // never create frames for comments on PIs
   if (tag == nsLayoutAtoms::commentTagName ||
@@ -7104,7 +7095,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
       PRInt32 nameSpaceID;
       xblService->ResolveTag(aContent, &nameSpaceID, getter_AddRefs(baseTag));
  
-      if (baseTag.get() != aTag || aNameSpaceID != nameSpaceID) {
+      if (baseTag != aTag || aNameSpaceID != nameSpaceID) {
         // Construct the frame using the XBL base tag.
         rv = ConstructFrameInternal( aPresShell, 
                                   aPresContext,
@@ -7612,7 +7603,7 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
     nodeList->Item(PRUint32(index), getter_AddRefs(node));
 
     nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-    if (child.get() == aChild)
+    if (child == aChild)
       break;
   }
 
@@ -7694,7 +7685,7 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
     nodeList->Item(PRUint32(index), getter_AddRefs(node));
 
     nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-    if (child.get() == aChild)
+    if (child == aChild)
       break;
   }
 
@@ -7935,21 +7926,20 @@ inline PRBool
 ShouldIgnoreSelectChild(nsIContent* aContainer)
 {
   // Ignore options and optgroups inside a select (size > 1)
-  nsCOMPtr<nsIAtom> containerTag;
-  aContainer->GetTag(getter_AddRefs(containerTag));
+  nsIAtom *containerTag = aContainer->Tag();
 
   if (containerTag == nsHTMLAtoms::optgroup ||
       containerTag == nsHTMLAtoms::select) {
     nsIContent* selectContent = aContainer;
-    
+
     while (containerTag != nsHTMLAtoms::select) {
       selectContent = selectContent->GetParent();
       if (!selectContent) {
         break;
       }
-      selectContent->GetTag(getter_AddRefs(containerTag));
+      containerTag = selectContent->Tag();
     }
-    
+
     nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(selectContent);
     if (selectElement) {
       nsAutoString selSize;
@@ -8097,7 +8087,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     if (tag == nsXULAtoms::treechildren ||
         tag == nsXULAtoms::treeitem ||
         tag == nsXULAtoms::treerow ||
-        (UseXBLForms() && ShouldIgnoreSelectChild(aContainer)))
+        (namespaceID == kNameSpaceID_XUL && UseXBLForms() &&
+         ShouldIgnoreSelectChild(aContainer)))
       return NS_OK;
 
   }
@@ -8656,10 +8647,7 @@ PRBool NotifyListBoxBody(nsIPresContext*    aPresContext,
   if (!aContainer)
     return PR_FALSE;
 
-  nsCOMPtr<nsIAtom> tag;
-  aChild->GetTag(getter_AddRefs(tag));
-
-  if (tag == nsXULAtoms::listitem) {
+  if (aChild->Tag() == nsXULAtoms::listitem) {
     nsListBoxBodyFrame* listBoxBody = nsnull;
     if (aChildFrame) {
       // There is a frame for the removed content, so its parent frame is the listboxbody
@@ -8693,6 +8681,7 @@ PRBool NotifyListBoxBody(nsIPresContext*    aPresContext,
     return PR_TRUE;
   }
 
+  nsCOMPtr<nsIAtom> tag;
   PRInt32 namespaceID;
   aDocument->GetBindingManager()->ResolveTag(aContainer, &namespaceID,
                                              getter_AddRefs(tag));
@@ -8701,7 +8690,8 @@ PRBool NotifyListBoxBody(nsIPresContext*    aPresContext,
   if (tag == nsXULAtoms::treechildren ||
       tag == nsXULAtoms::treeitem ||
       tag == nsXULAtoms::treerow ||
-      (aUseXBLForms && ShouldIgnoreSelectChild(aContainer)))
+      (namespaceID == kNameSpaceID_XUL && aUseXBLForms &&
+       ShouldIgnoreSelectChild(aContainer)))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -10178,7 +10168,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     mDocument->GetBindingManager()->ResolveTag(aContent, &namespaceID,
                                                getter_AddRefs(tag));
 
-    if (tag && (tag.get() == nsXULAtoms::listitem || tag.get() == nsXULAtoms::listcell))
+    if (namespaceID == kNameSpaceID_XUL &&
+        (tag == nsXULAtoms::listitem ||
+         tag == nsXULAtoms::listcell))
       return NS_OK;
   }
 
@@ -10312,9 +10304,7 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   aFrame = nsnull;
 
   // Get the alternate text to use
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
-  GetAlternateTextFor(aContent, tag, altText);
+  GetAlternateTextFor(aContent, aContent->Tag(), altText);
 
   // Create a text content element for the alternate text
   nsCOMPtr<nsIContent> altTextContent(do_CreateInstance(kTextNodeCID,&rv));
@@ -10437,12 +10427,12 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
   // Get aFrame's content object and the tag name
   PRInt32                   nameSpaceID;
-  nsCOMPtr<nsIAtom>         tag;
+  nsIAtom*                  tag;
 
   nsIContent* content = aFrame->GetContent();
   NS_ASSERTION(content, "null content object");
   content->GetNameSpaceID(&nameSpaceID);
-  content->GetTag(getter_AddRefs(tag));
+  tag = content->Tag();
 
   // Get the child list name that the frame is contained in
   nsCOMPtr<nsIAtom>  listName;
@@ -10464,8 +10454,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   // See whether it's an IMG or an INPUT element (for image buttons)
   // or if it is an applet with no displayable children
   // XXX need to check nameSpaceID in these spots
-  if (nsHTMLAtoms::img == tag.get() || nsHTMLAtoms::input == tag.get() ||
-      (nsHTMLAtoms::applet == tag.get() && !HasDisplayableChildren(aPresContext, aFrame))) {
+  if (nsHTMLAtoms::img == tag || nsHTMLAtoms::input == tag ||
+      (nsHTMLAtoms::applet == tag && !HasDisplayableChildren(aPresContext, aFrame))) {
     // Try and construct an alternate frame to use when the
     // image can't be rendered
     nsIFrame* newFrame;
@@ -10508,9 +10498,9 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       }
     }
 
-  } else if ((nsHTMLAtoms::object == tag.get()) ||
-             (nsHTMLAtoms::embed == tag.get()) ||
-             (nsHTMLAtoms::applet == tag.get())) {
+  } else if ((nsHTMLAtoms::object == tag) ||
+             (nsHTMLAtoms::embed == tag) ||
+             (nsHTMLAtoms::applet == tag)) {
     // It's an OBJECT, EMBED, or APPLET, so we should display the contents
     // instead
     nsIFrame* absoluteContainingBlock;
@@ -10529,10 +10519,10 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
 #ifdef NS_DEBUG
     // Verify that we calculated the same containing block
-    if (listName.get() == nsLayoutAtoms::absoluteList) {
+    if (listName == nsLayoutAtoms::absoluteList) {
       NS_ASSERTION(absoluteContainingBlock == parentFrame,
                    "wrong absolute containing block");
-    } else if (listName.get() == nsLayoutAtoms::floatList) {
+    } else if (listName == nsLayoutAtoms::floatList) {
       NS_ASSERTION(floatContainingBlock == parentFrame,
                    "wrong float containing block");
     }
@@ -10610,13 +10600,13 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
           // block frame.
           SplitToContainingBlock(aPresContext, state, parentFrame, list1, list2, list3, PR_FALSE);
         }
-      } else if (listName.get() == nsLayoutAtoms::absoluteList) {
+      } else if (listName == nsLayoutAtoms::absoluteList) {
         newFrame = state.mAbsoluteItems.childList;
         state.mAbsoluteItems.childList = nsnull;
-      } else if (listName.get() == nsLayoutAtoms::fixedList) {
+      } else if (listName == nsLayoutAtoms::fixedList) {
         newFrame = state.mFixedItems.childList;
         state.mFixedItems.childList = nsnull;
-      } else if (listName.get() == nsLayoutAtoms::floatList) {
+      } else if (listName == nsLayoutAtoms::floatList) {
         newFrame = state.mFloatedItems.childList;
         state.mFloatedItems.childList = nsnull;
       }
@@ -10631,7 +10621,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       
       InsertOutOfFlowFrames(state, aPresContext);
     }
-  } else if (nsHTMLAtoms::input == tag.get()) {
+  } else if (nsHTMLAtoms::input == tag) {
     // XXX image INPUT elements are also image frames, but don't throw away the
     // image frame, because the frame class has extra logic that is specific to
     // INPUT elements
@@ -11216,7 +11206,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
     while (parentFrame) {
       // Search the child frames for a match
       *aFrame = FindFrameWithContent(aPresContext, aFrameManager, parentFrame,
-                                     parentContent.get(), aContent, aHint);
+                                     parentContent, aContent, aHint);
 #ifdef NOISY_FINDFRAME
       printf("FindFrameWithContent returned %p\n", *aFrame);
 #endif
@@ -11233,7 +11223,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
 #endif
         nsIFrame *verifyTestFrame =
             FindFrameWithContent(aPresContext, aFrameManager, parentFrame,
-                                 parentContent.get(), aContent, nsnull);
+                                 parentContent, aContent, nsnull);
 #ifdef NOISY_FINDFRAME
         printf("VERIFY returned %p\n", verifyTestFrame);
 #endif
@@ -11263,9 +11253,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
 
   if (aHint && !*aFrame)
   { // if we had a hint, and we didn't get a frame, see if we should try the slow way
-    nsCOMPtr<nsIAtom>tag;
-    aContent->GetTag(getter_AddRefs(tag));
-    if (nsLayoutAtoms::textTagName == tag.get()) 
+    if (aContent->Tag() == nsLayoutAtoms::textTagName) 
     {
 #ifdef NOISY_FINDFRAME
       FFWC_slowSearchForText++;
@@ -12244,11 +12232,11 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       // Take the old textFrame out of the inline parents child list
       DeletingFrameSubtree(aPresContext, aState.mPresShell, 
                            aState.mFrameManager, textFrame);
-      parentFrame->RemoveFrame(aPresContext, *aState.mPresShell.get(),
+      parentFrame->RemoveFrame(aPresContext, *aState.mPresShell,
                                nsnull, textFrame);
 
       // Insert in the letter frame(s)
-      parentFrame->InsertFrames(aPresContext, *aState.mPresShell.get(),
+      parentFrame->InsertFrames(aPresContext, *aState.mPresShell,
                                 nsnull, prevFrame, letterFrames.childList);
     }
   }
@@ -12552,16 +12540,16 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIPresShell* aPresShell, nsIPresCont
     // Take the old textFrame out of the parents child list
     DeletingFrameSubtree(aPresContext, aState.mPresShell,
                          aState.mFrameManager, textFrame);
-    parentFrame->RemoveFrame(aPresContext, *aState.mPresShell.get(),
+    parentFrame->RemoveFrame(aPresContext, *aState.mPresShell,
                              nsnull, textFrame);
 
     // Insert in the letter frame(s)
-    parentFrame->InsertFrames(aPresContext, *aState.mPresShell.get(),
+    parentFrame->InsertFrames(aPresContext, *aState.mPresShell,
                               nsnull, prevFrame, letterFrames.childList);
 
     // Insert in floats too if needed
     if (aState.mFloatedItems.childList) {
-      aBlockFrame->AppendFrames(aPresContext, *aState.mPresShell.get(),
+      aBlockFrame->AppendFrames(aPresContext, *aState.mPresShell,
                                 nsLayoutAtoms::floatList,
                                 aState.mFloatedItems.childList);
     }
@@ -12608,13 +12596,11 @@ nsCSSFrameConstructor::CreateListBoxContent(nsIPresContext* aPresContext,
       return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> tag;
-    aChild->GetTag(getter_AddRefs(tag));
-
     PRInt32 namespaceID;
     aChild->GetNameSpaceID(&namespaceID);
 
-    rv = ConstructFrameInternal(shell, aPresContext, state, aChild, aParentFrame, tag, namespaceID, 
+    rv = ConstructFrameInternal(shell, aPresContext, state, aChild,
+                                aParentFrame, aChild->Tag(), namespaceID, 
                                 styleContext, frameItems, PR_FALSE);
     
     nsIFrame* newFrame = frameItems.childList;
@@ -12688,10 +12674,8 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
   nsresult rv = ProcessChildren(aPresShell, aPresContext, aState, aContent,
                                 aNewFrame, PR_TRUE, childItems, PR_TRUE);
 
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
-  CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, aNewFrame,
-                        PR_FALSE, childItems);
+  CreateAnonymousFrames(aPresShell, aPresContext, aContent->Tag(), aState,
+                        aContent, aNewFrame, PR_FALSE, childItems);
 
   // Set the frame's initial child list
   aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
@@ -12762,10 +12746,8 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
                                       aNewFrame, PR_TRUE, childItems, &kidsAllInline);
   if (kidsAllInline) {
     // Set the inline frame's initial child list
-    nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(getter_AddRefs(tag));
-    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, aNewFrame,
-                          PR_FALSE, childItems);
+    CreateAnonymousFrames(aPresShell, aPresContext, aContent->Tag(), aState,
+                          aContent, aNewFrame, PR_FALSE, childItems);
 
     aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
 

@@ -343,8 +343,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
   if (!content) return PR_FALSE;
 
-  nsCOMPtr<nsIAtom> tagName;
-  content->GetTag(getter_AddRefs(tagName));
+  nsIAtom *tagName = content->Tag();
   // brade: should the above use nsEditor::GetTag(aNode)?
   // brade: shouldn't some of the above go below the next block?
 
@@ -918,10 +917,7 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
   }
   if (!node) return;
 
-  // brade: use nsEditor::GetTag instead??
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-  nsCOMPtr<nsIAtom> tagName;
-  content->GetTag(getter_AddRefs(tagName));
+  nsIAtom *tagName = nsEditor::GetTag(node);
 
   if (nsEditProperty::b == aHTMLProperty) {
     BuildCSSDeclarations(cssPropertyArray, cssValueArray, boldEquivTable, aValue, aGetOrRemoveRequest);

@@ -553,9 +553,11 @@ nsXBLBinding::GenerateAnonymousContent()
       for (PRUint32 i = 0; i < length; i++) {
         children->Item(i, getter_AddRefs(node));
         childContent = do_QueryInterface(node);
-        nsCOMPtr<nsIAtom> tag;
-        childContent->GetTag(getter_AddRefs(tag));
-        if (tag != nsXULAtoms::observes && tag != nsXULAtoms::templateAtom) {
+
+        nsINodeInfo *ni = childContent->GetNodeInfo();
+
+        if (!ni || (!ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL) &&
+                    !ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL))) {
           hasContent = PR_FALSE;
           break;
         }
@@ -631,9 +633,12 @@ nsXBLBinding::GenerateAnonymousContent()
               else {
                 // We were unable to place this child.  All anonymous content
                 // should be thrown out.  Special-case template and observes.
-                nsCOMPtr<nsIAtom> tag;
-                childContent->GetTag(getter_AddRefs(tag));
-                if (tag != nsXULAtoms::observes && tag != nsXULAtoms::templateAtom) {
+
+                nsINodeInfo *ni = childContent->GetNodeInfo();
+
+                if (!ni ||
+                    (!ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL) &&
+                     !ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL))) {
                   // Kill all anonymous content.
                   mContent = nsnull;
                   bindingManager->SetContentListFor(mBoundElement, nsnull);
@@ -1233,9 +1238,8 @@ nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult)
 
   for (PRUint32 i = 0; i < childCount; i++) {
     nsIContent *child = binding->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    child->GetTag(getter_AddRefs(tag));
-    if (aTag == tag) {
+
+    if (aTag == child->Tag()) {
       *aResult = child;
       NS_ADDREF(*aResult);
       return;

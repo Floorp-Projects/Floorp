@@ -1768,12 +1768,10 @@ nsGenericElement::GetNameSpaceID(PRInt32* aNameSpaceID) const
   return NS_OK;
 }
 
-nsresult
-nsGenericElement::GetTag(nsIAtom** aResult) const
+nsIAtom *
+nsGenericElement::Tag() const
 {
-  NS_ADDREF(*aResult = mNodeInfo->NameAtom());
-
-  return NS_OK;
+  return mNodeInfo->NameAtom();
 }
 
 NS_IMETHODIMP_(nsINodeInfo *)
@@ -2019,20 +2017,18 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return ret;
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetContentID(PRUint32* aID)
+PRUint32
+nsGenericElement::ContentID() const
 {
   nsDOMSlots *slots = GetExistingDOMSlots();
 
   if (slots) {
-    *aID = slots->mContentID;
-  } else {
-    PtrBits flags = GetFlags();
-
-    *aID = flags >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET;
+    return slots->mContentID;
   }
 
-  return NS_OK;
+  PtrBits flags = GetFlags();
+
+  return flags >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET;
 }
 
 NS_IMETHODIMP
@@ -2326,13 +2322,11 @@ nsGenericElement::RangeRemove(nsIDOMRange* aRange)
   return NS_OK;
 }
 
-nsresult
-nsGenericElement::GetRangeList(nsVoidArray** aResult) const
+const nsVoidArray *
+nsGenericElement::GetRangeList() const
 {
-  *aResult = nsnull;
-
   if (!HasRangeList()) {
-    return NS_OK;
+    return nsnull;
   }
 
   RangeListMapEntry *entry =
@@ -2344,12 +2338,10 @@ nsGenericElement::GetRangeList(nsVoidArray** aResult) const
     NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
              "in the hash!?!!");
 
-    return NS_ERROR_UNEXPECTED;
+    return nsnull;
   }
 
-  *aResult = entry->mRangeList;
-
-  return NS_OK;
+  return entry->mRangeList;
 }
 
 nsresult
@@ -2422,8 +2414,8 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
   *aResult = nsnull;
 
   if (!sEventListenerManagersHash.ops) {
-    // We''re already shut down, don't bother creating a event
-    // listener manager.
+    // We're already shut down, don't bother creating a event listener
+    // manager.
 
     return NS_OK;
   }

@@ -212,7 +212,8 @@ nsScrollbarButtonFrame::MouseClicked()
 
 nsresult
 nsScrollbarButtonFrame::GetChildWithTag(nsIPresContext* aPresContext,
-                                        nsIAtom* atom, nsIFrame* start, nsIFrame*& result)
+                                        nsIAtom* atom, nsIFrame* start,
+                                        nsIFrame*& result)
 {
   // recursively search our children
   nsIFrame* childFrame;
@@ -224,11 +225,10 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIPresContext* aPresContext,
 
     if (child) {
       // see if it is the child
-       nsCOMPtr<nsIAtom> tag;
-       child->GetTag(getter_AddRefs(tag));
-       if (atom == tag.get())
+       if (child->Tag() == atom)
        {
          result = childFrame;
+
          return NS_OK;
        }
     }
@@ -246,7 +246,8 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start, nsIFrame*& result)
+nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start,
+                                         nsIFrame*& result)
 {
    while (start)
    {
@@ -256,10 +257,9 @@ nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start, nsIFr
         // get the content node
         nsIContent* child = start->GetContent();
 
-        nsCOMPtr<nsIAtom> atom;
-        if (child && child->GetTag(getter_AddRefs(atom)) == NS_OK && atom.get() == toFind) {
-           result = start;
-           return NS_OK;
+        if (child && child->Tag() == toFind) {
+          result = start;
+          return NS_OK;
         }
       }
    }

@@ -431,17 +431,22 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 
 PRBool nsFind::IsBlockNode(nsIContent* aContent)
 {
-  nsCOMPtr<nsIAtom> atom;
-  aContent->GetTag(getter_AddRefs(atom));
+  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+    return PR_FALSE;
+  }
 
-  if (atom.get() == sImgAtom || atom.get() == sHRAtom
-      || atom.get() == sThAtom || atom.get() == sTdAtom)
+  nsIAtom *atom = aContent->Tag();
+
+  if (atom == sImgAtom ||
+      atom == sHRAtom ||
+      atom == sThAtom ||
+      atom == sTdAtom)
     return PR_TRUE;
 
   if (!mParserService) {
-    nsresult rv;
-    mParserService = do_GetService(kParserServiceCID, &rv);
-    if (NS_FAILED(rv) || !mParserService) return PR_FALSE;
+    mParserService = do_GetService(kParserServiceCID);
+    if (!mParserService)
+      return PR_FALSE;
   }
 
   PRInt32 id;
@@ -457,12 +462,8 @@ PRBool nsFind::IsTextNode(nsIDOMNode* aNode)
   // Can't just QI for nsITextContent, because nsCommentNode
   // also implements that interface.
   nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
-  if (!content) return PR_FALSE;
-  nsCOMPtr<nsIAtom> atom;
-  content->GetTag(getter_AddRefs(atom));
-  if (atom.get() == sTextAtom)
-    return PR_TRUE;
-  return PR_FALSE;
+
+  return content && content->Tag() == sTextAtom;
 }
 
 PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
@@ -491,19 +492,20 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
 
 PRBool nsFind::SkipNode(nsIContent* aContent)
 {
-  nsCOMPtr<nsIAtom> atom;
+  nsIAtom *atom;
 
 #ifdef HAVE_BIDI_ITERATOR
-  aContent->GetTag(getter_AddRefs(atom));
-  if (!atom)
-    return PR_TRUE;
-  nsIAtom *atomPtr = atom.get();
+  atom = aContent->Tag();
 
   // We may not need to skip comment nodes,
   // now that IsTextNode distinguishes them from real text nodes.
-  return (sScriptAtom == atomPtr || sCommentAtom == atomPtr
-          || sNoframesAtom == atomPtr
-          || sSelectAtom == atomPtr || sTextareaAtom == atomPtr)
+  return (atom == sCommentAtom ||
+          (aContent->IsContentOfType(nsIContent::eHTML) &&
+           (atom == sScriptAtom ||
+            atom == sCommentAtom ||
+            atom == sNoframesAtom ||
+            atom == sSelectAtom ||
+            atom == sTextareaAtom)));
 
 #else /* HAVE_BIDI_ITERATOR */
   // Temporary: eventually we will have an iterator to do this,
@@ -511,39 +513,33 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
   // and see whether any parent is a skipped node,
   // and take the performance hit.
 
-  nsCOMPtr<nsIDOMNode> node (do_QueryInterface(aContent));
-  while (node)
+  nsIContent *content = aContent;
+  while (content)
   {
-    nsCOMPtr<nsIContent> content (do_QueryInterface(node));
-    if (!content) return PR_FALSE;
-    content->GetTag(getter_AddRefs(atom));
-    if (!atom)
-      return PR_FALSE;
-    nsAutoString atomName;
-    atom->ToString(atomName);
-    //printf("Atom name is %s\n", 
-    //       NS_LossyConvertUCS2toASCII(atomName).get());
-    nsIAtom *atomPtr = atom.get();
-    if (atomPtr == sScriptAtom || atomPtr == sCommentAtom
-        || sNoframesAtom == atomPtr
-        || sSelectAtom == atomPtr || sTextareaAtom == atomPtr)
+    atom = content->Tag();
+
+    if (atom == sCommentAtom ||
+        (content->IsContentOfType(nsIContent::eHTML) &&
+         (atom == sScriptAtom ||
+          atom == sNoframesAtom ||
+          atom == sSelectAtom ||
+          atom == sTextareaAtom)))
     {
 #ifdef DEBUG_FIND
       printf("Skipping node: ");
       DumpNode(node);
 #endif
+
       return PR_TRUE;
     }
+
     // Only climb to the nearest block node
     if (IsBlockNode(content))
       return PR_FALSE;
 
-    nsCOMPtr<nsIDOMNode> parent;
-    nsresult rv = node->GetParentNode(getter_AddRefs(parent));
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    node = parent;
+    content = content->GetParent();
   }
+
   return PR_FALSE;
 #endif /* HAVE_BIDI_ITERATOR */
 }
