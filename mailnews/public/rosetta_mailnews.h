@@ -56,8 +56,8 @@
 
 #define HJ13591
 #define HJ86782
-#define HJ08142
-#define HJ21695
+#define HJ08142 
+#define HJ21695 
 #define HJ98703 
 #define HJ30181 \
 	PRInt16 SetNewsUrlHeader (const char *hostPort, const char *group);
@@ -75,18 +75,21 @@
 #define HJ78808 \
 	status = SetNewsUrlHeader (hostPort, FALSE, group);
 
-#define HJ08239	--- unused #040, take it! ---
-#define HJ45609	--- unused #041, take it! ---
-#define HJ58534	--- unused #042, take it! ---
-#define HJ91531	--- unused #043, take it! ---
-#define HJ62011	--- unused #044, take it! ---
-#define HJ41792	--- unused #045, take it! ---
-#define HJ70669	--- unused #046, take it! ---
-#define HJ77514	--- unused #047, take it! ---
-#define HJ97347	--- unused #048, take it! ---
-#define HJ82388	--- unused #049, take it! ---
-#define HJ67078	--- unused #050, take it! ---
-#define HJ10196	--- unused #051, take it! ---
+#define HJ08239 \
+	
+#define HJ45609 
+#define HJ58534 
+#define HJ91531	
+#define HJ62011 
+#define HJ41792 \
+    fields->SetNewspostUrl("news:", NULL);
+
+#define HJ70669
+#define HJ77514
+#define HJ97347
+#define HJ82388
+#define HJ67078
+#define HJ10196
 #define HJ58932	--- unused #052, take it! ---
 #define HJ04608	--- unused #053, take it! ---
 #define HJ79059	--- unused #054, take it! ---
