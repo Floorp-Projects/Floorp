@@ -57,7 +57,9 @@ public:
 
     // nsSimpleArrayEnumerator methods
     nsSimpleArrayEnumerator(nsIArray* aValueArray) :
-        mValueArray(aValueArray), mIndex(0) {}
+        mValueArray(aValueArray), mIndex(0) {
+        NS_INIT_ISUPPORTS();
+    }
     virtual ~nsSimpleArrayEnumerator(void) {}
 
 protected:
