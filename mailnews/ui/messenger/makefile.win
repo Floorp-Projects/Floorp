@@ -17,6 +17,6 @@
 
 DEPTH=..\..\..
 
-DIRS=public resources
+DIRS= resources
 
 include <$(DEPTH)\config\rules.mak>
