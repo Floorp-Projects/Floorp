@@ -31,6 +31,7 @@ var SECTION = "10.1.3";
 var VERSION = "ECMA_1";
 startTest();
 var TITLE   = "Variable instantiation";
+VAR BUGNUMBER = "20256";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
@@ -51,12 +52,13 @@ function getTestCases() {
                      "second",
                      eval("function t() { return \"first\" };" +
                           "function t() { return \"second\" };t()"));
+
     array[item++] =
         new TestCase(SECTION,
-                     "var t; function t() { return \"function\" }; typeof(t)",
+                     "var t; function t(){}; typeof(t)",
                      "function",
-                     eval("var t;function t() { return \"function\" }; " +
-                          "typeof(t)"));
+                     eval("var t; "function t(){}; typeof(t)"));
+
 
     // formal parameter tests
     array[item++] = 
