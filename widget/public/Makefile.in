@@ -33,11 +33,8 @@ EXPORTS = \
 	nsIMenuBar.h	\
 	nsIMenu.h		\
 	nsIMenuItem.h	\
-	nsIImageButton.h	\
 	nsIPopUpMenu.h		\
 	nsIFileWidget.h            \
-	nsIMenuButton.h		\
-	nsIImageButtonListener.h \
 	nsStringUtil.h	\
 	nsui.h			\
 	nsITabWidget.h  \
