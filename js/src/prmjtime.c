@@ -66,6 +66,7 @@
 #include <TextUtils.h>
 #include <Resources.h>
 #include <Timer.h>
+#include <UTCUtils.h>
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -161,7 +162,7 @@ static void PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm);
 /*
  * get the difference in seconds between this time zone and UTC (GMT)
  */
-time_t
+JSInt32
 PRMJ_LocalGMTDifference()
 {
 #if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
@@ -180,16 +181,13 @@ PRMJ_LocalGMTDifference()
 #endif
 #endif
 #if defined(XP_MAC)
-    static time_t    zone = -1L;
+    static JSInt32   zone = -1L;
     MachineLocation  machineLocation;
-    JSUint64	     gmtOffsetSeconds;
-    JSUint64	     gmtDelta;
-    JSUint64	     dlsOffset;
-    JSInt32	     offset;
+    JSInt32 	     gmtOffsetSeconds;
 
     /* difference has been set no need to recalculate */
-    if(zone != -1)
-	return zone;
+    if (zone != -1)
+        return zone;
 
     /* Get the information about the local machine, including
      * its GMT offset and its daylight savings time info.
@@ -200,33 +198,13 @@ PRMJ_LocalGMTDifference()
     MyReadLocation(&machineLocation);
 
     /* Mask off top eight bits of gmtDelta, sign extend lower three. */
+    gmtOffsetSeconds = (machineLocation.u.gmtDelta << 8);
+    gmtOffsetSeconds >>= 8;
 
-    if ((machineLocation.u.gmtDelta & 0x00800000) != 0) {
-	gmtOffsetSeconds = (machineLocation.u.gmtDelta & 0x00FFFFFF) | 0xFFFFFFFFFF000000LL;
-	JSLL_UI2L(gmtDelta,0);
-    } else {
-	gmtOffsetSeconds = (machineLocation.u.gmtDelta & 0x00FFFFFFUL);
-	JSLL_UI2L(gmtDelta,PRMJ_DAY_SECONDS);
-    }
-
-    /*
-     * Normalize time to be positive if you are behind GMT. gmtDelta will
-     * always be positive.
-     */
-    JSLL_SUB(gmtDelta,gmtDelta,gmtOffsetSeconds);
-
-    /* Is Daylight Savings On?  If so, we need to add an hour to the offset. */
-    if (machineLocation.u.dlsDelta != 0) {
-	JSLL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);
-    } else {
-	JSLL_I2L(dlsOffset, 0);
-    }
-
-    JSLL_ADD(gmtDelta,gmtDelta, dlsOffset);
-    JSLL_L2I(offset,gmtDelta);
-
-    zone = offset;
-    return (time_t)offset;
+    /* Backout OS adjustment for DST, to give consistent GMT offset. */
+    if (machineLocation.u.dlsDelta != 0)
+        gmtOffsetSeconds -= PRMJ_HOUR_SECONDS;
+    return (zone = -gmtOffsetSeconds);
 #endif
 }
 
@@ -244,7 +222,7 @@ PRMJ_ToExtendedTime(JSInt32 base_time)
     JSInt64 exttime;
     JSInt64 g1970GMTMicroSeconds;
     JSInt64 low;
-    time_t diff;
+    JSInt32 diff;
     JSInt64  tmp;
     JSInt64  tmp1;
 
@@ -289,7 +267,7 @@ PRMJ_Now(void)
     JSInt64	 localTime;
     JSInt64       gmtOffset;
     JSInt64    dstOffset;
-    time_t       gmtDiff;
+    JSInt32       gmtDiff;
     JSInt64	 s2us;
 #endif /* XP_MAC */
 
@@ -354,25 +332,23 @@ JSInt64
 PRMJ_DSTOffset(JSInt64 local_time)
 {
     JSInt64 us2s;
-#ifdef XP_MAC
-    MachineLocation  machineLocation;
     JSInt64 dlsOffset;
-    /*	Get the information about the local machine, including
-     *	its GMT offset and its daylight savings time info.
-     *	Convert each into wides that we can add to
-     *	startupTimeMicroSeconds.
+#ifdef XP_MAC
+    /*
+     * Convert the local time passed in to Macintosh epoch seconds. Use UTC utilities to convert
+     * to UTC time, then compare difference with our GMT offset. If they are the same, then
+     * DST must not be in effect for the input date/time.
      */
-    MyReadLocation(&machineLocation);
-
-    /* Is Daylight Savings On?  If so, we need to add an hour to the offset. */
-    if (machineLocation.u.dlsDelta != 0) {
-	JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC); /* seconds in a microseconds */
-	JSLL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);  /* seconds in one hour       */
-	JSLL_MUL(dlsOffset, dlsOffset, us2s);
-    } else {
-	JSLL_I2L(dlsOffset, 0);
+    UInt32 macLocalSeconds = (local_time / PRMJ_USEC_PER_SEC) + gJanuaryFirst1970Seconds, utcSeconds;
+    ConvertLocalTimeToUTC(macLocalSeconds, &utcSeconds);
+    if ((utcSeconds - macLocalSeconds) == PRMJ_LocalGMTDifference())
+        return 0;
+    else {
+    	JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC);
+    	JSLL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);
+    	JSLL_MUL(dlsOffset, dlsOffset, us2s);
+        return dlsOffset;
     }
-    return(dlsOffset);
 #else
     time_t local;
     JSInt32 diff;
