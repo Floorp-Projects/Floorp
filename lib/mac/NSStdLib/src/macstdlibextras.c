@@ -164,11 +164,12 @@ void InitializeMacToolbox(void)
 		  InitContextualMenus();
 		
 		InitTSMAwareApplication();
+#endif
 	    
 		// init QuickTime if we have it
 		if ((long)EnterMovies != kUnresolvedCFragSymbolAddress)
 			EnterMovies();
-#endif
+
 #if DEBUG
 		InitializeSIOUX(false);
 #endif
