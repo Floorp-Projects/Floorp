@@ -721,6 +721,8 @@ nsEditorShell::PrepareDocumentForEditing()
   domSelection->AddSelectionListener(mStateMaintainer);
 #endif
 
+  // Force initial focus to the content window -- HOW?
+//  mWebShellWin->SetFocus();
   return NS_OK;
 }
 

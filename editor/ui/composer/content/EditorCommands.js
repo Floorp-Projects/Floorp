@@ -314,13 +314,14 @@ function EditorRemoveStyle(styleName)
 
 function EditorRemoveLinks()
 {
-  dump("NOT IMPLEMENTED YET\n");
+  editorShell.RemoveTextProperty("a", "");
   contentWindow.focus();
 }
 
 function EditorApplyStyleSheet(styleSheetURL)
 {
   editorShell.ApplyStyleSheet(styleSheetURL);
+  contentWindow.focus();
 }
 
 

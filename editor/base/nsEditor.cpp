@@ -2112,7 +2112,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
       // What is the parent node for the selection?
       nsAutoString tag;
       parentSelectedNode->GetNodeName(tag);
-      printf("Parent of selected node's NodeName = ");
+      printf("DeleteSelectionAndPrepareToCreateNode: Parent of selected node: ");
       wprintf(tag.GetUnicode());
       printf("\n");
 #endif
@@ -2884,6 +2884,14 @@ nsEditor::IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock)
       {
         aIsBlock = PR_TRUE;
       }
+      result = NS_OK;
+    }
+  } else {
+    // We don't have an element -- probably a text node
+    nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(aNode);
+    if (nodeAsText)
+    {
+      aIsBlock = PR_FALSE;
       result = NS_OK;
     }
   }
