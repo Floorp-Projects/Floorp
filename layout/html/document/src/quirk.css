@@ -89,6 +89,10 @@ td, th, tr {
   background: inherit;
 }
 
+td[bgcolor], td[background], th[bgcolor], th[background] {
+  empty-cells: show;
+}
+
 /* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
 
 /*
