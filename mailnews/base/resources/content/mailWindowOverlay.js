@@ -1478,8 +1478,8 @@ function IsMailFolderSelected()
 
 function IsGetNewMessagesEnabled()
 {
-  // users don't like it when the "Get Msgs" button is enabled
-  // so let's never do that
+  // users don't like it when the "Get Msgs" button is disabled
+  // so let's never do that. 
   // we'll just handle it as best we can in GetFolderMessages()
   // when they click "Get Msgs" and
   // Local Folders or a news server is selected
