@@ -307,7 +307,7 @@ struct nsCharTraits<char>
     const char*
     find( const char* s, size_t n, char c )
       {
-        return NS_STATIC_CAST(const char*, memchr(s, to_int_type(c), n));
+        return NS_REINTERPRET_CAST(const char*, memchr(s, to_int_type(c), n));
       }
 
 #if 0
@@ -433,7 +433,7 @@ struct nsCharTraits<wchar_t>
     const wchar_t*
     find( const wchar_t* s, size_t n, wchar_t c )
       {
-        return NS_STATIC_CAST(const wchar_t*, wmemchr(s, to_int_type(c), n));
+        return NS_REINTERPRET_CAST(const wchar_t*, wmemchr(s, to_int_type(c), n));
       }
 
 #if 0
