@@ -33,6 +33,7 @@ REQUIRES		= \
 				XfeWidgets \
 				XfeBm \
 				XfeToolBar \
+				XfeComboBox \
 				XfeTest \
 				Microline
 

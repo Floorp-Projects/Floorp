@@ -216,7 +216,7 @@ static XfeMenuItemRec dimensions_items[] =
 	{ "ShadowThickness",		XfeMENU_PANE,		NULL, dimension_items	},
 	{ "------------",			XfeMENU_SEP	},
 	{ "Margins",				XfeMENU_PANE,		NULL, margin_items		},
-	{ "RaiseBorderThickness",	XfeMENU_PANE,		NULL, dimension_items	},
+	{ "AccentBorderThickness",	XfeMENU_PANE,		NULL, dimension_items	},
 	{ "Spacing",				XfeMENU_PANE,		NULL, dimension_items	},
 	{ "------------",			XfeMENU_SEP	},
 	{ "ArmOffset",				XfeMENU_PANE,		NULL, dimension_items	},
@@ -599,9 +599,9 @@ menu_item_cb(Widget w,XtPointer client_data,XtPointer call_data)
 	{
 		XtSetArg(av[ac],XmNhighlightThickness,atoi(name)); ac++;
 	}
-	else if (strcmp(parent_name,"RaiseBorderThickness") == 0)
+	else if (strcmp(parent_name,"AccentBorderThickness") == 0)
 	{
-		XtSetArg(av[ac],XmNraiseBorderThickness,atoi(name)); ac++;
+		XtSetArg(av[ac],XmNaccentBorderThickness,atoi(name)); ac++;
 	}
 	else if (strcmp(parent_name,"Spacing") == 0)
 	{

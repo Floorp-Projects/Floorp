@@ -29,6 +29,7 @@ REQUIRES		= \
 				XfeToolTip \
 				XfeBm \
 				XfeToolBar \
+				XfeComboBox \
 				XfeWidgets
 
 STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))
