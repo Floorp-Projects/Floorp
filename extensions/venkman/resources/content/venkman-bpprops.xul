@@ -53,20 +53,20 @@
   <script src="chrome://venkman/content/venkman-utils.js"/>
   <script src="chrome://venkman/content/venkman-bpprops.js"/>
 
-  <hbox align="baseline">
+  <hbox align="center">
     <label value="&BPProps.URL.label;" minwidth="50px"/>
     <textbox flex="1" readonly="true" id="url-textbox"/>
     <label value="&BPProps.Line.label;" minwidth="25px"/>
     <textbox readonly="true" id="line-textbox" width="50px"/>
   </hbox>
-  <hbox align="baseline">
+  <hbox align="center">
     <label value="&BPProps.FunctionName.label;" minwidth="50px"/>
     <textbox flex="1" readonly="true" id="function-textbox" width="50px"/>
     <label value="&BPProps.PC.label;" minwidth="25px"/>
     <textbox readonly="true" id="pc-textbox" width="50px"/>
   </hbox>
 
-  <hbox align="baseline">
+  <hbox align="center">
     <checkbox id="enabled-checkbox" label="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
       oncommand="makeDirty()" flex="1"/>
     <checkbox id="onetime-checkbox" label="&BPProps.OneTime.label;"

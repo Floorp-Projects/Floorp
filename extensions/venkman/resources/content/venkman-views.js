@@ -2114,7 +2114,7 @@ function ss_init ()
         [
          ["close-source-tab"],
          ["reload-source-tab"],
-         ["save-source-tab", { enabledif: "console.views.source2.canSave()" }],
+         ["save-source-tab", {enabledif: "console.views.source2.canSave()"}],
          ["find-string"],
          ["-"],
          ["break", 
@@ -2134,7 +2134,7 @@ function ss_init ()
          ["-"],
          ["toggle-source-coloring",
                  {type: "checkbox",
-                  checkedif: "console.prefs['services.source.colorize']"} ],
+                  checkedif: "console.prefs['services.source.colorize']"}],
          ["toggle-pprint",
                  {type: "checkbox",
                   checkedif: "console.prefs['prettyprint']"}],

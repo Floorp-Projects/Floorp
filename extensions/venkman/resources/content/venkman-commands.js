@@ -1358,7 +1358,7 @@ function cmdSaveLayout (e)
     
     var ary = console.viewManager.getLayoutState ();
     var prefName = "layoutState." + e.name;
-    console.commandManager.addPref(prefName, "");
+    console.prefManager.addPref(prefName, "");
     console.prefs[prefName] = ary.join ("; ");
 }
 
