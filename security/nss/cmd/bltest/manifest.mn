@@ -34,7 +34,7 @@ CORE_DEPTH = ../../..
 
 MODULE = nss
 
-REQUIRES = seccmd dbm
+REQUIRES = seccmd dbm softoken
 
 INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
 
@@ -51,4 +51,8 @@ PRIVATE_EXPORTS = \
 CSRCS = \
 	blapitest.c \
 	$(NULL)
+
+ifdef NSS_ENABLE_ECC
+DEFINES += -DNSS_ENABLE_ECC
+endif
 

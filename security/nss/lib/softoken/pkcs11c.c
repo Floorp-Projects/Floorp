@@ -98,6 +98,17 @@ static void pk11_Null(void *data, PRBool freeit)
 #ifdef NSS_ENABLE_ECC
 extern SECStatus EC_DecodeParams(const SECItem *encodedParams, 
 				 ECParams **ecparams);
+#ifdef EC_DEBUG
+#define SEC_PRINT(str1, str2, num, sitem) \
+    printf("pkcs11c.c:%s:%s (keytype=%d) [len=%d]\n", \
+            str1, str2, num, sitem->len); \
+    for (i = 0; i < sitem->len; i++) { \
+	    printf("%02x:", sitem->data[i]); \
+    } \
+    printf("\n") 
+#else
+#define SEC_PRINT(a, b, c, d) 
+#endif
 #endif /* NSS_ENABLE_ECC */
 
 /*
@@ -3223,6 +3234,7 @@ dhgn_done:
     case CKM_EC_KEY_PAIR_GEN:
 	pk11_DeleteAttributeType(privateKey,CKA_EC_PARAMS);
 	pk11_DeleteAttributeType(privateKey,CKA_VALUE);
+    	pk11_DeleteAttributeType(privateKey,CKA_NETSCAPE_DB);
 	key_type = CKK_EC;
 
 	/* extract the necessary parameters and copy them to private keys */
@@ -3257,7 +3269,10 @@ dhgn_done:
 
 	crv = pk11_AddAttributeType(privateKey, CKA_VALUE, 
 			      pk11_item_expand(&ecPriv->privateValue));
+	if (crv != CKR_OK) goto ecgn_done;
 
+        crv = pk11_AddAttributeType(privateKey,CKA_NETSCAPE_DB,
+			   pk11_item_expand(&ecPriv->publicValue));
 ecgn_done:
 	/* should zeroize, since this function doesn't. */
 	PORT_FreeArena(ecPriv->ecParams.arena, PR_TRUE);
@@ -3360,6 +3375,11 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key, CK_RV *crvp)
     void *dummy, *param = NULL;
     SECStatus rv = SECSuccess;
     SECItem *encodedKey = NULL;
+#ifdef NSS_ENABLE_ECC
+    SECItem *fordebug;
+    int savelen;
+    int i;
+#endif`
 
     if(!key) {
 	*crvp = CKR_KEY_HANDLE_INVALID; /* really can't happen */
@@ -3411,6 +3431,34 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key, CK_RV *crvp)
 				       nsslowkey_PQGParamsTemplate);
 	    algorithm = SEC_OID_ANSIX9_DSA_SIGNATURE;
 	    break;
+#ifdef NSS_ENABLE_ECC	    
+        case NSSLOWKEYECKey:
+            prepare_low_ec_priv_key_for_asn1(lk);
+	    /* Public value is encoded as a bit string so adjust length
+	     * to be in bits before ASN encoding and readjust 
+	     * immediately after.
+	     *
+	     * Since the SECG specification recommends not including the
+	     * parameters as part of ECPrivateKey, we zero out the curveOID
+	     * length before encoding and restore it later.
+	     */
+	    lk->u.ec.publicValue.len <<= 3;
+	    savelen = lk->u.ec.ecParams.curveOID.len;
+	    lk->u.ec.ecParams.curveOID.len = 0;
+	    dummy = SEC_ASN1EncodeItem(arena, &pki->privateKey, lk,
+				       nsslowkey_ECPrivateKeyTemplate);
+	    lk->u.ec.ecParams.curveOID.len = savelen;
+	    lk->u.ec.publicValue.len >>= 3;
+
+	    fordebug = &pki->privateKey;
+	    SEC_PRINT("pk11_PackagePrivateKey()", "PrivateKey", lk->keyType,
+		      fordebug);
+
+	    param = SECITEM_DupItem(&lk->u.ec.ecParams.DEREncoding);
+
+	    algorithm = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	case NSSLOWKEYDHKey:
 	default:
 	    dummy = NULL;
@@ -3422,7 +3470,7 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key, CK_RV *crvp)
 	rv = SECFailure;
 	goto loser;
     }
-
+    
     rv = SECOID_SetAlgorithmID(arena, &pki->algorithm, algorithm, 
 			       (SECItem*)param);
     if(rv != SECSuccess) {
@@ -3443,6 +3491,11 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key, CK_RV *crvp)
 				    nsslowkey_PrivateKeyInfoTemplate);
     *crvp = encodedKey ? CKR_OK : CKR_DEVICE_ERROR;
 
+#ifdef NSS_ENABLE_ECC
+    fordebug = encodedKey;
+    SEC_PRINT("pk11_PackagePrivateKey()", "PrivateKeyInfo", lk->keyType,
+	      fordebug);
+#endif
 loser:
     if(arena) {
 	PORT_FreeArena(arena, PR_TRUE);
@@ -3640,6 +3693,16 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	    prepare_low_pqg_params_for_asn1(&lpk->u.dsa.params);
 	    break;
 	/* case NSSLOWKEYDHKey: */
+#ifdef NSS_ENABLE_ECC
+        case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+	    keyTemplate = nsslowkey_ECPrivateKeyTemplate;
+	    paramTemplate = NULL;
+	    paramDest = &(lpk->u.ec.ecParams.DEREncoding);
+	    lpk->keyType = NSSLOWKEYECKey;
+	    prepare_low_ec_priv_key_for_asn1(lpk);
+	    prepare_low_ecparams_for_asn1(&lpk->u.ec.ecParams);
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	default:
 	    keyTemplate = NULL;
 	    paramTemplate = NULL;
@@ -3653,6 +3716,20 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 
     /* decode the private key and any algorithm parameters */
     rv = SEC_QuickDERDecodeItem(arena, lpk, keyTemplate, &pki->privateKey);
+
+#ifdef NSS_ENABLE_ECC
+    if (lpk->keyType == NSSLOWKEYECKey) {
+        /* convert length in bits to length in bytes */
+	lpk->u.ec.publicValue.len >>= 3;
+        rv = SECITEM_CopyItem(arena, 
+			      &(lpk->u.ec.ecParams.DEREncoding),
+	                      &(pki->algorithm.parameters));
+	if(rv != SECSuccess) {
+	    goto loser;
+	}
+    }
+#endif /* NSS_ENABLE_ECC */
+
     if(rv != SECSuccess) {
 	goto loser;
     }
@@ -3746,6 +3823,33 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	    break;
 #endif
 	/* what about fortezza??? */
+#ifdef NSS_ENABLE_ECC
+        case NSSLOWKEYECKey:
+	    keyType = CKK_EC;
+	    crv = (pk11_hasAttribute(key, CKA_NETSCAPE_DB)) ? CKR_OK :
+						CKR_KEY_TYPE_INCONSISTENT;
+	    if(crv != CKR_OK) break;
+	    crv = pk11_AddAttributeType(key, CKA_KEY_TYPE, &keyType, 
+						sizeof(keyType));
+	    if(crv != CKR_OK) break;
+	    crv = pk11_AddAttributeType(key, CKA_SIGN, &cktrue, 
+						sizeof(CK_BBOOL));
+	    if(crv != CKR_OK) break;
+	    crv = pk11_AddAttributeType(key, CKA_SIGN_RECOVER, &cktrue, 
+						sizeof(CK_BBOOL)); 
+	    if(crv != CKR_OK) break;
+	    crv = pk11_AddAttributeType(key, CKA_DERIVE, &cktrue, 
+						sizeof(CK_BBOOL)); 
+	    if(crv != CKR_OK) break;
+	    crv = pk11_AddAttributeType(key, CKA_EC_PARAMS,
+				 pk11_item_expand(&lpk->u.ec.ecParams.DEREncoding));
+	    if(crv != CKR_OK) break;
+	    crv = pk11_AddAttributeType(key, CKA_VALUE, 
+			pk11_item_expand(&lpk->u.ec.privateValue));
+	    if(crv != CKR_OK) break;
+	    /* XXX Do we need to decode the EC Params here ?? */
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	default:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
@@ -4931,31 +5035,12 @@ key_and_mac_derive_fail:
       {
 	SECItem  ecScalar, ecPoint;
 	SECItem  tmp;
-	ECParams *ecParams;
 	PRBool   withCofactor = PR_FALSE;
 	unsigned char secret_hash[20];
 	unsigned char *secret;
 	int secretlen;
 	CK_ECDH1_DERIVE_PARAMS *mechParams;
-
-	/* get params and value attributes */
-	crv = pk11_Attribute2SecItem(NULL, &tmp, sourceKey, 
-	    CKA_EC_PARAMS); 
-	if (crv != CKR_OK) break;
-	crv = pk11_Attribute2SecItem(NULL, &ecScalar, sourceKey, CKA_VALUE); 
-	if (crv != CKR_OK) {
- 	    PORT_Free(tmp.data);
-	    break;
-	}
-
-	/* Check elliptic curve parameters */
-	rv = EC_DecodeParams(&tmp, &ecParams);
-	PORT_Free(tmp.data);
-	if (rv != SECSuccess) {
-	    crv = CKR_TEMPLATE_INCONSISTENT;
-	    PORT_Free(ecScalar.data);
-	    break;
-	}
+	NSSLOWKEYPrivateKey *privKey;
 
 	/* Check mechanism parameters */
 	mechParams = (CK_ECDH1_DERIVE_PARAMS *) pMechanism->pParameter;
@@ -4964,10 +5049,16 @@ key_and_mac_derive_fail:
 		((mechParams->ulSharedDataLen != 0) || 
 		    (mechParams->pSharedData != NULL)))) {
 	    crv = CKR_MECHANISM_PARAM_INVALID;
-	    PORT_FreeArena(ecParams->arena, PR_TRUE);
-	    PORT_Free(ecScalar.data);
 	    break;
 	}
+
+	privKey = pk11_GetPrivKey(sourceKey, CKK_EC, &crv);
+	if (privKey == NULL) {
+	    break;
+	}
+
+	/* Now we are working with a non-NULL private key */
+	SECITEM_CopyItem(NULL, &ecScalar, &privKey->u.ec.privateValue);
 
 	ecPoint.data = mechParams->pPublicData;
 	ecPoint.len  = mechParams->ulPublicDataLen;
@@ -4979,18 +5070,21 @@ key_and_mac_derive_fail:
 	     * validate the public key to avoid small subgroup
 	     * attacks.
 	     */
-	    if (EC_ValidatePublicKey(ecParams, &ecPoint) != SECSuccess) {
+	    if (EC_ValidatePublicKey(&privKey->u.ec.ecParams, &ecPoint) 
+		!= SECSuccess) {
 		crv = CKR_ARGUMENTS_BAD;
-		PORT_FreeArena(ecParams->arena, PR_TRUE);		
 		PORT_Free(ecScalar.data);
+		if (privKey != sourceKey->objectInfo)
+		    nsslowkey_DestroyPrivateKey(privKey);
 		break;
 	    }
 	}
 
-	rv = ECDH_Derive(&ecPoint, ecParams, &ecScalar,
+	rv = ECDH_Derive(&ecPoint, &privKey->u.ec.ecParams, &ecScalar,
 	                 withCofactor, &tmp); 
-	PORT_FreeArena(ecParams->arena, PR_TRUE);
 	PORT_Free(ecScalar.data);
+	if (privKey != sourceKey->objectInfo)
+	   nsslowkey_DestroyPrivateKey(privKey);
 
 	if (rv != SECSuccess) {
 	    crv = CKR_DEVICE_ERROR;

@@ -112,19 +112,19 @@ const int ssl2CipherSuites[] = {
      * for new SSL3 ciphers. A -1 indicates the cipher
      * is not currently implemented.
      */
-    -1, /* TLS_ECDH_ECDSA_WITH_NULL_SHA,     	 * G */
-    -1, /* TLS_ECDH_ECDSA_WITH_RC4_128_SHA,  	 * H */
-    -1, /* TLS_ECDH_ECDSA_WITH_DES_CBC_SHA,  	 * I */
-    -1, /* TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA, * J */
-    -1, /* TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,  * K */
-    -1, /* TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,  * L */
-    -1, /* TLS_ECDH_RSA_WITH_NULL_SHA,       	 * M */
-    -1, /* TLS_ECDH_RSA_WITH_RC4_128_SHA,    	 * N */
-    -1, /* TLS_ECDH_RSA_WITH_DES_CBC_SHA,    	 * O */
-    -1, /* TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,   * P */
-    -1, /* TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,	 * Q */
-    -1, /* TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,	 * R */
-    -1, /* TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, * S */
+    TLS_ECDH_ECDSA_WITH_NULL_SHA,       	/* G */
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,       	/* H */
+    TLS_ECDH_ECDSA_WITH_DES_CBC_SHA,       	/* I */
+    TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,    	/* J */
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,     	/* K */
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,     	/* L */
+    TLS_ECDH_RSA_WITH_NULL_SHA,          	/* M */
+    TLS_ECDH_RSA_WITH_RC4_128_SHA,       	/* N */
+    TLS_ECDH_RSA_WITH_DES_CBC_SHA,       	/* O */
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,      	/* P */
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,       	/* Q */
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,       	/* R */
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,    	/* S */
     TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,      	/* T */
 #endif /* NSS_ENABLE_ECC */
     0
@@ -199,8 +199,13 @@ Usage(const char *progName)
     fprintf(stderr, 
 
 "Usage: %s -n rsa_nickname -p port [-3DRTbmrvx] [-w password] [-t threads]\n"
+#ifdef NSS_ENABLE_ECC
+"         [-i pid_file] [-c ciphers] [-d dbdir] [-e ec_nickname] \n"
+"         [-f fortezza_nickname] [-L [seconds]] [-M maxProcs] [-l]\n"
+#else
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
 "         [-L [seconds]] [-M maxProcs] [-l]\n"
+#endif /* NSS_ENABLE_ECC */
 "-3 means disable SSL v3\n"
 "-D means disable Nagle delays in TCP\n"
 "-T means disable TLS\n"
@@ -227,6 +232,19 @@ Usage(const char *progName)
 "E    SSL2 DES 64 CBC WITH MD5\n"
 "F    SSL2 DES 192 EDE3 CBC WITH MD5\n"
 #ifdef NSS_ENABLE_ECC
+"G    TLS ECDH ECDSA WITH NULL SHA\n"
+"H    TLS ECDH ECDSA WITH RC4 128 SHA\n"
+"I    TLS ECDH ECDSA WITH DES CBC SHA\n"
+"J    TLS ECDH ECDSA WITH 3DES EDE CBC SHA\n"
+"K    TLS ECDH ECDSA WITH AES 128 CBC SHA\n"
+"L    TLS ECDH ECDSA WITH AES 256 CBC SHA\n"
+"M    TLS ECDH RSA WITH NULL SHA\n"
+"N    TLS ECDH RSA WITH RC4 128 SHA\n"
+"O    TLS ECDH RSA WITH DES CBC SHA\n"
+"P    TLS ECDH RSA WITH 3DES EDE CBC SHA\n"
+"Q    TLS ECDH RSA WITH AES 128 CBC SHA\n"
+"R    TLS ECDH RSA WITH AES 256 CBC SHA\n"
+"S    TLS ECDHE ECDSA WITH AES 128 CBC SHA\n"
 "T    TLS ECDHE RSA WITH AES 128 CBC SHA\n"
 #endif /* NSS_ENABLE_ECC */
 "\n"
@@ -1424,6 +1442,9 @@ main(int argc, char **argv)
 {
     char *               progName    = NULL;
     char *               nickName    = NULL;
+#ifdef NSS_ENABLE_ECC
+    char *               ecNickName   = NULL;
+#endif
     char *               fNickName   = NULL;
     const char *         fileName    = NULL;
     char *               cipherString= NULL;
@@ -1460,7 +1481,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-    	"2:3DL:M:RTbc:d:f:hi:lmn:op:rt:vw:xy");
+    	"2:3DL:M:RTbc:d:e:f:hi:lmn:op:rt:vw:xy");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1495,6 +1516,10 @@ main(int argc, char **argv)
 	case 'c': cipherString = strdup(optstate->value); break;
 
 	case 'd': dir = optstate->value; break;
+
+#ifdef NSS_ENABLE_ECC
+	case 'e': ecNickName = strdup(optstate->value); break;
+#endif /* NSS_ENABLE_ECC */
 
 	case 'f': fNickName = strdup(optstate->value); break;
 
@@ -1699,6 +1724,17 @@ main(int argc, char **argv)
 	}
 	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], NULL);
     }
+#ifdef NSS_ENABLE_ECC
+    if (ecNickName) {
+	cert[kt_ecdh] = PK11_FindCertFromNickname(ecNickName, NULL);
+	if (cert[kt_ecdh] == NULL) {
+	    fprintf(stderr, "selfserv: Can't find certificate %s\n",
+		    ecNickName);
+	    exit(13);
+	}
+	privKey[kt_ecdh] = PK11_FindKeyByAnyCert(cert[kt_ecdh], NULL);
+    }
+#endif /* NSS_ENABLE_ECC */
 
     /* allocate the array of thread slots, and launch the worker threads. */
     rv = launch_threads(&jobLoop, 0, 0, requestCert, useLocalThreads);

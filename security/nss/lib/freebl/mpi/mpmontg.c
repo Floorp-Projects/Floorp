@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.12 2003/09/26 02:15:12 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.13 2003/10/17 13:45:36 ian.mcgreer%sun.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -68,17 +68,7 @@
 #define ABORT abort()
 #endif
 
-typedef struct {
-  mp_int       N;	/* modulus N */
-  mp_digit     n0prime; /* n0' = - (n0 ** -1) mod MP_RADIX */
-  mp_size      b;	/* R == 2 ** b,  also b = # significant bits in N */
-} mp_mont_modulus;
-
-mp_err   s_mp_mul_mont(const mp_int *a, const mp_int *b, mp_int *c, 
-	               mp_mont_modulus *mmm);
-
 /* computes T = REDC(T), 2^b == R */
-STATIC
 mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
 {
   mp_err res;

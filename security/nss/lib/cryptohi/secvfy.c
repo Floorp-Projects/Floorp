@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.8 2003/02/27 01:31:07 nelsonb%netscape.com Exp $
+ * $Id: secvfy.c,v 1.9 2003/10/17 13:45:33 ian.mcgreer%sun.com Exp $
  */
 
 #include <stdio.h>
@@ -127,37 +127,51 @@ struct VFYContextStr {
 };
 
 /*
- * decode the DSA signature from it's DER wrapping.
+ * decode the ECDSA or DSA signature from it's DER wrapping.
+ * The unwrapped/raw signature is placed in the buffer pointed
+ * to by digest and has enough room for len bytes.
  */
 static SECStatus
-decodeDSASignature(SECOidTag algid, SECItem *sig, unsigned char *digest) {
-    SECItem *dsasig = NULL;
+decodeECorDSASignature(SECOidTag algid, SECItem *sig, unsigned char *digest,
+		       unsigned int len) {
+    SECItem *dsasig = NULL; /* also used for ECDSA */
     SECStatus rv=SECSuccess;
 
-    /* if this is a DER encoded signature, decode it first */
-    if ((algid == SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) ||
-	(algid == SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) ||
-	(algid == SEC_OID_ANSIX9_DSA_SIGNATURE)) {
-	dsasig = DSAU_DecodeDerSig(sig);
-	if ((dsasig == NULL) || (dsasig->len != DSA_SIGNATURE_LEN)) {
-	    rv = SECFailure;
-	    goto loser;
+    switch (algid) {
+    case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+    case SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+    case SEC_OID_ANSIX9_DSA_SIGNATURE:
+    case SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST:
+        if (algid == SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST) {
+	    if (len > MAX_ECKEY_LEN * 2) {
+	        PORT_SetError(SEC_ERROR_BAD_DER);
+		return SECFailure;
+	    }
+	    dsasig = DSAU_DecodeDerSigToLen(sig, len);
+	} else {
+	    dsasig = DSAU_DecodeDerSig(sig);
 	}
-	PORT_Memcpy(digest, dsasig->data, dsasig->len);
-    } else {
-	if (sig->len != DSA_SIGNATURE_LEN) {
+
+	if ((dsasig == NULL) || (dsasig->len != len)) {
 	    rv = SECFailure;
-	    goto loser;
+	} else {
+	    PORT_Memcpy(digest, dsasig->data, dsasig->len);
 	}
-	PORT_Memcpy(digest, sig->data, sig->len);
+	break;
+    default:
+        if (sig->len != len) {
+	    rv = SECFailure;
+	} else {
+	    PORT_Memcpy(digest, sig->data, sig->len);
+	}
+	break;
     }
 
-loser:
-    if (dsasig != NULL)
-	SECITEM_FreeItem(dsasig, PR_TRUE);
+    if (dsasig != NULL) SECITEM_FreeItem(dsasig, PR_TRUE);
+    if (rv == SECFailure) PORT_SetError(SEC_ERROR_BAD_DER);
     return rv;
-     
 }
+
 /*
  * Pulls the hash algorithm, signing algorithm, and key type out of a
  * composite algorithm.
@@ -200,6 +214,7 @@ decodeSigAlg(SECOidTag alg, SECOidTag *hashalg)
       /* what about normal DSA? */
       case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
       case SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+      case SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST:
         *hashalg = SEC_OID_SHA1;
 	break;
       case SEC_OID_MISSI_DSS:
@@ -216,60 +231,14 @@ decodeSigAlg(SECOidTag alg, SECOidTag *hashalg)
     return SECSuccess;
 }
 
-#ifdef NSS_ENABLE_ECC
-/*
- * decode the ECDSA signature from it's DER wrapping.
- */
-static SECStatus
-decodeECDSASignature(SECOidTag algid, SECItem *sig, 
-    unsigned char *digest, int len)
-{
-    SECStatus rv=SECSuccess;
-
-    if (len > MAX_ECKEY_LEN * 2) {
-	rv = SECFailure;
-	goto loser;
-    }
-
-    /* if this is a DER encoded signature, decode it first */
-    if (algid == SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST) {
-	    /* XXX Use a better decoder */
-	    if ((sig->len < len + 6) || 
-		(sig->data[0] != 0x30) || /* must start with a SEQUENCE */
-		(sig->data[1] != sig->len - 2) ||
-		(sig->data[2] != 0x02) || /* 1st INTEGER, r */
-		(sig->data[3] < len/2) ||
-		(sig->data[4 + sig->data[3]] != 0x02) || /* 2nd INTEGER, s */
-		(sig->data[5 + sig->data[3]] < len/2)) {	
-		    rv = SECFailure;
-		    goto loser;
-	    }
-	    
-	    PORT_Memcpy(digest, sig->data + 4 + (sig->data[3]-len/2), len/2);
-	    PORT_Memcpy(digest + len/2, sig->data + sig->len - len/2, len/2);
-    } else {
-	if (sig->len != len) {
-	    rv = SECFailure;
-	    goto loser;
-	}
-	PORT_Memcpy(digest, sig->data, sig->len);
-    }
-
-loser:
-    if (rv == SECFailure) PORT_SetError(SEC_ERROR_BAD_DER);
-    return rv;
-}
-#endif /* NSS_ENABLE_ECC */
-
 VFYContext *
 VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
 		  void *wincx)
 {
     VFYContext *cx;
     SECStatus rv;
-#ifdef NSS_ENABLE_ECC
-    int sigLen;
-#endif /* NSS_ENABLE_ECC */
+    unsigned char *tmp;
+    unsigned int sigLen;
 
     cx = (VFYContext*) PORT_ZAlloc(sizeof(VFYContext));
     if (cx) {
@@ -292,28 +261,25 @@ VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
 	    break;
 	case fortezzaKey:
 	case dsaKey:
-	    cx->type = VFY_DSA;
-	    cx->alg = SEC_OID_SHA1;
-	    cx->key = SECKEY_CopyPublicKey(key);
-	    if (sig) {
-	    	rv = decodeDSASignature(algid,sig,&cx->digest[0]);
+	case ecKey:
+	    if (key->keyType == ecKey) {
+	        cx->type = VFY_ECDSA;
+		/* Unlike DSA, EDSA does not have a fixed signature length
+		 * (it depends on the key size)
+		 */
+		sigLen = SECKEY_PublicKeyStrength(key) * 2;
+		tmp = cx->ecdsadigest;
+	    } else {
+	        cx->type = VFY_DSA;
+		sigLen = DSA_SIGNATURE_LEN;
+		tmp = cx->digest;
 	    }
-	    break;
-#ifdef NSS_ENABLE_ECC
-	  case ecKey:
-	    cx->type = VFY_ECDSA;
-	    cx->alg = SEC_OID_SHA1;
-	    cx->key = SECKEY_CopyPublicKey(key);
-	    /* Unlike DSA, EDSA does not have a fixed signature length
-	     * (it depends on the key size)
-	     */
-	    sigLen = SECKEY_PublicKeyStrength(key) * 2;
-	    if (sig) {
-		rv = decodeECDSASignature(algid,sig,&cx->ecdsadigest[0],
-		    sigLen);
-	    }
-	    break;
-#endif /* NSS_ENABLE_ECC */
+  	    cx->alg = SEC_OID_SHA1;
+  	    cx->key = SECKEY_CopyPublicKey(key);
+  	    if (sig) {
+	        rv = decodeECorDSASignature(algid,sig,tmp,sigLen);
+  	    }
+  	    break;
 	default:
 	    rv = SECFailure;
 	    break;
@@ -392,11 +358,9 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
 {
     unsigned char final[32];
     unsigned part;
-    SECItem hash,dsasig;
+    SECItem hash,dsasig; /* dsasig is also used for ECDSA */
     SECStatus rv;
-#ifdef NSS_ENABLE_ECC
-    SECItem ecdsasig;
-#endif /* NSS_ENABLE_ECC */
+    int rawSigLen;
 
     if ((cx->hasSignature == PR_FALSE) && (sig == NULL)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -410,15 +374,22 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
     (*cx->hashobj->end)(cx->hashcx, final, &part, sizeof(final));
     switch (cx->type) {
       case VFY_DSA:
+      case VFY_ECDSA:
+	if (cx->type == VFY_DSA) {
+	    dsasig.data = cx->digest;
+	    dsasig.len = DSA_SIGNATURE_LEN;
+	} else {
+	    dsasig.data = cx->ecdsadigest;
+	    dsasig.len = SECKEY_PublicKeyStrength(cx->key) * 2;
+	}
 	if (sig) {
-	    rv = decodeDSASignature(cx->sigAlg,sig,&cx->digest[0]);
+	    rv = decodeECorDSASignature(cx->sigAlg,sig,dsasig.data,
+					dsasig.len);
 	    if (rv != SECSuccess) {
 		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 		return SECFailure;
 	    }
 	} 
-	dsasig.data = cx->digest;
-	dsasig.len = DSA_SIGNATURE_LEN; /* magic size of dsa signature */
 	hash.data = final;
 	hash.len = part;
 	if (PK11_Verify(cx->key,&dsasig,&hash,cx->wincx) != SECSuccess) {
@@ -441,28 +412,6 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
 	    return SECFailure;
 	}
 	break;
-
-#ifdef NSS_ENABLE_ECC
-      case VFY_ECDSA:
-	if (sig) {
-	    rv = decodeECDSASignature(cx->sigAlg,sig,&cx->ecdsadigest[0],
-		SECKEY_PublicKeyStrength(cx->key) * 2);
-	    if (rv != SECSuccess) {
-		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-		return SECFailure;
-	    }
-	} 
-	ecdsasig.data = cx->ecdsadigest;
-	ecdsasig.len = 	SECKEY_PublicKeyStrength(cx->key) * 2;
-	hash.data = final;
-	hash.len = part;
-	if (PK11_Verify(cx->key,&ecdsasig,&hash,cx->wincx) != SECSuccess) {
-		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-		return SECFailure;
-	}
-	break;
-#endif /* NSS_ENABLE_ECC */
-
       default:
 	PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 	return SECFailure; /* shouldn't happen */
@@ -490,6 +439,9 @@ VFY_VerifyDigest(SECItem *digest, SECKEYPublicKey *key, SECItem *sig,
     SECStatus rv;
     VFYContext *cx;
     SECItem dsasig;
+#ifdef NSS_ENABLE_ECC
+    SECItem ecdsasig;
+#endif /* NSS_ENABLE_ECC */
 
     rv = SECFailure;
 
@@ -513,6 +465,18 @@ VFY_VerifyDigest(SECItem *digest, SECKEYPublicKey *key, SECItem *sig,
 		rv = SECSuccess;
 	    }
 	    break;
+#ifdef NSS_ENABLE_ECC
+	case ecKey:
+	    ecdsasig.data = &cx->ecdsadigest[0];
+	    ecdsasig.len = SECKEY_PublicKeyStrength(cx->key) * 2;
+	    if (PK11_Verify(cx->key, &ecdsasig, digest, cx->wincx) 
+		!= SECSuccess) {
+	        PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+	    } else {
+		rv = SECSuccess;
+	    }
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	default:
 	    break;
 	}

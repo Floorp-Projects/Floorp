@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: lowkeyi.h,v 1.7 2002/09/27 17:46:36 relyea%netscape.com Exp $
+ * $Id: lowkeyi.h,v 1.8 2003/10/17 13:45:39 ian.mcgreer%sun.com Exp $
  */
 
 #ifndef _LOWKEYI_H_
@@ -59,6 +63,10 @@ extern void prepare_low_pqg_params_for_asn1(PQGParams *params);
 extern void prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void prepare_low_dsa_priv_key_export_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
+#ifdef NSS_ENABLE_ECC
+extern void prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
+extern void prepare_low_ecparams_for_asn1(ECParams *params);
+#endif /* NSS_ENABLE_ECC */
 
 typedef char * (* NSSLOWKEYDBNameFunc)(void *arg, int dbVersion);
     

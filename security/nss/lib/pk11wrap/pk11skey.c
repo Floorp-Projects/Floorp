@@ -21,7 +21,8 @@
  *
  * Contributor(s):
  *	Dr Stephen Henson <stephen.henson@gemplus.com>
- *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
+ *	Dr Vipul Gupta <vipul.gupta@sun.com> and
+ *	Douglas Stebila <douglas@stebila.ca>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -68,6 +69,9 @@ static PK11SymKey *pk11_DeriveWithTemplate(PK11SymKey *baseKey,
 	CK_ATTRIBUTE_TYPE operation, int keySize, CK_ATTRIBUTE *userAttr, 
 	unsigned int numAttrs);
 
+#ifdef NSS_ENABLE_ECC
+extern int SECKEY_ECParams2KeySize(SECItem *params);
+#endif /* NSS_ENABLE_ECC */
 
 /*
  * strip leading zero's from key material
@@ -1225,6 +1229,7 @@ pk11_backupGetSignLength(SECKEYPrivateKey *key)
     }
     return len;
 }
+
 /*
  * get the length of a signature object based on the key
  */
@@ -1232,6 +1237,11 @@ int
 PK11_SignatureLen(SECKEYPrivateKey *key)
 {
     int val;
+#ifdef NSS_ENABLE_ECC
+    CK_ATTRIBUTE theTemplate = { CKA_EC_PARAMS, NULL, 0 };
+    SECItem params = {siBuffer, NULL, 0};
+    int length; 
+#endif /* NSS_ENABLE_ECC */
 
     switch (key->keyType) {
     case rsaKey:
@@ -1244,7 +1254,21 @@ PK11_SignatureLen(SECKEYPrivateKey *key)
     case fortezzaKey:
     case dsaKey:
 	return 40;
-
+#ifdef NSS_ENABLE_ECC
+    case ecKey:
+	if (PK11_GetAttributes(NULL, key->pkcs11Slot, key->pkcs11ID,
+			       &theTemplate, 1) == CKR_OK) {
+	    if (theTemplate.pValue != NULL) {
+	        params.len = theTemplate.ulValueLen;
+		params.data = (unsigned char *) theTemplate.pValue;
+	        length = SECKEY_ECParams2KeySize(&params);
+	        PORT_Free(theTemplate.pValue);
+	    }
+	    length = ((length + 7)/8) * 2;
+	    return length;
+	}
+	break;
+#endif /* NSS_ENABLE_ECC */
     default:
 	break;
     }
@@ -1735,6 +1759,8 @@ pk11_PairwiseConsistencyCheck(SECKEYPublicKey *pubKey,
 	 * We are not doing consistency check for Diffie-Hellman Key - 
 	 * otherwise it would be here
 	 * This is also true for Elliptic Curve Diffie-Hellman keys
+	 * NOTE: EC keys are currently subjected to pairwise
+	 * consistency check for signing/verification.
 	 */
 
       }
@@ -1825,6 +1851,12 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	ap->type = CKA_BASE; ap++; count++; extra_count++;
 	ap->type = CKA_VALUE; ap++; count++; extra_count++;
 	break;
+#ifdef NSS_ENABLE_ECC
+    case ecKey:
+	ap->type = CKA_EC_PARAMS; ap++; count++; extra_count++;
+	ap->type = CKA_VALUE; ap++; count++; extra_count++;
+	break;
+#endif /* NSS_ENABLE_ECC */       
      default:
 	count = 0;
 	extra_count = 0;
@@ -2204,7 +2236,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 
     crv = PK11_GETTAB(slot)->C_GenerateKeyPair(session_handle, &mechanism,
 	pubTemplate,pubCount,privTemplate,privCount,&pubID,&privID);
-
 
     if (crv != CKR_OK) {
 	if (restore)  {
@@ -2869,6 +2900,115 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    if (crv == CKR_OK) return symKey;
 	    PORT_SetError( PK11_MapError(crv) );
 	}
+#else
+	case ecKey:
+	break;
+#endif /* NSS_ENABLE_ECC */
+   }
+
+   PK11_FreeSymKey(symKey);
+   return NULL;
+}
+
+PK11SymKey *
+PK11_PubDeriveExtended(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
+	PRBool isSender, SECItem *randomA, SECItem *randomB, 
+	CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
+	CK_ATTRIBUTE_TYPE operation, int keySize,void *wincx,
+	CK_ULONG kdf, SECItem *sharedData)
+{
+    PK11SlotInfo *slot = privKey->pkcs11Slot;
+    PK11SymKey *symKey;
+#ifdef NSS_ENABLE_ECC
+    CK_MECHANISM mechanism;
+    CK_RV crv;
+#endif
+
+    /* get our key Structure */
+    symKey = PK11_CreateSymKey(slot,target,wincx);
+    if (symKey == NULL) {
+	return NULL;
+    }
+
+    symKey->origin = PK11_OriginDerive;
+
+    switch (privKey->keyType) {
+    case rsaKey:
+    case nullKey:
+    case dsaKey:
+    case keaKey:
+    case fortezzaKey:
+    case dhKey:
+	PK11_FreeSymKey(symKey);
+	return PK11_PubDerive(privKey, pubKey, isSender, randomA, randomB,
+		derive, target, operation, keySize, wincx);
+#ifdef NSS_ENABLE_ECC
+    case ecKey:
+        {
+	    CK_BBOOL cktrue = CK_TRUE;
+	    CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
+	    CK_KEY_TYPE keyType = CKK_GENERIC_SECRET;
+	    CK_ULONG key_size = 0;
+	    CK_ATTRIBUTE keyTemplate[4];
+	    int templateCount;
+	    CK_ATTRIBUTE *attrs = keyTemplate;
+	    CK_ECDH1_DERIVE_PARAMS *mechParams = NULL;
+
+	    if (pubKey->keyType != ecKey) {
+		PORT_SetError(SEC_ERROR_BAD_KEY);
+		break;
+	    }
+
+	    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass));
+	    attrs++;
+	    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType));
+	    attrs++;
+	    PK11_SETATTRS(attrs, operation, &cktrue, 1); attrs++;
+	    PK11_SETATTRS(attrs, CKA_VALUE_LEN, &key_size, sizeof(key_size)); 
+	    attrs++;
+	    templateCount =  attrs - keyTemplate;
+	    PR_ASSERT(templateCount <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
+
+	    keyType = PK11_GetKeyType(target,keySize);
+	    key_size = keySize;
+	    symKey->size = keySize;
+	    if (key_size == 0) templateCount--;
+
+	    mechParams = (CK_ECDH1_DERIVE_PARAMS *) 
+		PORT_ZAlloc(sizeof(CK_ECDH1_DERIVE_PARAMS));
+	    if ((kdf < CKD_NULL) || (kdf > CKD_SHA1_KDF)) {
+		PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+		break;
+	    }
+	    mechParams->kdf = kdf;
+	    if (sharedData == NULL) {
+		mechParams->ulSharedDataLen = 0;
+		mechParams->pSharedData = NULL;
+	    } else {
+		mechParams->ulSharedDataLen = sharedData->len;
+		mechParams->pSharedData = sharedData->data;
+	    }
+	    mechParams->ulPublicDataLen =  pubKey->u.ec.publicValue.len;
+	    mechParams->pPublicData =  pubKey->u.ec.publicValue.data;
+
+	    mechanism.mechanism = derive;
+	    mechanism.pParameter = mechParams;
+	    mechanism.ulParameterLen = sizeof(CK_ECDH1_DERIVE_PARAMS);
+
+	    pk11_EnterKeyMonitor(symKey);
+	    crv = PK11_GETTAB(slot)->C_DeriveKey(symKey->session, 
+		&mechanism, privKey->pkcs11ID, keyTemplate, 
+		templateCount, &symKey->objectID);
+	    pk11_ExitKeyMonitor(symKey);
+
+	    PORT_ZFree(mechParams, sizeof(CK_ECDH1_DERIVE_PARAMS));
+
+	    if (crv == CKR_OK) return symKey;
+	    PORT_SetError( PK11_MapError(crv) );
+	}
+#else
+	case ecKey:
+	break;
 #endif /* NSS_ENABLE_ECC */
    }
 
@@ -4567,7 +4707,9 @@ PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 		 CKA_UNWRAP, CKA_DECRYPT, CKA_SIGN, CKA_SIGN_RECOVER };
     CK_ATTRIBUTE_TYPE dsaUsage[] = { CKA_SIGN };
     CK_ATTRIBUTE_TYPE dhUsage[] = { CKA_DERIVE };
-
+#ifdef NSS_ENABLE_ECC
+    CK_ATTRIBUTE_TYPE ecUsage[] = { CKA_SIGN, CKA_DERIVE };
+#endif /* NSS_ENABLE_ECC */
     if((epki == NULL) || (pwitem == NULL))
 	return SECFailure;
 
@@ -4606,6 +4748,26 @@ PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 	usage = dsaUsage;
 	usageCount = sizeof(dsaUsage)/sizeof(dsaUsage[0]);
 	break;
+#ifdef NSS_ENABLE_ECC
+    case ecKey:
+	key_type = CKK_EC;
+	switch  (keyUsage & (KU_DIGITAL_SIGNATURE|KU_KEY_AGREEMENT)) {
+	case KU_DIGITAL_SIGNATURE:
+	    usage = ecUsage;
+	    usageCount = 1;
+	    break;
+	case KU_KEY_AGREEMENT:
+	    usage = &ecUsage[1];
+	    usageCount = 1;
+	    break;
+	case KU_DIGITAL_SIGNATURE|KU_KEY_AGREEMENT:
+	default: /* default to everything */
+	    usage = ecUsage;
+	    usageCount = 2;
+	    break;
+	}
+	break;	
+#endif /* NSS_ENABLE_ECC */
     }
 
 try_faulty_3des:
@@ -4645,7 +4807,6 @@ try_faulty_3des:
 	rv = SECSuccess;
 	goto done;
     }
-
     /* if we are unable to import the key and the mechanism is 
      * CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC, then it is possible that
      * the encrypted blob was created with a buggy key generation method
@@ -4706,9 +4867,20 @@ pk11_private_key_encrypt_buffer_length(SECKEYPrivateKey *key)
 {
     CK_ATTRIBUTE rsaTemplate = { CKA_MODULUS, NULL, 0 };
     CK_ATTRIBUTE dsaTemplate = { CKA_PRIME, NULL, 0 };
+#ifdef NSS_ENABLE_ECC
+    /* XXX We should normally choose an attribute such that
+     * factor times its size is enough to hold the private key.
+     * For EC keys, we have no choice but to use CKA_EC_PARAMS,
+     * CKA_VALUE is not available for token keys. But for named
+     * curves, the number of bytes needed to represent the params
+     * is quite small so we bump up factor from 10 to 15.
+     */
+    CK_ATTRIBUTE ecTemplate = { CKA_EC_PARAMS, NULL, 0 };
+#endif /* NSS_ENABLE_ECC */
     CK_ATTRIBUTE_PTR pTemplate;
     CK_RV crv;
     int length;
+    int factor = 10;
 
     if(!key) {
 	return -1;
@@ -4722,6 +4894,12 @@ pk11_private_key_encrypt_buffer_length(SECKEYPrivateKey *key)
 	case dhKey:
 	    pTemplate = &dsaTemplate;
 	    break;
+#ifdef NSS_ENABLE_ECC
+        case ecKey:
+	    pTemplate = &ecTemplate;
+	    factor = 15;
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	case fortezzaKey:
 	default:
 	    pTemplate = NULL;
@@ -4739,7 +4917,8 @@ pk11_private_key_encrypt_buffer_length(SECKEYPrivateKey *key)
     }
 
     length = pTemplate->ulValueLen;
-    length *= 10;
+    length *= factor;
+
 
     if(pTemplate->pValue != NULL) {
 	PORT_Free(pTemplate->pValue);

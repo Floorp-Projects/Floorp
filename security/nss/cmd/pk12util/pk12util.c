@@ -470,6 +470,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
     p12cxt->file = NULL;
     /* PK11_FreeSlot(slot); */
 
+    fprintf(stdout, "%s: PKCS12 IMPORT SUCCESSFUL\n", progName);
     rv = SECSuccess;
 
 loser:

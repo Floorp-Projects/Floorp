@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -34,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.15 2003/09/19 04:08:50 jpierre%netscape.com Exp $
+ * $Id: lowcert.c,v 1.16 2003/10/17 13:45:39 ian.mcgreer%sun.com Exp $
  */
 
 #include "seccomon.h"
@@ -46,6 +50,12 @@
 #include "pcert.h"
 #include "secasn1.h"
 #include "secoid.h"
+
+#ifdef NSS_ENABLE_ECC
+extern SECStatus EC_FillParams(PRArenaPool *arena, 
+			       const SECItem *encodedParams,
+			       ECParams *params);
+#endif
 
 static const SEC_ASN1Template nsslowcert_SubjectPublicKeyInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWCERTSubjectPublicKeyInfo) },
@@ -582,6 +592,28 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
 				 nsslowcert_DHPublicKeyTemplate, &os);
         if (rv == SECSuccess) return pubk;
         break;
+#ifdef NSS_ENABLE_ECC
+      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+        pubk->keyType = NSSLOWKEYECKey;
+	/* Since PKCS#11 directly takes the DER encoding of EC params
+	 * and public value, we don't need any decoding here.
+	 */
+        rv = SECITEM_CopyItem(arena, &pubk->u.ec.ecParams.DEREncoding, 
+	    &spki.algorithm.parameters);
+        if ( rv != SECSuccess )
+            break;	
+
+	/* Fill out the rest of the ecParams structure 
+	 * based on the encoded params
+	 */
+	if (EC_FillParams(arena, &pubk->u.ec.ecParams.DEREncoding,
+	    &pubk->u.ec.ecParams) != SECSuccess) 
+	    break;
+
+        rv = SECITEM_CopyItem(arena, &pubk->u.ec.publicValue, &os);
+	if (rv == SECSuccess) return pubk;
+        break;
+#endif /* NSS_ENABLE_ECC */
       default:
         rv = SECFailure;
         break;

@@ -17,6 +17,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *      Douglas Stebila <douglas@stebila.ca>, Sun Microsystems Laboratories
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -46,6 +47,15 @@
 #include "plgetopt.h"
 #include "softoken.h"
 #include "nss.h"
+
+#ifdef NSS_ENABLE_ECC
+#include "ecl-curve.h"
+SECStatus EC_DecodeParams(const SECItem *encodedParams, 
+	ECParams **ecparams);
+SECStatus EC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
+	      const ECParams *srcParams);
+SECStatus secoid_Init(void);
+#endif
 
 /* Temporary - add debugging ouput on windows for RSA to track QA failure */
 #ifdef _WIN32
@@ -123,11 +133,34 @@ static void Usage()
     PRINTUSAGE(progName, "-S -m mode", "Sign a buffer");
     PRINTUSAGE("",	"", "[-i plaintext] [-o signature] [-k key]");
     PRINTUSAGE("",	"", "[-b bufsize]");
+#ifdef NSS_ENABLE_ECC
+    PRINTUSAGE("",	"", "[-n curvename]");
+#endif
     PRINTUSAGE("",	"", "[-p repetitions]");
     PRINTUSAGE("",	"-m", "cipher mode to use");
     PRINTUSAGE("",	"-i", "file which contains input buffer");
     PRINTUSAGE("",	"-o", "file for signature");
     PRINTUSAGE("",	"-k", "file which contains key");
+#ifdef NSS_ENABLE_ECC
+    PRINTUSAGE("",	"-n", "name of curve for EC key generation; one of:");
+    PRINTUSAGE("",  "",   "  sect163k1, nistk163, sect163r1, sect163r2,");
+    PRINTUSAGE("",  "",   "  nistb163, sect193r1, sect193r2, sect233k1, nistk233,");
+    PRINTUSAGE("",  "",   "  sect233r1, nistb233, sect239k1, sect283k1, nistk283,");
+    PRINTUSAGE("",  "",   "  sect283r1, nistb283, sect409k1, nistk409, sect409r1,");
+    PRINTUSAGE("",  "",   "  nistb409, sect571k1, nistk571, sect571r1, nistb571,");
+    PRINTUSAGE("",  "",   "  secp169k1, secp160r1, secp160r2, secp192k1, secp192r1,");
+    PRINTUSAGE("",  "",   "  nistp192, secp224k1, secp224r1, nistp224, secp256k1,");
+    PRINTUSAGE("",  "",   "  secp256r1, nistp256, secp384r1, nistp384, secp521r1,");
+    PRINTUSAGE("",  "",   "  nistp521, prime192v1, prime192v2, prime192v3,");
+    PRINTUSAGE("",  "",   "  prime239v1, prime239v2, prime239v3, c2pnb163v1,");
+    PRINTUSAGE("",  "",   "  c2pnb163v2, c2pnb163v3, c2pnb176v1, c2tnb191v1,");
+    PRINTUSAGE("",  "",   "  c2tnb191v2, c2tnb191v3, c2onb191v4, c2onb191v5,");
+    PRINTUSAGE("",  "",   "  c2pnb208w1, c2tnb239v1, c2tnb239v2, c2tnb239v3,");
+    PRINTUSAGE("",  "",   "  c2onb239v4, c2onb239v5, c2pnb272w1, c2pnb304w1,");
+    PRINTUSAGE("",  "",   "  c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1,");
+    PRINTUSAGE("",  "",   "  secp112r2, secp128r1, secp128r2, sect113r1, sect113r2,");
+    PRINTUSAGE("",  "",   "  sect131r1, sect131r2");
+#endif
     PRINTUSAGE("",	"-p", "do performance test");
     fprintf(stderr, "\n");
     PRINTUSAGE(progName, "-V -m mode", "Verify a signed buffer");
@@ -291,23 +324,28 @@ serialize_key(SECItem *it, int ni, PRFileDesc *file)
 }
 
 void
-key_from_filedata(PRArenaPool *arena, SECItem *it, int ni, SECItem *filedata)
+key_from_filedata(PRArenaPool *arena, SECItem *it, int ns, int ni, SECItem *filedata)
 {
     int fpos = 0;
-    int i;
+    int i, len;
     unsigned char *buf = filedata->data;
-    for (i=0; i<ni; i++, it++) {
-	it->len	 = (buf[fpos++] & 0xff) << 24;
-	it->len |= (buf[fpos++] & 0xff) << 16;
-	it->len |= (buf[fpos++] & 0xff) <<  8;
-	it->len |= (buf[fpos++] & 0xff);
-	if (it->len > 0) {
-	    it->data = PORT_ArenaAlloc(arena, it->len);
-	    PORT_Memcpy(it->data, &buf[fpos], it->len);
-	} else {
-	    it->data = NULL;
+    for (i=0; i<ni; i++) {
+	len  = (buf[fpos++] & 0xff) << 24;
+	len |= (buf[fpos++] & 0xff) << 16;
+	len |= (buf[fpos++] & 0xff) <<  8;
+	len |= (buf[fpos++] & 0xff);
+	if (ns <= i) {
+	    if (len > 0) {
+		it->len = len;
+		it->data = PORT_ArenaAlloc(arena, it->len);
+		PORT_Memcpy(it->data, &buf[fpos], it->len);
+	    } else {
+		it->len = 0;
+		it->data = NULL;
+	    }
+	    it++;
 	}
-	fpos += it->len;
+	fpos += len;
     }
 }
 
@@ -319,7 +357,7 @@ rsakey_from_filedata(SECItem *filedata)
     arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     key = (RSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(RSAPrivateKey));
     key->arena = arena;
-    key_from_filedata(arena, &key->version, 9, filedata);
+    key_from_filedata(arena, &key->version, 0, 9, filedata);
     return key;
 }
 
@@ -331,7 +369,7 @@ pqg_from_filedata(SECItem *filedata)
     arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     pqg = (PQGParams *)PORT_ArenaZAlloc(arena, sizeof(PQGParams));
     pqg->arena = arena;
-    key_from_filedata(arena, &pqg->prime, 3, filedata);
+    key_from_filedata(arena, &pqg->prime, 0, 3, filedata);
     return pqg;
 }
 
@@ -343,9 +381,165 @@ dsakey_from_filedata(SECItem *filedata)
     arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     key = (DSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(DSAPrivateKey));
     key->params.arena = arena;
-    key_from_filedata(arena, &key->params.prime, 5, filedata);
+    key_from_filedata(arena, &key->params.prime, 0, 5, filedata);
     return key;
 }
+
+#ifdef NSS_ENABLE_ECC
+static ECPrivateKey *
+eckey_from_filedata(SECItem *filedata)
+{
+    ECPrivateKey *key;
+    PRArenaPool *arena;
+    SECStatus rv;
+    ECParams *tmpECParams = NULL;
+    arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
+    key = (ECPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(ECPrivateKey));
+    /* read and convert params */
+    key->ecParams.arena = arena;
+    key_from_filedata(arena, &key->ecParams.DEREncoding, 0, 1, filedata);
+    rv = secoid_Init();
+    CHECKERROR(rv, __LINE__);
+    rv = EC_DecodeParams(&key->ecParams.DEREncoding, &tmpECParams);
+    CHECKERROR(rv, __LINE__);
+    rv = EC_CopyParams(key->ecParams.arena, &key->ecParams, tmpECParams);
+    CHECKERROR(rv, __LINE__);
+    rv = SECOID_Shutdown();
+    CHECKERROR(rv, __LINE__);
+    PORT_FreeArena(tmpECParams->arena, PR_TRUE);
+    /* read key */
+    key_from_filedata(arena, &key->publicValue, 1, 3, filedata);
+    return key;
+}
+
+typedef struct curveNameTagPairStr {
+    char *curveName;
+    SECOidTag curveOidTag;
+} CurveNameTagPair;
+
+#define DEFAULT_CURVE_OID_TAG  SEC_OID_SECG_EC_SECP192R1
+/* #define DEFAULT_CURVE_OID_TAG  SEC_OID_SECG_EC_SECP160R1 */
+
+static CurveNameTagPair nameTagPair[] =
+{ 
+  { "sect163k1", SEC_OID_SECG_EC_SECT163K1},
+  { "nistk163", SEC_OID_SECG_EC_SECT163K1},
+  { "sect163r1", SEC_OID_SECG_EC_SECT163R1},
+  { "sect163r2", SEC_OID_SECG_EC_SECT163R2},
+  { "nistb163", SEC_OID_SECG_EC_SECT163R2},
+  { "sect193r1", SEC_OID_SECG_EC_SECT193R1},
+  { "sect193r2", SEC_OID_SECG_EC_SECT193R2},
+  { "sect233k1", SEC_OID_SECG_EC_SECT233K1},
+  { "nistk233", SEC_OID_SECG_EC_SECT233K1},
+  { "sect233r1", SEC_OID_SECG_EC_SECT233R1},
+  { "nistb233", SEC_OID_SECG_EC_SECT233R1},
+  { "sect239k1", SEC_OID_SECG_EC_SECT239K1},
+  { "sect283k1", SEC_OID_SECG_EC_SECT283K1},
+  { "nistk283", SEC_OID_SECG_EC_SECT283K1},
+  { "sect283r1", SEC_OID_SECG_EC_SECT283R1},
+  { "nistb283", SEC_OID_SECG_EC_SECT283R1},
+  { "sect409k1", SEC_OID_SECG_EC_SECT409K1},
+  { "nistk409", SEC_OID_SECG_EC_SECT409K1},
+  { "sect409r1", SEC_OID_SECG_EC_SECT409R1},
+  { "nistb409", SEC_OID_SECG_EC_SECT409R1},
+  { "sect571k1", SEC_OID_SECG_EC_SECT571K1},
+  { "nistk571", SEC_OID_SECG_EC_SECT571K1},
+  { "sect571r1", SEC_OID_SECG_EC_SECT571R1},
+  { "nistb571", SEC_OID_SECG_EC_SECT571R1},
+  { "secp160k1", SEC_OID_SECG_EC_SECP160K1},
+  { "secp160r1", SEC_OID_SECG_EC_SECP160R1},
+  { "secp160r2", SEC_OID_SECG_EC_SECP160R2},
+  { "secp192k1", SEC_OID_SECG_EC_SECP192K1},
+  { "secp192r1", SEC_OID_SECG_EC_SECP192R1},
+  { "nistp192", SEC_OID_SECG_EC_SECP192R1},
+  { "secp224k1", SEC_OID_SECG_EC_SECP224K1},
+  { "secp224r1", SEC_OID_SECG_EC_SECP224R1},
+  { "nistp224", SEC_OID_SECG_EC_SECP224R1},
+  { "secp256k1", SEC_OID_SECG_EC_SECP256K1},
+  { "secp256r1", SEC_OID_SECG_EC_SECP256R1},
+  { "nistp256", SEC_OID_SECG_EC_SECP256R1},
+  { "secp384r1", SEC_OID_SECG_EC_SECP384R1},
+  { "nistp384", SEC_OID_SECG_EC_SECP384R1},
+  { "secp521r1", SEC_OID_SECG_EC_SECP521R1},
+  { "nistp521", SEC_OID_SECG_EC_SECP521R1},
+
+  { "prime192v1", SEC_OID_ANSIX962_EC_PRIME192V1 },
+  { "prime192v2", SEC_OID_ANSIX962_EC_PRIME192V2 },
+  { "prime192v3", SEC_OID_ANSIX962_EC_PRIME192V3 },
+  { "prime239v1", SEC_OID_ANSIX962_EC_PRIME239V1 },
+  { "prime239v2", SEC_OID_ANSIX962_EC_PRIME239V2 },
+  { "prime239v3", SEC_OID_ANSIX962_EC_PRIME239V3 },
+
+  { "c2pnb163v1", SEC_OID_ANSIX962_EC_C2PNB163V1 },
+  { "c2pnb163v2", SEC_OID_ANSIX962_EC_C2PNB163V2 },
+  { "c2pnb163v3", SEC_OID_ANSIX962_EC_C2PNB163V3 },
+  { "c2pnb176v1", SEC_OID_ANSIX962_EC_C2PNB176V1 },
+  { "c2tnb191v1", SEC_OID_ANSIX962_EC_C2TNB191V1 },
+  { "c2tnb191v2", SEC_OID_ANSIX962_EC_C2TNB191V2 },
+  { "c2tnb191v3", SEC_OID_ANSIX962_EC_C2TNB191V3 },
+  { "c2onb191v4", SEC_OID_ANSIX962_EC_C2ONB191V4 },
+  { "c2onb191v5", SEC_OID_ANSIX962_EC_C2ONB191V5 },
+  { "c2pnb208w1", SEC_OID_ANSIX962_EC_C2PNB208W1 },
+  { "c2tnb239v1", SEC_OID_ANSIX962_EC_C2TNB239V1 },
+  { "c2tnb239v2", SEC_OID_ANSIX962_EC_C2TNB239V2 },
+  { "c2tnb239v3", SEC_OID_ANSIX962_EC_C2TNB239V3 },
+  { "c2onb239v4", SEC_OID_ANSIX962_EC_C2ONB239V4 },
+  { "c2onb239v5", SEC_OID_ANSIX962_EC_C2ONB239V5 },
+  { "c2pnb272w1", SEC_OID_ANSIX962_EC_C2PNB272W1 },
+  { "c2pnb304w1", SEC_OID_ANSIX962_EC_C2PNB304W1 },
+  { "c2tnb359v1", SEC_OID_ANSIX962_EC_C2TNB359V1 },
+  { "c2pnb368w1", SEC_OID_ANSIX962_EC_C2PNB368W1 },
+  { "c2tnb431r1", SEC_OID_ANSIX962_EC_C2TNB431R1 },
+
+  { "secp112r1", SEC_OID_SECG_EC_SECP112R1},
+  { "secp112r2", SEC_OID_SECG_EC_SECP112R2},
+  { "secp128r1", SEC_OID_SECG_EC_SECP128R1},
+  { "secp128r2", SEC_OID_SECG_EC_SECP128R2},
+
+  { "sect113r1", SEC_OID_SECG_EC_SECT113R1},
+  { "sect113r2", SEC_OID_SECG_EC_SECT113R2},
+  { "sect131r1", SEC_OID_SECG_EC_SECT131R1},
+  { "sect131r2", SEC_OID_SECG_EC_SECT131R2},
+};
+
+static SECKEYECParams * 
+getECParams(char *curve)
+{
+    SECKEYECParams *ecparams;
+    SECOidData *oidData = NULL;
+    SECOidTag curveOidTag = SEC_OID_UNKNOWN; /* default */
+    int i, numCurves;
+
+    if (curve != NULL) {
+        numCurves = sizeof(nameTagPair)/sizeof(CurveNameTagPair);
+	for (i = 0; ((i < numCurves) && (curveOidTag == SEC_OID_UNKNOWN)); 
+	     i++) {
+	    if (PL_strcmp(curve, nameTagPair[i].curveName) == 0)
+	        curveOidTag = nameTagPair[i].curveOidTag;
+	}
+    }
+
+    /* Return NULL if curve name is not recognized */
+    if ((curveOidTag == SEC_OID_UNKNOWN) || 
+	(oidData = SECOID_FindOIDByTag(curveOidTag)) == NULL) {
+        fprintf(stderr, "Unrecognized elliptic curve %s\n", curve);
+	return NULL;
+    }
+
+    ecparams = SECITEM_AllocItem(NULL, NULL, (2 + oidData->oid.len));
+
+    /* 
+     * ecparams->data needs to contain the ASN encoding of an object ID (OID)
+     * representing the named curve. The actual OID is in 
+     * oidData->oid.data so we simply prepend 0x06 and OID length
+     */
+    ecparams->data[0] = SEC_ASN1_OBJECT_ID;
+    ecparams->data[1] = oidData->oid.len;
+    memcpy(ecparams->data + 2, oidData->oid.data, oidData->oid.len);
+
+    return ecparams;
+}
+#endif /* NSS_ENABLE_ECC */
 
 static void
 dump_pqg(PQGParams *pqg)
@@ -362,6 +556,23 @@ dump_dsakey(DSAPrivateKey *key)
     SECU_PrintInteger(stdout, &key->publicValue, "PUBLIC VALUE:", 0);
     SECU_PrintInteger(stdout, &key->privateValue, "PRIVATE VALUE:", 0);
 }
+
+#ifdef NSS_ENABLE_ECC
+static void
+dump_ecp(ECParams *ecp)
+{
+    /* TODO other fields */
+    SECU_PrintInteger(stdout, &ecp->base, "BASE POINT:", 0);
+}
+
+static void
+dump_eckey(ECPrivateKey *key)
+{
+    dump_ecp(&key->ecParams);
+    SECU_PrintInteger(stdout, &key->publicValue, "PUBLIC VALUE:", 0);
+    SECU_PrintInteger(stdout, &key->privateValue, "PRIVATE VALUE:", 0);
+}
+#endif
 
 static void
 dump_rsakey(RSAPrivateKey *key)
@@ -421,7 +632,10 @@ typedef enum {
     bltestAES_ECB,        /* .                     */
     bltestAES_CBC,        /* .                     */
     bltestRSA,		  /* Public Key Ciphers	   */
-    bltestDSA,		  /* . (Public Key Sig.)   */
+#ifdef NSS_ENABLE_ECC
+    bltestECDSA,	  /* . (Public Key Sig.)   */
+#endif
+    bltestDSA,		  /* .                     */
     bltestMD2,		  /* Hash algorithms	   */
     bltestMD5,		  /* .			   */
     bltestSHA1,           /* .			   */
@@ -445,6 +659,9 @@ static char *mode_strings[] =
     "aes_ecb",
     "aes_cbc",
     "rsa",
+#ifdef NSS_ENABLE_ECC
+    "ecdsa",
+#endif
     /*"pqg",*/
     "dsa",
     "md2",
@@ -488,6 +705,17 @@ typedef struct
     DSAPrivateKey *dsakey;
 } bltestDSAParams;
 
+#ifdef NSS_ENABLE_ECC
+typedef struct
+{
+    bltestIO   key;
+    char      *curveName;
+    bltestIO   sigseed;
+    bltestIO   sig; /* if doing verify, have additional input */
+    ECPrivateKey *eckey;
+} bltestECDSAParams;
+#endif
+
 typedef struct
 {
     bltestIO   key; /* unused */
@@ -501,6 +729,9 @@ typedef union
     bltestRC5Params	rc5;
     bltestRSAParams	rsa;
     bltestDSAParams	dsa;
+#ifdef NSS_ENABLE_ECC
+    bltestECDSAParams	ecdsa;
+#endif
     bltestHashParams	hash;
 } bltestParams;
 
@@ -560,7 +791,11 @@ PRBool
 is_sigCipher(bltestCipherMode mode)
 {
     /* change as needed! */
+#ifdef NSS_ENABLE_ECC
+    if (mode >= bltestECDSA && mode <= bltestDSA)
+#else
     if (mode >= bltestDSA && mode <= bltestDSA)
+#endif
 	return PR_TRUE;
     return PR_FALSE;
 }
@@ -828,6 +1063,20 @@ dsa_verifyDigest(void *key, SECItem *output, const SECItem *input)
 {
     return DSA_VerifyDigest((DSAPublicKey *)key, output, input);
 }
+
+#ifdef NSS_ENABLE_ECC
+SECStatus
+ecdsa_signDigest(void *key, SECItem *output, const SECItem *input)
+{
+    return ECDSA_SignDigest((ECPrivateKey *)key, output, input);
+}
+
+SECStatus
+ecdsa_verifyDigest(void *key, SECItem *output, const SECItem *input)
+{
+    return ECDSA_VerifyDigest((ECPublicKey *)key, output, input);
+}
+#endif
 
 SECStatus
 bltest_des_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
@@ -1125,6 +1374,74 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     return SECSuccess;
 }
 
+#ifdef NSS_ENABLE_ECC
+SECStatus
+bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
+{
+    int i;
+    ECPrivateKey **dummyKey;
+    PRIntervalTime time1, time2;
+    bltestECDSAParams *ecdsap = &cipherInfo->params.ecdsa;
+    /* ECDSA key gen was done during parameter setup */
+    cipherInfo->cx = cipherInfo->params.ecdsa.eckey;
+    /* For performance testing */
+    if (cipherInfo->cxreps > 0) {
+	/* Create space for n private key objects */
+	dummyKey = (ECPrivateKey **)PORT_ZAlloc(cipherInfo->cxreps *
+	                                         sizeof(ECPrivateKey *));
+	/* Time n keygens, storing in the array */
+	TIMESTART();
+	for (i=0; i<cipherInfo->cxreps; i++) {
+	    EC_NewKey(&ecdsap->eckey->ecParams, &dummyKey[i]);
+	}
+	TIMEFINISH(cipherInfo->cxtime, cipherInfo->cxreps);
+	/* Free the n key objects */
+	for (i=0; i<cipherInfo->cxreps; i++)
+	    PORT_FreeArena(dummyKey[i]->ecParams.arena, PR_TRUE);
+	PORT_Free(dummyKey);
+    }
+    if (!cipherInfo->cx && ecdsap->key.buf.len > 0) {
+	cipherInfo->cx = eckey_from_filedata(&ecdsap->key.buf);
+    }
+    if (encrypt) {
+	cipherInfo->cipher.pubkeyCipher = ecdsa_signDigest;
+    } else {
+	/* Have to convert private key to public key.  Memory
+	 * is freed with private key's arena  */
+	ECPublicKey *pubkey;
+	ECPrivateKey *key = (ECPrivateKey *)cipherInfo->cx;
+	pubkey = (ECPublicKey *)PORT_ArenaZAlloc(key->ecParams.arena,
+						  sizeof(ECPublicKey));
+	pubkey->ecParams.type = key->ecParams.type;
+	pubkey->ecParams.fieldID.size = key->ecParams.fieldID.size;
+	pubkey->ecParams.fieldID.type = key->ecParams.fieldID.type;
+	pubkey->ecParams.fieldID.u.prime.len = key->ecParams.fieldID.u.prime.len;
+	pubkey->ecParams.fieldID.u.prime.data = key->ecParams.fieldID.u.prime.data;
+	pubkey->ecParams.fieldID.k1 = key->ecParams.fieldID.k1;
+	pubkey->ecParams.fieldID.k2 = key->ecParams.fieldID.k2;
+	pubkey->ecParams.fieldID.k3 = key->ecParams.fieldID.k3;
+	pubkey->ecParams.curve.a.len = key->ecParams.curve.a.len;
+	pubkey->ecParams.curve.a.data = key->ecParams.curve.a.data;
+	pubkey->ecParams.curve.b.len = key->ecParams.curve.b.len;
+	pubkey->ecParams.curve.b.data = key->ecParams.curve.b.data;
+	pubkey->ecParams.curve.seed.len = key->ecParams.curve.seed.len;
+	pubkey->ecParams.curve.seed.data = key->ecParams.curve.seed.data;
+	pubkey->ecParams.base.len = key->ecParams.base.len;
+	pubkey->ecParams.base.data = key->ecParams.base.data;
+	pubkey->ecParams.order.len = key->ecParams.order.len;
+	pubkey->ecParams.order.data = key->ecParams.order.data;
+	pubkey->ecParams.cofactor = key->ecParams.cofactor;
+	pubkey->ecParams.DEREncoding.len = key->ecParams.DEREncoding.len;
+	pubkey->ecParams.DEREncoding.data = key->ecParams.DEREncoding.data;
+	pubkey->ecParams.name= key->ecParams.name;
+	pubkey->publicValue.len = key->publicValue.len;
+	pubkey->publicValue.data = key->publicValue.data;
+	cipherInfo->cipher.pubkeyCipher = ecdsa_verifyDigest;
+    }
+    return SECSuccess;
+}
+#endif
+
 /* XXX unfortunately, this is not defined in blapi.h */
 SECStatus
 md2_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
@@ -1374,12 +1691,22 @@ finish:
 
 SECStatus
 pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
+#ifdef NSS_ENABLE_ECC
+	      int keysize, int exponent, char *curveName)
+#else
 	      int keysize, int exponent)
+#endif
 {
     int i;
     SECStatus rv = SECSuccess;
     bltestRSAParams *rsap;
     bltestDSAParams *dsap;
+#ifdef NSS_ENABLE_ECC
+    bltestECDSAParams *ecdsap;
+    SECItem *tmpECParamsDER;
+    ECParams *tmpECParams = NULL;
+    SECItem ecSerialize[3];
+#endif
     switch (cipherInfo->mode) {
     case bltestRSA:
 	rsap = &cipherInfo->params.rsa;
@@ -1412,6 +1739,37 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
 	    dsap->j = PQG_PBITS_TO_INDEX(8*dsap->dsakey->params.prime.len);
 	}
 	break;
+#ifdef NSS_ENABLE_ECC
+    case bltestECDSA:
+	ecdsap = &cipherInfo->params.ecdsa;
+	if (curveName != NULL) {
+	    tmpECParamsDER = getECParams(curveName);
+	    rv = secoid_Init();
+	    CHECKERROR(rv, __LINE__);
+	    rv = EC_DecodeParams(tmpECParamsDER, &tmpECParams) == SECFailure;
+	    CHECKERROR(rv, __LINE__);
+	    rv = EC_NewKey(tmpECParams, &ecdsap->eckey);
+	    CHECKERROR(rv, __LINE__);
+	    ecSerialize[0].type = tmpECParamsDER->type;
+	    ecSerialize[0].data = tmpECParamsDER->data;
+	    ecSerialize[0].len  = tmpECParamsDER->len;
+	    ecSerialize[1].type = ecdsap->eckey->publicValue.type;
+	    ecSerialize[1].data = ecdsap->eckey->publicValue.data;
+	    ecSerialize[1].len  = ecdsap->eckey->publicValue.len;
+	    ecSerialize[2].type = ecdsap->eckey->privateValue.type;
+	    ecSerialize[2].data = ecdsap->eckey->privateValue.data;
+	    ecSerialize[2].len  = ecdsap->eckey->privateValue.len;
+	    serialize_key(&(ecSerialize[0]), 3, file);
+	    free(tmpECParamsDER);
+	    PORT_FreeArena(tmpECParams->arena, PR_TRUE);
+	    rv = SECOID_Shutdown();
+	    CHECKERROR(rv, __LINE__);
+	} else {
+	    setupIO(cipherInfo->arena, &cipherInfo->params.key, file, NULL, 0);
+	    ecdsap->eckey = eckey_from_filedata(&cipherInfo->params.key.buf);
+	}
+	break;
+#endif
     default:
 	return SECFailure;
     }
@@ -1466,6 +1824,13 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 			  DSA_SIGNATURE_LEN);
 	return bltest_dsa_init(cipherInfo, encrypt);
 	break;
+#ifdef NSS_ENABLE_ECC
+    case bltestECDSA:
+	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+			  2 * MAX_ECKEY_LEN);
+	return bltest_ecdsa_init(cipherInfo, encrypt);
+	break;
+#endif
     case bltestMD2:
 	restart = cipherInfo->params.hash.restart;
 	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
@@ -1573,6 +1938,66 @@ dsaOp(bltestCipherInfo *cipherInfo)
     return rv;
 }
 
+#ifdef NSS_ENABLE_ECC
+SECStatus
+ecdsaOp(bltestCipherInfo *cipherInfo)
+{
+    PRIntervalTime time1, time2;
+    SECStatus rv = SECSuccess;
+    int i;
+    int maxLen = cipherInfo->output.pBuf.len;
+    SECItem dummyOut = { 0, 0, 0 };
+    SECITEM_AllocItem(NULL, &dummyOut, maxLen);
+    if (cipherInfo->cipher.pubkeyCipher == ecdsa_signDigest) {
+	if (cipherInfo->params.ecdsa.sigseed.buf.len > 0) {
+	    rv = ECDSA_SignDigestWithSeed((ECPrivateKey *)cipherInfo->cx,
+				       &cipherInfo->output.pBuf,
+				       &cipherInfo->input.pBuf,
+				       cipherInfo->params.ecdsa.sigseed.buf.data,
+				       cipherInfo->params.ecdsa.sigseed.buf.len);
+	    CHECKERROR(rv, __LINE__);
+	    TIMESTART();
+	    for (i=0; i<cipherInfo->repetitions; i++) {
+		rv |= ECDSA_SignDigestWithSeed((ECPrivateKey *)cipherInfo->cx,
+				       &dummyOut,
+				       &cipherInfo->input.pBuf,
+				       cipherInfo->params.ecdsa.sigseed.buf.data,
+				       cipherInfo->params.ecdsa.sigseed.buf.len);
+	    }
+	    TIMEFINISH(cipherInfo->optime, 1.0);
+	    CHECKERROR(rv, __LINE__);
+	} else {
+	    rv = ECDSA_SignDigest((ECPrivateKey *)cipherInfo->cx,
+				&cipherInfo->output.pBuf,
+				&cipherInfo->input.pBuf);
+	    CHECKERROR(rv, __LINE__);
+	    TIMESTART();
+	    for (i=0; i<cipherInfo->repetitions; i++) {
+		ECDSA_SignDigest((ECPrivateKey *)cipherInfo->cx, &dummyOut,
+			       &cipherInfo->input.pBuf);
+	    }
+	    TIMEFINISH(cipherInfo->optime, 1.0);
+	}
+	bltestCopyIO(cipherInfo->arena, &cipherInfo->params.ecdsa.sig, 
+	             &cipherInfo->output);
+    } else {
+	rv = ECDSA_VerifyDigest((ECPublicKey *)cipherInfo->cx,
+			      &cipherInfo->params.ecdsa.sig.buf,
+			      &cipherInfo->input.pBuf);
+	CHECKERROR(rv, __LINE__);
+	TIMESTART();
+	for (i=0; i<cipherInfo->repetitions; i++) {
+	    ECDSA_VerifyDigest((ECPublicKey *)cipherInfo->cx,
+			     &cipherInfo->params.ecdsa.sig.buf,
+			     &cipherInfo->input.pBuf);
+	}
+	TIMEFINISH(cipherInfo->optime, 1.0);
+    }
+    SECITEM_FreeItem(&dummyOut, PR_FALSE);
+    return rv;
+}
+#endif
+
 SECStatus
 cipherDoOp(bltestCipherInfo *cipherInfo)
 {
@@ -1583,6 +2008,10 @@ cipherDoOp(bltestCipherInfo *cipherInfo)
     unsigned char *dummyOut;
     if (cipherInfo->mode == bltestDSA)
 	return dsaOp(cipherInfo);
+#ifdef NSS_ENABLE_ECC
+    else if (cipherInfo->mode == bltestECDSA)
+	return ecdsaOp(cipherInfo);
+#endif
     dummyOut = PORT_Alloc(maxLen);
     if (is_symmkeyCipher(cipherInfo->mode)) {
 	rv = (*cipherInfo->cipher.symmkeyCipher)(cipherInfo->cx,
@@ -1657,6 +2086,9 @@ cipherFinish(bltestCipherInfo *cipherInfo)
 #endif
     case bltestRSA: /* keys are alloc'ed within cipherInfo's arena, */
     case bltestDSA: /* will be freed with it. */
+#ifdef NSS_ENABLE_ECC
+    case bltestECDSA:
+#endif
     case bltestMD2: /* hash contexts are ephemeral */
     case bltestMD5:
     case bltestSHA1:
@@ -1733,6 +2165,14 @@ print_td:
 	else
 	    fprintf(stdout, "%8d", PQG_INDEX_TO_PBITS(info->params.dsa.j));
 	break;
+#ifdef NSS_ENABLE_ECC
+    case bltestECDSA:
+	if (td)
+	    fprintf(stdout, "%12s", "ec_curve");
+	else
+	    fprintf(stdout, "%12s", ecCurve_map[info->params.ecdsa.eckey->ecParams.name]->text);
+	break;
+#endif
     case bltestMD2:
     case bltestMD5:
     case bltestSHA1:
@@ -1877,6 +2317,18 @@ get_params(PRArenaPool *arena, bltestParams *params,
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext",j);
 	load_file_data(arena, &params->dsa.sig, filename, bltestBase64Encoded);
 	break;
+#ifdef NSS_ENABLE_ECC
+    case bltestECDSA:
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
+	load_file_data(arena, &params->ecdsa.key, filename, bltestBase64Encoded);
+	params->ecdsa.eckey = eckey_from_filedata(&params->key.buf);
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
+	load_file_data(arena, &params->ecdsa.sigseed, filename, 
+	               bltestBase64Encoded);
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext",j);
+	load_file_data(arena, &params->ecdsa.sig, filename, bltestBase64Encoded);
+	break;
+#endif
     case bltestMD2:
     case bltestMD5:
     case bltestSHA1:
@@ -1945,7 +2397,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
     bltestIO pt, ct;
     bltestCipherMode mode;
     bltestParams *params;
-    int i, j, nummodes;
+    int i, j, nummodes, numtests;
     char *modestr;
     char filename[256];
     PRFileDesc *file;
@@ -1993,7 +2445,12 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 #endif
 	PR_Close(file);
 	/* loop over the tests in the directory */
-	for (j=0; j<(int)(item.data[0] - '0'); j++) { /* XXX bug when > 10 */
+	numtests = (int) (item.data[0] - '0');
+	for (j=1; j<item.len - 1; j++) {
+	    numtests *= 10;
+	    numtests += (int) (item.data[j] - '0');
+	}
+	for (j=0; j<numtests; j++) {
 #ifdef TRACK_BLTEST_BUG
 	    if (mode == bltestRSA) {
 		fprintf(stderr, "[%s] Executing self-test #%d\n", __bltDBG, j);
@@ -2001,8 +2458,13 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 #endif
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
 			      "plaintext", j);
-	    load_file_data(arena, &pt, filename, (mode == bltestDSA) ? 
-	                   bltestBase64Encoded : bltestBinary);
+	    load_file_data(arena, &pt, filename, 
+#ifdef NSS_ENABLE_ECC
+	                   ((mode == bltestDSA) || (mode == bltestECDSA))
+#else
+	                   (mode == bltestDSA)
+#endif
+	                   ? bltestBase64Encoded : bltestBinary);
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
 			      "ciphertext", j);
 	    load_file_data(arena, &ct, filename, bltestBase64Encoded);
@@ -2066,7 +2528,11 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    ** Align the input buffer (ciphertext) according to request
 	    ** then perform operation and compare to plaintext
 	    */
+#ifdef NSS_ENABLE_ECC
+	    if ((mode != bltestDSA) && (mode != bltestECDSA))
+#else
 	    if (mode != bltestDSA)
+#endif
 		bltestCopyIO(arena, &cipherInfo.input, &ct);
 	    else
 		bltestCopyIO(arena, &cipherInfo.input, &pt);
@@ -2127,6 +2593,13 @@ dump_file(bltestCipherMode mode, char *filename)
 	load_file_data(arena, &keydata, filename, bltestBase64Encoded);
 	key = dsakey_from_filedata(&keydata.buf);
 	dump_dsakey(key);
+#ifdef NSS_ENABLE_ECC
+    } else if (mode == bltestECDSA) {
+	ECPrivateKey *key;
+	load_file_data(arena, &keydata, filename, bltestBase64Encoded);
+	key = eckey_from_filedata(&keydata.buf);
+	dump_eckey(key);
+#endif
     }
     PORT_FreeArena(arena, PR_FALSE);
     return SECFailure;
@@ -2160,6 +2633,9 @@ enum {
     opt_Key,
     opt_HexWSpc,
     opt_Mode,
+#ifdef NSS_ENABLE_ECC
+    opt_CurveName,
+#endif
     opt_Output,
     opt_Repetitions,
     opt_ZeroBuf,
@@ -2206,6 +2682,9 @@ static secuCommandFlag bltest_options[] =
     { /* opt_Key	  */ 'k', PR_TRUE,  0, PR_FALSE },
     { /* opt_HexWSpc	  */ 'l', PR_FALSE, 0, PR_FALSE },
     { /* opt_Mode	  */ 'm', PR_TRUE,  0, PR_FALSE },
+#ifdef NSS_ENABLE_ECC
+    { /* opt_CurveName	  */ 'n', PR_TRUE,  0, PR_FALSE },
+#endif
     { /* opt_Output	  */ 'o', PR_TRUE,  0, PR_FALSE },
     { /* opt_Repetitions  */ 'p', PR_TRUE,  0, PR_FALSE },
     { /* opt_ZeroBuf	  */ 'q', PR_FALSE, 0, PR_FALSE },
@@ -2236,6 +2715,9 @@ int main(int argc, char **argv)
     PRArenaPool		*arena;
     bltestIOMode	 ioMode;
     int			 keysize, bufsize, exponent;
+#ifdef NSS_ENABLE_ECC
+    char		*curveName = NULL;
+#endif
     int			 i, commandsEntered;
     int			 inoff, outoff;
 
@@ -2397,6 +2879,13 @@ int main(int argc, char **argv)
     else
 	exponent = 65537;
 
+#ifdef NSS_ENABLE_ECC
+    if (bltest.options[opt_CurveName].activated)
+	curveName = PORT_Strdup(bltest.options[opt_CurveName].arg);
+    else
+	curveName = NULL;
+#endif
+
     /* Set up an encryption key. */
     keysize = 0;
     file = NULL;
@@ -2431,7 +2920,11 @@ int main(int argc, char **argv)
 	    file = PR_Open("tmp.key", PR_WRONLY|PR_CREATE_FILE, 00660);
 	}
 	params->key.mode = bltestBase64Encoded;
+#ifdef NSS_ENABLE_ECC
+	pubkeyInitKey(&cipherInfo, file, keysize, exponent, curveName);
+#else
 	pubkeyInitKey(&cipherInfo, file, keysize, exponent);
+#endif
 	PR_Close(file);
     }
 
@@ -2468,9 +2961,17 @@ int main(int argc, char **argv)
 	    exit(-1);
 	}
 	file = PR_Open(bltest.options[opt_SigFile].arg, PR_RDONLY, 00660);
-	memset(&cipherInfo.params.dsa.sig, 0, sizeof(bltestIO));
-	cipherInfo.params.dsa.sig.mode = ioMode;
-	setupIO(cipherInfo.arena, &cipherInfo.params.dsa.sig, file, NULL, 0);
+	if (cipherInfo.mode == bltestDSA) {
+	    memset(&cipherInfo.params.dsa.sig, 0, sizeof(bltestIO));
+	    cipherInfo.params.dsa.sig.mode = ioMode;
+	    setupIO(cipherInfo.arena, &cipherInfo.params.dsa.sig, file, NULL, 0);
+#ifdef NSS_ENABLE_ECC
+	} else if (cipherInfo.mode == bltestECDSA) {
+	    memset(&cipherInfo.params.ecdsa.sig, 0, sizeof(bltestIO));
+	    cipherInfo.params.ecdsa.sig.mode = ioMode;
+	    setupIO(cipherInfo.arena, &cipherInfo.params.ecdsa.sig, file, NULL, 0);
+#endif
+	}
     }
 
     if (bltest.options[opt_PQGFile].activated) {

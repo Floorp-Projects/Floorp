@@ -20,7 +20,9 @@
 # Sun Microsystems, Inc. All Rights Reserved.
 #
 # Contributor(s):
-#      Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
+# 	   Dr Vipul Gupta <vipul.gupta@sun.com> and
+#	   Douglas Stebila <douglas@stebila.ca>, Sun Microsystems 
+#	       Laboratories
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -59,6 +61,8 @@ REQUIRES =
 EXPORTS = \
 	blapit.h \
 	shsign.h \
+	ecl-exp.h \
+	ecl-curve.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
@@ -66,10 +70,22 @@ PRIVATE_EXPORTS = \
 	secmpi.h \
 	secrng.h \
 	ec.h \
+	ecl.h \
 	$(NULL)
 
 MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h mp_gf2m.h
 MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c mp_gf2m.c
+ECL_HDRS = ecl-exp.h ecl.h ec2.h ecp.h ecl-priv.h
+ifdef NSS_ENABLE_ECC
+ECL_SRCS = ecl.c ecl_curve.c ecl_mult.c ecl_gf.c \
+	ec2_aff.c ec2_mont.c ec2_proj.c \
+	ec2_163.c ec2_193.c ec2_233.c \
+	ecp_aff.c ecp_jac.c ecp_mont.c \
+	ecp_192.c ecp_224.c \
+	ec_naf.c ecp_jm.c
+else
+ECL_SRCS = $(NULL)
+endif
 
 CSRCS = \
 	ldvector.c \
@@ -88,13 +104,12 @@ CSRCS = \
 	aeskeywrap.c \
 	dh.c \
 	ec.c \
-	GFp_ecl.c \
-	GF2m_ecl.c \
 	pqg.c \
 	dsa.c \
 	rsa.c \
 	shvfy.c \
 	$(MPI_SRCS) \
+	$(ECL_SRCS) \
 	$(NULL)
 
 ALL_CSRCS := $(CSRCS)
@@ -104,8 +119,6 @@ ALL_HDRS =  \
 	blapit.h \
 	des.h \
 	ec.h \
-	GFp_ecl.h \
-	GF2m_ecl.h \
 	loader.h \
 	rijndael.h \
 	secmpi.h \
@@ -114,6 +127,10 @@ ALL_HDRS =  \
 	shsign.h \
 	vis_proto.h \
 	$(NULL)
+
+ifdef NSS_ENABLE_ECC
+DEFINES += -DNSS_ENABLE_ECC
+endif
 
 ifdef AES_GEN_TBL
 DEFINES += -DRIJNDAEL_GENERATE_TABLES

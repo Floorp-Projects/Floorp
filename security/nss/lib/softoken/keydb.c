@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ * 
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.33 2003/01/09 18:15:09 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.34 2003/10/17 13:45:39 ian.mcgreer%sun.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -50,6 +54,12 @@
 #include "cdbhdl.h"
 
 #include "keydbi.h"
+
+#ifdef NSS_ENABLE_ECC
+extern SECStatus EC_FillParams(PRArenaPool *arena, 
+			       const SECItem *encodedParams, 
+			       ECParams *params);
+#endif
 
 /*
  * Record keys for keydb
@@ -1195,6 +1205,12 @@ nsslowkey_KeyForCertExists(NSSLOWKEYDBHandle *handle, NSSLOWCERTCertificate *cer
 	namekey.data = pubkey->u.dh.publicValue.data;
 	namekey.size = pubkey->u.dh.publicValue.len;
 	break;
+#ifdef NSS_ENABLE_ECC
+      case NSSLOWKEYECKey:
+	namekey.data = pubkey->u.ec.publicValue.data;
+	namekey.size = pubkey->u.ec.publicValue.len;
+	break;
+#endif /* NSS_ENABLE_ECC */
       default:
 	/* XXX We don't do Fortezza or DH yet. */
 	return PR_FALSE;
@@ -1483,11 +1499,24 @@ seckey_rc4_decode(SECItem *key, SECItem *src)
     return dest;
 }
 
+
+#ifdef EC_DEBUG
+#define SEC_PRINT(str1, str2, num, sitem) \
+    printf("pkcs11c.c:%s:%s (keytype=%d) [len=%d]\n", \
+            str1, str2, num, sitem->len); \
+    for (i = 0; i < sitem->len; i++) { \
+	    printf("%02x:", sitem->data[i]); \
+    } \
+    printf("\n") 
+#else
+#define SEC_PRINT(a, b, c, d) 
+#endif /* EC_DEBUG */
+
 /* TNH - keydb is unused */
 /* TNH - the pwitem should be the derived key for RC4 */
 NSSLOWKEYEncryptedPrivateKeyInfo *
 seckey_encrypt_private_key(
-	NSSLOWKEYPrivateKey *pk, SECItem *pwitem, NSSLOWKEYDBHandle *keydb,
+        NSSLOWKEYPrivateKey *pk, SECItem *pwitem, NSSLOWKEYDBHandle *keydb,
 	SECOidTag algorithm, SECItem **salt)
 {
     NSSLOWKEYEncryptedPrivateKeyInfo *epki = NULL;
@@ -1498,6 +1527,11 @@ seckey_encrypt_private_key(
     NSSPKCS5PBEParameter *param = NULL;
     SECItem *dummy = NULL, *dest = NULL;
     SECAlgorithmID *algid;
+#ifdef NSS_ENABLE_ECC
+    SECItem *fordebug = NULL;
+    int savelen;
+    int i;
+#endif
 
     *salt = NULL;
     permarena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
@@ -1582,6 +1616,46 @@ seckey_encrypt_private_key(
 	    goto loser;
 	}
 	break;
+#ifdef NSS_ENABLE_ECC
+      case NSSLOWKEYECKey:
+	prepare_low_ec_priv_key_for_asn1(pk);
+	/* Public value is encoded as a bit string so adjust length
+	 * to be in bits before ASN encoding and readjust 
+	 * immediately after.
+	 *
+	 * Since the SECG specification recommends not including the
+	 * parameters as part of ECPrivateKey, we zero out the curveOID
+	 * length before encoding and restore it later.
+	 */
+	pk->u.ec.publicValue.len <<= 3;
+	savelen = pk->u.ec.ecParams.curveOID.len;
+	pk->u.ec.ecParams.curveOID.len = 0;
+	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk,
+				   nsslowkey_ECPrivateKeyTemplate);
+	pk->u.ec.ecParams.curveOID.len = savelen;
+	pk->u.ec.publicValue.len >>= 3;
+
+	if (dummy == NULL) {
+	    rv = SECFailure;
+	    goto loser;
+	}
+
+	dummy = &pk->u.ec.ecParams.DEREncoding;
+
+	/* At this point dummy should contain the encoded params */
+	rv = SECOID_SetAlgorithmID(temparena, &(pki->algorithm),
+				   SEC_OID_ANSIX962_EC_PUBLIC_KEY, dummy);
+
+	if (rv == SECFailure) {
+	    goto loser;
+	}
+	
+	fordebug = &(pki->privateKey);
+	SEC_PRINT("seckey_encrypt_private_key()", "PrivateKey", 
+		  pk->keyType, fordebug);
+
+	break;
+#endif /* NSS_ENABLE_ECC */
       default:
 	/* We don't support DH or Fortezza private keys yet */
 	PORT_Assert(PR_FALSE);
@@ -1591,6 +1665,10 @@ seckey_encrypt_private_key(
     /* setup encrypted private key info */
     dummy = SEC_ASN1EncodeItem(temparena, der_item, pki, 
 	nsslowkey_PrivateKeyInfoTemplate);
+
+    SEC_PRINT("seckey_encrypt_private_key()", "PrivateKeyInfo", 
+	      pk->keyType, der_item);
+
     if(dummy == NULL) {
 	rv = SECFailure;
 	goto loser;
@@ -1749,6 +1827,11 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
     PLArenaPool *temparena = NULL, *permarena = NULL;
     SECItem *salt = NULL, *dest = NULL, *key = NULL;
     NSSPKCS5PBEParameter *param;
+#ifdef NSS_ENABLE_ECC
+    ECPrivateKey *ecpriv;
+    SECItem *fordebug = NULL;
+    int i;
+#endif
 
     if((epki == NULL) || (pwitem == NULL))
 	goto loser;
@@ -1805,6 +1888,9 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
 
     if(dest != NULL)
     {
+        SEC_PRINT("seckey_decrypt_private_key()", "PrivateKeyInfo", -1,
+		  dest);
+
 	rv = SEC_ASN1DecodeItem(temparena, pki, 
 	    nsslowkey_PrivateKeyInfoTemplate, dest);
 	if(rv == SECSuccess)
@@ -1838,6 +1924,58 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
 					nsslowkey_DHPrivateKeyTemplate,
 					&pki->privateKey);
 		break;
+#ifdef NSS_ENABLE_ECC
+	      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+		pk->keyType = NSSLOWKEYECKey;
+		prepare_low_ec_priv_key_for_asn1(pk);
+
+		fordebug = &pki->privateKey;
+		SEC_PRINT("seckey_decrypt_private_key()", "PrivateKey", 
+			  pk->keyType, fordebug);
+		rv = SEC_ASN1DecodeItem(permarena, pk,
+					nsslowkey_ECPrivateKeyTemplate,
+					&pki->privateKey);
+		if (rv != SECSuccess)
+		    goto loser;
+
+		prepare_low_ecparams_for_asn1(&pk->u.ec.ecParams);
+
+		rv = SECITEM_CopyItem(permarena, 
+		    &pk->u.ec.ecParams.DEREncoding, 
+		    &pki->algorithm.parameters);
+
+		if (rv != SECSuccess)
+		    goto loser;
+
+		/* Fill out the rest of EC params */
+		rv = EC_FillParams(permarena, &pk->u.ec.ecParams.DEREncoding,
+				   &pk->u.ec.ecParams);
+
+		/* 
+		 * NOTE: Encoding of the publicValue is optional
+		 * so we need to be able to regenerate the publicValue
+		 * from the base point and the private key.
+		 *
+		 * XXX This part of the code needs more testing.
+		 */
+		if (pk->u.ec.publicValue.len == 0) {
+		    rv = EC_NewKeyFromSeed(&pk->u.ec.ecParams, 
+				      &ecpriv, pk->u.ec.privateValue.data,
+				      pk->u.ec.privateValue.len);
+		    if (rv == SECSuccess) {
+			SECITEM_CopyItem(permarena, &pk->u.ec.publicValue,
+					 &(ecpriv->publicValue));
+			PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
+		    }
+		} else {
+		    /* If publicValue was filled as part of DER decoding,
+		     * change length in bits to length in bytes.
+		     */
+		    pk->u.ec.publicValue.len >>= 3;
+		}
+
+		break;
+#endif /* NSS_ENABLE_ECC */
 	      default:
 		rv = SECFailure;
 		break;
@@ -2411,6 +2549,12 @@ ChangeKeyDBPasswordAlg(NSSLOWKEYDBHandle *handle,
 	    newkey.data = privkey->u.dh.publicValue.data;
 	    newkey.size = privkey->u.dh.publicValue.len;
 	    break;
+#ifdef NSS_ENABLE_ECC
+	  case NSSLOWKEYECKey:
+	    newkey.data = privkey->u.ec.publicValue.data;
+	    newkey.size = privkey->u.ec.publicValue.len;
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	  default:
 	    /* should we continue here and loose the key? */
 	    PORT_SetError(SEC_ERROR_BAD_DATABASE);

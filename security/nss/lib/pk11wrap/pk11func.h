@@ -17,6 +17,7 @@
  * Rights Reserved.
  * 
  * Contributor(s):
+ *  Douglas Stebila <douglas@stebila.ca>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -306,6 +307,11 @@ PK11SymKey *PK11_PubDerive( SECKEYPrivateKey *privKey,
  SECKEYPublicKey *pubKey, PRBool isSender, SECItem *randomA, SECItem *randomB,
  CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
 		 CK_ATTRIBUTE_TYPE operation, int keySize,void *wincx) ;
+PK11SymKey *PK11_PubDeriveExtended( SECKEYPrivateKey *privKey, 
+ SECKEYPublicKey *pubKey, PRBool isSender, SECItem *randomA, SECItem *randomB,
+ CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
+		 CK_ATTRIBUTE_TYPE operation, int keySize,void *wincx,
+		 CK_ULONG kdf, SECItem *sharedData);
 PK11SymKey *PK11_UnwrapSymKey(PK11SymKey *key, 
 	CK_MECHANISM_TYPE wraptype, SECItem *param, SECItem *wrapppedKey,  
 	CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);

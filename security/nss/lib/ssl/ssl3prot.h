@@ -37,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3prot.h,v 1.3 2003/02/27 01:31:30 nelsonb%netscape.com Exp $
+ * $Id: ssl3prot.h,v 1.4 2003/10/17 13:45:39 ian.mcgreer%sun.com Exp $
  */
 
 #ifndef __ssl3proto_h_
@@ -251,6 +251,14 @@ typedef enum {
     ct_DSS_fixed_DH 	=  4, 
     ct_RSA_ephemeral_DH =  5, 
     ct_DSS_ephemeral_DH =  6,
+    /* XXX The numbers assigned to the following EC-based 
+     * certificate types might change before the ECC in TLS
+     * draft becomes an IETF RFC.
+     */
+    ct_ECDSA_sign	=  7, 
+    ct_RSA_fixed_ECDH	=  8, 
+    ct_ECDSA_fixed_ECDH	=  9, 
+
     ct_Fortezza 	= 20
 } SSL3ClientCertificateType;
      
