@@ -29,12 +29,11 @@ function DeleteAllFromTree
   }
   table.length = 0;
 
-  // clear out selections
-  tree.treeBoxObject.view.selection.select(-1); 
-
   // redisplay
+  var oldCount = view.rowCount;
   view.rowCount = 0;
-  tree.treeBoxObject.invalidate();
+  tree.treeBoxObject.rowCountChanged(0, -oldCount);
+
 
   // disable buttons
   document.getElementById(removeButton).setAttribute("disabled", "true")
@@ -60,27 +59,18 @@ function DeleteSelectedItemFromTree
         k++;
       }
       table.splice(j, k-j);
+      view.rowCount -= k - j;
+      tree.treeBoxObject.rowCountChanged(j, j - k);
     }
   }
-
-  // redisplay
-  var box = tree.treeBoxObject;
-  var firstRow = box.getFirstVisibleRow();
-  if (firstRow > (table.length-1) ) {
-    firstRow = table.length-1;
-  }
-  view.rowCount = table.length;
-  box.rowCountChanged(0, table.length);
-  box.scrollToRow(firstRow)
 
   // update selection and/or buttons
   if (table.length) {
 
     // update selection
-    // note: we need to deselect before reselecting in order to trigger ...Selected method
     var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
-    tree.treeBoxObject.view.selection.select(-1); 
     tree.treeBoxObject.view.selection.select(nextSelection);
+    tree.treeBoxObject.ensureRowIsVisible(nextSelection);
 
   } else {
 
@@ -88,8 +78,6 @@ function DeleteSelectedItemFromTree
     document.getElementById(removeButton).setAttribute("disabled", "true")
     document.getElementById(removeAllButton).setAttribute("disabled","true");
 
-    // clear out selections
-    tree.treeBoxObject.view.selection.select(-1); 
   }
 }
 
@@ -121,18 +109,13 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
   // determine if sort is to be ascending or descending
   var ascending = (column == lastSortColumn) ? !lastSortAscending : true;
 
-  // do the sort
-  var compareFunc;
-  if (ascending) {
-    compareFunc = function compare(first, second) {
-      return CompareLowerCase(first[column], second[column]);
-    }
-  } else {
-    compareFunc = function compare(first, second) {
-      return CompareLowerCase(second[column], first[column]);
-    }
+  // do the sort or re-sort
+  var compareFunc = function compare(first, second) {
+    return first[column].toLowerCase().localeCompare(second[column].toLowerCase());
   }
   table.sort(compareFunc);
+  if (!ascending)
+    table.reverse();
 
   // restore the selection
   var selectedRow = -1;
@@ -158,21 +141,3 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
   return ascending;
 }
 
-/**
- * Case insensitive string comparator.
- */
-function CompareLowerCase(first, second) {
-  
-  var firstLower  = first.toLowerCase();
-  var secondLower = second.toLowerCase();
-  
-  if (firstLower < secondLower) {
-    return -1;
-  }
-  
-  if (firstLower > secondLower) {
-    return 1;
-  }
-  
-  return 0;
-}
