@@ -663,7 +663,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_SWITCH:
       {
 	JSOp switchop;
-	uint32 ncases, tablen;
+	uint32 ncases, tablen = 0;
 	JSScript *script;
 	jsint i, low, high;
 	jsdouble d;

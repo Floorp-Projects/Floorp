@@ -694,7 +694,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSOp op, lastop, saveop;
     JSCodeSpec *cs, *topcs;
     jssrcnote *sn;
-    const char *lval, *rval, *xval;
+    const char *lval, *rval = NULL, *xval;
     jsint i, argc;
     char **argv;
     JSAtom *atom;

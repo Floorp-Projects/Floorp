@@ -276,7 +276,7 @@ JS_XDRUint16(JSXDRState *xdr, uint16 *s)
 JS_PUBLIC_API(JSBool)
 JS_XDRUint32(JSXDRState *xdr, uint32 *lp)
 {
-    JSBool ok;
+    JSBool ok = JS_FALSE;
     if (xdr->mode == JSXDR_ENCODE) {
 	uint32 xl = JSXDR_SWAB32(*lp);
 	ok = xdr->ops->set32(xdr, &xl);
