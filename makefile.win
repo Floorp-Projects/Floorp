@@ -104,7 +104,7 @@ DIRS =                         \
   xpinstall                    \
   extensions                   \
   themes \
-!if defined(ENABLE_LDAP)       
+!if !defined(DISABLE_LDAP)       
   directory\c-sdk              \
   directory\xpcom              \
 !endif
