@@ -702,10 +702,12 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
 #endif
 
   PRBool doneLoading;
+  nsIParser* parser = nsnull;
+  if (blockParser) {
+    parser = mParser;
+  }
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
-                                 ((blockParser) ? mParser : nsnull),
-                                 doneLoading, 
-                                 this);
+                                 parser, doneLoading, this);
 
   if (NS_SUCCEEDED(rv) && blockParser && !doneLoading) {
     rv = NS_ERROR_HTMLPARSER_BLOCK;
