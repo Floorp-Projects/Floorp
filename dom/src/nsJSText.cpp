@@ -42,7 +42,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != text, "null pointer");
+  // NS_ASSERTION(nsnull != text, "null pointer");
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
