@@ -827,8 +827,8 @@ alpha*-*-osf*)
 	MOZ_DEBUG_FLAGS='-g3'
 	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g -std1'
 	CFLAGS="$CFLAGS -std1 -ieee"
-	CXXFLAGS="$CXXFLAGS -noexceptions -ieee -tlocal"
-	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@'
+	CXXFLAGS="$CXXFLAGS "'-noexceptions -ieee  -ptr $(DIST)/cxx_repository'
+	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@ -update_registry $(DIST)/so_locations'
 	DSO_CFLAGS=
 	DSO_PIC_CFLAGS=
 	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
