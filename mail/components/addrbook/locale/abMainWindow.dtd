@@ -164,8 +164,8 @@
 <!ENTITY PrimaryEmail.accesskey                         "E">
 <!ENTITY ScreenName.label                               "Screen Name">
 <!ENTITY ScreenName.accesskey                           "S">
-<!ENTITY Company.label                                  "Company">
-<!ENTITY Company.accesskey                              "C">
+<!ENTITY Company.label                                  "Organization">
+<!ENTITY Company.accesskey                              "z">
 <!ENTITY NickName.label                                 "Nickname">
 <!ENTITY NickName.accesskey                             "i">
 <!ENTITY SecondEmail.label                              "Additional Email">
@@ -189,7 +189,7 @@
 <!ENTITY sortDescending.label                           "Descending">
 <!ENTITY sortDescending.accesskey                       "D">
 <!ENTITY _PhoneticName.label                            "Phonetic Name">
-<!ENTITY _PhoneticName.accesskey                        "O">
+<!ENTITY _PhoneticName.accesskey                        "o">
 
 <!-- Results pane context menu -->
 <!ENTITY composeEmail.label                             "Compose Email To">
