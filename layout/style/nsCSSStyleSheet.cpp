@@ -3439,7 +3439,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       
       if (result &&
-          (!aAttribute || aAttribute != data.mContent->GetClassAttributeName())) {
+          (!aAttribute || aAttribute != data.mStyledContent->GetClassAttributeName())) {
         nsAtomList* classList = aSelector->mClassList;
         while (nsnull != classList) {
           if (localTrue == (!data.mStyledContent->HasClass(classList->mAtom, isCaseSensitive))) {
@@ -3745,6 +3745,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
+  NS_ASSERTION(aData->mStyledContent,
+               "elements must implement nsIStyledContent");
 
   AttributeEnumData data(aData);
 
@@ -3771,7 +3773,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       cascade->mIDSelectors.EnumerateForwards(AttributeEnumFunc, &data);
     }
     
-    if (aData->mAttribute == aData->mContent->GetClassAttributeName()) {
+    if (aData->mAttribute == aData->mStyledContent->GetClassAttributeName()) {
       cascade->mClassSelectors.EnumerateForwards(AttributeEnumFunc, &data);
     }
 

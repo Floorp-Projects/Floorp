@@ -195,7 +195,6 @@ public:
   virtual void SetNativeAnonymous(PRBool aAnonymous);
   virtual PRInt32 GetNameSpaceID() const;
   virtual nsIAtom *GetIDAttributeName() const;
-  virtual nsIAtom *GetClassAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)

@@ -60,8 +60,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x84840657, 0x2f0b, 0x4b11, \
-  { 0xa8, 0xba, 0xbc, 0x0e, 0xe3, 0xcd, 0xef, 0x08 } }
+{ 0x38824dfc, 0x5a2d, 0x4b86, \
+  { 0x8c, 0x49, 0xcc, 0xbb, 0x70, 0x03, 0x47, 0x51 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -228,13 +228,6 @@ public:
    * content nodes.
    */
   virtual nsIAtom *GetIDAttributeName() const = 0;
-
-  /**
-   * Returns an atom holding the name of the "class" attribute on this
-   * content node (if applicable).  Returns null for non-element
-   * content nodes.
-   */
-  virtual nsIAtom *GetClassAttributeName() const = 0;
 
   /**
    * Normalizes an attribute name and returns it as a nodeinfo if an attribute
