@@ -25,8 +25,12 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) platformHTMLBindings.xml $(DIST)\bin\res\builtin
+	$(MAKE_INSTALL) platformButtonBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) xbl-forms.css $(DIST)\bin\res\builtin
+  $(MAKE_INSTALL) buttons.css $(DIST)\bin\res\builtin
 
 clobber::
 	rm -f $(DIST)\bin\res\builtin\platformHTMLBindings.xml
+	rm -f $(DIST)\bin\res\builtin\platformButtonBindings.xml
 	rm -f $(DIST)\bin\res\builtin\xbl-forms.css
+  rm -f $(DIST)\bin\res\builtin\buttons.css
