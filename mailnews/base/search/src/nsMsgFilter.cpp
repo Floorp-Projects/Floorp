@@ -333,9 +333,8 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
 
     nsXPIDLString folderCharset;
     folder->GetCharset(getter_Copies(folderCharset));
-    const char *charset = NS_ConvertUCS2toUTF8(folderCharset).get();
 	return nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
-                                                           charset,
+                                                           NS_ConvertUCS2toUTF8(folderCharset).get(),
                                                            scope,
                                                            db, 
                                                            headers,
