@@ -12,9 +12,9 @@
 ; files required to initialize xpinstall for Install Wizard
 bin\js3250.dll
 bin\mozreg.dll
-bin\nspr3.dll
-bin\plc3.dll
-bin\plds3.dll
+bin\nspr4.dll
+bin\plc4.dll
+bin\plds4.dll
 bin\xpcom.dll
 bin\xpistub.dll
 bin\zlib.dll
@@ -34,7 +34,7 @@ bin\jsj3250.dll
 bin\mozilla.exe
 bin\netscape.cfg
 bin\oji.dll
-bin\prstrms3.dll
+bin\prstrms4.dll
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
