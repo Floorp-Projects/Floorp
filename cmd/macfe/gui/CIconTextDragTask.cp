@@ -35,6 +35,7 @@
 
 
 #include "CIconTextDragTask.h"
+#include "miconutils.h"
 #include "CEnvironment.h"
 #include "macutil.h"
 #include "CGWorld.h"
@@ -124,22 +125,28 @@ CIconTextDragTask :: MakeDragRegion( DragReference /*inDragRef*/, RgnHandle inDr
 {
 	CIconTextSuite* curr = NULL;
 	LArrayIterator it ( mDragItems );
-	while ( it.Next(&curr) ) {
-
-		Rect iconRect = curr->IconRectGlobal();
-		AddRectDragItem(static_cast<ItemReference>(1), iconRect);
-		RgnHandle iconRectRgn = ::NewRgn();
-		::RectRgn ( iconRectRgn, &iconRect );
-		::UnionRgn ( inDragRegion, iconRectRgn, inDragRegion );
-		DisposeRgn ( iconRectRgn );
-		
-		Rect textRect = curr->TextRectGlobal();
-		AddRectDragItem(static_cast<ItemReference>(1), textRect);
-		RgnHandle textRectRgn = ::NewRgn();
-		::RectRgn ( textRectRgn, &textRect );
-		::UnionRgn ( inDragRegion, textRectRgn, inDragRegion );
-		DisposeRgn ( textRectRgn );
-
+	while ( it.Next(&curr) )
+	{
+		{
+			Rect iconRect = curr->IconRectGlobal();
+			AddRectDragItem(static_cast<ItemReference>(1), iconRect);
+			StRegionHandle iconRectRgn ( iconRect );
+			StRegionHandle inset ( iconRectRgn );			// sub out all but the outline
+			::InsetRgn ( inset, 1, 1 );
+			::DiffRgn ( iconRectRgn, inset, iconRectRgn );
+			
+			::UnionRgn ( inDragRegion, iconRectRgn, inDragRegion );
+		}
+		{		
+			Rect textRect = curr->TextRectGlobal();
+			AddRectDragItem(static_cast<ItemReference>(1), textRect);
+			StRegionHandle textRectRgn ( textRect );
+			StRegionHandle inset ( textRectRgn );			// sub out all but the outline
+			::InsetRgn ( inset, 1, 1 );
+			::DiffRgn ( textRectRgn, inset, textRectRgn );
+			
+			::UnionRgn ( inDragRegion, textRectRgn, inDragRegion );
+		}
 	} // for each item to be dragged
 
 } // MakeDragRegion
@@ -257,59 +264,60 @@ CIconTextDragTask :: DoNormalDrag ( )
 void
 CIconTextDragTask :: DoTranslucentDrag ( )
 {
-	::TrackDrag(mDragRef, &mEventRecord, mDragRegion);
 	
-#if THIS_WOULD_EVER_WORK
-	Rect theFrame;
-	StColorPortState theColorPortState(mSuite.Parent()->GetMacPort());
+	::TrackDrag(mDragRef, &mEventRecord, mDragRegion);
+
+#if THIS_WOULD_ACTUALLY_WORK
+	
+	CIconTextSuite* mSuite;
+	mDragItems.FetchItemAt(1, &mSuite);
 
 	// Normalize the color state (to make CopyBits happy)
+	StColorPortState theColorPortState(mSuite->Parent()->GetMacPort());
 	StColorState::Normalize();
 	
-	// Build a GWorld
-	Rect gworldSize = mSuite.BoundingRect();
-	CGWorld theGWorld(gworldSize, 0, useTempMem);
+	// Build a GWorld. The rectangle passed to CGWorld should be in local coordinates.
+	CGWorld theGWorld(mSuite->BoundingRect(), 0, useTempMem);
 	theGWorld.BeginDrawing();
-//	StCaptureView theCaptureView( *mSuite.Parent() );
+	StCaptureView theCaptureView( *mSuite->Parent() );
 
 	try
 	{
-//		theCaptureView.Capture(theGWorld);
+		theCaptureView.Capture(theGWorld);
 
-		mSuite.Parent()->FocusDraw();
-	
-		mSuite.mDisplayText->Show();
-//		mSuite.DrawIcon();
-
-	   	Point theOffsetPoint = topLeft(PortToGlobalRect(mSuite.Parent(),
-	   								LocalToPortRect(mSuite.Parent(), mFrame)));
-		
-		// Set the drag image
-
-		StRegionHandle theTrackMask;
-
-//		mProxyPane.CalcLocalFrameRect(theFrame);
-//		ThrowIfOSErr_(::IconSuiteToRgn(theTrackMask, &theFrame, kAlignAbsoluteCenter, mIconSuite));
-		
-		mSuite.mDisplayText->CalcLocalFrameRect(theFrame); // Use frame which bounds the actual text, not the frame bounds
-		theTrackMask += theFrame;
-		
+		// draw into the GWorld
+		mSuite->Parent()->FocusDraw();	
+		mSuite->DrawText();
+		mSuite->DrawIcon();
 		theGWorld.EndDrawing();
+
+	   	Point theOffsetPoint = topLeft(mFrame);
+		mSuite->Parent()->LocalToPortPoint(theOffsetPoint);
+		mSuite->Parent()->PortToGlobalPoint (theOffsetPoint);
 		
+		// create the mask.
+		StRegionHandle theTrackMask;
+		MakeDragRegion(mDragRef, theTrackMask);
+//		ThrowIfOSErr_(::IconSuiteToRgn(theTrackMask, &mFrame, kAlignAbsoluteCenter, mIconSuite));
+//		Rect textArea = mSuite.TextRectLocal(); // Use frame which bounds the actual text, not the frame bounds
+//		theTrackMask += textArea;
+				
+		// Set the drag image
 		PixMapHandle theMap = ::GetGWorldPixMap(theGWorld.GetMacGWorld());
-		OSErr theErr = ::SetDragImage(mDragRef, theMap, theTrackMask, theOffsetPoint, dragDarkerImage);
+		OSErr theErr = ::SetDragImage(mDragRef, theMap, theTrackMask, theOffsetPoint, kDragDarkerTranslucency);
 		ThrowIfOSErr_(theErr);
 		
-		// Track the drag
-		
+		// Track the drag	
 		::TrackDrag(mDragRef, &mEventRecord, mDragRegion);
 	}
 	catch (...)
 	{
+		DebugStr("\pError in Translucent Drag; g");
 	}
 	
-	mSuite.mDisplayText->Hide();
-#endif
+//	mSuite.mDisplayText->Hide();
+
+#endif // THIS_WOULD_ACTUALLY_WORK
 
 } // DoTranslucentDrag
 
@@ -317,7 +325,7 @@ CIconTextDragTask :: DoTranslucentDrag ( )
 #pragma mark -
 
 CIconTextSuite :: CIconTextSuite ( )
-	: mIconSuite(nil), mIconText(""), mDisplayText(nil), mParent(nil), mHTNodeData(nil)
+	: mIconID(0), mIconText(""), mDisplayText(nil), mParent(nil), mHTNodeData(nil)
 {
 
 } // constructor
@@ -331,23 +339,21 @@ CIconTextSuite :: CIconTextSuite ( )
 // draw the icon and caption relative to. It is NOT used as a clipping rectangle.
 //
 CIconTextSuite :: CIconTextSuite ( LView* inParent, const Rect & inBounds, ResIDT inIconId, 
-									const cstring & inIconText, const HT_Resource inHTNodeData )
-	: mIconText(inIconText), mBounds(inBounds), mParent(inParent), mHTNodeData(inHTNodeData)
+									const string & inIconText, const HT_Resource inHTNodeData )
+	: mIconText(inIconText), mBounds(inBounds), mParent(inParent), mHTNodeData(inHTNodeData),
+		mIconID(inIconId)
 {
-	IconSelectorValue selector = svAllAvailableData;
-	::GetIconSuite ( &mIconSuite, inIconId, selector );
-	ThrowIfNil_ ( mIconSuite );
 	
 	// build a caption for the icon's title relative to the bounding rect we're given.
 	// The top and left offsets are from the LSmallIconTable's drawing routine.
 	SPaneInfo paneInfo;
-	paneInfo.width = ::TextWidth(inIconText, 0, inIconText.length());
+	paneInfo.width = ::TextWidth(inIconText.c_str(), 0, inIconText.length());
 	paneInfo.height = 16;
 	paneInfo.visible = false;
 	paneInfo.left = inBounds.left + 22;
 	paneInfo.top = inBounds.top + 2;
 	paneInfo.superView = inParent;
-	mDisplayText = new LCaption ( paneInfo, LStr255(mIconText), 130 );
+	mDisplayText = new LCaption ( paneInfo, LStr255(mIconText.c_str()), 130 );
 	ThrowIfNil_(mDisplayText);
 	
 } // constructor
@@ -359,7 +365,7 @@ CIconTextSuite :: CIconTextSuite ( LView* inParent, const Rect & inBounds, ResID
 CIconTextSuite :: CIconTextSuite ( const CIconTextSuite & other )
 	: mHTNodeData(other.mHTNodeData)
 {
-	mIconSuite = other.mIconSuite;
+	mIconID = other.mIconID;
 	mBounds = other.mBounds;
 	mIconText = other.mIconText;
 	mDisplayText = other.mDisplayText;
@@ -375,7 +381,6 @@ CIconTextSuite :: CIconTextSuite ( const CIconTextSuite & other )
 //
 CIconTextSuite :: ~CIconTextSuite ( ) 
 {
-	::DisposeIconSuite ( mIconSuite, true );
 	delete mDisplayText;
 	
 } // destructor
@@ -449,18 +454,41 @@ CIconTextSuite :: TextRectGlobal ( ) const
 //
 // BoundingRect
 //
-// Compute the rect that can contain the icon and caption entirely.
+// Compute the rect that can contain the icon and caption entirely. This rect will have
+// its top/left at (0,0)
 //
 Rect
 CIconTextSuite :: BoundingRect ( ) const
 {
-	Rect bounds = { 0, 0, 0, 0 };
+	Rect bounds = mBounds;
 	
 	mParent->FocusDraw();
 	Rect textRect = TextRectLocal();
 	
-	bounds.right = textRect.right;
-	bounds.bottom = textRect.bottom;
+	if ( textRect.right > bounds.right )
+		bounds.right = textRect.right;
+	
+	::OffsetRect(&bounds, -bounds.left, -bounds.top);	// move to (0,0)
 	return bounds;
 	
 } // BoundingRect
+
+
+void
+CIconTextSuite :: DrawIcon ( ) const
+{
+	Rect iconRect = IconRectLocal();
+	if ( ::PlotIconID(&iconRect, atNone, kTransformSelected, mIconID) != noErr )
+		throw;
+		
+} // DrawIcon
+
+
+void
+CIconTextSuite :: DrawText ( ) const
+{
+	::EraseRect ( &mBounds );
+//	mDisplayText->Show();
+//	mDisplayText->Draw(nil);
+//	mDisplayText->Hide();
+}

@@ -37,9 +37,9 @@
 
 
 #include "CBrowserDragTask.h"
-#include "cstring.h"
 #include "htrdf.h"
 
+#include <string>
 
 class LCaption;
 class LDragTask;
@@ -60,7 +60,7 @@ class CIconTextSuite {
 public:
 	CIconTextSuite ( ) ;
 	CIconTextSuite ( LView* inParent, const Rect & inBounds, ResIDT inIconId, 
-						const cstring & inIconText, const HT_Resource inHTNodeData = nil ) ;
+						const string & inIconText, const HT_Resource inHTNodeData = nil ) ;
 	CIconTextSuite ( const CIconTextSuite & other ) ;
 	virtual ~CIconTextSuite ( ) ;
 	
@@ -70,30 +70,23 @@ public:
 	virtual Rect TextRectLocal ( ) const;
 	virtual Rect BoundingRect ( ) const;
 	
-//	virtual void DrawIcon ( ) const;
-//	virtual void DrawText ( ) const;
+	virtual void DrawIcon ( ) const;
+	virtual void DrawText ( ) const;
 	
 	// 
 	// Accessors/Mutators
 	//
-#if I_WASNT_IN_SUCH_A_HURRY_TO_CHECK_THIS_IN
-	void IconSuite ( Handle inIconSuite ) 
-		{  
-			::DisposeIconSuite ( mIconSuite, true );
-			mIconSuite = inIconSuite;
-		};
-	Handle IconSuite ( ) const { return mIconSuite; } ;
-	void IconText ( const cstring & inIconText )  { mIconText = inIconText; } ;
-	cstring & IconText ( ) { return mIconText; } ;
+	void IconText ( const string & inIconText )  { mIconText = inIconText; } ;
+	string & IconText ( ) { return mIconText; } ;
+	const string & IconText ( ) const { return mIconText; }
 	LView* Parent ( ) const { return mParent; } ;
-#endif
 	
 	const HT_Resource GetHTNodeData ( ) const { return mHTNodeData; }
 	
  protected:
 
-	Handle mIconSuite;
-	cstring mIconText;
+	ResIDT mIconID;
+	string mIconText;
 	Rect mBounds;
 	LCaption* mDisplayText;
 	LView* mParent;
