@@ -58,7 +58,7 @@ NS_IMETHODIMP nsXPCToolsCompiler::GetBinDir(nsILocalFile * *aBinDir)
     if(NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIFile> lfile = do_QueryInterface(file);
+    nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
     NS_ADDREF(*aBinDir = lfile);
     return NS_OK;
 }
