@@ -290,7 +290,7 @@ print "$open_table_tag<TR><TD colspan=3><PRE>";
 # Print each line of the revision, preceded by its annotation.
 #
 my $count = $#::revision_map;
-if ($count == 0) {
+if ($count <= 0) {
     $count = 1;
 }
 my $line_num_width = int(log($count)/log(10)) + 1;
