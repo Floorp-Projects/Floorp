@@ -975,7 +975,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
         childItems.AddChild(aChildFrame);
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
           nsIFrame* innerFrame;
-          aParentFrame->GetParent(innerFrame);
+          aParentFrame->GetParent(&innerFrame);
           rv = ConstructFrame(aPresContext, aChildContent, innerFrame, aAbsoluteItems, 
                               childItems, aFixedItems);
         } else {
@@ -2721,7 +2721,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
     }
 
     // Continue walking up the hierarchy
-    containingBlock->GetParent(containingBlock);
+    containingBlock->GetParent(&containingBlock);
   }
 
   // If we didn't find an absolutely positioned containing block, then use the
@@ -2960,9 +2960,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     } else {
       // Use the prev sibling if we have it; otherwise use the next sibling
       if (nsnull != prevSibling) {
-        prevSibling->GetParent(parentFrame);
+        prevSibling->GetParent(&parentFrame);
       } else {
-        nextSibling->GetParent(parentFrame);
+        nextSibling->GetParent(&parentFrame);
       }
     }
 
@@ -3065,13 +3065,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // Generate two notifications. First for the absolutely positioned
       // frame
       nsIFrame* parentFrame;
-      childFrame->GetParent(parentFrame);
+      childFrame->GetParent(&parentFrame);
       rv = parentFrame->RemoveFrame(*aPresContext, *shell,
                                     nsLayoutAtoms::absoluteList, childFrame);
 
       // Now the placeholder frame
       if (nsnull != placeholderFrame) {
-        placeholderFrame->GetParent(parentFrame);
+        placeholderFrame->GetParent(&parentFrame);
         rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull,
                                       placeholderFrame);
       }
@@ -3079,7 +3079,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     } else {
       // Notify the parent frame that it should delete the frame
       nsIFrame* parentFrame;
-      childFrame->GetParent(parentFrame);
+      childFrame->GetParent(&parentFrame);
       rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull, childFrame);
     }
 
@@ -3467,7 +3467,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   nsIFrame*   parentFrame;
   nsresult    rv = NS_OK;
 
-  aFrame->GetParent(parentFrame);
+  aFrame->GetParent(&parentFrame);
 
   // Get the content object associated with aFrame
   aFrame->GetContent(&content);

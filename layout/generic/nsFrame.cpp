@@ -291,7 +291,7 @@ nsFrame::InsertFrames(nsIPresContext& aPresContext,
   // compatability.
   nsIFrame* target = this;
   if (nsnull != aPrevFrame) {
-    aPrevFrame->GetParent(target);
+    aPrevFrame->GetParent(&target);
   }
 
   nsIReflowCommand* reflowCmd = nsnull;
@@ -319,7 +319,7 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 #else
 #ifdef NS_DEBUG
   nsIFrame* parent;
-  aOldFrame->GetParent(parent);
+  aOldFrame->GetParent(&parent);
   NS_ASSERTION(parent == this, "bad child parent");
 #endif
 
@@ -331,7 +331,7 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
   // compatability.
   nsIFrame* target = this;
   if (nsnull != aOldFrame) {
-    aOldFrame->GetParent(target);
+    aOldFrame->GetParent(&target);
   }
 
   nsIReflowCommand* reflowCmd = nsnull;
@@ -470,9 +470,10 @@ NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 
 // Geometric parent member functions
 
-NS_IMETHODIMP nsFrame::GetParent(nsIFrame*& aParent) const
+NS_IMETHODIMP nsFrame::GetParent(nsIFrame** aParent) const
 {
-  aParent = mParent;
+  NS_PRECONDITION(nsnull != aParent, "null OUT parameter pointer");
+  *aParent = mParent;
   return NS_OK;
 }
 
@@ -1455,7 +1456,7 @@ NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame*& aParent) const
     if (nsnull != parView) {
       break;
     }
-    aParent->GetParent(aParent);
+    aParent->GetParent(&aParent);
   }
 
   return NS_OK;
@@ -1474,7 +1475,7 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) cons
 
     frame->GetOrigin(origin);
     aOffset += origin;
-    frame->GetParent(frame);
+    frame->GetParent(&frame);
     if (nsnull != frame) {
       frame->GetView(aView);
     }

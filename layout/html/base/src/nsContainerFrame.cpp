@@ -372,7 +372,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
-      aKidFrame->GetParent(parent);
+      aKidFrame->GetParent(&parent);
       ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aPresContext,
                                                           aKidFrame);
     }
@@ -401,7 +401,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
    
   aChild->GetNextInFlow(nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
-  nextInFlow->GetParent((nsIFrame*&)parent);
+  nextInFlow->GetParent((nsIFrame**)&parent);
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).

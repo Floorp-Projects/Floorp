@@ -1142,7 +1142,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsI
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
   nsTableOuterFrame* parent;
    
-  nextInFlow->GetParent((nsIFrame*&)parent);
+  nextInFlow->GetParent((nsIFrame**)&parent);
 
   // If the next-in-flow has a next-in-flow then delete it too (and
   // delete it first).

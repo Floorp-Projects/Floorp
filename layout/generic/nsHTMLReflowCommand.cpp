@@ -102,7 +102,7 @@ NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, kIReflowCommandIID);
 nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater)
 {
   nsIFrame* containingBlock;
-  aFloater->GetParent(containingBlock);
+  aFloater->GetParent(&containingBlock);
   return containingBlock;
 }
 
@@ -117,12 +117,12 @@ void nsHTMLReflowCommand::BuildPath()
   if (NS_STYLE_FLOAT_NONE != display->mFloats) {
     mPath.AppendElement((void*)mTargetFrame);
 
-    for (nsIFrame* f = GetContainingBlock(mTargetFrame); nsnull != f; f->GetParent(f)) {
+    for (nsIFrame* f = GetContainingBlock(mTargetFrame); nsnull != f; f->GetParent(&f)) {
       mPath.AppendElement((void*)f);
     }
 
   } else {
-    for (nsIFrame* f = mTargetFrame; nsnull != f; f->GetParent(f)) {
+    for (nsIFrame* f = mTargetFrame; nsnull != f; f->GetParent(&f)) {
       mPath.AppendElement((void*)f);
     }
   }

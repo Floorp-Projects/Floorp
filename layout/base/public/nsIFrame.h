@@ -276,13 +276,14 @@ public:
    * @see nsISupports#Release()
    */
   NS_IMETHOD  GetStyleContext(nsIStyleContext** aStyleContext) const = 0;
-  NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
+  NS_IMETHOD  SetStyleContext(nsIPresContext*  aPresContext,
                               nsIStyleContext* aContext) = 0;
 
   /**
    * Get the style data associated with this frame.
    */
-  NS_IMETHOD  GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const = 0;
+  NS_IMETHOD  GetStyleData(nsStyleStructID       aSID,
+                           const nsStyleStruct*& aStyleStruct) const = 0;
 
   /**
    * Re-resolve style context and either reset or re-resolve children.
@@ -297,7 +298,7 @@ public:
   /**
    * Accessor functions for geometric parent
    */
-  NS_IMETHOD  GetParent(nsIFrame*& aParent) const = 0;
+  NS_IMETHOD  GetParent(nsIFrame** aParent) const = 0;
   NS_IMETHOD  SetParent(const nsIFrame* aParent) = 0;
 
   /**

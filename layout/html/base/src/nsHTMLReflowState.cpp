@@ -390,13 +390,13 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       placeholderFrame->GetOrigin(placeholderOffset);
 
       nsIFrame* parent;
-      placeholderFrame->GetParent(parent);
+      placeholderFrame->GetParent(&parent);
       while ((nsnull != parent) && (parent != cbrs->frame)) {
         nsPoint origin;
 
         parent->GetOrigin(origin);
         placeholderOffset += origin;
-        parent->GetParent(parent);
+        parent->GetParent(&parent);
       }
 
       // Offsets are relative to the containing block's padding edge, so translate
