@@ -1354,11 +1354,11 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
   /* don't load the image if aSpec is empty */
   if (aSpec.IsEmpty()) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIURI> realURI;
 
   /* don't load the image if some security check fails... */
-  GetRealURI(aSpec, getter_AddRefs(uri));
-  if (!CanLoadImage(uri)) return NS_ERROR_FAILURE;
+  GetRealURI(aSpec, getter_AddRefs(realURI));
+  if (!CanLoadImage(realURI)) return NS_ERROR_FAILURE;
 
   if (!mListener) {
     nsImageListener *listener = new nsImageListener(this);
@@ -1376,8 +1376,10 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
   /* get the URI, convert internal-gopher-stuff if needed */
+  nsCOMPtr<nsIURI> uri;
   GetURI(aSpec, getter_AddRefs(uri));
-  if (!uri) return NS_ERROR_FAILURE;
+  if (!uri)
+    uri = realURI;
 
   /* set this back to FALSE before we do the real load */
   mInitialLoadCompleted = PR_FALSE;
@@ -1385,13 +1387,12 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
   return il->LoadImage(uri, loadGroup, mListener, aPresContext, aRequest);
 }
 
-#define INTERNAL_GOPHER_STRING "internal-gopher-"
-#define INTERNAL_GOPHER_LENGTH 17
+#define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */
 
 void
 nsImageFrame::GetURI(const nsAReadableString& aSpec, nsIURI **aURI)
 {
-  nsAutoString newURI;
+  *aURI = nsnull;
 
   /* Note: navigator 4.* and earlier releases ignored the base tags
      effect on the builtin images. So we do too. Use aSpec instead
@@ -1401,17 +1402,14 @@ nsImageFrame::GetURI(const nsAReadableString& aSpec, nsIURI **aURI)
   /* The prefix for special "internal" images that are well known.
      Look and see if this is an internal-gopher- url.
    */
-  if (NS_LITERAL_STRING(INTERNAL_GOPHER_STRING).Equals(Substring(aSpec, 0, INTERNAL_GOPHER_LENGTH))) {
+  if (NS_LITERAL_STRING("internal-gopher-").Equals(Substring(aSpec, 0, INTERNAL_GOPHER_LENGTH))) {
+    nsAutoString newURI;
     newURI.Assign(NS_LITERAL_STRING("resource:/res/html/gopher-") +
                   Substring(aSpec, INTERNAL_GOPHER_LENGTH, aSpec.Length() - INTERNAL_GOPHER_LENGTH) +
                   NS_LITERAL_STRING(".gif"));
-  } else {
-    newURI.Assign(aSpec);
+    GetRealURI(newURI, aURI);
   }
-
-  GetRealURI(newURI, aURI);
 }
-
 
 void
 nsImageFrame::GetRealURI(const nsAReadableString& aSpec, nsIURI **aURI)
