@@ -27,6 +27,7 @@
 #include "mdb.h"
 
 class nsMsgDatabase;
+class nsString2;
 
 // this could inherit from nsISupports mainly to get ref-counting semantics
 // but I don't intend it to be a public interface. I'll just
@@ -35,6 +36,7 @@ class nsMsgDatabase;
 class nsMsgHdr : public nsRDFResource, public nsIMessage {
 public:
 
+	friend class nsMsgDatabase;
     ////////////////////////////////////////////////////////////////////////////
     // nsIMessage methods:
     NS_IMETHOD GetProperty(const char *propertyName, nsString &resultProperty);
@@ -42,7 +44,7 @@ public:
     NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult);
     NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal);
     NS_IMETHOD GetNumReferences(PRUint16 *result);
-    NS_IMETHOD GetStringReference(PRInt32 refNum, nsString &resultReference);
+    NS_IMETHOD GetStringReference(PRInt32 refNum, nsString2 &resultReference);
     NS_IMETHOD GetDate(time_t *result);
     NS_IMETHOD SetDate(time_t date);
     NS_IMETHOD SetMessageId(const char *messageId);
@@ -76,6 +78,7 @@ public:
 
     NS_IMETHOD GetMessageKey(nsMsgKey *result);
     NS_IMETHOD GetThreadId(nsMsgKey *result);
+    NS_IMETHOD SetThreadId(nsMsgKey inKey);
     NS_IMETHOD SetMessageKey(nsMsgKey inKey);
     NS_IMETHOD GetMessageSize(PRUint32 *result);
     NS_IMETHOD SetMessageSize(PRUint32 messageSize);
@@ -103,6 +106,10 @@ protected:
     nsresult	SetStringColumn(const char *str, mdb_token token);
     nsresult	SetUInt32Column(PRUint32 value, mdb_token token);
     nsresult	GetUInt32Column(mdb_token token, PRUint32 *pvalue);
+
+	// reference and threading stuff.
+	const char*	GetNextReference(const char *startNextRef, nsString2 &reference);
+	const char* GetPrevReference(const char *prevRef, nsString2 &reference);
 
     nsMsgKey	m_threadId; 
     nsMsgKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...

@@ -19,6 +19,7 @@
 #include "msgCore.h"
 #include "nsMsgHdr.h"
 #include "nsMsgDatabase.h"
+#include "nsString2.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -106,13 +107,24 @@ NS_IMETHODIMP nsMsgHdr::GetMessageKey(nsMsgKey *result)
 
 NS_IMETHODIMP nsMsgHdr::GetThreadId(nsMsgKey *result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	if (result)
+	{
+		*result = m_threadId;
+		return NS_OK;
+	}
+    return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsMsgHdr::SetThreadId(nsMsgKey inKey)
+{
+	m_threadId = inKey;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
 {
-		m_messageKey = value;
-		return NS_OK;
+	m_messageKey = value;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
@@ -197,9 +209,24 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsString &resultReference)
+NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsString2 &resultReference)
 {
 	nsresult err = NS_OK;
+	nsString	allReferences;
+	m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_referencesColumnToken, allReferences);
+	char *cStringRefs = allReferences.ToNewCString();
+	const char *startNextRef = cStringRefs;
+	nsAutoCString reference(allReferences);
+	PRInt32 refIndex;
+	for (refIndex = 0; refIndex <= refNum && startNextRef; refIndex++)
+	{
+		startNextRef = GetNextReference(startNextRef, resultReference);
+	}
+
+	if (refIndex != refNum)
+		resultReference.Truncate(0);
+
+	delete [] cStringRefs;
 	return err;
 }
 
@@ -226,6 +253,18 @@ NS_IMETHODIMP nsMsgHdr::SetAuthor(const char *author)
 
 NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 {
+	nsString2 reference;
+
+	for (const char *startNextRef = references; startNextRef != nsnull;)
+	{
+		startNextRef = GetNextReference(startNextRef, reference);
+
+		if (reference.Length() == 0)
+			break;
+		
+		m_numReferences++;
+	}
+
 	return SetStringColumn(references, m_mdb->m_referencesColumnToken);
 }
 
@@ -453,3 +492,40 @@ nsresult nsMsgHdr::GetUInt32Column(mdb_token token, PRUint32 *pvalue)
 {
 	return m_mdb->RowCellColumnToUInt32(GetMDBRow(), token, pvalue);
 }
+
+// get the next <> delimited reference from nextRef and copy it into reference,
+const char *nsMsgHdr::GetNextReference(const char *startNextRef, nsString2 &reference)
+{
+	const char *ptr = startNextRef;
+
+	reference.Truncate(0);
+	while ((*ptr == '<' || *ptr == ' ') && *ptr)
+		ptr++;
+
+	for (int i = 0; *ptr && *ptr != '>'; i++)
+		reference += *ptr++;
+
+	if (*ptr == '>')
+		ptr++;
+	return ptr;
+}
+// Get previous <> delimited reference - used to go backwards through the
+// reference string. Caller will need to make sure that prevRef is not before
+// the start of the reference string when we return.
+const char *nsMsgHdr::GetPrevReference(const char *prevRef, nsString2 &reference)
+{
+	const char *ptr = prevRef;
+
+	while ((*ptr == '>' || *ptr == ' ') && *ptr)
+		ptr--;
+
+	// scan back to '<'
+	for (int i = 0; *ptr && *ptr != '<' ; i++)
+		ptr--;
+
+	GetNextReference(ptr, reference);
+	if (*ptr == '<')
+		ptr--;
+	return ptr;
+}
+

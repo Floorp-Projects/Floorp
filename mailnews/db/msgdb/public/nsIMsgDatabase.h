@@ -170,6 +170,7 @@ public:
   NS_IMETHOD GetFirstNew(nsMsgKey *result) = 0;
   NS_IMETHOD HasNew(void) = 0;  // returns NS_OK if true, NS_COMFALSE if false
   NS_IMETHOD ClearNewList(PRBool notify) = 0;
+  NS_IMETHOD AddToNewList(nsMsgKey key) = 0;
 
   // used mainly to force the timestamp of a local mail folder db to
   // match the time stamp of the corresponding berkeley mail folder,

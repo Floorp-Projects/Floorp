@@ -27,7 +27,7 @@ nsMsgThread::nsMsgThread()
 {
 	m_threadKey = nsMsgKey_None; 
 	m_numChildren = 0;		
-	m_numNewChildren = 0;	
+	m_numUnreadChildren = 0;	
 	m_flags = 0;
 	NS_INIT_REFCNT();
 }
@@ -36,34 +36,69 @@ nsMsgThread::~nsMsgThread()
 {
 }
 
-NS_IMETHODIMP nsMsgThread::GetFlags(PRUint32 *result)
+NS_IMETHODIMP		nsMsgThread::SetThreadKey(nsMsgKey threadKey)
 {
 	nsresult ret = NS_OK;
 
+	m_threadKey = threadKey;
 	return ret;
+}
+
+NS_IMETHODIMP	nsMsgThread::GetThreadKey(nsMsgKey *result)
+{
+	if (result)
+	{
+		*result = m_threadKey;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
+
+
+NS_IMETHODIMP nsMsgThread::GetFlags(PRUint32 *result)
+{
+	nsresult ret;
+
+	if (result)
+	{
+		*result = m_flags;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsMsgThread::SetFlags(PRUint32 flags)
 {
 	nsresult ret = NS_OK;
 
+	m_flags = flags;
 	return ret;
 }
 
 
 NS_IMETHODIMP nsMsgThread::GetNumChildren(PRUint32 *result)
 {
-	nsresult ret = NS_OK;
-
-	return ret;
+	if (result)
+	{
+		*result = m_numChildren;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 
 NS_IMETHODIMP nsMsgThread::GetNumUnreadChildren (PRUint32 *result)
 {
-	nsresult ret = NS_OK;
-
-	return ret;
+	if (result)
+	{
+		*result = m_numUnreadChildren;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 

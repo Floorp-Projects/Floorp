@@ -38,6 +38,8 @@ class nsIMsgThread : public nsISupports {
 public:
  
     static const nsIID& GetIID() { static nsIID iid = NS_IMSGTHREAD_IID; return iid; }
+	NS_IMETHOD		SetThreadKey(nsMsgKey threadKey) = 0;
+	NS_IMETHOD		GetThreadKey(nsMsgKey *result) = 0;
     NS_IMETHOD		GetFlags(PRUint32 *result) = 0;
     NS_IMETHOD		SetFlags(PRUint32 flags) = 0;
 	NS_IMETHOD		GetNumChildren(PRUint32 *result) = 0;

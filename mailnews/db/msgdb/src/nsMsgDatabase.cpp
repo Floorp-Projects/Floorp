@@ -26,8 +26,9 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
-
+#include "nsMsgThread.h"
 #include "nsFileStream.h"
+#include "nsString2.h"
 
 #include "nsIMimeHeaderConverter.h"
 //#include "nsMimeHeaderConverter.h"
@@ -1251,6 +1252,16 @@ NS_IMETHODIMP nsMsgDatabase::MarkLater(nsMsgKey key, time_t *until)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
+{
+	if (m_newSet == NULL)
+		m_newSet = nsNewsSet::Create();
+	if (m_newSet)
+		m_newSet->Add(key);
+	return (m_newSet) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
 NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
 {
 	nsresult			err = NS_OK;
@@ -1620,17 +1631,35 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMessage *newHdr, PRBool notify)
 {
     nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, newHdr);          // closed system, cast ok
 	nsresult err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());
-	if (notify)
+	if (NS_SUCCEEDED(err))
 	{
 		nsMsgKey key;
 		PRUint32 flags;
 
 	    newHdr->GetMessageKey(&key);
 		newHdr->GetFlags(&flags);
-
-		NotifyKeyAddedAll(key, flags, NULL);
+		if (flags & MSG_FLAG_NEW)
+		{
+			PRUint32 newFlags;
+			newHdr->AndFlags(~MSG_FLAG_NEW, &newFlags);	// make sure not filed out
+			AddToNewList(key);
+		}
+		if (m_dbFolderInfo != NULL)
+		{
+			m_dbFolderInfo->ChangeNumMessages(1);
+			m_dbFolderInfo->ChangeNumVisibleMessages(1);
+			if (! (flags & MSG_FLAG_READ))
+				m_dbFolderInfo->ChangeNumNewMessages(1);
+		}
+		PRBool newThread;
+#if 0
+		err = ThreadNewHdr(hdr, newThread);
+#endif
+		if (notify)
+		{
+			NotifyKeyAddedAll(key, flags, NULL);
+		}
 	}
-
 	return err;
 }
 
@@ -1926,6 +1955,142 @@ nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
 }
 
 // protected routines
+
+nsMsgThread *nsMsgDatabase::GetThreadForReference(const char * msgID)
+{
+	nsMsgHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
+	nsMsgThread *thread = NULL;
+
+	if (msgHdr != NULL)
+	{
+		// find thread header for header whose message id we matched.
+		thread = GetThreadForMsgKey(msgHdr->m_messageKey);
+		msgHdr->Release();
+	}
+	return thread;
+}
+
+nsMsgThread *	nsMsgDatabase::GetThreadForSubject(const char * subject)
+{
+	NS_ASSERTION(PR_FALSE, "not implemented yet.");
+	return nsnull;
+}
+
+nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
+{
+	nsresult result;
+	nsMsgThread *thread = nsnull;
+	nsMsgKey threadId = nsMsgKey_None;
+
+	if (!newHdr)
+		return NS_ERROR_NULL_POINTER;
+
+	PRUint16 numReferences = 0;
+	PRUint32 newHdrFlags = 0;
+
+	newHdr->GetFlags(&newHdrFlags);
+	newHdr->GetNumReferences(&numReferences);
+
+#define SUBJ_THREADING 1// try reference threading first
+	for (PRInt32 i = 0; i < numReferences; i++)
+	{
+		nsMsgThread *thread = nsnull;
+		nsString2 reference;
+
+		newHdr->GetStringReference(i, reference);
+		// first reference we have hdr for is best top-level hdr.
+		// but we have to handle case of promoting new header to top-level
+		// in case the top-level header comes after a reply.
+
+		if (reference.Length() == 0)
+			break;
+
+		if ((thread = GetThreadForReference(reference.GetBuffer())) != NULL)
+		{
+			thread->GetThreadKey(&threadId);
+			newHdr->SetThreadId(threadId);
+			result = AddToThread(newHdr, thread, TRUE);
+			break;
+		}
+	}
+#ifdef SUBJ_THREADING
+	// try subject threading if we couldn't find a reference and the subject starts with Re:
+	nsString subject;
+
+	newHdr->GetSubject(subject);
+	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && thread == NULL && (thread = GetThreadForSubject(nsAutoCString(subject))) != NULL)
+	{
+		thread->GetThreadKey(&threadId);
+		newHdr->SetThreadId(threadId);
+		//TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
+//			AddNeoHdr(neoMsgHdr);
+		// if we move this and do subject threading after, ref threading, 
+		// don't thread within children, since we know it won't work. But for now, pass TRUE.
+		result = AddToThread(newHdr, thread, TRUE);	
+	}
+#endif // SUBJ_THREADING
+
+	if (thread == NULL)
+	{
+		// couldn't find any parent articles - msgHdr is top-level thread, for now
+		result = AddNewThread(newHdr);
+		newThread = TRUE;
+	}
+	else
+	{
+		newThread = FALSE;
+	}
+	return result;
+}
+
+nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsMsgThread *thread, PRBool threadInThread)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(const char *reference)
+{
+	NS_ASSERTION(PR_FALSE, "not implemented yet.");
+	return nsnull;
+}
+
+nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(const char *msgID)
+{
+	NS_ASSERTION(PR_FALSE, "not implemented yet.");
+	return nsnull;
+}
+
+nsMsgThread *	nsMsgDatabase::GetThreadContainingMsgHdr(nsMsgHdr *msgHdr)
+{
+	NS_ASSERTION(PR_FALSE, "not implemented yet.");
+	return nsnull;
+}
+
+
+nsMsgThread *nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey)
+{
+	NS_ASSERTION(PR_FALSE, "not implemented yet.");
+	return nsnull;
+}
+
+// make the passed in header a thread header
+nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
+{
+	nsMsgThread *threadHdr = new nsMsgThread;
+	if (threadHdr)
+	{
+		threadHdr->AddRef();
+		threadHdr->SetThreadKey(msgHdr->m_messageKey);
+	//	threadHdr->SetSubject
+
+		// need to add the thread table to the db.
+		AddToThread(msgHdr, threadHdr, FALSE);
+
+		threadHdr->Release();
+	}
+	return NS_OK;
+}
+
 
 // should we thread messages with common subjects that don't start with Re: together?
 // I imagine we might have separate preferences for mail and news, so this is a virtual method.

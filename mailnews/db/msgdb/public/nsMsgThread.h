@@ -32,6 +32,8 @@ public:
 
     NS_DECL_ISUPPORTS
 
+	NS_IMETHOD		SetThreadKey(nsMsgKey threadKey);
+	NS_IMETHOD		GetThreadKey(nsMsgKey *result);
     NS_IMETHOD		GetFlags(PRUint32 *result);
     NS_IMETHOD		SetFlags(PRUint32 flags);
 	NS_IMETHOD		GetNumChildren(PRUint32 *result);
@@ -47,7 +49,7 @@ public:
 protected:
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
-	PRUint32		m_numNewChildren;	
+	PRUint32		m_numUnreadChildren;	
 	PRUint32		m_flags;
 
 

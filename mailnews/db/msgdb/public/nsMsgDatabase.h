@@ -33,6 +33,7 @@ class nsThreadMessageHdr;
 class ListContext;
 class nsMsgKeyArray;
 class nsNewsSet;
+class nsMsgThread;
 
 class nsMsgDatabase : public nsIMsgDatabase {
 public:
@@ -155,6 +156,7 @@ public:
   NS_IMETHOD GetFirstNew(nsMsgKey *result);
   NS_IMETHOD HasNew(void);  // returns NS_OK if true, NS_COMFALSE if false
   NS_IMETHOD ClearNewList(PRBool notify);
+  NS_IMETHOD AddToNewList(nsMsgKey key);
 
   // used mainly to force the timestamp of a local mail folder db to
   // match the time stamp of the corresponding berkeley mail folder,
@@ -213,7 +215,19 @@ protected:
 						  PRBool createKeyFromHeader = PR_FALSE);
 	// prefs stuff - in future, we might want to cache the prefs interface
 	nsresult GetBoolPref(const char *prefName, PRBool *result);
-	virtual PRBool	ThreadBySubjectWithoutRe() ;
+	// retrieval methods
+	nsMsgThread *	GetThreadForReference(const char * msgID);
+	nsMsgThread *	GetThreadForSubject(const char * subject);
+	nsMsgThread *	GetThreadForMsgKey(nsMsgKey msgKey);
+	nsMsgHdr	*	GetMsgHdrForReference(const char *reference);
+	nsMsgHdr	*	GetMsgHdrForMessageID(const char *msgID);
+	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
+	// threading interfaces
+	virtual PRBool	ThreadBySubjectWithoutRe();
+	virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
+	virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
+	virtual nsresult AddToThread(nsMsgHdr *newHdr, nsMsgThread *thread, PRBool threadInThread);
+
 
 	// open db cache
     static void		AddToCache(nsMsgDatabase* pMessageDB) 

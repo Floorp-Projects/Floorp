@@ -22,6 +22,8 @@
 #include "MailNewsTypes.h"
 #include "nsString.h"
 
+class nsString2;
+
 #define NS_IMESSAGE_IID                              \
 { /* 4e994f60-c317-11d2-8cc9-0060b0fc14a3 */         \
     0x4e994f60,                                      \
@@ -39,7 +41,7 @@ public:
     NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult) = 0;
     NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal) = 0;
     NS_IMETHOD GetNumReferences(PRUint16 *result) = 0;
-    NS_IMETHOD GetStringReference(PRInt32 refNum, nsString &resultReference) = 0;
+    NS_IMETHOD GetStringReference(PRInt32 refNum, nsString2 &resultReference) = 0;
     NS_IMETHOD GetDate(time_t *result) = 0;
     NS_IMETHOD SetDate(time_t date) = 0;
     NS_IMETHOD SetMessageId(const char *messageId) = 0;
@@ -73,6 +75,7 @@ public:
 
     NS_IMETHOD GetMessageKey(nsMsgKey *result) = 0;
     NS_IMETHOD GetThreadId(nsMsgKey *result) = 0;
+    NS_IMETHOD SetThreadId(nsMsgKey inKey) = 0;
     NS_IMETHOD SetMessageKey(nsMsgKey inKey) = 0;
     NS_IMETHOD GetMessageSize(PRUint32 *result) = 0;
     NS_IMETHOD SetMessageSize(PRUint32 messageSize) = 0;
