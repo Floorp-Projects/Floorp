@@ -740,24 +740,27 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
     // Turn auto array into flat array for quick sort, now that we
     // know how many items there are
     PRUint32 count = matchingRows.Count();
-    PRUint32* items = new PRUint32[count];
-    PRUint32 i;
-    for (i = 0; i < count; ++i)
-      items[i] = i;
 
-    NS_QuickSort(items, count, sizeof(nsIMdbRow*),
-                 SortComparison, &matchingValues);
+    if (count > 0) {
+      PRUint32* items = new PRUint32[count];
+      PRUint32 i;
+      for (i = 0; i < count; ++i)
+        items[i] = i;
 
-    for (i = 0; i < count; ++i) {
-      // Place the sorted result into the autocomplete result
-      result->AddRow((nsIMdbRow *)matchingRows[items[i]]);
-      
-      // Free up these strings we owned.
-      delete (PRUnichar *) matchingValues[i];
+      NS_QuickSort(items, count, sizeof(PRUint32),
+                   SortComparison, &matchingValues);
+
+      for (i = 0; i < count; ++i) {
+        // Place the sorted result into the autocomplete result
+        result->AddRow((nsIMdbRow *)matchingRows[items[i]]);
+
+        // Free up these strings we owned.
+        delete (PRUnichar *) matchingValues[i];
+      }
+
+      delete[] items;
     }
-          
-    delete[] items;
-    
+
     PRUint32 matchCount;
     result->GetMatchCount(&matchCount);
     if (matchCount > 0) {
