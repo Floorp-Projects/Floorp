@@ -28,15 +28,15 @@
 
 class MSG_NewsHost;
 
-class msg_NewsArtSet {
+class nsNewsSet {
 public:
 	// Creates an empty set.
-	static msg_NewsArtSet* Create(MSG_NewsHost* host = NULL);
+	static nsNewsSet* Create(MSG_NewsHost* host = NULL);
 
 	// Creates a set from the list of numbers, as might be found in a
 	// newsrc file.
-	static msg_NewsArtSet* Create(const char* str, MSG_NewsHost* host = NULL);
-	~msg_NewsArtSet();
+	static nsNewsSet* Create(const char* str, MSG_NewsHost* host = NULL);
+	~nsNewsSet();
 
 	// FirstNonMember() returns the lowest non-member of the set that is
 	// greater than 0.
@@ -83,8 +83,8 @@ public:
 #endif
 
 protected:
-	msg_NewsArtSet(MSG_NewsHost* host);
-	msg_NewsArtSet(const char*, MSG_NewsHost* host);
+	nsNewsSet(MSG_NewsHost* host);
+	nsNewsSet(const char*, MSG_NewsHost* host);
 	PRBool Grow();
 	PRBool Optimize();
 

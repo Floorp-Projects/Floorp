@@ -68,7 +68,7 @@
 
 
 
-msg_NewsArtSet::msg_NewsArtSet(MSG_NewsHost* host )
+nsNewsSet::nsNewsSet(MSG_NewsHost* host )
 {
 	m_cached_value = -1;
 	m_cached_value_index = 0;
@@ -81,13 +81,13 @@ msg_NewsArtSet::msg_NewsArtSet(MSG_NewsHost* host )
 }
 
 
-msg_NewsArtSet::~msg_NewsArtSet()
+nsNewsSet::~nsNewsSet()
 {
 	PR_FREEIF(m_data);
 }
 
 
-PRBool msg_NewsArtSet::Grow()
+PRBool nsNewsSet::Grow()
 {
 	PRInt32 new_size;
 	PRInt32 *new_data;
@@ -101,7 +101,7 @@ PRBool msg_NewsArtSet::Grow()
 }
 
 
-msg_NewsArtSet::msg_NewsArtSet(const char* numbers, MSG_NewsHost* host)
+nsNewsSet::nsNewsSet(const char* numbers, MSG_NewsHost* host)
 {
 	PRInt32 *head, *tail, *end;
 
@@ -190,10 +190,10 @@ msg_NewsArtSet::msg_NewsArtSet(const char* numbers, MSG_NewsHost* host)
 
 
 
-msg_NewsArtSet*
-msg_NewsArtSet::Create(MSG_NewsHost* host)
+nsNewsSet*
+nsNewsSet::Create(MSG_NewsHost* host)
 {
-	msg_NewsArtSet* set = new msg_NewsArtSet(host);
+	nsNewsSet* set = new nsNewsSet(host);
 	if (set && set->m_data == NULL) {
 		delete set;
 		set = NULL;
@@ -202,10 +202,10 @@ msg_NewsArtSet::Create(MSG_NewsHost* host)
 }
 
 
-msg_NewsArtSet*
-msg_NewsArtSet::Create(const char* value, MSG_NewsHost* host)
+nsNewsSet*
+nsNewsSet::Create(const char* value, MSG_NewsHost* host)
 {
-	msg_NewsArtSet* set = new msg_NewsArtSet(value, host);
+	nsNewsSet* set = new nsNewsSet(value, host);
 	if (set && set->m_data == NULL) {
 		delete set;
 		set = NULL;
@@ -218,7 +218,7 @@ msg_NewsArtSet::Create(const char* value, MSG_NewsHost* host)
 /* Returns the lowest non-member of the set greater than 0.
  */
 PRInt32
-msg_NewsArtSet::FirstNonMember ()
+nsNewsSet::FirstNonMember ()
 {
 	if (m_length <= 0) {
 		return 1;
@@ -263,7 +263,7 @@ msg_NewsArtSet::FirstNonMember ()
 
 
 char *
-msg_NewsArtSet::Output()
+nsNewsSet::Output()
 {
 	PRInt32 size;
 	PRInt32 *head;
@@ -341,7 +341,7 @@ msg_NewsArtSet::Output()
 }
 
 PRInt32 
-msg_NewsArtSet::GetLastMember()
+nsNewsSet::GetLastMember()
 {
 	if (m_length > 1)
 	{
@@ -362,7 +362,7 @@ msg_NewsArtSet::GetLastMember()
 		return 0;
 }
 
-void msg_NewsArtSet::SetLastMember(PRInt32 newHighWaterMark)
+void nsNewsSet::SetLastMember(PRInt32 newHighWaterMark)
 {
 	if (newHighWaterMark < GetLastMember())
 	{
@@ -417,7 +417,7 @@ void msg_NewsArtSet::SetLastMember(PRInt32 newHighWaterMark)
 }
 
 PRInt32 
-msg_NewsArtSet::GetFirstMember()
+nsNewsSet::GetFirstMember()
 {
 	if (m_length > 1)
 	{
@@ -438,9 +438,9 @@ msg_NewsArtSet::GetFirstMember()
 		return 0;
 }
 
-/* Re-compresses a `msg_NewsArtSet' object.
+/* Re-compresses a `nsNewsSet' object.
 
-   The assumption is made that the `msg_NewsArtSet' is syntactically correct
+   The assumption is made that the `nsNewsSet' is syntactically correct
    (all ranges have a length of at least 1, and all values are non-
    decreasing) but will optimize the compression, for example, merging
    consecutive literals or ranges into one range.
@@ -455,7 +455,7 @@ msg_NewsArtSet::GetFirstMember()
    changed.
    */
 PRBool
-msg_NewsArtSet::Optimize()
+nsNewsSet::Optimize()
 {
 	PRInt32 input_size;
 	PRInt32 output_size;
@@ -564,7 +564,7 @@ msg_NewsArtSet::Optimize()
 
 
 PRBool
-msg_NewsArtSet::IsMember(PRInt32 number)
+nsNewsSet::IsMember(PRInt32 number)
 {
 	PRBool value = FALSE;
 	PRInt32 size;
@@ -627,7 +627,7 @@ DONE:
 
 
 int
-msg_NewsArtSet::Add(PRInt32 number)
+nsNewsSet::Add(PRInt32 number)
 {
 	PRInt32 size;
 	PRInt32 *head;
@@ -720,7 +720,7 @@ msg_NewsArtSet::Add(PRInt32 number)
 
 
 int
-msg_NewsArtSet::Remove(PRInt32 number)
+nsNewsSet::Remove(PRInt32 number)
 {
 	PRInt32 size;
 	PRInt32 *head;
@@ -883,7 +883,7 @@ msg_emit_range(PRInt32* tmp, PRInt32 a, PRInt32 b)
 
 
 int
-msg_NewsArtSet::AddRange(PRInt32 start, PRInt32 end)
+nsNewsSet::AddRange(PRInt32 start, PRInt32 end)
 {
 	PRInt32 tmplength;
 	PRInt32* tmp;
@@ -964,7 +964,7 @@ msg_NewsArtSet::AddRange(PRInt32 start, PRInt32 end)
 }
 
 PRInt32
-msg_NewsArtSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
+nsNewsSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
 {
 	PRInt32 count;
 	PRInt32 *head;
@@ -1004,7 +1004,7 @@ msg_NewsArtSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
 
 
 int 
-msg_NewsArtSet::FirstMissingRange(PRInt32 min, PRInt32 max,
+nsNewsSet::FirstMissingRange(PRInt32 min, PRInt32 max,
 								  PRInt32* first, PRInt32* last)
 {
 	PRInt32 size;
@@ -1064,7 +1064,7 @@ msg_NewsArtSet::FirstMissingRange(PRInt32 min, PRInt32 max,
 // I'm guessing we didn't include this because we didn't think we're going
 // to need it. I'm not so sure. I'm putting it in for now.
 int 
-msg_NewsArtSet::LastMissingRange(PRInt32 min, PRInt32 max,
+nsNewsSet::LastMissingRange(PRInt32 min, PRInt32 max,
 								  PRInt32* first, PRInt32* last)
 {
   PRInt32 size;
@@ -1131,9 +1131,9 @@ msg_NewsArtSet::LastMissingRange(PRInt32 min, PRInt32 max,
 #define countof(x) (sizeof(x) / sizeof(*(x)))
 
 void
-msg_NewsArtSet::test_decoder (const char *string)
+nsNewsSet::test_decoder (const char *string)
 {
-	msg_NewsArtSet set(string, NULL);
+	nsNewsSet set(string, NULL);
 	char* tmp = set.Output();
 	printf ("\t\"%s\"\t--> \"%s\"\n", string, tmp);
 	delete [] tmp;
@@ -1142,7 +1142,7 @@ msg_NewsArtSet::test_decoder (const char *string)
 
 #define START(STRING) \
   string = STRING;	  \
-  if (!(set = msg_NewsArtSet::Create(string))) abort ()
+  if (!(set = nsNewsSet::Create(string))) abort ()
 
 #define FROB(N,PUSHP)									\
   i = N;												\
@@ -1167,10 +1167,10 @@ msg_NewsArtSet::test_decoder (const char *string)
 
 
 void
-msg_NewsArtSet::test_adder (void)
+nsNewsSet::test_adder (void)
 {
   char *string;
-  msg_NewsArtSet *set;
+  nsNewsSet *set;
   char *s;
   PRInt32 i;
 
@@ -1250,7 +1250,7 @@ msg_NewsArtSet::test_adder (void)
 
 #define START(STRING) \
   string = STRING;	  \
-  if (!(set = msg_NewsArtSet::Create(string))) abort ()
+  if (!(set = nsNewsSet::Create(string))) abort ()
 
 #define FROB(N,M)												\
   i = N;														\
@@ -1280,10 +1280,10 @@ msg_NewsArtSet::test_adder (void)
 
 
 void
-msg_NewsArtSet::test_ranges(void)
+nsNewsSet::test_ranges(void)
 {
   char *string;
-  msg_NewsArtSet *set;
+  nsNewsSet *set;
   char *s;
   PRInt32 i;
   PRInt32 j;
@@ -1319,9 +1319,9 @@ msg_NewsArtSet::test_ranges(void)
   delete [] s
 
 void
-msg_NewsArtSet::test_member(PRBool with_cache)
+nsNewsSet::test_member(PRBool with_cache)
 {
-  msg_NewsArtSet *set;
+  nsNewsSet *set;
   char *s;
 
   s = "1-70,72-99,105,107,110-111,117-200";
@@ -1414,7 +1414,7 @@ msg_NewsArtSet::test_member(PRBool with_cache)
 // }
 
 void
-msg_NewsArtSet::RunTests ()
+nsNewsSet::RunTests ()
 {
 
   test_decoder ("");
