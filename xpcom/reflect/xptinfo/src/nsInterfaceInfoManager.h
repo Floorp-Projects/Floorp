@@ -71,7 +71,6 @@ private:
     // (record handling is looked up by name; iids are translated there)
     nsHashtable *mIIDTable;
 
-    nsInterfaceInfo *mParent;
     nsIAllocator* mAllocator;
 };
 
@@ -80,9 +79,12 @@ class interface_record {
 public:
     XPTHeader *which_header;
     PRBool resolved;
-    int which;
     XPTInterfaceDirectoryEntry *entry;
     nsInterfaceInfo *info;
+#ifdef DEBUG
+    // which (counting from 1) typelib was it loaded from?
+    int which;
+#endif
 };    
 
 
