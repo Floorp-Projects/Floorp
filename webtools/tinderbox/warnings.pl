@@ -50,10 +50,6 @@ for $br (last_successful_builds($tree)) {
 
   my $log_file = "$br->{logfile}";
 
-  # Get the warnings summary
-  do "$tree/warn.pl"; # for $last_log_file
-  next if $last_log_file eq $log_file;
-
   warn "Parsing build log, $log_file\n";
 
   $fh = new FileHandle "gunzip -c $tree/$log_file |";
@@ -83,7 +79,6 @@ for $br (last_successful_builds($tree)) {
       ."$total_warnings Build Warnings</a> (updated $time_str). "
       .'-<a href="mailto:slamm@netscape.com?subject=About the Build Warnings">'
       .'slamm</a><p>\';'."\n";
-  print $fh "\$last_log_file='$log_file';\n";
   $fh->close;
 
   move($warn_summary, "$tree/warn.pl");
