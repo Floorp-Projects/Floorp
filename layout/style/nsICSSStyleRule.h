@@ -119,6 +119,8 @@ public:
   virtual nsIStyleRule* GetImportantRule(void) = 0;
 
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
+
+  NS_IMETHOD Clone(nsICSSStyleRule*& aClone) const = 0;
 };
 
 extern NS_HTML nsresult
