@@ -492,7 +492,7 @@ function UpdateBookmarksLastVisitiedDate(event)
 
 function OpenSearch(tabName)
 {
-	window.open("resource:/res/samples/search.xul", "SearchWindow", "chrome,resizable", tabName);
+	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
 }
 
   function BrowserNewWindow()
