@@ -61,7 +61,6 @@ LIBS		= \
 		-lsecfree \
 		-lmozjs \
 		-ljsdom \
-		-lcaps \
 		-lraptorgfx \
 		-lxpcom \
 		-lxp \
