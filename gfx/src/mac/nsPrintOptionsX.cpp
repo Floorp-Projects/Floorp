@@ -89,7 +89,9 @@ NS_IMETHODIMP
 nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 {
 
-  ReadPrefs();
+  // it doesn't really matter if this fails
+  nsresult rv = ReadPageSetupFromPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write page setup to prefs");
 
   NS_ASSERTION(mPageFormat != kPMNoPageFormat, "No page format");
   if (mPageFormat == kPMNoPageFormat)
@@ -108,7 +110,9 @@ nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 
   ::PMEnd();
 
-  WritePrefs();
+  // it doesn't really matter if this fails
+  rv = WritePageSetupToPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to save page setup to prefs");
   
   if (status != noErr)
     return NS_ERROR_FAILURE;
@@ -118,28 +122,6 @@ nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 
   return NS_OK;
 } 
-
-
-NS_IMETHODIMP 
-nsPrintOptionsX::ReadPrefs()
-{
-  // it doesn't really matter if this fails
-  nsresult  rv = ReadPageSetupFromPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write page setup to prefs");
-  
-  return nsPrintOptions::ReadPrefs();
-}
-
-NS_IMETHODIMP 
-nsPrintOptionsX::WritePrefs()
-{
-  // it doesn't really matter if this fails
-  nsresult  rv = WritePageSetupToPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to save page setup to prefs");
-  
-  return nsPrintOptions::WritePrefs();
-}
-
 
 /* [noscript] voidPtr GetNativeData (in short aDataType); */
 NS_IMETHODIMP

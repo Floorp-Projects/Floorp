@@ -96,7 +96,9 @@ nsPrintOptionsMac::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 
   if (!mPrintRecord) return NS_ERROR_NOT_INITIALIZED;
 
-  ReadPrefs();
+  // it doesn't really matter if this fails
+  nsresult rv = ReadPageSetupFromPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write page setup to prefs");
 
   // open the printing manager
   ::PrOpen();
@@ -115,32 +117,15 @@ nsPrintOptionsMac::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
   
   ::PrClose();
 
-  WritePrefs();
+  // it doesn't really matter if this fails
+  rv = WritePageSetupToPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to save page setup to prefs");
+
   if (err != noErr)
     return NS_ERROR_FAILURE;
 
   return NS_OK;
 } 
-
-NS_IMETHODIMP 
-nsPrintOptionsMac::ReadPrefs()
-{
-  // it doesn't really matter if this fails
-  nsresult  rv = ReadPageSetupFromPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write page setup to prefs");
-  
-  return nsPrintOptions::ReadPrefs();
-}
-
-NS_IMETHODIMP 
-nsPrintOptionsMac::WritePrefs()
-{
-  // it doesn't really matter if this fails
-  nsresult  rv = WritePageSetupToPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to save page setup to prefs");
-  
-  return nsPrintOptions::WritePrefs();
-}
 
 /* [noscript] voidPtr GetNativeData (in short aDataType); */
 NS_IMETHODIMP
