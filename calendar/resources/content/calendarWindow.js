@@ -797,3 +797,112 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
       dayEventStartList[i].totalSlotCount = currEventSlots.length;
   }
 }
+
+/** PRIVATE
+ *
+ *  Sets the following all-day event draw order properties. 
+ *  Used in day view and week view.
+ *    allDayStartsBefore 
+ *      (true if event starts before startDate)
+ *    allDayEndsAfter 
+ *      (true if event ends after endDate)
+ *    startDrawSlot
+ *      (index of the day the event will be drawn on. Used in weekview)
+ *    drawSlotCount
+ *      (count of days the event occupies between startDate and endDay. Used in weekview)
+ *    drawRow
+ *      (which allday-row the event should be drawn on. Used in weekview)
+ */
+CalendarView.prototype.setAllDayDrawProperties = function calView_setAllDayDrawProperties( eventList, startDate, endDate) {
+  startDate.setHours( 0, 0, 0, 0 );
+  
+  if ( !endDate ) {
+    endDate = new Date(startDate);
+    endDate.setDate( endDate.getDate() + 1 );
+  }
+  endDate.setHours( 0, 0, 0, 0 );
+  
+  var startDateValue = startDate.valueOf();
+  var endDateValue = endDate.valueOf();
+  
+  var recurObj = new Object();
+  var starttime;
+  var endtime;
+  
+  var dayCount = ( endDateValue - startDateValue ) / kDate_MillisecondsInDay;
+  var row;
+  var rowFound;
+  
+  var usedSlotMatrix = new Array(); //all-day rows 
+  usedSlotMatrix.push( new Array() ); //first row, one column per day between startDate and endDate
+  for( var i = 0; i < dayCount; i++ ) {
+    usedSlotMatrix[0].push( false );
+  }
+  
+  for( var i = 0; i < eventList.length; i++ ) {
+    if( eventList[i].event.allDay) {
+      
+      if( eventList[i].event.recur ) {
+        //get start time for correct occurrence
+        
+        //HACK: didn't know how to get the correct occurrence, ended 
+        // up just selecting the last one... This is definitely wrong,
+        // and should be fixed when recurring event occurrences are 
+        // easier to handle (bug 242544)
+        if( eventList[i].event.getPreviousOccurrence( endDate.getTime(), recurObj ) ) {
+          starttime = recurObj.value;
+          endtime = starttime + (eventList[i].event.end.getTime() -
+                                 eventList[i].event.start.getTime());
+        }
+      } else {
+        starttime = eventList[i].event.start.getTime();
+        endtime = eventList[i].event.end.getTime();
+      }
+      
+      if( starttime < startDateValue ) {
+        eventList[i].allDayStartsBefore = true;
+        eventList[i].startDrawSlot=0;
+      } else {
+        eventList[i].allDayStartsBefore = false;
+        eventList[i].startDrawSlot = (starttime - startDateValue) / kDate_MillisecondsInDay;
+      }
+      if( endtime > endDateValue ) {
+        eventList[i].allDayEndsAfter = true;
+        eventList[i].drawSlotCount = ((endDateValue - startDateValue) / kDate_MillisecondsInDay)-eventList[i].startDrawSlot;
+      } else {
+        eventList[i].allDayEndsAfter = false;
+        eventList[i].drawSlotCount = ((endtime - startDateValue) / kDate_MillisecondsInDay)-eventList[i].startDrawSlot;
+      }
+      
+      rowFound = false;
+      row=0;
+      while( ( !rowFound ) && ( row < usedSlotMatrix.length ) ) {
+        //check if there is room for the event on the row
+        rowFound = true;
+        for( var k = eventList[i].startDrawSlot; k < (eventList[i].startDrawSlot + eventList[i].drawSlotCount); k++) {
+          if( usedSlotMatrix[row][k] ) {
+            rowFound = false;
+            break;
+          }
+        }
+        if( !rowFound ) {
+          row++;
+        }
+      }
+      if(!rowFound) {
+        //add new all-day-row
+        var newArray = new Array(); 
+        for( var k = 0; k < dayCount; k++ ) {
+          newArray.push( false );
+        }
+        usedSlotMatrix.push(newArray);
+        row = usedSlotMatrix.length - 1;
+      }
+      
+      eventList[i].drawRow = row;
+      for( var k = eventList[i].startDrawSlot; k < (eventList[i].startDrawSlot + eventList[i].drawSlotCount); k++) {
+        usedSlotMatrix[row][k] = true;
+      }
+    }
+  }
+}

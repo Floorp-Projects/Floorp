@@ -151,7 +151,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
    
    // Calculate event draw properties (where events are drawn )
    this.setDrawProperties(normalEvents);
-   this.setAllDayDrawProperties(allDayEvents);
+   this.setAllDayDrawProperties(allDayEvents, this.calendarWindow.getSelectedDate() );
    
    // Sort all day events to correct draw order
    allDayEvents.sort(this.compareAllDayEvents);
@@ -265,49 +265,6 @@ DayView.prototype.compareAllDayEvents = function dayview_compareAllDayEvents( a,
          res = a.event.end.getTime() - b.event.end.getTime();
       return res;
    }
-}
-
-/** PRIVATE
-*
-*   Sets all-day event draw order properties ( allDayStartsBefore & allDayEndsAfter),
-*   that tell wether the event starts before selected day or ends after the day.
-*/
-DayView.prototype.setAllDayDrawProperties = function dayview_setAllDayDrawProperties( dayEventList ) {
-   var date = this.calendarWindow.getSelectedDate();
-   date.setHours( 0, 0, 0, 0 );
-   var dayStart = date.valueOf();
-   date.setDate( date.getDate() + 1 );
-   var nextDayStart = date.valueOf();
-   var recurObj = new Object();
-   
-   var starttime;
-   var endtime;
-   
-   for( var i = 0; i < dayEventList.length; i++ )
-      if( dayEventList[i].event.allDay) {
-
-         if( dayEventList[i].event.recur ) {
-            //must get start time for correct recur-instance
-            if( dayEventList[i].event.getPreviousOccurrence( date.getTime(), recurObj ) ) {
-               starttime = recurObj.value;
-               endtime = starttime + (dayEventList[i].event.end.getTime() -
-                                      dayEventList[i].event.start.getTime());
-            }
-         } else {
-            starttime = dayEventList[i].event.start.getTime();
-            endtime = dayEventList[i].event.end.getTime();
-         }
-
-         if( starttime < dayStart )
-            dayEventList[i].allDayStartsBefore = true;
-         else 
-            dayEventList[i].allDayStartsBefore = false;
-         
-         if( endtime > nextDayStart )
-            dayEventList[i].allDayEndsAfter = true;
-         else
-            dayEventList[i].allDayEndsAfter = false;
-      }
 }
 
 /** PRIVATE
