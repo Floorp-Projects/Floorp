@@ -20,4 +20,4 @@
  * Contributor(s): 
  */
 
-/* Nothing to do here. If you need DBM-specific defines, put them here */
+#define __DBINTERFACE_PRIVATE 1

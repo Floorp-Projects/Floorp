@@ -88,7 +88,7 @@ LINCS = -I..\include
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT
+CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT -D__DBINTERFACE_PRIVATE
 
 install:: $(LIBRARY)
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
