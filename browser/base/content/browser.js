@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Blake Ross <blaker@netscape.com>
+#   David Hyatt <hyatt@mozilla.org>
 #   Peter Annema <disttsc@bart.nl>
 #   Dean Tessman <dean_tessman@hotmail.com>
 #   Kevin Puetz (puetzk@iastate.edu)
@@ -772,13 +773,13 @@ function updateGoMenu(goMenu)
     endSep.hidden = false;
 }
 
-function addBookmarkAs(aBrowser)
+function addBookmarkAs(aBrowser, aIsWebPanel)
 {
   const browsers = aBrowser.browsers;
-  if (browsers.length > 1)
+  if (browsers && browsers.length > 1)
     addBookmarkForTabBrowser(aBrowser);
   else
-    addBookmarkForBrowser(aBrowser.webNavigation);
+    addBookmarkForBrowser(aBrowser.webNavigation, aIsWebPanel);
 }
 
 function addBookmarkForTabBrowser(aTabBrowser, aSelect)
@@ -810,7 +811,7 @@ function addBookmarkForTabBrowser(aTabBrowser, aSelect)
              currentTabInfo.charset, "addGroup" + (aSelect ? ",group" : ""), tabsInfo);
 }
 
-function addBookmarkForBrowser(aDocShell)
+function addBookmarkForBrowser(aDocShell, aIsWebPanel)
 {
   // Bug 52536: We obtain the URL and title from the nsIWebNavigation
   // associated with a <browser/> rather than from a DOMWindow.
@@ -826,7 +827,7 @@ function addBookmarkForBrowser(aDocShell)
   catch (e) {
     title = url;
   }
-  BookmarksUtils.addBookmark(url, title, charSet);
+  BookmarksUtils.addBookmark(url, title, charSet, aIsWebPanel);
 }
 
 function openLocation()

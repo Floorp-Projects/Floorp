@@ -67,6 +67,7 @@
  *   window.arguments[5]: If the mode is "addGroup", this is an array
  *                        of objects with name, URL and charset
  *                        properties, one for each group member.
+ *   window.arguments[6]: If the bookmark should become a web panel.
  *
  * Mode of Operation Notes:
  * ------------------------
@@ -253,7 +254,7 @@ function onOK()
       }
     } else {
       url = getNormalizedURL(gFld_URL.value);
-      rSource = BMDS.createBookmark(gFld_Name.value, url, null, null, gBookmarkCharset);
+      rSource = BMDS.createBookmark(gFld_Name.value, url, null, null, gBookmarkCharset, false);
       if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
         window.arguments[5].newBookmark = rSource;
       }

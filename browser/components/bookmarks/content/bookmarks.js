@@ -1464,10 +1464,11 @@ var BookmarksUtils = {
   },
 
   // should update the caller, aShowDialog is no more necessary
-  addBookmark: function (aURL, aTitle, aCharset)
+  addBookmark: function (aURL, aTitle, aCharset, aIsWebPanel)
   {
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-               "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharset);
+               "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharset,
+               null, null, aIsWebPanel);
   },
 
   getBrowserTargetFromEvent: function (aEvent)
