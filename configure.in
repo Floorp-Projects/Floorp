@@ -1989,9 +1989,9 @@ then
   exit 1
 fi
 
-MOZ_ARG_ENABLE_BOOL(mail-compose,
-[  --enable-mail-compose   Enable old Messenger mail composer],
-  [ MOZ_MAIL_COMPOSE=1 MOZ_EDITOR=1 ])
+dnl MOZ_ARG_ENABLE_BOOL(mail-compose,
+dnl [  --enable-mail-compose   Enable old Messenger mail composer],
+dnl  [ MOZ_MAIL_COMPOSE=1 MOZ_EDITOR=1 ])
 
 dnl The new mail app is "smart-mail"
 dnl MOZ_ARG_ENABLE_BOOL(smart-mail,
