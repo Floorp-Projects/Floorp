@@ -4,8 +4,17 @@
 #include "globals.h"
 #include "NewConfigDialog.h"
 #include "NewDialog.h"
+//#include <stdio.h>
+//#include <string.h>
+//#include <stdlib.h>
+#include <iostream.h>
+#include <fstream.h>
+//#include <windows.h>
+//#include <ctype.h>
 
 CString DlgTitle = "";
+CString rootpath = GetGlobal("Root");
+CString Clist = GetGlobal("CustomizationList");
 
 extern "C" __declspec(dllexport)
 void NewNCIDialog(CString parms, WIDGET* curWidget)
@@ -34,11 +43,7 @@ BOOL Config(CString globalsName, CString DialogTitle, WIDGET* curWidget)
 		DlgTitle = "";
 	newDlg.DoModal();
 	CString configField = newDlg.GetConfigName();
-
-	CString rootpath = GetGlobal("Root");
-
 	CString newDir = rootpath + "Configs\\" ;
-	CString Clist = GetGlobal("CustomizationList");
 	newDir += configField;
 	CString Template = rootpath + "WSTemplate" ;
 	CString FooCopy = rootpath + "Configs\\";
@@ -88,5 +93,32 @@ BOOL CopyConfig(CString configname, WIDGET* curWidget)
 	if(!Config(configname,"Create a Copy",curWidget))
 		return FALSE;
 	else
+		return TRUE;
+}
+extern "C" __declspec(dllexport)
+BOOL CreateJSFile(void)
+{
+	CString JSFile = rootpath + "Configs\\" + Clist +"\\Workspace\\Isetup\\prefs.js";
+
+	ofstream myout(JSFile);
+
+	if(!myout) 
+	{
+		cout << "cannot open the file \n";
+	}
+		char* attribArray[MAX_SIZE];
+		int k =GetAttrib("Pref", attribArray);
+	//	CString prefValue;
+		int g= 0;
+		while(g<k)
+		{
+	//		AfxMessageBox(bg,MB_OK);
+			myout<< "defaultPref(\"" << attribArray[g] << "\", " <<GetGlobal(attribArray[g])<<");\n";
+			g++;
+		}
+
+	//	myout<< "defaultPref(\"" << prefname << "\", " <<GetGlobal(prefname) <<");\n";
+	//	cout << prefname << " is not found \n";
+		myout.close();
 		return TRUE;
 }

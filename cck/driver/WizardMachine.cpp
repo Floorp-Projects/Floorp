@@ -1273,6 +1273,9 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 	GetPrivateProfileString(iniSection, "Type", "", buffer, MAX_SIZE, iniFile);
 	aWidget->type = buffer;
 
+	GetPrivateProfileString(iniSection, "Attrib", "", buffer, MAX_SIZE, iniFile);
+	aWidget->attrib = buffer;
+
 	GetPrivateProfileString(iniSection, "Options", "", buffer, MAX_SIZE, iniFile);
 	aWidget->items = buffer;
 
