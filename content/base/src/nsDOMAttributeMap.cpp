@@ -74,7 +74,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMAttributeMap)
 NS_IMPL_RELEASE(nsDOMAttributeMap)
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
                                 nsIDOMNode** aAttribute)
 {
@@ -105,7 +105,7 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -125,6 +125,16 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 
     if (!attribute) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
+    nsCOMPtr<nsIDOMElement> owner;
+    attribute->GetOwnerElement(getter_AddRefs(owner));
+    if (owner) {
+      nsCOMPtr<nsISupports> ownerSupports = do_QueryInterface(owner);
+      nsCOMPtr<nsISupports> thisSupports = do_QueryInterface(mContent);
+      if (ownerSupports != thisSupports) {
+        return NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR;
+      }
     }
 
     nsAutoString name, value;
@@ -155,6 +165,12 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
     attribute->GetValue(value);
 
     rv = mContent->SetAttr(ni, value, PR_TRUE);
+
+    // Not all attributes implement nsIAttribute.
+    nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aNode);
+    if (attr) {
+      attr->SetContent(mContent);
+    }
   }
 
   return rv;
@@ -202,7 +218,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
 }
 
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -258,7 +274,7 @@ nsDOMAttributeMap::GetLength(PRUint32 *aLength)
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
                                   const nsAString& aLocalName,
                                   nsIDOMNode** aReturn)
@@ -309,7 +325,7 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -327,10 +343,19 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
 
+    nsCOMPtr<nsIDOMElement> owner;
+    attribute->GetOwnerElement(getter_AddRefs(owner));
+    if (owner) {
+      nsCOMPtr<nsISupports> ownerSupports = do_QueryInterface(owner);
+      nsCOMPtr<nsISupports> thisSupports = do_QueryInterface(mContent);
+      if (ownerSupports != thisSupports) {
+        return NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR;
+      }
+    }
+
     nsAutoString name, nsURI, value;
 
     attribute->GetName(name);
-    attribute->GetPrefix(name);
     attribute->GetNamespaceURI(nsURI);
 
     nsCOMPtr<nsINodeInfo> ni;
@@ -364,12 +389,18 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
     attribute->GetValue(value);
 
     rv = mContent->SetAttr(ni, value, PR_TRUE);
+
+    // Not all attributes implement nsIAttribute.
+    nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aArg);
+    if (attr) {
+      attr->SetContent(mContent);
+    }
   }
 
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
                                      const nsAString& aLocalName,
                                      nsIDOMNode** aReturn)
