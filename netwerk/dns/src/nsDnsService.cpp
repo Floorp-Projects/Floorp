@@ -1279,7 +1279,7 @@ nsDNSService::Run()
         DispatchMessage(&msg);
     }
 
-    return rv;
+    return NS_OK;
 }
 
 #endif
