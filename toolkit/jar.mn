@@ -49,3 +49,7 @@ en-US.jar:
 +        locale/en-US/global/about.xhtml                    (locale/about.xhtml)
 +        locale/en-US/global/customizeToolbar.dtd           (locale/customizeToolbar.dtd)
 +        locale/en-US/global/customizeToolbar.properties    (locale/customizeToolbar.properties)
++        locale/en-US/global/dialog.properties              (locale/widgets/dialog.properties)
++        locale/en-US/global/tabbrowser.properties          (locale/widgets/tabbrowser.properties)
++        locale/en-US/global/tabbrowser.dtd                 (locale/widgets/tabbrowser.dtd)
++        locale/en-US/global/textcontext.dtd                (locale/widgets/textcontext.dtd)
