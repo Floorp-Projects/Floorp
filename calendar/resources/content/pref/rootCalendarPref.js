@@ -101,7 +101,7 @@ function calendarPreferences( CalendarWindow )
    getBoolPref( this.calendarPref, "servers.reloadonlaunch", categoriesStringBundle.GetStringFromName("reloadServersOnLaunch" ) );
    getBoolPref( this.calendarPref, "alarms.show", categoriesStringBundle.GetStringFromName("showAlarms" ) );
    getBoolPref( this.calendarPref, "alarms.playsound", categoriesStringBundle.GetStringFromName("playAlarmSound" ) );
-   getCharPref( this.calendarPref, "categories.names", getDefaultCategories() );
+   GetUnicharPref( this.calendarPref, "categories.names", getDefaultCategories() );
    getCharPref( this.calendarPref, "timezone.default", categoriesStringBundle.GetStringFromName("defaultzone"));
    getIntPref( this.calendarPref, "event.defaultlength", categoriesStringBundle.GetStringFromName("defaultEventLength" ) );
    getIntPref( this.calendarPref, "alarms.defaultsnoozelength", categoriesStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );

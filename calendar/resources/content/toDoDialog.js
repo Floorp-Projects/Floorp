@@ -135,7 +135,7 @@ function loadCalendarToDoDialog()
 
 
    // Load categories
-   var categoriesString = opener.getCharPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "categories.names", getDefaultCategories() );
+   var categoriesString = opener.GetUnicharPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "categories.names", getDefaultCategories() );
    var categoriesList = categoriesString.split( "," );
    
    // insert the category already in the task so it doesn't get lost

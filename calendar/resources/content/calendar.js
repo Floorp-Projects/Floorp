@@ -1370,6 +1370,7 @@ function GetUnicharPref(prefObj, prefName, defaultValue)
     }
     catch(e)
     {
+      SetUnicharPref(prefObj, prefName, defaultValue);
         return defaultValue;
     }
 }
