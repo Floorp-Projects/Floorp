@@ -1469,7 +1469,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
   if(rv != NS_OK)
   {
-	// we have not been able to load a plugin because we have not determined the mimetype
+    if(aMimeType) // we could not find a plugin
+      return rv;
+
+	  // we have not been able to load a plugin because we have not determined the mimetype
     if (aURL)
     {
       //we need to stream in enough to get the mime type...
