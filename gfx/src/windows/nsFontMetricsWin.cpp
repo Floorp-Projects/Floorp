@@ -2176,6 +2176,9 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
   return nsnull;
 }
 
+// XXX perf: also sync a static global map of missing chars, and check the
+// map to see if we can skip the lookup in FindGlobalFont(), and remember
+// to clear the map in UpdateFontList() when new fonts are installed
 nsFontWin*
 nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
 {
@@ -2212,18 +2215,24 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
   // The first unicode font (no converter) that has the
   // replacement char is taken and placed as the substitute font.
 
-  int count = mLoadedFonts.Count();
-  for (int i = 0; i < count; ++i) {
+  // Try local/loaded fonts first
+  int i, count = mLoadedFonts.Count();
+  for (i = 0; i < count; ++i) {
     nsAutoString name;
     nsFontWin* font = (nsFontWin*)mLoadedFonts[i];
     HFONT oldFont = (HFONT)::SelectObject(aDC, font->mFont);
     eGetNameError res = GetNAME(aDC, &name);
     ::SelectObject(aDC, oldFont);
-    if (res != eGetName_OK) {
-      continue;
+    if (res == eGetName_OK) { // TrueType font
+      nsFontInfo* info = (nsFontInfo*)PL_HashTableLookup(gFontMaps, &name);
+      if (!info || info->mType != eFontType_Unicode) {
+        continue;
+      }
     }
-    nsFontInfo* info = (nsFontInfo*)PL_HashTableLookup(gFontMaps, &name);
-    if (!info || info->mType != eFontType_Unicode) {
+    else if (res == eGetName_GDIError) { // Bitmap font
+      // alright, was treated as unicode font in GetCCMAP()
+    }
+    else {
       continue;
     }
     if (font->HasGlyph(NS_REPLACEMENT_CHAR)) {
@@ -2232,6 +2241,27 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
       // (Because this is a unicode font, those glyphs should in principle be there.)
       name.AssignWithConversion(font->mName);
       font = LoadSubstituteFont(aDC, &name);
+      if (font) {
+        ((nsFontWinSubstitute*)font)->SetRepresentable(c);
+        mSubstituteFont = font;
+        return font;
+      }
+    }
+  }
+
+  // Try global fonts
+  // Since we reach here after FindGlobalFont() is called, we have already
+  // scanned the global list of fonts and have set the attributes of interest
+  count = gGlobalFonts->Count();
+  for (i = 0; i < count; ++i) {
+    nsGlobalFont* globalFont = (nsGlobalFont*)gGlobalFonts->ElementAt(i);
+    if (!globalFont->ccmap || 
+        globalFont->flags & NS_GLOBALFONT_SKIP ||
+        globalFont->fonttype != eFontType_Unicode) {
+      continue;
+    }
+    if (CCMAP_HAS_CHAR(globalFont->ccmap, NS_REPLACEMENT_CHAR)) {
+      nsFontWin* font = LoadSubstituteFont(aDC, &globalFont->name);
       if (font) {
         ((nsFontWinSubstitute*)font)->SetRepresentable(c);
         mSubstituteFont = font;
@@ -4618,8 +4648,9 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
     return ((nsFontWinA*)mSubstituteFont)->mSubsets[0];
   }
 
-  int count = mLoadedFonts.Count();
-  for (int i = 0; i < count; ++i) {
+  // Try local/loaded fonts first
+  int i, count = mLoadedFonts.Count();
+  for (i = 0; i < count; ++i) {
     nsFontWinA* font = (nsFontWinA*)mLoadedFonts[i];
     if (font->HasGlyph(NS_REPLACEMENT_CHAR)) {
       nsFontSubset* subset = font->FindSubset(aDC, NS_REPLACEMENT_CHAR, this);
@@ -4637,6 +4668,48 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
             return substituteSubset;
           }
           mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
+          delete substituteFont;
+        }
+      }
+    }
+  }
+
+  // Try global fonts
+  // Since we reach here after FindGlobalFont() is called, we have already
+  // scanned the global list of fonts and have set the attributes of interest
+  count = gGlobalFonts->Count();
+  for (i = 0; i < count; ++i) {
+    nsGlobalFont* globalFont = (nsGlobalFont*)gGlobalFonts->ElementAt(i);
+    if (!globalFont->ccmap || 
+        globalFont->flags & NS_GLOBALFONT_SKIP) {
+      continue;
+    }
+    if (CCMAP_HAS_CHAR(globalFont->ccmap, NS_REPLACEMENT_CHAR)) {
+      // to find out the subset of interest, we will load this font for a moment
+      BYTE charset = DEFAULT_CHARSET;
+      nsFontWinA* font = (nsFontWinA*)LoadGlobalFont(aDC, globalFont);
+      if (!font) {
+        globalFont->flags |= NS_GLOBALFONT_SKIP;
+        continue;
+      }
+      nsFontSubset* subset = font->FindSubset(aDC, NS_REPLACEMENT_CHAR, this);
+      if (subset) {
+        charset = subset->mCharset;
+      }
+      mLoadedFonts.RemoveElement(font);
+      delete font;
+      if (charset != DEFAULT_CHARSET) {
+        // make a substitute font now
+        nsFontWinSubstituteA* substituteFont = (nsFontWinSubstituteA*)LoadSubstituteFont(aDC, &globalFont->name);
+        if (substituteFont) {
+          nsFontSubset* substituteSubset = substituteFont->mSubsets[0];
+          substituteSubset->mCharset = charset;
+          if (substituteSubset->Load(aDC, this, substituteFont)) {
+            substituteFont->SetRepresentable(aChar);
+            mSubstituteFont = (nsFontWin*)substituteFont;
+            return substituteSubset;
+          }
+          mLoadedFonts.RemoveElement(substituteFont);
           delete substituteFont;
         }
       }
