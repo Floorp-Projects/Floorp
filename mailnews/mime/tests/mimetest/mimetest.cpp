@@ -244,8 +244,8 @@ ConsoleOutputStreamListener::DoIndent()
   if (mIndentCount <= 1)
     return NS_OK;
 
-  //for (PRUint32 j=0; j<(PRUint32) ((mIndentCount-1)*TAB_SPACES); j++)
-  //  PR_Write(PR_GetSpecialFD(PR_StandardOutput), " ", 1);
+  for (PRUint32 j=0; j<(PRUint32) ((mIndentCount-1)*TAB_SPACES); j++)
+    PR_Write(PR_GetSpecialFD(PR_StandardOutput), " ", 1);
   return NS_OK;
 }
 
