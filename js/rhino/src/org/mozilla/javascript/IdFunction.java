@@ -60,34 +60,14 @@ public class IdFunction extends BaseFunction
         return this.tag == tag;
     }
 
-    public static void define(Scriptable scope, String name,
-                              IdFunctionMaster master, int id)
+    public final int getMethodId()
     {
-        define(scope, name, master, id, ScriptableObject.DONTENUM, false);
+        return methodId;
     }
 
-    public static void define(Scriptable scope, String name,
-                              IdFunctionMaster master, int id,
-                              int attributes)
+    public final void enableConstructorUsage()
     {
-        define(scope, name, master, id, attributes, false);
-    }
-
-    public static void define(Scriptable scope, String name,
-                              IdFunctionMaster master, int id,
-                              int attributes, boolean seal)
-    {
-        IdFunction f = new IdFunction(master, name, id);
-        f.defineAsScopeProperty(scope, attributes, seal);
-    }
-
-    public static void defineConstructor(Scriptable scope, String name,
-                                         IdFunctionMaster master, int id,
-                                         int attributes, boolean seal)
-    {
-        IdFunction f = new IdFunction(master, name, id);
-        f.useCallAsConstructor = true;
-        f.defineAsScopeProperty(scope, attributes, seal);
+        useCallAsConstructor = true;
     }
 
     public final void defineAsScopeProperty(Scriptable scope, boolean seal)
@@ -101,11 +81,6 @@ public class IdFunction extends BaseFunction
         setParentScope(scope);
         if (seal) { sealObject(); }
         ScriptableObject.defineProperty(scope, functionName, this, attributes);
-    }
-
-    public final int getMethodId()
-    {
-        return methodId;
     }
 
     public Scriptable getPrototype()

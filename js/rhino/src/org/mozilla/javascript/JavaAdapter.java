@@ -168,8 +168,9 @@ public final class JavaAdapter implements IdFunctionMaster
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         JavaAdapter obj = new JavaAdapter();
-        new IdFunction(FTAG, obj, "JavaAdapter", Id_JavaAdapter)
-            .defineAsScopeProperty(scope, sealed);
+        IdFunction f = new IdFunction(FTAG, obj, "JavaAdapter", Id_JavaAdapter);
+        f.enableConstructorUsage();
+        f.defineAsScopeProperty(scope, sealed);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
