@@ -49,8 +49,8 @@
 #include "nsEditorCommands.h"
 
 
-#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
-#define STATE_ENABLED  NS_ConvertASCIItoUCS2("state_enabled")
+#define COMMAND_NAME   NS_LITERAL_STRING("cmd_name")
+#define STATE_ENABLED  NS_LITERAL_STRING("state_enabled")
 
 
 nsBaseEditorCommand::nsBaseEditorCommand()

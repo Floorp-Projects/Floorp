@@ -67,13 +67,13 @@ nsresult GetListItemState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **_retva
 
 
 //defines
-#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
-#define STATE_ENABLED  NS_ConvertASCIItoUCS2("state_enabled")
-#define STATE_ALL NS_ConvertASCIItoUCS2("state_all")
-#define STATE_ATTRIBUTE NS_ConvertASCIItoUCS2("state_attribute")
-#define STATE_BEGIN NS_ConvertASCIItoUCS2("state_begin")
-#define STATE_END NS_ConvertASCIItoUCS2("state_end")
-#define STATE_MIXED NS_ConvertASCIItoUCS2("state_mixed")
+#define COMMAND_NAME    NS_LITERAL_STRING("cmd_name")
+#define STATE_ENABLED   NS_LITERAL_STRING("state_enabled")
+#define STATE_ALL       NS_LITERAL_STRING("state_all")
+#define STATE_ATTRIBUTE NS_LITERAL_STRING("state_attribute")
+#define STATE_BEGIN     NS_LITERAL_STRING("state_begin")
+#define STATE_END       NS_LITERAL_STRING("state_end")
+#define STATE_MIXED     NS_LITERAL_STRING("state_mixed")
 
 
 
