@@ -4413,6 +4413,11 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
                                              aAction,
                                            EditAggregateTxn    *aTxn)
 {
+  // We haven't implemented these three modes yet:
+  if (aAction == eDeleteNextWord || aAction == eDeletePreviousWord
+      || aAction == eDeleteToEndOfLine)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
   nsCOMPtr<nsIDOMNode> node;
   PRBool isFirst;
   PRBool isLast;

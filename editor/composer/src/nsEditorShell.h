@@ -126,6 +126,7 @@ class nsEditorShell :   public nsIEditorShell,
     NS_IMETHOD 			DoEditorMode(nsIWebShell *aWebShell);
     NS_IMETHOD	 		ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
+    NS_IMETHOD			ScrollSelectionIntoView();
     NS_IMETHOD      TransferDocumentStateListeners();
     NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);

@@ -266,6 +266,15 @@ interface nsIEditorShell : nsISupports
     */
   void DeleteElement(in nsIDOMElement element);
 
+  /** 
+    * Deletion methods which need to be accessible to JS:
+    */
+  void DeleteCharForward();
+  void DeleteCharBackward();
+  void DeleteWordForward();
+  void DeleteWordBackward();
+  void DeleteToEndOfLine();
+
   void SelectElement(in nsIDOMElement element);
   void SetSelectionAfterElement(in nsIDOMElement element);
 
