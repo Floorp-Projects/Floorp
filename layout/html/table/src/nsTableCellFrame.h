@@ -310,12 +310,6 @@ inline void nsTableCellFrame::SetPass1DesiredSize(const nsHTMLReflowMetrics & aD
 inline nsSize nsTableCellFrame::GetPass1MaxElementSize() const
 { return mPass1MaxElementSize; }
 
-inline void nsTableCellFrame::SetPass1MaxElementSize(const nsSize & aMaxElementSize)
-{ 
-  mPass1MaxElementSize.width = aMaxElementSize.width;
-  mPass1MaxElementSize.height = aMaxElementSize.height;
-}
-
 inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
 {
   if (mCalculated == NS_OK)
