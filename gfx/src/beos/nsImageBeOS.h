@@ -42,7 +42,7 @@
 #include "nsIImage.h"
 #include "nsPoint.h"
 class BBitmap;
-
+class BView;
 class nsImageBeOS : public nsIImage
 {
 public:

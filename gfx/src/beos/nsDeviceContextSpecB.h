@@ -43,14 +43,18 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecB.h" 
 #include "nsVoidArray.h"
-#include "nsIDeviceContextSpecPS.h" 
+#ifdef USE_POSTSCRIPT
+#include "nsIDeviceContextSpecPS.h"
+#endif /* USE_POSTSCRIPT */
 #include "nsIPrintSettings.h" 
 #include "nsIPrintOptions.h" 
  
 #include "nsPrintdBeOS.h" 
  
-class nsDeviceContextSpecBeOS : public nsIDeviceContextSpec , 
-                                public nsIDeviceContextSpecPS 
+class nsDeviceContextSpecBeOS : public nsIDeviceContextSpec
+#ifdef USE_POSTSCRIPT
+                              , public nsIDeviceContextSpecPS 
+#endif
 {
 public:
 /**

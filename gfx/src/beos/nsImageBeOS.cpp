@@ -42,6 +42,7 @@
 #include "imgScaler.h"
 #include <Looper.h>
 #include <Bitmap.h>
+#include <View.h>
 
 NS_IMPL_ISUPPORTS1(nsImageBeOS, nsIImage)
 

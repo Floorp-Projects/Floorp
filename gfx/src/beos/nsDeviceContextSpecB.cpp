@@ -105,7 +105,9 @@ nsDeviceContextSpecBeOS :: ~nsDeviceContextSpecBeOS()
 } 
  
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID); 
+#ifdef USE_POSTSCRIPT
 static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID); 
+#endif /* USE_POSTSCRIPT */
  
 #if 0 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecBeOS, nsIDeviceContextSpec)
@@ -124,6 +126,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aI
     return NS_OK; 
   } 
  
+#ifdef USE_POSTSCRIPT
   if (aIID.Equals(kIDeviceContextSpecPSIID)) 
   { 
     nsIDeviceContextSpecPS* tmp = this; 
@@ -131,6 +134,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aI
     NS_ADDREF_THIS(); 
     return NS_OK; 
   }
+#endif /* USE_POSTSCRIPT */
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -586,11 +590,13 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   mGlobalPrinterList = new nsStringArray();
   if (!mGlobalPrinterList) 
     return NS_ERROR_OUT_OF_MEMORY;
-      
+
+#ifdef USE_POSTSCRIPT      
   /* add an entry for the default printer (see nsPostScriptObj.cpp) */
   mGlobalPrinterList->AppendString(
     nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
   mGlobalNumPrinters++;
+#endif /* USE_POSTSCRIPT */
 
   /* get the list of printers */
   char *printerList = nsnull;
@@ -614,7 +620,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     printerList = strdup(printerList);
     if (!printerList)
       return NS_ERROR_OUT_OF_MEMORY;    
-    
+
+#ifdef USE_POSTSCRIPT    
     for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
          name != nsnull ; 
          name = PL_strtok_r(nsnull, " ", &tok_lasts) )
@@ -624,7 +631,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
         nsString(NS_ConvertASCIItoUCS2(name)));
       mGlobalNumPrinters++;      
     }
-    
+#endif /* USE_POSTSCRIPT */
+
     free(printerList);
   }
       
