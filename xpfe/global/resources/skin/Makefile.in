@@ -32,7 +32,12 @@ else
 DIRS		= unix
 endif
 
-EXPORT_RESOURCE_CONTENT = \
+CHROME_DIR=global
+CHROME_SKIN_DIR=skin
+
+CHROME_TYPE=skin
+
+CHROME_SKIN = \
 		$(srcdir)/box.css \
 		$(srcdir)/button.css \
 		$(srcdir)/checkbox.css \
@@ -150,12 +155,11 @@ EXPORT_RESOURCE_CONTENT = \
 
 EXPORT_CHROME	= $(srcdir)/xul.css \
 		$(srcdir)/htmlBindings.xml \
-                $(srcdir)/xulBindings.xml \
-                $(srcdir)/menulistBindings.xml \
-                $(NULL)
+		$(srcdir)/xulBindings.xml \
+		$(srcdir)/menulistBindings.xml \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/global/skin
 	$(INSTALL) $(EXPORT_CHROME) $(DIST)/bin/chrome

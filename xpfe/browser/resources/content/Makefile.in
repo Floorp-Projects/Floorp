@@ -26,7 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT := \
+CHROME_DIR=navigator
+CHROME_CONTENT_DIR=content
+CHROME_TYPE=content
+
+CHROME_CONTENT = \
 	nsContextMenu.js \
 	tooltip.js \
 	openLocation.js \
@@ -41,10 +45,5 @@ EXPORT_RESOURCE_CONTENT := \
 	NetSupportConfirmCheckYN.xul \
 	$(NULL)
 
-EXPORT_RESOURCE_CONTENT := $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_CONTENT))
-
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/content
 
