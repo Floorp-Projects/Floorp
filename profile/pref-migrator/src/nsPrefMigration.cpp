@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *	 Don Bragg <dbragg@netscape.com>
+ *   Don Bragg <dbragg@netscape.com>
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
@@ -131,6 +131,9 @@
 #define NEWS_SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies.txt"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmark.htm"
+// purposely not defined, since it was in the right place
+// and with the right name in 4.x
+//#define POPSTATE_FILE_IN_4x "popstate.dat"
 #define PSM_CERT7_DB "cert7.db"
 #define PSM_KEY3_DB "key3.db"
 #define PSM_SECMODULE_DB "secmod.db"
@@ -1158,7 +1161,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
 #endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
 
-  if(serverType == IMAP_4X_MAIL_TYPE) {
+  if (serverType == IMAP_4X_MAIL_TYPE) {
     if( copyMailFileInMigration )  // copy mail files in migration
     {
     rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
@@ -1169,22 +1172,41 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     else  // Copy & Rename filter files
     {
       // IMAP path
-      rv = DoTheCopyAndRename(oldIMAPMailPath, PR_TRUE, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
-      // if (NS_FAILED(rv)) return rv;  // don't care it
+      // don't care if this fails
+      (void)DoTheCopyAndRename(oldIMAPMailPath, PR_TRUE, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
       
       // Local Folders path
-      rv = DoTheCopyAndRename(oldIMAPLocalMailPath, PR_TRUE, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
-      // if (NS_FAILED(rv)) return rv;  // don't care it
+      // don't care if this fails
+      (void)DoTheCopyAndRename(oldIMAPLocalMailPath, PR_TRUE, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     }
   }
   else if (serverType == POP_4X_MAIL_TYPE) {
-    // we take care of the POP filter file later, in DoSpecialUpdates()
+    // fix for bug #202010
+    // copy over the pop filter and popstate files now
+    // and later, in DoSpecialUpdates()
+    // we'll move and rename them
+#ifdef POP_MAIL_FILTER_FILE_NAME_IN_4x
+    rv = DoTheCopy(oldProfilePath, newProfilePath, POP_MAIL_FILTER_FILE_NAME_IN_4x);
+    if (NS_FAILED(rv)) return rv;
+#endif
+    
+#ifdef POPSTATE_FILE_IN_4x 
+    rv = DoTheCopy(oldProfilePath, newProfilePath, POPSTATE_FILE_IN_4x);
+    if (NS_FAILED(rv)) return rv;
+#endif
+    
     rv = DoTheCopy(oldPOPMailPath, newPOPMailPath, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
   }
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
-    // we take care of the filter file later, in DoSpecialUpdates()
+    // in 4.x, the movemail filter name was the same as the pop filter name
+    // copy over the filter file now
+    // and later, in DoSpecialUpdates()
+    // we'll move and rename them
+    rv = DoTheCopy(oldProfilePath, newProfilePath, POP_MAIL_FILTER_FILE_NAME_IN_4x);
+    if (NS_FAILED(rv)) return rv;
+    
     rv = DoTheCopy(oldMOVEMAILMailPath, newMOVEMAILMailPath, PR_TRUE);
   }
 #endif /* HAVE_MOVEMAIL */
@@ -1197,7 +1219,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   // The cache pref later gets set with a default in nsAppRunner::InitCachePrefs().
   m_prefs->ClearUserPref(PREF_BROWSER_CACHE_DIRECTORY);
 
-  rv=DoSpecialUpdates(newProfilePath);
+  rv = DoSpecialUpdates(newProfilePath);
   if (NS_FAILED(rv)) return rv;
   PR_FREEIF(popServerName);
 
@@ -1997,29 +2019,28 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
 nsresult
 nsPrefMigration::RenameAndMove4xPopFilterFile(nsIFileSpec * profilePath)
 {
-	return RenameAndMove4xPopFile(profilePath, POP_MAIL_FILTER_FILE_NAME_IN_4x, POP_MAIL_FILTER_FILE_NAME_IN_5x);
+  return RenameAndMove4xPopFile(profilePath, POP_MAIL_FILTER_FILE_NAME_IN_4x, POP_MAIL_FILTER_FILE_NAME_IN_5x);
 }
 
 nsresult
 nsPrefMigration::RenameAndMove4xPopStateFile(nsIFileSpec * profilePath)
 {
 #ifdef POPSTATE_FILE_IN_4x
-	return RenameAndMove4xPopFile(profilePath, POPSTATE_FILE_IN_4x, POPSTATE_FILE_IN_5x);
+  return RenameAndMove4xPopFile(profilePath, POPSTATE_FILE_IN_4x, POPSTATE_FILE_IN_5x);
 #else 
-	// on windows, popstate.dat was in Users\<profile>\MAIL\popstate.dat
-	// which is the right place, unlike windows and mac.
-	// so, when we migrate Users\<profile>\Mail to Users50\<profile>\Mail\<hostname>
-	// it just works
-	return NS_OK;
+  // on windows, popstate.dat was in Users\<profile>\MAIL\popstate.dat
+  // which is the right place, unlike linux and mac.
+  // so, when we migrate Users\<profile>\Mail to Users50\<profile>\Mail\<hostname>
+  // it just works
+  return NS_OK;
 #endif /* POPSTATE_FILE_IN_4x */
 }
 
 nsresult
 nsPrefMigration::RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *fileNameIn4x, const char *fileNameIn5x)
 {
-  nsresult rv = NS_OK;
   nsFileSpec file;
-  rv = profilePath->GetFileSpec(&file);
+  nsresult rv = profilePath->GetFileSpec(&file);
   if (NS_FAILED(rv)) return rv;
   
   // we assume the 4.x pop files live at <profile>/<fileNameIn4x>
@@ -2037,6 +2058,9 @@ nsPrefMigration::RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *f
   // copy the 4.x file from <profile>/<fileNameIn4x> to the <profile>/Mail/<hostname>/<fileNameIn4x>
   rv = file.CopyToDir(migratedPopDirectory);
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to copy pop file");
+  
+  // XXX todo, delete the old file
+  // we are leaving it behind
   
   // make migratedPopDirectory point the the copied filter file,
   // <profile>/Mail/<hostname>/<fileNameIn4x>
