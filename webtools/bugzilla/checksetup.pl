@@ -709,7 +709,7 @@ $table{bugs} =
     product varchar(64) not null,
     rep_platform enum($my_platforms),
     reporter mediumint not null,
-    version varchar(16) not null,
+    version varchar(64) not null,
     component varchar(50) not null,
     resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME", "MOVED") not null,
     target_milestone varchar(20) not null default "---",
@@ -2183,6 +2183,10 @@ if (-d 'shadow') {
 }
 DropField("profiles", "emailnotification");
 DropField("profiles", "newemailtech");
+
+# 2001-06-15 kiko@async.com.br - Change bug:version size to avoid
+# truncates re http://bugzilla.mozilla.org/show_bug.cgi?id=9352
+ChangeFieldType('bugs', 'version','varchar(64) not null');
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
