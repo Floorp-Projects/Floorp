@@ -110,7 +110,7 @@ Rights Reserved.
 				<menuitem value="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
 				<menu id="menu_New">
 					<menupopup id="menu_NewPopup">
-						<menuitem value="&newListCmd.label;" accesskey="&newListCmd.accesskey;" disabled="true" oncommand="AbNewList()"/>
+						<menuitem value="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList()"/>
 						<menuitem value="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
 						<menuitem value="&newDirectoryCmd.label;" accesskey="&newDirectoryCmd.accesskey;" disabled="true" oncommand="AbNewDirectoryt()"/>
 						<menuseparator/>
@@ -223,7 +223,7 @@ Rights Reserved.
 		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
 			<box id="toolbar_button_box">
 				<button class="button-toolbar-2 top" orient="vertical" id="button-newcard" value="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" onclick="AbNewCard()"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-newlist" value="&newlistButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" onclick="AbNewList()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-newlist" value="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" onclick="AbNewList()"/>
             	<toolbarseparator/>
 				<button class="button-toolbar-2 top" orient="vertical" id="button-editcard" value="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" onclick="AbEditCard()"/>
 				<button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" value="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" onclick="AbNewMessage()"/>

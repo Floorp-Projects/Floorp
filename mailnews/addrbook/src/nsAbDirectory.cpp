@@ -372,6 +372,7 @@ NS_IMETHODIMP nsAbDirectory::CreateNewMailingList(const char* uri, nsIAbDirector
 	if (NS_SUCCEEDED(rv) && newList)
 	{
 		newList->CopyMailList(list);
+		AddMailListToDirectory(newList);
 		NotifyItemAdded(newList);
 		return rv;
 	}
@@ -462,6 +463,9 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 							nsCOMPtr<nsIRDFResource> listResource;
 							rv = rdfService->GetResource(listUri, getter_AddRefs(listResource));
 							nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(listResource);
+							if (m_AddressList)
+								m_AddressList->RemoveElement(listDir);
+							rv = mSubDirectories->RemoveElement(listDir);
 							if (listDir)
 								NotifyItemDeleted(listDir);
 							PR_smprintf_free(listUri);
@@ -588,6 +592,10 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 
 				if (NS_SUCCEEDED(rv))
 					database->Commit(kLargeCommit);
+
+				if (m_AddressList)
+					m_AddressList->RemoveElement(directory);
+				rv = mSubDirectories->RemoveElement(directory);
 
 				NotifyItemDeleted(directory);
 			}

@@ -208,7 +208,8 @@ function DropOnDirectoryTree(event)
 		{
 			var cardResource = rdf.GetResource(sourceID);
 			var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-			card.dropCardToDatabase(targetID);
+			if (card.isMailList == false)
+				card.dropCardToDatabase(targetID);
 		}
 	}
 

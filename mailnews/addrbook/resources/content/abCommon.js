@@ -530,7 +530,6 @@ function UpdateSortIndicator(column,sortDirection)
 
 function AbNewList()
 {
-	return;
 	var selectedAB = 0;
 	if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
 		selectedAB = dirTree.selectedItems[0].getAttribute('id');
@@ -544,6 +543,7 @@ function AbNewList()
 
 function goEditListDialog(abURI, listURI)
 {
+	return;
 	window.openDialog("chrome://messenger/content/addressbook/abEditListDialog.xul",
 					  "",
 					  "chrome,resizeable=no",

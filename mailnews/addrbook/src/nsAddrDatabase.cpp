@@ -274,6 +274,14 @@ NS_IMETHODIMP nsAddrDatabase::AddListener(nsIAddrDBListener *listener)
         if (!m_ChangeListeners) 
 			return NS_ERROR_OUT_OF_MEMORY;
     }
+	PRInt32 count = m_ChangeListeners->Count();
+	PRInt32 i;
+	for (i = 0; i < count; i++)
+	{
+		nsIAddrDBListener *dbListener = (nsIAddrDBListener *)m_ChangeListeners->ElementAt(i);
+		if (dbListener == listener)
+			return NS_OK;
+	}
 	return m_ChangeListeners->AppendElement(listener);
 }
 
@@ -1736,9 +1744,26 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 		NS_IF_ADDREF(pAddressLists);
 		PRUint32 count;
 		pAddressLists->Count(&count);
-		SetListAddressTotal(listRow, count);
 
-		PRUint32 i, pos;
+		PRUint32 i, total;
+		total = 0;
+		for (i = 0; i < count; i++)
+		{
+			nsISupports* pSupport = pAddressLists->ElementAt(i);
+			nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
+			
+			if (NS_FAILED(err))
+				continue;
+
+			PRUnichar *email = nsnull;
+			pCard->GetPrimaryEmail(&email);
+			PRInt32 emailLength = nsCRT::strlen(email);
+			if (email && emailLength)
+				total++;
+		}
+		SetListAddressTotal(listRow, total);
+
+		PRUint32 pos;
 		for (i = 0; i < count; i++)
 		{
 			nsISupports* pSupport = pAddressLists->ElementAt(i);
@@ -1747,7 +1772,11 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 			if (NS_FAILED(err))
 				continue;
 			pos = i + 1;
-			err = AddListCardColumnsToRow(pCard, listRow, pos);
+			PRUnichar *email = nsnull;
+			pCard->GetPrimaryEmail(&email);
+			PRInt32 emailLength = nsCRT::strlen(email);
+			if (email && emailLength)
+				err = AddListCardColumnsToRow(pCard, listRow, pos);
 		}
 	}
 	return NS_OK;

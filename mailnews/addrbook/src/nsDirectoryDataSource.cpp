@@ -556,6 +556,11 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 			return NS_RDF_NO_VALUE;
 		else
 		{
+			PRBool bIsMailList = PR_FALSE;
+			directory->GetIsMailList(&bIsMailList);
+			if (bIsMailList)
+				return NS_RDF_NO_VALUE;
+
 			PRUint32 i;
 			for (i = 0; i < total; i++)
 			{

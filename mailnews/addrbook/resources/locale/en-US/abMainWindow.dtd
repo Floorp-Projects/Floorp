@@ -27,7 +27,7 @@ Rights Reserved.
 <!ENTITY newCard.label						"New Address Book Card">
 <!-- LOCALIZATION NOTE (newCard.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newCard.accesskey					"n">  
-<!ENTITY newListCmd.label					".Mailing List">
+<!ENTITY newListCmd.label					"Mailing List">
 <!-- LOCALIZATION NOTE (newListCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newListCmd.accesskey				"l">  
 <!ENTITY newAddressBookCmd.label			"Address Book"> 
@@ -76,7 +76,7 @@ Rights Reserved.
 
 <!-- Toolbar items -->  
 <!ENTITY newcardButton.label "New Card">  
-<!ENTITY newlistButton.label ".New List">  
+<!ENTITY newlistButton.label "New List">  
 <!ENTITY editButton.label "Edit">  
 <!ENTITY newmsgButton.label "New Msg">  
 <!ENTITY deleteButton.label "Delete">  

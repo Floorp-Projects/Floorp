@@ -22,10 +22,11 @@
 top.MAX_RECIPIENTS = 1;
 var inputElementType = "";
 
+var mailList;
 var parentURI;
 var editList;
 
-function GetListValue(mailList)
+function GetListValue(mailList, doAdd)
 {
 	mailList.listName = document.getElementById('ListName').value;
 
@@ -41,19 +42,42 @@ function GetListValue(mailList)
 	mailList.description = document.getElementById('ListDescription').value;
 	
 	var i = 1;
+	var pos = 0;
 	while ((inputField = awGetInputElement(i)))
 	{
 	    fieldValue = inputField.value;
-	    if (fieldValue != "")
-	    {
+		if (doAdd)
 			var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
+		else
+			var cardproperty = mailList.addressLists.GetElementAt(pos);
+		if (cardproperty)
+		{
+			cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
 			if (cardproperty)
 			{
-				cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
-				if (cardproperty)
+				if (fieldValue != "")
 				{
-					cardproperty.primaryEmail = fieldValue
-					mailList.addressLists.AppendElement(cardproperty);
+					var beginpos = fieldValue.search('<');
+					var endpos = fieldValue.search('>');
+					if (beginpos != -1)
+					{
+						beginpos++;
+						var newValue = fieldValue.slice(beginpos, endpos);
+						cardproperty.primaryEmail = newValue;
+					}
+					else
+						cardproperty.primaryEmail = fieldValue;
+					if (doAdd)
+						mailList.addressLists.AppendElement(cardproperty);
+					pos++;
+				}
+				else
+				{
+					if (doAdd == false)
+					{
+						cardproperty.primaryEmail = fieldValue;
+						pos++;
+					}
 				}
 			}
 		}
@@ -76,10 +100,10 @@ function MailListOKButton()
 		// -----
 		
 		//Add mailing list to database
-		var mailList = Components.classes["component://netscape/addressbook/directoryproperty"].createInstance();
+		mailList = Components.classes["component://netscape/addressbook/directoryproperty"].createInstance();
 		mailList = mailList.QueryInterface(Components.interfaces.nsIAbDirectory);
 
-		if (GetListValue(mailList))
+		if (GetListValue(mailList, true))
 			mailList.addMailListToDatabase(uri);
 		else
 			return false;
@@ -128,10 +152,7 @@ function OnLoadMailList()
 function EditListOKButton()
 {
 	//Add mailing list to database
-
-	var parentURI = selectedAB.GetAttribute('id');
-
-	if (GetListValue(editList))
+	if (GetListValue(editList, false))
 	{
 		editList.editMailListToDatabase(parentURI);
 		return true;	// close the window
@@ -142,10 +163,9 @@ function EditListOKButton()
 
 function OnLoadEditList()
 {
-dump("***** OnLoadEditList\n");
 	doSetOKCancel(EditListOKButton, 0);
 	
-	parentUri  = window.arguments[0].abURI;
+	parentURI  = window.arguments[0].abURI;
 	var listUri  = window.arguments[0].listURI;
 
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
@@ -157,26 +177,53 @@ dump("***** OnLoadEditList\n");
 	document.getElementById('ListNickName').value = editList.listNickName;
 	document.getElementById('ListDescription').value = editList.description;
 
-	top.MAX_RECIPIENTS = 0;
-
 	var treeChildren = document.getElementById('addressList');
 	var newTreeChildrenNode = treeChildren.cloneNode(false);
-	var templateNode = treeChildren.firstChild;
+	var templateNode = treeChildren.firstChild;	
+	top.MAX_RECIPIENTS = 0;
 
 	if (editList.addressLists)
 	{
 		var total = editList.addressLists.Count();
+dump("*** editList.Count = "+total+"\n");
 		for ( var i = 0;  i < total; i++ )
 		{
 			var card = editList.addressLists.GetElementAt(i);
 			card = card.QueryInterface(Components.interfaces.nsIAbCard);
+			var address;
+			if (card.name.length)
+				address = card.name + " <" + card.primaryEmail + ">";
+			else
+				address = card.primaryEmail;
+			SetInputValue(address, newTreeChildrenNode, templateNode);
 		}
 	}
+
+    var parent = treeChildren.parentNode; 
+    parent.replaceChild(newTreeChildrenNode, treeChildren); 
 
 	// focus on first name
 	var listName = document.getElementById('ListName');
 	if ( listName )
 		listName.focus();
+}
+
+function SetInputValue(inputValue, parentNode, templateNode)
+{
+    top.MAX_RECIPIENTS++;
+
+    var newNode = templateNode.cloneNode(true);
+    parentNode.appendChild(newNode); // we need to insert the new node before we set the value of the select element!
+
+    var input = newNode.getElementsByTagName(awInputElementName());
+    if ( input && input.length == 1 )
+    {
+		//We need to set the value using both setAttribute and .value else we will
+		// loose the content when the field is not visible. See bug 37435
+	    input[0].setAttribute("value", inputValue);
+	    input[0].value = inputValue;
+	    input[0].setAttribute("id", "address#" + top.MAX_RECIPIENTS);
+	}
 }
 
 function awNotAnEmptyArea(event)
@@ -487,7 +534,14 @@ function DropOnAddressListTree(event)
 		if (card.isMailList)
 			DropListAddress(card.name); 
 		else
-			DropListAddress(card.primaryEmail); 
+		{
+			var address;
+			if (card.name.length)
+				address = card.name + " <" + card.primaryEmail + ">";
+			else
+				address = card.primaryEmail;
+			DropListAddress(address); 
+		}
 		
 	}
 
