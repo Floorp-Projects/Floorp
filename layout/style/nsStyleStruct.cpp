@@ -191,6 +191,15 @@ inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides,
                                aEnumTable, aNumEnums);
 }
 
+static PRBool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
+{
+  PRBool eq;
+  return aURI1 == aURI2 ||    // handle null==null, and optimize
+         (aURI1 && aURI2 &&
+          NS_SUCCEEDED(aURI1->Equals(aURI2, &eq)) && // not equal on fail
+          eq);
+}
+
 // --------------------
 // nsStyleFont
 //
@@ -717,7 +726,7 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
 nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
 {
   if (mListStylePosition == aOther.mListStylePosition &&
-      mListStyleImage == aOther.mListStyleImage &&
+      EqualURIs(mListStyleImage, aOther.mListStyleImage) &&
       mListStyleType == aOther.mListStyleType) {
     if (mImageRegion == aOther.mImageRegion)
       return NS_STYLE_HINT_NONE;
@@ -1029,7 +1038,7 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
       (mBackgroundClip == aOther.mBackgroundClip) &&
       (mBackgroundInlinePolicy == aOther.mBackgroundInlinePolicy) &&
       (mBackgroundOrigin == aOther.mBackgroundOrigin) &&
-      (mBackgroundImage == aOther.mBackgroundImage) &&
+      EqualURIs(mBackgroundImage, aOther.mBackgroundImage) &&
       ((!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_PERCENT) ||
        (mBackgroundXPosition.mFloat == aOther.mBackgroundXPosition.mFloat)) &&
        (!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_LENGTH) ||
@@ -1081,7 +1090,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (mBinding != aOther.mBinding
+  if (!EqualURIs(mBinding, aOther.mBinding)
       || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
       || mFloats != aOther.mFloats
@@ -1385,7 +1394,7 @@ nsStyleUserInterface::~nsStyleUserInterface(void)
 nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aOther) const
 {
   if ((mCursor != aOther.mCursor) ||
-      (mCursorImage != aOther.mCursorImage))
+      !EqualURIs(mCursorImage, aOther.mCursorImage))
     return NS_STYLE_HINT_VISUAL;
 
   if (mUserInput == aOther.mUserInput) {
