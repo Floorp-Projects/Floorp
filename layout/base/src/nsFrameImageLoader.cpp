@@ -176,7 +176,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   }
 
   // Start image load request
-  char* cp = aURL.ToNewCString();
+  char* cp = aURL.ToNewUTF8String();
 
 
   mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor,
