@@ -1044,7 +1044,7 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
 
     PR_ASSERT(aFactory != NULL);
 
-    nsFactoryEntry *entry = GetFactoryEntry(aClass, PR_TRUE);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, !mPrePopulationDone);
 
     if (!entry)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1527,7 +1527,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     nsFactoryEntry* newEntry = nsnull;
 
     nsIDKey key(aClass);
-    nsFactoryEntry *entry = GetFactoryEntry(aClass, PR_TRUE);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, !mPrePopulationDone);
     nsCOMPtr<nsIComponentLoader> loader;
     PRBool sanity;
 
@@ -2073,7 +2073,7 @@ nsComponentManagerImpl::IsRegistered(const nsCID &aClass,
         NS_ASSERTION(0, "null ptr");
         return NS_ERROR_NULL_POINTER;
     }
-    *aRegistered = (nsnull != GetFactoryEntry(aClass, PR_TRUE));
+    *aRegistered = (nsnull != GetFactoryEntry(aClass, !mPrePopulationDone));
     return NS_OK;
 }
 
