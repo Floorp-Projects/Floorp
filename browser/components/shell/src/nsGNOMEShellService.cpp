@@ -54,6 +54,8 @@
 #include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "nsIImage.h"
+#include "nsIGdkPixbufImage.h"
 #include "nsColor.h"
 
 #include <glib.h>
@@ -342,113 +344,15 @@ nsGNOMEShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
 static nsresult
 WriteImage(const nsCString& aPath, gfxIImageFrame* aImage)
 {
-  PRInt32 width, height;
-  aImage->GetWidth(&width);
-  aImage->GetHeight(&height);
+  nsCOMPtr<nsIGdkPixbufImage> pixImg(do_GetInterface(aImage));
+  if (!pixImg)
+      return NS_ERROR_NOT_AVAILABLE;
 
-  PRInt32 format;
-  aImage->GetFormat(&format);
+  GdkPixbuf* pixbuf = pixImg->GetGdkPixbuf();
+  if (!pixbuf)
+      return NS_ERROR_NOT_AVAILABLE;
 
-  aImage->LockImageData();
-
-  PRUint32 bytesPerRow;
-  aImage->GetImageBytesPerRow(&bytesPerRow);
-
-  PRUint32 bpp = bytesPerRow / width * 8;
-
-  // XXX If bpp is not 24, we will need to do something else, like
-  // allocate a new pixbuf and copy the data in ourselves.
-  if (bpp != 24)
-    return NS_ERROR_FAILURE;
-
-  PRUint8 *bits;
-  PRUint32 length;
-
-  aImage->GetImageData(&bits, &length);
-  if (!bits) return NS_ERROR_FAILURE;
-
-  GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(bits,
-                                               GDK_COLORSPACE_RGB,
-                                               PR_FALSE,
-                                               8,
-                                               width,
-                                               height,
-                                               bytesPerRow,
-                                               NULL,
-                                               NULL);
-
-  GdkPixbuf *alphaPixbuf = nsnull;
-
-  if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::RGB_A8) {
-    aImage->LockAlphaData();
-
-    PRUint32 alphaBytesPerRow, alphaDepth, alphaLength;
-    aImage->GetAlphaBytesPerRow(&alphaBytesPerRow);
-
-#if 0
-    if (format == gfxIFormats::RGB_A1)
-      alphaDepth = 1;
-    else
-      alphaDepth = 8;
-#endif
-    switch (format) {
-    case gfxIFormats::RGB_A1:
-      alphaDepth = 1;
-      break;
-    case gfxIFormats::RGB_A8:
-      alphaDepth = 8;
-      break;
-    default:
-      // not reached
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    PRUint8 *alphaBits;
-    aImage->GetAlphaData(&alphaBits, &alphaLength);
-
-    alphaPixbuf = gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
-
-    // Run through alphaBits and copy the alpha mask into the pixbuf's
-    // alpha channel.
-    PRUint8 *maskRow = alphaBits;
-    PRUint8 *pixbufRow = gdk_pixbuf_get_pixels(alphaPixbuf);
-
-    gint pixbufRowStride = gdk_pixbuf_get_rowstride(alphaPixbuf);
-    gint pixbufChannels = gdk_pixbuf_get_n_channels(alphaPixbuf);
-
-    for (PRInt32 y = 0; y < height; ++y) {
-      PRUint8 *pixbufPixel = pixbufRow;
-      PRUint8 *maskPixel = maskRow;
-
-      // If using 1-bit alpha, we must expand it to 8-bit
-      PRUint32 bitPos = 7;
-
-      for (PRInt32 x = 0; x < width; ++x) {
-        if (alphaDepth == 1) {
-          pixbufPixel[pixbufChannels - 1] = ((*maskPixel >> bitPos) & 1) ? 255 : 0;
-          if (bitPos-- == 0) { // wrapped around, move forward a byte
-            ++maskPixel;
-            bitPos = 7;
-          }
-        } else {
-          pixbufPixel[pixbufChannels - 1] = *maskPixel++;
-        }
-
-        pixbufPixel += pixbufChannels;
-      }
-
-      pixbufRow += pixbufRowStride;
-      maskRow += alphaBytesPerRow;
-    }
-  }
-
-  gboolean res = gdk_pixbuf_save(alphaPixbuf ? alphaPixbuf : pixbuf,
-                                 aPath.get(), "png", NULL, NULL);
-
-  if (alphaPixbuf) {
-    aImage->UnlockAlphaData();
-    g_object_unref(alphaPixbuf);
-  }
+  gboolean res = gdk_pixbuf_save(pixbuf, aPath.get(), "png", NULL, NULL);
 
   aImage->UnlockImageData();
   g_object_unref(pixbuf);

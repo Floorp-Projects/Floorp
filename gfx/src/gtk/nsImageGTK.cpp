@@ -47,6 +47,8 @@
 
 #include "nspr.h"
 
+#include "nsIGdkPixbufImage.h"
+
 #define IsFlagSet(a,b) ((a) & (b))
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
@@ -74,7 +76,11 @@ static GdkGC *sXbitGC = nsnull;
    prevents us from doing fast tiling. */
 static PRBool sNeedSlowTile = PR_FALSE;
 
+#ifdef MOZ_WIDGET_GTK2
+NS_IMPL_ISUPPORTS2(nsImageGTK, nsIImage, nsIGdkPixbufImage)
+#else
 NS_IMPL_ISUPPORTS1(nsImageGTK, nsIImage)
+#endif
 
 //------------------------------------------------------------
 
@@ -2163,3 +2169,90 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
 
   return NS_OK;
 }
+
+#ifdef MOZ_WIDGET_GTK2
+static void pixbuf_free(guchar* data, gpointer) {
+  nsMemory::Free(data);
+}
+
+NS_IMETHODIMP_(GdkPixbuf*)
+nsImageGTK::GetGdkPixbuf() {
+  // Init ensures that we only have 24bpp images
+  NS_ASSERTION(mNumBytesPixel == 3, "Unexpected color depth");
+
+  nsresult rv = LockImagePixels(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  // Since UnlockImagePixels potentially frees the image data (and since the
+  // buffer might outlive this object anyway), we have to copy the data.
+  guchar* pixels = NS_STATIC_CAST(guchar*,
+      nsMemory::Clone(mImageBits, mRowBytes * mHeight));
+  UnlockImagePixels(PR_FALSE);
+  if (!pixels)
+    return nsnull;
+
+  GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(pixels,
+      GDK_COLORSPACE_RGB,
+      PR_FALSE,
+      8,
+      mWidth,
+      mHeight,
+      mRowBytes,
+      pixbuf_free,
+      nsnull);
+  if (!pixbuf)
+    return nsnull;
+
+  if (!GetHasAlphaMask()) {
+    // No alpha channel -> we are done
+    return pixbuf;
+  }
+
+  GdkPixbuf *alphaPixbuf = gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
+  g_object_unref(pixbuf);
+  if (!alphaPixbuf)
+    return nsnull;
+
+  LockImagePixels(PR_TRUE);
+
+  PRInt32 alphaBytesPerRow = GetAlphaLineStride();
+  PRUint8 *alphaBits = GetAlphaBits();
+
+  // Run through alphaBits and copy the alpha mask into the pixbuf's
+  // alpha channel.
+  PRUint8 *maskRow = alphaBits;
+  PRUint8 *pixbufRow = gdk_pixbuf_get_pixels(alphaPixbuf);
+
+  gint pixbufRowStride = gdk_pixbuf_get_rowstride(alphaPixbuf);
+  gint pixbufChannels = gdk_pixbuf_get_n_channels(alphaPixbuf);
+
+  for (PRInt32 y = 0; y < mHeight; ++y) {
+    PRUint8 *pixbufPixel = pixbufRow;
+    PRUint8 *maskPixel = maskRow;
+
+    // If using 1-bit alpha, we must expand it to 8-bit
+    PRUint32 bitPos = 7;
+
+    for (PRInt32 x = 0; x < mWidth; ++x) {
+      if (mAlphaDepth == 1) {
+        pixbufPixel[pixbufChannels - 1] = ((*maskPixel >> bitPos) & 1) ? 255 : 0;
+        if (bitPos-- == 0) { // wrapped around, move forward a byte
+          ++maskPixel;
+          bitPos = 7;
+        }
+      } else {
+        pixbufPixel[pixbufChannels - 1] = *maskPixel++;
+      }
+
+      pixbufPixel += pixbufChannels;
+    }
+
+    pixbufRow += pixbufRowStride;
+    maskRow += alphaBytesPerRow;
+  }
+
+  UnlockImagePixels(PR_TRUE);
+  return alphaPixbuf;
+}
+
+#endif
