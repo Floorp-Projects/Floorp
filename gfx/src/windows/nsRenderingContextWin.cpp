@@ -2618,9 +2618,45 @@ nsRenderingContextWin::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord
                                                     nscoord aWidth,nscoord aHeight)
 {
 
+  if ( PR_TRUE==CanTile(aWidth,aHeight)){
+    // convert to pixels
+    mTMatrix->TransformCoord(&aX0,&aY0);
+    mTMatrix->TransformCoord(&aX1,&aY1);
+    mTMatrix->TransformCoord(&aWidth,&aHeight);
+
+    ((nsImageWin*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
+  } else {
+    // call up to the cross platform implementation
+    nsRenderingContextImpl::DrawTile(aImage,aX0,aY0,aX1,aY1,aWidth,aHeight);
+  }
+
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/16/00 dwc
+ */
+PRBool 
+nsRenderingContextWin::CanTile(nscoord aWidth,nscoord aHeight)
+{
+
+  // XXX This may need tweaking for win98
+  if (PR_TRUE == gIsWIN95) {
+    // windows 98
+    if((aWidth<8)&&(aHeight<8)){
+      return PR_TRUE;
+    }else{
+      return PR_FALSE;
+    }
+  }
+  else {
+    // windows NT
+    return PR_TRUE;
+  }
+  
+
+}
 
 
 NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
