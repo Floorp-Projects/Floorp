@@ -512,8 +512,12 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 
     nsIRDFResource* resource;
     if (NS_FAILED(PopResourceAndState(resource, mState))) {
-        NS_ERROR("parser didn't catch unmatched tags?");
-        return NS_ERROR_UNEXPECTED; // XXX
+        char* tagStr = aNode.GetText().ToNewCString();
+        printf("extra close tag '</%s>' at line %d\n", tagStr, aNode.GetSourceLineNumber());
+        delete[] tagStr;
+
+        // Failure to return NS_OK causes stuff to freak out. See Bug 4433.
+        return NS_OK;
     }
 
     PRInt32 nestLevel = mContextStack->Count();
