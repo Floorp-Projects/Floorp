@@ -273,6 +273,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     else if( !parentWidget )
     {
       mIsToplevel = PR_TRUE;
+      PtAddCallback(mWidget, Pt_CB_WINDOW_CLOSING, WindowCloseHandler, this ); 
     }
 
     // call the event callback to notify about creation
@@ -757,6 +758,17 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
   	someWindow->OnResize( rect );
   }
 	return( Pt_CONTINUE );
+}
+
+
+int nsWindow::WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
+{
+	PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WindowCloseHandler (%p)\n", data));
+
+  if( data )
+    ((nsWindow *) data)->Destroy();
+
+  return Pt_CONTINUE;
 }
 
 

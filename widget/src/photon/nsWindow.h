@@ -83,6 +83,7 @@ protected:
 
   NS_IMETHOD            CreateNative(PtWidget_t *parentWidget);
   static int            ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+  static int            WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   PRBool                HandleEvent( PtCallbackInfo_t* aCbInfo );
   void                  ScreenToWidget( PhPoint_t &pt );
   NS_METHOD             GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctiles );
@@ -92,7 +93,6 @@ protected:
 
   PtWidget_t            *mClientWidget;
   nsIFontMetrics        *mFontMetrics;
-  PRBool                mIsDestroying;
   PRBool                mClipChildren;
   PRBool                mClipSiblings;
   static PRBool         mIsResizing;
