@@ -215,6 +215,8 @@ public:
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
                           nsEventStatus& aEventStatus);
+  nsresult RangeAdd(nsIDOMRange& aRange);
+  nsresult RangeRemove(nsIDOMRange& aRange);
 
   // Implementation for nsIJSScriptObject
   PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -267,6 +269,7 @@ public:
   nsIAtom* mTag;
   nsIEventListenerManager* mListenerManager;
   nsDOMSlots *mDOMSlots;
+  nsVoidArray *mRangeList;
 };
 
 //----------------------------------------------------------------------
@@ -528,7 +531,13 @@ public:
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
-                            nsEventStatus& aEventStatus);
+                            nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){                                \
+    return _g.RangeAdd(aRange);                                            \
+  }                                                                        \
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){                             \
+    return _g.RangeRemove(aRange);                                         \
+  }                                                                        
 
 #define NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, _base) \
   if (_id.Equals(kISupportsIID)) {                              \

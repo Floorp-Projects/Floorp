@@ -37,6 +37,7 @@ class nsXIFConverter;
 class nsIDOMEvent;
 class nsIContent;
 class nsISupportsArray;
+class nsIDOMRange;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
@@ -178,6 +179,17 @@ public:
   NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const = 0;
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const = 0;
 
+  /**
+   * Inform content of range ownership changes.  This allows content
+   * to do the right thing to ranges in the face of changes to the content
+   * model.
+
+   * RangeAdd -- informs content that it owns one or both range endpoints
+   * RangeRemove -- informs content that it no longer owns a range endpoint
+   */
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) = 0;
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) = 0;
+  
   /**
    * Add this object's size information to the sizeof handler and
    * any objects that it can reach.

@@ -170,6 +170,10 @@ public:
       aEventStatus = nsEventStatus_eIgnore;
       return NS_OK;
     }
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange)
+    {  return mInner.RangeAdd(aRange); } 
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange)
+    {  return mInner.RangeRemove(aRange); }                                                                        
 
 protected:
   nsGenericContainerElement mInner;
