@@ -571,7 +571,12 @@ basic_nsAReadableString<CharT>::Last() const
   {
     NS_ASSERTION(Length()>0, "|Last()| on an empty string");
 
-    return *(EndReading()-=1);
+    // nsReadingIterator<CharT> iter; EndReading(iter);
+    nsReadingIterator<CharT> iter( EndReading() );
+    if ( !IsEmpty() )
+      iter -= 1;
+
+    return *iter; // Note: this has undefined results if |IsEmpty()|
   }
 
 template <class CharT>
