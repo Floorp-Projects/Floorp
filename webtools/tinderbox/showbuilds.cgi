@@ -568,18 +568,16 @@ sub print_javascript {
     <style type="text/css">
     #popup {
       position: absolute;
-      height: 10em;
       margin: -5em 0 0 -5em;
       }
     .who#popup{
-      width: 20em;
+      height: 9em;
+      width: 16em;
       }
     .note#popup {
       width: 25em;
-      height: 20em;
       }
     .log#popup {
-      width: 15em;
       }
     .note#popup, .log#popup {
       border: 2px solid black;
