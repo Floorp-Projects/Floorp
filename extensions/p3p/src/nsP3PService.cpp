@@ -43,6 +43,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
+#include "nsCRT.h"
 
 // pref string constants
 static const char kCookiesP3PStringPref[] = "network.cookie.p3p";
