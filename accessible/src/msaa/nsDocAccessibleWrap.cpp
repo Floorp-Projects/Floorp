@@ -194,7 +194,13 @@ STDMETHODIMP nsDocAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR 
   if (pWnd) {
     // get the accessible.
     void* ptr = nsnull;
+#ifdef DEBUG_aleventhal
+    printf("* Ready to call AccessibleObjectFromWindow()\n");
+#endif
     HRESULT result = AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr);
+#ifdef DEBUG_aleventhal
+    printf("* Successfully called AccessibleObjectFromWindow()\n");
+#endif
     if (SUCCEEDED(result)) {
       IAccessible* msaaParentAccessible = (IAccessible*)ptr;
       // got one? return it.
