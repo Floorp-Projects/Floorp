@@ -767,6 +767,12 @@ var toolbarDNDObserver =
       if (wrapper == gCurrentDragOverItem)
         return;
 
+      // Don't allow static kids (e.g., the menubar) to move.
+      if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
+        return;
+      if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
+        return;
+
       // Remove the item from it's place in the toolbar.
       wrapper.parentNode.removeChild(wrapper);
 
@@ -873,6 +879,12 @@ var paletteDNDObserver =
     
     var wrapper = gToolboxDocument.getElementById("wrapper-"+itemId);
     if (wrapper) {
+      // Don't allow static kids (e.g., the menubar) to move.
+      if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
+        return;
+      if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
+        return;
+
       // The item was dragged out of the toolbar.
       wrapper.parentNode.removeChild(wrapper);
       
