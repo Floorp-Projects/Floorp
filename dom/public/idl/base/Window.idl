@@ -5,7 +5,7 @@ interface Window {
        readonly attribute  Document document;
        readonly attribute  Window parent;
        readonly replaceable attribute  Window top;
-       readonly attribute  BarProp scrollbars;
+       readonly replaceable attribute  BarProp scrollbars;
        readonly attribute  WindowCollection frames;
        attribute  wstring name;
        readonly attribute  long scrollX;
@@ -34,8 +34,8 @@ interface WindowInternal : Window {
         readonly replaceable attribute  BarProp toolbar;
         readonly replaceable attribute  BarProp locationbar;
         readonly replaceable attribute  BarProp personalbar;
-        readonly attribute  BarProp statusbar;
-        readonly attribute  BarProp directories;
+        readonly replaceable attribute  BarProp statusbar;
+        readonly replaceable attribute  BarProp directories;
         readonly attribute  boolean closed;
         readonly attribute  Crypto crypto;
         readonly attribute  Pkcs11 pkcs11;
