@@ -1362,12 +1362,24 @@ static void FindBadFDs(void)
                 _PR_DEL_SLEEPQ(pq->thr, PR_TRUE);
                 _PR_SLEEPQ_UNLOCK(pq->thr->cpu);
 
-                pri = pq->thr->priority;
-                pq->thr->state = _PR_RUNNABLE;
+				if (pq->thr->flags & _PR_SUSPENDING) {
+				    /*
+				     * set thread state to SUSPENDED;
+				     * a Resume operation on the thread
+				     * will move it to the runQ
+				     */
+				    pq->thr->state = _PR_SUSPENDED;
+				    _PR_MISCQ_LOCK(pq->thr->cpu);
+				    _PR_ADD_SUSPENDQ(pq->thr, pq->thr->cpu);
+				    _PR_MISCQ_UNLOCK(pq->thr->cpu);
+				} else {
+				    pri = pq->thr->priority;
+				    pq->thr->state = _PR_RUNNABLE;
 
-                _PR_RUNQ_LOCK(cpu);
-                _PR_ADD_RUNQ(pq->thr, cpu, pri);
-                _PR_RUNQ_UNLOCK(cpu);
+				    _PR_RUNQ_LOCK(cpu);
+				    _PR_ADD_RUNQ(pq->thr, cpu, pri);
+				    _PR_RUNQ_UNLOCK(cpu);
+				}
             }
             _PR_THREAD_UNLOCK(pq->thr);
         } else {
@@ -1695,14 +1707,26 @@ extern sigset_t ints_off;
                     _PR_DEL_SLEEPQ(pq->thr, PR_TRUE);
                     _PR_SLEEPQ_UNLOCK(pq->thr->cpu);
 
-                    pri = pq->thr->priority;
-                    pq->thr->state = _PR_RUNNABLE;
+					if (pq->thr->flags & _PR_SUSPENDING) {
+					    /*
+					     * set thread state to SUSPENDED;
+					     * a Resume operation on the thread
+					     * will move it to the runQ
+					     */
+					    pq->thr->state = _PR_SUSPENDED;
+					    _PR_MISCQ_LOCK(pq->thr->cpu);
+					    _PR_ADD_SUSPENDQ(pq->thr, pq->thr->cpu);
+					    _PR_MISCQ_UNLOCK(pq->thr->cpu);
+					} else {
+						pri = pq->thr->priority;
+						pq->thr->state = _PR_RUNNABLE;
 
-                    _PR_RUNQ_LOCK(cpu);
-                    _PR_ADD_RUNQ(pq->thr, cpu, pri);
-                    _PR_RUNQ_UNLOCK(cpu);
-                    if (_pr_md_idle_cpus > 1)
-                        _PR_MD_WAKEUP_WAITER(thred);
+						_PR_RUNQ_LOCK(cpu);
+						_PR_ADD_RUNQ(pq->thr, cpu, pri);
+						_PR_RUNQ_UNLOCK(cpu);
+						if (_pr_md_idle_cpus > 1)
+							_PR_MD_WAKEUP_WAITER(thred);
+					}
                 }
                 _PR_THREAD_UNLOCK(thred);
                 _PR_IOQ_OSFD_CNT(me->cpu) -= pq->npds;
@@ -1792,15 +1816,27 @@ extern sigset_t ints_off;
                     _PR_DEL_SLEEPQ(pq->thr, PR_TRUE);
                     _PR_SLEEPQ_UNLOCK(pq->thr->cpu);
 
-                    pri = pq->thr->priority;
-                    pq->thr->state = _PR_RUNNABLE;
+					if (pq->thr->flags & _PR_SUSPENDING) {
+					    /*
+					     * set thread state to SUSPENDED;
+					     * a Resume operation on the thread
+					     * will move it to the runQ
+					     */
+					    pq->thr->state = _PR_SUSPENDED;
+					    _PR_MISCQ_LOCK(pq->thr->cpu);
+					    _PR_ADD_SUSPENDQ(pq->thr, pq->thr->cpu);
+					    _PR_MISCQ_UNLOCK(pq->thr->cpu);
+					} else {
+						pri = pq->thr->priority;
+						pq->thr->state = _PR_RUNNABLE;
 
-                    pq->thr->cpu = cpu;
-                    _PR_RUNQ_LOCK(cpu);
-                    _PR_ADD_RUNQ(pq->thr, cpu, pri);
-                    _PR_RUNQ_UNLOCK(cpu);
-                    if (_pr_md_idle_cpus > 1)
-                        _PR_MD_WAKEUP_WAITER(thred);
+						pq->thr->cpu = cpu;
+						_PR_RUNQ_LOCK(cpu);
+						_PR_ADD_RUNQ(pq->thr, cpu, pri);
+						_PR_RUNQ_UNLOCK(cpu);
+						if (_pr_md_idle_cpus > 1)
+							_PR_MD_WAKEUP_WAITER(thred);
+					}
                 }
                 _PR_THREAD_UNLOCK(thred);
             } else {
