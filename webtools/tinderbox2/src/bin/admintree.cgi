@@ -1,9 +1,9 @@
-#!#perl# --
+#!#perl# -T --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.5 $ 
-# $Date: 2000/09/10 16:01:28 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/09/18 19:29:31 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -69,13 +69,27 @@ sub get_params {
   (TreeData::tree_exists($TREE)) ||
     die("tree: $TREE does not exist\n");    
 
+  # tree is safe, untaint it.
+  $TREE =~ m/(.*)/;
+  $TREE = $1;
+
   $MAILADDR = ( param("mailaddr") ||
                 cookie(-name=>"tinderbox_mailaddr"));
+  $MAILADDR = main::extract_user($MAILADDR);
+
   $NEW_MOTD = param("motd");
+  $NEW_MOTD = extract_printable_chars($NEW_MOTD);
+
   $NEW_TREE_STATE = param("tree_state");
+  $NEW_TREE_STATE = extract_printable_chars($NEW_TREE_STATE);
+
   $NEW_ADMIN = param("newadmin");
+  $NEW_ADMIN = extract_printable_chars($NEW_ADMIN);
+
   $USE_COOKIE = param("use_cookie");
-  $REMOTE_HOST = remote_host();
+  ($USE_COOKIE) && 
+    ($USE_COOKIE = 1);
+
   $PASSWD = ( param("passwd") ||
               cookie(-name=>"tinderbox_password_$TREE"));
 
@@ -84,6 +98,8 @@ sub get_params {
   
   @NEW_IGNORE_BUILDS = param("ignore_builds");
   @NEW_IGNORE_BUILDS = uniq(@NEW_IGNORE_BUILDS);
+
+  $REMOTE_HOST = remote_host();
 
   return ;
 }
@@ -210,10 +226,14 @@ sub format_input_page {
               start_form
              );
 
-  push @out, ("<A HREF=$FileStructure::URLS{'treepages'}/$tree/index\.html>".
-              "Return to tree: $tree</A>",
-              p());  
-  
+  push @out, (
+              HTMLPopUp::Link( 
+                              "linktxt"=>"Return to tree: $tree",
+                              "href"=> FileStructure::get_filename($tree, 'tree_URL').
+                              "/$FileStructure::DEFAULT_HTML_PAGE",
+                             ).
+              p());
+
   push @out, (
 
               # if we know mailaddr send it back as the default to
@@ -315,6 +335,11 @@ sub format_input_page {
 
 sub save_passwd_table {
   my ($file) = FileStructure::get_filename($TREE, 'passwd');
+
+  # We expect tree administration to be a rare event and each change
+  # should be independent and noncontradictory, so we do not worry
+  # about locking during the updates but we make an effort to keep the
+  # updates atomic.
 
   if ( keys %{ $PASSWD_TABLE{$TREE} } ) {
     Persistence::save_structure($PASSWD_TABLE{$TREE},$file);
@@ -420,10 +445,10 @@ sub change_ignore_builds {
 
 sub change_motd {
   my (@results) = ();
-  
-  ($NEW_MOTD) ||
-    return ;
-  
+
+  # remember new_motd could be empty.  As long as it is different then
+  # old_motd we should save it.
+
   ($NEW_MOTD eq $CURRENT_MOTD) &&
     return ;
 
