@@ -664,6 +664,14 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent)
 {
+  // Mark this frame and all the next-in-flow frames as dirty
+  // XXX Unfortunately we don't know what actually changed...
+  nsTextFrame*  textFrame = this;
+  while (textFrame) {
+    textFrame->mState |= NS_FRAME_IS_DIRTY;
+    textFrame = (nsTextFrame*)textFrame->mNextInFlow;
+  }
+
   // Generate a reflow command with this frame as the target frame
   nsIReflowCommand* cmd;
   nsresult          rv;
@@ -2518,23 +2526,29 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
 
   // We can avoid actually measuring the text if:
   // - this is a resize reflow
+  // - we're not dirty (see ContentChanged() function)
   // - we don't have a next in flow
   // - the previous reflow successfully reflowed all text in the
   //   available space
-  // - the available width is at least as big as our current frame width
   // - we aren't computing the max element size (that requires we measure
   //   text)
-  // - we're not preformatted text or we're at the same column as before (this
-  //   is an issue for tabbed text)
-  if (eReflowReason_Resize == aReflowState.reason) {
+  // - skipping leading whitespace is the same as it was the last time
+  // - we're wrapping text and the available width is at least as big as our
+  //   current frame width -or-
+  //   we're not wrapping text and we're at the same column as before (this is
+  //   an issue for preformatted tabbed text only)
+  if ((eReflowReason_Resize == aReflowState.reason) &&
+      (0 == (mState & NS_FRAME_IS_DIRTY))) {
+
     nscoord realWidth = mRect.width;
     if (mState & TEXT_TRIMMED_WS) {
       realWidth += ts.mSpaceWidth;
     }
-    if (!mNextInFlow && (mState & TEXT_OPTIMIZE_RESIZE) &&
-        (maxWidth >= realWidth) && !aMetrics.maxElementSize &&
+    if (!mNextInFlow &&
+        (mState & TEXT_OPTIMIZE_RESIZE) &&
+        !aMetrics.maxElementSize &&
         (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
-        (!ts.mPreformatted || (prevColumn == column))) {
+        ((wrapping && (maxWidth >= realWidth)) || (prevColumn == column))) {
       // We can skip measuring of text and use the value from our
       // previous reflow
       measureText = PR_FALSE;
