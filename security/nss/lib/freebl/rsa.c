@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.6 2000/09/07 07:33:34 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.7 2000/09/07 16:29:23 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -304,5 +304,75 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
                  unsigned char *output, 
                  unsigned char *input)
 {
-    return SECFailure;
+    mp_int p, q, d_p, d_q, qInv;
+    mp_int m, m1, m2, b2, h, c;
+    mp_err   err = MP_OKAY;
+    SECStatus rv = SECSuccess;
+    unsigned int modLen;
+    if (!key || !output || !input) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    MP_DIGITS(&p)    = 0;
+    MP_DIGITS(&q)    = 0;
+    MP_DIGITS(&d_p)  = 0;
+    MP_DIGITS(&d_q)  = 0;
+    MP_DIGITS(&qInv) = 0;
+    MP_DIGITS(&m)    = 0;
+    MP_DIGITS(&m1)   = 0;
+    MP_DIGITS(&m2)   = 0;
+    MP_DIGITS(&b2)   = 0;
+    MP_DIGITS(&h)    = 0;
+    MP_DIGITS(&c)    = 0;
+    CHECK_MPI_OK( mp_init(&p)    );
+    CHECK_MPI_OK( mp_init(&q)    );
+    CHECK_MPI_OK( mp_init(&d_p)  );
+    CHECK_MPI_OK( mp_init(&d_q)  );
+    CHECK_MPI_OK( mp_init(&qInv) );
+    CHECK_MPI_OK( mp_init(&m)    );
+    CHECK_MPI_OK( mp_init(&m1)   );
+    CHECK_MPI_OK( mp_init(&m2)   );
+    CHECK_MPI_OK( mp_init(&b2)   );
+    CHECK_MPI_OK( mp_init(&h)    );
+    CHECK_MPI_OK( mp_init(&c)    );
+    /* copy private key parameters into mp integers */
+    SECITEM_TO_MPINT(key->prime1,      &p);    /* p */
+    SECITEM_TO_MPINT(key->prime2,      &q);    /* q */
+    SECITEM_TO_MPINT(key->exponent1,   &d_p);  /* d_p  = d mod (p-1) */
+    SECITEM_TO_MPINT(key->exponent2,   &d_q);  /* d_p  = q mod (q-1) */
+    SECITEM_TO_MPINT(key->coefficient, &qInv); /* qInv = q**-1 mod p */
+    /* copy input into mp integer c */
+    modLen = rsa_modulusLen(&key->modulus);
+    OCTETS_TO_MPINT(input, &c, modLen);
+    /* XXX check input out of range */
+    /* 1. m1 = c**d_p mod p */
+    CHECK_MPI_OK( mp_exptmod(&c, &d_p, &p, &m1) );
+    /* 2. m2 = c**d_q mod q */
+    CHECK_MPI_OK( mp_exptmod(&c, &d_q, &q, &m2) );
+    /* 3.  h = (m1 - m2) * qInv mod p */
+    CHECK_MPI_OK( mp_submod(&m1, &m2, &p, &h) );
+    CHECK_MPI_OK( mp_mulmod(&h, &qInv, &p, &h)  );
+    /* 4.  m = m2 + h * q */
+    CHECK_MPI_OK( mp_mul(&h, &q, &m) );
+    CHECK_MPI_OK( mp_add(&m, &m2, &m) );
+    /* m is the output */
+    err = mp_to_unsigned_octets(&m, output, modLen);
+    if (err >= 0) err = MP_OKAY;
+cleanup:
+    mp_clear(&p);
+    mp_clear(&q);
+    mp_clear(&d_p);
+    mp_clear(&d_q);
+    mp_clear(&qInv);
+    mp_clear(&m);
+    mp_clear(&m1);
+    mp_clear(&m2);
+    mp_clear(&b2);
+    mp_clear(&h);
+    mp_clear(&c);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
 }
