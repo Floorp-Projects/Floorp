@@ -289,7 +289,7 @@
 <!ENTITY zoomWindow.label "Zoom Window">
 
 <!ENTITY pageThemeButton.label "Page Themes">
-<!ENTITY pageThemeNoTheme.label "Plain">
-<!ENTITY pageThemeNoTheme.accesskey "p">
-<!ENTITY pageThemePersistentOnly.label "Normal">
-<!ENTITY pageThemePersistentOnly.accesskey "n">
+<!ENTITY pageThemeNoTheme.label "No Theme">
+<!ENTITY pageThemeNoTheme.accesskey "n">
+<!ENTITY pageThemePersistentOnly.label "Basic Theme">
+<!ENTITY pageThemePersistentOnly.accesskey "b">
