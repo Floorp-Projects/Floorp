@@ -40,7 +40,6 @@
 #include "nsDependentString.h"
 #include "nsHashKeys.h"
 #include "nsAutoPtr.h"
-#include "ipcILockNotify.h"
 #include "ipcLockService.h"
 #include "ipcLockProtocol.h"
 #include "ipcLog.h"
