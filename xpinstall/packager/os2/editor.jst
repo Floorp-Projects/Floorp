@@ -1,0 +1,33 @@
+var srDest = $SpaceRequired$;
+
+var err = initInstall("Mozilla Editor", "Editor", "$Version$"); 
+logComment("initInstall: " + err);
+
+var communicatorFolder = getFolder("Program");
+logComment("communicatorFolder: " + communicatorFolder);
+
+if (verifyDiskSpace(communicatorFolder, srDest))
+{
+    err = addDirectory("Program",
+                       "$Version$",
+                       "bin",              // jar source folder
+                       communicatorFolder, // target folder 
+                       "",                 // target subdir 
+                       true );             // force Flag 
+
+    logComment("addDirectory() returned: " + err);
+
+    err = getLastError();
+    if (err==SUCCESS)
+    {
+	    err = performInstall(); 
+	    logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+	    cancelInstall(err);
+	    logComment("cancelInstall() due to error: " + err);
+    }
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);
