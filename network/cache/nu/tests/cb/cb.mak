@@ -97,8 +97,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\cbDoc.obj" \
 	"$(INTDIR)\cbView.obj" \
 	"$(INTDIR)\MainFrm.obj" \
-	"$(INTDIR)\StdAfx.obj" \
-	"..\..\..\..\..\dist\WIN32_D.OBJ\lib\cachelib.lib"
+	"$(INTDIR)\StdAfx.obj"
 
 "$(OUTDIR)\cb.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -196,8 +195,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\cbDoc.obj" \
 	"$(INTDIR)\cbView.obj" \
 	"$(INTDIR)\MainFrm.obj" \
-	"$(INTDIR)\StdAfx.obj" \
-	"..\..\..\..\..\dist\WIN32_D.OBJ\lib\cachelib.lib"
+	"$(INTDIR)\StdAfx.obj"
 
 "$(OUTDIR)\cb.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -391,12 +389,18 @@ DEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\nsCacheObject.h"\
 	"..\..\..\..\..\dist\public\cache\nsCachePref.h"\
 	"..\..\..\..\..\dist\public\cache\nsDiskModule.h"\
+	"..\..\..\..\..\dist\public\cache\nsEnumeration.h"\
+	"..\..\..\..\..\dist\public\cache\nsIterator.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemCacheObject.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemModule.h"\
+	"..\..\..\..\..\dist\public\cache\nsMemStream.h"\
+	"..\..\..\..\..\dist\public\cache\nsMonitorable.h"\
+	"..\..\..\..\..\dist\public\cache\nsStream.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\obsolete\protypes.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prcpucfg.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prinrval.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prlog.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prmon.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prthread.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prtypes.h"\
 	".\cb.h"\
@@ -405,6 +409,7 @@ DEP_CPP_CBVIE=\
 	".\MainFrm.h"\
 	".\nsTimeIt.h"\
 	".\StdAfx.h"\
+	{$(INCLUDE)}"\sys\TYPES.H"\
 	
 NODEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\mcom_db.h"\
@@ -426,12 +431,20 @@ DEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\nsCacheObject.h"\
 	"..\..\..\..\..\dist\public\cache\nsCachePref.h"\
 	"..\..\..\..\..\dist\public\cache\nsDiskModule.h"\
+	"..\..\..\..\..\dist\public\cache\nsEnumeration.h"\
+	"..\..\..\..\..\dist\public\cache\nsIterator.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemCacheObject.h"\
 	"..\..\..\..\..\dist\public\cache\nsMemModule.h"\
+	"..\..\..\..\..\dist\public\cache\nsMemStream.h"\
+	"..\..\..\..\..\dist\public\cache\nsMonitorable.h"\
+	"..\..\..\..\..\dist\public\cache\nsStream.h"\
 	"..\..\..\..\..\dist\public\dbm\cdefs.h"\
 	"..\..\..\..\..\dist\public\dbm\mcom_db.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\obsolete\protypes.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prcpucfg.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prinrval.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prlog.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prmon.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prthread.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prtypes.h"\
 	".\cb.h"\
@@ -447,6 +460,7 @@ NODEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\nsISupports.h"\
 	"..\..\..\..\..\dist\public\dbm\prmacos.h"\
 	"..\..\..\..\..\dist\public\dbm\xp_mcom.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\protypes.h"\
 	
 
 "$(INTDIR)\cbView.obj" : $(SOURCE) $(DEP_CPP_CBVIE) "$(INTDIR)"\
@@ -503,18 +517,6 @@ DEP_CPP_CACHE=\
 "$(INTDIR)\CacheTreeView.sbr" : $(SOURCE) $(DEP_CPP_CACHE) "$(INTDIR)"\
  "$(INTDIR)\cb.pch"
 
-
-!ENDIF 
-
-# End Source File
-################################################################################
-# Begin Source File
-
-SOURCE=\work\mozilla\dist\WIN32_D.OBJ\lib\cachelib.lib
-
-!IF  "$(CFG)" == "cb - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "cb - Win32 Debug"
 
 !ENDIF 
 
