@@ -44,6 +44,8 @@
                     loading="rdf:http://home.netscape.com/NC-rdf#loading" >
             <treerow>
               <treecell class="treecell-filename treecell-indent" indent="true" 
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                        validate="never"
                         type="rdf:http://home.netscape.com/NC-rdf#File-Type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
