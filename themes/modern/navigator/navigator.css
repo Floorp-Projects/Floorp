@@ -3,6 +3,7 @@
 
 @import url(chrome://communicator/skin/);
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
+@import url(chrome://communicator/skin/sidebar/sidebar.css);
 
 
 #sidebar-parent 

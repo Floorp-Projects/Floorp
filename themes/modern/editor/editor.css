@@ -21,11 +21,12 @@
  */
 
 @import url(chrome://communicator/skin/);
+@import url(chrome://communicator/skin/sidebar/sidebar.css);
 /* Note: most of our styles are in EditorToolbars.css 
    in order to share with all users of editor
 */
 
-iframe#content-frame { 
+#content-frame { 
   min-width: 10px; 
   min-height: 10px;
   height: 400px;

@@ -48,7 +48,6 @@ CHROME_CONTENT= \
 		inputBindings.xul \
 		textAreaBindings.xul \
 		hiddenWindow.xul \
-		globalBindings.xml \
 		globalOverlay.xul \
 		globalOverlay.js \
 		tasksOverlay.xul \

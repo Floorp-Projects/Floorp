@@ -31,8 +31,10 @@ CHROME_CONTENT_DIR = packages/core/communicator/content/sidebar
 CHROME_L10N_DIR = locales/en-US/communicator/locale/sidebar
 
 CHROME_CONTENT = \
+	sidebarOverlay.css \
 	customize-panel.js \
 	customize-panel.xul \
+	sidebarBindings.xml \
 	customize.js \
 	customize.xul \
 	preview.js \
