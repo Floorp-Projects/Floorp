@@ -35,7 +35,7 @@ Contributor(s): ______________________________________. -->
         onunload="Shutdown()"
         title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
         titlemenuseparator ="&mainWindow.titlemodifiermenuseparator;"  windowtype="navigator:browser"
-        align="vertical" width="640" height="480" x="0" y="0" persist="width height x y"> 
+        align="vertical" width="640" height="480" x="10" y="10" persist="width height x y"> 
 
    <html:script language="javascript" src="chrome://global/content/strres.js" />
 
