@@ -32,7 +32,10 @@ pascal void* Install(void* unused)
 	short			vRefNum, srcVRefNum;
 	long			dirID, srcDirID, modulesDirID;
 	OSErr 			err;
-	FSSpec			idiSpec, coreFileSpec, redirectSpec;
+	FSSpec			idiSpec, coreFileSpec;
+#if MOZILLA == 0
+	FSSpec 			redirectSpec;
+#endif
 #ifdef MIW_DEBUG
 	FSSpec			tmpSpec;
 #endif
@@ -766,7 +769,10 @@ RunApps(void)
 {
 	OSErr 				err = noErr;
 	int 				i;
-	Ptr					appSigStr, docStr;	
+#if 0
+	Ptr					appSigStr;
+#endif
+	Ptr					docStr;	
 	StringPtr			relAppPath;
 	OSType 				appSig = 0x00000000;
 	FSSpec 				app, doc;

@@ -29,6 +29,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+
+#include <TextUtils.h>
+#include <Resources.h>
+#include <LowMem.h>
+#include <ToolUtils.h>
+#include <Sound.h>
+#include <Gestalt.h>
+#include <Balloons.h>
+#include <Folders.h>
+#include <Lists.h>
 #include <Navigation.h>
 #include <MacTypes.h>
 #include <PLStringFuncs.h>

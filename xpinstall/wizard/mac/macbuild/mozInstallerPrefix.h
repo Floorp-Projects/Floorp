@@ -19,7 +19,5 @@
  * Contributors:
  *     Samir Gehani <sgehani@netscape.com>
  */
- 
-#include <MacHeaders.h>
 
 #define	MOZILLA 1
