@@ -61,11 +61,51 @@ public class VersionCheck
     return DriverManager.getConnection("jdbc:mysql://localhost/umo_extensions", "root", "");
   }
 
+  public Extension[] getExtensionsToUpdate(Extension[] aExtensions, String aTargetApp, String aTargetAppVersion)
+  {
+    Vector results = new Vector();
+    for (int i = 0; i < aExtensions.length; ++i) 
+    {
+      Extension e = aExtensions[i];
+      int id = getNewestExtension(e.getId(), e.getVersion(), aTargetApp, aTargetAppVersion);
+      if (id != -1) 
+      {
+        e.setRow(id);
+        e.setVersion(getProperty(id, "version"));
+        e.setXpiURL(getProperty(id, "xpiurl"));
+        results.add(e);
+      }
+    }
+
+    return (Extension[])results.toArray();
+  }
+
+  // This method is a temporary workaround until Mozilla's Web Services implementation 
+  // supports passing Arrays of complex types.
+  public Extension getNewestExtension(Extension aExtension, 
+                                      String aTargetApp, 
+                                      String aTargetAppVersion)
+  {
+    Extension e = null;
+
+    int id = getNewestExtension(aExtension.getId(), aExtension.getVersion(), 
+                                aTargetApp, aTargetAppVersion);
+    if (id != -1) 
+    {
+      e = new Extension();
+      e.setRow(id);
+      e.setName(getProperty(id, "name"));
+      e.setVersion(getProperty(id, "version"));
+      e.setXpiURL(getProperty(id, "xpiurl"));
+    }
+    return e;
+  }
+
   public Extension getExtension(String aExtensionGUID, String aInstalledVersion, String aTargetApp, String aTargetAppVersion)
   {
     int id = getNewestExtension(aExtensionGUID, aInstalledVersion, aTargetApp, aTargetAppVersion);
-    Extension e = new Extension();
 
+    Extension e = new Extension();
     e.setRow(id);
     e.setId(getProperty(id, "id"));
     e.setVersion(getProperty(id, "version"));
@@ -75,7 +115,7 @@ public class VersionCheck
     return e;
   }
 
-  public String getProperty(int aRowID, String aProperty)
+  protected String getProperty(int aRowID, String aProperty)
   {
     String result = null;
     try
@@ -96,10 +136,7 @@ public class VersionCheck
     return result;
   }
 
-  public int getNewestExtension(String aExtensionGUID, 
-    String aInstalledVersion, 
-    String aTargetApp, 
-    String aTargetAppVersion)
+  protected int getNewestExtension(String aExtensionGUID, String aInstalledVersion, String aTargetApp, String aTargetAppVersion)
   {
     int id = -1;
     int extensionVersionParts = getPartCount(aInstalledVersion);

@@ -56,8 +56,46 @@ nsExtensionManager.prototype = {
                         .getService(Components.interfaces.nsIObserverService);
       os.removeObserver(this, "profile-after-change");
       
+      // Check to see if the version of the application that is being started
+      // now is the same one that was started last time. 
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      var currAppVersion = pref.getCharPref(PREF_EM_APP_VERSION);
+      var lastAppVersion = pref.getCharPref(PREF_EM_LAST_APP_VERSION);
+      if (currAppVersion != lastAppVersion) {
+        // Version mismatch, we're have to load the extensions datasource
+        // and do version checking. 
+        var power = currAppVersion.split(".").length;
+        currAppVersion = this.parseVersion(currAppVersion, power);
+        
+        var extensions = ds.getIncompatibleExtensionList(currAppVersion);
+        var updater = new nsExtensionUpdater(extensions, appID, currAppVersion);
+        updater.checkForUpdates(doneUpdatingExtension);
+      }
+
       dump("*** profile extensions startup\n");
     }
+  },
+  
+  parseVersion: function (aVersion, aPower)
+  {
+    var parts = aVersion.split(".");
+    var vrsion = 0;
+    if (aPower == 0)
+      aPower = parts.length;
+    
+    for (var i = 0; i < parts.length; ++i) {
+      var token = parts[i];
+      if (token.charAt(token.length-1) == "+") {
+        token = token.substr(0, token.lastIndexOf("+"));
+        version += 1;
+        if (token.length == 0)
+          continue;
+      }
+      
+      version += parseInt(token) * Math.pow(10, aPower - i);
+    }
+    return version;
   },
 
   // nsIExtensionManager
@@ -99,31 +137,16 @@ nsExtensionManager.prototype = {
     this._ds.disableExtension(aExtensionID);
   },
   
-  updateExtension: function (aExtensionID, aDOMWindow)
+  updateExtension: function (aExtensionID)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
 
-    var ds = this._ds;
-    var extensionVersion = ds.getExtensionProperty(aExtensionID, "version");
-
-    var itemCount = 0;
-    
-    var trigger = aDOMWindow.InstallTrigger;
-    
-    function doneUpdatingExtension(aExtensionID, aXPIURL)
-    {
-      var name = ds.getExtensionProperty(aExtensionID, "name");
-      var obj = {};
-      obj[name] = aXPIURL;
-      if (trigger.updateEnabled())
-        trigger.install(obj);
-    }
-    
-    var updater = new nsExtensionUpdater(aExtensionID, extensionVersion, appID, appVersion);
-    updater.checkForUpdates(doneUpdatingExtension);
+    var extensions = this._ds.getExtensionList(aExtensionID);
+    var updater = new nsExtensionUpdater(extensions, appID, appVersion);
+    updater.checkForUpdates();
   },  
   
   // Themes
@@ -175,22 +198,23 @@ nsExtensionManager.prototype = {
   }
 };
 
-function nsExtensionUpdater(aExtensionID, aExtensionVersion, 
+function nsExtensionUpdater(aExtensions, 
                             aTargetAppID, aTargetAppVersion) 
 {
-  this._extensionID = aExtensionID;
-  this._extensionVersion = aExtensionVersion;
+  this._extensions = aExtensions;
+  this._count = aExtensions.length;
   this._appID = aTargetAppID;
   this._appVersion = aTargetAppVersion;
+
+  this._os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
 }
 
 nsExtensionUpdater.prototype = {
   /////////////////////////////////////////////////////////////////////////////
   // 
-  checkForUpdates: function (aDoneUpdatingFunc) 
+  checkForUpdates: function () 
   {
-    this._doneUpdatingFunc = aDoneUpdatingFunc;
-    
     var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
                               .getService(Components.interfaces.nsIWebServiceProxyFactory);
     wspFactory.createProxyAsync("http://localhost:8080/axis/services/VersionCheck?wsdl", 
@@ -199,10 +223,21 @@ nsExtensionUpdater.prototype = {
 
   _proxy: null,
   
-  _getExtensionUpdateURL: function (aExtensionGUID, aInstalledVersion,
-                                    aTargetApp, aTargetAppVersion)
+  _getExtensionsToUpdate: function ()
   {
-    this._proxy.getNewestExtension(aExtensionGUID, aInstalledVersion, aTargetApp, aTargetAppVersion);
+    this._proxy.getExtensionsToUpdate(this._extensions, this._appID, this._appVersion);
+  },
+  
+  _checkForUpdates: function ()
+  {
+    this._os.notifyObservers(null, "update-started", "");
+    //
+    for (var i = 0; i < this._extensions.length; ++i) {
+      var e = this._extensions[i];
+      this._os.notifyObservers(null, "update-item-started", e.name);
+      this._proxy.getNewestExtension(e, this._appID, this._appVersion);
+      //this._proxy.getExtension(e.id, e.version, this._appID, this._appVersion);
+    }
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -211,7 +246,8 @@ nsExtensionUpdater.prototype = {
   { 
     this._proxy = aProxy;
     this._proxy.setListener(this);
-    this._getExtensionUpdateURL(this._extensionID, this._extensionVersion, this._appID, this._appVersion);
+    // this._getExtensionsToUpdate();
+    this._checkForUpdates();
   },
   
   onError: function (aError)
@@ -219,23 +255,30 @@ nsExtensionUpdater.prototype = {
     dump("*** onError ERROR = " + aError + "\n");
   },
   
-  getNewestExtensionCallback: function (aResult)
+  getExtensionsToUpdateCallback: function (aResult)
   {
-    this._newestID = aResult;
-    
-    if (this._newestID != -1)
-      this._proxy.getProperty(this._newestID, "xpiurl");
   },
 
-  getPropertyCallback: function (aResult)
+  getExtensionCallback: function (aResult)
   {
-    this._doneUpdatingFunc(this._extensionID, aResult);
+    dump("*** getExtensionCallback RESULT = " + aResult + "\n");
+  },
+  
+  getNewestExtensionCallback: function (aResult)
+  {
+    dump("*** getNewestExtensionCallback RESULT = " + aResult + "\n");
+    
+    this._os.notifyObservers(null, "update-item-ended", "goat");
+    
+    if (--this._count == 0)
+      this._os.notifyObservers(null, "update-ended", "");
   }
 };
 
 
 const PREF_EM_DEFAULTUPDATEURL = "update.url.extensions";
 const PREF_EM_APP_ID = "app.id";
+const PREF_EM_LAST_APP_VERSION = "extensions.lastAppVersion";
 const PREF_EM_APP_VERSION = "general.useragent.vendorSub";
 
 function EM_NS(aProperty)
@@ -260,6 +303,37 @@ nsExtensionsDataSource.prototype = {
   _emL: function (aLiteral)
   {
     return this._rdf.GetLiteral(aLiteral);
+  },
+
+  _stripPrefix: function (aResourceURI)
+  {
+    return aResourceURI.substr("urn:mozilla:extension:".length, aResourceURI.length);
+  },
+
+  getExtensionList: function (aExtensionID)
+  {
+    var extensions = [];
+    if (aExtensionID) {
+      extensions.push({ id: aExtensionID, 
+                        version: this.getExtensionProperty(aExtensionID, "version"),
+                        name: this.getExtensionProperty(aExtensionID, "name"), 
+                        row: -1, xpiURL: "" });
+    }
+    else {
+      var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                          .createInstance(Components.interfaces.nsIRDFContainer);
+      ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
+      
+      var elements = ctr.GetElements();
+      while (elements.hasMoreElements()) {
+        var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var id = this._stripPrefix(e.Value);
+        extensions.push({ id: id, version: this.getExtensionProperty(id, "version"), 
+                          name: this.getExtensionProperty(id, "name"), row: -1, 
+                          xpiURL: "" });
+      }
+    }
+    return extensions;
   },
   
   _setProperty: function (aDS, aSource, aProperty, aNewValue)
@@ -555,21 +629,21 @@ nsExtensionsDataSource.prototype = {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
   
-  init: function (aURI)
+  Init: function (aURI)
   {
   },
   
-  refresh: function (aBlocking)
+  Refresh: function (aBlocking)
   {
   },
   
-  flush: function ()
+  Flush: function ()
   {
     this._flush(false);
     this._flush(true);
   },
   
-  flushTo: function (aURI)
+  FlushTo: function (aURI)
   {
   },
   

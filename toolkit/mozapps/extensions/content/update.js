@@ -32,6 +32,28 @@ var gUpdateDialog = {
   observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
+    case "update-started":
+      dump("*** update-started: " + aSubject + ", " + aData + "\n");
+      break;
+    case "update-item-started":
+      dump("*** update-item-started: " + aSubject + ", " + aData + "\n");
+      break;
+    case "update-item-ended":
+      dump("*** update-item-ended: " + aSubject + ", " + aData + "\n");
+      break;
+    case "update-ended":
+      dump("*** update-ended: " + aSubject + ", " + aData + "\n");
+/*
+      var installObj = { };
+      for (var i = 0; i < aExtensions.length; ++i) {  
+        var e = aExtensions[i];
+        var name = ds.getExtensionProperty(e.id, "name");
+        installObj[name + " " + e.version] = e.xpiURL;
+      }
+      if (trigger.updateEnabled())
+        trigger.install(installObj);
+      break; */
+/*    
     case "update-start":
       dump("*** update-start: " + aSubject + ", " + aData + "\n");
       break;
@@ -62,6 +84,7 @@ var gUpdateDialog = {
         os.removeObserver(this, this._messages[i]);
     
       break;
+*/      
     }
   }
 };

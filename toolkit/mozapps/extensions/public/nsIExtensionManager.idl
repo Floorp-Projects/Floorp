@@ -40,7 +40,6 @@
 
 interface nsIInputStream;
 interface nsIRDFDataSource;
-interface nsIDOMWindowInternal;
 
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
 interface nsIExtensionManager : nsISupports
@@ -49,9 +48,7 @@ interface nsIExtensionManager : nsISupports
   void uninstallExtension(in string aExtensionID);
   void enableExtension(in string aExtensionID);
   void disableExtension(in string aExtensionID);
-  /* aDOMWindow param here is temporary hack until xpinstall trigger is accessible 
-     via xpconnect */
-  void updateExtension(in string aExtensionID, in nsIDOMWindowInternal aDOMWindow);
+  void updateExtension(in string aExtensionID);
 
   void installTheme(in string aThemeID);
   void uninstallTheme(in string aThemeID);
