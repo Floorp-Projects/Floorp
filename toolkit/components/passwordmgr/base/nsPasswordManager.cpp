@@ -604,10 +604,8 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                           PRBool* aCancelSubmit)
 {
   // Check the reject list
-  nsCOMPtr<nsIDocument> formDoc;
-  aFormNode->GetDocument(getter_AddRefs(formDoc));
   nsCOMPtr<nsIURI> uri;
-  formDoc->GetDocumentURL(getter_AddRefs(uri));
+  formDoc->GetDocument()->GetDocumentURL(getter_AddRefs(uri));
 
   nsCAutoString realm;
   uri->GetPrePath(realm);
