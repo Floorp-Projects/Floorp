@@ -170,6 +170,11 @@ public:
   static void ZeroAutoMargin(nsHTMLReflowState& aReflowState,
                              nsMargin&          aMargin);
 
+  PRBool IsNested(const nsHTMLReflowState& aReflowState) const;
+
+  static PRBool IsAutoWidth(nsIFrame& aTableOrCaption,
+                            PRBool*   aIsPctWidth = nsnull);
+
 protected:
 
 
