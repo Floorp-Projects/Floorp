@@ -93,17 +93,26 @@ public:
   decoder_error_mgr mErr;
   jstate mState;
 
-  nsCOMPtr<nsIInputStream> mInStream;
-  nsCOMPtr<nsIOutputStream> mOutStream;
-
-  PRUint32 mDataLen;
-
   JSAMPARRAY mSamples;
   JSAMPARRAY mSamples3;
   PRUint8*   mRGBPadRow;
 
   PRInt32 mCompletedPasses;
   PRInt32 mPasses;
+
+  int mFillState;
+
+  JOCTET *mBuffer;
+  PRUint32 mBufferLen;  // amount of data currently in mBuffer
+  PRUint32 mBufferSize; // size in bytes what mBuffer was created with
+
+  JOCTET *mBackBuffer;
+  PRUint32 mBackBufferLen; // Offset of end of active backtrack data
+  PRUint32 mBackBufferSize; // size in bytes what mBackBuffer was created with
+  PRUint32 mBackBufferUnreadLen; // amount of data currently in mBackBuffer
+
+
+
 };
 
 #endif // nsJPEGDecoder_h__
