@@ -947,7 +947,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 
             // We use null for the callback and data pointer because
             //  we MUST ONLY load synchronous local files (no @import)
-            rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete, nsnull, nsnull);
+            rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete, nsnull);
             if (NS_SUCCEEDED(rv))
             {
               // Synchronous loads should ALWAYS return completed

@@ -208,7 +208,7 @@ nsLayoutModule::Initialize()
     if (cssLoader) {
       PRBool complete;
       rv = cssLoader->LoadAgentSheet(uaURL, gUAStyleSheet, complete,
-                                     nsnull, nsnull);
+                                     nsnull);
     }
   }
   if (NS_FAILED(rv)) {

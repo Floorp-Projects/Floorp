@@ -34,6 +34,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsICSSLoader.h"
+#include "nsICSSLoaderObserver.h"
 #include "nsITableLayout.h"
 
 #include "TypeInState.h"
@@ -49,7 +50,8 @@ class nsHTMLEditor : public nsEditor,
                      public nsIHTMLEditor,
                      public nsIEditorMailSupport,
                      public nsITableEditor,
-                     public nsIEditorStyleSheets
+                     public nsIEditorStyleSheets,
+                     public nsICSSLoaderObserver
 {
 
   typedef enum {eNoOp, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
@@ -221,6 +223,8 @@ public:
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
+  /* ------------ nsICSSLoaderObserver -------------- */
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
