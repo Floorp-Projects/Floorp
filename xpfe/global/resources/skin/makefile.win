@@ -64,6 +64,8 @@ install::
 	$(MAKE_INSTALL) message-icon.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) question-icon.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) return.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) stop.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) print.gif $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*
