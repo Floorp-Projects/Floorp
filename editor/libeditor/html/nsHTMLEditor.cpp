@@ -231,75 +231,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLEditor, nsEditor)
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLEditor)
-  NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
-  NS_INTERFACE_MAP_ENTRY(nsIEditor)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLObjectResizer)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLAbsPosEditor)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLInlineTableEditor)
-  NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
   NS_INTERFACE_MAP_ENTRY(nsITableEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorStyleSheets)
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHTMLEditor)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsPlaintextEditor)
 
-/*
-NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
- 
-  *aInstancePtr = nsnull;
-  
-  if (aIID.Equals(NS_GET_IID(nsIPlaintextEditor))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIPlaintextEditor*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLEditor))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIHTMLEditor*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLObjectResizer))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIHTMLObjectResizer*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLAbsPosEditor))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIHTMLAbsPosEditor*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLInlineTableEditor))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIHTMLInlineTableEditor*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEditorMailSupport))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIEditorMailSupport*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsITableEditor))) {
-    *aInstancePtr = NS_STATIC_CAST(nsITableEditor*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEditorStyleSheets))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIEditorStyleSheets*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsICSSLoaderObserver))) {
-    *aInstancePtr = NS_STATIC_CAST(nsICSSLoaderObserver*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return nsEditor::QueryInterface(aIID, aInstancePtr);
-}
-*/
 
 NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, 
                                  nsIPresShell   *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
