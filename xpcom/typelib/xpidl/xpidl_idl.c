@@ -22,12 +22,6 @@
 
 #include "xpidl.h"
 
-FILE *typelib_file = NULL;
-FILE *doc_file = NULL;
-FILE *header_file = NULL;
-
-nodeHandler *nodeDispatch[TREESTATE_NUM] = { NULL };
-
 /*
  * Pass 1 generates #includes for headers and the like.
  */
@@ -36,7 +30,7 @@ process_tree_pass1(TreeState *state)
 {
     nodeHandler handler;
 
-    if ((handler = nodeDispatch[state->mode][0]))
+    if ((handler = state->dispatch[0]))
         return handler(state);
     return TRUE;
 }
@@ -66,7 +60,7 @@ gboolean
 process_node(TreeState *state)
 {
     char *name = NULL;
-    nodeHandler *handlerp = nodeDispatch[state->mode], handler;
+    nodeHandler *handlerp = state->dispatch, handler;
     gint type;
     assert(state->tree);
 
@@ -436,7 +430,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 
 int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
-                  char *basename)
+                  char *basename, ModeData *mode)
 {
     char *tmp, *outname, *mode_outname;
     IDL_tree top;
@@ -477,57 +471,28 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 
     state.includes = stack.includes;
     state.include_path = include_path;
-    nodeDispatch[TREESTATE_HEADER] = headerDispatch();
-    nodeDispatch[TREESTATE_TYPELIB] = typelibDispatch();
-    nodeDispatch[TREESTATE_DOC] = docDispatch();
-    if (generate_headers) {
-        if (strcmp(outname, "-")) {
-            mode_outname = g_strdup_printf("%s.h", outname);
-            state.file = fopen(mode_outname, "w");
-            if (!state.file) {
-                perror("error opening output file");
-                free(mode_outname);
-                return 0;
-            }
-            free(mode_outname);
-        } else {
-            state.file = stdout;
+    state.dispatch = mode->factory();
+    if (!state.dispatch) {
+        /* XXX error */
+        return 0;
+    }
+    if (strcmp(outname, "-")) {
+        mode_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
+        state.file = fopen(mode_outname, "w");
+        free(mode_outname);
+        if (!state.file) {
+            perror("error opening output file");
+            return 0;
         }
-        state.mode = TREESTATE_HEADER;
-        state.tree = top;
-        ok = process_tree(&state);
-        if (state.file != stdout)
-            fclose(state.file);
-        if (!ok)
-            return 0;
+    } else {
+        state.file = stdout;
     }
-    if (generate_typelib) {
-        if (strcmp(basename, "-")) {
-            outname = g_strdup_printf("%s.xpt", basename);
-            state.file = fopen(outname, "wb");
-            if (!state.file) {
-                perror("error opening output file");
-                free(outname);
-                return 0;
-            }
-        } else {
-            state.file = stdout;
-        }
-        state.mode = TREESTATE_TYPELIB;
-        state.tree = top;
-        ok = process_tree(&state);
-        free(outname);
-        if (state.file != stdout)
-            fclose(state.file);
-        if (!ok)
-            return 0;
-    }
-    if (generate_docs) {
-        state.mode = TREESTATE_DOC;
-        state.tree = top;
-        if (!process_tree(&state))
-            return 0;
-    }
+    state.tree = top;
+    ok = process_tree(&state);
+    if (state.file != stdout)
+        fclose(state.file);
+    if (!ok)
+        return 0;
     free(state.basename);
     free(outname);
     /* g_hash_table_foreach(state.includes, free_name, NULL);

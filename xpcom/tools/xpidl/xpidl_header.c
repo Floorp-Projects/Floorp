@@ -410,11 +410,6 @@ xpcom_param(TreeState *state)
     IDL_tree param = state->tree;
     state->tree = IDL_PARAM_DCL(param).param_type_spec;
 
-    /* in params that are pointers should be const */
-    if (STARRED_TYPE(state->tree) &&
-        IDL_PARAM_DCL(param).attr == IDL_PARAM_IN)
-        fputs("const ", state->file);
-
     if (!xpcom_type(state))
         return FALSE;
     fprintf(state->file, "%s%s",

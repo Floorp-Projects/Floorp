@@ -38,40 +38,16 @@
 extern gboolean enable_debug;
 extern gboolean enable_warnings;
 extern gboolean verbose_mode;
-extern gboolean generate_docs;
-extern gboolean generate_typelib;
-extern gboolean generate_headers;
-extern gboolean generate_nothing;
 
-typedef struct IncludePathEntry {
-    char *directory;
-    struct IncludePathEntry *next;
-} IncludePathEntry;
+typedef struct TreeState TreeState;
 
-typedef struct {
-    FILE *file;
-    char *basename;
-    IDL_ns ns;
-    IDL_tree tree;
-    int mode;
-    GHashTable *includes;
-    IncludePathEntry *include_path;
-} TreeState;
-
-#define TREESTATE_HEADER	0
-#define TREESTATE_TYPELIB	1
-#define TREESTATE_DOC		2
-#define TREESTATE_NUM		3
- 
 /*
  * A function to handle an IDL_tree type.
  */
 typedef gboolean (*nodeHandler)(TreeState *);
 
-/*
- * An array of vectors of nodeHandlers, for handling each kind of node.
- */
-extern nodeHandler *nodeDispatch[TREESTATE_NUM];
+/* Function that produces a table of nodeHandlers for a given mode */
+typedef nodeHandler *(*nodeHandlerFactory)();
 
 extern nodeHandler *headerDispatch();
 extern nodeHandler *typelibDispatch();
@@ -82,13 +58,35 @@ extern nodeHandler *docDispatch();
  */
 gboolean node_is_error(TreeState *state);
 
+typedef struct ModeData {
+    char               *mode;
+    char               *modeInfo;
+    char               *suffix;
+    nodeHandlerFactory factory;
+} ModeData;
+
+typedef struct IncludePathEntry {
+    char *directory;
+    struct IncludePathEntry *next;
+} IncludePathEntry;
+
+struct TreeState {
+    FILE *file;
+    char *basename;
+    IDL_ns ns;
+    IDL_tree tree;
+    GHashTable *includes;
+    IncludePathEntry *include_path;
+    nodeHandler *dispatch;
+};
+
 /*
  * Process an IDL file, generating InterfaceInfo, documentation and headers as
  * appropriate.
  */
 int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
-                  char *basename);
+                  char *basename, ModeData *mode);
 
 /*
  * Iterate over an IDLN_LIST -- why is this not part of libIDL?
@@ -105,6 +103,5 @@ void XPIDL_add_output_file(char *fn);
 void XPIDL_cleanup_on_error();
 
 gboolean process_node(TreeState *state);
-
 
 #endif /* __xpidl_h */
