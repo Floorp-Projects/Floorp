@@ -18,21 +18,25 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
- *   Jerry Kirk    <Jerry.Kirk@NexwareCorp.com>
  */
 
-#ifndef nsCPhFilter_h__
-#define nsCPhFilter_h__
+#ifndef nsCAppLoop_h__
+#define nsCAppLoop_h__
 
-#include "PhT.h"
+#include "nsCBaseAppLoop.h"
 
-class nsCPhFilter
+class nsCAppLoop : public nsCBaseAppLoop 
 {
 public:
-//	HWND hWnd;
-//	UINT wMsgFilterMin;
-//	UINT wMsgFilterMax;
-//	UINT wRemoveFlags;	// fRemoveEvent flag passed to PeekEvent takes precedent
-};								// over PM_NOREMOVE and PM_REMOVE.
+	static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
-#endif /* nsPhFilter_h__ */
+protected:
+	nsCAppLoop();
+	virtual ~nsCAppLoop();
+
+	// Internal Platform Implementations of nsIEventLoop 
+	// (Error checking is ensured above)
+	nsresult PlatformExit(PRInt32 exitCode);
+};
+
+#endif /* nsCAppLoop_h__ */
