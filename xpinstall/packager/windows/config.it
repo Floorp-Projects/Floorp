@@ -314,7 +314,7 @@ Server Path0=$ServerPath$
 Description Short=$CompanyName$ Uninstaller
 Description Long=Uninstaller for $ProductName$
 Archive=$UninstallFile$
-Install Size=0
+$InstallSize$:$UninstallFile$
 $InstallSizeArchive$:$UninstallFile$
 ;Dependency0=
 ; Attributes can be the following values:
