@@ -475,11 +475,11 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Prev(
   PRUint32 cur = aPos;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
   {
-    c1 = this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+    c2 = this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
                                   aText[cur-1],
                                   (cur<aLen) ?aText[cur]:0);
   } else  {
-    c1 = this->GetClass(aText[cur-1]);
+    c2 = this->GetClass(aText[cur-1]);
   }
   // To Do: 
   //
@@ -489,11 +489,11 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Prev(
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
      {
-       c2= this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+       c1= this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
                                   aText[cur-1],
                                   (cur<aLen) ?aText[cur]:0);
      } else {
-       c2 = this->GetClass(aText[cur-1]);
+       c1 = this->GetClass(aText[cur-1]);
      }
 
      if(GetPair(c1, c2)) {
@@ -501,7 +501,7 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Prev(
        *oNeedMoreText = PR_FALSE;
        return NS_OK;
      }
-     c1 = c2;
+     c2 = c1;
   }
   *oPrev = 0;
   *oNeedMoreText = PR_TRUE;
