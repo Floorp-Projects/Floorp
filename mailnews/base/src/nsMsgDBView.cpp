@@ -26,7 +26,6 @@
 #include "nsISupports.h"
 #include "nsIMsgFolder.h"
 #include "nsIDBFolderInfo.h"
-#include "nsIDBFolderInfo.h"
 #include "nsIMsgDatabase.h"
 #include "nsIMsgFolder.h"
 #include "MailNewsTypes2.h"
