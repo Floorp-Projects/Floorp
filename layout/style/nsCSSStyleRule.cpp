@@ -989,6 +989,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
   nsCSSUnit unit = aValue.GetUnit();
   switch (unit) {
     case eCSSUnit_EM:
+    case eCSSUnit_Char:
       return NSToCoordRound(aValue.GetFloatValue() * (float)aFont.size);
       // XXX scale against font metrics height instead?
     case eCSSUnit_EN:
@@ -1053,6 +1054,10 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
     result = PR_FALSE;
   }
   else if (((aMask & SETCOORD_LENGTH) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Char)) {
+    aCoord.SetIntValue(NSToIntFloor(aValue.GetFloatValue()), eStyleUnit_Chars);
+  } 
+  else if (((aMask & SETCOORD_LENGTH) != 0) && 
            aValue.IsLengthUnit()) {
     aCoord.SetCoordValue(CalcLength(aValue, aFont, aPresContext));
   } 
@@ -1101,11 +1106,9 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, nsc
   }
   else if (eCSSUnit_String == unit) {
     nsAutoString  value;
-    char  cbuf[100];
     aValue.GetStringValue(value);
-    value.ToCString(cbuf, sizeof(cbuf));
     nscolor rgba;
-    if (NS_ColorNameToRGB(cbuf, &rgba)) {
+    if (NS_ColorNameToRGB(value, &rgba)) {
       aResult = rgba;
       result = PR_TRUE;
     }
@@ -1686,8 +1689,6 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         else if (eCSSUnit_Inherit == ourColor->mOpacity.GetUnit()) {
           color->mOpacity = parentColor->mOpacity;
         }
-
-  // XXX: NYI        nsCSSValue mBackFilter;
       }
     }
 
@@ -1814,11 +1815,11 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // border-color: color, string, enum, inherit
         if (nsnull != ourMargin->mBorderColor) {
-          nsCSSRect* ourColor = ourMargin->mBorderColor;
+          nsCSSRect* ourBorderColor = ourMargin->mBorderColor;
           nscolor borderColor;
           nscolor unused = NS_RGB(0,0,0);
 
-          if (eCSSUnit_Inherit == ourColor->mTop.GetUnit()) {
+          if (eCSSUnit_Inherit == ourBorderColor->mTop.GetUnit()) {
             if (parentSpacing->GetBorderColor(NS_SIDE_TOP, borderColor)) {
               spacing->SetBorderColor(NS_SIDE_TOP, borderColor);
             }
@@ -1826,14 +1827,14 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               spacing->SetBorderTransparent(NS_SIDE_TOP);
             }
           }
-          else if (SetColor(ourColor->mTop, unused, borderColor)) {
+          else if (SetColor(ourBorderColor->mTop, unused, borderColor)) {
             spacing->SetBorderColor(NS_SIDE_TOP, borderColor);
           }
-          else if (eCSSUnit_Enumerated == ourColor->mTop.GetUnit()) {
+          else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
             spacing->SetBorderTransparent(NS_SIDE_TOP);
           }
 
-          if (eCSSUnit_Inherit == ourColor->mRight.GetUnit()) {
+          if (eCSSUnit_Inherit == ourBorderColor->mRight.GetUnit()) {
             if (parentSpacing->GetBorderColor(NS_SIDE_RIGHT, borderColor)) {
               spacing->SetBorderColor(NS_SIDE_RIGHT, borderColor);
             }
@@ -1841,14 +1842,14 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               spacing->SetBorderTransparent(NS_SIDE_RIGHT);
             }
           }
-          else if (SetColor(ourColor->mRight, unused, borderColor)) {
+          else if (SetColor(ourBorderColor->mRight, unused, borderColor)) {
             spacing->SetBorderColor(NS_SIDE_RIGHT, borderColor);
           }
-          else if (eCSSUnit_Enumerated == ourColor->mRight.GetUnit()) {
+          else if (eCSSUnit_Enumerated == ourBorderColor->mRight.GetUnit()) {
             spacing->SetBorderTransparent(NS_SIDE_RIGHT);
           }
 
-          if (eCSSUnit_Inherit == ourColor->mBottom.GetUnit()) {
+          if (eCSSUnit_Inherit == ourBorderColor->mBottom.GetUnit()) {
             if (parentSpacing->GetBorderColor(NS_SIDE_BOTTOM, borderColor)) {
               spacing->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
             }
@@ -1856,14 +1857,14 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               spacing->SetBorderTransparent(NS_SIDE_BOTTOM);
             }
           }
-          else if (SetColor(ourColor->mBottom, unused, borderColor)) {
+          else if (SetColor(ourBorderColor->mBottom, unused, borderColor)) {
             spacing->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
           }
-          else if (eCSSUnit_Enumerated == ourColor->mBottom.GetUnit()) {
+          else if (eCSSUnit_Enumerated == ourBorderColor->mBottom.GetUnit()) {
             spacing->SetBorderTransparent(NS_SIDE_BOTTOM);
           }
 
-          if (eCSSUnit_Inherit == ourColor->mLeft.GetUnit()) {
+          if (eCSSUnit_Inherit == ourBorderColor->mLeft.GetUnit()) {
             if (parentSpacing->GetBorderColor(NS_SIDE_LEFT, borderColor)) {
               spacing->SetBorderColor(NS_SIDE_LEFT, borderColor);
             }
@@ -1871,10 +1872,10 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               spacing->SetBorderTransparent(NS_SIDE_LEFT);
             }
           }
-          else if (SetColor(ourColor->mLeft, unused, borderColor)) {
+          else if (SetColor(ourBorderColor->mLeft, unused, borderColor)) {
             spacing->SetBorderColor(NS_SIDE_LEFT, borderColor);
           }
-          else if (eCSSUnit_Enumerated == ourColor->mLeft.GetUnit()) {
+          else if (eCSSUnit_Enumerated == ourBorderColor->mLeft.GetUnit()) {
             spacing->SetBorderTransparent(NS_SIDE_LEFT);
           }
         }
