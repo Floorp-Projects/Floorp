@@ -7,11 +7,11 @@
 
   <binding id="smallheader">
     <content>
-      <xul:box class="toolbar-primary" autostretch="never" flex="1">
+      <xul:hbox class="toolbar-primary" align="center" flex="1">
         <xul:text class="box-smallheader-left" inherits="value=title"/>
         <xul:spring flex="1"/>
         <xul:text class="box-smallheader-right" inherits="value=description"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     <implementation>
       <property name="title" onset="this.setAttribute('title',val); return val;"
@@ -23,23 +23,23 @@
 
   <binding id="largeheader">
     <content>
-      <xul:box class="box-header-header toolbar-primary" flex="1" autostretch="never">
+      <xul:hbox class="box-header-header toolbar-primary" flex="1" align="center">
         <xul:image inherits="src" class="box-header-circle"/>
-        <xul:box autostretch="never" class="box-header-text-box">
+        <xul:hbox align="center" class="box-header-text-box">
           <xul:text class="box-header-text" inherits="value"/>
-        </xul:box>
+        </xul:hbox>
         <xul:spring flex="1"/>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
   
   <binding id="status">
     <content>
-      <xul:box class="box-status-bg toolbar-standard" flex="1">
+      <xul:hbox class="box-status-bg toolbar-standard" flex="1" align="center">
         <xul:text class="box-status-text" inherits="label"/>
         <xul:spring flex="1"/>
         <xul:text class="box-status-progress" inherits="value=progress"/>
-      </xul:box>  
+      </xul:hbox>  
     </content>
   </binding>
   

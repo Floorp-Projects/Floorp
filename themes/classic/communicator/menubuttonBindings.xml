@@ -10,7 +10,7 @@
     <content>
       <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
                   inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey,disabled"/>
-      <xul:hbox class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle" flex="1">
+      <xul:hbox class="menubutton-dual-dropmarker-box" align="center" flex="1">
         <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
       </xul:hbox>
       <children includes="menupopup"/>
@@ -20,7 +20,7 @@
   <binding id="menubutton-toolbar-single"
            extends="chrome://global/content/bindings/menubutton.xml#menubutton-single-left">
     <content>
-      <xul:hbox class="menubutton-toolbar-single-internal-box" flex="1" autostretch="never">
+      <xul:hbox class="menubutton-toolbar-single-internal-box" flex="1" align="center">
         <xul:image class="menubutton-toolbar-single-icon" inherits="src,disabled"/>
         <xul:text class="menubutton-toolbar-single-text" inherits="value=label,accesskey,crop,disabled,dragover-top" flex="1"/>
         <xul:image class="menubutton-toolbar-single-dropmarker" inherits="menubuttontype,disabled"/>
@@ -32,10 +32,10 @@
   <binding id="menubutton-toolbar-single-ile" display="xul:menu"
            extends="chrome://global/content/bindings/general.xml#inline-edit-base">
     <content>
-      <xul:hbox class="menubutton-toolbar-single-internal-box" flex="1" autostretch="never">
+      <xul:hbox class="menubutton-toolbar-single-internal-box" flex="1" align="center">
         <xul:image class="menubutton-toolbar-single-icon" inherits="src,disabled"/>
         <xul:hbox class="menubutton-toolbar-single-ile-text-container" 
-                  flex="1" ileattr="text-container" autostretch="never">
+                  flex="1" ileattr="text-container" align="center">
           <xul:text class="menubutton-toolbar-single-ile-text" 
                     inherits="value=label,accesskey,crop,disabled,dragover-top" 
                     ileattr="text" rootcontent="menubutton" flex="1"/>

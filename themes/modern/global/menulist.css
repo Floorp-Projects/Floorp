@@ -45,7 +45,6 @@ menulist {
 
 .menulist-text-box {
   padding: 3px 2px 3px 2px;
-  text-align: left;
 }
 
 .menulist-icon-mid {
@@ -116,10 +115,6 @@ menulist:focus {
 .menulist-right-btm {
   background: url("chrome://global/skin/menulist/mlist-rit-btm.gif") no-repeat;
   height: 8px;
-}
-
-.menulist-dropmarker-box {
-  text-align: center;
 }
 
 /* ..... active state ..... */

@@ -6,7 +6,7 @@
 
   <binding id="throbber" extends="chrome://global/content/bindings/general.xml#basetext">
   	<content>
-      <xul:image class="throbber-icon" inherits="src" autostretch="never"/>
+      <xul:image class="throbber-icon" inherits="src"/>
     </content>
   </binding>
 
@@ -16,7 +16,7 @@
        	<xul:spring class="throbber-groove-top"/>
     	  <xul:hbox class="throbber-middle">
       	  <xul:spring class="throbber-groove-left"/>
-    	  	<xul:image class="throbber-icon" inherits="src" autostretch="never"/>
+    	  	<xul:image class="throbber-icon" inherits="src"/>
     	  	<xul:spring class="throbber-groove-right"/>
     	  </xul:hbox>
     	  <xul:spring class="throbber-groove-bottom"/>

@@ -54,7 +54,7 @@ mail-emailaddress
 .headerValueBox 
   { 
     width                 : 7.7em;
-    text-align            : right;
+    -moz-box-pack         : end;
   }
 
 .headerBox              
@@ -90,7 +90,7 @@ mail-emailaddress
 
 .emailDisplayImage
   {
-    text-align: right;
+    -moz-box-pack: end;
   }
 
 .emailDisplayButton 
@@ -164,7 +164,7 @@ text.headerValue
 /* ::::: collapsed view styles ::::: */
 
 #collapsedAttachmentBox {
-  text-align: center;
+  -moz-box-pack: center;
 }
 
 #collapseddateValue

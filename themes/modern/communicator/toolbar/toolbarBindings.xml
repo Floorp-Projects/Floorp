@@ -9,7 +9,7 @@
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
           tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
       <xul:hbox class="toolbar-holder" flex="1">
-        <xul:box class="toolbar-primary-icon"/>
+        <xul:hbox class="toolbar-primary-icon"/>
         <xul:stack class="toolbar-primary-mid" flex="1">
           <xul:hbox class="toolbar-primary-mid-2" flex="1">
             <xul:vbox class="toolbar-primary-mid-bg" flex="1">
@@ -22,10 +22,10 @@
               <xul:spring class="toolbar-primary-right-btm"/> 
             </xul:vbox>
           </xul:hbox>
-          <xul:box class="toolbar-primary-mid-fg"
+          <xul:hbox class="toolbar-primary-mid-fg"
                    inherits="collapsed,last-toolbar,orient=tborient">
             <children/>
-          </xul:box>
+          </xul:hbox>
         </xul:stack>
       </xul:hbox>
     </content>

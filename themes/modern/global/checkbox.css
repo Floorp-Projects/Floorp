@@ -63,8 +63,7 @@ checkbox > .internal-box > .checkmark-box {
 /* ::::: icon and label ::::: */
 
 checkbox[label] > .internal-box > .checkbox-label {
-  margin: 0px 0px 2px 0px;
-  padding: 1px;
+  margin: 2px 5px !important;
 }
 
 checkbox > .internal-box > .checkbox-icon {

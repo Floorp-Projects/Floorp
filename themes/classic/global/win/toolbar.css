@@ -37,6 +37,7 @@ menubar
 
 toolbargrippy
   {
+    -moz-box-orient       : vertical;
     border-left           : 1px solid ThreeDHighlight;
     border-top            : 1px solid ThreeDHighlight;
     border-right          : 1px solid ThreeDShadow;

@@ -6,14 +6,14 @@
    
   <binding id="button-toolbar-2" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-  	  <xul:box class="button-internal-box" orient="vertical" flex="1">
-        <xul:box class="button-icon-box" autostretch="never">
+  	  <xul:vbox class="button-internal-box" flex="1">
+        <xul:hbox class="button-icon-box" pack="center">
           <xul:image class="button-icon" inherits="src"/>
-        </xul:box>
-        <xul:box class="button-text-container" autostretch="never" flex="1">
+        </xul:hbox>
+        <xul:hbox class="button-text-container" flex="1" pack="center">
           <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>          	
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+      </xul:vbox>
       <children includes="menupopup"/>
     </content>
   </binding>
@@ -24,9 +24,9 @@
       <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
                     inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey,disabled"/>
-        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
+        <xul:hbox class="menubutton-dual-dropmarker-box" pack="center" flex="1">
           <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
-        </xul:box>
+        </xul:hbox>
       </xul:stack>
       <children includes="menupopup"/>
     </content>
@@ -38,9 +38,9 @@
       <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-2 top" allowevents="true" 
                     inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey,disabled"/>
-        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
+        <xul:hbox class="menubutton-dual-dropmarker-box" pack="center" flex="1">
           <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
-        </xul:box>
+        </xul:hbox>
       </xul:stack>
       <children includes="menupopup"/>
     </content>
@@ -49,11 +49,11 @@
   <binding id="menubutton-toolbar-single"
            extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
-      <xul:box class="menubutton-internal-box" flex="1" autostretch="never">
+      <xul:hbox class="menubutton-internal-box" flex="1" align="center">
         <xul:image class="menubutton-icon" inherits="src,disabled"/>
         <xul:text class="menubutton-text" inherits="value=label,accesskey,crop,disabled,dragover-top" flex="1"/>
         <xul:image class="menubutton-dropmarker" inherits="menubuttontype,disabled"/>
-      </xul:box>
+      </xul:hbox>
       <children includes="menupopup"/>
     </content>
   </binding>
@@ -61,10 +61,10 @@
   <binding id="menubutton-toolbar-single-ile" display="xul:menu"
            extends="chrome://global/content/bindings/general.xml#inline-edit-base">
     <content>
-      <xul:hbox class="menubutton-internal-box" flex="1" autostretch="never">
+      <xul:hbox class="menubutton-internal-box" flex="1" align="center">
         <xul:image class="menubutton-single-icon" inherits="src,disabled"/>
         <xul:hbox class="menubutton-toolbar-single-ile-text-container" 
-                  flex="1" ileattr="text-container" autostretch="never">
+                  flex="1" ileattr="text-container" align="center">
           <xul:text class="menubutton-text" 
                     inherits="value=label,accesskey,crop,disabled,dragover-top" 
                     ileattr="text" rootcontent="menubutton" flex="1"/>

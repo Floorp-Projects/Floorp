@@ -42,7 +42,7 @@
   <groupbox>
     <label value="&legendHeader;"/>
 
-    <hbox autostretch="never" valign="middle">
+    <hbox align="center">
       <text class="label" value="&defaultSearchEngine.label;" accesskey="&defaultSearchEngine.accesskey;" for="engineList"/>
       <menulist id="engineList" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch"
               sortResource="http://home.netscape.com/NC-rdf#Name" sortDirection="ascending"
@@ -71,7 +71,7 @@
 
   <groupbox orient="vertical">
     <label value="&sidebarSearchTabPref.label;"/>
-    <radiogroup orient="vertical" autostretch="never"
+    <radiogroup orient="vertical" align="start"
         id="sidebarSearchMode"
         pref="true"
         preftype="int"

@@ -803,7 +803,6 @@ button.edit-mode[selected="1"]:hover:active
     border                : 1px inset white;
     margin                : 0px;
     padding               : 2px;
-    text-align            : center;
   }
 
 .color-button 

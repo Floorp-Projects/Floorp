@@ -50,7 +50,7 @@
     <label value="&rHeader;"/>
 
   <text value="&textStart;"/>
-    <radiogroup id="offlineStartupstate" orient="vertical" autostretch="never"
+    <radiogroup id="offlineStartupstate" orient="vertical" align="start"
                 pref="true" preftype="int" prefstring="offline.startup_state"
                 prefattribute="value">
     <radio class="small-margin" group="offlineStartupstate" value="0" label="&radioAskMode;"/>
@@ -59,7 +59,7 @@
 
   <separator class="thin"/>
   <text value="&textGoingOnline;"/>
-    <radiogroup id="whengoingOnlinestate" orient="vertical" autostretch="never"
+    <radiogroup id="whengoingOnlinestate" orient="vertical" align="start"
                 pref="true" preftype="int" prefstring="offline.send.unsent_messages"
                 prefattribute="value">
     <radio class="small-margin" group="whengoingOnlinestate" value="0" label="&radioAskUnsent;"/>
@@ -69,7 +69,7 @@
 
   <separator class="thin"/>
   <text value="&textGoingOffline;"/>
-     <radiogroup id="whengoingOfflinestate" orient="vertical" autostretch="never"
+     <radiogroup id="whengoingOfflinestate" orient="vertical" align="start"
                 pref="true" preftype="int" prefstring="offline.download.download_messages"
                 prefattribute="value">
     <radio class="small-margin" group="whengoingOfflinestate" value="0" label="&radioAskDownload;"/>
@@ -81,7 +81,7 @@
 
 <groupbox orient="vertical">
     <label value="&Diskspace;"/>	    
-    <hbox autostretch="never">
+    <hbox align="center">
         <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
             pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" prefattribute="checked"/> 
         <textbox id="offlineCompactFolderMin" size="5" value="100" 

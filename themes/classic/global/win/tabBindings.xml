@@ -6,18 +6,18 @@
 
   <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:box class="tabcontainer">
-	      <children/>
-      </xul:box>
-	    <xul:spring class="tabs-spring" flex="1"/>
+      <xul:hbox class="tabcontainer">
+        <children/>
+      </xul:hbox>
+      <xul:spring class="tabs-spring" flex="1"/>
     </content>
   </binding>
 
   <binding id="tabpanels" extends="chrome://global/content/bindings/tabbox.xml#tabpanels">
     <content>
-  	  <xul:box class="tabpanels-inner-box" flex="1">
+      <xul:hbox class="tabpanels-inner-box" flex="1">
         <children/> 
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
 

@@ -43,7 +43,7 @@ mail-emailaddress {
 .buttonTopSpacer     { height: .3em; }
 .buttonSpacer        { width: .5em; }
 .headerBox              { overflow: hidden; min-width:50px;}
-.headerValueBox { width: 7.7em; text-align: right;}
+.headerValueBox { width: 7.7em; -moz-box-pack: end;}
 
 #addToAddressBookButton {
 	list-style-image:url("chrome://messenger/skin/addtoab.gif");
@@ -71,7 +71,7 @@ mail-emailaddress {
 
 .emailDisplayImage
 {
-  align: right;
+  -moz-box-pack: end;
 }
 
 .emailDisplayButton {
@@ -134,7 +134,7 @@ text.headerValue
 /* ::::: collapsed view styles ::::: */
 
 #collapsedAttachmentBox {
-  text-align: center;
+  -moz-box-pack: center;
 }
 #collapseddateValue
 {

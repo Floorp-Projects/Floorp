@@ -71,7 +71,7 @@
     <spring class="taskbarspacer" flex="9"/>
   </hbox>
     
-  <hbox id="taskbarGotoMenuBox" align="right" flex="1">
+  <hbox id="taskbarGotoMenuBox" flex="1">
     <!-- The "Open Windows" menu uses the window mediator
          to display all of the open windows -->
     <menubutton oncommand="ShowWindowFromResource(event.target)"

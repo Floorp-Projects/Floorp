@@ -71,6 +71,7 @@ menubar > .toolbar-holder {
 /* ::::: toolbargrippy ::::: */
  
 toolbargrippy {
+  -moz-box-orient: vertical;
   width: 12px;
   background-image: url("chrome://global/skin/toolbar/tbgrip-mid.gif");
 }

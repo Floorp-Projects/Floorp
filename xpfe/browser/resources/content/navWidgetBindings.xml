@@ -8,7 +8,7 @@
 
   <binding id="urlbar" extends="xul:box">
     <content flex="1">  
-      <xul:box class="urlbar-container" autostretch="never" flex="1">
+      <xul:box class="urlbar-container" align="center" flex="1">
         <xul:box class="urlbar-pre-buttons">
           <children includes="button"/>
         </xul:box>
@@ -45,7 +45,7 @@
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content>
-      <xul:box autostretch="never" valign="middle" flex="1" class="menulist-container">
+      <xul:box align="center" flex="1" class="menulist-container">
         <xul:image class="menulist-icon" inherits="src" emattr="icon"/>
         <xul:textbox class="menulist-editable-textbox plain" flex="1" emattr="field"
                        inherits="autocomplete,searchSessionType,timeout,tooltip=fieldtooltip,tooltiptext=fieldtooltiptext,value"/>

@@ -24,7 +24,6 @@
   .button-toolbar-2 > .button-internal-box
     {
       padding             : 2px 7px 2px 6px;
-      text-align          : center;
       border              : 1px solid transparent;
       color               : inherit;
       background-color    : -moz-Dialog;
@@ -78,12 +77,6 @@
       border              : 1px solid transparent !important;
     }
 
-  .button-toolbar-1 > .button-internal-box > .button-text-container,
-  .button-toolbar-2 > .button-internal-box > .button-text-container
-    {
-      text-align          : center;
-    }
-          
 /**
  * Standard Toolbar Buttons
  *   for secondary command toolbars, e.g. formatting toolbar 
@@ -196,7 +189,6 @@
       color               : inherit;
       padding             : 0px;
       border              : 1px solid transparent;
-      text-align          : center;
     }
   
   .button-toolbar-4:hover
@@ -230,11 +222,6 @@
       border-bottom       : 1px solid ThreeDHighlight !important;
     }
 
-  .button-toolbar-4 > .button-internal-box > .button-text-container
-    {
-      text-align          : center;
-    }
-    
   .button-toolbar-4[disabled="true"] > .button-internal-box,
   .button-toolbar-4[disabled="true"]:hover > .button-internal-box,
   .button-toolbar-4[disabled="true"]:hover:active > .button-internal-box

@@ -41,7 +41,7 @@
 
 .headerValueBox {
   width: 7.7em;
-  text-align: right;
+  -moz-box-pack: end;
 }
 
 /* ::::: msg header buttons ::::: */
@@ -117,7 +117,7 @@ mail-emailaddress {
 }
 
 .emailDisplayImage {
-  text-align: right;
+  -moz-box-pack: end;
 }
 
 /* ::::: email address twisty ::::: */
@@ -148,7 +148,7 @@ mail-emailaddress {
 /* ::::: collapsed view styles ::::: */
 
 #collapsedAttachmentBox {
-  text-align: center;
+  -moz-box-pack: center;
 }
 
 #collapseddateValue {

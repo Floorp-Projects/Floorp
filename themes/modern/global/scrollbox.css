@@ -30,11 +30,12 @@
 /* ::::: auto-repeat button ::::: */
  
 autorepeatbutton {
+  -moz-box-align: center;
+  -moz-box-pack: center;
   margin: 1px 2px 2px 1px;
   border: 1px solid transparent;
   padding: 3px;
   height: 1em;  
-  text-align: center;
 }
 
 autorepeatbutton:hover {

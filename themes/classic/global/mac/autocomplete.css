@@ -59,6 +59,7 @@ html|*.textbox-input
 
 .autocomplete-outliner 
   {
+    border                 : none;
     background-color       : transparent !important;
   }
 

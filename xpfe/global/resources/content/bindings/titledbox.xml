@@ -12,23 +12,23 @@
 
   <binding id="groupbox" extends="chrome://global/content/bindings/titledbox.xml#groupbox-base">
     <content>
-      <xul:box class="groupbox-title" autostretch="never" orient="vertical">
+      <xul:hbox class="groupbox-title" align="center" pack="start">
         <children includes="label"/>
-      </xul:box>
-      <xul:box flex="1" class="groupbox-body" inherits="orient,autostretch,align,valign">
+      </xul:hbox>
+      <xul:box flex="1" class="groupbox-body" inherits="orient,align,pack">
         <children/>
       </xul:box>
-    </content>    
+    </content>
   </binding>
 
   <!-- titledbox included for backwards compatibility purposes; to be removed at a later date -->
 
   <binding id="titledbox" extends="chrome://global/content/bindings/titledbox.xml#groupbox-base">
     <content>
-      <xul:box class="groupbox-title" autostretch="never" orient="vertical">
+      <xul:hbox class="groupbox-title" align="center">
         <children includes="label"/>
-      </xul:box>
-      <xul:box flex="1" class="groupbox-body" inherits="orient,autostretch,align,valign">
+      </xul:hbox>
+      <xul:box flex="1" class="groupbox-body" inherits="orient,align,pack">
         <children/>
       </xul:box>
     </content>    

@@ -20,9 +20,9 @@
   
   <binding id="text-editable-edit" extends="xul:box">
     <content>
-      <xul:box flex="1">
+      <xul:hbox flex="1">
         <html:input type="text" inherits="value,type,maxlength,disabled,size,readonly"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     <handlers>
       <handler event="blur" action="this.setAttribute('mode','display');"/>

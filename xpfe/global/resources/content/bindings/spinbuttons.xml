@@ -33,7 +33,7 @@
 
   <binding id="spinbuttons-baseline">
     <content>
-      <xul:vbox flex="1" autostretch="never">
+      <xul:vbox flex="1" align="center">
         <xul:image inherits="onclick=onup" id="upButton" class="up"/>
         <xul:image inherits="onclick=ondown" id="downButton" class="down"/>
       </xul:vbox>

@@ -76,7 +76,7 @@ popup > menuitem[menuactive="true"][disabled="true"]
   {
     margin                : -1px 3px 1px 6px;
     width                 : 8px;
-    text-align            : center;
+    -moz-box-pack         : center;
     list-style-image      : url("chrome://global/skin/menu-arrow.gif");
   }
 
@@ -85,7 +85,7 @@ popup > menuitem[menuactive="true"][disabled="true"]
     color                 : inherit;
     margin                : 0px 5px 0px 1px;
     width                 : 11px;
-    text-align            : center;
+   -moz-box-pack          : center;
     list-style-image      : inherit;
     padding-left          : 16px;
   }
@@ -96,7 +96,7 @@ menuitem[type="checkbox"] > .menu-iconic-left, menuitem[type="radio"] > .menu-ic
     color                 : inherit;
     margin                : 0px 10px 0px 0px;
     width                 : 11px;
-    text-align            : center;
+    -moz-box-pack         : center;
     list-style-image      : inherit;
     padding-left		  : 2px;
   }

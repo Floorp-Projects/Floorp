@@ -16,9 +16,9 @@
     </resources>
     
     <content context="_child">
-      <xul:box class="textbox-internal-box" flex="1">
+      <xul:hbox class="textbox-internal-box" flex="1">
         <html:input class="textbox-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
-      </xul:box>
+      </xul:hbox>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="
@@ -159,9 +159,9 @@
 
   <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content context="_child">
-      <xul:box class="textarea-internal-box" flex="1">
+      <xul:hbox class="textarea-internal-box" flex="1">
         <html:textarea class="textbox-textarea" flex="1" inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
-      </xul:box>
+      </xul:hbox>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="

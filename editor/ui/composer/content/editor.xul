@@ -166,7 +166,7 @@
 
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed" tbautostretch="always">
+  <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed" tbalign="stretch">
     <button id="newButton"/>
     <button id="openButton"/>
     <button id="saveButton"/>
@@ -186,7 +186,7 @@
       </button>
     </hbox> 
   </toolbar>
-  <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="never">
+  <toolbar id="FormatToolbar" persist="collapsed" tbalign="center">
     <!-- We need this else menulists get stretched -->
     <hbox autostretch="never">
       <!-- from editorOverlay -->

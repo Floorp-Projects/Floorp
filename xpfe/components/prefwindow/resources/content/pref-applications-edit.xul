@@ -278,7 +278,7 @@
   
   <keyset id="dialogKeys"/>
   
-  <hbox autostretch="never">
+  <hbox align="center">
     <image id="contentTypeImage"/>
     <text class="label" id="contentType" crop="right"/>
   </hbox>
@@ -296,11 +296,11 @@
     </columns>
     
     <rows>
-      <row autostretch="never">
+      <row align="center">
         <text class="label" value="&extension.label;"/>
         <text class="label" id="extension"/>
       </row>
-      <row autostretch="never">
+      <row align="center">
         <text class="label" value="&mimetype.label;" accesskey="&mimetype.accesskey;"
               for="mimeType"/>
         <textbox id="mimeType" flex="1"/>
@@ -314,17 +314,17 @@
     <label value="&handledby.label;"/>
     
     <radiogroup id="handler" orient="vertical">
-      <vbox autostretch="never">
+      <vbox align="start">
 <!-- Turn this off since we can't make it work yet
         <radio value="4" group="handler" label="&useDefault.label;" accesskey="&useDefault.accesskey;" oncommand="doEnabling();"/>
 -->
         <radio value="1" group="handler" label="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
       </vbox>
-      <hbox autostretch="never">
+      <hbox align="center">
         <radio value="2" group="handler" label="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
         <textbox id="appPath" flex="1" onchange="selectAppRadio();"/>
       </hbox>
-      <hbox autostretch="never" halign="right">
+      <hbox align="center" pack="end">
         <button label="&browse.label;" accesskey="&browse.accesskey;"
                 oncommand="chooseApp();"/>
       </hbox>
@@ -332,7 +332,7 @@
     
   </groupbox>              
 
-  <hbox autostretch="never">
+  <hbox align="center">
     <checkbox id="askBeforeOpen" label="&askBeforeOpen.label;" accesskey="&askBeforeOpen.accesskey;"/>         
   </hbox>
   

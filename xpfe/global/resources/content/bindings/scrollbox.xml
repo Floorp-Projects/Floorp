@@ -12,7 +12,7 @@
 
   <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
-      <xul:box class="scrollbox-innerbox" inherits="orient,autostretch,align,valign">
+      <xul:box class="scrollbox-innerbox" inherits="orient,align,pack">
         <children/>
       </xul:box>
     </content>
@@ -34,13 +34,13 @@
           button2.removeAttribute('collapsed');
           "
       >
-        <xul:autorepeatbutton autostretch="never" class="up" collapsed="true"
+        <xul:autorepeatbutton class="up" collapsed="true"
                               oncommand="parentNode.childNodes[1].boxObject.QueryInterface(
                                          Components.interfaces.nsIScrollBoxObject).scrollByIndex(-1);"/>
         <xul:scrollbox orient="vertical" flex="1">
           <children/>
         </xul:scrollbox>
-        <xul:autorepeatbutton autostretch="never" class="down" collapsed="true" 
+        <xul:autorepeatbutton class="down" collapsed="true" 
                               oncommand="parentNode.childNodes[1].boxObject.QueryInterface(
                                          Components.interfaces.nsIScrollBoxObject).scrollByIndex(1);"/>
       </xul:vbox>

@@ -12,13 +12,13 @@
 
   <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <content orient="vertical">
-      <xul:box orient="vertical" flex="1" class="toolbar-internal-box">
+      <xul:vbox flex="1" class="toolbar-internal-box">
         <children/>
-      </xul:box>
-      <xul:box tbattr="collapsed-tray-holder" class="collapsed-tray-holder" moz-collapsed="true">
-        <xul:box tbattr="collapsed-tray" class="collapsed-tray"/>
+      </xul:vbox>
+      <xul:hbox tbattr="collapsed-tray-holder" class="collapsed-tray-holder" moz-collapsed="true">
+        <xul:hbox tbattr="collapsed-tray" class="collapsed-tray"/>
         <xul:spring flex="1" class="collapsed-tray-spring"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>
@@ -142,10 +142,10 @@
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
-      <xul:box flex="1" class="toolbar-holder" autostretch="never"
-               inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch">
+      <xul:hbox flex="1" class="toolbar-holder" align="center"
+               inherits="collapsed,last-toolbar,orient=tborient,align=tbalign,pack=tbpack">
         <children/>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>
@@ -178,9 +178,9 @@
     <content>
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy" class="toolbar-grippy"/>
-      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
+      <xul:hbox flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" align="center">
         <children/>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>

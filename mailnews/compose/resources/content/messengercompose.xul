@@ -386,7 +386,7 @@
        </hbox>
     </toolbar>
   
-    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbautostretch="always" flex="1">
+    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbalign="stretch" flex="1">
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="75">
           <hbox autostretch="never">

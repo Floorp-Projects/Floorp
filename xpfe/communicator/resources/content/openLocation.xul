@@ -64,7 +64,7 @@
       <html>&enter.label;</html>
       <separator class="thin"/>
 
-      <hbox autostretch="never">
+      <hbox align="center">
         <textbox id="dialog.input" flex="1" type="autocomplete"
                     searchSessions="history" timeout="50" maxrows="6"
                     oninput="doEnabling();">
@@ -75,7 +75,7 @@
         </textbox>
         <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
       </hbox>
-      <hbox autostretch="never" valign="center">
+      <hbox align="center">
         <text class="label" value="&openWhere.label;"/>
         <menulist id="openAppList">
           <menupopup>

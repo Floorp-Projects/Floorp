@@ -89,7 +89,7 @@
       </vbox>
     </hbox>
   </groupbox>
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" align="start">
     <label value="&languages.customize.Charset.grouplabel;"/>
     <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
     <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"

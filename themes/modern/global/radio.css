@@ -61,8 +61,7 @@ radio > .internal-box > .checkmark-box {
 
 radio[label] > .internal-box > .checkbox-label,
 radio.iconic > .internal-box > .icon {
-  margin: 0px 0px 0px 0px;
-  padding: 0px 2px 0px 0px;
+  margin: 2px 5px !important;
 }
 
 radio.iconic > .internal-box > .checkbox-label {

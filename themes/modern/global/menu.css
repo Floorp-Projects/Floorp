@@ -71,7 +71,6 @@ menuitem[menuactive="true"][disabled="true"] {
 .menu-iconic-left {
   width: 16px;
   list-style-image: inherit;
-  text-align: center;
 }
 
 .menu-iconic-accel {
@@ -84,7 +83,6 @@ menuitem[menuactive="true"][disabled="true"] {
 .menu-right {
   margin: 0px 0px 0px 6px;
   width: 8px;
-  text-align: center;
   list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
 }
 

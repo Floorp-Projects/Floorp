@@ -63,7 +63,7 @@
             <separator orient="horizontal" class="thin"/>
             <radiogroup id="mode" orient="vertical" oncommand="window.dialog.toggleChoice()">
                 <vbox>
-                    <hbox autostretch="never">
+                    <hbox align="center">
                         <radio id="runApp"
                                group="mode"
                                label="&runApp.label;"
@@ -79,7 +79,7 @@
                     </hbox>
                 </vbox>
                 <vbox>
-                    <hbox autostretch="never">
+                    <hbox align="center">
                         <radio id="saveToDisk"
                                group="mode"
                                label="&saveToDisk.label;"
@@ -88,7 +88,7 @@
                  </vbox>
             </radiogroup>
             <separator orient="horizontal" class="thin"/>
-            <hbox autostretch="never">
+            <hbox align="center">
                 <checkbox id="alwaysAskMe" label="&alwaysAskMe.label;" accesskey="&alwaysAskMe.accesskey;"/>
             </hbox>
         </vbox>

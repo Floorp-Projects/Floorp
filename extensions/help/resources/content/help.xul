@@ -32,7 +32,7 @@
 	id="helpToolbar" 
 	grippytooltip="aTooltip" 
 	grippytooltiptext="The Help Toolbar"
-        tbautostretch="always" 
+        tbalign="stretch" 
 	persist="collapsed">
 
         <button id="helpBackButton"

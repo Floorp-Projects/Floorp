@@ -27,7 +27,7 @@
         <treeitem uri="...">
           <treerow>
             <treecell>
-              <html:hr width="75%" align="center" size="1" />
+              <html:hr width="75%" size="1" />
             </treecell>
           </treerow>
         </treeitem>   
@@ -40,16 +40,16 @@
           <treerow>
             <treecell>
               <treeindentation />
-              <button label="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+              <button label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </treecell>
             <treecell>
-              <button label="rdf:http://home.netscape.com/NC-rdf#URL" align="left" style="list-style-image: none;" />
+              <button label="rdf:http://home.netscape.com/NC-rdf#URL" style="list-style-image: none;" />
             </treecell>
             <treecell>
-              <button label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="left" style="list-style-image: none;" />
+              <button label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" style="list-style-image: none;" />
             </treecell>
             <treecell>
-              <button label="rdf:http://home.netscape.com/NC-rdf#Description" align="left" style="list-style-image: none;" />
+              <button label="rdf:http://home.netscape.com/NC-rdf#Description" style="list-style-image: none;" />
             </treecell>
           </treerow>
         </treeitem>
@@ -79,6 +79,6 @@ the scrollbar is visible. Yes, I know this is not necessary for win32 or gtk, bu
 use this area for information (maybe full URL of selected item or the like) in the future.
 -->
   <hbox id="status-bar" style="min-height:15px; max-height:15px;">
-    <button class="status-bar" align="left" label=""/>
+    <button class="status-bar" label=""/>
   </hbox>
 </window>

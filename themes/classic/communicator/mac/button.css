@@ -42,7 +42,7 @@
   .button-toolbar-2 > .button-internal-box
     {
       padding             : 2px 6px 2px 5px;
-      text-align          : center;
+      -moz-box-pack       : center;
       border              : 1px solid transparent;
     }    
   
@@ -50,7 +50,7 @@
     {
       border              : 1px solid transparent;
       padding			  : 0px 1px;
-      text-align          : center;
+      -moz-box-pack          : center;
     }
   
   .button-toolbar[value] > .button-internal-box > .button-text-container
@@ -144,7 +144,7 @@
   .button-toolbar-2 > .button-internal-box > .button-text-container,
   .button-toolbar-4 > .button-internal-box > .button-text-container
     {
-      text-align          : center;
+      -moz-box-pack       : center;
     }
   
   .button-toolbar-4 > .button-internal-box > .button-icon

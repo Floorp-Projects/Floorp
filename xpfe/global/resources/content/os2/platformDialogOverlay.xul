@@ -47,7 +47,7 @@
     <spring flex="1"/>
   </hbox>
 
-  <hbox id="okCancelButtonsRight" halign="right">
+  <hbox id="okCancelButtonsRight">
     <spring flex="1"/>
     <button class="right exit-dialog" id="ok" label="&okButton.label;" default="true" oncommand="doOKButton();"/> 
     <button class="exit-dialog" id="Button2" label="&cancelButton.label;" collapsed="true" oncommand="doButton2();"/> 
@@ -55,7 +55,7 @@
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
   </hbox>
   
-  <hbox id="okCancelHelpButtonsRight" halign="right">
+  <hbox id="okCancelHelpButtonsRight">
     <spring flex="1"/>
     <button class="right exit-dialog" id="ok" label="&okButton.label;" default="true" oncommand="doOKButton();"/>
     <button class="exit-dialog" id="Button2" label="&cancelButton.label;" collapsed="true" oncommand="doButton2();"/>

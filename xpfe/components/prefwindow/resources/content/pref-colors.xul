@@ -60,7 +60,7 @@
         <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <separator class="thin"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <checkbox id="browserUseSystemColors" label="&useSystemColors.label;" accesskey="&useSystemColors.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.display.use_system_colors" prefattribute="checked"/>
       </hbox>
@@ -81,7 +81,7 @@
         <data id="visitedLinks" pref="true" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <separator class="thin"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <checkbox id="browserUnderlineAnchors" label="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
                   pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>
       </hbox>
@@ -91,7 +91,7 @@
   <groupbox orient="vertical">
     <html>&someProvColors;</html>
   
-    <radiogroup id="browserUseDocumentColors" orient="vertical" autostretch="never" 
+    <radiogroup id="browserUseDocumentColors" orient="vertical" align="start" 
                 pref="true" preftype="bool" prefstring="browser.display.use_document_colors"
                 prefattribute="value">
       <radio group="browserUseDocumentColors" value="true" label="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
@@ -102,7 +102,7 @@
 
   <groupbox orient="vertical">
       <label value="&viewsource;"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
                   pref="true" preftype="bool" prefstring="view_source.syntax_highlight" prefattribute="checked"/>
       </hbox>

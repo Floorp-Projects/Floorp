@@ -50,7 +50,7 @@ Contributor(s): ______________________________________. -->
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
-             tbautostretch="always">
+             tbalign="stretch">
       <hbox id="nav-bar-buttons">
         <menubutton id="back-button" label="&backButton.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
@@ -107,7 +107,7 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
-      <hbox id="throbber-box" autostretch="never">
+      <hbox id="throbber-box" align="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </hbox>
     </toolbar>

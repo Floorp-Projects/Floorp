@@ -73,6 +73,7 @@ textbox[type="autocomplete"]
 
 .autocomplete-outliner 
   {
+    border                 : none;
     background-color       : transparent !important;
   }
 
@@ -81,6 +82,11 @@ textbox[type="autocomplete"]
     margin                 : 0px !important;
     border                 : none !important;
     padding                : 0px !important;
+  }
+
+.autocomplete-outlinerbody:-moz-outliner-cell-text 
+  {
+    padding-left: 8px;
   }
 
 .autocomplete-outlinerbody:-moz-outliner-row(menuactive) 

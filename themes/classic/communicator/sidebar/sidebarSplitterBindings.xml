@@ -6,26 +6,26 @@
 
   <binding id="sidebar-splitter" extends="xul:splitter">
     <content>
-      <xul:box class="sidebar-splitter-topright-cap" orient="vertical">
+      <xul:vbox class="sidebar-splitter-topright-cap">
         <xul:spring flex="1"/>
-      </xul:box>
+      </xul:vbox>
       <xul:spring flex="1"/>
-      <xul:box>
+      <xul:hbox>
         <children/>
-      </xul:box>
+      </xul:hbox>
       <xul:spring flex="1"/>
-      <xul:box class="sidebar-splitter-bottomright-cap" orient="vertical">
+      <xul:vbox class="sidebar-splitter-bottomright-cap">
         <xul:spring flex="100%"/>
-      </xul:box>
+      </xul:vbox>
     </content>
   </binding>
   
   <binding id="panelheader" extends="xul:button">
     <content>
-      <xul:box class="panelheader-box-1" flex="1">
+      <xul:hbox class="panelheader-box-1" flex="1">
         <xul:image class="panelheader-image" inherits="src"/>
         <xul:text class="panelheader-icon" inherits="value=label,crop"/>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
           

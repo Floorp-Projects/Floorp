@@ -6,36 +6,40 @@
           
   <binding id="menubutton-toolbar-top">
     <content>
-     <xul:box class="classic-simplebutton-box" autostretch="never" flex="1">
+     <xul:hbox class="classic-simplebutton-box" align="center" flex="1">
         <xul:button class="classic-simplebutton" allowevents="true" flex="1"
                   inherits="label,src,accesskey,crop,disabled,oncommand=buttonaction" 
                   onmousedown="this.parentNode.setAttribute('buttondown','true');"
                   onmouseup="this.parentNode.removeAttribute('buttondown');"
                   onmouseover="this.parentNode.setAttribute('buttonover','true');"
                   onmouseout="this.parentNode.removeAttribute('buttonover');"/>
-       </xul:box>
-       <xul:box class="classic-dropmarker-box" autostretch="never" valign="middle" inherits="disabled">
+       </xul:hbox>
+       <xul:hbox class="classic-dropmarker-box" align="center" inherits="disabled">
           <xul:image class="classic-dropmarker" inherits="disabled"/>
-       </xul:box>
+       </xul:hbox>
      <children includes="menupopup"/>
     </content>
   </binding>
   
   <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#base-button">
-    <content autostretch="never">
-      <xul:image class="classic-simplebutton-icon" inherits="src"/>
-      <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
-        <xul:text class="classic-simplebutton-text" inherits="value=label,accesskey,crop"/>
-      </xul:box>
+    <content>
+      <xul:hbox align="center" flex="1">
+        <xul:image class="classic-simplebutton-icon" inherits="src"/>
+        <xul:vbox class="classic-simplebutton-textbox" align="center" flex="1">
+          <xul:text class="classic-simplebutton-text" inherits="value=label,accesskey,crop"/>
+        </xul:vbox>
+      </xul:hbox>
     </content>
   </binding>
 
   <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#base-button">
-    <content orient="vertical" autostretch="never" halign="middle">
-      <xul:image class="classic-simplebutton-icon" inherits="src"/>
-      <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
-        <xul:text class="classic-simplebutton-text" inherits="value=label,accesskey,crop"/>
-      </xul:box>
+    <content>
+      <xul:vbox flex="1" align="center">
+        <xul:image class="classic-simplebutton-icon" inherits="src"/>
+        <xul:vbox class="classic-simplebutton-textbox" align="center" flex="1">
+          <xul:text class="classic-simplebutton-text" inherits="value=label,accesskey,crop"/>
+        </xul:vbox>
+      </xul:vbox>
     </content>
   </binding>
   

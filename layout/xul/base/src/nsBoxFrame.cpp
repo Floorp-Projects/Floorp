@@ -360,7 +360,7 @@ nsBoxFrameInner::CacheAttributes()
   printf("\n");
    */
 
-  mValign = nsBoxFrame::vAlign_Middle;
+  mValign = nsBoxFrame::vAlign_Top;
   mHalign = nsBoxFrame::hAlign_Left;
 
   PRBool orient = PR_FALSE;
@@ -440,9 +440,6 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
     // XXXdwh Everything inside this if statement is deprecated code.
     if (value.EqualsIgnoreCase("left")) {
         aHalign = nsBoxFrame::hAlign_Left;
-        return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("center")) {
-        aHalign = nsBoxFrame::hAlign_Center;
         return PR_TRUE;
     } else if (value.EqualsIgnoreCase("right")) {
         aHalign = nsBoxFrame::hAlign_Right;
@@ -1234,7 +1231,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsXULAtoms::autostretch) {
 
         if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
-          mInner->mValign = nsBoxFrame::vAlign_Middle;
+          mInner->mValign = nsBoxFrame::vAlign_Top;
           mInner->mHalign = nsBoxFrame::hAlign_Left;
 
           PRBool orient = PR_TRUE;

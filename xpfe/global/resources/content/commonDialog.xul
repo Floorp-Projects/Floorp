@@ -16,7 +16,7 @@
   <keyset id="dialogKeys"/>
 
   <hbox flex="1">
-    <hbox autostretch="never" valign="top">
+    <hbox align="start">
       <image id="info.icon" class="spaced"/>
     </hbox>
     <separator orient="vertical" class="thin"/>
@@ -45,7 +45,7 @@
       <spring flex="1"/>
       
       <!-- checkbox -->
-      <hbox id="checkboxContainer" collapsed="true" autostretch="never">
+      <hbox id="checkboxContainer" collapsed="true" align="middle">
         <checkbox id="checkbox" oncommand="onCheckboxClick(this);" style="max-width: 40em;"/>
       </hbox>
     </vbox>

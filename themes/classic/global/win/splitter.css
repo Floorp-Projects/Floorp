@@ -10,7 +10,6 @@
     {
       cursor                : e-resize;
       background-color      : -moz-Dialog;
-      text-align	    	: center;
     }
   
   grippy, grippy[collapse="before"]
@@ -65,11 +64,6 @@
     }
     
 /* Grippy alignment */
-
-  splitter[orient="vertical"][autostretch="never"] 
-    {
-      text-align          : center;
-    }
 
 /* Vertical splitter (between two boxes, horizontally stacked), collapse to left */
   window > splitter > grippy,

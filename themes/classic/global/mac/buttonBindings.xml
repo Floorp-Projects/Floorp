@@ -7,109 +7,108 @@
 
   <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-box-1" autostretch="never" flex="1">
-        <xul:box class="button-box-2" autostretch="never" flex="1">
+      <xul:hbox class="button-box-1" align="center" flex="1">
+        <xul:hbox class="button-box-2" align="center" flex="1">
           <xul:image class="button-icon" inherits="src"/>
-          <xul:box class="button-box-text" flex="1" autostretch="never">
+          <xul:hbox class="button-box-text" flex="1" align="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
-          </xul:box>
-        </xul:box>
-      </xul:box>
+          </xul:hbox>
+        </xul:hbox>
+      </xul:hbox>
     </content>
   </binding>
 
   <binding id="buttonright" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-box-1" autostretch="never" flex="1">
-        <xul:box class="button-box-2" autostretch="never" flex="1">
-          <xul:box class="button-box-text" flex="1" autostretch="never">
+      <xul:hbox class="button-box-1" align="center" flex="1">
+        <xul:hbox class="button-box-2" align="center" flex="1">
+          <xul:hbox class="button-box-text" flex="1" align="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
-          </xul:box>
+          </xul:hbox>
           <xul:image class="button-icon" inherits="src"/>
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+      </xul:hbox>
     </content>
   </binding>
   
   <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-box-1" autostretch="never" flex="1">
-        <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical" align="center">
+      <xul:hbox class="button-box-1" align="center" flex="1">
+        <xul:vbox class="button-box-2" flex="1" align="center">
           <xul:image class="button-icon" inherits="src"/>
-          <xul:box class="button-box-text" flex="1" autostretch="never">
+          <xul:hbox class="button-box-text" flex="1" align="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
-          </xul:box>
-        </xul:box>
-      </xul:box>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
     </content>
   </binding>
 
   <binding id="buttonbottom" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-box-1" autostretch="never" flex="1">
-        <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical" align="center">
-          <xul:box class="button-box-text" flex="1" autostretch="never">
+      <xul:hbox class="button-box-1" align="center" flex="1">
+        <xul:vbox class="button-box-2" flex="1" align="center">
+          <xul:hbox class="button-box-text" flex="1" align="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
-          </xul:box>
+          </xul:hbox>
           <xul:image class="button-icon" inherits="src"/>
-        </xul:box>
-      </xul:box>
+        </xul:vbox>
+      </xul:hbox>
     </content>
   </binding>
 
   <binding id="exit-button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-        <xul:spring class="button-image-left" inherits="default,disabled"/>
-      <xul:box flex="1" class="button-image-middle" inherits="default,disabled" orient="vertical" align="center">
+      <xul:spring class="button-image-left" inherits="default,disabled"/>
+      <xul:vbox flex="1" class="button-image-middle" inherits="default,disabled" align="center">
         <xul:spring flex="1" class="button-top-spring"/>
-        <xul:box flex="1">
+        <xul:hbox flex="1">
           <xul:image class="button-icon" inherits="src"/>
-          <xul:box class="button-text-box" flex="1">
-          <xul:text inherits="disabled,valu=labele,crop,accesskey"/>
-          </xul:box>
+          <xul:hbox class="button-text-box" flex="1">
+            <xul:text inherits="disabled,valu=labele,crop,accesskey"/>
+          </xul:hbox>
           <children/>
-        </xul:box>
+        </xul:hbox>
         <xul:spring flex="1" class="button-bottom-spring"/>
-      </xul:box>
+      </xul:vbox>
       <xul:spring class="button-image-right" inherits="default,disabled"/>
     </content>
   </binding>
 
   <binding id="nine-slice-button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-box-left" inherits="default,disabled" orient="vertical">
+      <xul:vbox class="button-box-left" inherits="default,disabled">
         <xul:spring class="button-left-top" inherits="default,disabled"/>
         <xul:spring class="button-left-mid" inherits="default,disabled" flex="1"/>
         <xul:spring class="button-left-btm" inherits="default,disabled"/>
-      </xul:box>
+      </xul:vbox>
       
       <xul:stack class="button-stack" flex="1">
-        <xul:box class="button-box-mid" inherits="default,disabled" orient="vertical">
+        <xul:vbox class="button-box-mid" inherits="default,disabled">
            <xul:spring class="button-mid-top" inherits="default,disabled"/>
-           <xul:box class="button-mid-mid" inherits="default,disabled" flex="1"/>
+           <xul:spring class="button-mid-mid" inherits="default,disabled" flex="1"/>
            <xul:spring class="button-mid-btm" inherits="default,disabled"/>
-        </xul:box>
+        </xul:vbox>
 
-        <xul:box class="button-text-box" autostretch="never">
+        <xul:hbox class="button-text-box" align="center">
          <xul:image class="button-icon-mid" inherits="src"/>
          <xul:text class="button-text-mid" inherits="default,disabled,value=label,crop,accesskey"/>
          <children/>
-       </xul:box>
+       </xul:hbox>
      </xul:stack>
       
-      <xul:box class="button-box-right" inherits="default,disabled" orient="vertical">
+      <xul:vbox class="button-box-right" inherits="default,disabled">
         <xul:spring class="button-right-top" inherits="default,disabled"/>
         <xul:spring class="button-right-mid" inherits="default,disabled" flex="1"/>
         <xul:spring class="button-right-btm" inherits="default,disabled"/>
-      </xul:box>
+      </xul:vbox>
     <children includes="menupopup"/>
     </content>
     <resources>
-    	<!-- just active states, there is no 'hover' for buttons in this skin -->
     	<image src="chrome://global/skin/button-active-left-top.gif" />
     	<image src="chrome://global/skin/button-active-left-mid.gif" />
     	<image src="chrome://global/skin/button-active-left-btm.gif" />
@@ -128,19 +127,17 @@
     	<image src="chrome://global/skin/button-def-active-right-top.gif" />
     	<image src="chrome://global/skin/button-def-active-right-mid.gif" />
     	<image src="chrome://global/skin/button-def-active-right-btm.gif" />
-    	
-    	<!-- end resources -->
     </resources>
-    
-    
   </binding>
 
 
   <binding id="simplebutton" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content orient="vertical" autostretch="never" align="center">
-      <xul:image class="simplebutton-icon" inherits="src,disabled"/>
-      <xul:text class="simplebutton-text" inherits="value=label,accesskey,crop,disabled"/>
-      <children/>
+    <content>
+      <xul:vbox flex="1" align="center">
+        <xul:image class="simplebutton-icon" inherits="src,disabled"/>
+        <xul:text class="simplebutton-text" inherits="value=label,accesskey,crop,disabled"/>
+        <children/>
+      </xul:vbox>
     </content>
   </binding>
 

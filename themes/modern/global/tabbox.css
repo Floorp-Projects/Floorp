@@ -68,52 +68,52 @@ tab {
   font: menu;
 }
 
-.tab-image-left {
+.tab-left {
   width: 5px;
 }
 
-.tab-image-left-top {
+.tab-left-top {
   background: url("chrome://global/skin/tabcontrol/tab-usel-lft-top.gif") no-repeat;
   height: 15px;
 }
 
-.tab-image-left-mid {
+.tab-left-mid {
   background: url("chrome://global/skin/tabcontrol/tab-usel-lft-mid.gif") repeat-y;
 }
 
-.tab-image-left-btm {
+.tab-left-btm {
   background: url("chrome://global/skin/tabcontrol/tab-usel-lft-btm.gif") no-repeat;
   height: 2px;
 }
 
-.tab-image-mid {
+.tab-mid {
   background: url("chrome://global/skin/tabcontrol/tab-usel-mid-top.gif") repeat-x top;
   background-color: #8B9AAD;
 }
 
-.tab-image-mid-mid {
+.tab-mid-mid {
   padding: 1px 0px 1px 0px;
 }
 
-.tab-image-mid-btm {
+.tab-mid-btm {
   background: url("chrome://global/skin/tabcontrol/tab-usel-mid-btm.gif") repeat-x;
   height: 2px;
 }
 
-.tab-image-right {
+.tab-right {
   width: 5px;
 }
 
-.tab-image-right-top {
+.tab-right-top {
   background: url("chrome://global/skin/tabcontrol/tab-usel-rit-top.gif") no-repeat;
   height: 14px;
 }
 
-.tab-image-right-mid {
+.tab-right-mid {
   background: url("chrome://global/skin/tabcontrol/tab-usel-rit-mid.gif") repeat-y;
 }
 
-.tab-image-right-btm {
+.tab-right-btm {
   background: url("chrome://global/skin/tabcontrol/tab-usel-rit-btm.gif") no-repeat;
   height: 2px;
 }
@@ -128,29 +128,29 @@ tab:hover:active {
   color: #FFFFFF;
 }
 
-tab:hover:active > .tab-image-left > .tab-image-left-top { 
+tab:hover:active > .tab-left > .tab-left-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-act-lft-top.gif");
 }
 
-tab:hover:active > .tab-image-left > .tab-image-left-mid { 
+tab:hover:active > .tab-left > .tab-left-mid { 
   background-image: url("chrome://global/skin/tabcontrol/tab-act-lft-mid.gif");
 }
 
-tab:hover:active > .tab-image-mid { 
+tab:hover:active > .tab-mid { 
   margin-top: 1px;
   background-image: url("chrome://global/skin/tabcontrol/tab-act-mid-top.gif");
   background-color: #8B9AAD;
 }
 
-tab:hover:active > .tab-image-mid > .tab-image-mid-mid { 
+tab:hover:active > .tab-mid > .tab-mid-mid { 
   padding: 1px 0px 0px 0px;
 }
 
-tab:hover:active > box > .tab-image-right-top { 
+tab:hover:active > .tab-right > .tab-right-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-act-rit-top.gif");
 }
 
-tab:hover:active > box > .tab-image-right-mid { 
+tab:hover:active > .tab-right > .tab-right-mid { 
   background-image: url("chrome://global/skin/tabcontrol/tab-act-rit-mid.gif");
 }
 
@@ -161,52 +161,52 @@ tab[selected="1"], tab:hover:active[selected="1"] {
   color: #000000;
 }
 
-.tab-image-left-top[selected="true"],
-tab:hover:active[selected="true"] > box > .tab-image-left-top { 
+.tab-left-top[selected="true"],
+tab:hover:active[selected="true"] > .tab-left > .tab-left-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-lft-top.gif");
 }
 
-.tab-image-left-mid[selected="true"],
-tab:hover:active[selected="true"] > box > .tab-image-left-mid { 
+.tab-left-mid[selected="true"],
+tab:hover:active[selected="true"] > .tab-left > .tab-left-mid { 
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-lft-mid.gif");
 }
 
-.tab-image-left-btm[selected="true"],
-tab:hover:active[selected="true"] > box > .tab-image-left-btm { 
+.tab-left-btm[selected="true"],
+tab:hover:active[selected="true"] > .tab-left > .tab-left-btm { 
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-lft-btm.gif");
 }
 
-.tab-image-mid[selected="true"],
-tab:hover:active[selected="true"] > .tab-image-mid { 
+.tab-mid[selected="true"],
+tab:hover:active[selected="true"] > .tab-mid { 
   margin-top: 0px;
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-mid-top.gif");
   background-color: #C7D0D9;
 }
 
-.tab-image-mid-mid[selected="true"],
-tab:hover:active[selected="true"] > box > .tab-image-mid-mid { 
+.tab-mid-mid[selected="true"],
+tab:hover:active[selected="true"] > .tab-mid > .tab-mid-mid { 
   padding: 1px 0px 1px 0px;
 }
 
 
-.tab-image-mid-btm[selected="true"],
-tab:hover:active[selected="true"] > box > .tab-image-mid-btm { 
+.tab-mid-btm[selected="true"],
+tab:hover:active[selected="true"] > .tab-mid > .tab-mid-btm { 
   background-image: none;
   background-color: #C7D0D9;
 }
 
-.tab-image-right-top[selected="true"],
-tab:hover:active[selected="true"] > box > .tab-image-right-top { 
+.tab-right-top[selected="true"],
+tab:hover:active[selected="true"] > .tab-right > .tab-right-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-rit-top.gif");
 }
 
-.tab-image-right-mid[selected="true"],
-tab:hover:active[selected="true"] > box > .tab-image-right-mid { 
+.tab-right-mid[selected="true"],
+tab:hover:active[selected="true"] > .tab-right > .tab-right-mid { 
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-rit-mid.gif");
 }
 
-.tab-image-right-btm[selected="true"],
-tab:hover:active[selected="true"] > box >  .tab-image-right-btm { 
+.tab-right-btm[selected="true"],
+tab:hover:active[selected="true"] > .tab-right >  .tab-right-btm { 
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-rit-btm.gif");
 }
 
@@ -219,122 +219,122 @@ tab:hover:active[selected="true"] > box >  .tab-image-right-btm {
   min-height: 21px;
 }
  
-.tab-bottom > .tab-image-left > .tab-image-left {
+.tab-bottom > .tab-left > .tab-left {
   width: 5px;
 }
 
-.tab-bottom > .tab-image-left > .tab-image-left-top {
+.tab-bottom > .tab-left > .tab-left-top {
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-lft-btm.gif");
   height: 2px;
 }
 
-.tab-bottom > .tab-image-left > .tab-image-left-btm {
+.tab-bottom > .tab-left > .tab-left-btm {
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-lft-top.gif");
   height: 15px;
 }
 
-.tab-bottom > .tab-image-mid {
+.tab-bottom > .tab-mid {
   background: url("chrome://global/skin/tabcontrol/tab-bot-usel-mid-top.gif") repeat-x bottom;
   background-color: #8B9AAD;
 }
 
-.tab-bottom > .tab-image-mid > .tab-image-mid-top {
+.tab-bottom > .tab-mid > .tab-mid-top {
   background: url("chrome://global/skin/tabcontrol/tab-bot-usel-mid-btm.gif") repeat-x;
   height: 2px;
 }
 
-.tab-bottom > .tab-image-mid > .tab-image-mid-mid {
+.tab-bottom > .tab-mid > .tab-mid-mid {
   padding: 1px 0px 1px 0px;
 }
 
-.tab-bottom > .tab-image-mid > .tab-image-mid-btm {
+.tab-bottom > .tab-mid > .tab-mid-btm {
   background: none;
   height: none;
 }
 
-.tab-bottom > .tab-image-right {
+.tab-bottom > .tab-right {
   width: 5px;
 }
 
-.tab-bottom > .tab-image-right > .tab-image-right-top {
+.tab-bottom > .tab-right > .tab-right-top {
   background: url("chrome://global/skin/tabcontrol/tab-bot-usel-rit-btm.gif") no-repeat;
   height: 2px;
 }
 
-.tab-bottom > .tab-image-right > .tab-image-right-btm {
+.tab-bottom > .tab-right > .tab-right-btm {
   background: url("chrome://global/skin/tabcontrol/tab-bot-usel-rit-top.gif") no-repeat;
   height: 14px;
 }
 
 /* ..... active state ..... */
 
-.tab-bottom:hover:active > .tab-image-left > .tab-image-left-top { 
+.tab-bottom:hover:active > .tab-left > .tab-left-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-lft-btm.gif");
 }
 
-.tab-bottom:hover:active > .tab-image-left > .tab-image-left-btm { 
+.tab-bottom:hover:active > .tab-left > .tab-left-btm { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-act-lft-top.gif");
 }
 
-.tab-bottom:hover:active > .tab-image-mid { 
+.tab-bottom:hover:active > .tab-mid { 
   margin: 0px 0px 1px 0px;
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-act-mid-top.gif");
 }
 
-.tab-bottom:hover:active > .tab-image-mid > .tab-image-mid-mid { 
+.tab-bottom:hover:active > .tab-mid > .tab-mid-mid { 
   padding: 0px 0px 1px 0px;
 }
 
-.tab-bottom:hover:active > .tab-image-right > .tab-image-right-top { 
+.tab-bottom:hover:active > .tab-right > .tab-right-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-rit-btm.gif");
 }
 
-.tab-bottom:hover:active > .tab-image-right > .tab-image-right-btm { 
+.tab-bottom:hover:active > .tab-right > .tab-right-btm { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-act-rit-top.gif");
 }
 
 /* ..... selected state ..... */
 
-.tab-bottom[selected="true"] > .tab-image-left > .tab-image-left-top,
-.tab-bottom:hover:active[selected="true"] > .tab-image-left > .tab-image-left-top { 
+.tab-bottom[selected="true"] > .tab-left > .tab-left-top,
+.tab-bottom:hover:active[selected="true"] > .tab-left > .tab-left-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-lft-btm.gif");
 }
 
-.tab-bottom[selected="true"] > .tab-image-left > .tab-image-left-btm,
-.tab-bottom:hover:active[selected="true"] > .tab-image-left > .tab-image-left-btm { 
+.tab-bottom[selected="true"] > .tab-left > .tab-left-btm,
+.tab-bottom:hover:active[selected="true"] > .tab-left > .tab-left-btm { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-lft-top.gif");
 }
 
-.tab-bottom[selected="true"] > .tab-image-mid,
-.tab-bottom:hover:active[selected="true"] > .tab-image-mid { 
+.tab-bottom[selected="true"] > .tab-mid,
+.tab-bottom:hover:active[selected="true"] > .tab-mid { 
   margin: 0px;
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-mid-top.gif");
   background-color: #C7D0D9;
 }
 
-.tab-bottom[selected="true"] > .tab-image-mid > .tab-image-mid-top,
-.tab-bottom:hover:active[selected="true"] > .tab-image-mid > .tab-image-mid-top { 
+.tab-bottom[selected="true"] > .tab-mid > .tab-mid-top,
+.tab-bottom:hover:active[selected="true"] > .tab-mid > .tab-mid-top { 
   background-image: none;
   background-color: #C7D0D9;
 }
 
-.tab-bottom[selected="true"] > .tab-image-mid > .tab-image-mid-mid,
-.tab-bottom:hover:active[selected="true"] > .tab-image-mid > .tab-image-mid-mid { 
+.tab-bottom[selected="true"] > .tab-mid > .tab-mid-mid,
+.tab-bottom:hover:active[selected="true"] > .tab-mid > .tab-mid-mid { 
   padding: 1px 0px 1px 0px;
 }
 
-.tab-bottom[selected="true"] > .tab-image-mid > .tab-image-mid-btm,
-.tab-bottom:hover:active[selected="true"] > .tab-image-mid > .tab-image-mid-btm { 
+.tab-bottom[selected="true"] > .tab-mid > .tab-mid-btm,
+.tab-bottom:hover:active[selected="true"] > .tab-mid > .tab-mid-btm { 
   background: none;
 }
 
-.tab-bottom[selected="true"] > .tab-image-right > .tab-image-right-top,
-.tab-bottom:hover:active[selected="true"] > .tab-image-right > .tab-image-right-top { 
+.tab-bottom[selected="true"] > .tab-right > .tab-right-top,
+.tab-bottom:hover:active[selected="true"] > .tab-right > .tab-right-top { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-rit-btm.gif");
 }
 
-.tab-bottom[selected="true"] > .tab-image-right > .tab-image-right-btm,
-.tab-bottom:hover:active[selected="true"] > .tab-image-right > .tab-image-right-btm { 
+.tab-bottom[selected="true"] > .tab-right > .tab-right-btm,
+.tab-bottom:hover:active[selected="true"] > .tab-right > .tab-right-btm { 
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-rit-top.gif");
 }
 

@@ -10,9 +10,9 @@
     </resources>
     
     <content>
-      <xul:box flex="1" orient="vertical">
+      <xul:vbox flex="1">
 
-        <xul:box orient="horizontal">
+        <xul:hbox>
           <xul:spring class="colorpickertile cp-light" style="background-color: #FFFFFF" color="#FFFFFF"/>
           <xul:spring class="colorpickertile cp-light" style="background-color: #FFCCCC" color="#FFCCCC"/>
           <xul:spring class="colorpickertile cp-light" style="background-color: #FFCC99" color="#FFCC99"/>
@@ -23,8 +23,8 @@
           <xul:spring class="colorpickertile cp-light" style="background-color: #CCFFFF" color="#CCFFFF"/>
           <xul:spring class="colorpickertile cp-light" style="background-color: #CCCCFF" color="#CCCCFF"/>
           <xul:spring class="colorpickertile cp-light" style="background-color: #FFCCFF" color="#FFCCFF"/>
-        </xul:box>
-        <xul:box orient="horizontal">
+        </xul:hbox>
+        <xul:hbox>
           <xul:spring class="colorpickertile" style="background-color: #CCCCCC" color="#CCCCCC"/>
           <xul:spring class="colorpickertile" style="background-color: #FF6666" color="#FF6666"/>
           <xul:spring class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
@@ -35,8 +35,8 @@
           <xul:spring class="colorpickertile cp-light" style="background-color: #66FFFF" color="#66FFFF"/>
           <xul:spring class="colorpickertile" style="background-color: #9999FF" color="#9999FF"/>
           <xul:spring class="colorpickertile" style="background-color: #FF99FF" color="#FF99FF"/>
-        </xul:box>
-        <xul:box orient="horizontal">
+        </xul:hbox>
+        <xul:hbox>
           <xul:spring class="colorpickertile" style="background-color: #C0C0C0" color="#C0C0C0"/>
           <xul:spring class="colorpickertile" style="background-color: #FF0000" color="#FF0000"/>
           <xul:spring class="colorpickertile" style="background-color: #FF9900" color="#FF9900"/>
@@ -47,8 +47,8 @@
           <xul:spring class="colorpickertile" style="background-color: #33CCFF" color="#33CCFF"/>
           <xul:spring class="colorpickertile" style="background-color: #6666CC" color="#6666CC"/>
           <xul:spring class="colorpickertile" style="background-color: #CC66CC" color="#CC66CC"/>
-        </xul:box>
-        <xul:box orient="horizontal">
+        </xul:hbox>
+        <xul:hbox>
           <xul:spring class="colorpickertile" style="background-color: #999999" color="#999999"/>
           <xul:spring class="colorpickertile" style="background-color: #CC0000" color="#CC0000"/>
           <xul:spring class="colorpickertile" style="background-color: #FF6600" color="#FF6600"/>
@@ -59,8 +59,8 @@
           <xul:spring class="colorpickertile" style="background-color: #3366FF" color="#3366FF"/>
           <xul:spring class="colorpickertile" style="background-color: #6633FF" color="#6633FF"/>
           <xul:spring class="colorpickertile" style="background-color: #CC33CC" color="#CC33CC"/>
-        </xul:box>
-        <xul:box orient="horizontal">
+        </xul:hbox>
+        <xul:hbox>
           <xul:spring class="colorpickertile" style="background-color: #666666" color="#666666"/>
           <xul:spring class="colorpickertile" style="background-color: #990000" color="#990000"/>
           <xul:spring class="colorpickertile" style="background-color: #CC6600" color="#CC6600"/>
@@ -71,8 +71,8 @@
           <xul:spring class="colorpickertile" style="background-color: #3333FF" color="#3333FF"/>
           <xul:spring class="colorpickertile" style="background-color: #6600CC" color="#6600CC"/>
           <xul:spring class="colorpickertile" style="background-color: #993399" color="#993399"/>
-        </xul:box>
-        <xul:box orient="horizontal">
+        </xul:hbox>
+        <xul:hbox>
           <xul:spring class="colorpickertile" style="background-color: #333333" color="#333333"/>
           <xul:spring class="colorpickertile" style="background-color: #660000" color="#660000"/>
           <xul:spring class="colorpickertile" style="background-color: #993300" color="#993300"/>
@@ -83,8 +83,8 @@
           <xul:spring class="colorpickertile" style="background-color: #000099" color="#000099"/>
           <xul:spring class="colorpickertile" style="background-color: #333399" color="#333399"/>
           <xul:spring class="colorpickertile" style="background-color: #663366" color="#663366"/>
-        </xul:box>
-        <xul:box orient="horizontal">
+        </xul:hbox>
+        <xul:hbox>
           <xul:spring class="colorpickertile" style="background-color: #000000" color="#000000"/>
           <xul:spring class="colorpickertile" style="background-color: #330000" color="#330000"/>
           <xul:spring class="colorpickertile" style="background-color: #663300" color="#663300"/>
@@ -95,8 +95,8 @@
           <xul:spring class="colorpickertile" style="background-color: #000066" color="#000066"/>
           <xul:spring class="colorpickertile" style="background-color: #330099" color="#330099"/>
           <xul:spring class="colorpickertile" style="background-color: #330033" color="#330033"/>
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+      </xul:vbox>
       <!-- Something to take tab focus
       <button style="border : 0px; width: 0px; height: 0px;"/>
       -->
@@ -405,9 +405,9 @@
     </resources>
     
     <content>
-      <xul:box class="colorpicker-button-internal-box" allowevents="true" flex="1">
+      <xul:hbox class="colorpicker-button-internal-box" allowevents="true" flex="1">
 
-        <xul:box class="colorpicker-button-colorbox" role="colorbox" flex="1"/>
+        <xul:hbox class="colorpicker-button-colorbox" role="colorbox" flex="1"/>
 
         <xul:popupset>
           <xul:popup class="colorpicker-button-menupopup" role="colorpopup"
@@ -420,7 +420,7 @@
   
            </xul:popup>
          </xul:popupset>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>

@@ -157,10 +157,10 @@
   <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
-      <xul:box class="tab-box" flex="1" autostretch="never" orient="horizontal">
+      <xul:hbox class="tab-box" flex="1" align="center">
         <xul:image class="tab-image" inherits="src"/>
         <xul:text class="tab-text" inherits="value=label,accesskey,crop,disabled"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>

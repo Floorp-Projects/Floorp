@@ -114,7 +114,6 @@
   min-width: 0px;
   font: message-box;
   font-size: smaller;
-  text-align: center;
 }
     
 .button-toolbar-1,
@@ -148,10 +147,6 @@
   color: #FFFFFF;
 }
     
-.button-toolbar-2 > .button-internal-box > .button-icon-box {
-  text-align: center;
-}
-
 .button-toolbar-2[disabled="true"],
 .button-toolbar-2[disabled="true"]:hover,
 .button-toolbar-2[disabled="true"]:hover:active {
@@ -206,10 +201,6 @@ menubutton.button-toolbar-4 {
 }
 
 /* ::::: shared text wrapping frame ::::: */
-
-.button-text-container {
-  text-align: center;
-}
 
 .button-text {
   padding: 0px 2px 0px 2px;

@@ -40,7 +40,7 @@ slider {
   background: url("chrome://global/skin/scrollbar/mini-slider-hrz-mid.gif") repeat-x;
 }
 
-slider[align="vertical"] {
+slider[orient="vertical"] {
   border-top: 0px;
   border-bottom: 0px;
   width: 8px;
@@ -96,7 +96,7 @@ thumb:active > .thumb-horz-box-middle > .thumb-horz-grippy {
 
 /* ::::: thumb (vertical) ::::: */
 
-thumb[align="vertical"] {
+thumb[orient="vertical"] {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-vertical");
 }
 
@@ -159,11 +159,11 @@ scrollbarbutton[type="increment"]:hover:active {
    list-style-image: url("chrome://global/skin/scrollbar/mini-btn-rit-act.gif")
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
    list-style-image: url("chrome://global/skin/scrollbar/mini-btn-dn.gif")
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:hover:active {
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"]:hover:active {
    list-style-image: url("chrome://global/skin/scrollbar/mini-btn-dn-act.gif")
 }
 
@@ -177,10 +177,10 @@ scrollbarbutton[type="decrement"]:hover:active {
    list-style-image: url("chrome://global/skin/scrollbar/mini-btn-lft-act.gif")
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"] {
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
    list-style-image: url("chrome://global/skin/scrollbar/mini-btn-up.gif")
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
    list-style-image: url("chrome://global/skin/scrollbar/mini-btn-up-act.gif")
 }

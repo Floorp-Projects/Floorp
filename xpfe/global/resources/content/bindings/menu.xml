@@ -12,11 +12,11 @@
 
   <binding id="menu" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:text class="menu-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:text class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="value=acceltext"/>
-      <xul:box align="center" class="menu-right" inherits="menuactive,disabled">
+      <xul:hbox align="center" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
-      </xul:box>
+      </xul:hbox>
       <children includes="menupopup"/>
     </content>
     
@@ -28,7 +28,7 @@
 
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:text class="menu-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:text class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="value=acceltext"/>
     </content>
     
@@ -55,11 +55,11 @@
 
   <binding id="menuitem-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:box class="menu-iconic-left" orient="vertical" align="center"
+      <xul:hbox class="menu-iconic-left" align="center" pack="center"
                inherits="selected,menuactive,disabled,checked">
         <xul:image inherits="src"/>
-      </xul:box>
-      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
+      </xul:hbox>
+      <xul:text class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
     
@@ -71,14 +71,14 @@
 
   <binding id="menu-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:box class="menu-iconic-left" orient="vertical" align="center">
+      <xul:hbox class="menu-iconic-left" align="center" pack="center">
         <xul:image inherits="src"/>
-      </xul:box>
-      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
+      </xul:hbox>
+      <xul:text class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
-      <xul:box orient="vertical" align="center" class="menu-right" inherits="menuactive,disabled">
+      <xul:hbox class="menu-right" inherits="menuactive,disabled" align="center" pack="center">
         <xul:image/>
-      </xul:box>
+      </xul:hbox>
       <children includes="menupopup|template"/>
     </content>
     

@@ -6,47 +6,47 @@
 
   <!-- :::/ navbar \ ::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="nav-bar-inner" extends="xul:box">
+  <binding id="nav-bar-inner">
     <content>
-      <xul:box class="navbar-inner-groove-lft" orient="vertical">
+      <xul:vbox class="navbar-inner-groove-lft">
         <xul:spring class="navbar-inner-groove-lft-top"/>
         <xul:spring class="navbar-inner-groove-lft-mid" flex="1"/>
         <xul:spring class="navbar-inner-groove-lft-btm"/>
-      </xul:box>
-      <xul:box flex="1" class="navbar-inner-border-outer">
-        <xul:box flex="1" class="navbar-inner-border-middle">
-          <xul:box flex="1" class="navbar-inner-border-inner" autostretch="never">
+      </xul:vbox>
+      <xul:hbox flex="1" class="navbar-inner-border-outer">
+        <xul:hbox flex="1" class="navbar-inner-border-middle">
+          <xul:hbox flex="1" class="navbar-inner-border-inner" align="center">
             <children/>
-          </xul:box>
-        </xul:box>
-      </xul:box>
-      <xul:box class="navbar-inner-groove-rit" orient="vertical">
+          </xul:hbox>
+        </xul:hbox>
+      </xul:hbox>
+      <xul:vbox class="navbar-inner-groove-rit">
         <xul:spring class="navbar-inner-groove-rit-top"/>
         <xul:spring class="navbar-inner-groove-rit-mid" flex="1"/>
         <xul:spring class="navbar-inner-groove-rit-btm"/>
-      </xul:box>
+      </xul:vbox>
     </content>
   </binding>
   
-  <binding id="urlbar-group" extends="xul:box">
+  <binding id="urlbar-group">
     <content>
-      <xul:box class="urlbar-lft" orient="vertical">
+      <xul:vbox class="urlbar-lft">
         <xul:spring class="urlbar-lft-top"/>
         <xul:spring class="urlbar-lft-mid" flex="1"/>
         <xul:spring class="urlbar-lft-btm"/>
-      </xul:box>
-      <xul:box flex="1" class="urlbar-mid" orient="vertical">
+      </xul:vbox>
+      <xul:vbox flex="1" class="urlbar-mid">
         <xul:spring class="urlbar-mid-top"/>
-        <xul:box class="urlbar-mid-mid" flex="1">
+        <xul:hbox class="urlbar-mid-mid" flex="1">
           <children/>
-        </xul:box>
+        </xul:hbox>
         <xul:spring class="urlbar-mid-btm"/>
-      </xul:box>
-      <xul:box class="urlbar-rit" orient="vertical">
+      </xul:vbox>
+      <xul:vbox class="urlbar-rit">
         <xul:spring class="urlbar-rit-top"/>
         <xul:spring class="urlbar-rit-mid" flex="1"/>
         <xul:spring class="urlbar-rit-btm"/>
-      </xul:box>
+      </xul:vbox>
     </content>
   </binding>
 

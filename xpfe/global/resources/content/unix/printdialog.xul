@@ -54,10 +54,10 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
           </radiogroup>
       </row>
       <row>
-        <text id="cmdLabel" class="label" value="&cmdInput.label;" flex ="1" align="left"/>
+        <text id="cmdLabel" class="label" value="&cmdInput.label;" flex ="1"/>
         <textbox id="cmdInput" flex ="1"/>
       </row>
-      <row valign="baseline">
+      <row align="baseline">
         <text id="fileLabel" class="label" value="&fileInput.label;"/>
         <hbox>
           <textbox id="fileInput" flex ="1" onblur="stripTrailingWhitespace(this)"/>
@@ -92,7 +92,7 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
         <text class="label" value="&printrangeGroup.label;" flex ="1"/>
         <radiogroup id="printrangeGroup" orient="vertical">
           <radio group = "printrangeGroup" id = "allpagesRadio" label = "&allpagesRadio.label;" onclick = "doPrintRange(0);"/>
-          <hbox autostretch="never">
+          <hbox align="center">
             <radio group = "printrangeGroup" id = "rangeRadio" label = "&rangeRadio.label;" onclick = "doPrintRange(1);"/>
             <text class = "label" id = "frompageLabel" for = "frompageInput" value = "&frompageInput.label;" />
             <textbox id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
@@ -113,19 +113,19 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
       <row>
         <text class="label" value="&marginInput.label;" flex ="1"/>
         <hbox>
-          <hbox autostretch="never">
+          <hbox align="center">
             <text class = "label" id = "topLabel" for = "topInput" value = "&topInput.label;" />
             <textbox id = "topInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
-          <hbox autostretch="never">
+          <hbox align="center">
             <text class = "label" id = "bottomLabel" for = "bottomInput" value = "&bottomInput.label;" />
             <textbox id = "bottomInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
-          <hbox autostretch="never">
+          <hbox align="center">
             <text class = "label" id = "leftLabel" for = "leftInput" value = "&leftInput.label;" />
             <textbox id = "leftInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>
-          <hbox autostretch="never">
+          <hbox align="center">
             <text class = "label" id = "rightLabel" for = "rightInput" value = "&rightInput.label;" />
             <textbox id = "rightInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </hbox>

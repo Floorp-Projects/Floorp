@@ -18,12 +18,14 @@
 #previewImageContainer {
   overflow: hidden; 
   height: 92px; 
-  max-width: 360px; 
   background-color: #000000; 
   padding: 2px;
+}
 
-} 
- 
+#previewImage {
+  max-width: 387px; 
+}
+
 /**
  * File icon (32x32)
  **/

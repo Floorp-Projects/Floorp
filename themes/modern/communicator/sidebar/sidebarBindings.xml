@@ -20,9 +20,9 @@
           <xul:spring class="sidebar-tab-mid-btm" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
         </xul:vbox>
       
-        <xul:box class="sidebar-tab-text-box">
+        <xul:vbox class="sidebar-tab-text-box">
           <xul:text class="sidebar-tab-text" inherits="value=label" crop="right"/>
-        </xul:box>
+        </xul:vbox>
       </xul:stack>
       
       <xul:vbox class="sidebar-tab-right">
@@ -38,12 +38,12 @@
 
   <binding id="sidebarheader">
     <content>
-      <xul:box class="sidebarheader-internal-box" flex="1" autostretch="never">
+      <xul:hbox class="sidebarheader-internal-box" flex="1" align="center">
         <xul:text class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
-        <xul:box>
+        <xul:hbox>
           <children/>
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+      </xul:hbox>
     </content>
   </binding>
     

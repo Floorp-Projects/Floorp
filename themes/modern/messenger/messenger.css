@@ -334,7 +334,6 @@ menu.push {
   border: 1px outset #B4C3D4;
   padding: 2px;
   background: transparent;
-  text-align: center;
 }
 
 menu.push:hover:active,
@@ -399,7 +398,7 @@ statusbarpanel,
 }
 
 #threadpane-splitter,
-#threadpane-splitter > box {
+#threadpane-splitter > .splitter-internal-box {
   border-top: none;
   border-left: none;
   border-right: none;
@@ -415,16 +414,16 @@ statusbarpanel,
 }
 
 .gray-vertical-splitter,
-.gray-vertical-splitter > box {
+.gray-vertical-splitter > .splitter-internal-box {
   border-right: none;
 }
 
-.gray-vertical-splitter > box {
+.gray-vertical-splitter > .splitter-internal-box {
   border-bottom: none;
 }
 
 #sidebar-panels-splitter,
-#sidebar-panels-splitter > box {
+#sidebar-panels-splitter > .splitter-internal-box {
   border-top: none;
 }
 

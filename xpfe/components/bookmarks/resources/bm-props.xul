@@ -57,7 +57,7 @@
     <tabpanels>
       <vbox>
         <separator class="thin"/>
-        <hbox autostretch="never" valign="top">
+        <hbox align="start">
           <image class="message-icon"/>
           <separator class="thin" orient="vertical"/>
           <html flex="1">&generaldesc.label;</html>
@@ -96,7 +96,7 @@
       
       <vbox>
         <separator class="thin"/>
-        <hbox autostretch="never">
+        <hbox align="center">
           <image id="schedule-icon"/>
           <separator class="thin" orient="vertical"/>
           <html flex="1">&schedule.description;</html>
@@ -112,7 +112,7 @@
                 <column flex="1"/>
               </columns>
               <rows>
-                <row autostretch="never">
+                <row align="center">
                   <text class="label" value="&when.label;" for="dayRange"/>
                   <hbox>
                     <menulist id="dayRange" oncommand="dayRangeChange(this);">
@@ -133,10 +133,10 @@
                     </menulist>
                   </hbox>
                 </row>
-                <row autostretch="never">
+                <row align="center">
                   <text id="startHourRangeLabel" class="label" 
                         value="&from.label;" for="startHourRange"/>
-                  <hbox autostretch="never">
+                  <hbox align="center">
                     <menulist id="startHourRange" oncommand="setEndHourRange()">
                       <menupopup>
                         <menuitem value="0" label="&midnight.label;"/>
@@ -197,10 +197,10 @@
                     </menulist>
                   </hbox>
                 </row>
-                <row autostretch="never">
+                <row align="center">
                   <text id="durationLabel" class="label" 
                         value="&every.label;" for="duration"/>
-                  <hbox autostretch="never">
+                  <hbox align="center">
               	    <textbox id="duration" size="4" value="60" />
       	            <text id="durationSubLabel" class="label" value="&minutes.label;" />
                   </hbox>
@@ -215,7 +215,7 @@
           
       <vbox>
         <separator class="thin"/>
-        <hbox autostretch="never" valign="top">
+        <hbox align="start">
           <image id="notification-icon"/>
           <separator class="thin" orient="vertical"/>
           <html flex="1">&notification.description;</html>
@@ -223,12 +223,14 @@
         <separator class="thin"/>
         <hbox class="box-padded">
           <spring flex="1"/>
-          <groupbox orient="vertical" autostretch="never">
+          <groupbox>
             <label value="&notifications.legend.label;" />
-            <checkbox id="bookmarkIcon" label="&notification.icon.label;" />
-            <checkbox id="showAlert" label="&notification.alert.label;" />
-            <checkbox id="openWindow" label="&notification.window.label;" />
-            <checkbox id="playSound" label="&notification.sound.label;" />
+            <vbox align="start">
+              <checkbox id="bookmarkIcon" label="&notification.icon.label;" />
+              <checkbox id="showAlert" label="&notification.alert.label;" />
+              <checkbox id="openWindow" label="&notification.window.label;" />
+              <checkbox id="playSound" label="&notification.sound.label;" />
+            </vbox>
           </groupbox>
           <spring flex="1"/>
         </hbox>

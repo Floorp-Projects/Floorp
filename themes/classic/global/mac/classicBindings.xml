@@ -14,19 +14,19 @@
   </binding>
 
   <binding id="toolbargrippy" extends="chrome://global/content/bindings/toolbar.xml#toolbargrippy">
-    <content orient="vertical">
-      <xul:box autostretch="never" halign="center">
+    <content>
+      <xul:hbox align="center">
         <xul:image class="toolbargrippy-twisty"/>
-      </xul:box>
+      </xul:hbox>
       <xul:spring class="toolbargrippy-texture" flex="1"/>
     </content>
   </binding>
 
   <binding id="toolbargrippy-collapsed" extends="chrome://global/content/bindings/toolbar.xml#toolbargrippy">
     <content>
-      <xul:box autostretch="never" halign="center">
+      <xul:hbox align="center">
         <xul:image class="toolbargrippy-twisty-collapsed"/>
-      </xul:box>
+      </xul:hbox>
       <xul:spring class="toolbargrippy-texture-collapsed" flex="1"/>
     </content>
   </binding>
@@ -34,47 +34,47 @@
   
   <binding id="radio" extends="chrome://global/content/bindings/radio.xml#radio">
     <content>
-      <xul:box flex="1" class="radio-internal-box" autostretch="never" valign="middle">
-        <xul:box class="radio-checkmark-box-1" autostretch="never" inherits="disabled">
-          <xul:box class="radio-checkmark-box-2" autostretch="never" flex="1">
+      <xul:hbox flex="1" class="radio-internal-box" align="center">
+        <xul:hbox class="radio-checkmark-box-1" align="center" inherits="disabled">
+          <xul:hbox class="radio-checkmark-box-2" align="center" flex="1">
             <xul:image class="radio-check" inherits="checked,disabled"/>
-          </xul:box>
-        </xul:box>
+          </xul:hbox>
+        </xul:hbox>
         <xul:image class="radio-icon" inherits="src,disabled"/>
         <xul:html class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1">
           <children/>
         </xul:html>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
 
   <binding id="checkbox" extends="chrome://global/content/bindings/checkbox.xml#checkbox">
     <content>
-      <xul:box flex="1" class="checkbox-internal-box" autostretch="never" valign="middle">
-        <xul:box class="checkbox-checkmark-box-1" autostretch="never" inherits="disabled">
-          <xul:box class="checkbox-checkmark-box-2" autostretch="never" flex="1">
+      <xul:hbox flex="1" class="checkbox-internal-box" align="center" valign="middle">
+        <xul:hbox class="checkbox-checkmark-box-1" align="center" inherits="disabled">
+          <xul:hbox class="checkbox-checkmark-box-2" align="center" flex="1">
             <xul:image class="checkbox-check" inherits="checked,disabled"/>
-          </xul:box>
-        </xul:box>
+          </xul:hbox>
+        </xul:hbox>
         <xul:image class="checkbox-icon" inherits="src,disabled"/>
         <xul:html class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1">
           <children/>
         </xul:html>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
 
 <binding id="thumb" extends="chrome://global/content/bindings/scrollbar.xml#thumb">
     <content>
-      <xul:box class="thumb-border" orient="vertical" flex="1">
+      <xul:vbox class="thumb-border" flex="1">
         <xul:spring flex="1"/>
-        <xul:box>
-            <xul:spring flex="1"/>
-        <xul:image inherits="src"/>
+        <xul:hbox>
+          <xul:spring flex="1"/>
+          <xul:image inherits="src"/>
+          <xul:spring flex="1"/>
+        </xul:hbox>
         <xul:spring flex="1"/>
-      </xul:box>
-        <xul:spring flex="1"/>
-      </xul:box>
+      </xul:vbox>
     </content>
   </binding>
 
@@ -106,36 +106,36 @@
   
   <binding id="grippy" extends="chrome://global/content/bindings/splitter.xml#grippy">
     <content>
-      <xul:box class="grippy-box" flex="1">
+      <xul:hbox class="grippy-box" flex="1">
         <xul:image class="grippy-image" inherits="src" />
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
   
   <binding id="double-box">
     <content>
-      <xul:box class="db-internal-box" flex="1">
+      <xul:hbox class="db-internal-box" flex="1">
         <children/>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
   
   <binding id="treeheader" 
            extends="chrome://global/content/bindings/tree.xml#treecell-header">
     <content>
-      <xul:box class="treeheader-box" flex="1" autostretch="never">
+      <xul:hbox class="treeheader-box" flex="1" align="center">
         <xul:image class="treeheader-icon" inherits="src,loading"/>
         <xul:text class="treeheader-text" inherits="value=label,crop" crop="right"/>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
   
   <binding id="menubutton-icon"
            extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
-      <xul:box class="menubutton-icon-box">
+      <xul:hbox class="menubutton-icon-box">
         <xul:image inherits="src" class="menubutton-icon-image"/>
-      </xul:box>
+      </xul:hbox>
     <children includes="menupopup"/>
     </content>
   </binding>
@@ -143,9 +143,9 @@
   <binding id="menubutton-icon-nostretch"
            extends="chrome://global/content/bindings/tree.xml#treecell-header">
     <content>
-      <xul:box class="menubutton-icon-box" autostretch="never">
+      <xul:hbox class="menubutton-icon-box" align="center">
         <xul:image inherits="src" class="menubutton-icon-image"/>
-      </xul:box>
+      </xul:hbox>
     <children includes="menupopup"/>
     </content>
   </binding>
@@ -153,10 +153,10 @@
   <binding id="tab" extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content>
       <xul:spring class="tab-image-left" inherits="selected"/>
-      <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected" autostretch="never">
+      <xul:hbox flex="1" class="tab-image-middle" align="center" inherits="selected">
         <xul:image class="tab-left"/>
         <xul:text flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
-      </xul:box>
+      </xul:hbox>
       <xul:spring class="tab-image-right" inherits="selected"/>
     </content>
   </binding>
@@ -164,58 +164,62 @@
   <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
       <xul:spring class="tab-border-top-left-cap"/>
-    <xul:spring class="tab-border-top-left"/>
-    <xul:box inherits="align">
-      <children/>
-    </xul:box>
-    <xul:spring class="tab-border-top-right" flex="1"/>
-    <xul:spring class="tab-border-top-right-cap"/>
-  </content>
+      <xul:spring class="tab-border-top-left"/>
+      <xul:box inherits="orient,align,pack">
+        <children/>
+      </xul:box>
+      <xul:spring class="tab-border-top-right" flex="1"/>
+      <xul:spring class="tab-border-top-right-cap"/>
+    </content>
   </binding>
   
   <binding id="largeheader" extends="chrome://communicator/content/dialogBindings.xml#largeheader">
     <content>
-      <xul:box class="box-header-header" flex="1" autostretch="never">
-        <xul:box class="box-header-icon-box" autostretch="never">
+      <xul:hbox class="box-header-header" flex="1" align="center">
+        <xul:hbox class="box-header-icon-box" align="center">
           <xul:image inherits="src" class="box-header-icon"/>
-        </xul:box>
-        <xul:box autostretch="never" class="box-header-text-box">
+        </xul:hbox>
+        <xul:hbox class="box-header-text-box" align="center">
           <xul:text class="box-header-text" inherits="value=title"/>
-        </xul:box>
+        </xul:hbox>
         <xul:spring flex="1"/>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>  
 
   <binding id="toolbarbutton-left" extends="chrome://global/content/bindings/button.xml#buttonleft">
-    <content autostretch="never">
-      <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
-      <xul:text class="toolbarbutton-left-text" inherits="value=label,crop"/>
+    <content>
+      <xul:hbox align="center" flex="1">
+        <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
+        <xul:text class="toolbarbutton-left-text" inherits="value=label,crop"/>
+      </xul:hbox>
     </content>
   </binding>  
 
   <binding id="toolbarbutton-top" extends="chrome://global/content/bindings/button.xml#buttontop">
-    <content autostretch="never" orient="vertical">
-      <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
-      <xul:text class="toolbarbutton-top-text" inherits="value=label,crop"/>
+    <content>
+      <xul:vbox flex="1" align="center">
+        <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
+        <xul:text class="toolbarbutton-top-text" inherits="value=label,crop"/>
+      </xul:vbox>
     </content>
   </binding>  
   
-    <binding id="autocomplete-history-button" extends="xul:box">
+  <binding id="autocomplete-history-button">
     <content>
-      <xul:box class="autocomplete-history-button-internal-box" autostretch="never">
+      <xul:hbox class="autocomplete-history-button-internal-box" align="center">
         <children/>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
 
   <binding id="menubutton-single" extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
-      <xul:box class="menubutton-single-internal-box" flex="1">
+      <xul:hbox class="menubutton-single-internal-box" flex="1">
         <xul:button class="menubutton-single-button" flex="1" inherits="open,label,disabled">
           <xul:image class="menubutton-single-dropmarker" inherits="open,disabled"/>
         </xul:button>
-      </xul:box>
+      </xul:hbox>
       <children includes="menupopup"/>
     </content>
   </binding>

@@ -26,7 +26,7 @@
     <text value="&results.header.label;"/>
   </hbox>
 
-  <hbox id="engineTabs" autostretch="never"
+  <hbox id="engineTabs" align="center"
         ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" 
         style="overflow: none; min-width: 1px;">
     <template>
@@ -156,7 +156,7 @@
 
   </tree>
 
-  <splitter id="results-splitter" persist="state" collapse="after" orient="vertical" autostretch="never">
+  <splitter id="results-splitter" persist="state" collapse="after" orient="vertical">
     <grippy/>
   </splitter>
   <hbox class="double-box-top" flex="1">
