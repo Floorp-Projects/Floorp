@@ -27,6 +27,7 @@
 <!ENTITY legalRadio.label  "Legal (8 1/2 x 14 in.)">
 <!ENTITY exectiveRadio.label "Executive (7 1/2 x 10 in.)">
 <!ENTITY a4Radio.label "A4 (210 x 297 mm)">
+<!ENTITY a3Radio.label "A3 (297 x 420 mm)">
 
 <!ENTITY printrangeGroup.label "Print Range:">
 <!ENTITY allpagesRadio.label "All Pages">
