@@ -219,6 +219,9 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s, uintN gcflag);
 extern void
 js_FinalizeString(JSContext *cx, JSString *str);
 
+extern void
+js_FinalizeStringRT(JSRuntime *rt, JSString *str);
+
 /* Wrap a string value in a String object. */
 extern JSObject *
 js_StringToObject(JSContext *cx, JSString *str);

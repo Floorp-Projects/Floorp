@@ -293,9 +293,12 @@ bad:
     return JS_FALSE;
 }
 
+/* NB: cx unused; js_FinishAtomState calls us with null cx. */
 void
 js_FreeAtomState(JSContext *cx, JSAtomState *state)
 {
+    if (state->interns != 0)
+        return;
     state->runtime = NULL;
     JS_HashTableDestroy(state->table);
     state->table = NULL;
@@ -303,6 +306,29 @@ js_FreeAtomState(JSContext *cx, JSAtomState *state)
 #ifdef JS_THREADSAFE
     js_FinishLock(&state->lock);
 #endif
+}
+
+JS_STATIC_DLL_CALLBACK(intN)
+js_atom_uninterner(JSHashEntry *he, intN i, void *arg)
+{
+    JSAtom *atom;
+
+    atom = (JSAtom *)he;
+    JS_ASSERT(atom->flags & ATOM_INTERNED);
+    JS_ASSERT(ATOM_IS_STRING(atom));
+    js_FinalizeStringRT(arg, ATOM_TO_STRING(atom));
+    return HT_ENUMERATE_NEXT;
+}
+
+void
+js_FinishAtomState(JSAtomState *state)
+{
+    if (state->interns == 0)
+        return;
+    JS_HashTableEnumerateEntries(state->table, js_atom_uninterner,
+                                 state->runtime);
+    state->interns = 0;
+    js_FreeAtomState(NULL, state);
 }
 
 typedef struct MarkArgs {
@@ -320,7 +346,8 @@ js_atom_marker(JSHashEntry *he, intN i, void *arg)
 
     atom = (JSAtom *)he;
     args = (MarkArgs *) arg;
-    if ((atom->flags & ATOM_PINNED) || (args->gcflags & GC_KEEP_ATOMS)) {
+    if ((atom->flags & (ATOM_PINNED | ATOM_INTERNED)) ||
+        (args->gcflags & GC_KEEP_ATOMS)) {
 	atom->flags |= ATOM_MARK;
 	key = ATOM_KEY(atom);
 	if (JSVAL_IS_GCTHING(key)) {
@@ -352,7 +379,7 @@ js_atom_sweeper(JSHashEntry *he, intN i, void *arg)
         atom->flags &= ~ATOM_MARK;
         return HT_ENUMERATE_NEXT;
     }
-    JS_ASSERT((atom->flags & ATOM_PINNED) == 0);
+    JS_ASSERT((atom->flags & (ATOM_PINNED | ATOM_INTERNED)) == 0);
     atom->entry.key = NULL;
     atom->flags = 0;
     return HT_ENUMERATE_REMOVE;
@@ -548,7 +575,9 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     }
 
     atom = (JSAtom *)he;
-    atom->flags |= flags & ATOM_PINNED;
+    atom->flags |= flags & (ATOM_PINNED | ATOM_INTERNED);
+    if (flags & ATOM_INTERNED)
+        state->interns++;
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;

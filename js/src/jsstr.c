@@ -1998,6 +1998,7 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
         tagbuf[j++] = (jschar)end[i];
     tagbuf[j++] = '>';
     JS_ASSERT(j == taglen);
+    tagbuf[j] = 0;
 
     str = js_NewString(cx, tagbuf, taglen, 0);
     if (!str) {
@@ -2378,12 +2379,18 @@ js_hash_string_pointer(const void *key)
 void
 js_FinalizeString(JSContext *cx, JSString *str)
 {
+    js_FinalizeStringRT(cx->runtime, str);
+}
+
+void
+js_FinalizeStringRT(JSRuntime *rt, JSString *str)
+{
     JSHashNumber hash;
     JSHashEntry *he, **hep;
 
-    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+    JS_RUNTIME_UNMETER(rt, liveStrings);
     if (str->chars) {
-        JS_free(cx, str->chars);
+        free(str->chars);
         str->chars = NULL;
         if (deflated_string_cache) {
             hash = js_hash_string_pointer(str);
@@ -2391,7 +2398,7 @@ js_FinalizeString(JSContext *cx, JSString *str)
             hep = JS_HashTableRawLookup(deflated_string_cache, hash, str);
             he = *hep;
             if (he) {
-                JS_free(cx, he->value);
+                free(he->value);
                 JS_HashTableRawRemove(deflated_string_cache, hep, he);
                 deflated_string_cache_bytes -= str->length;
             }
