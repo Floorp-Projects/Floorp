@@ -58,7 +58,7 @@ MKSHLIB = $(LD) -shared -all -expect_unresolved "*"
 #  _POSIX4A_DRAFT10_SOURCE is needed to pick up localtime_r, used in
 #      prtime.c
 #
-OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_POSIX4A_DRAFT10_SOURCE -DOSF1
+OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_POSIX4A_DRAFT10_SOURCE -DOSF1 -DHAVE_LOCALTIME_R
 OS_LIBS = -lsocket -lnsl 
 
 NOSUCHFILE = /no-such-file
