@@ -3692,8 +3692,8 @@ PRInt32 nsNNTPProtocol::Cancel()
   PRBool cancelchk=PR_FALSE;
   rv = m_newsHost->QueryExtension("CANCELCHK",&cancelchk);
   if (NS_SUCCEEDED(rv) && !cancelchk) {
-#ifdef DEBUG_sspitzer
-      printf("CANCELCHK supported\n");
+#ifdef DEBUG_NEWS
+      printf("CANCELCHK not supported\n");
 #endif
       nsCOMPtr<nsIMsgHeaderParser> parser;
       PRBool ok = PR_FALSE;
@@ -3704,7 +3704,7 @@ PRInt32 nsNNTPProtocol::Cancel()
                                               getter_AddRefs(parser));
       
       if (NS_SUCCEEDED(rv))  {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
           printf("got a header parser...\n");
 #endif
           char *us = nsnull;
@@ -3723,7 +3723,7 @@ PRInt32 nsNNTPProtocol::Cancel()
           alertText = UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED;
           if (dialog) {
               // until #7770 is fixed, we can't do dialogs on Linux from here
-#ifdef BUG_7770_FIXED
+#if defined(BUG_7770_FIXED) || defined(XP_PC)
               rv = dialog->Alert(alertText);
 #else
               printf("%s\n",alertText.GetBuffer());
@@ -3738,16 +3738,16 @@ PRInt32 nsNNTPProtocol::Cancel()
       }
   }
   else {
-#ifdef DEBUG_sspitzer
-      printf("CANCELCHK not supported\n");
+#ifdef DEBUG_NEWS
+      printf("CANCELCHK supported, don't do the us vs. them test\n");
 #endif
   }
   
   /* Last chance to cancel the cancel.
    */
   if (dialog) {
-      // until #7770 is fixed, we can't do dialogs on Linux from here
-#ifdef BUG_7770_FIXED
+      // until #7770 is fixed, we can't do dialogs on UNIX from here
+#if defined(BUG_7770_FIXED) || defined(XP_PC)
       rv = dialog->Confirm(confirmText, &confirmCancelResult);
 #else
       printf("%s\n", confirmText.GetBuffer());
@@ -3818,7 +3818,7 @@ PRInt32 nsNNTPProtocol::Cancel()
     alertText = UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED;
     if (dialog) {
         // until #7770 is fixed, we can't do dialogs on Linux from here
-#ifdef BUG_7770_FIXED
+#if defined(BUG_7770_FIXED) || defined(XP_PC)
         rv = dialog->Alert(alertText);
 #else
         printf("%s\n", alertText.GetBuffer());
