@@ -72,6 +72,13 @@ ifeq ($(OS_ARCH),AIX)
 IS_COMPONENT =  1
 endif
 
+# OpenVMS (Alpha only at this point)
+ifeq ($(OS_ARCH),OpenVMS)
+ifeq ($(CPU_ARCH),Alpha)
+IS_COMPONENT =  1
+endif
+endif
+
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
 CPPSRCS=		\
@@ -84,6 +91,7 @@ CPPSRCS=		\
 	xpclog.cpp			\
 	xpcmaps.cpp			\
 	xpcmodule.cpp	\
+	xpcstack.cpp	\
 	xpcthreadcontext.cpp	\
 	xpcthrower.cpp		\
 	xpcwrappedjs.cpp	\

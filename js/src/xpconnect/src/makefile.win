@@ -39,6 +39,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpclog.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
 	.\$(OBJDIR)\xpcmodule.obj	\
+	.\$(OBJDIR)\xpcstack.obj	\
 	.\$(OBJDIR)\xpcthreadcontext.obj	\
 	.\$(OBJDIR)\xpcthrower.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
