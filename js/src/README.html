@@ -73,7 +73,8 @@ Table of Contents</h2>
 <h2>
 <a NAME="Introduction"></a>Introduction</h2>
 This is the README file for the&nbsp;<span CLASS=LXRSHORTDESC>JavaScript
-Reference (JSRef) implementation.</span> It consists of build conventions
+Reference (JSRef, now better known as SpiderMonkey) implementation.</span>
+It consists of build conventions
 and instructions, source code conventions, a design walk-through, and a
 brief file-by-file description of the source.
 <p><span CLASS=LXRLONGDESC>JSRef builds a library or DLL containing the
@@ -81,12 +82,13 @@ JavaScript runtime (compiler, interpreter, decompiler, garbage collector,
 atom manager, standard classes). It then compiles a small "shell" program
 and links that with the library to make an interpreter that can be used
 interactively and with test .js files to run scripts.&nbsp; The code has
-no dependencies on the Navigator code.</span>
+no dependencies on the rest of the Mozilla codebase.</span>
 <p><i>Quick start tip</i>: skip to "Using the JS API" below, build the
 js shell, and play with the object named "it" (start by setting 'it.noisy
 = true').
 <h2>
-<a NAME="Build"></a>Build conventions (standalone JS engine and shell)</h2>
+<a NAME="Build"></a>Build conventions (standalone JS engine and shell)
+(OUT OF DATE!)</h2>
 These build directions refer only to building the standalone JavaScript
 engine and shell.&nbsp; To build within the browser, refer to the <a href="http://www.mozilla.org/docs/">build
 directions</a> on the mozilla.org website.
@@ -178,6 +180,13 @@ Use '<tt>gmake -f Makefile.ref nsinstall-target all export ship</tt>'</li>
 <li>
 To turn on GC instrumentation, define <tt>JS_GCMETER</tt>.</li>
 
+<ul>
+<li>
+To turn on GC mark-phase debugging, useful to find leaked objects by their
+address, and to dump the GC heap, define <tt>GC_MARK_DEBUG</tt>.
+See the code in jsgc.c around the declaration and use of
+<tt>js_LiveThingToFind</tt>.</li>
+
 <li>
 To turn on the arena package's instrumentation, define <tt>JS_ARENAMETER</tt>.</li>
 
@@ -195,7 +204,7 @@ e.g. <tt>JS_NewObject</tt>.</li>
 
 <li>
 Extern but library-private function names use a <tt>js_</tt> prefix and
-mixed case, e.g. <tt>js_LookupSymbol</tt>.</li>
+mixed case, e.g. <tt>js_SearchScope</tt>.</li>
 
 <li>
 Most static function names have unprefixed, mixed-case names: <tt>GetChar</tt>.</li>
@@ -216,18 +225,22 @@ Aggregate type names are JS-prefixed and mixed-case: <tt>JSObject.</tt></li>
 
 <li>
 Macros are generally <tt>ALL_CAPS </tt>and underscored, to call out potential
-side effects, multiple uses of a formal argument, etc. - Four spaces of
-indentation per statement nesting level.</li>
+side effects, multiple uses of a formal argument, etc.</li>
+
+<li>
+Four spaces of indentation per statement nesting level.</li>
 
 <li>
 Tabs are taken to be eight spaces, and an Emacs magic comment at the top
 of each file tries to help. If you're using MSVC or similar, you'll want
-to set tab width to 8, or convert these files to be space-filled.</li>
+to set tab width to 8, and help convert these files to be space-filled.
+<font color="#CC0000">Do not add hard tabs to source files; do remove them
+whenever possible.</font></li>
 
 <li>
 DLL entry points have their return type expanded within a <tt>JS_PUBLIC_API()</tt>
 macro call, to get the right Windows secret type qualifiers in the right
-places for both 16- and 32-bit builds.</li>
+places for all build variants.</li>
 
 <li>
 Callback functions that might be called from a DLL are similarly macroized
@@ -253,7 +266,7 @@ Starting up</h4>
 &nbsp;&nbsp;&nbsp; JSContext *cx;
 
 &nbsp;&nbsp;&nbsp; /* You need a runtime and one or more contexts to do anything with JS. */
-&nbsp;&nbsp;&nbsp; rt = JS_Init(1000000L);
+&nbsp;&nbsp;&nbsp; rt = JS_NewRuntime(0x400000L);
 &nbsp;&nbsp;&nbsp; if (!rt)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fail("can't create JavaScript runtime");
 &nbsp;&nbsp;&nbsp; cx = JS_NewContext(rt, STACK_CHUNK_SIZE);
@@ -291,7 +304,7 @@ Defining objects and properties</h4>
 &nbsp;&nbsp;&nbsp;&nbsp; * with all other API calls that take an object/name pair.&nbsp; The prototype
 &nbsp;&nbsp;&nbsp;&nbsp; * passed in is null, so the default object prototype will be used.
 &nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; obj = JS_DefineObject(cx, globalObj, "myObject", &amp;my_class, 0,
+&nbsp;&nbsp;&nbsp; obj = JS_DefineObject(cx, globalObj, "myObject", &amp;my_class, NULL,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_ENUMERATE);
 
 &nbsp;&nbsp;&nbsp; /*
@@ -395,7 +408,8 @@ Defining classes</h4>
 &nbsp;&nbsp;&nbsp;&nbsp; * the global object -- but you should call JS_InitClass if you require a
 &nbsp;&nbsp;&nbsp;&nbsp; * constructor function for script authors to call via new, and/or a class
 &nbsp;&nbsp;&nbsp;&nbsp; * prototype object ('MyClass.prototype') for authors to extend with new
-&nbsp;&nbsp;&nbsp;&nbsp; * properties at run-time.
+&nbsp;&nbsp;&nbsp;&nbsp; * properties at run-time.  In general, if you want to support multiple
+&nbsp;&nbsp;&nbsp;&nbsp; * instances that share behavior, use JS_InitClass.
 &nbsp;&nbsp;&nbsp;&nbsp; */
 &nbsp;&nbsp;&nbsp; protoObj = JS_InitClass(cx, globalObj, NULL, &amp;my_class,
 
@@ -462,8 +476,11 @@ Shutting down</h4>
 <pre><tt>&nbsp;&nbsp;&nbsp; /* For each context you've created: */
 &nbsp;&nbsp;&nbsp; JS_DestroyContext(cx);
 
+&nbsp;&nbsp;&nbsp; /* For each runtime: */
+&nbsp;&nbsp;&nbsp; JS_DestroyRuntime(rt);
+
 &nbsp;&nbsp;&nbsp; /* And finally: */
-&nbsp;&nbsp;&nbsp; JS_Finish(rt);</tt></pre>
+&nbsp;&nbsp;&nbsp; JS_ShutDown();</tt></pre>
 
 <h4>
 Debugging API</h4>
@@ -505,15 +522,15 @@ in JSRef take a JSContext pointer as their first argument.
 <p>The decompiler translates postfix bytecode into infix source by consulting
 a separate byte-sized code, called source notes, to disambiguate bytecodes
 that result from more than one grammatical production.
-<p>The GC is a mark-and-sweep, non-conservative (perfect) collector. It
+<p>The GC is a mark-and-sweep, non-conservative (exact) collector. It
 can allocate only fixed-sized things -- the current size is two machine
 words. It is used to hold JS object and string descriptors (but not property
 lists or string bytes), and double-precision floating point numbers. It
-runs automatically only when maxbytes (as passed to <tt>JS_Init()</tt>)
+runs automatically only when maxbytes (as passed to <tt>JS_NewRuntime()</tt>)
 bytes of GC things have been allocated and another thing-allocation request
 is made. JS API users should call <tt>JS_GC()</tt> or <tt>JS_MaybeGC()</tt>
 between script executions or from the branch callback, as often as necessary.
-<p>An important point about the GC's "perfection": you must add roots for
+<p>An important point about the GC's "exactness": you must add roots for
 new objects created by your native methods if you store references to them
 into a non-JS structure in the malloc heap or in static data. Also, if
 you make a new object in a native method, but do not store it through the
@@ -523,14 +540,14 @@ so that it is in a known root, the object is guaranteed to survive only
 until another new object is created. Either lock the first new object when
 making two in a row, or store it in a root you've added, or store it via
 rval.
+See the <a href="http://www.mozilla.org/js/spidermonkey/gctips.html">GC tips</a>
+document for more.
 <p>The atom manager consists of a hash table associating strings uniquely
 with scanner/parser information such as keyword type, index in script or
 function literal pool, etc. Atoms play three roles in JSRef: as literals
 referred to by unaligned 16-bit immediate bytecode operands, as unique
 string descriptors for efficient property name hashing, and as members
-of the root GC set for perfect GC. This design therefore requires atoms
-to be manually reference counted, from script literal pools (<tt>JSAtomMap</tt>)
-and object symbol (<tt>JSSymbol</tt>) entry keys.
+of the root GC set for exact GC.
 <p>Native objects and methods for arrays, booleans, dates, functions, numbers,
 and strings are implemented using the JS API and certain internal interfaces
 used as "fast paths".
@@ -541,7 +558,7 @@ code can substitute its own error reporting function and suppress errors,
 or reflect them into Java or some other runtime system as exceptions, GUI
 dialogs, etc..
 <h2>
-File walk-through (BADLY OUT OF DATE!)</h2>
+File walk-through (OUT OF DATE!)</h2>
 
 <h4>
 jsapi.c, jsapi.h</h4>
@@ -695,9 +712,8 @@ defining, looking up, getting, setting, and deleting properties;</li>
 <li>
 creating and destroying properties and binding names to them.</li>
 </ul>
-The details of an object map (scope) are mostly hidden in <tt>jsscope.[ch]</tt>,
-where scopes start out as linked lists of symbols, and grow after some
-threshold into PR hash tables.
+The details of a native object's map (scope) are mostly hidden in
+<tt>jsscope.[ch]</tt>.
 <h4>
 jsatom.c, jsatom.h</h4>
 The atom manager. Contains well-known string constants, their atoms, the
