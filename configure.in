@@ -224,8 +224,17 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
        NS_USE_NATIVE=1
     else
        MKSHLIB='$(CC) $(DSO_LDOPTS)'
-       MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
-       MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
+
+dnl    donm: you need to detect that gcc is built to use the gnu
+dnl          linker.  You cant assume that here.
+dnl
+dnl    MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
+dnl    MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
+dnl
+
+       MKSHLIB_FORCE_ALL='-Wl,-z -Wl,allextract'
+       MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
+
        AS='$(CC)'
        ASFLAGS='$(CFLAGS)'
     fi
