@@ -22,6 +22,7 @@
 
 #include <string.h>
 #include "prtypes.h"
+#include "nscore.h"
 #include "nsDebug.h"
 #include "nsMemory.h"
 
@@ -406,7 +407,7 @@ objmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 
     // Ignore tagged object ids stored as object pointer keys (the updater
     // code does this).
-    if ((NSFastLoadOID(entry->mObject) & MFL_OBJECT_DEF_TAG) == 0)
+    if ((NSFastLoadOID(NS_PTR_TO_INT32(entry->mObject)) & MFL_OBJECT_DEF_TAG) == 0)
         NS_IF_RELEASE(entry->mObject);
     PL_DHashClearEntryStub(aTable, aHdr);
 }
@@ -1507,7 +1508,7 @@ nsFastLoadFileWriter::ObjectMapEnumerate(PLDHashTable *aTable,
 #ifdef NS_DEBUG
     NS_ASSERTION(entry->mInfo.mStrongRefCnt, "no strong ref in serialization!");
 
-    if ((NSFastLoadOID(entry->mObject) & MFL_OBJECT_DEF_TAG) == 0) {
+    if ((NSFastLoadOID(NS_PTR_TO_INT32(entry->mObject)) & MFL_OBJECT_DEF_TAG) == 0) {
         nsrefcnt rc = entry->mObject->AddRef();
         NS_ASSERTION(entry->mInfo.mStrongRefCnt <= rc - 2,
                      "too many strong refs in serialization");
@@ -1517,7 +1518,7 @@ nsFastLoadFileWriter::ObjectMapEnumerate(PLDHashTable *aTable,
 
     // Ignore tagged object ids stored as object pointer keys (the updater
     // code does this).
-    if ((NSFastLoadOID(entry->mObject) & MFL_OBJECT_DEF_TAG) == 0)
+    if ((NSFastLoadOID(NS_PTR_TO_INT32(entry->mObject)) & MFL_OBJECT_DEF_TAG) == 0)
         NS_RELEASE(entry->mObject);
 
     return PL_DHASH_NEXT;
@@ -1735,7 +1736,7 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
     nsrefcnt rc;
     nsresult rv;
 
-    NS_ASSERTION((NSFastLoadOID(aObject) & MFL_OBJECT_DEF_TAG) == 0,
+    NS_ASSERTION((NSFastLoadOID(NS_PTR_TO_INT32(aObject)) & MFL_OBJECT_DEF_TAG) == 0,
                  "odd nsISupports*, oh no!");
 
     // Here be manual refcounting dragons!

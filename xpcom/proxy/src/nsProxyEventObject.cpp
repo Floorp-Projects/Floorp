@@ -24,6 +24,7 @@
 #include "prprf.h"
 #include "prmem.h"
 
+#include "nscore.h"
 #include "nsProxyEvent.h"
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
@@ -48,8 +49,8 @@ public:
     }
   
     PRUint32 HashCode(void) const {
-        // XXX what about 64-bit machines?
-        return (PRUint32)mRootObjectKey ^ (PRUint32)mDestQueueKey ^ mProxyType;
+        return NS_PTR_TO_INT32(mRootObjectKey) ^ 
+            NS_PTR_TO_INT32(mDestQueueKey) ^ mProxyType;
     }
 
     PRBool Equals(const nsHashKey *aKey) const {

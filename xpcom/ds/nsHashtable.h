@@ -211,7 +211,7 @@ class NS_COM nsISupportsKey : public nsHashKey {
     }
     
     PRUint32 HashCode(void) const {
-        return (PRUint32)mKey;
+        return NS_PTR_TO_INT32(mKey);
     }
 
     PRBool Equals(const nsHashKey *aKey) const {
@@ -243,7 +243,7 @@ class nsVoidKey : public nsHashKey {
     }
     
     PRUint32 HashCode(void) const {
-        return (PRUint32)mKey;
+        return NS_PTR_TO_INT32(mKey);
     }
 
     PRBool Equals(const nsHashKey *aKey) const {

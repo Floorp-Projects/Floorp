@@ -307,7 +307,7 @@ void TestCase_NestedLoop(void *arg)
                 rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
         
             printf("Thread (%d) Prior to calling proxyObject->Test.\n", threadNumber);
-            rv = proxyObject->Test((PRInt32)eventQ, 0, &retval);   
+            rv = proxyObject->Test(NS_PTR_TO_INT32(eventQ), 0, &retval);   
             printf("Thread (%d) proxyObject error: %d.\n", threadNumber, rv);
 
             printf("Deleting Proxy Object (%d)\n", threadNumber );

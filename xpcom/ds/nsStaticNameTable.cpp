@@ -34,6 +34,7 @@
 
 /* Class to manage lookup of static names in a table. */
 
+#include "nscore.h"
 #include "nsString.h"
 #include "nsStaticNameTable.h"
 
@@ -92,7 +93,7 @@ LookupLowercasedKeyword(const nsCString& aLowercasedKeyword,
 {
     nsCStringKey key(aLowercasedKeyword);
     void* val = aTable->Get(&key);
-    return val ? ((PRInt32)val) - 1 : 
+    return val ? NS_PTR_TO_INT32(val) - 1 : 
                  nsStaticCaseInsensitiveNameTable::NOT_FOUND;
 }  
 
