@@ -27,54 +27,53 @@
 
 <dialog id="CookieExceptions"
         buttons="accept,cancel"
+        windowtype="exceptions"
         title="&window.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
-        onload="window.opener.top.initPanel(window.location.href, window);"
-        ondialogaccept="return onOK();"
+        onload="gPermissionManager.onLoad();"
+        ondialogaccept="return gPermissionManager.onOK();"
         persist="screenX screenY width height">
 
   <script src="chrome://browser/content/cookieviewer/CookieExceptions.js"/>
-  <script src="chrome://browser/content/pref/permissions.js"/>
   <script src="chrome://browser/content/cookieviewer/treeUtils.js"/>
 
   <stringbundle id="permBundle"
                 src="chrome://browser/locale/pref/prefutilities.properties"/>
            
- <description id="permissionsText">&div.bannedservers.label;</description>
- <separator class="thin"/>
- <label value="&address.label;"/>
- <hbox align="start">
-   <textbox id="url" flex="1"
-            oninput="buttonEnabling(this);"/>
-   <vbox>
+  <description id="permissionsText"/>
+  <separator class="thin"/>
+  <label value="&address.label;"/>
+  <hbox align="start">
+    <textbox id="url" flex="1" oninput="gPermissionManager.onHostInput(event.target);"/>
+  </hbox>
+  <hbox pack="end">
      <button id="btnBlock" disabled="true"
-             label="&block.label;" oncommand="manageSite(permissionmanager.DENY_ACTION);"/>
+             label="&block.label;" oncommand="gPermissionManager.addPermission(nsIPermissionManager.DENY_ACTION);"/>
+     <button id="btnSession" disabled="true"
+             label="&session.label;" oncommand="gPermissionManager.addPermission(nsICookiePermission.ACCESS_SESSION);"/>
      <button id="btnAllow" disabled="true"
-             label="&allow.label;" oncommand="manageSite(permissionmanager.ALLOW_ACTION);"/>
-   </vbox>
- </hbox>
- <separator class="thin"/>
- <tree id="permissionsTree" flex="1" style="height: 18em;"
-       hidecolumnpicker="true"
-       onkeypress="HandlePermissionKeyPress(event)"
-       onselect="PermissionSelected();">
-   <treecols>
-     <treecol id="siteCol" label="&treehead.sitename.label;" flex="3"
-                  onclick="PermissionColumnSort('rawHost', true);" persist="width"/>
-     <splitter class="tree-splitter"/>
-     <treecol id="statusCol" label="&treehead.status.label;" flex="1"
-                  onclick="PermissionColumnSort('capability', true);" persist="width"/>
-   </treecols>
-   <treechildren/>
- </tree>
- <separator class="thin"/>
- <hbox>
-   <button id="removePermission" disabled="true" 
-                 label="&removepermission.label;" 
-                 oncommand="DeletePermission();"/>
-   <button id="removeAllPermissions"
-                 label="&removeallpermissions.label;" 
-                 oncommand="DeleteAllPermissions();"/>
- </hbox>
+             label="&allow.label;" oncommand="gPermissionManager.addPermission(nsIPermissionManager.ALLOW_ACTION);"/>
+  </hbox>
+  <separator class="thin"/>
+  <tree id="permissionsTree" flex="1" style="height: 18em;"
+        hidecolumnpicker="true"
+        onkeypress="gPermissionManager.onPermissionKeyPress(event)"
+        onselect="gPermissionManager.onPermissionSelected();">
+    <treecols>
+      <treecol id="siteCol" label="&treehead.sitename.label;" flex="3"
+                    onclick="gPermissionManager.onPermissionSort('rawHost', true);" persist="width"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="statusCol" label="&treehead.status.label;" flex="1"
+                    onclick="gPermissionManager.onPermissionSort('capability', true);" persist="width"/>
+    </treecols>
+    <treechildren/>
+  </tree>
+  <separator class="thin"/>
+  <hbox>
+    <button id="removePermission" disabled="true" label="&removepermission.label;" 
+            oncommand="gPermissionManager.onPermissionDeleted();"/>
+    <button id="removeAllPermissions" label="&removeallpermissions.label;" 
+            oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
+  </hbox>
 </dialog>

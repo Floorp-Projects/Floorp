@@ -48,6 +48,9 @@ else
 ifdef MOZ_STANDALONE_COMPOSER
 DIRS = console filepicker printing viewsource
 else
+ifdef MOZ_SUNBIRD
+DIRS = autocomplete console filepicker help printing passwordmgr
+else
 DIRS = 		\
 	autocomplete \
 	console \
@@ -57,6 +60,7 @@ DIRS = 		\
 	passwordmgr \
 	printing \
 	satchel \
+	typeaheadfind \
 	viewconfig \
 	viewsource \
 	$(NULL)
@@ -67,6 +71,7 @@ endif
 
 DIRS += downloads
 
+endif
 endif
 endif
 

@@ -37,7 +37,7 @@
 
 #include "nsIShellService.idl"
 
-[scriptable, uuid(45a378fd-65b7-4be8-99b3-ebbf5513fe07)]
+[scriptable, uuid(eccda3b0-ea69-4066-8343-ddaf1f435b53)]
 interface nsIWindowsShellService : nsIShellService
 {
     /**
@@ -56,7 +56,6 @@ interface nsIWindowsShellService : nsIShellService
      * @return The number of unread (new) mail messages for the current user.
      */
     readonly attribute unsigned long unreadMailCount;
-
 
     /**
      * Valid starting keys for the Windows Registry.
@@ -77,6 +76,5 @@ interface nsIWindowsShellService : nsIShellService
      * @return The value of the specified sub key/value, truncated to 4096 bytes.
      */
     string getRegistryEntry(in long aHKeyConstant, in string aSubKeyName, in string aValueName);
-
 };
 

@@ -46,12 +46,12 @@ function setHomePageToCurrentPage()
     var homePageField = document.getElementById("browserStartupHomepage");
     var newVal = "";
 
-    var browser = top.opener.document.getElementById("content");
-    var l = browser.mPanelContainer.childNodes.length;
+    var tabbrowser = top.opener.document.getElementById("content");
+    var l = tabbrowser.browsers.length;
     for (var i = 0; i < l; i++) {
       if (i)
         newVal += "|";
-      newVal += browser.mPanelContainer.childNodes[i].webNavigation.currentURI.spec;
+      newVal += tabbrowser.getBrowserAtIndex(i).webNavigation.currentURI.spec;
     }
     
     homePageField.value = newVal;
@@ -113,6 +113,12 @@ function Startup()
   } catch (e) { 
     // prefwindow wasn't opened from a browser window, so no current page
     useButton.disabled = true;
+  }
+  
+  if (parent.hPrefWindow.getPrefIsLocked("browser.startup.homepage")) {
+    document.getElementById("browserUseCurrent").disabled = true;
+    document.getElementById("browserUseBookmark").disabled = true;
+    document.getElementById("browserUseBlank").disabled = true;
   }
  
   try {

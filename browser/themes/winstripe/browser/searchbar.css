@@ -1,0 +1,19 @@
+.searchbar-textbox {
+  width: 12em;
+}
+
+.searchbar-dropmarker {
+  margin-top: 2px;
+  margin-bottom: 1px;
+}
+
+.searchbar-engine-image {
+  margin: 0px;
+  list-style-image: url("chrome://browser/skin/Search-bar.png");
+}
+
+.searchbar-dropmarker-image {
+  margin-left: 12px;
+  margin-top: 8px;
+  list-style-image: url("chrome://browser/skin/search-arrow.gif");
+}

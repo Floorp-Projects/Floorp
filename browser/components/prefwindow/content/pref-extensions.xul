@@ -56,9 +56,7 @@
     <listbox id="extList" datasources="rdf:chrome" 
           onselect="extensionSelect();" flex="1"
           ondblclick="if (isValidLeftClick(event,'listitem')) onDoubleClick(event);"
-          ref="urn:mozilla:package:root" rows="10"
-          sortResource="http://www.mozilla.org/rdf/chrome#displayName"
-          sortDirection="ascending">
+          ref="urn:mozilla:package:root" rows="10">
       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
         <rule chrome:extension="true">
           <listitem uri="..."

@@ -58,7 +58,11 @@
 
   <deck id="modes" flex="1">
     <vbox flex="1" id="clientBox">
-      <label id="version" value="&aboutVersion;"/>
+      <!-- XXXben - this is a hack to deal with our strange and confusing
+                    non-decimal version numbering. We display the human-readable
+                    version here - hard coded for JUST this release. We will
+                    remove this line and replace with the #expand one for 1.0 -->
+#expand <label id="version" value="&aboutVersion; __MOZ_APP_VERSION__"/>
       <description id="copyright">&copyrightText;</description>
       <vbox id="detailsBox" align="center" flex="1">
         <spacer flex="1"/>
@@ -66,7 +70,7 @@
       </vbox>
     </vbox>
     <vbox flex="1" id="creditsBox">
-      <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://browser/locale/credits.html" flex="1"/>
+      <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://browser/content/credits.xhtml" flex="1"/>
     </vbox>    
   </deck>
   <separator class="groove" id="groove"/>

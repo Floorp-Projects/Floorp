@@ -1,11 +1,11 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
@@ -14,25 +14,24 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
- * Vladimir Vukicevic
+ * The Initial Developer of the Original Code is
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -51,10 +50,15 @@
 #include "nsISupportsPrimitives.h"
 #include "rdf.h"
 #include "nsUnicharUtils.h"
+#include "nsInt64.h"
+
+#include "nsIScriptSecurityManager.h"
 
 #include "nsIURL.h"
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
+#include "nsICachingChannel.h"
+#include "nsICacheVisitor.h"
 
 #include "nsIDOMParser.h"
 #include "nsIDOMDocument.h"
@@ -79,6 +83,8 @@ extern nsIRDFResource       *kRSS10_channel;
 extern nsIRDFResource       *kRSS10_items;
 extern nsIRDFResource       *kRSS10_title;
 extern nsIRDFResource       *kRSS10_link;
+
+extern nsIRDFResource       *kDC_date;
 
 extern nsIRDFLiteral        *kTrueLiteral;
 
@@ -139,13 +145,16 @@ protected:
     // helpers
     NS_METHOD HandleRDFItem (nsIRDFDataSource *aDS, nsIRDFResource *itemResource,
                              nsIRDFResource *aLinkResource, nsIRDFResource *aTitleResource);
-    NS_METHOD FindTextNode (nsIDOMNode *aParentNode, nsIDOMNode **aTextNode);
+    NS_METHOD FindTextInNode (nsIDOMNode *aParentNode, nsAString &aString);
+
+    PRBool IsLinkValid(const PRUnichar *aURI);
 
     nsBookmarksService *mBMSVC;
     nsCOMPtr<nsIRDFDataSource> mInnerBMDataSource;
     nsCOMPtr<nsIURI> mURI;
     nsCOMPtr<nsIRDFResource> mResource;
     nsCOMPtr<nsIOutputStream> mCacheStream;
+    nsCOMPtr<nsIScriptSecurityManager> mSecMan;
     PRBool mAborted;
     nsCString mBody;
     nsCOMPtr<nsIRDFContainer> mLivemarkContainer;
@@ -221,7 +230,7 @@ nsFeedLoadListener::OnStopRequest(nsIRequest *aRequest,
             rv = gRDFC->MakeSeq(mInnerBMDataSource, mResource, getter_AddRefs(mLivemarkContainer));
             if (NS_FAILED(rv)) break;
         } else {
-            rv = nsBMSVCClearSeqContainer(mInnerBMDataSource, mResource);
+            rv = mBMSVC->ClearBookmarksContainer(mResource);
             if (NS_FAILED(rv)) break;
 
             mLivemarkContainer = do_CreateInstance (kRDFContainerCID, &rv);
@@ -236,6 +245,11 @@ nsFeedLoadListener::OnStopRequest(nsIRequest *aRequest,
         mBMSVC->Unassert (mResource, kNC_LivemarkLock, kTrueLiteral);
         return rv;
     }
+
+    /*
+     * Grab the security manager
+     */
+    mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
 
     /* We need to parse the returned data here, stored in mBody.  We
      * try parsing as RDF first, then as Atom and the "simple" RSS
@@ -256,12 +270,48 @@ nsFeedLoadListener::OnStopRequest(nsIRequest *aRequest,
     }
 
     /* Set an expiration on the livemark, for reloading the data */
-    PRInt32 ttl = 3600;     // XXXvladimir FIXME: read ttl from rss
+    PRInt32 ttl;
     if (NS_FAILED(rv)) {
-        // if we failed, try again in 5 minutes, to avoid trying
-        // to load the livemark over and over.
-        ttl = 300;          
+        // if we failed, try again in 1 hour, to avoid trying
+        // to load a feed that doesn't parse over and over.
+        ttl = 3600;
+    } else {
+        if (mBMSVC->mBookmarksPrefs)
+            rv = mBMSVC->mBookmarksPrefs->GetIntPref("livemark_refresh_seconds", &ttl);
+        if (!mBMSVC->mBookmarksPrefs || NS_FAILED(rv))
+            ttl = 3600;         // 1 hr default
+        else if (ttl < 60)
+            ttl = 60;           // 1 min minimum
+
+        // ensure that the ttl is at least equal to the cache expiry time, since
+        // otherwise a reload won't have much effect
+        nsCOMPtr<nsICachingChannel> channel = do_QueryInterface(aRequest);
+        if (channel) {
+            nsCOMPtr<nsISupports> cacheToken;
+            channel->GetCacheToken(getter_AddRefs(cacheToken));
+            if (cacheToken) {
+                nsCOMPtr<nsICacheEntryInfo> entryInfo = do_QueryInterface(cacheToken);
+                if (entryInfo) {
+                    PRUint32 expiresTime;
+                    
+                    if (NS_SUCCEEDED(entryInfo->GetExpirationTime(&expiresTime))) {
+                        PRInt64 temp64, nowtime = PR_Now();
+                        PRUint32 nowsec;
+                        LL_I2L(temp64, PR_USEC_PER_SEC);
+                        LL_DIV(temp64, nowtime, temp64);
+                        LL_L2UI(nowsec, temp64);
+
+                        if (nowsec >= expiresTime) {
+                            expiresTime -= nowsec;
+                            if (ttl < (PRInt32) expiresTime)
+                                ttl = (PRInt32) expiresTime;
+                        }
+                    }
+                }
+            }
+        }
     }
+
     rv = SetResourceTTL(ttl);
     if (NS_FAILED(rv)) {
         NS_WARNING ("SetResourceTTL failed on Livemark");
@@ -416,14 +466,11 @@ nsFeedLoadListener::TryParseAsRDF ()
 // and return it
 //
 nsresult
-nsFeedLoadListener::FindTextNode (nsIDOMNode *aParentNode, nsIDOMNode **aTextNode)
+nsFeedLoadListener::FindTextInNode (nsIDOMNode *aParentNode, nsAString &aString)
 {
     NS_ENSURE_ARG(aParentNode);
-    NS_ENSURE_ARG(aTextNode);
 
     nsresult rv;
-
-    *aTextNode = nsnull;
 
     nsCOMPtr<nsIDOMNode> childNode;
     rv = aParentNode->GetFirstChild(getter_AddRefs(childNode));
@@ -433,7 +480,8 @@ nsFeedLoadListener::FindTextNode (nsIDOMNode *aParentNode, nsIDOMNode **aTextNod
     PRUint16 nodeType = 0;
     do {
         rv = childNode->GetNodeType(&nodeType);
-        if (nodeType == nsIDOMNode::TEXT_NODE)
+        if (nodeType == nsIDOMNode::TEXT_NODE ||
+            nodeType == nsIDOMNode::CDATA_SECTION_NODE)
             break;
 
         nsCOMPtr<nsIDOMNode> temp;
@@ -442,12 +490,15 @@ nsFeedLoadListener::FindTextNode (nsIDOMNode *aParentNode, nsIDOMNode **aTextNod
         childNode = temp;
     } while (childNode);
 
-    if (nodeType == nsIDOMNode::TEXT_NODE) {
-        *aTextNode = childNode.get();
-        NS_ADDREF(*aTextNode);
+    if (nodeType == nsIDOMNode::TEXT_NODE ||
+        nodeType == nsIDOMNode::CDATA_SECTION_NODE)
+    {
+        nsCOMPtr<nsIDOMCharacterData> charTextNode = do_QueryInterface(childNode);
+        if (charTextNode)
+            return charTextNode->GetData(aString);
     }
 
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -464,15 +515,25 @@ nsFeedLoadListener::HandleRDFItem (nsIRDFDataSource *aDS, nsIRDFResource *aItem,
 
     nsCOMPtr<nsIRDFNode> titleNode;
     rv = aDS->GetTarget (aItem, aTitleResource, PR_TRUE, getter_AddRefs(titleNode));
+    if (rv == NS_RDF_NO_VALUE) {
+        rv = aDS->GetTarget (aItem, kDC_date, PR_TRUE, getter_AddRefs(titleNode));
+    }
     if (NS_FAILED(rv) || rv == NS_RDF_NO_VALUE) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIRDFLiteral> linkLiteral(do_QueryInterface(linkNode));
     nsCOMPtr<nsIRDFLiteral> titleLiteral(do_QueryInterface(titleNode));
 
+    // if the link/title points to something other than a literal skip it.
+    if (!linkLiteral || !titleLiteral)
+        return NS_ERROR_FAILURE;
+
     const PRUnichar *linkStr, *titleStr;
     rv = linkLiteral->GetValueConst(&linkStr);
     rv |= titleLiteral->GetValueConst(&titleStr);
     if (NS_FAILED(rv)) return rv;
+
+    if (!IsLinkValid(linkStr))
+        return NS_OK;
 
     nsCOMPtr<nsIRDFResource> newBM;
     rv = mBMSVC->CreateBookmark (titleStr, linkStr, nsnull, nsnull, nsnull, nsnull,
@@ -593,6 +654,7 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
                 /* We need to pull out the <title> and <link> children */
                 nsAutoString titleStr;
                 nsAutoString linkStr;
+                nsAutoString dateStr;
 
                 nsCOMPtr<nsIDOMNode> childNode;
                 rv = node->GetFirstChild(getter_AddRefs(childNode));
@@ -608,30 +670,41 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
                         rv = childNode->GetNodeName (childNname);
 
                         if (childNname.Equals(NS_LITERAL_STRING("title"))) {
-                            nsCOMPtr<nsIDOMNode> textNode;
-
-                            rv = FindTextNode (childNode, getter_AddRefs(textNode));
-                            if (!textNode || NS_FAILED(rv)) break;
-
-                            nsCOMPtr<nsIDOMCharacterData> charTextNode = do_QueryInterface(textNode);
-                            charTextNode->GetData(titleStr);
-                        } else if (childNname.Equals(NS_LITERAL_STRING("link"))) {
-                            if (!isAtom) {
+                            rv = FindTextInNode (childNode, titleStr);
+                            if (NS_FAILED(rv)) break;
+                        } else if (childNname.Equals(NS_LITERAL_STRING("pubDate")) ||
+                                   childNname.Equals(NS_LITERAL_STRING("updated")))
+                        {
+                            rv = FindTextInNode (childNode, dateStr);
+                            if (NS_FAILED(rv)) break;
+                        } else if (!isAtom && childNname.Equals(NS_LITERAL_STRING("guid"))) {
+                            nsCOMPtr<nsIDOMElement> linkElem = do_QueryInterface(childNode);
+                            if (!linkElem) break; // out of while(childNode) loop
+                            
+                            nsAutoString isPermaLink;
+                            linkElem->GetAttribute(NS_LITERAL_STRING("isPermaLink"), isPermaLink);
+                            // Ignore failures. isPermaLink defaults to true.
+                            if (!isPermaLink.Equals(NS_LITERAL_STRING("false"))) {
                                 // in node's TEXT
-                                nsCOMPtr<nsIDOMNode> textNode;
-
-                                rv = FindTextNode (childNode, getter_AddRefs(textNode));
-                                if (!textNode || NS_FAILED(rv)) break;
-
-                                nsCOMPtr<nsIDOMCharacterData> charTextNode = do_QueryInterface(textNode);
-                                charTextNode->GetData(linkStr);
-                            } else {
+                                rv = FindTextInNode (childNode, linkStr);
+                                if (NS_FAILED(rv)) break;
+                            }
+                        } else if (childNname.Equals(NS_LITERAL_STRING("link"))) {
+                            if (isAtom) { 
                                 // in HREF attribute
                                 nsCOMPtr<nsIDOMElement> linkElem = do_QueryInterface(childNode);
                                 if (!linkElem) break; // out of while(childNode) loop
 
-                                rv = linkElem->GetAttribute(NS_LITERAL_STRING("href"), linkStr);
-                                if (NS_FAILED(rv)) break; // out of while(childNode) loop
+                                nsAutoString rel;
+                                linkElem->GetAttribute(NS_LITERAL_STRING("rel"), rel);
+                                if (rel.Equals(NS_LITERAL_STRING("alternate"))) {
+                                    rv = linkElem->GetAttribute(NS_LITERAL_STRING("href"), linkStr);
+                                    if (NS_FAILED(rv)) break; // out of while(childNode) loop
+                                }
+                            } else if (linkStr.IsEmpty()) {
+                                // in node's TEXT
+                                rv = FindTextInNode (childNode, linkStr);
+                                if (NS_FAILED(rv)) break;
                             }
                         }
                     }
@@ -645,7 +718,10 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
                     if (!childNode || NS_FAILED(rv)) break;
                 }
 
-                if (!titleStr.IsEmpty() && !linkStr.IsEmpty()) {
+                if (titleStr.IsEmpty() && !dateStr.IsEmpty())
+                    titleStr.Assign(dateStr);
+
+                if (!titleStr.IsEmpty() && !linkStr.IsEmpty() && IsLinkValid(linkStr.get())) {
                     nsCOMPtr<nsIRDFResource> newBM;
                     rv = mBMSVC->CreateBookmark (titleStr.get(), linkStr.get(),
                                                  nsnull, nsnull, nsnull, nsnull,
@@ -678,9 +754,63 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
 }
 
 
+// return true if this link is valid and a livemark should be created;
+// otherwise, false.
+PRBool
+nsFeedLoadListener::IsLinkValid(const PRUnichar *aURI)
+{
+    nsCOMPtr<nsIURI> linkuri;
+    nsresult rv = NS_NewURI(getter_AddRefs(linkuri), nsDependentString(aURI));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    // Er, where'd our security manager go?
+    if (!mSecMan)
+        return PR_FALSE;
+
+    rv = mSecMan->CheckLoadURI(mURI, linkuri,
+                               nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
+                               nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    return PR_TRUE;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 ////  Main entry point for nsBookmarksService to deal with Livemarks
 ////
+
+PRBool
+nsBookmarksService::LivemarkNeedsUpdate(nsIRDFResource* aSource)
+{
+    nsresult rv;
+    PRBool locked = PR_FALSE;
+
+    if (NS_SUCCEEDED(mInner->HasAssertion (aSource, kNC_LivemarkLock, kTrueLiteral, PR_TRUE, &locked)) &&
+        locked)
+    {
+        /* We're already loading the livemark */
+        return PR_FALSE;
+    }
+
+    // Check the TTL/expiration on this.  If there isn't one,
+    // then we assume it's never been loaded.
+    nsCOMPtr<nsIRDFNode> expirationNode;
+    rv = mInner->GetTarget(aSource, kNC_LivemarkExpiration, PR_TRUE, getter_AddRefs(expirationNode));
+    if (rv == NS_OK) {
+        nsCOMPtr<nsIRDFDate> expirationTime = do_QueryInterface (expirationNode);
+        PRTime exprTime, nowTime = PR_Now();
+        expirationTime->GetValue(&exprTime);
+
+        if (exprTime > nowTime) {
+            return PR_FALSE;
+        }
+    }
+
+    return PR_TRUE;
+}
 
 /*
  * Update the child elements of a livemark; take care of cache checking,
@@ -736,7 +866,7 @@ nsBookmarksService::UpdateLivemarkChildren(nsIRDFResource* aSource)
         PRTime exprTime, nowTime = PR_Now();
         expirationTime->GetValue(&exprTime);
 
-        if (exprTime > nowTime) {
+        if (LL_CMP(exprTime, >, nowTime)) {
             // no need to refresh yet
             rv = Unassert (aSource, kNC_LivemarkLock, kTrueLiteral);
             if (NS_FAILED(rv)) return rv;
@@ -773,7 +903,7 @@ nsBookmarksService::UpdateLivemarkChildren(nsIRDFResource* aSource)
 
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull, nsnull,
-                       nsIRequest::LOAD_BACKGROUND);
+                       nsIRequest::LOAD_BACKGROUND | nsIRequest::LOAD_BYPASS_CACHE);
     if (NS_FAILED(rv)) UNLOCK_AND_RETURN_RV;
 
     rv = channel->AsyncOpen(listener, nsnull);
@@ -804,8 +934,8 @@ nsBMSVCClearSeqContainer (nsIRDFDataSource* aDataSource, nsIRDFResource* aResour
     if (NS_FAILED(rv)) return rv;
     if (itemsCount) {
         do {
-            nsIRDFNode *removed;
-            rv = itemsContainer->RemoveElementAt(itemsCount, PR_TRUE, &removed);
+            nsCOMPtr<nsIRDFNode> removed;
+            rv = itemsContainer->RemoveElementAt(itemsCount, PR_TRUE, getter_AddRefs(removed));
             // er, ignore the error, I think
         } while (--itemsCount > 0);
     }

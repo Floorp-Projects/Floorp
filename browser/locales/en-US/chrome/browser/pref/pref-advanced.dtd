@@ -1,26 +1,24 @@
-
 <!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
 <!ENTITY lHeader                      "Advanced">
 
 <!ENTITY accessibility.label          "Accessibility">
 <!ENTITY moveSystemCaret.label        "Move system caret with focus/selection changes">
 <!ENTITY browsing.label               "Browsing">
-<!ENTITY hideTabBar.label             "Hide the tab bar when only one website is open">
+<!ENTITY hideTabBar.label             "Hide the tab bar when only one web site is open">
 <!ENTITY loadInBackground.label       "Select new tabs opened from links">
+<!ENTITY loadBookmarksInBackground.label  "Select new tabs opened from bookmarks or history">
 <!ENTITY warnOnClose.label            "Warn when closing multiple tabs">
 <!ENTITY useAutoScrolling.label       "Use autoscrolling">
 <!ENTITY useSmoothScrolling.label     "Use smooth scrolling">
+<!-- note multimedia.label is no longer used. it can be removed when convenient between localization freezes. -->
 <!ENTITY multimedia.label             "Multimedia">
 <!ENTITY enableAutoImageResizing.label "Resize large images to fit in the browser window">
 <!ENTITY security.label               "Security">
 <!ENTITY useSSL2.label                "Use SSL 2.0">
 <!ENTITY useSSL3.label                "Use SSL 3.0">
 <!ENTITY useTLS1.label                "Use TLS 1.0">
-<!ENTITY useTypeAheadFind.label       "Use Find As You Type">
+<!ENTITY useTypeAheadFind.label       "Begin finding when you begin typing">
 <!ENTITY linksOnlyTypeAheadFind.label "to search links only">
-
-<!-- PROVISIONAL SECURITY UI ONLY -->
-<!ENTITY securityUIDisclaimer.label   "This section is PROVISIONAL and will change or disappear in future releases! It exists here now only to provide this functionality where no other access point is available.">
 
 <!-- Certs -->
 <!ENTITY certs.label                  "Certificates">
@@ -87,17 +85,26 @@
 <!ENTITY signingCA.accesskey "R">
 
 <!-- Software Update -->
-<!ENTITY browsing.label                   "Browsing">
 <!ENTITY softwareupdate.label             "Software Update">
-<!ENTITY enableSoftwareUpdate.label       "Allow web sites to install software">
-<!ENTITY enableSoftwareUpdate.accesskey   "i">
 <!ENTITY softwareupdateinfo.label         "Periodically check for updates to:">
 <!ENTITY enableSmartUpdate.label          "&brandShortName;">
 <!ENTITY enableSmartUpdate.accesskey      "F">
-<!ENTITY enableExtensionUpdate.label      "My Extensions">
+<!ENTITY enableExtensionUpdate.label      "My Extensions and Themes">
 <!ENTITY enableExtensionUpdate.accesskey  "y">
-<!ENTITY enableAutoInstall.label          "Automatically download and install updates to Extensions.">
+<!ENTITY enableAutoInstall.label          "Automatically download and install updates to Extensions and Themes.">
 <!ENTITY enableAutoInstall.accesskey      "d">
 <!ENTITY checkNow.label                   "Check Now">
 <!ENTITY checkNow.accesskey               "N">
 
+<!ENTITY xpinstall.allowedSites.label     "Allowed Sites">
+<!ENTITY xpinstall.allowedSites.accesskey "S">
+
+<!-- Tabbed Browsing -->
+<!ENTITY tabbedBrowsing.label          "Tabbed Browsing">
+<!ENTITY openExternalLinksIn.label     "Open links from other applications in:">
+<!ENTITY newWindow.label               "a new window">
+<!ENTITY newTabInRecentWindow.label    "a new tab in the most recent window">
+<!ENTITY recentWindowOrTab.label       "the most recent tab/window">
+<!ENTITY forceNewWindowLinks.label     "Force links that open new windows to open in:">
+<!ENTITY sameTabOrWindow.label         "the same tab/window as the link">
+<!ENTITY newTab.label                  "a new tab">

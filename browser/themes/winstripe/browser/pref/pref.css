@@ -47,7 +47,8 @@
   background-color: transparent;
   margin-left: 1px;
   margin-right: 1px;
-  list-style-image: url("chrome://browser/skin/pref/Options.png")
+	list-style-image: url("chrome://browser/skin/pref/Options.png");
+	color: WindowText;
 }
 
 .buttonBoxButton > .button-box {
@@ -66,6 +67,7 @@
   -moz-border-right-colors: #98B4E2;
   -moz-border-bottom-colors: #98B4E2;
   background-color: #E0E8F6;
+	color: black;  
 }
 
 .buttonBoxButton[checked="true"] {
@@ -75,23 +77,53 @@
   -moz-border-right-colors: #316AC5;
   -moz-border-bottom-colors: #316AC5;
   background-color: #C1D2EE;
+	color: black;  
 }
 
-#catGeneralButton   {-moz-image-region: rect(0px, 32px,  32px, 0px)}
-#catPrivacyButton   {-moz-image-region: rect(0px, 64px,  32px, 32px)}
-#catFeaturesbutton  {-moz-image-region: rect(0px, 96px,  32px, 64px)}
-#catDownloadsButton {-moz-image-region: rect(0px, 128px, 32px, 96px)}
-#catThemesButton    {-moz-image-region: rect(0px, 160px, 32px, 128px)}
-#catExtButton       {-moz-image-region: rect(0px, 192px, 32px, 160px)}
-#catAdvancedButton  {-moz-image-region: rect(0px, 224px, 32px, 192px)}
+#catGeneralButton  {
+	-moz-image-region: rect(0px, 32px,  32px, 0px)
+}
+#catGeneralButton:hover, #catGeneralButton[checked="true"]  {
+	-moz-image-region: rect(32px, 32px,  64px, 0px)
+}
+
+#catPrivacyButton  {
+	-moz-image-region: rect(0px, 64px,  32px, 32px)
+}
+#catPrivacyButton:hover, #catPrivacyButton[checked="true"]  {
+	-moz-image-region: rect(32px, 64px,  64px, 32px)
+}
+
+#catFeaturesbutton  {
+	-moz-image-region: rect(0px, 96px,  32px, 64px)
+}
+#catFeaturesbutton:hover, #catFeaturesbutton[checked="true"]  {
+	-moz-image-region: rect(32px, 96px,  64px, 64px)
+}
+
+#catDownloadsButton	  {
+	-moz-image-region: rect(0px, 128px, 32px, 96px)
+}
+#catDownloadsButton:hover, #catDownloadsButton[checked="true"] {
+	-moz-image-region: rect(32px, 128px, 64px, 96px)
+}
+
+#catAdvancedButton  {
+	-moz-image-region: rect(0px, 160px, 32px, 128px)
+}
+#catAdvancedButton:hover, #catAdvancedButton[checked="true"] {
+	-moz-image-region: rect(32px, 160px, 64px, 128px)
+}
 
 expander {
   margin: 2px;
   border: 1px solid transparent;
 }
+
 #privacyCategories > expander[open="true"] {
   background-color: #FFFFCC;
   border: 1px solid black;
+	color: black;  
 }
 
 .themesLink {                                                                   

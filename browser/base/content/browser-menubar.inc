@@ -46,8 +46,8 @@
                           label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
                 <menuitem label="&openLocationCmd.label;" accesskey="&openLocationCmd.accesskey;" key="focusURLBar" command="Browser:OpenLocation"/>
                 <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
-                <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
                 <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
+                <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
                 <menuseparator/>
                 <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
                 <menuitem id="menu_saveFrame" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
@@ -114,6 +114,12 @@
                 <menuseparator/>
                 <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="cmd_find"/>
                 <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="cmd_findAgain"/>
+                <menuseparator hidden="true" id="textfieldDirection-separator"/>
+                <menuitem hidden="true" id="textfieldDirection-swap" 
+                          label="&bidiSwitchTextDirectionItem.label;"
+                          key="key_SwitchTextDirection"
+                          accesskey="&bidiSwitchTextDirectionItem.accesskey;"
+                          command="cmd_SwitchTextDirection"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
                 <menuseparator/>
@@ -148,10 +154,26 @@
                 <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="Browser:Stop" key="key_stop"/>
                 <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
                 <menuseparator/>
-                <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
-                          command="cmd_textZoomEnlarge"/>
-                <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;"
-                          command="cmd_textZoomReduce"/>
+                <menu label="&textSize.label;" accesskey="&textSize.accesskey;">
+                  <menupopup>                    
+                    <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
+                              command="cmd_textZoomEnlarge"/>
+                    <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;"
+                              command="cmd_textZoomReduce"/>
+                    <menuseparator/>
+                    <menuitem key="key_textZoomReset" label="&textZoomResetCmd.label;" accesskey="&textZoomResetCmd.accesskey;"
+                              command="cmd_textZoomReset"/>
+                  </menupopup>
+                </menu>
+                <menu label="&pageStyleMenu.label;" accesskey="&pageStyleMenu.accesskey;">
+                  <menupopup onpopupshowing="stylesheetFillPopup(this);"
+                             oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data')); setStyleDisabled(false);">
+                    <menuitem label="&pageStyleNoStyle.label;" accesskey="&pageStyleNoStyle.accesskey;"
+                              oncommand="setStyleDisabled(true); event.preventBubble();" type="radio"/>
+                    <menuitem label="&pageStylePersistentOnly.label;" accesskey="&pageStylePersistentOnly.accesskey;" type="radio" checked="true"/>
+                    <menuseparator/>
+                  </menupopup>
+                </menu>
                 <menu label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
                       datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"
                       oncommand="MultiplexHandler(event)" onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');">
@@ -263,9 +285,13 @@
                 </menu>
                 <menuseparator/>
                 <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
-                  <menuitem accesskey="&fullScreenCmd.accesskey;"
-                            label="&fullScreenCmd.label;" key="key_fullScreen"
-                            command="View:FullScreen"/>
+                <menuitem accesskey="&fullScreenCmd.accesskey;"
+                          label="&fullScreenCmd.label;" key="key_fullScreen"
+                          command="View:FullScreen"/>
+                <menuseparator hidden="true" id="documentDirection-separator"/>
+                <menuitem hidden="true" id="documentDirection-swap" 
+                          label="&bidiSwitchPageDirectionItem.label;" accesskey="&bidiSwitchPageDirectionItem.accesskey;"
+                          oncommand="SwitchDocumentDirection()"/>
               </menupopup>
             </menu>
   
@@ -294,7 +320,7 @@
                 <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
-                <menuitem accesskey="&historySidebarCmd.accesskey;" command="viewHistorySidebar" key="key_gotoHistory"/>
+                <menuitem observes="viewHistorySidebar" accesskey="&historySidebarCmd.accesskey;" key="key_gotoHistory"/>
               </menupopup>
             </menu>
 
@@ -302,6 +328,7 @@
                   datasources="rdf:bookmarks rdf:files rdf:localsearch" 
                   ref="NC:BookmarksRoot" flags="dont-test-empty"
                   template='bookmarks-template'
+                  infer="forward-proxy"
                   onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
                   onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
                   oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
@@ -325,33 +352,27 @@
             </menu>
         
           <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
-            <menupopup id="menu_ToolsPopup">
+            <menupopup id="menu_ToolsPopup"
+#ifdef XP_WIN
+                       onpopupshowing="MailIntegration.updateUnreadCount();"
+#endif
+            >
               <menuitem label="&search.label;" accesskey="&search.accesskey;" 
                         key="key_search" command="Tools:Search"/>
 #ifdef XP_WIN
-              <menu label="&mailMenu.label;"
-                           accesskey="&mailMenu.accesskey;">
-                <menupopup id="viewMailMenu">
-                  <menuitem label="&mailButton.readMail.label;" 
-                                   id="readMailItem"
-                                   accesskey="&mailButton.readMail.accesskey;"
-                                   command="Browser:ReadMail"/>
-                  <menuitem label="&mailButton.newMessage.label;" 
-                                   accesskey="&mailButton.newMessage.accesskey;"
-                                   key="key_newMessage" command="Browser:NewMessage"/>
-                  <menuitem label="&mailButton.sendLink.label;" 
-                                   accesskey="&mailButton.sendLink.accesskey;"
-                                   command="Browser:SendLink"/>
-                  <menuseparator/>
-                  <menuitem label="&mailButton.readNews.label;" 
-                                   accesskey="&mailButton.readNews.accesskey;"
-                                   command="Browser:ReadNews"/>
-                </menupopup>
-              </menu>
+              <menuseparator/>
+              <menuitem label="&mailButton.readMail.label;" 
+                               accesskey="&mailButton.readMail.accesskey;"
+                               command="Browser:ReadMail"/>
+              <menuitem label="&mailButton.newMessage.label;" 
+                               accesskey="&mailButton.newMessage.accesskey;"
+                               key="key_newMessage" command="Browser:NewMessage"/>
+
 #endif
               <menuseparator/>
-              <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;" 
-                        key="key_openDownloads" command="Tools:Downloads"/>
+              <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;"
+                        key="key_openDownloads"
+                        command="Tools:Downloads"/>
               <menuitem label="&extensions.label;" accesskey="&extensions.accesskey;" 
                         command="Tools:Extensions"/>
               <menuitem label="&themes.label;" accesskey="&themes.accesskey;" 
@@ -360,8 +381,14 @@
               <menuitem id="javascriptConsole" 
                         label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" 
                         oncommand="toJavaScriptConsole();"/>
+#ifdef XP_WIN
+              <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
+                        command="View:PageInfo"/>
+#else
               <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
                         key="key_viewInfo" command="View:PageInfo"/>
+#endif
+
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
@@ -390,7 +417,7 @@
             </template>
             <menupopup id="windowPopup">
               <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
-              <menuitem label="&zoomWindow.label;" disabled="true"/>
+              <menuitem command="zoomWindow"/>
               <menuseparator/>
               <menuitem label="&bringAllToFront.label;" disabled="true"/>
               <menuseparator id="sep-window-list"/>
@@ -406,9 +433,10 @@
                 accesskey="&helpMenu.accesskey;">
 #endif
             <menupopup id="menu_HelpPopup">
-              <menuitem accesskey="&releaseCmd.accesskey;"
-                        label="&releaseCmd.label;"
-                        oncommand="openUILink('&releaseURL;', event, false, true);"
+              <menuseparator/>
+              <menuitem accesskey="&promote.accesskey;"
+                        label="&promote.label;"
+                        oncommand="openUILink(getUILink('promote'), event, false, true);"
                         onclick="checkForMiddleClick(this, event);"/>
               <menuseparator/>
               <menuitem id="aboutName"
@@ -425,16 +453,13 @@
       <toolbarseparator uri="rdf:*"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
     </rule>
-    <!-- yes, the type attribute is necessary otherwise all leaves are 
-         treated as containers for some reason -->
-    <rule parent="hbox" iscontainer="true" isempty="true"
-          rdf:type="http://home.netscape.com/NC-rdf#Folder">
-      <toolbarbutton type="menu" editable="true" class="bookmark-item"
+    <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#Livemark">
+      <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
                      rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                     uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
-        <menupopup>
-          <menuitem label="&emptyItem.label;" disabled="true"/>
-        </menupopup>
+                     label="rdf:http://home.netscape.com/NC-rdf#Name"
+                     livemark="true"
+                     chromedir="&locale.dir;">
+        <menupopup contextmenu="bookmarks-context-menu"/>
       </toolbarbutton>
     </rule>
     <rule parent="hbox" iscontainer="true">
@@ -456,6 +481,16 @@
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
       <menupopup> 
         <menuseparator uri="rdf:*" />
+      </menupopup>
+    </rule>
+    <rule rdf:type="http://home.netscape.com/NC-rdf#Livemark">
+      <menupopup>
+        <menu class="menu-iconic bookmark-item" uri="rdf:*"
+              label="rdf:http://home.netscape.com/NC-rdf#Name"
+              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+              livemark="true">
+          <menupopup contextmenu="bookmarks-context-menu"/>
+        </menu>
       </menupopup>
     </rule>
     <rule iscontainer="true">

@@ -38,6 +38,7 @@
 # ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/setWallpaper.dtd">
 
@@ -51,21 +52,25 @@
         title="&setWallpaper.title;"
         style="width: 299px"> 
     
+    <stringbundle id="bundle_wallpaper" src="chrome://browser/locale/browser.properties"/>
     <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
     <script type="application/x-javascript">
       <![CDATA[
         const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-        var gMode = ISS.BACKGROUND_STRETCH;
+        const ISS = Components.interfaces.nsIShellService;
+
+        var gPosition = ISS.BACKGROUND_STRETCH;
         var gMonitor;
-        var gWidth, gHeight;
+        var gWidth, gHeight, gBackgroundColor = 0;
 
         function HexToR(h) { return parseInt((cutHex(h)).substring(0,2),16) }
         function HexToG(h) { return parseInt((cutHex(h)).substring(2,4),16) }
         function HexToB(h) { return parseInt((cutHex(h)).substring(4,6),16) }
         function cutHex(h) { return (h.charAt(0)=="#") ? h.substring(1,7) : h}
 
-        function RGBToHex(r, g, b) {
+        function RGBToHex(r, g, b)
+        {
           var rHex = r.toString(16).toUpperCase();
           var gHex = g.toString(16).toUpperCase();
           var bHex = b.toString(16).toUpperCase();
@@ -77,76 +82,107 @@
           return '#' + rHex + gHex + bHex;
         }       
         
-       function onLoad() {
+       function onLoad()
+       {
+         gMonitor = document.getElementById("monitor");
+         gWidth = window.arguments[0].width;
+         gHeight = window.arguments[0].height;
+         
+         initColor();                  
+         updatePosition(parseInt(document.getElementById("menuPosition").value));
+        }
+        
+        function initColor()
+        {
           var color = 0;
           var shell = getShellService();
           if (shell)
             color = shell.desktopBackgroundColor;
-          gMonitor = document.getElementById("monitor");
+
           const rMask = 4294901760;
           const gMask = 65280;
           const bMask = 255;
           var r = (color & rMask) >> 16;
           var g = (color & gMask) >> 8;
           var b = (color & bMask);
-          gMonitor.style.backgroundColor = RGBToHex(r, g, b);
-          gWidth = window.arguments[0].width;
-          gHeight = window.arguments[0].height;
-          var img = document.createElementNS(xulNS, "image");
-          img.id = "wallpaperImg";
-          img.setAttribute("src", window.arguments[0].src);
-          gMonitor.appendChild(img);
-          stretchImage();
+          gBackgroundColor = RGBToHex(r, g, b);
           
           var colorpicker = document.getElementById("desktopColor");
           colorpicker.color = RGBToHex(r, g, b);
         }
         
-        function stretchImage() {
-          var img = gMonitor.firstChild.cloneNode(false);
-          gMonitor.removeChild(gMonitor.firstChild);
+        function createImage()
+        {
+          var img = document.createElementNS(xulNS, "image");
+          img.setAttribute("src", window.arguments[0].src);
+          return img;
+        }
+        
+        function stretchImage()
+        {  
+          updateColor(gBackgroundColor);
+          
+          var img = createImage();
           img.width = parseInt(gMonitor.style.width);
           img.height = parseInt(gMonitor.style.height);
           gMonitor.appendChild(img);
         }
         
-        function tileImage() {
-          // XXXBlake Waiting on caillon to implement background-size
+        function tileImage()
+        {
+          gMonitor.style.backgroundColor = 'white';
+          var bundle = document.getElementById("bundle_wallpaper");
+          var previewStr = bundle.getString("WallpaperNoPreview");
+          
+          var text = document.createElementNS(xulNS, "label");
+          text.setAttribute("id", "noPreviewAvailable");
+          text.setAttribute("value", previewStr);
+          gMonitor.appendChild(text);
         }
         
-        function centerImage() {
-           var img = gMonitor.firstChild.cloneNode(false);
-           gMonitor.removeChild(gMonitor.firstChild);
-           var width = gWidth*gMonitor.boxObject.width/screen.width;
-           var height = gHeight*gMonitor.boxObject.height/screen.height;
-           img.width = Math.floor(width);
-           img.height = Math.floor(height);
-           gMonitor.appendChild(img);
+        function centerImage()
+        {
+          updateColor(gBackgroundColor);
+                   
+          var img = createImage();
+          var width = gWidth*gMonitor.boxObject.width/screen.width;
+          var height = gHeight*gMonitor.boxObject.height/screen.height;
+          img.width = Math.floor(width);
+          img.height = Math.floor(height);
+          gMonitor.appendChild(img);
         }
           
-        function onAccept() {
-          var pos = parseInt(document.getElementById("menuPosition").value);
-          var colorpicker = document.getElementById("desktopColor");
-          var r = HexToR(colorpicker.color);
-          var g = HexToG(colorpicker.color);
-          var b = HexToB(colorpicker.color);
+        function onAccept() 
+        {
+          var r = HexToR(gBackgroundColor);
+          var g = HexToG(gBackgroundColor);
+          var b = HexToB(gBackgroundColor);
 
           var shell = getShellService();
           if (shell) {
-            shell.setDesktopBackground(window.arguments[0], pos);
+            shell.setDesktopBackground(window.arguments[0], gPosition);
             shell.desktopBackgroundColor = (r << 16) | (g << 8) | b;
+            document.persist("menuPosition", "value");
           }
         }
         
-        function updatePreviewColor(color) {
-          gMonitor.style.backgroundColor = color;
+        function updateColor(color)
+        {
+          gBackgroundColor = color;
+          
+          if (gPosition != ISS.BACKGROUND_TILE)
+            gMonitor.style.backgroundColor = color;
         }
         
-        function onPositionChange(val) {
-          gMode = parseInt(val);
-          if (gMode == ISS.BACKGROUND_TILE)
+        function updatePosition(position)
+        {
+          if (gMonitor.childNodes.length)
+            gMonitor.removeChild(gMonitor.firstChild);
+            
+          gPosition = position;
+          if (gPosition == ISS.BACKGROUND_TILE)
             tileImage();
-          else if (gMode == ISS.BACKGROUND_STRETCH)
+          else if (gPosition == ISS.BACKGROUND_STRETCH)
             stretchImage();
           else
             centerImage();
@@ -156,16 +192,16 @@
 
     <hbox align="center" id="foo">
       <label value="&position.label;"/>
-      <menulist id="menuPosition" label="&position.label;" oncommand="onPositionChange(this.value);">
+      <menulist id="menuPosition" label="&position.label;" oncommand="updatePosition(parseInt(this.value));">
         <menupopup>
           <menuitem label="&center.label;"  value="2"/>
           <menuitem label="&tile.label;"    value="0"/>
-          <menuitem label="&stretch.label;" value="1" selected="true"/>
+          <menuitem label="&stretch.label;" value="1"/>
         </menupopup>
       </menulist>
       <spacer flex="1"/>
       <label value="&color.label;"/>
-      <colorpicker type="button" id="desktopColor" onchange="updatePreviewColor(this.color);"/> 
+      <colorpicker type="button" id="desktopColor" onchange="updateColor(this.color);"/> 
     </hbox>
     <groupbox align="center">
       <caption label="&preview.label;"/>

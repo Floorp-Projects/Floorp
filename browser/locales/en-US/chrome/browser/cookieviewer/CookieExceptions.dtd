@@ -4,7 +4,7 @@
 <!ENTITY addpermission.label          "New Site">
 <!ENTITY removepermission.label       "Remove Site">
 <!ENTITY removeallpermissions.label   "Remove All Sites">
-<!ENTITY div.bannedservers.label      "You can specify which web sites are always or never allowed to use cookies.  Type the exact address of the site you want to manage and then click Block or Allow.">
-<!ENTITY address.label                "Address of website:">
+<!ENTITY address.label                "Address of web site:">
 <!ENTITY block.label                  "Block">
+<!ENTITY session.label                "Allow for Session">
 <!ENTITY allow.label                  "Allow">

@@ -16,18 +16,23 @@
 <!ENTITY clearCache.label                  "Clear">
 
 <!ENTITY cookies.label                     "Cookies">
-<!ENTITY enableCookies.label               "Enable cookies">
+<!ENTITY enableCookies.label               "Allow sites to set cookies">
 <!ENTITY enableCookies.accesskey           "c">
-<!ENTITY forOriginatingSiteOnly.label      "for the originating Web site only">
+<!ENTITY forOriginatingSiteOnly.label      "for the originating web site only">
 <!ENTITY forOriginatingSiteOnly.accesskey  "W">
 <!ENTITY forCurrentSessionOnly.label       "for the current session only">
 <!ENTITY forCurrentSessionOnly.accesskey   "s">
-<!ENTITY cookieExplanation.label           "Cookies are delicious delicacies.">
+<!ENTITY cookieExplanation.label           "Cookies are pieces of information stored by web pages on your computer.  They are used to remember login information and other data.">
 <!ENTITY butAskFirst.label                 "but ask before accepting">
 <!ENTITY butAskFirst.accesskey             "b">
 <!ENTITY clearCookies.label                "Clear">
-<!ENTITY viewCookies.label                 "Stored Cookies...">
-<!ENTITY exceptions.label                  "Exceptions...">
+<!ENTITY viewCookies.label                 "View Cookies">
+<!ENTITY exceptions.label                  "Exceptions">
+
+<!ENTITY cookieRetention.label             "Keep Cookies:">
+<!ENTITY acceptNormally.label              "until they expire">
+<!ENTITY acceptForSession.label            "until I close &brandShortName;">
+<!ENTITY askAboutCookies.label             "ask me every time">
 
 <!ENTITY formfill.label                    "Saved Form Information">
 <!ENTITY formfillDescription.label         "Information entered in web page forms and the Search Bar is saved to make filling out forms and searching faster.">
@@ -48,12 +53,10 @@
 <!ENTITY passwordsEnable.label             "Remember Passwords">
 <!ENTITY passwordsEnable.accesskey         "p">
 <!ENTITY clearPasswords.label              "Clear">
-<!ENTITY viewPasswords.label               "View Saved Passwords...">
+<!ENTITY viewPasswords.label               "View Saved Passwords">
 
 <!ENTITY clearAll.label                    "Clear All">
 <!ENTITY clearAllDescription.label         "Clear all information stored while browsing:">
 
-<!ENTITY acceptNormally.label              "Accept cookies normally">
-<!ENTITY acceptForSession.label            "Accept for current session only">
-<!ENTITY askAboutCookies.label             "Ask for each cookie">
+
 

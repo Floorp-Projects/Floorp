@@ -57,6 +57,7 @@
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsITransactionManager.h"
+#include "nsIPref.h"
 
 class nsIOutputStream;
 
@@ -99,6 +100,10 @@ public:
     // is either loading or failed to load.
     nsCOMPtr<nsIRDFResource>        mLivemarkLoadingBookmark;
     nsCOMPtr<nsIRDFResource>        mLivemarkLoadFailedBookmark;
+    nsCOMPtr<nsIPrefBranch>         mBookmarksPrefs;
+
+    // utility to update the forward proxy based on the URL
+    static nsresult UpdateBookmarkForwardProxy(nsIRDFDataSource* aDS, nsIRDFResource* aBookmarkResource);
 
 protected:
     // System Bookmark parsing
@@ -177,6 +182,7 @@ protected:
 
     nsresult GetLastModifiedFolders(nsISimpleEnumerator **aResult);
 
+    PRBool LivemarkNeedsUpdate(nsIRDFResource* aSource);
     nsresult UpdateLivemarkChildren(nsIRDFResource* aSource);
 
     void SaveToBackup();
@@ -195,6 +201,10 @@ public:
     nsBookmarksService();
     virtual ~nsBookmarksService();
     nsresult Init();
+
+    // we really need to figure out our public/private interface story
+    void RemoveBookmark(nsIRDFResource* aBookmark);
+    nsresult ClearBookmarksContainer(nsIRDFResource* aContainer);
 
     // nsISupports
     NS_DECL_ISUPPORTS

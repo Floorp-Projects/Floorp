@@ -381,11 +381,17 @@ function openLink(node)
   // here, because they will run with full privilege.
   var safeurls = /^https?:|^file:|^chrome:|^resource:|^mailbox:|^imap:|^s?news:|^nntp:|^about:|^mailto:|^ftp:|^gopher:/i;
   if (safeurls.test(url)) {
+    var sourceURI = Components.classes["@mozilla.org/network/standard-url;1"]
+                            .createInstance(Components.interfaces.nsIURI);
+    sourceURI.spec = nodeView._content.document.location;
+    var destURI = Components.classes["@mozilla.org/network/standard-url;1"]
+                          .createInstance(Components.interfaces.nsIURI);
+    destURI.spec = url;
+
     var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService()
                            .QueryInterface(nsIScriptSecurityManager);
     try {
-      secMan.checkLoadURIStr(nodeView._content.document.location,
-                             url, nsIScriptSecurityManager.STANDARD);
+      secMan.checkLoadURI(sourceURI, destURI, nsIScriptSecurityManager.STANDARD);
     } catch (e) {
       return;
     }

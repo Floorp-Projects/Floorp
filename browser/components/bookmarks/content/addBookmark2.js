@@ -127,7 +127,7 @@ function Startup()
     if (gKeywordRequired)
       gRequiredFields.push(gKeyword);
   }
-  sizeToContent(); // do this here to ensure we size properly without the keyword field
+  sizeToContent();
   onFieldInput();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));

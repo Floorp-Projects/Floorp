@@ -35,11 +35,11 @@ REQUIRES	= \
 		  windowwatcher \
 		  intl \
 		  appshell \
-		  appcomps \
 		  necko \
 		  layout \
 		  content \
 		  widget \
+		  browsercomps \
 		  imglib2 \
 		  gfx \
 		  locale \

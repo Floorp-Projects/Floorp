@@ -264,7 +264,7 @@
 
       <property name="currentIndex">
         <getter><![CDATA[
-          return this.tree.view.selection.currentIndex;
+          return this.treeBoxObject.view.selection.currentIndex;
         ]]></getter>
       </property>
     
@@ -443,7 +443,11 @@
             // in the original selection now has the index of the first item in the first
             // range. 
             var nextRow = oldRanges[0].min;
-            newRanges.push({min: nextRow, max: nextRow});
+            var maxCount = this.treeBoxObject.view.rowCount;
+            if (nextRow >= maxCount)
+              nextRow = maxCount-1;
+            if (nextRow >= 0)
+              newRanges.push({min: nextRow, max: nextRow});
             break;
           // [Category 2] - Commands that insert rows
           case "cmd_paste":
@@ -571,15 +575,14 @@
       <method name="searchBookmarks">
       <parameter name="aInput"/>
         <body><![CDATA[
+          if(!this.originalRef)
+              this.originalRef = this.tree.getAttribute("ref");
+
           if (!aInput)
             this.tree.setAttribute("ref", this.originalRef);
-          else {
-            if (!this.originalRef) {
-              this.originalRef = this.tree.getAttribute("ref");
-            }
+          else
             this.tree.setAttribute("ref",
                                    "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=" + encodeURIComponent(aInput));
-          }
         ]]></body>
       </method>
 
@@ -656,25 +659,37 @@
       <field name="builderObserver"><![CDATA[
       ({
         mOuter: this,
+
         canDrop: function(index, orientation)
         {
           var dragSession = DS.getCurrentSession();
           if (!dragSession)
             return false;
+
           var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
           if (selection.containsImmutable)
             return false;
           if (orientation == BookmarksUtils.DROP_ON)
             return true;
+          
+          var rsrc = this.mOuter.getRowResource(index);
+          var rsrcParent = this.mOuter.getParentResource(index);
+
+          var rtype = BookmarksUtils.resolveType(rsrc);
+          var rptype = BookmarksUtils.resolveType(rsrcParent);
+
+          if (!BookmarksUtils.isValidTargetContainer (rsrcParent, selection))
+              return false;
 
           if (index != 0)
             return true;
-          if (this.mOuter.getRowResource(index).Value != "NC:BookmarksRoot")
+          if (rsrc.Value != "NC:BookmarksRoot")
             return true;
           return orientation == BookmarksUtils.DROP_BEFORE ? false : this.mOuter.treeBoxObject.view.isContainerOpen(0)
         },
+
         onDrop: function(row, orientation)
-        {  
+        {
           var dragSession = DS.getCurrentSession();
           if (!dragSession)
             return;
@@ -693,12 +708,23 @@
           }
           this.mOuter.treeBoxObject.view.selection.selectEventsSuppressed = true;
           this.mOuter._itemToBeToggled = [];
+
+          // we can only test for kCopyAction if the source is a bookmark
+          var checkCopy = dragSession.isDataFlavorSupported("moz/rdfitem");
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
 
-          if (dragSession.dragAction & kCopyAction)
+          // doCopy defaults to true; check if we should make it false.
+          // we make it false only if all the selection items have valid parent
+          // bookmark DS containers (i.e. aren't generated via aggregation)
+          var doCopy = true;
+          if (checkCopy && !(dragSession.dragAction & kCopyAction))
+            doCopy = BookmarksUtils.shouldCopySelection("drag", selection);
+
+          if (doCopy)
             BookmarksUtils.insertAndCheckSelection("drag", selection, target);
           else
             BookmarksUtils.moveAndCheckSelection  ("drag", selection, target);
+
           if (this.mOuter._itemToBeToggled.length > 0)
             this.mOuter.updateTreeSelection();
           // use of a timer to speedup
@@ -710,8 +736,10 @@
         onToggleOpenState: function (aRow)
         {
           // update the open attribute of the selection
-          var resource = this.mOuter.getRowResource(aRow);
           var selection = this.mOuter._selection;
+          if (!selection)
+            return;
+          var resource = this.mOuter.getRowResource(aRow);
           for (var i=0; i<selection.length; ++i) {
             if (selection.item[i] == resource) {
               selection.isExpanded[i] = !selection.isExpanded[i];
@@ -927,7 +955,7 @@
   <!-- Tree with folders only -->
   <binding id="bookmarks-tree-folders" extends="chrome://browser/content/bookmarks/bookmarksTree.xml#bookmarks-tree">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
-      <tree anonid="bookmarks-tree" flex="1" class="bookmarksTree" hidecolumnpicker="true"
+      <tree anonid="bookmarks-tree" class="bookmarksTree" flex="1" hidecolumnpicker="true"
             xbl:inherits="rows,seltype"
             datasources="rdf:bookmarks rdf:files rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
             onselect="this.parentNode.treeBoxObject.view.selectionChanged();">

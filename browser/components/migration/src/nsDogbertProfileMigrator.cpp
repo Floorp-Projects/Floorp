@@ -561,7 +561,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
     // skip line if it is a comment or null line
     if (buffer.IsEmpty() || buffer.CharAt(0) == '#' ||
         buffer.CharAt(0) == nsCRT::CR || buffer.CharAt(0) == nsCRT::LF) {
-      fileOutputStream->Write((const char*)buffer.get(), buffer.Length(), &written);
+      fileOutputStream->Write(buffer.get(), buffer.Length(), &written);
       continue;
     }
 
@@ -583,7 +583,9 @@ nsDogbertProfileMigrator::FixDogbertCookies()
     buffer.Mid(suffix, nameIndex, buffer.Length()-nameIndex);
 
     // correct the expires field
-    unsigned long expires = strtoul(expiresString.get(), nsnull, 10);
+    char* expiresCString = ToNewCString(expiresString);
+    unsigned long expires = strtoul(expiresCString, nsnull, 10);
+    nsCRT::free(expiresCString);
 
     // if the cookie is supposed to expire at the end of the session
     // expires == 0.  don't adjust those cookies.
@@ -664,6 +666,7 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
   nsCAutoString sourceBuffer;
+  nsCAutoString targetBuffer;
   PRBool moreData = PR_FALSE;
   PRUint32 bytesWritten = 0;
   do {
@@ -683,8 +686,9 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
                             folderPrefixOffset + folderPrefix.Length());
     }
 
-    sourceBuffer.Append("\r\n");
-    outputStream->Write(sourceBuffer.get(), sourceBuffer.Length(), &bytesWritten);
+    targetBuffer.Assign(sourceBuffer);
+    targetBuffer.Append("\r\n");
+    outputStream->Write(targetBuffer.get(), targetBuffer.Length(), &bytesWritten);
   }
   while (1);
 

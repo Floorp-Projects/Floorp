@@ -21,7 +21,7 @@
  * Contributor(s):
  *  Ben Goodger    <ben@mozilla.org>     (Clients, Mail, New Default Browser)
  *  Joe Hewitt     <hewitt@netscape.com> (Set Background)
- *  Blake Ross     <blake@blakeross.com> (Desktop Color)
+ *  Blake Ross     <blake@cs.stanford.edu (Desktop Color, DDE support)
  *  Jungshik Shin  <jshin@mailaps.org>   (I18N)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -50,16 +50,19 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIOutputStream.h"
 #include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 #include "nsNetUtil.h"
 #include "nsShellService.h"
 #include "nsWindowsShellService.h"
+#include "nsIObserverService.h"
+#include "nsICategoryManager.h"
+#include "nsBrowserCompsCID.h"
 #include "nsNativeCharsetUtils.h"
 
 #include <mbstring.h>
-
 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_BACKUP_REGISTRY "SOFTWARE\\Mozilla\\Desktop"
@@ -74,7 +77,7 @@
 #define REG_FAILED(val) \
   (val != ERROR_SUCCESS)
 
-NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
+NS_IMPL_ISUPPORTS3(nsWindowsShellService, nsIWindowsShellService, nsIShellService, nsIObserver)
 
 static nsresult
 OpenUserKeyForReading(HKEY aStartKey, const char* aKeyName, HKEY* aKey)
@@ -187,6 +190,9 @@ typedef struct {
 #define CLS "SOFTWARE\\Classes\\"
 #define DI "\\DefaultIcon"
 #define SOP "\\shell\\open\\command"
+#define DDE "\\shell\\open\\ddeexec\\"
+#define DDE_NAME "Firefox" // This must be kept in sync with ID_DDE_APPLICATION_NAME as defined in splash.rc
+#define DDE_COMMAND "\"%1\",,0,0,,,,"
 #define EXE "firefox.exe"
 
 #define CLS_HTML "FirefoxHTML"
@@ -198,6 +204,9 @@ typedef struct {
 
 #define MAKE_KEY_NAME2(PREFIX, MID, SUFFIX) \
   PREFIX MID SUFFIX
+
+#define MAKE_KEY_NAME3(PREFIX, MID, MID2, SUFFIX) \
+  PREFIX MID MID2 SUFFIX
 
 static SETTING gSettings[] = {
   // Extension Manager Keys
@@ -247,6 +256,68 @@ static SETTING gSettings[] = {
   // string.
   //     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
 };
+
+static SETTING gDDESettings[] = {
+  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "", DDE_COMMAND, NO_SUBSTITUTION  },
+  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION  },
+  { MAKE_KEY_NAME2(CLS, "CHROME", DDE), "", DDE_COMMAND, NO_SUBSTITUTION  },
+  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION  },
+  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION  }
+};
+
+NS_IMETHODIMP
+nsWindowsShellService::Register(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation,
+                                const char *componentType, const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return catman->AddCategoryEntry("app-startup", "Windows Shell Service", "service," NS_SHELLSERVICE_CONTRACTID, PR_TRUE, PR_TRUE, nsnull);
+}
+
+nsWindowsShellService::nsWindowsShellService()
+:mCheckedThisSession(PR_FALSE)
+{
+  nsCOMPtr<nsIObserverService> obsServ (do_GetService("@mozilla.org/observer-service;1"));
+  obsServ->AddObserver(this, "quit-application", PR_FALSE);
+  obsServ->AddObserver(this, "profile-after-change", PR_FALSE);
+}
+
+nsresult
+nsWindowsShellService::RegisterDDESupport()
+{
+  SETTING* end = gDDESettings + sizeof(gDDESettings)/sizeof(SETTING);
+  for (SETTING* settings = gDDESettings; settings < end; ++settings) {
+    nsCAutoString key(settings->keyName);    
+    nsCAutoString data(settings->valueData);    
+
+    SetRegKey(key.get(), settings->valueName, data.get(),
+              PR_FALSE, 0, PR_TRUE, PR_TRUE);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsWindowsShellService::UnregisterDDESupport()
+{
+  DeleteRegKey(HKEY_CLASSES_ROOT, "HTTP\\shell\\open\\ddeexec");
+  DeleteRegKey(HKEY_CLASSES_ROOT, "HTTPS\\shell\\open\\ddeexec");
+  DeleteRegKey(HKEY_CLASSES_ROOT, "FTP\\shell\\open\\ddeexec");
+  DeleteRegKey(HKEY_CLASSES_ROOT, "CHROME\\shell\\open\\ddeexec");
+  DeleteRegKey(HKEY_CLASSES_ROOT, "GOPHER\\shell\\open\\ddeexec");
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
@@ -373,9 +444,10 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   key1.Append(exeName);
   key1.Append("\\");
   nsCAutoString nativeFullName;
-  // For now, we use 'A' APIs (see bug 240272,  239279)
+  // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(brandFullName, nativeFullName);
-  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE, backupKey, aClaimAllTypes, aForAllUsers);
+  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE, 
+            backupKey, aClaimAllTypes, aForAllUsers);
   
   // Set the Options menu item title
   nsXPIDLString brandShortName;
@@ -391,10 +463,14 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   PRInt32 offset = key2.Find("%APPEXE%");
   key2.Replace(offset, 8, exeName);
   nsCAutoString nativeTitle;
-  // For now, we use 'A' APIs (see bug 240272,  239279)
+  // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
   
-  SetRegKey(key2.get(), "", nativeTitle.get(), PR_TRUE, backupKey, aClaimAllTypes, aForAllUsers);
+  SetRegKey(key2.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
+            aClaimAllTypes, aForAllUsers);
+
+  // We need to reregister DDE support
+  RegisterDDESupport();
 
   // Refresh the Shell
   ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
@@ -439,6 +515,43 @@ nsWindowsShellService::RestoreFileSettings(PRBool aForAllUsers)
                        SMTO_NORMAL|SMTO_ABORTIFHUNG,
                        MOZ_HWND_BROADCAST_MSG_TIMEOUT, NULL);
   return NS_OK;
+}
+
+// Utility function to delete a registry subkey.
+DWORD
+nsWindowsShellService::DeleteRegKey(HKEY baseKey, const char *keyName)
+{
+ // Make sure input subkey isn't null. 
+ if (!keyName || !::strlen(keyName))
+   return ERROR_BADKEY;
+
+ DWORD rc;
+ // Open subkey.
+ HKEY key;
+ rc = ::RegOpenKeyEx(baseKey, keyName, 0, KEY_ENUMERATE_SUB_KEYS | DELETE, &key);
+ 
+ // Continue till we get an error or are done.
+ while (rc == ERROR_SUCCESS) {
+   char subkeyName[_MAX_PATH];
+   DWORD len = sizeof subkeyName;
+   // Get first subkey name.  Note that we always get the
+   // first one, then delete it.  So we need to get
+   // the first one next time, also.
+   rc = ::RegEnumKeyEx(key, 0, subkeyName, &len, 0, 0, 0, 0);
+   if (rc == ERROR_NO_MORE_ITEMS) {
+     // No more subkeys.  Delete the main one.
+     rc = ::RegDeleteKey(baseKey, keyName);
+     break;
+   } 
+   if (rc == ERROR_SUCCESS) {
+     // Another subkey, delete it, recursively.
+     rc = DeleteRegKey(key, subkeyName);
+   }
+ }
+ 
+ // Close the key we opened.
+ ::RegCloseKey(key);
+ return rc;
 }
 
 void
@@ -906,3 +1019,86 @@ nsWindowsShellService::GetRegistryEntry(PRInt32 aHKEYConstant,
 
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
+
+static nsresult ResetHomepage()
+{
+  // Reset the homepage to the default value if the user requested the installer do so.
+  HKEY theKey;
+  nsresult rv = OpenKeyForWriting("Software\\Mozilla\\Mozilla Firefox", &theKey, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIPrefBranch> prefs;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = pserve->GetBranch("", getter_AddRefs(prefs));
+  if (NS_FAILED(rv)) return rv;
+
+  char buf[MAX_BUF];
+  DWORD type, len = sizeof buf;
+  DWORD result = ::RegQueryValueEx(theKey, "Reset Home Page", 0, &type, (LPBYTE)&buf, &len);
+
+  PRBool resetHomepage = PR_FALSE;
+  prefs->GetBoolPref("browser.update.resetHomepage", &resetHomepage);
+
+  if ((REG_SUCCEEDED(result) && (PRBool)(*buf) == PR_TRUE) || resetHomepage) {
+    prefs->ResetBranch("browser.startup.homepage.");
+
+    PRBool hasUserValue;
+    prefs->PrefHasUserValue("browser.startup.homepage", &hasUserValue);
+    if (hasUserValue)
+      prefs->ClearUserPref("browser.startup.homepage");
+
+    nsCOMPtr<nsIPrefLocalizedString> pls;
+    prefs->GetComplexValue("browser.startup.homepage_reset", 
+                           NS_GET_IID(nsIPrefLocalizedString),
+                           getter_AddRefs(pls));
+    if (pls) {
+      prefs->SetComplexValue("browser.startup.homepage", 
+                             NS_GET_IID(nsIPrefLocalizedString),
+                             pls);
+    }
+
+    // Clear all traces of this activity so we don't keep resetting the homepage. 
+    DWORD val = 0;
+    ::RegSetValueEx(theKey, "Reset Home Page", 0, REG_DWORD, (LPBYTE)&val, len);
+
+    prefs->PrefHasUserValue("browser.update.resetHomepage", &hasUserValue);
+    if (hasUserValue)
+      prefs->ClearUserPref("browser.update.resetHomepage");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const PRUnichar* aMessage)
+{
+  if (!nsCRT::strcmp("app-startup", aTopic)) {
+    PRBool isDefault;
+    IsDefaultBrowser(PR_FALSE, &isDefault);
+    if (!isDefault)
+      return NS_OK;
+
+    return RegisterDDESupport();
+  }
+  else if (!nsCRT::strcmp("quit-application", aTopic)) {
+    PRBool isDefault;
+    IsDefaultBrowser(PR_FALSE, &isDefault);
+    if (!isDefault)
+      return NS_OK;
+
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    os->RemoveObserver(this, "quit-application");
+   
+    return UnregisterDDESupport();
+  }
+  else if (!nsCRT::strcmp("profile-after-change", aTopic)) {
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    os->RemoveObserver(this, "profile-after-change");
+
+    return ResetHomepage();
+  }
+
+  return NS_OK;
+}
+

@@ -287,6 +287,7 @@ function goUpdateGlobalEditMenuItems()
   goUpdateCommand('cmd_paste');
   goUpdateCommand('cmd_selectAll');
   goUpdateCommand('cmd_delete');
+  // XXX: implement controller for cmd_SwitchTextDirection  document.getElementById('cmd_SwitchTextDirection').setAttribute('disabled', !document.commandDispatcher.focusedElement);
 }
 
 // update menu items that rely on the current selection

@@ -56,7 +56,7 @@
 
 <!-- leaving this stuff in for now -->
 
-<!ENTITY  header2                                 "When a webpage chooses its own fonts">
+<!ENTITY  header2                                 "When a web page chooses its own fonts">
 <!-- font scaling -->
 <!ENTITY  resolution.label                        "Display resolution:">
 <!ENTITY  resolution.accesskey                    "r">

@@ -45,7 +45,7 @@
 
 static const nsXREAppData kAppData = {
   "Mozilla",
-  "Firefox",
+  "Firefox Debug",
   APP_VERSION,
   BUILD_ID,
   "Copyright (c) 2004 mozilla.org",

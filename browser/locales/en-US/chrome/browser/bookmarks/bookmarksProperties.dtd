@@ -1,3 +1,4 @@
+<!--
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -18,6 +19,7 @@
 # Contributor(s): Stephen Lamm          <slamm@netscape.com>
 #                 Robert John Churchill <rjc@netscape.com>
 #                 Ben Goodger           <ben@netscape.com>
+-->
 
 <!ENTITY bookmarks.windowtitle.label  "Properties for &quot;**bm_title**&quot;">
 

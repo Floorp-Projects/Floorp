@@ -35,16 +35,16 @@
 
 #define PROVISIONAL_SECURITY_UI
 
-var _elementIDs = ["moveSystemCaret", "hideTabBar",
-                    "loadInBackground", "warnOnClose", "useAutoScrolling",
+var _elementIDs = ["moveSystemCaret", "hideTabBar", "loadInBackground",
+                    "loadBookmarksInBackground", "warnOnClose", "useAutoScrolling",
                     "useSmoothScrolling", "enableAutoImageResizing",
                     "useSSL2", "useSSL3", "useTLS1", "useTypeAheadFind",
-                    "linksOnlyTypeAheadFind",
 #ifdef PROVISIONAL_SECURITY_UI
                     "certSelection", "securityOCSPEnabled", "serviceURL", "signingCA",
 #endif
+                    "tabbedExternalLinks", "tabbedWindowLinks",
                     "enableSoftwareInstall", "enableSmartUpdate", 
-                    "enableExtensionUpdate", "enableAutoInstall"];
+                    "enableExtensionUpdate"];
 
 #ifdef PROVISIONAL_SECURITY_UI
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
@@ -55,8 +55,33 @@ const nsISupportsArray = Components.interfaces.nsISupportsArray;
 var certdb;
 var ocspResponders;
 #endif
+
+function onOK()
+{
+  // the .ui pref is only the saved state of the prefs dialog's radio buttons.
+  // the other pref is the real one.
+  try {
+    var prefVal = document.getElementById("tabbedOpenForce").checked ?
+                    document.getElementById("tabbedWindowLinks").value : 2;
+    parent.hPrefWindow.setPref("int", "browser.link.open_newwindow", prefVal);
+  } catch(e) {
+    // never loaded |advanced| pane
+  }
+}
+
 function Startup() {
-  updatePrefs();
+  var prefVal = parent.hPrefWindow.getPref("int", "browser.link.open_newwindow",
+                                           false);
+  document.getElementById("tabbedOpenForce").checked = prefVal != 2;
+  updateWindowLinksBehavior();
+  parent.hPrefWindow.registerOKCallbackFunc(onOK);
+
+  // XXXben - Hide Single Window mode prefs for 1.0 to avoid crashes see 266759
+  if (parent.hPrefWindow.getPref("bool", "browser.tabs.showSingleWindowModePrefs", false)) {
+    document.getElementById("tabbedOpenForce").hidden = false;
+    document.getElementById("tabbedWindowLinks").hidden = false;
+  }
+
 #ifdef PROVISIONAL_SECURITY_UI
   var ocspEntry;
   var i;
@@ -86,12 +111,6 @@ function Startup() {
 #endif
 }
 
-function updatePrefs() {
-  var enabled = document.getElementById("useTypeAheadFind").checked;
-  var linksOnly = document.getElementById("linksOnlyTypeAheadFind");
-  linksOnly.disabled = !enabled;
-}
-
 #ifdef PROVISIONAL_SECURITY_UI
 function doSecurityEnabling()
 {
@@ -107,8 +126,10 @@ function doSecurityEnabling()
     break;
   case "2":
   default:
-    signersMenu.removeAttribute("disabled");
-    signersURL.removeAttribute("disabled");
+    if (!parent.hPrefWindow.getPrefIsLocked("security.OCSP.signingCA"))
+      signersMenu.removeAttribute("disabled");
+    if (!parent.hPrefWindow.getPrefIsLocked("security.OCSP.URL"))
+      signersURL.removeAttribute("disabled");
   }
 }
 
@@ -165,6 +186,17 @@ function openDeviceManager()
   }
 }
 #endif
+
+function updateWindowLinksBehavior() {
+  var radioNodes = document.getElementById("tabbedWindowLinks").childNodes;
+  var ctr;
+  if (document.getElementById("tabbedOpenForce").checked)
+    for (ctr = 0; ctr < radioNodes.length; ++ctr)
+      radioNodes.item(ctr).removeAttribute("disabled");
+  else
+    for (ctr = 0; ctr < radioNodes.length; ++ctr)
+      radioNodes.item(ctr).setAttribute("disabled", "true");
+}
 
 function checkForUpdates()
 {

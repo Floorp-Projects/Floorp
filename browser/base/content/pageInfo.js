@@ -76,10 +76,6 @@ pageInfoTreeView.prototype = {
     return this.data[row][column.index] || "";
   },
 
-  setCellValue: function(row, column, value) 
-  {
-  },
-
   setCellText: function(row, column, value) 
   {
     this.data[row][column.index] = value;
@@ -634,11 +630,12 @@ function onFormSelect()
       if (whatfor && (whatfor.form == form)) 
       {
         var labeltext = getValueText(label);
-        for (var j = 0; j < length; j++)
+        for (var j = 0; j < length; j++) {
           if (formfields[j] == whatfor) {
             var col = formPreview.columns["field-label"];
             fieldView.setCellText(j, col, labeltext);
           }
+        }
       }
     }
 

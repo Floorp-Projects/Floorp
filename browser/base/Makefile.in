@@ -28,8 +28,22 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+AB_CD = $(MOZ_UI_LOCALE)
+
+DEFINES += -DAB_CD=$(AB_CD) -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) -DMOZ_DISTRIBUTION_ID_UNQUOTED=$(MOZ_DISTRIBUTION_ID_UNQUOTED)
 
 ifneq (,$(filter windows gtk2, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DHAVE_SHELL_SERVICE=1
 endif
+
+libs locale::
+	@$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/content/browserconfig.properties > $(DIST)/bin/browserconfig.properties
+
+install::
+	@$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/content/browserconfig.properties > $(DESTDIR)$(mozappdir)/browserconfig.properties

@@ -172,9 +172,10 @@ nsBookmarkContentHandler.prototype = {
   
   _bundle: null,
   
-  handleContent: function (aContentType, aWindowTarget, aRequest)
+  handleContent: function (aContentType, aCommand, aWindowTarget, aRequest)
   {
-    var win = aWindowTarget.getInterface(Components.interfaces.nsIDOMWindowInternal);
+    var ireq = aWindowTarget.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var win = ireq.getInterface(Components.interfaces.nsIDOMWindowInternal);
     
     // It'd be nicer if the add bookmark dialog was parameterizable enough 
     // to be able to open here, instead of just showing a prompt, but that can

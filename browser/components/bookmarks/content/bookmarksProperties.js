@@ -94,8 +94,11 @@ function Init()
       field.value = value;
   }
 
+  var propsWindow = document.getElementById("bmPropsWindow");
   var nameNode = document.getElementById("name");
-  document.title = document.title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
+  var title = propsWindow.getAttribute("title");
+  title = title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
+  propsWindow.setAttribute("title", title);
 
   // check bookmark schedule
   var scheduleArc = RDF.GetResource(WEB_NS+"Schedule");
@@ -212,11 +215,13 @@ function Init()
       showScheduling = true;
   }
 
-  if (!showScheduling || isLivemark) {
+  // always hide the scheduling/notification tabs;
+  // we're diabling scheduling for 1.0 (bug 253478)
+  //if (!showScheduling || isLivemark) {
     // only allow scheduling of http/https URLs that are not livemarks
     document.getElementById("ScheduleTab").setAttribute("hidden", "true");
     document.getElementById("NotifyTab").setAttribute("hidden", "true");
-  }
+  //}
 
   sizeToContent();
   
@@ -266,6 +271,12 @@ function Commit()
       newValue = RDF.GetLiteral(newValue);
 
     changed |= updateAttribute(gProperties[i], oldValue, newValue);
+
+    if (gFields[i] == "url" && oldValue && oldValue.Value != newValue.Value) {
+      // if the URL was updated, clear out the favicon
+      var icon = BMDS.GetTarget(gResource, RDF.GetResource(NC_NS+"Icon"), true);
+      if (icon) BMDS.Unassert(gResource, RDF.GetResource(NC_NS+"Icon"), icon);
+    }
   }
 
   // Update bookmark schedule if necessary;

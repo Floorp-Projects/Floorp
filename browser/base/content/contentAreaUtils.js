@@ -68,7 +68,7 @@ function markLinkVisited(href, linkNode)
 
   var uri = makeURL(href);
   if (!globalHistory.isVisited(uri)) {
-    globalHistory.addURI(uri, false, true, null);
+    globalHistory.addURI(uri, false, true);
     var oldHref = linkNode.getAttribute("href");
     if (typeof oldHref == "string") {
       // Use setAttribute instead of direct assignment.
@@ -88,11 +88,17 @@ function urlSecurityCheck(url, doc)
   // URL Loading Security Check
   var focusedWindow = doc.commandDispatcher.focusedWindow;
   var sourceURL = getContentFrameURI(focusedWindow);
+  var sourceURI = Components.classes["@mozilla.org/network/standard-url;1"]
+                            .createInstance(Components.interfaces.nsIURI);
+  sourceURI.spec = sourceURL;
+  var destURI = Components.classes["@mozilla.org/network/standard-url;1"]
+                          .createInstance(Components.interfaces.nsIURI);
+  destURI.spec = url;
   const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
   var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                          .getService(nsIScriptSecurityManager);
   try {
-    secMan.checkLoadURIStr(sourceURL, url, nsIScriptSecurityManager.STANDARD);
+    secMan.checkLoadURI(sourceURI, destURI, nsIScriptSecurityManager.STANDARD);
   } catch (e) {
     throw "Load of " + url + " denied.";
   }
@@ -649,7 +655,7 @@ function getPostData()
 {
   try {
     var sessionHistory = getWebNavigation().sessionHistory;
-    var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
+    entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
     entry = entry.QueryInterface(Components.interfaces.nsISHEntry);
     return entry.postData;
   }
@@ -845,7 +851,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   
   var mimeInfo = getMIMEInfoForType(aContentType, ext);
 
-  if (ext && mimeInfo && mimeInfo.extensionExists(ext)) {
+  if (ext && mimeInfo && mimeInfo.ExtensionExists(ext)) {
     return ext;
   }
   
@@ -857,7 +863,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   } catch (e) {
   }
 
-  if (urlext && mimeInfo && mimeInfo.extensionExists(urlext)) {
+  if (urlext && mimeInfo && mimeInfo.ExtensionExists(urlext)) {
     return urlext;
   }
   else {
@@ -895,6 +901,13 @@ function getCharsetforSave(aDocument)
 
   return  window._content.document.characterSet;
   return false;
+}
+
+function SwitchTextEntryDirection(aElement) {
+  if (window.getComputedStyle(aElement, "").direction == "ltr")
+    aElement.style.direction = "rtl";
+  else
+    aElement.style.direction = "ltr";
 }
 
 # -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- 

@@ -1,7 +1,12 @@
 #bookmark-window toolbarbutton {
   list-style-image: url("chrome://browser/skin/bookmarks/Bookmarks-toolbar.png");
   -moz-box-orient: vertical;
-  padding: 6px !important;
+  min-width: 57px;
+  padding: 5px;
+}
+
+#bookmark-window toolbarbutton > .toolbarbutton-icon {
+  margin-right: 0px;
 }
 
 /* new bookmark */
@@ -15,6 +20,20 @@ toolbarbutton#newbookmark:hover {
 }
 
 toolbarbutton#newbookmark[disabled="true"] {
+  -moz-image-region: rect(48px 24px 72px 0px) !important;
+}
+
+/* new livemark */
+
+toolbarbutton#newlivemark {
+  -moz-image-region: rect(0px 24px 24px 0px);
+}
+
+toolbarbutton#newlivemark:hover {
+  -moz-image-region: rect(24px 24px 48px 0px);
+}
+
+toolbarbutton#newlivemark[disabled="true"] {
   -moz-image-region: rect(48px 24px 72px 0px) !important;
 }
 

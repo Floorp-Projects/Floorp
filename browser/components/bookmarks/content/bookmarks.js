@@ -188,7 +188,7 @@ var BookmarksCommand = {
   /////////////////////////////////////////////////////////////////////////////
   // Fill a context menu popup with menuitems that are appropriate for the current
   // selection.
-  createContextMenu: function (aEvent, aSelection)
+  createContextMenu: function (aEvent, aSelection, aDS)
   {
     if (aSelection == undefined) {
       aEvent.preventDefault();
@@ -202,7 +202,7 @@ var BookmarksCommand = {
         
     var commonCommands = [];
     for (var i = 0; i < aSelection.length; ++i) {
-      var commands = this.getCommands(aSelection.item[i], aSelection.parent[i]);
+      var commands = this.getCommands(aSelection.item[i], aSelection.parent[i], aDS);
       if (!commands) {
         aEvent.preventDefault();
         return;
@@ -274,15 +274,15 @@ var BookmarksCommand = {
   /////////////////////////////////////////////////////////////////////////////
   // For a given URI (a unique identifier of a resource in the graph) return 
   // an enumeration of applicable commands for that URI. 
-  getCommands: function (aNodeID, aParent)
+  getCommands: function (aNodeID, aParent, aDS)
   {
-    var type = BookmarksUtils.resolveType(aNodeID);
+    var type = BookmarksUtils.resolveType(aNodeID, aDS);
     if (!type)
       return null;
 
     var ptype = null;
     if (aParent) {
-      ptype = BookmarksUtils.resolveType(aParent);
+      ptype = BookmarksUtils.resolveType(aParent, aDS);
       if (ptype == "Livemark") {
         type = "LivemarkBookmark";
       }
@@ -305,6 +305,7 @@ var BookmarksCommand = {
     // delete
     // ---------------------
     // bm_refreshlivemark
+    // bm_sortbyname
     // ---------------------
     // bm_properties
     switch (type) {
@@ -312,6 +313,7 @@ var BookmarksCommand = {
       commands = ["bm_newbookmark", "bm_newfolder", "bm_newseparator", "bm_separator",
                   "cut", "copy", "paste", "bm_separator",
                   "delete", "bm_separator",
+                  "bm_sortbyname", "bm_separator",
                   "bm_properties"];
       break;
     case "Bookmark":
@@ -319,6 +321,7 @@ var BookmarksCommand = {
                   "bm_newbookmark", "bm_newfolder", "bm_newseparator", "bm_separator",
                   "cut", "copy", "paste", "bm_separator",
                   "delete", "bm_separator",
+                  "bm_sortbyname", "bm_separator",
                   "bm_properties"];
       break;
     case "Folder":
@@ -327,6 +330,7 @@ var BookmarksCommand = {
                   "bm_newbookmark", "bm_newfolder", "bm_newseparator", "bm_separator",
                   "cut", "copy", "paste", "bm_separator",
                   "delete", "bm_separator",
+                  "bm_sortbyname", "bm_separator",
                   "bm_properties"];
       break;
     case "IEFavoriteFolder":
@@ -341,14 +345,18 @@ var BookmarksCommand = {
                   "copy"];
       break;
     case "Livemark":
-      commands = ["cut", "copy", "bm_separator",
+      commands = ["bm_expandfolder", "bm_openfolder", "bm_separator",
+                  "cut", "copy", "bm_separator",
                   "delete", "bm_separator",
-                  "bm_refreshlivemark", "bm_separator",
+                  "bm_refreshlivemark", "bm_sortbyname", "bm_separator",
                   "bm_properties"];
       break;
     case "LivemarkBookmark":
       commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
                   "copy"];
+      break;
+    case "ImmutableBookmark":
+      commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab"];
       break;
     default: 
       commands = [];
@@ -432,7 +440,6 @@ var BookmarksCommand = {
 
   copyBookmark: function (aSelection)
   {
-
     const kSuppArrayContractID = "@mozilla.org/supports-array;1";
     const kSuppArrayIID = Components.interfaces.nsISupportsArray;
     var itemArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
@@ -518,11 +525,17 @@ var BookmarksCommand = {
    
     var selection = {item: items, parent:Array(items.length), length: items.length};
     BookmarksUtils.checkSelection(selection);
-    BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget);
+    BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget, -1);
   },
   
   deleteBookmark: function (aSelection)
   {
+    // call checkSelection here to update the immutable and other
+    // flags on the selection; when new resources get created,
+    // they're temporarily not valid because they're not in a
+    // bookmark container.  So, they can't be removed until that's
+    // fixed.
+    BookmarksUtils.checkSelection(aSelection);
     BookmarksUtils.removeAndCheckSelection("delete", aSelection);
   },
 
@@ -546,7 +559,7 @@ var BookmarksCommand = {
         var item = aSelection.item[i];
         saveURL(item.Value, BookmarksUtils.getProperty(item, "Name"), null, true);
       }
-      else if (type == "Bookmark" || type == "") {
+      else if (type == "Bookmark" || type == "ImmutableBookmark") {
         var webPanel = BMDS.GetTarget(aSelection.item[i],
                                       RDF.GetResource(NC_NS + "WebPanel"),
                                       true);
@@ -555,7 +568,7 @@ var BookmarksCommand = {
         else
           this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
       }
-      else if (type == "Folder" || type == "PersonalToolbarFolder")
+      else if (type == "Folder" || type == "PersonalToolbarFolder" || type == "Livemark")
         this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser);
     }
   },
@@ -605,7 +618,7 @@ var BookmarksCommand = {
       var urlArc   = RDF.GetResource(NC_NS+"URL");
       RDFC.Init(BMDS, resource);
       var containerChildren = RDFC.GetElements();
-      var tabPanels = browser.mPanelContainer.childNodes;
+      var tabPanels = browser.browsers;
       var tabCount  = tabPanels.length;
       var doReplace = PREF.getBoolPref("browser.tabs.loadFolderAndReplace");
       var loadInBackground = PREF.getBoolPref("browser.tabs.loadBookmarksInBackground");
@@ -650,7 +663,7 @@ var BookmarksCommand = {
         browser.removeTab(tabs[i]);
 
       // and focus the content
-      browser.focus();
+      w._content.focus();
 
     } else {
       dump("Open Group in new window: not implemented...\n");
@@ -689,7 +702,7 @@ var BookmarksCommand = {
   createNewResource: function(aResource, aTarget, aTxnType)
   {
     var selection = BookmarksUtils.getSelectionFromResource(aResource, aTarget.parent);
-    var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget);
+    var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget, -1);
     if (ok && aTxnType != "newseparator") {
       ok = this.openBookmarkProperties(selection);
       if (!ok)
@@ -794,6 +807,94 @@ var BookmarksCommand = {
         BMDS.Unassert(rsrc, exp, oldtgt);
       }
     }
+  },
+
+  sortByName: function (aSelection)
+  {
+    // do the real sorting in a timeout, to make sure that
+    // if we sort from a menu that the menu gets torn down
+    // before we sort.  the template builder really doesn't
+    // like it if we move things around; the menu code also
+    // doesn't like it if we move the menuparent while a
+    // popup is open.
+    setTimeout(function () { BookmarksCommand.realSortByName(aSelection); }, 0);
+  },
+
+  realSortByName: function (aSelection)
+  {
+    var theFolder;
+
+    if (aSelection.length != 1)
+      return;
+
+    var selType = BookmarksUtils.resolveType (aSelection.item[0]);
+    if (selType == "Folder" || selType == "Bookmark" ||
+        selType == "PersonalToolbarFolder" || selType == "Livemark")
+    {
+      theFolder = aSelection.parent[0];
+    } else {
+      // we're not going to try to sort ImmutableBookmark siblings or
+      // any other such thing, since it'll probably just get us into
+      // trouble
+      return;
+    }
+
+    var toSort = [];
+    RDFC.Init(BMDS, theFolder);
+    var folderContents = RDFC.GetElements();
+    while (folderContents.hasMoreElements()) {
+        var rsrc = folderContents.getNext().QueryInterface(kRDFRSCIID);
+        var rtype = BookmarksUtils.resolveType(rsrc);
+        if (rtype == "BookmarkSeparator")
+          continue;
+        toSort.push(rsrc);
+    }
+
+    const kName = RDF.GetResource(NC_NS+"Name");
+
+    var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                  .getService(Components.interfaces.nsILocaleService);
+    var collationFactory = Components.classes["@mozilla.org/intl/collation-factory;1"]
+                                     .getService(Components.interfaces.nsICollationFactory);
+    var collation = collationFactory.CreateCollation(localeService.getApplicationLocale());
+
+    toSort.sort (function (a, b) {
+                   var atype = BookmarksUtils.resolveType(a);
+                   var btype = BookmarksUtils.resolveType(b);
+
+                   var aisfolder = (atype == "Folder") || (atype == "PersonalToolbarFolder");
+                   var bisfolder = (btype == "Folder") || (btype == "PersonalToolbarFolder");
+
+                   // folders above bookmarks
+                   if (aisfolder && !bisfolder)
+                     return -1;
+                   if (bisfolder && !aisfolder)
+                     return 1;
+
+                   // then sort by name
+                   var aname = BMDS.GetTarget(a, kName, true).QueryInterface(kRDFLITIID).Value;
+                   var bname = BMDS.GetTarget(b, kName, true).QueryInterface(kRDFLITIID).Value;
+
+                   return collation.compareString(0, aname, bname);
+                 });
+
+    // we now have the resources here sorted by name
+    BMDS.beginUpdateBatch();
+
+    RDFC.Init(BMDS, theFolder);
+
+    // remove existing elements
+    var folderContents = RDFC.GetElements();
+    while (folderContents.hasMoreElements()) {
+      RDFC.RemoveElement (folderContents.getNext(), false);
+    }
+
+    // and add our elements back
+    for (var i = 0; i < toSort.length; i++) {
+      RDFC.InsertElementAt (toSort[i], i+1, true);
+    }
+
+    BMDS.endUpdateBatch();
   }
 
 }
@@ -834,6 +935,7 @@ var BookmarksController = {
     case "cmd_bm_export":
     case "cmd_bm_movebookmark":
     case "cmd_bm_refreshlivemark":
+    case "cmd_bm_sortbyname":
       isCommandSupported = true;
       break;
     default:
@@ -898,14 +1000,16 @@ var BookmarksController = {
       return true;
     case "cmd_bm_openfolder":
       for (i=0; i<length; ++i) {
-        if (aSelection.type[i] == ""         ||
+        if (aSelection.type[i] == "ImmutableBookmark" ||
+            aSelection.type[i] == "ImmutableFolder" ||
             aSelection.type[i] == "Bookmark" ||
             aSelection.type[i] == "BookmarkSeparator")
           return false;
         RDFC.Init(BMDS, aSelection.item[i]);
         var children = RDFC.GetElements();
         while (children.hasMoreElements()) {
-          if (BookmarksUtils.resolveType(children.getNext()) == "Bookmark")
+          var childType = BookmarksUtils.resolveType(children.getNext());
+          if (childType == "Bookmark" || childType == "LivemarkBookmark")
             return true;
         }
       }
@@ -917,7 +1021,8 @@ var BookmarksController = {
     case "cmd_bm_newlivemark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-      return (aTarget && BookmarksUtils.isValidTargetContainer(aTarget.parent));
+      return ((type0 == "PersonalToolbarFolder") ||
+              (aTarget && BookmarksUtils.isValidTargetContainer(aTarget.parent)));
     case "cmd_bm_properties":
     case "cmd_bm_rename":
       if (length != 1 ||
@@ -938,13 +1043,31 @@ var BookmarksController = {
           return false;
       }
       return length > 0;
+    case "cmd_bm_sortbyname":
+      if (length == 1 && (aSelection.type[0] == "Folder" ||
+                          aSelection.type[0] == "Bookmark" ||
+                          aSelection.type[0] == "PersonalToolbarFolder" ||
+                          aSelection.type[0] == "Livemark"))
+        return true;
+      return false;
     default:
       return false;
     }
   },
 
-  doCommand: function (aCommand, aSelection, aTarget)
+  doCommand: function (aCommand, aSelection, aTarget, aDS)
   {
+    var resource0, type0, realTarget;
+    if (aSelection && aSelection.length == 1) {
+      resource0 = aSelection.item[0];
+      type0 = aSelection.type[0];
+    }
+
+    if (type0 == "PersonalToolbarFolder" && aTarget == null)
+      realTarget = { parent: resource0, index: -1 };
+    else
+      realTarget = aTarget;
+
     switch (aCommand) {
     case "cmd_undo":
     case "cmd_bm_undo":
@@ -955,16 +1078,16 @@ var BookmarksController = {
       BookmarksCommand.redoBookmarkTransaction();
       break;
     case "cmd_bm_open":
-      BookmarksCommand.openBookmark(aSelection, "current");
+      BookmarksCommand.openBookmark(aSelection, "current", aDS);
       break;
     case "cmd_bm_openinnewwindow":
-      BookmarksCommand.openBookmark(aSelection, "window");
+      BookmarksCommand.openBookmark(aSelection, "window", aDS);
       break;
     case "cmd_bm_openinnewtab":
-      BookmarksCommand.openBookmark(aSelection, "tab");
+      BookmarksCommand.openBookmark(aSelection, "tab", aDS);
       break;
     case "cmd_bm_openfolder":
-      BookmarksCommand.openBookmark(aSelection, "current");
+      BookmarksCommand.openBookmark(aSelection, "current", aDS);
       break;
     case "cmd_bm_managefolder":
       BookmarksCommand.manageFolder(aSelection);
@@ -985,7 +1108,7 @@ var BookmarksController = {
       BookmarksCommand.copyBookmark(aSelection);
       break;
     case "cmd_paste":
-      BookmarksCommand.pasteBookmark(aTarget);
+      BookmarksCommand.pasteBookmark(realTarget);
       break;
     case "cmd_delete":
       BookmarksCommand.deleteBookmark(aSelection);
@@ -994,16 +1117,16 @@ var BookmarksController = {
       BookmarksCommand.moveBookmark(aSelection);
       break;
     case "cmd_bm_newbookmark":
-      BookmarksCommand.createNewBookmark(aTarget);
+      BookmarksCommand.createNewBookmark(realTarget);
       break;
     case "cmd_bm_newlivemark":
-      BookmarksCommand.createNewLivemark(aTarget);
+      BookmarksCommand.createNewLivemark(realTarget);
       break;
     case "cmd_bm_newfolder":
-      BookmarksCommand.createNewFolder(aTarget);
+      BookmarksCommand.createNewFolder(realTarget);
       break;
     case "cmd_bm_newseparator":
-      BookmarksCommand.createNewSeparator(aTarget);
+      BookmarksCommand.createNewSeparator(realTarget);
       break;
     case "cmd_bm_import":
       BookmarksCommand.importBookmarks();
@@ -1013,6 +1136,9 @@ var BookmarksController = {
       break;
     case "cmd_bm_refreshlivemark":
       BookmarksCommand.refreshLivemark(aSelection);
+      break;
+    case "cmd_bm_sortbyname":
+      BookmarksCommand.sortByName(aSelection);
       break;
     default: 
       dump("Bookmark command "+aCommand+" not handled!\n");
@@ -1026,7 +1152,7 @@ var BookmarksController = {
                     "cmd_undo", "cmd_redo", "cmd_bm_properties", "cmd_bm_rename", 
                     "cmd_copy", "cmd_paste", "cmd_cut", "cmd_delete",
                     "cmd_bm_setpersonaltoolbarfolder", "cmd_bm_movebookmark",
-                    "cmd_bm_openfolder", "cmd_bm_managefolder", "cmd_bm_refreshlivemark"];
+                    "cmd_bm_openfolder", "cmd_bm_managefolder", "cmd_bm_refreshlivemark", "cmd_bm_sortbyname"];
     for (var i = 0; i < commands.length; ++i) {
       var enabled = this.isCommandEnabled(commands[i], aSelection, aTarget);
       var commandNode = document.getElementById(commands[i]);
@@ -1127,15 +1253,27 @@ var BookmarksUtils = {
 
   /////////////////////////////////////////////////////////////////////////////
   // Determine the rdf:type property for the given resource.
-  resolveType: function (aResource)
+  resolveType: function (aResource, aDS)
   {
-    var type = this.getProperty(aResource, RDF_NS+"type");
+    var type = this.getProperty(aResource, RDF_NS+"type", aDS);
     if (type != "")
       type = type.split("#")[1];
     if (type == "Folder") {
       if (aResource == BMSVC.getBookmarksToolbarFolder())
         type = "PersonalToolbarFolder";
     }
+
+    if (type == "") {
+      // we're not sure what type it is.  figure out if it's a container.
+      var child = this.getProperty(aResource, NC_NS+"child", aDS);
+      if (child || RDFCU.IsContainer(aDS?aDS:BMDS, RDF.GetResource(aResource)))
+        return "ImmutableFolder";
+
+      // not a container; make sure it has at least a URL
+      if (this.getProperty(aResource, NC_NS+"URL") != null)
+        return "ImmutableBookmark";
+    }
+
     return type;
   },
 
@@ -1163,10 +1301,7 @@ var BookmarksUtils = {
       if (item.Value == "NC:BookmarksRoot") {
         isImmutable = true;
       }
-      else if (type != "" && // XXXpch: ugly ugly ugly temporary hack, 
-                             // getsynthesizeType says a bookmark is not a
-                             // bookmark when it's not a child of sth.
-               type != "Bookmark" && type != "BookmarkSeparator" && 
+      else if (type != "Bookmark" && type != "BookmarkSeparator" && 
                type != "Folder"   && type != "PersonalToolbarFolder" &&
                type != "Livemark")
         isImmutable = true;
@@ -1274,25 +1409,24 @@ var BookmarksUtils = {
     return true;
   },
         
-  insertAndCheckSelection: function (aAction, aSelection, aTarget)
+  insertAndCheckSelection: function (aAction, aSelection, aTarget, aTargetIndex)
   {
     isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget);
     if (!isValid) {
       SOUND.beep();
       return false;
     }
-    this.insertSelection(aAction, aSelection, aTarget);
+    this.insertSelection(aAction, aSelection, aTarget, aTargetIndex);
     BookmarksUtils.flushDataSource();
     return true;
   },
 
-  insertSelection: function (aAction, aSelection, aTarget)
+  insertSelection: function (aAction, aSelection, aTarget, aTargetIndex)
   {
     var transaction    = new BookmarkInsertTransaction(aAction);
     transaction.item   = new Array(aSelection.length);
     transaction.parent = new Array(aSelection.length);
     transaction.index  = new Array(aSelection.length);
-
     var index = aTarget.index;
     for (var i=0; i<aSelection.length; ++i) {
       var rSource = aSelection.item[i];
@@ -1300,7 +1434,25 @@ var BookmarksUtils = {
         rSource = BMSVC.cloneResource(rSource);
       transaction.item  [i] = rSource;
       transaction.parent[i] = aTarget.parent;
+      // Broken Insert Code attempts to always insert items in the
+      // right place (i.e. after the selected item).  However, because
+      // of RDF Container suckyness, this code gets very confused, due
+      // to rdf container indexes not matching up to number of items,
+      // and because we can't trust GetCount to return a real count.
+      // The -1 is there to handle inserting into the persontal toolbar
+      // folder via right-click on the PTF.
+      if (aTarget.index == -1) {
+        transaction.index[i] = -1;
+      } else {
+#ifdef BROKEN_INSERT_CODE
+        if (aTargetIndex == -1)
+          transaction.index [i] = (++index);
+        else
+          transaction.index [i] = (index++);
+#else
       transaction.index [i] = index++;
+#endif
+      }
     }
     BMSVC.transactionManager.doTransaction(transaction);
   },
@@ -1323,6 +1475,24 @@ var BookmarksUtils = {
     var txn = new BookmarkMoveTransaction(aAction, aSelection, aTarget);
     BMSVC.transactionManager.doTransaction(txn);
   }, 
+
+  // returns true if this selection should be copied instead of moved,
+  // if a move was originally requested
+  shouldCopySelection: function (aAction, aSelection)
+  {
+    for (var i = 0; i < aSelection.length; i++) {
+      var parentType = BookmarksUtils.resolveType(aSelection.parent[i]);
+      if (aSelection.type[i] == "ImmutableBookmark" ||
+          aSelection.type[i] == "ImmutableFolder" ||
+          aSelection.parent[i] == null ||
+          (aSelection.type[i] == "Bookmark" && parentType == "Livemark"))
+      {
+        return true;            // if any of these are found
+      }
+    }
+
+    return false;
+  },
 
   getXferDataFromSelection: function (aSelection)
   {
@@ -1503,6 +1673,15 @@ BookmarkTransaction.prototype = {
   RDFC        : null,
   BMDS        : null,
 
+  QueryInterface: function (iid)
+  {
+    if (!iid.equals(Components.interfaces.nsITransaction) &&
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+
+    return this;
+  },
+
   beginUpdateBatch: function()
   {
     if (this.item.length > this.BATCH_LIMIT) {
@@ -1517,7 +1696,6 @@ BookmarkTransaction.prototype = {
     }
   },
   merge               : function (aTxn)   {return false},
-  QueryInterface      : function (aUID)   {return this},
   getHelperForLanguage: function (aCount) {return null},
   getInterfaces       : function (aCount) {return null},
   canCreateWrapper    : function (aIID)   {return "AllAccess"}
@@ -1544,7 +1722,26 @@ BookmarkInsertTransaction.prototype =
     this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
       this.RDFC.Init(this.BMDS, this.parent[i]);
-      this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
+      // if the index is -1, we use appendElement, and then update the
+      // index so that undoTransaction can still function
+      if (this.index[i] == -1) {
+        this.RDFC.AppendElement(this.item[i]);
+        this.index[i] = this.RDFC.GetCount();
+      } else {
+#ifdef BROKEN_INSERT_CODE
+        try {
+          this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
+        } catch (e if e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
+          // if this failed, then we assume that we really want to append,
+          // because things are out of whack until we renumber.
+          this.RDFC.AppendElement(this.item[i]);
+          // and then fix up the index so undo works
+          this.index[i] = this.RDFC.GetCount();
+        }
+#else
+        this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
+#endif
+      }
     }
     this.endUpdateBatch();
   },

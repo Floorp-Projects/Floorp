@@ -52,7 +52,6 @@
       onunload="unload();" headertitle="&lHeader;">
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-privacy.js"/>
-  <script src="chrome://browser/content/cookieviewer/treeUtils.js"/>
 
   <stringbundle id="privacyBundle" src="chrome://browser/locale/pref/prefutilities.properties"/>
 
@@ -91,6 +90,7 @@
         </vbox>
         <vbox>
           <button label="&viewPasswords.label;" oncommand="viewSignons();"/>
+          <button id="masterPasswordBtn" label="" oncommand="changeMasterPassword();"/>
         </vbox>
       </hbox>
     </expander>
@@ -107,29 +107,37 @@
     <!-- Cookies -->
     <expander id="cookies" label="&cookies.label;" clearlabel="&clearCookies.label;" persist="open">
       <vbox flex="1">
-        <hbox flex="1">
-          <label value="&cookieExplanation.label;"/>
-          <spacer flex="1"/>
-          <button label="&exceptions.label;" oncommand="cookieExceptions();"/>
-          <button label="&viewCookies.label;" oncommand="viewCookies();"/>
-       </hbox>
-       <separator class="thin"/>
-       <vbox flex="1">
-          <data id="cookieBehavior" prefstring="network.cookie.cookieBehavior" preftype="int"/>
-          <checkbox id="enableCookies"
-                    oncommand="updateCookieBehavior();updateCookieBroadcaster();"
-                    label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"/>
-          <checkbox id="enableCookiesForOriginatingSiteOnly" observes="cookieBroadcaster"
-                    label="&forOriginatingSiteOnly.label;" accesskey="&forOriginatingSiteOnly.accesskey;"
-                    style="margin-left: 23px;" oncommand="updateCookieBehavior();"/>
-          <!-- FIXME: Temp UI to address fallout from bug 233339 -->
-          <radiogroup style="margin-left: 23px;" id="networkCookieLifetime" 
-                      prefstring="network.cookie.lifetimePolicy">
-            <radio value="0" label="&acceptNormally.label;"/>
-            <radio value="2" label="&acceptForSession.label;"/>
-            <radio value="1" label="&askAboutCookies.label;"/>
-          </radiogroup>
-        </vbox>
+        <description>&cookieExplanation.label;</description>
+        <separator class="thin"/>
+        <hbox>
+          <vbox flex="1">
+            <data id="cookieBehavior" prefstring="network.cookie.cookieBehavior" preftype="int"/>
+            <checkbox id="enableCookies"
+                      oncommand="updateCookieBehavior();updateCookieBroadcaster();"
+                      label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"/>
+            <checkbox id="enableCookiesForOriginatingSiteOnly" observes="cookieBroadcaster"
+                      label="&forOriginatingSiteOnly.label;" accesskey="&forOriginatingSiteOnly.accesskey;"
+                      style="margin-left: 23px;" oncommand="updateCookieBehavior();"/>
+            <separator class="thin"/>
+            <hbox align="center">
+              <description>&cookieRetention.label;</description>
+              <menulist id="networkCookieLifetime" 
+                        prefstring="network.cookie.lifetimePolicy">
+                <menupopup>
+                  <menuitem value="0" label="&acceptNormally.label;"/>
+                  <menuitem value="2" label="&acceptForSession.label;"/>
+                  <menuitem value="1" label="&askAboutCookies.label;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </vbox>
+          <vbox>
+            <hbox pack="end">
+              <button label="&exceptions.label;" oncommand="viewCookieExceptions();"/>
+              <button label="&viewCookies.label;" oncommand="viewCookies();"/>
+            </hbox>
+          </vbox>
+        </hbox>
       </vbox>
     </expander>    
     

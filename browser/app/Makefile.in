@@ -44,7 +44,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= profile
+DIRS		= profile/extensions
 
 PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js
 
@@ -158,7 +158,7 @@ endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
-RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+RCFLAGS += -DFIREFOX_ICO="$(DIST)/branding/firefox.ico" -DDOCUMENT_ICO="$(DIST)/branding/document.ico"
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -262,9 +262,6 @@ install::
 	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/icons
 endif
 
-export:: brand.dtd.in
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
-
 export::
 ifndef MOZ_USE_OFFICIAL_BRANDING
 	$(NSINSTALL) -D $(DIST)/branding
@@ -275,6 +272,7 @@ ifeq ($(OS_ARCH),WINNT)
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/firefox.icns  $(DIST)/branding/firefox.icns
+	cp $(srcdir)/macbuild/document.icns  $(DIST)/branding/document.icns
 endif
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/mozicon16.xpm $(DIST)/branding/mozicon16.xpm
@@ -298,9 +296,18 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 APP_NAME = Firefox
 
-libs:: $(PROGRAM)
+AB_CD = $(MOZ_UI_LOCALE)
+
+AB := $(firstword $(subst -, ,$(AB_CD)))
+
+clean clobber repackage::
+	rm -rf $(DIST)/$(APP_NAME).app
+
+libs repackage:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
+	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
+	rsync -a --exclude CVS $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
@@ -309,23 +316,19 @@ libs:: $(PROGRAM)
 	cp -R $(DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins/
 	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(APP_NAME).app/Contents/Resources/firefox.icns
+	cp -RL $(DIST)/branding/document.icns $(DIST)/$(APP_NAME).app/Contents/Resources/document.icns
 	cp -RL $(DIST)/package/mozillaSuite.rsrc $(DIST)/$(APP_NAME).app/Contents/Resources/$(PROGRAM).rsrc
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
-clean clobber::
-	rm -rf $(DIST)/$(APP_NAME).app
 endif
 
-README_FILE = $(srcdir)/README.txt
-
 libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
 	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
 
 libs:: $(srcdir)/profile/prefs.js
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
 
 install:: $(srcdir)/profile/prefs.js
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
+	$(SYSINSTALL) $(IFLAGS1) $^ $(destdir)$(bindir)/defaults/profile

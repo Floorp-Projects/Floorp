@@ -79,3 +79,5 @@
 #define NS_SHELLSERVICE_CONTRACTID \
   "@mozilla.org/browser/shell-service;1"
 
+#define NS_RDF_FORWARDPROXY_INFER_DATASOURCE_CID \
+{ 0x7a024bcf, 0xedd5, 0x4d9a, { 0x86, 0x14, 0xd4, 0x4b, 0xe1, 0xda, 0xda, 0xd3 } }

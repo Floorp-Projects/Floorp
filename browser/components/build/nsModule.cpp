@@ -40,6 +40,7 @@
 
 #include "nsBrowserCompsCID.h"
 #include "nsBookmarksService.h"
+#include "nsForwardProxyDataSource.h"
 #ifdef XP_WIN
 #include "nsWindowsShellService.h"
 #elif defined(XP_MACOSX)
@@ -65,10 +66,12 @@
 #include "nsCaminoProfileMigrator.h"
 #include "nsICabProfileMigrator.h"
 #endif
+#include "rdf.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
 #elif defined(XP_MACOSX)
@@ -102,7 +105,8 @@ static const nsModuleComponentInfo components[] =
   { "Browser Shell Service",
     NS_SHELLSERVICE_CID,
     NS_SHELLSERVICE_CONTRACTID,
-    nsWindowsShellServiceConstructor },
+    nsWindowsShellServiceConstructor,
+    nsWindowsShellService::Register },
 
 #elif defined(MOZ_WIDGET_GTK2)
   { "Browser Shell Service",
@@ -120,6 +124,11 @@ static const nsModuleComponentInfo components[] =
     NS_BOOKMARKS_SERVICE_CID,
     NS_BOOKMARKS_DATASOURCE_CONTRACTID,
     nsBookmarksServiceConstructor },
+
+  { "Bookmarks Forward Proxy Inference Data Source",
+    NS_RDF_FORWARDPROXY_INFER_DATASOURCE_CID,
+    NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX "forward-proxy",
+    nsForwardProxyDataSourceConstructor },
 
   { "Profile Migrator",
     NS_FIREFOX_PROFILEMIGRATOR_CID,
