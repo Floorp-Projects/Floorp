@@ -54,7 +54,10 @@ public:
   typedef enum {
     eDoNothing,
     eDeleteNext,
-    eDeletePrevious
+    eDeletePrevious,
+    eDeleteNextWord,
+    eDeletePreviousWord,
+    eDeleteToEndOfLine
   } ESelectionCollapseDirection;
 
 

@@ -377,7 +377,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   if (NS_FAILED(rv)) return rv;
   
   // get the URL of the page we are editing
-  char* pageURLString = nsnull;
   if (aUrl)
   {
     char* pageURLString = nsnull;                                               
@@ -653,6 +652,73 @@ nsEditorShell::UpdateInterfaceState(void)
 
   return mStateMaintainer->ForceUpdate();
 }  
+
+// Deletion routines
+nsresult
+nsEditorShell::ScrollSelectionIntoView()
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult result = editor->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(result))
+    return result;
+  if (!presShell)
+    return NS_ERROR_NULL_POINTER;
+
+  return presShell->ScrollSelectionIntoView(SELECTION_NORMAL,
+                                            SELECTION_FOCUS_REGION);
+}
+
+NS_IMETHODIMP
+nsEditorShell::DeleteCharForward()
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = editor->DeleteSelection(nsIEditor::eDeleteNext);
+  ScrollSelectionIntoView();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsEditorShell::DeleteCharBackward()
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = editor->DeleteSelection(nsIEditor::eDeletePrevious);
+  ScrollSelectionIntoView();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsEditorShell::DeleteWordForward()
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = editor->DeleteSelection(nsIEditor::eDeleteNextWord);
+  ScrollSelectionIntoView();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsEditorShell::DeleteWordBackward()
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = editor->DeleteSelection(nsIEditor::eDeletePreviousWord);
+  ScrollSelectionIntoView();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsEditorShell::DeleteToEndOfLine()
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = editor->DeleteSelection(nsIEditor::eDeleteToEndOfLine);
+  ScrollSelectionIntoView();
+  return rv;
+}
 
 // Generic attribute setting and removal
 NS_IMETHODIMP    

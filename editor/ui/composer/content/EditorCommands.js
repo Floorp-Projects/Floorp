@@ -213,6 +213,33 @@ function EditorShutdown()
 }
 
 
+// -------------------------- Key Bindings -------------------------
+
+function EditorDeleteCharForward()
+{
+  editorShell.DeleteCharForward();
+}
+
+function EditorDeleteCharBackward()
+{
+  editorShell.DeleteCharBackward();
+}
+
+function EditorDeleteWordForward()
+{
+  editorShell.DeleteWordForward();
+}
+
+function EditorDeleteWordBackward()
+{
+  editorShell.DeleteWordBackward();
+}
+
+function EditorDeleteToEndOfLine()
+{
+  editorShell.DeleteToEndOfLine();
+}
+
 // --------------------------- File menu ---------------------------
 
 function EditorOpen()

@@ -8,24 +8,42 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<!-- change the xul key for Unix -->
-	<keyset id="defaultKeySet">
-	<xulkey key="alt" />
-	</keyset>
+    <!-- change the xul key for Unix -->
+    <keyset id="defaultKeySet">
+    <xulkey key="alt" />
 
-	<!-- close -->
-	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" observes="cmd_close"/>
-	<key id="key_close" xulkey="true" key="&closeCmd.key;" observes="cmd_close"/>
+    <!-- emacs delete keys -->
+    <key id="emacsbackspacekb" key="h" control="true" onkeypress="EditorDeleteCharBackward()" />
+    <key id="emacsdeletekb" key="d" control="true" onkeypress="EditorDeleteCharForward()" />
+    <key id="emacsdeletewordbackwardkb" key="w" control="true" onkeypress="EditorDeleteWordBackward()" />
+    <key id="emacskilltoendkb" key="k" control="true" onkeypress="EditorDeleteToEndOfLine()" />
+
+    <!-- emacs motion keys -->
+    <!-- These are still waiting on the selection controller API -->
+    <key id="emacsbolkb" key="a" control="true" onkeypress="_EditorNotImplemented()" />
+    <key id="emacseolkb" key="e" control="true" onkeypress="_EditorNotImplemented()" />
+    <key id="emacsbackkb" key="b" control="true" onkeypress="_EditorNotImplemented()" />
+    <key id="emacsforwardkb" key="f" control="true" onkeypress="_EditorNotImplemented()" />
+    <key id="emacsupkb" key="p" control="true" onkeypress="_EditorNotImplemented()" />
+    <key id="emacsdownkb" key="n" control="true" onkeypress="_EditorNotImplemented()" />
+    <key id="emacspagedownkb" key="v" control="true" onkeypress="_EditorNotImplemented()" />
+    <key id="emacspageupkb" key="v" meta="true" onkeypress="_EditorNotImplemented()" />
+
+    </keyset>
+
+    <!-- close -->
+    <menuitem id="menu_close" value="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" observes="cmd_close"/>
+    <key id="key_close" xulkey="true" key="&closeCmd.key;" observes="cmd_close"/>
+
+    <!-- quit -->
+    <menupopup id="menu_FilePopup">
+    <menuitem value="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
+    </menupopup>
+    <key id="key_quit" xulkey="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
+    <broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	
-	<!-- quit -->
-	<menupopup id="menu_FilePopup">
-		<menuitem value="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
-	</menupopup>
-	<key id="key_quit" xulkey="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
- 	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
-	
-	<!-- Edit Menu -->
-	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
-	<key id="key_redo" xulkey="true" shift="true" key="&redoCmd.key;" observes="cmd_redo"/>
+    <!-- Edit Menu -->
+    <menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
+    <key id="key_redo" xulkey="true" shift="true" key="&redoCmd.key;" observes="cmd_redo"/>
 	
 </overlay>		
