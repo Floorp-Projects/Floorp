@@ -251,20 +251,37 @@ nsJSUtils::nsConvertXPCObjectToJSVal(nsISupports* aSupports,
   *aReturn = JSVAL_NULL; // a sane value, just in case something blows up
   if (aSupports != nsnull) {
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
-    if (NS_FAILED(rv)) return;
 
-    nsIXPConnectWrappedNative* wrapper;
-    rv = xpc->WrapNative(aContext, aSupports, aIID, &wrapper);
-    if (NS_SUCCEEDED(rv)) {
+    // First see if it's really an XPConnect-wrapped JSObject. If it
+    // is, it'll have an nsIXPConnectWrappedJSMethods interface...
+    nsCOMPtr<nsIXPConnectWrappedJSMethods> jsmethods = do_QueryInterface(aSupports);
+
+    if (jsmethods) {
+      // ...yep, so let's just pull out the original JSObject and
+      // return it.
       JSObject* obj;
-      rv = wrapper->GetJSObject(&obj);
+      rv = jsmethods->GetJSObject(&obj);
       if (NS_SUCCEEDED(rv)) {
-        // set the return value
         *aReturn = OBJECT_TO_JSVAL(obj);
       }
-      NS_RELEASE(wrapper);
     }
+    else {
+      // ...it's a bona fide native object. We need to wrap it.
+      NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+        rv = xpc->WrapNative(aContext, aSupports, aIID, getter_AddRefs(wrapper));
+        if (NS_SUCCEEDED(rv)) {
+          JSObject* obj;
+          rv = wrapper->GetJSObject(&obj);
+          if (NS_SUCCEEDED(rv)) {
+            // set the return value
+            *aReturn = OBJECT_TO_JSVAL(obj);
+          }
+        }
+      }
+    }
+
     // Yes, this is bizarre, but since this method used in a very
     // specific ways in idlc-generated code, it's okay. And yes, it's
     // really the semantics that we want.
@@ -335,18 +352,25 @@ nsJSUtils::nsConvertJSValToXPCObject(nsISupports** aSupports,
     NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
     if (NS_FAILED(rv)) return JS_FALSE;
 
-    nsIXPConnectWrappedNative* wrapper;
-    rv = xpc->GetWrappedNativeOfJSObject(aContext, JSVAL_TO_OBJECT(aValue), &wrapper);
-    if (NS_FAILED(rv)) return JS_FALSE;
+    // First see if it is a native object that is masquerading as a
+    // JSObject over here in DOM land.
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    rv = xpc->GetWrappedNativeOfJSObject(aContext, JSVAL_TO_OBJECT(aValue), getter_AddRefs(wrapper));
+    if (NS_SUCCEEDED(rv)) {
+      // ...yep, so pull the native out and return it.
+      nsCOMPtr<nsISupports> native;
+      rv = wrapper->GetNative(getter_AddRefs(native));
+      if (NS_FAILED(rv)) return JS_FALSE;
 
-    nsISupports* native;
-    rv = wrapper->GetNative(&native);
-    NS_RELEASE(wrapper);
-    if (NS_FAILED(rv)) return JS_FALSE;
-
-    rv = native->QueryInterface(aIID, (void**) aSupports);
-    NS_RELEASE(native);
-    if (NS_FAILED(rv)) return JS_FALSE;
+      rv = native->QueryInterface(aIID, (void**) aSupports);
+      if (NS_FAILED(rv)) return JS_FALSE;
+    }
+    else {
+      // ...nope, we need to create a native wrapper for a real
+      // JavaScript object.
+      rv = xpc->WrapJS(aContext, JSVAL_TO_OBJECT(aValue), aIID, aSupports);
+      if (NS_FAILED(rv)) return JS_FALSE;
+    }
 
     return JS_TRUE;
   }
