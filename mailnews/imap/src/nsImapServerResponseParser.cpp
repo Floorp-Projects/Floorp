@@ -855,12 +855,12 @@ void nsImapServerResponseParser::mailbox(nsImapMailboxSpec *boxSpec)
 			boxSpec->namespaceForFolder = ns;
 		}
 
-    	char *convertedName =
-            fServerConnection.CreateUtf7ConvertedString(boxname, PR_FALSE);
+//    	char *convertedName =
+//            fServerConnection.CreateUtf7ConvertedString(boxname, PR_FALSE);
 //		PRUnichar *unicharName;
 //        unicharName = fServerConnection.CreatePRUnicharStringFromUTF7(boxname);
-    	PL_strfree(boxname);
-    	boxname = convertedName;
+//    	PL_strfree(boxname);
+//    	boxname = convertedName;
     }
 
 	if (!boxname)

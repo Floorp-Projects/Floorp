@@ -50,12 +50,13 @@
 #include "nsRDFCID.h"
 #include "nsINetSupportDialogService.h"
 #include "nsEnumeratorUtils.h"
-
+#include "nsICharsetConverterManager.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
@@ -647,7 +648,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		if (imapFolder)
 		{
 			nsXPIDLCString onlineName;
-
+			nsXPIDLString unicodeName;
 			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
 			imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
 			imapFolder->SetBoxFlags(boxFlags);
@@ -655,6 +656,9 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
 				|| nsCRT::strcmp((const char *) onlineName, folderPath))
 				imapFolder->SetOnlineName(folderPath);
+			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderPath, getter_Copies(unicodeName))))
+				child->SetName(unicodeName);
+
 		}
     }
 	return NS_OK;
@@ -1507,3 +1511,49 @@ NS_IMETHODIMP nsImapIncomingServer::RemoveChannelFromUrl(nsIMsgMailNewsUrl *aUrl
 
   return rv;
 }
+
+nsresult nsImapIncomingServer::CreatePRUnicharStringFromUTF7(const char * aSourceString, PRUnichar **aUnicodeStr)
+{
+  PRUnichar *convertedString = NULL;
+  nsresult res;
+  
+  if (!aUnicodeStr)
+	  return NS_ERROR_NULL_POINTER;
+
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+
+  if(NS_SUCCEEDED(res) && (nsnull != ccm))
+  {
+    nsString aCharset("x-imap4-modified-utf7");
+    PRUnichar *unichars = nsnull;
+    PRInt32 unicharLength;
+
+    // convert utf7 to unicode
+    nsIUnicodeDecoder* decoder = nsnull;
+
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
+    {
+      PRInt32 srcLen = PL_strlen(aSourceString);
+      res = decoder->GetMaxLength(aSourceString, srcLen, &unicharLength);
+      // temporary buffer to hold unicode string
+      unichars = new PRUnichar[unicharLength + 1];
+      if (unichars == nsnull) 
+      {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else 
+      {
+        res = decoder->Convert(aSourceString, &srcLen, unichars, &unicharLength);
+        unichars[unicharLength] = 0;
+      }
+      NS_IF_RELEASE(decoder);
+      nsString unicodeStr(unichars);
+      convertedString = unicodeStr.ToNewUnicode();
+	  delete [] unichars;
+    }
+  }
+  *aUnicodeStr = convertedString;
+  return (convertedString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
