@@ -1640,33 +1640,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 #endif // IBMBIDI
     result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
   }
-  if (NS_FAILED(result))
-  {
-    if (nsIDOMKeyEvent::DOM_VK_UP == aKeycode)
-    {
-      pos.mPreferLeft = HINTRIGHT;
-      pos.mAmount = eSelectBeginLine;
-      InvalidateDesiredX();
-    }
-    else if(nsIDOMKeyEvent::DOM_VK_DOWN == aKeycode)
-    {
-      pos.mPreferLeft = HINTLEFT;
-      pos.mAmount = eSelectEndLine;
-      InvalidateDesiredX();
-    }
-    if (nsIDOMKeyEvent::DOM_VK_UP == aKeycode || nsIDOMKeyEvent::DOM_VK_DOWN == aKeycode )
-    {
-      if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
-      {
-#ifdef IBMBIDI
-        BidiLevelFromMove(context, shell, pos.mResultContent, pos.mContentOffset, aKeycode);
-#endif // IBMBIDI
-        tHint = (HINT)pos.mPreferLeft;
-        PostReason(nsISelectionListener::MOUSEUP_REASON);//force an update as though we used the mouse.
-        result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
-      }
-    }
-  }
   if (NS_SUCCEEDED(result))
   {
     mHint = tHint; //save the hint parameter now for the next time

@@ -848,7 +848,12 @@ NS_IMETHODIMP
 nsTextInputSelectionImpl::LineMove(PRBool aForward, PRBool aExtend)
 {
   if (mFrameSelection)
-    return mFrameSelection->LineMove(aForward, aExtend);
+  {
+    nsresult result = mFrameSelection->LineMove(aForward, aExtend);
+    if (NS_FAILED(result))
+      result = CompleteMove(aForward,aExtend);
+    return result;
+  }
   return NS_ERROR_NULL_POINTER;
 }
 
