@@ -219,7 +219,7 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
 JS_PUBLIC_API(void *)
 JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
 {
-    JSArena **ap, *a;
+    JSArena **ap, *a, *b;
     jsuword boff, aoff, extra, hdrsz, gross;
 
     /*
@@ -234,6 +234,7 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
         while ((a = *ap) != pool->current)
             ap = &a->next;
     }
+
     JS_ASSERT(a->base == (jsuword)p);
     boff = JS_UPTRDIFF(a->base, a);
     aoff = size + incr;
@@ -244,12 +245,24 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
     a = (JSArena *) realloc(a, gross);
     if (!a)
         return NULL;
-    if (pool->current == *ap)
-        pool->current = a;
-    *ap = a;
 #ifdef JS_ARENAMETER
     pool->stats.nreallocs++;
 #endif
+
+    if (a != *ap) {
+        /* Oops, realloc moved the allocation: update other pointers to a. */
+        if (pool->current == *ap)
+            pool->current = a;
+        b = a->next;
+        if (b && b->avail - b->base > pool->arenasize) {
+            JS_ASSERT(GET_HEADER(pool, b) == &(*ap)->next);
+            SET_HEADER(pool, b, &a->next);
+        }
+
+        /* Now update *ap, the next link of the arena before a. */
+        *ap = a;
+    }
+
     a->base = ((jsuword)a + hdrsz) & ~HEADER_BASE_MASK(pool);
     a->limit = (jsuword)a + gross;
     a->avail = JS_ARENA_ALIGN(pool, a->base + aoff);
