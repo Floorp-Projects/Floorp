@@ -660,6 +660,7 @@ void CBrowserView::OnFileSaveAs()
 		CString strFullPath = cf.GetPathName(); // Will be like: c:\tmp\junk.htm
 		char *pStrFullPath = strFullPath.GetBuffer(0); // Get char * for later use
 		
+		BOOL bSaveAll = FALSE;		
 		CString strDataPath; 
 		char *pStrDataPath = NULL;
 		if(cf.m_ofn.nFilterIndex == 2) 
@@ -667,6 +668,8 @@ void CBrowserView::OnFileSaveAs()
 			// cf.m_ofn.nFilterIndex == 2 indicates
 			// user want to save the complete document including
 			// all frames, images, scripts, stylesheets etc.
+
+			bSaveAll = TRUE;
 
 			int idxPeriod = strFullPath.ReverseFind('.');
 			strDataPath = strFullPath.Mid(0, idxPeriod);
@@ -694,7 +697,10 @@ void CBrowserView::OnFileSaveAs()
                 NS_NewLocalFile(pStrDataPath, TRUE, getter_AddRefs(dataPath));
             }
 
-			persist->SaveDocument(nsnull, file, dataPath);
+            if(bSaveAll)
+                persist->SaveDocument(nsnull, file, dataPath);
+            else
+                persist->SaveURI(nsnull, nsnull, file);
         }
 	}
 }
