@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.6 2003/02/07 23:41:15 wtc%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.7 2003/03/21 20:57:07 wtc%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -55,7 +55,6 @@
 #include "pk11pqg.h"
 
 #ifdef USES_LINKS
-#include <libgen.h>
 #include <unistd.h>
 #include <sys/param.h>
 #include <sys/types.h>
@@ -258,7 +257,7 @@ main (int argc, char **argv)
 	goto loser;
     }
     if (S_ISLNK(stat_buf.st_mode)) {
-	char *path,*dirpath;
+	char *dirpath,*dirend;
 	ret = readlink(input_file, link_buf, sizeof(link_buf) - 1);
 	if (ret < 0) {
 	   perror(input_file);
@@ -266,16 +265,24 @@ main (int argc, char **argv)
 	}
 	link_buf[ret] = 0;
 	link_file = mkoutput(input_file);
-	path = PORT_Strdup(input_file);
-	dirpath = dirname(path);
-	ret = chdir(dirpath);
-	if (ret < 0) {
-	   perror(dirpath);
-	   goto loser;
+	/* get the dirname of input_file */
+	dirpath = PORT_Strdup(input_file);
+	dirend = PORT_Strrchr(dirpath, '/');
+	if (dirend) {
+	    *dirend = '\0';
+	    ret = chdir(dirpath);
+	    if (ret < 0) {
+		perror(dirpath);
+		goto loser;
+	    }
 	}
-	PORT_Free(path);
+	PORT_Free(dirpath);
 	input_file = link_buf;
-	link_file = basename(link_file);
+	/* get the basename of link_file */
+	dirend = PORT_Strrchr(link_file, '/');
+	if (dirend) {
+	    link_file = dirend + 1;
+	}
     }
 #endif
     if (output_file == NULL) {
