@@ -15,10 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include <Menus.h>
+
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsIImageManager.h"
 #include <stdlib.h>
+
 
 static nsNativeViewerApp* gTheApp;
 
@@ -48,18 +51,33 @@ nsNativeBrowserWindow::~nsNativeBrowserWindow()
 {
 }
 
-static void MenuProc(PRUint32 aId) 
+/*static void MenuProc(PRUint32 aId) 
 {
   // XXX our menus are horked: we can't support multiple windows!
   nsBrowserWindow* bw = (nsBrowserWindow*)
     nsBrowserWindow::gBrowsers.ElementAt(0);
   bw->DispatchMenuItem(aId);
-}
+}*/ // XXX Nothing was calling this function
+
+// why is width passed to this function? XXX Platform specific?
 
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
+  MenuHandle theMenu;
   //CreateViewerMenus(XtParent((Widget)mWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
+  int i;
+  
+  for (i = 2000; i <= 2004; ++i)
+  {
+  	theMenu = GetMenu (i);
+  	if (i < 2003)
+  		InsertMenu (theMenu, 0);
+    else
+    	InsertMenu (theMenu, -1);
+  }
+  AppendResMenu (GetMenuHandle (2000), 'DRVR');
+  DrawMenuBar();
   return NS_OK;
 }
 
