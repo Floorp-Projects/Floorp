@@ -105,7 +105,7 @@ public:
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -491,7 +491,7 @@ nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                              PRInt32& aHint) const
+                                              nsChangeHint& aHint) const
 {
   nsIFormControlFrame* fcFrame = GetSelectFrame();
   

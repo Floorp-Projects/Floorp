@@ -768,11 +768,11 @@ nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
 
 NS_IMETHODIMP
 nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
-                                       nsIContent*  aContent,
-                                       PRInt32      aNameSpaceID,
-                                       nsIAtom*     aAttribute,
-                                       PRInt32      aModType, 
-                                       PRInt32      aHint)
+                                    nsIContent*  aContent,
+                                    PRInt32      aNameSpaceID,
+                                    nsIAtom*     aAttribute,
+                                    PRInt32      aModType, 
+                                    nsChangeHint aHint)
 {
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.
@@ -1149,9 +1149,9 @@ nsTreeContentView::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
 
 NS_IMETHODIMP
 nsTreeContentView::StyleRuleChanged(nsIDocument *aDocument,
-                                       nsIStyleSheet* aStyleSheet,
-                                       nsIStyleRule* aStyleRule,
-                                       PRInt32 aHint)
+                                    nsIStyleSheet* aStyleSheet,
+                                    nsIStyleRule* aStyleRule,
+                                    nsChangeHint aHint)
 {
   return NS_OK;
 }

@@ -139,7 +139,7 @@ public:
                                 PRInt32      aNameSpaceID,
                                 nsIAtom*     aAttribute,
                                 PRInt32      aModType, 
-                                PRInt32      aHint);
+                                nsChangeHint aHint);
 
     NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument);
 
@@ -1778,7 +1778,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
                                       PRInt32      aNameSpaceID,
                                       nsIAtom*     aAttribute,
                                       PRInt32      aModType, 
-                                      PRInt32      aHint)
+                                      nsChangeHint aHint)
 {
     // Handle "open" and "close" cases. We do this handling before
     // we've notified the observer, so that content is already created

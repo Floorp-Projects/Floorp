@@ -61,7 +61,7 @@ nsStyleChangeList::~nsStyleChangeList(void)
 
 nsresult 
 nsStyleChangeList::ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, nsIContent*& aContent, 
-                            PRInt32& aHint) const
+                            nsChangeHint& aHint) const
 {
   if ((0 <= aIndex) && (aIndex < mCount)) {
     aFrame = mArray[aIndex].mFrame;
@@ -73,12 +73,14 @@ nsStyleChangeList::ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, nsIContent*& aCon
 }
 
 nsresult 
-nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 aHint)
+nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHint)
 {
-  NS_ASSERTION(aFrame || (aHint >= NS_STYLE_HINT_FRAMECHANGE), "must have frame");
-  NS_ASSERTION(aContent || (aHint < NS_STYLE_HINT_FRAMECHANGE), "must have content");
+  NS_ASSERTION(aFrame || (aHint & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc)),
+               "must have frame");
+  NS_ASSERTION(aContent || !(aHint & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc)),
+               "must have content");
 
-  if ((0 < mCount) && (NS_STYLE_HINT_FRAMECHANGE == aHint)) { // filter out all other changes for same content
+  if ((0 < mCount) && (aHint & nsChangeHint_ReconstructFrame)) { // filter out all other changes for same content
     if (aContent) {
       PRInt32 index = mCount;
       while (0 < index--) {
@@ -95,9 +97,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 
 
   PRInt32 last = mCount - 1;
   if ((0 < mCount) && aFrame && (aFrame == mArray[last].mFrame)) { // same as last frame
-    if (mArray[last].mHint < aHint) {
-      mArray[last].mHint = aHint;
-    }
+    NS_UpdateHint(mArray[last].mHint, aHint);
   }
   else {
     if (mCount == mArraySize) {

@@ -44,6 +44,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
+#include "nsStyleConsts.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -130,13 +131,13 @@ public:
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType, 
-                              PRInt32         aHint);
+                              nsChangeHint    aHint);
 
   // Style change notifications
   NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
                               nsIStyleSheet*  aStyleSheet,
                               nsIStyleRule*   aStyleRule,
-                              PRInt32         aHint); // See nsStyleConsts fot hint values
+                              nsChangeHint    aHint);
 
   NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
                             nsIStyleSheet*  aStyleSheet,

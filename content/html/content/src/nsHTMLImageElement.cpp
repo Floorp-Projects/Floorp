@@ -129,7 +129,7 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
@@ -559,7 +559,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 NS_IMETHODIMP
 nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32 aModType,
-                                             PRInt32& aHint) const
+                                             nsChangeHint& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::usemap) ||
       (aAttribute == nsHTMLAtoms::ismap)  ||

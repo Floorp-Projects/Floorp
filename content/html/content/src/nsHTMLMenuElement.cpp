@@ -82,7 +82,7 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -224,7 +224,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aD
 
 NS_IMETHODIMP
 nsHTMLMenuElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                            PRInt32& aHint) const
+                                            nsChangeHint& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     aHint = NS_STYLE_HINT_REFLOW;

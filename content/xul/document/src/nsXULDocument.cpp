@@ -2156,7 +2156,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType, 
-                                PRInt32 aHint)
+                                nsChangeHint aHint)
 {
     nsresult rv;
 
@@ -2359,8 +2359,8 @@ nsXULDocument::AttributeWillChange(nsIContent* aChild,
 
 NS_IMETHODIMP
 nsXULDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
-                                  nsIStyleRule* aStyleRule,
-                                  PRInt32 aHint)
+                                nsIStyleRule* aStyleRule,
+                                nsChangeHint aHint)
 {
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];

@@ -39,6 +39,7 @@
 #define nsIDocumentObserver_h___
 
 #include "nsISupports.h"
+#include "nsChangeHint.h"
 
 class nsIAtom;
 class nsIContent;
@@ -159,7 +160,7 @@ public:
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aModType,    
-                              PRInt32      aHint) = 0;  // See nsStyleConsts fot hint values
+                              nsChangeHint aHint) = 0;
 
   /**
    * Notifcation that the content model has had data appended to the
@@ -288,7 +289,7 @@ public:
   NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+                              nsChangeHint aHint) = 0;
 
   /**
    * A StyleRule has just been added to a style sheet.

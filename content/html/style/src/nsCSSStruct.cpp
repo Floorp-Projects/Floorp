@@ -45,6 +45,7 @@
 #include "nsCSSProps.h"
 #include "nsUnitConversion.h"
 #include "nsVoidArray.h"
+#include "nsFont.h"
 
 #include "nsStyleConsts.h"
 
@@ -4865,7 +4866,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, const nsCS
       PRInt32 intValue = aValue.GetIntValue();
       if (NS_STYLE_TEXT_DECORATION_NONE != intValue) {
         PRInt32 mask;
-        for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE; 
+        for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
              mask <= NS_STYLE_TEXT_DECORATION_BLINK; 
              mask <<= 1) {
           if ((mask & intValue) == mask) {
@@ -6162,19 +6163,17 @@ nsCSSDeclaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn)
   return NS_OK;
 }
 
-PRInt32
+nsChangeHint
 nsCSSDeclaration::GetStyleImpact() const
 {
-  PRInt32 hint = NS_STYLE_HINT_NONE;
+  nsChangeHint hint = NS_STYLE_HINT_NONE;
   if (nsnull != mOrder) {
     PRInt32 count = mOrder->Count();
     PRInt32 index;
     for (index = 0; index < count; index++) {
       nsCSSProperty property = (nsCSSProperty)mOrder->ValueAt(index);
       if (eCSSProperty_UNKNOWN < property) {
-        if (hint < nsCSSProps::kHintTable[property]) {
-          hint = nsCSSProps::kHintTable[property];
-        }
+        NS_UpdateHint(hint, nsCSSProps::kHintTable[property]);
       }
     }
   }

@@ -40,6 +40,7 @@
 #include "nsISupports.h"
 #include "nsIStatefulFrame.h"
 #include "nsString.h"
+#include "nsChangeHint.h"
 
 class nsIAtom;
 class nsIContent;
@@ -171,8 +172,8 @@ public:
                                    PRInt32 aAttrNameSpaceID,
                                    nsIAtom* aAttribute,
                                    nsStyleChangeList& aChangeList,
-                                   PRInt32 aMinChange,
-                                   PRInt32& aTopLevelChange) = 0;
+                                   nsChangeHint aMinChange,
+                                   nsChangeHint& aTopLevelChange) = 0;
 
   // Determine whether an attribute affects style
   NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,

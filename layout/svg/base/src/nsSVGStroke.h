@@ -42,6 +42,7 @@
 #include "nsSVGRenderItem.h"
 #include "libart-incs.h"
 #include "nsStyleConsts.h"
+#include "nsString.h"
 
 struct nsSVGStrokeStyle 
 {

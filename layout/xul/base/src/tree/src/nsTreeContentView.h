@@ -50,6 +50,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
 #include "nsITreeContentView.h"
+#include "nsStyleConsts.h"
 
 class Property;
 
@@ -99,7 +100,7 @@ class nsTreeContentView : public nsITreeView,
                                 PRInt32      aNameSpaceID,
                                 nsIAtom*     aAttribute,
                                 PRInt32      aModType, 
-                                PRInt32      aHint);
+                                nsChangeHint aHint);
 
     NS_IMETHOD ContentAppended(nsIDocument *aDocument,
                                nsIContent* aContainer,
@@ -134,7 +135,7 @@ class nsTreeContentView : public nsITreeView,
     NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                                 nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule,
-                                PRInt32 aHint);
+                                nsChangeHint aHint);
 
     NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,

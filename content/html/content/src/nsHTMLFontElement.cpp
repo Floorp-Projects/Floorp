@@ -78,7 +78,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -306,16 +306,15 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                            PRInt32 aModType,
-                                            PRInt32& aHint) const
+nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
+                                            nsChangeHint& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::color) {
     aHint = NS_STYLE_HINT_VISUAL;
   }
   else if ((aAttribute == nsHTMLAtoms::face) ||
            (aAttribute == nsHTMLAtoms::pointSize) ||
-           (aAttribute == nsHTMLAtoms::size) ||
+            (aAttribute == nsHTMLAtoms::size) ||
            (aAttribute == nsHTMLAtoms::fontWeight)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }

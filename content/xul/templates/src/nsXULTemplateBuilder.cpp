@@ -349,7 +349,7 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
                                        PRInt32      aNameSpaceID,
                                        nsIAtom*     aAttribute,
                                        PRInt32      aModType, 
-                                       PRInt32      aHint)
+                                       nsChangeHint aHint)
 {
     // Check for a change to the 'ref' attribute on an atom, in which
     // case we may need to nuke and rebuild the entire content model
@@ -422,7 +422,7 @@ NS_IMETHODIMP
 nsXULTemplateBuilder::StyleRuleChanged(nsIDocument *aDocument,
                                        nsIStyleSheet* aStyleSheet,
                                        nsIStyleRule* aStyleRule,
-                                       PRInt32 aHint)
+                                       nsChangeHint aHint)
 {
     return NS_OK;
 }

@@ -208,7 +208,7 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     // set as string value to avoid another string copy
-    PRBool  impact = NS_STYLE_HINT_NONE;
+    nsChangeHint impact = NS_STYLE_HINT_NONE;
     GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
 
     nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
@@ -217,7 +217,8 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
       NS_ENSURE_SUCCESS(result, result);
     }
     result = mAttributes->SetAttributeFor(aAttribute, aValue, 
-                                          (NS_STYLE_HINT_CONTENT < impact),
+                                          (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
+                                                      | nsChangeHint_Content)) != 0,
                                           this, sheet);
   }
 

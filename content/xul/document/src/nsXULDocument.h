@@ -287,7 +287,7 @@ public:
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType, 
-                                PRInt32 aHint); // See nsStyleConsts fot hint values
+                                nsChangeHint aHint);
 
     NS_IMETHOD ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer);
@@ -310,7 +310,7 @@ public:
 
     NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule,
-                                PRInt32 aHint); // See nsStyleConsts fot hint values
+                                nsChangeHint aHint);
 
     NS_IMETHOD StyleRuleAdded(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);

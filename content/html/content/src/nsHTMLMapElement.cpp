@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIDOMHTMLMAPELEMENT
 
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
 #ifdef DEBUG
@@ -217,7 +217,7 @@ NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name)
 
 NS_IMETHODIMP
 nsHTMLMapElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                           PRInt32& aHint) const
+                                           nsChangeHint& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::name) {
     aHint = NS_STYLE_HINT_RECONSTRUCT_ALL;

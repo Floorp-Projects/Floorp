@@ -4907,14 +4907,14 @@ void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
       nsIFrameDebug*  frameDebug;
       if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
        frameDebug->GetFrameName(name);
-       printf("%s %p ", NS_LossyConvertUCS2toASCII(name).get(), aFrame);
+       printf("%s %p ", NS_LossyConvertUCS2toASCII(name).get(), (void*)aFrame);
       }
       else {
-        printf("%s %p ", frameTypeInfo->mNameAbbrev, aFrame);
+        printf("%s %p ", frameTypeInfo->mNameAbbrev, (void*)aFrame);
       }
     }
     else {
-      printf("%s %p ", frameTypeInfo->mNameAbbrev, aFrame);
+      printf("%s %p ", frameTypeInfo->mNameAbbrev, (void*)aFrame);
     }
   }
 }
@@ -5020,7 +5020,7 @@ void DR_State::PrettyUC(nscoord aSize,
     strcpy(aBuf, "UC");
   }
   else {
-    if(0xdeadbeef == aSize)
+    if(0xdeadbeefU == aSize)
     {
       strcpy(aBuf, "deadbeef");
     }
@@ -5075,11 +5075,11 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
     nsIFrame* inFlow;
     aFrame->GetPrevInFlow(&inFlow);
     if (inFlow) {
-      printf("pif=%p ", inFlow);
+      printf("pif=%p ", (void*)inFlow);
     }
     aFrame->GetNextInFlow(&inFlow);
     if (inFlow) {
-      printf("nif=%p ", inFlow);
+      printf("nif=%p ", (void*)inFlow);
     }
     if (aChanged) 
       printf("CHANGED \n");

@@ -472,7 +472,7 @@ public:
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
     NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule);
     NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                        PRInt32& aHint) const;
+                                        nsChangeHint& aHint) const;
 
 
     // nsIXULContent

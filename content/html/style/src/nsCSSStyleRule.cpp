@@ -1284,7 +1284,7 @@ DOMCSSDeclarationImpl::ParsePropertyValue(const nsAString& aPropName,
     return result;
   }
   
-  PRInt32 hint;
+  nsChangeHint hint;
   if (owningDoc) {
     owningDoc->BeginUpdate();
   }
@@ -1348,7 +1348,7 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAString& aDecl,
         }
       }
 
-      PRInt32 hint;
+      nsChangeHint hint;
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
                                                     aParseOnlyOneDecl, &hint);
 

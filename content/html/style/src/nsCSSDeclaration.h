@@ -592,7 +592,7 @@ public:
   PRUint32 Count();
   nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn);
 
-  PRInt32 GetStyleImpact() const;
+  nsChangeHint GetStyleImpact() const;
 
   nsresult ToString(nsAString& aString);
 

@@ -86,7 +86,7 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                nsHTMLAtoms::style);
     }
 
-    PRInt32 hint = NS_STYLE_HINT_NONE;
+    nsChangeHint hint = NS_STYLE_HINT_NONE;
 
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
     nsCSSValue val;
@@ -271,7 +271,7 @@ nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAString& aPropName,
     return result;
   }
 
-  PRInt32 hint = NS_STYLE_HINT_NONE;
+  nsChangeHint hint = NS_STYLE_HINT_NONE;
   if (doc) {
     doc->BeginUpdate();
     doc->AttributeWillChange(mContent, kNameSpaceID_None, nsHTMLAtoms::style);
@@ -315,7 +315,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAString& aDecl,
                                       getter_AddRefs(cssParser));
 
     if (NS_SUCCEEDED(result)) {
-      PRInt32 hint = NS_STYLE_HINT_NONE;
+      nsChangeHint hint = NS_STYLE_HINT_NONE;
       if (doc) {
         doc->BeginUpdate();
 
@@ -342,10 +342,10 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAString& aDecl,
         }
       }
   
-      PRInt32 newHint = NS_STYLE_HINT_NONE;
+      nsChangeHint newHint = NS_STYLE_HINT_NONE;
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
                                                     aParseOnlyOneDecl, &newHint);
-      hint = PR_MAX(hint, newHint);
+      NS_UpdateHint(hint, newHint);
       
       if (result == NS_CSS_PARSER_DROP_DECLARATION) {
         SetCSSDeclaration(declClone);

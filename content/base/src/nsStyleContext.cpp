@@ -40,7 +40,6 @@
  
 #include "nsStyleConsts.h"
 #include "nsString.h"
-#include "nsUnitConversion.h"
 #include "nsIPresContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
@@ -54,6 +53,7 @@
 #include "prenv.h"
 
 #include "nsRuleNode.h"
+#include "nsUnitConversion.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -102,7 +102,7 @@ public:
 
   virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
 
-  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint);
+  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint);
 
 #ifdef DEBUG
   virtual void DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
@@ -547,7 +547,7 @@ nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule
 }
 
 NS_IMETHODIMP
-nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
+nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint)
 {
   if (aOther) {
     // If our rule nodes are the same, then we are looking at the same style
@@ -560,71 +560,70 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
     if (ruleNode == mRuleNode)
       return NS_OK;
 
-    PRInt32 maxHint = NS_STYLE_HINT_MAX;
-    PRInt32 hint;
+    nsChangeHint maxHint = NS_STYLE_HINT_FRAMECHANGE;
     
     // We begin by examining those style structs that are capable of causing the maximal
     // difference, a FRAMECHANGE.
-    // FRAMECHANGE Structs: Display, XUL, Content, UserInterface, Quotes
-    if (aHint < maxHint) {
+    // FRAMECHANGE Structs: Display, XUL, Content, UserInterface, Visibility, Quotes
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleDisplay* display = (const nsStyleDisplay*)PeekStyleData(eStyleStruct_Display);
       if (display) {
         const nsStyleDisplay* otherDisplay = (const nsStyleDisplay*)aOther->GetStyleData(eStyleStruct_Display);
         if (display != otherDisplay) {
-          hint = display->CalcDifference(*otherDisplay);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, display->CalcDifference(*otherDisplay));
         }
       }
     }
 
 #ifdef INCLUDE_XUL
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleXUL* xul = (const nsStyleXUL*)PeekStyleData(eStyleStruct_XUL);
       if (xul) {
         const nsStyleXUL* otherXUL = (const nsStyleXUL*)aOther->GetStyleData(eStyleStruct_XUL);
         if (xul != otherXUL) {
-          hint = xul->CalcDifference(*otherXUL);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, xul->CalcDifference(*otherXUL));
         }
       }
     }
 #endif
 
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleContent* content = (const nsStyleContent*)PeekStyleData(eStyleStruct_Content);
       if (content) {
         const nsStyleContent* otherContent = (const nsStyleContent*)aOther->GetStyleData(eStyleStruct_Content);
         if (content != otherContent) {
-          hint = content->CalcDifference(*otherContent);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, content->CalcDifference(*otherContent));
         }
       }
     }
 
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleUserInterface* ui = (const nsStyleUserInterface*)PeekStyleData(eStyleStruct_UserInterface);
       if (ui) {
         const nsStyleUserInterface* otherUI = (const nsStyleUserInterface*)aOther->GetStyleData(eStyleStruct_UserInterface);
         if (ui != otherUI) {
-          hint = ui->CalcDifference(*otherUI);
-          if (aHint < hint) 
-            aHint = hint;
+          NS_UpdateHint(aHint, ui->CalcDifference(*otherUI));
+        }
+      }
+    }
+
+    if (!NS_IsHintSubset(maxHint, aHint)) {
+      const nsStyleVisibility* vis = (const nsStyleVisibility*)PeekStyleData(eStyleStruct_Visibility);
+      if (vis) {
+        const nsStyleVisibility* otherVis = (const nsStyleVisibility*)aOther->GetStyleData(eStyleStruct_Visibility);
+        if (vis != otherVis) {
+          NS_UpdateHint(aHint, vis->CalcDifference(*otherVis));
         }
       }
     }
 
 #ifdef MOZ_SVG
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleSVG* svg = (const nsStyleSVG*)PeekStyleData(eStyleStruct_SVG);
       if (svg) {
         const nsStyleSVG* otherSVG = (const nsStyleSVG*)aOther->GetStyleData(eStyleStruct_SVG);
         if (svg != otherSVG) {
-          hint = svg->CalcDifference(*otherSVG);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, svg->CalcDifference(*otherSVG));
         }
       }
     }
@@ -632,14 +631,12 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
 
     // If the quotes implementation is ever going to change we might not need
     // a framechange here and a reflow should be sufficient.  See bug 35768.
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleQuotes* quotes = (const nsStyleQuotes*)PeekStyleData(eStyleStruct_Quotes);
       if (quotes) {
         const nsStyleQuotes* otherQuotes = (const nsStyleQuotes*)aOther->GetStyleData(eStyleStruct_Quotes);
         if (quotes != otherQuotes) {
-          hint = quotes->CalcDifference(*otherQuotes);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, quotes->CalcDifference(*otherQuotes));
         }
       }
     }
@@ -649,135 +646,103 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
         
     // The following structs cause (as their maximal difference) a reflow to occur.
     // REFLOW Structs: Font, Margin, Padding, Border, List, Position, Text, TextReset,
-    // Visibility, Table, TableBorder
-    if (aHint < maxHint) {
+    // Table, TableBorder
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleFont* font = (const nsStyleFont*)PeekStyleData(eStyleStruct_Font);
       if (font) {
         const nsStyleFont* otherFont = (const nsStyleFont*)aOther->GetStyleData(eStyleStruct_Font);
         if (font != otherFont) {
-          hint = font->CalcDifference(*otherFont);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, font->CalcDifference(*otherFont));
         }
       }
     }
 
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleMargin* margin = (const nsStyleMargin*)PeekStyleData(eStyleStruct_Margin);
       if (margin) {
         const nsStyleMargin* otherMargin = (const nsStyleMargin*)aOther->GetStyleData(eStyleStruct_Margin);
         if (margin != otherMargin) {
-          hint = margin->CalcDifference(*otherMargin);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, margin->CalcDifference(*otherMargin));
         }
       }
     }
 
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStylePadding* padding = (const nsStylePadding*)PeekStyleData(eStyleStruct_Padding);
       if (padding) {
         const nsStylePadding* otherPadding = (const nsStylePadding*)aOther->GetStyleData(eStyleStruct_Padding);
         if (padding != otherPadding) {
-          hint = padding->CalcDifference(*otherPadding);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, padding->CalcDifference(*otherPadding));
         }
       }
     }
     
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleBorder* border = (const nsStyleBorder*)PeekStyleData(eStyleStruct_Border);
       if (border) {
         const nsStyleBorder* otherBorder = (const nsStyleBorder*)aOther->GetStyleData(eStyleStruct_Border);
         if (border != otherBorder) {
-          hint = border->CalcDifference(*otherBorder);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, border->CalcDifference(*otherBorder));
         }
       }
     }
 
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleList* list = (const nsStyleList*)PeekStyleData(eStyleStruct_List);
       if (list) {
         const nsStyleList* otherList = (const nsStyleList*)aOther->GetStyleData(eStyleStruct_List);
         if (list != otherList) {
-          hint = list->CalcDifference(*otherList);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, list->CalcDifference(*otherList));
         }
       }
     }
     
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStylePosition* pos = (const nsStylePosition*)PeekStyleData(eStyleStruct_Position);
       if (pos) {
         const nsStylePosition* otherPosition = (const nsStylePosition*)aOther->GetStyleData(eStyleStruct_Position);
         if (pos != otherPosition) {
-          hint = pos->CalcDifference(*otherPosition);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, pos->CalcDifference(*otherPosition));
         }
       }
     }
 
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleText* text = (const nsStyleText*)PeekStyleData(eStyleStruct_Text);
       if (text) {
         const nsStyleText* otherText = (const nsStyleText*)aOther->GetStyleData(eStyleStruct_Text);
         if (text != otherText) {
-          hint = text->CalcDifference(*otherText);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, text->CalcDifference(*otherText));
         }
       }
     }
     
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleTextReset* text = (const nsStyleTextReset*)PeekStyleData(eStyleStruct_TextReset);
       if (text) {
         const nsStyleTextReset* otherText = (const nsStyleTextReset*)aOther->GetStyleData(eStyleStruct_TextReset);
         if (text != otherText) {
-          hint = text->CalcDifference(*otherText);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, text->CalcDifference(*otherText));
         }
       }
     }
 
-    if (aHint < maxHint) {
-      const nsStyleVisibility* vis = (const nsStyleVisibility*)PeekStyleData(eStyleStruct_Visibility);
-      if (vis) {
-        const nsStyleVisibility* otherVis = (const nsStyleVisibility*)aOther->GetStyleData(eStyleStruct_Visibility);
-        if (vis != otherVis) {
-          hint = vis->CalcDifference(*otherVis);
-          if (aHint < hint)
-            aHint = hint;
-        }
-      }
-    }
-
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleTable* table = (const nsStyleTable*)PeekStyleData(eStyleStruct_Table);
       if (table) {
         const nsStyleTable* otherTable = (const nsStyleTable*)aOther->GetStyleData(eStyleStruct_Table);
         if (table != otherTable) {
-          hint = table->CalcDifference(*otherTable);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, table->CalcDifference(*otherTable));
         }
       }
     }
     
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleTableBorder* table = (const nsStyleTableBorder*)PeekStyleData(eStyleStruct_TableBorder);
       if (table) {
         const nsStyleTableBorder* otherTable = (const nsStyleTableBorder*)aOther->GetStyleData(eStyleStruct_TableBorder);
         if (table != otherTable) {
-          hint = table->CalcDifference(*otherTable);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, table->CalcDifference(*otherTable));
         }
       }
     }
@@ -788,50 +753,42 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
 
     // The following structs cause (as their maximal difference) a re-render to occur.
     // VISUAL Structs: Color, Background, Outline, UIReset
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleColor* color = (const nsStyleColor*)PeekStyleData(eStyleStruct_Color);
       if (color) {
         const nsStyleColor* otherColor = (const nsStyleColor*)aOther->GetStyleData(eStyleStruct_Color);
         if (color != otherColor) {
-          hint = color->CalcDifference(*otherColor);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, color->CalcDifference(*otherColor));
         }
       }
     }
 
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleBackground* background = (const nsStyleBackground*)PeekStyleData(eStyleStruct_Background);
       if (background) {
         const nsStyleBackground* otherBackground = (const nsStyleBackground*)aOther->GetStyleData(eStyleStruct_Background);
         if (background != otherBackground) {
-          hint = background->CalcDifference(*otherBackground);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, background->CalcDifference(*otherBackground));
         }
       }
     }
     
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleOutline* outline = (const nsStyleOutline*)PeekStyleData(eStyleStruct_Outline);
       if (outline) {
         const nsStyleOutline* otherOutline = (const nsStyleOutline*)aOther->GetStyleData(eStyleStruct_Outline);
         if (outline != otherOutline) {
-          hint = outline->CalcDifference(*otherOutline);
-          if (aHint < hint)
-            aHint = hint;
+          NS_UpdateHint(aHint, outline->CalcDifference(*otherOutline));
         }
       }
     }
     
-    if (aHint < maxHint) {
+    if (!NS_IsHintSubset(maxHint, aHint)) {
       const nsStyleUIReset* ui = (const nsStyleUIReset*)PeekStyleData(eStyleStruct_UIReset);
       if (ui) {
         const nsStyleUIReset* otherUI = (const nsStyleUIReset*)aOther->GetStyleData(eStyleStruct_UIReset);
         if (ui != otherUI) {
-          hint = ui->CalcDifference(*otherUI);
-          if (aHint < hint) 
-            aHint = hint;
+          NS_UpdateHint(aHint, ui->CalcDifference(*otherUI));
         }
       }
     }

@@ -1476,7 +1476,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute, PRInt32 aModType, PRInt32 aHint)
+                                 nsIAtom* aAttribute, PRInt32 aModType, nsChangeHint aHint)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 

@@ -249,7 +249,7 @@ nsStyleFont::Destroy(nsIPresContext* aContext) {
   aContext->FreeToShell(sizeof(nsStyleFont), this);
 }
 
-PRInt32 nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
+nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
 {
   if (mSize == aOther.mSize) {
     return CalcFontDifference(mFont, aOther.mFont);
@@ -257,7 +257,7 @@ PRInt32 nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
   return NS_STYLE_HINT_REFLOW;
 }
 
-PRInt32 nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)
+nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)
 {
   if ((aFont1.size == aFont2.size) && 
       (aFont1.sizeAdjust == aFont2.sizeAdjust) && 
@@ -346,7 +346,7 @@ void nsStyleMargin::RecalcData()
     mHasCachedMargin = PR_FALSE;
 }
 
-PRInt32 nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
+nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
 {
   if (mMargin == aOther.mMargin) {
     return NS_STYLE_HINT_NONE;
@@ -404,7 +404,7 @@ void nsStylePadding::RecalcData()
     mHasCachedPadding = PR_FALSE;
 }
 
-PRInt32 nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
+nsChangeHint nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
 {
   if (mPadding == aOther.mPadding) {
     return NS_STYLE_HINT_NONE;
@@ -552,7 +552,7 @@ void nsStyleBorder::RecalcData()
   }
 }
 
-PRInt32 nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
+nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
   if ((mBorder == aOther.mBorder) && 
       (mFloatEdge == aOther.mFloatEdge)) {
@@ -668,8 +668,7 @@ nsStyleOutline::RecalcData(void)
     mHasCachedOutline = PR_FALSE;
 }
 
-PRInt32 
-nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
+nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 {
   if ((mOutlineWidth != aOther.mOutlineWidth) ||
       (mOutlineStyle != aOther.mOutlineStyle) ||
@@ -701,7 +700,7 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
   mListStyleImage = aSource.mListStyleImage;
 }
 
-PRInt32 nsStyleList::CalcDifference(const nsStyleList& aOther) const
+nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
 {
   if (mListStylePosition == aOther.mListStylePosition)
     if (mListStyleImage == aOther.mListStyleImage)
@@ -741,8 +740,7 @@ nsStyleXUL::nsStyleXUL(const nsStyleXUL& aSource)
   memcpy((nsStyleXUL*)this, &aSource, sizeof(nsStyleXUL));
 }
 
-PRInt32 
-nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
+nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
 {
   if (mBoxAlign == aOther.mBoxAlign &&
       mBoxDirection == aOther.mBoxDirection &&
@@ -804,8 +802,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mStrokeWidth = aSource.mStrokeWidth;
 }
 
-PRInt32 
-nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
+nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
   if ( mFill.mType       != aOther.mFill.mType       ||
        mFillOpacity      != aOther.mFillOpacity      ||
@@ -860,7 +857,7 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   memcpy((nsStylePosition*)this, &aSource, sizeof(nsStylePosition));
 }
 
-PRInt32 nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
+nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
 {
   if ((mOffset == aOther.mOffset) &&
       (mWidth == aOther.mWidth) &&
@@ -898,7 +895,7 @@ nsStyleTable::nsStyleTable(const nsStyleTable& aSource)
   memcpy((nsStyleTable*)this, &aSource, sizeof(nsStyleTable));
 }
 
-PRInt32 nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
+nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
 {
   if ((mLayoutStrategy == aOther.mLayoutStrategy) &&
       (mFrame == aOther.mFrame) &&
@@ -936,7 +933,7 @@ nsStyleTableBorder::nsStyleTableBorder(const nsStyleTableBorder& aSource)
   memcpy((nsStyleTableBorder*)this, &aSource, sizeof(nsStyleTableBorder));
 }
 
-PRInt32 nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther) const
+nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther) const
 {
   if ((mBorderCollapse == aOther.mBorderCollapse) &&
       (mCaptionSide == aOther.mCaptionSide) &&
@@ -964,7 +961,7 @@ nsStyleColor::nsStyleColor(const nsStyleColor& aSource)
   mColor = aSource.mColor;
 }
 
-PRInt32 nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
+nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
 {
   if (mColor == aOther.mColor)
     return NS_STYLE_HINT_NONE;
@@ -996,11 +993,11 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   mBackgroundImage = aSource.mBackgroundImage;
 }
 
-PRInt32 nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
+nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
 {
   if (mBackgroundAttachment != aOther.mBackgroundAttachment
-    && (NS_STYLE_BG_ATTACHMENT_FIXED == mBackgroundAttachment) ||
-      (NS_STYLE_BG_ATTACHMENT_FIXED == aOther.mBackgroundAttachment))
+    && ((NS_STYLE_BG_ATTACHMENT_FIXED == mBackgroundAttachment) ||
+        (NS_STYLE_BG_ATTACHMENT_FIXED == aOther.mBackgroundAttachment)))
     // this might require creation of a view
     return NS_STYLE_HINT_FRAMECHANGE;
 
@@ -1050,7 +1047,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mClip = aSource.mClip;
 }
 
-PRInt32 nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
+nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 {
   if (mBinding != aOther.mBinding || mPosition != aOther.mPosition)
     return NS_STYLE_HINT_FRAMECHANGE;
@@ -1101,7 +1098,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mOpacity = aSource.mOpacity;
 } 
 
-PRInt32 nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
+nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
   if (mOpacity != aOther.mOpacity
       && ((mOpacity < 1.0) != (aOther.mOpacity < 1.0)))
@@ -1182,8 +1179,7 @@ nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
   }
 }
 
-PRInt32 
-nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
+nsChangeHint nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
 {
   if (mContentCount == aOther.mContentCount) {
     if ((mMarkerOffset == aOther.mMarkerOffset) &&
@@ -1245,8 +1241,7 @@ nsStyleQuotes::nsStyleQuotes(const nsStyleQuotes& aSource)
   }
 }
 
-PRInt32 
-nsStyleQuotes::CalcDifference(const nsStyleQuotes& aOther) const
+nsChangeHint nsStyleQuotes::CalcDifference(const nsStyleQuotes& aOther) const
 {
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
@@ -1283,7 +1278,7 @@ nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
 
 nsStyleTextReset::~nsStyleTextReset(void) { }
 
-PRInt32 nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) const
+nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) const
 {
   if (mVerticalAlign == aOther.mVerticalAlign
 #ifdef IBMBIDI
@@ -1320,7 +1315,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
 
 nsStyleText::~nsStyleText(void) { }
 
-PRInt32 nsStyleText::CalcDifference(const nsStyleText& aOther) const
+nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
 {
   if ((mTextAlign == aOther.mTextAlign) &&
       (mTextTransform == aOther.mTextTransform) &&
@@ -1360,7 +1355,7 @@ nsStyleUserInterface::~nsStyleUserInterface(void)
 { 
 }
 
-PRInt32 nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aOther) const
+nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aOther) const
 {
   if ((mCursor != aOther.mCursor) ||
       (mCursorImage != aOther.mCursorImage))
@@ -1409,7 +1404,7 @@ nsStyleUIReset::~nsStyleUIReset(void)
 { 
 }
 
-PRInt32 nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
+nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
 {
   if (mForceBrokenImageIcon == aOther.mForceBrokenImageIcon) {
     if (mResizer == aOther.mResizer &&

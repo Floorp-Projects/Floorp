@@ -110,7 +110,7 @@ public:
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aModType,
-                              PRInt32      aHint);
+                              nsChangeHint aHint);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
 			                       nsIContent* aContainer,
                              PRInt32     aNewIndexInContainer) { return NS_OK; } 
@@ -137,7 +137,7 @@ public:
   NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint) { return NS_OK; }
+                              nsChangeHint aHint) { return NS_OK; }
   NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) { return NS_OK; }
@@ -878,7 +878,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType,
-                              PRInt32         aHint) 
+                              nsChangeHint    aHint) 
 {
    if (mHScrollbarBox && mVScrollbarBox && (mHasHorizontalScrollbar || mHasVerticalScrollbar))
    {

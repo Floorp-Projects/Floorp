@@ -453,7 +453,7 @@ nsSVGElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 
 NS_IMETHODIMP
 nsSVGElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                       PRInt32& aHint) const
+                                       nsChangeHint& aHint) const
 {
   // we don't rely on the cssframeconstructor to map attribute changes
   // to changes in our frames. an exception is css.

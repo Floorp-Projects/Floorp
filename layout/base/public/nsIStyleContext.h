@@ -47,6 +47,7 @@
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
+#include "nsChangeHint.h"
 #include "nsCOMPtr.h"
 #include "nsILanguageAtom.h"
 
@@ -91,7 +92,7 @@ public:
   // context, and will not instantiate new data in order to compute a difference.
   // That is why the old context must always be used (since the new context will
   // have no data on it yet) for determining the actual difference.
-  NS_IMETHOD CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) = 0;
+  NS_IMETHOD CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint) = 0;
 
   NS_IMETHOD GetRuleNode(nsRuleNode** aResult)=0;
   NS_IMETHOD AddStyleBit(const PRUint32& aBit)=0;

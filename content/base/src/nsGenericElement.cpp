@@ -2198,9 +2198,8 @@ nsGenericElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                           PRInt32 aModType,
-                                           PRInt32& aHint) const
+nsGenericElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType, 
+                                           nsChangeHint& aHint) const
 {
   aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
   return NS_OK;

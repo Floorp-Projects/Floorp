@@ -233,7 +233,7 @@ public:
                                nsHTMLValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                      PRInt32 aModType, PRInt32& aHint) const;
+                                      PRInt32 aModType, nsChangeHint& aHint) const;
 
 
 protected:
@@ -1849,7 +1849,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 NS_IMETHODIMP
 nsHTMLSelectElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32 aModType,
-                                              PRInt32& aHint) const
+                                              nsChangeHint& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::multiple) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
