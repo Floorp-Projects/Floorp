@@ -187,6 +187,7 @@ my %map = (
   'xmlextras',          'extensions/xmlextras',
   'xmlterm',            'extensions/xmlterm',
   'xpcom',              'xpcom',
+  'xpcomsample',        'xpcom/sample',
   'xpconnect',          'js/src/xpconnect',
   'xpcshell',           'js/src/xpconnect/shell',
   'xpctools',           'js/src/xpconnect/tools',
