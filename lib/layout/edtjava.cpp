@@ -402,24 +402,40 @@ void EDT_PreOpen(MWContext *pErrorContext,char* _pURL,
                  EDT_PreOpenCallbackFn doneFunction, void* hook){
   // Make local copy, so we can change it if we want.
   char *pURL = _pURL ? XP_STRDUP(_pURL) : 0;
+  int urlType = NET_URL_Type(pURL);
   
   // Always ignore target or query appendages
   edt_StripAtHashOrQuestionMark(pURL);
+  XP_Bool bDeleteContext = FALSE;
+  XP_Bool bValid = FALSE;
   
-  if ( !pURL || !*pURL || !pErrorContext ) {
-    XP_ASSERT(pErrorContext);
-    // Canceled.
+  //if( !pErrorContext )
+  {
+    //Primarily for the Mac, which doesn't create
+    //  a context before calling EDT_PreOpen
+    // (Windows and UNIX create a new Composer window + MWContext
+    //  first or pass in parent MWContext here )
+    pErrorContext = XP_NewContext();
+    if( !pErrorContext )
+        goto ERROR_EXIT;
+    
+    pErrorContext->type = MWContextBrowser;
+    pErrorContext->is_editor = TRUE;
+    bDeleteContext = TRUE;
+  }
+ 
+  XP_ASSERT(pErrorContext);
+   
+  if ( !pURL || !*pURL ) {
+ERROR_EXIT:
+    // Error or user Canceled.
     if (doneFunction) {
       (*doneFunction)(TRUE, _pURL, hook);
     }
-    XP_FREEIF(pURL);
-    return;
+    goto PRE_OPEN_EXIT;
   }
 
-  XP_Bool bValid = FALSE;
-
   // Only allow editing of appropriate types of URLs.
-  int urlType = NET_URL_Type(pURL);
   if (urlType == FILE_TYPE_URL ||
       urlType == FTP_TYPE_URL ||
       urlType == HTTP_TYPE_URL ||
@@ -451,13 +467,7 @@ void EDT_PreOpen(MWContext *pErrorContext,char* _pURL,
     else {
         XP_ASSERT(0);
     }
-
-    // TRUE says to cancel opening URL.
-    if (doneFunction) {
-      (*doneFunction)(TRUE, pURL, hook);
-    }
-    XP_FREE(pURL);
-    return;
+    goto ERROR_EXIT;
   }
 
 
@@ -475,12 +485,12 @@ void EDT_PreOpen(MWContext *pErrorContext,char* _pURL,
         XP_Bool saveJS = pErrorContext->forceJSEnabled;
         pErrorContext->forceJSEnabled = TRUE;
         netscape_javascript_JSObject *t_object=LJ_GetMochaWindow(pErrorContext);
+        // Note: doneFunction will be called via hook2->doneFunction if following is successful
         XP_Bool bResult = epi->Perform(temp, &edt_PreOpenDoneFunction, hook2, t_object);
         pErrorContext->forceJSEnabled = saveJS;
-        if ( bResult ){
-            XP_FREE(pURL);
-            return;
-        }
+        if ( bResult )
+            goto PRE_OPEN_EXIT;
+
         // Failed, so clean up
         delete epi;
         delete hook2;
@@ -490,7 +500,11 @@ void EDT_PreOpen(MWContext *pErrorContext,char* _pURL,
         // FALSE means don't cancel.
         (*doneFunction)(FALSE, pURL, hook);
     }
-    XP_FREE(pURL);
+    
+PRE_OPEN_EXIT:
+    XP_FREEIF(pURL);
+    if( bDeleteContext )
+      XP_DeleteContext(pErrorContext);
 }
 
 struct PreCloseCallbackHook {

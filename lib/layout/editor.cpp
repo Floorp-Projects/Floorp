@@ -970,7 +970,7 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
     intn retVal;
     XP_Bool bCreatedEditor = FALSE;
 
-    if( !EDT_IS_EDITOR(pDocData->window_id) ){
+    if( !tag || !EDT_IS_EDITOR(pDocData->window_id) ){
         return LO_ProcessTag( data_object, tag, status );
     }
 

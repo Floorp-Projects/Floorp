@@ -1097,7 +1097,8 @@ XP_Bool CEditSaveObject::AddAllFiles(char **ppIncludedFiles){
     }
     m_pBuffer->FreePageData( pPageData );
 
-    while( pImage ){
+    while( pImage )
+    {
         // If this assert fails, it is probably because FinishedLoad
         // didn't get called on the image. And that's probably because
         // of some bug in the recursive FinishedLoad code.
@@ -1107,15 +1108,21 @@ XP_Bool CEditSaveObject::AddAllFiles(char **ppIncludedFiles){
         pImage->Image()->m_iSaveIndex = IgnoreImage;
         pImage->Image()->m_iSaveLowIndex = IgnoreImage;
         pData = pImage->Image()->GetImageData();
-        if( pData && pData->pSrc && *pData->pSrc){
-            pImage->Image()->m_iSaveIndex = CheckAddFile( pData->pSrc, NULL, ppIncludedFiles, 
-                m_bKeepImagesWithDoc && !pData->bNoSave );
+        if( pData )
+        {
+            // Only consider images that are not server-generated
+            if( EDT_IsImageURL(pData->pSrc) )
+            {
+                pImage->Image()->m_iSaveIndex = CheckAddFile( pData->pSrc, NULL, ppIncludedFiles, 
+                    m_bKeepImagesWithDoc && !pData->bNoSave );
+            }
+            if( EDT_IsImageURL(pData->pLowSrc) )
+            {
+                pImage->Image()->m_iSaveLowIndex = CheckAddFile( pData->pLowSrc, NULL,ppIncludedFiles, 
+                    m_bKeepImagesWithDoc && !pData->bNoSave );
+            }
+            edt_FreeImageData( pData );
         }
-        if( pData && pData->pLowSrc && *pData->pLowSrc){
-            pImage->Image()->m_iSaveLowIndex = CheckAddFile( pData->pLowSrc, NULL,ppIncludedFiles, 
-                m_bKeepImagesWithDoc && !pData->bNoSave );
-        }
-        edt_FreeImageData( pData );
         pImage = pImage->FindNextElement( &CEditElement::FindImage, 0 );
     }
 
@@ -1467,16 +1474,25 @@ char *CEditSaveObject::FixupLinks(){
 
     // regular images.
     CEditElement *pImage = m_pBuffer->m_pRoot->FindNextElement( &CEditElement::FindImage, 0 );
-    while( pImage ){
+    while( pImage )
+    {
         pData = pImage->Image()->GetImageData();
-
-        // do the normal image
-        FixupLink(pImage->Image()->m_iSaveIndex,&pData->pSrc,pDestPathURL,&badLinks);
-        // do the lowres image
-        FixupLink(pImage->Image()->m_iSaveLowIndex,&pData->pLowSrc,pDestPathURL,&badLinks);
-
-        pImage->Image()->SetImageData( pData );
-        edt_FreeImageData( pData );
+        if( pData )
+        {        
+            // Only consider images that are not server-generated
+            if( EDT_IsImageURL(pData->pSrc) )
+            {
+                // do the normal image
+                FixupLink(pImage->Image()->m_iSaveIndex,&pData->pSrc,pDestPathURL,&badLinks);
+            }            
+            if( EDT_IsImageURL(pData->pLowSrc) )
+            {
+                // do the lowres image
+                FixupLink(pImage->Image()->m_iSaveLowIndex,&pData->pLowSrc,pDestPathURL,&badLinks);
+            }
+            pImage->Image()->SetImageData( pData );
+            edt_FreeImageData( pData );
+        }
         pImage = pImage->FindNextElement( &CEditElement::FindImage, 0 );
     }
 

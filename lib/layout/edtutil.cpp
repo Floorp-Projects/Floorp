@@ -5912,6 +5912,22 @@ char * EDT_GetPageTitleFromFilename(char * pFilename)
     return pTitle;
 }
 
+XP_Bool EDT_IsImageURL(char *pImageURL)
+{
+    // Check for all known image file extensions
+    // without regard for case
+    if( pImageURL && *pImageURL &&
+        (strcasestr(pImageURL, ".jpeg") ||
+         strcasestr(pImageURL, ".jpg") ||
+         strcasestr(pImageURL, ".gif") ||
+         strcasestr(pImageURL, ".png") ||
+         strcasestr(pImageURL, ".xbmp")) )
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 // True if both urls are the same, ignores any username/password
 // information.  Does caseless comparison for file:// URLs 
 // on windows and mac.
@@ -5942,8 +5958,8 @@ XP_Bool EDT_IsSameURL(char *url1,char *url2,char *base1,char *base2) {
 
   XP_Bool bRetVal = FALSE;
   if (pUrl1 && pUrl2) {
-    char *pBaseUrl1 = NET_ParseURL(pUrl1, GET_PATH_PART);
-    char *pBaseUrl2 = NET_ParseURL(pUrl2, GET_PATH_PART);
+    //char *pBaseUrl1 = NET_ParseURL(pUrl1, GET_PATH_PART);
+    //char *pBaseUrl2 = NET_ParseURL(pUrl2, GET_PATH_PART);
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2)
     // Strip off Target (named Anchors)
     // Local file URLs are equivalent if they differ only 

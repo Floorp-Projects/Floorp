@@ -9224,8 +9224,9 @@ PRIVATE XP_Bool edt_make_image_relative(char *pBase,char **pURL) {
     return FALSE;
   }
 
-  if ((*pURL)[0] == '/') {
+  if ((*pURL)[0] == '/' || !EDT_IsImageURL(*pURL)) {
     // Don't change URL if using absolute pathing.
+    //  or not really an image file
     return FALSE;
   }
 

@@ -1839,8 +1839,8 @@ void CEditBuffer::FixupTableData()
         // Get starting layout cell - usually first cell after table element
         LO_Element *pLoCell = pLoTableElement->lo_any.next;
         
-        // Skip over non-cells
-        while( pLoCell && pLoCell->type != LO_CELL )
+        // Skip over non-cells or the caption
+        while( pLoCell && (pLoCell->type != LO_CELL || pLoCell->lo_cell.isCaption) )
             pLoCell = pLoCell->lo_any.next;
         
         // Get space between cell border and contents 
@@ -4039,7 +4039,8 @@ void CEditBuffer::MorphContainer( TagType t )
         else
             pStart = pContainer;
 
-        Relayout( pStart, 0, 0 );
+        // Note: This crashes in lo_MergeState (layedit.c) if 3rd param (pEndElement) is NULL
+        Relayout( pStart, 0, pContainer );
     }
 }
 
@@ -7892,7 +7893,6 @@ XP_Bool CStretchBuffer::Contains( char* p, int *pIndex ){
     return FALSE;
 }
 
-
 // Helper for CEditBuffer::GetAllDocumentFiles.  If pImageURL is not in buf, add it and add 
 // element to the "selected" list.  If pImageURL is in buf and was previously unselected, we may
 // now select it.
@@ -7956,18 +7956,24 @@ char* CEditBuffer::GetAllDocumentFiles(XP_Bool **ppSelected,XP_Bool bKeepImagesW
     }
 
     // Regular images.
-    while(NULL != (pNext = pNext->FindNextElement( &CEditElement::FindImage, 0 )) ){
+    while(NULL != (pNext = pNext->FindNextElement( &CEditElement::FindImage, 0 )) )
+    {
         EDT_ImageData *pData = pNext->Image()->GetImageData();
-        if( pData && pData->pSrc && *pData->pSrc) {
-          AddToBufferUnique(buf,selected,pDocURL,pData->pSrc,
-                bKeepImagesWithDoc && !pData->bNoSave);
-        }
+        if( pData )
+        {
+            if( EDT_IsImageURL(pData->pSrc) )
+            {
+              AddToBufferUnique(buf,selected,pDocURL,pData->pSrc,
+                    bKeepImagesWithDoc && !pData->bNoSave);
+            }
 
-        if( pData && pData->pLowSrc && *pData->pLowSrc) {
-          AddToBufferUnique(buf,selected,pDocURL,pData->pLowSrc,
-                bKeepImagesWithDoc && !pData->bNoSave);
+            if( EDT_IsImageURL(pData->pLowSrc) )
+            {
+              AddToBufferUnique(buf,selected,pDocURL,pData->pLowSrc,
+                    bKeepImagesWithDoc && !pData->bNoSave);
+            }
+            EDT_FreeImageData( pData );
         }
-        EDT_FreeImageData( pData );
     }
 
     
@@ -10854,6 +10860,10 @@ void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y )
         PositionCaret(x,y);    
         return;
     }
+
+    // Get the CEditObject at drop point and use it to create new insert point
+    CPersistentEditSelection PSelBefore;
+    GetSelection(PSelBefore);
 
     // Get where we would drop if not deleting anything
     int32 position;

@@ -374,7 +374,8 @@ void lo_MergeState( MWContext *context, lo_DocState *old_state, int32 iStartLine
 	*/
 	if( relayout_to_end == FALSE )
 	{
-		end_element->lo_any.prev = new_end_element;
+		/* WARNING: THIS WILL CRASH WHEN new_end_element == NULL */
+        end_element->lo_any.prev = new_end_element;
 		new_end_element->lo_any.next = end_element;
 
 		yDelta = (new_end_element->lo_any.y+new_end_element->lo_any.line_height)
