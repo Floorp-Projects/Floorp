@@ -20,6 +20,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
+#include "nsNeckoUtil.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -73,7 +74,11 @@ int main(int argc, char** argv)
   // Get an input stream from the url
   nsresult ec;
   nsIInputStream* in;
+#ifndef NECKO
   ec = NS_OpenURL(url, &in);
+#else
+  ec = NS_OpenURI(&in, url);
+#endif // NECKO
   if (nsnull == in) {
     printf("open of url('%s') failed: error=%x\n", urlName, ec);
     return -1;
