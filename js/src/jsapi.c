@@ -764,13 +764,19 @@ JS_NewContext(JSRuntime *rt, size_t stacksize)
 JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext *cx)
 {
-    js_DestroyContext(cx, JS_TRUE);
+    js_DestroyContext(cx, JS_FORCE_GC);
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyContextNoGC(JSContext *cx)
 {
-    js_DestroyContext(cx, JS_FALSE);
+    js_DestroyContext(cx, JS_NO_GC);
+}
+
+JS_PUBLIC_API(void)
+JS_DestroyContextMaybeGC(JSContext *cx)
+{
+    js_DestroyContext(cx, JS_MAYBE_GC);
 }
 
 JS_PUBLIC_API(void*)
@@ -1082,7 +1088,20 @@ JS_MaybeGC(JSContext *cx)
     rt = cx->runtime;
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
-    if (bytes > 8192 && bytes > lastBytes + lastBytes / 2)
+    if ((bytes > 8192 && bytes > lastBytes + lastBytes / 2)
+#ifdef NES40
+/*
+    This is the other side of the fix in jsgc.c, allocGCThing where we stopped
+    doing a gc when the allocation fails. It turned out that the server branch-
+    callback wasn't providing for enough gc to prevent certain string concatenations
+    from exhausting the heap - with large strings the number of JSObjects remains
+    small but the amount of malloc'd space can be huge. We re-instate a test of the
+    malloc'd space here to help trigger a gc. (The server changed the frequency of
+    issuing calls to MaybeGC as well).
+*/
+            || (rt->gcMallocBytes > rt->gcMaxBytes)
+#endif /* NES40 */
+            )
 	JS_GC(cx);
 }
 
