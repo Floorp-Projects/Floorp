@@ -488,7 +488,13 @@ function loadGlobalData()
 				document.vars.path.value = "New Path";
 			else if ( existingPathFlag == "yes" && newPathFlag != "yes" )
 				document.vars.path.value = "Existing Path";
-	
+
+			document.vars.oneStepMode.value = "";
+			var oneStepModeFlag = parent.parent.globals.GetNameValuePair( acctSetupFile, "Mode Selection", "OneStepMode" );
+			oneStepModeFlag = oneStepModeFlag.toLowerCase();
+			if ( oneStepModeFlag == "yes" )
+				document.vars.oneStepMode = "yes";
+						
 			if ( document.vars.debugMode.value.toLowerCase() != "yes" && ( document.vars.editMode.value.toLowerCase() != "yes" ) )
 				if (checkPluginExists( "application/x-netscape-autoconfigure-dialer", false ) )
 					document.setupPlugin.SetKiosk( true );
