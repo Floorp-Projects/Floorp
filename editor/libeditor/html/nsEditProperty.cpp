@@ -136,16 +136,18 @@ nsIAtom * nsIEditProperty::cssFontSize;
 nsIAtom * nsIEditProperty::cssFontStyle;
 nsIAtom * nsIEditProperty::cssFontWeight;
 nsIAtom * nsIEditProperty::cssHeight;
+nsIAtom * nsIEditProperty::cssLeft;
 nsIAtom * nsIEditProperty::cssListStyleType;
 nsIAtom * nsIEditProperty::cssMarginLeft;
 nsIAtom * nsIEditProperty::cssMarginRight;
 nsIAtom * nsIEditProperty::cssTextAlign;
 nsIAtom * nsIEditProperty::cssTextDecoration;
+nsIAtom * nsIEditProperty::cssTop;
 nsIAtom * nsIEditProperty::cssVerticalAlign;
 nsIAtom * nsIEditProperty::cssWhitespace;
 nsIAtom * nsIEditProperty::cssWidth;
-nsIAtom * nsIEditProperty::cssMozUserSelect;
 
+nsIAtom * nsIEditProperty::cssMozUserSelect;
 
 nsIAtom * nsIEditProperty::cssPxUnit;
 nsIAtom * nsIEditProperty::cssEmUnit;
@@ -275,15 +277,17 @@ nsEditProperty::nsEditProperty()
   nsIEditProperty::cssFontWeight      = NS_NewAtom("font-weight");
   nsIEditProperty::cssHeight          = NS_NewAtom("height");
   nsIEditProperty::cssListStyleType   = NS_NewAtom("list-style-type");
+  nsIEditProperty::cssLeft            = NS_NewAtom("left");
   nsIEditProperty::cssMarginRight     = NS_NewAtom("margin-right");
   nsIEditProperty::cssMarginLeft      = NS_NewAtom("margin-left");
   nsIEditProperty::cssTextAlign       = NS_NewAtom("text-align");
   nsIEditProperty::cssTextDecoration  = NS_NewAtom("text-decoration");
+  nsIEditProperty::cssTop             = NS_NewAtom("top");
   nsIEditProperty::cssVerticalAlign   = NS_NewAtom("vertical-align");
   nsIEditProperty::cssWhitespace      = NS_NewAtom("white-space");
   nsIEditProperty::cssWidth           = NS_NewAtom("width");
-  nsIEditProperty::cssMozUserSelect   = NS_NewAtom("-moz-user-select");
 
+  nsIEditProperty::cssMozUserSelect   = NS_NewAtom("-moz-user-select");
 
   nsIEditProperty::cssPxUnit          = NS_NewAtom("px");
   nsIEditProperty::cssEmUnit          = NS_NewAtom("em");
@@ -388,13 +392,16 @@ nsEditProperty::~nsEditProperty()
   NS_IF_RELEASE(nsIEditProperty::cssFontWeight);
   NS_IF_RELEASE(nsIEditProperty::cssHeight);
   NS_IF_RELEASE(nsIEditProperty::cssListStyleType);
+  NS_IF_RELEASE(nsIEditProperty::cssLeft);
   NS_IF_RELEASE(nsIEditProperty::cssMarginRight);
   NS_IF_RELEASE(nsIEditProperty::cssMarginLeft);
   NS_IF_RELEASE(nsIEditProperty::cssTextAlign);
   NS_IF_RELEASE(nsIEditProperty::cssTextDecoration);
+  NS_IF_RELEASE(nsIEditProperty::cssTop);
   NS_IF_RELEASE(nsIEditProperty::cssVerticalAlign);
   NS_IF_RELEASE(nsIEditProperty::cssWhitespace);
   NS_IF_RELEASE(nsIEditProperty::cssWidth);
+
   NS_IF_RELEASE(nsIEditProperty::cssMozUserSelect);
 
   NS_IF_RELEASE(nsIEditProperty::cssPxUnit);

@@ -26,6 +26,7 @@ nsIDocumentStateListener.idl
 nsPIEditorTransaction.idl
 nsIEditor.idl
 nsIHTMLEditor.idl
+nsIHTMLObjectResizer.idl
 nsIURIRefObject.idl
 nsICiter.idl
 nsIEditActionListener.idl

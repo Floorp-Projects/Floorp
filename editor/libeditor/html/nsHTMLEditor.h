@@ -65,6 +65,10 @@
 
 #include "nsVoidArray.h"
 
+#include "nsHTMLObjectResizer.h"
+
+#include "nsPoint.h"
+
 class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIDOMEventReceiver;
@@ -79,6 +83,7 @@ class TypeInState;
  */
 class nsHTMLEditor : public nsPlaintextEditor,
                      public nsIHTMLEditor,
+                     public nsIHTMLObjectResizer,
                      public nsITableEditor,
                      public nsIEditorStyleSheets,
                      public nsICSSLoaderObserver
@@ -105,6 +110,13 @@ public:
     kOpLoadHTML            = 3013
   };
 
+  enum ResizingRequestID
+  {
+    kX      = 0,
+    kY      = 1,
+    kWidth  = 2,
+    kHeight = 3
+  };
 
   // see nsIHTMLEditor for documentation
 
@@ -122,6 +134,9 @@ public:
   NS_IMETHODIMP CollapseSelectionToStart();
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
   NS_IMETHODIMP BeginningOfDocument();
+
+  /* ------------ nsIHTMLObjectResizer methods -------------- */
+  NS_DECL_NSIHTMLOBJECTRESIZER
 
   /* ------------ nsIHTMLEditor methods -------------- */
   NS_IMETHOD UpdateBaseURL();
@@ -826,6 +841,66 @@ protected:
   // ... which means that we need an instance count to know when to delete it
   static PRInt32 sInstanceCount;
 
+protected:
+  PRPackedBool mIsImageResizingEnabled;
+  PRPackedBool mIsShowingResizeHandles;
+  PRPackedBool mIsResizing;
+  PRPackedBool mPreserveRatio;
+  PRPackedBool mResizedObjectIsAnImage;
+
+  nsCOMPtr<nsIDOMElement> mTopLeftHandle;
+  nsCOMPtr<nsIDOMElement> mTopHandle;
+  nsCOMPtr<nsIDOMElement> mTopRightHandle;
+  nsCOMPtr<nsIDOMElement> mLeftHandle;
+  nsCOMPtr<nsIDOMElement> mRightHandle;
+  nsCOMPtr<nsIDOMElement> mBottomLeftHandle;
+  nsCOMPtr<nsIDOMElement> mBottomHandle;
+  nsCOMPtr<nsIDOMElement> mBottomRightHandle;
+
+  nsCOMPtr<nsIDOMElement> mResizingShadow;
+  nsCOMPtr<nsIDOMElement> mResizingInfo;
+
+  nsCOMPtr<nsIDOMElement> mResizedObject;
+
+  nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
+  nsCOMPtr<nsIDOMEventListener>  mMutationListenerP;
+  nsCOMPtr<nsISelectionListener> mSelectionListenerP;
+  nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
+
+  PRInt32 mOriginalX;
+  PRInt32 mOriginalY;
+
+  PRInt32 mResizedObjectX;
+  PRInt32 mResizedObjectY;
+  PRInt32 mResizedObjectWidth;
+  PRInt32 mResizedObjectHeight;
+
+  PRInt32 mXIncrementFactor;
+  PRInt32 mYIncrementFactor;
+  PRInt32 mWidthIncrementFactor;
+  PRInt32 mHeightIncrementFactor;
+
+  nsresult CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsISupportsArray * aArray);
+  void     SetResizerPosition(PRInt32 aX, PRInt32 aY, nsIDOMElement *aResizer);
+  nsresult SetAllResizersPosition(nsIDOMElement * aResizedElement, PRInt32 & aX, PRInt32 & aY);
+  nsresult CreateShadow(nsIDOMElement ** aReturn, nsISupportsArray * aArray);
+  nsresult SetShadowPosition(nsIDOMElement *aResizedObject,
+                             PRInt32 aX, PRInt32 aY);
+  nsresult CreateResizingInfo(nsIDOMElement ** aReturn, nsISupportsArray * aArray);
+  nsresult SetResizingInfoPosition(PRInt32 aX, PRInt32 aY,
+                                   PRInt32 aW, PRInt32 aH);
+
+  PRInt32  GetNewResizingIncrement(PRInt32 aX, PRInt32 aY, PRInt32 aID);
+  nsresult StartResizing(nsIDOMElement * aHandle);
+  PRInt32  GetNewResizingX(PRInt32 aX, PRInt32 aY);
+  PRInt32  GetNewResizingY(PRInt32 aX, PRInt32 aY);
+  PRInt32  GetNewResizingWidth(PRInt32 aX, PRInt32 aY);
+  PRInt32  GetNewResizingHeight(PRInt32 aX, PRInt32 aY);
+  void     HideShadowAndInfo();
+  void     SetFinalSize(PRInt32 aX, PRInt32 aY);
+  void     DeleteRefToAnonymousNode(nsIDOMNode * aNode);
+  void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, PRBool aPreserveRatio);
+  nsresult GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY);
 public:
 
 // friends

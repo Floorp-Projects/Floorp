@@ -124,6 +124,8 @@ private:
     */
   nsresult SetStyle(PRBool aAttributeWasSet, nsAString & aValue);
 
+  void CheckObjectResizing();
+
 public:
 
   NS_IMETHOD DoTransaction(void);

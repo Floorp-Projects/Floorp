@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Charles Manske (cmanske@netscape.com)
+ *    Daniel Glazman (glazman@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -67,6 +68,7 @@ public:
 
 /*BEGIN implementations of mouseevent handler interface*/
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
 /*END implementations of mouseevent handler interface*/
 
 };

@@ -48,6 +48,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
+#include "nsIHTMLObjectResizer.h"
 
 #define kNullCh (PRUnichar('\0'))
 
@@ -262,6 +263,8 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   else
     mRedoAttributeWasSet = PR_TRUE;
 
+  CheckObjectResizing();
+
   return cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
 }
 
@@ -305,12 +308,18 @@ nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
 
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::UndoTransaction(void)
 {
-  return SetStyle(mUndoAttributeWasSet, mUndoValue);
+  nsresult res = SetStyle(mUndoAttributeWasSet, mUndoValue);
+  if (NS_SUCCEEDED(res))
+    CheckObjectResizing();
+  return res;
 }
 
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::RedoTransaction(void)
 {
-  return SetStyle(mRedoAttributeWasSet, mRedoValue);
+  nsresult res = SetStyle(mRedoAttributeWasSet, mRedoValue);
+  if (NS_SUCCEEDED(res))
+    CheckObjectResizing();
+  return res;
 }
 
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
@@ -365,3 +374,18 @@ ChangeCSSInlineStyleTxn::AddValueToMultivalueProperty(nsAString & aValues, const
   return NS_OK;
 }
 
+void
+ChangeCSSInlineStyleTxn::CheckObjectResizing()
+{
+  // HACK !!!!! We absolutely need this because setting an inline CSS
+  // property does not trigger a DOMAttrModified event related to the
+  // style attribute (perf reasons I suppose)
+
+  nsCOMPtr<nsIHTMLObjectResizer> imageResizer = do_QueryInterface(mEditor);
+  if (imageResizer) {
+    nsCOMPtr<nsIDOMElement> resizedObject;
+    imageResizer->GetResizedObject(getter_AddRefs(resizedObject));
+    if (resizedObject == mElement)
+      imageResizer->RefreshResizers();
+  }
+}

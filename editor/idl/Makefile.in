@@ -41,6 +41,7 @@ XPIDLSRCS	= \
 		nsIEditorSpellCheck.idl \
 		nsIEditorStyleSheets.idl \
 		nsIHTMLEditor.idl \
+		nsIHTMLObjectResizer.idl \
 		nsIPlaintextEditor.idl \
 		nsITableEditor.idl \
 		nsIURIRefObject.idl \

@@ -1751,6 +1751,7 @@ function SetDisplayMode(mode)
     try {
       var editor = GetCurrentEditor();
       editor.QueryInterface(nsIEditorStyleSheets);
+      editor instanceof Components.interfaces.nsIHTMLObjectResizer;
 
       switch (mode)
       {
@@ -1758,17 +1759,25 @@ function SetDisplayMode(mode)
           // Disable all extra "edit mode" style sheets 
           editor.enableStyleSheet(kNormalStyleSheet, false);
           editor.enableStyleSheet(kAllTagsStyleSheet, false);
+          editor.isImageResizingEnabled = true;
           break;
 
         case kDisplayModeNormal:
           editor.addOverrideStyleSheet(kNormalStyleSheet);
           // Disable ShowAllTags mode
           editor.enableStyleSheet(kAllTagsStyleSheet, false);
+          editor.isImageResizingEnabled = true;
           break;
 
         case kDisplayModeAllTags:
           editor.addOverrideStyleSheet(kNormalStyleSheet);
           editor.addOverrideStyleSheet(kAllTagsStyleSheet);
+          // don't allow resizing in AllTags mode because the visible tags
+          // change the computed size of images and tables...
+          if (editor.resizedObject) {
+            editor.hideResizers();
+          }
+          editor.isImageResizingEnabled = false;
           break;
       }
     } catch(e) {}
