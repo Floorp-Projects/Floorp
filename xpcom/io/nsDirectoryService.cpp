@@ -337,8 +337,8 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 nsIAtom*  nsDirectoryService::sCurrentProcess = nsnull;
 nsIAtom*  nsDirectoryService::sComponentRegistry = nsnull;
 nsIAtom*  nsDirectoryService::sComponentDirectory = nsnull;
-nsIAtom*  nsDirectoryService::sMRE_Directory = nsnull;
-nsIAtom*  nsDirectoryService::sMRE_ComponentDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sGRE_Directory = nsnull;
+nsIAtom*  nsDirectoryService::sGRE_ComponentDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_DriveDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_TemporaryDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_CurrentProcessDirectory = nsnull;
@@ -438,8 +438,8 @@ nsDirectoryService::Init()
     nsDirectoryService::sCurrentProcess             = NS_NewAtom(NS_XPCOM_CURRENT_PROCESS_DIR);
     nsDirectoryService::sComponentRegistry          = NS_NewAtom(NS_XPCOM_COMPONENT_REGISTRY_FILE);
     nsDirectoryService::sComponentDirectory         = NS_NewAtom(NS_XPCOM_COMPONENT_DIR);
-    nsDirectoryService::sMRE_Directory              = NS_NewAtom(NS_MRE_DIR);
-    nsDirectoryService::sMRE_ComponentDirectory     = NS_NewAtom(NS_MRE_COMPONENT_DIR);
+    nsDirectoryService::sGRE_Directory              = NS_NewAtom(NS_GRE_DIR);
+    nsDirectoryService::sGRE_ComponentDirectory     = NS_NewAtom(NS_GRE_COMPONENT_DIR);
 
     nsDirectoryService::sOS_DriveDirectory          = NS_NewAtom(NS_OS_DRIVE_DIR);
     nsDirectoryService::sOS_TemporaryDirectory      = NS_NewAtom(NS_OS_TEMP_DIR);
@@ -530,8 +530,8 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sCurrentProcess);
      NS_IF_RELEASE(nsDirectoryService::sComponentRegistry);
      NS_IF_RELEASE(nsDirectoryService::sComponentDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sMRE_Directory);
-     NS_IF_RELEASE(nsDirectoryService::sMRE_ComponentDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sGRE_Directory);
+     NS_IF_RELEASE(nsDirectoryService::sGRE_ComponentDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS_DriveDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS_TemporaryDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS_CurrentProcessDirectory);
@@ -812,11 +812,11 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         if (localFile)
     		localFile->AppendNative(COMPONENT_REGISTRY_NAME);           
     }
-    else if (inAtom == nsDirectoryService::sMRE_Directory)
+    else if (inAtom == nsDirectoryService::sGRE_Directory)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
     }
-    else if (inAtom == nsDirectoryService::sMRE_ComponentDirectory)
+    else if (inAtom == nsDirectoryService::sGRE_ComponentDirectory)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (localFile)

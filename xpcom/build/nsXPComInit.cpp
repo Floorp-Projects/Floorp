@@ -545,26 +545,26 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
         // the default components directory.
         nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);        
 
-        // If the application is using an MRE, then, 
-        // auto register components in the MRE directory as well.
+        // If the application is using a GRE, then, 
+        // auto register components in the GRE directory as well.
         //
-        // The application indicates that it's using an MRE by
+        // The application indicates that it's using an GRE by
         // returning a valid nsIFile when queried (via appFileLocProvider)
-        // for the NS_MRE_DIR atom as shown below
+        // for the NS_GRE_DIR atom as shown below
         //
 
         if ( appFileLocationProvider ) {
-            nsCOMPtr<nsIFile> mreDir;
+            nsCOMPtr<nsIFile> greDir;
             PRBool persistent = PR_TRUE;
 
-            appFileLocationProvider->GetFile(NS_MRE_DIR, &persistent, getter_AddRefs(mreDir));
+            appFileLocationProvider->GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(greDir));
 
-            if (mreDir)
+            if (greDir)
             {
-                rv = nsComponentManagerImpl::gComponentManager->AutoRegister(mreDir);
+                rv = nsComponentManagerImpl::gComponentManager->AutoRegister(greDir);
                 if (NS_FAILED(rv))
                 {
-                    NS_ERROR("Could not AutoRegister MRE components");
+                    NS_ERROR("Could not AutoRegister GRE components");
                     return rv;
                 }
             }
