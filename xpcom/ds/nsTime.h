@@ -48,10 +48,10 @@ public:
      * Construct the time from a string.
      */
     nsTime(const char* dateStr, PRBool defaultToGMT) {
-        PRInt64 time;
-        PRStatus status = PR_ParseTimeString(dateStr, defaultToGMT, &time);
+        PRInt64 theTime;
+        PRStatus status = PR_ParseTimeString(dateStr, defaultToGMT, &theTime);
         if (status == PR_SUCCESS)
-            mValue = time;
+            mValue = theTime;
         else
             mValue = LL_ZERO;
     }
