@@ -438,7 +438,15 @@ pascal	OSErr	HCopyFile(short srcVRefNum,
 	pb.copyParam.ioNewDirID = dstDirID;
 	pb.copyParam.ioNewName = dstPathname;
 	pb.copyParam.ioCopyName = copyName;
+#if TARGET_CARBON
+	/* pinkerton
+	 * PBHCopyFileSync() doesn't exist in Carbon. We need a replacement.
+	 */
+	DebugStr("\pTrying to use PBHCopyFileSync");
+	return ( noErr );
+#else
 	return ( PBHCopyFileSync(&pb) );
+#endif
 }
 
 /*****************************************************************************/
@@ -463,13 +471,27 @@ pascal	OSErr	HMoveRename(short vRefNum,
 {
 	HParamBlockRec pb;
 
+#if TARGET_CARBON
+if ( srcDirID != dstDirID ) 
+  DebugStr("\pTrying to use PBHMoveRenameSync to move a file!!!!");
+#endif
+
 	pb.copyParam.ioVRefNum = vRefNum;
 	pb.copyParam.ioDirID = srcDirID;
 	pb.copyParam.ioNamePtr = (StringPtr)srcName;
 	pb.copyParam.ioNewDirID = dstDirID;
 	pb.copyParam.ioNewName = dstpathName;
 	pb.copyParam.ioCopyName = copyName;
+
+#if TARGET_CARBON
+	/* pinkerton
+	 * PBHMoveRenameSync() doesn't exist in Carbon. We need a replacement.
+	 */
+	DebugStr("\pTrying to use PBHMoveRenameSync");
+	return ( PBHRenameSync(&pb) );
+#else
 	return ( PBHMoveRenameSync(&pb) );
+#endif
 }
 
 /*****************************************************************************/
