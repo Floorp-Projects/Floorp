@@ -81,6 +81,7 @@ textbox {
 
 .autocomplete-result-popup,
 .autocomplete-history-popup {
+  -moz-appearance: listbox;
   border-width: 1px;
   -moz-border-top-colors: ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDDarkShadow;
