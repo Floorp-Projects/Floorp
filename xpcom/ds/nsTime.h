@@ -27,7 +27,12 @@
  * This class encapsulates full 64-bit time functionality and
  * provides simple arithmetic and conversion operations.
  */
-class NS_BASE nsTime
+
+// If you ever decide that you need to add a non-inline method to this
+// class, be sure to change the class declaration to "class NS_BASE
+// nsTime".
+
+class nsTime
 {
 private:
     nsInt64 mValue;

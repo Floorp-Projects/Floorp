@@ -26,12 +26,17 @@
  * This class encapsulates full 64-bit integer functionality and
  * provides simple arithmetic and conversion operations.
  */
-class NS_BASE nsInt64
+
+// If you ever decide that you need to add a non-inline method to this
+// class, be sure to change the class declaration to "class NS_BASE
+// nsInt64".
+
+class nsInt64
 {
-    private:
+private:
     PRInt64 mValue;
 
-    public:
+public:
     /**
      * Construct a new 64-bit integer.
      */
@@ -222,7 +227,7 @@ class NS_BASE nsInt64
 /**
  * Add two 64-bit integers.
  */
-const nsInt64
+inline const nsInt64
 operator +(const nsInt64& aObject1, const nsInt64& aObject2) {
     return nsInt64(aObject1) += aObject2;
 }
