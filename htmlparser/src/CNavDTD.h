@@ -159,18 +159,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
    	 *			being asked to parse).
      * @return  TRUE if this DTD parse the given type; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion);
-
-   /**
-    * This method gets called to determine if the DTD can determine the
-	  * kind of data contained in the given buffer string. If you know the
-	  * type, the you should enter its stringname aType.
-    * @update	gess7/7/98
-    * @param	aBuffer contains data to be examined for autodetection.
-    * @param	aType will contain a typename you specify.
-    * @return	unknown, valid (if you know the type), invalid (if you dont)
-    */
-    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
+    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion);
 
     /**
      * Called by the parser to initiate dtd verification of the
@@ -516,7 +505,7 @@ protected:
 		nsresult    CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 		nsresult    CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     nsresult    WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
-    nsresult    DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag);
+    nsresult    DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
 
 
     nsIHTMLContentSink* mSink;

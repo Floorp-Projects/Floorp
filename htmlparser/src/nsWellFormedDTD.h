@@ -91,15 +91,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param   
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion);
-
-    /**
-     * 
-     * @update	gess7/7/98
-     * @param 
-     * @return
-     */
-    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
+    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before

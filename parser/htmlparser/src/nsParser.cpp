@@ -327,68 +327,34 @@ eParseMode nsParser::GetParseMode(void){
  *  @param   
  *  @return  
  */
-PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand) {
+PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsString& aBuffer) {
 
     //Let's start by tring the defaultDTD, if one exists...
   if(aParserContext.mDTD)
-    if(aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,0))
+    if(aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0))
       return PR_TRUE;
-
-  PRBool  result=PR_FALSE;
 
   nsDequeIterator b=gSharedParserObjects.mDTDDeque.Begin(); 
   nsDequeIterator e=gSharedParserObjects.mDTDDeque.End(); 
 
-  while(b<e){
+  aParserContext.mAutoDetectStatus=eUnknownDetect;
+  nsIDTD* theBestDTD=0;
+  while((b<e) && (aParserContext.mAutoDetectStatus!=ePrimaryDetect)){
     nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
     if(theDTD) {
-      result=theDTD->CanParse(aParserContext.mSourceType,aCommand,0); 
-      if(result){
-        theDTD->CreateNewInstance(&aParserContext.mDTD);
-        break;
+      aParserContext.mAutoDetectStatus=theDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0);
+      if((eValidDetect==aParserContext.mAutoDetectStatus) || (ePrimaryDetect==aParserContext.mAutoDetectStatus)) {
+        theBestDTD=theDTD;
       }
     }
     b++;
   } 
 
-  return result;
-}
-
-/**
- * Call this method if you want the known DTD's to try 
- * to detect the document type based through analysis
- * of the underlying stream.
- *
- * @update	gess6/22/98
- * @param   aBuffer -- nsString containing sample data to be analyzed.
- * @param   aType -- may hold typename given from netlib; will hold result given by DTD's.
- * @return  auto-detect result: eValid, eInvalid, eUnknown
- */
-eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aType) {
-
-    //The process:
-    //  You should go out and ask each DTD if they
-    //  recognize the content in the scanner.
-    //  Somebody should say yes, or we can't continue.
-
-    //This method may change mSourceType and mParserContext->mDTD.
-    //It absolutely changes mParserContext->mAutoDetectStatus
-
-  nsDequeIterator b=gSharedParserObjects.mDTDDeque.Begin(); 
-  nsDequeIterator e=gSharedParserObjects.mDTDDeque.End(); 
-
-  mParserContext->mAutoDetectStatus=eUnknownDetect;
-  while(b<e){
-    nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
-    if(theDTD) {
-      mParserContext->mAutoDetectStatus=theDTD->AutoDetectContentType(aBuffer,aType);
-      if(eValidDetect==mParserContext->mAutoDetectStatus)
-        break;
-    }
-    b++;
-  } 
-
-  return mParserContext->mAutoDetectStatus;  
+  if(theBestDTD) {
+    theBestDTD->CreateNewInstance(&aParserContext.mDTD);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 
@@ -443,24 +409,21 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
 
   nsresult result=NS_OK;
 
-  if(eOnStart==mParserContext->mStreamListenerState) {  
-    mMajorIteration=-1; 
-    mMinorIteration=-1; 
-    if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
-      if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),mParserContext->mSourceType)) {
-        if(mParserContext){
+  if(mParserContext){
+    if(eOnStart==mParserContext->mStreamListenerState) {  
+      mMajorIteration=-1; 
+      mMinorIteration=-1; 
+      if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
+        mParserContext->mDTD=aDefaultDTD;
+        if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand,mParserContext->mScanner->GetBuffer())) {
           mParserContext->mParseMode=DetermineParseMode(*this);  
-          mParserContext->mDTD=aDefaultDTD;
-          if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand)) {
-            //mParserContext->mDTD->SetContentSink(mSink);
-            mParserContext->mStreamListenerState=eOnDataAvail;
-            mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this,mSink);
-          }
-        }
-        else result=kInvalidParserContext;    
-      } //if
-    }
-  }
+          mParserContext->mStreamListenerState=eOnDataAvail;
+          mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this,mSink);
+        }//if        
+      }//if
+    }//if
+  } 
+  else result=kInvalidParserContext;    
   return result;
 }
 

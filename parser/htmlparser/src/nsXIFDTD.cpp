@@ -383,31 +383,23 @@ nsresult nsXIFDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
  *       storing the result in the main content model.
- * @update	gpk 07/09/98
+ * @update	gess 02/16/99
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=aContentType.Equals(kXIFTextContentType);
-  return result;
-}
-
-
-/**
- * 
- * @update	gpk 07/09/98
- * @param 
- * @return
- */
-eAutoDetectResult nsXIFDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
-  if(kNotFound!=aBuffer.Find(kXIFDocHeader))
-  {
-    PRInt32 offset = aBuffer.Find("<section>");
-    if (offset != -1)
-      aBuffer.Cut(0,offset);
-    aType = kXIFTextContentType;
-    result=eValidDetect;
+  if(aContentType.Equals(kXIFTextContentType)){
+    result=ePrimaryDetect;
+  }
+  else {
+    if(kNotFound!=aBuffer.Find(kXIFDocHeader)) {
+      PRInt32 offset = aBuffer.Find("<section>");
+      if (offset != -1)
+        aBuffer.Cut(0,offset);
+      aContentType= kXIFTextContentType;
+      result=ePrimaryDetect;
+    }
   }
   return result;
 }

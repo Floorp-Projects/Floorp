@@ -92,8 +92,7 @@ class CValidDTD : public nsIDTD {
      * @param   
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion);
-
+    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion);
 
     /**
      * This method is called to determine if the given DTD can perform
@@ -104,14 +103,6 @@ class CValidDTD : public nsIDTD {
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
     virtual PRBool CanConvert(nsString& aSourceType, nsString& aTargetType, PRInt32 aVersion);
-
-    /**
-     * 
-     * @update	gess7/7/98
-     * @param 
-     * @return
-     */
-    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before

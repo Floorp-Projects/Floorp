@@ -227,30 +227,17 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=PR_FALSE;
-  if(aCommand.Equals(kViewSourceCommand)) {
-    result=(aContentType.Equals(kXMLTextContentType) ||
-            aContentType.Equals(kRDFTextContentType) ||
-            aContentType.Equals(kHTMLTextContentType) ||
-            aContentType.Equals(kPlainTextContentType) ||
-			      aContentType.Equals(kXULTextContentType));
-  }
-  return result;
-}
-
-
-/**
- * This is called to ask the DTD if it recognizes either the aType or data in the buffer.
- * We intentionally say NO to autodetect types so that XML and HTML dtds can do the right thing.
- * If either of those DTD's say YES, then we'll agree and render either.
- *
- * @update  gess7/7/98
- * @param 
- * @return  detect result
- */
-eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
+  if(aCommand.Equals(kViewSourceCommand)) {
+    if(aContentType.Equals(kXMLTextContentType) ||
+       aContentType.Equals(kRDFTextContentType) ||
+       aContentType.Equals(kHTMLTextContentType) ||
+       aContentType.Equals(kPlainTextContentType) ||
+       aContentType.Equals(kXULTextContentType)) {
+      result=eValidDetect;
+    }
+  }
   return result;
 }
 
@@ -503,7 +490,7 @@ nsresult WriteNBSP(PRInt32 aCount, nsIContentSink& aSink) {
  *  @param   
  *  @return  result status
  */
-nsresult CViewSourceHTML::WriteText(nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveSpace) {
+nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveSpace) {
   nsresult result=NS_OK;
 
   CTextToken  theTextToken;

@@ -290,18 +290,6 @@ private:
      */
     PRBool DidTokenize();
     
-    /**
-     * This method is used as a backstop to compute the kind of content
-     * that is contained in the scanner stream. This method is important
-     * because it allows us to defer the resolution of our DTD (and hence)
-     * filters and maybe eventually sinks based on the input type.
-     *
-     * @update	gess6/22/98
-     * @param 
-     * @return  TRUE if we figured it out.
-     */
-    eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
-
 
 protected:
     //*********************************************
