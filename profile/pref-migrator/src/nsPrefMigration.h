@@ -31,14 +31,15 @@ class nsPrefMigration: public nsIPrefMigration
                               char* oldPath);
 
       nsresult Read4xFiles(char* ProfilePath, 
-                           char* fileArray[], 
+                           char* fileArray[],
+                           PRUint32* fileTotal,
                            PRUint32* sizeTotal);
 
       nsresult CheckForSpace(char* newProfilePath, 
                              PRFloat64 requiredSpace);
 
-		  nsresult DoTheCopy(char* oldPath, 
-                         char* newPath, 
+		  nsresult DoTheCopy(const char* oldPath, 
+                         const char* newPath, 
                          char* fileArray[]);
 
 };
