@@ -2187,8 +2187,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     // Create an area frame for the document element. This serves as the
     // "initial containing block"
 
-    // XXX Until we clean up how painting damage is handled, we need to use the
-    // flag that says that this is the body...
     PRInt32 nameSpaceID;
     PRBool isBlockFrame = PR_FALSE;
     if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
@@ -2283,213 +2281,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
   // Add a mapping from content object to frame
   return NS_OK;
 }
-
-/*
-NS_IMETHODIMP
-nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
-                                          nsIContent*     aDocElement,
-                                          nsIFrame*&      aNewFrame)
-{
-#ifdef NS_DEBUG
-  nsCOMPtr<nsIDocument>  doc;
-  nsIContent*            rootContent;
-
-  // Verify that the content object is really the root content object
-  aDocElement->GetDocument(*getter_AddRefs(doc));
-  rootContent = doc->GetRootContent();
-  NS_ASSERTION(rootContent == aDocElement, "unexpected content");
-  NS_RELEASE(rootContent);
-#endif
-
-  nsIFrame*                 viewportFrame;
-  nsCOMPtr<nsIStyleContext> viewportPseudoStyle;
-
-  // Create the viewport frame
-  NS_NewViewportFrame(&viewportFrame);
-
-  // Create a pseudo element style context
-  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportPseudo,
-                                             nsnull, PR_FALSE,
-                                             getter_AddRefs(viewportPseudoStyle));
-
-  { // ensure that the viewport thinks it is a block frame, layout goes pootsy if it doesn't
-    nsStyleDisplay* display = (nsStyleDisplay*)viewportPseudoStyle->GetMutableStyleData(eStyleStruct_Display);
-    display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
-  }
-
-  // Initialize the viewport frame. It has a NULL content object
-  viewportFrame->Init(*aPresContext, nsnull, nsnull, viewportPseudoStyle, nsnull);
-
-  // Bind the viewport frame to the root view
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIViewManager> viewManager;
-  presShell->GetViewManager(getter_AddRefs(viewManager));
-  nsIView*        rootView;
-
-  viewManager->GetRootView(rootView);
-  viewportFrame->SetView(rootView);
-
-  // If the device supports scrolling (e.g., in galley mode on the screen and
-  // for print-preview, but not when printing), then create a scroll frame that
-  // will act as the scrolling mechanism for the viewport. 
-  // XXX Do we even need a viewport when printing to a printer?
-  // XXX It would be nice to have a better way to query for whether the device
-  // is scrollable
-  PRBool  isScrollable = PR_TRUE;
-  if (aPresContext) {
-    nsIDeviceContext* dc;
-    aPresContext->GetDeviceContext(&dc);
-    if (dc) {
-      PRBool  supportsWidgets;
-      if (NS_SUCCEEDED(dc->SupportsNativeWidgets(supportsWidgets))) {
-        isScrollable = supportsWidgets;
-      }
-      NS_RELEASE(dc);
-    }
-  }
-
-  // As long as the webshell doesn't prohibit it, and the device supports
-  // it, create a scroll frame that will act as the scolling mechanism for
-  // the viewport.
-  nsISupports* container;
-  if (nsnull != aPresContext) {
-    aPresContext->GetContainer(&container);
-    if (nsnull != container) {
-      nsIWebShell* webShell = nsnull;
-      container->QueryInterface(kIWebShellIID, (void**) &webShell);
-      if (nsnull != webShell) {
-        PRInt32 scrolling = -1;
-        webShell->GetScrolling(scrolling);
-        if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
-          isScrollable = PR_FALSE;
-        }
-        NS_RELEASE(webShell);
-      }
-      NS_RELEASE(container);
-    }
-  }
-
-  // If the viewport should offer a scrolling mechanism, then create a
-  // scroll frame
-  nsIFrame* scrollFrame;
-  nsCOMPtr<nsIStyleContext> scrollFrameStyle;
-  if (isScrollable) {
-  
-    NS_NewScrollFrame(&scrollFrame);
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportScrollPseudo,
-                                               viewportPseudoStyle, PR_FALSE,
-                                               getter_AddRefs(scrollFrameStyle));
-    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, scrollFrameStyle,
-                      nsnull);
-    
-
-    // Inform the view manager about the root scrollable view
-    nsIView*            scrollFrameView;
-    nsIScrollableView*  scrollingView;
-
-    scrollFrame->GetView(&scrollFrameView);
-    NS_ASSERTION(scrollFrameView, "scroll frame has no view");
-    scrollFrameView->QueryInterface(kScrollViewIID, (void**)&scrollingView);
-    viewManager->SetRootScrollableView(scrollingView);
-  }
-
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated) {
-    nsIFrame* pageSequenceFrame;
-
-    // Create a page sequence frame
-    NS_NewSimplePageSequenceFrame(&pageSequenceFrame);
-    nsCOMPtr<nsIStyleContext> pageSequenceStyle;
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageSequencePseudo,
-                                               (isScrollable ? scrollFrameStyle : viewportPseudoStyle), 
-                                               PR_FALSE,
-                                               getter_AddRefs(pageSequenceStyle));
-    pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                            viewportFrame, pageSequenceStyle, nsnull);
-    if (isScrollable) {
-      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
-                                               pageSequenceStyle, PR_TRUE);
-    }
-
-    // Create the first page
-    nsIFrame* pageFrame;
-    NS_NewPageFrame(&pageFrame);
-
-    // The page is the containing block for 'fixed' elements. which are repeated
-    // on every page
-    mFixedContainingBlock = pageFrame;
-
-    // Initialize the page and force it to have a view. This makes printing of
-    // the pages easier and faster.
-    // XXX Use a PAGE style context...
-    nsCOMPtr<nsIStyleContext> pagePseudoStyle;
-
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pagePseudo,
-                                               pageSequenceStyle, PR_FALSE,
-                                               getter_AddRefs(pagePseudoStyle));
-
-    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pagePseudoStyle,
-                    nsnull);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
-                                             pagePseudoStyle, PR_TRUE);
-
-    // The eventual parent of the document element frame
-    mDocElementContainingBlock = pageFrame;
-
-
-    // Set the initial child lists
-    pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
-    if (isScrollable) {
-      scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
-      viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
-    } else {
-      viewportFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
-    }
-
-  } else {
-    // The viewport is the containing block for 'fixed' elements
-    mFixedContainingBlock = viewportFrame;
-
-    // Create the root frame. The document element's frame is a child of the
-    // root frame.
-    //
-    // The root frame serves two purposes:
-    // - reserves space for any margins needed for the document element's frame
-    // - makes sure that the document element's frame covers the entire canvas
-    nsIFrame* rootFrame;
-    NS_NewRootFrame(&rootFrame);
-
-    nsCOMPtr<nsIStyleContext> canvasPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::canvasPseudo,
-                                               (isScrollable ? scrollFrameStyle : viewportPseudoStyle), 
-                                               PR_FALSE,
-                                               getter_AddRefs(canvasPseudoStyle));
-    // XXX this should be a canvas pseudo style context
-    rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                    viewportFrame, canvasPseudoStyle, nsnull);
-    if (isScrollable) {
-      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
-                                               canvasPseudoStyle, PR_TRUE);
-    }
-
-    // The eventual parent of the document element frame
-    mDocElementContainingBlock = rootFrame;
-
-    // Set the initial child lists
-    if (isScrollable) {
-      scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
-      viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
-    } else {
-      viewportFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
-    }
-  }
-
-  aNewFrame = viewportFrame;
-  return NS_OK;  
-}
-*/
 
 NS_IMETHODIMP
 nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
@@ -2702,9 +2493,16 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     nsIFrame* rootFrame;
     NS_NewRootFrame(&rootFrame);
 
-    // XXX this should be a root pseudo style context
+    // Initialize the frame. It gets a pseudo element style context
+    // XXX When we fix it so the scroll frame uses its own pseudo style context
+    // (instead of the viewport's pseudo style context), then this needs to change
+    // and a different parent style context pointer passed in...
+    nsCOMPtr<nsIStyleContext> canvasPseudoStyle;
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::canvasPseudo,
+                                               viewportPseudoStyle, PR_FALSE,
+                                               getter_AddRefs(canvasPseudoStyle));
     rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                    viewportFrame, viewportPseudoStyle, nsnull);
+                    viewportFrame, canvasPseudoStyle, nsnull);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
                                                viewportPseudoStyle, PR_TRUE);
