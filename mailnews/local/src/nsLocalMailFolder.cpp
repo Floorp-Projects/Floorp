@@ -739,11 +739,26 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 			if(!NS_SUCCEEDED(folderOpen) &&
 				folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
 			{
+        nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+        nsCOMPtr <nsIDBFolderInfo> transferInfo;
+        if (mDatabase)
+        {
+          mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+          if (dbFolderInfo)
+            dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+          dbFolderInfo = nsnull;
+        }
 				// if it's out of date then reopen with upgrade.
 				if(!NS_SUCCEEDED(rv = mailDBFactory->Open(pathSpec, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
 				{
 					return rv;
 				}
+        else if (transferInfo && mDatabase)
+        {
+          mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+          if (dbFolderInfo)
+            dbFolderInfo->InitFromTransferInfo(transferInfo);
+        }
 			}
 	
 		}
