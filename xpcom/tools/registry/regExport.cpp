@@ -74,34 +74,46 @@ int main( int argc, char *argv[] ) {
 
     // Create the registry
     nsIRegistry *reg;
-    // static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
     static NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
     rv = compMgr->CreateInstance(NS_REGISTRY_PROGID, NULL, kRegistryIID, (void **) &reg);
 
     // Check result.
+    if ( NS_FAILED(rv) )
+    {   
+        printf( "Error opening registry file %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
+        return rv;
+    }
+    
+    // Open it against the input file name.
+    rv = reg->Open( argv[1] );
+    
     if ( rv == NS_OK ) {
-        // Latch onto the registry object.
-        reg->AddRef();
-      
-        // Open it against the input file name.
-        rv = reg->Open( argv[1] );
-        
+        NS_ADDREF(reg);
+        printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<default>" );
+            
+        // Recurse over all 3 branches.
+        display( reg, nsIRegistry::Common, "nsRegistry::Common" );
+        display( reg, nsIRegistry::Users, "nsRegistry::Users" );
+        display( reg, nsIRegistry::Common, "nsRegistry::CurrentUser" );
+    }
+
+    if (argc == 1) {
+        // Called with no arguments. Print both the default registry and 
+        // the components registry. We already printed the default regsitry.
+        // So just do the component registry.
+        rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
         if ( rv == NS_OK ) {
-            printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<default>" );
+            NS_ADDREF(reg);
+            printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<Application Component Registry>" );
             
             // Recurse over all 3 branches.
             display( reg, nsIRegistry::Common, "nsRegistry::Common" );
             display( reg, nsIRegistry::Users, "nsRegistry::Users" );
             display( reg, nsIRegistry::Common, "nsRegistry::CurrentUser" );
-            
-        } else {
-            printf( "Error opening registry file %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
         }
-        // Release the registry.
-        reg->Release();
-    } else {
-        printf( "Error creating nsRegistry object, rv=0x%08X\n", (int)rv );
     }
+
+    NS_RELEASE(reg);
 
     return rv;
 }
