@@ -77,8 +77,6 @@ _PR_MD_GET_INTERVAL()
 PRIntervalTime 
 _PR_MD_INTERVAL_PER_SEC()
 {
-    LARGE_INTEGER count;
-
     if (_nt_ticksPerSec != -1)
         return _nt_ticksPerSec;
     else
