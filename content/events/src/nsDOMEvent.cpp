@@ -67,9 +67,8 @@ static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "beforeunload", "unload", "abort", "error",
-  "submit", "reset", "change", "input", "formchange", "forminput", "select",
-  "paint" ,"text", "popupshowing", "popupshown", "popuphiding", "popuphidden",
-  "close", "command", "broadcast", "commandupdate",
+  "submit", "reset", "change", "select", "input", "paint" ,"text",
+  "popupshowing", "popupshown", "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
   "scroll","overflow", "underflow", "overflowchanged",
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
@@ -1162,12 +1161,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_FORM_RESET;
     else if (atom == nsLayoutAtoms::onchange)
       mEvent->message = NS_FORM_CHANGE;
-    else if (atom == nsLayoutAtoms::oninput)
-      mEvent->message = NS_FORM_INPUT;
-    else if (atom == nsLayoutAtoms::onformchange)
-      mEvent->message = NS_FORM_FORMCHANGE;
-    else if (atom == nsLayoutAtoms::onforminput)
-      mEvent->message = NS_FORM_FORMINPUT;
     else if (atom == nsLayoutAtoms::onselect)
       mEvent->message = NS_FORM_SELECTED;
     else if (atom == nsLayoutAtoms::onload)
@@ -1486,14 +1479,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_reset];
   case NS_FORM_CHANGE:
     return sEventNames[eDOMEvents_change];
-  case NS_FORM_INPUT:
-    return sEventNames[eDOMEvents_input];
-  case NS_FORM_FORMCHANGE:
-    return sEventNames[eDOMEvents_formchange];
-  case NS_FORM_FORMINPUT:
-    return sEventNames[eDOMEvents_forminput];
   case NS_FORM_SELECTED:
     return sEventNames[eDOMEvents_select];
+  case NS_FORM_INPUT:
+    return sEventNames[eDOMEvents_input];
   case NS_PAINT:
     return sEventNames[eDOMEvents_paint];
   case NS_RESIZE_EVENT:

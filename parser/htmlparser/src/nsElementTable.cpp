@@ -154,7 +154,7 @@ DECL_TAG_LIST(gHRAutoClose,{eHTMLTag_p})
 DECL_TAG_LIST(gOLAutoClose,{eHTMLTag_p COMMA eHTMLTag_ol})
 DECL_TAG_LIST(gDivAutoClose,{eHTMLTag_p})
 // Form controls that autoclose <select> use this
-DECL_TAG_LIST(gInputAutoClose,{eHTMLTag_select COMMA eHTMLTag_optgroup COMMA eHTMLTag_option COMMA eHTMLTag_output})
+DECL_TAG_LIST(gInputAutoClose,{eHTMLTag_select COMMA eHTMLTag_optgroup COMMA eHTMLTag_option})
 
 DECL_TAG_LIST(gHeadingTags,{eHTMLTag_h1 COMMA eHTMLTag_h2 COMMA eHTMLTag_h3 COMMA eHTMLTag_h4 COMMA eHTMLTag_h5 COMMA eHTMLTag_h6})
 
@@ -924,15 +924,6 @@ void InitializeElementTable(void) {
       /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
       /*special props, prop-range*/       kNoStyleLeaksIn|kNoPropagate, kDefaultPropRange,
       /*special parents,kids,skip*/       &gOptgroupParents,&gContainedInOpt,eHTMLTag_unknown);
-
-    Initialize( 
-      /*tag*/                             eHTMLTag_output,
-      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ &gInputAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_p,

@@ -629,16 +629,6 @@ NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent)
   return NS_OK; 
 }
 
-NS_IMETHODIMP nsRootAccessible::FormChange(nsIDOMEvent* aEvent) 
-{ 
-  return NS_OK; 
-}
-
-NS_IMETHODIMP nsRootAccessible::FormInput(nsIDOMEvent* aEvent) 
-{ 
-  return NS_OK; 
-}
-
 // ------- nsIDOMXULListener Methods (8) ---------------
 
 NS_IMETHODIMP nsRootAccessible::PopupShowing(nsIDOMEvent* aEvent) { return NS_OK; }

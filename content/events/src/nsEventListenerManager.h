@@ -285,14 +285,12 @@ protected:
 #define NS_EVENT_BITS_FOCUS_BLUR    0x02
 
 //nsIDOMFormListener
-#define NS_EVENT_BITS_FORM_NONE              0x00
-#define NS_EVENT_BITS_FORM_SUBMIT            0x01
-#define NS_EVENT_BITS_FORM_RESET             0x02
-#define NS_EVENT_BITS_FORM_CHANGE            0x04
-#define NS_EVENT_BITS_FORM_SELECT            0x08
-#define NS_EVENT_BITS_FORM_INPUT             0x10
-#define NS_EVENT_BITS_FORM_FORMCHANGE        0x11
-#define NS_EVENT_BITS_FORM_FORMINPUT         0x12
+#define NS_EVENT_BITS_FORM_NONE     0x00
+#define NS_EVENT_BITS_FORM_SUBMIT   0x01
+#define NS_EVENT_BITS_FORM_RESET    0x02
+#define NS_EVENT_BITS_FORM_CHANGE   0x04
+#define NS_EVENT_BITS_FORM_SELECT   0x08
+#define NS_EVENT_BITS_FORM_INPUT    0x10
 
 //nsIDOMLoadListener
 #define NS_EVENT_BITS_LOAD_NONE              0x00
