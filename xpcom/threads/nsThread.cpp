@@ -23,10 +23,6 @@
 #include "nsThread.h"
 #include "prmem.h"
 #include "prlog.h"
-#include "nsAutoLock.h"
-
-#define NS_THREADPOOL_WAIT_INTERVAL 5000
-
 
 PRUintn nsThread::kIThreadSelfIndex = 0;
 static nsIThread *gMainThread = 0;
@@ -346,7 +342,6 @@ nsThreadPool::nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads)
     : mMinThreads(minThreads), mMaxThreads(maxThreads), mShuttingDown(PR_FALSE)
 {
     NS_INIT_REFCNT();
-    if (mMinThreads==0) mMinThreads=1;
 }
 
 nsThreadPool::~nsThreadPool()
@@ -366,7 +361,7 @@ NS_IMETHODIMP
 nsThreadPool::DispatchRequest(nsIRunnable* runnable)
 {
     nsresult rv;
-    
+    PR_EnterMonitor(mRequestMonitor);
 
 #if defined(PR_LOGGING)
     nsCOMPtr<nsIThread> th;
@@ -376,48 +371,30 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
         rv = NS_ERROR_FAILURE;
     }
     else {
-        
-        PRUint32 requestCnt = 0, threadCount = 0;
-        nsAutoMonitor mon(mRequestMonitor);
-
-        rv = mRequests->Count(&requestCnt);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mThreads->Count(&threadCount);
-        if (NS_FAILED(rv)) goto exit;
-
-        if ((requestCnt >= threadCount) && (threadCount < mMaxThreads))
-        {
-            rv = AddThread();
-            if (NS_FAILED(rv)) goto exit;
-        }
-
+        // XXX for now AppendElement returns a PRBool
         rv = ((PRBool) mRequests->AppendElement(runnable)) ? NS_OK : NS_ERROR_FAILURE;
         if (NS_SUCCEEDED(rv))
             PR_Notify(mRequestMonitor);
     }
-     
-exit:
-    
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThreadPool thread %p dispatching %p status %x\n", th.get(), runnable, rv));
+    PR_ExitMonitor(mRequestMonitor);
     return rv;
 }
 
 nsIRunnable*
-nsThreadPool::GetRequest(nsIThread *thread)
+nsThreadPool::GetRequest()
 {
     nsresult rv = NS_OK;
     nsIRunnable* request = nsnull;
-    nsAutoMonitor mon(mRequestMonitor);
-
+ 
+    PR_EnterMonitor(mRequestMonitor);
 #if defined(PR_LOGGING)
     nsCOMPtr<nsIThread> th;
     nsIThread::GetCurrent(getter_AddRefs(th));
 #endif
 
     PRUint32 cnt;
-    PRUint32 threadCnt;
     while (PR_TRUE) {
         rv = mRequests->Count(&cnt);
         if (NS_FAILED(rv) || cnt != 0)
@@ -427,41 +404,9 @@ nsThreadPool::GetRequest(nsIThread *thread)
             rv = NS_ERROR_FAILURE;
             break;
         }
-        
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p waiting for %d\n", th.get(), 
-               NS_THREADPOOL_WAIT_INTERVAL));
-        
-        PRStatus status = PR_Wait(  mRequestMonitor, 
-                                    PR_MillisecondsToInterval(NS_THREADPOOL_WAIT_INTERVAL));  
-        
-        if (status != PR_SUCCESS || mShuttingDown) {
-            rv = NS_ERROR_FAILURE;
-            break;
-        }
-        
-        if ( NS_SUCCEEDED(mRequests->Count(&cnt)) && cnt > 0 )
-            break;
-
-        // no requests yet.  check to see if we should go away.
-        rv = mThreads->Count(&threadCnt);
-        
-        if (NS_FAILED(rv)) break;
-        
-        if (threadCnt > mMinThreads )
-        {
-            PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p being removed\n", th.get()));
-
-            RemoveThread(thread);
-            
-            return nsnull;
-        }
-
-        PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p waiting indefinite\n", th.get()));
-        
-        status = PR_Wait(mRequestMonitor, PR_INTERVAL_NO_TIMEOUT);
+               ("nsIThreadPool thread %p waiting\n", th.get()));
+        PRStatus status = PR_Wait(mRequestMonitor, PR_INTERVAL_NO_TIMEOUT);
         if (status != PR_SUCCESS || mShuttingDown) {
             rv = NS_ERROR_FAILURE;
             break;
@@ -479,7 +424,7 @@ nsThreadPool::GetRequest(nsIThread *thread)
     }
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThreadPool thread %p got request %p\n", th.get(), request));
-
+    PR_ExitMonitor(mRequestMonitor);
     return request;
 }
 
@@ -561,12 +506,8 @@ nsThreadPool::Init(PRUint32 stackSize,
                    PRThreadPriority priority,
                    PRThreadScope scope)
 {
-    mStackSize = stackSize;
-    mPriority = priority;
-    mScope = scope;
-
     nsresult rv;
-    
+
     rv = NS_NewISupportsArray(getter_AddRefs(mThreads));
     if (NS_FAILED(rv)) return rv;
     
@@ -577,69 +518,34 @@ nsThreadPool::Init(PRUint32 stackSize,
     if (mRequestMonitor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     
-    return rv;
-}
+    PR_CEnterMonitor(this);
 
+    for (PRUint32 i = 0; i < mMinThreads; i++) {
+        nsThreadPoolRunnable* runnable =
+            new nsThreadPoolRunnable(this);
+        if (runnable == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(runnable);
 
-nsresult
-nsThreadPool::AddThread()
-{
-    PRUint32 cnt;
-    nsresult rv = mThreads->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
+        nsIThread* thread;
 
-    if (cnt >= mMaxThreads)
-        return NS_ERROR_FAILURE;
+        rv = NS_NewThread(&thread, runnable, stackSize, 
+                          PR_JOINABLE_THREAD, /* needed for Shutdown */
+                          priority, scope);
+        NS_RELEASE(runnable);
+        if (NS_FAILED(rv)) goto exit;
 
-    nsThreadPoolRunnable* runnable = new nsThreadPoolRunnable(this);
-    if (runnable == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(runnable);
-
-    nsIThread* thread;
-
-    rv = NS_NewThread(&thread, 
-                      runnable, 
-                      mStackSize, 
-                      PR_JOINABLE_THREAD, /* needed for Shutdown */
-                      mPriority, 
-                      mScope);
-    
-    // wait for worker thread to be ready
-    PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
-    
-    NS_RELEASE(runnable);
-    
-    if (NS_SUCCEEDED(rv))
         rv = mThreads->AppendElement(thread) ? NS_OK : NS_ERROR_FAILURE;
-    
-    NS_RELEASE(thread);
-    return rv;
-}
-
-nsresult
-nsThreadPool::RemoveThread(nsIThread *inThread)
-{
-    PRUint32 count, i;
-
-    nsresult rv = mThreads->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (i = 0; i < count; i++) 
-    {
-        nsIThread* thread = (nsIThread*)(mThreads->ElementAt(i));
-        if (thread == inThread)
-        {
-            NS_RELEASE(thread);
-            rv = mThreads->RemoveElementAt(i);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveElementAt failed");
-            break;
-        }
+        NS_RELEASE(thread);
+        if (NS_FAILED(rv)) goto exit;
     }
+    // wait for some worker thread to be ready
+    PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
+
+  exit:
+    PR_CExitMonitor(this);
     return rv;
 }
-
-
 
 NS_COM nsresult
 NS_NewThreadPool(nsIThreadPool* *result,
@@ -691,10 +597,11 @@ nsThreadPoolRunnable::Run()
     PR_CNotify(mPool);
     PR_CExitMonitor(mPool);
 
+#if defined(PR_LOGGING)
     nsCOMPtr<nsIThread> th;
     nsIThread::GetCurrent(getter_AddRefs(th));
-
-    while ((request = mPool->GetRequest(th)) != nsnull) {
+#endif
+    while ((request = mPool->GetRequest()) != nsnull) {
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                ("nsIThreadPool thread %p running %p\n", th.get(), request));
         rv = request->Run();
