@@ -22,8 +22,14 @@
 DEPTH=..
 include <$(DEPTH)/config/config.mak>
 
-DIRS = nss \
-	manager \
-	$(NULL)
+DIRS = nss manager
+
+all::
+	nmake /f makefile.win export
+	nmake /f makefile.win libs
+
+# NSS is hardcoded to use dbm.lib
+libs::
+	copy $(DIST)\lib\dbm32.lib $(DIST)\lib\dbm.lib
 
 include <$(DEPTH)\config\rules.mak>
