@@ -53,7 +53,14 @@
 */
 
 #if defined(LINUX)
+
+#if (__GNUC__ == 2) && (__GNUC_MINOR__ <= 7)
+/* Old gcc 2.7.x.x.  What does gcc 2.8.x do?? */
+#define CFRONT_STYLE_THIS_ADJUST
+#else
+/* egcs and later */
 #define THUNK_BASED_THIS_ADJUST
+#endif
 
 #elif defined(__FreeBSD__) 
 /* System versions of gcc on FreeBSD don't use thunks.  On 3.x, the system
