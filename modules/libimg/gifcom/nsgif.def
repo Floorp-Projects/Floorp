@@ -2,7 +2,7 @@
 ; temp def file for nsgif dll
 ;
 
-LIBRARY		nsgif3250.dll
+LIBRARY		nsgif.dll
 DESCRIPTION  	'test dll'
 
 EXPORTS		

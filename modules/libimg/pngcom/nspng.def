@@ -2,7 +2,7 @@
 ; temp def file for nspng dll
 ;
 
-LIBRARY		nspng3250.dll
+LIBRARY		nspng.dll
 DESCRIPTION  	'test dll'
 
 EXPORTS		
