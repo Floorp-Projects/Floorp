@@ -100,6 +100,64 @@ nsLineLayout::AddText(nsIFrame* aTextFrame)
   return NS_OK;/* XXX */
 }
 
+nsIFrame*
+nsLineLayout::FindNextText(nsIFrame* aFrame)
+{
+  // Only the first-in-flows are present in the text run list so
+  // backup from the argument frame to its first-in-flow.
+  for (;;) {
+    nsIFrame* prevInFlow;
+    aFrame->GetPrevInFlow(prevInFlow);
+    if (nsnull == prevInFlow) {
+      break;
+    }
+    aFrame = prevInFlow;
+  }
+
+  // Now look for the frame that follows aFrame's first-in-flow
+  nsTextRun* run = mReflowTextRuns;
+  while (nsnull != run) {
+    PRInt32 ix = run->mArray.IndexOf(aFrame);
+    if (ix >= 0) {
+      if (ix < run->mArray.Count() - 1) {
+        return (nsIFrame*) run->mArray[ix + 1];
+      }
+    }
+    run = run->mNext;
+  }
+  return nsnull;
+}
+
+PRBool
+nsLineLayout::IsNextWordFrame(nsIFrame* aFrame)
+{
+  if (0 != mWordFrames.Count()) {
+    nsIFrame* next = (nsIFrame*) mWordFrames[0];
+    return next == aFrame;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsLineLayout::IsLastWordFrame(nsIFrame* aFrame)
+{
+  PRInt32 n = mWordFrames.Count();
+  if (0 != n) {
+    nsIFrame* next = (nsIFrame*) mWordFrames[0];
+    return (next == aFrame) && (1 == n);
+  }
+  return PR_FALSE;
+}
+
+void
+nsLineLayout::ForgetWordFrame(nsIFrame* aFrame)
+{
+  NS_ASSERTION((void*)aFrame == mWordFrames[0], "forget-word-frame");
+  if (0 != mWordFrames.Count()) {
+    mWordFrames.RemoveElementAt(0);
+  }
+}
+
 // XXX move this somewhere else!!!
 PRBool
 nsLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
