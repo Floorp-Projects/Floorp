@@ -24,10 +24,6 @@ MODULE	= plugin
 EXPORTS	=				      \
 	nsIEventHandler.h		      \
 	nsIFileUtilities.h		      \
-	nsIJRILiveConnectPlugin.h	      \
-	nsIJRILiveConnectPlugInstPeer.h       \
-	nsILiveConnectPlugin.h		      \
-	nsILiveConnectPlugInstPeer.h          \
 	nsIMalloc.h                           \
 	nsIPlugin.h			      \
 	nsIPluginInstance.h		      \
@@ -37,9 +33,8 @@ EXPORTS	=				      \
 	nsIPluginTagInfo.h		      \
 	nsIPluginTagInfo2.h		      \
 	nsIWindowlessPlugInstPeer.h           \
-        nsIPluginInputStream.h                \
-        nsIPluginInputStream2.h               \
         nsIPluginStreamListener.h             \
+        nsIPluginStreamInfo.h                 \
 	nsplugin.h			      \
 	nsplugindefs.h
 
@@ -49,6 +44,12 @@ EXPORTS = $(EXPORTS)                          \
 	nsIPluginStreamPeer.h		      \
 	nsIPluginStreamPeer2.h		      \
 	nsISeekablePluginStreamPeer.h	      \
+        nsILiveConnectPlugin.h		      \
+	nsILiveConnectPlugInstPeer.h          \
+        nsIJRILiveConnectPlugin.h	      \
+	nsIJRILiveConnectPlugInstPeer.h       \
+        nsIPluginInputStream.h                \
+        nsIPluginInputStream2.h
 
 include <$(DEPTH)/config/rules.mak>
 
