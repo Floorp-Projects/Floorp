@@ -71,23 +71,25 @@ nsresult nsCollationMacUC::StrengthToOptions(
 {
   NS_ENSURE_ARG_POINTER(aOptions);
   NS_ENSURE_TRUE((aStrength < 4), NS_ERROR_FAILURE);
+  // set our default collaion option
+  UCCollateOptions defaultOption = kUCCollateStandardOptions | kUCCollatePunctuationSignificantMask;
   switch (aStrength) {
     case kCollationCaseInsensitiveAscii:
-      *aOptions = kUCCollateStandardOptions 
+      *aOptions = defaultOption 
                   | kUCCollateCaseInsensitiveMask;
       break;
     case kCollationAccentInsenstive:
-      *aOptions = kUCCollateStandardOptions 
+      *aOptions = defaultOption 
                   | kUCCollateDiacritInsensitiveMask;
       break;
     case kCollationCaseInSensitive:
-      *aOptions = kUCCollateStandardOptions 
+      *aOptions = defaultOption 
                   | kUCCollateCaseInsensitiveMask
                   | kUCCollateDiacritInsensitiveMask;
       break;
     case kCollationCaseSensitive:
     default:
-      *aOptions =  kUCCollateStandardOptions;
+      *aOptions =  defaultOption;
       break;
   }
   return NS_OK;
