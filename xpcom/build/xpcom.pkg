@@ -101,6 +101,3 @@ dist/include/nspr/plstr.h
 !optional dist/bin/.autoreg
 !optional dist/bin/components/xpti.dat
 !optional dist/bin/components/compreg.dat
-#if OS_ARCH==WINNT
-dist/bin/rebasedlls.exe
-#endif

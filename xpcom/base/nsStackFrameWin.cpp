@@ -247,10 +247,6 @@ EnsureSymInitialized()
  * so that the address in the file agrees with the address in memory.
  * Otherwise StackWalk will return FALSE when it hits a frame in a dll's
  * whose in memory address doesn't match it's in-file address.
- *
- * Fortunately, there is a handy dandy routine in IMAGEHLP.DLL that does
- * the rebasing and accordingly I've made a tool to use it to rebase the
- * DLL's in one fell swoop (see xpcom/tools/windows/rebasedlls.cpp).
  */
 
 
