@@ -355,7 +355,7 @@ printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSe
 
     mTitle = nsnull;
     if(nsnull != aTitle){
-      mTitle = ToNewCString(nsLiteralString(aTitle));
+      mTitle = ToNewCString(nsDependentString(aTitle));
     }
 
     pi->doc_title = mTitle;
