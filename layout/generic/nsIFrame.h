@@ -535,7 +535,7 @@ public:
    * @see nsISupports#Release()
    */
   nsresult GetStyleContext(nsIStyleContext** aStyleContext) const { 
-    NS_IF_ADDREF(mStyleContext); *aStyleContext = mStyleContext; return NS_OK;
+    *aStyleContext = mStyleContext; NS_IF_ADDREF(*aStyleContext); return NS_OK;
   }
   nsresult SetStyleContext(nsIPresContext*  aPresContext, nsIStyleContext* aContext) { 
     if (aContext != mStyleContext) {
