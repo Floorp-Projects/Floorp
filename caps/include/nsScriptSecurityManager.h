@@ -285,11 +285,6 @@ public:
 
     JSContext* GetSafeJSContext();
 
-    static nsresult
-    SecurityCompareURIs(nsIURI* aSourceURI,
-                        nsIURI* aTargetURI,
-                        PRBool* result);
-
 private:
 
     // GetScriptSecurityManager is the only call that can make one

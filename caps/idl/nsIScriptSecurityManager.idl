@@ -234,6 +234,14 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     [noscript] nsIPrincipal getPrincipalFromContext(in JSContextPtr cx);
 
+    /**
+     * Utility method for comparing two URIs.  For security purposes, two URIs
+     * are equivalent if their schemes, hosts, and ports (if any) match.  This
+     * method returns true if aSubjectURI and aObjectURI have the same origin,
+     * false otherwise.
+     */
+    [noscript] boolean securityCompareURIs(in nsIURI aSubjectURI,
+                                           in nsIURI aObjectURI);
 };
 
 %{C++

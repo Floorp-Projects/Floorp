@@ -214,10 +214,7 @@ nsScriptSecurityManager::GetSafeJSContext()
     return cx;
 }
 
-/* Static function for comparing two URIs - for security purposes,
- * two URIs are equivalent if their scheme, host, and port are equal.
- */
-/*static*/ nsresult
+NS_IMETHODIMP
 nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
                                              nsIURI* aTargetURI,
                                              PRBool* result)
