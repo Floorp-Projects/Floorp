@@ -662,7 +662,6 @@ cert_DecodeNameConstraintSubTree(PRArenaPool   *arena,
     CERTNameConstraint   *current = NULL;
     CERTNameConstraint   *first = NULL;
     CERTNameConstraint   *last = NULL;
-    CERTNameConstraint   *next = NULL;
     int                  i = 0;
 
     PORT_Assert(arena);
