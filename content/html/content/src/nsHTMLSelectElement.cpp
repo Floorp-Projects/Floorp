@@ -716,16 +716,38 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
       }
       result = options->Item(selectedIndex, getter_AddRefs(node));
       if (NS_SUCCEEDED(result) && node) {
-        nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
+        nsCOMPtr<nsIHTMLContent> option = do_QueryInterface(node);
         if (option) {
-          option->GetValue(aValue);
-          if (0 == aValue.Length()) {
-            option->GetLabel(aValue);
-            if (0 == aValue.Length()) {
-              option->GetText(aValue);
+          nsHTMLValue value;
+          // first check to see if value is there and has a value
+          nsresult rv = option->GetHTMLAttribute(nsHTMLAtoms::value, value);
+          if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
+            if (eHTMLUnit_String == value.GetUnit()) {
+              value.GetStringValue(aValue);
+            } else {
+              aValue = "";
             }
+            return NS_OK;
           }
+
+          // first check to see if label is there and has a value
+          rv = option->GetHTMLAttribute(nsHTMLAtoms::label, value);
+          if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
+            if (eHTMLUnit_String == value.GetUnit()) {
+              value.GetStringValue(aValue);
+            } else {
+              aValue = "";
+            }
+            return NS_OK;
+          } 
+
+          nsCOMPtr<nsIDOMHTMLOptionElement> optElement = do_QueryInterface(node);
+          if (optElement) {
+            optElement->GetText(aValue);
+          }
+          return NS_OK;
         }
+
       }
     }
   }
