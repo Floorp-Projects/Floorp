@@ -277,8 +277,8 @@ void nsDogbertProfileMigrator::CopyNextFolder()
     }
     // fire a timer to handle the next one. 
     mFileIOTimer = do_CreateInstance("@mozilla.org/timer;1");
-    // if the progress = 100% let's pause for a second or two with a finished progessmeter before we move on
-    mFileIOTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback *, this), percentage == 100 ? 500 : 0, nsITimer::TYPE_ONE_SHOT);
+    if (mFileIOTimer)
+      mFileIOTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback *, this), percentage == 100 ? 500 : 0, nsITimer::TYPE_ONE_SHOT);
   } else
     EndCopyFolders();
   

@@ -64,6 +64,8 @@ nsProfileMigratorBase::nsProfileMigratorBase()
 
 nsProfileMigratorBase::~nsProfileMigratorBase()
 {           
+  if (mFileIOTimer)
+    mFileIOTimer->Cancel();
 }
 
 nsresult nsProfileMigratorBase::ImportSettings(nsIImportModule * aImportModule)
