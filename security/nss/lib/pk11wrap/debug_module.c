@@ -774,6 +774,7 @@ CK_RV NSSDBGC_CreateObject(
     PR_LOG(modlog, 3, ("  pTemplate = 0x%p", pTemplate));
     PR_LOG(modlog, 3, ("  ulCount = %d", ulCount));
     PR_LOG(modlog, 3, ("  phObject = 0x%p", phObject));
+    print_template(pTemplate, ulCount);
     start = PR_IntervalNow();
     rv = module_functions->C_CreateObject(hSession,
                                  pTemplate,
@@ -805,6 +806,7 @@ CK_RV NSSDBGC_CopyObject(
     PR_LOG(modlog, 3, ("  pTemplate = 0x%p", pTemplate));
     PR_LOG(modlog, 3, ("  ulCount = %d", ulCount));
     PR_LOG(modlog, 3, ("  phNewObject = 0x%p", phNewObject));
+    print_template(pTemplate, ulCount);
     start = PR_IntervalNow();
     rv = module_functions->C_CopyObject(hSession,
                                  hObject,
