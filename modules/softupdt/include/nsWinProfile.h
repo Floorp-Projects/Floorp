@@ -80,6 +80,7 @@ private:
   /* Private Methods */
   int nativeWriteString( char* section, char* key, char* value );
   char* nativeGetString( char* section, char* key );
+  PRBool resolvePrivileges();
   
 };
 

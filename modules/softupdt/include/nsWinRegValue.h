@@ -34,8 +34,10 @@ public:
   PRInt32 data_length;
 
   /* Public Methods */
-  nsWinRegValue(PRInt32 datatype, void* regdata, PRInt32 len) {type = datatype; data = regdata; data_length = len;} 
+  nsWinRegValue(PRInt32 datatype, void* regdata, PRInt32 len) 
+	{type = datatype; data = regdata; data_length = len;} 
   
+  /* should we copy the regdata? */
 private:
   
   /* Private Fields */

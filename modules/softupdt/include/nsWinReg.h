@@ -80,6 +80,7 @@ private:
 
   PRInt32 nativeSetValue(char* subkey, char* valname, nsWinRegValue* value);
   nsWinRegValue* nativeGetValue(char* subkey, char* valname);
+  PRBool resolvePrivileges();
   
 };
 

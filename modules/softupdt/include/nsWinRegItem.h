@@ -41,21 +41,15 @@ public:
                char* valname,
                void* val);
   
-  /**
-   * Completes the install:
-   * - writes the data into the .INI file
-   */
-  virtual char* Complete();
-  
-  float GetInstallOrder();
+  char* Prepare(void);
+
+  char* Complete();
   
   char* toString();
   
-  // no need for special clean-up
   void Abort();
   
-  // no need for set-up
-  virtual char* Prepare();
+  float GetInstallOrder();
   
   
 private:
@@ -72,7 +66,9 @@ private:
   /* Private Methods */
 
   char* keystr(PRInt32 root, char* subkey, char* name);
-  
+
+  char* itoa(PRInt32 n);
+  void reverseString(char* s);
 };
 
 PR_END_EXTERN_C
