@@ -1,0 +1,94 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<?xml-stylesheet href="dialog.css" type="text/css"?>
+<?xml-stylesheet href="pref.css" type="text/css"?>
+
+<!DOCTYPE window [
+
+<!ENTITY  title.label "Fonts">
+<!ENTITY  header "Fonts">
+<!ENTITY  encod.select "For the Encoding:">
+<!ENTITY  encod1.option "Western">
+<!ENTITY  size.select "Size">
+<!ENTITY  size1.option "10">
+<!ENTITY  varFont.select "Variable Width Font:">
+<!ENTITY  varFont.option "10">
+<!ENTITY  fixedFont.Select "Fixed Width Font">
+<!ENTITY  fixedFont.option "Filler">
+<!ENTITY  header2 "Sometimes a document will provide its own fonts.">
+<!ENTITY  useDefaultFontRadio "Use my default fonts, overriding document-specified fonts">
+<!ENTITY  useDocFontRadio "Use document-specified fonts, but disable Dynamic Fonts">
+<!ENTITY  useDocFontsRadio "Use document-specified fonts, including Dynamic Fonts">
+
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('Fonts');"  title="&title.label;">
+
+<html:script language="JavaScript" src="PrefsWindow.js">
+</html:script>
+
+<html:DIV ID="top">
+		<html:SPAN ID="lefttext">&header;</html:SPAN>
+</html:DIV>
+
+
+
+<html:table>
+		<html:tr>
+			<html:td>&encod.select;
+			</html:td>
+			<html:td>
+				<html:select id="pref">
+					<html:optgroup>
+						<html:option>&encod1.option;</html:option>
+					</html:optgroup>
+				</html:select>
+			</html:td>
+			<html:td>&size.select;
+				<html:select id="pref">
+					<html:optgroup>
+						<html:option>&size1.option;</html:option>
+					</html:optgroup>
+				</html:select>
+			</html:td></html:tr>
+		<html:tr>
+		<html:td>&varFont.select;</html:td>
+			<html:td>
+				<html:select  id="pref">
+					<html:optgroup>
+						<html:option>Filler</html:option>
+				  </html:optgroup>
+				</html:select>
+				</html:td>			
+				<html:td>&size.select;
+					<html:select id="pref">
+						<html:optgroup>
+							<html:option>&varFont.option;</html:option>
+						</html:optgroup>
+					</html:select>
+			</html:td>
+		</html:tr>
+			<html:tr>
+			<html:td>&fixedFont.Select;
+			</html:td>
+			<html:td>
+					<html:select class="combobox" id="pref">
+						<html:optgroup>
+							<html:option>&fixedFont.option;</html:option>
+						</html:optgroup>
+					</html:select>
+			</html:td>
+			<html:td></html:td>
+		</html:tr>
+</html:table>
+<html:br />
+       <html:table>
+			<html:tr><html:td>&header2;</html:td></html:tr>
+			<html:tr><html:td><html:label>
+					<html:input name="fonts" type="radio" id="pref:0:int:browser.use_document_fonts" val="checked" />&useDefaultFontRadio;</html:label></html:td></html:tr>
+					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" />&useDocFontRadio;</html:label></html:td></html:tr>
+					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" />&useDocFontsRadio;</html:label></html:td></html:tr>
+		</html:table>
+</window>
