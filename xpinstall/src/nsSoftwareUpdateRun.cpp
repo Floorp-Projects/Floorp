@@ -184,6 +184,14 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
 
+    // CRC check the integrity of all items in this archive
+    rv = hZip->Test(nsnull);
+    if (NS_FAILED(rv))
+    {
+        NS_ASSERTION(0, "CRC check of archive failed!");
+        return nsInstall::CANT_READ_ARCHIVE;
+    }
+
     // Extract the install.js file to the temporary directory
     nsSpecialSystemDirectory installJSFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     installJSFileSpec += "install.js";
