@@ -1597,25 +1597,24 @@ imap_shell_cache_strcmp (const void *a, const void *b)
 
 nsIMAPBodyShellCache::nsIMAPBodyShellCache()
 {
-	m_shellHash = new nsHashtable(20); /* , XP_StringHash, imap_shell_cache_strcmp); */
-	m_shellList = new nsVoidArray();
+  m_shellHash = new nsHashtable(20); /* , XP_StringHash, imap_shell_cache_strcmp); */
+  m_shellList = new nsVoidArray();
 }
 
 /* static */ nsIMAPBodyShellCache *nsIMAPBodyShellCache::Create()
 {
-	nsIMAPBodyShellCache *cache = new nsIMAPBodyShellCache();
-	if (!cache || !cache->m_shellHash || !cache->m_shellList)
-		return NULL;
-
-	return cache;
+  nsIMAPBodyShellCache *cache = new nsIMAPBodyShellCache();
+  if (!cache || !cache->m_shellHash || !cache->m_shellList)
+    return NULL;
+  
+  return cache;
 }
 
 nsIMAPBodyShellCache::~nsIMAPBodyShellCache()
 {
-	while (EjectEntry()) ;
-	if (m_shellHash)
-		delete m_shellHash;
-	delete m_shellList;
+  while (EjectEntry()) ;
+  delete m_shellHash;
+  delete m_shellList;
 }
 
 // We'll use an LRU scheme here.
