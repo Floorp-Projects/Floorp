@@ -324,6 +324,13 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 	return rv;
 }
 
+nsresult nsNntpService::CopyMessages(nsMsgKeyArray *keys, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
+						   nsIUrlListener * aUrlListener, nsIURI **aURL)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 typedef struct _findNewsServerEntry {
   const char *newsgroup;
   nsINntpIncomingServer *server;

@@ -98,6 +98,15 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
                       aURL);
 }
 
+nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
+                              nsIStreamListener * aMailboxCopyHandler,
+                              PRBool moveMessage,
+                              nsIUrlListener * aUrlListener,
+                              nsIURI **aURL)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
                                         nsISupports * aDisplayConsumer, 
                                         nsIMsgWindow * aMsgWindow,
