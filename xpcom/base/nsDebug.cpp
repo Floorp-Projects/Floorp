@@ -117,7 +117,7 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
   InitLog();
 
   char buf[2000];
-  buf[0] = PR_snprintf(buf, sizeof(buf),
+  buf[0] = PR_snprintf(buf + 1, sizeof(buf) - 1,
               "AbortIfFalse: %s: '%s', file %s, line %d",
               aStr, aExpr, aFile, aLine);
 
@@ -144,7 +144,7 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
   PR_Abort();
 #elif defined(XP_BEOS)
   {
-	DEBUGGER(buf);
+	DEBUGGER(buf + 1);
   } 
 #endif
 }
