@@ -125,3 +125,8 @@ real_install: install
 real_clobber: clobber
 
 real_depend: depend
+
+ifndef MOZ_MAIL_NEWS
+export::
+	$(MAKE) -C mailnews export
+endif
