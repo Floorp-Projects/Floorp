@@ -2034,6 +2034,17 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
+      nsIEventStateManager *stateManager;
+      if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
+        nsIFrame * frame;
+        stateManager->GetEventTarget(&frame);
+        nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
+        if (listFrame) {
+          return NS_OK;
+        }
+        NS_RELEASE(stateManager);
+      }
+
       PRBool isDroppedDown;
       mComboboxFrame->IsDroppedDown(&isDroppedDown);
       mComboboxFrame->ShowDropDown(!isDroppedDown);
