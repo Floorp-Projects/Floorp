@@ -33,12 +33,10 @@ struct nsStyleText;
 
 class nsFrameReflowState : public nsHTMLReflowState {
 public:
-  nsFrameReflowState(nsIPresContext& aPresContext,
-                     const nsHTMLReflowState& aReflowState,
-                     const nsHTMLReflowMetrics& aMetrics);
-  ~nsFrameReflowState();
+  nsFrameReflowState(nsIPresContext& aPresContext);
 
-  void SetupChildReflowState(nsHTMLReflowState& aChildReflowState);
+  void Init(const nsHTMLReflowState& aReflowState,
+            const nsHTMLReflowMetrics& aMetrics);
 
   nsIPresContext& mPresContext;
   nsIFrame* mNextRCFrame;
@@ -48,8 +46,6 @@ public:
 
   // Style data pointers for frame
   const nsStyleText* mStyleText;
-  const nsStyleDisplay* mStyleDisplay;
-  const nsStyleSpacing* mStyleSpacing;
 
   // This is true if no-wrap is set for frame
   PRBool mNoWrap;
@@ -79,15 +75,6 @@ public:
 
   // The frames border+padding value
   nsMargin mBorderPadding;
-
-  // Is this frame a root for margin collapsing?
-  PRBool mIsMarginRoot;
-
-  // The computed collapsed top margin value that the frame did not
-  // apply but is passing out to the frames parent so that the parent
-  // can perform generational margin collapsing. This value ends up
-  // being copied into the nsHTMLReflowMetrics.mCarriedOutTopMargin.
-  nscoord mCarriedOutTopMargin;
 
   // The previous child frames collapsed bottom margin value.
   nscoord mPrevBottomMargin;
