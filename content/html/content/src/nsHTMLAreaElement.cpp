@@ -38,27 +38,26 @@
 #include "nsHTMLUtils.h"
 
 
-class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
+class nsHTMLAreaElement : public nsGenericHTMLLeafElement,
+                          public nsIDOMHTMLAreaElement,
                           public nsIDOMNSHTMLAreaElement,
-                          public nsIJSScriptObject,
-                          public nsILink,
-                          public nsIHTMLContent
+                          public nsILink
 {
 public:
-  nsHTMLAreaElement(nsINodeInfo *aNodeInfo);
+  nsHTMLAreaElement();
   virtual ~nsHTMLAreaElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLAreaElement
   NS_DECL_IDOMHTMLAREAELEMENT
@@ -66,23 +65,22 @@ public:
   // nsIDOMNSHTMLAreaElement
   NS_DECL_IDOMNSHTMLAREAELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
   // nsILink
-  NS_IMETHOD    GetLinkState(nsLinkState &aState);
-  NS_IMETHOD    SetLinkState(nsLinkState aState);
-  NS_IMETHOD    GetHrefCString(char* &aBuf);
+  NS_IMETHOD GetLinkState(nsLinkState &aState);
+  NS_IMETHOD SetLinkState(nsLinkState aState);
+  NS_IMETHOD GetHrefCString(char* &aBuf);
 
-  // nsIContent
-  NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(mInner)
-  
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsGenericHTMLLeafElement mInner;
-
   // The cached visited state
   nsLinkState mLinkState;
 };
@@ -92,21 +90,31 @@ NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult,
                       nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLAreaElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLAreaElement* it = new nsHTMLAreaElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLAreaElement::nsHTMLAreaElement(nsINodeInfo *aNodeInfo)
+nsHTMLAreaElement::nsHTMLAreaElement()
   : mLinkState(eLinkState_Unknown)
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   nsHTMLUtils::AddRef(); // for GetHrefCString
 }
 
@@ -115,45 +123,42 @@ nsHTMLAreaElement::~nsHTMLAreaElement()
   nsHTMLUtils::Release(); // for GetHrefCString
 }
 
-NS_IMPL_ADDREF(nsHTMLAreaElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLAreaElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLAreaElement, nsGenericElement) 
 
-NS_IMPL_RELEASE(nsHTMLAreaElement)
+NS_IMPL_HTMLCONTENT_QI3(nsHTMLAreaElement, nsGenericHTMLLeafElement,
+                        nsIDOMHTMLAreaElement, nsIDOMNSHTMLAreaElement,
+                        nsILink)
 
-nsresult
-nsHTMLAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLAreaElement))) {
-    nsIDOMHTMLAreaElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLAreaElement))) {
-    nsIDOMNSHTMLAreaElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsILink))) {
-    *aInstancePtr = (void*)(nsILink*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 nsresult
 nsHTMLAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLAreaElement* it = new nsHTMLAreaElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLAreaElement* it = new nsHTMLAreaElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Alt, alt)
@@ -162,6 +167,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Target, target)
+
 
 NS_IMETHODIMP
 nsHTMLAreaElement::StringToAttribute(nsIAtom* aAttribute,
@@ -173,7 +179,7 @@ nsHTMLAreaElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -182,56 +188,14 @@ nsHTMLAreaElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::AttributeToString(nsIAtom* aAttribute,
-                                     const nsHTMLValue& aValue,
-                                     nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLAreaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                            PRInt32& aHint) const
-
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLAreaElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent,
                                   nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEventForAnchors(this,
-                                         aPresContext, 
-                                         aEvent, 
-                                         aDOMEvent, 
-                                         aFlags, 
-                                         aEventStatus);
+  return HandleDOMEventForAnchors(this, aPresContext, aEvent, aDOMEvent, 
+                                  aFlags, aEventStatus);
 }
 
 NS_IMETHODIMP
@@ -273,17 +237,21 @@ nsHTMLAreaElement::GetHref(nsAWritableString& aValue)
 NS_IMETHODIMP
 nsHTMLAreaElement::SetHref(const nsAReadableString& aValue)
 {
-  // Clobber our "cache", so we'll recompute it the next time
-  // somebody asks for it.
+  // Clobber our "cache", so we'll recompute it the next time somebody
+  // asks for it.
   mLinkState = eLinkState_Unknown;
 
-  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, aValue, PR_TRUE);
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_HTML,
+                                                          nsHTMLAtoms::href,
+                                                          aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsHTMLAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -301,7 +269,7 @@ nsHTMLAreaElement::GetProtocol(nsAWritableString& aProtocol)
       result = url->GetScheme(&protocol);
       if (result == NS_OK) {
         aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
-        aProtocol.Append(NS_LITERAL_STRING(":"));
+        aProtocol.Append(PRUnichar(':'));
         nsCRT::free(protocol);
       }
       NS_RELEASE(url);
@@ -330,7 +298,7 @@ nsHTMLAreaElement::GetHost(nsAWritableString& aHost)
         PRInt32 port;
         (void)url->GetPort(&port);
         if (-1 != port) {
-          aHost.Append(NS_LITERAL_STRING(":"));
+          aHost.Append(PRUnichar(':'));
           nsAutoString portStr;
           portStr.AppendInt(port, 10);
           aHost.Append(portStr);
@@ -399,29 +367,28 @@ NS_IMETHODIMP
 nsHTMLAreaElement::GetSearch(nsAWritableString& aSearch)
 {
   nsAutoString href;
-  nsIURI *uri;
+  nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
-    if (NS_OK == result) {
+  if (NS_SUCCEEDED(result)) {
+    result = NS_NewURI(getter_AddRefs(uri), href);
+    if (NS_SUCCEEDED(result)) {
       char *search;
-      nsIURL* url;
-      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-      if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+
+      if (url) {
         result = url->GetEscapedQuery(&search);
-        NS_RELEASE(url);
       }
-      if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
-        aSearch.Assign(NS_LITERAL_STRING("?"));
+
+      if (NS_SUCCEEDED(result) && search && *search) {
+        aSearch.Assign(PRUnichar('?'));
         aSearch.Append(NS_ConvertASCIItoUCS2(search));
         nsCRT::free(search);
       }
       else {
         aSearch.SetLength(0);
       }
-      NS_RELEASE(uri);
     }
   }
 
@@ -432,22 +399,21 @@ NS_IMETHODIMP
 nsHTMLAreaElement::GetPort(nsAWritableString& aPort)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsCOMPtr<nsIURI> url;
   nsresult result = NS_OK;
   
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
+  if (NS_SUCCEEDED(result)) {
+    result = NS_NewURI(getter_AddRefs(url), href);
+    if (NS_SUCCEEDED(result)) {
       aPort.SetLength(0);
       PRInt32 port;
-      (void)url->GetPort(&port);
+      url->GetPort(&port);
       if (-1 != port) {
         nsAutoString portStr;
         portStr.AppendInt(port, 10);
         aPort.Append(portStr);
       }
-      NS_RELEASE(url);
     }
   }
 
@@ -458,30 +424,28 @@ NS_IMETHODIMP
 nsHTMLAreaElement::GetHash(nsAWritableString& aHash)
 {
   nsAutoString href;
-  nsIURI *uri;
+  nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
   if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
+    result = NS_NewURI(getter_AddRefs(uri), href);
 
-    if (NS_OK == result) {
+    if (NS_SUCCEEDED(result)) {
       char *ref;
-      nsIURL* url;
-      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-      if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+      if (url) {
         result = url->GetRef(&ref);
-        NS_RELEASE(url);
       }
-      if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
-        aHash.Assign(NS_LITERAL_STRING("#"));
+
+      if (NS_SUCCEEDED(result) && ref && *ref) {
+        aHash.Assign(PRUnichar('#'));
         aHash.Append(NS_ConvertASCIItoUCS2(ref));
         nsCRT::free(ref);
       }
       else {
         aHash.SetLength(0);
       }
-      NS_RELEASE(uri);
     }
   }
 
@@ -509,17 +473,19 @@ nsHTMLAreaElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec)) {
+      NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_HTML,
+                                                       nsHTMLAtoms::href,
+                                                       relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
-    mInner.GetBaseURL(*getter_AddRefs(baseURL));
+    GetBaseURL(*getter_AddRefs(baseURL));
 
     if (baseURL) {
       // Get absolute URL.
-      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mInner.mDocument, baseURL,
+      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mDocument, baseURL,
                                     nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
     }
     else {

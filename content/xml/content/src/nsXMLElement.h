@@ -30,221 +30,56 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIXMLContent.h"
 #include "nsIJSScriptObject.h"
-#include "nsGenericXMLElement.h"
+#include "nsGenericElement.h"
 #include "nsIStyledContent.h"
 
-class nsIDocument;
-class nsIAtom;
-class nsINodeInfo;
 class nsIEventListenerManager;
 class nsIHTMLAttributes;
 class nsIURI;
 class nsIWebShell;
 
-class nsXMLElement : public nsIDOMElement,
-		     public nsIXMLContent,
-		     public nsIJSScriptObject
+class nsXMLElement : public nsGenericContainerElement,
+                     public nsIDOMElement
 {
 public:
-  nsXMLElement(nsINodeInfo *aNodeInfo);
+  nsXMLElement();
   virtual ~nsXMLElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
-       
-  // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
-  
-  // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+  // nsIDOMNode
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericContainerElement::)
+
+  // nsIDOMElement
+  NS_FORWARD_IDOMELEMENT(nsGenericContainerElement::)
+
+  // nsIScriptObjectOwner methods
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+
+  // nsIXMLContent
+  NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
+  NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
+  NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+
+  // nsIStyledContent
+  NS_IMETHOD GetID(nsIAtom*& aResult) const;
 
   // nsIContent
-  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
-    return mInner.GetDocument(aResult);
-  }
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers) {
-    return mInner.SetDocument(aDocument, aDeep, aCompileEventHandlers);
-  }
-  NS_IMETHOD GetParent(nsIContent*& aResult) const {
-    return mInner.GetParent(aResult);
-  }
-  NS_IMETHOD SetParent(nsIContent* aParent) {
-    return mInner.SetParent(aParent);
-  }
-  NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpaceId) const {
-    return mInner.GetNameSpaceID(aNameSpaceId);
-  }
-  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
-    return mInner.CanContainChildren(aResult);
-  }
-  NS_IMETHOD ChildCount(PRInt32& aResult) const {
-    return mInner.ChildCount(aResult);
-  }
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
-    return mInner.ChildAt(aIndex, aResult);
-  }
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
-    return mInner.IndexOf(aPossibleChild, aResult);
-  }
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
-                           PRBool aNotify) {
-    return mInner.InsertChildAt(aKid, aIndex, aNotify);
-  }
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
-                            PRBool aNotify) {
-    return mInner.ReplaceChildAt(aKid, aIndex, aNotify);
-  }
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {
-    return mInner.AppendChildTo(aKid, aNotify);
-  }
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
-    return mInner.RemoveChildAt(aIndex, aNotify);
-  }
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const {
-    return mInner.GetTag(aResult);
-  }
-  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
-    return mInner.GetNodeInfo(aResult);
-  }
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
-                                      nsINodeInfo*& aNodeInfo) {
-    return mInner.NormalizeAttributeString(aStr, aNodeInfo);
-  }
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo,
+                          const nsAReadableString& aValue,
                           PRBool aNotify);
-  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,
-                          PRBool aNotify);
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsAWritableString& aResult) const {
-    return mInner.GetAttribute(aNameSpaceID, aName, aResult);
-  }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
-    return mInner.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);
-  }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify) {
-    return mInner.UnsetAttribute(aNameSpaceID, aName, aNotify);
-  }
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                PRInt32& aNameSpaceID, 
-                                nsIAtom*& aName,
-                                nsIAtom*& aPrefix) const {
-    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);
-  }
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
-    return mInner.GetAttributeCount(aResult);
-  }
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {
-    return mInner.List(out, aIndent);
-  }
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
-    return mInner.DumpContent(out, aIndent,aDumpAll);
-  } 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-
-  NS_IMETHOD GetContentID(PRUint32* aID) {
-    *aID = mContentID;
-    return NS_OK;
-  }
-  NS_IMETHOD SetContentID(PRUint32 aID) {
-    mContentID = aID;
-    return NS_OK;
-  }
-
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {  
-    return mInner.RangeAdd(aRange); 
-  } 
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {
-    return mInner.RangeRemove(aRange); 
-  }                                                                        
-  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
-    return mInner.GetRangeList(aResult); 
-  }          
-  
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) {
-    return mInner.SetFocus(aPresContext);
-  }
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {
-    return mInner.RemoveFocus(aPresContext);
-  }
-
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) {
-    return mInner.GetBindingParent(aContent);
-  }
-
-  NS_IMETHOD SetBindingParent(nsIContent* aParent) {
-    return mInner.SetBindingParent(aParent);
-  }  
-
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    if (!aResult) {
-      return NS_ERROR_NULL_POINTER;
-    }
-#ifdef DEBUG
-    *aResult = sizeof(*this);
-#else
-    *aResult = 0;
-#endif
-    return NS_OK;
-  }
-
-  // nsIXMLContent
-  NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace)  {
-    return mInner.SetContainingNameSpace(aNameSpace);
-  }
-  NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const  {
-    return mInner.GetContainingNameSpace(aNameSpace);
-  }
-  NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
-
-  // nsIStyledContent
-  NS_IMETHOD GetID(nsIAtom*& aResult) const;
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
-  NS_IMETHOD HasClass(nsIAtom* aClass) const;
-  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
-  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                      PRInt32& aHint) const;
-
-  // nsIJSScriptObject
-  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
-    return mInner.AddProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool   DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
-    return mInner.DeleteProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
-    return mInner.GetProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
-    return mInner.SetProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) {
-    return mInner.EnumerateProperty(aContext, aObj);
-  }
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                            PRBool *aDidDefineProperty) {
-    return mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
-  }
-  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) {
-    return mInner.Convert(aContext, aObj, aID);
-  }
-  virtual void      Finalize(JSContext *aContext, JSObject *aObj) {
-    mInner.Finalize(aContext, aObj);
-  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
   nsresult GetXMLBaseURI(nsIURI **aURI);  // XXX This should perhaps be moved to nsIXMLContent
-  nsGenericXMLElement mInner;
   PRBool mIsLink;
-  PRUint32 mContentID;
+  nsINameSpace* mNameSpace;
 };
 
 #endif // nsXMLElement_h___

@@ -28,7 +28,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMEventReceiver.h"
@@ -36,7 +35,6 @@
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsISizeOfHandler.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
@@ -57,8 +55,6 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
-#include "prprf.h"
-#include "prmem.h"
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
@@ -95,7 +91,7 @@ nsChildContentList::~nsChildContentList()
 {
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsChildContentList::GetLength(PRUint32* aLength)
 {
   if (nsnull != mContent) {
@@ -114,7 +110,7 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsIContent *content;
   nsresult res = NS_OK;
-  
+
   if (nsnull != mContent) {
     mContent->ChildAt(aIndex, content);
     if (nsnull != content) {
@@ -155,8 +151,8 @@ nsCheapVoidArray::~nsCheapVoidArray()
   }
 }
 
-PRInt32 
-nsCheapVoidArray::Count() const 
+PRInt32
+nsCheapVoidArray::Count() const
 {
   if (HasSingleChild()) {
     return 1;
@@ -166,13 +162,13 @@ nsCheapVoidArray::Count() const
     if (vector) {
       return vector->Count();
     }
-    }
-  
+  }
+
   return 0;
 }
 
-void* 
-nsCheapVoidArray::ElementAt(PRInt32 aIndex) const 
+void*
+nsCheapVoidArray::ElementAt(PRInt32 aIndex) const
 {
   if (HasSingleChild()) {
     if (0 == aIndex) {
@@ -185,12 +181,12 @@ nsCheapVoidArray::ElementAt(PRInt32 aIndex) const
       return vector->ElementAt(aIndex);
     }
   }
-  
+
   return nsnull;
 }
 
-PRInt32 
-nsCheapVoidArray::IndexOf(void* aPossibleElement) const 
+PRInt32
+nsCheapVoidArray::IndexOf(void* aPossibleElement) const
 {
   if (HasSingleChild()) {
     if (aPossibleElement == (void*)GetSingleChild()) {
@@ -203,12 +199,12 @@ nsCheapVoidArray::IndexOf(void* aPossibleElement) const
       return vector->IndexOf(aPossibleElement);
     }
   }
-  
+
   return -1;
 }
-   
-PRBool 
-nsCheapVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex) 
+
+PRBool
+nsCheapVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 {
   nsVoidArray* vector;
   if (HasSingleChild()) {
@@ -226,12 +222,12 @@ nsCheapVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
       }
     }
   }
-    
+
   return vector->InsertElementAt(aElement, aIndex);
 }
 
-PRBool 
-nsCheapVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex) 
+PRBool
+nsCheapVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
   if (HasSingleChild()) {
     if (aIndex == 0) {
@@ -253,8 +249,8 @@ nsCheapVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
   }
 }
 
-PRBool 
-nsCheapVoidArray::AppendElement(void* aElement) 
+PRBool
+nsCheapVoidArray::AppendElement(void* aElement)
 {
   nsVoidArray* vector;
   if (HasSingleChild()) {
@@ -267,12 +263,12 @@ nsCheapVoidArray::AppendElement(void* aElement)
       return PR_TRUE;
     }
   }
-  
+
   return vector->AppendElement(aElement);
 }
 
-PRBool 
-nsCheapVoidArray::RemoveElement(void* aElement) 
+PRBool
+nsCheapVoidArray::RemoveElement(void* aElement)
 {
   if (HasSingleChild()) {
     if (aElement == GetSingleChild()) {
@@ -286,12 +282,12 @@ nsCheapVoidArray::RemoveElement(void* aElement)
       return vector->RemoveElement(aElement);
     }
   }
-  
+
   return PR_FALSE;
 }
 
-PRBool 
-nsCheapVoidArray::RemoveElementAt(PRInt32 aIndex) 
+PRBool
+nsCheapVoidArray::RemoveElementAt(PRInt32 aIndex)
 {
   if (HasSingleChild()) {
     if (0 == aIndex) {
@@ -305,12 +301,12 @@ nsCheapVoidArray::RemoveElementAt(PRInt32 aIndex)
       return vector->RemoveElementAt(aIndex);
     }
   }
-  
+
   return PR_FALSE;
 }
 
-void 
-nsCheapVoidArray::Compact() 
+void
+nsCheapVoidArray::Compact()
 {
   if (!HasSingleChild()) {
     nsVoidArray* vector = GetChildVector();
@@ -322,18 +318,18 @@ nsCheapVoidArray::Compact()
 
 void
 nsCheapVoidArray::SetSingleChild(void* aChild)
-{ 
-  if (aChild) 
+{
+  if (aChild)
     mChildren = (void*)(PtrBits(aChild) | 0x1);
-  else 
+  else
     mChildren = nsnull;
 }
 
-nsVoidArray* 
+nsVoidArray*
 nsCheapVoidArray::SwitchToVector()
 {
   void* child = GetSingleChild();
-  
+
   mChildren = (void*)new nsVoidArray();
   nsVoidArray* vector = GetChildVector();
   if (vector && child) {
@@ -352,7 +348,7 @@ nsIDOMScriptObjectFactory* nsGenericElement::gScriptObjectFactory = nsnull;
 
 static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-nsresult 
+nsresult
 nsGenericElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
 {
   nsresult result = NS_OK;
@@ -377,45 +373,53 @@ nsGenericElement::Shutdown()
   NS_IF_RELEASE(gScriptObjectFactory); // assigns null
 }
 
-nsGenericElement::nsGenericElement() : mContent(nsnull), mDocument(nsnull),
-                                       mParent(nsnull), mNodeInfo(nsnull),
-                                       mDOMSlots(nsnull), mContentID(0)
+nsGenericElement::nsGenericElement() : mDocument(nsnull), mParent(nsnull),
+                                       mNodeInfo(nsnull), mDOMSlots(nsnull),
+                                       mContentID(0)
 {
+  NS_INIT_REFCNT();
 }
 
 nsGenericElement::~nsGenericElement()
 {
   // pop any enclosed ranges out
   // nsRange::OwnerGone(mContent); not used for now
-  if (nsnull != mDOMSlots) {
-    if (nsnull != mDOMSlots->mChildNodes) {
+  if (mDOMSlots) {
+    if (mDOMSlots->mChildNodes) {
       mDOMSlots->mChildNodes->DropReference();
       NS_RELEASE(mDOMSlots->mChildNodes);
       delete mDOMSlots->mRangeList;
     }
-    if (nsnull != mDOMSlots->mStyle) {
+    if (mDOMSlots->mStyle) {
       mDOMSlots->mStyle->DropReference();
       NS_RELEASE(mDOMSlots->mStyle);
-    } 
-    if (nsnull != mDOMSlots->mAttributeMap) {
+    }
+    if (mDOMSlots->mAttributeMap) {
       mDOMSlots->mAttributeMap->DropReference();
       NS_RELEASE(mDOMSlots->mAttributeMap);
     }
-    if (nsnull != mDOMSlots->mListenerManager) {
+    if (mDOMSlots->mListenerManager) {
       mDOMSlots->mListenerManager->SetListenerTarget(nsnull);
       NS_RELEASE(mDOMSlots->mListenerManager);
     }
+
     // XXX Should really be arena managed
-    PR_DELETE(mDOMSlots);
+    delete mDOMSlots;
+    mDOMSlots = nsnull;
   }
+
   NS_IF_RELEASE(mNodeInfo);
 }
 
 nsDOMSlots *
 nsGenericElement::GetDOMSlots()
 {
-  if (nsnull == mDOMSlots) {
-    mDOMSlots = PR_NEW(nsDOMSlots);
+  if (!mDOMSlots) {
+    mDOMSlots = new nsDOMSlots;
+
+    if (!mDOMSlots)
+      return nsnull;
+
     mDOMSlots->mScriptObject = nsnull;
     mDOMSlots->mChildNodes = nsnull;
     mDOMSlots->mStyle = nsnull;
@@ -425,7 +429,7 @@ nsGenericElement::GetDOMSlots()
     mDOMSlots->mListenerManager = nsnull;
     mDOMSlots->mBindingParent = nsnull;
   }
-  
+
   return mDOMSlots;
 }
 
@@ -433,55 +437,65 @@ void
 nsGenericElement::MaybeClearDOMSlots()
 {
   if (mDOMSlots &&
-      (nsnull == mDOMSlots->mScriptObject) &&
-      (nsnull == mDOMSlots->mChildNodes) &&
-      (nsnull == mDOMSlots->mStyle) &&
-      (nsnull == mDOMSlots->mAttributeMap) &&
-      (nsnull == mDOMSlots->mRangeList) &&
-      (nsnull == mDOMSlots->mCapturer) &&
-      (nsnull == mDOMSlots->mListenerManager) &&
-      (nsnull == mDOMSlots->mBindingParent)) {
-    PR_DELETE(mDOMSlots);
+      !mDOMSlots->mScriptObject &&
+      !mDOMSlots->mChildNodes &&
+      !mDOMSlots->mStyle &&
+      !mDOMSlots->mAttributeMap &&
+      !mDOMSlots->mRangeList &&
+      !mDOMSlots->mCapturer &&
+      !mDOMSlots->mListenerManager &&
+      !mDOMSlots->mBindingParent) {
+
+    delete mDOMSlots;
+    mDOMSlots = nsnull;
   }
 }
 
-void
-nsGenericElement::Init(nsIContent* aOuterContentObject,
-                       nsINodeInfo *aNodeInfo)
+nsresult
+nsGenericElement::Init(nsINodeInfo *aNodeInfo)
 {
-  NS_ABORT_IF_FALSE(aOuterContentObject, "We need a outer content object!");
-  NS_ABORT_IF_FALSE(aNodeInfo, "This can't be used without node info!");
+  NS_ENSURE_ARG(aNodeInfo);
 
-  NS_ASSERTION((nsnull == mContent) && (nsnull != aOuterContentObject),
-               "null ptr");
-
-  mContent = aOuterContentObject;
   mNodeInfo = aNodeInfo;
-  NS_IF_ADDREF(mNodeInfo);
+  NS_ADDREF(mNodeInfo);
+
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
+nsGenericElement::GetNodeName(nsAWritableString& aNodeName)
+{
+  return mNodeInfo->GetQualifiedName(aNodeName);
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetLocalName(nsAWritableString& aLocalName)
+{
+  return mNodeInfo->GetLocalName(aLocalName);
+}
+
+NS_IMETHODIMP
 nsGenericElement::GetNodeValue(nsAWritableString& aNodeValue)
 {
   aNodeValue.Truncate();
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::SetNodeValue(const nsAReadableString& aNodeValue)
 {
   // The node value can't be modified
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::ELEMENT_NODE;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
 {
   nsresult res = NS_OK;
@@ -492,7 +506,7 @@ nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
   }
   else if (nsnull == mDocument) {
     *aParentNode = nsnull;
-  } 
+  }
   else {
     // If we don't have a parent, but we're in the document, we must
     // be the root node of the document. The DOM says that the root
@@ -504,7 +518,7 @@ nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
   return res;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
   nsIContent* sibling = nsnull;
@@ -512,7 +526,7 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 
   if (nsnull != mParent) {
     PRInt32 pos;
-    mParent->IndexOf(mContent, pos);
+    mParent->IndexOf(this, pos);
     if (pos > -1 ) {
       mParent->ChildAt(--pos, sibling);
     }
@@ -521,10 +535,10 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
     // Nodes that are just below the document (their parent is the
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
-    mDocument->IndexOf(mContent, pos);
+    mDocument->IndexOf(this, pos);
     if (pos > -1 ) {
       mDocument->ChildAt(--pos, sibling);
-    }    
+    }
   }
 
   if (nsnull != sibling) {
@@ -536,11 +550,11 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
   else {
     *aPrevSibling = nsnull;
   }
-  
+
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   nsIContent* sibling = nsnull;
@@ -548,7 +562,7 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
 
   if (nsnull != mParent) {
     PRInt32 pos;
-    mParent->IndexOf(mContent, pos);
+    mParent->IndexOf(this, pos);
     if (pos > -1 ) {
       mParent->ChildAt(++pos, sibling);
     }
@@ -557,10 +571,10 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
     // Nodes that are just below the document (their parent is the
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
-    mDocument->IndexOf(mContent, pos);
+    mDocument->IndexOf(this, pos);
     if (pos > -1 ) {
       mDocument->ChildAt(++pos, sibling);
-    }    
+    }
   }
 
   if (nsnull != sibling) {
@@ -572,11 +586,11 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
   else {
     *aNextSibling = nsnull;
   }
-  
+
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   // XXX Actually the owner document is the document in whose context
@@ -592,19 +606,19 @@ nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   }
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 {
   return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetPrefix(nsAWritableString& aPrefix)
 {
   return mNodeInfo->GetPrefix(aPrefix);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::SetPrefix(const nsAReadableString& aPrefix)
 {
   // XXX: Validate the prefix string!
@@ -660,7 +674,7 @@ nsGenericElement::InternalIsSupported(const nsAReadableString& aFeature,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::IsSupported(const nsAReadableString& aFeature,
                               const nsAReadableString& aVersion,
                               PRBool* aReturn)
@@ -668,27 +682,27 @@ nsGenericElement::IsSupported(const nsAReadableString& aFeature,
   return InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::HasAttributes(PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   PRInt32 attrCount = 0;
 
-  mContent->GetAttributeCount(attrCount);
+  GetAttributeCount(attrCount);
 
   *aReturn = !!attrCount;
 
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
   nsDOMSlots *slots = GetDOMSlots();
 
   if (nsnull == slots->mAttributeMap) {
-    slots->mAttributeMap = new nsDOMAttributeMap(mContent);
+    slots->mAttributeMap = new nsDOMAttributeMap(this);
     if (nsnull == slots->mAttributeMap) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -699,7 +713,7 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
                                               (void **)aAttributes);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAWritableString& aTagName)
 {
   aTagName.Truncate();
@@ -710,10 +724,11 @@ nsGenericElement::GetTagName(nsAWritableString& aTagName)
 }
 
 nsresult
-nsGenericElement::GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn)
+nsGenericElement::GetAttribute(const nsAReadableString& aName,
+                               nsAWritableString& aReturn)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NormalizeAttributeString(aName, *getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   PRInt32 nsid;
@@ -722,7 +737,7 @@ nsGenericElement::GetAttribute(const nsAReadableString& aName, nsAWritableString
   ni->GetNamespaceID(nsid);
   ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
-  mContent->GetAttribute(nsid, nameAtom, aReturn);
+  NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid, nameAtom, aReturn);
 
   return NS_OK;
 }
@@ -732,15 +747,15 @@ nsGenericElement::SetAttribute(const nsAReadableString& aName,
                                const nsAReadableString& aValue)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
-  return mContent->SetAttribute(ni, aValue, PR_TRUE);
+  NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(ni, aValue, PR_TRUE);
 }
 
 nsresult
 nsGenericElement::RemoveAttribute(const nsAReadableString& aName)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NormalizeAttributeString(aName, *getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   PRInt32 nsid;
@@ -749,7 +764,7 @@ nsGenericElement::RemoveAttribute(const nsAReadableString& aName)
   ni->GetNamespaceID(nsid);
   ni->GetNameAtom(*getter_AddRefs(tag));
 
-  return mContent->UnsetAttribute(nsid, tag, PR_TRUE);
+  return UnsetAttribute(nsid, tag, PR_TRUE);
 }
 
 nsresult
@@ -761,7 +776,7 @@ nsGenericElement::GetAttributeNode(const nsAReadableString& aName,
   }
   nsIDOMNamedNodeMap* map;
   nsresult result = GetAttributes(&map);
- 
+
   *aReturn = nsnull;
   if (NS_OK == result) {
     nsIDOMNode* node;
@@ -777,7 +792,7 @@ nsGenericElement::GetAttributeNode(const nsAReadableString& aName,
 }
 
 nsresult
-nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute, 
+nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
                                    nsIDOMAttr** aReturn)
 {
   if ((nsnull == aReturn) || (nsnull == aAttribute))  {
@@ -785,7 +800,7 @@ nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
   }
   nsIDOMNamedNodeMap* map;
   nsresult result = GetAttributes(&map);
- 
+
   *aReturn = nsnull;
   if (NS_OK == result) {
     nsIDOMNode *node, *returnNode;
@@ -807,19 +822,19 @@ nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
 }
 
 nsresult
-nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute, 
+nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
                                       nsIDOMAttr** aReturn)
 {
   if ((nsnull == aReturn) || (nsnull == aAttribute))  {
     return NS_ERROR_NULL_POINTER;
-  }  
+  }
   nsIDOMNamedNodeMap* map;
   nsresult result = GetAttributes(&map);
 
   *aReturn = nsnull;
   if (NS_OK == result) {
     nsAutoString name;
-    
+
     result = aAttribute->GetName(name);
     if (NS_OK == result) {
       nsIDOMNode* node;
@@ -844,10 +859,10 @@ nsGenericElement::GetElementsByTagName(const nsAReadableString& aTagname,
 
   nameAtom = dont_AddRef(NS_NewAtom(aTagname));
 
-  nsContentList* list = new nsContentList(mDocument, 
-                                          nameAtom, 
-                                          kNameSpaceID_Unknown, 
-                                          mContent);
+  nsContentList* list = new nsContentList(mDocument,
+                                          nameAtom,
+                                          kNameSpaceID_Unknown,
+                                          this);
 
   if (!list) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -881,7 +896,7 @@ nsGenericElement::GetAttributeNS(const nsAReadableString& aNamespaceURI,
     return NS_OK;
   }
 
-  mContent->GetAttribute(nsid, name, aReturn);
+  NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid, name, aReturn);
 
   return NS_OK;
 }
@@ -900,11 +915,10 @@ nsGenericElement::SetAttributeNS(const nsAReadableString& aNamespaceURI,
                                    *getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mContent->SetAttribute(ni, aValue, PR_TRUE);
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(ni, aValue, PR_TRUE);
 }
 
 nsresult
-
 nsGenericElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
                                     const nsAReadableString& aLocalName)
 {
@@ -928,7 +942,7 @@ nsGenericElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
   }
 
   nsAutoString tmp;
-  mContent->UnsetAttribute(nsid, name, PR_TRUE);
+  UnsetAttribute(nsid, name, PR_TRUE);
 
   return NS_OK;
 }
@@ -942,7 +956,7 @@ nsGenericElement::GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
 
   nsIDOMNamedNodeMap* map;
   nsresult result = GetAttributes(&map);
- 
+
   *aReturn = nsnull;
   if (NS_OK == result) {
     nsIDOMNode* node;
@@ -966,7 +980,7 @@ nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
   }
   nsIDOMNamedNodeMap* map;
   nsresult result = GetAttributes(&map);
- 
+
   *aReturn = nsnull;
   if (NS_OK == result) {
     nsIDOMNode *node, *returnNode;
@@ -993,7 +1007,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
 {
   nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nameSpaceId = kNameSpaceID_Unknown;
-  
+
   nsContentList* list = nsnull;
 
   if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
@@ -1015,7 +1029,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
   }
 
   if (!list) {
-    list = new nsContentList(mDocument, nameAtom, nameSpaceId, mContent);
+    list = new nsContentList(mDocument, nameAtom, nameSpaceId, this);
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -1028,7 +1042,7 @@ nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
 
   nsCOMPtr<nsINodeInfo> ni;
-  mContent->NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NormalizeAttributeString(aName, *getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   PRInt32 nsid;
@@ -1038,7 +1052,9 @@ nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
   ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
   nsAutoString tmp;
-  nsresult rv = mContent->GetAttribute(nsid, nameAtom, tmp);
+  nsresult rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid,
+                                                                 nameAtom,
+                                                                 tmp);
 
   *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
 
@@ -1047,7 +1063,8 @@ nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
 
 nsresult
 nsGenericElement::HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aLocalName, PRBool* aReturn)
+                                 const nsAReadableString& aLocalName,
+                                 PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -1072,7 +1089,8 @@ nsGenericElement::HasAttributeNS(const nsAReadableString& aNamespaceURI,
   }
 
   nsAutoString tmp;
-  nsresult rv = mContent->GetAttribute(nsid, name, tmp);
+  nsresult rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid, name,
+                                                                 tmp);
 
   *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
 
@@ -1098,7 +1116,7 @@ nsGenericElement::JoinTextNodes(nsIContent* aFirst,
       }
     }
   }
-  
+
   return rv;
 }
 
@@ -1108,11 +1126,11 @@ nsGenericElement::Normalize()
   nsresult result = NS_OK;
   PRInt32 index, count;
 
-  mContent->ChildCount(count);
+  ChildCount(count);
   for (index = 0; (index < count) && (NS_OK == result); index++) {
     nsCOMPtr<nsIContent> child;
 
-    result = mContent->ChildAt(index, *getter_AddRefs(child));
+    result = ChildAt(index, *getter_AddRefs(child));
     if (NS_FAILED(result)) {
       return result;
     }
@@ -1121,29 +1139,29 @@ nsGenericElement::Normalize()
     if (node) {
       PRUint16 nodeType;
       node->GetNodeType(&nodeType);
-      
+
       switch (nodeType) {
         case nsIDOMNode::TEXT_NODE:
-        
+
           if (index+1 < count) {
             nsCOMPtr<nsIContent> sibling;
-            
+
             // Get the sibling. If it's also a text node, then
             // remove it from the tree and join the two text
             // nodes.
-            result = mContent->ChildAt(index+1, *getter_AddRefs(sibling));
+            result = ChildAt(index+1, *getter_AddRefs(sibling));
             if (NS_FAILED(result)) {
               return result;
             }
-            
+
             nsCOMPtr<nsIDOMNode> siblingNode = do_QueryInterface(sibling);
-              
+
             if (sibling) {
               PRUint16 siblingNodeType;
               siblingNode->GetNodeType(&siblingNodeType);
-              
+
               if (siblingNodeType == nsIDOMNode::TEXT_NODE) {
-                result = mContent->RemoveChildAt(index+1, PR_TRUE);
+                result = RemoveChildAt(index+1, PR_TRUE);
                 if (NS_FAILED(result)) {
                   return result;
                 }
@@ -1158,7 +1176,7 @@ nsGenericElement::Normalize()
             }
           }
           break;
-      
+
         case nsIDOMNode::ELEMENT_NODE:
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(child);
 
@@ -1184,8 +1202,8 @@ nsGenericElement::GetDocument(nsIDocument*& aResult) const
 
 
 void
-nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent, 
-                                          nsIDocument* aDocument, 
+nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent,
+                                          nsIDocument* aDocument,
                                           PRBool aCompileEventHandlers)
 {
   PRInt32 i, n;
@@ -1201,14 +1219,14 @@ nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent,
 }
 
 nsresult
-nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
+nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                              PRBool aCompileEventHandlers)
 {
   if (aDocument != mDocument) {
     // If we were part of a document, make sure we get rid of the
     // script context reference to our script object so that our
     // script object can be freed (or collected).
-    if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
-        (nsnull != mDOMSlots->mScriptObject)) {
+    if (mDocument && mDOMSlots && mDOMSlots->mScriptObject) {
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
       if (globalObject) {
@@ -1219,7 +1237,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
         }
       }
     }
-    
+
     if (mDocument && aDeep) {
       // Notify XBL- & nsIAnonymousContentCreator-generated
       // anonymous content that the document is changing.
@@ -1227,10 +1245,12 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
       mDocument->GetBindingManager(getter_AddRefs(bindingManager));
       NS_ASSERTION(bindingManager, "No binding manager.");
       if (bindingManager) {
-        bindingManager->ChangeDocumentFor(mContent, mDocument, aDocument);
+        bindingManager->ChangeDocumentFor(this, mDocument, aDocument);
       }
 
-      nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
+      nsCOMPtr<nsIDOMElement> domElement;
+      QueryInterface(NS_GET_IID(nsIDOMElement), getter_AddRefs(domElement));
+
       if (domElement) {
         nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
         nsDoc->SetBoxObjectFor(domElement, nsnull);
@@ -1238,13 +1258,12 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
     }
 
     mDocument = aDocument;
-    
+
     // If we already have a script object and now we're being added
-    // to a document, make sure that the script context adds a 
+    // to a document, make sure that the script context adds a
     // reference to our script object. This will ensure that it
     // won't be freed (or collected) out from under us.
-    if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
-        (nsnull != mDOMSlots->mScriptObject)) {
+    if (mDocument && mDOMSlots && mDOMSlots->mScriptObject) {
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
       if (globalObject) {
@@ -1259,7 +1278,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
   }
 
   if (PR_TRUE == aDeep) {
-    SetDocumentInChildrenOf(mContent, aDocument, aCompileEventHandlers);
+    SetDocumentInChildrenOf(this, aDocument, aCompileEventHandlers);
   }
 
   return NS_OK;
@@ -1282,10 +1301,9 @@ nsGenericElement::SetParent(nsIContent* aParent)
 }
 
 nsresult
-nsGenericElement::GetNameSpaceID(PRInt32& aResult) const
+nsGenericElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {
-  aResult = kNameSpaceID_None;
-  return NS_OK;
+  return mNodeInfo->GetNamespaceID(aNameSpaceID);
 }
 
 nsresult
@@ -1323,7 +1341,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     aEvent->flags = aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
   }
- 
+
   // Find out if we're anonymous.
   nsCOMPtr<nsIContent> bindingParent;
   GetBindingParent(getter_AddRefs(bindingParent));
@@ -1337,7 +1355,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
         retarget = PR_TRUE;
     }
   }
- 
+
   if (retarget) {
     if (!*aDOMEvent) {
       // We haven't made a DOMEvent yet.  Force making one now.
@@ -1349,7 +1367,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
       if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent)))
         return ret;
     }
-   
+
     if (!*aDOMEvent) {
       return NS_ERROR_FAILURE;
     }
@@ -1359,7 +1377,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
 
     (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-    
+
     PRBool hasOriginal;
     privateEvent->HasOriginalTarget(&hasOriginal);
 
@@ -1390,7 +1408,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }
     //}
   }
-  
+
   if (retarget) {
     // The event originated beneath us, and we performed a retargeting.
     // We need to restore the original target of the event.
@@ -1403,7 +1421,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if (mDOMSlots && mDOMSlots->mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
       !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)) {
     aEvent->flags |= aFlags;
-    nsCOMPtr<nsIDOMEventTarget> curTarg(do_QueryInterface(mContent));
+    nsCOMPtr<nsIDOMEventTarget> curTarg(do_QueryInterface(NS_STATIC_CAST(nsIHTMLContent *, this)));
     mDOMSlots->mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, curTarg, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;
   }
@@ -1463,20 +1481,161 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
     aDOMEvent = nsnull;
   }
- 
+
   return ret;
 }
-  
-  
-nsresult 
+
+PRUint32
+nsGenericElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
+{
+  return 0;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetContentID(PRUint32* aID)
+{
+  *aID = mContentID;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetContentID(PRUint32 aID)
+{
+  mContentID = aID;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
+{
+  aNameSpace = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetID(nsIAtom*& aResult) const
+{
+  aResult = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetClasses(nsVoidArray& aArray) const
+{
+  aArray.Clear();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::HasClass(nsIAtom* aClass) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetContentStyleRules(nsISupportsArray* aRules)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetInlineStyleRules(nsISupportsArray* aRules)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                           PRInt32& aHint) const
+{
+  aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGenericElement::Compact()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetHTMLAttribute(nsIAtom* aAttribute,
+                                   const nsHTMLValue& aValue,
+                                   PRBool aNotify)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetHTMLAttribute(nsIAtom* aAttribute,
+                                   nsHTMLValue& aValue) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                               nsMapAttributesFunc& aMapFunc) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::AttributeToString(nsIAtom* aAttribute,
+                                    const nsHTMLValue& aValue,
+                                    nsAWritableString& aResult) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::StringToAttribute(nsIAtom* aAttribute,
+                                    const nsAReadableString& aValue,
+                                    nsHTMLValue& aResult)
+{
+  return NS_CONTENT_ATTR_NOT_THERE;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetBaseURL(nsIURI*& aBaseURL) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetBaseTarget(nsAWritableString& aBaseTarget) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
 nsGenericElement::RangeAdd(nsIDOMRange& aRange)
 {
-  if (nsnull == mDOMSlots) GetDOMSlots();
+  if (!mDOMSlots)
+    GetDOMSlots();
+
   // lazy allocation of range list
-  if (nsnull == mDOMSlots->mRangeList) {
+  if (!mDOMSlots->mRangeList) {
     mDOMSlots->mRangeList = new nsVoidArray();
   }
-  if (nsnull == mDOMSlots->mRangeList) {
+  if (!mDOMSlots->mRangeList) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1491,12 +1650,14 @@ nsGenericElement::RangeAdd(nsIDOMRange& aRange)
 
   // dont need to addref - this call is made by the range object itself
   PRBool rv = mDOMSlots->mRangeList->AppendElement(&aRange);
-  if (rv)  return NS_OK;
+  if (rv)
+    return NS_OK;
+
   return NS_ERROR_FAILURE;
 }
 
 
-nsresult 
+nsresult
 nsGenericElement::RangeRemove(nsIDOMRange& aRange)
 {
   if (mDOMSlots && mDOMSlots->mRangeList) {
@@ -1515,7 +1676,7 @@ nsGenericElement::RangeRemove(nsIDOMRange& aRange)
 }
 
 
-nsresult 
+nsresult
 nsGenericElement::GetRangeList(nsVoidArray*& aResult) const
 {
   if (mDOMSlots && mDOMSlots->mRangeList) {
@@ -1527,31 +1688,32 @@ nsGenericElement::GetRangeList(nsVoidArray*& aResult) const
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsGenericElement::SetFocus(nsIPresContext* aPresContext)
 {
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled))
+  if (NS_CONTENT_ATTR_HAS_VALUE == NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled)) {
     return NS_OK;
+  }
  
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
     
-    esm->SetContentState(mContent, NS_EVENT_STATE_FOCUS);
+    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
     NS_RELEASE(esm);
   }
   
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsGenericElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 nsresult
-nsGenericElement::GetBindingParent(nsIContent** aContent) 
+nsGenericElement::GetBindingParent(nsIContent** aContent)
 {
   *aContent = mDOMSlots ? mDOMSlots->mBindingParent : nsnull;
   NS_IF_ADDREF(*aContent);
@@ -1568,10 +1730,10 @@ nsGenericElement::SetBindingParent(nsIContent* aParent)
 
   if (aParent) {
     PRInt32 count;
-    mContent->ChildCount(count);
+    ChildCount(count);
     for (PRInt32 i = 0; i < count; i++) {
       nsCOMPtr<nsIContent> child;
-      mContent->ChildAt(i, *getter_AddRefs(child));
+      ChildAt(i, *getter_AddRefs(child));
       child->SetBindingParent(aParent);
     }
   }
@@ -1579,20 +1741,6 @@ nsGenericElement::SetBindingParent(nsIContent* aParent)
   return NS_OK;
 }
 
-nsresult
-nsGenericElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
-                         size_t aInstanceSize) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-#ifdef DEBUG
-  *aResult = (PRUint32) aInstanceSize;
-#else
-  *aResult = 0;
-#endif
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 
@@ -1609,7 +1757,7 @@ nsGenericElement::RenderFrame(nsIPresContext* aPresContext)
     nsIPresShell* shell;
     shell = mDocument->GetShellAt(i);
     nsIFrame* frame;
-    shell->GetPrimaryFrameFor(mContent, &frame);
+    shell->GetPrimaryFrameFor(this, &frame);
     while (nsnull != frame) {
       nsIViewManager* vm;
       nsIView* view;
@@ -1644,22 +1792,23 @@ nsGenericElement::RenderFrame(nsIPresContext* aPresContext)
 
 nsresult
 nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
-                                      void** aScriptObject)
+                                  void** aScriptObject)
 {
   nsresult res = NS_OK;
   nsDOMSlots *slots = GetDOMSlots();
 
-  if (nsnull == slots->mScriptObject) {
+  if (!slots->mScriptObject) {
     nsIDOMScriptObjectFactory *factory;
-    
+
     res = GetScriptObjectFactory(&factory);
     if (NS_OK != res) {
       return res;
     }
-    
+
     nsAutoString tag;
     mNodeInfo->GetName(tag);
-    res = factory->NewScriptElement(tag, aContext, mContent,
+    res = factory->NewScriptElement(tag, aContext,
+                                    NS_STATIC_CAST(nsIHTMLContent *, this),
                                     mParent ? (nsISupports*)mParent : (nsISupports*)mDocument,
                                     (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
@@ -1672,18 +1821,18 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
                                   slots->mScriptObject,
                                   "nsGenericElement::mScriptObject");
 
-      // See if we have a frame.  
+      // See if we have a frame.
       nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
       if (shell) {
         nsIFrame* frame;
-        shell->GetPrimaryFrameFor(mContent, &frame);
+        shell->GetPrimaryFrameFor(this, &frame);
         if (!frame) {
           // We must ensure that the XBL Binding is installed before we hand
           // back this object.
           nsCOMPtr<nsIBindingManager> bindingManager;
           mDocument->GetBindingManager(getter_AddRefs(bindingManager));
           nsCOMPtr<nsIXBLBinding> binding;
-          bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+          bindingManager->GetBinding(this, getter_AddRefs(binding));
           if (!binding) {
             nsCOMPtr<nsIScriptGlobalObject> global;
             mDocument->GetScriptGlobalObject(getter_AddRefs(global));
@@ -1691,7 +1840,7 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
             if (viewCSS) {
               nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
               nsAutoString empty;
-              nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
+              nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(NS_STATIC_CAST(nsIHTMLContent *, this)));
               viewCSS->GetComputedStyle(elt, empty, getter_AddRefs(cssDecl));
               if (cssDecl) {
                 nsAutoString behavior; behavior.Assign(NS_LITERAL_STRING("-moz-binding"));
@@ -1702,7 +1851,7 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
                   nsresult rv;
                   PRBool dummy;
                   NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-                  xblService->LoadBindings(mContent, value, PR_FALSE, getter_AddRefs(binding), &dummy);
+                  xblService->LoadBindings(this, value, PR_FALSE, getter_AddRefs(binding), &dummy);
                   if (binding) {
                     binding->ExecuteAttachedHandler();
                   }
@@ -1714,7 +1863,7 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
       }
     }
   }
-  
+
   *aScriptObject = slots->mScriptObject;
   return res;
 }
@@ -1729,7 +1878,7 @@ nsGenericElement::SetScriptObject(void *aScriptObject)
   if (!aScriptObject) {
     if (slots->mListenerManager) {
       slots->mListenerManager->RemoveAllListeners(PR_TRUE);
-    } 
+    }
     MaybeClearDOMSlots();
   }
 
@@ -1752,7 +1901,7 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
   if (NS_OK == rv) {
     slots->mListenerManager = *aResult;
     NS_ADDREF(slots->mListenerManager);
-    slots->mListenerManager->SetListenerTarget(mContent);
+    slots->mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIHTMLContent *, this));
   }
   return rv;
 }
@@ -1761,38 +1910,36 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
 
 // nsIJSScriptObject implementation
 
-PRBool    
-nsGenericElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+PRBool
+nsGenericElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                              jsval *aVp)
 {
   return PR_TRUE;
 }
 
-PRBool    
-nsGenericElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+PRBool
+nsGenericElement::DeleteProperty(JSContext *aContext, JSObject *aObj,
+                                 jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
-PRBool    
-nsGenericElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+PRBool
+nsGenericElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                              jsval *aVp)
 {
   return PR_TRUE;
 }
- 
-PRBool    
-nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+
+PRBool
+nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                              jsval *aVp)
 {
-  nsIScriptObjectOwner *owner;
-
-  if (NS_OK != mContent->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
-                                        (void **)&owner)) {
-    return PR_FALSE;
-  }
-
-  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
+  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION &&
+      JSVAL_IS_STRING(aID)) {
     nsAutoString propName, prefix;
     propName.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(JS_ValueToString(aContext, aID))));
-    if (propName.Length() > 2) 
+    if (propName.Length() > 2)
       prefix.Assign(propName.GetUnicode(), 2);
     if (prefix.Equals(NS_LITERAL_STRING("on"))) {
       nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(propName));
@@ -1803,7 +1950,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseListenerIID)) {
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1813,7 +1960,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMKeyListenerIID)) {
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1823,7 +1970,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseMotionListenerIID)) {
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1833,7 +1980,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFocusListenerIID)) {
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1844,7 +1991,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFormListenerIID)) {
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1855,7 +2002,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMLoadListenerIID)) {
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1866,7 +2013,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner,
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this,
                                                             atom, kIDOMPaintListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -1877,18 +2024,16 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
     }
   }
 
-  NS_IF_RELEASE(owner);
-
   return PR_TRUE;
 }
- 
-PRBool    
+
+PRBool
 nsGenericElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
   return PR_TRUE;
 }
 
-PRBool    
+PRBool
 nsGenericElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
                           PRBool* aDidDefineProperty)
 {
@@ -1897,13 +2042,13 @@ nsGenericElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
   return PR_TRUE;
 }
 
-PRBool    
+PRBool
 nsGenericElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
-void      
+void
 nsGenericElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
@@ -1981,13 +2126,13 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
-    mContent->IndexOf(refContent, refPos);
+    IndexOf(refContent, refPos);
 
     if (refPos < 0) {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
   } else {
-    mContent->ChildCount(refPos);
+    ChildCount(refPos);
   }
 
   PRUint16 nodeType = 0;
@@ -2026,7 +2171,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
    * ancestors. Doing this check here should be safe even if newContent
    * is a document fragment.
    */
-  if (isSelfOrAncestor(mContent, newContent)) {
+  if (isSelfOrAncestor(this, newContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2063,7 +2208,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       childContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
 
       // Insert the child and increment the insertion position
-      res = mContent->InsertChildAt(childContent, refPos++, PR_TRUE);
+      res = InsertChildAt(childContent, refPos++, PR_TRUE);
 
       if (NS_FAILED(res)) {
         return res;
@@ -2088,14 +2233,14 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
       PRInt32 origChildCount, newChildCount;
 
-      mContent->ChildCount(origChildCount);
+      ChildCount(origChildCount);
 
       /*
        * We don't care here if the return fails or not.
        */
       oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
 
-      mContent->ChildCount(newChildCount);
+      ChildCount(newChildCount);
 
       /*
        * Check if our child count changed during the RemoveChild call, if
@@ -2111,7 +2256,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
            */
           nsCOMPtr<nsIContent> tmpContent;
 
-          mContent->ChildAt(refPos - 1, *getter_AddRefs(tmpContent));
+          ChildAt(refPos - 1, *getter_AddRefs(tmpContent));
 
           if (refContent == tmpContent) {
             refPos--;
@@ -2127,7 +2272,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
     newContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
 
-    res = mContent->InsertChildAt(newContent, refPos, PR_TRUE);
+    res = InsertChildAt(newContent, refPos, PR_TRUE);
 
     if (NS_FAILED(res)) {
       return res;
@@ -2140,7 +2285,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
   return res;
 }
 
- 
+
 nsresult
 nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
                                  nsIDOMNode* aOldChild,
@@ -2169,7 +2314,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  mContent->IndexOf(oldContent, oldPos);
+  IndexOf(oldContent, oldPos);
 
   if (oldPos < 0) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -2177,7 +2322,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
   nsCOMPtr<nsIContent> replacedChild;
 
-  mContent->ChildAt(oldPos, *getter_AddRefs(replacedChild));
+  ChildAt(oldPos, *getter_AddRefs(replacedChild));
 
   PRUint16 nodeType = 0;
 
@@ -2212,14 +2357,14 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
   nsCOMPtr<nsIDocument> document;
 
-  mContent->GetDocument(*getter_AddRefs(document));
+  GetDocument(*getter_AddRefs(document));
 
   /*
    * Make sure the new child is not "this" node or one of this nodes
    * ancestors. Doing this check here should be safe even if newContent
    * is a document fragment.
    */
-  if (isSelfOrAncestor(mContent, newContent)) {
+  if (isSelfOrAncestor(this, newContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2257,9 +2402,9 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
       // Insert the child and increment the insertion position
       if (i) {
-        res = mContent->InsertChildAt(childContent, oldPos++, PR_TRUE);
+        res = InsertChildAt(childContent, oldPos++, PR_TRUE);
       } else {
-        res = mContent->ReplaceChildAt(childContent, oldPos++, PR_TRUE);
+        res = ReplaceChildAt(childContent, oldPos++, PR_TRUE);
       }
 
       if (NS_FAILED(res)) {
@@ -2285,14 +2430,14 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
       PRInt32 origChildCount, newChildCount;
 
-      mContent->ChildCount(origChildCount);
+      ChildCount(origChildCount);
 
       /*
        * We don't care here if the return fails or not.
        */
       oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
 
-      mContent->ChildCount(newChildCount);
+      ChildCount(newChildCount);
 
       /*
        * Check if our child count changed during the RemoveChild call, if
@@ -2306,7 +2451,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
          */
         nsCOMPtr<nsIContent> tmpContent;
 
-        mContent->ChildAt(oldPos - 1, *getter_AddRefs(tmpContent));
+        ChildAt(oldPos - 1, *getter_AddRefs(tmpContent));
 
         if (oldContent == tmpContent) {
           oldPos--;
@@ -2316,7 +2461,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
     newContent->SetDocument(document, PR_TRUE, PR_TRUE);
 
-    res = mContent->ReplaceChildAt(newContent, oldPos, PR_TRUE);
+    res = ReplaceChildAt(newContent, oldPos, PR_TRUE);
 
     if (NS_FAILED(res)) {
       return res;
@@ -2329,7 +2474,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
 
 nsresult
-nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, 
+nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild,
                                 nsIDOMNode** aReturn)
 {
   *aReturn = nsnull;
@@ -2351,7 +2496,7 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild,
   }
 
   PRInt32 pos;
-  mContent->IndexOf(content, pos);
+  IndexOf(content, pos);
 
   if (pos < 0) {
     /*
@@ -2360,7 +2505,7 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild,
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  res = mContent->RemoveChildAt(pos, PR_TRUE);
+  res = RemoveChildAt(pos, PR_TRUE);
 
   *aReturn = aOldChild;
   NS_ADDREF(aOldChild);
@@ -2372,27 +2517,45 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild,
 
 // nsISupports implementation
 
-nsresult
-nsGenericElement::QueryInterface(REFNSIID aIID,void** aInstancePtr)
+NS_IMETHODIMP
+nsGenericElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  return mContent->QueryInterface(aIID, aInstancePtr);
+  nsISupports *inst = nsnull;
+
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    inst = NS_STATIC_CAST(nsIContent *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIContent))) {
+    inst = NS_STATIC_CAST(nsIContent *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIStyledContent))) {
+    inst = NS_STATIC_CAST(nsIStyledContent *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver)) ||
+             aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {
+    nsCOMPtr<nsIEventListenerManager> man;
+
+    GetListenerManager(getter_AddRefs(man));
+
+    if (man) {
+      return man->QueryInterface(aIID, aInstancePtr);
+    }
+
+    return NS_NOINTERFACE;
+  } else if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
+    inst = NS_STATIC_CAST(nsIScriptObjectOwner *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
+    inst = NS_STATIC_CAST(nsIJSScriptObject *, this);
+  } else {
+    return NS_NOINTERFACE;
+  }
+
+  NS_ADDREF(inst);
+
+  *aInstancePtr = inst;
+
+  return NS_OK;
 }
 
-nsrefcnt
-nsGenericElement::AddRef()
-{
-  return NS_ADDREF(mContent);
-}
-
-nsrefcnt
-nsGenericElement::Release()
-{
-  nsrefcnt rc=0;
-  NS_ASSERTION(mContent, "nsGenericElement: Nothing to release!");
-  if (mContent)
-    NS_RELEASE2(mContent, rc);
-  return rc;
-}
+NS_IMPL_ADDREF(nsGenericElement)
+NS_IMPL_RELEASE(nsGenericElement)
 
 //----------------------------------------------------------------------
 
@@ -2422,21 +2585,23 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
   if (aClick) {
     nsresult proceed = NS_OK;
     // Check that this page is allowed to load this URI.
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
                     NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     nsCOMPtr<nsIURI> absURI;
-    if (NS_SUCCEEDED(rv)) 
+    if (NS_SUCCEEDED(rv))
       rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, aBaseURL);
-    if (NS_SUCCEEDED(rv)) 
+    if (NS_SUCCEEDED(rv))
       proceed = securityManager->CheckLoadURI(aBaseURL, absURI, nsIScriptSecurityManager::STANDARD);
 
     // Only pass off the click event if the script security manager
     // says it's ok.
-    if (NS_SUCCEEDED(proceed)) 
-      handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+    if (NS_SUCCEEDED(proceed))
+      handler->OnLinkClick(this, aVerb, absURLSpec.GetUnicode(),
+                           aTargetSpec.GetUnicode());
   }
   else {
-    handler->OnOverLink(mContent, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+    handler->OnOverLink(this, absURLSpec.GetUnicode(),
+                        aTargetSpec.GetUnicode());
   }
   return rv;
 }
@@ -2468,57 +2633,47 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
       stack->GetSafeJSContext(&cx);
       NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
     }
-    
+
     nsLayoutUtils::GetDynamicScriptContext(cx, getter_AddRefs(context));
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
   }
-    
+
   //Attributes on the body and frameset tags get set on the global object
   if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
       mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
-    if (!global) {
-      if (cx) {
-        nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
-      }
+    if (!global && cx) {
+      nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+
       NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
     }
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(global));
+    NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
+
     nsCOMPtr<nsIEventListenerManager> manager;
-    if (receiver && NS_SUCCEEDED(receiver->GetListenerManager(getter_AddRefs(manager)))) {
+
+    receiver->GetListenerManager(getter_AddRefs(manager));
+
+    if (manager) {
       nsCOMPtr<nsIScriptObjectOwner> objOwner(do_QueryInterface(global));
       if (objOwner) {
-        ret = manager->AddScriptEventListener(context, objOwner, aAttribute, aValue, aIID, PR_FALSE);
+        ret = manager->AddScriptEventListener(context, objOwner, aAttribute,
+                                              aValue, aIID, PR_FALSE);
       }
     }
   }
   else {
     nsCOMPtr<nsIEventListenerManager> manager;
-    if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
-      nsCOMPtr<nsIScriptObjectOwner> objOwner(do_QueryInterface(mContent));
-      if (objOwner) {
-        ret = manager->AddScriptEventListener(context, objOwner, aAttribute, aValue, aIID, PR_TRUE);
-      }
+    GetListenerManager(getter_AddRefs(manager));
+
+    if (manager) {
+      ret = manager->AddScriptEventListener(context, this, aAttribute, aValue,
+                                            aIID, PR_TRUE);
     }
   }
+
   return ret;
 }
 
-static char kNameSpaceSeparator = ':';
-
-nsIAtom*  
-nsGenericElement::CutNameSpacePrefix(nsString& aString)
-{
-  nsAutoString  prefix;
-  PRInt32 nsoffset = aString.FindChar(kNameSpaceSeparator);
-  if (-1 != nsoffset) {
-    aString.Left(prefix, nsoffset);
-    aString.Cut(0, nsoffset+1);
-  }
-  if (0 < prefix.Length()) {
-    return NS_NewAtom(prefix);
-  }
-  return nsnull;
-}
 
 //----------------------------------------------------------------------
 
@@ -2622,7 +2777,7 @@ nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
       }
     }
   }
-  
+
   if (aDeep) {
     PRInt32 index;
     PRInt32 count = mChildren.Count();
@@ -2633,11 +2788,11 @@ nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
         result = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
         if (NS_OK == result) {
           nsIDOMNode* newNode;
-          
+
           result = node->CloneNode(aDeep, &newNode);
           if (NS_OK == result) {
             nsIContent* newContent;
-            
+
             result = newNode->QueryInterface(NS_GET_IID(nsIContent),
                                              (void**)&newContent);
             if (NS_OK == result) {
@@ -2665,7 +2820,7 @@ nsGenericContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
   nsDOMSlots *slots = GetDOMSlots();
 
   if (nsnull == slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(mContent);
+    slots->mChildNodes = new nsChildContentList(this);
     if (nsnull == slots->mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2681,7 +2836,7 @@ nsGenericContainerElement::HasChildNodes(PRBool* aReturn)
 {
   if (0 != mChildren.Count()) {
     *aReturn = PR_TRUE;
-  } 
+  }
   else {
     *aReturn = PR_FALSE;
   }
@@ -2716,8 +2871,8 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
   return NS_OK;
 }
 
-nsresult 
-nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+nsresult
+nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                         const nsAReadableString& aValue,
                                         PRBool aNotify)
 {
@@ -2734,7 +2889,10 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   return SetAttribute(ni, aValue, aNotify);
 }
 
-static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
+// Static helper method
+
+PRBool nsGenericElement::HasMutationListeners(nsIContent* aContent,
+                                              PRUint32 aType)
 {
   nsCOMPtr<nsIDocument> doc;
   aContent->GetDocument(*getter_AddRefs(doc));
@@ -2786,7 +2944,7 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
         return PR_TRUE;
     }
   }
-  
+
   rec = do_QueryInterface(window);
   if (rec) {
     rec->GetListenerManager(getter_AddRefs(manager));
@@ -2801,8 +2959,8 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
   return PR_FALSE;
 }
 
-nsresult 
-nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo, 
+nsresult
+nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
                                         const nsAReadableString& aValue,
                                         PRBool aNotify)
 {
@@ -2817,11 +2975,11 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
     mAttributes = new nsVoidArray();
     NS_ENSURE_TRUE(mAttributes, NS_ERROR_OUT_OF_MEMORY);
   }
-  
+
   if (aNotify && (nsnull != mDocument)) {
     mDocument->BeginUpdate();
   }
-  
+
   nsGenericAttribute* attr;
   PRInt32 index;
   PRInt32 count = mAttributes->Count();
@@ -2835,7 +2993,7 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
       break;
     }
   }
-  
+
   if (index >= count) { // didn't find it
     attr = new nsGenericAttribute(aNodeInfo, aValue);
     NS_ENSURE_TRUE(attr, NS_ERROR_OUT_OF_MEMORY);
@@ -2854,12 +3012,12 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
     nsCOMPtr<nsIBindingManager> bindingManager;
     mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+    bindingManager->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(name, nameSpaceID, PR_FALSE);
 
-    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
       nsMutationEvent mutation;
       mutation.eventStructType = NS_MUTATION_EVENT;
       mutation.message = NS_MUTATION_ATTRMODIFIED;
@@ -2872,19 +3030,21 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
       mutation.mRelatedNode = attrNode;
 
       mutation.mAttrName = name;
-      if (!oldValue.IsEmpty()) 
+      if (!oldValue.IsEmpty())
         mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValue));
       if (!aValue.IsEmpty())
         mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
-      mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION : 
+      mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION :
                                              nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
       nsCOMPtr<nsIDOMEvent> domEvent;
-      mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+      HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                     NS_EVENT_FLAG_INIT, &status);
     }
 
     if (aNotify) {
-      mDocument->AttributeChanged(mContent, nameSpaceID, name, NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(this, nameSpaceID, name,
+                                  NS_STYLE_HINT_UNKNOWN);
       mDocument->EndUpdate();
     }
   }
@@ -2892,16 +3052,16 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
   return rv;
 }
 
-nsresult 
-nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+nsresult
+nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                         nsAWritableString& aResult) const
 {
   nsCOMPtr<nsIAtom> prefix;
   return GetAttribute(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
 }
 
-nsresult 
-nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+nsresult
+nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                         nsIAtom*& aPrefix,
                                         nsAWritableString& aResult) const
 {
@@ -2918,7 +3078,7 @@ nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     for (index = 0; index < count; index++) {
       const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
       if ((aNameSpaceID == kNameSpaceID_Unknown ||
-           attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) && 
+           attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) &&
           (attr->mNodeInfo->Equals(aName))) {
         attr->mNodeInfo->GetPrefixAtom(aPrefix);
         aResult.Assign(attr->mValue);
@@ -2944,7 +3104,7 @@ nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-nsresult 
+nsresult
 nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
                                           nsIAtom* aName, PRBool aNotify)
 {
@@ -2962,14 +3122,14 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
     for (index = 0; index < count; index++) {
       nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
       if ((aNameSpaceID == kNameSpaceID_Unknown ||
-           attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) && 
+           attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) &&
           attr->mNodeInfo->Equals(aName)) {
         if (aNotify && (nsnull != mDocument)) {
           mDocument->BeginUpdate();
         }
-                
-        if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-          nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+
+        if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+          nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
           nsMutationEvent mutation;
           mutation.eventStructType = NS_MUTATION_EVENT;
           mutation.message = NS_MUTATION_ATTRMODIFIED;
@@ -2982,13 +3142,14 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
           mutation.mRelatedNode = attrNode;
 
           mutation.mAttrName = aName;
-          if (!attr->mValue.IsEmpty()) 
+          if (!attr->mValue.IsEmpty())
             mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(attr->mValue));
           mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
           nsEventStatus status = nsEventStatus_eIgnore;
           nsCOMPtr<nsIDOMEvent> domEvent;
-          mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+          this->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                               NS_EVENT_FLAG_INIT, &status);
         }
 
         mAttributes->RemoveElementAt(index);
@@ -3002,12 +3163,13 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
       nsCOMPtr<nsIBindingManager> bindingManager;
       mDocument->GetBindingManager(getter_AddRefs(bindingManager));
       nsCOMPtr<nsIXBLBinding> binding;
-      bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+      bindingManager->GetBinding(this, getter_AddRefs(binding));
       if (binding)
         binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
 
       if (aNotify) {
-        mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+        mDocument->AttributeChanged(this, aNameSpaceID, aName,
+                                    NS_STYLE_HINT_UNKNOWN);
         mDocument->EndUpdate();
       }
     }
@@ -3018,7 +3180,7 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
 
 nsresult
 nsGenericContainerElement::GetAttributeNameAt(PRInt32 aIndex,
-                                              PRInt32& aNameSpaceID, 
+                                              PRInt32& aNameSpaceID,
                                               nsIAtom*& aName,
                                               nsIAtom*& aPrefix) const
 {
@@ -3037,7 +3199,7 @@ nsGenericContainerElement::GetAttributeNameAt(PRInt32 aIndex,
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-nsresult 
+nsresult
 nsGenericContainerElement::GetAttributeCount(PRInt32& aResult) const
 {
   if (nsnull != mAttributes) {
@@ -3073,7 +3235,7 @@ nsGenericContainerElement::ListAttributes(FILE* out) const
   }
 }
 
-nsresult 
+nsresult
 nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(nsnull != mDocument, "bad content");
@@ -3085,24 +3247,21 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
   mNodeInfo->GetQualifiedName(buf);
   fputs(buf, out);
 
-  fprintf(out, "@%p", mContent);
+  fprintf(out, "@%p", this);
 
   ListAttributes(out);
 
-  nsIContent* hc = mContent;  
-  nsrefcnt r = NS_ADDREF(hc) - 1;
-  NS_RELEASE(hc);
-  fprintf(out, " refcount=%d<", r);
+  fprintf(out, " refcount=%d<", mRefCnt);
 
   PRBool canHaveKids;
-  mContent->CanContainChildren(canHaveKids);
+  CanContainChildren(canHaveKids);
   if (canHaveKids) {
     fputs("\n", out);
     PRInt32 kids;
-    mContent->ChildCount(kids);
+    ChildCount(kids);
     for (index = 0; index < kids; index++) {
       nsIContent* kid;
-      mContent->ChildAt(index, kid);
+      ChildAt(index, kid);
       kid->List(out, aIndent + 1);
       NS_RELEASE(kid);
     }
@@ -3113,7 +3272,7 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsGenericContainerElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
   return NS_OK;
 }
@@ -3166,27 +3325,28 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
-    aKid->SetParent(mContent);
-    nsRange::OwnerChildInserted(mContent, aIndex);
+    aKid->SetParent(this);
+    nsRange::OwnerChildInserted(this, aIndex);
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
-        doc->ContentInserted(mContent, aKid, aIndex);
+        doc->ContentInserted(this, aKid, aIndex);
       }
 
-      if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+      if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
         nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
         nsMutationEvent mutation;
         mutation.eventStructType = NS_MUTATION_EVENT;
         mutation.message = NS_MUTATION_NODEINSERTED;
         mutation.mTarget = node;
 
-        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
         mutation.mRelatedNode = relNode;
 
         nsEventStatus status = nsEventStatus_eIgnore;
         nsCOMPtr<nsIDOMEvent> domEvent;
-        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                             NS_EVENT_FLAG_INIT, &status);
       }
     }
   }
@@ -3207,15 +3367,15 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
     doc->BeginUpdate();
   }
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
-  nsRange::OwnerChildReplaced(mContent, aIndex, oldKid);
+  nsRange::OwnerChildReplaced(this, aIndex, oldKid);
   PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
   if (rv) {
     NS_ADDREF(aKid);
-    aKid->SetParent(mContent);
+    aKid->SetParent(this);
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
-        doc->ContentReplaced(mContent, oldKid, aKid, aIndex);
+        doc->ContentReplaced(this, oldKid, aKid, aIndex);
       }
     }
     oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
@@ -3231,7 +3391,7 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
 nsresult
 nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
-  NS_PRECONDITION((nsnull != aKid) && (aKid != mContent), "null ptr");
+  NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
     doc->BeginUpdate();
@@ -3239,27 +3399,28 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
-    aKid->SetParent(mContent);
+    aKid->SetParent(this);
     // ranges don't need adjustment since new child is at end of list
     if (nsnull != doc) {
       aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
-        doc->ContentAppended(mContent, mChildren.Count() - 1);
+        doc->ContentAppended(this, mChildren.Count() - 1);
       }
 
-      if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+      if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
         nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
         nsMutationEvent mutation;
         mutation.eventStructType = NS_MUTATION_EVENT;
         mutation.message = NS_MUTATION_NODEINSERTED;
         mutation.mTarget = node;
 
-        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
         mutation.mRelatedNode = relNode;
 
         nsEventStatus status = nsEventStatus_eIgnore;
         nsCOMPtr<nsIDOMEvent> domEvent;
-        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                             NS_EVENT_FLAG_INIT, &status);
       }
     }
   }
@@ -3279,26 +3440,28 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
       doc->BeginUpdate();
     }
 
-    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
       nsMutationEvent mutation;
       mutation.eventStructType = NS_MUTATION_EVENT;
       mutation.message = NS_MUTATION_NODEREMOVED;
       mutation.mTarget = node;
 
-      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
       mutation.mRelatedNode = relNode;
 
       nsEventStatus status = nsEventStatus_eIgnore;
       nsCOMPtr<nsIDOMEvent> domEvent;
-      oldKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+      oldKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                             NS_EVENT_FLAG_INIT, &status);
     }
 
-    nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
+    nsRange::OwnerChildRemoved(this, aIndex, oldKid);
+
     mChildren.RemoveElementAt(aIndex);
     if (aNotify) {
       if (nsnull != doc) {
-        doc->ContentRemoved(mContent, oldKid, aIndex);
+        doc->ContentRemoved(this, oldKid, aIndex);
       }
     }
     oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
@@ -3312,22 +3475,17 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
-nsresult
-nsGenericContainerElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
-                                  size_t aInstanceSize) const
+PRUint32
+nsGenericContainerElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
 {
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
   PRUint32 sum = 0;
 #ifdef DEBUG
-  sum += aInstanceSize;
   if (mAttributes) {
     // Add in array of attributes size
     PRUint32 asize;
     mAttributes->SizeOf(aSizer, &asize);
     sum += asize;
-    
+
     // Add in each attributes size
     PRInt32 i, n = mAttributes->Count();
     for (i = 0; i < n; i++) {
@@ -3341,7 +3499,7 @@ nsGenericContainerElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
     }
   }
 #endif
-  *aResult = sum;
-  return NS_OK;
+
+  return sum;
 }
 

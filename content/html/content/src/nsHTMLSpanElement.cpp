@@ -31,37 +31,26 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-class nsHTMLSpanElement : public nsIDOMHTMLElement,
-                          public nsIJSScriptObject,
-                          public nsIHTMLContent
+class nsHTMLSpanElement : public nsGenericHTMLContainerElement,
+                          public nsIDOMHTMLElement
 {
 public:
-  nsHTMLSpanElement(nsINodeInfo *aNodeInfo);
+  nsHTMLSpanElement();
   virtual ~nsHTMLSpanElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -69,111 +58,75 @@ NS_NewHTMLSpanElement(nsIHTMLContent** aInstancePtrResult,
                       nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLSpanElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLSpanElement* it = new nsHTMLSpanElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLSpanElement::nsHTMLSpanElement(nsINodeInfo *aNodeInfo)
+nsHTMLSpanElement::nsHTMLSpanElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLSpanElement::~nsHTMLSpanElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLSpanElement)
 
-NS_IMPL_RELEASE(nsHTMLSpanElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement);
 
-nsresult
-nsHTMLSpanElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI0(nsHTMLSpanElement, nsGenericHTMLContainerElement);
+
 
 nsresult
 nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLSpanElement* it = new nsHTMLSpanElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLSpanElement* it = new nsHTMLSpanElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
-}
 
-NS_IMETHODIMP
-nsHTMLSpanElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsAReadableString& aValue,
-                                     nsHTMLValue& aResult)
-{
-  // XXX write me
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
+  nsresult rv = it->Init(mNodeInfo);
 
-NS_IMETHODIMP
-nsHTMLSpanElement::AttributeToString(nsIAtom* aAttribute,
-                                     const nsHTMLValue& aValue,
-                                     nsAWritableString& aResult) const
-{
-  // XXX write me
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
+  if (NS_FAILED(rv))
+    return rv;
 
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  // XXX write me
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
+  CopyInnerTo(this, it, aDeep);
 
-NS_IMETHODIMP
-nsHTMLSpanElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                            PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsHTMLSpanElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLSpanElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                  nsEvent* aEvent,
-                                  nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
 
 NS_IMETHODIMP
 nsHTMLSpanElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

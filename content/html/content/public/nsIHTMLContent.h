@@ -22,7 +22,7 @@
 #ifndef nsIHTMLContent_h___
 #define nsIHTMLContent_h___
 
-#include "nsIStyledContent.h"
+#include "nsIXMLContent.h"
 #include "nsHTMLValue.h"
 class nsString;
 class nsIFrame;
@@ -42,9 +42,10 @@ typedef void (*nsMapAttributesFunc)(const nsIHTMLMappedAttributes* aAttributes,
                                     nsIPresContext* aPresContext);
 
 // Abstract interface for all html content
-class nsIHTMLContent : public nsIStyledContent {
+class nsIHTMLContent : public nsIXMLContent
+{
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IHTMLCONTENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLCONTENT_IID)
 
   /**
    * If this html content is a container, then compact asks it to minimize
@@ -84,18 +85,6 @@ public:
    * compatibility.
    */
   NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const = 0;
-
-  /**
-   * Translate this piece of content to html. Note that this only
-   * translates this content object, not any children it might
-   * have. The caller is responsible for recursing down the
-   * hierarchy.
-   */
-  // XXX add in output character set information so that we know how
-  // to encode non 7 bit characters
-  NS_IMETHOD ToHTMLString(nsAWritableString& aResult) const = 0;
-
-  NS_IMETHOD ToHTML(FILE* out) const = 0;
 };
 
 #endif /* nsIHTMLContent_h___ */

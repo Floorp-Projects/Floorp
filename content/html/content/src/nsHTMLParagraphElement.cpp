@@ -35,42 +35,39 @@
 // XXX missing nav attributes
 
 
-class nsHTMLParagraphElement : public nsIDOMHTMLParagraphElement,
-                               public nsIJSScriptObject,
-                               public nsIHTMLContent
+class nsHTMLParagraphElement : public nsGenericHTMLContainerElement,
+                               public nsIDOMHTMLParagraphElement
 {
 public:
   nsHTMLParagraphElement();
   virtual ~nsHTMLParagraphElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLParagraphElement
   NS_DECL_IDOMHTMLPARAGRAPHELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
-
-  friend nsresult NS_NewHTMLParagraphElement(nsIHTMLContent**, nsINodeInfo *);
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -78,59 +75,75 @@ NS_NewHTMLParagraphElement(nsIHTMLContent** aInstancePtrResult,
                            nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsHTMLParagraphElement* it;
-  NS_NEWXPCOM(it, nsHTMLParagraphElement);
-  if (nsnull == it) {
+  nsHTMLParagraphElement* it = new nsHTMLParagraphElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->mInner.Init(it, aNodeInfo);
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
 nsHTMLParagraphElement::nsHTMLParagraphElement()
 {
-  NS_INIT_REFCNT();
 }
 
 nsHTMLParagraphElement::~nsHTMLParagraphElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLParagraphElement)
 
-NS_IMPL_RELEASE(nsHTMLParagraphElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLParagraphElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement);
 
-nsresult
-nsHTMLParagraphElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLParagraphElement))) {
-    nsIDOMHTMLParagraphElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLParagraphElement, nsGenericHTMLContainerElement,
+                       nsIDOMHTMLParagraphElement);
+
 
 nsresult
 nsHTMLParagraphElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLParagraphElement* it;
-  NS_NEWXPCOM(it, nsHTMLParagraphElement);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLParagraphElement* it = new nsHTMLParagraphElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  it->mInner.Init(it, mInner.mNodeInfo);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
+
 NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align)
+
 
 NS_IMETHODIMP
 nsHTMLParagraphElement::StringToAttribute(nsIAtom* aAttribute,
@@ -138,7 +151,7 @@ nsHTMLParagraphElement::StringToAttribute(nsIAtom* aAttribute,
                                           nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.ParseDivAlignValue(aValue, aResult)) {
+    if (ParseDivAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -152,11 +165,13 @@ nsHTMLParagraphElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      mInner.DivAlignValueToString(aValue, aResult);
+      DivAlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void
@@ -173,7 +188,9 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       text->mTextAlign = value.GetIntValue();
     }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -183,7 +200,7 @@ nsHTMLParagraphElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::align) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }
 
@@ -200,22 +217,11 @@ nsHTMLParagraphElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontM
   return NS_OK;
 }
 
-
-
 NS_IMETHODIMP
-nsHTMLParagraphElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                       nsEvent* aEvent,
-                                       nsIDOMEvent** aDOMEvent,
-                                       PRUint32 aFlags,
-                                       nsEventStatus* aEventStatus)
+nsHTMLParagraphElement::SizeOf(nsISizeOfHandler* aSizer,
+                               PRUint32* aResult) const
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
 
-
-NS_IMETHODIMP
-nsHTMLParagraphElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  return NS_OK;
 }

@@ -33,40 +33,39 @@
 #include "nsIHTMLAttributes.h"
 
 
-class nsHTMLTableCaptionElement :  public nsIDOMHTMLTableCaptionElement,
-                                   public nsIJSScriptObject,
-                                   public nsIHTMLContent
+class nsHTMLTableCaptionElement :  public nsGenericHTMLContainerElement,
+                                   public nsIDOMHTMLTableCaptionElement
 {
 public:
-  nsHTMLTableCaptionElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableCaptionElement();
   virtual ~nsHTMLTableCaptionElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTableCaptionElement
   NS_DECL_IDOMHTMLTABLECAPTIONELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -74,56 +73,76 @@ NS_NewHTMLTableCaptionElement(nsIHTMLContent** aInstancePtrResult,
                               nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLTableCaptionElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLTableCaptionElement* it = new nsHTMLTableCaptionElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLTableCaptionElement::nsHTMLTableCaptionElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableCaptionElement::nsHTMLTableCaptionElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLTableCaptionElement::~nsHTMLTableCaptionElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLTableCaptionElement)
 
-NS_IMPL_RELEASE(nsHTMLTableCaptionElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableCaptionElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableCaptionElement, nsGenericElement);
 
-nsresult
-nsHTMLTableCaptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableCaptionElement))) {
-    nsIDOMHTMLTableCaptionElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLTableCaptionElement,
+                       nsGenericHTMLContainerElement,
+                       nsIDOMHTMLTableCaptionElement);
+
 
 nsresult
 nsHTMLTableCaptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableCaptionElement* it = new nsHTMLTableCaptionElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLTableCaptionElement* it = new nsHTMLTableCaptionElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
+
 NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align)
+
 
 static nsGenericHTMLElement::EnumTable kCaptionAlignTable[] = {
   { "left",  NS_SIDE_LEFT },
@@ -139,7 +158,7 @@ nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue&    aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kCaptionAlignTable, aResult)) {
+    if (ParseEnumValue(aValue, kCaptionAlignTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -147,17 +166,19 @@ nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLTableCaptionElement::AttributeToString(nsIAtom*    aAttribute,
+nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsAWritableString&          aResult) const
+                                      nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::EnumValueToString(aValue, kCaptionAlignTable, aResult);
+      EnumValueToString(aValue, kCaptionAlignTable, aResult);
+
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void
@@ -168,14 +189,18 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
   if (nsnull != aAttributes) {
     nsHTMLValue value;
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRUint8 align = value.GetIntValue();
       nsStyleTable* tableStyle = (nsStyleTable*)
         aContext->GetMutableStyleData(eStyleStruct_Table);
+
       tableStyle->mCaptionSide = align;
     }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -185,7 +210,7 @@ nsHTMLTableCaptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::align) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }
 
@@ -203,21 +228,11 @@ nsHTMLTableCaptionElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFo
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsHTMLTableCaptionElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                   nsEvent* aEvent,
-                                   nsIDOMEvent** aDOMEvent,
-                                   PRUint32 aFlags,
-                                   nsEventStatus* aEventStatus)
+nsHTMLTableCaptionElement::SizeOf(nsISizeOfHandler* aSizer,
+                                  PRUint32* aResult) const
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
 
-
-NS_IMETHODIMP
-nsHTMLTableCaptionElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  return NS_OK;
 }

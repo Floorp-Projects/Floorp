@@ -53,27 +53,26 @@
 // XXX either suppress is handled in the event code below OR we need a
 // custom frame
 
-class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
+class nsHTMLAnchorElement : public nsGenericHTMLContainerElement,
+                            public nsIDOMHTMLAnchorElement,
                             public nsIDOMNSHTMLAnchorElement,
-                            public nsIJSScriptObject,
-                            public nsILink,
-                            public nsIHTMLContent
+                            public nsILink
 {
 public:
-  nsHTMLAnchorElement(nsINodeInfo *aNodeInfo);
+  nsHTMLAnchorElement();
   virtual ~nsHTMLAnchorElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLAnchorElement
   NS_DECL_IDOMHTMLANCHORELEMENT  
@@ -81,24 +80,25 @@ public:
   // nsIDOMNSHTMLAnchorElement
   NS_DECL_IDOMNSHTMLANCHORELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
   // nsILink
-  NS_IMETHOD    GetLinkState(nsLinkState &aState);
-  NS_IMETHOD    SetLinkState(nsLinkState aState);
-  NS_IMETHOD    GetHrefCString(char* &aBuf);
+  NS_IMETHOD GetLinkState(nsLinkState &aState);
+  NS_IMETHOD SetLinkState(nsLinkState aState);
+  NS_IMETHOD GetHrefCString(char* &aBuf);
 
-  // nsIContent
-  //NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(mInner)
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
   nsresult RegUnRegAccessKey(PRBool aDoReg);
-  nsGenericHTMLContainerElement mInner;
 
   // The cached visited state
   nsLinkState mLinkState;
@@ -109,20 +109,30 @@ NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
                         nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLAnchorElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLAnchorElement* it = new nsHTMLAnchorElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
-nsHTMLAnchorElement::nsHTMLAnchorElement(nsINodeInfo *aNodeInfo)
-  : mLinkState(eLinkState_Unknown)
+
+nsHTMLAnchorElement::nsHTMLAnchorElement() : mLinkState(eLinkState_Unknown)
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   nsHTMLUtils::AddRef(); // for GetHrefCString
 }
 
@@ -131,44 +141,43 @@ nsHTMLAnchorElement::~nsHTMLAnchorElement()
   nsHTMLUtils::Release(); // for GetHrefCString
 }
 
-NS_IMPL_ADDREF(nsHTMLAnchorElement)
 
-NS_IMPL_RELEASE(nsHTMLAnchorElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
 
-nsresult
-nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLAnchorElement))) {
-    nsIDOMHTMLAnchorElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLAnchorElement))) {
-    *aInstancePtr = (void*)(nsIDOMNSHTMLAnchorElement*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsILink))) {
-    *aInstancePtr = (void*)(nsILink*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI3(nsHTMLAnchorElement, nsGenericHTMLContainerElement,
+                        nsIDOMHTMLAnchorElement, nsIDOMNSHTMLAnchorElement,
+                        nsILink)
+
 
 nsresult
 nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLAnchorElement* it = new nsHTMLAnchorElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLAnchorElement* it = new nsHTMLAnchorElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Charset, charset)
@@ -182,11 +191,6 @@ NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetParent(nsIContent* aParent)
-{
-  return mInner.SetParent(aParent);
-}
 
 // This goes and gets the proper PresContext in order
 // for it to get the EventStateManager so it can register 
@@ -197,30 +201,40 @@ nsresult nsHTMLAnchorElement::RegUnRegAccessKey(PRBool aDoReg)
   nsAutoString accessKey;
   PRInt32 nameSpaceID;
   GetNameSpaceID(nameSpaceID);
-  nsresult rv = GetAttribute(nameSpaceID, nsHTMLAtoms::accesskey, accessKey);
+  nsresult rv;
+
+  rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nameSpaceID,
+                                                        nsHTMLAtoms::accesskey,
+                                                        accessKey);
 
   if (NS_CONTENT_ATTR_NOT_THERE != rv) {
     nsCOMPtr<nsIPresContext> presContext;
-    nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+    GetPresContext(this, getter_AddRefs(presContext));
 
     // With a valid PresContext we can get the EVM 
     // and register the access key
     if (presContext) {
       nsCOMPtr<nsIEventStateManager> stateManager;
-      if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
+      presContext->GetEventStateManager(getter_AddRefs(stateManager));
+
+      if (stateManager) {
         if (aDoReg) {
-          return stateManager->RegisterAccessKey(nsnull, (nsIContent*)this, (PRUint32)accessKey.First());
+          return stateManager->RegisterAccessKey(nsnull, this,
+                                                 (PRUint32)accessKey.First());
         } else {
-          return stateManager->UnregisterAccessKey(nsnull, (nsIContent*)this, (PRUint32)accessKey.First());
+          return stateManager->UnregisterAccessKey(nsnull, this,
+                                                   (PRUint32)accessKey.First());
         }
       }
     }
   }
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
+nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                                 PRBool aCompileEventHandlers)
 {
   // The document gets set to null before it is destroyed,
   // so we unregister the the access key here (if it has one)
@@ -229,7 +243,10 @@ nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aC
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult res = mInner.SetDocument(aDocument, aDeep, aCompileEventHandlers);
+  nsresult rv;
+  rv = nsGenericHTMLContainerElement::SetDocument(aDocument,
+                                                  aDeep,
+                                                  aCompileEventHandlers);
 
   // Register the access key here (if it has one) 
   // if the document isn't null
@@ -237,14 +254,14 @@ nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aC
     RegUnRegAccessKey(PR_TRUE);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::Blur()
 {
   nsCOMPtr<nsIPresContext> presContext;
-  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+  GetPresContext(this, getter_AddRefs(presContext));
   return RemoveFocus(presContext);
 }
 
@@ -258,17 +275,24 @@ nsHTMLAnchorElement::Focus()
 
   PRInt32 numShells = doc->GetNumberOfShells();
   nsCOMPtr<nsIPresContext> context;
-  for (PRInt32 i=0; i<numShells; i++) 
-  {
+
+  for (PRInt32 i=0; i<numShells; i++) {
     nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
     if (!shell) { return NS_ERROR_NULL_POINTER; }
 
     rv = shell->GetPresContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) { return rv; }
-    if (!context) { return NS_ERROR_NULL_POINTER; }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (!context) {
+      return NS_ERROR_NULL_POINTER;
+    }
 
     rv = SetFocus(context);
-    if (NS_FAILED(rv)) { return rv; }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -277,34 +301,34 @@ nsHTMLAnchorElement::Focus()
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
 {
-
   // don't make the link grab the focus if there is no link handler
-  nsILinkHandler* handler;
-  nsresult rv = aPresContext->GetLinkHandler(&handler);
+  nsCOMPtr<nsILinkHandler> handler;
+  nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
   if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
-    nsIEventStateManager *stateManager;
-    if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
+    nsCOMPtr<nsIEventStateManager> stateManager;
+
+    aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
+
+    if (stateManager) {
       stateManager->SetContentState(this, NS_EVENT_STATE_FOCUS);
 
       // Make sure the presentation is up-to-date
-      if (mInner.mDocument) {
-        mInner.mDocument->FlushPendingNotifications();
+      if (mDocument) {
+        mDocument->FlushPendingNotifications();
       }
 
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
+
       if (presShell) {
         nsIFrame* frame = nsnull;
         presShell->GetPrimaryFrameFor(this, &frame);
         if (frame) {
-          presShell->ScrollFrameIntoView(frame,
-                                         NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+          presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
+                                         NS_PRESSHELL_SCROLL_ANYWHERE);
         }
       }
-
-      NS_RELEASE(stateManager);
     }
-    NS_RELEASE(handler);
   }
 
   return NS_OK;
@@ -318,8 +342,9 @@ nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
+  if (esm) {
     nsCOMPtr<nsIDocument> doc;
     GetDocument(*getter_AddRefs(doc));
     if (!doc)
@@ -339,53 +364,18 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, 32767, aResult,
-                                         eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, 32767, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (nsCRT::strcasecmp(nsPromiseFlatString(aValue).get(), NS_LITERAL_STRING("true").get())) {
+    if (nsCRT::strcasecmp(nsPromiseFlatString(aValue).get(),
+                          NS_LITERAL_STRING("true").get())) {
       aResult.SetEmptyValue();  // XXX? shouldn't just leave "true"
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::AttributeToString(nsIAtom* aAttribute,
-                                       const nsHTMLValue& aValue,
-                                       nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                              PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
-                                                  nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
 }
 
 // XXX support suppress in here
@@ -396,12 +386,8 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEventForAnchors(this,
-                                         aPresContext, 
-                                         aEvent, 
-                                         aDOMEvent, 
-                                         aFlags, 
-                                         aEventStatus);
+  return HandleDOMEventForAnchors(this, aPresContext, aEvent, aDOMEvent, 
+                                  aFlags, aEventStatus);
 }
 
 NS_IMETHODIMP
@@ -425,35 +411,43 @@ nsHTMLAnchorElement::SetHref(const nsAReadableString& aValue)
   // somebody asks for it.
   mLinkState = eLinkState_Unknown;
 
-  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, aValue, PR_TRUE);
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_HTML,
+                                                          nsHTMLAtoms::href,
+                                                          aValue, PR_TRUE);
 }
+
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }
+
 
 NS_IMETHODIMP    
 nsHTMLAnchorElement::GetProtocol(nsAWritableString& aProtocol)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsCOMPtr<nsIURI> url;
   nsresult result = NS_OK;
   
   result = GetHref(href);
   if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* protocol;
-      result = url->GetScheme(&protocol);
-      if (result == NS_OK) {
-        aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
-        aProtocol.Append(NS_LITERAL_STRING(":"));
-        nsCRT::free(protocol);
-      }
-      NS_RELEASE(url);
-    }
+    result = NS_NewURI(getter_AddRefs(url), href);
+    if (NS_FAILED(result))
+      return result;
+
+    char* protocol;
+    result = url->GetScheme(&protocol);
+    if (NS_FAILED(result))
+      return result;
+
+    aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
+    aProtocol.Append(PRUnichar(':'));
+
+    nsCRT::free(protocol);
   }
 
   return result;
@@ -463,12 +457,12 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::GetHost(nsAWritableString& aHost)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsCOMPtr<nsIURI> url;
   nsresult result = NS_OK;
   
   result = GetHref(href);
   if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
+    result = NS_NewURI(getter_AddRefs(url), href);
     if (NS_OK == result) {
       char* host;
       result = url->GetHost(&host);
@@ -484,7 +478,6 @@ nsHTMLAnchorElement::GetHost(nsAWritableString& aHost)
           aHost.Append(portStr);
         }
       }
-      NS_RELEASE(url);
     }
   }
 
@@ -556,29 +549,30 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::GetSearch(nsAWritableString& aSearch)
 {
   nsAutoString href;
-  nsIURI *uri;
+  nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
   if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
+    result = NS_NewURI(getter_AddRefs(uri), href);
     if (NS_OK == result) {
       char *search;
       nsIURL* url;
       result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
+
       if (NS_SUCCEEDED(result)) {
         result = url->GetEscapedQuery(&search);
         NS_RELEASE(url);
       }
-      if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
-        aSearch.Assign(NS_LITERAL_STRING("?"));
+
+      if (NS_SUCCEEDED(result) && search && (*search)) {
+        aSearch.Assign(PRUnichar('?'));
         aSearch.Append(NS_ConvertASCIItoUCS2(search));
         nsCRT::free(search);
       }
       else {
         aSearch.SetLength(0);
       }
-      NS_RELEASE(uri);
     }
   }
 
@@ -589,12 +583,12 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::GetPort(nsAWritableString& aPort)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsCOMPtr<nsIURI> url;
   nsresult result = NS_OK;
-  
+
   result = GetHref(href);
   if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
+    result = NS_NewURI(getter_AddRefs(url), href);
     if (NS_OK == result) {
       aPort.Truncate(0);
       PRInt32 port;
@@ -604,7 +598,6 @@ nsHTMLAnchorElement::GetPort(nsAWritableString& aPort)
         portStr.AppendInt(port);
         aPort.Append(portStr);
       }
-      NS_RELEASE(url);
     }
   }
 
@@ -615,30 +608,28 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::GetHash(nsAWritableString& aHash)
 {
   nsAutoString href;
-  nsIURI *uri;
+  nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
-  
+
   result = GetHref(href);
   if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
+    result = NS_NewURI(getter_AddRefs(uri), href);
 
     if (NS_OK == result) {
       char *ref;
-      nsIURL* url;
-      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-      if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+      if (url) {
         result = url->GetRef(&ref);
-        NS_RELEASE(url);
       }
+
       if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
-        aHash.Assign(NS_LITERAL_STRING("#"));
+        aHash.Assign(PRUnichar('#'));
         aHash.Append(NS_ConvertASCIItoUCS2(ref));
         nsCRT::free(ref);
       }
       else {
         aHash.SetLength(0);
       }
-      NS_RELEASE(uri);
     }
   }
 
@@ -652,7 +643,7 @@ nsHTMLAnchorElement::GetText(nsAWritableString& aText)
 
   nsCOMPtr<nsIDOMNode> child;
 
-  mInner.GetFirstChild(getter_AddRefs(child));
+  GetFirstChild(getter_AddRefs(child));
 
   if (child) {
     child->GetNodeValue(aText);
@@ -682,18 +673,21 @@ nsHTMLAnchorElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec)) {
+      NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_HTML,
+                                                       nsHTMLAtoms::href,
+                                                       relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
-    mInner.GetBaseURL(*getter_AddRefs(baseURL));
+    GetBaseURL(*getter_AddRefs(baseURL));
 
     if (baseURL) {
       // Get absolute URL.
-      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mInner.mDocument, baseURL,
-                                    nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
+      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mDocument, baseURL,
+                                    nsHTMLUtils::IOService,
+                                    nsHTMLUtils::CharsetMgr);
     }
     else {
       // Absolute URL is same as relative URL.

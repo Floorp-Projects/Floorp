@@ -46,40 +46,41 @@
 class GenericElementCollection;
 class TableRowsCollection;
 
-class nsHTMLTableElement :  public nsIDOMHTMLTableElement,
-                            public nsIJSScriptObject,
-                            public nsIHTMLContent
+class nsHTMLTableElement :  public nsGenericHTMLContainerElement,
+                            public nsIDOMHTMLTableElement
 {
 public:
-  nsHTMLTableElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableElement();
   virtual ~nsHTMLTableElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTableElement
   NS_DECL_IDOMHTMLTABLEELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsGenericHTMLContainerElement mInner;
   GenericElementCollection *mTBodies;
   TableRowsCollection *mRows;
 };
@@ -98,7 +99,8 @@ public:
 
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName,
+                          nsIDOMNode** aReturn);
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -121,72 +123,82 @@ TableRowsCollection::TableRowsCollection(nsHTMLTableElement *aParent)
 
 TableRowsCollection::~TableRowsCollection()
 {
-  // we do NOT have a ref-counted reference to mParent, so do NOT release it!
-  // this is to avoid circular references.  The instantiator who provided mParent
-  // is responsible for managing our reference for us.
+  // we do NOT have a ref-counted reference to mParent, so do NOT
+  // release it!  this is to avoid circular references.  The
+  // instantiator who provided mParent is responsible for managing our
+  // reference for us.
 }
 
-// we re-count every call.  A better implementation would be to set ourselves up as
-// an observer of contentAppended, contentInserted, and contentDeleted
+// we re-count every call.  A better implementation would be to set
+// ourselves up as an observer of contentAppended, contentInserted,
+// and contentDeleted
 NS_IMETHODIMP 
 TableRowsCollection::GetLength(PRUint32* aLength)
 {
-  if (nsnull==aLength)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aLength);
+
   *aLength=0;
   nsresult rv = NS_OK;
-  if (nsnull!=mParent)
-  {
+
+  if (mParent) {
     // count the rows in the thead, tfoot, and all tbodies
-    nsIDOMHTMLTableSectionElement *rowGroup;
-    mParent->GetTHead(&rowGroup);
-    if (nsnull!=rowGroup)
-    {
-      nsIContent *content=nsnull;
-      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
+    nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;
+
+    mParent->GetTHead(getter_AddRefs(rowGroup));
+
+    if (rowGroup) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
+
       GenericElementCollection head(content, nsHTMLAtoms::tr);
+
       PRUint32 rows;
       head.GetLength(&rows);
+
       *aLength = rows;
-      NS_RELEASE(content);
-      NS_RELEASE(rowGroup);
     }
-    mParent->GetTFoot(&rowGroup);
-    if (nsnull!=rowGroup)
-    {
-      nsIContent *content=nsnull;
-      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
+
+    mParent->GetTFoot(getter_AddRefs(rowGroup));
+
+    if (rowGroup) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
+
       GenericElementCollection foot(content, nsHTMLAtoms::tr);
+
       PRUint32 rows;
       foot.GetLength(&rows);
       *aLength += rows;
-      NS_RELEASE(content);
-      NS_RELEASE(rowGroup);
     }
-    nsIDOMHTMLCollection *tbodies;
-    mParent->GetTBodies(&tbodies);
-    if (nsnull!=tbodies)
-    {
+
+    nsCOMPtr<nsIDOMHTMLCollection> tbodies;
+
+    mParent->GetTBodies(getter_AddRefs(tbodies));
+
+    if (tbodies) {
+      nsCOMPtr<nsIDOMNode> node;
+
       rowGroup = nsnull;
-      nsIDOMNode *node;
+
       PRUint32 theIndex=0;
-      tbodies->Item(theIndex, &node);
-      while (nsnull!=node)
-      {
-        nsIContent *content=nsnull;
-        node->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
+
+      tbodies->Item(theIndex, getter_AddRefs(node));
+
+      while (node) {
+        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+
         GenericElementCollection body(content, nsHTMLAtoms::tr);
+
         PRUint32 rows;
         body.GetLength(&rows);
+
         *aLength += rows;
+
         theIndex++;
-        NS_RELEASE(content);
-        NS_RELEASE(node);
-        tbodies->Item(theIndex, &node);
+
+        tbodies->Item(theIndex, getter_AddRefs(node));
       }
-      NS_RELEASE(tbodies);
     }
   }
+
   return rv;
 }
 
@@ -198,70 +210,77 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsresult rv = NS_OK;
   PRUint32 count = 0;
  
-  if (nsnull != mParent) {
-    nsIDOMHTMLTableSectionElement *rowGroup;
+  if (mParent) {
+    nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;
 
     // check the thead
-    mParent->GetTHead(&rowGroup);
-    if (nsnull != rowGroup) {
-      nsIContent *content = nsnull;
-      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
+    mParent->GetTHead(getter_AddRefs(rowGroup));
+
+    if (rowGroup) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
+
       GenericElementCollection head(content, nsHTMLAtoms::tr);
+
       PRUint32 rowsInHead;
       head.GetLength(&rowsInHead);
+
       count = rowsInHead;
-      NS_RELEASE(content);
-      NS_RELEASE(rowGroup);
+
       if (count > aIndex) {
         head.Item(aIndex, aReturn);
         return NS_OK; 
       }
     }
 
-	// check the tbodies
-    nsIDOMHTMLCollection *tbodies;
-    mParent->GetTBodies(&tbodies);
-    if (nsnull != tbodies) {
+    // check the tbodies
+    nsCOMPtr<nsIDOMHTMLCollection> tbodies;
+
+    mParent->GetTBodies(getter_AddRefs(tbodies));
+
+    if (tbodies) {
       rowGroup = nsnull;
-      nsIDOMNode *node;
+      nsCOMPtr<nsIDOMNode> node;
       PRUint32 theIndex=0;
-      tbodies->Item(theIndex, &node);
-      while (nsnull != node) {
-        nsIContent *content = nsnull;
-        node->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
+
+      tbodies->Item(theIndex, getter_AddRefs(node));
+
+      while (node) {
+        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+
         GenericElementCollection body(content, nsHTMLAtoms::tr);
-        NS_RELEASE(content);
-        NS_RELEASE(node);
+
         PRUint32 rows;
         body.GetLength(&rows);
+
         if ((count+rows) > aIndex) {
           body.Item(aIndex-count, aReturn);
-          NS_RELEASE(tbodies);
+
 		      return NS_OK;
         }
+
         count += rows;
         theIndex++;
-        tbodies->Item(theIndex, &node);
+        tbodies->Item(theIndex, getter_AddRefs(node));
       }
-      NS_RELEASE(tbodies);
     }
 
     // check the tfoot
-    mParent->GetTFoot(&rowGroup);
-    if (nsnull != rowGroup) {
-      nsIContent *content = nsnull;
-      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
+    mParent->GetTFoot(getter_AddRefs(rowGroup));
+
+    if (rowGroup) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
+
       GenericElementCollection foot(content, nsHTMLAtoms::tr);
       foot.Item(aIndex-count, aReturn);
-      NS_RELEASE(content);
-      NS_RELEASE(rowGroup);
     }
   }
+
   return rv;
 }
 
 NS_IMETHODIMP 
-TableRowsCollection::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+TableRowsCollection::NamedItem(const nsAReadableString& aName,
+                               nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -277,10 +296,11 @@ TableRowsCollection::ParentDestroyed()
 {
   // see comment in destructor, do NOT release mParent!
   mParent = nsnull;
+
   return NS_OK;
 }
 
-/* ------------------------------ nsHTMLTableElement -------------------------------- */
+/* -------------------------- nsHTMLTableElement --------------------------- */
 // the class declaration is at the top of this file
 
 nsresult
@@ -288,69 +308,88 @@ NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult,
                        nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLTableElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLTableElement* it = new nsHTMLTableElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLTableElement::nsHTMLTableElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableElement::nsHTMLTableElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   mTBodies=nsnull;
   mRows=nsnull;
 }
 
 nsHTMLTableElement::~nsHTMLTableElement()
 {
-  if (nsnull!=mTBodies)
-  {
+  if (mTBodies) {
     mTBodies->ParentDestroyed();
     NS_RELEASE(mTBodies);
   }
-  if (nsnull!=mRows)
-  {
+
+  if (mRows) {
     mRows->ParentDestroyed();
     NS_RELEASE(mRows);
   }
 }
 
-NS_IMPL_ADDREF(nsHTMLTableElement)
 
-NS_IMPL_RELEASE(nsHTMLTableElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement) 
 
-nsresult
-nsHTMLTableElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableElement))) {
-    nsIDOMHTMLTableElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLTableElement,
+                       nsGenericHTMLContainerElement,
+                       nsIDOMHTMLTableElement);
+
 
 nsresult
 nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableElement* it = new nsHTMLTableElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLTableElement* it = new nsHTMLTableElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
+
 // the DOM spec says border, cellpadding, cellSpacing are all "wstring"
-// in fact, they are integers or they are meaningless.  so we store them here as ints.
+// in fact, they are integers or they are meaningless.  so we store them
+// here as ints.
 
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, BgColor, bgcolor)
@@ -362,24 +401,28 @@ NS_IMPL_STRING_ATTR(nsHTMLTableElement, Rules, rules)
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Summary, summary)
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Width, width)
 
+
 NS_IMETHODIMP
 nsHTMLTableElement::GetCaption(nsIDOMHTMLTableCaptionElement** aValue)
 {
   *aValue = nsnull;
   nsCOMPtr<nsIDOMNode> child;
-  mInner.GetFirstChild(getter_AddRefs(child));
-  while (child)
-  {
-    nsCOMPtr<nsIDOMHTMLTableCaptionElement> caption = do_QueryInterface(child);
-    if (caption)
-    {
+  GetFirstChild(getter_AddRefs(child));
+
+  while (child) {
+    nsCOMPtr<nsIDOMHTMLTableCaptionElement> caption(do_QueryInterface(child));
+
+    if (caption) {
       *aValue = caption;
       NS_ADDREF(*aValue);
+
       break;
     }
-    nsCOMPtr<nsIDOMNode> temp = child;
+
+    nsIDOMNode *temp = child.get();
     temp->GetNextSibling(getter_AddRefs(child));
   }
+
   return NS_OK;
 }
 
@@ -387,13 +430,14 @@ NS_IMETHODIMP
 nsHTMLTableElement::SetCaption(nsIDOMHTMLTableCaptionElement* aValue)
 {
   nsresult rv = DeleteCaption();
+
   if (NS_SUCCEEDED(rv)) {
-    if (nsnull!=aValue)
-    {
+    if (nsnull!=aValue) {
       nsCOMPtr<nsIDOMNode> resultingChild;
-      mInner.AppendChild(aValue, getter_AddRefs(resultingChild));
+      AppendChild(aValue, getter_AddRefs(resultingChild));
     }
   }
+
   return rv;
 }
 
@@ -402,26 +446,28 @@ nsHTMLTableElement::GetTHead(nsIDOMHTMLTableSectionElement** aValue)
 {
   *aValue = nsnull;
   nsCOMPtr<nsIDOMNode> child;
-  mInner.GetFirstChild(getter_AddRefs(child));
-  while (child)
-  {
-    nsCOMPtr<nsIDOMHTMLTableSectionElement> section = do_QueryInterface(child);
-    if (section)
-    {
+  GetFirstChild(getter_AddRefs(child));
+
+  while (child) {
+    nsCOMPtr<nsIDOMHTMLTableSectionElement> section(do_QueryInterface(child));
+
+    if (section) {
       nsCOMPtr<nsIAtom> tag;
       nsCOMPtr<nsIContent> content = do_QueryInterface(section);
-      
+
       content->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsHTMLAtoms::thead)
-      {
+      if (tag.get() == nsHTMLAtoms::thead) {
         *aValue = section;
         NS_ADDREF(*aValue);
+
         break;
       }
     }
-    nsCOMPtr<nsIDOMNode> temp = child;
+
+    nsIDOMNode *temp = child.get();
     temp->GetNextSibling(getter_AddRefs(child));
   }
+
   return NS_OK;
 }
 
@@ -435,13 +481,13 @@ nsHTMLTableElement::SetTHead(nsIDOMHTMLTableSectionElement* aValue)
 
   if (nsnull!=aValue) {
     nsCOMPtr<nsIDOMNode> child;
-    rv = mInner.GetFirstChild(getter_AddRefs(child));
+    rv = GetFirstChild(getter_AddRefs(child));
     if (NS_FAILED(rv)) {
       return rv;
     }
      
     nsCOMPtr<nsIDOMNode> resultChild;
-    rv = mInner.InsertBefore(aValue, child, getter_AddRefs(resultChild));
+    rv = InsertBefore(aValue, child, getter_AddRefs(resultChild));
   }
 
   return rv;
@@ -452,26 +498,29 @@ nsHTMLTableElement::GetTFoot(nsIDOMHTMLTableSectionElement** aValue)
 {
   *aValue = nsnull;
   nsCOMPtr<nsIDOMNode> child;
-  mInner.GetFirstChild(getter_AddRefs(child));
-  while (child)
-  {
-    nsCOMPtr<nsIDOMHTMLTableSectionElement> section=do_QueryInterface(child);
-    if (section)
-    {
+  GetFirstChild(getter_AddRefs(child));
+
+  while (child) {
+    nsCOMPtr<nsIDOMHTMLTableSectionElement> section(do_QueryInterface(child));
+
+    if (section) {
       nsCOMPtr<nsIAtom> tag;
       nsCOMPtr<nsIContent> content = do_QueryInterface(section);
 
       content->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsHTMLAtoms::tfoot)
-      {
+
+      if (tag.get() == nsHTMLAtoms::tfoot) {
         *aValue = section;
         NS_ADDREF(*aValue);
+
         break;
       }
     }
-    nsCOMPtr<nsIDOMNode> temp = child;
+
+    nsIDOMNode *temp = child.get();
     temp->GetNextSibling(getter_AddRefs(child));
   }
+
   return NS_OK;
 }
 
@@ -480,37 +529,46 @@ nsHTMLTableElement::SetTFoot(nsIDOMHTMLTableSectionElement* aValue)
 {
   nsresult rv = DeleteTFoot();
   if (NS_SUCCEEDED(rv)) {
-    if (nsnull!=aValue)
-    {
+    if (aValue) {
       nsCOMPtr<nsIDOMNode> resultingChild;
-      mInner.AppendChild(aValue, getter_AddRefs(resultingChild));
+      AppendChild(aValue, getter_AddRefs(resultingChild));
     }
   }
+
   return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
-  if (nsnull==mRows)
-  {
+  if (!mRows) {
     // XXX why was this here NS_ADDREF(nsHTMLAtoms::tr);
     mRows = new TableRowsCollection(this);
+
+    NS_ENSURE_TRUE(mRows, NS_ERROR_OUT_OF_MEMORY);
+
     NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
-  mRows->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);   // caller's addref 
+
+  mRows->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
 {
-  if (nsnull==mTBodies)
-  {
-    mTBodies = new GenericElementCollection((nsIContent*)this, nsHTMLAtoms::tbody);
+  if (!mTBodies) {
+    mTBodies = new GenericElementCollection((nsIContent*)this,
+                                            nsHTMLAtoms::tbody);
+
+    NS_ENSURE_TRUE(mTBodies, NS_ERROR_OUT_OF_MEMORY);
+
     NS_ADDREF(mTBodies); // this table's reference, released in the destructor
   }
-  mTBodies->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);  // caller's addref 
+
+  mTBodies->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);
+
   return NS_OK;
 }
 
@@ -520,35 +578,39 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
   *aValue = nsnull;
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMHTMLTableSectionElement> head;
+
   GetTHead(getter_AddRefs(head));
-  if (head)
-  { // return the existing thead
-    head->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);  // caller's addref
+
+  if (head) { // return the existing thead
+    head->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);
+
     NS_ASSERTION(nsnull!=*aValue, "head must be a DOMHTMLElement");
   }
   else
   { // create a new head rowgroup
     nsCOMPtr<nsIHTMLContent> newHead;
-
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::thead,
-                                  *getter_AddRefs(nodeInfo));
+
+    mNodeInfo->NameChanged(nsHTMLAtoms::thead, *getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newHead),nodeInfo);
-    if (NS_SUCCEEDED(rv) && newHead)
-    {
+
+    if (NS_SUCCEEDED(rv) && newHead) {
       nsCOMPtr<nsIDOMNode> child;
-      rv = mInner.GetFirstChild(getter_AddRefs(child));
+
+      rv = GetFirstChild(getter_AddRefs(child));
+
       if (NS_FAILED(rv)) {
         return rv;
       }
      
-      newHead->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue); // caller's addref
+      newHead->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);
 
       nsCOMPtr<nsIDOMNode> resultChild;
-      rv = mInner.InsertBefore(*aValue, child, getter_AddRefs(resultChild));
+      rv = InsertBefore(*aValue, child, getter_AddRefs(resultChild));
     }
   }
+
   return NS_OK;
 }
 
@@ -557,11 +619,13 @@ nsHTMLTableElement::DeleteTHead()
 {
   nsCOMPtr<nsIDOMHTMLTableSectionElement> childToDelete;
   nsresult rv = GetTHead(getter_AddRefs(childToDelete));
-  if ((NS_SUCCEEDED(rv)) && childToDelete)
-  {
+
+  if ((NS_SUCCEEDED(rv)) && childToDelete) {
     nsCOMPtr<nsIDOMNode> resultingChild;
-    mInner.RemoveChild(childToDelete, getter_AddRefs(resultingChild)); // mInner does the notification
+    // mInner does the notification
+    RemoveChild(childToDelete, getter_AddRefs(resultingChild));
   }
+
   return NS_OK;
 }
 
@@ -571,10 +635,12 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
   *aValue = nsnull;
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMHTMLTableSectionElement> foot;
+
   GetTFoot(getter_AddRefs(foot));
-  if (nsnull!=foot)
-  { // return the existing tfoot
-    foot->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);  // caller's addref
+
+  if (foot) { // return the existing tfoot
+    foot->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);
+
     NS_ASSERTION(nsnull!=*aValue, "foot must be a DOMHTMLElement");
   }
   else
@@ -582,16 +648,16 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIHTMLContent> newFoot;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tfoot,
-                                  *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::tfoot, *getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newFoot),nodeInfo);
-    if (NS_SUCCEEDED(rv) && newFoot)
-    {
-      rv = mInner.AppendChildTo(newFoot, PR_TRUE);
-      newFoot->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue); // caller's addref
+
+    if (NS_SUCCEEDED(rv) && newFoot) {
+      rv = AppendChildTo(newFoot, PR_TRUE);
+      newFoot->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);
     }
   }
+
   return NS_OK;
 }
 
@@ -600,11 +666,13 @@ nsHTMLTableElement::DeleteTFoot()
 {
   nsCOMPtr<nsIDOMHTMLTableSectionElement> childToDelete;
   nsresult rv = GetTFoot(getter_AddRefs(childToDelete));
-  if ((NS_SUCCEEDED(rv)) && childToDelete)
-  {
+
+  if ((NS_SUCCEEDED(rv)) && childToDelete) {
     nsCOMPtr<nsIDOMNode> resultingChild;
-    mInner.RemoveChild(childToDelete, getter_AddRefs(resultingChild)); // mInner does the notification
+    // mInner does the notification
+    RemoveChild(childToDelete, getter_AddRefs(resultingChild));
   }
+
   return NS_OK;
 }
 
@@ -614,10 +682,12 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
   *aValue = nsnull;
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMHTMLTableCaptionElement> caption;
+
   GetCaption(getter_AddRefs(caption));
-  if (caption)
-  { // return the existing thead
-    caption->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);  // caller's addref
+
+  if (caption) { // return the existing thead
+    caption->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);
+
     NS_ASSERTION(nsnull!=*aValue, "caption must be a DOMHTMLElement");
   }
   else
@@ -625,16 +695,17 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIHTMLContent> newCaption;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::caption,
-                                  *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::caption, *getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLTableCaptionElement(getter_AddRefs(newCaption),nodeInfo);
-    if (NS_SUCCEEDED(rv) && newCaption)
-    {
-      rv = mInner.AppendChildTo(newCaption, PR_TRUE);
-      newCaption->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue); // caller's addref
+
+    if (NS_SUCCEEDED(rv) && newCaption) {
+      rv = AppendChildTo(newCaption, PR_TRUE);
+      newCaption->QueryInterface(NS_GET_IID(nsIDOMHTMLElement),
+                                 (void **)aValue);
     }
   }
+
   return NS_OK;
 }
 
@@ -643,11 +714,12 @@ nsHTMLTableElement::DeleteCaption()
 {
   nsCOMPtr<nsIDOMHTMLTableCaptionElement> childToDelete;
   nsresult rv = GetCaption(getter_AddRefs(childToDelete));
-  if ((NS_SUCCEEDED(rv)) && childToDelete)
-  {
+
+  if ((NS_SUCCEEDED(rv)) && childToDelete) {
     nsCOMPtr<nsIDOMNode> resultingChild;
-    mInner.RemoveChild(childToDelete, getter_AddRefs(resultingChild)); // mInner does the notification
+    RemoveChild(childToDelete, getter_AddRefs(resultingChild));
   }
+
   return NS_OK;
 }
 
@@ -664,115 +736,144 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   */
   *aValue = nsnull;
   nsresult rv;
-  PRInt32 refIndex = aIndex;  // use local variable refIndex so we can remember original aIndex
+
+  // use local variable refIndex so we can remember original aIndex
+  PRInt32 refIndex = aIndex;
+
   if (0>refIndex) // negative aIndex treated as 0
     refIndex=0;
+
   nsIDOMHTMLCollection *rows;
   GetRows(&rows);
+
   PRUint32 rowCount;
+
   rows->GetLength(&rowCount);
-  if (0<rowCount)
-  {
-    if (rowCount<=PRUint32(refIndex))
-      refIndex=rowCount-1;  // we set refIndex to the last row so we can get the last row's parent
-                            // we then do an AppendChild below if (rowCount<aIndex)
-    nsIDOMNode *refRow;
-    rows->Item(refIndex, &refRow);
-    nsIDOMNode *parent;
-    refRow->GetParentNode(&parent);
+
+  if (0<rowCount) {
+    if (rowCount<=PRUint32(refIndex)) {
+      // we set refIndex to the last row so we can get the last row's
+      // parent we then do an AppendChild below if (rowCount<aIndex)
+
+      refIndex=rowCount-1;
+    }
+
+    nsCOMPtr<nsIDOMNode> refRow;
+    rows->Item(refIndex, getter_AddRefs(refRow));
+
+    nsCOMPtr<nsIDOMNode> parent;
+
+    refRow->GetParentNode(getter_AddRefs(parent));
     // create the row
-    nsIHTMLContent *newRow=nsnull;
+
+    nsCOMPtr<nsIHTMLContent> newRow;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
 
-    rv = NS_NewHTMLTableRowElement(&newRow, nodeInfo);
-    if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
-    {
-      nsIDOMNode *newRowNode=nsnull;
-      newRow->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&newRowNode); // caller's addref
-      if ((0<=aIndex) && (PRInt32(rowCount)<=aIndex)) // the index is greater than the number of rows, so just append
-        rv = parent->AppendChild(newRowNode, (nsIDOMNode **)aValue);
-      else  // insert the new row before the reference row we found above
-        rv = parent->InsertBefore(newRowNode, refRow, (nsIDOMNode **)aValue);
-      NS_RELEASE(newRow);
+    rv = NS_NewHTMLTableRowElement(getter_AddRefs(newRow), nodeInfo);
+
+    if (NS_SUCCEEDED(rv) && newRow) {
+      nsCOMPtr<nsIDOMNode> newRowNode(do_QueryInterface(newRow));
+      nsCOMPtr<nsIDOMNode> retChild;
+
+      // the index is greater than the number of rows, so just append
+      if ((0<=aIndex) && (PRInt32(rowCount)<=aIndex)) {
+        rv = parent->AppendChild(newRowNode, getter_AddRefs(retChild));
+      }
+      else
+      {
+        // insert the new row before the reference row we found above
+        rv = parent->InsertBefore(newRowNode, refRow,
+                                  getter_AddRefs(retChild));
+      }
+
+      if (retChild) {
+        retChild->QueryInterface(NS_GET_IID(nsIDOMHTMLElement),
+                                 (void **)aValue);
+      }
     }
-    NS_RELEASE(parent);
-    NS_RELEASE(refRow);
-    NS_RELEASE(rows);
   }
   else
   { // the row count was 0, so 
     // find the first row group and insert there as first child
-    nsIDOMNode *rowGroup=nsnull;
-    GenericElementCollection head((nsIContent*)this, nsHTMLAtoms::thead);
+    nsCOMPtr<nsIDOMNode> rowGroup;
+
+    GenericElementCollection head(this, nsHTMLAtoms::thead);
+
     PRUint32 length=0;
+
     head.GetLength(&length);
-    if (0!=length)
-    {
-      head.Item(0, &rowGroup);
+
+    if (0 != length) {
+      head.Item(0, getter_AddRefs(rowGroup));
     }
     else
     {
-      GenericElementCollection body((nsIContent*)this, nsHTMLAtoms::tbody);
+      GenericElementCollection body(this, nsHTMLAtoms::tbody);
       length=0;
+
       body.GetLength(&length);
-      if (0!=length)
-      {
-        body.Item(0, &rowGroup);
+
+      if (0 != length) {
+        body.Item(0, getter_AddRefs(rowGroup));
       }
       else
       {
-        GenericElementCollection foot((nsIContent*)this, nsHTMLAtoms::tfoot);
+        GenericElementCollection foot(this, nsHTMLAtoms::tfoot);
+
         length=0;
+
         foot.GetLength(&length);
-        if (0!=length)
-        {
-          foot.Item(0, &rowGroup);
+
+        if (0 != length) {
+          foot.Item(0, getter_AddRefs(rowGroup));
         }
       }
     }
-    if (nsnull==rowGroup)
-    { // need to create a TBODY
-      nsIHTMLContent *newRowGroup=nsnull;
+
+    if (!rowGroup) { // need to create a TBODY
+      nsCOMPtr<nsIHTMLContent> newRowGroup;
 
       nsCOMPtr<nsINodeInfo> nodeInfo;
-      mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tbody,
-                                    *getter_AddRefs(nodeInfo));
+      mNodeInfo->NameChanged(nsHTMLAtoms::tbody, *getter_AddRefs(nodeInfo));
 
-      rv = NS_NewHTMLTableSectionElement(&newRowGroup, nodeInfo);
-      if (NS_SUCCEEDED(rv) && (nsnull!=newRowGroup))
-      {
-        rv = mInner.AppendChildTo(newRowGroup, PR_TRUE);
-        newRowGroup->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&rowGroup);
-        NS_RELEASE(newRowGroup);
+      rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newRowGroup),
+                                         nodeInfo);
+
+      if (NS_SUCCEEDED(rv) && newRowGroup) {
+        rv = AppendChildTo(newRowGroup, PR_TRUE);
+
+        rowGroup = do_QueryInterface(newRowGroup);
       }
     }
-    if (nsnull!=rowGroup)
-    {
-      nsIHTMLContent *newRow=nsnull;
+
+    if (rowGroup) {
+      nsCOMPtr<nsIHTMLContent> newRow;
 
       nsCOMPtr<nsINodeInfo> nodeInfo;
-      mInner.mNodeInfo->NameChanged(nsHTMLAtoms::tr,
-                                    *getter_AddRefs(nodeInfo));
+      mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
 
-      rv = NS_NewHTMLTableRowElement(&newRow, nodeInfo);
-      nsIContent *rowGroupContent=nsnull;
-      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&rowGroupContent);
+      rv = NS_NewHTMLTableRowElement(getter_AddRefs(newRow), nodeInfo);
+      nsCOMPtr<nsIContent> rowGroupContent(do_QueryInterface(rowGroup));
+
       GenericElementCollection rowGroupRows(rowGroupContent, nsHTMLAtoms::tr);
-      nsIDOMNode *firstRow=nsnull;
-      rowGroupRows.Item(0, &firstRow);  // it's ok if this returns nsnull
-      if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
-      {
-        nsIDOMNode *newRowNode;
-        newRow->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&newRowNode);
-        rowGroup->InsertBefore(newRowNode, firstRow, (nsIDOMNode **)aValue);
-        NS_RELEASE(newRowNode);
-        NS_RELEASE(newRow);
+
+      nsCOMPtr<nsIDOMNode> firstRow;
+
+      // it's ok if this returns nsnull
+      rowGroupRows.Item(0, getter_AddRefs(firstRow));
+
+      if (newRow) {
+        nsCOMPtr<nsIDOMNode> retNode, newRowNode(do_QueryInterface(newRow));
+
+        rowGroup->InsertBefore(newRowNode, firstRow, getter_AddRefs(retNode));
+
+        if (retNode) {
+          retNode->QueryInterface(NS_GET_IID(nsIDOMHTMLElement),
+                                  (void **)aValue);
+        }
       }
-      NS_IF_RELEASE(firstRow);  // it's legal for firstRow to be nsnull
-      NS_RELEASE(rowGroupContent);
-      NS_RELEASE(rowGroup);
     }
   }
 
@@ -783,19 +884,23 @@ NS_IMETHODIMP
 nsHTMLTableElement::DeleteRow(PRInt32 aValue)
 {
   nsCOMPtr<nsIDOMHTMLCollection> rows;
+
   GetRows(getter_AddRefs(rows));
   nsCOMPtr<nsIDOMNode> row;
+
   rows->Item(aValue, getter_AddRefs(row));
-  if (row)
-  {
+
+  if (row) {
     nsCOMPtr<nsIDOMNode> parent=nsnull;
+
     row->GetParentNode(getter_AddRefs(parent));
-    if (parent)
-    {
+
+    if (parent) {
       nsCOMPtr<nsIDOMNode> deleted_row;
       parent->RemoveChild(row, getter_AddRefs(deleted_row));
     }
   }
+
   return NS_OK;
 }
 
@@ -837,22 +942,22 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   /* attributes that resolve to pixels, with min=0 */
   if ((aAttribute == nsHTMLAtoms::cellspacing) ||
       (aAttribute == nsHTMLAtoms::cellpadding)) {
-    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* attributes that are either empty, or integers, with min=0 */
   else if (aAttribute == nsHTMLAtoms::cols) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    /* attributes that are either empty, or integers, with min=0 */
+
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* attributes that are either empty, or pixels */
   else if (aAttribute == nsHTMLAtoms::border) {
+    /* attributes that are either empty, or pixels */
+
     PRInt32 min = (aValue.IsEmpty()) ? 1 : 0;
-    if (nsGenericHTMLElement::ParseValue(aValue, min, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValue(aValue, min, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     else { 
@@ -861,59 +966,59 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* attributes that resolve to integers or percents */
   else if (aAttribute == nsHTMLAtoms::height) {
-    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    /* attributes that resolve to integers or percents */
+
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* attributes that resolve to integers or percents or proportions */
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+    /* attributes that resolve to integers or percents or proportions */
+
+    if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* other attributes */
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.ParseTableHAlignValue(aValue, aResult)) {
+    /* other attributes */
+
+    if (ParseTableHAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+    if (ParseColor(aValue, mDocument, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::bordercolor) {
-    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+    if (ParseColor(aValue, mDocument, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::frame) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kFrameTable, aResult)) {
+    if (ParseEnumValue(aValue, kFrameTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::layout) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kLayoutTable, aResult)) {
+    if (ParseEnumValue(aValue, kLayoutTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::rules) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kRulesTable, aResult)) {
+    if (ParseEnumValue(aValue, kRulesTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::hspace) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::vspace) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -927,31 +1032,31 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
                                nsAWritableString& aResult) const
 {
   /* ignore summary, just a string */
-  /* ignore attributes that are of standard types
-     border, cellpadding, cellspacing, cols, height, width, background, bgcolor
-   */
+  /* ignore attributes that are of standard types border, cellpadding,
+     cellspacing, cols, height, width, background, bgcolor */
   if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.TableHAlignValueToString(aValue, aResult)) {
+    if (TableHAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::frame) {
-    if (nsGenericHTMLElement::EnumValueToString(aValue, kFrameTable, aResult)) {
+    if (EnumValueToString(aValue, kFrameTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::layout) {
-    if (nsGenericHTMLElement::EnumValueToString(aValue, kLayoutTable, aResult)) {
+    if (EnumValueToString(aValue, kLayoutTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::rules) {
-    if (nsGenericHTMLElement::EnumValueToString(aValue, kRulesTable, aResult)) {
+    if (EnumValueToString(aValue, kRulesTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
 
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void 
@@ -971,8 +1076,8 @@ MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
   nsHTMLValue frameValue;
   // 0 out the sides that we want to hide based on the frame attribute
   aAttributes->GetAttribute(nsHTMLAtoms::frame, frameValue);
-  if (frameValue.GetUnit() == eHTMLUnit_Enumerated)
-  {
+
+  if (frameValue.GetUnit() == eHTMLUnit_Enumerated) {
     // adjust the border style based on the value of frame
     switch (frameValue.GetIntValue())
     {
@@ -981,34 +1086,41 @@ MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
       aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+
       break;
     case NS_STYLE_TABLE_FRAME_ABOVE:
       aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+
       break;
     case NS_STYLE_TABLE_FRAME_BELOW:
       aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+
       break;
     case NS_STYLE_TABLE_FRAME_HSIDES:
       aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+
       break;
     case NS_STYLE_TABLE_FRAME_LEFT:
       aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+
       break;
     case NS_STYLE_TABLE_FRAME_RIGHT:
       aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+
       break;
     case NS_STYLE_TABLE_FRAME_VSIDES:
       aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+
       break;
     // BOX and BORDER are ignored, the caller has already set all the border sides
     // any illegal value is also ignored
@@ -1028,21 +1140,26 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
   nsHTMLValue borderValue;
 
   aAttributes->GetAttribute(nsHTMLAtoms::border, borderValue);
-  if (borderValue.GetUnit() == eHTMLUnit_Null)
-  { // the absence of "border" with the presence of "frame" implies border = 1 pixel
+  if (borderValue.GetUnit() == eHTMLUnit_Null) {
+    // the absence of "border" with the presence of "frame" implies
+    // border = 1 pixel
     nsHTMLValue frameValue;
     aAttributes->GetAttribute(nsHTMLAtoms::frame, frameValue);
+
     if (frameValue.GetUnit() != eHTMLUnit_Null)
       borderValue.SetPixelValue(1);
   }
+
   if (borderValue.GetUnit() != eHTMLUnit_Null) {
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetMutableStyleData(eStyleStruct_Spacing);
     nsStyleTable *tableStyle = (nsStyleTable*)
       aContext->GetMutableStyleData(eStyleStruct_Table);
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStyleCoord twips;
+    float p2t;
+
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+
     if (borderValue.GetUnit() != eHTMLUnit_Pixel) {
       // empty values of border get rules=all and frame=border
       tableStyle->mRules = NS_STYLE_TABLE_RULES_ALL;  
@@ -1052,6 +1169,7 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
     else {
       PRInt32 borderThickness = borderValue.GetPixelValue();
       twips.SetCoordValue(NSIntPixelsToTwips(borderThickness, p2t));
+
       if (0 != borderThickness) {
         // border != 0 implies rules=all and frame=border
         tableStyle->mRules = NS_STYLE_TABLE_RULES_ALL;  
@@ -1070,7 +1188,8 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
     spacing->mBorder.SetBottom(twips);
     spacing->mBorder.SetLeft(twips);
     // then account for the frame attribute
-    MapTableFrameInto(aAttributes, aContext, aPresContext, spacing, aBorderStyle);
+    MapTableFrameInto(aAttributes, aContext, aPresContext, spacing,
+                      aBorderStyle);
   }
 }
 
@@ -1082,21 +1201,23 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
 
-  if (nsnull!=aAttributes)
-  {
+  if (nsnull!=aAttributes) {
     float sp2t;
     aPresContext->GetScaledPixelsToTwips(&sp2t);
     nsHTMLValue value;
 
     const nsStyleDisplay* readDisplay = (nsStyleDisplay*)
                 aContext->GetStyleData(eStyleStruct_Display);
-    if (readDisplay && (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
+    if (readDisplay &&
+        (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
       // set the cell's border from the table
       aAttributes->GetAttribute(nsHTMLAtoms::border, value);
-      if (((value.GetUnit() == eHTMLUnit_Pixel) && (value.GetPixelValue() > 0)) ||
+      if (((value.GetUnit() == eHTMLUnit_Pixel) &&
+           (value.GetPixelValue() > 0)) ||
           (value.GetUnit() == eHTMLUnit_Empty)) {
         float p2t;
         aPresContext->GetPixelsToTwips(&p2t);
+
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
         nsStyleSpacing* spacingStyle = (nsStyleSpacing*)aContext->GetMutableStyleData(eStyleStruct_Spacing);
         nsStyleCoord width;
@@ -1123,22 +1244,25 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     else {  // handle attributes for table
       // width
       aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+
       if (value.GetUnit() != eHTMLUnit_Null) {
         nsStylePosition* position = (nsStylePosition*)
           aContext->GetMutableStyleData(eStyleStruct_Position);
+
         switch (value.GetUnit()) {
         case eHTMLUnit_Percent:
           // 0 width remains default auto
           //if (value.GetPercentValue() > 0.0f) {
             position->mWidth.SetPercentValue(value.GetPercentValue());
           //}
-          break;
 
+          break;
         case eHTMLUnit_Pixel:
           // 0 width remains default auto
           //if (value.GetPixelValue() > 0) {
             position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
           //}
+
           break;
         default:
           break;
@@ -1147,16 +1271,18 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
       // height
       aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+
       if (value.GetUnit() != eHTMLUnit_Null) {
         nsStylePosition* position = (nsStylePosition*)
           aContext->GetMutableStyleData(eStyleStruct_Position);
         switch (value.GetUnit()) {
         case eHTMLUnit_Percent:
           position->mHeight.SetPercentValue(value.GetPercentValue());
-          break;
 
+          break;
         case eHTMLUnit_Pixel:
           position->mHeight.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
+
           break;
         default:
           break;
@@ -1166,18 +1292,25 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
-      // default border style is the Nav4.6 extension which uses the background color as the
-      // basis of the outset border. If the table has a transparant background then it finds
-      // the closest ancestor that has a non transparant backgound. NS_STYLE_BORDER_OUTSET 
-      // uses the border color of the table and if that is not set, then it uses the color.
+      // default border style is the Nav4.6 extension which uses the
+      // background color as the basis of the outset border. If the
+      // table has a transparant background then it finds the closest
+      // ancestor that has a non transparant
+      // backgound. NS_STYLE_BORDER_OUTSET uses the border color of
+      // the table and if that is not set, then it uses the color.
+
       nsCompatibility mode;
       aPresContext->GetCompatibilityMode(&mode);
+
       PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
-                            ? NS_STYLE_BORDER_STYLE_BG_OUTSET : NS_STYLE_BORDER_STYLE_OUTSET;
+                            ? NS_STYLE_BORDER_STYLE_BG_OUTSET :
+                              NS_STYLE_BORDER_STYLE_OUTSET;
 
       // bordercolor
       aAttributes->GetAttribute(nsHTMLAtoms::bordercolor, value);
-      if ((eHTMLUnit_Color == value.GetUnit()) || (eHTMLUnit_ColorName == value.GetUnit())) {
+
+      if ((eHTMLUnit_Color == value.GetUnit()) ||
+          (eHTMLUnit_ColorName == value.GetUnit())) {
         nscolor color = value.GetColorValue();
         spacing->SetBorderColor(0, color);
         spacing->SetBorderColor(1, color);
@@ -1192,6 +1325,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       // align; Check for enumerated type (it may be another type if
       // illegal)
       aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
         if ((NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) ||
             (NS_STYLE_TEXT_ALIGN_MOZ_CENTER == value.GetIntValue())) {
@@ -1202,14 +1336,16 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         else {
           nsStyleDisplay* display = (nsStyleDisplay*)
             aContext->GetMutableStyleData(eStyleStruct_Display);
+
           switch (value.GetIntValue()) {
           case NS_STYLE_TEXT_ALIGN_LEFT:
             display->mFloats = NS_STYLE_FLOAT_LEFT;
-            break;
 
+            break;
           case NS_STYLE_TEXT_ALIGN_RIGHT:
           case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
             display->mFloats = NS_STYLE_FLOAT_RIGHT;
+
             break;
           }
         }
@@ -1218,7 +1354,9 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       // layout
       nsStyleTable* tableStyle=nsnull;
       aAttributes->GetAttribute(nsHTMLAtoms::layout, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated) {  // it may be another type if illegal
+
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        // it may be another type if illegal
         tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mLayoutStrategy = value.GetIntValue();
       }
@@ -1229,9 +1367,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         if (nsnull==tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
-      }
-      else if (value.GetUnit() == eHTMLUnit_Percent) {
-        if (nsnull==tableStyle)
+      } else if (value.GetUnit() == eHTMLUnit_Percent) {
+        if (!tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mCellPadding.SetPercentValue(value.GetPercentValue());
       }
@@ -1239,6 +1376,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       // cellspacing  (reuses tableStyle if already resolved)
       // ua.css sets cellspacing
       aAttributes->GetAttribute(nsHTMLAtoms::cellspacing, value);
+
       if (value.GetUnit() == eHTMLUnit_Pixel) {
         if (nsnull==tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
@@ -1248,8 +1386,9 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
       // cols
       aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
+
       if (value.GetUnit() != eHTMLUnit_Null) {
-        if (nsnull==tableStyle)
+        if (!tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         if (value.GetUnit() == eHTMLUnit_Integer)
           tableStyle->mCols = value.GetIntValue();
@@ -1259,6 +1398,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
       // rules, must come after handling of border which set the default
       aAttributes->GetAttribute(nsHTMLAtoms::rules, value);
+
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
         if (nsnull==tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
@@ -1268,15 +1408,19 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       // hspace is mapped into left and right margin, 
       // vspace is mapped into top and bottom margins
       // - *** Quirks Mode only ***
+
       if (eCompatibility_NavQuirks == mode) {
         aAttributes->GetAttribute(nsHTMLAtoms::hspace, value);
+
         if (value.GetUnit() == eHTMLUnit_Pixel) {
           nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), sp2t);
           nsStyleCoord hspace(twips);
           spacing->mMargin.SetLeft(hspace);
           spacing->mMargin.SetRight(hspace);
         }
+
         aAttributes->GetAttribute(nsHTMLAtoms::vspace, value);
+
         if (value.GetUnit() == eHTMLUnit_Pixel) {
           nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), sp2t);
           nsStyleCoord vspace(twips);
@@ -1286,8 +1430,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       }
 
       //background: color
-      nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
-      nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+      nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext,
+                                                        aPresContext);
+      nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                    aPresContext);
     }
   }
 }
@@ -1315,15 +1461,14 @@ nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::align) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetBackgroundAttributesImpact(aAttribute, aHint)) {
       aHint = NS_STYLE_HINT_CONTENT;
     }
   }
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -1334,37 +1479,10 @@ nsHTMLTableElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsHTMLTableElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
 NS_IMETHODIMP
 nsHTMLTableElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-#ifdef DEBUG
-  PRUint32 sum = 0;
-  mInner.SizeOf(aSizer, &sum, sizeof(*this));
-  if (mTBodies) {
-    PRUint32 asize;
-    mTBodies->SizeOf(aSizer, &asize);
-    sum += asize;
-  }
-  if (mRows) {
-    PRUint32 asize;
-    mRows->SizeOf(aSizer, &asize);
-    sum += asize;
-  }
-  *aResult = sum;
-#endif
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
   return NS_OK;
 }

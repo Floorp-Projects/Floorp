@@ -43,107 +43,57 @@
 #include "nsIDocument.h"
 
 
-class nsHTMLButtonElement : public nsIDOMHTMLButtonElement,
-                            public nsIJSScriptObject,
-                            public nsIHTMLContent,
-                            public nsIFormControl
+class nsHTMLButtonElement : public nsGenericHTMLContainerFormElement,
+                            public nsIDOMHTMLButtonElement,
+                            public nsIDOMNSHTMLButtonElement
 {
 public:
-  nsHTMLButtonElement(nsINodeInfo *aNodeInfo);
+  nsHTMLButtonElement();
   virtual ~nsHTMLButtonElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMElement
-//  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
-  NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
-    return mInner.GetTagName(aTagName);
-  }
-  NS_IMETHOD GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn);
-  NS_IMETHOD SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue);
-  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {
-    return mInner.RemoveAttribute(aName);
-  }
-  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,
-                              nsIDOMAttr** aReturn) {
-    return mInner.GetAttributeNode(aName, aReturn);
-  }
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return mInner.SetAttributeNode(aNewAttr, aReturn);
-  }
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
-    return mInner.RemoveAttributeNode(aOldAttr, aReturn);
-  }
-  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,
-                                  nsIDOMNodeList** aReturn) {
-    return mInner.GetElementsByTagName(aTagname, aReturn);
-  }
-  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName, nsAWritableString& aReturn) {
-    return mInner.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);
-  }
-  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aQualifiedName,
-                            const nsAReadableString& aValue) {
-    return mInner.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);
-  }
-  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aLocalName) {
-    return mInner.RemoveAttributeNS(aNamespaceURI, aLocalName);
-  }
-  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
-                                const nsAReadableString& aLocalName,
-                                nsIDOMAttr** aReturn) {
-    return mInner.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);
-  }
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return mInner.SetAttributeNodeNS(aNewAttr, aReturn);
-  }
-  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
-                                    const nsAReadableString& aLocalName,
-                                    nsIDOMNodeList** aReturn) {
-    return mInner.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
-  }
-  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {
-    return mInner.HasAttribute(aName, aReturn);
-  }
-  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName, PRBool* aReturn) {
-    return mInner.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);
-  }
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLButtonElement
   NS_DECL_IDOMHTMLBUTTONELEMENT
 
-  // nsIDOMHTMLButtonElement
-  NS_IMETHOD Blur();
-  NS_IMETHOD Focus();
+  // nsIDOMNSHTMLButtonElement
+  NS_DECL_IDOMNSHTMLBUTTONELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
-  
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-  // nsIFormControl
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+  // overrided nsIFormControl method
   NS_IMETHOD GetType(PRInt32* aType);
-  NS_IMETHOD Init() { return NS_OK; }
+
+  // nsIContent overrides...
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          nsAWritableString& aResult) const;
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          const nsAReadableString& aValue, PRBool aNotify);
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
+                            nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsGenericHTMLContainerFormElement mInner;
-  nsIForm*                          mForm;
-  PRInt32                           mType;
+  PRInt8 mType;
 };
 
 
@@ -154,21 +104,30 @@ NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult,
                         nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLButtonElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLButtonElement* it = new nsHTMLButtonElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLButtonElement::nsHTMLButtonElement(nsINodeInfo *aNodeInfo)
+nsHTMLButtonElement::nsHTMLButtonElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
-  mForm = nsnull;
   mType = NS_FORM_BUTTON_BUTTON; // default
 }
 
@@ -180,98 +139,88 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 
 // nsISupports
 
-NS_IMPL_ADDREF(nsHTMLButtonElement);
-NS_IMPL_RELEASE(nsHTMLButtonElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement);
 
-nsresult
-nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLButtonElement))) {
-    *aInstancePtr = (void*)(nsIDOMHTMLButtonElement*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
-    *aInstancePtr = (void*)(nsIFormControl*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLButtonElement, nsGenericHTMLContainerFormElement,
+                       nsIDOMHTMLButtonElement);
+
 
 NS_IMETHODIMP
-nsHTMLButtonElement::GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn)
+nsHTMLButtonElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                  nsAWritableString& aResult) const
 {
-  nsAutoString name(aName);
-  if (name.EqualsWithConversion("disabled", PR_TRUE)) {
-    nsresult rv = GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, aReturn);
+  if (aName == nsHTMLAtoms::disabled) {
+    nsresult rv = nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, aResult);
     if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-      aReturn.Assign(NS_LITERAL_STRING("false"));
+      aResult.Assign(NS_LITERAL_STRING("false"));
     } else {
-      aReturn.Assign(NS_LITERAL_STRING("true"));
+      aResult.Assign(NS_LITERAL_STRING("true"));
     }
 
     return NS_OK;
   }
 
-  return mInner.GetAttribute(aName, aReturn);
+  return nsGenericHTMLContainerFormElement::GetAttribute(aNameSpaceID, aName,
+                                                         aResult);
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
+nsHTMLButtonElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                  const nsAReadableString& aValue,
+                                  PRBool aNotify)
 {
-  nsAutoString name(aName), value(aValue);
-  if (name.EqualsWithConversion("disabled", PR_TRUE) &&
+  nsAutoString value(aValue);
+
+  if (aName == nsHTMLAtoms::disabled &&
       value.EqualsWithConversion("false", PR_TRUE)) {
-    return mInner.RemoveAttribute(aName);
+    return UnsetAttribute(aNameSpaceID, aName, aNotify);
   }
 
-  return mInner.SetAttribute(aName, aValue);
+  return nsGenericHTMLContainerFormElement::SetAttribute(aNameSpaceID, aName,
+                                                         aValue, aNotify);
 }
+
 
 // nsIDOMHTMLButtonElement
 
 nsresult
 nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLButtonElement* it = new nsHTMLButtonElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLButtonElement* it = new nsHTMLButtonElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 // nsIContent
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SetParent(nsIContent* aParent)
-{
-  return mInner.SetParentForFormControls(aParent, this, mForm);
-}
-
-NS_IMETHODIMP
-nsHTMLButtonElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
-{
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
-}
-
-NS_IMETHODIMP
 nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  nsresult result = NS_OK;
-  *aForm = nsnull;
-  if (nsnull != mForm) {
-    nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
-    if (NS_OK == result) {
-      *aForm = formElem;
-    }
-  }
-  return result;
+  return nsGenericHTMLContainerFormElement::GetForm(aForm);
 }
+
 NS_IMETHODIMP
 nsHTMLButtonElement::GetType(nsAWritableString& aType)
 {
@@ -290,7 +239,7 @@ NS_IMETHODIMP
 nsHTMLButtonElement::Blur()
 {
   nsCOMPtr<nsIPresContext> presContext;
-  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+  GetPresContext(this, getter_AddRefs(presContext));
   return RemoveFocus(presContext);
 }
 
@@ -298,7 +247,7 @@ NS_IMETHODIMP
 nsHTMLButtonElement::Focus()
 {
   nsCOMPtr<nsIPresContext> presContext;
-  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+  GetPresContext(this, getter_AddRefs(presContext));
   return SetFocus(presContext);
 }
 
@@ -307,7 +256,9 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 {
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_HTML,
+                                                nsHTMLAtoms::disabled,
+                                                disabled)) {
     return NS_OK;
   }
 
@@ -317,7 +268,7 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
   }
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  nsresult rv = GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
@@ -333,7 +284,7 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   nsresult rv = NS_OK;
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  rv = GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
   }
@@ -367,8 +318,7 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, 32767, aResult,
-                                         eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, 32767, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -388,6 +338,7 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
     aResult.SetEmptyValue();
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -398,38 +349,13 @@ nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::EnumValueToString(aValue, kButtonTypeTable, aResult, PR_FALSE);
+      EnumValueToString(aValue, kButtonTypeTable, aResult, PR_FALSE);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
 
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLButtonElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                              PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLButtonElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                  nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
+  return nsGenericHTMLContainerFormElement::AttributeToString(aAttribute,
+                                                              aValue, aResult);
 }
 
 NS_IMETHODIMP
@@ -450,8 +376,11 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   // Try script event handlers first
-  nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                       aFlags, aEventStatus);
+  nsresult ret;
+  ret = nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext,
+                                                          aEvent, aDOMEvent,
+                                                          aFlags,
+                                                          aEventStatus);
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
@@ -459,9 +388,11 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     case NS_KEY_PRESS:
       {
-        // For backwards compat, trigger buttons with space or enter (bug 25300)
+        // For backwards compat, trigger buttons with space or enter
+        // (bug 25300)
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-        if (keyEvent->keyCode == NS_VK_RETURN || keyEvent->charCode == NS_VK_SPACE) {
+        if (keyEvent->keyCode == NS_VK_RETURN ||
+            keyEvent->charCode == NS_VK_SPACE) {
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_GUI_EVENT;
@@ -472,7 +403,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
           event.isMeta = PR_FALSE;
           event.clickCount = 0;
           event.widget = nsnull;
-          rv = HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          rv = HandleDOMEvent(aPresContext, &event, nsnull,
+                              NS_EVENT_FLAG_INIT, &status);
         }
       }
       break;// NS_KEY_PRESS
@@ -481,7 +413,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
       {
         // Tell the frame about the click
         nsIFormControlFrame* formControlFrame = nsnull;
-        rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+        rv = GetPrimaryFrame(this, formControlFrame);
         if (NS_SUCCEEDED(rv)) {
           formControlFrame->MouseClicked(aPresContext);
         }
@@ -492,7 +424,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
-          stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+          stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE |
+                                        NS_EVENT_STATE_FOCUS);
           NS_RELEASE(stateManager);
         }
         *aEventStatus = nsEventStatus_eConsumeNoDefault; 
@@ -520,7 +453,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
             if (target.Length() == 0) {
               GetBaseTarget(target);
             }
-            ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_TRUE);
+            ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL,
+                              href, target, PR_TRUE);
             NS_IF_RELEASE(baseURL);
             *aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
@@ -528,7 +462,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }
       break;
 
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:     // cancel all of these events for buttons
+    // cancel all of these events for buttons
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_UP:
     case NS_MOUSE_MIDDLE_DOUBLECLICK:
     case NS_MOUSE_RIGHT_DOUBLECLICK:
@@ -583,65 +518,9 @@ nsHTMLButtonElement::GetType(PRInt32* aType)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-  nsCOMPtr<nsIFormControl> formControl;
-  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
-  if (NS_FAILED(result)) formControl = nsnull;
-
-  nsAutoString nameVal, idVal;
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-  if (mForm && formControl) {
-    mForm->RemoveElement(formControl);
-
-    if (nameVal.Length())
-      mForm->RemoveElementFromTable(this, nameVal);
-
-    if (idVal.Length())
-      mForm->RemoveElementFromTable(this, idVal);
-  }
-
-  if (aForm) {
-    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
-    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
-    if ((NS_OK == result) && theForm) {
-      if (formControl) {
-        theForm->AddElement(formControl);
-
-        if (nameVal.Length())
-          theForm->AddElementToTable(this, nameVal);
-
-        if (idVal.Length())
-          theForm->AddElementToTable(this, idVal);
-      }
-    }
-  } else {
-    mForm = nsnull;
-  }
-
-  mInner.SetForm(mForm);
-
-  return result;
-}
-
-
-NS_IMETHODIMP
 nsHTMLButtonElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-#ifdef DEBUG
-  mInner.SizeOf(aSizer, aResult, sizeof(*this));
-  if (mForm) {
-    PRBool recorded;
-    aSizer->RecordObject(mForm, &recorded);
-    if (!recorded) {
-      PRUint32 formSize;
-      mForm->SizeOf(aSizer, &formSize);
-      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
-    }
-  }
-#endif
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
   return NS_OK;
 }

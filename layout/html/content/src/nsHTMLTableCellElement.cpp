@@ -36,52 +36,49 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLTableCellElement :  public nsIHTMLTableCellElement,
-                                public nsIDOMHTMLTableCellElement,
-                                public nsIJSScriptObject,
-                                public nsIHTMLContent
+class nsHTMLTableCellElement : public nsGenericHTMLContainerElement,
+                               public nsIHTMLTableCellElement,
+                               public nsIDOMHTMLTableCellElement
 {
 public:
-  nsHTMLTableCellElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableCellElement();
   virtual ~nsHTMLTableCellElement();
 
-// nsISupports
-  NS_DECL_ISUPPORTS
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
-// nsIHTMLTableCellElement
+  // nsIDOMNode
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
-  /** @return the starting column for this cell.  Always >= 1 */
-  NS_METHOD GetColIndex (PRInt32* aColIndex);
+  // nsIDOMElement
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
-  /** set the starting column for this cell.  Always >= 1 */
-  NS_METHOD SetColIndex (PRInt32 aColIndex);
+  // nsIDOMHTMLElement
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
-
-// nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
-
-// nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
-
-// nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
-
-// nsIDOMHTMLTableCellElement
+  // nsIDOMHTMLTableCellElement
   NS_DECL_IDOMHTMLTABLECELLELEMENT
 
-// nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
+  // nsIHTMLTableCellElement
+  NS_METHOD GetColIndex (PRInt32* aColIndex);
+  NS_METHOD SetColIndex (PRInt32 aColIndex);
 
-// nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-// nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC2(mInner)
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
   nsresult GetRow(nsIDOMHTMLTableRowElement** aRow);
 
-  nsGenericHTMLContainerElement mInner;
   PRInt32 mColIndex;
 };
 
@@ -90,20 +87,30 @@ NS_NewHTMLTableCellElement(nsIHTMLContent** aInstancePtrResult,
                            nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLTableCellElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLTableCellElement* it = new nsHTMLTableCellElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLTableCellElement::nsHTMLTableCellElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableCellElement::nsHTMLTableCellElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   mColIndex=0;
 }
 
@@ -111,39 +118,42 @@ nsHTMLTableCellElement::~nsHTMLTableCellElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLTableCellElement)
 
-NS_IMPL_RELEASE(nsHTMLTableCellElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
 
-nsresult
-nsHTMLTableCellElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableCellElement))) {
-    nsIDOMHTMLTableCellElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIHTMLTableCellElement))) {
-    nsIHTMLTableCellElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI2(nsHTMLTableCellElement,
+                        nsGenericHTMLContainerElement,
+                        nsIDOMHTMLTableCellElement,
+                        nsIHTMLTableCellElement);
+
 
 nsresult
 nsHTMLTableCellElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableCellElement* it = new nsHTMLTableCellElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLTableCellElement* it = new nsHTMLTableCellElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 /** @return the starting column for this cell in aColIndex.  Always >= 1 */
@@ -175,24 +185,30 @@ NS_IMETHODIMP
 nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 {
   *aCellIndex = -1;
-  nsIDOMHTMLTableRowElement* row = nsnull;
-  GetRow(&row);
-  nsIDOMHTMLCollection *cells = nsnull;
-  row->GetCells(&cells);
+
+  nsCOMPtr<nsIDOMHTMLTableRowElement> row;
+
+  GetRow(getter_AddRefs(row));
+
+  nsCOMPtr<nsIDOMHTMLCollection> cells;
+
+  row->GetCells(getter_AddRefs(cells));
+
   PRUint32 numCells;
   cells->GetLength(&numCells);
+
   PRBool found = PR_FALSE;
-  for (PRUint32 i = 0; (i < numCells) && !found; i++) {
-    nsIDOMNode *node = nsnull;
-    cells->Item(i, &node);
-    if (this == node) {
+  PRUint32 i;
+
+  for (i = 0; (i < numCells) && !found; i++) {
+    nsCOMPtr<nsIDOMNode> node;
+    cells->Item(i, getter_AddRefs(node));
+
+    if (node.get() == NS_STATIC_CAST(nsIDOMNode *, this)) {
       *aCellIndex = i;
-	  found = PR_TRUE;
+      found = PR_TRUE;
     }
-	NS_IF_RELEASE(node);
   }
-  NS_RELEASE(cells);
-  NS_RELEASE(row);
 
   return NS_OK;
 }
@@ -202,42 +218,53 @@ nsHTMLTableCellElement::SetCellIndex(PRInt32 aCellIndex)
 {
   PRInt32 oldIndex;
   nsresult result = GetCellIndex(&oldIndex);
-  if ((-1 == oldIndex) || (oldIndex == aCellIndex) || (NS_OK != result)) {
+
+  if ((-1 == oldIndex) || (oldIndex == aCellIndex) || NS_FAILED(result)) {
     return NS_OK;
   }
 
-  nsIDOMHTMLTableRowElement* row = nsnull;
-  GetRow(&row);
-  nsIDOMHTMLCollection *cells = nsnull;
-  row->GetCells(&cells);
+  nsCOMPtr<nsIDOMHTMLTableRowElement> row;
+
+  GetRow(getter_AddRefs(row));
+
+  nsCOMPtr<nsIDOMHTMLCollection> cells;
+
+  row->GetCells(getter_AddRefs(cells));
+
   PRUint32 numCellsU;
   cells->GetLength(&numCellsU);
+
   PRInt32 numCells = numCellsU;
 
   // check if it really moves
-  if ( !(((0 == oldIndex) && (aCellIndex <= 0)) || ((numCells-1 == oldIndex) && (aCellIndex >= numCells-1)))) {
-    AddRef(); // don't use NS_ADDREF_THIS
+  if (!(((0 == oldIndex) && (aCellIndex <= 0)) ||
+        ((numCells-1 == oldIndex) && (aCellIndex >= numCells-1)))) {
+    nsCOMPtr<nsISupports> kungFuDeathGrip(NS_STATIC_CAST(nsIContent *, this));
+
     row->DeleteCell(oldIndex);       // delete this from the row
+
     numCells--;
-    nsIDOMNode *returnNode;
+    nsCOMPtr<nsIDOMNode> returnNode;
+
     if ((numCells <= 0) || (aCellIndex >= numCells)) {
-      row->AppendChild(this, &returnNode); // add this back into the row
+      // add this back into the row
+      row->AppendChild(this, getter_AddRefs(returnNode));
 		} else {
       PRInt32 newIndex = aCellIndex;
+
       if (aCellIndex <= 0) {
         newIndex = 0;
 			} else if (aCellIndex > oldIndex) {
         newIndex--;
 			}
-      nsIDOMNode *refNode;
-      cells->Item(newIndex, &refNode);
-      row->InsertBefore(this, refNode, &returnNode); // add this back into the row
-      NS_IF_RELEASE(refNode);
+
+      nsCOMPtr<nsIDOMNode> refNode;
+      cells->Item(newIndex, getter_AddRefs(refNode));
+
+      // add this back into the row
+      row->InsertBefore(this, refNode, getter_AddRefs(returnNode));
 		}
   }
-
-  NS_RELEASE(cells);
-  NS_RELEASE(row);
 
   return NS_OK;
 }
@@ -246,30 +273,32 @@ NS_IMETHODIMP
 nsHTMLTableCellElement::GetContentStyleRules(nsISupportsArray* aRules)
 {
   // get table, add its rules too
-  nsIContent* row = nsnull; // XXX can we safely presume structure or do we need to QI on the way up?
-  if (NS_SUCCEEDED(GetParent(row)) && row) {
-    nsIContent* section = nsnull;
-    if (NS_SUCCEEDED(row->GetParent(section)) && section) {
-      nsIContent* table = nsnull;
-      if (NS_SUCCEEDED(section->GetParent(table)) && table) {
-        nsIStyledContent* styledTable = nsnull;
-        if (NS_SUCCEEDED(table->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledTable))) {
-          styledTable->GetContentStyleRules(aRules);
-          NS_RELEASE(styledTable);
-        }
-        NS_RELEASE(table);
-      }
-      NS_RELEASE(section);
-    }
-    NS_RELEASE(row);
-  }
-  return mInner.GetContentStyleRules(aRules);
-}
+  // XXX can we safely presume structure or do we need to QI on the way up?
+  nsCOMPtr<nsIContent> row;
 
-NS_IMETHODIMP
-nsHTMLTableCellElement::GetInlineStyleRules(nsISupportsArray* aRules)
-{
-  return mInner.GetInlineStyleRules(aRules);
+  GetParent(*getter_AddRefs(row));
+
+  if (row) {
+    nsCOMPtr<nsIContent> section;
+
+    row->GetParent(*getter_AddRefs(section));
+
+    if (section) {
+      nsCOMPtr<nsIContent> table;
+
+      section->GetParent(*getter_AddRefs(table));
+
+      if (table) {
+        nsCOMPtr<nsIStyledContent> styledTable(do_QueryInterface(table));
+
+        if (styledTable) {
+          styledTable->GetContentStyleRules(aRules);
+        }
+      }
+    }
+  }
+
+  return nsGenericHTMLContainerElement::GetContentStyleRules(aRules);
 }
 
 
@@ -307,19 +336,19 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   /* ignore these attributes, stored simply as strings
      abbr, axis, ch, headers
    */
-  /* attributes that resolve to integers with a min of 0 */
   if (aAttribute == nsHTMLAtoms::choff) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    /* attributes that resolve to integers with a min of 0 */
+
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
   else if ((aAttribute == nsHTMLAtoms::colspan) ||
            (aAttribute == nsHTMLAtoms::rowspan)) {
-    if (nsGenericHTMLElement::ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
       PRInt32 val = aResult.GetIntValue();
       // quirks mode does not honor the special html 4 value of 0
-      if ((val < 0) || ((0 == val) && mInner.InNavQuirksMode(mInner.mDocument))) {
+      if ((val < 0) || ((0 == val) && InNavQuirksMode(mDocument))) {
         nsHTMLUnit unit = aResult.GetUnit();
         aResult.SetIntValue(1, unit);
       }
@@ -327,42 +356,43 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* attributes that resolve to integers or percents */
   else if (aAttribute == nsHTMLAtoms::height) {
-    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
+    /* attributes that resolve to integers or percents */
 
-  /* attributes that resolve to integers or percents or proportions */
-  else if (aAttribute == nsHTMLAtoms::width) {
-    if (nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  
-  /* other attributes */
+  else if (aAttribute == nsHTMLAtoms::width) {
+    /* attributes that resolve to integers or percents or proportions */
+
+    if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.ParseTableCellHAlignValue(aValue, aResult)) {
+    /* other attributes */
+
+    if (ParseTableCellHAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+    if (ParseColor(aValue, mDocument, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::scope) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kCellScopeTable, aResult)) {
+    if (ParseEnumValue(aValue, kCellScopeTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
-    if (nsGenericHTMLElement::ParseTableVAlignValue(aValue, aResult)) {
+    if (ParseTableVAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -378,21 +408,23 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
      choff, colspan, rowspan, height, width, nowrap, background, bgcolor
    */
   if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.TableCellHAlignValueToString(aValue, aResult)) {
+    if (TableCellHAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::scope) {
-    if (nsGenericHTMLElement::EnumValueToString(aValue, kCellScopeTable, aResult)) {
+    if (EnumValueToString(aValue, kCellScopeTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
-    if (nsGenericHTMLElement::TableVAlignValueToString(aValue, aResult)) {
+    if (TableVAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void
@@ -403,24 +435,21 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
 
-  if (nsnull!=aAttributes)
-  {
+  if (nsnull!=aAttributes) {
     nsHTMLValue value;
     nsHTMLValue widthValue;
     nsStyleText* textStyle = nsnull;
 
     // align: enum
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) 
-    {
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
       textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       textStyle->mTextAlign = value.GetIntValue();
     }
   
     // valign: enum
     aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) 
-    {
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
       if (nsnull==textStyle)
         textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
@@ -431,8 +460,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
+
     if (widthValue.GetUnit() == eHTMLUnit_Pixel) {     // width: pixel
       nscoord width = widthValue.GetPixelValue();
+
       if (width > 0) {
         nscoord twips = NSIntPixelsToTwips(width, p2t);
         pos->mWidth.SetCoordValue(twips);
@@ -460,20 +491,23 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     }
 
     // nowrap
-    // nowrap depends on the width attribute, so be sure to handle it after width is mapped!
+    // nowrap depends on the width attribute, so be sure to handle it
+    // after width is mapped!
+
     aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value);
-    if (value.GetUnit() != eHTMLUnit_Null)
-    {
-      if (widthValue.GetUnit() != eHTMLUnit_Pixel)
-      {
+
+    if (value.GetUnit() != eHTMLUnit_Null) {
+      if (widthValue.GetUnit() != eHTMLUnit_Pixel) {
         if (nsnull==textStyle)
           textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
         textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
       }
     }
 
-    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
-    nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext,
+                                                      aPresContext);
+    nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                  aPresContext);
   }
 }
 
@@ -492,8 +526,8 @@ nsHTMLTableCellElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::height)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetBackgroundAttributesImpact(aAttribute, aHint)) {
       aHint = NS_STYLE_HINT_CONTENT;
     }
   }
@@ -512,21 +546,11 @@ nsHTMLTableCellElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontM
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsHTMLTableCellElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIDOMEvent** aDOMEvent,
-                                PRUint32 aFlags,
-                                nsEventStatus* aEventStatus)
+nsHTMLTableCellElement::SizeOf(nsISizeOfHandler* aSizer,
+                               PRUint32* aResult) const
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
 
-
-NS_IMETHODIMP
-nsHTMLTableCellElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  return NS_OK;
 }

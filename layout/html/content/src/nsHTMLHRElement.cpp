@@ -33,40 +33,39 @@
 #include "nsIHTMLAttributes.h"
 
 
-class nsHTMLHRElement : public nsIDOMHTMLHRElement,
-                        public nsIJSScriptObject,
-                        public nsIHTMLContent
+class nsHTMLHRElement : public nsGenericHTMLLeafElement,
+                        public nsIDOMHTMLHRElement
 {
 public:
-  nsHTMLHRElement(nsINodeInfo *aNodeInfo);
+  nsHTMLHRElement();
   virtual ~nsHTMLHRElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLHRElement
   NS_DECL_IDOMHTMLHRELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLLeafElement mInner;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -74,82 +73,75 @@ NS_NewHTMLHRElement(nsIHTMLContent** aInstancePtrResult,
                     nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLHRElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLHRElement* it = new nsHTMLHRElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLHRElement::nsHTMLHRElement(nsINodeInfo *aNodeInfo)
+nsHTMLHRElement::nsHTMLHRElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLHRElement::~nsHTMLHRElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLHRElement)
 
-NS_IMPL_RELEASE(nsHTMLHRElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLHRElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLHRElement, nsGenericElement) 
 
-nsresult
-nsHTMLHRElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLHRElement))) {
-    nsIDOMHTMLHRElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLHRElement, nsGenericHTMLLeafElement,
+                       nsIDOMHTMLHRElement);
+
 
 nsresult
 nsHTMLHRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLHRElement* it = new nsHTMLHRElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLHRElement* it = new nsHTMLHRElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
-}
 
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Align, align)
+  nsresult rv = it->Init(mNodeInfo);
 
-#ifdef DEBUG_SET_ATTR
-NS_IMETHODIMP
-nsHTMLHRElement::GetNoShade(PRBool* aValue)
-{
-  nsHTMLValue val;
-  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::noshade, val);
-  *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
   return NS_OK;
 }
-NS_IMETHODIMP
-nsHTMLHRElement::SetNoShade(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::noshade, empty);
-  }
-  else {
-    mInner.UnsetAttr(nsHTMLAtoms::noshade);
-    return NS_OK;
-  }
-}
-#else
-NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade)
-#endif
 
+
+NS_IMPL_STRING_ATTR(nsHTMLHRElement, Align, align)
+NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width)
 
@@ -166,13 +158,12 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::width) {
-    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                                  eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -181,10 +172,11 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult)) {
+    if (ParseEnumValue(aValue, kAlignTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -195,11 +187,13 @@ nsHTMLHRElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::EnumValueToString(aValue, kAlignTable, aResult);
+      EnumValueToString(aValue, kAlignTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
 
 static void
@@ -266,13 +260,14 @@ nsHTMLHRElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
     aHint = NS_STYLE_HINT_VISUAL;
   }
   else if ((aAttribute == nsHTMLAtoms::align) ||
-           (aAttribute == nsHTMLAtoms::width) ||
-           (aAttribute == nsHTMLAtoms::size)) {
+             (aAttribute == nsHTMLAtoms::width) ||
+             (aAttribute == nsHTMLAtoms::size)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }
+
   return NS_OK;
 }
 
@@ -286,21 +281,10 @@ nsHTMLHRElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsHTMLHRElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIDOMEvent** aDOMEvent,
-                                PRUint32 aFlags,
-                                nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
 NS_IMETHODIMP
 nsHTMLHRElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

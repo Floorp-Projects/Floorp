@@ -36,47 +36,32 @@
 #include "nsISizeOfHandler.h"
 
 
-class nsHTMLFieldSetElement : public nsIDOMHTMLFieldSetElement,
-                              public nsIJSScriptObject,
-                              public nsIHTMLContent,
-                              public nsIFormControl 
+class nsHTMLFieldSetElement : public nsGenericHTMLContainerFormElement,
+                              public nsIDOMHTMLFieldSetElement
 {
 public:
-  nsHTMLFieldSetElement(nsINodeInfo *aNodeInfo);
+  nsHTMLFieldSetElement();
   virtual ~nsHTMLFieldSetElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
 
-  // nsIDOMHTMLLegendElement
+  // nsIDOMHTMLFieldSetElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
-
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
-  NS_IMETHOD Init() { return NS_OK; }
 
-protected:
-  nsGenericHTMLContainerFormElement mInner;
-  nsIForm*                          mForm;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 // construction, destruction
@@ -86,21 +71,30 @@ NS_NewHTMLFieldSetElement(nsIHTMLContent** aInstancePtrResult,
                           nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLFieldSetElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLFieldSetElement* it = new nsHTMLFieldSetElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLFieldSetElement::nsHTMLFieldSetElement(nsINodeInfo *aNodeInfo)
+nsHTMLFieldSetElement::nsHTMLFieldSetElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
-  mForm = nsnull;
 }
 
 nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
@@ -111,166 +105,51 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 
 // nsISupports
 
-NS_IMPL_ADDREF(nsHTMLFieldSetElement)
-NS_IMPL_RELEASE(nsHTMLFieldSetElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
 
-nsresult
-nsHTMLFieldSetElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLFieldSetElement))) {
-    *aInstancePtr = (void*)(nsIDOMHTMLFieldSetElement*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
-    *aInstancePtr = (void*)(nsIFormControl*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLFieldSetElement,
+                       nsGenericHTMLContainerFormElement,
+                       nsIDOMHTMLFieldSetElement);
+
 
 // nsIDOMHTMLFieldSetElement
 
 nsresult
 nsHTMLFieldSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLFieldSetElement* it = new nsHTMLFieldSetElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLFieldSetElement* it = new nsHTMLFieldSetElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 // nsIContent
 
 NS_IMETHODIMP
-nsHTMLFieldSetElement::SetParent(nsIContent* aParent)
-{
-  return mInner.SetParentForFormControls(aParent, this, mForm);
-}
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
-{
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
-}
-
-NS_IMETHODIMP
 nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  nsresult result = NS_OK;
-  *aForm = nsnull;
-  if (nsnull != mForm) {
-    nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
-    if (NS_OK == result) {
-      *aForm = formElem;
-    }
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-  nsCOMPtr<nsIFormControl> formControl;
-  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
-  if (NS_FAILED(result)) formControl = nsnull;
-
-  nsAutoString nameVal, idVal;
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-  if (mForm && formControl) {
-    mForm->RemoveElement(formControl);
-
-    if (nameVal.Length())
-      mForm->RemoveElementFromTable(this, nameVal);
-
-    if (idVal.Length())
-      mForm->RemoveElementFromTable(this, idVal);
-  }
-
-  if (aForm) {
-    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
-    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
-    if ((NS_OK == result) && theForm) {
-      if (formControl) {
-        theForm->AddElement(formControl);
-
-        if (nameVal.Length())
-          theForm->AddElementToTable(this, nameVal);
-
-        if (idVal.Length())
-          theForm->AddElementToTable(this, idVal);
-      }
-    }
-  } else {
-    mForm = nsnull;
-  }
-
-  mInner.SetForm(mForm);
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAReadableString& aValue,
-                                       nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::AttributeToString(nsIAtom* aAttribute,
-                                       const nsHTMLValue& aValue,
-                                       nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                                PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                    nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  return nsGenericHTMLContainerFormElement::GetForm(aForm);
 }
 
 // nsIFormControl
@@ -286,22 +165,11 @@ nsHTMLFieldSetElement::GetType(PRInt32* aType)
   }
 }
 
-
 NS_IMETHODIMP
-nsHTMLFieldSetElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+nsHTMLFieldSetElement::SizeOf(nsISizeOfHandler* aSizer,
+                              PRUint32* aResult) const
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-#ifdef DEBUG
-  mInner.SizeOf(aSizer, aResult, sizeof(*this));
-  if (mForm) {
-    PRBool recorded;
-    aSizer->RecordObject(mForm, &recorded);
-    if (!recorded) {
-      PRUint32 formSize;
-      mForm->SizeOf(aSizer, &formSize);
-      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
-    }
-  }
-#endif
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
   return NS_OK;
 }

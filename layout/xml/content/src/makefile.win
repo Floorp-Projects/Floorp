@@ -28,7 +28,6 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
 	nsXMLElement.cpp			\
-	nsGenericXMLElement.cpp			\
 	nsXMLCDATASection.cpp			\
 	nsXMLProcessingInstruction.cpp		\
 	nsXMLEntity.cpp \
@@ -39,7 +38,6 @@ CPPSRCS=					\
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLElement.obj		\
-	.\$(OBJDIR)\nsGenericXMLElement.obj	\
 	.\$(OBJDIR)\nsXMLCDATASection.obj	\
 	.\$(OBJDIR)\nsXMLProcessingInstruction.obj \
 	.\$(OBJDIR)\nsXMLEntity.obj \
@@ -51,10 +49,8 @@ CPP_OBJS=					\
 EXPORTS =					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
-   -I..\..\..\html\document\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
+LINCS= -I..\..\..\html\style\src -I..\..\..\html\base\src \
+  -I..\..\..\html\document\src -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

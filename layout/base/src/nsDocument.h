@@ -92,7 +92,7 @@ public:
   }
 
   nsIAtom*         mField;
-  nsAutoString     mData;
+  nsString         mData;
   nsDocHeaderData* mNext;
 };
 
