@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.6 $ 
-# $Date: 2001/07/20 19:04:54 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/02/25 19:30:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -291,7 +291,7 @@ sub parse_errorline {
 
 =head1 NAME
 
-Error_Parser - methods used by showlogs.cgi
+Error_Parse - methods used by showlogs.cgi
 
 =head1 SYNOPSIS
 
