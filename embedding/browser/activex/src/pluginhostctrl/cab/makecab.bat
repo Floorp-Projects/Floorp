@@ -1,20 +1,19 @@
 @echo off
-set CABARCEXE=d:\m\cabsdk\bin\cabarc.exe
-set SIGNCODEXE=
+
+set OLDPATH=%PATH%
+set PATH=d:\m\cabsdk\bin;d:\m\codesign\bin;%PATH%
 
 set OUTDIR=.\out
+set OUTCAB=.\pluginhostctrl.cab
 
 set PLUGINHOSTCTRLDLL=%1
 set CERTFILE=%2
 set KEYFILE=%3
-
-if EXIST %CABARCEXE% goto got_cabarc
-echo ERROR: The CABARC tool is not at %CABARCEXE%, so can't proceed.
-goto end
-:got_cabarc
+set SPCFILE=%4
 
 if NOT .%PLUGINHOSTCTRLDLL%.==.. goto have_pluginhostctrl
-echo Usage : %0 pluginhostctrl [certfile keyfile]
+echo Usage : %0 pluginhostctrl [certfile keyfile spcfile]
+echo    
 echo Specify the path to the pluginhostctrl.dll file as the first argument
 echo and optionally the certificate and keyfile as extra arguments.
 goto end
@@ -24,22 +23,45 @@ echo ERROR: The specified pluginhostctrl.dll file "%PLUGINHOSTCTRLDLL%" does not
 goto end
 :valid_pluginhostctrl
 
+
+REM === Make the CAB file ===
+
 mkdir %OUTDIR%
-copy %PLUGINHOSTCTRLDLL% %OUTDIR%\pluginhostctrl.dll
+copy %PLUGINHOSTCTRLDLL% %OUTDIR%
 copy redist\*.* %OUTDIR%
 copy pluginhostctrl.inf %OUTDIR%
-%CABARCEXE% -s 6144 -r -P out\ N pluginhostctrl.cab out\*.*
+cabarc -s 6144 -r -P %OUTDIR%\ N %OUTCAB% out\*.*
+
+
+REM === Generate a test certificate to sign this thing with ===
+
+if NOT .%TESTCERT%.==.. goto end_testcert
+set KEYFILE=.\test.key
+set CERTFILE=.\test.cer
+set SPCFILE=.\test.spc
+makecert -sv %KEYFILE% -n "CN=My Publisher Name" %CERTFILE%
+cert2spc %CERTFILE% %SPCFILE%
+:end_testcert
+
+
+REM === Sign the CAB file ===
 
 if .%CERTFILE%.==.. goto the_end
 if .%KEYFILE%.==.. goto the_end
+if .%SPCFILE%.==.. goto the_end
 if NOT EXIST %CERTFILE% goto the_end
 if NOT EXIST %KEYFILE$ goto the_end
-if NOT EXIST %SIGNCODEEXE% goto the_end
+if NOT EXIST %SPCFILE$ goto the_end
 
-REM TODO signing stuff here
+signcode -spc %SPCFILE% -v %KEYFILE% -n "Mozilla ActiveX control for hosting plugins" %OUTCAB%
+
+
+REM == THE END ===
 
 :the_end
+set PATH=%OLDPATH%
+set OLDPATH=
+set OUTCAB=
 set CERTFILE=
 set KEYFILE=
-set CABARCEXE=
-set SIGNCODEEXE=
+set SPCFILE=

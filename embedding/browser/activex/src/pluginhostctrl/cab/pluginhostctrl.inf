@@ -13,8 +13,10 @@ atl.dll=atl.dll
 file-win32-x86=thiscab
 DestDir=11
 RegisterServer=yes
+FileVersion=6,00,0,8449
 
 [pluginhostctrl.dll]
 file-win32-x86=thiscab
 clsid={DBB2DE32-61F1-4F7F-BEB8-A37F5BC24EE2}
+FileVersion=1,0,0,0
 RegisterServer=yes
