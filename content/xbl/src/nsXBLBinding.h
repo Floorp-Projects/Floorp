@@ -59,9 +59,10 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetBoundElement(nsIContent** aResult);
   NS_IMETHOD SetBoundElement(nsIContent* aElement);
 
-  NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
-  NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aBinding);
-  NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
+  NS_IMETHOD GenerateAnonymousContent();
+  NS_IMETHOD InstallEventHandlers(nsIXBLBinding** aBinding);
+  NS_IMETHOD InstallProperties();
+  NS_IMETHOD LoadResources();
 
   NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle);
   

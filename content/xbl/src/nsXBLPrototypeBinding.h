@@ -55,6 +55,8 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding
   NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aRec);
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aRec);
 
+  NS_IMETHOD LoadResources();
+
   NS_IMETHOD InheritsStyle(PRBool* aResult);
 
   NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler, nsIXBLPrototypeHandler** aSpecialHandler);
@@ -102,6 +104,10 @@ public:
   static nsIAtom* kChildrenAtom;
   static nsIAtom* kIncludesAtom;
   static nsIAtom* kContentAtom;
+  static nsIAtom* kResourcesAtom;
+  static nsIAtom* kResourceAtom;
+  static nsIAtom* kTypeAtom;
+  static nsIAtom* kSrcAtom;
   static nsIAtom* kInheritsAtom;
   static nsIAtom* kHTMLAtom;
   static nsIAtom* kValueAtom;
@@ -160,6 +166,7 @@ protected:
   nsCOMPtr<nsIXBLPrototypeBinding> mBaseBinding; // Strong. We own the base binding in our explicit inheritance chain.
   PRPackedBool mInheritStyle;
   PRPackedBool mHasBaseProto;
+  PRPackedBool mLoadedResources;
 
   nsWeakPtr mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
 

@@ -30,7 +30,7 @@
 
 class nsIAtom;
 class nsIDOMEventReceiver;
-struct nsXBLSpecialDocInfo;
+class nsXBLSpecialDocInfo;
 
 class nsXBLWindowDragHandler : public nsIDOMDragListener, public nsXBLWindowHandler
 {

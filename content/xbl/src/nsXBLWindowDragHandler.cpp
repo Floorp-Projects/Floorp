@@ -44,14 +44,6 @@ nsIAtom* nsXBLWindowDragHandler::kDragEnterAtom = nsnull;
 nsIAtom* nsXBLWindowDragHandler::kDragExitAtom = nsnull;
 nsIAtom* nsXBLWindowDragHandler::kDragDropAtom = nsnull;
 
-struct nsXBLSpecialDocInfo {
-  nsCOMPtr<nsIXBLDocumentInfo> mHTMLBindings;
-  nsCOMPtr<nsIXBLDocumentInfo> mPlatformHTMLBindings;
-  PRBool mFilesPresent;
-
-  nsXBLSpecialDocInfo() :mFilesPresent(PR_TRUE) {};
-};
-
 nsXBLWindowDragHandler::nsXBLWindowDragHandler(nsIDOMEventReceiver* aReceiver)
   : nsXBLWindowHandler(nsnull, aReceiver)
 {

@@ -547,7 +547,7 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
+nsXBLBinding::GenerateAnonymousContent()
 {
   // Fetch the content element for this binding.
   nsCOMPtr<nsIContent> content;
@@ -556,7 +556,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
   if (!content) {
     // We have no anonymous content.
     if (mNextBinding)
-      return mNextBinding->GenerateAnonymousContent(aBoundElement);
+      return mNextBinding->GenerateAnonymousContent();
     else return NS_OK;
   }
 
@@ -576,7 +576,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     content->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
     if (includes != NS_LITERAL_STRING("*")) {
       PRInt32 childCount;
-      aBoundElement->ChildCount(childCount);
+      mBoundElement->ChildCount(childCount);
       if (childCount > 0) {
         // We'll only build content if all the explicit children are 
         // in the includes list.
@@ -584,7 +584,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
         // are in the includes array.
         for (PRInt32 i = 0; i < childCount; i++) {
           nsCOMPtr<nsIContent> child;
-          aBoundElement->ChildAt(i, *getter_AddRefs(child));
+          mBoundElement->ChildAt(i, *getter_AddRefs(child));
           nsCOMPtr<nsIAtom> tag;
           child->GetTag(*getter_AddRefs(tag));
           if (!IsInExcludesList(tag, includes)) {
@@ -739,7 +739,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aBinding)
+nsXBLBinding::InstallEventHandlers(nsIXBLBinding** aBinding)
 {
   // Don't install handlers if scripts aren't allowed.
   if (AllowScripts()) {
@@ -905,7 +905,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
 
   if (mNextBinding) {
     nsCOMPtr<nsIXBLBinding> binding;
-    mNextBinding->InstallEventHandlers(aBoundElement, getter_AddRefs(binding));
+    mNextBinding->InstallEventHandlers(getter_AddRefs(binding));
     if (!*aBinding) {
       *aBinding = binding;
       NS_IF_ADDREF(*aBinding);
@@ -918,12 +918,12 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
 const char* gPropertyArg[] = { "val" };
 
 NS_IMETHODIMP
-nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
+nsXBLBinding::InstallProperties()
 {
   // Always install the base class properties first, so that
   // derived classes can reference the base class properties.
   if (mNextBinding)
-    mNextBinding->InstallProperties(aBoundElement);
+    mNextBinding->InstallProperties();
 
    // Fetch the interface element for this binding.
   nsCOMPtr<nsIContent> interfaceElement;
@@ -1190,6 +1190,15 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::LoadResources()
+{
+  mPrototypeBinding->LoadResources();
+  if (mNextBinding)
+    mNextBinding->LoadResources();
   return NS_OK;
 }
 
