@@ -584,6 +584,86 @@ public class ClassFileWriter {
     }
 
     /**
+     * Generate code to load the given integer on stack.
+     *
+     * @param k the constant
+     */
+    public void addPush(int k)
+    {
+        if ((byte)k == k) {
+            if (k == -1) {
+                add(ByteCode.ICONST_M1);
+            } else if (0 <= k && k <= 5) {
+                add((byte)(ByteCode.ICONST_0 + k));
+            } else {
+                add(ByteCode.BIPUSH, (byte)k);
+            }
+        } else if ((short)k == k) {
+            add(ByteCode.SIPUSH, (short)k);
+        } else {
+            addLoadConstant(k);
+        }
+    }
+
+    /**
+     * Generate code to load the given double on stack.
+     *
+     * @param k the constant
+     */
+    public void addPush(double k)
+    {
+        if (k == 0.0 && 1.0 / k >= 0.0) {
+            // Positive zero
+            add(ByteCode.DCONST_0);
+        } else if (k == 1.0) {
+            add(ByteCode.DCONST_1);
+        } else {
+            addLoadConstant(k);
+        }
+    }
+
+    /**
+     * Generate the code to leave on stack the given string even if the 
+     * string encoding exeeds the class file limit for single string constant
+     *
+     * @param k the constant
+     */
+    public void addPush(String k) {
+        int length = k.length();
+        int limit = itsConstantPool.getUtfEncodingLimit(k, 0, length);
+        if (limit == length) {
+            addLoadConstant(k);
+            return;
+        }
+        // Split string into picies fitting the UTF limit and generate code for
+        // StringBuffer sb = new StringBuffer(length);
+        // sb.append(loadConstant(piece_1));
+        // ...
+        // sb.append(loadConstant(piece_N));
+        // sb.toString();
+        final String SB = "java/lang/StringBuffer";
+        add(ByteCode.NEW, SB);
+        add(ByteCode.DUP);
+        addPush(length);
+        addInvoke(ByteCode.INVOKESTATIC, SB, "<init>", "(I)V");
+        int cursor = 0;
+        for (;;) {
+            add(ByteCode.DUP);
+            String s = k.substring(cursor, limit);
+            addLoadConstant(k);
+            addInvoke(ByteCode.INVOKEVIRTUAL, SB, "append",
+                      "(Ljava/lang/String;)V");
+            if (limit == length) {
+                break;
+            }
+            cursor = limit;
+            limit = itsConstantPool.getUtfEncodingLimit(k, limit, length);
+        } 
+        addInvoke(ByteCode.INVOKEVIRTUAL, SB, "toString",
+                  "()Ljava/lang/String;");
+    }
+
+    /**
      * Check if k fits limit on string constant size imposed by class file
      * format.
      *
@@ -1641,31 +1721,41 @@ final class ConstantPool
         return (short)theIndex;
     }
 
-    boolean isUnderUtfEncodingLimit(String k)
+    boolean isUnderUtfEncodingLimit(String s)
     {
-        int strLen = k.length();
+        int strLen = s.length();
         if (strLen * 3 <= MAX_UTF_ENCODING_SIZE) {
             return true;
         } else if (strLen > MAX_UTF_ENCODING_SIZE) {
             return false;
         }
+        return strLen == getUtfEncodingLimit(s, 0, strLen);
+    }
 
-        char[] chars = getCharBuffer(strLen);
-        k.getChars(0, strLen, chars, 0);
-
-        int utfLen = strLen;
-        for (int i = 0; i != strLen; i++) {
-            int c = chars[i];
-            if (c == 0 || c > 0x7F) {
-                if (c < 0x7FF) {
-                    ++utfLen;
-                } else {
-                    utfLen += 2;
-                }
+    /**
+     * Get maximum i such that <tt>start <= i <= end</tt> and
+     * <tt>s.substring(start, i)</tt> fits JVM UTF string encoding limit.
+     */
+    int getUtfEncodingLimit(String s, int start, int end)
+    {
+        if ((end - start) * 3 <= MAX_UTF_ENCODING_SIZE) {
+            return end;
+        }
+        int limit = MAX_UTF_ENCODING_SIZE;
+        for (int i = start; i != end; i++) {
+            int c = s.charAt(i);
+            if (0 != c && c <= 0x7F) {
+                --limit;
+            } else if (c < 0x7FF) {
+                limit -= 2;
+            } else {
+                limit -= 3;
+            }
+            if (limit < 0) {
+                return i;
             }
         }
-
-        return utfLen <= 65535;
+        return end;
     }
 
     short addUtf8(String k)
