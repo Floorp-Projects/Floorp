@@ -380,6 +380,10 @@ protected:
                                         nsIFrame*        aParentFrame,
                                         nsIFrame*&       aFrame);
 
+
+  nsresult ConstructTextControlFrame(nsIPresContext*          aPresContext,
+                                     nsIFrame*&               aNewFrame);
+
   nsresult ConstructSelectFrame(nsIPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
@@ -433,7 +437,9 @@ protected:
                            PRBool                   aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems);
 
-  nsresult CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame);
+  nsresult CreateInputFrame(nsIPresContext *aPresContext,
+                            nsIContent     *aContent, 
+                            nsIFrame      *&aFrame);
 
   PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
 
