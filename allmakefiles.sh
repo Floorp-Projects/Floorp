@@ -264,6 +264,8 @@ network/protocol/marimba/Makefile
 network/protocol/remote/Makefile
 network/protocol/sockstub/Makefile
 network/util/Makefile
+profile/Makefile
+profile/public/Makefile
 rdf/Makefile
 rdf/base/Makefile
 rdf/base/idl/Makefile
