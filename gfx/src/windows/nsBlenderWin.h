@@ -23,28 +23,30 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsIImage.h"
+#include "nsRenderingContextWin.h"
+
+#ifdef NGLAYOUT_DDRAW
+#include "ddraw.h"
+#endif
 
 //----------------------------------------------------------------------
 
 // Blender interface
 class nsBlenderWin : public nsIBlender
 {
-
-
 public:
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   
-      nsBlenderWin();
-      ~nsBlenderWin();
+  nsBlenderWin();
+  ~nsBlenderWin();
 
   virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst);
-  virtual void CleanUp();
   virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                           nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea);
 
-  nsDrawingSurface GetSrcDS() {return(mSrcDC);}
-  nsDrawingSurface GetDstDS() {return(mDstDC);}
+  nsDrawingSurface GetSrcDS() {return(mSrcDS);}
+  nsDrawingSurface GetDstDS() {return(mDstDS);}
 
   PRBool  RestoreImage(nsDrawingSurface aDst);
 
@@ -74,6 +76,9 @@ public:
    * @param aBits   a handle to the 8 bit pointer for the data bits
    */
   void DeleteDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits);
+
+  void Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 
   /** 
    * Blend two 24 bit image arrays using an 8 bit alpha mask
@@ -157,15 +162,16 @@ public:
   void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
                 PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 
-
+#ifdef NGLAYOUT_DDRAW
+  PRBool LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags);
+#endif
 
   private:
-  LPBITMAPINFOHEADER  mDstbinfo,mSrcbinfo;
+  BITMAPINFOHEADER    *mDstbinfo, *mSrcbinfo;
   PRUint8             *mSrcBytes;
   PRUint8             *mDstBytes;
-  BITMAP              mSrcInfo,mDstInfo;
-  HBITMAP             mTempB1,mTempB2;
-  nsDrawingSurface    mSrcDC, mDstDC;
+  BITMAP              mSrcInfo, mDstInfo;
+  nsDrawingSurfaceWin *mSrcDS, *mDstDS;
 
   PRInt32             mSRowBytes;
   PRInt32             mDRowBytes;
@@ -177,6 +183,10 @@ public:
   PRUint8             *mRestorePtr;   // starting area of save dst
   PRUint32            mResLS;         // line span for restore area
 
+#ifdef NGLAYOUT_DDRAW
+  DDSURFACEDESC       mSrcSurf;
+  DDSURFACEDESC       mDstSurf;
+#endif
 };
 
 #endif

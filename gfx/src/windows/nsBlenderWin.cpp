@@ -20,30 +20,58 @@
 #include "nsBlenderWin.h"
 #include "nsRenderingContextWin.h"
 
+#ifdef NGLAYOUT_DDRAW
+#include "ddraw.h"
+#endif
+
 static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 
 //------------------------------------------------------------
 
 nsBlenderWin :: nsBlenderWin()
 {
-
   NS_INIT_REFCNT();
 
   mSaveBytes = nsnull;
   mSrcBytes = nsnull;
   mDstBytes = nsnull;
-  mTempB1 = nsnull;
-  mTempB2 = nsnull;
   mSaveLS = 0;
   mSaveNumLines = 0;
-
+  mSrcbinfo = nsnull;
+  mDstbinfo = nsnull;
+  mRestorePtr = nsnull;
+  mSaveNumBytes = 0;
+  mResLS = 0;
+  mSRowBytes = 0;
+  mDRowBytes = 0;
+  mSrcDS = nsnull;
+  mDstDS = nsnull;
 }
 
 //------------------------------------------------------------
 
 nsBlenderWin :: ~nsBlenderWin()
 {
-  CleanUp();
+  NS_IF_RELEASE(mSrcDS);
+  NS_IF_RELEASE(mDstDS);
+
+  // get rid of the DIB's
+
+  if (nsnull != mSrcbinfo)
+    DeleteDIB(&mSrcbinfo, &mSrcBytes);
+
+  if (nsnull != mDstbinfo)
+    DeleteDIB(&mDstbinfo, &mDstBytes);
+
+  if (mSaveBytes != nsnull)
+  {
+    delete [] mSaveBytes;
+    mSaveBytes == nsnull;
+  }
+
+  mDstBytes = nsnull;
+  mSaveLS = 0;
+  mSaveNumLines = 0;
 }
 
 NS_IMPL_ISUPPORTS(nsBlenderWin, kIBlenderIID);
@@ -51,105 +79,145 @@ NS_IMPL_ISUPPORTS(nsBlenderWin, kIBlenderIID);
 //------------------------------------------------------------
 
 nsresult
-nsBlenderWin::Init(nsDrawingSurface aSrc,nsDrawingSurface aDst)
+nsBlenderWin::Init(nsDrawingSurface aSrc, nsDrawingSurface aDst)
 {
-PRInt32             numbytes;
-HDC                 srcdc,dstdc;
-HBITMAP             srcbits,dstbits;
+  NS_ASSERTION(!(aSrc == nsnull), "no source surface");
+  NS_ASSERTION(!(aDst == nsnull), "no dest surface");
 
-  if(mSaveBytes != nsnull)
+  if (mSaveBytes != nsnull)
+  {
     delete [] mSaveBytes;
-  mSaveBytes = nsnull;
+    mSaveBytes = nsnull;
+  }
 
-  // lets build some DIB's for the source and destination from the HDC's
-  srcdc = ((nsDrawingSurfaceWin *)aSrc)->mDC;
-  dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
+  mSrcDS = (nsDrawingSurfaceWin *)aSrc;
+  mDstDS = (nsDrawingSurfaceWin *)aDst;
 
-  mSrcDC = aSrc;
-  mDstDC = aDst;
-
-  // source
-  mTempB1 = CreateCompatibleBitmap(srcdc,3,3);
-  srcbits = (HBITMAP)::SelectObject(srcdc, mTempB1);
-  numbytes = ::GetObject(srcbits,sizeof(BITMAP),&mSrcInfo);
-  BuildDIB(&mSrcbinfo,&mSrcBytes,mSrcInfo.bmWidth,mSrcInfo.bmHeight,mSrcInfo.bmBitsPixel);
-  numbytes = ::GetDIBits(srcdc,srcbits,0,mSrcInfo.bmHeight,mSrcBytes,(LPBITMAPINFO)mSrcbinfo,DIB_RGB_COLORS);
-
-  if(numbytes > 0)
-    {
-    // destination
-    mTempB2 = CreateCompatibleBitmap(dstdc,3,3);
-    dstbits = (HBITMAP)::SelectObject(dstdc, mTempB2);
-    ::GetObject(dstbits,sizeof(BITMAP),&mDstInfo);
-    BuildDIB(&mDstbinfo,&mDstBytes,mDstInfo.bmWidth,mDstInfo.bmHeight,mDstInfo.bmBitsPixel);
-    numbytes = ::GetDIBits(dstdc,dstbits,0,mDstInfo.bmHeight,mDstBytes,(LPBITMAPINFO)mDstbinfo,DIB_RGB_COLORS);
-    
-    mSRowBytes = CalcBytesSpan(mSrcInfo.bmWidth,mSrcInfo.bmBitsPixel);
-
-    mDRowBytes = CalcBytesSpan(mDstInfo.bmWidth,mDstInfo.bmBitsPixel);
-
-    // put the old stuff back
-    ::SelectObject(srcdc,srcbits);
-    ::SelectObject(dstdc,dstbits);
-    }
+  NS_IF_ADDREF(mSrcDS);
+  NS_IF_ADDREF(mDstDS);
 
   return NS_OK;
 }
 
 //------------------------------------------------------------
 
-void
-nsBlenderWin::CleanUp()
-{
-
-  if(mTempB1)
-    ::DeleteObject(mTempB1);
-  if(mTempB2)
-  ::DeleteObject(mTempB2);
-
-  // get rid of the DIB's
-  DeleteDIB(&mSrcbinfo,&mSrcBytes);
-  DeleteDIB(&mDstbinfo,&mDstBytes);
-
-  if(mSaveBytes != nsnull)
-    delete [] mSaveBytes;
-  mSaveBytes == nsnull;
-
-  mTempB1 = nsnull;
-  mTempB2 = nsnull;
-  mDstBytes = nsnull;
-  mSaveLS = 0;
-  mSaveNumLines = 0;
-}
-
-//------------------------------------------------------------
-
 nsresult
 nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
-                     nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea)
+                    nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea)
 {
-nsresult            result = NS_ERROR_FAILURE;
-HDC                 dstdc;
-HBITMAP             dstbits, tb1;
-nsPoint             srcloc,maskloc;
-PRInt32             dlinespan,slinespan,mlinespan,numbytes,numlines,level,size,oldsize;
-PRUint8             *s1,*d1,*m1,*mask=NULL;
-nsColorMap          *colormap;
+  nsresult    result = NS_ERROR_FAILURE;
+  HBITMAP     dstbits, tb1;
+  nsPoint     srcloc, maskloc;
+  PRInt32     dlinespan, slinespan, mlinespan, numbytes, numlines, level, size, oldsize;
+  PRUint8     *s1, *d1, *m1, *mask = NULL;
+  nsColorMap  *colormap;
+  HDC         srcdc, dstdc;
+  PRBool      srcissurf = PR_FALSE, dstissurf = PR_FALSE;
 
+  // source
+
+#ifdef NGLAYOUT_DDRAW
+  RECT  srect;
+
+  srect.left = aSX;
+  srect.top = aSY;
+  srect.right = aSX + aWidth;
+  srect.bottom = aSY + aHeight;
+
+  if (PR_TRUE == LockSurface(mSrcDS->mSurface, &mSrcSurf, &mSrcInfo, &srect, DDLOCK_READONLY))
+  {
+    srcissurf = PR_TRUE;
+    mSRowBytes = mSrcInfo.bmWidthBytes;
+  }
+  else
+#endif
+  {
+    if (nsnull == mSrcbinfo)
+    {
+      HBITMAP srcbits;
+      srcdc = mSrcDS->mDC;
+
+      if (nsnull == mSrcDS->mSelectedBitmap)
+      {
+        HBITMAP hbits = ::CreateCompatibleBitmap(srcdc, 2, 2);
+        srcbits = (HBITMAP)::SelectObject(srcdc, hbits);
+        ::GetObject(srcbits, sizeof(BITMAP), &mSrcInfo);
+        ::SelectObject(srcdc, srcbits);
+        ::DeleteObject(hbits);
+      }
+      else
+      {
+        ::GetObject(mSrcDS->mSelectedBitmap, sizeof(BITMAP), &mSrcInfo);
+        srcbits = mSrcDS->mSelectedBitmap;
+      }
+
+      BuildDIB(&mSrcbinfo, &mSrcBytes, mSrcInfo.bmWidth, mSrcInfo.bmHeight, mSrcInfo.bmBitsPixel);
+      numbytes = ::GetDIBits(srcdc, srcbits, 0, mSrcInfo.bmHeight, mSrcBytes, (LPBITMAPINFO)mSrcbinfo, DIB_RGB_COLORS);
+
+      mSRowBytes = CalcBytesSpan(mSrcInfo.bmWidth, mSrcInfo.bmBitsPixel);
+    }
+
+    mSrcInfo.bmBits = mSrcBytes;
+  }
+
+  // destination
+
+#ifdef NGLAYOUT_DDRAW
+  RECT  drect;
+
+  drect.left = aDX;
+  drect.top = aDY;
+  drect.right = aDX + aWidth;
+  drect.bottom = aDY + aHeight;
+
+  if (PR_TRUE == LockSurface(mDstDS->mSurface, &mDstSurf, &mDstInfo, &drect, 0))
+  {
+    dstissurf = PR_TRUE;
+    mDRowBytes = mDstInfo.bmWidthBytes;
+  }
+  else
+#endif
+  {
+    if (nsnull == mDstbinfo)
+    {
+      HBITMAP dstbits;
+      dstdc = mDstDS->mDC;
+
+      if (nsnull == mDstDS->mSelectedBitmap)
+      {
+        HBITMAP hbits = CreateCompatibleBitmap(dstdc, 2, 2);
+        dstbits = (HBITMAP)::SelectObject(dstdc, hbits);
+        ::GetObject(dstbits, sizeof(BITMAP), &mDstInfo);
+        ::SelectObject(dstdc, dstbits);
+        ::DeleteObject(hbits);
+      }
+      else
+      {
+        ::GetObject(mDstDS->mSelectedBitmap, sizeof(BITMAP), &mDstInfo);
+        dstbits = mDstDS->mSelectedBitmap;
+      }
+
+      BuildDIB(&mDstbinfo, &mDstBytes, mDstInfo.bmWidth, mDstInfo.bmHeight, mDstInfo.bmBitsPixel);
+      numbytes = ::GetDIBits(dstdc, dstbits, 0, mDstInfo.bmHeight, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
+  
+      mDRowBytes = CalcBytesSpan(mDstInfo.bmWidth, mDstInfo.bmBitsPixel);
+    }
+
+    mDstInfo.bmBits = mDstBytes;
+  }
 
   // calculate the metrics, no mask right now
   srcloc.x = aSX;
   srcloc.y = aSY;
-  mSrcInfo.bmBits = mSrcBytes;
-  mDstInfo.bmBits = mDstBytes;
   maskloc.x = 0;
   maskloc.y = 0;
-  if(CalcAlphaMetrics(&mSrcInfo,&mDstInfo,&srcloc,NULL,&maskloc,aWidth,aHeight,&numlines,&numbytes,
-                &s1,&d1,&m1,&slinespan,&dlinespan,&mlinespan))
+
+  if (CalcAlphaMetrics(&mSrcInfo, &mDstInfo, &srcloc, NULL, &maskloc, aWidth, aHeight, &numlines, &numbytes,
+                       &s1, &d1, &m1, &slinespan, &dlinespan, &mlinespan))
+  {
+    if (nsnull != aSaveBlendArea)
     {
-    if( aSaveBlendArea )
-      {
-      oldsize = mSaveLS*mSaveNumLines;
+      oldsize = mSaveLS * mSaveNumLines;
 
       // allocate some memory
       mSaveLS = numbytes;
@@ -158,70 +226,98 @@ nsColorMap          *colormap;
       mSaveNumBytes = numbytes;
 
       if(mSaveBytes != nsnull) 
-        {
+      {
         if(oldsize != size)
-          {
+        {
           delete [] mSaveBytes;
           mSaveBytes = new unsigned char[size];
-          }
         }
+      }
       else
         mSaveBytes = new unsigned char[size];
 
       mRestorePtr = d1;
       mResLS = dlinespan;
-      }
-
-    // now do the blend
-    if ((mSrcInfo.bmBitsPixel==24) && (mDstInfo.bmBitsPixel==24))
-      {
-      if(mask)
-        {
-        this->Do24BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
-        result = NS_OK;
-        }
-      else
-        {
-        level = (PRInt32)(aSrcOpacity*100);
-        this->Do24Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
-        result = NS_OK;
-        }
-      }
-    else
-      if ((mSrcInfo.bmBitsPixel==8) && (mDstInfo.bmBitsPixel==8))
-        {
-        if(mask)
-          {
-          this->Do8BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
-          result = NS_OK;
-          }
-        else
-          {
-          level = (PRInt32)(aSrcOpacity*100);
-          this->Do8Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,colormap,nsHighQual,aSaveBlendArea);
-          result = NS_OK;
-          }
-        }
-      else
-        {
-        if ((mSrcInfo.bmBitsPixel==16) && (mDstInfo.bmBitsPixel==16))
-          {
-          if(!mask)
-            {
-            this->Do16Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
-            result = NS_OK;
-            }
-          }
-        }
-
-      // put the new bits in
-    dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
-    dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
-    tb1 = (HBITMAP)::SelectObject(dstdc,dstbits);
-    ::DeleteObject(tb1);
     }
 
-return result;
+    if (mSrcInfo.bmBitsPixel == mDstInfo.bmBitsPixel)
+    {
+      // now do the blend
+      switch (mSrcInfo.bmBitsPixel)
+      {
+        case 32:
+          if (!mask)
+          {
+            level = (PRInt32)(100 - aSrcOpacity*100);
+            Do32Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
+            result = NS_OK;
+          }
+          else
+            result = NS_ERROR_FAILURE;
+          break;
+
+        case 24:
+          if (mask)
+          {
+            Do24BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
+            result = NS_OK;
+          }
+          else
+          {
+            level = (PRInt32)(100 - aSrcOpacity*100);
+            Do24Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
+            result = NS_OK;
+          }
+          break;
+
+        case 16:
+          if (!mask)
+          {
+            level = (PRInt32)(100 - aSrcOpacity*100);
+            Do16Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
+            result = NS_OK;
+          }
+          else
+            result = NS_ERROR_FAILURE;
+          break;
+
+        case 8:
+          if (mask)
+          {
+            Do8BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
+            result = NS_OK;
+          }
+          else
+          {
+            level = (PRInt32)(100 - aSrcOpacity*100);
+            Do8Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,colormap,nsHighQual,aSaveBlendArea);
+            result = NS_OK;
+          }
+          break;
+      }
+
+      if (PR_FALSE == dstissurf)
+      {
+        // put the new bits in
+        dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
+        dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
+        tb1 = (HBITMAP)::SelectObject(dstdc, dstbits);
+        ::DeleteObject(tb1);
+      }
+    }
+    else
+        result == NS_ERROR_FAILURE;
+  }
+
+#ifdef NGLAYOUT_DDRAW
+  if (PR_TRUE == srcissurf)
+    mSrcDS->mSurface->Unlock(mSrcSurf.lpSurface);
+
+  if (PR_TRUE == dstissurf)
+    mDstDS->mSurface->Unlock(mDstSurf.lpSurface);
+#endif
+
+  return result;
 }
 
 //------------------------------------------------------------
@@ -236,35 +332,80 @@ PRUint8   *orgptr,*orgbyteptr;
 HDC       dstdc;
 HBITMAP   dstbits, tb1;
 
+  //XXX this is busted with directdraw... MMP
 
   if(mSaveBytes!=nsnull)
-    {
+  {
     result = PR_TRUE;
     saveptr = mSaveBytes;
     orgptr = mRestorePtr;
+
     for(y=0;y<mSaveNumLines;y++)
-      {
+    {
       savebyteptr = saveptr;
       orgbyteptr = orgptr;
+
       for(x=0;x<mSaveNumBytes;x++)
-        {
+      {
         *orgbyteptr = *savebyteptr;
         savebyteptr++;
         orgbyteptr++;
-        }
+      }
+
       saveptr+=mSaveLS;
       orgptr+=mResLS;
-      }
+    }
 
       // put the new bits in
     dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
     dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
     tb1 = (HBITMAP)::SelectObject(dstdc,dstbits);
     ::DeleteObject(tb1);
-    }
+  }
+
   return(result);
 }
 
+#ifdef NGLAYOUT_DDRAW
+
+PRBool nsBlenderWin :: LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags)
+{
+  if (nsnull != aSurface)
+  {
+    aDesc->dwSize = sizeof(DDSURFACEDESC);
+
+    if (DD_OK == aSurface->Lock(aRect, aDesc, DDLOCK_WAIT | DDLOCK_SURFACEMEMORYPTR | aLockFlags, NULL))
+    {
+      if ((aDesc->ddpfPixelFormat.dwFlags &
+          (DDPF_ALPHA | DDPF_PALETTEINDEXED1 |
+          DDPF_PALETTEINDEXED2 | DDPF_PALETTEINDEXED4 |
+          DDPF_PALETTEINDEXEDTO8 | DDPF_YUV | DDPF_ZBUFFER)) ||
+          (aDesc->ddpfPixelFormat.dwRGBBitCount < 8))
+      {
+        //this is a surface that we can't, or don't want to handle.
+
+        aSurface->Unlock(aDesc->lpSurface);
+        return PR_FALSE;
+      }
+      
+      aBitmap->bmType = 0;
+      aBitmap->bmWidth = aDesc->dwWidth;
+      aBitmap->bmHeight = aDesc->dwHeight;
+      aBitmap->bmWidthBytes = aDesc->lPitch;
+      aBitmap->bmPlanes = 1;
+      aBitmap->bmBitsPixel = (PRUint16)aDesc->ddpfPixelFormat.dwRGBBitCount;
+      aBitmap->bmBits = aDesc->lpSurface;
+
+      return PR_TRUE;
+    }
+    else
+      return PR_FALSE;
+  }
+  else
+    return PR_FALSE;
+}
+
+#endif
 
 //------------------------------------------------------------
 
@@ -280,34 +421,33 @@ PRBool    doalpha = PR_FALSE;
 nsRect    arect,srect,drect,irect;
 PRInt32   startx,starty;
 
-
   if(aMaskInfo)
-    {
+  {
     arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
     srect.SetRect(aMaskUL->x,aMaskUL->y,aMaskInfo->bmWidth,aSrcInfo->bmHeight);
     arect.IntersectRect(arect,srect);
-    }
+  }
   else
-    {
+  {
     //arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
     //srect.SetRect(aMaskUL->x,aMaskUL->y,aWidth,aHeight);
     //arect.IntersectRect(arect,srect);
 
     arect.SetRect(0, 0,aDestInfo->bmWidth, aDestInfo->bmHeight);
-    }
+  }
 
   srect.SetRect(aSrcUL->x, aSrcUL->y, aSrcInfo->bmWidth, aSrcInfo->bmHeight);
   drect = arect;
 
   if (irect.IntersectRect(srect, drect))
-    {
+  {
     // calculate destination information
     *aDLSpan = mDRowBytes;
-    *aNumbytes = this->CalcBytesSpan(irect.width,aDestInfo->bmBitsPixel);
+    *aNumbytes = CalcBytesSpan(irect.width,aDestInfo->bmBitsPixel);
     *aNumlines = irect.height;
     startx = irect.x;
     starty = aDestInfo->bmHeight - (irect.y + irect.height);
-    *aDImage = ((PRUint8*)aDestInfo->bmBits) + (starty * (*aDLSpan)) + ((aDestInfo->bmBitsPixel/8) * startx);
+    *aDImage = ((PRUint8*)aDestInfo->bmBits) + (starty * (*aDLSpan)) + ((aDestInfo->bmBitsPixel >> 3) * startx);
 
     // get the intersection relative to the source rectangle
     srect.SetRect(0, 0, aSrcInfo->bmWidth, aSrcInfo->bmHeight);
@@ -319,20 +459,20 @@ PRInt32   startx,starty;
     *aSLSpan = mSRowBytes;
     startx = drect.x;
     starty = aSrcInfo->bmHeight - (drect.y + drect.height);
-    *aSImage = ((PRUint8*)aSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aDestInfo->bmBitsPixel/8) * startx);
+    *aSImage = ((PRUint8*)aSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aDestInfo->bmBitsPixel >> 3) * startx);
          
     doalpha = PR_TRUE;
 
     if(aMaskInfo)
-      {
+    {
       *aMLSpan = aMaskInfo->bmWidthBytes;
       *aMImage = (PRUint8*)aMaskInfo->bmBits;
-      }
+    }
     else
-      {
+    {
       aMLSpan = 0;
       *aMImage = nsnull;
-      }
+    }
   }
 
   return doalpha;
@@ -341,9 +481,9 @@ PRInt32   startx,starty;
 //------------------------------------------------------------
 
 PRInt32  
-nsBlenderWin :: CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel)
+nsBlenderWin :: CalcBytesSpan(PRUint32 aWidth, PRUint32 aBitsPixel)
 {
-PRInt32 spanbytes;
+  PRInt32 spanbytes;
 
   spanbytes = (aWidth * aBitsPixel) >> 5;
 
@@ -352,7 +492,7 @@ PRInt32 spanbytes;
 
 	spanbytes <<= 2;
 
-  return(spanbytes);
+  return spanbytes;
 }
 
 //-----------------------------------------------------------
@@ -360,58 +500,79 @@ PRInt32 spanbytes;
 nsresult 
 nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth)
 {
-PRInt32   numpalletcolors,imagesize,spanbytes;
-PRUint8   *colortable;
-DWORD     bicomp;
+  PRInt32 palsize, imagesize, spanbytes, allocsize;
+  PRUint8 *colortable;
+  DWORD   bicomp, masks[3];
 
 	switch (aDepth) 
-    {
+  {
 		case 8:
-			numpalletcolors = 256;
+			palsize = 256;
+			allocsize = 256;
       bicomp = BI_RGB;
       break;
+
     case 16:
-      numpalletcolors = 0;
-      bicomp = BI_RGB;
+      palsize = 0;
+			allocsize = 3;
+      bicomp = BI_BITFIELDS;
+      masks[0] = 0xf800;
+      masks[1] = 0x07e0;
+      masks[2] = 0x001f;
       break;
+
 		case 24:
-			numpalletcolors = 0;
+      palsize = 0;
+			allocsize = 0;
       bicomp = BI_RGB;
       break;
-		default:
-			numpalletcolors = -1;
+
+		case 32:
+      palsize = 0;
+			allocsize = 3;
+      bicomp = BI_BITFIELDS;
+      masks[0] = 0xff0000;
+      masks[1] = 0x00ff00;
+      masks[2] = 0x0000ff;
       break;
-    }
 
+		default:
+			palsize = -1;
+      break;
+  }
 
-  if (numpalletcolors >= 0)
-    {
-	  (*aBHead) = (LPBITMAPINFOHEADER) new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * numpalletcolors];
+  if (palsize >= 0)
+  {
+    spanbytes = CalcBytesSpan(aWidth, aDepth);
+    imagesize = spanbytes * aHeight;
+
+	  (*aBHead) = (LPBITMAPINFOHEADER) new char[sizeof(BITMAPINFOHEADER) + (sizeof(RGBQUAD) * allocsize)];
     (*aBHead)->biSize = sizeof(BITMAPINFOHEADER);
 	  (*aBHead)->biWidth = aWidth;
 	  (*aBHead)->biHeight = aHeight;
 	  (*aBHead)->biPlanes = 1;
-	  (*aBHead)->biBitCount = (unsigned short) aDepth;
+	  (*aBHead)->biBitCount = (unsigned short)aDepth;
 	  (*aBHead)->biCompression = bicomp;
-	  (*aBHead)->biSizeImage = 0;            // not compressed, so we dont need this to be set
+	  (*aBHead)->biSizeImage = imagesize;
 	  (*aBHead)->biXPelsPerMeter = 0;
 	  (*aBHead)->biYPelsPerMeter = 0;
-	  (*aBHead)->biClrUsed = numpalletcolors;
-	  (*aBHead)->biClrImportant = numpalletcolors;
-
-    spanbytes = CalcBytesSpan(aWidth,aDepth);
-
-    imagesize = spanbytes * (*aBHead)->biHeight;    // no compression
+	  (*aBHead)->biClrUsed = palsize;
+	  (*aBHead)->biClrImportant = palsize;
 
     // set the color table in the info header
 	  colortable = (PRUint8 *)(*aBHead) + sizeof(BITMAPINFOHEADER);
 
-	  memset(colortable, 0, sizeof(RGBQUAD) * numpalletcolors);
-    *aBits = new unsigned char[imagesize];
-    memset(*aBits, 128, imagesize);
-  }
+    if ((aDepth == 16) || (aDepth == 32))
+      nsCRT::memcpy(colortable, masks, sizeof(DWORD) * allocsize);
+    else
+	    nsCRT::zero(colortable, sizeof(RGBQUAD) * palsize);
 
-  return NS_OK;
+    *aBits = new unsigned char[imagesize];
+
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 //------------------------------------------------------------
@@ -425,6 +586,86 @@ nsBlenderWin::DeleteDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits)
   delete[] *aBits;
   aBits = 0;
 
+}
+
+//------------------------------------------------------------
+
+// This routine can not be fast enough (and it's the same as the
+// 24 bit routine, so maybe it can be killed...)
+void
+nsBlenderWin::Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+{
+PRUint8   *d1,*d2,*s1,*s2;
+PRUint32  val1,val2;
+PRInt32   x,y,temp1,numlines,xinc,yinc;
+PRUint8   *saveptr,*sv2;
+
+  saveptr = mSaveBytes;
+  aBlendVal = (aBlendVal*255)/100;
+  val2 = aBlendVal;
+  val1 = 255-val2;
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = aSImage;
+  d1 = aDImage;
+
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
+
+  if (aSaveBlendArea)
+  {
+    for (y = 0; y < aNumlines; y++)
+    {
+      s2 = s1;
+      d2 = d1;
+      sv2 = saveptr;
+
+      for (x = 0; x < aNumbytes; x++)
+      {
+        *sv2 = *d2;
+
+        temp1 = (((*d2) * val1) + ((*s2) * val2)) >> 8;
+
+        if (temp1 > 255)
+          temp1 = 255;
+
+        *d2 = (PRUint8)temp1; 
+
+        sv2++;
+        d2++;
+        s2++;
+      }
+
+      s1 += aSLSpan;
+      d1 += aDLSpan;
+      saveptr+= mSaveLS;
+    }
+  }
+  else
+  {
+    for (y = 0; y < aNumlines; y++)
+    {
+      s2 = s1;
+      d2 = d1;
+
+      for (x = 0; x < aNumbytes; x++)
+      {
+        temp1 = (((*d2) * val1) + ((*s2) * val2)) >> 8;
+
+        if (temp1 > 255)
+          temp1 = 255;
+
+        *d2 = (PRUint8)temp1;
+
+        d2++;
+        s2++;
+      }
+
+      s1 += aSLSpan;
+      d1 += aDLSpan;
+    }
+  }
 }
 
 //------------------------------------------------------------
@@ -529,7 +770,7 @@ PRUint8   *saveptr,*sv2;
         if(temp1>255)
           temp1 = 255;
         *sv2 = *d2;
-        *d2 = (unsigned char)temp1; 
+        *d2 = (PRUint8)temp1; 
 
         sv2++;
         d2++;
@@ -553,7 +794,7 @@ PRUint8   *saveptr,*sv2;
         temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
         if(temp1>255)
           temp1 = 255;
-        *d2 = (unsigned char)temp1; 
+        *d2 = (PRUint8)temp1; 
 
         d2++;
         s2++;
@@ -568,111 +809,115 @@ PRUint8   *saveptr,*sv2;
 
 //------------------------------------------------------------
 
-#define RED16(x) ((x)&0x7C00)>>7
-#define GREEN16(x) ((x)&0x3E0)>>2
-#define BLUE16(x) ((x)&0x1F)<<3
-
+#define RED16(x)    (((x) & 0xf800) >> 8)
+#define GREEN16(x)  (((x) & 0x07e0) >> 3)
+#define BLUE16(x)   (((x) & 0x001f) << 3)
 
 // This routine can not be fast enough
 void
 nsBlenderWin::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
 {
 PRUint16    *d1,*d2,*s1,*s2;
-PRUint32    val1,val2,red,green,blue,t1,t2;
+PRUint32    val1,val2,red,green,blue,stemp,dtemp;
 PRInt32     x,y,numlines,xinc,yinc;
 PRUint16    *saveptr,*sv2;
 PRInt16     dspan,sspan,span,savesp;
 
   // since we are using 16 bit pointers, the num bytes need to be cut by 2
   saveptr = (PRUint16*)mSaveBytes;
-  aBlendVal = (aBlendVal*255)/100;
+  aBlendVal = (aBlendVal * 255) / 100;
   val2 = aBlendVal;
   val1 = 255-val2;
 
   // now go thru the image and blend (remember, its bottom upwards)
   s1 = (PRUint16*)aSImage;
   d1 = (PRUint16*)aDImage;
-  dspan = aDLSpan/2;
-  sspan = aSLSpan/2;
-  span = aNumbytes/2;
-  savesp = mSaveLS/2;
-  numlines = aNumlines;  
+  dspan = aDLSpan >> 1;
+  sspan = aSLSpan >> 1;
+  span = aNumbytes >> 1;
+  savesp = mSaveLS >> 1;
+  numlines = aNumlines;
   xinc = 1;
   yinc = 1;
 
-  if(aSaveBlendArea)
+  if (aSaveBlendArea)
+  {
+    for (y = 0; y < aNumlines; y++)
     {
-    for(y = 0; y < aNumlines; y++)
-      {
       s2 = s1;
       d2 = d1;
       sv2 = saveptr;
 
-      for(x=0;x<span;x++)
-        {
+      for (x = 0; x < span; x++)
+      {
+        stemp = *s2;
+        dtemp = *d2;
 
+        red = (RED16(dtemp) * val1 + RED16(stemp) * val2) >> 8;
 
-        t1 = RED16(*d2);
-        t2 = RED16(*s2);
-        red = (t1*val1+t2*val2)>>8;
-        if(red>255)
+        if (red > 255)
           red = 255;
-         
-        t1 = GREEN16(*d2);
-        t2 = GREEN16(*s2);
-        green = (t1*val1+t2*val2)>>8;
-        if(green>255)
+
+        green = (GREEN16(dtemp) * val1 + GREEN16(stemp) * val2) >> 8;
+
+        if (green > 255)
           green = 255;
 
-        t1 = BLUE16(*d2);
-        t2 = BLUE16(*s2);
+        blue = (BLUE16(dtemp) * val1 + BLUE16(stemp) * val2) >> 8;
 
-        blue = (t1*val1+t2*val2)>>8;
-        if(blue>255)
+        if (blue > 255)
           blue = 255;
 
         *sv2 = *d2;
-        *d2 = ((red&0xF8)<<7) | ((green&0xF8)<<2) | (blue&0xF8)>>3;
+        *d2 = (PRUint16)((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3);
+
         sv2++;
         d2++;
         s2++;
-        }
+      }
 
       s1 += sspan;
       d1 += dspan;
       saveptr += savesp;
-      }
     }
+  }
   else
+  {
+    for (y = 0; y < aNumlines; y++)
     {
-    for(y = 0; y < aNumlines; y++)
-      {
       s2 = s1;
       d2 = d1;
 
-      for(x = 0; x < aNumbytes; x++)
-        {
-        red = RED16(*d2)*val1+RED16(*s2)*val2;
-        if(red>255)
+      for (x = 0; x < span; x++)
+      {
+        stemp = *s2;
+        dtemp = *d2;
+
+        red = (RED16(dtemp) * val1 + RED16(stemp) * val2) >> 8;
+
+        if (red > 255)
           red = 255;
 
-        green = GREEN16(*d2)*val1+GREEN16(*s2)*val2;
-        if(green>255)
+        green = (GREEN16(dtemp) * val1 + GREEN16(stemp) * val2) >> 8;
+
+        if (green > 255)
           green = 255;
 
-        blue = BLUE16(*d2)*val1+BLUE16(*s2)*val2;
-        if(blue>255)
+        blue = (BLUE16(dtemp) * val1 + BLUE16(stemp) * val2) >> 8;
+
+        if (blue > 255)
           blue = 255;
 
-        *d2 = ((red&0xf8)<<7) | ((green&0xf8)<<2) | ((blue&0xf8)>>3);
+        *d2 = (PRUint16)((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3);
+
         d2++;
         s2++;
-        }
-
-      s1 += aSLSpan;
-      d1 += aDLSpan;
       }
+
+      s1 += sspan;
+      d1 += dspan;
     }
+  }
 }
 
 //------------------------------------------------------------

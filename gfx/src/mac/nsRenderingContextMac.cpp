@@ -213,7 +213,11 @@ nsresult nsRenderingContextMac :: CommonInit()
 
 nsresult nsRenderingContextMac :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
-	mRenderingSurface = (nsDrawingSurfaceMac)aSurface;
+  if (nsnull == aSurface)
+    mRenderingSurface = mFrontBuffer;
+  else
+  	mRenderingSurface = (nsDrawingSurfaceMac)aSurface;
+
 	return NS_OK;
 }
 
@@ -594,7 +598,7 @@ nsTransform2D * nsRenderingContextMac :: GetCurrentTransform()
 
 //------------------------------------------------------------------------
 
-nsDrawingSurface nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds)
+nsDrawingSurface nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags)
 {
 PRUint32	depth;
 GWorldPtr	theoff;
@@ -1088,25 +1092,50 @@ nsRect	tr;
 
 //------------------------------------------------------------------------
 
-nsresult nsRenderingContextMac :: CopyOffScreenBits(nsRect &aBounds)
+NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+                                                         PRInt32 aSrcX, PRInt32 aSrcY,
+                                                         const nsRect &aDestBounds,
+                                                         PRUint32 aCopyFlags)
 {
-PixMapHandle	offscreenPM;
-PixMapPtr			srcpix;
-PixMapPtr			destpix;
-RGBColor			rgbblack = {0x0000,0x0000,0x0000};
-RGBColor			rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
-Rect					srcrect,dstrect;
+  PixMapHandle	      offscreenPM;
+  PixMapPtr			      srcpix;
+  PixMapPtr			      destpix;
+  RGBColor			      rgbblack = {0x0000,0x0000,0x0000};
+  RGBColor			      rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
+  Rect					      srcrect,dstrect;
+  PRInt32             x = aSrcX;
+  PRInt32             y = aSrcY;
+  nsRect              drect = aDestBounds;
+  nsDrawingSurfaceMac destport;
 
-	::SetRect(&srcrect,0,0,aBounds.width,aBounds.height);
-	::SetRect(&dstrect,0,0,aBounds.width,aBounds.height);
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+  {
+    NS_ASSERTION(!(nsnull == destport), "no back buffer");
+    destport = mRenderingSurface;
+  }
+  else
+    destport = mFrontBuffer;
 
-	::SetPort(mFrontBuffer);
-	::SetEmptyRgn(mFrontBuffer->clipRgn);
-	::CopyRgn(mRenderingSurface->clipRgn, mFrontBuffer->clipRgn);
+  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+    mTMatrix->TransformCoord(&x, &y);
 
-	destpix = *((CGrafPtr)mFrontBuffer)->portPixMap;
+  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+    mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
 
-	offscreenPM = ::GetGWorldPixMap((GWorldPtr)mRenderingSurface);
+	::SetRect(&srcrect,x,y,drect.width,drect.height);
+	::SetRect(&dstrect,drect.x,drect.y,drect.width,drect.height);
+
+	::SetPort(destport);
+
+  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+  {
+  	::SetEmptyRgn(destport->clipRgn);
+	  ::CopyRgn(((nsDrawingSurfaceMac)aSrcSurf)->clipRgn, desport->clipRgn);
+  }
+
+	destpix = *((CGrafPtr)destport)->portPixMap;
+
+	offscreenPM = ::GetGWorldPixMap((GWorldPtr)aSrcSurf);
 	LockPixels(offscreenPM);
 	srcpix = (PixMapPtr)*offscreenPM;
 	::RGBForeColor(&rgbblack);
@@ -1115,7 +1144,6 @@ Rect					srcrect,dstrect;
 	::CopyBits((BitMap*)srcpix,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
 	UnlockPixels(offscreenPM);
 	
-
   return NS_OK;
 }
 

@@ -191,6 +191,7 @@ nsDrawingSurfaceWin :: nsDrawingSurfaceWin()
   mDC = NULL;
   mDCOwner = nsnull;
   mOrigBitmap = nsnull;
+  mSelectedBitmap = nsnull;
 
 #ifdef NGLAYOUT_DDRAW
   mSurface = NULL;
@@ -208,6 +209,8 @@ nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
 
     mOrigBitmap = nsnull;
   }
+
+  mSelectedBitmap = nsnull;
 
 #ifdef NGLAYOUT_DDRAW
   if (NULL != mSurface)
@@ -283,12 +286,29 @@ nsresult nsDrawingSurfaceWin :: Init(LPDIRECTDRAWSURFACE aSurface)
   if (nsnull != aSurface)
   {
     NS_ADDREF(mSurface);
-    mSurface->GetDC(&mDC);
-
     return NS_OK;
   }
 
   return NS_ERROR_FAILURE;
+}
+
+nsresult nsDrawingSurfaceWin :: GetDC()
+{
+  if ((nsnull == mDC) && (nsnull != mSurface))
+    mSurface->GetDC(&mDC);
+
+  return NS_OK;
+}
+
+nsresult nsDrawingSurfaceWin :: ReleaseDC()
+{
+  if ((nsnull != mDC) && (nsnull != mSurface))
+  {
+    mSurface->ReleaseDC(mDC);
+    mDC = nsnull;
+  }
+
+  return NS_OK;
 }
 
 #endif
@@ -441,7 +461,16 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     mStateCache = nsnull;
   }
 
-  NS_IF_RELEASE(mSurface);
+  if (nsnull != mSurface)
+  {
+#ifdef NGLAYOUT_DDRAW
+    //kill the DC
+    mSurface->ReleaseDC();
+#endif
+
+    NS_RELEASE(mSurface);
+  }
+
   NS_IF_RELEASE(mMainSurface);
 
   NS_IF_RELEASE(mDCOwner);
@@ -507,6 +536,9 @@ nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
     mSurface->Init(aWindow);
     mDC = mSurface->mDC;
 
+    mMainDC = mDC;
+    mMainSurface = mSurface;
+    NS_ADDREF(mMainSurface);
   }
 
   mDCOwner = aWindow;
@@ -531,6 +563,10 @@ nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   {
     NS_ADDREF(mSurface);
     mDC = mSurface->mDC;
+
+    mMainDC = mDC;
+    mMainSurface = mSurface;
+    NS_ADDREF(mMainSurface);
   }
 
   mDCOwner = nsnull;
@@ -567,13 +603,14 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   // If this is a palette device, then select and realize the palette
   nsPaletteInfo palInfo;
   mContext->GetPaletteInfo(palInfo);
-  if (palInfo.isPaletteDevice && palInfo.palette) {
+
+  if (palInfo.isPaletteDevice && palInfo.palette)
+  {
     // Select the palette in the background
     mOrigPalette = ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, TRUE);
     // Don't do the realization for an off-screen memory DC
-    if (nsnull == aOldDC) {
+    if (nsnull == aOldDC)
       ::RealizePalette(aNewDC);
-    }
   }
 
   if (GetDeviceCaps(aNewDC, RASTERCAPS) & (RC_BITBLT))
@@ -607,31 +644,56 @@ nsresult nsRenderingContextWin :: CommonInit(void)
 NS_IMETHODIMP
 nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-  NS_ASSERTION(!(nsnull != mMainDC), "offscreen surface already selected");
+  nsresult  rv;
 
-  mMainSurface = mSurface;
-  mMainDC = mDC;
-
-  mSurface = (nsDrawingSurfaceWin *)aSurface;
+  //XXX this should reset the data in the state stack.
 
   if (nsnull != aSurface)
   {
-    NS_ADDREF(mSurface);
-    mDC = mSurface->mDC;
+#ifdef NGLAYOUT_DDRAW
+    //get back a DC
+    ((nsDrawingSurfaceWin *)aSurface)->GetDC();
+#endif
+
+    rv = SetupDC(mDC, ((nsDrawingSurfaceWin *)aSurface)->mDC);
+
+#ifdef NGLAYOUT_DDRAW
+    //kill the DC
+    mSurface->ReleaseDC();
+#endif
+
+    NS_IF_RELEASE(mSurface);
+    mSurface = (nsDrawingSurfaceWin *)aSurface;
+  }
+  else
+  {
+    rv = SetupDC(mDC, mMainDC);
+
+#ifdef NGLAYOUT_DDRAW
+    //kill the DC
+    mSurface->ReleaseDC();
+#endif
+
+    NS_IF_RELEASE(mSurface);
+    mSurface = mMainSurface;
   }
 
-  return SetupDC(mMainDC, mDC);
+  NS_ADDREF(mSurface);
+  mDC = mSurface->mDC;
+
+  return rv;
 }
 
 NS_IMETHODIMP
 nsRenderingContextWin::GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
-  if (gIsWIN95) {
+
+  if (gIsWIN95)
     result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
-  }
 
   aResult = result;
+
   return NS_OK;
 }
 
@@ -943,7 +1005,7 @@ nsTransform2D * nsRenderingContextWin :: GetCurrentTransform()
   return mTMatrix;
 }
 
-nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds)
+nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags)
 {
   nsDrawingSurfaceWin *surf = new nsDrawingSurfaceWin();
 
@@ -952,45 +1014,55 @@ nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds)
     NS_ADDREF(surf);
 
 #ifdef NGLAYOUT_DDRAW
-    LPDIRECTDRAWSURFACE ddsurf = nsnull;
-
-    if ((NULL != mDDraw2) && (nsnull != aBounds))
+    if (aSurfFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS)
     {
-      DDSURFACEDESC ddsd;
+      LPDIRECTDRAWSURFACE ddsurf = nsnull;
 
-      ddsd.dwSize = sizeof(ddsd);
-      ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
-      ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-      ddsd.dwWidth = aBounds->width;
-      ddsd.dwHeight = aBounds->height;
+      if ((NULL != mDDraw2) && (nsnull != aBounds))
+      {
+        DDSURFACEDESC ddsd;
 
-      nsresult res = mDDraw2->CreateSurface(&ddsd, &ddsurf, NULL);
-    }
+        ddsd.dwSize = sizeof(ddsd);
+        ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+        ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN |
+                              ((aSurfFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS) ?
+                              DDSCAPS_SYSTEMMEMORY : 0);
+        ddsd.dwWidth = aBounds->width;
+        ddsd.dwHeight = aBounds->height;
 
-    if (NULL != ddsurf)
-    {
-      surf->Init(ddsurf);
-      NS_RELEASE(ddsurf);
+        mDDraw2->CreateSurface(&ddsd, &ddsurf, NULL);
+      }
+
+      if (NULL != ddsurf)
+      {
+        surf->Init(ddsurf);
+        NS_RELEASE(ddsurf);
+      }
+      else
+        surf->Init(::CreateCompatibleDC(mMainDC));
     }
     else
 #endif
-      surf->Init(::CreateCompatibleDC(mDC));
+      surf->Init(::CreateCompatibleDC(mMainDC));
 
-    HBITMAP hBits;
-
-    if (nsnull != aBounds)
-      hBits = ::CreateCompatibleBitmap(mDC, aBounds->width, aBounds->height);
-    else
+#ifdef NGLAYOUT_DDRAW
+    if (nsnull == surf->mSurface)
+#endif
     {
-      //we do this to make sure that the memory DC knows what the
-      //bitmap format of the original DC was. this way, later
-      //operations to create bitmaps from the memory DC will create
-      //bitmaps with the correct properties.
+      if (nsnull != aBounds)
+        surf->mSelectedBitmap = ::CreateCompatibleBitmap(mMainDC, aBounds->width, aBounds->height);
+      else
+      {
+        //we do this to make sure that the memory DC knows what the
+        //bitmap format of the original DC was. this way, later
+        //operations to create bitmaps from the memory DC will create
+        //bitmaps with the correct properties.
 
-      hBits = ::CreateCompatibleBitmap(mDC, 2, 2);
+        surf->mSelectedBitmap = ::CreateCompatibleBitmap(mMainDC, 2, 2);
+      }
+
+      surf->mOrigBitmap = (HBITMAP)::SelectObject(surf->mDC, surf->mSelectedBitmap);
     }
-
-    surf->mOrigBitmap = (HBITMAP)::SelectObject(surf->mDC, hBits);
   }
 
   return (nsDrawingSurface)surf;
@@ -999,6 +1071,12 @@ nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds)
 void nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
   nsDrawingSurfaceWin *surf = (nsDrawingSurfaceWin *)aDS;
+
+  if (surf->mDC == mDC)
+  {
+    mDC = mMainDC;
+    mSurface = mMainSurface;
+  }
 
   NS_IF_RELEASE(surf);
 }
@@ -1023,7 +1101,9 @@ void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
 
     LineDDA((int)(aX0),(int)(aY0),(int)(aX1),(int)(aY1),(LINEDDAPROC) LineDDAFunc,(long)&dda_struct);
 
-  } else {
+  }
+  else
+  {
     ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
     ::LineTo(mDC, (int)(aX1), (int)(aY1));
   }
@@ -1377,12 +1457,14 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)
 {
-	int	x = aX;
-  int y = aY;
+	PRInt32	x = aX;
+  PRInt32 y = aY;
 
   SetupFontAndColor();
-	mTMatrix->TransformCoord(&x,&y);
-  ::ExtTextOut(mDC,x,y,0,NULL,aString,aLength,NULL);
+
+	mTMatrix->TransformCoord(&x, &y);
+
+  ::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, NULL);
 
   if (nsnull != mFontMetrics)
   {
@@ -1401,12 +1483,14 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
 void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-  int		x = aX;
-  int   y = aY;
+  PRInt32 x = aX;
+  PRInt32 y = aY;
 
   SetupFontAndColor();
-	mTMatrix->TransformCoord(&x,&y);
-  ::ExtTextOutW(mDC,x,y,0,NULL,aString,aLength,NULL);
+
+	mTMatrix->TransformCoord(&x, &y);
+
+  ::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, NULL);
 
   if (nsnull != mFontMetrics)
   {
@@ -1476,45 +1560,87 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect& aRect)
   ((nsImageWin *)aImage)->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
+NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+                                                         PRInt32 aSrcX, PRInt32 aSrcY,
+                                                         const nsRect &aDestBounds,
+                                                         PRUint32 aCopyFlags)
 {
-  if ((nsnull != mDC) && (nsnull != mMainDC))
+
+  if ((nsnull != aSrcSurf) && (nsnull != mMainDC))
   {
-    HRGN  tregion = ::CreateRectRgn(0, 0, 0, 0);
+    PRInt32 x = aSrcX;
+    PRInt32 y = aSrcY;
+    nsRect  drect = aDestBounds;
+    HDC     destdc;
 
-    if (::GetClipRgn(mDC, tregion) == 1)
-      ::SelectClipRgn(mMainDC, tregion);
-//    else
-//      ::SelectClipRgn(mMainDC, NULL);
+#ifdef NGLAYOUT_DDRAW
+    PRBool  dccreated = PR_FALSE;
 
-    ::DeleteObject(tregion);
+    //get back a DC
 
-#if 0
-    GraphicsState *pstate = mStates;
-
-    //look for a cliprect somewhere in the stack...
-
-    while ((nsnull != pstate) && !(pstate->mFlags & FLAG_CLIP_VALID))
-      pstate = pstate->mNext;
-
-    if (nsnull != pstate)
-      ::SelectClipRgn(mMainDC, pstate->mClipRegion);
-    else
-      ::SelectClipRgn(mMainDC, NULL);
+    if ((nsnull == ((nsDrawingSurfaceWin *)aSrcSurf)->mDC) &&
+        (nsnull != ((nsDrawingSurfaceWin *)aSrcSurf)->mSurface))
+    {
+      ((nsDrawingSurfaceWin *)aSrcSurf)->GetDC();
+      dccreated = PR_TRUE;
+    }
 #endif
 
-    // If there's a palette make sure it's selected.
-    // XXX This doesn't seem like the best place to be doing this...
-    nsPaletteInfo palInfo;
-    HPALETTE      oldPalette;
-    mContext->GetPaletteInfo(palInfo);
-    if (palInfo.isPaletteDevice && palInfo.palette) {
-      oldPalette = ::SelectPalette(mMainDC, (HPALETTE)palInfo.palette, TRUE);
+    if (nsnull != ((nsDrawingSurfaceWin *)aSrcSurf)->mDC)
+    {
+      if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+      {
+        NS_ASSERTION(!(nsnull == mDC), "no back buffer");
+        destdc = mDC;
+      }
+      else
+        destdc = mMainDC;
+
+      if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+      {
+        HRGN  tregion = ::CreateRectRgn(0, 0, 0, 0);
+
+        if (::GetClipRgn(((nsDrawingSurfaceWin *)aSrcSurf)->mDC, tregion) == 1)
+          ::SelectClipRgn(destdc, tregion);
+
+        ::DeleteObject(tregion);
+      }
+
+      // If there's a palette make sure it's selected.
+      // XXX This doesn't seem like the best place to be doing this...
+
+      nsPaletteInfo palInfo;
+      HPALETTE      oldPalette;
+
+      mContext->GetPaletteInfo(palInfo);
+
+      if (palInfo.isPaletteDevice && palInfo.palette)
+        oldPalette = ::SelectPalette(destdc, (HPALETTE)palInfo.palette, TRUE);
+
+      if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+        mTMatrix->TransformCoord(&x, &y);
+
+      if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+        mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+
+      ::BitBlt(destdc, drect.x, drect.y,
+               drect.width, drect.height,
+               ((nsDrawingSurfaceWin *)aSrcSurf)->mDC,
+               x, y, SRCCOPY);
+
+      if (palInfo.isPaletteDevice && palInfo.palette)
+        ::SelectPalette(destdc, oldPalette, TRUE);
+
+#ifdef NGLAYOUT_DDRAW
+      if (PR_TRUE == dccreated)
+      {
+        //kill the DC
+        ((nsDrawingSurfaceWin *)aSrcSurf)->ReleaseDC();
+      }
+#endif
     }
-    ::BitBlt(mMainDC, 0, 0, aBounds.width, aBounds.height, mDC, 0, 0, SRCCOPY);
-    if (palInfo.isPaletteDevice && palInfo.palette) {
-      ::SelectPalette(mMainDC, oldPalette, TRUE);
-    }
+    else
+      NS_ASSERTION(0, "attempt to blit with bad DCs");
   }
   else
     NS_ASSERTION(0, "attempt to blit with bad DCs");
@@ -1731,6 +1857,21 @@ nsresult nsRenderingContextWin :: CreateDDraw()
   }
 
   return mDDrawResult;
+}
+
+nsresult nsRenderingContextWin :: GetDDraw(IDirectDraw2 **aDDraw)
+{
+  CreateDDraw();
+
+  if (NULL != mDDraw2)
+  {
+    NS_ADDREF(mDDraw2);
+    *aDDraw = mDDraw2;
+  }
+  else
+    *aDDraw = NULL;
+
+  return NS_OK;
 }
 
 #endif

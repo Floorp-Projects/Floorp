@@ -95,7 +95,7 @@ public:
   virtual void Scale(float aSx, float aSy);
   virtual nsTransform2D * GetCurrentTransform();
 
-  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds);
+  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags);
   virtual void DestroyDrawingSurface(nsDrawingSurface aDS);
 
   virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
@@ -145,7 +145,8 @@ public:
   virtual void DrawImage(nsIImage *aImage, const nsRect& aRect);
   virtual void DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
-  NS_IMETHOD CopyOffScreenBits(nsRect &aBounds);
+  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
   // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
@@ -153,6 +154,11 @@ public:
 
   // nsIDOMRenderingContext
   NS_DECL_IDOMRENDERINGCONTEXT
+
+  // locals
+#ifdef NGLAYOUT_DDRAW
+  nsresult GetDDraw(IDirectDraw2 **aDDraw);
+#endif
 
 private:
   nsresult CommonInit(void);
@@ -164,7 +170,9 @@ private:
   HPEN SetupDottedPen(void);
   void SetupFontAndColor(void);
   void PushClipState(void);
+#ifdef NGLAYOUT_DDRAW
   nsresult CreateDDraw(void);
+#endif
 
 protected:
   nscolor					  mCurrentColor;
@@ -229,14 +237,17 @@ public:
   nsresult Init(nsIWidget *aOwner);
 #ifdef NGLAYOUT_DDRAW
   nsresult Init(LPDIRECTDRAWSURFACE aSurface);
+  nsresult GetDC();
+  nsresult ReleaseDC();
 #endif
 
   nsIWidget           *mDCOwner;
   HDC                 mDC;
   HBITMAP             mOrigBitmap;
+  HBITMAP             mSelectedBitmap;
 
 #ifdef NGLAYOUT_DDRAW
-  LPDIRECTDRAWSURFACE mSurface;
+  IDirectDrawSurface  *mSurface;
 #endif
 };
 

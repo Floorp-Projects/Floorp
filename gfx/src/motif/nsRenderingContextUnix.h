@@ -99,7 +99,7 @@ public:
   virtual void Scale(float aSx, float aSy);
   virtual nsTransform2D * GetCurrentTransform();
 
-  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds);
+  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags);
   virtual void DestroyDrawingSurface(nsDrawingSurface aDS);
 
   virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
@@ -148,7 +148,8 @@ public:
   virtual void DrawImage(nsIImage *aImage, const nsRect& aRect);
   virtual void DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
-  NS_IMETHOD CopyOffScreenBits(nsRect &aBounds);
+  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
 protected:
 

@@ -101,6 +101,8 @@ public:
   /**
    * Selects an offscreen drawing surface into the RenderingContext to draw to.
    * @param aSurface is the offscreen surface we are going to draw to.
+   *        if nsnull, the original drawing surface obtained at initialization
+   *        should be selected.
    */
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface) = 0;
 
@@ -237,13 +239,16 @@ public:
   virtual nsTransform2D * GetCurrentTransform() = 0;
 
   /**
-   * Create an offscreen drawing surface compatible with this RenderingContext
+   * Create an offscreen drawing surface compatible with this RenderingContext.
+   * The rect passed in is not affected by any transforms in the rendering
+   * context and the values are in device units.
    * @param aBounds A rectangle representing the size for the drawing surface.
    *                if nsnull then a bitmap will not be created and associated
    *                with the new drawing surface
+   * @param aSurfFlags see bottom of nsIRenderingContext.h
    * @return A nsDrawingSurface
    */
-  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds) = 0;
+  virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags) = 0;
 
   /**
    * Destroy a drawing surface created by CreateDrawingSurface()
@@ -499,10 +504,15 @@ public:
   virtual void DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)=0;
 
   /**
-   * Copy offscreen pixelmap to this RenderingContext
-   * @param aBounds Destination rectangle to copy to
+   * Copy offscreen pixelmap to this RenderingContext.
+   * @param aSrcSurf drawing surface to copy bits from
+   * @param aSrcX x offset into source pixelmap to copy from
+   * @param aSrcY y offset into source pixelmap to copy from
+   * @param aDestBounds Destination rectangle to copy to
+   * @param aCopyFlags see below
    */
-  NS_IMETHOD CopyOffScreenBits(nsRect &aBounds) = 0;
+  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+                               const nsRect &aDestBounds, PRUint32 aCopyFlags) = 0;
 };
 
 //modifiers for text rendering
@@ -527,5 +537,34 @@ public:
  * remotely.
  */
 #define NS_RENDERING_HINT_REMOTE_RENDERING 0x2
+
+//flags for copy CopyOffScreenBits
+
+//when performing the blit, use the region, if any,
+//that exists in the source drawingsurface as a
+//blit mask.
+#define NS_COPYBITS_USE_SOURCE_CLIP_REGION  0x0001
+
+//transform the source offsets by the xform in the
+//rendering context
+#define NS_COPYBITS_XFORM_SOURCE_VALUES     0x0002
+
+//transform the destination rect by the xform in the
+//rendering context
+#define NS_COPYBITS_XFORM_DEST_VALUES       0x0004
+
+//this is basically a hack and is used by callers
+//who have selected an alternate drawing surface and
+//wish the copy to happen to that buffer rather than
+//the "front" buffer. i'm not proud of this. MMP
+#define NS_COPYBITS_TO_BACK_BUFFER          0x0008
+
+//when creating a drawing surface, you can use this
+//to tell the rendering context that you anticipate
+//the need to get to the actual bits of the drawing
+//surface at some point during it's lifetime. typically
+//used when creating bitmaps to be operated on by the
+//nsIBlender implementations.
+#define NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS  0x0001
 
 #endif /* nsIRenderingContext_h___ */
