@@ -131,7 +131,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 // closure structures for RemoveMatchingRows
 struct matchExpiration_t {
-  PRInt64 *expirationDate;
+  PRTime *expirationDate;
   nsGlobalHistory *history;
 };
 
@@ -147,7 +147,7 @@ struct matchSearchTerm_t {
   
   searchTerm *term;
   PRBool haveClosure;           // are the rest of the fields valid?
-  PRInt64 now;
+  PRTime now;
   PRInt32 intValue;
 };
 
@@ -204,30 +204,6 @@ struct searchQuery {
   mdb_column groupBy;           // column to group by
 };
 
-static nsresult
-PRInt64ToChars(const PRInt64& aValue, nsACString& aResult)
-{
-  // Convert an unsigned 64-bit value to a string of up to aSize
-  // decimal digits, placed in aBuf.
-  nsInt64 value(aValue);
-
-  aResult.Truncate(0);
-
-  if (value == nsInt64(0)) {
-    aResult.Append('0');
-  }
-
-  while (value != nsInt64(0)) {
-    PRInt32 ones = PRInt32(value % nsInt64(10));
-    value /= nsInt64(10);
-
-    if (ones <=9) 
-      aResult.Insert(char('0' + ones), 0);
-  }
-  
-  return NS_OK;
-}
-
 static PRBool HasCell(nsIMdbEnv *aEnv, nsIMdbRow* aRow, mdb_column aCol)
 {
   mdbYarn yarn;
@@ -241,28 +217,8 @@ static PRBool HasCell(nsIMdbEnv *aEnv, nsIMdbRow* aRow, mdb_column aCol)
   return (yarn.mYarn_Fill != 0);
 }
 
-
-//----------------------------------------------------------------------
-
-static nsresult
-CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
-{
-  // Convert aBuf of exactly aCount decimal characters to a 64-bit
-  // unsigned integer value.
-  nsInt64 result(0);
-
-  while (aCount-- > 0) {
-    PRInt32 digit = (*aBuf++) - '0';
-    result *= nsInt64(10);
-    result += nsInt64(digit);
-  }
-
-  *aResult = result;
-  return NS_OK;
-}
-
 static PRTime
-NormalizeTime(PRInt64 aTime)
+NormalizeTime(PRTime aTime)
 {
   // normalize both now and date to midnight of the day they occur on
   PRExplodedTime explodedTime;
@@ -280,11 +236,11 @@ NormalizeTime(PRInt64 aTime)
 // pass in a pre-normalized now and a date, and we'll find
 // the difference since midnight on each of the days..
 static PRInt32
-GetAgeInDays(PRInt64 aNormalizedNow, PRInt64 aDate)
+GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
 {
-  PRInt64 dateMidnight = NormalizeTime(aDate);
+  PRTime dateMidnight = NormalizeTime(aDate);
 
-  PRInt64 diff;
+  PRTime diff;
   LL_SUB(diff, aNormalizedNow, dateMidnight);
 
   // two-step process since I can't seem to load
@@ -309,7 +265,7 @@ GetAgeInDays(PRInt64 aNormalizedNow, PRInt64 aDate)
 
 
 PRBool
-nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
+nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRTime* expirationDate)
 {
   nsresult rv;
   
@@ -319,7 +275,7 @@ nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
   if (HasCell(mEnv, row, kToken_HiddenColumn) && HasCell(mEnv, row, kToken_TypedColumn))
     return PR_TRUE;
 
-  PRInt64 lastVisitedTime;
+  PRTime lastVisitedTime;
   rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitedTime);
 
   if (NS_FAILED(rv)) 
@@ -349,7 +305,6 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   
   // XXX convert the property to a column, get the column value
 
-  PRInt64 rowDate;
   mdb_column column;
   mdb_err err = store->StringToToken(env, "LastVisitDate", &column);
   if (err != 0) return PR_FALSE;
@@ -358,7 +313,8 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   err = row->AliasCellYarn(env, column, &yarn);
   if (err != 0) return PR_FALSE;
   
-  CharsToPRInt64((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill, &rowDate);
+  PRTime rowDate;
+  PR_sscanf((const char*)yarn.mYarn_Buf, "%lld", &rowDate);
 
   PRInt32 days = GetAgeInDays(matchSearchTerm->now, rowDate);
   
@@ -600,14 +556,14 @@ NS_IMPL_ISUPPORTS7(nsGlobalHistory,
 NS_IMETHODIMP
 nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel, nsIURI *aReferrer)
 {
-  PRInt64 now = GetNow();
+  PRTime now = GetNow();
 
   return AddPageToDatabase(aURI, aRedirect, aTopLevel, now, aReferrer);
 }
 
 nsresult
 nsGlobalHistory::AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLevel,
-                                   PRInt64 aLastVisitDate, nsIURI *aReferrer)
+                                   PRTime aLastVisitDate, nsIURI *aReferrer)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aURI);
@@ -672,7 +628,7 @@ nsGlobalHistory::AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLe
 
   if (NS_SUCCEEDED(rv)) {
     // update the database, and get the old info back
-    PRInt64 oldDate;
+    PRTime oldDate;
     PRInt32 oldCount;
     rv = AddExistingPageToDatabase(row, aLastVisitDate, aReferrer, &oldDate, &oldCount);
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddExistingPageToDatabase failed; see bug 88961");
@@ -719,9 +675,9 @@ nsGlobalHistory::AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLe
 
 nsresult
 nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
-                                           PRInt64 aDate,
+                                           PRTime aDate,
                                            nsIURI* aReferrer,
-                                           PRInt64 *aOldDate,
+                                           PRTime *aOldDate,
                                            PRInt32 *aOldCount)
 {
   nsresult rv;
@@ -798,7 +754,7 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
 
 nsresult
 nsGlobalHistory::AddNewPageToDatabase(nsIURI* aURI,
-                                      PRInt64 aDate, 
+                                      PRTime aDate, 
                                       PRBool aRedirect,
                                       PRBool aTopLevel,
                                       nsIURI* aReferrer,
@@ -927,11 +883,11 @@ nsGlobalHistory::RemovePageInternal(const char *aSpec)
 }
 
 nsresult
-nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue)
+nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRTime& aValue)
 {
   mdb_err err;
   nsCAutoString val;
-  PRInt64ToChars(aValue, val);
+  val.AppendInt(aValue);
 
   mdbYarn yarn = { (void *)val.get(), val.Length(), val.Length(), 0, 0, nsnull };
   
@@ -1068,7 +1024,7 @@ nsGlobalHistory::SwapBytes(const PRUnichar *source, PRUnichar *dest,
       
 nsresult
 nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
-                             PRInt64 *aResult)
+                             PRTime *aResult)
 {
   mdb_err err;
   
@@ -1081,7 +1037,9 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   if (!yarn.mYarn_Fill || !yarn.mYarn_Buf)
     return NS_OK;
 
-  return CharsToPRInt64((char *)yarn.mYarn_Buf, yarn.mYarn_Fill, aResult);
+  PR_sscanf((const char*)yarn.mYarn_Buf, "%lld", aResult);
+  
+  return NS_OK;
 }
 
 nsresult
@@ -1123,7 +1081,7 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 
 NS_IMETHODIMP
 nsGlobalHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle, 
-                                    PRInt64 aLastVisitDate)
+                                    PRTime aLastVisitDate)
 {
   nsresult rv = AddPageToDatabase(aURI, PR_FALSE, PR_TRUE, aLastVisitDate, nsnull);
   if (NS_FAILED(rv)) return rv;
@@ -1613,8 +1571,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
         if (NS_FAILED(rv)) return rv;
 
         nsCAutoString valueStr;
-        rv = PRInt64ToChars(n, valueStr);
-        if (NS_FAILED(rv)) return rv;
+        valueStr.AppendInt(n);
         
         value = (void *)ToNewCString(valueStr);
         if (aProperty == kNC_Date)
@@ -1817,7 +1774,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     if (aProperty == kNC_Date  ||
         aProperty == kNC_FirstVisitDate) {
       // Last visit date
-      PRInt64 i;
+      PRTime i;
       if (aProperty == kNC_Date)
         rv = GetRowValue(row, kToken_LastVisitDateColumn, &i);
       else
@@ -1849,7 +1806,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       return CallQueryInterface(visitCountLiteral, aTarget);
     }
     else if (aProperty == kNC_AgeInDays) {
-      PRInt64 lastVisitDate;
+      PRTime lastVisitDate;
       rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitDate);
       if (NS_FAILED(rv)) return rv;
       
@@ -1970,7 +1927,7 @@ nsGlobalHistory::SetDirty()
 
 // hack to avoid calling PR_Now() too often, as is the case when
 // we're asked the ageindays of many history entries in a row
-PRInt64
+PRTime
 nsGlobalHistory::GetNow()
 {
   if (!mNowValid) {             // not dirty, mLastNow is crufty
@@ -3505,7 +3462,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   // appropriate assertions
 
   // first pull out the appropriate values
-  PRInt64 lastVisited;
+  PRTime lastVisited;
   GetRowValue(aRow, kToken_LastVisitDateColumn, &lastVisited);
 
   PRInt32 ageInDays = GetAgeInDays(NormalizeTime(GetNow()), lastVisited);
@@ -3617,7 +3574,7 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   NotifyUnassert(kNC_HistoryRoot, kNC_child, aSource);
 
   //    first get age in days
-  PRInt64 lastVisited;
+  PRTime lastVisited;
   GetRowValue(aRow, kToken_LastVisitDateColumn, &lastVisited);
   PRInt32 ageInDays = GetAgeInDays(NormalizeTime(GetNow()), lastVisited);
   nsCAutoString ageString; ageString.AppendInt(ageInDays);

@@ -150,7 +150,7 @@ public:
   virtual ~nsGlobalHistory();
 
   // these must be public so that the callbacks can call them
-  PRBool MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate);
+  PRBool MatchExpiration(nsIMdbRow *row, PRTime* expirationDate);
   PRBool MatchHost(nsIMdbRow *row, matchHost_t *hostInfo);
   PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery, PRBool caseSensitive);
 
@@ -237,12 +237,12 @@ protected:
 
   // caching of PR_Now() so we don't call it every time we do
   // a history query
-  PRInt64   mLastNow;           // cache the last PR_Now()
+  PRTime    mLastNow;           // cache the last PR_Now()
   PRInt32   mBatchesInProgress;
   PRBool    mNowValid;          // is mLastNow valid?
   nsCOMPtr<nsITimer> mExpireNowTimer;
   
-  PRInt64 GetNow();
+  PRTime GetNow();
   void ExpireNow();
   
   static void expireNowTimer(nsITimer *aTimer, void *aClosure)
@@ -303,14 +303,14 @@ protected:
   // AddPage-oriented stuff
   //
   nsresult AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLevel,
-                             PRInt64 aLastVisitDate, nsIURI * aReferrer);
+                             PRTime aLastVisitDate, nsIURI * aReferrer);
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
-                                     PRInt64 aDate,
+                                     PRTime aDate,
                                      nsIURI *aReferrer,
-                                     PRInt64 *aOldDate,
+                                     PRTime *aOldDate,
                                      PRInt32 *aOldCount);
   nsresult AddNewPageToDatabase(nsIURI* aURI,
-                                PRInt64 aDate,
+                                PRTime aDate,
                                 PRBool aRedirect,
                                 PRBool aTopLevel,
                                 nsIURI *aReferrer,
@@ -321,7 +321,7 @@ protected:
   //
   // generic routines for setting/retrieving various datatypes
   //
-  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRTime& aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const char *aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRUnichar *aValue);
@@ -337,7 +337,7 @@ protected:
 
   //
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsACString& aResult);
-  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64* aResult);
+  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRTime* aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32* aResult);
 
   nsresult FindRow(mdb_column aCol, const char *aURL, nsIMdbRow **aResult);
