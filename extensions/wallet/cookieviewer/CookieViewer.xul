@@ -60,8 +60,8 @@
             <treecol width="70%"/>
             <treehead>
               <treerow>
-                <treecell value="&treehead.cookiedomain.label;"/>
-                <treecell value="&treehead.cookiename.label;"/>
+                <treecell class="treecell-header" value="&treehead.cookiedomain.label;"/>
+                <treecell class="treecell-header" value="&treehead.cookiename.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="cookielist"/>
@@ -128,8 +128,8 @@
                 multiple="true" onclick="ViewPermissionSelected();">
             <treehead>
               <treerow>
-                <treecell value="&treehead.sitename.label;"/>
-                <treecell value="&treehead.status.label;"/>
+                <treecell class="treecell-header" value="&treehead.sitename.label;"/>
+                <treecell class="treecell-header" value="&treehead.status.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="permissionslist"/>
@@ -156,8 +156,8 @@
                 multiple="true" onclick="ViewImageSelected();">
             <treehead>
               <treerow>
-                <treecell value="&treehead.sitename.label;"/>
-                <treecell value="&treehead.status.label;"/>
+                <treecell class="treecell-header" value="&treehead.sitename.label;"/>
+                <treecell class="treecell-header" value="&treehead.status.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="imageslist"/>

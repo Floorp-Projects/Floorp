@@ -42,13 +42,13 @@
       <title>
         <text id="heading"/>
       </title>
-      <tree class="inset" style="height: 275px; width: 440px;" align="vertical">
+      <tree class="inset" style="height: 300px; width: 440px;" align="vertical">
         <treecol width="45%"/>
         <treecol width="55%"/>
         <treehead>
           <treerow>
-            <treecell id="fieldHeading"/>
-            <treecell id="valueHeading"/>
+            <treecell class="treecell-header" id="fieldHeading"/>
+            <treecell class="treecell-header" id="valueHeading"/>
            </treerow>          
         </treehead>
         <treechildren id="combolists"/>

@@ -62,8 +62,8 @@
             <treecol width="55%"/>
             <treehead>
               <treerow>
-                <treecell value="&treehead.site.label;"/>
-                <treecell value="&treehead.username.label;"/>
+                <treecell class="treecell-header" value="&treehead.site.label;"/>
+                <treecell class="treecell-header" value="&treehead.username.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="savesignonlist"/>
@@ -90,7 +90,7 @@
             <treecol width="100%"/>
             <treehead>
               <treerow>
-                <treecell value="&treehead.site.label;"/>
+                <treecell class="treecell-header" value="&treehead.site.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="ignoredlist"/>
@@ -117,7 +117,7 @@
             <treecol width="100%"/>
             <treehead>
               <treerow>
-                <treecell value="&treehead.site.label;"/>
+                <treecell class="treecell-header" value="&treehead.site.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="nopreviewlist"/>
@@ -144,7 +144,7 @@
             <treecol width="100%"/>
             <treehead>
               <treerow>
-                <treecell value="&treehead.site.label;"/>
+                <treecell class="treecell-header" value="&treehead.site.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="nocapturelist"/>
