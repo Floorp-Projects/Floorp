@@ -4924,16 +4924,14 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, const nsCS
 
     aResult.Append(NS_LITERAL_STRING("rgb("));
 
-    tmpStr.AppendInt(NS_GET_R(color), 10);
-    aResult.Append(tmpStr);
+    NS_NAMED_LITERAL_STRING(comma, ", ");
 
-    aResult.Append(PRUnichar(','));
+    tmpStr.AppendInt(NS_GET_R(color), 10);
+    aResult.Append(tmpStr + comma);
 
     tmpStr.Truncate();
     tmpStr.AppendInt(NS_GET_G(color), 10);
-    aResult.Append(tmpStr);
-
-    aResult.Append(PRUnichar(','));
+    aResult.Append(tmpStr + comma);
 
     tmpStr.Truncate();
     tmpStr.AppendInt(NS_GET_B(color), 10);
