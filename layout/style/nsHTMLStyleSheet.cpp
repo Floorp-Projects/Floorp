@@ -1847,6 +1847,8 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewRadioControlFrame(aNewFrame);
     else if (aTag == nsXULAtoms::text)
       rv = NS_NewTextControlFrame(aNewFrame);
+	else if (aTag == nsXULAtoms::widget)
+	  rv = NS_NewObjectFrame(aNewFrame);
   }
 
   // If we succeeded in creating a frame then initialize it, process its
