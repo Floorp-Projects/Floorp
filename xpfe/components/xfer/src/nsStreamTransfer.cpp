@@ -131,6 +131,13 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
          NS_SUCCEEDED( outputFile->IsValid( &isValid ) )
          &&
          isValid ) {
+        // Try to get HTTP channel.
+        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+        if ( httpChannel ) {
+            // Turn off content encoding conversions.
+            httpChannel->SetApplyConversion( PR_FALSE );
+        }
+
         // Construct stream transfer operation to be given to dialog.
         nsStreamXferOp *p= new nsStreamXferOp( aChannel, outputFile );
 
