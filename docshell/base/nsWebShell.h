@@ -31,6 +31,7 @@
 #include "nsICommandManager.h"
 #include "nsIIOService.h"
 #include "nsCRT.h"
+#include "nsIDocumentLoader.h"
 
 class nsIEventQueue;
 class nsIController;
@@ -120,7 +121,7 @@ protected:
     PRThread *mThread;
 
     nsIWebShellContainer* mContainer;
-    nsIDocumentLoader* mDocLoader;
+    nsCOMPtr<nsIDocumentLoader> mDocLoader;
 
     eCharsetReloadState mCharsetReloadState;
 
