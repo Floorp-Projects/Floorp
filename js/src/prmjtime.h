@@ -49,8 +49,11 @@ struct PRMJTime {
 };
 
 /* Some handy constants */
+#define PRMJ_MSEC_PER_SEC	1000
 #define PRMJ_USEC_PER_SEC	1000000L
-#define PRMJ_USEC_PER_MSEC	1000L
+#define PRMJ_NSEC_PER_SEC	1000000000L
+#define PRMJ_USEC_PER_MSEC	1000
+#define PRMJ_NSEC_PER_MSEC	1000000L
 
 /* Return the current local time in micro-seconds */
 extern PR_IMPLEMENT(PRInt64)
