@@ -635,10 +635,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartDecode(imgIRequest *request, nsIPresContex
 }
 
 NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request, nsIPresContext *aPresContext, imgIContainer *image)
-{ 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
+{
 #ifdef DEBUG_pavlov
   NS_ENSURE_ARG(image);
 #else
@@ -671,24 +668,8 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartFrame(imgIRequest *request, nsIPresContext
 
 NS_IMETHODIMP nsImageBoxFrame::OnDataAvailable(imgIRequest *request, nsIPresContext *aPresContext, gfxIImageFrame *frame, const nsRect * rect)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
   nsBoxLayoutState state(aPresContext);
   this->Redraw(state);
-
-#if 0
-
-  // XXX we need to make sure that the reflow from the OnContainerStart has been
-  // processed before we start calling invalidate
-
-  float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
-  nsRect r(*rect);
-  r *= p2t; // convert to twips
-
-  Invalidate(aPresContext, nsRect(r.x, r.y, r.width, r.height), PR_FALSE);
-#endif
 
   return NS_OK;
 }
@@ -711,9 +692,6 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request, nsIPresContext
 
 NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIContainer *container, nsIPresContext *aPresContext, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
   nsBoxLayoutState state(aPresContext);
   this->Redraw(state);
 
