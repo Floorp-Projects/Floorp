@@ -115,7 +115,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 	char numBuf2[12];
 	sprintf(numBuf1, "%d", op);
 	sprintf(numBuf2, "%d", JSOP_LIMIT);
-	JS_ReportErrorNumber(cx, NULL, JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                        JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
 	return 0;
     }
     cs = &js_CodeSpec[op];
@@ -228,7 +229,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
       default: {
 	char numBuf[12];
 	sprintf(numBuf, "%x", cs->format);
-	JS_ReportErrorNumber(cx, NULL, JSMSG_UNKNOWN_FORMAT, numBuf); 
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                JSMSG_UNKNOWN_FORMAT, numBuf); 
 	return 0;
 	}
     }
@@ -793,7 +795,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    /* Do the loop body. */
 		    js_puts(jp, ") {\n");
 		    jp->indent += 4;
-		    oplen = js_CodeSpec[pc[cond]].length;
+                    oplen = (cond) ? js_CodeSpec[pc[cond]].length : 0;
 		    DECOMPILE_CODE(pc + cond + oplen, next - cond - oplen);
 		    jp->indent -= 4;
 		    js_printf(jp, "\t}\n");
