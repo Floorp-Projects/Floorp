@@ -58,10 +58,13 @@
             position="1"
             accesskey="&helpContents.accesskey;"
             key="key_openHelp"
-#ifdef MOZ_PHOENIX
-            oncommand="openHelp('firefox-help');"/>
-#elifdef MOZ_THUNDERBIRD
+# Use the Thunderbird content pack if we're building thunderbird. Otherwise use the Firefox content
+# pack. We should use else instead of elseif to prevent build errors if MOZ_PHOENIX and MOZ_THUNDERBIRD
+# are not built.
+#ifdef MOZ_THUNDERBIRD
             oncommand="openHelp('smtp-docs','chrome://help/locale/thunderbirdhelp.rdf');"/>
+#else
+            oncommand="openHelp('firefox-help');"/>
 #endif
 
 # Disable For IE Users menu item on Unix systems and if we're not building
