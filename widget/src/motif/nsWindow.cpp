@@ -46,6 +46,8 @@
 
 #define DBG 0
 
+#define SET_VALUES 0
+#undef SET_VALUES
 
 Widget gFirstTopLevelWindow = 0;
 
@@ -655,8 +657,12 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
   mBounds.y = aY;
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
-  //XtMoveWidget(mWidget, (Position)aX, (Position)GetYCoord(aY));
+
+#ifdef SET_VALUES
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
+#else
+  XtMoveWidget(mWidget, (Position)aX, (Position)GetYCoord(aY));
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -672,9 +678,14 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
   mBounds.height = aHeight;
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
+//#ifdef SET_VALUES
+
   XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 
-//    XtResizeWidget(mWidget, aWidth, aHeight, 0);
+//#else
+//  XtConfigureWidget(mWidget, mBounds.x, mBounds.y, aWidth, aHeight, 0);
+//  XtResizeWidget(mWidget, aWidth, aHeight, 0);
+//#endif
 }
 
     
@@ -691,8 +702,12 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
   mBounds.height = aHeight;
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
+#ifdef SET_VALUES
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
                         XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+#else
+  XtConfigureWidget(mWidget, aX, GetYCoord(aY), aWidth, aHeight, 0);
+#endif
 }
 
     
@@ -1082,8 +1097,11 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       Position y;
       XtVaGetValues(children[i], XtNx, &x, XtNy, &y, nsnull);
 
+#ifdef SET_VALUES
       XtVaSetValues(children[i], XmNx, x + aDx, XmNy, y + aDy, nsnull);
-    //  XtMoveWidget(children[i], x + aDx,  y + aDy);
+#else
+      XtMoveWidget(children[i], x + aDx,  y + aDy);
+#endif
     } 
   }
   
