@@ -226,9 +226,9 @@ nsMouseEvent	mouseevent;
 		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
 			
 		if(thewindow != nsnull)
-		{
+			{
 			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
-		}
+			}
 
 		switch(partcode)
 			{
@@ -252,6 +252,7 @@ nsMouseEvent	mouseevent;
 					mouseevent.eventStructType = NS_MOUSE_EVENT;
 					thewindow->DispatchMouseEvent(mouseevent);
 					gGrabWindow = (nsWindow*)thewindow;		// grab is in effect
+					this->SetCurrentWindow(thewindow);
 					}
 				break;
 			case inDrag:
@@ -381,9 +382,7 @@ nsMouseEvent	mouseevent;
 
 	if (*(long*)&mMousePoint == *(long*)&aTheEvent->where)
 		return;
-	
-	mouseevent.point.x = aTheEvent->where.h;
-	mouseevent.point.y = aTheEvent->where.v;					
+
 	mouseevent.time = 0;
 	mouseevent.isShift = FALSE;
 	mouseevent.isControl = FALSE;
@@ -401,13 +400,13 @@ nsMouseEvent	mouseevent;
 		windowcoord = aTheEvent->where;
 		GlobalToLocal(&windowcoord);
 		mouseevent.point.x = windowcoord.h;
-		mouseevent.point.y = windowcoord.v;					
+		mouseevent.point.y = windowcoord.v;				
 		gGrabWindow->DispatchMouseEvent(mouseevent);	
-		return;	
+		return;
 		}
 
+
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
-	
 	switch(partcode)
 		{
 		case inContent:
@@ -417,14 +416,25 @@ nsMouseEvent	mouseevent;
 				SetPort(whichwindow);
 				thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
 				}
+			if( (thewindow != nsnull))
+				thewindow = thewindow->FindWidgetHit(aTheEvent->where);
 				
-			if(thewindow != nsnull)
-				thewindow = thewindow->FindWidgetHit(aTheEvent->where);		
-			
 			if(thewindow)
 				{
 				if(lastwindow == nsnull || thewindow != lastwindow)
 					{
+					// mouseexit
+					if(lastwindow != nsnull)
+						{
+						mouseevent.message = NS_MOUSE_EXIT;
+						mouseevent.widget  = (nsWindow *) lastwindow;
+						windowcoord = aTheEvent->where;
+						GlobalToLocal(&windowcoord);
+						mouseevent.point.x = windowcoord.h;
+						mouseevent.point.y = windowcoord.v;					
+						lastwindow->DispatchMouseEvent(mouseevent);
+						}
+
 					// mouseenter
 					this->SetCurrentWindow(thewindow);
 					mouseevent.message = NS_MOUSE_ENTER;
@@ -433,18 +443,17 @@ nsMouseEvent	mouseevent;
 					GlobalToLocal(&windowcoord);
 					mouseevent.point.x = windowcoord.h;
 					mouseevent.point.y = windowcoord.v;					
-					thewindow->DispatchMouseEvent(mouseevent);
+					thewindow->DispatchMouseEvent(mouseevent);	
 					}
 				else
 					{
 					// mousedown inside the content region
 					mouseevent.message = NS_MOUSE_MOVE;
 					mouseevent.widget  = (nsWindow *) thewindow;
-					SetPort(whichwindow);
 					windowcoord = aTheEvent->where;
 					GlobalToLocal(&windowcoord);
 					mouseevent.point.x = windowcoord.h;
-					mouseevent.point.y = windowcoord.v;					
+					mouseevent.point.y = windowcoord.v;		
 					thewindow->DispatchMouseEvent(mouseevent);
 					break;
 					}
