@@ -653,7 +653,7 @@
     </implementation>
   </binding>
 
-  <!-- searchvalue - a widget which dynamically changes it's user interface
+  <!-- searchvalue - a widget which dynamically changes its user interface
        depending on what type of data it's supposed to be showing
        currently handles arbitrary text entry, and menulists for 
        priority, status, junk status, hasAttachment status, and addressbook
@@ -928,7 +928,7 @@
             var children = parentNode.childNodes;
             var len=children.length;
             for (var i=0; i<len; i++) {
-              var node = children[i];
+              var node = children[i];              
               var stringTag = node.getAttribute("stringTag");
               if (stringTag) {
                 var attr = (node.tagName == "label") ? "value" : "label";
@@ -945,10 +945,8 @@
           <![CDATA[
             this.fillStringsForChildren(menulist.firstChild, bundle);
 
-            // to work around bug #78429, set and reset the selectedItem
-            var item = menulist.selectedItem;
-            menulist.selectedItem = null;
-            menulist.selectedItem = item;
+            // to work around bug #78429
+            menulist.setAttribute("label", menulist.selectedItem.label);           
           ]]>
         </body>
       </method>
@@ -959,7 +957,7 @@
 
         // intialize the priority picker
         this.initialize(document.getAnonymousNodes(this)[1], bundle);
-
+       
         // initialize the status picker
         this.initialize(document.getAnonymousNodes(this)[2], bundle);
 
