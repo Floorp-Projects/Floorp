@@ -648,7 +648,7 @@ var BookmarksCommand = {
       kFilePicker.appendFilters(kFilePickerIID.filterHTML | kFilePickerIID.filterAll);
       var fileName;
       if (kFilePicker.show() != kFilePickerIID.returnCancel) {
-        fileName = kFilePicker.fileURL.spec;
+        fileName = kFilePicker.file.path;
         if (!fileName) return;
       }
       else return;
@@ -692,7 +692,7 @@ var BookmarksCommand = {
       kFilePicker.defaultString = "bookmarks.html";
       var fileName;
       if (kFilePicker.show() != kFilePickerIID.returnCancel) {
-        fileName = kFilePicker.fileURL.spec;
+        fileName = kFilePicker.file.path;
         if (!fileName) return;
       }
       else return;

@@ -4208,36 +4208,32 @@ nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, PRBool fallbackFla
 nsresult
 nsBookmarksService::importBookmarks(nsISupportsArray *aArguments)
 {
-    // look for #URL which is the "file:///" URL to import
-    nsresult        rv;
-    nsCOMPtr<nsIRDFNode>    aNode;
-    if (NS_FAILED(rv = getArgumentN(aArguments, kNC_URL, 0, getter_AddRefs(aNode))))
-        return rv;
-    nsCOMPtr<nsIRDFLiteral>     pathLiteral = do_QueryInterface(aNode);
-    if (!pathLiteral)   return NS_ERROR_NO_INTERFACE;
-
-    const PRUnichar     *pathUni = nsnull;
+    // look for #URL which is the file path to import
+    nsresult rv;
+    nsCOMPtr<nsIRDFNode> aNode;
+    rv = getArgumentN(aArguments, kNC_URL, 0, getter_AddRefs(aNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIRDFLiteral> pathLiteral = do_QueryInterface(aNode, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_NO_INTERFACE);
+    const PRUnichar *pathUni = nsnull;
     pathLiteral->GetValueConst(&pathUni);
-    if (!pathUni)   return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_TRUE(pathUni, NS_ERROR_NULL_POINTER);
 
-    nsAutoString        fileName(pathUni);
     nsCOMPtr<nsILocalFile> file;
-    NS_NewLocalFile(fileName, PR_TRUE, getter_AddRefs(file));
-    NS_ENSURE_TRUE(file, NS_ERROR_UNEXPECTED);
-
+    rv = NS_NewLocalFile(nsDependentString(pathUni), PR_TRUE, getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
     PRBool isFile;
     rv = file->IsFile(&isFile);
-    if(NS_FAILED(rv) || !isFile)
-        return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && isFile, NS_ERROR_UNEXPECTED);
 
     // figure out where to add the imported bookmarks
-    nsCOMPtr<nsIRDFResource>    newBookmarkFolder;
-    if (NS_FAILED(rv = getFolderViaHint(kNC_NewBookmarkFolder, PR_TRUE,
-            getter_AddRefs(newBookmarkFolder))))
-        return rv;
+    nsCOMPtr<nsIRDFResource> newBookmarkFolder;
+    rv = getFolderViaHint(kNC_NewBookmarkFolder, PR_TRUE, 
+                          getter_AddRefs(newBookmarkFolder));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // read 'em in
-    BookmarkParser      parser;
+    BookmarkParser parser;
     parser.Init(file, mInner, PR_TRUE);
 
     // Note: can't Begin|EndUpdateBatch() this as notifications are required
@@ -4249,34 +4245,30 @@ nsBookmarksService::importBookmarks(nsISupportsArray *aArguments)
 nsresult
 nsBookmarksService::exportBookmarks(nsISupportsArray *aArguments)
 {
-    // look for #URL which is the "file:///" URL to export
+    // look for #URL which is the file path to export
     nsCOMPtr<nsIRDFNode> node;
     nsresult rv = getArgumentN(aArguments, kNC_URL, 0, getter_AddRefs(node));
-    if (NS_FAILED(rv)) return rv;
-
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(node, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    const PRUnichar* path = nsnull;
-    literal->GetValueConst(&path);
-    if (!path)
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_NO_INTERFACE);
+    const PRUnichar* pathUni = nsnull;
+    literal->GetValueConst(&pathUni);
+    NS_ENSURE_TRUE(pathUni, NS_ERROR_NULL_POINTER);
 
     // determine file type to export; default to HTML unless told otherwise
     const PRUnichar* format = nsnull;
     rv = getArgumentN(aArguments, kRDF_type, 0, getter_AddRefs(node));
     if (NS_SUCCEEDED(rv))
     {
-        literal = do_QueryInterface(node);
-        if (literal)
-        {
-            literal->GetValueConst(&format);
-        }
+        literal = do_QueryInterface(node, &rv);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_NO_INTERFACE);
+        literal->GetValueConst(&format);
+        NS_ENSURE_TRUE(format, NS_ERROR_NULL_POINTER);
     }
 
-    nsAutoString fileName(path);
     nsCOMPtr<nsILocalFile> file;
-    NS_NewLocalFile(fileName, PR_TRUE, getter_AddRefs(file));
+    rv = NS_NewLocalFile(nsDependentString(pathUni), PR_TRUE, getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (NS_LITERAL_STRING("RDF").Equals(format, nsCaseInsensitiveStringComparator()))
     {
