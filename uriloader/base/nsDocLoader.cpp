@@ -593,6 +593,15 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
     // called each time a channel is added to the group.
     nsresult rv;
 
+    if (!mIsLoadingDocument) {
+        PRUint32 loadAttribs = 0;
+
+        aChannel->GetLoadAttributes(&loadAttribs);
+        if (loadAttribs & nsIChannel::LOAD_DOCUMENT_URI) {
+            mIsLoadingDocument = PR_TRUE;
+        }
+    }
+
     //
     // Only fire an OnStartDocumentLoad(...) if the document loader
     // has initiated a load...  Otherwise, this notification has

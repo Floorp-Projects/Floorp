@@ -145,6 +145,15 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     // part and move on.
                     rv = mFinalListener->OnStopRequest(mPartChannel, context, NS_OK, nsnull);
                     if (NS_FAILED(rv)) break;
+
+                    // Remove the channel from its load group (if any)
+                    nsCOMPtr<nsILoadGroup> loadGroup;
+            
+                    (void) mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+                    if (loadGroup) {
+                        loadGroup->RemoveChannel(mPartChannel, context, NS_OK, nsnull);
+                    }
+
                     mPartChannel = 0;
                 }
                 // the boundary occurs at the beginning of the data.
@@ -235,6 +244,8 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                 if (    (newLine[mLineFeedIncrement] == '\n')
                      || (newLine[mLineFeedIncrement] == '\r')
                      || (newLine == cursor) ) {
+                    nsCOMPtr<nsILoadGroup> loadGroup;
+
                     // that's it we've processed all the headers and 
                     // this is no longer a mNewPart
                     mNewPart = PR_FALSE;
@@ -249,12 +260,13 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                         nsAllocator::Free(buffer);
                         return rv;
                     }
+                    (void) channel->GetLoadGroup(getter_AddRefs(loadGroup));
 
                     if (mContentType.Length() < 1)
                         mContentType = "text/html"; // default to text/html, that's all we'll ever see anyway
                     rv = NS_NewInputStreamChannel(partURI, mContentType.GetBuffer(), mContentLength,
                                                   nsnull,    // inStr
-                                                  nsnull,    // loadGroup
+                                                  loadGroup, // loadGroup
                                                   nsnull,    // notificationCallbacks
                                                   nsIChannel::LOAD_NORMAL,
                                                   nsnull,    // originalURI
@@ -263,6 +275,11 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     if (NS_FAILED(rv)) {
                         nsAllocator::Free(buffer);
                         return rv;
+                    }
+
+                    // Add the new channel to the load group (if any)
+                    if (loadGroup) {
+                      loadGroup->AddChannel(mPartChannel, nsnull);
                     }
 
                     // Let's start off the load. NOTE: we don't forward on the channel passed
@@ -327,6 +344,14 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
             mNewPart = PR_TRUE;
             rv = mFinalListener->OnStopRequest(mPartChannel, context, NS_OK, nsnull);
             if (NS_FAILED(rv)) break;
+
+            // Remove the channel from its load group (if any)
+            nsCOMPtr<nsILoadGroup> loadGroup;
+            
+            (void) mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+            if (loadGroup) {
+                loadGroup->RemoveChannel(mPartChannel, context, NS_OK, nsnull);
+            }
 
             mPartChannel = 0; // kill this channel. it's done
             if (done || (*(boundary+mBoundaryStrLen+1) == '-') ) {

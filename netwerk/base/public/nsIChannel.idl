@@ -119,6 +119,7 @@ interface nsIChannel : nsIRequest
                                                    * nsIProgressEventSink, or keep this load from
                                                    * completing the nsILoadGroup it may belong to */
 
+    const unsigned long LOAD_DOCUMENT_URI = 1 << 1;
     //
     // The following flags control caching behavior.  Not all protocols pay
     // attention to all these flags, but they are applicable to more than one

@@ -1828,8 +1828,27 @@ nsresult nsWebShell::CreateViewer(nsIChannel* aChannel,
   rv = aChannel->GetLoadGroup(getter_AddRefs(currentLoadGroup));
   if (NS_SUCCEEDED(rv))
   {
-    if (currentLoadGroup.get() != loadGroup.get())
+    if (currentLoadGroup.get() != loadGroup.get()) {
+      nsLoadFlags loadAttribs = 0;
+
+      //Cancel any URIs that are currently loading...
+/// XXX: Need to do this eventually      Stop();
+      //
+      // Retarget the document to this loadgroup...
+      //
+      if (currentLoadGroup) {
+        (void) currentLoadGroup->RemoveChannel(aChannel, nsnull, nsnull, nsnull);
+      }
       aChannel->SetLoadGroup(loadGroup);
+
+      // Mark the channel as being a document URI...
+      aChannel->GetLoadAttributes(&loadAttribs);
+      loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+
+      aChannel->SetLoadAttributes(loadAttribs);
+
+      loadGroup->AddChannel(aChannel, nsnull);
+    }
   }
 
   /*

@@ -217,7 +217,7 @@ nsCachedChromeChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 NS_IMETHODIMP
 nsCachedChromeChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    NS_NOTREACHED("don't do that");
+    // XXX: NS_NOTREACHED("don't do that");
     return NS_OK;
 }
 
@@ -439,6 +439,8 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
         // load the thing.
         rv = nsCachedChromeChannel::Create(aURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
+
+        result->SetLoadGroup(aLoadGroup);
     }
     else {
         // Miss. Resolve the chrome URL using the registry and do a
