@@ -236,12 +236,14 @@ var BookmarksMenu = {
     else
       border = size/2;
     
+    // We are going to invert the drop-location for RTL PersonalBar
+    isLtrPB = (window.getComputedStyle(document.getElementById("PersonalToolbar"),'').direction == 'ltr');
     // in the first region?
     if (clientCoordValue-coordValue < border)
-      return BookmarksUtils.DROP_BEFORE;
+      return (isLtrPB? BookmarksUtils.DROP_BEFORE : BookmarksUtils.DROP_AFTER);
     // in the last region?
     if (clientCoordValue-coordValue >= size-border)
-      return BookmarksUtils.DROP_AFTER;
+      return (isLtrPB? BookmarksUtils.DROP_AFTER : BookmarksUtils.DROP_BEFORE);
     // must be in the middle somewhere
     return BookmarksUtils.DROP_ON;
   },
@@ -410,6 +412,16 @@ var BookmarksMenuDNDObserver = {
     var selection = BookmarksUtils.getSelectionFromXferData(aDragSession);
 
     var orientation = BookmarksMenu.getBTOrientation(aEvent);
+
+    // For RTL PersonalBar bookmarks buttons, orientation should be inverted (only in drop case)
+    // because "before" (to the left) on the screen translates to "after" in the collection of items.
+    if (target.localName == "toolbarbutton")
+      if (window.getComputedStyle(document.getElementById("PersonalToolbar"),'').direction == 'rtl')
+        if (orientation == BookmarksUtils.DROP_AFTER)
+          orientation = BookmarksUtils.DROP_BEFORE;
+        else if (orientation == BookmarksUtils.DROP_BEFORE)
+          orientation = BookmarksUtils.DROP_AFTER;
+
     var selTarget   = BookmarksMenu.getBTTarget(target, orientation);
 
     const kDSIID      = Components.interfaces.nsIDragService;
