@@ -1421,7 +1421,7 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
     aRect.width = swp.cx;
     aRect.height = swp.cy;
     aRect.x = swp.x;
-    aRect.y = swp.y;
+    aRect.y = gWidgetModuleData->szScreen.cy - (swp.y+swp.cy);
   } else {
     aRect = mBounds;
   }
