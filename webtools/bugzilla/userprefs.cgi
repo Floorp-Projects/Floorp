@@ -299,7 +299,7 @@ sub showExcludeSelf (\%) {
                 <table><tr><td colspan=2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <b>Global options:</b></tr>
                 <tr><td width=150></td><td>
-                Do not email me bugs that I change
+                Only email me reports of changes made by other people
              <input type="checkbox" name="ExcludeSelf" VALUE="on" $excludeSelf>
                 <br>
                 </td>
