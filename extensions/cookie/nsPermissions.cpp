@@ -234,7 +234,7 @@ Permission_AddHost(char * host, PRBool permission, PRInt32 type, PRBool save) {
   }
 
   /* find existing entry for host */
-  permission_HostStruct * hostStruct;
+  permission_HostStruct * hostStruct = nsnull; // initialized only to avoid warning message
   PRBool HostFound = PR_FALSE;
   PRInt32 hostCount = permission_list->Count();
   PRInt32 i;
