@@ -35,6 +35,10 @@ endif
 DIRS  = global/$(THEME_PLATFORM) \
 	$(NULL)
 
+ifeq (,$(filter mac cocoa OS2 WINNT,$(OS_ARCH)))
+DIRS  += global/unix
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 libs::
