@@ -99,10 +99,6 @@ function onLoad()
 {
   initDialogObject();
 
-  // Change "OK" to "Find".
-  dialog.find.label = document.getElementById("fBLT").getAttribute("label");
-  dialog.find.accessKey = document.getElementById("fBLT").getAttribute("accesskey");
-
   // get the find instance
   var arg0 = window.arguments[0];
   // If the dialog was opened from window.find(),

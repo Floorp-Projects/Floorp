@@ -9,4 +9,5 @@
 <!ENTITY search.doesntcontain.label     "doesn't contain">
 <!ENTITY search.for.label               "Find visited documents whose">
 <!ENTITY findHistory.title              "Find in History">
+<!ENTITY findButton.label               "Find">
 

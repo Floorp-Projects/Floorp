@@ -12,4 +12,4 @@
 <!ENTITY save.query.label               "Save query in bookmarks">
 <!ENTITY search.for.label               "Find Bookmarks whose">
 <!ENTITY findBookmark.title             "Find Bookmarks">
-
+<!ENTITY findButton.label               "Find">

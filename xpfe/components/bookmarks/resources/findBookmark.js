@@ -43,7 +43,6 @@ function Startup()
   initServices();
   initBMService();
   gOKButton = document.documentElement.getButton("accept");
-  gOKButton.label = BookmarksUtils.getLocaleString("search_button_label");
   gOKButton.disabled = true;
   gSearchField = document.getElementById("searchField");
   gSearchField.focus();
