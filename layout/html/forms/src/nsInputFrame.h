@@ -90,6 +90,9 @@ public:
                                 PRBool& aHeightExplicit, nscoord& aRowSize);
   // nsLeafFrame overrides
 
+  NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
+  NS_METHOD SizeTo(nscoord aWidth, nscoord aHeight);
+
   /** 
     * Respond to a gui event
     * @see nsIFrame::HandleEvent
@@ -99,8 +102,6 @@ public:
                          nsEventStatus& aEventStatus);
 
   NS_IMETHOD  SetRect(const nsRect& aRect);
-
-  virtual PRBool IsHidden();
 
   /**
     * Draw this frame within the context of a presentation context and rendering context
@@ -121,6 +122,11 @@ public:
                           ReflowStatus&    aStatus);
 
   // new behavior
+
+  /**
+   * Return true if the underlying form element is a hidden form element
+   */
+  PRBool IsHidden();
 
   /**
     * Get the class id of the widget associated with this frame
@@ -175,6 +181,8 @@ protected:
     */
   PRBool BoundsAreSet();
 
+  void SetViewVisiblity(nsIPresContext* aPresContext, PRBool aShow);
+
  /**
     * Get the size that this frame would occupy without any constraints
     * @param aPresContext the presentation context
@@ -204,7 +212,10 @@ protected:
   nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
                       nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
-  nsSize       mCacheBounds;
+  // Location of the view within the frame. The view will be inset by
+  // the border+padding.
+  nsRect mViewBounds;
+
   nsMouseState mLastMouseState;
 };
 

@@ -386,8 +386,10 @@ nsInputButtonFrame::ResizeReflow(nsIPresContext* aPresContext,
       aMaxElementSize->width = aDesiredSize.width;
       aMaxElementSize->height = aDesiredSize.height;
     }
-    mCacheBounds.width  = aDesiredSize.width;
-    mCacheBounds.height = aDesiredSize.height;
+    mViewBounds.x = 0;
+    mViewBounds.y = 0;
+    mViewBounds.width = aDesiredSize.width;
+    mViewBounds.height = aDesiredSize.height;
     aStatus = frComplete;
     return NS_OK;
   }
