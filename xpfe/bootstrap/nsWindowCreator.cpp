@@ -64,6 +64,10 @@
    Mozilla version, which calls through to nsAppShellService.
 */
 
+#ifdef USE_POPUP_MANAGER
+#undef USE_POPUP_MANAGER
+#endif
+
 #include "nsCOMPtr.h"
 #include "nsAppShellCIDs.h"
 #include "nsNetUtil.h"
