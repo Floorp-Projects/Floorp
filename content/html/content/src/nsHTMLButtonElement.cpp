@@ -467,10 +467,19 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     case NS_MOUSE_LEFT_CLICK:
       {
-        // Tell the frame about the click
-        nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-        if (formControlFrame) {
-          formControlFrame->MouseClicked(aPresContext);
+        if (mType == NS_FORM_BUTTON_SUBMIT || mType == NS_FORM_BUTTON_RESET) {
+          nsFormEvent event;
+          event.eventStructType = NS_FORM_EVENT;
+          event.message         = (mType == NS_FORM_BUTTON_RESET)
+                                   ? NS_FORM_RESET : NS_FORM_SUBMIT;
+          event.originator      = this;
+          nsEventStatus status  = nsEventStatus_eIgnore;
+
+          nsCOMPtr<nsIPresShell> presShell;
+          aPresContext->GetShell(getter_AddRefs(presShell));
+          nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+          presShell->HandleEventWithTarget(&event, nsnull, form,
+                                           NS_EVENT_FLAG_INIT, &status);
         }
       }
       break;// NS_MOUSE_LEFT_CLICK
