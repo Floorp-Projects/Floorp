@@ -100,6 +100,42 @@
     </handlers>    
   </binding>
 
+  <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <content>
+      <xul:hbox class="textbox-input-box" flex="1">
+        <html:input class="textbox-input" flex="1" anonid="input"
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex"/>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="_timer">null</field>
+      <property name="callback"
+                onset="this.setAttribute('callback', val); return val;"
+                onget="return this.getAttribute('callback');"/>
+      <property name="timeout"
+                onset="this.setAttribute('timeout', val); return val;"
+                onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 0;"/>
+    </implementation>    
+    <handlers>
+      <handler event="input">
+        <![CDATA[
+          if (this._timer)
+            clearTimeout(this._timer);
+          this._timer = setTimeout(this.callback, this.timeout);
+        ]]>
+      </handler>
+      <handler event="keypress">
+        <![CDATA[
+          if (event.keyCode == 13) {
+            if (this._timer)
+              clearTimeout(this._timer);
+            eval(this.callback);
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content>
       <xul:hbox class="textbox-input-box" flex="1">

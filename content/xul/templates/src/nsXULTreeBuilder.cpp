@@ -1061,8 +1061,11 @@ nsXULTreeBuilder::Rebuild()
 
     nsresult rv;
 
+    PRInt32 count = mRows.Count();
     mRows.Clear();
     mConflictSet.Clear();
+    if (mBoxObject)
+      mBoxObject->RowCountChanged(0, -count);
 
     rv = CompileRules();
     if (NS_FAILED(rv)) return rv;

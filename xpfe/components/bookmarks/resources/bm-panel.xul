@@ -81,6 +81,13 @@
     <toolbarbutton id="btnFindBookmarks" label="&command.findBookmarks.label;"
             oncommand="document.getElementById('bookmarks-view').openFindDialog();"/>
   </hbox>
+
+  <hbox id="search-bar" class="toolbar" align="center">
+    <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
+    <textbox id="search-box" flex="1"
+             type="timed" timeout="500"
+             callback="document.getElementById('bookmarks-view').searchBookmarks(document.getElementById('search-box').value)"/>
+  </hbox>
   
   <bookmarks-tree id="bookmarks-view" class="sidebar" type="single-column" flex="1"/>
 
