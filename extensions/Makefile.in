@@ -30,6 +30,10 @@ ifdef ENABLE_PICS
 DIRS += pics
 endif
 
+ifdef NECKO
+DIRS += cookie
+endif
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
