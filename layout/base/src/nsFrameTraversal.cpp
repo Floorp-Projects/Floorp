@@ -242,7 +242,7 @@ nsLeafIterator::Next()
         break;
       }
       else
-        if (NS_FAILED(parent->GetParent(&result)) || !result || (NS_SUCCEEDED(result->GetFrameType(getter_AddRefs(atom))) && atom == nsLayoutAtoms::rootFrame)){
+        if (NS_FAILED(parent->GetParent(&result)) || !result || (NS_SUCCEEDED(result->GetFrameType(getter_AddRefs(atom))) && atom.get() == nsLayoutAtoms::rootFrame)){
           result = nsnull;
           break;
         }
