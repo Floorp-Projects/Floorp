@@ -55,6 +55,7 @@
 #include "nsCRT.h"
 #include "CHGeckoUtils.h"
 #include "nsIWebProgressListener.h"
+#include "nsIWebBrowserChrome.h"
 
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
@@ -163,6 +164,35 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 {
     [super windowDidLoad];
 
+    // hide the resize control if specified by the chrome mask
+    if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) )
+      [[self window] setShowsResizeIndicator:NO];
+    
+    if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR) ) {
+      // remove the status bar at the bottom and adjust the height of the content area
+      // downwards
+      float height = [mStatusBar frame].size.height;
+      [mStatusBar removeFromSuperview];
+#if NOT_YET
+// for some reason, i can't get this working correctly. I'm not sure why, so i'm erring on the
+// side of safety
+      [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y - height,
+                               [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
+#endif
+      // clear out everything in the status bar we were holding on to. This will cause us to
+      // pass nil for these status items into the CHBrowserwWrapper which is what we want. We'll
+      // crash if we give them things that have gone away.
+      mProgress = nil;
+      mStatus = nil;
+      mLock = nil;
+    }
+    else {
+      // Retain with a single extra refcount.  This allows the CHBrowserWrappers
+      // to remove the progress meter from its superview without having to 
+      // worry about retaining and releasing it.
+      [mProgress retain];
+    }
+    
   [[mURLBar cell] setImage: [NSImage imageNamed:@"smallbookmark"]];
   
     // Get our saved dimensions.
@@ -174,12 +204,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
     mInitialized = YES;
 
     mDrawerCachedFrame = NO;
-    
-    // Retain with a single extra refcount.  This allows the CHBrowserWrappers
-    // to remove the progress meter from its superview without having to 
-    // worry about retaining and releasing it.
-    [mProgress retain];
-    
+        
     [[self window] setAcceptsMouseMovedEvents: YES];
     
     [self setupToolbar];
@@ -201,6 +226,14 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
     [self setupSidebarTabs];
 
     [mPersonalToolbar initializeToolbar];
+    if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR) ) {
+      // remove the personal toolbar and adjust the content area upwards
+      float height = [mPersonalToolbar frame].size.height;
+      [mPersonalToolbar removeFromSuperview];
+      [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y,
+                               [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
+    }
+    
 }
 
 - (void)drawerWillOpen: (NSNotification*)aNotification
@@ -268,10 +301,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 
 - (void)setupToolbar
 {
-  if (mChromeMask) {
-    printf("Uh-oh. %d\n", mChromeMask);
-  }
-  
+  if ( !mChromeMask || (mChromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR) ) {  
     NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:BrowserToolbarIdentifier] autorelease];
     
     [toolbar setDisplayMode:NSToolbarDisplayModeDefault];
@@ -279,6 +309,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
     [toolbar setAutosavesConfiguration:YES];
     [toolbar setDelegate:self];
     [[self window] setToolbar:toolbar];
+  }
 }
 
 

@@ -56,6 +56,7 @@ class nsIDOMNode;
   IBOutlet NSImageView* mLock;
   IBOutlet id mLocationSheetWindow;
   IBOutlet id mLocationSheetURLField;
+  IBOutlet NSView* mStatusBar;					// contains the status text, progress bar, and lock
 
   IBOutlet id mSidebarBrowserView;
   IBOutlet id mSidebarBookmarksDataSource;
