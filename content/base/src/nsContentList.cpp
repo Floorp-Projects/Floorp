@@ -539,8 +539,12 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   
   if (MayContainRelevantNodes(aContent->GetParent())) {
     if (Match(aContent)) {
-      // We may now match a new node.  Just dirty ourselves.
-      mState = LIST_DIRTY;
+      if (mElements.IndexOf(aContent) == -1) {
+        // We match aContent now, and it's not in our list already.  Just dirty
+        // ourselves; this is simpler than trying to figure out where to insert
+        // aContent.
+        mState = LIST_DIRTY;
+      }
     } else {
       // We no longer match aContent.  Remove it from our list.  If
       // it's already not there, this is a no-op, which is fine.
