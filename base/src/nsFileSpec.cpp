@@ -479,7 +479,7 @@ void nsFilePath::operator = (const nsFilePath& inOther)
 {
     nsFileSpecHelpers::StringAssign(mPath, inOther.mPath);
 #ifdef XP_MAC
-    mNativeFileSpec = inOther.GetNativeSpec();
+    mFileSpec = inOther.GetFileSpec();
 #endif
 }
 
@@ -727,10 +727,14 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
     if (inSpec.Error())
     	return;
 	AliasHandle	aliasH;
+/*
+        This is killing the tree.  mcmullen will need to look at this.
+
 	OSErr err = NewAlias(nil, inSpec.operator const FSSpec* const (), &aliasH);
 	if (err != noErr)
 		return;
-
+*/
+return -50;
 	PRUint32 bytes = GetHandleSize((Handle) aliasH);
 	HLock((Handle) aliasH);
 	char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
