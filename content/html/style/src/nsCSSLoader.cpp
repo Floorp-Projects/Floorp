@@ -1071,7 +1071,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
   aSheet->GetTitle(title);
   aSheet->SetEnabled(! IsAlternate(title));
 
-  nsISupportsKey key(mDocument);
+  nsVoidKey key(mDocument);
   nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
   if (! sheetMap) {
     sheetMap = new nsVoidArray();
@@ -1111,7 +1111,7 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsISupportsKey key(aParentSheet);
+  nsVoidKey key(aParentSheet);
   nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
   if (! sheetMap) {
     sheetMap = new nsVoidArray();
