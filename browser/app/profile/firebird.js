@@ -46,7 +46,7 @@ pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&q=");
 
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
-pref("general.useragent.misc", "rv:1.3b");
+pref("general.useragent.misc", "rv:1.4a");
 pref("general.useragent.vendor", "Phoenix");
 pref("general.useragent.vendorSub", "0.5");
 
@@ -83,6 +83,7 @@ pref("browser.anchor_color",                "#0000EE");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
 pref("browser.blink_allowed",               true);
+pref("browser.enable_automatic_image_resizing", true);
 
 pref("browser.display.use_focus_colors",    false);
 pref("browser.display.focus_background_color", "#117722");
@@ -111,10 +112,13 @@ pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);
 pref("accessibility.typeaheadfind", true);
+pref("accessibility.typeaheadfind.autostart", true);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
+pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "default");
+pref("accessibility.typeaheadfind.enablesound", true);
 
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
@@ -388,7 +392,7 @@ pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
 // Maximum number of consecutive redirects before aborting.
-pref("network.http.redirection-limit", 10);
+pref("network.http.redirection-limit", 20);
 
 // Enable http compression: comment this out in case of problems with 1.1
 pref("network.http.accept-encoding" ,"gzip,deflate,compress;q=0.9");
