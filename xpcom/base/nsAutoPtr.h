@@ -573,7 +573,7 @@ class nsAutoArrayPtr
           return *this;
         }
 
-      nsAutoArrayPtr<T>& operator=( const nsAutoArrayPtr<T>& rhs )
+      nsAutoArrayPtr<T>& operator=( nsAutoArrayPtr<T>& rhs )
           // assign by transferring ownership from another smart pointer.
         {
           assign(rhs.forget());
