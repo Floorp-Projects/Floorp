@@ -322,6 +322,54 @@
     </nc:subheadings>
   </rdf:Description>
 
+  <rdf:Description about="#nav">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="nav-page-info" nc:name="Viewing Page Info" nc:link="chrome://help/locale/page_info_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#nav-page-info">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="pageinfo_general" nc:name="General Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_general"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#nav-page-info">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="pageinfo_forms" nc:name="Forms Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_forms"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#nav-page-info">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="pageinfo_links" nc:name="Links Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_links"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#nav-page-info">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="pageinfo_media" nc:name="Media Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_media"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#nav-page-info">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="pageinfo_security" nc:name="Security Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_security"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
 
 <!-- MAIL HELP SECTION -->
 
