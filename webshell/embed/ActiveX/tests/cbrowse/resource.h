@@ -42,7 +42,7 @@
 #define IDC_CHECK1                      1021
 #define IDC_EDIT1                       1022
 #define IDC_EDITMODE                    1023
-#define IDC_BUTTON1                     1024
+#define IDC_EDITBAR_MARKER              1025
 #define IDB_BOLD                        32771
 #define IDB_ITALIC                      32772
 #define IDB_UNDERLINE                   32773
@@ -58,7 +58,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32779
-#define _APS_NEXT_CONTROL_VALUE         1025
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           107
 #endif
 #endif
