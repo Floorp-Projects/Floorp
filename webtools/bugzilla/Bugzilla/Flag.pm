@@ -323,10 +323,11 @@ sub modify {
         # being requested, otherwise we'll get false positives and think 
         # the user changed the flag when they didn't.
         next if 
-          $status eq $flag->{'status'}    # the flag's status hasn't changed, and
-          && (!$flag->{'is_requesteeble'} # the flag isn't specifically requestable, or
-              || $status ne "?"           # the flag isn't being requested, or
-              || ($flag->{'requestee'}    # the requestee hasn't changed
+          $status eq $flag->{'status'}  # the flag's status hasn't changed, and:
+          && (!$flag->{'type'}->{'is_requesteeble'} 
+                                        # the flag isn't specifically requestable
+              || $status ne "?"         # or the flag isn't being requested
+              || ($flag->{'requestee'}  # or the requestee hasn't changed
                   && ($requestee_email eq $flag->{'requestee'}->{'email'})));
         
         # Since the status is validated, we know it's safe, but it's still
