@@ -316,7 +316,7 @@ Contributor(s): ______________________________________. -->
          intended to hold (html) content -->
     <!-- id's use is a mystery -->
     <box context="context" flex="100%">
-    <html:iframe type="content-primary" id="content" src="about:blank" flex="100%"/>
+    <browser type="content-primary" id="content" src="about:blank" flex="100%"/>
     </box>
       <box align="horizontal" id="status-bar" chromeclass="status">
         <titledbutton value="&notifCom.label;" onclick="doTests()"/>
