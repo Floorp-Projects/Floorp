@@ -188,21 +188,10 @@ function UpdateBackForwardButtons()
   }
 }
 
-function RegisterTabOpenObserver()
+function CheckPageReport(event)
 {
-  const observer = {
-    observe: function(subject, topic, data)
-    {
-      if (topic != "open-new-tab-request" || subject != window)
-        return;
 
-      delayedOpenTab(data);
-    }
-  };
 
-  const service = Components.classes["@mozilla.org/observer-service;1"]
-    .getService(Components.interfaces.nsIObserverService);
-  service.addObserver(observer, "open-new-tab-request", false);
 }
 
 function Startup()
@@ -213,6 +202,8 @@ function Startup()
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   
+  gBrowser.addEventListener("DOMCheckPageReport", CheckPageReport, false);
+
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 

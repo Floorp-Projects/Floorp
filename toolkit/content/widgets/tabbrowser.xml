@@ -515,16 +515,6 @@
         </body>
       </method>
 
-      <method name="onPopupBlocked">
-        <parameter name="evt"/>
-        <body>
-          <![CDATA[
-            
-            evt.preventBubble();
-          ]]> 
-        </body>
-      </method>
-
       <method name="onTitleChanged">
         <parameter name="evt"/>
         <body>
@@ -607,8 +597,7 @@
 
             // Get the first tab all hooked up with a title listener and popup blocking listener.
             this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-            this.mCurrentBrowser.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
-
+            
             this.setTabTitle(this.mCurrentTab);
 
             // Hook up our favicon.
@@ -681,8 +670,7 @@
             this.mPanelContainer.appendChild(b);
 
             b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-            b.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
-
+            
             if (this.mStrip.collapsed)
               this.setStripVisibilityTo(true);
 
@@ -779,8 +767,7 @@
 
             // Remove our title change and blocking listeners
             oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
-            oldBrowser.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
-
+            
             // We are no longer the primary content area.
             oldBrowser.setAttribute("type", "content");
 
@@ -1169,7 +1156,6 @@
             this.mTabFilters[i] = null;
             this.mTabListeners[i] = null;
             this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
-            this.mPanelContainer.childNodes[i].removeEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
           }
           this.mPanelContainer.removeEventListener("DOMLinkAdded", this.onLinkAdded, false);
         ]]>
