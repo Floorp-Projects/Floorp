@@ -381,6 +381,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aGtkWidgetType = MOZ_GTK_TAB;
     }
     break;
+  case NS_THEME_WINDOW:
+  case NS_THEME_DIALOG:
+    aGtkWidgetType = MOZ_GTK_WINDOW;
+    break;
   default:
     return PR_FALSE;
   }
@@ -582,7 +586,9 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
       aWidgetType == NS_THEME_PROGRESSBAR ||
       aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL ||
-      aWidgetType == NS_THEME_TOOLTIP) {
+      aWidgetType == NS_THEME_TOOLTIP ||
+      aWidgetType == NS_THEME_WINDOW ||
+      aWidgetType == NS_THEME_DIALOG) {
     *aShouldRepaint = PR_FALSE;
     return NS_OK;
   }
@@ -689,8 +695,10 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
     // case NS_THEME_SLIDER_TICK:
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
-    // case NS_THEME_WINDOW:
-    // case NS_THEME_DIALOG:
+#ifdef MOZ_WIDGET_GTK2
+  case NS_THEME_WINDOW:
+  case NS_THEME_DIALOG:
+#endif
     // case NS_THEME_MENU:
     // case NS_THEME_MENUBAR:
     return PR_TRUE;
