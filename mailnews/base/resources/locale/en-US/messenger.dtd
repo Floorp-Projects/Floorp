@@ -109,7 +109,7 @@ Rights Reserved.
 <!ENTITY selectInvertCmd.accesskey "I">
 <!ENTITY filtersCmd.label "Message Filters...">
 <!ENTITY filtersCmd.accesskey "F">
-<!ENTITY filtersApply.label "Run Filters on Selected Folder">
+<!ENTITY filtersApply.label "Run Filters on Folder">
 <!ENTITY filtersApply.accesskey "R">
 <!ENTITY folderPropsCmd.label "Properties...">
 <!ENTITY folderPropsFolderCmd.label "Folder Properties...">
@@ -523,7 +523,7 @@ Rights Reserved.
 <!ENTITY junkMailCmd.label "Junk Mail Controls...">
 <!ENTITY junkMailCmd.accesskey "J">
 
-<!ENTITY runJunkControls.label "Analyze Selected Messages for Junk...">
+<!ENTITY runJunkControls.label "Run Junk Mail Controls on Folder">
 <!ENTITY runJunkControls.accesskey "u">
 
 <!-- junk bar -->

@@ -1539,7 +1539,7 @@ Rights Reserved.
               oncommand="MsgJunkMail()"/>
     <menuitem label="&runJunkControls.label;"
 	      accesskey="&runJunkControls.accesskey;"
-	      oncommand="analyzeMessages();"/>
+	      oncommand="analyzeFolderForJunk();"/>
     <menuseparator/>
     <menuitem label="&importCmd.label;" 
               accesskey="&importCmd.accesskey;" 

@@ -471,7 +471,29 @@ function analyze(aMsgHdr, aNextFunction)
     gJunkmailComponent.classifyMessage(messageURI, msgWindow, listener);
 }
 
-function analyzeMessages()
+function analyzeFolderForJunk()
+{
+  var view = GetDBView();
+  var treeView = view.QueryInterface(Components.interfaces.nsITreeView);
+  var count = treeView.rowCount;
+  if (!count)
+    return;
+
+  var messages = new Array(count)
+  for (var i = 0; i < count; i++) {
+    messages[i] = view.getURIForViewIndex(i);
+  }
+  analyzeMessages(messages);
+}
+
+// not used yet, but soon
+function analyzeMessagesForJunk()
+{
+  var messages = GetSelectedMessages();
+  analyzeMessages(messages);
+}
+
+function analyzeMessages(messages)
 {
     function processNext()
     {
@@ -488,7 +510,6 @@ function analyzeMessages()
     }
 
     getJunkmailComponent();
-    var messages = GetSelectedMessages();
     var counter = 0;
     gJunkmailComponent.startBatch();
     dump('[bayesian filter message analysis begins.]\n');
