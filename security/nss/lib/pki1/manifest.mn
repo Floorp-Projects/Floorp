@@ -30,17 +30,17 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:16:18 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.2 $ $Date: 2001/09/14 18:07:54 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
 PRIVATE_EXPORTS = \
-	pki1.h		  \
-	pki1t.h		  \
+	oiddata.h \
+	pki1.h	  \
+	pki1t.h	  \
 	$(NULL)
 
 EXPORTS =	   \
-	oiddata.h  \
 	nsspki1.h  \
 	nsspki1t.h \
 	$(NULL)

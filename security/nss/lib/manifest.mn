@@ -38,6 +38,11 @@ DIRS = crmf jar \
     softoken certdb crypto \
     util freebl nss pkcs12 fortcrypt \
     base ckfw pkcs7 smime ssl
+
+ifdef BUILD_STAN
+DIRS = base asn1 dev pki pki1
+endif
+
 #
 # these dirs are not built at the moment
 #
