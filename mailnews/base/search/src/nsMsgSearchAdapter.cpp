@@ -1092,7 +1092,8 @@ nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *
 {
   PRUint32 strlen = PL_strlen(customHeaders);
   PRUint32 numHeaders=0;
-  for (PRUint32 i=0;i <strlen; i++)
+  PRUint32 i=0;
+  for (i=0;i <strlen; i++)
     if (customHeaders[i] == ':')
       numHeaders++;
   numHeaders++;
