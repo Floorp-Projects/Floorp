@@ -50,6 +50,8 @@
 #include "nsFrameTraversal.h"
 #include "nsCOMPtr.h"
 #include "nsStyleChangeList.h"
+#include "nsIDOMRange.h"
+
 
 #define NORMAL_DRAG_HANDLING 1  // remove this to simulate a start-drag event.
 #if !NORMAL_DRAG_HANDLING
@@ -1583,6 +1585,8 @@ nsFrame::XMLQuote(nsString& aString)
 PRBool
 nsFrame::ParentDisablesSelection() const
 {
+  return PR_FALSE;//depricating method perhaps.
+/*
   PRBool selected;
   if (NS_FAILED(GetSelected(&selected)))
     return PR_FALSE;
@@ -1594,6 +1598,7 @@ nsFrame::ParentDisablesSelection() const
   if (target)
     return ((nsFrame *)target)->ParentDisablesSelection();
   return PR_FALSE; //default this does not happen
+  */
 }
 
 NS_IMETHODIMP
@@ -1701,9 +1706,10 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
+  nsresult rv;
   if (eSpreadDown == aSpread){
     nsIFrame* kid;
-    nsresult rv = FirstChild(nsnull, &kid);
+    rv = FirstChild(nsnull, &kid);
     if (NS_SUCCEEDED(rv)) {
       while (nsnull != kid) {
         kid->SetSelected(nsnull,aSelected,aSpread);
@@ -1728,6 +1734,32 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   GetRect(frameRect);
   nsRect rect(0, 0, frameRect.width, frameRect.height);
   Invalidate(rect, PR_FALSE);
+  if (aRange) {
+    //lets see if the range contains us, if so we must redraw!
+    nsCOMPtr<nsIDOMNode> endNode;
+    nsCOMPtr<nsIDOMNode> startNode;
+    aRange->GetEndParent(getter_AddRefs(endNode));
+    aRange->GetStartParent(getter_AddRefs(startNode));
+    nsCOMPtr<nsIContent> content;
+    rv = GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIDOMNode> thisNode;
+    thisNode = do_QueryInterface(content);
+
+//we must tell the siblings about the set selected call
+//since the getprimaryframe call is done with this content node.
+    if (thisNode != startNode && thisNode != endNode)
+    { //whole node selected
+      nsIFrame *frame;
+      rv = GetNextSibling(&frame);
+      while (NS_SUCCEEDED(rv) && frame)
+      {
+        frame->SetSelected(aRange,aSelected,eSpreadDown);
+        rv = frame->GetNextSibling(&frame);
+        if (NS_FAILED(rv))
+          break;
+      }
+    }
+  }
   return NS_OK;
 }
 
