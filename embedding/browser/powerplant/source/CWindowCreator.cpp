@@ -42,6 +42,7 @@
 #include "nsIServiceManagerUtils.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsIPrefBranch.h"
+#include "nsIURI.h"
 
 #include "CBrowserShell.h"
 #include "CBrowserWindow.h"
@@ -85,8 +86,11 @@ NS_IMETHODIMP CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 
 NS_IMETHODIMP CWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *parent,
                                                   PRUint32 chromeFlags, PRUint32 contextFlags,
+                                                  nsIURI *aURI, PRBool *aCancel,
                                                   nsIWebBrowserChrome **_retval)
 {
+    NS_ENSURE_ARG_POINTER(aCancel);
+    *aCancel = PR_FALSE;
     if (contextFlags & nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT) {
         nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
         if (prefs) {

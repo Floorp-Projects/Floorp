@@ -74,6 +74,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
+#include "nsIURI.h"
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
 
@@ -92,16 +93,21 @@ nsWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
                                     PRUint32 aChromeFlags,
                                     nsIWebBrowserChrome **_retval)
 {
-  return CreateChromeWindow2(aParent, aChromeFlags, 0, _retval);
+  PRBool cancel;
+  return CreateChromeWindow2(aParent, aChromeFlags, 0, 0, &cancel, _retval);
 }
 
 NS_IMETHODIMP
-nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
-                                     PRUint32 aChromeFlags,
-                                     PRUint32 aContextFlags,
-                                     nsIWebBrowserChrome **_retval)
+nsWindowCreator::CreateChromeWindow2( nsIWebBrowserChrome *aParent,
+                                      PRUint32 aChromeFlags,
+                                      PRUint32 aContextFlags,
+                                      nsIURI *aURI,
+                                      PRBool *aCancel,
+                                      nsIWebBrowserChrome **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aCancel);
   NS_ENSURE_ARG_POINTER(_retval);
+  *aCancel = PR_FALSE;
   *_retval = 0;
 
   nsCOMPtr<nsIXULWindow> newWindow;
