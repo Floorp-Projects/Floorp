@@ -59,7 +59,6 @@ CPPSRCS = \
 
 EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
-	-lxp	\
 	-lxpcom	\
 	-lmsgbaseutil	\
 	$(NSPR_LIBS) \

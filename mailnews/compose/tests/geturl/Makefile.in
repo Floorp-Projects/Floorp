@@ -31,7 +31,6 @@ CPPSRCS		= \
 
 BASE_LIBS	= \
 		-lmozjs \
-		-lxpcom \
 		$(NULL)
 
 GECKO_LIBS	= \
@@ -51,8 +50,6 @@ NETLIB_LIBS	= \
 		-lnetcnvts \
 		-lnetlib \
 		-lnetwork \
-		-lxp \
-		-lmozdbm \
 		-lpwcac \
 		$(NULL)
 

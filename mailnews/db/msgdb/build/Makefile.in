@@ -38,7 +38,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		-lxpcom \
-		-lxp \
 		-lmsgbaseutil \
 		$(NSPR_LIBS) \
 		$(NULL)

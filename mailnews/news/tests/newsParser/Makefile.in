@@ -40,16 +40,12 @@ LIBS		= \
 		-lnetlib \
 		-lpwcac \
 		-lmozdbm \
-		-lxp \
 		-lmozjs \
 		-lraptorgfx \
 		$(DIST)/lib/libmsgnews_s.a \
 		-lmsgbaseutil \
 		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
-		$(JPEG_LIBS) \
-		$(PNG_LIBS) \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

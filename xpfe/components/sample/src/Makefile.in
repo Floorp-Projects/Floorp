@@ -33,7 +33,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		-lxpcom \
 		-lnetlib \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

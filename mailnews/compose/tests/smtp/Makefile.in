@@ -29,11 +29,8 @@ CPPSRCS		= smtpTest.cpp
 LIBS = \
 	-lxpcom	\
 	-lmozdbm	\
-	-lxp	\
 	-lmozjs	\
-	-lxp	\
 	$(MOZ_TIMER_LIBS) \
-	$(ZLIB_LIBS) \
 	$(DIST)/lib/librdfbase_s.a \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \

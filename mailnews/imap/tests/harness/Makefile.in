@@ -32,11 +32,9 @@ LIBS =	\
 		-L$(DIST)/bin			\
 		-lxpcom \
 		-lmozdbm \
-		-lxp \
 		-lmozjs \
 		-lmsgbaseutil \
 		$(MOZ_TIMER_LIBS) \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

@@ -43,7 +43,6 @@ LIBS		= \
 		-lxpcom \
 		-lpwcac \
 		-lmozdbm \
-		-lxp \
 		-lmozjs \
 		-lraptorgfx \
 		$(NULL)

@@ -35,7 +35,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		-lxpcom \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

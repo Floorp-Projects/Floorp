@@ -45,11 +45,9 @@ LIBS		= \
 		-lxpcom \
 		-lpwcac \
 		-lmozdbm \
-		-lxp \
 		-lmozjs \
 		-lmork \
 		-lmsgbaseutil \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

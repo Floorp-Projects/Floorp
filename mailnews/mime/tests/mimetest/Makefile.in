@@ -47,7 +47,6 @@ NETLIB_LIBS	= \
 		-lnetcnvts \
 		-lnetlib \
 		-lnetwork \
-		-lxp \
 		-lmozdbm \
 		-lpwcac \
 		$(NULL)

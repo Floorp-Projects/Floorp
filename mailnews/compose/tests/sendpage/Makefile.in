@@ -29,8 +29,6 @@ CPPSRCS		= Test.cpp
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
-		-lmozdbm \
-		-lxp \
 		-lmozjs \
 		$(NSPR_LIBS) \
 		$(NULL)

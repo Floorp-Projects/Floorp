@@ -113,9 +113,6 @@ NETLIB_LIBS		= \
 			-lnetcnvts \
 			-lnetlib \
 			-lnetwork \
-			-lxp \
-			-ljsurl \
-			-lmozdbm \
 			-lpwcac \
 			$(NULL)
 endif
