@@ -58,7 +58,12 @@ sub init {
     local $Template::Config::STASH = 'Template::Stash::Context'; # Don't use Template::Stash::XS as we can't currently get a hash back out of it
     $self->{template} = Template->new({
         'CONTEXT' => PLIF::Service::TemplateToolkit::Context->new($app),
+        'AUTO_RESET' => 0, # don't clear BLKSTACK between templates [1]
     });
+    # [1] this shouldn't cause any problems assuming every template
+    # leave()s the context correctly. We need it because we currently
+    # treat each inclusion as effectively a totally new template, but
+    # we want to do that without losing [%BLOCK%]s.
 }
 
 sub expand {
