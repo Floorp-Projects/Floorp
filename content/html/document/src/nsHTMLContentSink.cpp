@@ -819,6 +819,11 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mContent = content;
   mStack[mStackPos].mFlags = 0;
   content->SetDocument(mSink->mDocument);
+
+  nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
+  rv = AddAttributes(aNode, content, sco);
+  NS_IF_RELEASE(sco);
+
   if (mPreAppend) {
     NS_ASSERTION(mStackPos > 0, "container w/o parent");
     nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
@@ -826,13 +831,9 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     mStack[mStackPos].mFlags |= APPENDED;
   }
   mStackPos++;
-  nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
-  rv = AddAttributes(aNode, content, sco);
-  NS_IF_RELEASE(sco);
   if (NS_OK != rv) {
     return rv;
   }
-
 
   // Special handling for certain tags
   switch (nodeType) {
@@ -925,6 +926,10 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       if (NS_OK != rv) {
         return rv;
       }
+
+      // Set the content's document
+      content->SetDocument(mSink->mDocument);
+
       nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
       rv = AddAttributes(aNode, content, sco);
       NS_IF_RELEASE(sco);
@@ -1065,6 +1070,8 @@ SinkContext::FlushText(PRBool* aDidFlush)
     nsIHTMLContent* content;
     rv = NS_NewHTMLText(&content, mText, mTextLength);
     if (NS_OK == rv) {
+      // Set the content's document
+      content->SetDocument(mSink->mDocument);
       // Add text to its parent
       NS_ASSERTION(mStackPos > 0, "leaf w/o container");
       nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
