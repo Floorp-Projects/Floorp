@@ -3449,59 +3449,6 @@ nsBlockFrame::LastChild()
   return nsnull;
 }
 
-#if 0
-nsresult
-nsBlockFrame::WrapFrameInFirstLetterFrame(nsIPresContext* aPresContext)
-{
-  nsLineBox* line = mLines;
-  if (!line || line->IsBlock()) {
-    return NS_OK;
-  }
-  NS_ASSERTION(line->mChildCount > 0, "bad line count");
-
-  nsresult rv = NS_OK;
-  if (line->IsFirstLine()) {
-    // Delegate wrapping to the line frame
-  }
-  else if (line->mFirstChild) {
-    // Examine first frame on the line. If its text, then 
-    nsIFrame* frame = line->mFirstChild;
-    nsIAtom* frameType;
-    frame->GetFrameType(&frameType);
-    if (frameType) {
-      if (frameType == nsLayoutAtoms::textFrame) {
-        // Time to rap. badda boom. :-)
-        nsIFrame* newFrame;
-        rv = NS_NewFirstLetterFrame(&newFrame);
-        if (NS_SUCCEEDED(rv)) {
-          // Give text frame to the new frame and then splice in the
-          // first-letter frame in its place.
-          nsIFrame* nextSib;
-          frame->GetNextSibling(&nextSib);
-          frame->SetNextSibling(nsnull);
-          line->mFirstChild = newFrame;
-          line->MarkDirty();
-
-          // Initialize the first-letter-frame.
-          rv = newFrame->Init(*aPresContext, mContent, this,
-                              GetFirstLetterStyle(aPresContext), nsnull);
-          newFrame->SetInitialChildList(*aPresContext, nsnull, frame);
-
-          // See if the first-letter-frame should be floating, and if
-          // it is then create a placeholder for it.
-        }
-      }
-      else if (frameType == nsLayoutAtoms::inlineFrame) {
-        // Delegate wrapping to the inline frame
-      }
-      NS_RELEASE(frameType);
-    }
-  }
-
-  return rv;
-}
-#endif
-
 nsresult
 nsBlockFrame::WrapFramesInFirstLineFrame(nsIPresContext* aPresContext)
 {
@@ -3840,13 +3787,6 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     // We just added one or more frame(s) to the first line.
     WrapFramesInFirstLineFrame(aPresContext);
   }
-#if 0
-  if ((NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState) &&
-      (nsnull != mLines) && !mLines->IsBlock()) {
-    // We just added one or more frame(s) to the first line.
-    WrapFrameInFirstLetterFrame(aPresContext);
-  }
-#endif
 
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
@@ -4233,13 +4173,6 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     // removed a block that preceeded the first line.
     WrapFramesInFirstLineFrame(aPresContext);
   }
-#if 0
-  if ((NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState) &&
-      (nsnull != mLines) && !mLines->IsBlock()) {
-    // We just added one or more frame(s) to the first line.
-    WrapFrameInFirstLetterFrame(aPresContext);
-  }
-#endif
 
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
