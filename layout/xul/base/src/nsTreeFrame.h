@@ -99,6 +99,11 @@ public:
 
   // nsITreeFrame.h
   NS_IMETHOD EnsureRowIsVisible(PRInt32 aRowIndex);
+  NS_IMETHOD GetNextItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult);
+  NS_IMETHOD GetPreviousItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult);
+  NS_IMETHOD ScrollToIndex(PRInt32 aRowIndex);
+  NS_IMETHOD GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aResult);
+  NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult);
 
   PRInt32 GetFixedRowSize() { return mFixedRows; };
   

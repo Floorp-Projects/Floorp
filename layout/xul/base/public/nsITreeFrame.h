@@ -38,7 +38,11 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITREEFRAME_IID)
 
   NS_IMETHOD EnsureRowIsVisible(PRInt32 aRowIndex) = 0;
-
+  NS_IMETHOD GetNextItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult) = 0;
+  NS_IMETHOD GetPreviousItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult) = 0;
+  NS_IMETHOD ScrollToIndex(PRInt32 aRowIndex) = 0;
+  NS_IMETHOD GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aResult) = 0;
+  NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult) = 0;
 };
 
 #endif

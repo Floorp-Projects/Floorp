@@ -642,6 +642,77 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
   // Bail. There's nothing else we can do.
 }
 
+void 
+nsTreeRowGroupFrame::FindNextRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
+                                        nsIContent* aDownwardHint,
+                                        nsIContent** aResult)
+{
+  // Init to nsnull.
+  *aResult = nsnull;
+
+  // It disappoints me that this function is completely tied to the content nodes,
+  // but I can't see any other way to handle this.  I don't have the frames, so I have nothing
+  // else to fall back on but the content nodes.
+  PRInt32 index = -1;
+  nsCOMPtr<nsIContent> parentContent;
+  if (aUpwardHint) {
+    aUpwardHint->GetParent(*getter_AddRefs(parentContent));
+    if (!parentContent) {
+      NS_ERROR("Parent content should not be NULL!");
+      return;
+    }
+    parentContent->IndexOf(aUpwardHint, index);
+  }
+  else if (aDownwardHint) {
+    parentContent = dont_QueryInterface(aDownwardHint);
+  }
+
+  PRInt32 childCount;
+  parentContent->ChildCount(childCount);
+  for (PRInt32 i = index+1; i < childCount; i++) {
+    nsCOMPtr<nsIContent> childContent;
+    parentContent->ChildAt(i, *getter_AddRefs(childContent));
+    nsCOMPtr<nsIAtom> tag;
+    childContent->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::treerow) {
+      aDelta--;
+      if (aDelta == 0) {
+        *aResult = childContent;
+        NS_IF_ADDREF(*aResult);
+        return;
+      }
+    }
+    else if (tag.get() == nsXULAtoms::treeitem) {
+      // Descend into this row group and try to find a next row.
+      FindNextRowContent(aDelta, nsnull, childContent, aResult);
+      if (aDelta == 0)
+        return;
+    }
+    else if (tag.get() == nsXULAtoms::treechildren) {
+      // If it's open, descend into its treechildren node first.
+      nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
+      nsAutoString isOpen;
+      parentContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      if (isOpen.EqualsWithConversion("true")) {
+        FindNextRowContent(aDelta, nsnull, childContent, aResult);
+        if (aDelta == 0)
+          return;
+      }
+    }
+  }
+
+  nsCOMPtr<nsIAtom> tag;
+  parentContent->GetTag(*getter_AddRefs(tag));
+  if (tag && tag.get() == nsXULAtoms::tree) {
+    // Hopeless. It ain't in there.
+    return;
+  }
+  else if (!aDownwardHint) // We didn't find it here. We need to go up to our parent, using ourselves as a hint.
+    FindNextRowContent(aDelta, parentContent, nsnull, aResult);
+
+  // Bail. There's nothing else we can do.
+}
+
 void
 nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
 {

@@ -48,6 +48,7 @@
 
 #include "nsLayoutCID.h"
 #include "nsLayoutAtoms.h"
+#include "nsIAtom.h"
 
 //
 // NS_NewTreeFrame
@@ -218,15 +219,12 @@ nsTreeFrame::HandleEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   *aEventStatus = nsEventStatus_eConsumeDoDefault;
+  /*
   if (aEvent->message == NS_KEY_PRESS) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     PRUint32 keyCode = keyEvent->keyCode;
     if (keyCode == NS_VK_UP ||
-        keyCode == NS_VK_DOWN ||
-        keyCode == NS_VK_LEFT ||
-        keyCode == NS_VK_RIGHT ||
-        keyCode == NS_VK_ENTER ||
-        keyCode == NS_VK_RETURN) {
+        keyCode == NS_VK_DOWN) {
 
       // Get our treechildren child frame.
       nsTreeRowGroupFrame* treeRowGroup = nsnull;
@@ -304,14 +302,9 @@ nsTreeFrame::HandleEvent(nsIPresContext* aPresContext,
       // We got it! Perform the selection on an up/down.
       if (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN)
         SetSelection(aPresContext, cellFrame);
-      else if (keyCode == NS_VK_ENTER || keyCode == NS_VK_RETURN)
-        cellFrame->ToggleOpenClose();
-      else if (keyCode == NS_VK_LEFT)
-        cellFrame->Close();
-      else if (keyCode == NS_VK_RIGHT)
-        cellFrame->Open();
     }
   }
+  */
   return NS_OK;
 }
   
@@ -605,6 +598,27 @@ nsTreeFrame::CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide)
 }
 
 
+static void
+GetImmediateChild(nsIContent* aParent, nsIAtom* aTag, nsIContent** aResult) 
+{
+  *aResult = nsnull;
+  PRInt32 childCount;
+  aParent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aParent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (aTag == tag.get()) {
+      *aResult = child;
+      NS_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  return;
+}
+
 NS_IMETHODIMP
 nsTreeFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
@@ -615,5 +629,132 @@ nsTreeFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   if (!treeRowGroup) return NS_OK;
   
   treeRowGroup->EnsureRowIsVisible(aRowIndex);
+  return NS_OK;
+}
+
+/* void scrollToIndex (in long rowIndex); */
+NS_IMETHODIMP 
+nsTreeFrame::ScrollToIndex(PRInt32 rowIndex)
+{
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIDOMElement getNextItem (in nsIDOMElement startItem, in long delta); */
+NS_IMETHODIMP 
+nsTreeFrame::GetNextItem(nsIDOMElement *aStartItem, PRInt32 aDelta, nsIDOMElement **aResult)
+{
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  nsCOMPtr<nsIContent> start(do_QueryInterface(aStartItem));
+  nsCOMPtr<nsIContent> row;
+  GetImmediateChild(start, nsXULAtoms::treerow, getter_AddRefs(row));
+
+  nsCOMPtr<nsIContent> result;
+  treeRowGroup->FindNextRowContent(aDelta, row, nsnull, getter_AddRefs(result));
+  if (!result)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  result->GetParent(*getter_AddRefs(parent));
+  if (!parent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> item(do_QueryInterface(parent));
+  *aResult = item;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+/* nsIDOMElement getPreviousItem (in nsIDOMElement startItem, in long delta); */
+NS_IMETHODIMP 
+nsTreeFrame::GetPreviousItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult)
+{
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  nsCOMPtr<nsIContent> start(do_QueryInterface(aStartItem));
+  nsCOMPtr<nsIContent> row;
+  GetImmediateChild(start, nsXULAtoms::treerow, getter_AddRefs(row));
+
+  nsCOMPtr<nsIContent> result;
+  treeRowGroup->FindPreviousRowContent(aDelta, row, nsnull, getter_AddRefs(result));
+  if (!result)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  result->GetParent(*getter_AddRefs(parent));
+  if (!parent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> item(do_QueryInterface(parent));
+  *aResult = item;
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+/* nsIDOMElement getItemAtIndex (in long index); */
+NS_IMETHODIMP 
+nsTreeFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement **aResult)
+{
+  *aResult = nsnull;
+
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  nsCOMPtr<nsIContent> result;
+  treeRowGroup->FindRowContentAtIndex(aIndex, nsnull, getter_AddRefs(result));
+  if (!result)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  result->GetParent(*getter_AddRefs(parent));
+  if (!parent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> item(do_QueryInterface(parent));
+  *aResult = item;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+/* long getIndexOfItem (in nsIDOMElement item); */
+NS_IMETHODIMP 
+nsTreeFrame::GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult)
+{
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  // Get the row child.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  nsCOMPtr<nsIContent> row;
+  GetImmediateChild(content, nsXULAtoms::treerow, getter_AddRefs(row));
+
+  treeRowGroup->IndexOfRow(aPresContext, row, *aResult);
+  
   return NS_OK;
 }

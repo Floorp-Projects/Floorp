@@ -30,7 +30,11 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIPresContext.h"
 #include "nsIFrame.h"
+
+// XXX Hack
+#include "nsTreeOuterFrame.h"
 
 class nsTreeBoxObject : public nsITreeBoxObject, public nsBoxObject
 {
@@ -41,6 +45,9 @@ public:
   nsTreeBoxObject();
   virtual ~nsTreeBoxObject();
   
+  // XXX Will go away as soon as I get off tables.
+  nsIFrame* GetFrame();
+
 protected:
 };
 
@@ -73,26 +80,86 @@ nsTreeBoxObject::~nsTreeBoxObject()
   /* destructor code */
 }
 
-/* void ensureRowIsVisible (in long rowIndex); */
-NS_IMETHODIMP nsTreeBoxObject::EnsureRowIsVisible(PRInt32 aRowIndex)
+// XXX Whole function is a hack that will go away.
+nsIFrame*
+nsTreeBoxObject::GetFrame()
+{
+  nsIFrame* frame = nsBoxObject::GetFrame();
+  if (!frame)
+    return nsnull;
+
+  nsTreeOuterFrame* outerFrame = (nsTreeOuterFrame*)frame;
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+  
+  nsITreeFrame* treeFrame = outerFrame->FindTreeFrame(presContext);
+  if (!treeFrame)
+    return nsnull;
+
+  return (nsIFrame*)treeFrame;
+}
+
+/* void ensureIndexIsVisible (in long rowIndex); */
+NS_IMETHODIMP nsTreeBoxObject::EnsureIndexIsVisible(PRInt32 aRowIndex)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
+  return treeFrame->EnsureRowIsVisible(aRowIndex);
+}
+
+/* void scrollToIndex (in long rowIndex); */
+NS_IMETHODIMP nsTreeBoxObject::ScrollToIndex(PRInt32 rowIndex)
+{
+  return NS_OK;
+}
+
+/* nsIDOMElement getNextItem (in nsIDOMElement startItem, in long delta); */
+NS_IMETHODIMP nsTreeBoxObject::GetNextItem(nsIDOMElement *aStartItem, PRInt32 aDelta, nsIDOMElement **aResult)
 {
   nsIFrame* frame = GetFrame();
   if (!frame)
     return NS_OK;
 
-  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
-  if (!treeFrame)
-    return NS_OK;
-
-  return treeFrame->EnsureRowIsVisible(aRowIndex);
+  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
+  
+  return treeFrame->GetNextItem(aStartItem, aDelta, aResult);
 }
 
-/* void fireOnSelect (); */
-NS_IMETHODIMP nsTreeBoxObject::FireOnSelect()
+/* nsIDOMElement getPreviousItem (in nsIDOMElement startItem, in long delta); */
+NS_IMETHODIMP nsTreeBoxObject::GetPreviousItem(nsIDOMElement *aStartItem, PRInt32 aDelta, nsIDOMElement **aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
+  return treeFrame->GetPreviousItem(aStartItem, aDelta, aResult);
+}
+
+/* nsIDOMElement getItemAtIndex (in long index); */
+NS_IMETHODIMP nsTreeBoxObject::GetItemAtIndex(PRInt32 index, nsIDOMElement **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* long getIndexOfItem (in nsIDOMElement item); */
+NS_IMETHODIMP nsTreeBoxObject::GetIndexOfItem(nsIDOMElement* aElement, PRInt32 *aResult)
+{
+  *aResult = -1;
+
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
+ 
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+  return treeFrame->GetIndexOfItem(presContext, aElement, aResult);
+}
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
@@ -105,4 +172,3 @@ NS_NewTreeBoxObject(nsIBoxObject** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
-
