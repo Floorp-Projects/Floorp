@@ -206,6 +206,13 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
         return NS_ERROR_INVALID_ARG;
     }
 
+    PRBool isWritable = PR_FALSE;
+    nsCOMPtr<nsIWritableVariant> writable = do_QueryInterface(aIn);
+    if (writable)
+    {
+        writable->GetWritable(&isWritable);
+    }
+
     PRUint16 type;
     nsresult rv = aIn->GetDataType(&type);
     switch (type)
