@@ -111,11 +111,11 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /* Startup the Version Registry        */
     /***************************************/
     
-    nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    VR_SetRegDirectory( nsNSPRPath(appDir) );
- 
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
 
+    nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    VR_SetRegDirectory( nsNSPRPath(appDir) );
+    
     /***************************************/
     /* Stupid Hack to test js env*/
     /***************************************/
@@ -220,9 +220,9 @@ NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
 {
     nsresult rv;
- #ifndef XP_MAC   
+    
     rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
- #endif
+    
     return rv;
 }
 
@@ -230,9 +230,9 @@ NS_IMETHODIMP
 nsSoftwareUpdate::Shutdown()
 {
     nsresult rv;
-#ifdef XP_MAC
+
     rv = nsServiceManager::ReleaseService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
-#endif
+    
     return rv;
 }
 
