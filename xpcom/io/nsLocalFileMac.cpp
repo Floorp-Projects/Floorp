@@ -2555,3 +2555,19 @@ NS_NewLocalFile(const char* path, nsILocalFile* *result)
 	return NS_OK;
 }
 
+nsresult 
+NS_NewLocalFileWithFSSpec(FSSpec* inSpec, nsILocalFileMac* *result)
+{
+	nsLocalFile* file = new nsLocalFile();
+	if (file == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+	NS_ADDREF(file);
+
+	nsresult rv = file->InitWithFSSpec(inSpec);
+	if (NS_FAILED(rv)) {
+		NS_RELEASE(file);
+		return rv;
+	}
+	*result = file;
+	return NS_OK;
+}

@@ -98,4 +98,8 @@ public:
 	
 };
 
+
+extern "C" NS_EXPORT nsresult
+NS_NewLocalFileWithFSSpec(FSSpec* inSpec, nsILocalFileMac* *result);
+
 #endif
