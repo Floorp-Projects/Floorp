@@ -302,7 +302,11 @@
   </menubar>
 
 <html:div id="header">
+<toolbox>
     <toolbar>
+ 	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
+
+	  <html:td width="80%">	  
 	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()">
 	  </titledbutton>
 
@@ -321,10 +325,14 @@
 
 	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
 	  </titledbutton>
+	  </html:td>
 
-	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="window.frames[0].home()"/>
-
+	  <html:td width="40px">	  
+	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')">
+	  </html:td>
+      </html:tr></html:table>
     </toolbar>
+</toolbox>
 </html:div>
 
 <html:div id="thread">

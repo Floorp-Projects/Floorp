@@ -20,6 +20,20 @@ function MsgLoadNewsMessage(url)
 	OpenURL(url);
 }
 
+function MsgHome(url)
+{
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow(url, window);
+    }
+}
+
 function MsgNewMessage() 
 {
 	dump("\n\nMsgNewMessage from XUL\n");
