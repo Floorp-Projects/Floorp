@@ -49,35 +49,35 @@ typedef struct ZipLocal_
 
 typedef struct ZipCentral_
   {
-  char signature [4];
-  char version_made_by [2];
-  char version [2];
-  char bitflag [2];
-  char method [2];
-  char time [2];
-  char date [2];
-  char crc32 [4];
-  char size [4];
-  char orglen [4];
-  char filename_len [2];
-  char extrafield_len [2];
-  char commentfield_len [2];
-  char diskstart_number [2];
-  char internal_attributes [2];
-  char external_attributes [4];
-  char localhdr_offset [4];
+  unsigned char signature [4];
+  unsigned char version_made_by [2];
+  unsigned char version [2];
+  unsigned char bitflag [2];
+  unsigned char method [2];
+  unsigned char time [2];
+  unsigned char date [2];
+  unsigned char crc32 [4];
+  unsigned char size [4];
+  unsigned char orglen [4];
+  unsigned char filename_len [2];
+  unsigned char extrafield_len [2];
+  unsigned char commentfield_len [2];
+  unsigned char diskstart_number [2];
+  unsigned char internal_attributes [2];
+  unsigned char external_attributes [4];
+  unsigned char localhdr_offset [4];
 } ZipCentral;
 
 typedef struct ZipEnd_
   {
-  char signature [4];
-  char disk_nr [2];
-  char start_central_dir [2];
-  char total_entries_disk [2];
-  char total_entries_archive [2];
-  char central_dir_size [4];
-  char offset_central_dir [4];
-  char commentfield_len [2];
+  unsigned char signature [4];
+  unsigned char disk_nr [2];
+  unsigned char start_central_dir [2];
+  unsigned char total_entries_disk [2];
+  unsigned char total_entries_archive [2];
+  unsigned char central_dir_size [4];
+  unsigned char offset_central_dir [4];
+  unsigned char commentfield_len [2];
 } ZipEnd;
 
 /* signatures */

@@ -58,6 +58,11 @@
 
 #endif /* STANDALONE */
 
+#if defined(XP_UNIX)
+    #include <sys/stat.h>
+#else if defined(XP_PC)
+    #include <io.h>
+#endif
 
 #include "zipfile.h"
 #include "zipstruct.h"
@@ -66,6 +71,7 @@
 
 static PRUint16 xtoint(unsigned char *ii);
 static PRUint32 xtolong(unsigned char *ll);
+static PRUint16 ExtractMode(PRUint32 ext_attr);
 
 
 /*---------------------------------------------
@@ -384,15 +390,27 @@ PRInt32 nsZipArchive::ExtractFile(const char* aFilename, const char* aOutname)
   switch( item->compression )
   {
     case STORED:
-      return CopyItemToDisk( item, aOutname );
+      status = CopyItemToDisk( item, aOutname );
+      break;
 
     case DEFLATED:
-      return InflateItem( item, aOutname, 0 );
+      status = InflateItem( item, aOutname, 0 );
+      break;
 
     default:
       //-- unsupported compression type
       return ZIP_ERR_UNSUPPORTED;
   }
+
+#if defined(XP_UNIX) || defined(XP_PC)
+  if (status == ZIP_OK)
+  {
+      //-- set extracted file permissions
+      chmod(aOutname, item->mode);
+  }
+#endif
+
+  return status;
 }
 
    
@@ -517,19 +535,17 @@ PRInt32 nsZipArchive::BuildFileList()
 {
   PRInt32   status = ZIP_OK;
   PRUint32  sig = 0L;
-  PRUint32  namelen, extralen;
+  PRUint32  namelen, extralen, commentlen;
   PRUint32  hash;
+  PRUint32  size;
 
-  ZipLocal  Local;
+  ZipLocal   Local;
+  ZipCentral Central;
 
   nsZipItem*  item;
 
   //-----------------------------------------------------------------------
-  // read the local file headers. 
-  //
-  // What we *should* be doing is reading the central directory at the end,
-  // all in one place. We'll have to change this eventually since the local
-  // headers don't have the mode information we need for Unix files.
+  // skip to the central directory
   //-----------------------------------------------------------------------
   PRInt32  pos = 0L;
   while ( status == ZIP_OK )
@@ -554,25 +570,82 @@ PRInt32 nsZipArchive::BuildFileList()
       break;
     }
 
-    //-- make sure we're processing a local header
+    //-- check if we hit the central directory
     sig = xtolong( Local.signature );
-    if ( sig == CENTRALSIG ) 
+    if ( sig == LOCALSIG )
     {
-      // we're onto the next section
+        //-- check length of this file and its metadata so we can skip over it
+        namelen = xtoint( Local.filename_len );
+        extralen = xtoint( Local.extrafield_len );
+        size = xtolong( Local.size );
+
+        //-- reposition file mark to next expected local header
+        pos += sizeof(ZipLocal) + namelen + extralen + size;
+    }
+    else if ( sig == CENTRALSIG ) 
+    {
+      // file mark set to start of central directory
       break;
     }
-    else if ( sig != LOCALSIG ) 
+    else
     {
       //-- otherwise expected to find a local header
       status = ZIP_ERR_CORRUPT;
       break;
     }
+  } /* while reading local headers */
 
-    namelen = xtoint( Local.filename_len );
-    extralen = xtoint( Local.extrafield_len );
+  //-------------------------------------------------------
+  // read the central directory headers
+  //-------------------------------------------------------
+  while ( status == ZIP_OK )
+  {
+#ifndef STANDALONE 
+    if ( PR_Seek( mFd, pos, PR_SEEK_SET ) != (PRInt32)pos )
+#else
+    if ( PR_Seek( mFd, pos, PR_SEEK_SET ) != 0 )
+#endif
+    {
+      //-- couldn't seek to next position
+      status = ZIP_ERR_CORRUPT;
+      break;
+    }
 
+    if ( PR_Read( mFd, (char*)&Central, sizeof(Central) ) != sizeof(ZipCentral) )
+    {
+      //-- central dir end record is smaller than a central dir header
+      sig = xtolong( Central.signature );
+      if ( sig == ENDSIG )
+      {
+        //-- we've reached the end of the central dir
+        break;
+      }
+      else
+      {
+        status = ZIP_ERR_CORRUPT;
+        break;
+      }
+    }
+
+    sig = xtolong( Central.signature );
+    if ( sig == ENDSIG )
+    {
+      //-- we've reached the end of the central dir
+      break;
+    }
+    else if ( sig != CENTRALSIG )
+    {
+        //-- otherwise expected to find a  central dir header
+        status = ZIP_ERR_CORRUPT;
+        break;
+    }
+
+    namelen = xtoint( Central.filename_len );
+    extralen = xtoint( Central.extrafield_len );
+    commentlen = xtoint( Central.commentfield_len );
+    
     item = new nsZipItem();
-    if ( item != 0 ) 
+    if (item != 0)
     {
       item->name = new char[namelen+1];
 
@@ -583,19 +656,48 @@ PRInt32 nsZipArchive::BuildFileList()
           item->name[namelen] = 0;
           item->namelen = namelen;
 
-          item->headerloc = pos;
-          item->offset = pos + sizeof(ZipLocal) + namelen + extralen;
-          item->compression = xtoint( Local.method );
-          item->size = xtolong( Local.size );
-          item->realsize = xtolong( Local.orglen );
-          item->crc32 = xtolong( Local.crc32 );
+          item->headerloc = xtolong( Central.localhdr_offset );
+
+          //-- seek to local header
+#ifndef STANDALONE 
+          if ( PR_Seek( mFd, item->headerloc, PR_SEEK_SET ) != (PRInt32)item->headerloc )
+#else
+          if ( PR_Seek( mFd, item->headerloc, PR_SEEK_SET ) != 0 )
+#endif
+          {
+            //-- couldn't seek to next position
+            status = ZIP_ERR_CORRUPT;
+            break;
+          }
+
+          //-- read local header to extract local extralen
+          //-- NOTE: extralen is different in central header and local header
+          //--       for archives created using the Unix "zip" utility. To set 
+          //--       the offset accurately we need the local extralen.
+          if ( PR_Read( mFd, (char*)&Local, sizeof(ZipLocal) ) != (READTYPE)sizeof(ZipLocal) )
+          { 
+              //-- expected a complete local header
+              status = ZIP_ERR_CORRUPT;
+              break;
+          }
+
+          item->offset = item->headerloc + 
+                         sizeof(ZipLocal) + 
+                         namelen + 
+                         xtoint( Local.extrafield_len );
+          item->compression = xtoint( Central.method );
+          item->size = xtolong( Central.size );
+          item->realsize = xtolong( Central.orglen );
+          item->crc32 = xtolong( Central.crc32 );
+          item->mode = ExtractMode(xtolong( Central.external_attributes )); 
 
           //-- add item to file table
           hash = HashName( item->name );
           item->next = mFiles[hash];
           mFiles[hash] = item;
 
-          pos = item->offset + item->size;
+          //-- set pos to next expected central dir header
+          pos += sizeof(ZipCentral) + namelen + extralen + commentlen;
         }
         else 
         {
@@ -611,17 +713,12 @@ PRInt32 nsZipArchive::BuildFileList()
         delete item;
       }
     }
-    else 
+    else
     {
-      //-- couldn't create a nsZipItem
+      //-- couldn't create an nsZipItem
       status = ZIP_ERR_MEMORY;
     }
-  } /* while reading local headers */
-
-  //-------------------------------------------------------
-  //  we don't care about the rest of the file (until we
-  //  fix this to read the central directory instead)
-  //-------------------------------------------------------
+  } /* while reading central directory records */
 
   return status;
 }
@@ -1108,4 +1205,20 @@ static PRUint32 xtolong (unsigned char *ll)
   return ret;
 }
 
+/*
+ * ExtractMode
+ *
+ * Extracts bits 17-24 from a 32-bit unsigned long
+ * representation of the external attributes field.
+ * Subsequently it tacks on the implicit user-read
+ * bit.
+ */
+static PRUint16 ExtractMode(PRUint32 ext_attr)
+{
+    ext_attr &= 0x00FF0000; 
+    ext_attr >>= 16;
+    ext_attr |= 0x00000100;
+
+    return (PRUint16) ext_attr;
+}
 
