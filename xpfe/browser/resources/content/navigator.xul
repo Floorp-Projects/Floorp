@@ -262,9 +262,10 @@ Contributor(s): ______________________________________. -->
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
                      template="bookmarksMenuTemplate"
                      ondraggesture="if (event.target.id=='bookmarks-button') event.preventBubble()">
-        <menupopup onpopupshowing="checkBookmarksMenuTemplateBuilder();">
+        <menupopup onpopupshowing="checkBookmarksMenuTemplateBuilder(); updateGroupmarkMenuitem('PT_bookmarks_groupmark');">
           <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"/>
           <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
+          <menuitem id="PT_bookmarks_groupmark" observes="Browser:AddGroupmarkAs"/>
           <menuseparator/>
           <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"/>
           <menuseparator id="lastStaticSeparator"/>

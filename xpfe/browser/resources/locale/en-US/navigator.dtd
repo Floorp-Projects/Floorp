@@ -131,7 +131,9 @@
 <!ENTITY addCurPageCmd.accesskey "B">
 <!ENTITY addCurPageCmd.commandkey "d">
 <!ENTITY addCurPageAsCmd.label "File Bookmark...">
-<!ENTITY addCurPageAsCmd.accesskey "f">
+<!ENTITY addCurPageAsCmd.accesskey "F">
+<!ENTITY addCurTabsAsCmd.label "Bookmark This Group of Tabs...">
+<!ENTITY addCurTabsAsCmd.accesskey "G">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "M">
 <!ENTITY manBookmarksCmd.commandkey "b">
