@@ -317,7 +317,7 @@ public:
                         const nsXPTMethodInfo* info,
                         nsXPTCMiniVariant* params);
 
-    void XPCContextBeingDestroyed() {mXPCContext = NULL;}
+    void XPCContextBeingDestroyed();
 
     virtual ~nsXPCWrappedJSClass();
 private:
@@ -333,10 +333,10 @@ private:
     JSObject*  CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID);
 
     JSBool IsReflectable(uint16 i) const
-        {return mDescriptors[i/32] & (1 << (i%32));}
+    {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
     void SetReflectable(uint16 i, JSBool b)
-        {if(b) mDescriptors[i/32] |= (1 << (i%32));
-         else  mDescriptors[i/32] &= ~(1 << (i%32));}
+    {if(b) mDescriptors[i/32] |= (1 << (i%32));
+     else mDescriptors[i/32] &= ~(1 << (i%32));}
 
 private:
     XPCContext* mXPCContext;
@@ -367,6 +367,8 @@ public:
     REFNSIID GetIID() const {return GetClass()->GetIID();}
     nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
     void DebugDump(int depth);
+
+    void XPCContextBeingDestroyed();
 
     virtual ~nsXPCWrappedJS();
 private:
@@ -494,7 +496,7 @@ public:
     const XPCNativeMemberDescriptor* GetMemberDescriptor(uint16 i) const
     {
         NS_PRECONDITION(i < mMemberCount,"bad index");
-        return &mDescriptors[i];
+        return mDescriptors ? &mDescriptors[i] : NULL;
     }
 
     const XPCNativeMemberDescriptor* LookupMemberByID(jsid id) const;
@@ -541,7 +543,7 @@ public:
                            JSIterateOp enum_op,
                            jsval *statep, jsid *idp);
 
-    void XPCContextBeingDestroyed() {mXPCContext = NULL;}
+    void XPCContextBeingDestroyed();
 
     virtual ~nsXPCWrappedNativeClass();
 private:
@@ -612,6 +614,8 @@ public:
         {return GetClass()->GetArbitraryScriptable();}
 
     void JSObjectFinalized(JSContext *cx, JSObject *obj);
+
+    void XPCContextBeingDestroyed();
 
     virtual ~nsXPCWrappedNative();
 private:
