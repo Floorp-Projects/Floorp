@@ -3,80 +3,119 @@
 </HEAD>
 <BODY>
 <H1>SOAP Test: Elements</H1>
-The entered element will be requested and the info displayed.  This service found on
-<A href="http://www.xmethods.com">X Methods Website</A>.  View the source of this 
-page for details on how it was called.  If you compile mozilla DEBUG, the message sent and received will  be logged to the console.
-<p>Experimenters may wish to add other tests which exercize services, with specific 
-user interfaces such as the one in this test.
+This page is linked to elements of the periodic table.
+<p>This works by calling a SOAP service.  View the source 
+of this page for details on how it was called.  If you compile mozilla DEBUG, 
+the message sent and received will  be logged to the console.  This loads js files 
+<a href=soapelementsproxy.js>soapelementsproxy.js</a> which relies on 
+<a href=soapproxy.js>soapproxy.js</a>, which implement a SOAP proxy on top 
+of the low level SOAP API in Mozilla.  In a future version of Mozilla, it
+should be possible to construct SOAP proxies directly from the wsdl file.
+<p>Since this service is not friendly to untrusted applets, it may not be
+called without requesting additional privileges from the user.  It can be
+made friendly by accepting the verifySource header or by loading the page
+and proxy from the domain of the service.
+<p>Other services are available on the
+<A href="http://www.xmethods.com">X Methods Website</A>.
+Experimenters may wish to create other tests which exercize services, with 
+specific user interfaces.
+<script src=soapproxy.js></script>
+<script src=soapelementsproxy.js></script>
 <SCRIPT>
 
-  var currentCall;
+var elements = new Elements();
+var currentnumber = "0";
+var currentsymbol = "";
+var add = false;
 
 // Passed in as the response handler in the asynchronous case
 // and called directly (see below) in the synchronous case
-function oncompletion(resp, call, status) { 
-  document.getElementById('BUTTON').value = "Call";
-  if (status != 0) {
-    alert("Error completion: " + status);
-    return true;
+function receiveelement(e)
+{ 
+  var info = document.getElementById('INFO');
+  if (!add) {
+    while (info != null) {
+      info.parentNode.removeChild(info);
+      info = document.getElementById('INFO');
+    }
   }
-
-  // Was there a SOAP fault in the response?
-  if (resp.fault != null) {
-    var f = resp.fault;
-    var detail = f.detail;
-    var ds = new XMLSerializer();
-    var detailStr = detail ? ds.serializeToString(detail) : "";
-    alert("Fault namespace: " + f.faultNamespaceURI + "\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
+  if (e != null) {
+    currentnumber = e.atomicnumber;
+    document.getElementById('NUMBER').value = currentnumber;
+    currentsymbol = e.symbol;
+    document.getElementById('SYMBOL').value = currentsymbol;
+    info = document.createElement("P");
+    info.id = "INFO";
+    var emphasis;
+    emphasis = document.createElement("B");
+    info.appendChild(emphasis);
+    emphasis.appendChild(document.createTextNode(e.name));
+    info.appendChild(document.createTextNode(" was discovered in the year "));
+    emphasis = document.createElement("B");
+    info.appendChild(emphasis);
+    emphasis.appendChild(document.createTextNode(e.found));
+    info.appendChild(document.createTextNode(".  Symbol: "));
+    emphasis = document.createElement("B");
+    info.appendChild(emphasis);
+    emphasis.appendChild(document.createTextNode(e.symbol));
+    info.appendChild(document.createTextNode(".  Atomic Number: "));
+    emphasis = document.createElement("B");
+    info.appendChild(emphasis);
+    emphasis.appendChild(document.createTextNode(e.atomicnumber));
+    info.appendChild(document.createTextNode(".  Mass: "));
+    emphasis = document.createElement("B");
+    info.appendChild(emphasis);
+    emphasis.appendChild(document.createTextNode(e.mass));
+    info.appendChild(document.createTextNode(".  Melting Point: "));
+    emphasis = document.createElement("B");
+    info.appendChild(emphasis);
+    emphasis.appendChild(document.createTextNode(e.meltingPoint));
+    info.appendChild(document.createTextNode("K.  Boiling Point: "));
+    emphasis = document.createElement("B");
+    info.appendChild(emphasis);
+    emphasis.appendChild(document.createTextNode(e.boilingPoint));
+    info.appendChild(document.createTextNode("K."));
+    document.getElementById('NUMBER').parentNode.appendChild(info);
   }
   else {
-    var ret = resp.getParameters(false, {})[0].value;
-
-    alert("atomicnumber: " + ret.atomicnumber + ", symbol: " + ret.symbol + ", name: " + ret.name + ", mass: " + ret.mass + ", melting point: " + ret.meltingPoint + ", boiling point: " + ret.boilingPoint + ", found: " + ret.found);
+    var number = document.getElementById('NUMBER').value;
+    var symbol = document.getElementById('SYMBOL').value;
+    //  Perhaps another search will find it
+    if (number != currentnumber || symbol != currentsymbol) {
+      element(number,symbol, add);
+    }
   }
-  return true;
 }
 
-function makeCall(symbol) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-  var s = new SOAPCall();
-  // The targetObjectURI, methodName and destinatioName are mandatory.
-  // The actionURI is optional.
-
-  s.transportURI = "http://213.23.125.181:8080/RPC";
-
-  // Set the parameters on the call object. Note that in this case,
-  // the last parameter is an object that will be serialized into
-  // a struct parameter. It does not have a parameter wrapper because 
-  // we don't need it to be named
-  s.encode(0, "getElementBySymbol", "urn:SpheonJSOAPChemistry", 0, null,
-    1, new Array(new SOAPParameter(symbol,"symbol")));
-    if (currentCall != null) { currentCall.abort(); }
-  document.getElementById('BUTTON').value = "Wait...";
-
-  //  The following line allows the browser with default security 
-  //  settings to attach a verifySource header instead of requesting 
-  //  UniversalBrowserRead.  Uncomment it if the server permits
-  //  verifySource headers.  If the server does not permit them, then
-  //  this setting will cause the service request to fail:
-
-  //s.verifySourceHeader = true;
-
-  //  If no verification of source headers is occurring, then it is necessary
-  //  to request privileges.
-
-  if (!s.verifySourceHeader)
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-
-  currentCall = s.asyncInvoke(oncompletion);
-  
+function element(number, symbol, additem) 
+{
+  if (symbol != "" && symbol != currentsymbol) {
+    currentsymbol = symbol;
+    elements.getElementBySymbol(currentsymbol, receiveelement);
+  }
+  else if (number != "" && number != currentnumber) {
+    currentnumber = number;
+    elements.getElementByNumber(currentnumber, receiveelement);
+  }
+  else if (symbol != "") {
+    currentsymbol = symbol;
+    elements.getElementBySymbol(currentsymbol, receiveelement);
+  }
+  else if (number != "") {
+    currentnumber = number;
+    elements.getElementByNumber(currentnumber, receiveelement);
+  }
+  add = additem;
 }
+
 </SCRIPT>
 <P>
 <FORM>
 
-<INPUT
-<INPUT ID=ELEMENT TYPE="text">
-<INPUT ID=BUTTON TYPE="button" VALUE="Call" ONCLICK="makeCall(document.getElementById('ELEMENT').value);">
+Symbol: <INPUT label=Symbol ID=SYMBOL TYPE="text">
+Atomic Number: <INPUT label=Number ID=NUMBER TYPE="text">
+<INPUT TYPE="button" VALUE="New" ONCLICK="element(document.getElementById('NUMBER').value,document.getElementById('SYMBOL').value,false);">
+<INPUT TYPE="button" VALUE="Add" ONCLICK="element(document.getElementById('NUMBER').value,document.getElementById('SYMBOL').value,true);">
+<INPUT TYPE="button" VALUE="Next" ONCLICK="element(1 + (document.getElementById('NUMBER').value - 0), currentsymbol, true);">
 </BODY>
 </HTML>

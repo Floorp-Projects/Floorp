@@ -1,81 +1,63 @@
 <HTML>
 <HEAD>
 </HEAD>
-<BODY>
+<BODY onload="soapcall()">
 <H1>SOAP Test: Statistics</H1>
-This passes an array to request the average and standard deviation.
+This passes an array to request the average and standard deviation.  This
+uses the low-level SOAP API of Mozilla directly, not hiding the use of the
+API in separate proxy objects as other examples may do.
+<p>View the source of this page for details on how it was called.  If you 
+compile mozilla DEBUG, the message sent and received will  be logged to the 
+console.
 <p>This works by calling a SOAP service listed on 
-<A href="http://www.xmethods.com">X Methods Website</A>.  View the source of this 
-page for details on how it was called.  If you compile mozilla DEBUG, the message sent and received will  be logged to the console.
-<p>Experimenters may wish to add other tests which exercize services, with specific 
-user interfaces such as the one in this test.
+<A href="http://www.xmethods.com">X Methods Website</A> using the low-level
+SOAP API in Mozilla.
+<p>Since this service is not friendly to untrusted applets, it may not be
+called without requesting additional privileges from the user.  It can be
+made friendly by accepting the verifySource header or by loading the page
+and proxy from the domain of the service.
+<p>Experimenters may wish to add other tests which exercize services, with 
+specific user interfaces such as the one in this test.
 <SCRIPT>
 
-  var currentCall;
+function soapcall() {
+  var s = new SOAPCall();
+  s.transportURI = "http://213.23.125.181:8080/RPC";
+  p = new SOAPParameter();
+  p.value = new Array(1.1,2.2,3.3,4.4,5.5);
+  p.name = "values";
+  s.encode(0, "getStatistics", "urn:SpheonJSOAPStatistics", 0, null, 1, 
+    new Array(p));
 
-// Passed in as the response handler in the asynchronous case
-// and called directly (see below) in the synchronous case
-function oncompletion(resp, call, status) { 
-  document.getElementById("BUTTON").value = "Call";
-  if (status != 0) {
-    alert("Error completion: " + status);
-    return true;
+  //s.verifySourceHeader = true;
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
+  var r = currentCall = s.invoke();
+
+  // Successful completion
+  if (r.fault == null) {
+    var ret = r.getParameters(false, {})[0].value;
+    r = "SOAP Call computed statistical functions on 1.1, 2.2, 3.3, 4.4, 5.5."
+      + "  Average: " + ret.average + " SD:" + ret.standardDeviation;
   }
-
-  // Was there a SOAP fault in the response?
-  if (resp.fault != null) {
-    var f = resp.fault;
+  
+  // Fault completion, alert with pertinent information
+  else {
+    var f = r.fault;
     var detail = f.detail;
     var ds = new XMLSerializer();
     var detailStr = detail ? ds.serializeToString(detail) : "";
-    alert("Fault namespace: " + f.faultNamespaceURI + "\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
+    r = ("Fault namespace: " + f.faultNamespaceURI 
+      + "\nFault code: " + f.faultCode + "\nFault string: " + f.faultString 
+      + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
   }
-  else {
-	  var ret = resp.getParameters(false, {})[0].value;
-	  alert("Average:" + ret.average + " SD:" + ret.standardDeviation);
-  }
+
+  document.getElementById("P").firstChild.nodeValue = r;
+
   return true;
 }
 
-function makeCall(values) {
-  var s = new SOAPCall();
-  // The targetObjectURI, methodName and destinatioName are mandatory.
-  // The actionURI is optional.
-
-  s.transportURI = "http://213.23.125.181:8080/RPC";
-
-  // Set the parameters on the call object. Note that in this case,
-  // the last parameter is an object that will be serialized into
-  // a struct parameter. It does not have a parameter wrapper because 
-  // we don't need it to be named
-  p = new SOAPParameter();
-  p.value = values;
-  p.name = "values";
-  s.encode(0, "getStatistics", "urn:SpheonJSOAPStatistics", 0, null, 1, new Array(p));
-
-  if (currentCall != null) { currentCall.abort(); }
-  document.getElementById("BUTTON").value = "Wait";
-
-  //  The following line allows the browser with default security 
-  //  settings to attach a verifySource header instead of requesting 
-  //  UniversalBrowserRead.  Uncomment it if the server permits
-  //  verifySource headers.  If the server does not permit them, then
-  //  this setting will cause the service request to fail:
-
-  //s.verifySourceHeader = true;
-
-  //  If no verification of source headers is occurring, then it is necessary
-  //  to request privileges.
-
-  if (!s.verifySourceHeader)
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-
-  currentCall = s.asyncInvoke(oncompletion);
-  
-}
 </SCRIPT>
-<P>
-<FORM>
-<INPUT ID=BUTTON TYPE="button" VALUE="Call" ONCLICK="makeCall(new Array(1.1,2.2,3.3,4.4,5.5));">
+<P id=P>SOAP call did not complete.  Look at the Javascript console to determine why.
 </BODY>
 </HTML>

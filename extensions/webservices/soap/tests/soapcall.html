@@ -1,107 +1,40 @@
 <HTML>
 <HEAD>
 </HEAD>
-<BODY>
-<H1>SOAP call test</H1>
+<BODY onload=showCall()>
+  <H1>SOAP Call Encoding Test</H1>
+  This encodes a call using the low-level Mozilla SOAP API and shows the resulting message.  
+  View the source of the page to see what was encoded.  This is useful to quickly test the
+  encoding of various arguments.  This call is never invoked.  Look at other soap samples for
+  calls that actually work.
 <SCRIPT>
 
-// Passed in as the response handler in the asynchronous case
-// and called directly (see below) in the synchronous case
-function oncompletion(resp, call, status) { 
-  if (status != 0) {
-    alert("Error completion: " + status);
-    return true;
-  }
+function showCall(syncCall, faultCall) {
 
-  // Was there a SOAP fault in the response?
-  if (resp.fault != null) {
-    var f = resp.fault;
-    var detail = f.detail;
-    var ds = new XMLSerializer();
-    var detailStr = detail ? ds.serializeToString(detail) : "";
-    alert("Fault namespace: " + f.faultNamespaceURI + "\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
-  }
-  else {
-    var ret = resp.getParameters(false, {});
-    var val = ret[0].value;
-    var retStr = "Success:\nName: " + ret.name + "\nValue: " + val;
-    // In this case, we happen to know that the result value is an array
-    // and the 5th parameter is a struct. 
-    var obj = val[4];
-    retStr += "\nObject:";
-    for (i in obj) {
-      retStr += "\n" + i + ":" + obj[i] + "\n";
-    }
-    alert(retStr);
-  }
-  return true;
-}
+  var soapversion = 0;  //  Version 1.1
 
-function makeCall(syncCall, faultCall) {
+  var method = "GetLastTradePrice";
+
+  var object = "uri:some-namespace";
+
+  var headers = new Array(
+    );
+  
+  var params = new Array(
+    new SOAPParameter("a string", "foo"),
+    new SOAPParameter(4, "bar"),
+    new SOAPParameter(true, "baz"),
+    new SOAPParameter(new Array(3, "another string", false, 5.235)),
+    new SOAPParameter({name: "Fido", breed: "Lab", color: "Black"})
+    );
+
   var s = new SOAPCall();
-  // The targetObjectURI, methodName and destinatioName are mandatory.
-  // The actionURI is optional.
-
-  if (faultCall) {
-    s.transportURI = "http://blueviper/cgi-bin/soapfault.cgi";
-  }
-  else {
-    s.transportURI = "http://blueviper/cgi-bin/soapsuccess.cgi";
-  }
-  s.actionURI = "uri:some action";
-
-  // Create parameter objects. This is needed if we want named parameters.
-  // If we don't want them to be named, we can just pass the
-  // raw JavaScript values into the setParameters method.
-  var p1 = new SOAPParameter("a string", "foo");
-  var p2 = new SOAPParameter(4, "bar");
-  var p3 = new SOAPParameter();
-  p3.name = "baz";
-  p3.value = true;
-  var p4 = new SOAPParameter();
-  p4.name = "bob";
-  p4.value = new Array(3, "another string", false, 5.235);
-
-  function Dog(name,breed,color) {
-     this.name=name
-     this.breed=breed
-     this.color=color
-  }
-
-  // Set the parameters on the call object. Note that in this case,
-  // the last parameter is an object that will be serialized into
-  // a struct parameter. It does not have a parameter wrapper because 
-  // we don't need it to be named
-  s.encode(1, "GetLastTradePrice", "uri:some-namespace", 0, null, 5, new Array(p1, p2, p3, p4, new SOAPParameter(new Dog("Fido", "Lab", "Black"))));
-
-
-  //  The following line allows the browser with default security 
-  //  settings to attach a verifySource header instead of requesting 
-  //  UniversalBrowserRead.  Uncomment it if the server permits
-  //  verifySource headers.  If the server does not permit them, then
-  //  this setting will cause the service request to fail:
-
-  //s.verifySourceHeader = true;
-
-  //  If no verification of source headers is occurring, then it is necessary
-  //  to request privileges.
-
-  if (!s.verifySourceHeader)
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-
-  if (syncCall) {
-    var r = s.invoke();
-    oncompletion(r, s, 0);
-  }
-  else {
-    s.asyncInvoke(oncompletion);
-  }
+  s.encode(soapversion, method, object, headers.length, headers, params.length, params);
+  var r = new XMLSerializer().serializeToString(s.message);
+  document.getElementById("P").firstChild.nodeValue = r;
 }
 </SCRIPT>
 <P>
-<FORM>
-<INPUT TYPE="button" VALUE="Sync call" onclick="makeCall(true, false);">
-<INPUT TYPE="button" VALUE="Async call" onclick="makeCall(false, false);">
-<INPUT TYPE="button" VALUE="Fault call" onclick="makeCall(true, true);">
+<P><CODE id=P>The SOAP call was not encoded.  Look at the Javascript console to determine why.
 </BODY>
 </HTML>
