@@ -199,14 +199,11 @@
       <method name="_hitEnter">
         <body>
         <![CDATA[
-          // if a button is focused, dispatch its command instead 
-          // of accepting the dialog
+          // if a dialog button is focused, do nothing, since its oncommand
+          // will fire, causing the _doButtonCommand to be called naturally
           var focused = document.commandDispatcher.focusedElement;
-          if (focused.localName == "button") {
-            if (focused.hasAttribute("dlgtype"))
-              this._doButtonCommand(focused.getAttribute("dlgtype"));
+          if (focused && focused.localName == "button" && focused.hasAttribute("dlgtype"))
             return;
-          }
             
           // only accept dialog if accept button is the default
           var btn = this.getButton("accept");
