@@ -51,6 +51,7 @@ class nsRenderingContextGTK : public nsRenderingContextImpl
 public:
   nsRenderingContextGTK();
   virtual ~nsRenderingContextGTK();
+  static nsresult Shutdown(); // release statics
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
