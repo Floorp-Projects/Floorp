@@ -100,7 +100,7 @@ nsButton::~nsButton()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsButton::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult nsButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
 {
   static NS_DEFINE_IID(kIButtonIID,    NS_IBUTTON_IID);
 
@@ -109,7 +109,7 @@ nsresult nsButton::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void**) &mAggWidget;
     return NS_OK;
   }
-  return nsWindow::QueryInterface(aIID, aInstancePtr);
+  return nsWindow::QueryObject(aIID, aInstancePtr);
 }
 
 

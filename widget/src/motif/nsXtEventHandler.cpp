@@ -71,7 +71,7 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   if (event->xexpose.count != 0)
     return ;
 
-  nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT);
+  nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT); 
 
   widgetWindow->OnPaint(pevent);
 

@@ -18,6 +18,8 @@
 #ifndef Window_h__
 #define Window_h__
 
+#include "nsISupports.h"
+
 #include "nsToolkit.h"
 
 #include "nsIWidget.h"
@@ -45,6 +47,11 @@ public:
     virtual                 ~nsWindow();
 
     NS_DECL_ISUPPORTS
+
+
+    NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+    nsrefcnt AddRefObject(void);
+    nsrefcnt ReleaseObject(void);
 
     // nsIWidget interface
     virtual void            Create(nsIWidget *aParent,
@@ -138,6 +145,24 @@ protected:
   nsCursor    mCursor;
   nsBorderStyle mBorderStyle;
   nsRect      mBounds;
+
+  nsISupports* mOuter;
+
+  class InnerSupport : public nsISupports {
+  public:
+      InnerSupport() {}
+
+#define INNER_OUTER \
+            ((nsWindow*)((char*)this - offsetof(nsWindow, mInner)))
+
+      NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr)
+                                { return INNER_OUTER->QueryObject(aIID, aInstancePtr); }
+      NS_IMETHOD_(nsrefcnt) AddRef(void)
+                                { return INNER_OUTER->AddRefObject(); }
+      NS_IMETHOD_(nsrefcnt) Release(void)
+                              { return INNER_OUTER->ReleaseObject(); }
+  } mInner;
+  friend InnerSupport;
 
 };
 
