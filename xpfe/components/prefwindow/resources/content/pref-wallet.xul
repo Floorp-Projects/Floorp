@@ -48,34 +48,26 @@
 	</box>
  
   <html:fieldset>
-    <html:legend>
-      &walletHeader;
-    </html:legend>
-    <html:div>
-      &walletDetails;
-    </html:div>
+    <html:legend>&walletHeader;</html:legend>
+    <html:div class="hspace-both">&walletDetails;</html:div>
     <spring style="height: 10px;"/>
-		<box align="horizontal" style="width: 100%;" flex="100%">
+		<box align="horizontal" style="width: 93%;" flex="100%" class="hspace-both">
      	<html:label for="walletServer" accesskey="c" tabindex="0">
 	    	&server.label;
   	  </html:label> 
    		<html:input name="Wallet Server:" type="text"	id="walletServer" 
                   pref="true" preftype="string" prefstring="wallet.Server" flex="100%"/> 
 	  </box> 
-    <box align="horizontal" flex="100%" style="width: 100%">
+    <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
       <spring flex="100%"/>
       <titledbutton value="&viewWallet.label;" class="dialog push" onclick="viewWallet();"/>
     </box>
   </html:fieldset>
 
   <html:fieldset>
-    <html:legend>
-      &signonHeader;
-    </html:legend>
-    <html:div>
-      &signonDetails;
-    </html:div>
-    <box align="horizontal" flex="100%" style="width: 100%">
+    <html:legend>&signonHeader;</html:legend>
+    <html:div class="hspace-both">&signonDetails;</html:div>
+    <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
       <spring flex="100%"/>
       <titledbutton value="&viewSignons.label;" class="dialog push" onclick="viewSignons();"/>
     </box>

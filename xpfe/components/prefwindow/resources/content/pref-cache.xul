@@ -40,7 +40,7 @@
 	</box>
 
   <html:fieldset style="width: 100%">
-   	<box align="vertical" style="width: 100%;" flex="100%">
+   	<box align="vertical" style="width: 93%;" flex="100%" class="hspace-both">
 	  	<html:div>&cachePara;</html:div>
       <spring style="height: 15px;"/>
       <box align="horizontal" flex="100%">
@@ -78,8 +78,10 @@
        			<titledbutton class="dialog push" name="clearm" value="&clearDiskcacheButton.label;" />
           </box>
           <box align="vertical" flex="100%">
+            <box align="horizontal" style="padding-right: 3px;">
          			<html:input name="disk" type="text" id="browserCacheDirectory"
                           pref="true" preftype="string" prefstring="browser.cache.directory" flex="100%"/>
+            </box>
           </box>
           <box align="horizontal">
             <spring flex="100%"/>
@@ -92,23 +94,23 @@
   </html:fieldset>
   
   <html:fieldset>
+    <html:div class="hspace-both">&docCache;</html:div>
 	  <box align="vertical" style="width: 100%;">
-		  <html:div>&docCache;</html:div>
-  		<html:div>
+  		<html:div class="hspace-both vspace">
     		<html:input name="cacheDocFreq" type="radio" id="browserCacheCheckDocFrequency0"
                     pref="true" preftype="int" prefindex="0" prefstring="browser.cache.check_doc_frequency"/>
 			<html:label for="browserCacheCheckDocFrequency0" accesskey="o" tabindex="0">
 			&oncePsessionRadio.label;
 			</html:label>
 		</html:div>
-		<html:div>
+		<html:div class="hspace-both">
     		<html:input name="cacheDocFreq" type="radio" id="browserCacheCheckDocFrequency1"
                     pref="true" preftype="int" prefindex="1" prefstring="browser.cache.check_doc_frequency"/>
 			<html:label for="browserCacheCheckDocFrequency1" accesskey="e" tabindex="0">
 			&everyTimeRadio.label;	
 			</html:label>
 		</html:div>
-    	<html:div>
+    	<html:div class="hspace-both">
     		<html:input name="cacheDocFreq" type="radio" id="browserCacheCheckDocFrequency2"
                     pref="true" preftype="int" prefinex="1" prefstring="browser.cache.check_doc_frequency"/>
 			<html:label for="browserCacheCheckDocFrequency2" accesskey="n" tabindex="0">
