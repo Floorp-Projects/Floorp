@@ -353,7 +353,7 @@ nsMsgCopyService::FindRequest(nsISupports* aSupport,
         nsresult rv = NS_OK;
         PRBool isServer=PR_FALSE;
         dstFolder->GetIsServer(&isServer);
-        if (isServer)
+        if (!isServer)
           rv = dstFolder->GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
         if ((NS_FAILED(rv)) || (!parentMsgFolder && !isServer) || (copyRequest->m_dstFolder.get() != parentMsgFolder))
         {
@@ -543,13 +543,13 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsIMsgDBHdr* msgToReplace,
                                   PRBool isDraft,
                                   nsIMsgCopyServiceListener* listener,
-	                               nsIMsgWindow* window)
+                                  nsIMsgWindow* window)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   nsCopyRequest* copyRequest;
   nsCopySource* copySource = nsnull;
   nsCOMPtr<nsISupports> fileSupport;
-	nsCOMPtr<nsITransactionManager> txnMgr;
+  nsCOMPtr<nsITransactionManager> txnMgr;
 
   NS_ENSURE_ARG_POINTER(fileSpec);
   NS_ENSURE_ARG_POINTER(dstFolder);
@@ -597,10 +597,9 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
   nsresult rv;
   rv = DoNextCopy();
   nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
-  if (copyRequest && copyRequest->m_processed)
-  {
+
+  if (copyRequest && copyRequest->m_processed) 
     ClearRequest(copyRequest, result);
-  }
 
   return rv;
 }
