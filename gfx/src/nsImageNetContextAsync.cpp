@@ -176,6 +176,14 @@ NS_IMETHODIMP ImageConsumer::GetInterface(const nsIID & aIID, void * *aInstanceP
 }
 
 // nsIURIContentListener support
+
+NS_IMETHODIMP 
+ImageConsumer::OnStartURIOpen(nsIURI* aURI, 
+   const char* aWindowTarget, PRBool* aAbortOpen)
+{
+   return NS_OK;
+}
+
 NS_IMETHODIMP
 ImageConsumer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
 {

@@ -54,6 +54,16 @@ NS_INTERFACE_MAP_END
 // nsDSURIContentListener::nsIURIContentListener
 //*****************************************************************************   
 
+NS_IMETHODIMP nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, 
+   const char* aWindowTarget, PRBool* aAbortOpen)
+{
+   if(mParentContentListener)
+      return mParentContentListener->OnStartURIOpen(aURI, aWindowTarget, 
+         aAbortOpen);
+
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDSURIContentListener::GetProtocolHandler(nsIURI* aURI,
    nsIProtocolHandler** aProtocolHandler)
 {
