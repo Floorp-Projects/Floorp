@@ -63,7 +63,7 @@ PRIVATE void stub_GraphProgressInit(MWContext  *context,
         if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
             nsAutoString status;
 
-            pConn->pConsumer->OnProgress(0, content_length, status);
+            pConn->pConsumer->OnProgress(pConn->pURL, 0, content_length, status);
         }
     }
 }
@@ -88,7 +88,8 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
         if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
             nsAutoString status;
 
-            pConn->pConsumer->OnProgress(bytes_received, content_length, status);
+            pConn->pConsumer->OnProgress(pConn->pURL, bytes_received, 
+                                         content_length, status);
         }
     }
 }
@@ -117,7 +118,8 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
         if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
             nsAutoString status;
 
-            pConn->pConsumer->OnProgress(total_bytes_read, content_length, status);
+            pConn->pConsumer->OnProgress(pConn->pURL, total_bytes_read, 
+                                         content_length, status);
         }
     }
 }
@@ -328,7 +330,7 @@ void stub_complete(NET_StreamClass *stream)
     if (pConn->pConsumer) {
         nsAutoString status;
 
-        pConn->pConsumer->OnStopBinding(NS_BINDING_SUCCEEDED, status);
+        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status);
         pConn->pConsumer->Release();
         pConn->pConsumer = NULL;
     }
@@ -358,7 +360,7 @@ void stub_abort(NET_StreamClass *stream, int status)
     if (pConn->pConsumer) {
         nsAutoString status;
 
-        pConn->pConsumer->OnStopBinding(NS_BINDING_ABORTED, status);
+        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_ABORTED, status);
         pConn->pConsumer->Release();
         pConn->pConsumer = NULL;
     }
@@ -390,7 +392,7 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
 
     /* XXX: check return value to abort connection if necessary */
     if (pConn->pConsumer && (0 < bytesWritten)) {
-        pConn->pConsumer->OnDataAvailable(pConn->pNetStream, bytesWritten);
+        pConn->pConsumer->OnDataAvailable(pConn->pURL, pConn->pNetStream, bytesWritten);
     }
 
     return (bytesWritten == length);
@@ -492,7 +494,7 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
             if (pConn->pConsumer) {
                 nsresult rv;
 
-                rv = pConn->pConsumer->OnStartBinding(URL_s->content_type);
+                rv = pConn->pConsumer->OnStartBinding(pConn->pURL, URL_s->content_type);
                 /*
                  * If OnStartBinding fails, then tear down the NET_StreamClass
                  * and release all references...

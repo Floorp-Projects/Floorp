@@ -655,7 +655,7 @@ PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
  *  @param   
  *  @return  
  */
-nsresult nsParser::GetBindInfo(void){
+nsresult nsParser::GetBindInfo(nsIURL* aURL){
   nsresult result=0;
   return result;
 }
@@ -668,12 +668,12 @@ nsresult nsParser::GetBindInfo(void){
  *  @return  
  */
 nsresult
-nsParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+nsParser::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                          const nsString& aMsg)
 {
   nsresult result=0;
   if (nsnull != mObserver) {
-    mObserver->OnProgress(aProgress, aProgressMax, aMsg);
+    mObserver->OnProgress(aURL, aProgress, aProgressMax, aMsg);
   }
   return result;
 }
@@ -685,9 +685,9 @@ nsParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
  *  @param   
  *  @return  
  */
-nsresult nsParser::OnStartBinding(const char *aSourceType){
+nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
   if (nsnull != mObserver) {
-    mObserver->OnStartBinding(aSourceType);
+    mObserver->OnStartBinding(aURL, aSourceType);
   }
   mParserContext->mAutoDetectStatus=eUnknownDetect;
   mParserContext->mDTD=0;
@@ -703,7 +703,7 @@ nsresult nsParser::OnStartBinding(const char *aSourceType){
  *  @param   length is the number of bytes waiting input
  *  @return  error code (usually 0)
  */
-nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
+nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length){
 /*  if (nsnull != mListener) {
       //Rick potts removed this.
       //Does it need to be here?
@@ -747,10 +747,10 @@ nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
  *  @param   
  *  @return  
  */
-nsresult nsParser::OnStopBinding(PRInt32 status, const nsString& aMsg){
+nsresult nsParser::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg){
   nsresult result=DidBuildModel(status);
   if (nsnull != mObserver) {
-    mObserver->OnStopBinding(status, aMsg);
+    mObserver->OnStopBinding(aURL, status, aMsg);
   }
   return result;
 }

@@ -497,7 +497,7 @@ DocObserver::StyleSheetAdded(nsIStyleSheet* aStyleSheet)
 }
 
 NS_IMETHODIMP
-DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+DocObserver::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg)
 {
   fputs(mURL, stdout);
@@ -510,7 +510,7 @@ DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
 }
 
 NS_IMETHODIMP
-DocObserver::OnStartBinding(const char *aContentType)
+DocObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   //start the throbber...
   if (nsnull != mViewer)
@@ -522,7 +522,7 @@ DocObserver::OnStartBinding(const char *aContentType)
 }
 
 NS_IMETHODIMP
-DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
+DocObserver::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
   fputs(mURL, stdout);
   fputs(": stop\n", stdout);

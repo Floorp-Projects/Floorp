@@ -43,10 +43,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(const char *aContentType);
-  NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg);
-  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
     
   // Add a URL to the doc loader
   void AddURL(char* aURL);

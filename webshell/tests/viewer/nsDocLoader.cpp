@@ -301,7 +301,7 @@ void nsDocLoader::CancelAll()
 
 
 NS_IMETHODIMP
-nsDocLoader::OnStartBinding(const char *aContentType)
+nsDocLoader::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
   fputs(*url, stdout);
@@ -310,7 +310,7 @@ nsDocLoader::OnStartBinding(const char *aContentType)
 }
 
 NS_IMETHODIMP
-nsDocLoader::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+nsDocLoader::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg)
 {
   nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
@@ -324,7 +324,7 @@ nsDocLoader::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
 }
 
 NS_IMETHODIMP
-nsDocLoader::OnStopBinding(PRInt32 status, const nsString& aMsg)
+nsDocLoader::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
   nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
   fputs(*url, stdout);

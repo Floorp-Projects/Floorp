@@ -66,10 +66,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStreamObserver
-  NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg);
-  NS_IMETHOD OnStartBinding(const char *aContentType);
-  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
 
 protected:
 
@@ -808,7 +808,7 @@ TempObserver::QueryInterface(const nsIID& aIID,
 
 
 NS_IMETHODIMP
-TempObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+TempObserver::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg)
 {
   fputs("[progress ", stdout);
@@ -820,7 +820,7 @@ TempObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
 }
 
 NS_IMETHODIMP
-TempObserver::OnStartBinding(const char *aContentType)
+TempObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   fputs("Loading ", stdout);
   fputs(mURL, stdout);
@@ -829,7 +829,7 @@ TempObserver::OnStartBinding(const char *aContentType)
 }
 
 NS_IMETHODIMP
-TempObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
+TempObserver::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
   fputs("Done loading ", stdout);
   fputs(mURL, stdout);

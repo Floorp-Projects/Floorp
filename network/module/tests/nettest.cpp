@@ -54,11 +54,11 @@ public:
     
     TestConsumer();
 
-    NS_IMETHOD GetBindInfo(void);
-    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg);
-    NS_IMETHOD OnStartBinding(const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
-    NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
+    NS_IMETHOD GetBindInfo(nsIURL* aURL);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg);
+    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
 
 protected:
     ~TestConsumer();
@@ -83,17 +83,17 @@ TestConsumer::~TestConsumer()
 }
 
 
-NS_IMETHODIMP TestConsumer::GetBindInfo(void)
+NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURL* aURL)
 {
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::GetBindInfo\n");
+        printf("\n+++ TestConsumer::GetBindInfo: URL: %p\n", aURL);
     }
 
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, 
-                                       const nsString& aMsg)
+NS_IMETHODIMP TestConsumer::OnProgress(nsIURL* aURL, PRInt32 Progress, 
+                                       PRInt32 ProgressMax, const nsString& aMsg)
 {
     if (bTraceEnabled) {
         if (aMsg.Length()) {
@@ -101,29 +101,29 @@ NS_IMETHODIMP TestConsumer::OnProgress(PRInt32 Progress, PRInt32 ProgressMax,
             fputs(aMsg, stdout);
             fputs("\n", stdout);
         } else {
-            printf("\n+++ TestConsumer::OnProgress: %d of total %d\n", Progress, ProgressMax);
+            printf("\n+++ TestConsumer::OnProgress: URL: %p - %d of total %d\n", aURL, Progress, ProgressMax);
         }
     }
 
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStartBinding(const char *aContentType)
+NS_IMETHODIMP TestConsumer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::OnStartBinding: Content type: %s\n", aContentType);
+        printf("\n+++ TestConsumer::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
     }
 
     return 0;
 }
 
 
-NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length) 
+NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length) 
 {
     PRInt32 len;
 
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::OnDataAvailable: %d bytes available...\n", length);
+        printf("\n+++ TestConsumer::OnDataAvailable: URL: %p, %d bytes available...\n", aURL, length);
     }
 
     do {
@@ -141,10 +141,10 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 le
 }
 
 
-NS_IMETHODIMP TestConsumer::OnStopBinding(PRInt32 status, const nsString& aMsg)
+NS_IMETHODIMP TestConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::OnStopBinding... status: %d\n", status);
+        printf("\n+++ TestConsumer::OnStopBinding... URL: %p status: %d\n", aURL, status);
     }
 
     /* The document has been loaded, so drop out of the message pump... */
