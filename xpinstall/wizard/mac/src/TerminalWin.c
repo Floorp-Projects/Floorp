@@ -303,6 +303,7 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		    DisableNavButtons();
 		    ClearSiteSelector();
 			SpawnSDThread(Install, &tid);
+			gInstallStarted = true;
 			return;
 		}
 	}
