@@ -50,6 +50,7 @@ OBJS =                                      \
 	.\$(OBJDIR)\nsThrobber.obj     \
 	.\$(OBJDIR)\nsViewerApp.obj         \
 	.\$(OBJDIR)\nsWebCrawler.obj        \
+	.\$(OBJDIR)\nsWebBrowserChrome.obj        \
 	.\$(OBJDIR)\nsWinMain.obj           \
 	.\$(OBJDIR)\JSConsole.obj           \
 	$(NULL)
