@@ -686,8 +686,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
       return NS_ERROR_FAILURE;
 
     // load it
-    rv = loader->OpenURI(channel, nsIURILoader::viewUserClick,
-			 listenerRef);
+    rv = loader->OpenURI(channel, PR_TRUE, listenerRef);
   }
 
   else {
