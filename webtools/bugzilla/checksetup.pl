@@ -669,6 +669,7 @@ $table{profiles} =
     emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges",
     disabledtext mediumtext not null,
     newemailtech tinyint not null,
+    mybugslink tinyint not null default 1,
 
     unique(login_name)';
 
@@ -677,6 +678,7 @@ $table{namedqueries} =
     'userid mediumint not null,
      name varchar(64) not null,
      watchfordiffs tinyint not null,
+     linkinfooter tinyint not null,
      query mediumtext not null,
 
      unique(userid, name),
@@ -1401,6 +1403,13 @@ if (GetIndexDef('profiles', 'login_name')->[1]) {
 
 }    
 
+
+# 2000-01-24 Added a new field to let people control whether the "My
+# bugs" link appears at the bottom of each page.  Also can control
+# whether each named query should show up there.
+
+AddField('profiles', 'mybugslink', 'tinyint not null default 1');
+AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 
 
 #

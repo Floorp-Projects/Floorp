@@ -225,19 +225,21 @@ sub GenerateEmailInput {
     }
 
 
-    return qq|
+    $default{"emailtype$id"} ||= "substring";
+
+    return qq{
 <table border=1 cellspacing=0 cellpadding=0>
 <tr><td>
 <table cellspacing=0 cellpadding=0>
 <tr>
 <td rowspan=2 valign=top><a href="helpemailquery.html">Email:</a>
 <input name="email$id" size="30" value="$defstr">&nbsp;matching as
-<SELECT NAME=emailtype$id>
-<OPTION VALUE="regexp">regexp
-<OPTION VALUE="notregexp">not regexp
-<OPTION SELECTED VALUE="substring">substring
-<OPTION VALUE="exact">exact
-</SELECT>
+} . BuildPulldown("emailtype$id",
+                  [["regexp", "regexp"],
+                   ["notregexp", "not regexp"],
+                   ["substring", "substring"],
+                   ["exact", "exact"]],
+                  $default{"emailtype$id"}) . qq{
 </td>
 <td>
 <input type="checkbox" name="emailassigned_to$id" value=1 $assignedto>Assigned To
@@ -262,7 +264,7 @@ sub GenerateEmailInput {
 </tr>
 </table>
 </table>
-|;
+};
 }
 
 
@@ -748,7 +750,7 @@ if (UserInGroup("editkeywords")) {
 if ($userid) {
     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
-print "<a href=changepassword.cgi>Change your password or preferences.</a><br>\n";
+print "<a href=userprefs.cgi>Change your password or preferences.</a><br>\n";
 print "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>\n";
 print "<a href=\"createaccount.cgi\">Open a new Bugzilla account</a><br>\n";
 print "<a href=\"reports.cgi\">Bug reports</a><br>\n";

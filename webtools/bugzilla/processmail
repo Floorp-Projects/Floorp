@@ -656,7 +656,7 @@ sub ProcessOneBug {
     if (@sentlist) {
         print "<B>Email sent to:</B> " . join(", ", @sentlist) . "\n";
         if ($didexclude) {
-            print "<B>Excluding:</B> $nametoexclude (<a href=changepassword.cgi>change your preferences</a> if you wish not to be excluded)\n";
+            print qq{<B>Excluding:</B> $nametoexclude (<a href="userprefs.cgi?bank=diffs">change your preferences</a> if you wish not to be excluded)\n};
         }
     }
     rename($new, $old) || die "Can't rename $new to $old";

@@ -141,9 +141,17 @@ individual query.
             PutFooter();
             exit();
         }
-        SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
-                "($userid, " . SqlQuote($name) .
-                ", " . SqlQuote($::buffer) . ")");
+        $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
+        my $qname = SqlQuote($name);
+        SendSQL("SELECT query FROM namedqueries " .
+                "WHERE userid = $userid AND name = $qname");
+        if (!FetchOneColumn()) {
+            SendSQL("REPLACE INTO namedqueries (userid, name, query) " .
+                    "VALUES ($userid, $qname, " . SqlQuote($::buffer) . ")");
+        } else {
+            SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) .
+                    " WHERE userid = $userid AND name = $qname");
+        }
         PutHeader("OK, query saved.");
         print qq{
 OK, you have a new query named <code>$name</code>
@@ -874,6 +882,7 @@ if ($count == 0) {
 
     print qq{<p><A HREF="query.cgi">Query Page</A>\n};
     print qq{&nbsp;&nbsp;<A HREF="enter_bug.cgi">Enter New Bug</A>\n};
+    print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
 } elsif ($count == 1) {
     print "One bug found.\n";
 } else {

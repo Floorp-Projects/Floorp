@@ -474,6 +474,25 @@ sub make_popup {
 }
 
 
+sub BuildPulldown {
+    my ($name, $valuelist, $default) = (@_);
+
+    my $entry = qq{<SELECT NAME="$name">};
+    foreach my $i (@$valuelist) {
+        my ($tag, $desc) = (@$i);
+        my $selectpart = "";
+        if ($tag eq $default) {
+            $selectpart = " SELECTED";
+        }
+        $entry .= qq{<OPTION$selectpart VALUE="$tag">$desc\n};
+    }
+    $entry .= qq{</SELECT>};
+    return $entry;
+}
+
+
+
+
 sub PasswordForLogin {
     my ($login) = (@_);
     SendSQL("select cryptpassword from profiles where login_name = " .
@@ -563,7 +582,7 @@ To use the wonders of bugzilla, you can use the following:
        Password: %s
 
  To change your password, go to:
- ${urlbase}changepassword.cgi
+ ${urlbase}userprefs.cgi
 
  (Your bugzilla and CVS password, if any, are not currently synchronized.
  Top hackers are working around the clock to fix this, as you read this.)
@@ -846,29 +865,27 @@ sub GetCommandMenu {
     if ($loggedin) {
         my $mybugstemplate = Param("mybugstemplate");
         my %substs;
-        $substs{'userid'} = $::COOKIE{"Bugzilla_login"};
+        $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
         if (!defined $::anyvotesallowed) {
             GetVersionTable();
         }
         if ($::anyvotesallowed) {
             $html .= qq{ | <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
         }
-        my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
-        $html = $html . " | <A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
-    }
-                
-    $html = $html . " | <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
-
-    my $onLogPage = 0;
-    if (defined $ENV{"HTTP_REFERER"}) {
-        #my $referrer = $ENV{"HTTP_REFERER"};
-        #my @parts = split("/",$referrer);
-        #my $called_from = $parts[@parts-1];
-        #confirm_login($called_from);
-    }
-
-    if ($loggedin) {
-        $html .= "| <NOBR>Edit <a href='changepassword.cgi'>prefs</a></NOBR>";
+        SendSQL("SELECT mybugslink, userid FROM profiles WHERE login_name = " .
+                SqlQuote($::COOKIE{'Bugzilla_login'}));
+        my ($mybugslink, $userid) = (FetchSQLData());
+        if ($mybugslink) {
+            my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
+            $html = $html . " | <A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
+        }
+        SendSQL("SELECT name,query FROM namedqueries " .
+                "WHERE userid = $userid AND linkinfooter");
+        while (MoreSQLData()) {
+            my ($name, $query) = (FetchSQLData());
+            $html .= qq{ | <A HREF="buglist.cgi?$query"><NOBR>$name</A>};
+        }
+        $html .= " | <NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
         if (UserInGroup("tweakparams")) {
             $html .= ", <a href=editparams.cgi>parameters</a>";
             $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
@@ -882,9 +899,12 @@ sub GetCommandMenu {
         if (UserInGroup("editkeywords")) {
             $html .= ", <a href=editkeywords.cgi>keywords</a>";
         }
-        $html = $html . " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
+        $html .= " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
     } else {
-        $html = $html . " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
+        $html .=
+            " | <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
+        $html .=
+            " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
     }
     $html .= "</FORM>";                
     return $html;

@@ -205,8 +205,10 @@ information about what Bugzilla is and what it can do, see
 DefParam("mybugstemplate",
          "This is the URL to use to bring up a simple 'all of my bugs' list for a user.  %userid% will get replaced with the login name of a user.",
          "t",
-         "buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&assigned_to=%userid%");
+         "buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=%userid%&emailtype1=exact&emailassigned_to1=1&emailreporter1=1");
     
+
+
 DefParam("shutdownhtml",
          "If this field is non-empty, then Bugzilla will be completely disabled and this text will be displayed instead of all the Bugzilla pages.",
          "l",
