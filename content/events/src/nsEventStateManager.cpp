@@ -4206,44 +4206,50 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
       // If so, the caret is actually sitting in front of the next
       // logical frame's primary node - so for this case we need to
       // change caretContent to that node.
-      nsCOMPtr<nsIContent> origStartContent(startContent), rootContent;
-      mDocument->GetRootContent(getter_AddRefs(rootContent));
-      nsAutoString nodeValue;
+
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(startContent));
-      domNode->GetNodeValue(nodeValue);
+      PRUint16 nodeType;
+      domNode->GetNodeType(&nodeType);
 
-      nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(startContent));
+      if (nodeType == nsIDOMNode::TEXT_NODE) {      
+        nsCOMPtr<nsIContent> origStartContent(startContent), rootContent;
+        mDocument->GetRootContent(getter_AddRefs(rootContent));
+        nsAutoString nodeValue;
+        domNode->GetNodeValue(nodeValue);
 
-      if (nodeValue.Length() == *aStartOffset && !formControl && startContent != rootContent) {
-        // Yes, indeed we were at the end of the last node
-        nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+        nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(startContent));
 
-        nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,
-                                                           &rv));
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (nodeValue.Length() == *aStartOffset && !formControl && startContent != rootContent) {
+          // Yes, indeed we were at the end of the last node
+          nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
-        rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                     mPresContext, startFrame);
-        NS_ENSURE_SUCCESS(rv, rv);
+          nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,
+                                                             &rv));
+          NS_ENSURE_SUCCESS(rv, rv);
 
-        do {   
-          // Get the next logical frame, and set the start of
-          // focusable elements. Search for focusable elements from there.
-          // Continue getting next frame until the primary node for the frame
-          // we are on changes - we don't want to be stuck in the same place
-          frameTraversal->Next();
-          nsISupports* currentItem;
-          frameTraversal->CurrentItem(&currentItem);
-          startFrame = NS_STATIC_CAST(nsIFrame*, currentItem);
-          if (startFrame) {
-            PRBool endEqualsStart(startContent == endContent);
-            startFrame->GetContent(getter_AddRefs(startContent));
-            if (endEqualsStart)            
-              endContent = startContent;
+          rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
+                                       mPresContext, startFrame);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          do {   
+            // Get the next logical frame, and set the start of
+            // focusable elements. Search for focusable elements from there.
+            // Continue getting next frame until the primary node for the frame
+            // we are on changes - we don't want to be stuck in the same place
+            frameTraversal->Next();
+            nsISupports* currentItem;
+            frameTraversal->CurrentItem(&currentItem);
+            startFrame = NS_STATIC_CAST(nsIFrame*, currentItem);
+            if (startFrame) {
+              PRBool endEqualsStart(startContent == endContent);
+              startFrame->GetContent(getter_AddRefs(startContent));
+              if (endEqualsStart)            
+                endContent = startContent;
+            }
+            else break;
           }
-          else break;
+          while (startContent == origStartContent);
         }
-        while (startContent == origStartContent);
       }
     }
   }
