@@ -129,8 +129,10 @@ nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
                  &width, &height,
                  &bwidth_ignore, &depth);
 
+#if 0
     if (depth != 32)
         fprintf (stderr, "**** nsCairoDrawingSurface::Init with Widget: depth is %d!\n", depth);
+#endif
 
     mWidth = width;
     mHeight = height;

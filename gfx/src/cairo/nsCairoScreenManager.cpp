@@ -52,8 +52,11 @@ nsIScreen*
 nsCairoScreenManager::CreateNewScreenObject()
 {
     nsIScreen* retval = nsnull;
-    if (!mCachedMainScreen)
-        mCachedMainScreen = new nsCairoScreen();
+    if (!mCachedMainScreen) {
+        nsCairoScreen *ncs = new nsCairoScreen();
+        ncs->Init();
+        mCachedMainScreen = ncs;
+    }
 
     NS_IF_ADDREF(retval = mCachedMainScreen.get());
 
