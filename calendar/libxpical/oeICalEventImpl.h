@@ -97,10 +97,10 @@ private:
     char *m_id;
     char *m_syncid;
     nsCString m_title;
-    char *m_description;
-    char *m_location;
-    char *m_category;
-    char *m_url;
+    nsCString m_description;
+    nsCString m_location;
+    nsCString m_category;
+    nsCString m_url;
     short m_priority;
     eventMethodProperty m_method;
     eventStatusProperty m_status;

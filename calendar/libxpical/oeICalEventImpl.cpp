@@ -245,10 +245,10 @@ oeICalEventImpl::oeICalEventImpl()
     }
     m_id = nsnull;
     m_title.SetIsVoid(true);
-    m_description = nsnull;
-    m_location = nsnull;
-    m_category = nsnull;
-    m_url = nsnull;
+    m_description.SetIsVoid(true);
+    m_location.SetIsVoid(true);
+    m_category.SetIsVoid(true);
+    m_url.SetIsVoid(true);
     m_priority = 0;
     m_method = 0;
     m_status = 0;
@@ -282,14 +282,6 @@ oeICalEventImpl::~oeICalEventImpl()
     /* destructor code */
     if( m_id )
         nsMemory::Free( m_id );
-    if( m_description )
-        nsMemory::Free( m_description );
-    if( m_location )
-        nsMemory::Free( m_location );
-    if( m_category )
-        nsMemory::Free( m_category );
-    if( m_url )
-        nsMemory::Free( m_url );
     if( m_alarmunits )
         nsMemory::Free( m_alarmunits );
     if( m_alarmemail  )
@@ -379,144 +371,103 @@ NS_IMETHODIMP oeICalEventImpl::SetTitle(const nsACString& aNewVal)
 }
 
 /* attribute string Description; */
-NS_IMETHODIMP oeICalEventImpl::GetDescription(char * *aRetVal)
+NS_IMETHODIMP oeICalEventImpl::GetDescription(nsACString& aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "GetDescription() = " );
 #endif
-    if( m_description ) {
-        *aRetVal= (char*) nsMemory::Clone( m_description , strlen(m_description)+1);
-        if( *aRetVal == nsnull )
-            return  NS_ERROR_OUT_OF_MEMORY;
-    } else
-        *aRetVal= EmptyReturn();
+    aRetVal = m_description;
     
 #ifdef ICAL_DEBUG_ALL
-    printf( "\"%s\"\n", *aRetVal );
+    printf( "\"%s\"\n", PromiseFlatCString( aRetVal ).get()  );
 #endif
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::SetDescription(const char * aNewVal)
+NS_IMETHODIMP oeICalEventImpl::SetDescription(const nsACString& aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetDescription( %s )\n", aNewVal );
+    printf( "SetDescription( %s )\n", PromiseFlatCString( aNewVal ).get() );
 #endif
 
-    if( m_description )
-        nsMemory::Free( m_description );
-    
-    if( aNewVal )
-        m_description= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
-    else
-        m_description = nsnull;
+    m_description = aNewVal;
     
     return NS_OK;
 }
 
 /* attribute string Location; */
-NS_IMETHODIMP oeICalEventImpl::GetLocation(char **aRetVal)
+NS_IMETHODIMP oeICalEventImpl::GetLocation(nsACString& aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "GetLocation() = " );
 #endif
 
-    if( m_location ) {
-        *aRetVal= (char*) nsMemory::Clone( m_location , strlen(m_location)+1);
-        if( *aRetVal == nsnull )
-            return  NS_ERROR_OUT_OF_MEMORY;
-    } else
-        *aRetVal= EmptyReturn();
+    aRetVal= m_location;
 
 #ifdef ICAL_DEBUG_ALL
-    printf( "\"%s\"\n", *aRetVal );
+    printf( "\"%s\"\n", PromiseFlatCString( aRetVal ).get()  );
 #endif
    return NS_OK;
 }
-NS_IMETHODIMP oeICalEventImpl::SetLocation(const char * aNewVal)
+NS_IMETHODIMP oeICalEventImpl::SetLocation(const nsACString& aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetLocation( %s )\n", aNewVal );
+    printf( "SetLocation( %s )\n", PromiseFlatCString( aNewVal ).get() );
 #endif
 
-    if( m_location )
-        nsMemory::Free( m_location );
-    
-    if( aNewVal )
-        m_location= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
-    else
-        m_location = nsnull;
+    m_location = aNewVal;
 
     return NS_OK;
 }
 
 /* attribute string Category; */
-NS_IMETHODIMP oeICalEventImpl::GetCategories(char **aRetVal)
+NS_IMETHODIMP oeICalEventImpl::GetCategories(nsACString& aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "GetCategories() = " );
 #endif
     
-    if( m_category ) {
-        *aRetVal= (char*) nsMemory::Clone( m_category , strlen(m_category)+1);
-        if( *aRetVal == nsnull )
-            return  NS_ERROR_OUT_OF_MEMORY;
-    } else
-        *aRetVal= EmptyReturn();
+    aRetVal= m_category;
 
 #ifdef ICAL_DEBUG_ALL
-    printf( "\"%s\"\n", *aRetVal );
+    printf( "\"%s\"\n", PromiseFlatCString( aRetVal ).get()  );
 #endif
    return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::SetCategories(const char * aNewVal)
+NS_IMETHODIMP oeICalEventImpl::SetCategories(const nsACString& aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetCategories( %s )\n", aNewVal );
+    printf( "SetCategories( %s )\n", PromiseFlatCString( aNewVal ).get() );
 #endif
-    if( m_category )
-        nsMemory::Free( m_category );
-    
-    if( aNewVal )
-        m_category= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
-    else
-        m_category = nsnull;
+    m_category = m_category;
+
     return NS_OK;
 }
 
 /* attribute string Url; */
-NS_IMETHODIMP oeICalEventImpl::GetUrl(char **aRetVal)
+NS_IMETHODIMP oeICalEventImpl::GetUrl(nsACString& aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "GetUrl() = " );
 #endif
     
-    if( m_url ) {
-        *aRetVal= (char*) nsMemory::Clone( m_url , strlen(m_url)+1);
-        if( *aRetVal == nsnull )
-            return  NS_ERROR_OUT_OF_MEMORY;
-    } else
-        *aRetVal= EmptyReturn();
+    aRetVal= m_url;
 
 #ifdef ICAL_DEBUG_ALL
-    printf( "\"%s\"\n", *aRetVal );
+    printf( "\"%s\"\n", PromiseFlatCString( aRetVal ).get()  );
 #endif
    return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::SetUrl(const char * aNewVal)
+NS_IMETHODIMP oeICalEventImpl::SetUrl(const nsACString& aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetUrl( %s )\n", aNewVal );
+    printf( "SetUrl( %s )\n", PromiseFlatCString( aNewVal ).get() );
 #endif
-    if( m_url )
-        nsMemory::Free( m_url );
-    
-    if( aNewVal )
-        m_url= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
-    else
-        m_url = nsnull;
+
+    m_url = aNewVal;
+
     return NS_OK;
 }
 
@@ -1577,40 +1528,36 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_DESCRIPTION_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_description( prop );
-        SetDescription( tmpstr );
-    } else if( m_description ) {
-        nsMemory::Free( m_description );
-        m_description = nsnull;
+        SetDescription( nsDependentCString( strForceUTF8( tmpstr ) ) );
+    } else if( !m_description.IsEmpty() ) {
+        m_description.Truncate();
     }
 
     //location
     prop = icalcomponent_get_first_property( vevent, ICAL_LOCATION_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_location( prop );
-        SetLocation( tmpstr );
-    } else if( m_location ) {
-        nsMemory::Free( m_location );
-        m_location = nsnull;
+        SetLocation( nsDependentCString( strForceUTF8( tmpstr ) ) );
+    } else if( !m_location.IsEmpty() ) {
+        m_location.Truncate();
     }
 
     //category
     prop = icalcomponent_get_first_property( vevent, ICAL_CATEGORIES_PROPERTY );
     if ( prop != 0) {
         tmpstr = (char *)icalproperty_get_categories( prop );
-        SetCategories( tmpstr );
-    } else if( m_category ) {
-        nsMemory::Free( m_category );
-        m_category= nsnull;
+        SetCategories( nsDependentCString( strForceUTF8( tmpstr ) ) );
+    } else if( !m_category.IsEmpty() ) {
+        m_category.Truncate();
     }
 
     //url
     prop = icalcomponent_get_first_property( vevent, ICAL_URL_PROPERTY );
     if ( prop != 0) {
         tmpstr = (char *)icalproperty_get_url( prop );
-        SetUrl( tmpstr );
-    } else if( m_url ) {
-        nsMemory::Free( m_url );
-        m_url= nsnull;
+        SetUrl( nsDependentCString( strForceUTF8( tmpstr ) ) );
+    } else if( !m_url.IsEmpty() ) {
+        m_url.Truncate();
     }
 
     //priority
@@ -2007,26 +1954,26 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         icalcomponent_add_property( vevent, prop );
     }
     //description
-    if( m_description && strlen( m_description ) != 0 ){
-        prop = icalproperty_new_description( m_description );
+    if( !m_description.IsEmpty() ) {
+        prop = icalproperty_new_description( PromiseFlatCString( m_description ).get() );
         icalcomponent_add_property( vevent, prop );
     }
 
     //location
-    if( m_location && strlen( m_location ) != 0 ){
-        prop = icalproperty_new_location( m_location );
+    if( !m_location.IsEmpty() ) {
+        prop = icalproperty_new_location( PromiseFlatCString( m_location ).get() );
         icalcomponent_add_property( vevent, prop );
     }
 
     //category
-    if( m_category && strlen( m_category ) != 0 ){
-        prop = icalproperty_new_categories( m_category );
+    if( !m_category.IsEmpty() ) {
+        prop = icalproperty_new_categories( PromiseFlatCString( m_category ).get() );
         icalcomponent_add_property( vevent, prop );
     }
 
     //url
-    if( m_url && strlen( m_url ) != 0 ){
-        prop = icalproperty_new_url( m_url );
+    if( !m_url.IsEmpty() ) {
+        prop = icalproperty_new_url( PromiseFlatCString( m_url ).get() );
         icalcomponent_add_property( vevent, prop );
     }
 

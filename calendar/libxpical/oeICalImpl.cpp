@@ -2216,42 +2216,42 @@ NS_IMETHODIMP oeICalFilter::SetTitle(const nsACString& aNewVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::GetDescription(char * *aRetVal)
+NS_IMETHODIMP oeICalFilter::GetDescription(nsACString& aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::SetDescription(const char * aNewVal)
+NS_IMETHODIMP oeICalFilter::SetDescription(const nsACString& aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::GetLocation(char **aRetVal)
+NS_IMETHODIMP oeICalFilter::GetLocation(nsACString& aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::SetLocation(const char * aNewVal)
+NS_IMETHODIMP oeICalFilter::SetLocation(const nsACString& aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::GetCategories(char **aRetVal)
+NS_IMETHODIMP oeICalFilter::GetCategories(nsACString& aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::SetCategories(const char * aNewVal)
+NS_IMETHODIMP oeICalFilter::SetCategories(const nsACString& aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::GetUrl(char **aRetVal)
+NS_IMETHODIMP oeICalFilter::GetUrl(nsACString& aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::SetUrl(const char * aNewVal)
+NS_IMETHODIMP oeICalFilter::SetUrl(const nsACString& aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

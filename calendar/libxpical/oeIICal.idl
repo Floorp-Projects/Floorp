@@ -95,9 +95,9 @@ interface oeIICalEvent : nsISupports
     readonly attribute oeIDateTime stamp;
     attribute string id;
     attribute AUTF8String title;
-    attribute string description;
-    attribute string location;
-    attribute string categories;
+    attribute AUTF8String description;
+    attribute AUTF8String location;
+    attribute AUTF8String categories;
     attribute boolean privateEvent;
     attribute string syncId;
     attribute boolean allDay;
@@ -114,7 +114,7 @@ interface oeIICalEvent : nsISupports
     attribute short recurWeekdays;
     attribute short recurWeekNumber;
     attribute PRTime lastAlarmAck;
-    attribute string url;
+    attribute AUTF8String url;
     attribute short priority;
     attribute eventMethodProperty method;
     attribute eventStatusProperty status;
