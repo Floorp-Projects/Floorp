@@ -81,6 +81,8 @@ nsresult nsExternalHelperAppService::Init()
   nsCOMPtr<nsIFileSpec> mimeTypesFile;
   rv = locator->GetFileLocation(nsSpecialFileSpec::App_UsersMimeTypes50,
                                 getter_AddRefs(mimeTypesFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsXPIDLCString url;
   rv = mimeTypesFile->GetURLString(getter_Copies(url));
   NS_ENSURE_SUCCESS(rv, rv);
