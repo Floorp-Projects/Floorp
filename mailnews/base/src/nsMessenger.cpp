@@ -360,9 +360,10 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
             fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
           
           if (!fileSpec) goto done;
-
-          rv = fileSpec->ChooseOutputFile("Save Attachment", displayName,
+          char * unescapedDisplayName = nsCRT::strdup(displayName);
+          rv = fileSpec->ChooseOutputFile("Save Attachment", nsUnescape(unescapedDisplayName),
                                           nsIFileSpecWithUI::eAllFiles);
+          nsCRT::free(unescapedDisplayName);
           if (NS_FAILED(rv)) goto done;
             
           aSpec = do_QueryInterface(fileSpec, &rv);
