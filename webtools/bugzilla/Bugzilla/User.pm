@@ -155,7 +155,7 @@ sub email_prefs {
       exists($prefs->{ExcludeSelf}) && $prefs->{ExcludeSelf} eq "on";
     
     # Determine the value of the global request preferences.
-    foreach my $pref qw(FlagRequestee FlagRequester) {
+    foreach my $pref (qw(FlagRequestee FlagRequester)) {
         $prefs->{$pref} = !exists($prefs->{$pref}) || $prefs->{$pref} eq "on";
     }
     
