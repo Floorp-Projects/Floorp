@@ -2707,6 +2707,50 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
           return result;
         point.y = tempRect.height + offset.y;
 
+        //special check. if we allow non-text selection then we can allow a hit location to fall before a table. 
+        //otherwise there is no way to get and click signal to fall before a table (it being a line iterator itself)
+        PRBool isEditor = PR_FALSE;
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        if (!shell)
+          return NS_ERROR_FAILURE;
+        shell->GetDisplayNonTextSelection ( &isEditor );
+        if ( isEditor ) 
+        {
+          nsIAtom *resultFrameType;
+          if(NS_SUCCEEDED(resultFrame->GetFrameType(&resultFrameType)) && resultFrameType)
+          {
+            if (resultFrameType ==  nsLayoutAtoms::tableOuterFrame)
+            {
+              if (((point.x - offset.x + tempRect.x)<0) ||  ((point.x - offset.x+ tempRect.x)>tempRect.width))//off left/right side
+              {
+                nsCOMPtr<nsIContent> content;
+                resultFrame->GetContent(getter_AddRefs(content));
+                nsCOMPtr<nsIContent> parent;
+                if (content)
+                {
+                  content->GetParent(*getter_AddRefs(parent));
+                  if (parent)
+                  {
+                    aPos->mResultContent = parent;
+                    parent->IndexOf(content, aPos->mContentOffset);
+                    aPos->mPreferLeft = PR_FALSE;
+                    if ((point.x - offset.x+ tempRect.x)>tempRect.width)
+                    {
+                      aPos->mContentOffset++;//go to end of this frame
+                      aPos->mPreferLeft = PR_TRUE;
+                    }
+                    aPos->mContentOffsetEnd = aPos->mContentOffset;
+                    //result frame is the result frames parent.
+                    resultFrame->GetParent(&aPos->mResultFrame);
+                    return NS_COMFALSE;
+                  }
+                }
+              }
+            }
+          }
+        }
+
         if (NS_FAILED(resultFrame->GetView(aPresContext, &view)) || !view)
         {
           result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
@@ -3107,7 +3151,9 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         }
         //this block is now one child down from blockframe
         if (NS_FAILED(result) || !it || !blockFrame || !thisBlock)
+        {
           return ((result) ? result : NS_ERROR_FAILURE);
+        }
         result = it->FindLineContaining(thisBlock, &thisLine);
         if (NS_FAILED(result) || thisLine <0)
           return result;

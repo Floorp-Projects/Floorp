@@ -6478,6 +6478,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN || aEvent->message == NS_MOUSE_MOVE ||
     aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK ) {
 
+    nsMouseEvent *me = (nsMouseEvent *)aEvent;
 
     nsIFrame *resultFrame = nsnull;//this will be passed the handle event when we 
                                    //can tell who to pass it to
@@ -6492,8 +6493,9 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     result = mainframe->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
     nsIView* parentWithView;
     nsPoint origin;
+    nsPeekOffsetStruct pos;
 
-    while(NS_SUCCEEDED(result))
+    while(NS_OK == result)
     { //we are starting aloop to allow us to "drill down to the one we want" 
       mainframe->GetOffsetFromView(aPresContext, origin, &parentWithView);
 
@@ -6537,7 +6539,6 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
       }
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again
-      nsPeekOffsetStruct pos;
       pos.mTracker = tracker;
       pos.mDirection = eDirNext;
       pos.mDesiredX = aEvent->point.x;
@@ -6550,7 +6551,8 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
                                           );
       
       if (NS_SUCCEEDED(result) && pos.mResultFrame){
-        result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));//if this fails thats ok
+        if (result == NS_OK)
+          result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));//if this fails thats ok
         resultFrame = pos.mResultFrame;
         mainframe = resultFrame;
       }
@@ -6563,7 +6565,26 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 
     if (resultFrame)
     {
-      result = resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
+      if (NS_COMFALSE == result)
+      {
+        nsCOMPtr<nsISelectionController> selCon;
+        result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+        //get the selection controller
+        if (NS_SUCCEEDED(result) && selCon) 
+        {
+          PRInt16 displayresult;
+          selCon->GetDisplaySelection(&displayresult);
+          if (displayresult == nsISelectionController::SELECTION_OFF)
+            return NS_OK;//nothing to do we cannot affect selection from here
+        }
+        nsCOMPtr<nsIFrameSelection> frameselection;
+        shell->GetFrameSelection(getter_AddRefs(frameselection));
+        if (frameselection)
+          result = frameselection->HandleClick(pos.mResultContent, pos.mContentOffset, 
+                                               pos.mContentOffsetEnd, me->isShift, PR_FALSE, pos.mPreferLeft);
+      }
+      else
+        result = resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);//else let the frame/container do what it needs
       if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsMouseCaptured(aPresContext))
           CaptureMouse(aPresContext, PR_TRUE);
       return result;
