@@ -69,10 +69,8 @@
 #if defined(XP_MAC) || defined (XP_MACOSX)
 #include "nsILocalFileMac.h"
 #include "nsIInternetConfigService.h"
-#endif // defined(XP_MAC) || defined (XP_MACOSX)
-#ifdef XP_MAC
 #include "nsIAppleFileDecoder.h"
-#endif // XP_MAC
+#endif // defined(XP_MAC) || defined (XP_MACOSX)
 
 #include "nsIPluginHost.h"
 #include "nsEscape.h"
@@ -1255,7 +1253,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
                                    PR_WRONLY | PR_CREATE_FILE, 0600);
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined (XP_MACOSX)
     nsXPIDLCString contentType;
     mMimeInfo->GetMIMEType(getter_Copies(contentType));
     if (contentType &&
