@@ -65,6 +65,7 @@ class NS_EXPORT nsGetInterface : public nsCOMPtr_helper
         }
 
       virtual nsresult operator()( const nsIID&, void** ) const;
+      virtual ~nsGetInterface() {};
 
     private:
       nsCOMPtr<nsISupports> mSource;
@@ -79,3 +80,4 @@ do_GetInterface( nsISupports* aSource, nsresult* error = 0 )
   }
 
 %}
+
