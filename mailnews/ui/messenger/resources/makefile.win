@@ -31,6 +31,7 @@ install::
 	$(MAKE_INSTALL) threadPane.xul  $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) threadPane.css	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) message.html	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) delmsg.gif		$(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\res\samples\mailshell.xul
@@ -39,3 +40,4 @@ clobber::
 	rm -f $(DIST)\res\samples\folderPane.css
 	rm -f $(DIST)\res\samples\threadPane.xul
 	rm -f $(DIST)\res\samples\message.html
+	rm -f $(DIST)\res\samples\delmsg.gif
