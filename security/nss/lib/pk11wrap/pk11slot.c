@@ -16,7 +16,8 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
+ *	Dr Stephen Henson <stephen.henson@gemplus.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -2680,10 +2681,12 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
     case CKM_SSL3_PRE_MASTER_KEY_GEN:
     case CKM_GENERIC_SECRET_KEY_GEN:
     case CKM_SSL3_MASTER_KEY_DERIVE:
+    case CKM_SSL3_MASTER_KEY_DERIVE_DH:
     case CKM_SSL3_KEY_AND_MAC_DERIVE:
     case CKM_SSL3_SHA1_MAC:
     case CKM_SSL3_MD5_MAC:
     case CKM_TLS_MASTER_KEY_DERIVE:
+    case CKM_TLS_MASTER_KEY_DERIVE_DH:
     case CKM_TLS_KEY_AND_MAC_DERIVE:
     case CKM_SHA_1_HMAC:
     case CKM_SHA_1_HMAC_GENERAL:

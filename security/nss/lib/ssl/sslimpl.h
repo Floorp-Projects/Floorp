@@ -19,7 +19,8 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
+ *	Dr Stephen Henson <stephen.henson@gemplus.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -33,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.11 2001/03/16 23:26:04 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.12 2001/04/11 00:29:18 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -220,7 +221,7 @@ typedef struct {
 #endif
 } ssl3CipherSuiteCfg;
 
-#define ssl_V3_SUITES_IMPLEMENTED 14
+#define ssl_V3_SUITES_IMPLEMENTED 19
 
 typedef struct sslOptionsStr {
     unsigned int useSecurity		: 1;  /*  1 */

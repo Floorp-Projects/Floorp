@@ -19,7 +19,8 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
+ *	Dr Stephen Henson <stephen.henson@gemplus.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -33,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslenum.c,v 1.2 2001/01/13 02:05:08 nelsonb%netscape.com Exp $
+ * $Id: sslenum.c,v 1.3 2001/04/11 00:29:18 nelsonb%netscape.com Exp $
  */
 
 #include "ssl.h"
@@ -67,6 +68,13 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     /* Netscape "experimental" cipher suites. */
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,
+
+    /* DHE ciphersuites */
+    SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
+    SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
+    SSL_DHE_RSA_WITH_DES_CBC_SHA,
+    SSL_DHE_DSS_WITH_DES_CBC_SHA,
+    TLS_DHE_DSS_WITH_RC4_128_SHA,
 
     0
 

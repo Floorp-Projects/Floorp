@@ -16,7 +16,8 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
+ *	Dr Stephen Henson <stephen.henson@gemplus.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -1114,6 +1115,8 @@ typedef CK_EXTRACT_PARAMS CK_PTR CK_EXTRACT_PARAMS_PTR;
 #define CKM_TLS_MASTER_KEY_DERIVE		0x80000371L
 #define CKM_TLS_KEY_AND_MAC_DERIVE		0x80000372L
 #define CKM_TLS_PRF_GENERAL                     0x80000373L
+#define CKM_SSL3_MASTER_KEY_DERIVE_DH		0x80000374L
+#define CKM_TLS_MASTER_KEY_DERIVE_DH		0x80000375L
 
 /* define used to pass in the database key for DSA private keys */
 #define CKA_NETSCAPE_DB				0xD5A0DB00L
