@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2001/12/03 19:57:35 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/04/26 22:42:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -191,6 +191,8 @@ sub save_note {
   
   push @out, "posted notice: \n",p().
     pre($NOTE);
+
+  HTMLPopUp::regenerate_HTML_pages();
 
   return @out;
 }

@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2001/12/03 19:48:47 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/04/26 22:42:42 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -229,8 +229,22 @@ sub split_cgi_args {
   return %form;
 }
 
+# Run tinderbox again to regenerate the pages.  I put this function
+# here because we need to bypass the security arangements.  Normally
+# you can not run --daemon-mode from an arbitrary CGI script.  This
+# part of the code (split_cgi_args) is the only part which knows which
+# Environmental variables are checked for security.
 
+sub regenerate_HTML_pages {
+    local $ENV{"QUERY_STRING"} = '';
 
+    system(
+           $FileStructure::URLS{'tinderd'}, 
+           '--daemon-mode',
+           );
+
+    return 0;
+}
 
 
 
