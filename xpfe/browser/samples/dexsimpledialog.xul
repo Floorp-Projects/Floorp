@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<!DOCTYPE window>
+<!-- dialog containing a control requiring initial setup -->
+<xul:window
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()"
+    title = "Things to do"
+    height = "200" width = "300">
+
+  <html:script>
+    // dialog initialization code
+    function Startup() {
+      var checkbox = ElementByID("remind");
+      if (checkbox)
+        checkbox.checked = true;
+    }
+
+    // OK button handler
+    function DoOK() {
+      // get checkbox
+      // (using a document method available on HTML and XUL
+      // documents, but not on XML documents)
+      var checkbox = document.getElementById("remind");
+      if (checkbox) {
+        // load some hypothetical appcore interested in
+        // the outcome of this dialog
+        var donationsCore = XPAppCoresManager.Find("DonationsCore");
+        if (!donationsCore) {
+          donationsCore = new DonationsCore();
+          if (donationsCore)
+            donationsCore.Init("DonationsCore");
+        }
+        // tell the appcore about the new setting
+        if (donationsCore)
+          donationsCore.SetRemindFlag(checkbox.checked);
+      }
+    }
+
+    // find and return the DOM element with the given ID
+    // the equivalent of document.getElementById(), but also
+    // works for XML documents (unused in the example)
+    function ElementByID(id) {
+      var element;
+      var ctr;
+      var taglist = document.getElementsByTagName("*");
+
+      element = null;
+      for (ctr = 0; ctr < taglist.length; ctr++)
+        if (taglist[ctr].getAttribute("id") == id) {
+          element = taglist[ctr];
+          break;
+        }
+      return element;
+    }
+  </html:script>
+
+  <table xmlns="http://www.w3.org/TR/REC-html40">
+    <tr>
+      <td>Give me your money</td>
+    </tr>
+    <tr>
+      <td>
+        <!-- note the html namespace on the id attribute, which
+             seems at this time to be required by getAttribute() -->
+        <input type="checkbox" html:id="remind"/>Remind me
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <button onclick="DoOK()">OK</button>
+      </td>
+    </tr>
+  </table>
+
+</xul:window>

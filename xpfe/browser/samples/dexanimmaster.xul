@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<!DOCTYPE window>
+<!-- sample interface for bringing up a nonmodal dialog, including some
+     JavaScript-testing animations -->
+<window
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title = "Dialog maker JS animation stress test">
+  <html:script>
+    function MakeDialog() {
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore)
+        toolkitCore.ShowWindow("resource:/res/samples/dexanimdialog.xul",
+            window);
+    }
+    function ModalDialog() {
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore)
+        toolkitCore.ShowModalDialog("resource:/res/samples/dexanimdialog.xul",
+            window);
+    }
+    function GetToolkitCore() {
+      var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+      if (!toolkitCore) {
+        toolkitCore = new ToolkitCore();
+        if (toolkitCore)
+          toolkitCore.Init("ToolkitCore");
+      }
+      return toolkitCore;
+    }
+
+    // preload an array of offscreen images
+    var images = new Array(4);
+    var imageNames = new Array("up.gif", "right.gif", "down.gif", "left.gif");
+    var animationFrame = 0;
+    var animationFunction = null;
+    for(var i = 0; i < 4; i++) {
+      images[i] = new Image();
+      images[i].src = "sampleimages/" + imageNames[i];
+    }
+
+    function animateButtonImage() {
+      var button = document.getElementById("animation");
+      if (button) {
+        button.src = images[animationFrame].src;
+        animationFrame = (animationFrame + 1) % 4;
+        animationFunction = setTimeout("animateButtonImage()", 250);
+      }
+    }
+    function startAnimation() {
+      if (animationFunction == null)
+        animateButtonImage();
+    }
+    function stopAnimation() {
+      if (animationFunction)
+        clearTimeout(animationFunction);
+      animationFunction = null;
+    }
+  </html:script>
+
+  <toolbox> 
+    <toolbar>
+      <titledbutton
+         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
+         value="Make Dialog" onclick="MakeDialog()"
+         style="background-color:rgb(192,192,192);"/>
+      <titledbutton
+         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
+         value="Start Animation" onclick="startAnimation()"
+         style="background-color:rgb(192,192,192);"/>
+      <titledbutton
+         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
+         value="Stop Animation" onclick = "stopAnimation()"
+         style="background-color:rgb(192,192,192);"/>
+    </toolbar>
+  </toolbox>
+
+  <html:img src="sampleimages/bongo.gif"/>
+  <html:img id="animation" src="sampleimages/right.gif"/>
+</window>

@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<!DOCTYPE window>
+<!-- dialog containing a control requiring initial setup -->
+<xul:window
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()"
+    title = "Things to do today"
+    width = "400" height = "300">
+
+  <html:script>
+    // dialog initialization code
+
+    // preload an array of offscreen images
+    var images = new Array(4);
+    var imageNames = new Array("up.gif", "right.gif", "down.gif", "left.gif");
+    var animationFrame = 0;
+    var animationFunction = null;
+    for(var i = 0; i < 4; i++) {
+      images[i] = new Image();
+      images[i].src = "sampleimages/" + imageNames[i];
+    }
+    function Startup() {
+      var checkbox = ElementByID("remind");
+      if (checkbox)
+        checkbox.checked = true;
+    }
+
+    // OK button handler
+    function DoOK() {
+      // get checkbox
+      // (using a document method available on HTML and XUL
+      // documents, but not on XML documents)
+      var checkbox = document.getElementById("remind");
+      if (checkbox) {
+        // load some hypothetical appcore interested in
+        // the outcome of this dialog
+        var donationsCore = XPAppCoresManager.Find("DonationsCore");
+        if (!donationsCore) {
+          donationsCore = new DonationsCore();
+          if (donationsCore)
+            donationsCore.Init("DonationsCore");
+        }
+        // tell the appcore about the new setting
+        if (donationsCore)
+          donationsCore.SetRemindFlag(checkbox.checked);
+      }
+    }
+
+    // find and return the DOM element with the given ID
+    // the equivalent of document.getElementById(), but also
+    // works for XML documents (unused in the example)
+    function ElementByID(id) {
+      var element;
+      var ctr;
+      var taglist = document.getElementsByTagName("*");
+
+      element = null;
+      for (ctr = 0; ctr < taglist.length; ctr++)
+        if (taglist[ctr].getAttribute("id") == id) {
+          element = taglist[ctr];
+          break;
+        }
+      return element;
+    }
+
+    function animateButtonImage() {
+      var button = document.getElementById("animation");
+      if (button) {
+        button.src = images[animationFrame].src;
+        animationFrame = (animationFrame + 1) % 4;
+        animationFunction = setTimeout("animateButtonImage()", 250);
+      }
+    }
+    function startAnimation() {
+      if (animationFunction == null)
+        animateButtonImage();
+    }
+    function stopAnimation() {
+      if (animationFunction)
+        clearTimeout(animationFunction);
+      animationFunction = null;
+    }
+  </html:script>
+
+  <table xmlns="http://www.w3.org/TR/REC-html40">
+    <tr>
+      <td>Give me your money</td>
+    </tr>
+    <tr>
+      <td>
+        <!-- note the html namespace on the id attribute, which
+             seems at this time to be required by getAttribute() -->
+        <input type="checkbox" html:id="remind"/>Remind me
+      </td>
+    </tr>
+    <tr>
+      <td><img src="sampleimages/bongo.gif"/></td>
+      <td><img id="animation" src="sampleimages/right.gif"/></td>
+    </tr>
+    <tr>
+      <td><button onclick="startAnimation()">Start Animation</button></td>
+      <td><button onclick="stopAnimation()">Stop Animation</button></td>
+    </tr>
+    <tr>
+      <td><button onclick="DoOK()">OK</button></td>
+      <td><button>Cancel</button></td>
+    </tr>
+  </table>
+
+</xul:window>
