@@ -308,7 +308,7 @@ nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
     if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
         aStatus = mEventListener->ProcessEvent(*aEvent);
 
-    NS_RELEASE(aEvent->widget);
+    NS_IF_RELEASE(aEvent->widget);
 
     return NS_OK;
 }

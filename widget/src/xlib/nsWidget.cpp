@@ -1239,7 +1239,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent * aEvent,
     aStatus = mEventListener->ProcessEvent(*aEvent);
   }
 
-  NS_RELEASE(aEvent->widget);
+  NS_IF_RELEASE(aEvent->widget);
 
   return NS_OK;
 }
