@@ -766,6 +766,7 @@ struct nsFileDownloadDialog : public nsIXULWindowCallbacks,
     ~nsFileDownloadDialog() { delete mOutput; delete [] mBuffer; }
     void OnOK( nsIContent *aContent );
     void OnClose();
+    void OnStart();
     void OnStop();
     void SetWindow( nsIWebShellWindow *aWindow );
 
@@ -779,13 +780,8 @@ private:
     PRUint32         mBufLen;
     char *           mBuffer;
     PRBool           mStopped;
-    static nsIAtom *kIdAtom, *kCommandAtom, *kFileNameAtom;
     enum { kPrompt, kProgress } mMode;
 }; // nsFileDownloadDialog
-
-nsIAtom *nsFileDownloadDialog::kIdAtom       = 0;
-nsIAtom *nsFileDownloadDialog::kCommandAtom  = 0;
-nsIAtom *nsFileDownloadDialog::kFileNameAtom = 0;
 
 // Standard implementations of addref/release.
 NS_IMPL_ADDREF( nsFileDownloadDialog );
@@ -828,15 +824,6 @@ nsFileDownloadDialog::nsFileDownloadDialog( nsIURL *aURL, const char *aContentTy
           mMode( kPrompt ) {
     // Initialize ref count.
     NS_INIT_REFCNT();
-
-    // Initialize static atoms.
-    static PRBool initialized = 0;
-    if ( !initialized ) {
-        kIdAtom       = NS_NewAtom("id");
-        kCommandAtom  = NS_NewAtom("command");
-        kFileNameAtom = NS_NewAtom("filename");
-        initialized = 1;
-    }
 }
 
 // Do startup stuff from C++ side.
@@ -856,18 +843,6 @@ nsFileDownloadDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
     // If showing download progress, make target file name known.
     if ( mMode == kProgress ) {
         setAttribute( mWebShell, "data.fileName", "value", nsString((const char*)mFileName) );
-
-        // Load source stream into file.
-        nsINetService *inet = 0;
-        rv = nsServiceManager::GetService( kNetServiceCID,
-                                           kINetServiceIID,
-                                           (nsISupports**)&inet );
-        if (NS_OK == rv) {
-          rv = inet->OpenStream(mUrl, this);
-          nsServiceManager::ReleaseService(kNetServiceCID, inet);
-        } else {
-            if ( APP_DEBUG ) { printf( "Error getting Net Service, rv=0x%X\n", (int)rv ); }
-        }
     }
 
     // Add as observer of the xul document.
@@ -997,19 +972,23 @@ nsFileDownloadDialog::AttributeChanged( nsIDocument *aDocument,
     nsresult rv = NS_OK;
     // Look for data.execute command changing.
     nsString id;
-    aContent->GetAttribute( kNameSpaceID_None, kIdAtom, id );
+    nsCOMPtr<nsIAtom> atomId = nsDontQueryInterface<nsIAtom>( NS_NewAtom("id") );
+    aContent->GetAttribute( kNameSpaceID_None, atomId, id );
     if ( id == "data.execute" ) {
         nsString cmd;
-        aContent->GetAttribute( kNameSpaceID_None, kCommandAtom, cmd );
+        nsCOMPtr<nsIAtom> atomCommand = nsDontQueryInterface<nsIAtom>( NS_NewAtom("command") );
+        aContent->GetAttribute( kNameSpaceID_None, atomCommand, cmd );
         if ( cmd == "ok" ) {
             OnOK( aContent );
+        } else if ( cmd == "start" ) {
+            OnStart();
         } else if ( cmd == "stop" ) {
             OnStop();
         } else if ( cmd == "close" ) {
             OnClose();
         } else {
         }
-        aContent->SetAttribute( kNameSpaceID_None, kCommandAtom, "", PR_FALSE );
+        aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
     }
 
     return rv;
@@ -1021,7 +1000,8 @@ nsFileDownloadDialog::OnOK( nsIContent *aContent ) {
     // Show progress.
     if ( mWebShell ) {
         nsString fileName;
-        aContent->GetAttribute( kNameSpaceID_None, kFileNameAtom, fileName );
+nsCOMPtr<nsIAtom> atomFileName = nsDontQueryInterface<nsIAtom>( NS_NewAtom("filename") );
+        aContent->GetAttribute( kNameSpaceID_None, atomFileName, fileName );
         mFileName = fileName;
         mMode = kProgress;
         nsString progressXUL = "resource:/res/samples/downloadProgress.xul";
@@ -1029,13 +1009,29 @@ nsFileDownloadDialog::OnOK( nsIContent *aContent ) {
     }
     // Open output file stream.
     mOutput = new nsOutputFileStream( mFileName );
-
 }
 
 void
 nsFileDownloadDialog::OnClose() {
     // Close the window.
     closeWindow( mWindow );
+}
+
+void
+nsFileDownloadDialog::OnStart() {
+    if ( mMode == kProgress ) {
+        // Load source stream into file.
+        nsINetService *inet = 0;
+        nsresult rv = nsServiceManager::GetService( kNetServiceCID,
+                                                    kINetServiceIID,
+                                                    (nsISupports**)&inet );
+        if (NS_OK == rv) {
+            rv = inet->OpenStream(mUrl, this);
+            nsServiceManager::ReleaseService(kNetServiceCID, inet);
+        } else {
+            if ( APP_DEBUG ) { printf( "Error getting Net Service, rv=0x%X\n", (int)rv ); }
+        }
+    }
 }
 
 void
