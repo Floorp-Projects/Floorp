@@ -60,8 +60,12 @@ REQUIRES	+= zlib
 EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lzlib
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib $(DIST)/lib/zlib.lib
+else
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
+endif
 
 include $(topsrcdir)/config/rules.mk
 

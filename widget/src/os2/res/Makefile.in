@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 OS2_LIBRARYNAME	= wdgtres
 DLL		= wdgtres.dll
 
-RCOPTS		= -n -x2 -i . $(RCDEFS)
+RCOPTS		= -n -x2 -i . -i $(RCDEFS)
 
 ifneq ($(MOZ_OS2_TOOLS),VACPP)
 OMF_FLAG	= -Zomf
@@ -38,7 +38,7 @@ install: $(DLL)
 	$(INSTALL) -m 444 $(DLL) $(DIST)/bin
 
 # XXX Have to copy files because rc and link386 are too stupid for a mirror tree build
-$(DLL): wdgtres.obj wdgtres.rc
+$(DLL): wdgtres.obj wdgtres.res
 	cp $(topsrcdir)/widget/src/os2/resID.h ./resID.h
 	cp $(srcdir)/frame.ico ./frame.ico
 	cp $(srcdir)/folder.ico ./folder.ico
@@ -46,7 +46,10 @@ $(DLL): wdgtres.obj wdgtres.rc
 	cp $(srcdir)/select.ptr ./select.ptr
 	cp $(srcdir)/wdgtres.def ./wdgtres.def
 	link386 /nol wdgtres,$@,nul,,wdgtres.def
-	rc $(RCOPTS) $(srcdir)/wdgtres.rc $@
+	rc $(RCOPTS) wdgtres.res $@
+
+wdgtres.res: wdgtres.rc
+	rc $(RCOPTS) -r $(srcdir)/wdgtres.rc $@
 
 wdgtres.obj: wdgtres.C
 	$(CC) -o $@ -s -c $(CFLAGS) $(OMF_FLAG) $<

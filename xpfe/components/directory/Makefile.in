@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= directory
 LIBRARY_NAME	= directory
+SHORT_LIBNAME	= directry
 IS_COMPONENT	= 1
 
 XPIDLSRCS	= nsIHTTPIndex.idl

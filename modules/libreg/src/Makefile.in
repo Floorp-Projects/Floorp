@@ -31,7 +31,7 @@ LIBRARY_NAME	= mozreg_s
 
 REQUIRES	= libreg pref js
 
-PROGRAM		= vreg
+PROGRAM		= vreg$(BIN_SUFFIX)
 
 CSRCS		= reg.c VerReg.c vr_stubs.c nr_bufio.c
 
@@ -54,7 +54,7 @@ DEFINES         += -DUSE_BUFFERED_REGISTRY_IO
 include $(topsrcdir)/config/rules.mk
 
 R_%.o: %.c
-ifeq ($(OS_ARCH), OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(CC) -Fo$@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
 else
 	$(CC) -o $@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<

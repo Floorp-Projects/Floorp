@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= nsinstall
+PROGRAM		= nsinstall$(BIN_SUFFIX)
 ifdef CROSS_COMPILE
 HOST_PROGRAM	= host_nsinstall
 endif
@@ -61,9 +61,9 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif
 
-ifeq ($(subst /,_,$(shell uname -s)),OS2)
-DIRS		= os2
-LOCAL_INCLUDES	+= -Ios2
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+LOCAL_INCLUDES	+= -I$(srcdir)/os2
+HSRCS		+= dirent.h getopt.h
 endif
 
 ifeq ($(OS_CONFIG),SunOS4.1)

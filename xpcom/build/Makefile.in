@@ -32,17 +32,17 @@ LIBRARY_NAME	= xpcom
 CPPSRCS		= nsXPComInit.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libxpcomds_s.a \
-		$(DIST)/lib/libxpcomio_s.a \
-		$(DIST)/lib/libxpcomcomponents_s.a \
-		$(DIST)/lib/libxpcomthreads_s.a \
-		$(DIST)/lib/libxpcomproxy_s.a \
-		$(DIST)/lib/libxpcombase_s.a \
-		$(DIST)/lib/libxptcall.a \
-		$(DIST)/lib/libxptinfo.a \
-		$(DIST)/lib/libxpt.a \
-		$(DIST)/lib/libxptcmd.a \
-		$(DIST)/lib/libmozreg_s.a \
+		$(DIST)/lib/libxpcomds_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpcomio_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpcomcomponents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpcomthreads_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpcomproxy_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpcombase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxptcall.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxptinfo.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpt.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxptcmd.$(LIB_SUFFIX) \
+		$(DIST)/lib/libmozreg_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -63,6 +63,11 @@ ifdef GC_LEAK_DETECTOR
 EXTRA_DSO_LDOPTS += -lboehm
 endif
 
+# Turn off grep filter for .def files
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+XPCOM_SWITCH	= 1
+endif
+ 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
