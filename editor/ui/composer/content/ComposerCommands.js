@@ -739,6 +739,7 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
     persistObj.persistFlags = persistObj.persistFlags 
                             | webPersist.PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS
                             | webPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES
+                            | webPersist.PERSIST_FLAGS_FIXUP_LINKS_TO_DESTINATION
                             | webPersist.PERSIST_FLAGS_FIXUP_ORIGINAL_DOM;
     persistObj.saveDocument(editorDoc, aDestinationLocation, aRelatedFilesParentDir, 
                             aMimeType, outputFlags, wrapColumn);
@@ -843,10 +844,18 @@ var gEditorOutputProgressListener =
           (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
            && requestSpec && requestSpec == pubSpec)
       {
-        // Do window.editorShell.doAfterSave(true, docUrl) and related stuff here
-
         // Get the new docUrl from the "browse location" in case "publish location" was FTP
         var urlstring = GetDocUrlFromPublishData(gPublishData);
+        
+        if (aStatus)
+        {
+          // we should provide more meaningful errors (if possible)
+          var saveDocStr = GetString("Publish");
+          var failedStr = GetString("PublishFailed");
+          AlertWithTitle(saveDocStr, failedStr);
+
+          return;  // we don't want to change location or reset mod count, etc.
+        }
 
         try {
           window.editorShell.doAfterSave(true, urlstring);  // we need to update the url before notifying listeners
