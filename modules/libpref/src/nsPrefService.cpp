@@ -219,6 +219,13 @@ NS_IMETHODIMP nsPrefService::ResetUserPrefs()
 NS_IMETHODIMP nsPrefService::SavePrefFile(nsIFile *aFile)
 {
   if (nsnull == aFile) {
+    // the gDirty flag tells us if we should write to mCurrentFile
+    // we only check this flag when the caller wants to write to the default
+    if (!gDirty) {
+      NS_WARNING("not writing prefs because they haven't changed");
+      return NS_OK;
+    }
+    
     // It's possible that we never got a prefs file.
     return mCurrentFile ? WritePrefFile(mCurrentFile) : NS_OK;
   } else {
@@ -407,6 +414,8 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
       rv = NS_OK;
     }
   }
+  if (NS_SUCCEEDED(rv))
+    gDirty = PR_FALSE;
   return rv;
 }
 

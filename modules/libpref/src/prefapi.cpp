@@ -63,6 +63,7 @@
 #include "prprf.h"
 #include "nsQuickSort.h"
 #include "nsString.h"
+#include "nsPrintfCString.h"
 #include "prlink.h"
 
 #ifdef XP_OS2
@@ -126,6 +127,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id)
 JSContext *       gMochaContext = NULL;
 PRBool              gErrorOpeningUserPrefs = PR_FALSE;
 PLDHashTable        gHashTable = { nsnull };
+PRBool              gDirty = PR_FALSE;
 
 static JSRuntime *       gMochaTaskState = NULL;
 static JSObject *        gMochaPrefObject = NULL;
@@ -840,7 +842,7 @@ PREF_DeleteBranch(const char *branch_name)
 
     PL_DHashTableEnumerate(&gHashTable, pref_DeleteItem,
                            (void*) branch_dot.get());
-    
+    gDirty = PR_TRUE;
     return PREF_NOERROR;
 }
 
@@ -861,6 +863,7 @@ PREF_ClearUserPref(const char *pref_name)
         if (gCallbacksEnabled)
             pref_DoCallback(pref_name);
         success = PREF_OK;
+        gDirty = PR_TRUE;
     }
     return success;
 }
@@ -894,7 +897,8 @@ PREF_ClearAllUserPrefs()
         return PREF_NOT_INITIALIZED;
     
     PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, nsnull);
-    
+
+    gDirty = PR_TRUE;
     return PREF_OK;
 }
 
@@ -962,6 +966,7 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
         default:
             *oldValue = newValue;
     }
+    gDirty = PR_TRUE;
 }
 
 static inline PrefHashEntry* pref_HashTableLookup(const void *key)
@@ -1009,8 +1014,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
     else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) !=
                  (type & PREF_VALUETYPE_MASK))
     {
-      /*PR_ASSERT(0);*/         /* this shouldn't happen */
-      /* NS_ASSERTION(0, "Trying to set pref to with the wrong type!"); */
+        NS_WARNING(nsPrintfCString("Trying to set pref %s to with the wrong type!", key).get());
         return PREF_TYPE_CHANGE_ERR;
     }
 
@@ -1068,11 +1072,14 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
             break;
     }
 
-    if (result == PREF_VALUECHANGED && gCallbacksEnabled)
-    {
-        PrefResult result2 = pref_DoCallback(key);
-        if (result2 < 0)
-            result = result2;
+    if (result == PREF_VALUECHANGED) {
+        gDirty = PR_TRUE;
+        
+        if (gCallbacksEnabled) {
+            PrefResult result2 = pref_DoCallback(key);
+            if (result2 < 0)
+                result = result2;
+        }
     }
     return result;
 }
