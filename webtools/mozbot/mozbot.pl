@@ -67,6 +67,7 @@ my %pubcmds = (
                "(help|about)" => \&bot_about,
                "(hi|hello|lo|sup)" => \&bot_hi,
                "moon" => \&bot_moon,
+               "uuid" => \&bot_uuid,
                "up" => \&bot_up,
                "(trees|tree)" => \&bot_tinderbox,
                "debug" => \&bot_debug,
@@ -130,8 +131,13 @@ $::moon = "./moon";
 $::moon = (-f $::moon) ? $::moon : ""; 
 delete $pubcmds{'moon'} if (! $::moon);
 
+$::uuid = "./uuidgen/uuidgen";
+$::uuid = (-f $::uuid) ? $::uuid : "";
+delete $pubcmds{'uuid'} if (! $::uuid);
+
 my $phase;
 my $last_moon = 0;
+my $last_uuid = 0;
 
 # leave @trees empty if you don't want tinderbox details
 
@@ -486,6 +492,7 @@ sub bot_debug
 		(
 		"tinderbox" => $last_tree,
 		"moon" => $last_moon,
+                "uuid" => $last_uuid,
 		);
 	
 	foreach (keys %last)
@@ -621,6 +628,18 @@ sub bot_moon {
     my ($nick, $cmd, $rest) = @_;
     sendmsg($nick, get_moon_str());
 }
+
+sub get_uuid_str  {
+    my $this_uuid;
+    return "- no uuid -" if (! defined $::uuid);
+    $this_uuid = `$::uuid`;
+    return $this_uuid;
+  }
+
+sub bot_uuid {
+    my ($nick, $cmd, $rest) = @_;
+    sendmsg($nick, get_uuid_str());
+  }
 
 
 # bot_up: report uptime
