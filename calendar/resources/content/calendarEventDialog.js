@@ -129,7 +129,6 @@ function loadCalendarEventDialog()
    
    var titleString = titleDataItem.getAttribute( "value" );
    document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
-
    // fill in fields from the event
    var startDate = new Date( gEvent.start.getTime() );
    var endDate = new Date( gEvent.end.getTime() );
@@ -352,8 +351,10 @@ function onOKCommand()
       }
    }
 
-   var ArrayOfExceptionDates = new Array();
+   /* EXCEPTIONS */
    
+   gEvent.removeAllExceptions();
+
    var listbox = document.getElementById( "exception-dates-listbox" );
 
    for( i = 0; i < listbox.childNodes.length; i++ )
@@ -364,7 +365,7 @@ function onOKCommand()
 
       dateObj.setTime( listbox.childNodes[i].value );
 
-      ArrayOfExceptionDates[ ArrayOfExceptionDates.length ] = dateObj;
+      gEvent.addException( dateObj );
    }
 
    /* File attachments */
@@ -385,7 +386,7 @@ function onOKCommand()
 
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
-   gOnOkFunction( gEvent, ArrayOfExceptionDates );
+   gOnOkFunction( gEvent );
       
    // tell standard dialog stuff to close the dialog
    return true;

@@ -518,15 +518,9 @@ function editNewEvent( calendarEvent )
 * notified of the change through their respective observers
 */
 
-function addEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
+function addEventDialogResponse( calendarEvent )
 {
    gICalLib.addEvent( calendarEvent );
-
-   for( i = 0; i < ArrayOfExceptionDates.length; i++ )
-   {
-      calendarEvent.addException( ArrayOfExceptionDates[i] );
-   }
-   gICalLib.modifyEvent( calendarEvent );
 }
 
 
@@ -588,17 +582,8 @@ function editToDo( calendarToDo )
 * notified of the change through their respective observers
 */
 
-function modifyEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
+function modifyEventDialogResponse( calendarEvent )
 {
-   calendarEvent.removeAllExceptions();
-
-   //remove all the old exceptions
-   
-   for( i = 0; i < ArrayOfExceptionDates.length; i++ )
-   {
-      calendarEvent.addException( ArrayOfExceptionDates[i] );
-   }
-
    gICalLib.modifyEvent( calendarEvent );
 }
 
