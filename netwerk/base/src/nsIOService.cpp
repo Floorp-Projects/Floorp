@@ -316,23 +316,24 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
 NS_IMETHODIMP
 nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, PRUint32 start, PRUint32 end)
 {
+    PRUint32 len = end - start - 1;
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {
+        if (!mWeakHandler[i])
+            continue;
+
         // handle unterminated strings
         // start is inclusive, end is exclusive, len = end - start - 1
-        if (end != 0 ? !nsCRT::strncasecmp(&scheme[start], gScheme[i],
-                                           (end-start)-1) :
-                       !nsCRT::strcasecmp(scheme, gScheme[i]))
+        if (end ? (!nsCRT::strncasecmp(scheme + start, gScheme[i], len)
+                   && gScheme[i][len] == '\0')
+                : (!nsCRT::strcasecmp(scheme, gScheme[i])))
         {
-            if (mWeakHandler[i])
+            nsCOMPtr<nsIProtocolHandler> temp = do_QueryReferent(mWeakHandler[i]);
+            if (temp)
             {
-                nsCOMPtr<nsIProtocolHandler> temp = do_QueryReferent(mWeakHandler[i]);
-                if (temp)
-                {
-                    *result = temp.get();
-                    NS_ADDREF(*result);
-                    return NS_OK;
-                }
+                *result = temp.get();
+                NS_ADDREF(*result);
+                return NS_OK;
             }
         }
     }
