@@ -6939,27 +6939,36 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
     nsIFrame* geometricParent = isAbsolutelyPositioned
                               ? aState.mAbsoluteItems.containingBlock
                               : aParentFrame;
-    InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        geometricParent, aStyleContext, nsnull, newFrame);
 
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, forceView);
+    if (aTag == nsSVGAtoms::foreignObject) {
+      // Claim to be relatively positioned so that we end up being the
+      // absolute containing block.  Also, push "null" as the floater
+      // containing block so that we get the SPACE_MGR bit set.
+      nsFrameConstructorSaveState saveState;
+      aState.PushFloatContainingBlock(nsnull, saveState, PR_FALSE, PR_FALSE);
+      rv = ConstructBlock(aPresShell, aPresContext, aState, disp, aContent,
+                          geometricParent, aParentFrame, aStyleContext,
+                          newFrame, PR_TRUE);
+    } else {
+      InitAndRestoreFrame(aPresContext, aState, aContent, 
+                          geometricParent, aStyleContext, nsnull, newFrame);
 
-    // Add the new frame to our list of frame items.
-    aFrameItems.AddChild(newFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, forceView);
 
-    // Process the child content if requested
-    nsFrameItems childItems;
-    if (processChildren) {
-      rv = ProcessChildren(aPresShell, aPresContext, aState, aContent,
-                           newFrame, PR_TRUE, childItems, isBlock);
+      // Process the child content if requested
+      nsFrameItems childItems;
+      if (processChildren) {
+        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent,
+                             newFrame, PR_TRUE, childItems, isBlock);
 
-      CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
-                            PR_FALSE, childItems);
+        CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
+                              PR_FALSE, childItems);
     }
 
-    // Set the frame's initial child list
-    newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
-  
+      // Set the frame's initial child list
+      newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    }
+    
     // If the frame is absolutely positioned then create a placeholder frame
     if (isAbsolutelyPositioned || isFixedPositioned) {
       nsIFrame* placeholderFrame;
@@ -6976,6 +6985,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
+    } else {
+      // Add the new frame to our list of frame items.
+      aFrameItems.AddChild(newFrame);
     }
   }
   return rv;
