@@ -722,6 +722,15 @@ public:
     */
   virtual void InvalidateCellMap();
     
+  /** sum the columns represented by all nsTableColGroup objects. 
+    * if the cell map says there are more columns than this, 
+    * add extra implicit columns to the content tree.
+    *
+    * returns whether any implicit column frames were created
+    */ 
+  virtual void EnsureColumns (nsIPresContext& aPresContext,
+                              PRBool&         aCreatedColFrames);
+
 protected:
   /** iterates all child frames and creates a new cell map */
   NS_IMETHOD ReBuildCellMap();
@@ -734,12 +743,6 @@ protected:
     */
   void ListColumnLayoutData(FILE* out, PRInt32 aIndent);
 #endif
-
-  /** sum the columns represented by all nsTableColGroup objects. 
-    * if the cell map says there are more columns than this, 
-    * add extra implicit columns to the content tree.
-    */ 
-  virtual void EnsureColumns (nsIPresContext& aPresContext);
 
   virtual void BuildColumnCache(nsIPresContext&          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,

@@ -437,8 +437,8 @@ nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
     prevColGroupChild->SetNextSibling(nsnull);
 
   if (NS_SUCCEEDED(rv)) {
-  //mCellMap->Dump();
-    EnsureColumns(aPresContext);
+    PRBool  createdColFrames;
+    EnsureColumns(aPresContext, createdColFrames);
   }
 
   return rv;
@@ -633,10 +633,13 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
   * if the cell map says there are more columns than this, 
   * add extra implicit columns to the content tree.
   */
-void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
+void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext,
+                                 PRBool&         aCreatedColFrames)
 {
   if (PR_TRUE==gsDebug) printf("TIF EnsureColumns\n");
   NS_PRECONDITION(nsnull!=mCellMap, "bad state:  null cellmap");
+  
+  aCreatedColFrames = PR_FALSE;  // initialize OUT parameter
   if (nsnull == mCellMap)
     return; // no info yet, so nothing useful to do
 
@@ -715,6 +718,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
                                                  lastColGroupStyle,
                                                  PR_TRUE,
                                                  &colStyleContext);             // colStyleContext: REFCNT++
+      aCreatedColFrames = PR_TRUE;  // remember that we're creating implicit col frames
       NS_NewTableColFrame(&colFrame);
       colFrame->Init(aPresContext, lastColGroupElement, lastColGroupFrame,
                      colStyleContext, nsnull);
@@ -4386,8 +4390,9 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
   PRInt32 colIndex=0;
   const nsStyleTable* tableStyle;
+  PRBool createdColFrames;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  EnsureColumns(aPresContext);
+  EnsureColumns(aPresContext, createdColFrames);
   if (nsnull!=mColCache)
   {
     if (PR_TRUE==gsDebugIR) printf("TIF BCC: clearing column cache and cell map column frame cache.\n");
