@@ -12,7 +12,7 @@ libgtkmozilla_la_SOURCES = \
 			nsNewTimer.cpp \
 			nsSetupRegistry.cpp
 
-MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include -I@NSPR_DIR@/include
+MOZILLA_INCLUDES = -I@MOZILLA_DIR@/include -I@NSPR_DIR@/include
 
 # Mozilla libs:
 NULL = 
@@ -38,7 +38,7 @@ ALL_MOZ_LIBS =                 \
         $(TK_LIBS)     \
         $(NULL)
 
-MOZILLA_LIBS=-L$(MOZILLA_DIR)/dist/lib  \
+MOZILLA_LIBS=-L$(MOZILLA_DIR)/lib  \
         $(ALL_MOZ_LIBS)
 
 INCLUDES = $(MOZILLA_INCLUDES) @GTK_CFLAGS@ @DEBUG_FLAGS@
