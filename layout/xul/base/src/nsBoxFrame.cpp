@@ -153,8 +153,6 @@ public:
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 
-    nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
-
     nsBoxFrame::Halignment GetHAlign();
     nsBoxFrame::Valignment GetVAlign();
 
@@ -255,6 +253,7 @@ nsBoxFrame::~nsBoxFrame()
   NS_ASSERTION(mInner == nsnull,"Error Destroy was never called on this Frame!!!");
 }
 
+
 NS_IMETHODIMP
 nsBoxFrame::GetVAlign(Valignment& aAlign)
 {
@@ -282,8 +281,7 @@ nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsresult r = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (r == NS_OK) {
     // initialize our list of infos.
-    nsBoxLayoutState state(shell);
-    InitChildren(state, aChildList);
+    InitChildren(shell, aChildList);
   } else {
     printf("Warning add child failed!!\n");
   }
@@ -357,7 +355,7 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
       mInner->GetDebugPref(aPresContext);
 
 
-  mMouseThrough = unset;
+  mMouseThrough = always;
 
   if (mContent) {
     nsAutoString value;
@@ -581,10 +579,15 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
 NS_IMETHODIMP
 nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
-   nsCOMPtr<nsIPresContext> context;
-   aPresShell->GetPresContext(getter_AddRefs(context));
-   nsBoxLayoutState state(context);
-   return RelayoutDirtyChild(state, this);
+    // if we are not dirty mark ourselves dirty and tell our parent we are dirty too.
+    if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {      
+      // Mark yourself as dirty and needing to be recalculated
+      mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
+      NeedsRecalc();
+      return mParent->ReflowDirtyChild(aPresShell, this);
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -848,9 +851,7 @@ nsBoxFrame::Destroy(nsIPresContext* aPresContext)
 // if we are root remove 1 from the debug count.
   if (mState & NS_STATE_IS_ROOT)
       mInner->GetDebugPref(aPresContext);
-
-  SetLayoutManager(nsnull);
-
+      
   // recycle the Inner via the shell's arena.
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -887,13 +888,11 @@ nsBoxFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 NS_IMETHODIMP
 nsBoxFrame::NeedsRecalc()
 {
-  if (mInner) {
-    SizeNeedsRecalc(mInner->mPrefSize);
-    SizeNeedsRecalc(mInner->mMinSize);
-    SizeNeedsRecalc(mInner->mMaxSize);
-    CoordNeedsRecalc(mInner->mFlex);
-    CoordNeedsRecalc(mInner->mAscent);
-  }
+  SizeNeedsRecalc(mInner->mPrefSize);
+  SizeNeedsRecalc(mInner->mMinSize);
+  SizeNeedsRecalc(mInner->mMaxSize);
+  CoordNeedsRecalc(mInner->mFlex);
+  CoordNeedsRecalc(mInner->mAscent);
   return NS_OK;
 }
 
@@ -911,8 +910,7 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
   SanityCheck(mFrames);
 
   // remove child from our info list
-  nsBoxLayoutState state(aPresContext);
-  Remove(state, aOldFrame);
+  Remove(&aPresShell, aOldFrame);
 
   // remove the child frame
   mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -920,6 +918,7 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
   SanityCheck(mFrames);
 
   // mark us dirty and generate a reflow command
+  nsBoxLayoutState state(aPresContext);
   MarkDirtyChildren(state);
   MarkDirty(state);
   return NS_OK;
@@ -946,11 +945,12 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
    }
 
    // insert the frames to our info list
-   nsBoxLayoutState state(aPresContext);
-   Insert(state, aPrevFrame, aFrameList);
+   Insert(&aPresShell, aPrevFrame, aFrameList);
 
    // insert the frames in out regular frame list
    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+
+   nsBoxLayoutState state(aPresContext);
 
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
@@ -979,11 +979,12 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
    SanityCheck(mFrames);
 
     // append them after
-   nsBoxLayoutState state(aPresContext);
-   Append(state,aFrameList);
+   Append(&aPresShell,aFrameList);
 
    // append in regular frames
    mFrames.AppendFrames(this, aFrameList); 
+
+   nsBoxLayoutState state(aPresContext);
 
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
@@ -1428,131 +1429,98 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     }
   }
 
-  nsIFrame *kid, *hit = nsnull;
-  nsPoint tmp;
 
-  FirstChild(aPresContext, nsnull, &kid);
-  *aFrame = nsnull;
-  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
-  while (nsnull != kid) {
-    // have we hit a child before
-    PRBool haveKid = (hit != nsnull);
-    nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
-
-    if (NS_SUCCEEDED(rv) && hit) {
-      if (!haveKid)
-         *aFrame = hit;
-      else
-      {
-        // if the kid had a child before see if this child has mouse
-        // though. 
-        nsresult rv = NS_OK;
-        PRBool isAdaptor = PR_FALSE;
-        nsCOMPtr<nsIBox> box = mInner->GetBoxForFrame(hit, isAdaptor);
-        if (box) {
-          PRBool mouseThrough = PR_FALSE;
-          box->GetMouseThrough(mouseThrough);
-          // if the child says it can never mouse though ignore it.
-          if (!mouseThrough)
-              *aFrame = hit;
-          else {
-            /*
-            // otherwise see if it has an opaque parent.
-            nsIFrame* child = hit;
-            while(child) {
-               if (child == this)
-                  break;
-
-               const nsStyleColor* color = nsnull;
-               child->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color);
-               PRBool transparentBG = (!color || NS_STYLE_BG_COLOR_TRANSPARENT ==
-                                     (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
-
-               if (!transparentBG) {
-                  *aFrame = hit;
-                  break;
-               }
-               child->GetParent(&child);
-            }
-            */
-          }
-        }
-      }
-    }
-
-    kid->GetNextSibling(&kid);
+  if (mMouseThrough == never)
+  {
+     *aFrame = this;
+     return NS_OK;
   }
 
-  if (*aFrame) {
-    return NS_OK;
+  // This won't work.
+  nsresult rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);    
+
+  /*
+  nsRect r(0,0,mRect.width, mRect.height);
+
+  // if it is not inside us fail
+  if (!r.Contains(aPoint)) {
+      return NS_ERROR_FAILURE;
   }
 
-  // if no kids were hit then select us
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->IsVisible()) {
+  // is it inside our border, padding, and debugborder or insets?
+  nsMargin im(0,0,0,0);
+  nsBoxLayoutState state(aPresContext);
+  GetInset(im);
+  nsMargin border(0,0,0,0);
+  GetBorderAndPadding(border);
+  r.Deflate(im);
+  r.Deflate(border);    
+
+  // no? Then it must be in our border so return us.
+  if (!r.Contains(aPoint)) {
       *aFrame = this;
       return NS_OK;
   }
 
+  // ok lets look throught the children
+  *aFrame = nsnull;
+  nsIBox* child = nsnull;
+  GetChildBox(&child);
+  nsPoint tmp;
+  nsIFrame *frame = nsnull, *hit = nsnull;
+  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+  while(child)
+  {
+    child->GetFrame(&frame);
+    nsresult rv = frame->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
+
+    if (NS_SUCCEEDED(rv) && hit) {
+     *aFrame = hit;
+    }
+
+    child->GetNextBox(&child);
+  }
+
+  // found it.
+  if (hit)
+    return NS_OK;
+
+  */
+
+  if (rv != NS_ERROR_FAILURE)
+     return rv;
+
+  // see if it is in our border, padding, or inset
+  nsRect r(mRect);
+  nsMargin m;
+  GetInset(m);
+  r.Deflate(m);
+  GetBorderAndPadding(m);
+  r.Deflate(m);
+  if (!r.Contains(aPoint)) {
+    *aFrame = this;
+    return NS_OK;
+  }
+
+  if (mMouseThrough == sometimes)
+  {
+     *aFrame = this;
+     return NS_OK;
+  }
+
+  const nsStyleColor* color = (const nsStyleColor*)
+  mStyleContext->GetStyleData(eStyleStruct_Color);
+  PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
+                        (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+
+  if (!transparentBG)
+  {
+     *aFrame = this;
+     return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
 }
-
-nsIBox*
-nsBoxFrameInner::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
-{
-  if (aFrame == nsnull)
-    return nsnull;
-
-  nsIBox* ibox = nsnull;
-  if (NS_FAILED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox))) {
-    aIsAdaptor = PR_TRUE;
-
-    // if we hit a non box. Find the box in out last container
-    // and clear its cache.
-    nsIFrame* parent = nsnull;
-    aFrame->GetParent(&parent);
-    nsIBox* parentBox = nsnull;
-    if (NS_FAILED(parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&parentBox))) 
-       return nsnull;
-
-    if (parentBox) {
-      nsIBox* start = nsnull;
-      parentBox->GetChildBox(&start);
-      while (start) {
-        nsIFrame* frame = nsnull;
-        start->GetFrame(&frame);
-        if (frame == aFrame) {
-          ibox = start;
-          break;
-        }
-
-        start->GetNextBox(&start);
-      }
-    }
-  } 
-
-  return ibox;
-}
-
-/*
-NS_IMETHODIMP
-nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
-{
-   const nsStyleColor* color = (const nsStyleColor*)
-   mStyleContext->GetStyleData(eStyleStruct_Color);
-   PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
-                         (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-
-   if (!transparentBG)
-      aMouseThrough = never;
-   else
-      return nsBox::GetMouseThrough(aMouseThrough);
-
-   return NS_OK;
-}
-*/
-
 
 
 
@@ -1651,8 +1619,7 @@ nsBoxFrameInner::operator new(size_t sz, nsIPresShell* aPresShell)
 void 
 nsBoxFrameInner::Recycle(nsIPresShell* aPresShell)
 {
-  nsBoxLayoutState state(aPresShell);
-  mOuter->ClearChildren(state);
+  mOuter->ClearChildren(aPresShell);
 
   delete this;
   nsBoxLayoutState::RecycleFreedMemory(aPresShell, this);

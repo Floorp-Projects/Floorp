@@ -89,18 +89,15 @@ nsContainerBox::GetChildCount()
 }
 
 PRInt32 
-nsContainerBox::CreateBoxList(nsBoxLayoutState& aState, nsIFrame* aFrameList, nsIBox*& aFirst, nsIBox*& aLast)
+nsContainerBox::CreateBoxList(nsIPresShell* aPresShell, nsIFrame* aFrameList, nsIBox*& aFirst, nsIBox*& aLast)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aState.GetPresShell(getter_AddRefs(shell));
-
   PRInt32 count = 0;
   if (aFrameList) {
     nsIBox* ibox = nsnull;
     if (NS_SUCCEEDED(aFrameList->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) 
         aFirst = ibox;
     else
-        aFirst = new (shell) nsBoxToBlockAdaptor(shell, aFrameList);
+        aFirst = new (aPresShell) nsBoxToBlockAdaptor(aPresShell, aFrameList);
 
        aFirst->SetParentBox(this);
 
@@ -114,7 +111,7 @@ nsContainerBox::CreateBoxList(nsBoxLayoutState& aState, nsIFrame* aFrameList, ns
         if (NS_SUCCEEDED(aFrameList->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) 
             aLast = ibox;
         else
-            aLast = new (shell) nsBoxToBlockAdaptor(shell, aFrameList);
+            aLast = new (aPresShell) nsBoxToBlockAdaptor(aPresShell, aFrameList);
 
          aLast->SetParentBox(this);
 
@@ -220,15 +217,15 @@ nsContainerBox::GetIndexOf(nsIBox* aBox)
 }
 
 void
-nsContainerBox::Remove(nsBoxLayoutState& aState, nsIFrame* aFrame)
+nsContainerBox::Remove(nsIPresShell* aShell, nsIFrame* aFrame)
 {
     // get the info before the frame
     nsIBox* prevBox = GetPrevious(aFrame);
-    RemoveAfter(aState, prevBox);        
+    RemoveAfter(aShell, prevBox);        
 }
 
 void
-nsContainerBox::Insert(nsBoxLayoutState& aState, nsIFrame* aPrevFrame, nsIFrame* aFrameList)
+nsContainerBox::Insert(nsIPresShell* aShell, nsIFrame* aPrevFrame, nsIFrame* aFrameList)
 {
    nsIBox* prevBox = GetBox(aPrevFrame);
    //NS_ASSERTION(aPrevFrame == nsnull || prevBox,"Error! The previous frame given is not in our list!");
@@ -237,15 +234,15 @@ nsContainerBox::Insert(nsBoxLayoutState& aState, nsIFrame* aPrevFrame, nsIFrame*
    // if no previous frame then we are inserting in front
    if (prevBox == nsnull) {
        // prepend them
-       Prepend(aState, aFrameList);
+       Prepend(aShell, aFrameList);
    } else {
        // insert insert after previous info
-       InsertAfter(aState, prevBox, aFrameList);
+       InsertAfter(aShell, prevBox, aFrameList);
    }
 }
 
 void
-nsContainerBox::RemoveAfter(nsBoxLayoutState& aState, nsIBox* aPrevious)
+nsContainerBox::RemoveAfter(nsIPresShell* aPresShell, nsIBox* aPrevious)
 {
     nsIBox* toDelete = nsnull;
 
@@ -274,24 +271,15 @@ nsContainerBox::RemoveAfter(nsBoxLayoutState& aState, nsIBox* aPrevious)
     // recycle adaptors
     nsIBoxToBlockAdaptor* adaptor = nsnull;
 
-    if (NS_SUCCEEDED(toDelete->QueryInterface(NS_GET_IID(nsIBoxToBlockAdaptor), (void**)&adaptor)) && adaptor) {
-       nsCOMPtr<nsIPresShell> shell;
-       aState.GetPresShell(getter_AddRefs(shell));
-       adaptor->Recycle(shell);
-    }
+    if (NS_SUCCEEDED(toDelete->QueryInterface(NS_GET_IID(nsIBoxToBlockAdaptor), (void**)&adaptor)) && adaptor) 
+       adaptor->Recycle(aPresShell);
 
     mChildCount--;
-
-    if (mLayoutManager)
-      mLayoutManager->ChildrenRemoved(this, aState, toDelete);
 }
 
 void
-nsContainerBox::ClearChildren(nsBoxLayoutState& aState)
+nsContainerBox::ClearChildren(nsIPresShell* aShell)
 {
-   if (mFirstChild && mLayoutManager)
-      mLayoutManager->ChildrenRemoved(this, aState, mFirstChild);
-
    nsIBox* box = mFirstChild;
    while(box) {
       nsIBox* it = box;
@@ -299,11 +287,8 @@ nsContainerBox::ClearChildren(nsBoxLayoutState& aState)
       // recycle adaptors
       nsIBoxToBlockAdaptor* adaptor = nsnull;
 
-      if (NS_SUCCEEDED(it->QueryInterface(NS_GET_IID(nsIBoxToBlockAdaptor), (void**)&adaptor)) && adaptor) {
-         nsCOMPtr<nsIPresShell> shell;
-         aState.GetPresShell(getter_AddRefs(shell));
-         adaptor->Recycle(shell);
-      }
+      if (NS_SUCCEEDED(it->QueryInterface(NS_GET_IID(nsIBoxToBlockAdaptor), (void**)&adaptor)) && adaptor) 
+         adaptor->Recycle(aShell);
    }
 
    mFirstChild= nsnull;
@@ -312,68 +297,52 @@ nsContainerBox::ClearChildren(nsBoxLayoutState& aState)
 }
 
 void
-nsContainerBox::Prepend(nsBoxLayoutState& aState, nsIFrame* aList)
+nsContainerBox::Prepend(nsIPresShell* aPresShell, nsIFrame* aList)
 {
     nsIBox* first;
     nsIBox* last;
-    mChildCount += CreateBoxList(aState, aList, first, last);
+    mChildCount += CreateBoxList(aPresShell, aList, first, last);
     if (!mFirstChild)
         mFirstChild= mLastChild= first;
     else {
         last->SetNextBox(mFirstChild);
         mFirstChild= first;
     }
-
-    if (mLayoutManager)
-      mLayoutManager->ChildrenInserted(this, aState, nsnull, first);
-
 }
 
 void
-nsContainerBox::Append(nsBoxLayoutState& aState, nsIFrame* aList)
+nsContainerBox::Append(nsIPresShell* aPresShell, nsIFrame* aList)
 {
     nsIBox* first;
     nsIBox* last;
-    mChildCount += CreateBoxList(aState, aList, first, last);
+    mChildCount += CreateBoxList(aPresShell, aList, first, last);
     if (!mFirstChild) 
         mFirstChild= first;
     else 
         mLastChild->SetNextBox(first);
     
     mLastChild= last;
-
-    if (mLayoutManager)
-      mLayoutManager->ChildrenAppended(this, aState, first);
 }
 
 void 
-nsContainerBox::InsertAfter(nsBoxLayoutState& aState, nsIBox* aPrev, nsIFrame* aList)
+nsContainerBox::InsertAfter(nsIPresShell* aPresShell, nsIBox* aPrev, nsIFrame* aList)
 {
     nsIBox* first = nsnull;
     nsIBox* last = nsnull;
-    mChildCount += CreateBoxList(aState, aList, first, last);
+    mChildCount += CreateBoxList(aPresShell, aList, first, last);
     nsIBox* next = nsnull;
     aPrev->GetNextBox(&next);
     last->SetNextBox(next);
     aPrev->SetNextBox(first);
     if (aPrev == mLastChild)
         mLastChild = last;
-
-    if (mLayoutManager) {
-      mLayoutManager->ChildrenInserted(this, aState, aPrev, first);
-    }
-
 }
 
 void 
-nsContainerBox::InitChildren(nsBoxLayoutState& aState, nsIFrame* aList)
+nsContainerBox::InitChildren(nsIPresShell* aPresShell, nsIFrame* aList)
 {
-    ClearChildren(aState);
-    mChildCount += CreateBoxList(aState, aList, mFirstChild, mLastChild);
-
-    if (mLayoutManager)
-      mLayoutManager->ChildrenAppended(this, aState, mFirstChild);
-
+    ClearChildren(aPresShell);
+    mChildCount += CreateBoxList(aPresShell, aList, mFirstChild, mLastChild);
 }
 
 void

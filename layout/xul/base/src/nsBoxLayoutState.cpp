@@ -49,12 +49,6 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mMaxElementSize = aState.mMaxElementSize;
 }
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), mMaxElementSize(nsnull)
-{
-   nsCOMPtr<nsIPresContext> context;
-   aShell->GetPresContext(getter_AddRefs(mPresContext));
-}
-
 nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize):mReflowState(&aReflowState),mPresContext(aPresContext),mType(Dirty)
 {
   mMaxElementSize = aDesiredSize.maxElementSize;
@@ -124,11 +118,6 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox, PRBool aCoelesce)
             mType = Initial;
          break;
 
-         case eReflowReason_StyleChange:
-            printf("STYLE CHANGE REFLOW. Blowing away all box caches!!\n");
-            DirtyAllChildren(*this, aRootBox);
-            // fall through to dirty
-
          default:
             mType = Dirty;
       }
@@ -185,25 +174,11 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
          ibox->MarkDirty(*this);      
 
          if (type == nsIReflowCommand::StyleChanged) {
-            // could be a visiblity change. Like collapse so we need to dirty
-            // parent so it gets redrawn. But be carefull we
-            // don't want to just mark dirty that would notify the
-            // box and it would notify its layout manager. This would 
-            // be really bad for grid because it would blow away
-            // all is cached infomation for is colums and rows. Because the
-            // our parent is most likely a rows or columns and it will think
-            // its child is getting bigger or something.
+            // could be a visiblity change need to dirty
+            // parent so it gets redrawn.
             nsIBox* parent;
             ibox->GetParentBox(&parent);
-            if (parent) {
-              nsFrameState parentState;
-              nsIFrame* parentFrame;
-              parent->GetFrame(&parentFrame);
-              parentFrame->GetFrameState(&parentState);
-              parentState |= NS_FRAME_IS_DIRTY;
-              parentFrame->SetFrameState(parentState);
-            }
-
+            parent->MarkDirty(*this);
             DirtyAllChildren(*this, ibox);
          } 
 
