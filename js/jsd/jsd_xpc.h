@@ -38,6 +38,7 @@
 
 #include "jsdIDebuggerService.h"
 #include "jsdebug.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 #if defined(DEBUG_rginda_l)
@@ -155,17 +156,44 @@ class jsdScript : public jsdIScript
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
     jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE), mCx(aCx),
-                                                      mScript(aScript)
+                                                      mScript(aScript),
+                                                      mFileName(0), 
+                                                      mFunctionName(0),
+                                                      mBaseLineNumber(0),
+                                                      mLineExtent(0)
     {
-        if (mScript)
-            mValid = true;
         NS_INIT_ISUPPORTS();
 #ifdef DEBUG_verbose
         printf ("++++++ jsdScript %i\n", ++gScriptCount);
 #endif
+
+        if (mScript)
+        {
+            /* copy the script's information now, so we have it later, when it
+             * get's destroyed. */
+            JSD_LockScriptSubsystem(mCx);
+            mFileName = new nsCString(JSD_GetScriptFilename(mCx, mScript));
+            mFunctionName =
+                new nsCString(JSD_GetScriptFunctionName(mCx, mScript));
+            mBaseLineNumber = JSD_GetScriptBaseLineNumber(mCx, mScript);
+            mLineExtent = JSD_GetScriptLineExtent(mCx, mScript);
+            JSD_UnlockScriptSubsystem(mCx);
+            
+            mValid = true;
+        }
     }
     virtual ~jsdScript () 
     {
+        if (mFileName)
+            delete mFileName;
+        if (mFunctionName)
+            delete mFunctionName;
+        
+        /* Invalidate() needs to be called to release an owning reference to
+         * ourselves, so if we got here without being invalidated, something
+         * has gone wrong with our ref count */
+        NS_ASSERTION (!mValid, "Script destroyed without being invalidated.");
+        
 #ifdef DEBUG_verbose
         printf ("------ jsdScript %i\n", --gScriptCount);
 #endif
@@ -199,6 +227,9 @@ class jsdScript : public jsdIScript
     PRBool      mValid;
     JSDContext *mCx;
     JSDScript  *mScript;
+    nsCString  *mFileName;
+    nsCString  *mFunctionName;
+    PRUint32    mBaseLineNumber, mLineExtent;
 };
 
 class jsdStackFrame : public jsdIStackFrame
@@ -296,7 +327,13 @@ class jsdService : public jsdIDebuggerService
     NS_DECL_ISUPPORTS
     NS_DECL_JSDIDEBUGGERSERVICE
 
-    jsdService();
+    jsdService() : mOn(PR_FALSE), mNestedLoopLevel(0), mCx(0), mRuntime(0),
+                   mBreakpointHook(0), mErrorHook(0), mDebuggerHook(0),
+                   mInterruptHook(0), mScriptHook(0), mThrowHook(0)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
     virtual ~jsdService() { }
     
     static jsdService *GetService ();
@@ -305,6 +342,8 @@ class jsdService : public jsdIDebuggerService
     PRBool      mOn;
     PRUint32    mNestedLoopLevel;
     JSDContext *mCx;
+    JSRuntime  *mRuntime;
+    
     nsCOMPtr<jsdIExecutionHook> mBreakpointHook;
     nsCOMPtr<jsdIExecutionHook> mErrorHook;
     nsCOMPtr<jsdIExecutionHook> mDebuggerHook;
