@@ -6,6 +6,7 @@ java/dom/Makefile
 java/dom/classes/Makefile
 java/dom/jni/Makefile
 java/dom/src/Makefile
+java/xpcom/Makefile
 java/webclient/Makefile
 java/webclient/classes_spec/Makefile
 java/webclient/src_share/Makefile
