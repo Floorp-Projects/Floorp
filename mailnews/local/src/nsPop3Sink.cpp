@@ -293,10 +293,19 @@ nsPop3Sink::EndMailDelivery()
         nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(openFolder);
         if (localFolder)
         {
-          PRBool hasNew;
+          PRBool hasNew, isLocked;
           (void) openFolder->GetHasNewMessages(&hasNew);
           if (hasNew)
-            openFolder->CallFilterPlugins(nsnull, &filtersRun);
+          {
+            // if the open folder is locked, we shouldn't run the spam filters
+            // on it because someone is using the folder. see 218433.
+            // Ideally, the filter plugin code would try to grab the folder lock
+            // and hold onto it until done, but that's more difficult and I think
+            // this will actually fix the problem.
+            openFolder->GetLocked(&isLocked);
+            if(!isLocked)
+              openFolder->CallFilterPlugins(nsnull, &filtersRun);
+          }
         }
       }
     }
@@ -483,12 +492,6 @@ nsPop3Sink::IncorporateWrite(const char* block,
     *(m_outputBuffer + length) = 0;
     nsresult rv = WriteLineToMailbox (m_outputBuffer);
     if (NS_FAILED(rv)) return rv;
-    // Is this where we should hook up the new mail parser? Is this block a line, or a real block?
-    // I think it's a real line. We're also not escaping lines that start with "From ", which is
-    // a potentially horrible bug...Should this be done here, or in the mailbox parser? I vote for
-    // here. Also, we're writing out the mozilla-status line in IncorporateBegin, but we need to 
-    // pass that along to the mailbox parser so that the mozilla-status offset is handled correctly.
-    // And what about uidl? Don't we need to be able to write out an X-UIDL header?
   }
   return NS_OK;
 }
@@ -502,13 +505,14 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
     if (m_newMailParser)
       m_newMailParser->HandleLine(buffer, bufferLen);
     // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 
-    // where for some reason or another we can't write too and lose the messages
+    // where for some reason or another we can't write to and lose the messages
     // See bug 62480
     if (!m_outFileStream)
       return NS_ERROR_OUT_OF_MEMORY;
     
     NS_ASSERTION(m_outFileStream->eof(), "we are not writing to end-of-file");
     
+    m_outFileStream->seek(PR_SEEK_END, 0);
     PRInt32 bytes = m_outFileStream->write(buffer,bufferLen);
     if (bytes != bufferLen) return NS_ERROR_FAILURE;
   }
@@ -526,18 +530,18 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
       nsBuildLocalMessageURI(m_baseMessageUri, msgKey, m_messageUri);
   }
 
-	nsresult rv = WriteLineToMailbox(MSG_LINEBREAK);
-    if (NS_FAILED(rv)) return rv;
-    rv = m_outFileStream->flush();   //to make sure the message is written to the disk
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(m_newMailParser, "could not get m_newMailParser");
-    if (m_newMailParser)
-      m_newMailParser->PublishMsgHeader(msgWindow); 
+  nsresult rv = WriteLineToMailbox(MSG_LINEBREAK);
+  if (NS_FAILED(rv)) return rv;
+  rv = m_outFileStream->flush();   //to make sure the message is written to the disk
+  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(m_newMailParser, "could not get m_newMailParser");
+  if (m_newMailParser)
+    m_newMailParser->PublishMsgHeader(msgWindow); 
 
 #ifdef DEBUG
-	printf("Incorporate message complete.\n");
+  printf("Incorporate message complete.\n");
 #endif
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult
