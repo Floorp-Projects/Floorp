@@ -451,9 +451,11 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetRole(PRUint32 *_retval)
 /**
   * No states supported for progressmeter
   */
-NS_IMETHODIMP nsXULProgressMeterAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetState(PRUint32 *aState)
 {
-  return nsAccessible::GetState(_retval);
+  nsresult rv = nsAccessible::GetState(aState);
+  *aState &= ~STATE_FOCUSABLE;
+  return rv;
 }
 
 NS_IMETHODIMP nsXULProgressMeterAccessible::GetValue(nsAString& _retval)

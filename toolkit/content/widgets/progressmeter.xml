@@ -30,8 +30,13 @@
             var delta = p - c;
             if (delta < 0)
               delta = -delta;
-            if (delta > 3 || p == 0 || p == 100)
+            if (delta > 3 || p == 0 || p == 100) {
               this.setAttribute("value", p);
+              // Fire DOM event so that accessible value change events occur
+              var event = document.createEvent('Events');
+              event.initEvent('ValueChange', true, true);
+              this.dispatchEvent(event);
+            }
           }
           
           return p;
