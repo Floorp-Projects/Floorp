@@ -203,3 +203,9 @@ SECMIME_DecryptionAllowed;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.4.1 {     # NSS 3.4.1 release
+;+    global:
+NSS_CMSMessage_IsEncrypted;
+;+    local:
+;+       *;
+;+};
