@@ -14247,7 +14247,7 @@ void CEditBuffer::PasteTable( CEditTableCellElement *pCell, CEditTableElement *p
         //  in ReplaceSpecialCells since we want relayout to happen first
         //  THIS LEAVES AN UGLY SELECTION FROM THE ORIGINAL SOURCE TO
         //  THE CURRENT CURSOR LOCATION - DOESN'T MAKE SENSE!!!
-        //FE_Alert(m_pContext, XP_GetString(XP_EDT_NOT_ALL_CELLS_PASTED));
+        FE_Alert(m_pContext, XP_GetString(XP_EDT_NOT_ALL_CELLS_PASTED));
     }
 }
 

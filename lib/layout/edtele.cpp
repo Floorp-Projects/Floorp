@@ -3159,7 +3159,7 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
                     // Skip over cells to get to the next source row
                     bAllSourceCellsPasted = FALSE;
                     while( pSourceCell && iSourceRow == iPrevSourceRow )
-                        pSourceCell->GetNextCellInTable(&iSourceRow);
+                        pSourceCell = pSourceCell->GetNextCellInTable(&iSourceRow);
                     if( !pSourceCell )
                         goto REPLACE_DONE;
                 }
