@@ -1603,6 +1603,7 @@ MailDeliveryCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
     ptr->DeliverAsMailExit(aUrl, aExitCode);
+    NS_RELEASE(ptr);
   }
 
   return aExitCode;
@@ -1690,6 +1691,7 @@ nsMsgComposeAndSend::DeliverFileAsMail ()
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)
   {
+  	NS_ADDREF(this);
     nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
     if (!sendListener)
     {
@@ -2689,8 +2691,8 @@ void
 nsMsgComposeAndSend::SetIMAPMessageUID(MessageKey key)
 {
 	NS_ASSERTION(m_pane && m_pane->GetPaneType() == MSG_COMPOSITIONPANE, "invalid msg pane");
-	nsMsgCompose *composePane = (nsMsgCompose*) m_pane;
 /*JFD
+	nsMsgCompose *composePane = (nsMsgCompose*) m_pane;
 	composePane->SetIMAPMessageUID(key);
 */
 }
@@ -3069,7 +3071,6 @@ nsMsgComposeAndSend::DeliverAsMailExit(nsIURL *aUrl, nsresult aExitCode)
     mSendCompleteCallback (aExitCode, m_fe_data);
 
   mSendCompleteCallback = nsnull;
-  Clear();
   return;
 }
 
