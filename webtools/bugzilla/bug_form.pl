@@ -423,6 +423,9 @@ if ($status eq $::unconfirmedstate) {
     }
 }
 
+my $movers = Param("movers");
+$movers =~ s/\s?,\s?/|/g;
+$movers =~ s/@/\@/g;
 
 if ($canedit || $::userid == $assignedtoid ||
       $::userid == $reporterid || $::userid == $qacontactid) {
@@ -472,6 +475,22 @@ if ($canedit || $::userid == $assignedtoid ||
             print "&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=checkbox NAME=compconfirm> and confirm bug (change status to <b>NEW</b>)<BR>";
         }
         $knum++;
+    } elsif ( Param("move-enabled") && ($bug{'resolution'} eq "MOVED") ) {
+        if ( (defined $::COOKIE{"Bugzilla_login"}) 
+             && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
+          print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
+          $knum++;
+          if ($status eq "RESOLVED") {
+              print "<INPUT TYPE=radio NAME=knob VALUE=verify>
+          Mark bug as <b>VERIFIED</b><br>\n";
+              $knum++;
+          }
+          if ($status ne "CLOSED") {
+              print "<INPUT TYPE=radio NAME=knob VALUE=close>
+          Mark bug as <b>CLOSED</b><br>\n";
+              $knum++;
+          }
+        }
     } else {
         print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
         $knum++;
@@ -491,14 +510,25 @@ if ($canedit || $::userid == $assignedtoid ||
 print "
 <INPUT TYPE=\"submit\" VALUE=\"Commit\">
 <INPUT TYPE=\"reset\" VALUE=\"Reset\">
-<INPUT TYPE=hidden name=form_name VALUE=process_bug>
+<INPUT TYPE=\"hidden\" name=\"form_name\" VALUE=\"process_bug\">
 <P>
 <FONT size=\"+1\"><B>
  <A HREF=\"show_activity.cgi?id=$id\">View Bug Activity</A>
  &nbsp; | &nbsp;
  <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
 </B></FONT><BR>
-</FORM>
+";
+
+if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
+  print "
+<P>
+<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"" 
+       . Param("move-button-text") . "\">";
+}
+
+print "</FORM>";
+
+print "
 <table><tr><td align=left><B>Description:</B></td>
 <td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
 <HR>

@@ -1277,7 +1277,6 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
             value_quote($::dontchange) . "\"></TD>
 </TR>";
     }
-        
 
     if (@::legal_keywords) {
         print qq{
@@ -1394,8 +1393,21 @@ To make changes to a bunch of bugs at once:
      comment explaining what you're doing.)
 <li> Click the below \"Commit\" button.
 </ol></font>
-<INPUT TYPE=SUBMIT VALUE=Commit>
-</FORM><hr>\n";
+<INPUT TYPE=SUBMIT VALUE=Commit>";
+
+    my $movers = Param("movers");
+    $movers =~ s/\s?,\s?/|/g;
+    $movers =~ s/@/\@/g;
+
+    if ( Param("move-enabled") 
+         && (defined $::COOKIE{"Bugzilla_login"}) 
+         && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
+      print "<P>";
+      print "<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"";
+      print Param("move-button-text") . "\">";
+    }
+
+    print "</FORM><hr>\n";
 }
 
 
@@ -1425,8 +1437,10 @@ if ($count > 0) {
     }
     print qq{&nbsp;&nbsp;\n};
     print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
+
     print "</FORM>\n";
 }
+
 PutFooter();
 
 if ($serverpush) {

@@ -560,5 +560,41 @@ DefParam("supportwatchers",
          " about) another's bugs.  Useful for people going on vacation, and" .
          " QA folks watching particular developers' bugs",
          "b", 0 );
-1;
 
+
+DefParam("move-enabled",
+         "If this is on, Bugzilla will allow certain people to move bugs to the defined database.",
+         "b",
+	 0);
+DefParam("move-button-text",
+         "The text written on the Move button. Explain where the bug is being moved to.",
+         "t",
+         'Move To Bugscape');
+DefParam("move-to-url",
+         "The URL of the database we allow some of our bugs to be moved to.",
+         "t",
+         '');
+DefParam("move-to-address",
+         "To move bugs, an email is sent to the target database. This is the email address that database
+          uses to listen for incoming bugs.",
+         "t",
+         'bugzilla-import');
+DefParam("moved-from-address",
+         "To move bugs, an email is sent to the target database. This is the email address from which
+          this mail, and error messages are sent.",
+         "t",
+         'bugzilla-admin');
+DefParam("movers",
+         "A list of people with permission to move bugs and reopen moved bugs (in case the move operation fails).",
+         "t",
+         '');
+DefParam("moved-default-product",
+         "Bugs moved from other databases to here are assigned to this product.",
+         "t",
+         '');
+DefParam("moved-default-component",
+         "Bugs moved from other databases to here are assigned to this component.",
+         "t",
+         '');
+
+1;

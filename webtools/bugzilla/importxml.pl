@@ -67,6 +67,7 @@ sub sillyness {
     my $zz;
     $zz = %::components;
     $zz = %::versions;
+    $zz = %::keywordsbyname;
     $zz = @::legal_bug_status;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
@@ -94,7 +95,9 @@ sub MailMessage {
 
   my $to = join (", ", @recipients);
   my $header = "To: $to\n";
-  $header.= "From: Bugzilla <bugzilla\@beefaroni>\n";
+  my $from = Param("moved-from-address");
+  $from =~ s/@/\@/g;
+  $header.= "From: Bugzilla <$from>\n";
   $header.= "Subject: $subject\n\n";
 
   open(SENDMAIL,
@@ -180,6 +183,17 @@ if (defined $tree->[1][0]->{'exporter'}) {
   exit;
 }
 
+
+unless ( Param("move-enabled") ) {
+  my $subject = "Error: bug importing is disabled here";
+  my $message = "Cannot import these bugs because importing is disabled\n";
+  $message .= "at this site. For more info, contact ";
+  $message .=  Param("maintainer") . ".\n";
+  my @to = (Param("maintainer"), $maintainer, $exporter);
+  MailMessage ($subject, $message, @to);
+  exit;
+}
+
 my $exporterid = DBname_to_id($exporter);
 if ( ! $exporterid ) {
   my $subject = "Bug import error: invalid exporter";
@@ -187,7 +201,7 @@ if ( ! $exporterid ) {
   $message .= "bugs here does not have an account in this database.\n";
   $message .= "\n\nPlease re-open the original bug.\n";
   $message .= "\n\n$xml";
-  my @to = (Param("maintainer"), $maintainer);
+  my @to = (Param("maintainer"), $maintainer, $exporter);
   MailMessage ($subject, $message, @to);
   exit;
 }
@@ -233,7 +247,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   foreach my $field (qw (dependson product bug_status priority cc version 
       bug_id rep_platform short_desc assigned_to bug_file_loc resolution
       delta_ts component reporter urlbase target_milestone bug_severity 
-      creation_ts qa_contact keyword status_whiteboard op_sys blocks)) {
+      creation_ts qa_contact keywords status_whiteboard op_sys blocks)) {
     $all_fields{$field} = "x"; 
   }
  
@@ -294,15 +308,13 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
       $long_description .= "$sorted_descs[$z]->{'bug_when'}"; 
       $long_description .= " ----\n\n";
     }
-    $long_description .=  "$sorted_descs[$z]->{'thetext'}\n";
+    $long_description .=  UnQuoteXMLChars($sorted_descs[$z]->{'thetext'});
+    $long_description .=  "\n";
   }
 
-
   my $comments;
-  my $query = "INSERT INTO bugs (\n";
-  my $values = "VALUES (\n";
 
-  $comments .= "\n\n------- Bug Moved by $exporter "; 
+  $comments .= "\n\n------- Bug moved to this database by $exporter "; 
   $comments .= time2str("%Y-%m-%d %H:%M", time);
   $comments .= " -------\n\n";
   $comments .= "This bug previously known as bug $bug_fields{'bug_id'} at ";
@@ -318,56 +330,85 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   $comments .= "Bug blocks bug(s) $bug_fields{'blocks'}.\n";
   }
 
-
-  foreach my $field ( qw(creation_ts delta_ts keywords status_whiteboard) ) {
+  my @query = ();
+  my @values = ();
+  foreach my $field ( qw(creation_ts delta_ts status_whiteboard) ) {
       if ( (defined $bug_fields{$field}) && ($bug_fields{$field}) ){
-        $query .= "$field,\n";
-        $values .= SqlQuote($bug_fields{$field}) . ",\n";
+        push (@query, "$field");
+        push (@values, SqlQuote($bug_fields{$field}));
       }
   }
 
   if ( (defined $bug_fields{'bug_file_loc'}) && ($bug_fields{'bug_file_loc'}) ){
-        $query .= "bug_file_loc,\n";
-      $values .= SqlQuote(UnQuoteXMLChars($bug_fields{'bug_file_loc'})) . ",\n";
+      push (@query, "bug_file_loc");
+      push (@values, SqlQuote(UnQuoteXMLChars($bug_fields{'bug_file_loc'})));
       }
 
   if ( (defined $bug_fields{'short_desc'}) && ($bug_fields{'short_desc'}) ){
-        $query .= "short_desc,\n";
-      $values .= SqlQuote(UnQuoteXMLChars($bug_fields{'short_desc'})) . ",\n";
+      push (@query, "short_desc");
+      push (@values, SqlQuote(UnQuoteXMLChars($bug_fields{'short_desc'})) );
       }
 
-  my @product;
-  if (defined ($bug_fields{'product'}) &&
-       (@product = grep /^$bug_fields{'product'}$/i, @::legal_product) ){
-    $query .= "product,\n";
-    $values .= SqlQuote($product[0]) . ",\n";
+
+  my $prod;
+  my $comp;
+  my $default_prod = Param("moved-default-product");
+  my $default_comp = Param("moved-default-component");
+  if ( (defined ($bug_fields{'product'})) &&
+       (defined ($bug_fields{'component'})) ) {
+     $prod = $bug_fields{'product'};
+     $comp = $bug_fields{'component'};
   } else {
-    $query .= "product,\n";
-    $values .= "\'From Bugzilla\',\n";
-    $product[0] = "From Bugzilla";
-    $err .= "Unknown product $bug_fields{'product'}. ";
-    $err .= "Moving to default product \"From Bugzilla\".\n";
+     $prod = $default_prod;
+     $comp = $default_comp;
+  }
+
+  my @product;
+  my @component;
+  if ((@product = grep /^$prod$/i, @::legal_product) &&
+      (@component = grep /^$comp$/i, @{$::components{$product[0]}}) ) {
+    push (@query, "product");
+    push (@values, SqlQuote($product[0]) );
+    push (@query, "component");
+    push (@values, SqlQuote($component[0]) );
+  } elsif ((@product = grep /^$default_prod$/i, @::legal_product) &&
+      (@component = grep /^$default_comp$/i, @{$::components{$product[0]}}) ) {
+    push (@query, "product");
+    push (@values, SqlQuote($product[0]) );
+    push (@query, "component");
+    push (@values, SqlQuote($component[0]) );
+  } else {
+    my $subject = "Bug import error: invalid default product or component";
+    my $message = "Cannot import these bugs because an invalid default ";
+    $message .= "product and/or component was defined for the target db.\n";
+    $message .= Param("maintainer") . " needs to fix the definitions of ";
+    $message .= "moved-default-product and moved-default-component.\n";
+    $message .= "\n\nPlease re-open the original bug.\n";
+    $message .= "\n\n$xml";
+    my @to = (Param("maintainer"), $maintainer, $exporter);
+    MailMessage ($subject, $message, @to);
+    exit;
   }
 
   if (defined  ($::versions{$product[0]} ) &&
      (my @version = grep /^$bug_fields{'version'}$/i, 
                          @{$::versions{$product[0]}}) ){
-    $values .= SqlQuote($version[0]) . ",\n";
-    $query .= "version,\n";
+    push (@values, SqlQuote($version[0]) );
+    push (@query, "version");
   } else {
-    $query .= "version,\n";
-    $values .= "\'@{$::versions{$product[0]}}->[0]\',\n";
+    push (@query, "version");
+    push (@values, SqlQuote(@{$::versions{$product[0]}}->[0]));
     $err .= "Unknown version $bug_fields{'version'} in product $product[0]. ";
     $err .= "Setting version to \"@{$::versions{$product[0]}}->[0]\".\n";
   }
 
   if (defined ($bug_fields{'priority'}) &&
        (my @priority = grep /^$bug_fields{'priority'}$/i, @::legal_priority) ){
-    $values .= SqlQuote($priority[0]) . ",\n";
-    $query .= "priority,\n";
+    push (@values, SqlQuote($priority[0]) );
+    push (@query, "priority");
   } else {
-    $values .= "\'P3\',\n";
-    $query .= "priority,\n";
+    push (@values, SqlQuote("P3"));
+    push (@query, "priority");
     $err .= "Unknown priority ";
     $err .= (defined $bug_fields{'priority'})?$bug_fields{'priority'}:"unknown";
     $err .= ". Setting to default priority \"P3\".\n";
@@ -375,11 +416,11 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   if (defined ($bug_fields{'rep_platform'}) &&
        (my @platform = grep /^$bug_fields{'rep_platform'}$/i, @::legal_platform) ){
-    $values .= SqlQuote($platform[0]) . ",\n";
-    $query .= "rep_platform,\n";
+    push (@values, SqlQuote($platform[0]) );
+    push (@query, "rep_platform");
   } else {
-    $values .= "\'Other\',\n";
-    $query .= "rep_platform,\n";
+    push (@values, SqlQuote("Other") );
+    push (@query, "rep_platform");
     $err .= "Unknown platform ";
     $err .= (defined $bug_fields{'rep_platform'})?
                      $bug_fields{'rep_platform'}:"unknown";
@@ -388,45 +429,28 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   if (defined ($bug_fields{'op_sys'}) &&
      (my @opsys = grep /^$bug_fields{'op_sys'}$/i, @::legal_opsys) ){
-    $values .= SqlQuote($opsys[0]) . ",\n";
-    $query .= "op_sys,\n";
+    push (@values, SqlQuote($opsys[0]) );
+    push (@query, "op_sys");
   } else {
-    $values .= "\'other\',\n";
-    $query .= "op_sys,\n";
+    push (@values, SqlQuote("other"));
+    push (@query, "op_sys");
     $err .= "Unknown operating system ";
     $err .= (defined $bug_fields{'op_sys'})?$bug_fields{'op_sys'}:"unknown";
     $err .= ". Setting to default OS \"other\".\n";
-  }
-
-  my @component;
-  if (defined  ($::components{$product[0]} ) &&
-     (@component = grep /^$bug_fields{'component'}$/i, 
-                       @{$::components{$product[0]}}) ){
-    $values .= SqlQuote($component[0]) . ",\n";
-    $query .= "component,\n";
-  } else {
-    $component[0] = $::components{$product[0]}->[0];
-    $values .= SqlQuote($component[0]) . ",\n";
-    $query .= "component,\n";
-    $err .= "Unknown component \"";
-    $err .= (defined $bug_fields{'component'})?$bug_fields{'component'}:"unknown";
-    $err .= "\" in product \"$product[0]\".\n";
-    $err .= "   Setting to this product\'s first component, ";
-    $err .= "\'$::components{$product[0]}->[0]\'.\n";
   }
 
   if (Param("usetargetmilestone")) {
     if (defined  ($::target_milestone{$product[0]} ) &&
        (my @tm = grep /^$bug_fields{'target_milestone'}$/i, 
                        @{$::target_milestone{$product[0]}}) ){
-      $values .= SqlQuote($tm[0]) . ",\n";
-      $query .= "target_milestone,\n";
+      push (@values, SqlQuote($tm[0]) );
+      push (@query, "target_milestone");
     } else {
       SendSQL("SELECT defaultmilestone FROM products " .
               "WHERE product = " . SqlQuote($product[0]));
       my $tm = FetchOneColumn();
-      $values .= "\'$tm\',\n";
-      $query .= "target_milestone,\n";
+      push (@values, SqlQuote($tm));
+      push (@query, "target_milestone");
       $err .= "Unknown milestone \"";
       $err .= (defined $bug_fields{'target_milestone'})?
               $bug_fields{'target_milestone'}:"unknown";
@@ -439,11 +463,11 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   if (defined ($bug_fields{'bug_severity'}) &&
        (my @severity= grep /^$bug_fields{'bug_severity'}$/i, 
                            @::legal_severity) ){
-    $values .= SqlQuote($severity[0]) . ",\n";
-    $query .= "bug_severity,\n";
+    push (@values, SqlQuote($severity[0]) );
+    push (@query, "bug_severity");
   } else {
-    $values .= "\'normal',\n";
-    $query .= "bug_severity,\n";
+    push (@values, SqlQuote("normal"));
+    push (@query, "bug_severity");
     $err .= "Unknown severity ";
     $err .= (defined $bug_fields{'bug_severity'})?
                      $bug_fields{'bug_severity'}:"unknown";
@@ -452,11 +476,11 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   my $reporterid = DBname_to_id($bug_fields{'reporter'});
   if ( ($bug_fields{'reporter'}) && ( $reporterid ) ) {
-    $values .= "'$reporterid',\n";
-    $query .= "reporter,\n";
+    push (@values, SqlQuote($reporterid));
+    push (@query, "reporter");
   } else {
-    $values .= "'$exporterid',\n";
-    $query .= "reporter,\n";
+    push (@values, SqlQuote($exporterid));
+    push (@query, "reporter");
     $err .= "The original reporter of this bug does not have\n";
     $err .= "   an account here. Reassigning to the person who moved\n";
     $err .= "   it here, $exporter.\n";
@@ -470,11 +494,11 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   my $changed_owner = 0;
   if ( ($bug_fields{'assigned_to'}) && 
        ( DBname_to_id($bug_fields{'assigned_to'})) ) {
-    $values .= "'" . DBname_to_id($bug_fields{'assigned_to'}) . "',\n";
-    $query .= "assigned_to,\n";
+    push (@values, SqlQuote(DBname_to_id($bug_fields{'assigned_to'})));
+    push (@query, "assigned_to");
   } else {
-    $values .= "'" . $exporterid . "',\n";
-    $query .= "assigned_to,\n";
+    push (@values, SqlQuote($exporterid) );
+    push (@query, "assigned_to");
     $changed_owner = 1;
     $err .= "The original owner of this bug does not have\n";
     $err .= "   an account here. Reassigning to the person who moved\n";
@@ -489,8 +513,8 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   my @resolution;
   if (defined ($bug_fields{'resolution'}) &&
        (@resolution= grep /^$bug_fields{'resolution'}$/i, @::legal_resolution) ){
-    $values .= SqlQuote($resolution[0]) . ",\n";
-    $query .= "resolution,\n";
+    push (@values, SqlQuote($resolution[0]) );
+    push (@query, "resolution");
   } elsif ( (defined $bug_fields{'resolution'}) && (!$resolution[0]) ){
     $err .= "Unknown resolution \"$bug_fields{'resolution'}\".\n";
   }
@@ -499,8 +523,8 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   # resolution is set, which indicates that the bug should be closed.
   #
   if ( ($changed_owner) && (!$resolution[0]) ) {
-    $values .= "\'NEW\',\n";
-    $query .= "bug_status,\n";
+    push (@values, SqlQuote("NEW"));
+    push (@query, "bug_status");
     $err .= "Bug assigned to new owner, setting status to \"NEW\".\n";
     $err .= "   Previous status was \"";
     $err .= (defined $bug_fields{'bug_status'})?
@@ -508,8 +532,8 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     $err .= "\".\n";
   } elsif ( (defined ($bug_fields{'resolution'})) && (!$resolution[0]) ){
     #if the resolution was illegal then set status to NEW
-    $values .= "\'NEW\',\n";
-    $query .= "bug_status,\n";
+    push (@values, SqlQuote("NEW"));
+    push (@query, "bug_status");
     $err .= "Resolution was invalid. Setting status to \"NEW\".\n";
     $err .= "   Previous status was \"";
     $err .= (defined $bug_fields{'bug_status'})?
@@ -518,12 +542,12 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   } elsif (defined ($bug_fields{'bug_status'}) &&
        (my @status = grep /^$bug_fields{'bug_status'}$/i, @::legal_bug_status) ){
     #if a bug status was set then use it, if its legal
-    $values .= SqlQuote($status[0]) . ",\n";
-    $query .= "bug_status,\n";
+    push (@values, SqlQuote($status[0]));
+    push (@query, "bug_status");
   } else {
     # if all else fails, make the bug new
-    $values .= "\'NEW\',\n";
-    $query .= "bug_status,\n";
+    push (@values, SqlQuote("NEW"));
+    push (@query, "bug_status");
     $err .= "Unknown status ";
     $err .= (defined $bug_fields{'bug_status'})?
                      $bug_fields{'bug_status'}:"unknown";
@@ -534,21 +558,26 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     my $qa_contact;
     if ( (defined $bug_fields{'qa_contact'}) &&
          ($qa_contact  = DBname_to_id($bug_fields{'qa_contact'})) ){
-      $values .= "'$qa_contact'";
-      $query .= "qa_contact\n";
+      push (@values, SqlQuote($qa_contact));
+      push (@query, "qa_contact");
     } else {
       SendSQL("select initialqacontact from components where program=" .
               SqlQuote($product[0]) .
               " and value=" . SqlQuote($component[0]) );
       $qa_contact = FetchOneColumn();
-      $values .= SqlQuote(DBname_to_id($qa_contact)) . "\n";
-      $query .= "qa_contact\n";
+      push (@values, SqlQuote(DBname_to_id($qa_contact)) );
+      push (@query, "qa_contact");
       $err .= "Setting qa contact to the default for this product.\n";
       $err .= "   This bug either had no qa contact or an invalid one.\n";
     }
   }
 
-  $query .= ") $values )\n";
+
+  my $query  = "INSERT INTO bugs (\n" 
+               . join (",\n", @query)
+               . "\n) VALUES (\n"
+               . join (",\n", @values)
+               . "\n)\n";
   SendSQL($query);
   SendSQL("select LAST_INSERT_ID()");
   my $id = FetchOneColumn();
@@ -562,6 +591,24 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     }
   }
 
+  if (defined ($bug_fields{'keywords'})) {
+    my %keywordseen;
+    foreach my $keyword (split(/[\s,]+/, $bug_fields{'keywords'})) {
+      if ($keyword eq '') {
+        next;
+      }
+      my $i = $::keywordsbyname{$keyword};
+      if (!$i) {
+        $err .= "Skipping unknown keyword: $keyword.\n";
+        next;
+      }
+      if (!$keywordseen{$i}) {
+        SendSQL("INSERT INTO keywords (bug_id, keywordid) VALUES ($id, $i)");
+        $keywordseen{$i} = 1;
+      }
+    }
+  }
+
   $long_description .= "\n" . $comments;
   if ($err) {
     $long_description .= "\n$err\n";
@@ -570,13 +617,17 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
     "($id, $exporterid, now(), " . SqlQuote($long_description) . ")");
 
-  $log .= "Bug $bug_fields{'bug_id'}\@$urlbase imported as bug $id.\n";
+  $log .= "Bug $urlbase/show_bug.cgi?id=$bug_fields{'bug_id'} ";
+  $log .= "imported as bug $id.\n";
+  $log .= Param("urlbase") . "/show_bug.cgi?id=$id\n\n";
   if ($err) {
-    $log .= "The following problems were encountered importing this bug.\n";
-    $log .= "You may have to set certain fields in the new bug by hand.\n";
+    $log .= "The following problems were encountered creating bug $id.\n";
+    $log .= "You may have to set certain fields in the new bug by hand.\n\n";
     $log .= $err;
-    $log .= "\n\n";
+    $log .= "\n\n\n";
   }
+
+  system("./processmail", $id, $exporter);
 }
 
 my $subject = "$bugqty bug(s) successfully moved from $urlbase to " 

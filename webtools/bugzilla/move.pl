@@ -27,6 +27,12 @@ use Bug;
 require "CGI.pl";
 $::lockcount = 0;
 
+unless ( Param("move-enabled") ) {
+  print "\n<P>Sorry. Bug moving is not enabled here. ";
+  print "If you need to move a bug, contact " . Param("maintainer");
+  exit;
+}
+
 ConnectToDatabase();
 
 sub Log {
@@ -65,14 +71,22 @@ sub Unlock {
 }
 
 if ( !defined $::FORM{'buglist'} ) {
-  print "To move bugs, perform a ";
+  print "Content-type: text/html\n\n";
+  PutHeader("Move Bugs");
+  print "Move bugs either from the bug display page or perform a ";
   print "<A HREF=\"query.cgi\">query</A> and change several bugs at once.\n";
+  print "If you don't see the move button, then you either aren't ";
+  print "logged in or aren't permitted to.";
+  PutFooter();
   exit;
 }
 
 confirm_login();
 my $exporter = $::COOKIE{"Bugzilla_login"};
-unless ($exporter =~ /(lchaing\@netscape.com|leger\@netscape.com|endico\@mozilla.org|dmose\@mozilla.org)/) {
+my $movers = Param("movers");
+$movers =~ s/\w?,\w?/|/g;
+$movers =~ s/@/\@/g;
+unless ($exporter =~ /($movers)/) {
   print "Content-type: text/html\n\n";
   PutHeader("Move Bugs");
   print "<P>You do not have permission to move bugs<P>\n";
@@ -88,15 +102,32 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
   my $bug = new Bug($id, $::userid);
   $xml .= $bug->emitXML;
   if (!$bug->error) {
-    SendSQL("UPDATE bugs SET bug_status =\"MOVED\" where bug_id=\"$id\"");
-    SendSQL("UPDATE bugs SET resolution =\"\" where bug_id=\"$id\"");
-    my $exp = $exporter;
-    $exp =~ s/@/\@/;
-    my $comment = "Bug moved to http://bugscape.netscape.com/ by $exp.\n";
+    my $exporterid = DBNameToIdAndCheck($exporter);
+
+    my $fieldid = GetFieldID("bug_status");
+    my $cur_status= $bug->bug_status;
+    SendSQL("INSERT INTO bugs_activity " .
+            "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+            "($id,$exporterid,now(),$fieldid,'$cur_status','RESOLVED')");
+    my $fieldid = GetFieldID("resolution");
+    my $cur_res= $bug->resolution;
+    SendSQL("INSERT INTO bugs_activity " .
+            "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+            "($id,$exporterid,now(),$fieldid,'$cur_res','MOVED')");
+
+    SendSQL("UPDATE bugs SET bug_status =\"RESOLVED\" where bug_id=\"$id\"");
+    SendSQL("UPDATE bugs SET resolution =\"MOVED\" where bug_id=\"$id\"");
+
+    my $comment = "Bug moved to " . Param("move-to-url") . ".\n\n";
+    $comment .= "If the move succeeded, $exporter will recieve a mail\n";
+    $comment .= "containing the number of the new bug in the other database.\n";
+    $comment .= "If all went well,  please mark this bug verified, and paste\n";
+    $comment .= "in a link to the new bug. Otherwise, reopen this bug.\n";
     SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
-        "($id, " . DBNameToIdAndCheck($exporter) 
-                 . ", now(), " . SqlQuote($comment) . ")");
-    print "Bug $id moved to http://bugscape.netscape.com/.<BR>\n";
+        "($id,  $exporterid, now(), " . SqlQuote($comment) . ")");
+
+    print "<P>Bug $id moved to " . Param("move-to-url") . ".<BR>\n";
+    system("./processmail", $id, $exporter);
   }
 }
 print "<P>\n";
@@ -106,9 +137,12 @@ my $buglist = $::FORM{'buglist'};
 $buglist =~ s/:/,/g;
 my $host = Param("urlbase");
 $host =~ s#http://([^/]+)/.*#$1#;
-my $to = "endico\@localhost";
+my $to = Param("move-to-address");
+$to =~ s/@/\@/;
 my $msg = "To: $to\n";
-$msg .= "From: Bugzilla <bugzilla\@$host>\n";
+my $from = Param("moved-from-address");
+$from =~ s/@/\@/;
+$msg .= "From: Bugzilla <" . $from . ">\n";
 $msg .= "Subject: Moving bug(s) $buglist\n\n";
 $msg .= $xml . "\n";
 
@@ -120,4 +154,3 @@ close SENDMAIL;
 
 my $logstr = "XML: bugs $buglist sent to $to";
 Log($logstr);
-

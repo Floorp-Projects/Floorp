@@ -255,6 +255,18 @@ if (defined $::FORM{'id'}) {
     }
 }
 
+my $action  = '';
+if (defined $::FORM{action}) {
+  $action  = trim($::FORM{action});
+}
+if ($action eq Param("move-button-text")) {
+  $::FORM{'buglist'} = join (":", @idlist);
+  do "move.pl" || die "Error executing move.cgi: $!";
+  PutFooter();
+  exit;
+}
+
+
 if (!defined $::FORM{'who'}) {
     $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
 }
