@@ -846,6 +846,8 @@ browser/app/Makefile
 browser/base/Makefile
 browser/components/Makefile
 browser/components/bookmarks/Makefile
+browser/components/bookmarks/public/Makefile
+browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
 browser/components/console/Makefile
 browser/components/downloads/Makefile

@@ -24,11 +24,12 @@ REQUIRES = \
 	uriloader \
 	dom \
 	necko \
-  nkcache \
-  txmgr \
+	nkcache \
+	txmgr \
 	webbrowserpersist \
 	progressDlg \
 	mimetype \
+	bookmarks \
 	$(NULL)
 
 EXPORTS = nsBrowserCompsCID.h
@@ -42,19 +43,19 @@ endif
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../downloads/src \
-  -I$(srcdir)/../bookmarks/src \
+	-I$(srcdir)/../bookmarks/src \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
-  $(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS += \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
-  $(MOZ_XPCOM_OBSOLETE_LIBS) \
+	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NULL)
 
