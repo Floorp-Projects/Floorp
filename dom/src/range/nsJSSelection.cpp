@@ -482,6 +482,72 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
 
 //
+// Native method ContainsNode
+//
+PR_STATIC_CALLBACK(JSBool)
+SelectionContainsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSelection *nativeThis = (nsIDOMSelection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNodePtr b0;
+  PRBool b1;
+  PRBool b2;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.containsnode", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ContainsNode(b0, b1, b2)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function containsNode requires 3 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method DeleteFromDocument
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -832,6 +898,7 @@ static JSFunctionSpec SelectionMethods[] =
   {"clearSelection",          SelectionClearSelection,     0},
   {"collapse",          SelectionCollapse,     2},
   {"extend",          SelectionExtend,     2},
+  {"containsNode",          SelectionContainsNode,     3},
   {"deleteFromDocument",          SelectionDeleteFromDocument,     0},
   {"addRange",          SelectionAddRange,     1},
   {"startBatchChanges",          SelectionStartBatchChanges,     0},

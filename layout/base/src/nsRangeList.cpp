@@ -92,6 +92,7 @@ public:
   NS_IMETHOD    ClearSelection();
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
+  NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes);
   NS_IMETHOD    DeleteFromDocument();
   NS_IMETHOD    AddRange(nsIDOMRange* aRange);
 
@@ -2472,7 +2473,11 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   return mRangeList->NotifySelectionListeners();
 }
 
-
+NS_IMETHODIMP
+nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsDOMSelection::ScrollIntoView()

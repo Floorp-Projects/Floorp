@@ -21,7 +21,9 @@
 		
 		void 		collapse(in Node parentNode, in long offset);
 		void		extend(in Node parentNode, in long offset);
-		
+
+		void		containsNode(in Node node, in boolean recursive, out boolean aYes);
+
 		void		deleteFromDocument();
 
 		void		addRange(in Range range);
