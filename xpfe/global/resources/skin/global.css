@@ -956,14 +956,12 @@ treecell.image > titledbutton:active {
 }
 
 .tree-icon {
-  width: 100%;
 }
 
 .tree-button {
  margin: 0px;
  padding: 0px;
  border: none;
- width: 100%;
  list-style-image: inherit;
 }
 
@@ -1000,7 +998,7 @@ treeitem > treerow > treecell > .tree-icon > .twisty[disabled="true"] {
  list-style-image: none;
 }
 
-treeitem[container="true"][open="true"][empty="false"] > treerow > treecell > .tree-icon > .twisty {
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon > .twisty {
  list-style-image: url("chrome://global/skin/opentwisty.gif");
 }
 
