@@ -1097,8 +1097,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     SetHadSpecialReflow(PR_TRUE);
   }
   else if (HadSpecialReflow()) {
-    if ((eReflowReason_Incremental == aReflowState.reason) || 
-        (eReflowReason_Resize == aReflowState.reason)) {
+    if (eReflowReason_Incremental == aReflowState.reason) {
       // with an unconstrained height, if the block height value hasn't changed, 
       // use the last height of the cell.
       if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && 
