@@ -24,6 +24,7 @@
 #include "nsDiskCacheDevice.h"
 #include "nsICacheService.h"
 #include "nsIFileTransportService.h"
+#include "nsDirectoryServiceDefs.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
@@ -68,8 +69,14 @@ static nsresult InstallPrefListeners(nsDiskCacheDevice* device)
 	nsCOMPtr<nsILocalFile> cacheDirectory;
     rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs( cacheDirectory ));
     if (NS_FAILED(rv)) {
-        // XXX use a hard coded cache directory during development only.
-        rv = NS_NewLocalFile("JMachine:Documents:Mozilla:Cache", PR_FALSE, getter_AddRefs(cacheDirectory));
+        nsCOMPtr<nsIFile> currentProcessDir;
+        rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                    getter_AddRefs(currentProcessDir));
+    	if (NS_FAILED(rv))
+    		return rv;
+
+        // XXX use current process directory during development only.
+        cacheDirectory = do_QueryInterface(currentProcessDir, &rv);
     	if (NS_FAILED(rv))
     		return rv;
         rv = prefs->SetFileXPref(CACHE_DIR_PREF, cacheDirectory);
@@ -209,7 +216,7 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
             rv = getFileForEntry(entry, getter_AddRefs(entryFile));
             if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsITransport> transport;
-                rv = service->CreateTransport(entryFile, PR_RDONLY, PR_IRUSR | PR_IWUSR,
+                rv = service->CreateTransport(entryFile, PR_RDWR | PR_CREATE_FILE, PR_IRUSR | PR_IWUSR,
                                               getter_AddRefs(transport));
                 if (NS_SUCCEEDED(rv)) {
                     entry->SetData(transport.get());
@@ -245,6 +252,7 @@ nsresult nsDiskCacheDevice::getFileForEntry(nsCacheEntry * entry, nsIFile ** res
         ::sprintf(name, "%08X", hash);
         entryFile->Append(name);
         NS_ADDREF(*result = entryFile);
+        return NS_OK;
     }
     return NS_ERROR_NOT_AVAILABLE;
 }
