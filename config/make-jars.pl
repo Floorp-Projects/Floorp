@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-f] [-v] [-l] [-x] [-d <chromeDir>] [-s <srcdir>] [-t <topsrcdir>] [-z zipprog] [-o operating-system] < <jar.mn>
+# make-jars [-f] [-v] [-l] [-x] [-d <chromeDir>] [-s <srcdir>] [-t <topsrcdir>] [-c <localedir>] [-z zipprog] [-o operating-system] < <jar.mn>
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
@@ -48,7 +48,7 @@ foreach my $arg (@ARGV) {
 }
 my $defines = join(' ', @ARGV[ $ddindex .. $#ARGV ]);
 
-getopts("d:s:t:f:avlD:o:p:xz:");
+getopts("d:s:t:c:f:avlD:o:p:xz:");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -58,6 +58,11 @@ if (defined($::opt_s)) {
 my $topSrcDir;
 if (defined($::opt_t)) {
     $topSrcDir = $::opt_t;
+}
+
+my $localeDir;
+if (defined($::opt_c)) {
+    $localeDir = $::opt_c;
 }
 
 my $maxCmdline = 4000;
@@ -367,7 +372,11 @@ sub EnsureFileInDir
     if (defined($src)) {
         if ($src =~ m|^/|) {
             # "absolute" patch from topSrcDir
+            defined($topSrcDir) || die("Command-line option -t <topsrcdir> missing.");
             $src = $topSrcDir.$srcFile;
+        } elsif ($srcFile =~ s|^\%|/|) {
+            defined($localeDir) || die("Command-line option -c <localedir> missing.");
+            $src = $localeDir.$srcFile;
         } elsif (! -e $src ) {
             $src = "$srcPath/$srcFile";
         }
@@ -485,7 +494,7 @@ start:
         my $cwd = cwd();
         print "+++ making chrome $cwd  => $chromeDir/$jarfile.jar\n";
         while (defined($_ = shift @gLines)) {
-            if (/^\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
+            if (/^\s+([\w\d.\-\_\\\/\+]+)\s*(\(\%?[\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
                 EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0, 0);
@@ -497,7 +506,7 @@ start:
                     my $pkg_name = $2;
                     RegIt($chromeDir, $jarfile, $chrome_type, $pkg_name);
                 }
-            } elsif (/^\+\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
+            } elsif (/^\+\s+([\w\d.\-\_\\\/\+]+)\s*(\(\%?[\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
                 EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1, 0);
@@ -508,7 +517,7 @@ start:
                     my $pkg_name = $2;
                     RegIt($chromeDir, $jarfile, $chrome_type, $pkg_name);
                 }
-            } elsif (/^\*\+?\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
+            } elsif (/^\*\+?\s+([\w\d.\-\_\\\/\+]+)\s*(\(\%?[\w\d.\-\_\\\/]+\))?$\s*/) {
                 # preprocessed (always override)
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;

@@ -1505,6 +1505,10 @@ ifdef NO_JAR_AUTO_REG
 _JAR_AUTO_REG=-a
 endif
 
+ifdef relativesrcdir
+_JAR_LOCALE_SOURCE = -c $(if $(filter en-US,$(AB_CD)),$(srcdir)/en-US,$(topsrcdir)/../l10n/$(AB_CD)/$(relativesrcdir))
+endif
+
 ifeq ($(OS_TARGET),WIN95)
 _NO_FLOCK=-l
 endif
@@ -1524,6 +1528,7 @@ ifndef NO_DIST_INSTALL
 	    $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	    $(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(_NO_FLOCK) $(_JAR_AUTO_REG) \
 	    -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome \
+	    $(_JAR_LOCALE_SOURCE) \
 	    -s $(srcdir) -t $(topsrcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- \
 	    "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl \
@@ -1542,6 +1547,7 @@ ifndef NO_INSTALL
 	    $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	    $(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(_NO_FLOCK) $(_JAR_AUTO_REG) \
 	    -f $(MOZ_CHROME_FILE_FORMAT) -d $(DESTDIR)$(mozappdir)/chrome \
+	    $(_JAR_LOCALE_SOURCE) \
 	    -s $(srcdir) -t $(topsrcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- \
 	    "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl \
