@@ -20,6 +20,7 @@
 #
 # Contributor(s): Dawn Endico    <endico@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
+#                 Dave Miller    <justdave@netscape.com>
 
 use strict;
 
@@ -150,7 +151,16 @@ $from =~ s/@/\@/;
 $msg .= "From: Bugzilla <" . $from . ">\n";
 $msg .= "Subject: Moving bug(s) $buglist\n\n";
 
-$template->process("bug/show.xml.tmpl", { user => { login => $exporter }, bugs => \@bugs }, \$msg)
+my @fieldlist = (Bug::fields(), 'group', 'long_desc', 'attachment');
+my %displayfields;
+foreach (@fieldlist) {
+    $displayfields{$_} = 1;
+}
+
+$template->process("bug/show.xml.tmpl", { user => { login => $exporter },
+                                          bugs => \@bugs,
+                                          displayfields => \%displayfields,
+                                        }, \$msg)
   || ThrowTemplateError($template->error());
 
 $msg .= "\n";
