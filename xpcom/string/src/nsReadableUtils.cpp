@@ -82,6 +82,7 @@ AllocateStringCopy( const basic_nsAReadableString<FromCharT>& aSource, ToCharT* 
   }
 
 
+NS_COM
 char*
 ToNewCString( const nsAReadableString& aSource )
   {
@@ -90,6 +91,7 @@ ToNewCString( const nsAReadableString& aSource )
     return result;
   }
 
+NS_COM
 char*
 ToNewCString( const nsAReadableCString& aSource )
   {
@@ -100,6 +102,7 @@ ToNewCString( const nsAReadableCString& aSource )
     return result;
   }
 
+NS_COM
 PRUnichar*
 ToNewUnicode( const nsAReadableString& aSource )
   {
@@ -110,6 +113,7 @@ ToNewUnicode( const nsAReadableString& aSource )
     return result;
   }
 
+NS_COM
 PRUnichar*
 ToNewUnicode( const nsAReadableCString& aSource )
   {
@@ -118,6 +122,7 @@ ToNewUnicode( const nsAReadableCString& aSource )
     return result;
   }
 
+NS_COM
 PRBool
 IsASCII( const nsAReadableString& aString )
   {
