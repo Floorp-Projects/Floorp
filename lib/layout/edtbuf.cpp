@@ -50,6 +50,12 @@ int32	gEditorReflow = TRUE;
 
 EDT_CharacterData *CEditBuffer::m_pCopyStyleCharacterData = 0;
 
+// When we are dragging table over another table, this is the previous cell
+//  we were dragging over. Used to avoid reselecting when cell hasn't changed
+//  and to unselect when moving off of the table or terminate dragging
+static LO_Element *edt_pPrevReplaceCellSelected = NULL;
+
+
 //-----------------------------------------------------------------------------
 // CEditBuffer
 //-----------------------------------------------------------------------------
@@ -1531,6 +1537,7 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_bBlocked(TRUE),
         m_bSelecting(0),
         m_bNoRelayout(FALSE),
+        m_pCellForInsertPoint(0),
         m_pSelectStart(0),
         m_iSelectOffset(0),
         m_preformatLinePos(0),
@@ -2261,7 +2268,20 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
     if( m_bNoRelayout ){
         return;
     }
-	
+
+    if( m_pCellForInsertPoint )
+    {
+        // Move insert point to a safe place?
+        // (at first leaf element before the table)
+        CEditElement *pElement = (CEditElement*)m_pCellForInsertPoint->GetTable();
+        if( pElement )
+        {
+            CEditElement *pLeaf = pElement->FindPreviousElement(&CEditElement::FindLeafAll, 0 );
+            if( pLeaf )
+                SetInsertPoint(pLeaf->Leaf(), 0, m_bCurrentStickyAfter);
+        }
+    }
+
    // These elements will be destroyed during LO_Relayout,
     //  so remove the list -- reconstructed after laying out
     m_pSelectedLoTable = NULL;
@@ -2366,7 +2386,6 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
     XP_TRACE(("\n\nEDITOR RELAYOUT"));
 	lo_PrintLayout(m_pContext);
 #endif
-
     // Search for zero-length text elements, and remove the non-breaking spaces we put
     // in.
 
@@ -2519,24 +2538,12 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
             }
         }
     }
-    if( (relayoutFlags & RELAYOUT_NOCARET) == 0 && !bWasSelected){
-        SetCaret();
-    }
-
-    if( bWasSelected ){
-        SelectRegion(pBegin, iBeginPos, pEnd, iEndPos, bFromStart );
-    }
-
-    m_bLayoutBackpointersDirty = FALSE;
-    
     // For each table just layed out, readjust all table and cell width data
     //   to reflect the complicated Layout algorithm's size data
     // Moved ABOVE next block (was below)
     FixupTableData();
 
-    //XP_TRACE(("*** Resync Table Selection"));
     // Resynch table selection
-    // TODO -- NOT NEEDED AFTER CHANGE SO LAYOUT ELEMENTS AREN'T DESTROYED
     if( m_pSelectedEdTable )
     {
         m_pSelectedLoTable = m_pSelectedEdTable->GetLoTable();
@@ -2546,7 +2553,6 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
         for( int i = 0; i < iEdCount; i++ )
         {
             // Get something we can observe in debugger
-            // CURRENTLY CRASHING HERE DURING DELETE SELECTED CELLS
             CEditTableCellElement *pEdCell = m_SelectedEdCells[i];
             // Get the new LO_CellStruct matching the previously-selected edit element
             LO_CellStruct *pLoCell = pEdCell->GetLoCell();
@@ -2555,6 +2561,26 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
         }
     }
 
+    // Check for cell to move insert point into after relayout
+    if( m_pCellForInsertPoint )
+    {
+        // Move caret to end of contents in designated cell
+        SetTableInsertPoint(m_pCellForInsertPoint->TableCell(), FALSE);
+        m_pCellForInsertPoint = 0;
+    } 
+    else 
+    {
+        // Else reset caret or selection as it was before
+        if( (relayoutFlags & RELAYOUT_NOCARET) == 0 && !bWasSelected){
+            SetCaret();
+        }
+
+        if( bWasSelected ){
+            SelectRegion(pBegin, iBeginPos, pEnd, iEndPos, bFromStart );
+        }
+    }
+    m_bLayoutBackpointersDirty = FALSE;
+    
 #if defined(XP_WIN) || defined(XP_OS2)
     // This clears FE pointers to cached layout elements
     FE_FinishedRelayout(m_pContext);
@@ -2843,13 +2869,14 @@ EDT_ClipboardResult CEditBuffer::DeleteChar(XP_Bool bForward, XP_Bool bTyping)
             // if a complete row or column is selected.
             // If not, only cell contents are cleared
             // to miminize messing up table layout
-            DeleteSelectedCells();
+            // TRUE means we really delete cell contents
+            //   and not put a space in those cells
+            DeleteSelectedCells(TRUE);
         }
         EndBatchChanges();
     } 
     else 
     {
-        ClearTableAndCellSelection();
         ClearPhantomInsertPoint();
         ClearMove();
         StartTyping(bTyping);
@@ -3096,7 +3123,7 @@ void CEditBuffer::UpDown( XP_Bool bSelect, XP_Bool bForward ){
     EndSelection();
 }
 
-XP_Bool CEditBuffer::NextTableCell( XP_Bool /*bSelect*/, XP_Bool bForward, intn* pRowCounter )
+XP_Bool CEditBuffer::NextTableCell( XP_Bool bForward,  XP_Bool bEndOfCell, intn* pRowCounter )
 {
     if( !  IsInsertPointInTable() )
         return FALSE;
@@ -3145,10 +3172,16 @@ XP_Bool CEditBuffer::NextTableCell( XP_Bool /*bSelect*/, XP_Bool bForward, intn*
     }
     if( pNext )
     {
+        // Place insert point at beginning of cell's contents, 
+        //   or at the end.
         CEditInsertPoint insertPoint;
-        insertPoint.m_pElement = pNext->GetFirstMostChild()->Leaf();
+        insertPoint.m_pElement = bEndOfCell ? pNext->GetLastMostChild()->Leaf() :
+                                              pNext->GetFirstMostChild()->Leaf();
         if( insertPoint.m_pElement )
         {
+            if( bEndOfCell )
+                insertPoint.m_iPos = insertPoint.m_pElement->GetLen();
+
             SetInsertPoint(insertPoint);
             return TRUE;
         }
@@ -3500,7 +3533,8 @@ EDT_ClipboardResult CEditBuffer::TabKey(XP_Bool bForward, XP_Bool bForceTabChar)
 
     ClearTableAndCellSelection();
     if( IsInsertPointInTable() && !bForceTabChar){
-        if( NextTableCell(FALSE, bForward) ){
+        // 2nd param = bEndOfCell: Should we move to the END of cell's contents? (see below as well)
+        if( NextTableCell(bForward, FALSE) ){
             // This selects contents of next cell:
             //cmanske: Other programs select the contents of a cell when
             //  tab into it, but lets not do that!
@@ -3519,7 +3553,7 @@ EDT_ClipboardResult CEditBuffer::TabKey(XP_Bool bForward, XP_Bool bForceTabChar)
             // Restore previous insert point
             //  then move to first new cell
             SetInsertPoint(ip);
-            NextTableCell(FALSE, bForward);
+            NextTableCell(bForward, FALSE); // Should this be TRUE?
             EndBatchChanges();
         }
         return EDT_COP_OK;
@@ -5621,7 +5655,7 @@ void CEditBuffer::ConvertTextToTable(intn iColumns)
         }
 
         // Move to the next cell to insert next container, if it exists
-        if( !bDone && !NextTableCell(FALSE, TRUE) )
+        if( !bDone && !NextTableCell(TRUE) )
         {
             // We need to create a new row
             
@@ -5640,7 +5674,7 @@ void CEditBuffer::ConvertTextToTable(intn iColumns)
             pNewRow->FinishedLoad( this );
 
             // Now move to the first cell in this new row
-            if( !NextTableCell(FALSE, TRUE) )
+            if( !NextTableCell(TRUE) )
                 break;
         }
         if( pNext == NULL ) // Should never happen?
@@ -6572,9 +6606,7 @@ ED_MergeType CEditBuffer::GetMergeTableCellsType()
     {
         pTableCell = m_SelectedEdCells[0];
     } else if(iCount == 0 ){
-        CEditInsertPoint ip;
-        GetTableInsertPoint(ip);
-        pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
+        pTableCell = m_pCurrent ? m_pCurrent->GetTableCellIgnoreSubdoc() : 0;
     }
     if( pTableCell && pTableCell->GetNextSibling() )
     {
@@ -6950,38 +6982,10 @@ void CEditBuffer::DeleteTableRows(intn number){
     if ( pTableCell ){
         BeginBatchChanges(kGroupOfChangesCommandID);
         // If we have entire rows selected, use that for number to delete
-        if( m_SelectedEdCells.Size() )
-        {
-            if( ED_HIT_SEL_ROW == GetTableSelectionType() )
-            {
-                // All selected cells are in rows,
-                //   so count how many to delete
-                CEditTableElement *pTable = pTableCell->GetParentTable();
-                if( !pTable )
-                    return; // Not likely!
-                
-                number = 0;
-                for( intn i = 0; i < pTable->m_RowLayoutData.Size(); i++ )
-                {
-                    // Get the first cell in each row
-                    CEditTableCellElement *pCell = pTable->m_RowLayoutData[i]->pEdCell;
+        if( number <= 0 )
+            number = max( 1, GetNumberOfSelectedRows());
 
-                    if( pCell && pCell->IsSelected() )
-                    {
-                        number++;
-                    }
-                    else if( number )
-                    {
-                        // We are done when we find the first
-                        // row that is not selected
-                        // NOTE: We don't try to handle non-contiguous selected rows
-                        break;
-                    }
-                }
-            }
-        }
-        if( number )
-            AdoptAndDo(new CDeleteTableRowCommand(this, number));
+        AdoptAndDo(new CDeleteTableRowCommand(this, number));
 
         EndBatchChanges();
     }
@@ -7024,7 +7028,13 @@ ED_HitType CEditBuffer::GetTableSelectionType()
     // Count number of cells in table to quickly determine if
     //  ALL cells in table are selected
     if( iSelectedCount == lo_GetNumberOfCellsInTable(lo_GetParentTable(m_pContext, (LO_Element*)m_SelectedLoCells[0])) )
-        return ED_HIT_SEL_ROW; // ED_HIT_SEL_ALL_CELLS;
+    {
+        CEditTableElement *pTable = m_SelectedEdCells[0]->GetTable();
+        if( pTable && pTable->GetRows() > pTable->GetColumns() )
+            return ED_HIT_SEL_COL;
+
+        return ED_HIT_SEL_ROW; // ED_HIT_SEL_ALL_CELLS???
+    }
 
     // Save the unique X and Y values we encounter,
     //   they define columns and rows
@@ -7181,7 +7191,7 @@ static void edt_CopyLoColor( LO_Color **ppDestColor, LO_Color *pSourceColor )
     }
 }
 
-static void edt_CopyTableCellData( EDT_TableCellData *pDestData, EDT_TableCellData *pSourceData )
+void edt_CopyTableCellData( EDT_TableCellData *pDestData, EDT_TableCellData *pSourceData )
 {
     if( pDestData && pSourceData )
     {
@@ -7257,9 +7267,8 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
     ClearTableAndCellSelection();
 
     // First see if we are changing the current selection type
-    if( iHitType != ED_HIT_NONE &&
-        ((pData && iHitType != pData->iSelectionType) ||
-         (pData == NULL && iMoveType == ED_MOVE_NONE)) )
+    if( iHitType != ED_HIT_NONE && iMoveType == ED_MOVE_NONE &&
+        (pData == NULL || (pData && iHitType != pData->iSelectionType)) )
     {
         // This is relatively simple as long as we can trust that the
         //   caret is in the "focus cell" 
@@ -7592,39 +7601,11 @@ void CEditBuffer::DeleteTableColumns(intn number){
     CEditTableCellElement* pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
     if ( pTableCell ){
         BeginBatchChanges(kGroupOfChangesCommandID);
-        // If we have entire rows selected, use that for number to delete
-        if( m_SelectedEdCells.Size() )
-        {
-            if( ED_HIT_SEL_COL == GetTableSelectionType() )
-            {
-                // All selected cells are in columns,
-                //   so count how many to delete
-                CEditTableElement *pTable = pTableCell->GetParentTable();
-                if( !pTable )
-                    return; // Not likely!
-                
-                number = 0;
-                for( intn i = 0; i < pTable->m_ColumnLayoutData.Size(); i++ )
-                {
-                    // Get the first cell in each column
-                    CEditTableCellElement *pCell = pTable->m_ColumnLayoutData[i]->pEdCell;
+        // If we have entire columns selected, use that for number to delete
+        if( number <= 0 )
+            number = max(1, GetNumberOfSelectedColumns());
 
-                    if( pCell && pCell->IsSelected() )
-                    {
-                        number++;
-                    }
-                    else if( number )
-                    {
-                        // We are done when we find the first
-                        // column that is not selected
-                        // NOTE: We don't try to handle non-contiguous selected columns
-                        break;
-                    }
-                }
-            }
-        }
-        if( number )
-    		AdoptAndDo(new CDeleteTableColumnCommand(this, number));
+        AdoptAndDo(new CDeleteTableColumnCommand(this, number));
         EndBatchChanges();
     }
 }
@@ -7638,7 +7619,7 @@ void CEditBuffer::InsertTableCells(EDT_TableCellData* /* pData */, XP_Bool bAfte
         // CInsertTableCellCommand actually performs the operation in the
         // constructor of the command. So in order for save-based undo to
         // work, we must wrap its constructor in BeginBatchChanges.
-        BeginBatchChanges(kGroupOfChangesCommandID /*kInsertTableCellCommandID*/);
+        BeginBatchChanges(kGroupOfChangesCommandID);
         SetFillNewCellWithSpace();
 		AdoptAndDo(new CInsertTableCellCommand(this, bAfterCurrentCell, number));
         ClearFillNewCellWithSpace();
@@ -10581,7 +10562,13 @@ static void SetDocColor(MWContext* pContext, int type, ED_Color& color)
     LO_Color *pColor = edt_MakeLoColor(color);
     // If pColor is NULL, this will use the "MASTER",
     //  (default Browser) color, and that's OK!
-    LO_SetDocumentColor( pContext, type, pColor );
+
+    if( type == LO_COLOR_FG )
+        // Use special version that overrides the flag that
+        //  is used to restrict changing foreground color 
+        lo_SetBodyTextFGColor(pContext, 0, pColor);
+    else
+        LO_SetDocumentColor( pContext, type, pColor );
     if( pColor) XP_FREE(pColor);
 }
 
@@ -10957,26 +10944,110 @@ XP_Bool CEditBuffer::StartDragTable(int32 /*x*/, int32 /*y*/)
     }
     if( m_pDragTableData )
     {
+        m_pDragTableData->iSourceType = GetTableSelectionType(); //m_TableHitType;
         // Initialize data for possible dragging
         // This is used by PositionDropCaret()
         m_pDragTableData->iDropType = ED_DROP_NORMAL;
         m_pDragTableData->pDragOverCell = NULL;
-        // Source that we are dragging
-        m_pDragTableData->iSourceType = GetTableSelectionType(); //m_TableHitType;
 
-        // Get first cell of selection - we ignore a drop on that cell
+        // This will get first cell in table if that is what is selected
+        CEditTableCellElement *pCell = GetFirstSelectedCell();
+        if( !pCell )
+            return FALSE;
+
+        // Source table we are dragging from
+        m_pDragTableData->pSourceTable = (void*)pCell->GetTable();
+
+        // Get first layout cell of selection
         if( m_pSelectedLoTable )
         {
+            XP_ASSERT(m_pSelectedLoTable);
+            if(!m_pSelectedLoTable)
+                return FALSE;
             // Get first cell of entire table
             LO_Element *pLoCell = m_pSelectedLoTable->next;
             while( pLoCell && pLoCell->type != LO_CELL ) { pLoCell = pLoCell->lo_any.next; }
             m_pDragTableData->pFirstSelectedCell = pLoCell;
         }
         else {
-            // Get first cell in selected LO_CELL list
+            XP_ASSERT(m_SelectedEdCells.Size() > 0 && m_SelectedLoCells.Size() > 0);
             m_pDragTableData->pFirstSelectedCell = (LO_Element*)m_SelectedLoCells[0];
+        }                        
+
+        intn  iPrevCounter = 0;
+        intn  iRowCounter = 0;
+        // Count number of actual cells per row (ignore COLSPAN)
+        // This will be assembled into the array of CellsPerRow
+        //   that is used to show cells to be replaced in destination
+        int32 iCellsInRow = 1;
+        // This is the total possible cells in the row,
+        // This is used to show number of cells that will be inserted
+        //   above or below a row
+        int32 iCellsInColumn = pCell->GetColSpan();
+        m_pDragTableData->iColumns = iCellsInColumn;
+
+        TXP_GrowableArray_int32  CellsPerRow;
+        int32 iRows = 1;
+
+        while( TRUE )
+        {
+            if( m_pSelectedEdTable )
+                pCell = pCell->GetNextCellInTable(&iRowCounter);
+            else
+                pCell = GetNextSelectedCell(&iRowCounter);
+
+            if( !pCell )
+            {
+                // We're done    
+                // Add final cell count
+                if( iCellsInRow )
+                    CellsPerRow.Add(iCellsInRow);
+                break;
+            }
+
+            if( iRowCounter != iPrevCounter )
+            {
+                // This cell is in the next row
+                // Save count for previous row
+                CellsPerRow.Add(iCellsInRow);
+                // Set up for new row
+                iPrevCounter = iRowCounter;
+                iCellsInColumn = pCell->GetColSpan();
+                iCellsInRow = 1;
+                iRows++;
+            } 
+            else 
+            {
+                // We have another cell in this row
+                // Count number of cells in each row 
+                // Note that we don't add the COLSPAN,
+                //  which would be needed based on Colspan
+                iCellsInRow++;
+                iCellsInColumn += pCell->GetColSpan();
+            }
+            // Save the max number of cells in a column
+            if( iCellsInColumn > m_pDragTableData->iColumns )
+                m_pDragTableData->iColumns = iCellsInColumn;
         }
-        return TRUE;
+
+        // Now that we know the number of rows,
+        //  create a simple int32 array and copy values from growable array
+        m_pDragTableData->pCellsPerRow = (int32*)XP_ALLOC(iRows*sizeof(int32));
+        m_pDragTableData->iRows = iRows;
+
+        if( m_pDragTableData->pCellsPerRow )
+        {
+            for(intn i=0; i < iRows; i++ )
+            {
+                m_pDragTableData->pCellsPerRow[i] = CellsPerRow[i];
+            }
+            return TRUE;
+        } 
+        else 
+        {
+            // not enough memory
+            XP_ASSERT(FALSE);
+        }
     }
     return FALSE;
 }
@@ -10984,7 +11055,28 @@ XP_Bool CEditBuffer::StartDragTable(int32 /*x*/, int32 /*y*/)
 void CEditBuffer::StopDragTable()
 { 
     // Free global struct and set to NULL
-    XP_FREEIF(m_pDragTableData);
+    if( m_pDragTableData )
+    {
+        XP_FREEIF(m_pDragTableData->pCellsPerRow);
+        XP_FREE(m_pDragTableData);
+        m_pDragTableData = NULL;
+    }
+    if( edt_pPrevReplaceCellSelected )
+        ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
+}
+
+static void edt_ClearSpecialCellSelection(MWContext *pContext, LO_CellStruct *pLoCell, CEditTableCellElement *pEdCell)
+{
+    if( pContext && pLoCell && (pLoCell->ele_attrmask & LO_ELE_SELECTED_SPECIAL) )
+    {
+        pLoCell->ele_attrmask &= ~LO_ELE_SELECTED_SPECIAL;
+        FE_DisplayEntireTableOrCell(pContext, (LO_Element*)pLoCell);
+        if( !pEdCell )
+            pEdCell = (CEditTableCellElement*)edt_GetTableElementFromLO_Element((LO_Element*)pLoCell, LO_CELL);
+
+        if( pEdCell )
+               pEdCell->SetSpecialSelected(FALSE);
+    }
 }
 
 /* Converts ("snaps") input X, Y (doc coordinates) to X, Y needed for drop caret 
@@ -11002,7 +11094,8 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
     {
         // Get where we currently are
         LO_Element *pLoCell = NULL;
-        int32 iWidth, iHeight;
+        int32 iWidth = 0;
+        int32 iHeight = 0;
 
         // Get where user is currently dragging over
         ED_DropType iDropType = GetTableDropRegion(&x, &y, &iWidth, &iHeight, &pLoCell);
@@ -11011,15 +11104,25 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
         if( iDropType == ED_DROP_NONE )
         {
             FE_DestroyCaret(m_pContext);
+            // Be sure there's no special selection
+            if( edt_pPrevReplaceCellSelected )
+                ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
             return FALSE;
         }
         
-        if( iDropType != ED_DROP_NORMAL )
+        if( iDropType == ED_DROP_NORMAL )
+        {
+            // Be sure there's no special selection
+            //  when we move off of the table
+            if( edt_pPrevReplaceCellSelected )
+                ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
+        }
+        else 
         {
             // Call Front end to display drop feedback only if
             //  different from previous condition
-            if( pLoCell != m_pDragTableData->pDragOverCell ||
-                iDropType != m_pDragTableData->iDropType )
+            //if( pLoCell != m_pDragTableData->pDragOverCell ||
+            //    iDropType != m_pDragTableData->iDropType )
             {
                 m_pDragTableData->iDropType = iDropType;
                 m_pDragTableData->pDragOverCell = pLoCell;
@@ -11029,13 +11132,18 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
                 m_pDragTableData->iHeight = iHeight;
 
                 FE_DestroyCaret(m_pContext);
-                if( m_pDragTableData->iDropType == ED_DROP_REPLACE_CELL )
+                if( m_pDragTableData->iDropType == ED_DROP_REPLACE_CELLS )
                 {
-                    // TODO: SET "REPLACE" BIT FOR ALL CELLS TO BE REPLACED
-                    //   AND CALL FEs TO REDRAW EACH CELL
-                    // TEMP: Just show replace cell as a regular drop caret
-                    lo_PositionDropCaret(m_pContext, x, y, NULL);
+                    SetReplaceCellSelection();
+
+                    // Should we do this as well?
+                    //lo_PositionDropCaret(m_pContext, x, y, NULL);
                 } else {
+                    // Clear replace selection
+                    if( edt_pPrevReplaceCellSelected )
+                        ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
+
+                    // Set the caret to show inserting between rows, colomns, or entire table
                     FE_DisplayDropTableFeedback(m_pContext, m_pDragTableData);
                 }
             }
@@ -11200,69 +11308,6 @@ void CEditBuffer::MoveAndHideCaretInTable(LO_Element *pLoElement)
         }
         m_bCurrentStickyAfter = FALSE;
     }
-}
-
-// Use only after deleting a cell, and before Relayout(),
-//  so later doesn't crash because current element is deleted
-void CEditBuffer::MoveToExistingCell(CEditTableElement *pTable, int32 X, int32 Y)
-{
-    if( !pTable )
-        return;
-    LO_Element *pLoElement = NULL;
-
-    // Get the cell under the supplied coordinates
-    GetTableHitRegion(X, Y, &pLoElement);
-    CEditTableCellElement *pCell = NULL;
-    if( pLoElement && pLoElement->type == LO_CELL )
-    {
-        // Try to get cell at
-        //   Current cursor location...
-        intn i;
-        intn iRowCount = pTable->m_RowLayoutData.Size();
-        intn iColCount = pTable->m_ColumnLayoutData.Size(); 
-        for( i = 0; i < iRowCount; i++ )
-        {
-            // Find the row spanning the Y value
-            if( Y >= pTable->m_RowLayoutData[i]->Y )
-            {
-                if( i+1 == iRowCount || Y < pTable->m_RowLayoutData[i+1]->Y )
-                    pCell = pTable->m_RowLayoutData[i]->pEdCell;
-                break;
-            }
-        }
-        if( pCell )
-        {
-            // Scan through cells in the row found
-            //  to get cell spanning the X value
-            while( pCell )
-            {
-                int32 iCellX = pCell->GetX();
-                if( X >= iCellX && X < (iCellX + pCell->GetFullWidth()) )
-                    break;
-
-                CEditTableCellElement *pNextCell = pTable->GetNextCellInRow(pCell);
-                if( pNextCell == NULL )
-                    break;
-
-                pCell = pNextCell;
-            }
-        }
-        
-        // Unlikely, but defer to 1st cell in table if not found above
-        if( !pCell )
-            pCell = pTable->GetFirstCell();
-    }
-    if( pCell )
-    {
-        SetTableInsertPoint(pCell);
-        return;
-    }
-    // Set insert point to beginning of page if no cell found
-//    CEditInsertPoint insertPoint(m_pRoot->GetFirstMostChild(), 0);
-//    CEditSelection selection = CEditSelection(insertPoint, insertPoint);
-    CEditElement *pFirstElement = m_pRoot->GetFirstMostChild();
-    CEditSelection selection(pFirstElement, 0, pFirstElement, 0);
-    SetSelection(selection);
 }
 
 // this routine is called when the right mouse goes down.
@@ -12104,6 +12149,12 @@ EDT_ClipboardResult CEditBuffer::DeleteSelection(CEditSelection& selection, XP_B
 
 EDT_ClipboardResult CEditBuffer::DeleteSelection(XP_Bool bCopyAppendAttributes){
     VALIDATE_TREE(this);
+
+    // Don't bother trying to do anything now
+    //  if we will delete the table stuff later
+    if( m_bDeleteTableAfterPasting )
+        return EDT_COP_OK;
+
     EDT_ClipboardResult result = CanCut(TRUE);
     if ( result == EDT_COP_OK )
     {
@@ -12213,11 +12264,19 @@ void CEditBuffer::DeleteBetweenPoints( CEditLeafElement* pBegin, CEditLeafElemen
 //  this removes the row or col. Otherwise, just cell contents
 //  are deleted to minimize disturbing table structure
 // Caller must manage UNDO (BatchChanges) process
-void CEditBuffer::DeleteSelectedCells()
+// All users except Backspace and Delete should use bNoSpaceInNewCells = FALSE;
+void CEditBuffer::DeleteSelectedCells(XP_Bool bNoSpaceInNewCells)
 {
     CEditTableElement *pTable = NULL;
     XP_Bool bRelayout;
     XP_Bool bNeedRelayout = FALSE;
+
+    // Set the flag that controls whether we
+    //   insert a single space in the cell contents we clear
+    if( bNoSpaceInNewCells )
+        ClearFillNewCellWithSpace();
+    else
+        SetFillNewCellWithSpace();
 
     do {
         bRelayout = FALSE;
@@ -12269,6 +12328,11 @@ void CEditBuffer::DeleteSelectedCells()
 
                     // Delete the column(s) -- this will relayout the table
             		AdoptAndDo(new CDeleteTableColumnCommand(this, number));
+
+                    // Reset this flag since it was probably cleared 
+                    if( !bNoSpaceInNewCells )
+                        SetFillNewCellWithSpace();
+
                     bRelayout = TRUE;
                     // We don't need to do relayout if
                     // this is the last thing we do
@@ -12298,6 +12362,11 @@ void CEditBuffer::DeleteSelectedCells()
                         pCell = pTable->GetFirstCellInNextRow(pCell->GetX());
                     }
             		AdoptAndDo(new CDeleteTableRowCommand(this, number));
+
+                    // Reset this flag since it was probably cleared 
+                    if( !bNoSpaceInNewCells )
+                        SetFillNewCellWithSpace();
+
                     bRelayout = TRUE;
                     bNeedRelayout = FALSE;
                     break;
@@ -12339,6 +12408,9 @@ void CEditBuffer::DeleteSelectedCells()
             pCell = pTable->GetNextCellInTable();
         }    
     }
+
+    if( !bNoSpaceInNewCells )
+        ClearFillNewCellWithSpace();
 }
 
 // Currently (4/22/98) not used. But we may want a FE call 
@@ -12694,18 +12766,27 @@ EDT_ClipboardResult CEditBuffer::PasteText( char *pText, XP_Bool bMailQuote, XP_
     return EDT_COP_OK;
 }
 
-EDT_ClipboardResult CEditBuffer::PasteHTML( char *pBuffer, XP_Bool bUndoRedo ){
-
-    CStreamInMemory stream(pBuffer);
-    return PasteHTML(stream, bUndoRedo);
+ED_CopyType EDT_GetHTMLCopyType(char *pBuffer)
+{
+    int32 iCopyType = ED_COPY_NORMAL;
+    // Read the 4th int32 in the stream
+    XP_MEMCPY( (char*)&iCopyType, &pBuffer[3*sizeof(int32)], sizeof(int32) );
+    return (ED_CopyType)iCopyType;
 }
 
-EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoRedo */ ){
+EDT_ClipboardResult CEditBuffer::PasteHTML( char *pBuffer, ED_PasteType iPasteType )
+{
+    CStreamInMemory stream(pBuffer);
+    return PasteHTML(stream, iPasteType);
+}
+
+EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, ED_PasteType iPasteType )
+{
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
     VALIDATE_TREE(this);
     EDT_ClipboardResult result = CanPaste(TRUE);
     if ( result != EDT_COP_OK ) return result;
-
+    
     // First thing in the buffer is some version info
     
     int32 signature = stream.ReadInt();
@@ -12726,18 +12807,79 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoR
     }
     // This is non-zero when stream contains just a table
     // It tells us whether it is an entire table or row(s), 
-    //      column(s), or "loose cells" copying
-    EEditCopyType iCopyType = (EEditCopyType)stream.ReadInt();
+    //      column(s), or "arbitrary cells" copying
+    ED_CopyType iCopyType = (ED_CopyType)stream.ReadInt();
 
-    // Pasting cells into existing table is entirely different
-    //  if pasting rows, columns, or cells
-    // Note: type = eEditCopyTable used for entire table,
-    //  allowing an embeded table in existing table
-    if( iCopyType > eCopyTable && IsInsertPointInTableCell() )
+    // We always do full table pasting here, 
+    //  even when embedding into an existing table
+    if( iPasteType != ED_PASTE_TABLE && IsInsertPointInTableCell() &&
+        !(m_pDragTableData && m_pDragTableData->iDropType <= ED_DROP_NORMAL) )
     {
-        return PasteCellsIntoTable(stream, iCopyType);
-    }
+        // Caller has told us how to paste table elements
+        if( iPasteType !=  ED_PASTE_NORMAL )
+            return PasteCellsIntoTable(stream, iPasteType);
     
+        // Figure out the default action when caller doesn't tell us
+        // If source is a complete table, then fall through to
+        //   insert embeded table
+        if( iCopyType > ED_COPY_TABLE )
+        {
+            // When dragging, user gets better feedback, so use
+            //   that information
+            if( m_pDragTableData )
+            {
+                // Keep the enums in synch so we can avoid a switch statement!
+                iPasteType = (ED_PasteType)m_pDragTableData->iDropType;
+            }
+            else
+            {
+                // We should be here only when pasting is NOT from dragdrop
+                if( m_pSelectedEdTable )
+                {
+                    // We are pasting on top of a selected table
+                    // Move insert point to just after the table
+	                CEditInsertPoint replacePoint(m_pSelectedEdTable->GetLastMostChild()->NextLeaf(), 0);
+                    SetInsertPoint(replacePoint);
+
+	                // Then set flag so we delete the table below
+                    m_bDeleteTableAfterPasting = TRUE;
+                    // and paste the cells as a new table
+                    goto NORMAL_PASTE;
+                }
+                else if( m_SelectedEdCells.Size() > 0 )
+                {
+                    
+                    // Replace the existing selected cells 
+                    // Note: Insert point (caret) will almost always be 
+                    //   within one of the selected cells EXCEPT if user unselects a 
+                    //   cell using modifier key while clicking. That will leave caret
+                    //   in the unselected cell. So lets assume they wanted to replace
+                    //   the selected cells anyway.
+                    iPasteType = ED_PASTE_REPLACE_CELLS;
+
+                    // Set the Special Selection attribute for all currently-selected cells
+                    //  to tell us what cells to replace
+                    DisplaySpecialCellSelection();
+                }
+                
+                else switch( iCopyType )
+                {
+                    case ED_COPY_ROWS:
+                        iPasteType = ED_PASTE_ROW_ABOVE;
+                        break;
+                    case ED_COPY_COLUMNS:
+                        iPasteType = ED_PASTE_COLUMN_BEFORE;
+                        break;
+                    case ED_COPY_CELLS:
+                        iPasteType = ED_PASTE_COLUMN_BEFORE;
+                        break;
+                }
+            }
+            return PasteCellsIntoTable(stream, iPasteType);
+        }
+    }    
+
+NORMAL_PASTE:
     // Don't relayout until all is pasted
     m_bNoRelayout = TRUE;
 
@@ -12836,8 +12978,10 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoR
                     pLastInserted = pLeftContainer;
 
                 // Merge containers and delete pFirstNewContainer;
-                pLeftContainer->Merge(pFirstNewContainer);
-                FixupInsertPoint();
+                if ( pLeftContainer != pFirstNewContainer ){
+                    pLeftContainer->Merge(pFirstNewContainer);
+                    FixupInsertPoint();
+                }
             }
         }
         else {
@@ -12896,195 +13040,162 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoR
     // Delete table or cells in original location if moving within the doc
     if( m_bDeleteTableAfterPasting )
     {
+        // The only way to end up here is if we are
+        //  pasting as a new table
+        XP_ASSERT(m_pSelectedEdTable);
         if( m_pSelectedEdTable )
         {
             // Delete the entire table.
             // FALSE = don't reposition insert point
             m_pSelectedEdTable->Delete(FALSE);
         } 
+#if 0
         else if( m_SelectedEdCells.Size() )
         {
             DeleteSelectedCells();
         }
+#endif
         m_bDeleteTableAfterPasting = FALSE;
     }
    
     return result;
 }
 
-EDT_ClipboardResult CEditBuffer::PasteCellsIntoTable( IStreamIn& stream, EEditCopyType iCopyType )
+EDT_ClipboardResult CEditBuffer::PasteCellsIntoTable( IStreamIn& stream, ED_PasteType iPasteType )
 {
     m_bNoRelayout = FALSE;
     CEditTableCellElement* pTableCell = NULL;
-    // Default for pasting is BEFORE
-    // TODO: Should we ask user to insert AFTER if currently in last cell in row or column?
-    XP_Bool bAfterCurrentCell = FALSE;
+    CEditTableElement* pSourceTable = NULL;
 
     // Shouldn't be here if this is "normal" or entire table
-    XP_ASSERT(iCopyType > eCopyTable);
-    if ( iCopyType > eCopyTable )
-    	return EDT_COP_CLIPBOARD_BAD;
+    XP_ASSERT(iPasteType > ED_PASTE_TABLE);
+    XP_ASSERT(m_pCurrent);
+
+    if ( iPasteType <= ED_PASTE_TABLE )
+        goto BAD_CLIPBOARD;
+    else 
+    {    
+        // Move caret into target cell
+        if( m_pDragTableData )
+        {
+            // We are dragging source cells
+            XP_ASSERT(m_pDragTableData->pDragOverCell);
+            
+            // Convert the drop types into general paste type
+            // (incomming iPasteType is always ED_PASTE_NORMAL with DragNDrop)
+            iPasteType = (ED_PasteType)m_pDragTableData->iDropType;
+            XP_ASSERT(iPasteType != ED_PASTE_TABLE );
+
+            CEditElement *pElement = edt_GetTableElementFromLO_Element(m_pDragTableData->pDragOverCell, LO_CELL);
+            if( pElement )
+            {
+                pTableCell = pElement->TableCell();
+                SetTableInsertPoint(pTableCell);
+            }
+        } else {
+            // Pasting from clipboard
+            // Target cell contains the current insert point
+            pTableCell = m_pCurrent->GetTableCellIgnoreSubdoc();
+        }
+
+        // Get the source table from the stream
+        int32 bMergeEnd = stream.ReadInt();
+        pSourceTable =(CEditTableElement*)CEditElement::StreamCtor(&stream, this);
+
+        XP_ASSERT(pSourceTable && pSourceTable->IsTable());
+        if( !pSourceTable )
+            goto BAD_CLIPBOARD;
+
+        PasteTable(pTableCell, pSourceTable, iPasteType);
+
+        return EDT_COP_OK;
+    }
+BAD_CLIPBOARD:
+    if( pSourceTable )
+        delete pSourceTable;
+
+    m_bDeleteTableAfterPasting = FALSE;
+    return EDT_COP_CLIPBOARD_BAD;
+}
+
+#define EDT_PASTE_ROW(t) (t == ED_PASTE_ROW_ABOVE || t == ED_PASTE_ROW_BELOW)
+#define EDT_PASTE_COLUMN(t) (t == ED_PASTE_COLUMN_BEFORE || t == ED_PASTE_COLUMN_AFTER)
+
+void CEditBuffer::PasteTable( CEditTableCellElement *pCell, CEditTableElement *pSourceTable, ED_PasteType iPasteType )
+{
+    if( !pSourceTable )
+        return;
+
+    CEditTableElement* pTable = pCell ? pCell->GetTable() : 0;
+    // Very unlikely!
+    XP_ASSERT(pTable);
+    if( !pTable )
+        return;
     
-    // Move caret into target cell
-    if( m_pDragTableData )
+    XP_Bool bAllCellsPasted = TRUE;
+    XP_Bool bAfterCurrentCell = (iPasteType == ED_PASTE_COLUMN_AFTER || 
+                                 iPasteType == ED_PASTE_ROW_BELOW );
+
+    // Note: These values counts COLSPAN and ROWSPAN,
+    //       so this is number of "virtual" columns or rows
+    //       [Be sure pasting routines can handle missing cells]
+    int32 X = pCell->GetX();
+    int32 Y = pCell->GetY();
+    int32 iNewX = X + (bAfterCurrentCell ? pCell->GetFullWidth() : 0); // GetFullWidth is used in edtcmd.cpp routines
+    int32 iNewY = Y + (bAfterCurrentCell ? pCell->GetHeight() : 0);
+    
+    // Should always be 0 initially - lets test it
+    XP_ASSERT(m_pCellForInsertPoint == NULL);
+    m_pCellForInsertPoint = NULL;    
+    
+    if( iPasteType == ED_PASTE_REPLACE_CELLS )
     {
-        // We are dragging source cells
-        XP_ASSERT(m_pDragTableData->pDragOverCell);
-
-        // Dragging has more flexibility for where to paste
-        bAfterCurrentCell = (m_pDragTableData->iDropType == ED_DROP_INSERT_AFTER || 
-                             m_pDragTableData->iDropType == ED_DROP_INSERT_BELOW );
-
-        CEditElement *pElement = edt_GetTableElementFromLO_Element(m_pDragTableData->pDragOverCell, LO_CELL);
-        if( pElement )
+        if( !m_pDragTableData )
         {
-            CEditElement *pChild = pElement->GetFirstMostChild();
-            if( pChild )
-            {
-                CEditInsertPoint ip(pChild, 0);
-                SetInsertPoint(ip);
-            }
+            // We are pasting over current selected cells only
+            // Set all selected cells to the "special selection" mode,
+            //  which happens with DragNDrop as well
+            DisplaySpecialCellSelection();
         }
-    } else {
-        // Pasting from clipboard
-        // Get current insert point
-        CEditInsertPoint ip;
-        GetTableInsertPoint(ip);
-        pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
+        // Second param is bIgnoreSourceLayout
+        // For now, use that when pasting over a user-selection
+        // When drag/dropping, lets assume we predicted the destination layout correctly
+        // TODO: ONLY IGNORE SOURCE LAYOUT FOR CERTAIN COPY TYPES?
+        bAllCellsPasted = pTable->ReplaceSpecialCells(pSourceTable, !m_pDragTableData, 
+                                                      &m_pCellForInsertPoint);
     }
-
-    //Get the table from the stream
-    int32 bMergeEnd = stream.ReadInt();
-    CEditTableElement* pSourceTable =(CEditTableElement*)CEditElement::StreamCtor(&stream, this);
-
-    XP_ASSERT(pSourceTable && pSourceTable->IsTable());
-
-    if( pTableCell && pSourceTable )
+    else if( EDT_PASTE_ROW(iPasteType) )
     {
-        CEditTableElement* pTable = pTableCell->GetTable();
-        if ( pTable )
-        {
-            // Note: This value counts COLSPAN,
-            //       so this is number of "virtual" columns
-            //       Be sure pasting routines can handle missing cells
-            intn iSourceCols = pSourceTable->CountColumns();
-            int32 X = pTableCell->GetX();
-            int32 Y = pTableCell->GetY();
-            int32 iNewX = X + (bAfterCurrentCell ? pTableCell->GetWidth() : 0);
-            // Try to place cursor in inserted cell
-            int32 iCaretX = iNewX + (bAfterCurrentCell ? pTable->GetCellSpacing() : 0);
-
-            CEditTableRowElement* pCurrentRow = (CEditTableRowElement*)pTableCell->GetParent();
-            XP_ASSERT(pCurrentRow->IsTableRow());
-            
-            intn iCurrentRows = pTable->GetRows(); // CountRows();
-            // Number of rows we may insert
-            intn iTotalRows = pSourceTable->CountRows();
-            // Current row index
-            intn iRow = 0;
-
-            CEditTableRowElement* pFirstRow = pTable->GetFirstRow();
-            if( pFirstRow != pCurrentRow )
-            {
-                //Insert empty cells for rows above target row
-                CEditTableRowElement* pTempRow = pFirstRow;
-                while( pTempRow != pCurrentRow )
-                {
-                    pTempRow->InsertCells(X, iNewX, iSourceCols);
-                    pTempRow = pTempRow->GetNextRow();
-                    // Increment row where we will start to insert source cells
-                    //   and also the total rows we may insert
-                    iRow++;
-                    iTotalRows++;
-                }
-            }
-            
-            CEditTableRowElement* pSourceRow = NULL;
-            CEditTableRowElement *pNextRow = NULL;
-            // The number of columns we will have to insert if we
-            //   need to add rows at bottom of table
-            //   so overflow from inserted columns line up
-            intn iColumnsBefore = pTable->GetColumnsSpanned(pTable->GetColumnX(0), X);
-            for( ; iRow < iCurrentRows; iRow++ )
-            {
-                if( !pCurrentRow )
-                    break;
-
-                pSourceRow = pSourceTable->GetFirstRow();
-                // pSourceRow may be 0 if there are less rows in source
-                //   than in target, so this will just insert blank cell in that case
-                pCurrentRow->InsertCells(X, iNewX, iSourceCols, pSourceRow);
-                // Delete the row just used
-                if( pSourceRow )
-                    delete pSourceRow;
-
-                // Next row to insert into
-                if( (pNextRow = pCurrentRow->GetNextRow()) != NULL )
-                    pCurrentRow = pNextRow;
-            }
-            // There shouldn't be any rows left now
-            //   (this is a check for CountRows();
-            XP_ASSERT(pNextRow == NULL);
-            
-            // Let's be sure!
-            pNextRow = NULL;
-            
-            // If needed, continue to insert more source rows,
-            //  but we need to add new rows to current table first            
-            // TODO: ASK USER IF THEY WANT TO APPEND EXTRA ROWS OR JUST SKIP THEM
-            for( ; iRow < iTotalRows; iRow++ )
-            {
-                pSourceRow = pSourceTable->GetFirstRow();
-                if( !pCurrentRow || !pSourceRow )
-                {
-                    // We should always have source row,
-                    //  else iSourceRows is not accurate
-                    //  and we should always have a current row
-                    XP_ASSERT(TRUE);
-                    break;
-                }
-                if( iColumnsBefore )
-                {
-                    // We need cells before the insert column,
-                    //  so make a new row with blank cells
-                    pNextRow = new CEditTableRowElement(iColumnsBefore);
-                    if( pNextRow )
-                    {
-                        pNextRow->InsertAfter(pCurrentRow);
-                        // Append the source cells to the the new row
-                        pNextRow->AppendRow(pSourceRow);
-                    }
-                } else {
-                    // No extra columns needed,
-                    //   just append source row
-                    pSourceRow->Unlink();
-                    pSourceRow->InsertAfter(pCurrentRow);
-                    pNextRow = pSourceRow;
-                }
-
-                XP_ASSERT(pNextRow);
-                if( pNextRow )
-                {
-                    // Fill in rest of row with empty cells
-                    pNextRow->PadRowWithEmptyCells(pTable->GetColumns() + iSourceCols);
-                    // Be sure any empty cells have required empty text elements
-                    pNextRow->FinishedLoad(this);
-                }
-                pCurrentRow = pNextRow;
-            }
-
-            // Delete whats left of the source table
-            delete pSourceTable;
-
-            Relayout(pTable, 0);
-            MoveToExistingCell(pTable, iCaretX, Y);
-        }
-#ifdef DEBUG
-        m_pRoot->ValidateTree();
-#endif
+        // NOTE: If 2nd to last param (iStartColumn) is 0, then row is pasted starting at left edge,
+        //  ignoring what column the target cell is
+        pTable->InsertRows(Y, iNewY, pSourceTable->CountRows(), 
+                           pSourceTable, pTable->GetColumnIndex(pCell->GetX()),
+                           &m_pCellForInsertPoint);
+        
+        //TODO: INSERT ROWS DOESN'T PAD OTHER ROWS IF EXTRA CELL(S) INSERTED
     }
+    else if( EDT_PASTE_COLUMN(iPasteType) )
+    {
+        // Similar comment for "iStartRow" param
+        pTable->InsertColumns(X, iNewX, pSourceTable->CountColumns(), 
+                              pSourceTable, pTable->GetRowIndex(pCell->GetY()),
+                              &m_pCellForInsertPoint);
+        //TODO: DOESN'T CREATE MORE ROWS AT BOTTOM IF NEED TO PASTE SOURCE CELLS
+    }
+    // Clear the source selection only if we need it
+    //   to delete
 
-    // Delete table or cells in original location if moving within the doc
+    SetFillNewCellWithSpace();
+    pTable->FinishedLoad(this);
+    ClearFillNewCellWithSpace();
+
+    // Delete whats left of the source table
+    delete pSourceTable;
+
+    Relayout(pTable, 0);
+
+    // Now that Relayout has inserted the new cells,
+    //  delete selected table or cells in original location if moving within the doc
     if( m_bDeleteTableAfterPasting )
     {
         if( m_pSelectedEdTable )
@@ -13094,15 +13205,33 @@ EDT_ClipboardResult CEditBuffer::PasteCellsIntoTable( IStreamIn& stream, EEditCo
             m_pSelectedEdTable->Delete(FALSE);
         } else if( m_SelectedEdCells.Size() )
         {
+            // We must save and restore current insert point
+            //   because DeleteSelectedCells will move it
+            CEditInsertPoint ip;
+            GetInsertPoint(ip);
             DeleteSelectedCells();
+            SetInsertPoint(ip);
         }
         m_bDeleteTableAfterPasting = FALSE;
     }
+    // We don't want any cells selected after pasting
+    // (same behavior as when pasting text)
+    ClearTableAndCellSelection();
 
-    //TODO: FINISH PASTECELLSINTOTABLE
-    return EDT_COP_OK;
+#ifdef DEBUG
+    m_pRoot->ValidateTree();
+#endif
+
+    if( !bAllCellsPasted )
+    {
+        // There's not much we can do with the leftover cells after a replace action,
+        //  so just tell the user. We do this here and not
+        //  in ReplaceSpecialCells since we want relayout to happen first
+        //  THIS LEAVES AN UGLY SELECTION FROM THE ORIGINAL SOURCE TO
+        //  THE CURRENT CURSOR LOCATION - DOESN'T MAKE SENSE!!!
+        //FE_Alert(m_pContext, XP_GetString(XP_EDT_NOT_ALL_CELLS_PASTED));
+    }
 }
-
 
 EDT_ClipboardResult CEditBuffer::PasteHREF( char **ppHref, char **ppTitle, int iCount){
     VALIDATE_TREE(this);
@@ -13180,26 +13309,45 @@ EDT_ClipboardResult CEditBuffer::PasteHREF( char **ppHref, char **ppTitle, int i
     return result;
 }
 
-EDT_ClipboardResult CEditBuffer::PasteTextAsNewTable(char *pText, intn iRows, intn iCols)
+EDT_ClipboardResult CEditBuffer::PasteTextAsTable(char *pText, ED_PasteType iPasteType, intn iRows, intn iCols)
 {
     if( iRows == 0 || iCols == 0 )
        CountRowsAndColsInPasteText(pText, &iRows, &iCols); 
+    
+    if( iPasteType == ED_PASTE_NORMAL || iRows == 0 || iCols == 0 )
+        return EDT_COP_CLIPBOARD_BAD;
+    
+    XP_Bool bNewTable = (iPasteType == ED_PASTE_NORMAL);
 
-    EDT_TableData *pData = EDT_NewTableData();
+    EDT_TableData *pData = bNewTable ? EDT_NewTableData() : GetTableData();
+    
+    CEditTableElement *pDebugTable = NULL; // ******* DEBUG TEST ONLY
+
+    // TODO: REWRITE THIS -- BUILD A TABLE AND INSERT TEXT,
+    //   THEN CALL CEditBuffer::PasteTable()
     if( pData )
     {
-        pData->iRows = iRows;
-        pData->iColumns = iCols;
-        InsertTable(pData);
-        EDT_FreeTableData(pData);
-        intn iRow = 0;
-        // We assume InsertTable will put caret in first cell of table
+        if( bNewTable )
+        {
+            pData->iRows = iRows;
+            pData->iColumns = iCols;
+            InsertTable(pData);
+            EDT_FreeTableData(pData);
+            // We assume InsertTable will put caret in first cell of table
+            CEditInsertPoint ip;
+            GetTableInsertPoint(ip);
+            pDebugTable = ip.m_pElement->GetTableIgnoreSubdoc();
+        }
+        CEditTableElement *pTable = m_pCurrent->GetTableIgnoreSubdoc();
         CEditInsertPoint ip;
         GetTableInsertPoint(ip);
-        CEditTableElement *pTable = ip.m_pElement->GetTableIgnoreSubdoc();
+
+        int32 iRow = 0;
+
         if( pTable )
         {
-            CEditTableCellElement* pNextCell = pTable->GetFirstCell();
+            CEditTableCellElement* pNextCell = bNewTable ? 
+                                        pTable->GetFirstCell() : m_pCurrent->GetParentTableCell();
             
             char *pCellText = pText;
             XP_Bool bDone = FALSE;
@@ -13240,13 +13388,14 @@ EDT_ClipboardResult CEditBuffer::PasteTextAsNewTable(char *pText, intn iRows, in
                 } while( pText );
 
                 if( pCellText && *pCellText )
-                    PasteText(pCellText, FALSE, FALSE, FALSE, TRUE); //Last 2param = don't relayout but we want to reduce
+                     // 2nd to last param = don't relayout, last param = we want to reduce
+                    PasteText(pCellText, FALSE, FALSE, FALSE, TRUE);
 
                 intn iNextRow = iRow;
                 
-                // Move insert point to next cell
+                // Move insert point to next cell, caret at end of contents 
                 // If its in next row, iNextRow will be incremented
-                if( NextTableCell(FALSE, TRUE, &iNextRow) )
+                if( NextTableCell(TRUE, TRUE, &iNextRow) )
                 {
                     if(bEndOfRow)
                     {
@@ -13257,7 +13406,7 @@ EDT_ClipboardResult CEditBuffer::PasteTextAsNewTable(char *pText, intn iRows, in
                         XP_Bool bGetNext = TRUE;
                         while( bGetNext && iRow != iNextRow )
                         {
-                            bGetNext = NextTableCell(FALSE, TRUE, &iNextRow);
+                            bGetNext = NextTableCell(TRUE, TRUE, &iNextRow);
                         }
                         bEndOfRow = FALSE;
                     } 
@@ -13291,15 +13440,6 @@ EDT_ClipboardResult CEditBuffer::PasteTextAsNewTable(char *pText, intn iRows, in
 
     return EDT_COP_OK;
 }
-
-EDT_ClipboardResult CEditBuffer::PasteTextIntoTable(char *pText, XP_Bool /*bReplace*/, intn iRows, intn iCols)
-{
-    if( iRows == 0 || iCols == 0 )
-       CountRowsAndColsInPasteText(pText, &iRows, &iCols); 
-    //TODO: FINISH PASTETEXTINTOTABLE()
-    return EDT_COP_OK;
-}
-
 
 //
 // Make sure that there are not spaces next to each other after a delete,
@@ -13368,13 +13508,37 @@ EDT_ClipboardResult CEditBuffer::CutSelection( char **ppText, int32* pTextLen,
     result = CopySelection( ppText, pTextLen, ppHtml, pHtmlLen );
     if ( result != EDT_COP_OK ) return result;
 
-    CPersistentEditSelection selection = GetEffectiveDeleteSelection();
-    BeginBatchChanges(kCutCommandID);
-    result = DeleteSelection();
-    EndBatchChanges();
+    if( IsTableOrCellSelected() )
+    {
+        BeginBatchChanges(kGroupOfChangesCommandID);
+        // We assume that table or cells are selected ONLY
+        //  if there's not a "normal" selection
+        if( m_pSelectedEdTable )
+        {
+            // Delete the entire table
+            // Assumes current insert point is inside the selected table
+    		AdoptAndDo(new CDeleteTableCommand(this));
+        } else if( m_SelectedEdCells.Size() )
+        {
+            // Delete all selected cells
+            // This will delete the cell elements ONLY
+            // if a complete row or column is selected.
+            // If not, only cell contents are cleared
+            // to miminize messing up table layout
+            DeleteSelectedCells();
+        }
+        EndBatchChanges();
+    }
+    else
+    { 
+        CPersistentEditSelection selection = GetEffectiveDeleteSelection();
+        BeginBatchChanges(kCutCommandID);
+        result = DeleteSelection();
+        EndBatchChanges();
 
-    // Check to see if we trashed the document
-    XP_ASSERT ( m_pCurrent && m_pCurrent->GetElementType() != eEndElement );
+        // Check to see if we trashed the document
+        XP_ASSERT ( m_pCurrent && m_pCurrent->GetElementType() != eEndElement );
+    }
     return result;
 }
 
@@ -13417,7 +13581,7 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
     }
     
     CEditSelection selection;
-    EEditCopyType iCopyType;
+    ED_CopyType iCopyType;
     CEditTableElement *pTempTable = NULL;
     CEditRootDocElement *pTempRoot = NULL;
 
@@ -13430,7 +13594,7 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
         {
             // Make selection from the entire table
             m_pSelectedEdTable->GetAll(selection);
-            iCopyType = eCopyTable;
+            iCopyType = ED_COPY_TABLE;
             pTable = m_pSelectedEdTable;
         } else {
             // Create a new empty table
@@ -13514,16 +13678,16 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
             // Get selection type -- may be different from m_TableHitType
             //   when all cells in a row or col are selected
             ED_HitType iSelectionType = GetTableSelectionType();
-            switch( iSelectionType /*m_TableHitType*/ )
+            switch( iSelectionType  )
             {
                 case ED_HIT_SEL_ROW:
-                    iCopyType = eCopyRows;
+                    iCopyType = ED_COPY_ROWS;
                     break;
                 case ED_HIT_SEL_COL:
-                    iCopyType = eCopyColumns;
+                    iCopyType = ED_COPY_COLUMNS;
                     break;
                 default:
-                    iCopyType = eCopyCells;
+                    iCopyType = ED_COPY_CELLS;
                     break;
             }
             // Set the number of columns and rows in table data
@@ -13551,7 +13715,7 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
     } else {
         // Get normal selection
         GetSelection(selection);
-        iCopyType = eCopyNormal;
+        iCopyType = ED_COPY_NORMAL;
     }
     // Build the HTML stream from the selection
     if( !selection.IsEmpty() )
@@ -13577,7 +13741,7 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
 
 XP_Bool CEditBuffer::CopySelectionContents( CEditSelection& selection,
                                             char **ppHtml, int32* pHtmlLen, 
-                                            EEditCopyType iCopyType )
+                                            ED_CopyType iCopyType )
 {
     CStreamOutMemory stream;
 
@@ -13590,7 +13754,7 @@ XP_Bool CEditBuffer::CopySelectionContents( CEditSelection& selection,
 }
 
 XP_Bool CEditBuffer::CopySelectionContents( CEditSelection& selection,
-                                            IStreamOut& stream, EEditCopyType iCopyType )
+                                            IStreamOut& stream, ED_CopyType iCopyType )
 {
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
     stream.WriteInt(GetClipboardSignature());
@@ -13605,13 +13769,13 @@ XP_Bool CEditBuffer::CopySelectionContents( CEditSelection& selection,
     //TODO: Problem: This will be TRUE if we have a "normal" selection
     //   that happens to end in a table, thus the last cell will be merged with
     //   next conainter after insert point
-    int32 bMergeEnd = ( iCopyType == eCopyNormal ) ? !selection.EndsAtStartOfContainer() : 0;
+    int32 bMergeEnd = ( iCopyType == ED_COPY_NORMAL ) ? !selection.EndsAtStartOfContainer() : 0;
     stream.WriteInt(bMergeEnd);
 
     // If streaming out "temporary" table for cell copying,
     //    we must use it as the root of stream creation since that is 
     //    where elements are examined if they contain the selection elements
-    if( iCopyType > eCopyNormal )
+    if( iCopyType > ED_COPY_NORMAL )
     {
         CEditTableElement *pTable = selection.m_start.m_pElement->GetParentTable();
         if( pTable )
@@ -13650,6 +13814,9 @@ int32 CEditBuffer::GetClipboardVersion(){
 // New Table Cut/Paste routines
 XP_Bool CEditBuffer::CountRowsAndColsInPasteText(char *pText, intn* pRows, intn* pCols)
 {
+    if( !pText )
+        return FALSE;
+
     intn iRows = 1;
     intn iCols = 1;
     intn iMaxCols = 0;
@@ -13782,9 +13949,10 @@ void CEditBuffer::CutEditText(CEditText& text){
     }
 }
 
+// This isn't used any more?
 void CEditBuffer::PasteEditText(CEditText& text){
     if ( text.Length() > 0 )
-        PasteHTML( text.GetChars(), TRUE);
+        PasteHTML( text.GetChars(), ED_PASTE_NORMAL /*, TRUE*/); //Was bUndoRedo flag
 }
 
 // Persistent to regular selection conversion routines
@@ -14250,12 +14418,16 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                     return ED_HIT_NONE;
             }
 
-            // We are in multiple cell selection mode,
-            //  so select the cell automatically,
-            //  but be sure we are not in inter-cell area (too confusing)
-            //  Also leave area near bottom for drag selection
-            if( m_SelectedLoCells.Size() && bModifierKeyPressed &&
-                x <= right && y <= bottom_limit )
+            // "Quick select cell" strategy:
+            //  If modifier key is pressed, anywhere inside cell 
+            //  can be used to select the cell.
+            //  (Usefull especially in multi-cell mode)
+            //  But only allow this if the cell is in the same table 
+            //    as current selected cells or there are no cells already selected
+            if( bModifierKeyPressed &&
+                x <= right && y <= bottom_limit &&
+                (m_SelectedLoCells.Size() == 0 ||
+                 (LO_Element*)(lo_GetParentTable(m_pContext, (LO_Element*)m_SelectedLoCells[0])) == pTableElement) )
             {
                 return ED_HIT_SEL_CELL;
             }
@@ -14356,6 +14528,8 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
     return ED_HIT_NONE;
 }
 
+// Note: Don't set any values in m_pDragTableData here,
+//       we will compare to previous values in m_pDragTableData
 ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth, int32 *pHeight, LO_Element **ppElement)
 {
     if( !m_pDragTableData || !pX || !pY || !pWidth || !pHeight )
@@ -14429,10 +14603,6 @@ ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth,
 		}
 		else if( pLoElement->type == LO_CELL )
         {
-            // Save the first cell
-            if( !pFirstCell )
-                pFirstCell = pLoElement;
-
             int32 iCellRight;
             LO_Element *pNextCell = pLoElement->lo_any.next;
             while( pNextCell && pNextCell->type != LO_CELL ) pNextCell = pNextCell->lo_any.next;
@@ -14473,153 +14643,146 @@ ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth,
 		pLoElement = pLoElement->lo_any.next;
 	}
 
-    if( pTableElement && pFirstCell )
+    if( pTableElement && pCellElement )
     {
-#if 0
-// TODO: FINISH THIS!
-        if( !pCellElement )
+        // Save the cell we are currently dragging over
+        if(ppElement)
+            *ppElement = pCellElement;
+
+        // Return signal that we shouldn't drop here
+        //   if we are exactly over the source selection
+        if( pCellElement == m_pDragTableData->pFirstSelectedCell )
+            return ED_DROP_NONE;
+        
+        // Set test limits for Cell element: TRUE = get limits for Drag/Drop
+        edt_SetHitLimits(pCellElement, &left_limit, &top_limit, &right_limit, &bottom_limit, &right, &bottom, TRUE );
+                    
+        *pX = pCellElement->lo_cell.x;
+        *pY = pCellElement->lo_cell.y;
+        int32 iInterCellSpace = pCellElement->lo_cell.inter_cell_space;
+        int32 iExtra = iInterCellSpace - ED_SIZING_BORDER;
+
+        if( iSourceType != ED_HIT_SEL_ROW && (x <= left_limit || x > right_limit /*right*/) )
         {
-            // Get bounding sides of all cells in table
-            LO_Element *pLastCellInRow = NULL;
-            LO_Element *pLastCellInCol = NULL;
-            lo_GetFirstAndLastCellsInColumnOrRow(pCellElement, &pLastCellInRow, FALSE );
-            lo_GetFirstAndLastCellsInColumnOrRow(pCellElement, &pLastCellInCol, TRUE );
-            if( !pLastCellInRow || !pLastCellInCol )
-                return ED_DROP_NORMAL; 
-            int32 iLeft = pFirstCell->lo_any.x;
-            int32 iTop =  pFirstCell->lo_any.y;
-            int32 iRight = pLastCellInRow->lo_any.x + pLastCellInRow->lo_any.width;
-            int32 iBottom = pLastCellInRow->lo_any.y + pLastCellInRow->lo_any.height;
-            
-            XP_Bool bFindBefore = FALSE;
-            XP_Bool bFindAfter = FALSE;
-            XP_Bool bFindAbove = FALSE;
-            XP_Bool bFindBelow = FALSE;
-            if( iSourceType != ED_HIT_SEL_COL )
+            if( x >  right_limit /*right*/ )
             {
-                if( y < pFirstCell->lo_any.y )
-                    bFindAbove = TRUE;
-                else {
-                    bFindBelow = TRUE;
-            }
-            if( iSourceType != ED_HIT_SEL_ROW )
-            {
-                if( x < pFirstCell->lo_any.x )
-                    bFindBefore = TRUE;
-                else
-                    bFindAfter = TRUE;
-            }
-            if(! bFindBefore || !bFindAbove || !bFindAfter || !bFindBelow )
-            {
-                if( 
-            }
+                LO_Element *pLoCellBefore = pCellElement->lo_any.prev;
+                while( pLoCellBefore->type != LO_CELL && pLoCellBefore->type != LO_TABLE )
+                    pLoCellBefore = pLoCellBefore->lo_any.prev;
 
-            LO_Element *pLoElement = pLoTable->lo_any.next;
-            int32 iMaxX = 0;
-            int32 iMaxY = 0;
-
-            // Find cell closest to table edge we figured out above
-            while( pLoElement && pLoElement->type != LO_LINEFEED)
-            {
-                
-                if( pLoElement->lo_any.type == LO_CELL )
+                 //   pLoCellBefore->lo_cell.x >= pCellElement->lo_cell.x) )
+                // Save cell before only if it is first cell of selection being dragged
+                // Can't drop just after itself.
+                // Note that we can drop just after if vertical position is different,
+                //   effect is to move cells up/down within the column 
+                if( pLoCellBefore && pLoCellBefore->type == LO_CELL && 
+                    pLoCellBefore == m_pDragTableData->pFirstSelectedCell )
                 {
-                    if( y >= pLoElement->lo_any.y && y <= (pLoElement->lo_any.y + pLoElement->lo_any.height) )
-                    {
-                        if( bFindBefore )
-                        {
-                            pCellElement = pLoElement;
-                            break;
-                        }
-                        if( 
-                    }
+                    return ED_DROP_NONE;        
                 }
-                pLoElement = pLoElement->lo_any.next;
+        
+                iDropType = ED_DROP_COLUMN_AFTER;
+                *pX += pCellElement->lo_cell.width;
+                if( iExtra > 1 )
+                    *pX += iExtra/2;
+            } else {
+                // Can't drop just before the cell to the right
+                LO_Element *pLoCellAfterFirstSelected  = m_pDragTableData->pFirstSelectedCell->lo_any.next;
+                while( pLoCellAfterFirstSelected && pLoCellAfterFirstSelected->type != LO_CELL )
+                    pLoCellAfterFirstSelected = pLoCellAfterFirstSelected->lo_any.next;
+                
+                if( pLoCellAfterFirstSelected && pLoCellAfterFirstSelected->type == LO_CELL &&
+                    pLoCellAfterFirstSelected == m_pDragTableData->pDragOverCell )
+                {
+                    return ED_DROP_NONE;        
+                }
+
+                iDropType = ED_DROP_COLUMN_BEFORE;
+                if( iExtra > 1 )
+                    *pX -= (iExtra/2 + ED_SIZING_BORDER);
+                else
+                    *pX -= ED_SIZING_BORDER;
             }
-            if( !pCellElement )
+            // Insert Column: Calculate dimensions for a caret that is as high as cells to be inserted near
+            // Position the feedback in the center of intercell region
+            //   or just before cell if intercell is too narrow
+            *pWidth = ED_SIZING_BORDER;
+            *pHeight = pCellElement->lo_cell.height;
+            // Number of rows to use to get height of column to insert
+            int32 iRowsLeft =  m_pDragTableData->iRows - lo_GetRowSpan(pCellElement);
+            // Figure out height from number of rows we will insert
+            if( iRowsLeft > 0 )
             {
+                // Get next cell in the column (cell may span across the x value)
+                LO_Element *pNextCell = lo_GetNextCellInColumnOrRow(m_pContext, pCellElement->lo_cell.x, 0, pCellElement, TRUE);
+                if( pNextCell )
+                {
+                    *pHeight += (pNextCell->lo_cell.height + iInterCellSpace);
+                    iRowsLeft -= lo_GetRowSpan(pNextCell);
+                    while( iRowsLeft > 0 )
+                    {
+                        // Use the same X value supplied during first call
+                        pNextCell = lo_GetNextCellInColumnOrRow(m_pContext, 0, 0, pNextCell, TRUE);
+                        if(pNextCell)
+                        {
+                            *pHeight += (pNextCell->lo_cell.height + iInterCellSpace);
+                            iRowsLeft -= lo_GetRowSpan(pNextCell);
+                        }
+                        else
+                            break;
+                    }
+                }                
             }
         }
-#endif
-        if(pCellElement)
+        if( iDropType == ED_DROP_NORMAL && iSourceType != ED_HIT_SEL_COL && (y <= top_limit || y > bottom) )
         {
-            if(ppElement) *ppElement = pCellElement;
-
-            // Return signal that we shouldn't drop here
-            //   if we are exactly over the source selection
-            if( pCellElement == m_pDragTableData->pFirstSelectedCell )
-                return ED_DROP_NONE;
-            
-            LO_Element *pBefore = pCellElement->lo_any.prev;
-            while( pBefore->type != LO_CELL && pBefore->type != LO_TABLE )
-                pBefore = pBefore->lo_any.prev;
-
-            // Save cell before only if it is first cell of selection being dragged
-            if( pBefore->type == LO_TABLE || 
-                (pBefore->type == LO_CELL && pBefore->lo_cell.x >= pCellElement->lo_cell.x) )
+            if( y > bottom )
             {
-                pBefore = NULL;
+                iDropType = ED_DROP_ROW_BELOW;
+                *pY += pCellElement->lo_cell.height;
+                if( iExtra > 1 )
+                    *pY += iExtra/2;
+            } else {
+                iDropType = ED_DROP_ROW_ABOVE;
+                if( iExtra > 1 )
+                    *pY -= (iExtra/2 + ED_SIZING_BORDER);
+                else
+                    *pY -= ED_SIZING_BORDER;
             }
 
-            // Also don't allow dropping under other circumstances
-            if( iSourceType == ED_HIT_SEL_COL && 
-                (pBefore != NULL && pBefore == m_pDragTableData->pFirstSelectedCell) )
+            // Insert Row: Calculate dimensions for a caret that is as wide as cells to be inserted near
+            *pHeight = ED_SIZING_BORDER;;
+            *pWidth = pCellElement->lo_cell.width;
+            int32 iColsLeft =  m_pDragTableData->iColumns - lo_GetColSpan(pCellElement);
+            // Figure out width from number of columns we will insert
+            if( iColsLeft > 0 )
             {
-                return ED_DROP_NONE;        
-            }
-            
-            // Set test limits for Cell element: TRUE = get limits for Drag/Drop
-            edt_SetHitLimits(pCellElement, &left_limit, &top_limit, &right_limit, &bottom_limit, &right, &bottom, TRUE );
-                        
-            *pX = pCellElement->lo_cell.x;
-            *pY = pCellElement->lo_cell.y;
-            int32 iExtra = pCellElement->lo_cell.inter_cell_space - ED_SIZING_BORDER;
-
-            if( iSourceType != ED_HIT_SEL_ROW && (x <= left_limit || x > right) )
-            {
-                // Position the feedback in the center of intercell region
-                //   or just before cell if intercell is too narrow
-                *pWidth = ED_SIZING_BORDER;
-                *pHeight = pCellElement->lo_cell.height;
-                if( x > right )
+                LO_Element *pNextCell = lo_GetNextCellInColumnOrRow(m_pContext, 0, pCellElement->lo_cell.y, pCellElement, FALSE);
+                if( pNextCell )
                 {
-                    iDropType = ED_DROP_INSERT_AFTER;
-                    *pX += pCellElement->lo_cell.width;
-                    if( iExtra > 1 )
-                        *pX += iExtra/2;
-                } else {
-                    iDropType = ED_DROP_INSERT_BEFORE;
-                    if( iExtra > 1 )
-                        *pX -= (iExtra/2 + ED_SIZING_BORDER);
-                    else
-                        *pX -= ED_SIZING_BORDER;
+                    *pWidth += (pNextCell->lo_cell.width + iInterCellSpace);
+                    iColsLeft -= lo_GetColSpan(pNextCell);
+                    while( iColsLeft > 0 )
+                    {
+                        pNextCell = lo_GetNextCellInColumnOrRow(m_pContext, 0, 0, pNextCell, FALSE);
+                        if( pNextCell )
+                        {
+                            *pWidth += (pNextCell->lo_cell.width + iInterCellSpace);
+                            iColsLeft -= lo_GetColSpan(pNextCell);
+                        }
+                        else
+                            break;
+                    }
                 }
             }
-            if( iDropType == ED_DROP_NORMAL && iSourceType != ED_HIT_SEL_COL && (y <= top_limit || y > bottom) )
-            {
-                *pWidth = pCellElement->lo_cell.width;
-                *pHeight = ED_SIZING_BORDER;;
-                if( y > bottom )
-                {
-                    iDropType = ED_DROP_INSERT_BELOW;
-                    *pY += pCellElement->lo_cell.height;
-                    if( iExtra > 1 )
-                        *pY += iExtra/2;
-                } else {
-                    iDropType = ED_DROP_INSERT_ABOVE;
-                    if( iExtra > 1 )
-                        *pY -= (iExtra/2 + ED_SIZING_BORDER);
-                    else
-                        *pY -= ED_SIZING_BORDER;
-                }
-            }
-            if( iDropType == ED_DROP_NORMAL )
-            {
-                // Inside of a cell and no hit regions
-                iDropType = ED_DROP_REPLACE_CELL;
-                *pWidth = pCellElement->lo_cell.width;
-                *pHeight = pCellElement->lo_cell.height;
-            }
+        }
+        if( iDropType == ED_DROP_NORMAL )
+        {
+            // Inside of a cell and no hit regions
+            iDropType = ED_DROP_REPLACE_CELLS;
+            // (These aren't really used for drawing feedback)
+            *pWidth = 0; //pCellElement->lo_cell.width;
+            *pHeight = 0; //pCellElement->lo_cell.height;
         }
     }
     return iDropType;
@@ -15140,8 +15303,9 @@ CEditTableElement* CEditBuffer::SelectTable(XP_Bool bSelect, LO_TableStruct *pLo
         XP_ASSERT(FALSE);
         return NULL;
     }
-    // Assume we are deselecting current table if no pointers supplied
-    if( !bSelect && !pLoTable && !pEdTable )
+    // Assume we are deselecting current table if no pointers supplied or
+    //   edit table is the selected table
+    if( !bSelect && !pLoTable && (!pEdTable || pEdTable == m_pSelectedEdTable) )
     {
         pLoTable = m_pSelectedLoTable;
         pEdTable = m_pSelectedEdTable;
@@ -15149,8 +15313,7 @@ CEditTableElement* CEditBuffer::SelectTable(XP_Bool bSelect, LO_TableStruct *pLo
     if( !pLoTable )
         return NULL;
 
-    //XP_Bool bWasSelected = bSelect ? pLoTable->ele_attrmask & LO_ELE_SELECTED : FALSE;
-    XP_Bool bWasSelected = pLoTable->ele_attrmask & LO_ELE_SELECTED;
+    XP_Bool bWasSelected = (pLoTable->ele_attrmask & LO_ELE_SELECTED) ? TRUE : FALSE;
 
     // Clear existing selected table if different
     if( m_pSelectedLoTable && pLoTable != m_pSelectedLoTable )
@@ -15313,6 +15476,8 @@ void CEditBuffer::DisplaySpecialCellSelection( CEditTableCellElement *pFocusCell
         XP_ASSERT(pEdCell);
         XP_Bool bWasSpecial = (pLoCell->ele_attrmask & LO_ELE_SELECTED_SPECIAL) ? TRUE : FALSE;
 
+        pEdCell->SetSpecialSelected(TRUE);
+
         if( pEdCell == pFocusCell )
         {
             // Remove the special selection from the focus cell
@@ -15322,6 +15487,7 @@ void CEditBuffer::DisplaySpecialCellSelection( CEditTableCellElement *pFocusCell
                 FE_DisplayEntireTableOrCell(m_pContext, (LO_Element*)pLoCell);
             }
             bCellFound = TRUE;
+            pEdCell->SetSpecialSelected(FALSE);
         }
         else if( !bWasSpecial )
         {
@@ -15350,7 +15516,11 @@ void CEditBuffer::DisplaySpecialCellSelection( CEditTableCellElement *pFocusCell
     }
 }
 
-// Start multi-cell selection highlighting with cell containing the caret
+// Select current cell and change other currently-selected cells
+//  to LO_ELE_SELECTED_SPECIAL so user can tell difference between
+//  the "focus" cell (current, where caret is) and other selected cells
+//  Call just before Table Cell properties dialog is created
+// Supply pCellData to update iSelectionType and iSelectedCount values
 void CEditBuffer::StartSpecialCellSelection(EDT_TableCellData *pCellData)
 {
     CEditTableCellElement* pEdCell = m_pCurrent->GetTableCellIgnoreSubdoc();
@@ -15358,21 +15528,172 @@ void CEditBuffer::StartSpecialCellSelection(EDT_TableCellData *pCellData)
         DisplaySpecialCellSelection( pEdCell, pCellData );
 }
 
-static void edt_ClearSpecialCellSelection(MWContext *pContext, LO_CellStruct *pLoCell)
+#define END_OF_TABLE(pEle) (pEle == NULL || pEle->type == LO_LINEFEED)
+
+void CEditBuffer::SetReplaceCellSelection()
 {
-    if( pContext && pLoCell && (pLoCell->ele_attrmask & LO_ELE_SELECTED_SPECIAL) )
+    if( !m_pDragTableData || !m_pDragTableData->pDragOverCell || m_pDragTableData->iRows <= 0 || !m_pDragTableData->pCellsPerRow )
+        return;
+    
+    XP_ASSERT(m_pDragTableData->pDragOverCell->type == LO_CELL);
+    if(!m_pDragTableData->pDragOverCell->type == LO_CELL)
+        return;
+
+    // Do nothing if we haven't changed from the last cell we were over
+    if( m_pDragTableData->pDragOverCell == edt_pPrevReplaceCellSelected )
+        return;
+
+    // Clear all existing special selection (this nulls pLastReplaceCellSelected)
+    // (Must supply the cell to identify what table to clear)
+    ClearSpecialCellSelection(m_pDragTableData->pDragOverCell);
+    // Reset replace cell
+    edt_pPrevReplaceCellSelected = m_pDragTableData->pDragOverCell;
+
+    // Copy array so we can decrement values as we mark cells
+    int32 *pSourceCellsLeftInRow = (int32*)XP_ALLOC(m_pDragTableData->iRows * sizeof(int32));
+    XP_ASSERT(pSourceCellsLeftInRow);
+    if(!pSourceCellsLeftInRow)
+        return;
+    intn i;
+    for( i = 0; i < m_pDragTableData->iRows; i++)
+        pSourceCellsLeftInRow[i] = m_pDragTableData->pCellsPerRow[i];
+
+    LO_Element *pEle = m_pDragTableData->pDragOverCell;
+    int32 iRowY = pEle->lo_cell.y;
+    int32 iFirstColX = pEle->lo_cell.x;
+
+    intn iRow;
+    for( iRow = 0; iRow < m_pDragTableData->iRows; iRow++ )
     {
-        pLoCell->ele_attrmask &= ~LO_ELE_SELECTED_SPECIAL;
-        FE_DisplayEntireTableOrCell(pContext, (LO_Element*)pLoCell);
+        // Find first cell at appropriate column in each row to be marked
+        while(TRUE)
+        {
+            if( pEle && pEle->type == LO_CELL && pEle->lo_cell.x >= iFirstColX )
+                break;
+            pEle = pEle->lo_any.next;
+        }
+        if(END_OF_TABLE(pEle))
+            break;
+
+        XP_ASSERT(pEle && pEle->type == LO_CELL & iRowY == pEle->lo_cell.y );
+
+        while(pSourceCellsLeftInRow[iRow])
+        {
+            if(END_OF_TABLE(pEle))
+                break;
+            LO_CellStruct *pLoCell = (LO_CellStruct*)pEle;
+            // Check if cell is in proper row
+            if( pLoCell->y != iRowY )
+                // We are in another row - get out
+                break;
+            
+#if 0
+            // Because we decided to ignore the COLSPAN and ROWSPAN of the source
+            //   cells, and use that of the destination, we don't need to
+            //   get fancy here. The following matches geometry of source to
+            //   destination by considering COLSPAN and ROWSPAN
+
+            int32 iColSpan = lo_GetColSpan(pEle);
+            int32 iRowSpan = lo_GetRowSpan(pEle);
+            // Adjust for effect of rowspan on number of cells in following rows
+            if( iRowSpan > 1 )
+            {
+                for( intn j = 1; j < iRowSpan; j++ )
+                {
+                    if( iColSpan < pSourceCellsLeftInRow[j] )
+                        pSourceCellsLeftInRow[j] -= iColSpan;
+                    else
+                        pSourceCellsLeftInRow[j] = 0;
+                }
+            }
+            // Reduce the count of cells left to mark
+            if( iColSpan < pSourceCellsLeftInRow[iRow] )
+                pSourceCellsLeftInRow[iRow] -= iColSpan;
+            else
+                pSourceCellsLeftInRow[iRow] = 0;
+#endif            
+            // Because we decided to ignore the COLSPAN
+            pSourceCellsLeftInRow[iRow]--;
+
+            // Mark cell with special selection
+            pLoCell->ele_attrmask |= LO_ELE_SELECTED_SPECIAL;
+            FE_DisplayEntireTableOrCell(m_pContext, pEle);
+
+            // Set flag in Editor's cell elements
+            CEditTableCellElement *pEdCell = 
+                (CEditTableCellElement*)edt_GetTableElementFromLO_Element(pEle, LO_CELL);
+            if( pEdCell )
+                pEdCell->SetSpecialSelected(TRUE);
+#ifdef DEBUG
+            else
+                XP_ASSERT(FALSE);
+#endif
+
+            // Move to next table cell
+            pEle = pEle->lo_any.next;
+            while(!END_OF_TABLE(pEle))
+            {
+                if( pEle->type == LO_CELL )
+                    break;
+                pEle = pEle->lo_any.next;
+            }
+        }
+        // Check if done because no more cells
+        if(END_OF_TABLE(pEle))
+            break;
+        
+        // We are done marking cells in this row
+        //   move to next row unless already there
+        if( pEle->type == LO_CELL && pEle->lo_cell.y == iRowY )
+        {
+            pEle = pEle->lo_any.next;
+            while(!END_OF_TABLE(pEle))
+            {
+                if( pEle->type == LO_CELL && pEle->lo_cell.y != iRowY )
+                    break;
+                pEle = pEle->lo_any.next;
+            }
+        }
+        if(END_OF_TABLE(pEle))
+            break;
+        
+        // If here, pEle should be first cell in next row to mark
+        XP_ASSERT(pEle && pEle->type == LO_CELL);
+        // Get top of next row
+        iRowY = pEle->lo_cell.y;
     }
+    XP_FREE(pSourceCellsLeftInRow);
 }
 
-void CEditBuffer::ClearSpecialCellSelection()
+void CEditBuffer::ClearSpecialCellSelection(LO_Element *pDragOverCell)
 {
-    for( intn i = 0; i < m_SelectedLoCells.Size(); i++ )
+    if( pDragOverCell )
     {
-        edt_ClearSpecialCellSelection(m_pContext, m_SelectedLoCells[i]);
+        // Scan through all cells in table and clear those with special selection
+        LO_Element *pLastCell;
+        LO_Element *pLoCell = lo_GetFirstAndLastCellsInTable(m_pContext, pDragOverCell, &pLastCell);
+        if( !pLoCell || !pLastCell )
+            return;
+
+        while (TRUE)
+        {
+            if( pLoCell && pLoCell->type == LO_CELL )
+                edt_ClearSpecialCellSelection( m_pContext, (LO_CellStruct*)pLoCell, NULL );
+
+            if( !pLoCell || pLoCell == pLastCell )
+                break;
+
+            pLoCell= pLoCell->lo_any.next;
+        }
+    } 
+    else 
+    {
+        // Performance optimization: If no cell is supplied, assume we are clearing 
+        //  just cells that have "normal" selection as well
+        for( intn i = 0; i < m_SelectedLoCells.Size(); i++ )
+            edt_ClearSpecialCellSelection( m_pContext, m_SelectedLoCells[i], m_SelectedEdCells[i] );
     }
+    edt_pPrevReplaceCellSelected = NULL;
 }
 
 // Sort cell lists so simple traversal through array 
@@ -15464,6 +15785,10 @@ void CEditBuffer::ClearTableAndCellSelection()
     m_pSelectedTableElement = NULL;
     m_pPrevExtendSelectionCell = NULL;
     m_TableHitType = ED_HIT_NONE;
+
+    // If we have leftover special selection, clear it
+    if( edt_pPrevReplaceCellSelected )
+        ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
 
     int iEdSize = m_SelectedEdCells.Size();
     int iLoSize = m_SelectedLoCells.Size();

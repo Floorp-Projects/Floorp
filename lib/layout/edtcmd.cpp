@@ -886,14 +886,14 @@ void CEditDataSaver::Redo(){
 
 
 // CDeleteTableCommand
-CDeleteTableCommand::CDeleteTableCommand(CEditBuffer* buffer, intn id)
-    : CEditCommand(buffer, id)
+CDeleteTableCommand::CDeleteTableCommand(CEditBuffer* pBuffer, intn id)
+    : CEditCommand(pBuffer, id)
 {
 	m_pTable = NULL;
-    GetEditBuffer()->GetSelection(m_originalSelection);
+    pBuffer->GetSelection(m_originalSelection);
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
-    GetEditBuffer()->ClearTableAndCellSelection();
+    pBuffer->GetTableInsertPoint(ip);
+    pBuffer->ClearTableAndCellSelection();
     m_pTable = ip.m_pElement->GetTableIgnoreSubdoc();
 	if ( m_pTable )
         m_pTable->Delete();
@@ -909,32 +909,32 @@ void CDeleteTableCommand::Do() {
 }
 
 // CInsertTableCaptionCommand
-CInsertTableCaptionCommand::CInsertTableCaptionCommand(CEditBuffer* buffer,
+CInsertTableCaptionCommand::CInsertTableCaptionCommand(CEditBuffer* pBuffer,
   EDT_TableCaptionData* pData, intn id)
-    : CEditCommand(buffer, id)
+    : CEditCommand(pBuffer, id)
 {
     m_pOldCaption = NULL;
-    GetEditBuffer()->GetSelection(m_originalSelection);
+    pBuffer->GetSelection(m_originalSelection);
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableElement* pTable = ip.m_pElement->GetTableIgnoreSubdoc();
     if ( pTable )
     {
         CEditCaptionElement* pCaption = new CEditCaptionElement();
         pCaption->SetData(pData);
         pTable->SetCaption(pCaption);
-        pTable->FinishedLoad(GetEditBuffer());
+        pTable->FinishedLoad(pBuffer);
         // CLM: Don't move insert point if we have a selected cell
         //      (We use selection to indicate current cell in property dialogs)
-        if( !GetEditBuffer()->IsSelected() &&
+        if( !pBuffer->IsSelected() &&
             ip.m_pElement->GetTableCellIgnoreSubdoc() != NULL )
         {
             // Put cursor at end of caption
             ip.m_pElement = pTable->GetCaption()->GetLastMostChild()->Leaf();
             ip.m_iPos = ip.m_pElement->GetLen();
-            GetEditBuffer()->SetInsertPoint(ip);
+            pBuffer->SetInsertPoint(ip);
         }
-        GetEditBuffer()->Relayout(pTable, 0);
+        pBuffer->Relayout(pTable, 0);
     }
 }
 
@@ -948,13 +948,13 @@ void CInsertTableCaptionCommand::Do() {
 }
 
 // CDeleteTableCaptionCommand
-CDeleteTableCaptionCommand::CDeleteTableCaptionCommand(CEditBuffer* buffer, intn id)
-    : CEditCommand(buffer, id),
+CDeleteTableCaptionCommand::CDeleteTableCaptionCommand(CEditBuffer* pBuffer, intn id)
+    : CEditCommand(pBuffer, id),
     m_pOldCaption(NULL)
 {
-    GetEditBuffer()->GetSelection(m_originalSelection);
+    pBuffer->GetSelection(m_originalSelection);
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableElement* pTable = ip.m_pElement->GetTableIgnoreSubdoc();
     if ( pTable )
     {
@@ -966,7 +966,7 @@ CDeleteTableCaptionCommand::CDeleteTableCaptionCommand(CEditBuffer* buffer, intn
             CEditCaptionElement *pCaption = ip.m_pElement->GetCaption();
 
             m_pOldCaption->Unlink();
-            pTable->FinishedLoad(GetEditBuffer());
+            pTable->FinishedLoad(pBuffer);
             if( pCaption /*!pTableCell*/ )
             {
                 // Set cursor to someplace that still exists
@@ -979,9 +979,9 @@ CDeleteTableCaptionCommand::CDeleteTableCaptionCommand(CEditBuffer* buffer, intn
                     X = pCell->GetX();
                     Y = pCell->GetY();
                 }
-                GetEditBuffer()->StartSelection(X,Y);
+                pBuffer->StartSelection(X,Y);
             }
-            GetEditBuffer()->Relayout(pTable, 0);
+            pBuffer->Relayout(pTable, 0);
         }
     }
 }
@@ -996,33 +996,30 @@ void CDeleteTableCaptionCommand::Do()
 }
 
 // CInsertTableRowCommand
-CInsertTableRowCommand::CInsertTableRowCommand(CEditBuffer* buffer,
+CInsertTableRowCommand::CInsertTableRowCommand(CEditBuffer* pBuffer,
   EDT_TableRowData* /* pData */, XP_Bool bAfterCurrentRow, intn number, intn id)
-    : CEditCommand(buffer, id)
+    : CEditCommand(pBuffer, id)
 {
     m_number = number;
-    GetEditBuffer()->GetSelection(m_originalSelection);
-    if( GetEditBuffer()->IsSelected() )
+    pBuffer->GetSelection(m_originalSelection);
+    if( pBuffer->IsSelected() )
     {
-        GetEditBuffer()->ClearSelection();
+        pBuffer->ClearSelection();
     }
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableCellElement* pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
     if ( pTableCell)
     {
         CEditTableElement* pTable = pTableCell->GetTable();
         if ( pTable )
         {
-            int32 X = pTableCell->GetX();
             int32 Y = pTableCell->GetY();
             int32 iNewY = Y + (bAfterCurrentRow ? pTableCell->GetHeight() : 0);
-            // Try to locate cursor in new cell
-            int32 iCaretY = iNewY + (bAfterCurrentRow ? pTable->GetCellSpacing() : 0);
-            pTable->InsertRows(Y, iNewY, number);
-            pTable->FinishedLoad(GetEditBuffer());
-            GetEditBuffer()->Relayout(pTable, 0);
-            GetEditBuffer()->MoveToExistingCell(pTable, X+2, iCaretY+2);
+            pBuffer->m_pCellForInsertPoint = 0;
+            pTable->InsertRows(Y, iNewY, number, NULL, 0, &pBuffer->m_pCellForInsertPoint);
+            pTable->FinishedLoad(pBuffer);
+            pBuffer->Relayout(pTable, 0);
         }
     }
 }
@@ -1037,31 +1034,29 @@ void CInsertTableRowCommand::Do() {
 
 
 // CDeleteTableRowCommand
-CDeleteTableRowCommand::CDeleteTableRowCommand(CEditBuffer* buffer, intn rows, intn id)
-    : CEditCommand(buffer, id),
+CDeleteTableRowCommand::CDeleteTableRowCommand(CEditBuffer* pBuffer, intn rows, intn id)
+    : CEditCommand(pBuffer, id),
     m_table(0,0)
 {
-    GetEditBuffer()->GetSelection(m_originalSelection);
+    pBuffer->GetSelection(m_originalSelection);
     //The code from Redo moved here:
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableCellElement* pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
     if ( pTableCell )
     {
         CEditTableElement* pTable = pTableCell->GetTable();
         if ( pTable )
         {
-            int32 X = pTableCell->GetX();
             int32 Y = pTableCell->GetY();
             //TODO: FIGURE THIS OUT 
             m_bDeletedWholeTable = FALSE; //m_row == 0 && m_rows >= pTable->GetRows();
-
-            pTable->DeleteRows(Y, rows);
-            pTable->FinishedLoad(GetEditBuffer());
+            
+            pBuffer->m_pCellForInsertPoint = 0;
+            pTable->DeleteRows(Y, rows, &pBuffer->m_pCellForInsertPoint);
+            pTable->FinishedLoad(pBuffer);
             // Move to a safe location so Relayout() doesn't assert
-            GetEditBuffer()->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
-            // Try to move to whereever we deleted
-            GetEditBuffer()->MoveToExistingCell(pTable, X, Y);
+            pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
         }
     }
 }
@@ -1077,17 +1072,17 @@ void CDeleteTableRowCommand::Do()
 
 
 // CInsertTableColumnCommand
-CInsertTableColumnCommand::CInsertTableColumnCommand(CEditBuffer* buffer,
+CInsertTableColumnCommand::CInsertTableColumnCommand(CEditBuffer* pBuffer,
   EDT_TableCellData* /* pData */, XP_Bool bAfterCurrentCell, intn number, intn id)
-    : CEditCommand(buffer, id)
+    : CEditCommand(pBuffer, id)
 {
 //    m_number = number;
-    GetEditBuffer()->GetSelection(m_originalSelection);
-    if( GetEditBuffer()->IsSelected() ){
-        GetEditBuffer()->ClearSelection();
+    pBuffer->GetSelection(m_originalSelection);
+    if( pBuffer->IsSelected() ){
+        pBuffer->ClearSelection();
     }
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableCellElement* pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
     if ( pTableCell)
     {
@@ -1095,14 +1090,11 @@ CInsertTableColumnCommand::CInsertTableColumnCommand(CEditBuffer* buffer,
         if ( pTable )
         {
             int32 X = pTableCell->GetX();
-            int32 Y = pTableCell->GetY();
             int32 iNewX = X + (bAfterCurrentCell ? pTableCell->GetFullWidth() : 0); // WAS GetWidth()
-            // Try to place cursor in inserted cell
-            //int32 iCaretX = iNewX + (bAfterCurrentCell ? pTable->GetCellSpacing() : 0);
-            pTable->InsertColumns(X, iNewX, number);
-            pTable->FinishedLoad(GetEditBuffer());
-            GetEditBuffer()->Relayout(pTable, 0);
-            GetEditBuffer()->MoveToExistingCell(pTable, iNewX /*iCaretX*/, Y);
+            pBuffer->m_pCellForInsertPoint = 0;
+            pTable->InsertColumns(X, iNewX, number, NULL, 0, &pBuffer->m_pCellForInsertPoint);
+            pTable->FinishedLoad(pBuffer);
+            pBuffer->Relayout(pTable, 0);
         }
     }
 }
@@ -1116,14 +1108,14 @@ void CInsertTableColumnCommand::Do() {
 }
 
 // CDeleteTableColumnCommand
-CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* buffer, intn columns, intn id)
-    : CEditCommand(buffer, id),
+CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* pBuffer, intn columns, intn id)
+    : CEditCommand(pBuffer, id),
     m_table(0,0)
 {
 //	m_columns = columns;
-    GetEditBuffer()->GetSelection(m_originalSelection);
+    pBuffer->GetSelection(m_originalSelection);
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableCellElement* pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
     if ( pTableCell )
     {
@@ -1133,14 +1125,12 @@ CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* buffer, intn c
             //TODO: FIGURE THIS OUT 
             m_bDeletedWholeTable = FALSE; //m_column == 0 && m_columns >= pTable->GetColumns();
             int32 X = pTableCell->GetX();
-            int32 Y = pTableCell->GetY();
+            pBuffer->m_pCellForInsertPoint = 0;
             // We don't save the table to undo any more
-            pTable->DeleteColumns(X, columns /*, &m_table*/);
-            pTable->FinishedLoad(GetEditBuffer());
+            pTable->DeleteColumns(X, columns, &pBuffer->m_pCellForInsertPoint );
+            pTable->FinishedLoad(pBuffer);
             // Move to a safe location so Relayout() doesn't assert
-            GetEditBuffer()->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
-            // Try to move to whereever we deleted
-            GetEditBuffer()->MoveToExistingCell(pTable, X, Y);
+            pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
         }
     }
 }
@@ -1156,17 +1146,17 @@ void CDeleteTableColumnCommand::Do()
 
 
 // CInsertTableCellCommand
-CInsertTableCellCommand::CInsertTableCellCommand(CEditBuffer* buffer,
-  XP_Bool bAfterCurrentCell, intn number, intn id)
-    : CEditCommand(buffer, id)
+CInsertTableCellCommand::CInsertTableCellCommand(CEditBuffer* pBuffer, XP_Bool bAfterCurrentCell, 
+                                                 intn number, intn id)
+    : CEditCommand(pBuffer, id)
 {
     m_number = number;
-    GetEditBuffer()->GetSelection(m_originalSelection);
-    if( GetEditBuffer()->IsSelected() ){
-        GetEditBuffer()->ClearSelection();
+    pBuffer->GetSelection(m_originalSelection);
+    if( pBuffer->IsSelected() ){
+        pBuffer->ClearSelection();
     }
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableCellElement* pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
     if ( pTableCell)
     {
@@ -1175,14 +1165,11 @@ CInsertTableCellCommand::CInsertTableCellCommand(CEditBuffer* buffer,
         if ( pTable && pTableRow )
         {
             int32 X = pTableCell->GetX();
-            int32 Y = pTableCell->GetY();
             int32 iNewX = X + (bAfterCurrentCell ? pTableCell->GetFullWidth() : 0); // WAS GetWidth()
-            // Try to move cursor to new column
-            // int32 iCaretX = bAfterCurrentCell ? (iNewX+pTable->GetCellSpacing()) : X;
-            pTableRow->InsertCells(X, iNewX, number);
-            pTable->FinishedLoad(GetEditBuffer());
-            GetEditBuffer()->Relayout(pTable, 0);
-            GetEditBuffer()->MoveToExistingCell(pTable, iNewX /*iCaretX*/, Y);
+            pBuffer->m_pCellForInsertPoint = 0;
+            pTableRow->InsertCells(X, iNewX, number, NULL, &pBuffer->m_pCellForInsertPoint);
+            pTable->FinishedLoad(pBuffer);
+            pBuffer->Relayout(pTable, 0);
         }
     }
 }
@@ -1197,13 +1184,13 @@ void CInsertTableCellCommand::Do() {
 
 
 // CDeleteTableCellCommand
-CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* buffer, intn columns, intn id)
-    : CEditCommand(buffer, id)
+CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* pBuffer, intn columns, intn id)
+    : CEditCommand(pBuffer, id)
 {
 //	m_columns = columns;
-    GetEditBuffer()->GetSelection(m_originalSelection);
+    pBuffer->GetSelection(m_originalSelection);
     CEditInsertPoint ip;
-    GetEditBuffer()->GetTableInsertPoint(ip);
+    pBuffer->GetTableInsertPoint(ip);
     CEditTableCellElement* pTableCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
     if ( pTableCell )
     {
@@ -1215,13 +1202,11 @@ CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* buffer, intn colum
             m_bDeletedWholeTable = FALSE; // m_column == 0 && m_columns >= pTableRow->GetCells();
 
             int32 X = pTableCell->GetX();
-            int32 Y = pTableCell->GetY();
-            pTableRow->DeleteCells(X, columns /*, &m_tableRow*/);
-            pTable->FinishedLoad(GetEditBuffer());
+            pBuffer->m_pCellForInsertPoint = 0;
+            pTableRow->DeleteCells(X, columns, &pBuffer->m_pCellForInsertPoint);
+            pTable->FinishedLoad(pBuffer);
             // Move to a safe location so Relayout() doesn't assert
-            GetEditBuffer()->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
-            // Try to move to whereever we deleted
-            GetEditBuffer()->MoveToExistingCell(pTable, X, Y);
+            pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
         }
     }
 }
@@ -1406,9 +1391,9 @@ void CSetMetaDataCommand::Redo(){
 
 CSetTableDataCommand::CSetTableDataCommand(CEditBuffer* buffer, EDT_TableData* pTableData, intn id)
     : CEditCommand(buffer, id){
-    m_pOldData = GetEditBuffer()->GetTableData();
+    m_pOldData = buffer->GetTableData();
     GetEditBuffer()->SetTableData(pTableData);
-    m_pNewData = GetEditBuffer()->GetTableData();
+    m_pNewData = buffer->GetTableData();
 }
 
 CSetTableDataCommand::~CSetTableDataCommand(){

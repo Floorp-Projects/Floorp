@@ -3378,6 +3378,9 @@ LO_CellStruct *lo_GetParentCell(MWContext * pContext, LO_Element *pElement)
 }
 
 
+static lo_iColumnX = 0;
+static lo_iRowY = 0;
+
 /* Find the first cell with with closest left border x-value <= than the given x
  * value or, if bGetColumn=FALSE, find the cell with closest top border 
  *   y-value <= than the given Y value. Also returns the pointer to the
@@ -3389,6 +3392,12 @@ LO_Element* lo_GetFirstCellInColumnOrRow(MWContext *pContext, LO_Element *pEleme
 	LO_Element *pLastCellInTable = NULL;
 	LO_Element *tptr = NULL;
     int32 closest = 0;
+
+    /* Save these values so future calls to lo_GetNextCellInColumnOrRow can use them */    
+    if( bGetColumn )
+        lo_iColumnX = x;
+    else
+        lo_iRowY = y;
 
     if( pElement->type == LO_TABLE )
     {
@@ -3442,6 +3451,56 @@ LO_Element* lo_GetFirstCellInColumnOrRow(MWContext *pContext, LO_Element *pEleme
         *ppLastCellInTable = pLastCellInTable;
 
     return pFirstCell;    
+}
+
+LO_Element* lo_GetNextCellInColumnOrRow(MWContext *pContext, int32 x, int32 y, LO_Element *pElement, XP_Bool bGetColumn)
+{
+    LO_Element *tptr;
+
+	if(!pElement)
+        return NULL;
+
+    /* Start with next element after the "current" one supplied */
+    tptr = pElement->lo_any.next;
+
+    /* Be sure we are a cell */
+    /* (tptr = LO_LINEFEED if we were already on the last cell */
+    while ( tptr && tptr->type != LO_LINEFEED && tptr->type != LO_CELL )
+        tptr = tptr->lo_any.next;
+
+    if(!tptr || tptr->type == LO_LINEFEED)
+        return NULL;
+    
+    /* Set column X or row Y values that define a col or row respectively */
+    if( bGetColumn )
+    {
+        if( x > 0 )
+            lo_iColumnX = x;
+    }
+    else
+    {
+        if( y > 0 )
+            lo_iRowY = y;
+    }
+
+    do {
+        if( tptr->type == LO_CELL )
+        {
+            /* Note that we return cell SPANNED by given ColumnX or RowY */
+            if( ( bGetColumn && tptr->lo_any.x <= lo_iColumnX &&
+                  (tptr->lo_any.x + tptr->lo_any.width) > lo_iColumnX ) ||
+                ( !bGetColumn && tptr->lo_any.y <= lo_iRowY &&
+                  (tptr->lo_any.y + tptr->lo_any.height) > lo_iRowY ) )
+            {
+                return tptr;
+            }
+        }
+        tptr = tptr->lo_any.next;
+
+      /* Table ends at linefeed (top level) or null element (nested table) */
+    } while (tptr && tptr->type != LO_LINEFEED ); 
+
+    return NULL;
 }
 
 /* Assumptions;
@@ -3562,23 +3621,26 @@ XP_Bool lo_AllCellsSelectedInColumnOrRow( LO_CellStruct *pCell, XP_Bool bInColum
 
     tptr = pFirstCell;
 
-    do {
+    while( TRUE )
+    {
         if( tptr->type == LO_CELL )
         {
             if( (bInColumn && pCell->x == tptr->lo_any.x) ||
                 (!bInColumn && pCell->y == tptr->lo_any.y) )
             {
                 /* If any cell is not selected, return FALSE */
-                if( !(tptr->lo_cell.ele_attrmask & LO_ELE_SELECTED) )
+                if( (tptr->lo_cell.ele_attrmask & LO_ELE_SELECTED) ? FALSE : TRUE )
                     return FALSE;
             }
         }
-        /* Edge case of only 1 cell in row/col */
-        if( tptr != pLastCell )
-            tptr = tptr->lo_any.next;
+        /* Done when we checked the last cell */
+        if( tptr == pLastCell )
+            break;
 
-    } while (tptr && tptr != pLastCell); 
-
+        tptr = tptr->lo_any.next;
+        if( !tptr )
+            break;
+    }
     return TRUE;
 }
 

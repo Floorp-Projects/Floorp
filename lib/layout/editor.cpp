@@ -1316,15 +1316,15 @@ void EDT_NextWord( MWContext *pContext, XP_Bool bSelect ){
     pEditBuffer->NavigateChunk( bSelect, LO_NA_WORD, TRUE );
 }
 
-//CLM: Navigate from cell to cell
-void EDT_NextTableCell( MWContext *pContext, XP_Bool bSelect ){
+// Navigate from cell to cell
+void EDT_NextTableCell( MWContext *pContext, XP_Bool bEndOfCell ){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
-    pEditBuffer->NextTableCell(bSelect, TRUE);
+    pEditBuffer->NextTableCell(TRUE, bEndOfCell);
 }
 
-void EDT_PreviousTableCell( MWContext *pContext, XP_Bool bSelect ){
+void EDT_PreviousTableCell( MWContext *pContext, XP_Bool bEndOfCell ){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
-    pEditBuffer->NextTableCell(bSelect, FALSE);
+    pEditBuffer->NextTableCell(FALSE, bEndOfCell);
 }
 
 //
@@ -1732,57 +1732,64 @@ EDT_ClipboardResult EDT_InsertText( MWContext *pContext, char *pText ) {
     return result;
 }
 
-EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText ) {
-    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
-    pEditBuffer->BeginBatchChanges(kPasteTextCommandID);
-    EDT_ClipboardResult result;
-
-    XP_Bool bPasteAsTable = FALSE;
+/* Front end check for spreadsheet formated text
+  (tabs between cells, CR at end of row, equal number of cells per row)
+*/
+XP_Bool EDT_CanPasteTextAsTable(MWContext *pContext, char * pText, intn *pRows, intn *pCols, XP_Bool *pIsInTable)
+{
+    GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
+    XP_Bool bResult = FALSE;
 
     // Determine format of paste text - use tabs as cell delimiters, <CR><LF> as end of row
     intn iCols;
     intn iRows;
     XP_Bool bEqualCols = pEditBuffer->CountRowsAndColsInPasteText(pText, &iRows, &iCols);
-    // Ask user for approval only if we have a well-formed table with > 1 column to paste
+
+    // Return number of rows and columns to caller
+    if( pRows )
+        *pRows = iRows;
+    if( pCols )
+        *pCols = iCols;
+
+    // See if we have a well-formed table with > 1 column to paste
     if( bEqualCols && iCols > 1 && iRows > 0 )
     {
-        char *pMessage = NULL;
-        pMessage = PR_sprintf_append( pMessage, XP_GetString(XP_EDT_CAN_PASTE_AS_TABLE), iRows, iCols);
-        if( pEditBuffer->IsInsertPointInTableCell() )
-        {
-            // Give message about pasting into an existing table
-            pMessage = PR_sprintf_append( pMessage,  XP_GetString(XP_EDT_REPLACE_CELLS));
 
-            if( FE_Confirm(pEditBuffer->GetContext(), pMessage) )
-            {
-                //TODO: Implement PasteIntoTable(TRUE); // TRUE = delete existing cells
-                bPasteAsTable = TRUE;
-            } else {
-                //TODO: Implement PasteIntoTable(FALSE); // FALSE = append to existing cells
-                // For now, just paste into one cell
-                //bPasteAsTable = TRUE;
-            }
-            bPasteAsTable = TRUE;
-        } else {
-            // Give message about pasting as a new table
-            pMessage = PR_sprintf_append( pMessage,  XP_GetString(XP_EDT_PASTE_AS_TABLE));
-            if( FE_Confirm(pEditBuffer->GetContext(), pMessage) )
-            {
-                pEditBuffer->PasteTextAsNewTable(pText, iRows, iCols);
-                bPasteAsTable = TRUE;
-            }
-        }
-        XP_FREEIF(pMessage);
+        if( pIsInTable )
+            *pIsInTable = pEditBuffer->IsInsertPointInTableCell();
+
+        bResult = TRUE;
     }
-    else 
+    return bResult;
+}
+
+EDT_ClipboardResult EDT_PasteTextAsTable( MWContext *pContext, char *pText, ED_PasteType iPasteType )
+{
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
+
+    EDT_ClipboardResult result = EDT_COP_OK;
+    intn iCols;
+    intn iRows;
+
+    // Check if we really can do do this
+    if( EDT_CanPasteTextAsTable(pContext, pText, &iRows, &iCols, NULL) )
     {
-        // No selected table cells Delete any existing selection so paste replaces it
-        pEditBuffer->DeleteSelection();
+        // Do we need batch changes?
+        pEditBuffer->BeginBatchChanges(kPasteTextCommandID);
+        result = pEditBuffer->PasteTextAsTable(pText, iPasteType, iRows, iCols );
+        pEditBuffer->EndBatchChanges();
     }
+    
+    return result;
 
-    // If we didn't do any special table pasting, do regular paste at caret location
-    if( !bPasteAsTable )
-        result = pEditBuffer->PasteText( pText, FALSE, FALSE, TRUE ,TRUE);
+}
+
+EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText ) {
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
+    pEditBuffer->BeginBatchChanges(kPasteTextCommandID);
+    EDT_ClipboardResult result;
+    pEditBuffer->DeleteSelection();
+    result = pEditBuffer->PasteText( pText, FALSE, FALSE, TRUE ,TRUE);
     pEditBuffer->EndBatchChanges();
     return result;
 }
@@ -1828,11 +1835,11 @@ EDT_ClipboardResult EDT_PasteQuoteEnd( MWContext *pContext ) {
     return result;
 }
 
-EDT_ClipboardResult EDT_PasteHTML( MWContext *pContext, char *pText ){
+EDT_ClipboardResult EDT_PasteHTML( MWContext *pContext, char *pText, ED_PasteType iPasteType ){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
-    pEditBuffer->BeginBatchChanges(kPasteHTMLCommandID);
+    pEditBuffer->BeginBatchChanges(kGroupOfChangesCommandID);
     pEditBuffer->DeleteSelection();
-    EDT_ClipboardResult result = pEditBuffer->PasteHTML( pText, FALSE );
+    EDT_ClipboardResult result = pEditBuffer->PasteHTML( pText, iPasteType );
     pEditBuffer->EndBatchChanges();
     return result;
 }
@@ -2217,14 +2224,19 @@ void EDT_InsertImage( MWContext *pContext, EDT_ImageData *pData, XP_Bool bKeepIm
 }
 
 void EDT_ImageLoadCancel( MWContext *pContext ){
-    GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
-    if( pEditBuffer->m_pLoadingImage ){
+    CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
+    if( !pEditBuffer )
+        return;
+
+    if( CEditBuffer::IsAlive(pEditBuffer) && pEditBuffer->IsReady() &&
+        pEditBuffer->m_pLoadingImage )
+    {
         delete pEditBuffer->m_pLoadingImage;
     } 
     else
     {
-        FE_ImageLoadDialogDestroy( pEditBuffer->m_pContext );
-        FE_EnableClicking( pEditBuffer->m_pContext );
+        FE_ImageLoadDialogDestroy( pContext );
+        FE_EnableClicking( pContext );
     }
 }
 
@@ -2551,8 +2563,11 @@ EDT_TableCellData* EDT_GetTableCellData( MWContext *pContext ){
     EDT_TableCellData *pData = pEditBuffer->GetTableCellData();
     // Translate old NS values for FE only,
     //  so they won't be changed unless explicitly edited
-    if( pData->valign == ED_ALIGN_BASELINE || pData->valign == ED_ALIGN_BOTTOM )
-        pData->valign =  ED_ALIGN_ABSBOTTOM;
+    if( pData )
+    {
+        if( pData->valign == ED_ALIGN_BASELINE || pData->valign == ED_ALIGN_BOTTOM )
+            pData->valign =  ED_ALIGN_ABSBOTTOM;
+    }
     return pData;
 }
 

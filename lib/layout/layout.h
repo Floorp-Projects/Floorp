@@ -1629,6 +1629,9 @@ LO_CellStruct *lo_GetParentCell(MWContext *pContext, LO_Element *pElement);
 */
 LO_Element* lo_GetFirstCellInColumnOrRow(MWContext *pContext, LO_Element *pElement, int32 x, int32 y, XP_Bool bGetColumn, LO_Element **ppLastCellInTable);
 
+/* Get next cell. If x or y is 0, use values from previous call or lo_GetFirstCellInColumnOrRow */
+LO_Element* lo_GetNextCellInColumnOrRow(MWContext *pContext, int32 x, int32 y, LO_Element *pElement, XP_Bool bGetColumn);
+
 /* Returns first cell in table, and last cell if pLastCell != NULL 
  * pElement can be any LO_Element in the table (quickest search if it is a LO_TABLE or LO_CELL)
 */

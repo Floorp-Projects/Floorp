@@ -5007,8 +5007,7 @@ void CSizingObject::ResizeObject()
                     m_pBuffer->MoveAndHideCaretInTable(m_pLoElement);
 
                     // Move to last cell of table
-                    // (1ST param unused, 2nd = Forward, 3rd = NextRow index ptr
-                    while(m_pBuffer->NextTableCell(FALSE, TRUE, 0))
+                    while(m_pBuffer->NextTableCell())
                         ;
 
                     if( m_iStyle == ED_SIZE_ADD_ROWS )

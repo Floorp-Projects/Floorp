@@ -527,18 +527,6 @@ enum EEditElementType {
 };
 
 //
-// Copy type written to stream
-//    Used to decide how to paste into existing table
-//
-enum EEditCopyType {
-    eCopyNormal,        // Default = 0. Normal HTML copying, not a table
-    eCopyTable,         // Entire table - paste normally or embeded into existing table
-    eCopyRows,          // Entire rows - inserts/overlays into existing table
-    eCopyColumns,       // Entire columns   "
-    eCopyCells          // Arbitrary cells - overlay selected target cells in table
-};
-
-//
 // CEditElement
 //
 class CEditElement {
@@ -875,16 +863,22 @@ public:
     PA_Tag* InternalTagOpen(int iEditOffset, XP_Bool bPrinting);
     virtual PA_Tag* TagEnd();
 
-    void InsertRows(int32 Y, int32 newY, intn number, CEditTableElement* pSource = NULL);
-    void InsertColumns(int32 X, int32 newX, intn number, CEditTableElement* pSource = NULL);
+    // These now return the cell where we should place the insert point after Relayout
+    void InsertRows(int32 Y, int32 newY, intn number, CEditTableElement* pSource = NULL, intn iStartColumn = 0, 
+                    CEditTableCellElement **ppCellForInsertPoint = NULL);
+    void InsertColumns(int32 X, int32 newX, intn number, CEditTableElement* pSource = NULL, intn iStartRow = 0, 
+                       CEditTableCellElement **ppCellForInsertPoint = NULL);
+    // Returns TRUE if all cells in source are pasted
+    XP_Bool ReplaceSpecialCells(CEditTableElement *pSourceTable,  XP_Bool bIgnoreSourceLayout = FALSE, CEditTableCellElement **ppCellForInsertPoint = NULL);
+
     // Delete a table and relayout
     // Use bMoveInsertPoint = TRUE when you have already moved insert point
     //   outside of the table, else it is moved to just before the table
     void Delete(XP_Bool bMoveInsertPoint = TRUE);
 //cmanske: I doubt we will ever revive the old undo system, so skip it here
 //    void DeleteRows(int32 Y, intn number, CEditTableElement* pUndoContainer = NULL);
-    void DeleteRows(int32 Y, intn number);
-    void DeleteColumns(int32 X, intn number, CEditTableElement* pUndoContainer = NULL);
+    void DeleteRows(int32 Y, intn number, CEditTableCellElement **ppCellForInsertPoint = NULL);
+    void DeleteColumns(int32 X, intn number, CEditTableCellElement **ppCellForInsertPoint = NULL);
 
     // Not used much - index based
     CEditTableRowElement* FindRow(intn number);
@@ -1107,7 +1101,9 @@ public:
 
     intn GetCells();
     // Use actual cell X and Y for Insert and Delete logic
-    void InsertCells(int32 X, int32 newX, intn number, CEditTableRowElement* pSource = NULL);
+    // Return the cell where we should place the insert point after Relayout
+    void InsertCells(int32 X, int32 newX, intn number, CEditTableRowElement* pSource = NULL, 
+                     CEditTableCellElement **ppCellForInsertPoint = NULL);
     // Append (move) cells in supplied row to this row and delete supplied row if requested
     // (Note: Unlike most other "insert" methods, "this" is the existing row, not row to be inserted)
     // Returns the number of cells "positions" appended (sum of COLSPAN of appended cells)
@@ -1116,7 +1112,9 @@ public:
     //   or use current table's max columns if iColumns is 0
     void PadRowWithEmptyCells(intn iColumns = 0);
 
-    void DeleteCells(int32 X, intn number, CEditTableRowElement* pUndoContainer = NULL);
+    // Return the cell where we should place the insert point after Relayout
+    void DeleteCells(int32 X, intn number, CEditTableCellElement **ppCellForInsertPoint = NULL);
+
     // Find cell at specific location in column
     CEditTableCellElement* FindCell(int32 X, XP_Bool bIncludeRightEdge = FALSE);
 
@@ -1241,7 +1239,9 @@ public:
     // Keep these in synch when selecting so
     //  we don't always have to rely on LO_Elements
     XP_Bool IsSelected() { return m_bSelected; }
+    XP_Bool IsSpecialSelected() { return m_bSpecialSelected; }
     void    SetSelected(XP_Bool bSelected) { m_bSelected = bSelected; }
+    void    SetSpecialSelected(XP_Bool bSelected) { m_bSpecialSelected = bSelected; }
 
     // Move contents of supplied cell into this cell
     void MergeCells(CEditTableCellElement* pCell);
@@ -1379,6 +1379,7 @@ private:
 
     // This should be TRUE only if cell is also in CEditBuffer::m_SelectedEdCells list
     XP_Bool       m_bSelected;
+    XP_Bool       m_bSpecialSelected;
     
     // Deleting an arbitrary set of cells is tricky 
     // since some cells only have contents deleted,
@@ -3054,6 +3055,9 @@ public:
                                     //  are blocked.
     XP_Bool m_bSelecting;
     XP_Bool m_bNoRelayout;               // maybe should be a counter
+    // Any operation changing table (insert and delete operations)
+    //  can set this so next Relayout call knows where to place caret
+    CEditTableCellElement *m_pCellForInsertPoint;
 
     CEditElement *m_pSelectStart;
     int m_iSelectOffset;
@@ -3260,9 +3264,10 @@ public:
     void SelectNextChar( );
     void SelectPreviousChar( );
     void NextChar( XP_Bool bSelect );
-    // Return FALSE if at the 1st or last cell
+    // Return FALSE if at the 1st cell and going backward, or last cell and moving forward
+    // bEndOfCell determines where caret is placed in the cell
     // Option pRowCounter: if supplied, it is incremented when we move to a new row
-    XP_Bool NextTableCell( XP_Bool bSelect, XP_Bool bForward, intn* pRowCounter = NULL );
+    XP_Bool NextTableCell(XP_Bool bForward = TRUE, XP_Bool bEndOfCell = FALSE, intn* pRowCounter = NULL);
     void UpDown( XP_Bool bSelect, XP_Bool bForward );
     void NavigateChunk( XP_Bool bSelect, intn chunkType, XP_Bool bForward );
     void EndOfLine( XP_Bool bSelect );
@@ -3507,7 +3512,8 @@ public:
     // If all cells in a col or row are selected,
     //  this removes the row or col. Otherwise, just cell contents
     //  are deleted to minimize disturbing table structure
-    void DeleteSelectedCells();
+    // All users except for Backspace and Delete should use bNoSpaceInNewCells = FALSE;
+    void DeleteSelectedCells(XP_Bool bNoSpaceInNewCells = FALSE);
 
     // Data for table currently being dragged.  Accessible to all edit windows
     static EDT_DragTableData* m_pDragTableData;
@@ -3515,7 +3521,7 @@ public:
     // Setup data for dragging table cells
     XP_Bool StartDragTable(int32 x, int32 y);
     static XP_Bool IsDraggingTable() { return m_pDragTableData != NULL; }
-    static void StopDragTable();
+    void StopDragTable();
 
     /*StartSelection:
         used when mouse is clicked or double clicked.  calls clearmove then done typing before 
@@ -3523,8 +3529,6 @@ public:
     */
     void StartSelection( int32 x, int32 y , XP_Bool doubleClick = FALSE);
     void MoveAndHideCaretInTable(LO_Element *pLoElement); //cmanske: Move caret without scrolling or showing caret
-    // Moves caret to an existing cell -- use after deleting a cell or row, but before Relayout();
-    void MoveToExistingCell(CEditTableElement *pTable, int32 X, int32 Y);
 
     void SelectObject( int32 x, int32 y);
     void ExtendSelection( int32 x, int32 y );
@@ -3686,9 +3690,10 @@ public:
 
     EDT_ClipboardResult PasteText(char *pText, XP_Bool bMailQuote, XP_Bool bIsContinueTyping, XP_Bool bRelayout, XP_Bool bReduce); /* Deprecated. */
     EDT_ClipboardResult PasteText(char *pText, XP_Bool bMailQuote, XP_Bool bIsContinueTyping, int16 csid,  XP_Bool bRelayout, XP_Bool bReduce);
-    EDT_ClipboardResult PasteHTML(char *pText, XP_Bool bUndoRedo);
-    EDT_ClipboardResult PasteHTML(IStreamIn& stream, XP_Bool bUndoRedo);
-    EDT_ClipboardResult PasteCellsIntoTable(IStreamIn& stream, EEditCopyType iCopyType);
+    EDT_ClipboardResult PasteHTML(char *pText, ED_PasteType iPasteType);
+    EDT_ClipboardResult PasteHTML(IStreamIn& stream, ED_PasteType iPasteType);
+    EDT_ClipboardResult PasteCellsIntoTable(IStreamIn& stream, ED_PasteType iPasteType);
+    void PasteTable( CEditTableCellElement *pCell, CEditTableElement *pSourceTable, ED_PasteType iPasteType );
     EDT_ClipboardResult PasteHREF( char **ppHref, char **ppTitle, int iCount);
     EDT_ClipboardResult CopySelection( char **ppText, int32* pTextLen,
             char **ppHtml, int32* pHtmlLen);
@@ -3697,10 +3702,10 @@ public:
                     CEditElement *pEnd, char **ppText, int32* pTextLen,
                     char **ppHtml, int32* pHtmlLen );
     XP_Bool CopySelectionContents( CEditSelection& selection,
-                    char **ppHtml, int32* pHtmlLen, EEditCopyType iCopyType = eCopyNormal );
+                    char **ppHtml, int32* pHtmlLen, ED_CopyType iCopyType = ED_COPY_NORMAL );
     //cmanske: Added flags param to pass info about copied table elements
     XP_Bool CopySelectionContents( CEditSelection& selection,
-                    IStreamOut& stream, EEditCopyType iCopyType = eCopyNormal );
+                    IStreamOut& stream, ED_CopyType iCopyType = ED_COPY_NORMAL );
     int32 GetClipboardSignature();
     int32 GetClipboardVersion();
     EDT_ClipboardResult CutSelection( char **ppText, int32* pTextLen,
@@ -3712,8 +3717,9 @@ public:
     // Returns FALSE if number of cells in each row are not all the same
     XP_Bool CountRowsAndColsInPasteText(char *pText, intn* pRows, intn* pCols);
     // Supply Rows, Cols if known, else they will be calculated from text 
-    EDT_ClipboardResult PasteTextAsNewTable(char *pText, intn iRows = 0, intn iCols = 0);
-    EDT_ClipboardResult PasteTextIntoTable(char *pText, XP_Bool bReplace = FALSE, intn iRows = 0, intn iCols = 0);
+    //  if in existing table, iPasteType determines whether (and how) we integrate into its cells
+    //  or insert a new nested table
+    EDT_ClipboardResult PasteTextAsTable(char *pText, ED_PasteType iPasteType, intn iRows = 0, intn iCols = 0);
 
     void RefreshLayout();
     void FixupSpace( XP_Bool bTyping = FALSE);
@@ -3863,18 +3869,26 @@ public:
     //  except for the supplied "focus" cell.
     // Front ends should always display the "special" attribute
     //  if that bit (LO_ELE_SELECTED_SPECIAL) even if LO_ELE_SELECTED ) is also set
-    void DisplaySpecialCellSelection( CEditTableCellElement *pFocusCell = NULL,  EDT_TableCellData *pCellData = NULL );
+    void DisplaySpecialCellSelection(CEditTableCellElement *pFocusCell = NULL,  EDT_TableCellData *pCellData = NULL);
     
     // Select current cell and change other currently-selected cells
     //  to LO_ELE_SELECTED_SPECIAL so user can tell difference between
     //  the "focus" cell (current, where caret is) and other selected cells
     //  Call just before Table Cell properties dialog is created
     // Supply pCellData to update iSelectionType and iSelectedCount values
-    void StartSpecialCellSelection( EDT_TableCellData *pCellData = NULL );
+    void StartSpecialCellSelection(EDT_TableCellData *pCellData = NULL);
 
+    // Do multi-cell selection highlighting of cells that will be replaced
+    //  when pasting table cells from clipboard or dragging 
+    //  on other table cells based on data in m_pDragTableData
+    // Uses the same "special selection" style as for StartSpecialCellSelection()
+    void SetReplaceCellSelection();
+
+    // If pDragOverCell is supplied, clear all cells with LO_ELE_SELECTED_SPECIAL
+    //  in the table containing that cell
     // Remove LO_ELE_SELECTED_SPECIAL from all currently-selected cells
     // Call after closing the Table Cell properties dialog
-    void ClearSpecialCellSelection();
+    void ClearSpecialCellSelection(LO_Element *pDragOverCell = NULL);
 
     // Rearrange order of cells in selected cell lists as they
     //   appear from upper left to lower right (rows first) 
@@ -3893,6 +3907,7 @@ public:
     XP_Bool IsTableSelected() {return m_pSelectedEdTable != NULL; }
     XP_Bool IsTableOrCellSelected() { return m_pSelectedEdTable ? TRUE : (m_SelectedEdCells.Size() > 0 ? TRUE : FALSE); }
     int     GetSelectedCellCount() { return m_SelectedEdCells.Size(); }
+    CEditTableElement* GetSelectedTable() { return m_pSelectedEdTable; }
     
     // New cell with space management. 
     // This is complicated by the fact the relevant FinishedLoad() methods
@@ -3901,7 +3916,7 @@ public:
     // This is set from preferences
     XP_Bool NewCellHasSpace() { return m_bNewCellHasSpace; }
     // Before creating new cells internally, call this
-    //  so new cells 
+    //  so new cells are filled with a space if pref was set
     void SetFillNewCellWithSpace() { m_bFillNewCellWithSpace = m_bNewCellHasSpace; }
     // Reset when done creating new cells
     void ClearFillNewCellWithSpace() { m_bFillNewCellWithSpace = FALSE; }
@@ -4355,6 +4370,8 @@ void edt_FreeImageData( EDT_ImageData *pData );
 void edt_SetTagData( PA_Tag* pTag, char* pTagData);
 void edt_AddTag( PA_Tag*& pStart, PA_Tag*& pEnd, TagType t, XP_Bool bIsEnd,
         char *pTagData = 0 );
+
+void edt_CopyTableCellData( EDT_TableCellData *pDestData, EDT_TableCellData *pSourceData );
 
 void edt_InitBitArrays();
 

@@ -773,14 +773,9 @@ lo_DisplayElement(MWContext *context, LO_Element *tptr,
         if (((LO_CellStruct*)tptr)->cell_inflow_layer)
             break;
 
-        /* cmanske: Order changed - display cell contents FIRST
-         * so selection feedback near cell border is not wiped out
-         * TODO: This doesn't work for images, which are display
-         *  asynchronously. Need to add "observer" to image display
-        */
+		lo_DisplayCell(context, (LO_CellStruct *)tptr);
 		lo_DisplayCellContents(context, (LO_CellStruct *)tptr,
 			    			   base_x, base_y, x, y, width, height);
-		lo_DisplayCell(context, (LO_CellStruct *)tptr);
 		break;
 
     case LO_SUBDOC:

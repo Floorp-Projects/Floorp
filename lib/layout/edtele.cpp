@@ -2081,6 +2081,13 @@ CEditTableElement::CEditTableElement(IStreamIn *pStreamIn, CEditBuffer *pBuffer)
 CEditTableElement::~CEditTableElement(){
     delete m_pBackgroundImage;
     DeleteLayoutData();
+
+    // Be sure to unselect the table if it is selected
+    CEditBuffer *pBuffer = GetEditBuffer();
+    if( pBuffer && (pBuffer->GetSelectedTable() == this)  )
+    {
+        pBuffer->SelectTable(FALSE, NULL, this);
+    }
 }
 
 PA_Tag* CEditTableElement::TagOpen( int iEditOffset ){
@@ -2171,9 +2178,10 @@ CEditTableCellElement* CEditTableElement::GetFirstCell()
         pChild = pChild->GetChild();
         if( pChild && pChild->IsTableCell() )
         {
-            m_pCurrentCell = pChild->TableCell();
             // Initialize these also so we can follow
-            //  this call with GetNextCellInRow() or GetNextCellInColumn()
+            //  this call with GetNextCellInRow(), GetNextCellInColumn(),
+            //  or GetNextCellInTable()
+            m_pCurrentCell = pChild->TableCell();
             m_pFirstCellInColumnOrRow = m_pNextCellInColumnOrRow = m_pCurrentCell;
             return m_pCurrentCell;
         }
@@ -2570,11 +2578,9 @@ intn CEditTableElement::GetColumnsSpanned(int32 iStartX, int32 iEndX)
     intn iTotalColumns = m_ColumnLayoutData.Size();
     for( intn i = 0; i < iTotalColumns; i++ )
     {
-        if( iStartX <= m_ColumnLayoutData[i]->X &&
-            iEndX > m_ColumnLayoutData[i]->X )
-        {
+        int32 iColX = m_ColumnLayoutData[i]->X;
+        if( iStartX <= iColX && iEndX > iColX )
             iColumns++;
-        }
     }
     return iColumns;
 }
@@ -2714,7 +2720,9 @@ void CEditTableElement::FixupColumnsAndRows()
 }
 
 
-void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, CEditTableElement* pSource)
+void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, 
+                                   CEditTableElement* pSourceTable, intn iStartColumn, 
+                                   CEditTableCellElement **ppCellForInsertPoint)
 {
     if ( number == 0 )
     {
@@ -2726,15 +2734,11 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, CEditTable
         XP_ASSERT(FALSE);
         return;
     }
-    intn iRow;
-    CEditTableRowElement* pRow = GetRow(Y, &iRow);
-    if ( ! pRow ) {
+    CEditTableRowElement* pCurrentRow = GetRow(Y);
+    if ( ! pCurrentRow ) {
         XP_ASSERT(FALSE);
         return;
     }
-    // We may need this later
-    //CEditTableRowElement* pNextRow = pRow->GetNextRow();
-
     // We must examine cells with same geometric row,
     //  but in different logical rows
     // So scan all cells near given Y and increase ROWSPAN
@@ -2742,7 +2746,48 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, CEditTable
     //  to be inserted in new row(s)
     intn iColumns = 0;
 
-    CEditTableCellElement *pCell = GetFirstCellInRow(Y, FALSE /*TRUE*/);
+    CEditBuffer *pBuffer = GetEditBuffer();
+    XP_ASSERT(pBuffer);
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+    if( pSourceTable )
+        pCellForInsertPoint = pSourceTable->GetFirstCell();
+
+    if( pSourceTable && iStartColumn > 0 )
+    {
+        // If inserted rows will require new columns,
+        //  figure that out now and add the necessary columns
+        int32 iTotalColumns = iStartColumn + pSourceTable->CountColumns();
+        if( iTotalColumns > GetColumns() )
+        {
+            CEditTableRowElement *pTableRow = GetFirstRow();
+            while( pTableRow )
+            {
+                pTableRow->PadRowWithEmptyCells(iTotalColumns);
+                pTableRow = (CEditTableRowElement*)pTableRow->GetNextSibling();
+            }
+        }
+
+        // Set flag to autoinsert space into new cells according to pref
+        pBuffer->SetFillNewCellWithSpace();
+        //Simplest way to handle this is to add blank cells to the source data
+        CEditTableRowElement* pSourceRow = pSourceTable->GetFirstRow();
+        while(pSourceRow)
+        {
+            for( intn i = 0; i < iStartColumn; i++ )
+            {
+                CEditTableCellElement *pNewCell = new CEditTableCellElement();
+                if( pNewCell )
+                {
+                    pNewCell->InsertAsFirstChild(pSourceRow);
+                    pNewCell->FinishedLoad(pBuffer);
+                }
+            }
+            pSourceRow = (CEditTableRowElement*)pSourceRow->GetNextSibling();
+        }
+        pBuffer->ClearFillNewCellWithSpace();
+    }
+
+    CEditTableCellElement *pCell = GetFirstCellInRow(Y, FALSE );
     while( pCell )
     {
         int32 iCellY = pCell->GetY();
@@ -2774,33 +2819,43 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, CEditTable
         }
         pCell = GetNextCellInRow();
     }
-    CEditBuffer *pBuffer = GetEditBuffer();
 
     // Now insert the new rows (including iColumns new cells in each)
     for ( intn row = 0; row < number; row++ )
     {
         CEditTableRowElement* pNewRow;
-        if ( pSource ) {
-            pNewRow = pSource->FindRow(0);
+        if ( pSourceTable ) {
+            pNewRow = pSourceTable->GetFirstRow();
             pNewRow->Unlink();
         }
         else {
             pNewRow = new CEditTableRowElement(iColumns);
             if( !pNewRow )
-                return;
+                break;
+
             pBuffer->SetFillNewCellWithSpace();
+            // Set insert point to first cell in inserted rows
+            if( !pCellForInsertPoint )
+                pCellForInsertPoint = pNewRow->GetFirstCell();
         }
         if( Y == iNewY )
-            pNewRow->InsertBefore(pRow);
+            pNewRow->InsertBefore(pCurrentRow);
         else 
-            pNewRow->InsertAfter(pRow);
+            pNewRow->InsertAfter(pCurrentRow);
 
         pNewRow->FinishedLoad(pBuffer);
     }
     pBuffer->ClearFillNewCellWithSpace();
+
+    if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
+        *ppCellForInsertPoint = pCellForInsertPoint;
 }
 
-void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number, CEditTableElement* pSource){
+// Now returns cell where we should move the insert point
+void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number, 
+                                      CEditTableElement* pSourceTable, intn iStartRow, 
+                                      CEditTableCellElement **ppCellForInsertPoint)
+{
     if ( number == 0 )
     {
         return; /* A waste of time, but legal. */
@@ -2811,18 +2866,246 @@ void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number, CEditTa
         XP_ASSERT(FALSE);
         return;
     }
+    CEditBuffer *pBuffer = GetEditBuffer();
+    XP_ASSERT(pBuffer);
+
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+    if( pSourceTable )
+        pCellForInsertPoint = pSourceTable->GetFirstCell();
+
+    // Insert starts below top of table - pad source with blank
+    //  rows 
+    if( pSourceTable && iStartRow > 0 )
+    {
+        XP_ASSERT(pSourceTable->IsTable());
+
+        // Set flag to autoinsert space into new cells according to pref
+        pBuffer->SetFillNewCellWithSpace();
+        for( intn i = 0; i < iStartRow; i++ )
+        {
+            // Creating a row with "number" of cells
+            CEditTableRowElement* pRow = new CEditTableRowElement(number);
+            if( pRow )
+            {
+                pRow->InsertAsFirstChild(pSourceTable);
+                // Insert default space if pref is set
+                pRow->FinishedLoad(pBuffer);
+            }
+        }
+        pBuffer->ClearFillNewCellWithSpace();
+    }
 
     CEditTableRowElement* pRow = GetFirstRow();
-
+    CEditTableRowElement* pLastRow = pRow;
+    CEditTableRowElement* pSourceRow = NULL;
     while( pRow )
     {
-        CEditTableRowElement* pSourceRow = pSource ? pSource->FindRow(0) : 0;
-        pRow->InsertCells(X, iNewX, number, pSourceRow);
+        if( pSourceTable )
+            pSourceRow = pSourceTable->GetFirstRow();
+
+        pRow->InsertCells(X, iNewX, number, pSourceRow, &pCellForInsertPoint);
+
         if( pSourceRow )
             delete pSourceRow;
-        
+    
         pRow = pRow->GetNextRow();
+        if( pRow )
+            pLastRow = pRow;
     }
+
+    if( pSourceTable )
+    {
+        if( !pLastRow ) // Not Likely!
+            goto INSERT_COLUMNS_END;
+        
+        // Do we have any more rows to paste?
+        pSourceRow = pSourceTable->GetFirstRow();
+    
+        if( pSourceRow )
+        {
+            // The number of columns we will have to insert if we
+            //   need to add rows at bottom of table
+            //   so overflow from inserted columns line up
+            intn iColumnsBefore = GetColumnsSpanned(GetColumnX(0), iNewX);
+            intn iTotalColumns = pSourceTable->GetColumns() + pSourceTable->CountColumns();
+
+            while(pSourceRow)
+            {
+                CEditTableRowElement *pNextRow;
+                if( iColumnsBefore )
+                {
+                    // We need cells before the insert column,
+                    //  so make a new row with blank cells
+                    pNextRow = new CEditTableRowElement(iColumnsBefore);
+                    if( pNextRow )
+                    {
+                        pNextRow->InsertAfter(pLastRow);
+                        // Append the source cells to the the new row
+                        pNextRow->AppendRow(pSourceRow);
+                    }
+                } else {
+                    // No extra columns needed,
+                    //   just append source row
+                    pSourceRow->Unlink();
+                    pSourceRow->InsertAfter(pLastRow);
+                    pNextRow = pSourceRow;
+                }
+
+                XP_ASSERT(pNextRow);
+                if( pNextRow )
+                {
+                    // Fill in rest of row with empty cells
+                    pNextRow->PadRowWithEmptyCells(iTotalColumns);
+                    // Be sure any empty cells have required empty text elements
+                    pNextRow->FinishedLoad(pBuffer);
+                }
+                pLastRow = pNextRow;
+                pSourceRow = pSourceTable->GetFirstRow();
+            }
+        }
+    }
+
+INSERT_COLUMNS_END:
+    if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
+        *ppCellForInsertPoint = pCellForInsertPoint;
+}
+
+XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, XP_Bool bIgnoreSourceLayout,
+                                               CEditTableCellElement **ppCellForInsertPoint )
+{
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+    CEditTableCellElement *pReplaceCell;
+    CEditTableCellElement *pSourceCell;
+    CEditTableCellElement *pNextReplaceCell;
+    CEditTableCellElement *pNextSourceCell;
+    intn iReplaceRow = 0;
+    intn iPrevReplaceRow = 0;
+    intn iSourceRow = 0;
+    intn iPrevSourceRow = 0;
+    EDT_TableCellData *pReplaceData;
+    EDT_TableCellData *pSourceData;
+    XP_Bool bAllSourceCellsPasted = TRUE;
+
+    if( !pSourceTable )
+        goto REPLACE_DONE;
+
+    pReplaceCell = GetFirstCell();
+    if( pReplaceCell )
+    {
+        // Skip to a special-selected cell
+        while( pReplaceCell && !pReplaceCell->IsSpecialSelected() )
+            pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
+    }
+    pSourceCell = pSourceTable->GetFirstCell();
+    if( !pReplaceCell || !pSourceCell )
+        goto REPLACE_DONE;
+    
+    iPrevReplaceRow = iReplaceRow;
+
+    do {
+        pReplaceData = pReplaceCell->GetData();
+        // Very, very unlikely to fail
+        if( !pReplaceData )
+            goto REPLACE_DONE;
+        
+        // Note that we must get the csid of the current table
+        //  because source cell is not part of doc yet
+        pSourceData = pSourceCell->GetData(GetWinCSID());
+        if( !pSourceData )
+        {
+            EDT_FreeTableCellData(pReplaceData);
+            goto REPLACE_DONE;
+        }
+
+        if( iReplaceRow != iPrevReplaceRow )
+        {
+            // We are on the next row
+            iPrevReplaceRow = iReplaceRow;
+            // If cell layout of source and destination matches,
+            //   we should get to the next source row at the same time
+            if( iSourceRow == iPrevSourceRow )
+            {
+                XP_TRACE(("CEditTableElement::ReplaceSpecialCells: More Source cells are left to paste."));
+                
+                //  We may flow cells into source, ignoring the source geometry
+                if( !bIgnoreSourceLayout )
+                {
+                    // Skip over cells to get to the next source row
+                    bAllSourceCellsPasted = FALSE;
+                    while( pSourceCell && iSourceRow == iPrevSourceRow )
+                        pSourceCell->GetNextCellInTable(&iSourceRow);
+                    if( !pSourceCell )
+                        goto REPLACE_DONE;
+                }
+                iPrevSourceRow = iSourceRow;
+            }
+        }
+        else if( iSourceRow != iPrevSourceRow )
+        {
+            // We ran out of source cells on the desired row, 
+            //  but we still have cells to replace
+            XP_TRACE(("CEditTableElement::ReplaceSpecialCells: Not enough SOURCE cells to paste in this row."));
+            iPrevSourceRow = iSourceRow;
+
+            if( !bIgnoreSourceLayout )
+            {
+                // Skip to the next replace row (skip replacing rest on this row)
+                while( pReplaceCell && iReplaceRow == iPrevReplaceRow )
+                    pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
+                // then find the next special selected cell
+                while( pReplaceCell && !pReplaceCell->IsSpecialSelected() )
+                    pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
+                if( !pReplaceCell )
+                    break;
+                // We are now at beginning of both a replace row and a source row                
+                iPrevReplaceRow = iReplaceRow;
+            }
+        }
+
+        // Must get these now before we move cells around
+        pNextSourceCell = pSourceCell->GetNextCellInTable(&iSourceRow);
+        pNextReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
+        // Skip to a special-selected cell
+        while( pNextReplaceCell && !pNextReplaceCell->IsSpecialSelected() )
+            pNextReplaceCell = pNextReplaceCell->GetNextCellInTable(&iReplaceRow);
+
+        // Move source cell to just after cell to be replaced
+        pSourceCell->Unlink();
+        pSourceCell->InsertAfter(pReplaceCell);
+        // then delete the replace cell
+        pReplaceCell->Unlink;
+        delete pReplaceCell;
+
+        // Use size data from the cell we replaced
+        //  to minimize table layout distortion
+        // (pReplaceData is the "source" data)
+        pReplaceData->mask = CF_WIDTH | CF_HEIGHT | CF_COLSPAN | CF_ROWSPAN;
+        edt_CopyTableCellData(pSourceData, pReplaceData);
+        pSourceCell->SetData(pSourceData);
+
+        EDT_FreeTableCellData(pSourceData);
+        EDT_FreeTableCellData(pReplaceData);
+
+        // We will place caret in the first cell replaced
+        if( !pCellForInsertPoint )
+            pCellForInsertPoint = pSourceCell;
+
+        pReplaceCell = pNextReplaceCell;
+        pSourceCell = pNextSourceCell;
+    }
+    while( pReplaceCell && pSourceCell );
+    
+    // Check if we still have cells in last source row,
+    if( bAllSourceCellsPasted && pSourceCell )
+        bAllSourceCellsPasted = FALSE;
+
+REPLACE_DONE:
+    if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
+        *ppCellForInsertPoint = pCellForInsertPoint;
+
+    // Note: Caller deletes what remains of the source table
+    GetEditBuffer()->ClearSpecialCellSelection();
+    return  bAllSourceCellsPasted;
 }
 
 // Code moved from CDeleteTableCommand::CDeleteTableCommand,
@@ -2840,17 +3123,25 @@ void CEditTableElement::Delete(XP_Bool bMoveInsertPoint)
 	if( bMoveInsertPoint )
         pBuffer->SetInsertPoint(replacePoint);
 	
+    // Be sure to unselect the table if it is selected
+    //  else Relayout blows up
+    if( pBuffer->GetSelectedTable() == this  )
+        pBuffer->SelectTable(FALSE);
+
     Unlink();
 	
     // Left over from older Undo system
     //m_replacePoint = pBuffer()->EphemeralToPersistent(replacePoint);
+
 	pBuffer->Relayout(pRefreshStart, 0, replacePoint.m_pElement);
+
     // Delete ourselves
     delete this;
 }
 
 // Note: no saving to pUndoContainer any more
-void CEditTableElement::DeleteRows(int32 Y, intn number)
+void CEditTableElement::DeleteRows(int32 Y, intn number,
+                                   CEditTableCellElement **ppCellForInsertPoint)
 {
     if ( number == 0 ) {
         return; /* A waste of time, but legal. */
@@ -2866,16 +3157,23 @@ void CEditTableElement::DeleteRows(int32 Y, intn number)
     if( iRowIndex == -1 )
         return;    
 
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+
     // Restrict number of rows we can delete
     intn iLastIndex = min(iRowIndex + number - 1, m_iRows-1);
+    CEditTableRowElement  *pFirstRow = NULL;
+    CEditTableRowElement *pLastRow = NULL;
 
     for( ; iRowIndex <= iLastIndex; iRowIndex++ )
     {
         Y = GetRowY(iRowIndex);
         CEditTableRowElement *pRow = GetRow(Y);
+        pLastRow = pRow;
 
         // Get first cell starting at or spanning the Y value (TRUE)
         CEditTableCellElement *pCell = GetFirstCellInRow(Y, TRUE);
+        pFirstRow = GetRow(Y);
+
         while( pCell )
         {
             // Get next cell before we delete the one we're at
@@ -2914,32 +3212,49 @@ void CEditTableElement::DeleteRows(int32 Y, intn number)
         //   relayout else our m_RowLayoutData and entire coordinate
         //   system will be altered
         if( pRow && pRow->GetChild() == NULL )
+        {
+            // Get the next row if available before deleting this one
+            pLastRow = (CEditTableRowElement*)pRow->GetNextSibling();
+#ifdef DEBUG           
+            if( pLastRow )
+                XP_ASSERT(pLastRow->IsTableRow());
+#endif            
             delete pRow;
+        }
     }
+    // Get first cell in the next row after deleted rows,
+    //  or row before if we deleted to the end of the table
+    if( pLastRow )
+         pCellForInsertPoint = pLastRow->GetFirstCell();
+    else if( pFirstRow )
+         pCellForInsertPoint = pLastRow->GetFirstCell();
+
+    if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
+        *ppCellForInsertPoint = pCellForInsertPoint;
 }
 
-void CEditTableElement::DeleteColumns(int32 X, intn number, CEditTableElement* pUndoContainer){
+void CEditTableElement::DeleteColumns(int32 X, intn number, CEditTableCellElement **ppCellForInsertPoint)
+{
     if ( number == 0 )
     {
         return; /* A waste of time, but legal. */
     }
     if ( number < 0 || X < 0 )
-     {
+    {
         /* Illegal. */
         XP_ASSERT(FALSE);
         return;
     }
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+
     CEditTableRowElement* pRow = GetFirstRow();
+    CEditTableRowElement *pFirstRow = pRow;
     
     while( pRow )
     {
-        CEditTableRowElement* pUndoRow = NULL;
-        if ( pUndoContainer )
-        {
-            pUndoRow = new CEditTableRowElement();
-            pUndoRow->InsertAsLastChild(pUndoContainer);
-        }
-        pRow->DeleteCells(X, number, pUndoRow);
+        // Delete cells from the row and save the first cell found for an insert point
+        pRow->DeleteCells(X, number, &pCellForInsertPoint);
+
         CEditTableRowElement *pNextRow = pRow->GetNextRow();
 
         // Check if ALL cells were deleted - delete row if all were
@@ -2948,6 +3263,8 @@ void CEditTableElement::DeleteColumns(int32 X, intn number, CEditTableElement* p
 
         pRow = pNextRow;
     }
+    if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
+        *ppCellForInsertPoint = pCellForInsertPoint;
 }
 
 // This is the old version - just finds row based on counting,
@@ -3962,14 +4279,13 @@ void CEditTableRowElement::FinishedLoad( CEditBuffer* pBuffer ){
         pChild->FinishedLoad(pBuffer);
     }
     if ( pCell ){
-//        pBuffer->SetFillNewCellWithSpace();
         pCell->FinishedLoad(pBuffer);
-//        pBuffer->ClearFillNewCellWithSpace();
         pCell = NULL;
     }
 }
 
-static void edt_InsertCells(intn number, XP_Bool bAfter, CEditTableCellElement *pExisting, CEditTableRowElement* pSource)
+static void edt_InsertCells(intn number, XP_Bool bAfter, CEditTableCellElement *pExisting, 
+                            CEditTableRowElement *pSourceRow, CEditTableCellElement **ppCellForInsertPoint)
 {
     XP_ASSERT(pExisting);
     if( !pExisting )
@@ -3982,10 +4298,10 @@ static void edt_InsertCells(intn number, XP_Bool bAfter, CEditTableCellElement *
     for ( intn col = 0; col < number; col++ )
     {
         CEditTableCellElement *pInsertCell = NULL;
-        if ( pSource )
+        if ( pSourceRow )
         {
             // Remove cells from source from left to right
-            pInsertCell = pSource->GetFirstCell();
+            pInsertCell = pSourceRow->GetFirstCell();
             if( pInsertCell )
             {
                 // We found a cell - unlink it from source row
@@ -4012,7 +4328,7 @@ static void edt_InsertCells(intn number, XP_Bool bAfter, CEditTableCellElement *
             if( bAfter )
             {
                 pInsertCell->InsertAfter(pExisting);
-                // To insert new cells when pSource is used
+                // To insert new cells when pSourceRow is used
                 //  and we want to insert from left to right,
                 //  set the "before" cell to the one just inserted
                 pExisting = pInsertCell;
@@ -4020,7 +4336,7 @@ static void edt_InsertCells(intn number, XP_Bool bAfter, CEditTableCellElement *
             else
             {
                 // Insert before the current column
-                // This will add pSource cells from left to right
+                // This will add pSourceRow cells from left to right
                 pInsertCell->InsertBefore(pExisting);
             }
             // Be sure cell has the empty text element in default paragraph container,
@@ -4029,12 +4345,16 @@ static void edt_InsertCells(intn number, XP_Bool bAfter, CEditTableCellElement *
             pInsertCell->FinishedLoad(pBuffer);
             pBuffer->ClearFillNewCellWithSpace();
         }
+        // Return the cell inserted if not already set
+        if( ppCellForInsertPoint &&  *ppCellForInsertPoint == NULL )
+            *ppCellForInsertPoint = pInsertCell;
     }
 }
 
 // Note: iNewX should either be == X (insert before current column)
 //       or == X + (insert column's width).
-void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditTableRowElement* pSource)
+void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditTableRowElement* pSourceRow,
+                                       CEditTableCellElement **ppCellForInsertPoint)
 {
     if ( number <= 0 || X < 0 )
     {
@@ -4044,6 +4364,8 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
     if( !pTable || !pTable->IsTable() )
         return;
 
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+
     int32 iInterCellSpace = pTable->GetCellSpacing();
     int32 iCellX;
     if ( pTable->GetColumnX(0) == iNewX )
@@ -4052,17 +4374,20 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
         for ( intn col = 0; col < number; col++ )
         {
             CEditTableCellElement* pInsertCell = NULL;
-            if ( pSource )
+            if ( pSourceRow )
             {
                 // Insert cells from the end
-                pInsertCell = (CEditTableCellElement*)pSource->GetLastChild();
-                pInsertCell->Unlink();
+                pInsertCell = (CEditTableCellElement*)pSourceRow->GetLastChild();
+                if( pInsertCell )
+                {
+                    pInsertCell->Unlink();
 
-                // If inserted cell spans > 1 column, then
-                //   we should insert fewer to keep table rectangular
-                intn iColSpan = pInsertCell->GetColSpan();
-                if( iColSpan > 1 )
-                    number -= iColSpan - 1;
+                    // If inserted cell spans > 1 column, then
+                    //   we should insert fewer to keep table rectangular
+                    intn iColSpan = pInsertCell->GetColSpan();
+                    if( iColSpan > 1 )
+                        number -= iColSpan - 1;
+                }
             }
             //Note: Create a new cell if no source or source row was incomplete
             if( !pInsertCell ) 
@@ -4076,6 +4401,10 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
             }
             if( pInsertCell )
             {
+                // Save first cell inserted
+                if( !pCellForInsertPoint )
+                    pCellForInsertPoint = pInsertCell;
+
                 pInsertCell->InsertAsFirstChild(this);
             }
         }
@@ -4097,14 +4426,14 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
             } else {
                 // Non-spanned cell found at current column,
                 //   so insert before (X==iNewX) or after that cell
-                edt_InsertCells(number, X < iNewX, pExisting, pSource);
+                edt_InsertCells(number, X < iNewX, pExisting, pSourceRow, &pCellForInsertPoint);
             }
         } 
         else if( (X != iNewX) && (pExisting = FindCell(iNewX/*+iInterCellSpace*/)) != NULL )
         {
             // No cell in current column, but we found cell at NEW insert column
             //  so put new cell(s) before this
-            edt_InsertCells(number, FALSE, pExisting, pSource);
+            edt_InsertCells(number, FALSE, pExisting, pSourceRow, &pCellForInsertPoint);
         }
         else
         {
@@ -4114,7 +4443,8 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
             // First cell in current row
             CEditTableCellElement *pFirstCell = GetFirstCell();
             if( !pFirstCell )
-                return;
+                goto INSERT_CELLS_DONE;
+
             // This should be same as pFirstCell, but we need to setup
             //  to find other cells in same geometric row
             CEditTableCellElement *pCell = pTable->GetFirstCellInRow(pFirstCell->GetY());
@@ -4135,7 +4465,7 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
                     if( X != iNewX && (iCellX+iCellWidth) > iNewX )
                     {
                         pCell->IncreaseColSpan(number);
-                        return;
+                        goto INSERT_CELLS_DONE;
                     }
                 }
                 // Find the closest cells in current row
@@ -4152,8 +4482,8 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
             if( pCellAfter )
             {
                 // FALSE = Force inserting before the cell found
-                edt_InsertCells(number, FALSE, pCellAfter, pSource);
-                return;
+                edt_InsertCells(number, FALSE, pCellAfter, pSourceRow, &pCellForInsertPoint);
+                goto INSERT_CELLS_DONE;
             }
             if( pCellBefore )
             {
@@ -4163,10 +4493,14 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
                 // TODO: USE pTable->m_ColumnLayoutData to figure out how
                 //       many cells to add to bring us to desired X
                 // TRUE = insert after the cell found
-                edt_InsertCells(number, TRUE, pCellBefore, pSource);
+                edt_InsertCells(number, TRUE, pCellBefore, pSourceRow, &pCellForInsertPoint);
             }
         }
     }
+INSERT_CELLS_DONE:
+    // Return the cell inserted if not already set
+    if( ppCellForInsertPoint &&  *ppCellForInsertPoint == NULL )
+        *ppCellForInsertPoint = pCellForInsertPoint;
 }
 
 intn CEditTableRowElement::AppendRow( CEditTableRowElement *pAppendRow, XP_Bool bDeleteRow )
@@ -4217,12 +4551,13 @@ void CEditTableRowElement::PadRowWithEmptyCells( intn iColumns )
         {
             intn iExtraColumns = iTotalColumns - iLastIndex - 1;
             if( iExtraColumns > 0 )
-                edt_InsertCells( iExtraColumns, TRUE, pLastCell, NULL );
+                edt_InsertCells( iExtraColumns, TRUE, pLastCell, NULL, NULL);
         }
     }
 }
 
-void CEditTableRowElement::DeleteCells(int32 X, intn number, CEditTableRowElement* pUndoContainer){
+void CEditTableRowElement::DeleteCells(int32 X, intn number, CEditTableCellElement **ppCellForInsertPoint)
+{
     if ( number == 0 )
     {
         return; /* A waste of time, but legal. */
@@ -4236,14 +4571,34 @@ void CEditTableRowElement::DeleteCells(int32 X, intn number, CEditTableRowElemen
     }
     CEditTableElement *pTable = (CEditTableElement*)GetParent();
     XP_ASSERT(pTable && pTable->IsTable() );
+
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+
     CEditTableCellElement* pCell = FindCell(X);
+    CEditTableCellElement* pPrevCell;
+
     if( pTable && pCell )
     {
+        // Save the first cell that we will NOT be deleting
+        if( X == pCell->GetX() )
+        {
+            pPrevCell = (CEditTableCellElement*)pCell->GetPreviousSibling();
+#ifdef DEBUG
+            if( pPrevCell )
+                XP_ASSERT(pPrevCell->IsTableCell());
+#endif
+        }
+        else
+            // Cell spans delete X, so we will only be reducing cellspan
+            pPrevCell = pCell;
+
         intn iRemaining = number;
+
+        CEditTableCellElement *pNextCell = NULL;
         while( iRemaining > 0 )
         {
             // Get next cell before we delete the one we're at
-            CEditTableCellElement *pNextCell = pCell->GetNextCellInLogicalRow();
+            pNextCell = pCell->GetNextCellInLogicalRow();
 
             int32 iCellX = pCell->GetX();
             int32 iColSpan = pCell->GetColSpan();
@@ -4261,14 +4616,7 @@ void CEditTableRowElement::DeleteCells(int32 X, intn number, CEditTableRowElemen
                     if( pCell->IsSelected() )
                         GetEditBuffer()->SelectCell(FALSE, NULL, pCell);
 
-                    if ( pUndoContainer )
-                    {
-                        pCell->Unlink();
-                        pCell->InsertAsFirstChild(pUndoContainer);
-                    }
-                    else {
-                        delete pCell;
-                    }
+                    delete pCell;
                     iRemaining -= iColSpan;
                 } 
                 else if( iColSpan > iRemaining )
@@ -4306,6 +4654,10 @@ void CEditTableRowElement::DeleteCells(int32 X, intn number, CEditTableRowElemen
 
             pCell = pNextCell;
         }
+        // Cell for insert point is the first non-deleted cell
+        //  (which should end up where the first deleted cell was)
+        //  or the previous cell if we deleted to the end of row
+        pCellForInsertPoint = pNextCell ? pNextCell : pPrevCell;
     } else {
         //TODO: WHAT TO DO IF WE DON'T FIND A CELL?
         // Only case this should fail is if number of cells in this row
@@ -4313,6 +4665,9 @@ void CEditTableRowElement::DeleteCells(int32 X, intn number, CEditTableRowElemen
         //   So doing nothing is probably OK
         XP_TRACE(("No cell in column at X = %d", X));
     }
+    // Return the cell inserted if not already set
+    if( ppCellForInsertPoint &&  *ppCellForInsertPoint == NULL )
+        *ppCellForInsertPoint = pCellForInsertPoint;
 }
 
 CEditTableCellElement* CEditTableRowElement::FindCell(int32 X, XP_Bool bIncludeRightEdge)
@@ -4582,6 +4937,7 @@ CEditTableCellElement::CEditTableCellElement()
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
+      m_bSpecialSelected(FALSE),
       m_bDeleted(FALSE)
 {
 }
@@ -4609,6 +4965,7 @@ CEditTableCellElement::CEditTableCellElement(XP_Bool bIsHeader)
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
+      m_bSpecialSelected(FALSE),
       m_bDeleted(FALSE)
 {
 }
@@ -4636,6 +4993,7 @@ CEditTableCellElement::CEditTableCellElement(CEditElement *pParent, PA_Tag *pTag
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
+      m_bSpecialSelected(FALSE),
       m_bDeleted(FALSE)
 {
     if( pTag ){
@@ -4672,6 +5030,7 @@ CEditTableCellElement::CEditTableCellElement(IStreamIn *pStreamIn, CEditBuffer *
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
+      m_bSpecialSelected(FALSE),
       m_bDeleted(FALSE)
 {
     // We need this so we can accurately determine number
@@ -5705,10 +6064,6 @@ void CEditTableCellElement::DeleteContents(XP_Bool bMarkAsDeleted)
         delete pChild;
         pChild = pNext;
     }
-    // Set state for new cell contents according to preference
-    // (we may put a space in the blank cell)
-    GetEditBuffer()->SetFillNewCellWithSpace();
-
     // Create a default paragraph container,
     //  this will set cell as its parent
     CEditContainerElement *pContainer = CEditContainerElement::NewDefaultContainer(this, ED_ALIGN_DEFAULT);
@@ -5716,8 +6071,6 @@ void CEditTableCellElement::DeleteContents(XP_Bool bMarkAsDeleted)
     // Initialize the cell contents
     if( pContainer )
         pContainer->FinishedLoad(GetEditBuffer());
-
-    GetEditBuffer()->ClearFillNewCellWithSpace();
 
     // Mark this cell as deleted so CEditBuffer::DeleteSelectedCells()
     //  can skip over this during multiple deletion passes
@@ -6449,83 +6802,99 @@ ElementIndex CEditContainerElement::GetPersistentCount(){
 
 void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer )
 {
+    if( !pBuffer )
+        pBuffer = GetEditBuffer();
+    if( !pBuffer )
+    {
+        XP_ASSERT(FALSE);
+        CEditElement::FinishedLoad(pBuffer);
+        return;
+    }
+
     XP_Bool bFillNewCellWithSpace = FALSE;
+
     if ( GetType() != P_PREFORMAT )
     {
         // Don't allow more than one space before non-text elements
         CEditElement* pNext;
-        CEditElement *pChild = GetChild();
         CEditElement* pParent = GetParent();
-        
+        CEditElement *pChild = GetChild();        
+
         // Detect the case of a single container with a single
         //  text element with just a space in a table cell
         // This is OK and is needed to show cell border in browser
         XP_Bool bIsTableCellWithOneSpace = FALSE;
 
-        if( pParent && pParent->IsTableCell() && 
-            GetNextSibling() == NULL &&
-            pChild && pChild->IsText() &&
-            (pChild->GetNextSibling() == NULL ||
-             pChild->GetNextSibling()->GetType() == P_UNKNOWN) )
+        if( pParent && pParent->IsTableCell() && GetNextSibling() == NULL )
         {
-            // We have a single container in a table cell with a single text child
-            CEditTextElement* pTextChild = pChild->Text();
-            char* pText = pTextChild->GetText();
+            if( !pChild )
             // If creating a new cell and preference is set,
             //  the empty cell should have a space,
             //  so delete this and a new one will be created below
-            bFillNewCellWithSpace = GetEditBuffer() ? GetEditBuffer()->FillNewCellWithSpace() : FALSE;
+            //bFillNewCellWithSpace = pBuffer ? pBuffer->FillNewCellWithSpace() : FALSE;
+            bFillNewCellWithSpace = pBuffer->FillNewCellWithSpace();
+                
+            if( pChild && pChild->IsText() &&
+                (pChild->GetNextSibling() == NULL ||
+                 pChild->GetNextSibling()->GetType() == P_UNKNOWN) )
+            {
+                // We have a single container in a table cell with a single text child
+                CEditTextElement* pTextChild = pChild->Text();
+                char* pText = pTextChild->GetText();
 
-            if( pTextChild->GetLen() == 0 && bFillNewCellWithSpace )
-            {
-                delete pChild;
-            }
-            else if( pTextChild->GetLen() == 1 && pText[0] == ' ')
-            {
-                // We have a single space, so don't do special trimming below
-                bIsTableCellWithOneSpace = TRUE;
-            }
-        }
-        if( ! bIsTableCellWithOneSpace )
-        {
-            for ( CEditElement* pChild = GetChild();
-                pChild;
-                pChild = pNext )
-            {
-                pNext = pChild->GetNextSibling();
-                if ( pChild->IsText() && ! (pNext && pNext->IsText()) )
+                bFillNewCellWithSpace = pBuffer->FillNewCellWithSpace();
+
+                if( pTextChild->GetLen() == 0 && bFillNewCellWithSpace )
                 {
-                    CEditTextElement* pTextChild = pChild->Text();
-                    char* pText = pTextChild->GetText();
-                    int size = pTextChild->GetLen();
-                    XP_Bool trimming = FALSE;
-                    //do not allow 1 byte of space to be a child
-                    if (size == 1 && GetType() == P_NSDT && pText[0] == ' ')
+                    delete pChild;
+                }
+                else if( pTextChild->GetLen() == 1 && pText[0] == ' ')
+                {
+                    // We have a single space, so don't do special trimming below
+                    bIsTableCellWithOneSpace = TRUE;
+                }
+            }
+            if( ! bIsTableCellWithOneSpace )
+            {
+                for ( CEditElement* pChild = GetChild();
+                    pChild;
+                    pChild = pNext )
+                {
+                    pNext = pChild->GetNextSibling();
+                    if ( pChild->IsText() && ! (pNext && pNext->IsText()) )
                     {
-                        trimming = TRUE;
-                        size--;
-                    }
-
-                    while ( size >0 && pText[size-1] == '\n' || 
-                           (size > 1 && pText[size-1] == ' ' && pText[size-2] == ' ') ) 
-                    {
-                        // More than one character of white space at the end of
-                        // a text element will get laid out as one character.
-                        trimming = TRUE;
-                        size--;
-                    }
-                    if ( trimming )
-                    {
-                        if (size <= 0 )
+                        CEditTextElement* pTextChild = pChild->Text();
+                        char* pText = pTextChild->GetText();
+                        int size = pTextChild->GetLen();
+                        XP_Bool trimming = FALSE;
+                        //do not allow 1 byte of space to be a child
+                        if (size == 1 && GetType() == P_NSDT && pText[0] == ' ')
                         {
-                            delete pChild;
+                            trimming = TRUE;
+                            size--;
                         }
-                        else 
+
+                        while ( size >0 && pText[size-1] == '\n' || 
+                               (size > 1 && pText[size-1] == ' ' && pText[size-2] == ' ') ) 
                         {
-                            char* pCopy = XP_STRDUP(pText);
-                            pCopy[size] = '\0';
-                            pTextChild->SetText(pCopy);
-                            XP_FREE(pCopy);
+                            // More than one character of white space at the end of
+                            // a text element will get laid out as one character.
+                            trimming = TRUE;
+                            size--;
+                        }
+                        if ( trimming )
+                        {
+                            if (size <= 0 )
+                            {
+                                delete pChild;
+                            }
+                            else 
+                            {
+                                char* pCopy = XP_STRDUP(pText);
+                                pCopy[size] = '\0';
+                                pTextChild->SetText(pCopy);
+                                XP_FREE(pCopy);
+                            }
                         }
                     }
                 }
@@ -6533,7 +6902,7 @@ void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer )
         }
     }
 
-    if ( GetChild() == NULL )
+    if( GetChild() == NULL )
     {
         // I need a dummy child -- might be a space for new cell
         CEditTextElement* pChild = new CEditTextElement(this, bFillNewCellWithSpace ? " " : 0);
@@ -9592,15 +9961,14 @@ EDT_ImageData* CEditImageElement::ParseParams( PA_Tag *pTag, int16 csid ){
         pData->bNoSave = TRUE;
         PA_FREE(buff);
     }
-//    pData->pUseMap = edt_FetchParamString( pTag, PARAM_USEMAP, csid ); now in pExtra
     pData->pSrc = edt_FetchParamString( pTag, PARAM_SRC, csid );
     pData->pLowSrc = edt_FetchParamString( pTag, PARAM_LOWSRC, csid );
     pData->pName = edt_FetchParamString( pTag, PARAM_NAME, csid );
     pData->pAlt = edt_FetchParamString( pTag, PARAM_ALT, csid );
 
+    // Fill in the ALT text string with the filename if none is supplied in HTML
     if( pData->pSrc && !pData->pAlt )
     {
-        // Copy string so we can mangle it
         char *pName = EDT_GetFilename(pData->pSrc, FALSE);
         if( pName )
         {
