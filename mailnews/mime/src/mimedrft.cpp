@@ -1965,7 +1965,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     //
     // Initialize a decoder if necessary.
     //
-    if (!newAttachment->encoding || mdd->options->decrypt_p)
+    if (!newAttachment->encoding)
       ;
     else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_BASE64))
       fn = &MimeB64DecoderInit;
