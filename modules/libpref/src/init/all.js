@@ -378,6 +378,9 @@ pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 pref("javascript.options.showInConsole",    true);
 
+// popups.policy values are in nsIPopupWindowManager.idl
+pref("privacy.popups.policy",               1);
+
 // advanced prefs
 pref("advanced.always_load_images",         true);
 pref("security.enable_java",                true);
