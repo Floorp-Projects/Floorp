@@ -92,8 +92,7 @@ public:
 
   nsMsgFactory(const nsCID &aClass,
                const char* aClassName,
-               const char* aProgID,
-               nsISupports*);
+               const char* aProgID);
 
   // nsIFactory methods   
   NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
@@ -109,8 +108,7 @@ protected:
 
 nsMsgFactory::nsMsgFactory(const nsCID &aClass,
                            const char* aClassName,
-                           const char* aProgID,
-                           nsISupports *compMgrSupports)
+                           const char* aProgID)
   : mClassID(aClass),
     mClassName(nsCRT::strdup(aClassName)),
     mProgID(nsCRT::strdup(aProgID))
@@ -139,14 +137,14 @@ nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
 
   // we support two interfaces....nsISupports and nsFactory.....
   if (aIID.Equals(::nsISupports::GetIID()))    
-    *aResult = (void *)(nsISupports*)this;   
+    *aResult = (void *)NS_STATIC_CAST(nsISupports*,this);
   else if (aIID.Equals(nsIFactory::GetIID()))   
-    *aResult = (void *)(nsIFactory*)this;   
+    *aResult = (void *)NS_STATIC_CAST(nsIFactory*,this);
 
   if (*aResult == NULL)
     return NS_NOINTERFACE;
 
-  AddRef(); // Increase reference count for caller   
+  NS_ADDREF_THIS(); // Increase reference count for caller   
   return NS_OK;   
 }   
 
@@ -154,10 +152,11 @@ NS_IMPL_ADDREF(nsMsgFactory)
 NS_IMPL_RELEASE(nsMsgFactory)
 
 nsresult
-nsMsgFactory::CreateInstance(nsISupports *aOuter,
+nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
                              const nsIID &aIID,
                              void **aResult)  
-{  
+{
+  nsresult rv = NS_ERROR_NO_INTERFACE;
 	if (aResult == NULL)  
 		return NS_ERROR_NULL_POINTER;  
 
@@ -170,99 +169,110 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
   if (mClassID.Equals(kCMsgFolderEventCID)) 
 	{
 		NS_NOTREACHED("hello? what happens here?");
-		return NS_OK;
+		rv = NS_OK;
 	}
 	else if (mClassID.Equals(kCMessengerBootstrapCID)) 
 	{
-		return NS_NewMessengerBootstrap(aIID, aResult);
+    rv = NS_NewMessengerBootstrap(aIID, aResult);
 	}
 	else if (mClassID.Equals(kCUrlListenerManagerCID))
 	{
 		nsUrlListenerManager * listener = nsnull;
 		listener = new nsUrlListenerManager();
 		if (listener == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		else
-			return listener->QueryInterface(aIID, aResult);
+			rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+      rv = listener->QueryInterface(aIID, aResult);
+      if (NS_FAILED(rv))
+        delete listener;
+    }
 	}
 	else if (mClassID.Equals(kCMsgMailSessionCID))
 	{
 		nsMsgMailSession * session = new nsMsgMailSession();
 		if (session == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		else
-			return session->QueryInterface(aIID,  aResult);		
+			rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+      rv = session->QueryInterface(aIID,  aResult);
+      if (NS_FAILED(rv))
+        delete session;
+    }
 	}
 	else if (mClassID.Equals(kCMsgAppCoreCID)) 
 	{
-		return NS_NewMsgAppCore(aIID, aResult);
+		rv = NS_NewMsgAppCore(aIID, aResult);
 	}
 
   else if (mClassID.Equals(kMsgAccountManagerCID))
   {
-    return NS_NewMsgAccountManager(aIID, aResult);
+    rv = NS_NewMsgAccountManager(aIID, aResult);
   }
   
   else if (mClassID.Equals(kMsgAccountCID))
   {
-    return NS_NewMsgAccount(aIID, aResult);
+    rv = NS_NewMsgAccount(aIID, aResult);
   }
   
   else if (mClassID.Equals(kMsgIdentityCID)) {
     nsMsgIdentity* identity = new nsMsgIdentity();
-    return identity->QueryInterface(aIID, aResult);
+    
+    if (identity == nsnull)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+      rv = identity->QueryInterface(aIID, aResult);
+      if (NS_FAILED(rv))
+        delete identity;
+    }
   }
 	else if (mClassID.Equals(kMailNewsFolderDataSourceCID)) 
 	{
-		nsresult rv;
 		nsMsgFolderDataSource * folderDataSource = new nsMsgFolderDataSource();
-		if (folderDataSource)
-			rv = folderDataSource->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-
-		if (NS_FAILED(rv) && folderDataSource)
-			delete folderDataSource;
-		return rv;
+		if (folderDataSource == nsnull)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+      rv = folderDataSource->QueryInterface(aIID, aResult);
+      if (NS_FAILED(rv))
+        delete folderDataSource;
+    }
 	}
 	else if (mClassID.Equals(kMailNewsMessageDataSourceCID)) 
 	{
-		nsresult rv;
 		nsMsgMessageDataSource * messageDataSource = new nsMsgMessageDataSource();
-		if (messageDataSource)
-			rv = messageDataSource->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-
-		if (NS_FAILED(rv) && messageDataSource)
-			delete messageDataSource;
-			
-		return rv;
+		if (messageDataSource == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+    else {
+      rv = messageDataSource->QueryInterface(aIID, aResult);
+      if (NS_FAILED(rv))
+        delete messageDataSource;
+    }
 	}
  	else if (mClassID.Equals(kCMessageViewDataSourceCID))
 	{
 		nsMessageViewDataSource * msgView = new nsMessageViewDataSource();
-		if (msgView)
-			return msgView->QueryInterface(aIID, aResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY;
+		if (msgView == nsnull)
+			rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+      rv =  msgView->QueryInterface(aIID, aResult);
+      if (NS_FAILED(rv))
+        delete msgView;
+    }
 	}
 
   // account manager RDF datasources
   else if (mClassID.Equals(kMsgAccountManagerDataSourceCID)) {
-    return NS_NewMsgAccountManagerDataSource(aIID, aResult);
+    rv = NS_NewMsgAccountManagerDataSource(aIID, aResult);
   }
   else if (mClassID.Equals(kMsgAccountDataSourceCID)) {
-    return NS_NewMsgAccountDataSource(aIID, aResult);
+    rv = NS_NewMsgAccountDataSource(aIID, aResult);
   }
   else if (mClassID.Equals(kMsgIdentityDataSourceCID)) {
-    return NS_NewMsgIdentityDataSource(aIID, aResult);
+    rv = NS_NewMsgIdentityDataSource(aIID, aResult);
   }
   else if (mClassID.Equals(kMsgServerDataSourceCID)) {
-    return NS_NewMsgServerDataSource(aIID, aResult);
+    rv = NS_NewMsgServerDataSource(aIID, aResult);
   }
-	
-	return NS_NOINTERFACE;  
+
+  return rv;
 }  
 
 nsresult
@@ -279,7 +289,7 @@ nsMsgFactory::LockFactory(PRBool aLock)
 ////////////////////////////////////////////////////////////////////////////////
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* /*aServMgr */,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -288,7 +298,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, aServMgr);
+  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID);
   if (aFactory)
     return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
                                        (void**)aFactory);
@@ -296,7 +306,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* /* aServMgr */)
 {
 	return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
