@@ -38,9 +38,7 @@
 #include "nsString.h"
 #include "nsCharTraits.h"
 
-#define nsAString_external nsAString_external_
-#define nsACString_external nsACString_external_
-
+#define NS_STRINGAPI_IMPL
 #include "nsStringAPI.h"
 #include "nsNativeCharsetUtils.h"
 
