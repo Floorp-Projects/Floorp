@@ -7,6 +7,7 @@ nsIContentViewer.h
 nsIContentViewerContainer.h
 nsIDocumentLoader.h
 nsIDocumentLoaderObserver.h
+nsIDocStreamLoaderFactory.h
 nsIDocumentViewer.h
 nsILinkHandler.h
 nsIThrobber.h
