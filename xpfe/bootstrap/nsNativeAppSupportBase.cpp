@@ -164,4 +164,20 @@ nsNativeAppSupportBase::QueryInterface( const nsIID &iid, void**p ) {
     return rv;
 }
 
+NS_IMETHODIMP
+nsNativeAppSupportBase::StartAddonFeatures()
+{
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+nsNativeAppSupportBase::StopAddonFeatures()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportBase::EnsureProfile(nsICmdLineService* args)
+{
+    return NS_OK;
+}

@@ -1259,6 +1259,11 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // From this point on, should be true
   appShell->SetQuitOnLastWindowClosing(PR_TRUE);	
 
+  nsCOMPtr<nsINativeAppSupport> nativeAppSupport;
+  rv = appShell->GetNativeAppSupport(getter_AddRefs( nativeAppSupport ));
+  if (NS_SUCCEEDED(rv))
+      nativeAppSupport->StartAddonFeatures();
+
 #ifdef MOZ_ENABLE_XREMOTE
   // if we have X remote support and we have our one window up and
   // running start listening for requests on the proxy window.

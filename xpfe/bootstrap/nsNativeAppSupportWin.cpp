@@ -72,6 +72,25 @@
 #define TURBO_DISABLE 5
 #define TURBO_EXIT 6
 
+/*************************************************************/
+/*                      MAPI SUPPORT                         */
+/*************************************************************/
+
+#define MAPI_DLL               "msgMapi.dll"
+#define MAPI_INIT_METHOD       "Init"
+#define MAPI_STARTUP_ARG       "/MAPIStartUp"
+
+typedef void (PASCAL InitMethod)();
+
+HINSTANCE mapiInstance = nsnull;
+
+void CheckMapiSupport()
+{
+    mapiInstance = LoadLibrary(MAPI_DLL);
+}
+
+/*************************************************************/
+
 static HWND hwndForDOMWindow( nsISupports * );
 
 static
@@ -324,6 +343,9 @@ public:
     NS_IMETHOD StartServerMode();
     NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
+    NS_IMETHOD StartAddonFeatures();
+    NS_IMETHOD StopAddonFeatures();
+    NS_IMETHOD EnsureProfile(nsICmdLineService* args);
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -349,7 +371,6 @@ private:
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
-    static nsresult EnsureProfile(nsICmdLineService* args);
     static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow( const char *args, PRBool newWindow = PR_TRUE );
     static nsresult ReParent( nsISupports *window, HWND newParent );
@@ -938,6 +959,7 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
             this->StartDDE();
             // Tell caller to spin message loop.
             *aResult = PR_TRUE;
+            CheckMapiSupport();
         }
     }
 
@@ -1009,6 +1031,8 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
 
     nsresult rv = NS_OK;
     *aResult = PR_TRUE;
+
+    StopAddonFeatures();
 
     Mutex ddeLock( MOZ_STARTUP_MUTEX_NAME );
 
@@ -1296,6 +1320,13 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
     if (NS_FAILED(rv)) return;
 
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+    if (NS_FAILED(rv)) return;
+
+    nsCOMPtr<nsINativeAppSupport> nativeApp;
+    rv = appShell->GetNativeAppSupport(getter_AddRefs( nativeApp ));
+    if (NS_FAILED(rv)) return;
+
     // first see if there is a url
     nsXPIDLCString arg;
     rv = args->GetURLToLoad(getter_Copies(arg));
@@ -1304,7 +1335,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching browser on url [%s]...\n", (const char*)arg );
 #endif
-      if (NS_SUCCEEDED(EnsureProfile(args)))
+      if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
         (void)OpenBrowserWindow( arg );
       return;
     }
@@ -1317,7 +1348,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching chrome url [%s]...\n", (const char*)arg );
 #endif
-      if (NS_SUCCEEDED(EnsureProfile(args)))
+      if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
         (void)OpenWindow( arg, "" );
       return;
     }
@@ -1325,7 +1356,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // try using the command line service to get the url
     nsCString taskURL;
     rv = GetStartupURL(args, taskURL);
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(EnsureProfile(args))) {
+    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->EnsureProfile(args))) {
       (void)OpenWindow(taskURL, "");
       return;
     }
@@ -1357,6 +1388,11 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
       return;
     }
 
+    // check wheather it is a MAPI request.  If yes, don't open any new
+    // windows and just return.
+    rv = args->GetCmdLineValue(MAPI_STARTUP_ARG, getter_Copies(arg));
+    if (NS_SUCCEEDED(rv) && (const char*)arg) return;
+
 
     // ok, no idea what the param is.
 #if MOZ_DEBUG_DDE
@@ -1368,7 +1404,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
     if (NS_FAILED(rv)) return;
 
-    rv = EnsureProfile(args);
+    rv = nativeApp->EnsureProfile(args);
     if (NS_FAILED(rv)) return;
 
     nsXPIDLString defaultArgs;
@@ -2045,3 +2081,34 @@ nsNativeAppSupportWin::GetStartupURL(nsICmdLineService *args, nsCString& taskURL
     return NS_OK;
 }
 
+/***************************************************************/
+/*                        MAPI SUPPORT                         */
+/***************************************************************/
+
+NS_IMETHODIMP
+nsNativeAppSupportWin::StartAddonFeatures()
+{
+    InitMethod *InitFunction = nsnull;
+    if (mapiInstance != nsnull)
+    {
+        InitFunction = (InitMethod *)GetProcAddress(mapiInstance, MAPI_INIT_METHOD);
+        if (InitFunction != nsnull)
+            InitFunction();
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportWin::StopAddonFeatures()
+{
+    if (mapiInstance != nsnull)
+    {
+        FreeLibrary(mapiInstance);
+        mapiInstance = nsnull;
+    }
+
+    return NS_OK;
+}
+
+/***************************************************************/
