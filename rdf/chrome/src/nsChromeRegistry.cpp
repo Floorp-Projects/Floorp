@@ -227,8 +227,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     }
 
     nsAutoString hostStr(host);
-    hostStr.ToLowerCase();
-
+    
     // Construct a chrome URL and use it to look up a resource.
     nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
 
@@ -236,8 +235,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     const char* file;
     aChromeURL->GetFile(&file);
     nsAutoString restOfURL(file);
-    restOfURL.ToLowerCase();
-
+    
 		// Find the second slash.
 		nsAutoString providerType("content");
 		nsAutoString path("");
