@@ -39,9 +39,6 @@ package org.mozilla.javascript;
  * This class allows the creation of nodes, and follows the Factory pattern.
  *
  * @see Node
- * @see NodeFactory
- * @see ASTFactory
-
  * @author Mike McCabe
  * @author Norris Boyd
  */

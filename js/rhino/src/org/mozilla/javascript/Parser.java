@@ -47,7 +47,6 @@ import java.io.IOException;
  * in the jsref package.
  *
  * @see TokenStream
- * @see NodeFactory
  *
  * @author Mike McCabe
  * @author Brendan Eich
@@ -84,9 +83,7 @@ class Parser {
     }
 
     /*
-     * Build a parse tree from the given TokenStream.  Creates a tree
-     * by making calls to the NodeFactory object that was used to
-     * construct the Parser.
+     * Build a parse tree from the given TokenStream.  
      *
      * @param ts the TokenStream to parse
      *
