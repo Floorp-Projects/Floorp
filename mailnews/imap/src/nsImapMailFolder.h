@@ -340,9 +340,6 @@ public:
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
 
-  NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                   nsIImapUrl * aUrl,
-                                   PRBool copySucceeded);
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore);

@@ -674,7 +674,7 @@ char *nsIMAPNamespaceList::GenerateFullFolderNameWithDefaultNamespace(const char
   }
   else
   {
-    // Could not find a namespace on the given host
+    // Could not find other users namespace on the given host
     NS_ASSERTION(PR_FALSE, "couldn't find namespace for given host");
   }
   return (fullFolderName);

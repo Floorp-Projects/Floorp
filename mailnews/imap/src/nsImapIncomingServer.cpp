@@ -672,19 +672,19 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
                                            nsIImapUrl * aImapUrl, 
                                            nsIImapProtocol ** aImapConnection)
 {
-	nsresult rv = NS_OK;
-	PRBool canRunUrlImmediately = PR_FALSE;
+  nsresult rv = NS_OK;
+  PRBool canRunUrlImmediately = PR_FALSE;
   PRBool canRunButBusy = PR_FALSE;
-	nsCOMPtr<nsIImapProtocol> connection;
+  nsCOMPtr<nsIImapProtocol> connection;
   nsCOMPtr<nsIImapProtocol> freeConnection;
   PRBool isBusy = PR_FALSE;
   PRBool isInboxConnection = PR_FALSE;
-	nsXPIDLCString redirectorType;
+  nsXPIDLCString redirectorType;
 
   PR_CEnterMonitor(this);
 
-	GetRedirectorType(getter_Copies(redirectorType));
-	PRBool redirectLogon = ((const char *) redirectorType && strlen((const char *) redirectorType) > 0);
+  GetRedirectorType(getter_Copies(redirectorType));
+  PRBool redirectLogon = ((const char *) redirectorType && strlen((const char *) redirectorType) > 0);
 
   PRInt32 maxConnections = 5; // default to be five
   rv = GetMaximumConnectionsNumber(&maxConnections);
@@ -726,6 +726,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     if (NS_FAILED(rv)) 
     {
         connection = nsnull;
+        rv = NS_OK; // don't want to return this error, just don't use the connection
         continue;
     }
     // if we haven't found a free connection, and this connection
@@ -769,6 +770,8 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
         userCancelled = PR_TRUE;
     }    
   }
+  nsImapState requiredState;
+  aImapUrl->GetRequiredImapState(&requiredState);
   // if we got here and we have a connection, then we should return it!
   if (canRunUrlImmediately && connection)
   {
@@ -783,7 +786,12 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   {
     rv = NS_BINDING_ABORTED;  // user cancelled
   }
-  else if (cnt < ((PRUint32)maxConnections) && aEventQueue)
+  // CanHandleUrl will pretend that some types of urls require a selected state url
+  // (e.g., a folder delete or msg append) but we shouldn't create new connections
+  // for these types of urls if we have a free connection. So we check the actual
+  // required state here.
+  else if (cnt < ((PRUint32)maxConnections) && aEventQueue 
+      && (!freeConnection || requiredState == nsIImapUrl::nsImapSelectedState))
   {	
     rv = CreateProtocolInstance(aEventQueue, aImapConnection);
   }
@@ -2486,41 +2494,41 @@ NS_IMETHODIMP nsImapIncomingServer::RemoveChannelFromUrl(nsIMsgMailNewsUrl *aUrl
 
 NS_IMETHODIMP nsImapIncomingServer::CreatePRUnicharStringFromUTF7(const char * aSourceString, PRUnichar **aUnicodeStr)
 {
-	return CreateUnicodeStringFromUtf7(aSourceString, aUnicodeStr);
+  return CreateUnicodeStringFromUtf7(aSourceString, aUnicodeStr);
 }
 
 nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 {
-
-	nsresult rv;
-	nsCAutoString contractID(NS_MSGLOGONREDIRECTORSERVICE_CONTRACTID);
-	nsXPIDLCString redirectorType;
-
-	GetRedirectorType(getter_Copies(redirectorType));
-	contractID.Append('/');
-	contractID.Append(redirectorType);
-
-	m_logonRedirector = do_GetService(contractID.get(), &rv);
-	if (m_logonRedirector && NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr <nsIMsgLogonRedirectionRequester> logonRedirectorRequester;
-		rv = QueryInterface(NS_GET_IID(nsIMsgLogonRedirectionRequester), getter_AddRefs(logonRedirectorRequester));
-		if (NS_SUCCEEDED(rv))
-		{
-			nsXPIDLCString password;
-			nsXPIDLCString userName;
+  
+  nsresult rv;
+  nsCAutoString contractID(NS_MSGLOGONREDIRECTORSERVICE_CONTRACTID);
+  nsXPIDLCString redirectorType;
+  
+  GetRedirectorType(getter_Copies(redirectorType));
+  contractID.Append('/');
+  contractID.Append(redirectorType);
+  
+  m_logonRedirector = do_GetService(contractID.get(), &rv);
+  if (m_logonRedirector && NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr <nsIMsgLogonRedirectionRequester> logonRedirectorRequester;
+    rv = QueryInterface(NS_GET_IID(nsIMsgLogonRedirectionRequester), getter_AddRefs(logonRedirectorRequester));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsXPIDLCString password;
+      nsXPIDLCString userName;
       PRBool requiresPassword = PR_TRUE;
-
+      
       GetRealUsername(getter_Copies(userName));
       m_logonRedirector->RequiresPassword(userName, &requiresPassword);
       
       if (requiresPassword)
       {
         GetPassword(getter_Copies(password));
-
-			  if (password.IsEmpty())
-				  PromptForPassword(getter_Copies(password), aMsgWindow);
-
+        
+        if (password.IsEmpty())
+          PromptForPassword(getter_Copies(password), aMsgWindow);
+        
         if (password.IsEmpty())  // if still empty then the user canceld out of the password dialog
         {
           // be sure to clear the waiting for connection info flag because we aren't waiting
@@ -2533,90 +2541,85 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
       {
         SetUserAuthenticated(PR_TRUE);  // we are already authenicated
       }
-
+      
       nsCOMPtr<nsIPrompt> dialogPrompter;
       if (aMsgWindow)
         aMsgWindow->GetPromptDialog(getter_AddRefs(dialogPrompter));
-  		rv = m_logonRedirector->Logon(userName, password, redirectorType, dialogPrompter, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
+      rv = m_logonRedirector->Logon(userName, password, redirectorType, dialogPrompter, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
       if (NS_FAILED(rv)) return OnLogonRedirectionError(nsnull, PR_TRUE);
-		}
-	}
-
-	return rv;
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pErrMsg, PRBool badPassword)
 {
-	nsresult rv = NS_OK;
-
-	nsXPIDLString progressString;
-	GetImapStringByID(IMAP_REDIRECT_LOGIN_FAILED, getter_Copies(progressString));
-	
+  nsresult rv = NS_OK;
+  
+  nsXPIDLString progressString;
+  GetImapStringByID(IMAP_REDIRECT_LOGIN_FAILED, getter_Copies(progressString));
+  
   nsCOMPtr<nsIMsgWindow> msgWindow;
   PRUint32 urlQueueCnt = 0;
-	// pull the url out of the queue so we can get the msg window, and try to rerun it.
-	m_urlQueue->Count(&urlQueueCnt);
-
-	if (urlQueueCnt > 0)
-	{
-		nsCOMPtr<nsISupports> supportCtxt(getter_AddRefs(m_urlQueue->ElementAt(0)));
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl(do_QueryInterface(supportCtxt, &rv));
+  // pull the url out of the queue so we can get the msg window, and try to rerun it.
+  m_urlQueue->Count(&urlQueueCnt);
+  
+  if (urlQueueCnt > 0)
+  {
+    nsCOMPtr<nsISupports> supportCtxt(getter_AddRefs(m_urlQueue->ElementAt(0)));
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl(do_QueryInterface(supportCtxt, &rv));
     if (mailnewsUrl)
       mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
   }
-
-  FEAlert(progressString, msgWindow);
-
-
-	if (m_logonRedirector)
-	{
-		nsXPIDLCString userName;
-
-		GetRealUsername(getter_Copies(userName));
-		m_logonRedirector->Logoff(userName);
-	}
-
-	if (badPassword)
-		SetPassword(nsnull);
-
-
-	if (badPassword && ++m_redirectedLogonRetries <= 3)
-	{
-		// this will force a reprompt for the password.
-		// ### DMB TODO display error message?
-		if (urlQueueCnt > 0)
-		{
-			nsCOMPtr<nsISupports>
-		  aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
-			nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
-
-		  nsCOMPtr <nsIImapProtocol> imapProtocol;
-		  nsCOMPtr <nsIEventQueue> aEventQueue;
-		  // Get current thread envent queue
-		  nsCOMPtr<nsIEventQueueService> pEventQService = 
-		           do_GetService(kEventQueueServiceCID, &rv); 
-		  if (NS_SUCCEEDED(rv) && pEventQService)
-			  pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-												getter_AddRefs(aEventQueue));
-
-			if (aImapUrl)
-			{       
-				nsCOMPtr <nsIImapProtocol>  protocolInstance ;
-				m_waitingForConnectionInfo = PR_FALSE;
-				rv = CreateImapConnection(aEventQueue, aImapUrl,
-												   getter_AddRefs(protocolInstance));
-			}
-		}
-	}
-	else
-	{
-		m_redirectedLogonRetries = 0; // reset so next attempt will start at 0.
-		if (urlQueueCnt > 0)
-		{
-			m_urlQueue->RemoveElementAt(0);
-			m_urlConsumers.RemoveElementAt(0);
-		}
-	}
+  
+  // don't put up alert if no msg window - it means we're biffing.
+  if (msgWindow)
+    FEAlert(progressString, msgWindow);
+  
+  
+  
+  if (badPassword)
+    SetPassword(nsnull);
+  
+  
+  if (badPassword && ++m_redirectedLogonRetries <= 3)
+  {
+    // this will force a reprompt for the password.
+    // ### DMB TODO display error message?
+    if (urlQueueCnt > 0)
+    {
+      nsCOMPtr<nsISupports>
+        aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
+      nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
+      
+      nsCOMPtr <nsIImapProtocol> imapProtocol;
+      nsCOMPtr <nsIEventQueue> aEventQueue;
+      // Get current thread envent queue
+      nsCOMPtr<nsIEventQueueService> pEventQService = 
+        do_GetService(kEventQueueServiceCID, &rv); 
+      if (NS_SUCCEEDED(rv) && pEventQService)
+        pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+        getter_AddRefs(aEventQueue));
+      
+      if (aImapUrl)
+      {       
+        nsCOMPtr <nsIImapProtocol>  protocolInstance ;
+        m_waitingForConnectionInfo = PR_FALSE;
+        rv = CreateImapConnection(aEventQueue, aImapUrl,
+          getter_AddRefs(protocolInstance));
+      }
+    }
+  }
+  else
+  {
+    m_redirectedLogonRetries = 0; // reset so next attempt will start at 0.
+    if (urlQueueCnt > 0)
+    {
+      m_urlQueue->RemoveElementAt(0);
+      m_urlConsumers.RemoveElementAt(0);
+    }
+  }
   
   return rv;
 }
@@ -2630,56 +2633,56 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionProgress(nsMsgLogonRedirec
   /* reply with logon redirection data. */
 NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHost, unsigned short pPort, const char *pCookieData,  unsigned short pCookieSize)
 {
-	PRBool urlRun = PR_FALSE;
-	nsresult rv;
-	nsCOMPtr <nsIImapProtocol> imapProtocol;
-	nsCOMPtr <nsIEventQueue> aEventQueue;
-	nsCAutoString cookie(pCookieData, pCookieSize);
-    // Get current thread envent queue
-	nsCOMPtr<nsIEventQueueService> pEventQService = 
-	         do_GetService(kEventQueueServiceCID, &rv); 
+  PRBool urlRun = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr <nsIImapProtocol> imapProtocol;
+  nsCOMPtr <nsIEventQueue> aEventQueue;
+  nsCAutoString cookie(pCookieData, pCookieSize);
+  // Get current thread envent queue
+  nsCOMPtr<nsIEventQueueService> pEventQService = 
+    do_GetService(kEventQueueServiceCID, &rv); 
   if (NS_SUCCEEDED(rv) && pEventQService)
-        pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                            getter_AddRefs(aEventQueue));
+    pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+    getter_AddRefs(aEventQueue));
   // we used to logoff the external requestor...we no longer need to do
   // that.
-
-	m_redirectedLogonRetries = 0; // we got through, so reset this counter.
-
+  
+  m_redirectedLogonRetries = 0; // we got through, so reset this counter.
+  
   PRUint32 cnt = 0;
-
+  
   m_urlQueue->Count(&cnt);
   if (cnt > 0)
   {
     nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
     nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
-
+    
     if (aImapUrl)
     {
       nsISupports *aConsumer = (nsISupports*)m_urlConsumers.ElementAt(0);
       NS_IF_ADDREF(aConsumer);
       
-			nsCOMPtr <nsIImapProtocol>  protocolInstance ;
-			rv = CreateImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
-			m_waitingForConnectionInfo = PR_FALSE;
-			if (NS_SUCCEEDED(rv) && protocolInstance)
+      nsCOMPtr <nsIImapProtocol>  protocolInstance ;
+      rv = CreateImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
+      m_waitingForConnectionInfo = PR_FALSE;
+      if (NS_SUCCEEDED(rv) && protocolInstance)
       {
-				protocolInstance->OverrideConnectionInfo(pHost, pPort, cookie.get());
-				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-				if (NS_SUCCEEDED(rv) && url)
-				{
-					rv = protocolInstance->LoadUrl(url, aConsumer);
-					urlRun = PR_TRUE;
-				}
+        protocolInstance->OverrideConnectionInfo(pHost, pPort, cookie.get());
+        nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
+        if (NS_SUCCEEDED(rv) && url)
+        {
+          rv = protocolInstance->LoadUrl(url, aConsumer);
+          urlRun = PR_TRUE;
+        }
         
         m_urlQueue->RemoveElementAt(0);
         m_urlConsumers.RemoveElementAt(0);
       }
-        
+      
       NS_IF_RELEASE(aConsumer);
     }    
   }
-
+  
   return rv;
 }
 

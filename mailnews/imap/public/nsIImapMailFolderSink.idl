@@ -67,7 +67,7 @@ interface nsIImapMailFolderSink : nsISupports {
   attribute boolean folderNeedsACLListed;
   attribute boolean folderNeedsSubscribing;
   attribute boolean folderNeedsAdded;
-	attribute boolean folderVerifiedOnline;
+  attribute boolean folderVerifiedOnline;
   string GetOnlineDelimiter();
   // Tell mail master about the newly selected mailbox
   void UpdateImapMailboxInfo(in nsIImapProtocol aProtocol,
@@ -86,16 +86,17 @@ interface nsIImapMailFolderSink : nsISupports {
   void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
   
   void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState);
-	void StartMessage(in nsIMsgMailNewsUrl aUrl);
-	void EndMessage(in nsIMsgMailNewsUrl aUrl, in nsMsgKey uidOfMessage);
+  void StartMessage(in nsIMsgMailNewsUrl aUrl);
+  void EndMessage(in nsIMsgMailNewsUrl aUrl, in nsMsgKey uidOfMessage);
 
-	void NotifySearchHit(in nsIMsgMailNewsUrl aUrl, in string hitLine);
+  void NotifySearchHit(in nsIMsgMailNewsUrl aUrl, in string hitLine);
 
-	// these two hokey methods are needed so we can try to make sure the imap url is released
-	// on the UI thread. This in turn ensures that the objects the imap url holds on to
-	// are only released / destroyed from the UI thread.
-	void prepareToReleaseUrl(in nsIMsgMailNewsUrl aUrl);
-	void releaseUrl();
+  void copyNextStreamMessage(in boolean copySucceeded);
+  // these two hokey methods are needed so we can try to make sure the imap url is released
+  // on the UI thread. This in turn ensures that the objects the imap url holds on to
+  // are only released / destroyed from the UI thread.
+  void prepareToReleaseUrl(in nsIMsgMailNewsUrl aUrl);
+  void releaseUrl();
   void closeMockChannel(in nsIImapMockChannel aChannel);
   void setUrlState(in nsIImapProtocol aProtocol, in nsIMsgMailNewsUrl aUrl, in boolean isRunning, in nsresult status);
   void releaseUrlCacheEntry(in nsIMsgMailNewsUrl aUrl);

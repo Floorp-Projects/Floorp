@@ -4116,7 +4116,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   m_downloadingFolderForOfflineUse = PR_FALSE;
   SetNotifyDownloadedLines(PR_FALSE);
   nsCOMPtr<nsIMsgMailSession> session = 
-           do_GetService(kMsgMailSessionCID, &rv); 
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
   nsCOMPtr <nsIMsgCopyServiceListener> listener;
   if (aUrl)
   {
@@ -4207,6 +4207,12 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             ClearCopyState(aExitCode);
             sendEndCopyNotification = PR_TRUE;
           }
+          // we're the dest folder of a move/copy - if we're not open in the ui,
+          // then we should clear our nsMsgDatabase pointer. Otherwise, the db would
+          // be open until the user selected it and then selected another folder.
+          // but don't do this for the trash or inbox - we'll leave them open
+          if (!folderOpen && ! (mFlags & (MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_INBOX)))
+            SetMsgDatabase(nsnull);
           break;
         case nsIImapUrl::nsImapSubtractMsgFlags:
           {
@@ -5376,52 +5382,38 @@ nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                        nsIImapUrl * aUrl,
-                                        PRBool copySucceeded)
+nsImapMailFolder::CopyNextStreamMessage(PRBool copySucceeded)
 {
     //if copy has failed it could be either user interrupted it or for some other reason
     //don't do any subsequent copies or delete src messages if it is move
 
-    if (!copySucceeded)
+    if (!copySucceeded || !m_copyState)
       return NS_OK;
 
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!aUrl) 
-      return rv;
-    nsCOMPtr<nsISupports> copyState;
-    aUrl->GetCopyState(getter_AddRefs(copyState));
-    if (!copyState) 
-      return rv;
+    nsresult rv;
 
-    nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState,
-                                                                    &rv);
-    if (NS_FAILED(rv)) 
-      return rv;
-
-    if (!mailCopyState->m_streamCopy) 
+    if (!m_copyState->m_streamCopy) 
       return NS_OK;
-
-    if (mailCopyState->m_curIndex < mailCopyState->m_totalCount)
+    if (m_copyState->m_curIndex < m_copyState->m_totalCount)
     {
        nsCOMPtr<nsISupports> aSupport =
-            getter_AddRefs(mailCopyState->m_messages->ElementAt
-                           (mailCopyState->m_curIndex));
-        mailCopyState->m_message = do_QueryInterface(aSupport,
+            getter_AddRefs(m_copyState->m_messages->ElementAt
+                           (m_copyState->m_curIndex));
+        m_copyState->m_message = do_QueryInterface(aSupport,
                                                      &rv);
         if (NS_SUCCEEDED(rv))
         {
-            rv = CopyStreamMessage(mailCopyState->m_message,
-                                   this, mailCopyState->m_msgWindow, mailCopyState->m_isMove);
+            rv = CopyStreamMessage(m_copyState->m_message,
+                                   this, m_copyState->m_msgWindow, m_copyState->m_isMove);
         }
     }
-    else if (mailCopyState->m_isMove)  
+    else if (m_copyState->m_isMove)  
     {
         nsCOMPtr<nsIMsgFolder> srcFolder =
-            do_QueryInterface(mailCopyState->m_srcSupport, &rv);
+            do_QueryInterface(m_copyState->m_srcSupport, &rv);
         if (NS_SUCCEEDED(rv) && srcFolder)
         {
-          srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
+          srcFolder->DeleteMessages(m_copyState->m_messages, nsnull,
             PR_TRUE, PR_TRUE, nsnull, PR_FALSE);
           // we want to send this notification after the source messages have
           // been deleted.

@@ -124,10 +124,6 @@ public:
 														 msg_line_info* aInfo);
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
-    NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocl,
-                                     nsIImapUrl * aUrl,
-                                     PRBool copySucceeded);
-
     nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
 };
 
@@ -280,17 +276,6 @@ struct ProcessTunnelProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     virtual ~ProcessTunnelProxyEvent();
     NS_IMETHOD HandleEvent();
     TunnelInfo m_tunnelInfo;
-};
-
-struct CopyNextStreamMessageProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    CopyNextStreamMessageProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                    nsIImapUrl * aUrl,
-                                    PRBool copySucceeded);
-    virtual ~CopyNextStreamMessageProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsCOMPtr<nsIImapUrl> m_Url;
-    PRBool m_copySucceeded;
 };
 
 #endif

@@ -516,37 +516,6 @@ nsImapMiscellaneousSinkProxy::ProcessTunnel(nsIImapProtocol* aProtocol,
     return res;
 }
 
-NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                                    nsIImapUrl * aUrl, 
-                                                    PRBool copySucceeded )
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aUrl, "Oops... null aUrl");
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        CopyNextStreamMessageProxyEvent *ev =
-            new CopyNextStreamMessageProxyEvent(this, aUrl, copySucceeded);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->CopyNextStreamMessage(aProtocol,
-                                                                 aUrl,
-                                                                 copySucceeded);
-    }
-    return res;
-}
-
-
 
 ///
 
@@ -930,30 +899,5 @@ ProcessTunnelProxyEvent::HandleEvent()
   if (m_notifyCompletion)
       m_proxy->m_protocol->NotifyFEEventCompletion();
   return res;
-}
-
-CopyNextStreamMessageProxyEvent::CopyNextStreamMessageProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, nsIImapUrl * aUrl, PRBool copySucceeded ) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-  NS_ASSERTION (aUrl, "Oops... a null url");
-	// potential ownership/lifetime problem here, but incoming server
-	// shouldn't be deleted while urls are running.
-  m_Url = aUrl; 
-  m_copySucceeded = copySucceeded;
-}
-
-CopyNextStreamMessageProxyEvent::~CopyNextStreamMessageProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-CopyNextStreamMessageProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->CopyNextStreamMessage(
-        m_proxy->m_protocol, m_Url, m_copySucceeded);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
 }
 

@@ -80,9 +80,6 @@ public:
 														 msg_line_info* aInfo) = 0;
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
 													 TunnelInfo *aInfo) = 0;
-  NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                   nsIImapUrl * aUrl,
-                                   PRBool copySucceeded) = 0;
 };
 
 

@@ -999,7 +999,6 @@ nsImapProtocol::ImapThreadMainLoop()
     // in the case of the server dropping the connection, this call is reputed
     // to make it so that we process the :OnStop notification.
       m_eventQueue->ProcessPendingEvents();
-  //    m_sinkEventQueue->ProcessPendingEvents();
 
     if (m_nextUrlReadyToRun && m_runningUrl)
     {
@@ -1211,11 +1210,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     }
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
-  if (GetConnectionStatus() >= 0 && m_imapMiscellaneousSink && m_runningUrl)
-  {
-      m_imapMiscellaneousSink->CopyNextStreamMessage(this, m_runningUrl, GetServerStateParser().LastCommandSuccessful());
-      WaitForFEEventCompletion();
-  }
 
 #ifdef DEBUG_bienvenu1
     mailnewsurl->GetSpec(getter_Copies(urlSpec));
@@ -1225,11 +1219,19 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // BEFORE calling ReleaseUrlState
   mailnewsurl = nsnull;
 
+  // save the imap folder sink since we need it to do the CopyNextStreamMessage
+  nsCOMPtr<nsIImapMailFolderSink> imapMailFolderSink = m_imapMailFolderSink;
   // release the url as we are done with it...
   ReleaseUrlState();
   ResetProgressInfo();
   m_urlInProgress = PR_FALSE;
   ClearFlag(IMAP_CLEAN_UP_URL_STATE);
+
+  if (GetConnectionStatus() >= 0 && imapMailFolderSink)
+  {
+      imapMailFolderSink->CopyNextStreamMessage(GetServerStateParser().LastCommandSuccessful());
+      imapMailFolderSink = nsnull;
+  }
 
   // now try queued urls, now that we've released this connection.
   if (m_imapServerSink)
@@ -1321,7 +1323,7 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIRequest *request, nsISupports *c
 NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
 
-  PRBool killThread = PR_FALSE;
+  PRBool killThread = PR_TRUE; // we always want to kill the thread, I believe.
 
   if (NS_FAILED(aStatus)) 
   {
@@ -7203,6 +7205,11 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
 
   NS_ENSURE_ARG(m_url); // kick out if m_url is null for some reason. 
 
+#ifdef DEBUG_bienvenu
+      nsXPIDLCString entryKey;
+      entry->GetKey(getter_Copies(entryKey));
+      printf("%s with access %ld status %ld\n", entryKey.get(), access, status);
+#endif
   if (NS_SUCCEEDED(status)) 
   {
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
@@ -7210,11 +7217,6 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
 
     if (mTryingToReadPart && access & nsICache::ACCESS_WRITE && !(access & nsICache::ACCESS_READ))
     {
-#ifdef DEBUG_bienvenu
-      nsXPIDLCString entryKey;
-      entry->GetKey(getter_Copies(entryKey));
-      printf("dooming %s with access %ld\n", entryKey.get(), access);
-#endif
       entry->Doom();
       // whoops, we're looking for a part, but didn't find it. Fall back to fetching the whole msg.
       nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
@@ -7231,19 +7233,18 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
       nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(kStreamListenerTeeCID, &rv);
       if (NS_SUCCEEDED(rv))
       {
-
-      nsCOMPtr<nsITransport> transport;
-      rv = entry->GetTransport(getter_AddRefs(transport));
+        nsCOMPtr<nsITransport> transport;
+        rv = entry->GetTransport(getter_AddRefs(transport));
         if (NS_SUCCEEDED(rv))
         {
-      nsCOMPtr<nsIOutputStream> out;
+          nsCOMPtr<nsIOutputStream> out;
           // this will fail with the mem cache turned off, so we need to fall through
           // to ReadFromImapConnection instead of aborting with NS_ENSURE_SUCCESS(rv,rv)
-      rv = transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
+          rv = transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
           if (NS_SUCCEEDED(rv))
           {
-      rv = tee->Init(m_channelListener, out);
-      m_channelListener = do_QueryInterface(tee);
+            rv = tee->Init(m_channelListener, out);
+            m_channelListener = do_QueryInterface(tee);
           }
         }
       }
