@@ -17,6 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ *
+ * Original Authors: Chris Waterson & David Hyatt
+ *
  * Contributor(s): 
  */
 
