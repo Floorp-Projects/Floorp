@@ -273,6 +273,112 @@ ProfileCoreGetProfileList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 
+//
+// Native method StartCommunicator
+//
+PR_STATIC_CALLBACK(JSBool)
+ProfileCoreStartCommunicator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->StartCommunicator(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function StartCommunicator requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetCurrentProfile
+//
+PR_STATIC_CALLBACK(JSBool)
+ProfileCoreGetCurrentProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetCurrentProfile(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetCurrentProfile requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method MigrateProfile
+//
+PR_STATIC_CALLBACK(JSBool)
+ProfileCoreMigrateProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->MigrateProfile(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function MigrateProfile requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for ProfileCore
@@ -309,6 +415,9 @@ static JSFunctionSpec ProfileCoreMethods[] =
   {"RenameProfile",          ProfileCoreRenameProfile,     2},
   {"DeleteProfile",          ProfileCoreDeleteProfile,     1},
   {"GetProfileList",          ProfileCoreGetProfileList,     0},
+  {"StartCommunicator",          ProfileCoreStartCommunicator,     1},
+  {"GetCurrentProfile",          ProfileCoreGetCurrentProfile,     0},
+  {"MigrateProfile",          ProfileCoreMigrateProfile,     1},
   {0}
 };
 

@@ -204,3 +204,41 @@ NS_IMETHODIMP nsProfileCore::GetProfileList(nsString& profileList)
     return NS_OK;
 }
 
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsProfileCore::StartCommunicator(const nsString& profileName)
+// Start loading of a new Profile panel.
+//----------------------------------------------------------------------------------------
+{
+	printf ("Entered Start AppRunner Routine\n");
+
+	printf ("Run AppRunner with profile -> %s <-\n", profileName.ToNewCString());
+
+	mProfile->StartCommunicator(profileName.ToNewCString());
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsProfileCore::GetCurrentProfile(nsString& currProfile)
+// Start loading of a new Profile panel.
+//----------------------------------------------------------------------------------------
+{
+	printf ("Entered GetCurrentProfile Routine\n");
+
+	mProfile->GetCurrProfile(currProfile);
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsProfileCore::MigrateProfile(const nsString& profileName)
+// Start loading of a new Profile panel.
+//----------------------------------------------------------------------------------------
+{
+#ifdef XP_PC
+	printf ("Entered Migrate Profile Routine\n");
+
+	printf ("Requesting migration of profile -> %s <-\n", profileName.ToNewCString());
+
+	mProfile->MigrateProfile(profileName.ToNewCString());
+#endif
+    return NS_OK;
+}

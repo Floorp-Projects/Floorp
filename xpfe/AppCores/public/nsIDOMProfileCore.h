@@ -41,6 +41,12 @@ public:
   NS_IMETHOD    DeleteProfile(const nsString& aProfileName)=0;
 
   NS_IMETHOD    GetProfileList(nsString& aReturn)=0;
+
+  NS_IMETHOD    StartCommunicator(const nsString& aProfileName)=0;
+
+  NS_IMETHOD    GetCurrentProfile(nsString& aReturn)=0;
+
+  NS_IMETHOD    MigrateProfile(const nsString& aProfileName)=0;
 };
 
 
@@ -49,6 +55,9 @@ public:
   NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName);  \
   NS_IMETHOD    DeleteProfile(const nsString& aProfileName);  \
   NS_IMETHOD    GetProfileList(nsString& aReturn);  \
+  NS_IMETHOD    StartCommunicator(const nsString& aProfileName);  \
+  NS_IMETHOD    GetCurrentProfile(nsString& aReturn);  \
+  NS_IMETHOD    MigrateProfile(const nsString& aProfileName);  \
 
 
 
@@ -57,6 +66,9 @@ public:
   NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName) { return _to RenameProfile(aOldName, aNewName); }  \
   NS_IMETHOD    DeleteProfile(const nsString& aProfileName) { return _to DeleteProfile(aProfileName); }  \
   NS_IMETHOD    GetProfileList(nsString& aReturn) { return _to GetProfileList(aReturn); }  \
+  NS_IMETHOD    StartCommunicator(const nsString& aProfileName) { return _to StartCommunicator(aProfileName); }  \
+  NS_IMETHOD    GetCurrentProfile(nsString& aReturn) { return _to GetCurrentProfile(aReturn); }  \
+  NS_IMETHOD    MigrateProfile(const nsString& aProfileName) { return _to MigrateProfile(aProfileName); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitProfileCoreClass(nsIScriptContext *aContext, void **aPrototype);
