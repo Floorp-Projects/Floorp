@@ -27,6 +27,10 @@
 NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 
+void nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
+{
+  mDispatchListener = aDispatchListener;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -73,6 +77,7 @@ void nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 { 
+  mDispatchListener = 0;
 }
 
 //-------------------------------------------------------------------------
