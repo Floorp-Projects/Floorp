@@ -1,0 +1,39 @@
+
+xpcsample1.* is a set of files that show a sample of implementing some simple
+xpcom classes and relecting them into JavaScript as a chain of properties on the
+global object.
+
+xpcsample1.idl declares four interfaces: nsIXPCSample_ClassA,
+nsIXPCSample_ClassB, nsIXPCSample_ClassC, and nsIXPCSample_HookerUpper. 'A' has
+an integer value (called 'someValue') and a 'B'. 'B' has an integer value and a
+'C'. 'C' just has an integer value. nsIXPCSample_HookerUpper just has one method
+that when called will attach an instance of 'A' to the global object. 
+
+Confused? This is quite contrived. It will make more sense after examining the
+code.
+
+So, this means that after calling the method
+nsIXPCSample_HookerUpper::createSampleObjectAtGlobalScope in JavaScript one can
+access:
+
+A.someValue, A.B.someValue, and A.B.C.someValue.
+
+see xpcsample.js (or run 'xpcshell xpcsample.js').
+
+The point of all this is to show how to build a hierarchy of native xpcom
+objects
+with properties and methods reflected into JavaScript. Of course, in real
+life these interfaces and native objects would be much more interesting.
+
+The only direct jsapi calls required are those that will 'root' the hierarchy
+into the JavaSCript namespace. 'createSampleObjectAtGlobalScope' shows an
+example of doing this. 
+
+Most native objects can be satisfactorily reflected using these mechanisms.
+However, some fancy stuff might require the extended support found in
+nsIXPCScriptable.h. For example, relecting objects that act like constructor
+functions, receiving 'finalize' calls on the native object, or reflecting
+'dynamically' named properties (i.e. those not declared in xpidl). Native xpcom 
+objects that implement nsIXPCScriptable are given much more control over how
+they are reflected into JavaScript. There should be few situations where this
+additional control is needed.
