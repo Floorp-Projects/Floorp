@@ -664,7 +664,7 @@ dump("ONSELECTION CHANGED\n")
         },
         
         getImageSource: function(aItemIndex, aColumnID) {
-           if (aColumnId == "Name") {
+           if (aColumnID == "Name") {
              var resource = this.mOuter.getRowResource(aItemIndex);
              return BookmarksUtils.getProperty(resource, NC_NS+"Icon", this.mOuter.db);
            }
