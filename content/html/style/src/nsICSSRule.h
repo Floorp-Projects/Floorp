@@ -50,7 +50,7 @@ class nsICSSGroupRule;
 
 class nsICSSRule : public nsIStyleRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_RULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_RULE_IID)
   enum {
     UNKNOWN_RULE = 0,
     STYLE_RULE = 1,

@@ -59,7 +59,7 @@ typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
 // Interface to the css parser.
 class nsICSSParser : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_PARSER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_PARSER_IID)
 
   // Return a mask of the various css standards that this parser
   // supports.

@@ -50,7 +50,7 @@ class nsIContent;
 
 class nsIRangeUtils : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IRANGEUTILS_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRANGEUTILS_IID)
 
   NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                                      nsIDOMNode* aParent2, PRInt32 aOffset2) = 0;

@@ -50,7 +50,7 @@
 
 class nsIDOMInstallTriggerGlobal : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMINSTALLTRIGGERGLOBAL_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMINSTALLTRIGGERGLOBAL_IID)
   enum {
     NOT_FOUND = -5,
     MAJOR_DIFF = 4,

@@ -61,7 +61,7 @@ class nsIPresShell;
 class IMETextTxn : public EditTxn
 {
 public:
-  static const nsIID& GetCID() { static nsIID iid = IME_TEXT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = IME_TEXT_TXN_CID; return iid; }
 
   virtual ~IMETextTxn();
 

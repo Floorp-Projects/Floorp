@@ -52,7 +52,7 @@ class nsISelection;
 class nsIAutoCopyService : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IAUTOCOPYSERVICE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IAUTOCOPYSERVICE_IID)
   
   //This will add this service as a selection listener.
   NS_IMETHOD Listen(nsISelection *aDomSelection)=0;

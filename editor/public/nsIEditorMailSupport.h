@@ -51,7 +51,7 @@ class nsIDOMNode;
 class nsIEditorMailSupport : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IEDITORMAILSUPPORT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITORMAILSUPPORT_IID)
 
 
   /** Paste the text in the OS clipboard at the cursor position,

@@ -86,7 +86,7 @@ class nsIListEventListener : public nsISupports
 {
 public:
  
-  static const nsIID& GetIID() { static nsIID iid = NS_ILIST_EVENT_LISTENER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILIST_EVENT_LISTENER_IID)
  
   /** SetFrame sets the frame we send event messages to, when necessary
    *  @param aFrame -- the frame, can be null, not ref counted (guaranteed to outlive us!)

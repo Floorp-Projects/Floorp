@@ -61,7 +61,7 @@ class nsITableLayout : public nsISupports
 {
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_ITABLELAYOUT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITABLELAYOUT_IID)
 
   /** return all the relevant layout information about a cell.
    *  @param aRowIndex       a row which the cell intersects

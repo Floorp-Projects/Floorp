@@ -60,7 +60,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  static const nsIID& GetCID() { static nsIID cid = EDIT_AGGREGATE_TXN_CID; return cid; }
+  static const nsIID& GetCID() { static const nsIID cid = EDIT_AGGREGATE_TXN_CID; return cid; }
 
   EditAggregateTxn();
 

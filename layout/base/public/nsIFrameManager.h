@@ -84,7 +84,7 @@ typedef void
  */
 class nsIFrameManager : public nsISupports {
 public:
-  static const nsIID& GetIID() {static nsIID iid = NS_IFRAMEMANAGER_IID; return iid;}
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEMANAGER_IID)
 
   // Initialization
   NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet) = 0;

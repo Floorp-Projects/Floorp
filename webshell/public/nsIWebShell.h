@@ -66,7 +66,7 @@ typedef enum {
 // Container for web shell's
 class nsIWebShellContainer : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_CONTAINER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWEB_SHELL_CONTAINER_IID)
 
 };
 
@@ -84,7 +84,7 @@ public:
  */
 class nsIWebShell : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWEB_SHELL_IID)
 
   /**
    * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING !!!!

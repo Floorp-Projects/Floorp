@@ -59,8 +59,9 @@ public:
   mozTXTToHTMLConv();
   virtual ~mozTXTToHTMLConv();
   NS_DECL_ISUPPORTS
-  static const nsIID& GetIID(void)
-       { static nsIID iid = MOZITXTTOHTMLCONV_IID; return iid; }
+
+  // XXX Is this really needed?  This isn't an interface.
+  NS_DEFINE_STATIC_IID_ACCESSOR(MOZITXTTOHTMLCONV_IID)
 
   NS_DECL_MOZITXTTOHTMLCONV
   NS_DECL_NSIREQUESTOBSERVER

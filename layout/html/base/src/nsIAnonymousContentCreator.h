@@ -61,7 +61,7 @@ class nsIFrame;
  */
 class nsIAnonymousContentCreator : public nsISupports {
 public:
-     static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_CREATOR_IID; return iid; }
+     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IANONYMOUS_CONTENT_CREATOR_IID)
      NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                        nsISupportsArray& aAnonymousItems)=0;
 

@@ -58,7 +58,7 @@ class nsIDOMEvent;
 class nsIPrivateDOMEvent : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATEDOMEVENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMEVENT_IID)
 
   NS_IMETHOD DuplicatePrivateData() = 0;
   NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) = 0;

@@ -95,7 +95,7 @@
 
 class nsIXBLAttributeEntry : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXBLATTR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLATTR_IID)
 
   NS_IMETHOD GetSrcAttribute(nsIAtom** aResult) = 0;
   NS_IMETHOD GetDstAttribute(nsIAtom** aResult) = 0;
@@ -161,7 +161,7 @@ NS_IMPL_QUERY_INTERFACE1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
 
 class nsIXBLInsertionPointEntry : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXBLINS_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLINS_IID)
 
   NS_IMETHOD GetInsertionParent(nsIContent** aResult)=0;
 

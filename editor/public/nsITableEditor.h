@@ -61,7 +61,7 @@
 class nsITableEditor : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ITABLEEDITOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITABLEEDITOR_IID)
 
   /* ------------ Table editing Methods -------------- */
 

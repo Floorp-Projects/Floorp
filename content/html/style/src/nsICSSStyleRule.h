@@ -151,7 +151,7 @@ public:
 
 class nsICSSStyleRule : public nsICSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_RULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_RULE_IID)
 
   virtual nsCSSSelector* FirstSelector(void) = 0;
   virtual void AddSelector(const nsCSSSelector& aSelector) = 0;

@@ -63,7 +63,7 @@ class nsIXBLPrototypeBinding;
 class nsIXBLBinding : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXBLBINDING_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLBINDING_IID)
 
   NS_IMETHOD GetPrototypeBinding(nsIXBLPrototypeBinding** aResult)=0;
   NS_IMETHOD SetPrototypeBinding(nsIXBLPrototypeBinding* aProtoBinding)=0;

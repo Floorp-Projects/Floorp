@@ -59,7 +59,7 @@ class AddStyleSheetTxn : public EditTxn
 
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = ADD_STYLESHEET_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = ADD_STYLESHEET_TXN_CID; return iid; }
 
   virtual ~AddStyleSheetTxn();
 
@@ -99,7 +99,7 @@ class RemoveStyleSheetTxn : public EditTxn
 
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = REMOVE_STYLESHEET_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = REMOVE_STYLESHEET_TXN_CID; return iid; }
 
 	virtual ~RemoveStyleSheetTxn();
 	

@@ -53,7 +53,7 @@ class nsIViewObserver : public nsISupports
 {
 public:
   
-  static const nsIID& GetIID() { static nsIID iid = NS_IVIEWOBSERVER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEWOBSERVER_IID)
 
   /* called when the observer needs to paint
    * @param aRenderingContext - rendering context to paint to

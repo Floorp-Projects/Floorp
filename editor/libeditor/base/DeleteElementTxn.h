@@ -55,7 +55,7 @@ class DeleteElementTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = DELETE_ELEMENT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = DELETE_ELEMENT_TXN_CID; return iid; }
  
   /** initialize the transaction.
     * @param aElement the node to delete

@@ -52,7 +52,7 @@ class nsIDocument;
 class nsISVGStyleValue : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGSTYLEVALUE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGSTYLEVALUE_IID)
   
   NS_IMETHOD GetStyleRule(nsIDocument* baseDocument, nsIStyleRule** rule)=0;
 };

@@ -37,7 +37,7 @@ static NS_DEFINE_IID(kIMathMLFrameIID, NS_IMATHMLFRAME_IID);
 // Abstract base class that provides additional methods for MathML frames
 class nsIMathMLFrame : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IMATHMLFRAME_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMATHMLFRAME_IID)
 
  /* SUPPORT FOR PRECISE POSITIONING */
  /*====================================================================*/

@@ -58,7 +58,7 @@
  */
 class nsIArena : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IARENA_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IARENA_IID)
 
   NS_IMETHOD Init(PRUint32 arenaBlockSize) = 0;
 

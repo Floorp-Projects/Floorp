@@ -60,7 +60,7 @@ class nsICSSStyleSheet;
  */
 class nsICSSStyleRuleProcessor: public nsIStyleRuleProcessor {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_RULE_PROCESSOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_RULE_PROCESSOR_IID)
 
   NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
 

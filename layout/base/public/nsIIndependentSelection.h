@@ -62,7 +62,7 @@
 class nsIIndependentSelection: public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IINDEPENDENTSELECTION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IINDEPENDENTSELECTION_IID)
 
   /** SetPresShell
    *  this method sets the internal pres shell to aPresShell

@@ -49,7 +49,7 @@ class nsIPresShell;
  */
 class nsIReflowCallback : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IREFLOWCALLBACK_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IREFLOWCALLBACK_IID)
 
   NS_IMETHOD ReflowFinished(nsIPresShell* aShell, PRBool* aFlushFlag) = 0;
 };

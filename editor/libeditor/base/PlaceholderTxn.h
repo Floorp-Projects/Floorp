@@ -68,7 +68,7 @@ class PlaceholderTxn : public EditAggregateTxn,
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = PLACEHOLDER_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = PLACEHOLDER_TXN_CID; return iid; }
 
   NS_DECL_ISUPPORTS_INHERITED  
   

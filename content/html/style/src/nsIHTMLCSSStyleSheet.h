@@ -46,7 +46,7 @@
 
 class nsIHTMLCSSStyleSheet : public nsIStyleSheet {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IHTML_CSS_STYLE_SHEET_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_CSS_STYLE_SHEET_IID)
 
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument) = 0;
   NS_IMETHOD Reset(nsIURI* aURL) = 0;

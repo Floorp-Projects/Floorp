@@ -99,7 +99,7 @@
 class nsIHTMLContentSink : public nsIContentSink {
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IHTML_CONTENT_SINK_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
 
   /**
    * This method gets called by the parser when it encounters

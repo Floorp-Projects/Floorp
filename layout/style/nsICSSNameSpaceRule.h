@@ -50,7 +50,7 @@ class nsIURI;
 
 class nsICSSNameSpaceRule : public nsICSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_NAMESPACE_RULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_NAMESPACE_RULE_IID)
 
   NS_IMETHOD  GetPrefix(nsIAtom*& aPrefix) const = 0;
   NS_IMETHOD  SetPrefix(nsIAtom* aPrefix) = 0;

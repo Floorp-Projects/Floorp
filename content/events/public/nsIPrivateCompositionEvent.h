@@ -50,7 +50,7 @@
 class nsIPrivateCompositionEvent : public nsISupports {
 
 public:
-	static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATECOMPOSITIONEVENT_IID; return iid; }
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATECOMPOSITIONEVENT_IID)
 
 	NS_IMETHOD GetCompositionReply(struct nsTextEventReply** aReply) = 0;
     NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply) = 0;

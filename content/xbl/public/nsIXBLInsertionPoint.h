@@ -49,7 +49,7 @@ class nsIContent;
 class nsIXBLInsertionPoint : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXBLINSERTIONPOINT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLINSERTIONPOINT_IID)
 
   NS_IMETHOD GetInsertionParent(nsIContent** aParentElement)=0;
   NS_IMETHOD GetInsertionIndex(PRInt32* aResult)=0;

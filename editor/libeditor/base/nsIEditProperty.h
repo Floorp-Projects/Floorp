@@ -57,7 +57,7 @@ class nsString;
 class nsIEditProperty : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IEDITPROPERTY_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITPROPERTY_IID)
 
 public:
 

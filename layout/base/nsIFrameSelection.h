@@ -129,7 +129,7 @@ class nsIScrollableView;
 
 class nsIFrameSelection : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IFRAMESELECTION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMESELECTION_IID)
   enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
 
   /** Init will initialize the frame selector with the necessary focus tracker to 

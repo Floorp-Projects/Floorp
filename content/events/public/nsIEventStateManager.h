@@ -61,7 +61,7 @@ class nsIWidget;
 class nsIEventStateManager : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IEVENTSTATEMANAGER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTSTATEMANAGER_IID)
 
   NS_IMETHOD Init() = 0;
 

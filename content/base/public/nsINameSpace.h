@@ -63,7 +63,7 @@ class nsINameSpaceManager;
  */
 class nsINameSpace : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_INAMESPACE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACE_IID)
 
   NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager) const = 0;
 

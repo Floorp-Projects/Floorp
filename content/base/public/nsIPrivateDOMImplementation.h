@@ -54,7 +54,7 @@ class nsIURI;
 class nsIPrivateDOMImplementation : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATEDOMIMPLEMENTATION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMIMPLEMENTATION_IID)
 
   NS_IMETHOD Init(nsIURI* aBaseURI) = 0;
 };

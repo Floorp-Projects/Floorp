@@ -53,7 +53,7 @@ class nsIDOMWindowInternal;
 class nsIWebShellWindow : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IWEBSHELL_WINDOW_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWEBSHELL_WINDOW_IID)
 
   NS_IMETHOD Show(PRBool aShow) = 0;
   NS_IMETHOD ShowModal() = 0;

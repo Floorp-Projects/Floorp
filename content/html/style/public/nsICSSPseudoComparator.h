@@ -47,7 +47,7 @@ struct nsCSSSelector;
 
 class nsICSSPseudoComparator: public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_PSEUDO_COMPARATOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_PSEUDO_COMPARATOR_IID)
 
   NS_IMETHOD  PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult)=0;
 };

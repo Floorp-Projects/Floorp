@@ -67,7 +67,7 @@ class nsRuleNode;
 
 class nsIStyleContext : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISTYLECONTEXT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLECONTEXT_IID)
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const = 0;
   

@@ -82,7 +82,7 @@ static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 class nsIPersistentProperties : public nsIProperties
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPERSISTENTPROPERTIES_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPERSISTENTPROPERTIES_IID)
 
   NS_IMETHOD Load(nsIInputStream* aIn) = 0;
   NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader) = 0;

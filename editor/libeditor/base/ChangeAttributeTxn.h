@@ -57,7 +57,7 @@ class ChangeAttributeTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = CHANGE_ATTRIBUTE_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = CHANGE_ATTRIBUTE_TXN_CID; return iid; }
 
   virtual ~ChangeAttributeTxn();
 

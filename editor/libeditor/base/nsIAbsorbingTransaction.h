@@ -63,7 +63,7 @@ class nsIAtom;
 class nsIAbsorbingTransaction  : public nsISupports{
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IABSORBINGTRANSACTION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IABSORBINGTRANSACTION_IID)
 
   NS_IMETHOD Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor)=0;
   

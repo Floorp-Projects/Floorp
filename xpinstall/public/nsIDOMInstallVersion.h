@@ -51,7 +51,7 @@ class nsIDOMInstallVersion;
 
 class nsIDOMInstallVersion : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMINSTALLVERSION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMINSTALLVERSION_IID)
   enum {
     EQUAL = 0,
     BLD_DIFF = 1,

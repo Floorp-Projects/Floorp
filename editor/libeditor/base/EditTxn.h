@@ -61,7 +61,7 @@ class EditTxn : public nsITransaction
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = EDIT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = EDIT_TXN_CID; return iid; }
 
   NS_DECL_ISUPPORTS
 

@@ -52,7 +52,7 @@
 
 class nsIDOMEventCapturer : public nsIDOMEventReceiver {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTCAPTURER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTCAPTURER_IID)
 
   NS_IMETHOD    CaptureEvent(const nsAString& aType)=0;
 

@@ -51,7 +51,7 @@
 class nsIHTMLTableCellElement : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IHTMLTABLECELLELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLTABLECELLELEMENT_IID)
   
   /** @return the starting column for this cell.  Always >= 1 */
   NS_IMETHOD GetColIndex (PRInt32* aColIndex) = 0;

@@ -39,7 +39,7 @@ class nsAString;
 
 class nsIFocusController : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IFOCUSCONTROLLER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOCUSCONTROLLER_IID)
 
   NS_IMETHOD GetFocusedElement(nsIDOMElement** aResult)=0;
   NS_IMETHOD SetFocusedElement(nsIDOMElement* aElement)=0;

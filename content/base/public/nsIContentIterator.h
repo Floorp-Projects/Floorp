@@ -59,7 +59,7 @@ class nsIDOMRange;
 class nsIContentIterator : public nsISupports {
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_ICONTENTITERTOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTITERTOR_IID)
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
    */
@@ -115,7 +115,7 @@ class nsIPresShell;
 class nsIGeneratedContentIterator : public nsISupports {
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IGENERATEDCONTENTITERTOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGENERATEDCONTENTITERTOR_IID)
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
    */

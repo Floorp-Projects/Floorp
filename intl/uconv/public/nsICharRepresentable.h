@@ -63,7 +63,7 @@
 class nsICharRepresentable : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICHARREPRESENTABLE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARREPRESENTABLE_IID)
 
   NS_IMETHOD FillInfo(PRUint32* aInfo) = 0;
 

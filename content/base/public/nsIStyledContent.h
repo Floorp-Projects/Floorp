@@ -54,7 +54,7 @@ class nsRuleWalker;
 // the ability to specify style hints on an attribute change).
 class nsIStyledContent : public nsIContent {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISTYLEDCONTENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLEDCONTENT_IID)
 
   NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;

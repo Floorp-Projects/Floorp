@@ -66,7 +66,7 @@ class nsIDOMNodeList;
 class nsIBindingManager : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IBINDING_MANAGER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBINDING_MANAGER_IID)
 
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) = 0;
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding) = 0;

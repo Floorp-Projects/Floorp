@@ -51,7 +51,7 @@
 
 class nsIWebShellServices : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_SERVICES_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWEB_SHELL_SERVICES_IID)
 
   NS_IMETHOD LoadDocument(const char* aURL, 
                           const char* aCharset= nsnull , 

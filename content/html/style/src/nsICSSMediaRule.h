@@ -49,7 +49,7 @@ class nsIAtom;
 
 class nsICSSMediaRule : public nsICSSGroupRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_MEDIA_RULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_MEDIA_RULE_IID)
 
   NS_IMETHOD  SetMedia(nsISupportsArray* aMedia) = 0;
   NS_IMETHOD_(PRBool)  UseForMedium(nsIAtom* aMedium) const = 0;

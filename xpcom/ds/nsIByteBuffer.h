@@ -55,7 +55,7 @@ class nsIInputStream;
 /** Interface to a buffer that holds bytes */
 class nsIByteBuffer : public nsISupports {
 public:
-	static const nsIID& GetIID() { static nsIID iid = NS_IBYTEBUFFER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFER_IID)
 
   NS_IMETHOD Init(PRUint32 aBufferSize) = 0;
 

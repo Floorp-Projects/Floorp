@@ -63,7 +63,7 @@ class nsIBox : public nsISupports {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IBOX_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBOX_IID)
 
     enum Halignment {
         hAlign_Left,

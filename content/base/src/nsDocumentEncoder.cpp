@@ -95,7 +95,7 @@ enum nsRangeIterationDirection {
 class nsDocumentEncoder : public nsIDocumentEncoder
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_ENCODER_IID)
 
   nsDocumentEncoder();
   virtual ~nsDocumentEncoder();
