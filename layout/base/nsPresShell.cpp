@@ -2019,9 +2019,11 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 	
   if (mCaret && (mCaretEnabled != oldEnabled))
   {
+/*  Don't change the caret's selection here! This was an evil side-effect of SetCaretEnabled()
     nsCOMPtr<nsIDOMSelection> domSel;
     if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
       mCaret->SetCaretDOMSelection(domSel);
+*/
     result = mCaret->SetCaretVisible(mCaretEnabled);
   }
 	
