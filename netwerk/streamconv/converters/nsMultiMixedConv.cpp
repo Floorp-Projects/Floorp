@@ -558,6 +558,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     mContext = ctxt;
 
     mFirstOnData = PR_TRUE;
+    mTotalSent   = 0;
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -646,6 +647,7 @@ nsMultiMixedConv::nsMultiMixedConv() {
     mProcessingHeaders  = PR_FALSE;
     mByteRangeStart     = 0;
     mByteRangeEnd       = 0;
+    mTotalSent          = 0;
     mIsByteRangeRequest = PR_FALSE;
 }
 
@@ -690,6 +692,8 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     if (mIsByteRangeRequest) {
         newChannel->InitializeByteRange(mByteRangeStart, mByteRangeEnd);
     }
+
+    mTotalSent = 0;
 
     // Set up the new part channel...
     mPartChannel = newChannel;
@@ -747,6 +751,18 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     
     if (!mPartChannel) return NS_ERROR_FAILURE; // something went wrong w/ processing
 
+
+    if (mContentLength != -1) {
+        // make sure that we don't send more than the mContentLength
+        if ((aLen + mTotalSent) > mContentLength)
+            aLen = mContentLength - mTotalSent;
+
+        if (aLen == 0)
+            return NS_OK;
+    }
+
+    mTotalSent += aLen;
+
     char *tmp = (char*)nsMemory::Alloc(aLen); // byteArray stream owns this mem
     if (!tmp) return NS_ERROR_OUT_OF_MEMORY;
     
@@ -792,7 +808,8 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     PRUint32 cursorLen = aLen;
     PRBool done = PR_FALSE;
     PRUint32 lineFeedIncrement = 1;
-
+    
+    mContentLength = -1;
     while ( (cursorLen > 0) 
             && (newLine = PL_strchr(cursor, nsCRT::LF)) ) {
         // adjust for linefeeds
@@ -872,6 +889,8 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                 }
 
                 mIsByteRangeRequest = PR_TRUE;
+                if (mContentLength == -1)   
+                    mContentLength = mByteRangeEnd - mByteRangeStart + 1;
             }
         }
         *newLine = tmpChar;

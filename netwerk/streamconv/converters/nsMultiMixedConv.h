@@ -114,6 +114,7 @@ protected:
     
     char                *mBuffer;
     PRUint32            mBufLen;
+    PRUint32            mTotalSent;
     PRBool              mFirstOnData;   // used to determine if we're in our first OnData callback.
 
     // The following members are for tracking the byte ranges in
