@@ -67,7 +67,6 @@ nsScreenWin :: nsScreenWin ( void* inScreen )
     if ( mGetMonitorInfoProc )
       mHasMultiMonitorAPIs = PR_TRUE;
   }
-  printf("has multiple monitor apis is %ld\n", mHasMultiMonitorAPIs);
 #endif
 
   // nothing else to do. I guess we could cache a bunch of information
