@@ -43,6 +43,9 @@ static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
+static const char* kOnStartNotCalled = "Error: OnStartBinding() must be called before OnDataAvailable()";
+static const char* kOnStopNotCalled  = "Error: OnStopBinding() must be called upon termination of netlib process";
+static const char* kBadListenerInit  = "Error: Parser's IStreamListener API was not setup correctly in constructor.";
 static nsString    kUnknownFilename("unknown");
 static nsString    kEmptyString("unknown");
 
@@ -185,6 +188,7 @@ MakeConversionTable()
  */
 nsParser::nsParser() : mCommand() {
   NS_INIT_REFCNT();
+  mStreamListenerState=eNone;
   mParserFilter = 0;
   mObserver = 0;
   mSink=0;
@@ -205,6 +209,7 @@ nsParser::~nsParser() {
   NS_IF_RELEASE(mObserver);
   NS_RELEASE(mSink);
 
+  NS_POSTCONDITION(eOnStop==mStreamListenerState,kOnStopNotCalled);
   //don't forget to add code here to delete 
   //what may be several contexts...
   delete mParserContext;
@@ -409,10 +414,12 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
   nsDequeIterator e=gSharedParserObjects.mDTDDeque.End(); 
 
   mParserContext->mAutoDetectStatus=eUnknownDetect;
-  while((b<e) && (eUnknownDetect==mParserContext->mAutoDetectStatus)){
+  while(b<e){
     nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
     if(theDTD) {
       mParserContext->mAutoDetectStatus=theDTD->AutoDetectContentType(aBuffer,aType);
+      if(eValidDetect==mParserContext->mAutoDetectStatus)
+        break;
     }
     b++;
   } 
@@ -820,9 +827,12 @@ nsParser::OnStatus(nsIURL* aURL, const nsString &aMsg)
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
+  NS_PRECONDITION((eNone==mStreamListenerState),kBadListenerInit);
+
   if (nsnull != mObserver) {
     mObserver->OnStartBinding(aURL, aSourceType);
   }
+  mStreamListenerState=eOnStart;
   mParserContext->mAutoDetectStatus=eUnknownDetect;
   mParserContext->mDTD=0;
   mParserContext->mSourceType=aSourceType;
@@ -844,7 +854,9 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
     mListener->OnDataAvailable(pIStream, length);
   }
 */
+  NS_PRECONDITION(((eOnStart==mStreamListenerState)||(eOnDataAvail==mStreamListenerState)),kOnStartNotCalled);
 
+  mStreamListenerState=eOnDataAvail;  
   if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
     if(mParserContext->mScanner) {
       mParserContext->mScanner->GetBuffer().Truncate();
@@ -902,6 +914,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
  *  @return  
  */
 nsresult nsParser::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg){
+  mStreamListenerState=eOnStop;
   nsresult result=DidBuildModel(status);
   if (nsnull != mObserver) {
     mObserver->OnStopBinding(aURL, status, aMsg);

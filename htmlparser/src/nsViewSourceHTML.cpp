@@ -227,10 +227,10 @@ PRBool CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, PRI
 
 
 /**
- * 
- * @update	gess7/7/98
+ * This is called to ask the DTD if it recognizes either the aType or data in the buffer.
+ * @update  gess7/7/98
  * @param 
- * @return
+ * @return  detect result
  */
 eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
@@ -238,8 +238,17 @@ eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsStr
     result=eValidDetect;
   else if(PR_TRUE==aType.Equals(kXMLTextContentType)) 
     result=eValidDetect;
+  else {
+    //otherwise, look into the buffer to see if you recognize anything...
+    if(BufferContainsHTML(aBuffer)){
+      result=eValidDetect;
+      if(0==aType.Length())
+        aType=kHTMLTextContentType;
+    }
+  }
   return result;
 }
+
 
 /**
  * 

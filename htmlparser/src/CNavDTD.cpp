@@ -423,6 +423,14 @@ eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
   eAutoDetectResult result=eUnknownDetect;
   if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
     result=eValidDetect;
+  else {
+    //otherwise, look into the buffer to see if you recognize anything...
+    if(BufferContainsHTML(aBuffer)){
+      result=eValidDetect;
+      if(0==aType.Length())
+        aType=kHTMLTextContentType;
+    }
+  }
   return result;
 }
 
