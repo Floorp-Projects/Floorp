@@ -1225,6 +1225,12 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                 gs->screen_width = width;
                 gs->x_offset = 0;
                 gs->y_offset = 0;
+                
+              (*gs->GIFCallback_BeginGIF)(
+                gs->clientptr,
+                gs->screen_width, 
+                gs->screen_height,
+                gs->screen_bgcolor);
             }
             /* Work around more broken GIF files that have zero image
                width or height */
