@@ -98,7 +98,7 @@
 #define PREG_URL			"http://seaspace.mcom.com/"
 
 
-#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_profile 1
 #endif
 
@@ -154,7 +154,7 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
 			return NS_OK;
         }
 		else {
-			PR_FREEIF(*string);
+            nsCRT::free(*string);
 			return rv;
 		}
     } 
@@ -455,16 +455,15 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #ifdef DEBUG_profile
                 printf("ProfileName : %s\n", cmdResult);
 #endif /* DEBUG_profile */
-			
+                
                 GetProfileDir(currProfileName, &currProfileDirSpec);
 #ifdef DEBUG_profile
-		char *currProfileDirSpecStr = nsnull;
-		rv = GetStringFromSpec(currProfileDirSpec, &currProfileDirSpecStr);
-
-		if (NS_SUCCEEDED(rv) && currProfileDirSpecStr && *currProfileDirSpecStr) {
-			printf("** ProfileDir  :  %s **\n", currProfileDirSpecStr);
-		}
-		PR_FREEIF(currProfileDirSpecStr);
+                nsXPIDLCString currProfileDirSpecStr;
+                rv = GetStringFromSpec(currProfileDirSpec, getter_Copies(currProfileDirSpecStr));
+                
+                if (NS_SUCCEEDED(rv) && currProfileDirSpecStr && *currProfileDirSpecStr) {
+                    printf("** ProfileDir  :  %s **\n", (const char *) currProfileDirSpecStr);
+                }
 #endif /* DEBUG_profile */
 			
                 if (NS_SUCCEEDED(rv)){
@@ -785,7 +784,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 							{
 								// Get node name.
 		                        nsXPIDLCString profile;
-								char *isMigrated = nsnull;
+                                nsXPIDLCString isMigrated;
 
 			                    rv = node->GetName( getter_Copies(profile) );
 
@@ -797,7 +796,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 								
 									if (NS_SUCCEEDED(rv)) 
 									{
-										rv = m_reg->GetString(profKey, "migrated", &isMigrated);
+										rv = m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
 
 										if (NS_SUCCEEDED(rv) && (isMigrated))
 										{
@@ -805,7 +804,6 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 											{
 												numKeys++;
 											}
-											nsCRT::free(isMigrated);
 										}
 									}
 								}
@@ -907,11 +905,11 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 		                        
 							if (NS_SUCCEEDED(rv))
 							{
-								char *isMigrated = nsnull;
-								nsIRegistry::Key profKey;								
+								nsXPIDLCString isMigrated;
+                                nsIRegistry::Key profKey;								
 
 					            // Get node name.
-					            rv = node->GetName( profileName );	
+					            rv = node->GetName(profileName );	
 
 								// Profiles need to be migrated are not considered as valid profiles
 								// On finding the valid profile, breaks out of the while loop.
@@ -919,7 +917,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 								{
 									rv = m_reg->GetSubtree(key, *profileName, &profKey);
 
-									m_reg->GetString(profKey, "migrated", &isMigrated);
+									m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
 
 									if (PL_strcmp(isMigrated, "no") == 0)
 									{
@@ -1150,12 +1148,11 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 #if defined(DEBUG_profile)
     printf("ProfileManager : SetProfileDir\n");
     printf("profileName : %s ", profileName);
-    char *profileDirStr = nsnull;
-    rv = GetStringFromSpec(profileDir, &profileDirStr);
-    if (NS_SUCCEEDED(rv) && profileDirStr && *profileDirStr) {
-	printf("profileDir  : %s\n", profileDirStr);
+    nsXPIDLCString profileDirStr;
+    rv = GetStringFromSpec(profileDir, getter_Copies(profileDirStr));
+    if (NS_SUCCEEDED(rv) && profileDirStr) {
+        printf("profileDir  : %s\n", (const char *)profileDirStr);
     }
-    PR_FREEIF(profileDirStr);
 #endif
 
     // Check result.
@@ -1191,16 +1188,17 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 						tmpDir.CreateDirectory();
 					}
 					
-					char* profileDirString = nsnull;
-					
+
+					nsXPIDLCString profileDirString;
+                    					
 					nsCOMPtr<nsIFileSpec>spec;
 					rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
 					if (NS_SUCCEEDED(rv)) {
-						rv = spec->GetPersistentDescriptorString(&profileDirString);
+						rv = spec->GetPersistentDescriptorString(getter_Copies(profileDirString));
 					}
     
 					// Set the entry "directory" for this profile
-					if (profileDirString && *profileDirString)
+					if (NS_SUCCEEDED(rv) && profileDirString)
 					{
 						rv = m_reg->SetString(newKey, "directory", profileDirString);
 
@@ -1224,12 +1222,11 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 							printf("NULL value received for directory name.\n" );
 #endif
 					}
-					PR_FREEIF(profileDirString);
 				}
 				else
 				{
 #if defined(DEBUG_profile)
-						printf("Profiles : Could not add profile name subtree.\n" );
+                    printf("Profiles : Could not add profile name subtree.\n" );
 #endif
 				}
 			}
@@ -1631,28 +1628,19 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 								if (NS_SUCCEEDED(rv)) 
 								{
 									// Get node name.
-									char *entryName;
-									char *entryValue;
+									nsXPIDLCString entryName;
+									nsXPIDLCString entryValue;
 								
-									rv = value->GetName( &entryName );
+									rv = value->GetName(getter_Copies(entryName));
 								
 									if (NS_SUCCEEDED(rv)) 
 									{
-										rv = m_reg->GetString( sourceKey, entryName, &entryValue);
+										rv = m_reg->GetString( sourceKey, entryName, getter_Copies(entryValue));
 
 										if (NS_SUCCEEDED(rv)) 
 										{
 											rv = m_reg->SetString(destKey, entryName, entryValue);
 										}
-									}
-								
-									if (entryName)
-									{
-										PR_DELETE(entryName);
-									}
-									if (entryValue)
-									{
-										PR_DELETE(entryValue);
 									}
 								}
 							}
@@ -1838,10 +1826,10 @@ void nsProfile::GetAllProfiles()
 							if (NS_SUCCEEDED(rv)) 
 							{
 								// Get node name.
-		                        char *profile = nsnull;
-								char *isMigrated = nsnull;
-
-			                    rv = node->GetName( &profile );
+		                        nsXPIDLCString profile;
+                                nsXPIDLCString isMigrated;
+								
+			                    rv = node->GetName(getter_Copies(profile));
 
 								if (NS_SUCCEEDED(rv) && (profile))
 								{
@@ -1851,7 +1839,7 @@ void nsProfile::GetAllProfiles()
 								
 									if (NS_SUCCEEDED(rv)) 
 									{
-										rv = m_reg->GetString(profKey, "migrated", &isMigrated);
+										rv = m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
 
 										if (NS_SUCCEEDED(rv) && (isMigrated))
 										{
@@ -2096,11 +2084,11 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 							if (NS_SUCCEEDED(rv)) 
 							{
 	                            // Get node name.
-		                        char *profile = nsnull;
-			                    rv = node->GetName( &profile );
+		                        nsXPIDLCString profile;
+                                rv = node->GetName(getter_Copies(profile));
 
 #if defined(DEBUG_profile)
-									printf("oldProflie = %s\n", profile);
+                                printf("oldProflie = %s\n", profile);
 #endif
 
 								nsIRegistry::Key key;								
@@ -2112,12 +2100,12 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 									PL_strcpy(gOldProfiles[g_numOldProfiles], nsUnescape(profile));
 								}
 
-								char *profLoc = nsnull;
+                                nsXPIDLCString profLoc;
 								
-								rv = m_reg->GetString( key, "ProfileLocation", &profLoc);
+								rv = m_reg->GetString( key, "ProfileLocation", getter_Copies(profLoc));
 
 #if defined(DEBUG_profile)
-									printf("oldProflie Location = %s\n", profLoc);
+                                printf("oldProflie Location = %s\n", profLoc);
 #endif
 							
 								if (NS_SUCCEEDED(rv)) 
@@ -2126,9 +2114,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 									g_numOldProfiles++;
 								}
 
-								PR_FREEIF(profile);
-								PR_FREEIF(profLoc);
-							}
+                            }
 						}	
 					    rv = enumKeys->Next();
 					}
@@ -2218,14 +2204,14 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 						{
 							nsFileSpec profileDir(gOldProfLocations[idx]);
 							
-							char* profileDirString = nsnull;	
+							nsXPIDLCString profileDirString;	
 							nsCOMPtr<nsIFileSpec>spec;
 							rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
 							if (NS_SUCCEEDED(rv)) {
-								rv = spec->GetPersistentDescriptorString(&profileDirString);
+								rv = spec->GetPersistentDescriptorString(getter_Copies(profileDirString));
 							}
 
-							if (NS_SUCCEEDED(rv) && profileDirString && *profileDirString)
+							if (NS_SUCCEEDED(rv) && profileDirString)
 							{
 
 								rv = m_reg->SetString(newKey, "directory", profileDirString);
@@ -2331,19 +2317,17 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 					getter_AddRefs(pPrefMigrator));
     if (NS_FAILED(rv)) return rv;
         
-	char *oldProfDirStr = nsnull;
-	char *newProfDirStr = nsnull;
+	nsXPIDLCString oldProfDirStr;
+    nsXPIDLCString newProfDirStr;
 	
-	rv = GetStringFromSpec(newProfDir, &newProfDirStr); 
+	rv = GetStringFromSpec(newProfDir, getter_Copies(newProfDirStr)); 
 	if (NS_SUCCEEDED(rv)) {               
-		rv = GetStringFromSpec(oldProfDir, &oldProfDirStr);               
+		rv = GetStringFromSpec(oldProfDir, getter_Copies(oldProfDirStr));               
 		if (NS_SUCCEEDED(rv)) {                             
 			rv = pPrefMigrator->AddProfilePaths(oldProfDirStr,  newProfDirStr);  // you can do this a bunch of times.
       rv = pPrefMigrator->ProcessPrefs();
 		}
 	}
-	PR_FREEIF(oldProfDirStr);
-	PR_FREEIF(newProfDirStr);
 
 	if (NS_FAILED(rv)) return rv;
 
@@ -2800,10 +2784,10 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 							if (NS_SUCCEEDED(rv)) 
 							{
 								// Get node name.
-		                        char *profile = nsnull;
-								char *isMigrated = nsnull;
-
-			                    rv = node->GetName( &profile );
+		                        nsXPIDLCString profile;
+                                nsXPIDLCString isMigrated;
+                                
+			                    rv = node->GetName(getter_Copies(profile));
 
 								if (NS_SUCCEEDED(rv) && (profile))
 								{
@@ -2813,7 +2797,7 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 								
 									if (NS_SUCCEEDED(rv)) 
 									{
-										rv = m_reg->GetString(profKey, "migrated", &isMigrated);
+										rv = m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
 
 										if (NS_SUCCEEDED(rv) && (isMigrated))
 										{
