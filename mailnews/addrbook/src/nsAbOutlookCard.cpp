@@ -38,13 +38,6 @@
 #include "nsAbOutlookCard.h"
 #include "nsAbWinHelper.h"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAbOutlookCardLog)
-
-#define PRINTF NS_LOG_PRINTF(nsAbOutlookCardLog)
-#define FLUSH  NS_LOG_FLUSH(nsAbOutlookCardLog)
-
 extern const char *kOutlookDirectoryScheme ;
 extern const char *kOutlookCardScheme ;
 

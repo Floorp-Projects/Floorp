@@ -48,13 +48,6 @@
 
 #include "prprf.h"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAbOutlookDirFactoryLog)
-
-#define PRINTF NS_LOG_PRINTF(nsAbOutlookDirFactoryLog)
-#define FLUSH  NS_LOG_FLUSH(nsAbOutlookDirFactoryLog)
-
 
 // In case someone is wondering WHY I have to undefine CreateDirectory,
 // it's because the windows files winbase.h and wininet.h define this

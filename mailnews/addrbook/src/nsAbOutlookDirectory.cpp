@@ -53,13 +53,6 @@
 #include "prprf.h"
 #include "prthread.h"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAbOutlookDirectoryLog)
-
-#define PRINTF NS_LOG_PRINTF(nsAbOutlookDirectoryLog)
-#define FLUSH  NS_LOG_FLUSH(nsAbOutlookDirectoryLog)
-
 
 // Class for the int key
 class nsIntegerKey : public nsHashKey

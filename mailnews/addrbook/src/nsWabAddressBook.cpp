@@ -38,12 +38,6 @@
 #include "nsWabAddressBook.h"
 #include "nsAbUtils.h"
 #include "nsAutoLock.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWabAddressBookLog)
-
-#define PRINTF NS_LOG_PRINTF(nsWabAddressBookLog)
-#define FLUSH  NS_LOG_FLUSH(nsWabAddressBookLog)
 
 HMODULE nsWabAddressBook::mLibrary = NULL ;
 PRInt32 nsWabAddressBook::mLibUsage = 0 ;

@@ -39,13 +39,6 @@
 #include "nsAbUtils.h"
 #include "nsAutoLock.h"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMapiAddressBookLog)
-
-#define PRINTF NS_LOG_PRINTF(nsMapiAddressBookLog)
-#define FLUSH  NS_LOG_FLUSH(nsMapiAddressBookLog)
-
 
 HMODULE nsMapiAddressBook::mLibrary = NULL ;
 PRInt32 nsMapiAddressBook::mLibUsage = 0 ;

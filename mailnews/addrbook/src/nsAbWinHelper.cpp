@@ -49,13 +49,6 @@
 
 #include <mapiguid.h>
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAbWinHelperLog)
-
-#define PRINTF NS_LOG_PRINTF(nsAbWinHelperLog)
-#define FLUSH  NS_LOG_FLUSH(nsAbWinHelperLog)
-
 // Small utility to ensure release of all MAPI interfaces
 template <class tInterface> struct nsMapiInterfaceWrapper
 {
