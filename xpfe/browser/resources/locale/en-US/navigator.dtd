@@ -4,7 +4,7 @@
 <!ENTITY mainWindow.title "Mozilla"> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
-
+<!ENTITY viewsourcetitle.preface "Source for: ">
 <!-- LOCALIZATION NOTE  throbber.url: Do NOT localize all the URL -->
 <!ENTITY throbber.url "http://www.mozilla.org"> 
 <!ENTITY myNetscape.url "http://my.netscape.com">
