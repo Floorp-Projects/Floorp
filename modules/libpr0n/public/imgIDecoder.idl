@@ -47,7 +47,4 @@ interface imgIDecoder : nsIOutputStream
    * all of the imgIDecoderObserver APIs.
    */
   void init(in imgIRequest aRequest);
-
-  /// allows access to the nsIImage we have to put bits in to.
-  readonly attribute imgIRequest request;
 };

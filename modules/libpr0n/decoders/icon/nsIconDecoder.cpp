@@ -65,12 +65,6 @@ NS_IMETHODIMP nsIconDecoder::Init(imgIRequest *aRequest)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconDecoder::GetRequest(imgIRequest * *aRequest)
-{
-  *aRequest = mRequest;
-  NS_ADDREF(*aRequest);
-  return NS_OK;
-}
 
 /** nsIOutputStream methods **/
 

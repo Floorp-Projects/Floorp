@@ -161,16 +161,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   return NS_OK;
 }
 
-/* readonly attribute imgIRequest request; */
-NS_IMETHODIMP nsJPEGDecoder::GetRequest(imgIRequest * *aRequest)
-{
-  *aRequest = mRequest;
-  NS_ADDREF(*aRequest);
-  return NS_OK;
-}
-
-
-
 
 
 
@@ -577,7 +567,6 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
 
       nsRect r(0, mInfo.output_scanline, mInfo.output_width, 1);
       mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
-
   }
 
   return PR_TRUE;

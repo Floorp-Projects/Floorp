@@ -100,15 +100,7 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgIRequest *aRequest)
   return NS_OK;
 }
 
-//******************************************************************************
-/* readonly attribute imgIRequest request; */
-NS_IMETHODIMP nsGIFDecoder2::GetRequest(imgIRequest * *aRequest)
-{
-  *aRequest = mImageRequest;
-  NS_IF_ADDREF(*aRequest);
-      
-  return NS_OK;
-}
+
 
 
 //******************************************************************************
