@@ -77,6 +77,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "stopwatch.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
@@ -3611,6 +3612,35 @@ HTMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
   return rv;
 }
 
+/*
+** The enum "SchemeOrder" defines an ordering of URI schemes used to 
+** determine whether a page can load a script. Schemes are listed in
+** order of declining power: chrome can access everything, resource
+** can access everything but chrome, and so forth.
+*/
+
+enum SchemeOrder { CHROME_SCHEME, RESOURCE_SCHEME, FILE_SCHEME, OTHER_SCHEME };
+
+static SchemeOrder
+GetSchemeOrder(nsIURI *uri) 
+{
+  SchemeOrder result = OTHER_SCHEME;
+  if (uri) {
+    char *scheme;
+    uri->GetScheme(&scheme);
+    if (scheme) {
+      if (PL_strcmp(scheme, "chrome") == 0)
+        result = CHROME_SCHEME;
+      else if (PL_strcmp(scheme, "resource") == 0)
+        result = RESOURCE_SCHEME;
+      else if (PL_strcmp(scheme, "file") == 0)
+        result = FILE_SCHEME;
+      nsCRT::free(scheme);
+    }
+  }
+  return result;
+}
+
 nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 {
@@ -3737,6 +3767,14 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
       if (NS_OK != rv) {
         return rv;
+      }
+
+      // Check access to file:, chrome:, and resource:.
+      SchemeOrder order = GetSchemeOrder(url);
+      SchemeOrder baseOrder = GetSchemeOrder(mDocumentBaseURL);
+      if (baseOrder > order) {
+        NS_RELEASE(url);
+        return NS_ERROR_DOM_BAD_URI;
       }
 
       nsCOMPtr<nsILoadGroup> loadGroup;
