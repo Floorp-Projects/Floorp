@@ -404,8 +404,8 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
     
     sp->cntP.printReport(fp, this);
 
-    fprintf(fp, "%6d %3d %8d <A name=%d>%s</a>\n", rankingTable[i],
-    sp->timerHit, countArray[rankingTable[i]], rankingTable[i],sp->name);
+    fprintf(fp, "%6d %3d <a name=%d>%8d</a> <b>%s</b>\n", rankingTable[i],
+    sp->timerHit, rankingTable[i], countArray[rankingTable[i]], sp->name);
 
     sp->cntC.printReport(fp, this);
 
@@ -453,8 +453,9 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
 
     Symbol *sp=&externalSymbols[rankingTable[i]];
     
-    fprintf(fp, "%3d   %-2.1f     <A href=\"#%d\">%s</a>\n",
-    sp->timerHit, ((float)sp->timerHit/(float)totalTimerHits)*100.0, rankingTable[i], sp->name);
+    fprintf(fp, "<a href=\"#%d\">%3d   %-2.1f     %s</a>\n",
+    rankingTable[i], sp->timerHit,
+    ((float)sp->timerHit/(float)totalTimerHits)*100.0, sp->name);
   }
 
   fprintf(fp,"</pre></body></html>\n");
@@ -520,7 +521,7 @@ void leaky::analyze()
 
 void FunctionCount::printReport(FILE *fp, leaky *lk)
 {
-    const char *fmt = "             %6d <A href=\"#%d\">%s</A>\n";
+    const char *fmt = "             <A href=\"#%d\">%6d %s</A>\n";
 
     int nmax, tmax=((~0U)>>1);
     
@@ -530,7 +531,7 @@ void FunctionCount::printReport(FILE *fp, leaky *lk)
 	    int cnt = getCount(j);
 	    if(cnt==tmax) {
 		int idx = getIndex(j);
-		fprintf(fp, fmt, getCount(j), idx,
+		fprintf(fp, fmt, idx, getCount(j),
 		const_cast<char*>(lk->indexToName(idx)));
 	    } else if(cnt<tmax && cnt>nmax) {
 	        nmax=cnt;
