@@ -48,6 +48,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="console.onLoad();" onunload="console.onUnload();"
+  width="640" height="480"
   persist="width height screenX screenY" title="&MainWindow.title;"
   windowtype="mozapp:venkman">
 
@@ -69,6 +70,7 @@
   <script src="chrome://communicator/content/contentAreaDD.js"/>
   <script src="chrome://global/content/strres.js"/>
 
+  <script src="chrome://venkman/content/outliner-utils.js"/>
   <script src="chrome://venkman/content/html-consts.js"/>
   <script src="chrome://venkman/content/command-manager.js"/>
 
@@ -171,10 +173,11 @@
           onclick="console.onScriptClick(event);">
 
           <outlinercol id="script-file-name" label="&FileName.header;" 
-           class="outlinercol-header outlinercol-inset-header" flex="95"/>
+           class="outlinercol-header outlinercol-inset-header" flex="95"
+           persist="hidden width"/>
           <splitter class="tree-splitter"/>
           <outlinercol flex="5" id="script-count"
-            label="&ScriptCount.header;"
+            label="&ScriptCount.header;" persist="hidden width"
             class="outlinercol-header outlinercol-inset-header"/>
           <outlinerbody id="script-list-body" flex="1"/>
         </outliner>
@@ -185,16 +188,17 @@
           onclick="console.onStackClick(event);">
 
           <outlinercol id="current-frame" display="&IsCurrent.header;"
+            persist="hidden width"
             class="outlinercol-header outlinercol-inset-header" width="20px"/>
           <outlinercol flex="50" id="function-name"
-            label="&FunctionName.header;"
+            label="&FunctionName.header;" persist="hidden width"
             class="outlinercol-header outlinercol-inset-header"/>
           <splitter class="tree-splitter"/>
           <outlinercol flex="25" id="line-number"
-            label="&LineNumber.header;"
+            label="&LineNumber.header;" persist="hidden width"
             class="outlinercol-header outlinercol-inset-header"/>
           <splitter class="tree-splitter"/>
-          <outlinercol flex="50" id="file-name"
+          <outlinercol flex="50" id="file-name" persist="hidden width"
             label="&FileName.header;" crop="left"
             class="outlinercol-header outlinercol-inset-header"/>
           <outlinerbody id="call-stack-body" flex="1"/>
@@ -209,14 +213,14 @@
           <outliner id="source-outliner" flex="1"
             onclick="console.onSourceClick(event);">
             <outlinercol id="breakpoint-col" width="20px"
-              display="&Breakpoint.header;"
+              display="&Breakpoint.header;" persist="hidden width"
               class="outlinercol-header outlinercell-inset-header"/>
             <outlinercol id="source-line-number" flex="5"
-              display="&LineNumber.header;"
+              display="&LineNumber.header;" persist="hidden width"
               class="outlinercol-header outlinercell-inset-header"/>
             <splitter class="tree-splitter"/>          
             <outlinercol id="source-line-text" flex="95"
-              display="&SourceText.header;"
+              display="&SourceText.header;" persist="hidden width"
               class="outlinercol-header outlinercell-inset-header"/>
             <outlinerbody id="source-outliner-body" flex="1"/>
           </outliner>
