@@ -123,7 +123,7 @@ SetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMCSSStyleDeclaration* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kICSSStyleDeclarationIID, NS_ConvertToString("CSSStyleDeclaration"),
+                                                  kICSSStyleDeclarationIID, NS_ConvertASCIItoUCS2("CSSStyleDeclaration"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }

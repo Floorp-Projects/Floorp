@@ -4143,19 +4143,19 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
   if ( NS_FAILED (rv ) )
   	return rv;
   	
-  if (PR_TRUE== NS_ConvertToString(sCopyString).Equals(aCommand))
+  if (PR_TRUE== NS_ConvertASCIItoUCS2(sCopyString).Equals(aCommand))
   { 
     rv = editInterface->GetCopyable( aResult );
   }
-  else if (PR_TRUE==NS_ConvertToString(sCutString).Equals(aCommand))    
+  else if (PR_TRUE==NS_ConvertASCIItoUCS2(sCutString).Equals(aCommand))    
   { 
     rv =  editInterface->GetCutable( aResult);
   }
-  else if (PR_TRUE==NS_ConvertToString(sPasteString).Equals(aCommand))    
+  else if (PR_TRUE==NS_ConvertASCIItoUCS2(sPasteString).Equals(aCommand))    
   { 
     rv = editInterface->GetPasteable( aResult );
   }
-  else if (PR_TRUE==NS_ConvertToString(sSelectAllString).Equals(aCommand))    
+  else if (PR_TRUE==NS_ConvertASCIItoUCS2(sSelectAllString).Equals(aCommand))    
   { 
     *aResult = PR_TRUE;
     rv = NS_OK;
@@ -4171,40 +4171,40 @@ NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand, 
   
   *aResult = PR_FALSE;
   if (
-  	(PR_TRUE== NS_ConvertToString(sCopyString).Equals(aCommand)) ||
-  	  (PR_TRUE== NS_ConvertToString(sSelectAllString).Equals(aCommand)) ||
-  	  (PR_TRUE== NS_ConvertToString(sCutString).Equals(aCommand)) ||
-  	  (PR_TRUE== NS_ConvertToString(sPasteString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sBeginLineString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sEndLineString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectBeginLineString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectEndLineString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sScrollTopString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sScrollBottomString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sMoveTopString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sMoveBottomString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectMoveTopString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectMoveBottomString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sDownString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sUpString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sLeftString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sRightString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectDownString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectUpString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectLeftString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectRightString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sWordLeftString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sWordRightString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectWordLeftString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectWordRightString).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sScrollPageUp).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sScrollPageDown).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sScrollLineUp).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sScrollLineDown).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sMovePageUp).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sMovePageDown).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectMovePageUp).Equals(aCommand)) ||
-      (PR_TRUE== NS_ConvertToString(sSelectMovePageDown).Equals(aCommand))
+  	(PR_TRUE== NS_ConvertASCIItoUCS2(sCopyString).Equals(aCommand)) ||
+  	  (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectAllString).Equals(aCommand)) ||
+  	  (PR_TRUE== NS_ConvertASCIItoUCS2(sCutString).Equals(aCommand)) ||
+  	  (PR_TRUE== NS_ConvertASCIItoUCS2(sPasteString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sBeginLineString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sEndLineString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectBeginLineString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectEndLineString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sScrollTopString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sScrollBottomString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sMoveTopString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sMoveBottomString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectMoveTopString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectMoveBottomString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sDownString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sUpString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sLeftString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sRightString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectDownString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectUpString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectLeftString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectRightString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sWordLeftString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sWordRightString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectWordLeftString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectWordRightString).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sScrollPageUp).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sScrollPageDown).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sScrollLineUp).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sScrollLineDown).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sMovePageUp).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sMovePageDown).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectMovePageUp).Equals(aCommand)) ||
+      (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectMovePageDown).Equals(aCommand))
       )
   {
     *aResult = PR_TRUE;
@@ -4224,38 +4224,38 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   if ( NS_FAILED ( rv ) )
   	return rv;
   	
-  if (PR_TRUE== NS_ConvertToString(sCopyString).Equals(aCommand))
+  if (PR_TRUE== NS_ConvertASCIItoUCS2(sCopyString).Equals(aCommand))
   { 
     rv = editInterface->CopySelection();
   }
-  else if (PR_TRUE== NS_ConvertToString(sCutString).Equals(aCommand))    
+  else if (PR_TRUE== NS_ConvertASCIItoUCS2(sCutString).Equals(aCommand))    
   { 
     rv = editInterface->CutSelection();
   }
-  else if (PR_TRUE== NS_ConvertToString(sPasteString).Equals(aCommand))    
+  else if (PR_TRUE== NS_ConvertASCIItoUCS2(sPasteString).Equals(aCommand))    
   { 
     rv = editInterface->Paste();
   }
-  else if (PR_TRUE== NS_ConvertToString(sSelectAllString).Equals(aCommand))    
+  else if (PR_TRUE== NS_ConvertASCIItoUCS2(sSelectAllString).Equals(aCommand))    
   { 
     rv = editInterface->SelectAll();
   }
-  else if (PR_TRUE==NS_ConvertToString(sScrollPageUp).Equals(aCommand))  //ScrollPageUp
+  else if (PR_TRUE==NS_ConvertASCIItoUCS2(sScrollPageUp).Equals(aCommand))  //ScrollPageUp
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollPage(PR_FALSE);
   }
-  else if (PR_TRUE==NS_ConvertToString(sScrollPageDown).Equals(aCommand))  //ScrollPageDown
+  else if (PR_TRUE==NS_ConvertASCIItoUCS2(sScrollPageDown).Equals(aCommand))  //ScrollPageDown
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollPage(PR_TRUE);
   }
-  else if (PR_TRUE==NS_ConvertToString(sScrollLineUp).Equals(aCommand))  //ScrollLineUp
+  else if (PR_TRUE==NS_ConvertASCIItoUCS2(sScrollLineUp).Equals(aCommand))  //ScrollLineUp
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollLine(PR_FALSE);
   }
-  else if (PR_TRUE==NS_ConvertToString(sScrollLineDown).Equals(aCommand))  //ScrollLineDown
+  else if (PR_TRUE==NS_ConvertASCIItoUCS2(sScrollLineDown).Equals(aCommand))  //ScrollLineDown
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollLine(PR_TRUE);

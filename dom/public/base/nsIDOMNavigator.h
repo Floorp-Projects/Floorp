@@ -52,7 +52,7 @@ public:
 
   NS_IMETHOD    GetPlatform(nsString& aPlatform)=0;
 
-  NS_IMETHOD    GetOscpu(nsString& aOSCPU)=0;
+  NS_IMETHOD    GetOscpu(nsString& aOscpu)=0;
 
   NS_IMETHOD    GetVendor(nsString& aVendor)=0;
 
@@ -85,11 +85,11 @@ public:
   NS_IMETHOD    GetLanguage(nsString& aLanguage);  \
   NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes);  \
   NS_IMETHOD    GetPlatform(nsString& aPlatform);  \
-  NS_IMETHOD    GetOscpu(nsString& aOSCPU);  \
-  NS_IMETHOD    GetVendor(nsString& aVendor); \
-  NS_IMETHOD    GetVendorSub(nsString& aVendorSub); \
-  NS_IMETHOD    GetProduct(nsString& aProduct); \
-  NS_IMETHOD    GetProductSub(nsString& aProductSub); \
+  NS_IMETHOD    GetOscpu(nsString& aOscpu);  \
+  NS_IMETHOD    GetVendor(nsString& aVendor);  \
+  NS_IMETHOD    GetVendorSub(nsString& aVendorSub);  \
+  NS_IMETHOD    GetProduct(nsString& aProduct);  \
+  NS_IMETHOD    GetProductSub(nsString& aProductSub);  \
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);  \
   NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);  \
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent);  \
@@ -107,8 +107,8 @@ public:
   NS_IMETHOD    GetLanguage(nsString& aLanguage) { return _to GetLanguage(aLanguage); } \
   NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes) { return _to GetMimeTypes(aMimeTypes); } \
   NS_IMETHOD    GetPlatform(nsString& aPlatform) { return _to GetPlatform(aPlatform); } \
-  NS_IMETHOD    GetOscpu(nsString& aOSCPU) { return _to GetOscpu(aOSCPU); } \
-  NS_IMETHOD    GetVendor(nsString& aVendor) { return _to GetVendor(aVendor); }\
+  NS_IMETHOD    GetOscpu(nsString& aOscpu) { return _to GetOscpu(aOscpu); } \
+  NS_IMETHOD    GetVendor(nsString& aVendor) { return _to GetVendor(aVendor); } \
   NS_IMETHOD    GetVendorSub(nsString& aVendorSub) { return _to GetVendorSub(aVendorSub); } \
   NS_IMETHOD    GetProduct(nsString& aProduct) { return _to GetProduct(aProduct); } \
   NS_IMETHOD    GetProductSub(nsString& aProductSub) { return _to GetProductSub(aProductSub); } \

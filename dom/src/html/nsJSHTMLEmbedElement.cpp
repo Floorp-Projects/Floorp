@@ -372,7 +372,7 @@ HTMLEmbedElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     return JS_FALSE;
   }
 
-  result = manager->LookupName("HTMLEmbedElement", PR_TRUE, classID);
+  result = manager->LookupName(NS_ConvertASCIItoUCS2("HTMLEmbedElement"), PR_TRUE, classID);
   if (NS_OK != result) {
     return JS_FALSE;
   }

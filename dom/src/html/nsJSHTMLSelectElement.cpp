@@ -230,6 +230,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         nsIDOMNSHTMLSelectElement* b;
         if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
+          nsresult result = NS_OK;
           rv = b->Item(JSVAL_TO_INT(id), &prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
@@ -508,14 +509,14 @@ HTMLSelectElementAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIHTMLElementIID,
-                                           NS_ConvertToString("HTMLElement"),
+                                           NS_ConvertASCIItoUCS2("HTMLElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIHTMLElementIID,
-                                           NS_ConvertToString("HTMLElement"),
+                                           NS_ConvertASCIItoUCS2("HTMLElement"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
