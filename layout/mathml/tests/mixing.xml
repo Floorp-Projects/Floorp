@@ -81,7 +81,7 @@ It seems that a table-cell only wants to be sole child or has only table-cell as
 Bug or feature ?
 -->
 
-<!-- --> 
+<!--
 
 <math>
    <math:mfrac>
@@ -107,6 +107,6 @@ Bug or feature ?
 
 <p/>
 
-<!-- -->
+-->
 
 </document>
