@@ -179,15 +179,27 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
         PRBool elementIsLink = PR_FALSE;
         if (!element)
         {
-          // Get enclosing link if in text so we can select the link
-          //XXX Although I'd prefer to not select a link on context click,
-          //    logic to place caret within a textnode is complicated and hidden 
-          //    in nsFrame code which is never reached during context-click processing
-          nsCOMPtr<nsIDOMElement> linkElement;
-          res = htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
-          if (NS_FAILED(res)) return res;
-          if (linkElement)
-            element = linkElement;
+          if (isContextClick)
+          {
+            // Set the selection to the point under the mouse cursor:
+            nsCOMPtr<nsIDOMNode> parent;
+            if (NS_FAILED(uiEvent->GetRangeParent(getter_AddRefs(parent))))
+              return NS_ERROR_NULL_POINTER;
+            PRInt32 offset = 0;
+            if (NS_FAILED(uiEvent->GetRangeOffset(&offset)))
+              return NS_ERROR_NULL_POINTER;
+
+            selection->Collapse(parent, offset);
+          }
+          else
+          {
+            // Get enclosing link if in text so we can select the link
+            nsCOMPtr<nsIDOMElement> linkElement;
+            res = htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
+            if (NS_FAILED(res)) return res;
+            if (linkElement)
+              element = linkElement;
+          }
         }
         // Select entire element clicked on if NOT within an existing selection
         //   and not the entire body, or table-related elements
