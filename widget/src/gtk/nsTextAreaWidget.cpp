@@ -55,6 +55,7 @@ NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 {
   PRBool oldIsReadOnly;
   mWidget = gtk_text_new(PR_FALSE, PR_FALSE);
+  gtk_text_set_word_wrap(GTK_TEXT(mWidget), PR_TRUE);
   gtk_widget_set_name(mWidget, "nsTextAreaWidget");
   SetPassword(mIsPassword);
   SetReadOnly(mIsReadOnly, oldIsReadOnly);
