@@ -342,7 +342,7 @@ NS_NewStringInputStream(nsIInputStream** aStreamResult,
     return NS_OK;
 }
 
-// Factory method to get an nsInputStream from an nsAString.  Result will
+// Factory method to get an nsInputStream from an nsACString.  Result will
 // implement nsIStringInputStream and nsIRandomAccessStore
 extern "C" NS_COM nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
@@ -371,7 +371,7 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
     return NS_OK;
 }
 
-// Factory method to get an nsInputStream from an nsAString.  Result will
+// Factory method to get an nsInputStream from a C string.  Result will
 // implement nsIStringInputStream and nsIRandomAccessStore
 extern "C" NS_COM nsresult
 NS_NewCharInputStream(nsIInputStream** aStreamResult,
@@ -394,7 +394,7 @@ NS_NewCharInputStream(nsIInputStream** aStreamResult,
     return NS_OK;
 }
 
-// Factory method to get an nsInputStream from an nsAString.  Result will
+// Factory method to get an nsInputStream from a byte array.  Result will
 // implement nsIStringInputStream and nsIRandomAccessStore
 extern "C" NS_COM nsresult
 NS_NewByteInputStream(nsIInputStream** aStreamResult,
