@@ -422,14 +422,9 @@ nsXFormsSubmissionElement::Submit()
 
   nsresult rv;
 
-  // 1. ensure that we are not currently processing a xforms-submit on our model
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-
-  PRBool submissionActive = PR_FALSE;
-  model->GetSubmissionActive(&submissionActive);
-  NS_ENSURE_STATE(!submissionActive);
-
-  model->SetSubmissionActive(PR_TRUE);
+  // 1. ensure that we are not currently processing a xforms-submit (see E37)
+  NS_ENSURE_STATE(!mSubmissionActive);
+  mSubmissionActive = PR_TRUE;
 
 
   // 2. get selected node from the instance data (use xpath, gives us node
@@ -469,8 +464,10 @@ nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
 {
   LOG(("xforms submission complete [%s]\n", succeeded ? "success" : "failure"));
 
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  model->SetSubmissionActive(PR_FALSE);
+  // XForms 1.0 errata (E37) limits a <submission> element to performing
+  // only one submission at a time, contrary to the spec which places the
+  // limitation on the <model> element.
+  mSubmissionActive = PR_FALSE;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -484,17 +481,9 @@ nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
                              : NS_LITERAL_STRING("xforms-submit-error"),
                    PR_TRUE, PR_FALSE);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  if (succeeded)
-    target = do_QueryInterface(mElement);
-  else
-  {
-    nsCOMPtr<nsIDOMNode> parent;
-    mElement->GetParentNode(getter_AddRefs(parent));
-    NS_ENSURE_STATE(parent);
-
-    target = do_QueryInterface(parent);
-  }
+  // XForms 1.0 errata (E10) states that the target of the xforms-submit-error
+  // event is the <submission> element instead of the <model> element.
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mElement);
 
   PRBool cancelled;
   return target->DispatchEvent(event, &cancelled);
@@ -960,7 +949,7 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
   postDataChunk += NS_LITERAL_CSTRING("--") + boundary
                 +  NS_LITERAL_CSTRING("\r\nContent-Type: ") + type
                 +  NS_LITERAL_CSTRING("\r\nContent-ID: <") + start
-                +  NS_LITERAL_CSTRING(">\r\n");
+                +  NS_LITERAL_CSTRING(">\r\n\r\n");
   nsresult rv = AppendPostDataChunk(postDataChunk, multiStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -984,7 +973,7 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
                   +  NS_LITERAL_CSTRING("\r\nContent-Type: ") + type
                   +  NS_LITERAL_CSTRING("\r\nContent-Transfer-Encoding: binary")
                   +  NS_LITERAL_CSTRING("\r\nContent-ID: <") + a->cid
-                  +  NS_LITERAL_CSTRING(">\r\n");
+                  +  NS_LITERAL_CSTRING(">\r\n\r\n");
     rv = AppendPostDataChunk(postDataChunk, multiStream);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -999,8 +988,8 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
 
   contentType =
       NS_LITERAL_CSTRING("multipart/related; boundary=") + boundary +
-      NS_LITERAL_CSTRING("; type=") + type +
-      NS_LITERAL_CSTRING("; start=\"<") + start +
+      NS_LITERAL_CSTRING("; type=\"") + type +
+      NS_LITERAL_CSTRING("\"; start=\"<") + start +
       NS_LITERAL_CSTRING(">\"");
 
   NS_ADDREF(*stream = multiStream);
@@ -1044,7 +1033,7 @@ nsXFormsSubmissionElement::SerializeDataMultipartFormData(nsIDOMNode *data,
   NS_ENSURE_SUCCESS(rv, rv);
 
   postDataChunk += NS_LITERAL_CSTRING("--") + boundary
-                +  NS_LITERAL_CSTRING("--\r\n");
+                +  NS_LITERAL_CSTRING("--\r\n\r\n");
   rv = AppendPostDataChunk(postDataChunk, multiStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1278,9 +1267,15 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
   nsCOMPtr<nsIIOService> ios = do_GetIOService();
   NS_ENSURE_STATE(ios);
 
-  // uriSpec is already ASCII-encoded and absolutely specified
+  // Any parameters appended to uriSpec are already ASCII-encoded per the rules
+  // of section 11.6.  Use our standard document charset based canonicalization
+  // for any other non-ASCII bytes.  (This might be important for compatibility
+  // with legacy CGI processors.)
   nsCOMPtr<nsIURI> uri;
-  ios->NewURI(uriSpec, nsnull, doc->GetDocumentURI(), getter_AddRefs(uri));
+  ios->NewURI(uriSpec,
+              doc->GetDocumentCharacterSet().get(),
+              doc->GetDocumentURI(),
+              getter_AddRefs(uri));
   NS_ENSURE_STATE(uri);
 
   nsresult rv;

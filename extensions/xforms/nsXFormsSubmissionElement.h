@@ -63,6 +63,7 @@ public:
 
   nsXFormsSubmissionElement()
     : mElement(nsnull)
+    , mSubmissionActive(PR_FALSE)
   {}
 
   // nsIXTFGenericElement overrides
@@ -95,6 +96,7 @@ public:
 
 private:
   nsIDOMElement *mElement;
+  PRBool         mSubmissionActive;
 
   // input end of pipe, which contains response data.
   nsCOMPtr<nsIInputStream> mPipeIn;

@@ -131,7 +131,6 @@ private:
 
   PRInt32 mSchemaCount;
   PRInt32 mPendingInstanceCount;
-  PRBool  mSubmissionActive;
   
   nsXFormsMDG mMDG;
 };

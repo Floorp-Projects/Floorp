@@ -111,8 +111,7 @@ static nsIAtom* sModelPropsList[eModel__count];
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
     mSchemaCount(0),
-    mPendingInstanceCount(0),
-    mSubmissionActive(PR_FALSE)
+    mPendingInstanceCount(0)
 {
 }
 
@@ -590,20 +589,6 @@ nsXFormsModelElement::FindInstanceElement(const nsAString &aID,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::GetSubmissionActive(PRBool *aIsActive)
-{
-  *aIsActive = mSubmissionActive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::SetSubmissionActive(PRBool aIsActive)
-{
-  mSubmissionActive = aIsActive;
   return NS_OK;
 }
 

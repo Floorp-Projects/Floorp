@@ -76,9 +76,4 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * Locate the instance element child with the given id.
    */
   nsIInstanceElementPrivate findInstanceElement(in AString id);
-
-  /**
-   * Track whether there is a form submit in progress for this model.
-   */
-  attribute boolean submissionActive;
 };
