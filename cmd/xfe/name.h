@@ -24,7 +24,7 @@
 #define XFE_NAME      Netscape
 #define XFE_PROGNAME  netscape
 #define XFE_PROGCLASS Netscape
-#define XFE_LEGALESE "(c) 1995-1997 Netscape Communications Corp."
+#define XFE_LEGALESE "(c) 1995-1998 Netscape Communications Corp."
 
 /* I don't pretend to understand this. */
 #define cpp_stringify_noop_helper(x)#x
