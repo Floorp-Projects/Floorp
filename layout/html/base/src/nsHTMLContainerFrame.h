@@ -94,7 +94,7 @@ public:
    */
   static nsresult CreateViewForFrame(nsIPresContext* aPresContext,
                                      nsIFrame* aFrame,
-                                     nsIStyleContext* aStyleContext,
+                                     nsStyleContext* aStyleContext,
                                      nsIFrame* aContentParentFrame,
                                      PRBool aForce);
 

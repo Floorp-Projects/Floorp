@@ -47,7 +47,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsISupports.h"
@@ -123,7 +123,7 @@ NS_IMETHODIMP
 nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsIStyleContext* aContext,
+              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -145,13 +145,11 @@ nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame
-  nsIStyleContext* styleContext;
-  aPresContext->ResolvePseudoStyleContextFor(mContent,
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
                                             nsCSSAnonBoxes::buttonContent,
-                                            mStyleContext,
-                                            &styleContext);
+                                            mStyleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
-  NS_RELEASE(styleContext);                                           
 
   return rv;
 }
@@ -333,14 +331,14 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   //
   nsCOMPtr<nsIPresShell> shell;
   nsCOMPtr<nsIFrameManager> frameManager;
-  nsCOMPtr<nsIStyleContext> newParentContext;
+  nsStyleContext* newParentContext;
   aPresContext->GetShell(getter_AddRefs(shell));
   if (shell) {
     shell->GetFrameManager(getter_AddRefs(frameManager));
   }
   // get the new parent context from the first child: that is the frame that the
   // subsequent children will be made children of
-  mFrames.FirstChild()->GetStyleContext(getter_AddRefs(newParentContext));
+  newParentContext = mFrames.FirstChild()->GetStyleContext();
 
   // Set the parent for each of the child frames
   for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(&frame)) {
@@ -691,18 +689,17 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAString& a
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
-                                                    nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsHTMLButtonControlFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
-  return mRenderer.GetStyleContext(aIndex, aStyleContext);
+  return mRenderer.GetStyleContext(aIndex);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLButtonControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
-                                                    nsIStyleContext* aStyleContext)
+                                                    nsStyleContext* aStyleContext)
 {
-  return mRenderer.SetStyleContext(aIndex, aStyleContext);
+  mRenderer.SetStyleContext(aIndex, aStyleContext);
 }
 
 

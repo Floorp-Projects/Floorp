@@ -43,7 +43,7 @@
 //
 
 #include "nsStackFrame.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
@@ -107,7 +107,9 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   GetInset(im);
   nsMargin border(0,0,0,0);
   nsStyleBorderPadding  bPad;
-  aFrame->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  nsStyleContext* styleContext;
+  aFrame->GetStyleContext(&styleContext);
+  styleContext->GetBorderPaddingFor(bPad);
   bPad.GetBorderPadding(borderPadding);
   r.Deflate(im);
   r.Deflate(border);    

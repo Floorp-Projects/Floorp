@@ -64,7 +64,6 @@ nsIReflowCallback.h \
 nsIScrollableFrame.h \
 nsIScrollableViewProvider.h \
 nsIStatefulFrame.h \
-nsIStyleContext.h \
 nsIStyleFrameConstruction.h \
 nsIStyleSet.h \
 nsLayoutErrors.h \

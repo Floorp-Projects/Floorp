@@ -48,7 +48,7 @@
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsImageMap.h"
 #include "nsILinkHandler.h"
@@ -304,7 +304,7 @@ NS_IMETHODIMP
 nsImageFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
+                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsSplittableFrame::Init(aPresContext, aContent, aParent,
@@ -1296,7 +1296,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
     // inline-level or block-level, respectively.  (See CSS2 9.5, which
     // is the rationale for paint layers.)
     const nsStyleDisplay *display;
-    ::GetStyleData(NS_STATIC_CAST(nsIStyleContext*, mStyleContext), &display);
+    ::GetStyleData(mStyleContext, &display);
     nsFramePaintLayer backgroundLayer = display->IsBlockLevel()
                                             ? NS_FRAME_PAINT_LAYER_BACKGROUND
                                             : NS_FRAME_PAINT_LAYER_FOREGROUND;

@@ -92,7 +92,7 @@ NS_IMETHODIMP
 nsScrollFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsIStyleContext* aStyleContext,
+                    nsStyleContext*  aStyleContext,
                     nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent,

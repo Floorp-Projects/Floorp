@@ -61,11 +61,12 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollableView.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsITimer.h"
+#include "nsAutoPtr.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -225,7 +226,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 NS_IMETHODIMP
 nsListBoxBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
-                         nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
+                         nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
@@ -747,9 +748,9 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
   nsCOMPtr<nsIContent> firstRowContent(do_QueryInterface(firstRowEl));
 
   if (firstRowContent) {
-    nsCOMPtr<nsIStyleContext> styleContext;
-    aBoxLayoutState.GetPresContext()->ResolveStyleContextFor(firstRowContent, nsnull,
-                                                             getter_AddRefs(styleContext));
+    nsRefPtr<nsStyleContext> styleContext;
+    styleContext = aBoxLayoutState.GetPresContext()->ResolveStyleContextFor(firstRowContent,
+                                                                            nsnull);
 
     nscoord width = 0;
     nsMargin margin(0,0,0,0);

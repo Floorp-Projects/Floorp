@@ -73,6 +73,7 @@
 #include "nsISizeOfHandler.h"
 
 #include "nsContentUtils.h"
+#include "nsContentErrors.h"
 
 // #define DEBUG_REFS
  

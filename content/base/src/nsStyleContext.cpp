@@ -54,6 +54,7 @@
 
 #include "nsRuleNode.h"
 #include "nsUnitConversion.h"
+#include "nsStyleContext.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -61,87 +62,8 @@
 
 //----------------------------------------------------------------------
 
-class nsStyleContext : public nsIStyleContext 
-{
-public:
-  nsStyleContext(nsIStyleContext* aParent, nsIAtom* aPseudoTag, 
-                 nsRuleNode* aRuleNode, nsIPresContext* aPresContext);
-  virtual ~nsStyleContext();
 
-  void* operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW;
-  void Destroy();
-
-  NS_DECL_ISUPPORTS
-
-  virtual already_AddRefed<nsIStyleContext> GetParent(void) const;
-  NS_IMETHOD GetFirstChild(nsIStyleContext** aContext);
-
-  NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const;
-
-  NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules,
-                                nsIStyleContext*& aResult);
-
-  virtual PRBool    Equals(const nsIStyleContext* aOther) const;
-  virtual PRBool    HasTextDecorations() { return mBits & NS_STYLE_HAS_TEXT_DECORATIONS; };
-
-  NS_IMETHOD GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding);
-
-  NS_IMETHOD GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct);
-  NS_IMETHOD SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct);
-
-  NS_IMETHOD GetRuleNode(nsRuleNode** aResult) { *aResult = mRuleNode; return NS_OK; };
-  NS_IMETHOD AddStyleBit(const PRUint32& aBit) { mBits |= aBit; return NS_OK; };
-  NS_IMETHOD GetStyleBits(PRUint32* aBits) { *aBits = mBits; return NS_OK; };
-
-  virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
-  const nsStyleStruct* PeekStyleData(nsStyleStructID aSID);
-
-  virtual nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID);
-
-  virtual nsresult ClearCachedDataForRule(nsIStyleRule* aRule);
-
-  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
-
-  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint);
-
-#ifdef DEBUG
-  virtual void DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
-
-  virtual void List(FILE* out, PRInt32 aIndent);
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-#endif
-
-protected:
-  void AppendChild(nsStyleContext* aChild);
-  void RemoveChild(nsStyleContext* aChild);
-
-  void ApplyStyleFixups(nsIPresContext* aPresContext);
-
-  nsStyleContext* mParent;
-  nsStyleContext* mChild;
-  nsStyleContext* mEmptyChild;
-  nsStyleContext* mPrevSibling;
-  nsStyleContext* mNextSibling;
-
-  // If this style context is for a pseudo-element, the pseudo-element
-  // atom.  Otherwise, null.
-  nsCOMPtr<nsIAtom> mPseudoTag;
-
-  nsRuleNode*             mRuleNode;
-
-  // |mCachedStyleData| points to both structs that are owned by this
-  // style context and structs that are owned by one of this style
-  // context's ancestors (which are indirectly owned since this style
-  // context owns a reference to its parent).  If the bit in |mBits| is
-  // set for a struct, that means that the pointer for that struct is
-  // owned by an ancestor rather than by this style context.
-  nsCachedStyleData       mCachedStyleData; // Our cached style data.
-  PRUint32                mBits; // Which structs are inherited from the
-                                 // parent context.
-};
-
-nsStyleContext::nsStyleContext(nsIStyleContext* aParent,
+nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                nsRuleNode* aRuleNode,
                                nsIPresContext* aPresContext)
@@ -150,13 +72,13 @@ nsStyleContext::nsStyleContext(nsIStyleContext* aParent,
     mEmptyChild(nsnull),
     mPseudoTag(aPseudoTag),
     mRuleNode(aRuleNode),
-    mBits(0)
+    mBits(0),
+    mRefCnt(0)
 {
-  
   mNextSibling = this;
   mPrevSibling = this;
   if (mParent) {
-    NS_ADDREF(mParent);
+    mParent->AddRef();
     mParent->AppendChild(this);
   }
 
@@ -173,7 +95,7 @@ nsStyleContext::~nsStyleContext()
 
   if (mParent) {
     mParent->RemoveChild(this);
-    NS_RELEASE(mParent);
+    mParent->Release();
   }
 
   // Free up our data structs.
@@ -182,24 +104,6 @@ nsStyleContext::~nsStyleContext()
     mRuleNode->GetPresContext(getter_AddRefs(presContext));
     mCachedStyleData.Destroy(mBits, presContext);
   }
-}
-
-NS_IMPL_ADDREF(nsStyleContext)
-NS_IMPL_RELEASE_WITH_DESTROY(nsStyleContext, Destroy())
-NS_IMPL_QUERY_INTERFACE1(nsStyleContext, nsIStyleContext)
-
-already_AddRefed<nsIStyleContext> nsStyleContext::GetParent(void) const
-{
-  NS_IF_ADDREF(mParent);
-  return mParent;
-}
-
-NS_IMETHODIMP
-nsStyleContext::GetFirstChild(nsIStyleContext** aContext)
-{
-  *aContext = mChild;
-  NS_IF_ADDREF(*aContext);
-  return NS_OK;
 }
 
 void nsStyleContext::AppendChild(nsStyleContext* aChild)
@@ -263,23 +167,22 @@ void nsStyleContext::RemoveChild(nsStyleContext* aChild)
   aChild->mPrevSibling = aChild;
 }
 
-NS_IMETHODIMP
-nsStyleContext::GetPseudoType(nsIAtom*& aPseudoTag) const
+already_AddRefed<nsIAtom>
+nsStyleContext::GetPseudoType() const
 {
-  aPseudoTag = mPseudoTag;
-  NS_IF_ADDREF(aPseudoTag);
-  return NS_OK;
+  nsIAtom* pseudoTag = mPseudoTag;
+  NS_IF_ADDREF(pseudoTag);
+  return pseudoTag;
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsStyleContext>
 nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag, 
-                                     nsRuleNode* aRuleNode,
-                                     nsIStyleContext*& aResult)
+                                   nsRuleNode* aRuleNode)
 {
   PRUint32 threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 
-  aResult = nsnull;
+  nsStyleContext* aResult = nsnull;
 
   if ((nsnull != mChild) || (nsnull != mEmptyChild)) {
     nsStyleContext* child;
@@ -313,12 +216,15 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
       } while (child != mChild);
     }
   }
-  NS_IF_ADDREF(aResult);
-  return NS_OK;
+
+  if (aResult)
+    aResult->AddRef();
+
+  return aResult;
 }
 
 
-PRBool nsStyleContext::Equals(const nsIStyleContext* aOther) const
+PRBool nsStyleContext::Equals(const nsStyleContext* aOther) const
 {
   PRBool  result = PR_TRUE;
   const nsStyleContext* other = (nsStyleContext*)aOther;
@@ -358,7 +264,7 @@ inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
   return mRuleNode->GetStyleData(aSID, this, PR_FALSE); // Our rule node will take care of it for us.
 }
 
-NS_IMETHODIMP
+void
 nsStyleContext::GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)
 {
   nsMargin border, padding;
@@ -370,8 +276,6 @@ nsStyleContext::GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)
       aBorderPadding.SetBorderPadding(border);
     }
   }
-
-  return NS_OK;
 }
 
 // This is an evil evil function, since it forces you to alloc your own separate copy of
@@ -421,14 +325,7 @@ nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleSt
   return result;
 }
 
-NS_IMETHODIMP
-nsStyleContext::GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct)
-{
-  *aStruct = GetStyleData(aSID);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
 {
   // This method should only be called from nsRuleNode!  It is not a public
@@ -461,8 +358,6 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
   }
   char* dataSlot = resetOrInherit + info.mInheritResetOffset;
   *NS_REINTERPRET_CAST(nsStyleStruct**, dataSlot) = aStruct;
-
-  return NS_OK;
 }
 
 void
@@ -497,7 +392,7 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
   }
 }
 
-nsresult
+void
 nsStyleContext::ClearCachedDataForRule(nsIStyleRule* aInlineStyleRule)
 {
   mRuleNode->ClearCachedData(aInlineStyleRule); // XXXdwh.  If we're willing to *really* special case
@@ -505,10 +400,9 @@ nsStyleContext::ClearCachedDataForRule(nsIStyleRule* aInlineStyleRule)
                                            // that actually changed.  For example, if someone changes
                                            // style.left, we really only need to blow away cached
                                            // data in the position struct.
-  return NS_OK;
 }
 
-nsresult
+void
 nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule)
 {
   PRBool matched = PR_TRUE;
@@ -541,13 +435,12 @@ nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule
       child = child->mNextSibling;
     } while (mEmptyChild != child);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint)
+nsChangeHint
+nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 {
+  nsChangeHint hint = NS_STYLE_HINT_NONE;
   if (aOther) {
     // If our rule nodes are the same, then we are looking at the same style
     // data.  We know this because CalcStyleDifference is always called on two
@@ -557,72 +450,70 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint
     nsRuleNode* ruleNode;
     aOther->GetRuleNode(&ruleNode);
     if (ruleNode == mRuleNode)
-      return NS_OK;
+      return hint;
 
     nsChangeHint maxHint = NS_STYLE_HINT_FRAMECHANGE;
     
     // We begin by examining those style structs that are capable of causing the maximal
     // difference, a FRAMECHANGE.
     // FRAMECHANGE Structs: Display, XUL, Content, UserInterface, Visibility, Quotes
-    if (!NS_IsHintSubset(maxHint, aHint)) {
-      const nsStyleDisplay* display = (const nsStyleDisplay*)PeekStyleData(eStyleStruct_Display);
-      if (display) {
-        const nsStyleDisplay* otherDisplay = (const nsStyleDisplay*)aOther->GetStyleData(eStyleStruct_Display);
-        if (display != otherDisplay) {
-          NS_UpdateHint(aHint, display->CalcDifference(*otherDisplay));
-        }
+    const nsStyleDisplay* display = (const nsStyleDisplay*)PeekStyleData(eStyleStruct_Display);
+    if (display) {
+      const nsStyleDisplay* otherDisplay = (const nsStyleDisplay*)aOther->GetStyleData(eStyleStruct_Display);
+      if (display != otherDisplay) {
+        NS_UpdateHint(hint, display->CalcDifference(*otherDisplay));
       }
     }
 
 #ifdef INCLUDE_XUL
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleXUL* xul = (const nsStyleXUL*)PeekStyleData(eStyleStruct_XUL);
       if (xul) {
         const nsStyleXUL* otherXUL = (const nsStyleXUL*)aOther->GetStyleData(eStyleStruct_XUL);
         if (xul != otherXUL) {
-          NS_UpdateHint(aHint, xul->CalcDifference(*otherXUL));
+          NS_UpdateHint(hint, xul->CalcDifference(*otherXUL));
         }
       }
     }
 #endif
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleContent* content = (const nsStyleContent*)PeekStyleData(eStyleStruct_Content);
       if (content) {
         const nsStyleContent* otherContent = (const nsStyleContent*)aOther->GetStyleData(eStyleStruct_Content);
         if (content != otherContent) {
-          NS_UpdateHint(aHint, content->CalcDifference(*otherContent));
+          NS_UpdateHint(hint, content->CalcDifference(*otherContent));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleUserInterface* ui = (const nsStyleUserInterface*)PeekStyleData(eStyleStruct_UserInterface);
       if (ui) {
         const nsStyleUserInterface* otherUI = (const nsStyleUserInterface*)aOther->GetStyleData(eStyleStruct_UserInterface);
         if (ui != otherUI) {
-          NS_UpdateHint(aHint, ui->CalcDifference(*otherUI));
+          NS_UpdateHint(hint, ui->CalcDifference(*otherUI));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleVisibility* vis = (const nsStyleVisibility*)PeekStyleData(eStyleStruct_Visibility);
       if (vis) {
         const nsStyleVisibility* otherVis = (const nsStyleVisibility*)aOther->GetStyleData(eStyleStruct_Visibility);
         if (vis != otherVis) {
-          NS_UpdateHint(aHint, vis->CalcDifference(*otherVis));
+          NS_UpdateHint(hint, vis->CalcDifference(*otherVis));
         }
       }
     }
 
 #ifdef MOZ_SVG
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleSVG* svg = (const nsStyleSVG*)PeekStyleData(eStyleStruct_SVG);
       if (svg) {
         const nsStyleSVG* otherSVG = (const nsStyleSVG*)aOther->GetStyleData(eStyleStruct_SVG);
         if (svg != otherSVG) {
-          NS_UpdateHint(aHint, svg->CalcDifference(*otherSVG));
+          NS_UpdateHint(hint, svg->CalcDifference(*otherSVG));
         }
       }
     }
@@ -630,12 +521,12 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint
 
     // If the quotes implementation is ever going to change we might not need
     // a framechange here and a reflow should be sufficient.  See bug 35768.
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleQuotes* quotes = (const nsStyleQuotes*)PeekStyleData(eStyleStruct_Quotes);
       if (quotes) {
         const nsStyleQuotes* otherQuotes = (const nsStyleQuotes*)aOther->GetStyleData(eStyleStruct_Quotes);
         if (quotes != otherQuotes) {
-          NS_UpdateHint(aHint, quotes->CalcDifference(*otherQuotes));
+          NS_UpdateHint(hint, quotes->CalcDifference(*otherQuotes));
         }
       }
     }
@@ -646,102 +537,102 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint
     // The following structs cause (as their maximal difference) a reflow to occur.
     // REFLOW Structs: Font, Margin, Padding, Border, List, Position, Text, TextReset,
     // Table, TableBorder
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleFont* font = (const nsStyleFont*)PeekStyleData(eStyleStruct_Font);
       if (font) {
         const nsStyleFont* otherFont = (const nsStyleFont*)aOther->GetStyleData(eStyleStruct_Font);
         if (font != otherFont) {
-          NS_UpdateHint(aHint, font->CalcDifference(*otherFont));
+          NS_UpdateHint(hint, font->CalcDifference(*otherFont));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleMargin* margin = (const nsStyleMargin*)PeekStyleData(eStyleStruct_Margin);
       if (margin) {
         const nsStyleMargin* otherMargin = (const nsStyleMargin*)aOther->GetStyleData(eStyleStruct_Margin);
         if (margin != otherMargin) {
-          NS_UpdateHint(aHint, margin->CalcDifference(*otherMargin));
+          NS_UpdateHint(hint, margin->CalcDifference(*otherMargin));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStylePadding* padding = (const nsStylePadding*)PeekStyleData(eStyleStruct_Padding);
       if (padding) {
         const nsStylePadding* otherPadding = (const nsStylePadding*)aOther->GetStyleData(eStyleStruct_Padding);
         if (padding != otherPadding) {
-          NS_UpdateHint(aHint, padding->CalcDifference(*otherPadding));
+          NS_UpdateHint(hint, padding->CalcDifference(*otherPadding));
         }
       }
     }
     
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleBorder* border = (const nsStyleBorder*)PeekStyleData(eStyleStruct_Border);
       if (border) {
         const nsStyleBorder* otherBorder = (const nsStyleBorder*)aOther->GetStyleData(eStyleStruct_Border);
         if (border != otherBorder) {
-          NS_UpdateHint(aHint, border->CalcDifference(*otherBorder));
+          NS_UpdateHint(hint, border->CalcDifference(*otherBorder));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleList* list = (const nsStyleList*)PeekStyleData(eStyleStruct_List);
       if (list) {
         const nsStyleList* otherList = (const nsStyleList*)aOther->GetStyleData(eStyleStruct_List);
         if (list != otherList) {
-          NS_UpdateHint(aHint, list->CalcDifference(*otherList));
+          NS_UpdateHint(hint, list->CalcDifference(*otherList));
         }
       }
     }
     
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStylePosition* pos = (const nsStylePosition*)PeekStyleData(eStyleStruct_Position);
       if (pos) {
         const nsStylePosition* otherPosition = (const nsStylePosition*)aOther->GetStyleData(eStyleStruct_Position);
         if (pos != otherPosition) {
-          NS_UpdateHint(aHint, pos->CalcDifference(*otherPosition));
+          NS_UpdateHint(hint, pos->CalcDifference(*otherPosition));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleText* text = (const nsStyleText*)PeekStyleData(eStyleStruct_Text);
       if (text) {
         const nsStyleText* otherText = (const nsStyleText*)aOther->GetStyleData(eStyleStruct_Text);
         if (text != otherText) {
-          NS_UpdateHint(aHint, text->CalcDifference(*otherText));
+          NS_UpdateHint(hint, text->CalcDifference(*otherText));
         }
       }
     }
     
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleTextReset* text = (const nsStyleTextReset*)PeekStyleData(eStyleStruct_TextReset);
       if (text) {
         const nsStyleTextReset* otherText = (const nsStyleTextReset*)aOther->GetStyleData(eStyleStruct_TextReset);
         if (text != otherText) {
-          NS_UpdateHint(aHint, text->CalcDifference(*otherText));
+          NS_UpdateHint(hint, text->CalcDifference(*otherText));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleTable* table = (const nsStyleTable*)PeekStyleData(eStyleStruct_Table);
       if (table) {
         const nsStyleTable* otherTable = (const nsStyleTable*)aOther->GetStyleData(eStyleStruct_Table);
         if (table != otherTable) {
-          NS_UpdateHint(aHint, table->CalcDifference(*otherTable));
+          NS_UpdateHint(hint, table->CalcDifference(*otherTable));
         }
       }
     }
     
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleTableBorder* table = (const nsStyleTableBorder*)PeekStyleData(eStyleStruct_TableBorder);
       if (table) {
         const nsStyleTableBorder* otherTable = (const nsStyleTableBorder*)aOther->GetStyleData(eStyleStruct_TableBorder);
         if (table != otherTable) {
-          NS_UpdateHint(aHint, table->CalcDifference(*otherTable));
+          NS_UpdateHint(hint, table->CalcDifference(*otherTable));
         }
       }
     }
@@ -752,47 +643,47 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, nsChangeHint& aHint
 
     // The following structs cause (as their maximal difference) a re-render to occur.
     // VISUAL Structs: Color, Background, Outline, UIReset
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleColor* color = (const nsStyleColor*)PeekStyleData(eStyleStruct_Color);
       if (color) {
         const nsStyleColor* otherColor = (const nsStyleColor*)aOther->GetStyleData(eStyleStruct_Color);
         if (color != otherColor) {
-          NS_UpdateHint(aHint, color->CalcDifference(*otherColor));
+          NS_UpdateHint(hint, color->CalcDifference(*otherColor));
         }
       }
     }
 
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleBackground* background = (const nsStyleBackground*)PeekStyleData(eStyleStruct_Background);
       if (background) {
         const nsStyleBackground* otherBackground = (const nsStyleBackground*)aOther->GetStyleData(eStyleStruct_Background);
         if (background != otherBackground) {
-          NS_UpdateHint(aHint, background->CalcDifference(*otherBackground));
+          NS_UpdateHint(hint, background->CalcDifference(*otherBackground));
         }
       }
     }
     
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleOutline* outline = (const nsStyleOutline*)PeekStyleData(eStyleStruct_Outline);
       if (outline) {
         const nsStyleOutline* otherOutline = (const nsStyleOutline*)aOther->GetStyleData(eStyleStruct_Outline);
         if (outline != otherOutline) {
-          NS_UpdateHint(aHint, outline->CalcDifference(*otherOutline));
+          NS_UpdateHint(hint, outline->CalcDifference(*otherOutline));
         }
       }
     }
     
-    if (!NS_IsHintSubset(maxHint, aHint)) {
+    if (!NS_IsHintSubset(maxHint, hint)) {
       const nsStyleUIReset* ui = (const nsStyleUIReset*)PeekStyleData(eStyleStruct_UIReset);
       if (ui) {
         const nsStyleUIReset* otherUI = (const nsStyleUIReset*)aOther->GetStyleData(eStyleStruct_UIReset);
         if (ui != otherUI) {
-          NS_UpdateHint(aHint, ui->CalcDifference(*otherUI));
+          NS_UpdateHint(hint, ui->CalcDifference(*otherUI));
         }
       }
     }
   }
-  return NS_OK;
+  return hint;
 }
 
 #ifdef DEBUG
@@ -802,7 +693,7 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
   PRInt32 ix;
   for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
   fprintf(out, "%p(%d) parent=%p ",
-          (void*)this, mRefCnt.get(), (void *)mParent);
+          (void*)this, mRefCnt, (void *)mParent);
   if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
@@ -1176,24 +1067,16 @@ nsStyleContext::Destroy()
   presContext->FreeToShell(sizeof(nsStyleContext), this);
 }
 
-NS_EXPORT nsresult
-NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
-                   nsIStyleContext* aParentContext,
+already_AddRefed<nsStyleContext>
+NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsRuleNode* aRuleNode,
                    nsIPresContext* aPresContext)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
   nsStyleContext* context = new (aPresContext) nsStyleContext(aParentContext, aPseudoTag, 
                                                               aRuleNode, aPresContext);
-  if (!context) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return CallQueryInterface(context, aInstancePtrResult);
+  if (context)
+    context->AddRef();
+  return context;
 }
 

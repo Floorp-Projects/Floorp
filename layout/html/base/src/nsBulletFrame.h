@@ -38,7 +38,7 @@
 #define nsBulletFrame_h___
 
 #include "nsFrame.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
@@ -57,7 +57,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
+                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD Paint(nsIPresContext*      aCX,

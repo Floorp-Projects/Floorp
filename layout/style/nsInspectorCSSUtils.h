@@ -41,9 +41,10 @@
 #define nsInspectorCSSUtils_h___
 
 #include "nsIInspectorCSSUtils.h"
+#include "nsStyleContext.h"
+#include "nsAutoPtr.h"
 
 class nsIPresShell;
-class nsIStyleContext;
 
 class nsInspectorCSSUtils : public nsIInspectorCSSUtils {
 
@@ -64,11 +65,10 @@ public:
                                      nsRuleNode** aRuleNode);
 
 private:
-    nsresult GetStyleContextForContent(nsIContent* aContent,
-                                       nsIPresShell* aPresShell,
-                                       nsIStyleContext** aStyleContext);
-    nsresult GetStyleContextForFrame(nsIFrame* aFrame,
-                                     nsIStyleContext** aStyleContext);
+    already_AddRefed<nsStyleContext>
+    GetStyleContextForContent(nsIContent* aContent, nsIPresShell* aPresShell);
+
+    nsStyleContext* GetStyleContextForFrame(nsIFrame* aFrame);
 };
 
 #endif /* nsInspectorCSSUtils_h___ */

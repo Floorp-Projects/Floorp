@@ -99,7 +99,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
+                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
@@ -210,7 +210,7 @@ protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
 
-  nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext);
+  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsIPresContext* aPresContext);
 
   /*
    * Overides member function of nsHTMLContainerFrame. Needed to handle the 

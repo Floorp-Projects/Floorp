@@ -39,7 +39,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
@@ -190,7 +190,7 @@ NS_IMETHODIMP
 nsTableRowFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsIStyleContext* aContext,
+                      nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;

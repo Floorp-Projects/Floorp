@@ -50,7 +50,7 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsCoord.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
@@ -91,6 +91,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsGUIEvent.h"
+#include "nsAutoPtr.h"
 
 #ifdef IBMBIDI
 #include "nsBidiFrames.h"
@@ -536,7 +537,7 @@ public:
 
     TextStyle(nsIPresContext* aPresContext,
               nsIRenderingContext& aRenderingContext,
-              nsIStyleContext* sc)
+              nsStyleContext* sc)
     {
     mFont = nsnull;
     mText = nsnull;
@@ -679,7 +680,7 @@ public:
                                         PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumSpaces);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
-                            nsIStyleContext* aStyleContext,
+                            nsStyleContext* aStyleContext,
                             nsIPresContext* aPresContext,
                             TextStyle& aStyle,
                             nscoord aX, nscoord aY, nscoord aWidth,
@@ -691,12 +692,12 @@ public:
 
   void PaintTextSlowly(nsIPresContext* aPresContext,
                        nsIRenderingContext& aRenderingContext,
-                       nsIStyleContext* aStyleContext,
+                       nsStyleContext* aStyleContext,
                        TextStyle& aStyle,
                        nscoord aX, nscoord aY);
 
   void RenderString(nsIRenderingContext& aRenderingContext,
-                    nsIStyleContext* aStyleContext,
+                    nsStyleContext* aStyleContext,
                     nsIPresContext* aPresContext,
                     TextStyle& aStyle,
                     PRUnichar* aBuffer, PRInt32 aLength,
@@ -748,13 +749,13 @@ public:
 
   void PaintUnicodeText(nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
-                        nsIStyleContext* aStyleContext,
+                        nsStyleContext* aStyleContext,
                         TextStyle& aStyle,
                         nscoord dx, nscoord dy);
 
   void PaintAsciiText(nsIPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
-                      nsIStyleContext* aStyleContext,
+                      nsStyleContext* aStyleContext,
                       TextStyle& aStyle,
                       nscoord dx, nscoord dy);
 
@@ -874,7 +875,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
+                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
@@ -901,7 +902,7 @@ NS_IMETHODIMP
 nsContinuingTextFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
-                            nsIStyleContext* aContext,
+                            nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;
@@ -1006,7 +1007,7 @@ public:
   DrawSelectionIterator(nsIContent *aContent, const SelectionDetails *aSelDetails, PRUnichar *aText,
                         PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle,
                         PRInt16 aSelectionStatus, nsIPresContext *aPresContext,
-                        nsIStyleContext *aStyleContext);
+                        nsStyleContext *aStyleContext);
   ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
@@ -1051,7 +1052,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
                                              nsTextFrame::TextStyle &aTextStyle, 
                                              PRInt16 aSelectionStatus, 
                                              nsIPresContext *aPresContext,
-                                             nsIStyleContext *aStyleContext)
+                                             nsStyleContext *aStyleContext)
                                              :mOldStyle(aTextStyle)
 {
     mDetails = aSelDetails;
@@ -1065,13 +1066,13 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
     mSelectionPseudoBGIsTransparent = PR_FALSE;
 
     if (aContent) {
-      nsIStyleContext *sc = nsnull;
       nsCOMPtr<nsIContent> parentContent;
       aContent->GetParent(*getter_AddRefs(parentContent));
-      aPresContext->ProbePseudoStyleContextFor(parentContent,
-  					     nsCSSPseudoElements::mozSelection,
-  					     aStyleContext, &sc);
-      if (nsnull != sc) {
+      nsRefPtr<nsStyleContext> sc;
+      sc = aPresContext->ProbePseudoStyleContextFor(parentContent,
+						    nsCSSPseudoElements::mozSelection,
+						    aStyleContext);
+      if (sc) {
         mSelectionPseudoStyle = PR_TRUE;
         const nsStyleBackground* bg = (const nsStyleBackground*)sc->GetStyleData(eStyleStruct_Background);
         mSelectionPseudoBGIsTransparent = PRBool(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
@@ -1079,7 +1080,6 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
           mSelectionPseudoBGcolor = bg->mBackgroundColor;
         const nsStyleColor* color =(const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
         mSelectionPseudoFGcolor = color->mColor;
-        NS_RELEASE(sc);
       }
     }
 
@@ -1510,7 +1510,7 @@ nsTextFrame::Paint(nsIPresContext*      aPresContext,
   if ((0 != (mState & TEXT_BLINK_ON)) && nsBlinkTimer::GetBlinkIsOff()) {
     return NS_OK;
   }
-  nsIStyleContext* sc = mStyleContext;
+  nsStyleContext* sc = mStyleContext;
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
     TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
@@ -1822,7 +1822,7 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 
 void 
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
-                                  nsIStyleContext* aStyleContext,
+                                  nsStyleContext* aStyleContext,
                                   nsIPresContext* aPresContext,
                                   TextStyle& aTextStyle,
                                   nscoord aX, nscoord aY, nscoord aWidth,
@@ -1849,19 +1849,19 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
     PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | 
                         NS_STYLE_TEXT_DECORATION_OVERLINE |
                         NS_STYLE_TEXT_DECORATION_LINE_THROUGH;    
-    nsCOMPtr<nsIStyleContext> context = aStyleContext;
+    nsStyleContext* context = aStyleContext;
     PRBool hasDecorations = context->HasTextDecorations();
 
     while (hasDecorations) {
       const nsStyleTextReset* styleText;
-      ::GetStyleData(context.get(), &styleText);
+      ::GetStyleData(context, &styleText);
       if (!useOverride && 
           (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & 
            styleText->mTextDecoration)) {
         // This handles the <a href="blah.html"><font color="green">La 
         // la la</font></a> case. The link underline should be green.
         const nsStyleColor* styleColor;
-        ::GetStyleData(context.get(), &styleColor);
+        ::GetStyleData(context, &styleColor);
         useOverride = PR_TRUE;
         overrideColor = styleColor->mColor;          
       }
@@ -1869,7 +1869,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
       PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
       if (useDecorations) {// a decoration defined here
         const nsStyleColor* styleColor;
-        ::GetStyleData(context.get(), &styleColor);
+        ::GetStyleData(context, &styleColor);
     
         if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
           underColor = useOverride ? overrideColor : styleColor->mColor;
@@ -2293,7 +2293,7 @@ nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
 void
 nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
-                              nsIStyleContext* aStyleContext,
+                              nsStyleContext* aStyleContext,
                               TextStyle& aTextStyle,
                               nscoord dx, nscoord dy)
 {
@@ -2698,7 +2698,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
 
 void
 nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
-                          nsIStyleContext* aStyleContext,
+                          nsStyleContext* aStyleContext,
                           nsIPresContext* aPresContext,
                           TextStyle& aTextStyle,
                           PRUnichar* aBuffer, PRInt32 aLength,
@@ -3010,7 +3010,7 @@ nsTextFrame::ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingCon
 void
 nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             nsIStyleContext* aStyleContext,
+                             nsStyleContext* aStyleContext,
                              TextStyle& aTextStyle,
                              nscoord dx, nscoord dy)
 {
@@ -3197,7 +3197,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 void
 nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            nsIStyleContext* aStyleContext,
+                            nsStyleContext* aStyleContext,
                             TextStyle& aTextStyle,
                             nscoord dx, nscoord dy)
 {
@@ -6011,8 +6011,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
   if((*aStop) && (wordLen == 0))
     return dimensions; // 0;
 
-  nsCOMPtr<nsIStyleContext> sc;
-  aTextFrame->GetStyleContext(getter_AddRefs(sc));
+  nsStyleContext* sc = aTextFrame->GetStyleContext();
   if (sc) {
     // Measure the piece of text. Note that we have to select the
     // appropriate font into the text first because the rendering

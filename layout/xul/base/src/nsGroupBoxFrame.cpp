@@ -39,7 +39,7 @@
 
 #include "nsBoxFrame.h"
 #include "nsCSSRendering.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 
 class nsGroupBoxFrame : public nsBoxFrame {
 public:

@@ -42,7 +42,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
@@ -786,8 +786,7 @@ nsStyleUnit
 nsBlockReflowContext::GetRealMarginLeftUnit()
 {
   nsStyleUnit unit = eStyleUnit_Inherit;
-  nsCOMPtr<nsIStyleContext> sc;
-  mFrame->GetStyleContext(getter_AddRefs(sc));
+  nsStyleContext* sc = mFrame->GetStyleContext();
   while (sc && eStyleUnit_Inherit == unit) {
     // Get parent style context
     sc = sc->GetParent();
@@ -807,8 +806,7 @@ nsStyleUnit
 nsBlockReflowContext::GetRealMarginRightUnit()
 {
   nsStyleUnit unit = eStyleUnit_Inherit;
-  nsCOMPtr<nsIStyleContext> sc;
-  mFrame->GetStyleContext(getter_AddRefs(sc));
+  nsStyleContext* sc = mFrame->GetStyleContext();
   while (sc && eStyleUnit_Inherit == unit) {
     // Get parent style context
     sc = sc->GetParent();

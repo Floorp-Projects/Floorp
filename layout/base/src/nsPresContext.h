@@ -84,29 +84,35 @@ public:
   NS_IMETHOD GetBaseURL(nsIURI** aURLResult);
   NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
   NS_IMETHOD ClearStyleDataAndReflow(void);
-  NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
-                                    nsIStyleContext* aParentContext,
-                                    nsIStyleContext** aResult);
+
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleContextFor(nsIContent* aContent, nsStyleContext* aParentContext);
+
   NS_IMETHOD ResolveStyleContextAndGetStyleData(nsIContent* aContent,
                                                 int aSID,
                                                 const nsStyleStruct*& aStyleStruct);
-  NS_IMETHOD ResolveStyleContextForNonElement(nsIStyleContext* aParentContext,
-                                              nsIStyleContext** aResult);
-  NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
-                                          nsIAtom* aPseudoTag,
-                                          nsIStyleContext* aParentContext,
-                                          nsIStyleContext** aResult);
-  NS_IMETHOD ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
-                                          nsIAtom* aPseudoTag,
-                                          nsIStyleContext* aParentContext,
-                                          nsICSSPseudoComparator* aComparator,
-                                          nsIStyleContext** aResult);
-  NS_IMETHOD ProbePseudoStyleContextFor(nsIContent* aParentContent,
-                                        nsIAtom* aPseudoTag,
-                                        nsIStyleContext* aParentContext,
-                                        nsIStyleContext** aResult);
+
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleContextForNonElement(nsStyleContext* aParentContext);
+
+  virtual already_AddRefed<nsStyleContext>
+  ResolvePseudoStyleContextFor(nsIContent* aParentContent,
+                               nsIAtom* aPseudoTag,
+                               nsStyleContext* aParentContext);
+
+  virtual already_AddRefed<nsStyleContext>
+  ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
+                                   nsIAtom* aPseudoTag,
+                                   nsStyleContext* aParentContext,
+                                   nsICSSPseudoComparator* aComparator);
+
+  virtual already_AddRefed<nsStyleContext>
+  ProbePseudoStyleContextFor(nsIContent* aParentContent,
+                             nsIAtom* aPseudoTag,
+                             nsStyleContext* aParentContext);
+
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
-                                  nsIStyleContext* aNewParentContext);
+                                  nsStyleContext* aNewParentContext);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
   NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult);
   NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk);

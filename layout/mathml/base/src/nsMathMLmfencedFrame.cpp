@@ -26,7 +26,7 @@
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
@@ -584,11 +584,9 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
 
 // ----------------------
 // the Style System will use these to pass the proper style context to our MathMLChar
-NS_IMETHODIMP
-nsMathMLmfencedFrame::GetAdditionalStyleContext(PRInt32           aIndex, 
-                                                nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsMathMLmfencedFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(aStyleContext, "null OUT ptr");
   PRInt32 openIndex = -1;
   PRInt32 closeIndex = -1;
   PRInt32 lastIndex = mSeparatorsCount-1;
@@ -602,25 +600,24 @@ nsMathMLmfencedFrame::GetAdditionalStyleContext(PRInt32           aIndex,
     closeIndex = lastIndex;
   }
   if (aIndex < 0 || aIndex > lastIndex) {
-    return NS_ERROR_INVALID_ARG;
+    return nsnull;
   }
 
-  *aStyleContext = nsnull;
   if (aIndex < mSeparatorsCount) {
-    mSeparatorsChar[aIndex].GetStyleContext(aStyleContext);
+    return mSeparatorsChar[aIndex].GetStyleContext();
   }
   else if (aIndex == openIndex) {
-    mOpenChar->GetStyleContext(aStyleContext);
+    return mOpenChar->GetStyleContext();
   }
   else if (aIndex == closeIndex) {
-    mCloseChar->GetStyleContext(aStyleContext);
+    return mCloseChar->GetStyleContext();
   }
-  return NS_OK;
+  return nsnull;
 }
 
-NS_IMETHODIMP
+void
 nsMathMLmfencedFrame::SetAdditionalStyleContext(PRInt32          aIndex, 
-                                                nsIStyleContext* aStyleContext)
+                                                nsStyleContext*  aStyleContext)
 {
   PRInt32 openIndex = -1;
   PRInt32 closeIndex = -1;
@@ -635,7 +632,7 @@ nsMathMLmfencedFrame::SetAdditionalStyleContext(PRInt32          aIndex,
     closeIndex = lastIndex;
   }
   if (aIndex < 0 || aIndex > lastIndex) {
-    return NS_ERROR_INVALID_ARG;
+    return;
   }
 
   if (aIndex < mSeparatorsCount) {
@@ -647,5 +644,4 @@ nsMathMLmfencedFrame::SetAdditionalStyleContext(PRInt32          aIndex,
   else if (aIndex == closeIndex) {
     mCloseChar->SetStyleContext(aStyleContext);
   }
-  return NS_OK;
 }

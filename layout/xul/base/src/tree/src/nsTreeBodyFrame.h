@@ -112,13 +112,16 @@ public:
 
   void Clear() { delete mTransitionTable; mTransitionTable = nsnull; delete mCache; mCache = nsnull; mNextState = 0; };
 
-  nsresult GetStyleContext(nsICSSPseudoComparator* aComparator, nsIPresContext* aPresContext, 
-                           nsIContent* aContent, 
-                           nsIStyleContext* aContext, nsIAtom* aPseudoElement,
-                           nsISupportsArray* aInputWord,
-                           nsIStyleContext** aResult);
+  nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
+                                  nsIPresContext* aPresContext, 
+                                  nsIContent* aContent, 
+                                  nsStyleContext* aContext,
+                                  nsIAtom* aPseudoElement,
+                                  nsISupportsArray* aInputWord);
 
   static PRBool PR_CALLBACK DeleteDFAState(nsHashKey *aKey, void *aData, void *closure);
+
+  static PRBool PR_CALLBACK ReleaseStyleContext(nsHashKey *aKey, void *aData, void *closure);
 
 protected:
   // A transition table for a deterministic finite automaton.  The DFA
@@ -139,7 +142,7 @@ protected:
 
   // The cache of all active style contexts.  This is a hash from 
   // a final state in the DFA, Sf, to the resultant style context.
-  nsSupportsHashtable* mCache;
+  nsObjectHashtable* mCache;
 
   // An integer counter that is used when we need to make new states in the
   // DFA.
@@ -259,7 +262,7 @@ public:
 
   // Overridden from nsIFrame to cache our pres context.
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
-                  nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
+                  nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   // Painting methods.
@@ -353,7 +356,7 @@ public:
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
-  nsresult PaintBackgroundLayer(nsIStyleContext*     aStyleContext,
+  nsresult PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                 nsIPresContext*      aPresContext, 
                                 nsIRenderingContext& aRenderingContext, 
                                 const nsRect&        aRect,
@@ -381,11 +384,11 @@ protected:
 
   // Fetch an image from the image cache.
   nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext,
-                    nsIStyleContext* aStyleContext, PRBool& aAllowImageRegions, imgIContainer** aResult);
+                    nsStyleContext* aStyleContext, PRBool& aAllowImageRegions, imgIContainer** aResult);
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
-  nsRect GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext, nsIStyleContext* aStyleContext);
+  nsRect GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext, nsStyleContext* aStyleContext);
 
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
@@ -398,7 +401,7 @@ protected:
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
-  nsresult GetPseudoStyleContext(nsIAtom* aPseudoElement, nsIStyleContext** aResult);
+  nsStyleContext* GetPseudoStyleContext(nsIAtom* aPseudoElement);
 
   // Builds our cache of column info.
   void EnsureColumns();

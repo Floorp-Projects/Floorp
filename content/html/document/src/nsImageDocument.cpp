@@ -55,11 +55,12 @@
 #include "nsIScrollable.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIViewManager.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsITextToSubURI.h"
+#include "nsAutoPtr.h"
 
 #define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
@@ -594,9 +595,8 @@ nsImageDocument::CheckOverflowing()
   nsRect visibleArea;
   context->GetVisibleArea(visibleArea);
 
-  nsCOMPtr<nsIStyleContext> styleContext;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
-  context->ResolveStyleContextFor(content, nsnull, getter_AddRefs(styleContext));
+  nsRefPtr<nsStyleContext> styleContext = context->ResolveStyleContextFor(content, nsnull);
 
   const nsStyleMargin* marginData =
     (const nsStyleMargin*)styleContext->GetStyleData(eStyleStruct_Margin);

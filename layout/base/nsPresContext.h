@@ -43,6 +43,7 @@
 #include "nsAString.h"
 #include "nsIRequest.h"
 #include "nsCompatibility.h"
+#include "nsCOMPtr.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -61,7 +62,7 @@ class nsIImage;
 class nsILinkHandler;
 class nsIPresShell;
 class nsIPref;
-class nsIStyleContext;
+class nsStyleContext;
 class nsIAtom;
 class nsString;
 class nsIEventStateManager;
@@ -192,9 +193,9 @@ public:
    * Resolve style for the given piece of content that will be a child
    * of the aParentContext. Don't use this for pseudo frames.
    */
-  NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
-                                    nsIStyleContext* aParentContext,
-                                    nsIStyleContext** aResult) = 0;
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleContextFor(nsIContent* aContent,
+                         nsStyleContext* aParentContext) = 0;
 
   /**
    * Resolve the given style struct for a content node.
@@ -221,19 +222,19 @@ public:
    * represents everything except the first letter.)
    *
    */
-  NS_IMETHOD ResolveStyleContextForNonElement(
-                                    nsIStyleContext* aParentContext,
-                                    nsIStyleContext** aResult) = 0;
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleContextForNonElement(nsStyleContext* aParentContext) = 0;
 
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
    * The tag should be lowercase and inclue the colon.
    * ie: NS_NewAtom(":first-line");
    */
-  NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
-                                          nsIAtom* aPseudoTag,
-                                          nsIStyleContext* aParentContext,
-                                          nsIStyleContext** aResult) = 0;
+
+  virtual already_AddRefed<nsStyleContext>
+  ResolvePseudoStyleContextFor(nsIContent* aParentContent,
+                               nsIAtom* aPseudoTag,
+                               nsStyleContext* aParentContext) = 0;
 
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
@@ -243,11 +244,11 @@ public:
    * Instead of matching solely on aPseudoTag, a comparator function can be
    * passed in to test.
    */
-  NS_IMETHOD ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
-                                              nsIAtom* aPseudoTag,
-                                              nsIStyleContext* aParentContext,
-                                              nsICSSPseudoComparator* aComparator,
-                                              nsIStyleContext** aResult) = 0;
+  virtual already_AddRefed<nsStyleContext>
+  ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
+                                   nsIAtom* aPseudoTag,
+                                   nsStyleContext* aParentContext,
+                                   nsICSSPseudoComparator* aComparator) = 0;
 
   /**
    * Probe style for a pseudo frame within the given aParentContent & aParentContext.
@@ -255,17 +256,17 @@ public:
    * The tag should be lowercase and inclue the colon.
    * ie: NS_NewAtom(":first-line");
    */
-  NS_IMETHOD ProbePseudoStyleContextFor(nsIContent* aParentContent,
-                                        nsIAtom* aPseudoTag,
-                                        nsIStyleContext* aParentContext,
-                                        nsIStyleContext** aResult) = 0;
+  virtual already_AddRefed<nsStyleContext>
+  ProbePseudoStyleContextFor(nsIContent* aParentContent,
+                             nsIAtom* aPseudoTag,
+                             nsStyleContext* aParentContext) = 0;
 
   /** 
    * For a given frame tree, get a new style context that is the equivalent
    * but within a new parent
    */
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
-                                  nsIStyleContext* aNewParentContext) = 0;
+                                  nsStyleContext* aNewParentContext) = 0;
 
 
   NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult) = 0;

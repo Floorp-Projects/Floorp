@@ -39,7 +39,7 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
@@ -84,7 +84,7 @@ NS_IMETHODIMP
 nsContainerFrame::Init(nsIPresContext*  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
-                       nsIStyleContext* aContext,
+                       nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
@@ -514,7 +514,7 @@ NonZeroStyleCoord(const nsStyleCoord& aCoord) {
 }
 
 static PRBool
-HasNonZeroBorderRadius(nsIStyleContext* aStyleContext) {
+HasNonZeroBorderRadius(nsStyleContext* aStyleContext) {
   const nsStyleBorder* border;
   ::GetStyleData(aStyleContext, &border);
 
@@ -534,7 +534,7 @@ HasNonZeroBorderRadius(nsIStyleContext* aStyleContext) {
 static void
 SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
                                          nsIFrame*        aFrame,
-                                         nsIStyleContext* aStyleContext,
+                                         nsStyleContext*  aStyleContext,
                                          nsIView*         aView,
                                          PRUint32         aFlags)
 {
@@ -735,8 +735,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     // detect whether it has or not. Likewise, whether the view size
     // has changed or not, we may need to change the transparency
     // state even if there is no clip.
-    nsCOMPtr<nsIStyleContext> savedStyleContext;
-    aFrame->GetStyleContext(getter_AddRefs(savedStyleContext));
+    nsStyleContext* savedStyleContext = aFrame->GetStyleContext();
     SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, savedStyleContext, aView, aFlags);
   }
 }
@@ -744,7 +743,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
 void
 nsContainerFrame::SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
                                                nsIFrame*        aFrame,
-                                               nsIStyleContext* aStyleContext,
+                                               nsStyleContext*  aStyleContext,
                                                nsIView*         aView,
                                                PRUint32         aFlags)
 {
@@ -752,10 +751,8 @@ nsContainerFrame::SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
     return;
   }
   
-  nsCOMPtr<nsIStyleContext> savedStyleContext;
   if (nsnull == aStyleContext) {
-    aFrame->GetStyleContext(getter_AddRefs(savedStyleContext));
-    aStyleContext = savedStyleContext;
+    aStyleContext = aFrame->GetStyleContext();
   }
 
   SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, aStyleContext, aView, aFlags);
@@ -764,7 +761,7 @@ nsContainerFrame::SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
 void
 nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
                                           nsIFrame*        aFrame,
-                                          nsIStyleContext* aStyleContext,
+                                          nsStyleContext*  aStyleContext,
                                           nsIView*         aView,
                                           PRUint32         aFlags)
 {
@@ -775,10 +772,8 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIViewManager> vm;
   aView->GetViewManager(*getter_AddRefs(vm));
 
-  nsCOMPtr<nsIStyleContext> savedStyleContext;
   if (nsnull == aStyleContext) {
-    aFrame->GetStyleContext(getter_AddRefs(savedStyleContext));
-    aStyleContext = savedStyleContext;
+    aStyleContext = aFrame->GetStyleContext();
   }
     
   const nsStyleVisibility* vis;
@@ -859,7 +854,7 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
 PRBool
 nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
                                  nsIFrame* aFrame,
-                                 nsIStyleContext* aStyleContext)
+                                 nsStyleContext* aStyleContext)
 {
   const nsStyleVisibility* vis;
   ::GetStyleData(aStyleContext, &vis);
@@ -887,8 +882,7 @@ nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
     return PR_TRUE;
   } 
 
-  nsCOMPtr<nsIAtom>  pseudoTag;
-  aStyleContext->GetPseudoType(*getter_AddRefs(pseudoTag));
+  nsCOMPtr<nsIAtom>  pseudoTag = aStyleContext->GetPseudoType();
   if (pseudoTag == nsCSSAnonBoxes::scrolledContent) {
     return PR_TRUE;
   }

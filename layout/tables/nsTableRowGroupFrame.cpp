@@ -41,7 +41,7 @@
 #include "nsTableCellFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsIView.h"
@@ -1874,7 +1874,7 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::Init(nsIPresContext*  aPresContext,
                            nsIContent*      aContent,
                            nsIFrame*        aParent,
-                           nsIStyleContext* aContext,
+                           nsStyleContext*  aContext,
                            nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;

@@ -50,7 +50,7 @@ class nsIView;
 class nsIPresContext;
 class nsStyleCoord;
 class nsIPresState;
-class nsIStyleContext;
+class nsStyleContext;
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
@@ -96,7 +96,7 @@ public:
   // XXX This could be removed now that we no longer have form quirks.
   static nsresult GetFont(nsIFormControlFrame *  aFormFrame,
                           nsIPresContext*        aPresContext, 
-                          nsIStyleContext *      aStyleContext, 
+                          nsStyleContext *       aStyleContext, 
                           const nsFont*&         aFont);
 
   // returns the an addref'ed FontMetrics for the default font for the frame
@@ -330,9 +330,9 @@ public:
                             const nsRect& aDirtyRect, const nsRect& aRect, 
                             PRBool aShift, PRBool aShowFocus, PRBool aDisabled,
 							              PRBool aDrawOutline,
-							              nsIStyleContext* aOutlineStyle,
-							              nsIStyleContext* aFocusStyle,
-                            nsIStyleContext* aStyleContext, nsString& aLabel, 
+							              nsStyleContext* aOutlineStyle,
+							              nsStyleContext* aFocusStyle,
+                            nsStyleContext* aStyleContext, nsString& aLabel, 
                             nsIFrame* aForFrame);
 
   static void StyleChangeReflow(nsIPresContext* aPresContext,

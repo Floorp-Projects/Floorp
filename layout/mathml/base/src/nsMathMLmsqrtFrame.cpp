@@ -27,7 +27,7 @@
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
@@ -81,7 +81,7 @@ NS_IMETHODIMP
 nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsIStyleContext* aContext,
+                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
@@ -297,36 +297,25 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
 
 // ----------------------
 // the Style System will use these to pass the proper style context to our MathMLChar
-NS_IMETHODIMP
-nsMathMLmsqrtFrame::GetAdditionalStyleContext(PRInt32           aIndex, 
-                                              nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsMathMLmsqrtFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(aStyleContext, "null OUT ptr");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aStyleContext = nsnull;
   switch (aIndex) {
   case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
-    mSqrChar.GetStyleContext(aStyleContext);
+    return mSqrChar.GetStyleContext();
     break;
   default:
-    return NS_ERROR_INVALID_ARG;
+    return nsnull;
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsMathMLmsqrtFrame::SetAdditionalStyleContext(PRInt32          aIndex, 
-                                              nsIStyleContext* aStyleContext)
+                                              nsStyleContext*  aStyleContext)
 {
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
   switch (aIndex) {
   case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
     mSqrChar.SetStyleContext(aStyleContext);
     break;
   }
-  return NS_OK;
 }

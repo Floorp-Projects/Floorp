@@ -44,7 +44,7 @@
 #include "nsDOMError.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "prprf.h"
@@ -3034,18 +3034,16 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
     nsCOMPtr<nsIPresContext> pctx;
     presShell->GetPresContext(getter_AddRefs(pctx));
     if (pctx) {
-      nsCOMPtr<nsIStyleContext> sctx;
+      nsStyleContext* sctx;
       if (!mPseudo) {
-        pctx->ResolveStyleContextFor(mContent, nsnull,
-                                     getter_AddRefs(sctx));
+        sctx = pctx->ResolveStyleContextFor(mContent, nsnull).get();
       } else {
-        pctx->ResolvePseudoStyleContextFor(mContent, mPseudo, nsnull,
-                                           getter_AddRefs(sctx));
+        sctx = pctx->ResolvePseudoStyleContextFor(mContent, mPseudo, nsnull).get();
       }
       if (sctx) {
         aStyleStruct = sctx->GetStyleData(aID);
       }
-      mStyleContextHolder = sctx;
+      mStyleContextHolder = dont_AddRef(sctx);  // transfer ref from sctx
     }
   }
   NS_ASSERTION(aStyleStruct, "Failed to get a style struct");

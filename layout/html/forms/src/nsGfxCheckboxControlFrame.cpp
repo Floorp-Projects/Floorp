@@ -82,7 +82,8 @@ nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame()
 
 nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 {
-  NS_IF_RELEASE(mCheckButtonFaceStyle);
+  if (mCheckButtonFaceStyle)
+    mCheckButtonFaceStyle->Release();
 }
 
 
@@ -120,53 +121,43 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessib
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxCheckboxControlFrame::SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext)
+nsGfxCheckboxControlFrame::SetCheckboxFaceStyleContext(nsStyleContext *aCheckboxFaceStyleContext)
 {
   mCheckButtonFaceStyle = aCheckboxFaceStyleContext;
-  NS_ADDREF(mCheckButtonFaceStyle);
+  mCheckButtonFaceStyle->AddRef();
   return NS_OK;
 }
 
 
 //--------------------------------------------------------------
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
-                                                     nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsGfxCheckboxControlFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aStyleContext = nsnull;
   switch (aIndex) {
   case NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    *aStyleContext = mCheckButtonFaceStyle;
-    NS_IF_ADDREF(*aStyleContext);
+    return mCheckButtonFaceStyle;
     break;
   default:
-    return NS_ERROR_INVALID_ARG;
+    return nsnull;
   }
-  return NS_OK;
 }
 
 
 
 //--------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsGfxCheckboxControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
-                                                     nsIStyleContext* aStyleContext)
+                                                     nsStyleContext* aStyleContext)
 {
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
   switch (aIndex) {
   case NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    NS_IF_RELEASE(mCheckButtonFaceStyle);
+    if (mCheckButtonFaceStyle)
+      mCheckButtonFaceStyle->Release();
     mCheckButtonFaceStyle = aStyleContext;
-    NS_IF_ADDREF(aStyleContext);
+    if (aStyleContext)
+      aStyleContext->AddRef();
     break;
   }
-  return NS_OK;
 }
 
 

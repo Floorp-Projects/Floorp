@@ -48,7 +48,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsISupports.h"
@@ -102,13 +102,12 @@ public:
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
+                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext** aStyleContext) const;
-  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext* aStyleContext);
+  virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
+  virtual void SetAdditionalStyleContext(PRInt32 aIndex, 
+                                         nsStyleContext* aStyleContext);
  
   NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,

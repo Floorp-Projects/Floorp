@@ -41,7 +41,7 @@
 
 #include "nsIViewManager.h"
 
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 
 NS_IMPL_ISUPPORTS2(nsImageLoader, imgIDecoderObserver, imgIContainerObserver)
 
@@ -240,8 +240,8 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
   // Invalidate the entire frame only if the frame has a tiled background
   // image, otherwise just invalidate the intersection of the frame's bounds
   // with the damaged rect.
-  nsCOMPtr<nsIStyleContext> styleContext;
-  mFrame->GetStyleContext(getter_AddRefs(styleContext));
+  nsStyleContext* styleContext;
+  mFrame->GetStyleContext(&styleContext);
   const nsStyleBackground* bg = (const nsStyleBackground*)styleContext->GetStyleData(eStyleStruct_Background);
 
   if ((bg->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) ||

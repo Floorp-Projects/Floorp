@@ -101,7 +101,7 @@ NS_IMETHODIMP
 nsScrollBoxFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsIStyleContext* aStyleContext,
+                    nsStyleContext*  aStyleContext,
                     nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent,
@@ -138,8 +138,7 @@ nsScrollBoxFrame::SetUpScrolledFrame(nsIPresContext* aPresContext)
      return;
 
   // create a view if we don't already have one.
-  nsCOMPtr<nsIStyleContext> context;
-  frame->GetStyleContext(getter_AddRefs(context));
+  nsStyleContext* context = frame->GetStyleContext();
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, frame,
                                            context, nsnull, PR_TRUE);
 
@@ -827,7 +826,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsIStyleContext* aContext,
+              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow);
 
   NS_DECL_NSITIMERCALLBACK
@@ -861,7 +860,7 @@ NS_IMETHODIMP
 nsAutoRepeatBoxFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsIStyleContext* aContext,
+              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
   mPresContext = aPresContext;

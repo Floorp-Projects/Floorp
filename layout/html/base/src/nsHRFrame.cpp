@@ -39,10 +39,9 @@
 #include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsCSSColorUtils.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleConsts.h"
@@ -112,7 +111,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
+      (const nsStyleVisibility*)((nsStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
   if (!vis->IsVisible()) {
     return NS_OK;
   }

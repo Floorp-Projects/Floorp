@@ -77,13 +77,12 @@ public:
 
 
   //nsICheckboxControlFrame methods
-  NS_IMETHOD SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext);
+  NS_IMETHOD SetCheckboxFaceStyleContext(nsStyleContext *aCheckboxFaceStyleContext);
   NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked);
 
-  NS_IMETHOD GetAdditionalStyleContext(PRInt32 aIndex, 
-                                       nsIStyleContext** aStyleContext) const;
-  NS_IMETHOD SetAdditionalStyleContext(PRInt32 aIndex, 
-                                       nsIStyleContext* aStyleContext);
+  virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
+  virtual void SetAdditionalStyleContext(PRInt32 aIndex,
+                                         nsStyleContext* aStyleContext);
 
     // nsIFormControlFrame
   NS_IMETHOD OnContentReset();
@@ -110,7 +109,7 @@ protected:
 
   //GFX-rendered state variables
   PRBool           mInClickEvent;
-  nsIStyleContext* mCheckButtonFaceStyle;
+  nsStyleContext*  mCheckButtonFaceStyle;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

@@ -44,7 +44,7 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
@@ -180,10 +180,9 @@ nsBoxToBlockAdaptor::SetParentBox(nsIBox* aParent)
         mFrame->GetView(context, &view);
 
         if (!view) {
-           nsCOMPtr<nsIStyleContext> style;
-           mFrame->GetStyleContext(getter_AddRefs(style));
-           nsHTMLContainerFrame::CreateViewForFrame(context,mFrame,style,nsnull,PR_TRUE); 
-           mFrame->GetView(context, &view);
+          nsStyleContext* style = mFrame->GetStyleContext();
+          nsHTMLContainerFrame::CreateViewForFrame(context,mFrame,style,nsnull,PR_TRUE); 
+          mFrame->GetView(context, &view);
         }
 
         nsCOMPtr<nsIWidget> widget;

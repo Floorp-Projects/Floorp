@@ -39,7 +39,7 @@
 #define nsICheckControlFrame_h___
 
 #include "nsISupports.h"
-class nsIStyleContext;
+class nsStyleContext;
 class nsIPresContext;
 
 // IID for the nsICheckControlFrame class
@@ -61,7 +61,7 @@ public:
    * Sets the Pseudo Style Contexts for the Check button
    */
   NS_IMETHOD SetCheckboxFaceStyleContext(
-                 nsIStyleContext* aCheckboxFaceStyleContext) = 0;
+                 nsStyleContext* aCheckboxFaceStyleContext) = 0;
   
   /**
    * Called by content when checkbox "checked" changes

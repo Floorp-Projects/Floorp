@@ -59,7 +59,7 @@ class nsString;
 class nsAString;
 class nsStringArray;
 class nsICaret;
-class nsIStyleContext;
+class nsStyleContext;
 class nsIFrameSelection;
 class nsIFrameManager;
 class nsILayoutHistoryState;
@@ -257,13 +257,6 @@ public:
    */
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const = 0;
-
-  /** Returns the style context associated with the frame.
-    * Used by code outside of layout that can't use nsIFrame methods to get
-    * the style context directly.
-    */
-  NS_IMETHOD GetStyleContextFor(nsIFrame*         aFrame,
-                                nsIStyleContext** aStyleContext) const = 0;
 
   /**
    * Returns a layout object associated with the primary frame for the content object.

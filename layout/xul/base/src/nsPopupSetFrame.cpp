@@ -48,7 +48,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
@@ -154,7 +154,7 @@ NS_IMETHODIMP
 nsPopupSetFrame::Init(nsIPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
-                     nsIStyleContext* aContext,
+                     nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
   mPresContext = aPresContext; // Don't addref it.  Our lifetime is shorter.

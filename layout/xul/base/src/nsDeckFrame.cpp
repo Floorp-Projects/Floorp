@@ -43,7 +43,7 @@
 //
 
 #include "nsDeckFrame.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
@@ -115,10 +115,9 @@ nsDeckFrame::CreateWidget(nsIPresContext* aPresContext, nsIBox* aBox)
   frame->GetView(aPresContext, &view);
   
   if (!view) {
-     nsCOMPtr<nsIStyleContext> context;
-     frame->GetStyleContext(getter_AddRefs(context));
-     nsHTMLContainerFrame::CreateViewForFrame(aPresContext,frame,context,nsnull,PR_TRUE); 
-     frame->GetView(aPresContext, &view);
+    nsStyleContext* context = frame->GetStyleContext();
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext,frame,context,nsnull,PR_TRUE); 
+    frame->GetView(aPresContext, &view);
   }
 
   nsCOMPtr<nsIWidget> widget;
@@ -204,7 +203,7 @@ NS_IMETHODIMP
 nsDeckFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsIStyleContext* aStyleContext,
+                    nsStyleContext*  aStyleContext,
                     nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent,

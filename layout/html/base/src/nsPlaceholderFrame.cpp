@@ -39,7 +39,6 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsIStyleContext.h"
 #include "nsLayoutAtoms.h"
 
 nsresult

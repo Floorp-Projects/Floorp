@@ -39,7 +39,7 @@
 
 #include "nsIRenderingContext.h"
 struct nsPoint;
-class nsIStyleContext;
+class nsStyleContext;
 class nsIPresContext;
 
 class nsCSSRendering {
@@ -58,7 +58,7 @@ public:
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
                           const nsStyleBorder& aBorderStyle,
-                          nsIStyleContext* aStyleContext,
+                          nsStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           nsRect* aGap = 0,
                           nscoord aHardBorderSize = 0,
@@ -79,7 +79,7 @@ public:
                           const nsRect& aBorderArea,
                           const nsStyleBorder& aBorderStyle,
                           const nsStyleOutline& aOutlineStyle,
-                          nsIStyleContext* aStyleContext,
+                          nsStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           nsRect* aGap = 0);
 
@@ -100,7 +100,7 @@ public:
                                const nsRect& aDirtyRect,
                                const nsRect& aBorderArea,
                                nsBorderEdges * aBorderEdges,
-                               nsIStyleContext* aStyleContext,
+                               nsStyleContext* aStyleContext,
                                PRIntn aSkipSides,
                                nsRect* aGap = 0);
 
@@ -123,7 +123,7 @@ public:
    * you want.
    */
   static const nsStyleBackground*
-  FindNonTransparentBackground(nsIStyleContext* aContext,
+  FindNonTransparentBackground(nsStyleContext* aContext,
                                PRBool aStartAtParent = PR_FALSE);
 
   /**
@@ -232,13 +232,13 @@ protected:
                           const nsRect& aBorderArea,
                           const nsStyleBorder* aBorderStyle,
                           const nsStyleOutline* aOutlineStyle,
-                          nsIStyleContext* aStyleContext,
+                          nsStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           PRInt16 aBorderRadius[4],nsRect* aGap = 0,
                           PRBool aIsOutline=PR_FALSE);
 
   static void RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderingContext,
-                        const nsStyleBorder* aBorderStyle,const nsStyleOutline* aOutlineStyle,nsIStyleContext* aStyleContext,
+                        const nsStyleBorder* aBorderStyle,const nsStyleOutline* aOutlineStyle,nsStyleContext* aStyleContext,
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
                         PRBool aIsOutline=PR_FALSE);
 

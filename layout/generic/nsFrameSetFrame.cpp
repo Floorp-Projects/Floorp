@@ -38,7 +38,7 @@
 #include "nsIScrollableView.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIDocumentLoader.h"
 #include "nsHTMLParts.h"
 #include "nsILookAndFeel.h"
@@ -54,6 +54,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsAutoPtr.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -317,7 +318,7 @@ NS_IMETHODIMP
 nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
-                          nsIStyleContext* aContext,
+                          nsStyleContext*  aContext,
                           nsIFrame*        aPrevInFlow)
 {
   nsHTMLContainerFrame::Init(aPresContext, aContent, aParent,
@@ -408,11 +409,10 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(*getter_AddRefs(tag));
     if (tag == nsHTMLAtoms::frameset || tag == nsHTMLAtoms::frame) {
-      nsCOMPtr<nsIStyleContext> kidSC;
+      nsRefPtr<nsStyleContext> kidSC;
       nsresult result;
 
-      aPresContext->ResolveStyleContextFor(child, mStyleContext,
-                                           getter_AddRefs(kidSC));
+      kidSC = aPresContext->ResolveStyleContextFor(child, mStyleContext);
       if (tag == nsHTMLAtoms::frameset) {
         result = NS_NewHTMLFramesetFrame(shell, &frame);
 
@@ -453,10 +453,10 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
     // XXX the blank frame is using the content of its parent - at some point it 
     // should just have null content, if we support that
     nsHTMLFramesetBlankFrame* blankFrame = new (shell.get()) nsHTMLFramesetBlankFrame;
-    nsCOMPtr<nsIStyleContext> pseudoStyleContext;
-    aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                            nsCSSAnonBoxes::framesetBlank, mStyleContext,
-                            getter_AddRefs(pseudoStyleContext));
+    nsRefPtr<nsStyleContext> pseudoStyleContext;
+    pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                                                    nsCSSAnonBoxes::framesetBlank,
+                                                                    mStyleContext);
     if(blankFrame)
       blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
    
@@ -1080,12 +1080,11 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       offset.y += lastSize.height;
       if (firstTime) { // create horizontal border
         borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
-        nsIStyleContext* pseudoStyleContext;
-        aPresContext->ResolvePseudoStyleContextFor(mContent, nsCSSPseudoElements::horizontalFramesetBorder,
-                                                   mStyleContext,
-                                                   &pseudoStyleContext);
+        nsRefPtr<nsStyleContext> pseudoStyleContext;
+        pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
+                                                                        nsCSSPseudoElements::horizontalFramesetBorder,
+                                                                        mStyleContext);
         borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
-        NS_RELEASE(pseudoStyleContext);
 
         mChildCount++;
         lastChild->SetNextSibling(borderFrame);
@@ -1108,12 +1107,11 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
             borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
-            nsIStyleContext* pseudoStyleContext;
-            aPresContext->ResolvePseudoStyleContextFor(mContent, nsCSSPseudoElements::verticalFramesetBorder,
-                                                       mStyleContext,
-                                                       &pseudoStyleContext);
+            nsRefPtr<nsStyleContext> pseudoStyleContext;
+            pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
+                                                                            nsCSSPseudoElements::verticalFramesetBorder,
+                                                                            mStyleContext);
             borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
-            NS_RELEASE(pseudoStyleContext);
 
             mChildCount++;
             lastChild->SetNextSibling(borderFrame);

@@ -53,6 +53,7 @@
 #include "nsIFrame.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "nsAutoPtr.h"
 
 class nsComputedDOMStyle : public nsIComputedDOMStyle
 {
@@ -302,7 +303,7 @@ private:
    * When a frame is unavailable, strong reference to the
    * style context while we're accessing the data from in.
    */
-  nsCOMPtr<nsIStyleContext> mStyleContextHolder;
+  nsRefPtr<nsStyleContext> mStyleContextHolder;
   nsCOMPtr<nsIAtom> mPseudo;
 
   float mT2P; /* For unit conversions */

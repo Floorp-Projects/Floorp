@@ -65,7 +65,7 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
@@ -254,7 +254,7 @@ NS_IMETHODIMP
 nsBoxFrame::Init(nsIPresContext*  aPresContext,
                  nsIContent*      aContent,
                  nsIFrame*        aParent,
-                 nsIStyleContext* aContext,
+                 nsStyleContext*  aContext,
                  nsIFrame*        aPrevInFlow)
 {
   SetParent(aParent);
@@ -2481,7 +2481,7 @@ nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
 nsresult
 nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
                                nsIFrame*        aFrame,
-                               nsIStyleContext* aStyleContext,
+                               nsStyleContext*  aStyleContext,
                                PRBool           aForce)
 {
   nsIView* view;
@@ -2514,14 +2514,12 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
     
     // See if the frame is a scrolled frame
     if (!aForce) {
-      nsIAtom*  pseudoTag;
-      aStyleContext->GetPseudoType(pseudoTag);
+      nsCOMPtr<nsIAtom> pseudoTag = aStyleContext->GetPseudoType();
       if (pseudoTag == nsCSSAnonBoxes::scrolledContent) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsBoxFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
         aForce = PR_TRUE;
       }
-      NS_IF_RELEASE(pseudoTag);
     }
 
     if (aForce) {

@@ -29,7 +29,7 @@
 #include "nsIPresShell.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRenderingContext.h"
@@ -45,6 +45,7 @@
 #include "nsMathMLParts.h"
 #include "nsMathMLChar.h"
 #include "nsMathMLContainerFrame.h"
+#include "nsAutoPtr.h"
 
 //
 // nsMathMLContainerFrame implementation
@@ -592,9 +593,8 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
     // the one to use when we will propagate the recursion
     aParentScriptLevel = presentationData.scriptLevel;
 
-    nsCOMPtr<nsIStyleContext> oldStyleContext;
-    aFrame->GetStyleContext(getter_AddRefs(oldStyleContext));
-    nsCOMPtr<nsIStyleContext> parentContext(oldStyleContext->GetParent());
+    nsStyleContext* oldStyleContext = aFrame->GetStyleContext();
+    nsStyleContext* parentContext = oldStyleContext->GetParent();
 
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
@@ -730,11 +730,10 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
       nsIFrame* wrapper;
       nsresult rv = NS_NewMathMLForeignFrameWrapper(shell, &wrapper);
       if (NS_FAILED(rv)) return rv;
-      nsCOMPtr<nsIStyleContext> newStyleContext;
-      aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                                 nsCSSAnonBoxes::mozAnonymousBlock,
-                                                 mStyleContext,
-                                                 getter_AddRefs(newStyleContext));
+      nsRefPtr<nsStyleContext> newStyleContext;
+      newStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
+								   nsCSSAnonBoxes::mozAnonymousBlock,
+								   mStyleContext);
       rv = wrapper->Init(aPresContext, mContent, this, newStyleContext, nsnull);
       if (NS_FAILED(rv)) {
         wrapper->Destroy(aPresContext);
@@ -798,7 +797,7 @@ NS_IMETHODIMP
 nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
                              nsIContent*      aContent,
                              nsIFrame*        aParent,
-                             nsIStyleContext* aContext,
+                             nsStyleContext*  aContext,
                              nsIFrame*        aPrevInFlow)
 {
   MapAttributesIntoCSS(aPresContext, aContent);
@@ -1446,8 +1445,7 @@ GetInterFrameSpacingFor(nsIPresContext* aPresContext,
       prevFrameType, childFrameType, &fromFrameType, &carrySpace);
     if (aChildFrame == childFrame) {
       // get thinspace
-      nsCOMPtr<nsIStyleContext> parentContext;
-      aParentFrame->GetStyleContext(getter_AddRefs(parentContext));
+      nsStyleContext* parentContext = aParentFrame->GetStyleContext();
       const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
         parentContext->GetStyleData(eStyleStruct_Font));
       nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));

@@ -113,7 +113,7 @@ NS_IMETHODIMP
 nsBulletFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsIStyleContext* aContext,
+                    nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);

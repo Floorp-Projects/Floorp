@@ -36,6 +36,7 @@
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 #include "nsContentCID.h"
+#include "nsAutoPtr.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 
 
@@ -107,18 +108,17 @@ nsMathMLFrame::UpdatePresentationData(nsIPresContext* aPresContext,
 /* static */ void
 nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
                                       nsIContent*      aContent,
-                                      nsIStyleContext* aParentStyleContext,
+                                      nsStyleContext*  aParentStyleContext,
                                       nsMathMLChar*    aMathMLChar,
                                       PRBool           aIsMutableChar)
 {
   nsIAtom* fontAtom = (aIsMutableChar) ?
     nsMathMLAtoms::fontstyle_stretchy :
     nsMathMLAtoms::fontstyle_anonymous; // savings
-  nsCOMPtr<nsIStyleContext> newStyleContext;
-  nsresult rv = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
-                                             aParentStyleContext,
-                                             getter_AddRefs(newStyleContext));
-  if (NS_SUCCEEDED(rv) && newStyleContext)
+  nsRefPtr<nsStyleContext> newStyleContext;
+  newStyleContext = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
+							       aParentStyleContext);
+  if (newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);
 }
 
@@ -403,7 +403,7 @@ nsMathMLFrame::ParseNumericValue(nsString&   aString,
 
 /* static */ nscoord
 nsMathMLFrame::CalcLength(nsIPresContext*   aPresContext,
-                          nsIStyleContext*  aStyleContext,
+                          nsStyleContext*   aStyleContext,
                           const nsCSSValue& aCSSValue)
 {
   NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");

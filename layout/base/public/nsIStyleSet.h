@@ -41,11 +41,12 @@
 #include <stdio.h>
 #include "nsISupports.h"
 #include "nsChangeHint.h"
+#include "nsCOMPtr.h"
 
 class nsIAtom;
 class nsIStyleRule;
 class nsIStyleSheet;
-class nsIStyleContext;
+class nsStyleContext;
 class nsIStyleRuleSupplier;
 class nsIStyleFrameConstruction;
 class nsIPresContext;
@@ -141,7 +142,7 @@ public:
   // |aContext| provides an additional hint that a specific style context has changed, and
   // that the entire rule tree need not be searched for occurrences of |aRule|.  It is
   // only specified in the inline style case, i.e., when the inline style attribute changes.
-  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext) = 0;
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsStyleContext* aContext) = 0;
 
   // enable / disable the Quirk style sheet: 
   // returns NS_FAILURE if none is found, otherwise NS_OK
@@ -150,10 +151,11 @@ public:
   
   NS_IMETHOD NotifyStyleSheetStateChanged(PRBool aApplicable) = 0;
 
-  // get a style context for a non-pseudo frame
-  virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
-                                           nsIContent* aContent,
-                                           nsIStyleContext* aParentContext) = 0;
+  // get a style context for a non-pseudo frame.
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleFor(nsIPresContext* aPresContext,
+                  nsIContent* aContent,
+                  nsStyleContext* aParentContext) = 0;
 
   // Get a style context for a non-element (which no rules will match).
   // Eventually, this should go away and we shouldn't even create style
@@ -165,34 +167,36 @@ public:
   // it once to create a style context for the nsFirstLetterFrame that
   // represents everything except the first letter.)
   //
-  virtual nsIStyleContext* ResolveStyleForNonElement(
-                                           nsIPresContext* aPresContext,
-                                           nsIStyleContext* aParentContext) = 0;
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleForNonElement(nsIPresContext* aPresContext,
+                            nsStyleContext* aParentContext) = 0;
 
   // get a style context for a pseudo-element (i.e.,
   // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|;
-  virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
-                                                 nsIContent* aParentContent,
-                                                 nsIAtom* aPseudoTag,
-                                                 nsIStyleContext* aParentContext,
-                                                 nsICSSPseudoComparator* aComparator = nsnull) = 0;
+  virtual already_AddRefed<nsStyleContext>
+  ResolvePseudoStyleFor(nsIPresContext* aPresContext,
+                        nsIContent* aParentContent,
+                        nsIAtom* aPseudoTag,
+                        nsStyleContext* aParentContext,
+                        nsICSSPseudoComparator* aComparator = nsnull) = 0;
 
   // This funtions just like ResolvePseudoStyleFor except that it will
   // return nsnull if there are no explicit style rules for that
-  // pseudo element
-  virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
-                                               nsIContent* aParentContent,
-                                               nsIAtom* aPseudoTag,
-                                               nsIStyleContext* aParentContext) = 0;
+  // pseudo element.
+  virtual already_AddRefed<nsStyleContext>
+  ProbePseudoStyleFor(nsIPresContext* aPresContext,
+                      nsIContent* aParentContent,
+                      nsIAtom* aPseudoTag,
+                      nsStyleContext* aParentContext) = 0;
 
   NS_IMETHOD Shutdown()=0;
 
   // Get a new style context that lives in a different parent
   // The new context will be the same as the old if the new parent == the old parent
-  NS_IMETHOD  ReParentStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aStyleContext, 
-                                   nsIStyleContext* aNewParentContext,
-                                   nsIStyleContext** aNewStyleContext) = 0;
+  virtual already_AddRefed<nsStyleContext>
+  ReParentStyleContext(nsIPresContext* aPresContext,
+                       nsStyleContext* aStyleContext, 
+                       nsStyleContext* aNewParentContext) = 0;
 
   // Test if style is dependent on content state
   NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,

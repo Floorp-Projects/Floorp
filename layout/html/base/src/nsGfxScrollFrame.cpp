@@ -470,7 +470,7 @@ NS_IMETHODIMP
 nsGfxScrollFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsIStyleContext* aStyleContext,
+                    nsStyleContext*  aStyleContext,
                     nsIFrame*        aPrevInFlow)
 {
   mPresContext = aPresContext;

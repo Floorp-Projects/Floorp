@@ -87,7 +87,7 @@ nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell)
 NS_IMETHODIMP  nsResizerFrame::Init(nsIPresContext*  aPresContext,
                 nsIContent*      aContent,
                 nsIFrame*        aParent,
-                nsIStyleContext* aContext,
+                nsStyleContext*  aContext,
                 nsIFrame*        asPrevInFlow)
 {
 	nsresult rv = nsTitleBarFrame::Init(aPresContext, aContent, aParent, aContext, asPrevInFlow);

@@ -65,7 +65,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIScrollableView.h"
 #include "nsStyleCoord.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIDocumentLoader.h"
 #include "nsFrameSetFrame.h"
@@ -94,6 +94,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFrameFrame.h"
 #include "nsIPluginViewer.h"
+#include "nsAutoPtr.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -156,7 +157,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
+                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
@@ -240,7 +241,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
+                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   void GetParentContent(nsIContent** aContent);
@@ -338,7 +339,7 @@ NS_IMETHODIMP
 nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
-                            nsIStyleContext* aContext,
+                            nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
   mPresContext = aPresContext;
@@ -412,16 +413,10 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     mFrames.SetFrames(firstChild);
     // Resolve the style context for the inner frame
     nsresult rv = NS_OK;
-    nsIStyleContext *innerStyleContext = nsnull;
-    rv = aPresContext->ResolveStyleContextFor(mContent, mStyleContext,
-                                              &innerStyleContext);
-    if (NS_SUCCEEDED(rv)) {
-      rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
-      // have to release the context: Init does its own AddRef...
-      NS_RELEASE(innerStyleContext);
-    } else {
-      NS_WARNING( "Error resolving style for InnerFrame in nsHTMLFrameOuterFrame");
-    }
+    nsRefPtr<nsStyleContext> innerStyleContext;
+    innerStyleContext = aPresContext->ResolveStyleContextFor(mContent,
+                                                             mStyleContext);
+    rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
     if (NS_FAILED(rv)){
       NS_WARNING( "Error initializing InnerFrame in nsHTMLFrameOuterFrame");
       return rv;
@@ -1192,7 +1187,7 @@ NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
-                            nsIStyleContext* aContext,
+                            nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext,

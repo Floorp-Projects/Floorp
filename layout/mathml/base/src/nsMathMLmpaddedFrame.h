@@ -78,7 +78,7 @@ private:
 
   static void
   UpdateValue(nsIPresContext*      aPresContext,
-              nsIStyleContext*     aStyleContext,
+              nsStyleContext*      aStyleContext,
               PRInt32              aSign,
               PRInt32              aPseudoUnit,
               nsCSSValue&          aCSSValue,
