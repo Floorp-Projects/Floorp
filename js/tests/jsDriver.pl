@@ -607,7 +607,7 @@ sub get_xpc_engine_command {
     }
 
     if ($os_type eq "WIN") {
-        $retval =~ s/\//\\/g;
+        $m5_home =~ s/\//\\/g;
     }
 
     return $m5_home . "xpcshell";
