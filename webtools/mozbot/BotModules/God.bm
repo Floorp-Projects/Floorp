@@ -1,3 +1,4 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 ################################
 # God Module                   #
 ################################
@@ -140,7 +141,7 @@ sub Told {
                 $self->say($event, "$event->{'from'}: You have to give a channel, as in \'<command> <who> in <channel>\'.");
 
         # XXX next two could be merged, maybe.
-        } elsif ($message =~ /^\s*op\s*meh?[!1.,]*\s*(?:please|(b+[iea]+t+c+h+))?\s*[.!1]*\s*$/osi) {
+        } elsif ($message =~ /^\s*op\s*meh?[!1.,\s]*(?:now\s+)?(?:please|(b+[iea]+t+c+h+))?\s*[.!1]*\s*$/osi) {
             if ($event->{'userName'}) {
                 if ($event->{'channel'}) {
                     unless ($self->checkOpping($event, $event->{'channel'}, $event->{'from'}, $self->isAdmin($event))) {
@@ -239,8 +240,42 @@ sub isMatchedByMask {
         my @masks = split(/ +/os, $masks);
         my $user = $event->{'user'};
         foreach my $regexp (@masks) {
-            my $pattern = $self->sanitizeRegexp($regexp);
-            return 1 if ($pattern !~ /^[\s.*+]*$/) and ($user =~ /$pattern/si);
+            my $pattern;
+            if ($regexp =~ m/       ^ # start at the start
+                             ([^!@]+) # nick part
+                                   \! # nick-username delimiter
+                             ([^!@]+) # username part
+                                   \@ # username-host delimiter
+                             ([^!@]+) # host part
+                                    $ # end at the end
+                             /osx) {
+
+                my $nick = $1;
+                my $user = $2;
+                my $host = $3;
+
+                # This was entered as an IRC hostmask so we need to
+                # translate it into a regular expression.
+                foreach ($nick, $user, $host) {
+                    quotemeta($_); # escape regular expression magic
+                    s/\\\*/.*/gos; # translate "*" into regexp equivalent
+                }
+
+                # If we don't match the first part of the host-mask
+                # (the user's nick) then we should not op them; we
+                # should just skip to the next mask.
+                next unless $event->{'from'} =~ m/^$nick$/i;
+
+                # ok, create hostmask regexp
+                $pattern = "^$user\@$host\$";
+            } else {
+                # this was entered as a regexp, check it is valid.
+                $pattern = $self->sanitizeRegexp($regexp);
+            }
+            if (($pattern =~ /[^\s.*+]/os) # pattern is non-trivial
+                and ($user =~ /$pattern/si)) { # pattern matches user
+                return 1; # op user (so insecure, sigh)
+            }
         }
     }
     return 0;
