@@ -158,3 +158,8 @@ to not work under Red Hat Linux 6.0.  The way I determine the stack trace
 from inside the signal handler is tightly bound to the version of glibc
 that is running.  If you know of a more portable way to get this information
 please let me know.
+<P> <h3>Update</h3>
+Ben Bucksch reports that installing the Red Hat 6.1 glibc rpms on a Red Hat
+6.0 system allows jprof to work, and does not seem to break anything except
+gdm (the Gnome login program), and that can be fixed by installing the RH 6.1
+gdb rpm.
