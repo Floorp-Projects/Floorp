@@ -22,45 +22,113 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsISelectionListener.idl"
-#include "nsIEnumerator.idl"
+
+/* THIS IS A PUBLIC INTERFACE */
 
 %{C++
 class nsIDOMNode;
 class nsIDOMRange;
-class nsISelectionListener;
 %}
 
+/**
+ * Interface for manipulating and querying the current selected range
+ * of nodes within the document.
+ */
 [scriptable, uuid(B2C7ED59-8634-4352-9E37-5484C8B6E4E1)]
 interface nsISelection : nsISupports
- {
-		readonly attribute	nsIDOMNode  anchorNode;
-		readonly attribute	long        anchorOffset;
-		
-		readonly attribute	nsIDOMNode  focusNode;
-		readonly attribute	long        focusOffset;
-		
-		readonly attribute	boolean     isCollapsed;
-		
-		readonly attribute	long        rangeCount;
-		
-		nsIDOMRange		getRangeAt(in long index);
-		
-		void 		collapse(in nsIDOMNode parentNode, in long offset);
-		void		extend(in nsIDOMNode parentNode, in long offset);
+{
+    /**
+     * The node representing one end of the selection.
+     */
+    readonly attribute nsIDOMNode anchorNode;
 
-    void    collapseToStart();
-    void    collapseToEnd();
+    /**
+     * The offset within the (text) node where the selection begins.
+     */
+    readonly attribute long anchorOffset;
 
-		boolean	containsNode(in nsIDOMNode node, in boolean recursive);
+    /**
+     * The node with keyboard focus.
+     */
+    readonly attribute nsIDOMNode focusNode;
 
+    /**
+     * The offset within the (text) node where focus starts.
+     */
+    readonly attribute long focusOffset;
+
+    /**
+     * Indicates if the whole selection just one point, or unset.
+     */
+    readonly attribute boolean isCollapsed;
+
+    /**
+     * Returns the number of ranges in the selection.
+     */
+    readonly attribute long rangeCount;
+
+    /**
+     * Returns the range at the specified index.
+     */
+    nsIDOMRange getRangeAt(in long index);
+
+    /**
+     * Sets the whole selection down to a single point specified
+     * by the node and offset.
+     */
+    void collapse(in nsIDOMNode parentNode, in long offset);
+
+    /**
+     * Changes the current selection to extend to the specified node
+     * and offset.
+     */
+    void extend(in nsIDOMNode parentNode, in long offset);
+
+    /**
+     * Sets the whole selection to be a point at the start of the current
+     * selection.
+     */
+    void collapseToStart();
+
+    /**
+     * Sets the whole selection to be a point at the end of the current
+     * selection.
+     */
+    void collapseToEnd();
+
+    /**
+     * Tests whether the node is in the selection, optionally
+     * using recursion to locate it.
+     */
+    boolean containsNode(in nsIDOMNode node, in boolean recursive);
+
+    /**
+     * Adds all children of the specified node to the selection.
+     */
     void selectAllChildren(in nsIDOMNode parentNode); 
 
-		void		addRange(in nsIDOMRange range);
-		void    removeRange(in nsIDOMRange range);
-		void    removeAllRanges();
+    /**
+     * Adds a range to the current selection.
+     */
+    void addRange(in nsIDOMRange range);
+ 
+    /**
+     * Removes a range from the current selection.
+     */
+    void removeRange(in nsIDOMRange range);
 
-		void    deleteFromDocument();
+    /**
+     * Removes all ranges from the current selection.
+     */
+    void removeAllRanges();
 
+    /**
+     * Deletes this selection from document the nodes belong to.
+     */
+    void deleteFromDocument();
+
+    /**
+     * Returns the whole selection into a plain text string.
+     */
     wstring toString();
 };
