@@ -9636,7 +9636,7 @@ else
 fi
 done
 
-for ac_func in nl_langinfo
+for ac_func in nl_langinfo strtok_r
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:9643: checking for $ac_func" >&5
