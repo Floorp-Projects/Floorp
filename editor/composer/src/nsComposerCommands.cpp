@@ -440,31 +440,21 @@ nsListCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTagNam
   nsCOMPtr<nsIEditor> editor;
   aEditorShell->GetEditor(getter_AddRefs(editor));
   if (!editor) return NS_ERROR_UNEXPECTED;
-  
-  nsCOMPtr<nsIDOMSelection>  domSelection;
-  editor->GetSelection(getter_AddRefs(domSelection));
-  if (!domSelection) return NS_ERROR_UNEXPECTED;
-  
-  nsCOMPtr<nsIDOMNode> domNode;
-  domSelection->GetAnchorNode(getter_AddRefs(domNode));
-  if (!domNode) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_NOT_INITIALIZED;
   
   // tagStr will hold the list state when we're done.
-  nsAutoString  tagStr; tagStr.AssignWithConversion("ol");
-  nsCOMPtr<nsIDOMElement> parentElement;
-  nsresult rv = aEditorShell->GetElementOrParentByTagName(tagStr.GetUnicode(), domNode, getter_AddRefs(parentElement));
-  if (NS_FAILED(rv)) return rv;  
+  nsAutoString  tagStr; 
+  PRBool bMixed, bOL, bUL;
+  nsresult rv = htmlEditor->GetListState(bMixed, bOL, bUL);
+  if (NS_FAILED(rv)) return rv; 
 
-  if (!parentElement)
+  if (!bMixed)
   {
-    tagStr.AssignWithConversion("ul");
-    rv = aEditorShell->GetElementOrParentByTagName(tagStr.GetUnicode(), domNode, getter_AddRefs(parentElement));
-    if (NS_FAILED(rv)) return rv;
-    
-    if (!parentElement)
-      tagStr.Truncate();
+    if (bOL) tagStr.AssignWithConversion("ol");
+    else if (bUL) tagStr.AssignWithConversion("ul");
   }
-
+  
   outInList = tagStr.EqualsWithConversion(mTagName);
   return NS_OK;
 }
