@@ -25,6 +25,7 @@
 interface nsIInterfaceRequestor;
 interface nsIWebBrowserChrome;
 interface nsIURIContentListener;
+interface nsIDOMWindow;
 
 /**
  * The nsIWebBrowser
@@ -81,4 +82,9 @@ interface nsIWebBrowser : nsISupports
 	nulled out by the parent when the parent is going away.
 	*/
 	attribute nsIURIContentListener parentURIContentListener;
+
+   /*
+   The top-level DOM window (nsIDOMWindow)
+   */
+   readonly attribute nsIDOMWindow contentDOMWindow;
 };
