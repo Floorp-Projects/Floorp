@@ -58,9 +58,9 @@ public:
 
 protected:
   static PRInt32 CmpByToken(nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByOrg(nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b);
   static PRInt32 CmpByName(nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByTok_Org_Name(nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByTok_IssuerOrg_Name(nsIX509Cert *a, nsIX509Cert *b);
   PRInt32 CountOrganizations();
 
 private:
