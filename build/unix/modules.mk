@@ -61,8 +61,8 @@ BM_CVS_string	      = $(NSPRPUB_DIR) string
 # xpcom
 #
 BM_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg string xpcom
-BM_DEP_DIRS_xpcom	= intl/unicharutil/public intl/uconv/public modules/libjar
-BM_CVS_NS_xpcom		= xpcom xpcom/typelib xpcom/typelib/xpidl intl/unicharutil/public intl/uconv/public
+BM_DEP_DIRS_xpcom	= intl/unicharutil/public intl/uconv/public modules/libjar netwerk/base/public
+BM_CVS_NS_xpcom		= xpcom xpcom/typelib xpcom/typelib/xpidl intl/unicharutil/public intl/uconv/public netwerk/base/public
 BM_CVS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom/typelib/xpt xpcom/base xpcom/ds xpcom/io xpcom/components xpcom/threads xpcom/reflect xpcom/proxy xpcom/build xpcom/tools xpcom/sample modules/libjar string
 
 #
