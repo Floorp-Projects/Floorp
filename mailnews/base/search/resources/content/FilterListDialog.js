@@ -158,6 +158,17 @@ function onServerClick(event)
     selectServer(item.id);
 }
 
+function CanRunFiltersAfterTheFact(aServer)
+{
+  // can't manually run news filters yet
+  if (aServer.type == "nntp")
+    return false;
+
+  // filter after the fact is implement using search
+  // so if you can't search, you can't filter after the fact
+  return aServer.canSearchMessages;
+}
+
 // roots the tree at the specified server
 function setServer(uri)
 {
@@ -180,18 +191,18 @@ function setServer(uri)
    gRunFiltersFolderPicker.setAttribute("ref", uri);
  
    // run filters after the fact not supported by news
-   if (msgFolder.server.type == "nntp" && !msgFolder.isServer) {
-     gRunFiltersFolderPicker.setAttribute("hidden", "true");
-     gRunFiltersButton.setAttribute("hidden", "true");
-     gRunFiltersFolderPickerLabel.setAttribute("hidden", "true");
-   }
-   else {
+   if (CanRunFiltersAfterTheFact(msgFolder.server)) {
      gRunFiltersFolderPicker.removeAttribute("hidden");
      gRunFiltersButton.removeAttribute("hidden");
      gRunFiltersFolderPickerLabel.removeAttribute("hidden");
 
      // for POP3 and IMAP, select the first folder, which is the INBOX
      gRunFiltersFolderPicker.selectedIndex = 0;
+   }
+   else {
+     gRunFiltersFolderPicker.setAttribute("hidden", "true");
+     gRunFiltersButton.setAttribute("hidden", "true");
+     gRunFiltersFolderPickerLabel.setAttribute("hidden", "true");
    }
 
    // Get the first folder uri for this server. INBOX for

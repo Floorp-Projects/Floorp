@@ -376,6 +376,7 @@ private:
   static nsDateFormatSelector  m_dateFormatDefault;
   static nsDateFormatSelector  m_dateFormatThisWeek;
   static nsDateFormatSelector  m_dateFormatToday;
+  PRBool ServerSupportsFilterAfterTheFact();
 };
 
 #endif

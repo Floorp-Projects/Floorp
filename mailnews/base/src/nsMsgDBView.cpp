@@ -1999,6 +1999,31 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
   return rv;
 }
 
+PRBool nsMsgDBView::ServerSupportsFilterAfterTheFact()
+{
+  NS_ASSERTION(m_folder, "no folder!");
+  if (!m_folder)
+    return PR_FALSE; // unexpected
+
+  // can't manually run news filters yet
+  if (mIsNews)
+    return PR_FALSE;
+
+  nsCOMPtr <nsIMsgIncomingServer> server;
+  nsresult rv = m_folder->GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv))
+    return PR_FALSE; // unexpected
+
+  // filter after the fact is implement using search
+  // so if you can't search, you can't filter after the fact
+  PRBool canSearch;
+  rv = server->GetCanSearchMessages(&canSearch);
+  if (NS_FAILED(rv))
+    return PR_FALSE; // unexpected
+
+  return canSearch;
+}
+
 NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, PRBool *selectable_p, nsMsgViewCommandCheckStateValue *selected_p)
 {
   nsresult rv = NS_OK;
@@ -2026,10 +2051,11 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
     }
     break;
   case nsMsgViewCommandType::applyFilters:
-    // can't manually run news filters yet
     // disable if no messages
     // XXX todo, check that we have filters, and at least one is enabled
-    *selectable_p = GetSize() && !mIsNews; 
+    *selectable_p = GetSize();  
+    if (*selectable_p)
+      *selectable_p = ServerSupportsFilterAfterTheFact();
     break;
   case nsMsgViewCommandType::runJunkControls:
     // disable if no messages
@@ -5391,7 +5417,8 @@ nsMsgDBView::GetKeyForFirstSelectedMessage(nsMsgKey *key)
   PRInt32 startRange;
   PRInt32 endRange;
   nsresult rv = mTreeSelection->GetRangeAt(0, &startRange, &endRange);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // don't assert, it is legal for nothing to be selected
+  if (NS_FAILED(rv)) return rv;
 
   // check that the first index is valid, it may not be if nothing is selected
   if (startRange >= 0 && startRange < GetSize()) {
