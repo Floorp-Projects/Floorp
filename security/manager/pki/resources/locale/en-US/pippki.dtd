@@ -63,6 +63,10 @@
 <!ENTITY downloadCert.viewCert.text "Examine CA certificate">
 <!ENTITY downloadCert.viewPolicy.text "Examine CA policies and procedures">
 
+<!-- Certificate Exists in database -->
+<!ENTITY caCertExists.title "Certificate Exists">
+<!ENTITY caCertExists.message "The Certificate already exists.">
+
 <!-- Strings for the MismatchDomain dialog  -->
 <!ENTITY domainMismatch.title "Security Error: Domain Name  Mismatch">
 <!ENTITY examineCert.label "View Certificate">

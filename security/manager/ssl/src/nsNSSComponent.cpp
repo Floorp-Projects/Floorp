@@ -1051,6 +1051,8 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
 
   nsresult rv;
+  SECItem der;
+  CERTCertificate *tmpCert = NULL;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PSMContentDownloaderContext();
 
   switch (mType) {
@@ -1059,12 +1061,31 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
       nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(mByteData, mBufferOffset);
       if (certdb == nsnull)
         return NS_ERROR_FAILURE;
+
       nsCOMPtr<nsICertificateDialogs> dialogs;
       PRBool canceled;
       PRUint32 trust;
       rv = ::getNSSDialogs(getter_AddRefs(dialogs), 
                          NS_GET_IID(nsICertificateDialogs));
       if (NS_FAILED(rv)) goto loser;
+
+      rv=cert->GetRawDER((char **)&der.data, &der.len);
+      if (rv != NS_OK)
+       return NS_ERROR_FAILURE;
+
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
+      tmpCert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der,
+                                    NULL, PR_FALSE, PR_TRUE);
+	  
+	  //Added to check if cert exists
+	  if (tmpCert->isperm) 
+	  {
+         dialogs->CACertExists(ctx, &canceled);
+         rv = NS_ERROR_FAILURE;
+         break;
+	  }
+      //end added
+
       rv = dialogs->DownloadCACert(ctx, cert, &trust, &canceled);
       if (NS_FAILED(rv)) goto loser;
       if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
@@ -1082,8 +1103,13 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
 	  break;
   }
 loser:
+
+  if (tmpCert) 
+    CERT_DestroyCertificate(tmpCert);
+  
   return rv;
 }
+
 
 /* other mime types that we should handle sometime:
    

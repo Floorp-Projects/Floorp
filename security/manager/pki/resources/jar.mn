@@ -13,6 +13,8 @@ pippki.jar:
     content/pippki/newserver.xul             (content/newserver.xul)
     content/pippki/downloadcert.js           (content/downloadcert.js)
     content/pippki/downloadcert.xul          (content/downloadcert.xul)
+    content/pippki/cacertexists.js           (content/cacertexists.js)
+    content/pippki/cacertexists.xul          (content/cacertexists.xul)
     content/pippki/certManager.js            (content/certManager.js)
     content/pippki/certManager.xul           (content/certManager.xul)
     content/pippki/CAOverlay.xul             (content/CAOverlay.xul)

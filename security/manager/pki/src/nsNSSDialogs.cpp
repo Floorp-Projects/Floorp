@@ -617,6 +617,30 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
+
+NS_IMETHODIMP 
+nsNSSDialogs::CACertExists(nsIInterfaceRequestor *ctx,PRBool *_canceled)
+								
+{
+  nsresult rv;
+
+  *_canceled = PR_FALSE;
+
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  if (!block) return NS_ERROR_FAILURE;
+
+  
+  rv = nsNSSDialogHelper::openDialog(parent, 
+                                   "chrome://pippki/content/cacertexists.xul",
+								    block);
+
+  return rv;
+}
+
+
 NS_IMETHODIMP
 nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn, const PRUnichar *organization, const PRUnichar *issuer, const PRUnichar **certNickList, PRUint32 count, PRUnichar **certNick, PRBool *canceled) 
 {
