@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.9 2004/10/12 17:54:46 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.10 2004/10/12 22:37:12 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -54,6 +54,8 @@ endif
 	echo "%dir /opt/sun" >>temp.spec
 	echo "%dir /opt/sun/private" >>temp.spec
 	echo "%dir /opt/sun/private/lib" >>temp.spec
+	echo "%dir /opt/sun/private/share" >>temp.spec
+	echo "%dir /opt/sun/private/share/lib" >>temp.spec
 	find opt \( -name "*.so" -o -name "*.jar" \) \
 		| sed -e "s-^-/-" >>temp.spec
 	echo "" >>temp.spec
