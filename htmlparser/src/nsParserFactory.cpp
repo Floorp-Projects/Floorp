@@ -143,7 +143,11 @@ nsresult nsParserFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
+#ifdef XP_MAC
+extern "C" NS_EXPORT nsresult NSGetFactory_PARSER_DLL(const nsCID &aClass, nsIFactory **aFactory)
+#else
 extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+#endif
 {
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
@@ -157,4 +161,3 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFa
 
   return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
-

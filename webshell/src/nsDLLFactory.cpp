@@ -27,7 +27,11 @@ static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 
 extern "C" NS_WEB nsresult
+#ifdef XP_MAC
+NSGetFactory_WEB_DLL(const nsCID& aClass, nsIFactory** aFactory)
+#else
 NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
+#endif
 {
   nsresult rv = NS_OK;
 
@@ -47,3 +51,4 @@ NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
 
   return rv;
 }
+
