@@ -99,8 +99,6 @@ ImageSystemServicesImpl::SetTimeout(ilTimeoutCallbackFunction aFunc,
         return nsnull;
     }
 
-    NS_ADDREF(timer);
-
     return (void *)timer;
 }
 
