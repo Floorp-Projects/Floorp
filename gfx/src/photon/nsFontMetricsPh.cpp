@@ -96,6 +96,7 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
   int           index;
   PhRect_t      extent;
 
+
 	result = aContext->FirstExistingFont(aFont, firstFace);
 
 	str = firstFace.ToNewCString();
@@ -108,6 +109,14 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 		str = firstFace.ToNewCString();
 		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: after GetFirstFamily = <%s>\n", str));
 		delete [] str;
+	}
+
+//brianeprint
+	printf("nsFontMetricsPh::Init, %s\n", str);
+	if (!str || !str[0])
+	{
+		delete [] str;
+		str = strdup("serif");
 	}
 
 	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: aFont.name = <%s>\n", str));
@@ -153,7 +162,8 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	if(aFont.style & NS_FONT_STYLE_ITALIC)
 		uiFlags |= PF_STYLE_ITALIC;
 
-	//uiFlags |= PF_STYLE_ANTIALIAS;	// kedl, for now this looks really bad
+	if(aFont.style & NS_FONT_STYLE_OBLIQUE)
+		uiFlags |= PF_STYLE_ANTIALIAS;
 
 	if(PfGenerateFontName((const uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName) == NULL)
 	{
@@ -187,15 +197,18 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 		/* These are in pixels and need to be converted! */
 		float height;
 		height = fontInfo.descender - fontInfo.ascender + 1.0;
-		mHeight                = nscoord(height * f);
-		mMaxAscent = mAscent   = nscoord(fontInfo.ascender * f * -1.0); // HACK
-		mMaxDescent = mDescent = nscoord(fontInfo.descender * f);
+		mEmHeight = mHeight                = nscoord(height * f);
+		mEmAscent = mMaxAscent = mAscent   = nscoord(fontInfo.ascender * f * -1.0); // HACK
+		mEmDescent = mMaxDescent = mDescent = nscoord(fontInfo.descender * f);
 		mMaxAdvance            = nscoord(fontInfo.width * f);  /* max width */
-
+		
         /***** Get the width of a space *****/
         PfExtentText(&extent, NULL, NSFullFontName, " ", 1);
 //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont mSpaceWidth=<%d> font=<%s> f=<%f> \n", (extent.lr.x - extent.ul.x + 1),  NSFullFontName, f ));
         mSpaceWidth = (int) ((extent.lr.x - extent.ul.x + 1) * f);
+	// brianeprint
+	printf("FONTINFO: %d, %d, %d, %d, %d\n", fontInfo.size, fontInfo.style, fontInfo.ascender, fontInfo.descender, fontInfo.width);
+	printf("FONT: %s, %f, %f, %d\n", NSFullFontName, height, f, mHeight);
     
 
 		/****** stolen from GTK *******/
