@@ -757,8 +757,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                                          containingBlockHeight,
                                          handled);
 
-    // If the incremental reflow command was handled by the absolute positioning
-    // code, then we're all done
+    // If the incremental reflow command was handled by the absolute
+    // positioning code, then we're all done.
     if (handled) {
       // Just return our current size as our desired size.
       aMetrics.width = mRect.width;
@@ -1370,14 +1370,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // because we can't shrink any smaller.
     maxHeight = aMetrics.height;
 
-    // Don't carry out a bottom margin when our height is fixed
-    // unless the bottom of the last line adjoins the bottom of our
-    // content area.
-    if (!aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
-      if (aState.mY + aState.mPrevBottomMargin.get() != aMetrics.height) {
-        aState.mPrevBottomMargin.Zero();
-      }
-    }
+    // Don't carry out a bottom margin when our height is fixed.
+    aState.mPrevBottomMargin.Zero();
   }
   else {
     nscoord autoHeight = aState.mY;
@@ -3344,8 +3338,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
     nsCollapsingMargin collapsedBottomMargin;
     nsRect combinedArea(0,0,0,0);
-    *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, isAdjacentWithTop, computedOffsets,
-                                       collapsedBottomMargin, aLine->mBounds, combinedArea);
+    *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, isAdjacentWithTop,
+                                       computedOffsets, collapsedBottomMargin,
+                                       aLine->mBounds, combinedArea);
     aLine->SetCarriedOutBottomMargin(collapsedBottomMargin);
 
     if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {

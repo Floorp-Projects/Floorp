@@ -448,11 +448,10 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
   mPrevBottomMargin.Zero();
   nsBlockFrame *block = mBlock;
 
-  const nsStyleText* styleText = NS_STATIC_CAST(const nsStyleText*,
-      block->mStyleContext->GetStyleData(eStyleStruct_Text));
-  PRBool isPre =
-      ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
-       (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace));
+  const nsStyleText* styleText;
+  ::GetStyleData(block, &styleText);
+  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
+                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
 
   nsCompatibility mode;
   mPresContext->GetCompatibilityMode(&mode);
