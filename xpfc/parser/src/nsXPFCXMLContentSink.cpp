@@ -31,6 +31,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXPFCToolkit.h"
 
+
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID,      NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kClassIID,             NS_XPFCXMLCONTENTSINK_IID); 
@@ -56,6 +57,7 @@ static NS_DEFINE_IID(kCXPButtonCID,         NS_XP_BUTTON_CID);
 static NS_DEFINE_IID(kCXPFCTabWidgetCID,    NS_XPFC_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTextWidgetCID,   NS_XPFC_TEXTWIDGET_CID);
 static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
+static NS_DEFINE_IID(kIXPFCContentSinkIID,  NS_IXPFC_CONTENT_SINK_IID); 
 
 #define XPFC_PARSING_STATE_UNKNOWN      0
 #define XPFC_PARSING_STATE_TOOLBAR      1
@@ -182,6 +184,9 @@ nsresult nsXPFCXMLContentSink::QueryInterface(const nsIID& aIID, void** aInstanc
   else if(aIID.Equals(kIXPFCXMLContentSinkIID)) {  //do this class...
     *aInstancePtr = (nsIXPFCXMLContentSink*)(this);                                        
   }                 
+  else if(aIID.Equals(kIXPFCContentSinkIID)) {  //do this class...
+    *aInstancePtr = (nsIXPFCContentSink*)(this);                                        
+  }
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -946,6 +951,21 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
   return NS_OK;
 }
 
+
+nsresult nsXPFCXMLContentSink::SetContentSinkContainer(nsISupports * 
+                                                       aContentSinkContainer)
+{
+  nsresult res;
+  nsIXPFCCanvas * canvas;
+  static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
+  res = aContentSinkContainer->QueryInterface(kIXPFCCanvasIID, (void **)&canvas);
+  if (NS_OK == res)
+  {
+    res = SetRootCanvas(canvas);
+    NS_RELEASE(canvas);
+  }
+  return res;
+}
 
 nsresult nsXPFCXMLContentSink::SetRootCanvas(nsIXPFCCanvas * aCanvas)
 {

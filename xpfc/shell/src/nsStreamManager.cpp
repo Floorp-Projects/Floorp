@@ -27,6 +27,7 @@
 #include "nspr.h"
 #include "nsParserCIID.h"
 #include "nsXPFCXMLContentSink.h"
+#include "nsIXPFCICalContentSink.h"
 #include "nsStreamObject.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -77,11 +78,11 @@ NS_IMPL_ISUPPORTS(nsStreamManager,kIStreamManagerIID);
 
 nsresult nsStreamManager::Init()
 {
-  static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
+  static NS_DEFINE_IID(kCArrayCID, NS_ARRAY_CID);
 
-  nsresult res = nsRepository::CreateInstance(kCVectorCID, 
+  nsresult res = nsRepository::CreateInstance(kCArrayCID, 
                                               nsnull, 
-                                              kCVectorCID, 
+                                              kCArrayCID, 
                                               (void **)&mStreamObjects);
 
   if (NS_OK != res)
@@ -93,7 +94,7 @@ nsresult nsStreamManager::Init()
 }
 
 nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
-                                  nsIXPFCCanvas * aParentCanvas,
+                                  nsISupports * aContentSinkContainer,
                                   const nsString& aURLSpec, 
                                   nsIPostData * aPostData,
                                   nsIID *aDTDIID,
@@ -184,27 +185,23 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
       return res;
   }
 
-  nsIXPFCXMLContentSink * sink ;
-
-  static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
-
-  res = stream_object->mSink->QueryInterface(kIXPFCXMLContentSinkIID,(void**)&sink);
-
+  nsIXPFCContentSink * xpfc_sink;
+  static NS_DEFINE_IID(kIXPFCContentSinkIID, NS_IXPFC_CONTENT_SINK_IID);
+  static NS_DEFINE_IID(kIXPFCContentSinkContainerIID, NS_IXPFC_CONTENT_SINK_CONTAINER_IID);
+  
+  res = stream_object->mSink->QueryInterface(kIXPFCContentSinkIID, (void**)&xpfc_sink);
   if (NS_OK == res)
   {
-    sink->SetViewerContainer(aWebViewerContainer);
-
+    xpfc_sink->SetViewerContainer(aWebViewerContainer);
+    
     /*
      * Push Top of stack
      */
-
-    if (nsnull != aParentCanvas)
+    if (nsnull != aContentSinkContainer)
     {
-      sink->SetRootCanvas(aParentCanvas);
-
+      xpfc_sink->SetContentSinkContainer(aContentSinkContainer);
     }
-
-    NS_RELEASE(sink);
+    NS_RELEASE(xpfc_sink);
   }
 
   /*

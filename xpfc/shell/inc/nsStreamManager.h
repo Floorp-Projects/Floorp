@@ -21,7 +21,8 @@
 #include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIStreamManager.h"
-#include "nsIXPFCCanvas.h"
+#include "nsIXPFCContentSinkContainer.h"
+//#include "nsIXPFCCanvas.h"
 
 class nsStreamManager : public nsIStreamManager 
 {
@@ -45,8 +46,18 @@ public:
    */
   NS_IMETHOD Init();
 
+#if 0
   NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
                      nsIXPFCCanvas * aParentCanvas,
+                     const nsString& aURLSpec, 
+                     nsIPostData * aPostData,
+                     nsIArray * aCalendarVector,
+                     nsIID *aDTDIID = nsnull,
+                     nsIID *aSinkIID = nsnull);
+#endif
+
+  NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
+                     nsISupports * aContentSinkContainer,
                      const nsString& aURLSpec, 
                      nsIPostData * aPostData,
                      nsIID *aDTDIID = nsnull,

@@ -32,9 +32,11 @@
 #include "nsXPFCXMLDTD.h"
 #include "nsIXMLParserObject.h"
 #include "nsIXPFCXMLContentSink.h"
+#include "nsIXPFCContentSink.h"
 
 class nsXPFCXMLContentSink : public nsIHTMLContentSink,
-                             public nsIXPFCXMLContentSink
+                             public nsIXPFCXMLContentSink,
+                             public nsIXPFCContentSink
 {
 
 public:
@@ -47,6 +49,7 @@ public:
   NS_IMETHOD Init();
   NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);
   NS_IMETHOD SetRootCanvas(nsIXPFCCanvas * aCanvas);
+  NS_IMETHOD SetContentSinkContainer(nsISupports * aContentSinkContainer);
 
   // nsIContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);

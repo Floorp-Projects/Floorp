@@ -15,7 +15,9 @@ EXPORTS = \
     nsIMenuManager.h \
     nsIXPFCToolbarManager.h \
     nsIXPFCXMLContentSink.h \
-	$(NULL)
+    nsIXPFCICalContentSink.h \
+    nsIXPFCContentSink.h \
+    	$(NULL)
 
 PRIVATE_EXPORTS = \
 	$(NULL)
