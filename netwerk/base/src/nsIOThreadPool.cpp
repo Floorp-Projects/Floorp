@@ -81,17 +81,16 @@ public:
 private:
     virtual ~nsIOThreadPool();
 
-    int GetCurrentThreadIndex();
-
     PR_STATIC_CALLBACK(void) ThreadFunc(void *);
 
     // mLock protects all (exceptions during Init and Shutdown)
     PRLock    *mLock;
-    PRCondVar *mCV;
-    PRThread  *mThreads[MAX_THREADS];
-    PRUint32   mNumIdleThreads;
-    PRCList    mEventQ;
-    PRBool     mShutdown;
+    PRCondVar *mIdleThreadCV;   // notified to wake up an idle thread
+    PRCondVar *mExitThreadCV;   // notified when a thread exits
+    PRUint32   mNumThreads;     // number of active + idle threads
+    PRUint32   mNumIdleThreads; // number of idle threads
+    PRCList    mEventQ;         // queue of PLEvent structs
+    PRBool     mShutdown;       // set to true if shutting down
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsIOThreadPool, nsIEventTarget, nsIObserver)
@@ -104,6 +103,7 @@ nsIOThreadPool::Init()
         gIOThreadPoolLog = PR_NewLogModule("nsIOThreadPool");
 #endif
 
+    mNumThreads = 0;
     mNumIdleThreads = 0;
     mShutdown = PR_FALSE;
 
@@ -111,11 +111,14 @@ nsIOThreadPool::Init()
     if (!mLock)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mCV = PR_NewCondVar(mLock);
-    if (!mCV)
+    mIdleThreadCV = PR_NewCondVar(mLock);
+    if (!mIdleThreadCV)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    memset(mThreads, 0, sizeof(mThreads));
+    mExitThreadCV = PR_NewCondVar(mLock);
+    if (!mExitThreadCV)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     PR_INIT_CLIST(&mEventQ);
 
     // we want to shutdown the i/o thread pool at xpcom-shutdown time...
@@ -131,12 +134,13 @@ nsIOThreadPool::~nsIOThreadPool()
 
 #ifdef DEBUG
     NS_ASSERTION(PR_CLIST_IS_EMPTY(&mEventQ), "leaking events");
-    for (int i=0; i<MAX_THREADS; ++i)
-        NS_ASSERTION(mThreads[i] == nsnull, "leaking thread");
+    NS_ASSERTION(mNumThreads == 0, "leaking thread(s)");
 #endif
 
-    if (mCV)
-        PR_DestroyCondVar(mCV);
+    if (mIdleThreadCV)
+        PR_DestroyCondVar(mIdleThreadCV);
+    if (mExitThreadCV)
+        PR_DestroyCondVar(mExitThreadCV);
     if (mLock)
         PR_DestroyLock(mLock);
 }
@@ -150,27 +154,12 @@ nsIOThreadPool::Shutdown()
     {
         nsAutoLock lock(mLock);
         mShutdown = PR_TRUE;
-        PR_NotifyAllCondVar(mCV);
+
+        PR_NotifyAllCondVar(mIdleThreadCV);
+
+        while (mNumThreads != 0)
+            PR_WaitCondVar(mExitThreadCV, PR_INTERVAL_NO_TIMEOUT);
     }
-
-    for (int i=0; i<MAX_THREADS; ++i) {
-        if (mThreads[i]) {
-            PR_JoinThread(mThreads[i]);
-            mThreads[i] = 0;
-        }         
-    }
-}
-
-int
-nsIOThreadPool::GetCurrentThreadIndex()
-{
-    PRThread *current = PR_GetCurrentThread();
-
-    for (int i=0; i<MAX_THREADS; ++i)
-        if (current == mThreads[i])
-            return i;
-
-    return -1;
 }
 
 NS_IMETHODIMP
@@ -180,6 +169,8 @@ nsIOThreadPool::PostEvent(PLEvent *event)
 
     nsAutoLock lock(mLock);
 
+    // if we are shutting down, then prevent additional events from being
+    // added to the queue...
     if (mShutdown)
         return NS_ERROR_UNEXPECTED;
     
@@ -187,35 +178,42 @@ nsIOThreadPool::PostEvent(PLEvent *event)
 
     PR_APPEND_LINK(&event->link, &mEventQ);
 
-    // now, look for an available thread...
+    // now, look for an available idle thread...
     if (mNumIdleThreads)
-        PR_NotifyCondVar(mCV); // wake up an idle thread
-    else {
-        // try to create a new thread unless we have reached our maximum...
-        for (int i=0; i<MAX_THREADS; ++i) {
-            if (!mThreads[i]) {
-                NS_ADDREF_THIS(); // the thread owns a reference to us
-                mThreads[i] = PR_CreateThread(PR_USER_THREAD,
-                                              ThreadFunc,
-                                              this,
-                                              PR_PRIORITY_NORMAL,
-                                              PR_GLOBAL_THREAD,
-                                              PR_JOINABLE_THREAD,
-                                              0);
-                if (!mThreads[i])
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-                break;
-            }
+        PR_NotifyCondVar(mIdleThreadCV); // wake up an idle thread
+
+    // or, try to create a new thread unless we have reached our maximum...
+    else if (mNumThreads < MAX_THREADS) {
+        NS_ADDREF_THIS(); // the thread owns a reference to us
+        mNumThreads++;
+        PRThread *thread = PR_CreateThread(PR_USER_THREAD,
+                                           ThreadFunc,
+                                           this,
+                                           PR_PRIORITY_NORMAL,
+                                           PR_GLOBAL_THREAD,
+                                           PR_UNJOINABLE_THREAD,
+                                           0);
+        if (!thread) {
+            NS_RELEASE_THIS();
+            mNumThreads--;
+            rv = NS_ERROR_OUT_OF_MEMORY;
         }
     }
+    // else, we expect one of the active threads to process the event queue.
+
     return rv;
 }
 
 NS_IMETHODIMP
 nsIOThreadPool::IsOnCurrentThread(PRBool *result)
 {
+    // no one should be calling this method.  if this assertion gets hit,
+    // then we need to think carefully about what this method should be
+    // returning.
+    NS_NOTREACHED("nsIOThreadPool::IsOnCurrentThread");
+
     // fudging this a bit since we actually cover several threads...
-    *result = (GetCurrentThreadIndex() != -1);
+    *result = PR_FALSE;
     return NS_OK;
 }
 
@@ -241,7 +239,7 @@ nsIOThreadPool::ThreadFunc(void *arg)
             // never wait if we are shutting down; always process queued events...
             if (PR_CLIST_IS_EMPTY(&pool->mEventQ) && !pool->mShutdown) {
                 pool->mNumIdleThreads++;
-                PR_WaitCondVar(pool->mCV, THREAD_IDLE_TIMEOUT);
+                PR_WaitCondVar(pool->mIdleThreadCV, THREAD_IDLE_TIMEOUT);
                 pool->mNumIdleThreads--;
             }
 
@@ -265,10 +263,9 @@ nsIOThreadPool::ThreadFunc(void *arg)
             while (!PR_CLIST_IS_EMPTY(&pool->mEventQ));
         }
 
-        // thread is dying... cleanup mThreads, unless of course if we are
-        // shutting down, in which case Shutdown will clean up mThreads for us.
-        if (!pool->mShutdown)
-            pool->mThreads[pool->GetCurrentThreadIndex()] = nsnull;
+        // thread is going away...
+        pool->mNumThreads--;
+        PR_NotifyCondVar(pool->mExitThreadCV);
     }
 
     // release our reference to the pool
