@@ -1342,14 +1342,9 @@ proxy_isResolvable(JSContext *mc, JSObject *obj, unsigned int argc,
     if (argc >= 1 && JSVAL_IS_STRING(argv[0])) {
 	const char *h = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
 	PRHostEnt *hp = NULL;
-#ifdef NSPR20
 	PRStatus rv;
     PRHostEnt hpbuf;
     char dbbuf[PR_NETDB_BUF_SIZE];
-#elif defined(XP_UNIX) || defined(XP_WIN32)
-	PRHostEnt hpbuf;
-	char dbbuf[PR_NETDB_BUF_SIZE];
-#endif
 
 	if (h) {
 	    char *safe = PL_strdup(h);
