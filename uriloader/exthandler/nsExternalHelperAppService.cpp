@@ -1182,7 +1182,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
     PRUint32 numBytesRead = 0; 
     PRUint32 numBytesWritten = 0;
     mProgress += count;
-    PRBool readError;
+    PRBool readError = PR_TRUE;
     while (NS_SUCCEEDED(rv) && count > 0) // while we still have bytes to copy...
     {
       readError = PR_TRUE;
