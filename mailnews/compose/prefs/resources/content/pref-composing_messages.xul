@@ -51,7 +51,6 @@
                 prefattribute="data">
         <menupopup>
           <menuitem data="0" value="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
-          <menuitem data="1" value="&quoted.label;" accesskey="&quoted.accesskey;"/>
           <menuitem data="2" value="&inline.label;" accesskey="&inline.accesskey;"/>
         </menupopup>
       </menulist>
