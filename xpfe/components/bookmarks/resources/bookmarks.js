@@ -129,23 +129,48 @@ function doDelete()
 
 	dump("# of Nodes selected: " + select_list.length + "\n\n");
 
-	var ok = confirm("Delete all the selected nodes?");
-	if (!ok)
-	{
-		dump("Aborting.\n");
-		return(false);
-	}
+	var ok = confirm("Delete the selected bookmark(s)?");
+	if (!ok)	return(false);
 
-	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!RDF)	return(false);
+
+	var RDFC = Components.classes["component://netscape/rdf/container"].getService();
+	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+	if (!RDFC)	return(false);
+
+	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+	if (!Bookmarks)	return(false);
+
+	// note: backwards delete so that we handle odd deletion cases such as
+	//       deleting a child of a folder as well as the folder itself
+	for (var nodeIndex=select_list.length-1; nodeIndex>=0; nodeIndex--)
 	{
 		var node = select_list[nodeIndex];
 		if (!node)    continue;
-		var id = node.getAttribute("id");
-		if (!id)    continue;
-		
-		dump("Node " + nodeIndex + ": " + id + "\n");
-		
-		// XXX delete the node
+		var ID = node.getAttribute("id");
+		if (!ID)    continue;
+		var parentID = node.parentNode.parentNode.getAttribute("id");
+		if (!parentID)	continue;
+
+		dump("Node " + nodeIndex + ": " + ID + "\n");
+		dump("Parent Node " + nodeIndex + ": " + parentID + "\n");
+
+		var IDRes = RDF.GetResource(ID);
+		if (!IDRes)	continue;
+		var parentIDRes = RDF.GetResource(parentID);
+		if (!parentIDRes)	continue;
+
+		RDFC.Init(Bookmarks, parentIDRes);
+		RDFC.RemoveElement(IDRes, false);		// XXX should probably be true
+	}
+
+	var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+	if (remote)
+	{
+		remote.Flush();
+		dump("Wrote out bookmark changes.\n");
 	}
 	return(true);
 }
