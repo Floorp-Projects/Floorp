@@ -1490,7 +1490,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
       if (tmp_cookie_ptr) {
         if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
-          cookie_cookieList->InsertElementAt(tmp_cookie_ptr, i);
+          cookie_cookieList->InsertElementAt(prev_cookie, i);
           bCookieAdded = PR_TRUE;
           break;
         }
