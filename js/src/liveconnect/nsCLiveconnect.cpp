@@ -453,7 +453,7 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize leng
 
     /* Set up security stuff */
     principals = NULL;
-    if (JSJ_callbacks->get_JSPrincipals_from_java_caller)
+    if (JSJ_callbacks && JSJ_callbacks->get_JSPrincipals_from_java_caller)
         principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, principalsArray, numPrincipals, pNSISecurityContext);
     codebase = principals ? (const char *)principals->codebase : NULL;
 
