@@ -28,6 +28,20 @@ LIBRARY_NAME=mime
 EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
 		nsMimeObjectClassAccess.h		\
 		nsMimeHeaderConverter.h			\
+		mimetext.h						\
+		mimeleaf.h						\
+		mimecth.h						\
+		mimeobj.h						\
+		mimei.h							\
+		modmimee.h						\
+		mimecont.h						\
+		mimemult.h						\
+		mimemsig.h						\
+		mimehdrs.h						\
+		modmime.h						\
+		mimepbuf.h						\
+		modlmime.h						\
+		mimerosetta.h					\
 		$(NULL)
 
 CPPSRCS = \
