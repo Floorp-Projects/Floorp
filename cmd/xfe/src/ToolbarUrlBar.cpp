@@ -42,6 +42,9 @@
 const char *
 XFE_ToolbarUrlBar::doCommandNotice = "XFE_ToolbarUrlBar::doCommandNotice";
 
+const char *
+XFE_ToolbarUrlBar::navigateToUrlNotice = "XFE_ToolbarUrlBar::navigateToUrlNotice";
+
 //////////////////////////////////////////////////////////////////////////
 XFE_ToolbarUrlBar::XFE_ToolbarUrlBar(XFE_Frame *		frame,
 									 Widget				parent,
@@ -96,14 +99,14 @@ XFE_ToolbarUrlBar::createBaseWidget(Widget			parent,
 							   XmNcomboBoxType,			XmCOMBO_BOX_EDITABLE,
 							   XmNwidth,				400,
 							   XmNusePreferredWidth,	False,
+// 							   XmNtraversalOn,			False,
+// 							   XmNhighlightThickness,	0,
 							   NULL);
 
-#if 0
     XtAddCallback(url_bar,
-				  XmNactivateCallback,
-				  XFE_ToolbarUrlBar::activateCB,
+				  XmNtextActivateCallback,
+				  XFE_ToolbarUrlBar::textActivateCB,
 				  (XtPointer) this);
-#endif
 	
 	return url_bar;
 }
@@ -158,6 +161,31 @@ XFE_ToolbarUrlBar::docStringClear(XmString /* string */)
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
+/* virtual */ void	
+XFE_ToolbarUrlBar::textActivate()
+{
+	String text = XfeComboBoxGetTextString(m_widget);
+
+	if (text != NULL)
+	{
+//		printf("textActivate(%s)\n",text);
+
+		URL_Struct * url = NET_CreateURLStruct(text,NET_DONT_RELOAD);
+
+		notifyInterested(XFE_ToolbarUrlBar::navigateToUrlNotice,
+						 (void *) url);
+		
+		
+		XtFree(text);
+	}
+
+	XFE_Frame * frame = (XFE_Frame *) getToplevel();
+
+	fe_NeutralizeFocus(frame->getContext());
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
 //
 // Private methods
 //
@@ -191,28 +219,14 @@ XFE_ToolbarUrlBar::createProxyIcon(Widget			parent,
 //
 //////////////////////////////////////////////////////////////////////////
 /* static */ void
-XFE_ToolbarUrlBar::activateCB(Widget		w,
-							  XtPointer		clientData,
-							  XtPointer		callData)
+XFE_ToolbarUrlBar::textActivateCB(Widget		w,
+								  XtPointer		clientData,
+								  XtPointer		callData)
 {
-#if 0
-	XFE_ToolbarUrlBar *			button = (XFE_ToolbarUrlBar*) clientData;
-	XfeButtonCallbackStruct *	cd = (XfeButtonCallbackStruct *) callData;
-	CommandType					cmd = button->getCommand();
-	void *						cmdCallData = button->getCallData();
+	XFE_ToolbarUrlBar *			urlbar = (XFE_ToolbarUrlBar*) clientData;
 
-	// The command info - only widget and event available
-	XFE_CommandInfo				info(XFE_COMMAND_BUTTON_ACTIVATE,
-									 w,
-									 cd->event);
-	// Command arguments
-	XFE_DoCommandArgs			cmdArgs(cmd,
-										cmdCallData,
-										&info);
+	XP_ASSERT( urlbar != NULL );
 
-	// Send a message that will perform an action.
-	button->notifyInterested(XFE_ToolbarUrlBar::doCommandNotice,
-							 (void *) & cmdArgs);
-#endif
+	urlbar->textActivate();
 }
 //////////////////////////////////////////////////////////////////////////

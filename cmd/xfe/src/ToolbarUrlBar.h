@@ -58,6 +58,7 @@ public:
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
 	static const char * doCommandNotice;
+	static const char *	navigateToUrlNotice;
 
 protected:
 
@@ -84,6 +85,8 @@ protected:
 
  	virtual void	docStringClear		(XmString		string);
 
+	virtual void	textActivate		();
+
 private:
 
 	//////////////////////////////////////////////////////////////////////
@@ -107,7 +110,7 @@ private:
 	// Private callbacks                                                //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-	static void		activateCB			(Widget			w,
+	static void		textActivateCB		(Widget			w,
  										 XtPointer		clientData,
  										 XtPointer		callData);
 
