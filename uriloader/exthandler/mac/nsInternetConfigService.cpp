@@ -39,6 +39,7 @@
 #include "nsInternetConfigService.h"
 #include "nsCOMPtr.h"
 #include "nsIMIMEInfo.h"
+#include "nsMIMEInfoImpl.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
