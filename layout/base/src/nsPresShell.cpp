@@ -468,16 +468,14 @@ void PresShell::ProcessReflowCommands()
 void PresShell::ContentChanged(nsIContent* aContent,
                                nsISupports* aSubContent)
 {
-#if 0
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   // Notify the first frame that maps the content. It will generate a reflow
   // command
   nsIFrame* frame = FindFrameWithContent(aContent);
   NS_PRECONDITION(nsnull != frame, "null frame");
-  frame->ContentChanged(this, mPresContext, aContent, aSubContent, aChangeType);
+  frame->ContentChanged(this, mPresContext, aContent, aSubContent);
   ProcessReflowCommands();
-#endif
 }
 
 void PresShell::ContentAppended(nsIContent* aContainer)
