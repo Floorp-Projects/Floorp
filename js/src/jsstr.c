@@ -1204,6 +1204,7 @@ typedef struct ReplaceData {
     JSObject    *lambda;        /* replacement function object or null */
     JSString    *repstr;        /* replacement string */
     jschar      *dollar;        /* null or pointer to first $ in repstr */
+    jschar      *dollarEnd;     /* limit pointer for js_strchr_limit */
     jschar      *chars;         /* result chars, null initially */
     size_t      length;         /* result length, 0 initially */
     jsint       index;          /* index in result of next replacement */
@@ -1300,7 +1301,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 {
     JSString *repstr;
     size_t replen, skip;
-    jschar *dp;
+    jschar *dp, *ep;
     JSSubString *sub;
 #if JS_HAS_REPLACE_LAMBDA
     JSObject *lambda;
@@ -1402,7 +1403,8 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
     repstr = rdata->repstr;
     replen = JSSTRING_LENGTH(repstr);
-    for (dp = rdata->dollar; dp; dp = js_strchr(dp, '$')) {
+    for (dp = rdata->dollar, ep = rdata->dollarEnd; dp;
+         dp = js_strchr_limit(dp, '$', ep)) {
         sub = interpret_dollar(cx, dp, rdata, &skip);
         if (sub) {
             replen += sub->length - skip;
@@ -1419,14 +1421,14 @@ static void
 do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
 {
     JSString *repstr;
-    jschar *bp, *cp, *dp;
+    jschar *bp, *cp, *dp, *ep;
     size_t len, skip;
     JSSubString *sub;
 
     repstr = rdata->repstr;
     bp = cp = JSSTRING_CHARS(repstr);
-    dp = rdata->dollar;
-    while (dp) {
+    for (dp = rdata->dollar, ep = rdata->dollarEnd; dp;
+         dp = js_strchr_limit(dp, '$', ep)) {
         len = dp - cp;
         js_strncpy(chars, cp, len);
         chars += len;
@@ -1438,10 +1440,9 @@ do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
             chars += len;
             cp += skip;
             dp += skip;
-        }
-        else
+        } else {
             dp++;
-        dp = js_strchr(dp, '$');
+        }
     }
     js_strncpy(chars, cp, JSSTRING_LENGTH(repstr) - (cp - bp));
 }
@@ -1506,8 +1507,6 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!JS_ConvertValue(cx, argv[1], JSTYPE_STRING, &argv[1]))
             return JS_FALSE;
         repstr = JSVAL_TO_STRING(argv[1]);
-        if (!js_UndependString(cx, repstr))     /* XXX flatten for js_strchr */
-            return JS_FALSE;
         lambda = NULL;
     }
 
@@ -1515,7 +1514,13 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     rdata.base.mode = GLOB_REPLACE;
     rdata.lambda = lambda;
     rdata.repstr = repstr;
-    rdata.dollar = repstr ? js_strchr(JSSTRING_CHARS(repstr), '$') : NULL;
+    if (repstr) {
+        rdata.dollarEnd = JSSTRING_CHARS(repstr) + JSSTRING_LENGTH(repstr);
+        rdata.dollar = js_strchr_limit(JSSTRING_CHARS(repstr), '$',
+                                       rdata.dollarEnd);
+    } else {
+        rdata.dollar = rdata.dollarEnd = NULL;
+    }
     rdata.chars = NULL;
     rdata.length = 0;
     rdata.index = 0;
@@ -2642,6 +2647,17 @@ jschar *
 js_strchr(const jschar *s, jschar c)
 {
     while (*s != 0) {
+        if (*s == c)
+            return (jschar *)s;
+        s++;
+    }
+    return NULL;
+}
+
+jschar *
+js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
+{
+    while (s < limit) {
         if (*s == c)
             return (jschar *)s;
         s++;
