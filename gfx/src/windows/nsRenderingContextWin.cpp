@@ -216,7 +216,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mOrigFont = NULL;
   mOrigSolidPen = NULL;
   mCurrBrushColor = RGB(255, 255, 255);
-  mCurrFontMetrics = nsnull;
+  mCurrFontWin = nsnull;
   mCurrPenColor = NULL;
   mCurrPen = NULL;
   mNullPen = NULL;
@@ -983,6 +983,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetLineStyle(nsLineStyle &aLineStyle)
 
 NS_IMETHODIMP nsRenderingContextWin :: SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
+  mCurrFontWin = nsnull; // owned & released by mFontMetrics
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, aLangGroup, mFontMetrics);
 
@@ -991,6 +992,7 @@ NS_IMETHODIMP nsRenderingContextWin :: SetFont(const nsFont& aFont, nsIAtom* aLa
 
 NS_IMETHODIMP nsRenderingContextWin :: SetFont(nsIFontMetrics *aFontMetrics)
 {
+  mCurrFontWin = nsnull; // owned & released by mFontMetrics
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = aFontMetrics;
   NS_IF_ADDREF(mFontMetrics);
@@ -2641,13 +2643,11 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 
 void nsRenderingContextWin :: SetupFontAndColor(void)
 {
-  if (((mFontMetrics != mCurrFontMetrics) || (NULL == mCurrFontMetrics)) &&
-      (nsnull != mFontMetrics))
-  {
+  if (mFontMetrics && (!mCurrFontWin || mCurrFontWin->mFont != mCurrFont)) {
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
     HFONT         tfont = (HFONT)fontHandle;
-    
+
     ::SelectObject(mDC, tfont);
 
     mCurrFont = tfont;
@@ -2657,8 +2657,6 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
     // When making changes in the font code, set |useAFunctions = 1| in nsGfxFactoryWin
     // to verify that the changes didn't let the 'A' versions out of sync. 
     NS_ASSERTION(mCurrFontWin, "internal error");
-
-    mCurrFontMetrics = mFontMetrics;
   }
 
   if (mCurrentColor != mCurrTextColor)
