@@ -31,16 +31,6 @@
 #include "nsXULAtoms.h"
 #include "nsCOMPtr.h"
 
-// Includes related to the execution of custom JS event handlers
-#include "nsIPrivateDOMEvent.h"
-#include "nsIDOMEvent.h"
-#include "nsIScriptContextOwner.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIJSScriptObject.h"
-
-static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
-
 static void ForceDrawFrame(nsIFrame * aFrame)
 {
   if (aFrame == nsnull) {
@@ -251,40 +241,13 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
     if (isExpanded)
 	  {
 		  // We're collapsing and need to remove frames from the flow.
-		  pTreeItemContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, PR_FALSE);
+		  pTreeItemContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, PR_TRUE);
 	  }
 	  else
 	  {
 		  // We're expanding and need to add frames to the flow.
-		  pTreeItemContent->SetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, "true", PR_FALSE);
+		  pTreeItemContent->SetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, "true", PR_TRUE);
 	  }
-
-	  // Ok, try out the hack of doing frame reconstruction
-    // XXX: This needs to change
-    // XXX: Need to only do this for containers.
-	  nsCOMPtr<nsIPresShell> pShell;
-    aPresContext.GetShell(getter_AddRefs(pShell));
-	  nsCOMPtr<nsIStyleSet> pStyleSet;
-    pShell->GetStyleSet(getter_AddRefs(pStyleSet));
-	  nsCOMPtr<nsIDocument> pDocument;
-    pShell->GetDocument(getter_AddRefs(pDocument));
-	  nsCOMPtr<nsIContent> pRoot ( dont_AddRef(pDocument->GetRootContent()) );
-	  
-	  if (pRoot) {
-		  nsIFrame*   docElementFrame;
-		  nsIFrame*   parentFrame;
-    
-		  // Get the frame that corresponds to the document element
-		  pShell->GetPrimaryFrameFor(pRoot, &docElementFrame);
-		  if (nsnull != docElementFrame) {
-		    docElementFrame->GetParent(&parentFrame);
-      
-		    pShell->EnterReflowLock();
-		    pStyleSet->ReconstructFrames(&aPresContext, pRoot,
-									     parentFrame, docElementFrame);
-		    pShell->ExitReflowLock();
-		  }
-    }
   }
   return NS_OK;
 }
@@ -337,136 +300,3 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
 
   NS_IF_RELEASE(pParentContent);
 }
-
-
-
-/* All backed out for now.
-nsresult
-nsTreeCellFrame::HandleClickEvent(nsIPresContext& aPresContext, 
-									                nsGUIEvent*     aEvent,
-									                nsEventStatus&  aEventStatus)
-{
-  if (mIsHeader)
-  {
-	  // Nothing to do?
-  }
-  else
-  {
-    // Need to look for an "onItemClick" handler in the tree tag (our great-grandparent). 
-    // If one exists, then we should execute the JavaScript code in the context of the
-    // treeitem (our parent).
-    // Create a DOM event from the nsGUIEvent that occurred.
-    nsIDOMEvent* aDOMEvent;
-    NS_NewDOMEvent(&aDOMEvent, aPresContext, aEvent);
-    ExecuteDefaultJSEventHandler("onitemclick", aDOMEvent);
-    // Release the DOM event. We don't care about it any more.
-    NS_IF_RELEASE(aDOMEvent);
-  }
-  return NS_OK;
-}
-
-const char* cEvent[] = {"event"};
-
-void nsTreeCellFrame::ExecuteDefaultJSEventHandler(const nsString& eventName,
-                                                   nsIDOMEvent* aDOMEvent)
-{
-  /* BACKING THIS OUT, SINCE I THINK EVENT BUBBLING ACCOMPLISHED WHAT
-  I WANTED.
-
-  // Get our parent, grandparent, and great-grandparent nodes
-  nsCOMPtr<nsIContent> treeitem;
-  nsCOMPtr<nsIContent> treebody;
-  nsCOMPtr<nsIContent> tree;
-
-  mContent->GetParent(*(getter_AddRefs(treeitem)));
-  treeitem->GetParent(*(getter_AddRefs(treebody)));
-  treebody->GetParent(*(getter_AddRefs(tree)));
-
-  // See if the attribute is even present on the tree node.
-  PRInt32 namespaceID;
-  tree->GetNameSpaceID(namespaceID);
-  nsIAtom* eventNameAtom = NS_NewAtom(eventName);
-  nsString codeText;
-  nsresult rv = tree->GetAttribute(namespaceID, eventNameAtom, codeText);
-  NS_IF_RELEASE(eventNameAtom);
-
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE)
-  {
-    // Compile/execute the JavaScript code in the context of the treeitem.
-    // XXX: Make this code more robust. Check for null pointers.
-
-    // Retrieve our document.
-    nsCOMPtr<nsIDocument> document;
-    rv = tree->GetDocument(*getter_AddRefs(document));
-    if (rv != NS_OK)
-      return;
-
-    // Retrieve the script context owner for the document.
-    nsIScriptContextOwner* scriptContextOwner = document->GetScriptContextOwner();
-
-    // Retrieve the script context from the owner.
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    rv = scriptContextOwner->GetScriptContext(getter_AddRefs(scriptContext));
-    if (rv != NS_OK)
-      return;
-
-    NS_IF_RELEASE(scriptContextOwner);
-
-    // The TREEITEM is considered to be the script object owner.
-    nsIScriptObjectOwner* scriptObjectOwner;
-    if (treeitem->QueryInterface(kIScriptObjectOwnerIID, (void**) &scriptObjectOwner) != NS_OK)
-      return;
-    
-    // Obtain the script object from its owner.
-    JSObject* jsObject;
-    rv = scriptObjectOwner->GetScriptObject(scriptContext, (void**)&jsObject);
-    NS_IF_RELEASE(scriptObjectOwner);
-    if (rv != NS_OK)
-      return;
-
-    // Obtain the JS native context
-    JSContext* jsContext = (JSContext*)scriptContext->GetNativeContext();
-
-    nsString lowerEventName;
-    eventName.ToLowerCase(lowerEventName);
-
-    char* charName = lowerEventName.ToNewCString();
-
-    if (charName)
-    {
-      // Compile the function.
-      JS_CompileUCFunction(jsContext, jsObject, charName,
-		           1, cEvent, (jschar*)codeText.GetUnicode(), codeText.Length(),
-		           nsnull, 0);
-      
-      // Execute the function.
-      jsval funval, result;
-      jsval argv[1];
-      
-      if (!JS_LookupProperty(jsContext, jsObject, charName, &funval)) {
-        delete charName;
-        return;
-      }
-
-      delete charName;
-
-      if (JS_TypeOfValue(jsContext, funval) != JSTYPE_FUNCTION) {
-        return;
-      }
-
-      JSObject* aEventObj;
-      nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(jsContext);
-      if (NS_OK != NS_NewScriptEvent(scriptCX, aDOMEvent, nsnull, (void**)&aEventObj)) {
-        return;
-      }
-
-      argv[0] = OBJECT_TO_JSVAL(aEventObj);
-      if (PR_TRUE == JS_CallFunctionValue(jsContext, jsObject, funval, 1, argv, &result)) {
-	      if (JSVAL_IS_BOOLEAN(result) && JSVAL_TO_BOOLEAN(result) == JS_FALSE) {
-          return; // XXX: Denoted failure. Do I care?
-        }
-        return; // XXX: Denoted success.
-      }
-    }
-  } // XXX: Am I missing out on some necessary cleanup?
-}*/
