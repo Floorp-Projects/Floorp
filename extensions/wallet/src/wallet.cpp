@@ -2944,6 +2944,7 @@ SINGSIGN_ReencryptAll();
 
 PUBLIC void
 WLLT_ReencryptAll() {
+  PRUnichar * message;
   wallet_Initialize(PR_FALSE);
   wallet_MapElement * ptr;
   nsAutoString value;
@@ -2952,10 +2953,10 @@ WLLT_ReencryptAll() {
     ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
     if (!ptr->item2.IsEmpty()) {
       if (NS_FAILED(Wallet_Decrypt(ptr->item2, value))) {
-        return;
+        goto fail;
       }
       if (NS_FAILED(Wallet_Encrypt(value, ptr->item2))) {
-        return;
+        goto fail;
       }
     } else {
       wallet_Sublist * ptr1;
@@ -2963,17 +2964,22 @@ WLLT_ReencryptAll() {
       for (PRInt32 i2=0; i2<count2; i2++) {
         ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
         if (NS_FAILED(Wallet_Decrypt(ptr1->item, value))) {
-          return;
+          goto fail;
         }
         if (NS_FAILED(Wallet_Encrypt(value, ptr1->item))) {
-          return;
+          goto fail;
         }
       }
     }
   }
   wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
   SINGSIGN_ReencryptAll();
-  PRUnichar * message = Wallet_Localize("Converted");
+  message = Wallet_Localize("Converted");
+  Wallet_Alert(message);
+  Recycle(message);
+  return;
+fail:
+  message = Wallet_Localize("NotConverted");
   Wallet_Alert(message);
   Recycle(message);
 }
