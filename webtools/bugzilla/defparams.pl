@@ -120,10 +120,6 @@ sub check_shadowdb {
 # t -- A short text entry field (suitable for a single line)
 # l -- A long text field (suitable for many lines)
 # b -- A boolean value (either 1 or 0)
-# i -- An integer.
-# defenum -- This param defines an enum that defines a column in one of
-#	     the database tables.  The name of the parameter is of the form
-#	     "tablename.columnname".
 
 DefParam("maintainer",
 	 "The email address of the person who maintains this installation of Bugzilla.",
@@ -334,6 +330,10 @@ additional data you may have.</li>
 <br>
 });
 
+DefParam("mostfreqthreshold",
+         "The minimum number of duplicates a bug needs to show up on the <A HREF=\"duplicates.cgi\">most frequently reported bugs page</a>. If you have a large database and this page takes a long time to load, try increasing this number.",
+         "t",
+         "2");
 
 DefParam("mybugstemplate",
          "This is the URL to use to bring up a simple 'all of my bugs' list for a user.  %userid% will get replaced with the login name of a user.",

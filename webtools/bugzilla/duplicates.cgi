@@ -25,82 +25,119 @@
 use diagnostics;
 use strict;
 use CGI "param";
-use DB_File;
+use AnyDBM_File;
 require "globals.pl";
 require "CGI.pl";
 
-ConnectToDatabase();
+ConnectToDatabase(1);
 GetVersionTable();
 
+my %dbmcount;
 my %count;
 my $dobefore = 0;
 my $before = "";
 my %before;
 
-my $changedsince;
-my $maxrows = 500;       # arbitrary limit on max number of rows
+# Get params from URL
 
-my $today = &days_ago(0);
+my $changedsince = 7;     # default one week
+my $maxrows = 100;        # arbitrary limit on max number of rows
+my $sortby = "dup_count"; # default to sorting by dup count
 
-# Open today's record of dupes
-if (-e "data/mining/dupes$today.db")
+if (defined(param("sortby")))
 {
-	dbmopen(%count, "data/mining/dupes${today}.db", 0644) || die "Can't open today's dupes file: $!";
-}
-else
-{
-	# Try yesterday's, then (in case today's hasn't been created yet) :-)
-	$today = &days_ago(1);
-	if (-e "data/mining/dupes$today.db")
-	{
-		dbmopen(%count, "data/mining/dupes${today}.db", 0644) || die "Can't open yesterday's dupes file: $!";
-	}
-	else
-	{
-		die "There are no duplicate statistics for today or yesterday.";
-	}
+  $sortby = param("sortby");
 }
 
 # Check for changedsince param, and see if it's a positive integer
 if (defined(param("changedsince")) && param("changedsince") =~ /^\d{1,4}$/) 
 {
-	$changedsince = param("changedsince");
-}
-else
-{
-	# Otherwise, default to one week
-	$changedsince = "7";
+  $changedsince = param("changedsince");
 }
 
-$before = &days_ago($changedsince);		
-
-# check for max rows parameter
+# check for max rows param, and see if it's a positive integer
 if (defined(param("maxrows")) && param("maxrows") =~ /^\d{1,4}$/)
 {
-	$maxrows = param("maxrows");
+  $maxrows = param("maxrows");
 }
 
-if (-e "data/mining/dupes${before}.db") 
-{
-	dbmopen(%before, "data/mining/dupes${before}.db", 0644) && ($dobefore = 1);
-}
-
+# Start the page
 print "Content-type: text/html\n";
 print "\n";
 PutHeader("Most Frequently Reported Bugs");
+
+# Open today's record of dupes
+my $today = &days_ago(0);
+
+if (-e "data/mining/dupes$today.db")
+{
+  dbmopen(%dbmcount, "data/mining/dupes$today", 0644) || 
+                            &die_politely("Can't open today's dupes file: $!");
+}
+else
+{
+  # Try yesterday's, then (in case today's hasn't been created yet)
+  $today = &days_ago(1);
+  if (-e "data/mining/dupes$today.db")
+  {
+    dbmopen(%dbmcount, "data/mining/dupes$today", 0644) || 
+                        &die_politely("Can't open yesterday's dupes file: $!");
+  }
+  else
+  {
+    &die_politely("There are no duplicate statistics for today or yesterday.");
+  }
+}
+
+# Copy hash (so we don't mess up the on-disk file when we remove entries)
+%count = %dbmcount;
+my $key;
+my $value;
+my $threshold = Param("mostfreqthreshold");
+
+# Remove all those dupes under the threshold (for performance reasons)
+while (($key, $value) = each %count)
+{
+  if ($value < $threshold)
+  {
+    delete $count{$key};
+  } 
+}
+
+# Try and open the database from "changedsince" days ago
+$before = &days_ago($changedsince);    
+
+if (-e "data/mining/dupes$before.db") 
+{
+  dbmopen(%before, "data/mining/dupes$before", 0644) && ($dobefore = 1);
+}
 
 print Param("mostfreqhtml");
 
 print "
 <table BORDER>
-
 <tr BGCOLOR=\"#CCCCCC\">
-<td><center><b>Bug #</b></center></td>
-<td><center><b>Dupe<br>Count</b></center></td>\n";
+
+<td><center><b>
+<a href=\"duplicates.cgi?sortby=bug_no&maxrows=$maxrows&changedsince=$changedsince\">Bug #</a>
+</b></center></td>
+<td><center><b>
+<a href=\"duplicates.cgi?sortby=dup_count&maxrows=$maxrows&changedsince=$changedsince\">Dupe<br>Count</a>
+</b></center></td>\n";
+
+my %delta;
 
 if ($dobefore) 
 {
-	print "<td><center><b>Change in last<br>$changedsince day(s)</b></center></td> ";
+  print "<td><center><b>
+  <a href=\"duplicates.cgi?sortby=delta&maxrows=$maxrows&changedsince=$changedsince\">Change in
+  last<br>$changedsince day(s)</a></b></center></td>";
+
+  # Calculate the deltas if we are doing a "before"
+  foreach (keys(%count))
+  {
+    $delta{$_} = $count{$_} - $before{$_};
+  }
 }
 
 print "
@@ -111,78 +148,94 @@ print "
 <td><center><b>Summary</b></center></td>
 </tr>\n\n";
 
-my %delta;
-
-# Calculate the deltas if we are doing a "before"
-if ($dobefore)
-{
-	foreach (keys(%count))
-	{
-		$delta{$_} = $count{$_} - $before{$_};
-	}
-}
-
-# Offer the option of sorting on total count, or on the delta
+# Sort, if required
 my @sortedcount;
 
-if (defined(param("sortby")) && param("sortby") == "delta")
+if    ($sortby eq "delta")
 {
-	@sortedcount = sort by_delta keys(%count);
+  @sortedcount = sort by_delta keys(%count);
 }
-else
+elsif ($sortby eq "bug_no")
 {
-	@sortedcount = sort by_dup_count keys(%count);
+  @sortedcount = sort by_bug_no keys(%count);
+}
+elsif ($sortby eq "dup_count")
+{
+  @sortedcount = sort by_dup_count keys(%count);
 }
 
 my $i = 0;
 
 foreach (@sortedcount)
 {
-	my $id = $_;
-	SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset " .
+  my $id = $_;
+  SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset " .
                  " FROM bugs WHERE bug_id = $id");
-	my ($component, $severity, $op_sys, $milestone, $summary, $groupset) = FetchSQLData();
+  my ($component, $severity, $op_sys, $milestone, $summary, $groupset) = FetchSQLData();
         next unless $groupset == 0;
         $summary = html_quote($summary);
-	print "<tr>";
-	print '<td><center><A HREF="show_bug.cgi?id=' . $id . '">';
-	print $id . "</A></center></td>";
-	print "<td><center>$count{$id}</center></td>";
-	if ($dobefore) 
-	{
-		print "<td><center>$delta{$id}</center></td>";
-	}
-	print "<td>$component</td>\n    ";
-	print "<td><center>$severity</center></td>";
-	print "<td><center>$op_sys</center></td>";
-	print "<td><center>$milestone</center></td>";
-	print "<td>$summary</td>";
-	print "</tr>\n";
-	
-	$i++;
-	if ($i == $maxrows)
-	{
-		last;
-	}
+  print "<tr>";
+  print '<td><center><A HREF="show_bug.cgi?id=' . $id . '">';
+  print $id . "</A></center></td>";
+  print "<td><center>$count{$id}</center></td>";
+  if ($dobefore) 
+  {
+    print "<td><center>$delta{$id}</center></td>";
+  }
+  print "<td>$component</td>\n    ";
+  print "<td><center>$severity</center></td>";
+  print "<td><center>$op_sys</center></td>";
+  print "<td><center>$milestone</center></td>";
+  print "<td>$summary</td>";
+  print "</tr>\n";
+  
+  $i++;
+  if ($i == $maxrows)
+  {
+    last;
+  }
 }
 
 print "</table><br><br>";
 PutFooter();
 
 
+sub by_bug_no 
+{
+  return ($a <=> $b);
+}
+
 sub by_dup_count 
 {
-	return -($count{$a} <=> $count{$b});
+  return -($count{$a} <=> $count{$b});
 }
 
 sub by_delta 
 {
-	return -($delta{$a} <=> $delta{$b});
+  return -($delta{$a} <=> $delta{$b});
 }
 
 sub days_ago 
 {
-    my ($dom, $mon, $year) = (localtime(time - ($_[0]*24*60*60)))[3, 4, 5];
-    return sprintf "%04d%02d%02d", 1900 + $year, ++$mon, $dom;
+  my ($dom, $mon, $year) = (localtime(time - ($_[0]*24*60*60)))[3, 4, 5];
+  return sprintf "%04d-%02d-%02d", 1900 + $year, ++$mon, $dom;
 }
 
+sub die_politely {
+  my $msg = shift;
+
+  print <<FIN;
+<p>
+<table border=1 cellpadding=10>
+<tr>
+<td align=center>
+<font color=blue>$msg</font>
+</td>
+</tr>
+</table>
+<p>
+FIN
+    
+  PutFooter();
+  exit;
+}

@@ -24,7 +24,7 @@
 
 # Run me out of cron at midnight to collect Bugzilla statistics.
 
-use DB_File;
+use AnyDBM_File;
 use diagnostics;
 use strict;
 use vars @::legal_product;
@@ -125,16 +125,16 @@ sub calculate_dupes {
     my $key;
     my $changed = 1;
 
-    my $today = &today;
+    my $today = &today_dash;
 
     # Save % count here in a date-named file
     # so we can read it back in to do changed counters
     # First, delete it if it exists, so we don't add to the contents of an old file
-    if (-e "data/mining/dupes$today.db") {
-        system("rm -f data/mining/dupes$today.db");
+    if (-e "data/mining/dupes$today") {
+        system("rm -f data/mining/dupes$today");
     }
    
-    dbmopen(%count, "data/mining/dupes$today.db", 0644) || die "Can't open DBM dupes file: $!";
+    dbmopen(%count, "data/mining/dupes$today", 0644) || die "Can't open DBM dupes file: $!";
 
     # Create a hash with key "a bug number", value "bug which that bug is a
     # direct dupe of" - straight from the duplicates table.
@@ -192,5 +192,10 @@ sub calculate_dupes {
 sub today {
     my ($dom, $mon, $year) = (localtime(time))[3, 4, 5];
     return sprintf "%04d%02d%02d", 1900 + $year, ++$mon, $dom;
+}
+
+sub today_dash {
+    my ($dom, $mon, $year) = (localtime(time))[3, 4, 5];
+    return sprintf "%04d-%02d-%02d", 1900 + $year, ++$mon, $dom;
 }
 
