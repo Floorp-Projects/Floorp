@@ -54,12 +54,14 @@
       margin              : 0px;
       font                : inherit;
       background-color    : inherit;
+      color               : inherit;
     }
 
   textfield[disabled="true"] 
     {
       cursor              : default ! important;
       background-color    : threedface;
+      color               : graytext;
     } 
     
 /** plain atomic textfields, class="plain" **/

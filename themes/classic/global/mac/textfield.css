@@ -62,6 +62,7 @@
       margin              : 0px;
       font                : inherit;
       background-color    : inherit;
+      color               : inherit;
     }
 
   textfield[disabled="true"] 
