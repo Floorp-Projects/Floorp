@@ -2067,6 +2067,7 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
   PRInt32 proxyPort = -1;
   PRBool useDirect = PR_FALSE;
   PRBool usePrefs = PR_TRUE;
+  PRInt32 proxyType = -1;
     
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
 
@@ -2115,6 +2116,15 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
     }
   }
   if (usePrefs) {
+    // first, see if the prefs say, use "direct connection to the
+    // internet".
+    // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=48336
+    res = prefs->GetIntPref("network.proxy.type", &proxyType);
+    if (NS_FAILED(res) || 0 == proxyType) {
+      useDirect = PR_TRUE;
+    }
+  }
+  if (usePrefs && !useDirect) {
     // If ProxyAutoConfig is not enabled, look to the prefs.
     
     // If the host for this url is in the "no proxy for" list, just go
