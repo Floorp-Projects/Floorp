@@ -2547,15 +2547,14 @@ NS_IMETHODIMP GlobalWindowImpl::AttachArguments(nsIDOMWindow* aWindow,
  */
 PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
 {
-   if(!aFeatures)
-      {
+   if(!aFeatures) {
       if(aDialog)
          return   nsIWebBrowserChrome::allChrome | 
                   nsIWebBrowserChrome::openAsDialog | 
                   nsIWebBrowserChrome::openAsChrome;
       else
          return nsIWebBrowserChrome::allChrome;
-      }
+   }
 
    /* This function has become complicated since browser windows and
       dialogs diverged. The difference is, browser windows assume all
@@ -2615,6 +2614,12 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
       with the features that are more operating hints than appearance
       instructions. (Note modality implies dependence.) */
 
+   if ( WinHasOption(aFeatures, "alwaysLowered", nsnull) ||
+        WinHasOption(aFeatures, "z-lock", nsnull) )
+     chromeFlags |= nsIWebBrowserChrome::windowLowered;
+   else if (WinHasOption(aFeatures, "alwaysRaised", nsnull))
+     chromeFlags |= nsIWebBrowserChrome::windowRaised;
+
    chromeFlags |= WinHasOption(aFeatures, "chrome", nsnull) ? 
       nsIWebBrowserChrome::openAsChrome : 0;
    chromeFlags |= WinHasOption(aFeatures, "dependent", nsnull) ? 
@@ -2626,27 +2631,20 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
 
    /* and dialogs need to have the last word. assume dialogs are dialogs,
       and opened as chrome, unless explicitly told otherwise. */
-   if(aDialog)
-      {
+   if(aDialog) {
       if(!PL_strcasestr(aFeatures, "dialog"))
          chromeFlags |= nsIWebBrowserChrome::openAsDialog;
       if(!PL_strcasestr(aFeatures, "chrome"))
          chromeFlags |= nsIWebBrowserChrome::openAsChrome;
-      }
+   }
 
-   /*z-ordering, history, dependent
-   chromeFlags->topmost         = WinHasOption(aFeatures, "alwaysRaised");
-   chromeFlags->bottommost      = WinHasOption(aFeatures, "alwaysLowered");
-   chromeFlags->z_lock          = WinHasOption(aFeatures, "z-lock");
-   chromeFlags->is_modal        = WinHasOption(aFeatures, "modal");
-   chromeFlags->hide_title_bar  = !(WinHasOption(aFeatures, "titlebar"));
-   chromeFlags->dependent       = WinHasOption(aFeatures, "dependent");
-   chromeFlags->copy_history    = FALSE;
+   /* missing
+   chromeFlags->copy_history
+   chromeFlags->scrollbars
    */
 
    /* Allow disabling of commands only if there is no menubar */
-   /*if(!chromeFlags & NS_CHROME_MENU_BAR_ON)
-      {
+   /*if(!chromeFlags & NS_CHROME_MENU_BAR_ON) {
       chromeFlags->disable_commands = !WinHasOption(aFeatures, "hotkeys");
       if(XP_STRCASESTR(aFeatures,"hotkeys")==NULL)
          chromeFlags->disable_commands = FALSE;
