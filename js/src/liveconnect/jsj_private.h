@@ -633,9 +633,18 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp);
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env);
 
-JS_EXTERN_API(JSObjectMap *)
+extern JSObjectMap * JS_DLL_CALLBACK
 jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj);
+
+extern void JS_DLL_CALLBACK
+jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map);
+
+extern jsval JS_DLL_CALLBACK
+jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
+
+extern void JS_DLL_CALLBACK
+jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
 #ifdef DEBUG
 #define DEBUG_LOG(args) printf args

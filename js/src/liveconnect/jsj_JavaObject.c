@@ -891,14 +891,59 @@ JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
     }
 }
 
+#define JSJ_SLOT_COUNT (JSSLOT_PRIVATE+1)
+
+JSObjectMap * JS_DLL_CALLBACK
+jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
+                         JSClass *clasp, JSObject *obj)
+{
+    JSObjectMap * map;
+    
+    map = (JSObjectMap *) JS_malloc(cx, sizeof(JSObjectMap));
+    if (map) {
+        map->nrefs = nrefs;
+        map->ops = ops;
+        map->nslots = JSJ_SLOT_COUNT;
+        map->freeslot = JSJ_SLOT_COUNT;
+    }
+    return map;
+}
+
+void JS_DLL_CALLBACK
+jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map)
+{
+    JS_free(cx, map);
+}        
+
+jsval JS_DLL_CALLBACK
+jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
+{
+    JS_ASSERT(slot < JSJ_SLOT_COUNT);
+    JS_ASSERT(obj->slots);
+    JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
+    JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
+    return obj->slots[slot];
+}        
+
+void JS_DLL_CALLBACK
+jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, 
+                              uint32 slot, jsval v)
+{
+    JS_ASSERT(slot < JSJ_SLOT_COUNT);
+    JS_ASSERT(obj->slots);
+    JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
+    JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
+    obj->slots[slot] = v;
+}        
+
 JSObjectOps JavaObject_ops = {
     /* Mandatory non-null function pointer members. */
-    NULL,                       /* newObjectMap */
-    NULL,                       /* destroyObjectMap */
+    jsj_wrapper_newObjectMap,       /* newObjectMap */
+    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
     JavaObject_lookupProperty,
     JavaObject_defineProperty,
-    JavaObject_getPropertyById, /* getProperty */
-    JavaObject_setPropertyById, /* setProperty */
+    JavaObject_getPropertyById,     /* getProperty */
+    JavaObject_setPropertyById,     /* setProperty */
     JavaObject_getAttributes,
     JavaObject_setAttributes,
     JavaObject_deleteProperty,
@@ -907,18 +952,18 @@ JSObjectOps JavaObject_ops = {
     JavaObject_checkAccess,
 
     /* Optionally non-null members start here. */
-    NULL,                       /* thisObject */
-    NULL,                       /* dropProperty */
-    NULL,                       /* call */
-    NULL,                       /* construct */
-    NULL,                       /* xdrObject */
-    NULL,                       /* hasInstance */
-    NULL,                       /* setProto */
-    NULL,                       /* setParent */
-    NULL,                       /* mark */
-    NULL,                       /* clear */
-    NULL,                       /* getRequiredSlot */
-    NULL                        /* setRequiredSlot */
+    NULL,                           /* thisObject */
+    NULL,                           /* dropProperty */
+    NULL,                           /* call */
+    NULL,                           /* construct */
+    NULL,                           /* xdrObject */
+    NULL,                           /* hasInstance */
+    NULL,                           /* setProto */
+    NULL,                           /* setParent */
+    NULL,                           /* mark */
+    NULL,                           /* clear */
+    jsj_wrapper_getRequiredSlot,    /* getRequiredSlot */
+    jsj_wrapper_setRequiredSlot     /* setRequiredSlot */
 };
 
 JS_STATIC_DLL_CALLBACK(JSObjectOps *)
@@ -945,26 +990,9 @@ JSClass JavaObject_class = {
 
 extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-/*
-   This is just a wrapper around the JS engine's newObjectMap() function,
-   required to avoid the JS engine confusing a JavaObject for a native 
-   object.  See bug #12367 for details
-*/
-JSObjectMap *
-jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-                         JSClass *clasp, JSObject *obj)
-{
-    return js_ObjectOps.newObjectMap(cx, nrefs, ops, clasp, obj);
-}
-
 JSBool
 jsj_init_JavaObject(JSContext *cx, JSObject *global_obj)
 {
-    JavaObject_ops.newObjectMap = js_ObjectOps.newObjectMap;
-    JavaObject_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-    JavaObject_ops.getRequiredSlot = js_ObjectOps.getRequiredSlot;
-    JavaObject_ops.setRequiredSlot = js_ObjectOps.setRequiredSlot;
-
     if (!JS_InitClass(cx, global_obj, 
         0, &JavaObject_class, 0, 0,
         0, 0,

@@ -407,12 +407,12 @@ JavaArray_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 
 JSObjectOps JavaArray_ops = {
     /* Mandatory non-null function pointer members. */
-    NULL,                       /* newObjectMap */
-    NULL,                       /* destroyObjectMap */
+    jsj_wrapper_newObjectMap,       /* newObjectMap */
+    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
     JavaArray_lookupProperty,
     JavaArray_defineProperty,
-    JavaArray_getPropertyById,  /* getProperty */
-    JavaArray_setPropertyById,  /* setProperty */
+    JavaArray_getPropertyById,      /* getProperty */
+    JavaArray_setPropertyById,      /* setProperty */
     JavaArray_getAttributes,
     JavaArray_setAttributes,
     JavaArray_deleteProperty,
@@ -421,18 +421,18 @@ JSObjectOps JavaArray_ops = {
     JavaArray_checkAccess,
 
     /* Optionally non-null members start here. */
-    NULL,                       /* thisObject */
-    NULL,                       /* dropProperty */
-    NULL,                       /* call */
-    NULL,                       /* construct */
-    NULL,                       /* xdrObject */
-    NULL,                       /* hasInstance */
-    NULL,                       /* setProto */
-    NULL,                       /* setParent */
-    NULL,                       /* mark */
-    NULL,                       /* clear */
-    NULL,                       /* getRequiredSlot */
-    NULL                        /* setRequiredSlot */
+    NULL,                           /* thisObject */
+    NULL,                           /* dropProperty */
+    NULL,                           /* call */
+    NULL,                           /* construct */
+    NULL,                           /* xdrObject */
+    NULL,                           /* hasInstance */
+    NULL,                           /* setProto */
+    NULL,                           /* setParent */
+    NULL,                           /* mark */
+    NULL,                           /* clear */
+    jsj_wrapper_getRequiredSlot,    /* getRequiredSlot */
+    jsj_wrapper_setRequiredSlot     /* setRequiredSlot */
 };
 
 JS_STATIC_DLL_CALLBACK(JSObjectOps *)
@@ -464,11 +464,6 @@ extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 JSBool
 jsj_init_JavaArray(JSContext *cx, JSObject *global_obj)
 {
-    JavaArray_ops.newObjectMap = js_ObjectOps.newObjectMap;
-    JavaArray_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-    JavaArray_ops.getRequiredSlot = js_ObjectOps.getRequiredSlot;
-    JavaArray_ops.setRequiredSlot = js_ObjectOps.setRequiredSlot;
-
     if (!JS_InitClass(cx, global_obj, 
         0, &JavaArray_class, 0, 0,
         0, 0, 0, 0))
