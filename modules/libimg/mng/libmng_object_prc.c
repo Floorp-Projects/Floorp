@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_object_prc.c       copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.2                                                      * */
+/* * file      : libmng_object_prc.c       copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Object processing routines (implementation)                * */
 /* *                                                                        * */
@@ -80,6 +80,33 @@
 /* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
 /* *             - added optimization option for MNG-video playback         * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/15/2002 - G.Juyn                                * */
+/* *             - completed PROM support                                   * */
+/* *             1.0.5 - 08/16/2002 - G.Juyn                                * */
+/* *             - completed MAGN support (16-bit functions)                * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             1.0.5 - 09/13/2002 - G.Juyn                                * */
+/* *             - fixed read/write of MAGN chunk                           * */
+/* *             1.0.5 - 09/15/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
+/* *             1.0.5 - 09/20/2002 - G.Juyn                                * */
+/* *             - added support for PAST                                   * */
+/* *             1.0.5 - 09/23/2002 - G.Juyn                                * */
+/* *             - fixed reset_object_detail to clear old buffer            * */
+/* *             - added in-memory color-correction of abstract images      * */
+/* *             1.0.5 - 10/05/2002 - G.Juyn                                * */
+/* *             - fixed problem with cloned objects marked as invalid      * */
+/* *             - fixed problem cloning frozen object_buffers              * */
+/* *             1.0.5 - 10/07/2002 - G.Juyn                                * */
+/* *             - fixed DISC support                                       * */
+/* *             1.0.5 - 11/04/2002 - G.Juyn                                * */
+/* *             - fixed goframe/golayer/gotime processing                  * */
+/* *             1.0.5 - 11/07/2002 - G.Juyn                                * */
+/* *             - fixed magnification bug with object 0                    * */
+/* *             1.0.5 - 01/19/2003 - G.Juyn                                * */
+/* *             - B664911 - fixed buffer overflow during init              * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -90,10 +117,12 @@
 #pragma hdrstop
 #endif
 #include "libmng_memory.h"
+#include "libmng_chunks.h"
 #include "libmng_objects.h"
 #include "libmng_display.h"
 #include "libmng_pixels.h"
 #include "libmng_object_prc.h"
+#include "libmng_cms.h"
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
 #pragma option -A                      /* force ANSI-C */
@@ -109,7 +138,7 @@
 /* *                                                                        * */
 /* ************************************************************************** */
 
-mng_retcode drop_invalid_objects (mng_datap pData)
+mng_retcode mng_drop_invalid_objects (mng_datap pData)
 {
   mng_objectp       pObject;
   mng_objectp       pNext;
@@ -149,17 +178,17 @@ mng_retcode drop_invalid_objects (mng_datap pData)
 /* *                                                                        * */
 /* ************************************************************************** */
 
-mng_retcode create_imagedataobject (mng_datap      pData,
-                                    mng_bool       bConcrete,
-                                    mng_bool       bViewable,
-                                    mng_uint32     iWidth,
-                                    mng_uint32     iHeight,
-                                    mng_uint8      iBitdepth,
-                                    mng_uint8      iColortype,
-                                    mng_uint8      iCompression,
-                                    mng_uint8      iFilter,
-                                    mng_uint8      iInterlace,
-                                    mng_imagedatap *ppObject)
+mng_retcode mng_create_imagedataobject (mng_datap      pData,
+                                        mng_bool       bConcrete,
+                                        mng_bool       bViewable,
+                                        mng_uint32     iWidth,
+                                        mng_uint32     iHeight,
+                                        mng_uint8      iBitdepth,
+                                        mng_uint8      iColortype,
+                                        mng_uint8      iCompression,
+                                        mng_uint8      iFilter,
+                                        mng_uint8      iInterlace,
+                                        mng_imagedatap *ppObject)
 {
   mng_imagedatap pImagedata;
   mng_uint32 iSamplesize = 0;
@@ -170,8 +199,8 @@ mng_retcode create_imagedataobject (mng_datap      pData,
                                        /* get a buffer */
   MNG_ALLOC (pData, pImagedata, sizeof (mng_imagedata))
                                        /* fill the appropriate fields */
-  pImagedata->sHeader.fCleanup   = (mng_cleanupobject)free_imagedataobject;
-  pImagedata->sHeader.fProcess   = 0;
+  pImagedata->sHeader.fCleanup   = (mng_cleanupobject)mng_free_imagedataobject;
+  pImagedata->sHeader.fProcess   = MNG_NULL;
   pImagedata->iRefcount          = 1;
   pImagedata->bFrozen            = MNG_FALSE;
   pImagedata->bConcrete          = bConcrete;
@@ -183,6 +212,7 @@ mng_retcode create_imagedataobject (mng_datap      pData,
   pImagedata->iCompression       = iCompression;
   pImagedata->iFilter            = iFilter;
   pImagedata->iInterlace         = iInterlace;
+  pImagedata->bCorrected         = MNG_FALSE;
   pImagedata->iAlphabitdepth     = 0;
   pImagedata->iJHDRcompression   = 0;
   pImagedata->iJHDRinterlace     = 0;
@@ -309,8 +339,8 @@ mng_retcode create_imagedataobject (mng_datap      pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_imagedataobject   (mng_datap      pData,
-                                    mng_imagedatap pImagedata)
+mng_retcode mng_free_imagedataobject   (mng_datap      pData,
+                                        mng_imagedatap pImagedata)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_IMGDATAOBJECT, MNG_LC_START)
@@ -339,10 +369,10 @@ mng_retcode free_imagedataobject   (mng_datap      pData,
 
 /* ************************************************************************** */
 
-mng_retcode clone_imagedataobject  (mng_datap      pData,
-                                    mng_bool       bConcrete,
-                                    mng_imagedatap pSource,
-                                    mng_imagedatap *ppClone)
+mng_retcode mng_clone_imagedataobject  (mng_datap      pData,
+                                        mng_bool       bConcrete,
+                                        mng_imagedatap pSource,
+                                        mng_imagedatap *ppClone)
 {
   mng_imagedatap pNewdata;
 
@@ -356,6 +386,7 @@ mng_retcode clone_imagedataobject  (mng_datap      pData,
 
   pNewdata->iRefcount = 1;             /* only the reference count */
   pNewdata->bConcrete = bConcrete;     /* and concrete-flag are different */
+  pNewdata->bFrozen   = MNG_FALSE;
 
   if (pNewdata->iImgdatasize)          /* sample buffer present ? */
   {
@@ -400,26 +431,26 @@ mng_retcode clone_imagedataobject  (mng_datap      pData,
 /* *                                                                        * */
 /* ************************************************************************** */
 
-mng_retcode create_imageobject (mng_datap  pData,
-                                mng_uint16 iId,
-                                mng_bool   bConcrete,
-                                mng_bool   bVisible,
-                                mng_bool   bViewable,
-                                mng_uint32 iWidth,
-                                mng_uint32 iHeight,
-                                mng_uint8  iBitdepth,
-                                mng_uint8  iColortype,
-                                mng_uint8  iCompression,
-                                mng_uint8  iFilter,
-                                mng_uint8  iInterlace,
-                                mng_int32  iPosx,
-                                mng_int32  iPosy,
-                                mng_bool   bClipped,
-                                mng_int32  iClipl,
-                                mng_int32  iClipr,
-                                mng_int32  iClipt,
-                                mng_int32  iClipb,
-                                mng_imagep *ppObject)
+mng_retcode mng_create_imageobject (mng_datap  pData,
+                                    mng_uint16 iId,
+                                    mng_bool   bConcrete,
+                                    mng_bool   bVisible,
+                                    mng_bool   bViewable,
+                                    mng_uint32 iWidth,
+                                    mng_uint32 iHeight,
+                                    mng_uint8  iBitdepth,
+                                    mng_uint8  iColortype,
+                                    mng_uint8  iCompression,
+                                    mng_uint8  iFilter,
+                                    mng_uint8  iInterlace,
+                                    mng_int32  iPosx,
+                                    mng_int32  iPosy,
+                                    mng_bool   bClipped,
+                                    mng_int32  iClipl,
+                                    mng_int32  iClipr,
+                                    mng_int32  iClipt,
+                                    mng_int32  iClipb,
+                                    mng_imagep *ppObject)
 {
   mng_imagep     pImage;
   mng_imagep     pPrev, pNext;
@@ -432,10 +463,10 @@ mng_retcode create_imageobject (mng_datap  pData,
                                        /* get a buffer */
   MNG_ALLOC (pData, pImage, sizeof (mng_image))
                                        /* now get a new "object buffer" */
-  iRetcode = create_imagedataobject (pData, bConcrete, bViewable,
-                                     iWidth, iHeight, iBitdepth, iColortype,
-                                     iCompression, iFilter, iInterlace,
-                                     &pImgbuf);
+  iRetcode = mng_create_imagedataobject (pData, bConcrete, bViewable,
+                                         iWidth, iHeight, iBitdepth, iColortype,
+                                         iCompression, iFilter, iInterlace,
+                                         &pImgbuf);
 
   if (iRetcode)                        /* on error bail out */
   {
@@ -443,15 +474,15 @@ mng_retcode create_imageobject (mng_datap  pData,
     return iRetcode;
   }
                                        /* fill the appropriate fields */
-  pImage->sHeader.fCleanup = (mng_cleanupobject)free_imageobject;
-  pImage->sHeader.fProcess = 0;
+  pImage->sHeader.fCleanup = (mng_cleanupobject)mng_free_imageobject;
+  pImage->sHeader.fProcess = MNG_NULL;
   pImage->iId              = iId;
   pImage->bFrozen          = MNG_FALSE;
   pImage->bVisible         = bVisible;
   pImage->bViewable        = bViewable;
   pImage->bValid           = (mng_bool)((pData->bDisplaying) &&
-                                        (pData->bRunning   ) &&
-                                        (!pData->bFreezing )    ); 
+                                        ((pData->bRunning) || (pData->bSearching)) &&
+                                        (!pData->bFreezing));
   pImage->iPosx            = iPosx;
   pImage->iPosy            = iPosy;
   pImage->bClipped         = bClipped;
@@ -467,6 +498,8 @@ mng_retcode create_imageobject (mng_datap  pData,
   pImage->iMAGN_MR         = 0;
   pImage->iMAGN_MT         = 0;
   pImage->iMAGN_MB         = 0;
+  pImage->iPastx           = 0;
+  pImage->iPasty           = 0;
   pImage->pImgbuf          = pImgbuf;
 
   if (iId)                             /* only if not object 0 ! */
@@ -508,8 +541,8 @@ mng_retcode create_imageobject (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_imageobject (mng_datap  pData,
-                              mng_imagep pImage)
+mng_retcode mng_free_imageobject (mng_datap  pData,
+                                  mng_imagep pImage)
 {
   mng_retcode    iRetcode;
   mng_imagep     pPrev   = pImage->sHeader.pPrev;
@@ -534,7 +567,7 @@ mng_retcode free_imageobject (mng_datap  pData,
 
   }
                                        /* unlink the image-data buffer */
-  iRetcode = free_imagedataobject (pData, pImgbuf);
+  iRetcode = mng_free_imagedataobject (pData, pImgbuf);
                                        /* drop it's own buffer */
   MNG_FREEX (pData, pImage, sizeof (mng_image))
 
@@ -547,8 +580,8 @@ mng_retcode free_imageobject (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_imagep find_imageobject (mng_datap  pData,
-                             mng_uint16 iId)
+mng_imagep mng_find_imageobject (mng_datap  pData,
+                                 mng_uint16 iId)
 {
   mng_imagep pImage = (mng_imagep)pData->pFirstimgobj;
 
@@ -568,17 +601,17 @@ mng_imagep find_imageobject (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode clone_imageobject (mng_datap  pData,
-                               mng_uint16 iId,
-                               mng_bool   bPartial,
-                               mng_bool   bVisible,
-                               mng_bool   bAbstract,
-                               mng_bool   bHasloca,
-                               mng_uint8  iLocationtype,
-                               mng_int32  iLocationx,
-                               mng_int32  iLocationy,
-                               mng_imagep pSource,
-                               mng_imagep *ppClone)
+mng_retcode mng_clone_imageobject (mng_datap  pData,
+                                   mng_uint16 iId,
+                                   mng_bool   bPartial,
+                                   mng_bool   bVisible,
+                                   mng_bool   bAbstract,
+                                   mng_bool   bHasloca,
+                                   mng_uint8  iLocationtype,
+                                   mng_int32  iLocationx,
+                                   mng_int32  iLocationy,
+                                   mng_imagep pSource,
+                                   mng_imagep *ppClone)
 {
   mng_imagep     pNew;
   mng_imagep     pPrev, pNext;
@@ -592,7 +625,7 @@ mng_retcode clone_imageobject (mng_datap  pData,
   if ((pSource->iId) &&                /* needs magnification ? */
       ((pSource->iMAGN_MethodX) || (pSource->iMAGN_MethodY)))
   {
-    iRetcode = magnify_imageobject (pData, pSource);
+    iRetcode = mng_magnify_imageobject (pData, pSource);
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;
@@ -600,12 +633,13 @@ mng_retcode clone_imageobject (mng_datap  pData,
                                        /* get a buffer */
   MNG_ALLOC (pData, pNew, sizeof (mng_image))
                                        /* fill or copy the appropriate fields */
-  pNew->sHeader.fCleanup = (mng_cleanupobject)free_imageobject;
-  pNew->sHeader.fProcess = 0;
+  pNew->sHeader.fCleanup = (mng_cleanupobject)mng_free_imageobject;
+  pNew->sHeader.fProcess = MNG_NULL;
   pNew->iId              = iId;
   pNew->bFrozen          = MNG_FALSE;
   pNew->bVisible         = bVisible;
   pNew->bViewable        = pSource->bViewable;
+  pNew->bValid           = MNG_TRUE;
 
   if (bHasloca)                        /* location info available ? */
   {
@@ -632,14 +666,17 @@ mng_retcode clone_imageobject (mng_datap  pData,
   pNew->iClipt           = pSource->iClipt;
   pNew->iClipb           = pSource->iClipb;
                                        /* copy magnification info */
-  pNew->iMAGN_MethodX    = pSource->iMAGN_MethodX;
+/*  pNew->iMAGN_MethodX    = pSource->iMAGN_MethodX;     LET'S NOT !!!!!!
   pNew->iMAGN_MethodY    = pSource->iMAGN_MethodY;
   pNew->iMAGN_MX         = pSource->iMAGN_MX;
   pNew->iMAGN_MY         = pSource->iMAGN_MY;
   pNew->iMAGN_ML         = pSource->iMAGN_ML;
   pNew->iMAGN_MR         = pSource->iMAGN_MR;
   pNew->iMAGN_MT         = pSource->iMAGN_MT;
-  pNew->iMAGN_MB         = pSource->iMAGN_MB;
+  pNew->iMAGN_MB         = pSource->iMAGN_MB; */
+
+  pNew->iPastx           = 0;          /* initialize PAST info */
+  pNew->iPasty           = 0;
 
   if (iId)                             /* not for object 0 */
   {                                    /* find previous lower object-id */
@@ -680,7 +717,7 @@ mng_retcode clone_imageobject (mng_datap  pData,
     if (!bAbstract)                    /* determine concreteness from source ? */
       bConcrete = pSource->pImgbuf->bConcrete;
                                        /* create a full clone ! */
-    iRetcode = clone_imagedataobject (pData, bConcrete, pSource->pImgbuf, &pImgbuf);
+    iRetcode = mng_clone_imagedataobject (pData, bConcrete, pSource->pImgbuf, &pImgbuf);
 
     if (iRetcode)                      /* on error bail out */
     {
@@ -702,15 +739,15 @@ mng_retcode clone_imageobject (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode renum_imageobject (mng_datap  pData,
-                               mng_imagep pSource,
-                               mng_uint16 iId,
-                               mng_bool   bVisible,
-                               mng_bool   bAbstract,
-                               mng_bool   bHasloca,
-                               mng_uint8  iLocationtype,
-                               mng_int32  iLocationx,
-                               mng_int32  iLocationy)
+mng_retcode mng_renum_imageobject (mng_datap  pData,
+                                   mng_imagep pSource,
+                                   mng_uint16 iId,
+                                   mng_bool   bVisible,
+                                   mng_bool   bAbstract,
+                                   mng_bool   bHasloca,
+                                   mng_uint8  iLocationtype,
+                                   mng_int32  iLocationx,
+                                   mng_int32  iLocationy)
 {
   mng_imagep pPrev, pNext;
 
@@ -788,16 +825,16 @@ mng_retcode renum_imageobject (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode reset_object_details (mng_datap  pData,
-                                  mng_imagep pImage,
-                                  mng_uint32 iWidth,
-                                  mng_uint32 iHeight,
-                                  mng_uint8  iBitdepth,
-                                  mng_uint8  iColortype,
-                                  mng_uint8  iCompression,
-                                  mng_uint8  iFilter,
-                                  mng_uint8  iInterlace,
-                                  mng_bool   bResetall)
+mng_retcode mng_reset_object_details (mng_datap  pData,
+                                      mng_imagep pImage,
+                                      mng_uint32 iWidth,
+                                      mng_uint32 iHeight,
+                                      mng_uint8  iBitdepth,
+                                      mng_uint8  iColortype,
+                                      mng_uint8  iCompression,
+                                      mng_uint8  iFilter,
+                                      mng_uint8  iInterlace,
+                                      mng_bool   bResetall)
 {
   mng_imagedatap pBuf  = pImage->pImgbuf;
   mng_uint32     iSamplesize = 0;
@@ -815,6 +852,7 @@ mng_retcode reset_object_details (mng_datap  pData,
   pBuf->iCompression   = iCompression;
   pBuf->iFilter        = iFilter;
   pBuf->iInterlace     = iInterlace;
+  pBuf->bCorrected     = MNG_FALSE;
   pBuf->iAlphabitdepth = 0;
                                        /* determine samplesize from color_type/bit_depth */
   switch (iColortype)                  /* for < 8-bit samples we just reserve 8 bits */
@@ -871,10 +909,39 @@ mng_retcode reset_object_details (mng_datap  pData,
     if (iImgdatasize)                  /* allocate new sample-buffer ? */
       MNG_ALLOC (pData, pBuf->pImgdata, iImgdatasize)
   }
+  else
+  {
+    if (iImgdatasize)                  /* clear old buffer */
+    {
+      mng_uint8p pTemp = pBuf->pImgdata;
+      mng_uint32 iX;
+      
+/* SF-bug #664911 start */
+/*      for (iX = 0; iX < iImgdatasize; iX += 4)
+      {
+        *((mng_uint32p)pTemp) = 0x00000000l;
+        pTemp += 4;
+      } */
+      for (iX = 0; iX < (iImgdatasize & (mng_uint32)(~3L)); iX += 4, pTemp += 4)
+        *((mng_uint32p)pTemp) = 0x00000000l;
+/* SF-bug #664911 end */
+
+      while (pTemp < (pBuf->pImgdata + iImgdatasize))
+      {
+        *pTemp = 0;
+        pTemp++;
+      }
+    }
+  }
 
   pBuf->iSamplesize  = iSamplesize;    /* remember new sizes */
   pBuf->iRowsize     = iRowsize;
   pBuf->iImgdatasize = iImgdatasize;
+
+  if (!pBuf->iPixelsampledepth)        /* set delta sampledepths if empty */
+    pBuf->iPixelsampledepth = iBitdepth;
+  if (!pBuf->iAlphasampledepth)
+    pBuf->iAlphasampledepth = iBitdepth;
                                        /* dimension set and clipping not ? */
   if ((iWidth) && (iHeight) && (!pImage->bClipped))
   {
@@ -898,6 +965,9 @@ mng_retcode reset_object_details (mng_datap  pData,
 
   if (bResetall)                       /* reset the other characteristics ? */
   {
+    pImage->iPastx = 0;
+    pImage->iPasty = 0;
+
     pBuf->bHasPLTE = MNG_FALSE;
     pBuf->bHasTRNS = MNG_FALSE;
     pBuf->bHasGAMA = pData->bHasglobalGAMA;
@@ -958,118 +1028,466 @@ mng_retcode reset_object_details (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode promote_imageobject (mng_datap  pData,
-                                 mng_imagep pImage,
-                                 mng_uint8  iBitdepth,
-                                 mng_uint8  iColortype,
-                                 mng_uint8  iFilltype)
+mng_retcode mng_promote_imageobject (mng_datap  pData,
+                                     mng_imagep pImage,
+                                     mng_uint8  iBitdepth,
+                                     mng_uint8  iColortype,
+                                     mng_uint8  iFilltype)
 {
+  mng_retcode    iRetcode       = MNG_NOERROR;
+  mng_imagedatap pBuf           = pImage->pImgbuf;
+  mng_uint32     iW             = pBuf->iWidth;
+  mng_uint32     iH             = pBuf->iHeight;
   mng_uint8p     pNewbuf;
   mng_uint32     iNewbufsize;
   mng_uint32     iNewrowsize;
-  mng_uint32     iNewsamplesize;
-  mng_uint32     iX, iY;
-  mng_uint8p     pSrcline, pDstline;
-  mng_uint8      iB;
-  mng_imagedatap pBuf = pImage->pImgbuf;
-  mng_uint32     iW   = pBuf->iWidth;
-  mng_uint32     iH   = pBuf->iHeight;
+  mng_uint32     iNewsamplesize = pBuf->iSamplesize;
+  mng_uint32     iY;
+  mng_uint8      iTempdepth;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROMOTE_IMGOBJECT, MNG_LC_START)
 #endif
 
-  if ((pBuf->iColortype == 3) && (iColortype == 2))
-  {                                    /* indexed -> rgb */
-    iNewsamplesize = 3;
-    iNewrowsize    = iW * iNewsamplesize;
-    iNewbufsize    = iH * iNewrowsize;
+  pData->fPromoterow    = MNG_NULL;    /* init promotion fields */
+  pData->fPromBitdepth  = MNG_NULL;
+  pData->iPromColortype = iColortype;
+  pData->iPromBitdepth  = iBitdepth;
+  pData->iPromFilltype  = iFilltype;
 
-    MNG_ALLOC (pData, pNewbuf, iNewbufsize)
-
-    pSrcline = pBuf->pImgdata;
-    pDstline = pNewbuf;
-
-    for (iY = 0; iY < iH; iY++)
-    {
-      for (iX = 0; iX < iW; iX++)
-      {
-        iB = *pSrcline;
-
-        if ((mng_uint32)iB < pBuf->iPLTEcount)
-        {
-          *pDstline     = pBuf->aPLTEentries [iB].iRed;
-          *(pDstline+1) = pBuf->aPLTEentries [iB].iGreen;
-          *(pDstline+2) = pBuf->aPLTEentries [iB].iBlue;
-        }  
-
-        pSrcline++;
-        pDstline += 3;
-      }
-    }
-
-    MNG_FREEX (pData, pBuf->pImgdata, pBuf->iImgdatasize)
-
-    pBuf->iBitdepth    = iBitdepth;
-    pBuf->iColortype   = iColortype;
-    pBuf->iSamplesize  = iNewsamplesize;
-    pBuf->iRowsize     = iNewrowsize;
-    pBuf->iImgdatasize = iNewbufsize;
-    pBuf->pImgdata     = pNewbuf;
-    pBuf->bHasPLTE     = MNG_FALSE;
-    pBuf->bHasTRNS     = MNG_FALSE;
-  }
-  else
-  if ((pBuf->iColortype == 3) && (iColortype == 6))
-  {                                    /* indexed -> rgba */
-    iNewsamplesize = 4;
-    iNewrowsize    = iW * iNewsamplesize;
-    iNewbufsize    = iH * iNewrowsize;
-
-    MNG_ALLOC (pData, pNewbuf, iNewbufsize)
-
-    pSrcline = pBuf->pImgdata;
-    pDstline = pNewbuf;
-
-    for (iY = 0; iY < iH; iY++)
-    {
-      for (iX = 0; iX < iW; iX++)
-      {
-        iB = *pSrcline;
-
-        if ((mng_uint32)iB < pBuf->iPLTEcount)
-        {
-          *pDstline       = pBuf->aPLTEentries [iB].iRed;
-          *(pDstline+1)   = pBuf->aPLTEentries [iB].iGreen;
-          *(pDstline+2)   = pBuf->aPLTEentries [iB].iBlue;
-
-          if ((mng_uint32)iB < pBuf->iTRNScount)
-            *(pDstline+3) = pBuf->aTRNSentries [iB];
-          else
-            *(pDstline+3) = 255;
-        }
-
-        pSrcline++;
-        pDstline += 4;
-      }
-    }
-
-    MNG_FREEX (pData, pBuf->pImgdata, pBuf->iImgdatasize)
-
-    pBuf->iBitdepth    = iBitdepth;
-    pBuf->iColortype   = iColortype;
-    pBuf->iSamplesize  = iNewsamplesize;
-    pBuf->iRowsize     = iNewrowsize;
-    pBuf->iImgdatasize = iNewbufsize;
-    pBuf->pImgdata     = pNewbuf;
-    pBuf->bHasPLTE     = MNG_FALSE;
-    pBuf->bHasTRNS     = MNG_FALSE;
-  }
-  else
+  if (iBitdepth != pBuf->iBitdepth)    /* determine bitdepth promotion */
   {
+    if (pBuf->iColortype == MNG_COLORTYPE_INDEXED)
+      iTempdepth = 8;
+    else
+      iTempdepth = pBuf->iBitdepth;
 
-    /* TODO: other promotion */
+    if (iFilltype == MNG_FILLMETHOD_ZEROFILL)
+    {
+      switch (iTempdepth)
+      {
+        case 1 : {
+                   switch (iBitdepth)
+                   {
+                     case  2 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_1_2;  break; }
+                     case  4 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_1_4;  break; }
+                     case  8 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_1_8;  break; }
+                     case 16 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_1_16; break; }
+                   }
+                   break;
+                 }
+        case 2 : {
+                   switch (iBitdepth)
+                   {
+                     case  4 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_2_4;  break; }
+                     case  8 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_2_8;  break; }
+                     case 16 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_2_16; break; }
+                   }
+                   break;
+                 }
+        case 4 : {
+                   switch (iBitdepth)
+                   {
+                     case  8 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_4_8;  break; }
+                     case 16 : { pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_4_16; break; }
+                   }
+                   break;
+                 }
+        case 8 : {
+                   if (iBitdepth == 16)
+                     pData->fPromBitdepth = (mng_fptr)mng_promote_zerofill_8_16;
+                   break;
+                 }
+      }
+    }
+    else
+    {
+      switch (iTempdepth)
+      {
+        case 1 : {
+                   switch (iBitdepth)
+                   {
+                     case  2 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_1_2;  break; }
+                     case  4 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_1_4;  break; }
+                     case  8 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_1_8;  break; }
+                     case 16 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_1_16; break; }
+                   }
+                   break;
+                 }
+        case 2 : {
+                   switch (iBitdepth)
+                   {
+                     case  4 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_2_4;  break; }
+                     case  8 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_2_8;  break; }
+                     case 16 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_2_16; break; }
+                   }
+                   break;
+                 }
+        case 4 : {
+                   switch (iBitdepth)
+                   {
+                     case  8 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_4_8;  break; }
+                     case 16 : { pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_4_16; break; }
+                   }
+                   break;
+                 }
+        case 8 : {
+                   if (iBitdepth == 16)
+                     pData->fPromBitdepth = (mng_fptr)mng_promote_replicate_8_16;
+                   break;
+                 }
+      }
+    }
+  }
+                                       /* g -> g */
+  if ((pBuf->iColortype == MNG_COLORTYPE_GRAY) &&
+      (iColortype == MNG_COLORTYPE_GRAY))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_g16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_g8;
+    }
 
+    iNewsamplesize = 1;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 2;
+  }
+  else                                 /* g -> ga */
+  if ((pBuf->iColortype == MNG_COLORTYPE_GRAY) &&
+      (iColortype == MNG_COLORTYPE_GRAYA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_ga16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_ga8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_g16_ga16;
+
+    iNewsamplesize = 2;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 4;
+  }
+  else                                 /* g -> rgb */
+  if ((pBuf->iColortype == MNG_COLORTYPE_GRAY) &&
+      (iColortype == MNG_COLORTYPE_RGB))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgb16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgb8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_g16_rgb16;
+
+    iNewsamplesize = 3;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 6;
+  }
+  else                                 /* g -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_GRAY) &&
+      (iColortype == MNG_COLORTYPE_RGBA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgba16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgba8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_g16_rgba16;
+
+    iNewsamplesize = 4;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 8;
+  }
+  else                                 /* ga -> ga */
+  if ((pBuf->iColortype == MNG_COLORTYPE_GRAYA) &&
+      (iColortype == MNG_COLORTYPE_GRAYA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_ga8_ga16;
+
+    iNewsamplesize = 4;
+  }
+  else                                 /* ga -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_GRAYA) &&
+      (iColortype == MNG_COLORTYPE_RGBA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_ga8_rgba16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_ga8_rgba8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_ga16_rgba16;
+
+    iNewsamplesize = 4;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 8;
+  }
+  else                                 /* rgb -> rgb */
+  if ((pBuf->iColortype == MNG_COLORTYPE_RGB) &&
+      (iColortype == MNG_COLORTYPE_RGB))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_rgb8_rgb16;
+
+    iNewsamplesize = 6;
+  }
+  else                                 /* rgb -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_RGB) &&
+      (iColortype == MNG_COLORTYPE_RGBA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_rgb8_rgba16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_rgb8_rgba8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_rgb16_rgba16;
+
+    iNewsamplesize = 4;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 8;
+  }
+  else                                 /* indexed -> rgb */
+  if ((pBuf->iColortype == MNG_COLORTYPE_INDEXED) &&
+      (iColortype == MNG_COLORTYPE_RGB))
+  {
+    if (iBitdepth == 16)
+      pData->fPromoterow = (mng_fptr)mng_promote_idx8_rgb16;
+    else
+      pData->fPromoterow = (mng_fptr)mng_promote_idx8_rgb8;
+
+    iNewsamplesize = 3;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 6;
+  }
+  else                                 /* indexed -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_INDEXED) &&
+      (iColortype == MNG_COLORTYPE_RGBA))
+  {
+    if (iBitdepth == 16)
+      pData->fPromoterow = (mng_fptr)mng_promote_idx8_rgba16;
+    else
+      pData->fPromoterow = (mng_fptr)mng_promote_idx8_rgba8;
+
+    iNewsamplesize = 4;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 8;
+  }
+  else                                 /* rgba -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_RGBA) &&
+      (iColortype == MNG_COLORTYPE_RGBA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_rgba8_rgba16;
+
+    iNewsamplesize = 8;
+  }
+  else                                 /* JPEG g -> g */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGGRAY) &&
+      (iColortype == MNG_COLORTYPE_JPEGGRAY))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_g16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_g8;
+    }
+
+    iNewsamplesize = 1;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 2;
+  }
+  else                                 /* JPEG g -> ga */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGGRAY) &&
+      (iColortype == MNG_COLORTYPE_JPEGGRAYA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_ga16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_ga8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_g16_ga16;
+
+    iNewsamplesize = 2;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 4;
+  }
+  else                                 /* JPEG g -> rgb */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGGRAY) &&
+      (iColortype == MNG_COLORTYPE_JPEGCOLOR))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgb16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgb8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_g16_rgb16;
+
+    iNewsamplesize = 3;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 6;
+  }
+  else                                 /* JPEG g -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGGRAY) &&
+      (iColortype == MNG_COLORTYPE_JPEGCOLORA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgba16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_g8_rgba8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_g16_rgba16;
+
+    iNewsamplesize = 4;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 8;
+  }
+  else                                 /* JPEG ga -> ga */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGGRAYA) &&
+      (iColortype == MNG_COLORTYPE_JPEGGRAYA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_ga8_ga16;
+
+    iNewsamplesize = 4;
+  }
+  else                                 /* JPEG ga -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGGRAYA) &&
+      (iColortype == MNG_COLORTYPE_JPEGCOLORA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_ga8_rgba16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_ga8_rgba8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_ga16_rgba16;
+
+    iNewsamplesize = 4;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 8;
+  }
+  else                                 /* JPEG rgb -> rgb */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGCOLOR) &&
+      (iColortype == MNG_COLORTYPE_JPEGCOLOR))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_rgb8_rgb16;
+
+    iNewsamplesize = 6;
+  }
+  else                                 /* JPEG rgb -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGCOLOR) &&
+      (iColortype == MNG_COLORTYPE_JPEGCOLORA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+    {
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_rgb8_rgba16;
+      else
+        pData->fPromoterow = (mng_fptr)mng_promote_rgb8_rgba8;
+    }
+    else                               /* source = 16 bits */
+      pData->fPromoterow = (mng_fptr)mng_promote_rgb16_rgba16;
+
+    iNewsamplesize = 4;
+
+    if (iBitdepth == 16)               /* 16-bit wide ? */
+      iNewsamplesize = 8;
+  }
+  else                                 /* JPEG rgba -> rgba */
+  if ((pBuf->iColortype == MNG_COLORTYPE_JPEGCOLORA) &&
+      (iColortype == MNG_COLORTYPE_JPEGCOLORA))
+  {
+    if (pBuf->iBitdepth <= 8)          /* source <= 8 bits */
+      if (iBitdepth == 16)
+        pData->fPromoterow = (mng_fptr)mng_promote_rgba8_rgba16;
+
+    iNewsamplesize = 8;
+  }
+
+  if (pData->fPromoterow)              /* found a proper promotion ? */
+  {
+    pData->pPromBuf    = (mng_ptr)pBuf;
+    pData->iPromWidth  = pBuf->iWidth;
+    iNewrowsize        = iW * iNewsamplesize;
+    iNewbufsize        = iH * iNewrowsize;
+
+    MNG_ALLOC (pData, pNewbuf, iNewbufsize)
+
+    pData->pPromSrc    = (mng_ptr)pBuf->pImgdata;
+    pData->pPromDst    = (mng_ptr)pNewbuf;
+    iY                 = 0;
+
+    while ((!iRetcode) && (iY < iH))
+    {
+      iRetcode         = ((mng_promoterow)pData->fPromoterow) (pData);
+      pData->pPromSrc  = (mng_ptr)((mng_uint32)pData->pPromSrc + pBuf->iRowsize);
+      pData->pPromDst  = (mng_ptr)((mng_uint32)pData->pPromDst + iNewrowsize);
+      iY++;
+    }
+
+    MNG_FREEX (pData, pBuf->pImgdata, pBuf->iImgdatasize)
+
+    pBuf->iBitdepth    = iBitdepth;
+    pBuf->iColortype   = iColortype;
+    pBuf->iSamplesize  = iNewsamplesize;
+    pBuf->iRowsize     = iNewrowsize;
+    pBuf->iImgdatasize = iNewbufsize;
+    pBuf->pImgdata     = pNewbuf;
+    pBuf->bHasPLTE     = MNG_FALSE;
+    pBuf->iPLTEcount   = 0;
+    pBuf->bHasTRNS     = MNG_FALSE;
+    pBuf->iTRNScount   = 0;
+
+    if (iRetcode)                      /* on error bail out */
+      return iRetcode;
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -1081,8 +1499,8 @@ mng_retcode promote_imageobject (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode magnify_imageobject (mng_datap  pData,
-                                 mng_imagep pImage)
+mng_retcode mng_magnify_imageobject (mng_datap  pData,
+                                     mng_imagep pImage)
 {
   mng_uint8p     pNewdata;
   mng_uint8p     pSrcline1;
@@ -1111,9 +1529,9 @@ mng_retcode magnify_imageobject (mng_datap  pData,
       MNG_ERROR (pData, MNG_INVALIDCOLORTYPE)
 
     if (pBuf->iTRNScount)              /* with transparency ? */
-      iRetcode = promote_imageobject (pData, pImage, 8, 6, 0);
+      iRetcode = mng_promote_imageobject (pData, pImage, 8, 6, 0);
     else
-      iRetcode = promote_imageobject (pData, pImage, 8, 2, 0);
+      iRetcode = mng_promote_imageobject (pData, pImage, 8, 2, 0);
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;
@@ -1172,27 +1590,41 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                 {
                   switch (pImage->iMAGN_MethodX)
                   {
-                    case 1  : { fMagnifyX = magnify_g8_x1; break; }
-                    case 2  : { fMagnifyX = magnify_g8_x2; break; }
-                    case 3  : { fMagnifyX = magnify_g8_x3; break; }
-                    case 4  : { fMagnifyX = magnify_g8_x2; break; }
-                    case 5  : { fMagnifyX = magnify_g8_x3; break; }
+                    case 1  : { fMagnifyX = mng_magnify_g8_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_g8_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_g8_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_g8_x2; break; }
+                    case 5  : { fMagnifyX = mng_magnify_g8_x3; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
                   {
-                    case 1  : { fMagnifyY = magnify_g8_y1; break; }
-                    case 2  : { fMagnifyY = magnify_g8_y2; break; }
-                    case 3  : { fMagnifyY = magnify_g8_y3; break; }
-                    case 4  : { fMagnifyY = magnify_g8_y2; break; }
-                    case 5  : { fMagnifyY = magnify_g8_y3; break; }
+                    case 1  : { fMagnifyY = mng_magnify_g8_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_g8_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_g8_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_g8_y2; break; }
+                    case 5  : { fMagnifyY = mng_magnify_g8_y3; break; }
                   }
                 }
                 else
                 {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = mng_magnify_g16_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_g16_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_g16_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_g16_x2; break; }
+                    case 5  : { fMagnifyX = mng_magnify_g16_x3; break; }
+                  }
 
-                  /* TODO: magnify 16-bit */
-
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = mng_magnify_g16_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_g16_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_g16_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_g16_y2; break; }
+                    case 5  : { fMagnifyY = mng_magnify_g16_y3; break; }
+                  }
                 }
 
                 break;
@@ -1204,27 +1636,41 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                 {
                   switch (pImage->iMAGN_MethodX)
                   {
-                    case 1  : { fMagnifyX = magnify_rgb8_x1; break; }
-                    case 2  : { fMagnifyX = magnify_rgb8_x2; break; }
-                    case 3  : { fMagnifyX = magnify_rgb8_x3; break; }
-                    case 4  : { fMagnifyX = magnify_rgb8_x2; break; }
-                    case 5  : { fMagnifyX = magnify_rgb8_x3; break; }
+                    case 1  : { fMagnifyX = mng_magnify_rgb8_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_rgb8_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_rgb8_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_rgb8_x2; break; }
+                    case 5  : { fMagnifyX = mng_magnify_rgb8_x3; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
                   {
-                    case 1  : { fMagnifyY = magnify_rgb8_y1; break; }
-                    case 2  : { fMagnifyY = magnify_rgb8_y2; break; }
-                    case 3  : { fMagnifyY = magnify_rgb8_y3; break; }
-                    case 4  : { fMagnifyY = magnify_rgb8_y2; break; }
-                    case 5  : { fMagnifyY = magnify_rgb8_y3; break; }
+                    case 1  : { fMagnifyY = mng_magnify_rgb8_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_rgb8_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_rgb8_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_rgb8_y2; break; }
+                    case 5  : { fMagnifyY = mng_magnify_rgb8_y3; break; }
                   }
                 }
                 else
                 {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = mng_magnify_rgb16_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_rgb16_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_rgb16_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_rgb16_x2; break; }
+                    case 5  : { fMagnifyX = mng_magnify_rgb16_x3; break; }
+                  }
 
-                  /* TODO: magnify 16-bit */
-
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = mng_magnify_rgb16_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_rgb16_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_rgb16_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_rgb16_y2; break; }
+                    case 5  : { fMagnifyY = mng_magnify_rgb16_y3; break; }
+                  }
                 }
 
                 break;
@@ -1236,27 +1682,41 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                 {
                   switch (pImage->iMAGN_MethodX)
                   {
-                    case 1  : { fMagnifyX = magnify_ga8_x1; break; }
-                    case 2  : { fMagnifyX = magnify_ga8_x2; break; }
-                    case 3  : { fMagnifyX = magnify_ga8_x3; break; }
-                    case 4  : { fMagnifyX = magnify_ga8_x4; break; }
-                    case 5  : { fMagnifyX = magnify_ga8_x5; break; }
+                    case 1  : { fMagnifyX = mng_magnify_ga8_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_ga8_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_ga8_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_ga8_x4; break; }
+                    case 5  : { fMagnifyX = mng_magnify_ga8_x5; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
                   {
-                    case 1  : { fMagnifyY = magnify_ga8_y1; break; }
-                    case 2  : { fMagnifyY = magnify_ga8_y2; break; }
-                    case 3  : { fMagnifyY = magnify_ga8_y3; break; }
-                    case 4  : { fMagnifyY = magnify_ga8_y4; break; }
-                    case 5  : { fMagnifyY = magnify_ga8_y5; break; }
+                    case 1  : { fMagnifyY = mng_magnify_ga8_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_ga8_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_ga8_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_ga8_y4; break; }
+                    case 5  : { fMagnifyY = mng_magnify_ga8_y5; break; }
                   }
                 }
                 else
                 {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = mng_magnify_ga16_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_ga16_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_ga16_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_ga16_x4; break; }
+                    case 5  : { fMagnifyX = mng_magnify_ga16_x5; break; }
+                  }
 
-                  /* TODO: magnify 16-bit */
-
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = mng_magnify_ga16_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_ga16_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_ga16_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_ga16_y4; break; }
+                    case 5  : { fMagnifyY = mng_magnify_ga16_y5; break; }
+                  }
                 }
 
                 break;
@@ -1268,27 +1728,41 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                 {
                   switch (pImage->iMAGN_MethodX)
                   {
-                    case 1  : { fMagnifyX = magnify_rgba8_x1; break; }
-                    case 2  : { fMagnifyX = magnify_rgba8_x2; break; }
-                    case 3  : { fMagnifyX = magnify_rgba8_x3; break; }
-                    case 4  : { fMagnifyX = magnify_rgba8_x4; break; }
-                    case 5  : { fMagnifyX = magnify_rgba8_x5; break; }
+                    case 1  : { fMagnifyX = mng_magnify_rgba8_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_rgba8_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_rgba8_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_rgba8_x4; break; }
+                    case 5  : { fMagnifyX = mng_magnify_rgba8_x5; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
                   {
-                    case 1  : { fMagnifyY = magnify_rgba8_y1; break; }
-                    case 2  : { fMagnifyY = magnify_rgba8_y2; break; }
-                    case 3  : { fMagnifyY = magnify_rgba8_y3; break; }
-                    case 4  : { fMagnifyY = magnify_rgba8_y4; break; }
-                    case 5  : { fMagnifyY = magnify_rgba8_y5; break; }
+                    case 1  : { fMagnifyY = mng_magnify_rgba8_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_rgba8_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_rgba8_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_rgba8_y4; break; }
+                    case 5  : { fMagnifyY = mng_magnify_rgba8_y5; break; }
                   }
                 }
                 else
                 {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = mng_magnify_rgba16_x1; break; }
+                    case 2  : { fMagnifyX = mng_magnify_rgba16_x2; break; }
+                    case 3  : { fMagnifyX = mng_magnify_rgba16_x3; break; }
+                    case 4  : { fMagnifyX = mng_magnify_rgba16_x4; break; }
+                    case 5  : { fMagnifyX = mng_magnify_rgba16_x5; break; }
+                  }
 
-                  /* TODO: magnify 16-bit */
-
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = mng_magnify_rgba16_y1; break; }
+                    case 2  : { fMagnifyY = mng_magnify_rgba16_y2; break; }
+                    case 3  : { fMagnifyY = mng_magnify_rgba16_y3; break; }
+                    case 4  : { fMagnifyY = mng_magnify_rgba16_y4; break; }
+                    case 5  : { fMagnifyY = mng_magnify_rgba16_y5; break; }
+                  }
                 }
 
                 break;
@@ -1408,6 +1882,121 @@ mng_retcode magnify_imageobject (mng_datap  pData,
 }
 
 /* ************************************************************************** */
+
+mng_retcode mng_colorcorrect_object (mng_datap  pData,
+                                     mng_imagep pImage)
+{
+  mng_imagedatap pBuf = pImage->pImgbuf;
+  mng_retcode    iRetcode;
+  mng_uint32     iY;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_COLORCORRECT_OBJECT, MNG_LC_START)
+#endif
+
+  if ((pBuf->iBitdepth < 8) ||         /* we need 8- or 16-bit RGBA !!! */
+      ((pBuf->iColortype != MNG_COLORTYPE_RGBA      ) &&
+       (pBuf->iColortype != MNG_COLORTYPE_JPEGCOLORA)    ))
+    MNG_ERROR (pData, MNG_OBJNOTABSTRACT)
+
+  if (!pBuf->bCorrected)               /* only if not already done ! */
+  {                                    /* so the row routines now to find it */
+    pData->pRetrieveobj   = (mng_objectp)pImage;
+    pData->pStoreobj      = (mng_objectp)pImage;
+    pData->pStorebuf      = (mng_objectp)pImage->pImgbuf;
+
+    if (pBuf->iBitdepth > 8)
+    {
+      pData->fRetrieverow = (mng_fptr)mng_retrieve_rgba16;
+      pData->fStorerow    = (mng_fptr)mng_store_rgba16;
+    }
+    else
+    {
+      pData->fRetrieverow = (mng_fptr)mng_retrieve_rgba8;
+      pData->fStorerow    = (mng_fptr)mng_store_rgba8;
+    }
+
+    pData->bIsOpaque      = MNG_FALSE;
+
+    pData->iPass          = -1;        /* these are the object's dimensions now */
+    pData->iRow           = 0;
+    pData->iRowinc        = 1;
+    pData->iCol           = 0;
+    pData->iColinc        = 1;
+    pData->iRowsamples    = pBuf->iWidth;
+    pData->iRowsize       = pData->iRowsamples << 2;
+    pData->iPixelofs      = 0;
+    pData->bIsRGBA16      = MNG_FALSE;
+                                       /* adjust for 16-bit object ? */
+    if (pBuf->iBitdepth > 8)
+    {
+      pData->bIsRGBA16    = MNG_TRUE;
+      pData->iRowsize     = pData->iRowsamples << 3;
+    }
+
+    pData->fCorrectrow    = MNG_NULL;  /* default no color-correction */
+
+#ifdef MNG_NO_CMS
+    iRetcode = MNG_NOERROR;
+#else
+#if defined(MNG_FULL_CMS)              /* determine color-management routine */
+    iRetcode = mng_init_full_cms   (pData, MNG_FALSE, MNG_FALSE, MNG_TRUE);
+#elif defined(MNG_GAMMA_ONLY)
+    iRetcode = mng_init_gamma_only (pData, MNG_FALSE, MNG_FALSE, MNG_TRUE);
+#elif defined(MNG_APP_CMS)
+    iRetcode = mng_init_app_cms    (pData, MNG_FALSE, MNG_FALSE, MNG_TRUE);
+#endif
+    if (iRetcode)                      /* on error bail out */
+      return iRetcode;
+#endif /* MNG_NO_CMS */
+
+    if (pData->fCorrectrow)            /* really correct something ? */
+    {                                  /* get a temporary row-buffer */
+      MNG_ALLOC (pData, pData->pRGBArow, pData->iRowsize)
+
+      pData->pWorkrow = pData->pRGBArow;
+      iY              = 0;             /* start from the top */
+
+      while ((!iRetcode) && (iY < pBuf->iHeight))
+      {                                /* get a row */
+        iRetcode = ((mng_retrieverow)pData->fRetrieverow) (pData);
+
+        if (!iRetcode)                 /* color correct it */
+          iRetcode = ((mng_correctrow)pData->fCorrectrow) (pData);
+
+        if (!iRetcode)                 /* store it back ! */
+          iRetcode = ((mng_storerow)pData->fStorerow) (pData);
+
+        if (!iRetcode)                 /* adjust variables for next row */
+          iRetcode = mng_next_row (pData);
+
+        iY++;                          /* and next line */
+      }
+                                       /* drop the temporary row-buffer */
+      MNG_FREEX (pData, pData->pRGBArow, pData->iRowsize)
+
+      if (iRetcode)                    /* on error bail out */
+        return iRetcode;
+
+#if defined(MNG_FULL_CMS)              /* cleanup cms stuff */
+      iRetcode = mng_clear_cms (pData);
+
+      if (iRetcode)                    /* on error bail out */
+        return iRetcode;
+#endif
+    }
+
+    pBuf->bCorrected = MNG_TRUE;       /* let's not go through that again ! */
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_COLORCORRECT_OBJECT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
 /* *                                                                        * */
 /* * Animation-object routines                                              * */
 /* *                                                                        * */
@@ -1416,8 +2005,8 @@ mng_retcode magnify_imageobject (mng_datap  pData,
 /* *                                                                        * */
 /* ************************************************************************** */
 
-void add_ani_object (mng_datap          pData,
-                     mng_object_headerp pObject)
+void mng_add_ani_object (mng_datap          pData,
+                         mng_object_headerp pObject)
 {
   mng_object_headerp pLast = (mng_object_headerp)pData->pLastaniobj;
 
@@ -1448,7 +2037,7 @@ void add_ani_object (mng_datap          pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_image (mng_datap pData)
+mng_retcode mng_create_ani_image (mng_datap pData)
 {
   mng_ani_imagep pImage;
   mng_imagep     pCurrent;
@@ -1468,16 +2057,17 @@ mng_retcode create_ani_image (mng_datap pData)
     if (!pCurrent)                     /* otherwise object 0 */
       pCurrent = (mng_imagep)pData->pObjzero;
                                        /* now just clone the object !!! */
-    iRetcode  = clone_imageobject (pData, 0, MNG_FALSE, pCurrent->bVisible,
-                                   MNG_FALSE, MNG_FALSE, 0, 0, 0, pCurrent, &pImage);
+    iRetcode  = mng_clone_imageobject (pData, 0, MNG_FALSE, pCurrent->bVisible,
+                                       MNG_FALSE, MNG_FALSE, 0, 0, 0, pCurrent,
+                                       &pImage);
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;
 
-    pImage->sHeader.fCleanup = free_ani_image;
-    pImage->sHeader.fProcess = process_ani_image;
+    pImage->sHeader.fCleanup = mng_free_ani_image;
+    pImage->sHeader.fProcess = mng_process_ani_image;
 
-    add_ani_object (pData, (mng_object_headerp)pImage);
+    mng_add_ani_object (pData, (mng_object_headerp)pImage);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -1489,8 +2079,8 @@ mng_retcode create_ani_image (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_image (mng_datap   pData,
-                            mng_objectp pObject)
+mng_retcode mng_free_ani_image (mng_datap   pData,
+                                mng_objectp pObject)
 {
   mng_ani_imagep pImage = (mng_ani_imagep)pObject;
   mng_imagedatap pImgbuf = pImage->pImgbuf;
@@ -1500,7 +2090,7 @@ mng_retcode free_ani_image (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_FREE_ANI_IMAGE, MNG_LC_START)
 #endif
                                        /* unlink the image-data buffer */
-  iRetcode = free_imagedataobject (pData, pImgbuf);
+  iRetcode = mng_free_imagedataobject (pData, pImgbuf);
                                        /* drop it's own buffer */
   MNG_FREEX (pData, pImage, sizeof (mng_ani_image))
 
@@ -1513,8 +2103,8 @@ mng_retcode free_ani_image (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_image (mng_datap   pData,
-                               mng_objectp pObject)
+mng_retcode mng_process_ani_image (mng_datap   pData,
+                                   mng_objectp pObject)
 {
   mng_retcode    iRetcode = MNG_NOERROR;
   mng_ani_imagep pImage   = (mng_imagep)pObject;
@@ -1531,14 +2121,14 @@ mng_retcode process_ani_image (mng_datap   pData,
     {                                  /* make sure to process pixels as well */
       pData->bDeltaimmediate = MNG_FALSE;
                                        /* execute the delta process */
-      iRetcode = execute_delta_image (pData, pDelta, (mng_imagep)pObject);
+      iRetcode = mng_execute_delta_image (pData, pDelta, (mng_imagep)pObject);
 
       if (iRetcode)                    /* on error bail out */
         return iRetcode;
     }
                                        /* now go and shoot it off (if required) */
     if ((pDelta->bVisible) && (pDelta->bViewable))
-      iRetcode = display_image (pData, pDelta, MNG_FALSE);
+      iRetcode = mng_display_image (pData, pDelta, MNG_FALSE);
 
     if (!pData->bTimerset)
       pData->bHasDHDR = MNG_FALSE;     /* this image signifies IEND !! */
@@ -1578,24 +2168,41 @@ mng_retcode process_ani_image (mng_datap   pData,
     }
                                        /* now go and shoot it off (if required) */
     if ((pCurrent->bVisible) && (pCurrent->bViewable))
-      iRetcode = display_image (pData, pCurrent, MNG_FALSE);
+      iRetcode = mng_display_image (pData, pCurrent, MNG_FALSE);
   }
   else
   {
-    mng_imagep pObjzero = (mng_imagep)pData->pObjzero;
-                                       /* overlay with object 0 status */
-    pImage->bVisible  = pObjzero->bVisible;
-    pImage->bViewable = pObjzero->bViewable;
-    pImage->iPosx     = pObjzero->iPosx;
-    pImage->iPosy     = pObjzero->iPosy;
-    pImage->bClipped  = pObjzero->bClipped;
-    pImage->iClipl    = pObjzero->iClipl;
-    pImage->iClipr    = pObjzero->iClipr;
-    pImage->iClipt    = pObjzero->iClipt;
-    pImage->iClipb    = pObjzero->iClipb;
-                                       /* now this should do the trick */
-    if ((pImage->bVisible) && (pImage->bViewable))
-      iRetcode = display_image (pData, pImage, MNG_FALSE);
+    mng_imagep     pObjzero = (mng_imagep)pData->pObjzero;
+    mng_imagedatap pBuf     = pObjzero->pImgbuf;
+
+    if (!pData->iBreakpoint)           /* don't copy it again ! */
+    {
+      if (pBuf->iImgdatasize)          /* buffer present in active object ? */
+                                       /* then drop it */
+        MNG_FREE (pData, pBuf->pImgdata, pBuf->iImgdatasize)
+
+      if (pBuf->iProfilesize)          /* iCCP profile present ? */
+                                       /* then drop it */
+        MNG_FREE (pData, pBuf->pProfile, pBuf->iProfilesize)
+                                       /* now blatently copy the animation buffer */
+      MNG_COPY (pBuf, pImage->pImgbuf, sizeof (mng_imagedata))
+                                       /* copy viewability */
+      pObjzero->bViewable = pImage->bViewable;
+
+      if (pBuf->iImgdatasize)          /* sample buffer present ? */
+      {                                /* then make a copy */
+        MNG_ALLOC (pData, pBuf->pImgdata, pBuf->iImgdatasize)
+        MNG_COPY (pBuf->pImgdata, pImage->pImgbuf->pImgdata, pBuf->iImgdatasize)
+      }
+
+      if (pBuf->iProfilesize)          /* iCCP profile present ? */
+      {                                /* then make a copy */
+        MNG_ALLOC (pData, pBuf->pProfile, pBuf->iProfilesize)
+        MNG_COPY (pBuf->pProfile, pImage->pImgbuf->pProfile, pBuf->iProfilesize)
+      }
+    }
+                                       /* now go and show it */
+    iRetcode = mng_display_image (pData, pObjzero, MNG_FALSE);
   }
 
   if (!iRetcode)                       /* all's well ? */
@@ -1616,9 +2223,9 @@ mng_retcode process_ani_image (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_plte (mng_datap      pData,
-                             mng_uint32     iEntrycount,
-                             mng_palette8ep paEntries)
+mng_retcode mng_create_ani_plte (mng_datap      pData,
+                                 mng_uint32     iEntrycount,
+                                 mng_palette8ep paEntries)
 {
   mng_ani_pltep pPLTE;
 
@@ -1630,10 +2237,10 @@ mng_retcode create_ani_plte (mng_datap      pData,
   {
     MNG_ALLOC (pData, pPLTE, sizeof (mng_ani_plte))
 
-    pPLTE->sHeader.fCleanup = free_ani_plte;
-    pPLTE->sHeader.fProcess = process_ani_plte;
+    pPLTE->sHeader.fCleanup = mng_free_ani_plte;
+    pPLTE->sHeader.fProcess = mng_process_ani_plte;
 
-    add_ani_object (pData, (mng_object_headerp)pPLTE);
+    mng_add_ani_object (pData, (mng_object_headerp)pPLTE);
 
     pPLTE->iEntrycount      = iEntrycount;
 
@@ -1649,8 +2256,8 @@ mng_retcode create_ani_plte (mng_datap      pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_plte (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_plte (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_PLTE, MNG_LC_START)
@@ -1667,8 +2274,8 @@ mng_retcode free_ani_plte (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_plte (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_plte (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_pltep pPLTE = (mng_ani_pltep)pObject;
 
@@ -1691,9 +2298,9 @@ mng_retcode process_ani_plte (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_trns (mng_datap    pData,
-                             mng_uint32   iRawlen,
-                             mng_uint8p   pRawdata)
+mng_retcode mng_create_ani_trns (mng_datap    pData,
+                                 mng_uint32   iRawlen,
+                                 mng_uint8p   pRawdata)
 {
   mng_ani_trnsp pTRNS;
 
@@ -1705,10 +2312,10 @@ mng_retcode create_ani_trns (mng_datap    pData,
   {
     MNG_ALLOC (pData, pTRNS, sizeof (mng_ani_trns))
 
-    pTRNS->sHeader.fCleanup = free_ani_trns;
-    pTRNS->sHeader.fProcess = process_ani_trns;
+    pTRNS->sHeader.fCleanup = mng_free_ani_trns;
+    pTRNS->sHeader.fProcess = mng_process_ani_trns;
 
-    add_ani_object (pData, (mng_object_headerp)pTRNS);
+    mng_add_ani_object (pData, (mng_object_headerp)pTRNS);
 
     pTRNS->iRawlen          = iRawlen;
 
@@ -1724,8 +2331,8 @@ mng_retcode create_ani_trns (mng_datap    pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_trns (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_trns (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_TRNS, MNG_LC_START)
@@ -1742,8 +2349,8 @@ mng_retcode free_ani_trns (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_trns (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_trns (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_trnsp pTRNS = (mng_ani_trnsp)pObject;
 
@@ -1766,9 +2373,9 @@ mng_retcode process_ani_trns (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_gama (mng_datap  pData,
-                             mng_bool   bEmpty,
-                             mng_uint32 iGamma)
+mng_retcode mng_create_ani_gama (mng_datap  pData,
+                                 mng_bool   bEmpty,
+                                 mng_uint32 iGamma)
 {
   mng_ani_gamap pGAMA;
 
@@ -1780,10 +2387,10 @@ mng_retcode create_ani_gama (mng_datap  pData,
   {
     MNG_ALLOC (pData, pGAMA, sizeof (mng_ani_gama))
 
-    pGAMA->sHeader.fCleanup = free_ani_gama;
-    pGAMA->sHeader.fProcess = process_ani_gama;
+    pGAMA->sHeader.fCleanup = mng_free_ani_gama;
+    pGAMA->sHeader.fProcess = mng_process_ani_gama;
 
-    add_ani_object (pData, (mng_object_headerp)pGAMA);
+    mng_add_ani_object (pData, (mng_object_headerp)pGAMA);
 
     pGAMA->bEmpty           = bEmpty;
     pGAMA->iGamma           = iGamma;
@@ -1798,8 +2405,8 @@ mng_retcode create_ani_gama (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_gama (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_gama (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_GAMA, MNG_LC_START)
@@ -1816,8 +2423,8 @@ mng_retcode free_ani_gama (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_gama (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_gama (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_gamap pGAMA = (mng_ani_gamap)pObject;
 
@@ -1846,16 +2453,16 @@ mng_retcode process_ani_gama (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_chrm (mng_datap  pData,
-                             mng_bool   bEmpty,
-                             mng_uint32 iWhitepointx,
-                             mng_uint32 iWhitepointy,
-                             mng_uint32 iRedx,
-                             mng_uint32 iRedy,
-                             mng_uint32 iGreenx,
-                             mng_uint32 iGreeny,
-                             mng_uint32 iBluex,
-                             mng_uint32 iBluey)
+mng_retcode mng_create_ani_chrm (mng_datap  pData,
+                                 mng_bool   bEmpty,
+                                 mng_uint32 iWhitepointx,
+                                 mng_uint32 iWhitepointy,
+                                 mng_uint32 iRedx,
+                                 mng_uint32 iRedy,
+                                 mng_uint32 iGreenx,
+                                 mng_uint32 iGreeny,
+                                 mng_uint32 iBluex,
+                                 mng_uint32 iBluey)
 {
   mng_ani_chrmp pCHRM;
 
@@ -1867,10 +2474,10 @@ mng_retcode create_ani_chrm (mng_datap  pData,
   {
     MNG_ALLOC (pData, pCHRM, sizeof (mng_ani_chrm))
 
-    pCHRM->sHeader.fCleanup = free_ani_chrm;
-    pCHRM->sHeader.fProcess = process_ani_chrm;
+    pCHRM->sHeader.fCleanup = mng_free_ani_chrm;
+    pCHRM->sHeader.fProcess = mng_process_ani_chrm;
 
-    add_ani_object (pData, (mng_object_headerp)pCHRM);
+    mng_add_ani_object (pData, (mng_object_headerp)pCHRM);
 
     pCHRM->bEmpty           = bEmpty;
     pCHRM->iWhitepointx     = iWhitepointx;
@@ -1892,8 +2499,8 @@ mng_retcode create_ani_chrm (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_chrm (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_chrm (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_CHRM, MNG_LC_START)
@@ -1910,8 +2517,8 @@ mng_retcode free_ani_chrm (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_chrm (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_chrm (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_chrmp pCHRM = (mng_ani_chrmp)pObject;
 
@@ -1954,9 +2561,9 @@ mng_retcode process_ani_chrm (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_srgb (mng_datap pData,
-                             mng_bool  bEmpty,
-                             mng_uint8 iRenderingintent)
+mng_retcode mng_create_ani_srgb (mng_datap pData,
+                                 mng_bool  bEmpty,
+                                 mng_uint8 iRenderingintent)
 {
   mng_ani_srgbp pSRGB;
 
@@ -1968,10 +2575,10 @@ mng_retcode create_ani_srgb (mng_datap pData,
   {
     MNG_ALLOC (pData, pSRGB, sizeof (mng_ani_srgb))
 
-    pSRGB->sHeader.fCleanup = free_ani_srgb;
-    pSRGB->sHeader.fProcess = process_ani_srgb;
+    pSRGB->sHeader.fCleanup = mng_free_ani_srgb;
+    pSRGB->sHeader.fProcess = mng_process_ani_srgb;
 
-    add_ani_object (pData, (mng_object_headerp)pSRGB);
+    mng_add_ani_object (pData, (mng_object_headerp)pSRGB);
 
     pSRGB->bEmpty           = bEmpty;
     pSRGB->iRenderingintent = iRenderingintent;
@@ -1986,8 +2593,8 @@ mng_retcode create_ani_srgb (mng_datap pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_srgb (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_srgb (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_SRGB, MNG_LC_START)
@@ -2004,8 +2611,8 @@ mng_retcode free_ani_srgb (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_srgb (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_srgb (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_srgbp pSRGB = (mng_ani_srgbp)pObject;
 
@@ -2034,10 +2641,10 @@ mng_retcode process_ani_srgb (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_iccp (mng_datap  pData,
-                             mng_bool   bEmpty,
-                             mng_uint32 iProfilesize,
-                             mng_ptr    pProfile)
+mng_retcode mng_create_ani_iccp (mng_datap  pData,
+                                 mng_bool   bEmpty,
+                                 mng_uint32 iProfilesize,
+                                 mng_ptr    pProfile)
 {
   mng_ani_iccpp pICCP;
 
@@ -2049,10 +2656,10 @@ mng_retcode create_ani_iccp (mng_datap  pData,
   {
     MNG_ALLOC (pData, pICCP, sizeof (mng_ani_iccp))
 
-    pICCP->sHeader.fCleanup = free_ani_iccp;
-    pICCP->sHeader.fProcess = process_ani_iccp;
+    pICCP->sHeader.fCleanup = mng_free_ani_iccp;
+    pICCP->sHeader.fProcess = mng_process_ani_iccp;
 
-    add_ani_object (pData, (mng_object_headerp)pICCP);
+    mng_add_ani_object (pData, (mng_object_headerp)pICCP);
 
     pICCP->bEmpty           = bEmpty;
     pICCP->iProfilesize     = iProfilesize;
@@ -2073,8 +2680,8 @@ mng_retcode create_ani_iccp (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_iccp (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_iccp (mng_datap   pData,
+                               mng_objectp pObject)
 {
   mng_ani_iccpp pICCP = (mng_ani_iccpp)pObject;
 
@@ -2096,8 +2703,8 @@ mng_retcode free_ani_iccp (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_iccp (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_iccp (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_iccpp pICCP = (mng_ani_iccpp)pObject;
 
@@ -2137,10 +2744,10 @@ mng_retcode process_ani_iccp (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_bkgd (mng_datap  pData,
-                             mng_uint16 iRed,
-                             mng_uint16 iGreen,
-                             mng_uint16 iBlue)
+mng_retcode mng_create_ani_bkgd (mng_datap  pData,
+                                 mng_uint16 iRed,
+                                 mng_uint16 iGreen,
+                                 mng_uint16 iBlue)
 {
   mng_ani_bkgdp pBKGD;
 
@@ -2152,10 +2759,10 @@ mng_retcode create_ani_bkgd (mng_datap  pData,
   {
     MNG_ALLOC (pData, pBKGD, sizeof (mng_ani_bkgd))
 
-    pBKGD->sHeader.fCleanup = free_ani_bkgd;
-    pBKGD->sHeader.fProcess = process_ani_bkgd;
+    pBKGD->sHeader.fCleanup = mng_free_ani_bkgd;
+    pBKGD->sHeader.fProcess = mng_process_ani_bkgd;
 
-    add_ani_object (pData, (mng_object_headerp)pBKGD);
+    mng_add_ani_object (pData, (mng_object_headerp)pBKGD);
 
     pBKGD->iRed             = iRed;
     pBKGD->iGreen           = iGreen;
@@ -2171,8 +2778,8 @@ mng_retcode create_ani_bkgd (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_bkgd (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_bkgd (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_BKGD, MNG_LC_START)
@@ -2189,8 +2796,8 @@ mng_retcode free_ani_bkgd (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_bkgd (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_bkgd (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_bkgdp pBKGD = (mng_ani_bkgdp)pObject;
 
@@ -2213,14 +2820,14 @@ mng_retcode process_ani_bkgd (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_loop (mng_datap   pData,
-                             mng_uint8   iLevel,
-                             mng_uint32  iRepeatcount,
-                             mng_uint8   iTermcond,
-                             mng_uint32  iItermin,
-                             mng_uint32  iItermax,
-                             mng_uint32  iCount,
-                             mng_uint32p pSignals)
+mng_retcode mng_create_ani_loop (mng_datap   pData,
+                                 mng_uint8   iLevel,
+                                 mng_uint32  iRepeatcount,
+                                 mng_uint8   iTermcond,
+                                 mng_uint32  iItermin,
+                                 mng_uint32  iItermax,
+                                 mng_uint32  iCount,
+                                 mng_uint32p pSignals)
 {
   mng_ani_loopp pLOOP;
 
@@ -2232,10 +2839,10 @@ mng_retcode create_ani_loop (mng_datap   pData,
   {
     MNG_ALLOC (pData, pLOOP, sizeof (mng_ani_loop))
 
-    pLOOP->sHeader.fCleanup = free_ani_loop;
-    pLOOP->sHeader.fProcess = process_ani_loop;
+    pLOOP->sHeader.fCleanup = mng_free_ani_loop;
+    pLOOP->sHeader.fProcess = mng_process_ani_loop;
 
-    add_ani_object (pData, (mng_object_headerp)pLOOP);
+    mng_add_ani_object (pData, (mng_object_headerp)pLOOP);
 
     pLOOP->iLevel           = iLevel;
     pLOOP->iRepeatcount     = iRepeatcount;
@@ -2262,8 +2869,8 @@ mng_retcode create_ani_loop (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_loop (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_loop (mng_datap   pData,
+                               mng_objectp pObject)
 {
   mng_ani_loopp pLOOP = (mng_ani_loopp)pObject;
 
@@ -2285,8 +2892,8 @@ mng_retcode free_ani_loop (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_loop (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_loop (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_loopp pLOOP = (mng_ani_loopp)pObject;
 
@@ -2295,6 +2902,9 @@ mng_retcode process_ani_loop (mng_datap   pData,
 #endif
                                        /* just reset the running counter */
   pLOOP->iRunningcount = pLOOP->iRepeatcount;
+                                       /* iteration=0 means we're skipping ! */
+  if ((!pData->bSkipping) && (pLOOP->iRepeatcount == 0))
+    pData->bSkipping = MNG_TRUE;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_LOOP, MNG_LC_END)
@@ -2306,8 +2916,8 @@ mng_retcode process_ani_loop (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_endl (mng_datap pData,
-                             mng_uint8 iLevel)
+mng_retcode mng_create_ani_endl (mng_datap pData,
+                                 mng_uint8 iLevel)
 {
   mng_ani_endlp pENDL;
 
@@ -2319,10 +2929,10 @@ mng_retcode create_ani_endl (mng_datap pData,
   {
     MNG_ALLOC (pData, pENDL, sizeof (mng_ani_endl))
 
-    pENDL->sHeader.fCleanup = free_ani_endl;
-    pENDL->sHeader.fProcess = process_ani_endl;
+    pENDL->sHeader.fCleanup = mng_free_ani_endl;
+    pENDL->sHeader.fProcess = mng_process_ani_endl;
 
-    add_ani_object (pData, (mng_object_headerp)pENDL);
+    mng_add_ani_object (pData, (mng_object_headerp)pENDL);
 
     pENDL->iLevel           = iLevel;
   }
@@ -2336,8 +2946,8 @@ mng_retcode create_ani_endl (mng_datap pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_endl (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_endl (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_ENDL, MNG_LC_START)
@@ -2354,8 +2964,8 @@ mng_retcode free_ani_endl (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_endl (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_endl (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_endlp pENDL = (mng_ani_endlp)pObject;
   mng_ani_loopp pLOOP;
@@ -2364,7 +2974,8 @@ mng_retcode process_ani_endl (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_ENDL, MNG_LC_START)
 #endif
 
-  if ((pData->bDisplaying) && (pData->bRunning))
+  if (((pData->bDisplaying) && ((pData->bRunning) || (pData->bSearching))) ||
+      (pData->bReading)                                                       )
   {
     pLOOP = pENDL->pLOOP;              /* determine matching LOOP */
 
@@ -2373,8 +2984,8 @@ mng_retcode process_ani_endl (mng_datap   pData,
       pLOOP = (mng_ani_loopp)pENDL->sHeader.pPrev;
 
       while ((pLOOP) &&
-             ((pLOOP->sHeader.fCleanup != free_ani_loop) ||
-              (pLOOP->iLevel           != pENDL->iLevel)    ))
+             ((pLOOP->sHeader.fCleanup != mng_free_ani_loop) ||
+              (pLOOP->iLevel           != pENDL->iLevel)        ))
         pLOOP = pLOOP->sHeader.pPrev;
     }
                                        /* got it now ? */
@@ -2385,29 +2996,38 @@ mng_retcode process_ani_endl (mng_datap   pData,
       if ((pLOOP->iRunningcount) && (pLOOP->iRunningcount < 0x7fffffffL))
         pLOOP->iRunningcount--;
 
-      /* TODO: we're cheating out on the termination_condition,
-         iteration_min, iteration_max and possible signals;
-         the code is just not ready for that can of worms.... */
-
-      if (!pLOOP->iRunningcount)       /* reached zero ? */
-      {                                /* was this the outer LOOP ? */
-        if (pData->pFirstaniobj == (mng_objectp)pLOOP)
-          pData->bHasLOOP = MNG_FALSE;
+      if ((pData->bReading) && (pLOOP->iRunningcount >= 0x7fffffffL))
+      {
+        pData->iTotalframes   = 0x7fffffffL;
+        pData->iTotallayers   = 0x7fffffffL;
+        pData->iTotalplaytime = 0x7fffffffL;
       }
       else
       {
-        if (pData->pCurraniobj)        /* was we processing objects ? */
-          pData->pCurraniobj = pLOOP;  /* then restart with LOOP */
-        else                           /* else restart behind LOOP !!! */
-          pData->pCurraniobj = pLOOP->sHeader.pNext;
+        /* TODO: we're cheating out on the termination_condition,
+           iteration_min, iteration_max and possible signals;
+           the code is just not ready for that can of worms.... */
+
+        if (!pLOOP->iRunningcount)     /* reached zero ? */
+        {                              /* was this the outer LOOP ? */
+          if (pData->pFirstaniobj == (mng_objectp)pLOOP)  /* TODO: THIS IS WRONG!! */
+            pData->bHasLOOP = MNG_FALSE;
+        }
+        else
+        {
+          if (pData->pCurraniobj)      /* was we processing objects ? */
+            pData->pCurraniobj = pLOOP;/* then restart with LOOP */
+          else                         /* else restart behind LOOP !!! */
+            pData->pCurraniobj = pLOOP->sHeader.pNext;
+        }
       }
+                                       /* does this match a 'skipping' LOOP? */
+      if ((pData->bSkipping) && (pLOOP->iRepeatcount == 0))
+        pData->bSkipping = MNG_FALSE;
     }
     else
-    {
-      MNG_ERROR (pData, 1234);
-      /* TODO: error abort ??? */
+      MNG_ERROR (pData, MNG_NOMATCHINGLOOP)
 
-    }
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -2420,8 +3040,8 @@ mng_retcode process_ani_endl (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_defi (mng_datap pData)
-{
+mng_retcode mng_create_ani_defi (mng_datap pData)
+{               
   mng_ani_defip pDEFI;
 
 #ifdef MNG_SUPPORT_TRACE
@@ -2432,10 +3052,10 @@ mng_retcode create_ani_defi (mng_datap pData)
   {
     MNG_ALLOC (pData, pDEFI, sizeof (mng_ani_defi))
 
-    pDEFI->sHeader.fCleanup = free_ani_defi;
-    pDEFI->sHeader.fProcess = process_ani_defi;
+    pDEFI->sHeader.fCleanup = mng_free_ani_defi;
+    pDEFI->sHeader.fProcess = mng_process_ani_defi;
 
-    add_ani_object (pData, (mng_object_headerp)pDEFI);
+    mng_add_ani_object (pData, (mng_object_headerp)pDEFI);
 
     pDEFI->iId              = pData->iDEFIobjectid;
     pDEFI->bHasdonotshow    = pData->bDEFIhasdonotshow;
@@ -2461,8 +3081,8 @@ mng_retcode create_ani_defi (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_defi (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_defi (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_DEFI, MNG_LC_START)
@@ -2479,8 +3099,8 @@ mng_retcode free_ani_defi (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_defi (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_defi (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_defip pDEFI = (mng_ani_defip)pObject;
   mng_retcode   iRetcode;
@@ -2503,7 +3123,7 @@ mng_retcode process_ani_defi (mng_datap   pData,
   pData->iDEFIclipt        = pDEFI->iClipt;
   pData->iDEFIclipb        = pDEFI->iClipb;
 
-  iRetcode = process_display_defi (pData);
+  iRetcode = mng_process_display_defi (pData);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -2518,13 +3138,13 @@ mng_retcode process_ani_defi (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_basi (mng_datap  pData,
-                             mng_uint16 iRed,
-                             mng_uint16 iGreen,
-                             mng_uint16 iBlue,
-                             mng_bool   bHasalpha,
-                             mng_uint16 iAlpha,
-                             mng_uint8  iViewable)
+mng_retcode mng_create_ani_basi (mng_datap  pData,
+                                 mng_uint16 iRed,
+                                 mng_uint16 iGreen,
+                                 mng_uint16 iBlue,
+                                 mng_bool   bHasalpha,
+                                 mng_uint16 iAlpha,
+                                 mng_uint8  iViewable)
 {
   mng_ani_basip pBASI;
 
@@ -2536,10 +3156,10 @@ mng_retcode create_ani_basi (mng_datap  pData,
   {
     MNG_ALLOC (pData, pBASI, sizeof (mng_ani_basi))
 
-    pBASI->sHeader.fCleanup = free_ani_basi;
-    pBASI->sHeader.fProcess = process_ani_basi;
+    pBASI->sHeader.fCleanup = mng_free_ani_basi;
+    pBASI->sHeader.fProcess = mng_process_ani_basi;
 
-    add_ani_object (pData, (mng_object_headerp)pBASI);
+    mng_add_ani_object (pData, (mng_object_headerp)pBASI);
 
     pBASI->iRed             = iRed;
     pBASI->iGreen           = iGreen;
@@ -2558,8 +3178,8 @@ mng_retcode create_ani_basi (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_basi (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_basi (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_BASI, MNG_LC_START)
@@ -2576,8 +3196,8 @@ mng_retcode free_ani_basi (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_basi (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_basi (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_basip pBASI = (mng_ani_basip)pObject;
   mng_retcode   iRetcode;
@@ -2586,8 +3206,8 @@ mng_retcode process_ani_basi (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_BASI, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_basi (pData, pBASI->iRed, pBASI->iGreen, pBASI->iBlue,
-                                   pBASI->bHasalpha, pBASI->iAlpha, pBASI->iViewable);
+  iRetcode = mng_process_display_basi (pData, pBASI->iRed, pBASI->iGreen, pBASI->iBlue,
+                                       pBASI->bHasalpha, pBASI->iAlpha, pBASI->iViewable);
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_BASI, MNG_LC_END)
@@ -2599,17 +3219,17 @@ mng_retcode process_ani_basi (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_clon (mng_datap  pData,
-                             mng_uint16 iCloneid,
-                             mng_uint16 iSourceid,
-                             mng_uint8  iClonetype,
-                             mng_bool   bHasdonotshow,
-                             mng_uint8  iDonotshow,
-                             mng_uint8  iConcrete,
-                             mng_bool   bHasloca,
-                             mng_uint8  iLocatype,
-                             mng_int32  iLocax,
-                             mng_int32  iLocay)
+mng_retcode mng_create_ani_clon (mng_datap  pData,
+                                 mng_uint16 iCloneid,
+                                 mng_uint16 iSourceid,
+                                 mng_uint8  iClonetype,
+                                 mng_bool   bHasdonotshow,
+                                 mng_uint8  iDonotshow,
+                                 mng_uint8  iConcrete,
+                                 mng_bool   bHasloca,
+                                 mng_uint8  iLocatype,
+                                 mng_int32  iLocax,
+                                 mng_int32  iLocay)
 {
   mng_ani_clonp pCLON;
 
@@ -2621,10 +3241,10 @@ mng_retcode create_ani_clon (mng_datap  pData,
   {
     MNG_ALLOC (pData, pCLON, sizeof (mng_ani_clon))
 
-    pCLON->sHeader.fCleanup = free_ani_clon;
-    pCLON->sHeader.fProcess = process_ani_clon;
+    pCLON->sHeader.fCleanup = mng_free_ani_clon;
+    pCLON->sHeader.fProcess = mng_process_ani_clon;
 
-    add_ani_object (pData, (mng_object_headerp)pCLON);
+    mng_add_ani_object (pData, (mng_object_headerp)pCLON);
 
     pCLON->iCloneid         = iCloneid;
     pCLON->iSourceid        = iSourceid;
@@ -2647,8 +3267,8 @@ mng_retcode create_ani_clon (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_clon (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_clon (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_CLON, MNG_LC_START)
@@ -2665,8 +3285,8 @@ mng_retcode free_ani_clon (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_clon (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_clon (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_clonp pCLON = (mng_ani_clonp)pObject;
   mng_retcode   iRetcode;
@@ -2675,11 +3295,11 @@ mng_retcode process_ani_clon (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_CLON, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_clon (pData, pCLON->iCloneid, pCLON->iSourceid,
-                                   pCLON->iClonetype, pCLON->bHasdonotshow,
-                                   pCLON->iDonotshow, pCLON->iConcrete,
-                                   pCLON->bHasloca, pCLON->iLocatype,
-                                   pCLON->iLocax, pCLON->iLocay);
+  iRetcode = mng_process_display_clon (pData, pCLON->iCloneid, pCLON->iSourceid,
+                                       pCLON->iClonetype, pCLON->bHasdonotshow,
+                                       pCLON->iDonotshow, pCLON->iConcrete,
+                                       pCLON->bHasloca, pCLON->iLocatype,
+                                       pCLON->iLocax, pCLON->iLocay);
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_CLON, MNG_LC_END)
@@ -2691,13 +3311,13 @@ mng_retcode process_ani_clon (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_back (mng_datap  pData,
-                             mng_uint16 iRed,
-                             mng_uint16 iGreen,
-                             mng_uint16 iBlue,
-                             mng_uint8  iMandatory,
-                             mng_uint16 iImageid,
-                             mng_uint8  iTile)
+mng_retcode mng_create_ani_back (mng_datap  pData,
+                                 mng_uint16 iRed,
+                                 mng_uint16 iGreen,
+                                 mng_uint16 iBlue,
+                                 mng_uint8  iMandatory,
+                                 mng_uint16 iImageid,
+                                 mng_uint8  iTile)
 {
   mng_ani_backp pBACK;
 
@@ -2709,10 +3329,10 @@ mng_retcode create_ani_back (mng_datap  pData,
   {
     MNG_ALLOC (pData, pBACK, sizeof (mng_ani_back))
 
-    pBACK->sHeader.fCleanup = free_ani_back;
-    pBACK->sHeader.fProcess = process_ani_back;
+    pBACK->sHeader.fCleanup = mng_free_ani_back;
+    pBACK->sHeader.fProcess = mng_process_ani_back;
 
-    add_ani_object (pData, (mng_object_headerp)pBACK);
+    mng_add_ani_object (pData, (mng_object_headerp)pBACK);
 
     pBACK->iRed             = iRed;
     pBACK->iGreen           = iGreen;
@@ -2731,8 +3351,8 @@ mng_retcode create_ani_back (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_back (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_back (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_BACK, MNG_LC_START)
@@ -2749,8 +3369,8 @@ mng_retcode free_ani_back (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_back (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_back (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_backp pBACK = (mng_ani_backp)pObject;
 
@@ -2775,18 +3395,18 @@ mng_retcode process_ani_back (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_fram (mng_datap  pData,
-                             mng_uint8  iFramemode,
-                             mng_uint8  iChangedelay,
-                             mng_uint32 iDelay,
-                             mng_uint8  iChangetimeout,
-                             mng_uint32 iTimeout,
-                             mng_uint8  iChangeclipping,
-                             mng_uint8  iCliptype,
-                             mng_int32  iClipl,
-                             mng_int32  iClipr,
-                             mng_int32  iClipt,
-                             mng_int32  iClipb)
+mng_retcode mng_create_ani_fram (mng_datap  pData,
+                                 mng_uint8  iFramemode,
+                                 mng_uint8  iChangedelay,
+                                 mng_uint32 iDelay,
+                                 mng_uint8  iChangetimeout,
+                                 mng_uint32 iTimeout,
+                                 mng_uint8  iChangeclipping,
+                                 mng_uint8  iCliptype,
+                                 mng_int32  iClipl,
+                                 mng_int32  iClipr,
+                                 mng_int32  iClipt,
+                                 mng_int32  iClipb)
 {
   mng_ani_framp pFRAM;
 
@@ -2798,10 +3418,10 @@ mng_retcode create_ani_fram (mng_datap  pData,
   {
     MNG_ALLOC (pData, pFRAM, sizeof (mng_ani_fram))
 
-    pFRAM->sHeader.fCleanup = free_ani_fram;
-    pFRAM->sHeader.fProcess = process_ani_fram;
+    pFRAM->sHeader.fCleanup = mng_free_ani_fram;
+    pFRAM->sHeader.fProcess = mng_process_ani_fram;
 
-    add_ani_object (pData, (mng_object_headerp)pFRAM);
+    mng_add_ani_object (pData, (mng_object_headerp)pFRAM);
 
     pFRAM->iFramemode       = iFramemode;
     pFRAM->iChangedelay     = iChangedelay;
@@ -2825,8 +3445,8 @@ mng_retcode create_ani_fram (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_fram (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_fram (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_FRAM, MNG_LC_START)
@@ -2843,8 +3463,8 @@ mng_retcode free_ani_fram (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_fram (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_fram (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_framp pFRAM = (mng_ani_framp)pObject;
   mng_retcode   iRetcode;
@@ -2855,16 +3475,16 @@ mng_retcode process_ani_fram (mng_datap   pData,
 
   if (pData->iBreakpoint)              /* previously broken ? */
   {
-    iRetcode           = process_display_fram2 (pData);
+    iRetcode           = mng_process_display_fram2 (pData);
     pData->iBreakpoint = 0;            /* not again */
   }
   else
-    iRetcode = process_display_fram (pData, pFRAM->iFramemode,
-                                     pFRAM->iChangedelay, pFRAM->iDelay,
-                                     pFRAM->iChangetimeout, pFRAM->iTimeout,
-                                     pFRAM->iChangeclipping, pFRAM->iCliptype,
-                                     pFRAM->iClipl, pFRAM->iClipr,
-                                     pFRAM->iClipt, pFRAM->iClipb);
+    iRetcode = mng_process_display_fram (pData, pFRAM->iFramemode,
+                                         pFRAM->iChangedelay, pFRAM->iDelay,
+                                         pFRAM->iChangetimeout, pFRAM->iTimeout,
+                                         pFRAM->iChangeclipping, pFRAM->iCliptype,
+                                         pFRAM->iClipl, pFRAM->iClipr,
+                                         pFRAM->iClipt, pFRAM->iClipb);
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_FRAM, MNG_LC_END)
@@ -2876,12 +3496,12 @@ mng_retcode process_ani_fram (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_move (mng_datap  pData,
-                             mng_uint16 iFirstid,
-                             mng_uint16 iLastid,
-                             mng_uint8  iType,
-                             mng_int32  iLocax,
-                             mng_int32  iLocay)
+mng_retcode mng_create_ani_move (mng_datap  pData,
+                                 mng_uint16 iFirstid,
+                                 mng_uint16 iLastid,
+                                 mng_uint8  iType,
+                                 mng_int32  iLocax,
+                                 mng_int32  iLocay)
 {
   mng_ani_movep pMOVE;
 
@@ -2893,10 +3513,10 @@ mng_retcode create_ani_move (mng_datap  pData,
   {
     MNG_ALLOC (pData, pMOVE, sizeof (mng_ani_move))
 
-    pMOVE->sHeader.fCleanup = free_ani_move;
-    pMOVE->sHeader.fProcess = process_ani_move;
+    pMOVE->sHeader.fCleanup = mng_free_ani_move;
+    pMOVE->sHeader.fProcess = mng_process_ani_move;
 
-    add_ani_object (pData, (mng_object_headerp)pMOVE);
+    mng_add_ani_object (pData, (mng_object_headerp)pMOVE);
 
     pMOVE->iFirstid         = iFirstid;
     pMOVE->iLastid          = iLastid;
@@ -2914,8 +3534,8 @@ mng_retcode create_ani_move (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_move (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_move (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_MOVE, MNG_LC_START)
@@ -2932,8 +3552,8 @@ mng_retcode free_ani_move (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_move (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_move (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_retcode   iRetcode;
   mng_ani_movep pMOVE = (mng_ani_movep)pObject;
@@ -2942,9 +3562,8 @@ mng_retcode process_ani_move (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_MOVE, MNG_LC_START)
 #endif
                                        /* re-process the MOVE chunk */
-  iRetcode = process_display_move (pData, pMOVE->iFirstid, pMOVE->iLastid,
-                                          pMOVE->iType,
-                                          pMOVE->iLocax, pMOVE->iLocay);
+  iRetcode = mng_process_display_move (pData, pMOVE->iFirstid, pMOVE->iLastid,
+                                       pMOVE->iType, pMOVE->iLocax, pMOVE->iLocay);
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_MOVE, MNG_LC_END)
@@ -2956,14 +3575,14 @@ mng_retcode process_ani_move (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_clip (mng_datap  pData,
-                             mng_uint16 iFirstid,
-                             mng_uint16 iLastid,
-                             mng_uint8  iType,
-                             mng_int32  iClipl,
-                             mng_int32  iClipr,
-                             mng_int32  iClipt,
-                             mng_int32  iClipb)
+mng_retcode mng_create_ani_clip (mng_datap  pData,
+                                 mng_uint16 iFirstid,
+                                 mng_uint16 iLastid,
+                                 mng_uint8  iType,
+                                 mng_int32  iClipl,
+                                 mng_int32  iClipr,
+                                 mng_int32  iClipt,
+                                 mng_int32  iClipb)
 {
   mng_ani_clipp pCLIP;
 
@@ -2975,10 +3594,10 @@ mng_retcode create_ani_clip (mng_datap  pData,
   {
     MNG_ALLOC (pData, pCLIP, sizeof (mng_ani_clip))
 
-    pCLIP->sHeader.fCleanup = free_ani_clip;
-    pCLIP->sHeader.fProcess = process_ani_clip;
+    pCLIP->sHeader.fCleanup = mng_free_ani_clip;
+    pCLIP->sHeader.fProcess = mng_process_ani_clip;
 
-    add_ani_object (pData, (mng_object_headerp)pCLIP);
+    mng_add_ani_object (pData, (mng_object_headerp)pCLIP);
 
     pCLIP->iFirstid         = iFirstid;
     pCLIP->iLastid          = iLastid;
@@ -2998,8 +3617,8 @@ mng_retcode create_ani_clip (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_clip (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_clip (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_CLIP, MNG_LC_START)
@@ -3016,8 +3635,8 @@ mng_retcode free_ani_clip (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_clip (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_clip (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_retcode   iRetcode;
   mng_ani_clipp pCLIP = (mng_ani_clipp)pObject;
@@ -3026,10 +3645,9 @@ mng_retcode process_ani_clip (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_CLIP, MNG_LC_START)
 #endif
                                        /* re-process the CLIP chunk */
-  iRetcode = process_display_clip (pData, pCLIP->iFirstid, pCLIP->iLastid,
-                                          pCLIP->iType,
-                                          pCLIP->iClipl, pCLIP->iClipr,
-                                          pCLIP->iClipt, pCLIP->iClipb);
+  iRetcode = mng_process_display_clip (pData, pCLIP->iFirstid, pCLIP->iLastid,
+                                       pCLIP->iType, pCLIP->iClipl, pCLIP->iClipr,
+                                       pCLIP->iClipt, pCLIP->iClipb);
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_CLIP, MNG_LC_END)
@@ -3041,10 +3659,10 @@ mng_retcode process_ani_clip (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_show (mng_datap  pData,
-                             mng_uint16 iFirstid,
-                             mng_uint16 iLastid,
-                             mng_uint8  iMode)
+mng_retcode mng_create_ani_show (mng_datap  pData,
+                                 mng_uint16 iFirstid,
+                                 mng_uint16 iLastid,
+                                 mng_uint8  iMode)
 {
   mng_ani_showp pSHOW;
 
@@ -3056,10 +3674,10 @@ mng_retcode create_ani_show (mng_datap  pData,
   {
     MNG_ALLOC (pData, pSHOW, sizeof (mng_ani_show))
 
-    pSHOW->sHeader.fCleanup = free_ani_show;
-    pSHOW->sHeader.fProcess = process_ani_show;
+    pSHOW->sHeader.fCleanup = mng_free_ani_show;
+    pSHOW->sHeader.fProcess = mng_process_ani_show;
 
-    add_ani_object (pData, (mng_object_headerp)pSHOW);
+    mng_add_ani_object (pData, (mng_object_headerp)pSHOW);
 
     pSHOW->iFirstid         = iFirstid;
     pSHOW->iLastid          = iLastid;
@@ -3075,8 +3693,8 @@ mng_retcode create_ani_show (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_show (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_show (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_SHOW, MNG_LC_START)
@@ -3093,8 +3711,8 @@ mng_retcode free_ani_show (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_show (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_show (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_retcode   iRetcode;
   mng_ani_showp pSHOW = (mng_ani_showp)pObject;
@@ -3105,7 +3723,7 @@ mng_retcode process_ani_show (mng_datap   pData,
 
   if (pData->iBreakpoint)              /* returning from breakpoint ? */
   {
-    iRetcode           = process_display_show (pData);
+    iRetcode           = mng_process_display_show (pData);
   }
   else
   {                                    /* "re-run" SHOW chunk */
@@ -3113,7 +3731,7 @@ mng_retcode process_ani_show (mng_datap   pData,
     pData->iSHOWfromid = pSHOW->iFirstid;
     pData->iSHOWtoid   = pSHOW->iLastid;
 
-    iRetcode           = process_display_show (pData);
+    iRetcode           = mng_process_display_show (pData);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3126,11 +3744,11 @@ mng_retcode process_ani_show (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_term (mng_datap  pData,
-                             mng_uint8  iTermaction,
-                             mng_uint8  iIteraction,
-                             mng_uint32 iDelay,
-                             mng_uint32 iItermax)
+mng_retcode mng_create_ani_term (mng_datap  pData,
+                                 mng_uint8  iTermaction,
+                                 mng_uint8  iIteraction,
+                                 mng_uint32 iDelay,
+                                 mng_uint32 iItermax)
 {
   mng_ani_termp pTERM;
 
@@ -3142,10 +3760,10 @@ mng_retcode create_ani_term (mng_datap  pData,
   {
     MNG_ALLOC (pData, pTERM, sizeof (mng_ani_term))
 
-    pTERM->sHeader.fCleanup = free_ani_term;
-    pTERM->sHeader.fProcess = process_ani_term;
+    pTERM->sHeader.fCleanup = mng_free_ani_term;
+    pTERM->sHeader.fProcess = mng_process_ani_term;
 
-    add_ani_object (pData, (mng_object_headerp)pTERM);
+    mng_add_ani_object (pData, (mng_object_headerp)pTERM);
 
     pTERM->iTermaction      = iTermaction;
     pTERM->iIteraction      = iIteraction;
@@ -3162,8 +3780,8 @@ mng_retcode create_ani_term (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_term (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_term (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_TERM, MNG_LC_START)
@@ -3180,8 +3798,8 @@ mng_retcode free_ani_term (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_term (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_term (mng_datap   pData,
+                                  mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_TERM, MNG_LC_START)
@@ -3199,7 +3817,7 @@ mng_retcode process_ani_term (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_save (mng_datap pData)
+mng_retcode mng_create_ani_save (mng_datap pData)
 {
   mng_ani_savep pSAVE;
 
@@ -3211,10 +3829,10 @@ mng_retcode create_ani_save (mng_datap pData)
   {
     MNG_ALLOC (pData, pSAVE, sizeof (mng_ani_save))
 
-    pSAVE->sHeader.fCleanup = free_ani_save;
-    pSAVE->sHeader.fProcess = process_ani_save;
+    pSAVE->sHeader.fCleanup = mng_free_ani_save;
+    pSAVE->sHeader.fProcess = mng_process_ani_save;
 
-    add_ani_object (pData, (mng_object_headerp)pSAVE);
+    mng_add_ani_object (pData, (mng_object_headerp)pSAVE);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3226,8 +3844,8 @@ mng_retcode create_ani_save (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_save (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_save (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_SAVE, MNG_LC_START)
@@ -3244,8 +3862,8 @@ mng_retcode free_ani_save (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_save (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_save (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_retcode iRetcode;
 
@@ -3253,7 +3871,7 @@ mng_retcode process_ani_save (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_SAVE, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_save (pData);
+  iRetcode = mng_process_display_save (pData);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3268,7 +3886,9 @@ mng_retcode process_ani_save (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_seek (mng_datap pData)
+mng_retcode mng_create_ani_seek (mng_datap  pData,
+                                 mng_uint32 iSegmentnamesize,
+                                 mng_pchar  zSegmentname)
 {
   mng_ani_seekp pSEEK;
 
@@ -3280,10 +3900,20 @@ mng_retcode create_ani_seek (mng_datap pData)
   {
     MNG_ALLOC (pData, pSEEK, sizeof (mng_ani_seek))
 
-    pSEEK->sHeader.fCleanup = free_ani_seek;
-    pSEEK->sHeader.fProcess = process_ani_seek;
+    pSEEK->sHeader.fCleanup = mng_free_ani_seek;
+    pSEEK->sHeader.fProcess = mng_process_ani_seek;
 
-    add_ani_object (pData, (mng_object_headerp)pSEEK);
+    mng_add_ani_object (pData, (mng_object_headerp)pSEEK);
+
+    pSEEK->iSegmentnamesize = iSegmentnamesize;
+
+    if (iSegmentnamesize)
+    {
+      MNG_ALLOC (pData, pSEEK->zSegmentname, iSegmentnamesize + 1)
+      MNG_COPY (pSEEK->zSegmentname, zSegmentname, iSegmentnamesize)
+    }
+
+    pData->pLastseek = (mng_objectp)pSEEK;
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3295,12 +3925,17 @@ mng_retcode create_ani_seek (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_seek (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_seek (mng_datap   pData,
+                               mng_objectp pObject)
 {
+  mng_ani_seekp pSEEK = (mng_ani_seekp)pObject;
+
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_SEEK, MNG_LC_START)
 #endif
+
+  if (pSEEK->iSegmentnamesize)
+    MNG_FREEX (pData, pSEEK->zSegmentname, pSEEK->iSegmentnamesize + 1)
 
   MNG_FREEX (pData, pObject, sizeof (mng_ani_seek))
 
@@ -3313,16 +3948,42 @@ mng_retcode free_ani_seek (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_seek (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_seek (mng_datap   pData,
+                                  mng_objectp pObject)
 {
-  mng_retcode iRetcode;
+  mng_ani_seekp pSEEK = (mng_ani_seekp)pObject;
+  mng_retcode   iRetcode;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_SEEK, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_seek (pData);
+#ifdef MNG_SUPPORT_DYNAMICMNG
+  if (!pData->bStopafterseek)          /* can we really process this one ? */
+#endif  
+  {
+    pData->pLastseek = pObject;
+
+    if (pData->fProcessseek)           /* inform the app ? */
+    {
+      mng_bool  bOke;
+      mng_pchar zName;
+
+      MNG_ALLOC (pData, zName, pSEEK->iSegmentnamesize + 1)
+
+      if (pSEEK->iSegmentnamesize)
+        MNG_COPY (zName, pSEEK->zSegmentname, pSEEK->iSegmentnamesize)
+
+      bOke = pData->fProcessseek ((mng_handle)pData, zName);
+
+      MNG_FREEX (pData, zName, pSEEK->iSegmentnamesize + 1)
+
+      if (!bOke)
+        MNG_ERROR (pData, MNG_APPMISCERROR)
+    }
+  }
+
+  iRetcode = mng_process_display_seek (pData);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3337,14 +3998,14 @@ mng_retcode process_ani_seek (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_dhdr (mng_datap  pData,
-                             mng_uint16 iObjectid,
-                             mng_uint8  iImagetype,
-                             mng_uint8  iDeltatype,
-                             mng_uint32 iBlockwidth,
-                             mng_uint32 iBlockheight,
-                             mng_uint32 iBlockx,
-                             mng_uint32 iBlocky)
+mng_retcode mng_create_ani_dhdr (mng_datap  pData,
+                                 mng_uint16 iObjectid,
+                                 mng_uint8  iImagetype,
+                                 mng_uint8  iDeltatype,
+                                 mng_uint32 iBlockwidth,
+                                 mng_uint32 iBlockheight,
+                                 mng_uint32 iBlockx,
+                                 mng_uint32 iBlocky)
 {
   mng_ani_dhdrp pDHDR;
 
@@ -3356,8 +4017,8 @@ mng_retcode create_ani_dhdr (mng_datap  pData,
   {
     MNG_ALLOC (pData, pDHDR, sizeof (mng_ani_dhdr))
 
-    pDHDR->sHeader.fCleanup = free_ani_dhdr;
-    pDHDR->sHeader.fProcess = process_ani_dhdr;
+    pDHDR->sHeader.fCleanup = mng_free_ani_dhdr;
+    pDHDR->sHeader.fProcess = mng_process_ani_dhdr;
 
     pDHDR->iObjectid        = iObjectid;
     pDHDR->iImagetype       = iImagetype;
@@ -3367,7 +4028,7 @@ mng_retcode create_ani_dhdr (mng_datap  pData,
     pDHDR->iBlockx          = iBlockx;
     pDHDR->iBlocky          = iBlocky;
 
-    add_ani_object (pData, (mng_object_headerp)pDHDR);
+    mng_add_ani_object (pData, (mng_object_headerp)pDHDR);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3379,8 +4040,8 @@ mng_retcode create_ani_dhdr (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_dhdr (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_dhdr (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_DHDR, MNG_LC_START)
@@ -3397,8 +4058,8 @@ mng_retcode free_ani_dhdr (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_dhdr (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_dhdr (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_dhdrp pDHDR = (mng_ani_dhdrp)pObject;
   mng_retcode   iRetcode;
@@ -3409,10 +4070,10 @@ mng_retcode process_ani_dhdr (mng_datap   pData,
 
   pData->bHasDHDR = MNG_TRUE;          /* let everyone know we're inside a DHDR */
 
-  iRetcode = process_display_dhdr (pData, pDHDR->iObjectid,
-                                   pDHDR->iImagetype, pDHDR->iDeltatype,
-                                   pDHDR->iBlockwidth, pDHDR->iBlockheight,
-                                   pDHDR->iBlockx, pDHDR->iBlocky);
+  iRetcode = mng_process_display_dhdr (pData, pDHDR->iObjectid,
+                                       pDHDR->iImagetype, pDHDR->iDeltatype,
+                                       pDHDR->iBlockwidth, pDHDR->iBlockheight,
+                                       pDHDR->iBlockx, pDHDR->iBlocky);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3427,10 +4088,10 @@ mng_retcode process_ani_dhdr (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_prom (mng_datap pData,
-                             mng_uint8 iBitdepth,
-                             mng_uint8 iColortype,
-                             mng_uint8 iFilltype)
+mng_retcode mng_create_ani_prom (mng_datap pData,
+                                 mng_uint8 iBitdepth,
+                                 mng_uint8 iColortype,
+                                 mng_uint8 iFilltype)
 {
   mng_ani_promp pPROM;
 
@@ -3442,14 +4103,14 @@ mng_retcode create_ani_prom (mng_datap pData,
   {
     MNG_ALLOC (pData, pPROM, sizeof (mng_ani_prom))
 
-    pPROM->sHeader.fCleanup = free_ani_prom;
-    pPROM->sHeader.fProcess = process_ani_prom;
+    pPROM->sHeader.fCleanup = mng_free_ani_prom;
+    pPROM->sHeader.fProcess = mng_process_ani_prom;
 
     pPROM->iBitdepth        = iBitdepth;
     pPROM->iColortype       = iColortype;
     pPROM->iFilltype        = iFilltype;
 
-    add_ani_object (pData, (mng_object_headerp)pPROM);
+    mng_add_ani_object (pData, (mng_object_headerp)pPROM);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3461,8 +4122,8 @@ mng_retcode create_ani_prom (mng_datap pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_prom (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_prom (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_PROM, MNG_LC_START)
@@ -3479,8 +4140,8 @@ mng_retcode free_ani_prom (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_prom (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_prom (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_promp pPROM = (mng_ani_promp)pObject;
   mng_retcode iRetcode;
@@ -3489,8 +4150,8 @@ mng_retcode process_ani_prom (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_PROM, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_prom (pData, pPROM->iBitdepth,
-                                   pPROM->iColortype, pPROM->iFilltype);
+  iRetcode = mng_process_display_prom (pData, pPROM->iBitdepth,
+                                       pPROM->iColortype, pPROM->iFilltype);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3505,7 +4166,7 @@ mng_retcode process_ani_prom (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_ipng (mng_datap pData)
+mng_retcode mng_create_ani_ipng (mng_datap pData)
 {
   mng_ani_ipngp pIPNG;
 
@@ -3517,10 +4178,10 @@ mng_retcode create_ani_ipng (mng_datap pData)
   {
     MNG_ALLOC (pData, pIPNG, sizeof (mng_ani_ipng))
 
-    pIPNG->sHeader.fCleanup = free_ani_ipng;
-    pIPNG->sHeader.fProcess = process_ani_ipng;
+    pIPNG->sHeader.fCleanup = mng_free_ani_ipng;
+    pIPNG->sHeader.fProcess = mng_process_ani_ipng;
 
-    add_ani_object (pData, (mng_object_headerp)pIPNG);
+    mng_add_ani_object (pData, (mng_object_headerp)pIPNG);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3532,8 +4193,8 @@ mng_retcode create_ani_ipng (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_ipng (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_ipng (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_IPNG, MNG_LC_START)
@@ -3550,8 +4211,8 @@ mng_retcode free_ani_ipng (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_ipng (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_ipng (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_retcode iRetcode;
 
@@ -3559,7 +4220,7 @@ mng_retcode process_ani_ipng (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_IPNG, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_ipng (pData);
+  iRetcode = mng_process_display_ipng (pData);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3574,7 +4235,7 @@ mng_retcode process_ani_ipng (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_ijng (mng_datap pData)
+mng_retcode mng_create_ani_ijng (mng_datap pData)
 {
   mng_ani_ijngp pIJNG;
 
@@ -3586,10 +4247,10 @@ mng_retcode create_ani_ijng (mng_datap pData)
   {
     MNG_ALLOC (pData, pIJNG, sizeof (mng_ani_ijng))
 
-    pIJNG->sHeader.fCleanup = free_ani_ijng;
-    pIJNG->sHeader.fProcess = process_ani_ijng;
+    pIJNG->sHeader.fCleanup = mng_free_ani_ijng;
+    pIJNG->sHeader.fProcess = mng_process_ani_ijng;
 
-    add_ani_object (pData, (mng_object_headerp)pIJNG);
+    mng_add_ani_object (pData, (mng_object_headerp)pIJNG);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3601,8 +4262,8 @@ mng_retcode create_ani_ijng (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_ijng (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_ijng (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_IJNG, MNG_LC_START)
@@ -3619,8 +4280,8 @@ mng_retcode free_ani_ijng (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_ijng (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_ijng (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_retcode iRetcode;
 
@@ -3628,7 +4289,7 @@ mng_retcode process_ani_ijng (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_IJNG, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_ijng (pData);
+  iRetcode = mng_process_display_ijng (pData);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3643,12 +4304,12 @@ mng_retcode process_ani_ijng (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_pplt (mng_datap      pData,
-                             mng_uint8      iType,
-                             mng_uint32     iCount,
-                             mng_palette8ep paIndexentries,
-                             mng_uint8p     paAlphaentries,
-                             mng_uint8p     paUsedentries)
+mng_retcode mng_create_ani_pplt (mng_datap      pData,
+                                 mng_uint8      iType,
+                                 mng_uint32     iCount,
+                                 mng_palette8ep paIndexentries,
+                                 mng_uint8p     paAlphaentries,
+                                 mng_uint8p     paUsedentries)
 {
   mng_ani_ppltp pPPLT;
 
@@ -3660,8 +4321,8 @@ mng_retcode create_ani_pplt (mng_datap      pData,
   {
     MNG_ALLOC (pData, pPPLT, sizeof (mng_ani_pplt))
 
-    pPPLT->sHeader.fCleanup = free_ani_pplt;
-    pPPLT->sHeader.fProcess = process_ani_pplt;
+    pPPLT->sHeader.fCleanup = mng_free_ani_pplt;
+    pPPLT->sHeader.fProcess = mng_process_ani_pplt;
 
     pPPLT->iType            = iType;
     pPPLT->iCount           = iCount;
@@ -3670,7 +4331,7 @@ mng_retcode create_ani_pplt (mng_datap      pData,
     MNG_COPY (pPPLT->aAlphaentries, paAlphaentries, sizeof (pPPLT->aAlphaentries))
     MNG_COPY (pPPLT->aUsedentries,  paUsedentries,  sizeof (pPPLT->aUsedentries ))
 
-    add_ani_object (pData, (mng_object_headerp)pPPLT);
+    mng_add_ani_object (pData, (mng_object_headerp)pPPLT);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3682,8 +4343,8 @@ mng_retcode create_ani_pplt (mng_datap      pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_pplt (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_pplt (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_PPLT, MNG_LC_START)
@@ -3700,8 +4361,8 @@ mng_retcode free_ani_pplt (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_pplt (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_pplt (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_ppltp pPPLT = (mng_ani_ppltp)pObject;
   mng_retcode iRetcode;
@@ -3710,9 +4371,9 @@ mng_retcode process_ani_pplt (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_PPLT, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_pplt (pData, pPPLT->iType, pPPLT->iCount,
-                                   pPPLT->aIndexentries, pPPLT->aAlphaentries,
-                                   pPPLT->aUsedentries);
+  iRetcode = mng_process_display_pplt (pData, pPPLT->iType, pPPLT->iCount,
+                                       pPPLT->aIndexentries, pPPLT->aAlphaentries,
+                                       pPPLT->aUsedentries);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3727,17 +4388,17 @@ mng_retcode process_ani_pplt (mng_datap   pData,
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode create_ani_magn (mng_datap  pData,
-                             mng_uint16 iFirstid,
-                             mng_uint16 iLastid,
-                             mng_uint16 iMethodX,
-                             mng_uint16 iMX,
-                             mng_uint16 iMY,
-                             mng_uint16 iML,
-                             mng_uint16 iMR,
-                             mng_uint16 iMT,
-                             mng_uint16 iMB,
-                             mng_uint16 iMethodY)
+mng_retcode mng_create_ani_magn (mng_datap  pData,
+                                 mng_uint16 iFirstid,
+                                 mng_uint16 iLastid,
+                                 mng_uint8  iMethodX,
+                                 mng_uint16 iMX,
+                                 mng_uint16 iMY,
+                                 mng_uint16 iML,
+                                 mng_uint16 iMR,
+                                 mng_uint16 iMT,
+                                 mng_uint16 iMB,
+                                 mng_uint8  iMethodY)
 {
   mng_ani_magnp pMAGN;
 
@@ -3749,8 +4410,8 @@ mng_retcode create_ani_magn (mng_datap  pData,
   {
     MNG_ALLOC (pData, pMAGN, sizeof (mng_ani_magn))
 
-    pMAGN->sHeader.fCleanup = free_ani_magn;
-    pMAGN->sHeader.fProcess = process_ani_magn;
+    pMAGN->sHeader.fCleanup = mng_free_ani_magn;
+    pMAGN->sHeader.fProcess = mng_process_ani_magn;
 
     pMAGN->iFirstid         = iFirstid;
     pMAGN->iLastid          = iLastid;
@@ -3763,7 +4424,7 @@ mng_retcode create_ani_magn (mng_datap  pData,
     pMAGN->iMB              = iMB;
     pMAGN->iMethodY         = iMethodY;
 
-    add_ani_object (pData, (mng_object_headerp)pMAGN);
+    mng_add_ani_object (pData, (mng_object_headerp)pMAGN);
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -3775,8 +4436,8 @@ mng_retcode create_ani_magn (mng_datap  pData,
 
 /* ************************************************************************** */
 
-mng_retcode free_ani_magn (mng_datap   pData,
-                           mng_objectp pObject)
+mng_retcode mng_free_ani_magn (mng_datap   pData,
+                               mng_objectp pObject)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ANI_MAGN, MNG_LC_START)
@@ -3793,8 +4454,8 @@ mng_retcode free_ani_magn (mng_datap   pData,
 
 /* ************************************************************************** */
 
-mng_retcode process_ani_magn (mng_datap   pData,
-                              mng_objectp pObject)
+mng_retcode mng_process_ani_magn (mng_datap   pData,
+                                  mng_objectp pObject)
 {
   mng_ani_magnp pMAGN = (mng_ani_magnp)pObject;
   mng_retcode iRetcode;
@@ -3803,10 +4464,10 @@ mng_retcode process_ani_magn (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_MAGN, MNG_LC_START)
 #endif
 
-  iRetcode = process_display_magn (pData, pMAGN->iFirstid, pMAGN->iLastid,
-                                   pMAGN->iMethodX, pMAGN->iMX, pMAGN->iMY,
-                                   pMAGN->iML, pMAGN->iMR, pMAGN->iMT, pMAGN->iMB,
-                                   pMAGN->iMethodY);
+  iRetcode = mng_process_display_magn (pData, pMAGN->iFirstid, pMAGN->iLastid,
+                                       pMAGN->iMethodX, pMAGN->iMX, pMAGN->iMY,
+                                       pMAGN->iML, pMAGN->iMR, pMAGN->iMT,
+                                       pMAGN->iMB, pMAGN->iMethodY);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -3817,6 +4478,338 @@ mng_retcode process_ani_magn (mng_datap   pData,
 
   return MNG_NOERROR;
 }
+
+/* ************************************************************************** */
+/* ************************************************************************** */
+
+mng_retcode mng_create_ani_past (mng_datap  pData,
+                                 mng_uint16 iTargetid,
+                                 mng_uint8  iTargettype,
+                                 mng_int32  iTargetx,
+                                 mng_int32  iTargety,
+                                 mng_uint32 iCount,
+                                 mng_ptr    pSources)
+{
+  mng_ani_pastp pPAST;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_PAST, MNG_LC_START)
+#endif
+
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pPAST, sizeof (mng_ani_past))
+
+    pPAST->sHeader.fCleanup = mng_free_ani_past;
+    pPAST->sHeader.fProcess = mng_process_ani_past;
+
+    pPAST->iTargetid        = iTargetid;
+    pPAST->iTargettype      = iTargettype;
+    pPAST->iTargetx         = iTargetx;
+    pPAST->iTargety         = iTargety;
+    pPAST->iCount           = iCount;
+
+    if (iCount)
+    {
+      MNG_ALLOC (pData, pPAST->pSources, (iCount * sizeof (mng_past_source)))
+      MNG_COPY (pPAST->pSources, pSources, (iCount * sizeof (mng_past_source)))
+    }
+
+    mng_add_ani_object (pData, (mng_object_headerp)pPAST);
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_PAST, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode mng_free_ani_past (mng_datap   pData,
+                               mng_objectp pObject)
+{
+  mng_ani_pastp pPAST = (mng_ani_pastp)pObject;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_PAST, MNG_LC_START)
+#endif
+
+  if (pPAST->iCount)
+    MNG_FREEX (pData, pPAST->pSources, (pPAST->iCount * sizeof (mng_past_source)))
+
+  MNG_FREEX (pData, pObject, sizeof (mng_ani_past))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_PAST, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode mng_process_ani_past (mng_datap   pData,
+                                  mng_objectp pObject)
+{
+  mng_ani_pastp pPAST = (mng_ani_pastp)pObject;
+  mng_retcode iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_PAST, MNG_LC_START)
+#endif
+
+  iRetcode = mng_process_display_past (pData, pPAST->iTargetid, pPAST->iTargettype,
+                                       pPAST->iTargetx, pPAST->iTargety,
+                                       pPAST->iCount, pPAST->pSources);
+
+  if (iRetcode)                        /* on error bail out */
+    return iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_PAST, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+/* ************************************************************************** */
+
+mng_retcode mng_create_ani_disc (mng_datap   pData,
+                                 mng_uint32  iCount,
+                                 mng_uint16p pIds)
+{
+  mng_ani_discp pDISC;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_DISC, MNG_LC_START)
+#endif
+
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pDISC, sizeof (mng_ani_disc))
+
+    pDISC->sHeader.fCleanup = mng_free_ani_disc;
+    pDISC->sHeader.fProcess = mng_process_ani_disc;
+
+    pDISC->iCount           = iCount;
+
+    if (iCount)
+    {
+      MNG_ALLOC (pData, pDISC->pIds, (iCount << 1))
+      MNG_COPY (pDISC->pIds, pIds, (iCount << 1))
+    }
+
+    mng_add_ani_object (pData, (mng_object_headerp)pDISC);
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_DISC, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode mng_free_ani_disc (mng_datap   pData,
+                               mng_objectp pObject)
+{
+  mng_ani_discp pDISC = (mng_ani_discp)pObject;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_DISC, MNG_LC_START)
+#endif
+
+  if (pDISC->iCount)
+    MNG_FREEX (pData, pDISC->pIds, (pDISC->iCount << 1))
+
+  MNG_FREEX (pData, pObject, sizeof (mng_ani_disc))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_DISC, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode mng_process_ani_disc (mng_datap   pData,
+                                  mng_objectp pObject)
+{
+  mng_ani_discp pDISC = (mng_ani_discp)pObject;
+  mng_retcode iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_DISC, MNG_LC_START)
+#endif
+
+  iRetcode = mng_process_display_disc (pData, pDISC->iCount, pDISC->pIds);
+
+  if (iRetcode)                        /* on error bail out */
+    return iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_DISC, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+/* ************************************************************************** */
+
+#ifdef MNG_SUPPORT_DYNAMICMNG
+
+/* ************************************************************************** */
+
+mng_retcode mng_create_event (mng_datap  pData,
+                              mng_uint8  iEventtype,
+                              mng_uint8  iMasktype,
+                              mng_int32  iLeft,
+                              mng_int32  iRight,
+                              mng_int32  iTop,
+                              mng_int32  iBottom,
+                              mng_uint16 iObjectid,
+                              mng_uint8  iIndex,
+                              mng_uint32 iSegmentnamesize,
+                              mng_pchar  zSegmentname)
+{
+  mng_eventp pEvent;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_EVENT, MNG_LC_START)
+#endif
+
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    mng_object_headerp pLast;
+
+    MNG_ALLOC (pData, pEvent, sizeof (mng_event))
+
+    pEvent->sHeader.fCleanup = mng_free_event;
+    pEvent->sHeader.fProcess = mng_process_event;
+
+    pEvent->iEventtype       = iEventtype;
+    pEvent->iMasktype        = iMasktype;
+    pEvent->iLeft            = iLeft;
+    pEvent->iRight           = iRight;
+    pEvent->iTop             = iTop;
+    pEvent->iBottom          = iBottom;
+    pEvent->iObjectid        = iObjectid;
+    pEvent->iIndex           = iIndex;
+    pEvent->iSegmentnamesize = iSegmentnamesize;
+
+    if (iSegmentnamesize)
+    {
+      MNG_ALLOC (pData, pEvent->zSegmentname, iSegmentnamesize+1)
+      MNG_COPY (pEvent->zSegmentname, zSegmentname, iSegmentnamesize)
+    }
+                                       /* fixup the double-linked list */
+    pLast                    = (mng_object_headerp)pData->pLastevent;
+
+    if (pLast)                         /* link it as last in the chain */
+    {
+      pEvent->sHeader.pPrev  = pLast;
+      pLast->pNext           = pEvent;
+    }
+    else
+    {
+      pData->pFirstevent     = pEvent;
+    }
+
+    pData->pLastevent        = pEvent;
+    pData->bDynamic          = MNG_TRUE;    
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_EVENT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode mng_free_event (mng_datap   pData,
+                            mng_objectp pObject)
+{
+  mng_eventp pEvent = (mng_eventp)pObject;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_EVENT, MNG_LC_START)
+#endif
+
+  if (pEvent->iSegmentnamesize)
+    MNG_FREEX (pData, pEvent->zSegmentname, pEvent->iSegmentnamesize + 1)
+
+  MNG_FREEX (pData, pEvent, sizeof (mng_event))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_EVENT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode mng_process_event (mng_datap   pData,
+                               mng_objectp pObject)
+{
+  mng_eventp         pEvent  = (mng_eventp)pObject;
+  mng_object_headerp pAni;
+  mng_bool           bFound = MNG_FALSE;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_EVENT, MNG_LC_START)
+#endif
+
+  if (!pEvent->pSEEK)                  /* need to find SEEK first ? */
+  {
+    pAni = (mng_object_headerp)pData->pFirstaniobj;
+
+    while ((pAni) && (!bFound))
+    {
+      if ((pAni->fCleanup == mng_free_ani_seek) &&
+          (strcmp(pEvent->zSegmentname, ((mng_ani_seekp)pAni)->zSegmentname) == 0))
+        bFound = MNG_TRUE;
+      else
+        pAni = (mng_object_headerp)pAni->pNext;
+    }
+
+    if (pAni)
+      pEvent->pSEEK = (mng_ani_seekp)pAni;
+  }
+
+  if (pEvent->pSEEK)                   /* anything to do ? */
+  {
+    pEvent->iLastx = pData->iEventx;
+    pEvent->iLasty = pData->iEventy;
+                                       /* let's start from this SEEK then */
+    pData->pCurraniobj   = (mng_objectp)pEvent->pSEEK;
+    pData->bRunningevent = MNG_TRUE;
+                                       /* wake-up the app ! */
+    if (!pData->fSettimer ((mng_handle)pData, 5))
+      MNG_ERROR (pData, MNG_APPTIMERERROR)
+
+  }
+  else
+    MNG_ERROR (pData, MNG_SEEKNOTFOUND)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_EVENT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+#endif /* MNG_SUPPORT_DYNAMICMNG */
 
 /* ************************************************************************** */
 

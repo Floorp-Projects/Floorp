@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_cms.h              copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * file      : libmng_cms.h              copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : color management routines (definition)                     * */
 /* *                                                                        * */
@@ -27,6 +27,11 @@
 /* *             - moved mng_clear_cms to libmng_cms                        * */
 /* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
 /* *             - added "default" sRGB generation (Thanks Marti!)          * */
+/* *                                                                        * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             1.0.5 - 09/19/2002 - G.Juyn                                * */
+/* *             - optimized color-correction routines                      * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -54,21 +59,27 @@ mng_retcode mng_clear_cms             (mng_datap    pData    );
 /* ************************************************************************** */
 
 #ifdef MNG_FULL_CMS
-mng_retcode init_full_cms          (mng_datap pData);
-mng_retcode init_full_cms_object   (mng_datap pData);
-mng_retcode correct_full_cms       (mng_datap pData);
+mng_retcode mng_init_full_cms          (mng_datap pData,
+                                        mng_bool  bGlobal,
+                                        mng_bool  bObject,
+                                        mng_bool  bRetrobj);
+mng_retcode mng_correct_full_cms       (mng_datap pData);
 #endif
 
 #if defined(MNG_FULL_CMS) || defined(MNG_GAMMA_ONLY)
-mng_retcode init_gamma_only        (mng_datap pData);
-mng_retcode init_gamma_only_object (mng_datap pData);
-mng_retcode correct_gamma_only     (mng_datap pData);
+mng_retcode mng_init_gamma_only        (mng_datap pData,
+                                        mng_bool  bGlobal,
+                                        mng_bool  bObject,
+                                        mng_bool  bRetrobj);
+mng_retcode mng_correct_gamma_only     (mng_datap pData);
 #endif
 
 #ifdef MNG_APP_CMS
-mng_retcode init_app_cms           (mng_datap pData);
-mng_retcode init_app_cms_object    (mng_datap pData);
-mng_retcode correct_app_cms        (mng_datap pData);
+mng_retcode mng_init_app_cms           (mng_datap pData,
+                                        mng_bool  bGlobal,
+                                        mng_bool  bObject,
+                                        mng_bool  bRetrobj);
+mng_retcode mng_correct_app_cms        (mng_datap pData);
 #endif
 
 /* ************************************************************************** */

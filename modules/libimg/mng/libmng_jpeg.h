@@ -4,7 +4,7 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_jpeg.h             copyright (c) 2000 G.Juyn        * */
+/* * file      : libmng_jpeg.h             copyright (c) 2000-2002 G.Juyn   * */
 /* * version   : 1.0.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : JPEG library interface (definition)                        * */

@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_filter.c           copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_filter.c           copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Filtering routines (implementation)                        * */
 /* *                                                                        * */
@@ -25,6 +25,11 @@
 /* *                                                                        * */
 /* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
 /* *             - added support for new filter_types                       * */
+/* *                                                                        * */
+/* *             1.0.5 - 08/07/2002 - G.Juyn                                * */
+/* *             - added test-option for PNG filter method 193 (=no filter) * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -47,46 +52,7 @@
 
 /* ************************************************************************** */
 
-mng_retcode filter_a_row (mng_datap pData)
-{
-  mng_retcode iRetcode;
-
-#ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (pData, MNG_FN_FILTER_A_ROW, MNG_LC_START)
-#endif
-
-  switch (*(pData->pWorkrow + pData->iFilterofs))
-  {
-    case 1  : {
-                iRetcode = filter_sub     (pData);
-                break;
-              }
-    case 2  : {
-                iRetcode = filter_up      (pData);
-                break;
-              }
-    case 3  : {
-                iRetcode = filter_average (pData);
-                break;
-              }
-    case 4  : {
-                iRetcode = filter_paeth   (pData);
-                break;
-              }
-
-    default : iRetcode = MNG_INVALIDFILTER;
-  }
-
-#ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (pData, MNG_FN_FILTER_A_ROW, MNG_LC_END)
-#endif
-
-  return iRetcode;
-}
-
-/* ************************************************************************** */
-
-mng_retcode filter_sub (mng_datap pData)
+MNG_LOCAL mng_retcode filter_sub (mng_datap pData)
 {
   mng_uint32 iBpp;
   mng_uint8p pRawx;
@@ -117,7 +83,7 @@ mng_retcode filter_sub (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode filter_up (mng_datap pData)
+MNG_LOCAL mng_retcode filter_up (mng_datap pData)
 {
   mng_uint8p pRawx;
   mng_uint8p pPriorx;
@@ -146,7 +112,7 @@ mng_retcode filter_up (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode filter_average (mng_datap pData)
+MNG_LOCAL mng_retcode filter_average (mng_datap pData)
 {
   mng_int32  iBpp;
   mng_uint8p pRawx;
@@ -187,7 +153,7 @@ mng_retcode filter_average (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode filter_paeth (mng_datap pData)
+MNG_LOCAL mng_retcode filter_paeth (mng_datap pData)
 {
   mng_int32  iBpp;
   mng_uint8p pRawx;
@@ -249,9 +215,49 @@ mng_retcode filter_paeth (mng_datap pData)
 }
 
 /* ************************************************************************** */
+
+mng_retcode mng_filter_a_row (mng_datap pData)
+{
+  mng_retcode iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FILTER_A_ROW, MNG_LC_START)
+#endif
+
+  switch (*(pData->pWorkrow + pData->iFilterofs))
+  {
+    case 1  : {
+                iRetcode = filter_sub     (pData);
+                break;
+              }
+    case 2  : {
+                iRetcode = filter_up      (pData);
+                break;
+              }
+    case 3  : {
+                iRetcode = filter_average (pData);
+                break;
+              }
+    case 4  : {
+                iRetcode = filter_paeth   (pData);
+                break;
+              }
+
+    default : iRetcode = MNG_INVALIDFILTER;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FILTER_A_ROW, MNG_LC_END)
+#endif
+
+  return iRetcode;
+}
+
+/* ************************************************************************** */
 /* ************************************************************************** */
 
-mng_retcode init_rowdiffering (mng_datap pData)
+#ifdef FILTER192
+mng_retcode mng_init_rowdiffering (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -260,7 +266,7 @@ mng_retcode init_rowdiffering (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_INIT_ROWDIFFERING, MNG_LC_START)
 #endif
 
-  if (pData->iFilter & 0x40)           /* has leveling parameters ? */
+  if (pData->iFilter == 0xC0)          /* has leveling parameters ? */
   {
     switch (pData->iColortype)         /* salvage leveling parameters */
     {
@@ -335,9 +341,11 @@ mng_retcode init_rowdiffering (mng_datap pData)
 
   pData->iFilterofs = 0;               /* indicate so ! */
 
-  if (pData->iFilter & 0x01)           /* no adaptive filtering ? */
+#ifdef FILTER193
+  if (pData->iFilter == 0xC1)          /* no adaptive filtering ? */
     pData->iPixelofs = pData->iFilterofs;
   else
+#endif
     pData->iPixelofs = pData->iFilterofs + 1;
 
 #ifdef MNG_SUPPORT_TRACE
@@ -349,7 +357,7 @@ mng_retcode init_rowdiffering (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_g1 (mng_datap pData)
+mng_retcode mng_differ_g1 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -377,7 +385,7 @@ mng_retcode differ_g1 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_g2 (mng_datap pData)
+mng_retcode mng_differ_g2 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -427,7 +435,7 @@ mng_retcode differ_g2 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_g4 (mng_datap pData)
+mng_retcode mng_differ_g4 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -477,7 +485,7 @@ mng_retcode differ_g4 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_g8 (mng_datap pData)
+mng_retcode mng_differ_g8 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -505,7 +513,7 @@ mng_retcode differ_g8 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_g16 (mng_datap pData)
+mng_retcode mng_differ_g16 (mng_datap pData)
 {
   mng_uint16p pRawi, pRawo;
   mng_int32   iX;
@@ -533,7 +541,7 @@ mng_retcode differ_g16 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_rgb8 (mng_datap pData)
+mng_retcode mng_differ_rgb8 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -566,7 +574,7 @@ mng_retcode differ_rgb8 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_rgb16 (mng_datap pData)
+mng_retcode mng_differ_rgb16 (mng_datap pData)
 {
   mng_uint16p pRawi, pRawo;
   mng_int32   iX;
@@ -599,7 +607,7 @@ mng_retcode differ_rgb16 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_idx1 (mng_datap pData)
+mng_retcode mng_differ_idx1 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -627,7 +635,7 @@ mng_retcode differ_idx1 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_idx2 (mng_datap pData)
+mng_retcode mng_differ_idx2 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -677,7 +685,7 @@ mng_retcode differ_idx2 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_idx4 (mng_datap pData)
+mng_retcode mng_differ_idx4 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -727,7 +735,7 @@ mng_retcode differ_idx4 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_idx8 (mng_datap pData)
+mng_retcode mng_differ_idx8 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -755,7 +763,7 @@ mng_retcode differ_idx8 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_ga8 (mng_datap pData)
+mng_retcode mng_differ_ga8 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -785,7 +793,7 @@ mng_retcode differ_ga8 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_ga16 (mng_datap pData)
+mng_retcode mng_differ_ga16 (mng_datap pData)
 {
   mng_uint16p pRawi, pRawo;
   mng_int32   iX;
@@ -814,7 +822,7 @@ mng_retcode differ_ga16 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_rgba8 (mng_datap pData)
+mng_retcode mng_differ_rgba8 (mng_datap pData)
 {
   mng_uint8p pRawi, pRawo;
   mng_int32  iX;
@@ -848,7 +856,7 @@ mng_retcode differ_rgba8 (mng_datap pData)
 
 /* ************************************************************************** */
 
-mng_retcode differ_rgba16 (mng_datap pData)
+mng_retcode mng_differ_rgba16 (mng_datap pData)
 {
   mng_uint16p pRawi, pRawo;
   mng_int32   iX;
@@ -879,6 +887,10 @@ mng_retcode differ_rgba16 (mng_datap pData)
 
   return MNG_NOERROR;
 }
+
+/* ************************************************************************** */
+
+#endif /* FILTER192 */
 
 /* ************************************************************************** */
 

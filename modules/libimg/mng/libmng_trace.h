@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_trace.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.3                                                      * */
+/* * file      : libmng_trace.h            copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (definition)                               * */
 /* *                                                                        * */
@@ -112,6 +112,27 @@
 /* *             1.0.3 - 08/06/2001 - G.Juyn                                * */
 /* *             - added get function for last processed BACK chunk         * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/15/2002 - G.Juyn                                * */
+/* *             - completed PROM support                                   * */
+/* *             - completed delta-image support                            * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             - added HLAPI function to copy chunks                      * */
+/* *             1.0.5 - 09/14/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
+/* *             1.0.5 - 09/20/2002 - G.Juyn                                * */
+/* *             - added support for PAST                                   * */
+/* *             1.0.5 - 09/22/2002 - G.Juyn                                * */
+/* *             - added bgrx8 canvas (filler byte)                         * */
+/* *             1.0.5 - 09/23/2002 - G.Juyn                                * */
+/* *             - added in-memory color-correction of abstract images      * */
+/* *             - added compose over/under routines for PAST processing    * */
+/* *             - added flip & tile routines for PAST processing           * */
+/* *             1.0.5 - 10/09/2002 - G.Juyn                                * */
+/* *             - fixed trace-constants for PAST chunk                     * */
+/* *             1.0.5 - 11/07/2002 - G.Juyn                                * */
+/* *             - added support to get totals after mng_read()             * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -178,6 +199,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_DISPLAY_GOTIME          14
 #define MNG_FN_GETLASTERROR            15
 #define MNG_FN_READ_RESUME             16
+#define MNG_FN_TRAPEVENT               17
 
 #define MNG_FN_SETCB_MEMALLOC         101
 #define MNG_FN_SETCB_MEMFREE          102
@@ -328,6 +350,10 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_GET_CACHEPLAYBACK      454
 #define MNG_FN_GET_DOPROGRESSIVE      455
 #define MNG_FN_GET_LASTBACKCHUNK      456
+#define MNG_FN_GET_LASTSEEKNAME       457
+#define MNG_FN_GET_TOTALFRAMES        458
+#define MNG_FN_GET_TOTALLAYERS        459
+#define MNG_FN_GET_TOTALPLAYTIME      460
 
 #define MNG_FN_STATUS_ERROR           481
 #define MNG_FN_STATUS_READING         482
@@ -337,10 +363,13 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_STATUS_DISPLAYING      486
 #define MNG_FN_STATUS_RUNNING         487
 #define MNG_FN_STATUS_TIMERBREAK      488
+#define MNG_FN_STATUS_DYNAMIC         489
+#define MNG_FN_STATUS_RUNNINGEVENT    490
 
 /* ************************************************************************** */
 
 #define MNG_FN_ITERATE_CHUNKS         601
+#define MNG_FN_COPY_CHUNK             602
 
 #define MNG_FN_GETCHUNK_IHDR          701
 #define MNG_FN_GETCHUNK_PLTE          702
@@ -395,11 +424,13 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_GETCHUNK_UNKNOWN       751
 #define MNG_FN_GETCHUNK_MAGN          752
 #define MNG_FN_GETCHUNK_JDAA          753
+#define MNG_FN_GETCHUNK_EVNT          754
 
 #define MNG_FN_GETCHUNK_PAST_SRC      781
 #define MNG_FN_GETCHUNK_SAVE_ENTRY    782
 #define MNG_FN_GETCHUNK_PPLT_ENTRY    783
 #define MNG_FN_GETCHUNK_ORDR_ENTRY    784
+#define MNG_FN_GETCHUNK_EVNT_ENTRY    785
 
 #define MNG_FN_PUTCHUNK_IHDR          801
 #define MNG_FN_PUTCHUNK_PLTE          802
@@ -454,11 +485,13 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_PUTCHUNK_UNKNOWN       851
 #define MNG_FN_PUTCHUNK_MAGN          852
 #define MNG_FN_PUTCHUNK_JDAA          853
+#define MNG_FN_PUTCHUNK_EVNT          854
 
 #define MNG_FN_PUTCHUNK_PAST_SRC      881
 #define MNG_FN_PUTCHUNK_SAVE_ENTRY    882
 #define MNG_FN_PUTCHUNK_PPLT_ENTRY    883
 #define MNG_FN_PUTCHUNK_ORDR_ENTRY    884
+#define MNG_FN_PUTCHUNK_EVNT_ENTRY    885
 
 /* ************************************************************************** */
 
@@ -531,6 +564,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_DISPLAY_DX16          1123
 #define MNG_FN_DISPLAY_RGB8_A8       1124
 #define MNG_FN_DISPLAY_BGRA8PM       1125
+#define MNG_FN_DISPLAY_BGRX8         1126
 
 /* ************************************************************************** */
 
@@ -637,6 +671,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_RENUM_IMGOBJECT       1609
 #define MNG_FN_PROMOTE_IMGOBJECT     1610
 #define MNG_FN_MAGNIFY_IMGOBJECT     1611
+#define MNG_FN_COLORCORRECT_OBJECT   1612
 
 /* ************************************************************************** */
 
@@ -714,6 +749,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_CREATE_ANI_MAGN       1828
 
 #define MNG_FN_CREATE_ANI_IMAGE      1891
+#define MNG_FN_CREATE_EVENT          1892
 
 /* ************************************************************************** */
 
@@ -747,6 +783,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_FREE_ANI_MAGN         1928
 
 #define MNG_FN_FREE_ANI_IMAGE        1991
+#define MNG_FN_FREE_EVENT            1992
 
 /* ************************************************************************** */
 
@@ -780,6 +817,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_PROCESS_ANI_MAGN      2028
 
 #define MNG_FN_PROCESS_ANI_IMAGE     2091
+#define MNG_FN_PROCESS_EVENT         2092
 
 /* ************************************************************************** */
 
@@ -789,6 +827,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_RESTORE_RGB8          2104
 #define MNG_FN_RESTORE_BGR8          2105
 #define MNG_FN_RESTORE_BKGD          2106
+#define MNG_FN_RESTORE_BGRX8         2107
 
 /* ************************************************************************** */
 
@@ -845,6 +884,64 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_INIT_UNKNOWN          2251
 #define MNG_FN_INIT_MAGN             2252
 #define MNG_FN_INIT_JDAA             2253
+#define MNG_FN_INIT_EVNT             2254
+
+/* ************************************************************************** */
+
+#define MNG_FN_ASSIGN_IHDR           2301
+#define MNG_FN_ASSIGN_PLTE           2302
+#define MNG_FN_ASSIGN_IDAT           2303
+#define MNG_FN_ASSIGN_IEND           2304
+#define MNG_FN_ASSIGN_TRNS           2305
+#define MNG_FN_ASSIGN_GAMA           2306
+#define MNG_FN_ASSIGN_CHRM           2307
+#define MNG_FN_ASSIGN_SRGB           2308
+#define MNG_FN_ASSIGN_ICCP           2309
+#define MNG_FN_ASSIGN_TEXT           2310
+#define MNG_FN_ASSIGN_ZTXT           2311
+#define MNG_FN_ASSIGN_ITXT           2312
+#define MNG_FN_ASSIGN_BKGD           2313
+#define MNG_FN_ASSIGN_PHYS           2314
+#define MNG_FN_ASSIGN_SBIT           2315
+#define MNG_FN_ASSIGN_SPLT           2316
+#define MNG_FN_ASSIGN_HIST           2317
+#define MNG_FN_ASSIGN_TIME           2318
+#define MNG_FN_ASSIGN_MHDR           2319
+#define MNG_FN_ASSIGN_MEND           2320
+#define MNG_FN_ASSIGN_LOOP           2321
+#define MNG_FN_ASSIGN_ENDL           2322
+#define MNG_FN_ASSIGN_DEFI           2323
+#define MNG_FN_ASSIGN_BASI           2324
+#define MNG_FN_ASSIGN_CLON           2325
+#define MNG_FN_ASSIGN_PAST           2326
+#define MNG_FN_ASSIGN_DISC           2327
+#define MNG_FN_ASSIGN_BACK           2328
+#define MNG_FN_ASSIGN_FRAM           2329
+#define MNG_FN_ASSIGN_MOVE           2330
+#define MNG_FN_ASSIGN_CLIP           2331
+#define MNG_FN_ASSIGN_SHOW           2332
+#define MNG_FN_ASSIGN_TERM           2333
+#define MNG_FN_ASSIGN_SAVE           2334
+#define MNG_FN_ASSIGN_SEEK           2335
+#define MNG_FN_ASSIGN_EXPI           2336
+#define MNG_FN_ASSIGN_FPRI           2337
+#define MNG_FN_ASSIGN_NEED           2338
+#define MNG_FN_ASSIGN_PHYG           2339
+#define MNG_FN_ASSIGN_JHDR           2340
+#define MNG_FN_ASSIGN_JDAT           2341
+#define MNG_FN_ASSIGN_JSEP           2342
+#define MNG_FN_ASSIGN_DHDR           2343
+#define MNG_FN_ASSIGN_PROM           2344
+#define MNG_FN_ASSIGN_IPNG           2345
+#define MNG_FN_ASSIGN_PPLT           2346
+#define MNG_FN_ASSIGN_IJNG           2347
+#define MNG_FN_ASSIGN_DROP           2348
+#define MNG_FN_ASSIGN_DBYK           2349
+#define MNG_FN_ASSIGN_ORDR           2350
+#define MNG_FN_ASSIGN_UNKNOWN        2351
+#define MNG_FN_ASSIGN_MAGN           2352
+#define MNG_FN_ASSIGN_JDAA           2353
+#define MNG_FN_ASSIGN_EVNT           2354
 
 /* ************************************************************************** */
 
@@ -901,6 +998,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_FREE_UNKNOWN          2451
 #define MNG_FN_FREE_MAGN             2452
 #define MNG_FN_FREE_JDAA             2453
+#define MNG_FN_FREE_EVNT             2454
 
 /* ************************************************************************** */
 
@@ -957,6 +1055,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_READ_UNKNOWN          2651
 #define MNG_FN_READ_MAGN             2652
 #define MNG_FN_READ_JDAA             2653
+#define MNG_FN_READ_EVNT             2654
 
 /* ************************************************************************** */
 
@@ -1013,6 +1112,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_WRITE_UNKNOWN         2851
 #define MNG_FN_WRITE_MAGN            2852
 #define MNG_FN_WRITE_JDAA            2853
+#define MNG_FN_WRITE_EVNT            2854
 
 /* ************************************************************************** */
 
@@ -1150,6 +1250,23 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_MAGNIFY_GA8_X5        3715
 #define MNG_FN_MAGNIFY_RGBA8_X5      3716
 
+#define MNG_FN_MAGNIFY_G16_X1        3725
+#define MNG_FN_MAGNIFY_G16_X2        3726
+#define MNG_FN_MAGNIFY_RGB16_X1      3727
+#define MNG_FN_MAGNIFY_RGB16_X2      3728
+#define MNG_FN_MAGNIFY_GA16_X1       3729
+#define MNG_FN_MAGNIFY_GA16_X2       3730
+#define MNG_FN_MAGNIFY_GA16_X3       3731
+#define MNG_FN_MAGNIFY_GA16_X4       3732
+#define MNG_FN_MAGNIFY_RGBA16_X1     3733
+#define MNG_FN_MAGNIFY_RGBA16_X2     3734
+#define MNG_FN_MAGNIFY_RGBA16_X3     3735
+#define MNG_FN_MAGNIFY_RGBA16_X4     3736
+#define MNG_FN_MAGNIFY_G16_X3        3737
+#define MNG_FN_MAGNIFY_RGB16_X3      3738
+#define MNG_FN_MAGNIFY_GA16_X5       3739
+#define MNG_FN_MAGNIFY_RGBA16_X5     3740
+
 #define MNG_FN_MAGNIFY_G8_Y1         3751
 #define MNG_FN_MAGNIFY_G8_Y2         3752
 #define MNG_FN_MAGNIFY_RGB8_Y1       3753
@@ -1166,6 +1283,23 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_MAGNIFY_RGB8_Y3       3764
 #define MNG_FN_MAGNIFY_GA8_Y5        3765
 #define MNG_FN_MAGNIFY_RGBA8_Y5      3766
+
+#define MNG_FN_MAGNIFY_G16_Y1        3775
+#define MNG_FN_MAGNIFY_G16_Y2        3776
+#define MNG_FN_MAGNIFY_RGB16_Y1      3777
+#define MNG_FN_MAGNIFY_RGB16_Y2      3778
+#define MNG_FN_MAGNIFY_GA16_Y1       3779
+#define MNG_FN_MAGNIFY_GA16_Y2       3780
+#define MNG_FN_MAGNIFY_GA16_Y3       3781
+#define MNG_FN_MAGNIFY_GA16_Y4       3782
+#define MNG_FN_MAGNIFY_RGBA16_Y1     3783
+#define MNG_FN_MAGNIFY_RGBA16_Y2     3784
+#define MNG_FN_MAGNIFY_RGBA16_Y3     3785
+#define MNG_FN_MAGNIFY_RGBA16_Y4     3786
+#define MNG_FN_MAGNIFY_G16_Y3        3787
+#define MNG_FN_MAGNIFY_RGB16_Y3      3788
+#define MNG_FN_MAGNIFY_GA16_Y5       3789
+#define MNG_FN_MAGNIFY_RGBA16_Y5     3790
 
 /* ************************************************************************** */
 
@@ -1189,6 +1323,70 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_DELTA_RGBA16_RGB16    3818
 #define MNG_FN_DELTA_RGBA16_A16      3819
 
+#define MNG_FN_PROMOTE_G8_G8         3901
+#define MNG_FN_PROMOTE_G8_G16        3902
+#define MNG_FN_PROMOTE_G16_G16       3903
+#define MNG_FN_PROMOTE_G8_GA8        3904
+#define MNG_FN_PROMOTE_G8_GA16       3905
+#define MNG_FN_PROMOTE_G16_GA16      3906
+#define MNG_FN_PROMOTE_G8_RGB8       3907
+#define MNG_FN_PROMOTE_G8_RGB16      3908
+#define MNG_FN_PROMOTE_G16_RGB16     3909
+#define MNG_FN_PROMOTE_G8_RGBA8      3910
+#define MNG_FN_PROMOTE_G8_RGBA16     3911
+#define MNG_FN_PROMOTE_G16_RGBA16    3912
+#define MNG_FN_PROMOTE_GA8_GA16      3913
+#define MNG_FN_PROMOTE_GA8_RGBA8     3914
+#define MNG_FN_PROMOTE_GA8_RGBA16    3915
+#define MNG_FN_PROMOTE_GA16_RGBA16   3916
+#define MNG_FN_PROMOTE_RGB8_RGB16    3917
+#define MNG_FN_PROMOTE_RGB8_RGBA8    3918
+#define MNG_FN_PROMOTE_RGB8_RGBA16   3919
+#define MNG_FN_PROMOTE_RGB16_RGBA16  3920
+#define MNG_FN_PROMOTE_RGBA8_RGBA16  3921
+#define MNG_FN_PROMOTE_IDX8_RGB8     3922
+#define MNG_FN_PROMOTE_IDX8_RGB16    3923
+#define MNG_FN_PROMOTE_IDX8_RGBA8    3924
+#define MNG_FN_PROMOTE_IDX8_RGBA16   3925
+
+#define MNG_FN_SCALE_G1_G2           4001
+#define MNG_FN_SCALE_G1_G4           4002
+#define MNG_FN_SCALE_G1_G8           4003
+#define MNG_FN_SCALE_G1_G16          4004
+#define MNG_FN_SCALE_G2_G4           4005
+#define MNG_FN_SCALE_G2_G8           4006
+#define MNG_FN_SCALE_G2_G16          4007
+#define MNG_FN_SCALE_G4_G8           4008
+#define MNG_FN_SCALE_G4_G16          4009
+#define MNG_FN_SCALE_G8_G16          4010
+#define MNG_FN_SCALE_GA8_GA16        4011
+#define MNG_FN_SCALE_RGB8_RGB16      4012
+#define MNG_FN_SCALE_RGBA8_RGBA16    4013
+
+#define MNG_FN_SCALE_G2_G1           4021
+#define MNG_FN_SCALE_G4_G1           4022
+#define MNG_FN_SCALE_G8_G1           4023
+#define MNG_FN_SCALE_G16_G1          4024
+#define MNG_FN_SCALE_G4_G2           4025
+#define MNG_FN_SCALE_G8_G2           4026
+#define MNG_FN_SCALE_G16_G2          4027
+#define MNG_FN_SCALE_G8_G4           4028
+#define MNG_FN_SCALE_G16_G4          4029
+#define MNG_FN_SCALE_G16_G8          4030
+#define MNG_FN_SCALE_GA16_GA8        4031
+#define MNG_FN_SCALE_RGB16_RGB8      4032
+#define MNG_FN_SCALE_RGBA16_RGBA8    4033
+
+#define MNG_FN_COMPOSEOVER_RGBA8     4501
+#define MNG_FN_COMPOSEOVER_RGBA16    4502
+#define MNG_FN_COMPOSEUNDER_RGBA8    4503
+#define MNG_FN_COMPOSEUNDER_RGBA16   4504
+
+#define MNG_FN_FLIP_RGBA8            4521
+#define MNG_FN_FLIP_RGBA16           4522
+#define MNG_FN_TILE_RGBA8            4523
+#define MNG_FN_TILE_RGBA16           4524
+
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * Trace string-table entry                                               * */
@@ -1196,10 +1394,10 @@ mng_retcode mng_trace (mng_datap  pData,
 /* ************************************************************************** */
 
 typedef struct {
-           mng_uint32 iFunction;
-           mng_pchar  zTracetext;
-        } mng_trace_entry;
-typedef mng_trace_entry * mng_trace_entryp;
+                 mng_uint32 iFunction;
+                 mng_pchar  zTracetext;
+               } mng_trace_entry;
+typedef mng_trace_entry const * mng_trace_entryp;
 
 /* ************************************************************************** */
 

@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_zlib.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_zlib.c             copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : ZLIB library interface (implementation)                    * */
 /* *                                                                        * */
@@ -38,6 +38,13 @@
 /* *             - fixed compiler-warnings from Mozilla                     * */
 /* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
 /* *             - added support for new filter_types                       * */
+/* *                                                                        * */
+/* *             1.0.5 - 08/07/2002 - G.Juyn                                * */
+/* *             - added test-option for PNG filter method 193 (=no filter) * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             1.0.5 - 09/19/2002 - G.Juyn                                * */
+/* *             - added warning for too much IDAT data                     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -197,20 +204,19 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
                                        /* produced a full row ? */
     if (((iZrslt == Z_OK) || (iZrslt == Z_STREAM_END)) &&
         (pData->sZlib.avail_out == 0))
-    {                                  /* shouldn't we be at the end ? */
-      if (pData->iRow >= (mng_int32)pData->iDataheight)
-/*        MNG_ERROR (pData, MNG_TOOMUCHIDAT) */ ;  /* TODO: check this!!! */
-      else
-      {                                /* has leveling info ? */
-/*        if (pData->iFilterofs)
+    {                                  /* image not completed yet ? */
+      if (pData->iRow < (mng_int32)pData->iDataheight)
+      {
+#ifdef FILTER192                       /* has leveling info ? */
+        if (pData->iFilterofs == MNG_FILTER_DIFFERING)
           iRslt = init_rowdiffering (pData);
         else
-          iRslt = MNG_NOERROR; */
+#endif
+          iRslt = MNG_NOERROR;
                                        /* filter the row if necessary */
-/*        if ((!iRslt) && (pData->iFilterofs < pData->iPixelofs  ) &&
-                        (*(pData->pWorkrow + pData->iFilterofs))    ) */
-        if (*(pData->pWorkrow + pData->iFilterofs))   
-          iRslt = filter_a_row (pData);
+        if ((!iRslt) && (pData->iFilterofs < pData->iPixelofs  ) &&
+                        (*(pData->pWorkrow + pData->iFilterofs))    )
+          iRslt = mng_filter_a_row (pData);
         else
           iRslt = MNG_NOERROR;
                                        /* additonal leveling/differing ? */
@@ -248,7 +254,7 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
               iRslt = ((mng_displayrow)pData->fDisplayrow) (pData);
 
               if (!iRslt)              /* check progressive display refresh */
-                iRslt = display_progressive_check (pData);
+                iRslt = mng_display_progressive_check (pData);
 
             }
           }
@@ -264,7 +270,7 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
           pData->pPrevrow = pSwap;     /* so prev points to the processed row! */
         }
 
-        iRslt = next_row (pData);      /* adjust variables for next row */
+        iRslt = mng_next_row (pData);  /* adjust variables for next row */
 
         if (iRslt)                     /* on error bail out */
           MNG_ERROR (pData, iRslt);
@@ -273,11 +279,17 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
       pData->sZlib.next_out  = pData->pWorkrow;
       pData->sZlib.avail_out = (uInt)(pData->iRowsize + pData->iPixelofs);
     }
-  }                                    /* until some error or EOI */
-  while ((iZrslt == Z_OK) && (pData->sZlib.avail_in > 0));
+  }                                    /* until some error or EOI
+                                          or all pixels received */
+  while ( (iZrslt == Z_OK) && (pData->sZlib.avail_in > 0)      &&
+          ( (pData->iRow < (mng_int32)pData->iDataheight) ||
+            ( (pData->iPass >= 0) && (pData->iPass < 7) )    )    );
                                        /* on error bail out */
   if ((iZrslt != Z_OK) && (iZrslt != Z_STREAM_END))
     MNG_ERRORZ (pData, (mng_uint32)iZrslt)
+                                       /* too much data ? */
+  if ((iZrslt == Z_OK) && (pData->sZlib.avail_in > 0))
+    MNG_WARNING (pData, MNG_TOOMUCHIDAT)
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_INFLATEROWS, MNG_LC_END)
@@ -358,7 +370,7 @@ mng_retcode mngzlib_deflateinit (mng_datap pData)
   if (iZrslt != Z_OK)                  /* on error bail out */
     MNG_ERRORZ (pData, (mng_uint32)iZrslt)
 
-  pData->bDeflating      = MNG_TRUE;   /* really deflating something now */
+  pData->bDeflating = MNG_TRUE;        /* really deflating something now */
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_DEFLATEINIT, MNG_LC_END)

@@ -4,7 +4,7 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_zlib.h             copyright (c) 2000 G.Juyn        * */
+/* * file      : libmng_zlib.h             copyright (c) 2000-2002 G.Juyn   * */
 /* * version   : 1.0.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : ZLIB package interface (definition)                        * */

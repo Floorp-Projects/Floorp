@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_error.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * file      : libmng_error.h            copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Error functions (definition)                               * */
 /* *                                                                        * */
@@ -41,6 +41,11 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             1.0.5 - 08/20/2002 - G.Juyn                                * */
+/* *             - added option for soft-handling of errors                 * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -72,10 +77,17 @@ mng_bool mng_process_error (mng_datap   pData,
 /* *                                                                        * */
 /* ************************************************************************** */
 
+#ifdef MNG_SOFTERRORS
+#define MNG_ERROR(D,C)      { if (!mng_process_error (D, C, 0, 0)) return C; }
+#define MNG_ERRORZ(D,Z)     { if (!mng_process_error (D, MNG_ZLIBERROR, Z, 0)) return MNG_ZLIBERROR; }
+#define MNG_ERRORJ(D,J)     { if (!mng_process_error (D, MNG_JPEGERROR, J, 0)) return MNG_JPEGERROR; }
+#define MNG_ERRORL(D,L)     { if (!mng_process_error (D, MNG_LCMSERROR, L, 0)) return MNG_LCMSERROR; }
+#else
 #define MNG_ERROR(D,C)      { mng_process_error (D, C, 0, 0); return C; }
 #define MNG_ERRORZ(D,Z)     { mng_process_error (D, MNG_ZLIBERROR, Z, 0); return MNG_ZLIBERROR; }
 #define MNG_ERRORJ(D,J)     { mng_process_error (D, MNG_JPEGERROR, J, 0); return MNG_JPEGERROR; }
 #define MNG_ERRORL(D,L)     { mng_process_error (D, MNG_LCMSERROR, L, 0); return MNG_LCMSERROR; }
+#endif
 
 #define MNG_RETURN(D,C)     { mng_store_error (D, C, 0, 0); return C; }
 
@@ -95,10 +107,10 @@ mng_bool mng_process_error (mng_datap   pData,
 /* ************************************************************************** */
 
 typedef struct {
-           mng_retcode iError;
-           mng_pchar   zErrortext;
-        } mng_error_entry;
-typedef mng_error_entry * mng_error_entryp;
+                 mng_retcode iError;
+                 mng_pchar   zErrortext;
+               } mng_error_entry;
+typedef mng_error_entry const * mng_error_entryp;
 
 /* ************************************************************************** */
 

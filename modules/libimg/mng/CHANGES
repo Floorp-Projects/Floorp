@@ -1,5 +1,321 @@
 -----------------------------------------------------------
 
+1.0.5 (mar 1st 2003)
+-------------------------
+
+in short:
+
+Only a small fix for progressive jpeg suspension problem.
+
+This is the long-awaited final release containing the new 'dynamic MNG' feature
+and bringing MNG compliance to near 100%!
+
+-------------------
+
+bugfixes:
+- B683152 - libjpeg suspension not always honored correctly
+
+core:
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
+1.0.5-rc3 (jan 20th 2003)
+-------------------------
+
+in short:
+
+Third release-candidate for the upcoming 1.0.5 version.
+
+Minor bug-fixes and finalizing the accepted proposal (by official vote) for
+the TERM/frame_delay changes on mng-list (nov-dec/2002).
+
+-------------------
+
+bugfixes:
+- B654627 - fixed SEGV when no gettickcount callback (thanks Adam!)
+- B664383 - fixed typo (thanks Dimitri)
+- B664911 - fixed buffer overflow during init (thanks Alex!)
+
+core:
+- finalized changes in TERM/final_delay to elected proposal (positive vote)
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
+1.0.5-rc2 (dec 9th 2002)
+------------------------
+
+in short:
+
+Second release-candidate for the upcoming 1.0.5 version.
+This contains fixes for a few minor details reported by the loyal testers.
+It fixes some issues with the goframe/golayer/gotime processing and related
+stuff. And it adds a way to disable playback-caching from within the MNG,
+which is very useful for streaming-MNG encoders (such as gserver!).
+
+-------------------
+
+bugfixes:
+
+core:
+- fixed layer- & frame-counting during read()
+- changed FRAMECOUNT/LAYERCOUNT/PLAYTIME error to warning
+- fixed goframe/golayer/gotime processing
+- added support for nEED "MNG 1.1"
+- added support for nEED "CACHEOFF"; turn playback caching off for streaming MNG
+- fixed magnification bug with object 0
+- added support to get totals for frames/layers/playtime after mng_read()
+- fixed some issues in init_app_cms()
+- fixed goxxxxx() support for zero values
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
+1.0.5-rc1 (nov 1st 2002)
+------------------------
+
+in short:
+
+First release-candidate for the upcoming 1.0.5 version.
+This fixes a few small problems and brings the TERM/MEND processing, with
+respect to interframe_delay as per the current discussion on MNG-list,
+up-to-date with the latest proposal.
+
+-------------------
+
+bugfixes:
+
+core:
+- fixed initialization of pIds in dISC read routine (Thanks Winfried!)
+- fixed issue in freeing evNT chunk (Thanks Winfried!)
+- fixed clipping-problem with BACK tiling (Thanks Sakura!)
+- fixed processing for multiple objects in MAGN (Thanks Sakura!)
+- fixed display of visible target of PAST operation (Thanks Sakura!)
+- modified TERM/MEND processing for max(1, TERM_delay, interframe_delay)
+
+samples:
+
+contrib:
+- fixed typo in Makefile for gtk-mng-view sample
+
+doc:
+
+makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
+1.0.5-b3 (oct 15th 2002)
+------------------------
+
+in short:
+
+Fairly quick after beta2, since that introduced a couple of unfortunate
+booboo's and wasn't very workable. It also changes the standard configure
+script to build a standard shared object similar to what I intended.
+
+-------------------
+
+bugfixes:
+
+core:
+- fixed support for condition=2 in TERM chunk
+- fixed trace-constants for PAST chunk
+- added mng_status_dynamic to supports function
+
+samples:
+
+contrib:
+
+doc:
+- small cosmetic changes in man/libmng.3
+
+makefiles:
+
+autoconf:
+- fixed configure.in to build a 'standard' SO primarily
+
+-----------------------------------------------------------
+
+1.0.5-b2 (oct 9th 2002)
+------------------------
+
+in short:
+
+Second beta for next 1.0.5 release. This addresses some minor problems
+detected during testing. It adds the proposed change to the MNG spec as
+discussed on the "mng-list" recently; eg. Adam's option 4.
+And it adds a little function to check at run-time if the lib is a beta or not.
+
+-------------------
+
+bugfixes:
+
+core:
+- fixed chunk-storage for evNT chunk
+- fixed dropping mix of frozen/unfrozen objects
+- fixed problem with cloned objects marked as invalid
+- fixed problem cloning frozen object_buffers
+- fixed DISC support
+- added proposed change in handling of TERM- & interframe-delay
+- added another fix for misplaced TERM chunk
+- added check for TERM placement during create/write
+- completed support for condition=2 in TERM chunk
+- added beta version function & constant
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
+1.0.5-b1 (sep 24th 2002)
+------------------------
+
+in short:
+
+First beta of a large maintenance release. This completes support of the MNG
+specification to nearly 100% (PAST, PROM, delta-images, BACK image+tile).
+It adds "dynamic" MNG and a few other neat routines as well as fixes several
+bugs reported through SourceForge or to me directly.
+
+-------------------
+
+bugfixes:
+- B575832 - library has wrong patch version number
+- B578572 - remove in 1.0.0!
+- B578940 - some functions not implemented
+- B581625 - large chunks fail with suspension reads
+- B597134 - libmng pollutes the linker namespace
+
+core:
+- added sanity check for improbable chunklengths
+- removed eMNGma hack (thanks Dimitri!)
+- unimplemented functions return an errorcode now
+- added test-option for PNG filter method 192 (= levelling)
+- added test-option for PNG filter method 193 (= no filtering)
+  (both are conditional and only for testing purposes!!!)
+- completed PROM support
+- completed delta-image support
+- completed MAGN support (16-bit functions)
+- added HLAPI function to copy a chunk from a read MNG to a newly created MNG
+- added option for soft-handling of errors (only for repair software!!!)
+- fixed some routine inclusion/exclusion for undefined conditionals 
+- pre-fixed all internal routines with mng_
+- added symbol MNG_LOCAL (= static) to really local functions
+- fixed reading of FRAM with just frame_mode and name
+- fixed read/write of MAGN chunk
+- added event handling for dynamic MNG
+- added 'supports' call to check function availability
+- fixed copyright notice in the headers of all libmng modules
+- fixed LOOP iteration=0 special case
+- re-compiled standard Windows dll with lcms-1.0.9
+- added warning for too much IDAT data
+- warnings are ignored by default now
+- misplaced TERM is now treated as warning
+- fixed color-correction for restore-background handling
+- optimized restore-background for bKGD cases
+- cleaned up some old stuff
+- completed support for BACK image & tiling
+- completed support for PAST
+- added bgrx8 canvas (filler byte)
+- fixed reset_object_detail to clear old buffer
+- added in-memory color-correction of abstract images
+- added compose over/under routines for PAST processing
+- added flip & tile routines for PAST processing
+
+samples:
+- Added new BCB sample for fixing invalid JASC Animation Shop files
+  (shows new copy_chunks function; use of MNG_SOFTERRORS & static linking)
+
+contrib:
+- added xmngview by Winfried Szukalski (Vielen dank!)
+- Updated the Delphi mngview sample to handle dynamic MNGs
+- Added Kylix example (simplified port of the Delphi mngview sample)
+
+doc:
+- added diff to add MNG&JNG to a systems 'magic' file (Thanks Winfried)
+- fixed docs about using mng_display_resume after display_reset
+  (should read to use mng_display!)
+
+makefiles:
+- added makefile to build a libmng.dll for MingW
+  (makefile.mingwdll - thanks to Frank Richter!)
+
+autoconf:
+- fixing libtool version-number to be in line with what it should be
+
+-----------------------------------------------------------
+
+1.0.4 (Jun 23rd 2002)
+---------------------
+
+in short:
+
+Just some small fixes
+Standard dll now compiled with zlib 1.1.4 and lcms 1.0.8
+
+-------------------
+
+bugfixes:
+- B495442 - invalid returnvalue in mng_get_suspensionmode
+- B495443 - incorrect suspend check in read_databuffer
+- B526138 - returned IJGSRC6B calling convention to default for MSVC
+- B558212 - off by one error
+- B557677 - can't find lcms.h
+
+core:
+- fixed possible compile-problem in cleanup_rowproc
+- MNG subimage alpha composite wrong for rgba8 images
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+- fixed check for lcms.h in configure.in
+
+autoconf:
+
+-----------------------------------------------------------
+
 1.0.3 (Sep 18th 2001)
 ---------------------
 
@@ -102,7 +418,7 @@ core:
 - fixed reset_rundata to drop all objects (Thanks again, Gregg!)
 - fixed problem with cms profile being created multiple times when both
   iCCP & cHRM/gAMA are present (And again... Gregg)
-- moved mng_clear_cms to libmng_cms                   
+- moved mng_clear_cms to libmng_cms
 - added "default" sRGB generation (Thanks Marti!)
 
 samples:

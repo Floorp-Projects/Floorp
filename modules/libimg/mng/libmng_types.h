@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_types.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.3                                                      * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : type specifications                                        * */
 /* *                                                                        * */
@@ -100,6 +100,9 @@
 /* *             1.0.3 - 08/06/2001 - G.Juyn                                * */
 /* *             - changed inclusion of lcms.h for Linux platforms          * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #ifndef _libmng_types_h_
@@ -181,23 +184,19 @@
 #include <limits.h>                    /* get proper integer widths */
 
 #ifdef WIN32
-/* B003 */
 #if defined __BORLANDC__
 #include <mem.h>                       /* defines "memcpy" for BCB */
 #else
 #include <memory.h>                    /* defines "memcpy" for other win32 platforms */
 #endif
-/* B003 */
-#ifdef MNG_CHECK_BAD_ICCP
-#include <string.h>                    /* strncmp() */
-#endif
-#else
+#include <string.h>                    /* "strncmp" + "strcmp" */
+#else /* WIN32 */
 #ifdef BSD
-#include <strings.h>                   /* defines "memcpy" for BSD (?) */
+#include <strings.h>                   /* defines "memcpy", etc for BSD (?) */
 #else
-#include <string.h>                    /* defines "memcpy" for all others (???) */
+#include <string.h>                    /* defines "memcpy", etc for all others (???) */
 #endif
-#endif
+#endif /* WIN32 */
 
 #if defined(MNG_FULL_CMS) || defined(MNG_GAMMA_ONLY)
 #include <math.h>                      /* fp gamma-calculation */
@@ -217,6 +216,8 @@
 #define MNG_DLL
 #endif
 #endif
+
+#define MNG_LOCAL static
 
 #if defined(MNG_DLL) && defined(WIN32) /* setup DLL calling conventions */ 
 #define MNG_DECL __stdcall

@@ -4,8 +4,8 @@
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
-/* * file      : libmng_trace.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.3                                                      * */
+/* * file      : libmng_trace.c            copyright (c) 2000-2002 G.Juyn   * */
+/* * version   : 1.0.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (implementation)                           * */
 /* *                                                                        * */
@@ -103,6 +103,27 @@
 /* *             1.0.3 - 08/06/2001 - G.Juyn                                * */
 /* *             - added get function for last processed BACK chunk         * */
 /* *                                                                        * */
+/* *             1.0.5 - 08/15/2002 - G.Juyn                                * */
+/* *             - completed PROM support                                   * */
+/* *             - completed delta-image support                            * */
+/* *             1.0.5 - 08/19/2002 - G.Juyn                                * */
+/* *             - B597134 - libmng pollutes the linker namespace           * */
+/* *             - added HLAPI function to copy chunks                      * */
+/* *             1.0.5 - 09/14/2002 - G.Juyn                                * */
+/* *             - added event handling for dynamic MNG                     * */
+/* *             1.0.5 - 09/20/2002 - G.Juyn                                * */
+/* *             - added support for PAST                                   * */
+/* *             1.0.5 - 09/22/2002 - G.Juyn                                * */
+/* *             - added bgrx8 canvas (filler byte)                         * */
+/* *             1.0.5 - 09/23/2002 - G.Juyn                                * */
+/* *             - added in-memory color-correction of abstract images      * */
+/* *             - added compose over/under routines for PAST processing    * */
+/* *             - added flip & tile routines for PAST processing           * */
+/* *             1.0.5 - 10/09/2002 - G.Juyn                                * */
+/* *             - fixed trace-constants for PAST chunk                     * */
+/* *             1.0.5 - 11/07/2002 - G.Juyn                                * */
+/* *             - added support to get totals after mng_read()             * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -124,7 +145,7 @@
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_TRACE_STRINGS
-  mng_trace_entry trace_table [] =
+MNG_LOCAL mng_trace_entry const trace_table [] =
   {
     {MNG_FN_INITIALIZE,                "initialize"},
     {MNG_FN_RESET,                     "reset"},
@@ -142,6 +163,7 @@
     {MNG_FN_DISPLAY_GOTIME,            "display_gotime"},
     {MNG_FN_GETLASTERROR,              "getlasterror"},
     {MNG_FN_READ_RESUME,               "read_resume"},
+    {MNG_FN_TRAPEVENT,                 "trapevent"},
 
     {MNG_FN_SETCB_MEMALLOC,            "setcb_memalloc"},
     {MNG_FN_SETCB_MEMFREE,             "setcb_memfree"},
@@ -292,6 +314,10 @@
     {MNG_FN_GET_CACHEPLAYBACK,         "get_cacheplayback"},
     {MNG_FN_GET_DOPROGRESSIVE,         "get_doprogressive"},
     {MNG_FN_GET_LASTBACKCHUNK,         "get_lastbackchunk"},
+    {MNG_FN_GET_LASTSEEKNAME,          "get_lastseekname"},
+    {MNG_FN_GET_TOTALFRAMES,           "get_totalframes"},
+    {MNG_FN_GET_TOTALLAYERS,           "get_totallayers"},
+    {MNG_FN_GET_TOTALPLAYTIME,         "get_totalplaytime"},
 
     {MNG_FN_STATUS_ERROR,              "status_error"},
     {MNG_FN_STATUS_READING,            "status_reading"},
@@ -301,8 +327,11 @@
     {MNG_FN_STATUS_DISPLAYING,         "status_displaying"},
     {MNG_FN_STATUS_RUNNING,            "status_running"},
     {MNG_FN_STATUS_TIMERBREAK,         "status_timerbreak"},
+    {MNG_FN_STATUS_DYNAMIC,            "status_dynamic"},
+    {MNG_FN_STATUS_RUNNINGEVENT,       "status_runningevent"},
 
     {MNG_FN_ITERATE_CHUNKS,            "iterate_chunks"},
+    {MNG_FN_COPY_CHUNK,                "copy_chunk"},
 
     {MNG_FN_GETCHUNK_IHDR,             "getchunk_ihdr"},
     {MNG_FN_GETCHUNK_PLTE,             "getchunk_plte"},
@@ -357,11 +386,13 @@
     {MNG_FN_GETCHUNK_UNKNOWN,          "getchunk_unknown"},
     {MNG_FN_GETCHUNK_MAGN,             "getchunk_magn"},
     {MNG_FN_GETCHUNK_JDAA,             "getchunk_jdaa"},
+    {MNG_FN_GETCHUNK_EVNT,             "getchunk_evnt"},
 
     {MNG_FN_GETCHUNK_PAST_SRC,         "getchunk_past_src"},
     {MNG_FN_GETCHUNK_SAVE_ENTRY,       "getchunk_save_entry"},
     {MNG_FN_GETCHUNK_PPLT_ENTRY,       "getchunk_pplt_entry"},
     {MNG_FN_GETCHUNK_ORDR_ENTRY,       "getchunk_ordr_entry"},
+    {MNG_FN_GETCHUNK_EVNT_ENTRY,       "getchunk_evnt_entry"},
 
     {MNG_FN_PUTCHUNK_IHDR,             "putchunk_ihdr"},
     {MNG_FN_PUTCHUNK_PLTE,             "putchunk_plte"},
@@ -416,11 +447,13 @@
     {MNG_FN_PUTCHUNK_UNKNOWN,          "putchunk_unknown"},
     {MNG_FN_PUTCHUNK_MAGN,             "putchunk_magn"},
     {MNG_FN_PUTCHUNK_JDAA,             "putchunk_jdaa"},
+    {MNG_FN_PUTCHUNK_EVNT,             "putchunk_evnt"},
 
     {MNG_FN_PUTCHUNK_PAST_SRC,         "putchunk_past_src"},
     {MNG_FN_PUTCHUNK_SAVE_ENTRY,       "putchunk_save_entry"},
     {MNG_FN_PUTCHUNK_PPLT_ENTRY,       "putchunk_pplt_entry"},
     {MNG_FN_PUTCHUNK_ORDR_ENTRY,       "putchunk_ordr_entry"},
+    {MNG_FN_PUTCHUNK_EVNT_ENTRY,       "putchunk_evnt_entry"},
 
     {MNG_FN_GETIMGDATA_SEQ,            "getimgdata_seq"},
     {MNG_FN_GETIMGDATA_CHUNKSEQ,       "getimgdata_chunkseq"},
@@ -487,6 +520,7 @@
     {MNG_FN_DISPLAY_DX16,              "display_dx16"},
     {MNG_FN_DISPLAY_RGB8_A8,           "display_rgb8_a8"},
     {MNG_FN_DISPLAY_BGRA8PM,           "display_bgra8_pm"},
+    {MNG_FN_DISPLAY_BGRX8,             "display_bgrx8"},
 
     {MNG_FN_INIT_FULL_CMS,             "init_full_cms"},
     {MNG_FN_CORRECT_FULL_CMS,          "correct_full_cms"},
@@ -583,6 +617,7 @@
     {MNG_FN_RENUM_IMGOBJECT,           "renum_imgobject"},
     {MNG_FN_PROMOTE_IMGOBJECT,         "promote_imgobject"},
     {MNG_FN_MAGNIFY_IMGOBJECT,         "magnify_imgobject"},
+    {MNG_FN_COLORCORRECT_OBJECT,       "colorcorrect_object"},
 
     {MNG_FN_STORE_G1,                  "store_g1"},
     {MNG_FN_STORE_G2,                  "store_g2"},
@@ -656,6 +691,7 @@
     {MNG_FN_CREATE_ANI_MAGN,           "create_ani_magn"},
 
     {MNG_FN_CREATE_ANI_IMAGE,          "create_ani_image"},
+    {MNG_FN_CREATE_EVENT,              "create_event"},
 
     {MNG_FN_FREE_ANI_LOOP,             "free_ani_loop"},
     {MNG_FN_FREE_ANI_ENDL,             "free_ani_endl"},
@@ -687,6 +723,7 @@
     {MNG_FN_FREE_ANI_MAGN,             "free_ani_magn"},
 
     {MNG_FN_FREE_ANI_IMAGE,            "free_ani_image"},
+    {MNG_FN_FREE_EVENT,                "free_event"},
 
     {MNG_FN_PROCESS_ANI_LOOP,          "process_ani_loop"},
     {MNG_FN_PROCESS_ANI_ENDL,          "process_ani_endl"},
@@ -718,6 +755,7 @@
     {MNG_FN_PROCESS_ANI_MAGN,          "process_ani_magn"},
 
     {MNG_FN_PROCESS_ANI_IMAGE,         "process_ani_image"},
+    {MNG_FN_PROCESS_EVENT,             "process_event"},
 
     {MNG_FN_RESTORE_BACKIMAGE,         "restore_backimage"},
     {MNG_FN_RESTORE_BACKCOLOR,         "restore_backcolor"},
@@ -725,6 +763,7 @@
     {MNG_FN_RESTORE_RGB8,              "restore_rgb8"},
     {MNG_FN_RESTORE_BGR8,              "restore_bgr8"},
     {MNG_FN_RESTORE_BKGD,              "restore_bkgd"},
+    {MNG_FN_RESTORE_BGRX8,             "restore_bgrx8"},
 
     {MNG_FN_INIT_IHDR,                 "init_ihdr"},
     {MNG_FN_INIT_PLTE,                 "init_plte"},
@@ -779,6 +818,62 @@
     {MNG_FN_INIT_UNKNOWN,              "init_unknown"},
     {MNG_FN_INIT_MAGN,                 "init_magn"},
     {MNG_FN_INIT_JDAA,                 "init_jdaa"},
+    {MNG_FN_INIT_EVNT,                 "init_evnt"},
+
+    {MNG_FN_ASSIGN_IHDR,               "assign_ihdr"},
+    {MNG_FN_ASSIGN_PLTE,               "assign_plte"},
+    {MNG_FN_ASSIGN_IDAT,               "assign_idat"},
+    {MNG_FN_ASSIGN_IEND,               "assign_iend"},
+    {MNG_FN_ASSIGN_TRNS,               "assign_trns"},
+    {MNG_FN_ASSIGN_GAMA,               "assign_gama"},
+    {MNG_FN_ASSIGN_CHRM,               "assign_chrm"},
+    {MNG_FN_ASSIGN_SRGB,               "assign_srgb"},
+    {MNG_FN_ASSIGN_ICCP,               "assign_iccp"},
+    {MNG_FN_ASSIGN_TEXT,               "assign_text"},
+    {MNG_FN_ASSIGN_ZTXT,               "assign_ztxt"},
+    {MNG_FN_ASSIGN_ITXT,               "assign_itxt"},
+    {MNG_FN_ASSIGN_BKGD,               "assign_bkgd"},
+    {MNG_FN_ASSIGN_PHYS,               "assign_phys"},
+    {MNG_FN_ASSIGN_SBIT,               "assign_sbit"},
+    {MNG_FN_ASSIGN_SPLT,               "assign_splt"},
+    {MNG_FN_ASSIGN_HIST,               "assign_hist"},
+    {MNG_FN_ASSIGN_TIME,               "assign_time"},
+    {MNG_FN_ASSIGN_MHDR,               "assign_mhdr"},
+    {MNG_FN_ASSIGN_MEND,               "assign_mend"},
+    {MNG_FN_ASSIGN_LOOP,               "assign_loop"},
+    {MNG_FN_ASSIGN_ENDL,               "assign_endl"},
+    {MNG_FN_ASSIGN_DEFI,               "assign_defi"},
+    {MNG_FN_ASSIGN_BASI,               "assign_basi"},
+    {MNG_FN_ASSIGN_CLON,               "assign_clon"},
+    {MNG_FN_ASSIGN_PAST,               "assign_past"},
+    {MNG_FN_ASSIGN_DISC,               "assign_disc"},
+    {MNG_FN_ASSIGN_BACK,               "assign_back"},
+    {MNG_FN_ASSIGN_FRAM,               "assign_fram"},
+    {MNG_FN_ASSIGN_MOVE,               "assign_move"},
+    {MNG_FN_ASSIGN_CLIP,               "assign_clip"},
+    {MNG_FN_ASSIGN_SHOW,               "assign_show"},
+    {MNG_FN_ASSIGN_TERM,               "assign_term"},
+    {MNG_FN_ASSIGN_SAVE,               "assign_save"},
+    {MNG_FN_ASSIGN_SEEK,               "assign_seek"},
+    {MNG_FN_ASSIGN_EXPI,               "assign_expi"},
+    {MNG_FN_ASSIGN_FPRI,               "assign_fpri"},
+    {MNG_FN_ASSIGN_NEED,               "assign_need"},
+    {MNG_FN_ASSIGN_PHYG,               "assign_phyg"},
+    {MNG_FN_ASSIGN_JHDR,               "assign_jhdr"},
+    {MNG_FN_ASSIGN_JDAT,               "assign_jdat"},
+    {MNG_FN_ASSIGN_JSEP,               "assign_jsep"},
+    {MNG_FN_ASSIGN_DHDR,               "assign_dhdr"},
+    {MNG_FN_ASSIGN_PROM,               "assign_prom"},
+    {MNG_FN_ASSIGN_IPNG,               "assign_ipng"},
+    {MNG_FN_ASSIGN_PPLT,               "assign_pplt"},
+    {MNG_FN_ASSIGN_IJNG,               "assign_ijng"},
+    {MNG_FN_ASSIGN_DROP,               "assign_drop"},
+    {MNG_FN_ASSIGN_DBYK,               "assign_dbyk"},
+    {MNG_FN_ASSIGN_ORDR,               "assign_ordr"},
+    {MNG_FN_ASSIGN_UNKNOWN,            "assign_unknown"},
+    {MNG_FN_ASSIGN_MAGN,               "assign_magn"},
+    {MNG_FN_ASSIGN_JDAA,               "assign_jdaa"},
+    {MNG_FN_ASSIGN_EVNT,               "assign_evnt"},
 
     {MNG_FN_FREE_IHDR,                 "free_ihdr"},
     {MNG_FN_FREE_PLTE,                 "free_plte"},
@@ -833,6 +928,7 @@
     {MNG_FN_FREE_UNKNOWN,              "free_unknown"},
     {MNG_FN_FREE_MAGN,                 "free_magn"},
     {MNG_FN_FREE_JDAA,                 "free_jdaa"},
+    {MNG_FN_FREE_EVNT,                 "free_evnt"},
 
     {MNG_FN_READ_IHDR,                 "read_ihdr"},
     {MNG_FN_READ_PLTE,                 "read_plte"},
@@ -887,6 +983,7 @@
     {MNG_FN_READ_UNKNOWN,              "read_unknown"},
     {MNG_FN_READ_MAGN,                 "read_magn"},
     {MNG_FN_READ_JDAA,                 "read_jdaa"},
+    {MNG_FN_READ_EVNT,                 "read_evnt"},
 
     {MNG_FN_WRITE_IHDR,                "write_ihdr"},
     {MNG_FN_WRITE_PLTE,                "write_plte"},
@@ -941,6 +1038,7 @@
     {MNG_FN_WRITE_UNKNOWN,             "write_unknown"},
     {MNG_FN_WRITE_MAGN,                "write_magn"},
     {MNG_FN_WRITE_JDAA,                "write_jdaa"},
+    {MNG_FN_WRITE_EVNT,                "write_evnt"},
 
     {MNG_FN_ZLIB_INITIALIZE,           "zlib_initialize"},
     {MNG_FN_ZLIB_CLEANUP,              "zlib_cleanup"},
@@ -1087,6 +1185,40 @@
     {MNG_FN_MAGNIFY_GA8_Y5,            "magnify_ga8_y5"},
     {MNG_FN_MAGNIFY_RGBA8_Y5,          "magnify_rgba8_y5"},
 
+    {MNG_FN_MAGNIFY_G8_X1,             "magnify_g8_x1"},
+    {MNG_FN_MAGNIFY_G8_X2,             "magnify_g8_x2"},
+    {MNG_FN_MAGNIFY_RGB8_X1,           "magnify_rgb8_x1"},
+    {MNG_FN_MAGNIFY_RGB8_X2,           "magnify_rgb8_x2"},
+    {MNG_FN_MAGNIFY_GA8_X1,            "magnify_ga8_x1"},
+    {MNG_FN_MAGNIFY_GA8_X2,            "magnify_ga8_x2"},
+    {MNG_FN_MAGNIFY_GA8_X3,            "magnify_ga8_x3"},
+    {MNG_FN_MAGNIFY_GA8_X4,            "magnify_ga8_x4"},
+    {MNG_FN_MAGNIFY_RGBA8_X1,          "magnify_rgba8_x1"},
+    {MNG_FN_MAGNIFY_RGBA8_X2,          "magnify_rgba8_x2"},
+    {MNG_FN_MAGNIFY_RGBA8_X3,          "magnify_rgba8_x3"},
+    {MNG_FN_MAGNIFY_RGBA8_X4,          "magnify_rgba8_x4"},
+    {MNG_FN_MAGNIFY_G8_X3,             "magnify_g8_x3"},
+    {MNG_FN_MAGNIFY_RGB8_X3,           "magnify_rgb8_x3"},
+    {MNG_FN_MAGNIFY_GA8_X5,            "magnify_ga8_x5"},
+    {MNG_FN_MAGNIFY_RGBA8_X5,          "magnify_rgba8_x5"},
+
+    {MNG_FN_MAGNIFY_G8_Y1,             "magnify_g8_y1"},
+    {MNG_FN_MAGNIFY_G8_Y2,             "magnify_g8_y2"},
+    {MNG_FN_MAGNIFY_RGB8_Y1,           "magnify_rgb8_y1"},
+    {MNG_FN_MAGNIFY_RGB8_Y2,           "magnify_rgb8_y2"},
+    {MNG_FN_MAGNIFY_GA8_Y1,            "magnify_ga8_y1"},
+    {MNG_FN_MAGNIFY_GA8_Y2,            "magnify_ga8_y2"},
+    {MNG_FN_MAGNIFY_GA8_Y3,            "magnify_ga8_y3"},
+    {MNG_FN_MAGNIFY_GA8_Y4,            "magnify_ga8_y4"},
+    {MNG_FN_MAGNIFY_RGBA8_Y1,          "magnify_rgba8_y1"},
+    {MNG_FN_MAGNIFY_RGBA8_Y2,          "magnify_rgba8_y2"},
+    {MNG_FN_MAGNIFY_RGBA8_Y3,          "magnify_rgba8_y3"},
+    {MNG_FN_MAGNIFY_RGBA8_Y4,          "magnify_rgba8_y4"},
+    {MNG_FN_MAGNIFY_G8_Y3,             "magnify_g8_y3"},
+    {MNG_FN_MAGNIFY_RGB8_Y3,           "magnify_rgb8_y3"},
+    {MNG_FN_MAGNIFY_GA8_Y5,            "magnify_ga8_y5"},
+    {MNG_FN_MAGNIFY_RGBA8_Y5,          "magnify_rgba8_y5"},
+
     {MNG_FN_DELTA_G1_G1,               "delta_g1_g1"},
     {MNG_FN_DELTA_G2_G2,               "delta_g2_g2"},
     {MNG_FN_DELTA_G4_G4,               "delta_g4_g4"},
@@ -1106,6 +1238,71 @@
     {MNG_FN_DELTA_RGBA16_RGBA16,       "delta_rgba16_rgba16"},
     {MNG_FN_DELTA_RGBA16_RGB16,        "delta_rgba16_rgb16"},
     {MNG_FN_DELTA_RGBA16_A16,          "delta_rgba16_a16"},
+
+    {MNG_FN_PROMOTE_G8_G8,             "promote_g8_g8"},
+    {MNG_FN_PROMOTE_G8_G16,            "promote_g8_g16"},
+    {MNG_FN_PROMOTE_G16_G16,           "promote_g8_g16"},
+    {MNG_FN_PROMOTE_G8_GA8,            "promote_g8_ga8"},
+    {MNG_FN_PROMOTE_G8_GA16,           "promote_g8_ga16"},
+    {MNG_FN_PROMOTE_G16_GA16,          "promote_g16_ga16"},
+    {MNG_FN_PROMOTE_G8_RGB8,           "promote_g8_rgb8"},
+    {MNG_FN_PROMOTE_G8_RGB16,          "promote_g8_rgb16"},
+    {MNG_FN_PROMOTE_G16_RGB16,         "promote_g16_rgb16"},
+    {MNG_FN_PROMOTE_G8_RGBA8,          "promote_g8_rgba8"},
+    {MNG_FN_PROMOTE_G8_RGBA16,         "promote_g8_rgba16"},
+    {MNG_FN_PROMOTE_G16_RGBA16,        "promote_g16_rgba16"},
+    {MNG_FN_PROMOTE_GA8_GA16,          "promote_ga8_ga16"},
+    {MNG_FN_PROMOTE_GA8_RGBA8,         "promote_ga8_rgba8"},
+    {MNG_FN_PROMOTE_GA8_RGBA16,        "promote_ga8_rgba16"},
+    {MNG_FN_PROMOTE_GA16_RGBA16,       "promote_ga16_rgba16"},
+    {MNG_FN_PROMOTE_RGB8_RGB16,        "promote_rgb8_rgb16"},
+    {MNG_FN_PROMOTE_RGB8_RGBA8,        "promote_rgb8_rgba8"},
+    {MNG_FN_PROMOTE_RGB8_RGBA16,       "promote_rgb8_rgba16"},
+    {MNG_FN_PROMOTE_RGB16_RGBA16,      "promote_rgb16_rgba16"},
+    {MNG_FN_PROMOTE_RGBA8_RGBA16,      "promote_rgba8_rgba16"},
+    {MNG_FN_PROMOTE_IDX8_RGB8,         "promote_idx8_rgb8"},
+    {MNG_FN_PROMOTE_IDX8_RGB16,        "promote_idx8_rgb16"},
+    {MNG_FN_PROMOTE_IDX8_RGBA8,        "promote_idx8_rgba8"},
+    {MNG_FN_PROMOTE_IDX8_RGBA16,       "promote_idx8_rgba16"},
+
+    {MNG_FN_SCALE_G1_G2,               "scale_g1_g2"},
+    {MNG_FN_SCALE_G1_G4,               "scale_g1_g4"},
+    {MNG_FN_SCALE_G1_G8,               "scale_g1_g8"},
+    {MNG_FN_SCALE_G1_G16,              "scale_g1_g16"},
+    {MNG_FN_SCALE_G2_G4,               "scale_g2_g4"},
+    {MNG_FN_SCALE_G2_G8,               "scale_g2_g8"},
+    {MNG_FN_SCALE_G2_G16,              "scale_g2_g16"},
+    {MNG_FN_SCALE_G4_G8,               "scale_g4_g8"},
+    {MNG_FN_SCALE_G4_G16,              "scale_g4_g16"},
+    {MNG_FN_SCALE_G8_G16,              "scale_g8_g16"},
+    {MNG_FN_SCALE_GA8_GA16,            "scale_ga8_ga16"},
+    {MNG_FN_SCALE_RGB8_RGB16,          "scale_rgb8_rgb16"},
+    {MNG_FN_SCALE_RGBA8_RGBA16,        "scale_rgba8_rgba16"},
+
+    {MNG_FN_SCALE_G2_G1,               "scale_g2_g1"},
+    {MNG_FN_SCALE_G4_G1,               "scale_g4_g1"},
+    {MNG_FN_SCALE_G8_G1,               "scale_g8_g1"},
+    {MNG_FN_SCALE_G16_G1,              "scale_g16_g1"},
+    {MNG_FN_SCALE_G4_G2,               "scale_g4_g2"},
+    {MNG_FN_SCALE_G8_G2,               "scale_g8_g2"},
+    {MNG_FN_SCALE_G16_G2,              "scale_g16_g2"},
+    {MNG_FN_SCALE_G8_G4,               "scale_g8_g4"},
+    {MNG_FN_SCALE_G16_G4,              "scale_g16_g4"},
+    {MNG_FN_SCALE_G16_G8,              "scale_g16_g8"},
+    {MNG_FN_SCALE_GA16_GA8,            "scale_ga16_ga8"},
+    {MNG_FN_SCALE_RGB16_RGB8,          "scale_rgb16_rgb8"},
+    {MNG_FN_SCALE_RGBA16_RGBA8,        "scale_rgba16_rgba8"},
+
+    {MNG_FN_COMPOSEOVER_RGBA8,         "composeover_rgba8"},
+    {MNG_FN_COMPOSEOVER_RGBA16,        "composeover_rgba16"},
+    {MNG_FN_COMPOSEUNDER_RGBA8,        "composeunder_rgba8"},
+    {MNG_FN_COMPOSEUNDER_RGBA16,       "composeunder_rgba16"},
+
+    {MNG_FN_FLIP_RGBA8,                "flip_rgba8"},
+    {MNG_FN_FLIP_RGBA16,               "flip_rgba16"},
+    {MNG_FN_TILE_RGBA8,                "tile_rgba8"},
+    {MNG_FN_TILE_RGBA16,               "tile_rgba16"}
+
   };
 #endif /* MNG_INCLUDE_TRACE_STINGS */
 

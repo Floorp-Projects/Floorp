@@ -77,7 +77,7 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
 MOZPNG=10205
-MOZMNG="((1<<16)|(0<<8)|(4))"
+MOZMNG="((1<<16)|(0<<8)|(5))"
 MOZZLIB=1.1.4
 NSPR_VERSION=4
 
