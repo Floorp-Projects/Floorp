@@ -81,15 +81,21 @@ nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
   nsIMenuBar  * menubar  = nsnull;
   void *PhMenuBar;
-  
+
   /* Create the MenuBar */
   nsComponentManager::CreateInstance( kMenuBarCID, nsnull, kIMenuBarIID, (void**)&menubar );
   if( menubar )
   {
     menubar->Create( mWindow );
-    mWindow->SetMenuBar( menubar );
-    menubar->GetNativeData(PhMenuBar);
-    ::CreateViewerMenus((PtWidget_t *) PhMenuBar,this);
+
+    // REVISIT - strange problem here. May be a race condition or a compiler bug.
+
+    if( mWindow->SetMenuBar( menubar ) == NS_OK )
+    {
+      mWindow->ShowMenuBar( PR_TRUE );
+      menubar->GetNativeData(PhMenuBar);
+      ::CreateViewerMenus((PtWidget_t *) PhMenuBar,this);
+    }
   }
 
   return NS_OK;
