@@ -371,11 +371,13 @@ function Startup()
   }
   if (sidebarBox.hasAttribute("sidebarcommand")) { 
     var cmd = sidebarBox.getAttribute("sidebarcommand");
-    gMustLoadSidebar = true;
-    sidebarBox.hidden = false;
-    var sidebarSplitter = document.getElementById("sidebar-splitter");
-    sidebarSplitter.hidden = false;
-    document.getElementById(cmd).setAttribute("checked", "true");
+    if (cmd != "") {
+      gMustLoadSidebar = true;
+      sidebarBox.hidden = false;
+      var sidebarSplitter = document.getElementById("sidebar-splitter");
+      sidebarSplitter.hidden = false;
+      document.getElementById(cmd).setAttribute("checked", "true");
+    }
   }
 
   // Focus the content area unless we're loading a blank page
