@@ -101,3 +101,10 @@ the files are stored in the local version control system.
 Pay closer attention to security.  Use taint perl to ensure that
 harmful input does not get used in unexpected ways.  Keep the flow of
 control clear and simple.
+
+
+Allow for use of any text browser which can display tables
+currently this is true for the browser links:
+	http://artax.karlin.mff.cuni.cz/~mikulas/links/.
+
+but not the browser lynx.
