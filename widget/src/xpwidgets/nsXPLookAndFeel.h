@@ -28,12 +28,18 @@
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 
+typedef enum nsLookAndFeelType {
+  typeInt,
+  typeFloat,
+  typeColor
+};
+
 struct nsLookAndFeelIntPref
 {
   char* name;
   nsILookAndFeel::nsMetricID id;
   PRPackedBool isSet;
-  PRPackedBool isFloat; // default (PR_FALSE) is PRInt32
+  nsLookAndFeelType type;
   PRInt32 intVar;
 };
 
@@ -42,8 +48,17 @@ struct nsLookAndFeelFloatPref
   char* name;
   nsILookAndFeel::nsMetricFloatID id;
   PRPackedBool isSet;
-  PRPackedBool isFloat; // default (PR_FALSE) is PRInt32
+  nsLookAndFeelType type;
   float floatVar;
+};
+
+struct nsLookAndFeelColorPref
+{
+  char* name;
+  nsILookAndFeel::nsColorID id;
+  PRPackedBool isSet;
+  nsLookAndFeelType type;
+  nscolor colorVar;
 };
 
 class nsXPLookAndFeel: public nsILookAndFeel
@@ -74,15 +89,15 @@ public:
 #endif
 
 protected:
-  nsresult InitFromPref(nsLookAndFeelIntPref* aPref);
-  nsresult InitFromPref(nsLookAndFeelFloatPref* aPref);
-
-  nsCOMPtr<nsIPref> mPrefService;
+  nsresult InitFromPref(nsLookAndFeelIntPref* aPref, nsIPref* aPrefService);
+  nsresult InitFromPref(nsLookAndFeelFloatPref* aPref, nsIPref* aPrefService);
+  nsresult InitFromPref(nsLookAndFeelColorPref* aPref, nsIPref* aPrefService);
 
   static PRBool sInitialized;
 
-  static nsLookAndFeelIntPref sIntPrefs[22];
-  static nsLookAndFeelFloatPref sFloatPrefs[8];
+  static nsLookAndFeelIntPref sIntPrefs[];
+  static nsLookAndFeelFloatPref sFloatPrefs[];
+  static nsLookAndFeelColorPref sColorPrefs[];
 };
 
 extern nsresult NS_NewXPLookAndFeel(nsILookAndFeel**);

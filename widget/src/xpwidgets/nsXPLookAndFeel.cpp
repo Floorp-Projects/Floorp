@@ -30,59 +30,143 @@ NS_IMPL_ISUPPORTS1(nsXPLookAndFeel, nsILookAndFeel)
 
 nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
 {
-  { "ui.windowTitleHeight", eMetric_WindowTitleHeight, PR_FALSE, PR_FALSE, 0 },
-  { "ui.windowBorderWidth", eMetric_WindowBorderWidth, PR_FALSE, PR_FALSE, 0 },
-  { "ui.windowBorderHeight", eMetric_WindowBorderHeight, PR_FALSE, PR_FALSE, 0 },
-  { "ui.widget3DBorder", eMetric_Widget3DBorder, PR_FALSE, PR_FALSE, 0 },
-  { "ui.textFieldBorder", eMetric_TextFieldBorder, PR_FALSE, PR_FALSE, 0 },
-  { "ui.textFieldHeight", eMetric_TextFieldHeight, PR_FALSE, PR_FALSE, 0 },
+  { "ui.windowTitleHeight", eMetric_WindowTitleHeight, PR_FALSE, typeInt, 0 },
+  { "ui.windowBorderWidth", eMetric_WindowBorderWidth, PR_FALSE, typeInt, 0 },
+  { "ui.windowBorderHeight", eMetric_WindowBorderHeight, PR_FALSE, typeInt, 0 },
+  { "ui.widget3DBorder", eMetric_Widget3DBorder, PR_FALSE, typeInt, 0 },
+  { "ui.textFieldBorder", eMetric_TextFieldBorder, PR_FALSE, typeInt, 0 },
+  { "ui.textFieldHeight", eMetric_TextFieldHeight, PR_FALSE, typeInt, 0 },
   { "ui.buttonHorizontalInsidePaddingNavQuirks",
-    eMetric_ButtonHorizontalInsidePaddingNavQuirks, PR_FALSE, PR_FALSE, 0 },
+    eMetric_ButtonHorizontalInsidePaddingNavQuirks, PR_FALSE, typeInt, 0 },
   { "ui.buttonHorizontalInsidePaddingOffsetNavQuirks",
-    eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks, PR_FALSE, PR_FALSE, 0 },
-  { "ui.checkboxSize", eMetric_CheckboxSize, PR_FALSE, PR_FALSE, 0 },
-  { "ui.radioboxSize", eMetric_RadioboxSize, PR_FALSE, PR_FALSE, 0 },
+    eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks, PR_FALSE, typeInt, 0 },
+  { "ui.checkboxSize", eMetric_CheckboxSize, PR_FALSE, typeInt, 0 },
+  { "ui.radioboxSize", eMetric_RadioboxSize, PR_FALSE, typeInt, 0 },
   { "ui.textHorizontalInsideMinimumPadding",
-    eMetric_TextHorizontalInsideMinimumPadding, PR_FALSE, PR_FALSE, 0 },
+    eMetric_TextHorizontalInsideMinimumPadding, PR_FALSE, typeInt, 0 },
   { "ui.textVerticalInsidePadding", eMetric_TextVerticalInsidePadding,
-    PR_FALSE, PR_FALSE, 0 },
+    PR_FALSE, typeInt, 0 },
   { "ui.textShouldUseVerticalInsidePadding",
-    eMetric_TextShouldUseVerticalInsidePadding, PR_FALSE, PR_FALSE, 0 },
+    eMetric_TextShouldUseVerticalInsidePadding, PR_FALSE, typeInt, 0 },
   { "ui.textShouldUseHorizontalInsideMinimumPadding",
-    eMetric_TextShouldUseHorizontalInsideMinimumPadding, PR_FALSE, PR_FALSE, 0 },
+    eMetric_TextShouldUseHorizontalInsideMinimumPadding, PR_FALSE, typeInt, 0 },
   { "ui.listShouldUseHorizontalInsideMinimumPadding",
-    eMetric_ListShouldUseHorizontalInsideMinimumPadding, PR_FALSE, PR_FALSE, 0 },
+    eMetric_ListShouldUseHorizontalInsideMinimumPadding, PR_FALSE, typeInt, 0 },
   { "ui.listHorizontalInsideMinimumPadding",
-    eMetric_ListHorizontalInsideMinimumPadding, PR_FALSE, PR_FALSE, 0 },
+    eMetric_ListHorizontalInsideMinimumPadding, PR_FALSE, typeInt, 0 },
   { "ui.listShouldUseVerticalInsidePadding",
-    eMetric_ListShouldUseVerticalInsidePadding, PR_FALSE, PR_FALSE, 0 },
+    eMetric_ListShouldUseVerticalInsidePadding, PR_FALSE, typeInt, 0 },
   { "ui.listVerticalInsidePadding", eMetric_ListVerticalInsidePadding,
-    PR_FALSE, PR_FALSE, 0 },
-  { "ui.caretBlinkTime", eMetric_CaretBlinkTime, PR_FALSE, PR_FALSE, 0 },
-  { "ui.caretWidthTwips", eMetric_CaretWidthTwips, PR_FALSE, PR_FALSE, 0 },
-  { "ui.submenuDelay", eMetric_SubmenuDelay, PR_FALSE, PR_FALSE, 0 },
+    PR_FALSE, typeInt, 0 },
+  { "ui.caretBlinkTime", eMetric_CaretBlinkTime, PR_FALSE, typeInt, 0 },
+  { "ui.caretWidthTwips", eMetric_CaretWidthTwips, PR_FALSE, typeInt, 0 },
+  { "ui.submenuDelay", eMetric_SubmenuDelay, PR_FALSE, typeInt, 0 },
   { "ui.menusCanOverlapOSBar", eMetric_MenusCanOverlapOSBar,
-    PR_FALSE, PR_FALSE, 0 },
+    PR_FALSE, typeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
 {
   { "ui.textFieldVerticalInsidePadding",
-    eMetricFloat_TextFieldVerticalInsidePadding, PR_FALSE, PR_TRUE, 0 },
+    eMetricFloat_TextFieldVerticalInsidePadding, PR_FALSE, typeFloat, 0 },
   { "ui.textFieldHorizontalInsidePadding",
-    eMetricFloat_TextFieldHorizontalInsidePadding, PR_FALSE, PR_TRUE, 0 },
+    eMetricFloat_TextFieldHorizontalInsidePadding, PR_FALSE, typeFloat, 0 },
   { "ui.textAreaVerticalInsidePadding", eMetricFloat_TextAreaVerticalInsidePadding,
-    PR_FALSE, PR_TRUE, 0 },
+    PR_FALSE, typeFloat, 0 },
   { "ui.textAreaHorizontalInsidePadding",
-    eMetricFloat_TextAreaHorizontalInsidePadding, PR_FALSE, PR_TRUE, 0 },
+    eMetricFloat_TextAreaHorizontalInsidePadding, PR_FALSE, typeFloat, 0 },
   { "ui.listVerticalInsidePadding",
-    eMetricFloat_ListVerticalInsidePadding, PR_FALSE, PR_TRUE, 0 },
+    eMetricFloat_ListVerticalInsidePadding, PR_FALSE, typeFloat, 0 },
   { "ui.listHorizontalInsidePadding",
-    eMetricFloat_ListHorizontalInsidePadding, PR_FALSE, PR_TRUE, 0 },
+    eMetricFloat_ListHorizontalInsidePadding, PR_FALSE, typeFloat, 0 },
   { "ui.buttonVerticalInsidePadding", eMetricFloat_ButtonVerticalInsidePadding,
-    PR_FALSE, PR_TRUE, 0 },
+    PR_FALSE, typeFloat, 0 },
   { "ui.buttonHorizontalInsidePadding", eMetricFloat_ButtonHorizontalInsidePadding,
-    PR_FALSE, PR_TRUE, 0 },
+    PR_FALSE, typeFloat, 0 },
+};
+
+nsLookAndFeelColorPref nsXPLookAndFeel::sColorPrefs[] =
+{
+  { "ui.windowBackground",
+    eColor_WindowBackground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.windowForeground",
+    eColor_WindowForeground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.widgetBackground",
+    eColor_WidgetBackground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.widgetForeground",
+    eColor_WidgetForeground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.widgetSelectBackground",
+    eColor_WidgetSelectBackground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.widgetSelectForeground",
+    eColor_WidgetSelectForeground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.widget3DHighlight",
+    eColor_Widget3DHighlight, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.widget3DShadow",
+    eColor_Widget3DShadow, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.textBackground",
+    eColor_TextBackground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.textForeground",
+    eColor_TextForeground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.textSelectBackground",
+    eColor_TextSelectBackground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.textSelectForeground",
+    eColor_TextSelectForeground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.activeborder",
+    eColor_activeborder, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.activecaption",
+    eColor_activecaption, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.appworkspace",
+    eColor_appworkspace, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.background",
+    eColor_background, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.captiontext",
+    eColor_captiontext, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.graytext",
+    eColor_graytext, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.highlight",
+    eColor_highlight, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.highlighttext",
+    eColor_highlighttext, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.inactiveborder",
+    eColor_inactiveborder, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.inactivecaption",
+    eColor_inactivecaption, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.inactivecaptiontext",
+    eColor_inactivecaptiontext, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.infobackground",
+    eColor_infobackground, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.infotext",
+    eColor_infotext, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.menu",
+    eColor_menu, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.menutext",
+    eColor_menutext, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.scrollbar",
+    eColor_scrollbar, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.threedface",
+    eColor_threedface, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.buttonface",
+    eColor_buttonface, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.buttonhighlight",
+    eColor_buttonhighlight, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.threedhighlight",
+    eColor_threedhighlight, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.buttontext",
+    eColor_buttontext, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.buttonshadow",
+    eColor_buttonshadow, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.threeddarkshadow",
+    eColor_threeddarkshadow, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.threedshadow",
+    eColor_threedshadow, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.threedlightshadow",
+    eColor_threedlightshadow, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.window",
+    eColor_window, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.windowframe",
+    eColor_windowframe, PR_FALSE, typeColor, (nscolor)0 },
+  { "ui.windowtext",
+    eColor_windowtext, PR_FALSE, typeColor, (nscolor)0 },
 };
 
 PRBool nsXPLookAndFeel::sInitialized = PR_FALSE;
@@ -140,31 +224,83 @@ static int floatPrefChanged (const char *newpref, void *data)
   return 0;
 }
 
+static int colorPrefChanged (const char *newpref, void *data)
+{
+  nsLookAndFeelColorPref* np = (nsLookAndFeelColorPref*)data;
+  if (np)
+  {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefService)
+    {
+      char *colorStr = 0;
+      rv = prefService->CopyCharPref(np->name, &colorStr);
+      if (NS_SUCCEEDED(rv) && colorStr[0])
+      {
+        nsString colorNSStr(colorStr);
+        nscolor thecolor;
+        if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
+        {
+          np->isSet = PR_TRUE;
+          np->colorVar = (nscolor)thecolor;
+#ifdef DEBUG_akkana
+          printf("====== Changed color pref %s to 0x%lx\n",
+                 np->name, (long)np->colorVar);
+        }
+#endif
+        PL_strfree(colorStr);
+      }
+    }
+  }
+  return 0;
+}
+
 nsresult
-nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref)
+nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref, nsIPref* aPrefService)
 {
   PRInt32 intpref;
-  nsresult rv = mPrefService->GetIntPref(aPref->name, &intpref);
+  nsresult rv = aPrefService->GetIntPref(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv))
   {
     aPref->isSet = PR_TRUE;
     aPref->intVar = intpref;
   }
-  mPrefService->RegisterCallback(aPref->name, intPrefChanged, aPref);
+  aPrefService->RegisterCallback(aPref->name, intPrefChanged, aPref);
   return rv;
 }
 
 nsresult
-nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref)
+nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref, nsIPref* aPrefService)
 {
   PRInt32 intpref;
-  nsresult rv = mPrefService->GetIntPref(aPref->name, &intpref);
+  nsresult rv = aPrefService->GetIntPref(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv))
   {
     aPref->isSet = PR_TRUE;
     aPref->floatVar = (float)intpref / 100.;
   }
-  mPrefService->RegisterCallback(aPref->name, floatPrefChanged, &aPref);
+  aPrefService->RegisterCallback(aPref->name, floatPrefChanged, aPref);
+  return rv;
+}
+
+nsresult
+nsXPLookAndFeel::InitFromPref(nsLookAndFeelColorPref* aPref, nsIPref* aPrefService)
+{
+  char *colorStr = 0;
+  nsresult rv = aPrefService->CopyCharPref(aPref->name, &colorStr);
+  if (NS_SUCCEEDED(rv) && colorStr[0])
+  {
+    nsAutoString colorNSStr(colorStr);
+    nscolor thecolor;
+    if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
+    {
+      aPref->isSet = PR_TRUE;
+      aPref->colorVar = (nscolor)thecolor;
+      PL_strfree(colorStr);
+    }
+  }
+
+  aPrefService->RegisterCallback(aPref->name, colorPrefChanged, aPref);
   return rv;
 }
 
@@ -182,19 +318,19 @@ nsXPLookAndFeel::Init()
   sInitialized = PR_TRUE;
 
   nsresult rv;
-  mPrefService = do_GetService(kPrefServiceCID, &rv);
-  if (NS_FAILED(rv) || !mPrefService)
+  NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv) || !prefService)
     return;
 
   unsigned int i;
   for (i = 0; i < ((sizeof (sIntPrefs) / sizeof (*sIntPrefs))); ++i)
-    InitFromPref(&sIntPrefs[i]);
+    InitFromPref(&sIntPrefs[i], prefService);
 
   for (i = 0; i < ((sizeof (sFloatPrefs) / sizeof (*sFloatPrefs))); ++i)
-    InitFromPref(&sFloatPrefs[i]);
+    InitFromPref(&sFloatPrefs[i], prefService);
 
-  // We won't need the prefs service any more:
-  mPrefService = 0;
+  for (i = 0; i < ((sizeof (sColorPrefs) / sizeof (*sColorPrefs))); ++i)
+    InitFromPref(&sColorPrefs[i], prefService);
 }
 
 nsXPLookAndFeel::~nsXPLookAndFeel()
@@ -209,9 +345,16 @@ nsXPLookAndFeel::~nsXPLookAndFeel()
 //
 NS_IMETHODIMP nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
-  // We don't return any colors, currently;
-  // sostly because we need a string-pref-to-NS_RGB translation routine,
-  // but we also assume the user will pick a skin with colors they like.
+  if (!sInitialized)
+    Init();
+
+  for (unsigned int i = 0; i < ((sizeof (sIntPrefs) / sizeof (*sIntPrefs))); ++i)
+    if (sColorPrefs[i].isSet && (sColorPrefs[i].id == aID))
+    {
+      aColor = sColorPrefs[i].colorVar;
+      return NS_OK;
+    }
+
   return NS_ERROR_NOT_AVAILABLE;
 }
   
