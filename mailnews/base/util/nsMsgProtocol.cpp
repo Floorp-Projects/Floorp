@@ -361,13 +361,13 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
 		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
 
-        // if the url is given a stream consumer then we should use it to forward calls to...
-        if (!m_channelListener && aConsumer) // if we don't have a registered listener already
-        {
-            m_channelListener = do_QueryInterface(aConsumer);
-            if (!m_channelContext)
-                m_channelContext = do_QueryInterface(aURL);
-        }
+    // if the url is given a stream consumer then we should use it to forward calls to...
+    if (!m_channelListener && aConsumer) // if we don't have a registered listener already
+    {
+      m_channelListener = do_QueryInterface(aConsumer);
+      if (!m_channelContext)
+         m_channelContext = do_QueryInterface(aURL);
+    }
 
 		if (!m_socketIsOpen)
 		{
@@ -891,11 +891,11 @@ NS_IMETHODIMP nsMsgAsyncWriteProtocol::Cancel(nsresult status)
 nsresult nsMsgAsyncWriteProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
 {
   // convert the file spec into a nsIFile....
-  nsFileSpec * spec = new nsFileSpec();
-  fileSpec->GetFileSpec(spec);
+  nsFileSpec spec;
+  fileSpec->GetFileSpec(&spec);
 
   nsCOMPtr<nsILocalFile> file;
-  NS_FileSpecToIFile(spec, getter_AddRefs(file));
+  NS_FileSpecToIFile(&spec, getter_AddRefs(file));
 
   nsCOMPtr<nsIStreamListener> listener;
   NS_NEWXPCOM(listener, nsMsgFilePostHelper);
