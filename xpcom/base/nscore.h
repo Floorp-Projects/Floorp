@@ -250,6 +250,11 @@ typedef PRUint16 PRUnichar;
    the semantics. So if you want to dynamic_cast, then just use it
    "straight", no macro. */
 
+/* Because this may be included bogously a C file (or an extern "C"
+   block), we'll "extern C++" it. There's a bug filed against that
+   somewhere. */
+extern "C++" {
+
 template <class T>
 inline
 const T&
@@ -265,6 +270,6 @@ NS_MAX( const T& a, const T& b )
   {
     return a > b ? a : b;
   }
-
+}
 
 #endif /* nscore_h___ */
