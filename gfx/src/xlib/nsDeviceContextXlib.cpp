@@ -46,7 +46,7 @@
 #ifdef USE_XPRINT
 #include "nsGfxXPrintCID.h"
 #include "nsIDeviceContextXPrint.h"
-#endif
+#endif /* USE_XPRINT */
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);

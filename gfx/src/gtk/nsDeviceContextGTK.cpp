@@ -37,16 +37,14 @@
 #ifdef USE_XPRINT
 #include "nsGfxXPrintCID.h"
 #include "nsIDeviceContextXPrint.h"
-#endif
+#endif /* USE_XPRINT */
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
 #include <X11/Xatom.h>
 
-#ifdef USE_XPRINT
 #include "nsDeviceContextSpecG.h"
-#endif
 
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
