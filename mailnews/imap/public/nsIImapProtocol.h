@@ -24,6 +24,7 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "plevent.h"
+#include "prtime.h"
 
 /* include all of our event sink interfaces */
 
@@ -97,6 +98,8 @@ public:
 
     // Tell thread to die
     NS_IMETHOD TellThreadToDie(PRBool isSafeToDie) = 0;
+    // Get last active time stamp
+    NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp) = 0;
 };
 
 #endif /* nsIImapProtocol_h___ */

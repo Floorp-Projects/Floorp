@@ -49,6 +49,9 @@ public:
     // ** attribute maximum cached connections **
     NS_IMETHOD GetMaximumConnectionsNumber(PRInt32* maxConnections) = 0;
     NS_IMETHOD SetMaximumConnectionsNumber(PRInt32 maxConnections) = 0;
+
+    NS_IMETHOD GetTimeOutLimits(PRInt32* minutes) = 0;
+    NS_IMETHOD SetTimeOutLimits(PRInt32 minutes) = 0;
     
     NS_IMETHOD GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
                                            nsIImapUrl* aImapUrl,
