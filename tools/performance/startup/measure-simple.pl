@@ -26,11 +26,11 @@ use Cwd;
 
 sub PrintUsage {
   die <<END_USAGE
-  usage: startup-quick.pl [n]
-  e.g
-      startup-unix.pl ../../../dist/bin/mozilla
-      startup-unix.pl ../../../dist/bin/mozilla 10
+  usage: measure-simple.pl [n]
   n defaults to 3
+  e.g
+      measure-simple.pl ../../../dist/bin/mozilla
+      measure-simple.pl ../../../dist/bin/mozilla 10
 END_USAGE
 }
 
