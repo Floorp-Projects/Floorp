@@ -22,6 +22,7 @@
 #include "nsGfxCIID.h"
 #include "nsIComponentManager.h"
 #include "nsGtkEventHandler.h"
+#include "nsGtkUtils.h"
 #include "nsIFontMetrics.h"
 #include <gdk/gdkx.h>
 
@@ -438,6 +439,29 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
   nsBaseWidget::SetBackgroundColor(aColor);
+
+  // There are some "issues" with the conversion of rgb values
+#if 0
+  if (nsnull != mWidget)
+  {
+    GdkColor gdk_color;
+
+#if 0
+//     gdk_color.red = NS_GET_R(NS_TO_GDK_RGB(aColor));
+//     gdk_color.green = NS_GET_G(NS_TO_GDK_RGB(aColor));
+//     gdk_color.blue = NS_GET_B(NS_TO_GDK_RGB(aColor));
+#else
+//     gdk_color.pixel = gdk_rgb_xpixel_from_rgb(aColor);
+#endif
+
+    GtkRcFlags rc_flags = GTK_RC_BG | GTK_RC_BASE;
+
+    nsGtkUtils::gtk_widget_set_color(mWidget,
+                                     rc_flags,
+                                     GTK_STATE_NORMAL,
+                                     &gdk_color);
+  }
+#endif
 
   return NS_OK;
 }
