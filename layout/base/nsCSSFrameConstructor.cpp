@@ -4356,11 +4356,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
       nsIFrame* geometricParent = aParentFrame;
       if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
         isAbsolutelyPositioned = PR_TRUE;
-        aParentFrame = aState.mAbsoluteItems.containingBlock;
+        geometricParent = aState.mAbsoluteItems.containingBlock;
       }
       if (NS_STYLE_POSITION_FIXED == position->mPosition) {
         isFixedPositioned = PR_TRUE;
-        aParentFrame = aState.mFixedItems.containingBlock;
+        geometricParent = aState.mFixedItems.containingBlock;
       }
       rv = ConstructTableFrame(aPresContext, aState, aContent, geometricParent,
                                aStyleContext, newFrame, tableCreator);
