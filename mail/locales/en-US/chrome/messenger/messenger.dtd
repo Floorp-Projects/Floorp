@@ -3,8 +3,6 @@
 <!ENTITY titleSeparator.label " - ">
 
 <!-- File Menu -->
-<!ENTITY newMessage.label "New Message">
-<!ENTITY newMessage.accesskey "N">
 <!ENTITY newFolderCmd.label "Folder...">
 <!ENTITY newFolderCmd.accesskey "F">
 <!ENTITY newVirtualFolderCmd.label "Saved Search...">
