@@ -41,7 +41,7 @@
 #include <gdk/gdkprivate.h>
 #include "nsDrawingSurfaceGTK.h"
 
-NS_IMPL_ISUPPORTS2(nsDrawingSurfaceGTK, nsIDrawingSurface, nsIDrawingSurfaceGTK)
+NS_IMPL_ISUPPORTS1(nsDrawingSurfaceGTK, nsIDrawingSurface)
 
 //#define CHEAP_PERFORMANCE_MEASUREMENT
 
@@ -245,7 +245,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: GetPixelFormat(nsPixelFormat *aFormat)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
+nsresult nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 {
   if (mGC)
     gdk_gc_unref(mGC);
@@ -270,8 +270,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
-                                          PRUint32 aHeight, PRUint32 aFlags)
+nsresult nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
+                                     PRUint32 aHeight, PRUint32 aFlags)
 {
   //  ::g_return_val_if_fail (aGC != nsnull, NS_ERROR_FAILURE);
   //  ::g_return_val_if_fail ((aWidth > 0) && (aHeight > 0), NS_ERROR_FAILURE);

@@ -40,19 +40,21 @@
 #define nsDrawingSurfaceGTK_h___
 
 #include "nsIDrawingSurface.h"
-#include "nsIDrawingSurfaceGTK.h"
 
 #include "nsTimer.h"
 
 #include <gtk/gtk.h>
 
-class nsDrawingSurfaceGTK : public nsIDrawingSurface,
-                            public nsIDrawingSurfaceGTK
+class nsDrawingSurfaceGTK : public nsIDrawingSurface
 {
 public:
   nsDrawingSurfaceGTK();
   virtual ~nsDrawingSurfaceGTK();
 
+  nsresult Init(GdkDrawable *aDrawable, GdkGC *aGC);
+  nsresult Init(GdkGC *aGC, PRUint32 aWidth, PRUint32 aHeight,
+                PRUint32 aFlags);
+  
   NS_DECL_ISUPPORTS
 
   //nsIDrawingSurface interface
@@ -65,11 +67,6 @@ public:
   NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
   NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
-
-  //nsIDrawingSurfaceGTK interface
-
-  NS_IMETHOD Init(GdkDrawable *aDrawable, GdkGC *aGC);
-  NS_IMETHOD Init(GdkGC *aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
 
 /* below are utility functions used mostly for nsRenderingContext and nsImage
  * to plug into gdk_* functions for drawing.  You should not set a pointer
