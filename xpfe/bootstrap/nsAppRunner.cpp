@@ -49,9 +49,9 @@ static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
-static nsIDOMAppCoresManager *gAppCores = nsnull;
-static NS_DEFINE_IID(nsIDOMAppCoresManager, NS_IDOMAPPCORESMANAGER_IID);
-static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
+//static nsIDOMAppCoresManager *appCoresManager = nsnull;
+static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
+static NS_DEFINE_IID(kAppCoresManagerCID,     NS_APPCORESMANAGER_CID);
 //#endif
 /*********************************************/
 
@@ -194,15 +194,17 @@ int main(int argc, char* argv[])
     goto done;
   }
 
-//#if defined(XP_PC) || defined(XP_MAC)
-	rv = nsRepository::CreateInstance(kAppCoresManagerCID, nsnull, nsIDOMAppCoresManager, (void**) &gAppCores);
+
+  nsIDOMAppCoresManager *appCoresManager;
+  rv = nsServiceManager::GetService(kAppCoresManagerCID,
+                                    kIDOMAppCoresManagerIID,
+                                    (nsISupports**)&appCoresManager);
 	if (rv == NS_OK) {
-		if (gAppCores->Startup() != NS_OK) {
-			gAppCores->Shutdown();
-			NS_RELEASE(gAppCores);
+		if (appCoresManager->Startup() != NS_OK) {
+		  appCoresManager->Shutdown();
+      nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
 		}
-	}
-//#endif
+  }
 
   /*
    * XXX: Currently, the CID for the "controller" is passed in as an argument 
@@ -237,12 +239,11 @@ done:
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   }
 
-//#if defined(XP_PC) || defined(XP_MAC)
-  if (nsnull != gAppCores) {
-		gAppCores->Shutdown();
-		NS_RELEASE(gAppCores);
+  /* Release the AppCoresManager... */
+  if (nsnull != appCoresManager) {
+		appCoresManager->Shutdown();
+    nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
   }
-//#endif
 
   /* 
    * Translate the nsresult into an appropriate platform-specific return code.
