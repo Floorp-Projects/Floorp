@@ -69,7 +69,9 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   int         numnames = 0;
   char        altitalicization = 0;
   XFontStruct *fonts;
-  PRInt32     dpi = NSToIntRound(aCX->GetTwipsToDevUnits() * 1440);
+  float       t2d;
+  aCX->GetTwipsToDevUnits(t2d);
+  PRInt32     dpi = NSToIntRound(t2d * 1440);
   Display     *dpy = XtDisplay((Widget)aCX->GetNativeWidget());
 
   if (nsnull == wildstring)
@@ -231,7 +233,7 @@ void nsFontMetricsUnix::RealizeFont()
 {
   mFontInfo = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
 
-  float f  = mContext->GetDevUnitsToAppUnits();
+  float f = mContext->GetDevUnitsToAppUnits();
   
   mAscent = nscoord(mFontInfo->ascent * f);
   mDescent = nscoord(mFontInfo->descent * f);
