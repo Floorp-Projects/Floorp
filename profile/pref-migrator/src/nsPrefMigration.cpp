@@ -73,7 +73,8 @@
 #if defined(XP_UNIX)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
-#define SUMMARY_SUFFIX_IN_4x ".summary"
+#define MAIL_SUMMARY_SUFFIX_IN_4x ".summary"
+#define NEWS_SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
 #define HISTORY_FILE_NAME_IN_4x "history.dat"
@@ -83,7 +84,8 @@
 #elif defined(XP_MAC)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
-#define SUMMARY_SUFFIX_IN_4x ".snm"
+#define MAIL_SUMMARY_SUFFIX_IN_4x ".snm"
+#define NEWS_SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "MagicCookie"
 #define BOOKMARKS_FILE_NAME_IN_4x "Bookmarks.html"
 #define HISTORY_FILE_NAME_IN_4x "Netscape History"
@@ -91,7 +93,8 @@
 #else /* XP_PC */
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
-#define SUMMARY_SUFFIX_IN_4x ".snm"
+#define MAIL_SUMMARY_SUFFIX_IN_4x ".snm"
+#define NEWS_SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies.txt"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmark.htm"
 #define HISTORY_FILE_NAME_IN_4x "history.dat"
@@ -1204,7 +1207,7 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
     nsFileSpec fileOrDirName = (nsFileSpec&)dir;
     folderName = fileOrDirName.GetLeafName();
     fileOrDirNameStr = folderName;
-    if (nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
+    if (nsStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
       continue;
     else
     {
@@ -1395,7 +1398,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
     fileOrDirNameStr = folderName;
 
-    if (nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
+    if (nsStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
       continue;
     else
     {
