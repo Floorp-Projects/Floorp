@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<title>form sizing input radio strict mode</title>
+<style type="text/css">
+ .fixed {width:50px}
+.tight {width:20px}
+div {border:blue 1px solid}
+.pct {width:10%}
+.cellpct{width:100%}
+.wide {width:200px}
+</style>
+</head>
+<p>intrinsic width:</p>
+<p><input type="radio"></p>
+<p>intrinsic width long nonbreakable text</p>
+<p><input type="radio" value="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></p>
+<p>fixed width</p>
+<p><input  type="radio" class="fixed"></p>
+<p>intrinsic width inside table</p>
+<table border><tr><td><input  type="radio"></td></tr></table>
+<p>intrinsic width inside tight table cell</p>
+<table border><tr><td class="tight"><input  type="radio"></td></tr></table>
+<p>fixed width inside table</p>
+<table border><tr><td><input  type="radio" class="fixed"></td></tr></table>
+<p>fixed width inside smaller table cell</p>
+<table border><tr><td class="tight"><input  type="radio" class="fixed"></td></tr></table>
+<p>pctwidth inside auto table</p>
+<table border><tr><td><input  type="radio" class="pct"></td></tr></table>
+<p>pct width inside fixed width table cell</p>
+<table border><tr><td class="tight"><input  type="radio" class="pct"></td></tr></table>
+<p>pct width inside pct width table cell</p>
+<table border class="wide"><tr><td class="cellpct"><input  type="radio" class="pct"></td></tr></table>
+
+
+<a href="input_checkbox_strict.html">previous:&nbsp;&nbsp; input type:checkbox</a>&nbsp;&nbsp;&nbsp;<a href="input_submit_strict.html">next:&nbsp;&nbsp; input type:submit</a>
+
+
+</body>
+
+</html>
