@@ -19,6 +19,7 @@
 #ifndef nsIEventListener_h__
 #define nsIEventListener_h__
 
+#include "nsISupports.h"
 #include "nsGUIEvent.h"
 
 /**
@@ -26,10 +27,14 @@
  * Alternative to a callback for recieving events.
  */
 
-class nsIEventListener {
+// {c83f6b80-d7ce-11d2-8360-c4c894c4917c}
+#define NS_IEVENTLISTENER_IID \
+{ 0xc83f6b80, 0xd7ce, 0x11d2, { 0x83, 0x60, 0xc4, 0xc8, 0x94, 0xc4, 0x91, 0x7c } }
 
+class nsIEventListener : public nsISupports {
 public:
-
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTLISTENER_IID)
+  
  /**
   * Processes all events. 
   * If a mouse listener is registered this method will not process mouse events. 
