@@ -27,7 +27,9 @@
 #include "nsIMAPNamespace.h"
 #include "nsCOMPtr.h"
 
+#if defined(XP_WIN)
 #include <windows.h>						// for InterlockedIncrement
+#endif
 
 nsImapEvent::~nsImapEvent()
 {
