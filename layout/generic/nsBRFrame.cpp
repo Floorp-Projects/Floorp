@@ -138,11 +138,14 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
 
 
 
-NS_IMETHODIMP BRFrame::GetPosition(nsIPresContext&,
-                         nscoord         ,
-                         nsIContent **   ,
-                         PRInt32&        ,
-                         PRInt32&        )
+NS_IMETHODIMP BRFrame::GetPosition(nsIPresContext& aCX,
+                         nscoord         aCoord,
+                         nsIContent **   aContent,
+                         PRInt32&        aOffsetBegin,
+                         PRInt32&        aOffsetEnd)
 {
-  return NS_ERROR_FAILURE;
+  nsresult returnval = nsFrame::GetPosition(aCX,aCoord,aContent,aOffsetBegin,aOffsetEnd);
+  if (NS_SUCCEEDED(returnval))
+    aOffsetEnd = aOffsetBegin;//BRFrames should return a collapsed selection before itself
+  return returnval;
 }

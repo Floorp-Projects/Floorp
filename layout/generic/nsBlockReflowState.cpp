@@ -5355,6 +5355,7 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
         if (NS_FAILED(result))
           continue;//do not handle
         rect+=origin;
+        rect.width = aEvent->point.x - rect.x+1;//EXTEND RECT TO REACH POINT
         if (rect.Contains(aEvent->point.x, aEvent->point.y))
         {
           closestLine = i;
