@@ -132,6 +132,7 @@ private:
   nsIRegion         *mDirtyRegion;
   PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
+  PRBool            mPainting;
   nsIView           *mMouseGrabber;
   nsIView           *mKeyGrabber;
 

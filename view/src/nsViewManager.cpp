@@ -246,9 +246,7 @@ void nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
     nsIScrollableView *scroller;
 
     if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-    {
       scroller->GetVisibleOffset(xoffset, yoffset);
-    }
     else
       *xoffset = *yoffset = 0;
   }
@@ -263,9 +261,7 @@ void nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
     nsIScrollableView *scroller;
 
     if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-    {
       scroller->SetVisibleOffset(xoffset, yoffset);
-    }
   }
 }
 
@@ -276,9 +272,7 @@ void nsViewManager :: ResetScrolling(void)
     nsIScrollableView *scroller;
 
     if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-    {
       scroller->ComputeContainerSize();
-    }
   }
 }
 
@@ -291,6 +285,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   if (PR_FALSE == mRefreshEnabled)
     return;
+
+  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+
+  mPainting = PR_TRUE;
 
 //printf("refreshing region...\n");
   //force double buffering because of non-opaque views?
@@ -352,6 +350,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
     mDirtyRegion->Subtract(*region);
 
   mLastRefresh = PR_Now();
+
+  mPainting = PR_FALSE;
 }
 
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsRect *rect, PRUint32 aUpdateFlags)
@@ -362,6 +362,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 
   if (PR_FALSE == mRefreshEnabled)
     return;
+
+  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+
+  mPainting = PR_TRUE;
 
   //force double buffering because of non-opaque views?
 
@@ -448,6 +452,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 #endif
 
   mLastRefresh = PR_Now();
+
+  mPainting = PR_FALSE;
 }
 
 void nsViewManager :: Composite()
@@ -1058,9 +1064,7 @@ void nsViewManager :: ShowQuality(PRBool aShow)
   nsIScrollableView *scroller;
 
   if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-  {
     scroller->ShowQuality(aShow);
-  }
 }
 
 PRBool nsViewManager :: GetShowQuality(void)
@@ -1069,9 +1073,7 @@ PRBool nsViewManager :: GetShowQuality(void)
   PRBool            retval = PR_FALSE;
 
   if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-  {
     retval = scroller->GetShowQuality();
-  }
 
   return retval;
 }
