@@ -106,7 +106,6 @@ void EmbedUrlExit(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 			NET_FreeURLStruct(pUrl);
         	return;
 	    }
-#ifdef MOCHA
 	    {
 		    /* only wait on applets if onload flag */
 		    lo_TopState *top_state = lo_FetchTopState(XP_DOCID(pContext));
@@ -117,7 +116,6 @@ void EmbedUrlExit(URL_Struct *pUrl, int iStatus, MWContext *pContext)
                                  LO_DOCUMENT_LAYER_ID, FALSE);
 		    }
 	    }
-#endif /* MOCHA */
 
         // else must be an OLE stream exit
         if(iStatus != MK_DATA_LOADED)   {

@@ -33,27 +33,15 @@
 #endif
 #include "prefs.h" //To access g_bReloadChangeColor;
 
-#ifdef NSPR20
 #include "private/prpriv.h"
-#endif
 
 // This is the NSPR priority of the main GUI thread (ie. mozilla)
 
-#ifndef NSPR20
-#ifdef XP_WIN32
-#define MOZILLA_THREAD_PRIORITY 15
-#else
-#define MOZILLA_THREAD_PRIORITY 2
-#endif
-#else
 #ifdef XP_WIN32
 #define MOZILLA_THREAD_PRIORITY PR_PRIORITY_NORMAL
 #else
 #define MOZILLA_THREAD_PRIORITY PR_PRIORITY_LOW
 #endif
-#endif
-
-#if defined(OJI) || defined(JAVA) || defined(MOCHA)
 
 #ifndef XP_PC
 #define XP_PC
@@ -74,7 +62,6 @@
 
 #include "nspr.h"
 #include "plevent.h"
-#endif /* OJI || JAVA || MOCHA */
 
 #if defined(OJI)
 #include "jvmmgr.h"
@@ -574,78 +561,11 @@ void fe_InitJava()
 
 void fe_InitNSPR(void* stackBase)
 {
-#ifdef XP_WIN16
-#if !defined(NSPR20)
-//
-// The 16-bit MS RTL prohibits 16-bit DLLs from calling some RTL functions.
-//   ie.
-//	 malloc/free
-//	 strftime
-//	 sscanf
-//	 etc...
-// To fix this limitation, function pointers are passed to NSPR which
-// route the RTL functions "into the EXE" where the actual RTL function
-// is available.  (Oh what a tangled web we weave :-( )
-//
-static struct PRMethodCallbackStr DLLCallbacks = {
-    __ns_malloc,
-    __ns_realloc,
-    __ns_calloc,
-    __ns_free,
-    __ns_gethostname,
-    __ns_gethostbyname,
-    __ns_gethostbyaddr,
-    __ns_getenv,
-    __ns_putenv,
-    __ns_auxOutput,
-    __ns_exit,
-    __ns_strftime,
-
-    __ns_ntohl,
-    __ns_ntohs,
-    __ns_closesocket,
-    __ns_setsockopt,
-    __ns_socket,
-    __ns_getsockname,
-    __ns_htonl,
-    __ns_htons,
-    __ns_inet_addr,
-    __ns_WSAGetLastError,
-    __ns_connect,
-    __ns_recv,
-    __ns_ioctlsocket,
-    __ns_recvfrom,
-    __ns_send,
-    __ns_sendto,
-    __ns_accept,
-    __ns_listen,
-    __ns_bind,
-    __ns_select,
-    __ns_getsockopt,
-    __ns_getprotobyname,
-    __ns_WSAAsyncSelect,
-    __ns_WSASetLastError
-    };
-
-    // Perform the 16-bit ONLY callback initialization...
-    PR_MDInit(&DLLCallbacks);
-#endif	/* NSPR20 */
-#endif /* XP_WIN16 */
-
-#if defined(OJI) || defined(JAVA) || defined(MOCHA)
-#ifndef NSPR20
-    // Initialize the NSPR library
-    PR_Init( "mozilla", MOZILLA_THREAD_PRIORITY, 1, stackBase);
-
-    mozilla_thread = PR_CurrentThread();
-#else
     PR_STDIO_INIT()
     mozilla_thread = PR_CurrentThread();
     PR_SetThreadGCAble();
     PR_SetThreadPriority(mozilla_thread, MOZILLA_THREAD_PRIORITY);
     PL_InitializeEventsLib("mozilla");
-#endif
-#endif /* OJI || JAVA || MOCHA */
 }
 
 BOOL fe_ShutdownJava()
@@ -805,7 +725,7 @@ BOOL fe_RegisterOLEIcon ( LPSTR szCLSIDObject,	 // Class ID of the Object
 /* BEWARE! BEWARE! BEWARE! BEWARE! BEWARE! BEWARE! BEWARE! BEWARE! BEWARE!  */
 /*									    */
 /****************************************************************************/
-#if defined(MOCHA) && !defined(JAVA)
+#if !defined(JAVA)
 #include "prevent.h"
 #include "prlog.h"
 
@@ -840,13 +760,11 @@ LJ_ProcessEvent()
 
     }
 }
-#endif	// MOCHA && !JAVA
+#endif	// !JAVA
 #endif	// XP_WIN16
 
 #ifdef XP_WIN16
-#if defined(NSPR20)
 #include "private\prpriv.h"
-#endif
 void fe_yield(void)
 {
 	PR_Sleep(PR_INTERVAL_NO_WAIT);

@@ -17,13 +17,9 @@
  */
 
 #define JMC_INIT_IMGCB_ID	1
-#ifndef NSPR20
-#include "coremem.h"
-#include "stdafx.h"
-#else
+
 #include "stdafx.h"
 #include "coremem.h"
-#endif
 #include "feimage.h"
 #include "il_types.h"
 #include "cxdc.h"

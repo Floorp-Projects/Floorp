@@ -275,9 +275,6 @@ LONG CHiddenFrame::OnForceIOSelect(WPARAM wParam, LPARAM lParam)
 LONG CHiddenFrame::OnNetworkActivity(UINT socket, LONG lParam) 
 {
     XP_ASSERT(0);
-#ifdef NSPR20_DISABLED
-    return(OnForceIOSelect((WPARAM)SocketSelect, (LPARAM)socket));
-#endif
 	return 0;
 }                       
 

@@ -81,11 +81,7 @@ static DDSURFACEDESC ddsd;
 
 extern "C" {
 
-#ifndef NSPR20
-PR_LOG_DEFINE(APPLET);
-#else
 extern PRLogModuleInfo *APPLET;
-#endif
 
 #ifdef LAYPROBE_API
 extern "C" {
