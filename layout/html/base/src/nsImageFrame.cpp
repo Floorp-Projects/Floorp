@@ -39,7 +39,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsCSSLayout.h"
-#include "nsHTMLBase.h"
+#include "nsHTMLContainerFrame.h"
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
 #include "nsIFontMetrics.h"
@@ -449,7 +449,7 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     // We can't use that approach yet, because currently the compositor doesn't
     // support transparent views...
 #if 0
-    nsHTMLBase::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
 #endif
 
     // Setup url before starting the image load
