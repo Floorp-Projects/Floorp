@@ -291,7 +291,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * write out summary data for this folder
    * to the given folder cache (i.e. panacea.dat)
    */
-	void writeToFolderCache(in nsIMsgFolderCache folderCache);
+	void writeToFolderCache(in nsIMsgFolderCache folderCache, in boolean deep);
 
   /**
    * the charset of this folder
@@ -309,6 +309,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
 	readonly attribute wstring newMessagesNotificationDescription;
 
+	// are we running a url as a result of the user clicking get msg?
+	attribute boolean gettingNewMessages;
   /**
    * local path of this folder
    */

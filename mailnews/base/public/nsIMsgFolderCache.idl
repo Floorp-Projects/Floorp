@@ -32,4 +32,5 @@ interface nsIMsgFolderCache : nsISupports
 	void Init(in nsIFileSpec fileSpec);
 	nsIMsgFolderCacheElement GetCacheElement(in string key, in boolean createIfMissing);
 	void Close();
+	void Commit(in boolean compress);
 };

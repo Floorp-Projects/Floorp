@@ -416,11 +416,19 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool crea
 
 NS_IMETHODIMP nsMsgFolderCache::Close()
 {
-	nsresult ret=NS_OK;
+  return Commit(PR_TRUE);
+}
 
-	nsIMdbThumb	*commitThumb = NULL;
+NS_IMETHODIMP nsMsgFolderCache::Commit(PRBool compress)
+{
+	nsresult ret = NS_OK;
+
+	nsIMdbThumb	*commitThumb = nsnull;
 	if (m_mdbStore)
-		ret = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
+    if (compress)
+		  ret = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
+    else
+      ret = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
 
 	if (commitThumb)
 	{
