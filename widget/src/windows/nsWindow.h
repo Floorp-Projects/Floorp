@@ -30,8 +30,6 @@
 #include "nsIWidget.h"
 #include "nsIKBStateControl.h"
 
-#include "nsIMenuBar.h"
-
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsStringUtil.h"
@@ -41,6 +39,8 @@
 
 class nsNativeDragTarget;
 class nsIRollupListener;
+
+class nsIMenuBar;
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -130,8 +130,8 @@ public:
     NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
     NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
     NS_IMETHOD              SetTitle(const nsString& aTitle); 
-    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar); 
-    NS_IMETHOD              ShowMenuBar(PRBool aShow);
+    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
+    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
     NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD              BeginResizingChildren(void);
@@ -176,10 +176,6 @@ protected:
     virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
     virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
     virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
-    nsresult                MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
-    nsresult                DynamicMenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
-    nsIMenuItem *           FindMenuItem(nsIMenu * aMenu, PRUint32 aId);
-    nsIMenu *               FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth);
 
      // Allow Derived classes to modify the height that is passed
      // when the window is created or resized.
@@ -272,10 +268,7 @@ protected:
     PRInt32     mPreferredWidth;
     PRInt32     mPreferredHeight;
 
-    nsIMenuBar  * mMenuBar;
     PRInt32       mMenuCmdId;
-    nsIMenu     * mHitMenu;
-    nsVoidArray * mHitSubMenus;
 
 	// For Input Method Support
 	DWORD		mIMEProperty;

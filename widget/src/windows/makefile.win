@@ -36,25 +36,14 @@ CPPSRCS =              \
 	nsDataObj.cpp      \
 	nsDataObjCollection.cpp      \
 	nsClipboard.cpp      \
-	nsPopUpMenu.cpp      \
-	nsMenuBar.cpp        \
-	nsMenu.cpp           \
-	nsMenuItem.cpp       \
-	nsContextMenu.cpp    \
 	nsWindow.cpp         \
 	nsButton.cpp         \
-	nsCheckButton.cpp    \
-	nsRadioButton.cpp    \
-	nsListBox.cpp        \
-	nsComboBox.cpp       \
 	nsTextWidget.cpp     \
 	nsTextHelper.cpp     \
-	nsTextAreaWidget.cpp \
 	nsFileWidget.cpp     \
 	nsScrollbar.cpp      \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
-	nsLabel.cpp          \
 	nsToolkit.cpp        \
 	nsSound.cpp          \
 	$(NULL)
@@ -71,25 +60,14 @@ OBJS =                             \
 	.\$(OBJDIR)\nsDataObj.obj  \
 	.\$(OBJDIR)\nsDataObjCollection.obj  \
 	.\$(OBJDIR)\nsClipboard.obj  \
-	.\$(OBJDIR)\nsPopUpMenu.obj  \
-	.\$(OBJDIR)\nsMenuBar.obj  \
-	.\$(OBJDIR)\nsMenu.obj  \
-	.\$(OBJDIR)\nsMenuItem.obj  \
-	.\$(OBJDIR)\nsContextMenu.obj    \
 	.\$(OBJDIR)\nsWindow.obj         \
 	.\$(OBJDIR)\nsButton.obj         \
-	.\$(OBJDIR)\nsCheckButton.obj    \
-	.\$(OBJDIR)\nsRadioButton.obj    \
-	.\$(OBJDIR)\nsListBox.obj        \
-	.\$(OBJDIR)\nsComboBox.obj       \
 	.\$(OBJDIR)\nsTextWidget.obj     \
 	.\$(OBJDIR)\nsTextHelper.obj     \
-	.\$(OBJDIR)\nsTextAreaWidget.obj \
 	.\$(OBJDIR)\nsFileWidget.obj     \
 	.\$(OBJDIR)\nsScrollbar.obj      \
 	.\$(OBJDIR)\nsAppShell.obj       \
 	.\$(OBJDIR)\nsLookAndFeel.obj    \
-	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
 	.\$(OBJDIR)\nsSound.obj          \
 	$(NULL)
