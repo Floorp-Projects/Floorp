@@ -18,11 +18,11 @@ if ($opt_help) {
 
 # Icon details
 #my $imgdir="chrome://xmlterm/skin/default/images"
-my $imgdir = "file:/usr/share/pixmaps/mc";
+my $imgdir = "file:///usr/share/pixmaps/mc";
 
 my %img;
-($img{'directory'}, $img{'executable'}, $img{'plainfile'}) =
-    ('i-directory.png', 'i-executable.png', 'i-regular.png');
+($img{'directory'}, $img{'executable'}, $img{'plainfile'}, $img{'urlfile'}) =
+    ('i-directory.png', 'i-executable.png', 'i-regular.png', 'i-regular.png');
 
 my $ncols = 5;
 $ncols = $opt_cols if ($opt_cols);
@@ -63,9 +63,9 @@ foreach $file (glob("*")) {        # for each file in current directory
         $sendtxt1 = "$dir/$file";
         $sendtxt2 = "./$file";
 
-    } elsif (($extension eq ".gif") || ($extension eq ".png")) {  # image
+    } elsif (($extension eq ".gif") || ($extension eq ".png") || ($extension eq ".jpg")) {  # image
         $filetype = "imagefile";
-        $fileimg  = $file;
+        $fileimg  = "file://$dir/$file";
         $sendtxt1 = "xcat $dir/$file";
         $sendtxt2 = "xcat $file";
 

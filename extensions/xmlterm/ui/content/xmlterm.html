@@ -35,7 +35,8 @@
       // Create new XMLTerm window
       function NewXMLTerm(firstcommand) {
         newwin = window.openDialog( "chrome://xmlterm/content/xmlterm.xul",
-                                    "", "", firstcommand);
+                                    "xmlterm", "chrome,dialog=no,resizable",
+                                    firstcommand);
         //newwin = window.xmlterm.NewXMLTermWindow(firstcommand);
         dump("NewXMLTerm: "+newwin+"\n")
         return (false);
