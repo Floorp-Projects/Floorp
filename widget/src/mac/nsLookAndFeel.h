@@ -48,9 +48,25 @@ public:
 #endif
 
 protected:
+
+ typedef enum {
+  
+    //theme accent variation colours on Mac OS,
+    //offsets into Platinum theme variation colour table
+    eColorOffset_mac_accentlightesthighlight,
+    eColorOffset_mac_accentregularhighlight,
+    eColorOffset_mac_accentface,
+    eColorOffset_mac_accentlightshadow,
+    eColorOffset_mac_accentregularshadow,
+    eColorOffset_mac_accentdarkshadow,
+    eColorOffset_mac_accentdarkestshadow
+  } nsMacAccentColorOffset;
+
+
   nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
   NS_IMETHOD GetMacBrushColor(const PRInt32 aBrushType, nscolor & aColor, const nscolor & aDefaultColor);
   NS_IMETHOD GetMacTextColor(const PRInt32 aTextType, nscolor & aColor, const nscolor & aDefaultColor);
+  NS_IMETHOD GetMacAccentColor(const nsMacAccentColorOffset aAccent, nscolor & aColor, const nscolor & aDefaultColor);
 };
 
 #endif

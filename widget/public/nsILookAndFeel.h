@@ -85,8 +85,15 @@ public:
     eColor_windowtext,
 
     // Colors which will hopefully become CSS3
-    eColor__moz_field
+    eColor__moz_field,
+    eColor__moz_dragtargetzone,				//used to highlight valid regions to drop something onto
 
+    //colours needed by Mac Classic skin
+    eColor__moz_mac_focusring,				//ring around text fields and lists
+    eColor__moz_mac_menuselect,				//colour used when mouse is over a menu item
+    eColor__moz_mac_menushadow,				//colour used to do shadows on menu items
+    eColor__moz_mac_menutextselect			//colour used to display text while mouse is over a menu item
+    
   } nsColorID;
 
   typedef enum {

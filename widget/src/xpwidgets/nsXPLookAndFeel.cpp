@@ -170,6 +170,16 @@ nsLookAndFeelColorPref nsXPLookAndFeel::sColorPrefs[] =
     eColor_windowtext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
   { "ui.-moz-field",
     eColor__moz_field, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
+  { "ui.-moz-dragtargetzone",
+    eColor__moz_dragtargetzone, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
+  { "ui.-moz-mac-focusring",
+    eColor__moz_mac_focusring, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
+  { "ui.-moz-mac-menuselect",
+    eColor__moz_mac_menushadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
+  { "ui.-moz-mac-menutextshadow",
+    eColor__moz_mac_menutextselect, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },     
+  { "ui.-moz-mac-menutextselect",
+    eColor__moz_mac_menutextselect, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },       
 };
 
 PRBool nsXPLookAndFeel::sInitialized = PR_FALSE;
