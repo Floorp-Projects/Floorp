@@ -611,7 +611,7 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
     PRIntn skipSides = 0;
     nsRect rect(0, 0, mRect.width, mRect.height);
-    if (eCompatibility_NavQuirks == mode) {
+    /*if (eCompatibility_NavQuirks == mode) {
       nscoord borderTwips = 0;
       nsCOMPtr<nsILookAndFeel> lookAndFeel;
       if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
@@ -625,14 +625,14 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
                                              aDirtyRect, rect, *mySpacing, 
                                              aStyleContext, skipSides, nsnull, borderTwips, PR_TRUE);
 
-    } else {
+    } else {*/
     const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 	  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                      aDirtyRect, rect,  *color, *mySpacing, 0, 0);
       //PaintTextControl(aPresContext, aRenderingContext, text, mStyleContext, rect);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
-    }
+    //}
   }
 }
 
@@ -894,7 +894,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
-                              nsHTMLReflowMetrics& aMetrics,
+                              nsHTMLReflowMetrics& aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus& aStatus)
 {
@@ -913,6 +913,13 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(&mode);
 
+  nsMargin borderPadding;
+  borderPadding.SizeTo(0, 0, 0, 0);
+  // Get the CSS border
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+
   // calculate the the desired size for the text control
   // use the suggested size if it has been set
   nsresult rv = NS_OK;
@@ -922,21 +929,21 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       // Honor the suggested width and/or height.
     if (kSuggestedNotSet != mSuggestedWidth) {
       suggestedReflowState.mComputedWidth = mSuggestedWidth;
-      aMetrics.width = mSuggestedWidth;
+      aDesiredSize.width = mSuggestedWidth;
     }
 
     if (kSuggestedNotSet != mSuggestedHeight) {
       suggestedReflowState.mComputedHeight = mSuggestedHeight;
-      aMetrics.height = mSuggestedHeight;
+      aDesiredSize.height = mSuggestedHeight;
     }
     rv = NS_OK;
     if (!mDidInit) {
-      PostCreateWidget(&aPresContext, aMetrics.width, aMetrics.height);
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
     }
   
-    aMetrics.ascent = aMetrics.height;
-    aMetrics.descent = 0;
+    aDesiredSize.ascent = aDesiredSize.height;
+    aDesiredSize.descent = 0;
 
     aStatus = NS_FRAME_COMPLETE;
   } else {
@@ -945,22 +952,28 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     // Quirks mode will NOT obey CSS border and padding
     // GetDesiredSize calculates the size without CSS borders
     // the nsLeafFrame::Reflow will add in the borders
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth &&
-        NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-      aMetrics.width = aReflowState.mComputedWidth;
-      aMetrics.height = aReflowState.mComputedHeight;
-    } else {
-      if (eCompatibility_NavQuirks == mode) {
-        GetDesiredSize(&aPresContext, aReflowState, aMetrics);
-      } else {
-        rv = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
-      }
+    if (eCompatibility_NavQuirks == mode) {
+      // This calculates the reflow size
+      GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
 
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
-        aMetrics.width = aReflowState.mComputedWidth;
+      // In Nav Quirks mode we only add in extra size for padding
+      nsMargin padding;
+      padding.SizeTo(0, 0, 0, 0);
+      spacing->CalcPaddingFor(this, padding);
+      aDesiredSize.width  += padding.left + padding.right;
+      aDesiredSize.height += padding.top + padding.bottom;
+    } else {
+      rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    }
+
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+      if (aReflowState.mComputedWidth > aDesiredSize.width) {
+        aDesiredSize.width = aReflowState.mComputedWidth;
       }
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-        aMetrics.height = aReflowState.mComputedHeight;
+    }
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+      if (aReflowState.mComputedHeight > aDesiredSize.height) {
+        aDesiredSize.height = aReflowState.mComputedHeight;
       }
     }
     aStatus = NS_FRAME_COMPLETE;
@@ -968,75 +981,47 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     // Now resize the widget if there is one, in this case it is 
     // the webshell for the editor
     if (!mDidInit) {
-      PostCreateWidget(&aPresContext, aMetrics.width, aMetrics.height);
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
     }
-    //rv = Inherited::Reflow(aPresContext, aMetrics, suggestedReflowState, aStatus);
+    //rv = Inherited::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
   }
 
     
 
 #ifdef NOISY
   printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
-           aMetrics.width, aMetrics.height);
+           aDesiredSize.width, aDesiredSize.height);
 #endif
 
 
   // resize the sub document within the defined rect 
   // the sub-document will fit inside the border
   if (NS_SUCCEEDED(rv) && mWebShell) {
-    // Get the size of the border
-    // if in Quirks mode then it is a hard coded value from 
-    // the native look and feel
-    // otherwise it comes from style
-    nsMargin border;
-    if (eCompatibility_NavQuirks == mode) {
-      nsCOMPtr<nsILookAndFeel> lookAndFeel;
-      if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
-        float p2t;
-        aPresContext.GetPixelsToTwips(&p2t);
-        PRInt32 borderSize;
-        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, borderSize);
-        nscoord borderTwips = NSIntPixelsToTwips(borderSize, p2t);
-        border.SizeTo(borderTwips, borderTwips, borderTwips, borderTwips);
-      }
-
-    } else {
-      // Get the CSS border
-      const nsStyleSpacing* spacing;
-      GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-      spacing->CalcBorderPaddingFor(this, border);
-    }
-
     float t2p;
     aPresContext.GetTwipsToPixels(&t2p);
-
-#ifdef DEBUG_rods
-    printf ("nsGfxTextControlFrame::Reflow: size=%d,%d   %d,%d\n\n",
-           aMetrics.width, aMetrics.height, NSToCoordRound(aMetrics.width * t2p), NSToCoordRound(aMetrics.height * t2p));
-#endif 
 
     nsRect subBounds;
 
     // XXX: the point here is to make a single-line edit field as wide as it wants to be, 
     //      so it will scroll horizontally if the characters take up more space than the field
-    subBounds.x      = NSToCoordRound(border.left * t2p);
-    subBounds.y      = NSToCoordRound(border.top * t2p);
-    subBounds.width  = NSToCoordRound((aMetrics.width - (border.left + border.right)) * t2p);
-    subBounds.height = NSToCoordRound((aMetrics.height - (border.top + border.bottom)) * t2p);
+    subBounds.x      = NSToCoordRound(borderPadding.left * t2p);
+    subBounds.y      = NSToCoordRound(borderPadding.top * t2p);
+    subBounds.width  = NSToCoordRound((aDesiredSize.width - (borderPadding.left + borderPadding.right)) * t2p);
+    subBounds.height = NSToCoordRound((aDesiredSize.height - (borderPadding.top + borderPadding.bottom)) * t2p);
     mWebShell->SetBounds(subBounds.x, subBounds.y, subBounds.width, subBounds.height);
 
 #ifdef NOISY
     printf("webshell set to (%d, %d, %d %d)\n", 
-           border.left, border.top, 
-           (aMetrics.width - (border.left + border.right)), 
-           (aMetrics.height - (border.top + border.bottom)));
+           borderPadding.left, borderPadding.top, 
+           (aDesiredSize.width - (borderPadding.left + borderPadding.right)), 
+           (aDesiredSize.height - (borderPadding.top + borderPadding.bottom)));
 #endif
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
-                  aMetrics.width, aMetrics.height));
+                  aDesiredSize.width, aDesiredSize.height));
 
 // DUMMY
   if (mDummyFrame)
@@ -1046,23 +1031,35 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       mDummyFrame->Init(aPresContext, mContent, mParent, mStyleContext, nsnull);
       mDummyInitialized = PR_TRUE;
     }
-    nsHTMLReflowMetrics metrics = aMetrics;
+    nsHTMLReflowMetrics metrics = aDesiredSize;
     nsHTMLReflowState reflowState = suggestedReflowState;
     nsReflowStatus status = aStatus;
     nsresult dummyResult = mDummyFrame->Reflow(aPresContext, metrics, reflowState, status);
     NS_ASSERTION((NS_SUCCEEDED(dummyResult)), "dummy frame reflow failed.");
-    if (aMetrics.width != metrics.width) 
+    if (aDesiredSize.width != metrics.width) 
     { 
       printf("CT: different widths\n"); 
       NS_ASSERTION(0, "CT: different widths\n");
     }
-    if (aMetrics.height != metrics.height) 
+    if (aDesiredSize.height != metrics.height) 
     { 
       printf("CT: different heights\n"); 
       NS_ASSERTION(0, "CT: different heights\n");
     }
   }
 // END DUMMY
+
+#ifdef DEBUG_rods
+  {
+    PRInt32 type;
+    GetType(&type);
+    if (NS_FORM_TEXTAREA == type) {
+      COMPARE_QUIRK_SIZE("nsGfxText(textarea)", 184, 48)  // text area
+    } else {
+      COMPARE_QUIRK_SIZE("nsGfxText(field)", 176, 24)  // text field
+    }
+  }
+#endif
 
   return NS_OK;
 }
