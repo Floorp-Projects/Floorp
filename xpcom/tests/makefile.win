@@ -24,7 +24,6 @@ DIRS = dynamic windows services
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestFactory.exe
-PROG2 = .\$(OBJDIR)\RegFactory.exe
 PROG3 = .\$(OBJDIR)\TestArray.exe
 PROG4 = .\$(OBJDIR)\TestID.exe
 PROG5 = .\$(OBJDIR)\TestServMgr.exe
@@ -43,7 +42,7 @@ PROG18 = .\$(OBJDIR)\TestStackCrawl.exe
 
 RESFILE = timer.res
 
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) \
+PROGRAMS = $(PROG1) $(PROG3) $(PROG4) $(PROG5) \
         $(PROG6) $(PROG7) \
         $(PROG8) \
 	$(PROG9) \
@@ -92,7 +91,6 @@ clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 $(PROG1): $(OBJDIR) TestFactory.cpp
-$(PROG2): $(OBJDIR) RegFactory.cpp
 $(PROG3): $(OBJDIR) TestArray.cpp
 $(PROG4): $(OBJDIR) TestID.cpp
 $(PROG5): $(OBJDIR) TestServMgr.cpp
