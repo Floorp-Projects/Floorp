@@ -4318,9 +4318,10 @@ nsFontEnumeratorXlib::HaveFontFor(const char* aLangGroup, PRBool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsFontEnumeratorXlib::UpdateFontList()
+NS_IMETHODIMP
+nsFontEnumeratorXlib::UpdateFontList(PRBool *updateFontList)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *updateFontList = PR_FALSE; // always return false for now
+  return NS_OK;
 }
 

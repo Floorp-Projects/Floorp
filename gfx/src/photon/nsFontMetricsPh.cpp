@@ -586,7 +586,8 @@ NS_IMETHODIMP
 }
 
 NS_IMETHODIMP
-   nsFontEnumeratorPh::UpdateFontList()
+   nsFontEnumeratorPh::UpdateFontList(PRBool *updateFontList)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  *updateFontList = PR_FALSE; // always return false for now
+  return NS_OK;
 }
