@@ -46,3 +46,10 @@
 
 #define IDC_COUNT IDC_HELP-IDC_BASE+1
 
+/* drag & drop icons */
+#define IDC_DNDBASE                     4150
+#define IDC_DNDURL                      4150
+#define IDC_DNDTEXT                     4151
+
+#define IDC_DNDCOUNT IDC_DNDTEXT-IDC_DNDBASE+1
+

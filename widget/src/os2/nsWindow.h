@@ -301,7 +301,7 @@ protected:
    void ConstrainZLevel(HWND *aAfter);
 
    PRUint32 GetDragStatus(PRUint32 aState, HPS * oHps);
-   HPS      ReleaseDragHPS(HPS hps);
+   PRBool   ReleaseIfDragHPS(HPS hps);
 
    // Enumeration of the methods which are accessable on the PM thread
    enum {
