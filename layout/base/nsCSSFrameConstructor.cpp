@@ -376,8 +376,8 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
 
     if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
       // See if there was any content specified
-      const nsStyleContent* styleContent;
-      styleContent = (const nsStyleContent*)pseudoStyleContext->GetStyleData(eStyleStruct_Content);
+      const nsStyleContent* styleContent =
+        (const nsStyleContent*)pseudoStyleContext->GetStyleData(eStyleStruct_Content);
       PRUint32  contentCount = styleContent->ContentCount();
 
       if (contentCount > 0) {
@@ -409,6 +409,18 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
             pseudoStyleContext->GetMutableStyleData(eStyleStruct_Display);
   
           mutableDisplay->mDisplay = displayValue;
+        }
+
+        // Also make sure the 'position' property is 'static'. :before and :after
+        // pseudo-elements can not be floated or positioned
+        const nsStylePosition * stylePosition =
+          (const nsStylePosition*)pseudoStyleContext->GetStyleData(eStyleStruct_Position);
+        if (NS_STYLE_POSITION_NORMAL != stylePosition->mPosition) {
+          // Reset the value
+          nsStylePosition* mutablePosition = (nsStylePosition*)
+            pseudoStyleContext->GetMutableStyleData(eStyleStruct_Position);
+  
+          mutablePosition->mPosition = NS_STYLE_POSITION_NORMAL;
         }
 
         // Create a block box or an inline box depending on the value of
