@@ -39,6 +39,12 @@
 */
 #define   MAX_NS_COLORS        70
 
+// Limits on table parameters
+#define MAX_TABLE_ROWS    500
+#define MAX_TABLE_COLUMNS 100
+// This is also limit used for cell size, padding, and borders
+#define MAX_TABLE_PIXELS  10000
+
 typedef int32  ED_BufferOffset;
 
 /*

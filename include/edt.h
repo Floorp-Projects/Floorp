@@ -620,12 +620,7 @@ void EDT_ConvertTableToText(MWContext *pMWContext);
  * Returns TRUE only if top or bottom was changed */ 
 XP_Bool EDT_AdjustTableRectForCaption(LO_TableStruct *pTable, XP_Rect *pRect);
 
-/* Save the character and paragraph style of selection or at caret */
-void EDT_CopyStyle(MWContext *pMWContext);
-
-/* This is TRUE after EDT_CopyStyle is called, until the next left mouse up call 
- *  or user cancels with ESC key, or ??? (any suggestions?)
-*/
+/* TRUE if there's global style data saved from last text copy action */
 XP_Bool EDT_CanPasteStyle(MWContext *pMWContext);
 
 /* Apply the style to selection or at caret. Use bApplyStyle = FALSE to cancel */
