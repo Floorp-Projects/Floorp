@@ -56,6 +56,7 @@
 #endif
 
 #include "ssl.h"
+#include "xp_error.h"
 
 #if defined(XP_OS2) /*DSR072196 - use os2sock.h*/
 #include "os2sock.h"
