@@ -1103,6 +1103,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsNativeWidget aNativeParent)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d> aRect=<%d,%d,%d,%d> aContext=<%p>\n", this, mRefCnt, aRect.x, aRect.y, aRect.width, aRect.height, aContext));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> aParent=<%p> aNativeParent=<%p>\n", this, aParent, aNativeParent));
 
   if (aParent)
   {
@@ -1121,7 +1122,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
  nsIWidget *baseParent = aInitData &&
     (aInitData->mWindowType == eWindowType_dialog ||
-     aInitData->mWindowType == eWindowType_toplevel) ?
+     aInitData->mWindowType == eWindowType_toplevel ) ?
     nsnull : aParent;
 
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
@@ -1138,12 +1139,12 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   if( aNativeParent )
   {
     parentWidget = (PtWidget_t*)aNativeParent;
-//    mParent = GetInstance( (PtWidget_t*)aNativeParent );
+    /* Kirk added this back in... */
+    //mParent = GetInstance( (PtWidget_t*)aNativeParent );
   }
   else if( aParent )
   {
     parentWidget = (PtWidget_t*) (aParent->GetNativeData(NS_NATIVE_WIDGET));
-//    mParent = aParent;
   }
   else
   {
@@ -1586,9 +1587,19 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar )
   { NS_VK_COMMA,      Pk_comma, PR_TRUE },
   { NS_VK_PERIOD,     Pk_period, PR_TRUE },
   { NS_VK_SLASH,      Pk_slash, PR_TRUE },
-  { NS_VK_OPEN_BRACKET, Pk_bracketleft, PR_TRUE },
+  { NS_VK_OPEN_BRACKET,  Pk_bracketleft, PR_TRUE },
   { NS_VK_CLOSE_BRACKET, Pk_bracketright, PR_TRUE },
-  { NS_VK_QUOTE, Pk_quotedbl, PR_TRUE }
+  { NS_VK_QUOTE,         Pk_quotedbl, PR_TRUE },
+  { NS_VK_NUMPAD0,       Pk_KP_0, PR_TRUE },
+  { NS_VK_NUMPAD1,       Pk_KP_1, PR_TRUE },
+  { NS_VK_NUMPAD2,       Pk_KP_2, PR_TRUE },
+  { NS_VK_NUMPAD3,       Pk_KP_3, PR_TRUE },
+  { NS_VK_NUMPAD4,       Pk_KP_4, PR_TRUE },
+  { NS_VK_NUMPAD5,       Pk_KP_5, PR_TRUE },
+  { NS_VK_NUMPAD6,       Pk_KP_6, PR_TRUE },
+  { NS_VK_NUMPAD7,       Pk_KP_7, PR_TRUE },
+  { NS_VK_NUMPAD8,       Pk_KP_8, PR_TRUE },
+  { NS_VK_NUMPAD9,       Pk_KP_9, PR_TRUE }
   };
 
   const int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
@@ -2284,7 +2295,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> mUpdate
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc end, PtHold/PtRelease Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
 #endif
 
-#if 1
+#if 0
     Global_Widget_Hold_Count = PtFlush();  /* this may not be necessary  since after PtRelease */
     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc  PtFlush Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
 #endif
