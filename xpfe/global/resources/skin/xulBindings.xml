@@ -141,7 +141,7 @@
 
   <binding name="buttonleft" excludes="observes,template">
     <content>
-	  <xul:box class="internal-box" autostretch="never">
+	  <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:image inherits="src"/>
         <xul:text inherits="value,accesskey,crop"/>
       </xul:box>
@@ -150,7 +150,7 @@
   
   <binding name="buttontop" excludes="observes,template">
     <content>
-	  <xul:box orient="vertical" autostretch="never" class="internal-box">
+	  <xul:box flex="1" orient="vertical" autostretch="never" class="internal-box">
         <xul:image inherits="src"/>
         <xul:text inherits="value,accesskey,crop"/>
 	  </xul:box>
@@ -159,7 +159,7 @@
 
   <binding name="buttonright" excludes="observes,template">
     <content>
-	  <xul:box autostretch="never" class="internal-box">
+	  <xul:box flex="1" autostretch="never" class="internal-box">
 	    <xul:text inherits="value,accesskey,crop"/>
         <xul:image inherits="src"/>
       </xul:box>
@@ -168,7 +168,7 @@
 
   <binding name="buttonbottom" excludes="observes,template">
     <content>
-	  <xul:box orient="vertical" autostretch="never" class="internal-box">
+	  <xul:box flex="1" orient="vertical" autostretch="never" class="internal-box">
 	    <xul:text inherits="value,accesskey,crop"/>
         <xul:image inherits="src"/>
 	  </xul:box>
@@ -176,5 +176,24 @@
   </binding>
 
   <binding name="separator" extends="xul:spring"/>
+
+  <binding name="progressmeter" extends="xul:box">
+    <content excludes="observes,template">
+      <xul:box class="internal-box" flex="1">
+        <xul:stack flex="1">
+          <xul:progressbar inherits="value">
+            <xul:box class="progress-bar"/>
+            <xul:box class="progress-remainder"/>
+          </xul:progressbar>
+          <xul:box>
+            <xul:spring flex="1"/>
+            <xul:text class="progress-text" inherits="progresstext:value"/>
+            <xul:spring flex="1"/>
+          </xul:box>
+        </xul:stack>
+      </xul:box>
+    </content>
+  </binding>
+
 
 </bindings>

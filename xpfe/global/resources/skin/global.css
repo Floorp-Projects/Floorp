@@ -688,15 +688,22 @@ progressmeter[align="horizontal"] {
 	height: 1em;
 }
 
-progressmeter {
-	color : #9999CC;
+box.progress-bar {
+	background-color : #9999cc;
+}
+
+box.progress-remainder {
 	background-color: #999999;
 }
 
-progressmeter[mode="undetermined"]
+progressmeter[mode="undetermined"] > .internal-box
 {
-   //background-color: yellow;
-   background-image: url(chrome://global/skin/progressmeter-busy.gif);
+  background-image: url(chrome://global/skin/progressmeter-busy.gif);
+}
+
+progressmeter[mode="undetermined"] > .internal-box > stack > progressbar
+{
+  display: none;
 }
 
 /********* Box ********/

@@ -80,6 +80,10 @@ toolbarseparator {
 
 /****** Progress Meter ********/
 
+progressmeter {
+  behavior: url("resource:/chrome/xulBindings.xml#progressmeter");
+}
+
 /****** TitledBox ******/
 
 /********* XP Menus ***********/
