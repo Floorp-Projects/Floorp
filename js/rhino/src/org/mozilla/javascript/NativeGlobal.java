@@ -700,7 +700,6 @@ public class NativeGlobal implements IdFunctionMaster {
     }
 
     private static String decode(Context cx, String str, boolean fullUri) {
-        byte[] utf8buf = null;
         char[] buf = null;
         int bufTop = 0;
 
@@ -727,33 +726,57 @@ public class NativeGlobal implements IdFunctionMaster {
                 if ((B & 0x80) == 0) {
                     C = (char)B;
                 } else {
-                    if (utf8buf == null) { utf8buf = new byte[6]; }
-                    int n = 1;
-                    while ((B & (0x80 >>> n)) != 0) n++;
-                    if ((n == 1) || (n > 6))
+                    // Decode UTF-8 sequence into ucs4Char and encode it into
+                    // UTF-16
+                    int utf8Tail, ucs4Char, minUcs4Char;
+                    if ((B & 0xC0) == 0x80) {
+                        // First  UTF-8 should be ouside 0x80..0xBF
                         throw cx.reportRuntimeError0("msg.bad.uri");
-                    utf8buf[0] = (byte)B;
-                    if ((k + 3 * (n - 1)) > length)
+                    } else if ((B & 0x20) == 0) {
+                        utf8Tail = 1; ucs4Char = B & 0x1F;
+                        minUcs4Char = 0x80;
+                    } else if ((B & 0x10) == 0) {
+                        utf8Tail = 2; ucs4Char = B & 0x0F;
+                        minUcs4Char = 0x800;
+                    } else if ((B & 0x08) == 0) {
+                        utf8Tail = 3; ucs4Char = B & 0x07;
+                        minUcs4Char = 0x10000;
+                    } else if ((B & 0x04) == 0) {
+                        utf8Tail = 4; ucs4Char = B & 0x03;
+                        minUcs4Char = 0x200000;
+                    } else if ((B & 0x02) == 0) {
+                        utf8Tail = 5; ucs4Char = B & 0x01;
+                        minUcs4Char = 0x4000000;
+                    } else {
+                        // First UTF-8 can not be 0xFF or 0xFE
                         throw cx.reportRuntimeError0("msg.bad.uri");
-                    for (int j = 1; j < n; j++) {
+                    }
+                    if (k + 3 * utf8Tail > length)
+                        throw cx.reportRuntimeError0("msg.bad.uri");
+                    for (int j = 0; j != utf8Tail; j++) {
                         if (str.charAt(k) != '%')
                             throw cx.reportRuntimeError0("msg.bad.uri");
                         B = unHex(str.charAt(k + 1), str.charAt(k + 2));
                         if (B < 0 || (B & 0xC0) != 0x80)
                             throw cx.reportRuntimeError0("msg.bad.uri");
+                        ucs4Char = (ucs4Char << 6) | (B & 0x3F);
                         k += 3;
-                        utf8buf[j] = (byte)B;
                     }
-                    int V = utf8ToOneUcs4Char(utf8buf, n);
-                    if (V >= 0x10000) {
-                        V -= 0x10000;
-                        if (V > 0xFFFFF)
+                    // Check for overlongs and other should-not-present codes
+                    if (ucs4Char < minUcs4Char
+                        || ucs4Char == 0xFFFE || ucs4Char == 0xFFFF)
+                    {
+                        ucs4Char = 0xFFFD;
+                    }
+                    if (ucs4Char >= 0x10000) {
+                        ucs4Char -= 0x10000;
+                        if (ucs4Char > 0xFFFFF)
                             throw cx.reportRuntimeError0("msg.bad.uri");
-                        char H = (char)((V >>> 10) + 0xD800);
-                        C = (char)((V & 0x3FF) + 0xDC00);
+                        char H = (char)((ucs4Char >>> 10) + 0xD800);
+                        C = (char)((ucs4Char & 0x3FF) + 0xDC00);
                         buf[bufTop++] = H;
                     } else {
-                        C = (char)V;
+                        C = (char)ucs4Char;
                     }
                 }
                 if (fullUri && fullUriDecodeReserved(C)) {
@@ -855,28 +878,6 @@ public class NativeGlobal implements IdFunctionMaster {
             utf8Buffer[0] = (byte)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
         }
         return utf8Length;
-    }
-
-
-    /* Convert a utf8 character sequence into a UCS-4 character and return that
-    * character.  It is assumed that the caller already checked that the sequence is valid.
-    */
-    private static int utf8ToOneUcs4Char(byte[] utf8Buffer, int utf8Length) {
-        int ucs4Char;
-        int k = 0;
-        if (!(1 <= utf8Length && utf8Length <= 6)) Context.codeBug();
-        if (utf8Length == 1) {
-            ucs4Char = 0xff & utf8Buffer[0];
-            //            JS_ASSERT(!(ucs4Char & 0x80));
-        } else {
-            //JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) == (0x100 - (1 << (8-utf8Length))));
-            ucs4Char = utf8Buffer[k++] & ((1<<(7-utf8Length))-1);
-            while (--utf8Length > 0) {
-                //JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
-                ucs4Char = ucs4Char<<6 | (utf8Buffer[k++] & 0x3F);
-            }
-        }
-        return ucs4Char;
     }
 
     private static final int
