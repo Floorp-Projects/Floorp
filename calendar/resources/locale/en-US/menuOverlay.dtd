@@ -58,7 +58,7 @@
 <!ENTITY event.mail.event	"Mail Selected Event(s)">
 <!ENTITY event.mail.event.accesskey	"m">
 
-<!ENTITY calendar.print.label	"Print Events...">
+<!ENTITY calendar.print.label	"Print Active Calendars...">
 <!ENTITY calendar.print.accesskey	"r">
 
 <!ENTITY calendar.print.label	"Print Preview">
