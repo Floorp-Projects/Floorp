@@ -1,43 +1,52 @@
 Building Grendel:
 
-Make sure you have the required (external) packages first.  
+You no longer have to set a CLASSPATH environment variable to build Grendel successfully. Just 
+follow the instructions below and you should be up and running pretty quickly.
 
-Then:
-	./configure
-	gmake
+1. Make sure you have the required (external) packages (see README.libs).  
+2. Copy the jars to the extlib directory. With OROMatcher, you'll have to create the jar yourself
+   from the binaries in the OROMatcher distribution. To do this, unpack the OROMatcher distribution
+   and cd to the top directory, then:
+	jar cvf OROMatcher.jar com
+   Copy the resulting OROMatcher.jar to the extlib directory in here.
+3. Type 'make' and go get a cup of coffee or something. Grendel takes a little while to build.
+4. Type 'make resources' to copy the application resources to the right locations in the binary
+   tree.
+5. Binaries and application resources will now be in dist/classes.
+6. Type 'make run' and test that Grendel works. If everything built successfully, it should.
+7. If you want to make an executable jar to package up all the application's classes (minus the
+   external libraries), type 'make jar'. There is a manifest header file in dist/classes which sets
+   the main class so the Java VM can find it. You'll have to take care of setting up the class-
+   path if you want to run Grendel from the jar. Once you've done that, you can type:
+	java -jar dist/classes/Grendel.jar 
+   and it should run Grendel for you.
+8. To clean out the dist/classes directory of all build products, type 'make clean'.
 
-The 'configure' script will create the Makefiles with all necessary CLASSPATH
-settings and such set up appropriately for your system. You no longer have to 
-edit the Makefiles or set CLASSPATH manually.
+NOTE TO MAC USERS:
+We are no longer supporting JDK 1.1.x, so Grendel will not run on MacOS 9.x or earlier. You'll have
+to upgrade to Mac OS X if you want to run Grendel. Support for building with Project Builder is 
+forthcoming. Please note also that the application settings in Project Builder (especially the
+MRJAppBuilder related settings) should NOT be changed without a VERY compelling reason. Changing 
+these settings may cause Grendel to fail to run in your particular environment. The creator code 
+'GRen' is registered with Apple, so please don't change that setting. If you want to use Icon
+Composer to change the application icons to something you like better than an envelope, go ahead.
+You'll find the Project Builder project and resource files in PBProj/Grendel.pbproj and 
+PBProj/Grendel.icns. Project Builder will put the build products in PBProj/build.
+ 
+NOTE TO ALL USERS/DEVELOPERS:
+If you add directories, copy one of the Makefiles from a neighbouring directory to use as a 
+template for your Makefiles. This will help ensure that you have all the right things set up in
+your Makefiles for your new modules to build correctly. If you add sources to existing directories,
+be sure to add the source file names to the SOURCES list in that directory's Makefile. If you add
+new external library dependencies for a new module you're contributing, be sure to add the new 
+jar to the LIBS definition in rules.mk, then check rules.mk in after you've verified your build. 
+Also be sure to add the new external library to README.libs so everyone knows about it.
 
-'configure' will look for three specific Java compilers (in this order):
-	1. 'javac-ea' - early access of next-generation Java compiler from
-	   Java Software (Sun)
+If you must edit any of the Makefiles to make changes specific to your environment, but not 
+generally useful to everyone, please, please, PLEASE DO NOT check the Makefiles in. You should
+actually have no need to edit the Makefiles as they are currently, unless you really truly
+cannot copy the required jars to extlib (which should never be the case).
 
-	2. 'javac' - standard Sun JDK compiler
-
-	3. 'jikes' - IBM's Java-compatible compiler (included because some
-	   people like to use it instead of 'javac')
-
-'configure' will use whichever of these three it finds first as the compiler
-for Grendel.
-
-Running Grendel: 
-
-There are currently two ways you can run Grendel:
-	
-1. Type 'java grendel.Main' (with the correct CLASSPATH, or you can 
-	use the '-classpath' option to set the classpath on the 
-	command-line)
-2. Type 'make run' after building and watch it work.
-
-Editing Makefiles:
-
-Do not edit the generated Makefiles as they will be overwritten when you next
-run 'configure' or 'configure.status'. If you want to change something in the
-Makefiles, or add or delete targets, edit the Makefile.in files.
-
-If you edit 'configure.in' you will need to run GNU autoconf to remake the 
-'configure' script. If you don't have GNU autoconf and don't want to get it,
-just don't go there.
+Happy haquing!
+--Jeff
 

@@ -1,27 +1,19 @@
 The following packages are required for Grendel:
 
-JDK 1.1.6+ or Java 2
-* http://java.sun.com/products/jdk/1.1/
+Java 2 (version 1.2 or newer)
 * http://java.sun.com/products/jdk/1.2/
 
-JFC/Swing 1.1
-- Only for jdk 1.1.x not for jdk 1.2/Java 2 as it's already included
-* http://java.sun.com/products/jfc/
-  
-JavaBeans Activation Framework (JAF) 1.0
+JavaBeans Activation Framework (JAF) 
 * http://java.sun.com/beans/glasgow/jaf.html
 
-JavaMail 1.1.1
+JavaMail
 * http://java.sun.com/products/javamail/
 
-POP3 provider 1.0
-* http://java.sun.com/products/javamail/
-
-Netscape Directory SDK for Java 3.05
+Netscape Directory SDK for Java 
 * http://www.mozilla.org/directory/
 
-Java Project X Technology Release 2
-* http://developer.java.sun.com/developer/products/xml/
+Java API for XML Parsing
+* http://java.sun.com/xml/
 
 ORO Matcher
-* http://www.oroinc.com/
+* http://www.savarese.org/oro/
