@@ -220,7 +220,7 @@ pref("mailnews.nav_crosses_folders",        1); // 0=do it, don't prompt 1=promp
 pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+bottom 3=select+top
 pref("mailnews.reply_with_extra_lines",     2);
 
-pref("mailnews.force_ascii_search",         true);
+pref("mailnews.force_ascii_search",         false);
 pref("mailnews.autolookup_unknown_mime_types",  true);
 
 pref("mailnews.customHeaders", "");
