@@ -33,6 +33,9 @@
       <!-- public implementation -->
       <property name="checked"    onset="if (val) this.setAttribute('checked', 'true');
                                          else this.removeAttribute('checked');
+                                         var event = document.createEvent('Events');
+                                         event.initEvent('CheckboxStateChange', false, true);
+                                         this.dispatchEvent(event);
                                          return val;"
                                   onget="return this.hasAttribute('checked');"/>
     </implementation>
