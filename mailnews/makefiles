@@ -55,6 +55,7 @@ mailnews/mime/tests/Makefile
 mailnews/mime/tests/xpcomtest/Makefile
 mailnews/mime/public/Makefile
 mailnews/mime/src/Makefile
+mailnews/mime/resources/Makefile
 mailnews/compose/Makefile
 mailnews/compose/public/Makefile
 mailnews/compose/src/Makefile
