@@ -57,10 +57,18 @@ static nsModuleComponentInfo components[] =
     imgRequestProxyConstructor, },
 };
 
+PR_STATIC_CALLBACK(nsresult)
+imgCache_Initialize(nsIModule* aSelf)
+{
+  imgCache::Init();
+  return PR_TRUE;
+}
+
 PR_STATIC_CALLBACK(void)
-ImageModuleDestructor(nsIModule *self)
+imgCache_Shutdown(nsIModule* aSelf)
 {
   imgCache::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsImageLib2Module, components, ImageModuleDestructor)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsImageLib2Module, components, imgCache_Initialize, imgCache_Shutdown)
+

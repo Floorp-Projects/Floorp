@@ -30,13 +30,15 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsIMemory.h"
+#include "nsIObserverService.h"
 
 #include "nsICache.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
 
-NS_IMPL_ISUPPORTS1(imgCache, imgICache)
+NS_IMPL_ISUPPORTS3(imgCache, imgICache, nsIObserver, nsISupportsWeakReference)
 
 imgCache::imgCache()
 {
@@ -47,6 +49,18 @@ imgCache::imgCache()
 imgCache::~imgCache()
 {
   /* destructor code */
+}
+
+nsresult imgCache::Init()
+{
+  imgCache* cache = new imgCache();
+  if(!cache) return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_SUCCEEDED(rv) && os)
+    rv = os->AddObserver(cache, "memory-pressure", PR_TRUE);
+  return rv;
 }
 
 /* void clearCache (in boolean chrome); */
@@ -255,3 +269,12 @@ PRBool imgCache::Remove(nsIURI *aKey)
   return PR_TRUE;
 }
 
+
+NS_IMETHODIMP
+imgCache::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
+{
+  if (strcmp(aTopic, "memory-pressure") == 0)
+    ClearCache(PR_TRUE);
+
+  return NS_OK;
+}
