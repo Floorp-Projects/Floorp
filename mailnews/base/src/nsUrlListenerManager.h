@@ -20,7 +20,8 @@
 #define nsUrlListenerManager_h___
 
 #include "nsIUrlListenerManager.h"
-#include "nsISupportsArray.h"
+#include "nsVoidArray.h"
+#include "nsCOMPtr.h"
 
 /********************************************************************************************
 	The url listener manager is a helper class used by all of our subclassed urls to implement
@@ -54,7 +55,7 @@ public:
 	 NS_IMETHOD OnStopRunningUrl(nsIMsgMailNewsUrl * aUrl, nsresult aExitCode);
 
 protected:
-	nsISupportsArray * m_listeners;
+	nsVoidArray * m_listeners;
 
 	// helper function used to enumerate ISupportsArray and broadcast the change
 	nsresult BroadcastChange(nsIURL * aUrl, nsUrlNotifyType notification, nsresult aErrorCode);

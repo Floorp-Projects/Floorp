@@ -29,8 +29,7 @@ nsUrlListenerManager::nsUrlListenerManager() :
 {
 	NS_INIT_REFCNT();
 	// create a new isupports array to store our listeners in...
-	NS_NewISupportsArray(&m_listeners);
-
+	m_listeners = new nsVoidArray();
 }
 
 nsUrlListenerManager::~nsUrlListenerManager()
@@ -41,8 +40,6 @@ nsUrlListenerManager::~nsUrlListenerManager()
 
 		for (int i = count - 1; i >= 0; i--)
 			m_listeners->RemoveElementAt(i);
-
-		NS_RELEASE(m_listeners);
 	}
 }
 
@@ -51,7 +48,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsIUrlListenerManager::GetIID
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {
 	if (m_listeners && aUrlListener)
-		m_listeners->AppendElement(aUrlListener);
+		m_listeners->AppendElement((void *) aUrlListener);
 
 	return NS_OK;
 }
@@ -59,7 +56,7 @@ nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 nsresult nsUrlListenerManager::UnRegisterListener(nsIUrlListener * aUrlListener)
 {
 	if (m_listeners && aUrlListener)
-		m_listeners->RemoveElement(aUrlListener);
+		m_listeners->RemoveElement((void *) aUrlListener);
 	return NS_OK;
 }
 
@@ -72,25 +69,18 @@ nsresult nsUrlListenerManager::BroadcastChange(nsIURL * aUrl, nsUrlNotifyType no
 	if (m_listeners && aUrl)
 	{
 		// enumerate over all url listeners...(Start at the end and work our way down)
+		nsIUrlListener * listener = nsnull;
+		
 		for (PRUint32 i = m_listeners->Count(); i > 0; i--)
 		{
-			nsISupports *supports = m_listeners->ElementAt(i-1);
-			if(supports)
+			listener = (nsIUrlListener *) m_listeners->ElementAt(i-1);
+			if (listener)
 			{
-				if(NS_SUCCEEDED(rv = supports->QueryInterface(nsIUrlListener::GetIID(), (void**)&listener)))
-				{
-					if (listener)
-					{
-						if (notification == nsUrlNotifyStartRunning)
-							listener->OnStartRunningUrl(aUrl);
-						else if (notification == nsUrlNotifyStopRunning)
-							listener->OnStopRunningUrl(aUrl, aErrorCode);
-						NS_RELEASE(listener);
-					}
-				}
-
-				NS_RELEASE(supports);
-			} // if we have a valid element in the array
+				if (notification == nsUrlNotifyStartRunning)
+					listener->OnStartRunningUrl(aUrl);
+				else if (notification == nsUrlNotifyStopRunning)
+					listener->OnStopRunningUrl(aUrl, aErrorCode);
+			}
 
 		} // for each listener
 	} // if m_listeners && aUrl
