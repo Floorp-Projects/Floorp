@@ -319,7 +319,8 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
     } else {
-      visibleWidth = aReflowState.mComputedWidth;
+      visibleWidth = aReflowState.mComputedWidth - scrollbarWidth;
+      visibleWidth  -= (border.left + border.right + padding.left + padding.right);
     }
   }
   
@@ -359,11 +360,13 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
       // Calculate the visible height of the listbox
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
       visibleHeight = aReflowState.mComputedHeight;
+      visibleHeight -= (border.top + border.bottom + padding.top + padding.bottom);
     } else {
       PRInt32 numRows = 1;
       GetSizeAttribute(&numRows);
       if (numRows == kNoSizeSpecified) {
         visibleHeight = aReflowState.mComputedHeight;
+        visibleHeight -= (border.top + border.bottom + padding.top + padding.bottom);
       } else {
         visibleHeight = numRows * heightOfARow;
       }
@@ -2388,15 +2391,15 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
             mComboboxFrame->ListWasSelected(mPresContext);
           } else {
-	    UpdateSelection(PR_TRUE, PR_FALSE, mContent);
-	  }
+	          UpdateSelection(PR_TRUE, PR_FALSE, mContent);
+	        }
         } if (code == nsIDOMUIEvent::DOM_VK_ESCAPE) {
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
             ResetSelectedItem();
             mComboboxFrame->ListWasSelected(mPresContext); 
           } 
         } else { // Select option with this as the first character
-          // Not I18N compliant
+          // XXX Not I18N compliant
           PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1) % numOptions;
           PRInt32 startedAtIndex    = selectedIndex;
           PRBool  loopedAround  = PR_FALSE;
