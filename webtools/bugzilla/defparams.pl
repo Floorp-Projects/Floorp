@@ -387,7 +387,7 @@ DefParam("defaultquery",
 
 
 DefParam("letsubmitterchoosepriority",
-         "If this is on, then people submitting bugs can choose an initial priority for that bug.  If off, then all bugs initially have the default priority selected above.",
+         "If this is on, then people submitting bugs can choose an initial priority for that bug.  If off, then all bugs initially have the default priority selected below.",
          "b",
          1);
 
