@@ -11,17 +11,13 @@
 
 @implementation OrgMozillaChimeraPreferenceSecurity
 
-- (void) dealloc
+- (void)dealloc
 {
   [super dealloc];
 }
 
-
-- (void)mainViewDidLoad
+- (void)updateButtons
 {
-  if ( !mPrefService )
-    return;
-    
   // Set initial value on Security checkboxes
   PRBool leaveEncrypted = PR_TRUE;
   mPrefService->GetBoolPref(LEAVE_SITE_PREF, &leaveEncrypted);
@@ -36,6 +32,19 @@
   [mViewMixed setState:(viewMixed ? NSOnState : NSOffState)];
 }
 
+
+- (void)mainViewDidLoad
+{
+  if ( !mPrefService )
+    return;
+
+  [self updateButtons];
+}
+
+- (void)didActivate
+{
+  [self updateButtons];
+}
 
 //
 // clickEnableViewMixed:

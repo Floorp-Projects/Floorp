@@ -10,29 +10,34 @@ class nsIPermission;
 class nsICookieManager;
 class nsICookie;
 
+@class ExtendedTableView;
+
 @interface OrgMozillaChimeraPreferencePrivacy : PreferencePaneBase
 {
   // pane
-  IBOutlet NSMatrix* mCookieBehavior;
-  IBOutlet NSButton* mAskAboutCookies;
+  IBOutlet NSMatrix*          mCookieBehavior;
+  IBOutlet NSButton*          mAskAboutCookies;
   
-  IBOutlet NSButton* mStorePasswords;
-  IBOutlet NSButton* mAutoFillPasswords;
+  IBOutlet NSButton*          mStorePasswords;
+  IBOutlet NSButton*          mAutoFillPasswords;
 
-  BOOL mSortedAscending;                           // sort direction for tables in sheets
+  BOOL                        mSortedAscending;   // sort direction for tables in sheets
 
   // permission sheet
-  IBOutlet id mPermissionsPanel;
-  IBOutlet NSTableView* mPermissionsTable;
-  IBOutlet NSTableColumn* mPermissionColumn;
-  nsIPermissionManager* mPermissionManager;        // STRONG (should be nsCOMPtr)
-  nsCOMArray<nsIPermission>* mCachedPermissions;   // parallel list for speed, STRONG
+  IBOutlet id                 mPermissionsPanel;
+  IBOutlet ExtendedTableView* mPermissionsTable;
+  IBOutlet NSTableColumn*     mPermissionColumn;
+
+  nsIPermissionManager*       mPermissionManager;   // STRONG (should be nsCOMPtr)
+  nsCOMArray<nsIPermission>*  mCachedPermissions;   // parallel list for speed, STRONG
       
   // cookie sheet
-  IBOutlet id mCookiesPanel;
-  IBOutlet NSTableView* mCookiesTable;
-  nsICookieManager* mCookieManager;
-  nsCOMArray<nsICookie>* mCachedCookies;
+  IBOutlet id                 mCookiesPanel;
+  IBOutlet ExtendedTableView* mCookiesTable;
+  IBOutlet NSButton*          mRemoveCookiesButton;
+
+  nsICookieManager*           mCookieManager;
+  nsCOMArray<nsICookie>*      mCachedCookies;
 }
 
 // main panel button actions
@@ -65,10 +70,11 @@ class nsICookie;
 - (void)tableView:(NSTableView *)aTableView setObjectValue:anObject forTableColumn:(NSTableColumn *)aTableColumn  row:(int)rowIndex;
 
 // NSTableView delegate methods
-- (void) tableView:(NSTableView *)aTableView didClickTableColumn:(NSTableColumn *)aTableColumn;
+- (void)tableView:(NSTableView *)aTableView didClickTableColumn:(NSTableColumn *)aTableColumn;
 
 // sorting support methods
--(void) sortCookiesByColumn:(NSTableColumn *)aTableColumn inAscendingOrder:(BOOL)ascending;
--(void) sortPermissionsByColumn:(NSTableColumn *)aTableColumn inAscendingOrder:(BOOL)ascending;
+- (void)sortCookiesByColumn:(NSTableColumn *)aTableColumn inAscendingOrder:(BOOL)ascending;
+- (void)sortPermissionsByColumn:(NSTableColumn *)aTableColumn inAscendingOrder:(BOOL)ascending;
+
 
 @end

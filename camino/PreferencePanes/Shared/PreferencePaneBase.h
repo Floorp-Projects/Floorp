@@ -40,6 +40,16 @@
 
 class nsIPref;
 
+
+// optional methods that our prefs panes can implement
+@interface NSObject(CaminoPreferencePane)
+
+// the prefs window was activated; pane should update its state
+- (void)didActivate;
+
+@end
+
+
 @interface PreferencePaneBase : NSPreferencePane 
 {
   nsIPref* 				mPrefService;					// strong, but can't use a comptr here

@@ -14,6 +14,7 @@
 #include "nsNetUtil.h"
 #include "nsString.h"
 
+#import "ExtendedTableView.h"
 
 // prefs for keychain password autofill
 static const char* const gUseKeychainPref = "chimera.store_passwords_with_keychain";
@@ -277,6 +278,9 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   // build parallel cookie list
   [self populateCookieCache];
   
+  [mCookiesTable setDeleteAction:@selector(removeCookies:)];
+  [mCookiesTable setTarget:self];
+
   // start sorted by host
   mCachedCookies->Sort(compareCookieHosts, nsnull);
   NSTableColumn* sortedColumn = [mCookiesTable tableColumnWithIdentifier:@"Website"];
@@ -397,6 +401,9 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 {
   // build parallel permission list for speed with a lot of blocked sites
   [self populatePermissionCache];
+
+  [mPermissionsTable setDeleteAction:@selector(removeCookiePermissions:)];
+  [mPermissionsTable setTarget:self];
   
   // start sorted by host
   mCachedPermissions->Sort(comparePermHosts, nsnull);
@@ -707,6 +714,15 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
         }
       }
     }
+  }
+}
+
+- (void)tableViewSelectionDidChange:(NSNotification *)aNotification
+{
+  if ([aNotification object] == mCookiesTable)
+  {
+    int selRow =[mCookiesTable selectedRow];
+    [mRemoveCookiesButton setEnabled:(selRow != -1)];
   }
 }
 

@@ -1,5 +1,6 @@
 {
     IBClasses = (
+        {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
             CLASS = NSPreferencePane; 
@@ -12,6 +13,7 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
+        {CLASS = NSTableView; LANGUAGE = ObjC; SUPERCLASS = NSControl; }, 
         {
             ACTIONS = {
                 clickAskAboutCookies = id; 
@@ -35,10 +37,11 @@
                 mAutoFillPasswords = NSButton; 
                 mCookieBehavior = NSMatrix; 
                 mCookiesPanel = id; 
-                mCookiesTable = NSTableView; 
+                mCookiesTable = ExtendedTableView; 
                 mPermissionColumn = NSTableColumn; 
                 mPermissionsPanel = id; 
-                mPermissionsTable = NSTableView; 
+                mPermissionsTable = ExtendedTableView; 
+                mRemoveCookiesButton = NSButton; 
                 mStorePasswords = NSButton; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
