@@ -81,16 +81,18 @@
     </radiogroup>
 
     <hbox align="center">
-      <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"
-                prefattribute="value"
+      <checkbox wsm_persist="true" id="identity.bccSelf" 
+                before="&bccAccount.label; &lt;" after="&gt;" 
+                prefattribute="value" flex="1"
                 prefstring="mail.identity.%identitykey%.bcc_self"/>
     </hbox>
-    
+
     <hbox align="center">
       <checkbox wsm_persist="true" id="identity.bccOthers" label="&bccAddress.label;"
                 oncommand="setupBCCTextbox();"
-                prefattribute="value"
+                prefattribute="value" 
                 prefstring="mail.identity.%identitykey%.bcc_other"/>
+
       <textbox wsm_persist="true" id="identity.bccList" flex="1"
                prefstring="mail.identity.%identitykey%.bcc_other_list"/>
     </hbox>
