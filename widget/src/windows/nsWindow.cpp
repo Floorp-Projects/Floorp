@@ -379,6 +379,62 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
   return PR_FALSE;
 }
 
+//////////////////////////////////////////////////////////////////
+//
+// Turning TRACE_EVENTS on will cause printfs for most
+// events that are dispatched.
+//
+// Motion events are extra noisy so they get their own
+// define: TRACE_EVENTS_MOTION
+//
+//////////////////////////////////////////////////////////////////
+
+#undef TRACE_EVENTS
+#undef TRACE_EVENTS_MOTION
+
+#ifdef DEBUG
+void
+nsWindow::DebugPrintEvent(nsGUIEvent &   aEvent,
+                          char *         sMessage,
+                          HWND           aWnd,
+                          PRBool         aPrintCoords)
+{
+  nsString eventName = "UNKNOWN";
+
+#ifndef TRACE_EVENTS_MOTION
+   if (aEvent.message == NS_MOUSE_MOVE)
+   {
+     return;
+   }
+#endif
+
+  static int sPrintCount=0;
+
+  printf("%4d %-14s(this=%-8p , HWND=%-8p",
+         sPrintCount++,
+         sMessage,
+         this,
+         aWnd);
+         
+  printf(" , event=%-16s",
+         (const char *) nsAutoCString(GuiEventToString(aEvent)));
+
+  if (aPrintCoords)
+  {
+    printf(" , x=%-3d, y=%d)",
+           aEvent.point.x,
+           aEvent.point.y);
+  }
+  else
+  {
+    printf(")");
+  }
+
+  printf("\n");
+}
+#endif // DEBUG
+//////////////////////////////////////////////////////////////////
+
 //-------------------------------------------------------------------------
 //
 // Initialize an event to dispatch
@@ -450,6 +506,10 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 {
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(*event,"Something",mWnd,PR_TRUE);
+#endif
+
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
