@@ -180,7 +180,6 @@
 				19C28FACFE9D520D11CA2CBB,
 				F6BD637A01B30E0F01A962F7,
 				F50E1BA70207EB8201F281DF,
-				F57F2086029AEB5001000106,
 			);
 			isa = PBXGroup;
 			name = Chimera;
@@ -2379,7 +2378,7 @@
 				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../dist/include/pref ../dist/include/nspr ../dist/include/cookie ../dist/include/nkcache ../dist/include/xpcom";
-				LIBRARY_SEARCH_PATHS = "/Users/pink/src/cocoa/mozilla/dist/Embed /Users/pink/src/cocoa/mozilla/embedding/base /Users/pink/src/cocoa/mozilla/string/obsolete /Users/pink/src/cocoa/mozilla/intl/unicharutil/util /Users/pink/src/cocoa/mozilla/js/src /Users/pink/src/cocoa/mozilla/dist/Embed/components";
+				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../string/obsolete ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-bundle";
@@ -2627,12 +2626,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F57F2086029AEB5001000106 = {
-			isa = PBXFileReference;
-			name = nsCocoaNotifier.mm;
-			path = /Users/pink/src/cocoa/mozilla/xpcom/threads/nsCocoaNotifier.mm;
-			refType = 0;
 		};
 		F5807368023A1514010001CA = {
 			children = (
