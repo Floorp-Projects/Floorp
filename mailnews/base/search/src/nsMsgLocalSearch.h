@@ -115,7 +115,7 @@ protected:
                                PRUint32 headerSize,
                                PRBool Filtering,
 							   PRBool *pResult); 
-	nsIMsgDatabase *m_db;
+	nsCOMPtr <nsIMsgDatabase> m_db;
 	nsCOMPtr<nsISimpleEnumerator> m_listContext;
 	void CleanUpScope();
 };

@@ -159,7 +159,7 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
     // strings. It is possible to have: To NULL CR LF From. We want to skip over these CR/LFs if they start
     // at the beginning of what we think is another header.
     
-    while ((m_headers[0] == nsCRT::CR || m_headers[0] == nsCRT::LF || m_headers[0] == ' ' || m_headers[0] == '\0') && m_headersSize > 0)
+    while (m_headersSize > 0 && (m_headers[0] == nsCRT::CR || m_headers[0] == nsCRT::LF || m_headers[0] == ' ' || m_headers[0] == '\0'))
     {
       m_headers++;  // skip over these chars...
       m_headersSize--;

@@ -270,23 +270,21 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsMsgSearchOfflineMail, nsMsgSearchAdapter, nsIUrlL
 
 nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchAdapter (scope, termList)
 {
-    m_db = nsnull;
-    m_listContext = nsnull;
 }
 
 nsMsgSearchOfflineMail::~nsMsgSearchOfflineMail ()
 {
-    // Database should have been closed when the scope term finished. 
-    CleanUpScope();
-    NS_ASSERTION(!m_db, "db not closed");
+  // Database should have been closed when the scope term finished. 
+  CleanUpScope();
+  NS_ASSERTION(!m_db, "db not closed");
 }
 
 
 nsresult nsMsgSearchOfflineMail::ValidateTerms ()
 {
-    nsresult err = NS_OK;
+  nsresult err = NS_OK;
 	err = nsMsgSearchAdapter::ValidateTerms ();
-    return err;
+  return err;
 }
 
 
@@ -308,7 +306,7 @@ nsresult nsMsgSearchOfflineMail::OpenSummaryFile ()
     err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
     if (NS_SUCCEEDED(err) && scopeFolder)
     {
-      err = scopeFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), &m_db);
+      err = scopeFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_db));
     }
     else
       return err; // not sure why m_folder wouldn't be set.
@@ -384,78 +382,78 @@ nsresult nsMsgSearchOfflineMail::ConstructExpressionTree(nsIMsgDBHdr *msgToMatch
                                             nsMsgSearchBoolExpression ** aExpressionTree,
 											PRBool *pResult)
 {
-    PRBool result;
+  PRBool result;
 
 	NS_ENSURE_ARG_POINTER(pResult);
 
 	*pResult = PR_FALSE;
 
-    // Don't even bother to look at expunged messages awaiting compression
-    PRUint32 msgFlags;
-    msgToMatch->GetFlags(&msgFlags);
+  // Don't even bother to look at expunged messages awaiting compression
+  PRUint32 msgFlags;
+  msgToMatch->GetFlags(&msgFlags);
 	if (msgFlags & MSG_FLAG_EXPUNGED)
-        result = PR_FALSE;
+    result = PR_FALSE;
     
-    PRUint32 count;
-    termList->Count(&count);
+  PRUint32 count;
+  termList->Count(&count);
 
-    nsMsgSearchBoolExpression * finalExpression = new nsMsgSearchBoolExpression(); 
+  nsMsgSearchBoolExpression * finalExpression = new nsMsgSearchBoolExpression(); 
 
-    while (aStartPosInList < count)
-    {
-        nsCOMPtr<nsIMsgSearchTerm> pTerm;
-        termList->QueryElementAt(aStartPosInList, NS_GET_IID(nsIMsgSearchTerm), (void **)getter_AddRefs(pTerm));
-        NS_ASSERTION (msgToMatch, "couldn't get term to match");
+  while (aStartPosInList < count)
+  {
+      nsCOMPtr<nsIMsgSearchTerm> pTerm;
+      termList->QueryElementAt(aStartPosInList, NS_GET_IID(nsIMsgSearchTerm), (void **)getter_AddRefs(pTerm));
+      NS_ASSERTION (msgToMatch, "couldn't get term to match");
 
-        PRBool beginsGrouping;
-        PRBool endsGrouping;
-        pTerm->GetBeginsGrouping(&beginsGrouping);
-        pTerm->GetEndsGrouping(&endsGrouping);
+      PRBool beginsGrouping;
+      PRBool endsGrouping;
+      pTerm->GetBeginsGrouping(&beginsGrouping);
+      pTerm->GetEndsGrouping(&endsGrouping);
 
-        if (beginsGrouping)
+      if (beginsGrouping)
+      {
+          //temporarily turn off the grouping for our recursive call
+          pTerm->SetBeginsGrouping(PR_FALSE); 
+          // recursively process this inner expression
+          nsMsgSearchBoolExpression * innerExpression = new nsMsgSearchBoolExpression(); 
+
+          ConstructExpressionTree(msgToMatch, termList, aStartPosInList, defaultCharset, scope, db, headers, 
+              headerSize, Filtering, &innerExpression, &result);
+
+          // the first search term in the grouping is the one that holds the operator for how this search term
+          // should be joined with the expressions to it's left. 
+          PRBool booleanAnd;
+          pTerm->GetBooleanAnd(&booleanAnd);
+
+          // now add this expression tree to our overall expression tree...
+          finalExpression = nsMsgSearchBoolExpression::AddExpressionTree(finalExpression, innerExpression, booleanAnd);
+
+          // undo our damage
+          pTerm->SetBeginsGrouping(PR_TRUE); 
+
+      }
+      else
+      {
+        ProcessSearchTerm(msgToMatch, pTerm, defaultCharset, scope, db, headers, headerSize, Filtering, &result);
+        finalExpression = nsMsgSearchBoolExpression::AddSearchTerm(finalExpression, pTerm, result);    // added the term and its value to the expression tree
+
+        if (endsGrouping)
         {
-            //temporarily turn off the grouping for our recursive call
-            pTerm->SetBeginsGrouping(PR_FALSE); 
-            // recursively process this inner expression
-            nsMsgSearchBoolExpression * innerExpression = new nsMsgSearchBoolExpression(); 
-
-            ConstructExpressionTree(msgToMatch, termList, aStartPosInList, defaultCharset, scope, db, headers, 
-                headerSize, Filtering, &innerExpression, &result);
-
-            // the first search term in the grouping is the one that holds the operator for how this search term
-            // should be joined with the expressions to it's left. 
-            PRBool booleanAnd;
-            pTerm->GetBooleanAnd(&booleanAnd);
-
-            // now add this expression tree to our overall expression tree...
-            finalExpression = nsMsgSearchBoolExpression::AddExpressionTree(finalExpression, innerExpression, booleanAnd);
-
-            // undo our damage
-            pTerm->SetBeginsGrouping(PR_TRUE); 
+          // okay, this term marks the end of a grouping...kick out of this function.
+          *pResult = result; 
+          *aExpressionTree = finalExpression;
+          return NS_OK;
 
         }
-        else
-        {
-          ProcessSearchTerm(msgToMatch, pTerm, defaultCharset, scope, db, headers, headerSize, Filtering, &result);
-          finalExpression = nsMsgSearchBoolExpression::AddSearchTerm(finalExpression, pTerm, result);    // added the term and its value to the expression tree
+      }
 
-          if (endsGrouping)
-          {
-            // okay, this term marks the end of a grouping...kick out of this function.
-            *pResult = result; 
-            *aExpressionTree = finalExpression;
-            return NS_OK;
+      aStartPosInList++;
+  } // while we still have terms to process in this group
 
-          }
-        }
+  *pResult = PR_TRUE;
+  *aExpressionTree = finalExpression;
 
-        aStartPosInList++;
-    } // while we still have terms to process in this group
-
-    *pResult = PR_TRUE;
-    *aExpressionTree = finalExpression;
-
-    return NS_OK; 
+  return NS_OK; 
 }
 
 nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
@@ -790,7 +788,7 @@ nsresult nsMsgSearchOfflineNews::OpenSummaryFile ()
   err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
   // code here used to check if offline store existed, which breaks offline news.
   if (NS_SUCCEEDED(err) && scopeFolder)
-    err = scopeFolder->GetMsgDatabase(nsnull, &m_db);
+    err = scopeFolder->GetMsgDatabase(nsnull, getter_AddRefs(m_db));
   return err;
 }
 
