@@ -599,7 +599,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             do_QueryInterface(aElement);
         if (ssle) {
             ssle->SetEnableUpdates(PR_TRUE);
-            ssle->UpdateStyleSheet(nsnull, this);
+            rv = ssle->UpdateStyleSheet(nsnull, this);
             if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
                 nsCOMPtr<nsIStyleSheet> stylesheet;
                 ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
