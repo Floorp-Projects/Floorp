@@ -57,7 +57,6 @@
 
 #include "nsISecurityEventSink.h"
 
-#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsICommonDialogs.h"
 #include "nsIPref.h"

@@ -25,6 +25,8 @@
 #include "plstr.h"
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsISecretDecoderRing.h"
 
@@ -39,9 +41,9 @@
 
 #include "nsNetUtil.h"
 #include "nsFileStream.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIStringBundle.h"
 #include "nsIFileSpec.h"
+#include "nsIWindowWatcher.h"
 #include "nsFileLocations.h"
 #include "prmem.h"
 #include "prprf.h"  
@@ -54,7 +56,6 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #define HEADER_VERSION_1 "#2b"
 
@@ -147,9 +148,12 @@ Wallet_Confirm(PRUnichar * szMessage)
   PRBool retval = PR_TRUE; /* default value */
 
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return retval;
+  nsCOMPtr<nsIPrompt> dialog;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  if (!dialog) {
+    return NS_ERROR_FAILURE;
   }
 
   const nsAutoString message(szMessage);
@@ -172,9 +176,12 @@ wallet_GetString(nsAutoString& result, PRUnichar * szMessage, PRUnichar * szMess
 
   nsAutoString password;
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
+  nsCOMPtr<nsIPrompt> dialog;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  if (!dialog) {
+    return NS_ERROR_FAILURE;
   }
 
   PRUnichar* pwd = NULL;
@@ -231,9 +238,12 @@ wallet_GetDoubleString(nsAutoString& result, PRUnichar * szMessage, PRUnichar * 
 
   nsAutoString password, password2;
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
+  nsCOMPtr<nsIPrompt> dialog;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  if (!dialog) {
+    return NS_ERROR_FAILURE;
   }
 
   PRUnichar* pwd = NULL;
