@@ -952,7 +952,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
       // Calculate any 'auto' margin values
       PRBool  marginLeftIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit());
       PRBool  marginRightIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit());
-      PRInt32 availMarginSpace = availBoxSpace - mComputedWidth;
+      PRInt32 availMarginSpace = availContentSpace - mComputedWidth;
 
       if (marginLeftIsAuto) {
         if (marginRightIsAuto) {
@@ -1142,7 +1142,6 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
   // See if none of 'top', 'height', and 'bottom', is 'auto'
   if (!topIsAuto && !heightIsAuto && !bottomIsAuto) {
     // See whether we're over-constrained
-    // XXX Handle the case where the containing block is the document element
     PRInt32 availBoxSpace = containingBlockHeight - mComputedOffsets.top - mComputedOffsets.bottom;
     PRInt32 availContentSpace = availBoxSpace - mComputedBorderPadding.top -
                                 mComputedBorderPadding.bottom;
@@ -1156,7 +1155,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
       // Calculate any 'auto' margin values
       PRBool  marginTopIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetTopUnit());
       PRBool  marginBottomIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetBottomUnit());
-      PRInt32 availMarginSpace = availBoxSpace - mComputedHeight;
+      PRInt32 availMarginSpace = availContentSpace - mComputedHeight;
 
       if (marginTopIsAuto) {
         if (marginBottomIsAuto) {
