@@ -1352,8 +1352,11 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
 
   // Stop loading of the earlier document completely when the document url
   // load starts.  Now we know that this url is valid and available.
+  nsLoadFlags loadFlags = 0;
+  channel -> GetLoadAttributes (&loadFlags);
+
   PRBool equals = PR_FALSE;
-  if (NS_SUCCEEDED(aURL->Equals(mCurrentURI, &equals)) && equals)
+  if (NS_SUCCEEDED(aURL->Equals(mCurrentURI, &equals)) && equals && !(loadFlags & nsIChannel::LOAD_REPLACE))
     Stop();
 
   /*

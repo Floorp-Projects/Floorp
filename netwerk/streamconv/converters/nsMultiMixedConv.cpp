@@ -323,8 +323,8 @@ nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString dummyURIStr(uriSpec);
-    dummyURIStr.Append("##");
-    dummyURIStr.AppendInt(mPartCount, 10 /* radix */);
+//    dummyURIStr.Append("##");
+//    dummyURIStr.AppendInt(mPartCount, 10 /* radix */);
 
     return mIOService->NewURI(dummyURIStr.GetBuffer(), nsnull, _retval);
 }
@@ -349,8 +349,10 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     // First build up a dummy uri.
     nsCOMPtr<nsIURI> partURI;
-    rv = BuildURI(aChannel, getter_AddRefs(partURI));
+    rv = aChannel->GetURI(getter_AddRefs (partURI));
     if (NS_FAILED(rv)) return rv;
+//    rv = BuildURI(aChannel, getter_AddRefs(partURI));
+//    if (NS_FAILED(rv)) return rv;
 
     if (mContentType.IsEmpty())
         mContentType = UNKNOWN_CONTENT_TYPE;
@@ -361,6 +363,11 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
                                                  mContentType.GetBuffer(), 
                                                  mContentLength);
     if (NS_FAILED(rv)) return rv;
+
+    nsLoadFlags loadFlags = 0;
+    mPartChannel -> GetLoadAttributes (&loadFlags);
+    loadFlags |= nsIChannel::LOAD_REPLACE;
+    mPartChannel -> SetLoadAttributes ( loadFlags);
 
 	nsCOMPtr<nsILoadGroup> loadGroup;
     (void)aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
