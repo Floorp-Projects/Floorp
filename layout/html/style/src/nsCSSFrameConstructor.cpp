@@ -814,9 +814,9 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
   *aResult = nsnull; // initialize OUT parameter
 
   // Probe for the existence of the pseudo-element
-  nsIStyleContext*  pseudoStyleContext;
+  nsCOMPtr<nsIStyleContext> pseudoStyleContext;
   aPresContext->ProbePseudoStyleContextFor(aContent, aPseudoElement, aStyleContext,
-                                           PR_FALSE, &pseudoStyleContext);
+                                           PR_FALSE, getter_AddRefs(pseudoStyleContext));
 
   if (pseudoStyleContext) {
     const nsStyleDisplay* display;
@@ -934,7 +934,6 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
         }
   
         NS_RELEASE(textStyleContext);
-        NS_RELEASE(pseudoStyleContext);
         if (childFrames.childList) {
           containerFrame->SetInitialChildList(aPresContext, nsnull, childFrames.childList);
         }
