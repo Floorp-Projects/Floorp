@@ -75,6 +75,10 @@
 #include "nsGUIEvent.h"
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsIAccessibilityService.h"
+#include "nsIServiceManager.h"
+#endif
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -6685,5 +6689,18 @@ nsBlockFrame::GetDepth() const
     depth++;
   }
   return depth;
+}
+#endif
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    return accService->CreateHTMLBlockAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 #endif
