@@ -190,7 +190,10 @@ sub init {
             if (my $list = $self->ListIDsForEmail($type, $email)) {
                 my $table = "longdescs_email_$id";
                 push(@supptables, "LEFT JOIN longdescs $table ON bugs.bug_id = $table.bug_id AND $table.who IN($list)");
-                push(@clist, "$table.who",'isnotnull');
+                push(@wherepart, "$table.who IS NOT NULL");
+                # push something into @clist so that we don't trigger
+                # the missing_email_type error below
+                push(@clist, 'noop');
             } else {
                 my $table = "longdescs_email_$id";
                 push(@supptables, "longdescs $table");
@@ -599,9 +602,6 @@ sub init {
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
-         },
-         ",isnotnull" => sub {
-             $term = "$ff IS NOT NULL";
          },
          ",greaterthan" => sub {
              $term = "$ff > $q";
