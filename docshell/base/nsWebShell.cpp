@@ -808,10 +808,10 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
       ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
        this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
 
+/*  nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
   //
   // The following logic is mirrored in nsHTMLDocument::StartDocumentLoad!
   //
-  nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
   if (mContentViewer) // && (eCharsetReloadInit!=mCharsetReloadState))
   { // get any interesting state from the old content viewer
     // XXX: it would be far better to just reuse the document viewer ,
@@ -834,8 +834,10 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
       }
     }
   }
+*/
+  if (mContentViewer) {
 
-  if (oldMUDV) {
+    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV = do_QueryInterface(mContentViewer);
     PRUnichar *defaultCharset=nsnull;
     PRUnichar *forceCharset=nsnull;
     PRUnichar *hintCharset=nsnull;
