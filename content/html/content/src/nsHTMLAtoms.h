@@ -179,6 +179,7 @@ public:
   static nsIAtom* ol;
   static nsIAtom* onabort;
   static nsIAtom* onblur;
+  static nsIAtom* onchange;
   static nsIAtom* onclick;
   static nsIAtom* ondblclick;
   static nsIAtom* ondragdrop;
@@ -194,6 +195,8 @@ public:
   static nsIAtom* onmouseout;
   static nsIAtom* onmouseup;
   static nsIAtom* onpaint;
+  static nsIAtom* onreset;
+  static nsIAtom* onsubmit;
   static nsIAtom* onunload;
   static nsIAtom* outOfDate;
   static nsIAtom* overflow;

@@ -1345,38 +1345,32 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
   }
   else {
     // Check for event handlers
-    if (nsHTMLAtoms::onclick == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onclick, aValue, kIDOMMouseListenerIID); 
-    else if (nsHTMLAtoms::ondblclick == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::ondblclick, aValue, kIDOMMouseListenerIID); 
-    else if (nsHTMLAtoms::onmousedown == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onmousedown, aValue, kIDOMMouseListenerIID); 
-    else if (nsHTMLAtoms::onmouseup == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onmouseup, aValue, kIDOMMouseListenerIID); 
-    else if (nsHTMLAtoms::onmouseover == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onmouseover, aValue, kIDOMMouseListenerIID); 
-    else if (nsHTMLAtoms::onmouseout == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onmouseout, aValue, kIDOMMouseListenerIID); 
-    else if (nsHTMLAtoms::onkeydown == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onkeydown, aValue, kIDOMKeyListenerIID); 
-    else if (nsHTMLAtoms::onkeyup == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onkeyup, aValue, kIDOMKeyListenerIID); 
-    else if (nsHTMLAtoms::onkeypress == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onkeypress, aValue, kIDOMKeyListenerIID); 
+    if ((nsHTMLAtoms::onclick == aAttribute) || 
+             (nsHTMLAtoms::ondblclick == aAttribute) ||
+             (nsHTMLAtoms::onmousedown == aAttribute) ||
+             (nsHTMLAtoms::onmouseup == aAttribute) ||
+             (nsHTMLAtoms::onmouseover == aAttribute) ||
+             (nsHTMLAtoms::onmouseout == aAttribute))
+      AddScriptEventListener(aAttribute, aValue, kIDOMMouseListenerIID); 
+    else if ((nsHTMLAtoms::onkeydown == aAttribute) ||
+             (nsHTMLAtoms::onkeyup == aAttribute) ||
+             (nsHTMLAtoms::onkeypress == aAttribute))
+      AddScriptEventListener(aAttribute, aValue, kIDOMKeyListenerIID); 
     else if (nsHTMLAtoms::onmousemove == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onmousemove, aValue, kIDOMMouseMotionListenerIID); 
+      AddScriptEventListener(aAttribute, aValue, kIDOMMouseMotionListenerIID); 
     else if (nsHTMLAtoms::onload == aAttribute)
       AddScriptEventListener(nsHTMLAtoms::onload, aValue, kIDOMLoadListenerIID); 
-    else if (nsHTMLAtoms::onunload == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onunload, aValue, kIDOMLoadListenerIID); 
-    else if (nsHTMLAtoms::onabort == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onabort, aValue, kIDOMLoadListenerIID); 
-    else if (nsHTMLAtoms::onerror == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onerror, aValue, kIDOMLoadListenerIID); 
-    else if (nsHTMLAtoms::onfocus == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onfocus, aValue, kIDOMFocusListenerIID); 
-    else if (nsHTMLAtoms::onblur == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onblur, aValue, kIDOMFocusListenerIID); 
+    else if ((nsHTMLAtoms::onunload == aAttribute) ||
+             (nsHTMLAtoms::onabort == aAttribute) ||
+             (nsHTMLAtoms::onerror == aAttribute))
+      AddScriptEventListener(aAttribute, aValue, kIDOMLoadListenerIID); 
+    else if ((nsHTMLAtoms::onfocus == aAttribute) ||
+             (nsHTMLAtoms::onblur == aAttribute))
+      AddScriptEventListener(aAttribute, aValue, kIDOMFocusListenerIID); 
+    else if ((nsHTMLAtoms::onsubmit == aAttribute) ||
+             (nsHTMLAtoms::onreset == aAttribute) ||
+             (nsHTMLAtoms::onchange == aAttribute))
+      AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
     else if (nsHTMLAtoms::onpaint == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
 
@@ -2041,7 +2035,7 @@ nsGenericHTMLElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (propName == "onsubmit" || propName == "onreset") {
+      else if (propName == "onsubmit" || propName == "onreset" || propName == "onchange") {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFormListenerIID)) {

@@ -229,6 +229,7 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_FORM_EVENT_START             1200
 #define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)
 #define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
+#define NS_FORM_CHANGE                  (NS_FORM_EVENT_START + 2)
 //@}
 
 

@@ -31,7 +31,7 @@ static char* mEventNames[] = {
   "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover",
   "onmouseout", "onmousemove", "onkeydown", "onkeyup", "onkeypress",
   "onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
-  "onsubmit", "onreset", "onpaint"
+  "onsubmit", "onreset", "onchange", "onpaint"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
@@ -337,6 +337,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_submit];
   case NS_FORM_RESET:
     return mEventNames[eDOMEvents_reset];
+  case NS_FORM_CHANGE:
+    return mEventNames[eDOMEvents_change];
   case NS_PAINT:
     return mEventNames[eDOMEvents_paint];
   default:

@@ -428,6 +428,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 
     case NS_FORM_SUBMIT:
     case NS_FORM_RESET:
+    case NS_FORM_CHANGE:
       if (nsnull != mFormListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
@@ -446,6 +447,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                   break;
                 case NS_FORM_RESET:
                   ret = mFormListener->Reset(*aDOMEvent);
+                  break;
+                case NS_FORM_CHANGE:
+                  ret = mFormListener->Change(*aDOMEvent);
                   break;
                 default:
                   break;
