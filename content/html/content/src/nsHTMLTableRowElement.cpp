@@ -40,6 +40,7 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsDOMError.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
@@ -442,12 +443,18 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
 
+  if (aIndex < 0)
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  
   nsCOMPtr<nsIDOMHTMLCollection> cells;
 
   GetCells(getter_AddRefs(cells));
 
   PRUint32 cellCount;
   cells->GetLength(&cellCount);
+
+  if (aIndex > PRInt32(cellCount))
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
   PRBool doInsert = (aIndex < PRInt32(cellCount));
 
@@ -491,19 +498,25 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
 {
+  if (aValue < 0)
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  
   nsCOMPtr<nsIDOMHTMLCollection> cells;
 
   GetCells(getter_AddRefs(cells));
 
   nsCOMPtr<nsIDOMNode> cell;
 
-  cells->Item(aValue, getter_AddRefs(cell));
+  nsresult rv = cells->Item(aValue, getter_AddRefs(cell));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (cell) {
-    nsCOMPtr<nsIDOMNode> retChild;
-
-    RemoveChild(cell, getter_AddRefs(retChild));
+  if (!cell) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
+
+  nsCOMPtr<nsIDOMNode> retChild;
+
+  RemoveChild(cell, getter_AddRefs(retChild));
 
   return NS_OK;
 }
