@@ -513,11 +513,11 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
   if (NS_LITERAL_STRING("FilenameColumn").Equals(aColID)) {
     curFile->GetUnicodeLeafName(aCellText);
   } else if (NS_LITERAL_STRING("LastModifiedColumn").Equals(aColID)) {
-    PRInt64 lastModDate;
-    curFile->GetLastModificationDate(&lastModDate);
+    PRInt64 lastModTime;
+    curFile->GetLastModificationTime(&lastModTime);
     nsAutoString dateString;
     mDateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatSeconds,
-                                 lastModDate * 1000, dateString);
+                                 lastModTime * 1000, dateString);
     *aCellText = ToNewUnicode(dateString);
   } else {
     // file size
@@ -684,14 +684,14 @@ SortDateCallback(const void* aElement1, const void* aElement2, void* aContext)
   nsIFile* file1 = *NS_STATIC_CAST(nsIFile* const *, aElement1);
   nsIFile* file2 = *NS_STATIC_CAST(nsIFile* const *, aElement2);
 
-  PRInt64 date1, date2;
-  file1->GetLastModificationDate(&date1);
-  file2->GetLastModificationDate(&date2);
+  PRInt64 time1, time2;
+  file1->GetLastModificationTime(&time1);
+  file2->GetLastModificationTime(&time2);
 
-  if (LL_EQ(date1, date2))
+  if (LL_EQ(time1, time2))
     return 0;
 
-  return (LL_CMP(date1, <, date2) ? -1 : 1);
+  return (LL_CMP(time1, <, time2) ? -1 : 1);
 }
 
 void
