@@ -148,7 +148,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   mLockFlags = aFlags;
 
   // Obtain an ximage from the pixmap.
-  g_print("gdk_get_use_xshm() = %i\n", gdk_get_use_xshm());
+  //  g_print("gdk_get_use_xshm() = %i\n", gdk_get_use_xshm());
   mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
  
   // The bits will be in the ximage.
