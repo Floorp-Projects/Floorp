@@ -596,7 +596,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
                          uintN argc, jsval *argv, jsval *vp)
 {
     JSFunction *fun;
-    jsint id;
+    jsid id;
     jsval idval;
 
     nsXPCWrappedNative* wrapper;
