@@ -194,6 +194,10 @@ nsresult nsRootAccessible::AddEventListeners()
     rv = target->AddEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
+    // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
+    rv = target->AddEventListener(NS_LITERAL_STRING("OpenStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
     // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
     rv = target->AddEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
@@ -240,6 +244,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("OpenStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -390,8 +395,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                       treeIndex,
                       nsnull,
                       getter_AddRefs(treeItemAccessible))) ||
-            !treeItemAccessible)
-         return NS_ERROR_OUT_OF_MEMORY;
+                      !treeItemAccessible) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        accessible = treeItemAccessible;
       }
     }
   }
@@ -444,10 +451,11 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
                               accessible, nsnull);
   }
-  else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange")) { 
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
-                              accessible, nsnull);
-  }
+  else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") ||
+           eventType.LowerCaseEqualsLiteral("openstatechange")) {
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
+                                accessible, nsnull);
+    }
   else if (eventType.LowerCaseEqualsLiteral("radiostatechange") ) {
     // first the XUL radio buttons
     if (targetNode &&
@@ -543,6 +551,12 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (eventType.LowerCaseEqualsLiteral("radiostatechange")) {
       FireAccessibleFocusEvent(accessible, targetNode);
     }
+  }
+  else if (eventType.LowerCaseEqualsLiteral("openstatechange")) { // collapsed/expanded changed
+    accessible->GetState(&stateData.state);
+    stateData.enable = (stateData.state & STATE_EXPANDED) != 0;
+    stateData.state = STATE_EXPANDED;
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
   }
   else if (eventType.LowerCaseEqualsLiteral("popupshowing")) {
     FireAccessibleFocusEvent(accessible, targetNode);

@@ -208,6 +208,31 @@
         ]]></body>
       </method>
 
+      <method name="changeOpenState">
+        <parameter name="row"/>
+        <!-- Optional parameter openState == true or false to set. 
+             No openState param == toggle -->
+        <parameter name="openState"/>
+        <body><![CDATA[
+          if (row < 0 || !this.treeBoxObject.view.isContainer(row)) {
+            return false;
+          }
+          if (this.treeBoxObject.view.isContainerOpen(row) != openState) {
+            this.treeBoxObject.view.toggleOpenState(row);
+            if (row == this.currentIndex) {
+              // Only fire event when current row is expanded or collapsed
+              // because that's all the assistive technology really cares about.
+              var event = document.createEvent('Events');
+              event.initEvent('OpenStateChange', false, true);
+              this.dispatchEvent(event);
+            }
+            return true;
+          }
+          return false;
+          }
+        ]]></body>
+      </method>
+      
     </implementation>
     
     <handlers>
@@ -223,33 +248,12 @@
         ]]>
       </handler>
       <handler event="focus" action="this.treeBoxObject.focused = true;"/>
-      <handler event="blur" action="this.treeBoxObject.focused = false;"/>
-  
-      <handler event="keypress" keycode="vk_enter">
-        <![CDATA[
-         if (this.currentIndex == -1)
-           return;
-         if (this.treeBoxObject.view.isContainer(this.currentIndex))
-           this.treeBoxObject.view.toggleOpenState(this.currentIndex);
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_return">
-        <![CDATA[
-         if (this.currentIndex == -1)
-           return;
-         if (this.treeBoxObject.view.isContainer(this.currentIndex))
-           this.treeBoxObject.view.toggleOpenState(this.currentIndex);
-        ]]>
-      </handler>
+      <handler event="blur" action="this.treeBoxObject.focused = false;"/>  
+      <handler event="keypress" keycode="vk_enter" action="this.changeOpenState(this.currentIndex);"/>
+      <handler event="keypress" keycode="vk_return" action="this.changeOpenState(this.currentIndex);"/>
       <handler event="keypress" keycode="vk_left">
         <![CDATA[
-         if (this.currentIndex == -1)
-           return;
-         if (this.treeBoxObject.view.isContainer(this.currentIndex) &&
-             this.treeBoxObject.view.isContainerOpen(this.currentIndex)) {
-           this.treeBoxObject.view.toggleOpenState(this.currentIndex);
-         }
-         else {
+         if (!this.changeOpenState(this.currentIndex, false)) {
            var parentIndex = this.treeBoxObject.view.getParentIndex(this.currentIndex);
            if (parentIndex >= 0) {
              this.view.selection.select(parentIndex);
@@ -260,12 +264,18 @@
       </handler>
       <handler event="keypress" keycode="vk_right">
         <![CDATA[
-         if (this.currentIndex == -1)
-           return;
-         if (this.treeBoxObject.view.isContainer(this.currentIndex)) {
-           if (!this.treeBoxObject.view.isContainerOpen(this.currentIndex))
-             this.treeBoxObject.view.toggleOpenState(this.currentIndex);
-         }
+          var row = this.currentIndex;
+          if (row >= 0 && !this.changeOpenState(row, true)) {
+            var view = this.treeBoxObject.view;
+            if (row + 1 < view.rowCount &&
+                view.getParentIndex(row + 1) == row) {
+              // If already opened, select the first child.
+              // The getParentIndex test above ensures that the children
+              // are already populated and ready.
+              this.view.selection.timedSelect(row + 1, this._selectDelay);
+              this.treeBoxObject.ensureRowIsVisible(row + 1);
+            }
+          }
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="control any">
@@ -630,7 +640,7 @@
             if (parentIndex == row.value)
               b.view.selection.select(parentIndex);
           }
-          b.view.toggleOpenState(row.value);
+          this.parentNode.changeOpenState(row.value);
           return;
         }
 
@@ -671,9 +681,8 @@
       <handler event="click" clickcount="2">
       <![CDATA[
         var b = this.parentNode.treeBoxObject;
-        var v = b.view;
-        var row = v.selection.currentIndex;
-        if (row == -1 || !v.isContainer(row))
+        var row = b.view.selection.currentIndex;
+        if (row == -1 || !b.view.isContainer(row))
           return;
 
          var col = {};
@@ -682,7 +691,7 @@
 
          // Cyclers and twisties respond to single clicks, not double clicks
          if (!col.value.cycler && obj.value != "twisty")
-           v.toggleOpenState(row);
+           this.parentNode.changeOpenState(row);
       ]]>
       </handler>
       
