@@ -1725,7 +1725,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       // Frame hint not correct, get true frame, we try to optimize away from this
       aPresShell->GetPrimaryFrameFor(content, &frame);
       if (frame) {
-#ifdef DEBUG_aleventhal
+#ifdef DEBUG_aleventhal_
         // Frame hint debugging
         ++frameHintFailed;
         if (content->IsContentOfType(nsIContent::eTEXT)) {

@@ -615,23 +615,14 @@ void nsDocAccessible::FireDocLoadFinished()
 
   PRUint32 state;
   GetState(&state);
-  if ((state & STATE_INVISIBLE) != 0) {
-    return; // Don't consider load finished until window unhidden
-  }
-
-  if (mIsNewDocument) {
+  if ((state & STATE_INVISIBLE) == 0) {
+    // Don't consider load finished until window unhidden
     mIsNewDocument = PR_FALSE;
-
     if (mBusy != eBusyStateDone) {
       AddScrollListener();
-#ifndef MOZ_ACCESSIBILITY_ATK
-      mBusy = eBusyStateDone; // before event callback so STATE_BUSY is not reported
-      FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
-#endif
     }
+    mBusy = eBusyStateDone;
   }
-
-  mBusy = eBusyStateDone;
 }
 
 void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)

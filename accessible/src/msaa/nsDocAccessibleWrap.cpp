@@ -38,9 +38,18 @@
 
 #include "nsDocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
+#include "nsIAccessibilityService.h"
 #include "nsIAccessibleEvent.h"
+#include "nsIDOMDocumentTraversal.h"
+#include "nsIDOMNodeFilter.h"
+#include "nsIDOMTreeWalker.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPresShell.h"
+#include "nsISelectionController.h"
+#include "nsIServiceManager.h"
+#include "nsIURI.h"
 #include "nsIViewManager.h"
+#include "nsIWebNavigation.h"
 #include "nsIWidget.h"
 
 /* For documentation of the accessibility architecture, 
@@ -50,7 +59,7 @@
 //----- nsDocAccessibleWrap -----
 
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
-  nsDocAccessible(aDOMNode, aShell)
+  nsDocAccessible(aDOMNode, aShell), mWasAnchor(PR_FALSE)
 {
 }
 
@@ -256,6 +265,142 @@ PRInt32 nsDocAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
   // Yes, this means we're only compatibible with 32 bit
   // MSAA is only available for 32 bit windows, so it's okay
   return - NS_PTR_TO_INT32(uniqueID);
+}
+
+already_AddRefed<nsIAccessible>
+nsDocAccessibleWrap::GetFirstLeafAccessible(nsIDOMNode *aStartNode)
+{
+  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIDOMTreeWalker> walker; 
+  nsCOMPtr<nsIDOMNode> currentNode(aStartNode);
+
+  while (currentNode) {
+    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, getter_AddRefs(accessible)); // AddRef'd
+    if (accessible) {
+      PRInt32 numChildren;
+      accessible->GetChildCount(&numChildren);
+      if (numChildren == 0) {
+        nsIAccessible *leafAccessible = accessible;
+        NS_ADDREF(leafAccessible);
+        return leafAccessible;  // It's a leaf accessible, return it
+      }
+    }
+    if (!walker) {
+      // Instantiate walker lazily since we won't need it in 90% of the cases
+      // where the first DOM node we're given provides an accessible
+      nsCOMPtr<nsIDOMDocumentTraversal> trav = do_QueryInterface(mDocument);
+      NS_ASSERTION(trav, "No DOM document traversal for document");
+      trav->CreateTreeWalker(mDOMNode, 
+                            nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
+                            nsnull, PR_FALSE, getter_AddRefs(walker));
+      NS_ENSURE_TRUE(walker, nsnull);
+      walker->SetCurrentNode(currentNode);
+    }
+
+    walker->NextNode(getter_AddRefs(currentNode));
+  }
+
+  return nsnull;
+}
+
+void nsDocAccessibleWrap::FireAnchorJumpEvent()
+{
+  // Staying on the same page, jumping to a named anchor
+  // Fire EVENT_SELECTION_WITHIN on first leaf accessible -- because some
+  // assistive technologies only cache the child numbers for leaf accessibles
+  // the can only relate events back to their internal model if it's a leaf.
+  // There is usually an accessible for the focus node, but if it's an empty text node
+  // we have to move forward in the document to get one
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
+  nsCAutoString theURL;
+  if (webNav) {
+    nsCOMPtr<nsIURI> pURI;
+    webNav->GetCurrentURI(getter_AddRefs(pURI));
+    if (pURI) {
+      pURI->GetSpec(theURL);
+    }
+  }
+  const char kHash = '#';
+  PRBool hasAnchor = PR_FALSE;
+  if (theURL.FindChar(kHash) > 0) {
+    hasAnchor = PR_TRUE;
+  }
+
+  // mWasAnchor is set when the previous URL included a named anchor.
+  // This way we still know to fire the SELECTION_WITHIN event when we
+  // move from a named anchor back to the top.
+  if (!mWasAnchor && !hasAnchor) {
+    return;
+  }
+  mWasAnchor = hasAnchor;
+
+  nsCOMPtr<nsIDOMNode> focusNode;
+  if (hasAnchor) {
+    nsCOMPtr<nsISelectionController> selCon(do_QueryReferent(mWeakShell));
+    if (!selCon) {
+      return;
+    }
+    nsCOMPtr<nsISelection> domSel;
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
+    if (!domSel) {
+      return;
+    }
+    domSel->GetFocusNode(getter_AddRefs(focusNode));
+  }
+  else {
+    focusNode = mDOMNode; // Moved to top, so event is for 1st leaf after root
+  }
+
+  nsCOMPtr<nsIAccessible> accessible = GetFirstLeafAccessible(focusNode);
+  nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
+  if (privateAccessible) {
+    privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+                                        accessible, nsnull);
+  }
+}
+
+void nsDocAccessibleWrap::FireDocLoadFinished()
+{
+  if (!mDocument || !mWeakShell)
+    return;  // Document has been shut down
+
+  PRUint32 state;
+  GetState(&state);
+  if ((state & STATE_INVISIBLE) != 0) {
+    return; // Don't consider load finished until window unhidden
+  }
+
+  if (mIsNewDocument) {
+    mIsNewDocument = PR_FALSE;
+
+    if (mBusy != eBusyStateDone) {
+      mBusy = eBusyStateDone; // before event callback so STATE_BUSY is not reported
+      FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
+      FireAnchorJumpEvent();
+    }
+  }
+
+  mBusy = eBusyStateDone;
+}
+
+NS_IMETHODIMP nsDocAccessibleWrap::OnLocationChange(nsIWebProgress *aWebProgress,
+                                                    nsIRequest *aRequest,
+                                                    nsIURI *location)
+{
+  if (!mWeakShell || !mDocument) {
+    return NS_OK;
+  }
+  
+  PRBool isLoadingDocument;
+  aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
+  if (isLoadingDocument) {
+    return nsDocAccessible::OnLocationChange(aWebProgress, aRequest, location);
+  }
+
+  FireAnchorJumpEvent();
+  return NS_OK;
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)

@@ -490,10 +490,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, accessible, nsnull);
   else if (eventType.LowerCaseEqualsLiteral("dommenubarinactive")) {
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, accessible, nsnull);
-    GetFocusedChild(getter_AddRefs(accessible));
+    GetFocusedChild(getter_AddRefs(accessible)); // Returns null if no focus
     nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(accessible));
-    NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
-    if (accessible) {
+    if (accessNode) {
       accessNode->GetDOMNode(getter_AddRefs(targetNode));
       FireAccessibleFocusEvent(accessible, targetNode);
     }
