@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Jason Kersey (kerz@netscape.com)
 
 DEPTH=..\..
 MODULE		= apprunner
