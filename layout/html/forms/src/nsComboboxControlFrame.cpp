@@ -961,7 +961,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   // Fix for Bug 58220 (part of it)
   // make sure we size correctly if the CSS width is set to something really small like 0, 1, or 2 pixels
   nscoord computedWidth = aReflowState.mComputedWidth + aBorderPadding.left + aBorderPadding.right;
-  if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE && computedWidth <= 0) {
+  if ((aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE && computedWidth <= 0) || aReflowState.mComputedWidth == 0) {
     nsRect buttonRect(0,0,0,0);
     nsRect displayRect(0,0,0,0);
     aBtnWidth = 0;
