@@ -69,7 +69,6 @@
 #include "nsIFile.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
-#include "nsDirectoryServiceDefs.h"
 
 #ifdef  XP_WIN
 #include "nsIUnicodeDecoder.h"
@@ -84,6 +83,10 @@
 #ifdef  XP_BEOS
 #include <File.h>
 #include <NodeInfo.h>
+#endif
+
+#if defined(XP_WIN) || defined(XP_BEOS)
+#include "nsDirectoryServiceDefs.h"
 #endif
 
 #ifdef XP_OS2
