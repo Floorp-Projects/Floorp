@@ -1,0 +1,76 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Mozilla browser.
+# 
+# The Initial Developer of the Original Code is Christopher
+# Blizzard.  Portions created by Christopher Blizzard
+# Copyright (C) 1999, Christopher Blizzard.  All Rights Reserved.
+#
+# Contributor(s):
+#
+
+DEPTH           = ../../../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+
+MODULE          = ax_common
+LIBRARY_NAME    = ax_common_s
+XPIDL_MODULE    = ax_common
+
+include $(DEPTH)/config/autoconf.mk
+
+REQUIRES        = \
+                xpcom \
+                string \
+                dom \
+                js \
+                widget \
+                gfx \
+                layout \
+                content \
+                $(NULL)
+
+CPPSRCS         = \
+                IEHtmlNode.cpp \
+                IEHtmlElement.cpp \
+                IEHtmlElementCollection.cpp \
+                ControlSite.cpp \
+                ControlSiteIPFrame.cpp \
+                ControlEventSink.cpp \
+                PropertyBag.cpp \
+                ItemContainer.cpp \
+                $(NULL)
+
+EXPORTS         = \
+                IEHtmlNode.h \
+                IEHtmlElement.h \
+                IEHtmlElementCollection.h \
+                ControlSite.h \
+                ControlSiteIPFrame.h \
+                ControlEventSink.h \
+                PropertyList.h \
+                PropertyBag.h \
+                ItemContainer.h \
+                IOleCommandTargetImpl.h \
+                IWebBrowserImpl.h \
+                IHTMLLocationImpl.h \
+                CPMozillaControl.h
+
+
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += -GX
