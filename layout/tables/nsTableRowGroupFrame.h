@@ -100,6 +100,11 @@ public:
 
   NS_METHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -276,7 +281,8 @@ protected:
                                      nsReflowStatus&      aStatus,
                                      nsTableRowFrame *    aStartFrame,
                                      nsReflowReason       aReason,
-                                     PRBool               aDoSiblings);
+                                     PRBool               aDoSiblings,
+                                     PRBool               aDirtyOnly = PR_FALSE);
 
   /**
    * Pull-up all the row frames from our next-in-flow

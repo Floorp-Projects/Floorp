@@ -1498,7 +1498,14 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
   RowReflowState state(aReflowState, tableFrame);
 
   // Do the reflow
-  switch (aReflowState.reason) {
+  // XXX If the width is unconstrained, then treat it like we would treat the
+  // initial reflow instead. This needs to be cleaned up
+  nsReflowReason  reason = aReflowState.reason;
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
+    reason = eReflowReason_Initial;
+  }
+
+  switch (reason) {
   case eReflowReason_Initial:
     rv = InitialReflow(aPresContext, aDesiredSize, state, aStatus, nsnull, PR_TRUE);
     if (PR_FALSE==tableFrame->RequiresPass1Layout())

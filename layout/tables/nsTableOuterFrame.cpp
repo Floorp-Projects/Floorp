@@ -481,6 +481,28 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
   TDBG_SD(gsDebugIR,"TOF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type) {
+  case nsIReflowCommand::ReflowDirty:
+  {
+    // Inner table is dirty so reflow it. Change the reflow state and set the
+    // reason to resize reflow.
+    // XXX It could also be the caption that is dirty...
+    ((nsHTMLReflowState&)aReflowState.reflowState).reason = eReflowReason_Resize;
+    ((nsHTMLReflowState&)aReflowState.reflowState).reflowCommand = nsnull;
+
+    // Get the inner table frame's current bounds. We'll use that when
+    // repainting it
+    // XXX It should really do the repainting, but because it think it's
+    // getting a resize reflow it won't know to...
+    nsRect  dirtyRect;
+    mInnerTableFrame->GetRect(dirtyRect);
+    rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+    // Repaint the inner table frame's entire visible area
+    dirtyRect.x = dirtyRect.y = 0;
+    Invalidate(dirtyRect);
+    break;
+  }
+
   case nsIReflowCommand::FrameAppended :
   case nsIReflowCommand::FrameInserted :
   {
@@ -975,9 +997,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
   } else {
     if (eReflowReason_Initial == aReflowState.reason) {
-      //KIPP/TROY:  uncomment the following line for your own testing, do not check it in
-      // NS_ASSERTION(nsnull == mFirstChild, "unexpected reflow reason");
-
       // Set up our kids.  They're already present, on an overflow list, 
       // or there are none so we'll create them now
       MoveOverflowToChildList();
