@@ -647,7 +647,12 @@ PRUint32 nsCRT::BufferHashCode(const char* s, PRUint32 len)
 
 PRInt32 nsCRT::atoi( const PRUnichar *aString )
 {
+#ifndef XPCOM_STANDALONE
   return ::atoi(NS_ConvertUCS2toUTF8(aString).get());
+#else
+  NS_NOTREACHED("nsCRT::atoi(const PRUnichar *) not supported in XPCOM_STANDALONE");
+  return 0;
+#endif
 }
 
 /**
