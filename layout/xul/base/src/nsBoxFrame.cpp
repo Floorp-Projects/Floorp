@@ -1093,14 +1093,12 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsBoxFrame::Destroy(nsIPresContext* aPresContext)
 {
-// if we are root remove 1 from the debug count.
-  if (mState & NS_STATE_IS_ROOT)
-      GetDebugPref(aPresContext);
-
   // unregister access key
   RegUnregAccessKey(aPresContext, PR_FALSE);
 
-  SetLayoutManager(nsnull);
+  // clean up the container box's layout manager and child boxes
+  nsBoxLayoutState state(aPresContext);
+  nsContainerBox::Destroy(state);
 
   return nsContainerFrame::Destroy(aPresContext);
 } 
