@@ -110,6 +110,8 @@ private:
   PRBool mNeedsRecalc;
   nsSize mTextSize;
   nscoord mAscent;
+  static PRBool gAlwaysAppendAccessKey;
+  static PRBool gAccessKeyPrefInitialized;
 }; // class nsTextBoxFrame
 
 #endif /* nsTextBoxFrame_h___ */

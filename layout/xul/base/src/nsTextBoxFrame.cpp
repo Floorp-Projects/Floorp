@@ -41,6 +41,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsMenuBarListener.h"
+#include "nsIPref.h"
+#include "nsXPIDLString.h"
 
 #define ELLIPSIS "..."
 
@@ -57,6 +59,9 @@ public:
     nscoord mBeforeWidth, mAccessWidth, mAccessUnderlineSize, mAccessOffset;
 };
 
+
+PRBool nsTextBoxFrame::gAlwaysAppendAccessKey       = PR_FALSE;
+PRBool nsTextBoxFrame::gAccessKeyPrefInitialized    = PR_FALSE;
 
 //
 // NS_NewToolbarFrame
@@ -131,6 +136,18 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
     PRBool aResize;
     PRBool aRedraw;
 
+    if (!gAccessKeyPrefInitialized) {
+        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+        gAccessKeyPrefInitialized = PR_TRUE;
+        if (prefs) {
+            nsXPIDLString prefValue;
+            nsresult res = prefs->GetLocalizedUnicharPref("intl.menuitems.alwaysappendacceskeys", getter_Copies(prefValue));
+            if (NS_SUCCEEDED(res)) {
+                gAlwaysAppendAccessKey = nsLocalString(prefValue).Equals(NS_LITERAL_STRING("true"));
+            }
+        }
+    }
+ 
     UpdateAttributes(aPresContext, nsnull, aResize, aRedraw); /* update all */
 
     return rv;
@@ -481,7 +498,7 @@ nsTextBoxFrame::UpdateAccessTitle()
     nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
     if (menuAccessKey) {
         if (!mAccessKey.IsEmpty()) {
-            if (mTitle.Find(mAccessKey, PR_TRUE) == kNotFound) {
+            if ((mTitle.Find(mAccessKey, PR_TRUE) == kNotFound) || gAlwaysAppendAccessKey) {
                 nsAutoString tmpstring; tmpstring.AssignWithConversion("(");
                 tmpstring += mAccessKey;
                 tmpstring.ToUpperCase();
@@ -511,7 +528,12 @@ nsTextBoxFrame::UpdateAccessIndex()
             if (!mAccessKeyInfo)
                 mAccessKeyInfo = new nsAccessKeyInfo();
 
-            mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.Find(mAccessKey, PR_TRUE);
+            // use reverse string find for appended access keys
+            if (!gAlwaysAppendAccessKey) {
+                mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.Find(mAccessKey, PR_TRUE);
+            } else {
+                mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.RFind(mAccessKey, PR_TRUE);
+            }
         }
     }
 }
