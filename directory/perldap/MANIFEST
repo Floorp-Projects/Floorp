@@ -4,7 +4,6 @@ API.xs
 MANIFEST
 Makefile.PL
 constant.h
-oldtest.pl
 typemap
 Entry.pm
 Conn.pm
@@ -14,7 +13,7 @@ README
 INSTALL
 CREDITS
 RELEASE
-MPL-1.0.txt
+MPL-1.1.txt
 test_api/search.pl
 test_api/write.pl
 test_api/api.pl
