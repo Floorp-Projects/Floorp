@@ -1198,41 +1198,29 @@ function MsgOpenSelectedMessages()
   // gWindowReuse values: false, true
   //    false: open new standalone message window for each message
   //    true : reuse existing standalone message window for each message
-  if ((gWindowReuse) && (numMessages == 1)) {
-      if (!MsgOpenExistingWindowForMessage(dbView.getURIForViewIndex(indices[0]))) {
-          MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[0]),dbView.getFolderForViewIndex(indices[0]).URI);
-      }
-  } else {
+  if ((!gWindowReuse) || (numMessages != 1) || (!MsgOpenSelectedMessageInExistingWindow())) {
       for (var i = 0; i < numMessages; i++) {
           MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
       }
   }
 }
 
-function MsgOpenExistingWindowForMessage(aMessageUri)
+function MsgOpenSelectedMessageInExistingWindow()
 {
-    var messageUri;
-    var msgHdr = null;
     var windowID = GetWindowByWindowType("mail:messageWindow");
-
     if (!windowID)
       return false;
 
-    if (!aMessageUri) {
-        var currentIndex = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView).outlinerView.selection;
-        messageUri = gDBView.getURIForViewIndex(currentIndex);
-    }
-    else
-        messageUri = aMessageUri;
-
-    // be sure to pass in the current view....
-    if (!messageUri)
-        return false;
-
     try {
-        msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
-        if (!msgHdr)
-            return false;
+        var messageURI = gDBView.URIForFirstSelectedMessage;
+        var msgHdr = gDBView.hdrForFirstSelectedMessage;
+
+        // Reset the window's message uri and folder uri vars, and
+        // update the command handlers to what's going to be used.
+        // This has to be done before the call to CreateView().
+        windowID.gCurrentMessageUri = messageURI;
+        windowID.gCurrentFolderUri = msgHdr.folder.URI;
+        windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
 
         // even if the folder uri's match, we can't use the existing view
         // (msgHdr.folder.URI == windowID.gCurrentFolderUri)
@@ -1242,27 +1230,17 @@ function MsgOpenExistingWindowForMessage(aMessageUri)
         // for the sake of simplicity,
         // let's always call CreateView(gDBView)
         // which will clone gDBView
-        if ("CreateView" in windowID) {
-          // Reset the window's message uri and folder uri vars, and
-          // update the command handlers to what's going to be used.
-          // This has to be done before the call to CreateView().
-          windowID.gCurrentMessageUri = messageUri;
-          windowID.gCurrentFolderUri = msgHdr.folder.URI;
-          windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
-          windowID.CreateView(gDBView);
-          windowID.LoadMessageByMsgKey(msgHdr.messageKey);
-        }
-        else
-          return false;
+        windowID.CreateView(gDBView);
+        windowID.LoadMessageByMsgKey(msgHdr.messageKey);
+
+        // bring existing window to front
+        windowID.focus();
+        return true;
     }
     catch (ex) {
         dump("reusing existing standalone message window failed: " + ex + "\n");
-        return false;
     }
-
-    // bring existing window to front
-    windowID.focus();
-    return true;
+    return false;
 }
 
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
