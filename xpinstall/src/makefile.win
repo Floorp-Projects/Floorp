@@ -58,7 +58,6 @@ LLIBS =                                \
         $(DIST)\lib\libreg32.lib       \
         $(DIST)\lib\netlib.lib         \
         $(DIST)\lib\xpcom.lib        \
-        $(DIST)\lib\xppref32.lib       \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\jsdombase_s.lib    \
         $(DIST)\lib\jsdomevents_s.lib  \
