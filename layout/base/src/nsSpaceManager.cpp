@@ -984,6 +984,12 @@ nsSpaceManager::ClearRegions()
 }
 
 #ifdef DEBUG
+void
+DebugListSpaceManager(nsSpaceManager *aSpaceManager)
+{
+  aSpaceManager->List(stdout);
+}
+
 nsresult
 nsSpaceManager::List(FILE* out)
 {

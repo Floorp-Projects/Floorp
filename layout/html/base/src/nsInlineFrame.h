@@ -111,14 +111,12 @@ public:
 protected:
   // Additional reflow state used during our reflow methods
   struct InlineReflowState {
-    nsIFrame* mNextRCFrame;
     nsIFrame* mPrevFrame;
     nsInlineFrame* mNextInFlow;
     PRPackedBool mSetParentPointer;  // when reflowing child frame first set its
                                      // parent frame pointer
 
     InlineReflowState()  {
-      mNextRCFrame = nsnull;
       mPrevFrame = nsnull;
       mNextInFlow = nsnull;
       mSetParentPointer = PR_FALSE;

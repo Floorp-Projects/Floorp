@@ -120,10 +120,12 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
           // generational collapse is required we need to compute the
           // child blocks margin and so in so that we can look into
           // it. For its margins to be computed we need to have a reflow
-          // state for it.
+          // state for it. Since the reflow reason is irrelevant, we'll
+          // arbitrarily make it a `resize' to avoid the path-plucking
+          // behavior if we're in an incremental reflow.
           nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
           nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
-                                        availSpace);
+                                        availSpace, eReflowReason_Resize);
           ComputeCollapsedTopMargin(aPresContext, reflowState, aMargin);
         }
       }
@@ -264,10 +266,30 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }
-  else if (mNextRCFrame == aFrame) {
-    reason = eReflowReason_Incremental;
-    // Make sure we only incrementally reflow once
-    mNextRCFrame = nsnull;
+  else if (mOuterReflowState.reason == eReflowReason_Incremental) {
+    // If the frame we're about to reflow is on the reflow path, then
+    // propagate the reflow as `incremental' so it unwinds correctly
+    // to the target frames below us.
+    PRBool frameIsOnReflowPath = mOuterReflowState.path->HasChild(aFrame);
+    if (frameIsOnReflowPath)
+      reason = eReflowReason_Incremental;
+
+    // But...if the incremental reflow command is a StyleChanged
+    // reflow and its target is the current block, change the reason
+    // to `style change', so that it propagates through the entire
+    // subtree.
+    nsHTMLReflowCommand* rc = mOuterReflowState.path->mReflowCommand;
+    if (rc) {
+      nsReflowType type;
+      rc->GetType(type);
+      if (type == eReflowType_StyleChanged)
+        reason = eReflowReason_StyleChange;
+      else if (type == eReflowType_ReflowDirty &&
+               (state & NS_FRAME_IS_DIRTY) &&
+               !frameIsOnReflowPath) {
+        reason = eReflowReason_Dirty;
+      }
+    }
   }
   else if (mOuterReflowState.reason == eReflowReason_StyleChange) {
     reason = eReflowReason_StyleChange;
@@ -275,38 +297,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   else if (mOuterReflowState.reason == eReflowReason_Dirty) {
     if (state & NS_FRAME_IS_DIRTY)
       reason = eReflowReason_Dirty;
-  }
-  else {
-    if (mOuterReflowState.reason == eReflowReason_Incremental) {
-      // If the incremental reflow command is a StyleChanged reflow
-      // and it's target is the current block, then make sure we send
-      // StyleChange reflow reasons down to all the children so that
-      // they don't over-optimize their reflow.
-      nsHTMLReflowCommand* rc = mOuterReflowState.reflowCommand;
-      if (rc) {
-        nsReflowType type;
-        rc->GetType(type);
-        if (type == eReflowType_StyleChanged) {
-          nsIFrame* target;
-          rc->GetTarget(target);
-          if (target == mOuterReflowState.frame) {
-            reason = eReflowReason_StyleChange;
-          }
-        }
-        else if (type == eReflowType_ReflowDirty &&
-                 (state & NS_FRAME_IS_DIRTY)) {
-          reason = eReflowReason_Dirty;
-        }
-      }
-      /*
-      if (eReflowReason_Resize == reason) {
-        // we're doing a resize reflow, even though our outer reflow state is incremental
-        // text (and possibly other objects) don't do incremental painting for resize reflows
-        // so, we have to handle the invalidation for repainting ourselves
-        mBlockShouldInvalidateItself = PR_TRUE;
-      }
-      */
-    }
   }
 
   // Setup reflow state for reflowing the frame
@@ -335,8 +325,8 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     // constrains the containing block's width and height to the
     // available width and height.
     nsHTMLReflowState autoReflowState(mPresContext, mOuterReflowState, aFrame,
-                                      availSpace, aSpace.width, aSpace.height);
-    autoReflowState.reason = reason;
+                                      availSpace, aSpace.width, aSpace.height,
+                                      reason);
     rv = DoReflowBlock(autoReflowState, reason, aFrame, aSpace, 
                        aApplyTopMargin, aPrevBottomMargin,
                        aIsAdjacentWithTop,

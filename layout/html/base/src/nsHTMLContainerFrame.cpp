@@ -61,6 +61,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIStyleSet.h"
 #include "nsCOMPtr.h"
+#include "nsReflowPath.h"
 
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
@@ -693,11 +694,10 @@ nsHTMLContainerFrame::CheckInvalidateBorder(nsIPresContext* aPresContext,
   // everything (well, we really just have to repaint the borders but we're
   // a bunch of lazybones).
   if (aReflowState.reason == eReflowReason_Incremental) {
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    if (target == this) {
+    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+    if (command) {
       nsReflowType type;
-      aReflowState.reflowCommand->GetType(type);
+      command->GetType(type);
       if (type == eReflowType_StyleChanged) {
 
 #ifdef NOISY_BLOCK_INVALIDATE

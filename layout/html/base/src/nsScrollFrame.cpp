@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
-#include "nsHTMLReflowCommand.h"
+#include "nsReflowPath.h"
 #include "nsIDeviceContext.h"
 #include "nsPageFrame.h"
 #include "nsViewsCID.h"
@@ -664,8 +664,6 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
                       aReflowState.availableHeight));
 
   nsIFrame* kidFrame = mFrames.FirstChild();
-  nsIFrame* targetFrame;
-  nsIFrame* nextFrame;
 
   nsRect oldKidBounds;
   kidFrame->GetRect(oldKidBounds);
@@ -673,27 +671,32 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   // Special handling for incremental reflow
   if (eReflowReason_Incremental == aReflowState.reason) {
     // See whether we're the target of the reflow command
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
-      nsReflowType  type;
+    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+    if (command) {
+      nsReflowType type;
 
       // The only type of reflow command we expect to get is a style
-      // change reflow command
-      aReflowState.reflowCommand->GetType(type);
+      // change reflow command.
+      command->GetType(type);
       NS_ASSERTION(eReflowType_StyleChanged == type, "unexpected reflow type");
 
-      // Make a copy of the reflow state (with a different reflow reason) and
-      // then recurse
+      // Make a copy of the reflow state (with a different reflow
+      // reason) and then recurse. Note that there is no need to worry
+      // about incremental reflows targeted at our children because
+      // the style changed reflow will by definition reflow the entire
+      // subtree.
       nsHTMLReflowState reflowState(aReflowState);
       reflowState.reason = eReflowReason_StyleChange;
-      reflowState.reflowCommand = nsnull;
+      reflowState.path = nsnull;
       return Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
     }
 
+#ifdef DEBUG
     // Get the next frame in the reflow chain, and verify that it's our
     // child frame
-    aReflowState.reflowCommand->GetNext(nextFrame);
-    NS_ASSERTION(nextFrame == kidFrame, "unexpected reflow command next-frame");
+    nsReflowPath::iterator iter = aReflowState.path->FirstChild();
+    NS_ASSERTION(*iter == kidFrame, "unexpected reflow command next-frame");
+#endif
   }
 
   // Calculate the amount of space needed for borders

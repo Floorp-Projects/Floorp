@@ -214,14 +214,6 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
   DrainOverflowFrames(aPresContext);
 
   nsIFrame* kid = mFrames.FirstChild();
-  nsIFrame* nextRCFrame = nsnull;
-  if (aReflowState.reason == eReflowReason_Incremental) {
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    if (this != target) {
-      aReflowState.reflowCommand->GetNext(nextRCFrame);
-    }
-  }
 
   // Setup reflow state for our child
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
@@ -259,7 +251,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
     PRBool        pushedFrame;
 
     ll->BeginSpan(this, &aReflowState, bp.left, availSize.width);
-    ll->ReflowFrame(kid, &nextRCFrame, aReflowStatus, &aMetrics, pushedFrame);
+    ll->ReflowFrame(kid, aReflowStatus, &aMetrics, pushedFrame);
     nsSize size;
     ll->EndSpan(this, size, aMetrics.maxElementSize);
   }

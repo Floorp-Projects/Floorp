@@ -306,34 +306,30 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     desiredSize.height = aReflowState.mComputedMaxHeight - (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
   }
 
-  // now reflow the first child (genertaed content)
-  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, desiredSize);
-  reflowState.mComputedWidth  = desiredSize.width;
-  reflowState.mComputedHeight = desiredSize.height;
   // XXX Proper handling of incremental reflow...
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIFrame* targetFrame;
-
+  nsReflowReason reason = aReflowState.reason;
+  if (eReflowReason_Incremental == reason) {
     // See if it's targeted at us
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
+    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+
+    if (command) {
       Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
       nsReflowType  reflowType;
-      aReflowState.reflowCommand->GetType(reflowType);
+      command->GetType(reflowType);
       if (eReflowType_StyleChanged == reflowType) {
-        reflowState.reason = eReflowReason_StyleChange;
+        reason = eReflowReason_StyleChange;
       }
       else {
-        reflowState.reason = eReflowReason_Resize;
+        reason = eReflowReason_Resize;
       }
-    } else {
-      nsIFrame* nextFrame;
-
-      // Remove the next frame from the reflow path
-      aReflowState.reflowCommand->GetNext(nextFrame);  
     }
   }
+
+  // now reflow the first child (genertaed content)
+  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, desiredSize, reason);
+  reflowState.mComputedWidth  = desiredSize.width;
+  reflowState.mComputedHeight = desiredSize.height;
 
   nsHTMLReflowMetrics childReflowMetrics(aDesiredSize);
   nsRect kidRect;

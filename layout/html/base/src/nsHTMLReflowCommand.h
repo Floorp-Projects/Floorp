@@ -38,6 +38,7 @@
 #define nsHTMLReflowCommand_h___
 #include "nsReflowType.h"
 #include "nsVoidArray.h"
+#include <stdio.h>
 
 class  nsIAtom;
 class  nsIFrame;
@@ -87,26 +88,6 @@ public:
   ~nsHTMLReflowCommand();
 
   /**
-   * Dispatch the reflow command.
-   *
-   * Builds a path from the target frame back to the root frame, and then
-   * invokes the root frame's Reflow() member function.
-   *
-   * @see nsIFrame#Reflow()
-   */
-  nsresult Dispatch(nsIPresContext*      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsSize&        aMaxSize,
-                    nsIRenderingContext& aRendContext);
-
-  /**
-   * Get the next frame in the command processing path. If requested removes the
-   * the frame from the path. You must remove the frame from the path before
-   * dispatching the reflow command to the next frame in the chain.
-   */
-  nsresult GetNext(nsIFrame*& aNextFrame, PRBool aRemove = PR_TRUE);
-
-  /**
    * Get the target of the reflow command.
    */
   nsresult GetTarget(nsIFrame*& aTargetFrame) const;
@@ -125,14 +106,6 @@ public:
    * Can return nsnull.  If nsnull is not returned, the caller must NS_RELEASE aAttribute
    */
   nsresult GetAttribute(nsIAtom *& aAttribute) const;
-
-  /**
-   * Return the reflow command's path. The path is stored in
-   * <em>reverse</em> order in the array; i.e., the first element in
-   * the array is the target frame, the last element in the array is
-   * the current frame.
-   */
-  nsVoidArray *GetPath() { return &mPath; }
 
   /**
    * Get the child frame associated with the reflow command.
@@ -157,12 +130,6 @@ public:
   nsresult SetChildListName(nsIAtom* aListName);
 
   /**
-   * Get the previous sibling frame associated with the reflow command.
-   * This is used for FrameInserted reflow commands.
-   */
-  nsresult GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
-
-  /**
    * Dump out the reflow-command to out
    */
   nsresult List(FILE* out) const;
@@ -173,17 +140,12 @@ public:
   nsresult GetFlags(PRInt32* aFlags);
   nsresult SetFlags(PRInt32 aFlags);
 
-protected:
-  void      BuildPath();
-
 private:
   nsReflowType    mType;
   nsIFrame*       mTargetFrame;
   nsIFrame*       mChildFrame;
-  nsIFrame*       mPrevSiblingFrame;
   nsIAtom*        mAttribute;
   nsIAtom*        mListName;
-  nsAutoVoidArray mPath;
   PRInt32         mFlags;
 };
 

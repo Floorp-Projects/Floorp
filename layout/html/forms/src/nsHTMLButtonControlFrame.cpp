@@ -579,36 +579,30 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     availSize.height = PR_MAX(availSize.height,0);
   }
   
-  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize);
+  // XXX Proper handling of incremental reflow...
+  nsReflowReason reason = aReflowState.reason;
+  if (eReflowReason_Incremental == reason) {
+    // See if it's targeted at us
+    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+    if (command) {
+      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+
+      nsReflowType  reflowType;
+      command->GetType(reflowType);
+      if (eReflowType_StyleChanged == reflowType) {
+        reason = eReflowReason_StyleChange;
+      }
+      else {
+        reason = eReflowReason_Resize;
+      }
+    }
+  }
+
+  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize, reason);
   //reflowState.computedWidth = availSize;
 
   // XXX remove the following when the reflow state is fixed
   //ButtonHack(reflowState, "html4 button's area");
-
-  // XXX Proper handling of incremental reflow...
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIFrame* targetFrame;
-    
-    // See if it's targeted at us
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
-      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-
-      nsReflowType  reflowType;
-      aReflowState.reflowCommand->GetType(reflowType);
-      if (eReflowType_StyleChanged == reflowType) {
-        reflowState.reason = eReflowReason_StyleChange;
-      }
-      else {
-        reflowState.reason = eReflowReason_Resize;
-      }
-    } else {
-      nsIFrame* nextFrame;
-
-      // Remove the next frame from the reflow path
-      aReflowState.reflowCommand->GetNext(nextFrame);  
-    }
-  }
 
   ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState,
               focusPadding.left + aReflowState.mComputedBorderPadding.left,

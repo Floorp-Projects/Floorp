@@ -42,7 +42,7 @@
 
 class nsIFrame;
 class nsIPresContext;
-class nsHTMLReflowCommand;
+class nsReflowPath;
 class nsIRenderingContext;
 class nsSpaceManager;
 class nsLineLayout;
@@ -139,8 +139,13 @@ struct nsHTMLReflowState {
   // the reason for the reflow
   nsReflowReason      reason;
 
-  // the reflow command. only set for a reflow reason of eReflowReason_Incremental
-  nsHTMLReflowCommand* reflowCommand;
+  // the incremental reflow path, when the reflow reason is
+  // eReflowReason_Incremental. Specifically, this corresponds to the
+  // portion of the incremental reflow path from `frame' down. Note
+  // that it is safe to assume that this is non-null: we maintain the
+  // invariant that it contains a valid nsReflowPath pointer when
+  // reason == eReflowReason_Incremental.
+  nsReflowPath        *path;
 
   // the available space in which to reflow the frame. The space represents the
   // amount of room for the frame's border, padding, and content area (not the
@@ -267,7 +272,7 @@ struct nsHTMLReflowState {
   // reflow.
   nsHTMLReflowState(nsIPresContext*          aPresContext,
                     nsIFrame*                aFrame,
-                    nsHTMLReflowCommand&     aReflowCommand,
+                    nsReflowPath*            aReflowPath,
                     nsIRenderingContext*     aRenderingContext,
                     const nsSize&            aAvailableSpace);
 
@@ -295,7 +300,8 @@ struct nsHTMLReflowState {
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
                     nscoord                  aContainingBlockWidth,
-                    nscoord                  aContainingBlockHeight);
+                    nscoord                  aContainingBlockHeight,
+                    nsReflowReason           aReason);
 
   // This method initializes various data members. It is automatically
   // called by the various constructors

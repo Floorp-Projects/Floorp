@@ -100,6 +100,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsPageContentFrame.obj \
 	.\$(OBJDIR)\nsPlaceholderFrame.obj \
 	.\$(OBJDIR)\nsPresShell.obj \
+	.\$(OBJDIR)\nsReflowPath.obj \
 	.\$(OBJDIR)\nsScrollFrame.obj \
 	.\$(OBJDIR)\nsScrollPortFrame.obj \
 	.\$(OBJDIR)\nsSelectsAreaFrame.obj \

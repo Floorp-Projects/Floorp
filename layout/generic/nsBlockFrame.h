@@ -42,6 +42,7 @@
 #include "nsHTMLParts.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLineBox.h"
+#include "nsReflowPath.h"
 
 class nsBlockReflowState;
 class nsBulletFrame;
@@ -299,9 +300,9 @@ protected:
    *
    * @param aPrevInFlow points to the target frame's prev-in-flow.
    */
-  void RetargetInlineIncrementalReflow(nsBlockReflowState &aState,
-                                       line_iterator &aLine,
-                                       nsIFrame *aPrevInFlow);
+  void RetargetInlineIncrementalReflow(nsReflowPath::iterator &aFrame,
+                                       line_iterator          &aLine,
+                                       nsIFrame               *aPrevInFlow);
 
   /** set up the conditions necessary for an resize reflow
     * the primary task is to mark the minimumly sufficient lines dirty. 

@@ -523,19 +523,6 @@ public:
    */
   NS_IMETHOD UnsuppressPainting() = 0;
 
-  enum InterruptType {Timeout};
-  /**
-   * Notify aFrame via a reflow command when an aInterruptType event occurs 
-   */
-  NS_IMETHOD SendInterruptNotificationTo(nsIFrame*     aFrame,
-                                         InterruptType aInterruptType) = 0;
-  /**
-   * Cancel Notifications to aFrame when an aInterruptType event occurs 
-   */
-  NS_IMETHOD CancelInterruptNotificationTo(nsIFrame*     aFrame,
-                                           InterruptType aInterruptType) = 0;
-
-
   /**
    * See if reflow verification is enabled. To enable reflow verification add
    * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable

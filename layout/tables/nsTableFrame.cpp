@@ -203,16 +203,13 @@ nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
     mCellMap(nsnull),
     mTableLayoutStrategy(nsnull),
-    mPreferredWidth(0),
-    mNumDescendantReflowsPending(0),
-    mNumDescendantTimeoutReflowsPending(0)
+    mPreferredWidth(0)
 {
   mBits.mHadInitialReflow       = PR_FALSE;
   mBits.mHaveReflowedColGroups  = PR_FALSE;
   mBits.mNeedStrategyInit       = PR_TRUE;
   mBits.mNeedStrategyBalance    = PR_TRUE;
   mBits.mCellSpansPctCol        = PR_FALSE;
-  mBits.mRequestedTimeoutReflow = PR_FALSE;
   mBits.mNeedToCalcBCBorders    = PR_FALSE;
   mBits.mIsBorderCollapse       = PR_FALSE;
 
@@ -316,64 +313,6 @@ nsTableFrame::Destroy(nsIPresContext* aPresContext)
 {
   mColGroups.DestroyFrames(aPresContext);
   return nsHTMLContainerFrame::Destroy(aPresContext);
-}
-
-NS_IMETHODIMP
-nsTableFrame::ReflowCommandNotify(nsIPresShell*     aShell,
-                                  nsHTMLReflowCommand* aRC,
-                                  PRBool            aCommandAdded)
-
-{
-  if (!aShell || !aRC) {
-    NS_ASSERTION(PR_FALSE, "invalid call to ReflowCommandNotify");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-#ifndef TABLE_REFLOW_COALESCING_OFF
-  nsReflowType type;
-  aRC->GetType(type);
-  if ((type == eReflowType_ContentChanged) ||
-      (type == eReflowType_StyleChanged)   ||
-      (type == eReflowType_ReflowDirty)) {
-    mNumDescendantReflowsPending += (aCommandAdded) ? 1 : -1;
-  }
-  else if (type == eReflowType_Timeout) {
-    if (aCommandAdded) {
-      mNumDescendantTimeoutReflowsPending++;
-      if (RequestedTimeoutReflow()) {
-        // since we can use the descendants timeout reflow, remove ours 
-        aShell->CancelInterruptNotificationTo(this, nsIPresShell::Timeout);
-        SetRequestedTimeoutReflow(PR_FALSE);
-      }
-    }
-    else {
-      mNumDescendantTimeoutReflowsPending--;
-      if ((mNumDescendantTimeoutReflowsPending <= 0) && !RequestedTimeoutReflow() &&
-           DescendantReflowedNotTimeout()) {
-        // a descendant caused us to cancel our timeout request but we really need one 
-        aShell->SendInterruptNotificationTo(this, nsIPresShell::Timeout);
-        SetRequestedTimeoutReflow(PR_TRUE);
-      }
-    }
-  }
-#endif
-  return NS_OK;
-}
-
-void
-nsTableFrame::InterruptNotification(nsIPresContext* aPresContext,
-                                    PRBool          aIsRequest)
-{
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  if (aIsRequest) {
-    presShell->SendInterruptNotificationTo(this, nsIPresShell::Timeout);
-    SetRequestedTimeoutReflow(PR_TRUE);
-  }
-  else {
-    presShell->CancelInterruptNotificationTo(this, nsIPresShell::Timeout);
-    SetRequestedTimeoutReflow(PR_FALSE);
-  }
 }
 
 nscoord 
@@ -1641,8 +1580,6 @@ nsTableFrame::GetSkipSides() const
   return skip;
 }
 
-// this assumes that mNumDescendantReflowsPending and mNumDescendantTimeoutReflowsPending
-// have already been updated for the current reflow
 PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 {
   PRBool result = PR_TRUE;
@@ -1657,37 +1594,7 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
            (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight)) {
     // It's an incremental reflow and we're in galley mode. Only
     // do a full reflow if we need to.
-#ifndef TABLE_REFLOW_COALESCING_OFF
-    nsIFrame* reflowTarget;
-    aReflowState.reflowCommand->GetTarget(reflowTarget);
-    nsReflowType reflowType;
-    aReflowState.reflowCommand->GetType(reflowType);
-    if (reflowType == eReflowType_Timeout) {
-      result = PR_FALSE;
-      if (this == reflowTarget) {
-        if (mNumDescendantTimeoutReflowsPending <= 0) {
-          // no more timeout reflows are coming targeted below
-          result = NeedStrategyInit() || NeedStrategyBalance();
-        }
-      }
-      else if ((mNumDescendantTimeoutReflowsPending <= 0) && !RequestedTimeoutReflow()) {
-        // no more timeout reflows are coming targeted below or here
-        result = NeedStrategyInit() || NeedStrategyBalance();
-      }
-    }
-    else {
-      if ((mNumDescendantTimeoutReflowsPending <= 0) &&
-          !RequestedTimeoutReflow() &&
-          (mNumDescendantReflowsPending <= 0)) { 
-        // no more timeout reflows are coming targeted below or here, 
-        // and no more normal reflows are coming targeted below
-        result = NeedStrategyInit() || NeedStrategyBalance();
-      }
-      else result = PR_FALSE;
-    }
-#else
     result = NeedStrategyInit() || NeedStrategyBalance();
-#endif
   }
   return result;
 }
@@ -2208,30 +2115,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   if (IsRowInserted()) {
     ProcessRowInserted(aPresContext, *this, PR_TRUE, aDesiredSize.height);
   }
-
-#ifndef TABLE_REFLOW_COALESCING_OFF
-  // determine if we need to reset DescendantReflowedNotTimeout and/or
-  // RequestedTimeoutReflow after a timeout reflow.
-  if (aReflowState.reflowCommand) {
-    nsReflowType type;
-    aReflowState.reflowCommand->GetType(type);
-    if (eReflowType_Timeout == type) {
-      nsIFrame* target = nsnull;
-      aReflowState.reflowCommand->GetTarget(target);
-      if (target == this) { // target is me
-        NS_ASSERTION(0 == mNumDescendantTimeoutReflowsPending, "was incorrectly target of timeout reflow"); 
-        SetDescendantReflowedNotTimeout(PR_FALSE);
-        SetRequestedTimeoutReflow(PR_FALSE);
-      }
-      else if (target) {    // target is descendant        
-        if (0 >= mNumDescendantTimeoutReflowsPending) {
-          NS_ASSERTION(!RequestedTimeoutReflow(), "invalid timeout request");
-          SetDescendantReflowedNotTimeout(PR_FALSE);
-        }
-      }
-    }
-  }
-#endif
 
   nsMargin borderPadding = GetChildAreaOffset(*aPresContext, &aReflowState);
   SetColumnDimensions(aPresContext, aDesiredSize.height, borderPadding);
@@ -2865,8 +2748,6 @@ nsTableFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
-  nsresult  rv = NS_OK;
-
   // Constrain our reflow width to the computed table width. Note: this is
   // based on the width of the first-in-flow
   PRInt32 lastWidth = mRect.width;
@@ -2877,31 +2758,18 @@ nsTableFrame::IncrementalReflow(nsIPresContext*          aPresContext,
   nsTableReflowState state(*aPresContext, aReflowState, *this, eReflowReason_Incremental,
                            lastWidth, aReflowState.availableHeight); 
 
-  // determine if this frame is the target or not
-  nsIFrame* target = nsnull;
-  rv = aReflowState.reflowCommand->GetTarget(target);
-  if (NS_SUCCEEDED(rv) && target) {
-    nsReflowType type;
-    aReflowState.reflowCommand->GetType(type);
-    // this is the target if target is either this or the outer table frame containing this inner frame
-    nsIFrame* outerTableFrame = nsnull;
-    GetParent(&outerTableFrame);
-    if ((this == target) || (outerTableFrame == target)) {
-      rv = IR_TargetIsMe(aPresContext, state, aStatus);
-    }
-    else {
-      // Get the next frame in the reflow chain
-      nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame);
-      if (nextFrame) {
-        rv = IR_TargetIsChild(aPresContext, state, aStatus, nextFrame);
-      }
-      else {
-        NS_ASSERTION(PR_FALSE, "next frame in reflow command is null"); 
-      }
-    }
-  }
-  return rv;
+  // the table is a target if its path has a reflow command
+  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
+  if (command)
+    IR_TargetIsMe(aPresContext, state, aStatus);
+
+  // see if the chidren are targets as well
+  nsReflowPath::iterator iter = aReflowState.path->FirstChild();
+  nsReflowPath::iterator end  = aReflowState.path->EndChildren();
+  for (; iter != end; ++iter)
+    IR_TargetIsChild(aPresContext, state, aStatus, *iter);
+
+  return NS_OK;
 }
 
 NS_METHOD 
@@ -2913,7 +2781,7 @@ nsTableFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   nsReflowType type;
-  aReflowState.reflowState.reflowCommand->GetType(type);
+  aReflowState.reflowState.path->mReflowCommand->GetType(type);
 
   switch (type) {
     case eReflowType_StyleChanged :
@@ -2935,10 +2803,6 @@ nsTableFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
         SetNeedStrategyInit(PR_TRUE);
       }
       break;
-    case eReflowType_Timeout: {
-      // for a timeout reflow, don't do anything here
-      break;
-    }
     default:
       NS_NOTYETIMPLEMENTED("unexpected reflow command type");
       rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -3182,36 +3046,6 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
   // AdjustSiblingsAfterReflow()
   nsRect  kidRect(aReflowState.x, aReflowState.y, desiredSize.width, desiredSize.height);
   FinishReflowChild(aNextFrame, aPresContext, nsnull, desiredSize, aReflowState.x, aReflowState.y, 0);
-
-#ifndef TABLE_REFLOW_COALESCING_OFF
-  // update the descendant reflow counts and determine if we need to request a timeout reflow
-  PRBool needToRequestTimeoutReflow = PR_FALSE;
-  nsReflowType type;
-  aReflowState.reflowState.reflowCommand->GetType(type);
-  if (eReflowType_Timeout == type) {
-    mNumDescendantTimeoutReflowsPending--;
-    NS_ASSERTION(mNumDescendantTimeoutReflowsPending >= 0, "invalid descendant reflow count");
-  }
-  else {
-    mNumDescendantReflowsPending--;
-    NS_ASSERTION(mNumDescendantReflowsPending >= 0, "invalid descendant reflow count");
-    SetDescendantReflowedNotTimeout(PR_TRUE);
-    // request a timeout reflow if there are no more timeout reflows coming, more normal
-    // reflows are coming, and we haven't already requested one.
-    if ((mNumDescendantTimeoutReflowsPending <= 0) &&
-        (mNumDescendantReflowsPending > 0) && 
-        !RequestedTimeoutReflow()) {
-      InterruptNotification(aPresContext, PR_TRUE);
-    }
-    // cancel our timeout reflow (if present) if there are no more coming and
-    // this is the last child to be reflowed.
-    else if ((mNumDescendantTimeoutReflowsPending <= 0) &&
-             (mNumDescendantReflowsPending <= 0) && 
-             RequestedTimeoutReflow()) {
-      InterruptNotification(aPresContext, PR_FALSE);
-    }
-  }
-#endif
 
   // Adjust the running y-offset
   aReflowState.y += desiredSize.height + GetCellSpacingY();

@@ -62,12 +62,6 @@ enum nsReflowType {
   eReflowType_ReflowDirty,
 
   /**
-   * The pres shell ran out of time but will guaranteed the reflow
-   * command gets processed.
-   */
-  eReflowType_Timeout,
-
-  /**
    * Trap door for extensions.
    */
   eReflowType_UserDefined

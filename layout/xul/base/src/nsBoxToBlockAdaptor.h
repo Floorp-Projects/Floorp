@@ -90,15 +90,15 @@ private:
                    PRBool aMoveFrame = PR_TRUE);
 
   void HandleIncrementalReflow(nsBoxLayoutState& aState, 
-                                          const nsHTMLReflowState aReflowState, 
-                                          nsReflowReason& aReason,
-                                          PRBool aPopOffIncremental,
-                                          PRBool& aRedrawNow,
-                                          PRBool& aNeedReflow,
-                                          PRBool& aRedrawAfterReflow,
-                                          PRBool& aMoveFrame);
+                               const nsHTMLReflowState& aReflowState, 
+                               nsReflowReason& aReason,
+                               nsReflowPath** aReflowPath,
+                               PRBool& aRedrawNow,
+                               PRBool& aNeedReflow,
+                               PRBool& aRedrawAfterReflow,
+                               PRBool& aMoveFrame);
 
-  PRBool CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReason& aReason);
+  PRBool CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReason& aReason, nsReflowPath **aReflowPath);
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 

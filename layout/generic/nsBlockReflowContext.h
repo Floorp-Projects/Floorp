@@ -60,14 +60,6 @@ public:
                        PRBool aComputeMaximumWidth);
   ~nsBlockReflowContext() { }
 
-  void SetNextRCFrame(nsIFrame* aNextRCFrame) {
-    mNextRCFrame = aNextRCFrame;
-  }
-
-  nsIFrame* GetNextRCFrame() const {
-    return mNextRCFrame;
-  }
-
   nsresult ReflowBlock(nsIFrame* aFrame,
                        const nsRect& aSpace,
                        PRBool aApplyTopMargin,
@@ -136,11 +128,6 @@ protected:
 
   nsIFrame* mFrame;
   nsRect mSpace;
-
-  // For an incremental reflow that has not yet reached the target
-  // frame, this field contains the next frame along the reflow's
-  // path.
-  nsIFrame* mNextRCFrame;
 
   // Spacing style for the frame we are reflowing; only valid after reflow
   const nsStyleBorder* mStyleBorder;

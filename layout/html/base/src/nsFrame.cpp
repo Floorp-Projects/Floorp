@@ -4025,14 +4025,6 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-NS_IMETHODIMP
-nsFrame::ReflowCommandNotify(nsIPresShell*        aShell,
-                             nsHTMLReflowCommand* aRC,
-                             PRBool               aCommandAdded)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
                                     nsIFrame**      aProviderFrame,

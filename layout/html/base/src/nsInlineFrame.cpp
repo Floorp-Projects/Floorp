@@ -419,17 +419,7 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
   InlineReflowState irs;
   irs.mPrevFrame = nsnull;
   irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
-  irs.mNextRCFrame = nsnull;
   irs.mSetParentPointer = lazilySetParentPointer;
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    // Peel off the next frame in the path if this is an incremental
-    // reflow aimed at one of the children.
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    if (this != target) {
-      aReflowState.reflowCommand->GetNext(irs.mNextRCFrame);
-    }
-  }
 
   nsresult rv;
   if (mFrames.IsEmpty()) {
@@ -722,8 +712,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
   nsLineLayout* lineLayout = aReflowState.mLineLayout;
   PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
   PRBool pushedFrame;
-  nsresult rv = lineLayout->ReflowFrame(aFrame, &irs.mNextRCFrame, aStatus,
-                                        nsnull, pushedFrame);
+  nsresult rv = lineLayout->ReflowFrame(aFrame, aStatus, nsnull, pushedFrame);
   /* This next block is for bug 28811
      Test the child frame for %-awareness, 
      and mark this frame with a bit if it is %-aware.
@@ -1006,16 +995,6 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
   InlineReflowState irs;
   irs.mPrevFrame = nsnull;
   irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
-  irs.mNextRCFrame = nsnull;
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    // Peel off the next frame in the path if this is an incremental
-    // reflow aimed at one of the children.
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    if (this != target) {
-      aReflowState.reflowCommand->GetNext(irs.mNextRCFrame);
-    }
-  }
 
   nsresult rv;
   PRBool wasEmpty = mFrames.IsEmpty();
@@ -1249,7 +1228,7 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
       // time being pretend a resize reflow occured
       nsHTMLReflowState reflowState(aReflowState);
       reflowState.reason = eReflowReason_Resize;
-      reflowState.reflowCommand = nsnull;
+      reflowState.path = nsnull;
       rv = nsInlineFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
 
       // XXX Although this seems like the correct thing to do the line layout
