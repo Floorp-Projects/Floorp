@@ -1405,9 +1405,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     if (m_channelListener) 
     {
         nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
-        if (!request) return NS_ERROR_FAILURE;
-
-        rv = m_channelListener->OnStopRequest(request, m_channelContext, NS_OK);
+        NS_ASSERTION(request, "no request");
+        if (request)
+          rv = m_channelListener->OnStopRequest(request, m_channelContext, NS_OK);
     }
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
@@ -5658,7 +5658,9 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
   if (!name)
     return PR_FALSE;
 
-  m_imapServerSink->FolderIsNoSelect(name, &rv);
+  NS_ASSERTION(m_imapServerSink, "unexpected, no imap server sink, see bug #194335");
+  if (m_imapServerSink)
+    m_imapServerSink->FolderIsNoSelect(name, &rv);
 
   PL_strfree(name);
   return rv;
