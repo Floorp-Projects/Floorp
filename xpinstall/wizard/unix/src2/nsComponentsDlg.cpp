@@ -75,6 +75,9 @@ nsComponentsDlg::Next(GtkWidget *aWidget, gpointer aData)
         return;
     }
 
+	if (OK != nsSetupTypeDlg::VerifyDiskSpace())
+	    return;
+
     // hide this notebook page
     gCtx->cdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
 
@@ -100,7 +103,8 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
     char *currDescShort = NULL;
     char *currDescLong = NULL;
     char *currArchive = NULL;
-    char *currSizeStr = NULL;
+    char *currInstallSizeStr = NULL;
+    char *currArchiveSizeStr = NULL;
     char *currAttrStr = NULL;
     char *currURL = NULL;
     char *currDepName = NULL;
@@ -139,7 +143,8 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
         currDescShort = NULL;
         currDescLong = NULL;
         currArchive = NULL;
-        currSizeStr = NULL;
+        currInstallSizeStr = NULL;
+        currArchiveSizeStr = NULL;
         currAttrStr = NULL;
 
         sprintf(currSec, COMPONENTd, i);
@@ -157,8 +162,10 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
                                             &currDescLong, &bufsize));
         XI_ERR_BAIL(aParser->GetStringAlloc(currSec, ARCHIVE,
                                             &currArchive, &bufsize));
-        XI_ERR_BAIL(aParser->GetStringAlloc(currSec, SIZE,  
-                                            &currSizeStr, &bufsize));
+        XI_ERR_BAIL(aParser->GetStringAlloc(currSec, INSTALL_SIZE,  
+                                            &currInstallSizeStr, &bufsize));
+        XI_ERR_BAIL(aParser->GetStringAlloc(currSec, ARCHIVE_SIZE,  
+                                            &currArchiveSizeStr, &bufsize));
         err = aParser->GetStringAlloc(currSec, ATTRIBUTES,
                                       &currAttrStr, &bufsize);
         if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
@@ -169,7 +176,8 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
         currComp->SetDescShort(currDescShort);
         currComp->SetDescLong(currDescLong);
         currComp->SetArchive(currArchive);
-        currComp->SetSize(atoi(currSizeStr));
+        currComp->SetInstallSize(atoi(currInstallSizeStr));
+        currComp->SetArchiveSize(atoi(currArchiveSizeStr));
         if (NULL != strstr(currAttrStr, SELECTED_ATTR))
         { 
             currComp->SetSelected();

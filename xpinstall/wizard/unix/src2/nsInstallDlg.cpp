@@ -23,15 +23,34 @@
  */
 
 #include "nsSocket.h"
+#include "nsHTTPConn.h"
 #include "nsInstallDlg.h"
 #include "nsXInstaller.h"
 #include "nsXIEngine.h"
 #include <signal.h>
+#include <gtk/gtk.h>
 
 #define NUM_PS_ENTRIES 4
 
+typedef struct _DLProgress 
+{
+    // progress widgets
+    GtkWidget *vbox;
+    GtkWidget *compName;
+    GtkWidget *URL;
+    GtkWidget *localPath;
+    GtkWidget *status;
+    GtkWidget *progBar;
+
+    // progress info
+    int       downloadedBytes;
+    int       totalKB;
+} 
+DLProgress;
+
 static char             *sXPInstallEngine;
 static nsRunApp         *sRunAppList = NULL;
+static DLProgress       sDLProgress;
 
 static GtkWidget        *sDLTable = NULL;
 static GtkWidget        *sMsg0Label;
@@ -44,6 +63,10 @@ static GtkWidget        *sPSTextEntry[NUM_PS_ENTRIES];
 
 static int              bDownload = FALSE;
 static struct timeval   sDLStartTime;
+static int              bDLPause = FALSE;
+static int              bDLCancel = FALSE;
+static int              bComplete = FALSE;
+static int              bInstallClicked = FALSE;
 
 nsInstallDlg::nsInstallDlg() :
     mMsg0(NULL)
@@ -87,20 +110,18 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     DUMP("Next");
     int bCus;
     nsComponentList *comps = NULL;
+    GtkWidget *pauseLabel, *resumeLabel;
 
     if (aData != gCtx->idlg) return;
     if (gCtx->bMoving)
     {
         gCtx->bMoving = FALSE;
+        DUMP("Moving done!");
         return;
     }
 
     bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
     comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
-
-    // hide the cancel button
-    if (gCtx->cancel)
-        gtk_widget_hide(gCtx->cancel);
 
     // initialize progress bar cleanly
     int totalComps = 0;
@@ -112,25 +133,61 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE);
     gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), (gfloat) 0);
     gtk_label_set_text(GTK_LABEL(sMajorLabel), "");
-    gtk_widget_show(sMajorLabel);
-    gtk_widget_show(sMajorProgBar);
 
-    gtk_widget_hide(gCtx->back);
-    gtk_widget_hide(gCtx->next);
+    if (bDownload)
+    {
+        InitDLProgress();
+
+        pauseLabel = gtk_label_new(gCtx->Res("PAUSE"));
+        resumeLabel = gtk_label_new(gCtx->Res("RESUME"));
+        gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->backLabel); 
+        gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->installLabel); 
+        gtk_container_add(GTK_CONTAINER(gCtx->back), pauseLabel);
+        gtk_container_add(GTK_CONTAINER(gCtx->next), resumeLabel);
+        gtk_widget_show(pauseLabel);
+        gtk_widget_show(resumeLabel);
+
+        gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+        gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+        gtk_signal_disconnect(GTK_OBJECT(gCtx->cancel), gCtx->cancelID);
+
+        // disable resume button
+        gtk_widget_set_sensitive(gCtx->next, FALSE);
+
+        XI_GTK_UPDATE_UI();
+
+        // hook up buttons with callbacks
+        gCtx->backID = gtk_signal_connect(GTK_OBJECT(gCtx->back), "clicked",
+            GTK_SIGNAL_FUNC(DLPause), NULL);
+        gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
+            GTK_SIGNAL_FUNC(DLResume), NULL);
+        gCtx->cancelID = gtk_signal_connect(GTK_OBJECT(gCtx->cancel), "clicked",
+            GTK_SIGNAL_FUNC(DLCancel), NULL);
+    }
+    else
+    {
+        gtk_widget_show(sMajorLabel);
+        gtk_widget_show(sMajorProgBar);
+
+        gtk_widget_hide(gCtx->back);
+        gtk_widget_hide(gCtx->next);
+        gtk_widget_hide(gCtx->cancel);
+    }
+
     gtk_widget_hide(sMsg0Label);
     if (bDownload && sDLTable)
         gtk_widget_hide(sDLTable);
     XI_GTK_UPDATE_UI();
 
-    WorkDammitWork((void*) NULL);
-    
-    // run all specified applications after installation
-    if (sRunAppList)
+    bInstallClicked = TRUE;
+    WorkDammitWork();
+    if (bDLCancel) // set only when download was cancelled
     {
-        RunApps();
-        FreeRunAppList();
+        // mode auto has no call to gtk_main()
+        if (gCtx->opt->mMode != nsXIOptions::MODE_AUTO)
+            gtk_main_quit();
     }
-
+    
     gCtx->bMoving = TRUE;
     return;
 }
@@ -424,6 +481,28 @@ nsInstallDlg::Hide(int aDirection)
 }
 
 int
+nsInstallDlg::ShowTable()
+{
+    if (!mTable)
+        return E_PARAM;
+
+    gtk_widget_show(mTable);
+
+    return OK;
+}
+
+int
+nsInstallDlg::HideTable()
+{
+    if (!mTable)
+        return E_PARAM;
+
+    gtk_widget_hide(mTable);
+
+    return OK;
+}
+
+int
 nsInstallDlg::SetMsg0(char *aMsg)
 {
     if (!aMsg)
@@ -443,8 +522,8 @@ nsInstallDlg::GetMsg0()
     return NULL;
 }
 
-void *
-nsInstallDlg::WorkDammitWork(void *arg)
+int
+nsInstallDlg::WorkDammitWork()
 {
     DUMP("WorkDammitWork");
 
@@ -455,7 +534,7 @@ nsInstallDlg::WorkDammitWork(void *arg)
     if (!engine)
     {
         ErrorHandler(E_MEM);
-        return NULL;
+        return E_MEM;
     }
 
     // get the component list for the current setup type
@@ -466,14 +545,34 @@ nsInstallDlg::WorkDammitWork(void *arg)
     if (!comps)
     {
         ErrorHandler(E_NO_COMPONENTS);
-        return NULL;
+        return E_NO_COMPONENTS;
     }
     
-    if (!sXPInstallEngine) return NULL;
+    if (!sXPInstallEngine) return E_PARAM;
     xpiengine = comps->GetCompByArchive(sXPInstallEngine);
 
     // 1> download
-    XI_ERR_BAIL(engine->Download(bCus, comps));
+    err = engine->Download(bCus, comps);
+    if (err == E_DL_DROP_CXN)
+    {
+        ShowCxnDroppedDlg();
+        return err;
+    }
+    else if (err == E_DL_PAUSE || err == E_DL_CANCEL)
+    {
+        DUMP("Pause or Cancel pressed");
+        goto BAIL;
+    }
+    else if (err != OK)
+    {
+        DUMP("dammit... hopped into the wrong hole!");
+        ErrorHandler(err);
+        goto BAIL;
+    }
+
+    // prepare install UI
+    InitInstallProgress();
+    HideNavButtons();
 
     // 2> extract engine
     XI_ERR_BAIL(engine->Extract(xpiengine));
@@ -481,19 +580,26 @@ nsInstallDlg::WorkDammitWork(void *arg)
     // 3> install .xpis
     XI_ERR_BAIL(engine->Install(bCus, comps, gCtx->opt->mDestination));
 
-    // save xpis if user requested so
-    if (bDownload && gCtx->opt->mSaveModules)
+    // delete xpis if user didn't request saving them
+    if (bDownload && !gCtx->opt->mSaveModules)
     {
-        engine->SaveXPIs();
+        engine->DeleteXPIs(bCus, comps);
     }
 
     ShowCompleteDlg();
+
+    // run all specified applications after installation
+    if (sRunAppList)
+    {
+        RunApps();
+        FreeRunAppList();
+    }
 
 BAIL:
     // destroy installer engine thread object
     XI_IF_DELETE(engine);
 
-    return NULL;
+    return err;
 }
 
 void
@@ -617,15 +723,42 @@ nsInstallDlg::MajorProgressCB(char *aName, int aNum, int aTotal, int aActivity)
     XI_GTK_UPDATE_UI();
 }
 
+const int kCharsInDLLabel = 50;
+
 void
-nsInstallDlg::SetDownloadComp(char *aName, int aNum, int aTotal)
+nsInstallDlg::SetDownloadComp(nsComponent *aComp, int aURLIndex, 
+                              int aNum, int aTotal)
 {
-    char label[64];
+    static char xpiDir[MAXPATHLEN];
+    static int bHaveXPIDir = FALSE;
+    char label[MAXPATHLEN];
+    char localPath[MAXPATHLEN];
+    
+    if (!aComp)
+        return;
 
-    // major label format e.g., "Downloading Navigator [4/12] at 635 K/sec..."
-    sprintf(label, gCtx->Res("DOWNLOADING"), aName, aNum, aTotal);
-    gtk_label_set_text(GTK_LABEL(sMajorLabel), label);
+    if (!bHaveXPIDir)
+    {
+        getcwd(xpiDir, MAXPATHLEN);
+        strcat(xpiDir, "/xpi");
+        bHaveXPIDir = TRUE;
+    }
 
+    // update comp name 
+    sprintf(label, "%s [%d/%d]", aComp->GetDescShort(), aNum, aTotal);
+    gtk_label_set_text(GTK_LABEL(sDLProgress.compName), label);
+
+    // update from URL 
+    label[0] = 0;
+    CompressToFit(aComp->GetURL(aURLIndex), label, kCharsInDLLabel);
+    gtk_label_set_text(GTK_LABEL(sDLProgress.URL), label);
+
+    // to local path 
+    label[0] = 0;
+    sprintf(localPath, "%s/%s", xpiDir, aComp->GetArchive());
+    CompressToFit(localPath, label, kCharsInDLLabel);
+    gtk_label_set_text(GTK_LABEL(sDLProgress.localPath), label);
+    
     gettimeofday(&sDLStartTime, NULL);
 }
 
@@ -639,6 +772,27 @@ nsInstallDlg::DownloadCB(int aBytesRd, int aTotal)
     gfloat percent = 0;
     static int timesCalled = 0;
     static int activityCount = 0;
+    int dlKB;
+    static int lastTotal = 0;
+    static int lastBytesRd = 0;
+
+    // new component being downloaded
+    if (lastTotal != aTotal)
+    {
+        lastBytesRd = 0; // reset
+        lastTotal = aTotal;
+    }
+    
+    if ((aBytesRd - lastBytesRd) > 0)
+    {
+        sDLProgress.downloadedBytes += aBytesRd - lastBytesRd;
+        lastBytesRd = aBytesRd;
+    }
+
+    if (bDLPause || bDLCancel)
+    {
+        return nsHTTPConn::E_USER_CANCEL;
+    }
 
     if (++timesCalled < SHOW_EVERY_N_KB)
         return 0; 
@@ -648,23 +802,36 @@ nsInstallDlg::DownloadCB(int aBytesRd, int aTotal)
     gettimeofday(&now, NULL);
     rate = (int) nsSocket::CalcRate(&sDLStartTime, &now, aBytesRd);
 
+    // update the status -- bytes thus far, rate, percent in prog bar
+    dlKB = sDLProgress.downloadedBytes/1024;
+    sprintf(label, gCtx->Res("DL_STATUS_STR"), dlKB, sDLProgress.totalKB, rate);
+    gtk_label_set_text(GTK_LABEL(sDLProgress.status), label);
+
+/*
     // only update rate in major label line
+    XXX remove this: DLRATE no longer exists
     sprintf(label, gCtx->Res("DLRATE"), rate);
     gtk_label_set_text(GTK_LABEL(sRateLabel), label);
+*/
 
-    if (aTotal <= 0) 
+    if (sDLProgress.totalKB <= 0) 
     {
         // show some activity
         if (activityCount >= 5) activityCount = 0;
         percent = (gfloat)( (gfloat)activityCount++/ (gfloat)5 ); 
-        gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), TRUE); 
-        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sDLProgress.progBar), TRUE);
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sDLProgress.progBar), percent);
     }
     else
     {
-        percent = (gfloat)aBytesRd/(gfloat)aTotal;
-        gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE); 
-        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
+        percent = (gfloat)dlKB/(gfloat)sDLProgress.totalKB;
+#ifdef DEBUG
+    printf("DLProgress: %d of %d (%f percent) at %d KB/sec\n", dlKB,
+            sDLProgress.totalKB, percent, rate);
+#endif
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sDLProgress.progBar), 
+            FALSE); 
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sDLProgress.progBar), percent);
     }
 
     XI_GTK_UPDATE_UI();
@@ -704,7 +871,13 @@ nsInstallDlg::ShowCompleteDlg()
     gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
                        GTK_SIGNAL_FUNC(CompleteOK), completeDlg);
     gtk_widget_show_all(completeDlg);
-    XI_GTK_UPDATE_UI();
+
+    while (!bComplete)
+    {
+        XI_GTK_UPDATE_UI();
+    }
+
+    gtk_main_quit();
 }
 
 void
@@ -715,7 +888,7 @@ nsInstallDlg::CompleteOK(GtkWidget *aWidget, gpointer aData)
     if (dlg)
         gtk_widget_destroy(dlg);
 
-    gtk_main_quit();
+    bComplete = TRUE;
 }
 
 void
@@ -874,3 +1047,310 @@ nsInstallDlg::PSDlgCancel(GtkWidget *aWidget, gpointer aData)
     if (dlg)
         gtk_widget_destroy(dlg);
 }
+
+void
+nsInstallDlg::DLPause(GtkWidget *aWidget, gpointer aData)
+{
+    DUMP("DLPause");
+
+    // set pause for download callback to return to libxpnet
+    bDLPause = TRUE;
+
+    // disbale pause button
+    gtk_widget_set_sensitive(gCtx->back, FALSE);
+
+    // enable resume button
+    gtk_widget_set_sensitive(gCtx->next, TRUE);
+}
+
+void
+nsInstallDlg::DLResume(GtkWidget *aWidget, gpointer aData)
+{
+    DUMP("DLResume");
+
+    if (!bDLPause)
+    {
+        DUMP("Not paused");
+        return;
+    }
+
+    if (bInstallClicked)
+    {
+        DUMP("Lingering signal from when Install clicked");
+        bInstallClicked = FALSE;
+        return;
+    }
+
+    DUMP("Unsetting bDLPause");
+    bDLPause = FALSE;
+
+    // disable resume button
+    gtk_widget_set_sensitive(gCtx->next, FALSE);
+
+    // enable pause button
+    gtk_widget_set_sensitive(gCtx->back, TRUE);
+
+    WorkDammitWork();
+ 
+    return;
+}
+
+void
+nsInstallDlg::DLCancel(GtkWidget *aWidget, gpointer aData)
+{
+    DUMP("DLCancel");
+
+    // show cancellation confirm dialog
+    // XXX    TO DO
+
+    // set cancel for download callback to return to libxpnet
+    bDLCancel = TRUE;
+
+#ifdef DEBUG
+    printf("%s %d: bDLPause: %d\tbDLCancel: %d\n", __FILE__, __LINE__, 
+                   bDLPause, bDLCancel);
+#endif
+
+    // already paused then take explicit action to quit
+    if (bDLPause)
+    {
+        // mode auto has no call to gtk_main()
+        if (gCtx->opt->mMode != nsXIOptions::MODE_AUTO)
+            gtk_main_quit();
+    }
+}
+
+int
+nsInstallDlg::CancelOrPause()
+{
+    int err;
+
+    if (bDLPause)
+    {
+        err = E_DL_PAUSE;
+    }
+    else if (bDLCancel)
+    {
+        err = E_DL_CANCEL;
+    }
+    
+    return err;
+}
+
+int
+nsInstallDlg::ShowCxnDroppedDlg()
+{
+    GtkWidget *cxnDroppedDlg, *label, *okButton, *packer;
+
+    // throw up dialog informing user to press resume
+    // or to cancel out
+    cxnDroppedDlg = gtk_dialog_new();
+    label = gtk_label_new(gCtx->Res("CXN_DROPPED"));
+    okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+    packer = gtk_packer_new();
+
+    if (cxnDroppedDlg && label && okButton && packer)
+    {
+        gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
+        gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
+                                GTK_ANCHOR_CENTER, GTK_FILL_X);
+        gtk_window_set_modal(GTK_WINDOW(cxnDroppedDlg), TRUE);
+        gtk_window_set_title(GTK_WINDOW(cxnDroppedDlg), gCtx->opt->mTitle);
+        gtk_window_set_position(GTK_WINDOW(cxnDroppedDlg), GTK_WIN_POS_CENTER);
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(cxnDroppedDlg)->vbox), 
+                          packer);
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(cxnDroppedDlg)->action_area),
+                          okButton);
+        gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
+                           GTK_SIGNAL_FUNC(CxnDroppedOK), cxnDroppedDlg);
+        gtk_widget_show_all(cxnDroppedDlg);
+    }
+    XI_GTK_UPDATE_UI();
+
+    return OK;
+}
+
+void
+nsInstallDlg::CxnDroppedOK(GtkWidget *aWidget, gpointer aData)
+{
+    GtkWidget *cxnDroppedDlg = (GtkWidget *) aData;
+    
+    if (cxnDroppedDlg)
+        gtk_widget_destroy(cxnDroppedDlg);
+
+    return;
+}
+
+void
+nsInstallDlg::HideNavButtons()
+{
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->cancel), gCtx->cancelID);
+
+    gtk_widget_hide(gCtx->back);
+    gtk_widget_hide(gCtx->next);
+    gtk_widget_hide(gCtx->cancel);
+}
+
+void
+nsInstallDlg::InitDLProgress()
+{
+    GtkWidget *titles[4];
+    GtkWidget *hbox;
+    GtkWidget *table;
+
+    gCtx->idlg->HideTable();
+
+    sDLProgress.vbox = gtk_vbox_new(FALSE, 10);
+    gtk_notebook_append_page(GTK_NOTEBOOK(gCtx->notebook), 
+        sDLProgress.vbox, NULL);
+    gtk_widget_show(sDLProgress.vbox);
+    
+    table = gtk_table_new(5, 2, FALSE);
+    gtk_box_pack_start(GTK_BOX(sDLProgress.vbox), table, FALSE, 
+        FALSE, 0);
+    gtk_widget_show(table);
+
+    // setup static title progress labels in table left column
+    titles[0] = gtk_label_new(gCtx->Res("DOWNLOADING"));
+    titles[1] = gtk_label_new(gCtx->Res("FROM"));
+    titles[2] = gtk_label_new(gCtx->Res("TO"));
+    titles[3] = gtk_label_new(gCtx->Res("STATUS"));
+
+    // setup dynamic progress labels in right column
+    sDLProgress.compName = gtk_label_new(gCtx->Res("UNKNOWN"));
+    sDLProgress.URL = gtk_label_new(gCtx->Res("UNKNOWN"));
+    sDLProgress.localPath = gtk_label_new(gCtx->Res("UNKNOWN"));
+    sDLProgress.status = gtk_label_new(gCtx->Res("UNKNOWN"));
+
+    // pack and show titles
+    for (int i = 0; i < 4; ++i)
+    {
+        hbox = gtk_hbox_new(FALSE, 10);
+        gtk_box_pack_end(GTK_BOX(hbox), titles[i], FALSE, FALSE, 0);
+        gtk_table_attach(GTK_TABLE(table), hbox, 
+            0, 1, i, i + 1, GTK_FILL, GTK_FILL, 5, 5);
+        gtk_widget_show(titles[i]);
+        gtk_widget_show(hbox);
+    }
+
+    // pack and show dynamic labels 
+    hbox = gtk_hbox_new(FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.compName, FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 0, 1,
+        GTK_FILL, GTK_FILL, 5, 5);
+    gtk_widget_show(sDLProgress.compName);
+    gtk_widget_show(hbox);
+
+    hbox = gtk_hbox_new(FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.URL, FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 1, 2,
+        GTK_FILL, GTK_FILL, 5, 5);
+    gtk_widget_show(sDLProgress.URL);
+    gtk_widget_show(hbox);
+
+    hbox = gtk_hbox_new(FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.localPath, FALSE, 
+        FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 2, 3,
+        GTK_FILL, GTK_FILL, 5, 5);
+    gtk_widget_show(sDLProgress.localPath);
+    gtk_widget_show(hbox);
+
+    hbox = gtk_hbox_new(FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.status, FALSE, 
+        FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 3, 4,
+        GTK_FILL, GTK_FILL, 5, 5);
+    gtk_widget_show(sDLProgress.status);
+    gtk_widget_show(hbox);
+
+    // init and show prog bar
+    sDLProgress.progBar = gtk_progress_bar_new();
+
+    // set to non-activity mode and initialize 
+    gtk_progress_set_activity_mode(GTK_PROGRESS(sDLProgress.progBar), FALSE);
+    gtk_progress_bar_update(GTK_PROGRESS_BAR(sDLProgress.progBar), (gfloat) 0);
+
+    // compute total download size
+    sDLProgress.downloadedBytes = 0;
+    sDLProgress.totalKB = TotalDLSize();
+
+    // show prog bar
+    hbox = gtk_hbox_new(TRUE, 10);
+    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.progBar, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(sDLProgress.vbox), hbox, FALSE, FALSE, 0);
+    gtk_widget_show(sDLProgress.progBar);
+    gtk_widget_show(hbox);
+
+    XI_GTK_UPDATE_UI();
+}
+
+void
+nsInstallDlg::InitInstallProgress()
+{
+    gtk_widget_hide(sDLProgress.vbox);
+    gCtx->idlg->ShowTable();
+}
+
+int
+nsInstallDlg::TotalDLSize()
+{
+    int total = 0; // in KB
+    int bCustom;
+    nsComponentList *comps;
+    nsComponent *currComp;
+    int archiveSize, currentSize;
+
+    bCustom = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
+    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
+    currComp = comps->GetHead();
+    
+    // loop through all components
+    while (currComp)
+    {
+        if ((bCustom && currComp->IsSelected()) || (!bCustom))
+        {
+            // if still have to download 
+            if (!currComp->IsDownloaded())
+            {
+                // find archive size - amount downloaded already
+                archiveSize = currComp->GetArchiveSize();
+                currentSize = currComp->GetCurrentSize();
+
+#ifdef DEBUG
+                printf("%s ar sz = %d cu sz = %d\n", currComp->GetArchive(), 
+                        archiveSize, currentSize);
+#endif
+
+                total += (archiveSize - currentSize);
+            }
+        }
+        currComp = currComp->GetNext();
+    }
+
+    return total;
+}
+
+void
+nsInstallDlg::CompressToFit(char *aOrigStr, char *aOutStr, int aOutStrLen)
+{
+    int origStrLen;
+    int halfOutStrLen;
+    char *lastPart; // last aOrigStr part start
+
+    if (!aOrigStr || !aOutStr || aOutStrLen <= 0)
+        return;
+
+    origStrLen = strlen(aOrigStr);
+    halfOutStrLen = (aOutStrLen/2) - 2; // minus 2 since ellipsis is 3 chars
+    lastPart = aOrigStr + origStrLen - halfOutStrLen;
+
+    strncpy(aOutStr, aOrigStr, halfOutStrLen);
+    *(aOutStr + halfOutStrLen) = 0;
+    strcat(aOutStr, "...");
+    strncat(aOutStr, lastPart, strlen(lastPart));
+    *(aOutStr + aOutStrLen + 1) = 0;
+}
+

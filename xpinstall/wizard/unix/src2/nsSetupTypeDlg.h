@@ -61,6 +61,10 @@ public:
     static void         DeleteInstDelete(GtkWidget *aWidget, gpointer aData);
     static void         DeleteInstCancel(GtkWidget *aWidget, gpointer aData);
     static int          ConstructPath(char *aDest, char *aTrunk, char *aLeaf);
+    static int          VerifyDiskSpace();
+    static int          DSAvailable();
+    static int          DSRequired();
+    static void         NoDiskSpaceOK(GtkWidget *aWidget, gpointer aData);
 
 /*---------------------------------------------------------------------*
  *   INI Properties

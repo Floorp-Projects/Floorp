@@ -42,8 +42,6 @@
 #include <dlfcn.h>
 #include <sys/stat.h>
 
-class nsFTPConn;
-
 /*------------------------------------------------------------------------*
  *   XPI Stub Glue
  *------------------------------------------------------------------------*/
@@ -76,19 +74,35 @@ public:
     int     Download(int aCustom, nsComponentList *aComps);
     int     Extract(nsComponent *aXPIEngine);
     int     Install(int aCustom, nsComponentList *aComps, char *aDestination);
-    void    SaveXPIs(void);
+    int     DeleteXPIs(int aCustom, nsComponentList *aComps);
 
     static void ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax);
     static int  ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal);
 
+    enum
+    {
+        OK          = 0,
+        E_PARAM     = -1201,
+        E_MEM       = -1202,
+        E_OPEN_MKR  = -1203,
+        E_WRITE_MKR = -1204,
+        E_READ_MKR  = -1205,
+        E_FIND_COMP = -1206,
+        E_STAT      = -1207
+    };
+
 private:
     int     MakeUniqueTmpDir();
     int     ParseURL(char *aURL, char **aHost, char **aDir);
-    int     FTPAnonGet(nsFTPConn *aConn, char *aDir, char *aAcrhive);
     int     LoadXPIStub(xpistub_t *aStub, char *aDestionation);
     int     InstallXPI(nsComponent *aComp, xpistub_t *aStub);
     int     UnloadXPIStub(xpistub_t *aStub);
-    int     CopyToTmp(int aCustom, nsComponentList *aComps);
+    int     GetFileSize(char *aPath);
+    int     SetDLMarker(char *aCompName);
+    int     GetDLMarkedComp(nsComponentList *aComps, int aCustom,
+                            nsComponent **aOutComp, int *aOutCompNum);
+    int     DelDLMarker();
+    int     TotalToDownload(int aCustom, nsComponentList *aComps);
 
     char    *mTmp;
     int     mTotalComps;

@@ -36,6 +36,14 @@ public:
     char    *mTitle;
     char    *mDestination;
     int     mSetupType;
+    int     mMode;
+
+    enum
+    {
+        MODE_DEFAULT = 0,
+        MODE_AUTO,
+        MODE_SILENT
+    };
 
     char    *mProxyHost;
     char    *mProxyPort;
