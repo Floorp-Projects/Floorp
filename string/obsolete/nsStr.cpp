@@ -442,48 +442,51 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEli
 PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
   if((aDest.mLength>0) && (aTarget.mLength>0) && (anOffset<aTarget.mLength)){
 
-    nsStr theCopy;
-    nsStr::Initialize(theCopy,eOneByte);
-    nsStr::Assign(theCopy,aTarget,0,aTarget.mLength,0);
-    if(aIgnoreCase){
-      nsStr::ChangeCase(theCopy,PR_FALSE); //force to lowercase
-    }
-
       //This little block of code builds up the boyer-moore skip table.
       //It might be nicer if this could be generated externally as passed in to improve performance.
     const int theSize=256;
     int theSkipTable[theSize];
     PRUint32 theIndex=0;
     for (theIndex=0;theIndex<theSize;++theIndex) {
-      theSkipTable[theIndex]=theCopy.mLength;
+      theSkipTable[theIndex]=aTarget.mLength;
     }
-    for (theIndex=0;theIndex<theCopy.mLength-1;++theIndex) {
-      theSkipTable[(PRUint32)GetCharAt(theCopy,theIndex)]=(theCopy.mLength-theIndex-1);
+    PRUnichar theChar=0;
+    if(aIgnoreCase) {
+      for (theIndex=0;theIndex<aTarget.mLength-1;++theIndex) {
+        theChar=nsCRT::ToLower(GetCharAt(aTarget,theIndex));
+        theSkipTable[(PRUint32)theChar]=(aTarget.mLength-theIndex-1);
+      }
+    }
+    else {
+      for (theIndex=0;theIndex<aTarget.mLength-1;++theIndex) {
+        theSkipTable[(PRUint32)GetCharAt(aTarget,theIndex)]=(aTarget.mLength-theIndex-1);
+      }
     }
 
       //and now we do the actual searching.      
     PRUint32 theMaxIndex=aDest.mLength-anOffset;
     for (theIndex=aTarget.mLength-1; theIndex< theMaxIndex; theIndex+= theSkipTable[(unsigned char)GetCharAt(aDest,theIndex)]) {
-      int iBuf =theIndex;
-      int iPat=aTarget.mLength-1;
+      int theDestIndex=theIndex;
+      int theTargetIndex=aTarget.mLength-1;
       
       PRBool matches=PR_TRUE;
-      while((iPat>=0) && (matches)){
-        PRUnichar theTargetChar=GetCharAt(theCopy,iPat);
-        PRUnichar theDestChar=GetCharAt(aDest,iBuf);
-        if(aIgnoreCase)
+      while((theTargetIndex>=0) && (matches)){
+        PRUnichar theTargetChar=GetCharAt(aTarget,theTargetIndex);
+        PRUnichar theDestChar=GetCharAt(aDest,theDestIndex);
+        if(aIgnoreCase) {
+          theTargetChar=nsCRT::ToLower(theTargetChar);
           theDestChar=nsCRT::ToLower(theDestChar);
+        }
         matches=PRBool(theTargetChar==theDestChar);
         if(matches){
-          --iBuf;
-          --iPat;
+          --theDestIndex;
+          --theTargetIndex;
         }
       }
-      if(-1==iPat){
-        return anOffset+iBuf+1;
+      if(-1==theTargetIndex){
+        return anOffset+theDestIndex+1;
       }
     } //for
-    nsStr::Destroy(theCopy,0);
   }//if
   return kNotFound;
 }
