@@ -37,7 +37,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         title="&messengerWindow.title;"
-        titlemodifier="&titleModifier.label;"
+        titledefault="&titledefault.label;"
         titlemenuseparator="&titleSeparator.label;"
         onload="OnLoadMessageWindow()"
         onunload="OnUnloadMessageWindow()"

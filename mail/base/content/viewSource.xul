@@ -53,7 +53,7 @@
         onload="onLoadViewSource();"
         contenttitlesetting="true"
         title="&mainWindow.title;" 
-        titlemodifier="&mainWindow.titlemodifier;" 
+        titledefault="&mainWindow.titlemodifier;" 
         titlepreface="&mainWindow.preface;"
         titlemenuseparator ="&mainWindow.titlemodifierseparator;"  
         windowtype="navigator:view-source"
