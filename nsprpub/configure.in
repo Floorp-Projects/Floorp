@@ -965,11 +965,33 @@ if test -n "$USE_PTHREADS"; then
     rm -f conftest*
     AC_MSG_RESULT($ac_cv_have_dash_pthread)
 
+	dnl
+	dnl See if -pthreads is supported.
+	dnl
+    ac_cv_have_dash_pthreads=no
+    if test "$ac_cv_have_dash_pthread" = "no"; then
+	    AC_MSG_CHECKING(whether ${CC-cc} accepts -pthreads)
+    	echo 'int main() { return 0; }' | cat > conftest.c
+	    ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
+    	if test $? -eq 0; then
+	    	if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthreads`" && test -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
+			    ac_cv_have_dash_pthreads=yes
+			    CFLAGS="$CFLAGS -pthreads"
+			    CXXFLAGS="$CXXFLAGS -pthreads"
+		    fi
+	    fi
+	    rm -f conftest*
+    	AC_MSG_RESULT($ac_cv_have_dash_pthreads)
+    fi
+
     case "$target" in
     *-mingw*|*-cygwin*|*-uwin*)
 	    ;;
     *-solaris*)
 	    AC_DEFINE(_REENTRANT)
+        if test "$ac_cv_have_dash_pthreads" = "yes"; then
+            PTHREAD_LDFLAGS=
+        fi
 	    ;;
     *-freebsd*)
 	    AC_DEFINE(_REENTRANT)
