@@ -14,53 +14,57 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+
 DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
 
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
+MAKE_OBJ_TYPE = DLL
+DLLNAME = nslocale
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+#RESFILE = $(DLLNAME).res
+
+MODULE=raptor 
+
+DEFINES=-DWIN32_LEAN_AND_MEAN
+
+MISCDEP=                        \
+ $(DIST)\lib\nslocale_s.lib
+ 
+OBJS =                                  \
+	.\$(OBJDIR)\nsCollationWin.obj   \
+	.\$(OBJDIR)\nsDateTimeFormatWin.obj         \
+	.\$(OBJDIR)\nsLocaleFactoryWin.obj          \
+	.\$(OBJDIR)\nsLocaleDLL.obj          \
+	$(NULL)
+
+LINCS= \
+		-I..\
+        -I$(PUBLIC)\locale		\
+        -I$(PUBLIC)\xpcom		\
+        -I$(PUBLIC)\unicharutil \
+        -I$(PUBLIC)\raptor		\
         $(NULL)
 
-DEFINES= -DWIN32_LEAN_AND_MEAN
-LIBRARY_NAME=locale
+LCFLAGS = \
+        $(LCFLAGS) \
+		$(DEFINES) \
+        $(NULL)
 
-CPPSRCS= \
-	nsCollationWin.cpp	\
-	nsDateTimeFormatWin.cpp \
-	nsLocaleFactoryWin.cpp \
-	$(NULL)
+LLIBS=				\
+ $(DIST)\lib\xpcom32.lib	\
+ $(DIST)\lib\raptorbase.lib	\
+ $(DIST)\lib\libplc21.lib       \
+ $(DIST)\lib\nslocale_s.lib		\
+$(LIBNSPR)  
 
-CPP_OBJS= \
-	.\$(OBJDIR)\nsCollationWin.obj \
-	.\$(OBJDIR)\nsDateTimeFormatWin.obj \
-	.\$(OBJDIR)\nsLocaleFactoryWin.obj \
-	$(NULL)
-
-MODULE=locale
-
-REQUIRES=xpcom
-
-INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\locale -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor -I..\
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=locale
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-
-LLIBS= \
-	$(DIST)\lib\xpcom32.lib	\
-	$(DIST)\lib\libplc21.lib	\
-	$(DIST)\lib\raptorbase.lib     \
-	$(DIST)\lib\locale_s.lib     \
-	$(LIBNSPR)	
-
+		 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL) $(LIBRARY) 
+install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\bin\$(DLLNAME).lib
+	rm -f $(DIST)\lib\$(DLLNAME).lib
+	

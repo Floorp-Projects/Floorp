@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=uconv
+DIRS=uconv unicharutil locale
 
 include <$(DEPTH)\layout\config\rules.mak>

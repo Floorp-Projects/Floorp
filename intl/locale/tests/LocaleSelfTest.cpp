@@ -27,7 +27,7 @@
 #ifdef XP_MAC
 #define LOCALE_DLL_NAME "LOCALE_DLL"
 #else
-#define LOCALE_DLL_NAME "LOCALE.DLL"
+#define LOCALE_DLL_NAME "NSLOCALE.DLL"
 #endif
 
 

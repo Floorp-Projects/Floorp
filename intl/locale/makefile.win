@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,21 +15,9 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+DEPTH=..\..
 
-
-MODULE=locale
-
-DEPTH=..\..\..
-
-EXPORTS=\
-    nsCollationCID.h           \
-	nsDateTimeFormatCID.h      \
-	nsICollation.h				\
-	nsIDateTimeFormat.h			\
-	nsILocale.h					\
-	nsILocaleFactory.h			\
-	nsLocaleCID.h				\
-	$(NULL)
-
-include <$(DEPTH)/config/rules.mak>
-
+DIRS=	public		\
+		src			
+    
+include <$(DEPTH)\layout\config\rules.mak>

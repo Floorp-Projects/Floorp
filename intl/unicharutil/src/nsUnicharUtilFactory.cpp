@@ -81,8 +81,9 @@ nsresult nsUnicharUtilFactory::CreateInstance(nsISupports *aDelegate,
   return res;
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID,
-                                           nsIFactory **aFactory) {
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* serviceMgr,
+                                           nsIFactory **aFactory)
+{
   if (aFactory == NULL) {
     return NS_ERROR_NULL_POINTER;
   }
