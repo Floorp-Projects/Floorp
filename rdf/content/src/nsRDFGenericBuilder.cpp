@@ -83,6 +83,8 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
+#include "nsIFormControl.h"
+#include "nsIDOMHTMLFormElement.h"
 
 // Return values for EnsureElementHasGenericChild()
 #define NS_RDF_ELEMENT_GOT_CREATED NS_RDF_NO_VALUE
@@ -3164,6 +3166,15 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
 
+    // 
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(result);
+    if (formControl) {
+        nsCOMPtr<nsIDOMHTMLFormElement> form;
+        rv = mDocument->GetForm(getter_AddRefs(form));
+        if (NS_SUCCEEDED(rv) && form)
+            formControl->SetForm(form);
+    }
+    
     rv = result->SetDocument(doc, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
     if (NS_FAILED(rv)) return rv;
