@@ -49,24 +49,11 @@ public:
     virtual string ValueForOption( const char *key );
 
     // Process management:
-    //   Initialize       - Initialize kernel services.  Default is to initialize
-    //                      NSPR.
-    //   ShowSplashScreen - Puts up splash screen.  Default is to do nothing.
-    //                      We will override per platform, probably.
-    //   IsSingleInstanceOnly - Default is PR_FALSE, platforms must override
-    //                      if they need to block multiple instances.
-    //   IsAlreadyRunning - Indicate whether another process is already running.
-    //                      Default returns PR_FALSE; platforms should override
-    //                      if they care about this (i.e., return PR_TRUE from
-    //                      PermitsMultipleInstances).
-    //   NotifyServerProcess - Passes request to the server process to be run.
-    //   ...synchronization stuff...TBD
-    virtual PRBool   Initialize();
-    virtual nsresult Exit( nsresult rv );
-    virtual PRBool   ShowSplashScreen();
-    virtual PRBool   IsSingleInstanceOnly() const;
-    virtual PRBool   IsAlreadyRunning() const;
-    virtual PRBool   NotifyServerProcess( int argc, char *argv[] );
+    //   Initialize       - Initialization; default does nothing.
+    //   OnExit           - Called just prior to exit; default returns
+    //                      input argument.
+    virtual nsresult Initialize();
+    virtual nsresult OnExit( nsresult rvIn );
 
     // AppShell loading:
     //   AppShellCID  - Returns CID for app shell to be loaded/started.
@@ -88,6 +75,14 @@ public:
 
 protected:
     virtual ~nsAppRunner();
+
+private:
+    int mArgc;
+    struct Arg {
+        const char *key;
+        const char *value;
+    } *mArg;
+    int IndexOfArg( const char *key, PRBool ignoreCase );
 }; //  nsAppRunner
 
 #endif

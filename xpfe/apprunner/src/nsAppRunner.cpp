@@ -33,18 +33,20 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsAppRunner, kIAppRunnerIID);
 
 // ctor
-nsAppRunner::nsAppRunner() {
+nsAppRunner::nsAppRunner() 
+    : mArgc( 0 ), mArg( 0 ) {
     NS_INIT_REFCNT();
 }
 
 // dtor
 nsAppRunner::~nsAppRunner() {
+    delete [] mArg;
 }
 
-// main
-//
-// Initialize, show splash screen, load and run the app shell.  All work is
-// farmed out to virtual functions to enable customization.
+/*---------------------------- nsAppRunner::main -------------------------------
+| Initialize, then load and run the app shell.  All work is farmed out to      |
+| virtual functions to enable customization.                     |             |
+------------------------------------------------------------------------------*/
 NS_IMETHODIMP
 nsAppRunner::main( int argc, char *argv[] ) {
 #if 0
@@ -59,44 +61,30 @@ nsAppRunner::main( int argc, char *argv[] ) {
     nsresult rv = Initialize();
 
     if ( rv == NS_OK ) {
-        // See if we need to manage multiple instances.
-        if ( IsSingleInstanceOnly() ) {
-            DisplayMsg( "nsAppRunner error", "SingleInstanceOnly not supported" );
-            // ??? rv = NS_ERROR_INVALID_REQUEST;
-        } else {
-        }
-
-        // Show splash screen:
-        rv = ShowSplashScreen();
+        // Load app shell.
+        rv = LoadAppShell();
 
         if ( rv == NS_OK ) {
-            // Load app shell.
-            rv = LoadAppShell();
+            // Execute the shell.
+            rv = AppShell()->Initialize();
 
             if ( rv == NS_OK ) {
-                // Execute the shell.
-                rv = AppShell()->Initialize();
+                // Run the shell.
+                rv = AppShell()->Run();
 
-                if ( rv == NS_OK ) {
-                    // Run the shell.
-                    rv = AppShell()->Run();
+                // Shut it down.
+                AppShell()->Shutdown();
 
-                    // Shut it down.
-                    AppShell()->Shutdown();
-
-                    if ( rv != NS_OK ) {
-                        DisplayMsg( "nsAppRunner error", "app shell failed to run, rv=0x%lX", rv );
-                    }
-                } else {
-                    DisplayMsg( "nsAppRunner error", "app shell initialization failed, rv=0x%lX", rv );
+                if ( rv != NS_OK ) {
+                    DisplayMsg( "nsAppRunner error", "app shell failed to run, rv=0x%lX", rv );
                 }
             } else {
-                char *cid = AppShellCID().ToString();
-                DisplayMsg( "nsAppRunner error", "Unable to load app shell (CID=%s), rv=0x%lX", cid, rv );
-                delete [] cid;
+                DisplayMsg( "nsAppRunner error", "app shell initialization failed, rv=0x%lX", rv );
             }
         } else {
-            DisplayMsg( "nsAppRunner error", "ShowSplashScreen failed, rv=0x%lX", rv );
+            char *cid = AppShellCID().ToString();
+            DisplayMsg( "nsAppRunner error", "Unable to load app shell (CID=%s), rv=0x%lX", cid, rv );
+            delete [] cid;
         }
     } else {
         DisplayMsg( "nsAppRunner error", "Initialize failed, rv=0x%lX", rv );
@@ -106,9 +94,79 @@ nsAppRunner::main( int argc, char *argv[] ) {
 #endif
 }
 
-    virtual PRBool      ParseCommandLine( int argc, char *argv[] );
-    virtual PRBool      IsOptionSpecified( const char *key );
-    virtual const char *ValueForOption( const char *key );
+
+/*---------------------- NSAppRunner::ParseCommandLine -------------------------
+| Store the command line arguments in data members with  minor twiddling to    |
+| simplify lookup.                                                             |
+------------------------------------------------------------------------------*/
+PRBool NSAppRunner::ParseCommandLine( int argc, char *argv[] ) { {
+    mArgc = argc;
+
+    // Allocate array of arg info structures.
+    mArg = new [argc] Arg;
+
+    // Fill in structures.
+    for( int i = 0; i < mArgc; i++ ) {
+        char *p = argv[i];
+
+        // "Key" is always the beginning
+        mArg[i].key = p;
+
+        // Bump pointer till we get to null or double quote.
+        while ( *p && *p != '"' ) {
+            p++;
+        }
+
+        // If not null, get value.
+        if ( *p ) { 
+            *p++ = 0; // Terminate key and advance pointer.
+
+            // Value starts here.
+            mArg[i].value = p;
+
+            // Strip trailing '"'.
+            if ( p[ PR_strlen(p) ] == '"' ) {
+                p[ PR_strlen(p) ] = 0;
+            }
+        } else {
+            // Have value point to this null string.
+            mArg[i].value = p;
+        }
+
+    }
+
+    return PR_TRUE;
+}
+
+
+/*---------------------- NSAppRunner::IsOptionSpecified ------------------------
+| Enumerate array of arg structures, looking for key.                          |
+------------------------------------------------------------------------------*/
+PRBool NSAppRunner::IsOptionSpecified( const char *key, PRBool ignoreCase ) {
+    PRBool result = PR_FALSE;
+    for( int i = 0; i < mArgc; i++ ) {
+        if ( ignoreCase ) {
+            if ( PR_strcmpi( key, mArg[i].key ) == 0 ) {
+                result = PR_TRUE;
+                break;
+            }
+        } else {
+            if ( PR_strcmp( key, mArg[i].key ) == 0 ) {
+                result = PR_TRUE;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+/*----------------------- NSAppRunner::*ValueForOption -------------------------
+  Look up key
+------------------------------------------------------------------------------*/
+const char *NSAppRunner::ValueForOption( const char *key, PRBool ignoreCase ) {
+    return 0;
+}
+
 
     // Process management:
     //   Initialize       - Initialize kernel services.  Default is to initialize
