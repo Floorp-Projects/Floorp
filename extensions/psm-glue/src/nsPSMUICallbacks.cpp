@@ -45,6 +45,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsIXULWindow.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -208,6 +209,17 @@ extern "C" void CARTMAN_UIEventLoop(void *data)
 
 PRStatus InitPSMEventLoop(PCMT_CONTROL control, PRThread **aThread)
 {
+    nsresult rv;
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    if (!prefs)
+      return PR_FAILURE;
+
+    // check for the ui pref
+    PRBool handleUI = PR_TRUE;
+    rv = prefs->GetBoolPref("security.ui.enable", &handleUI);
+    if (NS_FAILED(rv) || !handleUI)
+      return PR_SUCCESS;
+
 	if (!aThread)
 		return PR_FAILURE;
 		
@@ -227,9 +239,20 @@ PRStatus InitPSMUICallbacks(PCMT_CONTROL control)
     if (!control)
         return PR_FAILURE;  
     
+    nsresult rv;
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    if (!prefs)
+        return PR_FAILURE;
+
     CMT_SetPromptCallback(control, (promptCallback_fn)PromptUserCallback, nsnull);
     CMT_SetAppFreeCallback(control, (applicationFreeCallback_fn) ApplicationFreeCallback);
     CMT_SetFilePathPromptCallback(control, (filePathPromptCallback_fn) FilePathPromptCallback, nsnull);
+
+    // check for the pref
+    PRBool handleUI = PR_TRUE;
+    rv = prefs->GetBoolPref("security.ui.enable", &handleUI);
+    if (NS_FAILED(rv) || !handleUI)
+        return PR_SUCCESS;
 
     if (CMT_SetUIHandlerCallback(control, (uiHandlerCallback_fn) CartmanUIHandler, NULL) != CMTSuccess) 
             return PR_FAILURE;
