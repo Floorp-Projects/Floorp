@@ -271,7 +271,7 @@ static nsrefcnt gRefCnt;
 void nsHTMLAtoms::AddrefAtoms()
 {
   if (0 == gRefCnt) {
-    mozAnonymousBlock = NS_NewAtom(":-MOZ-ANONYMOUS-BLOCK");
+    mozAnonymousBlock = NS_NewAtom(":MOZ-ANONYMOUS-BLOCK");
 
     _baseHref = NS_NewAtom(NS_HTML_BASE_HREF);
     _baseTarget = NS_NewAtom(NS_HTML_BASE_TARGET);
