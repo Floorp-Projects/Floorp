@@ -385,8 +385,6 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
         return PR_FAILURE;
     }
 
-	LOCK_DNS();
-
 #if defined(_PR_HAVE_GETIPNODEBYNAME)
 	if (flags & PR_AI_V4MAPPED)
 		tmp_flags |= AI_V4MAPPED;
@@ -400,8 +398,10 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     	md_af = af;
 #endif
 
+    /* Do not need to lock the DNS lock if getipnodebyname() is called */
 #ifdef _PR_INET6
 #ifdef _PR_HAVE_GETHOSTBYNAME2
+    LOCK_DNS();
     if (af == PR_AF_INET6)
     {
 #ifdef _PR_INET6_PROBE
@@ -427,9 +427,13 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
     if (_pr_ipv6_is_present == PR_TRUE)
     	h = (*((_pr_getipnodebyname_t)_pr_getipnodebyname_fp))(name, md_af, tmp_flags, &error_num);
-	else
+    else
+    {
+        LOCK_DNS();
     	h = gethostbyname(name);
+    }
 #else /* _PR_INET6 */
+    LOCK_DNS();
 #ifdef XP_OS2_VACPP
 	h = gethostbyname((char *)name);
 #else
@@ -497,7 +501,18 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #endif
 	}
 
-	UNLOCK_DNS();
+    /* Must match the convoluted logic above for LOCK_DNS() */
+#ifdef _PR_INET6
+#ifdef _PR_HAVE_GETHOSTBYNAME2
+    UNLOCK_DNS();
+#endif	/* _PR_HAVE_GETHOSTBYNAME2 */
+#elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
+    if (_pr_ipv6_is_present == PR_FALSE)
+        UNLOCK_DNS();
+#else /* _PR_INET6 */
+    UNLOCK_DNS();
+#endif /* _PR_INET6 */
+
 	return rv;
 }
 
@@ -516,7 +531,6 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-	LOCK_DNS();
 	if (hostaddr->raw.family == PR_AF_INET6)
 	{
 #if defined(_PR_INET6_PROBE)
@@ -561,6 +575,7 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 		addrlen = sizeof(hostaddr->inet.ip);
 	}
 
+    /* Do not need to lock the DNS lock if getipnodebyaddr() is called */
 #if defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6)
 	h = getipnodebyaddr(addr, addrlen, af, &error_num);
 #elif defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6_PROBE)
@@ -568,8 +583,12 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
     	h = (*((_pr_getipnodebyaddr_t)_pr_getipnodebyaddr_fp))(addr, addrlen,
 				af, &error_num);
 	else
+    {
+        LOCK_DNS();
 		h = gethostbyaddr(addr, addrlen, af);
+    }
 #else	/* _PR_HAVE_GETIPNODEBYADDR */
+    LOCK_DNS();
 #ifdef XP_OS2_VACPP
 	h = gethostbyaddr((char *)addr, addrlen, af);
 #else
@@ -614,7 +633,16 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 			(*((_pr_freehostent_t)_pr_freehostent_fp))(h);
 #endif
 	}
-	UNLOCK_DNS();
+
+    /* Must match the convoluted logic above for LOCK_DNS() */
+#if defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6)
+#elif defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6_PROBE)
+    if (_pr_ipv6_is_present == PR_FALSE)
+        UNLOCK_DNS();
+#else	/* _PR_HAVE_GETIPNODEBYADDR */
+    UNLOCK_DNS();
+#endif /* _PR_HAVE_GETIPNODEBYADDR */
+
 	return rv;
 }
 
