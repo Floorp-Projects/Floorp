@@ -491,232 +491,182 @@ int rv, err;
 PRInt32
 _MD_pr_poll (PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
-    PRPollDesc *pd, *epd;
-    PRInt32 n, err, pdcnt;
-    PRThread *me = _PR_MD_CURRENT_THREAD();
-
-    fd_set rd, wt, ex;
+	PRInt32 rc = 0;
+    fd_set rd, wr;
     struct timeval tv, *tvp = NULL;
-    int maxfd = -1;                      
-    int rv;
+	PRPollDesc *pd, *epd;
+	int i = 0, j = 0;
+	int maxfd = -1;
+    PRInt32 osfd;
+    PRInt16 in_flags;
+    PRFileDesc *bottom;
 
-    ConnectListNode currentConnectList[64];
-    int currentConnectListCount = 0;
-    int i,j;
-    int connectResult = 0;
-    int connectError = 0;
-
-    /*
-     * For restarting _MD_SELECT() if it is interrupted by a signal.
-     * We use these variables to figure out how much time has elapsed
-     * and how much of the timeout still remains.
-     */
-    PRIntervalTime start, elapsed, remaining;
+	/*printf("POLL: entering _MD_pr_poll\n");*/
+	
+	/*	
+	 * Is it an empty set? If so, just sleep for the timeout and return
+	 */    
+    if (npds < 1)
+    {
+		/*printf("POLL: empty set.  exiting _MD_pr_poll\n");*/
+        PR_Sleep(timeout);
+		return rc;
+    }
 
     FD_ZERO(&rd);
-    FD_ZERO(&wt);
-    FD_ZERO(&ex);
+    FD_ZERO(&wr);
 
-    for (pd = pds, epd = pd + npds; pd < epd; pd++) {
-         PRInt32 osfd;
-         PRInt16 in_flags = pd->in_flags;
-         PRFileDesc *bottom = pd->fd;
- 
-         if ((NULL == bottom) || (in_flags == 0)) {
-             continue;
-         }
-         while (bottom->lower != NULL) {
-             bottom = bottom->lower;
-         }
-         osfd = bottom->secret->md.osfd;
-
-	if( (in_flags & PR_POLL_WRITE) || (in_flags & PR_POLL_EXCEPT) ) {
-
-	    PR_Lock( _connectLock );
-
-	    for( i = 0; i < connectCount; i++ ) {
-
-		if( connectList[i].osfd == osfd ) {
-
-		    memcpy( &currentConnectList[currentConnectListCount], &connectList[i], sizeof( connectList[i] ) );
-		    currentConnectListCount++;
-	            break;
-		}
-	    }
-
-	    PR_Unlock( _connectLock );
-	}
-
-        if (in_flags & PR_POLL_READ)  {
-                FD_SET(osfd, &rd); 
-		if( osfd > maxfd ) maxfd = osfd;
-        }
-   }
-   if (timeout != PR_INTERVAL_NO_TIMEOUT) {
-        tv.tv_sec = PR_IntervalToSeconds(timeout);
-        tv.tv_usec = PR_IntervalToMicroseconds(timeout) % PR_USEC_PER_SEC;
-        tvp = &tv;
-        start = PR_IntervalNow();
-   }
-
-   if( currentConnectListCount > 0 ) {
-
-	tv.tv_sec = 0;
-	tv.tv_usec = 100000L;
-	tvp = &tv;
-	start = PR_IntervalNow();
-   }
-
-retry:
-   if( currentConnectListCount > 0 ) {
-
-	for( i = 0; i < currentConnectListCount; i++ ) {
-
-		connectResult = connect( currentConnectList[i].osfd,
-				&currentConnectList[i].addr,
-				&currentConnectList[i].addrlen );
-		connectError = _MD_ERRNO();
-
-		if( ( connectResult < 0 ) && 
-			( connectError == EINTR ||
-			  connectError == EWOULDBLOCK ||
-			  connectError == EINPROGRESS ||
-			  connectError == EALREADY ) ) {
-
-		    continue;
-		}
-
-		PR_Lock( _connectLock );
-
-		for( j = 0; j < connectCount; j++ ) {
-
-		    if( connectList[j].osfd == currentConnectList[i].osfd ) {
-
-			if( j == ( connectCount - 1 ) ) {
-
-				connectList[j].osfd = -1;
-
-			} else {
-
-			    for( ; j < connectCount; j++ )
-				memcpy( &connectList[j], &connectList[j+1], sizeof( connectList[j] ) );
+	/*	
+	 * first, sort out the new connects, the reads, and the writes
+	 */	
+	epd = pds + npds;
+	for(pd = pds; pd < epd; pd++)
+	{
+		in_flags = pd->in_flags;
+		bottom = pd->fd;
+		
+		if(bottom != 0 && in_flags != 0)
+		{
+			while(bottom->lower != 0)
+			{
+				bottom = bottom->lower;
 			}
-			connectCount--;
-			break;
-		    }
+			osfd = bottom->secret->md.osfd;
+			
+			if(in_flags & PR_POLL_WRITE || in_flags & PR_POLL_EXCEPT)
+			{
+				/*printf("POLL: adding to write\n");*/
+				FD_SET(osfd, &wr);
+				if( osfd > maxfd ) maxfd = osfd;
+			}
+			if(in_flags & PR_POLL_READ || in_flags & PR_POLL_EXCEPT)
+			{
+				/*printf("POLL: adding to read\n");*/
+				FD_SET(osfd, &rd);
+				if( osfd > maxfd ) maxfd = osfd;
+			}
 		}
+		
+		
+	} 
 
-		PR_Unlock( _connectLock );
+	if(maxfd >= 0)
+	{
+		PRInt32 n;
+		do {
+		    PRIntervalTime start = PR_IntervalNow();
+	  		if (timeout != PR_INTERVAL_NO_TIMEOUT)
+			{
+			  /*printf("POLL: timeout = %ld\n", (long) PR_IntervalToMicroseconds(timeout));*/
+	      	  tv.tv_sec = PR_IntervalToSeconds(timeout);
+	      	  tv.tv_usec = PR_IntervalToMicroseconds(timeout) % PR_USEC_PER_SEC;
+	       	  tvp = &tv;
+			}
 
-		FD_ZERO( &rd );
-		FD_SET( currentConnectList[i].osfd, &wt );
-		FD_SET( currentConnectList[i].osfd, &ex );
-		n = 1;
-		goto afterselect;
+			
+			n = select(maxfd + 1, &rd, &wr, 0, tvp);
+			/*printf("POLL: maxfd = %d, select returns %d\n", maxfd, n);*/
+		    if ((n <= 0) && (timeout != PR_INTERVAL_NO_TIMEOUT))
+			{
+				timeout -= PR_IntervalNow() - start;
+				if(timeout <= 0)
+				{
+					/* timed out */
+					n = 0;
+				}
+			}
+			
+		} while(n < 0 && errno == EINTR);
+		
+		if(n > 0)
+		{
+			epd = pds + npds;
+			for(pd = pds; pd < epd; pd++)
+			{
+				int selected;
+				in_flags = pd->in_flags;
+				bottom = pd->fd;
+				selected = 0;
+						
+				if(bottom != 0 && in_flags != 0)
+				{
+					while(bottom->lower != 0)
+					{
+						bottom = bottom->lower;
+					}
+					osfd = bottom->secret->md.osfd;
+					if (FD_ISSET(osfd, &rd))
+					{
+                        pd->out_flags |= PR_POLL_READ;
+						selected++;
+               		}
+                	if (FD_ISSET(osfd, &wr)) 
+					{			
+                        pd->out_flags |= PR_POLL_WRITE;
+						selected++;
+	                }
+					
+					if(selected > 0)
+					{
+						rc++;
+						/*
+					 	 * check if it is a pending connect
+						 */
+						PR_Lock( _connectLock );
+	   					for( i = 0; i < connectCount; i++ ) 
+						{
+							if(connectList[i].osfd == osfd)
+							{
+								int connectError;
+								int connectResult;
+
+								connectResult = connect(connectList[i].osfd,
+												&connectList[i].addr,
+												connectList[i].addrlen);
+								connectError = errno;
+
+								if(connectResult < 0 ) 
+								{
+									if(connectError == EINTR || connectError == EWOULDBLOCK
+									  || connectError == EINPROGRESS || connectError == EALREADY)
+									{
+										break;
+									}
+								}
+								
+								if(i == (connectCount - 1))
+								{
+									connectList[i].osfd = -1;
+								} else {
+				    				for(j = i; j < connectCount; j++ )
+									{
+										memcpy( &connectList[j], &connectList[j+1],
+														sizeof(connectList[j]));
+									}
+								}
+								connectCount--;
+									
+				   				bottom->secret->md.connectReturnValue = connectResult;
+		   						bottom->secret->md.connectReturnError = connectError;
+		   						bottom->secret->md.connectValueValid = PR_TRUE;
+	            				break;
+							}
+						}
+						
+						
+						PR_Unlock( _connectLock );
+					}
+				} else {
+		        	pd->out_flags = 0;
+                    continue;
+				}
+				
+			}
+		}
 	}
-   }
 
-   if( maxfd == -1 ) {
-	snooze( 100000L );
-	goto retry;
-   }
-   n = select(maxfd + 1, &rd, NULL, NULL, tvp);
-afterselect:
-   if ( (n == -1 && errno == EINTR) || (n == 0 && currentConnectListCount > 0 ) ) {
-        if (timeout == PR_INTERVAL_NO_TIMEOUT) {
-                goto retry;
-        } else {
-                elapsed = (PRIntervalTime) (PR_IntervalNow() - start);
-                if (elapsed > timeout) {
-                        n = 0;  /* timed out */
-           } else {
-                remaining = timeout - elapsed;
-                tv.tv_sec = PR_IntervalToSeconds(remaining);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                                remaining - PR_SecondsToInterval(tv.tv_sec));
-                goto retry;
-           }
-       }
-   }
-
-   if (n > 0) {
-        n = 0;
-        for (pd = pds, epd = pd + npds; pd < epd; pd++) {
-                PRInt32 osfd;
-                PRInt16 in_flags = pd->in_flags;
-                PRInt16 out_flags = 0;
-                PRFileDesc *bottom = pd->fd;
-
-                if ((NULL == bottom) || (in_flags == 0)) {
-                        pd->out_flags = 0;
-                        continue;
-                }
-                while (bottom->lower != NULL) {
-                        bottom = bottom->lower;
-                }
-                osfd = bottom->secret->md.osfd;
-
-                if ((in_flags & PR_POLL_READ) && FD_ISSET(osfd, &rd))  {
-                        out_flags |= PR_POLL_READ;
-                }
-                if ((in_flags & PR_POLL_WRITE) && FD_ISSET(osfd, &wt)) {
-                        out_flags |= PR_POLL_WRITE;
-                }
-                if ((in_flags & PR_POLL_EXCEPT) && FD_ISSET(osfd, &ex)) {
-                        out_flags |= PR_POLL_EXCEPT;
-                }
-
-		if ( FD_ISSET(osfd, &wt) && FD_ISSET(osfd, &ex ) ) {
-
-		    bottom->secret->md.connectReturnValue = connectResult;
-		    bottom->secret->md.connectReturnError = connectError;
-		    bottom->secret->md.connectValueValid = PR_TRUE;
-		}
-
-                pd->out_flags = out_flags;
-                if (out_flags) {
-                        n++;
-                }
-        }
-        PR_ASSERT(n > 0);
-   } else if (n < 0) {
-        err = _MD_ERRNO();
-        if (err == EBADF) {
-	    /* Find the bad fds */
-	    n = 0;
-	    for (pd = pds, epd = pd + npds; pd < epd; pd++) {
-		int optval;
-		int optlen = sizeof(optval);
-		PRFileDesc *bottom = pd->fd;
-
-		pd->out_flags = 0;
-		if ((NULL == bottom) || (pd->in_flags == 0)) {
-		    continue;
-		}
-		while (bottom->lower != NULL) {
-		    bottom = bottom->lower;
-		}
-#if 0
-/*
- * BeOS doesn't have this feature of getsockopt.
-*/
-		if (getsockopt(bottom->secret->md.osfd, SOL_SOCKET,
-			SO_TYPE, (char *) &optval, &optlen) == -1) {
-		    PR_ASSERT(_MD_ERRNO() == ENOTSOCK);
-		    if (_MD_ERRNO() == ENOTSOCK) {
-			pd->out_flags = PR_POLL_NVAL;
-			n++;
-		    }
-		}
-#endif
-	    }
-	    PR_ASSERT(n > 0);
-        } else {
-	    PR_ASSERT(err != EINTR);  /* should have been handled above */
-	    _PR_MD_MAP_SELECT_ERROR(err);
-        }
-   }
-   return n;
+	/*printf("POLL: exiting _MD_pr_poll\n");*/
+	return rc;
 }
 
 /*

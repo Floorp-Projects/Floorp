@@ -97,6 +97,8 @@ struct PLEventQueue {
     HWND         eventReceiverWindow;
 #elif defined(XP_OS2)
     HWND         eventReceiverWindow;
+#elif defined(XP_BEOS)
+    port_id      eventport;
 #endif
 };
 
@@ -651,6 +653,28 @@ failed:
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
     return PR_FAILURE;
+#elif defined(XP_BEOS)
+	/* hook up to the nsToolkit queue, however the appshell
+	 * isn't necessairly started, so we might have to create
+	 * the queue ourselves
+	 */
+	char		portname[64];
+	char		semname[64];
+	sprintf(portname, "event%lx", self->handlerThread);
+	sprintf(semname, "sync%lx", self->handlerThread);
+
+	if((self->eventport = find_port(portname)) < 0)
+	{
+		/* create port
+		 */
+		self->eventport = create_port(100, portname);
+
+		/* We don't use the sem, but it has to be there
+		 */
+		create_sem(0, semname);
+	}
+
+    return PR_SUCCESS;
 #else
     return PR_SUCCESS;
 #endif
@@ -725,9 +749,20 @@ _pl_NativeNotify(PLEventQueue* self)
 #endif /* XP_UNIX */
 
 #if defined(XP_BEOS)
+struct ThreadInterfaceData
+{
+	void	*data;
+	int32	sync;
+};
+
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
+	struct ThreadInterfaceData	 id;
+	id.data = self;
+	id.sync = false;
+	write_port(self->eventport, 'natv', &id, sizeof(id));
+
     return PR_SUCCESS;    /* Is this correct? */
 }
 #endif /* XP_BEOS */

@@ -638,25 +638,6 @@ PR_LoadLibrary(const char *name)
     }
 #endif
 
-#ifdef XP_BEOS
-    {
-	image_id h = load_add_on( name );
-
-	if( h == B_ERROR || h <= 0 ) {
-
-	    h = 0;
-	    result = NULL;
-	    PR_DELETE( lm );
-	    lm = NULL;
-	    goto unlock;
-	}
-	lm->name = strdup(name);
-	lm->dlh = (void*)h;
-	lm->next = pr_loadmap;
-	pr_loadmap = lm;
-    }
-#endif
-
 #ifdef XP_UNIX
 #ifdef HAVE_DLL
     {
@@ -687,6 +668,36 @@ PR_LoadLibrary(const char *name)
 #endif /* XP_UNIX */
 
     lm->refCount = 1;
+
+#ifdef XP_BEOS
+    {
+	image_info info;
+	int32 cookie = 0;
+	image_id h = B_ERROR;
+
+	while(get_next_image_info(0, &cookie, &info) == B_OK)
+		if(strcmp(name, info.name + strlen(info.name) - strlen(name)) == 0) {
+			h = info.id;
+			lm->refCount++;	/* it has been already loaded implcitly, so pretend it already had a control structure and ref */
+		}
+
+	if(h == B_ERROR)
+		h = load_add_on( name );
+
+	if( h == B_ERROR || h <= 0 ) {
+	    h = 0;
+	    result = NULL;
+	    PR_DELETE( lm );
+	    lm = NULL;
+	    goto unlock;
+	}
+	lm->name = strdup(name);
+	lm->dlh = (void*)h;
+	lm->next = pr_loadmap;
+	pr_loadmap = lm;
+    }
+#endif
+
     result = lm;    /* success */
     PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Loaded library %s (load lib)", lm->name));
 
