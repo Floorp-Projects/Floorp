@@ -133,7 +133,6 @@ var downloadViewController = {
     var selectionCount = gDownloadView.selectedItems.length;
     switch (aCommand) {
     case "cmd_downloadFile":
-      downloadFile();
       return true;
     case "cmd_openfile":
     case "cmd_showinshell":
@@ -158,7 +157,7 @@ var downloadViewController = {
     var selection = gDownloadView.selectedItems;
     switch (aCommand) {
     case "cmd_downloadFile":
-      dump("*** show a dialog that lets a user specify a URL to download\n");
+      downloadFile();
       break;
     case "cmd_properties":
       dump("*** show properties for selected item\n");
@@ -181,6 +180,7 @@ var downloadViewController = {
       // a) Prompt user to confirm end of transfers in progress
       // b) End transfers
       // c) Delete entries from datasource
+      deleteItem(selection);
       break;
     case "cmd_selectAll":
       gDownloadView.selectAll();
@@ -244,6 +244,52 @@ function downloadFile()
       dlmgr.addItem(fp.file.leafName, uri, fp.file, null, null);
     }
   }
+}
+
+function deleteItem(aElements)
+{
+  var selection = [];
+  for (var i = 0; i < aElements.length; ++i) 
+    selection[i] = aElements[i];
+
+  var itemToSelect;
+  for (i = 0; i < selection.length; ++i) {
+    var itemResource = gRDFService.GetResource(NODE_ID(selection[i]));
+    itemToSelect = getItemToSelect(selection[i]);
+
+    // Alert the user that transfers will be halted
+    // End transfers
+    
+    // Remove the download from the database
+    var downloads = getDownloadsContainer();
+    downloads.RemoveElement(itemResource, true);
+  }
+  gDownloadView.selectItem(itemToSelect);
+  
+  var ds = gRDFService.GetDataSource("rdf:downloads");
+  var remote = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+  ds.Flush();
+}
+
+function getItemToSelect(aElement)
+{
+  if (aElement.nextSibling)
+    return aElement.nextSibling;
+  else if (aElement.previousSibling)
+    return aElement.previousSibling;
+  return aElement.parentNode.parentNode;
+}
+
+function getDownloadsContainer()
+{
+  var downloads = gRDFService.GetResource("NC:DownloadsRoot", true);
+  
+  const ctrContractID = "@mozilla.org/rdf/container;1";
+  const ctrIID = Components.interfaces.nsIRDFContainer;
+  var ctr = Components.classes[ctrContractID].getService(ctrIID);
+
+  ctr.Init(gDownloadView.database, downloads);
+  return ctr;
 }
 
 function getFileForItem(aElement)

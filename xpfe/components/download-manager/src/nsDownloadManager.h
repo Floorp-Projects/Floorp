@@ -51,12 +51,15 @@
 #include "nsIRequestObserver.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
+#include "nsHashtable.h"
  
 class nsDownloadManager : public nsIDownloadManager,
-                          public nsIRDFDataSource
+                          public nsIRDFDataSource,
+                          public nsIRDFRemoteDataSource
 {
 public:
   NS_DECL_NSIRDFDATASOURCE
+	NS_DECL_NSIRDFREMOTEDATASOURCE
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
 
@@ -76,6 +79,7 @@ protected:
   nsCOMPtr<nsIRDFService> mRDFService;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
 
+  nsHashtable* mDownloadItems;
 };
 
 
@@ -84,6 +88,7 @@ class DownloadItem : public nsIWebProgressListener
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_ISUPPORTS
   DownloadItem();
   virtual ~DownloadItem();
 

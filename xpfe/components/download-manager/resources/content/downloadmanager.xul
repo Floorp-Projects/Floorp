@@ -176,7 +176,7 @@
                         src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
               <treecell>
-                <progressmeter class="tree-progressmeter" value="rdf:http://home.netscape.com/NC-rdf#Progress"/>
+                <progressmeter class="tree-progressmeter" value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
               </treecell>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
