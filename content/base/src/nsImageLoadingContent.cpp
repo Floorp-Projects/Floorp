@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim: ft=cpp tw=78 sw=2 et ts=2
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -65,12 +66,14 @@
 
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
+#include "nsIDOMNode.h"
 
 #include "nsContentUtils.h"
 
 // Statics
 imgILoader* nsImageLoadingContent::sImgLoader = nsnull;
 nsIIOService* nsImageLoadingContent::sIOService = nsnull;
+
 
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
@@ -365,7 +368,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     return NS_OK;
   }
   
-  CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED);
+  CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED, PR_FALSE);
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
@@ -409,16 +412,19 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // not to show the broken image icon.  If the load is blocked by the
   // content policy or security manager, we will want to cancel with
   // the error code from those.
-  nsresult cancelResult = nsContentUtils::CanLoadImage(imageURI, this, doc);
-  if (NS_SUCCEEDED(cancelResult)) {
-    cancelResult = NS_ERROR_IMAGE_SRC_CHANGED;
-  }
 
-  mImageIsBlocked = (cancelResult == NS_ERROR_IMAGE_BLOCKED);
-  
-  CancelImageRequests(cancelResult);
+  // TODOtw: figure out whether we should show alternate text
+  //     (CanLoadImage can tell us this, since Content Policy tells it)
+  PRBool loadImage = nsContentUtils::CanLoadImage(imageURI, this, doc);
 
-  if (cancelResult != NS_ERROR_IMAGE_SRC_CHANGED) {
+  nsresult cancelResult = loadImage ? NS_ERROR_IMAGE_SRC_CHANGED
+                                    : NS_ERROR_IMAGE_BLOCKED;
+
+  mImageIsBlocked = !loadImage;
+
+  CancelImageRequests(cancelResult, PR_FALSE);
+
+  if (mImageIsBlocked) {
     // Don't actually load anything!  This was blocked by CanLoadImage.
     return NS_OK;
   }
@@ -481,7 +487,8 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
 }
 
 void
-nsImageLoadingContent::CancelImageRequests(nsresult aReason)
+nsImageLoadingContent::CancelImageRequests(nsresult aReason,
+                                           PRBool   aEvenIfSizeAvailable)
 {
   // Cancel the pending request, if any
   if (mPendingRequest) {
@@ -495,7 +502,8 @@ nsImageLoadingContent::CancelImageRequests(nsresult aReason)
     PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
     mCurrentRequest->GetImageStatus(&loadStatus);
     
-    if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+    if (aEvenIfSizeAvailable ||
+        !(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
       mCurrentRequest->Cancel(aReason);
       mCurrentRequest = nsnull;
     }

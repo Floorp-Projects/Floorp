@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+  * vim: ft=cpp tw=78 sw=2 et ts=2
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -49,6 +50,7 @@
 #define nsCSSLoader_h__
 
 class CSSLoaderImpl;
+class nsIDOMNode;
 
 #include "nsIURI.h"
 #include "nsIParser.h"
@@ -270,7 +272,8 @@ public:
 private:
   nsresult CheckLoadAllowed(nsIURI* aSourceURI,
                             nsIURI* aTargetURI,
-                            nsISupports* aContext);
+                            nsIDOMNode* aContext);
+
 
   // For inline style, the aURI param is null, but the aLinkingContent
   // must be non-null then.

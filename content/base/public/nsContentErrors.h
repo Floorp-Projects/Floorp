@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim: ft=cpp sw=2 ts=2 tw=78 et
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -78,5 +79,19 @@
 
 #define NS_ERROR_IMAGE_BLOCKED \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_CONTENT, 9)
+
+/** Error codes for content policy blocking */
+#define NS_ERROR_CONTENT_BLOCKED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_CONTENT, 10)
+
+#define NS_ERROR_CONTENT_BLOCKED_SHOW_ALT \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_CONTENT, 11)
+
+/** Success variations of content policy blocking */
+#define NS_CONTENT_BLOCKED \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_CONTENT, 12)
+
+#define NS_CONTENT_BLOCKED_SHOW_ALT \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_CONTENT, 13)
 
 #endif // nsContentErrors_h___

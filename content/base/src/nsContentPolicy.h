@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim: ft=cpp ts=8 sw=4 et tw=78
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Tim Watt <riceman+bmo@mail.rit.edu> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,24 +37,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIContentPolicy.h"
-#include "nsISupportsArray.h"
-
 #ifndef __nsContentPolicy_h__
 #define __nsContentPolicy_h__
+
+#include "nsIContentPolicy.h"
+#include "nsCOMArray.h"
 
 class nsContentPolicy : public nsIContentPolicy
 {
  public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTENTPOLICY
+
     nsContentPolicy();
     virtual ~nsContentPolicy();
  private:
-    nsCOMPtr<nsISupportsArray> mPolicies;
-    NS_IMETHOD CheckPolicy(PRInt32 policyType, PRInt32 contentType,
-                           nsIURI *aURI, nsISupports *context,
-                           nsIDOMWindow *window, PRBool *shouldProceed);
+    //Array of policies (retrieved from the category manager in the ctor)
+    nsCOMArray<nsIContentPolicy> mPolicies;
+
+    //Helper type for CheckPolicy
+    typedef nsresult
+    (nsIContentPolicy::*CPMethod)(PRUint32, nsIURI*, nsIURI*, nsIDOMNode*,
+                                  const nsACString &, nsISupports*, PRInt16*);
+
+    //Helper method that applies policyMethod across all policies in mPolicies
+    // with the given parameters
+    nsresult CheckPolicy(CPMethod policyMethod, PRUint32 contentType,
+                         nsIURI *aURI, nsIURI *origURI,
+                         nsIDOMNode *requestingNode,
+                         const nsACString &mimeGuess, nsISupports *extra,
+                         PRInt16 *decision);
 };
 
 nsresult

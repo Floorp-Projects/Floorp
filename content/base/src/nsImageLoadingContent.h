@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim: ft=cpp tw=78 sw=2 et ts=2
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -113,11 +114,14 @@ private:
   /**
    * CancelImageRequests can be called when we want to cancel the
    * image requests.  The "current" request will be canceled only if
-   * it has not progressed far enough to know the image size yet.
+   * it has not progressed far enough to know the image size yet unless
+   * aEvenIfSizeAvailable is true.
    *
    * @param aReason the reason the requests are being canceled
+   * @param aEvenIfSizeAvailable cancels the current load even if its size is
+   *                             available
    */
-  void CancelImageRequests(nsresult aReason);
+  void CancelImageRequests(nsresult aReason, PRBool aEvenIfSizeAvailable);
 
   /**
    * helper to get the document for this content (from the nodeinfo

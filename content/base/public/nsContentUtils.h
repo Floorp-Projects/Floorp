@@ -313,12 +313,11 @@ public:
    * @param aURI uri of the image to be loaded
    * @param aContext the context the image is loaded in (eg an element)
    * @param aLoadingDocument the document we belong to
-   * @throws NS_ERROR_IMAGE_BLOCKED if the load is blocked.  This is
-   *         subject to change.  See nsIContentPolicy.
+   * @return PR_TRUE if the load can proceed, or PR_FALSE if it is blocked
    */
-  static nsresult CanLoadImage(nsIURI* aURI,
-                               nsISupports* aContext,
-                               nsIDocument* aLoadingDocument);
+  static PRBool CanLoadImage(nsIURI* aURI,
+                             nsISupports* aContext,
+                             nsIDocument* aLoadingDocument);
   /**
    * Method to start an image load.  This does not do any security checks.
    *

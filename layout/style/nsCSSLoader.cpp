@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -925,13 +926,13 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle)
  *
  * @param aSourceURI the uri of the document or parent sheet loading the sheet
  * @param aTargetURI the uri of the sheet to be loaded
- * @param aContext the context.  This is the element or the @import
- *        rule doing the loading
+ * @param aNode the node owning the sheet.  This is the element or document
+ *              owning the stylesheet (possibly indirectly, for child sheets)
  */
 nsresult
 CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
                                 nsIURI* aTargetURI,
-                                nsISupports* aContext)
+                                nsIDOMNode* aNode)
 {
   LOG(("CSSLoaderImpl::CheckLoadAllowed"));
   
@@ -947,25 +948,18 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
 
   // Check with content policy
 
-  if (!mDocument) {
-    return NS_OK;
-  }
-  
-  nsIScriptGlobalObject *globalObject = mDocument->GetScriptGlobalObject();
-  if (!globalObject) {
-    LOG(("  No script global object"));
-    return NS_OK;
-  }
-  
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
-  NS_ASSERTION(domWin, "Global object not DOM window?");
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+                                 aTargetURI,
+                                 aSourceURI,
+                                 aNode,
+                                 NS_LITERAL_CSTRING("text/css"),
+                                 nsnull,                        //extra param
+                                 &shouldLoad);
 
-  PRBool shouldLoad = PR_TRUE;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::STYLESHEET, aTargetURI,
-                                 aContext, domWin, &shouldLoad);
-  if (NS_SUCCEEDED(rv) && !shouldLoad) {
-    LOG(("  Blocked by content policy"));
-    return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    LOG(("  Load blocked by content policy"));
+    return NS_ERROR_CONTENT_BLOCKED;
   }
 
   return rv;
@@ -1679,7 +1673,13 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   // Check whether we should even load
   nsIURI *docURI = mDocument->GetDocumentURI();
   if (!docURI) return NS_ERROR_FAILURE;
-  nsresult rv = CheckLoadAllowed(docURI, aURL, aElement);
+
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
+  if (!node) {
+    node = do_QueryInterface(mDocument);
+  }
+
+  nsresult rv = CheckLoadAllowed(docURI, aURL, node);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -1755,7 +1755,33 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   nsCOMPtr<nsIURI> sheetURI;
   nsresult rv = aParentSheet->GetURL(*getter_AddRefs(sheetURI));
   if (NS_FAILED(rv) || !sheetURI) return NS_ERROR_FAILURE;
-  rv = CheckLoadAllowed(sheetURI, aURL, aParentRule);
+
+  nsCOMPtr<nsIDOMNode> owningNode;
+
+  // check for an owning document: if none, don't bother walking up the parent
+  // sheets
+  nsCOMPtr<nsIDocument> owningDoc;
+  rv = aParentSheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+  if (NS_SUCCEEDED(rv) && owningDoc) {
+    nsCOMPtr<nsIDOMStyleSheet> nextParentSheet(do_QueryInterface(aParentSheet));
+    NS_ENSURE_TRUE(nextParentSheet, NS_ERROR_FAILURE); //Not a stylesheet!?
+
+    nsCOMPtr<nsIDOMStyleSheet> topSheet;
+    //traverse our way to the top-most sheet
+    do {
+      topSheet.swap(nextParentSheet);
+      topSheet->GetParentStyleSheet(getter_AddRefs(nextParentSheet));
+    } while (nextParentSheet);
+
+    topSheet->GetOwnerNode(getter_AddRefs(owningNode));
+  }
+
+  if (!owningNode) {
+    //failed to get owning node, revert to document
+    owningNode = do_QueryInterface(mDocument);
+  }
+
+  rv = CheckLoadAllowed(sheetURI, aURL, owningNode);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));

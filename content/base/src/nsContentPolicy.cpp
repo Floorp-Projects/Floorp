@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim: ft=cpp tw=78 sw=4 et ts=8
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prlog.h"
+
 #include "nsISupports.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -42,8 +45,13 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentPolicy.h"
 #include "nsICategoryManager.h"
+#include "nsIURI.h"
 
 NS_IMPL_ISUPPORTS1(nsContentPolicy, nsIContentPolicy)
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gConPolLog;
+#endif
 
 nsresult
 NS_NewContentPolicy(nsIContentPolicy **aResult)
@@ -63,12 +71,16 @@ NS_NewContentPolicy(nsIContentPolicy **aResult)
  */
 nsContentPolicy::nsContentPolicy()
 {
+#ifdef PR_LOGGING
+    if (! gConPolLog) {
+        gConPolLog = PR_NewLogModule("nsContentPolicy");
+    }
+#endif
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman = 
              do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
-	/* log an error? */
-	return;
+        return; /* log an error? */
 
     /*
      * I'd like to use GetCategoryContents, so that I can size the array
@@ -76,17 +88,14 @@ nsContentPolicy::nsContentPolicy()
      * not yet implemented (see nsCategoryManager.cpp).  No biggie, I guess.
      */
     nsCOMPtr<nsISimpleEnumerator> catEnum;
-    if (NS_FAILED(catman->EnumerateCategory(NS_CONTENTPOLICY_CATEGORY,
-					    getter_AddRefs(catEnum)))) {
-	/* no category, no problem */
-	return;
-    }
+    rv = catman->EnumerateCategory(NS_CONTENTPOLICY_CATEGORY,
+                                   getter_AddRefs(catEnum));
+    if (NS_FAILED(rv))
+        return; /* no category, no problem */
 
     PRBool hasMore;
-    if (NS_FAILED(catEnum->HasMoreElements(&hasMore)) || !hasMore ||
-       NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mPolicies)))) {
+    if (NS_FAILED(catEnum->HasMoreElements(&hasMore)) || !hasMore)
        return;
-    }
     
     /* 
      * Populate mPolicies with policy services named by contractids in the
@@ -94,26 +103,28 @@ nsContentPolicy::nsContentPolicy()
      */
     nsCOMPtr<nsISupports> item;
     while (NS_SUCCEEDED(catEnum->GetNext(getter_AddRefs(item)))) {
-	nsCOMPtr<nsISupportsCString> string = do_QueryInterface(item, &rv);
-	if (NS_FAILED(rv))
-	    continue;
-	
-	nsCAutoString contractid;
-	if (NS_FAILED(string->GetData(contractid)))
-	    continue;
+        nsCOMPtr<nsISupportsCString> string = do_QueryInterface(item, &rv);
+        if (NS_FAILED(rv))
+            continue;
 
-#ifdef DEBUG_shaver
-	fprintf(stderr, "POLICY: loading %s\n", contractid.get());
-#endif
-	/*
-	 * Create this policy service and add to mPolicies.
-	 *
-	 * Should we try to parse as a CID, in case the component prefers to be
-	 * registered that way?
-	 */
-	nsCOMPtr<nsISupports> policy = do_GetService(contractid.get(), &rv);
-	if (NS_SUCCEEDED(rv))
-	    mPolicies->AppendElement(policy);
+        nsCAutoString contractid;
+        if (NS_FAILED(string->GetData(contractid)))
+            continue;
+
+        PR_LOG(gConPolLog, PR_LOG_DEBUG,
+                ("POLICY: loading %s\n", contractid.get()));
+
+        /*
+         * Create this policy service and add to mPolicies.
+         *
+         * Should we try to parse as a CID, in case the component prefers to be
+         * registered that way?
+         */
+        nsCOMPtr<nsIContentPolicy> policy = do_GetService(contractid.get(),
+                                                          &rv);
+        if (NS_SUCCEEDED(rv) && policy) {
+            mPolicies.AppendObject(policy);
+        }
     }
 	
 }
@@ -122,72 +133,136 @@ nsContentPolicy::~nsContentPolicy()
 {
 }
 
-#define POLICY_LOAD    (PRInt32)0
-#define POLICY_PROCESS (PRInt32)1
+#ifdef DEBUG
+#define WARN_IF_URI_UNINITIALIZED(uri,name)                         \
+  PR_BEGIN_MACRO                                                    \
+    if ((uri)) {                                                    \
+        nsCAutoString spec;                                         \
+        (uri)->GetAsciiSpec(spec);                                  \
+        if (spec.IsEmpty()) {                                       \
+            NS_WARNING(name " is uninitialized, fix caller");       \
+        }                                                           \
+    }                                                               \
+  PR_END_MACRO
 
-NS_IMETHODIMP
-nsContentPolicy::CheckPolicy(PRInt32 policyType, PRInt32 contentType,
-                             nsIURI *contentLocation, nsISupports *context,
-                             nsIDOMWindow *window, PRBool *shouldProceed)
+#else  // ! defined(DEBUG)
+
+#define WARN_IF_URI_UNINITIALIZED(uri,name)
+
+#endif // defined(DEBUG)
+
+inline nsresult
+nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
+                             PRUint32          contentType,
+                             nsIURI           *contentLocation,
+                             nsIURI           *requestingLocation,
+                             nsIDOMNode       *requestingNode,
+                             const nsACString &mimeType,
+                             nsISupports      *extra,
+                             PRInt16           *decision)
 {
-    *shouldProceed = PR_TRUE;
-    if (!mPolicies)
-	return NS_OK;
+    //sanity-check passed-through parameters
+    NS_PRECONDITION(decision, "Null out pointer");
+    WARN_IF_URI_UNINITIALIZED(contentLocation, "Request URI");
+    WARN_IF_URI_UNINITIALIZED(requestingLocation, "Requesting URI");
+
+    PRInt32 count = mPolicies.Count();
+    nsresult rv = NS_OK;
 
     /* 
      * Enumerate mPolicies and ask each of them, taking the logical AND of
      * their permissions.
      */
-    nsresult rv;
-    nsCOMPtr<nsIContentPolicy> policy;
-    PRUint32 count;
-    if (NS_FAILED(rv = mPolicies->Count(&count)))
-	return NS_OK;
-
-    for (PRUint32 i = 0; i < count; i++) {
-	rv = mPolicies->QueryElementAt(i, NS_GET_IID(nsIContentPolicy),
-				       getter_AddRefs(policy));
-	if (NS_FAILED(rv))
-	    continue;
-	
-	/* check the appropriate policy */
-	if (policyType == POLICY_LOAD) {
-	    rv = policy->ShouldLoad(contentType, contentLocation, context,
-                                    window, shouldProceed);
-	} else {
-	    rv = policy->ShouldProcess(contentType, contentLocation, context,
-                                       window, shouldProceed);
+    for (PRInt32 i = 0; i < count; i++) {
+        nsIContentPolicy *policy = mPolicies[i];
+        if (!policy) { //shouldn't happen
+            NS_ERROR("Somehow a null policy got into the list");
+            continue;
         }
-	   
-	if (NS_SUCCEEDED(rv) && !*shouldProceed)
-	    /* policy says no, no point continuing to check */
-	    return NS_OK;
+
+        /* check the appropriate policy */
+        rv = (policy->*policyMethod)(contentType, contentLocation,
+                                     requestingLocation, requestingNode,
+                                     mimeType, extra, decision);
+
+        if (NS_SUCCEEDED(rv) && NS_CP_REJECTED(*decision)) {
+            /* policy says no, no point continuing to check */
+            return NS_OK;
+        }
     }
 
-    /*
-     * One of the policy objects might be misbehaving and setting shouldProceed
-     * to PR_FALSE before returning an error, so force it back to PR_TRUE
-     * here.
-     */
-    *shouldProceed = PR_TRUE;
+    // everyone returned failure, or no policies: sanitize result
+    *decision = nsIContentPolicy::ACCEPT;
     return NS_OK;
 }
 
+#ifdef PR_LOGGING
+
+//uses the parameters from ShouldXYZ to produce and log a message
+//logType must be a literal string constant
+#define LOG_CHECK(logType)                                                    \
+  PR_BEGIN_MACRO                                                              \
+    /* skip all this nonsense if the call failed */                           \
+    if (NS_SUCCEEDED(rv)) {                                                   \
+      const char *resultName;                                                 \
+      if (decision) {                                                         \
+        resultName = NS_CP_ResponseName(*decision);                           \
+      } else {                                                                \
+        resultName = "(null ptr)";                                            \
+      }                                                                       \
+      nsCAutoString spec("None");                                             \
+      if (contentLocation) {                                                  \
+          contentLocation->GetSpec(spec);                                     \
+      }                                                                       \
+      nsCAutoString refSpec("None");                                          \
+      if (requestingLocation) {                                               \
+          requestingLocation->GetSpec(refSpec);                               \
+      }                                                                       \
+      PR_LOG(gConPolLog, PR_LOG_DEBUG,                                        \
+             ("Content Policy: " logType ": <%s> <Ref:%s> result=%s",         \
+              spec.get(), refSpec.get(), resultName)                          \
+             );                                                               \
+    }                                                                         \
+  PR_END_MACRO
+
+#else //!defined(PR_LOGGING)
+
+#define LOG_CHECK(logType)
+
+#endif //!defined(PR_LOGGING)
+
 NS_IMETHODIMP
-nsContentPolicy::ShouldLoad(PRInt32 contentType, nsIURI *contentLocation,
-                            nsISupports *context, nsIDOMWindow *window,
-                            PRBool *shouldLoad)
+nsContentPolicy::ShouldLoad(PRUint32          contentType,
+                            nsIURI           *contentLocation,
+                            nsIURI           *requestingLocation,
+                            nsIDOMNode       *requestingNode,
+                            const nsACString &mimeType,
+                            nsISupports      *extra,
+                            PRInt16          *decision)
 {
-    return CheckPolicy(POLICY_LOAD, contentType, contentLocation, context,
-                       window, shouldLoad);
+    // ShouldProcess does not need a content location, but we do
+    NS_PRECONDITION(contentLocation, "Must provide request location");
+    nsresult rv = CheckPolicy(&nsIContentPolicy::ShouldLoad, contentType,
+                              contentLocation, requestingLocation,
+                              requestingNode, mimeType, extra, decision);
+    LOG_CHECK("ShouldLoad");
+
+    return rv;
 }
 
 NS_IMETHODIMP
-nsContentPolicy::ShouldProcess(PRInt32 contentType, nsIURI *contentLocation,
-                               nsISupports *context, nsIDOMWindow *window,
-                               PRBool *shouldProcess)
+nsContentPolicy::ShouldProcess(PRUint32          contentType,
+                               nsIURI           *contentLocation,
+                               nsIURI           *requestingLocation,
+                               nsIDOMNode       *requestingNode,
+                               const nsACString &mimeType,
+                               nsISupports      *extra,
+                               PRInt16          *decision)
 {
-    return CheckPolicy(POLICY_PROCESS, contentType, contentLocation, context,
-		       window, shouldProcess);
-}
+    nsresult rv = CheckPolicy(&nsIContentPolicy::ShouldProcess, contentType,
+                              contentLocation, requestingLocation,
+                              requestingNode, mimeType, extra, decision);
+    LOG_CHECK("ShouldProcess");
 
+    return rv;
+}

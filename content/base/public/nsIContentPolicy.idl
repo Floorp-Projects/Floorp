@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ft=cpp tw=78 sw=2 et ts=8 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Timothy Watt <riceman+bmo@mail.rit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,38 +39,185 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
 interface nsIURI;
+interface nsIDOMNode;
 
 /**
  * Interface for content policy mechanism.  Implementations of this
  * interface can be used to control loading of various types of out-of-line
  * content, or processing of certain types of in-line content.
+ *
+ * WARNING: do not block the caller from shouldLoad or shouldProcess (e.g.,
+ * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(1cb4085d-5407-4169-bcfe-4c5ba013fa5b)]
+[scriptable,uuid(3bb1a3c8-3073-41e0-9a26-a7671955fb65)]
 interface nsIContentPolicy : nsISupports
 {
-  const PRInt32 OTHER       = 0;
-  const PRInt32 SCRIPT      = 1;
-  const PRInt32 IMAGE       = 2;
-  const PRInt32 STYLESHEET  = 3;
-  const PRInt32 OBJECT      = 4;
-  const PRInt32 SUBDOCUMENT = 5;
-  const PRInt32 CONTROL_TAG = 6;
-  const PRInt32 RAW_URL     = 7;
-  const PRInt32 DOCUMENT    = 8;
+  const unsigned long TYPE_OTHER       = 1;
 
   /**
-   * Should the content at this location be loaded and processed?
+   * Indicates an executable script (such as JavaScript).
+   */
+  const unsigned long TYPE_SCRIPT      = 2;
+
+  /**
+   * Indicates an image (e.g., IMG elements).
+   */
+  const unsigned long TYPE_IMAGE       = 3;
+
+  /**
+   * Indicates a stylesheet (e.g., STYLE elements).
+   */
+  const unsigned long TYPE_STYLESHEET  = 4;
+
+  /**
+   * Indicates a generic object (plugin-handled content typically falls under
+   * this category).
+   */
+  const unsigned long TYPE_OBJECT      = 5;
+
+  /**
+   * Indicates a document at the top-level (i.e., in a browser).
+   */
+  const unsigned long TYPE_DOCUMENT    = 6;
+
+  /**
+   * Indicates a document contained within another document (e.g., IFRAMEs,
+   * FRAMES, and OBJECTs).
+   */
+  const unsigned long TYPE_SUBDOCUMENT = 7;
+
+  /**
+   * Indicates a timed refresh.
    *
+   * shouldLoad will never get this, because it does not represent content
+   * to be loaded (the actual load triggered by the refresh will go through
+   * shouldLoad as expected).
+   *
+   * shouldProcess will get this for, e.g., META Refresh elements and HTTP
+   * Refresh headers.
    */
-  boolean shouldLoad(in PRInt32 contentType, in nsIURI contentLocation,
-                     in nsISupports ctxt, in nsIDOMWindow window);
+  const unsigned long TYPE_REFRESH     = 8;
+
+
+  //////////////////////////////////////////////////////////////////////
 
   /**
-   * Should the contents of the element in question be processed?
+   * Returned from shouldLoad or shouldProcess if the load or process request
+   * is rejected based on details of the request.
    */
-  boolean shouldProcess(in PRInt32 contentType, in nsIURI documentLocation,
-                        in nsISupports ctxt, in nsIDOMWindow window);
+  const short REJECT_REQUEST = -1;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based solely on its type (of the above flags).
+   *
+   * NOTE that it is not meant to stop future requests for this type--only the
+   * current request.
+   */
+  const short REJECT_TYPE = -2;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based on the server it is hosted on or requested from (aContentLocation or
+   * aRequestOrigin), e.g., if you block an IMAGE because it is served from
+   * goatse.cx (even if you don't necessarily block other types from that
+   * server/domain).
+   * 
+   * NOTE that it is not meant to stop future requests for this server--only the
+   * current request.
+   */
+  const short REJECT_SERVER = -3;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based on some other criteria. Mozilla callers will handle this like
+   * REJECT_REQUEST; third-party implementors may, for example, use this to
+   * direct their own callers to consult the extra parameter for additional
+   * details.
+   */
+  const short REJECT_OTHER = -4;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load or process request
+   * is not rejected.
+   */
+  const short ACCEPT = 1;
+
+  //////////////////////////////////////////////////////////////////////
+
+  /**
+   * Should the resource at this location be loaded?
+   * ShouldLoad will be called before loading the resource at aContentLocation
+   * to determine whether to start the load at all.
+   *
+   * @param aContentType      the type of content being tested. This will be one
+   *                          one of the TYPE_* constants.
+   *
+   * @param aContentLocation  the location of the content being checked; must
+   *                          not be null
+   *
+   * @param aRequestOrigin    OPTIONAL. the location of the resource that
+   *                          initiated this load request; can be null if
+   *                          inapplicable
+   *
+   * @param aRequestingNode   OPTIONAL. the DOM node that initiated the
+   *                          request; can be null if inapplicable
+   *
+   * @param aMimeTypeGuess    OPTIONAL. a guess for the requested content's
+   *                          MIME type, based on information available to
+   *                          the request initiator (e.g., an OBJECT's type
+   *                          attribute); does not reliably reflect the
+   *                          actual MIME type of the requested content
+   *
+   * @param aExtra            an OPTIONAL argument, pass-through for non-Gecko
+   *                          callers to pass extra data to callees.
+   *
+   * @return ACCEPT or REJECT_*
+   */
+  short shouldLoad(in unsigned long aContentType,
+                   in nsIURI        aContentLocation,
+                   in nsIURI        aRequestOrigin,
+                   in nsIDOMNode    aRequestingNode,
+                   in ACString      aMimeTypeGuess,
+                   in nsISupports   aExtra);
+
+  /**
+   * Should the resource be processed?
+   * ShouldProcess will be called once all the information passed to it has
+   * been determined about the resource, typically after part of the resource
+   * has been loaded.
+   *
+   * @param aContentType      the type of content being tested. This will be one
+   *                          one of the TYPE_* constants.
+   *
+   * @param aContentLocation  OPTIONAL; the location of the resource being
+   *                          requested: MAY be, e.g., a post-redirection URI
+   *                          for the resource.
+   *
+   * @param aRequestOrigin    OPTIONAL. the location of the resource that
+   *                          initiated this load request; can be null if
+   *                          inapplicable
+   *
+   * @param aRequestingNode   OPTIONAL. the DOM node that initiated the
+   *                          request; can be null if inapplicable
+   *
+   * @param aMimeType         the MIME type of the requested resource (e.g.,
+   *                          image/png), as reported by the networking library,
+   *                          if available (may be empty if inappropriate for
+   *                          the type, e.g., TYPE_REFRESH).
+   *
+   * @param aExtra            an OPTIONAL argument, pass-through for non-Gecko
+   *                          callers to pass extra data to callees.
+   *
+   * @return ACCEPT or REJECT_*
+   */
+  short shouldProcess(in unsigned long aContentType,
+                      in nsIURI        aContentLocation,
+                      in nsIURI        aRequestOrigin,
+                      in nsIDOMNode    aRequestingNode,
+                      in ACString      aMimeType,
+                      in nsISupports   aExtra);
+
 };
