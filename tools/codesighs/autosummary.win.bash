@@ -98,7 +98,7 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 #   Find all map files.
 #
 ALLMAPSFILE="$MYTMPDIR/allmaps.list"
-find ./mozilla -type f -name "*.map" > $ALLMAPSFILE
+find ./mozilla -type f -name *.map > $ALLMAPSFILE
 
 
 #
@@ -124,9 +124,9 @@ rm -f $SUMMARYFILE
 DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
-  ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE >> $SUMMARYFILE
+  ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE | dos2unix >> $SUMMARYFILE
 else
-  ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
+  ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV | dos2unix >> $SUMMARYFILE
 fi
 
 
@@ -137,9 +137,18 @@ fi
 #       files parsed.
 #   Second number, if present, is growth/shrinkage.
 #
-./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV
+
+if [ $TINDERBOX_OUTPUT ]; then
+    echo -n "__codesize:"
+fi
+./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV | dos2unix
+
+
 if [ -e $DIFFFILE ]; then
-    ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE
+if [ $TINDERBOX_OUTPUT ]; then
+    echo -n "__codesizeDiff:"
+fi
+    ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE | dos2unix
 fi
 
 #
