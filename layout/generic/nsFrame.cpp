@@ -4621,6 +4621,54 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
   return PR_FALSE;
 }
 
+nsresult 
+nsFrame::SetProperty(nsIPresContext*         aPresContext,
+                     nsIAtom*                aPropName,
+                     void*                   aPropValue,
+                     NSFramePropertyDtorFunc aPropDtorFunc)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult               rv = NS_ERROR_FAILURE;
+
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      rv = frameManager->SetFrameProperty(this, aPropName, aPropValue, aPropDtorFunc);
+    }
+  }
+  return rv;
+}
+
+void* 
+nsFrame::GetProperty(nsIPresContext* aPresContext,
+                     nsIAtom*        aPropName,
+                     PRBool          aRemoveProp) const
+{
+  void* value = nsnull;
+
+  nsCOMPtr<nsIPresShell>     presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager> frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      PRUint32 options = 0;
+  
+      if (aRemoveProp) {
+        options |= NS_IFRAME_MGR_REMOVE_PROP;
+      }
+      frameManager->GetFrameProperty((nsIFrame*)this, aPropName, options, &value);
+    }
+  }
+
+  return value;
+}
+
 #ifdef IBMBIDI
 /**
  *  retrieve Bidi property of this frame

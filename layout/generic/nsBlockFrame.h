@@ -201,9 +201,11 @@ public:
 
   // Create a contination for aPlaceholder and its out of flow frame and
   // add it to the list of overflow floaters
-  nsresult SplitPlaceholder(nsBlockReflowState& aState,
-                            nsIFrame&           aPlaceholder);
+  nsresult SplitPlaceholder(nsIPresContext& aPresContext, nsIFrame& aPlaceholder);
 
+  void UndoSplitPlaceholders(nsBlockReflowState& aState,
+                             nsIFrame*           aLastPlaceholder);
+  
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
@@ -502,6 +504,12 @@ protected:
 
   nsresult SetOverflowLines(nsIPresContext* aPresContext,
                             nsLineList*     aOverflowLines);
+
+  nsFrameList* GetOverflowPlaceholders(nsIPresContext* aPresContext,
+                                       PRBool          aRemoveProperty) const;
+
+  nsresult SetOverflowPlaceholders(nsIPresContext* aPresContext,
+                                   nsFrameList*    aOverflowPlaceholders);
 
   nsIFrame* LastChild();
 

@@ -199,9 +199,6 @@ public:
 
   nsFloaterCacheFreeList mFloaterCacheFreeList;
 
-  // next-in-flows of incomplete floaters which get put into overflow lines
-  nsFrameList mOverflowFloaters; 
-
   // Previous child. This is used when pulling up a frame to update
   // the sibling list.
   nsIFrame* mPrevChild;

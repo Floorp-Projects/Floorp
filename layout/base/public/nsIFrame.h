@@ -90,6 +90,13 @@ struct nsRect;
 struct nsSize;
 struct nsMargin;
 
+// Calback function used to destroy the value associated with a property.
+typedef void 
+(*NSFramePropertyDtorFunc)(nsIPresContext* aPresContext,
+                           nsIFrame*       aFrame,
+                           nsIAtom*        aPropertyName,
+                           void*           aPropertyValue);
+
 // IID for the nsIFrame interface 
 // a6cf9050-15b3-11d2-932e-00805f8add32
 #define NS_IFRAME_IID \
@@ -1158,6 +1165,14 @@ public:
                      PRBool aIsPre,
                      PRBool* aResult) = 0;
 
+  virtual void* GetProperty(nsIPresContext* aPresContext,
+                            nsIAtom*        aPropertyName,
+                            PRBool          aRemoveProperty) const = 0;
+
+  virtual nsresult SetProperty(nsIPresContext*         aPresContext,
+                               nsIAtom*                aPropertyName,
+                               void*                   aPropertyValue,
+                               NSFramePropertyDtorFunc aPropDtorFunc) = 0;
 #ifdef IBMBIDI
   /**
    *  retrieve and set Bidi property of this frame

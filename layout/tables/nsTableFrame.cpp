@@ -7412,7 +7412,7 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
         // The property isn't set yet, so allocate a new value, set the property,
         // and return the newly allocated value
         void* value = nsnull;
-        NSFMPropertyDtorFunc dtorFunc = nsnull;
+        NSFramePropertyDtorFunc dtorFunc = nsnull;
         if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
           value = new nsPoint(0, 0);
           dtorFunc = DestroyPointFunc;
