@@ -1126,6 +1126,10 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	bookmarksFile += "bookmarks.html";
 
 	PRBool	foundIERoot = PR_FALSE;
+	#ifdef	XP_WIN
+		nsCOMPtr<nsIRDFResource>	ieFolder;
+		const char			*ieFavoritesURL;
+	#endif
 	{ // <-- scope the stream to get the open/close automatically.
 		nsInputFileStream strm(bookmarksFile);
 
@@ -1143,10 +1147,9 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	#endif
 
 	#ifdef	XP_WIN
-		nsCOMPtr<nsIRDFResource>	ieFolder;
 		nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
 		nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
-		const char			*ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
+		ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
 		parser.SetIEFavoritesRoot(ieFavoritesURL);
 	#endif
 
