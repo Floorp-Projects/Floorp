@@ -462,6 +462,7 @@
 				F541496402714F9A01A80166,
 				F541496502714F9A01A80166,
 				F5DA444B027DD5AA01A80166,
+				F5179420027F3F2901A967DF,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -878,6 +879,24 @@
 		};
 		F517395D020CE3750189DA0C = {
 			fileRef = F517395B020CE3740189DA0C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F517941F027F3F2901A967DF = {
+			isa = PBXFileReference;
+			name = xuldoc.xpt;
+			path = ../content/xul/document/public/_xpidlgen/xuldoc.xpt;
+			refType = 2;
+		};
+		F5179420027F3F2901A967DF = {
+			fileRef = F517941F027F3F2901A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5179421027F3FD301A967DF = {
+			fileRef = F517941F027F3F2901A967DF;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3167,6 +3186,7 @@
 				F6BD644F01B315FA01A962F7,
 				F6BD645001B315FA01A962F7,
 				F655020201B480F201A962F7,
+				F517941F027F3F2901A967DF,
 			);
 			isa = PBXGroup;
 			name = "Gecko Components";
@@ -3314,6 +3334,7 @@
 				F6BD64B301B3167601A962F7,
 				F6BD64B401B3167601A962F7,
 				F6BD64B501B3167601A962F7,
+				F5179421027F3FD301A967DF,
 				F6BD64B601B3167601A962F7,
 				F655020401B4812301A962F7,
 			);
