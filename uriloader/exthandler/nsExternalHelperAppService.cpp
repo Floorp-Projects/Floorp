@@ -452,7 +452,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
 #endif
 
   mTempFile->Append(tempLeafName); // make this file unique!!!
-  mTempFile->MakeUnique(nsnull);
+  mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
 
   nsCOMPtr<nsIFileChannel> mFileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
   if (mFileChannel)
