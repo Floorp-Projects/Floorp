@@ -123,10 +123,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
   case eColor_inactivecaption:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_INACTIVE]);
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_INSENSITIVE]);
     break;
   case eColor_inactivecaptiontext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INACTIVE]);
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
     break;
   case eColor_infobackground:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
