@@ -51,7 +51,6 @@ LD_LIBS += \
 	nscnv$(MOZ_BITS)30 \
 	nssb$(MOZ_BITS)30 \
 	calui10 \
-	calnetwork10 \
 	calparser10 \
     calcapi10 \
 	util10 \
