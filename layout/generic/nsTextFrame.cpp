@@ -331,7 +331,7 @@ public:
 #endif
 
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
-                         nscoord         aXCoord,
+                         const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd);
@@ -345,9 +345,9 @@ public:
 
   NS_IMETHOD GetPositionSlowly(nsIPresContext& aCX,
                          nsIRenderingContext * aRendContext,
-                         nscoord         aXCoord,
-                         nsIContent **      aNewContent,
-                         PRInt32&       aOffset);
+                         const nsPoint&        aPoint,
+                         nsIContent **         aNewContent,
+                         PRInt32&              aOffset);
 
 
   NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
@@ -1294,7 +1294,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 nsresult
 nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
                                nsIRenderingContext* aRendContext,
-                               nscoord         aXCoord,
+                               const nsPoint& aPoint,
                                nsIContent** aNewContent,
                                PRInt32& aOffset)
 
@@ -1312,7 +1312,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   GetView(&aPresContext, &view);
   GetOffsetFromView(&aPresContext, origin, &view);
 
-  if (aXCoord - origin.x <0)
+  if (aPoint.x - origin.x < 0)
   {
       *aNewContent = mContent;
       aOffset =0;
@@ -1336,76 +1336,105 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   if (textLength <= 0) {
     return NS_ERROR_FAILURE;
   }
-  PRInt32 actualLength = textLength;
 
-  nscoord charWidth,widthsofar = 0;
-  PRInt32 indx = 0;
-  PRBool found = PR_FALSE;
-  PRInt32* ip = indexBuffer.mBuffer;
-  PRUnichar* paintBuf = paintBuffer.mBuffer;
-  PRUnichar* startBuf = paintBuf;
-  nsIFontMetrics* lastFont = ts.mLastFont;
-  for (; --textLength >= 0; paintBuf++,indx++) {
-    nsIFontMetrics* nextFont;
-    nscoord glyphWidth;
-    PRUnichar ch = *paintBuf;
-    if (ts.mSmallCaps && nsCRT::IsLower(ch)) {
-      nextFont = ts.mSmallFont;
-      ch = nsCRT::ToUpper(ch);
-      if (lastFont != ts.mSmallFont) {
-        aRendContext->SetFont(ts.mSmallFont);
-        aRendContext->GetWidth(ch, charWidth);
-        aRendContext->SetFont(ts.mNormalFont);
+//IF SYLE SAYS TO SELCT TO END OF FRAME HERE...
+  nsCOMPtr<nsIPref>     prefs;
+  PRInt32 prefInt = 0;
+  rv = nsServiceManager::GetService(kPrefCID, 
+                                    nsIPref::GetIID(), 
+                                    (nsISupports**)&prefs); 
+  PRBool outofstylehandled = PR_FALSE;
+  if (NS_SUCCEEDED(rv) && prefs) 
+  { 
+    if (NS_SUCCEEDED(prefs->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
+    {
+      if (aPoint.y < mRect.y)//above rectangle
+      {
+        aOffset = mContentOffset;
+        outofstylehandled = PR_TRUE;
+      }
+      else if (aPoint.y > (mRect.y + mRect.height))
+      {
+        aOffset = mContentOffset + mContentLength;
+        outofstylehandled = PR_TRUE;
+      }
+    }
+  }
+
+  if (!outofstylehandled) //then we drag to closest X point and dont worry about the 'Y'
+//END STYLE RULE
+  {
+    PRInt32 actualLength = textLength;
+
+    nscoord charWidth,widthsofar = 0;
+    PRInt32 indx = 0;
+    PRBool found = PR_FALSE;
+    PRInt32* ip = indexBuffer.mBuffer;
+    PRUnichar* paintBuf = paintBuffer.mBuffer;
+    PRUnichar* startBuf = paintBuf;
+    nsIFontMetrics* lastFont = ts.mLastFont;
+    for (; --textLength >= 0; paintBuf++,indx++) {
+      nsIFontMetrics* nextFont;
+      nscoord glyphWidth;
+      PRUnichar ch = *paintBuf;
+      if (ts.mSmallCaps && nsCRT::IsLower(ch)) {
+        nextFont = ts.mSmallFont;
+        ch = nsCRT::ToUpper(ch);
+        if (lastFont != ts.mSmallFont) {
+          aRendContext->SetFont(ts.mSmallFont);
+          aRendContext->GetWidth(ch, charWidth);
+          aRendContext->SetFont(ts.mNormalFont);
+        }
+        else {
+          aRendContext->GetWidth(ch, charWidth);
+        }
+        glyphWidth = charWidth + ts.mLetterSpacing;
+      }
+      else if (ch == ' ') {
+        nextFont = lastFont;
+        glyphWidth = ts.mSpaceWidth + ts.mWordSpacing;
+        nscoord extra = ts.mExtraSpacePerSpace;
+        if (--ts.mNumSpaces == 0) {
+          extra += ts.mRemainingExtraSpace;
+        }
+        glyphWidth += extra;
       }
       else {
+        nextFont = lastFont;
         aRendContext->GetWidth(ch, charWidth);
+        glyphWidth = charWidth + ts.mLetterSpacing;
       }
-      glyphWidth = charWidth + ts.mLetterSpacing;
-    }
-    else if (ch == ' ') {
-      nextFont = lastFont;
-      glyphWidth = ts.mSpaceWidth + ts.mWordSpacing;
-      nscoord extra = ts.mExtraSpacePerSpace;
-      if (--ts.mNumSpaces == 0) {
-        extra += ts.mRemainingExtraSpace;
+      if ((aPoint.x  - origin.x) >= widthsofar && (aPoint.x - origin.x) <= (widthsofar + glyphWidth)){
+        if ( ((aPoint.x - origin.x) - widthsofar) <= (glyphWidth /2)){
+          aOffset = indx;
+          found = PR_TRUE;
+          break;
+        }
+        else{
+          aOffset = indx+1;
+          found = PR_TRUE;
+          break;
+        }
+
       }
-      glyphWidth += extra;
+      if (nextFont != lastFont)
+        lastFont = nextFont;
+
+      widthsofar += glyphWidth;
     }
-    else {
-      nextFont = lastFont;
-      aRendContext->GetWidth(ch, charWidth);
-      glyphWidth = charWidth + ts.mLetterSpacing;
+    paintBuf = startBuf;
+    if (!found){
+      aOffset = textLength;
+      if (aOffset <0)
+        aOffset = actualLength;//max length before textlength was reduced
     }
-    if ((aXCoord - origin.x) >= widthsofar && (aXCoord - origin.x) <= (widthsofar + glyphWidth)){
-      if ( ((aXCoord - origin.x) - widthsofar) <= (glyphWidth /2)){
-        aOffset = indx;
-        found = PR_TRUE;
+    aOffset += mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
+    PRInt32 i;
+    for (i = 0;i <= mContentLength; i ++){
+      if (ip[i] == aOffset){ //reverse mapping
+        aOffset = i + mContentOffset;
         break;
       }
-      else{
-        aOffset = indx+1;
-        found = PR_TRUE;
-        break;
-      }
-
-    }
-    if (nextFont != lastFont)
-      lastFont = nextFont;
-
-    widthsofar += glyphWidth;
-  }
-  paintBuf = startBuf;
-  if (!found){
-    aOffset = textLength;
-    if (aOffset <0)
-      aOffset = actualLength;//max length before textlength was reduced
-  }
-  aOffset += mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
-  PRInt32 i;
-  for (i = 0;i <= mContentLength; i ++){
-    if (ip[i] == aOffset){ //reverse mapping
-      aOffset = i + mContentOffset;
-      break;
     }
   }
 
@@ -1882,7 +1911,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
 //---------------------------------------------------------------------------
 NS_IMETHODIMP
 nsTextFrame::GetPosition(nsIPresContext& aCX,
-                         nscoord         aXCoord,
+                         const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd)
@@ -1897,7 +1926,7 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
       TextStyle ts(&aCX, *acx, mStyleContext);
       if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing) {
 
-        nsresult result = GetPositionSlowly(aCX, acx, aXCoord, aNewContent,
+        nsresult result = GetPositionSlowly(aCX, acx, aPoint, aNewContent,
                                  aContentOffset);
         aContentOffsetEnd = aContentOffset;
         return result;
@@ -1933,40 +1962,71 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
         //invalid frame to get position on
         return NS_ERROR_FAILURE;
       }
-      PRInt32* ip = indexBuffer.mBuffer;
 
-      PRInt32 indx;
-      PRInt32 textWidth = 0;
-      PRUnichar* text = paintBuffer.mBuffer;
       nsPoint origin;
       nsIView * view;
       GetOffsetFromView(&aCX, origin, &view);
-      PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
-                                             PRInt32(textLength),
-                                             PRInt32(aXCoord) , //go to local coordinates
-                                             indx, textWidth);
-      if (found) {
-        PRInt32 charWidth;
-        acx->GetWidth(text[indx], charWidth);
-        charWidth /= 2;
 
-        if (PR_ABS(PRInt32(aXCoord) - origin.x) > textWidth+charWidth) {
-          indx++;
+//IF SYLE SAYS TO SELCT TO END OF FRAME HERE...
+      nsCOMPtr<nsIPref>     prefs;
+      PRInt32 prefInt = 0;
+      rv = nsServiceManager::GetService(kPrefCID, 
+                                        nsIPref::GetIID(), 
+                                        (nsISupports**)&prefs); 
+      PRBool outofstylehandled = PR_FALSE;
+      if (NS_SUCCEEDED(rv) && prefs) 
+      { 
+        if (NS_SUCCEEDED(prefs->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
+        {
+          if ((aPoint.y - origin.y) < 0)//above rectangle
+          {
+            aContentOffset = mContentOffset;
+            aContentOffsetEnd = aContentOffset;
+            outofstylehandled = PR_TRUE;
+          }
+          else if ((aPoint.y - origin.y) > mRect.height)
+          {
+            aContentOffset = mContentOffset + mContentLength;
+            aContentOffsetEnd = aContentOffset;
+            outofstylehandled = PR_TRUE;
+          }
         }
       }
 
-      aContentOffset = indx + mContentOffset;
-      //reusing wordBufMem
-      PRInt32 i;
-      for (i = 0;i <= mContentLength; i ++){
-        if (ip[i] == aContentOffset){ //reverse mapping
-            aContentOffset = i + mContentOffset;
-            break;
+      if (!outofstylehandled) //then we need to track based on the X coord only
+      {
+//END STYLE IF
+        PRInt32* ip = indexBuffer.mBuffer;
+
+        PRInt32 indx;
+        PRInt32 textWidth = 0;
+        PRUnichar* text = paintBuffer.mBuffer;
+        PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
+                                               PRInt32(textLength),
+                                               PRInt32(aPoint.x) , //go to local coordinates
+                                               indx, textWidth);
+        if (found) {
+          PRInt32 charWidth;
+          acx->GetWidth(text[indx], charWidth);
+          charWidth /= 2;
+
+          if (PR_ABS(PRInt32(aPoint.x) - origin.x) > textWidth+charWidth) {
+            indx++;
+          }
         }
-      }
-      aContentOffsetEnd = aContentOffset;
-      NS_ASSERTION(i<= mContentLength, "offset we got from binary search is messed up");
-      
+
+        aContentOffset = indx + mContentOffset;
+        //reusing wordBufMem
+        PRInt32 i;
+        for (i = 0;i <= mContentLength; i ++){
+          if (ip[i] == aContentOffset){ //reverse mapping
+              aContentOffset = i + mContentOffset;
+              break;
+          }
+        }
+        aContentOffsetEnd = aContentOffset;
+        NS_ASSERTION(i<= mContentLength, "offset we got from binary search is messed up");
+      }      
       *aNewContent = mContent;
       if (*aNewContent) {
         (*aNewContent)->AddRef();
@@ -1984,7 +2044,14 @@ nsTextFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent)
 {
-  nsresult rv = GetPosition(aCX, (aPoint.x < 0) ? 0 : aPoint.x, aNewContent, aContentOffset, aContentOffsetEnd);
+  nsPoint newPoint;
+  newPoint.y = aPoint.y;
+  if (aPoint.x < 0)
+    newPoint.x = 0;
+  else
+    newPoint.x = aPoint.x;
+
+  nsresult rv = GetPosition(aCX, newPoint, aNewContent, aContentOffset, aContentOffsetEnd);
   if (aContentOffset == mContentOffset)
     aBeginFrameContent = PR_TRUE;
   else
@@ -2522,7 +2589,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
 
     if (NS_SUCCEEDED(rv) && mPrefs) 
     { 
-      if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.triple_click_style", &prefInt)) && prefInt)
+      if (NS_FAILED(mPrefs->GetIntPref("browser.triple_click_style", &prefInt)) || !prefInt)
         return nsFrame::HandleMultiplePress(aPresContext, aEvent, aEventStatus);
     }
     //THIS NEXT CODE IS FOR PARAGRAPH
@@ -2602,7 +2669,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
       //find which word needs to be selected! use peek offset one way then the other
       nsCOMPtr<nsIDOMNode> startNode;
       nsCOMPtr<nsIDOMNode> endNode;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
+      if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point,
                        getter_AddRefs(newContent), startPos, contentOffsetEnd))){
         //peeks{}
         nsPeekOffsetStruct startpos;
@@ -3507,4 +3574,3 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
   return NS_OK;
 }
 #endif
-
