@@ -40,7 +40,7 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIStatefulFrame.h"
@@ -58,6 +58,8 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIFormControlFrame.h"
+#include "nsINodeInfo.h"
+#include "nsIDOMEventReceiver.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 

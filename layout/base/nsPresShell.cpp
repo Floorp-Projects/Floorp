@@ -62,7 +62,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsIEventStateManager.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
@@ -1197,14 +1197,14 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
                             (void **) aInstancePtrResult);
 }
 
-PresShell::PresShell():mStackArena(nsnull),
+PresShell::PresShell():mAnonymousContentTable(nsnull),
+                       mStackArena(nsnull),
                        mFirstDOMEventRequest(nsnull),
                        mLastDOMEventRequest(nsnull),
                        mFirstAttributeRequest(nsnull),
                        mLastAttributeRequest(nsnull),
                        mFirstCallbackEventRequest(nsnull),
-                       mLastCallbackEventRequest(nsnull),
-                       mAnonymousContentTable(nsnull)
+                       mLastCallbackEventRequest(nsnull)
 {
   NS_INIT_REFCNT();
   mIsDestroying = PR_FALSE;

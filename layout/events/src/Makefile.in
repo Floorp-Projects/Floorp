@@ -40,11 +40,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsEventListenerManager.h \
-		nsEventStateManager.h \
-		nsDOMEvent.h \
 		nsDOMEventsIIDs.h \
-		nsPrivateTextRange.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -41,6 +41,7 @@
 #include "nsFrameImageLoader.h"
 #include "nsIFrameManager.h"
 #include "nsIImageGroup.h"
+#include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsEventStateManager.h"

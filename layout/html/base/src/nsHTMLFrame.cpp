@@ -34,7 +34,7 @@
 #include "nsPageFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"

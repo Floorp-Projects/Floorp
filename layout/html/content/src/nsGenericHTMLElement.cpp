@@ -53,9 +53,10 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsStyleConsts.h"
-#include "nsFrame.h"
+#include "nsIFrame.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
@@ -72,7 +73,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsDOMEventsIIDs.h"
 #include "nsIEventStateManager.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -89,7 +90,6 @@
 
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
-#include "nsEventListenerManager.h"
 
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"

@@ -135,10 +135,13 @@ nsresult
 NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 #endif
 
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentXBL.h"
 #include "nsIScrollable.h"
+#include "nsINodeInfo.h"
 
 #ifdef DEBUG
 static PRBool gNoisyContentUpdates = PR_FALSE;

@@ -103,6 +103,7 @@ DEFINES		+= -D_IMPL_NS_HTML
 
 INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../html/base/src \
+		   -I$(srcdir)/../html/style/src \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
 		   $(NULL)

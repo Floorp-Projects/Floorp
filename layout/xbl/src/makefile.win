@@ -76,15 +76,11 @@ EXPORTS =					\
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\html\style\src -I..\..\html\base\src -I$(PUBLIC)\dom \
    -I..\..\html\document\src \
-   -I..\..\html\content\src \
-   -I..\..\html\table\src \
-   -I..\..\html\forms\src \
   -I$(PUBLIC)\netlib \
   -I$(PUBLIC)\pref \
-  -I..\..\xml\content\src \
   -I..\..\xml\document\src \
   -I..\..\base\src \
-  -I..\public
+  $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \

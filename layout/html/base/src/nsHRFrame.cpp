@@ -31,7 +31,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIFontMetrics.h"
-#include "nsIHTMLAttributes.h"
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLHRElement.h"

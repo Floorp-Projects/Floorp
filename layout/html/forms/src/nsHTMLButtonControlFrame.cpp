@@ -41,10 +41,8 @@
 #include "nsHTMLAtoms.h"
 #include "nsIImage.h"
 #include "nsStyleUtil.h"
-#include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIHTMLAttributes.h"
-#include "nsGenericHTMLElement.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
@@ -55,6 +53,7 @@
 #include "nsButtonFrameRenderer.h"
 #include "nsFormControlFrame.h"
 #include "nsIFrameManager.h"
+#include "nsINameSpaceManager.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);

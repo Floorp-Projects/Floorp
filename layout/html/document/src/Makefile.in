@@ -59,10 +59,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../content/src \
-		-I$(srcdir)/../../forms/src \
-		-I$(srcdir)/../../style/src \
-		-I$(srcdir)/../../table/src \
-		-I$(srcdir)/../../dom \
 		$(NULL)
 
 GARBAGE		+= $(DIST)/bin/res/ua.css $(DIST)/bin/res/html.css $(DIST)/bin/res/forms.css $(DIST)/bin/res/quirk.css $(DIST)/bin/res/arrow.gif

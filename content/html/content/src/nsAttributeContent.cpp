@@ -38,7 +38,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsISizeOfHandler.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMText.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "prprf.h"

@@ -44,7 +44,7 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIPresShell.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -54,6 +54,9 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIFilePicker.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsINodeInfo.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIScriptGlobalObject.h"
 
 
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);

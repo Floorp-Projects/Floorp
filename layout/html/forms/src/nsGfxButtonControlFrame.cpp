@@ -26,6 +26,7 @@
 #include "nsIFontMetrics.h"
 #include "nsFormControlFrame.h"
 #include "nsISupportsArray.h"
+#include "nsINameSpaceManager.h"
 
 const nscoord kSuggestedNotSet = -1;
 

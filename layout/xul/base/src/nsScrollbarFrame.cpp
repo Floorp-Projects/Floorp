@@ -41,7 +41,6 @@
 #include "nsIDOMElement.h"
 #include "nsXMLElement.h"
 #include "nsIStyledContent.h"
-#include "nsGenericElement.h"
 #include "nsIStyleRule.h"
 #include "nsHTMLValue.h"
 #include "nsIAnonymousContent.h"

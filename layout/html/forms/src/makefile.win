@@ -82,7 +82,6 @@ LINCS= -I$(PUBLIC)\xpcom  \
        -I..\..\style\src	\
        -I..\..\..\base\src \
        -I..\..\..\xul\base\src \
-       -I..\..\content\src \
        -I$(PUBLIC)\uconv
 
 

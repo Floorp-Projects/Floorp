@@ -52,7 +52,7 @@ typedef unsigned long HMTX;
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

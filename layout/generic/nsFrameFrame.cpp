@@ -56,13 +56,13 @@
 #include "nsFrameSetFrame.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
-#include "nsGenericHTMLElement.h"
 #include "nsLayoutAtoms.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsICodebasePrincipal.h"
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
+#include "nsINameSpaceManager.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULElement.h"

@@ -58,7 +58,6 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIPresShell.h"
-#include "nsGenericHTMLElement.h"
 #include "nsFrameNavigator.h"
 #include "nsCSSRendering.h"
 #include "nsISelfScrollingFrame.h"
