@@ -551,7 +551,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           lstrcpy(sgProduct.szPath, szTempSetupPath);
 
           /* check for legacy file.  We're trying not to install over an old incompatible version */
-          if(CheckLegacy() == TRUE)
+          if(CheckLegacy(hDlg) == TRUE)
           {
             SetForegroundWindow(hDlg);
             break;

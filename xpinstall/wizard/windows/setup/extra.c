@@ -3017,7 +3017,7 @@ int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   return(0);
 }
 
-BOOL CheckLegacy()
+BOOL CheckLegacy(HWND hDlg)
 {
   char      szSection[MAX_BUF];
   char      szFilename[MAX_BUF];
@@ -3068,7 +3068,7 @@ BOOL CheckLegacy()
           if(NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
             lstrcpy(szMBWarningStr, "Warning");
 
-          if(MessageBox(hWndMain, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
+          if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
             return(TRUE);
         }
         /* file does not exist, so it's okay.  Continue with the next check */
@@ -3085,7 +3085,7 @@ BOOL CheckLegacy()
           if(NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
             lstrcpy(szMBWarningStr, "Warning");
 
-          if(MessageBox(hWndMain, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
+          if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
             return(TRUE);
         }
       }
