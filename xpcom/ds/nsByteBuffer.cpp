@@ -27,12 +27,12 @@ public:
   ~ByteBufferImpl();
 
   NS_DECL_ISUPPORTS
-  virtual PRUint32 GetLength(void) const;
-  virtual PRUint32 GetBufferSize(void) const;
-  virtual char* GetBuffer() const;
-  virtual PRBool Grow(PRUint32 aNewSize);
-  virtual PRInt32 Fill(nsresult* aErrorCode, nsIInputStream* aStream,
-                       PRUint32 aKeep);
+  NS_IMETHOD_(PRUint32) GetLength(void) const;
+  NS_IMETHOD_(PRUint32) GetBufferSize(void) const;
+  NS_IMETHOD_(char*) GetBuffer() const;
+  NS_IMETHOD_(PRBool) Grow(PRUint32 aNewSize);
+  NS_IMETHOD_(PRInt32) Fill(nsresult* aErrorCode, nsIInputStream* aStream,
+                            PRUint32 aKeep);
 
   char* mBuffer;
   PRUint32 mSpace;
@@ -62,22 +62,26 @@ ByteBufferImpl::~ByteBufferImpl()
   mLength = 0;
 }
 
-PRUint32 ByteBufferImpl::GetLength(void) const
+NS_IMETHODIMP_(PRUint32)
+ByteBufferImpl::GetLength(void) const
 {
   return mLength;
 }
 
-PRUint32 ByteBufferImpl::GetBufferSize(void) const
+NS_IMETHODIMP_(PRUint32)
+ByteBufferImpl::GetBufferSize(void) const
 {
   return mSpace;
 }
 
-char* ByteBufferImpl::GetBuffer(void) const
+NS_IMETHODIMP_(char*)
+ByteBufferImpl::GetBuffer(void) const
 {
   return mBuffer;
 }
 
-PRBool ByteBufferImpl::Grow(PRUint32 aNewSize)
+NS_IMETHODIMP_(PRBool)
+ByteBufferImpl::Grow(PRUint32 aNewSize)
 {
   if (aNewSize < MIN_BUFFER_SIZE) {
     aNewSize = MIN_BUFFER_SIZE;
@@ -94,8 +98,9 @@ PRBool ByteBufferImpl::Grow(PRUint32 aNewSize)
   return PR_FALSE;
 }
 
-PRInt32 ByteBufferImpl::Fill(nsresult* aErrorCode, nsIInputStream* aStream,
-                             PRUint32 aKeep)
+NS_IMETHODIMP_(PRInt32)
+ByteBufferImpl::Fill(nsresult* aErrorCode, nsIInputStream* aStream,
+                     PRUint32 aKeep)
 {
   NS_PRECONDITION(nsnull != aStream, "null stream");
   NS_PRECONDITION(aKeep <= mLength, "illegal keep count");
