@@ -79,14 +79,15 @@ private:
 
     nsresult    OpenCacheFile(PRIntn flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks();
-    nsresult    FlushBufferToFile(PRBool  clearBuffer);
+    nsresult    FlushBufferToFile(PRBool  clearBuffer); // XXX clearBuffer is always PR_TRUE
     PRUint32    WriteToBuffer(const char * buffer, PRUint32 count);
     nsresult    UpdateFileSize();
+    void        DeleteBuffer();
 
 
     nsDiskCacheBinding *        mBinding;
     nsDiskCacheDevice *         mDevice;
-    nsDiskCacheOutputStream *   mOutStream;
+    nsDiskCacheOutputStream *   mOutStream;     // not an owning reference
     PRInt32                     mInStreamCount;
     nsCOMPtr<nsILocalFile>      mLocalFile;
     PRFileDesc *                mFD;
@@ -96,7 +97,6 @@ private:
     PRUint32                    mBufPos;        // current mark in buffer
     PRUint32                    mBufEnd;        // current end of data in buffer
     PRUint32                    mBufSize;       // current end of buffer
-    PRUint32                    mBufOffset;     // stream position of buffer start
     PRBool                      mBufDirty;
     char *                      mBuffer;
     
