@@ -1656,10 +1656,10 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     PRUnichar **certDetailsList = NULL;
     PRBool canceled;
 
-    /* find all user certs that are valid and for SSL */
+    /* find all user certs that are for SSL */
     /* note that we are allowing expired certs in this list */
     certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
-                                         certUsageSSLClient, PR_TRUE, 
+                                         certUsageSSLClient, PR_FALSE, 
                                          PR_FALSE, wincx);
     if (certList == NULL) {
       goto noCert;
