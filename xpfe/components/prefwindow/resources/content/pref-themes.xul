@@ -34,7 +34,9 @@
         class="color-dialog"
         orient="vertical">
 
+  <script language="JavaScript" src="chrome://global/content/strres.js"></script>
   <script language="JavaScript" src="chrome://communicator/content/pref/pref-themes.js"></script>
+  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
         
   <box class="box-smallheader" title="&lHeader;"/>
 
