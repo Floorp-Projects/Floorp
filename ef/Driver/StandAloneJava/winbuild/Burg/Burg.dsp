@@ -134,7 +134,7 @@ BuildCmds= \
 InputPath=..\..\..\..\Tools\Burg\gram.y
 
 BuildCmds= \
-	$(MOZ_TOOLS)\bin\yacc -l -b y.tab -d $(InputPath)
+	..\..\..\..\Tools\bin\bison -l -d $(InputPath)
 
 "y.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
