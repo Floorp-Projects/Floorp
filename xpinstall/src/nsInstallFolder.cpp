@@ -106,7 +106,10 @@ nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRel
         tempString += aRelativePath;
         mFileSpec = new nsFileSpec(tempString);
 
-        // make sure that the directory is created.
+        // This paranoia makes no sense since dirCheck.IsDirectory() && dirCheck.Exists() !
+        //      vvvv
+        // make sure that the directory is created. 
+        //      ^^^^
         nsFileSpec(mFileSpec->GetCString(), PR_TRUE);
     }
     else
@@ -273,7 +276,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 mFileSpec = nsnull;
 			   return;
 		}
-#ifndef XP_MAC
+		
         if (aRelativePath.Length() > 0)
         {
             nsString tempPath(aRelativePath);
@@ -283,9 +286,6 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
             *mFileSpec += tempPath;
         }
-#endif
-            // make sure that the directory is created.
-        nsFileSpec(mFileSpec->GetCString(), PR_TRUE);
     }
 }
 
