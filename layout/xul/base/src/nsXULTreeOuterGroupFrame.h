@@ -142,7 +142,8 @@ public:
   nscoord GetYPosition();
   nscoord GetAvailableHeight();
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32 *aResult) {
-    *aResult=GetAvailableHeight() / mRowHeight; return NS_OK;
+    *aResult=(mRowHeight ? GetAvailableHeight() / mRowHeight : 0);
+    return NS_OK;
   }
   NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32 *aResult) {
     *aResult=mCurrentIndex; return NS_OK;
