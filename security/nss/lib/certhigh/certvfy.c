@@ -422,10 +422,11 @@ loser:
     if (status == PR_SUCCESS) {
 	/* if it's a root, the chain will only have one cert */
 	if (!chain[1]) {
-	    /* need to dupe since caller expects new cert */
-	    return CERT_DupCertificate(cert);
+	    /* already has a reference from the call to BuildChain */
+	    return cert;
 	} else {
-	    return STAN_GetCERTCertificate(chain[1]);
+	    CERT_DestroyCertificate(cert); /* the first cert in the chain */
+	    return STAN_GetCERTCertificate(chain[1]); /* return the 2nd */
 	}
     } else {
 	PORT_SetError (SEC_ERROR_UNKNOWN_ISSUER);

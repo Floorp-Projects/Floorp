@@ -1084,21 +1084,23 @@ loser:
 
     arena = PORT_NewArena(4096);
     if (arena == NULL) {
-	/* XXX destroy certs in chain */
-	nss_ZFreeIf(stanChain);
+	goto loser;
     }
 
     chain = (CERTCertificateList *)PORT_ArenaAlloc(arena, 
                                                  sizeof(CERTCertificateList));
+    if (!chain) goto loser;
     chain->certs = (SECItem*)PORT_ArenaAlloc(arena, len * sizeof(SECItem));
+    if (!chain->certs) goto loser;
     i = 0;
     stanCert = stanChain[i];
     while (stanCert) {
 	SECItem derCert;
+	CERTCertificate *cCert = STAN_GetCERTCertificate(stanCert);
 	derCert.len = (unsigned int)stanCert->encoding.size;
 	derCert.data = (unsigned char *)stanCert->encoding.data;
 	SECITEM_CopyItem(arena, &chain->certs[i], &derCert);
-	/* XXX CERT_DestroyCertificate(node->cert); */
+	CERT_DestroyCertificate(cCert);
 	stanCert = stanChain[++i];
     }
     if ( !includeRoot && len > 1) {
@@ -1110,6 +1112,19 @@ loser:
     chain->arena = arena;
     nss_ZFreeIf(stanChain);
     return chain;
+loser:
+    i = 0;
+    stanCert = stanChain[i];
+    while (stanCert) {
+	CERTCertificate *cCert = STAN_GetCERTCertificate(stanCert);
+	CERT_DestroyCertificate(cCert);
+	stanCert = stanChain[++i];
+    }
+    nss_ZFreeIf(stanChain);
+    if (arena) {
+	PORT_FreeArena(arena, PR_FALSE);
+    }
+    return NULL;
 #endif
 }
 

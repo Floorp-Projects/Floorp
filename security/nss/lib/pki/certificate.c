@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.28 $ $Date: 2002/02/01 17:25:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.29 $ $Date: 2002/02/02 20:01:18 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -313,7 +313,7 @@ NSSCertificate_BuildChain
     }
 #endif
     chain = nssList_Create(NULL, PR_FALSE);
-    nssList_Add(chain, c);
+    nssList_Add(chain, nssCertificate_AddRef(c));
     if (statusOpt) *statusOpt = PR_SUCCESS;
     if (rvLimit == 1) goto finish;
     while (!nssItem_Equal(&c->subject, &c->issuer, &nssrv)) {
