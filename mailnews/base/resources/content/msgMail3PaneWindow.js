@@ -41,6 +41,7 @@ var gUnreadCount = null;
 var gTotalCount = null;
 
 var gCurrentLoadingFolderURI;
+var gCurrentFolderToReroot;
 var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
 
@@ -110,16 +111,17 @@ var folderListener = {
 
 	OnFolderLoaded: function (folder)
 	{
-		dump('In OnFolderLoader\n');
 		if(folder)
 		{
 			var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
 			if(resource)
 			{
 				var uri = resource.Value;
-				if(uri == gCurrentLoadingFolderURI)
+				dump('In OnFolderLoaded for ' + uri);
+				dump('\n');
+				if(uri == gCurrentFolderToReroot)
 				{
-					gCurrentLoadingFolderURI="";
+					gCurrentFolderToReroot="";
 					var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
 					if(msgFolder)
 					{
@@ -130,7 +132,14 @@ var folderListener = {
 						gCurrentLoadingFolderSortID = "";
 					}
 				}
+				if(uri == gCurrentLoadingFolderURI)
+				{
+				  gCurrentLoadingFolderURI = "";
+				  //Now let's select the first new message if there is one
+				  SelectFirstNewMessage();
+				}
 			}
+
 		}
 	}
 }
@@ -537,6 +546,13 @@ function ThreadPaneOnClick(event)
 
 function OpenThread(treeitem)
 {
+	treeitem.setAttribute('notreadytodisplay', 'true');
+	OpenTreeItemAndDescendants(treeitem);
+	treeitem.setAttribute('notreadytodisplay', 'false');
+}
+
+function OpenTreeItemAndDescendants(treeitem)
+{
 	var open = treeitem.getAttribute('open');
 	if(open != "true")
 	{
@@ -566,7 +582,7 @@ function OpenThread(treeitem)
 					{
 						treechildrenChild.setAttribute('open', 'true');
 						//Open up all of this items
-						OpenThread(treechildrenChild);
+						OpenTreeItemAndDescendants(treechildrenChild);
 					}
 				}
 			}

@@ -507,7 +507,14 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
-	return GetDatabase(); // this will cause a reparse, if needed.
+	nsresult rv = NS_OK;
+	//If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
+	//changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
+	if(!mDatabase)
+		rv = GetDatabase(); // this will cause a reparse, if needed.
+	else
+		NotifyFolderLoaded();
+	return rv;
 }
 
 NS_IMETHODIMP

@@ -54,6 +54,18 @@ function ResourceGoFlaggedMessage(message)
 	return(flaggedValue == 'flagged');
 }
 
+function GoNewMessage(message)
+{
+	var status = message.getAttribute('Status');
+	return(status == 'new');
+}
+
+function ResourceGoNewMessage(message)
+{
+	var StatusValue = GetMessageValue(message, "http://home.netscape.com/NC-rdf#Status");
+	return(StatusValue == 'new');
+}
+
 function GetMessageValue(message, propertyURI)
 {
 	var db = GetThreadTree().database;
@@ -105,16 +117,7 @@ function GoNextMessage(nextFunction, nextResourceFunction, nextThreadFunction, s
 		else
 			currentMessage = selArray[0];
 
-		var nextMessage;
-
-		if(messageView.showThreads)
-		{
-			nextMessage = GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning);	
-		}
-		else
-		{
-			nextMessage = GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning);
-		}
+		var nextMessage = GetNextMessage(tree, currentMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning);
 
 		//Only change the selection if there's a valid nextMessage
 		if(nextMessage && (nextMessage != currentMessage))
@@ -122,14 +125,30 @@ function GoNextMessage(nextFunction, nextResourceFunction, nextThreadFunction, s
 	}
 }
 
-/*GetNextMessage does the iterating for the Next menu item.
+function GetNextMessage(tree, currentMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning)
+{
+	var nextMessage;
+
+	if(messageView.showThreads)
+	{
+		nextMessage = GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning);	
+	}
+	else
+	{
+		nextMessage = GetNextMessageUnthreaded(tree, currentMessage, nextFunction, startFromBeginning);
+	}
+
+	return nextMessage;
+}
+
+/*GetNextMessageUnthreaded does the iterating for the Next menu item.
   currentMessage is the message we are starting from.  
   nextFunction is the function that will be used to detertime if a message matches criteria.
   It must take a node and return a boolean.
   startFromBeginning is a boolean that states whether or not we should start looking at the beginning
   if we reach then end 
 */
-function GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning)
+function GetNextMessageUnthreaded(tree, currentMessage, nextFunction, startFromBeginning)
 {
 	var foundMessage = false;
 
@@ -564,6 +583,16 @@ function FindNextThread(startThread, nextThreadFunction, startFromBeginning, che
 	}
 
 	return nextThread;
+}
+
+function SelectFirstNewMessage()
+{
+	var tree = GetThreadTree();
+
+	var newMessage = GetNextMessage(tree, null, GoNewMessage, ResourceGoNewMessage, null, false)
+
+	if(newMessage)
+		SelectNextMessage(newMessage); 
 }
 
 

@@ -219,12 +219,13 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
       window.title = msgfolder.name;
 
   gBeforeFolderLoadTime = new Date();
+  gCurrentLoadingFolderURI = uri;
 
   if(msgfolder.manyHeadersToDownload())
   {
 	try
 	{
-		gCurrentLoadingFolderURI = uri;
+		gCurrentFolderToReroot = uri;
 		gCurrentLoadingFolderIsThreaded = isThreaded;
 		gCurrentLoadingFolderSortID = sortID;
 		msgfolder.startFolderLoading();
@@ -237,11 +238,13 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
   }
   else
   {
-	gCurrentLoadingFolderURI = "";
+	gCurrentFolderToReroot = "";
 	gCurrentLoadingFolderIsThreaded = false;
 	gCurrentLoadingFolderSortID = "";
-	msgfolder.updateFolder(msgWindow);
 	RerootFolder(uri, msgfolder, isThreaded, sortID);
+	//Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
+	//notification before folder has actually changed.
+	msgfolder.updateFolder(msgWindow);
   }
 }
 
@@ -596,7 +599,7 @@ function GetNextMessageAfterDelete(messages)
 	//search forward
 	while(curMessage)
 	{
-		nextMessage = GetNextMessage(tree, curMessage, GoMessage, false);
+		nextMessage = GetNextMessageUnthreaded(tree, curMessage, GoMessage, false);
 		if(nextMessage)
 		{
 			if(!MessageInSelection(nextMessage, messages))
