@@ -33,17 +33,13 @@
 #define NS_IAUTOCOPYSERVICE_IID \
 { 0x558b93cd, 0x95c1, 0x417d, { 0xa6, 0x6e, 0xf9, 0xca, 0x66, 0xdc, 0x98, 0xa8 } }
 
-// {8775CA39-4072-4cc0-92D3-A7C2B820089C}
-#define NS_AUTOCOPYSERVICE_CID
-{ 0x8775ca39, 0x4072, 0x4cc0, { 0x92, 0xd3, 0xa7, 0xc2, 0xb8, 0x20, 0x8, 0x9c } }
-
 
 class nsIDOMSelection;
 
 class nsIAutoCopyService : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IAUTOCOPYSERVICE; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IAUTOCOPYSERVICE_IID; return iid; }
   
   //This will add this service as a selection listener.
   NS_IMETHOD Listen(nsIDOMSelection *aDomSelection)=0;
