@@ -60,6 +60,12 @@ interface nsIStreamLoader : nsISupports
      * Gets the owner of this file
      */
     readonly attribute nsISupports owner;
+
+    /**
+     * Gets the channel
+     */
+    readonly attribute nsIChannel channel;
+
 };
 
 %{C++
