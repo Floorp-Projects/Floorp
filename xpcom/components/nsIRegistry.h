@@ -216,10 +216,24 @@ struct nsIRegistry : public nsISupports {
     |                        location.  Returns the resulting key in           |
     |                        the location specified by the third argument      |
     |                        (unless that pointer is 0).                       |
-    | RemoveNode           - Removes the specified registry subtree or         |
+	| AddSubtreeRaw        - Adds a new registry subtree at the specified      |
+    |                        location.  Returns the resulting key in           |
+    |                        the location specified by the third argument      |
+    |                        (unless that pointer is 0).                       |
+	|                        Does not interpret special chars in key names.    |
+    |                                                                          |
+    | RemoveSubtree        - Removes the specified registry subtree or         |
     |                        value at the specified location.                  |
+    | RemoveSubtreeRaw     - Removes the specified registry subtree or         |
+    |                        value at the specified location.                  |
+    |                        Does not interpret special chars in key names.    |
+    |                                                                          |
     | GetSubtree           - Returns a nsIRegistry::Key that can be used       |
     |                        to refer to the specified registry location.      |
+	| GetSubtreeRaw        - Returns a nsIRegistry::Key that can be used       |
+    |                        to refer to the specified registry location.      |
+	|                        Does not interpret special chars in key names.    |
+    |                                                                          |
     | EnumerateSubtrees    - Returns a nsIEnumerator object that you can       |
     |                        use to enumerate all the subtrees descending      |
     |                        from a specified location.  You must free the     |
@@ -243,6 +257,10 @@ struct nsIRegistry : public nsISupports {
     NS_IMETHOD AddSubtree( Key baseKey, const char *path, Key *result ) = 0;
     NS_IMETHOD RemoveSubtree( Key baseKey, const char *path ) = 0;
     NS_IMETHOD GetSubtree( Key baseKey, const char *path, Key *result ) = 0;
+
+	NS_IMETHOD AddSubtreeRaw( Key baseKey, const char *keyname, Key *result ) = 0;
+    NS_IMETHOD RemoveSubtreeRaw( Key baseKey, const char *keyname ) = 0;
+	NS_IMETHOD GetSubtreeRaw( Key baseKey, const char *keyname, Key *result ) = 0;
 
     NS_IMETHOD EnumerateSubtrees( Key baseKey, nsIEnumerator **result ) = 0;
     NS_IMETHOD EnumerateAllSubtrees( Key baseKey, nsIEnumerator **result ) = 0;
