@@ -21,10 +21,15 @@
 
 #include "nsIRegion.h"
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
 class nsRegionXlib : public nsIRegion
 {
  public:
   nsRegionXlib();
+  virtual ~nsRegionXlib();
 
   NS_DECL_ISUPPORTS
 
@@ -47,6 +52,14 @@ class nsRegionXlib : public nsIRegion
   NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
   NS_IMETHOD GetNativeRegion(void *&aRegion) const;
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
+
+private:
+  Region mRegion;
+  nsRegionComplexity mRegionType;
+
+  void SetRegionEmpty();
+  Region CreateRectRegion(PRInt32 aX, PRInt32 aY,          
+                          PRInt32 aWidth, PRInt32 aHeight);
 
 };
 
