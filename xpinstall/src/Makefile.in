@@ -31,7 +31,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
 LIBRARY_NAME	= xpinstall
-EXPORT_LIBRARY = 1
+# Do not set EXPORT_LIBRARY as we do not want xpinstall in the static libs list
+#EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= xpinstal
 IS_COMPONENT	= 1
 MODULE_NAME	= nsSoftwareUpdate
