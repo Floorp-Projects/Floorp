@@ -64,6 +64,8 @@ nsImapUrl::nsImapUrl()
     m_imapExtension = nsnull;
     m_imapMiscellaneous = nsnull;
 	m_listOfMessageIds = nsnull;
+	m_sourceCanonicalFolderPathSubString = nsnull;
+	m_destinationCanonicalFolderPathSubString = nsnull;
 
 	m_runningUrl = PR_FALSE;
 
@@ -735,7 +737,7 @@ NS_IMETHODIMP nsImapUrl::GetContentLength(PRInt32 *len)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char **aResult) const
+NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char **aResult) 
 {
 	if (nsnull == aResult || !m_listOfMessageIds) 
 		return  NS_ERROR_NULL_POINTER;
@@ -823,6 +825,7 @@ NS_IMETHODIMP nsImapUrl::GetServerStatus(PRInt32 *status)
     return NS_OK;
 }
 
+
 NS_IMETHODIMP nsImapUrl::ToString(PRUnichar* *aString) const
 { 
 	if (aString)
@@ -830,7 +833,7 @@ NS_IMETHODIMP nsImapUrl::ToString(PRUnichar* *aString) const
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) const
+NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) 
 {
     NS_LOCK_INSTANCE();
 	//  here's the old code:
@@ -863,7 +866,77 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) const
 
 }
 
-NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const
+char nsImapUrl::GetOnlineSubDirSeparator()
+{
+	return m_onlineSubDirSeparator;
+}
+
+
+// Returns NULL if nothing was done.
+// Otherwise, returns a newly allocated name.
+char *nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailboxName)
+{
+	char *rv = NULL;
+#ifdef HAVE_PORT
+	// If this host has an online server directory configured
+	char *onlineDir = TIMAPHostInfo::GetOnlineDirForHost(GetUrlHost());
+	if (onlineMailboxName && onlineDir)
+	{
+#ifdef DEBUG
+		// This invariant should be maintained by libmsg when reading/writing the prefs.
+		// We are only supporting online directories whose online delimiter is /
+		// Therefore, the online directory must end in a slash.
+		XP_ASSERT(onlineDir[XP_STRLEN(onlineDir) - 1] == '/');
+#endif
+		TIMAPNamespace *ns = TIMAPHostInfo::GetNamespaceForMailboxForHost(GetUrlHost(), onlineMailboxName);
+		NS_ASSERTION(ns, "couldn't find namespace for host");
+		if (ns && (PL_strlen(ns->GetPrefix()) == 0) && XP_STRCASECMP(onlineMailboxName, "INBOX"))
+		{
+			// Also make sure that the first character in the mailbox name is not '/'.
+			NS_ASSERTION(*onlineMailboxName != '/', "first char of onlinemailbox is //");
+
+			// The namespace for this mailbox is the root ("").
+			// Prepend the online server directory
+			int finalLen = XP_STRLEN(onlineDir) + XP_STRLEN(onlineMailboxName) + 1;
+			rv = (char *)XP_ALLOC(finalLen);
+			if (rv)
+			{
+				XP_STRCPY(rv, onlineDir);
+				XP_STRCAT(rv, onlineMailboxName);
+			}
+		}
+	}
+#endif // HAVE_PORT
+	return rv;
+}
+
+// Converts from canonical format (hierarchy is indicated by '/' and all real slashes ('/') are escaped)
+// to the real online name on the server.
+char *nsImapUrl::AllocateServerPath(const char *canonicalPath, char onlineDelimiter /* = kOnlineHierarchySeparatorUnknown */)
+{
+	char *rv = NULL;
+	char delimiterToUse = onlineDelimiter;
+	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown)
+		delimiterToUse = GetOnlineSubDirSeparator();
+	NS_ASSERTION(delimiterToUse != kOnlineHierarchySeparatorUnknown, "hierarchy separator unknown");
+	if (canonicalPath)
+		rv = ReplaceCharsInCopiedString(canonicalPath, '/', delimiterToUse);
+	else
+		rv = PL_strdup("");
+
+	char *onlineNameAdded = AddOnlineDirectoryIfNecessary(rv);
+	if (onlineNameAdded)
+	{
+		PR_FREEIF(rv);
+		rv = onlineNameAdded;
+	}
+
+	return rv;
+
+}
+
+
+NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) 
 {
 	NS_LOCK_INSTANCE();
     *allocatedPath = nsnull;
@@ -927,6 +1000,36 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
     NS_UNLOCK_INSTANCE();
     return NS_ERROR_NULL_POINTER;
 }
+
+NS_IMETHODIMP  nsImapUrl::CreateServerSourceFolderPathString(char **result)
+{
+	if (!result)
+	    return NS_ERROR_NULL_POINTER;
+	NS_LOCK_INSTANCE();
+	*result = AllocateServerPath(m_sourceCanonicalFolderPathSubString);
+
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar)
+{	
+	char oldCharString[2];
+	*oldCharString = oldChar;
+	*(oldCharString+1) = 0;
+	
+	char *translatedString = PL_strdup(stringToCopy);
+	char *currentSeparator = strstr(translatedString, oldCharString);
+	
+	while(currentSeparator)
+	{
+		*currentSeparator = newChar;
+		currentSeparator = strstr(currentSeparator+1, oldCharString);
+	}
+
+	return translatedString;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // End of functions which should be made obsolete after modifying nsIURL

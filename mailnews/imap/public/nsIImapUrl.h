@@ -131,10 +131,11 @@ public:
 	NS_IMETHOD GetImapAction(nsImapAction * aImapAction) = 0;
 	NS_IMETHOD SetImapAction(nsImapAction aImapAction) = 0;
 
-	NS_IMETHOD GetImapPartToFetch(char **resultPart) const = 0;
-	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const = 0;
+	NS_IMETHOD GetImapPartToFetch(char **resultPart) = 0;
+	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) = 0;
+	NS_IMETHOD CreateServerSourceFolderPathString(char **result) = 0;
 
-	NS_IMETHOD	CreateListOfMessageIdsString(char **result) const = 0;
+	NS_IMETHOD	CreateListOfMessageIdsString(char **result) = 0;
 };
 
 #endif /* nsIImapUrl_h___ */

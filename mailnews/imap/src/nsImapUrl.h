@@ -104,10 +104,11 @@ public:
     NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
     NS_IMETHOD ToString(PRUnichar* *aString) const;
 
-	NS_IMETHOD GetImapPartToFetch(char **result) const;
-	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const;
+	NS_IMETHOD GetImapPartToFetch(char **result) ;
+	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) ;
+	NS_IMETHOD CreateServerSourceFolderPathString(char **result) ;
 
-	NS_IMETHOD	CreateListOfMessageIdsString(char **result) const;
+	NS_IMETHOD	CreateListOfMessageIdsString(char **result) ;
 
 	// nsImapUrl
 	nsImapUrl();
@@ -129,6 +130,16 @@ protected:
 	char		*m_search;
 	char		*m_errorMessage;
 	char		*m_listOfMessageIds;
+
+	char		GetOnlineSubDirSeparator();
+	char *		AllocateServerPath(const char *canonicalPath, 
+									char onlineDelimiter = kOnlineHierarchySeparatorUnknown);
+	char *		AddOnlineDirectoryIfNecessary(const char *onlineMailboxName);
+
+	char *		ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
+    char        *m_sourceCanonicalFolderPathSubString;
+    char        *m_destinationCanonicalFolderPathSubString;
+    char		m_onlineSubDirSeparator;	
 
 
 	PRBool		m_runningUrl;

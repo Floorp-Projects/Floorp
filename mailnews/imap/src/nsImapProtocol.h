@@ -250,6 +250,7 @@ private:
     nsImapServerResponseParser& GetServerStateParser() { return m_parser; };
 
     virtual void ProcessCurrentURL();
+	void ProcessSelectedStateURL();
     virtual void ParseIMAPandCheckForNewMail(char* commandString = nsnull);
 
 	// folder opening and listing header functions
