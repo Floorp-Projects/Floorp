@@ -102,12 +102,10 @@ static nsresult openWindow( const char *chrome, nsIMsgComposeParams *params )
 {
   nsresult rv;
 
-printf("___TRACE___BUG_79775___CP#022___\n");
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (!wwatch)
     return NS_ERROR_FAILURE;
 
-printf("___TRACE___BUG_79775___CP#023___\n");
   nsCOMPtr<nsISupportsInterfacePointer> msgParamsWrapper =
     do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -115,16 +113,11 @@ printf("___TRACE___BUG_79775___CP#023___\n");
   msgParamsWrapper->SetData(params);
   msgParamsWrapper->SetDataIID(&NS_GET_IID(nsIMsgComposeParams));
 
-printf("___TRACE___BUG_79775___CP#024___\n");
   nsCOMPtr<nsIDOMWindow> newWindow;
   rv = wwatch->OpenWindow(0, chrome && *chrome ? chrome : DEFAULT_CHROME,
                  "_blank", "chrome,dialog=no,all", msgParamsWrapper,
                  getter_AddRefs(newWindow));
 
-if (NS_FAILED(rv))
-printf("___TRACE___BUG_79775___CP#025___\n");
-else
-printf("___TRACE___BUG_79775___CP#026___\n");
   return rv;
 }
 
@@ -132,7 +125,6 @@ NS_IMETHODIMP
 nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const char *originalMsgURI,
 	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity)
 {
-printf("___TRACE___BUG_79775___CP#001___\n");
 	nsresult rv;
 	
 	/* Actually, the only way to implement forward inline is to simulate a template message. 
@@ -140,26 +132,21 @@ printf("___TRACE___BUG_79775___CP#001___\n");
 	*/
   if (type == nsIMsgCompType::ForwardInline || type == nsIMsgCompType::Draft || type == nsIMsgCompType::Template)
 	{
-printf("___TRACE___BUG_79775___CP#002___\n");
     nsCOMPtr<nsIMsgDraft> pMsgDraft (do_CreateInstance(NS_MSGDRAFT_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && pMsgDraft)
 		{
-printf("___TRACE___BUG_79775___CP#003___\n");
       nsCAutoString uriToOpen(originalMsgURI);
       uriToOpen.Append("?fetchCompleteMessage=true"); 
 
 			switch(type)
 			{
 				case nsIMsgCompType::ForwardInline:
-printf("___TRACE___BUG_79775___CP#004___\n");
 	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_TRUE);
 					break;
 				case nsIMsgCompType::Draft:
-printf("___TRACE___BUG_79775___CP#005___\n");
 	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_FALSE);
 					break;
 				case nsIMsgCompType::Template:
-printf("___TRACE___BUG_79775___CP#006___\n");
 	    			rv = pMsgDraft->OpenEditorTemplate(uriToOpen.get(), nsnull, identity);
 					break;
 			}
@@ -303,7 +290,6 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const char *msgCom
 {
 	nsresult rv;
 
-printf("___TRACE___BUG_79775___CP#020___\n");
   nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && pMsgComposeParams)
   {
@@ -315,7 +301,6 @@ printf("___TRACE___BUG_79775___CP#020___\n");
 #ifdef MSGCOMP_TRACE_PERFORMANCE
       TimeStamp("Start opening the window", PR_TRUE);
 #endif
-printf("___TRACE___BUG_79775___CP#021___\n");
       rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
   }
 

@@ -178,7 +178,6 @@ CreateTheComposeWindow(nsIMsgCompFields     *compFields,
 nsresult            rv;
 MSG_ComposeFormat   format = nsIMsgCompFormat::Default;
 
-printf("___TRACE___BUG_79775___ME#006___\n");
 #ifdef NS_DEBUG
 printf("RICHIE: Need to do something with the attachment data!!!!\n");
 mime_dump_attachments ( attachmentList );
@@ -216,7 +215,6 @@ mime_dump_attachments ( attachmentList );
   if ((NS_FAILED(rv)) || (!msgComposeService))
     return rv; 
   
-printf("___TRACE___BUG_79775___ME#007___\n");
   if (identity && composeType == nsIMsgCompType::ForwardInline)
   {
   	PRBool composeHtml = PR_FALSE;
@@ -234,7 +232,6 @@ printf("___TRACE___BUG_79775___ME#007___\n");
   else
     format = composeFormat;
     
-printf("___TRACE___BUG_79775___ME#008___\n");
   rv = msgComposeService->OpenComposeWindowWithCompFields(nsnull, /* default chrome */
                                                           composeType, format, compFields, identity);
   return rv;
@@ -260,7 +257,6 @@ CreateCompositionFields(const char        *from,
                         PRBool            sign_p,
                         char              *charset)
 {
-printf("___TRACE___BUG_79775___ME#003___\n");
   nsIMsgCompFields *cFields = nsnull;
   char *val;
 
@@ -272,7 +268,6 @@ printf("___TRACE___BUG_79775___ME#003___\n");
     return nsnull;
   NS_ADDREF(cFields);
 
-printf("___TRACE___BUG_79775___ME#004___\n");
   // Now set all of the passed in stuff...
   cFields->SetCharacterSet(charset);
 
@@ -336,7 +331,6 @@ printf("___TRACE___BUG_79775___ME#004___\n");
   cFields->SetNewspostUrl(val ? val : newspost_url);
   PR_FREEIF(val);
 
-printf("___TRACE___BUG_79775___ME#005___\n");
   return cFields;
 }
 
@@ -1137,7 +1131,6 @@ mime_parse_stream_complete (nsMIMESession *stream)
   char *priority = 0;
   char *draftInfo = 0;
   
-printf("___TRACE___BUG_79775___ME#009___\n");
   PRBool xlate_p = PR_FALSE;	/* #### how do we determine this? */
   PRBool sign_p = PR_FALSE;		/* #### how do we determine this? */
   PRBool forward_inline = PR_FALSE;
@@ -1146,7 +1139,6 @@ printf("___TRACE___BUG_79775___ME#009___\n");
   
   if (!mdd) return;
   
-printf("___TRACE___BUG_79775___ME#010___\n");
   if (mdd->obj) 
   {
     int status;
@@ -1399,7 +1391,6 @@ printf("___TRACE___BUG_79775___ME#010___\n");
 #ifdef NS_DEBUG
         printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
 #endif
-printf("___TRACE___BUG_79775___ME#011___\n");
         CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity);
       }
       else
@@ -1407,12 +1398,10 @@ printf("___TRACE___BUG_79775___ME#011___\n");
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITH a body!!!!\n");
 #endif
-printf("___TRACE___BUG_79775___ME#012___\n");
         if (mdd->forwardInline)
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
         else
         {
-printf("___TRACE___BUG_79775___ME#013___\n");
           fields->SetDraftId(mdd->url_name);
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
         }
@@ -1432,7 +1421,6 @@ printf("___TRACE___BUG_79775___ME#013___\n");
 #ifdef NS_DEBUG
         printf("RICHIE: Time to create the EDITOR with this template - NO body!!!!\n");
 #endif
-printf("___TRACE___BUG_79775___ME#014___\n");
         CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, nsIMsgCompFormat::Default, mdd->identity);
       }
       else
@@ -1440,12 +1428,10 @@ printf("___TRACE___BUG_79775___ME#014___\n");
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITHOUT a body!!!!\n");
 #endif
-printf("___TRACE___BUG_79775___ME#015___\n");
         if (mdd->forwardInline)
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);
         else
         {
-printf("___TRACE___BUG_79775___ME#016___\n");
           fields->SetDraftId(mdd->url_name);
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity);
         }
@@ -1454,7 +1440,6 @@ printf("___TRACE___BUG_79775___ME#016___\n");
   }
   else
   {
-printf("___TRACE___BUG_79775___ME#017___\n");
     fields = CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
       org, subj, refs, 0, priority, 0, news_host,
       GetMailXlateionPreference(), 
@@ -1908,7 +1893,6 @@ mime_bridge_create_draft_stream(
   struct mime_draft_data  *mdd = NULL;
   MimeObject              *obj;
 
-printf("___TRACE___BUG_79775___ME#001___\n");
   if ( !uri ) 
     return nsnull;
 
@@ -2022,6 +2006,5 @@ printf("___TRACE___BUG_79775___ME#001___\n");
     return nsnull;
   }
 
-printf("___TRACE___BUG_79775___ME#002___\n");
   return stream;
 }
