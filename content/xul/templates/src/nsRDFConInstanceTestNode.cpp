@@ -143,15 +143,15 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
         rv = rdfc->IsContainer(mDataSource, VALUE_TO_IRDFRESOURCE(value), &isRDFContainer);
         if (NS_FAILED(rv)) return rv;
 
-        // If they've asked us to test for emptiness, do that first
-        // because it doesn't require us to create any enumerators.
-        if (mEmpty != eDontCare) {
-            Test empty;
+        if (mEmpty != eDontCare || mContainer != eDontCare) {
+            Test empty = eDontCare;
+            Test container = eDontCare;
 
             if (isRDFContainer) {
                 // It's an RDF container. Use the container utilities
                 // to deduce what's in it.
-                //
+                container = eTrue;
+
                 // XXX should cache the factory
                 rdfcontainer = do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
                 if (NS_FAILED(rv)) return rv;
@@ -164,10 +164,13 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                 if (NS_FAILED(rv)) return rv;
 
                 empty = (count == 0) ? eTrue : eFalse;
-            }
-            else {
+            } else {
                 empty = eTrue;
+                container = eFalse;
 
+                // First do the simple check of finding some outward
+                // arcs; mMembershipProperties should be short, so this can
+                // save us time from dealing with an iterator later on
                 for (nsResourceSet::ConstIterator property = mMembershipProperties.First();
                      property != mMembershipProperties.Last();
                      ++property) {
@@ -178,7 +181,40 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                     if (target != nsnull) {
                         // bingo. we found one.
                         empty = eFalse;
+                        container = eTrue;
                         break;
+                    }
+                }
+
+                // if we still don't think its a container, but we
+                // want to know for sure whether it is or not, we need
+                // to check ArcLabelsOut for potential container arcs.
+                if (container == eFalse && mContainer != eDontCare) {
+                    nsCOMPtr<nsISimpleEnumerator> arcsout;
+                    rv = mDataSource->ArcLabelsOut(VALUE_TO_IRDFRESOURCE(value), getter_AddRefs(arcsout));
+                    if (NS_FAILED(rv)) return rv;
+
+                    while (1) {
+                        PRBool hasmore;
+                        rv = arcsout->HasMoreElements(&hasmore);
+                        if (NS_FAILED(rv)) return rv;
+
+                        if (! hasmore)
+                            break;
+
+                        nsCOMPtr<nsISupports> isupports;
+                        rv = arcsout->GetNext(getter_AddRefs(isupports));
+                        if (NS_FAILED(rv)) return rv;
+
+                        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
+                        NS_ASSERTION(property != nsnull, "not a property");
+                        if (! property)
+                            return NS_ERROR_UNEXPECTED;
+
+                        if (mMembershipProperties.Contains(property)) {
+                            container = eTrue;
+                            break;
+                        }
                     }
                 }
             }
@@ -187,74 +223,18 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                    ("    empty => %s",
                     (empty == mEmpty) ? "consistent" : "inconsistent"));
 
-            if (empty == mEmpty) {
-                Element* element =
-                    nsRDFConInstanceTestNode::Element::Create(mConflictSet.GetPool(),
-                                                              VALUE_TO_IRDFRESOURCE(value),
-                                                              mContainer, mEmpty);
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                inst->AddSupportingElement(element);
-            }
-            else {
-                aInstantiations.Erase(inst--);
-            }
-        }
-        else if (mContainer != eDontCare) {
-            // We didn't care about emptiness, only containerhood.
-            Test container;
-
-            if (isRDFContainer) {
-                // Wow, this is easy.
-                container = eTrue;
-            }
-            else {
-                // Okay, suckage. We need to look at all of the arcs
-                // leading out of the thing, and see if any of them
-                // are properties that are deemed as denoting
-                // containerhood.
-                container = eFalse;
-
-                nsCOMPtr<nsISimpleEnumerator> arcsout;
-                rv = mDataSource->ArcLabelsOut(VALUE_TO_IRDFRESOURCE(value), getter_AddRefs(arcsout));
-                if (NS_FAILED(rv)) return rv;
-
-                while (1) {
-                    PRBool hasmore;
-                    rv = arcsout->HasMoreElements(&hasmore);
-                    if (NS_FAILED(rv)) return rv;
-
-                    if (! hasmore)
-                        break;
-
-                    nsCOMPtr<nsISupports> isupports;
-                    rv = arcsout->GetNext(getter_AddRefs(isupports));
-                    if (NS_FAILED(rv)) return rv;
-
-                    nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-                    NS_ASSERTION(property != nsnull, "not a property");
-                    if (! property)
-                        return NS_ERROR_UNEXPECTED;
-
-                    if (mMembershipProperties.Contains(property)) {
-                        container = eTrue;
-                        break;
-                    }
-                }
-            }
-
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("    container => %s",
                     (container == mContainer) ? "consistent" : "inconsistent"));
 
-            if (container == mContainer) {
+            if (((mEmpty == empty) && (mContainer == container)) ||
+                ((mEmpty == eDontCare) && (mContainer == container)) ||
+                ((mContainer == eDontCare) && (mEmpty == empty)))
+            {
                 Element* element =
                     nsRDFConInstanceTestNode::Element::Create(mConflictSet.GetPool(),
                                                               VALUE_TO_IRDFRESOURCE(value),
-                                                              mContainer, mEmpty);
-
+                                                              container, empty);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
