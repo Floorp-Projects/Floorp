@@ -45,9 +45,8 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean usingSubscription;
   attribute string manageMailAccountUrl;
     
-  nsIURI GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
+  void GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
-                                           in nsIUrlListener aUrlListener,
                                            in nsISupports aConsumer);
 
   void LoadNextQueuedUrl();
