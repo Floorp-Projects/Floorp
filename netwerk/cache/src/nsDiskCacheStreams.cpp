@@ -746,7 +746,6 @@ nsresult
 nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
 {
     PRInt32  newPos;
-    //nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (PRUint32(offset) > mStreamEnd)  return NS_ERROR_FAILURE;

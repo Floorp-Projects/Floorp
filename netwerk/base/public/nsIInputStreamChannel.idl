@@ -62,6 +62,9 @@ interface nsIInputStreamChannel : nsIChannel
      * Otherwise, the stream will be read on a background thread.
      *
      * This attribute can only be changed before the channel is opened.
+     *
+     * @throws NS_ERROR_IN_PROGRESS if the setter is called after the channel
+     * has been opened.
      */
     attribute nsIInputStream contentStream;
 };

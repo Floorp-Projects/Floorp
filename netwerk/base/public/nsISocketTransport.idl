@@ -40,12 +40,13 @@
 interface nsIInterfaceRequestor;
 interface nsISocketEventSink;
 
-[ptr] native PRNetAddrStar(union PRNetAddr);
+native PRNetAddr(union PRNetAddr);
 
 /**
  * nsISocketTransport
  *
- * NOTE: This is a free-threaded interface.
+ * NOTE: This is a free-threaded interface, meaning that the methods on
+ * this interface may be called from any thread.
  */
 [scriptable, uuid(1e372001-ca12-4507-8405-3267d4e0c1fd)]
 interface nsISocketTransport : nsITransport 
@@ -64,18 +65,18 @@ interface nsISocketTransport : nsITransport
      * Returns the IP address for the underlying socket connection.  This
      * attribute is only defined once a connection has been established.
      */
-    [noscript] void getAddress(in PRNetAddrStar netAddr);
+    [noscript] PRNetAddr getAddress();
 
     /**
-     * Security info object returned from the PSM socket provider.  This object
-     * supports nsISSLSocketControl, nsITransportSecurityInfo, and possibly
-     * other interfaces.
+     * Security info object returned from the secure socket provider.  This
+     * object supports nsISSLSocketControl, nsITransportSecurityInfo, and
+     * possibly other interfaces.
      */
     readonly attribute nsISupports securityInfo;
     
     /**
-     * Security notification callbacks passed to PSM via nsISSLSocketControl at
-     * socket creation time.
+     * Security notification callbacks passed to the secure socket provider
+     * via nsISSLSocketControl at socket creation time.
      *
      * NOTE: this attribute cannot be changed once a stream has been opened.
      */
@@ -94,13 +95,20 @@ interface nsISocketTransport : nsITransport
      * with existing error codes in Necko, these status codes are confined
      * within a very limited context where no error codes may appear, so there
      * is no ambiguity.
+     *
+     * The values of these status codes must never change.
+     *
+     * The status codes appear in near-chronological order (not in numeric
+     * order).  STATUS_RESOLVING may be skipped if the host does not need to be
+     * resolved.  STATUS_WAITING_FOR is an optional status code, which the impl
+     * of this interface may choose not to generate.
      */
     const unsigned long STATUS_RESOLVING      = 0x804b0003;
+    const unsigned long STATUS_CONNECTING_TO  = 0x804b0007;
     const unsigned long STATUS_CONNECTED_TO   = 0x804b0004;
     const unsigned long STATUS_SENDING_TO     = 0x804b0005;
-    const unsigned long STATUS_RECEIVING_FROM = 0x804b0006;
-    const unsigned long STATUS_CONNECTING_TO  = 0x804b0007;
     const unsigned long STATUS_WAITING_FOR    = 0x804b000a;
+    const unsigned long STATUS_RECEIVING_FROM = 0x804b0006;
 };
 
 %{C++

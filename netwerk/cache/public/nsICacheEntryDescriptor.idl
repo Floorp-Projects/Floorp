@@ -57,7 +57,8 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      * stream MAY implement nsISeekableStream.
      *
      * @param offset
-     *        read starting from this offset into the cached data.
+     *        read starting from this offset into the cached data.  an offset
+     *        beyond the end of the stream has undefined consequences.
      *
      * @return blocking, unbuffered input stream.
      */
@@ -73,7 +74,8 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      * truncated to the specified offset.
      *
      * @param offset
-     *        write starting from this offset into the cached data.
+     *        write starting from this offset into the cached data.  an offset
+     *        beyond the end of the stream has undefined consequences.
      *
      * @return blocking, unbuffered output stream.
      */

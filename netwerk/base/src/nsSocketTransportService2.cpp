@@ -92,6 +92,7 @@ nsSocketTransportService::nsSocketTransportService()
     PR_INIT_CLIST(&mEventQ);
     PR_INIT_CLIST(&mPendingSocketQ);
 
+    NS_ASSERTION(!gSocketTransportService, "must not instantiate twice");
     gSocketTransportService = this;
 }
 
@@ -145,6 +146,8 @@ nsSocketTransportService::NotifyWhenCanAttachSocket(PLEvent *event)
 {
     LOG(("nsSocketTransportService::NotifyWhenCanAttachSocket\n"));
 
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
     if (CanAttachSocket()) {
         NS_WARNING("should have called CanAttachSocket");
         return PostEvent(event);
@@ -158,6 +161,8 @@ nsresult
 nsSocketTransportService::AttachSocket(PRFileDesc *fd, nsASocketHandler *handler)
 {
     LOG(("nsSocketTransportService::AttachSocket [handler=%x]\n", handler));
+
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     SocketContext sock;
     sock.mFD = fd;

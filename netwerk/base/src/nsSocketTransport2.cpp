@@ -119,7 +119,7 @@ static PRErrorCode RandomizeConnectError(PRErrorCode code)
 {
     //
     // To test out these errors, load http://www.yahoo.com/.  It should load
-    // correctly despite the random occurance of there errors.
+    // correctly despite the random occurance of these errors.
     //
     int n = rand();
     if (n > RAND_MAX/2) {
@@ -208,6 +208,8 @@ nsSocketInputStream::OnSocketReady(nsresult condition)
 {
     LOG(("nsSocketInputStream::OnSocketReady [this=%x cond=%x]\n",
         this, condition));
+
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     nsCOMPtr<nsIInputStreamCallback> callback;
     {
@@ -450,6 +452,8 @@ nsSocketOutputStream::OnSocketReady(nsresult condition)
     LOG(("nsSocketOutputStream::OnSocketReady [this=%x cond=%x]\n",
         this, condition));
 
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
     nsCOMPtr<nsIOutputStreamCallback> callback;
     {
         nsAutoLock lock(mTransport->mLock);
@@ -683,7 +687,7 @@ nsSocketTransport::~nsSocketTransport()
         PRUint32 i;
         for (i=0; i<mTypeCount; ++i)
             PL_strfree(mTypes[i]);
-        PR_Free(mTypes);
+        free(mTypes);
     }
 
     if (mLock)
@@ -720,7 +724,7 @@ nsSocketTransport::Init(const char **types, PRUint32 typeCount,
     // include proxy type as a socket type if proxy type is not "http"
     mTypeCount = typeCount + (proxyType != nsnull);
     if (mTypeCount) {
-        mTypes = (char **) PR_Malloc(mTypeCount * sizeof(char *));
+        mTypes = (char **) malloc(mTypeCount * sizeof(char *));
         if (!mTypes)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -794,7 +798,7 @@ nsSocketTransport::SendStatus(nsresult status)
         }
     }
     if (sink)
-        sink->OnTransportStatus(this, status, progress, ~0U);
+        sink->OnTransportStatus(this, status, progress, PR_UINT32_MAX);
 }
 
 nsresult
@@ -1133,8 +1137,10 @@ nsSocketTransport::OnMsgInputClosed(nsresult reason)
     LOG(("nsSocketTransport::OnMsgInputClosed [this=%x reason=%x]\n",
         this, reason));
 
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
     mInputClosed = PR_TRUE;
-    // check if event should effect entire transport
+    // check if event should affect entire transport
     if (NS_FAILED(reason) && (reason != NS_BASE_STREAM_CLOSED))
         mCondition = reason;                // XXX except if NS_FAILED(mCondition), right??
     else if (mOutputClosed)
@@ -1153,8 +1159,10 @@ nsSocketTransport::OnMsgOutputClosed(nsresult reason)
     LOG(("nsSocketTransport::OnMsgOutputClosed [this=%x reason=%x]\n",
         this, reason));
 
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
     mOutputClosed = PR_TRUE;
-    // check if event should effect entire transport
+    // check if event should affect entire transport
     if (NS_FAILED(reason) && (reason != NS_BASE_STREAM_CLOSED))
         mCondition = reason;                // XXX except if NS_FAILED(mCondition), right??
     else if (mInputClosed)
@@ -1371,6 +1379,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 {
     LOG(("nsSocketTransport::OnSocketDetached [this=%x cond=%x]\n",
         this, mCondition));
+
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     // if we didn't initiate this detach, then be sure to pass an error
     // condition up to our consumers.  (e.g., STS is shutting down.)

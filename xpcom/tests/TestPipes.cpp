@@ -401,9 +401,7 @@ TestPipeObserver()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPump : /*public nsIInputStreamObserver, 
-               public nsIOutputStreamObserver,*/
-               public nsIRunnable
+class nsPump : public nsIRunnable
 {
 public:
     NS_DECL_ISUPPORTS
@@ -489,14 +487,12 @@ TestChainedPipes()
         len = len * rand() / RAND_MAX;
         len = PR_MAX(1, len);
         rv = WriteAll(out1, buf, len, &writeCount);
-        //rv = out1->Write(buf, len, &writeCount);
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(writeCount == len, "didn't write enough");
         total += writeCount;
 
         if (gTrace)
             printf("wrote %d bytes: %s\n", writeCount, buf);
-        //out1->Flush();  // wakes up the pump
 
         PR_smprintf_free(buf);
     }
@@ -638,8 +634,6 @@ main(int argc, char* argv[])
     TestSearch("baz", 2);
 #endif
 
-    //rv = TestPipeObserver();
-    //NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipeObserver failed");
     rv = TestChainedPipes();
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestChainedPipes failed");
     RunTests(16, 1);
