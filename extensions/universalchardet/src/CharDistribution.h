@@ -106,7 +106,7 @@ protected:
   PRUint32 mTotalChars;
 
   //Mapping table to get frequency order from char order (get from GetOrder())
-  PRInt16  *mCharToFreqOrder;
+  const PRInt16  *mCharToFreqOrder;
 
   //Size of above table
   PRUint32 mTableSize;
