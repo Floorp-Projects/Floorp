@@ -58,6 +58,7 @@ public:
     NS_IMETHOD_(PRInt32) GetEventQueueSelectFD() = 0;
 
     NS_IMETHOD Init() = 0;
+    NS_IMETHOD InitFromPRThread(PRThread* thread) = 0;
     NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue) = 0;
 
     NS_IMETHOD EnterMonitor() = 0;

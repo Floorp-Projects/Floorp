@@ -22,6 +22,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsEventQueue.h"
+#include "nsIEventQueueService.h"
+#include "nsIThread.h"
+
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
 #include "nsString2.h"
@@ -68,6 +71,31 @@ NS_IMETHODIMP
 nsEventQueueImpl::Init()
 {
   mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", PR_GetCurrentThread());
+  NotifyObservers(gActivatedNotification);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsEventQueueImpl::InitFromPRThread(PRThread* thread)
+{
+  if (thread == NS_CURRENT_THREAD) 
+  {
+     thread = PR_GetCurrentThread();
+  }
+  else if (thread == NS_UI_THREAD) 
+  {
+    nsCOMPtr<nsIThread>  mainIThread;
+    nsresult rv;
+  
+    // Get the primordial thread
+    rv = nsIThread::GetMainThread(getter_AddRefs(mainIThread));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mainIThread->GetPRThread(&thread);
+    if (NS_FAILED(rv)) return rv;
+  }  
+  
+  mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", thread);
   NotifyObservers(gActivatedNotification);
   return NS_OK;
 }
