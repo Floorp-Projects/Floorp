@@ -627,8 +627,10 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
     }
 
     currentDot = nextDot;
-    nextDot = strchr(currentDot + 1, '.');
-  }
+    if (currentDot)
+      nextDot = strchr(currentDot + 1, '.');
+
+  } while (currentDot);
 
   // return cookies in order of path length; longest to shortest.
   // this is required per RFC2109.
@@ -2131,7 +2133,7 @@ nsCookieService::CountCookiesFromHost(nsCookie          *aCookie,
 
   const char *currentDot = hostWithDot.get();
   const char *nextDot = currentDot + 1;
-  while (nextDot) {
+  do {
     nsCookieEntry *entry = mHostTable.GetEntry(currentDot);
     for (nsListIter iter(entry); iter.current; ++iter) {
       // only count session or non-expired cookies
@@ -2147,8 +2149,10 @@ nsCookieService::CountCookiesFromHost(nsCookie          *aCookie,
     }
 
     currentDot = nextDot;
-    nextDot = strchr(currentDot + 1, '.');
-  }
+    if (currentDot)
+      nextDot = strchr(currentDot + 1, '.');
+
+  } while (currentDot);
 
   return countFromHost;
 }
