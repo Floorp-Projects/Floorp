@@ -36,6 +36,9 @@ class nsIDOMXULDocument : public nsIDOMDocument {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULDOCUMENT_IID; return iid; }
 
+  NS_IMETHOD    GetPopup(nsIDOMElement** aPopup)=0;
+  NS_IMETHOD    SetPopup(nsIDOMElement* aPopup)=0;
+
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
@@ -43,12 +46,16 @@ public:
 
 
 #define NS_DECL_IDOMXULDOCUMENT   \
+  NS_IMETHOD    GetPopup(nsIDOMElement** aPopup);  \
+  NS_IMETHOD    SetPopup(nsIDOMElement* aPopup);  \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMXULDOCUMENT(_to)  \
+  NS_IMETHOD    GetPopup(nsIDOMElement** aPopup) { return _to GetPopup(aPopup); } \
+  NS_IMETHOD    SetPopup(nsIDOMElement* aPopup) { return _to SetPopup(aPopup); } \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
 

@@ -746,6 +746,7 @@ protected:
     nsString                   mCommand;
     nsIRDFResource*            mFragmentRoot;    // [OWNER] 
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
+	nsIDOMElement*			   mPopup;			  // [OWNER] of this popup element in the doc
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -781,7 +782,8 @@ XULDocumentImpl::XULDocumentImpl(void)
       mContentViewerContainer(nsnull),
       mCommand(""),
       mFragmentRoot(nsnull),
-      mListenerManager(nsnull)
+      mListenerManager(nsnull),
+	  mPopup(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -826,6 +828,8 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mLocalDataSource);
 
     NS_IF_RELEASE(mListenerManager);
+
+	NS_IF_RELEASE(mPopup);
 
     // mParentDocument is never refcounted
     // Delete references to sub-documents
@@ -2683,6 +2687,23 @@ XULDocumentImpl::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMXULDocument interface
+
+NS_IMETHODIMP
+XULDocumentImpl::GetPopup(nsIDOMElement** anElement)
+{
+	*anElement = mPopup;
+	NS_IF_ADDREF(mPopup);
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::SetPopup(nsIDOMElement* anElement)
+{
+	NS_IF_RELEASE(mPopup);
+	NS_IF_ADDREF(anElement);
+	mPopup = anElement;
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
