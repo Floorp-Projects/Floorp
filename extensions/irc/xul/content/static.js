@@ -1832,7 +1832,7 @@ function setCurrentObject (obj)
         /* Remove currently selected items before this tree gets rerooted,
          * because it seems to remember the selections for eternity if not. */
         if (userList.treeBoxObject.selection)
-            userList.treeBoxObject.selection.clearSelection ();
+            userList.treeBoxObject.selection.select(-1);
 
         if (obj.TYPE == "IRCChannel")
         {
