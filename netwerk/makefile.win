@@ -30,7 +30,6 @@ DIRS=              \
 	mime       \
 	streamconv \
 	build      \
-	util       \
 	protocol   \
 	test       \
 	$(NULL)
