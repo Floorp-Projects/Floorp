@@ -25,6 +25,7 @@
 #include "nsIScrollableView.h"
 #include "nsView.h"
 #include "nsIScrollbar.h"
+#include "nsIClipView.h"
 
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
@@ -32,6 +33,9 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
+static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
 
 static const PRBool gsDebug = PR_FALSE;
 
@@ -41,9 +45,21 @@ static const PRBool gsDebug = PR_FALSE;
 //#define NEW_COMPOSITOR
 
 //used for debugging new compositor
-#define SHOW_RECTS
+//#define SHOW_RECTS
 
-#define FLATVIEW_INC  3
+//number of entries per view in display list
+#define DISPLAYLIST_INC  3
+
+//display list flags
+#define RENDER_VIEW   0x0000
+#define VIEW_INCLUDED 0x0001
+#define PUSH_CLIP     0x0002
+#define POP_CLIP      0x0004
+
+//display list slots
+#define VIEW_SLOT     0
+#define RECT_SLOT     1
+#define FLAGS_SLOT    2
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
@@ -145,20 +161,20 @@ nsViewManager :: ~nsViewManager()
   mObserver = nsnull;
   mContext = nsnull;
 
-  if (nsnull != mFlatViews)
+  if (nsnull != mDisplayList)
   {
-    PRInt32 cnt = mFlatViews->Count(), idx;
+    PRInt32 cnt = mDisplayList->Count(), idx;
 
-    for (idx = 1; idx < cnt; idx += FLATVIEW_INC)
+    for (idx = RECT_SLOT; idx < cnt; idx += DISPLAYLIST_INC)
     {
-      nsRect *rect = (nsRect *)mFlatViews->ElementAt(idx);
+      nsRect *rect = (nsRect *)mDisplayList->ElementAt(idx);
 
       if (nsnull != rect)
         delete rect;
     }
 
-    delete mFlatViews;
-    mFlatViews = nsnull;
+    delete mDisplayList;
+    mDisplayList = nsnull;
   }
 
   if (nsnull != mTransRgn)
@@ -173,6 +189,10 @@ nsViewManager :: ~nsViewManager()
   NS_IF_RELEASE(mOpaqueRgn);
   NS_IF_RELEASE(mTRgn);
   NS_IF_RELEASE(mRCRgn);
+
+  NS_IF_RELEASE(mOffScreenCX);
+  NS_IF_RELEASE(mRedCX);
+  NS_IF_RELEASE(mBlueCX);
 }
 
 NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
@@ -533,14 +553,12 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 #define BACK_TO_FRONT_TRANS       3
 #define BACK_TO_FRONT_OPACITY     4
 #define FRONT_TO_BACK_CLEANUP     5
-#define COMPOSITION_DONE          6
+#define FRONT_TO_BACK_POP_SEARCH  6
+#define COMPOSITION_DONE          7
 
 //bit shifts
 #define TRANS_PROPERTY_TRANS      0
 #define TRANS_PROPERTY_OPACITY    1
-
-//flat view flags
-#define VIEW_INCLUDED             0x0001
 
 static evenodd = 0;
 
@@ -551,12 +569,11 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
   PRInt32           flatlen = 0, cnt;
   PRInt32           state = FRONT_TO_BACK_RENDER;
   PRInt32           transprop = 0;
-  PRInt32           increment = FLATVIEW_INC;
+  PRInt32           increment = DISPLAYLIST_INC;
   PRInt32           loopstart = 0;
   PRInt32           loopend;
   PRInt32           accumstart;
   float             t2p, p2t;
-  nsDrawingSurface  origsurf;
   PRInt32           rgnrect;
   nsRect            localrect;
   PRBool            useopaque = PR_FALSE;
@@ -564,28 +581,74 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
 //printf("begin paint\n");
   if (nsnull != aRootView)
-    FlattenViewTree(aRootView, &flatlen, &aRect);
+  {
+    nscoord ox = 0, oy = 0;
+
+    ComputeViewOffset(aRootView, &ox, &oy, 1);
+    CreateDisplayList(mRootView, &flatlen, ox, oy, aRootView, &aRect);
+  }
 
   loopend = flatlen;
 
   mContext->GetAppUnitsToDevUnits(t2p);
   mContext->GetDevUnitsToAppUnits(p2t);
-  aRC.GetDrawingSurface(&origsurf);
 
 #if 0
-printf("flatlen %d\n", flatlen);
-
-for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 {
-  nsRect *rect;
-  printf("view: %x\n", mFlatViews->ElementAt(cnt));
+  char      nest[400];
+  PRUint32  newnestcnt, nestcnt = 0;
 
-  rect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
+  for (cnt = 0; cnt < 400; cnt++)
+    nest[cnt] = ' ';
 
-  if (nsnull != rect)
-    printf("rect: %d, %d, %d, %d\n", rect->x, rect->y, rect->width, rect->height);
-  else
-    printf("rect: null\n");
+  printf("flatlen %d\n", flatlen);
+
+  for (cnt = 0; cnt < flatlen; cnt += DISPLAYLIST_INC)
+  {
+    nsRect    *rect;
+    PRUint32  flags;
+
+    nest[nestcnt << 1] = 0;
+
+    printf("%sview: %x\n", nest, mDisplayList->ElementAt(cnt + VIEW_SLOT));
+
+    rect = (nsRect *)mDisplayList->ElementAt(cnt + RECT_SLOT);
+
+    if (nsnull != rect)
+      printf("%srect: %d, %d, %d, %d\n", nest, rect->x, rect->y, rect->width, rect->height);
+    else
+      printf("%srect: null\n", nest);
+
+    flags = (PRUint32)mDisplayList->ElementAt(cnt + FLAGS_SLOT);
+
+    newnestcnt = nestcnt;
+
+    if (flags)
+    {
+      printf("%s", nest);
+
+      if (flags & POP_CLIP)
+      {
+        printf("POP_CLIP ");
+        newnestcnt--;
+      }
+
+      if (flags & PUSH_CLIP)
+      {
+        printf("PUSH_CLIP ");
+        newnestcnt++;
+      }
+
+      if (flags & VIEW_INCLUDED)
+        printf("VIEW_INCLUDED ");
+
+      printf("\n");
+    }
+
+    nest[nestcnt << 1] = ' ';
+
+    nestcnt = newnestcnt;
+  }
 }
 #endif
 
@@ -594,198 +657,319 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
     nsIView   *curview;
     nsRect    *currect;
     PRUint32  curflags;
+    PRBool    pushing;
+    PRUint32  pushcnt = 0;
 
     for (cnt = loopstart; (increment > 0) ? (cnt < loopend) : (cnt > loopend); cnt += increment)
     {
-      curview = (nsIView *)mFlatViews->ElementAt(cnt);
-      currect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
-      curflags = (PRUint32)mFlatViews->ElementAt(cnt + 2);
+      curview = (nsIView *)mDisplayList->ElementAt(cnt + VIEW_SLOT);
+      currect = (nsRect *)mDisplayList->ElementAt(cnt + RECT_SLOT);
+      curflags = (PRUint32)mDisplayList->ElementAt(cnt + FLAGS_SLOT);
     
       if ((nsnull != curview) && (nsnull != currect))
       {
         PRBool  hasWidget = DoesViewHaveNativeWidget(*curview);
-        PRBool  isBottom = cnt == (flatlen - FLATVIEW_INC);
+        PRBool  isBottom = cnt == (flatlen - DISPLAYLIST_INC);
 
-        if (!hasWidget || isBottom)
+        if (curflags & PUSH_CLIP)
         {
-          PRBool  trans = PR_FALSE;
-          float   opacity = 1.0f;
-          PRBool  translucent = PR_FALSE;
+          PRBool  clipstate;
 
-          if (!isBottom)
+          if (state == BACK_TO_FRONT_OPACITY)
           {
-            curview->HasTransparency(trans);
-            curview->GetOpacity(opacity);
+            mOffScreenCX->PopState(clipstate);
+            mRedCX->PopState(clipstate);
+            mBlueCX->PopState(clipstate);
 
-            translucent = opacity < 1.0f;
+            pushcnt--;
+          }
+          else if (state == BACK_TO_FRONT_TRANS)
+          {
+            aRC.PopState(clipstate);
+            pushcnt--;
+          }
+          else
+          {
+            pushing = FRONT_TO_BACK_RENDER;
+
+            aRC.PushState();
+            aRC.SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
+
+            pushcnt++;
+          }
+        }
+        else if (curflags & POP_CLIP)
+        {
+          PRBool  clipstate;
+
+          if (state == BACK_TO_FRONT_OPACITY)
+          {
+            pushing = BACK_TO_FRONT_OPACITY;
+
+            mOffScreenCX->PushState();
+            mRedCX->PushState();
+            mBlueCX->PushState();
+
+            mOffScreenCX->SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
+            mRedCX->SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
+            mBlueCX->SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
+
+            pushcnt++;
+          }
+          else if (state == BACK_TO_FRONT_TRANS)
+          {
+            pushing = FRONT_TO_BACK_RENDER;
+
+            aRC.PushState();
+            aRC.SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
+
+            pushcnt++;
+          }
+          else
+          {
+            aRC.PopState(clipstate);
+            pushcnt--;
           }
 
-          switch (state)
+          if (state == FRONT_TO_BACK_POP_SEARCH)
           {
-            case FRONT_TO_BACK_RENDER:
-              if (trans || translucent)
-              {
-                if (mTransRgn && mOpaqueRgn)
-                {
-                  //need to finish using back to front till this point
-                  state = FRONT_TO_BACK_ACCUMULATE;
-                  accumstart = cnt;
+            aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
 
-                  mTransRgn->SetTo(0, 0, 0, 0);
-                  mOpaqueRgn->SetTo(0, 0, 0, 0);
-                }
-
-                //falls through
-              }
-              else
-              {
-                RenderView(curview, aRC, aRect, *currect, aResult);
-
-                if (aResult == PR_FALSE)
-                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
-
-                break;
-              }
-
-            case FRONT_TO_BACK_ACCUMULATE:
-            {
-              nsRect  trect;
-
-              trect.IntersectRect(*currect, aRect);
-              trect *= t2p;
-
-              if (trans || translucent ||
-                  mTransRgn->ContainsRect(trect.x, trect.y, trect.width, trect.height) ||
-                  mOpaqueRgn->ContainsRect(trect.x, trect.y, trect.width, trect.height))
-              {
-                transprop |= (trans << TRANS_PROPERTY_TRANS) | (translucent << TRANS_PROPERTY_OPACITY);
-                mFlatViews->ReplaceElementAt((void *)VIEW_INCLUDED, cnt + 2);
-
-                if (!isBottom)
-                {
-//printf("adding %d %d %d %d\n", trect.x, trect.y, trect.width, trect.height);
-                  if (trans || translucent)
-                    mTransRgn->Union(trect.x, trect.y, trect.width, trect.height);
-                  else
-                    mOpaqueRgn->Union(trect.x, trect.y, trect.width, trect.height);
-                }
-              }
-              else
-              {
-                RenderView(curview, aRC, aRect, *currect, aResult);
-
-                if (aResult == PR_FALSE)
-                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
-              }
-  
-              break;
-            }
-
-            case BACK_TO_FRONT_TRANS:
-              if ((curflags & VIEW_INCLUDED) && localrect.Intersects(*currect))
-              {
-                PRBool clipstate;
-
-                RenderView(curview, aRC, localrect, *currect, clipstate);
-              }
-
-              break;
-
-            case FRONT_TO_BACK_CLEANUP:
-              if ((curflags & VIEW_INCLUDED) && !trans &&
-                  !translucent && localrect.Intersects(*currect))
-              {
-                RenderView(curview, aRC, localrect, *currect, aResult);
-
-                if (aResult == PR_FALSE)
-                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
-              }
-
-              break;
-
-            case BACK_TO_FRONT_OPACITY:
-              if (curflags & VIEW_INCLUDED)
-              {
-                nsRect blendrect;
-
-                if (blendrect.IntersectRect(*currect, localrect))
-                {
-                  PRBool clipstate;
-
-                  if (!translucent)
-                    RenderView(curview, aRC, localrect, *currect, clipstate);
-                  else
-                  {
-                    aRC.SelectOffScreenDrawingSurface(gRed);
-
-#if 0
-                    if (trans)
-                    {
-                      aRC.SetColor(NS_RGB(255, 0, 0));
-//                      aRC.FillRect(localrect);
-                      aRC.FillRect(blendrect);
-#ifdef SHOW_RECTS
-                      aRC.SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
-                      aRC.DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
-#endif
-                    }
-#endif
-                    RenderView(curview, aRC, localrect, *currect, clipstate);
-
-#if 0
-                    if (trans)
-                    {
-                      aRC.SelectOffScreenDrawingSurface(gBlue);
-                      aRC.SetColor(NS_RGB(0, 0, 255));
-//                      aRC.FillRect(localrect);
-                      aRC.FillRect(blendrect);
-#ifdef SHOW_RECTS
-                      aRC.SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
-                      aRC.DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
-#endif
-                      RenderView(curview, aRC, localrect, *currect, clipstate);
-                    }
-#endif
-
-                    if (nsnull == mBlender)
-                    {
-                      if (NS_OK == nsComponentManager::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&mBlender))
-                        mBlender->Init(mContext);
-                    }
-
-                    if (nsnull != mBlender)
-                    {
-                      blendrect.x -= localrect.x;
-                      blendrect.y -= localrect.y;
-
-                      blendrect *= t2p;
-
-                      aRC.SelectOffScreenDrawingSurface(origsurf);
-
-                      mBlender->Blend(blendrect.x, blendrect.y,
-                                      blendrect.width, blendrect.height,
-                                      gRed, gOffScreen,
-                                      blendrect.x, blendrect.y,
-                                      opacity, trans ? gBlue : nsnull,
-                                      NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
-                    }
-
-                    aRC.SelectOffScreenDrawingSurface(gOffScreen);
-                  }
-                }
-              }
-              //falls through
-
-            default:
-              break;
+            if (!clipstate)
+              state = FRONT_TO_BACK_RENDER;
+            else if (pushcnt == 0)
+              aResult = clipstate;
           }
         }
         else
-          aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+//        if (isBottom)
+//        if (!hasWidget || isBottom)
+        {
+          nsPoint *point;
+
+          curview->GetScratchPoint(&point);
+
+          if (!hasWidget || (hasWidget && point->x))
+          {
+            PRBool  trans = PR_FALSE;
+            float   opacity = 1.0f;
+            PRBool  translucent = PR_FALSE;
+
+            if (!isBottom)
+            {
+              curview->HasTransparency(trans);
+              curview->GetOpacity(opacity);
+
+              translucent = opacity < 1.0f;
+            }
+
+            switch (state)
+            {
+              case FRONT_TO_BACK_RENDER:
+                if (trans || translucent)
+                {
+                  if (mTransRgn && mOpaqueRgn)
+                  {
+                    //need to finish using back to front till this point
+                    state = FRONT_TO_BACK_ACCUMULATE;
+
+                    if (pushcnt == 0)
+                      accumstart = cnt;
+                    else
+                      accumstart = 0;
+
+                    mTransRgn->SetTo(0, 0, 0, 0);
+                    mOpaqueRgn->SetTo(0, 0, 0, 0);
+                  }
+
+                  //falls through
+                }
+                else
+                {
+                  RenderView(curview, aRC, aRect, *currect, aResult);
+
+                  if (aResult == PR_FALSE)
+                  {
+                    PRBool clipstate;
+
+                    aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
+
+                    if (clipstate)
+                    {
+                      if (pushcnt > 0)
+                        state = FRONT_TO_BACK_POP_SEARCH;
+                      else
+                        aResult = clipstate;
+                    }
+                  }
+
+                  break;
+                }
+
+              case FRONT_TO_BACK_ACCUMULATE:
+              {
+                nsRect  trect;
+
+                trect.IntersectRect(*currect, aRect);
+                trect *= t2p;
+
+                if (trans || translucent ||
+                    mTransRgn->ContainsRect(trect.x, trect.y, trect.width, trect.height) ||
+                    mOpaqueRgn->ContainsRect(trect.x, trect.y, trect.width, trect.height))
+                {
+                  transprop |= (trans << TRANS_PROPERTY_TRANS) | (translucent << TRANS_PROPERTY_OPACITY);
+                  mDisplayList->ReplaceElementAt((void *)(VIEW_INCLUDED | curflags), cnt + FLAGS_SLOT);
+
+                  if (!isBottom)
+                  {
+  //printf("adding %d %d %d %d\n", trect.x, trect.y, trect.width, trect.height);
+                    if (trans || translucent)
+                      mTransRgn->Union(trect.x, trect.y, trect.width, trect.height);
+                    else
+                      mOpaqueRgn->Union(trect.x, trect.y, trect.width, trect.height);
+                  }
+                }
+                else
+                {
+                  RenderView(curview, aRC, aRect, *currect, aResult);
+
+                  if (aResult == PR_FALSE)
+  {
+  PRBool clipstate;
+                    aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
+  //                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+  }
+                }
+  
+                break;
+              }
+
+              case FRONT_TO_BACK_POP_SEARCH:
+                break;
+
+              case BACK_TO_FRONT_TRANS:
+                if ((curflags & VIEW_INCLUDED) && localrect.Intersects(*currect))
+                {
+                  PRBool clipstate;
+
+                  RenderView(curview, aRC, localrect, *currect, clipstate);
+                }
+
+                break;
+
+              case FRONT_TO_BACK_CLEANUP:
+                if ((curflags & VIEW_INCLUDED) && !trans &&
+                    !translucent && localrect.Intersects(*currect))
+                {
+                  RenderView(curview, aRC, localrect, *currect, aResult);
+
+                  if (aResult == PR_FALSE)
+  {
+  PRBool clipstate;
+                    aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
+  //                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+  }
+                }
+
+                break;
+
+              case BACK_TO_FRONT_OPACITY:
+                if (curflags & VIEW_INCLUDED)
+                {
+                  nsRect blendrect;
+
+                  if (blendrect.IntersectRect(*currect, localrect))
+                  {
+                    PRBool clipstate;
+
+                    if (!translucent)
+                      RenderView(curview, *mOffScreenCX, localrect, *currect, clipstate);
+                    else
+                    {
+                      if (trans)
+                      {
+                        mRedCX->SetColor(NS_RGB(255, 0, 0));
+                        mRedCX->FillRect(blendrect);
+  #ifdef SHOW_RECTS
+                        mRedCX->SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
+                        mRedCX->DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
+  #endif
+                      }
+
+                      RenderView(curview, *mRedCX, localrect, *currect, clipstate);
+
+                      if (trans)
+                      {
+                        mBlueCX->SetColor(NS_RGB(0, 0, 255));
+                        mBlueCX->FillRect(blendrect);
+  #ifdef SHOW_RECTS
+                        mBlueCX->SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
+                        mBlueCX->DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
+  #endif
+                        RenderView(curview, *mBlueCX, localrect, *currect, clipstate);
+                      }
+
+                      if (nsnull == mBlender)
+                      {
+                        if (NS_OK == nsComponentManager::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&mBlender))
+                          mBlender->Init(mContext);
+                      }
+
+                      if (nsnull != mBlender)
+                      {
+                        blendrect.x -= localrect.x;
+                        blendrect.y -= localrect.y;
+
+                        blendrect *= t2p;
+
+                        mBlender->Blend(blendrect.x, blendrect.y,
+                                        blendrect.width, blendrect.height,
+                                        mRedCX, mOffScreenCX,
+                                        blendrect.x, blendrect.y,
+                                        opacity, trans ? mBlueCX : nsnull,
+                                        NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
+                      }
+                    }
+                  }
+                }
+                //falls through
+
+              default:
+                break;
+            }
+          }
+          else
+          {
+            if (state == BACK_TO_FRONT_OPACITY)
+            {
+              PRBool clipstate;
+
+              mOffScreenCX->SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
+              mRedCX->SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
+              mBlueCX->SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
+            }
+            else
+              aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+          }
+        }
 
         if (aResult == PR_TRUE)
           break;
       }
+    }
+
+    while (pushcnt--)
+    {
+      PRBool  clipstate;
+
+      if (pushing == BACK_TO_FRONT_OPACITY)
+      {
+        mOffScreenCX->PopState(clipstate);
+        mRedCX->PopState(clipstate);
+        mBlueCX->PopState(clipstate);
+      }
+      else
+        aRC.PopState(clipstate);
     }
 
     switch (state)
@@ -856,35 +1040,44 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
       case BACK_TO_FRONT_OPACITY:
         if (rgnrect > 0)
         {
+
+          if (state == BACK_TO_FRONT_OPACITY)
+          {
+#ifdef SHOW_RECTS
+            mOffScreenCX->SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
+            mOffScreenCX->DrawRect(localrect);
+#endif
+            mOffScreenCX->Translate(localrect.x, localrect.y);
+            mRedCX->Translate(localrect.x, localrect.y);
+            mBlueCX->Translate(localrect.x, localrect.y);
+
+            //buffer swap.
+            aRC.CopyOffScreenBits(gOffScreen, 0, 0, localrect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+          }
+          else
+          {
 #ifdef SHOW_RECTS
           aRC.SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
           aRC.DrawRect(localrect);
 
 //          for (int xxxxx = 0; xxxxx < 50000000; xxxxx++);
 #endif
+          }
           //if this is the last rect, we don't need to subtract it, cause
           //we're done with this region.
           if (rgnrect < (PRInt32)rectset->mNumRects)
             aRC.SetClipRect(localrect, nsClipCombine_kSubtract, aResult);
-
-          if (state == BACK_TO_FRONT_OPACITY)
-          {
-            //buffer swap.
-            aRC.SelectOffScreenDrawingSurface(origsurf);
-            aRC.Translate(localrect.x, localrect.y);
-            aRC.CopyOffScreenBits(gOffScreen, 0, 0, localrect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
-          }
         }
 
         if (rgnrect < (PRInt32)rectset->mNumRects)
         {
           if (state == BACK_TO_FRONT_OPACITY)
-            loopstart = flatlen - FLATVIEW_INC;
+            loopstart = flatlen - DISPLAYLIST_INC;
           else
-            loopstart = flatlen - (FLATVIEW_INC << 1);
+            loopstart = flatlen - (DISPLAYLIST_INC << 1);
 
-          loopend = accumstart - FLATVIEW_INC;
-          increment = -FLATVIEW_INC;
+          loopend = accumstart - DISPLAYLIST_INC;
+          increment = -DISPLAYLIST_INC;
 
           localrect.x = rectset->mRects[rgnrect].x;
           localrect.y = rectset->mRects[rgnrect].y;
@@ -897,9 +1090,11 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 
             if ((localrect.width > gBlendWidth) || (localrect.height > gBlendHeight))
             {
-              nsRect  bitrect = nsRect(0, 0, localrect.width + 400, localrect.height + 400);
+              nsRect  bitrect = nsRect(0, 0, localrect.width, localrect.height);
 
-              aRC.SelectOffScreenDrawingSurface(origsurf);
+              NS_IF_RELEASE(mOffScreenCX);
+              NS_IF_RELEASE(mRedCX);
+              NS_IF_RELEASE(mBlueCX);
 
               if (nsnull != gOffScreen)
               {
@@ -909,6 +1104,9 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 
               aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
 
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mOffScreenCX))
+                mOffScreenCX->Init(mContext, gOffScreen);
+
               if (nsnull != gRed)
               {
                 aRC.DestroyDrawingSurface(gRed);
@@ -917,16 +1115,22 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 
               aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
 
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mRedCX))
+                mRedCX->Init(mContext, gRed);
+
               if (nsnull != gBlue)
               {
                 aRC.DestroyDrawingSurface(gBlue);
-                gRed = nsnull;
+                gBlue = nsnull;
               }
 
               aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlue);
 
-              gBlendWidth = localrect.width + 400;
-              gBlendHeight = localrect.height + 400;
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mBlueCX))
+                mBlueCX->Init(mContext, gBlue);
+
+              gBlendWidth = localrect.width;
+              gBlendHeight = localrect.height;
 //printf("offscr: %d, %d (%d, %d)\n", w, h, accumrect.width, accumrect.height);
             }
 
@@ -940,8 +1144,15 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 
           if (state == BACK_TO_FRONT_OPACITY)
           {
-            aRC.Translate(-localrect.x, -localrect.y);
-            aRC.SelectOffScreenDrawingSurface(gOffScreen);
+            PRBool  clipstate;
+
+            mOffScreenCX->Translate(-localrect.x, -localrect.y);
+            mRedCX->Translate(-localrect.x, -localrect.y);
+            mBlueCX->Translate(-localrect.x, -localrect.y);
+
+            mOffScreenCX->SetClipRect(localrect, nsClipCombine_kReplace, clipstate);
+            mRedCX->SetClipRect(localrect, nsClipCombine_kReplace, clipstate);
+            mBlueCX->SetClipRect(localrect, nsClipCombine_kReplace, clipstate);
           }
         }
         else
@@ -954,7 +1165,7 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
             {
               loopstart = accumstart;
               loopend = flatlen;
-              increment = FLATVIEW_INC;
+              increment = DISPLAYLIST_INC;
               state = FRONT_TO_BACK_CLEANUP;
 
               mOpaqueRgn->GetBoundingBox(&localrect.x, &localrect.y, &localrect.width, &localrect.height);
@@ -983,6 +1194,9 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
         break;
     }
   }
+
+  if (nsnull != aRootView)
+    ComputeViewOffset(aRootView, nsnull, nsnull, 0);
 
 #else
 
@@ -2075,6 +2289,11 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
 NS_IMETHODIMP nsViewManager :: SetRootScrollableView(nsIScrollableView *aScrollable)
 {
   mRootScrollable = aScrollable;
+
+  //XXX this needs to go away when layout start setting this bit on it's own. MMP
+  if (mRootScrollable)
+    mRootScrollable->SetScrollProperties(NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+
   return NS_OK;
 }
 
@@ -2131,25 +2350,31 @@ NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
   return NS_OK;
 }
 
-void nsViewManager :: FlattenViewTree(nsIView *aView, PRInt32 *aIndex, const nsRect *aDamageRect, nsIView *aTopView, nsVoidArray *aArray, nscoord aX, nscoord aY)
+PRBool nsViewManager :: CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
+                                          nscoord aOriginX, nscoord aOriginY, nsIView *aRealView,
+                                          const nsRect *aDamageRect, nsIView *aTopView,
+                                          nsVoidArray *aArray, nscoord aX, nscoord aY)
 {
-  PRInt32 numkids, cnt;
+  PRInt32     numkids, cnt;
+  PRBool      hasWidget, retval = PR_FALSE;
+  nsIClipView *clipper = nsnull;
+  nsPoint     *point;
 
-  NS_ASSERTION(!(nsnull == aView), "no view");
-  NS_ASSERTION(!(nsnull == aIndex), "no index");
+  NS_ASSERTION(!(!aView), "no view");
+  NS_ASSERTION(!(!aIndex), "no index");
 
-  if (nsnull == aArray)
+  if (!aArray)
   {
-    if (nsnull == mFlatViews)
-      mFlatViews = new nsVoidArray(8);
+    if (!mDisplayList)
+      mDisplayList = new nsVoidArray(8);
 
-    aArray = mFlatViews;
+    aArray = mDisplayList;
 
-    if (nsnull == aArray)
-      return;
+    if (!aArray)
+      return PR_TRUE;
   }
 
-  if (nsnull == aTopView)
+  if (!aTopView)
     aTopView = aView;
 
   nsRect lrect;
@@ -2165,61 +2390,236 @@ void nsViewManager :: FlattenViewTree(nsIView *aView, PRInt32 *aIndex, const nsR
   lrect.x += aX;
   lrect.y += aY;
 
+  aView->QueryInterface(kIClipViewIID, (void **)&clipper);
   aView->GetChildCount(numkids);
+  aView->GetScratchPoint(&point);
+
+  hasWidget = DoesViewHaveNativeWidget(*aView);
 
   if (numkids > 0)
   {
-    PRBool hasWidget = DoesViewHaveNativeWidget(*aView);
+    if (clipper && (!hasWidget || (hasWidget && point->x)))
+    {
+      lrect.x -= aOriginX;
+      lrect.y -= aOriginY;
 
-    if ((PR_FALSE == hasWidget) || ((PR_TRUE == hasWidget) && (aView == aTopView)))
+      retval = AddToDisplayList(aArray, aIndex, aView, lrect, PUSH_CLIP);
+
+      if (retval)
+        return retval;
+
+      lrect.x += aOriginX;
+      lrect.y += aOriginY;
+    }
+
+    if (!hasWidget || (hasWidget && point->x))
+//    if ((aView == aTopView) || (aView == aRealView))
+//    if ((aView == aTopView) || !hasWidget || (aView == aRealView))
+//    if ((aView == aTopView) || !(hasWidget && clipper) || (aView == aRealView))
     {
       for (cnt = 0; cnt < numkids; cnt++)
       {
         nsIView *child;
 
         aView->GetChild(cnt, child);
-        FlattenViewTree(child, aIndex, aDamageRect, aTopView, aArray, lrect.x, lrect.y);
+        retval = CreateDisplayList(child, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, aArray, lrect.x, lrect.y);
+
+        if (retval)
+          break;
       }
     }
   }
 
-  nsViewVisibility  vis;
-  float             opacity;
-  PRBool            overlap;
+  lrect.x -= aOriginX;
+  lrect.y -= aOriginY;
 
-  aView->GetVisibility(vis);
-  aView->GetOpacity(opacity);
-
-  if (nsnull != aDamageRect)
-    overlap = lrect.Intersects(*aDamageRect);
-  else
-    overlap = PR_TRUE;
-
-  if ((nsViewVisibility_kShow == vis) && (opacity > 0.0f) && (PR_TRUE == overlap))
+//  if (clipper)
+  if (clipper && (!hasWidget || (hasWidget && point->x)))
   {
-    aArray->ReplaceElementAt(aView, (*aIndex)++);
-
-    nsRect *grect = (nsRect *)aArray->ElementAt(*aIndex);
-
-    if (nsnull == grect)
-    {
-      grect = new nsRect(lrect.x, lrect.y, lrect.width, lrect.height);
-
-      if (nsnull == grect)
-      {
-        (*aIndex)--;
-        return;
-      }
-
-      aArray->ReplaceElementAt(grect, *aIndex);
-    }
-    else
-      *grect = lrect;
-
-    (*aIndex)++;
-
-    aArray->ReplaceElementAt(nsnull, (*aIndex)++);
+    if (numkids > 0)
+      retval = AddToDisplayList(aArray, aIndex, aView, lrect, POP_CLIP);
   }
+  else if (!retval)
+  {
+    nsViewVisibility  vis;
+    float             opacity;
+    PRBool            overlap;
+    PRBool            trans;
+    nsRect            irect;
+
+    aView->GetVisibility(vis);
+    aView->GetOpacity(opacity);
+    aView->HasTransparency(trans);
+
+    if (aDamageRect)
+      overlap = irect.IntersectRect(lrect, *aDamageRect);
+    else
+      overlap = PR_TRUE;
+
+    if ((nsViewVisibility_kShow == vis) && (opacity > 0.0f) && overlap)
+    {
+      retval = AddToDisplayList(aArray, aIndex, aView, lrect, 0);
+
+      if (retval || !trans && (opacity == 1.0f) && (irect == *aDamageRect))
+        retval = PR_TRUE;
+    }
+  }
+
+#if 0
+  if ((aTopView == aView) &&
+      (trans || (opacity < 1.0f) ||
+      (nsViewVisibility_kHide == vis) ||
+      !overlap))
+  {
+    nsIView *parent;
+
+    //the root view that we were given is transparent, translucent or
+    //hidden, so we need to walk up the tree and add intervening parents
+    //to the view list until we find the root view or something opaque,
+    //non-transparent and not hidden. gross.
+
+    aView->GetBounds(lrect);
+    aView->GetParent(parent);
+
+    lrect.x = -lrect.x;
+    lrect.y = -lrect.y;
+
+    ComputeParentOffsets(parent, &lrect.x, &lrect.y);
+    FlattenViewTreeUp(aView, aIndex, aDamageRect, parent, aArray);
+  }
+#endif
+
+  return retval;
+}
+
+PRBool nsViewManager :: AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags)
+{
+  aArray->ReplaceElementAt(aView, (*aIndex)++);
+
+  nsRect *grect = (nsRect *)aArray->ElementAt(*aIndex);
+
+  if (!grect)
+  {
+    grect = new nsRect(aRect.x, aRect.y, aRect.width, aRect.height);
+
+    if (!grect)
+    {
+      (*aIndex)--;
+      return PR_TRUE;
+    }
+
+    aArray->ReplaceElementAt(grect, *aIndex);
+  }
+  else
+    *grect = aRect;
+
+  (*aIndex)++;
+
+  aArray->ReplaceElementAt((void *)aFlags, (*aIndex)++);
+
+  return PR_FALSE;
+}
+
+#if 0
+
+void nsViewManager :: FlattenViewTreeUp(nsIView *aView, PRInt32 *aIndex, 
+                                        const nsRect *aDamageRect, nsIView *aParView, 
+                                        nsVoidArray *aArray)
+{
+  nsIView *nextview;
+  nsRect  bounds, irect;
+  PRBool  trans;
+  float   opacity;
+  PRBool  haswidget;
+  nsViewVisibility  vis;
+  nsPoint *point;
+
+  aView->GetNextSibling(nextview);
+
+  if (!nextview)
+  {
+    nextview = aParView;
+    nextview->GetParent(aParView);
+  }
+
+  if (!aParView)
+    return;
+
+  aParView->GetScratchPoint(&point);
+
+  if (nextview)
+  {
+    nextview->GetBounds(bounds);
+
+    bounds.x += point->x;
+    bounds.y += point->y;
+
+    haswidget = DoesViewHaveNativeWidget(*nextview);
+    nextview->GetVisibility(vis);
+    nextview->HasTransparency(trans);
+    nextview->GetOpacity(opacity);
+
+    if (!haswidget && irect.IntersectRect(bounds, *aDamageRect) &&
+        (nsViewVisibility_kShow == vis) && (opacity > 0.0f))
+    {
+      aArray->ReplaceElementAt(nextview, (*aIndex)++);
+
+      nsRect *grect = (nsRect *)aArray->ElementAt(*aIndex);
+
+      if (!grect)
+      {
+        grect = new nsRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        if (!grect)
+        {
+          (*aIndex)--;
+          return;
+        }
+
+        aArray->ReplaceElementAt(grect, *aIndex);
+      }
+      else
+        *grect = bounds;
+
+      (*aIndex)++;
+
+      aArray->ReplaceElementAt(nsnull, (*aIndex)++);
+
+      //if this view completely covers the damage area and it's opaque
+      //then we're done.
+
+      if (!trans && (opacity == 1.0f) && (irect == *aDamageRect))
+        return;
+    }
+
+    FlattenViewTreeUp(nextview, aIndex, aDamageRect, aParView, aArray);
+  }
+}
+
+#endif
+
+void nsViewManager :: ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag)
+{
+  nsIView *parent;
+  nsRect  bounds;
+  nsPoint *point;
+
+  aView->GetScratchPoint(&point);
+
+  point->x = aFlag;
+
+  aView->GetBounds(bounds);
+
+  if (aX && aY)
+  {
+    *aX += bounds.x;
+    *aY += bounds.y;
+  }
+
+  aView->GetParent(parent);
+
+  if (parent)
+    ComputeViewOffset(parent, aX, aY, aFlag);
 }
 
 PRBool nsViewManager :: DoesViewHaveNativeWidget(nsIView &aView)

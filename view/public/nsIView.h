@@ -429,6 +429,16 @@ public:
   NS_IMETHOD SetViewFlags(PRInt32 aFlags) = 0;
 
   /**
+   * Get pointer to temporary data storage used by
+   * the compositor. make no assumptions about the
+   * data returned by this method.
+   * @param aPoint out paramemter for nsPoint structure
+   *        stored in view.
+   * @return error status
+   */
+  NS_IMETHOD GetScratchPoint(nsPoint **aPoint) = 0;
+
+  /**
    * Remove flags from view to allow customization of view behavior during
    * event handling
    * @param aFlags flags to be removed from view

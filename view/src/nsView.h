@@ -94,6 +94,7 @@ public:
   NS_IMETHOD  GetWidget(nsIWidget *&aWidget);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD SetViewFlags(PRInt32 aFlags);
+  NS_IMETHOD GetScratchPoint(nsPoint **aPoint);
   NS_IMETHOD ClearViewFlags(PRInt32 aFlags);
 
   // Helper function to get the view that's associated with a widget
@@ -123,6 +124,7 @@ protected:
   PRInt32           mVFlags;
   nsIRegion*        mDirtyRegion;
   PRInt32           mEventFlags;
+  nsPoint           mScratchPoint;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

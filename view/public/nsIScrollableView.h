@@ -146,9 +146,33 @@ public:
   NS_IMETHOD GetScrollbarVisibility(PRBool *aVerticalVisible,
                                     PRBool *aHorizontalVisible) const = 0;
 
+  /**
+   * Set the properties describing how scrolling can be performed
+   * in this scrollable.
+   * @param aProperties new properties
+   * @return error status
+   */
+  NS_IMETHOD SetScrollProperties(PRUint32 aProperties) = 0;
+
+  /**
+   * Get the properties describing how scrolling can be performed
+   * in this scrollable.
+   * @param aProperties out parameter for current properties
+   * @return error status
+   */
+  NS_IMETHOD GetScrollProperties(PRUint32 *aProperties) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
+
+//regardless of the transparency or opacity settings
+//for this view, it can always be scrolled via a blit
+#define NS_SCROLL_PROPERTY_ALWAYS_BLIT    0x0001
+
+//regardless of the transparency or opacity settings
+//for this view, it can never be scrolled via a blit
+#define NS_SCROLL_PROPERTY_NEVER_BLIT     0x0002
 
 #endif
