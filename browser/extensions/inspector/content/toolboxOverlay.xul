@@ -28,6 +28,12 @@
       <menupopup id="mppView"/>
     </menu>
 
+#ifdef XP_MACOSX
+    <menupopup id="menu_ToolsPopup"/>
+    <menu id="windowMenu"/>
+#endif
+    <menu id="helpMenu"/>
+
   </menubar>
 
   <toolbar id="tbInspectorPrimary" class="chromeclass-toolbar">

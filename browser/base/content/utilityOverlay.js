@@ -426,3 +426,13 @@ function openPreferences()
     openDialog("chrome://browser/content/preferences/preferences.xul", 
                "Preferences", features);
 }
+
+function getUILink(item)
+{
+  var regionBundle = document.getElementById("bundle_browser_region");
+
+  if (item == "promote")
+    return regionBundle.getString("promoteURL");
+  
+  return "";
+}

@@ -49,6 +49,7 @@
 <?xul-overlay href="chrome://inspector/content/statusbarOverlay.xul"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 
 <?xml-stylesheet href="chrome://inspector/skin/inspectorWindow.css"?>
 
@@ -57,6 +58,7 @@
         persist="screenX screenY width height maximized"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <stringbundleset id="stringbundleset"/>
   <popupset id="aTooltipSet"/>
 
   <popupset id="ppsGlobalPopupset"/>
@@ -69,10 +71,14 @@
     <command id="cmd_quit"/>
   </commandset>
 
+  <commandset id="baseMenuCommandSet"/>
+
   <keyset id="tasksKeys">
     <key id="key_closeInspector" key="&closeCmd.key;" command="cmdClose"
          modifiers="accel"/>
   </keyset>
+
+  <keyset id="baseMenuKeyset"/>
 
   <toolbox id="tbxInsToolbox">
     <menubar id="mbrInspectorMain"/>

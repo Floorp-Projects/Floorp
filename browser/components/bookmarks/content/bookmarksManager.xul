@@ -64,6 +64,8 @@
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksManager.js"/>
 
+  <stringbundleset id="stringbundleset"/>
+
   <commandset id="editMenuCommands"/>
   <commandset id="CommandUpdate_Bookmarks"
               events="focus,tree-select"

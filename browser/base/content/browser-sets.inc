@@ -48,7 +48,6 @@
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
-    <stringbundle id="bundle_browser_region" src="chrome://browser-region/locale/region.properties"/>
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
   </stringbundleset>
 
