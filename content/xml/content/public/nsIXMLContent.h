@@ -84,7 +84,7 @@ public:
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 7)
 
 extern nsresult
-NS_NewXMLElement(nsIXMLContent** aResult, nsINodeInfo* aNodeInfo);
+NS_NewXMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
 
 // XXX These belongs elsewhere
 extern nsresult

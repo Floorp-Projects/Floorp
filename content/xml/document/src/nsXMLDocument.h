@@ -125,6 +125,8 @@ protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
 
+  nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
+  
   // For HTML elements in our content model
   // XXX This is not clean, but is there a better way? 
   nsIHTMLStyleSheet*    mAttrStyleSheet;
