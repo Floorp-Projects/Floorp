@@ -127,7 +127,7 @@ NS_IMETHODIMP TimerThread::Run()
   mProcessing = PR_TRUE;
 
   while (mProcessing) {
-    nsCOMPtr<nsTimerImpl> theTimer;
+    nsTimerImpl *theTimer = nsnull;
 
     if (mTimers.Count() > 0) {
       nsAutoLock lock(mLock);
@@ -141,6 +141,7 @@ NS_IMETHODIMP TimerThread::Run()
 #endif
         RemoveTimerInternal(timer);
         theTimer = timer;
+        NS_ADDREF(theTimer);
       }
     }
 
@@ -151,7 +152,12 @@ NS_IMETHODIMP TimerThread::Run()
         ((now > theTimer->mTimeout) ? PR_IntervalToMilliseconds(now - theTimer->mTimeout) :
                                       -(PRInt32)PR_IntervalToMilliseconds(theTimer->mTimeout - now))));
 #endif
+
+      // We are going to let the call to Fire here handle the release of the timer so that
+      // we don't end up releasing the timer on the TimerThread
       theTimer->Fire();
+
+      theTimer = nsnull;
     }
 
     nsAutoLock lock(mLock);

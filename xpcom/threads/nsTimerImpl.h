@@ -135,6 +135,8 @@ private:
   PRUint8              mType;
   PRUint8              mFiring;
 
+  PRBool               mCancelled;
+
   PRUint32             mDelay;
   PRIntervalTime       mTimeout;
 
