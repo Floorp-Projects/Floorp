@@ -6,6 +6,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug1010.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug101201.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug101759.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug10140.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug120107.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug102145-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug102145-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug102145-3.html
