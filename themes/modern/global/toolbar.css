@@ -122,7 +122,7 @@ toolbarseparator {
 
 /* ::::: special looks for widgets in toolbars ::::: */
 
-tree.toolbar,
+tree.toolbar.inset,
 textbox.toolbar {
   border-top: 1px solid #536B86;
   border-right: 1px solid #94A6B9;
@@ -130,7 +130,7 @@ textbox.toolbar {
   border-left: 1px solid #536B86;
 }
 
-tree.toolbar > .tree-container-treerows,
+tree.toolbar.inset > .tree-container-treerows,
 textbox.toolbar > .textbox-internal-box {
   border-color: #364556;
 }

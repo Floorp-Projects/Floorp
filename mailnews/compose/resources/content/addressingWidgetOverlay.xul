@@ -29,7 +29,7 @@ Rights Reserved.
 
   <!-- Addressing Widget -->
   <tree id="addressingWidgetTree"
-    class="addressingWidget inset" multiple="true"
+    class="addressingWidget inset toolbar" multiple="true"
     onkeydown="awKeyDown(event, this)"
     onclick="awClickEmptySpace(event.originalTarget, true)"
     ondragover="return DragOverTree(event);"
@@ -43,7 +43,7 @@ Rights Reserved.
     <treechildren flex="1" id="addressWidgetBody">
       <treeitem>
         <treerow>
-          <treecell class="treecell-addressingWidget" allowevents="true">
+          <treecell class="treecell-addressingWidget" allowevents="true" autostretch="always">
             <menulist id="msgRecipientType#1" class="aw-menulist menulist-compact" flex="1"
                       onclick="awNotAnEmptyArea(event)" 
                       oncommand="awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">

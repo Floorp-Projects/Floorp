@@ -30,17 +30,12 @@
     height                : 80px;
     width                 : 0px;
     -moz-user-focus       : none;
+    background-color      : -moz-field;
   }  
   
-#addressingWidgetTree > .tree-container-treerows
-  {
-    border-left: none;
-  }
-
 #listcol-addressingWidget 
   {
     width                 : 9em;
-    border-left           : 1px solid ThreeDDarkShadow;
     border-right          : 1px solid #CACAFF;
   }
   
@@ -249,7 +244,7 @@
 
 #appcontent
   {
-    border-left           : 1px solid ThreeDDarkShadow;
+    border-left           : 1px solid ThreeDShadow;
     border-right          : 1px solid ThreeDHighlight;
     border-top            : 1px solid ThreeDShadow;
   }  

@@ -167,28 +167,6 @@
 
 /* ..... border adjustments to match toolbar colors ..... */
 
-#attachmentBucket,
-#addressingWidgetTree,
-#msgSubject {
-  border-top: 1px solid #536B86;
-  border-right: 1px solid #94A6B9;
-  border-bottom: 1px solid #94A6B9;
-  border-left: 1px solid #536B86;
-}
-
-#msgSubject > .textbox-internal-box {
-  border-color: #364556;
-}
-
-#msgSubject[focused="true"] {
-  border: 1px solid #2D3B49;
-}
-
-#addressingWidgetTree > .tree-container-treerows {
-  border-top: none;
-  border-left: none;
-}
-
 #compose-toolbar-sizer {
   border-top: none;
 }
@@ -209,7 +187,6 @@
 
 #addressingWidgetTree {
   -moz-user-focus: none;
-  border: 1px inset #5B7693;
   width: 0px;
   height: 80px;
 }
@@ -234,7 +211,6 @@
 
 .treecell-addressingWidget:first-child {
   border-top: none;
-  border-bottom: none;
 }
 
 .dummy-row-cell:first-child {
