@@ -757,7 +757,8 @@ nsRDFElement::ChildCount(PRInt32& aResult) const
 {
     nsresult rv;
     if (!mChildren) {
-        if (NS_FAILED(rv = GenerateChildren()))
+        nsRDFElement* unconstThis = const_cast<nsRDFElement*>(this);
+        if (NS_FAILED(rv = unconstThis->GenerateChildren()))
             return rv;
     }
 
@@ -770,7 +771,8 @@ nsRDFElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
     nsresult rv;
     if (!mChildren) {
-        if (NS_FAILED(rv = GenerateChildren()))
+        nsRDFElement* unconstThis = const_cast<nsRDFElement*>(this);
+        if (NS_FAILED(rv = unconstThis->GenerateChildren()))
             return rv;
     }
 
@@ -1243,7 +1245,7 @@ nsRDFElement::GetProperty(const nsString& aPropertyURI, nsString& rValue) const
 //   would do the work of transforming it for presentation.)
 //
 nsresult
-nsRDFElement::GenerateChildren(void) const
+nsRDFElement::GenerateChildren(void)
 {
     nsresult rv;
 
@@ -1350,7 +1352,7 @@ done:
 
 nsresult
 nsRDFElement::CreateChild(nsIRDFNode* value,
-                          nsIRDFContent*& result) const
+                          nsIRDFContent*& result)
 {
     // XXX I wish that we could avoid doing it "by hand" like this
     // (i.e., use interface methods so that we could extend to other
@@ -1380,7 +1382,7 @@ nsRDFElement::CreateChild(nsIRDFNode* value,
 nsresult
 nsRDFElement::CreateChild(nsIRDFNode* property,
                           nsIRDFNode* value,
-                          nsIRDFContent*& result) const
+                          nsIRDFContent*& result)
 {
     nsresult rv;
     nsRDFElement* child = NULL;

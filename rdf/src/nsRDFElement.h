@@ -127,14 +127,14 @@ protected:
     PRInt32           mNameSpaceId;
     void*             mScriptObject;
     nsIRDFNode*       mResource;
-    mutable nsISupportsArray* mChildren;
+    nsISupportsArray* mChildren;
     nsIContent*       mParent;
 
-    nsresult GenerateChildren(void) const;
-    nsresult CreateChild(nsIRDFNode* value, nsIRDFContent*& result) const;
+    nsresult GenerateChildren(void);
+    nsresult CreateChild(nsIRDFNode* value, nsIRDFContent*& result);
     nsresult CreateChild(nsIRDFNode* property,
                          nsIRDFNode* value,
-                         nsIRDFContent*& result) const;
+                         nsIRDFContent*& result);
 };
 
 #endif // nsRDFElement_h___

@@ -26,26 +26,25 @@
 
 /*
 
+  XXX --- chris, are you happy with this (I rewrote it).
+
   A simple "database" implementation. An RDF database is just a
   "strategy" pattern for combining individual data sources into a
   collective graph.
 
-  This implementation is pretty much lifted straight out of the old C
-  RDF implementation. As such, it inheirits some horrible problems.
 
-  1) A database is a hard-coded collection of data sources. What you'd
-     really like would be fore data sources to be discovered at
-     runtime, and added in to the database as needed.
+  1) A database is a sequence of data sources. The set of data sources
+     can be specified during creation of the database. Data sources
+     can also be added/deleted from a database later.
 
-  2) The aggregation mechanism is horribly ad hoc, specifically, with
-     respect to negative assertions. It works something like this.
-     Check the "first" data source for a negative assertion. If it has
-     one, then return it. Otherwise, check the "rest" of the data
-     sources for a positive assertion.
+  2) The aggregation mechanism is based on simple super-positioning of
+     the graphs from the datasources. If there is a conflict (i.e., 
+     data source A has a true arc from foo to bar while data source B
+     has a false arc from foo to bar), the data source that it earlier
+     in the sequence wins.
 
-  3) Related to the above, there are no clear semantics for ordering
-     or precedence. Things all depend on the order that you said "add
-     this data source".
+     The implementation below doesn't really do this and needs to be
+     fixed.
 
 */
 
@@ -173,6 +172,8 @@ MultiCursor::HasMoreElements(PRBool& result)
                 return rv;
 
             // See if data source zero has the negation
+            // XXX --- this needs to be fixed so that we look at all the prior 
+            // data sources for negations
             PRBool hasNegation;
             if (NS_FAILED(rv = HasNegation(mDataSource0,
                                            mNextResult,
@@ -336,6 +337,8 @@ dbArcCursorImpl::HasNegation(nsIRDFDataSource* ds0,
 
 ////////////////////////////////////////////////////////////////////////
 // nsSimpleDataBase
+// XXX --- shouldn't this take a char** argument indicating the data sources
+// we want to aggregate?
 
 nsSimpleDataBase::nsSimpleDataBase(void)
 {
@@ -622,6 +625,9 @@ nsSimpleDataBase::Flush()
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDataBase methods
+// XXX We should make this take an additional argument specifying where
+// in the sequence of data sources (of the db), the new data source should
+// fit in. Right now, the new datasource gets stuck at the end.
 
 NS_IMETHODIMP
 nsSimpleDataBase::AddDataSource(nsIRDFDataSource* source)
