@@ -22,6 +22,7 @@
   -->
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smart_browsing.dtd" >
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -30,12 +31,7 @@
         title="&title.label;" orient="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-smart_browsing' ); else parent.queuedTag = 'pref-smart_browsing';">
 
-  <box class="header" align="horizontal">  
-	  <titledbutton class="left-header-text" value="&lHeader;"/>
-   	<spring class="header-spring" flex="1"/>
-		<titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
-
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 
 		<titledbox orient="vertical">
 			<title><text value="&lHeader;"/></title>

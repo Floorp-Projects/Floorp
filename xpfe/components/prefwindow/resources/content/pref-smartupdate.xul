@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smartupdate.dtd" >
  
@@ -10,11 +11,7 @@
         title="&title.label;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-smartupdate' ); else parent.queuedTag = 'pref-smartupdate';">
 
-	<box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&lHeader;"/>
-	  <spring class="header-spring" flex="1"/>
-	  <titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
     
   <titledbox orient="vertical">
     <html:div class="vertical-gap">
