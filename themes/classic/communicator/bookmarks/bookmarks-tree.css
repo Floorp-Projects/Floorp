@@ -33,7 +33,7 @@
 
   .treeitem-bookmark
     {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
     }
  
   .treeitem-bookmark[container="true"][open="true"][loading="true"]
@@ -74,12 +74,12 @@
 
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"]
     {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
     }
 
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Bookmark"]
     {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
     }
 
 /**
