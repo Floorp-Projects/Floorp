@@ -427,7 +427,7 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
 {
   mp_digit      np;
   mp_err        res;
-  int           i;
+  int           i	= 0;
   mp_int        trial;
   mp_int        q;
   mp_size       num_tests;
@@ -436,8 +436,10 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
   ARGCHK(start != 0, MP_BADARG);
   ARGCHK(nBits > 16, MP_RANGE);
 
-  mp_init(&trial);
-  mp_init(&q);
+  MP_DIGITS(&trial) = 0;
+  MP_DIGITS(&q) = 0;
+  MP_CHECKOK( mp_init(&trial) );
+  MP_CHECKOK( mp_init(&q)     );
   if (nBits >= 1024) {
     num_tests = 5;
   } else if (nBits >= 512) {
@@ -451,15 +453,15 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
 
   if (strong) 
     --nBits;
-  res = mpl_set_bit(start, nBits - 1, 1);  if (res != MP_OKAY) goto loser;
-  res = mpl_set_bit(start,         0, 1);  if (res != MP_OKAY) goto loser;
+  MP_CHECKOK( mpl_set_bit(start, nBits - 1, 1) );
+  MP_CHECKOK( mpl_set_bit(start,         0, 1) );
   for (i = mpl_significant_bits(start) - 1; i >= nBits; --i) {
-    res = mpl_set_bit(start, i, 0);  if (res != MP_OKAY) goto loser;
+    MP_CHECKOK( mpl_set_bit(start, i, 0) );
   }
   /* start sieveing with prime value of 3. */
-  res = mpp_sieve(start, prime_tab + 1, prime_tab_size - 1, 
-			 sieve, sizeof sieve);
-  if (res != MP_OKAY) goto loser;
+  MP_CHECKOK(mpp_sieve(start, prime_tab + 1, prime_tab_size - 1, 
+		       sieve, sizeof sieve) );
+
 #ifdef DEBUG_SIEVE
   res = 0;
   for (i = 0; i < sizeof sieve; ++i) {
@@ -471,18 +473,19 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
 #else
 #define FPUTC(x,y) 
 #endif
+
   res = MP_NO;
   for(i = 0; i < sizeof sieve; ++i) {
     if (sieve[i])	/* this number is composite */
       continue;
-    res = mp_add_d(start, 2 * i, &trial); if (res != MP_OKAY) goto loser;
+    MP_CHECKOK( mp_add_d(start, 2 * i, &trial) );
     FPUTC('.', stderr);
     /* run a Fermat test */
     res = mpp_fermat(&trial, 2);
     if (res != MP_OKAY) {
       if (res == MP_NO)
 	continue;	/* was composite */
-      goto loser;
+      goto CLEANUP;
     }
       
     FPUTC('+', stderr);
@@ -491,7 +494,7 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
     if (res != MP_OKAY) {
       if (res == MP_NO)
 	continue;	/* was composite */
-      goto loser;
+      goto CLEANUP;
     }
     FPUTC('!', stderr);
 
@@ -502,15 +505,18 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
        is itself prime.  If we want a strong prime, we need now
        to test q = 2p + 1 for primality...
      */
-    mp_mul_2(&trial, &q);
-    mp_add_d(&q, 1, &q);
+    MP_CHECKOK( mp_mul_2(&trial, &q) );
+    MP_CHECKOK( mp_add_d(&q, 1, &q)  );
 
     /* Test q for small prime divisors ... */
     np = prime_tab_size;
-    if (mpp_divis_primes(&q, &np) == MP_YES) { /* is composite */
+    res = mpp_divis_primes(&q, &np);
+    if (res == MP_YES) { /* is composite */
       mp_clear(&q);
       continue;
     }
+    if (res != MP_NO) 
+      goto CLEANUP;
 
     /* And test with Fermat, as with its parent ... */
     res = mpp_fermat(&q, 2);
@@ -518,7 +524,7 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
       mp_clear(&q);
       if (res == MP_NO)
 	continue;	/* was composite */
-      goto loser;
+      goto CLEANUP;
     }
 
     /* And test with Miller-Rabin, as with its parent ... */
@@ -527,7 +533,7 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
       mp_clear(&q);
       if (res == MP_NO)
 	continue;	/* was composite */
-      goto loser;
+      goto CLEANUP;
     }
 
     /* If it passed, we've got a winner */
@@ -536,9 +542,9 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
     break;
 
   } /* end of loop through sieved values */
-  if (res == MP_YES)
+  if (res == MP_YES) 
     mp_exch(&trial, start);
-loser:
+CLEANUP:
   mp_clear(&trial);
   if (nTries)
     *nTries += i;
