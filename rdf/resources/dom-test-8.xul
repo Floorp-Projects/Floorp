@@ -92,6 +92,7 @@
   </box>
 
 <!--  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;"> -->
+  <html:div flex="100%">
   <tree id="tree" flex="100%" style="height:100%;">
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -172,5 +173,5 @@
       </treeitem>
     </treechildren>
   </tree>
-
+</html:div>
 </window>
