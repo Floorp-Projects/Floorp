@@ -2706,9 +2706,31 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
       NS_ENSURE_TRUE(mJSStrURL, NS_ERROR_FAILURE);
 
-      nsAutoString mURL;
-      mURL.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(mJSStrURL)));
+      nsAutoString unescapedURL;
+      unescapedURL.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(mJSStrURL)));
     
+      // fix bug 35076
+      // if the URL contains non ASCII, then escape from the first non ASCII char
+      nsAutoString mURL;
+      if(unescapedURL.IsASCII()) {
+        mURL = unescapedURL;
+      } else {
+        const PRUnichar* pt = unescapedURL.GetUnicode();
+        PRUint32 len=unescapedURL.Length();
+        PRUint32 i;
+        for(i=0;i<len;i++)
+        { 
+          if(0!=(0xFF80 & (*pt++)))
+            break;
+        }
+        nsAutoString right,right2;
+        unescapedURL.Left(mURL, i);
+        unescapedURL.Right(right, len-i);
+        if(NS_SUCCEEDED(Escape(right, right2)))
+           mURL.Append(right2);
+        else
+           mURL = unescapedURL;
+      }
       if(!mURL.IsEmpty()) 
          {
          nsAutoString mAbsURL;
