@@ -62,7 +62,7 @@ public:
    * suggested replacements for the misspelled word. The array will be empty
    * if there aren't any suggestions.
    */
-  NS_IMETHOD CheckWord(nsString *aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions) = 0;
+  NS_IMETHOD CheckWord(const nsString *aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions) = 0;
 
   /**
    * Replaces the old word with the specified new word.
@@ -72,25 +72,25 @@ public:
    * word, in the document, with new word when it is true. If
    * false, it will replace the 1st occurrence only!
    */
-  NS_IMETHOD Replace(nsString *aOldWord, nsString *aNewWord, PRBool aAllOccurrences) = 0;
+  NS_IMETHOD Replace(const nsString *aOldWord, const nsString *aNewWord, PRBool aAllOccurrences) = 0;
 
   /**
    * Ignores all occurrences of the specified word in the document.
    * @param aWord is the word to ignore.
    */
-  NS_IMETHOD IgnoreAll(nsString *aWord) = 0;
+  NS_IMETHOD IgnoreAll(const nsString *aWord) = 0;
 
   /**
    * Add a word to the user's personal dictionary.
    * @param aWord is the word to add.
    */
-  NS_IMETHOD AddWordToPersonalDictionary(nsString *aWord) = 0;
+  NS_IMETHOD AddWordToPersonalDictionary(const nsString *aWord) = 0;
 
   /**
    * Remove a word from the user's personal dictionary.
    * @param aWord is the word to remove.
    */
-  NS_IMETHOD RemoveWordFromPersonalDictionary(nsString *aWord) = 0;
+  NS_IMETHOD RemoveWordFromPersonalDictionary(const nsString *aWord) = 0;
 
   /**
    * Returns the list of words in the user's personal dictionary.
