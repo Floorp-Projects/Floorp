@@ -351,11 +351,14 @@ struct nsInputEvent : public nsGUIEvent
 
 struct nsMouseEvent : public nsInputEvent
 {
+  enum reasonType { eReal, eSynthesized };
+
   nsMouseEvent(PRUint32 msg = 0,
                nsIWidget *w = nsnull,
+               reasonType aReason = eReal,
                PRUint8 structType = NS_MOUSE_EVENT)
     : nsInputEvent(msg, w, structType),
-      clickCount(0), acceptActivation(PR_FALSE)
+      clickCount(0), acceptActivation(PR_FALSE), reason(aReason)
   {
   }
 
@@ -364,6 +367,7 @@ struct nsMouseEvent : public nsInputEvent
   /// Special return code for MOUSE_ACTIVATE to signal
   /// if the target accepts activation (1), or denies it (0)
   PRBool          acceptActivation;           
+  reasonType      reason;
 };
 
 /**
