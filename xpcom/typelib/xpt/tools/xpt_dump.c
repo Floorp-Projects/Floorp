@@ -42,6 +42,14 @@ static char *ptype_array[20] = {"int8 *", "int16 *", "int32 *", "int64 *",
                                 "string", "wstring", "Interface *", 
                                 "InterfaceIs *"};
 
+static char *rtype_array[20] = {"int8 &", "int16 &", "int32 &", "int64 &",
+                                "uint8 &", "uint16 &", "uint32 &", "uint64 &",
+                                "float &", "double &", "boolean &", "char &",
+                                "wchar_t &", "void &", "nsIID &", "bstr",
+                                "string", "wstring", "Interface &", 
+                                "InterfaceIs &"};
+
+
 PRBool param_problems = PR_FALSE;
 
 PRBool
@@ -526,6 +534,9 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
                     if (XPT_PD_IS_RETVAL(pd->flags)) {
                         fprintf(stdout, "retval ");
                     }
+                    if (XPT_PD_IS_SHARED(pd->flags)) {
+                        fprintf(stdout, "shared ");
+                    }
                 } else {
                     fprintf(stdout, " ");
                 }
@@ -534,6 +545,9 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
                     fprintf(stdout, "out ");
                     if (XPT_PD_IS_RETVAL(pd->flags)) {
                         fprintf(stdout, "retval ");
+                    }
+                    if (XPT_PD_IS_SHARED(pd->flags)) {
+                        fprintf(stdout, "shared ");
                     }
                 } else {
                     param_problems = PR_TRUE;
@@ -563,7 +577,10 @@ XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
         else
             *type_string = header->interface_directory[index-1].name;
     } else if (XPT_TDP_IS_POINTER(td->prefix.flags)) {
-        *type_string = ptype_array[tag];
+        if (XPT_TDP_IS_REFERENCE(td->prefix.flags))
+            *type_string = rtype_array[tag];
+        else
+            *type_string = ptype_array[tag];
     } else {
         *type_string = type_array[tag];
     }
@@ -590,7 +607,8 @@ XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
     
     if (!XPT_PD_IS_IN(pd->flags) && 
         !XPT_PD_IS_OUT(pd->flags) &&
-        XPT_PD_IS_RETVAL(pd->flags)) {
+        (XPT_PD_IS_RETVAL(pd->flags) ||
+         XPT_PD_IS_SHARED(pd->flags))) {
         param_problems = PR_TRUE;
         fprintf(stdout, "XXX\n");
     } else {
@@ -622,6 +640,12 @@ XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
     
     fprintf(stdout, "%*sRetval?     ", indent, " ");
     if (XPT_PD_IS_RETVAL(pd->flags))
+        fprintf(stdout, "TRUE\n");
+    else 
+        fprintf(stdout, "FALSE\n");
+
+    fprintf(stdout, "%*sShared?     ", indent, " ");
+    if (XPT_PD_IS_SHARED(pd->flags))
         fprintf(stdout, "TRUE\n");
     else 
         fprintf(stdout, "FALSE\n");
