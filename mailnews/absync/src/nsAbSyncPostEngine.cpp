@@ -218,7 +218,7 @@ nsAbSyncPostEngine::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, n
   if (NS_FAILED(rv)) return rv;
 
   // write to the protocol response buffer...
-  mProtocolResponse.Append(buf, readLen);
+  mProtocolResponse.Append(NS_ConvertASCIItoUCS2(buf), readLen);
   PR_FREEIF(buf);
   mTotalWritten += readLen;
   NotifyListenersOnProgress(mTransactionID, mTotalWritten, 0);
@@ -502,7 +502,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
     return NS_ERROR_FAILURE;
 
   mTransactionID = aTransactionID;
-  mProtocolResponse = "";
+  mProtocolResponse = NS_ConvertASCIItoUCS2("");
   mTotalWritten = 0;
 
   char *tSpec = PR_smprintf("%s?%s", aSpec, aProtocolRequest);

@@ -35,6 +35,8 @@
 #include "nsFileLocations.h"
 #include "nsEscape.h"
 #include "nsSyncDecoderRing.h"
+#include "plstr.h"
+#include "nsString.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -42,6 +44,7 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsAbSync, nsIAbSync)
@@ -50,6 +53,13 @@ nsAbSync::nsAbSync()
 {
   NS_INIT_ISUPPORTS();
 
+  InternalInit();
+  InitSchemaColumns();
+}
+
+void
+nsAbSync::InternalInit()
+{
   /* member initializers and constructor code */
   mListenerArray = nsnull;
   mListenerArrayCount = 0;
@@ -67,9 +77,13 @@ nsAbSync::nsAbSync()
   mNewServerTable = nsnull;
 
   mLastChangeNum = 1;
-  mUserName = nsString("RHPizzarro").ToNewCString();
+  mUserName = nsCString("RHPizzarro").ToNewCString();
 
-  InitSchemaColumns();
+  mLocale.AssignWithConversion("");
+  mDeletedRecordTags = nsnull;
+  mDeletedRecordValues = nsnull;
+  mNewRecordTags = nsnull;
+  mNewRecordValues = nsnull;
 }
 
 nsresult
@@ -91,12 +105,21 @@ nsAbSync::InternalCleanup()
 
   PR_FREEIF(mUserName);
 
+  if (mDeletedRecordTags)
+    delete mDeletedRecordTags;
+  if (mDeletedRecordValues)
+    delete mDeletedRecordValues;
+
+  if (mNewRecordTags)
+    delete mNewRecordTags;
+  if (mNewRecordValues)
+    delete mNewRecordValues;
+
   return NS_OK;
 }
 
 nsAbSync::~nsAbSync()
 {
-
   if (mPostEngine)
     mPostEngine->RemovePostListener((nsIAbSyncPostListener *)this);
 
@@ -361,6 +384,9 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   if (mCurrentState != nsIAbSyncState::nsIAbSyncIdle)
     return NS_ERROR_FAILURE;
 
+  // Make sure everything is set back to NULL's
+  InternalInit();
+
   // Ok, now get the server/port number we should be hitting with 
   // this request as well as the local address book we will be 
   // syncing with...
@@ -416,7 +442,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   // if we have nothing in mPostString, then we can just return OK...no 
   // sync was needed
   //
-  if (mPostString == "")
+  if (mPostString.IsEmpty())
   {
     rv = NS_OK;
     OnStopOperation(mTransactionID, NS_OK, nsnull, nsnull);
@@ -434,7 +460,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   }
 
   // Ok, add the header to this protocol string information...
-  prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo&", mLastChangeNum, ABSYNC_PROTOCOL);
+  prefixStr = PR_smprintf("last=%u&protocol=%d&client=seamonkey&ver=%s&", mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
   if (!prefixStr)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -442,7 +468,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     goto EarlyExit;
   }
 
-  mPostString.Insert(prefixStr, 0);
+  mPostString.Insert(NS_ConvertASCIItoUCS2(prefixStr), 0);
   nsCRT::free(prefixStr);
 
   protocolRequest = mPostString.ToNewCString();
@@ -498,7 +524,7 @@ NS_IMETHODIMP
 nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &protLine)
 {
   PRUnichar     *aName = nsnull;
-  nsString      tProtLine = "";
+  nsString      tProtLine;
 
   if (aAddId)
   {
@@ -509,8 +535,8 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     char *tVal = PR_smprintf("%d", (aKey * -1));
     if (tVal)
     {
-      tProtLine.Append("%26cid%3D");
-      tProtLine.Append(tVal);
+      tProtLine.Append(NS_ConvertASCIItoUCS2("%26cid%3D"));
+      tProtLine.Append(NS_ConvertASCIItoUCS2(tVal));
       nsCRT::free(tVal);
     }
   }
@@ -521,15 +547,15 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     {
       if (nsCRT::strncasecmp(mSchemaMappingList[i].serverField, "OMIT:", 5))
       {
-        tProtLine.Append("&");
-        tProtLine.Append(mSchemaMappingList[i].serverField);
-        tProtLine.Append("=");
+        tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
+        tProtLine.Append(NS_ConvertASCIItoUCS2(mSchemaMappingList[i].serverField));
+        tProtLine.Append(NS_ConvertASCIItoUCS2("="));
         tProtLine.Append(aName);
       }
     }
   }
 
-  if (tProtLine != "")
+  if (!tProtLine.IsEmpty())
   {
     char *tLine = tProtLine.ToNewCString();
     if (!tLine)
@@ -538,7 +564,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     char *escData = nsEscape(tLine, url_Path);
     if (escData)
     {
-      tProtLine = escData;
+      tProtLine = NS_ConvertASCIItoUCS2(escData);
     }
 
     PR_FREEIF(tLine);
@@ -585,10 +611,10 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
 {
   syncMappingRecord   *historyRecord = nsnull;
   PRUint32            counter = 0;
-  nsString            tempProtocolLine = "";
+  nsString            tempProtocolLine;
 
   // First, null out the protocol return line
-  protLine = "";
+  protLine = NS_ConvertASCIItoUCS2("");
 
   // Use the localID for this entry to lookup the old history record in the 
   // cached array
@@ -648,8 +674,8 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
     char *tVal = PR_smprintf("%d", (aKey * -1));
     if (tVal)
     {
-      protLine.Append("%26cid%3D");
-      protLine.Append(tVal);
+      protLine.Append(NS_ConvertASCIItoUCS2("%26cid%3D"));
+      protLine.Append(NS_ConvertASCIItoUCS2(tVal));
       protLine.Append(tempProtocolLine);
       nsCRT::free(tVal);
     }
@@ -681,7 +707,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   PRUint32                readCount = 0;
   PRInt32                 readSize = 0;
   PRUint32                workCounter = 0;
-  nsString                singleProtocolLine = "";
+  nsString                singleProtocolLine;
 
   // Init size vars...
   mOldTableSize = 0;
@@ -822,11 +848,11 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
             char *tVal3 = PR_smprintf("%d", mCurrentPostRecord);
             if (tVal3)
             {
-              mPostString.Append(tVal3);
-              mPostString.Append("=");
+              mPostString.Append(NS_ConvertASCIItoUCS2(tVal3));
+              mPostString.Append(NS_ConvertASCIItoUCS2("="));
             }
 
-            mPostString.Append(SYNC_ESCAPE_ADDUSER);
+            mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_ADDUSER));
             mPostString.Append(singleProtocolLine);
 
             PR_FREEIF(tVal3);
@@ -837,11 +863,11 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
             char *tVal4 = PR_smprintf("%d", mCurrentPostRecord);
             if (tVal4)
             {
-              mPostString.Append(tVal4);
-              mPostString.Append("=");
+              mPostString.Append(NS_ConvertASCIItoUCS2(tVal4));
+              mPostString.Append(NS_ConvertASCIItoUCS2("="));
             }
 
-            mPostString.Append(SYNC_ESCAPE_MOD);
+            mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_MOD));
             mPostString.Append(singleProtocolLine);
             PR_FREEIF(tVal4);
             mCurrentPostRecord++;
@@ -852,8 +878,6 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
 
     workCounter++;
   } while (NS_SUCCEEDED(cardEnum->Next()));
-
-  delete cardEnum;
 
   //
   // Now, when we get here, we should go through the old history and see if
@@ -871,13 +895,13 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         char *tVal2 = PR_smprintf("%d", mCurrentPostRecord);
         if (tVal2)
         {
-          mPostString.Append(tVal2);
-          mPostString.Append("=");
+          mPostString.Append(NS_ConvertASCIItoUCS2(tVal2));
+          mPostString.Append(NS_ConvertASCIItoUCS2("="));
         }
 
-        mPostString.Append(SYNC_ESCAPE_DEL);
-        mPostString.Append("%26id=");
-        mPostString.Append(tVal);
+        mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_DEL));
+        mPostString.Append(NS_ConvertASCIItoUCS2("%26id="));
+        mPostString.Append(NS_ConvertASCIItoUCS2(tVal));
         nsCRT::free(tVal);
         nsCRT::free(tVal2);
         mCurrentPostRecord++;
@@ -888,6 +912,9 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   }
 
 GetOut:
+  if (cardEnum)
+    delete cardEnum;
+
   if (mHistoryFile)
     mHistoryFile->CloseStream();
 
@@ -914,14 +941,9 @@ nsAbSync::AnalyzeTheLocalAddressBook()
   // Get the address book entry
   nsCOMPtr <nsIRDFResource>     resource = nsnull;
   nsCOMPtr <nsIAbDirectory>     directory = nsnull;
-  nsIAbCard                     *urlArgCard = nsnull;
-  PRUnichar                     *workEmail = nsnull;
-  char                          *charEmail = nsnull;
-  PRUnichar                     *workAb = nsnull;
-  char                          *charAb = nsnull;
 
   // Init to null...
-  mPostString = "";
+  mPostString.Assign(NS_ConvertASCIItoUCS2(""));
 
   // Now, open the database...for now, make it the default
   rv = OpenAB(mAbSyncAddressBookFileName, &aDatabase);
@@ -958,29 +980,112 @@ EarlyExit:
     aDatabase->Close(PR_TRUE);
   }
   NS_IF_RELEASE(aDatabase);
-  
-  NS_IF_RELEASE(urlArgCard);
-  PR_FREEIF(charEmail);
-  PR_FREEIF(charAb);
   return rv;
+}
+
+nsresult
+nsAbSync::PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID)
+{
+  for (PRUint32 i = 0; i < mNewTableSize; i++)
+  {
+    if (mNewSyncMapingTable[i].localID == (clientID * -1))
+    {
+      mNewSyncMapingTable[i].serverID = serverID;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 ///////////////////////////////////////////////
 // The following is for protocol parsing
 ///////////////////////////////////////////////
+#define     SERVER_ERROR              "err "
 
 #define     SERVER_OP_RETURN          "~op_return"
+#define     SERVER_OP_RETURN_LOCALE   "dlocale="
+#define     SERVER_OP_RETURN_RENAME   "op=ren"
+#define     SERVER_OP_RETURN_CID      "cid="
+#define     SERVER_OP_RETURN_SID      "sid="
+
 #define     SERVER_NEW_RECORDS        "~new_records_section "
+
 #define     SERVER_DELETED_RECORDS    "~deleted_records_section "
+
 #define     SERVER_LAST_CHANGED       "~last_chg"
+
+nsresult
+nsAbSync::ExtractInteger(char *aLine, char *aTag, char aDelim, PRInt32 *aRetVal)
+{
+  *aRetVal = 0;
+
+  if ((!aLine) || (!aTag))
+    return NS_ERROR_FAILURE;
+
+  char *fLoc = PL_strstr(aLine, aTag);
+  if (!fLoc)
+    return NS_ERROR_FAILURE;
+
+  fLoc += nsCRT::strlen(aTag);
+  if (!*fLoc)
+    return NS_ERROR_FAILURE;
+
+  char *endLoc = fLoc;
+  while ( (*endLoc) && (*endLoc != aDelim) )
+    endLoc++;
+
+  // Terminate it temporarily...
+  char  saveLoc = '\0';
+  if (*endLoc)
+  {
+    saveLoc = *endLoc;
+    *endLoc = '\0';
+  }
+
+  *aRetVal = atoi(fLoc);
+  *endLoc = saveLoc;
+  return NS_OK;
+}
+
+char *
+nsAbSync::ExtractCharacterString(char *aLine, char *aTag, char aDelim)
+{
+  if ((!aLine) || (!aTag))
+    return nsnull;
+
+  char *fLoc = PL_strstr(aLine, aTag);
+  if (!fLoc)
+    return nsnull;
+
+  fLoc += nsCRT::strlen(aTag);
+  if (!*fLoc)
+    return nsnull;
+
+  char *endLoc = fLoc;
+  while ( (*endLoc) && (*endLoc != aDelim) )
+    endLoc++;
+
+  // Terminate it temporarily...
+  char  saveLoc = '\0';
+  if (*endLoc)
+  {
+    saveLoc = *endLoc;
+    *endLoc = '\0';
+  }
+
+  char *returnValue = nsCRT::strdup(fLoc);
+  *endLoc = saveLoc;
+  return returnValue;
+}
 
 // Return true if the server returned an error...
 PRBool
 nsAbSync::ErrorFromServer(char **errString)
 {
-  if (!nsCRT::strncasecmp(mProtocolOffset, "err ", 4))
+  if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_ERROR, nsCRT::strlen(SERVER_ERROR)))
   {
-    *errString = mProtocolOffset + 4;
+    *errString = mProtocolOffset + nsCRT::strlen(SERVER_ERROR);
     return PR_TRUE;
   }
   else
@@ -1000,19 +1105,313 @@ nsAbSync::EndOfStream()
 nsresult        
 nsAbSync::ProcessOpReturn()
 {
+  char  *workLine;
+
+  while (workLine = ExtractCurrentLine())
+  {
+    if (!*workLine)   // end of this section
+      break;
+
+    // Find the right tag and do something with it!
+    // First a locale for the data
+    if (!nsCRT::strncasecmp(workLine, SERVER_OP_RETURN_LOCALE, 
+                            nsCRT::strlen(SERVER_OP_RETURN_LOCALE)))
+    {
+      char *locale = workLine += nsCRT::strlen(SERVER_OP_RETURN_LOCALE);
+      if (*locale)
+        mLocale = NS_ConvertASCIItoUCS2(locale);
+    }
+    // this is for renaming records from the server...
+    else if (!nsCRT::strncasecmp(workLine, SERVER_OP_RETURN_RENAME, 
+                                 nsCRT::strlen(SERVER_OP_RETURN_RENAME)))
+    {
+      char *renop = workLine;
+      renop += nsCRT::strlen(SERVER_OP_RETURN_RENAME);
+      if (*renop)
+      {
+        nsresult  rv = NS_OK;
+        PRInt32   clientID, serverID;
+
+        rv  = ExtractInteger(renop, SERVER_OP_RETURN_CID, ' ', &clientID);
+        rv += ExtractInteger(renop, SERVER_OP_RETURN_SID, ' ', &serverID);
+        if (NS_SUCCEEDED(rv))
+        {
+          PatchHistoryTableWithNewID(clientID, serverID);
+        }
+      }
+    }
+
+    if (*workLine)
+      nsCRT::free(workLine);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsAbSync::LocateClientIDFromServerID(PRInt32 aServerID, PRInt32 *aClientID)
+{
+  PRUint32   i;
+
+  for (i=0; i<mOldTableSize; i++)
+  {
+    if (mOldSyncMapingTable[i].serverID == aServerID)
+    {
+      *aClientID = mOldSyncMapingTable[i].localID;
+      return NS_OK;
+    }
+  }
+
+  for (i=0; i<mNewTableSize; i++)
+  {
+    if (mNewSyncMapingTable[i].serverID == aServerID)
+    {
+      *aClientID = mNewSyncMapingTable[i].localID;
+      return NS_OK;
+    }
+  }
+
   return NS_ERROR_FAILURE;
 }
 
-nsresult        
-nsAbSync::ProcessNewRecords()
+nsresult
+nsAbSync::DeleteCardByServerID(PRInt32 aServerID)
 {
-  return NS_ERROR_FAILURE;
+  nsIEnumerator           *cardEnum = nsnull;
+  nsCOMPtr<nsISupports>   obj = nsnull;
+  PRUint32                aKey;
+
+  // First off, find the aServerID in the history database and find
+  // the local client ID for this server ID
+  //
+  PRInt32   clientID;
+  if (NS_FAILED(LocateClientIDFromServerID(aServerID, &clientID)))
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Time to find the entry to delete!
+  //
+  nsresult        rv = NS_OK;
+  nsIAddrDatabase *aDatabase = nsnull;
+ 
+  // Get the address book entry
+  nsCOMPtr <nsIRDFResource>     resource = nsnull;
+  nsCOMPtr <nsIAbDirectory>     directory = nsnull;
+
+  // Now, open the database...for now, make it the default
+  rv = OpenAB(mAbSyncAddressBookFileName, &aDatabase);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Get the RDF service...
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) 
+    goto EarlyExit;
+
+  // this should not be hardcoded to abook.mab
+  // RICHIE - this works for any address book...not sure why
+  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
+  if (NS_FAILED(rv)) 
+    goto EarlyExit;
+  
+  // query interface 
+  directory = do_QueryInterface(resource, &rv);
+  if (NS_FAILED(rv)) 
+    goto EarlyExit;
+
+  rv = aDatabase->EnumerateCards(directory, &cardEnum);
+  if (NS_FAILED(rv) || (!cardEnum))
+  {
+    rv = NS_ERROR_FAILURE;
+    goto EarlyExit;
+  }
+
+  //
+  // Now we have to find the entry and delete it from the database!
+  //
+  cardEnum->First();
+  do
+  {
+    if (NS_FAILED(cardEnum->CurrentItem(getter_AddRefs(obj))))
+      continue;
+    else
+    {
+      nsCOMPtr<nsIAbCard> card;
+      card = do_QueryInterface(obj, &rv);
+
+      if (NS_FAILED(card->GetKey(&aKey)))
+        continue;
+
+      if ((PRInt32) aKey == clientID)
+      {
+        rv = aDatabase->DeleteCard(card, PR_TRUE);
+        break;
+      }
+    }
+
+  } while (NS_SUCCEEDED(cardEnum->Next()));
+
+EarlyExit:
+  if (cardEnum)
+    delete cardEnum;
+
+  // Database is open...make sure to close it
+  if (aDatabase)
+  {
+    aDatabase->Close(PR_TRUE);
+  }
+  NS_IF_RELEASE(aDatabase);
+  return rv;
+}
+
+nsresult        
+nsAbSync::DeleteRecord()
+{
+  PRInt32     i = 0;
+  nsresult    rv = NS_ERROR_FAILURE;
+
+  for (i=0; i<mDeletedRecordValues->Count(); i+=mDeletedRecordTags->Count())
+  {
+    nsString *val = mDeletedRecordValues->StringAt(i);
+    if ( (!val) || val->IsEmpty() )
+      continue;
+
+    PRInt32   aErrorCode;
+    PRInt32 delID = val->ToInteger(&aErrorCode);
+    if (NS_FAILED(aErrorCode))
+      continue;
+
+    rv = DeleteCardByServerID(delID);
+  }
+
+  return rv;
+}
+
+nsresult        
+nsAbSync::DeleteList()
+{
+  PRInt32     i = 0;
+  nsresult    rv = NS_ERROR_FAILURE;
+
+  for (i=0; i<mDeletedRecordValues->Count(); i+=mDeletedRecordTags->Count())
+  {
+    nsString *val = mDeletedRecordValues->StringAt(i);
+    if ( (!val) || val->IsEmpty() )
+      continue;
+
+    PRInt32   aErrorCode;
+    PRInt32 delID = val->ToInteger(&aErrorCode);
+    if (NS_FAILED(aErrorCode))
+      continue;
+
+    // RICHIE_TODO - Ok, delete a list by a server ID
+  }
+
+  return rv;
+}
+
+nsresult        
+nsAbSync::DeleteGroup()
+{
+  PRInt32     i = 0;
+  nsresult    rv = NS_ERROR_FAILURE;
+
+  for (i=0; i<mDeletedRecordValues->Count(); i+=mDeletedRecordTags->Count())
+  {
+    nsString *val = mDeletedRecordValues->StringAt(i);
+    if ( (!val) || val->IsEmpty() )
+      continue;
+
+    PRInt32   aErrorCode;
+    PRInt32 delID = val->ToInteger(&aErrorCode);
+    if (NS_FAILED(aErrorCode))
+      continue;
+
+    // RICHIE_TODO - Ok, delete a group by a server ID
+  }
+
+  return rv;
 }
 
 nsresult        
 nsAbSync::ProcessDeletedRecords()
 {
-  return NS_ERROR_FAILURE;
+  char      *workLine;
+  nsresult  rv = NS_OK;
+
+  // Ok, first thing we need to do is get all of the tags for 
+  // deleted records.
+  //
+  mDeletedRecordTags = new nsStringArray();
+  if (!mDeletedRecordTags)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mDeletedRecordValues = new nsStringArray();
+  if (!mDeletedRecordValues)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  while (workLine = ExtractCurrentLine())
+  {
+    if (!*workLine)   // end of this section
+      break;
+
+    mDeletedRecordTags->AppendString(nsString(NS_ConvertASCIItoUCS2(workLine)));
+    PR_FREEIF(workLine);
+  }
+
+  // Now, see what the next line is...if its a CRLF, then we
+  // really don't have anything to do here and we can just return
+  //
+  while (workLine = ExtractCurrentLine())
+  {
+    if (!*workLine)
+     break;
+    
+    // Ok, if we are here, then we need to loop and get the values
+    // for the tags in question starting at the second since the 
+    // first has already been eaten
+    //
+    mDeletedRecordValues->AppendString(nsString(NS_ConvertASCIItoUCS2(workLine)));
+    for (PRInt32 i=0; i<mDeletedRecordTags->Count(); i++)
+    {
+      workLine = ExtractCurrentLine();
+      if (!workLine)
+        return NS_ERROR_FAILURE;
+      
+      mDeletedRecordValues->AppendString(nsString(NS_ConvertASCIItoUCS2(workLine)));
+    }
+  }
+  
+  // Ok, now that we are here, we check to see if we have anything
+  // in the records array. If we do, then deal with it!
+  //
+  // If nothing in the array...just return!
+  if (mDeletedRecordValues->Count() == 0)
+    return NS_OK;
+
+  PRInt32 tType = DetermineTagType(mDeletedRecordTags);
+  switch (tType) 
+  {
+  case SYNC_SINGLE_USER_TYPE:
+    rv += DeleteRecord();
+    break;
+
+  case SYNC_MAILLIST_TYPE:
+    rv += DeleteList();
+    break;
+
+  case SYNC_GROUP_TYPE:
+    rv += DeleteGroup();
+    break;
+    
+  case SYNC_UNKNOWN_TYPE:
+  default:
+    rv = NS_ERROR_FAILURE;
+    break;
+  }
+
+  return rv;
 }
 
 nsresult        
@@ -1039,13 +1438,13 @@ nsAbSync::ProcessLastChange()
 char *        
 nsAbSync::ExtractCurrentLine()
 {
-  nsString    extractString = ""; 
+  nsString    extractString; 
 
   while ( (*mProtocolOffset) && 
           ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
         )
   {
-    extractString.Append(mProtocolOffset, 1);
+    extractString.Append(NS_ConvertASCIItoUCS2(mProtocolOffset), 1);
     mProtocolOffset++;
   }
 
@@ -1054,13 +1453,20 @@ nsAbSync::ExtractCurrentLine()
   else
   {
     while ( (*mProtocolOffset) && 
-            (*mProtocolOffset != LF) )
+            (*mProtocolOffset == CR) )
             mProtocolOffset++;
 
     if (*mProtocolOffset == LF)
       mProtocolOffset++;
 
-    return extractString.ToNewCString();
+    char *tString = extractString.ToNewCString();
+    if (tString)
+    {
+      char *ret = nsUnescape(tString);
+      return ret;
+    }
+    else
+      return nsnull;
   }
 }
 
@@ -1101,14 +1507,17 @@ nsAbSync::AdvanceToNextSection()
 
 // See if we are sitting on a particular tag...and eat if if we are
 PRBool          
-nsAbSync::TagHit(char *aTag)
+nsAbSync::TagHit(char *aTag, PRBool advanceToNextLine)
 {
   if ((!aTag) || (!*aTag))
     return PR_FALSE;
   
   if (!nsCRT::strncasecmp(mProtocolOffset, aTag, nsCRT::strlen(aTag)))
   {
-    AdvanceToNextLine();
+    if (advanceToNextLine)
+      AdvanceToNextLine();
+    else
+      mProtocolOffset += nsCRT::strlen(aTag);
     return PR_TRUE;
   }
   else
@@ -1120,14 +1529,16 @@ nsAbSync::ParseNextSection()
 {
   nsresult      rv = NS_OK;
 
-  if (TagHit(SERVER_OP_RETURN))
+  if (TagHit(SERVER_OP_RETURN, PR_TRUE))
     rv = ProcessOpReturn();
-  else if (TagHit(SERVER_NEW_RECORDS))
+  else if (TagHit(SERVER_NEW_RECORDS, PR_TRUE))
     rv = ProcessNewRecords();
-  else if (TagHit(SERVER_DELETED_RECORDS))
+  else if (TagHit(SERVER_DELETED_RECORDS, PR_TRUE))
     rv = ProcessDeletedRecords();
-  else if (TagHit(SERVER_LAST_CHANGED))
+  else if (TagHit(SERVER_LAST_CHANGED, PR_TRUE))
     rv = ProcessLastChange();
+  else    // We shouldn't get here...but if we do...
+    rv = AdvanceToNextSection();
 
   // If this is a failure, then get to the next section!
   if (NS_FAILED(rv))
@@ -1151,7 +1562,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
   // If no response, then this is a problem...
   if (!aProtocolResponse)
   {
-    printf("\7RICHIE: Server returned invalid response!\n");
+    printf("\7RICHIE_GUI: Server returned invalid response!\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -1161,7 +1572,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 
   if (ErrorFromServer(&errorString))
   {
-    printf("\7RICHIE: Server error: %s\n", errorString);
+    printf("\7RICHIE_GUI: Server error: %s\n", errorString);
     return NS_ERROR_FAILURE;
   }
 
@@ -1178,23 +1589,15 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
     goto ExitEarly;
   }
 
-  /***********RICHIE
   if (NS_FAILED(mHistoryFile->OpenStreamForWriting()))
   {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto ExitEarly;
   }
 
-  //
-  // Now, when we get here, we should go through the old history and see if
-  // there are records we need to delete since we didn't touch them when comparing
-  // against the current address book
-  //
-
   // Ok, this handles the entries that we knew about before we started.
   while (writeCount < mNewTableSize)
-  {
-    
+  {    
     if (NS_FAILED(mHistoryFile->Write((char *)&(mNewSyncMapingTable[writeCount]), 
                                      sizeof(syncMappingRecord), &writeSize))
                                      || (writeSize != sizeof(syncMappingRecord)))
@@ -1210,8 +1613,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
   // to us!
   writeCount = 0;
   while (writeCount < mNewServerTableSize)
-  {
-    
+  {    
     if (NS_FAILED(mHistoryFile->Write((char *)&(mNewServerTable[writeCount]), 
                                      sizeof(syncMappingRecord), &writeSize))
                                      || (writeSize != sizeof(syncMappingRecord)))
@@ -1225,7 +1627,6 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 
   if (mHistoryFile)
     mHistoryFile->CloseStream();
-*************** RICHIE */
 
 ExitEarly:
   if (mLastChangeNum > 1)
@@ -1238,4 +1639,210 @@ ExitEarly:
   }
 
   return NS_OK;
+}
+
+PRInt32
+nsAbSync::DetermineTagType(nsStringArray *aArray)
+{
+  PRBool    gotRecordID = PR_FALSE;
+  PRBool    gotListID = PR_FALSE;
+  PRBool    gotGroupID = PR_FALSE;
+
+  for (PRInt32 i = 0; i<aArray->Count(); i++)
+  {
+    nsString *val = mNewRecordTags->StringAt(0);
+    if ( (!val) || (val->IsEmpty()) )
+      continue;
+
+    if (val->CompareWithConversion("record_id") == 0)
+      gotRecordID = PR_TRUE;
+    else if (val->CompareWithConversion("list_id") == 0)
+      gotListID = PR_TRUE;
+    else if (val->CompareWithConversion("group_id") == 0)
+      gotGroupID = PR_TRUE;
+  }
+
+  if (gotGroupID)
+    return SYNC_GROUP_TYPE;
+  else if (gotListID)
+    return SYNC_MAILLIST_TYPE;
+  else if (gotRecordID)
+    return SYNC_SINGLE_USER_TYPE;
+  else
+    // If we get here, don't have a clue!
+    return SYNC_UNKNOWN_TYPE;
+}
+
+nsresult        
+nsAbSync::ProcessNewRecords()
+{
+  char      *workLine;
+  nsresult  rv = NS_OK;
+
+  // Ok, first thing we need to do is get all of the tags for 
+  // new records. These are the server tags for address book fields.
+  //
+  mNewRecordTags = new nsStringArray();
+  if (!mNewRecordTags)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mNewRecordValues = new nsStringArray();
+  if (!mNewRecordValues)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  while (workLine = ExtractCurrentLine())
+  {
+    if (!*workLine)   // end of this section
+      break;
+
+    mNewRecordTags->AppendString(nsString(NS_ConvertASCIItoUCS2(workLine)));
+    PR_FREEIF(workLine);
+  }
+
+  // Now, see what the next line is...if its a CRLF, then we
+  // really don't have anything to do here and we can just return
+  //
+  while (workLine = ExtractCurrentLine())
+  {
+    if (!*workLine)
+     break;
+    
+    // Ok, if we are here, then we need to loop and get the values
+    // for the tags in question starting at the second since the 
+    // first has already been eaten
+    //
+    mNewRecordValues->AppendString(nsString(NS_ConvertASCIItoUCS2(workLine)));
+    PR_FREEIF(workLine);
+    for (PRInt32 i=0; i<(mNewRecordTags->Count()-1); i++)
+    {
+      workLine = ExtractCurrentLine();
+      if (!workLine)
+        return NS_ERROR_FAILURE;
+      
+      mNewRecordValues->AppendString(nsString(NS_ConvertASCIItoUCS2(workLine)));
+      PR_FREEIF(workLine);
+    }
+
+    // Eat the CRLF!
+    workLine = ExtractCurrentLine();
+    PR_FREEIF(workLine);
+  }
+  
+  // Ok, now that we are here, we need to figure out what type
+  // of addition to the address book this is. 
+  //
+  // But first...sanity! If nothing in the array...just return!
+  if (mNewRecordValues->Count() == 0)
+    return NS_OK;
+
+  PRInt32 tType = DetermineTagType(mNewRecordTags);
+  switch (tType) 
+  {
+  case SYNC_SINGLE_USER_TYPE:
+    rv = AddNewUsers();
+    break;
+
+  case SYNC_MAILLIST_TYPE:
+    break;
+
+  case SYNC_GROUP_TYPE:
+    break;
+    
+  case SYNC_UNKNOWN_TYPE:
+  default:
+    return NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+nsresult        
+nsAbSync::AddNewUsers()
+{
+  nsresult        rv = NS_OK;
+  nsIAddrDatabase *aDatabase = nsnull;
+  PRInt32         addCount = 0;
+  PRInt32         i,j;
+  nsCOMPtr<nsIAbCard> newCard;
+ 
+  // Get the address book entry
+  nsCOMPtr <nsIRDFResource>     resource = nsnull;
+  nsCOMPtr <nsIAbDirectory>     directory = nsnull;
+
+  // Do a sanity check...if the numbers don't add up, then 
+  // return an error
+  //
+  if ( (mNewRecordValues->Count() % mNewRecordTags->Count()) != 0)
+    return NS_ERROR_FAILURE;
+
+  // Get the add count...
+  addCount = mNewRecordValues->Count() / mNewRecordTags->Count();
+
+  // Now, open the database...for now, make it the default
+  rv = OpenAB(mAbSyncAddressBookFileName, &aDatabase);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Get the RDF service...
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) 
+    goto EarlyExit;
+
+  // this should not be hardcoded to abook.mab
+  // RICHIE - this works for any address book...not sure why
+  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
+  if (NS_FAILED(rv)) 
+    goto EarlyExit;
+  
+  // query interface 
+  directory = do_QueryInterface(resource, &rv);
+  if (NS_FAILED(rv)) 
+    goto EarlyExit;
+
+  //
+  // 
+  // Create the new card that we will eventually add to the 
+  // database...
+  //
+  for (i = 0; i < addCount; i++)
+  {
+    rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, NS_GET_IID(nsIAbCard), 
+                                            getter_AddRefs(newCard));
+    if (NS_FAILED(rv) || !newCard)
+    {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      goto EarlyExit;
+    }
+
+    for (j = 0; j < mNewRecordTags->Count(); j++)
+    {
+      nsString *val = mNewRecordValues->StringAt((i*(mNewRecordTags->Count())) + j);
+      if ( (val) && (!val->IsEmpty()) )
+      {
+        AddValueToNewCard(newCard, mNewRecordTags->StringAt(j), val);
+      }
+    }
+
+    // Ok, now we need to add the card!
+    rv = aDatabase->CreateNewCardAndAddToDB(newCard, PR_TRUE);
+    newCard = nsnull;
+  }
+
+EarlyExit:
+  // Database is open...make sure to close it
+  if (aDatabase)
+  {
+    aDatabase->Close(PR_TRUE);
+  }
+  NS_IF_RELEASE(aDatabase);  
+  return rv;
+}
+
+nsresult
+nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTagValue)
+{
+  nsresult  rv = NS_OK;
+
+
+  return rv;
 }

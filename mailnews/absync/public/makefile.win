@@ -23,16 +23,12 @@ DEPTH=..\..\..
 MODULE=absync
 
 
-XPIDLSRCS = \
+XPIDLSRCS=\
 	      .\nsIAbSync.idl		\
 	      .\nsIAbSyncListener.idl		\
       	.\nsIAbSyncPostEngine.idl			\
       	.\nsIAbSyncPostListener.idl			\
         $(NULL)
-
-EXPORTS =							\
-    $(NULL)
-
 
 include <$(DEPTH)\config\rules.mak>
 
