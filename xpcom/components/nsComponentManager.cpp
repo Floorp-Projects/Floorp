@@ -2411,9 +2411,11 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     }
 
 #ifdef XPCOM_CHECK_PENDING_CIDS  
-    rv = AddPendingCID(entry->mCid);
-    if (NS_FAILED(rv))
-        return rv;
+    if (entry) {
+        rv = AddPendingCID(entry->mCid);
+        if (NS_FAILED(rv))
+            return rv;
+    }
 #endif
     nsCOMPtr<nsISupports> service;
     // We need to not be holding the service manager's monitor while calling 
@@ -2426,7 +2428,8 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     mon.Enter();
 
 #ifdef XPCOM_CHECK_PENDING_CIDS 
-    RemovePendingCID(entry->mCid);
+    if (entry)
+        RemovePendingCID(entry->mCid);
 #endif
 
     if (NS_FAILED(rv))
