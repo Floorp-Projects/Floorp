@@ -33,11 +33,17 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.9 $ $Date: 2004/01/28 04:29:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.10 $ $Date: 2004/02/11 02:17:24 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "seccomon.h"
 #include "secport.h"
+
+#ifdef TEST_UTF8
+#include <assert.h>
+#undef PORT_Assert
+#define PORT_Assert assert
+#endif
 
 /*
  * From RFC 2044:
@@ -165,9 +171,7 @@ sec_port_ucs4_utf8_conversion_function
   unsigned int *outBufLen
 )
 {
-#ifndef TEST_UTF8
   PORT_Assert((unsigned int *)NULL != outBufLen);
-#endif /* TEST_UTF8 */
 
   if( toUnicode ) {
     unsigned int i, len = 0;
@@ -291,9 +295,7 @@ sec_port_ucs2_utf8_conversion_function
   unsigned int *outBufLen
 )
 {
-#ifndef TEST_UTF8
   PORT_Assert((unsigned int *)NULL != outBufLen);
-#endif /* TEST_UTF8 */
 
   if( toUnicode ) {
     unsigned int i, len = 0;
@@ -391,9 +393,7 @@ sec_port_ucs2_utf8_conversion_function
       } else if( (inBuf[i+H_0] & 0xDC) == 0xD8 ) {
         int abcde, BCDE;
 
-#ifndef TEST_UTF8
         PORT_Assert(((inBuf[i+2+H_0] & 0xDC) == 0xDC) && ((inBufLen - i) > 2));
-#endif /* TEST_UTF8 */
 
         /* D800-DBFF DC00-DFFF -> 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
         /* 110110BC DEfghijk 110111lm nopqrstu ->
@@ -443,9 +443,7 @@ sec_port_iso88591_utf8_conversion_function
 {
   unsigned int i, len = 0;
 
-#ifndef TEST_UTF8
   PORT_Assert((unsigned int *)NULL != outBufLen);
-#endif /* TEST_UTF8 */
 
   for( i = 0; i < inBufLen; i++) {
     if( (inBuf[i] & 0x80) == 0x00 ) len += 1;
@@ -1478,10 +1476,10 @@ test_iso88591_chars
     unsigned char utf8[3];
     unsigned int len = 0;
 
-    if (e->c > 0xFF) continue;
+    if (ntohs(e->c) > 0xFF) continue;
 
     (void)memset(utf8, 0, sizeof(utf8));
-    iso88591 = e->c;
+    iso88591 = ntohs(e->c);
     
     result = sec_port_iso88591_utf8_conversion_function(&iso88591,
       1, utf8, sizeof(utf8), &len);
