@@ -43,7 +43,7 @@ function Startup()
 
       // Fill the fields we can from this.
       gDescriptionField.value = info.Description;
-      gExtensionField.value   = info.FirstExtension();
+      gExtensionField.value   = info.primaryExtension;
       gMIMEField.value        = info.MIMEType;
       var app = info.preferredApplicationHandler;
       if ( app ) {

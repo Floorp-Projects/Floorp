@@ -273,7 +273,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
       {
         char *aFileExtension = nsnull;
 
-        if ( (NS_SUCCEEDED(mimeInfo->FirstExtension(&aFileExtension))) && aFileExtension)
+        if ( (NS_SUCCEEDED(mimeInfo->GetPrimaryExtension(&aFileExtension))) && aFileExtension)
         {
           newAttachName.Append(NS_LITERAL_STRING("."));
           newAttachName.AppendWithConversion(aFileExtension);

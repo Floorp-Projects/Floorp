@@ -1002,7 +1002,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
             // Append the mime file extension
             nsXPIDLCString fileExt;
             if (!hasExtension &&
-                NS_SUCCEEDED(mimeInfo->FirstExtension(getter_Copies(fileExt))))
+                NS_SUCCEEDED(mimeInfo->GetPrimaryExtension(getter_Copies(fileExt))))
             {
                 newFileName.Append(".");
                 newFileName.Append(fileExt.get());

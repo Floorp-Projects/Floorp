@@ -334,7 +334,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     if (mimeObject)
     {
       nsXPIDLCString fileExt;
-      mimeObject->FirstExtension(getter_Copies(fileExt));
+      mimeObject->GetPrimaryExtension(getter_Copies(fileExt));
       // we need to insert a '.' b4 the extension...
       nsCAutoString formattedFileExt;
       formattedFileExt = ".";

@@ -1849,7 +1849,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       {
         nsXPIDLCString fileExtension;
 
-        if ( (NS_SUCCEEDED(mimeInfo->FirstExtension(getter_Copies(fileExtension)))) && fileExtension)
+        if ( (NS_SUCCEEDED(mimeInfo->GetPrimaryExtension(getter_Copies(fileExtension)))) && fileExtension)
         {
           newAttachName.Append(".");
           newAttachName.Append(fileExtension);

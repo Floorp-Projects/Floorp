@@ -359,7 +359,7 @@ function GetExtensionBasedOnMimeType(aMIMEType)
     var mimeInfo = mimeService.GetFromMIMEType(aMIMEType);
     if (!mimeInfo) return "";
 
-    var fileExtension = mimeInfo.FirstExtension();
+    var fileExtension = mimeInfo.primaryExtension;
 
     // the MIME service likes to give back ".htm" for text/html files,
     // so do a special-case fix here.
