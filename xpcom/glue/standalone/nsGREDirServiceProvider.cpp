@@ -487,6 +487,21 @@ nsGREDirServiceProvider::AddGRELocationToPath()
                                XPCOM_SEARCH_KEY,
                                grePath,
                                path);
+
+#if XP_WIN32
+  // On windows, the current directory is searched before the 
+  // PATH environment variable.  This is a very bad thing 
+  // since libraries in the cwd will be picked up before
+  // any that are in either the application or GRE directory.
+
+  char* cpd = GetGREDirectoryPath();
+  if (cpd) {
+    SetCurrentDirectory(cpd);
+    free (cpd);
+  }
+#endif
+  
+
   PR_SetEnv(mPathEnvString);
   free(grePath);
 }
