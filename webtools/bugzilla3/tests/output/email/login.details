@@ -2,13 +2,24 @@ COSES
 <text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
 
 <text>
-To: <text value="(data.session.fields.contact:e-mail)"/><br/>
+To: <text value="(data.session.fields.contact:email)"/><br/>
 From: <text value="(data.output.address)"/><br/>
-Subject: Test From PLIF<br/>
+Subject: Your <text value="(data.app.name)"/> login details<br/>
 </text>
+
+<text xml:space="preserve">
 
 Hi.
 
+Your username is: <text value="(data.username)"/>
+Your password is: <text value="(data.password)"/>
+
+HTH,
+-- 
+<text value="(data.app.name)"/>
+
+--- debug --
 Here's what I know:
 <include href="debug.dumpVars"/>
+
 </text>
