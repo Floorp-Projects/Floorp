@@ -523,7 +523,7 @@ nsGREDirServiceProvider::AddGRELocationToPath()
   }
 
   if (mPathEnvString)
-    PR_Free(mPathEnvString);
+    PR_smprintf_free(mPathEnvString);
 
   mPathEnvString = PR_smprintf("%s=%s;%s",
                                XPCOM_SEARCH_KEY,

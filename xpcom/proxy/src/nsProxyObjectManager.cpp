@@ -114,10 +114,9 @@ nsProxyObjectManager* nsProxyObjectManager::mInstance = nsnull;
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 
 nsProxyObjectManager::nsProxyObjectManager()
+: mProxyClassMap(256, PR_TRUE),
+  mProxyObjectMap(256, PR_TRUE)
 {
-    mProxyClassMap = new nsHashtable(256, PR_TRUE);
-    mProxyObjectMap = new nsHashtable(256, PR_TRUE);
-
     mProxyCreationMonitor = PR_NewMonitor();
 }
 
@@ -130,13 +129,7 @@ static PRBool PurgeProxyClasses(nsHashKey *aKey, void *aData, void* closure)
 
 nsProxyObjectManager::~nsProxyObjectManager()
 {
-    if (mProxyClassMap)
-    {
-        mProxyClassMap->Reset((nsHashtableEnumFunc)PurgeProxyClasses, nsnull);
-        delete mProxyClassMap;
-    }
-
-    delete mProxyObjectMap;
+    mProxyClassMap.Reset((nsHashtableEnumFunc)PurgeProxyClasses, nsnull);
 
     if (mProxyCreationMonitor) {
         PR_DestroyMonitor(mProxyCreationMonitor);

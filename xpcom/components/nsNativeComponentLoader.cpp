@@ -52,13 +52,6 @@
 #include "prlog.h"
 extern PRLogModuleInfo *nsComponentManagerLog;
 
-nsNativeComponentLoader::nsNativeComponentLoader() :
-    mCompMgr(nsnull),
-    mLoadedDependentLibs(nsnull),
-    mDllStore(nsnull)
-{
-}
-
 static PRBool PR_CALLBACK
 DLLStore_Destroy(nsHashKey *aKey, void *aData, void* closure)
 {
@@ -67,11 +60,17 @@ DLLStore_Destroy(nsHashKey *aKey, void *aData, void* closure)
     return PR_TRUE;
 }
 
+nsNativeComponentLoader::nsNativeComponentLoader() :
+    mCompMgr(nsnull),
+    mLoadedDependentLibs(16, PR_TRUE),
+    mDllStore(nsnull, nsnull, DLLStore_Destroy, 
+              nsnull, 256, PR_TRUE)
+{
+}
+
 nsNativeComponentLoader::~nsNativeComponentLoader()
 {
     mCompMgr = nsnull;
-    delete mDllStore;
-    delete mLoadedDependentLibs;
 }
     
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNativeComponentLoader, 
@@ -157,20 +156,6 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     mCompMgr = aCompMgr;
     if (!mCompMgr)
         return NS_ERROR_INVALID_ARG;
-
-    mDllStore = new nsObjectHashtable(nsnull, 
-                                      nsnull,
-                                      DLLStore_Destroy, 
-                                      nsnull,
-                                      256, 
-                                      PR_TRUE);
-    if (!mDllStore)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    mLoadedDependentLibs = new nsHashtable(16, PR_TRUE);
-
-    if (!mLoadedDependentLibs)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }
@@ -641,7 +626,7 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
 
     // Remove any autoreg info about this dll
     nsCStringKey key(persistentDescriptor);
-    mDllStore->RemoveAndDelete(&key);
+    mDllStore.RemoveAndDelete(&key);
     
     nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(mCompMgr);
     NS_ASSERTION(manager, "Something is terribly wrong");
@@ -872,7 +857,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         dll = new nsDll(component, this);
         if (dll == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
-        mDllStore->Put(&key, (void *) dll);
+        mDllStore.Put(&key, (void *) dll);
     } // dll == NULL
         
     // Either we are seeing the dll for the first time or the dll has
@@ -973,9 +958,7 @@ nsNativeComponentLoader::UnloadAll(PRInt32 aWhen)
     callData.when = aWhen;
 
     // Cycle through the dlls checking to see if they want to be unloaded
-    if (mDllStore) {
-        mDllStore->Enumerate(nsFreeLibraryEnum, &callData);
-    }
+    mDllStore.Enumerate(nsFreeLibraryEnum, &callData);
     return NS_OK;
 }
 
@@ -1008,7 +991,7 @@ nsNativeComponentLoader::CreateDll(nsIFile *aSpec,
     nsresult rv;
 
     nsCStringKey key(aLocation);
-    dll = (nsDll *)mDllStore->Get(&key);
+    dll = (nsDll *)mDllStore.Get(&key);
     if (dll)
     {
         *aDll = dll;
@@ -1039,7 +1022,7 @@ nsNativeComponentLoader::CreateDll(nsIFile *aSpec,
     }
 
     *aDll = dll;
-    mDllStore->Put(&key, dll);
+    mDllStore.Put(&key, dll);
     return NS_OK;
 }
 

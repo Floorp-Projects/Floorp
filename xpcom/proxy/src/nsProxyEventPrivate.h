@@ -182,15 +182,15 @@ public:
 
     static void Shutdown();
     
-    nsHashtable* GetRealObjectToProxyObjectMap() const { return mProxyObjectMap;}   
-    nsHashtable* GetIIDToProxyClassMap() const { return mProxyClassMap; }   
+    nsHashtable* GetRealObjectToProxyObjectMap() { return &mProxyObjectMap;}   
+    nsHashtable* GetIIDToProxyClassMap() { return &mProxyClassMap; }   
 
     PRMonitor*   GetMonitor() const { return mProxyCreationMonitor; }
     
 private:
     static nsProxyObjectManager* mInstance;
-    nsHashtable *mProxyObjectMap;
-    nsHashtable *mProxyClassMap;
+    nsHashtable  mProxyObjectMap;
+    nsHashtable  mProxyClassMap;
     PRMonitor   *mProxyCreationMonitor;
 };
 

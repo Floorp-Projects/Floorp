@@ -74,7 +74,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsObserverService, nsIObserverService)
 nsObserverService::nsObserverService()
     : mObserverTopicTable(nsnull)
 {
-    mObserverTopicTable = nsnull;
 }
 
 nsObserverService::~nsObserverService(void)
