@@ -73,6 +73,8 @@ XPIDLSRCS	= \
 
 EXPORTS		= \
 		nsCookieHTTPNotify.h \
+		nsCCookie.h \
+		nsCCookieManager.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

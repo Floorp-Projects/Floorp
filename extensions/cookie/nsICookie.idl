@@ -22,8 +22,8 @@
 #include "nsISupports.idl"
 
 /** 
- * An optional interface for embedding clients wishing to access an
- * HTTP or javascript cookie object
+ * An optional interface for accessing the HTTP or
+ * javascript cookie object
  * 
  * @status FROZEN
  */

@@ -42,8 +42,8 @@
 
 
 /** 
- * An optional interface for embedding clients wishing to access or
- * remove the cookies that are in the cookie list
+ * An optional interface for accessing or removing the cookies
+ * that are in the cookie list
  * 
  * @status FROZEN
  */

@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is Netscape Communications Corporation.
  * Portions created by Netscape Communications Corporation are
- * Copyright (C) 1998 Netscape Communications Corporation.
+ * Copyright (C) 2002 Netscape Communications Corporation.
  * All Rights Reserved.
  *
  * Contributor(s):
