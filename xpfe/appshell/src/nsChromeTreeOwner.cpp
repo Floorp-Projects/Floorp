@@ -120,7 +120,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
       return NS_OK;
    if(name.EqualsIgnoreCase("_blank"))
       return NS_OK;
-   if(name.EqualsIgnoreCase("_content"))
+   if(name.EqualsIgnoreCase("_content") || name.EqualsIgnoreCase("_main"))
       {
       fIs_Content = PR_TRUE;
       mXULWindow->GetPrimaryContentShell(aFoundItem);

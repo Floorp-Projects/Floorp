@@ -1005,7 +1005,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
         if(!treeItem)
             *aResult = this;
     }
-    else if(name.EqualsIgnoreCase("_content"))
+    else if(name.EqualsIgnoreCase("_content") || name.EqualsIgnoreCase("_main"))
     {
         if (mTreeOwner) {
             mTreeOwner->FindItemWithName(name.get(), nsnull, 
@@ -4975,7 +4975,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         if (mUseExternalProtocolHandler && aLoadType == LOAD_LINK) {
             // don't do it for javascript urls!
             if (!bIsJavascript &&
-                (name.EqualsIgnoreCase("_content") || 
+                (name.EqualsIgnoreCase("_content") || name.EqualsIgnoreCase("_main") ||
                  name.EqualsIgnoreCase("_blank"))) 
             {
                 nsCOMPtr<nsIExternalProtocolService> extProtService;
@@ -5018,7 +5018,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 }
                 else if (!name.EqualsIgnoreCase("_parent") &&
                          !name.EqualsIgnoreCase("_self") &&
-                         !name.EqualsIgnoreCase("_content")) {
+                         !name.EqualsIgnoreCase("_content") &&
+                         !name.EqualsIgnoreCase("_main")) {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
                     FindItemWithName(name.get(),
                                      NS_STATIC_CAST(nsIInterfaceRequestor *, this),
