@@ -114,10 +114,6 @@ h6 {
   font-weight: bold;
   margin: 2.33em 0;
 }
-layer {
-  display: block;
-  position: absolute;
-}
 listing {
   display: block;
   font-family: -moz-fixed;
@@ -279,10 +275,6 @@ sub {
 }
 sup {
   vertical-align: super;
-}
-ilayer {
-  position: relative;
-  display: inline;
 }
 nobr {
   display: inline;
