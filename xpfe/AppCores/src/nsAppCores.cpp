@@ -80,15 +80,15 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** AppCores object is being unregistered\n");
     
-    nsComponentManager::UnregisterFactory(kAppCoresManagerCID, path);
-    nsComponentManager::UnregisterFactory(kDOMPropsCoreCID, path);
-    nsComponentManager::UnregisterFactory(kPrefsCoreCID, path);
-    nsComponentManager::UnregisterFactory(kProfileCoreCID, path); 
-    nsComponentManager::UnregisterFactory(kRDFCoreCID, path);
-    nsComponentManager::UnregisterFactory(kToolbarCoreCID, path);
-    nsComponentManager::UnregisterFactory(kToolkitCoreCID, path);
-    nsComponentManager::UnregisterFactory(kBrowserAppCoreCID, path);
-    nsComponentManager::UnregisterFactory(kEditorAppCoreCID, path);
+    nsComponentManager::UnregisterComponent(kAppCoresManagerCID, path);
+    nsComponentManager::UnregisterComponent(kDOMPropsCoreCID, path);
+    nsComponentManager::UnregisterComponent(kPrefsCoreCID, path);
+    nsComponentManager::UnregisterComponent(kProfileCoreCID, path); 
+    nsComponentManager::UnregisterComponent(kRDFCoreCID, path);
+    nsComponentManager::UnregisterComponent(kToolbarCoreCID, path);
+    nsComponentManager::UnregisterComponent(kToolkitCoreCID, path);
+    nsComponentManager::UnregisterComponent(kBrowserAppCoreCID, path);
+    nsComponentManager::UnregisterComponent(kEditorAppCoreCID, path);
     
     return NS_OK;
 }

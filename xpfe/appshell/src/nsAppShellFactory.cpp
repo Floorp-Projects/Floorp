@@ -65,13 +65,13 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
-    nsComponentManager::UnregisterFactory(kAppShellServiceCID, path);
-    nsComponentManager::UnregisterFactory(kCmdLineServiceCID,  path);
-    nsComponentManager::UnregisterFactory(kFileLocatorCID,  path);
-    nsComponentManager::UnregisterFactory(kProtocolHelperCID,  path);
-    nsComponentManager::UnregisterFactory(kXPConnectFactoryCID, path);
-    nsComponentManager::UnregisterFactory(kGlobalHistoryCID, path);  
-    nsComponentManager::UnregisterFactory(kNetSupportDialogCID, path);
+    nsComponentManager::UnregisterComponent(kAppShellServiceCID, path);
+    nsComponentManager::UnregisterComponent(kCmdLineServiceCID,  path);
+    nsComponentManager::UnregisterComponent(kFileLocatorCID,  path);
+    nsComponentManager::UnregisterComponent(kProtocolHelperCID,  path);
+    nsComponentManager::UnregisterComponent(kXPConnectFactoryCID, path);
+    nsComponentManager::UnregisterComponent(kGlobalHistoryCID, path);  
+    nsComponentManager::UnregisterComponent(kNetSupportDialogCID, path);
 
     return NS_OK;
 }
