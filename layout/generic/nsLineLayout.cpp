@@ -2247,6 +2247,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // since this code sets zeroEffectiveSpanBox even when there are
   // non-empty children.
   PRBool zeroEffectiveSpanBox = PR_FALSE;
+  // XXXldb If we really have empty continuations, then all these other
+  // checks don't make sense for them.
   if ((emptyContinuation || !InStrictMode()) &&
       ((psd == mRootSpan) ||
        ((0 == spanFramePFD->mBorderPadding.top) &&
@@ -2267,11 +2269,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // mode) we don't want big line heights for things like
     // <p><font size="-1">Text</font></p>
 
-    // Don't count the first frame if it's only whitespace.  (Somehow
-    // the last frame, if whitespace, is already ignored.  So we're not
-    // quite compatible with Nav4.x, but it's probably good that we're
-    // ignoring the last frame.  Still, I wonder where the code is
-    // that's doing it.)  See bug 134580.
+    // Don't include any initial whitespace, unless we're preformatted.
+    // See bug 134580.
     PRUint32 flag = preMode ? PFD_ISTEXTFRAME : PFD_ISNONWHITESPACETEXTFRAME;
     zeroEffectiveSpanBox = PR_TRUE;
     for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
@@ -2279,7 +2278,16 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         zeroEffectiveSpanBox = PR_FALSE;
         break;
       }
-      flag = PFD_ISTEXTFRAME;
+      // The line could begin with multiple all-whitespace text frames,
+      // and we need to ignore all of them, including those contained
+      // within other inline frames.
+      if (flag != PFD_ISTEXTFRAME) {
+        PRBool empty;
+        pfd->mFrame->IsEmpty(PR_TRUE, preMode, &empty);
+        if (!empty) {
+          flag = PFD_ISTEXTFRAME;
+        }
+      }
     }
   }
   psd->mZeroEffectiveSpanBox = zeroEffectiveSpanBox;
