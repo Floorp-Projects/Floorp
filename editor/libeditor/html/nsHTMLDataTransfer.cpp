@@ -248,7 +248,8 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAString & aInputString, 
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAString & aInString)
 {
   return InsertHTMLWithCharsetAndContext(aInString, nsString(), nsString(),
-                                     nsString(), nsString(), nsnull, 0, PR_TRUE);
+                                         nsString(), nsString(),
+                                         nsnull, nsnull, 0, PR_TRUE);
 }
 
 
@@ -258,6 +259,7 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
                                               const nsAString & aContextStr,
                                               const nsAString & aInfoStr,
                                               const nsAString & aFlavor,
+                                              nsIDOMDocument *aSourceDoc,
                                               nsIDOMNode *aDestNode,
                                               PRInt32 aDestOffset,
                                               PRBool aDeleteSelection)
@@ -326,7 +328,7 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
 
   PRBool doContinue = PR_TRUE;
 
-  res = DoContentFilterCallback(aFlavor, aDeleteSelection,
+  res = DoContentFilterCallback(aFlavor, aSourceDoc, aDeleteSelection,
                                 (nsIDOMNode **)address_of(fragmentAsNode), 
                                 (nsIDOMNode **)address_of(streamStartParent), 
                                 &streamStartOffset,
@@ -518,16 +520,13 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
     {
       nsCOMPtr<nsIDOMNode> curNode = nodeList[j];
 
-      nsString namestr;
-      curNode->GetNodeName(namestr);
-
       NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
       NS_ENSURE_TRUE(curNode != fragmentAsNode, NS_ERROR_FAILURE);
       NS_ENSURE_TRUE(!nsTextEditUtils::IsBody(curNode), NS_ERROR_FAILURE);
       
       if (insertedContextParent)
       {
-        // if we had to insert something higher up in the paste heirarchy, we want to 
+        // if we had to insert something higher up in the paste hierarchy, we want to 
         // skip any further paste nodes that descend from that.  Else we will paste twice.
         if (nsEditorUtils::IsDescendantOf(curNode, insertedContextParent))
           continue;
@@ -786,6 +785,7 @@ nsHTMLEditor::RemoveInsertionListener(nsIContentFilter *aListener)
  
 nsresult
 nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor, 
+                                      nsIDOMDocument *sourceDoc,
                                       PRBool aWillDeleteSelection,
                                       nsIDOMNode **aFragmentAsNode, 
                                       nsIDOMNode **aFragStartNode, 
@@ -804,8 +804,8 @@ nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor,
   {
     listener = (nsIContentFilter *)mContentFilters[i];
     if (listener)
-      listener->NotifyOfInsertion(aFlavor, nsnull, aWillDeleteSelection,
-                                  aFragmentAsNode,
+      listener->NotifyOfInsertion(aFlavor, nsnull, sourceDoc,
+                                  aWillDeleteSelection, aFragmentAsNode,
                                   aFragStartNode, aFragStartOffset, 
                                   aFragEndNode, aFragEndOffset,
                                   aTargetNode, aTargetOffset, aDoContinue);
@@ -1005,6 +1005,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable, 
+                                                   nsIDOMDocument *aSourceDoc,
                                                    const nsAString & aContextStr,
                                                    const nsAString & aInfoStr,
                                                    nsIDOMNode *aDestinationNode,
@@ -1041,6 +1042,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
           nsAutoEditBatch beginBatching(this);
           rv = InsertHTMLWithCharsetAndContext(cffragment, nsString(),
                                               cfcontext, cfselection, flavor,
+                                              aSourceDoc,
                                               aDestinationNode, aDestOffset,
                                               aDoDeleteSelection);
         }
@@ -1058,6 +1060,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         nsAutoEditBatch beginBatching(this);
         rv = InsertHTMLWithCharsetAndContext(stuffToPaste, nsString(),
                                              aContextStr, aInfoStr, flavor,
+                                             aSourceDoc,
                                              aDestinationNode, aDestOffset,
                                              aDoDeleteSelection);
       }
@@ -1125,6 +1128,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
             nsAutoEditBatch beginBatching(this);
             rv = InsertHTMLWithCharsetAndContext(stuffToPaste, nsString(),
                                                 nsString(), nsString(), flavor, 
+                                                aSourceDoc,
                                                 aDestinationNode, aDestOffset,
                                                 aDoDeleteSelection);
           }
@@ -1166,8 +1170,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   // transferable hooks here
   nsCOMPtr<nsIDOMDocument> domdoc;
   GetDocument(getter_AddRefs(domdoc));
-  PRBool isAllowed = nsEditorHookUtils::DoAllowDropHook(domdoc, aDropEvent, dragSession);
-  if (!isAllowed)
+  if (!nsEditorHookUtils::DoAllowDropHook(domdoc, aDropEvent, dragSession))
     return NS_OK;
 
   // find out if we have our internal html flavor on the clipboard.  We don't want to mess
@@ -1193,6 +1196,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   PRBool deleteSelection = PR_FALSE;
   nsCOMPtr<nsIDOMNode> newSelectionParent;
   PRInt32 newSelectionOffset = 0;
+
+  // Source doc is null if source is *not* the current editor document
+  nsCOMPtr<nsIDOMDocument> srcdomdoc;
+  rv = dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
+  if (NS_FAILED(rv)) return rv;
 
   PRUint32 i; 
   PRBool doPlaceCaret = PR_TRUE;
@@ -1255,11 +1263,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 #else
         mouseEvent->GetCtrlKey(&userWantsCopy);
 #endif
-
-      // Source doc is null if source is *not* the current editor document
-      nsCOMPtr<nsIDOMDocument> srcdomdoc;
-      rv = dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
-      if (NS_FAILED(rv)) return rv;
 
       // Current doc is destination
       nsCOMPtr<nsIDOMDocument>destdomdoc; 
@@ -1368,11 +1371,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     }
     
     // handle transferable hooks
-    PRBool doInsert = nsEditorHookUtils::DoInsertionHook(domdoc, aDropEvent, trans);
-    if (!doInsert)
+    if (!nsEditorHookUtils::DoInsertionHook(domdoc, aDropEvent, trans))
       return NS_OK;
 
-    rv = InsertFromTransferable(trans, contextStr, infoStr, newSelectionParent,
+    rv = InsertFromTransferable(trans, srcdomdoc, contextStr, infoStr,
+                                newSelectionParent,
                                 newSelectionOffset, deleteSelection);
   }
 
@@ -1585,14 +1588,13 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
         }
       }
 
-     // handle transferable hooks
-     nsCOMPtr<nsIDOMDocument> domdoc;
-     GetDocument(getter_AddRefs(domdoc));
-     PRBool doInsert = nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans);
-     if (!doInsert)
-       return NS_OK;
+      // handle transferable hooks
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      GetDocument(getter_AddRefs(domdoc));
+      if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
+        return NS_OK;
 
-      rv = InsertFromTransferable(trans, contextStr, infoStr,
+      rv = InsertFromTransferable(trans, nsnull, contextStr, infoStr,
                                   nsnull, 0, PR_TRUE);
     }
   }
@@ -1622,7 +1624,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
     // Get the Data from the clipboard  
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
-      rv = InsertFromTransferable(trans, nsString(), nsString(),
+      rv = InsertFromTransferable(trans, nsnull, nsString(), nsString(),
                                   nsnull, 0, PR_TRUE);
     }
   }
