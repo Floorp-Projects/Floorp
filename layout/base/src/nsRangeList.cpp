@@ -813,7 +813,9 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
       result = mTracker->GetPrimaryFrameFor(content, &frame);
       if (NS_SUCCEEDED(result) && frame)
          frame->SetSelected(aRange,aFlags,PR_TRUE);//spread from here to hit all frames in flow
-      iter->Next();
+      result = iter->Next();
+      if (NS_FAILED(result))
+      	break;
     }
   }
   return result;
