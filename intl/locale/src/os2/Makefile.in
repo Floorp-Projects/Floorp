@@ -30,11 +30,11 @@ EXTRA_DSO_LIBS	= nslocale_s
 
 
 CPPSRCS		= \
-		nsLocaleOS2.cpp \
+		nsOS2Locale.cpp \
 		nsLocaleFactoryOS2.cpp \
 		nsCollationOS2.cpp \
 		nsDateTimeFormatOS2.cpp \
-		nsLocaleDllOS2.cpp \
+		nsOS2LocaleFactory.cpp \
 		nsLocaleModule.cpp \
 		$(NULL)
 

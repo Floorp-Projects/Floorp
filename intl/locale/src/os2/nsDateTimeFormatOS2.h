@@ -18,38 +18,32 @@
  * Contributor(s): 
  *
  */
-
 #ifndef _nsdatetimeformatos2_h_
 #define _nsdatetimeformatos2_h_
 
+
 #include "nsIDateTimeFormat.h"
 
-class nsILocaleOS2;
+#define kPlatformLocaleLength 64
 
-class nsDateTimeFormatOS2 : public nsIDateTimeFormat
-{
+class nsDateTimeFormatOS2 : public nsIDateTimeFormat {
+
  public:
-   nsDateTimeFormatOS2();
-   virtual ~nsDateTimeFormatOS2();
-
-   // nsISupports
    NS_DECL_ISUPPORTS
+   
+  // performs a locale sensitive date formatting operation on the time_t parameter
+  NS_IMETHOD FormatTime(nsILocale* locale, 
+                        const nsDateFormatSelector  dateFormatSelector, 
+                        const nsTimeFormatSelector timeFormatSelector, 
+                        const time_t  timetTime, 
+                        nsString& stringOut);
 
-   // nsIDateTimeFormat
-
-   // performs a locale sensitive date formatting operation on a time_t
-   NS_IMETHOD FormatTime( nsILocale                  *aLocale, 
-                          const nsDateFormatSelector  aDateFormatSelector, 
-                          const nsTimeFormatSelector  aTimeFormatSelector, 
-                          const time_t                aTime,
-                          nsString                   &aStringOut);
-
-   // performs a locale sensitive date formatting operation on the struct tm parameter
-   NS_IMETHOD FormatTMTime( nsILocale                  *aLocale, 
-                            const nsDateFormatSelector  aDateFormatSelector, 
-                            const nsTimeFormatSelector  aTimeFormatSelector, 
-                            const struct tm            *aTime, 
-                            nsString                   &aStringOut);
+  // performs a locale sensitive date formatting operation on the struct tm parameter
+  NS_IMETHOD FormatTMTime(nsILocale* locale, 
+                          const nsDateFormatSelector  dateFormatSelector, 
+                          const nsTimeFormatSelector timeFormatSelector, 
+                          const struct tm*  tmTime, 
+                          nsString& stringOut);
 
   // performs a locale sensitive date formatting operation on the PRTime parameter
   NS_IMETHOD FormatPRTime(nsILocale* locale, 
@@ -63,8 +57,20 @@ class nsDateTimeFormatOS2 : public nsIDateTimeFormat
                                   const nsDateFormatSelector  dateFormatSelector, 
                                   const nsTimeFormatSelector timeFormatSelector, 
                                   const PRExplodedTime*  explodedTime, 
-                                  nsString& stringOut); 
+                                  nsString& stringOut);
 
+  nsDateTimeFormatOS2() {NS_INIT_REFCNT();
+                         mLocale.SetLength(0);mAppLocale.SetLength(0);}
+
+
+  virtual ~nsDateTimeFormatOS2() {}
+ 
+private: 
+
+  nsString    mLocale;
+  nsString    mAppLocale;
+  nsString    mCharset;          
+  PRUint32    mLCID;
 };
 
-#endif
+#endif /* nsDateTimeFormatOS2_h__ */

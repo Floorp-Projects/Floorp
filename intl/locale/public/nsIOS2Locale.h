@@ -22,11 +22,11 @@
 #ifndef _nsios2locale_h_
 #define _nsios2locale_h_
 
-#include <locale.h>
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "unidef.h"       // for LocaleObject
+#include "unidef.h"     
+
 
 // {F25F74F0-FB59-11d3-A9F2-00203522A03C}
 #define NS_IOS2LOCALE_IID	                    \
@@ -39,19 +39,8 @@ class nsIOS2Locale : public nsISupports
  public:
 
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOS2LOCALE_IID)
-   NS_IMETHOD GetPlatformLocale(const nsString* locale,char* os2Locale,size_t length)=0;
+   NS_IMETHOD GetPlatformLocale(PRUnichar* os2Locale,size_t length)=0;
    NS_IMETHOD GetXPLocale(const char* os2Locale, nsString* locale)=0;
-
-   // Init a complex locale - categories should be magic nsLocale words
-   NS_IMETHOD Init( nsString **aCatList,
-                    nsString **aValList,
-                    PRUint8    aLength) = 0;
-
-   // Init a locale object from a xx-XX style name
-   NS_IMETHOD Init( const nsString &aLocaleName) = 0;
-
-   // Get the OS/2 locale object
-   NS_IMETHOD GetLocaleObject( LocaleObject *aLocaleObject) = 0;
 };
 
 #endif
