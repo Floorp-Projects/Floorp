@@ -4166,6 +4166,7 @@ CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
 {
     CERTSignedCrl *newCrl, *crl;
     SECStatus rv;
+    CERTCertificate *caCert = NULL;
 
     newCrl = crl = NULL;
 
@@ -4184,7 +4185,6 @@ CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
         }
 
         if (0 == (importOptions & CRL_IMPORT_BYPASS_CHECKS)){
-            CERTCertificate *caCert;
             CERTCertDBHandle* handle = CERT_GetDefaultCertDB();
             PR_ASSERT(handle != NULL);
             caCert = CERT_FindCertByName (handle,
@@ -4219,6 +4219,9 @@ CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
 
     if (crl == NULL) {
 	SEC_DestroyCrl (newCrl);
+    }
+    if (caCert) {
+        CERT_DestroyCertificate(caCert);
     }
     return (crl);
 }
