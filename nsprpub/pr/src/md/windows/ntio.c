@@ -2156,7 +2156,7 @@ _PR_MD_CLOSE(PRInt32 osfd, PRBool socket)
                 _PR_THREAD_UNLOCK(me);
 
                 if (fWait)
-                    _NT_IO_WAIT(me, CLOSE_TIMEOUT);
+                    _NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT);
                 PR_ASSERT(me->io_suspended ==  PR_FALSE);
                 PR_ASSERT(me->io_pending ==  PR_FALSE);
                 me->io_suspended = PR_FALSE;
