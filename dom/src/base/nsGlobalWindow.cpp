@@ -298,7 +298,11 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
         if (mListenerManager)
           mListenerManager->RemoveAllListeners(PR_FALSE);
 
-        if (mScriptObject && mContext) {
+        if (mContext && mScriptObject) {
+//      if (mContext && mScriptObject && aDocument) {
+//      not doing this unless there's a new document prevents a closed window's
+//      JS properties from going away (that's good) and causes everything,
+//      and I mean everything, to be leaked (that's bad)
           ::JS_ClearScope((JSContext *) mContext->GetNativeContext(),
                           (JSObject *) mScriptObject);
         }
@@ -326,9 +330,13 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
 
 NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 {
-  // When SetDocShell(nsnull) is called, drop our references to the 
-  // script object (held via a named JS root) and the script context
-  // itself.
+  /* SetDocShell(nsnull) means the window is being torn down. Set the
+     "closed" JS property, Drop our reference to the script context,
+     allowing it to be deleted later, and hand off our reference
+     to the script object (held via a named JS root) to the context
+     so it will be unrooted later. Meanwhile, keep our weak reference
+     to the script object so it can be retrieved later, as the JS glue
+     is wont to do. */
   if (!aDocShell && mContext) {
     if (mScriptObject) {
       // Indicate that the window is now closed. Since we've
@@ -336,8 +344,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
       jsval val = BOOLEAN_TO_JSVAL(JS_TRUE);
       ::JS_SetProperty((JSContext *) mContext->GetNativeContext(),
                        (JSObject *) mScriptObject, "closed", &val);
+      // hand off our reference to mContext
+      mContext->SetRootedScriptObject(mScriptObject);
       mContext->RemoveReference(&mScriptObject, mScriptObject);
-      mScriptObject = nsnull;
     }
     mContext = nsnull;          // force release now
   }
