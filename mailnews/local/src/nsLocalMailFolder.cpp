@@ -1071,7 +1071,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
+NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener)
 {
     // **** jefft -- needs to provide nsIMsgWindow for the compact status
     // update; come back later
