@@ -806,12 +806,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInp
   NS_ABORT_IF_FALSE(mContext.get() == ctxt,"start context different from OnDataAvailable context");
 
   PRUint32 totalRead;
-  nsresult result = inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc, (void*)this, count, &totalRead);
-  if (NS_FAILED(result)) {
-    mResponseBody.Truncate();
-  }
-
-  return result;
+  return inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc, (void*)this, count, &totalRead);
 }
 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
