@@ -307,8 +307,14 @@ nsPersistentProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
   PLHashEntry *he = *hep;
-  if (he && aOldValue.GetUnicode()) {
-    // XXX fix me
+  if (he) {
+    // XXX should we copy the old value to aOldValue, and then remove it?
+#ifdef NS_DEBUG
+    char buf[128];
+    aKey.ToCString(buf, sizeof(buf));
+    printf("warning: property %s already exists\n", buf);
+#endif
+    return NS_OK;
   }
   PL_HashTableRawAdd(mTable, hep, hashValue, aKey.ToNewUnicode(),
                      aNewValue.ToNewUnicode());
