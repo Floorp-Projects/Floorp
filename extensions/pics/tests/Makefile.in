@@ -34,9 +34,8 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-EXPORT_SAMPLES	= samples/picstest1.html
-
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(EXPORT_SAMPLES) $(DIST)/bin/res/samples
+	$(INSTALL) samples/picstest1.html $(DIST)/bin/res/samples
+
