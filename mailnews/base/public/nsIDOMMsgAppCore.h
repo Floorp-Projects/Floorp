@@ -48,6 +48,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void GetRDFResourceForMessage (in string str); */
   NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList, nsISupports **_retval) = 0;
 
+  /* void exit(); */
+  NS_IMETHOD Exit()= 0;
+
  #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMMsgAppCore *priv);

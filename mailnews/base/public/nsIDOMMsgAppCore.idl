@@ -51,6 +51,7 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
     void OpenURL(in string str);
     void DeleteMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
     nsISupports GetRDFResourceForMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
+	void Exit();
 };
 
 /* hack to make MsgAppCore visible from AppCore */

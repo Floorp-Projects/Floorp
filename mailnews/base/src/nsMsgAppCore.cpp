@@ -51,6 +51,10 @@
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "nsIAppShell.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
+
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
@@ -58,6 +62,8 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
+
 
 NS_BEGIN_EXTERN_C
 
@@ -94,6 +100,7 @@ public:
   NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
                                       nsIDOMNodeList *nodeList, nsISupports
                                       **aSupport); 
+  NS_IMETHOD Exit();
 
 private:
   
@@ -571,6 +578,23 @@ nsMsgAppCore::GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
       return rv;
 }
 
+NS_IMETHODIMP
+nsMsgAppCore::Exit()
+{
+  nsIAppShellService* appShell = nsnull;
+
+  /*
+   * Create the Application Shell instance...
+   */
+  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
+											nsIAppShellService::GetIID(),
+                                             (nsISupports**)&appShell);
+  if (NS_SUCCEEDED(rv)) {
+    appShell->Shutdown();
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  } 
+  return NS_OK;
+}
 
 //  to load the webshell!
 //  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 

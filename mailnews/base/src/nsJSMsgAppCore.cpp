@@ -383,7 +383,33 @@ MsgAppCoreGetRDFResourceForMessage(JSContext *cx, JSObject *obj, uintN argc, jsv
   return JS_TRUE;
 }
 
+//
+// Native method Exit
+//
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+      nsIDOMNodeList *nodeList;
+      nsIDOMXULTreeElement *tree;
+  nsISupports *nativeRet;
+      const nsString typeName;
 
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (NS_OK != nativeThis->Exit())
+  {
+      return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -422,6 +448,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"OpenURL",          MsgAppCoreOpenURL,     1},
   {"DeleteMessage",          MsgAppCoreDeleteMessage,     2},
   {"GetRDFResourceForMessage",    MsgAppCoreGetRDFResourceForMessage,     2},
+  {"exit",				MsgAppCoreExit, 0},
   {0}
 };
 
