@@ -155,7 +155,7 @@
 
 /* Jack Liu (jliu) add the following. The trigger is passing the parameter to 
    PA_FetchParamValue() to satisfy its signature */
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define CS_FE_ASCII CS_MAC_ROMAN
 #else
 #define CS_FE_ASCII CS_LATIN1

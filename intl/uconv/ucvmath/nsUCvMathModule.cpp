@@ -55,7 +55,7 @@
 #include "nsUnicodeToTeXCMMIttf.h"
 #include "nsUnicodeToTeXCMSYttf.h"
 #include "nsUnicodeToTeXCMEXttf.h"
-#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC) && !defined(XP_MACOSX)
 #include "nsUnicodeToTeXCMRt1.h"
 #include "nsUnicodeToTeXCMMIt1.h"
 #include "nsUnicodeToTeXCMSYt1.h"
@@ -82,7 +82,7 @@ NS_UCONV_REG_UNREG_ENCODER("x-ttf-cmr",   NS_UNICODETOTEXCMRTTF_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-ttf-cmmi",  NS_UNICODETOTEXCMMITTF_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-ttf-cmsy",  NS_UNICODETOTEXCMSYTTF_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-ttf-cmex",  NS_UNICODETOTEXCMEXTTF_CID)
-#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC) && !defined(XP_MACOSX)
 NS_UCONV_REG_UNREG_ENCODER("x-t1-cmr",   NS_UNICODETOTEXCMRT1_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-t1-cmmi",  NS_UNICODETOTEXCMMIT1_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-t1-cmsy",  NS_UNICODETOTEXCMSYT1_CID)
@@ -103,7 +103,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMRttf);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMMIttf);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMSYttf);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMEXttf);
-#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC) && !defined(XP_MACOSX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMRt1);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMMIt1);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMSYt1);
@@ -138,7 +138,7 @@ static const nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmex",
     nsUnicodeToTeXCMEXttfConstructor, 
   },
-#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC) && !defined(XP_MACOSX)
   { 
     ENCODER_NAME_BASE "x-t1-cmr" , NS_UNICODETOTEXCMRT1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmr",
