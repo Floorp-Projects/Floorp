@@ -865,7 +865,7 @@ NS_IMETHODIMP nsWebBrowser::SetScrollRangeEx(PRInt32 minHorizontalPos,
       minVerticalPos, maxVerticalPos);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
+NS_IMETHODIMP nsWebBrowser::GetCurrentScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32* scrollbarPref)
 {
    NS_ENSURE_ARG_POINTER(scrollbarPref);
@@ -875,10 +875,23 @@ NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
-   return scroll->GetScrollbarPreferences(scrollOrientation, scrollbarPref);
+   return scroll->GetCurrentScrollbarPreferences(scrollOrientation, scrollbarPref);
 }
 
-NS_IMETHODIMP nsWebBrowser::SetScrollbarPreferences(PRInt32 scrollOrientation,
+NS_IMETHODIMP nsWebBrowser::GetDefaultScrollbarPreferences(PRInt32 scrollOrientation,
+   PRInt32* scrollbarPref)
+{
+   NS_ENSURE_ARG_POINTER(scrollbarPref);
+   NS_ENSURE_STATE(mDocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
+
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->GetDefaultScrollbarPreferences(scrollOrientation, scrollbarPref);
+}
+
+NS_IMETHODIMP nsWebBrowser::SetCurrentScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32 scrollbarPref)
 {
    NS_ENSURE_STATE(mDocShell);
@@ -887,7 +900,30 @@ NS_IMETHODIMP nsWebBrowser::SetScrollbarPreferences(PRInt32 scrollOrientation,
 
    NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
-   return scroll->SetScrollbarPreferences(scrollOrientation, scrollbarPref);
+   return scroll->SetCurrentScrollbarPreferences(scrollOrientation, scrollbarPref);
+}
+
+NS_IMETHODIMP nsWebBrowser::SetDefaultScrollbarPreferences(PRInt32 scrollOrientation,
+   PRInt32 scrollbarPref)
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
+
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->SetDefaultScrollbarPreferences(scrollOrientation, scrollbarPref);
+}
+
+NS_IMETHODIMP nsWebBrowser::ResetScrollbarPreferences()
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(mDocShell));
+
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->ResetScrollbarPreferences();
 }
 
 NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* verticalVisible,

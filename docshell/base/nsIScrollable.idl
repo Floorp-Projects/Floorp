@@ -92,10 +92,16 @@ interface nsIScrollable : nsISupports
 	const long Scrollbar_Always = 3;
 
 	/*
-	Retrieves of Set the preferences for the scroll bar.
+	Retrieves or Set the preferences for the scroll bar.
+	current is 'scrolling preference for this document'
+	default is 'scrolling preference for all documents in this shell'
+	resetScrollbarPreferences resets current to default
 	*/
-	void getScrollbarPreferences(in long scrollOrientation, out long scrollbarPref);
-	void setScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
+	void getCurrentScrollbarPreferences(in long scrollOrientation, out long scrollbarPref);
+	void setCurrentScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
+	void getDefaultScrollbarPreferences(in long scrollOrientation, out long scrollbarPref);
+	void setDefaultScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
+	void resetScrollbarPreferences();
 
 	/*
 	Get information about whether the vertical and horizontal scrollbars are

@@ -40,6 +40,7 @@
 #include "nsIWebShell.h"
 #include "nsIBox.h"
 #include "nsIScrollableFrame.h"
+#include "nsIScrollable.h"
 
 #undef NOISY_SECOND_REFLOW
 
@@ -360,19 +361,21 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
     // has its scrolling set, use that value
     // XXX This is a huge hack, and we should not be checking the web shell's
     // scrolling preference...
+    // This is needed to preserve iframe/frameset scrolling prefs between doc loads.
     nsIFrame* parentFrame = nsnull;
     GetParent(&parentFrame);
-    nsIAtom* frameType = nsnull;
-    parent->GetFrameType(&frameType);
-    if (nsLayoutAtoms::viewportFrame == frameType) {
+    nsCOMPtr<nsIAtom> frameType;
+    parent->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::viewportFrame == frameType.get()) {
       nsCOMPtr<nsISupports> container;
       rv = aPresContext->GetContainer(getter_AddRefs(container));
       if (NS_SUCCEEDED(rv) && container) {
-        nsCOMPtr<nsIWebShell> webShell;
-        rv = container->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
-        if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(container, &rv);
+        if (NS_SUCCEEDED(rv) && scrollableContainer) {
           PRInt32 scrolling = -1; // -1 indicates not set
-          webShell->GetScrolling(scrolling);
+
+          // XXX We should get prefs for X and Y and deal with these independently!
+          scrollableContainer->GetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
           if (-1 != scrolling) {
             if (NS_STYLE_OVERFLOW_SCROLL == scrolling) {
               scrollPref = nsScrollPreference_kAlwaysScroll;
@@ -383,7 +386,6 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
         }
       }
     }
-    NS_IF_RELEASE(frameType);
     scrollingView->SetScrollPreference(scrollPref);
 
     // Set the scrolling view's insets to whatever our border is

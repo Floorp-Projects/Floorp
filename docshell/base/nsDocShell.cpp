@@ -40,6 +40,7 @@
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsPoint.h"
 
 // Interfaces Needed
 #include "nsIGlobalHistory.h"
@@ -69,7 +70,9 @@ nsDocShell::nsDocShell() :
   mInitialPageLoad(PR_TRUE),
   mParent(nsnull),
   mTreeOwner(nsnull),
-  mChromeEventHandler(nsnull)
+  mChromeEventHandler(nsnull),
+  mCurrentScrollbarPref(-1,-1),
+  mDefaultScrollbarPref(-1,-1)
 {
   NS_INIT_REFCNT();
 }
@@ -270,8 +273,6 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
    doc->SetRootContent(rootContent);
 
    // (6) reflow the document
-   //XXX: SetScrolling doesn't make any sense
-   //SetScrolling(-1, PR_FALSE);
    PRInt32 i;
    PRInt32 ns = doc->GetNumberOfShells();
    for (i = 0; i < ns; i++) 
@@ -1575,41 +1576,109 @@ NS_IMETHODIMP nsDocShell::SetScrollRangeEx(PRInt32 minHorizontalPos,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShell::GetScrollbarPreferences(PRInt32 scrollOrientation,
+// Get scroll setting for this document only
+//
+// One important client is nsCSSFrameConstructor::ConstructRootFrame()
+NS_IMETHODIMP nsDocShell::GetCurrentScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32* scrollbarPref)
 {
    NS_ENSURE_ARG_POINTER(scrollbarPref);
+   switch(scrollOrientation) {
+     case ScrollOrientation_X:
+       *scrollbarPref = mCurrentScrollbarPref.x;
+       return NS_OK;
 
-   nsCOMPtr<nsIScrollableView> scrollView;
-   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
-      NS_ERROR_FAILURE);
+     case ScrollOrientation_Y:
+       *scrollbarPref = mCurrentScrollbarPref.y;
+       return NS_OK;
 
-   // XXX This is all evil, we need to convert.  We don't know our prefs
-   // are the same as this interfaces.
- /*  nsScrollPreference scrollPref;
-
-   NS_ENSURE_SUCCESS(scrollView->GetScrollPreference(scrollPref), 
-      NS_ERROR_FAILURE);
-
-   *scrollbarPref = scrollPref; */
-
-   return NS_OK;
+     default:
+       NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+   }
+   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShell::SetScrollbarPreferences(PRInt32 scrollOrientation,
+// This returns setting for all documents in this webshell
+NS_IMETHODIMP nsDocShell::GetDefaultScrollbarPreferences(PRInt32 scrollOrientation,
+   PRInt32* scrollbarPref)
+{
+   NS_ENSURE_ARG_POINTER(scrollbarPref);
+   switch(scrollOrientation) {
+     case ScrollOrientation_X:
+       *scrollbarPref = mDefaultScrollbarPref.x;
+       return NS_OK;
+
+     case ScrollOrientation_Y:
+       *scrollbarPref = mDefaultScrollbarPref.y;
+       return NS_OK;
+
+     default:
+       NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+   }
+   return NS_ERROR_FAILURE;
+}
+
+// Set scrolling preference for this document only.
+//
+// There are three possible values stored in the shell:
+//  1) NS_STYLE_OVERFLOW_HIDDEN = no scrollbars
+//  2) NS_STYLE_OVERFLOW_AUTO = scrollbars appear if needed
+//  3) NS_STYLE_OVERFLOW_SCROLL = scrollbars always
+//
+// XXX Currently OVERFLOW_SCROLL isn't honored,
+//     as it is not implemented by Gfx scrollbars
+// XXX setting has no effect after the root frame is created
+//     as it is not implemented by Gfx scrollbars
+//
+// One important client is HTMLContentSink::StartLayout()
+NS_IMETHODIMP nsDocShell::SetCurrentScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32 scrollbarPref)
 {
-   nsCOMPtr<nsIScrollableView> scrollView;
-   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
-      NS_ERROR_FAILURE);
+   switch(scrollOrientation) {
+     case ScrollOrientation_X:
+       mCurrentScrollbarPref.x = scrollbarPref;
+       return NS_OK;
 
-   // XXX This is evil.  We should do a mapping, we don't know our prefs
-   // are the same as this interface.  In fact it doesn't compile
-  /* nsScrollPreference scrollPref = scrollbarPref;
-   NS_ENSURE_SUCCESS(scrollView->SetScrollPreference(scrollPref), 
-      NS_ERROR_FAILURE);  */
+     case ScrollOrientation_Y:
+       mCurrentScrollbarPref.y = scrollbarPref;
+       return NS_OK;
 
-   return NS_OK;
+     default:
+       NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+   }
+   return NS_ERROR_FAILURE;
+}
+
+// Set scrolling preference for all documents in this shell
+// One important client is nsHTMLFrameInnerFrame::CreateWebShell()
+NS_IMETHODIMP nsDocShell::SetDefaultScrollbarPreferences(PRInt32 scrollOrientation,
+   PRInt32 scrollbarPref)
+{
+   switch(scrollOrientation) {
+     case ScrollOrientation_X:
+       mDefaultScrollbarPref.x = scrollbarPref;
+       return NS_OK;
+
+     case ScrollOrientation_Y:
+       mDefaultScrollbarPref.y = scrollbarPref;
+       return NS_OK;
+
+     default:
+       NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+   }
+   return NS_ERROR_FAILURE;
+}
+
+// Reset 'current' scrollbar settings to 'default'.
+// This must be called before every document load or else
+// frameset scrollbar settings (e.g. <IFRAME SCROLLING="no">
+// will not be preserved.
+//
+// One important client is HTMLContentSink::StartLayout()
+NS_IMETHODIMP nsDocShell::ResetScrollbarPreferences()
+{
+  mCurrentScrollbarPref = mDefaultScrollbarPref;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetScrollbarVisibility(PRBool* verticalVisible,

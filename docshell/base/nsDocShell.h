@@ -47,6 +47,7 @@
 #include "nsIInterfaceRequestor.h"
 
 #include "nsDSURIContentListener.h"
+#include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 
 // Interfaces Needed
 #include "nsISHistory.h"
@@ -191,6 +192,8 @@ protected:
    PRInt32                    mMarginWidth;
    PRInt32                    mMarginHeight;
    PRInt32                    mItemType;
+   nsPoint                    mCurrentScrollbarPref; // this document only
+   nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
    PRBool                     mUpdateHistoryOnLoad;
    PRBool                     mInitialPageLoad;
 
