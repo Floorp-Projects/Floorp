@@ -1175,19 +1175,17 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIAtom*        aAttribute,
                                         PRInt32         aHint)
 {
-  if (PR_FALSE==IsInitialized()) {return NS_ERROR_NOT_INITIALIZED;}
   nsresult result = NS_OK;
 
   if (nsHTMLAtoms::value == aAttribute) 
   {
     if (mEditor)
-    {
-      nsString value;
-      GetText(&value, PR_TRUE);           // get the initial value from the content attribute
       mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
-      SetTextControlFrameState(value);    // set new text value
+    nsString value;
+    GetText(&value, PR_TRUE);             // get the initial value from the content attribute
+    SetTextControlFrameState(value);      // set new text value
+    if (mEditor)
       mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
-    }
     if (aHint != NS_STYLE_HINT_REFLOW)
       nsFormFrame::StyleChangeReflow(aPresContext, this);
   } 
