@@ -45,6 +45,7 @@ FILES=\
         common.css						\
 		pm.css							\
 		pm.xul							\
+		pm.js							\
 		pmrename.xul					\
 	 	cpwPreg.xul						\
 		navStartPreg.xul				\
