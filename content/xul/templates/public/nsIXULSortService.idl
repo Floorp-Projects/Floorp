@@ -62,7 +62,7 @@ interface nsIXULSortService : nsISupports
      * <code>aSortDirection</code> as the direction.
      *
      * @param aNode A node in the XUL widget whose children are to be
-     * sorted. <code>Sort</code> will traverse upwards to find the
+     * sorted. <code>sort</code> will traverse upwards to find the
      * root node at which to begin the actualy sorting. For optimal
      * results, pass in the root of the widget.
      *
@@ -74,14 +74,14 @@ interface nsIXULSortService : nsISupports
      * <b>ascending</b> to sort the contents in ascending order, or
      * <b>descending</b> to sort the contents in descending order.
      */
-    void Sort(in nsIDOMNode aNode,
-              in string aSortResource,
-              in string aSortDirection);
+    void sort(in nsIDOMNode aNode,
+              in AString aSortResource,
+              in AString aSortDirection);
 
     /**
      * Used internally for insertion sorting.
      */
-    [noscript] void InsertContainerNode(in nsIRDFCompositeDataSource db,
+    [noscript] void insertContainerNode(in nsIRDFCompositeDataSource db,
                                         in nsRDFSortState sortStatePtr,
                                         in nsIContent root,
                                         in nsIContent trueParent,

@@ -81,6 +81,7 @@ function Startup()
   gNC_File = gRDFService.GetResource(NC_NS + "File");
 
   gDownloadView = document.getElementById("downloadView");
+  setSortVariables(gDownloadView);
   
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
@@ -90,7 +91,7 @@ function Startup()
   gDownloadView.database.AddDataSource(ds);
   gDownloadView.builder.rebuild();
   window.setTimeout(onRebuild, 0);
-  
+
   var key;
   if (navigator.platform.indexOf("Win") != -1)
     key = "Win";
@@ -328,5 +329,42 @@ function Shutdown()
     observerService.removeObserver(dlObserver, "download-starting");
   }
   catch (ex) {
+  }
+}
+
+function setSortVariables(tree)
+{
+  var node;
+  for (node = document.getElementById("Name"); node; node = node.nextSibling) {
+    if (node.getAttribute("sortActive") == "true")
+      break;
+  }
+  if (!node) {
+    node = document.getElementById("Progress");
+    node.setAttribute("sortActive", "true");
+    node.setAttribute("sortDirection", "descending");
+  }
+
+  tree.setAttribute("sortActive", "true");
+  tree.setAttribute("sortDirection", node.getAttribute("sortDirection"));
+  tree.setAttribute("sortResource", node.getAttribute("resource"));
+}
+
+function doSort(node)
+{
+  if (node.localName != "treecol")
+    return;
+
+  var sortResource = node.getAttribute("resource");
+
+  var sortDirection = node.getAttribute("sortDirection");
+  sortDirection = sortDirection == "ascending" ? "descending" : "ascending";
+
+  try {
+    var sortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"]
+                      .getService(Components.interfaces.nsIXULSortService);
+    sortService.sort(node, sortResource, sortDirection);
+  }
+  catch(ex) {
   }
 }

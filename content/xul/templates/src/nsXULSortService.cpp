@@ -170,13 +170,12 @@ private:
 
 nsresult FindDatabaseElement(nsIContent* aElement, nsIContent** aDatabaseElement);
 nsresult FindSortableContainer(nsIContent *tree, nsIContent **treeBody);
-nsresult SetSortHints(nsIContent *tree, const nsString &sortResource, const nsString &sortDirection, const nsString &sortResource2, PRBool inbetweenSeparatorSort, PRBool found);
-nsresult SetSortColumnHints(nsIContent *content, const nsString &sortResource, const nsString &sortDirection);
-nsresult GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort);
+nsresult SetSortHints(nsIContent *tree, const nsAString &sortResource, const nsAString &sortDirection, const nsAString &sortResource2, PRBool inbetweenSeparatorSort, PRBool found);
+nsresult SetSortColumnHints(nsIContent *content, const nsAString &sortResource, const nsAString &sortDirection);
+nsresult GetSortColumnInfo(nsIContent *tree, nsAString &sortResource, nsAString &sortDirection, nsAString &sortResource2, PRBool &inbetweenSeparatorSort);
 
 nsresult SortContainer(nsIContent *container, sortPtr sortInfo, PRBool merelyInvertFlag);
 nsresult InvertSortInfo(contentSortInfo **data, PRInt32 numItems);
-nsresult DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
 
 static nsresult  GetCachedTarget(sortPtr sortInfo, PRBool useCache, nsIRDFResource* aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **aResult);
 static nsresult GetTarget(contentSortInfo *contentSortInfo, sortPtr sortInfo,  PRBool first, PRBool onlyCollationHint, PRBool truthValue,nsIRDFNode **target, PRBool &isCollationKey);
@@ -383,8 +382,8 @@ XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot, nsIContent **aConta
 }
 
 nsresult
-XULSortServiceImpl::SetSortHints(nsIContent *tree, const nsString &sortResource,
-                                 const nsString &sortDirection, const nsString &sortResource2,
+XULSortServiceImpl::SetSortHints(nsIContent *tree, const nsAString &sortResource,
+                                 const nsAString &sortDirection, const nsAString &sortResource2,
                                  PRBool inbetweenSeparatorSort, PRBool found)
 {
   if (found) {
@@ -416,7 +415,7 @@ XULSortServiceImpl::SetSortHints(nsIContent *tree, const nsString &sortResource,
 }
 
 nsresult
-XULSortServiceImpl::SetSortColumnHints(nsIContent *content, const nsString &sortResource, const nsString &sortDirection)
+XULSortServiceImpl::SetSortColumnHints(nsIContent *content, const nsAString &sortResource, const nsAString &sortDirection)
 {
   PRInt32 numChildren, childIndex, nameSpaceID;
   nsCOMPtr<nsIContent> child;
@@ -458,8 +457,8 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content, const nsString &sort
 }
 
 nsresult
-XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource,
-                                      nsString &sortDirection, nsString &sortResource2,
+XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsAString &sortResource,
+                                      nsAString &sortDirection, nsAString &sortResource2,
                                       PRBool &inbetweenSeparatorSort)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -1584,13 +1583,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 }
 
 NS_IMETHODIMP
-XULSortServiceImpl::Sort(nsIDOMNode* node, const char *sortResource, const char *sortDirection)
-{
-  return DoSort(node, NS_ConvertASCIItoUCS2(sortResource), NS_ConvertASCIItoUCS2(sortDirection));
-}
-
-nsresult
-XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection)
+XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const nsAString& sortDirection)
 {
   nsresult rv;
   _sortStruct  sortInfo;
@@ -1663,7 +1656,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource, const
   GetSortColumnInfo(contentNode, unused, unused, sortResource2, sortInfo.inbetweenSeparatorSort);
 
   // build resource url for first sort resource
-  rv = gRDFService->GetUnicodeResource(sortResource.get(), getter_AddRefs(sortInfo.sortProperty));
+  rv = gRDFService->GetUnicodeResource(PromiseFlatString(sortResource).get(), getter_AddRefs(sortInfo.sortProperty));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString resourceUrl;

@@ -233,7 +233,7 @@ function doSort(aTarget)
 
 	try {
 	  var sortService = Components.classes[XULSORTSERVICE_CONTRACTID].getService(nsIXULSortService);
-		sortService.Sort(aTarget, sortResource, sortDirection);
+		sortService.sort(aTarget, sortResource, sortDirection);
 	} catch(ex) { }
 }
 
