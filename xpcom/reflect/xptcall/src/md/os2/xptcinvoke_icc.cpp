@@ -208,8 +208,7 @@ XPTC_InvokeByIndex(nsISupports *that, PRUint32 index,
    int   result = NS_OK;
 
    // Find size in bytes necessary for call and load param structs
-   // Always allocate at least space for one additional parameter on the stack
-   ibytes = 4 * (invoke_count_words(paramcount, params)+1);
+   ibytes = 4 * invoke_count_words(paramcount, params);
 
    // XXXX DO REST FROM xptcall_vacpp.asm
    // pStack = get_stack() + ibytes;
