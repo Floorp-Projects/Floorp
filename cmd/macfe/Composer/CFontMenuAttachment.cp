@@ -22,6 +22,7 @@
 #include "resgui.h"					// cmd_FormatViewerFont, cmd_FormatFixedFont, FONT_MENU_BASE
 #include "macutil.h"				// CMediatedWindow
 #include "edt.h"
+#include "mforms.h"
 
 
 
@@ -47,16 +48,28 @@ MWContext *CFontMenuAttachment::GetTopWindowContext()
 	CWindowIterator iter(WindowType_Any);
 	iter.Next(topWin);
 	
-	if (topWin == NULL
-	|| ! (topWin->GetWindowType() == WindowType_Editor || topWin->GetWindowType() == WindowType_Compose) )
-		return NULL;
+	if (topWin == NULL) return NULL;
 	
-	CEditView *editView = (CEditView *)(topWin->FindPaneByID(CEditView::pane_ID));
+	if (topWin->GetWindowType() == WindowType_Editor || topWin->GetWindowType() == WindowType_Compose)
+	{
+		CEditView *editView = (CEditView *)(topWin->FindPaneByID(CEditView::pane_ID));
+			
+		if (editView == NULL || editView->GetNSContext() == NULL)
+			return NULL;
+			
+		return editView->GetNSContext()->operator MWContext*();
+	}
+	else if (topWin->GetWindowType() == WindowType_Browser)
+	{
+		// we're in a browser window, so check for an htmlarea that has the focus
+		LCommander 		*com = LCommander::GetTarget();
+		CFormHTMLArea	*ender = dynamic_cast<CFormHTMLArea*>(com);
 		
-	if (editView == NULL || editView->GetNSContext() == NULL)
-		return NULL;
+		if (!ender) return NULL;
 		
-	return editView->GetNSContext()->operator MWContext*();
+		return ender->GetNSContext()->operator MWContext*();
+	}
+	return NULL;
 }
 
 

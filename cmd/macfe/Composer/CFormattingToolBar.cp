@@ -124,63 +124,28 @@ void CFormattingToolBar::ListenToMessage( MessageT inMessage, void* ioParam )
 }
 
 #ifdef ENDER
-LWindow* CFormattingToolFloatView::mFormatToolWin = 0;
 
-// CFormattingToolFloatView is just a CFormattingToolBar for <htmlarea>
-// form widgets.  CFormattingToolFloatView lives in a floating window
-// instead of in a toolbar in the browser window.
+// CHTMLAreaToolBar is just a CFormattingToolBar for <htmlarea>
+// form widgets.  
 
-CFormattingToolFloatView::CFormattingToolFloatView(LStream * inStream) 
+CHTMLAreaToolBar::CHTMLAreaToolBar(LStream * inStream) 
 							: CFormattingToolBar(inStream)
 {
 	mEditView = NULL;
 }
 
-CFormattingToolFloatView::~CFormattingToolFloatView()
+CHTMLAreaToolBar::~CHTMLAreaToolBar()
 {
 }
 
-void CFormattingToolFloatView::FinishCreateSelf()
+void CHTMLAreaToolBar::FinishCreateSelf()
 {
-	UReanimator::LinkListenerToControls(this, this, 11616);
+	UReanimator::LinkListenerToControls(this, this, 11617);
 }
 
-void CFormattingToolFloatView::SetEditView(CEditView* inEditView)
+void CHTMLAreaToolBar::SetEditView(CEditView* inEditView)
 {
 	mEditView = inEditView;
 }
 
-//	GetFloatingToolBar()  [ static ]
-//  lazy construction of floating formatting tool bar for Ender done here.
-CFormattingToolFloatView* CFormattingToolFloatView::GetFloatingToolBar(CEditView* inEditView)
-{
-	if (!mFormatToolWin)
-	{
-		// time to build the floating formatting tool windoid
-		mFormatToolWin = (URobustCreateWindow::CreateWindow( 
-										CFormattingToolFloatView::mToolWinResID, 
-										LCommander::GetTopCommander() ));
-		// sanity check
-		if (!mFormatToolWin) return 0;
-	}
-	CFormattingToolFloatView *theView = 
-		(CFormattingToolFloatView*)(mFormatToolWin->FindPaneByID( CFormattingToolFloatView::pane_ID ));
-	Assert_(theView);
-	theView->SetEditView(inEditView);
-	return theView;
-}
-
-//	ShowFormatFloatTool()  [ static ]
-//  tool bar revealed - this is called from CHTMLView::BeTarget()
-void CFormattingToolFloatView::ShowFormatFloatTool()
-{
-	if (mFormatToolWin) mFormatToolWin->Show();
-}
-
-//	HideFormatFloatTool()  [ static ]
-//  tool bar hidden - this is called from CHTMLView::DontBeTarget()
-void CFormattingToolFloatView::HideFormatFloatTool()
-{
-	if (mFormatToolWin)	mFormatToolWin->Hide();
-}
 #endif // ENDER

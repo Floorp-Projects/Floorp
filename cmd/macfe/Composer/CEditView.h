@@ -128,6 +128,7 @@ public:
 	virtual void	PutOnDuty(LCommander*);
 	
 	Bool 			PtInSelectedRegion(SPoint32 cpPoint );
+	virtual Boolean	EstablishPort();
 	virtual void	DrawSelf( void );
 	virtual void 	ActivateSelf();
 	virtual void 	DeactivateSelf();

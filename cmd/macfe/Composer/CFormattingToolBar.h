@@ -41,22 +41,15 @@ protected:
 };
 
 #ifdef ENDER
-class CFormattingToolFloatView : public CFormattingToolBar
+class CHTMLAreaToolBar : public CFormattingToolBar
 {
 public:
-	enum { pane_ID = 'ftfv', class_ID = 'FoTV', mToolWinResID = 5252 };
-					CFormattingToolFloatView(LStream * inStream);
-					~CFormattingToolFloatView();
+	enum { pane_ID = 'ftfv', class_ID = 'FoTV' };
+					CHTMLAreaToolBar(LStream * inStream);
+					~CHTMLAreaToolBar();
 
 	virtual void	FinishCreateSelf();
 			void	SetEditView(CEditView* inEditView);
 			
-	static	CFormattingToolFloatView* GetFloatingToolBar(CEditView* inEditView);
-	static	void	ShowFormatFloatTool();	
-	static	void	HideFormatFloatTool();	
-
-protected:
-
-	static	LWindow*	mFormatToolWin;
 };
 #endif // ENDER
