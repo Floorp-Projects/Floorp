@@ -1007,56 +1007,64 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-#ifdef DRAG_AND_DROP_FRIENDLY_SELECTION
+  PRBool supportsDelay = PR_FALSE;
 
-  // Check if any part of this frame is selected, and if the
-  // user clicked inside the selected region. If so, we delay
-  // starting a new selection since the user may be trying to
-  // drag the selected region to some other app.
+  frameselection->GetDelayCaretOverExistingSelection(&supportsDelay);
+  frameselection->SetDelayedCaretData(0);
 
-  SelectionDetails *details = 0;
-  nsFrameState  frameState;
-  GetFrameState(&frameState);
-  PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
-
-  if (isSelected)
+  if (supportsDelay)
   {
-    rv = frameselection->LookUpSelection(content, 0, endOffset, &details, PR_FALSE);
+    // Check if any part of this frame is selected, and if the
+    // user clicked inside the selected region. If so, we delay
+    // starting a new selection since the user may be trying to
+    // drag the selected region to some other app.
 
-    if (NS_FAILED(rv))
-      return rv;
+    SelectionDetails *details = 0;
+    nsFrameState  frameState;
+    GetFrameState(&frameState);
+    PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
 
-    //
-    // If there are any details, check to see if the user clicked
-    // within any selected region of the frame.
-    //
-
-    if (details)
+    if (isSelected)
     {
-      SelectionDetails *curDetail = details;
+      rv = frameselection->LookUpSelection(content, 0, endOffset, &details, PR_FALSE);
 
-      while (curDetail)
+      if (NS_FAILED(rv))
+        return rv;
+
+      //
+      // If there are any details, check to see if the user clicked
+      // within any selected region of the frame.
+      //
+
+      if (details)
       {
-        //
-        // If the user clicked inside a selection, then just
-        // return without doing anything. We will handle placing
-        // the caret later on when the mouse is released.
-        //
-        if (curDetail->mStart <= startOffset && endOffset <= curDetail->mEnd)
+        SelectionDetails *curDetail = details;
+
+        while (curDetail)
         {
-          delete details;
-          rv = frameselection->SetMouseDownState( PR_FALSE );
-          return NS_OK;
+          //
+          // If the user clicked inside a selection, then just
+          // return without doing anything. We will handle placing
+          // the caret later on when the mouse is released.
+          //
+          if (curDetail->mStart <= startOffset && endOffset <= curDetail->mEnd)
+          {
+            delete details;
+            rv = frameselection->SetMouseDownState( PR_FALSE );
+
+            if (NS_FAILED(rv))
+              return rv;
+
+            return frameselection->SetDelayedCaretData(me);
+          }
+
+          curDetail = curDetail->mNext;
         }
 
-        curDetail = curDetail->mNext;
+        delete details;
       }
-
-      delete details;
     }
   }
-
-#endif // DRAG_AND_DROP_FRIENDLY_SELECTION
 
   rv = frameselection->SetMouseDownState( PR_TRUE );
 
@@ -1311,46 +1319,56 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
   if (!frameselection)
     return NS_ERROR_FAILURE;
 
-#ifdef DRAG_AND_DROP_FRIENDLY_SELECTION
+  PRBool supportsDelay = PR_FALSE;
 
-  // Check if the frameselection recorded the mouse going down.
-  // If not, the user must have clicked in a part of the selection.
-  // Place the caret before continuing!
+  frameselection->GetDelayCaretOverExistingSelection(&supportsDelay);
 
-  PRBool mouseDown = PR_FALSE;
-
-  result = frameselection->GetMouseDownState(&mouseDown);
-
-  nsMouseEvent *me = (nsMouseEvent *)aEvent;
-
-  if (NS_SUCCEEDED(result) && me->clickCount < 2 && !mouseDown)
+  if (supportsDelay)
   {
-    result = frameselection->SetMouseDownState( PR_TRUE );
+    // Check if the frameselection recorded the mouse going down.
+    // If not, the user must have clicked in a part of the selection.
+    // Place the caret before continuing!
 
-    nsCOMPtr<nsIContent>parentContent;
-    PRInt32  contentOffset;
-    PRUint32 target;
+    PRBool mouseDown = PR_FALSE;
 
-    result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
+    result = frameselection->GetMouseDownState(&mouseDown);
 
-    if (NS_SUCCEEDED(result) && parentContent)
-      result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-    else
+    if (NS_FAILED(result))
+      return result;
+
+    nsMouseEvent *me = 0;
+
+    result = frameselection->GetDelayedCaretData(&me);
+
+    if (NS_SUCCEEDED(result) && !mouseDown && me && me->clickCount < 2)
     {
-      nsCOMPtr<nsIContent> content;
-      PRInt32 startOffset = 0, endOffset = 0;
-      PRBool  beginFrameContent = PR_FALSE;
+      result = frameselection->SetMouseDownState( PR_TRUE );
 
-      result = GetContentAndOffsetsFromPoint(aPresContext, aEvent->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+      nsCOMPtr<nsIContent>parentContent;
+      PRInt32  contentOffset;
+      PRUint32 target;
 
-      if (NS_FAILED(result))
-        return result;
+      result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
 
-      result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+      if (NS_SUCCEEDED(result) && parentContent)
+        result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+      else
+      {
+        nsCOMPtr<nsIContent> content;
+        PRInt32 startOffset = 0, endOffset = 0;
+        PRBool  beginFrameContent = PR_FALSE;
+
+        result = GetContentAndOffsetsFromPoint(aPresContext, me->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+
+        if (NS_FAILED(result))
+          return result;
+
+        result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+      }
     }
-  }
 
-#endif // DRAG_AND_DROP_FRIENDLY_SELECTION
+    result = frameselection->SetDelayedCaretData(0);
+  }
 
   // Now handle the normal HandleRelase business.
 

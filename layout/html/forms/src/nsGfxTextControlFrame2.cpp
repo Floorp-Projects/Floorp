@@ -134,6 +134,10 @@ public:
                              SelectionDetails **aReturnDetails, PRBool aSlowCheck);
   NS_IMETHOD SetMouseDownState(PRBool aState);
   NS_IMETHOD GetMouseDownState(PRBool *aState);
+  NS_IMETHOD SetDelayCaretOverExistingSelection(PRBool aDelay);
+  NS_IMETHOD GetDelayCaretOverExistingSelection(PRBool *aDelay);
+  NS_IMETHOD SetDelayedCaretData(nsMouseEvent *aMouseEvent);
+  NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
   NS_IMETHOD GetTableCellSelection(PRBool *aState);
   NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
@@ -418,6 +422,29 @@ nsTextAreaSelectionImpl::GetMouseDownState(PRBool *aState)
   return mFrameSelection->GetMouseDownState(aState);
 }
 
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::SetDelayCaretOverExistingSelection(PRBool aDelay)
+{
+  return mFrameSelection->SetDelayCaretOverExistingSelection(aDelay);
+}
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetDelayCaretOverExistingSelection(PRBool *aDelay)
+{
+  return mFrameSelection->GetDelayCaretOverExistingSelection(aDelay);
+}
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::SetDelayedCaretData(nsMouseEvent *aMouseEvent)
+{
+  return mFrameSelection->SetDelayedCaretData(aMouseEvent);
+}
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetDelayedCaretData(nsMouseEvent **aMouseEvent)
+{
+  return mFrameSelection->GetDelayedCaretData(aMouseEvent);
+}
 
 NS_IMETHODIMP
 nsTextAreaSelectionImpl::GetTableCellSelection(PRBool *aState)

@@ -291,6 +291,10 @@ public:
   NS_IMETHOD SelectAll();
   NS_IMETHOD SetDisplaySelection(PRInt16 aState);
   NS_IMETHOD GetDisplaySelection(PRInt16 *aState);
+  NS_IMETHOD SetDelayCaretOverExistingSelection(PRBool aDelay);
+  NS_IMETHOD GetDelayCaretOverExistingSelection(PRBool *aDelay);
+  NS_IMETHOD SetDelayedCaretData(nsMouseEvent *aMouseEvent);
+  NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
   /*END nsIFrameSelection interfacse*/
 
 
@@ -372,6 +376,11 @@ private:
   PRBool mDesiredXSet;
   enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
   nsIScrollableView *mScrollView;
+
+  PRBool mDelayCaretOverExistingSelection;
+  PRBool mDelayedMouseEventValid;
+  nsMouseEvent mDelayedMouseEvent;
+
 public:
   static nsIAtom *sTableAtom;
   static nsIAtom *sCellAtom;
@@ -798,6 +807,9 @@ nsSelection::nsSelection()
       autoCopyService->Listen(mDomSelections[index]);
   }
   mDisplaySelection = nsISelectionController::SELECTION_OFF;
+
+  mDelayCaretOverExistingSelection = PR_TRUE;
+  mDelayedMouseEventValid = PR_FALSE;
 }
 
 
@@ -2780,6 +2792,61 @@ nsSelection::GetDisplaySelection(PRInt16 *aToggle)
   if (!aToggle)
     return NS_ERROR_INVALID_ARG;
   *aToggle = mDisplaySelection;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::SetDelayCaretOverExistingSelection(PRBool aDelay)
+{
+  mDelayCaretOverExistingSelection = aDelay;
+  
+  if (! aDelay)
+    mDelayedMouseEventValid = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::GetDelayCaretOverExistingSelection(PRBool *aDelay)
+{
+  if (!aDelay)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDelay =   mDelayCaretOverExistingSelection;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::SetDelayedCaretData(nsMouseEvent *aMouseEvent)
+{
+  if (aMouseEvent)
+  {
+    mDelayedMouseEventValid = PR_TRUE;
+    mDelayedMouseEvent      = *aMouseEvent;
+
+    // XXX: Hmmm, should we AddRef mDelayedMouseEvent->widget?
+    //      Doing so might introduce a leak if things in the app
+    //      are not released in the correct order though, so for now
+    //      don't do anything.
+  }
+  else
+    mDelayedMouseEventValid = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::GetDelayedCaretData(nsMouseEvent **aMouseEvent)
+{
+  if (!aMouseEvent)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mDelayedMouseEventValid)
+    *aMouseEvent = &mDelayedMouseEvent;
+  else
+    *aMouseEvent = 0;
+
   return NS_OK;
 }
 
