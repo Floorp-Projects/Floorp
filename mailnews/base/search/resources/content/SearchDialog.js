@@ -584,7 +584,13 @@ function HandleDeleteOrMoveMessageCompleted(folder)
     // this can happen when the user
     // deletes message from the stand alone msg window
     // or the three pane
-    if (treeSelection.count == 0) {
+    if (!treeSelection) {
+      // this can happen if you open the search window
+      // and before you do any searches
+      // and you do delete from another mail window
+      return;
+    }
+    else if (treeSelection.count == 0) {
       // this can happen if you double clicked a message
       // in the thread pane, and deleted it from the stand alone msg window
       // see bug #185147
