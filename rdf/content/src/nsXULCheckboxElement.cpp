@@ -148,6 +148,11 @@ nsXULCheckboxElement::GetChecked(PRBool* aChecked)
 NS_IMETHODIMP
 nsXULCheckboxElement::SetChecked(PRBool aChecked)
 {
+  PRBool disabled;
+  GetDisabled(&disabled);
+  if (disabled)
+    return NS_OK;
+
   if(aChecked)
     mOuter->SetAttribute("checked", "true");
   else
