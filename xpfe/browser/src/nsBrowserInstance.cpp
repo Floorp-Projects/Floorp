@@ -102,6 +102,10 @@
 #include "nsFileStream.h"
 #include "nsIProxyObjectManager.h" 
 
+#ifdef MOZ_PHOENIX
+#include "nsBrowserCompsCID.h"
+#endif
+
 #include "nsBrowserStatusFilter.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 
