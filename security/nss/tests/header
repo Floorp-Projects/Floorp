@@ -176,11 +176,12 @@ fi
 if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
 then                      # a linux compiler bug prevents us from doing the 
                           # testing against a rtm - so we rebuild the branch
-    if [ "`uname -sp`" != "SunOS i386" ] ; then
-        BC_MASTER="nss32/builds/20010510.1-nss-3.2-ref"
-    else
-        BC_MASTER="nss32/builds/20010530.1.nss321_rtm_solaris"
-    fi
+    BC_MASTER=nss322/builds/20010820.1
+    #if [ "`uname -sp`" != "SunOS i386" ] ; then
+        #BC_MASTER="nss32/builds/20010510.1-nss-3.2-ref"
+    #else
+        #BC_MASTER="nss32/builds/20010530.1.nss321_rtm_solaris"
+    #fi
 fi
 BC_RELEASE=3.2
 export BC_RELEASE
