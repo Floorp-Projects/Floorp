@@ -99,6 +99,8 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 nsMenuItem::~nsMenuItem()
 {
   NS_IF_RELEASE(mTarget);
+  gtk_widget_destroy(mMenuItem);
+  mMenuItem = nsnull;
   g_print("nsMenuItem::~nsMenuItem called\n");
 }
 
