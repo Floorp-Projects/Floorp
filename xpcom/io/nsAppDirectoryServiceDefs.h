@@ -36,7 +36,7 @@
 
 // --------------------------------------------------------------------------------------
 // Files and directories which exist on a per-product basis
-// These locations are typically provided by mozilla\xpfe\appfilelocprovider\
+// These locations are typically provided by mozilla\xpfe\appfilelocprovider
 // --------------------------------------------------------------------------------------
 
 #define NS_APP_DEFAULTS_50_DIR                  "DefRt"         // The root dir of all defaults dirs
