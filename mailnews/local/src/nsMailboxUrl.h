@@ -90,6 +90,7 @@ public:
 
     // nsMailboxUrl
     nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup);
+	virtual ~nsMailboxUrl();
 
     NS_DECL_ISUPPORTS
 
@@ -97,7 +98,6 @@ public:
     nsresult ParseURL(const nsString& aSpec, const nsIURL* aURL = nsnull);
 
 protected:
-    virtual ~nsMailboxUrl();
 
 	// mailboxurl specific state
 	nsIStreamListener *m_mailboxParser;
