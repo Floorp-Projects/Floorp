@@ -1228,10 +1228,11 @@ void XSLTProcessor::processAction
                             {
                                 expr = ps->getExpr(xslTemplate->getAttribute(TEST_ATTR));
                                 ExprResult* result = expr->evaluate(node, ps);
-                                if ( result->booleanValue() ) {
+                                if (result && result->booleanValue()) {
                                     processChildren(node, xslTemplate, ps);
                                     caseFound = MB_TRUE;
                                 }
+                                delete result;
                                 break;
                             }
                             case XSLType::OTHERWISE:
