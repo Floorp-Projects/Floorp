@@ -214,6 +214,7 @@ XP_ListMoveTopToBottom (XP_List *list)
 		next_obj->prev = list;
 }
 
+#if 0
 /*
   Comment goes here
 */
@@ -232,7 +233,7 @@ XP_ListGetNumFromObject (XP_List *list, void * object)
 
 	return(0); /* not found */
 }
-		
+
 /* returns the list node of the specified object if it was 
  * in the list
  */
@@ -253,6 +254,7 @@ XP_ListFindObject (XP_List *list, void * obj)
 
     return(NULL);
 }
+#endif
 
 /*
   Count the number of items in the list
@@ -328,6 +330,7 @@ XP_ListInsertObject (XP_List *list, void *insert_before, void *object)
     }
 }
 
+#if 0
 /*
   Insert an object somewhere into the list.
   If insert_after is not NULL find the element whose 'object' is equal to
@@ -379,7 +382,7 @@ XP_ListInsertObjectAfter (XP_List *list, void *insert_after, void *object)
 
     }
 }
-
+#endif
 
 /*
   Remove the element whose 'object' field is equal to remove_me
