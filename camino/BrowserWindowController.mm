@@ -370,8 +370,10 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
                                         ForwardToolbarItemIdentifier,
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
-                                        SearchToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
+#if CORPORATE_BRANDING
+                                        SearchToolbarItemIdentifier,
+#endif
                                         SidebarToolbarItemIdentifier,
 #if CORPORATE_BRANDING
                                         ThrobberToolbarItemIdentifier,
@@ -432,8 +434,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
         [toolbarItem setLabel:@"Search"];
         [toolbarItem setPaletteLabel:@"Search"];
         [toolbarItem setToolTip:@"Search the Internet"];
-        // XXX until we get a better search icon.
-        [toolbarItem setImage:[[[NSImage alloc] initWithContentsOfFile:@"/System/Library/CoreServices/Finder.app/Contents/Resources/find.icns"] autorelease]];
+        [toolbarItem setImage:[NSImage imageNamed:@"saveShowFile.tif"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(performSearch)];
     } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
@@ -631,8 +632,8 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (void)performSearch
 {
-    // XXX go to the user's preferred search engine.
-    [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString: @"http://dmoz.org/"] flags:NSLoadFlagsNone];
+  // XXX go to the user's preferred search engine.
+  [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString: @"http://dmoz.org/"] flags:NSLoadFlagsNone];
 }
 
 static Boolean movieControllerFilter(MovieController mc, short action, void *params, long refCon)
