@@ -303,10 +303,10 @@ BASIC_LIBS	= \
 		  $(XFE_WIDGETS_LIB) \
 		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/libmimetype.a \
+		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/libnetcache.a	\
 		  $(DIST)/lib/libnetcnvts.a	\
-		  $(DIST)/lib/libnetwork.a	\
-		  $(DIST)/lib/libnetutil.a      \
+		  $(DIST)/lib/libnetutil.a \
 		  $(DIST)/lib/libnetcnvts.a	\
 		  $(DIST)/lib/libcnetinit.a	\
 		  $(DIST)/lib/libabouturl.a	\
@@ -319,12 +319,12 @@ BASIC_LIBS	= \
 		  $(DIST)/lib/libmarimurl.a	\
 		  $(DIST)/lib/libremoturl.a	\
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
-		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/lib$(LITE_PREFIX)xml.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)lay.a \
 		  $(DIST)/lib/libpng.a \
 		  $(DIST)/lib/libmariner.a \
 		  $(DIST)/lib/libimg.a \
+		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/libprivacy.a \
 		  $(NULL)
 
