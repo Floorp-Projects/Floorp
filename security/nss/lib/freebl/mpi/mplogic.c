@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.11 2000/08/09 20:53:25 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.12 2000/09/14 00:30:50 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -439,7 +439,8 @@ mp_err mpl_significant_bits(const mp_int *a)
 
   ix = MP_USED(a);
   for (ix = MP_USED(a); ix > 0; ) {
-    mp_digit d = MP_DIGIT(a, --ix);
+    mp_digit d;
+    d = MP_DIGIT(a, --ix);
     if (d) {
       while (d) {
 	++bits;

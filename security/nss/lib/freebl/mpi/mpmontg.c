@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.7 2000/08/22 01:57:34 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.8 2000/09/14 00:30:51 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -225,7 +225,7 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   /* compute n0', given n0, n0' = -(n0 ** -1) mod MP_RADIX
   **		where n0 = least significant mp_digit of N, the modulus.
   */
-  mmm.n0prime = 0 - s_mp_invmod_32b( MP_DIGIT(modulus, 0) );
+  mmm.n0prime = 0 - s_mp_invmod_radix( MP_DIGIT(modulus, 0) );
 
   MP_CHECKOK( s_mp_to_mont(base, &mmm, &square) );
 
