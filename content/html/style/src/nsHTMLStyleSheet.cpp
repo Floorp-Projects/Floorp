@@ -948,40 +948,40 @@ HTMLStyleSheetImpl::CreateInputFrame(nsIContent* aContent,
   nsAutoString  val;
   if (NS_OK == aContent->GetAttribute(nsAutoString("type"), val)) {
     if (val.EqualsIgnoreCase("submit")) {
-      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewButtonControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("reset")) {
-      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewButtonControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("button")) {
-      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewButtonControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("checkbox")) {
-      rv = NS_NewInputCheckboxFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewCheckboxControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("file")) {
-      rv = NS_NewInputFileFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewFileControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("hidden")) {
-      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewButtonControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("image")) {
-      rv = NS_NewInputButtonFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewButtonControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("password")) {
-      rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewTextControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("radio")) {
-      rv = NS_NewInputRadioFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewRadioControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("text")) {
-      rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewTextControlFrame(aContent, aParentFrame, aFrame);
     }
     else {
-      rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewTextControlFrame(aContent, aParentFrame, aFrame);
     }
   } else {
-    rv = NS_NewInputTextFrame(aContent, aParentFrame, aFrame);
+    rv = NS_NewTextControlFrame(aContent, aParentFrame, aFrame);
   }
 
   return rv;
@@ -1177,10 +1177,10 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
     rv = CreateInputFrame(aContent, aParentFrame, aNewFrame);
   }
   else if (nsHTMLAtoms::textarea == aTag) {
-    rv = NS_NewInputTextFrame(aContent, aParentFrame, aNewFrame);
+    rv = NS_NewTextControlFrame(aContent, aParentFrame, aNewFrame);
   }
   else if (nsHTMLAtoms::select == aTag) {
-    rv = NS_NewHTMLSelectFrame(aContent, aParentFrame, aNewFrame);
+    rv = NS_NewSelectControlFrame(aContent, aParentFrame, aNewFrame);
   }
   else if (nsHTMLAtoms::applet == aTag) {
     rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
@@ -1194,6 +1194,9 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   else if (nsHTMLAtoms::body == aTag) {
     rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame);
     processChildren = PR_TRUE;
+  }
+  else if (nsHTMLAtoms::form == aTag) {
+    rv = NS_NewFormFrame(aContent, aParentFrame, aNewFrame);
   }
   else if (nsHTMLAtoms::frameset == aTag) {
     rv = NS_NewHTMLFramesetFrame(aContent, aParentFrame, aNewFrame);

@@ -17,6 +17,9 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIFormControl.h"
+#include "nsIForm.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -26,13 +29,21 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIWidget.h"
+#include "nsITextWidget.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 
 class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
-                  public nsIScriptObjectOwner,
-                  public nsIDOMEventReceiver,
-                  public nsIHTMLContent
+                              public nsIScriptObjectOwner,
+                              public nsIDOMEventReceiver,
+                              public nsIHTMLContent,
+                              public nsIFormControl
 {
 public:
   nsHTMLTextAreaElement(nsIAtom* aTag);
@@ -85,8 +96,15 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIFormControl
+  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD SetWidget(nsIWidget* aWidget);
+  NS_IMETHOD Init() { return NS_OK; }
+
 protected:
   nsGenericHTMLContainerElement mInner;
+  nsIWidget* mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
+  nsIForm*   mForm;
 };
 
 nsresult
@@ -107,28 +125,61 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mForm = nsnull;
+  mWidget = nsnull;
 }
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
+  NS_IF_RELEASE(mWidget);
+  if (nsnull != mForm) {
+    // prevent mForm from decrementing its ref count on us
+    mForm->RemoveElement(this, PR_FALSE); 
+    NS_RELEASE(mForm);
+  }
 }
 
-NS_IMPL_ADDREF(nsHTMLTextAreaElement)
-
-NS_IMPL_RELEASE(nsHTMLTextAreaElement)
+NS_IMETHODIMP
+nsHTMLTextAreaElement::AddRef(void)
+{
+  PRInt32 refCnt = mRefCnt;  // debugging 
+  return ++mRefCnt; 
+}
 
 nsresult
 nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLTextAreaElementIID)) {
-    nsIDOMHTMLTextAreaElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
+    *aInstancePtr = (void*)(nsIDOMHTMLTextAreaElement*) this;
+    mRefCnt++;
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFormControlIID)) {
+    *aInstancePtr = (void*)(nsIFormControl*) this;
     mRefCnt++;
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
+
+NS_IMETHODIMP_(nsrefcnt)
+nsHTMLTextAreaElement::Release()
+{
+  --mRefCnt;
+	if (mRefCnt <= 0) {
+    delete this;                                       
+    return 0;                                          
+  } else if ((1 == mRefCnt) && mForm) { 
+    mRefCnt = 0;
+    delete this;
+    return 0;
+  } else {
+    return mRefCnt;
+  }
+}
+
+// nsIDOMHTMLTextAreaElement
 
 nsresult
 nsHTMLTextAreaElement::CloneNode(nsIDOMNode** aReturn)
@@ -144,34 +195,73 @@ nsHTMLTextAreaElement::CloneNode(nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  *aForm = nsnull;/* XXX */
+  *aForm = nsnull;
+  if (nsnull != mForm) {
+    nsIDOMHTMLFormElement* formElem = nsnull;
+    nsresult result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    if (NS_OK == result) {
+      *aForm = formElem;
+    }
+  }
   return NS_OK;
 }
 
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
+  nsresult result = NS_OK;
+	if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::Blur() // XXX not tested
+{
+  if (nsnull != mWidget) {
+    nsIWidget *mParentWidget = mWidget->GetParent();
+    if (nsnull != mParentWidget) {
+      mParentWidget->SetFocus();
+      NS_RELEASE(mParentWidget);
+    }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Blur()
+nsHTMLTextAreaElement::Focus() // XXX not tested
 {
-  // XXX write me
+  if (nsnull != mWidget) {
+    mWidget->SetFocus();
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Focus()
+nsHTMLTextAreaElement::Select() // XXX not tested
 {
-  // XXX write me
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::Select()
-{
-  // XXX write me
+  if (nsnull != mWidget) {
+    nsITextWidget *textWidget;
+    if (NS_OK == mWidget->QueryInterface(kITextWidgetIID, (void**)&textWidget)) {
+      textWidget->SelectAll();
+      NS_RELEASE(textWidget);
+    }
+  }
   return NS_OK;
 }
 
@@ -189,7 +279,31 @@ nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,
                                          const nsString& aValue,
                                          nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseFormAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::disabled) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::cols) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::readonly) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::rows) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::tabindex) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -198,7 +312,12 @@ nsHTMLTextAreaElement::AttributeToString(nsIAtom* aAttribute,
                                          nsHTMLValue& aValue,
                                          nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::FormAlignValueToString(aValue, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -207,7 +326,26 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
+  nsHTMLValue value;
+
+  aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+  if (eHTMLUnit_Enumerated == value.GetUnit()) {
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      aContext->GetMutableStyleData(eStyleStruct_Display);
+    nsStyleText* text = (nsStyleText*)
+      aContext->GetMutableStyleData(eStyleStruct_Text);
+    switch (value.GetIntValue()) {
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+      display->mFloats = NS_STYLE_FLOAT_LEFT;
+      break;
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      display->mFloats = NS_STYLE_FLOAT_RIGHT;
+      break;
+    default:
+      text->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+      break;
+    }
+  }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
@@ -229,3 +367,29 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+
+// nsIFormControl
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetType(PRInt32* aType)
+{
+  if (aType) {
+    *aType = NS_FORM_TEXTAREA;
+    return NS_OK;
+  } else {
+    return NS_FORM_NOTOK;
+  }
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetWidget(nsIWidget* aWidget)
+{
+  if (aWidget != mWidget) {
+	  NS_IF_RELEASE(mWidget);
+    NS_IF_ADDREF(aWidget);
+    mWidget = aWidget;
+  }
+  return NS_OK;
+}
+
+

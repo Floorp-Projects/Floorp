@@ -936,8 +936,8 @@ nsGenericHTMLElement::SetClassName(const nsString& aClassName)
 nsresult
 nsGenericHTMLElement::GetDocument(nsIDocument*& aResult) const
 {
-  aResult = mDocument;
   NS_IF_ADDREF(mDocument);
+  aResult = mDocument;
   return NS_OK;
 }
 
@@ -2253,6 +2253,15 @@ static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
   { 0 }
 };
 
+static nsGenericHTMLElement::EnumTable kFormAlignTable[] = {
+  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
+  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { 0 }
+};
+
 static nsGenericHTMLElement::EnumTable kFrameborderQuirksTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
@@ -2329,6 +2338,20 @@ nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
                                          nsString& aResult)
 {
   return EnumValueToString(aValue, kAlignTable, aResult);
+}
+
+PRBool
+nsGenericHTMLElement::ParseFormAlignValue(const nsString& aString,
+                                          nsHTMLValue& aResult)
+{
+  return ParseEnumValue(aString, kFormAlignTable, aResult);
+}
+
+PRBool
+nsGenericHTMLElement::FormAlignValueToString(const nsHTMLValue& aValue,
+                                             nsString& aResult)
+{
+  return EnumValueToString(aValue, kFormAlignTable, aResult);
 }
 
 PRBool

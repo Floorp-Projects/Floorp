@@ -25,15 +25,14 @@ DEFINES += -D_IMPL_NS_HTML
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
-	nsForm.cpp			\
-	nsInput.cpp			\
-	nsInputButton.cpp		\
-	nsInputCheckbox.cpp		\
-	nsInputFile.cpp			\
-	nsInputFrame.cpp		\
-	nsInputRadio.cpp		\
-	nsInputText.cpp			\
-	nsSelect.cpp            \
+	nsFormFrame.cpp			\
+	nsFormControlFrame.cpp		\
+	nsButtonControlFrame.cpp	\
+	nsCheckboxControlFrame.cpp	\
+	nsFileControlFrame.cpp		\
+	nsRadioControlFrame.cpp		\
+	nsTextControlFrame.cpp  	\
+	nsSelectControlFrame.cpp        \
 	$(NULL)
 
 MODULE = raptor

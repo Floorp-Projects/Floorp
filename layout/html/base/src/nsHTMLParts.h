@@ -295,29 +295,39 @@ nsresult
 NS_NewWBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                nsIFrame*& aResult);
 
+// forms
 extern nsresult
-NS_NewInputButtonFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                       nsIFrame*& aResult);
+NS_NewFormFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                nsIFrame*& aResult);
 
 extern nsresult
-NS_NewInputCheckboxFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+NS_NewButtonControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                          nsIFrame*& aResult);
 
 extern nsresult
-NS_NewInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                     nsIFrame*& aResult);
+NS_NewCheckboxControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                           nsIFrame*& aResult);
 
 extern nsresult
-NS_NewInputTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                     nsIFrame*& aResult);
+NS_NewFileControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                       nsIFrame*& aResult);
 
 extern nsresult
-NS_NewInputRadioFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                      nsIFrame*& aResult);
+NS_NewTextControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                       nsIFrame*& aResult);
 
 extern nsresult
-NS_NewHTMLSelectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                      nsIFrame*& aResult);
+NS_NewRadioControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                        nsIFrame*& aResult);
+
+extern nsresult
+NS_NewSelectControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                         nsIFrame*& aResult);
+
+// bullet
+extern nsresult
+NS_NewBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aResult);
 
 extern nsresult
 NS_NewBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame,

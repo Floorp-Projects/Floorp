@@ -21,7 +21,8 @@
 #include "nsISupports.h"
 class nsIImageMap;
 class nsString;
-class nsIFormManager;
+class nsIDOMHTMLCollection;
+class nsIDOMHTMLFormElement;
 class nsIHTMLStyleSheet;
 
 /* b2a848b0-d0a9-11d1-89b1-006008911b81 */
@@ -44,19 +45,12 @@ public:
   NS_IMETHOD AddImageMap(nsIImageMap* aMap) = 0;
 
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult) = 0;
-
-  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  // XXX Temporary form methods. Forms will soon become actual content
-  // elements. For now, the document keeps a list of them.
-  NS_IMETHOD AddForm(nsIFormManager *aForm) = 0;
-
-  NS_IMETHOD_(PRInt32) GetFormCount() const = 0;
-  
-  NS_IMETHOD GetFormAt(PRInt32 aIndex, nsIFormManager **aForm) const = 0;
-  // XXX
-  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet) = 0;
+
+  NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm) = 0;
+
+  NS_IMETHOD GetForms(nsIDOMHTMLCollection** aForms) = 0;
 
   /**
    * Access DTD compatibility mode for this document

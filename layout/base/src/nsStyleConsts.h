@@ -153,7 +153,6 @@
 #define NS_STYLE_CLIP_RIGHT_AUTO                0x40
 #define NS_STYLE_CLIP_BOTTOM_AUTO               0x80
 
-// XXX Peter, is this ok?
 // FRAME/FRAMESET/IFRAME specific values including backward compatibility. Boolean values with
 // the same meaning (e.g. 1 & yes) may need to be distinguished for correct mode processing 
 #define NS_STYLE_FRAME_YES                      0

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -26,13 +27,21 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIFormControl.h"
+#include "nsIForm.h"
+#include "nsIDOMText.h"
 
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 
 class nsHTMLOptionElement : public nsIDOMHTMLOptionElement,
                      public nsIScriptObjectOwner,
                      public nsIDOMEventReceiver,
                      public nsIHTMLContent
+                     //public nsIFormControl
 {
 public:
   nsHTMLOptionElement(nsIAtom* aTag);
@@ -82,6 +91,7 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
+  nsIForm* mForm;
 };
 
 nsresult
@@ -102,27 +112,54 @@ nsHTMLOptionElement::nsHTMLOptionElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mForm = nsnull;
 }
 
 nsHTMLOptionElement::~nsHTMLOptionElement()
 {
+  if (mForm) {
+    NS_RELEASE(mForm);
+  }
 }
 
-NS_IMPL_ADDREF(nsHTMLOptionElement)
+// ISupports
 
-NS_IMPL_RELEASE(nsHTMLOptionElement)
+NS_IMETHODIMP
+nsHTMLOptionElement::AddRef(void)
+{
+  PRInt32 refCnt = mRefCnt;  // debugging 
+  return ++mRefCnt; 
+}
 
 nsresult
 nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLOptionElementIID)) {
-    nsIDOMHTMLOptionElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
+    *aInstancePtr = (void*)(nsIDOMHTMLOptionElement*) this;
+    mRefCnt++;
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFormControlIID)) {
+    *aInstancePtr = (void*)(nsIFormControl*) this;
     mRefCnt++;
     return NS_OK;
   }
   return NS_NOINTERFACE;
+}
+
+// the option has a ref (not ref counted) to the form, but not vice versa. The form can get to the
+// options via the select.
+NS_IMETHODIMP_(nsrefcnt)
+nsHTMLOptionElement::Release()
+{
+  --mRefCnt;
+	if (mRefCnt <= 0) {
+    delete this;                                       
+    return 0;                                          
+  } else {
+    return mRefCnt;
+  }
 }
 
 nsresult
@@ -139,12 +176,30 @@ nsHTMLOptionElement::CloneNode(nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  *aForm = nsnull;/* XXX */
+  *aForm = nsnull;
+  if (nsnull != mForm) {
+    nsIDOMHTMLFormElement* formElem = nsnull;
+    nsresult result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    if (NS_OK == result) {
+      *aForm = formElem;
+    }
+  }
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLOptionElement::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+	if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    return aForm->QueryInterface(kIFormIID, (void**)&mForm);
+  }
+}
+
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Text, text, eSetAttrNotify_Render)
 NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index, eSetAttrNotify_None)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label, eSetAttrNotify_Render)
@@ -156,7 +211,14 @@ nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
                                 const nsString& aValue,
                                 nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::selected) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::disabled) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -165,7 +227,6 @@ nsHTMLOptionElement::AttributeToString(nsIAtom* aAttribute,
                                 nsHTMLValue& aValue,
                                 nsString& aResult) const
 {
-  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -174,7 +235,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
@@ -195,4 +255,30 @@ nsHTMLOptionElement::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::GetText(nsString& aText)
+{
+  aText.SetLength(0);
+  nsIDOMNode* node = nsnull;
+  nsresult result = mInner.GetFirstChild(&node);
+  if ((NS_OK == result) && node) {
+    nsIDOMText* domText = nsnull;
+    result = node->QueryInterface(kIDOMTextIID, (void**)&domText);
+    if ((NS_OK == result) && domText) {
+      result = domText->GetData(aText);
+      aText.CompressWhitespace(PR_TRUE, PR_TRUE);
+      NS_RELEASE(domText);
+    }
+    NS_RELEASE(node);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::SetText(const nsString& aText)
+{
+  // XXX write me
+  return NS_OK;
 }

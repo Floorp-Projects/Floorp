@@ -347,10 +347,6 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 PresShell::~PresShell()
 {
   mRefCnt = 99;/* XXX hack! get around re-entrancy bugs */
-  if (nsnull != mDocument) {
-    mDocument->DeleteShell(this);
-    NS_RELEASE(mDocument);
-  }
   if (nsnull != mRootFrame) {
     mRootFrame->DeleteFrame(*mPresContext);
   }
@@ -358,6 +354,10 @@ PresShell::~PresShell()
   //Release mPresContext after mViewManager
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mStyleSet);
+  if (nsnull != mDocument) {
+    mDocument->DeleteShell(this);
+    NS_RELEASE(mDocument);
+  }
   mRefCnt = 0;
 }
 
