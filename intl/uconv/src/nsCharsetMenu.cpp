@@ -1404,7 +1404,7 @@ nsresult nsCharsetMenu::AddSeparatorToContainer(
   str.AssignWithConversion("----");
 
   // hack to generate unique id's for separators
-  static u = 0;
+  static PRInt32 u = 0;
   u++;
   str.Append(u);
 
@@ -1508,7 +1508,7 @@ PRInt32 nsCharsetMenu::FindMenuItemInArray(nsVoidArray * aArray,
 
   for (PRUint32 i=0; i < count; i++) {
     nsMenuItem2 * item = (nsMenuItem2 *) aArray->ElementAt(i);
-    if (aCharset == item->mCharset) {
+    if (item->mCharset == aCharset) {
       if (aResult != NULL) *aResult = item;
       return i;
     }
