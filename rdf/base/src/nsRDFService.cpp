@@ -1163,7 +1163,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         contractIDStr.ToCString(contractID, contractIDStr.Length() + 1);
 
         /* strip params to get ``base'' contractID for data source */
-        p = PL_strchr(contractID, ';');
+        p = PL_strchr(contractID, '&');
         if (p)
             *p = '\0';
 
