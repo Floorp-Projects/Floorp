@@ -2294,11 +2294,12 @@ GlobalWindowImpl::Alert(const nsAString& aString)
 {
   NS_ENSURE_STATE(mDocShell);
 
-  nsAutoString str;
+  // Special handling for alert(null) in JS for backwards
+  // compatibility.
 
-  str.Assign(aString);
+  NS_NAMED_LITERAL_STRING(null_str, "null");
 
-  // XXX: Concatenation of optional args?
+  const nsAString *str = DOMStringIsNull(aString) ? &null_str : &aString;
 
   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
@@ -2312,13 +2313,15 @@ GlobalWindowImpl::Alert(const nsAString& aString)
       MakeScriptDialogTitle(EmptyString(), newTitle);
       title = newTitle.get();
   }
-  NS_WARN_IF_FALSE(!isChrome, "chrome shouldn't be calling alert(), use the prompt service");
+  NS_WARN_IF_FALSE(!isChrome,
+                   "chrome shouldn't be calling alert(), use the prompt "
+                   "service");
 
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  return prompter->Alert(title, str.get());
+  return prompter->Alert(title, PromiseFlatString(*str).get());
 }
 
 NS_IMETHODIMP
