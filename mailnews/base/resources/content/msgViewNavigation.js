@@ -151,6 +151,7 @@ function ChangeSelection(tree, newMessage)
 	if(newMessage)
 	{
 		tree.clearItemSelection();
+		tree.clearCellSelection();
 		tree.selectItem(newMessage);
 	}
 }
