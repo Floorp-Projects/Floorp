@@ -85,10 +85,11 @@ endif
 #   (See build pages, http://www.mozilla.org/build/unix.html, 
 #    for how to set up mozconfig.sh.)
 MOZCONFIG2DEFS := build/autoconf/mozconfig2defs.sh
+FIND_MOZCONFIG := build/autoconf/find-mozconfig.sh
 run_for_side_effects := \
   $(shell cd $(TOPSRCDIR); \
           if test ! -f $(MOZCONFIG2DEFS); then \
-	    (cd ..; cvs co mozilla/$(MOZCONFIG2DEFS);) \
+	    (cd ..; cvs co mozilla/$(MOZCONFIG2DEFS) mozilla/$(FIND_MOZCONFIG); ) \
 	  fi; \
 	  $(MOZCONFIG2DEFS) .client-defs.mk)
 include $(TOPSRCDIR)/.client-defs.mk
@@ -222,14 +223,23 @@ checkout:
 #
 # Web configure
 #
+MOZCONFIG2URL := build/autoconf/mozconfig2url.sh
 webconfig:
-	netscape -remote "openURL($(WEBCONFIG_URL))"
-	@if test -f $(WEBCONFIG_FILE) ; then \
-	  mv $(WEBCONFIG_FILE) $(WEBCONFIG_FILE).old; \
-	  echo Saving $(WEBCONFIG_FILE) as $(WEBCONFIG_FILE).old; \
-	fi
-	@echo Fill out the form on the browser.
-	@echo Save the results to $(WEBCONFIG_FILE) when done.
+	@url=$(WEBCONFIG_URL); \
+	if test -f $(WEBCONFIG_FILE) ; then \
+          cd $(TOPSRCDIR); \
+          if test ! -f $(MOZCONFIG2URL); then \
+	    (cd ..; cvs co mozilla/$(MOZCONFIG2URL) mozilla/$(FIND_MOZCONFIG);) \
+	  fi; \
+	  url=$$url`$(MOZCONFIG2URL)`; \
+	fi; \
+	echo Running netscape with the following url: ;\
+	echo ;\
+	echo $$url ;\
+	netscape -remote "openURL($$url)" || netscape $$url ;\
+	echo ;\
+	echo Fill out the form on the browser. ;\
+	echo Save the results to $(WEBCONFIG_FILE) when done.
 
 #	netscape -remote "saveAs($(WEBCONFIG_FILE))"
 
