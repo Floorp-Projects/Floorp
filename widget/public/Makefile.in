@@ -62,6 +62,7 @@ EXPORTS		= \
 		nsIDragSessionGTK.h \
 		nsIDragSessionXlib.h \
 		nsIDragSessionMac.h \
+		nsIXRemoteWidgetHelper.h \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
