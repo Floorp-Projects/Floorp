@@ -43,6 +43,7 @@
 #include "nsIRDFResource.h"
 #include "nsIAtom.h"
 #include "nsXULContentUtils.h"
+#include "nsPrintfCString.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -87,8 +88,7 @@ ElementToString(nsIContent *aContent, nsString &aResult)
 {
     aContent->Tag()->ToString(aResult);
 
-    aResult.Append(PRUnichar('@'));
-    aResult.AppendInt(NS_PTR_TO_INT32(aContent), 16);
+    AppendASCIItoUTF16(nsPrintfCString(18, "@%p", aContent), aResult);
 }
 #endif
 
