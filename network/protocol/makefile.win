@@ -28,33 +28,34 @@ IGNORE_MANIFEST=1
 DEPTH=..\..
 include <$(DEPTH)\config\config.mak> 
 DIRS= \
-	about \
-	file \
-	ftp \
-	gopher \
-	http \
-	remote \
+    about \
+    file \
+    ftp \
+    gopher \
+    http \
+    remote \
+    sockstub \
 !if defined(SMART_MAIL) 
-	pop3 \
+    pop3 \
 !endif
 !ifndef MODULAR_NETLIB
-	dataurl \
-	js \
-	marimba \
+    dataurl \
+    js \
+    marimba \
 !endif
 !if defined(MOZ_MAIL_NEWS)
-	smtp \
+    smtp \
 !endif
 !ifdef MOZ_MAIL_NEWS 
-	nntp \
-	mailbox \
-	certld \
-	imap4 \
+    nntp \
+    mailbox \
+    certld \
+    imap4 \
 !endif
 !ifdef MOZ_LDAP
-	ldap \
+    ldap \
 !endif
-	$(NULL)
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
 
