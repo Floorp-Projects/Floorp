@@ -529,7 +529,7 @@ function addNewToolbar()
       // if a conflict is found
       var nameToId = "__customToolbar_" + name.value.replace(" ", "");
       var existingToolbar = gToolboxDocument.getElementById(nameToId);
-      if (existingToolbar || !name.value) {
+      if (existingToolbar) {
         message = stringBundle.getFormattedString("enterToolbarDup", [name.value]);
       } else {
         break;
