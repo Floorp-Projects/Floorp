@@ -56,52 +56,49 @@ typedef struct {
   PRPackedBool canDefault;
 } GtkWidgetState;
 
-typedef struct {
-  GtkWidgetState wState;
-  PRPackedBool selected;
-} GtkToggleButtonState;
+void
+moz_gtk_button_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                     GdkRectangle* cliprect, GtkWidgetState* state, 
+                     GtkReliefStyle relief);
 
 void
-moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
-                     GdkRectangle* buttonRect, GdkRectangle* clipRect,
-                     GtkWidgetState* buttonState, GtkReliefStyle relief);
-
-void
-moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
-                       GdkRectangle* boxRect, GdkRectangle* clipRect,
-                       GtkToggleButtonState* aState, const char* detail);
+moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style, GdkRectangle *rect,
+                       GdkRectangle* cliprect, GtkWidgetState* state, 
+                       gboolean selected, gboolean isradio);
 
 void
 moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
-                               GdkRectangle* arrowRect, GdkRectangle* clipRect,
+                               GdkRectangle* rect, GdkRectangle* cliprect,
                                GtkWidgetState* state, GtkArrowType type);
 
 void
 moz_gtk_scrollbar_trough_paint(GdkWindow* window, GtkStyle* style,
-                               GdkRectangle* troughRect, GdkRectangle* clipRect,
+                               GdkRectangle* rect, GdkRectangle* cliprect,
                                GtkWidgetState* state);
 
 void
 moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
-                              GdkRectangle* thumbRect, GdkRectangle* clipRect,
+                              GdkRectangle* rect, GdkRectangle* cliprect,
                               GtkWidgetState* state);
 
 
 void
 moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                      GdkRectangle* clipRect, GtkWidgetState* state);
+                      GdkRectangle* cliprect, GtkWidgetState* state);
 
 void
 moz_gtk_entry_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                    GdkRectangle* clipRect, GtkWidgetState* state);
+                    GdkRectangle* cliprect, GtkWidgetState* state);
 
 void
-moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                             GdkRectangle* clipRect, GtkWidgetState* state);
+moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
+                             GdkRectangle* rect, GdkRectangle* cliprect, 
+                             GtkWidgetState* state);
 
 void
 moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                        GdkRectangle* clipRect, GtkWidgetState* aState, const char* detail);
+                        GdkRectangle* cliprect, GtkWidgetState* state,
+                        gboolean isradio);
 
 #ifdef __cplusplus
 }
