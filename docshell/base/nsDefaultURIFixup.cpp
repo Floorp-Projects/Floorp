@@ -26,6 +26,7 @@
 #include "nsEscape.h"
 #include "nsCRT.h"
 
+#include "nsIPrefService.h"
 #include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
 
@@ -39,6 +40,9 @@ nsDefaultURIFixup::nsDefaultURIFixup()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
+
+  // Try and get the pref service
+  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
 }
 
 
@@ -103,12 +107,6 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
 
     nsresult rv;
     *aURI = nsnull;
-
-    // Try and get the prefs service
-    if (!mPrefs)
-    {
-        mPrefs = do_GetService(NS_PREF_CONTRACTID);
-    }
 
     nsAutoString uriString(aStringURI);
     uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
@@ -218,9 +216,9 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
     // Test whether keywords need to be fixed up
     if (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
         PRBool fixupKeywords = PR_FALSE;
-        if (mPrefs)
+        if (mPrefBranch)
         {
-            NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &fixupKeywords), NS_ERROR_FAILURE);
+            NS_ENSURE_SUCCESS(mPrefBranch->GetBoolPref("keyword.enabled", &fixupKeywords), NS_ERROR_FAILURE);
         }
         if (fixupKeywords)
         {
@@ -296,12 +294,12 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
 
 PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
 {
-    PRBool makeAlternate = PR_TRUE;
-    if (!mPrefs)
+    if (!mPrefBranch)
     {
         return PR_FALSE;
     }
-    mPrefs->GetBoolPref("browser.fixup.alternate.enabled", &makeAlternate);
+    PRBool makeAlternate = PR_TRUE;
+    mPrefBranch->GetBoolPref("browser.fixup.alternate.enabled", &makeAlternate);
     if (!makeAlternate)
     {
         return PR_FALSE;
@@ -345,7 +343,7 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
 
     nsCAutoString prefix("www.");
     nsXPIDLCString prefPrefix;
-    rv = mPrefs->GetCharPref("browser.fixup.alternate.prefix", getter_Copies(prefPrefix));
+    rv = mPrefBranch->GetCharPref("browser.fixup.alternate.prefix", getter_Copies(prefPrefix));
     if (NS_SUCCEEDED(rv))
     {
         prefix.Assign(prefPrefix);
@@ -353,7 +351,7 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
 
     nsCAutoString suffix(".com");
     nsXPIDLCString prefSuffix;
-    rv = mPrefs->GetCharPref("browser.fixup.alternate.suffix", getter_Copies(prefSuffix));
+    rv = mPrefBranch->GetCharPref("browser.fixup.alternate.suffix", getter_Copies(prefSuffix));
     if (NS_SUCCEEDED(rv))
     {
         suffix.Assign(prefSuffix);
