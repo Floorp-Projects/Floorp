@@ -815,13 +815,13 @@ nsIPrintStatusCallback = { /* a6cf90d3-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90d4-15b3-11d2-932e-00805f8add32 */
+nsINameSpace = { /* a6cf90d4-15b3-11d2-932e-00805f8add32 */
     0xa6cf90d4,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90d5-15b3-11d2-932e-00805f8add32 */
+nsINameSpaceManager = { /* a6cf90d5-15b3-11d2-932e-00805f8add32 */
     0xa6cf90d5,
     0x15b3,
     0x11d2,
