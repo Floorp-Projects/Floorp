@@ -39,7 +39,7 @@
 #ifndef MITRE_MOZILLA_STRING
 #define MITRE_MOZILLA_STRING
 
-#include "String.h"
+#include "TxString.h"
 #include "MITREObject.h"
 #include "baseutils.h"
 #include "nsString.h"

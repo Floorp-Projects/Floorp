@@ -25,19 +25,19 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *    -- 19990806, added void return type declaration for ::nextToken()
  *
- * $Id: Tokenizer.h,v 1.2 1999/11/15 07:12:42 nisheeth%netscape.com Exp $
+ * $Id: Tokenizer.h,v 1.3 2000/04/12 22:31:03 nisheeth%netscape.com Exp $
  */
 
 /**
  * Tokenizer
  * A simple String tokenizer
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:42 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/12 22:31:03 $
 **/
 
 
 #include "baseutils.h"
-#include "String.h"
+#include "TxString.h"
 
 
 #ifndef MITRE_TOKENIZER_H

@@ -21,17 +21,17 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: Parser.cpp,v 1.1 2000/04/06 07:45:36 kvisco%ziplink.net Exp $
+ * $Id: Parser.cpp,v 1.2 2000/04/12 22:33:30 nisheeth%netscape.com Exp $
  */
 
 /**
  * Test App for Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:45:36 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/12 22:33:30 $
 **/
 
 #include <iostream.h>
-#include "String.h"
+#include "TxString.h"
 #include "Expr.h"
 #include "ExprLexer.h"
 #include "ExprParser.h"

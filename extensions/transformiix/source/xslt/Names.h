@@ -21,10 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Names.h,v 1.2 2000/04/12 11:00:36 kvisco%ziplink.net Exp $
+ * $Id: Names.h,v 1.3 2000/04/12 22:33:33 nisheeth%netscape.com Exp $
  */
 
-#include "String.h"
+#include "TxString.h"
 
 #ifndef TRANSFRMX_NAMES_H
 #define TRANSFRMX_NAMES_H

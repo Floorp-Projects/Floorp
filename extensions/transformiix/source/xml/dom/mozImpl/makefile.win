@@ -19,50 +19,50 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..\..
+DEPTH=..\..\..\..\..\..
 
 LIBRARY_NAME=transformix_xml_dom_mozImpl
 MODULE=transformix
 REQUIRES=xpcom raptor
 
 CPPSRCS=						\
-	Attr.cpp					\
-	CDATASection.cpp			\
-	CharacterData.cpp			\
-	Comment.cpp					\
-	Document.cpp				\
-	DocumentFragment.cpp		\
-	DocumentType.cpp			\
-	DOMImplementation.cpp		\
-	Element.cpp					\
-	Entity.cpp					\
-	EntityReference.cpp			\
-	NamedNodeMap.cpp			\
-	NodeDefinition.cpp			\
-	NodeListDefinition.cpp		\
-	Notation.cpp				\
-	ProcessingInstruction.cpp	\
-	Text.cpp					\
+	MozillaAttr.cpp					\
+	MozillaCDATASection.cpp			\
+	MozillaCharacterData.cpp			\
+	MozillaComment.cpp					\
+	MozillaDocument.cpp				\
+	MozillaDocumentFragment.cpp		\
+	MozillaDocumentType.cpp			\
+	MozillaDOMImplementation.cpp		\
+	MozillaElement.cpp					\
+	MozillaEntity.cpp					\
+	MozillaEntityReference.cpp			\
+	MozillaNamedNodeMap.cpp			\
+	MozillaNode.cpp			\
+	MozillaNodeList.cpp		\
+	MozillaNotation.cpp				\
+	MozillaProcInstruction.cpp	\
+	MozillaText.cpp					\
 	$(NULL)
 
 CPP_OBJS=									\
-	.\$(OBJDIR)\Attr.obj					\
-	.\$(OBJDIR)\CDATASection.obj			\
-	.\$(OBJDIR)\CharacterData.obj			\
-	.\$(OBJDIR)\Comment.obj					\
-	.\$(OBJDIR)\Document.obj				\
-	.\$(OBJDIR)\DocumentFragment.obj		\
-	.\$(OBJDIR)\DocumentType.obj			\
-	.\$(OBJDIR)\DOMImplementation.obj		\
-	.\$(OBJDIR)\Element.obj					\
-	.\$(OBJDIR)\Entity.obj					\
-	.\$(OBJDIR)\EntityReference.obj			\
-	.\$(OBJDIR)\NamedNodeMap.obj			\
-	.\$(OBJDIR)\NodeDefinition.obj			\
-	.\$(OBJDIR)\NodeListDefinition.obj		\
-	.\$(OBJDIR)\Notation.obj				\
-	.\$(OBJDIR)\ProcessingInstruction.obj	\
-	.\$(OBJDIR)\Text.obj					\
+	.\$(OBJDIR)\MozillaAttr.obj					\
+	.\$(OBJDIR)\MozillaCDATASection.obj			\
+	.\$(OBJDIR)\MozillaCharacterData.obj			\
+	.\$(OBJDIR)\MozillaComment.obj					\
+	.\$(OBJDIR)\MozillaDocument.obj				\
+	.\$(OBJDIR)\MozillaDocumentFragment.obj		\
+	.\$(OBJDIR)\MozillaDocumentType.obj			\
+	.\$(OBJDIR)\MozillaDOMImplementation.obj		\
+	.\$(OBJDIR)\MozillaElement.obj					\
+	.\$(OBJDIR)\MozillaEntity.obj					\
+	.\$(OBJDIR)\MozillaEntityReference.obj			\
+	.\$(OBJDIR)\MozillaNamedNodeMap.obj			\
+	.\$(OBJDIR)\MozillaNode.obj			\
+	.\$(OBJDIR)\MozillaNodeList.obj		\
+	.\$(OBJDIR)\MozillaNotation.obj				\
+	.\$(OBJDIR)\MozillaProcInstruction.obj	\
+	.\$(OBJDIR)\MozillaText.obj					\
 	$(NULL)
 
 EXPORTS = 					\

@@ -21,19 +21,19 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NamedMap.h,v 1.3 2000/02/22 11:10:00 kvisco%ziplink.net Exp $
+ * $Id: NamedMap.h,v 1.4 2000/04/12 22:30:54 nisheeth%netscape.com Exp $
  */
 
 /**
  * A Named Map for MITREObjects
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/02/22 11:10:00 $
+ * @version $Revision: 1.4 $ $Date: 2000/04/12 22:30:54 $
 **/
 
 #ifndef TRANSFRMX_NAMEDMAP_H
 #define TRANSFRMX_NAMEDMAP_H
 
-#include "String.h"
+#include "TxString.h"
 #include "baseutils.h"
 #include "MITREObject.h"
 #include "StringList.h"

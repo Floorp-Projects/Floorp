@@ -25,21 +25,21 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: Expr.h,v 1.2 2000/04/06 22:34:02 Peter.VanderBeken%pandora.be Exp $
+ * $Id: Expr.h,v 1.3 2000/04/12 22:32:25 nisheeth%netscape.com Exp $
  */
 
 /**
  * XSL expression class definitions.
  * Much of this code was ported from XSL:P. <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2000/04/06 22:34:02 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/12 22:32:25 $
 **/
 
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
 #include <math.h>
-#include "String.h"
+#include "TxString.h"
 #include "ErrorObserver.h"
 #include "NodeSet.h"
 #include "List.h"

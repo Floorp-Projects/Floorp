@@ -20,11 +20,11 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NodeSorter.h,v 1.1 2000/04/12 10:55:55 kvisco%ziplink.net Exp $
+ * $Id: NodeSorter.h,v 1.2 2000/04/12 22:33:55 nisheeth%netscape.com Exp $
  */
 
 
-#include "String.h"
+#include "TxString.h"
 #include "StringComparator.h"
 #include "NamedMap.h"
 #include "dom.h"
