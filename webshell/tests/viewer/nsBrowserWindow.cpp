@@ -1408,7 +1408,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
   NS_ENSURE_SUCCESS(EnsureWebBrowserChrome(), NS_ERROR_FAILURE);
   mWebBrowser->SetContainerWindow(mWebBrowserChrome);
-  mWebBrowser->AddWebBrowserListener((nsIWebProgressListener *)(mWebBrowserChrome), NS_GET_IID(nsIWebProgressListener));
+  nsWeakPtr weakling(
+      dont_AddRef(NS_GetWeakReference((nsIWebProgressListener*)mWebBrowserChrome)));
+  mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 
   webBrowserWin->Create();
   mDocShell = do_GetInterface(mWebBrowser);

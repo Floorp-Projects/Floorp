@@ -1077,7 +1077,9 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	mWebBrowserAsWin->SetVisibility(PR_TRUE);
 
     // Subscribe for progress notifications
-    mWebBrowser->AddWebBrowserListener(NS_STATIC_CAST(nsIWebBrowserChrome*, mWebBrowserContainer), NS_GET_IID(nsIWebProgressListener));
+	nsCOMPtr<nsIWeakReference> listener(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mWebBrowserContainer))));
+    mWebBrowser->AddWebBrowserListener(listener, NS_GET_IID(nsIWebProgressListener));
 
 	mValidBrowserFlag = TRUE;
 
