@@ -75,11 +75,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_LIBS += libconv.lib
-else
 OS_LIBS += -luconv -los2386
-endif
 
 include $(topsrcdir)/config/rules.mk
 
