@@ -176,7 +176,8 @@ NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithArray(const PRUnichar * aLine, 
   }
 
   *aNumAddresses = numAddresses;
-
+  PR_FREEIF(names);
+  PR_FREEIF(addresses);
   return rv;
 }
 
