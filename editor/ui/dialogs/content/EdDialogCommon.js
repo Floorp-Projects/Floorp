@@ -664,11 +664,13 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function GetLocalFileURL(filterType)
 {
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  var fileType = "html";
 
   if (filterType == "img")
   {
     fp.init(window, GetString("SelectImageFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterImages);
+    fileType = "image";
   }
   // Current usage of this is in Link dialog,
   //  where we always want HTML first
@@ -689,6 +691,10 @@ function GetLocalFileURL(filterType)
   // Default or last filter is "All Files"
   fp.appendFilters(nsIFilePicker.filterAll);
 
+  // set the file picker's current directory to last-opened location saved in prefs
+  SetFilePickerDirectory(fp, fileType);
+
+
   /* doesn't handle *.shtml files */
   try {
     var ret = fp.show();
@@ -699,8 +705,10 @@ function GetLocalFileURL(filterType)
     dump("filePicker.chooseInputFile threw an exception\n");
     return null;
   }
-
-  return fp.fileURL.spec;
+  SaveFilePickerDirectory(fp, fileType);
+  
+  // Note: fp.file.URL = fp.fileURL.spec
+  return fp.file ? fp.file.URL : null;
 }
 
 function GetMetaElement(name)

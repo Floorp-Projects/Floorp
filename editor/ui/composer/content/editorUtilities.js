@@ -51,6 +51,7 @@ const gOutputEncodeEntities = 256;
 var gStringBundle;
 var gIOService;
 var gPrefsService;
+var gFilePickerDirectory;
 
 var gOS = "";
 const gWin = "Win";
@@ -101,7 +102,9 @@ function GetString(name)
 {
   if (editorShell)
   {
-    return editorShell.GetString(name);
+    try {
+      return editorShell.GetString(name);
+    } catch (e) {}
   }
   else
   {
@@ -112,7 +115,9 @@ function GetString(name)
       if (!gStringBundle)
         return null;
     }
-    return gStringBundle.GetStringFromName(name);
+    try {
+      return gStringBundle.GetStringFromName(name);
+    } catch (e) {}
   }
   return null;
 }
@@ -271,6 +276,73 @@ function GetPrefs()
     dump("failed to get root prefs!\n");
   }
   return null;
+}
+
+function SetUnicharPref(aPrefName, aPrefValue)
+{
+  var prefs = GetPrefs();
+  if (prefs)
+  {
+    try
+    {
+      var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                          .createInstance(Components.interfaces.nsISupportsWString);
+      str.data = aPrefValue;
+      prefs.setComplexValue(aPrefName, Components.interfaces.nsISupportsWString, str);
+    }
+    catch(e) {}
+  }
+}
+
+function  GetUnicharPref(aPrefName, aDefVal)
+{
+  var prefs = GetPrefs();
+  if (prefs)
+  {
+    try
+    {
+      return prefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsWString).data;
+    }
+    catch(e) {}
+  }
+  return "";
+}
+
+// Set initial directory for a filepicker from URLs saved in prefs
+function SetFilePickerDirectory(filePicker, fileType)
+{
+  if (filePicker)
+  {
+    var location = GetUnicharPref("editor.lastFileLocation."+fileType);
+    if (location)
+    {
+      try {
+        var lastLocation = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
+        lastLocation.URL = location;
+        // Save current directory so we can reset it in SaveFilePickerDirectory
+        gFilePickerDirectory = filePicker.displayDirectory;
+
+        filePicker.displayDirectory = lastLocation;
+      }
+      catch(e) {}
+    }
+  }
+}
+
+// Save the directory of the selected file to prefs
+function SaveFilePickerDirectory(filePicker, fileType)
+{
+  if (filePicker && filePicker.file && filePicker.file.parent)
+  {
+    SetUnicharPref("editor.lastFileLocation."+fileType, filePicker.file.parent.URL);
+  }
+
+  // Restore the directory used before SetFilePickerDirectory was called;
+  // This reduces interference with Browser and other module directory defaults
+  if (gFilePickerDirectory)
+    filePicker.displayDirectory = gFilePickerDirectory;
+
+  gFilePickerDirectory = "";
 }
 
 function GetDefaultBrowserColors()
@@ -586,3 +658,4 @@ function GetOS()
 
   return gOS;
 }
+
