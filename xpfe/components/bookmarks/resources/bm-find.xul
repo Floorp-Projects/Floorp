@@ -22,12 +22,15 @@
     Robert John Churchill    <rjc@netscape.com>
 
   Contributor(s): 
+    Blake Ross <BlakeR1234@aol.com>
 
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bm-find.dtd">
 
@@ -36,32 +39,78 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns:web="http://home.netscape.com/WEB-rdf#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	width="630" height="400" x="20" y="20" persist="width height x y" align="vertical"
-	windowtype="bookmarks:find" class="dialog"
+	width="630" height="400" x="20" y="20" persist="width height x y" orient="vertical"
+	windowtype="bookmarks:find"
 	onload="doLoad()" onunload="doUnload()"
 	>
 
-	<html:script src="chrome://communicator/content/bookmarks/bm-find.js" />
-	<html:script src="chrome://global/content/treePopups.js" />
+	<script src="chrome://communicator/content/bookmarks/bm-find.js" />
+	<script src="chrome://global/content/treePopups.js" />
 
+<broadcasterset id="broadcasterset">
+  <!-- File Menu -->
+  <broadcaster id="cmd_newNavigator"/>
+  <broadcaster id="cmd_newMessage"/>
+  <broadcaster id="cmd_newEditor"/>
+  <broadcaster id="cmd_close" oncommand="window.close()"/>
+  <broadcaster id="cmd_quit"/>
+  <!-- Edit Menu -->
+  <broadcaster id="cmd_undo"/>
+  <broadcaster id="cmd_redo"/>
+  <broadcaster id="cmd_cut"/>
+  <broadcaster id="cmd_copy"/>
+  <broadcaster id="cmd_paste"/>
+  <broadcaster id="cmd_delete"/>
+  <broadcaster id="cmd_selectAll"/>
+</broadcasterset>
+<keyset id="keyset">
+  <!-- File Menu -->
+  <key id="key_newNavigator"/>
+  <key id="key_newMessage"/>
+  <key id="key_newEditor"/>
+  <key id="key_close"/>
+  <key id="key_quit"/>
+  <!-- Edit Menu -->
+  <key id="key_undo"/>
+  <key id="key_redo"/>
+  <key id="key_cut"/>
+  <key id="key_copy"/>
+  <key id="key_paste"/>
+  <key id="key_delete"/>
+  <key id="key_selectAll"/>
+</keyset>
 	<menubar>
-		<menu value="&menu.file.label;">
-			<menupopup>
-				<menuitem value="&menuitem.close.label;" oncommand="window.close()" />
-			</menupopup>
-		</menu>
+  <menu id="menu_File">
+    <menupopup id="menu_FilePopup">     
+      <menu id="menu_New">
+        <menupopup id="menu_NewPopup">
+          <menuitem id="menu_newNavigator"/>
+          <menuitem id="menu_newMessage"/>
+          <menuitem id="cmd_newCard"/>
+          <menuitem id="menu_newEditor"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem id="menu_close"/>
+      <menuseparator/>
+    </menupopup>
+  </menu>
 
-		<menu value="&menu.edit.label;">
-			<menupopup>
-				<menuitem value="&menuitem.undo.label;" disabled="true" />
-				<menuseparator/>
-				<menuitem value="&menuitem.cut.label;" disabled="true" />
-				<menuitem value="&menuitem.copy.label;" disabled="true" />
-				<menuitem value="&menuitem.paste.label;" disabled="true" />
-				<menuitem value="&menuitem.delete.label;" disabled="true" />
-				<menuitem value="&menuitem.selectAll.label;" disabled="true" />
-			</menupopup>
-		</menu>
+  <menu id="menu_Edit">
+    <menupopup>
+      <menuitem id="menu_undo" disabled="true" />
+      <menuitem id="menu_redo" disabled="true" />
+      <menuseparator/>
+      <menuitem id="menu_cut"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_paste"/>
+      <menuitem id="menu_delete"/>
+      <menuseparator/>
+      <menuitem id="menu_selectAll"/>
+    </menupopup>
+  </menu>
+  <menu id="tasksMenu" accesskey="t" />
+  <menu id="menu_Help" accesskey="h" />
 	</menubar>
 
 	<titledbox orient="horizontal">
