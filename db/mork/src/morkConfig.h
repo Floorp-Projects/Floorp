@@ -82,12 +82,12 @@
 // } %%%%% end platform defs peculiar to Mork %%%%%
 
 #if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS)
-#include "stdio.h" 
-#include "ctype.h" 
-#include "errno.h" 
-#include "string.h" 
+#include <stdio.h> 
+#include <ctype.h> 
+#include <errno.h> 
+#include <string.h> 
 #ifdef HAVE_MEMORY_H
-#include "memory.h" 
+#include <memory.h> 
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>  /* for SEEK_SET, SEEK_END */
