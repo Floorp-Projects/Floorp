@@ -43,7 +43,6 @@ sub provides {
             $service eq 'dispatcher.commands' or 
             $service eq 'dispatcher.output.generic' or 
             $service eq 'dispatcher.output' or 
-            $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
 }
 
@@ -193,30 +192,6 @@ sub strings {
             'login.detailsSent' => 'The password was sent to data.address using data.protocol',
             'login.details' => 'The message containing the data.username and data.password of a new account or when the user has forgotten his password (only required for contact protocols, e.g. e-mail)',
             );
-}
-
-# dataSource.strings.default
-sub getDefaultString {
-    my $self = shift;
-    my($app, $protocol, $string) = @_;
-    if ($protocol eq 'stdout') {
-        if ($string eq 'login.accessDenied') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Access Denied<br/></text>');
-        } elsif ($string eq 'login.failed') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.tried)" condition="!=" rvalue="0">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --><br/></text>');
-        } elsif ($string eq 'login.detailsSent') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Login details were sent. (Protocol: <text value="(data.protocol)"/>; Address: <text value="(data.address)"/>)<br/></text>');
-        }
-    } elsif ($protocol eq 'http') {
-        if ($string eq 'login.accessDenied') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Access Denied<br/>Content-Type: text/plain<br/><br/>Access Denied</text>');
-        } elsif ($string eq 'login.failed') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="!=" rvalue="0">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>');
-        } elsif ($string eq 'login.detailsSent') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/></text>');
-        }
-    }
-    return; # nope, sorry
 }
 
 

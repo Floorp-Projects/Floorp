@@ -130,7 +130,7 @@ sub removeField {
 sub setupInstall {
     my $self = shift;
     my($app) = @_;
-    $app->output->setupProgress('user fields');
+    $app->output->setupProgress('user.fieldFactory');
     $app->getCollectingServiceList('user.fieldRegisterer')->register($app, $self);
     return;
 }

@@ -67,8 +67,6 @@ sub registerServices {
                      PLIF::Service::ContactMethod::AIM
                      Output
                      Configuration
-                     DataSource::ConsoleStrings
-                     DataSource::HTTPStrings
                        ));
 }
 

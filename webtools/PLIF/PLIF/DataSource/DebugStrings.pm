@@ -44,7 +44,7 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     # this is protocol agnostic stuff :-)
     if ($string eq 'debug.dumpVars') {
-        return ('COSES', <<eof);
+        return ('COSES', '1', <<eof);
 <!--
  !
  !  This example will dump every single string passed into it. For

@@ -170,17 +170,18 @@ sub expand {
                         push(@index, $index);
                         push(@stack, $stack);
                         $index = 0;
-                        $stack = $xmlService->parseNS($self->getString($app, $session, $protocol, 
-                                                                       $self->evaluateExpression($attributes->{'href'}, $scope)));
+                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope));
+                        $self->assert($type eq 'COSES', 1, 'Tried to include a non-COSES string as COSES data. Set the \'parse\' attribute to \'text\' or \'x-auto\' to handle this correctly.');
+                        $stack = $xmlService->parseNS($string);
                         push(@scope, $superscope);
                     } elsif ($attributes->{'parse'} eq 'text') {
                         # raw text inclusion
-                        $result .= $self->escape($app, $self->getString($app, $session, $protocol, 
-                                                                  $self->evaluateExpression($attributes->{'href'}, $scope)), $scope);
+                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope));
+                        $result .= $self->escape($app, $string, $scope);
                     } elsif ($attributes->{'parse'} eq 'x-auto') {
                         # Get the string expanded automatically and
                         # insert it into the result.
-                        $result .= $self->escape($app, $output->getString($session, $self->evaluateExpression($attributes->{'href'}, $scope), $scope), $scope);
+                        $result .= $self->escape($app, $app->getService('dataSource.strings')->getExpandedString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope), $scope), $scope);
                     }
                     next node; # skip default handling
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}else') {
@@ -281,13 +282,6 @@ sub expand {
             }
         }
     }
-}
-
-sub getString {
-    my $self = shift;
-    my($app, $session, $protocol, $name) = @_;
-    my($type, $string) = $app->getService('dataSource.strings')->get($app, $session, $protocol, $name);
-    return $string;
 }
 
 sub evaluateVariable {

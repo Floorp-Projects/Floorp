@@ -66,16 +66,24 @@ sub getDefaultString {
         $self->assert(open(FILE, "<$filename"), 1, "Could not open output template file '$filename' for reading: $!");
         # get the data type (platform's line delimiter)
         local $/ = "\n";
-        my $type = <FILE>;
-        chomp($type);
+        my @data;
+        my $line;
+        while (defined($line = <FILE>)) {
+            chomp($line);
+            if ($line eq '') {
+                # stop this when we reach the first blank line
+                last;
+            }
+            push(@data, $line);
+        }
         # and then slurp entire file (no record delimiter)
         local $/ = undef;
-        my $data = <FILE>;
+        push(@data, <FILE>);
         $self->assert(close(FILE), 3, "Could not close output template file '$filename': $!");
-        return ($type, $data);
+        return @data;
     } else {
         # file does not exist
-        $self->dump(9, "No file for string '$string' in protocol '$protocol' (looking for '$filename')4");
+        $self->dump(9, "No file for string '$string' in protocol '$protocol' (looking for '$filename')");
         return; # no can do, sir
     }
 }

@@ -40,7 +40,7 @@ sub databaseType {
 sub getString {
     my $self = shift;
     my($app, $variant, $string) = @_;
-    return $self->database($app)->execute('SELECT type, data FROM strings WHERE variant = ? AND name = ?', $variant, $string)->row;
+    return $self->database($app)->execute('SELECT type, version, data FROM strings WHERE variant = ? AND name = ?', $variant, $string)->row;
 }
 
 sub getVariants {
@@ -79,7 +79,7 @@ sub getVariantStrings {
     my $self = shift;
     my($app, $variant) = @_;
     my %result = ();
-    foreach my $string ($self->database($app)->execute('SELECT name, type, data FROM strings WHERE variant = ?', $variant)->rows) {
+    foreach my $string ($self->database($app)->execute('SELECT name, type, version, data FROM strings WHERE variant = ?', $variant)->rows) {
         $result{$string->[0]} = [$string->[1], $string->[2]];
     }
     return %result;
@@ -89,10 +89,16 @@ sub getStringVariants {
     my $self = shift;
     my($app, $string) = @_;
     my %result = ();
-    foreach my $variant ($self->database($app)->execute('SELECT variant, type, data FROM strings WHERE name = ?', $string)->rows) {
+    foreach my $variant ($self->database($app)->execute('SELECT variant, type, version, data FROM strings WHERE name = ?', $string)->rows) {
         $result{$variant->[0]} = [$variant->[1], $variant->[2]];
     }
     return %result;
+}
+
+sub getAllStringVersions {
+    my $self = shift;
+    my($app) = @_;
+    return $self->database($app)->execute('SELECT stringVariants.id, stringVariants.name, stringVariants.protocol, strings.name, strings.version FROM stringVariants, strings WHERE stringVariants.id = strings.variant')->rows;
 }
 
 sub setVariant {
@@ -107,9 +113,9 @@ sub setVariant {
 
 sub setString {
     my $self = shift;
-    my($app, $variant, $string, $type, $data) = @_;
-    if ((defined($data)) and (length($data) > 0)) {
-        $self->database($app)->execute('REPLACE INTO stringVariants SET variant=?, string=?, type=?, data=?', $variant, $string, $type, $data);
+    my($app, $variant, $version, $string, $type, $data) = @_;
+    if (defined($data)) {
+        $self->database($app)->execute('REPLACE INTO stringVariants SET variant=?, string=?, type=?, version=?, data=?', $variant, $string, $type, $version, $data);
     } else {
         $self->database($app)->execute('DELETE FROM stringVariants WHERE variant = ? AND string = ?', $variant, $string);
     }
@@ -122,7 +128,7 @@ sub setupInstall {
     $self->dump(9, 'about to configure string data source...');
     if (not $helper->tableExists($app, $self->database($app), 'stringVariants')) {
         $self->debug('going to create \'stringVariants\' table');
-        $app->output->setupProgress('strings data source (creating stringVariants database)');
+        $app->output->setupProgress('dataSource.strings.stringVariants');
         $self->database($app)->execute('
             CREATE TABLE stringVariants (
                                          id integer unsigned auto_increment NOT NULL PRIMARY KEY,
@@ -143,12 +149,13 @@ sub setupInstall {
     }
     if (not $helper->tableExists($app, $self->database($app), 'strings')) {
         $self->debug('going to create \'strings\' table');
-        $app->output->setupProgress('strings data source (creating strings database)');
+        $app->output->setupProgress('dataSource.strings.strings');
         $self->database($app)->execute('
             CREATE TABLE strings (
                                   variant integer unsigned NOT NULL,
                                   name varchar(32) NOT NULL,
                                   type varchar(32) NOT NULL,
+                                  version varchar(32) NOT NULL,
                                   data text,
                                   PRIMARY KEY (variant, name)
                                   )
@@ -158,7 +165,10 @@ sub setupInstall {
         if (not $helper->columnExists($app, $self->database($app), 'strings', 'type')) {
             $self->database($app)->execute('ALTER TABLE strings ADD COLUMN type varchar(32) NOT NULL');
         }
+        if (not $helper->columnExists($app, $self->database($app), 'strings', 'version')) {
+            $self->database($app)->execute('ALTER TABLE strings ADD COLUMN version varchar(32) NOT NULL');
+        }
     }
     $self->dump(9, 'done configuring string data source');
-    return;
+    return $self->SUPER::setupInstall(@_);
 }

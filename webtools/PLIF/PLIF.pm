@@ -71,7 +71,7 @@ sub create {
     } else {
         $class->dump(10, "Called constructor of class $class, creating object...");
         my $self = $class->bless(@_); # call our real constructor
-        $self->init(@_);
+        $self->serviceInit(@_);
         return $self;
     }
 }
@@ -85,11 +85,21 @@ sub serviceCreate {
     }
     $class->dump(10, "Called service constructor of class $class, creating object...");
     my $self = $class->bless(@_); # call our real constructor
-    $self->init(@_);
+    $self->serviceInstanceInit(@_);
     return $self;
 }
 
 sub init {} # stub for services
+
+sub serviceInit {
+    my $self = shift;
+    $self->init(@_);
+}
+
+sub serviceInstanceInit {
+    my $self = shift;
+    $self->init(@_);
+}
 
 # provide a constructor that always constructs a new copy of the
 # class. This is used by services that implement factories for objects

@@ -44,7 +44,6 @@ sub provides {
             $service eq 'dispatcher.commands' or
             $service eq 'dispatcher.output.generic' or
             $service eq 'dispatcher.output' or
-            $service eq 'dataSource.strings.default' or
             $service eq 'setup.install' or
             $class->SUPER::provides($service));
 }
@@ -56,15 +55,15 @@ sub cmdCosesEditor {
     my($app) = @_;
     my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
     if (defined($user)) {
-        my %variants = $app->getService('dataSource.strings')->getDescribedVariants();
+        my $variants = $self->getDescribedVariants($app);
         my $variantsSortColumn = $app->input->getArgument('cosesEditorVariantsSortColumn');
-        my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        my $strings = $self->getExpectedStrings($app);
         my $stringsSortColumn = $app->input->getArgument('cosesEditorStringsSortColumn');
         # if (defined($user)) {
         $user->setting(\$variantsSortColumn, 'cosesEditor.index.variantsSortColumn');
         $user->setting(\$stringsSortColumn, 'cosesEditor.index.stringsSortColumn');
         # }
-        $app->output->cosesEditorIndex(\%variants, $variantsSortColumn, \%strings, $stringsSortColumn);
+        $app->output->cosesEditorIndex($variants, $variantsSortColumn, $strings, $stringsSortColumn);
     } # else, user has been notified
 }
 
@@ -74,10 +73,11 @@ sub cmdCosesVariantAdd {
     my($app) = @_;
     my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
     if (defined($user)) {
-        my @data = ('', '', 1.0, '', '', '', '', '', '');
+        my $protocol = $app->input->getArgument('cosesEditorVariantProtocol');
+        my @data = ('', $protocol, 1.0, '', '', '', '', '', '');
         my $id = $app->getService('dataSource.strings')->setVariant($app, undef, @data);
-        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-        $app->output->cosesEditorVariant($id, @data, \%expectedStrings, {});
+        my $expectedStrings = $self->getExpectedStrings($app, $protocol);
+        $app->output->cosesEditorVariant($id, @data, $expectedStrings, {});
     } # else, user has been notified
 }
 
@@ -90,9 +90,9 @@ sub cmdCosesVariantEdit {
         my $id = $app->input->getArgument('cosesEditorVariantID');
         my $dataSource = $app->getService('dataSource.strings');
         my @data = $dataSource->getVariant($app, $id);
-        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-        my %variantStrings = $dataSource->getVariantStrings($app, $id);
-        $app->output->cosesEditorVariant($id, @data, \%expectedStrings, \%variantStrings);
+        my $expectedStrings = $self->getExpectedStrings($app, $data[1]);
+        my $variantStrings = \$dataSource->getVariantStrings($app, $id);
+        $app->output->cosesEditorVariant($id, @data, $expectedStrings, $variantStrings);
     } # else, user has been notified
 }
 
@@ -102,9 +102,9 @@ sub cmdCosesVariantAddString {
     my($app) = @_;
     my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
     if (defined($user)) {
-        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
         my($id, $data, $variantStrings) = $self->getVariantEditorArguments($app);
-        $app->output->cosesEditorVariant($id, @$data, \%expectedStrings, $variantStrings);
+        my $expectedStrings = $self->getExpectedStrings($app, $data->[1]);
+        $app->output->cosesEditorVariant($id, @$data, $expectedStrings, $variantStrings);
     } # else, user has been notified
 }
 
@@ -131,11 +131,10 @@ sub cmdCosesStringEdit {
     my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
     if (defined($user)) {
         my $id = $app->input->getArgument('cosesEditorStringID');
-        my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-        my $dataSource = $app->getService('dataSource.strings');
-        my %expectedVariants = $dataSource->getDescribedVariants();    
-        my %stringVariants = $dataSource->getStringVariants($app, $id);
-        $app->output->cosesEditorString($id, $strings{$id}, \%expectedVariants, \%stringVariants);
+        my $strings = $self->getExpectedStrings($app);
+        my $expectedVariants = $self->getDescribedVariants($app, $id);
+        my $stringVariants = \$app->getService('dataSource.strings')->getStringVariants($app, $id);
+        $app->output->cosesEditorString($id, $strings->{$id}, $expectedVariants, $stringVariants);
     } # else, user has been notified
 }
 
@@ -147,10 +146,11 @@ sub cmdCosesStringCommit {
     if (defined($user)) {
         my $input = $app->input;
         my $id = $input->getArgument('cosesEditorStringID');
-        my %variants = ();
+        my %variants;
         my $index = 0;
         while (defined(my $name = $input->getArgument('cosesEditorStringVariant${index}Name'))) {
-            $variants{$name} = [$input->getArgument('cosesEditorStringVariant${index}Type'), 
+            $variants{$name} = [$input->getArgument('cosesEditorStringVariant${index}Type'),
+                                $input->getArgument('cosesEditorStringVariant${index}Version'),
                                 $input->getArgument('cosesEditorStringVariant${index}Value')];
             $index += 1;
         }
@@ -186,8 +186,9 @@ sub cmdCosesVariantExport {
         foreach my $string (keys(%strings)) {
             my $name = $XML->escape($string);
             my $type = $XML->escape($strings{$string}->[0]);
-            my $value = $XML->escape($strings{$string}->[1]);
-            $result.= "  <string name=\"$name\" type=\"$type\">$value</string>\n";
+            my $version = $XML->escape($strings{$string}->[1]);
+            my $value = $XML->escape($strings{$string}->[2]);
+            $result.= "  <string name=\"$name\" type=\"$type\" version=\"$version\">$value</string>\n";
         }
         $result .= '</variant>';
         $app->output->cosesEditorExport($id, $result);
@@ -207,8 +208,9 @@ sub cmdCosesVariantImport {
         my $XML = $app->getService('service.xml');
         my $data = {
             'depth' => 0,
-            'string' => undef,
+            'name' => undef,
             'type' => undef,
+            'version' => undef,
             'variant' => [], # same at all scopes (because walkNesting() is not a deep copy)
             'strings' => {}, # same at all scopes (because walkNesting() is not a deep copy)
         };
@@ -222,7 +224,7 @@ sub cmdCosesVariantImport {
         }
 
         # display data
-        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        my %expectedStrings = $self->getExpectedStrings($app);
         my %variantStrings = $dataSource->getVariantStrings($app, $id);
         $app->output->cosesEditorVariant($id, @{$data->{'variant'}}, \%expectedStrings, \%variantStrings);
     } # else, user has been notified
@@ -246,11 +248,12 @@ sub walkElement {
         }
     } elsif ($tagName eq '{http://bugzilla.mozilla.org/variant/1}string') {
         if ($data->{'depth'} == 1) {
-            if (exists($attributes->{'name'})) {
-                $data->{'string'} = $attributes->{'name'};
-                $data->{'type'} = $attributes->{'type'};
-            } else {
-                $self->error(1, 'invalid variant document format - missing attribute \'name\' on <string>');
+            foreach my $name (qw(name type version)) {
+                if (exists($attributes->{$name})) {
+                    $data->{$name} = $attributes->{$name};
+                } else {
+                    $self->error(1, "invalid variant document format - missing attribute '$name' on <string>");
+                }
             }
         } else {
             $self->error(1, 'invalid variant document format - <string> not child of <variant>');
@@ -266,7 +269,7 @@ sub walkText {
     my $self = shift;
     my($text, $data) = @_;
     if (defined($data->{'string'})) {
-        $data->{'strings'}->{$data->{'string'}} = [$data->{'type'}, $text];
+        $data->{'strings'}->{$data->{'name'}} = [$data->{'type'}, $data->{'version'}, $text];
     } elsif ($text !~ /^\w*$/o) {
         $self->error(1, "invalid variant document format - unexpected text");
     }
@@ -337,39 +340,11 @@ sub outputCosesEditorExport {
 # dispatcher.output
 sub strings {
     return (
-            'cosesEditor.index' => 'The COSES editor index. The data.variants hash (variant ID => hash with keys name, protocol, quality, type, encoding, charset, language, description, and translator) should be sorted by the data.variantsSortColumn, and the data.strings hash (name=>description) should be sorted by the data.stringsSortColumn (these are typically set by the cosesEditorVariantsSortColumn and cosesEditorStringsSortColumn arguments). Typical commands that this should lead to: cosesVariantAdd (no arguments), cosesVariantEdit (cosesEditorVariantID), cosesStringEdit (cosesEditorStringID), cosesVariantExport (cosesEditorVariantID), cosesVariantImport (cosesEditorImportData, the contents of an XML file)',
-            'cosesEditor.variant' => 'The COSES variant editor. The data hash contains: protocol, quality, type, encoding, charset, language, description and translator (hereon "the variant data"), variant, an expectedStrings hash (name=>description), and a variantStrings hash (name=>[type,value]). The two hashes are likely to overlap. Typical commands that this should lead to: cosesVariantCommit and cosesVariantAddString (cosesEditorVariantID, cosesEditorVariantX where X is each of the variant data, cosesEditorVariantStringNName, cosesEditorVariantStringNType and cosesEditorVariantStringNValue where N is a number from 0 to as high as required, and cosesEditorStringNewName, cosesEditorStringNewType and cosesEditorVariantStringNewValue)',
-            'cosesEditor.string' => 'The COSES string editor. The name of the string being edited and its description are in data.string and data.description. The data.expectedVariants contains a list of all variants (variant ID => hash with keys name, protocol, quality, type, encoding, charset, language, description, and translator), and data.stringVariants hosts the currently set strings (variant=>value). The main command that this should lead to is: cosesStringCommit (cosesEditorStringID, cosesEditorStringVariantNName, cosesEditorStringVariantNType and cosesEditorStringVariantNValue where N is a number from 0 to as high as required)',
+            'cosesEditor.index' => 'The COSES editor index. The data.variants hash (variant ID => hash with keys name, protocol, quality, type, encoding, charset, language, description, and translator) should be sorted by the data.variantsSortColumn, and the data.strings hash (name=>description) should be sorted by the data.stringsSortColumn (these are typically set by the cosesEditorVariantsSortColumn and cosesEditorStringsSortColumn arguments). Typical commands that this should lead to: cosesVariantAdd (optional cosesEditorVariantProtocol), cosesVariantEdit (cosesEditorVariantID), cosesStringEdit (cosesEditorStringID), cosesVariantExport (cosesEditorVariantID), cosesVariantImport (cosesEditorImportData, the contents of an XML file)',
+            'cosesEditor.variant' => 'The COSES variant editor. The data hash contains: protocol, quality, type, encoding, charset, language, description and translator (hereon "the variant data"), variant, an expectedStrings hash (name=>description), and a variantStrings hash (name=>[type,version,value]). The two hashes are likely to overlap. Typical commands that this should lead to: cosesVariantCommit and cosesVariantAddString (cosesEditorVariantID, cosesEditorVariantX where X is each of the variant data, cosesEditorVariantStringNName, cosesEditorVariantStringNType, cosesEditorVariantStringNVersion, and cosesEditorVariantStringNValue where N is a number from 0 to as high as required, and cosesEditorStringNewName, cosesEditorStringNewType, cosesEditorStringNewVersion and cosesEditorVariantStringNewValue)',
+            'cosesEditor.string' => 'The COSES string editor. The name of the string being edited and its description are in data.string and data.description. The data.expectedVariants contains a list of all variants (variant ID => hash with keys name, protocol, quality, type, encoding, charset, language, description, and translator), and data.stringVariants hosts the currently set strings (variant=>value). The main command that this should lead to is: cosesStringCommit (cosesEditorStringID, cosesEditorStringVariantNName, cosesEditorStringVariantNType, cosesEditorStringVariantNVersion and cosesEditorStringVariantNValue where N is a number from 0 to as high as required)',
             'cosesEditor.export' => 'The COSES variant export feature. data.variant holds the id of the variant, and data.output holds the XML representation of the variant.',
             );
-}
-
-# dataSource.strings.default
-sub getDefaultString {
-    my $self = shift;
-    my($app, $protocol, $string) = @_;
-    if ($protocol eq 'stdout') {
-        if ($string eq 'cosesEditor.index') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">COSES Editor<br/></text>');
-        } elsif ($string eq 'cosesEditor.variant') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">COSES Editor<br/>Variant Editor<br/></text>');
-        } elsif ($string eq 'cosesEditor.string') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">COSES Editor<br/>String Editor<br/></text>');
-        } elsif ($string eq 'cosesEditor.export') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><text variable="(data.output)"/><br/></text>');
-        }
-    } elsif ($protocol eq 'http') {
-        if ($string eq 'cosesEditor.index') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>COSES Editor: Index</text>');
-        } elsif ($string eq 'cosesEditor.variant') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>COSES Editor: Variant Editor</text>');
-        } elsif ($string eq 'cosesEditor.string') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>COSES Editor: String Editor</text>');
-        } elsif ($string eq 'cosesEditor.export') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/xml<br/><br/><text variable="(data.output)"/></text>');
-        }
-    }
-    return; # nope, sorry
 }
 
 # setup.install
@@ -405,13 +380,44 @@ sub getVariantEditorArguments {
     my $index = 0;
     while (defined(my $name = $input->getArgument('cosesEditorVariantString${index}Name'))) {
         $variantStrings{$name} = [$input->getArgument('cosesEditorVariantString${index}Type'),
+                                  $input->getArgument('cosesEditorVariantString${index}Version'),
                                   $input->getArgument('cosesEditorVariantString${index}Value')];
         $index += 1;
     }
     my $newName = $input->getArgument('cosesEditorVariantStringNewName');
     if ((defined($newName)) and ($newName ne '')) {
         $variantStrings{$newName} = [$input->getArgument('cosesEditorVariantStringNewType'),
+                                     $input->getArgument('cosesEditorVariantStringNewVersion'),
                                      $input->getArgument('cosesEditorVariantStringNewValue')];
     }
     return ($id, \@data, \%variantStrings);
+}
+
+sub getExpectedStrings {
+    my $self = shift;
+    my($app, $protocol) = @_;
+    my $strings = $app->getCollectingServiceList('dispatcher.output')->strings();
+    if (defined($protocol)) {
+        my $defaults = $app->getSelectingService('dataSource.strings.default');
+        foreach my $string (keys(%$strings)) {
+            $strings->{$string} = {
+                                   'description' => $strings->{$string},
+                                   'default' => $defaults->getDefaultString($app, $protocol, $string),
+                                  };
+        }
+    }
+    return $strings;
+}
+
+sub getDescribedVariants {
+    my $self = shift;
+    my($app, $string) = @_;
+    my $variants = \$app->getService('dataSource.strings')->getDescribedVariants($app);
+    if (defined($string)) {
+        my $defaults = $app->getSelectingService('dataSource.strings.default');
+        foreach my $variant (keys(%$variants)) {
+            push(@{$variants->{$variant}}, $defaults->getDefaultString($app, $variants->{$variant}->[1], $string));
+        }
+    }
+    return $variants;
 }

@@ -39,10 +39,13 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     # XXX this class should provide a 'clear caches' service (as should some others)
-    return ($service eq 'dataSource.strings' or
-            $service eq 'setup.install' or
+    return ($service eq 'dataSource.strings.customised' or
             $service eq 'setup.events.start' or
             $service eq 'setup.events.end' or
+            $service eq 'setup.install' or
+            $service eq 'dispatcher.output.generic' or
+            $service eq 'dispatcher.output' or
+            $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
 }
 
@@ -58,8 +61,8 @@ sub databaseName {
     return 'default';
 }
 
-# returns ($type, $string)
-sub get {
+# returns ($type, $version, $string)
+sub getCustomisedString {
     my $self = shift;
     my($app, $session, $protocol, $string) = @_;
     # error handling makes code ugly :-)
@@ -86,19 +89,19 @@ sub get {
                 # XXX do we want to do an error here or something?
                 $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
             }
-            if (not scalar(@results)) {
-                $self->dump(9, "Did not find a string for '$string', going to look in the defaults...");
-                @results = $self->getDefaultString($app, $protocol, $string);
-                $self->assert(scalar(@results), 1, "Couldn't find a string to display for '$string' in protocol '$protocol'");
+            if (scalar(@results)) {
+                $self->stringsCache->{$variant}->{$string} = \@results;
+                return @results;
+            } else {
+                $self->dump(9, "Did not find a customised string for '$string' in protocol '$protocol'");
+                return;
             }
-            $self->stringsCache->{$variant}->{$string} = \@results;
-            return @results;
         } else {
             return @{$self->stringsCache->{$variant}->{$string}};
         }
     } else {
-        $self->dump(9, "String datasource is disabled, going to use default for string '$string'.");
-        return $self->getDefaultString($app, $protocol, $string);
+        $self->dump(9, "String datasource is disabled, skipping");
+        return;
     }
 }
 
@@ -168,6 +171,65 @@ sub setupEnding {
     $self->enabled(1);
 }
 
+# setup.install
+sub setupInstall {
+    my $self = shift;
+    my($app) = @_;
+    my $oldStrings = [];
+    # get all strings (variant id, variant name, variant protocol, string name, string version)
+    $app->output->setupProgress('strings.versionCheck');
+    my $strings = $self->getAllStringVersions($app); # arrayref of arrayrefs
+    foreach my $string (@$strings) {
+        # get version of default for $string->name in $string->protocol
+        my($variantID, $variantName, $variantProtocol, $stringName, $stringVersion) = @$string;
+        my($defaultStringType, $defaultStringVersion, $defaultStringData) = $app->getSelectingService('dataSource.strings.default')->getDefaultString($app, $variantProtocol, $stringName);
+        # if version < default string's version
+        if ($stringVersion < $defaultStringVersion) {
+            # XXX this is a numeric comparison because I am assuming
+            # that versions are simply integers. There is no reason
+            # this should actually be the case, so we may wish to
+            # implement a service for comparing versions and then use
+            # that here.
+            push(@$oldStrings, [@$string, $defaultStringVersion]);
+        }
+    }
+    if (scalar(@$oldStrings) > 0) {
+        # output array
+        $app->output->setupNewStringReport($oldStrings);
+    }
+    return;
+}
+
+# dispatcher.output.generic (used by the setupInstall method above
+# assuming you are using a generic output system)
+sub outputSetupNewStringReport {
+    my $self = shift;
+    my($app, $output, $oldStrings) = @_;
+    $output->output('setup.newStringReport', {
+        'oldStrings' => $oldStrings,
+    });
+}
+
+# dispatcher.output
+sub strings {
+    return (
+            'setup.newStringsReport' => 'If some of the strings that are customised in this local installation have had their defaults changed, then this output will be triggered in addition to the various setup.progress calls and so on. It has one entry in the data hash. oldStrings, which is an array of arrays containing the variant id, the variant name, the variant protocol, the string name, the string version number, and the new version number of the default string. Details about exactly what changed should be found in the documentation.',
+            );
+}
+
+# dataSource.strings.default
+sub getDefaultString {
+    my $self = shift;
+    my($app, $protocol, $string) = @_;
+    if ($protocol eq 'stdout') {
+        if ($string eq 'setup.newStringsReport') {
+            return ('COSES', '1', '<text>Note: The following strings have had their defaults updated since you last customised them:<br/><set variable="string" value="(data.oldStrings)" source="values" order="lexical"><text value="string (string.3) in variant (string.1)"/> (<text value="protocol (string.2)"/>): yours=<text value="(string.4)"/>, new=<text value="(string.5)"/><br/></set></text>')
+        }
+    }
+    return; # nope, sorry
+}
+
+
 
 # XXX The next four SO have to change...
 sub acceptType {
@@ -201,13 +263,7 @@ sub getString {
     my $self = shift;
     # my($app, $variant, $string) = @_;
     $self->notImplemented();
-    # return type, data
-}
-
-sub getDefaultString {
-    my $self = shift;
-    my($app, $protocol, $string) = @_;
-    return $app->getSelectingServiceList('dataSource.strings.default')->getDefaultString($app, $protocol, $string);
+    # return type, version, data
 }
 
 sub getVariants {
@@ -228,14 +284,14 @@ sub getVariantStrings {
     my $self = shift;
     # my($app, $variant) = @_;
     $self->notImplemented();
-    # return ( string => [ type, data ] )*;
+    # return ( string => [ type, version, data ] )*;
 }
 
 sub getStringVariants {
     my $self = shift;
     # my($app, $string) = @_;
     $self->notImplemented();
-    # return ( variant => [ type, data ] )*;
+    # return ( variant => [ type, version, data ] )*;
 }
 
 sub getDescribedVariants {
@@ -243,6 +299,13 @@ sub getDescribedVariants {
     # my($app) = @_;
     $self->notImplemented();
     # return { id => { name, protocol, quality, type, encoding, charset, language, description, translator } }*
+}
+
+sub getAllStringVersions {
+    my $self = shift;
+    # my($app) = @_;
+    $self->notImplemented();
+    # return ( variant id, variant name, variant protocol, string id, string name, string version )*
 }
 
 # an undefined $id means "add me please"
@@ -254,12 +317,7 @@ sub setVariant {
 
 sub setString {
     my $self = shift;
-    # my($app, $variant, $string, $type, $data) = @_;
+    # my($app, $variant, $string, $type, $version, $data) = @_;
     # if $data = '' then delete the relevant string from the database
-    $self->notImplemented();
-}
-
-sub setupInstall {
-    my $self = shift;
     $self->notImplemented();
 }

@@ -73,14 +73,16 @@ use PLIF::Output;
 # database which looks up the name of the database, which is used to
 # look up the list of variants and the specific string which should be
 # used from those variants. If that fails, then the string data source
-# will instead ask each of the default string data sources in turn for
-# a suitable string.
+# will just return a "nope, sorry, not me" response.
+#
+# If that happens, then the output method instead asks the default
+# string datasources.
 #
 # The output method then calls for an appropriate string expander
 # service, passes it the string and the data hash, and waits for
 # another string in return.
 #
-# The string expander tytpically passes this string to an XML service
+# The string expander typically passes this string to an XML service
 # (which typically calls expat) to get it parsed and then handles it
 # as appropriate to get some string output.
 #
@@ -96,11 +98,18 @@ use PLIF::Output;
 # To find the list of strings required, do this:
 #    my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
 
+sub provides {
+    my $class = shift;
+    my($service) = @_;
+    return ($service eq 'dataSource.strings' or
+            $class->SUPER::provides($service));
+}
+
 sub protocol {
     return 'generic';
 }
 
-sub init {
+sub serviceInstanceInit {
     my $self = shift;
     $self->SUPER::init(@_);
     my($app, $session, $protocol) = @_;
@@ -109,6 +118,7 @@ sub init {
     $self->propertySet('outputter', $self->app->getService('output.generic.'.$self->actualProtocol));
 }
 
+# output.generic service instance method
 sub output {
     my $self = shift;
     my($string, $data, $session) = @_;
@@ -116,21 +126,11 @@ sub output {
         $session = $self->actualSession;
     }
     $self->fillData($data);
-    $self->outputter->output($self->app, $session, $self->getString($session, $string, $data));
+    $self->outputter->output($self->app, $session,
+                             $self->app->getService('dataSource.strings')->getExpandedString($self->app, $session, $self->actualProtocol, $string, $data));
 }
 
-sub getString {
-    my $self = shift;
-    my($session, $name, $data) = @_;
-    my($type, $string) = $self->app->getService('dataSource.strings')->get($self->app, $session, $self->actualProtocol, $name);
-    my $expander = $self->app->getService("string.expander.named.$name");
-    if (not defined($expander)) {
-        $expander = $self->app->getService("string.expander.$type");
-        $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
-    }
-    return $expander->expand($self->app, $self, $session, $self->actualProtocol, $string, $data);
-}
-
+# output.generic service instance method
 # If we don't implement the output handler directly, let's see if some
 # specific output dispatcher service for this protocol does.
 # Note: We pass ourselves as the 'output object for this protocol'
@@ -145,6 +145,7 @@ sub methodMissing {
     }
 }
 
+# output.generic service instance method
 sub fillData {
     my $self = shift;
     my($data) = @_;
@@ -154,4 +155,29 @@ sub fillData {
     }
     $data->{'input'} = $self->app->input->hash;
     $data->{'output'} = $self->outputter->hash;
+}
+
+# dataSource.strings default implementation
+sub getExpandedString {
+    my $self = shift;
+    my($app, $session, $protocol, $name, $data) = @_;
+    my($type, $version, $string) = $self->getString($app, $session, $protocol, $name);
+    my $expander = $app->getService("string.expander.named.$name");
+    if (not defined($expander)) {
+        $expander = $app->getService("string.expander.$type");
+        $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
+    }
+    return $expander->expand($app, $self, $session, $protocol, $string, $data);
+}
+
+# dataSource.strings default implementation
+sub getString {
+    my $self = shift;
+    my($app, $session, $protocol, $name) = @_;
+    my @string = $app->getSelectingServiceList('dataSource.strings.customised')->getCustomisedString($app, $session, $protocol, $name);
+    if (not scalar(@string)) {
+        @string = $app->getSelectingServiceList('dataSource.strings.default')->getDefaultString($app, $protocol, $name);
+        $self->assert(scalar(@string), 1, "No suitable '$name' string available for the '$protocol' protocol");
+    }
+    return @string;
 }
