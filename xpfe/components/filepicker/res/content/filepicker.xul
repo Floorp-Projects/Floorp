@@ -16,7 +16,7 @@
 
 <box align="horizontal">
   <text value="Look in:"/>
-  <menulist id="lookInMenuList" flex="1">
+  <menulist id="lookInMenuList" flex="1" oncommand="onMenuListChanged(event.target);">
     <menupopup id="lookInMenu"/>
   </menulist>
 
@@ -40,7 +40,7 @@
 
 <box align="horizontal">
   <text value="File name:"/>
-  <html:input type="text" id="textInput" onkeyup="if (event.which == 13) { onOK(); }" flex="1"/>
+  <html:input type="text" id="textInput" onkeypress="if (event.which == 13) { onOK(); }" flex="1"/>
 </box>
 
 <box align="horizontal">
