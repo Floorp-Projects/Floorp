@@ -59,6 +59,8 @@ public:
 public:
 	virtual nsHierarchicalDataItem* CreateDataItemWithContentNode(nsIContent* pContent) = 0;
 
+	static void GetChildTextForNode(nsIContent* pChildNode, nsString& text);
+
 	void ImageLoaded(nsHierarchicalDataItem* pItem);
 	nsIImageGroup* GetImageGroup() const { NS_ADDREF(mImageGroup); return mImageGroup; }
 

@@ -573,7 +573,7 @@ void nsTreeView::PaintColumnHeader(nsIRenderingContext* drawCtx,
 
 	// Now draw the text.
 	nsString columnName("Name");
-	pColumn->GetColumnName(columnName);
+	pColumn->GetColumnDisplayText(columnName);
 
 	colRect.x++;
 	colRect.width--;

@@ -174,7 +174,6 @@ nsIImageRequest* nsHTTreeItem::RequestImage(nsString& reqUrl) const
 
 void nsHTTreeItem::GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) const
 {
-	nsString text("Node Stuff");
 	nsString columnName;
 	pColumn->GetColumnName(columnName);
 
@@ -183,7 +182,7 @@ void nsHTTreeItem::GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) c
 	if (pColumnNode)
 	{
 		nsIContent* pChildNode = FindChildWithName(columnName);
-		nsHTItem::GetChildTextForNode(pChildNode, nodeText);
+		nsHTDataModel::GetChildTextForNode(pChildNode, nodeText);
 	}
 }
 
