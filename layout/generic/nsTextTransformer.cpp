@@ -55,14 +55,17 @@
 
 
 PRBool nsTextTransformer::sWordSelectListenerPrefChecked = PR_FALSE;
+PRBool nsTextTransformer::sWordSelectEatSpaceAfter = PR_FALSE;
 PRBool nsTextTransformer::sWordSelectStopAtPunctuation = PR_FALSE;
-static const char kWordSelectPref[] = "layout.word_select.stop_at_punctuation";
+static const char kWordSelectEatSpaceAfterPref[] = "layout.word_select.eat_space_to_next_word";
+static const char kWordSelectStopAtPunctuationPref[] = "layout.word_select.stop_at_punctuation";
 
 // static
 int
 nsTextTransformer::WordSelectPrefCallback(const char* aPref, void* aClosure)
 {
-  sWordSelectStopAtPunctuation = nsContentUtils::GetBoolPref(kWordSelectPref);
+  sWordSelectEatSpaceAfter = nsContentUtils::GetBoolPref(kWordSelectEatSpaceAfterPref);
+  sWordSelectStopAtPunctuation = nsContentUtils::GetBoolPref(kWordSelectStopAtPunctuationPref);
 
   return 0;
 }
@@ -122,10 +125,14 @@ nsTextTransformer::Initialize()
   if ( !sWordSelectListenerPrefChecked ) {
     sWordSelectListenerPrefChecked = PR_TRUE;
 
+    sWordSelectEatSpaceAfter =
+      nsContentUtils::GetBoolPref(kWordSelectEatSpaceAfterPref);
     sWordSelectStopAtPunctuation =
-      nsContentUtils::GetBoolPref(kWordSelectPref);
+      nsContentUtils::GetBoolPref(kWordSelectStopAtPunctuationPref);
 
-    nsContentUtils::RegisterPrefCallback(kWordSelectPref,
+    nsContentUtils::RegisterPrefCallback(kWordSelectEatSpaceAfterPref,
+                                         WordSelectPrefCallback, nsnull);
+    nsContentUtils::RegisterPrefCallback(kWordSelectStopAtPunctuationPref,
                                          WordSelectPrefCallback, nsnull);
   }
 
@@ -146,6 +153,11 @@ static nsresult EnsureCaseConv()
 void
 nsTextTransformer::Shutdown()
 {
+  nsContentUtils::UnregisterPrefCallback(kWordSelectEatSpaceAfterPref,
+                                         WordSelectPrefCallback, nsnull);
+  nsContentUtils::UnregisterPrefCallback(kWordSelectStopAtPunctuationPref,
+                                         WordSelectPrefCallback, nsnull);
+
   if (gCaseConv) {
     nsServiceManager::ReleaseService(kUnicharUtilCID, gCaseConv);
     gCaseConv = nsnull;
