@@ -24,8 +24,8 @@
 #define nsScreenManagerGtk_h___
 
 #include "nsIScreenManager.h"
-
-class nsIScreen;
+#include "nsIScreen.h"
+#include "nsCOMPtr.h"
 
 //------------------------------------------------------------------------
 
@@ -41,6 +41,9 @@ public:
 private:
 
   nsIScreen* CreateNewScreenObject ( ) ;
+
+    // cache the primary screen object to avoid memory allocation every time
+  nsCOMPtr<nsIScreen> mCachedMainScreen;
 
 };
 

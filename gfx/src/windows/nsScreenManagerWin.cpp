@@ -49,11 +49,17 @@ NS_IMPL_ISUPPORTS(nsScreenManagerWin, NS_GET_IID(nsIScreenManager))
 //
 // Utility routine. Creates a new screen object from the given device handle
 //
+// NOTE: For this "single-monitor" impl, we just always return the cached primary
+//        screen. This should change when a multi-monitor impl is done.
+//
 nsIScreen* 
 nsScreenManagerWin :: CreateNewScreenObject ( HDC inScreen )
 {
-  nsIScreen* retval = new nsScreenWin ( inScreen );
-  NS_IF_ADDREF(retval);
+  nsIScreen* retval = nsnull;
+  if ( !mCachedMainScreen )
+    mCachedMainScreen = new nsScreenWin ( inScreen );
+  NS_IF_ADDREF(retval = mCachedMainScreen.get());
+  
   return retval;
 }
 
