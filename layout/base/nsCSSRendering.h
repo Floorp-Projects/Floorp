@@ -272,7 +272,7 @@ public:
    *  @param aHeight -- Height of bounding box
    *  @param aRadius -- radius for the rounding
    */
-  void  Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius);
+  void  Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius,PRInt16 aNumTwipPerPix);
 
 
   /**
