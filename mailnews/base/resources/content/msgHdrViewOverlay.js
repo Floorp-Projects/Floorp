@@ -805,7 +805,9 @@ function handleAttachmentSelection(commandPrefix)
 
 function generateCommandSuffixForAttachment(attachment)
 {
-  return "('" + attachment.contentType + "', '" + attachment.url + "', '" + escape(attachment.displayName) + "', '" + attachment.uri + "')";
+  // replace ' in url with \' so we can eval() correctly
+  var attachmentUrl = attachment.url.replace(/'/g,"\\\'");
+  return "('" + attachment.contentType + "', '" + attachmentUrl + "', '" + escape(attachment.displayName) + "', '" + attachment.uri + "')";
 }
 
 function displayAttachmentsForExpandedView()
