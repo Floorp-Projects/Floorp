@@ -133,6 +133,9 @@ protected:
   static nsIAtom* kLabelColorWhiteAtom;
   static nsIAtom* kLabelColorBlackAtom;
 
+  static nsIAtom* kJunkMsgAtom;
+  static nsIAtom* kNotJunkMsgAtom;
+
   static PRUnichar* kReadString;
   static PRUnichar* kRepliedString;
   static PRUnichar* kForwardedString;

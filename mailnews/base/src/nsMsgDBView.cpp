@@ -88,6 +88,9 @@ nsIAtom * nsMsgDBView::kWatchThreadAtom = nsnull;
 nsIAtom * nsMsgDBView::kIgnoreThreadAtom = nsnull;
 nsIAtom * nsMsgDBView::kHasImageAtom = nsnull;
 
+nsIAtom * nsMsgDBView::kJunkMsgAtom = nsnull;
+nsIAtom * nsMsgDBView::kNotJunkMsgAtom = nsnull;
+
 nsIAtom * nsMsgDBView::mLabelPrefColorAtoms[PREF_LABELS_MAX] = {nsnull, nsnull, nsnull, nsnull, nsnull};
 
 nsIAtom * nsMsgDBView::kLabelColorWhiteAtom = nsnull;
@@ -160,6 +163,8 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kWatchThreadAtom = NS_NewAtom("watch");
   kIgnoreThreadAtom = NS_NewAtom("ignore");
   kHasImageAtom = NS_NewAtom("hasimage");
+  kJunkMsgAtom = NS_NewAtom("junk");
+  kNotJunkMsgAtom = NS_NewAtom("notjunk");
 
 #ifdef SUPPORT_PRIORITY_COLORS
   kHighestPriorityAtom = NS_NewAtom("priority-highest");
@@ -204,6 +209,8 @@ nsMsgDBView::~nsMsgDBView()
     NS_IF_RELEASE(kWatchThreadAtom);
     NS_IF_RELEASE(kIgnoreThreadAtom);
     NS_IF_RELEASE(kHasImageAtom);
+    NS_IF_RELEASE(kJunkMsgAtom);
+    NS_IF_RELEASE(kNotJunkMsgAtom);
 
 #ifdef SUPPORT_PRIORITY_COLORS
     NS_IF_RELEASE(kHighestPriorityAtom);
@@ -1125,6 +1132,17 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   {
     properties->AppendElement(kHasImageAtom);
   }
+
+  nsXPIDLCString junkScoreStr;
+  msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+  if (!junkScoreStr.IsEmpty())
+  {
+    // I set the cut off at 50. this may change
+    // it works for our bayesian plugin, as "0" is good, and "100" is junk
+    // but it might need tweaking for other plugins
+    properties->AppendElement(atoi(junkScoreStr.get()) > 50 ? kJunkMsgAtom : kNotJunkMsgAtom);
+  }
+
   nsXPIDLCString keywordProperty;
   msgHdr->GetStringProperty("keywords", getter_Copies(keywordProperty));
   if (!keywordProperty.IsEmpty())
@@ -1532,6 +1550,22 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
     else
       ApplyCommandToIndices(nsMsgViewCommandType::flagMessages, (nsMsgViewIndex *) &row, 1);
     break;
+  case 'j': // junkStatus column
+    {
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+
+      nsresult rv = GetMsgHdrForViewIndex(row, getter_AddRefs(msgHdr));
+      if (NS_SUCCEEDED(rv) && msgHdr) 
+      {
+        nsXPIDLCString junkScoreStr;
+        rv = msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+        if (junkScoreStr.IsEmpty() || (atoi(junkScoreStr.get()) < 50))
+          ApplyCommandToIndices(nsMsgViewCommandType::junk, (nsMsgViewIndex *) &row, 1);
+        else
+         ApplyCommandToIndices(nsMsgViewCommandType::unjunk, (nsMsgViewIndex *) &row, 1);
+      }
+    }
+    break;
   case 'l': // label column
     {
       nsCOMPtr <nsIMsgDBHdr> msgHdr;
@@ -1551,7 +1585,6 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
             msgHdr->SetLabel(0);
         }
       }
-
     }
     break;
   default:
