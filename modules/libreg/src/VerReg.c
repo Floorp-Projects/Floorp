@@ -505,8 +505,8 @@ static REGERR vr_SetCurrentNav( char *installation, char *programPath, char *ver
     char        regname[MAXREGNAMELEN];
     char        dirbuf[MAXREGNAMELEN];
 
-    XP_ASSERT( installation ); // required
-    XP_ASSERT( programPath );  // required
+    XP_ASSERT( installation ); /* required */
+    XP_ASSERT( programPath );  /* required */
     if ( !installation || !programPath )
         return REGERR_PARAM;
 
