@@ -48,6 +48,8 @@
 #include "nsIScriptContext.h"
 #include "nsDocLoader.h"
 #include "nsIFileWidget.h"
+#include "nsIDOMDocument.h"
+#include "nsEditorMode.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
@@ -1036,6 +1038,16 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
 
     case JS_CONSOLE:
         ShowConsole(wd);
+      break;
+
+    case EDITOR_MODE:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        nsIDOMDocument* domDoc = nsnull;
+        if (NS_OK == wd->ww->GetDOMDocument(&domDoc)) {
+          nsInitEditorMode(domDoc);
+          domDoc->Release();
+        }
+      }
       break;
   }
 
