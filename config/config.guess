@@ -236,8 +236,12 @@ EOF
     TSUNAMI:LynxOS:2.2*:*)
 	echo sparc-lynx-lynxos${UNAME_RELEASE}
 	exit 0 ;;
-    RM*:SINIX*:5.4[23]:* | RM*:Reliant*:5.4[23]:*)
-	echo mips-sni-reliantunix
+    *:SINIX*:5.4[23]:* | *:Reliant*:5.4[23]:*)
+	if test "`uname -p`" = "i386"; then
+		echo x86-sni-sinix
+	else
+		echo mips-sni-sinix
+	fi
 	exit 0 ;;
 esac
 
