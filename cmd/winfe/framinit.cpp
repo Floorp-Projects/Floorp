@@ -284,14 +284,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
         //   appropriate) we can create the url bar.  The animation 
         //   might need custom colors so we need the palette to be around
         //
-		CreateMainToolbar();
-
-		if (!theApp.m_bInGetCriticalFiles) { // if we are here, don't show link bar
-			CreateLocationBar();
-			CreateLinkBar();  
-			GetChrome()->FinishedAddingBrowserToolbars();
-		}
-
+		
 		LPNSSTATUSBAR pIStatusBar = NULL;
 		GetChrome()->QueryInterface( IID_INSStatusBar, (LPVOID *) &pIStatusBar );
 		if( pIStatusBar ) 
@@ -300,6 +293,14 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			pIStatusBar->Release();
 			if (theApp.m_ParentAppWindow || theApp.m_bKioskMode)
 			    pIStatusBar->Show(FALSE);
+		}
+
+		CreateMainToolbar();
+
+		if (!theApp.m_bInGetCriticalFiles) { // if we are here, don't show link bar
+			CreateLocationBar();
+			CreateLinkBar();  
+			GetChrome()->FinishedAddingBrowserToolbars();
 		}
 
 		if(!IsEditFrame())
