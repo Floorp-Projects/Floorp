@@ -31,6 +31,7 @@
 #include "VerReg.h"
 #include "ScheduledTasks.h"
 #include "nsInstallDelete.h"
+#include "nsInstallResources.h"
 
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
@@ -125,7 +126,19 @@ void nsInstallDelete::Abort()
 
 char* nsInstallDelete::toString()
 {
-    return nsnull;
+    char* buffer = new char[1024];
+    
+    if (mDeleteStatus == DELETE_COMPONENT)
+    {
+        sprintf( buffer, nsInstallResources::GetDeleteComponentString(), nsAutoCString(mRegistryName));
+    }
+    else
+    {
+        if (mFinalFile)
+            sprintf( buffer, nsInstallResources::GetDeleteFileString(), mFinalFile->GetCString());
+    }
+
+    return buffer;
 }
 
 
@@ -209,14 +222,7 @@ PRInt32 nsInstallDelete::NativeComplete()
     {
         if (mFinalFile->IsFile())
         {
-           mFinalFile->Delete(false);
-
-           if (mFinalFile->Exists())
-           {
-                // If file still exists, we need to delete it later!
-                DeleteFileLater(mFinalFile->GetCString());
-                return nsInstall::REBOOT_NEEDED;
-           }
+           return DeleteFileLater(*mFinalFile);
         }
         else
         {

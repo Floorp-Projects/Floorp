@@ -26,45 +26,102 @@
 #include "nscore.h"
 #include "NSReg.h"
 #include "nsFileSpec.h"
+#include "nsFileStream.h"
+#include "nsInstall.h" // for error codes
+#include "prmem.h"
 
-
-
-
-REGERR DeleteFileLater(const char * filename)
+REGERR DeleteFileLater(nsFileSpec& filename)
 {
-    RKEY newkey;
-    REGERR result = -1;
-    HREG reg;
-    if ( REGERR_OK == NR_RegOpen("", &reg) ) 
-    {
-        if (REGERR_OK == NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY, &newkey) )
-        {
-            result = NR_RegSetEntryString( reg, newkey, (char*)filename, "" );
-        }
 
-        NR_RegClose(reg);
+    REGERR result = 0;
+    
+    filename.Delete(false);
+    
+    if (filename.Exists())
+    {
+        RKEY newkey;
+        HREG reg;
+        if ( REGERR_OK == NR_RegOpen("", &reg) ) 
+        {
+            if (REGERR_OK == NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY, &newkey) )
+            {
+                nsPersistentFileDescriptor savethis(filename);
+                char* buffer = nsnull;
+                nsOutputStringStream s(buffer);
+                s << savethis;
+
+                result = NR_RegSetEntry( reg, newkey, "", REGTYPE_ENTRY_BYTES, buffer, strlen(buffer));
+                if (result == REGERR_OK)
+                    result = nsInstall::REBOOT_NEEDED;
+            }
+
+            NR_RegClose(reg);
+        }
     }
 
     return result;
 }
 
-REGERR ReplaceFileLater(const char *tmpfile, const char *target )
+REGERR ReplaceFileLater(nsFileSpec& tmpfile, nsFileSpec& target )
 {
-    RKEY newkey;
-    REGERR err;
-    HREG reg;
-
-    if ( REGERR_OK == NR_RegOpen("", &reg) ) 
+    REGERR result = 0;
+    
+    if (! target.Exists() )
     {
-        err = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &newkey);
-        if ( err == REGERR_OK ) 
-        {
-            err = NR_RegSetEntryString( reg, newkey, (char*)tmpfile, (char*)target );
-        }
-        NR_RegClose(reg);
+        // Now that we have move the existing file, we can move the mExtracedFile into place.
+        nsFileSpec parentofFinalFile;
+
+        target.GetParent(parentofFinalFile);
+        result = tmpfile.Move(parentofFinalFile);
+    
+        char* leafName = target.GetLeafName();
+        tmpfile.Rename(leafName);
+        nsCRT::free(leafName);
     }
-    return err;
+    else
+    {
+        RKEY newkey;
+        HREG reg;
+
+        if ( REGERR_OK == NR_RegOpen("", &reg) ) 
+        {
+            result = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &newkey);
+            if ( result == REGERR_OK ) 
+            {
+                nsPersistentFileDescriptor tempDesc(tmpfile);
+                nsPersistentFileDescriptor targDesc(target);
+            
+                char* tempBuffer = nsnull;
+                char* targBuffer = nsnull;
+
+                nsOutputStringStream tempStream(tempBuffer);
+                nsOutputStringStream targStream(targBuffer);
+            
+                tempStream << tempDesc;
+                targStream << targDesc;
+
+                result = NR_RegSetEntry( reg, newkey, tempBuffer, REGTYPE_ENTRY_BYTES, targBuffer, strlen(targBuffer));
+                if (result == REGERR_OK)
+                    result = nsInstall::REBOOT_NEEDED;
+            
+            }
+
+            NR_RegClose(reg);
+        }
+    }
+
+    return result;
 }
+
+void DeleteScheduledFiles(void);
+void ReplaceScheduledFiles(void);
+
+extern "C" void PerformScheduledTasks(void *data)
+{
+    DeleteScheduledFiles();
+    ReplaceScheduledFiles();
+}
+
 
 void DeleteScheduledFiles(void)
 {
@@ -78,11 +135,16 @@ void DeleteScheduledFiles(void)
         /* perform scheduled file deletions and replacements (PC only) */
         if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY,&key))
         {
-            char buf[MAXREGNAMELEN];
+            char buf[MAXREGNAMELEN];  // what about the mac?  FIX
 
             while (REGERR_OK == NR_RegEnumEntries(reg, key, &state, buf, sizeof(buf), NULL ))
             {
-                nsFileSpec doomedFile(buf);
+                
+                nsPersistentFileDescriptor doomedDesc;
+                nsInputStringStream tempStream(buf);
+                tempStream >> doomedDesc;
+
+                nsFileSpec doomedFile(doomedDesc);
 
                 doomedFile.Delete(PR_FALSE);
                 
@@ -121,7 +183,13 @@ void ReplaceScheduledFiles(void)
             state = 0;
             while (REGERR_OK == NR_RegEnumEntries(reg, key, &state, tmpfile, sizeof(tmpfile), NULL ))
             {
-                nsFileSpec replaceFile(tmpfile);
+
+                
+                nsPersistentFileDescriptor doomedDesc;
+                nsInputStringStream tempStream(tmpfile);
+                tempStream >> doomedDesc;
+                
+                nsFileSpec replaceFile(doomedDesc);
 
                 if (! replaceFile.Exists() )
                 {
@@ -134,7 +202,12 @@ void ReplaceScheduledFiles(void)
                 }
                 else 
                 {
-                    nsFileSpec targetFile(target);
+                    nsPersistentFileDescriptor targetDesc;
+                    nsInputStringStream anotherStream(target);
+                    anotherStream >> targetDesc;
+                    
+                    nsFileSpec targetFile(targetDesc);
+                
                     targetFile.Delete(PR_FALSE);
                 
                     if (!targetFile.Exists())

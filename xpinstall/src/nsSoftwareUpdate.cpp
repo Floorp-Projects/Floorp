@@ -21,10 +21,11 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
-
-#include "pratom.h"
+#include "nspr.h"
 #include "nsVector.h"
 #include "VerReg.h"
 #include "nsSpecialSystemDirectory.h"
@@ -32,7 +33,6 @@
 #include "nsInstall.h"
 #include "nsSoftwareUpdateIIDs.h"
 #include "nsSoftwareUpdate.h"
-#include "nsSoftwareUpdateStream.h"
 #include "nsSoftwareUpdateRun.h"
 #include "nsInstallTrigger.h"
 #include "nsInstallVersion.h"
@@ -54,6 +54,8 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
@@ -124,7 +126,7 @@ nsSoftwareUpdate::Startup()
     /***************************************/
     
     nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    VR_SetRegDirectory(appDir.GetCString());
+    VR_SetRegDirectory( nsprPath(appDir) );
  
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
 
@@ -132,21 +134,28 @@ nsSoftwareUpdate::Startup()
     /* Stupid Hack to test js env*/
     /***************************************/
     // FIX:  HACK HACK HACK!
-#if 1  
+#if 0  
     nsSpecialSystemDirectory jarFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     jarFile += "test.jar";
     if (jarFile.Exists())
     {
-        InstallJar(nsString(nsFileURL(jarFile).GetAsString()), "", "");
+        InstallJar(nsString(nsFileURL(jarFile)), "", "");
     }
 #endif    
     /***************************************/
-    /* Preform Scheduled Tasks             */
+    /* Perform Scheduled Tasks             */
     /***************************************/
     
-    DeleteScheduledFiles();
-    ReplaceScheduledFiles();
-        
+#if 1
+    PR_CreateThread(PR_USER_THREAD,
+                    PerformScheduledTasks,
+                    nsnull, 
+                    PR_PRIORITY_NORMAL, 
+                    PR_GLOBAL_THREAD, 
+                    PR_UNJOINABLE_THREAD,
+                    0);  
+#endif 
+//    PerformScheduledTasks(nsnull);
     
     return NS_OK;
 }
@@ -373,33 +382,67 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* serviceMgr)
+NSCanUnload(nsISupports* aServMgr)
 {
     return PR_FALSE;
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-    printf("*** XPInstall is being registered\n");
-    
-    nsRepository::RegisterComponent(kSoftwareUpdate_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kInstallTrigger_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kInstallVersion_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsresult rv;
 
-    return NS_OK;
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
+    printf("*** XPInstall is being registered\n");
+#endif
+
+    rv = compMgr->RegisterComponent(kSoftwareUpdate_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kInstallTrigger_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kInstallVersion_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  done:
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
 }
 
+
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
+nsresult rv;
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
     printf("*** XPInstall is being unregistered\n");
+#endif
+    
+    rv = compMgr->UnregisterComponent(kSoftwareUpdate_CID, path);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->UnregisterComponent(kInstallTrigger_CID, path);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->UnregisterComponent(kInstallVersion_CID, path);
 
-    nsRepository::UnregisterComponent(kSoftwareUpdate_CID, path);
-    nsRepository::UnregisterComponent(kInstallTrigger_CID, path);
-    nsRepository::UnregisterComponent(kInstallVersion_CID, path);
-
-    return NS_OK;
+  done:
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
 }
 
 

@@ -46,7 +46,7 @@ class nsISoftwareUpdate : public nsISupports
         	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
         	
             NS_IMETHOD InstallJar(nsInstallInfo *installInfo) = 0;
-
+            
             NS_IMETHOD InstallJar(const nsString& fromURL, 
                                   const nsString& flags, 
                                   const nsString& args) = 0;  

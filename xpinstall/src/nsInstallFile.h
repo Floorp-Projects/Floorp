@@ -81,7 +81,6 @@ class nsInstallFile : public nsInstallObject
         nsString*   mVersionRegistryName; /* full version path */
         
         PRBool      mForceInstall;   /* whether install is forced */
-        PRBool      mJavaInstall;    /* whether file is installed to a Java directory */
         PRBool      mReplaceFile;    /* whether file exists */
         PRBool      mChildFile;      /* whether file is a child */
         PRBool      mUpgradeFile;    /* whether file is an upgrade */

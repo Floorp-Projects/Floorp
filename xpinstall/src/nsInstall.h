@@ -32,6 +32,8 @@
 
 #include "jsapi.h"
 
+#include "plevent.h"
+
 #include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsVector.h"
@@ -61,6 +63,9 @@ class nsInstallInfo
     
     PRBool    IsMultipleTrigger();
   
+    PLEventQueue* GetUIEventQueue(void) const { return mUIEventQueue; }
+    void          SetUIEventQueue(PLEventQueue* queue) { mUIEventQueue = queue; }
+    
   private:
     
     void DeleteVector(nsVector* vector);
@@ -77,6 +82,8 @@ class nsInstallInfo
 
     nsVector *mFromURLs;
     nsVector *mLocalFiles;
+
+    PLEventQueue *mUIEventQueue;  // this should be moved to private and have accessors
 };
 
 
@@ -139,22 +146,40 @@ class nsInstall
 
         PRInt32    AbortInstall();
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aJarSource, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aJarSource, PRInt32* aReturn);
         PRInt32    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
         PRInt32    DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
         PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRInt32* aReturn);
         PRInt32    Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* aReturn);
+        PRInt32    Execute(const nsString& aJarSource, PRInt32* aReturn);
         PRInt32    FinalizeInstall(PRInt32* aReturn);
         PRInt32    Gestalt(const nsString& aSelector, PRInt32* aReturn);
         PRInt32    GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsString** aFolder);
+        PRInt32    GetComponentFolder(const nsString& aComponentName, nsString** aFolder);
         PRInt32    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsString** aFolder);
+        PRInt32    GetFolder(const nsString& aTargetFolder, nsString** aFolder);
         PRInt32    GetLastError(PRInt32* aReturn);
         PRInt32    GetWinProfile(const nsString& aFolder, const nsString& aFile, PRInt32* aReturn);
         PRInt32    GetWinRegistry(PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    Patch(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    ResetError();
         PRInt32    SetPackageFolder(const nsString& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, nsIDOMInstallVersion* aVersion, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
+        PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
 
@@ -186,18 +211,19 @@ class nsInstall
         nsString            mRegistryPackageName;   /* Name of the package we are installing */
         nsString            mUIName;                /* User-readable package name */
 
-        nsInstallVersion*   mVersionInfo;        /* Component version info */
-        
-        nsString*           mPackageFolder;
+        nsInstallVersion*   mVersionInfo;           /* Component version info */
         
         nsVector*           mInstalledFiles;        
         nsHashtable*        mPatchList;
-
+        
+        nsOutputFileStream  *mLogStream;       
+        
         PRInt32             mLastError;
 
         void        ParseFlags(int flags);
         PRInt32     SanityCheck(void);
-        
+        void        GetTime(nsString &aString);
+
         nsString *  GetQualifiedRegName( const nsString& name );
         nsString*   GetQualifiedPackageName( const nsString& name );
         nsString*   CurrentUserNode();

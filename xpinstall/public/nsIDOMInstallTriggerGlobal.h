@@ -43,26 +43,50 @@ public:
   NS_IMETHOD    UpdateEnabled(PRBool* aReturn)=0;
 
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)=0;
+  NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn)=0;
 
   NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)=0;
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)=0;
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)=0;
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)=0;
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)=0;
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)=0;
 
+  NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)=0;
   NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)=0;
+  NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMINSTALLTRIGGERGLOBAL   \
   NS_IMETHOD    UpdateEnabled(PRBool* aReturn);  \
+  NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn);  \
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn);  \
   NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn);  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn);  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn);  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn);  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn);  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);  \
+  NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn);  \
   NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn);  \
+  NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMINSTALLTRIGGERGLOBAL(_to)  \
   NS_IMETHOD    UpdateEnabled(PRBool* aReturn) { return _to##UpdateEnabled(aReturn); }  \
+  NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn) { return _to##StartSoftwareUpdate(aURL, aFlags, aReturn); }  \
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn) { return _to##StartSoftwareUpdate(aURL, aReturn); }  \
   NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn) { return _to##ConditionalSoftwareUpdate(aURL, aRegName, aDiffLevel, aVersion, aMode, aReturn); }  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn) { return _to##ConditionalSoftwareUpdate(aURL, aRegName, aDiffLevel, aVersion, aMode, aReturn); }  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, nsIDOMInstallVersion* aRegName, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn) { return _to##ConditionalSoftwareUpdate(aURL, aDiffLevel, aVersion, aMode, aReturn); }  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn) { return _to##ConditionalSoftwareUpdate(aURL, aDiffLevel, aVersion, aMode, aReturn); }  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn) { return _to##ConditionalSoftwareUpdate(aURL, aDiffLevel, aVersion, aReturn); }  \
+  NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn) { return _to##ConditionalSoftwareUpdate(aURL, aDiffLevel, aVersion, aReturn); }  \
+  NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn) { return _to##CompareVersion(aRegName, aMajor, aMinor, aRelease, aBuild, aReturn); }  \
   NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn) { return _to##CompareVersion(aRegName, aVersion, aReturn); }  \
+  NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn) { return _to##CompareVersion(aRegName, aVersion, aReturn); }  \
 
 
 extern nsresult NS_InitInstallTriggerGlobalClass(nsIScriptContext *aContext, void **aPrototype);
