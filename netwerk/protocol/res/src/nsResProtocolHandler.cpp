@@ -91,7 +91,14 @@ nsResURL::GetFile(nsIFile **result)
     rv = gResHandler->ResolveURI(this, spec);
     if (NS_FAILED(rv)) return rv;
 
-    return NS_GetFileFromURLSpec(spec, result, gResHandler->mIOService);
+    nsCOMPtr<nsILocalFile> localFile =
+            do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_InitFileFromURLSpec(localFile, spec);
+    if (NS_FAILED(rv)) return rv;
+
+    return CallQueryInterface(localFile, result);
 }
 
 //----------------------------------------------------------------------------

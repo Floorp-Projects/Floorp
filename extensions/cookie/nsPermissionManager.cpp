@@ -47,7 +47,7 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsPermission.h"
-#include "nsNetUtil.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -129,26 +129,19 @@ nsresult nsPermissionManager::Init()
     observerService->AddObserver(this, "profile-before-change", PR_FALSE);
     observerService->AddObserver(this, "profile-do-change", PR_FALSE);
   }
-
-  mIOService = do_GetIOService();
+  mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   return rv;
 }
 
 NS_IMETHODIMP nsPermissionManager::Add
-    (const nsACString & objectURI, PRBool permission, PRInt32 type) {
-  // XXX ideally we should change this interface to pass nsIURI
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), objectURI, nsnull, nsnull, mIOService);
-  ::PERMISSION_Add(uri, permission, type);
+    (const char * objectURL, PRBool permission, PRInt32 type) {
+  ::PERMISSION_Add(objectURL, permission, type, mIOService);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPermissionManager::TestForBlocking
-    (const nsACString &objectURI, PRInt32 type, PRBool* blocked) {
-  // XXX ideally we should change this interface to pass nsIURI
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), objectURI, nsnull, nsnull, mIOService);
-  ::PERMISSION_TestForBlocking(uri, blocked, type);
+    (const char * objectURL, PRInt32 type, PRBool* blocked) {
+  ::PERMISSION_TestForBlocking(objectURL, blocked, type, mIOService);
   return NS_OK;
 }
 
@@ -169,7 +162,7 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator * *entries)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsPermissionManager::Remove(const nsACString & host, PRInt32 type) {
+NS_IMETHODIMP nsPermissionManager::Remove(const char* host, PRInt32 type) {
   ::PERMISSION_Remove(host, type);
   return NS_OK;
 }

@@ -100,8 +100,6 @@ protected:
     NS_METHOD CacheURLParser(const char *scheme,
                              nsIURLParser* hdlr);
 
-    NS_METHOD GetParserForScheme(const char *scheme, nsIURLParser **);
-
     // Prefs wrangling
     void PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
     void GetPrefBranch(nsIPrefBranch **);

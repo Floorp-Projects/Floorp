@@ -479,7 +479,8 @@ nsIOService::ExtractScheme(const nsACString &inURI, nsACString &scheme)
     return ExtractURLScheme(inURI, nsnull, nsnull, &scheme);
 }
 
-NS_METHOD 
+/* nsIURLParser getParserForScheme (in string scheme); */
+NS_IMETHODIMP 
 nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
 {
     nsresult rv;
@@ -548,7 +549,6 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
     return NS_OK;
 }
 
-#if 0
 static inline void
 ExtractUrlPart_Helper(const nsACString &src, PRUint32 pos, PRInt32 len, nsACString &result)
 {
@@ -706,7 +706,6 @@ nsIOService::ExtractUrlPart(const nsACString &urlString, PRInt16 flag, nsACStrin
     }
     return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP 
 nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
@@ -903,6 +902,77 @@ nsIOService::AllowPort(PRInt32 inPort, const char *scheme, PRBool *_retval)
     }
 
     *_retval = PR_TRUE;
+    return NS_OK;
+}
+////////////////////////////////////////////////////////////////////////////////
+// URL parsing utilities
+
+NS_IMETHODIMP
+nsIOService::ResolveRelativePath(const nsACString &relativePath, const nsACString &basePath,
+                                 nsACString &result)
+{
+    nsCAutoString name;
+    nsCAutoString path(basePath);
+	PRBool needsDelim = PR_FALSE;
+
+	if ( !path.IsEmpty() ) {
+		PRUnichar last = path.Last();
+		needsDelim = !(last == '/' || last == '\\' );
+	}
+
+    nsACString::const_iterator beg, end;
+    relativePath.BeginReading(beg);
+    relativePath.EndReading(end);
+
+    PRBool stop = PR_FALSE;
+    char c;
+    for (; !stop; ++beg) {
+        c = (beg == end) ? '\0' : *beg;
+        //printf("%c [name=%s] [path=%s]\n", c, name.get(), path.get());
+        switch (c) {
+          case '\0':
+          case '#':
+          case ';':
+          case '?':
+            stop = PR_TRUE;
+            // fall through...
+          case '/':
+          case '\\':
+            // delimiter found
+            if (name.Equals("..")) {
+                // pop path
+                // If we already have the delim at end, then
+                //  skip over that when searching for next one to the left
+                PRInt32 offset = path.Length() - (needsDelim ? 1 : 2);
+                PRInt32 pos = path.RFind("/", PR_FALSE, offset);
+                if (pos > 0)
+                    path.Truncate(pos + 1);
+                else
+                    return NS_ERROR_MALFORMED_URI;
+            }
+            else if (name.Equals(".") || name.Equals("")) {
+                // do nothing
+            }
+            else {
+                // append name to path
+                if (needsDelim)
+                    path += "/";
+                path += name;
+                needsDelim = PR_TRUE;
+            }
+            name = "";
+            break;
+
+          default:
+            // append char to name
+            name += c;
+        }
+    }
+    // append anything left on relativePath (e.g. #..., ;..., ?...)
+    if (c != '\0')
+        path += Substring(--beg, end);
+
+    result = path;
     return NS_OK;
 }
 

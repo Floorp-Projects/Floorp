@@ -739,8 +739,8 @@ NS_NewProxyInfo(const char* type, const char* host, PRInt32 port, nsIProxyInfo* 
 }
 
 inline nsresult
-NS_GetFileFromURLSpec(const nsACString &inURL, nsIFile **result,
-                      nsIIOService *ioService=nsnull)
+NS_InitFileFromURLSpec(nsIFile* aFile, const nsACString &inURL,
+                       nsIIOService *ioService=nsnull)
 {
     nsCOMPtr<nsIIOService> serv;
     if (ioService == nsnull) {
@@ -749,7 +749,7 @@ NS_GetFileFromURLSpec(const nsACString &inURL, nsIFile **result,
         if (NS_FAILED(rv)) return rv;
         ioService = serv.get();
     }
-    return ioService->GetFileFromURLSpec(inURL, result);
+    return ioService->InitFileFromURLSpec(aFile, inURL);
 }
 
 inline nsresult

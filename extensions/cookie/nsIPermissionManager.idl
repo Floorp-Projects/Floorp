@@ -48,11 +48,11 @@
 [scriptable, uuid(4F6B5E00-0C36-11d5-A535-0010A401EB10)]
 interface nsIPermissionManager : nsISupports
 {
-  void add(in AUTF8String objectURL, in boolean permission, in PRInt32 type);
-  boolean testForBlocking(in AUTF8String objectURL, in PRInt32 type);
+  void add(in string objectURL, in boolean permission, in PRInt32 type);
+  boolean testForBlocking(in string objectURL, in PRInt32 type);
   void removeAll();
   readonly attribute nsISimpleEnumerator enumerator;
-  void remove(in AUTF8String host, in PRInt32 type);
+  void remove(in string host, in PRInt32 type);
 };
 
 %{ C++

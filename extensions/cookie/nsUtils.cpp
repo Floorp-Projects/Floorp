@@ -79,7 +79,7 @@ ckutil_getChar(nsInputFileStream& strm, char& c) {
  * strip carriage returns and line feeds from end of line
  */
 PUBLIC PRInt32
-CKutil_GetLine(nsInputFileStream& strm, nsACString& aLine) {
+CKutil_GetLine(nsInputFileStream& strm, nsString& aLine) {
 
   /* read the line */
   aLine.Truncate();
@@ -93,7 +93,7 @@ CKutil_GetLine(nsInputFileStream& strm, nsACString& aLine) {
     }
 
     if (c != '\r') {
-      aLine.Append(c);
+      aLine.Append(PRUnichar(c));
     }
   }
   return 0;

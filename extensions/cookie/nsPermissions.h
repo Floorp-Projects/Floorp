@@ -40,8 +40,7 @@
 #define PERMISSIONS_H
 
 #include "nsString.h"
-
-class nsIURI;
+#include "nsIIOService.h"
 
 #define COOKIEPERMISSION 0
 #define IMAGEPERMISSION 1
@@ -57,8 +56,8 @@ typedef enum {
 class nsIPrompt;
 
 extern nsresult PERMISSION_Read();
-extern void PERMISSION_Add(nsIURI * objectURI, PRBool permission, PRInt32 type);
-extern void PERMISSION_TestForBlocking(nsIURI * objectURL, PRBool* blocked, PRInt32 type);
+extern void PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type, nsIIOService* ioService);
+extern void PERMISSION_TestForBlocking(const char * objectURL, PRBool* blocked, PRInt32 type, nsIIOService* ioService);
 extern void PERMISSION_RemoveAll();
 extern void PERMISSION_DeletePersistentUserData(void);
 
@@ -66,13 +65,13 @@ extern PRInt32 PERMISSION_HostCount();
 extern PRInt32 PERMISSION_TypeCount(PRInt32 host);
 extern nsresult PERMISSION_Enumerate
   (PRInt32 hostNumber, PRInt32 typeNumber, char **host, PRInt32 *type, PRBool *capability);
-extern void PERMISSION_Remove(const nsACString & host, PRInt32 type);
+extern void PERMISSION_Remove(const char* host, PRInt32 type);
 
 extern PRBool Permission_Check
   (nsIPrompt *aPrompter, const char * hostname, PRInt32 type,
    PRBool warningPref, const char * message_string, int count_for_message);
 extern nsresult Permission_AddHost
-  (const nsAFlatCString &host, PRBool permission, PRInt32 type, PRBool save);
+  (char * host, PRBool permission, PRInt32 type, PRBool save);
 //extern void Permission_Free(PRInt32 hostNumber, PRInt32 type, PRBool save);
 extern void Permission_Save();
 
