@@ -32,6 +32,12 @@
 #include <windows.h>
 #endif
 
+#ifdef XP_OS2
+#define INCL_DOSERRORS
+#define INCL_DOSFILEMGR
+#include <os2.h>
+#endif
+
 class ProfileStruct
 {    
 public:
