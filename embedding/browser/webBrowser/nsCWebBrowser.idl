@@ -23,7 +23,7 @@
 #include "nsIWebBrowser.idl"
 #include "nsIWebBrowserNav.idl"
 #include "nsIProgress.idl"
-#include "nsIGenericWindow.idl"
+#include "nsIBaseWindow.idl"
 #include "nsIScrollable.idl"
 #include "nsITextScroll.idl"
 
@@ -33,7 +33,7 @@ nsCWebBrowser implements:
 nsIWebBrowser
 nsIWebBrowserNav
 nsIProgress
-nsIGenericWindow
+nsIBaseWindow
 nsIScrollable
 nsITextScroll
 */

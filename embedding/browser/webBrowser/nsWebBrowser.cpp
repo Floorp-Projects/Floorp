@@ -70,8 +70,18 @@ NS_IMETHODIMP nsWebBrowser::Create(nsISupports* aOuter, const nsIID& aIID,
 // nsWebBrowser::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS6(nsWebBrowser, nsIWebBrowser, nsIWebBrowserNav, nsIProgress, 
-   nsIGenericWindow, nsIScrollable, nsITextScroll)
+NS_IMPL_ADDREF(nsWebBrowser)
+NS_IMPL_RELEASE(nsWebBrowser)
+
+NS_IMPL_QUERY_HEAD(nsWebBrowser)
+   NS_IMPL_QUERY_BODY(nsIWebBrowser)
+   NS_IMPL_QUERY_BODY(nsIWebBrowserNav)
+   NS_IMPL_QUERY_BODY(nsIProgress)
+   NS_IMPL_QUERY_BODY(nsIBaseWindow)
+   NS_IMPL_QUERY_BODY(nsIScrollable)
+   NS_IMPL_QUERY_BODY(nsITextScroll)
+//   NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
+NS_IMPL_QUERY_TAIL(nsIWebBrowser)
 
 //*****************************************************************************
 // nsWebBrowser::nsIWebBrowser
@@ -401,7 +411,7 @@ NS_IMETHODIMP nsWebBrowser::GetNumChildParts(PRInt32* numChildParts)
 }
    
 //*****************************************************************************
-// nsWebBrowser::nsIGenericWindow
+// nsWebBrowser::nsIBaseWindow
 //*****************************************************************************
 
 NS_IMETHODIMP nsWebBrowser::InitWindow(nativeWindow parentNativeWindow,
@@ -488,7 +498,7 @@ NS_IMETHODIMP nsWebBrowser::SetPosition(PRInt32 x, PRInt32 y)
          NS_ENSURE_SUCCESS(mInternalWidget->Move(x, y), NS_ERROR_FAILURE);
       else // Else rely on the docShell to set it
          {
-         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(mDocShell));
+         nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
          NS_ENSURE_SUCCESS(docShellWin->SetPosition(x, y), NS_ERROR_FAILURE);
          }
       }
@@ -518,7 +528,7 @@ NS_IMETHODIMP nsWebBrowser::GetPosition(PRInt32* x, PRInt32* y)
          }
       else //Else Rely on the docShell to tell us
          {
-         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(mDocShell));
+         nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
          NS_ENSURE_SUCCESS(docShellWin->GetPosition(x, y), NS_ERROR_FAILURE);
          }
       }
@@ -540,7 +550,7 @@ NS_IMETHODIMP nsWebBrowser::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
          mInternalWidget->Resize(cx, cy, fRepaint);
 
       // Now size the docShell as well
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->SetSize(cx, cy, fRepaint), NS_ERROR_FAILURE);
       }
@@ -561,7 +571,7 @@ NS_IMETHODIMP nsWebBrowser::GetSize(PRInt32* cx, PRInt32* cy)
       {
       // We can ignore the internal widget and just rely on the docShell for 
       // this question.
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->GetSize(cx, cy), NS_ERROR_FAILURE);
       }
@@ -594,7 +604,7 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
             NS_ERROR_FAILURE);
          }
 
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       // Now reposition/ resize the doc
       NS_ENSURE_SUCCESS(docShellWindow->SetPositionAndSize(doc_x, doc_y, cx, cy, 
@@ -607,7 +617,7 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
 NS_IMETHODIMP nsWebBrowser::Repaint(PRBool fForce)
 {
    NS_ENSURE_STATE(mDocShell);
-   nsCOMPtr<nsIGenericWindow> docWnd(do_QueryInterface(mDocShell));
+   nsCOMPtr<nsIBaseWindow> docWnd(do_QueryInterface(mDocShell));
    NS_ENSURE_TRUE(docWnd, NS_ERROR_FAILURE);
    return docWnd->Repaint(fForce); // Can directly return this as it is the
 }                                     // same interface, thus same returns.
@@ -663,7 +673,7 @@ NS_IMETHODIMP nsWebBrowser::GetVisibility(PRBool* visibility)
       *visibility = mInitInfo->visible;
    else
       {
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->GetVisibility(visibility), 
          NS_ERROR_FAILURE);
@@ -678,7 +688,7 @@ NS_IMETHODIMP nsWebBrowser::SetVisibility(PRBool visibility)
       mInitInfo->visible = visibility;
    else
       {
-      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
 
       NS_ENSURE_SUCCESS(docShellWindow->SetVisibility(visibility), 
          NS_ERROR_FAILURE);
@@ -705,7 +715,7 @@ NS_IMETHODIMP nsWebBrowser::SetFocus()
 {
    NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+   nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
    
    NS_ENSURE_SUCCESS(docShellWindow->SetFocus(), NS_ERROR_FAILURE);
 
@@ -717,7 +727,7 @@ NS_IMETHODIMP nsWebBrowser::GetTitle(PRUnichar** aTitle)
    NS_ENSURE_ARG_POINTER(aTitle);
    NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+   nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
 
    NS_ENSURE_SUCCESS(docShellWindow->GetTitle(aTitle), NS_ERROR_FAILURE);
 
@@ -728,7 +738,7 @@ NS_IMETHODIMP nsWebBrowser::SetTitle(const PRUnichar* aTitle)
 {
    NS_ENSURE_STATE(mDocShell);
 
-   nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+   nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
 
    NS_ENSURE_SUCCESS(docShellWindow->SetTitle(aTitle), NS_ERROR_FAILURE);
 
