@@ -62,7 +62,6 @@ TEST_FILES      = \
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) -m 555 $(srcdir)/TestOutSinks $(DIST)/bin
 	$(INSTALL) -m 555 $(srcdir)/TestOutSinks.pl $(DIST)/bin
 	$(INSTALL) $(addprefix $(srcdir)/, $(TEST_FILES)) $(DIST)/bin/OutTestData
 
