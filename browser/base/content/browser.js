@@ -277,9 +277,6 @@ function Startup()
     uriToLoad = window.arguments[0];
   gIsLoadingBlank = uriToLoad == "about:blank";
 
-  // Initialize browser instance..
-  appCore.setWebShellWindow(window);
-
   if (!gIsLoadingBlank) {
     prepareForStartup();
   }
@@ -364,6 +361,9 @@ function prepareForStartup()
       }
     }
   }
+
+  // Initialize browser instance..
+  appCore.setWebShellWindow(window);
 
   // Wire up session and global history before any possible
   // progress notifications for back/forward button updating
