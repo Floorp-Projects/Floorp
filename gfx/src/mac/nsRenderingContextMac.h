@@ -176,7 +176,8 @@ protected:
 	float             		mP2T;				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
-	GrafPtr					mSavePort;
+	CGrafPtr				mSavePort;
+	GDHandle        mSaveDevice;
 	Rect					mSavePortRect;
 
 	nsDrawingSurfaceMac*	mFrontSurface;
