@@ -117,11 +117,11 @@ function strresTest() {
   dump("\n--** JS strBundle GetStringFromID 123=" + ostr2 + 
       "len=" + ostr2.length + "**--\n");
 
-  var	ostr3 = Bundle.GetStringFromName("back");
-  dump("\n--** JS strBundle GetStringFromName back=" + ostr3 + 
+  var	ostr3 = Bundle.GetStringFromName("loyal");
+  dump("\n--** JS strBundle GetStringFromName loyal=" + ostr3 + 
        "len=" + ostr3.length + "**--\n");
   
-  var	ostr4 = Bundle.GetStringFromName("eutf8");
+  var	ostr4 = Bundle.GetStringFromName("trout");
   dump("\n--** JS strBundle GetStringFromName eutf8=" + ostr4 +
        "len=" + ostr4.length + "**--\n");
   var	ostr5 = "\u88e6\ue3bb\u8b82"; /* æˆ»ã‚‹ */
@@ -130,9 +130,7 @@ function strresTest() {
 
 
   /* utf-8 \u9cdf\u9b5a */
-  dialog.test.setAttribute("value", ostr3); 
   dialog.ok.setAttribute("value", ostr2); 
-  dialog.cancel.setAttribute("value", ostr5); 
-  /* sjis 
-  dialog.test.setAttribute("value", "–ß‚é");  */
+  dialog.test.setAttribute("value", ostr3); 
+  dialog.cancel.setAttribute("value", ostr4); 
 }
