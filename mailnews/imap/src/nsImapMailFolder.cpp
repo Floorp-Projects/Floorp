@@ -408,6 +408,8 @@ nsresult nsImapMailFolder::GetDatabase()
 				UpdateSummaryTotals();
 			}
 		}
+		else
+			folderOpen = rv;
 	}
 	return folderOpen;
 }

@@ -336,10 +336,11 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgLocalMailFolder::GetDatabase()
 {
+	nsresult rv = NS_OK;
 	if (!mDatabase)
 	{
 		nsNativeFileSpec path;
-		nsresult rv = GetPath(path);
+		rv = GetPath(path);
 		if (NS_FAILED(rv)) return rv;
 
 #if 0
@@ -387,7 +388,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 			}
 		}
 	}
-	return NS_OK;
+	return rv;
 }
 
 NS_IMETHODIMP
