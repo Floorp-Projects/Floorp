@@ -152,7 +152,6 @@ NPP_New(NPMIMEType pluginType,
     return NPERR_NO_ERROR;
 }
 
-
 NPError 
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
@@ -165,6 +164,8 @@ NPP_Destroy(NPP instance, NPSavedData** save)
     This = (PluginInstance*) instance->pdata;
 
     if (This != NULL) {
+	if (This->dialogBox)
+	   destroyWidget(This);	
         if (This->type)
             NPN_MemFree(This->type);
         if (This->pluginsPageUrl)
@@ -221,10 +222,8 @@ NPP_SetWindow(NPP instance, NPWindow* window)
       This->visual = ws_info->visual;
       This->depth = ws_info->depth;
       This->colormap = ws_info->colormap;
-      if (This->exists != TRUE) {
-          This->exists = FALSE;
-          makeWidget(This);
-      }
+      makePixmap(This);
+      makeWidget(This);
     }
     return NPERR_NO_ERROR;
 }
