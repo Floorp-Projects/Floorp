@@ -271,7 +271,6 @@ function loadCalendarEventDialog()
    setFieldValue( "categories-field", gEvent.categories );
    
    /* Server stuff */
-   var serverList = opener.gCalendarWindow.calendarManager.calendars;
    document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
    document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
    
