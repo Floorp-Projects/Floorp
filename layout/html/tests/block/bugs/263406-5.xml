@@ -1,0 +1,7 @@
+<?xml-stylesheet type="text/css" href="data:text/css, root { display: table; }
+   table {display: table; position: fixed; top: auto; left: 200px }
+   tbody { display: table-row-group }
+   tr { display: table-row }
+   td { display: table-cell }
+   "?>
+<root><table><tbody><tr><td>bbb</td></tr></tbody></table></root>
