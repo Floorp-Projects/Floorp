@@ -322,6 +322,10 @@ NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
                      "destroy",
                      GTK_SIGNAL_FUNC(DestroySignal),
                      this);
+  gtk_signal_connect(GTK_OBJECT(GTK_COMBO(mCombo)->popwin),
+                     "unmap",
+                     GTK_SIGNAL_FUNC(UnmapSignal),
+                     this);
 
   gtk_container_add(GTK_CONTAINER(mWidget), mAlign);
 
@@ -337,4 +341,26 @@ nsComboBox::OnDestroySignal(GtkWidget* aGtkWidget)
   else {
     nsWidget::OnDestroySignal(aGtkWidget);
   }
+}
+
+gint
+nsComboBox::UnmapSignal(GtkWidget* aGtkWidget, nsComboBox* aCombo)
+{
+  if (!aCombo) return PR_FALSE;
+  aCombo->OnUnmapSignal(aGtkWidget);
+  return PR_TRUE;
+}
+
+void
+nsComboBox::OnUnmapSignal(GtkWidget * aWidget)
+{
+  if (!aWidget) return;
+
+  /* Generate and sent an NS_CONTROLCHANGE signal to frame here */
+  printf("Unmap - Bing!\n");
+  nsGUIEvent event;
+  event.eventStructType = NS_GUI_EVENT;
+  nsPoint point(0,0);
+  InitEvent(event, NS_CONTROL_CHANGE, &point);
+  DispatchWindowEvent(&event);
 }
