@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -143,7 +143,8 @@ GetAttribute(nsIFrame* aFrame, nsIAtom* inAttribute, nsCString& outValue)
   nsresult res = content->GetAttr(kNameSpaceID_None, inAttribute, attr);
   outValue = NS_LossyConvertUCS2toASCII(attr).get();
 
-  return ( res != NS_CONTENT_ATTR_NO_VALUE );
+  return ( res != NS_CONTENT_ATTR_NO_VALUE &&
+           !(res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()));
 }
 
 
@@ -219,6 +220,8 @@ nsNativeThemeMac::nsNativeThemeMac()
   mScrollbarAtom = do_GetAtom("scrollbar");
   mClassAtom = do_GetAtom("class");
   mSortDirectionAtom = do_GetAtom("sortDirection");
+  mInputAtom = do_GetAtom("input");
+  mInputCheckedAtom = do_GetAtom("_moz-input-checked");
 }
 
 nsNativeThemeMac::~nsNativeThemeMac()
@@ -244,9 +247,9 @@ nsNativeThemeMac::IsDefaultButton(nsIFrame* aFrame)
 
   
 PRBool
-nsNativeThemeMac::IsChecked(nsIFrame* aFrame)
+nsNativeThemeMac::IsChecked(nsIFrame* aFrame, PRBool aIsHTML)
 {
-  return CheckBooleanAttr(aFrame, mCheckedAtom);
+  return CheckBooleanAttr(aFrame, aIsHTML ? mInputCheckedAtom : mCheckedAtom);
 }
 
 
@@ -647,12 +650,19 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
   ::ClipRect(&clipRect);
 #endif
   
+  PRBool isHTML = PR_FALSE;
   // for some widgets, the parent determines the appropriate state. grab the parent instead.
   if ( aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO ) {
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
     if (content->IsContentOfType(nsIContent::eXUL))
       aFrame->GetParent(&aFrame);
+    else {
+      nsCOMPtr<nsIAtom> tag;
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag == mInputAtom)
+        isHTML = PR_TRUE;
+    }
   }
   
   PRInt32 eventState = GetContentState(aFrame);
@@ -681,7 +691,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
     }
 
     case NS_THEME_CHECKBOX:
-      DrawCheckbox ( macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState );
+      DrawCheckbox ( macRect, IsChecked(aFrame, isHTML), IsDisabled(aFrame), eventState );
       break;    
     case NS_THEME_RADIO:
       DrawRadio ( macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState );
