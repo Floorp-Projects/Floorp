@@ -31,7 +31,7 @@
 #include "nsIDOMDocument.h"
 
 // loading includes
-#include "nsIXMLHTTPRequest.h"
+#include "nsIXMLHttpRequest.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
