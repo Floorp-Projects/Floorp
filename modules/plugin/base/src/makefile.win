@@ -30,6 +30,7 @@ MODULE		= plugin
 LIBRARY_NAME	= gkplugin
 MODULE_NAME	= nsPluginModule
 REQUIRES	= xpcom \
+		  xpconnect \
 		  string \
 		  java \
 		  pref \
