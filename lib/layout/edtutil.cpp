@@ -5805,6 +5805,9 @@ EDT_GetEditHistory(MWContext * pMWContext, unsigned n,
     if( !ppEditHistoryURLs )
         EDT_SyncEditHistory(pMWContext);
 
+    if( !ppEditHistoryURLs )
+        return FALSE;
+
     // Check if current URL is matches the requested or more recent items in the list
     if( pMWContext )
     {
@@ -5856,6 +5859,18 @@ EDT_SyncEditHistory(MWContext * pMWContext)
     if(!pMWContext)
         return;
 
+    // We are not in a happy state if there's no history item
+    History_entry * pEntry = SHIST_GetCurrent(&(pMWContext->hist));
+	if(!pEntry || !pEntry->address || !*pEntry->address )
+        return;
+
+    // Test for new document URL: file://Untitled and ignore it
+    if( !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_NAME), pEntry->address) ||
+        !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_URL), pEntry->address))
+    {
+        return;
+    }
+
     // Initialize the local arrays from the current preference list
     if( !ppEditHistoryURLs )
     {
@@ -5896,19 +5911,9 @@ EDT_SyncEditHistory(MWContext * pMWContext)
             }
         }
     }
-
-    History_entry * pEntry = SHIST_GetCurrent(&(pMWContext->hist));
-
-    // Must have an address
-    if( !pEntry || !pEntry->address || !*pEntry->address )
+    // We failed to initialize - quit
+    if( !ppEditHistoryURLs )
         return;
-
-    // Test for new document URL: file://Untitled and ignore it
-    if( !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_NAME), pEntry->address) ||
-        !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_URL), pEntry->address))
-    {
-        return;
-    }
 
     if( pEntry->title && *pEntry->title ){
         pTitle = pEntry->title;
