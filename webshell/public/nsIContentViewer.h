@@ -25,6 +25,7 @@
 
 // Forward declarations... 
 class nsIDeviceContext;
+class nsIPref;
 class nsString;
 struct nsRect;
 class nsIContentViewerContainer;
@@ -48,6 +49,7 @@ public:
    */
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   nsIDeviceContext* aDeviceContext,
+                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto)=0;
 

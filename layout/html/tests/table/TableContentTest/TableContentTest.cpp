@@ -441,7 +441,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
     NS_ASSERTION(PR_FALSE, "bad galley pc");
   }
 
-  pc->Init(dx);
+  pc->Init(dx, nsnull);
 
   // create a view manager
   nsIViewManager * vm = nsnull;
@@ -516,7 +516,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
     fprintf(out, "bad paginated pc");
     NS_ASSERTION(PR_FALSE, "");
   }
-  pc->Init(dx);
+  pc->Init(dx, nsnull);
   aDoc->CreateCorrectContent(rows, cols);
   CreateGeometry(aDoc, pc);
   VerifyGeometry(aDoc, pc);

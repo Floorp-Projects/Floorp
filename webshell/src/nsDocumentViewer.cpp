@@ -60,6 +60,7 @@ public:
     // nsIContentViewer interface...
     NS_IMETHOD Init(nsNativeWidget aParent,
                     nsIDeviceContext* aDeviceContext,
+                    nsIPref* aPrefs,
                     const nsRect& aBounds,
                     nsScrollPreference aScrolling = nsScrollPreference_kAuto);
     
@@ -245,6 +246,7 @@ DocumentViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
 NS_IMETHODIMP
 DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
                          nsIDeviceContext* aDeviceContext,
+                         nsIPref* aPrefs,
                          const nsRect& aBounds,
                          nsScrollPreference aScrolling)
 {
@@ -260,7 +262,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         return rv;
     }
 
-    mPresContext->Init(aDeviceContext);
+    mPresContext->Init(aDeviceContext, aPrefs); 
     rv = Init(aNativeParent, aBounds, mDocument, mPresContext, aScrolling);
 
     // Init(...) will addref the Presentation Context...

@@ -59,6 +59,7 @@ public:
 
   // nsIBrowserWindow
   NS_IMETHOD Init(nsIAppShell* aAppShell,
+                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   PRUint32 aChromeMask);
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);

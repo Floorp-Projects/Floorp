@@ -347,7 +347,7 @@ nsViewerApp::OpenWindow()
                                              kIBrowserWindowIID,
                                              (void**) &bw);
   bw->SetApp(this);
-  bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0));
+  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0));
   bw->Show();
   mCrawler->SetBrowserWindow(bw);
 

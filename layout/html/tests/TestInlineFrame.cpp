@@ -1597,7 +1597,7 @@ int main(int argc, char** argv)
 
   NS_NewGalleyContext(&presContext);
 
-  presContext->Init(dx);
+  presContext->Init(dx, nsnull);
 
   // Test basic reflowing of unmapped children
   if (!TestReflowUnmapped(presContext)) {
