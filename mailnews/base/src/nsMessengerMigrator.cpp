@@ -1234,8 +1234,8 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
                             getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
-  // if we got the port above, set it here
-  if ((port != -1) || (port == 0)) {
+  // if we got a valid port from above, set it here
+  if (port > 0) {
     server->SetPort(port);
   }
   
@@ -1460,7 +1460,8 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 	NS_ASSERTION(err == 0, "failed to get the port\n");
     if (err != 0)
       port = -1;
-	}
+  }
+
 
   //
   // create the server
@@ -1471,7 +1472,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   if (NS_FAILED(rv)) return rv;
 
   // now start migrating 4.x prefs
-  if ((port != -1) || (port == 0)) {
+  if (port > 0) {
     server->SetPort(port);
   }
 
@@ -1503,7 +1504,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 
   rv = MigrateOldImapPrefs(server, hostAndPort);
   if (NS_FAILED(rv)) return rv;
-  
+
   nsCOMPtr <nsIFileSpec> imapMailDir;
   nsFileSpec dir;
   PRBool dirExists;
@@ -1823,8 +1824,8 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 		NS_ASSERTION(err == 0, "failed to get the port\n");
         if (err != 0)
           port=-1;
-		}
-    
+	}
+
     // create the server
 	nsCOMPtr<nsIMsgIncomingServer> server;
     rv = accountManager->CreateIncomingServer(nsnull, hostname, "nntp",
@@ -1832,7 +1833,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	if (NS_FAILED(rv)) return rv;
     
 	// now upgrade all the prefs
-    if ((port != -1) || (port == 0)) {
+    if (port > 0) {
       server->SetPort(port);
     }
 
