@@ -39,13 +39,7 @@ public:
    * Class constructor.
    */
   nsUnicodeToX11Johab();
-  virtual ~nsUnicodeToX11Johab();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
+  ~nsUnicodeToX11Johab();
 
   NS_IMETHOD Convert(
       const PRUnichar * aSrc, PRInt32 * aSrcLength,

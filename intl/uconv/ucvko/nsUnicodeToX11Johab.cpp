@@ -96,17 +96,6 @@ NS_IMETHODIMP nsUnicodeToX11Johab::SetOutputErrorBehavior(
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-nsresult nsUnicodeToX11Johab::CreateInstance(nsISupports **aResult)
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToX11Johab();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
 //   1	/*
 //   2	 * @(#)CharToByteX11Johab.java  1.0 98/05/03
 //   3	 *

@@ -81,12 +81,6 @@ nsEUCKRToUnicode::nsEUCKRToUnicode()
 {
 }
 
-nsresult nsEUCKRToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsEUCKRToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 

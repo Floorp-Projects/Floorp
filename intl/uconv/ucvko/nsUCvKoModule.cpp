@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Roy Yokoyama <yokoyama@netscape.com>
  */
 
 #define NS_IMPL_IDS
@@ -29,7 +30,9 @@
 #include "nsCOMPtr.h"
 #include "nsIFactory.h"
 #include "nsIRegistry.h"
+#include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIModule.h"
 #include "nsUCvKOCID.h"
 #include "nsUCvKODll.h"
@@ -65,341 +68,45 @@ PRUint16 g_HangulNullMapping[] ={
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0xAC00, 0xD7A3, 0xAC00
 };
 
-typedef nsresult (* fpCreateInstance) (nsISupports **);
+NS_IMPL_NSUCONVERTERREGSELF
 
-struct FactoryData
-{
-  const nsCID   * mCID;
-  fpCreateInstance  CreateInstance;
-  char    * mCharsetSrc;
-  char    * mCharsetDest;
-};
+NS_UCONV_REG_UNREG(nsEUCKRToUnicode, "EUC-KR", "Unicode" , NS_EUCKRTOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToEUCKR, "Unicode", "EUC-KR",  NS_UNICODETOEUCKR_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToKSC5601, "Unicode", "ks_c_5601-1987",  NS_UNICODETOKSC5601_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToX11Johab, "Unicode", "x-x11johab",  NS_UNICODETOX11JOHAB_CID);
 
-static FactoryData g_FactoryData[] =
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEUCKRToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToEUCKR);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToKSC5601);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToX11Johab);
+
+static nsModuleComponentInfo components[] = 
 {
-  {
-    &kEUCKRToUnicodeCID,
-    nsEUCKRToUnicode::CreateInstance,
-    "EUC-KR",
-    "Unicode"
+  { 
+    DECODER_NAME_BASE "EUC-KR" , NS_EUCKRTOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "EUC-KR",
+    nsEUCKRToUnicodeConstructor ,
+    nsEUCKRToUnicodeRegSelf , nsEUCKRToUnicodeUnRegSelf 
   },
-  {
-    &kUnicodeToEUCKRCID,
-    nsUnicodeToEUCKR::CreateInstance,
-    "Unicode",
-    "EUC-KR"
+  { 
+    ENCODER_NAME_BASE "EUC-KR" , NS_UNICODETOEUCKR_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "EUC-KR",
+    nsUnicodeToEUCKRConstructor, 
+    nsUnicodeToEUCKRRegSelf, nsUnicodeToEUCKRUnRegSelf
   },
-  {
-    &kUnicodeToKSC5601CID,
-    nsUnicodeToKSC5601::CreateInstance,
-    "Unicode",
-    "ks_c_5601-1987"
+  { 
+    ENCODER_NAME_BASE "ks_c_5601-1987" , NS_UNICODETOKSC5601_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "ks_c_5601-1987",
+    nsUnicodeToKSC5601Constructor,
+    nsUnicodeToKSC5601RegSelf, nsUnicodeToKSC5601UnRegSelf
   },
-  {
-    &kUnicodeToX11JohabCID,
-    nsUnicodeToX11Johab::CreateInstance,
-    "Unicode",
-    "x-x11johab"
+  { 
+    ENCODER_NAME_BASE "x-x11johab" , NS_UNICODETOX11JOHAB_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-x11johab",
+    nsUnicodeToX11JohabConstructor,
+    nsUnicodeToX11JohabRegSelf, nsUnicodeToX11JohabUnRegSelf
   }
 };
 
-#define ARRAY_SIZE(_array)                                      \
-     (sizeof(_array) / sizeof(_array[0]))
-
-//----------------------------------------------------------------------------
-// Class nsConverterFactory [declaration]
-
-/**
- * General factory class for converter objects.
- * 
- * @created         24/Feb/1998
- * @author  Catalin Rotaru [CATA]
- */
-class nsConverterFactory : public nsIFactory
-{
-  NS_DECL_ISUPPORTS
-
-private:
-
-  FactoryData * mData;
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsConverterFactory(FactoryData * aData);
-
-  /**
-   * Class destructor.
-   */
-  virtual ~nsConverterFactory();
-
-  //--------------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
-
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
-  NS_IMETHOD LockFactory(PRBool aLock);
-};
-
-//----------------------------------------------------------------------------
-// Class nsConverterModule [declaration]
-
-class nsConverterModule : public nsIModule 
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMODULE
-
-private:
-
-  PRBool mInitialized;
-
-  void Shutdown();
-
-public:
-
-  nsConverterModule();
-
-  virtual ~nsConverterModule();
-
-  nsresult Initialize();
-
-};
-
-//----------------------------------------------------------------------------
-// Global functions and data [implementation]
-
-static nsConverterModule * gModule = NULL;
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
-                                          nsIFile* location,
-                                          nsIModule** return_cobj)
-{
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_ARG_POINTER(return_cobj);
-  NS_ENSURE_FALSE(gModule, NS_ERROR_FAILURE);
-
-  // Create an initialize the module instance
-  nsConverterModule * m = new nsConverterModule();
-  if (!m) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-  if (NS_FAILED(rv)) {
-    delete m;
-    m = nsnull;
-  }
-  gModule = m;                  // WARNING: Weak Reference
-  return rv;
-}
-
-//----------------------------------------------------------------------------
-// Class nsConverterFactory [implementation]
-
-NS_IMPL_ISUPPORTS1(nsConverterFactory, nsIFactory)
-
-nsConverterFactory::nsConverterFactory(FactoryData * aData) 
-{
-  mData = aData;
-
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsConverterFactory::~nsConverterFactory() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
-
-//----------------------------------------------------------------------------
-// Interface nsIFactory [implementation]
-
-NS_IMETHODIMP nsConverterFactory::CreateInstance(nsISupports *aDelegate,
-                                                 const nsIID &aIID,
-                                                 void **aResult)
-{
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
-
-  nsISupports * t;
-  mData->CreateInstance(&t);
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  
-  NS_ADDREF(t);  // Stabilize
-  
-  nsresult res = t->QueryInterface(aIID, aResult);
-
-  NS_RELEASE(t); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
-
-  return res;
-}
-
-NS_IMETHODIMP nsConverterFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) PR_AtomicIncrement(&g_LockCount);
-  else PR_AtomicDecrement(&g_LockCount);
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------
-// Class nsConverterModule [implementation]
-
-NS_IMPL_ISUPPORTS1(nsConverterModule, nsIModule)
-
-nsConverterModule::nsConverterModule()
-: mInitialized(PR_FALSE)
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsConverterModule::~nsConverterModule()
-{
-  Shutdown();
-}
-
-nsresult nsConverterModule::Initialize()
-{
-  return NS_OK;
-}
-
-void nsConverterModule::Shutdown()
-{
-}
-
-//----------------------------------------------------------------------------
-// Interface nsIModule [implementation]
-
-NS_IMETHODIMP nsConverterModule::GetClassObject(nsIComponentManager *aCompMgr,
-                                                const nsCID& aClass,
-                                                const nsIID& aIID,
-                                                void ** r_classObj)
-{
-  nsresult rv;
-
-  // Defensive programming: Initialize *r_classObj in case of error below
-  if (!r_classObj) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *r_classObj = NULL;
-
-  if (!mInitialized) {
-    rv = Initialize();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    mInitialized = PR_TRUE;
-  }
-
-  FactoryData * data;
-  nsConverterFactory * fact;
-
-  // XXX cache these factories
-  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
-    data = &(g_FactoryData[i]);
-    if (aClass.Equals(*(data->mCID))) {
-      fact = new nsConverterFactory(data);
-      if (fact == NULL) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      rv = fact->QueryInterface(aIID, (void **) r_classObj);
-      if (NS_FAILED(rv)) delete fact;
-
-      return rv;
-    }
-  }
-
-  return NS_ERROR_FACTORY_NOT_REGISTERED;
-}
-
-NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                                              nsIFile* aPath,
-                                              const char* registryLocation,
-                                              const char* componentType)
-{
-  nsresult res;
-  PRUint32 i;
-  nsIRegistry * registry = NULL;
-  nsRegistryKey key;
-  char buff[1024];
-
-  // get the registry
-  res = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID, 
-      NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
-  if (NS_FAILED(res)) goto done;
-
-  // open the registry
-  res = registry->OpenWellKnownRegistry(
-      nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(res)) goto done;
-
-  char name[128];
-  char contractid[128];
-  char * cid_string;
-  for (i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
-    if(0==PL_strcmp(g_FactoryData[i].mCharsetSrc,"Unicode"))
-    {
-       PL_strcpy(name, ENCODER_NAME_BASE);
-       PL_strcat(name, g_FactoryData[i].mCharsetDest);
-       PL_strcpy(contractid, NS_UNICODEENCODER_CONTRACTID_BASE);
-       PL_strcat(contractid, g_FactoryData[i].mCharsetDest);
-    } else {
-       PL_strcpy(name, DECODER_NAME_BASE);
-       PL_strcat(name, g_FactoryData[i].mCharsetSrc);
-       PL_strcpy(contractid, NS_UNICODEDECODER_CONTRACTID_BASE);
-       PL_strcat(contractid, g_FactoryData[i].mCharsetSrc);
-    }
-    // register component
-    res = aCompMgr->RegisterComponentSpec(*(g_FactoryData[i].mCID), name, 
-      contractid, aPath, PR_TRUE, PR_TRUE);
-    if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) goto done;
-
-    // register component info
-    // XXX take these KONSTANTS out of here; refine this code
-    cid_string = g_FactoryData[i].mCID->ToString();
-    sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);
-    nsCRT::free(cid_string);
-    res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);
-    if (NS_FAILED(res)) goto done;
-    res = registry -> SetStringUTF8(key, "source", g_FactoryData[i].mCharsetSrc);
-    if (NS_FAILED(res)) goto done;
-    res = registry -> SetStringUTF8(key, "destination", g_FactoryData[i].mCharsetDest);
-    if (NS_FAILED(res)) goto done;
-  }
-
-done:
-  if (registry != NULL) {
-    nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
-  }
-
-  return res;
-}
-
-NS_IMETHODIMP nsConverterModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                                                nsIFile* aPath,
-                                                const char* registryLocation)
-{
-  // XXX also delete the stuff I added to the registry
-  nsresult rv;
-
-  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
-    rv = aCompMgr->UnregisterComponentSpec(*(g_FactoryData[i].mCID), aPath);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsConverterModule::CanUnload(nsIComponentManager *aCompMgr, 
-                                           PRBool *okToUnload)
-{
-  if (!okToUnload) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *okToUnload = (g_InstanceCount == 0 && g_LockCount == 0);
-  return NS_OK;
-}
+NS_IMPL_NSGETMODULE("nsUCvKoModule", components);
 
