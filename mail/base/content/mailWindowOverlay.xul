@@ -1291,7 +1291,7 @@
               accesskey="&forwardMsgCmd.accesskey;"
               key="key_forward"
               observes="cmd_forward"/>
-            <menu label="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
+            <menu id="forwardAsMenu" label="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
               <menupopup>
                 <menuitem label="&forwardAsInline.label;" accesskey="&forwardAsInline.accesskey;" observes="cmd_forwardInline"/>
                 <menuitem label="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
@@ -1435,7 +1435,7 @@
               </template>
             </menu>
 
-        <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
+        <menu id="labelMenu" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
           <menupopup id="menuPopup-labels" onpopupshowing="InitMessageLabel('menuPopup')">
             <menuitem
                id="menuPopup-labelMenuItem0"
@@ -1476,7 +1476,7 @@
                observes="cmd_label5"/>
           </menupopup>
         </menu>
-        <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;">
+        <menu id="markMenu" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
           <menupopup onpopupshowing="InitMessageMark()">
             <menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
             <menuitem label="&markThreadAsReadCmd.label;" key="key_markThreadAsRead" accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
