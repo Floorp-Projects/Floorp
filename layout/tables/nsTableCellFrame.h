@@ -21,6 +21,7 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTableCell.h"
+#include "nsTableFrame.h"
 
 struct nsStyleSpacing;
 
@@ -74,7 +75,13 @@ public:
 
   virtual ~nsTableCellFrame();
 
- 
+  // Get the TableFrame that contains this cell frame
+  virtual nsTableFrame* GetTableFrame();
+
+  // For DEBUGGING Purposes Only
+  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
+  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
+
 protected:
 
   /** protected constructor.
@@ -92,13 +99,7 @@ protected:
   void      MapTextAttributes(nsIPresContext* aPresContext);
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
   void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
-  PRBool    ConvertToIntValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
-
-
- 
-  
-
-
+  PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 };
 
 

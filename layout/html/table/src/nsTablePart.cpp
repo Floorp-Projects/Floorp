@@ -304,6 +304,13 @@ void nsTablePart::EnsureColumns()
   }
 }
 
+void nsTablePart::EnsureCellMap()
+{
+  if (mCellMap == nsnull)
+    BuildCellMap();
+}
+
+
 /**
   */
 void nsTablePart::ReorderChildren()

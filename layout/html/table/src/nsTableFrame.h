@@ -164,7 +164,12 @@ public:
                                nsTableCell* aLeft,
                                nsTableCell* aRight);
 
+  // Get cell margin information
+  NS_IMETHOD GetCellMarginData(nsIFrame* aKidFrame, nsMargin& aMargin);
 
+  // For DEBUGGING Purposes Only
+  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
+  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
 
 protected:
 
@@ -295,6 +300,7 @@ protected:
 
   /** do post processing to setting up style information for the frame */
   virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
 
 private:
   void DebugPrintCount() const; // Debugging routine

@@ -239,6 +239,10 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
     {
       nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
       NS_ASSERTION(nsnull != data, "bad data");
+      
+      nsMargin  margin;
+      nsresult  result = data->GetMargin(margin);
+
       nsSize * cellMinSize = data->GetMaxElementSize();
       nsReflowMetrics * cellDesiredSize = data->GetDesiredSize();
       NS_ASSERTION(nsnull != cellDesiredSize, "bad cellDesiredSize");
@@ -259,6 +263,8 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
       if (0==cellIndex)
       {
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(0));
+        nsMargin  margin;
+        nsresult  result = data->GetMargin(margin);        
         nsTableCellFrame *cellFrame = data->GetCellFrame();
         nsTableCellPtr cell;
         cellFrame->GetContent((nsIContent*&)(cell.AssignRef()));          // cell: REFCNT++
@@ -319,8 +325,12 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
 
       // regardless of the width specification, keep track of the
       // min/max column widths
-      PRInt32 cellMinWidth = cellMinSize->width/colSpan;
-      PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan;
+      nscoord cellMinWidth = cellMinSize->width/colSpan;
+      nscoord cellDesiredWidth = cellDesiredSize->width/colSpan;
+
+      cellMinWidth += margin.left + margin.right;
+      cellDesiredWidth += margin.left + margin.right;
+
       if (minColWidth < cellMinWidth)
         minColWidth = cellMinWidth;
       if (maxColWidth < cellDesiredWidth)
@@ -557,14 +567,20 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
         NS_ASSERTION(nsnull != data, "bad data");
 
+ 
         PRInt32 colSpan = data->GetCellFrame()->GetColSpan();
         // distribute a portion of the spanning cell's min and max width to this column
         nsSize * cellMinSize = data->GetMaxElementSize();
         NS_ASSERTION(nsnull != cellMinSize, "bad cellMinSize");
         nsReflowMetrics * cellDesiredSize = data->GetDesiredSize();
         NS_ASSERTION(nsnull != cellDesiredSize, "bad cellDesiredSize");
-        PRInt32 cellMinWidth = cellMinSize->width/colSpan;
-        PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan;
+        
+        nsMargin  margin;
+        nsresult  result = data->GetMargin(margin);        
+        nscoord marginWidth = margin.left + margin.right;
+        PRInt32 cellMinWidth = cellMinSize->width/colSpan + marginWidth;
+        PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan + marginWidth;
+
         if (PR_TRUE==gsDebug)
           printf("factoring in cell %d with colSpan=%d\n  factoring in min=%d and desired=%d\n", 
                  cellIndex, colSpan, cellMinWidth, cellDesiredWidth);
@@ -715,8 +731,13 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
         NS_ASSERTION(nsnull != cellMinSize, "bad cellMinSize");
         nsReflowMetrics * cellDesiredSize = data->GetDesiredSize();
         NS_ASSERTION(nsnull != cellDesiredSize, "bad cellDesiredSize");
-        PRInt32 cellMinWidth = cellMinSize->width/colSpan;
-        PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan;
+
+        nsMargin  margin;
+        nsresult  result = data->GetMargin(margin);        
+        nscoord marginWidth = margin.left + margin.right;
+
+        PRInt32 cellMinWidth = cellMinSize->width/colSpan + marginWidth;
+        PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan + marginWidth;
         if (minColWidth < cellMinWidth)
           minColWidth = cellMinWidth;
         if (maxColWidth < cellDesiredWidth)

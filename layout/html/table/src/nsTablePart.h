@@ -118,7 +118,11 @@ public:
     */ 
   virtual void EnsureColumns ();
 
-  /** return the number of columns as specified by the input. 
+  /** Ensure that the cell map has been built for the table
+   */
+  virtual void EnsureCellMap();
+
+    /** return the number of columns as specified by the input. 
     * has 2 side effects:<br>
     * calls SetStartColumnIndex on each nsTableColumn<br>
     * sets mSpecifiedColCount.<br>

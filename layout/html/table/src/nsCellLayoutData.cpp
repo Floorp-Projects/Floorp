@@ -42,6 +42,8 @@ nsCellLayoutData::nsCellLayoutData(nsTableCellFrame *aCellFrame,
   SetCellFrame(aCellFrame);
   SetDesiredSize(aDesiredSize);
   SetMaxElementSize(aMaxElementSize);
+
+  mCalculated = NS_ERROR_NOT_INITIALIZED;
 }
 
 // don't delete mCellFrame, I didn't allocate it
@@ -113,7 +115,7 @@ nsIFrame* nsCellLayoutData::GetFrameAt(nsVoidArray* aList,  PRInt32 aIndex)
 }
 
 /**
-  * Given a style context and an edge, find the margin
+  * Given a frame and an edge, find the margin
   *
   **/
 nscoord nsCellLayoutData::GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const
@@ -555,8 +557,22 @@ void nsCellLayoutData::RecalcLayoutData(nsTableFrame* aTableFrame,
                                         nsVoidArray* aBoundaryCells[4])
 
 {
+  
   CalculateBorders(aTableFrame, aBoundaryCells);
   CalculateMargins(aTableFrame, aBoundaryCells);
+  mCalculated = NS_OK;
+}
+
+
+
+NS_METHOD nsCellLayoutData::GetMargin(nsMargin& aMargin)
+{
+  if (mCalculated == NS_OK)
+  {
+    aMargin = mMargin;
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_INITIALIZED;
 }
 
 

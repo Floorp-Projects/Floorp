@@ -38,7 +38,7 @@
 static PRBool gsDebug = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
-//#define NOISY_MARGINS
+#define NOISY_MARGINS
 #else
 static const PRBool gsDebug = PR_FALSE;
 #endif
@@ -218,22 +218,15 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   // lay out inner table, if required
   if (PR_FALSE==mInnerTableFrame->IsFirstPassValid())
-  { // we treat the table as if we've never seen the layout data before
+  { 
+   // we treat the table as if we've never seen the layout data before
+ 
     mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_FIRST);
     aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, 
                                                   &innerTableMaxElementSize);
   
-    nsIContentPtr content;
-    mInnerTableFrame->GetContent(content.AssignRef());
-    nsTablePart *table = (nsTablePart*)(nsIContent*)content;
-#ifdef NOISY_MARGINS
-    if (table != nsnull)
-      table->DumpCellMap();
-#endif
     mInnerTableFrame->RecalcLayoutData();
-#ifdef NOISY_MARGINS
-    mInnerTableFrame->ListColumnLayoutData(stdout,1);
-#endif
+
   }
   mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_SECOND);
   // assign table width info only if the inner table frame is a first-in-flow

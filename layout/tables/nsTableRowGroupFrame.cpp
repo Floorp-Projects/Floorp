@@ -967,3 +967,44 @@ nsresult nsTableRowGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
 
 
 
+
+// For Debugging ONLY
+NS_METHOD nsTableRowGroupFrame::MoveTo(nscoord aX, nscoord aY)
+{
+  if ((aX != mRect.x) || (aY != mRect.y)) {
+    mRect.x = aX;
+    mRect.y = aY;
+
+    nsIView* view;
+    GetView(view);
+
+    // Let the view know
+    if (nsnull != view) {
+      // Position view relative to it's parent, not relative to our
+      // parent frame (our parent frame may not have a view).
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      view->SetPosition(origin.x, origin.y);
+      NS_IF_RELEASE(parentWithView);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD nsTableRowGroupFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+{
+  mRect.width = aWidth;
+  mRect.height = aHeight;
+
+  nsIView* view;
+  GetView(view);
+
+  // Let the view know
+  if (nsnull != view) {
+    view->SetDimensions(aWidth, aHeight);
+  }
+  return NS_OK;
+}
+

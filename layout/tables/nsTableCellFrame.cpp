@@ -27,6 +27,7 @@
 #include "nsIContentDelegate.h"
 #include "nsCSSLayout.h"
 #include "nsHTMLAtoms.h"
+#include "nsIView.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -199,6 +200,31 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
   }
 }
 
+/*
+ * Should this be performanced tuned? This is called
+ * in resize/reflow. Maybe we should cache the table
+ * frame in the table cell frame.
+ *
+ */
+nsTableFrame* nsTableCellFrame::GetTableFrame()
+{
+  nsIFrame* frame = nsnull;
+  nsresult  result;
+
+  result = GetContentParent(frame);             // Get RowFrame
+  
+  if ((result == NS_OK) && (frame != nsnull))
+    frame->GetContentParent(frame);             // Get RowGroupFrame
+  
+  if ((result == NS_OK) && (frame != nsnull))
+   frame->GetContentParent(frame);              // Get TableFrame
+
+  return (nsTableFrame*)frame;
+}
+
+
+
+
 /**
   */
 NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
@@ -232,6 +258,7 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -240,11 +267,18 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   nscoord bottomInset = borderPadding.bottom;
   nscoord leftInset = borderPadding.left;
 
+  // Get the margin information, available space should
+  // be reduced accordingly
+  nsMargin      margin(0,0,0,0);
+  nsTableFrame* tableFrame = GetTableFrame();
+  tableFrame->GetCellMarginData(this,margin);
+
   // reduce available space by insets
+
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)
-    availSize.width -= leftInset+rightInset;
+    availSize.width -= leftInset+rightInset+margin.left+margin.right;
   if (NS_UNCONSTRAINEDSIZE!=availSize.height)
-    availSize.height -= topInset+bottomInset;
+    availSize.height -= topInset+bottomInset+margin.top+margin.bottom;
 
   mLastContentIsComplete = PR_TRUE;
 
@@ -283,7 +317,7 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   if (gsDebug) printf("CELL: set last content offset to %d\n", GetLastContentOffset()); //@@@
 
   // Place the child since some of it's content fit in us.
-  mFirstChild->SetRect(nsRect(leftInset + x, topInset,
+  mFirstChild->SetRect(nsRect(leftInset, topInset,
                            kidSize.width, kidSize.height));
   
     
@@ -382,18 +416,19 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord
 }
 
 
-PRBool nsTableCellFrame::ConvertToIntValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
+PRBool nsTableCellFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
 {
   PRInt32 result = 0;
 
-  if (aValue.GetUnit() == eHTMLUnit_Integer)
-    aResult = aValue.GetIntValue();
-  else if (aValue.GetUnit() == eHTMLUnit_Pixel)
+  if (aValue.GetUnit() == eHTMLUnit_Pixel)
     aResult = aValue.GetPixelValue();
   else if (aValue.GetUnit() == eHTMLUnit_Empty)
     aResult = aDefault;
   else
+  {
+    NS_ERROR("Unit must be pixel or empty");
     return PR_FALSE;
+  }
   return PR_TRUE;
 }
 
@@ -439,10 +474,10 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     nsStyleCoord  padding(0);
     nsStyleCoord  spacing(0);
 
-    if (padding_result == eContentAttr_HasValue && ConvertToIntValue(padding_value,0,value))
+    if (padding_result == eContentAttr_HasValue && ConvertToPixelValue(padding_value,0,value))
       padding.SetCoordValue((nscoord)(p2t*(float)value)); 
     
-    if (spacing_result == eContentAttr_HasValue && ConvertToIntValue(spacing_value,0,value))
+    if (spacing_result == eContentAttr_HasValue && ConvertToPixelValue(spacing_value,0,value))
       spacing.SetCoordValue((nscoord)(p2t*(float)value)); 
 
     spacingData->mMargin.SetTop(spacing);
@@ -459,7 +494,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   {
     PRInt32 intValue = 0;
 
-    if (ConvertToIntValue(border_value,1,intValue))
+    if (ConvertToPixelValue(border_value,1,intValue))
     {    
       if (intValue > 0)
         intValue = 1;
@@ -497,6 +532,7 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 }
 
 
+
 /* ----- static methods ----- */
 
 nsresult nsTableCellFrame::NewFrame(nsIFrame** aInstancePtrResult,
@@ -514,3 +550,45 @@ nsresult nsTableCellFrame::NewFrame(nsIFrame** aInstancePtrResult,
   *aInstancePtrResult = it;
   return NS_OK;
 }
+
+
+// For Debugging ONLY
+NS_METHOD nsTableCellFrame::MoveTo(nscoord aX, nscoord aY)
+{
+  if ((aX != mRect.x) || (aY != mRect.y)) {
+    mRect.x = aX;
+    mRect.y = aY;
+
+    nsIView* view;
+    GetView(view);
+
+    // Let the view know
+    if (nsnull != view) {
+      // Position view relative to it's parent, not relative to our
+      // parent frame (our parent frame may not have a view).
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      view->SetPosition(origin.x, origin.y);
+      NS_IF_RELEASE(parentWithView);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD nsTableCellFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+{
+  mRect.width = aWidth;
+  mRect.height = aHeight;
+
+  nsIView* view;
+  GetView(view);
+
+  // Let the view know
+  if (nsnull != view) {
+    view->SetDimensions(aWidth, aHeight);
+  }
+  return NS_OK;
+}
+
