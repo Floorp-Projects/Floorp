@@ -734,6 +734,16 @@ namespace MetaData {
         return (widenCString(chrp) == *name);
 	}
 
+    bool JS2ArrayClass::Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
+    {
+        if ((*multiname->name == *meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+            *rval = Array_lengthGet(meta, *base, NULL, 0);
+            return true;
+        }
+        else
+            return JS2Class::Read(meta, base, multiname, env, phase, rval);
+    }
+
     bool JS2ArrayClass::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
         ASSERT(JS2VAL_IS_OBJECT(base));

@@ -4151,6 +4151,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
+/*
         Multiname length_mn(&world.identifiers["length"], publicNamespace);
         fInst = createFunctionInstance(env, true, true, Array_lengthGet, 0, NULL);
         g = new InstanceGetter(&length_mn, fInst, objectClass, true, true);
@@ -4158,7 +4159,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         fInst = createFunctionInstance(env, true, true, Array_lengthSet, 0, NULL);
         s = new InstanceSetter(&length_mn, fInst, objectClass, true, true);
         defineInstanceMember(arrayClass, &cxt, length_mn.name, *length_mn.nsList, Attribute::NoOverride, false, s, 0);
-
+*/
 /*** ECMA 3  Error Classes ***/
         MAKEBUILTINCLASS(errorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);

@@ -817,6 +817,7 @@ public:
     JS2ArrayClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
 
+    virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
     virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
     virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
     virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue);
