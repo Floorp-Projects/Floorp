@@ -23,6 +23,10 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+#if defined(XP_MAC)
+#include <TextUtils.h>
+#endif
+
 //#include <Xm/CascadeBG.h>
 //#include <Xm/SeparatoG.h>
 
@@ -39,9 +43,10 @@ nsMenu::nsMenu() : nsIMenu()
 {
   NS_INIT_REFCNT();
   mNumMenuItems  = 0;
-  //mMenu          = nsnull;
   mMenuParent    = nsnull;
   mMenuBarParent = nsnull;
+  
+  mMacMenuHandle = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -157,6 +162,21 @@ NS_METHOD nsMenu::GetParent(nsISupports*& aParent)
 NS_METHOD nsMenu::GetLabel(nsString &aText)
 {
   aText = mLabel;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetLabel(nsString &aText)
+{
+   mLabel = aText;
+   
+  // Mac Menu id may be 1-255
+  //mMacMenuHandle = ::NewMenu(1, (unsigned char *)mName.ToNewCString() );
+  Str255 test;
+  strcpy((char*)&test, "test");
+  c2pstr((char*)test);
+  mMacMenuHandle = ::NewMenu(500, test);
+  
   return NS_OK;
 }
 

@@ -121,6 +121,13 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetLabel(nsString &aText)
+{
+  mLabel = aText;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddItem(const nsString &aText)
 {
   char * labelStr = mLabel.ToNewCString();
