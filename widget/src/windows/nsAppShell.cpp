@@ -63,7 +63,7 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
-nsresult nsAppShell::Run()
+NS_METHOD nsAppShell::Run()
 {
   NS_ADDREF_THIS();
     // Process messages
