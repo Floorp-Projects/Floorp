@@ -32,6 +32,7 @@
 typedef boolean             PRBool   ;
 typedef octet               PRUint8  ;
 typedef unsigned short      PRUint16 ;
+typedef unsigned short      PRUnichar;
 typedef unsigned long       PRUint32 ;
 typedef unsigned long long  PRUint64 ;
 typedef unsigned long long  PRTime   ;
