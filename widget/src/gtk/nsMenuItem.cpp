@@ -315,6 +315,18 @@ NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 {
   aCommand = mCommand;

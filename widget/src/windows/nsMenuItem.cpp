@@ -301,6 +301,18 @@ NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
+{
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
 {

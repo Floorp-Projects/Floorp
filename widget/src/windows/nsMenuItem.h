@@ -64,6 +64,8 @@ public:
   NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
   NS_IMETHOD SetChecked(PRBool aIsEnabled);
   NS_IMETHOD GetChecked(PRBool *aIsEnabled);
+  NS_IMETHOD SetCheckboxType(PRBool aIsCheckbox);
+  NS_IMETHOD GetCheckboxType(PRBool *aIsCheckbox);
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);

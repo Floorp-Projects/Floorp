@@ -153,8 +153,46 @@ pascal void nsDynamicMDEFMain(
       //printf("  Point.v = %d  Point.h = %d \n", hitPt.v, hitPt.h);
       //printf("  whichItem = %d \n", *whichItem);
       //printf("  theMenu.menuID = %d \n", (**theMenu).menuID);
-    
+      
       nsCheckDestroy(theMenu, whichItem);
+      
+      // Need to make sure that we rebuild the menu every time...
+if (gPreviousMenuHandleStack.Count()) {
+    nsIMenu * menu = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
+    MenuHandle menuHandle = (MenuHandle) gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1];
+    
+    //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+    //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
+          
+    if( menu && menuHandle ) {
+      
+      if( menuHandle == theMenu ) {
+           
+	      nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menu));
+		  if(listener) {
+		    //printf("MenuPop \n");
+		    
+		    nsMenuEvent mevent;
+		    mevent.message = NS_MENU_SELECTED;
+		    mevent.eventStructType = NS_MENU_EVENT;
+		    mevent.point.x = 0;
+		    mevent.point.y = 0;
+		    mevent.widget = nsnull;
+		    mevent.time = PR_IntervalNow();
+		    mevent.mCommand = (PRUint32) nsnull;
+		    
+		    // UNDO
+		    listener->MenuDeselected(mevent);
+		    
+		    gPreviousMenuStack.RemoveElementAt(gPreviousMenuStack.Count() - 1);
+	        //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
+	        gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
+	      
+		  }
+	  }
+	}
+  } 
+      
       nsDynamicSizeTheMenu(theMenu);
       break;
   }

@@ -75,17 +75,18 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 {
   NS_INIT_REFCNT();
   //mMenu        = nsnull;
-  mMenuParent  = nsnull;
-  mPopUpParent = nsnull;
-  mTarget      = nsnull;
+  mMenuParent         = nsnull;
+  mPopUpParent        = nsnull;
+  mTarget             = nsnull;
   mXULCommandListener = nsnull;
-  mIsSeparator = PR_FALSE;
-  mWebShell    = nsnull;
-  mDOMElement  = nsnull;
-  mDOMNode     = nsnull;
-  mKeyEquivalent = " ";
-  mEnabled     = PR_TRUE;
-  mIsChecked   = PR_FALSE;
+  mIsSeparator        = PR_FALSE;
+  mWebShell           = nsnull;
+  mDOMElement         = nsnull;
+  mDOMNode            = nsnull;
+  mKeyEquivalent      = " ";
+  mEnabled            = PR_TRUE;
+  mIsChecked          = PR_FALSE;
+  mIsCheckboxType     = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -268,6 +269,13 @@ NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
   mIsChecked = aIsEnabled;
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement) {
+    if(mIsChecked)
+      domElement->SetAttribute("checked", "true");
+    else
+      domElement->SetAttribute("checked", "false");
+  }
   return NS_OK;
 }
 
@@ -275,6 +283,20 @@ NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
 {
   *aIsEnabled = mIsChecked;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
+{
+  mIsCheckboxType = aIsCheckbox;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
+{
+  *aIsCheckbox = mIsCheckboxType;
   return NS_OK;
 }
 
@@ -326,6 +348,9 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
+    if(mIsCheckboxType) {
+      SetChecked(!mIsChecked);
+    }
     DoCommand();
   	return nsEventStatus_eConsumeNoDefault;
 }

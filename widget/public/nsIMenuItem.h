@@ -97,17 +97,29 @@ class nsIMenuItem : public nsISupports {
     NS_IMETHOD GetEnabled(PRBool *aIsEnabled) = 0;
 
    /**
-    * Sets whether the item is enabled or disabled
+    * Sets whether the item is checked or not
     *
     */
     NS_IMETHOD SetChecked(PRBool aIsEnabled) = 0;
 
    /**
-    * Gets whether the item is enabled or disabled
+    * Gets whether the item is checked or not
     *
     */
     NS_IMETHOD GetChecked(PRBool *aIsEnabled) = 0;
 
+   /**
+    * Sets whether the item is a checkbox type
+    *
+    */
+    NS_IMETHOD SetCheckboxType(PRBool aIsCheckbox) = 0;
+
+   /**
+    * Gets whether the item is a checkbox type
+    *
+    */
+    NS_IMETHOD GetCheckboxType(PRBool *aIsCheckbox) = 0;
+    
    /**
     * Gets the MenuItem Command identifier
     *
