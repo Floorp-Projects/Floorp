@@ -408,7 +408,7 @@ nsAggregatePrincipal::Write(nsIObjectOutputStream* aStream)
     rv = NS_WriteOptionalObject(aStream, mCertificate, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_WriteOptionalObject(aStream, mCodebase, PR_TRUE);
+    rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIPrincipal), PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
