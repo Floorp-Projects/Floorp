@@ -313,7 +313,7 @@ public:
         NonWithFrame *localFrame;
         ParameterFrame *parameterFrame;
     };
-    void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
+    void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env, ParameterFrame *pFrame);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
     void rts();
     ActivationFrame *activationStack;

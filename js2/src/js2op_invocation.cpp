@@ -86,7 +86,7 @@
                         baseVal = OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
                         pFrame->thisObject = baseVal;
                         pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
-                        jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);   // seems out of order, but we need to catch the current top frame 
+                        jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env, pFrame);
                         meta->env->addFrame(pFrame);
                         parameterFrame = pFrame;
                         pFrame = NULL;
@@ -132,7 +132,7 @@ doCall:
                         push(JS2VAL_UNDEFINED);
                         argCount++;
                     }
-                    jsr(phase, NULL, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
+                    jsr(phase, NULL, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env, NULL);
                     if (fWrap->alien)
                         a = fWrap->alien(meta, fInst, a, base(argCount), argc);
                     else
@@ -147,7 +147,7 @@ doCall:
                         pFrame->thisObject = a;
                         // XXX (use fWrap->compileFrame->signature)
                         pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
-                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
+                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env, pFrame);
                         if (fInst->isMethodClosure)
                             meta->env->addFrame(meta->objectType(a));
                         meta->env->addFrame(pFrame);
@@ -155,7 +155,7 @@ doCall:
                         pFrame = NULL;
                     }
                     else {
-                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
+                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env, pFrame);
                         // XXX constructing a parameterFrame only for the purpose of holding the 'this'
                         // need to find a more efficient way of stashing 'this'
                         // used to be : "meta->env->addFrame(fWrap->compileFrame->prototype);"

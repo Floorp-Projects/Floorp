@@ -67,7 +67,7 @@ namespace MetaData {
     js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon, Environment *env)
     {
         packageFrame = env->getPackageFrame();
-        jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID, env);
+        jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID, env, NULL);
         ActivationFrame *f = activationStackTop;
         js2val result;
         try {
@@ -1028,7 +1028,7 @@ namespace MetaData {
 
     // Save current engine state (pc, environment top) and
     // jump to start of new bytecodeContainer
-    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal, Environment *env)
+    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal, Environment *env, ParameterFrame *pFrame)
     {
         if (activationStackTop >= (activationStack + MAX_ACTIVATION_STACK))
             meta->reportError(Exception::internalError, "out of activation stack", meta->engine->errorPos());
@@ -1042,6 +1042,7 @@ namespace MetaData {
         activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be so that local frames don't accumulate
         activationStackTop->localFrame = localFrame;
         activationStackTop->parameterFrame = parameterFrame;
+//		if (pFrame && pFrame->)
         activationStackTop++;
         if (new_bCon) {
             bCon = new_bCon;
