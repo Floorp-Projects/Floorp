@@ -205,7 +205,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
 
     if(!proto || !proto->Init(ccx, ScriptableCreateInfo))
     {
-        delete proto;
+        delete proto.get();
         return nsnull;
     }
 
