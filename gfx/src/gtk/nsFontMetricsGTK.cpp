@@ -1,3 +1,4 @@
+#define MOZ_MATHML 1
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ex: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab:
  *
@@ -1999,10 +2000,15 @@ nsFontGTKNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   }
 
   XChar2b buf[512];
+  char* p;
+  PRInt32 bufLen;
+  ENCODER_BUFFER_ALLOC_IF_NEEDED(p, mCharSetInfo->mConverter,
+                         aString, aLength, buf, sizeof(buf), bufLen);
   gint len = mCharSetInfo->Convert(mCharSetInfo,
-    (XFontStruct*) GDK_FONT_XFONT(mFont), aString, aLength, (char*) buf,
-    sizeof(buf));
-  return ::gdk_text_width(mFont, (char*) buf, len);
+    (XFontStruct*) GDK_FONT_XFONT(mFont), aString, aLength, p, bufLen);
+  gint outWidth = ::gdk_text_width(mFont, p, len);
+  ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
+  return outWidth;
 }
 
 gint
@@ -2019,14 +2025,19 @@ nsFontGTKNormal::DrawString(nsRenderingContextGTK* aContext,
   }
 
   XChar2b buf[512];
+  char* p;
+  PRInt32 bufLen;
+  ENCODER_BUFFER_ALLOC_IF_NEEDED(p, mCharSetInfo->mConverter,
+                         aString, aLength, buf, sizeof(buf), bufLen);
   gint len = mCharSetInfo->Convert(mCharSetInfo,
-    (XFontStruct*) GDK_FONT_XFONT(mFont), aString, aLength, (char*) buf,
-    sizeof(buf));
+    (XFontStruct*) GDK_FONT_XFONT(mFont), aString, aLength, p, bufLen);
   GdkGC *gc = aContext->GetGC();
   nsRenderingContextGTK::my_gdk_draw_text(aSurface->GetDrawable(), mFont, gc, aX,
-                                          aY + mBaselineAdjust, (char*) buf, len);
+                                          aY + mBaselineAdjust, p, len);
   gdk_gc_unref(gc);
-  return ::gdk_text_width(mFont, (char*) buf, len);
+  gint outWidth = ::gdk_text_width(mFont, p, len);
+  ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
+  return outWidth;
 }
 
 #ifdef MOZ_MATHML
@@ -2048,15 +2059,20 @@ nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
 
   if (aString && 0 < aLength) {
     XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (mFont);
-    XChar2b buf[512]; // XXX watch buffer length !!!
+    XChar2b buf[512];
+    char* p;
+    PRInt32 bufLen;
+    ENCODER_BUFFER_ALLOC_IF_NEEDED(p, mCharSetInfo->mConverter,
+                         aString, aLength, buf, sizeof(buf), bufLen);
     gint len = mCharSetInfo->Convert(mCharSetInfo, fontInfo, aString, aLength,
-                                     (char*) buf, sizeof(buf));
-    gdk_text_extents (mFont, (char*) buf, len, 
+                                     p, bufLen);
+    gdk_text_extents (mFont, p, len, 
                       &aBoundingMetrics.leftBearing, 
                       &aBoundingMetrics.rightBearing, 
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent); 
+    ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   }
 
   return NS_OK;
@@ -2152,8 +2168,21 @@ gint
 nsFontGTKSubstitute::GetWidth(const PRUnichar* aString, PRUint32 aLength)
 {
   PRUnichar buf[512];
-  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf)/2);
-  return mSubstituteFont->GetWidth(buf, len);
+  PRUnichar *p = buf;
+  PRUint32 bufLen = sizeof(buf)/sizeof(PRUnichar);
+  if ((aLength*2) > bufLen) {
+    PRUnichar *tmp;
+    tmp = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar) * (aLength*2));
+    if (tmp) {
+      p = tmp;
+      bufLen = (aLength*2);
+    }
+  }
+  PRUint32 len = Convert(aString, aLength, p, bufLen);
+  gint outWidth = mSubstituteFont->GetWidth(p, len);
+  if (p != buf)
+    nsMemory::Free(p);
+  return outWidth;
 
 }
 
@@ -2164,8 +2193,22 @@ nsFontGTKSubstitute::DrawString(nsRenderingContextGTK* aContext,
                                 const PRUnichar* aString, PRUint32 aLength)
 {
   PRUnichar buf[512];
-  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf)/2);
-  return mSubstituteFont->DrawString(aContext, aSurface, aX, aY, buf, len);
+  PRUnichar *p = buf;
+  PRUint32 bufLen = sizeof(buf)/sizeof(PRUnichar);
+  if ((aLength*2) > bufLen) {
+    PRUnichar *tmp;
+    tmp = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar) * (aLength*2));
+    if (tmp) {
+      p = tmp;
+      bufLen = (aLength*2);
+    }
+  }
+  PRUint32 len = Convert(aString, aLength, p, bufLen);
+  gint outWidth = mSubstituteFont->DrawString(aContext, aSurface, 
+                                        aX, aY, p, len);
+  if (p != buf)
+    nsMemory::Free(p);
+  return outWidth;
 }
 
 #ifdef MOZ_MATHML
@@ -2176,9 +2219,23 @@ nsFontGTKSubstitute::GetBoundingMetrics(const PRUnichar*   aString,
                                         PRUint32           aLength,
                                         nsBoundingMetrics& aBoundingMetrics)                                 
 {
-  PRUnichar buf[512]; // XXX watch buffer length !!!
-  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf)/2);
-  return mSubstituteFont->GetBoundingMetrics(buf, len, aBoundingMetrics);
+  PRUnichar buf[512];
+  PRUnichar *p = buf;
+  PRUint32 bufLen = sizeof(buf)/sizeof(PRUnichar);
+  if ((aLength*2) > bufLen) {
+    PRUnichar *tmp;
+    tmp = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar) * (aLength*2));
+    if (tmp) {
+      p = tmp;
+      bufLen = (aLength*2);
+    }
+  }
+  PRUint32 len = Convert(aString, aLength, p, bufLen);
+  nsresult res = mSubstituteFont->GetBoundingMetrics(p, len, 
+                                    aBoundingMetrics);
+  if (p != buf)
+    nsMemory::Free(p);
+  return res;
 }
 #endif
 
@@ -2256,9 +2313,15 @@ gint
 nsFontGTKUserDefined::GetWidth(const PRUnichar* aString, PRUint32 aLength)
 {
   char buf[1024];
-  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf));
+  char* p;
+  PRInt32 bufLen;
+  ENCODER_BUFFER_ALLOC_IF_NEEDED(p, gUserDefinedConverter,
+                         aString, aLength, buf, sizeof(buf), bufLen);
+  PRUint32 len = Convert(aString, aLength, p, bufLen);
 
-  return ::gdk_text_width(mFont, buf, len);
+  gint outWidth = ::gdk_text_width(mFont, p, len);
+  ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
+  return outWidth;
 }
 
 gint
@@ -2268,13 +2331,19 @@ nsFontGTKUserDefined::DrawString(nsRenderingContextGTK* aContext,
                                 const PRUnichar* aString, PRUint32 aLength)
 {
   char buf[1024];
-  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf));
+  char* p;
+  PRInt32 bufLen;
+  ENCODER_BUFFER_ALLOC_IF_NEEDED(p, gUserDefinedConverter,
+                         aString, aLength, buf, sizeof(buf), bufLen);
+  PRUint32 len = Convert(aString, aLength, p, bufLen);
   GdkGC *gc = aContext->GetGC();
   nsRenderingContextGTK::my_gdk_draw_text(aSurface->GetDrawable(), mFont, gc, aX,
-                                          aY + mBaselineAdjust, buf, len);
+                                          aY + mBaselineAdjust, p, len);
   gdk_gc_unref(gc);
 
-  return ::gdk_text_width(mFont, buf, len);
+  gint outWidth = ::gdk_text_width(mFont, buf, len);
+  ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
+  return outWidth;
 }
 
 #ifdef MOZ_MATHML
@@ -2288,14 +2357,19 @@ nsFontGTKUserDefined::GetBoundingMetrics(const PRUnichar*   aString,
   aBoundingMetrics.Clear();               
 
   if (aString && 0 < aLength) {
-    char buf[1024]; // XXX watch buffer length !!!
-    PRUint32 len = Convert(aString, aLength, buf, sizeof(buf));
-    gdk_text_extents (mFont, buf, len, 
+    char buf[1024];
+    char* p;
+    PRInt32 bufLen;
+    ENCODER_BUFFER_ALLOC_IF_NEEDED(p, gUserDefinedConverter,
+                         aString, aLength, buf, sizeof(buf), bufLen);
+    PRUint32 len = Convert(aString, aLength, p, bufLen);
+    gdk_text_extents (mFont, p, len, 
                       &aBoundingMetrics.leftBearing, 
                       &aBoundingMetrics.rightBearing, 
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent); 
+    ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   }
 
   return NS_OK;
