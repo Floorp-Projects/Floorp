@@ -21,10 +21,9 @@
 
 DEPTH=..\..\..\..\..
 
-include <$(DEPTH)\config\rules.mak>
-
 DIRS = win
 
+include <$(DEPTH)\config\rules.mak>
+
 chrome::
-        $(REGCHROME) content communicator comm.jar
         $(REGCHROME) locale en-US/communicator en-US.jar
