@@ -3118,11 +3118,11 @@ doUnary:
             LocalBindingEntry *lbe = *bi2;
             singularFrame->localBindings.insert(lbe->name, lbe->clone());
         }
-        if (buildSlots && pluralFrame->slots) {
-            size_t count = pluralFrame->slots->size();
-            singularFrame->slots = new std::vector<js2val>(count);
+        if (buildSlots && pluralFrame->frameSlots) {
+            size_t count = pluralFrame->frameSlots->size();
+            singularFrame->frameSlots = new std::vector<js2val>(count);
             for (size_t i = 0; i < count; i++)
-                (*singularFrame->slots)[i] = (*pluralFrame->slots)[i];
+                (*singularFrame->frameSlots)[i] = (*pluralFrame->frameSlots)[i];
         }
     }
 
@@ -3530,7 +3530,7 @@ rescan:
             else
                 lbe = *lbeP;
             result = makeFrameVariable(regionalFrame);
-            (*regionalFrame->slots)[checked_cast<FrameVariable *>(result)->frameSlot] = initVal;
+            (*regionalFrame->frameSlots)[checked_cast<FrameVariable *>(result)->frameSlot] = initVal;
             LocalBinding *sb = new LocalBinding(ReadWriteAccess, result, true);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
         }
@@ -4008,10 +4008,7 @@ static const uint8 urlCharType[256] =
         MAKEBUILTINCLASS(classClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);                
         MAKEBUILTINCLASS(functionClass, objectClass, true, true, engine->Function_StringAtom, JS2VAL_NULL);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Package"]), JS2VAL_NULL);
-        MAKEBUILTINCLASS(argumentsClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Arguments"]), JS2VAL_NULL);
-
-        
-
+        argumentsClass = new JS2ArgumentsClass(objectClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["Object"])); argumentsClass->complete = true; argumentsClass->defaultValue = JS2VAL_NULL;
 
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
@@ -4466,19 +4463,19 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 case FrameVariable::Package:
                     {
                         ASSERT(container->kind == PackageKind);
-                        *rval = (*(checked_cast<Package *>(container))->slots)[fv->frameSlot];
+                        *rval = (*(checked_cast<Package *>(container))->frameSlots)[fv->frameSlot];
                     }
                     break;
                 case FrameVariable::Local:
                     {
                         ASSERT(container->kind == BlockFrameKind);
-                        *rval = (*(checked_cast<NonWithFrame *>(container))->slots)[fv->frameSlot];
+                        *rval = (*(checked_cast<NonWithFrame *>(container))->frameSlots)[fv->frameSlot];
                     }
                     break;
                 case FrameVariable::Parameter:
                     {
                         ASSERT(container->kind == ParameterFrameKind);
-                        *rval = (*(checked_cast<ParameterFrame *>(container))->slots)[fv->frameSlot];
+                        *rval = (*(checked_cast<ParameterFrame *>(container))->frameSlots)[fv->frameSlot];
                     }
                     break;
                 }
@@ -4537,19 +4534,19 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 case FrameVariable::Package:
                     {
                         ASSERT(container->kind == PackageKind);
-                        (*(checked_cast<Package *>(container))->slots)[fv->frameSlot] = newValue;
+                        (*(checked_cast<Package *>(container))->frameSlots)[fv->frameSlot] = newValue;
                     }
                     break;
                 case FrameVariable::Local:
                     {
                         ASSERT(container->kind == BlockFrameKind);
-                        (*(checked_cast<NonWithFrame *>(container))->slots)[fv->frameSlot] = newValue;
+                        (*(checked_cast<NonWithFrame *>(container))->frameSlots)[fv->frameSlot] = newValue;
                     }
                     break;
                 case FrameVariable::Parameter:
                     {
                         ASSERT(container->kind == ParameterFrameKind);
-                        (*(checked_cast<ParameterFrame *>(container))->slots)[fv->frameSlot] = newValue;
+                        (*(checked_cast<ParameterFrame *>(container))->frameSlots)[fv->frameSlot] = newValue;
                     }
                     break;
                 }
@@ -4639,7 +4636,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ASSERT(JS2VAL_IS_OBJECT(thisObjVal) 
                     && (JS2VAL_TO_OBJECT(thisObjVal)->kind == SimpleInstanceKind));
         JS2Object *thisObj = JS2VAL_TO_OBJECT(thisObjVal);
-        return &checked_cast<SimpleInstance *>(thisObj)->slots[id->slotIndex];
+        return &checked_cast<SimpleInstance *>(thisObj)->fixedSlots[id->slotIndex];
     }
 
 
@@ -4946,7 +4943,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 InstanceMember *im = ns.second->content;
                 if (im->memberKind == Member::InstanceVariableMember) {
                     InstanceVariable *iv = checked_cast<InstanceVariable *>(im);
-                    slots[iv->slotIndex].value = iv->defaultValue;
+                    fixedSlots[iv->slotIndex].value = iv->defaultValue;
                 }
             }
         }
@@ -4959,10 +4956,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             sealed(false),
             super(parent),
             type(type), 
-            slots(new Slot[type->slotCount])
+            fixedSlots(new Slot[type->slotCount])
     {
         for (uint32 i = 0; i < type->slotCount; i++) {
-            slots[i].value = JS2VAL_UNINITIALIZED;
+            fixedSlots[i].value = JS2VAL_UNINITIALIZED;
         }
         initializeSlots(type);
     }
@@ -4972,10 +4969,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         GCMARKOBJECT(type)
         GCMARKVALUE(super);
-        if (slots) {
+        if (fixedSlots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
-                GCMARKVALUE(slots[i].value);
+                GCMARKVALUE(fixedSlots[i].value);
             }
         }
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
@@ -4998,7 +4995,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
             delete lbe;
         }
-        delete [] slots;
+        delete [] fixedSlots;
     }
 
 
@@ -5098,10 +5095,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // on the list (which may need to be created) for gc tracking.
     uint16 NonWithFrame::allocateSlot()
     {
-        if (slots == NULL)
-            slots = new std::vector<js2val>;
-        uint16 result = (uint16)(slots->size());
-        slots->push_back(JS2VAL_VOID);
+        if (frameSlots == NULL)
+            frameSlots = new std::vector<js2val>;
+        uint16 result = (uint16)(frameSlots->size());
+        frameSlots->push_back(JS2VAL_VOID);
         return result;
     }
 
@@ -5115,8 +5112,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
             delete lbe;
         }
-        if (slots)
-            delete slots;
+        if (frameSlots)
+            delete frameSlots;
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
@@ -5130,8 +5127,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 ns.second->content->mark();
             }
         }            
-        if (slots) {
-            for (std::vector<js2val>::iterator i = slots->begin(), end = slots->end(); (i != end); i++)
+        if (frameSlots) {
+            for (std::vector<js2val>::iterator i = frameSlots->begin(), end = frameSlots->end(); (i != end); i++)
                 GCMARKVALUE(*i);
         }
     }
@@ -5167,7 +5164,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     void ParameterFrame::instantiate(Environment *env)
     {
-        env->instantiateFrame(pluralFrame, this, !buildArguments);
+        ASSERT(pluralFrame->kind == ParameterFrameKind);
+        ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
+        env->instantiateFrame(pluralFrame, this, !plural->buildArguments);
     }
 
     // Assume that instantiate has been called, the plural frame will contain
@@ -5182,20 +5181,24 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ArgumentsInstance *argsObj = NULL;
         DEFINE_ROOTKEEPER(rk2, argsObj);
 
-        uint32 slotCount = (plural->slots) ? plural->slots->size() : 0;
+		// slotCount is the number of slots required by the parameter frame
+        uint32 slotCount = (plural->frameSlots) ? plural->frameSlots->size() : 0;
+		ASSERT(length == slotCount);
 
         if (plural->buildArguments) {
             // If we're building an arguments object, the slots for the parameter frame are located
             // there so that the arguments object itself can survive beyond the life of the function.
             argsObj = new ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
-            if (slotCount)
+			if (argCount > slotCount)
+				slotCount = argCount;
+			if (slotCount)
                 argsObj->mSlots = new std::vector<js2val>(slotCount);
-            slots = argsObj->mSlots;
+            frameSlots = argsObj->mSlots;
             // Add the 'arguments' property
             String name(widenCString("arguments"));
             ASSERT(localBindings[name] == NULL);
             LocalBindingEntry *lbe = new LocalBindingEntry(name);
-            LocalBinding *sb = new LocalBinding(ReadAccess, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true), false);
+            LocalBinding *sb = new LocalBinding(ReadWriteAccess, new Variable(meta->objectClass, OBJECT_TO_JS2VAL(argsObj), false), false);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
             localBindings.insert(name, lbe);
         }
@@ -5203,17 +5206,17 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         uint32 i;
         for (i = 0; (i < argCount); i++) {
             if (i < slotCount) {
-                (*slots)[i] = argBase[i];
+                (*frameSlots)[i] = argBase[i];
             }
         }
         while (i++ < length) {
             if (i < slotCount) {
-                (*slots)[i] = JS2VAL_UNDEFINED;
-            }
+				(*frameSlots)[i] = JS2VAL_UNDEFINED;
+			}
         }
         if (plural->buildArguments) {
             setLength(meta, argsObj, argCount);
-            meta->objectClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
+            meta->argumentsClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
         }
     }
 
@@ -5228,7 +5231,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     ParameterFrame::~ParameterFrame()
     {
         if (buildArguments) {
-            slots = NULL;      // the slots are in the arguments object, let it do the delete
+            frameSlots = NULL;      // the slots are in the arguments object, let it do the delete
         }
     }
 

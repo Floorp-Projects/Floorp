@@ -802,15 +802,6 @@ namespace MetaData {
             return JS2Class::Delete(meta, base, multiname, env, result);
     }
 
-    bool JS2ArrayClass::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
-	{
-		const String *indexStr = meta->toString(indexVal);
-		DEFINE_ROOTKEEPER(rk, indexStr);
-		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-		DEFINE_ROOTKEEPER(rk1, mn);
-		return Read(meta, base, mn, NULL, phase, rval);
-	}
-
     bool JS2ArrayClass::BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)
 	{
 		const String *indexStr = meta->toString(indexVal);
@@ -894,6 +885,32 @@ namespace MetaData {
         return JS2Class::Delete(meta, base, multiname, env, result);
     }
 
+    bool JS2ArrayClass::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
+	{
+		const String *indexStr = meta->toString(indexVal);
+		DEFINE_ROOTKEEPER(rk, indexStr);
+		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+		DEFINE_ROOTKEEPER(rk1, mn);
+		return Read(meta, base, mn, NULL, phase, rval);
+	}
+
+    bool JS2Class::BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)
+    {
+        const String *indexStr = meta->toString(indexVal);
+        DEFINE_ROOTKEEPER(rk, indexStr);
+        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(rk1, mn);
+        return Write(meta, base, mn, NULL, true, newValue, false);
+    }
+
+    bool JS2Class::BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)
+    {
+        const String *indexStr = meta->toString(indexVal);
+        DEFINE_ROOTKEEPER(rk, indexStr);
+        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(rk1, mn);
+        return Delete(meta, base, mn, NULL, result);
+    }
 
     bool JS2Class::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
@@ -957,15 +974,6 @@ namespace MetaData {
             NOT_REACHED("bad member kind");
             return false;
         }
-    }
-
-    bool JS2Class::BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)
-    {
-        const String *indexStr = meta->toString(indexVal);
-        DEFINE_ROOTKEEPER(rk, indexStr);
-        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn);
-        return Write(meta, base, mn, NULL, true, newValue, false);
     }
 
     bool JS2Class::Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)
@@ -1050,15 +1058,6 @@ VariableMemberCommon:
             NOT_REACHED("bad member kind");
             return false;
         }
-    }
-
-    bool JS2Class::BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)
-    {
-        const String *indexStr = meta->toString(indexVal);
-        DEFINE_ROOTKEEPER(rk, indexStr);
-        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn);
-        return Delete(meta, base, mn, NULL, result);
     }
 
     js2val JS2Class::ImplicitCoerce(JS2Metadata *meta, js2val newValue)

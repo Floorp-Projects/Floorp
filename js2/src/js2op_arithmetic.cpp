@@ -1095,9 +1095,9 @@
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
             ASSERT(obj->kind == SimpleInstanceKind);
-            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
+            a = checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value;
             float64 num = meta->toFloat64(a);
-            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = allocNumber(num + 1.0);
+            checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value = allocNumber(num + 1.0);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
         }
@@ -1110,9 +1110,9 @@
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
             ASSERT(obj->kind == SimpleInstanceKind);
-            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
+            a = checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value;
             float64 num = meta->toFloat64(a);
-            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = allocNumber(num - 1.0);
+            checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value = allocNumber(num - 1.0);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
         }
@@ -1125,10 +1125,10 @@
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
             ASSERT(obj->kind == SimpleInstanceKind);
-            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
+            a = checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value;
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = a;
+            checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value = a;
             baseVal = JS2VAL_VOID;
         }
         break;
@@ -1140,10 +1140,10 @@
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
             ASSERT(obj->kind == SimpleInstanceKind);
-            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
+            a = checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value;
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = a;
+            checked_cast<SimpleInstance *>(obj)->fixedSlots[slotIndex].value = a;
             baseVal = JS2VAL_VOID;
         }
         break;
@@ -1152,10 +1152,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < localFrame->slots->size());
-            a = (*localFrame->slots)[slotIndex];
+            ASSERT(slotIndex < localFrame->frameSlots->size());
+            a = (*localFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*localFrame->slots)[slotIndex] = allocNumber(num + 1.0);
+            (*localFrame->frameSlots)[slotIndex] = allocNumber(num + 1.0);
             pushNumber(num);
         }
         break;
@@ -1163,10 +1163,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < localFrame->slots->size());
-            a = (*localFrame->slots)[slotIndex];
+            ASSERT(slotIndex < localFrame->frameSlots->size());
+            a = (*localFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*localFrame->slots)[slotIndex] = allocNumber(num - 1.0);
+            (*localFrame->frameSlots)[slotIndex] = allocNumber(num - 1.0);
             pushNumber(num);
         }
         break;
@@ -1174,22 +1174,22 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < localFrame->slots->size());
-            a = (*localFrame->slots)[slotIndex];
+            ASSERT(slotIndex < localFrame->frameSlots->size());
+            a = (*localFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            (*localFrame->slots)[slotIndex] = a;
+            (*localFrame->frameSlots)[slotIndex] = a;
         }
         break;
     case eFrameSlotPreDec:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < localFrame->slots->size());
-            a = (*localFrame->slots)[slotIndex];
+            ASSERT(slotIndex < localFrame->frameSlots->size());
+            a = (*localFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            (*localFrame->slots)[slotIndex] = a;
+            (*localFrame->frameSlots)[slotIndex] = a;
         }
         break;
 
@@ -1197,10 +1197,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < packageFrame->slots->size());
-            a = (*packageFrame->slots)[slotIndex];
+            ASSERT(slotIndex < packageFrame->frameSlots->size());
+            a = (*packageFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*packageFrame->slots)[slotIndex] = allocNumber(num + 1.0);
+            (*packageFrame->frameSlots)[slotIndex] = allocNumber(num + 1.0);
             pushNumber(num);
         }
         break;
@@ -1208,10 +1208,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < packageFrame->slots->size());
-            a = (*packageFrame->slots)[slotIndex];
+            ASSERT(slotIndex < packageFrame->frameSlots->size());
+            a = (*packageFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*packageFrame->slots)[slotIndex] = allocNumber(num - 1.0);
+            (*packageFrame->frameSlots)[slotIndex] = allocNumber(num - 1.0);
             pushNumber(num);
         }
         break;
@@ -1219,22 +1219,22 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < packageFrame->slots->size());
-            a = (*packageFrame->slots)[slotIndex];
+            ASSERT(slotIndex < packageFrame->frameSlots->size());
+            a = (*packageFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            (*packageFrame->slots)[slotIndex] = a;
+            (*packageFrame->frameSlots)[slotIndex] = a;
         }
         break;
     case ePackageSlotPreDec:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < packageFrame->slots->size());
-            a = (*packageFrame->slots)[slotIndex];
+            ASSERT(slotIndex < packageFrame->frameSlots->size());
+            a = (*packageFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            (*packageFrame->slots)[slotIndex] = a;
+            (*packageFrame->frameSlots)[slotIndex] = a;
         }
         break;
 
@@ -1242,10 +1242,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->slots->size());
-            a = (*parameterFrame->slots)[slotIndex];
+            ASSERT(slotIndex < parameterFrame->frameSlots->size());
+            a = (*parameterFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*parameterFrame->slots)[slotIndex] = allocNumber(num + 1.0);
+            (*parameterFrame->frameSlots)[slotIndex] = allocNumber(num + 1.0);
             pushNumber(num);
         }
         break;
@@ -1253,10 +1253,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->slots->size());
-            a = (*parameterFrame->slots)[slotIndex];
+            ASSERT(slotIndex < parameterFrame->frameSlots->size());
+            a = (*parameterFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*parameterFrame->slots)[slotIndex] = allocNumber(num - 1.0);
+            (*parameterFrame->frameSlots)[slotIndex] = allocNumber(num - 1.0);
             pushNumber(num);
         }
         break;
@@ -1264,21 +1264,21 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->slots->size());
-            a = (*parameterFrame->slots)[slotIndex];
+            ASSERT(slotIndex < parameterFrame->frameSlots->size());
+            a = (*parameterFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            (*parameterFrame->slots)[slotIndex] = a;
+            (*parameterFrame->frameSlots)[slotIndex] = a;
         }
         break;
     case eParameterSlotPreDec:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->slots->size());
-            a = (*parameterFrame->slots)[slotIndex];
+            ASSERT(slotIndex < parameterFrame->frameSlots->size());
+            a = (*parameterFrame->frameSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            (*parameterFrame->slots)[slotIndex] = a;
+            (*parameterFrame->frameSlots)[slotIndex] = a;
         }
         break;

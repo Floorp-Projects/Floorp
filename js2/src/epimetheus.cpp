@@ -350,7 +350,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     stdOut << "type = " << *s->type->name << '\n';
                     printLocalBindings(&s->localBindings, NULL);
                     stdOut << " Instance Bindings:\n";   
-                    printInstanceVariables(s->type, s->slots);
+                    printInstanceVariables(s->type, s->fixedSlots);
                     if (meta->objectType(argv[0]) == meta->functionClass) {
                         FunctionWrapper *fWrap;
                         fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
@@ -370,7 +370,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     stdOut << "\n";
                     stdOut << ((c->dynamic) ? " dynamic, " : " non-dynamic, ") << ((c->final) ? "final" : "non-final") << "\n";
                     stdOut << " slotCount = " << c->slotCount << "\n";
-                    printLocalBindings(&c->localBindings, c->slots);
+                    printLocalBindings(&c->localBindings, c->frameSlots);
                     stdOut << " Instance Bindings:\n";                    
                     for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
                         InstanceBindingEntry *ibe = *rib;
@@ -423,7 +423,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     else
                         stdOut << "super = " << *metadata->toString(pkg->super) << '\n';
                     stdOut << ((pkg->sealed) ? "sealed " : "not-sealed ") << '\n';
-                    printLocalBindings(&pkg->localBindings, pkg->slots);
+                    printLocalBindings(&pkg->localBindings, pkg->frameSlots);
                 }
                 break;
             default:

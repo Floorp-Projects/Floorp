@@ -164,21 +164,34 @@ namespace MetaData {
 			callThis = meta->toObject(callThis);
 
 		if ((argc > 1) && !JS2VAL_IS_NULL(argv[1]) && !JS2VAL_IS_UNDEFINED(argv[1])) {
-			if (!JS2VAL_IS_OBJECT(argv[1]) 
-					|| (JS2VAL_TO_OBJECT(argv[1])->kind != SimpleInstanceKind)
-					|| ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(argv[1])))->type != meta->arrayClass))
-				meta->reportError(Exception::typeError, "Function.apply passed a non-array argument list", meta->engine->errorPos());
-			ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(argv[1]));
-			uint32 length = getLength(meta, arrInst);
-			js2val *argArray = new js2val[length];
-			DEFINE_ARRAYROOTKEEPER(rk, argArray, length);
-			for (uint32 i = 0; i < length; i++)
-				meta->arrayClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
-			return meta->invokeFunction(fnInst, callThis, argArray, length, NULL);
+			if (JS2VAL_IS_OBJECT(argv[1]) 
+					&& (JS2VAL_TO_OBJECT(argv[1])->kind == SimpleInstanceKind)) {
+				SimpleInstance *obj = checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(argv[1]));
+				if (obj->type == meta->arrayClass) {
+					ArrayInstance *arrInst = checked_cast<ArrayInstance *>(obj);
+					uint32 length = getLength(meta, arrInst);
+					js2val *argArray = new js2val[length];
+					DEFINE_ARRAYROOTKEEPER(rk, argArray, length);
+					for (uint32 i = 0; i < length; i++)
+						meta->arrayClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
+					return meta->invokeFunction(fnInst, callThis, argArray, length, NULL);
+				}
+				else
+					if (obj->type == meta->argumentsClass) {
+						ArgumentsInstance *argInst = checked_cast<ArgumentsInstance *>(obj);
+						uint32 length = getLength(meta, argInst);
+						js2val *argArray = new js2val[length];
+						DEFINE_ARRAYROOTKEEPER(rk, argArray, length);
+						for (uint32 i = 0; i < length; i++)
+							meta->argumentsClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
+						return meta->invokeFunction(fnInst, callThis, argArray, length, NULL);
+					}
+			}
+			meta->reportError(Exception::typeError, "Function.apply passed a non-array or argument value", meta->engine->errorPos());
+			return JS2VAL_VOID;
 		}
 		else
-			return meta->invokeFunction(fnInst, callThis, NULL, 0, NULL);
-        
+			return meta->invokeFunction(fnInst, callThis, NULL, 0, NULL);        
     }
 
     void initFunctionObject(JS2Metadata *meta)

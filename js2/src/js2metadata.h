@@ -687,12 +687,12 @@ typedef std::vector<js2val> ValueList;
 class NonWithFrame : public Frame {
 public:
 
-    NonWithFrame(ObjectKind kind) : Frame(kind), slots(NULL), pluralFrame(NULL) { }
-    NonWithFrame(ObjectKind kind, NonWithFrame *pluralFrame) : Frame(kind), slots(NULL), pluralFrame(pluralFrame) { }
+    NonWithFrame(ObjectKind kind) : Frame(kind), frameSlots(NULL), pluralFrame(NULL) { }
+    NonWithFrame(ObjectKind kind, NonWithFrame *pluralFrame) : Frame(kind), frameSlots(NULL), pluralFrame(pluralFrame) { }
 
     LocalBindingMap localBindings;              // Map of qualified names to members defined in this frame
 
-    ValueList *slots;                           // temporaries or frame variables allocted in this frame
+    ValueList *frameSlots;                      // temporaries or frame variables allocted in this frame
     uint16 allocateSlot();
 
     virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }
@@ -948,7 +948,7 @@ public:
     js2val              super;              // Optional link to the next object in this instance's prototype chain
     bool                sealed;             // If true, no more local properties may be added to this instance
     JS2Class            *type;              // This instance's type
-    Slot                *slots;             // A set of slots that hold this instance's fixed property values
+    Slot                *fixedSlots;        // A set of slots that hold this instance's fixed property values
 
     void initializeSlots(JS2Class *type);
 
