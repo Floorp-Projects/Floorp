@@ -137,12 +137,12 @@ function addToUrlbarHistory()
 		   entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
            var url = entry.Value;
 		   if (url == urlToAdd) {
-		      dump("URL already in urlbar history\n");
+		 //     dump("URL already in urlbar history\n");
 			  return;
 		   }  
          }  //entry
        }  //while
-	   dump("Adding " + urlToAdd + "to urlbar history\n");
+	   //dump("Adding " + urlToAdd + "to urlbar history\n");
 	   localstore.Assert(rdf.GetResource("nc:urlbar-history"),
                     rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
                     rdf.GetLiteral(urlToAdd),
