@@ -1,0 +1,44 @@
+#! /usr/bonsaitools/bin/perl
+
+$tree = 'SeaMonkey';
+
+for $br (last_successful_builds($tree)) {
+
+  next unless $br->{buildname} =~ /shrike.*\b(Clobber|Clbr)\b/;
+
+  my $logfile = "$tree/$br->{logfile}";
+  unless (-e $logfile) {
+    chdir "$tree";
+    system "wget http://tinderbox.mozilla.org/$logfile";
+    chdir '..';
+  }
+  last;
+}
+
+sub last_successful_builds {
+  my $tree = shift;
+  my @build_records = ();
+  my $br;
+
+  # tinderbox/globals.pl uses many shameful globals
+  $form{tree} = $tree;
+
+  $maxdate = time;
+  $mindate = $maxdate - 8*60*60; # Go back 8 hours
+  
+  print STDERR "Loading build data...";
+
+  require 'tbglobals.pl';
+  tb_load_data();
+
+  print STDERR "done\n";
+  
+  for (my $ii=1; $ii <= $name_count; $ii++) {
+    for (my $tt=1; $tt <= $time_count; $tt++) {
+      if (defined($br = $build_table->[$tt][$ii])
+          and $br->{buildstatus} eq 'success') {
+        push @build_records, $br;
+        last;
+  } } }
+  return @build_records;
+}
