@@ -321,12 +321,12 @@ public:
   /**
    * Get the nearest enclosing chrome shell.
    */
-  NS_IMETHOD GetContainingChromeShell(nsIWebShell** aResult) = 0;
+  NS_IMETHOD GetContainingChromeElement(nsIContent** aResult) = 0;
 
   /** 
    * Set the nearest enclosing chrome shell.
    */
-  NS_IMETHOD SetContainingChromeShell(nsIWebShell* aChromeShell) = 0;
+  NS_IMETHOD SetContainingChromeElement(nsIContent* aChromeElement) = 0;
 
   //
   // Document load api's
