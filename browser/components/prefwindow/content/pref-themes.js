@@ -318,6 +318,9 @@ function toggleExtension()
 function updateDisableExtButton(item)
 {
   var disableButton = document.getElementById("disableExtension");
+  if (disableButton.disabled)
+    disableButton.disabled = false;
+
   if (item.getAttribute("disabledState") == "true")
     disableButton.setAttribute("label", "Enable Extension"); // XXXdwh localize
   else
