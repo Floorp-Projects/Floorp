@@ -2586,17 +2586,6 @@ nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
 {
   NS_ENSURE_ARG_POINTER(aTextLength);
 
-  // We should probably invalidate the cached string on more
-  // than just selection changes; maybe we should listen
-  // for editor transactions etc.
-  nsString *str = GetCachedString();
-  if (str)
-  {
-    *aTextLength = str->Length();
-    return NS_OK;
-  }
-  
-  // otherwise, do it the long way
   nsAutoString   textContents;
   GetTextControlFrameState(textContents);   // this is expensive!
   *aTextLength = textContents.Length();
@@ -3201,19 +3190,6 @@ nsGfxTextControlFrame2::CallOnChange()
 
 //======
 //privates
-
-nsString *
-nsGfxTextControlFrame2::GetCachedString()
-{
-  if (!mCachedState && mEditor && mUseEditor)
-  {
-    mCachedState = new nsString;
-    if (!mCachedState)
-      return nsnull;
-    GetTextControlFrameState(*mCachedState);  
-  }
-  return mCachedState;
-}
 
 void
 nsGfxTextControlFrame2::InvalidateCachedState()
