@@ -137,6 +137,19 @@ NS_SoftwareUpdateRequestAutoReg()
   }
 
   file->AppendNative(nsDependentCString(".autoreg"));
+  PRBool condition;
+  if (NS_SUCCEEDED(file->Exists(&condition)) && condition) {
+    if (NS_SUCCEEDED(file->IsFile(&condition)) && condition)
+      return;
+#ifdef DEBUG_timeless
+    if (NS_SUCCEEDED(file->IsDirectory(&condition)) && condition) {
+      /* someone did this intentionally, no point in complaining */
+      return;
+    }
+#endif
+    NS_WARNING("Found an .autoreg object, but it isn't a file or directory");
+    return;
+  }
 
   rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
 
