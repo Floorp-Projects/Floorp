@@ -130,10 +130,11 @@ extern CTagList      gFramesetKids;
 extern CTagList      gHeadingTags;
 
 //special property bits...
-static const int kDiscardTag    = 0x0001; //tells us to toss this tag
-static const int kOmitEndTag    = 0x0002; //safely ignore end tag
-static const int kLegalOpen     = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
-static const int kOmitWS        = 0x0008; //If set, the tag can omit all ws and newlines
+static const int kDiscardTag      = 0x0001; //tells us to toss this tag
+static const int kOmitEndTag      = 0x0002; //safely ignore end tag
+static const int kLegalOpen       = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
+static const int kOmitWS          = 0x0008; //If set, the tag can omit all ws and newlines
+static const int kBadContentWatch = 0x0014; //Used in handling illegal contents
 
 //*********************************************************************************************
 // The following ints define the standard groups of HTML elements...
