@@ -3561,20 +3561,22 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             if (doc) {
               nsCOMPtr<nsIDocument> subDoc;
               doc->GetSubDocumentFor(child, getter_AddRefs(subDoc));
-              nsCOMPtr<nsISupports> container;
-              subDoc->GetContainer(getter_AddRefs(container));
-              nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-              if (docShell) {
-                nsCOMPtr<nsIContentViewer> contentViewer;
-                docShell->GetContentViewer(getter_AddRefs(contentViewer));
-                if (contentViewer) {
-                  nsCOMPtr<nsIContentViewer> zombieViewer;
-                  contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-                  if (!zombieViewer) {
-                    // If there are 2 viewers for the current docshell, that 
-                    // means the current document is a zombie document.
-                    // Only navigate into the frame/iframe if it's not a zombie
-                    disabled = PR_FALSE;
+              if (subDoc) {
+                nsCOMPtr<nsISupports> container;
+                subDoc->GetContainer(getter_AddRefs(container));
+                nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+                if (docShell) {
+                  nsCOMPtr<nsIContentViewer> contentViewer;
+                  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+                  if (contentViewer) {
+                    nsCOMPtr<nsIContentViewer> zombieViewer;
+                    contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+                    if (!zombieViewer) {
+                      // If there are 2 viewers for the current docshell, that 
+                      // means the current document is a zombie document.
+                      // Only navigate into the frame/iframe if it's not a zombie
+                      disabled = PR_FALSE;
+                    }
                   }
                 }
               }
