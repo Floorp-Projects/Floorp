@@ -43,16 +43,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -75,6 +66,8 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.TextAction;
 
+import javax.activation.*;
+
 import javax.mail.Address;
 import javax.mail.Session;
 import javax.mail.Message;
@@ -83,6 +76,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeUtility;
 import javax.mail.internet.InternetAddress;
 
 import grendel.storage.MessageExtra;
@@ -408,6 +402,18 @@ public class CompositionPanel extends GeneralPanel {
       this.setEnabled(true);
     }
 
+    /**
+     * Check if an array of bytes are in range 1-127 (i.e. clean ASCII)
+     */
+
+    public boolean isCleanText(byte [] data) {
+      for (int i=0; i < data.length; ++i)
+        if (data[i] <= 0)
+          return false;
+
+      return true;
+    }
+
     public void actionPerformed(ActionEvent ae) {
       //try to retieve all text from message area.
       notifySendingMail();
@@ -482,16 +488,30 @@ public class CompositionPanel extends GeneralPanel {
                 try {
                   File f = new File(attachments[i]);
                   int len = (int) f.length();
+                  String mimeString =
+                    FileTypeMap.getDefaultFileTypeMap().getContentType(f);
+                  MimeType mimeType = new MimeType(mimeString);
+
                   byte [] bs = new byte[len];
-                  FileInputStream fis = new FileInputStream(attachments[i]);
+                  FileInputStream fis = new FileInputStream(f);
                   DataInputStream dis = new DataInputStream(fis);
                   dis.readFully(bs);
                   dis.close();
                   fis.close();
-                  
-                  MimeBodyPart att = new MimeBodyPart();
-                  att.setContent(new String(bs), "text/plain");
 
+                  MimeBodyPart att = new MimeBodyPart();
+                  String encName = "7bit";
+                  if (mimeType.getPrimaryType().equalsIgnoreCase("text")) {
+                    if (!isCleanText(bs)) {
+                      encName = "quoted-printable";
+                    }
+                  } else {
+                    encName = "base64";
+                  }
+
+                  att.setText(new String(bs)); 
+                  att.setHeader("Content-Type", mimeString);
+                  att.setHeader("Content-Transfer-Encoding", encName);
                   att.setFileName(attachments[i]);
                   att.setDisposition("Attachment");
                   multi.addBodyPart(att);
