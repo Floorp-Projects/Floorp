@@ -59,6 +59,8 @@ interface nsIMsgAccountManager : nsISupports {
   readonly attribute nsISupportsArray allServers;
 
   nsISupportsArray FindServersByHostname(in string hostname, in nsIIDRef iid);
+  nsISupportsArray GetIdentitiesForServer(in nsIMsgIncomingServer server);
+  nsISupportsArray GetServersForIdentity(in nsIMsgIdentity identity);
   
   void LoadAccounts();
 };
