@@ -2286,9 +2286,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 #undef NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG
   }
 
-  PR_PL(("*******************************************\n"));
-  PR_PL(("*** ShowPrintErrorDialog %s\n", NS_LossyConvertUCS2toASCII(stringName).get()));
-  PR_PL(("*******************************************\n"));
+  PR_PL(("ShowPrintErrorDialog:  stringName='%s'\n", NS_LossyConvertUCS2toASCII(stringName).get()));
 
   myStringBundle->GetStringFromName(stringName.get(), getter_Copies(msg));
   if (aIsPrinting) {
@@ -2303,22 +2301,25 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
   }
 
   nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    PR_PL(("ShowPrintErrorDialog(): wwatch==nsnull\n"));
     return;
+  }
 
   nsCOMPtr<nsIDOMWindow> active;
   wwatch->GetActiveWindow(getter_AddRefs(active));
 
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
-  if (!parent)
-    return;
-
   nsCOMPtr<nsIPrompt> dialog;
-  parent->GetPrompter(getter_AddRefs(dialog));
-  if (!dialog)
+  /* |GetNewPrompter| allows that |active| is |nsnull| 
+   * (see bug 234982 ("nsPrintEngine::ShowPrintErrorDialog() fails in many cases")) */
+  wwatch->GetNewPrompter(active, getter_AddRefs(dialog));
+  if (!dialog) {
+    PR_PL(("ShowPrintErrorDialog(): dialog==nsnull\n"));
     return;
+  }
 
   dialog->Alert(title, msg);
+  PR_PL(("ShowPrintErrorDialog(): alert displayed successfully.\n"));
 }
 
 //-----------------------------------------------------------------
