@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s):
+-->
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<!DOCTYPE window SYSTEM "chrome://wallet/locale/WalletEditor.dtd" >
+
+<window id="walleteditor"
+        class="dialog"
+        title="&windowtitle.label;"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical"
+        onload="Startup()">
+
+  <html:script src="chrome://wallet/content/WalletEditor.js"/>
+	<html:script language="javascript" src="chrome://global/content/strres.js" />
+
+    <box id="system" flex="100%" align="vertical">
+      <spring style="height: 7px;"/>
+      <box><html:div>&div.walletdataonsystem.label;</html:div></box>
+      <html:div class="separator" align="horizontal" style="margin-bottom: -2px;"/>
+      <spring style="height: 10px;"/>
+      <box id="system1" flex="100%" align="horizontal">
+        <spring style="width: 7px;"/>
+        <html:div style="width: 195px;">
+          <box><html:div>&treehead.schemaname.label;</html:div></box>
+          <tree id="schematree" class="inset" style="height: 250px; width: 195px;" align="vertical" 
+            onclick="ViewEntries();">
+            <treecol width="100%"/>
+            <treechildren id="schemalist"/>
+          </tree>
+          <spring flex="5%"/>
+          <spring style="height: 7px;"/>
+          <box align="horizontal">
+            <titledbutton id="removeSchema" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSchema();"/>
+            <titledbutton id="addSchema" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSchema();"/>
+          </box>
+        </html:div>
+        <spring style="width: 7px;"/>
+        <html:div style="width: 195px;">
+          <box><html:div>&treehead.entries.label;</html:div></box>
+          <tree id="entrytree" class="inset" style="height: 113px; width: 195px;" align="vertical" 
+            onclick="ViewSynonyms();">
+            <treecol width="100%"/>
+            <treechildren id="entrieslist"/>
+          </tree>
+          <spring style="height: 7px;"/>
+          <box><html:div>&treehead.synonyms.label;</html:div></box>
+          <tree id="synonymtree" class="inset" style="height: 113px; width: 195px;" align="vertical" 
+            onclick="SynonymSelected();">
+            <treecol width="100%"/>
+            <treechildren id="synonymslist"/>
+          </tree>
+        </html:div>
+        <spring style="width: 7px;"/>
+        <html:div>
+          <box align="vertical">
+            <spring style="height: 12px;"/>
+            <titledbutton id="removeEntry" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteEntry();"/>
+            <titledbutton id="addEntry" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddEntry();"/>
+            <spring style="height: 88px;"/>
+            <titledbutton id="removeSynonym" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSynonym();"/>
+            <titledbutton id="addSynonym" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSynonym();"/>
+          </box>
+        </html:div>
+        <spring style="width: 7px;"/>
+      </box>
+    </box>
+    <html:div class="separator" align="horizontal" style="margin-bottom: -2px;"/>
+
+  <!-- from dialogOverlay.xul -->
+  <spring style="height: 5px;"/>
+  <box align="horizontal">
+    <spring flex="100%"/>
+    <box id="okCancelButtons"/>
+  </box>
+  <spring style="height: 5px;"/>
+
+</window>
