@@ -119,6 +119,7 @@ my $assignedtoid = $bug{'assigned_to'};
 my $reporterid = $bug{'reporter'};
 my $qacontactid =  $bug{'qa_contact'};
 
+$bug{'assigned_to_email'} = DBID_to_name($assignedtoid);
 $bug{'assigned_to'} = DBID_to_real_or_loginname($bug{'assigned_to'});
 $bug{'reporter'} = DBID_to_real_or_loginname($bug{'reporter'});
 
@@ -444,11 +445,7 @@ if ($canedit || $::userid == $assignedtoid ||
         Resolve bug, mark it as duplicate of bug # 
         <INPUT NAME=dup_id SIZE=6 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"><br>\n";
         $knum++;
-        if ( $bug{'assigned_to'} =~ /(.*)\((.*)\)/ ) {
-           $bug{'assigned_to'} = $1;
-           chop($bug{'assigned_to'});
-        }
-        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=\"$bug{'assigned_to'}\">";
+        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=\"$bug{'assigned_to_email'}\">";
 
         print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
           <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to
