@@ -19,10 +19,6 @@
 #include "msgCore.h" // for pre-compiled headers...
 #include "nsUrlListenerManager.h"
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
 nsUrlListenerManager::nsUrlListenerManager() :
     mRefCnt(0),
     m_listeners(nsnull)

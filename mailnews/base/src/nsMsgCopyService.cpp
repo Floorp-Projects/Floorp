@@ -24,11 +24,6 @@
 #include "nsIMessage.h"
 #include "nsIMsgFolder.h"
 
-#ifdef XP_PC
-#include <windows.h>
-#endif 
-
-
 typedef enum _nsCopyRequestType
 {
     nsCopyMessagesType = 0x0,
