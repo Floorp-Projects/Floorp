@@ -65,6 +65,12 @@ XML::Parser (any)
   please comment on the below bug.
   (bug 124589)
 
+- Placing comments in localconfig is deprecated.  If you have done
+  this, they will likely get nuked with future version of
+  Bugzilla, as checksetup.pl will likely automatically rewrite localconfig
+  to automatically get the latest comments.
+  (bug 147776)
+
 *** Outstanding Issues Of Note ***
 
 - Renaming or removing keywords that are in use will not update
@@ -129,6 +135,9 @@ XML::Parser (any)
 - Querying on CC takes too long on big databases.
   (bug 127200)
 
+- Attachment changes have no midair collision detection, unlike bug changes.
+  (bug 99215)
+
 *********************************************
 *** USERS UPGRADING FROM 2.16 OR EARLIER  ***
 *********************************************
@@ -146,15 +155,6 @@ XML::Parser (any)
 ***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
-
-- It was possible for random confidential information to be
-  divulged, if the shadow database was in use and became
-  corrupted.
-  (bug 92263)
-
-- Mass change would set the groupset of every bug to be the
-  groupset of the first bug.
-  (bug 107718)
 
 - The bug list sort order could take arbitrary SQL.  There
   are no known exploits for this problem.
@@ -178,7 +178,8 @@ XML::Parser (any)
 - 2.16 introduces "templatisation", a new feature that allows
   administrators to easily customise the HTML output of Bugzilla
   without altering Perl code.  Bugzilla uses the "Template Toolkit"
-  for this.  ??? See the Bugzilla Guide?
+  for this.  Please see the "Template Customisation" section of the
+  Bugzilla Guide for more details.
 
   Administrators who ran the 2.15 development version and customised
   templates should check the templates are still valid, as file names
@@ -204,11 +205,11 @@ XML::Parser (any)
   requires 5.005.
   (bug 97721)
 
-- New requirements: Text::Wrap, Template [requires AppConfig].
-  (bugs 97784, 84338)
+- New requirements: Text::Wrap, Template [requires AppConfig], File::Spec.
+  (bugs 97784, 84338, 103778)
 
-- New version required: Perl v5.005, File::Spec v0.82
-  (bugs 97721, ???)
+- New version required: Perl v5.005
+  (bugs 97721)
 
 - The index page is now a CGI instead of an HTML page.  You should remove
   any existing index.html file and make sure your web server allows index.cgi
@@ -228,12 +229,19 @@ XML::Parser (any)
   lengthy delays in future if this problem reoccurs.
   (bug 106377)
 
-- If you wish to use ??? webdot htaccess stuff here ???
-
 - In parallel with templatisation, a lot of changes have been made to the HTML
   output of the Bugzilla CGIs.  This could break code that attempts to parse
   such code.  For example, this breaks mozbot.
   (no bug number)
+
+- The "HTML template" parameters (headerhtml, bodyhtml, footerhtml,
+  errorhtml, bannerhtml, blurbhtml, mostfreqhtml, entryheaderhtml) have now
+  been moved to Template Toolkit templates.  If you have modified these
+  parameters you will need to make corresponding changes to the corresponding
+  templates.  Most of these now sit in the en/global template subdirectory.
+  Your old parameter values will be moved to a file called old-params.txt by
+  checksetup.pl.
+  (bug 140437)
 
 *** Other changes of note ***
 
@@ -371,7 +379,16 @@ XML::Parser (any)
 
 - Real names were not HTML filtered, causing possible cross
   site scripting attacks.
-  (bug 146447)
+  (bug 146447, 147486)
+
+- Mass change would set the groupset of every bug to be the
+  groupset of the first bug.
+  (bug 107718)
+
+- It was possible for random confidential information to be
+  divulged, if the shadow database was in use and became
+  corrupted.
+  (bug 92263)
 
 ********************************************
 *** USERS UPGRADING FROM 2.14 OR EARLIER ***
