@@ -189,6 +189,11 @@ moz_run_program()
 			if [ -x "$debugger" ]
 			then
 				echo "$debugger $prog core"
+
+				# See http://www.mozilla.org/unix/debugging-faq.html
+				# For why LD_BIND_NOW is needed
+				LD_BIND_NOW=1; export LD_BIND_NOW
+
 				$debugger $prog core
 			else
 				echo "Could not find a debugger on your system."
