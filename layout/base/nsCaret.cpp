@@ -571,6 +571,7 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext& inRendContext)
 			inRendContext.SetColor(NS_RGB(85, 85, 85));		// we are drawing it; gray
 	  */
 	  
+    inRendContext.SetColor(NS_RGB(255,255,255));
 		inRendContext.InvertRect(mCaretRect);
 	}
 	
