@@ -22,8 +22,8 @@
 #include "nsIToolbarItemHolder.h"
 #include "nsIToolbarItem.h"
 #include "nsCOMPtr.h"
+#include "nsIWidget.h"
 
-class nsIWidget;
 struct nsRect;
 
 //------------------------------------------------------------
