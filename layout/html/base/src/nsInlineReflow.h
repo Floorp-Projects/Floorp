@@ -51,6 +51,10 @@ public:
     mIsFirstChild = aValue;
   }
 
+  void SetRunInFrame(nsBlockFrame* aBlockFrame) {
+    mRunInFrame = aBlockFrame;
+  }
+
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                   PRBool aPlacedLeftFloater);
 
@@ -152,6 +156,8 @@ protected:
   nsFrameReflowState& mOuterReflowState;
   nsIPresContext& mPresContext;
   PRBool mOuterIsBlock;
+
+  nsBlockFrame* mRunInFrame;
 
   PRIntn mFrameNum;
 

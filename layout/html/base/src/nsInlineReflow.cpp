@@ -93,6 +93,7 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
   mUpdatedBand = PR_FALSE;
   mPlacedLeftFloater = PR_FALSE;
   mTreatFrameAsBlock = PR_FALSE;
+  mRunInFrame = nsnull;
 }
 
 void
@@ -461,6 +462,7 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   if (!mTreatFrameAsBlock) {
     reflowState.lineLayout = &mLineLayout;
   }
+  reflowState.mRunInFrame = mRunInFrame;
   reflowState.reason = reason;
   mLineLayout.SetUnderstandsWhiteSpace(PR_FALSE);
 
