@@ -32,17 +32,17 @@
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
-    const unsigned long ERROR = 0x0;
+    const unsigned long errorFlag = 0x0;
     
     /** message is warning */
-    const unsigned long WARNING = 0x1;
+    const unsigned long warningFlag = 0x1;
 
     /** exception was thrown for this case - exception-aware hosts can ignore */
-    const unsigned long EXCEPTION = 0x2;
+    const unsigned long exceptionFlag = 0x2;
 
     // XXX check how strict is implemented these days.
     /** error or warning is due to strict option */
-    const unsigned long STRICT = 0x4;
+    const unsigned long strictFlag = 0x4;
 
     readonly attribute wstring sourceName;
     readonly attribute wstring sourceLine;

@@ -109,17 +109,17 @@ function appendMessage(messageObject)
             messageObject.QueryInterface(nsIScriptError);
 
         // Is this error actually just a non-fatal warning?
-        var warning = scriptError.flags & nsIScriptError.WARNING != 0;
+        var warning = scriptError.flags & nsIScriptError.warningFlag != 0;
 
         // Is this error or warning a result of JavaScript's strict mode,
         // and therefore something we might decide to be lenient about?
-        var strict = scriptError.flags & nsIScriptError.STRICT != 0;
+        var strict = scriptError.flags & nsIScriptError.strictFlag != 0;
 
         // If true, this error led to the creation of a (catchable!) javascript
         // exception, and should probably be ignored.
         // This is worth checking, as I'm not sure how the behavior falls
         // out.  Does an uncaught exception result in this flag being raised?
-        var isexn = scriptError.flags & nsIScriptError.EXCEPTION != 0;
+        var isexn = scriptError.flags & nsIScriptError.exceptionFlag != 0;
 
         /*
          * It'd be nice to do something graphical with our column information,
@@ -131,7 +131,8 @@ function appendMessage(messageObject)
          *
          * But for now, I'm just pushing it out the door.
          */
-        text = "JavaScript " + (warning ? "Warning: " : "Error: ");
+        text = scriptError.category + ": ";
+        text += "JavaScript " + (warning ? "Warning: " : "Error: ");
         text += scriptError.sourceName;
         text += " line " + scriptError.lineNumber +
             ", column " + scriptError.columnNumber + ": " + scriptError.message;
