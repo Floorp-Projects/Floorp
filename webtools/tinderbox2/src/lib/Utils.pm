@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.33 $ 
-# $Date: 2002/05/10 22:41:41 $ 
+# $Revision: 1.34 $ 
+# $Date: 2003/04/13 14:13:40 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -418,8 +418,22 @@ sub cache_cmd {
 # fatal errors need to be valid HTML
 
 sub fatal_error {
+# It is important to prevent unprintable characters from getting into
+# the log file.  There are attacks against the software which reads
+# the logfile using especially crafted escape sequence.
+
+# http://www.securityfocus.com/archive/1/313007
+#          or
+# http://www.digitaldefense.net/labs/papers/Termulation.txt
+#          or
+# http://www.digitaldefense.net/labs/papers/Termulation.txt
+#    Temulation.txt
+#    TERMINAL EMULATOR SECURITY ISSUES Copyright © 2003
+#    Digital Defense Incorporated All Rights Reserved
+
   my  @error = @_;
   foreach $_ (@error) {
+    $_ = main::extract_printable_chars($_);
     print LOG "[$LOCALTIME] $_";
   }
   print LOG "\n";
@@ -445,9 +459,21 @@ sub fatal_error {
 
 
 sub log_warning {
+# It is important to prevent unprintable characters from getting into
+# the log file.  There are attacks against the software which reads
+# the logfile using especially crafted escape sequence.
+
+# http://www.securityfocus.com/archive/1/313007
+#          or
+# http://www.digitaldefense.net/labs/papers/Termulation.txt
+#    Temulation.txt
+#    TERMINAL EMULATOR SECURITY ISSUES Copyright © 2003
+#    Digital Defense Incorporated All Rights Reserved
+
   my  @error = @_;
 
   foreach $_ (@error) {
+    $_ = main::extract_printable_chars($_) ;
     print LOG "[$LOCALTIME] $_";
   }
 
@@ -649,6 +675,8 @@ sub fix_time_format {
 sub extract_printable_chars {
   my ($str) = @_;
 
+  # a complete list of printable characters.
+
   $str =~ s![^a-zA-Z0-9\ \t\n\`\"\'\;\:\,\?\.\-\_\+\=\\\|\/\~\!\@\#\$\%\^\&\*\(\)\{\}\[\]\<\>]+!!g;
 
   if ( $str =~ m!(.*)!s ) {
@@ -683,7 +711,10 @@ sub extract_filename_chars {
 
   my $out;
 
-  # This may be the output of a glob, make it taint safe.
+  # This may be the output of a glob, make it taint safe.  We
+  # should have full control over our own filenames, we do put all
+  # printable characters in filenames.
+
   if ( $str =~ m/([0-9a-zA-Z\.\-\_\/\:]+)/ ) {
       $out = $1;
   } else {
