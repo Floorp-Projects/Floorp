@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Dan Mosedale <dan.mosedale@oracle.com>
+ *   Mike Shaver <mike.x.shaver@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,23 +44,31 @@
 
 function calDavCalendar() {
     this.wrappedJSObject = this;
+    this.mObservers = { };
+    this.mItems = { };
 }
 
-calDavCalendar.prototype = {
-    //
-    // private members
-    //
-    mObservers: Array(),
-    mItems: Array(),
-    mUri: "",
+function makeOccurrence(item, start, end)
+{
+    var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].
+        createInstance(calIItemOccurrence);
+    // XXX poor form
+    occ.wrappedJSObject.item = item;
+    occ.wrappedJSObject.occurrenceStartDate = item.startDate;
+    occ.wrappedJSObject.occurrenceEndDate = item.endDate;
+    return occ;
+}
+  
+// END_OF_TIME needs to be the max value a PRTime can be
+const END_OF_TIME = 0x7fffffffffffffff;
 
+calDavCalendar.prototype = {
     //
     // nsISupports interface
     // 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calICalendar))
-        {
+            !aIID.equals(Components.interfaces.calICalendar)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
@@ -71,8 +80,9 @@ calDavCalendar.prototype = {
     //
 
     // attribute nsIURI uri;
-    get uri() { return mURI },
-    set uri(aURI) { mURI = aURI; },
+    mUri: null,
+    get uri() { return this.mUri },
+    set uri(aUri) { this.mUri = aUri; },
 
     // attribute boolean suppressAlarms;
     get suppressAlarms() { return false; },
@@ -103,13 +113,14 @@ calDavCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
-        if (aItem.id == null) {
+        if (aItem.id == null)
             aItem.id = "uuid:" + (new Date()).getTime();
-        }
+
         if (this.mItems[aItem.id] != null) {
             // is this an error?
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.ADD,
                                                aItem.id,
                                                "ID already eists for addItem");
@@ -123,7 +134,8 @@ calDavCalendar.prototype = {
 
         // notify the listener
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.ADD,
                                            aItem.id,
                                            aItem);
@@ -132,11 +144,11 @@ calDavCalendar.prototype = {
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
     modifyItem: function (aItem, aListener) {
         if (aItem.id == null ||
-            this.mItems[aItem.id] == null)
-        {
+            this.mItems[aItem.id] == null) {
             // this is definitely an error
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
                                                aItem.id,
                                                "ID for modifyItem doesn't exist or is null");
@@ -151,7 +163,8 @@ calDavCalendar.prototype = {
         this.observeModifyItem(modifiedItem, aItem);
 
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.MODIFY,
                                            aItem.id,
                                            aItem);
@@ -160,10 +173,10 @@ calDavCalendar.prototype = {
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aId, aListener) {
         if (aId == null ||
-            this.mItems[aId] == null)
-        {
+            this.mItems[aId] == null) {
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
                                                aId,
                                                "ID doesn't exist for deleteItem");
@@ -177,7 +190,8 @@ calDavCalendar.prototype = {
         observeDeleteItem(deletedItem);
 
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.DELETE,
                                            aId,
                                            null);
@@ -190,9 +204,9 @@ calDavCalendar.prototype = {
             return;
 
         if (aId == null ||
-            this.mItems[aId] == null)
-        {
-            aListener.onOperationComplete(Components.results.NS_ERROR_FAILURE,
+            this.mItems[aId] == null) {
+            aListener.onOperationComplete(this,
+                                          Components.results.NS_ERROR_FAILURE,
                                           aListener.GET,
                                           null,
                                           "IID doesn't exist for getItem");
@@ -207,18 +221,21 @@ calDavCalendar.prototype = {
         } else if (item.QueryInterface(Components.interfaces.calITodo)) {
             iid = Components.interfaces.calITodo;
         } else {
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_ERROR_FAILURE,
                                            aListener.GET,
                                            aId,
                                            "Can't deduce item type based on QI");
             return;
         }
 
-        aListener.onGetResult (Components.results.NS_OK,
+        aListener.onGetResult (this,
+                               Components.results.NS_OK,
                                iid,
                                null, 1, [item]);
 
-        aListener.onOperationComplete (Components.results.NS_OK,
+        aListener.onOperationComplete (this,
+                                       Components.results.NS_OK,
                                        aListener.GET,
                                        aId,
                                        null);
@@ -242,8 +259,7 @@ calDavCalendar.prototype = {
 
         var itemsFound = Array();
         var startTime = 0;
-        // endTime needs to be the max value a PRTime can be
-        var endTime = 0x7fffffffffffffff;
+        var endTime = END_OF_TIME;
         if (aRangeStart)
             startTime = aRangeStart.utcTime;
         if (aRangeEnd)
@@ -272,7 +288,7 @@ calDavCalendar.prototype = {
 
         // completed?
         var itemCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
-        var itemNotCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
+        var itemNotCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_NO) != 0);
 
         // return occurrences?
         var itemReturnOccurrences = ((aItemFilter & calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0);
@@ -280,71 +296,60 @@ calDavCalendar.prototype = {
         //  if aCount != 0, we don't attempt to sort anything, and
         //  instead return the first aCount items that match.
 
-        for (var i = 0; i < this.mItems.length; i++) {
+        for (var i in this.mItems) {
             var item = this.mItems[i];
             var itemtoadd = null;
+            if (itemTypeFilter && !(item instanceof itemTypeFilter))
+                continue;
 
-            if (itemTypeFilter)
-                item = item.QueryInterface(itemTypeFilter);
-
-            if (item) {
-                var itemStartTime = 0;
-                var itemEndTime = 0;
-
-                var tmpitem = item;
-                if ((tmpitem = item.QueryInterface(calIEvent)) != null)
-                {
-                    itemStartTime = tmpitem.startDate.utcTime;
-                    itemEndTime = tmpitem.endDate.utcTime;
-
-                    if (itemReturnOccurrences) {
-                        itemtoadd = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(calIItemOccurrence);
-                        itemtoadd.wrappedJSObject.item = item;
-                        itemtoadd.wrappedJSObject.occurrenceStartDate = tmpitem.startDate;
-                        itemtoadd.wrappedJSObject.occurrenceEndDate = tmpitem.endDate;
-                    }
-                } else if ((tmpitem = item.QueryInterface(calITodo)) != null)
-                {
-                    // if it's a todo, also filter based on completeness
-                    if (tmpitem.percentComplete == 100 && !itemCompletedFilter)
-                        continue;
-                    else if (tmpitem.percentComplete < 100 && !itemNotCompletedFilter)
-                        continue;
-
-                    itemStartTime = tmpitem.entryTime.utcTime;
-                    itemEndTime = tmpitem.entryTime.utcTime;
-
-                    if (itemReturnOccurrences) {
-                        itemtoadd = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(calIItemOccurrence);
-                        itemtoadd.wrappedJSObject.item = item;
-                        itemtoadd.wrappedJSObject.occurrenceStartDate = tmpitem.entryTime;
-                        itemtoadd.wrappedJSObject.occurrenceEndDate = tmpitem.entryTime;
-                    }
-                } else {
-                    // XXX unknown item type, wth do we do?
+            var itemStartTime = 0;
+            var itemEndTime = 0;
+            
+            var tmpitem = item;
+            if (item instanceof calIEvent) {
+                tmpitem = item.QueryInterface(calIEvent);
+                itemStartTime = item.startDate.utcTime || 0
+                itemEndTime = item.endDate.utcTime || END_OF_TIME;
+                
+                if (itemReturnOccurrences)
+                    itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
+            } else if (item instanceof calITodo) {
+                // if it's a todo, also filter based on completeness
+                if (item.percentComplete == 100 && !itemCompletedFilter)
                     continue;
-                }
+                else if (item.percentComplete < 100 && !itemNotCompletedFilter)
+                    continue;
+                    
+                itemEndTime = itemStartTime = item.entryTime.utcTime || 0;
+                
+                if (itemReturnOccurrences)
+                    itemtoadd = makeOccurrence(item, item.entryTime, item.entryTime);
+            } else {
+                // XXX unknown item type, wth do we do?
+                continue;
+            }
 
-                // determine whether any endpoint falls within the range
-                if (itemStartTime <= endTime && itemEndTime >= startTime) {
-                    if (itemtoadd == null)
-                        itemtoadd = item;
-
-                    itemsFound.push(itemtoadd);
-                }
+            // determine whether any endpoint falls within the range
+            if (itemStartTime <= endTime && itemEndTime >= startTime) {
+                if (itemtoadd == null)
+                    itemtoadd = item;
+                
+                itemsFound.push(itemtoadd);
             }
 
             if (aCount && itemsFound.length >= aCount)
                 break;
         }
 
-        aListener.onGetResult (Components.results.NS_OK,
+        aListener.onGetResult (this,
+                               Components.results.NS_OK,
                                itemReturnOccurrences ? calIItemOccurrence : itemTypeFilter,
                                null,
                                itemsFound.length,
                                itemsFound);
 
-        aListener.onOperationComplete (Components.results.NS_OK,
+        aListener.onOperationComplete (this,
+                                       Components.results.NS_OK,
                                        aListener.GET,
                                        null,
                                        null);
@@ -384,7 +389,7 @@ calDavCalendar.prototype = {
 
 var calDavCalendarModule = {
     mCID: Components.ID("{a35fc6ea-3d92-11d9-89f9-00045ace3b8d}"),
-    mContractID: "@mozilla.org/calendar/calendar;1&type=caldav",
+    mContractID: "@mozilla.org/calendar/calendar;1?type=caldav",
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
