@@ -257,10 +257,15 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
                 // if we failed, we consume one byte by replace it with U+FFFD
                 // and try conversion again.
 		if(NS_FAILED(res)) {
+			mUnicodeDecoder->Reset();
 			mBuffer.Append( (PRUnichar)0xFFFD);
 			mTotalRead++;
-			aBuffer += srcLength + 1;
-			aLen -= srcLength + 1;
+			if(((PRUint32) (srcLength + 1)) > aLen)
+				srcLength = aLen;
+			else 
+				srcLength++;
+			aBuffer += srcLength;
+			aLen -= srcLength;
 		}
 	} while (NS_FAILED(res) && (aLen > 0));
         // we continue convert the bytes data into Unicode 
