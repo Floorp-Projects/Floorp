@@ -51,6 +51,11 @@ wish to run this with a different 'prefix'
 
 	make install prefix=/opt/tinderbox
 
+It is currently assumed that the bin directory of your installation
+will be where the webserver will run the tinderbox cgi's from.  You
+can copy the *.cgi files to another directory if this is not the case.
+
+
 *) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
 	every five minutes.
    set up a cron job to run $prefix/bin/tinder.cgi/rmlogs once a day.
@@ -92,17 +97,10 @@ something like:
 
 We use the mail address 'tinderbox_builds' for build information
 destined for the webserver. Similarly the bug tracking system should
-send mail to 'tinderbox_bugs'. Currently I have a program called
-'processmail' it will eventually be renamed to 'processmail_builds' so
-that it is clear what mail it is processing. (Originally there was
-only one mail processing program.) The bug tracking mail is parsed by
-the script processmail_bugs.
+send mail to 'tinderbox_bugs'.
 
 
-
-
-
-*) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
+*) If you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
 each tree you have defined.  The login command must use the
 hostname/modules exactly as you wrote it in VCData.  Then copy your
@@ -112,14 +110,16 @@ must be the REAL home of the Tinderbox daemon, as listed in
 tinder.cgi.
 
 
-*) setup the build machines to mail their build logs (with tinderbox
+*) Setup the build machines to mail their build logs (with tinderbox
 variables on the top) to the web server machine.  New builds must not
 start earlier then 6 minutes after the last build started.  Each build
 machine mails the build log of each build and puts some build data at
 the top of the log.  Build information includes whether the build was
 a success, which error parsers to use on the log file and what build
-this is.  The mail processing program has a help file (--help) which
-details the format it knows how to accept.
+this is.  Run 'processmail_builds --help' to learn about how the mail
+processing system works and what the mail messages are expected to
+look like.  There is an example mail in the test directory called
+samplelog.
 
 
 *) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
