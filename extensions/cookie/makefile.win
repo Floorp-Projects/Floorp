@@ -23,7 +23,6 @@ MODULE=cookie
 
 EXPORTS = nsICookieService.h nsCookieHTTPNotify.h nsCookie.h
 
-
 CSRCS=				\
  $(NULL)
 

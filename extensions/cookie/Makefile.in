@@ -36,13 +36,16 @@ CPPSRCS =				\
     $(NULL)
 
 EXPORTS = \
+	nsICookieService.h \
+	nsCookieHTTPNotify.h \
+	nsCookie.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = cookie
 
-REQUIRES = js netlib xpcom xppref32  nspr
+REQUIRES = js netlib xpcom xppref32 nspr
 
 MKSHLIB :=
 
