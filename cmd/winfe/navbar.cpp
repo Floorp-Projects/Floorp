@@ -131,9 +131,10 @@ void CNavTitleBar::OnPaint( )
 
 	CRect controlStripRect(rect);
 	CRect titleBarRect(rect);
-	controlStripRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
-	titleBarRect.top = NAVBAR_CONTROLSTRIP_HEIGHT;
-	titleBarRect.bottom = NAVBAR_TOTAL_HEIGHT;
+	controlStripRect.top = NAVBAR_TOTAL_HEIGHT - NAVBAR_CONTROLSTRIP_HEIGHT;
+	controlStripRect.bottom = NAVBAR_TOTAL_HEIGHT;
+	titleBarRect.top = 0;
+	titleBarRect.bottom = controlStripRect.top;
 
 	CBrush faceBrush(m_BackgroundColor); 
 	if (m_BackgroundImageURL != "")
@@ -197,7 +198,7 @@ void CNavTitleBar::OnPaint( )
 	sizeRect.right += 4;
 
 	// Center the text vertically.
-	sizeRect.top = NAVBAR_CONTROLSTRIP_HEIGHT + (titleBarRect.Height() - height) / 2;
+	sizeRect.top = (titleBarRect.Height() - height) / 2;
 	sizeRect.bottom = sizeRect.top + height;
 
 	// Draw the text
@@ -238,13 +239,13 @@ void CNavTitleBar::OnPaint( )
 	addRect.right += 4;
 
 	// Center the text vertically.
-	addRect.top = (controlStripRect.Height() - smallHeight) / 2;
+	addRect.top = controlStripRect.top + (controlStripRect.Height() - smallHeight) / 2;
 	addRect.bottom = addRect.top + smallHeight;
 
 	// Cache the rect
-	cachedAddRect.top = 0;
+	cachedAddRect.top = controlStripRect.top;
 	cachedAddRect.left = 0;
-	cachedAddRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	cachedAddRect.bottom = controlStripRect.bottom;
 	cachedAddRect.right = addRect.right + 3;
 
 	// The MANAGE button
@@ -265,14 +266,14 @@ void CNavTitleBar::OnPaint( )
 	modeRect.right += cachedAddRect.right + 10;
 
 	// Center the text vertically.
-	modeRect.top = (controlStripRect.Height() - smallHeight) / 2;
-	modeRect.bottom = modeRect.top + smallHeight;
+	modeRect.top = addRect.top;
+	modeRect.bottom = addRect.bottom;
 	modeRect.right += 4;
 
 	// Cache the rect
-	cachedModeRect.top = 0;
+	cachedModeRect.top = controlStripRect.top;
 	cachedModeRect.left = cachedAddRect.right + 6;
-	cachedModeRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	cachedModeRect.bottom = controlStripRect.bottom;
 	cachedModeRect.right = cachedModeRect.left + modeRect.Width() + 3;
 
 	// Now compute the close box rect.
@@ -294,17 +295,17 @@ void CNavTitleBar::OnPaint( )
 	closeRect.bottom = modeRect.bottom;
 
 	CRect arrowRect;
-	arrowRect.top = 0;
+	arrowRect.top = controlStripRect.top;
 	arrowRect.left = closeRect.left - 12;
 	arrowRect.right = arrowRect.left + 12;
-	arrowRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	arrowRect.bottom = controlStripRect.bottom;
 
 	DrawArrow(dc.m_hDC, m_ControlStripForegroundColor, LEFT_ARROW, arrowRect, TRUE);
 
 	// Cache the rect
-	cachedCloseRect.top = 0;
+	cachedCloseRect.top = controlStripRect.top;
 	cachedCloseRect.left = arrowRect.left;
-	cachedCloseRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	cachedCloseRect.bottom = controlStripRect.bottom;
 	cachedCloseRect.right = closeRect.right + 3;
 
 	// Draw the text
