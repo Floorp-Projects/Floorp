@@ -79,6 +79,27 @@ public:
    */
   nsresult GetBidiEngine(nsIBidi** aBidiEngine);
 
+  /**
+   * Reorder plain text using the Unicode Bidi algorithm and send it to
+   * a rendering context for rendering.
+   *
+   * @param aText the string to be rendered
+   * @param aLength the number of characters in the string
+   * @param aBaseDirection the base direction of the string
+   *  NSBIDI_LTR - left-to-right string
+   *  NSBIDI_RTL - right-to-left string
+   * @param aPresContext the presentation context
+   * @param aRenderingContext the rendering context
+   * @param aTextRect contains the coordinates to render the string
+   */
+  nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
+                                       PRInt32              aLength,
+                                       nsBidiDirection      aBaseDirection,
+                                       nsIPresContext*      aPresContext,
+                                       nsIRenderingContext& aRenderingContext,
+                                       nscoord              aX,
+                                       nscoord              aY);
+
 private:
   /**
    *  Create a string containing entire text content of this block.
