@@ -4,3 +4,4 @@
 
 nsILineIterator.h
 nsIHTMLContent.h
+nsHTMLParts.h

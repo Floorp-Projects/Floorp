@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\..
 
-LIBRARY_NAME=raptorhtmlbase_s 
+LIBRARY_NAME=layouthtmlbase_s 
 MODULE=raptor 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)

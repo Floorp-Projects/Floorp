@@ -79,6 +79,7 @@ DIRS =                         \
   widget                       \
   dom                          \
   view                         \
+  content                      \
   layout                       \
   rdf                          \
   docshell                     \

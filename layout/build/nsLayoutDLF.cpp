@@ -40,6 +40,10 @@
 #include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
 
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kDocumentViewerCID, NS_DOCUMENT_VIEWER_CID);
+static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
+
 #define VIEW_SOURCE_HTML
 
 // URL for the "user agent" style sheet
@@ -53,8 +57,6 @@ static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
-
-extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 
 static char* gHTMLTypes[] = {
   "text/html",
@@ -227,8 +229,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     nsCOMPtr<nsIURI> uaURL;
     rv = NS_NewURI(getter_AddRefs(uaURL), UA_CSS_URL);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICSSLoader> cssLoader;
-      rv = NS_NewCSSLoader(getter_AddRefs(cssLoader));
+      nsCOMPtr<nsICSSLoader> cssLoader(do_CreateInstance(kCSSLoaderCID,&rv));
       if (cssLoader) {
         PRBool complete;
         rv = cssLoader->LoadAgentSheet(uaURL, nsLayoutModule::gUAStyleSheet, complete,
@@ -316,9 +317,7 @@ nsLayoutDLF::CreateInstanceForDocument(nsISupports* aContainer,
   nsresult rv = NS_ERROR_FAILURE;  
 
   do {
-    nsCOMPtr<nsIDocumentViewer> docv;
-    // Create the document viewer
-    rv = NS_NewDocumentViewer(getter_AddRefs(docv));
+    nsCOMPtr<nsIDocumentViewer> docv(do_CreateInstance(kDocumentViewerCID,&rv));
     if (NS_FAILED(rv))
       break;
     docv->SetUAStyleSheet(nsLayoutDLF::GetUAStyleSheet());
@@ -367,7 +366,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
       break;
 
     // Create the document viewer  XXX: could reuse document viewer here!
-    rv = NS_NewDocumentViewer(getter_AddRefs(docv));
+    docv = do_CreateInstance(kDocumentViewerCID,&rv);
     if (NS_FAILED(rv))
       break;
     docv->SetUAStyleSheet(nsLayoutDLF::GetUAStyleSheet());
@@ -429,7 +428,7 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
   if (NS_FAILED(rv)) return rv;
 
   // Create the image content viewer...
-  rv = NS_NewDocumentViewer(getter_AddRefs(*docv));
+  rv = nsComponentManager::CreateInstance(kDocumentViewerCID,nsnull,NS_GET_IID(nsIDocumentViewer),getter_AddRefs(*docv));
   if (NS_FAILED(rv)) return rv;
 
   // Load the UA style sheet if we haven't already done that

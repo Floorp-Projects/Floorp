@@ -28,13 +28,17 @@
 #include "nsIPresShell.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
+#include "nsIObjectFrame.h"
 
 class nsPluginInstanceOwner;
 
 #define nsObjectFrameSuper nsHTMLContainerFrame
 
-class nsObjectFrame : public nsObjectFrameSuper {
+class nsObjectFrame : public nsObjectFrameSuper, public nsIObjectFrame {
 public:
+  // nsISupports 
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -69,18 +73,22 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
+  NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
+
   //local methods
   nsresult CreateWidget(nsIPresContext* aPresContext,
                         nscoord aWidth,
                         nscoord aHeight,
                         PRBool aViewOnly);
   nsresult GetFullURL(nsIURI*& aFullURL);
-
-  nsresult GetPluginInstance(nsIPluginInstance*& aPluginInstance);
   
   void IsSupportedImage(nsIContent* aContent, PRBool* aImage);
 
 protected:
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
   virtual ~nsObjectFrame();
 
   virtual PRIntn GetSkipSides() const;

@@ -377,8 +377,6 @@ nsGfxScrollFrame::GetScrollbarBox(PRBool aVertical, nsIBox** aResult)
   return NS_OK;
 }
 
-nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
-
 NS_IMETHODIMP
 nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                          nsISupportsArray& aAnonymousChildren)

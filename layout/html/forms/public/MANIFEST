@@ -11,3 +11,4 @@ nsIFormSubmitObserver.h
 nsIFormProcessor.h
 nsISelectControlFrame.h
 nsIGfxTextControlFrame.h
+nsIFormManager.h

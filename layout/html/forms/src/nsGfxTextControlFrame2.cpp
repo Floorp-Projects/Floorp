@@ -87,9 +87,8 @@
 
 #include "nsIDOMFocusListener.h" //onchange events
 #include "nsIDOMCharacterData.h" //for selection setting helper func
-#include "nsIDOMNodeList.h" //for selection settting helper func
-#include "nsIDOMRange.h" //for selection settting helper func
-#include "nsRange.h" //for selection settting helper func (i cant believe this is exported!?)
+#include "nsIDOMNodeList.h" //for selection setting helper func
+#include "nsIDOMRange.h" //for selection setting helper func
 #include "nsIScriptGlobalObject.h" //needed for notify selection changed to update the menus ect.
 #include "nsIDOMWindowInternal.h" //needed for notify selection changed to update the menus ect.
 #include "nsITextContent.h" //needed to create initial text control content
@@ -100,6 +99,8 @@
 #define DEFAULT_COLUMN_WIDTH 20
 #define GUESS_INPUT_SIZE 150  // 10 pixels wide
 
+#include "nsContentCID.h"
+static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
@@ -2495,9 +2496,9 @@ nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd
     // remove existing ranges
     selection->RemoveAllRanges();  
 
-    nsCOMPtr<nsIDOMRange> selectionRange;
-    NS_NewRange(getter_AddRefs(selectionRange));
-    if (!selectionRange) return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIDOMRange> selectionRange(do_CreateInstance(kRangeCID,&rv));
+    if (NS_FAILED(rv)) 
+      return rv;
     
     selectionRange->SetStart(firstTextNode, aSelStart);
     selectionRange->SetEnd(firstTextNode, aSelEnd);
@@ -2520,8 +2521,9 @@ nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd
     else
     {
       // no range. Make a new one.
-      NS_NewRange(getter_AddRefs(firstRange));
-      if (!firstRange) return NS_ERROR_OUT_OF_MEMORY;
+      firstRange = do_CreateInstance(kRangeCID,&rv);
+      if (NS_FAILED(rv)) 
+        return rv;
       mustAdd = PR_TRUE;
     }
     

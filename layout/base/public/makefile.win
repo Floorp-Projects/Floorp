@@ -23,28 +23,19 @@ DEPTH=..\..\..
 
 EXPORTS =				\
 	nslayout.h			\
-	nsContentPolicyUtils.h          \
 	nsHTMLReflowState.h		\
 	nsIAutoCopy.h			\
 	nsICaret.h			\
-	nsIContent.h			\
-	nsIContentIterator.h		\
-	nsIDocument.h			\
-	nsIDocumentContainer.h		\
-	nsIDocumentEncoder.h		\
-	nsIDocumentObserver.h		\
-	nsIDocumentViewer.h		\
-	nsIElementFactory.h     \
 	nsIFocusTracker.h		\
 	nsIFrame.h			\
+	nsIObjectFrame.h			\
+	nsIImageFrame.h			\
+	nsIFrameTraversal.h			\
 	nsIFrameDebug.h			\
 	nsIFrameImageLoader.h		\
 	nsIFrameManager.h		\
 	nsIIndependentSelection.h		\
 	nsILayoutDebugger.h		\
-	nsINameSpace.h			\
-	nsINameSpaceManager.h		\
-	nsINodeInfo.h			\
 	nsIFrameUtil.h			\
 	nsIPageSequenceFrame.h		\
 	nsIPresContext.h		\
@@ -54,17 +45,10 @@ EXPORTS =				\
 	nsIReflowCommand.h		\
 	nsIFrameSelection.h		\
 	nsISpaceManager.h		\
-	nsIStyledContent.h		\
 	nsIStyleContext.h		\
 	nsIMutableStyleContext.h		\
 	nsIStyleFrameConstruction.h	\
-	nsIStyleRule.h			\
-  nsIStyleRuleSupplier.h \
 	nsIStyleSet.h			\
-	nsIStyleSheet.h			\
-	nsIStyleSheetLinkingElement.h	\
-	nsIStyleRuleProcessor.h	\
-	nsITextContent.h		\
 	nsLayoutAtoms.h			\
 	nsLayoutAtomList.h			\
 	nsLayoutUtils.h			\
@@ -74,13 +58,9 @@ EXPORTS =				\
 	nsStyleConsts.h			\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\
-	nsTextFragment.h		\
 	nsILayoutHistoryState.h \
 	nsIStatefulFrame.h \
 	nsIScrollableFrame.h \
-	nsIPrivateDOMImplementation.h \
-	nsIContentSerializer.h \
-	nsIHTMLToTextSink.h \
 	nsIScrollableViewProvider.h \
   nsIPrintContext.h \
 	$(NULL)
@@ -89,12 +69,6 @@ MODULE=layout_base
 
 XPIDLSRCS=					\
 		.\nsIChromeEventHandler.idl	\
-		.\nsIContentPolicy.idl		\
-		.\nsIDiskDocument.idl     \
-		.\nsISelectionController.idl	\
-		.\nsISelectionListener.idl	\
-		.\nsISelection.idl	\
-		.\nsISelectionPrivate.idl	\
 		.\nsIPrintListener.idl          \
 		$(NULL)
 

@@ -24,12 +24,27 @@
 
 #include "nsIEnumerator.h"
 #include "nsIFrame.h"
+#include "nsIFrameTraversal.h"
 
-enum nsTraversalType{LEAF, EXTENSIVE, FASTEST}; 
 nsresult NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               nsTraversalType aType,
                               nsIPresContext* aPresContext,
                               nsIFrame *aStart);
 
+nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
+
+class nsFrameTraversal : public nsIFrameTraversal
+{
+public:
+  nsFrameTraversal();
+  virtual ~nsFrameTraversal();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
+                              PRUint32 aType,
+                              nsIPresContext* aPresContext,
+                              nsIFrame *aStart);
+};
 
 #endif //NSFRAMETRAVERSAL_H

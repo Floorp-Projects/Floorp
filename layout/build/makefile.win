@@ -42,7 +42,7 @@ EXPORTS=nsLayoutCID.h $(BUILD_DATE)
 
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = gkhtml
+DLLNAME = gklayout
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \
@@ -65,28 +65,22 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 
 # These are the libraries we need to link with to create the dll
 LLIBS=					\
- $(DIST)\lib\raptorlayout_s.lib		\
- $(DIST)\lib\raptorhtmlbase_s.lib	\
- $(DIST)\lib\nglhtmlcon_s.lib		\
- $(DIST)\lib\raptorhtmldoc_s.lib	\
- $(DIST)\lib\raptorhtmlforms_s.lib	\
- $(DIST)\lib\raptorhtmlstyle_s.lib	\
- $(DIST)\lib\raptorhtmltable_s.lib	\
- $(DIST)\lib\raptorxmlcontent_s.lib	\
- $(DIST)\lib\raptorxmldoc_s.lib		\
- $(DIST)\lib\raptorxsldoc_s.lib		\
- $(DIST)\lib\raptorxulbase_s.lib \
- $(DIST)\lib\raptorxulcontent_s.lib	\
- $(DIST)\lib\raptorxbl_s.lib \
+ $(DIST)\lib\layoutbase_s.lib		\
+ $(DIST)\lib\layouthtmlbase_s.lib	\
+ $(DIST)\lib\layouthtmldoc_s.lib	\
+ $(DIST)\lib\layouthtmlforms_s.lib	\
+ $(DIST)\lib\layouthtmlstyle_s.lib	\
+ $(DIST)\lib\layouthtmltable_s.lib	\
+ $(DIST)\lib\layoutxulbase_s.lib \
+ $(DIST)\lib\layoutxulcontent_s.lib	\
 !ifdef MOZ_MATHML
- $(DIST)\lib\raptormathmlbase_s.lib \
- $(DIST)\lib\raptormathmlcontent_s.lib	\
+ $(DIST)\lib\layoutmathmlbase_s.lib \
+ $(DIST)\lib\layoutmathmlcontent_s.lib	\
 !endif
 !ifdef MOZ_SVG
- $(DIST)\lib\raptorsvgbase_s.lib \
- $(DIST)\lib\raptorsvgcontent_s.lib	\
+ $(DIST)\lib\layoutsvgbase_s.lib \
+ $(DIST)\lib\layoutsvgcontent_s.lib	\
 !endif
- $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\gkgfxwin.lib		\
  $(DIST)\lib\timer_s.lib \

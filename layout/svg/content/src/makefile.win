@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptorsvgcontent_s 
+LIBRARY_NAME=layoutsvgcontent_s 
 MODULE=raptor 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

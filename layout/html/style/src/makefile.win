@@ -21,80 +21,34 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptorhtmlstyle_s 
+LIBRARY_NAME=layouthtmlstyle_s 
 MODULE=raptor 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 EXPORTS =			\
-	nsCSSKeywords.h 		\
-	nsCSSKeywordList.h 		\
-	nsCSSProps.h 		\
-	nsCSSPropList.h 		\
-	nsCSSValue.h 		\
-	nsICSSStyleRuleProcessor.h 		\
-	nsICSSRule.h 	\
-	nsICSSGroupRule.h 	\
-	nsICSSStyleRule.h 	\
-  nsICSSCharsetRule.h \
-  nsICSSImportRule.h \
-  nsICSSMediaRule.h \
-  nsICSSNameSpaceRule.h \
-	nsICSSDeclaration.h 	\
-	nsIHTMLCSSStyleSheet.h 	\
         nsIHTMLStyleSheet.h     \
-	nsHTMLValue.h 		\
-	nsDOMCSSDeclaration.h 	\
+        nsICSSFrameConstructor.h     \
 	$(NULL)
 
 CPPSRCS=				\
 	nsCSSAtoms.cpp 		\
 	nsCSSKeywords.cpp 		\
-	nsCSSDeclaration.cpp 		\
   nsCSSFrameConstructor.cpp   \
-  nsCSSLoader.cpp   \
-	nsCSSParser.cpp 		\
 	nsCSSProps.cpp			\
 	nsCSSRendering.cpp 		\
-	nsCSSScanner.cpp 		\
-	nsCSSRule.cpp 		\
-	nsCSSStyleRule.cpp 		\
-	nsCSSRules.cpp 		\
-	nsCSSStyleSheet.cpp 		\
-	nsCSSValue.cpp			\
-	nsHTMLAttributes.cpp 		\
-	nsHTMLStyleSheet.cpp 		\
-	nsHTMLCSSStyleSheet.cpp		\
-	nsHTMLValue.cpp 		\
+#	nsHTMLStyleSheet.cpp 		\
 	nsStyleUtil.cpp 		\
-	nsDOMCSSDeclaration.cpp		\
-	nsComputedDOMStyle.cpp		\
-	nsROCSSPrimitiveValue.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsCSSAtoms.obj 		\
 	.\$(OBJDIR)\nsCSSKeywords.obj 		\
-	.\$(OBJDIR)\nsCSSDeclaration.obj 	\
   .\$(OBJDIR)\nsCSSFrameConstructor.obj  \
-  .\$(OBJDIR)\nsCSSLoader.obj  \
-	.\$(OBJDIR)\nsCSSParser.obj 		\
 	.\$(OBJDIR)\nsCSSProps.obj 		\
 	.\$(OBJDIR)\nsCSSRendering.obj 		\
-	.\$(OBJDIR)\nsCSSScanner.obj 		\
-	.\$(OBJDIR)\nsCSSRule.obj 		\
-	.\$(OBJDIR)\nsCSSStyleRule.obj 		\
-	.\$(OBJDIR)\nsCSSRules.obj 		\
-	.\$(OBJDIR)\nsCSSStyleSheet.obj 	\
-	.\$(OBJDIR)\nsCSSValue.obj 		\
-	.\$(OBJDIR)\nsHTMLAttributes.obj 	\
-	.\$(OBJDIR)\nsHTMLStyleSheet.obj 	\
-	.\$(OBJDIR)\nsHTMLCSSStyleSheet.obj 	\
-	.\$(OBJDIR)\nsHTMLValue.obj 		\
+#	.\$(OBJDIR)\nsHTMLStyleSheet.obj 	\
 	.\$(OBJDIR)\nsStyleUtil.obj 		\
-	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
-	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
-	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \

@@ -28,7 +28,6 @@
 #include "nsIComponentManager.h"
 #include "nsNetUtil.h"
 #include "nsICSSStyleSheet.h"
-#include "nsICSSLoader.h"
 #include "nsHTMLAtoms.h"
 #include "nsCSSKeywords.h"  // to addref/release table
 #include "nsCSSProps.h"     // to addref/release table
@@ -68,8 +67,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsTextTransformer.h"
-#include "nsRange.h"
-#include "nsGenericElement.h"
 #ifdef INCLUDE_XUL
 #include "nsBulletinBoardLayout.h"
 #include "nsRepeatService.h"
@@ -264,9 +261,6 @@ nsLayoutModule::Shutdown()
   nsStackLayout::Shutdown();
 #endif
 
-  nsRange::Shutdown();
-  nsGenericElement::Shutdown();
-    
   // Release all of our atoms
   nsColorNames::ReleaseTable();
   nsCSSProps::ReleaseTable();
@@ -276,7 +270,7 @@ nsLayoutModule::Shutdown()
   nsLayoutAtoms::ReleaseAtoms();
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
-#endif
+#endif  
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
   nsMathMLOperators::ReleaseTable();
@@ -328,66 +322,20 @@ struct Components {
 
 // The list of components we register
 static Components gComponents[] = {
-  { "Namespace manager", NS_NAMESPACEMANAGER_CID, nsnull, },
-  { "Event listener manager", NS_EVENTLISTENERMANAGER_CID, nsnull, },
   { "Frame utility", NS_FRAME_UTIL_CID, nsnull, },
   { "Print preview context", NS_PRINT_PREVIEW_CONTEXT_CID, nsnull, },
   { "Layout debugger", NS_LAYOUT_DEBUGGER_CID, nsnull, },
 
-  { "HTML document", NS_HTMLDOCUMENT_CID, nsnull, },
-  { "HTML style sheet", NS_HTMLSTYLESHEET_CID, nsnull, },
-  { "HTML-CSS style sheet", NS_HTML_CSS_STYLESHEET_CID, nsnull, },
-
-  { "DOM implementation", NS_DOM_IMPLEMENTATION_CID, nsnull, },
-
-  { "XML document", NS_XMLDOCUMENT_CID, nsnull, },
-  { "Image document", NS_IMAGEDOCUMENT_CID, nsnull, },
-
-  { "CSS parser", NS_CSSPARSER_CID, nsnull, },
-  { "CSS loader", NS_CSS_LOADER_CID, nsnull, },
-
-  { "HTML element factory", NS_HTML_ELEMENT_FACTORY_CID, NS_HTML_ELEMENT_FACTORY_CONTRACTID, },
-  { "Text element", NS_TEXTNODE_CID, nsnull, },
-
-  { "XML element factory", NS_XML_ELEMENT_FACTORY_CID, NS_XML_ELEMENT_FACTORY_CONTRACTID, },
-
-  { "Selection", NS_SELECTION_CID, nsnull, },
-  { "Frame selection", NS_FRAMESELECTION_CID, nsnull, },
-  { "Dom selection", NS_DOMSELECTION_CID, nsnull, },
-  { "Range", NS_RANGE_CID, nsnull, },
-  { "Content iterator", NS_CONTENTITERATOR_CID, nsnull, },
-  { "Generated Content iterator", NS_GENERATEDCONTENTITERATOR_CID, nsnull, },
-  { "Generated Subtree iterator", NS_GENERATEDSUBTREEITERATOR_CID, nsnull, },
-  { "Subtree iterator", NS_SUBTREEITERATOR_CID, nsnull, },
+  { "CSS Frame Constructor", NS_CSSFRAMECONSTRUCTOR_CID, nsnull, },
+  { "Frame Traversal", NS_FRAMETRAVERSAL_CID, nsnull, },
 
   // XXX ick
-  { "HTML image element", NS_HTMLIMAGEELEMENT_CID, nsnull, },
-  { "HTML option element", NS_HTMLOPTIONELEMENT_CID, nsnull, },
   { "Presentation shell", NS_PRESSHELL_CID, nsnull, },
+  { "Presentation state", NS_PRESSTATE_CID, nsnull, },
+  { "Galley context", NS_GALLEYCONTEXT_CID, nsnull, },
+  { "Print context", NS_PRINTCONTEXT_CID, nsnull, },
   // XXX end ick
 
-  { "XML document encoder", NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", },
-  { "HTML document encoder", NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "text/html", },
-  { "Plaintext document encoder", NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "text/plain", },
-  { "HTML copy encoder", NS_HTMLCOPY_TEXT_ENCODER_CID,
-    NS_HTMLCOPY_ENCODER_CONTRACTID, },
-  { "XML content serializer", NS_XMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xml", },
-  { "HTML content serializer", NS_HTMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/html", },
-  { "XUL content serializer", NS_XMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xul", },
-  { "plaintext content serializer", NS_PLAINTEXTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/plain", },
-  { "plaintext sink", NS_PLAINTEXTSERIALIZER_CID,
-    NS_PLAINTEXTSINK_CONTRACTID, },
-
-  { "XBL Service", NS_XBLSERVICE_CID, "@mozilla.org/xbl;1" },
-  { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "@mozilla.org/xbl/binding-manager;1" },
-  
   { "XUL Box Object", NS_BOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject;1" },
   { "XUL Tree Box Object", NS_TREEBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-tree;1" },
   { "XUL Menu Box Object", NS_MENUBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-menu;1" },
@@ -397,11 +345,7 @@ static Components gComponents[] = {
   { "XUL Iframe Object", NS_IFRAMEBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-iframe;1" },
   { "XUL ScrollBox Object", NS_SCROLLBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-scrollbox;1" },
 
-  { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "@mozilla.org/autocopy;1" },
-  { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_CONTRACTID },
-  { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_CONTRACTID },
-  { "DOM CSS Computed Style Declaration", NS_COMPUTEDDOMSTYLE_CID,
-    "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1" }
+  { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "@mozilla.org/autocopy;1" }
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

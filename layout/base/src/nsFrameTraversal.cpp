@@ -96,6 +96,21 @@ private :
 
 /************IMPLEMENTATIONS**************/
 
+nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+  nsCOMPtr<nsIFrameTraversal> t(new nsFrameTraversal());
+  if (!t)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *aResult = t;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
 nsresult
 NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                      nsTraversalType aType,
@@ -141,6 +156,27 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
 }
 
 
+nsFrameTraversal::nsFrameTraversal()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsFrameTraversal::~nsFrameTraversal()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsFrameTraversal,nsIFrameTraversal);
+
+NS_IMETHODIMP 
+nsFrameTraversal::NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
+                              PRUint32 aType,
+                              nsIPresContext* aPresContext,
+                              nsIFrame *aStart)
+{
+  return NS_NewFrameTraversal(aEnumerator, NS_STATIC_CAST(nsTraversalType,
+                                                          aType),
+                              aPresContext, aStart);  
+}
 
 /*********nsFrameIterator************/
 NS_IMPL_ISUPPORTS2(nsFrameIterator, nsIEnumerator, nsIBidirectionalEnumerator)

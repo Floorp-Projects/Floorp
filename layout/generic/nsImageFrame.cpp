@@ -107,7 +107,45 @@ nsImageFrame::~nsImageFrame()
   }
 }
 
-NS_METHOD
+NS_IMETHODIMP
+nsImageFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  *aInstancePtr = nsnull;
+
+#ifdef DEBUG
+  if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIFrameDebug*,this);
+    return NS_OK;
+  }
+#endif
+
+  if (aIID.Equals(NS_GET_IID(nsIImageFrame))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*,this);
+    return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIFrame))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIFrame*,this);
+    return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*,this);
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsImageFrame::AddRef(void)
+{
+  NS_WARNING("not supported for frames");
+  return 1;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsImageFrame::Release(void)
+{
+  NS_WARNING("not supported for frames");
+  return 1;
+}
+
+NS_IMETHODIMP
 nsImageFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Tell our image map, if there is one, to clean up

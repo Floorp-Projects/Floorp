@@ -37,6 +37,8 @@
 #include "nsIHTMLContent.h"
 #include "..\..\..\src\nsTablePart.h"
 
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kStyleSetCID, NS_STYLESET_CID);
 
 static FILE * out;
 
@@ -482,9 +484,8 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
 
   vm->SetRootView(rootView);
 
-  nsIStyleSet * ss = nsnull;
-  status = NS_NewStyleSet(&ss);
-  if ((NS_FAILED(status)) ||  nsnull==ss)
+  nsCOMPtr<nsIStyleSet> ss(do_CreateInstance(kStyleSetCID,&status));
+  if ((NS_FAILED(status)))
   {
     fprintf(out, "bad style set");
     NS_ASSERTION(PR_FALSE, "bad style set");

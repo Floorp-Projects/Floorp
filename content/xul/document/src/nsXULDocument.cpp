@@ -106,6 +106,7 @@
 #include "nsIXULPrototypeCache.h"
 #include "nsLWBrkCIID.h"
 #include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "nsPIBoxObject.h"

@@ -26,6 +26,7 @@
 #include "nsString.h"
 #include "nsIPresContext.h"
 #include "nsHTMLImageLoader.h"
+#include "nsIImageFrame.h"
 
 class nsIFrame;
 class nsImageMap;
@@ -37,9 +38,12 @@ struct nsSize;
 
 #define ImageFrameSuper nsLeafFrame
 
-class nsImageFrame : public ImageFrameSuper {
+class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
 public:
   nsImageFrame();
+
+  // nsISupports 
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
@@ -58,7 +62,7 @@ public:
   NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIContent** aContent);
-  NS_METHOD HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus* aEventStatus);
   NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
@@ -82,6 +86,10 @@ public:
 #endif
 
 protected:
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
   virtual ~nsImageFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,

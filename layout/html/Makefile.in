@@ -26,6 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base content document forms style table
+DIRS		= base document forms style table
 
 include $(topsrcdir)/config/rules.mk

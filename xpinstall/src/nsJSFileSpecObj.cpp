@@ -17,7 +17,6 @@
  */
 
 #include "jsapi.h"
-#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 
@@ -66,9 +65,17 @@ fso_ToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
   }
 
-    if(NS_FAILED( nativeThis->ToString(&stringReturned)))
-      return JS_FALSE;
-    nsJSUtils::nsConvertStringToJSVal(stringReturned, cx, rval);
+  if(NS_FAILED( nativeThis->ToString(&stringReturned)))
+    return JS_FALSE;
+
+
+  JSString *jsstring =
+    JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
+                                                stringReturned.GetUnicode()),
+                        stringReturned.Length());
+
+  // set the return value
+  *rval = STRING_TO_JSVAL(jsstring);
 
   return JS_TRUE;
 }

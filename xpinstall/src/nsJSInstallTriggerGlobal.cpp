@@ -21,10 +21,8 @@
  */
 
 #include "jsapi.h"
-#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
-#include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCRT.h"
@@ -56,22 +54,27 @@ extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                JSContext* aContext,
                                jsval aValue);
 
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIInstallTriggerGlobalIID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
-
 //
 // InstallTriggerGlobal finalizer
 //
 PR_STATIC_CALLBACK(void)
 FinalizeInstallTriggerGlobal(JSContext *cx, JSObject *obj)
 {
-  nsJSUtils::nsGenericFinalize(cx, obj);
-}
+  nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
 
-static NS_DEFINE_IID(kIDOMInstallTriggerIID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
-static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
+  if (nsnull != nativeThis) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), 
+                                            (void**)&owner)) {
+      owner->SetScriptObject(nsnull);
+      NS_RELEASE(owner);
+    }
+    
+    // The addref was part of JSObject construction
+    NS_RELEASE(nativeThis);
+  }
+}
 
 static JSBool CreateNativeObject(JSContext *cx, JSObject *obj, nsIDOMInstallTriggerGlobal **aResult)
 {
@@ -79,14 +82,18 @@ static JSBool CreateNativeObject(JSContext *cx, JSObject *obj, nsIDOMInstallTrig
     nsIScriptObjectOwner *owner = nsnull;
     nsIDOMInstallTriggerGlobal *nativeThis;
 
+    static NS_DEFINE_CID(kInstallTrigger_CID,
+                         NS_SoftwareUpdateInstallTrigger_CID);
+
     result = nsRepository::CreateInstance(kInstallTrigger_CID,
                                         nsnull,
-                                        kIDOMInstallTriggerIID,
+                                        NS_GET_IID(nsIDOMInstallTriggerGlobal),
                                         (void **)&nativeThis);
 
     if (NS_OK != result) return JS_FALSE;
     
-    result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+    result = nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
+                                        (void **)&owner);
 
     if (NS_OK != result) 
     {
@@ -640,7 +647,8 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aC
   if (nsnull == aParent) {
     parent = nsnull;
   }
-  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+  else if (NS_OK == aParent->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
+                                            (void**)&owner)) {
     if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
       NS_RELEASE(owner);
       return NS_ERROR_FAILURE;
@@ -655,7 +663,8 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aC
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIInstallTriggerGlobalIID, (void **)&aInstallTriggerGlobal);
+  result = aSupports->QueryInterface(NS_GET_IID(nsIDOMInstallTriggerGlobal),
+                                     (void **)&aInstallTriggerGlobal);
   if (NS_OK != result) {
     return result;
   }

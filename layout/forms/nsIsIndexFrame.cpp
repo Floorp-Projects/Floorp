@@ -60,6 +60,11 @@
 #include "nsIFormControlFrame.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIElementFactory.h"
+#include "nsContentCID.h"
+
+static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -206,22 +211,28 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDocument> doc;
   mContent->GetDocument(*getter_AddRefs(doc));
   nsCOMPtr<nsINodeInfoManager> nimgr;
-  nsresult rv = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
-  NS_ENSURE_SUCCESS(rv, rv);
+  result = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_SUCCESS(result, result);
+
+  nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID,&result));
+  NS_ENSURE_SUCCESS(result, result);
 
   // Create an hr
   nsCOMPtr<nsINodeInfo> hrInfo;
-  nsCOMPtr<nsIHTMLContent> prehr;
   nimgr->GetNodeInfo(nsHTMLAtoms::hr, nsnull, kNameSpaceID_None,
                      *getter_AddRefs(hrInfo));
-  if (NS_OK == NS_NewHTMLHRElement(getter_AddRefs(prehr), hrInfo)) {
+  nsCOMPtr<nsIContent> content;
+  result = ef->CreateInstanceByTag(hrInfo,getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(result, result);
+
+  nsCOMPtr<nsIHTMLContent> prehr(do_QueryInterface(content,&result));
+  if (NS_SUCCEEDED(result)) {
     result = aChildList.AppendElement(prehr);
   }
 
   // Add a child text content node for the label
   if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIContent> labelContent;
-    result = NS_NewTextNode(getter_AddRefs(labelContent));
+    nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID,&result));
     if (NS_SUCCEEDED(result) && labelContent) {
       // set the value of the text node and add it to the child list
       result = labelContent->QueryInterface(NS_GET_IID(nsITextContent),(void**)&mTextContent);
@@ -237,7 +248,12 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
                      *getter_AddRefs(inputInfo));
 
-  if (NS_OK == NS_NewHTMLInputElement(&mInputContent, inputInfo)) {
+  result = ef->CreateInstanceByTag(inputInfo,getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = content->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&mInputContent);
+
+  if (NS_SUCCEEDED(result)) {
     mInputContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("text"), PR_FALSE);
     aChildList.AppendElement(mInputContent);
 
@@ -247,8 +263,11 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   }
 
   // Create an hr
-  nsCOMPtr<nsIHTMLContent> posthr;
-  if (NS_OK == NS_NewHTMLHRElement(getter_AddRefs(posthr), hrInfo)) {
+  result = ef->CreateInstanceByTag(hrInfo,getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(result, result);
+
+  nsCOMPtr<nsIHTMLContent> posthr(do_QueryInterface(content,&result));
+  if (NS_SUCCEEDED(result)) {
     aChildList.AppendElement(posthr);
   }
 

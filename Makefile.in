@@ -102,6 +102,7 @@ DIRS		+= \
 		dom \
 		view \
 		widget \
+		content \
 		layout \
 		db \
 		rdf \

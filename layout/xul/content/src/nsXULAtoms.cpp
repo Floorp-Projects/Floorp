@@ -25,6 +25,8 @@
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 
 static const char kXULNameSpace[] = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -45,7 +47,7 @@ void nsXULAtoms::AddRefAtoms() {
     /* XUL Atoms registers the XUL name space ID because it's a convenient
        place to do this, if you don't want a permanent, "well-known" ID.
     */
-    if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager))) {
+    if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kNameSpaceManagerCID,nsnull,NS_GET_IID(nsINameSpaceManager),(void**)&gNameSpaceManager))) {
 //    gNameSpaceManager->CreateRootNameSpace(namespace);
       nsAutoString nameSpace; nameSpace.AssignWithConversion(kXULNameSpace);
       gNameSpaceManager->RegisterNameSpace(nameSpace, nameSpaceID);

@@ -29,6 +29,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"

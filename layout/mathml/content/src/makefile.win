@@ -23,7 +23,7 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptormathmlcontent_s 
+LIBRARY_NAME=layoutmathmlcontent_s 
 MODULE=raptor 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

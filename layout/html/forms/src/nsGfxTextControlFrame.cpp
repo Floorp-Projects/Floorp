@@ -89,7 +89,7 @@
 #include "nsIEventStateManager.h"
 #include "nsStyleUtil.h"
 #include "nsLinebreakConverter.h"
-#include "nsRange.h"
+#include "nsIDOMRange.h"
 
 // for anonymous content and frames
 #include "nsHTMLParts.h"
@@ -106,6 +106,10 @@
 #include "nsINodeInfo.h"
 
 #include "nsLayoutAtoms.h"
+#include "nsContentCID.h"
+
+static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
+static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
 
@@ -575,9 +579,9 @@ nsGfxTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
     // remove existing ranges
     selection->ClearSelection();  
 
-    nsCOMPtr<nsIDOMRange> selectionRange;
-    NS_NewRange(getter_AddRefs(selectionRange));
-    if (!selectionRange) return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIDOMRange> selectionRange(do_CreateInstance(kRangeCID,&rv));
+    if (NS_FAILED(rv)) 
+      return rv;
     
     selectionRange->SetStart(firstTextNode, aSelStart);
     selectionRange->SetEnd(firstTextNode, aSelEnd);
@@ -600,8 +604,9 @@ nsGfxTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
     else
     {
       // no range. Make a new one.
-      NS_NewRange(getter_AddRefs(firstRange));
-      if (!firstRange) return NS_ERROR_OUT_OF_MEMORY;
+      firstRange = do_CreateInstance(kRangeCID,&rv);
+      if (NS_FAILED(rv)) 
+        return rv;
       mustAdd = PR_TRUE;
     }
     
@@ -2562,8 +2567,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         { // single line text controls get a display frame rather than a subdoc.
           // the subdoc will be created when the frame first gets focus
           // create anonymous text content
-          nsCOMPtr<nsIContent> content;
-          rv = NS_NewTextNode(getter_AddRefs(content));
+          nsCOMPtr<nsIContent> content(do_CreateInstance(kTextNodeCID,&result));
           if (NS_FAILED(rv)) { return rv; }
           if (!content) { return NS_ERROR_NULL_POINTER; }
           nsIDocument* doc;
