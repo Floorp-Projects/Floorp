@@ -204,6 +204,7 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   LL_I2L(mStartLoad, 0);
   mRegressing = PR_FALSE;
   mPrinterTestType = 0;
+  mRegressionOutputLevel = 0;     // full output
   mIncludeStyleInfo = PR_TRUE;
   mLastWebShell = nsnull;
 }
@@ -992,7 +993,7 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
     NS_RELEASE(fu);
     return;
   }
-  rv = fu->CompareRegressionData(f1, f2);
+  rv = fu->CompareRegressionData(f1, f2,mRegressionOutputLevel);
   NS_RELEASE(fu);
 
   char dirName[BUF_SIZE];
