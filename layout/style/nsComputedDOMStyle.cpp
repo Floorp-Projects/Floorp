@@ -520,6 +520,57 @@ nsComputedDOMStyle::GetOpacity(nsIFrame *aFrame,
 }
 
 nsresult
+nsComputedDOMStyle::GetColumnCount(nsIFrame *aFrame,
+                                   nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleColumn* column = nsnull;
+  GetStyleData(eStyleStruct_Column, (const nsStyleStruct*&)column, aFrame);
+
+  if (column) {
+    if (column->mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO) {
+      val->SetIdent(nsLayoutAtoms::autoAtom);
+    } else {
+      val->SetNumber(column->mColumnCount);
+    }
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColumnWidth(nsIFrame *aFrame,
+                                   nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleColumn* column = nsnull;
+  GetStyleData(eStyleStruct_Column, (const nsStyleStruct*&)column, aFrame);
+
+  if (column) {
+    switch (column->mColumnWidth.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(column->mColumnWidth.GetCoordValue());
+        break;
+      case eStyleUnit_Auto:
+        // XXX fix this. When we actually have a column frame, I think
+        // we should return the computed column width.
+        val->SetIdent(nsLayoutAtoms::autoAtom);
+        break;
+      default:
+        NS_WARNING("Bad column width unit");
+        val->SetTwips(0);
+        break;
+    }
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
                                   nsIDOMCSSValue** aValue)
 {
@@ -3522,6 +3573,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(box_orient,                    BoxOrient),
     COMPUTED_STYLE_MAP_ENTRY(box_pack,                      BoxPack),
     COMPUTED_STYLE_MAP_ENTRY(box_sizing,                    BoxSizing),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_count,             ColumnCount),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),

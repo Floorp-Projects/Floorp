@@ -258,11 +258,13 @@ struct nsRuleData
   nsRuleDataSVG* mSVGData;
 #endif
 
+  nsRuleDataColumn* mColumnData;
+
   nsRuleData(const nsStyleStructID& aSID, nsIPresContext* aContext, nsStyleContext* aStyleContext) 
     :mSID(aSID), mPresContext(aContext), mStyleContext(aStyleContext), mPostResolveCallback(nsnull),
      mFontData(nsnull), mDisplayData(nsnull), mMarginData(nsnull), mListData(nsnull), 
      mPositionData(nsnull), mTableData(nsnull), mColorData(nsnull), mContentData(nsnull), mTextData(nsnull),
-     mUserInterfaceData(nsnull)
+     mUserInterfaceData(nsnull), mColumnData(nsnull)
   {
     mCanStoreInRuleTree = PR_TRUE;
     mXULData = nsnull;
@@ -523,6 +525,11 @@ protected:
                    nsStyleContext* aContext, nsRuleNode* aHighestNode,
                    const RuleDetail& aRuleDetail, PRBool aInherited);
 
+  NS_HIDDEN_(const nsStyleStruct*)
+    ComputeColumnData(nsStyleStruct* aStartColumn, const nsRuleDataStruct& aColumnData,
+                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
+                      const RuleDetail& aRuleDetail, PRBool aInherited);
+
 #ifdef MOZ_SVG
   NS_HIDDEN_(const nsStyleStruct*)
     ComputeSVGData(nsStyleStruct* aStartSVG, const nsRuleDataStruct& aSVGData, 
@@ -593,6 +600,7 @@ protected:
 
   NS_HIDDEN_(const nsStyleStruct*) GetUIResetData(nsStyleContext* aContext);
   NS_HIDDEN_(const nsStyleStruct*) GetXULData(nsStyleContext* aContext);
+  NS_HIDDEN_(const nsStyleStruct*) GetColumnData(nsStyleContext* aContext);
 #ifdef MOZ_SVG
   NS_HIDDEN_(const nsStyleStruct*) GetSVGData(nsStyleContext* aContext);
   NS_HIDDEN_(const nsStyleStruct*) GetSVGResetData(nsStyleContext* aContext);

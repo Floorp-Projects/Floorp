@@ -622,6 +622,10 @@
 #define NS_STYLE_PAGE_BREAK_LEFT                3
 #define NS_STYLE_PAGE_BREAK_RIGHT               4
 
+// See nsStyleColumn
+#define NS_STYLE_COLUMN_COUNT_AUTO              0
+#define NS_STYLE_COLUMN_COUNT_UNLIMITED         (-1)
+
 #ifdef MOZ_SVG
 // Some of our constants must map to the same values as those defined in
 // nsISVG{,Path,Glyph}GeometrySource.idl/

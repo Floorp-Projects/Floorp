@@ -720,6 +720,32 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
   return NS_STYLE_HINT_REFLOW;
 }
 
+// --------------------
+// nsStyleColumn
+//
+nsStyleColumn::nsStyleColumn() 
+{ 
+  mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
+  mColumnWidth.SetAutoValue();
+}
+
+nsStyleColumn::~nsStyleColumn() 
+{
+}
+
+nsStyleColumn::nsStyleColumn(const nsStyleColumn& aSource)
+{
+  memcpy((nsStyleColumn*)this, &aSource, sizeof(nsStyleColumn));
+}
+
+nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
+{
+  if (mColumnWidth == aOther.mColumnWidth &&
+      mColumnCount == aOther.mColumnCount)
+    return NS_STYLE_HINT_NONE;
+  return nsChangeHint_ReconstructFrame;
+}
+
 #ifdef MOZ_SVG
 // --------------------
 // nsStyleSVG

@@ -451,6 +451,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // Visibility, Quotes
   DO_STRUCT_DIFFERENCE(Display);
   DO_STRUCT_DIFFERENCE(XUL);
+  DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);
   DO_STRUCT_DIFFERENCE(UserInterface);
   DO_STRUCT_DIFFERENCE(Visibility);
@@ -805,6 +806,15 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   fprintf(out, "<uireset data=\"%d %d\" />\n",
     (int)uiReset->mUserSelect,
     (int)uiReset->mKeyEquivalent);
+
+  // Column
+  IndentBy(out,aIndent);
+  const nsStyleColumn* column = GetStyleColumn();
+  fprintf(out, "<column data=\"%d ",
+    (int)column->mColumnCount);
+  column->mColumnWidth.ToString(str);
+  fprintf(out, "%s", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "\" />\n");
 
   // XUL
   IndentBy(out,aIndent);

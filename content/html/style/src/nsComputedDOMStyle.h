@@ -280,6 +280,10 @@ private:
   nsresult GetUserModify(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetUserSelect(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
+  /* Column properties */
+  nsresult GetColumnCount(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetColumnWidth(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
   nsDOMCSSRGBColor* GetDOMCSSRGBColor(nscolor aColor);
