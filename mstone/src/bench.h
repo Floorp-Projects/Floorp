@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-file-style: "bsd"; comment-column: 40 -*- */
+/* -*- Mode: C; c-file-style: "stroustrup"; comment-column: 40 -*- */
 /* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -372,7 +372,6 @@ extern void rqstat_to_buffer(char *buf, char *comm, cmd_stats_t *stats);
 extern int readResponse(ptcx_t ptcx, SOCKET sock, char *buffer, int buflen);
 extern int sendCommand(ptcx_t ptcx, SOCKET sock, char *command);
 extern int doCommandResponse(ptcx_t ptcx, SOCKET sock, char *command, char *response, int resplen);
-extern int sendMessage(ptcx_t ptcx, SOCKET sock, char *message);
 extern int sendOutput(int fd, char *command);
 extern int retrMsg(ptcx_t ptcx, char *buffer, int maxBytes, SOCKET sock);
 extern void trimEndWhite (char *buff);

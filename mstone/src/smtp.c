@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-file-style: "bsd"; comment-column: 40 -*- */
+/* -*- Mode: C; c-file-style: "stroustrup"; comment-column: 40 -*- */
 /* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -37,15 +37,320 @@
  
 #include "bench.h"
 #include "pish.h"
+#include <glob.h>			/* for glob, globfree */
 
-#define MAXCOMMANDLEN	256
+#define MAXCOMMANDLEN	256		/* parse buffer length */
 
+/* SMTP protocol line to send after a message */
+#define MSG_TRAILER CRLF "." CRLF
+
+/* run time state */
 typedef struct _doSMTP_state {
     int	nothing;
 } doSMTP_state_t;
 
+/* info on files/messages to send */
+typedef struct {
+    char *	filename;		/* file name */
+    int		offset;			/* where to start sending from */
+    char *	msgMailFrom; /* message mail from (envelope sender) */
+} smtp_file_t;
+
+/* flags definitions */
+#define useEHLO 0x01			/* use EHLO instead of HELO */
+#define useAUTHLOGIN 0x02	  /* use AUTH LOGIN to authenticate */
+#define useAUTHPLAIN 0x04	  /* use AUTH PLAIN to authenticate */
+
 static void doSMTPExit  (ptcx_t ptcx, doSMTP_state_t	*me);
 
+/* ================ Support routines ================ */
+/*
+  Handle the initial look at the specified file
+*/
+static int
+SmtpFileInit (pmail_command_t cmd,	/* command being checked */
+	      param_list_t *defparm,	/* default parameters */
+	      smtp_file_t	*fileEntry) /* file entry to fill in */
+{
+    /*pish_command_t	*pish = (pish_command_t *)cmd->data;*/
+    int fd;
+    int bytesRead;
+    struct stat statbuf;
+    char *msgdata;			/* temp buffer */
+    int msgsize;	 /* message size without trailing CRLF.CRLF */
+
+
+    /* Handle multiple files.  This means that the file contents
+       (starting from an offset) are read when the block is executed.
+       The start of the file is scanned here for special commands. */
+
+    D_PRINTF (stderr, "SmtpFileInit: %s\n", fileEntry->filename);
+
+    /* read the contents of file into struct */
+    memset(&statbuf, 0, sizeof(statbuf));
+    if (stat(fileEntry->filename, &statbuf) != 0) {
+	return returnerr(stderr,"Couldn't stat file %s: errno=%d: %s\n", 
+			 fileEntry->filename, errno, strerror(errno));
+    }
+
+    /* open file */
+    if ((fd = open(fileEntry->filename, O_RDONLY)) <= 0) {
+	return returnerr(stderr, "Cannot open file %s: errno=%d: %s\n",
+			 fileEntry->filename, errno, strerror(errno));
+    }
+
+    /* We don't really need much of the file, but it warms up the
+     * cache.  Limit at 1Mb */
+    msgsize = MIN (statbuf.st_size, 1024*1024);
+    msgdata = (char *) mycalloc(msgsize+strlen(MSG_TRAILER)+1);
+
+    if ((bytesRead = read(fd, msgdata, msgsize)) <= 0) {
+	close(fd);
+	return returnerr(stderr, "Cannot read file %s: errno=%d: %s\n", 
+			 fileEntry->filename, errno, strerror(errno));
+    }
+
+    if (bytesRead != msgsize) {
+	returnerr(stderr, "Error reading file %s, got %d expected %d\n",
+		  fileEntry->filename, bytesRead, msgsize);
+	close(fd);
+	return -1;
+    }
+
+    msgdata[msgsize] = 0;
+
+    /* If the file starts with SMTP, then it has extra info in it */
+    /* clean up message to rfc822 style */
+
+#define PROTO_HEADER "SMTP"
+#define PROTO_MAIL_FROM "\nMAIL FROM:"
+#define PROTO_DATA "\nDATA\n"
+
+    if (strncmp(msgdata, PROTO_HEADER, strlen(PROTO_HEADER)) == 0) {
+	char *cp, *cp2;
+	int off;
+
+	D_PRINTF(stderr, "found PROTO_HEADER  [%s]\n", PROTO_HEADER);
+	cp = strstr(msgdata, PROTO_MAIL_FROM); 
+	if (cp != NULL) {		/* copy out FROM field */
+	    cp += strlen(PROTO_MAIL_FROM);
+	    cp2 = strchr(cp, '\n');
+	    off = cp2 - cp;
+	    fileEntry->msgMailFrom = (char *) mycalloc(off+1);
+	    memcpy(fileEntry->msgMailFrom, cp, off);
+	    fileEntry->msgMailFrom[off] = 0;
+	    D_PRINTF(stderr, "got PROTO_MAIL_FROM:%s\n",
+		     fileEntry->msgMailFrom);
+	}
+
+	cp = strstr(msgdata, PROTO_DATA);
+	if (cp != NULL) { /* DATA marks the real message, copy up */
+	    off = cp - msgdata;
+	    off += strlen(PROTO_DATA);
+	    fileEntry->offset = off;
+	    D_PRINTF(stderr, "found PROTO_DATA at off=%d\n", off);
+	} else {
+	    D_PRINTF(stderr,
+		     "WARNING: PROTO_HEADER [%s] given, but PROTO_DATA [%s] never found\n",
+		     PROTO_HEADER, PROTO_DATA);
+	}
+    }
+
+
+    myfree (msgdata);
+    close(fd);
+    return 0;
+}
+
+/*
+  Handle file expansion for the given file pattern
+*/
+static int
+SmtpFilePrep (pmail_command_t cmd,	/* command being checked */
+	      param_list_t *defparm)	/* default parameters */
+{
+    pish_command_t	*pish = (pish_command_t *)cmd->data;
+    int		ii;
+    glob_t	globs;
+    smtp_file_t	*fileEntry;
+
+    /* We randomly pick files, so dont bother to sort them */
+    if (glob (pish->filePattern, GLOB_NOSORT | GLOB_MARK, NULL, &globs) < 0) {
+	globfree (&globs);
+	return returnerr(stderr,"Error globbing '%s': errno=%d: %s\n", 
+			 pish->filePattern, errno, strerror(errno));
+    }
+
+    pish->fileCount = globs.gl_pathc;
+    D_PRINTF (stderr, "SmtpFilePrep: filePattern='%s' entries=%d\n",
+	      pish->filePattern, pish->fileCount);
+    pish->files = mycalloc (pish->fileCount * sizeof (smtp_file_t));
+    fileEntry = pish->files;
+    for (ii = 0; ii < pish->fileCount; ++ii, ++fileEntry) {
+	fileEntry->filename = mystrdup (globs.gl_pathv[ii]);
+	if (SmtpFileInit (cmd, defparm, fileEntry) < 0) {
+	    globfree (&globs);
+	    return -1;
+	}
+    }
+
+    globfree (&globs);
+    return 0;
+}
+
+/*
+  Send a file with leading and trailing text.
+  Currently only used by SMTP.
+  The leading and trailing text may be NULL.
+  For SMTP, put the <CRLF>.<CRLF> in the trailing text.
+ */
+static int
+sendFile (
+	ptcx_t ptcx,			/* timer context */
+	SOCKET sock,			/* socket to send on */
+	char *leading,			/* initial text/headers or NULL */
+	char *fileName,			/* filename */
+	int  offset,			/* offset into file */
+	char *trailing)			/* trailing text or NULL */
+{
+    int leadLen = 0, trailLen = 0;
+    int sentbytes = 0;
+    int sent, todo, done, fd;
+    char buff[16*1024];
+
+    fd = open (fileName, O_RDONLY);
+    if (fd < 0) {
+	snprintf (buff, sizeof (buff),
+		  "<sendfile: Error opening '%s' (%s)",
+		  fileName, strerror (errno));
+	strcat (ptcx->errMsg, buff);
+	return -1;
+    }
+
+
+    if (NULL != leading) leadLen = strlen(leading);
+    if (NULL != trailing) trailLen = strlen(trailing);
+
+    D_PRINTF(debugfile, "Writing file '%s' to server: leadLen=%d trailLen=%d offset=%d\n",
+	     fileName, leadLen, trailLen, offset);
+
+    /* Send leading text */
+    todo = leadLen;
+    done = 0;
+    while (todo > 0) {
+	if ((sent = retryWrite(ptcx, sock, leading + done,
+			       todo - done)) == -1) {
+	    strcat (ptcx->errMsg, "<sendFile");
+            return -1;
+        }
+
+	done += sent;
+	todo -= sent;
+
+	if (gf_timeexpired >= EXIT_FAST) {
+	    D_PRINTF(debugfile,"sendFile() Time expired.\n");
+	    sentbytes += done;
+	    goto exitFast;
+	}
+    }
+    sentbytes += done;
+
+    /* Send the file */
+    if (offset > 0) {			/* skip an initial offset */
+	if (lseek (fd, offset, SEEK_SET) < 0) {
+	    strcat (ptcx->errMsg, "<sendFile() seek failed.\n");
+	    return -1;
+	}
+    }
+    while ((todo = read (fd, buff, sizeof (buff))) > 0) {
+	done = 0;
+	while (todo > 0) {
+	    if ((sent = retryWrite(ptcx, sock, buff + done,
+				   todo - done)) == -1) {
+		strcat (ptcx->errMsg, "<sendFile");
+		return -1;
+	    }
+
+	    done += sent;
+	    todo -= sent;
+
+	    if (gf_timeexpired >= EXIT_FAST) {
+		D_PRINTF(debugfile,"sendFile() Time expired.\n");
+		sentbytes += done;
+		goto exitFast;
+	    }
+	}
+	sentbytes += done;
+    }
+    if (todo < 0) {
+	D_PRINTF(debugfile,"sendFile() File read.\n");
+    }
+    close (fd);
+    
+    /* Send trailing text */
+    todo = trailLen;
+    done = 0;
+    while (todo > 0) {
+	if ((sent = retryWrite(ptcx, sock, trailing + done,
+			       todo - done)) == -1) {
+	    strcat (ptcx->errMsg, "<sendFile");
+            return -1;
+        }
+
+	done += sent;
+	todo -= sent;
+
+	if (gf_timeexpired >= EXIT_FAST) {
+	    D_PRINTF(debugfile,"sendFile() Time expired.\n");
+	    sentbytes += done;
+	    goto exitFast;
+	}
+    }
+    sentbytes += done;
+
+exitFast:
+    ptcx->byteswritten += sentbytes;
+    return sentbytes;
+}
+
+#if 0					/* not currently used */
+/*
+  Send a message from memory.  Currently only used by SMTP.
+  Assumes we already included the <CRLF>.<CRLF> at the end of message
+*/
+static int
+sendMessage(ptcx_t ptcx, SOCKET sock, char *message)
+{
+    int writelen;
+    int sentbytes = 0;
+    int sent;
+
+    writelen = strlen(message);
+
+    D_PRINTF(debugfile, "Writing message to server: len=%d\n", writelen );
+
+    while (sentbytes < writelen) {
+	if ((sent = retryWrite(ptcx, sock, message + sentbytes,
+			       writelen - sentbytes)) == -1) {
+	    strcat (ptcx->errMsg, "<sendMessage");
+            return -1;
+        }
+
+	sentbytes += sent;
+
+	if (gf_timeexpired >= EXIT_FAST) {
+	    D_PRINTF(debugfile,"sendMessage() Time expired.\n");
+	    break;
+	}
+    }
+
+    ptcx->byteswritten += sentbytes;
+
+    return sentbytes;
+}
+#endif
+
+/* ================ SMTP protocol entry points ================ */
 /*
   Set defaults in command structure
 */
@@ -80,9 +385,6 @@ SmtpParseEnd (pmail_command_t cmd,
 		param_list_t *defparm)
 {
     string_list_t	*sp;
-    int fd;
-    int bytesRead;
-    struct stat statbuf;
     pish_command_t	*pish = (pish_command_t *)cmd->data;
 
     /* Now parse section lines */
@@ -126,88 +428,12 @@ SmtpParseEnd (pmail_command_t cmd,
     }
 
     /* check for required attrs */
-    if (!pish->filename) {
+    if (!pish->filePattern) {
 	D_PRINTF(stderr,"missing file for SMTP command");
 	return returnerr(stderr,"missing file for SMTP command\n");
     }
 
-	/* read the contents of file into struct */
-    memset(&statbuf, 0, sizeof(statbuf));
-    if (stat(pish->filename, &statbuf) != 0) {
-	return returnerr(stderr,"Couldn't stat file %s: errno=%d: %s\n", 
-			 pish->filename, errno, strerror(errno));
-    }
-
-    /* open file */
-    if ((fd = open(pish->filename, O_RDONLY)) <= 0) {
-	return returnerr(stderr, "Cannot open file %s: errno=%d: %s\n",
-			 pish->filename, errno, strerror(errno));
-    }
-
-    /* read into loaded_comm_list */
-#define MSG_TRAILER CRLF "." CRLF
-
-    pish->msgsize = statbuf.st_size;
-    pish->msgMailFrom = NULL;
-    pish->msgdata = (char *) mycalloc(pish->msgsize+strlen(MSG_TRAILER)+1);
-
-    if ((bytesRead = read(fd, pish->msgdata, pish->msgsize)) <= 0) {
-	close(fd);
-	return returnerr(stderr, "Cannot read file %s: errno=%d: %s\n", 
-			 pish->filename, errno, strerror(errno));
-    }
-
-    if (bytesRead != pish->msgsize) {
-	returnerr(stderr, "Error reading file %s, got %d expected %d\n",
-		  pish->filename, bytesRead, pish->msgsize);
-	close(fd);
-	return -1;
-    }
-
-    pish->msgdata[pish->msgsize] = 0;
-
-    /* clean up message to rfc822 style */
-
-#define PROTO_HEADER "SMTP"
-#define PROTO_MAIL_FROM "\nMAIL FROM:"
-#define PROTO_DATA "\nDATA\n"
-
-    D_PRINTF (stderr, "checking for PROTO_HEADER [%s]\n", PROTO_HEADER);
-    if (strncmp(pish->msgdata, PROTO_HEADER, strlen(PROTO_HEADER)) == 0) {
-	    char *cp, *cp2;
-	    int off;
-
-	    D_PRINTF(stderr, "got PROTO_HEADER\n");
-	    D_PRINTF(stderr, "find PROTO_MAIL_FROM...\n");
-	    cp = strstr(pish->msgdata, PROTO_MAIL_FROM); 
-	    if (cp != NULL) {
-		    cp += strlen(PROTO_MAIL_FROM);
-		    cp2 = strchr(cp, '\n');
-		    off = cp2 - cp;
-		    pish->msgMailFrom = (char *) mycalloc(off+1);
-		    memcpy(pish->msgMailFrom, cp, off);
-		    pish->msgMailFrom[off] = 0;
-		    D_PRINTF(stderr, "got PROTO_MAIL_FROM:%s\n",pish->msgMailFrom);
-	    }
-
-	    D_PRINTF(stderr, "find PROTO_DATA...\n");
-	    cp = strstr(pish->msgdata, PROTO_DATA);
-	    if (cp != NULL) {
-		    off = cp - pish->msgdata;
-		    off += strlen(PROTO_DATA);
-		    D_PRINTF(stderr, "got past PROTO_DATA at off=%d\n", off);
-		    char *newmsg = (char *) mycalloc(pish->msgsize+strlen(MSG_TRAILER)+1-off);
-		    memcpy(newmsg, pish->msgdata+off, pish->msgsize-off+1);
-		    myfree(pish->msgdata);
-		    pish->msgdata = newmsg;
-		    D_PRINTF(stderr, "done msg shrink\n");
-	    }
-    }
-
-
-    strcat(pish->msgdata, MSG_TRAILER);
-
-    close(fd);
+    SmtpFilePrep (cmd, defparm);
 
     /* see if we can resolve the mailserver addr */
     if (resolve_addrs(pish->hostInfo.hostName, "tcp",
@@ -283,7 +509,7 @@ pishParseNameValue (pmail_command_t cmd,
     else if (strcmp(name, "numrecipients") == 0)
 	pish->numRecipients = atoi(tok);
     else if (strcmp(name, "file") == 0)
-	pish->filename= mystrdup (tok);
+	pish->filePattern = mystrdup (tok);
     else if (strcmp(name, "passwdformat") == 0)
 	pish->passwdFormat = mystrdup (tok);
     else if (strcmp(name, "searchfolder") == 0)
@@ -293,11 +519,23 @@ pishParseNameValue (pmail_command_t cmd,
     else if (strcmp(name, "searchrate") == 0)
 	pish->imapSearchRate = atoi(tok);
     else if (strcmp(name, "useehlo") == 0)
-	pish->useEHLO = atoi(tok);
+	if (atoi(tok)) {
+	    pish->flags |= useEHLO;
+	} else {
+	    pish->flags &= ~useEHLO;
+	}
     else if (strcmp(name, "useauthlogin") == 0)
-	pish->useAUTHLOGIN = atoi(tok);
+	if (atoi(tok) > 0) {
+	    pish->flags |= useAUTHLOGIN;
+	} else {
+	    pish->flags &= ~useAUTHLOGIN;
+	}
     else if (strcmp(name, "useauthplain") == 0)
-	pish->useAUTHPLAIN = atoi(tok);
+	if (atoi(tok) > 0) {
+	    pish->flags |= useAUTHPLAIN;
+	} else {
+	    pish->flags &= ~useAUTHPLAIN;
+	}
     else {
 	return -1;
     }
@@ -774,7 +1012,7 @@ sendSMTPStart(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
     D_PRINTF(debugfile,"read connect response\n");
 
 
-    if (pish->useEHLO != 0) {
+    if (pish->flags & useEHLO) {
 	/* send extended EHLO */
 	sprintf(command, "EHLO %s" CRLF, gs_thishostname);
     } else {
@@ -795,7 +1033,7 @@ sendSMTPStart(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
 	return NULL;
     }
 
-    if (pish->useAUTHPLAIN) {
+    if (pish->flags & useAUTHPLAIN) {
 	/* look for AUTH PLAIN LOGIN in respBuffer */
 	if (strstr(respBuffer, "AUTH PLAIN LOGIN") != NULL) {
 	    /* FIX: time get base64 time and multiple round trips */
@@ -805,7 +1043,7 @@ sendSMTPStart(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
 		return NULL;
 	    }
 	}
-    } else if (pish->useAUTHLOGIN) {
+    } else if (pish->flags & useAUTHLOGIN) {
 	/* look for AUTH LOGIN in respBuffer */
 	if (strstr(respBuffer, "AUTH=LOGIN") != NULL) {
 	    /* FIX: time get base64 time and multiple round trips */
@@ -836,13 +1074,23 @@ sendSMTPLoop(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, void *mystat
     int		numBytes;
     pish_stats_t	*stats = (pish_stats_t *)ptimer->data;
     pish_command_t	*pish = (pish_command_t *)cmd->data;
+    smtp_file_t	*fileEntry;
 
     /* send MAIL FROM:<username> */
-    if (pish->msgMailFrom != NULL) {
-	sprintf(command, "MAIL FROM:%s%s", pish->msgMailFrom, CRLF);
+    if (pish->fileCount > 1) {		/* randomly pick file */
+	int	ff;
+	ff = (RANDOM() % pish->fileCount);
+	/*D_PRINTF(debugfile,"random file<%d=%d\n", pish->fileCount, ff);*/
+	fileEntry = ((smtp_file_t *)pish->files) + ff;
+    } else {
+	fileEntry = (smtp_file_t *)pish->files;
+    }
+    if (fileEntry->msgMailFrom != NULL) {
+	sprintf(command, "MAIL FROM:%s%s", fileEntry->msgMailFrom, CRLF);
     } else {
 	sprintf(command, "MAIL FROM:<%s>%s", pish->smtpMailFrom, CRLF);
     }
+    /*D_PRINTF(debugfile,"%s\n", command);*/
     event_start(ptcx, &stats->cmd);
     rc = doSmtpCommandResponse(ptcx, ptcx->sock, command, respBuffer, sizeof(respBuffer));
     event_stop(ptcx, &stats->cmd);
@@ -901,9 +1149,12 @@ sendSMTPLoop(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, void *mystat
 
     D_PRINTF(debugfile, "data response %s\n", respBuffer);
 
-    /* send data as message (we already added the CRLF.CRLF) */
+    /* send message */
     event_start(ptcx, &stats->msgwrite);
-    numBytes = sendMessage(ptcx, ptcx->sock, pish->msgdata);
+    numBytes = sendFile(ptcx, ptcx->sock,
+			NULL,
+			fileEntry->filename, fileEntry->offset,
+			MSG_TRAILER);
     if (numBytes == -1) {
 	event_stop(ptcx, &stats->msgwrite);
 	if (gf_timeexpired < EXIT_FAST) {

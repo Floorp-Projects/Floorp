@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-file-style: "bsd"; comment-column: 40 -*- */
+/* -*- Mode: C; c-file-style: "stroustrup"; comment-column: 40 -*- */
 /* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -72,9 +72,12 @@ typedef struct _doIMAP4_state {
     int		*searchSchedule;
 } doIMAP4_state_t;
 
+/* IMAP flags definitions */
+#define leaveMailOnServer 0x01
+#define leaveMailUnseen   0x02
+
 static void doImap4Exit (ptcx_t ptcx, doIMAP4_state_t *me);
 
-#define	IMAP_LEAVE_UNSEEN	2
 
 static int
 ImapParseNameValue (pmail_command_t cmd,
@@ -87,17 +90,21 @@ ImapParseNameValue (pmail_command_t cmd,
     if (pishParseNameValue(cmd, name, tok) == 0)
 	;				/* done */
     else if (strcmp(name, "leavemailonserver") == 0) {
-	int	v = atoi(tok);
-	if (v <= 0) {			/* turn off */
-	    pish->leaveMailOnServer = 0;
-	} else if (0 == pish->leaveMailOnServer) { /* turn on if < leavemailunseen */
-	    pish->leaveMailOnServer = 1;
+	if (atoi(tok) > 0) {
+	    pish->flags |= leaveMailOnServer;
+	} else  { /* turn on if < leavemailunseen */
+	    pish->flags &= ~leaveMailOnServer;
 	}
-	D_PRINTF (stderr, "leaveMailOnServer=%d\n", pish->leaveMailOnServer);
+	/*D_PRINTF (stderr, "leaveMailOnServer=%d\n", pish->leaveMailOnServer);*/
     }
     else if (strcmp(name, "leavemailunseen") == 0) {
-	pish->leaveMailOnServer = IMAP_LEAVE_UNSEEN * (atoi(tok) > 0);
-	D_PRINTF (stderr, "leaveMailOnServer=%d\n", pish->leaveMailOnServer);
+	if (atoi(tok) > 0) {
+	    /* leaving mail unseen implies leaving on server */
+	    pish->flags |= leaveMailUnseen | leaveMailOnServer;
+	} else  { /* turn on if < leavemailunseen */
+	    pish->flags &= ~leaveMailUnseen;
+	}
+	/*D_PRINTF (stderr, "leaveMailOnServer=%d\n", pish->leaveMailOnServer);*/
     }
     else {
 	return -1;
@@ -834,14 +841,14 @@ imapRetrRecentMessages(ptcx_t ptcx,
 	}
 
 	/* if we're told to leave mail on server, do not delete the message */
-        if (pish->leaveMailOnServer < IMAP_LEAVE_UNSEEN) {
-	    if (0 == pish->leaveMailOnServer) {
-					/* mark the msg \deleted and \seen */
-		sprintf(command, "%d STORE %d +FLAGS (\\DELETED \\SEEN)%s",
-			++pIMAP->seq_num,i, CRLF);
-	    } else {
+        if (!(pish->flags & leaveMailUnseen)) {
+	    if (pish->flags & leaveMailOnServer) { /* just mark seen */
 					/* mark the msg \seen needed??? */
 		sprintf(command, "%d STORE %d +FLAGS (\\SEEN)%s",
+			++pIMAP->seq_num,i, CRLF);
+	    } else {			/* delete message */
+					/* mark the msg \deleted and \seen */
+		sprintf(command, "%d STORE %d +FLAGS (\\DELETED \\SEEN)%s",
 			++pIMAP->seq_num,i, CRLF);
 	    }
 	    event_start(ptcx, &stats->cmd);
@@ -859,7 +866,7 @@ imapRetrRecentMessages(ptcx_t ptcx,
 	}
     }
 
-    if (0 == pish->leaveMailOnServer) {	/* expunge if we are deleting */
+    if (!(pish->flags & leaveMailOnServer)) { /* expunge if we are deleting */
 	/* EXPUNGE \deleted messages */
 	sprintf(command, "%d EXPUNGE%s", ++pIMAP->seq_num, CRLF);
 	event_start(ptcx, &stats->cmd);
