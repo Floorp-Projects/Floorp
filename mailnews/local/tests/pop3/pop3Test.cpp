@@ -338,7 +338,7 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 			char * value = nsnull;
 			incomingServer->GetPrettyName(&value);
 			printf("Server pretty name: %s\n", value ? value : "");
-			incomingServer->GetUserName(&value);
+			incomingServer->GetUsername(&value);
 			printf("User Name: %s\n", value ? value : "");
 			incomingServer->GetHostName(&value);
 			printf("Pop Server: %s\n", value ? value : "");

@@ -64,6 +64,7 @@
 #include "nsImapMailFolder.h"
 #include "nsIRDFResource.h"
 #include "nsCOMPtr.h"
+#include "nsMsgBaseCID.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -400,7 +401,7 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 			char * value = nsnull;
 			server->GetHostName(&value);
 			printf("Imap Server: %s\n", value ? value : "");
-			server->GetUserName(&value);
+			server->GetUsername(&value);
 			printf("User Name: %s\n", value ? value : "");
 			server->GetPassword(&value);
 			printf("Imap Password: %s\n", value ? value : "");

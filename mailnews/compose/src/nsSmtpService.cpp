@@ -29,6 +29,7 @@
 
 #include "nsSmtpUrl.h"
 #include "nsSmtpProtocol.h"
+#include "nsMsgBaseCID.h"
 
 // foward declarations...
 

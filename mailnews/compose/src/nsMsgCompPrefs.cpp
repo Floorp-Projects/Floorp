@@ -19,6 +19,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgCompPrefs.h"
+#include "nsMsgBaseCID.h"
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
