@@ -112,7 +112,7 @@ public class TrivialApplet extends Applet {
 						JSObject window = JSObject.getWindow(TrivialApplet.this);
 						if (window != null) {
 							//window.eval("alert('going to location " + location + "');");
-							window.eval("println(" + location + ")");
+							window.eval("println('" + location + "')");
 						}
 						getAppletContext().showDocument(location, "_new");
 					} catch (MalformedURLException mfue) {
