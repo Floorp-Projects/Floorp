@@ -436,13 +436,13 @@ if (defined $params->param('columnlist')) {
 elsif (defined $::COOKIE{'COLUMNLIST'}) {
     # 2002-10-31 Rename column names (see bug 176461)
     my $columnlist = $::COOKIE{'COLUMNLIST'};
-    $columnlist =~ s/owner/assigned_to/;
-    $columnlist =~ s/owner_realname/assigned_to_realname/;
-    $columnlist =~ s/[^_]platform/rep_platform/;
-    $columnlist =~ s/[^_]severity/bug_severity/;
-    $columnlist =~ s/[^_]status\b/bug_status/;
-    $columnlist =~ s/summaryfull/short_desc/;
-    $columnlist =~ s/summary/short_short_desc/;
+    $columnlist =~ s/\bowner\b/assigned_to/;
+    $columnlist =~ s/\bowner_realname\b/assigned_to_realname/;
+    $columnlist =~ s/\bplatform\b/rep_platform/;
+    $columnlist =~ s/\bseverity\b/bug_severity/;
+    $columnlist =~ s/\bstatus\b/bug_status/;
+    $columnlist =~ s/\bsummaryfull\b/short_desc/;
+    $columnlist =~ s/\bsummary\b/short_short_desc/;
 
     # Use the columns listed in the user's preferences.
     @displaycolumns = split(/ /, $columnlist);
