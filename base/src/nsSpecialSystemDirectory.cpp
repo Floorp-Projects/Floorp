@@ -36,6 +36,7 @@
 #include <stdio.h>
 #elif defined(XP_UNIX)
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/param.h>
 #endif
 
@@ -109,11 +110,21 @@ GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 
 #elif defined(XP_UNIX)
 
-    // XXX This is wrong, but I don't know a better way to do it.
+    // In the absence of a good way to get the executable directory let
+    // us try this for unix:
+    //	- if MOZILLA_FIVE_HOME is defined, that is it
+    //	- else give the current directory
     char buf[MAXPATHLEN];
-    if (getcwd(buf, sizeof(buf))) {
-        aFileSpec = buf;
+    char *moz5 = getenv("MOZILLA_FIVE_HOME");
+    if (moz5) {
+        aFileSpec = moz5;
         return;
+    }
+    else {
+        if (getcwd(buf, sizeof(buf))) {
+            aFileSpec = buf;
+            return;
+        }
     }
 
 #endif
