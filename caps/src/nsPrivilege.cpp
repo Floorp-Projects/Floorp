@@ -218,7 +218,9 @@ PRBool nsPrivilegeInitialize(void)
   nsDurationState duration;
   for (int i = 0; i < nsPermissionState_NumberOfPermissions; i++)
     for(int j = 0; j < nsDurationState_NumberOfDurations; j++) {
-      /* XXX: hack fix it */
+      /* This code assumes that nsPermissionState and nsDurationState 
+       * are ordered sequentially from 0 to N 
+       */
       perm = (nsPermissionState)i;
       duration = (nsDurationState)j;
       thePrivilegeCache[i][j] = new nsPrivilege(perm, duration);

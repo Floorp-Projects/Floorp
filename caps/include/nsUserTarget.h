@@ -54,6 +54,27 @@ public:
     {
     }
 
+    nsUserTarget(char *name, nsPrincipal *prin, PRInt32 risk, 
+                 char *riskColor, 
+                 int desc_id, 
+                 int detail_desc_id,
+                 int help_url_id)
+      : nsTarget(name, prin, risk, riskColor, desc_id, detail_desc_id, 
+                 help_url_id, NULL)
+    {
+    }
+
+    nsUserTarget(char *name, nsPrincipal *prin, PRInt32 risk, 
+                 char *riskColor, 
+                 int desc_id, 
+                 int detail_desc_id,
+                 int help_url_id,
+                 nsTargetArray *targetArray) 
+      : nsTarget(name, prin, risk, riskColor, desc_id, detail_desc_id, 
+                 help_url_id, targetArray)
+    {
+    }
+
 	nsPrivilege * enablePrivilege(nsPrincipal *prin, void *data);
 
 private:
