@@ -3574,7 +3574,7 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
             *pResultKey = m_keys.GetAt(*pResultIndex);
             break;
         case nsMsgNavigationType::previousMessage:
-            *pResultIndex = (startIndex > 0) ? startIndex - 1 : 0;
+            *pResultIndex = (startIndex != nsMsgViewIndex_None) ? startIndex - 1 : 0;
             *pResultKey = m_keys.GetAt(*pResultIndex);
             break;
         case nsMsgNavigationType::lastMessage:
@@ -3654,6 +3654,9 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
             }
             break;
         case nsMsgNavigationType::previousUnreadMessage:
+            if (startIndex == nsMsgViewIndex_None) {
+              break;
+            }
             rv = FindPrevUnread(m_keys.GetAt(startIndex), pResultKey,
                                 &resultThreadKey);
             if (NS_SUCCEEDED(rv)) {
