@@ -766,6 +766,8 @@ PK11_ExportEncryptedPrivKeyInfo;
 PK11_FindSlotsByAliases;
 SECMOD_GetDeadModuleList;
 SECMOD_GetDBModuleList;
+SEC_ASN1DecoderAbort;
+SEC_ASN1EncoderAbort;
 SEC_DupCrl;
 ;+    local:
 ;+       *;

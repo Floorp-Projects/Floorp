@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.11 2003/09/19 04:16:19 jpierre%netscape.com Exp $
+ * $Id: p7decode.c,v 1.12 2003/10/16 23:49:14 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1247,6 +1247,19 @@ SEC_PKCS7DecodeItem(SECItem *p7item,
 				  decrypt_key_cb_arg, decrypt_allowed_cb);
     (void) SEC_PKCS7DecoderUpdate(p7dcx, (char *) p7item->data, p7item->len);
     return SEC_PKCS7DecoderFinish(p7dcx);
+}
+
+/*
+ * Abort the ASN.1 stream. Used by pkcs 12
+ */
+void
+SEC_PKCS7DecoderAbort(SEC_PKCS7DecoderContext *p7dcx, int error)
+{
+    PORT_Assert(p7dcx);
+    if (!p7dcx) {
+	return;
+    }
+    SEC_ASN1DecoderAbort(p7dcx->dcx, error);
 }
 
 
