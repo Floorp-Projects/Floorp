@@ -271,6 +271,7 @@ protected:
   mdb_column kToken_NameColumn;
   mdb_column kToken_HostnameColumn;
   mdb_column kToken_HiddenColumn;
+  mdb_column kToken_TypedColumn;
 
   //
   // AddPage-oriented stuff
@@ -395,6 +396,7 @@ protected:
     nsGlobalHistory* mHistory;
     mdb_column mURLColumn;
     mdb_column mHiddenColumn;
+    mdb_column mTypedColumn;
     mdb_column mCommentColumn;
     AutocompleteExclude* mExclude;
     const nsAReadableString& mSelectValue;
@@ -406,11 +408,13 @@ protected:
                            mdb_column aURLColumn,
                            mdb_column aCommentColumn,
                            mdb_column aHiddenColumn,
+                           mdb_column aTypedColumn,
                            const nsAReadableString& aSelectValue,
                            AutocompleteExclude* aExclude) :
       mHistory(aHistory),
       mURLColumn(aURLColumn),
       mHiddenColumn(aHiddenColumn),
+      mTypedColumn(aTypedColumn),
       mCommentColumn(aCommentColumn),
       mExclude(aExclude),
       mSelectValue(aSelectValue) {}

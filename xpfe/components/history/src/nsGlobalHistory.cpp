@@ -1235,6 +1235,23 @@ nsGlobalHistory::HidePage(const char *aURL)
   return NotifyFindUnassertions(urlResource, row);
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::MarkPageAsTyped(const char* aURL)
+{
+  nsCOMPtr<nsIMdbRow> row;
+  nsresult rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
+  if (NS_FAILED(rv)) {
+    rv = AddPage(aURL);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return SetRowValue(row, kToken_TypedColumn, 1);
+}
+
+
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -2613,6 +2630,9 @@ nsGlobalHistory::CreateTokens()
   err = mStore->StringToToken(mEnv, "Hidden", &kToken_HiddenColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
+  err = mStore->StringToToken(mEnv, "Typed", &kToken_TypedColumn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
   return NS_OK;
 }
 
@@ -3770,12 +3790,12 @@ nsGlobalHistory::AutoCompleteEnumerator::~AutoCompleteEnumerator()
 PRBool
 nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 {
-  if (HasCell(mEnv, aRow, mHiddenColumn))
+  if (HasCell(mEnv, aRow, mHiddenColumn) && !HasCell(mEnv, aRow, mTypedColumn))
     return PR_FALSE;
 
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
-  
+
   nsAutoString url2;
   url2.AssignWithConversion(url.get());
   PRBool result = mHistory->AutoCompleteCompare(url2, mSelectValue, mExclude); 
@@ -3952,6 +3972,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
     enumerator = new AutoCompleteEnumerator(this, kToken_URLColumn, 
                                             kToken_NameColumn,
                                             kToken_HiddenColumn,
+                                            kToken_TypedColumn,
                                             aSearchString, aExclude);
     rv = enumerator->Init(mEnv, mTable);
     if (NS_FAILED(rv)) return rv;
