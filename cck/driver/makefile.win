@@ -105,6 +105,7 @@ include <$(DEPTH)\cck\InitDist.win>
 export::
 	$(MAKE_INSTALL) NCITemplate $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) cck.che $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) WizardMachine.ini $(CCKDIST)\CCKTool
 
 install::$(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(CCKDIST)\CCKTool
