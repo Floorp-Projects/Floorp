@@ -541,6 +541,7 @@
       <handler event="keydown"><![CDATA[
         // open popup if key is space/up/left/right/down and popup is closed
         if ( (event.keyCode == 32 || (event.keyCode > 36 && event.keyCode < 41)) && !this.mOpen)
+          
           this.openPopup();
       ]]></handler>
 
@@ -549,6 +550,7 @@
         // popup="_child" mechanism, I can't use that because I can't seem to
         // get it to recognize the popupalign and popupanchor attributes that way
         // So, I have to do it manually...
+        this.focus();
         this.openPopup();
       ]]></handler>
     </handlers>
