@@ -1493,7 +1493,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
     // return it immediately. 
 
     nsIWebShellWindow *parent = aChromeMask & NS_CHROME_DEPENDENT ? this : nsnull;
-    rv = appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, PR_FALSE,
+    rv = appShell->CreateTopLevelWindow(parent, nsnull, aVisible, PR_FALSE,
                                  aChromeMask, nsnull,
                                  NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                  getter_AddRefs(newWindow));
@@ -1530,7 +1530,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   NS_RELEASE(uri);
 
   if (NS_SUCCEEDED(rv)) {
-    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, PR_FALSE,
+    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, aVisible, PR_FALSE,
                                  aChromeMask, nsnull, 615, 480,
                                  getter_AddRefs(newWindow));
   }
