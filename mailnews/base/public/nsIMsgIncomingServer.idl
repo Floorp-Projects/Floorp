@@ -111,6 +111,8 @@ interface nsIMsgIncomingServer : nsISupports {
 	 going off at the same time. */
   attribute boolean serverBusy;
 
+  /* what kind of logon redirector to use for this server, if any */
+  attribute string redirectorType;
   /* we use this to set the default local path.  we use this when migrating prefs */
   void SetDefaultLocalPath(in nsIFileSpec aDefaultLocalPath);
 
