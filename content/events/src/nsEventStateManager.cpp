@@ -3972,9 +3972,18 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
         aContent = nsnull;
       }
     } else {
+      // see comments in ShiftFocusInternal on mCurrentFocus overloading
+      PRBool fcActive = PR_FALSE;
+      if (mDocument) {
+        nsCOMPtr<nsIFocusController> fc;
+        fc = getter_AddRefs(GetFocusControllerForDocument(mDocument));
+        if (fc)
+          fc->GetActive(&fcActive);
+      }
       notifyContent[3] = gLastFocusedContent;
       NS_IF_ADDREF(gLastFocusedContent);
-      SendFocusBlur(mPresContext, aContent, PR_TRUE);
+      // only raise window if the the focus controller is active
+      SendFocusBlur(mPresContext, aContent, fcActive); 
     }
   }
 
