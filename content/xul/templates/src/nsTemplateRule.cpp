@@ -179,8 +179,11 @@ nsTemplateRule::InitBindings(nsConflictSet& aConflictSet, nsTemplateMatch* aMatc
         PRBool hasBinding =
             aMatch->mInstantiation.mAssignments.GetAssignmentFor(binding->mSourceVariable, &sourceValue);
 
-        if (hasBinding)
-            aConflictSet.AddBindingDependency(aMatch, VALUE_TO_IRDFRESOURCE(sourceValue));
+        if (hasBinding) {
+            nsIRDFResource* source = VALUE_TO_IRDFRESOURCE(sourceValue);
+            aMatch->mBindingDependencies.Add(source);
+            aConflictSet.AddBindingDependency(aMatch, source);
+        }
 
         // If this binding is dependant on another binding, then we
         // need to eagerly compute its source variable's assignment.
@@ -254,7 +257,9 @@ nsTemplateRule::RecomputeBindings(nsConflictSet& aConflictSet,
                         // The assignment's variable depends on the
                         // binding's target variable, which is
                         // changing. Rip it out.
-                        aConflictSet.RemoveBindingDependency(aMatch, VALUE_TO_IRDFRESOURCE(dependent->mValue));
+                        nsIRDFResource* target = VALUE_TO_IRDFRESOURCE(dependent->mValue);
+                        aMatch->mBindingDependencies.Remove(target);
+                        aConflictSet.RemoveBindingDependency(aMatch, target);
 
                         delete dependent;
                         assignments.RemoveElementAt(j--);
@@ -335,6 +340,7 @@ nsTemplateRule::ComputeAssignmentFor(nsConflictSet& aConflictSet,
 
             // Add a dependency on the source, so we'll recompute the
             // assignment if somebody tweaks it.
+            aMatch->mBindingDependencies.Add(source);
             aConflictSet.AddBindingDependency(aMatch, source);
         }
 

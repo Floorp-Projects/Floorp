@@ -58,6 +58,7 @@ public:
 
     nsresult Clear();
     nsresult Add(nsIRDFResource* aProperty);
+    void Remove(nsIRDFResource* aProperty);
 
     PRBool Contains(nsIRDFResource* aProperty) const;
 

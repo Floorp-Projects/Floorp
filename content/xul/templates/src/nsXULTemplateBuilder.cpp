@@ -1284,8 +1284,8 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 
 #ifdef PR_LOGGING
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-               ("xultemplate[%p] %d modified binding(s)",
-                this, modified.GetCount()));
+               ("xultemplate[%p] match %p, %d modified binding(s)",
+                this, match.operator->(), modified.GetCount()));
 
         for (PRInt32 i = 0; i < modified.GetCount(); ++i) {
             PRInt32 var = modified.GetVariableAt(i);
