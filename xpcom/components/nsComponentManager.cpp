@@ -1595,12 +1595,14 @@ nsresult
 nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char *fullname)
 {
     const char *ValidDllExtensions[] = {
-        ".dll",	/* Windows */
-        ".dso",	/* Unix */
-        ".so",	/* Unix */
-        ".sl",	/* Unix: HP */
+        ".dll",		/* Windows */
+        ".dso",		/* Unix ? */
+        ".dylib",	/* Unix: Rhapsody */
+        ".so",		/* Unix */
+        ".so.1.0",	/* Unix: BSD */
+        ".sl",		/* Unix: HP-UX */
         ".shlb",	/* Mac ? */
-        ".dlm",	/* new for all platforms */
+        ".dlm",		/* new for all platforms */
         NULL
     };
     	

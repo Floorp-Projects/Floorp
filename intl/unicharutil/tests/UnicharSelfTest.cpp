@@ -26,7 +26,7 @@ NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 
 #ifdef XP_UNIX
-#define UNICHARUTIL_DLL_NAME "libunicharutil.so"
+#define UNICHARUTIL_DLL_NAME "libunicharutil"MOZ_DLL_SUFFIX
 #else
 #define UNICHARUTIL_DLL_NAME "UNICHARUTIL_DLL"
 #endif

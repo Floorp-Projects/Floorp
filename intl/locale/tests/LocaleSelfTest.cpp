@@ -47,10 +47,10 @@
 #define UCVLATIN_DLL    "ucvlatin.dll"
 #define UNICHARUTIL_DLL_NAME "unicharutil.dll"
 #else
-#define LOCALE_DLL_NAME "libnslocale.so"
-#define UCONV_DLL       "libuconv.so"
-#define UCVLATIN_DLL    "libucvlatin.so"
-#define UNICHARUTIL_DLL_NAME "libunicharutil.so"
+#define LOCALE_DLL_NAME "libnslocale"MOZ_DLL_SUFFIX
+#define UCONV_DLL       "libuconv"MOZ_DLL_SUFFIX
+#define UCVLATIN_DLL    "libucvlatin"MOZ_DLL_SUFFIX
+#define UNICHARUTIL_DLL_NAME "libunicharutil"MOZ_DLL_SUFFIX
 #endif
 
 

@@ -29,7 +29,7 @@
 #ifdef XP_MAC
 #endif
 #ifdef XP_UNIX
-#define PARSER_DLL "libraptorhtmlpars.so"
+#define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
 #endif
 
 // Class IID's
