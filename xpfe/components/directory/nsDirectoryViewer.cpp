@@ -507,9 +507,37 @@ nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     if (! ok)
       return NS_ERROR_FAILURE;
   }
+  if (!aContext) {
+    nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+    NS_ASSERTION(channel, "request should be a channel");
 
-  // Get the directory from the context
-  mDirectory = do_QueryInterface(aContext);
+    // lets hijack the notifications:
+    channel->SetNotificationCallbacks(this);
+
+    // now create the top most resource
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
+      
+    nsXPIDLCString entryuriC;
+    uri->GetSpec(getter_Copies(entryuriC));
+
+    nsCOMPtr<nsIRDFResource> entry;
+    rv = gRDF->GetResource(entryuriC, getter_AddRefs(entry));
+    
+    nsString uriUnicode;
+    uriUnicode.AssignWithConversion(entryuriC);
+
+    nsCOMPtr<nsIRDFLiteral> URLVal;
+    rv = gRDF->GetLiteral(uriUnicode.GetUnicode(), getter_AddRefs(URLVal));
+
+    mDataSource->Assert(entry, kHTTPIndex_URL, URLVal, PR_TRUE);
+    mDirectory = do_QueryInterface(entry);
+  }
+  else
+  {
+    // Get the directory from the context
+    mDirectory = do_QueryInterface(aContext);
+  }
 
   if (!mDirectory) {
       request->Cancel(NS_BINDING_ABORTED);
