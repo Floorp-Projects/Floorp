@@ -1223,7 +1223,7 @@ PRInt32
 nsPop3Protocol::GetList(nsIInputStream* inputStream, 
                         PRUint32 length)
 {
-    char * line;
+    char * line, *token;
     PRInt32 ln = 0;
     PRInt32 msg_num;
 
@@ -1269,10 +1269,18 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
         return(0);
 	  }
     
-    msg_num = atol(XP_STRTOK(line, " "));
+	token = XP_STRTOK(line, " ");
+	if (token)
+	{
+		msg_num = atol(XP_STRTOK(line, " "));
 
-    if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0)
-        m_pop3ConData->msg_info[msg_num-1].size = atol(XP_STRTOK(NULL, " "));
+		if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0)
+		{
+			token = XP_STRTOK(NULL, " ");
+			if (token)
+				m_pop3ConData->msg_info[msg_num-1].size = atol(token);
+		}
+	}
 
     return(0);
 }
