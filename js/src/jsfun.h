@@ -70,6 +70,10 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
      OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass)
 
 extern JSBool
+js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
+                uintN argc, jsval *argv, jsval *rval);
+
+extern JSBool
 js_IsIdentifier(JSString *str);
 
 extern JSObject *

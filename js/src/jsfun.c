@@ -1355,37 +1355,43 @@ JSClass js_FunctionClass = {
     fun_mark,         0
 };
 
-static JSBool
-fun_toString_sub(JSContext *cx, JSObject *obj, uint32 indent,
-                 uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
+                uintN argc, jsval *argv, jsval *rval)
 {
     jsval fval;
     JSFunction *fun;
     JSString *str;
 
-    fval = argv[-1];
-    if (!JSVAL_IS_FUNCTION(cx, fval)) {
-        /*
-         * If we don't have a function to start off with, try converting the
-         * object to a function.  If that doesn't work, complain.
-         */
-        if (JSVAL_IS_OBJECT(fval)) {
-            obj = JSVAL_TO_OBJECT(fval);
-            if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, JSTYPE_FUNCTION,
-                                                 &fval)) {
+    if (!argv) {
+        JS_ASSERT(JS_ObjectIsFunction(cx, obj));
+    } else {
+        fval = argv[-1];
+        if (!JSVAL_IS_FUNCTION(cx, fval)) {
+            /*
+             * If we don't have a function to start off with, try converting
+             * the object to a function.  If that doesn't work, complain.
+             */
+            if (JSVAL_IS_OBJECT(fval)) {
+                obj = JSVAL_TO_OBJECT(fval);
+                if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, JSTYPE_FUNCTION,
+                                                     &fval)) {
+                    return JS_FALSE;
+                }
+            }
+            if (!JSVAL_IS_FUNCTION(cx, fval)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_INCOMPATIBLE_PROTO,
+                                     js_Function_str, js_toString_str,
+                                     JS_GetTypeName(cx,
+                                                    JS_TypeOfValue(cx, fval)));
                 return JS_FALSE;
             }
         }
-        if (!JSVAL_IS_FUNCTION(cx, fval)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_INCOMPATIBLE_PROTO,
-                                 js_Function_str, js_toString_str,
-                                 JS_GetTypeName(cx, JS_TypeOfValue(cx, fval)));
-            return JS_FALSE;
-        }
+
+        obj = JSVAL_TO_OBJECT(fval);
     }
 
-    obj = JSVAL_TO_OBJECT(fval);
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     if (!fun)
         return JS_TRUE;
@@ -1401,14 +1407,14 @@ fun_toString_sub(JSContext *cx, JSObject *obj, uint32 indent,
 static JSBool
 fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return fun_toString_sub(cx, obj, 0, argc, argv, rval);
+    return js_fun_toString(cx, obj, 0, argc, argv, rval);
 }
 
 #if JS_HAS_TOSOURCE
 static JSBool
 fun_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return fun_toString_sub(cx, obj, JS_DONT_PRETTY_PRINT, argc, argv, rval);
+    return js_fun_toString(cx, obj, JS_DONT_PRETTY_PRINT, argc, argv, rval);
 }
 #endif
 

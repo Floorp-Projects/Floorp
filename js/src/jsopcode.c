@@ -848,7 +848,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSFunction *fun;
     JSString *str;
     JSBool ok;
-    jsval key;
+    jsval val;
 
 /*
  * Local macros
@@ -1883,14 +1883,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_NUMBER:
                 atom = GET_ATOM(cx, jp->script, pc);
-                key = ATOM_KEY(atom);
-                if (JSVAL_IS_INT(key)) {
-                    long ival = (long)JSVAL_TO_INT(key);
+                val = ATOM_KEY(atom);
+                if (JSVAL_IS_INT(val)) {
+                    long ival = (long)JSVAL_TO_INT(val);
                     todo = Sprint(&ss->sprinter, "%ld", ival);
                 } else {
                     char buf[DTOSTR_STANDARD_BUFFER_SIZE];
                     char *numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD,
-                                             0, *JSVAL_TO_DOUBLE(key));
+                                             0, *JSVAL_TO_DOUBLE(val));
                     if (!numStr) {
                         JS_ReportOutOfMemory(cx);
                         return JS_FALSE;
@@ -1912,9 +1912,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_ANONFUNOBJ:
               case JSOP_NAMEDFUNOBJ:
                 atom = GET_ATOM(cx, jp->script, pc);
-                str = js_ValueToSource(cx, ATOM_KEY(atom));
-                if (!str)
-                    return JS_FALSE;
+                if (op == JSOP_OBJECT) {
+                    str = js_ValueToSource(cx, ATOM_KEY(atom));
+                    if (!str)
+                        return JS_FALSE;
+                } else {
+                    if (!js_fun_toString(cx, ATOM_TO_OBJECT(atom),
+                                         JS_DONT_PRETTY_PRINT, 0, NULL,
+                                         &val)) {
+                        return JS_FALSE;
+                    }
+                    str = JSVAL_TO_STRING(val);
+                }
                 todo = SprintPut(&ss->sprinter, JS_GetStringBytes(str),
                                  JSSTRING_LENGTH(str));
                 break;
