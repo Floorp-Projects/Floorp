@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = resources
+
 MODULE		= layout
 LIBRARY_NAME	= gksvgbase_s
 REQUIRES	= xpcom \
@@ -43,24 +45,21 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsSVGBPathBuilder.cpp \
-		nsSVGEllipseFrame.cpp \
 		nsSVGCircleFrame.cpp \
-		nsSVGFill.cpp \
+		nsSVGEllipseFrame.cpp \
 		nsSVGForeignObjectFrame.cpp \
 		nsSVGGFrame.cpp \
 		nsSVGGenericContainerFrame.cpp \
-		nsSVGGraphic.cpp \
-		nsSVGGraphicFrame.cpp \
+		nsSVGGlyphFrame.cpp \
 		nsSVGLineFrame.cpp \
 		nsSVGOuterSVGFrame.cpp \
 		nsSVGPathFrame.cpp \
+		nsSVGPathGeometryFrame.cpp \
 		nsSVGPolygonFrame.cpp \
 		nsSVGPolylineFrame.cpp \
 		nsSVGRectFrame.cpp \
-		nsSVGRenderItem.cpp \
-		nsSVGRenderingContext.cpp \
-		nsSVGStroke.cpp \
+		nsSVGTSpanFrame.cpp \
+		nsSVGTextFrame.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -69,8 +68,6 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS	+= $(MOZ_LIBART_CFLAGS)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../base/src \
@@ -89,8 +86,12 @@ EXPORT_RESOURCE_CONTENT = \
 		$(NULL)
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd
+	$(INSTALL) $(srcdir)/svg.css $(DIST)/bin/res
+	$(PERL) $(srcdir)/install-svg-css.pl $(DIST)/bin/res/ua.css
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_CONTENT) $(DESTDIR)$(mozappdir)/res/dtd
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.css $(DESTDIR)$(mozappdir)/res
+
 
 DEFINES += -D_IMPL_NS_LAYOUT
