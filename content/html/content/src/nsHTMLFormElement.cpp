@@ -46,6 +46,7 @@ class nsFormControlList;
 // nsHTMLFormElement
 
 class nsHTMLFormElement : public nsIDOMHTMLFormElement,
+                          public nsIDOMNSHTMLFormElement,
                           public nsIScriptObjectOwner,
                           public nsIDOMEventReceiver,
                           public nsIHTMLContent,
@@ -83,6 +84,11 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD Submit();
 
+  // nsIDOMNSHTMLFormElement
+  NS_IMETHOD    GetEncoding(nsString& aEncoding);
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn);
+  
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
 
@@ -424,6 +430,36 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild, PRBool aChildIsRef)
     NS_RELEASE(aChild);
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::GetEncoding(nsString& aEncoding)
+{
+  return mInner.GetAttribute(nsHTMLAtoms::encoding, aEncoding);
+}
+ 
+NS_IMETHODIMP    
+nsHTMLFormElement::GetLength(PRUint32* aLength)
+{
+  *aLength = mControls->mElements.Count();
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLFormElement::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
+{
+  // XXX For now we just search our element list. In reality, we'll have
+  // to look at all of our children, including images, objects, etc.
+  nsIDOMNode *node;
+  nsresult result = mControls->NamedItem(aName, &node);
+  
+  if ((NS_OK == result) && (nsnull != node)) {
+    result = node->QueryInterface(kIDOMElementIID, (void **)aReturn);
+    NS_RELEASE(node);
+  }
+
+  return result;
 }
 
 
