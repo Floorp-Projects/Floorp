@@ -71,9 +71,7 @@
 <!ENTITY borderEditField.label "Solid Border:">
 
 <!-- These controls may be added some day; currently not used -->
-<!ENTITY leaveAtLocationCheckbox.label "Leave">
-<!ENTITY leaveAtLocationCheckbox.tooltip "Leave tooltip">
 <!ENTITY makePageBackgroundCheckbox.label "Make Page Background">
-<!ENTITY makePageBackgroundCheckbox.tooltip "Make Page Background tooltip">
+<!ENTITY makePageBackgroundCheckbox.tooltip "Use image as background for your page">
 <!ENTITY editImageButton.label "Edit Image">
-<!ENTITY editImageButton.tooltip "Edit Image tooltip">
+<!ENTITY editImageButton.tooltip "Edit image file in another program">
