@@ -76,6 +76,7 @@
   Trace(_method, PR_FALSE, _status)
 
 #else
+#define NS_FRAME_TRACE(_bits,_args)
 #define NS_FRAME_TRACE_IN(_method)
 #define NS_FRAME_TRACE_OUT(_method)
 #define NS_FRAME_TRACE_MSG(_bits,_args)

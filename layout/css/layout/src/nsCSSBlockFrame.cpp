@@ -1564,8 +1564,8 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
       nsIFrame* kidNextInFlow;
       lastFrame->GetNextInFlow(kidNextInFlow);
       NS_ASSERTION(nsnull != kidNextInFlow, "whoops");
-    }
 #endif
+    }
   }
   else {
     // We can't have an empty line list and have a prev-in-flow. If we
