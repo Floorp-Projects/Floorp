@@ -65,7 +65,8 @@ msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 										      (MWContext *context,
 											   void *fe_data,
 											   int status,
-											   const char *error_message)
+											   const char *error_message),
+										 const char *smtp
 											   );
 
 class nsMsgSendMimeDeliveryState : public nsIMsgSend
@@ -80,7 +81,7 @@ public:
 	/* this is just for testing purpose, must be removed before shipping */
 	NS_IMETHOD Test() {printf("nsMsgSend: Test Succesfull\n"); return NS_OK;}
 
-	NS_IMETHOD SendMessage(nsIMsgCompFields *fields);
+	NS_IMETHOD SendMessage(const nsIMsgCompFields *fields, const char *smtp);
 
   static void	StartMessageDelivery(MSG_Pane *pane,
 									 void      *fe_data,
