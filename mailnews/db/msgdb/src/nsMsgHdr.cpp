@@ -49,6 +49,8 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
     NS_INIT_REFCNT();
 	m_mdb = db;
+	if(m_mdb)
+		m_mdb->AddRef();
 	m_mdbRow = dbRow;
 	Init();
 }
