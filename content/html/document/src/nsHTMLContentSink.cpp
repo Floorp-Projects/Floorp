@@ -128,6 +128,9 @@
 #include "nsLayoutCID.h"
 #include "nsIFrameManager.h"
 #include "nsILayoutHistoryState.h"
+
+
+#include "nsEscape.h"
 static NS_DEFINE_CID(kLayoutHistoryStateCID, NS_LAYOUT_HISTORY_STATE_CID);
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
@@ -3873,10 +3876,18 @@ void
 HTMLContentSink::ScrollToRef()
 {
   if (!mRef.IsEmpty()) {
+    char* tmpstr = mRef.ToNewCString();
+    if(! tmpstr)
+      return;
+    nsUnescape(tmpstr);
+    nsCAutoString unescapedRef;
+    unescapedRef.Assign(tmpstr);
+    nsMemory::Free(tmpstr);
+
     nsresult rv = NS_ERROR_FAILURE;
     // We assume that the bytes are in UTF-8, as it says in the spec:
     // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-    nsAutoString ref = NS_ConvertUTF8toUCS2(mRef);
+    nsAutoString ref = NS_ConvertUTF8toUCS2(unescapedRef);
 
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
@@ -3900,7 +3911,7 @@ HTMLContentSink::ScrollToRef()
           rv = mDocument->GetDocumentCharacterSet(docCharset);
 
           if (NS_SUCCEEDED(rv)) {
-            rv = CharsetConvRef(docCharset, mRef, ref);
+            rv = CharsetConvRef(docCharset, unescapedRef, ref);
 
             if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
               rv = shell->GoToAnchor(ref);
