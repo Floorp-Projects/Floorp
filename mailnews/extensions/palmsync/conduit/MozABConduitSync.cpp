@@ -592,11 +592,11 @@ long CMozABConduitSync::CopyHHtoPC()
 {
     long retval=0;
     BOOL success = FALSE;
-
+printf("copying hh to pc\n");
     // Log the start time.
     time_t ltime;
     time( &ltime );
-    CONDUIT_LOG1(gFD, "------------ START OF PALM SYNC Palm -> Destkop ------------ at %s", ctime(&ltime));
+    CONDUIT_LOG1(gFD, "------------ xxx START OF PALM SYNC Palm -> Destkop ------------ at %s", ctime(&ltime));
 
     if(!m_dbHH)
         return retval;

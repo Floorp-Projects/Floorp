@@ -89,6 +89,10 @@ public :
  
     STDMETHODIMP nsRenameAB(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName, LPTSTR aABUrl);
 
+    STDMETHODIMP nsUseABHomeAddressForPalmAddress(BOOL *aUseHomeAddress);
+
+    STDMETHODIMP nsPreferABHomePhoneForPalmPhone(BOOL *aPreferHomePhone);
+
     static PRBool GetBoolPref(const char *prefName, PRBool defaultVal);
     static PRBool nsUseABHomeAddressForPalmAddress();
     static PRBool nsPreferABHomePhoneForPalmPhone();

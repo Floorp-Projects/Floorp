@@ -54,6 +54,10 @@ const CLSID CLSID_CPalmSyncImp = { 0xb20b4521, 0xccf8, 0x11d6, { 0xb8, 0xa5, 0x0
 
 extern DWORD tId;
 
+/* static */BOOL MozABPCManager::gUseHomeAddress;
+/* static */ BOOL MozABPCManager::gPreferHomePhone;
+
+
 BOOL MozABPCManager::InitMozPalmSyncInstance(IPalmSync **aRetValue)
 {
     // Check wehther this thread has a valid Interface
@@ -74,7 +78,11 @@ BOOL MozABPCManager::InitMozPalmSyncInstance(IPalmSync **aRetValue)
 
     if (hRes == S_OK)
         if (TlsSetValue(tId, (LPVOID)(*aRetValue)))
+        {
+            (*aRetValue)->nsUseABHomeAddressForPalmAddress(&gUseHomeAddress);
+            (*aRetValue)->nsPreferABHomePhoneForPalmPhone(&gPreferHomePhone);
             return TRUE;
+        }
 
     // Either CoCreate or TlsSetValue failed; so return FALSE
 

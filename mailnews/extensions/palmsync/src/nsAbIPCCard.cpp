@@ -45,6 +45,8 @@
 #include "prdtoa.h"
 #include "PalmSyncImp.h"
 
+extern PRLogModuleInfo *PALMSYNC;
+
 #define CONVERT_ASSIGNTO_UNICODE(d, s, convertCRLF)  d.SetLength(0);\
                                         if((char*) s) d=NS_ConvertASCIItoUCS2((char*)s);\
                                         if (convertCRLF) \
@@ -60,6 +62,7 @@ nsAbIPCCard::nsAbIPCCard()
     mRecordId = 0;
     mCategoryId = -1;
     mStatus = -1;
+    PR_LOG(PALMSYNC, PR_LOG_DEBUG, ("nsAbIPCCard::nsAbIPCCard \n"));
 }
 
 nsAbIPCCard::~nsAbIPCCard()
@@ -123,6 +126,8 @@ nsresult nsAbIPCCard::Copy(nsABCOMCardStruct * srcCard)
     mRecordId = srcCard->dwRecordId;
     mCategoryId = srcCard->dwCategoryId;
     mStatus = srcCard->dwStatus;
+    srcCard->addressToUse = CPalmSyncImp::nsUseABHomeAddressForPalmAddress(); // 0 == work, 1 == home
+    PR_LOG(PALMSYNC, PR_LOG_DEBUG, ("nsAbIPCCard::Copy using %d\n", srcCard->addressToUse));
 
     // Each palm address field is allowed to have multiple lines
     // so replace CRLFs with spaces (since other than Notes field
@@ -812,6 +817,8 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     card->dwRecordId = mRecordId;
     card->dwCategoryId = mCategoryId;
     card->dwStatus = mStatus;
+    card->addressToUse = CPalmSyncImp::nsUseABHomeAddressForPalmAddress(); // 0 == home, 1 == work
+    PR_LOG(PALMSYNC, PR_LOG_DEBUG, ("nsAbIPCCard::GetABCOMCardStruct using %d\n", card->addressToUse));
 
     CopyValue(isUnicode, m_FirstName, &card->firstName);
     CopyValue(isUnicode, m_LastName, &card->lastName);
@@ -852,7 +859,7 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
 
     card->lastModifiedDate = m_LastModDate;
     card->preferMailFormat = m_PreferMailFormat;
-    card->addressToUse = CPalmSyncImp::nsUseABHomeAddressForPalmAddress(); // 0 == work, 1 == home
+    card->addressToUse = CPalmSyncImp::nsUseABHomeAddressForPalmAddress(); // 0 == home, 1 == work
     if (CPalmSyncImp::nsPreferABHomePhoneForPalmPhone())
       card->preferredPhoneNum = (m_HomePhone.IsEmpty()) ? 1 : 2;
     else

@@ -154,5 +154,9 @@ interface IPalmSync : IUnknown
 
     // Rename an addressbook
     HRESULT nsRenameAB([in] BOOL aIsUnicode, [in] long aCategoryIndex, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
+
+    HRESULT nsUseABHomeAddressForPalmAddress ([out] BOOL *useHomeAddress);
+
+    HRESULT nsPreferABHomePhoneForPalmPhone ([out] BOOL * preferHomePhone);
 };
 

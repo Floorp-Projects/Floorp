@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -56,6 +61,8 @@
 #include "nsIPref.h"
 #include "nsIPrefBranchInternal.h"
 
+#include "nspr.h"
+PRLogModuleInfo *PALMSYNC;
 
 #define  kPABDirectory  2  // defined in nsDirPrefs.h
 
@@ -63,6 +70,9 @@ CPalmSyncImp::CPalmSyncImp()
 : m_cRef(1),
   m_PalmHotSync(nsnull)
 {
+  if (!PALMSYNC)
+    PALMSYNC = PR_NewLogModule("PALMSYNC");
+
 
 }
 
@@ -417,6 +427,18 @@ PRBool CPalmSyncImp::GetBoolPref(const char *prefName, PRBool defaultVal)
     }
   }
   return boolVal;
+}
+
+STDMETHODIMP CPalmSyncImp::nsUseABHomeAddressForPalmAddress(BOOL *aUseHomeAddress)
+{
+  *aUseHomeAddress = nsUseABHomeAddressForPalmAddress();
+  return S_OK;
+}
+
+STDMETHODIMP CPalmSyncImp::nsPreferABHomePhoneForPalmPhone(BOOL *aPreferHomePhone)
+{
+  *aPreferHomePhone = nsPreferABHomePhoneForPalmPhone();
+  return S_OK;
 }
 
 /* static */ PRBool CPalmSyncImp::nsUseABHomeAddressForPalmAddress()

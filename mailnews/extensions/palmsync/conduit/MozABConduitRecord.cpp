@@ -44,6 +44,9 @@
 #include <TCHAR.H>
 
 #include "MozABConduitRecord.h"
+#include "MozABPCManager.h"
+#include "MozABConduitSync.h"
+
 #define  STR_CRETURN  "\r" 
 #define  STR_NEWLINE  "\n" 
 
@@ -91,9 +94,11 @@ CMozABConduitRecord::CMozABConduitRecord(nsABCOMCardStruct &rec)
     m_csPhone4 = rec.cellularNumber;
     m_csPhone5 = rec.primaryEmail;
 
-    m_csAddress = (rec.addressToUse == 0)
-                    ? rec.workAddress : rec.homeAddress;
+    m_csAddress = (MozABPCManager::gUseHomeAddress)
+                    ? rec.homeAddress : rec.workAddress;
 
+//    CONDUIT_LOG3(gFD, "\nCMozABConduitRecord::CMozABConduitRecord(nsABCOMCardStruct &rec) gUseHomeAddress = %s card home address = %s card work address = %s\n", 
+//      (MozABPCManager::gUseHomeAddress) ? "true" : "false", (char *) rec.homeAddress, (char *) rec.workAddress);
     m_dwDisplayPhone = rec.preferredPhoneNum;
     m_csCity = rec.homeCity;
     m_csState = rec.homeState;
@@ -189,14 +194,14 @@ eRecCompare CMozABConduitRecord::Compare(const CMozABConduitRecord &rec)
 }
 
 #define COPY_FROM_GENERIC(m, d)  {  iLen = _tcslen((char *)pBuff);  \
-                                    AddCRs((char *)pBuff, m.GetBuffer(iLen * 2), iLen); \
+                                    CopyFromHHBuffer((char *)pBuff, m.GetBuffer(iLen * 2), iLen); \
                                     m.ReleaseBuffer();              \
                                     d = m.GetBuffer(0);             \
                                     pBuff += iLen + 1;              \
                                  }                                  \
 
 #define COPY_PHONE_FROM_GENERIC(m, d){  iLen = _tcslen((char *)pBuff);              \
-                                        AddCRs((char *)pBuff, m.GetBuffer(iLen * 2), iLen); \
+                                        CopyFromHHBuffer((char *)pBuff, m.GetBuffer(iLen * 2), iLen); \
                                         m.ReleaseBuffer();                          \
                                         AssignPhoneToMozData(d, m.GetBuffer(0));    \
                                         pBuff += iLen + 1;                          \
@@ -279,9 +284,16 @@ long CMozABConduitRecord::ConvertFromGeneric(CPalmRecord &rec)
     if (flags.phone4) COPY_PHONE_FROM_GENERIC(m_csPhone4, m_dwPhone4LabelID)
     if (flags.phone5) COPY_PHONE_FROM_GENERIC(m_csPhone5, m_dwPhone5LabelID)
     // Address
-    if (flags.address) COPY_FROM_GENERIC(m_csAddress, 
-          (m_nsCard.addressToUse == 0) 
-            ? m_nsCard.workAddress : m_nsCard.homeAddress);
+    if (flags.address) 
+    {
+      if (MozABPCManager::gUseHomeAddress)
+        COPY_FROM_GENERIC(m_csAddress, m_nsCard.homeAddress)
+      else
+         COPY_FROM_GENERIC(m_csAddress, m_nsCard.workAddress)
+
+//      CONDUIT_LOG4(gFD, "\nConvertFromGeneric gUseHomeAddress = %s card home address = %s card work address = %s result = %s\n", 
+//        (MozABPCManager::gUseHomeAddress) ? "true" : "false", (char *) m_nsCard.homeAddress, (char *) m_nsCard.workAddress, (char *) m_csAddress);
+    }
     // City
     if (flags.city) COPY_FROM_GENERIC(m_csCity, m_nsCard.homeCity)
     // State
@@ -447,8 +459,9 @@ long CMozABConduitRecord::ConvertToGeneric(CPalmRecord &rec)
     return(retval);
 }
 
-// this function adds carraige returns to handheld data
-long CMozABConduitRecord::AddCRs(TCHAR* pSrc, TCHAR* pDest, int len)
+// this function copies data from the handheld into the passed destination,
+// and optionally adds carriage returns to handheld data
+long CMozABConduitRecord::CopyFromHHBuffer(TCHAR* pSrc, TCHAR* pDest, int len)
 {
     long retval = GEN_ERR_INVALID_POINTER;
     int off=0;
@@ -461,8 +474,10 @@ long CMozABConduitRecord::AddCRs(TCHAR* pSrc, TCHAR* pDest, int len)
         pCurr = _tcspbrk(pSrc, STR_NEWLINE);
         if(pCurr) 
         {
-            while (off < len && *pSrc) {
-                if (*pSrc == CH_NEWLINE){
+            while (off < len && *pSrc)
+            {
+                if (*pSrc == CH_NEWLINE)
+                {
                     *pDest = CH_CRETURN;
                     pDest++;
                 }
@@ -472,7 +487,9 @@ long CMozABConduitRecord::AddCRs(TCHAR* pSrc, TCHAR* pDest, int len)
                 off++;
             }
             *pDest = 0;
-        } else {
+        }
+        else 
+        {
             strncpy(pDest, pSrc, len);
             pDest[len] = 0;
         }

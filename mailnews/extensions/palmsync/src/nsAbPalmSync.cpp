@@ -52,7 +52,7 @@
 #define  kPABDirectory  2 // defined in nsDirPrefs.h
 #define  kMAPIDirectory 3 // defined in nsDirPrefs.h
 
-#ifdef RAJIV_DEBUG
+#ifdef DEBUG_bienvenu
    PRBool PalmDataDisplayed = PR_FALSE;
    void DisplayTestData(nsABCOMCardStruct * aIPCCard, PRBool IsUnicode)
    {
@@ -411,7 +411,7 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
     for (PRInt32 i=0; i < aPalmCount; i++) 
     {
         mPalmRecords.AppendElement(&aPalmRecords[i]);
-#ifdef RAJIV_DEBUG        
+#ifdef DEBUG_bienvenu        
         DisplayTestData(&aPalmRecords[i],PR_FALSE);
 #endif
     }

@@ -142,8 +142,8 @@ public:
 protected:
 
     // internal utility functions
-    long AddCRs(TCHAR* pSrc, TCHAR* pDest, int len, int iBufSize);
-    long AddCRs(TCHAR* pSrc, TCHAR* pDest, int len);
+    long CopyFromHHBuffer(TCHAR* pSrc, TCHAR* pDest, int len, int iBufSize);
+    long CopyFromHHBuffer(TCHAR* pSrc, TCHAR* pDest, int len);
     int  StripCRs(TCHAR* pDest, const TCHAR* pSrc, int len);
 
     void AssignPhoneToMozData(DWORD labelID, LPTSTR buf);
