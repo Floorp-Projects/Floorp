@@ -2198,7 +2198,13 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAReadableString&
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
   PRInt32 ec, val = tmp.ToInteger(&ec);
-  if (NS_OK == ec) {
+  if (NS_ERROR_ILLEGAL_VALUE == ec) {
+    // NOTE: we need to allow non-integer values for the '*' case, 
+    //       so we allow for the ILLEGAL_VALUE error and set val to 0
+    val = 0;
+    ec = NS_OK;
+  }
+  if (NS_OK == ec) { 
     if (val < 0) val = 0;
     if (tmp.Length() && tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
       if (val > 100) val = 100;
