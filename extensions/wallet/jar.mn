@@ -1,0 +1,22 @@
+packages/core.jar:
+        communicator/content/wallet/CookieViewer.js	(cookieviewer/resources/content/CookieViewer.js)
+	communicator/content/wallet/CookieViewer.xul	(cookieviewer/resources/content/CookieViewer.xul)
+	communicator/content/wallet/WalletEditor.js	(editor/resources/content/WalletEditor.js)
+	communicator/content/wallet/WalletEditor.xul	(editor/resources/content/WalletEditor.xul)
+	communicator/content/wallet/interview.html	(editor/interview.html)
+	communicator/content/wallet/SignonViewer.js	(signonviewer/resources/content/SignonViewer.js)
+	communicator/content/wallet/SignonViewer.xul	(signonviewer/resources/content/SignonViewer.xul)
+	communicator/content/wallet/WalletPreview.js	(walletpreview/resources/content/WalletPreview.js)
+	communicator/content/wallet/WalletPreview.xul	(walletpreview/resources/content/WalletPreview.xul)
+
+locales/en-US.jar:
+	communicator/locale/wallet/CookieViewer.properties      (cookieviewer/resources/locale/en-US/CookieViewer.properties)
+	communicator/locale/wallet/CookieViewer.dtd             (cookieviewer/resources/locale/en-US/CookieViewer.dtd)
+	communicator/locale/wallet/WalletEditor.properties   	(editor/resources/locale/en-US/WalletEditor.properties)
+	communicator/locale/wallet/WalletEditor.dtd  		(editor/resources/locale/en-US/WalletEditor.dtd)
+	communicator/locale/wallet/SignonViewer.properties	(signonviewer/resources/locale/en-US/SignonViewer.properties)
+	communicator/locale/wallet/SignonViewer.dtd		(signonviewer/resources/locale/en-US/SignonViewer.dtd)
+	communicator/locale/wallet/WalletPreview.properties 	(walletpreview/resources/locale/en-US/WalletPreview.properties)
+	communicator/locale/wallet/cookie.properties         	(src/resources/locale/en-US/cookie.properties)
+	communicator/locale/wallet/wallet.properties         	(src/resources/locale/en-US/wallet.properties)
+
