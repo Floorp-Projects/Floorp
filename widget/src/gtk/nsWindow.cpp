@@ -2187,6 +2187,28 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     // scroll baby, scroll!
     gdk_superwin_scroll(mSuperWin, aDx, aDy);
   }
+
+  // Update bounds on our child windows
+  nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+    nsCOMPtr<nsIWidget> child;
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp)) && isupp)) {
+      child = do_QueryInterface(isupp);
+
+      if (child) {
+        nsRect bounds;
+        child->GetBounds(bounds);
+        bounds.x += aDx;
+        bounds.y += aDy;
+        NS_STATIC_CAST(nsBaseWidget*, (nsIWidget*)child)->SetBounds(bounds);
+      }
+
+      if (NS_FAILED(children->Next()))
+        break;
+    }
+  }
+
   return NS_OK;
 }
 //-------------------------------------------------------------------------
