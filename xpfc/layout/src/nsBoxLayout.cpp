@@ -41,8 +41,8 @@ nsBoxLayout :: nsBoxLayout() : nsLayout()
   NS_INIT_REFCNT();
   mContainer        = nsnull;
   mLayoutAlignment  = eLayoutAlignment_horizontal;
-  mVerticalGap      = 1;
-  mHorizontalGap    = 1;
+  mVerticalGap      = 0;
+  mHorizontalGap    = 0;
   mVerticalFill     = 1.0;
   mHorizontalFill   = 1.0;
 }
@@ -123,6 +123,15 @@ nsresult nsBoxLayout :: LayoutContainer()
 
   // Default case is everyone gets equal space  
   mContainer->GetBounds(rect);
+
+
+  // Offset by the gaps
+  rect.x += mVerticalGap;
+  rect.width-=(2*mVerticalGap);
+  rect.y += mHorizontalGap;
+  rect.height-=(2*mHorizontalGap);
+
+
   wsize = width = rect.width;
   hsize = height = rect.height;
   
@@ -132,7 +141,10 @@ nsresult nsBoxLayout :: LayoutContainer()
   iterator->Init();
 
   if (iterator->Count() == 0)
+  {
+    NS_RELEASE(iterator);
     return NS_OK;
+  }
 
   if (GetLayoutAlignment() == eLayoutAlignment_horizontal) {
     wsize  /= iterator->Count();

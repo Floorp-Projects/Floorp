@@ -45,8 +45,15 @@ public:
   NS_IMETHOD SetRootCanvas(nsIXPFCCanvas * aCanvas);
   NS_IMETHOD Register(nsIXPFCCanvas * aCanvas, nsIView * aView);
   NS_IMETHOD Unregister(nsIXPFCCanvas * aCanvas);
+
   NS_IMETHOD_(nsIXPFCCanvas *) GetFocusedCanvas();
   NS_IMETHOD SetFocusedCanvas(nsIXPFCCanvas * aCanvas);
+
+  NS_IMETHOD_(nsIXPFCCanvas *) GetPressedCanvas();
+  NS_IMETHOD SetPressedCanvas(nsIXPFCCanvas * aCanvas);
+
+  NS_IMETHOD_(nsIXPFCCanvas *) GetMouseOverCanvas();
+  NS_IMETHOD SetMouseOverCanvas(nsIXPFCCanvas * aCanvas);
 
   // nsIViewObserver Interfaces
   NS_IMETHOD Paint(nsIView *            aView,
@@ -71,6 +78,8 @@ public:
 private:
   nsIXPFCCanvas * mRootCanvas;
   nsIXPFCCanvas * mFocusedCanvas;
+  nsIXPFCCanvas * mMouseOverCanvas ;
+  nsIXPFCCanvas * mPressedCanvas ;
 
 };
 

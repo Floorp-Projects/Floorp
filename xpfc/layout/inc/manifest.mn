@@ -12,6 +12,7 @@ GDEPTH = ../../..
 EXPORTS = \
 	nsLayout.h \
 	nsBoxLayout.h \
+	nsListLayout.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

@@ -19,6 +19,7 @@ MODULE = xpfc
 
 CPPSRCS = \
 	nsLayout.cpp \
+	nsListLayout.cpp \
 	nsBoxLayout.cpp \
 	$(NULL)
 

@@ -64,6 +64,7 @@ nsXPFCXMLTagEntry gXPFCXMLTagTable[] =
   {"tabwidget",             eXPFCXMLTag_tabwidget},
   {"toolbar",               eXPFCXMLTag_toolbar},
   {"ui",                    eXPFCXMLTag_ui},
+  {"xpbutton",              eXPFCXMLTag_xpbutton},
 
 };
 
@@ -274,6 +275,7 @@ nsresult nsXPFCXMLDTD::HandleStartToken(CToken* aToken)
 
         case eXPFCXMLTag_menuitem:
         case eXPFCXMLTag_button:
+        case eXPFCXMLTag_xpbutton:
         case eXPFCXMLTag_editfield:
         case eXPFCXMLTag_separator:
         case eXPFCXMLTag_tabwidget:
@@ -344,6 +346,7 @@ nsresult nsXPFCXMLDTD::HandleEndToken(CToken* aToken)
     case eXPFCXMLTag_editfield:
     case eXPFCXMLTag_separator:
     case eXPFCXMLTag_button:
+    case eXPFCXMLTag_xpbutton:
     case eXPFCXMLTag_tabwidget:
        break;
 
@@ -380,6 +383,8 @@ eXPFCXMLTags nsXPFCXMLDTD::TagTypeFromObject(const nsIParserNode& aNode)
         return (eXPFCXMLTag_button);
       else if (value.EqualsIgnoreCase("separator"))
         return (eXPFCXMLTag_separator);
+      else if (value.EqualsIgnoreCase("xpbutton"))
+        return (eXPFCXMLTag_xpbutton);
       else if (value.EqualsIgnoreCase("editfield"))
         return (eXPFCXMLTag_editfield);
       else if (value.EqualsIgnoreCase("tabwidget"))

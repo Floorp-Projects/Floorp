@@ -42,8 +42,8 @@ enum eXPFCXMLTags
   eXPFCXMLTag_tabwidget,
   eXPFCXMLTag_toolbar,
   eXPFCXMLTag_ui,
- 
-  eXPFCXMLTag_userdefined
+  eXPFCXMLTag_userdefined,
+  eXPFCXMLTag_xpbutton
 };
 
 enum eXPFCXMLAttributes 

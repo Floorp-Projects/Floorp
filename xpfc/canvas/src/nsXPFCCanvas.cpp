@@ -371,6 +371,50 @@ nsresult nsXPFCCanvas :: SetFocus()
   return NS_OK;
 }
 
+nsresult nsXPFCCanvas :: CreateImageGroup()
+{
+  nsresult res = NS_OK;
+
+  if ((mImageGroup != nsnull) && (GetWidget() != nsnull))
+    return NS_OK;
+
+  res = NS_NewImageGroup(&mImageGroup);
+
+  if (NS_OK == res) 
+  {
+    
+    nsIDeviceContext * deviceCtx = GetWidget()->GetDeviceContext();
+
+    mImageGroup->Init(deviceCtx);
+
+    NS_RELEASE(deviceCtx);
+  }
+
+  return res;
+}
+
+
+nsIImageRequest * nsXPFCCanvas :: RequestImage(nsString aUrl)
+{
+    char * url = aUrl.ToNewCString();
+
+    nsIImageRequest * request ;
+
+    nscolor bgcolor = NS_RGB(0, 0, 0);
+
+    request = mImageGroup->GetImage(url,
+                                   (nsIImageRequestObserver *)this,
+                                   &bgcolor,
+                                   mBounds.width,
+                                   mBounds.height, 
+                                   0);
+
+    delete url;
+
+    return request;
+}
+
+
 nsresult nsXPFCCanvas :: SetParameter(nsString& aKey, nsString& aValue)
 {
   PRInt32 error = 0;
@@ -446,35 +490,9 @@ nsresult nsXPFCCanvas :: SetParameter(nsString& aKey, nsString& aValue)
      * Request to load the image
      */
 
-    nsresult res;
+    CreateImageGroup();
 
-    res = NS_NewImageGroup(&mImageGroup);
-
-    if (NS_OK == res) 
-    {
-    
-      nsIDeviceContext * deviceCtx = GetWidget()->GetDeviceContext();
-
-      mImageGroup->Init(deviceCtx);
-
-      NS_RELEASE(deviceCtx);
-
-      char * url = aValue.ToNewCString();
-
-      nscolor bgcolor = NS_RGB(0, 0, 0);
-
-
-      mImageRequest = mImageGroup->GetImage(url,
-                                           (nsIImageRequestObserver *)this,
-                                           &bgcolor,
-                                           mBounds.width,
-                                           mBounds.height, 
-                                           0);
-
-      delete url;
-    }
-
-
+    mImageRequest = RequestImage(aValue);
 
   } else if (aKey.EqualsIgnoreCase(XPFC_STRING_WEIGHTMAJOR)) {
 
@@ -499,6 +517,14 @@ nsresult nsXPFCCanvas :: SetParameter(nsString& aKey, nsString& aValue)
   } else if (aKey.EqualsIgnoreCase(XPFC_STRING_WEIGHTMINOR)) {
 
     SetMinorAxisWeight(aValue.ToFloat(&error));
+
+  } else if (aKey.EqualsIgnoreCase(XPFC_STRING_HGAP)) {
+
+    ((nsBoxLayout *)GetLayout())->SetHorizontalGap(aValue.ToInteger(&error));
+
+  } else if (aKey.EqualsIgnoreCase(XPFC_STRING_VGAP)) {
+
+    ((nsBoxLayout *)GetLayout())->SetVerticalGap(aValue.ToInteger(&error));
 
   } 
 
@@ -636,6 +662,12 @@ nsILayout * nsXPFCCanvas :: GetLayout()
     return mLayout;
 }
 
+nsresult nsXPFCCanvas :: SetLayout(nsILayout * aLayout)
+{
+  mLayout = aLayout;
+  return NS_OK;
+}
+
 nsresult nsXPFCCanvas :: Init()
 {
 
@@ -665,7 +697,15 @@ nsresult nsXPFCCanvas :: Init()
 
   mChildWidgets->Init();
 
-  // XXX Box Layout is the default, but probably should not be
+  CreateDefaultLayout();
+
+  return res ;
+}
+
+nsresult nsXPFCCanvas :: CreateDefaultLayout()
+{
+  nsresult res = NS_OK;
+  
   res = nsRepository::CreateInstance(kCBoxLayoutCID, 
                                      nsnull, 
                                      kCBoxLayoutCID, 
@@ -676,7 +716,7 @@ nsresult nsXPFCCanvas :: Init()
 
   ((nsBoxLayout *)mLayout)->Init(this);
 
-  return res ;
+  return res;
 }
 
 nsresult nsXPFCCanvas :: Init(nsNativeWidget aNativeParent, const nsRect& aBounds, EVENT_CALLBACK   aHandleEventFunction)
@@ -1347,30 +1387,40 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
 
       case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
+        gXPFCToolkit->GetCanvasManager()->SetPressedCanvas(canvas);
         canvas->OnLeftButtonDown(aEvent);
       }
       break;
 
       case NS_MOUSE_LEFT_BUTTON_UP:
       {
+        gXPFCToolkit->GetCanvasManager()->SetPressedCanvas(nsnull);
         canvas->OnLeftButtonUp(aEvent);
       }
       break;
 
       case NS_MOUSE_RIGHT_BUTTON_DOWN:
       {
+        gXPFCToolkit->GetCanvasManager()->SetPressedCanvas(canvas);
         canvas->OnLeftButtonDown(aEvent);
       }
       break;
 
       case NS_MOUSE_RIGHT_BUTTON_UP:
       {
+        gXPFCToolkit->GetCanvasManager()->SetPressedCanvas(nsnull);
         canvas->OnLeftButtonUp(aEvent);
       }
       break;
 
       case NS_MOUSE_MOVE:
       {
+        if ((gXPFCToolkit->GetCanvasManager()->GetMouseOverCanvas() != nsnull) && (gXPFCToolkit->GetCanvasManager()->GetMouseOverCanvas() != canvas))
+        {
+          gXPFCToolkit->GetCanvasManager()->GetMouseOverCanvas()->OnMouseExit(aEvent);
+          canvas->OnMouseEnter(aEvent);
+        }
+        gXPFCToolkit->GetCanvasManager()->SetMouseOverCanvas(canvas);
         canvas->OnMouseMove(aEvent);
       }
       break;
@@ -2029,6 +2079,8 @@ void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
                           PRInt32 aParam1, PRInt32 aParam2,
                           void *aParam3)
 {
+  if (aNotificationType == nsImageNotification_kImageComplete)
+    GetWidget()->Invalidate(PR_FALSE);
   return ;
 }
 

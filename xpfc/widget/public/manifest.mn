@@ -11,6 +11,8 @@ GDEPTH = ../../..
 DEPTH = ../../..
 
 EXPORTS = \
+    nsIXPButton.h \
+    nsIXPItem.h \
     nsIXPFCButton.h \
     nsIXPFCTextWidget.h \
     nsIXPFCTabWidget.h \

@@ -47,6 +47,8 @@ static NS_DEFINE_IID(kCMenuManagerCID, NS_MENU_MANAGER_CID);
 static NS_DEFINE_IID(kCXPFCToolbarCID, NS_XPFC_TOOLBAR_CID);
 static NS_DEFINE_IID(kCXPFCDialogCID, NS_XPFC_DIALOG_CID);
 static NS_DEFINE_IID(kCXPFCButtonCID, NS_XPFC_BUTTON_CID);
+static NS_DEFINE_IID(kCXPButtonCID, NS_XP_BUTTON_CID);
+static NS_DEFINE_IID(kCXPItemCID, NS_XP_ITEM_CID);
 static NS_DEFINE_IID(kCXPFCTextWidgetCID, NS_XPFC_TEXTWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTabWidgetCID, NS_XPFC_TABWIDGET_CID);
 
@@ -56,6 +58,9 @@ static NS_DEFINE_IID(kCStreamObjectCID, NS_STREAM_OBJECT_CID);
 static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
 static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
 static NS_DEFINE_IID(kCstackCID, NS_STACK_CID);
+
+static NS_DEFINE_IID(kCBoxLayoutCID,    NS_BOXLAYOUT_CID);
+static NS_DEFINE_IID(kCListLayoutCID,   NS_LISTLAYOUT_CID);
 
 int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
@@ -76,6 +81,8 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
     nsRepository::RegisterFactory(kCXPFCToolbarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCDialogCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCXPButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCXPItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCTextWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCTabWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCToolbarManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
@@ -84,6 +91,8 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
     nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCstackCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCBoxLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCListLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
 	result = nsRepository::CreateInstance(kCShellInstanceCID,
 										  NULL,

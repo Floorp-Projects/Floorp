@@ -13,9 +13,12 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
+    nsXPButton.h \
+    nsXPItem.h \
     nsXPFCButton.h \
     nsXPFCTabWidget.h \
     nsXPFCTextWidget.h \
+	nsxpenums.h \
 	$(NULL)
 
 MODULE = xpfc

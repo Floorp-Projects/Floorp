@@ -18,6 +18,8 @@ PRIVATE_EXPORTS = \
 MODULE = xpfc
 
 CPPSRCS = \
+    nsXPButton.cpp \
+    nsXPItem.cpp \
     nsXPFCButton.cpp \
     nsXPFCTabWidget.cpp \
     nsXPFCTextWidget.cpp \

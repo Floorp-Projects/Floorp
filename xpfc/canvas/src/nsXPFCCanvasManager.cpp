@@ -49,6 +49,8 @@ nsXPFCCanvasManager :: nsXPFCCanvasManager()
   monitor = nsnull;
   mRootCanvas = nsnull;
   mFocusedCanvas = nsnull;
+  mMouseOverCanvas = nsnull;
+  mPressedCanvas = nsnull;
 }
 
 nsXPFCCanvasManager :: ~nsXPFCCanvasManager()  
@@ -221,6 +223,28 @@ nsresult nsXPFCCanvasManager::SetFocusedCanvas(nsIXPFCCanvas * aCanvas)
 nsIXPFCCanvas * nsXPFCCanvasManager::GetFocusedCanvas()
 {
   return(mFocusedCanvas);
+}
+
+nsresult nsXPFCCanvasManager::SetPressedCanvas(nsIXPFCCanvas * aCanvas)
+{
+  mPressedCanvas = aCanvas;
+  return NS_OK;
+}
+
+nsIXPFCCanvas * nsXPFCCanvasManager::GetPressedCanvas()
+{
+  return(mPressedCanvas);
+}
+
+nsresult nsXPFCCanvasManager::SetMouseOverCanvas(nsIXPFCCanvas * aCanvas)
+{
+  mMouseOverCanvas = aCanvas;
+  return NS_OK;
+}
+
+nsIXPFCCanvas * nsXPFCCanvasManager::GetMouseOverCanvas()
+{
+  return(mMouseOverCanvas);
 }
 
 nsresult nsXPFCCanvasManager::Paint(nsIView * aView,

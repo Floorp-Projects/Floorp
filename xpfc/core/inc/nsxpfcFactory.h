@@ -31,6 +31,8 @@
 #include "nsXPFCToolbar.h"
 #include "nsXPFCDialog.h"
 #include "nsXPFCButton.h"
+#include "nsXPButton.h"
+#include "nsXPItem.h"
 #include "nsXPFCTabWidget.h"
 #include "nsXPFCTextWidget.h"
 #include "nsMenuContainer.h"
@@ -46,6 +48,7 @@
 #include "nsStack.h"
 #include "nsLayout.h"
 #include "nsBoxLayout.h"
+#include "nsListLayout.h"
 #include "nsXPFCObserver.h"
 #include "nsXPFCObserverManager.h"
 #include "nsXPFCSubject.h"
@@ -56,6 +59,7 @@
 #include "nsXPFCActionCommand.h"
 #include "nsCommandServer.h"
 #include "nsXPFCHTMLCanvas.h"
+#include "nsXPFolderCanvas.h"
 
 static NS_DEFINE_IID(kCShellInstance,             NS_XPFC_SHELL_INSTANCE_CID);
 static NS_DEFINE_IID(kCMenuItem,                  NS_MENUITEM_CID);
@@ -72,6 +76,8 @@ static NS_DEFINE_IID(kCXPFCToolbar,               NS_XPFC_TOOLBAR_CID);
 static NS_DEFINE_IID(kCToolbarManager,            NS_TOOLBAR_MANAGER_CID);
 static NS_DEFINE_IID(kCXPFCDialog,                NS_XPFC_DIALOG_CID);
 static NS_DEFINE_IID(kCXPFCButton,                NS_XPFC_BUTTON_CID);
+static NS_DEFINE_IID(kCXPButton,                  NS_XP_BUTTON_CID);
+static NS_DEFINE_IID(kCXPItem,                    NS_XP_ITEM_CID);
 static NS_DEFINE_IID(kCXPFCTabWidget,             NS_XPFC_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTextWidget,            NS_XPFC_TEXTWIDGET_CID);
 static NS_DEFINE_IID(kCVector,                    NS_VECTOR_CID);
@@ -79,12 +85,14 @@ static NS_DEFINE_IID(kCVectorIterator,            NS_VECTOR_ITERATOR_CID);
 static NS_DEFINE_IID(kCLayout,                    NS_LAYOUT_CID);
 static NS_DEFINE_IID(kILayout,                    NS_ILAYOUT_IID);
 static NS_DEFINE_IID(kCBoxLayout,                 NS_BOXLAYOUT_CID);
+static NS_DEFINE_IID(kCListLayout,                NS_LISTLAYOUT_CID);
 static NS_DEFINE_IID(kCXPFCObserver,              NS_XPFC_OBSERVER_CID);
 static NS_DEFINE_IID(kCXPFCObserverManager,       NS_XPFC_OBSERVERMANAGER_CID);
 static NS_DEFINE_IID(kCXPFCSubject,               NS_XPFC_SUBJECT_CID);
 static NS_DEFINE_IID(kCXPFCCommand,               NS_XPFC_COMMAND_CID);
 static NS_DEFINE_IID(kCXPFCCanvas,                NS_XPFC_CANVAS_CID);
 static NS_DEFINE_IID(kCXPFCHTMLCanvas,            NS_XPFC_HTML_CANVAS_CID);
+static NS_DEFINE_IID(kCXPFolderCanvas,            NS_XP_FOLDER_CANVAS_CID);
 static NS_DEFINE_IID(kCXPFCCanvasManager,         NS_XPFC_CANVASMANAGER_CID);
 static NS_DEFINE_IID(kIXPFCCanvas,                NS_IXPFC_CANVAS_IID);
 static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
