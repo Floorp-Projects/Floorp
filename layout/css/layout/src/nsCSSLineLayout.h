@@ -22,6 +22,8 @@
 #include "nsIFrame.h"
 #include "nsVoidArray.h"
 
+struct nsCSSBlockReflowState;
+class nsPlaceholderFrame;
 struct nsStyleDisplay;
 struct nsStylePosition;
 
@@ -58,6 +60,10 @@ public:
                   nsISpaceManager* aSpaceManager);
   ~nsCSSLineLayout();
 
+  void Init(nsCSSBlockReflowState* aReflowState) {
+    mBlockReflowState = aReflowState;
+  }
+
   // Reset the text-run information in preparation for a FindTextRuns
   void ResetTextRuns();
 
@@ -92,13 +98,14 @@ public:
     mLineNumber++;
   }
 
-  void AddFloater(nsIFrame* aFrame);
+  void AddFloater(nsPlaceholderFrame* aFrame);
 
   static PRBool TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
                                   const nsStylePosition* aPosition);
 
   nsIPresContext* mPresContext;
   nsISpaceManager* mSpaceManager;
+  nsCSSBlockReflowState* mBlockReflowState;
 
   PRBool mListPositionOutside;
   PRInt32 mLineNumber;
