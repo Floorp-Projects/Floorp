@@ -46,6 +46,65 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 //-------------------------------------------------------------------------
 //
+// nsWindow constructor
+//
+//-------------------------------------------------------------------------
+nsWindow::nsWindow() : nsBaseWidget()
+{
+    NS_INIT_REFCNT();
+    mWnd                = 0;
+    mPrevWndProc        = NULL;
+    mBackground         = ::GetSysColor(COLOR_BTNFACE);
+    mBrush              = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
+    mForeground         = ::GetSysColor(COLOR_WINDOWTEXT);
+    mPalette            = NULL;
+    mIsShiftDown        = PR_FALSE;
+    mIsControlDown      = PR_FALSE;
+    mIsAltDown          = PR_FALSE;
+    mIsDestroying       = PR_FALSE;
+    mOnDestroyCalled    = PR_FALSE;
+    mTooltip            = NULL;
+    mDeferredPositioner = NULL;
+    mLastPoint.x        = 0;
+    mLastPoint.y        = 0;
+    mPreferredWidth     = 0;
+    mPreferredHeight    = 0;
+    mFont               = nsnull;
+    mIsVisible          = PR_FALSE;
+    mHas3DBorder        = PR_FALSE;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// nsWindow destructor
+//
+//-------------------------------------------------------------------------
+nsWindow::~nsWindow()
+{
+  mIsDestroying = PR_TRUE;
+  if (gCurrentWindow == this) {
+    gCurrentWindow = nsnull;
+  }
+
+  MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+  if (mouseTrailer->GetMouseTrailerWindow() == this) {
+    mouseTrailer->DestroyTimer();
+  } 
+
+  // If the widget was released without calling Destroy() then the native
+  // window still exists, and we need to destroy it
+  if (NULL != mWnd) {
+    Destroy();
+  }
+
+  //XXX Temporary: Should not be caching the font
+  delete mFont;
+}
+
+
+//-------------------------------------------------------------------------
+//
 // Default for height modification is to do nothing
 //
 //-------------------------------------------------------------------------
@@ -366,64 +425,6 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 }
 
 
-//-------------------------------------------------------------------------
-//
-// nsWindow constructor
-//
-//-------------------------------------------------------------------------
-nsWindow::nsWindow() : nsBaseWidget()
-{
-    NS_INIT_REFCNT();
-    mWnd                = 0;
-    mPrevWndProc        = NULL;
-    mBackground         = ::GetSysColor(COLOR_BTNFACE);
-    mBrush              = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
-    mForeground         = ::GetSysColor(COLOR_WINDOWTEXT);
-    mPalette            = NULL;
-    mIsShiftDown        = PR_FALSE;
-    mIsControlDown      = PR_FALSE;
-    mIsAltDown          = PR_FALSE;
-    mIsDestroying       = PR_FALSE;
-    mOnDestroyCalled    = PR_FALSE;
-    mTooltip            = NULL;
-    mDeferredPositioner = NULL;
-    mLastPoint.x        = 0;
-    mLastPoint.y        = 0;
-    mPreferredWidth     = 0;
-    mPreferredHeight    = 0;
-    mFont               = nsnull;
-    mIsVisible          = PR_FALSE;
-  
-}
-
-
-//-------------------------------------------------------------------------
-//
-// nsWindow destructor
-//
-//-------------------------------------------------------------------------
-nsWindow::~nsWindow()
-{
-  mIsDestroying = PR_TRUE;
-  if (gCurrentWindow == this) {
-    gCurrentWindow = nsnull;
-  }
-
-  MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-  if (mouseTrailer->GetMouseTrailerWindow() == this) {
-    mouseTrailer->DestroyTimer();
-  } 
-
-  // If the widget was released without calling Destroy() then the native
-  // window still exists, and we need to destroy it
-  if (NULL != mWnd) {
-    Destroy();
-  }
-
-  //XXX Temporary: Should not be caching the font
-  delete mFont;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -494,11 +495,13 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     if (nsnull != aInitData) {
       if (aInitData->mBorderStyle == eBorderStyle_dialog ||
           aInitData->mBorderStyle == eBorderStyle_none) {
-        extendedStyle = 0;
+        extendedStyle &= ~WS_EX_CLIENTEDGE;
       } else if (aInitData->mBorderStyle == eBorderStyle_3DChildWindow) {
         extendedStyle |= WS_EX_CLIENTEDGE;
       }
     }
+
+    mHas3DBorder = (extendedStyle & WS_EX_CLIENTEDGE) > 0;
 
     mWnd = ::CreateWindowEx(extendedStyle,
                             WindowClass(),
@@ -809,57 +812,80 @@ NS_METHOD nsWindow::SetFocus(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 {
-    if (mWnd) {
-        RECT r;
-        VERIFY(::GetClientRect(mWnd, &r));
+  if (mWnd) {
+    RECT r;
+    VERIFY(::GetWindowRect(mWnd, &r));
 
-        // assign size
-        aRect.width = r.right - r.left;
-        aRect.height = r.bottom - r.top;
+    // assign size
+    aRect.width  = r.right - r.left;
+    aRect.height = r.bottom - r.top;
 
-        // convert coordinates if parent exists
-        HWND parent = ::GetParent(mWnd);
-        if (parent) {
-          RECT pr;
-          VERIFY(::GetClientRect(parent, &pr));
-          VERIFY(::ClientToScreen(mWnd, (LPPOINT)&r));
-          VERIFY(::ClientToScreen(parent, (LPPOINT)&pr));
-          r.left -= pr.left;
-          r.top -= pr.top;
-        }
-        aRect.x = r.left;
-        aRect.y = r.top;
-    } else {
-        aRect.SetRect(0,0,0,0);
+    // convert coordinates if parent exists
+    HWND parent = ::GetParent(mWnd);
+    if (parent) {
+      RECT pr;
+      VERIFY(::GetWindowRect(parent, &pr));
+      r.left -= pr.left;
+      r.top  -= pr.top;
     }
-    return NS_OK;
+    aRect.x = r.left;
+    aRect.y = r.top;
+  } else {
+    aRect.SetRect(0,0,0,0);
+  }
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get this component dimension
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
+{
+
+  if (mWnd) {
+    RECT r;
+    VERIFY(::GetClientRect(mWnd, &r));
+
+    // assign size
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width  = r.right - r.left;
+    aRect.height = r.bottom - r.top;
+
+  } else {
+    aRect.SetRect(0,0,0,0);
+  }
+  return NS_OK;
 }
 
 //get the bounds, but don't take into account the client size
 
 void nsWindow::GetNonClientBounds(nsRect &aRect)
 {
-    if (mWnd) {
-        RECT r;
-        VERIFY(::GetWindowRect(mWnd, &r));
+  if (mWnd) {
+      RECT r;
+      VERIFY(::GetWindowRect(mWnd, &r));
 
-        // assign size
-        aRect.width = r.right - r.left;
-        aRect.height = r.bottom - r.top;
+      // assign size
+      aRect.width = r.right - r.left;
+      aRect.height = r.bottom - r.top;
 
-        // convert coordinates if parent exists
-        HWND parent = ::GetParent(mWnd);
-        if (parent) {
-          RECT pr;
-          VERIFY(::GetWindowRect(parent, &pr));
-          r.left -= pr.left;
-          r.top -= pr.top;
-        }
-        aRect.x = r.left;
-        aRect.y = r.top;
-    } else {
-        aRect.SetRect(0,0,0,0);
-    }
+      // convert coordinates if parent exists
+      HWND parent = ::GetParent(mWnd);
+      if (parent) {
+        RECT pr;
+        VERIFY(::GetWindowRect(parent, &pr));
+        r.left -= pr.left;
+        r.top -= pr.top;
+      }
+      aRect.x = r.left;
+      aRect.y = r.top;
+  } else {
+      aRect.SetRect(0,0,0,0);
+  }
 }
 
            
@@ -1417,12 +1443,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               // is for the client area then the origin should be (0,0) and not
               // the window origin in screen coordinates...
               RECT r;
-              ::GetClientRect(mWnd, &r);
+              ::GetWindowRect(mWnd, &r);
               PRInt32 newWidth, newHeight;
               newWidth = PRInt32(r.right - r.left);
               newHeight = PRInt32(r.bottom - r.top);
               nsRect rect(wp->x, wp->y, newWidth, newHeight);
-              if (newWidth > mWidth)
+              //if (newWidth != mWidth)
               {
                 RECT drect;
 
@@ -1433,11 +1459,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 drect.right = drect.left + (newWidth - mWidth);
                 drect.bottom = drect.top + newHeight;
 
+//                ::InvalidateRect(mWnd, NULL, FALSE);
 //                ::InvalidateRect(mWnd, &drect, FALSE);
                 ::RedrawWindow(mWnd, &drect, NULL,
                                RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
               }
-              if (newHeight > mHeight)
+              //if (newHeight != mHeight)
               {
                 RECT drect;
 
@@ -1448,6 +1475,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 drect.right = drect.left + newWidth;
                 drect.bottom = drect.top + (newHeight - mHeight);
 
+//                ::InvalidateRect(mWnd, NULL, FALSE);
 //                ::InvalidateRect(mWnd, &drect, FALSE);
                 ::RedrawWindow(mWnd, &drect, NULL,
                                RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
@@ -1455,6 +1483,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               mWidth = newWidth;
               mHeight = newHeight;
               ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
+
+              // recalculate the width and height
+              // this time based on the client area
+              if (::GetClientRect(mWnd, &r)) {
+                rect.width  = PRInt32(r.right - r.left);
+                rect.height = PRInt32(r.bottom - r.top);
+              }
               result = OnResize(rect);
             }
             break;
@@ -1713,6 +1748,14 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
     InitEvent(event, NS_SIZE);
     event.windowSize = &aWindowRect;
     event.eventStructType = NS_SIZE_EVENT;
+    RECT r;
+    if (::GetWindowRect(mWnd, &r)) {
+      event.mWinWidth  = PRInt32(r.right - r.left);
+      event.mWinHeight = PRInt32(r.bottom - r.top);
+    } else {
+      event.mWinWidth  = 0;
+      event.mWinHeight = 0;
+    }
     PRBool result = DispatchWindowEvent(&event);
     NS_RELEASE(event.widget);
     return result;
@@ -1751,7 +1794,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
     result = DispatchWindowEvent(&event);
 
-    //printf("**result=%d%\n",result);
     if (aEventType == NS_MOUSE_MOVE) {
 
       MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
@@ -1762,8 +1804,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
       GetBounds(rect);
       rect.x = 0;
       rect.y = 0;
-      //printf("Rect[%d, %d, %d, %d]  Point[%d,%d]\n", rect.x, rect.y, rect.width, rect.height, event.position.x, event.position.y);
-      //printf("gCurrentWindow 0x%X\n", gCurrentWindow);
 
       if (rect.Contains(event.point.x, event.point.y)) {
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
@@ -1794,7 +1834,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
         GetBounds(rect);
         if (rect.Contains(event.point.x, event.point.y)) {
           if (gCurrentWindow == NULL || gCurrentWindow != this) {
-            //printf("Mouse enter");
             gCurrentWindow = this;
           }
         } else {

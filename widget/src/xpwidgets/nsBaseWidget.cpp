@@ -554,5 +554,33 @@ NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 }
 
 
+/**
+ * If the implementation of nsWindow supports borders this method MUST be overridden
+ *
+ **/
+NS_METHOD nsBaseWidget::GetClientBounds(nsRect &aRect)
+{
+  return GetBounds(aRect);
+}
+
+
+/**
+ * Calculates the border width and height  
+ *
+ **/
+NS_METHOD nsBaseWidget::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
+{
+  nsRect rectWin;
+  nsRect rectClient;
+  GetBounds(rectWin);
+  GetClientBounds(rectClient);
+
+  aWidth  = (rectWin.width - rectClient.width) / 2;
+  aHeight = (rectWin.height - rectClient.height) / 2;
+
+  return NS_OK;
+}
+
+
 
 

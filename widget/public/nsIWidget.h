@@ -317,12 +317,30 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetFocus(void) = 0;
 
     /**
-     * Get this widget's dimension
+     * Get this widget's dimension outside dimensions, or in otherswords
+     * the dimensions of the widget or window
      *
      * @param aRect on return it holds the  x. y, width and height of this widget
      *
      */
     NS_IMETHOD GetBounds(nsRect &aRect) = 0;
+
+    /**
+     * Get this widget's client area dimensions, if the window has a 3D border appearance
+     * this returns the area inside the border, The x and y are always zero
+     *
+     * @param aRect on return it holds the  x. y, width and height of the client area of this widget
+     *
+     */
+    NS_IMETHOD GetClientBounds(nsRect &aRect) = 0;
+
+    /**
+     * Gets the width and height of the borders
+     * @param aWidth the width of the border
+     * @param aHeight the height of the border
+     *
+     */
+    NS_IMETHOD GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight) = 0;
 
     /**
      * Get the foreground color for this widget
