@@ -980,6 +980,8 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
     if (NS_SUCCEEDED(res))
       frameContent = do_QueryInterface(GetFocusNode(),&res);
   }
+  else
+    res = NS_OK;
   if (NS_SUCCEEDED(res)){
     for (PRUint32 i =0; i<mRangeArray->Count(); i++){
       //end content and start content do NOT necessarily mean anchor and focus frame respectively
@@ -1036,7 +1038,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
       res = ScrollIntoView(aTracker);
     }
   }
-  printf("debug reset selection has been called\n");
+  //printf("debug reset selection has been called\n");
   return res;
 }
 
