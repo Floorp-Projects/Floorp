@@ -28,9 +28,9 @@
 #include "nsButton.h"
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
-#include "nsRadioButton.h"
 #include "nsTextWidget.h"
 #include "nsTextAreaWidget.h"
+#include "nsRadioButton.h"
 #include "nsFileWidget.h"
 #include "nsListBox.h"
 #include "nsComboBox.h"
@@ -64,8 +64,6 @@ static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
-static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
@@ -201,12 +199,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCTextField)) {
         inst = (nsISupports*)(nsWindow *)new nsTextWidget();
-    }
-    else if (mClassID.Equals(kCTabWidget)) {
-        inst = (nsISupports*)(nsWindow *)new nsTabWidget();
-    }
-    else if (mClassID.Equals(kCTooltipWidget)) {
-		inst = (nsISupports*)(nsWindow *)new nsTooltipWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
         inst = (nsISupports*)new nsAppShell();
