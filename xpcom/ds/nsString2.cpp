@@ -430,7 +430,8 @@ void nsString::ToUpperCase(nsString& aString) const {
  *  @param  anOffset -- where in this string to start stripping chars
  *  @return *this 
  */
-nsString& nsString::StripChar(PRUnichar aChar,PRInt32 anOffset){
+void
+nsString::StripChar(PRUnichar aChar,PRInt32 anOffset){
   if(mLength && (anOffset<PRInt32(mLength))) {
     if(eOneByte==mCharSize) {
       char*  to   = mStr + anOffset;
@@ -461,7 +462,6 @@ nsString& nsString::StripChar(PRUnichar aChar,PRInt32 anOffset){
       mLength=to - mUStr;
     }
   }
-  return *this;
 }
 
 /**
@@ -472,9 +472,9 @@ nsString& nsString::StripChar(PRUnichar aChar,PRInt32 anOffset){
  *  @param  aSet -- characters to be cut from this
  *  @return *this 
  */
-nsString& nsString::StripChars(const char* aSet){
+void
+nsString::StripChars(const char* aSet){
   nsStr::StripChars(*this,aSet);
-  return *this;
 }
 
 
@@ -484,8 +484,9 @@ nsString& nsString::StripChars(const char* aSet){
  *  @update  gess 01/04/99
  *  @return  this
  */
-nsString& nsString::StripWhitespace() {
-  return StripChars(kWhitespace);
+void
+nsString::StripWhitespace() {
+  StripChars(kWhitespace);
 }
 
 /**
@@ -495,7 +496,8 @@ nsString& nsString::StripWhitespace() {
  *  @param  
  *  @return *this 
  */
-nsString& nsString::ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar) {
+void
+nsString::ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar) {
   PRUint32 theIndex=0;
   if(eTwoByte==mCharSize){
     for(theIndex=0;theIndex<mLength;theIndex++){
@@ -511,7 +513,6 @@ nsString& nsString::ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar) {
       }//if
     }
   }
-  return *this;
 }
 
 /**
@@ -521,7 +522,8 @@ nsString& nsString::ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar) {
  *  @param  
  *  @return *this 
  */
-nsString& nsString::ReplaceChar(const char* aSet, PRUnichar aNewChar){
+void
+nsString::ReplaceChar(const char* aSet, PRUnichar aNewChar){
   if(aSet){
     PRInt32 theIndex=FindCharInSet(aSet,0);
     while(kNotFound<theIndex) {
@@ -531,7 +533,6 @@ nsString& nsString::ReplaceChar(const char* aSet, PRUnichar aNewChar){
       theIndex=FindCharInSet(aSet,theIndex+1);
     }
   }
-  return *this;
 }
 
 /**
@@ -541,7 +542,8 @@ nsString& nsString::ReplaceChar(const char* aSet, PRUnichar aNewChar){
  *  @param  
  *  @return *this 
  */
-nsString& nsString::ReplaceSubstring(const PRUnichar* aTarget,const PRUnichar* aNewValue){
+void
+nsString::ReplaceSubstring(const PRUnichar* aTarget,const PRUnichar* aNewValue){
   if(aTarget && aNewValue) {
 
     PRInt32 len=nsCRT::strlen(aTarget);
@@ -558,7 +560,7 @@ nsString& nsString::ReplaceSubstring(const PRUnichar* aTarget,const PRUnichar* a
       }
     }
   }
-  return *this;}
+}
 
 /**
  *  This method is used to replace all occurances of the
@@ -568,7 +570,8 @@ nsString& nsString::ReplaceSubstring(const PRUnichar* aTarget,const PRUnichar* a
  *  @param aNewValue
  *  @return *this 
  */
-nsString& nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
+void
+nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
 
 
   //WARNING: This is not working yet!!!!!
@@ -597,7 +600,6 @@ nsString& nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNe
       }
     }
   }
-  return *this;
 }
 
 /**
@@ -628,7 +630,8 @@ PRInt32 nsString::CountChar(PRUnichar aChar) {
  *           both ends
  *  @return  this
  */
-nsString& nsString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool aEliminateTrailing,PRBool aIgnoreQuotes){
+void
+nsString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool aEliminateTrailing,PRBool aIgnoreQuotes){
 
   if(aTrimSet){
     
@@ -657,7 +660,6 @@ nsString& nsString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool a
     }
 
   }
-  return *this;
 }
 
 /**
@@ -670,15 +672,12 @@ nsString& nsString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool a
  *  @param   aEliminateTrailing controls stripping of trailing ws
  *  @return  this
  */
-nsString& nsString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){
+void
+nsString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){
   if(aSet){
     ReplaceChar(aSet,aChar);
     nsStr::CompressSet(*this,aSet,aEliminateLeading,aEliminateTrailing);
   }
-
-
-
-  return *this;
 }
 
 /**
@@ -691,10 +690,9 @@ nsString& nsString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aElimin
  *  @param   aEliminateTrailing controls stripping of trailing ws
  *  @return  this
  */
-nsString& nsString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailing){
+void
+nsString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailing){
   CompressSet(kWhitespace,' ',aEliminateLeading,aEliminateTrailing);
-
-  return *this;
 }
 
 /**********************************************************************

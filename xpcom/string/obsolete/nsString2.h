@@ -306,30 +306,30 @@ public:
    *  @param  aSet -- characters to be cut from this
    *  @return *this 
    */
-  nsString& StripChars(const char* aSet);
-  nsString& StripChar(PRUnichar aChar,PRInt32 anOffset=0);
-  nsString& StripChar(char aChar,PRInt32 anOffset=0) {return StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
-  nsString& StripChar(PRInt32 anInt,PRInt32 anOffset=0) {return StripChar((PRUnichar)anInt,anOffset); }
+  void StripChars( const char* aSet );
+  void StripChar( PRUnichar aChar, PRInt32 anOffset=0 );
+  void StripChar( char aChar, PRInt32 anOffset=0 )       { StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
+  void StripChar( PRInt32 anInt, PRInt32 anOffset=0 )    { StripChar((PRUnichar)anInt,anOffset); }
 
   /**
    *  This method strips whitespace throughout the string
    *  
    *  @return  this
    */
-  nsString& StripWhitespace();
+  void StripWhitespace();
 
   /**
    *  swaps occurence of 1 string for another
    *  
    *  @return  this
    */
-  nsString& ReplaceChar(PRUnichar anOldChar,PRUnichar aNewChar);
-  nsString& ReplaceChar(const char* aSet,PRUnichar aNewChar);
+  void ReplaceChar( PRUnichar anOldChar, PRUnichar aNewChar );
+  void ReplaceChar( const char* aSet, PRUnichar aNewChar );
 
-  nsString& ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue);
-  nsString& ReplaceSubstring(const PRUnichar* aTarget,const PRUnichar* aNewValue);
+  void ReplaceSubstring( const nsString& aTarget, const nsString& aNewValue );
+  void ReplaceSubstring( const PRUnichar* aTarget, const PRUnichar* aNewValue );
 
-  PRInt32 CountChar(PRUnichar aChar);
+  PRInt32 CountChar( PRUnichar aChar );
 
   /**
    *  This method trims characters found in aTrimSet from
@@ -342,7 +342,7 @@ public:
    *  @param   aIgnoreQuotes
    *  @return  this
    */
-  nsString& Trim(const char* aSet,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE,PRBool aIgnoreQuotes=PR_FALSE);
+  void Trim(const char* aSet,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE,PRBool aIgnoreQuotes=PR_FALSE);
 
   /**
    *  This method strips whitespace from string.
@@ -353,7 +353,7 @@ public:
    *  @param   aEliminateTrailing controls stripping of trailing ws
    *  @return  this
    */
-  nsString& CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
+  void CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
 
   /**
    *  This method strips whitespace from string.
@@ -364,7 +364,7 @@ public:
    *  @param   aEliminateTrailing controls stripping of trailing ws
    *  @return  this
    */
-  nsString& CompressWhitespace( PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
+  void CompressWhitespace( PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
 
   /**********************************************************************
     string conversion methods...
