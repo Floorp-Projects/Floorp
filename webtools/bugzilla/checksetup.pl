@@ -282,6 +282,20 @@ sub LocalVar ($$)
 # Set up the defaults for the --LOCAL-- variables below:
 #
 
+LocalVar('create_htaccess', <<'END');
+#
+# If you are using Apache for your web server, Bugzilla can create .htaccess
+# files for you that will instruct Apache not to serve files that shouldn't
+# be accessed from the web (like your local configuration data and non-cgi
+# executable files).  For this to work, the directory your Bugzilla
+# installation is in must be within the jurisdiction of a <Directory> block
+# in the httpd.conf file that has 'AllowOverride Limit' in it.  If it has
+# 'AllowOverride All' or other options with Limit, that's fine.
+# If this is set to 1, Bugzilla will create these files if they don't exist.
+# If this is set to 0, Bugzilla will not create these files.
+$create_htaccess = 1;
+END
+
     
 LocalVar('webservergroup', '
 #
@@ -435,6 +449,7 @@ my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
 my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
 my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
@@ -540,6 +555,62 @@ unless (-d 'graphs') {
         close(IN);
         close(OUT);
     }    
+}
+
+if ($my_create_htaccess) {
+  my $fileperm = 0644;
+  my $dirperm = 01777;
+  if ($my_webservergroup) {
+    $fileperm = 0640;
+    $dirperm = 0770;
+  }
+  if (!-e ".htaccess") {
+    print "Creating .htaccess...\n";
+    open HTACCESS, ">.htaccess";
+    print HTACCESS <<'END';
+# don't allow people to retrieve non-cgi executable files or our private data
+<FilesMatch ^(.*\.pl|localconfig|processmail|syncshadowdb)$>
+  deny from all
+</FilesMatch>
+END
+    close HTACCESS;
+    chmod $fileperm, ".htaccess";
+  }
+  if (!-e "data/.htaccess") {
+    print "Creating data/.htaccess...\n";
+    open HTACCESS, ">data/.htaccess";
+    print HTACCESS <<'END';
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "data/.htaccess";
+  }
+  if (!-e "data/webdot/.htaccess") {
+    if (!-d "data/webdot") {
+      mkdir "data/webdot", $dirperm;
+      chmod $dirperm, "data/webdot"; # the perms on mkdir don't seem to apply for some reason...
+    }
+    print "Creating data/webdot/.htaccess...\n";
+    open HTACCESS, ">data/webdot/.htaccess";
+    print HTACCESS <<'END';
+# Allow access to nothing in this directory except for .dot files
+# and don't allow access to those to anyone except research.att.com
+# if research.att.com ever changed their IP, or if you use a different
+# webdot server, you'll need to edit this
+<FilesMatch ^[0-9]+\.dot$>
+  Allow from 192.20.225.10
+  Deny from all
+</FilesMatch>
+
+# And no directory listings, either.
+Deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "data/webdot/.htaccess";
+  }
+
 }
 
 
