@@ -7,5 +7,8 @@
 <!ENTITY loginAtStartup.label "Check for new articles at startup"> 
 <!ENTITY loginAtStartup.accesskey "C">
 
+<!ENTITY useQuickMode.label "By default, show the article summary instead of loading the web page"> 
+<!ENTITY useQuickMode.accesskey "B">
+
 <!ENTITY manageSubscriptions.label "Manage Subscriptions..."> 
 <!ENTITY manageSubscriptions.accesskey "M">

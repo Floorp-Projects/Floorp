@@ -88,7 +88,7 @@ var feedDownloadCallback = {
 
       // add feed just adds the feed we have validated and downloaded to the subscription UI. 
       // it also flushes the subscription datasource
-      addFeed(feed.url, feed.name, null, folder); 
+      addFeed(feed.url, feed.name, folder); 
     } 
     else if (aErrorCode == kNewsBlogInvalidFeed) //  the feed was bad...
       window.alert(document.getElementById('bundle_newsblog').getFormattedString('newsblog-invalidFeed', [feed.url]));
@@ -117,7 +117,13 @@ var feedDownloadCallback = {
 
 function doAdd() {
     var userAddedFeed = false; 
-    var feedProperties = { feedName: "", feedLocation: "", serverURI: gRSSServer.serverURI, serverPrettyName: gRSSServer.prettyName, folderURI: "", result: userAddedFeed};
+    var defaultQuickMode = gRSSServer.getBoolAttribute('quickMode')
+    var feedProperties = { feedName: "", feedLocation: "", 
+                           serverURI: gRSSServer.serverURI, 
+                           serverPrettyName: gRSSServer.prettyName,  
+                           folderURI: "", 
+                           quickMode: gRSSServer.getBoolAttribute('quickMode'), 
+                           result: userAddedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
 
@@ -141,6 +147,7 @@ function doAdd() {
 
     // set the server for the feed
     feed.server = gRSSServer;
+    feed.quickMode = feedProperties.quickMode;
 
     // update status text
     updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validating'));
@@ -164,6 +171,7 @@ function doEdit() {
     var resource = rdf.GetResource(item.id);
     var old_url = ds.GetTarget(resource, DC_IDENTIFIER, true);
     old_url = old_url ? old_url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
+    var feed = new Feed(resource);
 
     var currentFolder = ds.GetTarget(resource, FZ_DESTFOLDER, true);
     var currentFolderURI = currentFolder.QueryInterface(Components.interfaces.nsIRDFResource).Value;
@@ -171,7 +179,9 @@ function doEdit() {
     currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
    
     var userModifiedFeed = false; 
-    var feedProperties = { feedLocation: old_url, serverURI: gRSSServer.serverURI, serverPrettyName: gRSSServer.prettyName, folderURI: currentFolderURI, result: userModifiedFeed};
+    var feedProperties = { feedLocation: old_url, serverURI: gRSSServer.serverURI, 
+                           serverPrettyName: gRSSServer.prettyName, folderURI: currentFolderURI, 
+                           quickMode: feed.quickMode, result: userModifiedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
     if (!feedProperties.result) // did the user cancel?
@@ -203,8 +213,11 @@ function doEdit() {
       updateFolderFeedUrl(currentFolder, feedProperties.feedLocation, true);  // add the new one
     }
 
-    // feed = new Feed(item.id);
-    // feed.download();
+    // check to see if the quickMode value changed
+    if (feed.quickMode != feedProperties.quickMode)
+      feed.quickMode = feedProperties.quickMode;
+
+   ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 }
 
 function doRemove() {

@@ -162,6 +162,16 @@ Feed.prototype.quickMode getter = function() {
     return quickMode;
 }
 
+Feed.prototype.quickMode setter = function(new_quickMode) {
+    var ds = getSubscriptionsDS(this.server);
+    new_quickMode = rdf.GetLiteral(new_quickMode || "");
+    var old_quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
+    if (old_quickMode)
+        ds.Change(this.resource, FZ_QUICKMODE, old_quickMode, new_quickMode);
+    else
+        ds.Assert(this.resource, FZ_QUICKMODE, new_quickMode, true);
+}
+
 Feed.prototype.parse = function() {
   // Figures out what description language (RSS, Atom) and version this feed
   // is using and calls a language/version-specific feed parser.

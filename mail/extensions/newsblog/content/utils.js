@@ -59,13 +59,9 @@ var fileHandler =
         .getProtocolHandler("file")
           .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
 
-function addFeed(url, title, quickMode, destFolder) {
+function addFeed(url, title, destFolder) {
     var ds = getSubscriptionsDS(destFolder.server);
     var feeds = getSubscriptionsList(destFolder.server);
-
-    // Give quickMode a default value of "true"; otherwise convert value
-    // to either "true" or "false" string.
-    quickMode = quickMode == null ? "false" : quickMode ? "true" : "false";
 
     // Generate a unique ID for the feed.
     var id = url;
@@ -82,7 +78,6 @@ function addFeed(url, title, quickMode, destFolder) {
     ds.Assert(id, DC_IDENTIFIER, rdf.GetLiteral(url), true);
     if (title)
         ds.Assert(id, DC_TITLE, rdf.GetLiteral(title), true);
-    ds.Assert(id, FZ_QUICKMODE, rdf.GetLiteral(quickMode), true);
 		ds.Assert(id, FZ_DESTFOLDER, destFolder, true);
     ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
     ds.Flush();

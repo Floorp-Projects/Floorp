@@ -33,12 +33,18 @@ var gIncomingServer;
 
 function onInit() 
 {  
-  // nothing to do here yet...
+  // set our custom quickMode attribute
+  document.getElementById('useQuickMode').checked = gIncomingServer.getBoolAttribute("quickMode");
 }
 
 function onPreInit(account, accountValues)
 {
   gIncomingServer = account.incomingServer;
+}
+
+function onSave()
+{
+  gIncomingServer.setBoolAttribute("quickMode", document.getElementById('useQuickMode').checked);
 }
 
 function manageSubscriptions()

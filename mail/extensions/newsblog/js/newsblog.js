@@ -95,6 +95,8 @@ var nsNewsBlogFeedDownloader =
     var itemResource = rdf.GetResource(aUrl);
     var feed = new Feed(itemResource);
     feed.server = aFolder.server;
+    feed.quickMode = feed.server.getBoolAttribute('quickMode');
+
     if (!aFolder.isServer) // if the root server, create a new folder for the feed
       feed.folder = aFolder; // user must want us to add this subscription url to an existing RSS folder.
 
@@ -322,7 +324,7 @@ var progressNotifier = {
       // in feed.folder or FeedItems created the folder for us....
       var folder = feed.folder ? feed.folder : feed.server.rootMsgFolder.getChildNamed(feed.name);
       updateFolderFeedUrl(folder, feed.url, false);        
-      addFeed(feed.url, feed.name, null, folder); // add feed just adds the feed to the subscription UI and flushes the datasource
+      addFeed(feed.url, feed.name, folder); // add feed just adds the feed to the subscription UI and flushes the datasource
     } 
     else if (aErrorCode == kNewsBlogInvalidFeed)
       this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-invalidFeed",

@@ -47,7 +47,7 @@
   <script type="application/x-javascript" src="chrome://messenger-newsblog/content/am-newsblog.js"/>
     
   <dialogheader title="&newsblogTitle.label;"/>
-
+  
     <hbox align="center">
       <label value="&accountName.label;" control="server.prettyName"
              accesskey="&accountName.accesskey;"/>
@@ -69,11 +69,18 @@
     </hbox>
 
     <checkbox wsm_persist="true"
-              id="server.loginAtStartUp" hidefor="nntp"
+              id="server.loginAtStartUp"
               label="&loginAtStartup.label;"
               accesskey="&loginAtStartup.accesskey;"
               prefattribute="value"
-              prefstring="mail.server.%serverkey%.login_at_startup"/>   
+              prefstring="mail.server.%serverkey%.login_at_startup"/>
+
+    <checkbox wsm_persist="true"
+              id="useQuickMode"
+              label="&useQuickMode.label;"
+              accesskey="&useQuickMode.accesskey;"/>
+
+    <separator class="thin"/>
 
     <hbox align="center">
       <spacer flex="1"/>

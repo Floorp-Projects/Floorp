@@ -113,4 +113,9 @@
       </row>
     </rows>
   </grid>
+
+  <separator class="thin"/>
+
+  <checkbox id="quickMode" accesskey="&quickMode.accesskey;" label="&quickMode.label;"/> 
+
 </dialog>

@@ -7,4 +7,6 @@
 <!ENTITY feedLocation.label "Feed URL: ">
 <!ENTITY feedLocation.accesskey "F">
 
+<!ENTITY quickMode.label "Show the article summary instead of loading the web page">
+<!ENTITY quickMode.accesskey "h">
 

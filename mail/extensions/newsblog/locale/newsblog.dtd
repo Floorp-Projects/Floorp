@@ -1,18 +1,10 @@
-<!-- Tools Window Overlay -->
-<!ENTITY newsBlogMenu.label "News Feed Subscriptions...">
-<!ENTITY newsBlogMenu.accesskey "b">
-
-<!-- customizeable toolbar button -->
-<!ENTITY newsBlogMenu.label "News &amp; Blogs">
-<!ENTITY newsBlogMenu.tooltip "Manage news and blog feeds">
-
 <!-- folder pane context menu item -->
-<!ENTITY folderContextRSSSubscribe.label    "Subscribe to Feeds...">
-<!ENTITY folderContextRSSSubscribe.accesskey   "b">
+<!ENTITY folderContextRSSSubscribe.label    "Manage Subscriptions...">
+<!ENTITY folderContextRSSSubscribe.accesskey   "M">
 
 <!-- Subscription Dialog -->
-<!ENTITY newsBlogSubscriptions.label "News Feed Subscriptions">
-<!ENTITY subscriptionDesc.label "Manage your News &amp; Blogs feeds.">
+<!ENTITY newsBlogSubscriptions.label "RSS Subscriptions">
+<!ENTITY subscriptionDesc.label "Manage your RSS Subscriptions.">
 <!ENTITY feedNameTreeCol.label "Name">
 <!ENTITY locationTreeCol.label "Location">
 <!ENTITY addButton.label       "Add">

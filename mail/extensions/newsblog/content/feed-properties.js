@@ -43,12 +43,16 @@ function onLoad()
 
   document.getElementById('rssAccountMenuItem').label = window.arguments[0].serverPrettyName;
   document.getElementById('rssAccountMenuItem').value = window.arguments[0].serverURI;
+
+  // set quick mode value
+  document.getElementById('quickMode').checked = window.arguments[0].quickMode;
 }
 
 function onOk()
 {
   window.arguments[0].feedLocation = document.getElementById('feedLocation').value;
   window.arguments[0].folderURI = document.getElementById('selectFolder').value;
+  window.arguments[0].quickMode = document.getElementById('quickMode').checked;
   window.arguments[0].result = true;
 
   return true;
