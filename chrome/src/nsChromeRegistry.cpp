@@ -1194,7 +1194,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
 
   nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(domDocument);
   if (xulDoc) {
-    // Deal with the backstop sheets first.
+    // Deal with the agent sheets first.
     PRInt32 shellCount = document->GetNumberOfShells();
     for (PRInt32 k = 0; k < shellCount; k++) {
       nsCOMPtr<nsIPresShell> shell;
@@ -1204,18 +1204,18 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
         rv = shell->GetStyleSet(getter_AddRefs(styleSet));
         if (NS_FAILED(rv)) return rv;
         if (styleSet) {
-          // Reload only the chrome URL backstop style sheets.
-          nsCOMPtr<nsISupportsArray> backstops;
-          rv = NS_NewISupportsArray(getter_AddRefs(backstops));
+          // Reload only the chrome URL agent style sheets.
+          nsCOMPtr<nsISupportsArray> agents;
+          rv = NS_NewISupportsArray(getter_AddRefs(agents));
           if (NS_FAILED(rv)) return rv;
 
-          nsCOMPtr<nsISupportsArray> newBackstopSheets;
-          rv = NS_NewISupportsArray(getter_AddRefs(newBackstopSheets));
+          nsCOMPtr<nsISupportsArray> newAgentSheets;
+          rv = NS_NewISupportsArray(getter_AddRefs(newAgentSheets));
           if (NS_FAILED(rv)) return rv;
 
-          PRInt32 bc = styleSet->GetNumberOfBackstopStyleSheets();
+          PRInt32 bc = styleSet->GetNumberOfAgentStyleSheets();
           for (PRInt32 l = 0; l < bc; l++) {
-            nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetBackstopStyleSheetAt(l));
+            nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetAgentStyleSheetAt(l));
             nsCOMPtr<nsIURI> uri;
             rv = sheet->GetURL(*getter_AddRefs(uri));
             if (NS_FAILED(rv)) return rv;
@@ -1226,17 +1226,17 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
               rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
               if (NS_FAILED(rv)) return rv;
               if (newSheet) {
-                rv = newBackstopSheets->AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
+                rv = newAgentSheets->AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
                 if (NS_FAILED(rv)) return rv;
               }
             }
             else {  // Just use the same sheet.
-              rv = newBackstopSheets->AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
+              rv = newAgentSheets->AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
               if (NS_FAILED(rv)) return rv;
             }
           }
 
-          styleSet->ReplaceBackstopStyleSheets(newBackstopSheets);
+          styleSet->ReplaceAgentStyleSheets(newAgentSheets);
         }
       }
     }
@@ -2722,7 +2722,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::GetBackstopSheets(nsIDocShell* aDocShell, nsISupportsArray **aResult)
+nsChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell, nsISupportsArray **aResult)
 {
   nsresult rv = NS_NewISupportsArray(aResult);
 

@@ -23,7 +23,7 @@
 ?Release@nsOverlayEnumerator@@UAGKXZ ; 174
 ?GetOverlays@nsChromeRegistry@@UAGIPAVnsIURI@@PAPAVnsISimpleEnumerator@@@Z ; 133
 ?GetUserSheets@nsChromeRegistry@@UAGIHPAPAVnsISupportsArray@@@Z ; 115
-?GetBackstopSheets@nsChromeRegistry@@UAGIPAPAVnsISupportsArray@@@Z ; 115
+?GetAgentSheets@nsChromeRegistry@@UAGIPAPAVnsISupportsArray@@@Z ; 115
 ?AddRef@nsCachedChromeChannel@@UAGKXZ ; 88
 ?Release@nsCachedChromeChannel@@UAGKXZ ; 88
 ?QueryInterface@nsCachedChromeChannel@@UAGIABUnsID@@PAPAX@Z ; 74
