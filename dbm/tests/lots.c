@@ -139,7 +139,7 @@ DBT * MakeLargeKey(int32 num)
 	static DBT rv;
 	static char *string_rv=0;
 	int rep_char;
-	int32 size;
+	size_t size;
 
 	if(string_rv)
 		free(string_rv);
@@ -154,9 +154,9 @@ DBT * MakeLargeKey(int32 num)
 
 	/* malloc a string low_bits wide */
 	size = low_bits*sizeof(char);
-	string_rv = (char *)malloc((size_t)size);
+	string_rv = (char *)malloc(size);
 
-	memset(string_rv, rep_char, (size_t)size);
+	memset(string_rv, rep_char, size);
 
 	rv.data = string_rv;
 	rv.size = size;
@@ -223,7 +223,7 @@ int
 VerifyData(DBT *data, int32 num, key_type_enum key_type)
 {
 	int32 count, compare_num;
-	uint32 size;
+	size_t size;
 	int32 *int32_array;
 
 	/* The first int32 is count 
@@ -327,7 +327,7 @@ GenData(int32 num)
 	int32 n;
 	static DBT *data=0;
 	int32 *int32_array;
-	int32 size;
+	size_t size;
 
 	if(!data)
 	  {
@@ -346,7 +346,7 @@ GenData(int32 num)
 
 	
 	size = sizeof(int32)*(n+1);
-	int32_array = (int32 *) malloc((size_t)size);
+	int32_array = (int32 *) malloc(size);
 
 	memcpy(&int32_array[0], &n, sizeof(int32));
 
