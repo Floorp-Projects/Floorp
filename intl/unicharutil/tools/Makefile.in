@@ -32,10 +32,10 @@ PROGRAM		= ucgendat
 CSRCS		= ucgendat.c
 
 # XXX need configure test
-EX_LIBS		= $(shell $(GLIB-CONFIG) --libs)
+EX_LIBS		= $(shell $(GLIB_CONFIG) --libs)
 
 include $(topsrcdir)/config/rules.mk
 
 # XXX replace with proper configure test for glib
-CFLAGS		+= $(shell $(GLIB-CONFIG) --cflags)
+CFLAGS		+= $(shell $(GLIB_CONFIG) --cflags)
 
