@@ -2784,7 +2784,6 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
 #endif
   if (fetchTables && !wallet_tablesFetched) {
     wallet_FetchFromNetCenter();
-    wallet_tablesInitialized = PR_TRUE;
     wallet_tablesFetched = PR_TRUE;
   }
   if (!wallet_tablesInitialized) {
