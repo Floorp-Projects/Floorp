@@ -23,10 +23,11 @@ bin\chrome\en-mac\*
 [regus]
 ;
 ; US
+; If you add a new directory you must explicitly call addDirectory in regus.jst
 bin\chrome\US.jar
 bin\chrome\US\*
 bin\defaults\profile\US\*
-bin\searchplugins\*,searchplugins
+bin\searchplugins\*
 
 [deflenus]
 ;
