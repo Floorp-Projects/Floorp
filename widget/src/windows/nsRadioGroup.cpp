@@ -236,7 +236,7 @@ NS_METHOD nsRadioGroup::Remove(nsIRadioButton * aChild)
 nsIEnumerator* nsRadioGroup::GetChildren()
 {
     if (mChildren) {
-        mChildren->Reset();
+        mChildren->Fist();
         NS_ADDREF(mChildren);
         return mChildren;
     }
@@ -373,17 +373,6 @@ nsRadioGroup::Enumerator::IsDone(PRBool *aDone)
     else
         *aDone = PR_FALSE;
     return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Reset enumerator internal pointer to the beginning
-//
-//-------------------------------------------------------------------------
-void nsRadioGroup::Enumerator::Reset()
-{
-    mCurrentPosition = 0;
 }
 
 
