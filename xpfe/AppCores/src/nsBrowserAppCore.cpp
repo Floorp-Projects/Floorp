@@ -1007,11 +1007,16 @@ nsBrowserAppCore::LoadInitialPage(void)
   nsresult rv;
   nsICmdLineService * cmdLineArgs;
 
+  
   // Examine content URL.
   if ( mContentAreaWebShell ) {
       const PRUnichar *url = 0;
       rv = mContentAreaWebShell->GetURL( 0, &url );
-      if ( NS_SUCCEEDED( rv ) ) {
+	  /* Check whether url is valid. Otherwise we compare 0x00 with 
+	   * "about:blank" and there by return from here with out 
+	   * loading the command line url or default home page.
+	   */
+      if ( NS_SUCCEEDED( rv ) && url ) {
           if ( nsString(url) != "about:blank" ) {
               // Something has already been loaded (probably via window.open),
               // leave it be.
