@@ -58,6 +58,8 @@ else
 TARGET		= Camino
 endif
 
+GARBAGE_DIRS += build 
+
 include $(topsrcdir)/config/rules.mk
 
 ABS_topsrcdir := $(shell cd $(topsrcdir); pwd)
@@ -73,9 +75,6 @@ endif
 libs::
 	$(PBBUILD) -project Camino.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) USE_GCC3=YES
 
-clean clobber::
-	rm -rf build
-	rm -f resources/localized/English.lproj/Localized.rsrc
 
 # convenience target for PB script build phases
 echo_srcdir:
