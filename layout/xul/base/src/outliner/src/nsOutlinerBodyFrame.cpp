@@ -543,7 +543,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetFirstVisibleRow(PRInt32 *_retval)
 
 NS_IMETHODIMP nsOutlinerBodyFrame::GetLastVisibleRow(PRInt32 *_retval)
 {
-  *_retval = mTopRowIndex + mPageCount + 1;
+  *_retval = mTopRowIndex + mPageCount - 1;
   return NS_OK;
 }
 
