@@ -84,6 +84,16 @@ final class PK11KeyWrapper implements KeyWrapper {
         this.pubKey = wrappingKey;
     }
 
+    public void initWrap()
+            throws InvalidKeyException, InvalidAlgorithmParameterException
+    {
+        if( algorithm != KeyWrapAlgorithm.PLAINTEXT ) {
+            throw new InvalidKeyException(algorithm + " requires a key");
+        }
+        reset();
+        state = WRAP;
+    }
+
     /**
      * Does everything that is key-independent for initializing a wrap.
      */
@@ -114,6 +124,16 @@ final class PK11KeyWrapper implements KeyWrapper {
         initUnwrap(parameters);
         checkWrapper(unwrappingKey);
         this.symKey = unwrappingKey;
+    }
+
+    public void initUnwrap()
+        throws InvalidKeyException, InvalidAlgorithmParameterException
+    {
+        if( algorithm != KeyWrapAlgorithm.PLAINTEXT ) {
+            throw new InvalidKeyException(algorithm + " requires a key");
+        }
+        reset();
+        state = UNWRAP;
     }
 
     /**
@@ -239,6 +259,10 @@ final class PK11KeyWrapper implements KeyWrapper {
         if( state != WRAP ) {
             throw new IllegalStateException();
         }
+        if( algorithm == KeyWrapAlgorithm.PLAINTEXT ) {
+            throw new InvalidKeyException(
+                "plaintext wrapping not supported");
+        }
 
         checkWrappee(toBeWrapped);
 
@@ -263,6 +287,9 @@ final class PK11KeyWrapper implements KeyWrapper {
     {
         if( state != WRAP ) {
             throw new IllegalStateException();
+        }
+        if( algorithm == KeyWrapAlgorithm.PLAINTEXT ) {
+            throw new InvalidKeyException("plaintext wrapping now supported");
         }
 
         checkWrappee(toBeWrapped);
@@ -382,6 +409,10 @@ final class PK11KeyWrapper implements KeyWrapper {
         if( state != UNWRAP ) {
             throw new IllegalStateException();
         }
+        if( algorithm == KeyWrapAlgorithm.PLAINTEXT ) {
+            throw new TokenException("plaintext unwrapping of private keys " +
+                "is not supported");
+        }
 
         byte[] publicValue = extractPublicValue(publicKey, type);
 
@@ -452,14 +483,19 @@ final class PK11KeyWrapper implements KeyWrapper {
             keyLen = 0;
         }
 
-        if( symKey != null ) {
-            Assert.assert(pubKey==null && privKey==null);
-            return nativeUnwrapSymWithSym(token, symKey, wrapped, algorithm,
-                        algFromType(type), keyLen, IV, usage.getVal() );
+        if( algorithm == KeyWrapAlgorithm.PLAINTEXT ) {
+            return nativeUnwrapSymPlaintext(token, wrapped, algFromType(type),
+                usage.getVal() );
         } else {
-            Assert.assert(privKey!=null && pubKey==null && symKey==null);
-            return nativeUnwrapSymWithPriv(token, privKey, wrapped, algorithm,
+            if( symKey != null ) {
+                Assert.assert(pubKey==null && privKey==null);
+                return nativeUnwrapSymWithSym(token, symKey, wrapped, algorithm,
                         algFromType(type), keyLen, IV, usage.getVal() );
+            } else {
+                Assert.assert(privKey!=null && pubKey==null && symKey==null);
+                return nativeUnwrapSymWithPriv(token, privKey, wrapped,
+                    algorithm, algFromType(type), keyLen, IV, usage.getVal() );
+            }
         }
     }
 
@@ -522,6 +558,9 @@ final class PK11KeyWrapper implements KeyWrapper {
         byte[] IV, int usageEnum)
             throws TokenException;
 
+    private static native SymmetricKey
+    nativeUnwrapSymPlaintext(PK11Token token, byte[] wrappedKey,
+        Algorithm type, int usageEnum);
 
     private void reset() {
         state = UNINITIALIZED;

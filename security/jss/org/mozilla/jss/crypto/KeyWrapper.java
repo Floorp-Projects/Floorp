@@ -47,12 +47,24 @@ public interface KeyWrapper {
                             AlgorithmParameterSpec parameters)
         throws InvalidKeyException, InvalidAlgorithmParameterException;
 
+    /**
+     * For wrapping keys in plaintext.
+     */
+    public void initWrap()
+        throws InvalidKeyException, InvalidAlgorithmParameterException;
+
     public void initUnwrap(SymmetricKey unwrappingKey,
                             AlgorithmParameterSpec parameters)
         throws InvalidKeyException, InvalidAlgorithmParameterException;
 
     public void initUnwrap(PrivateKey unwrappingKey,
                             AlgorithmParameterSpec parameters)
+        throws InvalidKeyException, InvalidAlgorithmParameterException;
+
+    /**
+     * For plaintext-wrapped keys.
+     */
+    public void initUnwrap()
         throws InvalidKeyException, InvalidAlgorithmParameterException;
 
     public byte[] wrap(PrivateKey toBeWrapped)

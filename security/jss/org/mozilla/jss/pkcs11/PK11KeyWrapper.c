@@ -600,6 +600,63 @@ finish:
 
 /***********************************************************************
  *
+ * PK11KeyWrapper.nativeUnwrapSymPlaintext
+ */
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymPlaintext
+    (JNIEnv *env, jclass clazz, jobject tokenObj, jbyteArray wrappedBA,
+        jobject typeAlgObj, jint usageEnum)
+{
+    PK11SymKey *symKey=NULL;
+    CK_MECHANISM_TYPE keyTypeMech;
+    SECItem *wrappedKey=NULL;
+    jobject keyObj = NULL;
+    PK11SlotInfo *slot = NULL;
+
+    /* get key type */
+    keyTypeMech = JSS_getPK11MechFromAlg(env, typeAlgObj);
+    if( keyTypeMech == CKM_INVALID_MECHANISM ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unrecognized key type algorithm");
+        goto finish;
+    }
+
+    /* get the slot */
+    if( JSS_PK11_getTokenSlotPtr(env, tokenObj, &slot) != PR_SUCCESS) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+    /* get the wrapped key */
+    wrappedKey = JSS_ByteArrayToSECItem(env, wrappedBA);
+    if( wrappedKey == NULL ) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+    /* pull in the key */
+    symKey = PK11_ImportSymKey(slot, keyTypeMech, PK11_OriginUnwrap,
+        JSS_symkeyUsage[usageEnum], wrappedKey, NULL);
+    if( symKey == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to unwrap key");
+        goto finish;
+    }
+
+    /* wrap the symmetric key in a Java object.  This will clear symKey */
+    keyObj = JSS_PK11_wrapSymKey(env, &symKey);
+
+finish:
+    if(wrappedKey) {
+        SECITEM_FreeItem(wrappedKey, PR_TRUE /*free wrappedKey*/);
+    }
+    if( symKey ) {
+        PK11_FreeSymKey(symKey);
+    }
+    return keyObj;
+}
+
+
+/***********************************************************************
+ *
  * J S S _ P K 1 1 _ g e t E r r o r S t r i n g
  *
  * Returns a simple error string for a given PKCS #11 error.

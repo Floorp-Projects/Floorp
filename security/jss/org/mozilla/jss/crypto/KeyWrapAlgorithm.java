@@ -84,4 +84,8 @@ public class KeyWrapAlgorithm extends Algorithm {
     public static final KeyWrapAlgorithm
     RSA = new KeyWrapAlgorithm(SEC_OID_PKCS1_RSA_ENCRYPTION, "RSA", null,
             false);
+
+    public static final KeyWrapAlgorithm
+    PLAINTEXT = new KeyWrapAlgorithm(0, "Plaintext", null,
+            false);
 }
