@@ -67,7 +67,7 @@
 #include "nsCURILoader.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-static const char kSatchelPropertiesURL[] = "chrome://passwordmgr/locale/satchel.properties";
+static const char kSatchelPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
 static PRBool sPrefsInitialized = PR_FALSE;
 
