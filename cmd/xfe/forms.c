@@ -2897,10 +2897,18 @@ fe_mocha_submit_form_cb (MWContext *context, LO_Element *element, int32 event,
   NET_AddLOSubmitDataToURLStruct (data, url);
   if (data->window_target)
   {
-      context = XP_FindNamedContextInList(context, (char*)data->window_target);
-      data->window_target = NULL;
-      url->window_target = NULL;
- }
+	  MWContext *tempContext;
+
+      tempContext = XP_FindNamedContextInList(context, data->window_target);
+
+	  /* Might be null if we're looking at _new. */
+	  if(tempContext)
+		  {
+			  context = tempContext;
+			  data->window_target = NULL;
+			  url->window_target = NULL;
+		  }
+  }
 
 
   fe_GetURL (context, url, FALSE);
