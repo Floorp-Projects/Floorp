@@ -55,6 +55,10 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
+
+  NS_IMETHOD
   TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
@@ -110,6 +114,11 @@ protected:
   // using attributes that we may have
   void
   ProcessOperatorData(nsIPresContext* aPresContext);
+
+  // helper to double check thar our char should be rendered as a selected char
+  PRBool
+  IsFrameInSelection(nsIPresContext* aPresContext,
+                     nsIFrame*       aFrame);
 };
 
 #endif /* nsMathMLmoFrame_h___ */

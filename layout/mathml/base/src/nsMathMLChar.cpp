@@ -47,6 +47,7 @@
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 
+#include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
@@ -1866,7 +1867,8 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
-                    nsIFrame*            aForFrame)
+                    nsIFrame*            aForFrame,
+                    const nsRect*        aSelectedRect)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIStyleContext> parentContext(dont_AddRef(mStyleContext->GetParent()));
@@ -1880,12 +1882,26 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
 
   const nsStyleVisibility *visib = NS_STATIC_CAST(const nsStyleVisibility*,
     styleContext->GetStyleData(eStyleStruct_Visibility));
+  if (!visib->IsVisible())
+    return NS_OK;
 
   // if the leaf style context that we use for stretchy chars has a background
   // color we use it -- this feature is mostly used for testing and debugging
   // purposes. Normally, users will set the background on the container frame.
-  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (mRect.width && mRect.height) {
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    // paint the selection background -- beware MathML frames overlap a lot
+    if (aSelectedRect && !aSelectedRect->IsEmpty()) {
+      // get color to use for selection from the look&feel object
+      nsCOMPtr<nsILookAndFeel> lf;
+      aPresContext->GetLookAndFeel(getter_AddRefs(lf));
+      if (lf) {
+        nscolor bgColor = NS_RGB(0, 0, 0);
+        lf->GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
+        aRenderingContext.SetColor(bgColor);
+        aRenderingContext.FillRect(*aSelectedRect);
+      }
+    }
+    else if (mRect.width && mRect.height) {
       const nsStyleBorder *border = NS_STATIC_CAST(const nsStyleBorder*,
         styleContext->GetStyleData(eStyleStruct_Border));
       const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
@@ -1912,11 +1928,20 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     }
   }
 
-  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // Set color ...
     const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
       styleContext->GetStyleData(eStyleStruct_Color));
-    aRenderingContext.SetColor(color->mColor);
+    nscolor fgColor = color->mColor;
+    if (aSelectedRect && !aSelectedRect->IsEmpty()) {
+      // get color to use for selection from the look&feel object
+      nsCOMPtr<nsILookAndFeel> lf;
+      aPresContext->GetLookAndFeel(getter_AddRefs(lf));
+      if (lf) {
+        lf->GetColor(nsILookAndFeel::eColor_TextSelectForeground, fgColor);
+      }
+    }
+    aRenderingContext.SetColor(fgColor);
 
     nsAutoString fontName;
     const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
@@ -1956,7 +1981,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
 //if (!mStyleContext->Equals(child->mStyleContext))
 //  printf("char contexts are out of sync\n");
             child->Paint(aPresContext, aRenderingContext,
-                         aDirtyRect, aWhichLayer, aForFrame);
+                         aDirtyRect, aWhichLayer, aForFrame, aSelectedRect);
           }
           return NS_OK; // that's all folks
         }

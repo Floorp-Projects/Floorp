@@ -111,6 +111,16 @@ nsMathMLmfencedFrame::AttributeChanged(nsIPresContext* aPresContext,
                           aAttribute, aModType, aHint);
 }
 
+nsresult
+nsMathMLmfencedFrame::ChildListChanged(nsIPresContext* aPresContext,
+                                       PRInt32         aModType)
+{
+  RemoveFencesAndSeparators();
+  CreateFencesAndSeparators(aPresContext);
+
+  return nsMathMLContainerFrame::ChildListChanged(aPresContext, aModType);
+}
+
 void
 nsMathMLmfencedFrame::RemoveFencesAndSeparators()
 {
